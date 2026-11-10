@@ -60,19 +60,23 @@ ShaderBuilderTester.expectHasFragmentUniforms = function (
   );
 };
 
-ShaderBuilderTester.expectHasVaryings = function (
+ShaderBuilderTester.expectVertexVaryings = function (
   shaderBuilder,
-  expectedVaryings,
+  expectedVaryingLines,
 ) {
-  expect(shaderBuilder._vertexShaderParts.varyingLines).toEqual(
-    jasmine.arrayWithExactContents(
-      expectedVaryings.map((varying) => jasmine.stringContaining(varying)),
-    ),
+  expectEqualUnordered(
+    shaderBuilder._vertexShaderParts.varyingLines,
+    expectedVaryingLines,
   );
-  expect(shaderBuilder._fragmentShaderParts.varyingLines).toEqual(
-    jasmine.arrayWithExactContents(
-      expectedVaryings.map((varying) => jasmine.stringContaining(varying)),
-    ),
+};
+
+ShaderBuilderTester.expectFragmentVaryings = function (
+  shaderBuilder,
+  expectedVaryingLines,
+) {
+  expectEqualUnordered(
+    shaderBuilder._fragmentShaderParts.varyingLines,
+    expectedVaryingLines,
   );
 };
 

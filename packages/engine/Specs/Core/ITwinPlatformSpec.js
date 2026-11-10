@@ -1,9 +1,5 @@
-import {
-  ITwinPlatform,
-  RequestErrorEvent,
-  Resource,
-  RuntimeError,
-} from "../../index.js";
+import { RuntimeError } from "@cesium/core";
+import { ITwinPlatform, RequestErrorEvent, Resource } from "../../index.js";
 
 describe("ITwinPlatform", () => {
   let previousAccessToken;
@@ -155,6 +151,17 @@ describe("ITwinPlatform", () => {
       await ITwinPlatform.getExports("imodel-id-1");
       expect(resource).toBeDefined();
       expect(resource.url).toContain("imodel-id-1");
+    });
+
+    it("uses the changeset in the API request", async () => {
+      let resource;
+      requestSpy.and.callFake(function () {
+        resource = this;
+        return JSON.stringify({ exports: [] });
+      });
+      await ITwinPlatform.getExports("imodel-id-1", "changeset-id-1");
+      expect(resource).toBeDefined();
+      expect(resource.url).toContain("changeset-id-1");
     });
   });
 

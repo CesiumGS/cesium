@@ -1,5 +1,6 @@
-import WebGLConstants from "../Core/WebGLConstants.js";
+// @ts-check
 
+import { WebGLConstants } from "@cesium/core";
 /**
  * Determines how two pixels' values are combined.
  *
@@ -50,4 +51,7 @@ const BlendEquation = {
    */
   MAX: WebGLConstants.MAX,
 };
-export default Object.freeze(BlendEquation);
+
+Object.freeze(BlendEquation);
+
+export default BlendEquation;

@@ -1,25 +1,41 @@
 import {
-  PerspectiveFrustum,
+  Cartesian3,
+  FixedFrameTransforms,
+  HeadingPitchRange,
   Math as CesiumMath,
+  Matrix4,
+  PerspectiveFrustum,
+} from "@cesium/core";
+import {
   ResourceCache,
   RequestScheduler,
-  HeadingPitchRange,
+  CustomShader,
   GaussianSplat3DTileContent,
+  VertexAttributeSemantic,
 } from "../../index.js";
-
+import GaussianSplatPrimitive from "../../Source/Scene/GaussianSplatPrimitive.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
+import createCanvas from "../../../../Specs/createCanvas.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/GaussianSplatPrimitive",
   function () {
-    const tilesetUrl = "./Data/Cesium3DTiles/GaussianSplats/tower/tileset.json";
+    const sphericalHarmonicUrl =
+      "./Data/Cesium3DTiles/GaussianSplats/sh_unit_cube/tileset.json";
 
     let scene;
     let options;
+    let camera;
+
+    const canvassize = { width: 512, height: 512 };
+    const samplePosition =
+      ((canvassize.width / 2) * canvassize.height + canvassize.width / 2) * 4;
 
     beforeAll(function () {
-      scene = createScene();
+      const canvas = createCanvas(canvassize.width, canvassize.height);
+      scene = createScene({ canvas });
     });
 
     afterAll(function () {
@@ -30,7 +46,7 @@ describe(
       RequestScheduler.clearForSpecs();
       scene.morphTo3D(0.0);
 
-      const camera = scene.camera;
+      camera = scene.camera;
       camera.frustum = new PerspectiveFrustum();
       camera.frustum.aspectRatio =
         scene.drawingBufferWidth / scene.drawingBufferHeight;
@@ -50,7 +66,7 @@ describe(
     it("loads a Gaussian splats tileset", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetUrl,
+        sphericalHarmonicUrl,
         options,
       );
       scene.camera.lookAt(
@@ -59,10 +75,15 @@ describe(
       );
       expect(tileset.hasExtension("3DTILES_content_gltf")).toBe(true);
       expect(
-        tileset.isGltfExtensionUsed("KHR_spz_gaussian_splats_compression"),
+        tileset.isGltfExtensionUsed("KHR_gaussian_splatting_compression_spz_2"),
       ).toBe(true);
+      expect(tileset.isGltfExtensionRequired("KHR_gaussian_splatting")).toBe(
+        true,
+      );
       expect(
-        tileset.isGltfExtensionRequired("KHR_spz_gaussian_splats_compression"),
+        tileset.isGltfExtensionRequired(
+          "KHR_gaussian_splatting_compression_spz_2",
+        ),
       ).toBe(true);
 
       const tile = await Cesium3DTilesTester.waitForTileContentReady(
@@ -74,26 +95,636 @@ describe(
       expect(tile.content instanceof GaussianSplat3DTileContent).toBe(true);
     });
 
-    xit("loads a Gaussian splats tileset and toggles visibility", async function () {
+    it("loads a Gaussian splats tileset and toggles visibility", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetUrl,
+        sphericalHarmonicUrl,
         options,
       );
       scene.camera.lookAt(
         tileset.boundingSphere.center,
         new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
       );
+
       const tile = await Cesium3DTilesTester.waitForTileContentReady(
         scene,
         tileset.root,
       );
+
       expect(tile.content).toBeDefined();
-      expect(tileset.gaussianSplatPrimitive).toBeDefined();
-      expect(scene).notToRender([0, 0, 0, 255]);
+
+      const gsPrim = tileset.gaussianSplatPrimitive;
+      expect(gsPrim).toBeDefined();
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return gsPrim.isStable;
+      });
+      scene.renderForSpecs();
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[samplePosition + 0]).not.toBe(0);
+        expect(rgba[samplePosition + 1]).not.toBe(0);
+        expect(rgba[samplePosition + 2]).not.toBe(0);
+      });
 
       tileset.show = false;
-      expect(scene).toRender([0, 0, 0, 255]);
+      scene.renderForSpecs();
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[samplePosition + 0]).toBe(0);
+        expect(rgba[samplePosition + 1]).toBe(0);
+        expect(rgba[samplePosition + 2]).toBe(0);
+      });
+    });
+
+    it("retries pending snapshot sorting when sorter is temporarily unavailable", function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: {
+          addEventListener: function () {},
+        },
+        tileVisible: {
+          addEventListener: function () {},
+        },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset: tileset });
+      gsPrim._rootTransform = Matrix4.IDENTITY;
+
+      // Force the pending-snapshot TEXTURE_READY path deterministically.
+      // This validates "unavailable sorter -> keep TEXTURE_READY -> retry next frame"
+      // without depending on async texture generation timing.
+      const fakeTexture = {
+        destroy: function () {},
+      };
+      gsPrim._pendingSnapshot = {
+        generation: gsPrim._splatDataGeneration,
+        positions: new Float32Array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
+        rotations: new Float32Array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]),
+        scales: new Float32Array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
+        colors: new Uint8Array([255, 255, 255, 255, 255, 255, 255, 255]),
+        shData: undefined,
+        sphericalHarmonicsDegree: 0,
+        shCoefficientCount: 0,
+        numSplats: 2,
+        indexes: undefined,
+        gaussianSplatTexture: fakeTexture,
+        sphericalHarmonicsTexture: undefined,
+        lastTextureWidth: 1,
+        lastTextureHeight: 1,
+        state: "SORTING",
+      };
+      gsPrim._pendingSortPromise = undefined;
+      gsPrim._pendingSort = undefined;
+      gsPrim._sorterPromise = undefined;
+      gsPrim._sorterState = 0;
+      gsPrim._dirty = false;
+      gsPrim._needsSnapshotRebuild = false;
+      gsPrim._selectedTileSet = new Set();
+      gsPrim._selectedTilesStableFrames = 2;
+
+      const frameState = {
+        frameNumber: 1,
+        camera: {
+          viewMatrix: Matrix4.clone(Matrix4.IDENTITY, new Matrix4()),
+          positionWC: Cartesian3.clone(Cartesian3.ZERO, new Cartesian3()),
+          directionWC: Cartesian3.clone(Cartesian3.UNIT_Z, new Cartesian3()),
+        },
+        context: { defaultTexture: {} },
+        commandList: [],
+        passes: {
+          pick: false,
+        },
+      };
+
+      gsPrim.update(frameState);
+
+      expect(gsPrim._pendingSnapshot).toBeDefined();
+      expect(gsPrim._pendingSnapshot.state).toBe("TEXTURE_READY");
+      expect(gsPrim._pendingSortPromise).toBeUndefined();
+      gsPrim.destroy();
+    });
+
+    it("inflates maximumScreenSpaceError during traversal and restores it when splatBudgetSSEScale > 1", function () {
+      let capturedSSEDuringTraversal;
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        maximumScreenSpaceError: 16,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {
+          capturedSSEDuringTraversal = this.maximumScreenSpaceError;
+        },
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      gsPrim._splatBudgetSSEScale = 5.0;
+
+      const frameState = {
+        frameNumber: 1,
+        camera: {
+          viewMatrix: Matrix4.clone(Matrix4.IDENTITY, new Matrix4()),
+          positionWC: Cartesian3.clone(Cartesian3.ZERO, new Cartesian3()),
+          directionWC: Cartesian3.clone(Cartesian3.UNIT_Z, new Cartesian3()),
+        },
+        context: { defaultTexture: {} },
+        commandList: [],
+        passes: { pick: false },
+      };
+
+      gsPrim._wrappedUpdate(frameState);
+
+      // SSE seen inside traversal must be originalSSE × scale
+      expect(capturedSSEDuringTraversal).toBe(80);
+      // SSE must be restored to original value afterward
+      expect(tileset.maximumScreenSpaceError).toBe(16);
+      gsPrim.destroy();
+    });
+
+    it("does not modify maximumScreenSpaceError when splatBudgetSSEScale is 1", function () {
+      let capturedSSEDuringTraversal;
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        maximumScreenSpaceError: 16,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {
+          capturedSSEDuringTraversal = this.maximumScreenSpaceError;
+        },
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      gsPrim._splatBudgetSSEScale = 1.0;
+
+      const frameState = {
+        frameNumber: 1,
+        camera: {
+          viewMatrix: Matrix4.clone(Matrix4.IDENTITY, new Matrix4()),
+          positionWC: Cartesian3.clone(Cartesian3.ZERO, new Cartesian3()),
+          directionWC: Cartesian3.clone(Cartesian3.UNIT_Z, new Cartesian3()),
+        },
+        context: { defaultTexture: {} },
+        commandList: [],
+        passes: { pick: false },
+      };
+
+      gsPrim._wrappedUpdate(frameState);
+
+      expect(capturedSSEDuringTraversal).toBe(16);
+      expect(tileset.maximumScreenSpaceError).toBe(16);
+      gsPrim.destroy();
+    });
+
+    it("transformTile bakes tileset transform into splat positions", function () {
+      const tilesetMock = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: { center: Cartesian3.ZERO },
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset: tilesetMock });
+      tilesetMock.gaussianSplatPrimitive = gsPrim;
+      // Override axis correction and rootTransform to identity so the test
+      // isolates the computedTransform baking behavior.
+      gsPrim._axisCorrectionMatrix = Matrix4.clone(Matrix4.IDENTITY);
+      gsPrim._rootTransform = Matrix4.clone(Matrix4.IDENTITY);
+      // computedTransform represents the product of tileset.modelMatrix and
+      // tile transforms.  The baked output position should equal the transformed
+      // input, not be cancelled by toLocal.
+      const translation = new Cartesian3(5, 3, 1);
+      const computedTransform = Matrix4.fromTranslation(
+        translation,
+        new Matrix4(),
+      );
+      const srcPositions = new Float32Array([0, 0, 0]);
+      const srcRotations = new Float32Array([0, 0, 0, 1]);
+      const srcScales = new Float32Array([1, 1, 1]);
+      const outPositions = new Float32Array(3);
+      const outRotations = new Float32Array(4);
+      const outScales = new Float32Array(3);
+      const tile = {
+        computedTransform: computedTransform,
+        tileset: tilesetMock,
+        content: {
+          gltfPrimitive: {
+            attributes: [
+              {
+                semantic: VertexAttributeSemantic.POSITION,
+                typedArray: srcPositions,
+              },
+              {
+                semantic: VertexAttributeSemantic.ROTATION,
+                typedArray: srcRotations,
+              },
+              {
+                semantic: VertexAttributeSemantic.SCALE,
+                typedArray: srcScales,
+              },
+            ],
+          },
+          worldTransform: Matrix4.clone(Matrix4.IDENTITY),
+          positions: outPositions,
+          rotations: outRotations,
+          scales: outScales,
+        },
+      };
+      GaussianSplatPrimitive.transformTile(tile);
+      // The translated position must be baked into the output values.
+      expect(outPositions[0]).toBeCloseTo(translation.x, 5);
+      expect(outPositions[1]).toBeCloseTo(translation.y, 5);
+      expect(outPositions[2]).toBeCloseTo(translation.z, 5);
+      expect(tile.content._transformed).toBe(true);
+      gsPrim.destroy();
+    });
+
+    it("transformTile re-applies from original glTF attributes when the transform changes", function () {
+      const tilesetMock = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: { center: Cartesian3.ZERO },
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset: tilesetMock });
+      tilesetMock.gaussianSplatPrimitive = gsPrim;
+      gsPrim._axisCorrectionMatrix = Matrix4.clone(Matrix4.IDENTITY);
+      gsPrim._rootTransform = Matrix4.clone(Matrix4.IDENTITY);
+
+      const srcPositions = new Float32Array([1, 0, 0]);
+      const srcRotations = new Float32Array([0, 0, 0, 1]);
+      const srcScales = new Float32Array([1, 1, 1]);
+      const outPositions = new Float32Array(3);
+      const outRotations = new Float32Array(4);
+      const outScales = new Float32Array(3);
+      const tile = {
+        computedTransform: Matrix4.fromTranslation(
+          new Cartesian3(5, 0, 0),
+          new Matrix4(),
+        ),
+        tileset: tilesetMock,
+        content: {
+          gltfPrimitive: {
+            attributes: [
+              {
+                semantic: VertexAttributeSemantic.POSITION,
+                typedArray: srcPositions,
+              },
+              {
+                semantic: VertexAttributeSemantic.ROTATION,
+                typedArray: srcRotations,
+              },
+              {
+                semantic: VertexAttributeSemantic.SCALE,
+                typedArray: srcScales,
+              },
+            ],
+          },
+          worldTransform: Matrix4.clone(Matrix4.IDENTITY),
+          positions: outPositions,
+          rotations: outRotations,
+          scales: outScales,
+          _transformed: false,
+          _lastSplatTransform: undefined,
+        },
+      };
+
+      GaussianSplatPrimitive.transformTile(tile);
+      expect(outPositions[0]).toBeCloseTo(6.0, 5);
+      expect(outPositions[1]).toBeCloseTo(0.0, 5);
+      expect(outPositions[2]).toBeCloseTo(0.0, 5);
+      expect(tile.content._transformed).toBe(true);
+
+      tile.computedTransform = Matrix4.fromTranslation(
+        new Cartesian3(10, 0, 0),
+        new Matrix4(),
+      );
+      GaussianSplatPrimitive.transformTile(tile);
+
+      expect(outPositions[0]).toBeCloseTo(11.0, 5);
+      expect(outPositions[1]).toBeCloseTo(0.0, 5);
+      expect(outPositions[2]).toBeCloseTo(0.0, 5);
+      gsPrim.destroy();
+    });
+
+    it("transformTile skips recomputing when the cached transform is unchanged", function () {
+      const tilesetMock = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: { center: Cartesian3.ZERO },
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset: tilesetMock });
+      tilesetMock.gaussianSplatPrimitive = gsPrim;
+      gsPrim._axisCorrectionMatrix = Matrix4.clone(Matrix4.IDENTITY);
+      gsPrim._rootTransform = Matrix4.clone(Matrix4.IDENTITY);
+
+      const transform = Matrix4.fromTranslation(
+        new Cartesian3(5, 3, 1),
+        new Matrix4(),
+      );
+      const outPositions = new Float32Array([123, 456, 789]);
+      const outRotations = new Float32Array([9, 8, 7, 6]);
+      const outScales = new Float32Array([4, 5, 6]);
+      const tile = {
+        computedTransform: transform,
+        tileset: tilesetMock,
+        content: {
+          gltfPrimitive: {
+            attributes: [
+              {
+                semantic: VertexAttributeSemantic.POSITION,
+                typedArray: new Float32Array([1, 2, 3]),
+              },
+              {
+                semantic: VertexAttributeSemantic.ROTATION,
+                typedArray: new Float32Array([0, 0, 0, 1]),
+              },
+              {
+                semantic: VertexAttributeSemantic.SCALE,
+                typedArray: new Float32Array([1, 1, 1]),
+              },
+            ],
+          },
+          worldTransform: Matrix4.clone(Matrix4.IDENTITY),
+          positions: outPositions,
+          rotations: outRotations,
+          scales: outScales,
+          _transformed: true,
+          _lastSplatTransform: Matrix4.clone(transform, new Matrix4()),
+        },
+      };
+
+      GaussianSplatPrimitive.transformTile(tile);
+
+      expect(Array.from(outPositions)).toEqual([123, 456, 789]);
+      expect(Array.from(outRotations)).toEqual([9, 8, 7, 6]);
+      expect(Array.from(outScales)).toEqual([4, 5, 6]);
+      gsPrim.destroy();
+    });
+
+    it("Check Spherical Harmonic specular on a Gaussian splats tileset", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        sphericalHarmonicUrl,
+        options,
+      );
+
+      const boundingSphere = tileset.boundingSphere;
+      const yellowish = new HeadingPitchRange(
+        CesiumMath.toRadians(231),
+        CesiumMath.toRadians(-75),
+        tileset.boundingSphere.radius / 10,
+      );
+      const orangeish = new HeadingPitchRange(
+        CesiumMath.toRadians(2),
+        CesiumMath.toRadians(-76),
+        tileset.boundingSphere.radius / 10,
+      );
+      const purplish = new HeadingPitchRange(
+        CesiumMath.toRadians(100),
+        CesiumMath.toRadians(66),
+        tileset.boundingSphere.radius / 10,
+      );
+      const targetOrange = { red: 210, green: 156, blue: 98 };
+      const targetYellow = { red: 189, green: 173, blue: 97 };
+      const targetPurple = { red: 127, green: 80, blue: 141 };
+
+      tileset.show = true;
+
+      const enu = FixedFrameTransforms.eastNorthUpToFixedFrame(
+        boundingSphere.center,
+      );
+
+      scene.camera.lookAtTransform(enu, yellowish);
+
+      await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
+
+      const gsPrim = tileset.gaussianSplatPrimitive;
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return gsPrim.isStable;
+      });
+
+      for (let i = 0; i < 100; ++i) {
+        scene.renderForSpecs();
+      }
+
+      scene.renderForSpecs();
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[samplePosition + 0]).toBeCloseTo(targetYellow.red, -10);
+        expect(rgba[samplePosition + 1]).toBeCloseTo(targetYellow.green, -10);
+        expect(rgba[samplePosition + 2]).toBeCloseTo(targetYellow.blue, -10);
+      });
+
+      scene.camera.lookAtTransform(enu, orangeish);
+
+      await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return gsPrim.isStable;
+      });
+
+      scene.renderForSpecs();
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[samplePosition + 0]).toBeCloseTo(targetOrange.red, -10);
+        expect(rgba[samplePosition + 1]).toBeCloseTo(targetOrange.green, -10);
+        expect(rgba[samplePosition + 2]).toBeCloseTo(targetOrange.blue, -10);
+      });
+      scene.camera.lookAtTransform(enu, purplish);
+
+      await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return gsPrim.isStable;
+      });
+
+      scene.renderForSpecs();
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[samplePosition + 0]).toBeCloseTo(targetPurple.red, -10);
+        expect(rgba[samplePosition + 1]).toBeCloseTo(targetPurple.green, -10);
+        expect(rgba[samplePosition + 2]).toBeCloseTo(targetPurple.blue, -10);
+      });
+    });
+
+    it("customShader defaults to DefaultCustomShader", function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      expect(gsPrim.customShader).toBe(
+        GaussianSplatPrimitive.DefaultCustomShader,
+      );
+      gsPrim.destroy();
+    });
+
+    it("setting customShader to a different instance marks _shaderDirty", function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      expect(gsPrim._shaderDirty).toBe(false);
+
+      const newShader = new CustomShader({
+        fragmentShaderText:
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}",
+      });
+      gsPrim.customShader = newShader;
+
+      expect(gsPrim._shaderDirty).toBe(true);
+      expect(gsPrim.customShader).toBe(newShader);
+      gsPrim.destroy();
+    });
+
+    it("setting customShader to the same instance does not mark _shaderDirty", function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      const originalShader = gsPrim.customShader;
+
+      gsPrim.customShader = originalShader;
+
+      expect(gsPrim._shaderDirty).toBe(false);
+      gsPrim.destroy();
+    });
+
+    it("setting customShader to undefined resets to DefaultCustomShader", function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const shader = new CustomShader({
+        fragmentShaderText:
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}",
+      });
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      gsPrim.customShader = shader;
+      expect(gsPrim.customShader).toBe(shader);
+
+      gsPrim.customShader = undefined;
+
+      expect(gsPrim.customShader).toBe(
+        GaussianSplatPrimitive.DefaultCustomShader,
+      );
+      gsPrim.destroy();
+    });
+
+    it("customShaderCompilationEvent is defined and is an Event", function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      expect(gsPrim.customShaderCompilationEvent).toBeDefined();
+      expect(typeof gsPrim.customShaderCompilationEvent.addEventListener).toBe(
+        "function",
+      );
+      gsPrim.destroy();
+    });
+
+    it("update() syncs customShader from tileset when tileset.customShader differs", function () {
+      const newShader = new CustomShader({
+        fragmentShaderText:
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}",
+      });
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        customShader: newShader,
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      // Construct without passing customShader — primitive starts with DefaultCustomShader.
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      expect(gsPrim.customShader).toBe(
+        GaussianSplatPrimitive.DefaultCustomShader,
+      );
+
+      const frameState = {
+        frameNumber: 1,
+        camera: {
+          viewMatrix: Matrix4.clone(Matrix4.IDENTITY, new Matrix4()),
+          positionWC: Cartesian3.clone(Cartesian3.ZERO, new Cartesian3()),
+          directionWC: Cartesian3.clone(Cartesian3.UNIT_Z, new Cartesian3()),
+        },
+        context: { defaultTexture: {} },
+        commandList: [],
+        passes: { pick: false },
+      };
+
+      gsPrim.update(frameState);
+
+      expect(gsPrim.customShader).toBe(newShader);
+      gsPrim.destroy();
     });
   },
   "WebGL",

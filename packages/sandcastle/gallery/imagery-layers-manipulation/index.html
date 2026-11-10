@@ -1,0 +1,66 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  #toolbar table tr {
+    transform: translateY(0);
+    transition: transform 0.4s ease-out;
+  }
+
+  #toolbar table tr.up {
+    transform: translateY(33px);
+    transition: none;
+  }
+
+  #toolbar table tr.down {
+    transform: translateY(-33px);
+    transition: none;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody data-bind="foreach: layers">
+      <tr
+        data-bind="css: { up: $parent.upLayer === $data, down: $parent.downLayer === $data }"
+      >
+        <td><input type="checkbox" data-bind="checked: show" /></td>
+        <td>
+          <span
+            data-bind="text: name, visible: !$parent.isSelectableLayer($data)"
+          ></span>
+          <select
+            data-bind="visible: $parent.isSelectableLayer($data), options: $parent.baseLayers, optionsText: 'name', value: $parent.selectedLayer"
+          ></select>
+        </td>
+        <td>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            data-bind="value: alpha, valueUpdate: 'input'"
+          />
+        </td>
+        <td>
+          <button
+            type="button"
+            class="cesium-button"
+            data-bind="click: function() { $parent.raise($data, $index()); }, visible: $parent.canRaise($index())"
+          >
+            ▲
+          </button>
+        </td>
+        <td>
+          <button
+            type="button"
+            class="cesium-button"
+            data-bind="click: function() { $parent.lower($data, $index()); }, visible: $parent.canLower($index())"
+          >
+            ▼
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -1,4 +1,4 @@
-import Frozen from "../Core/Frozen.js";
+import { Frozen } from "@cesium/core";
 import IonImageryProvider from "./IonImageryProvider.js";
 import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
 
@@ -7,7 +7,7 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
  *
  * @function
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {IonWorldImageryStyle} [options.style=IonWorldImageryStyle] The style of base imagery, only AERIAL, AERIAL_WITH_LABELS, and ROAD are currently supported.
  * @returns {Promise<IonImageryProvider>}
  *

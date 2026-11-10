@@ -1,0 +1,354 @@
+// @ts-check
+
+import { assert } from "@cesium/core";
+import PickId from "../Renderer/PickId.js";
+import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
+
+/** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
+
+const { DirtyFlags } = BufferPrimitiveCollection;
+
+/**
+ * View bound to the underlying buffer data of a {@link BufferPrimitiveCollection}. Abstract.
+ *
+ * <p>BufferPrimitive instances are intended to be reused when iterating over large collections,
+ * and temporarily bound to a primitive index while performing read/write operations on that primitive,
+ * before being rebound to the next primitive, using the
+ * {@link https://en.wikipedia.org/wiki/Flyweight_pattern|flyweight pattern}.</p>
+ *
+ * @see BufferPrimitiveCollection
+ * @see BufferPrimitiveMaterial
+ * @see BufferPoint
+ * @see BufferPolyline
+ * @see BufferPolygon
+ *
+ * @abstract
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+class BufferPrimitive {
+  /**
+   * Collecton containing the primitive(s) for which this instance currently
+   * provides a view.
+   *
+   * @type {BufferPrimitiveCollection<BufferPrimitive>}
+   * @ignore
+   */
+  _collection = null;
+
+  /**
+   * Index of the primitive for which this instance currently provides a view.
+   *
+   * @type {number}
+   * @ignore
+   */
+  _index = -1;
+
+  /**
+   * Byte offset, into the collection's primitive buffer, of the primitive for
+   * which this instance currently provides a view.
+   *
+   * @type {number}
+   * @ignore
+   */
+  _byteOffset = -1;
+
+  /**
+   * Binary layout for this primitive type in collection's primitive buffer.
+   * Each `Layout.MY_KEY_U32` entry is an offset in bytes, relative to the
+   * start offset of the primitive, with the suffix indicating the data type
+   * stored at that offset.
+   *
+   * The final entry, `__BYTE_LENGTH`, is not a pointer into a buffer — its
+   * literal value is the total byte length of one primitive in the primitive
+   * buffer, exclusive of other buffers.
+   *
+   * @ignore
+   */
+  static Layout = {
+    /**
+     * Feature ID associated with the primitive; not required to be unique.
+     * @type {number}
+     * @ignore
+     */
+    FEATURE_ID_U32: 0,
+
+    /**
+     * Boolean (0 or 1) flag indicating whether primitive is shown.
+     * @type {number}
+     * @ignore
+     */
+    SHOW_U8: 4,
+
+    /**
+     * Boolean (0 or 1) flag indicating whether primitive is dirty.
+     * @type {number}
+     * @ignore
+     */
+    DIRTY_U8: 5,
+
+    /**
+     * Pick ID (uint32) of primitive.
+     * @type {number}
+     * @ignore
+     */
+    PICK_ID_U32: 8,
+
+    /**
+     * Byte length of one primitive in the primitive buffer, exclusive of
+     * other buffers. Literal value, not a pointer.
+     * @type {number}
+     * @ignore
+     */
+    __BYTE_LENGTH: 12,
+  };
+
+  /////////////////////////////////////////////////////////////////////////////
+  // LIFECYCLE
+
+  /**
+   * Copies data from source primitive to result. If the result primitive is not
+   * new (the last primitive in the collection) then source and result primitives
+   * must have the same vertex counts.
+   *
+   * @param {BufferPrimitive} primitive
+   * @param {BufferPrimitive} result
+   * @returns {BufferPrimitive}
+   */
+  static clone(primitive, result) {
+    const SrcMaterialClass = primitive._collection._getMaterialClass();
+
+    //>>includeStart('debug', pragmas.debug);
+    const DstMaterialClass = result._collection._getMaterialClass();
+    assert(SrcMaterialClass === DstMaterialClass, "Incompatible materials");
+    //>>includeEnd('debug');
+
+    result.featureId = primitive.featureId;
+    result.show = primitive.show;
+    result.setMaterial(primitive.getMaterial(new SrcMaterialClass()));
+    return result;
+  }
+
+  /**
+   * Returns true if this primitive's memory footprint is resizable. Only the
+   * newest (most recently created) primitive in a collection can be resized,
+   * to guarantee fast and stable performance.
+   *
+   * @returns {boolean}
+   * @protected
+   * @ignore
+   */
+  _isResizable() {
+    return this._index === this._collection.primitiveCount - 1;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // ACCESSORS
+
+  /**
+   * Feature ID associated with the primitive; not required to be unique.
+   * @type {number}
+   */
+  get featureId() {
+    return this._getUint32(BufferPrimitive.Layout.FEATURE_ID_U32);
+  }
+
+  set featureId(featureId) {
+    this._setUint32(BufferPrimitive.Layout.FEATURE_ID_U32, featureId);
+  }
+
+  /**
+   * Whether primitive is shown.
+   * @type {boolean}
+   */
+  get show() {
+    return this._getUint8(BufferPrimitive.Layout.SHOW_U8) === 1;
+  }
+
+  set show(show) {
+    this._setUint8(BufferPrimitive.Layout.SHOW_U8, show ? 1 : 0);
+  }
+
+  /**
+   * @param {BufferPrimitiveMaterial} result
+   * @returns {BufferPrimitiveMaterial}
+   */
+  getMaterial(result) {
+    const collection = this._collection;
+    const MaterialClass = collection._getMaterialClass();
+
+    return MaterialClass.unpack(
+      collection._materialView,
+      this._index * MaterialClass.packedLength,
+      result,
+    );
+  }
+
+  /**
+   * @param {BufferPrimitiveMaterial} material
+   */
+  setMaterial(material) {
+    const collection = this._collection;
+    const MaterialClass = collection._getMaterialClass();
+
+    MaterialClass.pack(
+      material,
+      collection._materialView,
+      this._index * MaterialClass.packedLength,
+    );
+
+    this._collection._makeDirty(DirtyFlags.PROPERTIES, this._index);
+
+    return material;
+  }
+
+  /**
+   * Whether the primitive requires an update on next render. Renderers should
+   * _not_ iterate over all primitives each frame, but must instead inspect
+   * only the dirty range of the parent collection. This flag is managed
+   * automatically, by primitive setters and collection renderers.
+   *
+   * @type {boolean}
+   * @ignore
+   *
+   * @see BufferPrimitiveCollection#_dirtyOffset
+   * @see BufferPrimitiveCollection#_dirtyCount
+   * @see BufferPrimitiveCollection#_dirtyFlags
+   */
+  get _dirty() {
+    return this._getUint8(BufferPrimitive.Layout.DIRTY_U8) === 1;
+  }
+
+  /**
+   * Pick ID (uint32) of primitive.
+   * @type {number}
+   * @ignore
+   */
+  get _pickId() {
+    return this._getUint32(BufferPrimitive.Layout.PICK_ID_U32);
+  }
+
+  set _pickId(pickId) {
+    this._setUint32(BufferPrimitive.Layout.PICK_ID_U32, pickId);
+  }
+
+  /**
+   * User-defined pick object, if any. After a primitive has been rendered, its
+   * pick object can no longer be changed.
+   *
+   * @type {object|undefined}
+   */
+  get pickObject() {
+    return this._collection._customPickObjects[this._index];
+  }
+
+  set pickObject(pickObject) {
+    //>>includeStart('debug', pragmas.debug);
+    assert(this._pickId === PickId.NULL_PICK_ID, ".pickObject locked");
+    //>>includeEnd('debug');
+
+    this._collection._customPickObjects[this._index] = pickObject;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // BUFFER ACCESSORS
+
+  /**
+   * @param {number} itemByteOffset
+   * @returns {number}
+   * @ignore
+   */
+  _getUint8(itemByteOffset) {
+    return this._collection._primitiveView.getUint8(
+      this._byteOffset + itemByteOffset,
+    );
+  }
+
+  /**
+   * @param {number} itemByteOffset
+   * @param {number} itemValue
+   * @ignore
+   */
+  _setUint8(itemByteOffset, itemValue) {
+    this._collection._primitiveView.setUint8(
+      this._byteOffset + itemByteOffset,
+      itemValue,
+    );
+    this._collection._makeDirty(DirtyFlags.PROPERTIES, this._index);
+  }
+
+  /**
+   * @param {number} itemByteOffset
+   * @returns {number}
+   * @ignore
+   */
+  _getUint32(itemByteOffset) {
+    return this._collection._primitiveView.getUint32(
+      this._byteOffset + itemByteOffset,
+      true,
+    );
+  }
+
+  /**
+   * @param {number} itemByteOffset
+   * @param {number} itemValue
+   * @ignore
+   */
+  _setUint32(itemByteOffset, itemValue) {
+    this._collection._primitiveView.setUint32(
+      this._byteOffset + itemByteOffset,
+      itemValue,
+      true,
+    );
+    this._collection._makeDirty(DirtyFlags.PROPERTIES, this._index);
+  }
+
+  /**
+   * @param {number} itemByteOffset
+   * @returns {number}
+   * @ignore
+   */
+  _getFloat32(itemByteOffset) {
+    return this._collection._primitiveView.getFloat32(
+      this._byteOffset + itemByteOffset,
+      true,
+    );
+  }
+
+  /**
+   * @param {number} itemByteOffset
+   * @param {number} itemValue
+   * @ignore
+   */
+  _setFloat32(itemByteOffset, itemValue) {
+    this._collection._primitiveView.setFloat32(
+      this._byteOffset + itemByteOffset,
+      itemValue,
+      true,
+    );
+    this._collection._makeDirty(DirtyFlags.PROPERTIES, this._index);
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // DEBUG
+
+  /**
+   * Returns a JSON-serializable object representing the primitive. This encoding
+   * is not memory-efficient, and should generally be used for debugging and
+   * testing.
+   *
+   * @returns {object} JSON-serializable object.
+   */
+  toJSON() {
+    const collection = this._collection;
+    const MaterialClass = collection._getMaterialClass();
+
+    return {
+      featureId: this.featureId,
+      show: this.show,
+      dirty: this._dirty,
+      material: this.getMaterial(new MaterialClass()).toJSON(),
+    };
+  }
+}
+
+export default BufferPrimitive;

@@ -4,6 +4,8 @@ import {
   ReferenceFrame,
   TimeInterval,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
   PositionProperty,
   TimeIntervalCollectionPositionProperty,
 } from "../../index.js";

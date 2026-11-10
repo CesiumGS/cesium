@@ -1,6 +1,4 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import combine from "../Core/combine.js";
-import defined from "../Core/defined.js";
+import { Cartesian3, combine, defined } from "@cesium/core";
 import ShaderBuilder from "../Renderer/ShaderBuilder.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
 import VoxelUtils from "../Shaders/Voxels/VoxelUtils.js";
@@ -8,15 +6,15 @@ import VoxelFS from "../Shaders/Voxels/VoxelFS.js";
 import VoxelVS from "../Shaders/Voxels/VoxelVS.js";
 import IntersectionUtils from "../Shaders/Voxels/IntersectionUtils.js";
 import IntersectDepth from "../Shaders/Voxels/IntersectDepth.js";
-import IntersectClippingPlanes from "../Shaders/Voxels/IntersectClippingPlanes.js";
+import IntersectPlane from "../Shaders/Voxels/IntersectPlane.js";
 import IntersectLongitude from "../Shaders/Voxels/IntersectLongitude.js";
 import IntersectBox from "../Shaders/Voxels/IntersectBox.js";
 import IntersectCylinder from "../Shaders/Voxels/IntersectCylinder.js";
 import IntersectEllipsoid from "../Shaders/Voxels/IntersectEllipsoid.js";
 import Intersection from "../Shaders/Voxels/Intersection.js";
-import convertUvToBox from "../Shaders/Voxels/convertUvToBox.js";
-import convertUvToCylinder from "../Shaders/Voxels/convertUvToCylinder.js";
-import convertUvToEllipsoid from "../Shaders/Voxels/convertUvToEllipsoid.js";
+import convertLocalToBoxUv from "../Shaders/Voxels/convertLocalToBoxUv.js";
+import convertLocalToCylinderUv from "../Shaders/Voxels/convertLocalToCylinderUv.js";
+import convertLocalToEllipsoidUv from "../Shaders/Voxels/convertLocalToEllipsoidUv.js";
 import Octree from "../Shaders/Voxels/Octree.js";
 import Megatexture from "../Shaders/Voxels/Megatexture.js";
 import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
@@ -62,7 +60,7 @@ function VoxelRenderResources(primitive) {
   // The reason this uniform is added by shader builder is because some of the
   // dynamically generated shader code reads from it.
   shaderBuilder.addUniform(
-    "sampler2D",
+    "sampler3D",
     "u_megatextureTextures[METADATA_COUNT]",
     ShaderDestination.FRAGMENT,
   );
@@ -83,6 +81,12 @@ function VoxelRenderResources(primitive) {
 
   this.clippingPlanes = clippingPlanes;
   this.clippingPlanesLength = clippingPlanesLength;
+
+  const renderBoundPlanes = primitive._shape.renderBoundPlanes;
+  const renderBoundPlanesLength = renderBoundPlanes?.length ?? 0;
+
+  this.renderBoundPlanes = renderBoundPlanes;
+  this.renderBoundPlanesLength = renderBoundPlanesLength;
 
   // Build shader
   shaderBuilder.addVertexLines([VoxelVS]);
@@ -116,8 +120,10 @@ function VoxelRenderResources(primitive) {
     "#line 0",
     Octree,
     VoxelUtils,
-    IntersectionUtils,
     Megatexture,
+    IntersectionUtils,
+    IntersectPlane,
+    IntersectDepth,
   ]);
 
   if (clippingPlanesLength > 0) {
@@ -138,9 +144,8 @@ function VoxelRenderResources(primitive) {
         ShaderDestination.FRAGMENT,
       );
     }
-    shaderBuilder.addFragmentLines([IntersectClippingPlanes]);
   }
-  shaderBuilder.addFragmentLines([IntersectDepth]);
+
   if (primitive._depthTest) {
     shaderBuilder.addDefine(
       "DEPTH_TEST",
@@ -151,20 +156,20 @@ function VoxelRenderResources(primitive) {
 
   if (shapeType === "BOX") {
     shaderBuilder.addFragmentLines([
-      convertUvToBox,
+      convertLocalToBoxUv,
       IntersectBox,
       Intersection,
     ]);
   } else if (shapeType === "CYLINDER") {
     shaderBuilder.addFragmentLines([
-      convertUvToCylinder,
+      convertLocalToCylinderUv,
       IntersectLongitude,
       IntersectCylinder,
       Intersection,
     ]);
   } else if (shapeType === "ELLIPSOID") {
     shaderBuilder.addFragmentLines([
-      convertUvToEllipsoid,
+      convertLocalToEllipsoidUv,
       IntersectLongitude,
       IntersectEllipsoid,
       Intersection,
@@ -230,13 +235,6 @@ function VoxelRenderResources(primitive) {
   if (primitive._useLogDepth) {
     shaderBuilder.addDefine(
       "LOG_DEPTH_READ_ONLY",
-      undefined,
-      ShaderDestination.FRAGMENT,
-    );
-  }
-  if (primitive._nearestSampling) {
-    shaderBuilder.addDefine(
-      "NEAREST_SAMPLING",
       undefined,
       ShaderDestination.FRAGMENT,
     );

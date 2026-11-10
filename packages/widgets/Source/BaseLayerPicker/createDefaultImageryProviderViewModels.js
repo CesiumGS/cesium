@@ -302,6 +302,91 @@ of the world.\nhttp://www.openstreetmap.org",
     }),
   );
 
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Google Maps Satellite",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/googleSatellite.png",
+      ),
+      tooltip: "Imagery from Google Maps",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3830182);
+      },
+    }),
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Google Maps Satellite with Labels",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/googleSatelliteLabels.png",
+      ),
+      tooltip: "Imagery with place labels from Google Maps",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3830183);
+      },
+    }),
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Google Maps Roadmap",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/googleRoadmap.png",
+      ),
+      tooltip:
+        "Labeled roads and other features on a base landscape from Google Maps",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3830184);
+      },
+    }),
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Google Maps Contour",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/googleContour.png",
+      ),
+      tooltip:
+        "Hillshade mapping, contour lines, natural features (roadmap features hidden) from Google Maps",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3830186);
+      },
+    }),
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Azure Maps Aerial",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/azureAerial.png",
+      ),
+      tooltip: "Imagery from Azure Maps",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3891168);
+      },
+    }),
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Azure Maps Roads",
+      iconUrl: buildModuleUrl("Widgets/Images/ImageryProviders/azureRoads.png"),
+      tooltip:
+        "Labeled roads and other features on a base landscape from Azure Maps",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3891169);
+      },
+    }),
+  );
+
   return providerViewModels;
 }
 export default createDefaultImageryProviderViewModels;

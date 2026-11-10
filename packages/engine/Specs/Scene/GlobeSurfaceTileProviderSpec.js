@@ -1,18 +1,24 @@
 import {
   Cartesian3,
   Cartesian4,
-  CesiumTerrainProvider,
   Color,
-  Credit,
-  CreditDisplay,
-  defined,
   Ellipsoid,
-  EllipsoidTerrainProvider,
   GeographicProjection,
   HeadingPitchRoll,
   Rectangle,
-  Resource,
   WebMercatorProjection,
+  defined,
+} from "@cesium/core";
+import {
+  BufferPolygon,
+  BufferPolygonCollection,
+  BufferPolygonMaterial,
+  BufferPolyline,
+  BufferPolylineCollection,
+  CesiumTerrainProvider,
+  Credit,
+  CreditDisplay,
+  EllipsoidTerrainProvider,
   ContextLimits,
   RenderState,
   BlendingState,
@@ -24,6 +30,7 @@ import {
   Globe,
   GlobeSurfaceShaderSet,
   GlobeSurfaceTileProvider,
+  HeightReference,
   ImageryLayerCollection,
   Model,
   QuadtreeTile,
@@ -31,9 +38,9 @@ import {
   SceneMode,
   SingleTileImageryProvider,
   SplitDirection,
+  VectorProvider,
   WebMapServiceImageryProvider,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -106,8 +113,6 @@ describe(
     afterEach(function () {
       scene.imageryLayers.removeAll();
       scene.primitives.removeAll();
-      Resource._Implementations.loadWithXhr =
-        Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("conforms to QuadtreeTileProvider interface", function () {
@@ -918,6 +923,144 @@ describe(
       expect(tileCount).toBeGreaterThanOrEqual(1);
     });
 
+    it("reserves texture units for draped vectors when splitting imagery across passes", async function () {
+      const provider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Red16x16.png",
+      );
+      for (let i = 0; i < ContextLimits.maximumTextureImageUnits; ++i) {
+        scene.imageryLayers.addImageryProvider(provider);
+      }
+
+      const positions = Cartesian3.fromDegreesArray([
+        0.02, 0.02, 0.15, 0.02, 0.15, 0.15, 0.02, 0.15,
+      ]);
+      const flatPositions = Cartesian3.packArray(
+        positions,
+        new Float64Array(12),
+      );
+      const polylines = new BufferPolylineCollection({
+        heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      });
+      polylines.add({ positions: flatPositions }, new BufferPolyline());
+      const polygons = new BufferPolygonCollection({
+        heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      });
+      polygons.add(
+        {
+          positions: flatPositions,
+          triangles: new Uint16Array([0, 1, 2, 0, 2, 3]),
+        },
+        new BufferPolygon(),
+      );
+      scene.primitives.add(polylines);
+      scene.primitives.add(polygons);
+
+      switchViewMode(
+        SceneMode.SCENE3D,
+        new GeographicProjection(Ellipsoid.WGS84),
+      );
+
+      await updateUntilDone(scene.globe);
+      expect(scene).notToRender([0, 0, 0, 255]);
+
+      let vectorTileCount = 0;
+      const commandsByTile = new Map();
+      for (const command of scene.frameState.commandList) {
+        if (!(command.owner instanceof QuadtreeTile)) {
+          continue;
+        }
+        const vectorTextureCount = VectorProvider.getTextureCount(
+          command.owner.data.vectorData,
+        );
+        expect(
+          command.uniformMap.u_dayTextures().length + vectorTextureCount,
+        ).toBeLessThanOrEqual(ContextLimits.maximumTextureImageUnits);
+        if (!commandsByTile.has(command.owner)) {
+          commandsByTile.set(command.owner, []);
+        }
+        commandsByTile.get(command.owner).push(command);
+      }
+
+      for (const [tile, commands] of commandsByTile) {
+        if (VectorProvider.getTextureCount(tile.data.vectorData) === 0) {
+          continue;
+        }
+        vectorTileCount++;
+        expect(commands.length).toBeGreaterThan(1);
+        commands.forEach((command, i) => {
+          const isFinalPass = i === commands.length - 1;
+          const defines = command.shaderProgram.fragmentShaderSource.defines;
+          expect(defines.includes("HAS_VECTOR_LAYER")).toBe(isFinalPass);
+          expect(defined(command.pickId)).toBe(isFinalPass);
+        });
+      }
+      expect(vectorTileCount).toBeGreaterThan(0);
+    });
+
+    it("composites a translucent draped vector once across imagery passes", async function () {
+      const red = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Red16x16.png",
+      );
+      scene.imageryLayers.addImageryProvider(red);
+
+      const polygons = new BufferPolygonCollection({
+        heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      });
+      polygons.add(
+        {
+          positions: Cartesian3.packArray(
+            Cartesian3.fromDegreesArray([0, 0, 0.2, 0, 0.2, 0.2, 0, 0.2]),
+            new Float64Array(12),
+          ),
+          triangles: new Uint16Array([0, 1, 2, 0, 2, 3]),
+          material: new BufferPolygonMaterial({
+            color: Color.BLUE.withAlpha(0.5),
+          }),
+        },
+        new BufferPolygon(),
+      );
+      scene.primitives.add(polygons);
+
+      switchViewMode(
+        SceneMode.SCENE3D,
+        new GeographicProjection(Ellipsoid.WGS84),
+      );
+      await updateUntilDone(scene.globe);
+
+      let singlePassColor;
+      expect(scene).toRenderAndCall((rgba) => {
+        singlePassColor = Array.from(rgba);
+      });
+
+      // Fully transparent layers force extra imagery passes without adding color.
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1;
+      const transparent = await SingleTileImageryProvider.fromUrl(
+        canvas.toDataURL(),
+      );
+      for (let i = 0; i < ContextLimits.maximumTextureImageUnits; ++i) {
+        scene.imageryLayers.addImageryProvider(transparent);
+      }
+      await updateUntilDone(scene.globe);
+
+      expect(scene).toRenderAndCall((rgba) => {
+        for (let i = 0; i < 4; i++) {
+          expect(Math.abs(rgba[i] - singlePassColor[i])).toBeLessThanOrEqual(3);
+        }
+      });
+
+      const passCounts = new Map();
+      for (const command of scene.frameState.commandList) {
+        if (command.owner instanceof QuadtreeTile) {
+          passCounts.set(
+            command.owner,
+            (passCounts.get(command.owner) ?? 0) + 1,
+          );
+        }
+      }
+      expect(Math.max(...passCounts.values())).toBeGreaterThan(1);
+    });
+
     it("adds terrain and imagery credits to the CreditDisplay", async function () {
       const CreditDisplayElement = CreditDisplay.CreditDisplayElement;
       const imageryCredit = new Credit("imagery credit");
@@ -931,41 +1074,8 @@ describe(
       scene.imageryLayers.addImageryProvider(provider);
 
       const terrainCredit = new Credit("terrain credit");
-
-      // Mock terrain tile loading
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        if (defined(url.match(/\/\d+\/\d+\/\d+\.terrain/))) {
-          Resource._DefaultImplementations.loadWithXhr(
-            "Data/CesiumTerrainTileJson/tile.32bitIndices.terrain",
-            responseType,
-            method,
-            data,
-            headers,
-            deferred,
-          );
-          return;
-        }
-
-        Resource._DefaultImplementations.loadWithXhr(
-          url,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType,
-        );
-      };
       scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json",
+        "Data/CesiumTerrainTileJson/QuantizedMesh",
         {
           credit: terrainCredit,
         },
@@ -1437,16 +1547,17 @@ describe(
         expect(tile.isClipped).toBe(false);
       });
 
-      it("destroys attached ClippingPolygonCollections that have been detached", function () {
+      it("detaches ClippingPolygonCollections without destroying them", function () {
         const globe = scene.globe;
         const collection = new ClippingPolygonCollection({
           polygons: [polygon],
         });
         globe.clippingPolygons = collection;
-        expect(collection.isDestroyed()).toBe(false);
+        expect(collection.length).toBe(1);
 
+        // Detaching drops the reference without destroying the collection.
         globe.clippingPolygons = undefined;
-        expect(collection.isDestroyed()).toBe(true);
+        expect(collection.length).toBe(1);
       });
 
       it("throws a DeveloperError when given a ClippingPolygonCollection attached to a Model", async function () {
@@ -1660,40 +1771,8 @@ describe(
     });
 
     it("hasWaterMask returns expected value", async function () {
-      // Mock terrain tile loading
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        if (defined(url.match(/\/\d+\/\d+\/\d+\.terrain/))) {
-          Resource._DefaultImplementations.loadWithXhr(
-            "Data/CesiumTerrainTileJson/tile.32bitIndices.terrain",
-            responseType,
-            method,
-            data,
-            headers,
-            deferred,
-          );
-          return;
-        }
-
-        Resource._DefaultImplementations.loadWithXhr(
-          url,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType,
-        );
-      };
       scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json",
+        "Data/CesiumTerrainTileJson/QuantizedMeshWithWaterMask",
         {
           requestWaterMask: true,
         },

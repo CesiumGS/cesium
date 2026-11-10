@@ -1,16 +1,18 @@
 import {
-  Camera,
   Cartesian3,
-  Cesium3DTileRefine,
-  Cesium3DTileStyle,
   Math as CesiumMath,
   Matrix4,
-  ModelType,
   OrthographicFrustum,
+  RuntimeError,
+} from "@cesium/core";
+import {
+  Camera,
+  Cesium3DTileRefine,
+  Cesium3DTileStyle,
+  ModelType,
   Pass,
   PointCloudStylingPipelineStage,
   PointCloudShading,
-  RuntimeError,
   ShaderBuilder,
   _shadersPointCloudStylingStageVS,
   VertexAttributeSemantic,
@@ -170,8 +172,11 @@ describe(
         scene.frameState,
       );
 
-      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "vec4 v_pointCloudColor;",
+      ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+        "out vec4 v_pointCloudColor;",
+      ]);
+      ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+        "in vec4 v_pointCloudColor;",
       ]);
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -217,8 +222,11 @@ describe(
         scene.frameState,
       );
 
-      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "vec4 v_pointCloudColor;",
+      ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+        "out vec4 v_pointCloudColor;",
+      ]);
+      ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+        "in vec4 v_pointCloudColor;",
       ]);
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -660,7 +668,15 @@ describe(
         "HAS_POINT_CLOUD_BACK_FACE_CULLING",
       ]);
 
-      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_BACK_FACE_CULLING",
+      ]);
+      ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+        "out float v_pointCloudShow;",
+      ]);
+      ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+        "in float v_pointCloudShow;",
+      ]);
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
         "uniform vec4 model_pointCloudParameters;",
       ]);

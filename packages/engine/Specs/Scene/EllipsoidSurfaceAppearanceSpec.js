@@ -3,12 +3,13 @@ import {
   GeometryInstance,
   Rectangle,
   RectangleGeometry,
+} from "@cesium/core";
+import {
   Appearance,
   EllipsoidSurfaceAppearance,
   Material,
   Primitive,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

@@ -1,7 +1,5 @@
+import { Color, ComponentDatatype, combine } from "@cesium/core";
 import {
-  Color,
-  combine,
-  ComponentDatatype,
   GltfLoader,
   PrimitiveOutlinePipelineStage,
   ShaderBuilder,
@@ -113,8 +111,11 @@ describe(
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
           "in vec3 a_outlineCoordinates;",
         ]);
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "vec3 v_outlineCoordinates;",
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+          "out vec3 v_outlineCoordinates;",
+        ]);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+          "in vec3 v_outlineCoordinates;",
         ]);
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
         ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [

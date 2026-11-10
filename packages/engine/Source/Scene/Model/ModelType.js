@@ -1,5 +1,4 @@
-import Check from "../../Core/Check.js";
-import DeveloperError from "../../Core/DeveloperError.js";
+import { Check, DeveloperError } from "@cesium/core";
 
 /**
  * An enum to distinguish the different uses for {@link Model},
@@ -91,4 +90,6 @@ ModelType.is3DTiles = function (modelType) {
   }
 };
 
-export default Object.freeze(ModelType);
+Object.freeze(ModelType);
+
+export default ModelType;

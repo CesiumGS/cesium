@@ -1,22 +1,22 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import CesiumMath from "../Core/Math.js";
-import CullingVolume from "../Core/CullingVolume.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import {
+  Cartesian2,
+  CullingVolume,
+  Math as CesiumMath,
+  PixelDatatype,
+  PixelFormat,
+  defined,
+  destroyObject,
+  getTimestamp,
+} from "@cesium/core";
 import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
-import getTimestamp from "../Core/getTimestamp.js";
 import KeyframeNode from "./KeyframeNode.js";
 import MetadataType from "./MetadataType.js";
 import Megatexture from "./Megatexture.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
 import SpatialNode from "./SpatialNode.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
-import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 
 /**
  * Handles tileset traversal, tile requests, and GPU resources. Intended to be
@@ -28,7 +28,7 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  * @param {VoxelPrimitive} primitive The voxel primitive for which this traversal will be used.
  * @param {Context} context The context in which to create GPU resources.
  * @param {number} keyframeCount The number of keyframes in the tileset.
- * @param {number} [maximumTextureMemoryByteLength] The maximum amount of memory to use for textures.
+ * @param {number} [maximumTextureMemoryByteLength=536870912] The maximum amount of memory to use for textures.
  *
  * @private
  */
@@ -38,32 +38,16 @@ function VoxelTraversal(
   keyframeCount,
   maximumTextureMemoryByteLength,
 ) {
-  const { provider, dimensions, paddingBefore, paddingAfter } = primitive;
-  const { types, componentTypes, metadataOrder } = provider;
+  const { provider, dimensions, inputDimensions } = primitive;
+  const { types, componentTypes } = provider;
 
-  const inputDimensions = Cartesian3.add(
-    dimensions,
-    paddingBefore,
-    new Cartesian3(),
-  );
-  Cartesian3.add(inputDimensions, paddingAfter, inputDimensions);
-
-  if (metadataOrder === VoxelMetadataOrder.Y_UP) {
-    const inputDimensionsY = inputDimensions.y;
-    inputDimensions.y = inputDimensions.z;
-    inputDimensions.z = inputDimensionsY;
-  }
-
-  if (
-    !defined(maximumTextureMemoryByteLength) &&
-    defined(provider.maximumTileCount)
-  ) {
-    maximumTextureMemoryByteLength = getApproximateTextureMemoryByteLength(
-      provider.maximumTileCount,
-      inputDimensions,
-      types,
-      componentTypes,
+  if (defined(maximumTextureMemoryByteLength)) {
+    maximumTextureMemoryByteLength = Math.min(
+      Math.max(0, maximumTextureMemoryByteLength),
+      512 * 1024 * 1024,
     );
+  } else {
+    maximumTextureMemoryByteLength = 128 * 1024 * 1024;
   }
 
   /**
@@ -84,7 +68,12 @@ function VoxelTraversal(
    */
   this.megatextures = new Array(types.length);
 
-  // TODO make sure to split the maximumTextureMemoryByteLength across all the megatextures
+  const providerTileCount = defined(provider.maximumTileCount)
+    ? provider.maximumTileCount
+    : defined(provider.availableLevels)
+      ? (8 ** provider.availableLevels - 1) / 7
+      : undefined;
+
   for (let i = 0; i < types.length; i++) {
     const type = types[i];
     const componentCount = MetadataType.getComponentCount(type);
@@ -96,6 +85,7 @@ function VoxelTraversal(
       componentCount,
       componentType,
       maximumTextureMemoryByteLength,
+      providerTileCount,
     );
 
     this.textureMemoryByteLength +=
@@ -614,7 +604,7 @@ function updateKeyframeNodes(that, frameState) {
         that._primitive.tileFailed.raiseEvent();
         continue;
       }
-      let addNodeIndex = 0;
+      let addNodeIndex;
       if (megatexture.isFull()) {
         // If the megatexture is full, try removing a discardable node with the lowest priority.
         addNodeIndex = keyframeNodesInMegatextureCount - 1 - destroyedCount;
@@ -1226,39 +1216,6 @@ function copyToLeafNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
   };
 
   texture.copyFrom(copyOptions);
-}
-
-/**
- * @param {number} tileCount
- * @param {Cartesian3} dimensions
- * @param {MetadataType[]} types
- * @param {MetadataComponentType[]} componentTypes
- * @private
- */
-function getApproximateTextureMemoryByteLength(
-  tileCount,
-  dimensions,
-  types,
-  componentTypes,
-) {
-  let textureMemoryByteLength = 0;
-
-  const length = types.length;
-  for (let i = 0; i < length; i++) {
-    const type = types[i];
-    const componentType = componentTypes[i];
-    const componentCount = MetadataType.getComponentCount(type);
-
-    textureMemoryByteLength +=
-      Megatexture.getApproximateTextureMemoryByteLength(
-        tileCount,
-        dimensions,
-        componentCount,
-        componentType,
-      );
-  }
-
-  return textureMemoryByteLength;
 }
 
 export default VoxelTraversal;

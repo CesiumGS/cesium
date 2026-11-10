@@ -1,0 +1,42 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td>
+          <button class="cesium-button" data-bind="click: highlightTrees">
+            Highlight trees
+          </button>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <button class="cesium-button" data-bind="click: highlightBuilding">
+            Highlight building face
+          </button>
+        </td>
+      </tr>
+      <tr>
+        <td>invert classification</td>
+        <td><input type="checkbox" data-bind="checked: inverted" /></td>
+      </tr>
+      <tr>
+        <td>inverted color alpha</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            data-bind="value: invertedAlpha, valueUpdate: 'input'"
+          />
+          <input type="text" size="3" data-bind="value: invertedAlpha" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

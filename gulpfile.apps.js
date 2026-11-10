@@ -1,0 +1,144 @@
+// @ts-check
+
+import { mkdirSync } from "fs";
+import { join } from "path";
+import { finished } from "stream/promises";
+
+import gulp from "gulp";
+import yargs from "yargs";
+import { buildSandcastleApp } from "./scripts/buildSandcastle.js";
+import {
+  bundleWorkers,
+  defaultESBuildOptions,
+  handleBuildWarnings,
+} from "./scripts/build-utilities.js";
+import { build as esbuild } from "esbuild";
+
+const isProduction = process.env.PROD === "true";
+
+export async function buildCesiumViewer() {
+  const cesiumViewerOutputDirectory = isProduction
+    ? "Build/CesiumViewer"
+    : "Build/Apps/CesiumViewer";
+  mkdirSync(cesiumViewerOutputDirectory, { recursive: true });
+
+  const result = await esbuild({
+    ...defaultESBuildOptions(),
+    entryPoints: [
+      "Apps/CesiumViewer/CesiumViewer.js",
+      "Apps/CesiumViewer/CesiumViewer.css",
+    ],
+    minify: true,
+    loader: {
+      ".gif": "text",
+      ".png": "text",
+    },
+    format: "iife",
+    // Configure Cesium base path to use built
+    define: { CESIUM_BASE_URL: `"."` },
+    outdir: cesiumViewerOutputDirectory,
+    outbase: "Apps/CesiumViewer",
+    logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
+  });
+
+  handleBuildWarnings(result);
+
+  await esbuild({
+    ...defaultESBuildOptions(),
+    entryPoints: ["packages/widgets/Source/InfoBox/InfoBoxDescription.css"],
+    minify: true,
+    loader: {
+      ".gif": "text",
+      ".png": "text",
+    },
+    outdir: join(cesiumViewerOutputDirectory, "Widgets"),
+    outbase: "packages/widgets/Source/",
+  });
+
+  await bundleWorkers({
+    minify: true,
+    removePragmas: true,
+    path: cesiumViewerOutputDirectory,
+  });
+
+  const stream = gulp
+    .src(
+      [
+        "Apps/CesiumViewer/**",
+        "!Apps/CesiumViewer/Images",
+        "!Apps/CesiumViewer/**/*.js",
+        "!Apps/CesiumViewer/**/*.css",
+      ],
+      {
+        encoding: false,
+      },
+    )
+    .pipe(
+      gulp.src(
+        [
+          "Build/Cesium/Assets/**",
+          "Build/Cesium/Workers/**",
+          "Build/Cesium/ThirdParty/**",
+          "Build/Cesium/Widgets/**",
+          "!Build/Cesium/Widgets/**/*.css",
+        ],
+        {
+          base: "Build/Cesium",
+          encoding: false,
+        },
+      ),
+    )
+    .pipe(gulp.src(["web.config"]))
+    .pipe(gulp.dest(cesiumViewerOutputDirectory));
+
+  await finished(stream);
+  return stream;
+}
+
+export async function buildSandcastle() {
+  const argv = await yargs(process.argv.slice(5))
+    .options({
+      "outer-origin": {
+        type: "string",
+        description:
+          "The outer origin for the Sandcastle App. Defaults to localhost:8080 if not specified",
+      },
+      "inner-origin": {
+        type: "string",
+        description:
+          "The inner origin for the Sandcastle viewer iframe. Defaults to the outer-origin if not specified or localhost:8081 if neither are specified",
+      },
+      embeddings: {
+        type: "boolean",
+        default: true,
+        description:
+          "Generate semantic search embeddings. Pass --no-embeddings to skip. Can also be set via SANDCASTLE_NO_EMBEDDINGS=1.",
+      },
+    })
+    .help(false)
+    .version(false)
+    .strict()
+    .parse();
+
+  let outerOrigin = argv.outerOrigin ?? "http://localhost:8080";
+  let innerOrigin =
+    argv.innerOrigin ?? argv.outerOrigin ?? "http://localhost:8081";
+
+  if (process.env.SANDCASTLE_ORIGIN) {
+    outerOrigin = process.env.SANDCASTLE_ORIGIN;
+    innerOrigin = outerOrigin;
+  }
+
+  const noEmbeddings =
+    !argv.embeddings || !!process.env.SANDCASTLE_NO_EMBEDDINGS;
+
+  return buildSandcastleApp({
+    outputToBuildDir: isProduction,
+    includeDevelopment: !isProduction,
+    outerOrigin,
+    innerOrigin,
+    generateEmbeddings: noEmbeddings ? false : undefined,
+  });
+}
+
+export const buildApps = gulp.parallel(buildCesiumViewer, buildSandcastle);

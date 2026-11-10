@@ -1,15 +1,18 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Check from "../Core/Check.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  Cartesian2,
+  Check,
+  Color,
+  DeveloperError,
+  Frozen,
+  Math as CesiumMath,
+  PixelDatatype,
+  PixelFormat,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ContextLimits from "./ContextLimits.js";
 import MipmapHint from "./MipmapHint.js";
-import PixelDatatype from "./PixelDatatype.js";
 import Sampler from "./Sampler.js";
 import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";
@@ -82,7 +85,7 @@ function Texture(options) {
   const internalFormat = PixelFormat.toInternalFormat(
     pixelFormat,
     pixelDatatype,
-    context,
+    context.webgl2,
   );
 
   const isCompressed = PixelFormat.isCompressedFormat(internalFormat);
@@ -365,7 +368,7 @@ function loadBufferSource(texture, source) {
     height,
     0,
     pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
     arrayBufferView,
   );
 
@@ -383,7 +386,7 @@ function loadBufferSource(texture, source) {
         mipHeight,
         0,
         pixelFormat,
-        PixelDatatype.toWebGLConstant(pixelDatatype, context),
+        PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
         source.mipLevels[i],
       );
     }
@@ -398,7 +401,7 @@ function loadBufferSource(texture, source) {
  * @param {number} xOffset The texel x coordinate of the lower left corner of the subregion of the texture to be updated.
  * @param {number} yOffset The texel y coordinate of the lower left corner of the subregion of the texture to be updated.
  * @param {number} width The width of the source data, in pixels.
- * @param {number} width The height of the source data, in pixels.
+ * @param {number} height The height of the source data, in pixels.
  *
  * @private
  */
@@ -441,7 +444,7 @@ function loadPartialBufferSource(
     width,
     height,
     pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
     arrayBufferView,
   );
 }
@@ -503,7 +506,7 @@ function loadImageSource(texture, source) {
     0,
     texture._internalFormat,
     texture.pixelFormat,
-    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context.webgl2),
     source,
   );
 }
@@ -532,7 +535,7 @@ function loadPartialImageSource(texture, source, xOffset, yOffset) {
     xOffset,
     yOffset,
     texture.pixelFormat,
-    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context.webgl2),
     source,
   );
 }
@@ -568,7 +571,7 @@ function loadNull(texture) {
     texture._height,
     0,
     texture._pixelFormat,
-    PixelDatatype.toWebGLConstant(texture._pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(texture._pixelDatatype, context.webgl2),
     null,
   );
 }
@@ -576,7 +579,7 @@ function loadNull(texture) {
 /**
  * This function is identical to using the Texture constructor except that it can be
  * replaced with a mock/spy in tests.
- * @private
+ * @ignore
  */
 Texture.create = function (options) {
   return new Texture(options);
@@ -1123,4 +1126,14 @@ Texture.prototype.destroy = function () {
   this._context._gl.deleteTexture(this._texture);
   return destroyObject(this);
 };
+
+/**
+ * The default color used as a placeholder texture while other textures are downloaded.
+ * This can be changed globally to customize the placeholder appearance.
+ *
+ * @type {Color}
+ * @default Color.WHITE
+ */
+Texture.defaultColor = Color.WHITE;
+
 export default Texture;

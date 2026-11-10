@@ -1,7 +1,7 @@
+import { Ellipsoid } from "@cesium/core";
 import {
   buildModuleUrl,
   createWorldTerrainAsync,
-  Ellipsoid,
   EllipsoidTerrainProvider,
 } from "@cesium/engine";
 import ProviderViewModel from "./ProviderViewModel.js";

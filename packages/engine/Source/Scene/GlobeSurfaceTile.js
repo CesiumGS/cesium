@@ -1,108 +1,136 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Cartographic from "../Core/Cartographic.js";
-import defined from "../Core/defined.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import IntersectionTests from "../Core/IntersectionTests.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import Ray from "../Core/Ray.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartesian4,
+  IndexDatatype,
+  PixelDatatype,
+  PixelFormat,
+  defined,
+} from "@cesium/core";
 import Request from "../Core/Request.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import TerrainEncoding from "../Core/TerrainEncoding.js";
 import TileProviderError from "../Core/TileProviderError.js";
+import VectorPipeline from "../Core/VectorPipeline.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
 import VertexArray from "../Renderer/VertexArray.js";
+import ClippingPolygonCollection from "./ClippingPolygonCollection.js";
 import ImageryState from "./ImageryState.js";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
-import SceneMode from "./SceneMode.js";
 import TerrainState from "./TerrainState.js";
+
+/** @import Context from "../Renderer/Context.js"; */
+/** @import { Ellipsoid } from "@cesium/core"; */
+/** @import FrameState from "./FrameState.js"; */
+/** @import HeightmapTerrainData from "../Core/HeightmapTerrainData.js"; */
+/** @import ImageryLayerCollection from "./ImageryLayerCollection.js"; */
+/** @import { MapProjection } from "@cesium/core"; */
+/** @import QuadtreePrimitive from "./QuadtreePrimitive.js"; */
+/** @import QuadtreeTile from "./QuadtreeTile.js"; */
+/** @import { Ray } from "@cesium/core"; */
+/** @import SceneMode from "./SceneMode.js"; */
+/** @import TerrainMesh from "../Core/TerrainMesh.js"; */
+/** @import TerrainProvider from "../Core/TerrainProvider.js"; */
+/** @import TileBoundingRegion from "./TileBoundingRegion.js"; */
+/** @import TileImagery from "./TileImagery.js"; */
+/** @import VectorProvider from "../Core/VectorProvider.js"; */
+/** @import { VectorTileData } from "../Core/VectorPipeline.js"; */
 
 /**
  * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
  * encapsulates state transition logic for loading tiles.
  *
- * @constructor
- * @alias GlobeSurfaceTile
  * @private
  */
-function GlobeSurfaceTile() {
-  /**
-   * The {@link TileImagery} attached to this tile.
-   * @type {TileImagery[]}
-   * @default []
-   */
-  this.imagery = [];
+class GlobeSurfaceTile {
+  /** @type {Request} */
+  request;
 
-  this.waterMaskTexture = undefined;
-  this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+  constructor() {
+    /**
+     * The {@link TileImagery} attached to this tile.
+     * @type {TileImagery[]}
+     * @default []
+     */
+    this.imagery = [];
 
-  this.terrainData = undefined;
-  this.vertexArray = undefined;
+    /** @type {Texture} */
+    this.waterMaskTexture = undefined;
+    this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
-  /**
-   * A bounding region used to estimate distance to the tile. The horizontal bounds are always tight-fitting,
-   * but the `minimumHeight` and `maximumHeight` properties may be derived from the min/max of an ancestor tile
-   * and be quite loose-fitting and thus very poor for estimating distance.
-   * @type {TileBoundingRegion}
-   */
-  this.tileBoundingRegion = undefined;
-  this.occludeePointInScaledSpace = new Cartesian3();
-  this.boundingVolumeSourceTile = undefined;
-  this.boundingVolumeIsFromMesh = false;
+    /** @type {HeightmapTerrainData} */
+    this.terrainData = undefined;
 
-  this.terrainState = TerrainState.UNLOADED;
-  this.mesh = undefined;
-  this.fill = undefined;
+    /** @type {VectorTileData} */
+    this.vectorData = undefined;
 
-  this.pickBoundingSphere = new BoundingSphere();
+    /**
+     * Clipping polygons build on top of the vector tile data system (both rely on the same rendering technique).
+     * @type {VectorTileData}
+     */
+    this.clippingPolygonData = undefined;
 
-  this.surfaceShader = undefined;
-  this.isClipped = true;
+    /** @type {VertexArray} */
+    this.vertexArray = undefined;
 
-  this.clippedByBoundaries = false;
-}
+    /**
+     * A bounding region used to estimate distance to the tile. The horizontal bounds are always tight-fitting,
+     * but the `minimumHeight` and `maximumHeight` properties may be derived from the min/max of an ancestor tile
+     * and be quite loose-fitting and thus very poor for estimating distance.
+     * @type {TileBoundingRegion}
+     */
+    this.tileBoundingRegion = undefined;
+    this.occludeePointInScaledSpace = new Cartesian3();
+    this.boundingVolumeSourceTile = undefined;
+    this.boundingVolumeIsFromMesh = false;
 
-Object.defineProperties(GlobeSurfaceTile.prototype, {
+    this.terrainState = TerrainState.UNLOADED;
+    this.mesh = undefined;
+    this.fill = undefined;
+
+    this.pickBoundingSphere = new BoundingSphere();
+
+    this.surfaceShader = undefined;
+    this.isClipped = true;
+
+    this.clippedByBoundaries = false;
+  }
+
   /**
    * Gets a value indicating whether or not this tile is eligible to be unloaded.
    * Typically, a tile is ineligible to be unloaded while an asynchronous operation,
    * such as a request for data, is in progress on it.  A tile will never be
    * unloaded while it is needed for rendering, regardless of the value of this
    * property.
-   * @memberof GlobeSurfaceTile.prototype
    * @type {boolean}
    */
-  eligibleForUnloading: {
-    get: function () {
-      // Do not remove tiles that are transitioning or that have
-      // imagery that is transitioning.
-      const terrainState = this.terrainState;
-      const loadingIsTransitioning =
-        terrainState === TerrainState.RECEIVING ||
-        terrainState === TerrainState.TRANSFORMING;
+  get eligibleForUnloading() {
+    // Do not remove tiles that are transitioning or that have
+    // imagery that is transitioning.
+    const terrainState = this.terrainState;
+    const loadingIsTransitioning =
+      terrainState === TerrainState.RECEIVING ||
+      terrainState === TerrainState.TRANSFORMING;
 
-      let shouldRemoveTile = !loadingIsTransitioning;
+    let shouldRemoveTile = !loadingIsTransitioning;
 
-      const imagery = this.imagery;
-      for (let i = 0, len = imagery.length; shouldRemoveTile && i < len; ++i) {
-        const tileImagery = imagery[i];
-        shouldRemoveTile =
-          !defined(tileImagery.loadingImagery) ||
-          tileImagery.loadingImagery.state !== ImageryState.TRANSITIONING;
-      }
+    const imagery = this.imagery;
+    for (let i = 0, len = imagery.length; shouldRemoveTile && i < len; ++i) {
+      const tileImagery = imagery[i];
+      shouldRemoveTile =
+        !defined(tileImagery.loadingImagery) ||
+        tileImagery.loadingImagery.state !== ImageryState.TRANSITIONING;
+    }
 
-      return shouldRemoveTile;
-    },
-  },
+    return shouldRemoveTile;
+  }
 
   /**
    * Gets the {@link TerrainMesh} that is used for rendering this tile, if any.
@@ -111,282 +139,460 @@ Object.defineProperties(GlobeSurfaceTile.prototype, {
    * {@link TerrainFillMesh#mesh} property of the {@link GlobeSurfaceTile#fill}.
    * If there is no fill, it returns undefined.
    *
-   * @memberof GlobeSurfaceTile.prototype
    * @type {TerrainMesh}
    */
-  renderedMesh: {
-    get: function () {
-      if (defined(this.vertexArray)) {
-        return this.mesh;
-      } else if (defined(this.fill)) {
-        return this.fill.mesh;
-      }
-      return undefined;
-    },
-  },
-});
-
-const scratchCartographic = new Cartographic();
-
-function getPosition(encoding, mode, projection, vertices, index, result) {
-  let position = encoding.getExaggeratedPosition(vertices, index, result);
-
-  if (defined(mode) && mode !== SceneMode.SCENE3D) {
-    const ellipsoid = projection.ellipsoid;
-    const positionCartographic = ellipsoid.cartesianToCartographic(
-      position,
-      scratchCartographic,
-    );
-    position = projection.project(positionCartographic, result);
-    position = Cartesian3.fromElements(
-      position.z,
-      position.x,
-      position.y,
-      result,
-    );
-  }
-
-  return position;
-}
-
-const scratchV0 = new Cartesian3();
-const scratchV1 = new Cartesian3();
-const scratchV2 = new Cartesian3();
-
-GlobeSurfaceTile.prototype.pick = function (
-  ray,
-  mode,
-  projection,
-  cullBackFaces,
-  result,
-) {
-  const mesh = this.renderedMesh;
-  if (!defined(mesh)) {
+  get renderedMesh() {
+    if (defined(this.vertexArray)) {
+      return this.mesh;
+    } else if (defined(this.fill)) {
+      return this.fill.mesh;
+    }
     return undefined;
   }
 
-  const vertices = mesh.vertices;
-  const indices = mesh.indices;
-  const encoding = mesh.encoding;
-  const indicesLength = indices.length;
-
-  let minT = Number.MAX_VALUE;
-
-  for (let i = 0; i < indicesLength; i += 3) {
-    const i0 = indices[i];
-    const i1 = indices[i + 1];
-    const i2 = indices[i + 2];
-
-    const v0 = getPosition(encoding, mode, projection, vertices, i0, scratchV0);
-    const v1 = getPosition(encoding, mode, projection, vertices, i1, scratchV1);
-    const v2 = getPosition(encoding, mode, projection, vertices, i2, scratchV2);
-
-    const t = IntersectionTests.rayTriangleParametric(
-      ray,
-      v0,
-      v1,
-      v2,
-      cullBackFaces,
-    );
-    if (defined(t) && t < minT && t >= 0.0) {
-      minT = t;
+  /**
+   * @param {Ray} ray
+   * @param {SceneMode} mode
+   * @param {MapProjection} projection
+   * @param {boolean} cullBackFaces
+   * @param {Cartesian3} result
+   */
+  pick(ray, mode, projection, cullBackFaces, result) {
+    if (!defined(this.renderedMesh)) {
+      return undefined;
     }
+    const value = this.renderedMesh.pick(ray, cullBackFaces, mode, projection);
+    return Cartesian3.clone(value, result);
   }
 
-  return minT !== Number.MAX_VALUE
-    ? Ray.getPoint(ray, minT, result)
-    : undefined;
-};
-
-GlobeSurfaceTile.prototype.freeResources = function () {
-  if (defined(this.waterMaskTexture)) {
-    --this.waterMaskTexture.referenceCount;
-    if (this.waterMaskTexture.referenceCount === 0) {
-      this.waterMaskTexture.destroy();
+  freeResources() {
+    if (defined(this.waterMaskTexture)) {
+      --this.waterMaskTexture.referenceCount;
+      if (this.waterMaskTexture.referenceCount === 0) {
+        this.waterMaskTexture.destroy();
+      }
+      this.waterMaskTexture = undefined;
     }
-    this.waterMaskTexture = undefined;
+
+    if (defined(this.vectorData)) {
+      VectorPipeline.freeResources(this.vectorData);
+      this.vectorData = undefined;
+    }
+
+    if (defined(this.clippingPolygonData)) {
+      ClippingPolygonCollection.releaseRectangleData(this.clippingPolygonData);
+      this.clippingPolygonData = undefined;
+    }
+
+    this.terrainData = undefined;
+
+    this.terrainState = TerrainState.UNLOADED;
+    this.mesh = undefined;
+    this.fill = this.fill && this.fill.destroy();
+
+    const imageryList = this.imagery;
+    for (let i = 0, len = imageryList.length; i < len; ++i) {
+      imageryList[i].freeResources();
+    }
+    this.imagery.length = 0;
+
+    this.freeVertexArray();
   }
 
-  this.terrainData = undefined;
-
-  this.terrainState = TerrainState.UNLOADED;
-  this.mesh = undefined;
-  this.fill = this.fill && this.fill.destroy();
-
-  const imageryList = this.imagery;
-  for (let i = 0, len = imageryList.length; i < len; ++i) {
-    imageryList[i].freeResources();
-  }
-  this.imagery.length = 0;
-
-  this.freeVertexArray();
-};
-
-GlobeSurfaceTile.prototype.freeVertexArray = function () {
-  GlobeSurfaceTile._freeVertexArray(this.vertexArray);
-  this.vertexArray = undefined;
-  GlobeSurfaceTile._freeVertexArray(this.wireframeVertexArray);
-  this.wireframeVertexArray = undefined;
-};
-
-GlobeSurfaceTile.initialize = function (
-  tile,
-  terrainProvider,
-  imageryLayerCollection,
-) {
-  let surfaceTile = tile.data;
-  if (!defined(surfaceTile)) {
-    surfaceTile = tile.data = new GlobeSurfaceTile();
+  freeVertexArray() {
+    GlobeSurfaceTile._freeVertexArray(this.vertexArray);
+    this.vertexArray = undefined;
+    GlobeSurfaceTile._freeVertexArray(this.wireframeVertexArray);
+    this.wireframeVertexArray = undefined;
   }
 
-  if (tile.state === QuadtreeTileLoadState.START) {
-    prepareNewTile(tile, terrainProvider, imageryLayerCollection);
-    tile.state = QuadtreeTileLoadState.LOADING;
-  }
-};
-
-GlobeSurfaceTile.processStateMachine = function (
-  tile,
-  frameState,
-  terrainProvider,
-  imageryLayerCollection,
-  quadtree,
-  vertexArraysToDestroy,
-  terrainOnly,
-) {
-  GlobeSurfaceTile.initialize(tile, terrainProvider, imageryLayerCollection);
-
-  const surfaceTile = tile.data;
-
-  if (tile.state === QuadtreeTileLoadState.LOADING) {
-    processTerrainStateMachine(
-      tile,
-      frameState,
-      terrainProvider,
-      imageryLayerCollection,
-      quadtree,
-      vertexArraysToDestroy,
-    );
-  }
-
-  // From here down we're loading imagery, not terrain. We don't want to load imagery until
-  // we're certain that the terrain tiles are actually visible, though. We'll load terrainOnly
-  // in these scenarios:
-  //   * our bounding volume isn't accurate so we're not certain this tile is really visible (see GlobeSurfaceTileProvider#loadTile).
-  //   * we want to upsample from this tile but don't plan to render it (see processTerrainStateMachine).
-  if (terrainOnly) {
-    return;
-  }
-
-  const wasAlreadyRenderable = tile.renderable;
-
-  // The terrain is renderable as soon as we have a valid vertex array.
-  tile.renderable = defined(surfaceTile.vertexArray);
-
-  // But it's not done loading until it's in the READY state.
-  const isTerrainDoneLoading = surfaceTile.terrainState === TerrainState.READY;
-
-  // If this tile's terrain and imagery are just upsampled from its parent, mark the tile as
-  // upsampled only.  We won't refine a tile if its four children are upsampled only.
-  tile.upsampledFromParent =
-    defined(surfaceTile.terrainData) &&
-    surfaceTile.terrainData.wasCreatedByUpsampling();
-
-  const isImageryDoneLoading = surfaceTile.processImagery(
+  /**
+   * @param {QuadtreeTile} tile
+   * @param {TerrainProvider} terrainProvider
+   * @param {VectorProvider} vectorProvider
+   * @param {ImageryLayerCollection} imageryLayerCollection
+   */
+  static initialize(
     tile,
     terrainProvider,
-    frameState,
-  );
+    vectorProvider,
+    imageryLayerCollection,
+  ) {
+    if (!defined(tile.data)) {
+      tile.data = new GlobeSurfaceTile();
+    }
 
-  if (isTerrainDoneLoading && isImageryDoneLoading) {
-    const callbacks = tile._loadedCallbacks;
-    const newCallbacks = {};
-    for (const layerId in callbacks) {
-      if (callbacks.hasOwnProperty(layerId)) {
-        if (!callbacks[layerId](tile)) {
-          newCallbacks[layerId] = callbacks[layerId];
+    if (tile.state === QuadtreeTileLoadState.START) {
+      prepareNewTile(
+        tile,
+        terrainProvider,
+        vectorProvider,
+        imageryLayerCollection,
+      );
+      tile.state = QuadtreeTileLoadState.LOADING;
+    }
+  }
+
+  /**
+   * @param {QuadtreeTile} tile
+   * @param {FrameState} frameState
+   * @param {TerrainProvider} terrainProvider
+   * @param {VectorProvider} vectorProvider
+   * @param {ImageryLayerCollection} imageryLayerCollection
+   * @param {QuadtreePrimitive} quadtree
+   * @param {*} vertexArraysToDestroy
+   * @param {*} terrainOnly
+   */
+  static processStateMachine(
+    tile,
+    frameState,
+    terrainProvider,
+    vectorProvider,
+    imageryLayerCollection,
+    quadtree,
+    vertexArraysToDestroy,
+    terrainOnly,
+  ) {
+    GlobeSurfaceTile.initialize(
+      tile,
+      terrainProvider,
+      vectorProvider,
+      imageryLayerCollection,
+    );
+
+    const surfaceTile = tile.data;
+
+    if (tile.state === QuadtreeTileLoadState.LOADING) {
+      processTerrainStateMachine(
+        tile,
+        frameState,
+        terrainProvider,
+        vectorProvider,
+        imageryLayerCollection,
+        quadtree,
+        vertexArraysToDestroy,
+      );
+    }
+
+    // From here down we're loading imagery, not terrain. We don't want to load imagery until
+    // we're certain that the terrain tiles are actually visible, though. We'll load terrainOnly
+    // in these scenarios:
+    //   * our bounding volume isn't accurate so we're not certain this tile is really visible (see GlobeSurfaceTileProvider#loadTile).
+    //   * we want to upsample from this tile but don't plan to render it (see processTerrainStateMachine).
+    if (terrainOnly) {
+      return;
+    }
+
+    const wasAlreadyRenderable = tile.renderable;
+
+    // The terrain is renderable as soon as we have a valid vertex array.
+    tile.renderable = defined(surfaceTile.vertexArray);
+
+    // But it's not done loading until it's in the READY state.
+    const isTerrainDoneLoading =
+      surfaceTile.terrainState === TerrainState.READY;
+
+    // If this tile's terrain and imagery are just upsampled from its parent, mark the tile as
+    // upsampled only.  We won't refine a tile if its four children are upsampled only.
+    tile.upsampledFromParent =
+      defined(surfaceTile.terrainData) &&
+      surfaceTile.terrainData.wasCreatedByUpsampling();
+
+    const isImageryDoneLoading = surfaceTile.processImagery(
+      tile,
+      terrainProvider,
+      frameState,
+    );
+
+    if (isTerrainDoneLoading && isImageryDoneLoading) {
+      const callbacks = tile._loadedCallbacks;
+      const newCallbacks = {};
+      for (const layerId in callbacks) {
+        if (callbacks.hasOwnProperty(layerId)) {
+          if (!callbacks[layerId](tile)) {
+            newCallbacks[layerId] = callbacks[layerId];
+          }
+        }
+      }
+      tile._loadedCallbacks = newCallbacks;
+
+      tile.state = QuadtreeTileLoadState.DONE;
+    }
+
+    // Once a tile is renderable, it stays renderable, because doing otherwise would
+    // cause detail (or maybe even the entire globe) to vanish when adding a new
+    // imagery layer. `GlobeSurfaceTileProvider._onLayerAdded` sets renderable to
+    // false for all affected tiles that are not currently being rendered.
+    if (wasAlreadyRenderable) {
+      tile.renderable = true;
+    }
+  }
+
+  /**
+   * @param {QuadtreeTile} tile
+   * @param {TerrainProvider} terrainProvider
+   * @param {FrameState} frameState
+   * @param {boolean} skipLoading
+   */
+  processImagery(tile, terrainProvider, frameState, skipLoading) {
+    const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+    let isUpsampledOnly = tile.upsampledFromParent;
+    let isAnyTileLoaded = false;
+    let isDoneLoading = true;
+
+    // Transition imagery states
+    const tileImageryCollection = surfaceTile.imagery;
+    let i, len;
+    for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
+      const tileImagery = tileImageryCollection[i];
+      if (!defined(tileImagery.loadingImagery)) {
+        isUpsampledOnly = false;
+        continue;
+      }
+
+      if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
+        const imageryLayer = tileImagery.loadingImagery.imageryLayer;
+        if (imageryLayer.ready) {
+          // Remove the placeholder and add the actual skeletons (if any)
+          // at the same position.  Then continue the loop at the same index.
+          tileImagery.freeResources();
+          tileImageryCollection.splice(i, 1);
+          imageryLayer._createTileImagerySkeletons(tile, terrainProvider, i);
+          --i;
+          len = tileImageryCollection.length;
+          continue;
+        } else {
+          isUpsampledOnly = false;
+        }
+      }
+
+      const thisTileDoneLoading = tileImagery.processStateMachine(
+        tile,
+        frameState,
+        skipLoading,
+      );
+      isDoneLoading = isDoneLoading && thisTileDoneLoading;
+
+      // The imagery is renderable as soon as we have any renderable imagery for this region.
+      isAnyTileLoaded =
+        isAnyTileLoaded ||
+        thisTileDoneLoading ||
+        defined(tileImagery.readyImagery);
+
+      isUpsampledOnly =
+        isUpsampledOnly &&
+        defined(tileImagery.loadingImagery) &&
+        (tileImagery.loadingImagery.state === ImageryState.FAILED ||
+          tileImagery.loadingImagery.state === ImageryState.INVALID);
+    }
+
+    tile.upsampledFromParent = isUpsampledOnly;
+
+    // Allow rendering if any available layers are loaded
+    tile.renderable = tile.renderable && (isAnyTileLoaded || isDoneLoading);
+
+    return isDoneLoading;
+  }
+
+  /**
+   * @param {Ellipsoid} ellipsoid
+   * @param {FrameState} frameState
+   */
+  addGeodeticSurfaceNormals(ellipsoid, frameState) {
+    toggleGeodeticSurfaceNormals(this, true, ellipsoid, frameState);
+  }
+
+  /**
+   * @param {FrameState} frameState
+   */
+  removeGeodeticSurfaceNormals(frameState) {
+    toggleGeodeticSurfaceNormals(this, false, undefined, frameState);
+  }
+
+  /**
+   * @param {QuadtreeTile} tile
+   * @param {FrameState} frameState
+   * @param {QuadtreePrimitive} quadtree
+   */
+  updateExaggeration(tile, frameState, quadtree) {
+    const surfaceTile = this;
+    const mesh = surfaceTile.renderedMesh;
+    if (mesh === undefined) {
+      return;
+    }
+
+    // Check the tile's terrain encoding to see if it has been exaggerated yet
+    const exaggeration = frameState.verticalExaggeration;
+    const exaggerationRelativeHeight =
+      frameState.verticalExaggerationRelativeHeight;
+    const hasExaggerationScale = exaggeration !== 1.0;
+
+    const encoding = mesh.encoding;
+    const encodingExaggerationScaleChanged =
+      encoding.exaggeration !== exaggeration;
+    const encodingRelativeHeightChanged =
+      encoding.exaggerationRelativeHeight !== exaggerationRelativeHeight;
+    const exaggerationChanged =
+      encodingExaggerationScaleChanged || encodingRelativeHeightChanged;
+
+    if (exaggerationChanged) {
+      // Turning exaggeration scale on/off requires adding or removing geodetic surface normals
+      // Relative height only translates, so it has no effect on normals
+      if (encodingExaggerationScaleChanged) {
+        if (hasExaggerationScale && !encoding.hasGeodeticSurfaceNormals) {
+          const ellipsoid = tile.tilingScheme.ellipsoid;
+          surfaceTile.addGeodeticSurfaceNormals(ellipsoid, frameState);
+        } else if (
+          !hasExaggerationScale &&
+          encoding.hasGeodeticSurfaceNormals
+        ) {
+          surfaceTile.removeGeodeticSurfaceNormals(frameState);
+        }
+      }
+
+      encoding.exaggeration = exaggeration;
+      encoding.exaggerationRelativeHeight = exaggerationRelativeHeight;
+
+      // Notify the quadtree that this tile's height has changed
+      if (quadtree !== undefined) {
+        quadtree._tileToUpdateHeights.push(tile);
+        const customData = tile.customData;
+        for (const data of customData) {
+          // Restart the level so that a height update is triggered
+          data.level = -1;
+        }
+      }
+
+      mesh.updateExaggeration(exaggeration, exaggerationRelativeHeight);
+    }
+  }
+
+  /**
+   * @param {SceneMode} mode
+   */
+  updateSceneMode(mode) {
+    const surfaceTile = this;
+    const mesh = surfaceTile.renderedMesh;
+    if (mesh === undefined) {
+      return;
+    }
+
+    mesh.updateSceneMode(mode);
+  }
+
+  /**
+   * @param {Context} context
+   * @param {TerrainMesh} mesh
+   */
+  static _createVertexArrayForMesh(context, mesh) {
+    const typedArray = mesh.vertices;
+    const buffer = Buffer.createVertexBuffer({
+      context: context,
+      typedArray: typedArray,
+      usage: BufferUsage.STATIC_DRAW,
+    });
+    const attributes = mesh.encoding.getAttributes(buffer);
+
+    const indexBuffers = mesh.indices.indexBuffers || {};
+    let indexBuffer = indexBuffers[context.id];
+    if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
+      const indices = mesh.indices;
+      indexBuffer = Buffer.createIndexBuffer({
+        context: context,
+        typedArray: indices,
+        usage: BufferUsage.STATIC_DRAW,
+        // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
+        indexDatatype: IndexDatatype.fromSizeInBytes(indices.BYTES_PER_ELEMENT),
+      });
+      indexBuffer.vertexArrayDestroyable = false;
+      indexBuffer.referenceCount = 1;
+      indexBuffers[context.id] = indexBuffer;
+      mesh.indices.indexBuffers = indexBuffers;
+    } else {
+      ++indexBuffer.referenceCount;
+    }
+
+    return new VertexArray({
+      context: context,
+      attributes: attributes,
+      indexBuffer: indexBuffer,
+    });
+  }
+
+  /**
+   * @param {VertexArray} vertexArray
+   */
+  static _freeVertexArray(vertexArray) {
+    if (defined(vertexArray)) {
+      // @ts-expect-error Missing types.
+      const indexBuffer = vertexArray.indexBuffer;
+
+      if (!vertexArray.isDestroyed()) {
+        vertexArray.destroy();
+      }
+
+      if (
+        defined(indexBuffer) &&
+        !indexBuffer.isDestroyed() &&
+        defined(indexBuffer.referenceCount)
+      ) {
+        --indexBuffer.referenceCount;
+        if (indexBuffer.referenceCount === 0) {
+          indexBuffer.destroy();
         }
       }
     }
-    tile._loadedCallbacks = newCallbacks;
-
-    tile.state = QuadtreeTileLoadState.DONE;
   }
 
-  // Once a tile is renderable, it stays renderable, because doing otherwise would
-  // cause detail (or maybe even the entire globe) to vanish when adding a new
-  // imagery layer. `GlobeSurfaceTileProvider._onLayerAdded` sets renderable to
-  // false for all affected tiles that are not currently being rendered.
-  if (wasAlreadyRenderable) {
-    tile.renderable = true;
-  }
-};
+  /**
+   * @param {QuadtreeTile} tile
+   */
+  _findAncestorTileWithTerrainData(tile) {
+    let sourceTile = tile.parent;
 
-GlobeSurfaceTile.prototype.processImagery = function (
-  tile,
-  terrainProvider,
-  frameState,
-  skipLoading,
-) {
-  const surfaceTile = tile.data;
-  let isUpsampledOnly = tile.upsampledFromParent;
-  let isAnyTileLoaded = false;
-  let isDoneLoading = true;
-
-  // Transition imagery states
-  const tileImageryCollection = surfaceTile.imagery;
-  let i, len;
-  for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
-    const tileImagery = tileImageryCollection[i];
-    if (!defined(tileImagery.loadingImagery)) {
-      isUpsampledOnly = false;
-      continue;
+    while (
+      defined(sourceTile) &&
+      (!defined(sourceTile.data) ||
+        !defined(sourceTile.data.terrainData) ||
+        sourceTile.data.terrainData.wasCreatedByUpsampling())
+    ) {
+      sourceTile = sourceTile.parent;
     }
 
-    if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
-      const imageryLayer = tileImagery.loadingImagery.imageryLayer;
-      if (imageryLayer.ready) {
-        // Remove the placeholder and add the actual skeletons (if any)
-        // at the same position.  Then continue the loop at the same index.
-        tileImagery.freeResources();
-        tileImageryCollection.splice(i, 1);
-        imageryLayer._createTileImagerySkeletons(tile, terrainProvider, i);
-        --i;
-        len = tileImageryCollection.length;
-        continue;
-      } else {
-        isUpsampledOnly = false;
-      }
-    }
-
-    const thisTileDoneLoading = tileImagery.processStateMachine(
-      tile,
-      frameState,
-      skipLoading,
-    );
-    isDoneLoading = isDoneLoading && thisTileDoneLoading;
-
-    // The imagery is renderable as soon as we have any renderable imagery for this region.
-    isAnyTileLoaded =
-      isAnyTileLoaded ||
-      thisTileDoneLoading ||
-      defined(tileImagery.readyImagery);
-
-    isUpsampledOnly =
-      isUpsampledOnly &&
-      defined(tileImagery.loadingImagery) &&
-      (tileImagery.loadingImagery.state === ImageryState.FAILED ||
-        tileImagery.loadingImagery.state === ImageryState.INVALID);
+    return sourceTile;
   }
 
-  tile.upsampledFromParent = isUpsampledOnly;
+  /**
+   * @param {QuadtreeTile} tile
+   * @param {QuadtreeTile} sourceTile
+   * @param {Cartesian4} result
+   */
+  _computeWaterMaskTranslationAndScale(tile, sourceTile, result) {
+    const sourceTileRectangle = sourceTile.rectangle;
+    const tileRectangle = tile.rectangle;
+    const tileWidth = tileRectangle.width;
+    const tileHeight = tileRectangle.height;
 
-  // Allow rendering if any available layers are loaded
-  tile.renderable = tile.renderable && (isAnyTileLoaded || isDoneLoading);
+    const scaleX = tileWidth / sourceTileRectangle.width;
+    const scaleY = tileHeight / sourceTileRectangle.height;
+    result.x =
+      (scaleX * (tileRectangle.west - sourceTileRectangle.west)) / tileWidth;
+    result.y =
+      (scaleY * (tileRectangle.south - sourceTileRectangle.south)) / tileHeight;
+    result.z = scaleX;
+    result.w = scaleY;
 
-  return isDoneLoading;
-};
+    return result;
+  }
+}
 
+/**
+ * @param {GlobeSurfaceTile} surfaceTile
+ * @param {boolean} enabled
+ * @param {Ellipsoid} ellipsoid
+ * @param {FrameState} frameState
+ * @ignore
+ */
 function toggleGeodeticSurfaceNormals(
   surfaceTile,
   enabled,
@@ -438,73 +644,22 @@ function toggleGeodeticSurfaceNormals(
   surfaceTile.wireframeVertexArray = undefined;
 }
 
-GlobeSurfaceTile.prototype.addGeodeticSurfaceNormals = function (
-  ellipsoid,
-  frameState,
-) {
-  toggleGeodeticSurfaceNormals(this, true, ellipsoid, frameState);
-};
-
-GlobeSurfaceTile.prototype.removeGeodeticSurfaceNormals = function (
-  frameState,
-) {
-  toggleGeodeticSurfaceNormals(this, false, undefined, frameState);
-};
-
-GlobeSurfaceTile.prototype.updateExaggeration = function (
+/**
+ * @param {QuadtreeTile} tile
+ * @param {TerrainProvider} terrainProvider
+ * @param {VectorProvider} vectorProvider
+ * @param {ImageryLayerCollection} imageryLayerCollection
+ * @ignore
+ */
+function prepareNewTile(
   tile,
-  frameState,
-  quadtree,
+  terrainProvider,
+  vectorProvider,
+  imageryLayerCollection,
 ) {
-  const surfaceTile = this;
-  const mesh = surfaceTile.renderedMesh;
-  if (mesh === undefined) {
-    return;
-  }
-
-  // Check the tile's terrain encoding to see if it has been exaggerated yet
-  const exaggeration = frameState.verticalExaggeration;
-  const exaggerationRelativeHeight =
-    frameState.verticalExaggerationRelativeHeight;
-  const hasExaggerationScale = exaggeration !== 1.0;
-
-  const encoding = mesh.encoding;
-  const encodingExaggerationScaleChanged =
-    encoding.exaggeration !== exaggeration;
-  const encodingRelativeHeightChanged =
-    encoding.exaggerationRelativeHeight !== exaggerationRelativeHeight;
-
-  if (encodingExaggerationScaleChanged || encodingRelativeHeightChanged) {
-    // Turning exaggeration scale on/off requires adding or removing geodetic surface normals
-    // Relative height only translates, so it has no effect on normals
-    if (encodingExaggerationScaleChanged) {
-      if (hasExaggerationScale && !encoding.hasGeodeticSurfaceNormals) {
-        const ellipsoid = tile.tilingScheme.ellipsoid;
-        surfaceTile.addGeodeticSurfaceNormals(ellipsoid, frameState);
-      } else if (!hasExaggerationScale && encoding.hasGeodeticSurfaceNormals) {
-        surfaceTile.removeGeodeticSurfaceNormals(frameState);
-      }
-    }
-
-    encoding.exaggeration = exaggeration;
-    encoding.exaggerationRelativeHeight = exaggerationRelativeHeight;
-
-    // Notify the quadtree that this tile's height has changed
-    if (quadtree !== undefined) {
-      quadtree._tileToUpdateHeights.push(tile);
-      const customData = tile.customData;
-      const customDataLength = customData.length;
-      for (let i = 0; i < customDataLength; i++) {
-        // Restart the level so that a height update is triggered
-        const data = customData[i];
-        data.level = -1;
-      }
-    }
-  }
-};
-
-function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
+  /** @type {boolean} */
   let available = terrainProvider.getTileDataAvailable(
+    // @ts-expect-error Missing types.
     tile.x,
     tile.y,
     tile.level,
@@ -513,7 +668,7 @@ function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
   if (!defined(available) && defined(tile.parent)) {
     // Provider doesn't know if this tile is available. Does the parent tile know?
     const parent = tile.parent;
-    const parentSurfaceTile = parent.data;
+    const parentSurfaceTile = /** @type {GlobeSurfaceTile} */ (parent.data);
     if (defined(parentSurfaceTile) && defined(parentSurfaceTile.terrainData)) {
       available = parentSurfaceTile.terrainData.isChildAvailable(
         parent.x,
@@ -524,12 +679,15 @@ function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
     }
   }
 
+  const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+
   if (available === false) {
     // This tile is not available, so mark it failed so we start upsampling right away.
-    tile.data.terrainState = TerrainState.FAILED;
+    surfaceTile.terrainState = TerrainState.FAILED;
   }
 
   // Map imagery tiles to this terrain tile
+  // @ts-expect-error Missing types.
   for (let i = 0, len = imageryLayerCollection.length; i < len; ++i) {
     const layer = imageryLayerCollection.get(i);
     if (layer.show) {
@@ -538,15 +696,26 @@ function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
   }
 }
 
+/**
+ * @param {QuadtreeTile} tile
+ * @param {FrameState} frameState
+ * @param {TerrainProvider} terrainProvider
+ * @param {VectorProvider} vectorProvider
+ * @param {ImageryLayerCollection} imageryLayerCollection
+ * @param {QuadtreePrimitive} quadtree
+ * @param {*} vertexArraysToDestroy
+ * @ignore
+ */
 function processTerrainStateMachine(
   tile,
   frameState,
   terrainProvider,
+  vectorProvider,
   imageryLayerCollection,
   quadtree,
   vertexArraysToDestroy,
 ) {
-  const surfaceTile = tile.data;
+  const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
 
   // If this tile is FAILED, we'll need to upsample from the parent. If the parent isn't
   // ready for that, let's push it along.
@@ -555,15 +724,19 @@ function processTerrainStateMachine(
     surfaceTile.terrainState === TerrainState.FAILED &&
     parent !== undefined
   ) {
+    const parentSurfaceTile = /** @type {GlobeSurfaceTile|undefined} */ (
+      parent.data
+    );
     const parentReady =
-      parent.data !== undefined &&
-      parent.data.terrainData !== undefined &&
-      parent.data.terrainData.canUpsample !== false;
+      parentSurfaceTile !== undefined &&
+      parentSurfaceTile.terrainData !== undefined &&
+      parentSurfaceTile.terrainData.canUpsample !== false;
     if (!parentReady) {
       GlobeSurfaceTile.processStateMachine(
         parent,
         frameState,
         terrainProvider,
+        vectorProvider,
         imageryLayerCollection,
         quadtree,
         vertexArraysToDestroy,
@@ -623,6 +796,7 @@ function processTerrainStateMachine(
   if (
     surfaceTile.terrainState >= TerrainState.RECEIVED &&
     surfaceTile.waterMaskTexture === undefined &&
+    // @ts-expect-error Missing types.
     terrainProvider.hasWaterMask
   ) {
     const terrainData = surfaceTile.terrainData;
@@ -630,8 +804,11 @@ function processTerrainStateMachine(
       createWaterMaskTextureIfNeeded(frameState.context, surfaceTile);
     } else {
       const sourceTile = surfaceTile._findAncestorTileWithTerrainData(tile);
-      if (defined(sourceTile) && defined(sourceTile.data.waterMaskTexture)) {
-        surfaceTile.waterMaskTexture = sourceTile.data.waterMaskTexture;
+      const sourceSurfaceTile = /** @type {GlobeSurfaceTile|undefined} */ (
+        sourceTile?.data
+      );
+      if (defined(sourceTile) && defined(sourceSurfaceTile.waterMaskTexture)) {
+        surfaceTile.waterMaskTexture = sourceSurfaceTile.waterMaskTexture;
         ++surfaceTile.waterMaskTexture.referenceCount;
         surfaceTile._computeWaterMaskTranslationAndScale(
           tile,
@@ -643,6 +820,16 @@ function processTerrainStateMachine(
   }
 }
 
+/**
+ * @param {GlobeSurfaceTile} surfaceTile
+ * @param {QuadtreeTile} tile
+ * @param {FrameState} frameState
+ * @param {TerrainProvider} terrainProvider
+ * @param {number} x
+ * @param {number} y
+ * @param {number} level
+ * @ignore
+ */
 function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
   const parent = tile.parent;
   if (!parent) {
@@ -651,7 +838,8 @@ function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
     return;
   }
 
-  const sourceData = parent.data.terrainData;
+  const parentSurfaceTile = /** @type {GlobeSurfaceTile} */ (parent.data);
+  const sourceData = parentSurfaceTile.terrainData;
   const sourceX = parent.x;
   const sourceY = parent.y;
   const sourceLevel = parent.level;
@@ -662,6 +850,7 @@ function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
   }
 
   const terrainDataPromise = sourceData.upsample(
+    // @ts-expect-error Missing types.
     terrainProvider.tilingScheme,
     sourceX,
     sourceY,
@@ -692,7 +881,16 @@ function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
     });
 }
 
+/**
+ * @param {GlobeSurfaceTile} surfaceTile
+ * @param {TerrainProvider} terrainProvider
+ * @param {number} x
+ * @param {number} y
+ * @param {number} level
+ * @ignore
+ */
 function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
+  /** @param {HeightmapTerrainData} terrainData */
   function success(terrainData) {
     if (!defined(terrainData)) {
       // Throttled due to low priority - try again later.
@@ -706,6 +904,7 @@ function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
     surfaceTile.request = undefined;
   }
 
+  /** @param {Error} error */
   function failure(error) {
     if (surfaceTile.request.state === RequestState.CANCELLED) {
       // Cancelled due to low priority - try again later.
@@ -721,15 +920,19 @@ function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
     surfaceTile.request = undefined;
 
     const message = `Failed to obtain terrain tile X: ${x} Y: ${y} Level: ${level}. Error message: "${error}"`;
+    // @ts-expect-error Missing types.
     terrainProvider._requestError = TileProviderError.reportError(
+      // @ts-expect-error Missing types.
       terrainProvider._requestError,
       terrainProvider,
+      // @ts-expect-error Missing types.
       terrainProvider.errorEvent,
       message,
       x,
       y,
       level,
     );
+    // @ts-expect-error Missing types.
     if (terrainProvider._requestError.retry) {
       doRequest();
     }
@@ -745,6 +948,7 @@ function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
     surfaceTile.request = request;
 
     const requestPromise = terrainProvider.requestTileGeometry(
+      // @ts-expect-error Missing types.
       x,
       y,
       level,
@@ -782,7 +986,17 @@ const scratchCreateMeshOptions = {
   throttle: true,
 };
 
+/**
+ * @param {GlobeSurfaceTile} surfaceTile
+ * @param {FrameState} frameState
+ * @param {TerrainProvider} terrainProvider
+ * @param {number} x
+ * @param {number} y
+ * @param {number} level
+ * @ignore
+ */
 function transform(surfaceTile, frameState, terrainProvider, x, y, level) {
+  // @ts-expect-error Missing types.
   const tilingScheme = terrainProvider.tilingScheme;
 
   const createMeshOptions = scratchCreateMeshOptions;
@@ -815,61 +1029,16 @@ function transform(surfaceTile, frameState, terrainProvider, x, y, level) {
     });
 }
 
-GlobeSurfaceTile._createVertexArrayForMesh = function (context, mesh) {
-  const typedArray = mesh.vertices;
-  const buffer = Buffer.createVertexBuffer({
-    context: context,
-    typedArray: typedArray,
-    usage: BufferUsage.STATIC_DRAW,
-  });
-  const attributes = mesh.encoding.getAttributes(buffer);
-
-  const indexBuffers = mesh.indices.indexBuffers || {};
-  let indexBuffer = indexBuffers[context.id];
-  if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
-    const indices = mesh.indices;
-    indexBuffer = Buffer.createIndexBuffer({
-      context: context,
-      typedArray: indices,
-      usage: BufferUsage.STATIC_DRAW,
-      indexDatatype: IndexDatatype.fromSizeInBytes(indices.BYTES_PER_ELEMENT),
-    });
-    indexBuffer.vertexArrayDestroyable = false;
-    indexBuffer.referenceCount = 1;
-    indexBuffers[context.id] = indexBuffer;
-    mesh.indices.indexBuffers = indexBuffers;
-  } else {
-    ++indexBuffer.referenceCount;
-  }
-
-  return new VertexArray({
-    context: context,
-    attributes: attributes,
-    indexBuffer: indexBuffer,
-  });
-};
-
-GlobeSurfaceTile._freeVertexArray = function (vertexArray) {
-  if (defined(vertexArray)) {
-    const indexBuffer = vertexArray.indexBuffer;
-
-    if (!vertexArray.isDestroyed()) {
-      vertexArray.destroy();
-    }
-
-    if (
-      defined(indexBuffer) &&
-      !indexBuffer.isDestroyed() &&
-      defined(indexBuffer.referenceCount)
-    ) {
-      --indexBuffer.referenceCount;
-      if (indexBuffer.referenceCount === 0) {
-        indexBuffer.destroy();
-      }
-    }
-  }
-};
-
+/**
+ * @param {GlobeSurfaceTile} surfaceTile
+ * @param {Context} context
+ * @param {TerrainProvider} terrainProvider
+ * @param {number} x
+ * @param {number} y
+ * @param {number} level
+ * @param {*} vertexArraysToDestroy
+ * @ignore
+ */
 function createResources(
   surfaceTile,
   context,
@@ -888,6 +1057,10 @@ function createResources(
     surfaceTile.fill && surfaceTile.fill.destroy(vertexArraysToDestroy);
 }
 
+/**
+ * @param {Context} context
+ * @ignore
+ */
 function getContextWaterMaskData(context) {
   let data = context.cache.tile_waterMaskData;
 
@@ -925,13 +1098,26 @@ function getContextWaterMaskData(context) {
   return data;
 }
 
+/**
+ * @param {Context} context
+ * @param {GlobeSurfaceTile} surfaceTile
+ * @ignore
+ */
 function createWaterMaskTextureIfNeeded(context, surfaceTile) {
   const waterMask = surfaceTile.terrainData.waterMask;
   const waterMaskData = getContextWaterMaskData(context);
   let texture;
 
   const waterMaskLength = waterMask.length;
-  if (waterMaskLength === 1) {
+  if (waterMask instanceof ImageBitmap) {
+    texture = Texture.create({
+      context: context,
+      source: waterMask,
+      sampler: waterMaskData.sampler,
+      flipY: false,
+      skipColorSpaceConversion: true,
+    });
+  } else if (waterMaskLength === 1) {
     // Length 1 means the tile is entirely land or entirely water.
     // A value of 0 indicates entirely land, a value of 1 indicates entirely water.
     if (waterMask[0] !== 0) {
@@ -970,40 +1156,4 @@ function createWaterMaskTextureIfNeeded(context, surfaceTile) {
   );
 }
 
-GlobeSurfaceTile.prototype._findAncestorTileWithTerrainData = function (tile) {
-  let sourceTile = tile.parent;
-
-  while (
-    defined(sourceTile) &&
-    (!defined(sourceTile.data) ||
-      !defined(sourceTile.data.terrainData) ||
-      sourceTile.data.terrainData.wasCreatedByUpsampling())
-  ) {
-    sourceTile = sourceTile.parent;
-  }
-
-  return sourceTile;
-};
-
-GlobeSurfaceTile.prototype._computeWaterMaskTranslationAndScale = function (
-  tile,
-  sourceTile,
-  result,
-) {
-  const sourceTileRectangle = sourceTile.rectangle;
-  const tileRectangle = tile.rectangle;
-  const tileWidth = tileRectangle.width;
-  const tileHeight = tileRectangle.height;
-
-  const scaleX = tileWidth / sourceTileRectangle.width;
-  const scaleY = tileHeight / sourceTileRectangle.height;
-  result.x =
-    (scaleX * (tileRectangle.west - sourceTileRectangle.west)) / tileWidth;
-  result.y =
-    (scaleY * (tileRectangle.south - sourceTileRectangle.south)) / tileHeight;
-  result.z = scaleX;
-  result.w = scaleY;
-
-  return result;
-};
 export default GlobeSurfaceTile;

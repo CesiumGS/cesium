@@ -1,26 +1,34 @@
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Color,
+  DeveloperError,
+  Ellipsoid,
+  Frozen,
+  Iso8601,
+  JulianDate,
+  Math as CesiumMath,
+  Rectangle,
+  ReferenceFrame,
+  RuntimeError,
+  TimeInterval,
+  TimeIntervalCollection,
+  createGuid,
+  defined,
+} from "@cesium/core";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Color from "../Core/Color.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Iso8601 from "../Core/Iso8601.js";
-import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
-import Rectangle from "../Core/Rectangle.js";
-import ReferenceFrame from "../Core/ReferenceFrame.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import TimeInterval from "../Core/TimeInterval.js";
-import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
 import HeightReference from "../Scene/HeightReference.js";
 import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
-import * as zip from "@zip.js/zip.js/lib/zip-no-worker.js";
+import {
+  configure,
+  BlobReader,
+  BlobWriter,
+  TextReader,
+  ZipWriter,
+} from "@zip.js/zip.js/lib/zip-core.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import ModelGraphics from "./ModelGraphics.js";
@@ -257,7 +265,7 @@ IdManager.prototype.get = function (id) {
  * @param {boolean} [options.kmz=false] If true KML and external files will be compressed into a kmz file.
  *
  * @returns {Promise<exportKmlResultKml|exportKmlResultKmz>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs, or a kmz file as a blob if options.kmz is true.
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Export%20KML.html|Cesium Sandcastle KML Export Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=export-kml|Cesium Sandcastle KML Export Demo}
  * @example
  * Cesium.exportKml({
  *      entities: entityCollection
@@ -322,43 +330,34 @@ function exportKml(options) {
   });
 }
 
-function createKmz(kmlString, externalFiles) {
-  const zWorkerUrl = buildModuleUrl("ThirdParty/Workers/z-worker-pako.js");
-  zip.configure({
-    workerScripts: {
-      deflate: [zWorkerUrl, "./pako_deflate.min.js"],
-      inflate: [zWorkerUrl, "./pako_inflate.min.js"],
-    },
+async function createKmz(kmlString, externalFiles) {
+  const zWorkerUri = buildModuleUrl("ThirdParty/Workers/zip-web-worker.js");
+  const zWasmUri = buildModuleUrl("ThirdParty/zip-module.wasm");
+  configure({
+    workerURI: zWorkerUri,
+    wasmURI: zWasmUri,
   });
-  const blobWriter = new zip.BlobWriter();
-  const writer = new zip.ZipWriter(blobWriter);
+  const blobWriter = new BlobWriter("application/vnd.google-earth.kmz");
+  const writer = new ZipWriter(blobWriter);
+
   // We need to only write one file at a time so the zip doesn't get corrupted
-  return writer
-    .add("doc.kml", new zip.TextReader(kmlString))
-    .then(function () {
-      const keys = Object.keys(externalFiles);
-      return addExternalFilesToZip(writer, keys, externalFiles, 0);
-    })
-    .then(function () {
-      return writer.close();
-    })
-    .then(function (blob) {
-      return {
-        kmz: blob,
-      };
-    });
+  await writer.add("doc.kml", new TextReader(kmlString));
+  const keys = Object.keys(externalFiles);
+  await addExternalFilesToZip(writer, keys, externalFiles, 0);
+  await writer.close();
+  const blob = await blobWriter.getData();
+  return {
+    kmz: blob,
+  };
 }
 
-function addExternalFilesToZip(writer, keys, externalFiles, index) {
+async function addExternalFilesToZip(writer, keys, externalFiles, index) {
   if (keys.length === index) {
     return;
   }
   const filename = keys[index];
-  return writer
-    .add(filename, new zip.BlobReader(externalFiles[filename]))
-    .then(function () {
-      return addExternalFilesToZip(writer, keys, externalFiles, index + 1);
-    });
+  await writer.add(filename, new BlobReader(externalFiles[filename]));
+  return addExternalFilesToZip(writer, keys, externalFiles, index + 1);
 }
 
 exportKml._createState = function (options) {

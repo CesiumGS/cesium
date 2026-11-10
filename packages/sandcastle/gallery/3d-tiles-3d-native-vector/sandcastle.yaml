@@ -1,0 +1,7 @@
+title: 3D Native Vector Data
+description: Load a vector 3D Tiles dataset along with a photogrammetry mesh of the Robert Street bridge in St. Paul, Minnesota. Shows cracks detected on the structure. Data courtesy of Collins Engineers, Inc.
+labels:
+  - Showcases
+  - 3D Tiles
+  - Vector Tiles
+thumbnail: thumbnail.jpg

@@ -1,11 +1,13 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  PixelDatatype,
+  PixelFormat,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ContextLimits from "./ContextLimits.js";
-import PixelDatatype from "./PixelDatatype.js";
 
 function attachTexture(framebuffer, attachment, texture) {
   const gl = framebuffer._gl;
@@ -287,6 +289,10 @@ function Framebuffer(options) {
   }
 
   this._unBind();
+
+  // _bind and _unBind bypass the context's framebuffer binding cache. The GL
+  // binding is now the default framebuffer; update the cache to match.
+  context._currentFramebuffer = undefined;
 }
 
 Object.defineProperties(Framebuffer.prototype, {

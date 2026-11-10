@@ -1,7 +1,10 @@
-import Check from "../../Core/Check.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
+import {
+  Check,
+  Frozen,
+  PrimitiveType,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import SceneMode from "../SceneMode.js";
 import AlphaPipelineStage from "./AlphaPipelineStage.js";
 import BatchTexturePipelineStage from "./BatchTexturePipelineStage.js";
@@ -10,6 +13,8 @@ import CPUStylingPipelineStage from "./CPUStylingPipelineStage.js";
 import CustomShaderMode from "./CustomShaderMode.js";
 import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
 import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
+import EdgeDetectionPipelineStage from "./EdgeDetectionPipelineStage.js";
+import EdgeVisibilityPipelineStage from "./EdgeVisibilityPipelineStage.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import ImageryPipelineStage from "./ImageryPipelineStage.js";
@@ -28,7 +33,6 @@ import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js"
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
 import VerticalExaggerationPipelineStage from "./VerticalExaggerationPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
-import oneTimeWarning from "../../Core/oneTimeWarning.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -88,7 +92,7 @@ function ModelRuntimePrimitive(options) {
    * is an array of classes, each with a static method called
    * <code>process()</code>
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private
@@ -170,7 +174,7 @@ function ModelRuntimePrimitive(options) {
   /**
    * Update stages to apply to this primitive.
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private
@@ -212,7 +216,8 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   // Check whether the model is part of a `Model3DTileContent` that
   // belongs to a tileset that has imagery layers. If this is the
   // case, then the `ImageryPipelineStage` will be required.
-  const hasImageryLayers = defined(model.imageryLayers);
+  const hasImageryLayers =
+    defined(model.imageryLayers) && model.imageryLayers.length > 0;
 
   const hasCustomShader = defined(customShader);
   const hasCustomFragmentShader =
@@ -243,6 +248,10 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   const hasOutlines =
     model._enableShowOutline && defined(primitive.outlineCoordinates);
+
+  // Edge geometry is built lazily; see updateEdgeGeometryNeeded in Model.js.
+  const hasEdgeVisibility =
+    defined(primitive.edgeVisibility) && model._edgeGeometryNeeded;
 
   const featureIdFlags = inspectFeatureIds(model, node, primitive);
 
@@ -322,6 +331,11 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   if (hasOutlines) {
     pipelineStages.push(PrimitiveOutlinePipelineStage);
+  }
+
+  if (hasEdgeVisibility) {
+    pipelineStages.push(EdgeVisibilityPipelineStage);
+    pipelineStages.push(EdgeDetectionPipelineStage);
   }
 
   pipelineStages.push(AlphaPipelineStage);

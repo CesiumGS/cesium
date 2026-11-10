@@ -1,0 +1,267 @@
+<style>
+  @import url(../templates/bucket.css);
+  #toolbar input[type="range"] {
+    width: 70px;
+  }
+  #toolbar input {
+    vertical-align: middle;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td data-bind="style: { color: lightHorizonEnabled ? '' : 'gray'}">
+          Light Horizon
+        </td>
+        <td>
+          <input
+            type="range"
+            min="0"
+            max="90"
+            step="1.0"
+            data-bind="value: lightHorizon, valueUpdate: 'input', enable: lightHorizonEnabled"
+          />
+          <input
+            type="text"
+            size="2"
+            data-bind="value: lightHorizon, enable: lightHorizonEnabled"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td data-bind="style: { color: lightAngleEnabled ? '' : 'gray'}">
+          Light Angle
+        </td>
+        <td>
+          <input
+            type="range"
+            min="0"
+            max="360"
+            step="1.0"
+            data-bind="value: lightAngle, valueUpdate: 'input', enable: lightAngleEnabled"
+          />
+          <input
+            type="text"
+            size="2"
+            data-bind="value: lightAngle, enable: lightAngleEnabled"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td data-bind="style: { color: distanceEnabled ? '' : 'gray'}">
+          Distance Limit
+        </td>
+        <td>
+          <input
+            type="range"
+            min="100.0"
+            max="10000.0"
+            step="1.0"
+            data-bind="value: distance, valueUpdate: 'input', enable: distanceEnabled"
+          />
+          <input
+            type="text"
+            size="2"
+            data-bind="value: distance, enable: distanceEnabled"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td data-bind="style: { color: radiusEnabled ? '' : 'gray'}">Radius</td>
+        <td>
+          <input
+            type="range"
+            min="10.0"
+            max="1000.0"
+            step="1.0"
+            data-bind="value: radius, valueUpdate: 'input', enable: radiusEnabled"
+          />
+          <input
+            type="text"
+            size="2"
+            data-bind="value: radius, enable: radiusEnabled"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Darkness</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            data-bind="value: darkness, valueUpdate: 'input'"
+          />
+          <input type="text" size="2" data-bind="value: darkness" />
+        </td>
+      </tr>
+      <tr>
+        <td data-bind="style: { color: cascadesEnabled ? '' : 'gray'}">
+          Cascades
+        </td>
+        <td>
+          <select
+            data-bind="options: cascadeOptions, value: cascades, enable: cascadesEnabled"
+          ></select>
+        </td>
+      </tr>
+      <tr>
+        <td>Light Source</td>
+        <td>
+          <select
+            data-bind="options: lightSourceOptions, value: lightSource"
+          ></select>
+        </td>
+      </tr>
+      <tr>
+        <td>Texture Size</td>
+        <td><select data-bind="options: sizeOptions, value: size"></select></td>
+      </tr>
+      <tr>
+        <td>Shadows Enabled</td>
+        <td><input type="checkbox" data-bind="checked: shadows" /></td>
+      </tr>
+      <tr>
+        <td>Terrain Enabled</td>
+        <td><input type="checkbox" data-bind="checked: terrain" /></td>
+      </tr>
+      <tr>
+        <td>Show Globe</td>
+        <td><input type="checkbox" data-bind="checked: globe" /></td>
+      </tr>
+      <tr>
+        <td>Terrain Cast</td>
+        <td><input type="checkbox" data-bind="checked: terrainCast" /></td>
+      </tr>
+      <tr>
+        <td>Terrain Receive</td>
+        <td>
+          <input type="checkbox" data-bind="checked: terrainReceive" />
+        </td>
+      </tr>
+      <tr>
+        <td>Show debug</td>
+        <td><input type="checkbox" data-bind="checked: debug" /></td>
+      </tr>
+      <tr>
+        <td>Freeze frame</td>
+        <td><input type="checkbox" data-bind="checked: freeze" /></td>
+      </tr>
+      <tr>
+        <td data-bind="style: { color: cascadeColorsEnabled ? '' : 'gray'}">
+          Cascade colors
+        </td>
+        <td>
+          <input
+            type="checkbox"
+            data-bind="checked: cascadeColors, enable: cascadeColorsEnabled"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td data-bind="style: { color: fitNearFarEnabled ? '' : 'gray'}">
+          Fit near/far
+        </td>
+        <td>
+          <input
+            type="checkbox"
+            data-bind="checked: fitNearFar, enable: fitNearFarEnabled"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td data-bind="style: { color: softShadowsEnabled ? '' : 'gray'}">
+          Soft shadows
+        </td>
+        <td>
+          <input
+            type="checkbox"
+            data-bind="checked: softShadows, enable: softShadowsEnabled"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Location</td>
+        <td>
+          <select
+            data-bind="options: locationOptions, value: location"
+          ></select>
+        </td>
+      </tr>
+      <tr>
+        <td>Model</td>
+        <td>
+          <select data-bind="options: modelOptions, value: model"></select>
+        </td>
+      </tr>
+      <tr>
+        <td>Model Position</td>
+        <td>
+          <select
+            data-bind="options: modelPositionOptions, value: modelPosition"
+          ></select
+          ><input type="checkbox" data-bind="checked: grid" />
+          <span>Grid</span>
+        </td>
+      </tr>
+      <tr>
+        <td>Bias Mode</td>
+        <td>
+          <select
+            data-bind="options: biasModes, optionsText : 'type', value: biasMode"
+          ></select>
+        </td>
+      </tr>
+      <tr>
+        <td>Polygon Offset</td>
+        <td>
+          <input type="checkbox" data-bind="checked: biasMode.polygonOffset" />
+          <input
+            type="text"
+            size="2"
+            data-bind="value: biasMode.polygonOffsetFactor"
+          />
+          <input
+            type="text"
+            size="2"
+            data-bind="value: biasMode.polygonOffsetUnits"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Normal Offset</td>
+        <td>
+          <input type="checkbox" data-bind="checked: biasMode.normalOffset" />
+          <input
+            type="text"
+            size="2"
+            data-bind="value: biasMode.normalOffsetScale"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Normal Shading</td>
+        <td>
+          <input type="checkbox" data-bind="checked: biasMode.normalShading" />
+          <input
+            type="text"
+            size="2"
+            data-bind="value: biasMode.normalShadingSmooth"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Depth Bias</td>
+        <td>
+          <input type="text" size="2" data-bind="value: biasMode.depthBias" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

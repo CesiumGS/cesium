@@ -1,10 +1,10 @@
+import { defined } from "@cesium/core";
 import Credit from "./Credit.js";
-import defined from "./defined.js";
 import Resource from "./Resource.js";
 
 let defaultTokenCredit;
 const defaultAccessToken =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwNDljNWFmZC03MzRlLTRiMDMtYWIwMi00Yjk4YWQ4NzQwZGEiLCJpZCI6MjU5LCJpYXQiOjE3NTEzNzkyMzR9.OTqPNs3UGNnT1LYkPTavV80wN8Es_YphpJgQcpdnqWc";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IldQb0dGTEdyY2hDejlSMm8iLCJqdGkiOiIxZDlkMWFmZS0wZjY1LTQ2ZGYtOWQ2YS1iNjgxMmZjZTkyM2EiLCJpZCI6MjU5LCJzdWIiOiJDZXNpdW1KUyIsImlzcyI6Imh0dHBzOi8vYXBpLmNlc2l1bS5jb20iLCJhdWQiOiIxLjE0NyBSZWxlYXNlIC0gRGVsZXRlIG9uIEphbnVhcnkgMSwgMjAyNyIsImlhdCI6MTc5MjkwNTEyM30.doKMneDAmgY-6nOogKo5os5i7_xCI_4J3flZv21Uiv4";
 /**
  * Default settings for accessing the Cesium ion API.
  *

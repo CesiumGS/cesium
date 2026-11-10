@@ -1,7 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import { DeveloperError, Event, Frozen, defined } from "@cesium/core";
 import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
@@ -34,7 +31,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @param {WallGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @see Entity
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=wall|Cesium Sandcastle Wall Demo}
  */
 function WallGraphics(options) {
   this._definitionChanged = new Event();

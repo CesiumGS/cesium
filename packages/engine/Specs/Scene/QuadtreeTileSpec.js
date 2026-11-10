@@ -1,9 +1,11 @@
 import {
   Cartesian3,
   Cartographic,
-  GeographicTilingScheme,
-  Rectangle,
   Math as CesiumMath,
+  Rectangle,
+} from "@cesium/core";
+import {
+  GeographicTilingScheme,
   WebMercatorTilingScheme,
   QuadtreeTile,
 } from "../../index.js";
@@ -456,6 +458,55 @@ describe("Scene/QuadtreeTile", function () {
       );
       expect(cachedData).toBeDefined();
       expect(cachedData).toEqual(dummyPosition);
+    });
+  });
+
+  describe("updateCustomData", function () {
+    function addAndRemoveCustomData(tilingScheme) {
+      const tile = new QuadtreeTile({
+        level: 0,
+        x: 0,
+        y: 0,
+        tilingScheme: tilingScheme,
+      });
+
+      const child = tile.northwestChild;
+      const centerCartographic = Rectangle.center(child.rectangle);
+
+      const data = {
+        positionCartographic: centerCartographic,
+      };
+
+      tile._addedCustomData.push(data);
+      tile.updateCustomData();
+
+      expect(tile.customData.has(data)).toBe(true);
+      expect(tile._addedCustomData.length).toBe(0);
+      expect(child._addedCustomData.length).toBe(1);
+      expect(child._addedCustomData[0]).toBe(data);
+
+      child.updateCustomData();
+      expect(child.customData.has(data)).toBe(true);
+
+      // Now remove the data from the parent tile.
+      tile._removedCustomData.push(data);
+      tile.updateCustomData();
+
+      expect(tile.customData.has(data)).toBe(false);
+      expect(tile._removedCustomData.length).toBe(0);
+      expect(child._removedCustomData.length).toBe(1);
+      expect(child._removedCustomData[0]).toBe(data);
+
+      child.updateCustomData();
+      expect(child.customData.has(data)).toBe(false);
+    }
+
+    it("can add and remove custom data when tiling scheme is GeographicTilingScheme", function () {
+      addAndRemoveCustomData(new GeographicTilingScheme());
+    });
+
+    it("can add and remove custom data when tiling scheme is WebMercatorTilingScheme", function () {
+      addAndRemoveCustomData(new WebMercatorTilingScheme());
     });
   });
 });

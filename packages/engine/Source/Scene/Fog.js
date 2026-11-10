@@ -1,14 +1,16 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
+import {
+  Cartesian3,
+  DeveloperError,
+  Math as CesiumMath,
+  defined,
+} from "@cesium/core";
 import SceneMode from "./SceneMode.js";
 
 /**
  * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
  * performance improvements by rendering less geometry and dispatching less terrain requests.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Fog.html|Cesium Sandcastle Fog Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=fog|Cesium Sandcastle Fog Demo}
  *
  * @alias Fog
  * @constructor

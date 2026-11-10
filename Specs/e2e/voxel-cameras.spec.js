@@ -52,6 +52,7 @@ test("renders procedural voxel in perspective camera", async ({
       this.types = [Cesium.MetadataType.VEC4];
       this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
       this.globalTransform = globalTransform;
+      this.availableLevels = 1;
     }
 
     const scratchColor = new Cesium.Color();
@@ -178,6 +179,7 @@ test("renders procedural voxel in orthographic camera", async ({
       this.types = [Cesium.MetadataType.VEC4];
       this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
       this.globalTransform = globalTransform;
+      this.availableLevels = 1;
     }
 
     const scratchColor = new Cesium.Color();

@@ -1,13 +1,15 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
+import {
+  BoundingRectangle,
+  Color,
+  PixelDatatype,
+  PixelFormat,
+  WebGLConstants,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import Texture from "../Renderer/Texture.js";
@@ -531,10 +533,20 @@ function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
 
   // Discarding the fragment in main is a workaround for ANGLE D3D9
   // shader compilation errors.
+  //
+  // CESIUM_REDIRECTED_COLOR_OUTPUT: A general-purpose flag to indicate that this shader
+  // is a derived/modified version created by Cesium's rendering pipeline.
+  // This flag can be used to avoid color attachment conflicts when shaders
+  // need different output declarations for different rendering passes.
+  // For example, MRT (Multiple Render Targets) features can check this flag
+  // to conditionally declare their output variables only when not conflicting
+  // with the derived shader's output layout.
   fs.sources.splice(
     0,
     0,
-    `vec4 czm_out_FragColor;\n` + `bool czm_discard = false;\n`,
+    `#define CESIUM_REDIRECTED_COLOR_OUTPUT\n` +
+      `vec4 czm_out_FragColor;\n` +
+      `bool czm_discard = false;\n`,
   );
 
   const fragDataMatches = [...source.matchAll(/out_FragData_(\d+)/g)];

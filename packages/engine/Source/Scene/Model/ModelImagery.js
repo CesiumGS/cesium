@@ -1,8 +1,4 @@
-import Check from "../../Core/Check.js";
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-
+import { Check, DeveloperError, defined, destroyObject } from "@cesium/core";
 import ImageryConfiguration from "./ImageryConfiguration.js";
 import ModelPrimitiveImagery from "./ModelPrimitiveImagery.js";
 
@@ -100,6 +96,9 @@ class ModelImagery {
     //>>includeEnd('debug');
 
     if (!this._hasImagery) {
+      // When there is no imagery, make sure to delete any model primitive
+      // imageries that may previously have been created
+      this._deleteModelPrimitiveImageries();
       return;
     }
 
@@ -215,6 +214,7 @@ class ModelImagery {
       modelPrimitiveImagery.destroy();
     }
     delete this._modelPrimitiveImageries;
+    this._model.resetDrawCommands();
   }
 
   /**

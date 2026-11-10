@@ -1,7 +1,12 @@
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  ComponentDatatype,
+  IndexDatatype,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
+// Draco API uses many capitalized non-constructor methods.
+/* eslint-disable new-cap */
+
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 import dracoModule from "draco3d/draco_decoder_nodejs.js";
 

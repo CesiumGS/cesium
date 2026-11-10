@@ -9,6 +9,9 @@ import {
   Math as CesiumMath,
   NearFarScalar,
   Rectangle,
+  defined,
+} from "@cesium/core";
+import {
   BlendOption,
   Globe,
   HeightReference,
@@ -18,7 +21,6 @@ import {
   LabelStyle,
   VerticalOrigin,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -1148,6 +1150,26 @@ describe("Scene/LabelCollection", function () {
       });
 
       describe("Label", function () {
+        it("should update background billboard when updating label properties while label is hidden", async function () {
+          const label = labels.add({
+            text: "abc",
+            showBackground: true,
+          });
+
+          await allLabelsReady();
+          expect(labels._backgroundBillboardCollection.length).toEqual(1);
+
+          const backgroundBillboard = label._backgroundBillboard;
+          const { width } = backgroundBillboard;
+
+          label.show = false;
+          label.text = "abcde";
+          expect(labels._backgroundBillboardCollection.length).toEqual(1);
+
+          label.show = true;
+          scene.renderForSpecs();
+          expect(backgroundBillboard.width).toBeGreaterThan(width);
+        });
         it("can compute screen space position", function () {
           labels.clampToPixel = false;
           const label = labels.add({
@@ -1658,7 +1680,7 @@ describe("Scene/LabelCollection", function () {
           });
 
           it("translucencyByDistance to undefined", function () {
-            let newValue;
+            const newValue = undefined;
             expect(label.translucencyByDistance).not.toEqual(newValue);
             label.translucencyByDistance = newValue;
             scene.renderForSpecs();
@@ -1671,7 +1693,7 @@ describe("Scene/LabelCollection", function () {
           });
 
           it("pixelOffsetScaleByDistance to undefined", function () {
-            let newValue;
+            const newValue = undefined;
             expect(label.pixelOffsetScaleByDistance).not.toEqual(newValue);
             label.pixelOffsetScaleByDistance = newValue;
             scene.renderForSpecs();
@@ -1684,7 +1706,7 @@ describe("Scene/LabelCollection", function () {
           });
 
           it("scaleByDistance to undefined", function () {
-            let newValue;
+            const newValue = undefined;
             expect(label.scaleByDistance).not.toEqual(newValue);
             label.scaleByDistance = newValue;
             scene.renderForSpecs();
@@ -2446,7 +2468,6 @@ describe("Scene/LabelCollection", function () {
           });
 
           expect(l._clampedPosition).toBeDefined();
-          expect(l._glyphs[0].billboard._clampedPosition).toBeDefined();
 
           l.heightReference = HeightReference.NONE;
           expect(l._clampedPosition).toBeUndefined();
@@ -2458,6 +2479,7 @@ describe("Scene/LabelCollection", function () {
             heightReference: HeightReference.CLAMP_TO_GROUND,
             text: "t",
             position: Cartesian3.fromDegrees(-72.0, 40.0),
+            showBackground: true,
           });
 
           await pollToPromise(() => {
@@ -2465,14 +2487,57 @@ describe("Scene/LabelCollection", function () {
             return labelsWithHeight.ready;
           });
 
-          const billboard = l._glyphs[0].billboard;
-          expect(billboard._removeCallbackFunc).toBeDefined();
-          const spy = spyOn(billboard, "_removeCallbackFunc");
+          // Background billboard uses _positionFromParent so it does not
+          // register its own height callback — it relies on the label.
+          const backgroundBillboard = l._backgroundBillboard;
+          expect(backgroundBillboard._positionFromParent).toBe(true);
+          expect(backgroundBillboard._removeCallbackFunc).toBeUndefined();
+
+          // The label itself owns the height callback
+          expect(l._removeCallbackFunc).toBeDefined();
           labelsWithHeight.remove(l);
-          expect(spy).toHaveBeenCalled();
           expect(
             labelsWithHeight._spareBillboards[0]._removeCallbackFunc,
           ).toBeUndefined();
+        });
+
+        it("propagates clamped position to glyph and background billboards", async function () {
+          spyOn(scene.camera, "update");
+          const l = labelsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            text: "test",
+            position: Cartesian3.fromDegrees(-72.0, 40.0),
+            showBackground: true,
+          });
+
+          await pollToPromise(() => {
+            scene.renderForSpecs();
+            return labelsWithHeight.ready;
+          });
+
+          expect(l._clampedPosition).toBeDefined();
+
+          // All glyph billboards should share the label's clamped position
+          const glyphs = l._glyphs;
+          for (let i = 0; i < glyphs.length; i++) {
+            if (defined(glyphs[i].billboard)) {
+              expect(glyphs[i].billboard._clampedPosition).toBeDefined();
+              expect(
+                Cartesian3.equals(
+                  glyphs[i].billboard._clampedPosition,
+                  l._clampedPosition,
+                ),
+              ).toBe(true);
+            }
+          }
+
+          // Background billboard should also share the label's clamped position
+          const bg = l._backgroundBillboard;
+          expect(bg).toBeDefined();
+          expect(bg._clampedPosition).toBeDefined();
+          expect(
+            Cartesian3.equals(bg._clampedPosition, l._clampedPosition),
+          ).toBe(true);
         });
       });
     },

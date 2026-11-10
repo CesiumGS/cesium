@@ -1,0 +1,12 @@
+{
+  "include": ["Source/**/*.js"],
+  "extends": ["../../tsconfig.json"],
+  "compilerOptions": {
+    // The "strict mode" family of options is turned off by default to ease
+    // incremental adoption. Over time, we may want to enable more of its
+    // sub-options, and then to enable it by default, with exceptions for
+    // unwanted rules and specific contexts (e.g. unit tests).
+    "strict": false,
+    "noImplicitAny": true
+  }
+}

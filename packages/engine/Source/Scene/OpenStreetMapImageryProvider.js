@@ -1,8 +1,5 @@
+import { DeveloperError, Frozen, Rectangle, defined } from "@cesium/core";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";

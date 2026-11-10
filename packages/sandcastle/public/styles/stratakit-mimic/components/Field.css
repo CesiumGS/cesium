@@ -1,0 +1,51 @@
+@layer stratakit.components {
+  /*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+  .stratakit-mimic-field {
+    --✨layout-inline-label-first: [label-start] auto [label-end control-start]
+      auto [control-end];
+    --✨layout-inline-control-first: [control-start] auto [control-end
+      label-start] auto [label-end];
+    --✨layout-stacked: [label-start control-start] auto [label-end control-end];
+
+    @layer base {
+      display: grid;
+      gap: var(--stratakit-space-x1);
+      align-items: center;
+      justify-content: start;
+
+      /* Default layout */
+      grid-template-columns: var(--✨layout-inline-label-first);
+
+      /* By default align the descriptions with the label */
+      --🥝field-description-column: label-start / label-end;
+
+      /* With checkable fields, when the label is not first, switch to control-first layout */
+      &:where(
+        [data-kiwi-control-type="checkable"][data-kiwi-label-placement="after"]
+      ) {
+        grid-template-columns: var(--✨layout-inline-control-first);
+      }
+
+      &:where([data-kiwi-control-type="textlike"]) {
+        /* Descriptions should be aligned with the control for text and combobox controls */
+        --🥝field-description-column: control-start / control-end;
+
+        /* Align labels with the control text (when inline) */
+        align-items: baseline;
+
+        /* Default to stacked layout unless inline has been specified */
+        &:where(:not([data-kiwi-layout="inline"])) {
+          grid-template-columns: var(--✨layout-stacked);
+          justify-content: stretch; /* Stretch the entire width in stacked layout. */
+        }
+      }
+
+      :where(.🥝-description) {
+        grid-column: var(--🥝field-description-column);
+      }
+    }
+  }
+}

@@ -1,12 +1,14 @@
 import {
   Cartesian3,
-  Cesium3DTilesVoxelProvider,
   CullingVolume,
-  KeyframeNode,
   Math as CesiumMath,
   Matrix4,
-  MetadataType,
   OrientedBoundingBox,
+} from "@cesium/core";
+import {
+  Cesium3DTilesVoxelProvider,
+  KeyframeNode,
+  MetadataType,
   VoxelEllipsoidShape,
   VoxelTraversal,
   VoxelPrimitive,
@@ -145,7 +147,7 @@ describe(
     });
 
     it("shows texture memory allocation statistic", function () {
-      expect(traversal.textureMemoryByteLength).toBe(textureMemoryByteLength);
+      expect(traversal.textureMemoryByteLength).toBe(32);
       traversal.destroy();
       expect(traversal.textureMemoryByteLength).toBe(0);
     });
@@ -170,9 +172,7 @@ describe(
 
       const megatexture = traversal.megatextures[0];
       expect(megatexture.occupiedCount).toBe(1);
-      expect(traversal.textureMemoryByteLength).toEqual(
-        textureMemoryByteLength,
-      );
+      expect(traversal.textureMemoryByteLength).toEqual(32);
     });
 
     it("tile failed event is raised", async function () {

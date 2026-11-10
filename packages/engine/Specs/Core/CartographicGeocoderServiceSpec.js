@@ -1,8 +1,5 @@
-import {
-  Cartesian3,
-  CartographicGeocoderService,
-  GeocoderService,
-} from "../../index.js";
+import { Cartesian3 } from "@cesium/core";
+import { CartographicGeocoderService, GeocoderService } from "../../index.js";
 
 describe("Core/CartographicGeocoderService", function () {
   const service = new CartographicGeocoderService();

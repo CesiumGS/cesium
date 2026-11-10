@@ -1,0 +1,93 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay">
+  <h1>Loading...</h1>
+</div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td colspan="3">
+          <h4>Cesium GPM Visualization</h4>
+        </td>
+      </tr>
+      <tr>
+        <td>Data set</td>
+        <td>
+          <select
+            data-bind="options: dataSetNames, value: dataSetName"
+          ></select>
+        </td>
+        <td style="text-align: right">
+          <button type="button" data-bind="click: zoomToCurrentTileset">
+            Zoom
+          </button>
+        </td>
+      </tr>
+      <tr>
+        <td>Anchor point ellipsoid</td>
+        <td colspan="2">
+          <input
+            type="range"
+            min="1.0"
+            max="500"
+            step="1"
+            data-bind="value: anchorPointEllipsoidScaling, valueUpdate: 'input'"
+          />
+          <input
+            type="text"
+            size="5"
+            data-bind="value: anchorPointEllipsoidScaling"
+          />
+          <label
+            ><input
+              type="checkbox"
+              data-bind="checked: anchorPointLabelsVisible"
+            />Labels</label
+          >
+        </td>
+      </tr>
+      <tr>
+        <td>Shader mode</td>
+        <td colspan="2">
+          <select data-bind="options: shaderModes, value: shaderMode"></select>
+        </td>
+      </tr>
+      <tr id="texture-threshold-control" class="hidden">
+        <td>Texture threshold (m)</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="16.0"
+            step="0.01"
+            data-bind="value: textureThreshold, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: textureThreshold" />
+        </td>
+      </tr>
+      <tr>
+        <td colspan="3">
+          <br />
+          Uncertainty information is stored as GPM metadata in the tiles.<br />
+          <br />
+          The <i>anchor points</i> provide information about the low-frequency
+          error.<br />
+          This error is visualized as ellipsoids.<br />
+          <br />
+          The high-frequency error is represented as
+          <i>Per-Point Error</i> textures.<br />
+          This error can be visualized with custom shaders. The 'uncertainty'<br />
+          shaders visualize the horizontal or vertical uncertainty with a
+          color<br />
+          scale. The 'threshold' shaders highlight areas where the selected<br />
+          error threshold is exceeded. Picking a point on the tileset will
+          show<br />
+          a label with the actual error values.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -1,11 +1,13 @@
-import Check from "../Core/Check.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  IndexDatatype,
+  WebGLConstants,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import BufferUsage from "./BufferUsage.js";
 
 /**
@@ -72,6 +74,26 @@ function Buffer(options) {
   this.vertexArrayDestroyable = true;
 }
 
+Buffer.createPixelBuffer = function (options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.context", options.context);
+  //>>includeEnd('debug');
+
+  if (!options.context._webgl2) {
+    throw new DeveloperError(
+      "A WebGL 2 context is required to create PixelBuffers.",
+    );
+  }
+
+  return new Buffer({
+    context: options.context,
+    bufferTarget: WebGLConstants.PIXEL_PACK_BUFFER,
+    typedArray: options.typedArray,
+    sizeInBytes: options.sizeInBytes,
+    usage: options.usage,
+  });
+};
+
 /**
  * Creates a vertex buffer, which contains untyped vertex data in GPU-controlled memory.
  * <br /><br />
@@ -83,7 +105,7 @@ function Buffer(options) {
  * @param {ArrayBufferView} [options.typedArray] A typed array containing the data to copy to the buffer.
  * @param {number} [options.sizeInBytes] A <code>Number</code> defining the size of the buffer in bytes. Required if options.typedArray is not given.
  * @param {BufferUsage} options.usage Specifies the expected usage pattern of the buffer. On some GL implementations, this can significantly affect performance. See {@link BufferUsage}.
- * @returns {VertexBuffer} The vertex buffer, ready to be attached to a vertex array.
+ * @returns {Buffer} The vertex buffer, ready to be attached to a vertex array.
  *
  * @exception {DeveloperError} Must specify either <options.typedArray> or <options.sizeInBytes>, but not both.
  * @exception {DeveloperError} The buffer size must be greater than zero.
@@ -139,7 +161,7 @@ Buffer.createVertexBuffer = function (options) {
  * @param {number} [options.sizeInBytes] A <code>Number</code> defining the size of the buffer in bytes. Required if options.typedArray is not given.
  * @param {BufferUsage} options.usage Specifies the expected usage pattern of the buffer. On some GL implementations, this can significantly affect performance. See {@link BufferUsage}.
  * @param {IndexDatatype} options.indexDatatype The datatype of indices in the buffer.
- * @returns {IndexBuffer} The index buffer, ready to be attached to a vertex array.
+ * @returns {Buffer} The index buffer, ready to be attached to a vertex array.
  *
  * @exception {DeveloperError} Must specify either <options.typedArray> or <options.sizeInBytes>, but not both.
  * @exception {DeveloperError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system. Check context.elementIndexUint.
@@ -240,6 +262,18 @@ Object.defineProperties(Buffer.prototype, {
 
 Buffer.prototype._getBuffer = function () {
   return this._buffer;
+};
+
+Buffer.prototype._bind = function () {
+  const gl = this._gl;
+  const target = this._bufferTarget;
+  gl.bindBuffer(target, this._buffer);
+};
+
+Buffer.prototype._unBind = function () {
+  const gl = this._gl;
+  const target = this._bufferTarget;
+  gl.bindBuffer(target, null);
 };
 
 Buffer.prototype.copyFromArrayView = function (arrayView, offsetInBytes) {

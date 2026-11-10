@@ -11,9 +11,9 @@
 #define INTERSECTION_COUNT ###
 */
 
-RayShapeIntersection intersectScene(in vec2 screenCoord, in Ray ray, out Intersections ix) {
+RayShapeIntersection intersectScene(in vec2 screenCoord, in Ray ray, in Ray rayEC, out Intersections ix) {
     // Do a ray-shape intersection to find the exact starting and ending points.
-    intersectShape(ray, ix);
+    intersectShape(ray, rayEC, ix);
 
     // Exit early if the positive shape was completely missed or behind the ray.
     RayShapeIntersection intersection = getFirstIntersection(ix);
@@ -28,7 +28,7 @@ RayShapeIntersection intersectScene(in vec2 screenCoord, in Ray ray, out Interse
     #endif
 
     // Depth
-    intersectDepth(screenCoord, ray, ix);
+    intersectDepth(screenCoord, rayEC, ix);
 
     // Find the first intersection that's in front of the ray
     #if (INTERSECTION_COUNT > 1)

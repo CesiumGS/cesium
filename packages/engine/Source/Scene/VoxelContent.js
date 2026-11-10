@@ -1,8 +1,10 @@
-import { destroyObject } from "@cesium/engine";
-import Check from "../Core/Check.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import defined from "../Core/defined.js";
+import {
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import GltfLoader from "./GltfLoader.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";
@@ -66,6 +68,8 @@ Object.defineProperties(VoxelContent.prototype, {
    * The metadata for this voxel content.
    * The metadata is an array of typed arrays, one for each field.
    * The data for one field is a flattened 3D array ordered by X, then Y, then Z.
+   *
+   * @memberof VoxelContent.prototype
    * @type {Int8Array[]|Uint8Array[]|Int16Array[]|Uint16Array[]|Int32Array[]|Uint32Array[]|Float32Array[]|Float64Array[]}
    * @readonly
    */

@@ -1,16 +1,18 @@
-import BoundingSphere from "./BoundingSphere.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import IndexDatatype from "./IndexDatatype.js";
-import Intersections2D from "./Intersections2D.js";
-import CesiumMath from "./Math.js";
-import OrientedBoundingBox from "./OrientedBoundingBox.js";
+import {
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Check,
+  DeveloperError,
+  Frozen,
+  IndexDatatype,
+  Intersections2D,
+  Math as CesiumMath,
+  OrientedBoundingBox,
+  Rectangle,
+  defined,
+} from "@cesium/core";
 import QuantizedMeshTerrainData from "./QuantizedMeshTerrainData.js";
-import Rectangle from "./Rectangle.js";
 import TaskProcessor from "./TaskProcessor.js";
 import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";
@@ -210,6 +212,7 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
       result.vertexCountWithoutSkirts,
       result.minimumHeight,
       result.maximumHeight,
+      rectangleScratch,
       BoundingSphere.clone(result.boundingSphere3D),
       Cartesian3.clone(result.occludeePointInScaledSpace),
       result.numberOfAttributes,
@@ -380,7 +383,7 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
 
 /**
  * Determines if a given child tile is available, based on the
- * {@link HeightmapTerrainData.childTileMask}.  The given child tile coordinates are assumed
+ * {@link GoogleEarthEnterpriseTerrainData.childTileMask}.  The given child tile coordinates are assumed
  * to be one of the four children of this tile.  If non-child tile coordinates are
  * given, the availability of the southeast child tile is returned.
  *

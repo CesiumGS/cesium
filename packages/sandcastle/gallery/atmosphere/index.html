@@ -1,0 +1,610 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  .tab-bar {
+    overflow: hidden;
+    border-bottom: 1px solid #ccc;
+    display: grid;
+    grid-auto-flow: column;
+  }
+
+  .tab-bar button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 4px 4px;
+  }
+
+  .tab-bar button.active {
+    background-color: white;
+    color: black;
+  }
+
+  .numinput {
+    width: 64px;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <div class="tab-bar">
+    <button
+      class="tablinks active"
+      onclick="setActiveTab(event, 'ground-table')"
+    >
+      Ground Atmosphere
+    </button>
+    <button class="tablinks" onclick="setActiveTab(event, 'sky-table')">
+      Sky Atmosphere
+    </button>
+  </div>
+  <table id="ground-table" class="tabcontent">
+    <tbody>
+      <tr>
+        <th colspan="2">Fog Settings</th>
+      </tr>
+      <tr>
+        <td>Fog</td>
+        <td>
+          <input type="checkbox" data-bind="checked: showFog" />
+        </td>
+      </tr>
+      <tr>
+        <td>Fog Min Brightness</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            data-bind="value: minimumBrightness, valueUpdate: 'input'"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: minimumBrightness, enable: showFog"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Fog Density</td>
+        <td>
+          <input
+            type="range"
+            min="0.5"
+            max="2.0"
+            step="0.1"
+            data-bind="value: density, valueUpdate: 'input'"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: density, enable: showFog"
+          />
+        </td>
+      </tr>
+      <tr>
+        <th colspan="2">Ground Atmosphere Settings</th>
+      </tr>
+      <tr>
+        <td>Terrain</td>
+        <td>
+          <input type="checkbox" data-bind="checked: enableTerrain" />
+        </td>
+      </tr>
+      <tr>
+        <td>Ground Atmosphere</td>
+        <td>
+          <input type="checkbox" data-bind="checked: showGroundAtmosphere" />
+        </td>
+      </tr>
+      <tr>
+        <td>Light Intensity</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="100.0"
+            step="1"
+            data-bind="value: groundAtmosphereLightIntensity, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: groundAtmosphereLightIntensity"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Rayleigh Coefficient: Red</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="100.0"
+            step="1"
+            data-bind="value: groundAtmosphereRayleighCoefficientR, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: groundAtmosphereRayleighCoefficientR"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Rayleigh Coefficient: Green</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="100.0"
+            step="1"
+            data-bind="value: groundAtmosphereRayleighCoefficientG, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: groundAtmosphereRayleighCoefficientG"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Rayleigh Coefficient: Blue</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="100.0"
+            step="1"
+            data-bind="value: groundAtmosphereRayleighCoefficientB, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: groundAtmosphereRayleighCoefficientB"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Mie Coefficient</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="100.0"
+            step="1"
+            data-bind="value: groundAtmosphereMieCoefficient, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: groundAtmosphereMieCoefficient"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Rayleigh Scale Height</td>
+        <td>
+          <input
+            type="range"
+            min="0"
+            max="2e4"
+            step="1e2"
+            data-bind="value: groundAtmosphereRayleighScaleHeight, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: groundAtmosphereRayleighScaleHeight"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Mie Scale Height</td>
+        <td>
+          <input
+            type="range"
+            min="0"
+            max="1e4"
+            step="1e2"
+            data-bind="value: groundAtmosphereMieScaleHeight, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: groundAtmosphereMieScaleHeight"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Mie Anisotropy</td>
+        <td>
+          <input
+            type="range"
+            min="-1.0"
+            max="1.0"
+            step="0.1"
+            data-bind="value: groundAtmosphereMieAnisotropy, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: groundAtmosphereMieAnisotropy"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Hue Shift</td>
+        <td>
+          <input
+            type="range"
+            min="-1"
+            max="1"
+            step="0.01"
+            data-bind="value: groundHueShift, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+          />
+          <input type="text" size="5" data-bind="value: groundHueShift" />
+        </td>
+      </tr>
+      <tr>
+        <td>Saturation Shift</td>
+        <td>
+          <input
+            type="range"
+            min="-1"
+            max="1"
+            step="0.01"
+            data-bind="value: groundSaturationShift, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+          />
+          <input
+            type="text"
+            size="5"
+            data-bind="value: groundSaturationShift"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Brightness Shift</td>
+        <td>
+          <input
+            type="range"
+            min="-1"
+            max="1"
+            step="0.01"
+            data-bind="value: skyBrightnessShift, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
+          />
+          <input type="text" size="5" data-bind="value: skyBrightnessShift" />
+        </td>
+      </tr>
+      <tr>
+        <td>Globe Lighting</td>
+        <td>
+          <input
+            type="checkbox"
+            data-bind="checked: enableLighting, enable: (showGroundAtmosphere || showFog)"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Lighting Fade Out Distance</td>
+        <td>
+          <input
+            type="range"
+            min="1e6"
+            max="1e8"
+            step="1e6"
+            data-bind="value: lightingFadeOutDistance, valueUpdate: 'input', enable: showGroundAtmosphere"
+          />
+          <input
+            type="text"
+            size="10"
+            data-bind="value: lightingFadeOutDistance"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Lighting Fade In Distance</td>
+        <td>
+          <input
+            type="range"
+            min="1e6"
+            max="1e8"
+            step="1e6"
+            data-bind="value: lightingFadeInDistance, valueUpdate: 'input', enable: showGroundAtmosphere"
+          />
+          <input
+            type="text"
+            size="10"
+            data-bind="value: lightingFadeInDistance"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Night Fade Out Distance</td>
+        <td>
+          <input
+            type="range"
+            min="1e6"
+            max="1e8"
+            step="1e6"
+            data-bind="value: nightFadeOutDistance, valueUpdate: 'input', enable: (showGroundAtmosphere &amp;&amp; enableLighting)"
+          />
+          <input
+            type="text"
+            size="10"
+            data-bind="value: nightFadeOutDistance"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Night Fade In Distance</td>
+        <td>
+          <input
+            type="range"
+            min="1e6"
+            max="1e8"
+            step="1e6"
+            data-bind="value: nightFadeInDistance, valueUpdate: 'input', enable: (showGroundAtmosphere &amp;&amp; enableLighting)"
+          />
+          <input type="text" size="10" data-bind="value: nightFadeInDistance" />
+        </td>
+      </tr>
+      <tr>
+        <td>Dynamic Atmosphere</td>
+        <td>
+          <input
+            type="checkbox"
+            data-bind="checked: dynamicLighting, enable: (showGroundAtmosphere || showFog)"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Dynamic Atmosphere From Sun</td>
+        <td>
+          <input
+            type="checkbox"
+            data-bind="checked: dynamicLightingFromSun, enable: (showGroundAtmosphere || showFog)"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Ground Translucency</td>
+        <td>
+          <input type="checkbox" data-bind="checked: groundTranslucency" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>HDR</td>
+        <td>
+          <input type="checkbox" data-bind="checked: hdr" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <table id="sky-table" class="tabcontent" style="display: none">
+    <tbody>
+      <tr>
+        <th colspan="2">Sky Atmosphere Settings</th>
+      </tr>
+      <tr>
+        <td>Sky Atmosphere</td>
+        <td>
+          <input type="checkbox" data-bind="checked: showSkyAtmosphere" />
+        </td>
+      </tr>
+      <tr>
+        <td>Light Intensity</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="100.0"
+            step="1"
+            data-bind="value: skyAtmosphereLightIntensity, valueUpdate: 'input', enable: (showSkyAtmosphere)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: skyAtmosphereLightIntensity"
+          />
+        </td>
+      </tr>
+
+      <tr>
+        <td>Rayleigh Coefficient: Red</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="100.0"
+            step="1"
+            data-bind="value: skyAtmosphereRayleighCoefficientR, valueUpdate: 'input', enable: (showSkyAtmosphere)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: skyAtmosphereRayleighCoefficientR"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Rayleigh Coefficient: Green</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="100.0"
+            step="1"
+            data-bind="value: skyAtmosphereRayleighCoefficientG, valueUpdate: 'input', enable: (showSkyAtmosphere)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: skyAtmosphereRayleighCoefficientG"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Rayleigh Coefficient: Blue</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="100.0"
+            step="1"
+            data-bind="value: skyAtmosphereRayleighCoefficientB, valueUpdate: 'input', enable: (showSkyAtmosphere)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: skyAtmosphereRayleighCoefficientB"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Mie Coefficient</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="100.0"
+            step="1"
+            data-bind="value: skyAtmosphereMieCoefficient, valueUpdate: 'input', enable: (showSkyAtmosphere)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: skyAtmosphereMieCoefficient"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Rayleigh Scale Height</td>
+        <td>
+          <input
+            type="range"
+            min="0"
+            max="2e4"
+            step="1e2"
+            data-bind="value: skyAtmosphereRayleighScaleHeight, valueUpdate: 'input', enable: (showSkyAtmosphere)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: skyAtmosphereRayleighScaleHeight"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Mie Scale Height</td>
+        <td>
+          <input
+            type="range"
+            min="0"
+            max="1e4"
+            step="1e2"
+            data-bind="value: skyAtmosphereMieScaleHeight, valueUpdate: 'input', enable: (showSkyAtmosphere)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: skyAtmosphereMieScaleHeight"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Mie Anisotropy</td>
+        <td>
+          <input
+            type="range"
+            min="-1.0"
+            max="1.0"
+            step="0.1"
+            data-bind="value: skyAtmosphereMieAnisotropy, valueUpdate: 'input', enable: (showSkyAtmosphere)"
+          />
+          <input
+            class="numinput"
+            type="number"
+            size="5"
+            data-bind="value: skyAtmosphereMieAnisotropy"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Hue Shift</td>
+        <td>
+          <input
+            type="range"
+            min="-1"
+            max="1"
+            step="0.01"
+            data-bind="value: skyHueShift, valueUpdate: 'input', enable: (showSkyAtmosphere)"
+          />
+          <input type="text" size="5" data-bind="value: skyHueShift" />
+        </td>
+      </tr>
+      <tr>
+        <td>Saturation Shift</td>
+        <td>
+          <input
+            type="range"
+            min="-1"
+            max="1"
+            step="0.01"
+            data-bind="value: skySaturationShift, valueUpdate: 'input', enable: (showSkyAtmosphere)"
+          />
+          <input type="text" size="5" data-bind="value: skySaturationShift" />
+        </td>
+      </tr>
+      <tr>
+        <td>Brightness Shift</td>
+        <td>
+          <input
+            type="range"
+            min="-1"
+            max="1"
+            step="0.01"
+            data-bind="value: skyBrightnessShift, valueUpdate: 'input', enable: (showSkyAtmosphere)"
+          />
+          <input type="text" size="5" data-bind="value: skyBrightnessShift" />
+        </td>
+      </tr>
+      <tr>
+        <td>Per-Fragment</td>
+        <td>
+          <input
+            type="checkbox"
+            data-bind="checked: perFragmentAtmosphere, enable: (showSkyAtmosphere)"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>HDR</td>
+        <td>
+          <input type="checkbox" data-bind="checked: hdr" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

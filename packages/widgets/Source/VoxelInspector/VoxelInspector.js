@@ -1,9 +1,5 @@
-import {
-  Math as CesiumMath,
-  Check,
-  destroyObject,
-  getElement,
-} from "@cesium/engine";
+import { Check, Math as CesiumMath, destroyObject } from "@cesium/core";
+import { getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import InspectorShared from "../InspectorShared.js";
 import VoxelInspectorViewModel from "./VoxelInspectorViewModel.js";

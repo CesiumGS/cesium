@@ -1,5 +1,4 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
+import { Cartesian3, Check } from "@cesium/core";
 import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
@@ -49,12 +48,10 @@ Cesium3DTileOptimizations.checkChildrenWithinParent = function (tile) {
 
       // Check if the child has an oriented bounding box.
       const childBoundingVolume = child.boundingVolume;
-      if (
-        !(
-          childBoundingVolume instanceof TileOrientedBoundingBox ||
-          childBoundingVolume instanceof TileBoundingRegion
-        )
-      ) {
+      if (!(
+        childBoundingVolume instanceof TileOrientedBoundingBox ||
+        childBoundingVolume instanceof TileBoundingRegion
+      )) {
         // Do not support if the parent and child both do not have oriented bounding boxes.
         tile._optimChildrenWithinParent =
           Cesium3DTileOptimizationHint.SKIP_OPTIMIZATION;

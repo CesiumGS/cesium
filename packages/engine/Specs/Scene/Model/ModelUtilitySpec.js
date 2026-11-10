@@ -1,13 +1,15 @@
 import {
   AttributeType,
-  Axis,
   Cartesian3,
-  CullFace,
-  InstanceAttributeSemantic,
   Matrix4,
-  ModelUtility,
   PrimitiveType,
   Quaternion,
+} from "@cesium/core";
+import {
+  Axis,
+  CullFace,
+  InstanceAttributeSemantic,
+  ModelUtility,
   VertexAttributeSemantic,
 } from "../../../index.js";
 
@@ -451,6 +453,7 @@ describe("Scene/Model/ModelUtility", function () {
   it("checkSupportedExtensions doesn't throw for supported extensions", function () {
     const extensionsRequired = [
       "AGI_articulations",
+      "CESIUM_mesh_vector",
       "CESIUM_primitive_outline",
     ];
     expect(function () {

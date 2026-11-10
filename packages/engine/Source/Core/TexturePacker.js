@@ -1,6 +1,4 @@
-import BoundingRectangle from "./BoundingRectangle.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
+import { BoundingRectangle, Check, defined } from "@cesium/core";
 
 /**
  * @typedef {object} TexturePacker.PackableObject
@@ -48,7 +46,7 @@ function TextureNode({ x, y, width, height }) {
  * @alias TexturePacker
  * @constructor
  * @private
- * @param {options} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {number} options.width Width of the atlas, in pixels
  * @param {number} options.height Height of atlas, in pixels
  * @param {number} options.borderPadding Amount of border padding, in pixels
@@ -122,6 +120,8 @@ TexturePacker.prototype._findNode = function (node, { width, height }) {
       return node;
     }
 
+    const borderPadding = this._borderPadding;
+
     // Vertical split (childNode1 = left half, childNode2 = right half).
     if (widthDifference > heightDifference) {
       node.childNode1 = new TextureNode({
@@ -130,12 +130,18 @@ TexturePacker.prototype._findNode = function (node, { width, height }) {
         width,
         height: nodeHeight,
       });
-      node.childNode2 = new TextureNode({
-        x: rectangle.x + width,
-        y: rectangle.y,
-        width: widthDifference,
-        height: nodeHeight,
-      });
+
+      // Apply padding only along the vertical "cut".
+      const widthDifferencePadded = widthDifference - borderPadding;
+
+      if (widthDifferencePadded > 0) {
+        node.childNode2 = new TextureNode({
+          x: rectangle.x + width + borderPadding,
+          y: rectangle.y,
+          width: widthDifferencePadded,
+          height: nodeHeight,
+        });
+      }
 
       return this._findNode(node.childNode1, { width, height });
     }
@@ -147,12 +153,19 @@ TexturePacker.prototype._findNode = function (node, { width, height }) {
       width: nodeWidth,
       height,
     });
-    node.childNode2 = new TextureNode({
-      x: rectangle.x,
-      y: rectangle.y + height,
-      width: nodeWidth,
-      height: heightDifference,
-    });
+
+    // Apply padding only along the horizontal "cut".
+    const heightDifferencePadded = heightDifference - borderPadding;
+
+    if (heightDifferencePadded > 0) {
+      node.childNode2 = new TextureNode({
+        x: rectangle.x,
+        y: rectangle.y + height + borderPadding,
+        width: nodeWidth,
+        height: heightDifferencePadded,
+      });
+    }
+
     return this._findNode(node.childNode1, { width, height });
   }
 

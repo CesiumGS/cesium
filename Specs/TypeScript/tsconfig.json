@@ -3,7 +3,8 @@
     "noEmit": true,
     "types": [],
     "strict": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "lib": ["ES2020", "DOM"]
   },
   "include": [
     "index.ts",

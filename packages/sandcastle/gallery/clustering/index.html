@@ -1,0 +1,37 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td>Pixel Range</td>
+        <td>
+          <input
+            type="range"
+            min="1"
+            max="200"
+            step="1"
+            data-bind="value: pixelRange, valueUpdate: 'input'"
+          />
+          <input type="text" size="2" data-bind="value: pixelRange" />
+        </td>
+      </tr>
+      <tr>
+        <td>Minimum Cluster Size</td>
+        <td>
+          <input
+            type="range"
+            min="2"
+            max="20"
+            step="1"
+            data-bind="value: minimumClusterSize, valueUpdate: 'input'"
+          />
+          <input type="text" size="2" data-bind="value: minimumClusterSize" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

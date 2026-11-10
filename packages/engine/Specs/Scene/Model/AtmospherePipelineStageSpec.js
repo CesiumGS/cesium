@@ -1,10 +1,9 @@
+import { Cartesian3, FixedFrameTransforms } from "@cesium/core";
 import {
   _shadersAtmosphereStageFS,
   _shadersAtmosphereStageVS,
-  Cartesian3,
   AtmospherePipelineStage,
   ModelRenderResources,
-  Transforms,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
@@ -25,7 +24,7 @@ describe(
       model = await loadAndZoomToModelAsync(
         {
           url: boxTexturedGlbUrl,
-          modelMatrix: Transforms.eastNorthUpToFixedFrame(center),
+          modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(center),
         },
         scene,
       );
@@ -62,10 +61,16 @@ describe(
         "COMPUTE_POSITION_WC_ATMOSPHERE",
       ]);
 
-      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "vec3 v_atmosphereRayleighColor;",
-        "vec3 v_atmosphereMieColor;",
-        "float v_atmosphereOpacity;",
+      ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+        "out vec3 v_atmosphereRayleighColor;",
+        "out vec3 v_atmosphereMieColor;",
+        "out float v_atmosphereOpacity;",
+      ]);
+
+      ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+        "in vec3 v_atmosphereRayleighColor;",
+        "in vec3 v_atmosphereMieColor;",
+        "in float v_atmosphereOpacity;",
       ]);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [

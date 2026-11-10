@@ -1,15 +1,18 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Check from "../../Core/Check.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import Ellipsoid from "../../Core/Ellipsoid.js";
-import IndexDatatype from "../../Core/IndexDatatype.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
-import RuntimeError from "../../Core/RuntimeError.js";
-import Transforms from "../../Core/Transforms.js";
-import AttributeType from "../AttributeType.js";
+import {
+  AttributeType,
+  Cartesian3,
+  Check,
+  ComponentDatatype,
+  Ellipsoid,
+  FixedFrameTransforms,
+  Frozen,
+  IndexDatatype,
+  Matrix4,
+  PrimitiveType,
+  RuntimeError,
+  addAllToArray,
+  defined,
+} from "@cesium/core";
 import JsonMetadataTable from "../JsonMetadataTable.js";
 import MetadataSchema from "../MetadataSchema.js";
 import ModelComponents from "../ModelComponents.js";
@@ -19,7 +22,6 @@ import StructuralMetadata from "../StructuralMetadata.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
-import addAllToArray from "../../Core/addAllToArray.js";
 
 /**
  * Loads a GeoJson model as part of the <code>MAXAR_content_geojson</code> extension with the following constraints:
@@ -33,89 +35,87 @@ import addAllToArray from "../../Core/addAllToArray.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GeoJsonLoader
- * @constructor
- * @augments ResourceLoader
  * @private
- *
- * @param {object} options Object with the following properties:
- * @param {object} options.geoJson The GeoJson object.
  */
-function GeoJsonLoader(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+class GeoJsonLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {object} options.geoJson The GeoJson object.
+   */
+  constructor(options) {
+    super();
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.geoJson", options.geoJson);
-  //>>includeEnd('debug');
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  this._geoJson = options.geoJson;
-  this._components = undefined;
-}
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("options.geoJson", options.geoJson);
+    //>>includeEnd('debug');
 
-if (defined(Object.create)) {
-  GeoJsonLoader.prototype = Object.create(ResourceLoader.prototype);
-  GeoJsonLoader.prototype.constructor = GeoJsonLoader;
-}
+    this._geoJson = options.geoJson;
+    this._components = undefined;
+  }
 
-Object.defineProperties(GeoJsonLoader.prototype, {
   /**
    * The cache key of the resource.
    *
-   * @memberof GeoJsonLoader.prototype
    *
    * @type {string}
    * @readonly
    * @private
    */
-  cacheKey: {
-    get: function () {
-      return undefined;
-    },
-  },
+  get cacheKey() {
+    return undefined;
+  }
+
   /**
    * The loaded components.
    *
-   * @memberof GeoJsonLoader.prototype
    *
    * @type {ModelComponents.Components}
    * @readonly
    * @private
    */
-  components: {
-    get: function () {
-      return this._components;
-    },
-  },
-});
+  get components() {
+    return this._components;
+  }
 
-/**
- * Loads the resource.
- * @returns {Promise<GeoJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @private
- */
-GeoJsonLoader.prototype.load = function () {
-  return Promise.resolve(this);
-};
+  /**
+   * Loads the resource.
+   * @returns {Promise<GeoJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
+   * @private
+   */
+  load() {
+    return Promise.resolve(this);
+  }
 
-/**
- * Processes the resource until it becomes ready.
- *
- * @param {FrameState} frameState The frame state.
- * @private
- */
-GeoJsonLoader.prototype.process = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("frameState", frameState);
-  //>>includeEnd('debug');
+  /**
+   * Processes the resource until it becomes ready.
+   *
+   * @param {FrameState} frameState The frame state.
+   * @private
+   */
+  process(frameState) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("frameState", frameState);
+    //>>includeEnd('debug');
 
-  if (defined(this._components)) {
+    if (defined(this._components)) {
+      return true;
+    }
+
+    this._components = parse(this._geoJson, frameState);
+    this._geoJson = undefined;
     return true;
   }
 
-  this._components = parse(this._geoJson, frameState);
-  this._geoJson = undefined;
-  return true;
-};
+  /**
+   * Unloads the resource.
+   * @private
+   */
+  unload() {
+    this._components = undefined;
+  }
+}
 
 function ParsedFeature() {
   this.lines = undefined;
@@ -651,7 +651,7 @@ function parse(geoJson, frameState) {
     Ellipsoid.WGS84,
     new Cartesian3(),
   );
-  const toGlobal = Transforms.eastNorthUpToFixedFrame(
+  const toGlobal = FixedFrameTransforms.eastNorthUpToFixedFrame(
     ecefCenter,
     Ellipsoid.WGS84,
     new Matrix4(),
@@ -685,13 +685,5 @@ function parse(geoJson, frameState) {
 
   return components;
 }
-
-/**
- * Unloads the resource.
- * @private
- */
-GeoJsonLoader.prototype.unload = function () {
-  this._components = undefined;
-};
 
 export default GeoJsonLoader;

@@ -1,9 +1,8 @@
+import { Rectangle, RuntimeError } from "@cesium/core";
 import {
   GeographicTilingScheme,
-  Rectangle,
   Request,
   Resource,
-  RuntimeError,
   WebMercatorTilingScheme,
   GoogleEarthEnterpriseMapsProvider,
   ImageryProvider,

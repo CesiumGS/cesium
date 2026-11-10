@@ -1,14 +1,16 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import combine from "../Core/combine.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  ComponentDatatype,
+  DeveloperError,
+  PixelDatatype,
+  PixelFormat,
+  combine,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ContextLimits from "../Renderer/ContextLimits.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 
@@ -20,7 +22,7 @@ import Texture from "../Renderer/Texture.js";
  * @private
  *
  * @param {Context} context The context in which the batch table is created.
- * @param {Object[]} attributes An array of objects describing a per instance attribute. Each object contains a datatype, components per attributes, whether it is normalized and a function name
+ * @param {object[]} attributes An array of objects describing a per instance attribute. Each object contains a datatype, components per attributes, whether it is normalized and a function name
  *     to retrieve the value in the vertex shader.
  * @param {number} numberOfInstances The number of instances in a batch table.
  *
@@ -131,7 +133,7 @@ Object.defineProperties(BatchTable.prototype, {
   /**
    * The attribute descriptions.
    * @memberOf BatchTable.prototype
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    */
   attributes: {

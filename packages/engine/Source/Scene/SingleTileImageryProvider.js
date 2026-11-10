@@ -1,12 +1,14 @@
-import Check from "../Core/Check.js";
+import {
+  Check,
+  Event,
+  Frozen,
+  Rectangle,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
-import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import ImageryProvider from "./ImageryProvider.js";
 
@@ -283,18 +285,18 @@ async function doRequest(resource, provider, previousError) {
 }
 
 /**
- * @typedef {Object} SingleTileImageryProvider.fromUrlOptions
+ * @typedef {object} SingleTileImageryProvider.fromUrlOptions
  *
  * Initialization options for the SingleTileImageryProvider constructor when using SingleTileImageryProvider.fromUrl
  *
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
- * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  */
 
 /**
  * Creates a provider for a single, top-level imagery tile.  The single image is assumed to use a
- * @param {Resource|String} url The url for the tile
+ * @param {Resource|string} url The url for the tile
  * @param {SingleTileImageryProvider.fromUrlOptions} [options] Object describing initialization options.
  * @returns {Promise.<SingleTileImageryProvider>} The resolved SingleTileImageryProvider.
  *

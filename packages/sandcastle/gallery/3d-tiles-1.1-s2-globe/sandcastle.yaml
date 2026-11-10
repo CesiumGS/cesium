@@ -1,0 +1,7 @@
+legacyId: 3D Tiles 1.1 S2 Globe.html
+title: S2 Globe with 3D Tiles
+description: Loads a One World Terrain dataset, courtesy Maxar,—A global scale 3D Tiles 1.1 tileset that uses 3DTILES_bounding_volume_S2, a schema for defining bounding volumes as hierarchical cells composing a unit sphere. This extension is well suited for tilesets that span the whole globe as, opposed to traditional GIS projections such as Web Mercator which can create distortions in scale, divides an ellipsoid into cells of relatively similar size.
+labels:
+  - 3D Tiles
+  - Terrain
+thumbnail: thumbnail.jpg

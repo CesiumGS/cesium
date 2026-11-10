@@ -1,0 +1,117 @@
+html {
+  height: 100%;
+}
+
+body {
+  background: #000;
+  color: #eee;
+  font-family: sans-serif;
+  font-size: 9pt;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  /* Matches --stratakit-color-border-neutral-muted */
+  --ring-color: oklch(32.63% 0.014 268.32);
+  /* Matches --stratakit-color-bg-page-depth */
+  --bg-dark: oklch(22.52% 0.005 268.32);
+  /* Matches --stratakit-color-bg-path-base */
+  --bg-lighter: oklch(24.37% 0.006 268.32);
+
+  --_rings: repeating-radial-gradient(
+    circle at center,
+    var(--ring-color) 1px,
+    var(--ring-color) 3px,
+    transparent 3px,
+    transparent 25px
+  );
+  --_gradient: linear-gradient(
+    180deg,
+    var(--bg-lighter) 0%,
+    var(--bg-dark) 100%
+  );
+
+  background-image: var(--_rings), var(--_gradient);
+}
+
+#loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0.9;
+  width: 100%;
+  height: 100%;
+  display: none;
+}
+
+#loadingOverlay h1 {
+  text-align: center;
+  position: relative;
+  top: 50%;
+  margin-top: -0.5em;
+  font-size: 2em;
+  font-weight: bold;
+}
+
+.sandcastle-loading #loadingOverlay {
+  display: block;
+}
+
+.sandcastle-loading #toolbar {
+  display: none;
+}
+
+.fullSize {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: none;
+  width: 100%;
+  height: 100%;
+}
+
+#toolbar {
+  position: absolute;
+  margin: 5px;
+  padding: 8px;
+  background: var(--stratakit-color-bg-page-base, oklch(24.37% 0.006 268.32));
+  border-radius: 4px;
+  --animation-control-height: 130px;
+  max-height: calc(100% - var(--animation-control-height));
+  overflow-y: auto;
+
+  &:empty {
+    display: none;
+  }
+
+  input {
+    vertical-align: middle;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+}
+
+.infoPanel {
+  background: rgba(42, 42, 42, 0.8);
+  padding: 4px;
+  border: 1px solid #444;
+  border-radius: 4px;
+}
+
+input {
+  accent-color: var(--stratakit-color-bg-accent-base);
+}
+input[type="checkbox"] {
+  vertical-align: bottom;
+}
+input[type="radio"] {
+  cursor: pointer;
+  margin-top: 0;
+  vertical-align: text-top;
+}
+input[type="range"] {
+  vertical-align: middle;
+}

@@ -1,16 +1,18 @@
 import {
-  computeFlyToLocationForRectangle,
-  defined,
   DeveloperError,
-  destroyObject,
   Event,
+  Math as CesiumMath,
+  Matrix4,
+  Rectangle,
+  defined,
+  destroyObject,
+} from "@cesium/core";
+import {
+  computeFlyToLocationForRectangle,
   GeocoderService,
   GeocodeType,
   getElement,
   IonGeocoderService,
-  Math as CesiumMath,
-  Matrix4,
-  Rectangle,
   sampleTerrainMostDetailed,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
@@ -293,7 +295,7 @@ Object.defineProperties(GeocoderViewModel.prototype, {
    * Gets the list of geocoder search suggestions
    * @memberof GeocoderViewModel.prototype
    *
-   * @type {Object[]}
+   * @type {object[]}
    */
   suggestions: {
     get: function () {
@@ -301,14 +303,6 @@ Object.defineProperties(GeocoderViewModel.prototype, {
     },
   },
 });
-
-/**
- * Destroys the widget.  Should be called if permanently
- * removing the widget from layout.
- */
-GeocoderViewModel.prototype.destroy = function () {
-  this._suggestionSubscription.dispose();
-};
 
 function handleArrowUp(viewModel) {
   if (viewModel._suggestions.length === 0) {
@@ -608,6 +602,7 @@ GeocoderViewModel.prototype.isDestroyed = function () {
  * removing the widget from layout.
  */
 GeocoderViewModel.prototype.destroy = function () {
+  this._suggestionSubscription.dispose();
   clearCredits(this);
   return destroyObject(this);
 };

@@ -1,7 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import { DeveloperError, Event, Frozen, defined } from "@cesium/core";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import NodeTransformationProperty from "./NodeTransformationProperty.js";
 import PropertyBag from "./PropertyBag.js";
@@ -66,7 +63,7 @@ function createEnvironmentMapPropertyBag(value) {
  *
  * @param {ModelGraphics.ConstructorOptions} [options] Object describing initialization options
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=3d-models|Cesium Sandcastle 3D Models Demo}
  */
 function ModelGraphics(options) {
   this._definitionChanged = new Event();

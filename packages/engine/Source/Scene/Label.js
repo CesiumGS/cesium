@@ -1,12 +1,14 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import NearFarScalar from "../Core/NearFarScalar.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Color,
+  DeveloperError,
+  DistanceDisplayCondition,
+  Frozen,
+  NearFarScalar,
+  defined,
+} from "@cesium/core";
 import Billboard from "./Billboard.js";
 import HeightReference from "./HeightReference.js";
 import HorizontalOrigin from "./HorizontalOrigin.js";
@@ -112,7 +114,7 @@ function parseFont(label) {
  * @property {NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} specifying near and far pixel offset scaling properties of the label based on the label's distance from the camera.
  * @property {NearFarScalar} [scaleByDistance] A {@link NearFarScalar} specifying near and far scaling properties of the label based on the label's distance from the camera.
  * @property {DistanceDisplayCondition} [distanceDisplayCondition] A {@link DistanceDisplayCondition} specifying at what distance from the camera that this label will be displayed.
- * @property {number} [disableDepthTestDistance] A number specifying the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+ * @property {number} [disableDepthTestDistance] The distance from the camera, beyond which, depth testing is disabled—to, for example, prevent clipping against terrain.
  */
 
 /**
@@ -134,7 +136,7 @@ function parseFont(label) {
  * @see LabelCollection
  * @see LabelCollection#add
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=labels|Cesium Sandcastle Labels Demo}
  */
 function Label(options, labelCollection) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -1048,10 +1050,12 @@ Object.defineProperties(Label.prototype, {
   },
 
   /**
-   * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
-   * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+   * Gets or sets the distance from the camera, beyond which, depth testing is disabled—to, for example, prevent clipping against terrain.
+   * When set to <code>undefined</code> or
+   * <code>0</code>, the depth test is always applied. When set to Number.<code>POSITIVE_INFINITY</code>, the depth test is never applied.
    * @memberof Label.prototype
-   * @type {number}
+   * @type {number|undefined}
+   * @default undefined
    */
   disableDepthTestDistance: {
     get: function () {
@@ -1184,6 +1188,38 @@ Object.defineProperties(Label.prototype, {
       }
     },
   },
+
+  /**
+   * When <code>true</code>, this label is ready to render, i.e., the glyphs have been mapped and the WebGL resources are created. This property is exposed for testing purposes.
+   * @memberof Label.prototype
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  ready: {
+    get: function () {
+      if (this._rebindAllGlyphs || this._repositionAllGlyphs) {
+        return false;
+      }
+
+      if (
+        defined(this._backgroundBillboard) &&
+        !this._backgroundBillboard.ready
+      ) {
+        return false;
+      }
+
+      const glyphs = this._glyphs;
+      for (let i = 0, len = glyphs.length; i < len; i++) {
+        const glyph = glyphs[i];
+        if (defined(glyph.billboard) && !glyph.billboard.ready) {
+          return false;
+        }
+      }
+
+      return true;
+    },
+  },
 });
 
 Label.prototype._updateClamping = function () {
@@ -1248,10 +1284,10 @@ Label.getScreenSpaceBoundingBox = function (
   screenSpacePosition,
   result,
 ) {
-  let x = 0;
-  let y = 0;
-  let width = 0;
-  let height = 0;
+  let x;
+  let y;
+  let width;
+  let height;
   const scale = label.totalScale;
 
   const backgroundBillboard = label._backgroundBillboard;

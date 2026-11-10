@@ -1,6 +1,7 @@
-import WebGLConstants from "../Core/WebGLConstants.js";
+import { WebGLConstants } from "@cesium/core";
 
 /**
+ * @enum {number}
  * @private
  */
 const RenderbufferFormat = {
@@ -39,4 +40,7 @@ const RenderbufferFormat = {
     return RenderbufferFormat.RGBA8;
   },
 };
-export default Object.freeze(RenderbufferFormat);
+
+Object.freeze(RenderbufferFormat);
+
+export default RenderbufferFormat;

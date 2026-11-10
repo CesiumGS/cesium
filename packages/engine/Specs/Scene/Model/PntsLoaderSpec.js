@@ -3,15 +3,17 @@ import {
   Color,
   ComponentDatatype,
   Frozen,
-  DracoLoader,
   Matrix4,
+  RuntimeError,
+} from "@cesium/core";
+import {
+  DracoLoader,
   MetadataClass,
   MetadataComponentType,
   MetadataType,
   PntsLoader,
   Resource,
   ResourceCache,
-  RuntimeError,
   VertexAttributeSemantic,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
@@ -48,6 +50,8 @@ describe(
       "./Data/Cesium3DTiles/PointCloud/PointCloudDracoPartial/pointCloudDracoPartial.pnts";
     const pointCloudDracoBatchedUrl =
       "./Data/Cesium3DTiles/PointCloud/PointCloudDracoBatched/pointCloudDracoBatched.pnts";
+    const pointCloudDracoInvalidUrl =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudDracoInvalid/pointCloudDracoInvalid.pnts";
     const pointCloudWGS84Url =
       "./Data/Cesium3DTiles/PointCloud/PointCloudWGS84/pointCloudWGS84.pnts";
     const pointCloudBatchedUrl =
@@ -164,6 +168,19 @@ describe(
         expect(Object.keys(propertyAttribute.properties).sort()).toEqual(
           attributePropertyNames.sort(),
         );
+      }
+    }
+
+    /**
+     * Expects the `count` property of each of the given attributes
+     * to be the given value.
+     *
+     * @param {Attribute[]} attributes The attributes
+     * @param {number} count The count value
+     */
+    function expectCountsToBe(attributes, count) {
+      for (const attribute of attributes) {
+        expect(attribute.count).toBe(count);
       }
     }
 
@@ -301,6 +318,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPosition(attributes[0]);
         expectColorRGB(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -315,6 +333,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPosition(attributes[0]);
         expectColorRGBA(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -329,6 +348,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPosition(attributes[0]);
         expectColorRGB565(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -343,6 +363,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPosition(attributes[0]);
         expectDefaultColor(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -357,6 +378,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPosition(attributes[0]);
         expectConstantColor(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -372,6 +394,7 @@ describe(
         expectPosition(attributes[0]);
         expectNormal(attributes[1]);
         expectColorRGB(attributes[2]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -391,6 +414,7 @@ describe(
           false,
         );
         expectColorRGB(attributes[2]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -405,6 +429,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPositionQuantized(attributes[0], ComponentDatatype.UNSIGNED_BYTE);
         expectColorRGB(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -424,6 +449,7 @@ describe(
           false,
         );
         expectColorRGB(attributes[2]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -462,6 +488,7 @@ describe(
           true,
         );
         expectColorRGB(attributes[2]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -496,6 +523,7 @@ describe(
         expectPositionQuantized(attributes[0]);
         expectNormal(attributes[1]);
         expectColorRGB(attributes[2]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -535,7 +563,20 @@ describe(
         );
         expectColorRGB(attributes[2]);
         expectBatchId(attributes[3], ComponentDatatype.UNSIGNED_BYTE);
+        expectCountsToBe(attributes, 1000);
       });
+    });
+
+    it("loads PointCloudDracoInvalid without crashing", async function () {
+      // Test for https://github.com/CesiumGS/cesium/issues/12872:
+      // PNTS files that are invalid due to a missing batch table
+      // binary and draco compression extension object should
+      // load. (The metadata is expected to be empty here)
+      const loader = await loadPnts(pointCloudDracoInvalidUrl);
+      const components = loader.components;
+      expect(components).toBeDefined();
+      const isBatched = false;
+      expectMetadata(components.structuralMetadata, {}, isBatched);
     });
 
     it("loads PointCloudWGS84", function () {
@@ -549,6 +590,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPosition(attributes[0]);
         expectColorRGB(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -584,6 +626,7 @@ describe(
         expectNormal(attributes[1]);
         expectDefaultColor(attributes[2]);
         expectBatchId(attributes[3], ComponentDatatype.UNSIGNED_BYTE);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -607,6 +650,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPosition(attributes[0]);
         expectColorRGB(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -662,6 +706,7 @@ describe(
           expect(attributes.length).toBe(5);
           expectPosition(attributes[0]);
           expectColorRGB(attributes[1]);
+          expectCountsToBe(attributes, 1000);
         },
       );
     });
@@ -698,6 +743,7 @@ describe(
           expect(attributes.length).toBe(5);
           expectPosition(attributes[0]);
           expectColorRGB(attributes[1]);
+          expectCountsToBe(attributes, 1000);
         },
       );
     });
@@ -718,6 +764,7 @@ describe(
           expect(positionAttribute.typedArray).toBeDefined();
 
           expectColorRGB(attributes[1]);
+          expectCountsToBe(attributes, 1000);
         },
       );
     });
@@ -762,6 +809,7 @@ describe(
             true,
           );
           expectColorRGB(attributes[2]);
+          expectCountsToBe(attributes, 1000);
         },
       );
     });

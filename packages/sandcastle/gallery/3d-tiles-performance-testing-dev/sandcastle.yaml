@@ -1,0 +1,7 @@
+legacyId: development/3D Tiles Performance Testing.html
+title: Streaming Performance Testing - Dev
+description: Measure 3D Tiles streaming and rendering performance.
+labels:
+  - Development
+thumbnail: thumbnail.jpg
+development: true

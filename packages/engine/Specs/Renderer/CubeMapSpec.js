@@ -1,22 +1,23 @@
 import {
-  BufferUsage,
   Cartesian3,
   Color,
   ComponentDatatype,
-  defined,
+  PixelDatatype,
   PixelFormat,
+  defined,
+} from "@cesium/core";
+import {
+  BufferUsage,
   Resource,
   ClearCommand,
   ContextLimits,
   CubeMap,
-  PixelDatatype,
   Sampler,
   Texture,
   TextureMagnificationFilter,
   TextureMinificationFilter,
   TextureWrap,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe(

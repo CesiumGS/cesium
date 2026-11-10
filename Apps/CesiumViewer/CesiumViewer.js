@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-undef
 window.CESIUM_BASE_URL = window.CESIUM_BASE_URL
   ? window.CESIUM_BASE_URL
   : "../../Build/CesiumUnminified/";

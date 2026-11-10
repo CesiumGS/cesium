@@ -65,7 +65,9 @@ describe("Scene/VertexAttributeSemantic", function () {
       "_FEATURE_ID_1",
       "_OTHER",
       "_SCALE",
+      "KHR_gaussian_splatting:SCALE",
       "_ROTATION",
+      "KHR_gaussian_splatting:ROTATION",
     ];
 
     const expectedSemantics = [
@@ -84,6 +86,8 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.FEATURE_ID,
       undefined,
       VertexAttributeSemantic.SCALE,
+      VertexAttributeSemantic.SCALE,
+      VertexAttributeSemantic.ROTATION,
       VertexAttributeSemantic.ROTATION,
     ];
 

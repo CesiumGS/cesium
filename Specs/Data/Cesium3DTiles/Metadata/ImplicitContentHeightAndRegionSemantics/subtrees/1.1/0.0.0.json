@@ -1,6 +1,6 @@
 {
     "buffers": [
-        {  
+        {
             "uri": "../metadata.bin",
             "byteLength": 1344
         }
@@ -35,7 +35,7 @@
     },
     "propertyTables": [
         {
-            "class": "tile",
+            "class": "content",
             "count": 21,
             "properties": {
                 "minimumHeight": {
@@ -50,5 +50,5 @@
             }
         }
     ],
-    "tileMetadata": 0
+    "contentMetadata": [0]
 }

@@ -1,18 +1,21 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Cartographic from "../Core/Cartographic.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Cartographic,
+  Color,
+  Ellipsoid,
+  EncodedCartesian3,
+  FixedFrameTransforms,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  OrthographicFrustum,
+  defined,
+} from "@cesium/core";
 import Simon1994PlanetaryPositions from "../Core/Simon1994PlanetaryPositions.js";
-import Transforms from "../Core/Transforms.js";
+import CelestialFrameTransforms from "../Core/CelestialFrameTransforms.js";
 import SceneMode from "../Scene/SceneMode.js";
 import SunLight from "../Scene/SunLight.js";
 
@@ -25,6 +28,25 @@ function UniformState() {
    * @type {Texture}
    */
   this.globeDepthTexture = undefined;
+  /**
+   * @type {Texture}
+   */
+  this.edgeIdTexture = undefined;
+  /**
+   * @type {Texture}
+   */
+  this.edgeColorTexture = undefined;
+  /**
+   * @type {Texture}
+   */
+  this.edgeDepthTexture = undefined; // packed depth color attachment from edge pass
+  /**
+   * Texture written by the planar fill feature-ID pre-pass.
+   * Contains per-pixel feature IDs for non-behind planar fill geometry.
+   * Sampled by behind fills to test same-object coplanarity.
+   * @type {Texture}
+   */
+  this.planarFillIdTexture = undefined;
   /**
    * @type {number}
    */
@@ -143,8 +165,10 @@ function UniformState() {
   this._frustum2DWidth = 0.0;
   this._eyeHeight = 0.0;
   this._eyeHeight2D = new Cartesian2();
+  this._eyeCartographic = new Cartesian3();
   this._eyeEllipsoidNormalEC = new Cartesian3();
   this._eyeEllipsoidCurvature = new Cartesian2();
+  this._eyeToEnu = new Matrix3();
   this._modelToEnu = new Matrix4();
   this._enuToModel = new Matrix4();
   this._pixelRatio = 1.0;
@@ -697,6 +721,19 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
+   * The geodetic longitude (<code>x</code>), latitude (<code>y</code>) in radians and
+   * height (<code>z</code>) in meters of the eye (camera).
+   * This is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  eyeCartographic: {
+    get: function () {
+      return this._eyeCartographic;
+    },
+  },
+
+  /**
    * The height (<code>x</code>) and the height squared (<code>y</code>)
    * in meters of the eye (camera) above the 2D world plane. This uniform is only valid
    * when the {@link SceneMode} is <code>SCENE2D</code>.
@@ -733,8 +770,21 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
+   * A 3x3 rotation from eye coordinates to an east-north-up coordinate system
+   * centered at the position on the ellipsoid below the camera.
+   * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   * @memberof UniformState.prototype
+   * @type {Matrix3}
+   */
+  eyeToEnu: {
+    get: function () {
+      return this._eyeToEnu;
+    },
+  },
+
+  /**
    * A transform from model coordinates to an east-north-up coordinate system
-   * centered at the position on the ellipsoid below the camera
+   * centered at the position on the ellipsoid nearest to the camera.
    * @memberof UniformState.prototype
    * @type {Matrix4}
    */
@@ -1222,6 +1272,7 @@ function setInfiniteProjection(uniformState, matrix) {
 
 const surfacePositionScratch = new Cartesian3();
 const enuTransformScratch = new Matrix4();
+const enuRotationScratch = new Matrix3();
 
 function setCamera(uniformState, camera) {
   Cartesian3.clone(camera.positionWC, uniformState._cameraPosition);
@@ -1247,6 +1298,12 @@ function setCamera(uniformState, camera) {
     );
   } else {
     uniformState._eyeHeight = positionCartographic.height;
+    uniformState._eyeCartographic = Cartesian3.fromElements(
+      positionCartographic.longitude,
+      positionCartographic.latitude,
+      positionCartographic.height,
+      uniformState._eyeCartographic,
+    );
     uniformState._eyeEllipsoidNormalEC =
       ellipsoid.geodeticSurfaceNormalCartographic(
         positionCartographic,
@@ -1273,7 +1330,7 @@ function setCamera(uniformState, camera) {
     uniformState._eyeEllipsoidNormalEC,
   );
 
-  const enuToWorld = Transforms.eastNorthUpToFixedFrame(
+  const enuToWorld = FixedFrameTransforms.eastNorthUpToFixedFrame(
     surfacePosition,
     ellipsoid,
     enuTransformScratch,
@@ -1287,6 +1344,17 @@ function setCamera(uniformState, camera) {
     uniformState._enuToModel,
     uniformState._modelToEnu,
   );
+
+  const enuToWorldRotation = Matrix4.getRotation(
+    enuToWorld,
+    enuRotationScratch,
+  );
+  const enuToView = Matrix3.multiply(
+    uniformState._viewRotation,
+    enuToWorldRotation,
+    enuRotationScratch,
+  );
+  uniformState._eyeToEnu = Matrix3.transpose(enuToView, uniformState._eyeToEnu);
 
   if (
     !CesiumMath.equalsEpsilon(
@@ -1308,7 +1376,7 @@ function setCamera(uniformState, camera) {
 const transformMatrix = new Matrix3();
 const sunCartographicScratch = new Cartographic();
 function setSunAndMoonDirections(uniformState, frameState) {
-  Transforms.computeIcrfToCentralBodyFixedMatrix(
+  CelestialFrameTransforms.computeIcrfToCentralBodyFixedMatrix(
     frameState.time,
     transformMatrix,
   );
@@ -1531,10 +1599,11 @@ UniformState.prototype.update = function (frameState) {
   this._invertClassificationColor = frameState.invertClassificationColor;
 
   this._frameState = frameState;
-  this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(
-    frameState.time,
-    this._temeToPseudoFixed,
-  );
+  this._temeToPseudoFixed =
+    CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
+      frameState.time,
+      this._temeToPseudoFixed,
+    );
 
   // Convert the relative splitPosition to absolute pixel coordinates
   this._splitPosition =
@@ -1869,7 +1938,7 @@ function view2Dto3D(
   );
 
   // Compute the rotation from the local ENU at the real world camera position to the fixed axes.
-  const enuToFixed = Transforms.eastNorthUpToFixedFrame(
+  const enuToFixed = FixedFrameTransforms.eastNorthUpToFixedFrame(
     position3D,
     ellipsoid,
     view2Dto3DMatrix4Scratch,

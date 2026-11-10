@@ -1,0 +1,130 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td>Scale with Max Size</td>
+        <td>
+          <input type="checkbox" data-bind="checked: scaleWithMaximumSize" />
+        </td>
+      </tr>
+      <tr>
+        <td>Scale X</td>
+        <td>
+          <input
+            type="range"
+            min="5.0"
+            max="50.0"
+            step="1.0"
+            data-bind="value: scaleX, valueUpdate: 'input', enable: !scaleWithMaximumSize"
+          />
+          <input
+            type="text"
+            size="1"
+            data-bind="value: scaleX, enable: !scaleWithMaximumSize"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Scale Y</td>
+        <td>
+          <input
+            type="range"
+            min="5.0"
+            max="50.0"
+            step="1.0"
+            data-bind="value: scaleY, valueUpdate: 'input', enable: !scaleWithMaximumSize"
+          />
+          <input
+            type="text"
+            size="1"
+            data-bind="value: scaleY, enable: !scaleWithMaximumSize"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Maximum Size X</td>
+        <td>
+          <input
+            type="range"
+            min="5.0"
+            max="50.0"
+            step="1.0"
+            data-bind="value: maximumSizeX, valueUpdate: 'input'"
+          />
+          <input type="text" size="1" data-bind="value: maximumSizeX" />
+        </td>
+      </tr>
+      <tr>
+        <td>Maximum Size Y</td>
+        <td>
+          <input
+            type="range"
+            min="5.0"
+            max="50.0"
+            step="1.0"
+            data-bind="value: maximumSizeY, valueUpdate: 'input'"
+          />
+          <input type="text" size="1" data-bind="value: maximumSizeY" />
+        </td>
+      </tr>
+      <tr>
+        <td>Maximum Size Z</td>
+        <td>
+          <input
+            type="range"
+            min="5.0"
+            max="50.0"
+            step="1.0"
+            data-bind="value: maximumSizeZ, valueUpdate: 'input'"
+          />
+          <input type="text" size="1" data-bind="value: maximumSizeZ" />
+        </td>
+      </tr>
+      <tr>
+        <td>Render Slice</td>
+        <td>
+          <input type="checkbox" data-bind="checked: renderSlice" />
+        </td>
+      </tr>
+      <tr>
+        <td>Slice</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            data-bind="value: slice, valueUpdate: 'input', enable: renderSlice"
+          />
+          <input
+            type="text"
+            size="1"
+            data-bind="value: slice, enable: renderSlice"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Color</td>
+        <td><select data-bind="options: colors, value: color"></select></td>
+      </tr>
+      <tr>
+        <td>Brightness</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            data-bind="value: brightness, valueUpdate: 'input'"
+          />
+          <input type="text" size="1" data-bind="value: brightness" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

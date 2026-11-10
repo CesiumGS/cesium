@@ -12,7 +12,8 @@ dist
 dist-ssr
 *.local
 *.tsbuildinfo
+.env
 
-gallery/list.json
+public/gallery
 templates/Sandcastle.d.ts
 templates/Sandcastle.js

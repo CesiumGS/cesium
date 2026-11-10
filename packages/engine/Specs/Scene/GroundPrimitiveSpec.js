@@ -1,8 +1,6 @@
 import {
-  ApproximateTerrainHeights,
   Color,
   ColorGeometryInstanceAttribute,
-  destroyObject,
   DistanceDisplayConditionGeometryInstanceAttribute,
   Ellipsoid,
   GeometryInstance,
@@ -12,6 +10,10 @@ import {
   Rectangle,
   RectangleGeometry,
   ShowGeometryInstanceAttribute,
+  destroyObject,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
   Pass,
   RenderState,
   ClassificationType,
@@ -23,7 +25,6 @@ import {
   Primitive,
   StencilConstants,
 } from "../../index.js";
-
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -1153,6 +1154,49 @@ describe(
 
       expect(scene).toPickAndCall(function (result) {
         expect(result.id).toEqual("rectangle");
+      });
+    });
+
+    // Test edge-case from #12978 of geometry instances z-fighting when rendered side-by-side
+    it("picks the correct instance", function () {
+      if (!GroundPrimitive.isSupported(scene)) {
+        return;
+      }
+      // This edge-case only occurs when the right instance is rendered before the left instance
+      const rectangles = [
+        {
+          rectangle: Rectangle.fromRadians(-1.0001, 0.5, -1.0, 0.5001),
+          id: "right",
+        },
+        {
+          rectangle: Rectangle.fromRadians(-1.0002, 0.5, -1.0001, 0.5001),
+          id: "left",
+        },
+      ];
+      const color = ColorGeometryInstanceAttribute.fromColor(Color.RED);
+      primitive = new GroundPrimitive({
+        geometryInstances: rectangles.map(
+          ({ rectangle, id }) =>
+            new GeometryInstance({
+              geometry: PolygonGeometry.fromPositions({
+                positions: Rectangle.subsample(rectangle),
+              }),
+              id,
+              attributes: {
+                color,
+              },
+            }),
+        ),
+        asynchronous: false,
+      });
+
+      // Slightly shift the rectangle such that without the proper discard,
+      // the right rectangle will render over the left during the picking pass
+      rectangle = Rectangle.fromRadians(-1.000201, 0.5, -1.0, 0.5001);
+      verifyGroundPrimitiveRender(primitive, color.value);
+
+      expect(scene).toPickAndCall(function (result) {
+        expect(result.id).toEqual("left");
       });
     });
 

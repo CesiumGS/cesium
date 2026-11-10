@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core";
 import { MetadataComponentType } from "@cesium/engine";
-import defined from "../Core/defined.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
@@ -264,13 +264,13 @@ function getPickShaderProgram(context, shaderProgram, pickId) {
 
   const hasFragData = sources.some((source) => source.includes("out_FragData"));
   const outputColorVariable = hasFragData ? "out_FragData_0" : "out_FragColor";
-  const newMain = `void main () 
-{ 
-    czm_non_pick_main(); 
-    if (${outputColorVariable}.a == 0.0) { 
-        discard; 
-    } 
-    ${outputColorVariable} = ${pickId}; 
+  const newMain = `void main ()
+{
+    czm_non_pick_main();
+    if (${outputColorVariable}.a == 0.0) {
+        discard;
+    }
+    ${outputColorVariable} = ${pickId};
 } `;
 
   const length = sources.length;
@@ -346,6 +346,100 @@ DerivedCommand.createPickDerivedCommand = function (
   return result;
 };
 
+// Repacks an RGBA8-normalized pick color into the uint32 pick ID so it can be
+// carried losslessly in the R channel of the RGBA32F snap framebuffer.
+// Injected only into snap-derived shaders; referenced by DrawCommand.snapId
+// expressions built in PickingPipelineStage.
+const snapHelperSource = `uint rgba8UnormToUint32(vec4 c)
+{
+    uvec4 b = uvec4(c * 255.0 + 0.5);
+    return (b.r) | (b.g << 8u) | (b.b << 16u) | (b.a << 24u);
+}
+`;
+
+function getSnapShaderProgram(context, shaderProgram, snapId) {
+  const cachedShader = context.shaderCache.getDerivedShaderProgram(
+    shaderProgram,
+    "snap",
+  );
+  if (defined(cachedShader)) {
+    return cachedShader;
+  }
+
+  const attributeLocations = shaderProgram._attributeLocations;
+  const { sources, defines } = shaderProgram.fragmentShaderSource;
+
+  const hasFragData = sources.some((source) => source.includes("out_FragData"));
+  const outputColorVariable = hasFragData ? "out_FragData_0" : "out_FragColor";
+  const newMain = `${snapHelperSource}
+void main ()
+{
+    czm_non_snap_main();
+    if (${outputColorVariable}.a == 0.0) {
+        discard;
+    }
+    ${outputColorVariable} = ${snapId};
+} `;
+
+  const length = sources.length;
+  const newSources = new Array(length + 1);
+  for (let i = 0; i < length; ++i) {
+    newSources[i] = ShaderSource.replaceMain(sources[i], "czm_non_snap_main");
+  }
+  newSources[length] = newMain;
+  const fragmentShaderSource = new ShaderSource({
+    sources: newSources,
+    defines: defines,
+  });
+  return context.shaderCache.createDerivedShaderProgram(shaderProgram, "snap", {
+    vertexShaderSource: shaderProgram.vertexShaderSource,
+    fragmentShaderSource: fragmentShaderSource,
+    attributeLocations: attributeLocations,
+  });
+}
+
+/**
+ * Derives the command used during a snapping pass (see Scene#snap). Identical
+ * in structure to the pick derived command, but the fragment shader writes the
+ * float snap payload (DrawCommand.snapId) into the RGBA32F snap framebuffer
+ * instead of the RGBA8 pick color.
+ *
+ * @private
+ */
+DerivedCommand.createSnapDerivedCommand = function (
+  scene,
+  command,
+  context,
+  result,
+) {
+  if (!defined(result)) {
+    result = {};
+  }
+
+  const shader = result.snapCommand?.shaderProgram;
+  const renderState = result.snapCommand?.renderState;
+
+  result.snapCommand = DrawCommand.shallowClone(command, result.snapCommand);
+
+  if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
+    result.snapCommand.shaderProgram = getSnapShaderProgram(
+      context,
+      command.shaderProgram,
+      command.snapId,
+    );
+    result.snapCommand.renderState = getPickRenderState(
+      scene,
+      command.renderState,
+    );
+    result.shaderProgramId = command.shaderProgram.id;
+  } else {
+    result.snapCommand.shaderProgram = shader;
+    result.snapCommand.renderState = renderState;
+  }
+
+  return result;
+};
+
 /**
  * Replaces the value of the specified 'define' directive identifier
  * with the given value.
@@ -395,29 +489,6 @@ function getComponentCount(classProperty) {
 }
 
 /**
- * Returns the type that the given class property has in a GLSL shader.
- *
- * It returns the same string as `PropertyTextureProperty.prototype.getGlslType`
- * for a property texture property with the given class property
- *
- * @param {MetadataClassProperty} classProperty The class property
- * @returns {string} The GLSL shader type string for the property
- */
-function getGlslType(classProperty) {
-  const componentCount = getComponentCount(classProperty);
-  if (classProperty.normalized) {
-    if (componentCount === 1) {
-      return "float";
-    }
-    return `vec${componentCount}`;
-  }
-  if (componentCount === 1) {
-    return "int";
-  }
-  return `ivec${componentCount}`;
-}
-
-/**
  * Returns a shader statement that applies the inverse of the
  * value transform to the given value, based on the given offset
  * and scale.
@@ -426,6 +497,7 @@ function getGlslType(classProperty) {
  * @param {string} offset The offset
  * @param {string} scale The scale
  * @returns {string} The statement
+ * @ignore
  */
 function unapplyValueTransform(input, offset, scale) {
   return `((${input} - float(${offset})) / float(${scale}))`;
@@ -438,6 +510,7 @@ function unapplyValueTransform(input, offset, scale) {
  * @param {string} input The input value
  * @param {string} componentType The component type
  * @returns {string} The statement
+ * @ignore
  */
 function unnormalize(input, componentType) {
   const max = MetadataComponentType.getMaximum(componentType);
@@ -452,6 +525,7 @@ function unnormalize(input, componentType) {
  * @param {object} metadataProperty The metadata property, either
  * a `PropertyTextureProperty` or a `PropertyAttributeProperty`
  * @returns {string} The string
+ * @ignore
  */
 function getSourceValueStringScalar(classProperty, metadataProperty) {
   let result = `float(value)`;
@@ -480,6 +554,7 @@ function getSourceValueStringScalar(classProperty, metadataProperty) {
  * a `PropertyTextureProperty` or a `PropertyAttributeProperty`
  * @param {string} componentName The name, in ["x", "y", "z", "w"]
  * @returns {string} The string
+ * @ignore
  */
 function getSourceValueStringComponent(
   classProperty,
@@ -547,7 +622,7 @@ function getPickMetadataShaderProgram(
 
   const metadataProperty = pickedMetadataInfo.metadataProperty;
   const classProperty = pickedMetadataInfo.classProperty;
-  const glslType = getGlslType(classProperty);
+  const glslType = classProperty.getGlslType();
 
   // Define the components that will go into the output `metadataValues`.
   // This will be the 'color' that is written into the frame buffer,

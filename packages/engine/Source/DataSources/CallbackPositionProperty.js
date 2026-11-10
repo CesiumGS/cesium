@@ -1,8 +1,10 @@
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
-import ReferenceFrame from "../Core/ReferenceFrame.js";
+import {
+  DeveloperError,
+  Event,
+  JulianDate,
+  ReferenceFrame,
+  defined,
+} from "@cesium/core";
 import PositionProperty from "./PositionProperty.js";
 
 /**
@@ -15,7 +17,7 @@ import PositionProperty from "./PositionProperty.js";
  * @param {boolean} isConstant <code>true</code> when the callback function returns the same value every time, <code>false</code> if the value will change.
  * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Callback%20Position%20Property.html|Cesium Sandcastle Callback Position Property Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=callback-position-property|Cesium Sandcastle Callback Position Property Demo}
  */
 function CallbackPositionProperty(callback, isConstant, referenceFrame) {
   this._callback = undefined;

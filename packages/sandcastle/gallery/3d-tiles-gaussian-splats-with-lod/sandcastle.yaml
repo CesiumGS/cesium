@@ -1,0 +1,8 @@
+title: "3D Tiles Gaussian Splats – Multiple LODs"
+description: A Gaussian Splats 3D Tiles dataset using multiple levels of detail (LOD). As you zoom in, the dataset transitions from a lower LOD with fewer, larger splats to a higher LOD with more detailed splats, balancing detail, visual fidelity, and performance.
+labels:
+  - Showcases
+  - 3D Tiles
+  - Gaussian Splats
+  - Performance
+thumbnail: thumbnail.jpg

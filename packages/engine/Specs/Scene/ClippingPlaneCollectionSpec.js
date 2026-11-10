@@ -8,15 +8,16 @@ import {
   Intersect,
   Math as CesiumMath,
   Matrix4,
+  PixelDatatype,
   PixelFormat,
   Plane,
-  PixelDatatype,
+} from "@cesium/core";
+import {
   TextureMinificationFilter,
   TextureWrap,
   ClippingPlane,
   ClippingPlaneCollection,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/ClippingPlaneCollection", function () {
@@ -26,7 +27,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     new ClippingPlane(Cartesian3.UNIT_Y, 2.0),
   ];
 
-  const transform = new Matrix4.fromTranslation(new Cartesian3(1.0, 3.0, 2.0));
+  const transform = Matrix4.fromTranslation(new Cartesian3(1.0, 3.0, 2.0));
   const boundingVolume = new BoundingSphere(Cartesian3.ZERO, 1.0);
 
   function decodeUint8Plane(pixel1, pixel2) {

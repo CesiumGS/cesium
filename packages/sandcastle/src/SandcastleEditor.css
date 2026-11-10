@@ -1,0 +1,30 @@
+.editor-container {
+  grid-area: code;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .header {
+    display: flex;
+    align-items: flex-end;
+    padding-left: var(--stratakit-space-x1);
+  }
+
+  .editor-actions {
+    display: flex;
+    gap: var(--stratakit-space-x1);
+    padding: var(--stratakit-space-x1);
+
+    .icon-button {
+      padding: var(--stratakit-space-x1);
+    }
+  }
+
+  .editor-wrapper {
+    border-top: var(--stratakit-ext-border-border) solid
+      var(--stratakit-color-border-neutral-muted);
+    flex-shrink: 1;
+    /* Monaco needs a defined height for dynamic resizing to work */
+    height: 100%;
+  }
+}

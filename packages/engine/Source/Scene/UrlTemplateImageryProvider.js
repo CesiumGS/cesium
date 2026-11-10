@@ -1,15 +1,17 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import combine from "../Core/combine.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Check,
+  Event,
+  Frozen,
+  GeographicProjection,
+  Math as CesiumMath,
+  Rectangle,
+  combine,
+  defined,
+} from "@cesium/core";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
-import GeographicProjection from "../Core/GeographicProjection.js";
-import CesiumMath from "../Core/Math.js";
-import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import ImageryProvider from "./ImageryProvider.js";
@@ -134,7 +136,7 @@ const pickFeaturesTags = combine(tags, {
  *        that this can be dynamically overridden by modifying the {@link UriTemplateImageryProvider#enablePickFeatures}
  *        property.
  * @property {TileDiscardPolicy} [tileDiscardPolicy] A policy for discarding tile images according to some criteria
- * @property {Object} [customTags] Allow to replace custom keywords in the URL template. The object must have strings as keys and functions as values.
+ * @property {object} [customTags] Allow to replace custom keywords in the URL template. The object must have strings as keys and functions as values.
  */
 
 /**

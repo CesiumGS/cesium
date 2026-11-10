@@ -1,66 +1,68 @@
 {
-    "asset": {
-        "extras": {
-            "ion": {
-                "georeferenced": true,
-                "movable": true
-            }
-        },
-        "version": "1.1"
+  "asset": {
+    "extras": {
+      "ion": {
+        "georeferenced": true,
+        "movable": true
+      }
     },
-    "extensions": {
-        "3DTILES_content_gltf": {
-            "extensionsRequired": [
-                "KHR_spz_gaussian_splats_compression"
-            ],
-            "extensionsUsed": [
-                "KHR_spz_gaussian_splats_compression"
-            ]
-        }
-    },
-    "extensionsUsed": [
-        "3DTILES_content_gltf"
-    ],
-    "geometricError": 14.76778488662848,
-    "root": {
-        "boundingVolume": {
-            "box": [
-                1.2307894825935364,
-                -0.6764951944351196,
-                186.9346923828125,
-                2.405353009700775,
-                0.0,
-                0.0,
-                0.0,
-                2.5862385034561157,
-                0.0,
-                0.0,
-                0.0,
-                6.484405517578125
-            ]
-        },
-        "content": {
-            "uri": "0/0.glb"
-        },
-        "geometricError": 0.0,
-        "refine": "REPLACE",
-        "transform": [
-            -0.14382095244935905,
-            0.9896037255571338,
-            0.0,
-            0.0,
-            -0.7120020847592599,
-            -0.1034765889935951,
-            0.6945110703428119,
-            0.0,
-            0.6872907426519194,
-            0.09988524362332703,
-            0.7194820172674795,
-            0.0,
-            4391456.686631473,
-            638218.5788113032,
-            4566368.395700517,
-            1.0
-        ]
+    "version": "1.1"
+  },
+  "extensions": {
+    "3DTILES_content_gltf": {
+      "extensionsRequired": [
+        "KHR_gaussian_splatting",
+        "KHR_gaussian_splatting_compression_spz_2"
+      ],
+      "extensionsUsed": [
+        "KHR_gaussian_splatting",
+        "KHR_gaussian_splatting_compression_spz_2"
+      ]
     }
+  },
+  "extensionsUsed": [
+    "3DTILES_content_gltf"
+  ],
+  "geometricError": 76.94345372195917,
+  "root": {
+    "boundingVolume": {
+      "box": [
+        0.759602474620948,
+        -1.6211592734702087,
+        2566.3544788548998,
+        8.432663940269968,
+        0.0,
+        0.0,
+        0.0,
+        8.127358416707006,
+        0.0,
+        0.0,
+        0.0,
+        36.64573633729674
+      ]
+    },
+    "content": {
+      "uri": "0/0.glb"
+    },
+    "geometricError": 0.0,
+    "refine": "REPLACE",
+    "transform": [
+      0.9984683783609064,
+      -0.0553253776610889,
+      0.0,
+      0.0,
+      0.038789672094630565,
+      0.7000451263203326,
+      0.7130443060946077,
+      0.0,
+      -0.03944944552377324,
+      -0.7119521920057605,
+      0.7011189753145034,
+      0.0,
+      -252040.29496225834,
+      -4548622.6254820945,
+      4449422.940203034,
+      1.0
+    ]
+  }
 }

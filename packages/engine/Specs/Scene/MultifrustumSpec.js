@@ -4,11 +4,13 @@ import {
   Cartesian2,
   Cartesian3,
   Color,
-  defined,
-  destroyObject,
   GeometryPipeline,
   Math as CesiumMath,
   Matrix4,
+  defined,
+  destroyObject,
+} from "@cesium/core";
+import {
   Resource,
   BufferUsage,
   DrawCommand,
@@ -21,7 +23,6 @@ import {
   BlendingState,
   TextureAtlas,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -228,21 +229,23 @@ describe(
       }
       Primitive.prototype.update = function (frameState) {
         if (!defined(this._sp)) {
-          let vs = "";
-          vs += "in vec4 position;";
-          vs += "void main()";
-          vs += "{";
-          vs += "    gl_Position = czm_modelViewProjection * position;";
-          vs += closestFrustum
-            ? "    gl_Position.z = clamp(gl_Position.z, gl_DepthRange.near, gl_DepthRange.far);"
-            : "";
-          vs += "}";
-          let fs = "";
-          fs += "uniform vec4 u_color;";
-          fs += "void main()";
-          fs += "{";
-          fs += "    out_FragColor = u_color;";
-          fs += "}";
+          const zUpdate = closestFrustum
+            ? `gl_Position.z = clamp(gl_Position.z, gl_DepthRange.near, gl_DepthRange.far);`
+            : ``;
+          const vs = `
+          in vec4 position;
+          void main()
+          {
+              vec4 positionEC = czm_modelView * position;
+              gl_Position = czm_projection * positionEC;
+              ${zUpdate}
+          }`;
+          const fs = `
+          uniform vec4 u_color;
+          void main()
+          {
+              out_FragColor = u_color;
+          }`;
 
           const dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
           const maximum = Cartesian3.multiplyByScalar(
