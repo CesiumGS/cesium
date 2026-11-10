@@ -17,6 +17,7 @@ import {
   type DesignPoint,
   type SnapKind,
 } from "./EngineeringFrame.ts";
+import { meshGeometry } from "../geometry/mesh.ts";
 import { pickInFrame, type PickCamera, type PickView } from "./pick.ts";
 import { engineeringPlacement } from "./placement.ts";
 
@@ -260,13 +261,7 @@ export class ClientSnapService {
     return (
       context !== undefined &&
       camera !== undefined &&
-      hiddenFrom(
-        context.geometry,
-        camera,
-        point,
-        context.error + 1e-3,
-        this.scratch,
-      )
+      hiddenFrom(context.geometry, camera, point, context.error + 1e-3)
     );
   }
 
@@ -706,44 +701,25 @@ function hiddenFrom(
   camera: SnapCamera,
   point: ArrayLike<number>,
   epsilon: number,
-  s: Scratch,
 ): boolean {
-  const { positions, indices, matrix: m } = g;
-  const count = Math.floor(positions.length / 3);
-  s.reserve(count, 0);
-  const rel = s.rel;
   const e = camera.position;
-  const tx = m[12]! - e[0]!,
-    ty = m[13]! - e[1]!,
-    tz = m[14]! - e[2]!;
-  for (let v = 0; v < count; v++) {
-    const x = positions[3 * v]!,
-      y = positions[3 * v + 1]!,
-      z = positions[3 * v + 2]!;
-    rel[3 * v] = m[0]! * x + m[4]! * y + m[8]! * z + tx;
-    rel[3 * v + 1] = m[1]! * x + m[5]! * y + m[9]! * z + ty;
-    rel[3 * v + 2] = m[2]! * x + m[6]! * y + m[10]! * z + tz;
-  }
   const px = point[0]! - e[0]!,
     py = point[1]! - e[1]!,
     pz = point[2]! - e[2]!;
   const limit = 1 - Math.max(1e-6, epsilon / Math.hypot(px, py, pz));
   const d = camera.direction;
   const first = camera.near / (px * d[0]! + py * d[1]! + pz * d[2]!);
-  for (let t = 0; t + 2 < indices.length; t += 3) {
-    if (
-      indices[t]! >= count ||
-      indices[t + 1]! >= count ||
-      indices[t + 2]! >= count
-    ) {
-      continue;
-    }
-    const along = crossing(rel, indices, t, px, py, pz);
-    if (along >= first && along > 0 && along < limit) {
-      return true;
-    }
-  }
-  return false;
+  return (
+    meshGeometry(g).rayHit(
+      { from: e, to: point },
+      {
+        origin: e,
+        tMin: Math.max(first, Number.MIN_VALUE),
+        tMax: limit,
+        anyHit: true,
+      },
+    ).verdict === "hit"
+  );
 }
 
 interface Found {

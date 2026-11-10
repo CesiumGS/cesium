@@ -6,13 +6,7 @@
 // undecided, each with its reason.
 import type { Ellipsoid } from "../math/ellipsoid.ts";
 import { volumeObb, type Obb, type TileVolume } from "../streaming/volumes.ts";
-import {
-  dot,
-  hitTriangle,
-  segmentTriangle,
-  sub,
-  type V3,
-} from "../geometry/mesh.ts";
+import { dot, meshGeometry, sub, type V3 } from "../geometry/mesh.ts";
 import { crossing } from "./ellipsoidBackend.ts";
 import type { QueryRay, RayAnswer, UnknownSpan } from "./queries.ts";
 
@@ -203,36 +197,24 @@ export function castTilesetRays(
         let nearest: number | undefined;
         let near = Infinity;
         for (const g of tile.geometry) {
-          const m = g.matrix;
-          const p = g.positions;
-          const world = (i: number): V3 => {
-            const x = p[i * 3]!;
-            const y = p[i * 3 + 1]!;
-            const z = p[i * 3 + 2]!;
-            return [
-              m[0]! * x + m[4]! * y + m[8]! * z + m[12]!,
-              m[1]! * x + m[5]! * y + m[9]! * z + m[13]!,
-              m[2]! * x + m[6]! * y + m[10]! * z + m[14]!,
-            ];
-          };
-          for (let k = 0; k + 2 < g.indices.length; k += 3) {
-            const a = world(g.indices[k]!);
-            const b = world(g.indices[k + 1]!);
-            const c = world(g.indices[k + 2]!);
-            const t = hitTriangle(ray.from, d, a, b, c);
-            if (
-              t !== undefined &&
-              t >= lo &&
-              t <= hi &&
-              t * span >= tolerance &&
-              (1 - t) * span >= tolerance
-            ) {
-              nearest = nearest === undefined ? t : Math.min(nearest, t);
-            } else if (tile.geometricError > 0) {
-              const to: V3 = [ray.to[0]!, ray.to[1]!, ray.to[2]!];
-              const from: V3 = [ray.from[0]!, ray.from[1]!, ray.from[2]!];
-              near = Math.min(near, segmentTriangle(from, to, a, b, c));
-            }
+          const mesh = meshGeometry(g);
+          const answer = mesh.rayHit(ray, {
+            tMin: Math.max(lo, tolerance / span),
+            tMax: Math.min(hi, 1 - tolerance / span),
+          });
+          if (answer.verdict === "hit") {
+            nearest =
+              nearest === undefined
+                ? answer.hit.t
+                : Math.min(nearest, answer.hit.t);
+          }
+        }
+        if (nearest === undefined && tile.geometricError > 0) {
+          for (const g of tile.geometry) {
+            near = Math.min(
+              near,
+              meshGeometry(g).segmentDistance(ray.from, ray.to).distance,
+            );
           }
         }
         if (nearest !== undefined) {
