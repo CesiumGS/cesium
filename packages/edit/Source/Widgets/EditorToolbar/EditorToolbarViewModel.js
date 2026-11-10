@@ -14,9 +14,6 @@ import EditMode from "../../Editor/EditMode.js";
  * @property {string} id The entry's identifier.
  * @property {string} label The tooltip text.
  * @property {EditMode} mode The mode to select.
- * @property {string} [iconPath] The SVG icon path.
- * @property {number} [iconWidth=64] The SVG view box width.
- * @property {number} [iconHeight=64] The SVG view box height.
  */
 
 /**
@@ -33,7 +30,6 @@ import EditMode from "../../Editor/EditMode.js";
 /**
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  * @typedef {object} EditorToolbarOptions
- * @property {EditorToolbarModeEntry[]} [modes] Entries replacing the default modes.
  * @property {EditorToolbarToolEntry[]} [tools] The tool entries. The toolbar doesn't add tools to the editor, so by default it offers none.
  */
 
@@ -46,14 +42,22 @@ import EditMode from "../../Editor/EditMode.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @param {MeshEditor} editor The editor to control.
- * @param {EditorToolbarOptions} [options] The dropdown entries.
+ * @param {EditorToolbarOptions} [options] The tool entries.
  */
 class EditorToolbarViewModel {
   /** @type {MeshEditor} */
   #editor;
 
   /** @type {EditorToolbarModeEntry[]} */
-  #modeEntries;
+  #modeEntries = [
+    { id: "none", label: "Object Mode", mode: EditMode.NONE },
+    { id: "vertex", label: "Vertex", mode: EditMode.VERTEX },
+    { id: "edge", label: "Edge", mode: EditMode.EDGE },
+    { id: "face", label: "Face", mode: EditMode.FACE },
+  ];
+
+  /** @type {EditorToolbarModeEntry[]} */
+  #componentEntries = this.#modeEntries.slice(1);
 
   /** @type {EditorToolbarToolEntry[]} */
   #toolEntries;
@@ -62,10 +66,16 @@ class EditorToolbarViewModel {
   #selectModeEntry;
 
   /** @type {Command} */
-  #selectToolEntry;
+  #enterEditMode;
 
   /** @type {Command} */
-  #toggleModeDropDown;
+  #exitEditMode;
+
+  /** @type {Command} */
+  #toggleEditMode;
+
+  /** @type {Command} */
+  #selectToolEntry;
 
   /** @type {Command} */
   #toggleToolDropDown;
@@ -74,9 +84,12 @@ class EditorToolbarViewModel {
 
   #mode = knockout.observable(EditMode.NONE);
 
+  /** The mode Edit Mode restores. */
+  #lastComponentMode = EditMode.VERTEX;
+
   /**
    * @param {MeshEditor} editor The editor to control.
-   * @param {EditorToolbarOptions} [options] The dropdown entries.
+   * @param {EditorToolbarOptions} [options] The tool entries.
    */
   constructor(editor, options) {
     //>>includeStart('debug', pragmas.debug);
@@ -84,7 +97,6 @@ class EditorToolbarViewModel {
     //>>includeEnd('debug');
 
     this.#editor = editor;
-    this.#modeEntries = options?.modes ?? this.#createModeEntries();
     this.#toolEntries = options?.tools ?? [];
 
     /**
@@ -95,17 +107,18 @@ class EditorToolbarViewModel {
     this.modeId = undefined;
 
     /**
+     * Whether the editor is in a component mode, rather than
+     * {@link EditMode.NONE}. Observable.
+     * @type {boolean}
+     */
+    this.editing = false;
+
+    /**
      * The selected tool entry's identifier, or undefined if no entry matches.
      * Observable.
      * @type {string|undefined}
      */
     this.toolId = undefined;
-
-    /**
-     * Whether the mode dropdown is open. Observable.
-     * @type {boolean}
-     */
-    this.modeDropDownVisible = false;
 
     /**
      * Whether the tool dropdown is open. Observable.
@@ -123,9 +136,20 @@ class EditorToolbarViewModel {
     return this.#editor;
   }
 
-  /** @type {EditorToolbarModeEntry[]} */
+  /**
+   * The Object Mode, Vertex, Edge and Face entries.
+   * @type {EditorToolbarModeEntry[]}
+   */
   get modeEntries() {
     return this.#modeEntries;
+  }
+
+  /**
+   * The Vertex, Edge and Face entries, shown in Edit Mode.
+   * @type {EditorToolbarModeEntry[]}
+   */
+  get componentEntries() {
+    return this.#componentEntries;
   }
 
   /** @type {EditorToolbarToolEntry[]} */
@@ -134,11 +158,36 @@ class EditorToolbarViewModel {
   }
 
   /**
-   * Selects a mode entry and closes its dropdown.
+   * Selects a mode entry.
    * @type {Command}
    */
   get selectModeEntry() {
     return this.#selectModeEntry;
+  }
+
+  /**
+   * Leaves {@link EditMode.NONE} for the last component mode, initially
+   * {@link EditMode.VERTEX}. Does nothing if already editing.
+   * @type {Command}
+   */
+  get enterEditMode() {
+    return this.#enterEditMode;
+  }
+
+  /**
+   * Switches to {@link EditMode.NONE}.
+   * @type {Command}
+   */
+  get exitEditMode() {
+    return this.#exitEditMode;
+  }
+
+  /**
+   * Enters or exits Edit Mode.
+   * @type {Command}
+   */
+  get toggleEditMode() {
+    return this.#toggleEditMode;
   }
 
   /**
@@ -147,11 +196,6 @@ class EditorToolbarViewModel {
    */
   get selectToolEntry() {
     return this.#selectToolEntry;
-  }
-
-  /** @type {Command} */
-  get toggleModeDropDown() {
-    return this.#toggleModeDropDown;
   }
 
   /** @type {Command} */
@@ -170,28 +214,14 @@ class EditorToolbarViewModel {
   }
 
   /**
-   * Creates the default mode entries.
-   * @returns {EditorToolbarModeEntry[]} The mode entries.
-   * @ignore
-   */
-  #createModeEntries() {
-    return [
-      { id: "none", label: "Object Mode", mode: EditMode.NONE },
-      { id: "vertex", label: "Vertex", mode: EditMode.VERTEX },
-      { id: "edge", label: "Edge", mode: EditMode.EDGE },
-      { id: "face", label: "Face", mode: EditMode.FACE },
-    ];
-  }
-
-  /**
-   * Creates observable properties and dropdown/selection commands.
+   * Creates observable properties and commands.
    * @ignore
    */
   #createCommands() {
     knockout.track(this, [
       "modeId",
+      "editing",
       "toolId",
-      "modeDropDownVisible",
       "toolDropDownVisible",
     ]);
 
@@ -199,9 +229,25 @@ class EditorToolbarViewModel {
       /** @param {EditorToolbarModeEntry} entry */
       (entry) => {
         this.#editor.mode = entry.mode;
-        this.modeDropDownVisible = false;
       },
     );
+
+    this.#enterEditMode = createCommand(() => {
+      if (this.#editor.mode === EditMode.NONE) {
+        this.#editor.mode = this.#lastComponentMode;
+      }
+    });
+
+    this.#exitEditMode = createCommand(() => {
+      this.#editor.mode = EditMode.NONE;
+    });
+
+    this.#toggleEditMode = createCommand(() => {
+      this.#editor.mode =
+        this.#editor.mode === EditMode.NONE
+          ? this.#lastComponentMode
+          : EditMode.NONE;
+    });
 
     this.#selectToolEntry = createCommand(
       /** @param {EditorToolbarToolEntry} entry */
@@ -217,18 +263,8 @@ class EditorToolbarViewModel {
       },
     );
 
-    this.#toggleModeDropDown = createCommand(() => {
-      this.modeDropDownVisible = !this.modeDropDownVisible;
-      if (this.modeDropDownVisible) {
-        this.toolDropDownVisible = false;
-      }
-    });
-
     this.#toggleToolDropDown = createCommand(() => {
       this.toolDropDownVisible = !this.toolDropDownVisible;
-      if (this.toolDropDownVisible) {
-        this.modeDropDownVisible = false;
-      }
     });
   }
 
@@ -238,7 +274,11 @@ class EditorToolbarViewModel {
    */
   #updateSelectedEntriesFromEditor() {
     const { mode, activeTool } = this.#editor;
+    if (mode !== EditMode.NONE) {
+      this.#lastComponentMode = mode;
+    }
     this.modeId = this.#modeEntries.find((entry) => entry.mode === mode)?.id;
+    this.editing = mode !== EditMode.NONE;
     this.toolId = this.#toolEntries.find(
       (entry) => entry.tool === activeTool,
     )?.id;

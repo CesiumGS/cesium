@@ -15,6 +15,21 @@
   padding: 2px;
 }
 
+.cesium-editor-toolbar-group {
+  display: inline-flex;
+  align-items: center;
+}
+
+.cesium-editor-toolbar-components,
+.cesium-editor-toolbar-tool {
+  margin-left: 2px;
+  border-left: 1px solid #444;
+}
+
+.cesium-editor-toolbar-group > .cesium-editor-toolbar-active {
+  border-color: #2e2;
+}
+
 .cesium-editor-toolbar-dropdown-container {
   display: inline-block;
   position: relative;
@@ -32,8 +47,10 @@
   z-index: 1;
 }
 
+/* Matches the horizontal margin of .cesium-button, so the entries line up
+   under the button that opens the dropdown. */
 .cesium-editor-toolbar-dropdown > .cesium-button {
-  margin: 0;
+  margin: 0 3px;
 }
 
 .cesium-editor-toolbar-dropdown-container .cesium-editor-toolbar-selected {

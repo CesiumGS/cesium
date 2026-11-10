@@ -357,19 +357,17 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   });
 
   it("forwards toolbar options", function () {
-    const modes = [{ id: "vertex", label: "Vertex", mode: EditMode.VERTEX }];
     const tools = [{ id: "select", label: "Select", tool: selectTool }];
-    viewerEditorMixin(viewer, { editor, toolbar: { modes, tools } });
+    viewerEditorMixin(viewer, { editor, toolbar: { tools } });
 
-    expect(viewer.editorToolbar.viewModel.modeEntries).toBe(modes);
     expect(viewer.editorToolbar.viewModel.toolEntries).toBe(tools);
     expect(viewer.editorTools.select).toBe(selectTool);
 
     // Default shortcuts for omitted entries are skipped.
     press("1");
     expect(editor.mode).toBe(EditMode.VERTEX);
-    press("0");
-    expect(editor.mode).toBe(EditMode.VERTEX);
+    expect(press("g").defaultPrevented).toBe(false);
+    expect(editor.activeTool).toBe(selectTool);
   });
 
   it("does not create a toolbar without toolbar options", function () {
