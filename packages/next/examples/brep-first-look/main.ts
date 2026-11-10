@@ -33,6 +33,13 @@ import {
   normalWhiskers,
 } from "./analysis.ts";
 import {
+  edgeLength,
+  faceArea,
+  nearestOnFace,
+  nearestVertexUv,
+  MAX_ITERATIONS,
+} from "./exact.ts";
+import {
   boundsSize,
   flatFaces,
   liftedEdges,
@@ -95,6 +102,10 @@ interface Prepared {
   whiskers?: LineMesh;
   /** The largest extent of the faces, m. */
   size: number;
+  /** Where the shape's origin stands, m: its z in the layout's coordinates, so it rests on the ground. */
+  stand: number;
+  /** The shape's draws' model matrix: the b-rep's mesh-relative positions to the layout. */
+  model?: ReturnType<typeof mat4.mat4>;
 }
 
 /** The display modes, in the order of the toolbar and the keys 1 to 4. */
@@ -200,6 +211,8 @@ const EDGE_COLOR: [number, number, number, number] = [0, 0, 0, 1];
 const WIRE_MID: [number, number, number, number] = [0.2, 0.2, 0.22, 1];
 const WIRE_DARK: [number, number, number, number] = [0.09, 0.09, 0.1, 1];
 const ISO_COLOR: [number, number, number, number] = [0.02, 0.12, 0.55, 1];
+/** The selection's colour, linear: a hot pink, which none of the kind colours is. */
+const SELECT_COLOR: [number, number, number, number] = [1, 0.01, 0.26, 1];
 const WHISKER_COLOR: [number, number, number, number] = [0, 0.42, 0.12, 1];
 /** About this many normal whiskers in all, shared between the shapes. */
 const WHISKER_BUDGET = 2000;
@@ -558,7 +571,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
             ? mesh.faces.positions
             : mesh.edges.positions,
         );
-        prepared[s] = { mesh, lift: size * LIFT, lowest, size };
+        prepared[s] = { mesh, lift: size * LIFT, lowest, size, stand: 0 };
         stats.error = Math.max(stats.error, mesh.error * shape.scale);
         if (mesh.error > (settings.tolerance / shape.scale) * 1.0000001) {
           stats.capped.push(shape.name);
@@ -569,6 +582,120 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       }
     });
     stats.ms = performance.now() - start;
+  };
+
+  // ------------------------------------------------------------ selection
+  /** What was picked: a face or an edge, and where, in the shape's b-rep coordinates (m). */
+  let selection:
+    | {
+        shape: Shape;
+        kind: "face" | "edge";
+        index: number;
+        point: [number, number, number] | undefined;
+      }
+    | undefined;
+  let selectionDraws: DrawHandle[] = [];
+  /** Filled by the panel: shows the selection's readout. */
+  let showSelection: () => void = () => undefined;
+
+  /** Draws the selected face as a recoloured overlay, or the selected edge in the selection colour. */
+  const applySelection = () => {
+    for (const d of selectionDraws) {
+      world.removeDraw(d);
+      parts.delete(d.index);
+    }
+    selectionDraws = [];
+    const sel = selection;
+    const prep = sel ? prepared[shapes.indexOf(sel.shape)] : undefined;
+    if (sel && prep?.model) {
+      const mesh = prep.mesh;
+      if (sel.kind === "face") {
+        const { positions, normals, indices, featureIds } = mesh.faces;
+        const renumber = new Map<number, number>();
+        const outPositions: number[] = [];
+        const outNormals: number[] = [];
+        const outIndices: number[] = [];
+        for (let t = 0; t < indices.length; t += 3) {
+          if (featureIds[indices[t]!] !== sel.index) {
+            continue;
+          }
+          for (let k = 0; k < 3; k++) {
+            const i = indices[t + k]!;
+            let at = renumber.get(i);
+            if (at === undefined) {
+              at = renumber.size;
+              renumber.set(i, at);
+              for (let c = 0; c < 3; c++) {
+                // Above the face, below the wireframe.
+                outPositions.push(
+                  positions[i * 3 + c]! + normals[i * 3 + c]! * prep.lift * 0.4,
+                );
+                outNormals.push(normals[i * 3 + c]!);
+              }
+            }
+            outIndices.push(at);
+          }
+        }
+        if (outIndices.length > 0) {
+          const draw = world.addDraw({
+            mesh: world.addMesh({
+              positions: Float32Array.from(outPositions),
+              normals: Float32Array.from(outNormals),
+              indices: Uint32Array.from(outIndices),
+              featureIds: new Uint32Array(outPositions.length / 3).fill(
+                sel.index,
+              ),
+              featureCount: Math.max(1, sel.shape.form.faceSurface.length),
+            }),
+            origin,
+            model: prep.model,
+            material: facesMaterial,
+            color: SELECT_COLOR,
+            doubleSided: sel.shape.doubleSided,
+            name: `${sel.shape.name}: selected face`,
+          });
+          selectionDraws.push(draw);
+          parts.set(draw.index, { shape: sel.shape, kind: "face" });
+        }
+      } else {
+        // Lifted further than the drawn edges, so it covers them.
+        const lines = liftedEdges(sel.shape.form, mesh, prep.lift * 1.8);
+        const outPositions: number[] = [];
+        const outIndices: number[] = [];
+        for (let i = 0; i < lines.indices.length; i += 2) {
+          const a = lines.indices[i]!;
+          if (lines.featureIds[a] !== sel.index) {
+            continue;
+          }
+          for (const v of [a, lines.indices[i + 1]!]) {
+            outIndices.push(outPositions.length / 3);
+            outPositions.push(...lines.positions.subarray(v * 3, v * 3 + 3));
+          }
+        }
+        if (outIndices.length > 0) {
+          const draw = world.addDraw({
+            mesh: world.addMesh({
+              positions: Float32Array.from(outPositions),
+              indices: Uint32Array.from(outIndices),
+              featureIds: new Uint32Array(outPositions.length / 3).fill(
+                sel.index,
+              ),
+              featureCount: Math.max(1, sel.shape.form.edgeVertices.length / 2),
+              topology: "line-list",
+            }),
+            origin,
+            model: prep.model,
+            material: lineMaterial,
+            color: SELECT_COLOR,
+            name: `${sel.shape.name}: selected edge`,
+          });
+          selectionDraws.push(draw);
+          parts.set(draw.index, { shape: sel.shape, kind: "edge" });
+        }
+      }
+    }
+    showSelection();
+    engine.requestRender();
   };
 
   const build = () => {
@@ -594,9 +721,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       // stood on the ground at the shape's place.
       const centre = mesh.origin;
       const lift = -(prep.lowest + centre[2]!) * shape.scale;
+      prep.stand = lift;
       const place = translation(shape.x, shape.y, lift);
       // place · scale · translate(centre)
-      const model = toWorld(
+      const model = (prep.model = toWorld(
         mat4.multiply(
           mat4.mat4(),
           place,
@@ -606,7 +734,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
             translation(centre[0]!, centre[1]!, centre[2]!),
           ),
         ),
-      );
+      ));
 
       if (showFaces && mesh.faces.indices.length > 0) {
         const source =
@@ -726,7 +854,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         stats.whiskers += lineDraw(whiskers, WHISKER_COLOR, "normals");
       }
     });
-    engine.requestRender();
+    applySelection();
   };
   tessellate();
   build();
@@ -798,6 +926,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   syncButtons();
   view_.append(style, toolbar);
   const onKey = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      clearSelection();
+      return;
+    }
     const target = event.target as HTMLElement;
     if (
       event.ctrlKey ||
@@ -970,11 +1102,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     validity.append(item);
   });
 
-  const picked = el(
-    "p",
-    {},
-    "Tap a face for its index and ID. Edges carry IDs too, by the draw's feature ID, but they are 1-pixel lines and hard to hit.",
-  );
+  const picked = el("div", { className: "bf-selection" });
 
   panel.append(
     el("h3", {}, "Tessellation"),
@@ -1021,7 +1149,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     ),
     el("h3", {}, "Shapes, in grid order"),
     validity,
-    el("h3", {}, "Picked"),
+    el("h3", {}, "Selection"),
     picked,
     el(
       "p",
@@ -1030,24 +1158,152 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     ),
   );
 
-  const describe = (shape: Shape, kind: "face" | "edge", index: number) => {
-    const form = shape.form;
+  // What the selection says: the face or edge, and for a face the exact
+  // point of the surface nearest where it was picked.
+  const mmOf = (m: number) => `${(m * 1000).toFixed(3)} mm`;
+  const num = (x: number) => x.toFixed(4);
+  const triple = (v: ArrayLike<number>) =>
+    `(${num(v[0]!)}, ${num(v[1]!)}, ${num(v[2]!)})`;
+  const row = (label: string, ...value: Array<Node | string>) => [
+    el("dt", {}, label),
+    el("dd", {}, ...value),
+  ];
+  showSelection = () => {
+    const sel = selection;
+    const prep = sel ? prepared[shapes.indexOf(sel.shape)] : undefined;
+    if (!sel || !prep) {
+      picked.replaceChildren(
+        el(
+          "p",
+          {},
+          "Click a face or an edge. A face is highlighted and its exact point is worked out from the surface; an edge is drawn in the selection colour (edges are 1-pixel lines and hard to hit). Esc or a click on empty space clears it.",
+        ),
+      );
+      return;
+    }
+    const form = sel.shape.form;
     const faces = form.faceSurface.length;
-    const id = form.ids[kind === "face" ? index : faces + index] ?? "";
-    return `${shape.name}: ${kind} ${index}${id ? `, ID "${id}"` : ""}`;
+    const id = form.ids[sel.kind === "face" ? sel.index : faces + sel.index];
+    const list = el("dl");
+    list.append(
+      ...row("Shape", `${sel.shape.name} (${sel.shape.place})`),
+      ...row(
+        sel.kind === "face" ? "Face" : "Edge",
+        `${sel.index}${id ? `, ID "${id}"` : ""}`,
+      ),
+    );
+    if (sel.kind === "edge") {
+      list.append(
+        ...row(
+          "Length",
+          `${num(edgeLength(prep.mesh, sel.index))} m, from the tessellation`,
+        ),
+        ...row(
+          "Vertices",
+          `${form.edgeVertices[sel.index * 2]} to ${form.edgeVertices[sel.index * 2 + 1]}`,
+        ),
+      );
+      picked.replaceChildren(list);
+      return;
+    }
+    list.append(
+      ...row(
+        "Surface",
+        KIND_NAMES[form.surfaceKind[form.faceSurface[sel.index]!]!] ?? "?",
+      ),
+      ...row(
+        "Area",
+        `${num(faceArea(prep.mesh, sel.index))} m² `,
+        el("small", {}, "from the tessellation"),
+      ),
+    );
+    picked.replaceChildren(list);
+    const start = sel.point
+      ? nearestVertexUv(prep.mesh, sel.index, sel.point)
+      : undefined;
+    const exact =
+      sel.point && start
+        ? nearestOnFace(form, sel.index, sel.point, start)
+        : undefined;
+    const exactList = el("dl");
+    if (exact) {
+      exactList.append(
+        ...row("Point", `${triple(exact.position)} m`),
+        ...row(
+          "Normal",
+          exact.normal ? triple(exact.normal) : "undefined here (a pole)",
+        ),
+        ...row("(u, v)", `(${num(exact.u)}, ${num(exact.v)})`),
+        ...row(
+          "Mesh point off the surface",
+          `${mmOf(exact.distance)} in the shape, ${mmOf(exact.distance * sel.shape.scale)} in the scene`,
+        ),
+        ...row(
+          "Newton",
+          `${exact.iterations} of at most ${MAX_ITERATIONS} iterations`,
+        ),
+      );
+    }
+    picked.append(
+      el("h4", {}, "Exact point on the surface (Newton in u, v)"),
+      exact ? exactList : el("p", {}, "No depth was read under the pointer."),
+      el(
+        "p",
+        {},
+        el(
+          "small",
+          {},
+          "A preview of step 7's exact queries: Gauss–Newton on |S(u, v) − p|² from the nearest tessellation vertex, with the depth buffer's point as p. The mesh distance includes the depth read.",
+        ),
+      ),
+    );
+  };
+  showSelection();
+
+  /** An Earth-fixed point as b-rep coordinates of a shape, m. */
+  const toShape = (ecef: Float64Array, shape: Shape, stand: number) => {
+    const local = mat4.transformPoint(
+      vec3.vec3(),
+      mat4.invertAffine(mat4.mat4(), enu),
+      vec3.sub(vec3.vec3(), ecef, origin),
+    );
+    return [
+      (local[0]! - shape.x) / shape.scale,
+      (local[1]! - shape.y) / shape.scale,
+      (local[2]! - stand) / shape.scale,
+    ] as [number, number, number];
   };
   const onPick = async (event: PointerEvent) => {
     const rect = viewer.canvas.getBoundingClientRect();
-    const result = await viewer.pick(
-      event.clientX - rect.left,
-      event.clientY - rect.top,
-    );
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    // The depth is read at the same pixel, in the view's device pixels.
+    const scale = viewer.canvas.width / Math.max(1, viewer.canvas.clientWidth);
+    const area = view.pixelRect();
+    const [result, ecef] = await Promise.all([
+      viewer.pick(x, y),
+      view.pickPosition(x * scale - area.x, y * scale - area.y),
+    ]);
     const info = result ? world.feature(result.featureId) : undefined;
     const part = info ? parts.get(info.draw.index) : undefined;
-    picked.textContent =
-      info && part
-        ? describe(part.shape, part.kind, info.localId)
-        : "Nothing there.";
+    if (!info || !part) {
+      clearSelection();
+      return;
+    }
+    const prep = prepared[shapes.indexOf(part.shape)];
+    selection = {
+      shape: part.shape,
+      kind: part.kind,
+      index: info.localId,
+      point: ecef && prep ? toShape(ecef, part.shape, prep.stand) : undefined,
+    };
+    applySelection();
+  };
+  const clearSelection = () => {
+    if (selection) {
+      selection = undefined;
+      applySelection();
+    }
   };
   // A click, not a drag: the orbit controls own drags.
   let down: { x: number; y: number } | undefined;
@@ -1073,7 +1329,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     }
     style.remove();
     toolbar.remove();
-    for (const d of [...draws, ...extras]) {
+    for (const d of [...draws, ...selectionDraws, ...extras]) {
       world.removeDraw(d);
     }
     panel.replaceChildren();

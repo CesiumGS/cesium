@@ -30,6 +30,8 @@ export interface BrepMesh {
   readonly faces: {
     readonly positions: Float32Array;
     readonly normals: Float32Array;
+    /** Each vertex's (u, v) on its face's surface, 2 per vertex (float32). */
+    readonly uvs: Float32Array;
     readonly indices: Uint32Array;
     readonly featureIds: Uint32Array;
   };
@@ -104,6 +106,7 @@ export function tessellateBrep(
 
   const facePositions = new Chunks<Float64Array>();
   const faceNormals = new Chunks<Float64Array>();
+  const faceUvs = new Chunks<Float64Array>();
   const faceIndices = new Chunks<Uint32Array>();
   const faceIds = new Chunks<Uint32Array>();
   const edgePositions = new Chunks<Float64Array>();
@@ -122,6 +125,7 @@ export function tessellateBrep(
     const count = done.positions.length / 3;
     facePositions.add(done.positions);
     faceNormals.add(done.normals);
+    faceUvs.add(done.uvs);
     const indices = done.indices;
     for (let i = 0; i < indices.length; i++) {
       indices[i] = indices[i]! + faceVertices;
@@ -180,6 +184,7 @@ export function tessellateBrep(
     faces: {
       positions: relative(facePositions),
       normals: Float32Array.from(normals),
+      uvs: Float32Array.from(join(faceUvs, (n) => new Float64Array(n))),
       indices: join(faceIndices, (n) => new Uint32Array(n)),
       featureIds: join(faceIds, (n) => new Uint32Array(n)),
     },
@@ -259,6 +264,8 @@ export function faceTrim(form: BrepForm, face: number): FaceTrim | undefined {
 interface FaceMesh {
   positions: Float64Array;
   normals: Float64Array;
+  /** (u, v) of each vertex, 2 per vertex. */
+  uvs: Float64Array;
   indices: Uint32Array;
   /** The chordal error m this face's grid allows beyond the tolerance, or 0. */
   error: number;
@@ -351,11 +358,14 @@ function tessellateFace(
   }
   const positions = new Float64Array(used.length * 3);
   const normals = new Float64Array(used.length * 3);
+  const uvs = new Float64Array(used.length * 2);
   const undefinedNormal = new Uint8Array(used.length);
   for (let k = 0; k < used.length; k++) {
     const g = used[k]!;
     const u = us[g % stride]!;
     const v = vs[Math.floor(g / stride)]!;
+    uvs[k * 2] = u;
+    uvs[k * 2 + 1] = v;
     positions.set(evaluateSurface(form, surface, u, v).position, k * 3);
     const n = faceNormal(form, face, u, v);
     if (n) {
@@ -405,7 +415,7 @@ function tessellateFace(
       }
     }
   }
-  return { positions, normals, indices, error };
+  return { positions, normals, uvs, indices, error };
 }
 
 /** The area-weighted geometric normal of a triangle, from its winding. */

@@ -471,3 +471,30 @@ describe("faceTrim", () => {
     expect(faceTrim(copy, 0)).toBeUndefined();
   });
 });
+
+describe("tessellateBrep uvs", () => {
+  it("gives each face vertex a (u, v) that evaluateSurface maps back to its position", () => {
+    for (const make of [boxBrep, cappedCylinderBrep, trimmedNurbsBrep]) {
+      const form = make();
+      const mesh = tessellateBrep(form, { tolerance: 0.001 });
+      const count = mesh.faces.positions.length / 3;
+      expect(mesh.faces.uvs.length).toBe(count * 2);
+      let worst = 0;
+      for (let i = 0; i < count; i++) {
+        const surface = form.faceSurface[mesh.faces.featureIds[i]!]!;
+        const p = evaluateSurface(
+          form,
+          surface,
+          mesh.faces.uvs[i * 2]!,
+          mesh.faces.uvs[i * 2 + 1]!,
+        ).position;
+        const q = facePoint(mesh, i);
+        worst = Math.max(
+          worst,
+          Math.hypot(p[0]! - q[0], p[1]! - q[1], p[2]! - q[2]),
+        );
+      }
+      expect(worst).toBeLessThan(1e-5);
+    }
+  });
+});
