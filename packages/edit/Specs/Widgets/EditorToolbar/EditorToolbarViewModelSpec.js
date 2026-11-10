@@ -351,6 +351,62 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
     expect(viewModel.toolDropDownVisible).toBe(false);
   });
 
+  describe("tooltips", function () {
+    it("are the labels without shortcuts", function () {
+      viewModel = createViewModel();
+
+      expect(viewModel.modeShortcuts).toEqual({});
+      expect(viewModel.toolShortcuts).toEqual({});
+      expect(viewModel.getModeTooltip(viewModel.componentEntries[0])).toBe(
+        "Vertex",
+      );
+      expect(viewModel.getToolTooltip(viewModel.toolEntries[0])).toBe("Select");
+      expect(viewModel.getModeToggleTooltip()).toBe("Switch to Edit Mode");
+      editor.mode = EditMode.EDGE;
+      expect(viewModel.getModeToggleTooltip()).toBe("Switch to Object Mode");
+    });
+
+    it("show shortcuts, with single characters in upper case", function () {
+      viewModel = createViewModel();
+      viewModel.modeShortcuts = { none: ["0"], vertex: ["1", "v"] };
+      viewModel.toolShortcuts = { select: ["s"], translate: ["ArrowUp"] };
+
+      expect(viewModel.getModeTooltip(viewModel.componentEntries[0])).toBe(
+        "Vertex (1, V)",
+      );
+      expect(viewModel.getModeTooltip(viewModel.componentEntries[1])).toBe(
+        "Edge",
+      );
+      expect(viewModel.getToolTooltip(viewModel.toolEntries[0])).toBe(
+        "Select (S)",
+      );
+      expect(viewModel.getToolTooltip(viewModel.toolEntries[1])).toBe(
+        "Translate (ArrowUp)",
+      );
+      // Edit Mode has no shortcut of its own.
+      expect(viewModel.getModeToggleTooltip()).toBe("Switch to Edit Mode");
+      editor.mode = EditMode.FACE;
+      expect(viewModel.getModeToggleTooltip()).toBe(
+        "Switch to Object Mode (0)",
+      );
+    });
+
+    it("update observably when shortcuts change", function () {
+      viewModel = createViewModel();
+      const tooltip = knockout.pureComputed(() =>
+        viewModel.getToolTooltip(viewModel.toolEntries[0]),
+      );
+      const listener = jasmine.createSpy();
+      const subscription = tooltip.subscribe(listener);
+
+      viewModel.toolShortcuts = { select: ["s"] };
+
+      expect(listener).toHaveBeenCalledWith("Select (S)");
+      subscription.dispose();
+      tooltip.dispose();
+    });
+  });
+
   it("toggles the tool dropdown", function () {
     viewModel = createViewModel();
 

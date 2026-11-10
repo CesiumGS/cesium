@@ -429,6 +429,50 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
     expect(translateTool.cancel).not.toHaveBeenCalled();
   });
 
+  describe("shortcut tooltips", function () {
+    it("show the default shortcuts", function () {
+      viewerEditorMixin(viewer, { editor, toolbar: {} });
+      const viewModel = viewer.editorToolbar.viewModel;
+
+      expect(viewModel.modeShortcuts).toEqual({
+        none: ["0"],
+        vertex: ["1"],
+        edge: ["2"],
+        face: ["3"],
+      });
+      expect(viewModel.toolShortcuts).toEqual({
+        select: ["s"],
+        translate: ["g"],
+      });
+      expect(viewModel.getToolTooltip(viewModel.toolEntries[0])).toBe(
+        "Select (S)",
+      );
+    });
+
+    it("show custom shortcuts, skipping keys taken by earlier shortcuts", function () {
+      viewerEditorMixin(viewer, {
+        editor,
+        toolbar: {},
+        keyBindings: {
+          modes: { f: "face", v: "vertex" },
+          tools: { t: "translate", v: "select" },
+        },
+      });
+      const viewModel = viewer.editorToolbar.viewModel;
+
+      expect(viewModel.modeShortcuts).toEqual({ face: ["f"], vertex: ["v"] });
+      expect(viewModel.toolShortcuts).toEqual({ translate: ["t"] });
+    });
+
+    it("are not shown with keyboard handling disabled", function () {
+      viewerEditorMixin(viewer, { editor, toolbar: {}, keyBindings: false });
+      const viewModel = viewer.editorToolbar.viewModel;
+
+      expect(viewModel.modeShortcuts).toEqual({});
+      expect(viewModel.toolShortcuts).toEqual({});
+    });
+  });
+
   it("supports custom entry shortcuts", function () {
     viewerEditorMixin(viewer, {
       editor,

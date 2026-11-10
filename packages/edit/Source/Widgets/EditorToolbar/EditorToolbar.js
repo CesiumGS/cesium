@@ -116,7 +116,7 @@ class EditorToolbar {
 
   /**
    * @param {string} binding The button's Knockout bindings.
-   * @param {string} [label] A fixed tooltip and accessible name.
+   * @param {string} [label] A fixed accessible name.
    * @returns {HTMLButtonElement}
    * @ignore
    */
@@ -126,7 +126,6 @@ class EditorToolbar {
     button.className = "cesium-button cesium-toolbar-button";
     button.setAttribute("data-bind", binding);
     if (label) {
-      button.title = label;
       button.setAttribute("aria-label", label);
     }
     return button;
@@ -150,8 +149,9 @@ class EditorToolbar {
     button.setAttribute(
       "data-bind",
       `click: function() { viewModel.toggleEditMode(); },
-       attr: { title: viewModel.editing
-         ? 'Switch to Object Mode' : 'Switch to Edit Mode' }`,
+       attr: { title: viewModel.getModeToggleTooltip(),
+         'aria-keyshortcuts': viewModel.editing
+           ? keyShortcuts(viewModel.modeShortcuts.none) : null }`,
     );
 
     const icon = document.createElement("span");
@@ -207,7 +207,9 @@ class EditorToolbar {
              viewModel.selectModeEntry(${data});
            }
          },
-         attr: { 'aria-pressed': String(viewModel.isComponentActive(${data})) },
+         attr: { title: viewModel.getModeTooltip(${data}),
+           'aria-keyshortcuts': keyShortcuts(viewModel.modeShortcuts.${entry.id}),
+           'aria-pressed': String(viewModel.isComponentActive(${data})) },
          css: {
            'cesium-editor-toolbar-active': viewModel.isComponentActive(${data}),
          }`,
@@ -262,7 +264,8 @@ class EditorToolbar {
     dropdownContainer.appendChild(
       this.#createButton(
         `click: function() { viewModel.toggleToolDropDown(); },
-         attr: { title: selectedTool().label, 'aria-label': selectedTool().label,
+         attr: { title: viewModel.getToolTooltip(selectedTool()),
+           'aria-label': selectedTool().label,
            'aria-expanded': String(viewModel.toolDropDownVisible) },
          css: { 'cesium-editor-toolbar-selected': viewModel.toolDropDownVisible },
          cesiumSvgPath: { path: selectedTool().iconPath,
@@ -279,7 +282,9 @@ class EditorToolbar {
     dropdown.appendChild(
       this.#createButton(
         `click: function() { $parent.viewModel.selectToolEntry($data); },
-         attr: { title: label, 'aria-label': label,
+         attr: { title: $parent.viewModel.getToolTooltip($data),
+           'aria-label': label,
+           'aria-keyshortcuts': $parent.keyShortcuts($parent.viewModel.toolShortcuts[id]),
            'aria-pressed': String(id === $parent.viewModel.toolId) },
          css: { 'cesium-editor-toolbar-active': id === $parent.viewModel.toolId },
          enable: $parent.viewModel.isToolEnabled($data),
@@ -305,6 +310,9 @@ class EditorToolbar {
         viewModel,
         icons: EditorToolbarIcons.mode,
         toolEntries,
+        // Removes aria-keyshortcuts without shortcuts.
+        keyShortcuts: (/** @type {string[]|undefined} */ keys) =>
+          keys?.length ? keys.join(" ") : null,
         selectedTool: () =>
           toolEntries.find((entry) => entry.id === viewModel.toolId),
       },

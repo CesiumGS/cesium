@@ -129,6 +129,20 @@ class EditorToolbarViewModel {
      */
     this.toolDropDownVisible = false;
 
+    /**
+     * The KeyboardEvent.key values that select each mode entry, by entry ID,
+     * shown in tooltips.
+     * @type {Object<string, string[]>}
+     */
+    this.modeShortcuts = {};
+
+    /**
+     * The KeyboardEvent.key values that select each tool entry, by entry ID,
+     * shown in tooltips.
+     * @type {Object<string, string[]>}
+     */
+    this.toolShortcuts = {};
+
     this.#createCommands();
     this.#updateSelectedEntriesFromEditor();
     this.#listenForEditorChanges();
@@ -237,6 +251,38 @@ class EditorToolbarViewModel {
   }
 
   /**
+   * A mode entry's tooltip: its label and shortcuts, e.g. "Vertex (1)".
+   *
+   * @param {EditorToolbarModeEntry} entry The mode entry.
+   * @returns {string} The tooltip.
+   */
+  getModeTooltip(entry) {
+    return withShortcuts(entry.label, this.modeShortcuts[entry.id]);
+  }
+
+  /**
+   * A tool entry's tooltip: its label and shortcuts, e.g. "Select (S)".
+   *
+   * @param {EditorToolbarToolEntry} entry The tool entry.
+   * @returns {string} The tooltip.
+   */
+  getToolTooltip(entry) {
+    return withShortcuts(entry.label, this.toolShortcuts[entry.id]);
+  }
+
+  /**
+   * The Object Mode/Edit Mode toggle's tooltip, describing what it switches
+   * to, with Object Mode's shortcuts.
+   *
+   * @returns {string} The tooltip.
+   */
+  getModeToggleTooltip() {
+    return this.editing
+      ? withShortcuts("Switch to Object Mode", this.modeShortcuts.none)
+      : "Switch to Edit Mode";
+  }
+
+  /**
    * Creates observable properties and commands.
    * @ignore
    */
@@ -246,6 +292,8 @@ class EditorToolbarViewModel {
       "editing",
       "toolId",
       "toolDropDownVisible",
+      "modeShortcuts",
+      "toolShortcuts",
     ]);
 
     this.#selectModeEntry = createCommand(
@@ -340,6 +388,23 @@ class EditorToolbarViewModel {
   destroy() {
     this.#eventHelper.removeAll();
   }
+}
+
+/**
+ * Appends shortcuts to a label, e.g. "Select (S)". Single characters are shown
+ * in upper case.
+ *
+ * @param {string} label
+ * @param {string[]|undefined} keys KeyboardEvent.key values.
+ * @returns {string}
+ * @ignore
+ */
+function withShortcuts(label, keys) {
+  if (!keys?.length) {
+    return label;
+  }
+  const names = keys.map((key) => (key.length === 1 ? key.toUpperCase() : key));
+  return `${label} (${names.join(", ")})`;
 }
 
 export default EditorToolbarViewModel;
