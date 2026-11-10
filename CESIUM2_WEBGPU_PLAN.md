@@ -8862,6 +8862,13 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 - **Quadratic segments are made after placement,** with their error measured there; snaps and measurements go back to the exact source.
 - **Measurements name their reference frame:** a distance in design coordinates and on the ground differ by the projection's scale factor.
 
+**Subdivision surfaces (owner, 2026-11-10).** Another representation for the same query interface and tessellation engine, planned, not designed. A subdivision surface is a control mesh (Catmull-Clark for quads, Loop for triangles) whose limit surface is smooth. They matter here because USD meshes carry a subdivision scheme, and Catmull-Clark is the default, so content from USD and from most modeling tools may mean a smooth surface while storing a coarse mesh. How it fits:
+
+- **Drawing:** on regular faces the Catmull-Clark limit surface is a bicubic B-spline patch, so it converts exactly to Bézier patches and draws through step 5's patch path. Faces at extraordinary vertices need adaptive subdivision toward the vertex, or an approximating patch with a stated error. Creases, corners and boundary rules (as OpenSubdiv defines them) change the patches.
+- **Queries:** exact limit-surface evaluation at (face, u, v) (Stam's method, or the patches above), so picks, closest points and normals are exact, with accuracy stated where an approximating patch is used.
+- **Input:** USD's subdivision attributes on meshes; glTF has no standard for it that this plan relies on. A fallback mesh stays the coarse cage or a pre-subdivided level.
+- **Open:** whether to use OpenSubdiv (its licence, its size in WebAssembly) or write the patch conversion in TypeScript, and whether the tessellation engine evaluates subdivision patches directly or only through Bézier conversion.
+
 **Order.**
 
 1. Spike: SMLib in WebAssembly (size, startup, threads, exceptions; converting a USD BRep sample to the render form). Done for the kernel; see the result below.
@@ -8874,6 +8881,7 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 8. SMLib as a module: `fromUsd`, healing, sections.
 9. The tiler: USD BRep to 3D Tiles 2.0, coarse levels as meshes; overrides for editing.
 10. F-reps.
+11. Subdivision surfaces, through the patch path of step 5 and the query interface.
 
 **Sequencing with the vector design (owner, 2026-11-09).** B-reps go first, but the kernels they share with vectors are set by vectors, their harder user: per-pixel coverage under glyph and label density with the band cap under pressure, strokes with the styling language's full control, and the owner's measured prototype as evidence. A trim loop is a small glyph in (u, v). So:
 
