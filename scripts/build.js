@@ -82,17 +82,20 @@ async function getCombinedWorkspaceFiles() {
  * @returns {Promise<CesiumBundles>}
  */
 export async function bundleCesiumJs(options) {
-  const buildConfig = defaultESBuildOptions();
-  buildConfig.entryPoints = ["Source/Cesium.js"];
-  buildConfig.minify = options.minify;
-  buildConfig.sourcemap = options.sourcemap;
-  buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
-  buildConfig.write = options.write;
-  buildConfig.banner = {
-    js: await getCopyrightHeader(),
+  /** @type {esbuild.BuildOptions} */
+  const buildConfig = {
+    ...defaultESBuildOptions(),
+    entryPoints: ["Source/Cesium.js"],
+    minify: options.minify,
+    sourcemap: options.sourcemap,
+    plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
+    write: options.write,
+    banner: {
+      js: await getCopyrightHeader(),
+    },
+    // print errors immediately, and collect warnings so we can filter out known ones
+    logLevel: "info",
   };
-  // print errors immediately, and collect warnings so we can filter out known ones
-  buildConfig.logLevel = "info";
 
   /** @type {esbuild.BuildResult|esbuild.BuildContext|undefined} */
   let iife;
@@ -133,9 +136,6 @@ export async function bundleCesiumJs(options) {
       inject: [inlineWorkerPath],
       globalName: "Cesium",
       outfile: path.join(options.path, "Cesium.js"),
-      logOverride: {
-        "empty-import-meta": "silent",
-      },
     });
 
     if (incremental) {
@@ -152,9 +152,6 @@ export async function bundleCesiumJs(options) {
       ...buildConfig,
       format: "cjs",
       platform: "node",
-      logOverride: {
-        "empty-import-meta": "silent",
-      },
       define: {
         // TransformStream is a browser-only implementation depended on by zip.js
         TransformStream: "null",
@@ -310,12 +307,12 @@ async function bundleCombinedSpecs(options) {
   const build = options.incremental ? esbuild.context : esbuild.build;
 
   return build({
+    ...defaultESBuildOptions(),
     entryPoints: [
       "Specs/spec-main.js",
       "Specs/SpecList.js",
       "Specs/karma-main.js",
     ],
-    bundle: true,
     format: "esm",
     sourcemap: true,
     outdir: path.join("Build", "Specs"),
@@ -326,7 +323,7 @@ async function bundleCombinedSpecs(options) {
 
 /**
  * Bundles test worker in used specs.
- * @param {object} options
+ * @param {object} [options]
  * @param {boolean} [options.incremental=false] true if the build should be cached for repeated rebuilds
  * @param {boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
  * @returns {Promise<esbuild.BuildResult|esbuild.BuildContext>}
@@ -338,8 +335,8 @@ export async function bundleTestWorkers(options) {
 
   const workers = globSync("Specs/TestWorkers/*.js");
   return build({
+    ...defaultESBuildOptions(),
     entryPoints: workers,
-    bundle: true,
     format: "esm",
     sourcemap: true,
     outdir: path.join("Build", "Specs", "TestWorkers"),
@@ -359,19 +356,18 @@ export async function bundleTestWorkers(options) {
  * @param {string} options.outbase The
  */
 async function bundleCSS(options) {
-  // Configure options for esbuild.
-  const esBuildOptions = defaultESBuildOptions();
-  esBuildOptions.entryPoints = globSync(options.filePaths);
-  esBuildOptions.loader = {
-    ".gif": "text",
-    ".png": "text",
-  };
-  esBuildOptions.sourcemap = options.sourcemap;
-  esBuildOptions.minify = options.minify;
-  esBuildOptions.outdir = options.outdir;
-  esBuildOptions.outbase = options.outbase;
-
-  await esbuild.build(esBuildOptions);
+  await esbuild.build({
+    ...defaultESBuildOptions(),
+    entryPoints: globSync(options.filePaths),
+    loader: {
+      ".gif": "text",
+      ".png": "text",
+    },
+    sourcemap: options.sourcemap,
+    minify: options.minify,
+    outdir: options.outdir,
+    outbase: options.outbase,
+  });
 }
 
 /**
@@ -390,7 +386,7 @@ function cssGlobsFor(workspace) {
  * @param {boolean} [options.incremental=true] True if builds should be generated incrementally.
  * @param {boolean} [options.minify=false] True if bundles should be minified.
  * @param {boolean} [options.node=true] True if CommonJS bundle should be generated.
- * @param {string} options.outputDirectory The directory where the output should go.
+ * @param {string} [options.outputDirectory] The directory where the output should go.
  * @param {boolean} [options.removePragmas=false] True if debug pragmas should be removed.
  * @param {boolean} [options.sourcemap=true] True if sourcemap should be included in the generated bundles.
  * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
