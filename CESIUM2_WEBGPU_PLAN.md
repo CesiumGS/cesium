@@ -8875,6 +8875,15 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 9. The tiler: USD BRep to 3D Tiles 2.0, coarse levels as meshes; overrides for editing.
 10. F-reps.
 
+**Sequencing with the vector design (owner, 2026-11-09).** B-reps go first, but the kernels they share with vectors are set by vectors, their harder user: per-pixel coverage under glyph and label density with the band cap under pressure, strokes with the styling language's full control, and the owner's measured prototype as evidence. A trim loop is a small glyph in (u, v). So:
+
+1. B-rep work that doesn't touch the shared kernels starts first: both spikes, the query interface, the render form, GPU patch tessellation through placement, and exact picks, snapping and measurement. Spike B's trim coverage test is throwaway.
+2. The vector design session sets the shared curve, coverage and stroke contracts, with b-rep trims and edges as stated requirements.
+3. B-rep trims and edges move onto those kernels.
+4. Vectors build the rest: styling, labels, the columnar store that replaces Entity (§13.29), and draping.
+
+The extensions here are drafts for this proof of concept and free to change, so a format chosen early is no constraint.
+
 **Open:** the extension's name and schema; whether tiles store NURBS or pre-split Bézier patches (size against loader work); how b-rep edges meet the vector design's exact circles and clothoids; SMLib's WebAssembly size.
 
 ## 14. Follow-ups
