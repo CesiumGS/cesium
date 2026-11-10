@@ -16,6 +16,14 @@ import {
 } from "../../src/index.ts";
 import type { ExampleContext } from "../types.ts";
 import { boxBrep, cappedCylinderBrep, trimmedNurbsBrep } from "./fixtures.ts";
+import {
+  boundsSize,
+  flatFaces,
+  liftedEdges,
+  wireLines,
+  type DisplayMode,
+  type LineMesh,
+} from "./meshes.ts";
 
 /**
  * B-reps, a first look: exact CAD shapes (a box, a capped cylinder, a
@@ -42,14 +50,131 @@ const DEG = Math.PI / 180;
 interface Shape {
   name: string;
   form: BrepForm;
-  /** East of the row's middle, m. */
+  /** East of the layout's middle, m. */
   x: number;
+  /** North of the layout's middle, m. */
+  y: number;
   scale: number;
   /** A sheet is seen from both sides. */
   doubleSided: boolean;
   /** Said in the panel: where the form came from. */
   note?: string;
 }
+
+/** What one shape's tessellation gives, and what the display modes make of it. */
+interface Prepared {
+  mesh: BrepMesh;
+  /** How far lines are lifted off the faces, m in the b-rep's units. */
+  lift: number;
+  /** The lowest point of the faces, m. */
+  lowest: number;
+  wire?: LineMesh;
+  flat?: ReturnType<typeof flatFaces>;
+  edges?: LineMesh;
+}
+
+/** The display modes, in the order of the toolbar and the keys 1 to 4. */
+const MODES: ReadonlyArray<{
+  id: DisplayMode;
+  label: string;
+  /** The picture on the button: the faces and the strokes of a cube. */
+  icon: string;
+}> = [
+  { id: "shaded", label: "Shaded", icon: iconOf("fill") },
+  { id: "shadedWire", label: "Shaded + wireframe", icon: iconOf("fill wire") },
+  { id: "flatWire", label: "Flat + wireframe", icon: iconOf("facets wire") },
+  { id: "wire", label: "Wireframe", icon: iconOf("wire hidden") },
+];
+
+/** A 20 px cube for a toolbar button, drawn in the button's own colour. */
+function iconOf(parts: string): string {
+  const on = parts.split(" ");
+  const top = "10,2 16.9,6 10,10 3.1,6";
+  const left = "3.1,6 10,10 10,18 3.1,14";
+  const right = "10,10 16.9,6 16.9,14 10,18";
+  const fill = (points: string, opacity: number) =>
+    `<polygon points="${points}" fill="currentColor" fill-opacity="${opacity}" stroke="none"/>`;
+  let body = "";
+  if (on.includes("fill")) {
+    body += fill(top, 0.3) + fill(left, 0.55) + fill(right, 0.85);
+  }
+  if (on.includes("facets")) {
+    // Each face split in two, the halves lit differently: flat shading.
+    body +=
+      fill("10,2 16.9,6 10,10", 0.22) +
+      fill("10,2 10,10 3.1,6", 0.4) +
+      fill("3.1,6 10,10 10,18", 0.45) +
+      fill("3.1,6 10,18 3.1,14", 0.68) +
+      fill("10,10 16.9,6 16.9,14", 0.95) +
+      fill("10,10 16.9,14 10,18", 0.72);
+  }
+  let strokes = "";
+  if (on.includes("wire")) {
+    const outline = "10,2 16.9,6 16.9,14 10,18 3.1,14 3.1,6";
+    strokes += `<polygon points="${outline}" fill="none"/><polyline points="3.1,6 10,10 16.9,6" fill="none"/><line x1="10" y1="10" x2="10" y2="18"/>`;
+    if (on.includes("fill") || on.includes("facets")) {
+      strokes += `<line x1="10" y1="2" x2="10" y2="10" opacity="0.6"/>`;
+    }
+    if (on.includes("hidden")) {
+      strokes += `<line x1="10" y1="2" x2="10" y2="10"/><line x1="3.1" y1="6" x2="16.9" y2="14" opacity="0.55"/>`;
+    }
+    if (on.includes("facets")) {
+      strokes += `<line x1="10" y1="2" x2="10" y2="10"/><line x1="3.1" y1="6" x2="10" y2="18"/><line x1="10" y1="10" x2="16.9" y2="14"/>`;
+    }
+  }
+  return `<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false">${body}<g stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round">${strokes}</g></svg>`;
+}
+
+/** The look of the toolbar over the view: themed by the UI custom properties, as the widgets are. */
+const TOOLBAR_CSS = `
+.bf-toolbar {
+  position: absolute; top: 12px; left: 12px; z-index: 2;
+  display: flex; gap: 2px; padding: 3px;
+  border-radius: 8px;
+  background: color-mix(in oklab, Canvas 88%, transparent);
+  color: CanvasText;
+  border: 1px solid color-mix(in oklab, CanvasText 18%, transparent);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
+  backdrop-filter: blur(8px);
+  font: 400 12px/16px var(--cesium-ui-font, system-ui, sans-serif);
+}
+.bf-toolbar button {
+  position: relative;
+  display: grid; place-items: center;
+  width: 34px; height: 30px; padding: 0;
+  border: 0; border-radius: 6px;
+  background: transparent; color: inherit; cursor: pointer;
+}
+.bf-toolbar button:hover { background: color-mix(in oklab, CanvasText 10%, transparent); }
+.bf-toolbar button[aria-pressed="true"] {
+  background: var(--cesium-ui-accent, AccentColor);
+  color: var(--cesium-ui-on-accent, #fff);
+}
+.bf-toolbar button:focus-visible {
+  outline: 2px solid var(--cesium-ui-focus, Highlight);
+  outline-offset: 2px;
+}
+.bf-toolbar button::after {
+  content: attr(data-tip);
+  position: absolute; top: calc(100% + 8px); left: 0;
+  padding: 4px 8px; border-radius: 4px; white-space: nowrap;
+  background: CanvasText; color: Canvas;
+  opacity: 0; pointer-events: none; transition: opacity 120ms;
+}
+.bf-toolbar button:hover::after,
+.bf-toolbar button:focus-visible::after { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .bf-toolbar button::after { transition: none; }
+}
+.bf-view:focus-visible { outline: 2px solid var(--cesium-ui-focus, Highlight); outline-offset: -2px; }
+`;
+
+/** How far lines lift off the faces, as a fraction of a shape's size. */
+const LIFT = 0.0025;
+/** Linear colours of unlit lines: the B-rep edges, and the tessellation's wire. */
+const EDGE_COLOR: [number, number, number, number] = [0, 0, 0, 1];
+const WIRE_MID: [number, number, number, number] = [0.2, 0.2, 0.22, 1];
+const WIRE_DARK: [number, number, number, number] = [0.09, 0.09, 0.1, 1];
 
 /** What a feature ID of a draw stands for. */
 interface Part {
@@ -197,7 +322,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   const settings = {
     /** m. */
     tolerance: 0.001,
-    faces: true,
+    mode: "shaded" as DisplayMode,
     edges: true,
   };
 
@@ -224,11 +349,12 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     return () => undefined;
   }
   const shapes: Shape[] = [
-    { name: "Box", form: box, x: -7.5, scale: 1, doubleSided: false },
+    { name: "Box", form: box, x: -7.5, y: 0, scale: 1, doubleSided: false },
     {
       name: "Capped cylinder",
       form: cappedCylinderBrep(),
       x: -3,
+      y: 0,
       scale: 1,
       doubleSided: false,
     },
@@ -236,6 +362,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       name: "Trimmed NURBS face",
       form: trimmedNurbsBrep(),
       x: 1.5,
+      y: 0,
       scale: 0.03,
       doubleSided: true,
       note: "100 m across, drawn at 0.03",
@@ -246,6 +373,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       name: "Box via glTF",
       form: viaGltf,
       x: 6,
+      y: 0,
       scale: 1,
       doubleSided: false,
       note: gltfNote,
@@ -325,12 +453,47 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     }),
   );
 
-  /** What each shape's draws are, rebuilt when the tolerance changes. */
+  /** What each shape's draws are, rebuilt when the tolerance or the mode changes. */
   let draws: DrawHandle[] = [];
   const parts = new Map<number, Part>();
-  const stats = { triangles: 0, lines: 0, ms: 0, error: 0 };
+  const stats = {
+    triangles: 0,
+    wireLines: 0,
+    edgeLines: 0,
+    ms: 0,
+    error: 0,
+  };
+  const prepared: Array<Prepared | undefined> = [];
 
   const problemsOf = shapes.map((shape) => validateBrep(shape.form));
+
+  // Tessellates every shape: when the tolerance changes.
+  const tessellate = () => {
+    const start = performance.now();
+    shapes.forEach((shape, s) => {
+      try {
+        const mesh = tessellateBrep(shape.form, {
+          tolerance: settings.tolerance,
+        });
+        const p = mesh.faces.positions;
+        let lowest = Infinity;
+        for (let i = 2; i < p.length; i += 3) {
+          lowest = Math.min(lowest, p[i]!);
+        }
+        // Lines sit this far off the faces: a fraction of the shape's size.
+        const size = boundsSize(
+          mesh.faces.positions.length > 0
+            ? mesh.faces.positions
+            : mesh.edges.positions,
+        );
+        prepared[s] = { mesh, lift: size * LIFT, lowest };
+      } catch (error) {
+        console.warn(`tessellating ${shape.name}:`, error);
+        prepared[s] = undefined;
+      }
+    });
+    stats.ms = performance.now() - start;
+  };
 
   const build = () => {
     for (const d of draws) {
@@ -339,34 +502,23 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     draws = [];
     parts.clear();
     stats.triangles = 0;
-    stats.lines = 0;
+    stats.wireLines = 0;
+    stats.edgeLines = 0;
     stats.error = 0;
-    const start = performance.now();
-    const meshes = shapes.map((shape) => {
-      try {
-        return tessellateBrep(shape.form, { tolerance: settings.tolerance });
-      } catch (error) {
-        console.warn(`tessellating ${shape.name}:`, error);
-        return undefined;
-      }
-    });
-    stats.ms = performance.now() - start;
+    const showFaces = settings.mode !== "wire";
+    const showWire = settings.mode !== "shaded";
     shapes.forEach((shape, s) => {
-      const mesh = meshes[s];
-      if (!mesh) {
+      const prep = prepared[s];
+      if (!prep) {
         return;
       }
+      const mesh = prep.mesh;
       stats.error = Math.max(stats.error, mesh.error);
       // Relative positions, then the mesh's own centre, then scaled, then
-      // stood on the ground at the shape's x.
-      let lowest = Infinity;
-      const p = mesh.faces.positions;
-      for (let i = 2; i < p.length; i += 3) {
-        lowest = Math.min(lowest, p[i]!);
-      }
+      // stood on the ground at the shape's place.
       const centre = mesh.origin;
-      const lift = -(lowest + centre[2]!) * shape.scale;
-      const place = translation(shape.x, 0, lift);
+      const lift = -(prep.lowest + centre[2]!) * shape.scale;
+      const place = translation(shape.x, shape.y, lift);
       // place · scale · translate(centre)
       const model = toWorld(
         mat4.multiply(
@@ -380,28 +532,22 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         ),
       );
 
-      // The edges lie on the faces, where depth ties would hide them, and
-      // lines take no depth bias: so they are drawn a hair larger about the
-      // shape's centre, about 0.6% (1 cm on the box), which lifts them off
-      // the faces of a convex shape.
-      const edgeModel = mat4.multiply(
-        mat4.mat4(),
-        model,
-        mat4.fromScale(mat4.mat4(), 1.006, 1.006, 1.006),
-      );
-
-      if (settings.faces && mesh.faces.indices.length > 0) {
-        const count = mesh.faces.positions.length / 3;
+      if (showFaces && mesh.faces.indices.length > 0) {
+        const source =
+          settings.mode === "flatWire"
+            ? (prep.flat ??= flatFaces(mesh))
+            : mesh.faces;
+        const count = source.positions.length / 3;
         const colors = new Float32Array(count * 4);
         for (let i = 0; i < count; i++) {
-          colors.set([...tint(mesh.faces.featureIds[i]!), 1], i * 4);
+          colors.set([...tint(source.featureIds[i]!), 1], i * 4);
         }
         const data: MeshData = {
-          positions: mesh.faces.positions,
-          normals: mesh.faces.normals,
-          indices: mesh.faces.indices,
+          positions: source.positions,
+          normals: source.normals,
+          indices: source.indices,
           colors,
-          featureIds: mesh.faces.featureIds,
+          featureIds: source.featureIds,
           featureCount: Math.max(1, shape.form.faceSurface.length),
         };
         const draw = world.addDraw({
@@ -417,29 +563,53 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         parts.set(draw.index, { shape, kind: "face" });
         stats.triangles += mesh.faces.indices.length / 3;
       }
-      if (settings.edges && mesh.edges.indices.length > 0) {
+      if (showWire && mesh.faces.indices.length > 0) {
+        const wire = (prep.wire ??= wireLines(mesh, prep.lift));
         const data: MeshData = {
-          positions: mesh.edges.positions,
-          indices: mesh.edges.indices,
-          featureIds: mesh.edges.featureIds,
+          positions: wire.positions,
+          indices: wire.indices,
+          featureIds: wire.featureIds,
+          featureCount: Math.max(1, shape.form.faceSurface.length),
+          topology: "line-list",
+        };
+        const draw = world.addDraw({
+          mesh: world.addMesh(data),
+          origin,
+          model,
+          material: lineMaterial,
+          color: settings.mode === "wire" ? WIRE_DARK : WIRE_MID,
+          name: `${shape.name}: wireframe`,
+        });
+        draws.push(draw);
+        // A wire line is part of its face: picking it picks the face.
+        parts.set(draw.index, { shape, kind: "face" });
+        stats.wireLines += wire.indices.length / 2;
+      }
+      if (settings.edges && mesh.edges.indices.length > 0) {
+        const edges = (prep.edges ??= liftedEdges(shape.form, mesh, prep.lift));
+        const data: MeshData = {
+          positions: edges.positions,
+          indices: edges.indices,
+          featureIds: edges.featureIds,
           featureCount: Math.max(1, shape.form.edgeVertices.length / 2),
           topology: "line-list",
         };
         const draw = world.addDraw({
           mesh: world.addMesh(data),
           origin,
-          model: edgeModel,
+          model,
           material: lineMaterial,
-          color: [0.04, 0.04, 0.05, 1],
+          color: EDGE_COLOR,
           name: `${shape.name}: edge`,
         });
         draws.push(draw);
         parts.set(draw.index, { shape, kind: "edge" });
-        stats.lines += mesh.edges.indices.length / 2;
+        stats.edgeLines += edges.indices.length / 2;
       }
     });
     engine.requestRender();
   };
+  tessellate();
   build();
 
   // The row's middle, Earth-fixed.
@@ -453,7 +623,6 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   );
   viewer.setSun(150, 40);
 
-  // ------------------------------------------------------------ the panel
   const el = <K extends keyof HTMLElementTagNameMap>(
     tag: K,
     props: Record<string, unknown> = {},
@@ -463,6 +632,70 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     e.append(...children);
     return e;
   };
+  // ---------------------------------------------------- the display modes
+  // A toolbar over the view, as a viewport in a DCC tool has. The keys 1 to 4
+  // work while the view has focus.
+  const view_ = viewer.container;
+  const style = el("style", { textContent: TOOLBAR_CSS });
+  const previousTabIndex = view_.getAttribute("tabindex");
+  if (previousTabIndex === null) {
+    view_.tabIndex = 0;
+  }
+  view_.classList.add("bf-view");
+  const toolbar = el("div", {
+    className: "bf-toolbar",
+    role: "toolbar",
+    ariaLabel: "Display mode",
+  });
+  const modeButtons = MODES.map((mode, i) => {
+    const button = el("button", {
+      type: "button",
+      ariaLabel: mode.label,
+    });
+    button.innerHTML = mode.icon;
+    button.dataset.tip = `${mode.label} (${i + 1})`;
+    button.title = `${mode.label} (${i + 1})`;
+    button.addEventListener("click", () => setMode(mode.id));
+    return button;
+  });
+  toolbar.append(...modeButtons);
+  const syncButtons = () => {
+    MODES.forEach((mode, i) => {
+      modeButtons[i]!.setAttribute(
+        "aria-pressed",
+        String(mode.id === settings.mode),
+      );
+    });
+  };
+  const setMode = (mode: DisplayMode) => {
+    if (mode === settings.mode) {
+      return;
+    }
+    settings.mode = mode;
+    syncButtons();
+    build();
+    showStats();
+  };
+  syncButtons();
+  view_.append(style, toolbar);
+  const onKey = (event: KeyboardEvent) => {
+    const target = event.target as HTMLElement;
+    if (
+      event.ctrlKey ||
+      event.metaKey ||
+      event.altKey ||
+      target.tagName === "INPUT"
+    ) {
+      return;
+    }
+    const mode = MODES[Number(event.key) - 1];
+    if (mode) {
+      setMode(mode.id);
+    }
+  };
+  view_.addEventListener("keydown", onKey);
+
+  // ------------------------------------------------------------ the panel
   const check = (
     label: string,
     get: () => boolean,
@@ -494,6 +727,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     oninput: () => {
       settings.tolerance = toleranceOf(Number(toleranceInput.value));
       toleranceOut.textContent = mm(settings.tolerance);
+      tessellate();
       build();
       showStats();
     },
@@ -501,10 +735,19 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   const statsOut = el("dl");
   const showStats = () => {
     statsOut.replaceChildren(
-      el("dt", {}, "Triangles"),
+      el("dt", {}, "Triangles drawn"),
       el("dd", {}, stats.triangles.toLocaleString()),
-      el("dt", {}, "Edge lines"),
-      el("dd", {}, stats.lines.toLocaleString()),
+      el("dt", {}, "Lines drawn"),
+      el(
+        "dd",
+        {},
+        (stats.wireLines + stats.edgeLines).toLocaleString(),
+        el(
+          "small",
+          {},
+          ` (${stats.wireLines.toLocaleString()} wireframe, ${stats.edgeLines.toLocaleString()} B-rep edges)`,
+        ),
+      ),
       el("dt", {}, "tessellateBrep took"),
       el("dd", {}, `${stats.ms.toFixed(1)} ms for all four`),
       el("dt", {}, "Largest chordal error"),
@@ -566,16 +809,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     ),
     statsOut,
     check(
-      "Faces",
-      () => settings.faces,
-      (on) => {
-        settings.faces = on;
-        build();
-        showStats();
-      },
-    ),
-    check(
-      "Edges",
+      "B-rep edges",
       () => settings.edges,
       (on) => {
         settings.edges = on;
@@ -630,6 +864,13 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   return () => {
     viewer.container.removeEventListener("pointerdown", pointerDown);
     viewer.container.removeEventListener("pointerup", pointerUp);
+    view_.removeEventListener("keydown", onKey);
+    view_.classList.remove("bf-view");
+    if (previousTabIndex === null) {
+      view_.removeAttribute("tabindex");
+    }
+    style.remove();
+    toolbar.remove();
     for (const d of [...draws, ...extras]) {
       world.removeDraw(d);
     }
