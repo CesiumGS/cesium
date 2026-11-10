@@ -374,7 +374,11 @@ export function meshGeometry(
       const tb = corner(placed, indices[3 * t + 1]!);
       const tc = corner(placed, indices[3 * t + 2]!);
       const hit = hitTriangle(from, d, ta, tb, tc);
-      if (hit === undefined || hit < tMin || hit > tMax || flat(ta, tb, tc)) {
+      if (
+        hit === undefined ||
+        !(hit >= tMin && hit <= tMax) ||
+        flat(ta, tb, tc)
+      ) {
         continue;
       }
       if (best === undefined || hit < best) {

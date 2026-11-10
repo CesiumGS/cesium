@@ -46,6 +46,12 @@ export function sdfGeometry(
 ): GeometryQueries {
   const maxSteps = options.maxSteps ?? 256;
   const epsilon = options.epsilon ?? 1e-4;
+  if (!(Number.isFinite(epsilon) && epsilon > 0)) {
+    throw new Error("sdfGeometry: epsilon must be a positive finite number");
+  }
+  if (!(Number.isInteger(maxSteps) && maxSteps >= 1)) {
+    throw new Error("sdfGeometry: maxSteps must be a positive integer");
+  }
   const error = field.error ?? 0;
   const lo = [field.min[0]!, field.min[1]!, field.min[2]!] as const;
   const hi = [field.max[0]!, field.max[1]!, field.max[2]!] as const;
@@ -87,7 +93,7 @@ export function sdfGeometry(
     let t0 = o.tMin ?? 0;
     let t1 = o.tMax ?? 1;
 
-    const hitAt = (t: number): GeometryRayAnswer => {
+    const hitAt = (t: number, dist = 0): GeometryRayAnswer => {
       const px = from[0]! + t * dx;
       const py = from[1]! + t * dy;
       const pz = from[2]! + t * dz;
@@ -113,14 +119,23 @@ export function sdfGeometry(
           position: Float64Array.of(px, py, pz),
           normal,
           entity: FACE,
-          accuracy: hitAccuracy,
+          // Starting inside, the surface may be as far as the depth.
+          accuracy:
+            dist < 0
+              ? {
+                  ...hitAccuracy,
+                  meters: Math.max(epsilon, -dist) + error,
+                  note: "the ray starts inside the field: the surface is within the depth of the start",
+                }
+              : hitAccuracy,
         },
       };
     };
 
     if (length === 0) {
       // No direction to march: only a start inside the field is a hit.
-      return f(from[0]!, from[1]!, from[2]!) < 0 ? hitAt(t0) : miss;
+      const inside = f(from[0]!, from[1]!, from[2]!);
+      return inside < 0 ? hitAt(t0, inside) : miss;
     }
 
     // Clip [t0, t1] to the bounds box (slab test).
@@ -150,7 +165,7 @@ export function sdfGeometry(
     for (let step = 0; step < maxSteps; step++) {
       const dist = f(from[0]! + t * dx, from[1]! + t * dy, from[2]! + t * dz);
       if (dist < epsilon) {
-        return hitAt(t);
+        return hitAt(t, t === t0 ? dist : 0);
       }
       t += dist / length;
       if (t > t1) {
@@ -175,15 +190,21 @@ export function sdfGeometry(
     let y = point[1]!;
     let z = point[2]!;
     let d = f(x, y, z);
+    if (!Number.isFinite(d)) {
+      return undefined;
+    }
     for (let i = 0; i < PROJECTIONS && Math.abs(d) >= epsilon; i++) {
       const n = gradient(x, y, z);
       if (!n) {
-        break;
+        return undefined;
       }
       x -= d * n[0];
       y -= d * n[1];
       z -= d * n[2];
       d = f(x, y, z);
+    }
+    if (!Number.isFinite(d)) {
+      return undefined;
     }
     const converged = Math.abs(d) < epsilon;
     const distance = Math.hypot(x - point[0]!, y - point[1]!, z - point[2]!);
@@ -192,7 +213,10 @@ export function sdfGeometry(
     }
     const n = gradient(x, y, z);
     const accuracy: GeometryAccuracy = converged
-      ? hitAccuracy
+      ? {
+          ...hitAccuracy,
+          note: "on the surface to the field's epsilon; the nearest point only if the field is a true distance",
+        }
       : {
           meters: Math.abs(d) + error,
           exact: false,
@@ -226,8 +250,12 @@ export function sdfGeometry(
     let bestAt = 0;
     let bestStep = epsilon;
     let s = 0;
+    let reached = false;
     for (let i = 0; i < maxSteps; i++) {
       const d = at(s);
+      if (!Number.isFinite(d)) {
+        break;
+      }
       const step = Math.max(d, epsilon);
       if (d < best) {
         best = d;
@@ -235,9 +263,20 @@ export function sdfGeometry(
         bestStep = step;
       }
       if (best < epsilon || s >= length) {
+        reached = true;
         break;
       }
       s = Math.min(s + step, length);
+    }
+    if (best === Infinity) {
+      return {
+        distance: NaN,
+        accuracy: {
+          meters: Infinity,
+          exact: false,
+          note: "the field gave no finite distance along the segment",
+        },
+      };
     }
     // Refine within one step on either side of the smallest.
     let a = Math.max(0, bestAt - bestStep);
@@ -261,13 +300,21 @@ export function sdfGeometry(
         fe = at(e);
       }
     }
+    const distance = Math.min(best, fc, fe);
     return {
-      distance: Math.min(best, fc, fe),
-      accuracy: {
-        meters: epsilon + error,
-        exact: false,
-        note: "sampled along the segment and refined: an upper bound on the least distance",
-      },
+      distance,
+      accuracy: reached
+        ? {
+            meters: epsilon + error,
+            exact: false,
+            note: "sampled along the segment and refined: an upper bound on the least distance",
+          }
+        : {
+            // The unsampled rest may come anywhere from 0 to the best seen.
+            meters: distance + error,
+            exact: false,
+            note: "the march ran out of steps before the end of the segment: an upper bound on the least distance, which may be anywhere from 0 to it",
+          },
     };
   };
 

@@ -59,6 +59,8 @@ describe("meshGeometry rays", () => {
     );
     expect(g.rayHit(down, { tMax: 0.4 }).verdict).toBe("miss");
     expect(g.rayHit(down, { tMin: 0.6 }).verdict).toBe("miss");
+    expect(g.rayHit(down, { tMin: NaN }).verdict).toBe("miss");
+    expect(g.rayHit(down, { tMax: NaN }).verdict).toBe("miss");
     expect(g.rayHit(down, { tMin: 0.4, tMax: 0.6 }).verdict).toBe("hit");
   });
 

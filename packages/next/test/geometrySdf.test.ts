@@ -102,4 +102,69 @@ describe("sdfGeometry", () => {
     expect(Array.from(b.min)).toEqual([-1, -1, -1]);
     expect(Array.from(b.max)).toEqual([1, 1, 1]);
   });
+
+  it("reports the unsampled rest when segmentDistance runs out of steps", () => {
+    const plane: DistanceField = {
+      distance: (_x, _y, z) => z,
+      min: [-1e6, -1e6, -1e6],
+      max: [1e6, 1e6, 1e6],
+    };
+    const p = sdfGeometry(plane, { maxSteps: 3 });
+    const s = p.segmentDistance([0, 0, 0.01], [100000, 0, 0.01]);
+    expect(s.accuracy.meters).toBeGreaterThanOrEqual(s.distance);
+    expect(s.accuracy.note).toMatch(/steps/);
+  });
+
+  it("gives undefined for a NaN field in closestPoint", () => {
+    const nan = sdfGeometry({
+      distance: () => NaN,
+      min: [-1, -1, -1],
+      max: [1, 1, 1],
+    });
+    expect(nan.closestPoint([0, 3, 0])).toBeUndefined();
+  });
+
+  it("reports no finite distance for a NaN field in segmentDistance", () => {
+    const nan = sdfGeometry({
+      distance: () => NaN,
+      min: [-1, -1, -1],
+      max: [1, 1, 1],
+    });
+    const s = nan.segmentDistance([0, 0, 0], [1, 0, 0]);
+    expect(Number.isNaN(s.distance)).toBe(true);
+    expect(s.accuracy.meters).toBe(Infinity);
+    expect(s.accuracy.exact).toBe(false);
+    expect(s.accuracy.note).toMatch(/no finite distance/);
+  });
+
+  it("widens the hit accuracy for a ray starting inside", () => {
+    const a = g.rayHit({ from: [0, 0, 0], to: [3, 0, 0] });
+    expect(a.verdict).toBe("hit");
+    if (a.verdict === "hit") {
+      expect(a.hit.accuracy.meters).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it("rejects bad epsilon and maxSteps", () => {
+    for (const epsilon of [0, -1, NaN, Infinity]) {
+      expect(() => sdfGeometry(sphere, { epsilon })).toThrow(
+        "sdfGeometry: epsilon must be a positive finite number",
+      );
+    }
+    for (const maxSteps of [0, -1, 1.5, NaN]) {
+      expect(() => sdfGeometry(sphere, { maxSteps })).toThrow(
+        "sdfGeometry: maxSteps must be a positive integer",
+      );
+    }
+  });
+
+  it("gives undefined for closestPoint where the gradient is flat", () => {
+    expect(g.closestPoint([0, 0, 0])).toBeUndefined();
+  });
+
+  it("says the closest point is on the surface, nearest only for a true distance", () => {
+    const c = g.closestPoint([0, 3, 0]);
+    expect(c?.accuracy.note).toMatch(/on the surface/);
+    expect(c?.accuracy.note).toMatch(/true distance/);
+  });
 });
