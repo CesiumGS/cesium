@@ -94,7 +94,7 @@ select:not(.stratakit-mimic-button):not(.cesium-viewer select) {
 
 button:not(.stratakit-mimic-button):not(.cesium-viewer button):not(
     .cesium-toolbar-button
-  ) {
+  ):not(.cesium-editor-toolbar button) {
   /* Missing shadows and pressed, active and disabled states but "good enough" for now */
   background: var(--stratakit-color-bg-neutral-base);
   padding: var(--stratakit-space-x1) var(--stratakit-space-x3);

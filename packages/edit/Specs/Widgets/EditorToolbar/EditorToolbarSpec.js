@@ -58,9 +58,8 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
   }
 
   function getVisibleModeLabel() {
-    return container.querySelector(
-      ".cesium-editor-toolbar-mode-labels > span:not(.cesium-editor-toolbar-mode-label-hidden)",
-    ).textContent;
+    return container.querySelector(".cesium-editor-toolbar-mode-label")
+      .textContent;
   }
 
   function getComponents() {
@@ -154,14 +153,10 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
     it("names the mode toggle with its visible label", function () {
       toolbar = new EditorToolbar(container, editor);
       const modeButton = getModeButton();
-      const labels = modeButton.querySelectorAll(
-        ".cesium-editor-toolbar-mode-labels > span",
-      );
 
-      expect(Array.from(labels).map((label) => label.textContent)).toEqual([
-        "Object Mode",
-        "Edit Mode",
-      ]);
+      expect(modeButton.textContent.trim()).toBe("Object Mode");
+      modeButton.click();
+      expect(modeButton.textContent.trim()).toBe("Edit Mode");
       expect(modeButton.hasAttribute("aria-label")).toBe(false);
       expect(modeButton.hasAttribute("aria-pressed")).toBe(false);
     });

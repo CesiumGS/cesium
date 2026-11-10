@@ -20,8 +20,9 @@
   align-items: center;
 }
 
-/* Shows the current mode's icon to the left of its name. */
-.cesium-editor-toolbar-mode-button {
+/* Shows the current mode's icon to the left of its name. Qualified with the
+   toolbar so it overrides .cesium-button however the stylesheets are ordered. */
+.cesium-editor-toolbar .cesium-editor-toolbar-mode-button {
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
@@ -33,25 +34,16 @@
   font-size: 13px;
 }
 
-.cesium-editor-toolbar-mode-labels {
-  display: grid;
-  justify-items: start;
-}
-
-.cesium-editor-toolbar-mode-labels > span {
-  grid-area: 1 / 1;
+.cesium-editor-toolbar-mode-label {
   white-space: nowrap;
-}
-
-.cesium-editor-toolbar-mode-labels > .cesium-editor-toolbar-mode-label-hidden {
-  visibility: hidden;
 }
 
 .cesium-editor-toolbar-mode-icon {
   position: relative;
   flex: none;
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
+  margin: 0 2px;
 }
 
 .cesium-editor-toolbar-icon-dimmed {
@@ -67,16 +59,21 @@
 }
 
 /* Only keyboard focus gets the focus border. A clicked button keeping it would
-   look selected after Shift+click deselects it. :where() keeps this as
-   specific as .cesium-button:focus, so the hover, active and selected borders
-   below still win. */
-.cesium-button:focus:where(.cesium-editor-toolbar *):where(
-    :not(:focus-visible, :hover)
+   look selected after Shift+click deselects it. Hovered, active and selected
+   buttons keep their own borders. */
+.cesium-editor-toolbar
+  .cesium-button:focus:not(
+    :focus-visible,
+    :hover,
+    .cesium-editor-toolbar-active,
+    .cesium-editor-toolbar-selected
   ) {
   border-color: #444;
 }
 
-.cesium-editor-toolbar-group > .cesium-editor-toolbar-active {
+/* .cesium-button in these selectors lets the green borders override its focus
+   and hover borders however the stylesheets are ordered. */
+.cesium-editor-toolbar-group > .cesium-button.cesium-editor-toolbar-active {
   border-color: #2e2;
 }
 
@@ -103,14 +100,15 @@
   margin: 0 3px;
 }
 
-.cesium-editor-toolbar-dropdown-container .cesium-editor-toolbar-selected {
+.cesium-editor-toolbar-dropdown-container
+  .cesium-button.cesium-editor-toolbar-selected {
   border-color: #2e2;
   box-shadow:
     0 0 8px #fff,
     0 0 8px #fff;
 }
 
-.cesium-editor-toolbar-dropdown .cesium-editor-toolbar-active {
+.cesium-editor-toolbar-dropdown .cesium-button.cesium-editor-toolbar-active {
   border-color: #2e2;
 }
 
