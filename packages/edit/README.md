@@ -60,6 +60,11 @@ The toolbar doesn't add tools to the editor, so pass the tools it should offer;
 without any, it has no tool dropdown. `viewerEditorMixin` adds a select and a translate tool, exposed
 as `viewer.editorTools`, and activates the select tool.
 
+The toolbar doesn't handle keys either. To show shortcuts in its tooltips, like
+"Vertex (1)", set its view model's `modeShortcuts` and `toolShortcuts`, e.g.
+`toolbar.viewModel.toolShortcuts = { select: ["s"] }`. `viewerEditorMixin` sets
+them from its key bindings.
+
 ## Community
 
 Have questions? Ask them on the [community forum](https://community.cesium.com/).
