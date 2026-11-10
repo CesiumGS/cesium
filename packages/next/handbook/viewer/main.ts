@@ -6,6 +6,8 @@ import {
   Engine,
   EYE,
   GlobeController,
+  eastNorthUpToFixedFrame,
+  mat4,
   PointSource,
   VectorLayer,
   fromDegrees,
@@ -45,16 +47,19 @@ const SITE = { longitude: -122.02, latitude: 37.76 };
 /** Vehicle counts it steps through, never skipping one going up. */
 const VEHICLE_STEPS = [
   1_000, 2_500, 5_000, 10_000, 25_000, 50_000, 100_000, 250_000, 500_000,
-  1_000_000, 2_000_000,
+  1_000_000, 2_000_000, 5_000_000, 10_000_000,
 ];
-/** Over these, a step is too many for this machine. */
-const LONG_TICK_MS = 250;
-const SLOW_AVERAGE_MS = 50;
-/** Under this, the next step may be tried. */
-const HEALTHY_AVERAGE_MS = 26;
-const SETTLE_MS = 1500;
+/**
+ * How long each step holds before the next. No frame-time cap: the climb goes
+ * on however slow the ticks get, and backs off only when the GPU fails.
+ */
+const SETTLE_MS = 1000;
 
 const SHADERS = Object.keys(presets);
+/** The toy car's scale: its nodes make it centimeters long. */
+const CAR_SCALE = 250;
+/** Meters above the ground the camera looks at, about the car's middle. */
+const CAR_LIFT = 4;
 
 export interface ReelState {
   chapter: number;
@@ -76,6 +81,8 @@ export interface ReelState {
   count: number;
   steps: readonly number[];
   target: number;
+  /** The reader set the count: the slider shows what was asked for. */
+  countManual: boolean;
   /** The most that have held up here, and why it stopped there. */
   ceiling: number | undefined;
   ceilingWhy: string | undefined;
@@ -389,8 +396,7 @@ export async function startReel(
   let ceilingStep: number | undefined;
   let ceilingWhy: string | undefined;
   let settledAt = Infinity;
-  let slowAverage = 0;
-  let longTicks = 0;
+  let countManual = false;
   const HALF = 18_000;
   const origin = ecef(SITE.longitude, SITE.latitude, 100);
 
@@ -407,17 +413,25 @@ export async function startReel(
     stopVehicles();
     const token = building;
     const n = VEHICLE_STEPS[index]!;
-    const next = new PointSource(engine, world, {
-      capacity: n,
-      origin,
-      anchor: world.bodyAnchor(EARTH),
-      clamp: {
-        halfExtent: HALF * 1.05,
-        size: 2048,
-        top: 2000,
-        bottom: -400,
-      },
-    });
+    let next: PointSource;
+    try {
+      next = new PointSource(engine, world, {
+        capacity: n,
+        origin,
+        anchor: world.bodyAnchor(EARTH),
+        clamp: {
+          halfExtent: HALF * 1.05,
+          size: 2048,
+          top: 2000,
+          bottom: -400,
+        },
+      });
+    } catch (error) {
+      if (index > 0) {
+        backOff(`${n.toLocaleString()} couldn't be held (${String(error)})`);
+      }
+      return;
+    }
     next.count = n;
     source = next;
     stepIndex = index;
@@ -452,8 +466,6 @@ export async function startReel(
     };
     worker.postMessage({ count: n, half: HALF, rate: 10 });
     settledAt = performance.now() + SETTLE_MS;
-    slowAverage = 0;
-    longTicks = 0;
   };
   const backOff = (why: string) => {
     ceilingStep = Math.max(0, stepIndex - 1);
@@ -461,27 +473,13 @@ export async function startReel(
     targetStep = Math.min(targetStep, ceilingStep);
     void buildVehicles(ceilingStep);
   };
-  /** One step at a time, each only once the last has held up. */
-  const stepVehicles = (tickMs: number, now: number) => {
+  /** One step at a time toward the target, each held for `SETTLE_MS`. */
+  const stepVehicles = (now: number) => {
     if (!source || now < settledAt) {
       return;
     }
-    slowAverage =
-      slowAverage === 0
-        ? tickMs
-        : slowAverage * 0.9 + Math.min(tickMs, 500) * 0.1;
-    if (tickMs > LONG_TICK_MS) {
-      longTicks++;
-    }
-    const watched = now > settledAt + 1000;
-    if (stepIndex > 0 && longTicks >= 3) {
-      backOff("ticks over 250 ms");
-    } else if (stepIndex > 0 && watched && slowAverage > SLOW_AVERAGE_MS) {
-      backOff("ticks averaging over 50 ms");
-    } else if (
-      watched &&
+    if (
       targetStep > stepIndex &&
-      slowAverage < HEALTHY_AVERAGE_MS &&
       (ceilingStep === undefined || stepIndex < ceilingStep)
     ) {
       void buildVehicles(stepIndex + 1);
@@ -515,12 +513,40 @@ export async function startReel(
   const modelTarget = ecef(
     MODEL_SPOT.longitude,
     MODEL_SPOT.latitude,
-    modelGround + 13,
+    modelGround + CAR_LIFT,
+  );
+  /** The toy car, east-north-up on the ground, scaled to the size of a house. */
+  const carMatrix = mat4.multiply(
+    mat4.mat4(),
+    eastNorthUpToFixedFrame(
+      ecef(MODEL_SPOT.longitude, MODEL_SPOT.latitude, modelGround),
+      ellipsoid,
+      mat4.mat4(),
+    ),
+    mat4.fromScale(mat4.mat4(), CAR_SCALE, CAR_SCALE, CAR_SCALE),
   );
   let model: ModelResource | undefined;
   let placement: ModelPlacement | undefined;
   let shaderName = SHADERS[0]!;
   const shaders = new Map<string, CustomShader>();
+  /**
+   * Switches once the shader's pipelines are made, so the model keeps the
+   * one it had meanwhile (content with an uncompiled shader draws with the
+   * default material: `CustomShader`).
+   */
+  const switchTo = async (name: string) => {
+    const shader = shaderFor(name);
+    await engine.compileShader(shader);
+    if (shaderName === name && !disposed) {
+      placement?.setShader(shader);
+    }
+  };
+  /** All of them, one at a time, so the tour's switches are ready in time. */
+  const warmShaders = async () => {
+    for (const name of SHADERS) {
+      await engine.compileShader(shaderFor(name));
+    }
+  };
   const shaderFor = (name: string) => {
     let shader = shaders.get(name);
     if (!shader) {
@@ -546,6 +572,8 @@ export async function startReel(
 
   let compensation = 0;
   const NIGHT_STOPS = 2.2;
+  /** The hour (UTC) the first chapter's clock stops at: night over Europe. */
+  const NIGHT_HOLD = 23;
   const earthPose = (
     name: string,
     lon: number,
@@ -561,7 +589,7 @@ export async function startReel(
 
   const CHAPTERS: Chapter[] = [
     {
-      duration: 14,
+      duration: 22,
       poses: [
         earthPose("The Atlantic", -30, 15, 2.1e7),
         earthPose("Europe by night", 12, 44, 5.5e6),
@@ -570,13 +598,15 @@ export async function startReel(
       keys: [
         [0, 0],
         [14, 1],
+        [22, 1],
       ],
       enter() {
         setClock(9);
       },
       update(_t, dt) {
+        // The clock stops at night, so the eye has time to adapt to the lights.
         if (options.motion && !timeManual) {
-          setClock(hours + dt);
+          setClock(Math.min(NIGHT_HOLD, hours + dt));
         }
         // Eyes open as the view goes dark, so the lights show.
         const opening = ramp(hours, 17, 22) * NIGHT_STOPS;
@@ -593,7 +623,7 @@ export async function startReel(
         "The Sun comes from a reduced copy of JPL's DE440 embedded in this file, and Earth's rotation from a table. The terminator, the air and the night lights follow from them.",
     },
     {
-      duration: 14,
+      duration: 30,
       poses: [
         {
           name: "Over the valley",
@@ -612,8 +642,8 @@ export async function startReel(
       ],
       keys: [
         [0, 0],
-        [9, 0],
-        [14, 1],
+        [20, 0],
+        [28, 1],
       ],
       turn: 0.02,
       async enter() {
@@ -624,7 +654,10 @@ export async function startReel(
         await buildVehicles(0);
       },
       update() {},
-      exit: stopVehicles,
+      exit() {
+        stopVehicles();
+        countManual = false;
+      },
       caption: () =>
         "A simulated feed sends reports from a worker. On the GPU, vehicles move between reports and clamp to the ground the view draws. The count rises a step at a time while this machine keeps up.",
     },
@@ -714,8 +747,8 @@ export async function startReel(
           name: "Two views",
           target: Float64Array.from(middle.p),
           heading: 10 * deg,
-          pitch: -62 * deg,
-          range: 34_000,
+          pitch: -38 * deg,
+          range: 5_500,
         },
       ],
       keys: [[0, 0]],
@@ -775,39 +808,34 @@ export async function startReel(
         "An orbit and a close-up: two views of one world, on one GPU device and one tile cache. Each selects its own tiles, and a tile both want loads once.",
     },
     {
-      duration: 12,
+      duration: 15,
       poses: [
         {
-          name: "The lantern",
+          name: "The toy car",
           target: modelTarget,
           heading: 200 * deg,
-          pitch: -5 * deg,
-          range: 52,
+          pitch: -12 * deg,
+          range: 48,
         },
       ],
       keys: [[0, 0]],
       turn: 0.1,
       async enter() {
         setClock(23);
-        model ??= await engine.loadModel(world, data.url("Lantern.glb")!);
+        void warmShaders();
+        model ??= await engine.loadModel(world, data.url("ToyCar.glb")!);
         if (disposed || index !== 4) {
           return;
         }
-        placement = model.place({
-          at: {
-            longitude: MODEL_SPOT.longitude,
-            latitude: MODEL_SPOT.latitude,
-            height: modelGround,
-          },
-          shader: shaderFor(shaderName),
-        });
+        placement = model.place({ modelMatrix: carMatrix });
+        void switchTo(shaderName);
       },
       update(t) {
         if (!shaderManual && options.motion) {
           const name = SHADERS[Math.floor(t / 2.4) % SHADERS.length]!;
           if (name !== shaderName) {
             shaderName = name;
-            placement?.setShader(shaderFor(name));
+            void switchTo(name);
           }
         }
       },
@@ -816,7 +844,7 @@ export async function startReel(
         placement = undefined;
       },
       caption: () =>
-        "Custom shaders written in Slang, compiled to WGSL when this page was built, so nothing downloads a compiler. Switching one changes nothing else about the model.",
+        "Custom shaders written in Slang, compiled to WGSL when this page was built, so nothing downloads a compiler. One moves the vertices; the others change the surface. Each compiles before it's switched to, and switching changes nothing else about the model.",
     },
     // Room here for a Moon chapter, once plan 5c lands.
   ];
@@ -914,7 +942,7 @@ export async function startReel(
       }
     }
     if (index === 1) {
-      stepVehicles(tick, now);
+      stepVehicles(now);
     }
     return true;
   });
@@ -976,6 +1004,7 @@ export async function startReel(
         count: source ? VEHICLE_STEPS[stepIndex]! : 0,
         steps: VEHICLE_STEPS,
         target: VEHICLE_STEPS[targetStep]!,
+        countManual,
         ceiling:
           ceilingStep === undefined ? undefined : VEHICLE_STEPS[ceilingStep],
         ceilingWhy,
@@ -1009,6 +1038,7 @@ export async function startReel(
       setClock(h);
     },
     setCount(count) {
+      countManual = true;
       const wanted = VEHICLE_STEPS.findIndex((n) => n >= count);
       targetStep = wanted < 0 ? VEHICLE_STEPS.length - 1 : wanted;
       if (ceilingStep !== undefined) {
@@ -1030,7 +1060,7 @@ export async function startReel(
     setShader(name) {
       shaderManual = true;
       shaderName = name;
-      placement?.setShader(shaderFor(name));
+      void switchTo(name);
     },
     setActive(on) {
       if (disposed || on === active) {

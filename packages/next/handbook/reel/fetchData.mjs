@@ -8,7 +8,7 @@
 //   - NASA GIBS: Blue Marble Next Generation and VIIRS Black Marble, as Web
 //     Mercator tiles
 //   - USGS The National Map: imagery and 3DEP elevation around the corridor
-//   - Khronos glTF Sample Assets: Lantern, CC0
+//   - Khronos glTF Sample Assets: ToyCar, CC0
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
@@ -31,8 +31,8 @@ const USGS =
   "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile";
 const DEM =
   "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/exportImage";
-const LANTERN =
-  "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Lantern/glTF-Binary/Lantern.glb";
+const TOY_CAR =
+  "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/ToyCar/glTF-Binary/ToyCar.glb";
 
 const tileX = (lon, z) => Math.floor(((lon + 180) / 360) * 2 ** z);
 const tileY = (lat, z) => {
@@ -93,7 +93,7 @@ for (const [lon, lat, finest, half] of [
     }
   }
 }
-add(LANTERN, "Lantern.glb");
+add(TOY_CAR, "ToyCar.glb");
 
 async function fetchTo(job) {
   if (existsSync(job.path)) {

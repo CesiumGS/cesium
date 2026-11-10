@@ -49,9 +49,9 @@ const CHAPTERS = [
     title: "A shader you can switch",
     short: "Shaders",
     still: shot5,
-    alt: "A lantern model on a hillside with a glowing custom shader.",
+    alt: "A toy car model on a hillside with a custom shader.",
     credit:
-      "Lantern: Microsoft, by sbtron, CC0, from Khronos's glTF Sample Assets. Shaders from the Slang playground.",
+      "Toy car: Guido Odendahl and Eric Chadwick, CC0, from Khronos's glTF Sample Assets. Shaders from the Slang playground.",
   },
 ];
 
@@ -370,8 +370,17 @@ function Controls({
               min={0}
               max={state.steps.length - 1}
               step={1}
-              value={Math.max(0, state.steps.indexOf(state.target))}
-              aria-valuetext={`${state.target.toLocaleString()} asked for`}
+              value={Math.max(
+                0,
+                state.steps.indexOf(
+                  state.countManual ? state.target : state.count,
+                ),
+              )}
+              aria-valuetext={
+                state.countManual
+                  ? `${state.target.toLocaleString()} asked for`
+                  : `${state.count.toLocaleString()} shown`
+              }
               onChange={(e) => r.setCount(state.steps[Number(e.target.value)]!)}
             />
             <output>

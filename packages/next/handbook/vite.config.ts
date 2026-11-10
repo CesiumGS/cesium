@@ -153,7 +153,7 @@ function reelData(): { index: string; block: string } {
   walk("night");
   add("dem.json", readFileSync(join(store, "dem.json")));
   add("dem.f32", readFileSync(join(store, "dem.f32")));
-  add("Lantern.glb", readFileSync(join(store, "Lantern.glb")));
+  add("ToyCar.glb", readFileSync(join(store, "ToyCar.glb")));
   add("planets.pack", readFileSync(join(root, "planets-de440-2000-2050.pack")));
   add("moon.pack", readFileSync(join(root, "moon-pa-de440-2000-2050.pack")));
   add("EOP-All.csv", readFileSync(join(root, "EOP-All.csv")));
