@@ -111,6 +111,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Xuan Huang](https://github.com/xuanhuang1)
   - [Denis Biguenet](https://github.com/dbiguenet)
   - [Cyril Novel](https://github.com/cnovel)
+  - [Michel Dastous](https://github.com/mdastous-bentley)
 - [Flightradar24 AB](https://www.flightradar24.com)
   - [Aleksei Kalmykov](https://github.com/kalmykov)
 - [BIT Systems](http://www.caci.com/bit-systems)
@@ -474,3 +475,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Kanchan Basnet](https://github.com/Kanchanbasnet)
 - [Mhayk Whandson](https://github.com/mhayk)
 - [TianHengZhuang](https://github.com/TianHengZhuang)
+- [Peter Mayrhofer](https://github.com/mapeGeoinfo)
