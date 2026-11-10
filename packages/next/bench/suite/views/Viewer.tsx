@@ -186,12 +186,46 @@ export function Viewer() {
   // Fullscreen: the canvas card with its tools, inspector and credits.
   const card = useRef<HTMLDivElement>(null);
   const [fullscreen, setFullscreen] = useState(false);
+  // Where the element can't go full screen (an iPhone's Safari allows only
+  // video), or the browser refuses, the card fills the window instead.
+  const [filling, setFilling] = useState(false);
   useEffect(() => {
     const changed = () =>
       setFullscreen(document.fullscreenElement === card.current);
     document.addEventListener("fullscreenchange", changed);
     return () => document.removeEventListener("fullscreenchange", changed);
   }, []);
+  useEffect(() => {
+    if (!filling) {
+      return;
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setFilling(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [filling]);
+  const toggleFullscreen = () => {
+    if (fullscreen) {
+      void document.exitFullscreen();
+      return;
+    }
+    if (filling) {
+      setFilling(false);
+      return;
+    }
+    const element = card.current;
+    if (!element) {
+      return;
+    }
+    if (typeof element.requestFullscreen !== "function") {
+      setFilling(true);
+      return;
+    }
+    element.requestFullscreen().catch(() => setFilling(true));
+  };
   const viewRef = useRef(view);
   viewRef.current = view;
   const lightingRef = useRef(lighting);
@@ -767,7 +801,12 @@ export function Viewer() {
             />
           </div>
         )}
-        <div className="viewer-stage" ref={card}>
+        <div
+          className={
+            filling ? "viewer-stage viewer-stage-fill" : "viewer-stage"
+          }
+          ref={card}
+        >
           {/* The engine's own DOM (canvas or 1.x widget), not React's. */}
           <div className="viewer-engine" key={engine} ref={stage} />
           {(state.phase === "starting" || state.phase === "loading") && (
@@ -855,13 +894,13 @@ export function Viewer() {
             <Toolbar.Item
               render={
                 <GhostButton
-                  label={fullscreen ? "Exit full screen" : "Full screen"}
-                  icon={fullscreen ? svgWindowCollapse : svgWindowExpand}
-                  onClick={() =>
-                    void (fullscreen
-                      ? document.exitFullscreen()
-                      : card.current?.requestFullscreen())
+                  label={
+                    fullscreen || filling ? "Exit full screen" : "Full screen"
                   }
+                  icon={
+                    fullscreen || filling ? svgWindowCollapse : svgWindowExpand
+                  }
+                  onClick={toggleFullscreen}
                 />
               }
             />

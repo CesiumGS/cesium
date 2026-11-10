@@ -40,6 +40,16 @@
   border: none;
   border-radius: 0;
 }
+/* Full screen where the browser can't give it (an iPhone): the card fills
+   the window, over the page. */
+.viewer-stage.viewer-stage-fill {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  block-size: 100dvh;
+  border: none;
+  border-radius: 0;
+}
 .viewer-engine {
   position: absolute;
   inset: 0;
