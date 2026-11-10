@@ -6,7 +6,13 @@
 // undecided, each with its reason.
 import type { Ellipsoid } from "../math/ellipsoid.ts";
 import { volumeObb, type Obb, type TileVolume } from "../streaming/volumes.ts";
-import { dot, hitTriangle, sub, type V3 } from "../geometry/mesh.ts";
+import {
+  dot,
+  hitTriangle,
+  segmentTriangle,
+  sub,
+  type V3,
+} from "../geometry/mesh.ts";
 import { crossing } from "./ellipsoidBackend.ts";
 import type { QueryRay, RayAnswer, UnknownSpan } from "./queries.ts";
 
@@ -78,117 +84,6 @@ function overlap(
     }
   }
   return [lo, hi];
-}
-
-/** The distance between two segments. */
-function segmentSegment(p1: V3, q1: V3, p2: V3, q2: V3): number {
-  const d1 = sub(q1, p1);
-  const d2 = sub(q2, p2);
-  const r = sub(p1, p2);
-  const a = dot(d1, d1);
-  const e = dot(d2, d2);
-  const f = dot(d2, r);
-  const clamp = (x: number) => Math.min(1, Math.max(0, x));
-  let s: number;
-  let t: number;
-  if (a <= 1e-18 && e <= 1e-18) {
-    return Math.hypot(...r);
-  }
-  if (a <= 1e-18) {
-    s = 0;
-    t = clamp(f / e);
-  } else {
-    const c = dot(d1, r);
-    if (e <= 1e-18) {
-      t = 0;
-      s = clamp(-c / a);
-    } else {
-      const b = dot(d1, d2);
-      const denom = a * e - b * b;
-      s = denom > 1e-18 ? clamp((b * f - c * e) / denom) : 0;
-      t = (b * s + f) / e;
-      if (t < 0) {
-        t = 0;
-        s = clamp(-c / a);
-      } else if (t > 1) {
-        t = 1;
-        s = clamp((b - c) / a);
-      }
-    }
-  }
-  const x: V3 = [p1[0] + d1[0] * s, p1[1] + d1[1] * s, p1[2] + d1[2] * s];
-  const y: V3 = [p2[0] + d2[0] * t, p2[1] + d2[1] * t, p2[2] + d2[2] * t];
-  return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
-}
-
-/** The distance from a point to a triangle (Ericson's closest point). */
-function pointTriangle(p: V3, a: V3, b: V3, c: V3): number {
-  const ab = sub(b, a);
-  const ac = sub(c, a);
-  const ap = sub(p, a);
-  const d1 = dot(ab, ap);
-  const d2 = dot(ac, ap);
-  let q: V3;
-  if (d1 <= 0 && d2 <= 0) {
-    q = a;
-  } else {
-    const bp = sub(p, b);
-    const d3 = dot(ab, bp);
-    const d4 = dot(ac, bp);
-    if (d3 >= 0 && d4 <= d3) {
-      q = b;
-    } else {
-      const vc = d1 * d4 - d3 * d2;
-      if (vc <= 0 && d1 >= 0 && d3 <= 0) {
-        const v = d1 / (d1 - d3);
-        q = [a[0] + v * ab[0], a[1] + v * ab[1], a[2] + v * ab[2]];
-      } else {
-        const cp = sub(p, c);
-        const d5 = dot(ab, cp);
-        const d6 = dot(ac, cp);
-        if (d6 >= 0 && d5 <= d6) {
-          q = c;
-        } else {
-          const vb = d5 * d2 - d1 * d6;
-          if (vb <= 0 && d2 >= 0 && d6 <= 0) {
-            const w = d2 / (d2 - d6);
-            q = [a[0] + w * ac[0], a[1] + w * ac[1], a[2] + w * ac[2]];
-          } else {
-            const va = d3 * d6 - d5 * d4;
-            if (va <= 0 && d4 - d3 >= 0 && d5 - d6 >= 0) {
-              const w = (d4 - d3) / (d4 - d3 + (d5 - d6));
-              q = [
-                b[0] + w * (c[0] - b[0]),
-                b[1] + w * (c[1] - b[1]),
-                b[2] + w * (c[2] - b[2]),
-              ];
-            } else {
-              const denom = 1 / (va + vb + vc);
-              const v = vb * denom;
-              const w = vc * denom;
-              q = [
-                a[0] + ab[0] * v + ac[0] * w,
-                a[1] + ab[1] * v + ac[1] * w,
-                a[2] + ab[2] * v + ac[2] * w,
-              ];
-            }
-          }
-        }
-      }
-    }
-  }
-  return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
-}
-
-/** The distance from a segment to a triangle it does not cross. */
-function segmentTriangle(p: V3, q: V3, a: V3, b: V3, c: V3): number {
-  return Math.min(
-    pointTriangle(p, a, b, c),
-    pointTriangle(q, a, b, c),
-    segmentSegment(p, q, a, b),
-    segmentSegment(p, q, b, c),
-    segmentSegment(p, q, c, a),
-  );
 }
 
 const positionAt = (ray: QueryRay, t: number): Float64Array =>

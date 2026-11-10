@@ -158,9 +158,108 @@ describe("meshGeometry bounds and display", () => {
       "the mesh as stored (float32 positions)",
     );
   });
+});
 
-  it("leaves the later queries for the next step", () => {
-    const g = meshGeometry({ positions, indices });
-    expect(() => g.closestPoint([0, 0, 0])).toThrow("meshGeometry: not yet");
+describe("meshGeometry closest point, segment distance and topology", () => {
+  const g = meshGeometry({ positions, indices });
+  const bad = meshGeometry({
+    positions,
+    indices: Uint32Array.from([0, 1, 2, 0, 2, 3, 0, 0, 1, 0, 1, 99]),
+  });
+
+  for (const [name, m] of [
+    ["clean", g],
+    ["with malformed triangles", bad],
+  ] as const) {
+    describe(name, () => {
+      it("finds a point inside a face", () => {
+        const c = m.closestPoint([0.75, 0.25, 2])!;
+        near(c.position, [0.75, 0.25, 0]);
+        expect(c.distance).toBeCloseTo(2, 12);
+        expect(c.entity).toMatchObject({ kind: "face", index: 0 });
+        near(c.normal!, [0, 0, 1]);
+        expect(c.accuracy).toMatchObject({ meters: 0, exact: true });
+      });
+
+      it("finds an edge and a vertex", () => {
+        const e = m.closestPoint([2, 0.5, 0])!;
+        expect(e.entity).toMatchObject({ kind: "edge", index: 1 });
+        near(e.position, [1, 0.5, 0]);
+        expect(e.distance).toBeCloseTo(1, 12);
+        const v = m.closestPoint([2, -1, 0])!;
+        expect(v.entity).toMatchObject({ kind: "vertex", index: 1 });
+        near(v.position, [1, 0, 0]);
+      });
+
+      it("restricts the kinds, interior edges included", () => {
+        const v = m.closestPoint([0.5, 0.5, 0.1], { kinds: ["vertex"] })!;
+        expect(v.entity.kind).toBe("vertex");
+        expect(v.distance).toBeCloseTo(Math.hypot(0.5, 0.5, 0.1), 12);
+        const e = m.closestPoint([0.5, 0.5, 0.1], { kinds: ["edge"] })!;
+        expect(e.entity.kind).toBe("edge");
+        expect([2, 3]).toContain(e.entity.index);
+        expect(e.distance).toBeCloseTo(0.1, 12);
+      });
+
+      it("answers undefined beyond maxDistance", () => {
+        expect(
+          m.closestPoint([0.5, 0.5, 2], { maxDistance: 1.5 }),
+        ).toBeUndefined();
+        expect(
+          m.closestPoint([0.5, 0.5, 2], { maxDistance: 2.5 }),
+        ).toBeDefined();
+      });
+
+      it("measures a segment's distance", () => {
+        expect(m.segmentDistance([0, 0, 1], [1, 1, 1]).distance).toBeCloseTo(
+          1,
+          12,
+        );
+        expect(
+          m.segmentDistance([0.5, 0.25, 1], [0.5, 0.25, -1]).distance,
+        ).toBe(0);
+      });
+
+      it("lists an entity's points and faces", () => {
+        const e = m.entity({ kind: "edge", index: 2 })!;
+        expect(e.points).toHaveLength(2);
+        near(e.points[0]!, [1, 1, 0]);
+        near(e.points[1]!, [0, 0, 0]);
+        expect(e.faces.map((f) => f.index)).toEqual([0, 1]);
+        const v = m.entity({ kind: "vertex", index: 0 })!;
+        expect(v.points).toHaveLength(1);
+        expect(v.faces.map((f) => f.index)).toEqual([0, 1]);
+        const f = m.entity({ kind: "face", index: 1 })!;
+        expect(f.points).toHaveLength(3);
+        expect(f.faces).toEqual([{ kind: "face", index: 1 }]);
+        expect(m.entity({ kind: "face", index: 2 })).toBeUndefined();
+        expect(m.entity({ kind: "face", index: 9 })).toBeUndefined();
+        expect(m.entity({ kind: "edge", index: 60 })).toBeUndefined();
+        expect(m.entity({ kind: "vertex", index: 4 })).toBeUndefined();
+      });
+    });
+  }
+
+  it("measures a placed segment's distance with an origin", () => {
+    const p = meshGeometry({ positions, indices, matrix: placed });
+    const off = (v: number[]) => [v[0]! + T[0], v[1]!, v[2]!];
+    const o = { origin: T };
+    expect(
+      p.segmentDistance(off([0, 0, 1]), off([1, 1, 1]), o).distance,
+    ).toBeCloseTo(1, 6);
+    expect(
+      p.segmentDistance(off([0.5, 0.25, 1]), off([0.5, 0.25, -1]), o).distance,
+    ).toBeLessThan(1e-6);
+    const c = p.closestPoint(off([0.75, 0.25, 2]), o)!;
+    near(c.position, off([0.75, 0.25, 0]), 1e-6);
+  });
+
+  it("gives vertices and edges a feature when the mesh has one", () => {
+    const f = meshGeometry({
+      positions,
+      indices,
+      featureIds: Uint32Array.from([5, 6, 7, 9]),
+    });
+    expect(f.entity({ kind: "face", index: 1 })!.ref.feature).toBe(5);
   });
 });

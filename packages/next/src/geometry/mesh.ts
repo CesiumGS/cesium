@@ -5,6 +5,8 @@
 // far from the coordinates' origin keeps its precision when given an origin.
 import type { QueryRay } from "../query/queries.ts";
 import type {
+  ClosestPoint,
+  ClosestPointOptions,
   DisplayMesh,
   EntityInfo,
   EntityRef,
@@ -13,6 +15,7 @@ import type {
   GeometryQueries,
   GeometryRayAnswer,
   RayHitOptions,
+  SegmentDistance,
 } from "./query.ts";
 
 export interface MeshSource {
@@ -75,6 +78,152 @@ export function hitTriangle(
   const t = dot(e2, q) * inv;
   return t >= 0 && t <= 1 ? t : undefined;
 }
+
+/** The distance between two segments. */
+export function segmentSegment(p1: V3, q1: V3, p2: V3, q2: V3): number {
+  const d1 = sub(q1, p1);
+  const d2 = sub(q2, p2);
+  const r = sub(p1, p2);
+  const a = dot(d1, d1);
+  const e = dot(d2, d2);
+  const f = dot(d2, r);
+  const clamp = (x: number) => Math.min(1, Math.max(0, x));
+  let s: number;
+  let t: number;
+  if (a <= 1e-18 && e <= 1e-18) {
+    return Math.hypot(...r);
+  }
+  if (a <= 1e-18) {
+    s = 0;
+    t = clamp(f / e);
+  } else {
+    const c = dot(d1, r);
+    if (e <= 1e-18) {
+      t = 0;
+      s = clamp(-c / a);
+    } else {
+      const b = dot(d1, d2);
+      const denom = a * e - b * b;
+      s = denom > 1e-18 ? clamp((b * f - c * e) / denom) : 0;
+      t = (b * s + f) / e;
+      if (t < 0) {
+        t = 0;
+        s = clamp(-c / a);
+      } else if (t > 1) {
+        t = 1;
+        s = clamp((b - c) / a);
+      }
+    }
+  }
+  const x: V3 = [p1[0] + d1[0] * s, p1[1] + d1[1] * s, p1[2] + d1[2] * s];
+  const y: V3 = [p2[0] + d2[0] * t, p2[1] + d2[1] * t, p2[2] + d2[2] * t];
+  return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
+}
+
+/** Where a point's closest point on a triangle lies: a corner (0 to 2), a side (0 to 2, side k runs corner k to k + 1) or the interior. */
+export type TriangleRegion =
+  | { readonly region: "vertex"; readonly corner: number }
+  | { readonly region: "edge"; readonly side: number }
+  | { readonly region: "face" };
+
+/** The closest point on a triangle to `p`, and the Voronoi region it lies in (Ericson, "Real-Time Collision Detection" 5.1.5). */
+export function closestOnTriangle(
+  p: V3,
+  a: V3,
+  b: V3,
+  c: V3,
+): { readonly point: V3 } & TriangleRegion {
+  const ab = sub(b, a);
+  const ac = sub(c, a);
+  const ap = sub(p, a);
+  const d1 = dot(ab, ap);
+  const d2 = dot(ac, ap);
+  if (d1 <= 0 && d2 <= 0) {
+    return { point: a, region: "vertex", corner: 0 };
+  }
+  const bp = sub(p, b);
+  const d3 = dot(ab, bp);
+  const d4 = dot(ac, bp);
+  if (d3 >= 0 && d4 <= d3) {
+    return { point: b, region: "vertex", corner: 1 };
+  }
+  const vc = d1 * d4 - d3 * d2;
+  if (vc <= 0 && d1 >= 0 && d3 <= 0) {
+    const v = d1 / (d1 - d3);
+    return {
+      point: [a[0] + v * ab[0], a[1] + v * ab[1], a[2] + v * ab[2]],
+      region: "edge",
+      side: 0,
+    };
+  }
+  const cp = sub(p, c);
+  const d5 = dot(ab, cp);
+  const d6 = dot(ac, cp);
+  if (d6 >= 0 && d5 <= d6) {
+    return { point: c, region: "vertex", corner: 2 };
+  }
+  const vb = d5 * d2 - d1 * d6;
+  if (vb <= 0 && d2 >= 0 && d6 <= 0) {
+    const w = d2 / (d2 - d6);
+    return {
+      point: [a[0] + w * ac[0], a[1] + w * ac[1], a[2] + w * ac[2]],
+      region: "edge",
+      side: 2,
+    };
+  }
+  const va = d3 * d6 - d5 * d4;
+  if (va <= 0 && d4 - d3 >= 0 && d5 - d6 >= 0) {
+    const w = (d4 - d3) / (d4 - d3 + (d5 - d6));
+    return {
+      point: [
+        b[0] + w * (c[0] - b[0]),
+        b[1] + w * (c[1] - b[1]),
+        b[2] + w * (c[2] - b[2]),
+      ],
+      region: "edge",
+      side: 1,
+    };
+  }
+  const denom = 1 / (va + vb + vc);
+  const v = vb * denom;
+  const w = vc * denom;
+  return {
+    point: [
+      a[0] + ab[0] * v + ac[0] * w,
+      a[1] + ab[1] * v + ac[1] * w,
+      a[2] + ab[2] * v + ac[2] * w,
+    ],
+    region: "face",
+  };
+}
+
+/** The distance from a point to a triangle. */
+export function pointTriangle(p: V3, a: V3, b: V3, c: V3): number {
+  const { point: q } = closestOnTriangle(p, a, b, c);
+  return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+}
+
+/** The distance from a segment to a triangle it does not cross. */
+export function segmentTriangle(p: V3, q: V3, a: V3, b: V3, c: V3): number {
+  return Math.min(
+    pointTriangle(p, a, b, c),
+    pointTriangle(q, a, b, c),
+    segmentSegment(p, q, a, b),
+    segmentSegment(p, q, b, c),
+    segmentSegment(p, q, c, a),
+  );
+}
+
+/** The closest point on the segment `a`-`b` to `p`, and its parameter (0 at `a`, 1 at `b`). */
+function pointSegment(p: V3, a: V3, b: V3): { point: V3; s: number } {
+  const ab = sub(b, a);
+  const len = dot(ab, ab);
+  const s = len > 0 ? Math.min(1, Math.max(0, dot(sub(p, a), ab) / len)) : 0;
+  return { point: [a[0] + s * ab[0], a[1] + s * ab[1], a[2] + s * ab[2]], s };
+}
+
+const edgeKey = (i: number, j: number): string =>
+  i < j ? `${i}:${j}` : `${j}:${i}`;
 
 const IDENTITY = Float64Array.from([
   1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
@@ -148,6 +297,20 @@ export function meshGeometry(
     featureIds === undefined
       ? { kind: "face", index: t }
       : { kind: "face", index: t, feature: featureIds[indices[3 * t]!]! };
+
+  const edgeRef = (t: number, side: number): EntityRef => {
+    const face = faceRef(t);
+    return {
+      kind: "edge",
+      index: 3 * t + side,
+      ...(face.feature !== undefined && { feature: face.feature }),
+    };
+  };
+  const vertexRef = (v: number): EntityRef => ({
+    kind: "vertex",
+    index: v,
+    ...(featureIds !== undefined && { feature: featureIds[v]! }),
+  });
 
   const bounds = (): GeometryBounds => {
     const placed = place();
@@ -241,8 +404,193 @@ export function meshGeometry(
     error,
   });
 
-  const later = (): never => {
-    throw new Error("meshGeometry: not yet");
+  const toRelative = (
+    point: ArrayLike<number>,
+    origin?: ArrayLike<number>,
+  ): V3 => [
+    point[0]! - (origin?.[0] ?? 0),
+    point[1]! - (origin?.[1] ?? 0),
+    point[2]! - (origin?.[2] ?? 0),
+  ];
+
+  const closestPoint = (
+    point: ArrayLike<number>,
+    o: ClosestPointOptions = {},
+  ): ClosestPoint | undefined => {
+    const kinds = o.kinds ?? ["face", "edge", "vertex"];
+    const wantFace = kinds.includes("face");
+    const wantEdge = kinds.includes("edge");
+    const wantVertex = kinds.includes("vertex");
+    if (!wantFace && !wantEdge && !wantVertex) {
+      return undefined;
+    }
+    const origin = o.origin;
+    const placed = place(origin);
+    const p = toRelative(point, origin);
+    let best = Infinity;
+    let at: V3 | undefined;
+    let entity: EntityRef | undefined;
+    let face = -1;
+    const offer = (q: V3, ref: EntityRef, t: number): void => {
+      const dist = Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+      if (dist < best) {
+        best = dist;
+        at = q;
+        entity = ref;
+        face = t;
+      }
+    };
+    for (let t = 0; t < triangleCount; t++) {
+      if (!usable[t]) {
+        continue;
+      }
+      const ids = [indices[3 * t]!, indices[3 * t + 1]!, indices[3 * t + 2]!];
+      const [a, b, c] = ids.map((v) => corner(placed, v)) as [V3, V3, V3];
+      const cs = [a, b, c];
+      if (wantFace) {
+        // The most specific kind allowed: a vertex or an edge of the face
+        // lies on the face itself.
+        const r = closestOnTriangle(p, a, b, c);
+        if (r.region === "vertex" && wantVertex) {
+          offer(r.point, vertexRef(ids[r.corner]!), t);
+        } else if (r.region === "vertex" && wantEdge) {
+          // A corner ends two sides: take side 0 for corners 0 and 1, side 1 for corner 2.
+          offer(r.point, edgeRef(t, r.corner === 2 ? 1 : 0), t);
+        } else if (r.region === "edge" && wantEdge) {
+          offer(r.point, edgeRef(t, r.side), t);
+        } else {
+          offer(r.point, faceRef(t), t);
+        }
+        continue;
+      }
+      for (let side = 0; side < 3; side++) {
+        const next = (side + 1) % 3;
+        if (wantEdge) {
+          const { point: q, s } = pointSegment(p, cs[side]!, cs[next]!);
+          if (wantVertex && (s === 0 || s === 1)) {
+            offer(q, vertexRef(ids[s === 0 ? side : next]!), t);
+          } else {
+            offer(q, edgeRef(t, side), t);
+          }
+        } else {
+          offer(cs[side]!, vertexRef(ids[side]!), t);
+        }
+      }
+    }
+    if (at === undefined || entity === undefined) {
+      return undefined;
+    }
+    if (o.maxDistance !== undefined && best > o.maxDistance) {
+      return undefined;
+    }
+    const position = Float64Array.from(
+      [0, 1, 2],
+      (i) => at![i]! + (origin?.[i] ?? 0),
+    );
+    if (entity.kind !== "face") {
+      return { position, distance: best, entity, accuracy };
+    }
+    const a = corner(placed, indices[3 * face]!);
+    const n = cross(
+      sub(corner(placed, indices[3 * face + 1]!), a),
+      sub(corner(placed, indices[3 * face + 2]!), a),
+    );
+    const length = Math.hypot(n[0], n[1], n[2]);
+    const flip = dot(n, sub(p, a)) < 0 ? -1 : 1;
+    const normal = Float64Array.from(n, (x) => (flip * x) / length);
+    return { position, distance: best, entity, normal, accuracy };
+  };
+
+  const segmentDistance = (
+    from: ArrayLike<number>,
+    to: ArrayLike<number>,
+    o: { readonly origin?: ArrayLike<number> } = {},
+  ): SegmentDistance => {
+    const placed = place(o.origin);
+    const p = toRelative(from, o.origin);
+    const q = toRelative(to, o.origin);
+    const d = sub(q, p);
+    let best = Infinity;
+    for (let t = 0; t < triangleCount && best > 0; t++) {
+      if (!usable[t]) {
+        continue;
+      }
+      const a = corner(placed, indices[3 * t]!);
+      const b = corner(placed, indices[3 * t + 1]!);
+      const c = corner(placed, indices[3 * t + 2]!);
+      best = Math.min(
+        best,
+        hitTriangle(p, d, a, b, c) !== undefined
+          ? 0
+          : segmentTriangle(p, q, a, b, c),
+      );
+    }
+    return { distance: best, accuracy };
+  };
+
+  // Which usable faces use each edge (keyed by the sorted vertex pair) and
+  // each vertex: built on the first `entity` call.
+  let edgeFaces: Map<string, number[]> | undefined;
+  let vertexFaces: Map<number, number[]> | undefined;
+  const topology = (): void => {
+    if (edgeFaces !== undefined) {
+      return;
+    }
+    edgeFaces = new Map();
+    vertexFaces = new Map();
+    for (let t = 0; t < triangleCount; t++) {
+      if (!usable[t]) {
+        continue;
+      }
+      for (let side = 0; side < 3; side++) {
+        const i = indices[3 * t + side]!;
+        const j = indices[3 * t + ((side + 1) % 3)]!;
+        const key = edgeKey(i, j);
+        edgeFaces.set(key, [...(edgeFaces.get(key) ?? []), t]);
+        vertexFaces.set(i, [...(vertexFaces.get(i) ?? []), t]);
+      }
+    }
+  };
+
+  const entity = (ref: EntityRef): EntityInfo | undefined => {
+    const placed = place();
+    const point = (v: number): Float64Array =>
+      Float64Array.from(corner(placed, v));
+    if (ref.kind === "face") {
+      if (!usable[ref.index]) {
+        return undefined;
+      }
+      const t = ref.index;
+      return {
+        ref: faceRef(t),
+        points: [0, 1, 2].map((c) => point(indices[3 * t + c]!)),
+        faces: [faceRef(t)],
+      };
+    }
+    topology();
+    if (ref.kind === "edge") {
+      const t = Math.floor(ref.index / 3);
+      if (!(ref.index >= 0) || !usable[t]) {
+        return undefined;
+      }
+      const side = ref.index % 3;
+      const i = indices[3 * t + side]!;
+      const j = indices[3 * t + ((side + 1) % 3)]!;
+      return {
+        ref: edgeRef(t, side),
+        points: [point(i), point(j)],
+        faces: edgeFaces!.get(edgeKey(i, j))!.map(faceRef),
+      };
+    }
+    const faces = vertexFaces!.get(ref.index);
+    if (faces === undefined) {
+      return undefined;
+    }
+    return {
+      ref: vertexRef(ref.index),
+      points: [point(ref.index)],
+      faces: faces.map(faceRef),
+    };
   };
 
   return {
@@ -250,9 +598,9 @@ export function meshGeometry(
     version: options.version ?? 0,
     bounds,
     rayHit,
-    closestPoint: later,
-    segmentDistance: later,
-    entity: later as (ref: EntityRef) => EntityInfo | undefined,
+    closestPoint,
+    segmentDistance,
+    entity,
     display,
   };
 }
