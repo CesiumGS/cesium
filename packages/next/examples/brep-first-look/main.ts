@@ -26,6 +26,13 @@ import {
   trimmedNurbsBrep,
 } from "./fixtures.ts";
 import {
+  KIND_COLORS,
+  KIND_NAMES,
+  isoLines,
+  linearOf,
+  normalWhiskers,
+} from "./analysis.ts";
+import {
   boundsSize,
   flatFaces,
   liftedEdges,
@@ -84,6 +91,10 @@ interface Prepared {
   wire?: LineMesh;
   flat?: ReturnType<typeof flatFaces>;
   edges?: LineMesh;
+  iso?: LineMesh;
+  whiskers?: LineMesh;
+  /** The largest extent of the faces, m. */
+  size: number;
 }
 
 /** The display modes, in the order of the toolbar and the keys 1 to 4. */
@@ -188,6 +199,12 @@ const LIFT = 0.0025;
 const EDGE_COLOR: [number, number, number, number] = [0, 0, 0, 1];
 const WIRE_MID: [number, number, number, number] = [0.2, 0.2, 0.22, 1];
 const WIRE_DARK: [number, number, number, number] = [0.09, 0.09, 0.1, 1];
+const ISO_COLOR: [number, number, number, number] = [0.02, 0.12, 0.55, 1];
+const WHISKER_COLOR: [number, number, number, number] = [0, 0.42, 0.12, 1];
+/** About this many normal whiskers in all, shared between the shapes. */
+const WHISKER_BUDGET = 2000;
+/** A whisker is this fraction of its shape's size. */
+const WHISKER_LENGTH = 0.05;
 
 /** What a feature ID of a draw stands for. */
 interface Part {
@@ -337,7 +354,11 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     tolerance: 0.001,
     mode: "shaded" as DisplayMode,
     edges: true,
+    byKind: false,
+    iso: false,
+    normals: false,
   };
+  const kindColors = KIND_COLORS.map(linearOf);
 
   // ----------------------------------------------------------- the shapes
   const box = boxBrep();
@@ -502,6 +523,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     triangles: 0,
     wireLines: 0,
     edgeLines: 0,
+    isoLines: 0,
+    whiskers: 0,
     ms: 0,
     /** The worst chordal error on screen, m: each shape's error × its scale. */
     error: 0,
@@ -535,7 +558,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
             ? mesh.faces.positions
             : mesh.edges.positions,
         );
-        prepared[s] = { mesh, lift: size * LIFT, lowest };
+        prepared[s] = { mesh, lift: size * LIFT, lowest, size };
         stats.error = Math.max(stats.error, mesh.error * shape.scale);
         if (mesh.error > (settings.tolerance / shape.scale) * 1.0000001) {
           stats.capped.push(shape.name);
@@ -557,6 +580,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     stats.triangles = 0;
     stats.wireLines = 0;
     stats.edgeLines = 0;
+    stats.isoLines = 0;
+    stats.whiskers = 0;
     const showFaces = settings.mode !== "wire";
     const showWire = settings.mode !== "shaded";
     shapes.forEach((shape, s) => {
@@ -591,7 +616,13 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         const count = source.positions.length / 3;
         const colors = new Float32Array(count * 4);
         for (let i = 0; i < count; i++) {
-          colors.set([...tint(source.featureIds[i]!), 1], i * 4);
+          const face = source.featureIds[i]!;
+          const tinted = settings.byKind
+            ? kindColors[
+                shape.form.surfaceKind[shape.form.faceSurface[face]!]!
+              ]!
+            : tint(face);
+          colors.set([...tinted, 1], i * 4);
         }
         const data: MeshData = {
           positions: source.positions,
@@ -656,6 +687,43 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         draws.push(draw);
         parts.set(draw.index, { shape, kind: "edge" });
         stats.edgeLines += edges.indices.length / 2;
+      }
+      const lineDraw = (
+        lines: LineMesh,
+        color: [number, number, number, number],
+        name: string,
+      ) => {
+        const data: MeshData = {
+          positions: lines.positions,
+          indices: lines.indices,
+          featureIds: lines.featureIds,
+          featureCount: Math.max(1, shape.form.faceSurface.length),
+          topology: "line-list",
+        };
+        const draw = world.addDraw({
+          mesh: world.addMesh(data),
+          origin,
+          model,
+          material: lineMaterial,
+          color,
+          name: `${shape.name}: ${name}`,
+        });
+        draws.push(draw);
+        // These lines belong to faces: picking one picks its face.
+        parts.set(draw.index, { shape, kind: "face" });
+        return lines.indices.length / 2;
+      };
+      if (settings.iso) {
+        const iso = (prep.iso ??= isoLines(shape.form, mesh.origin, prep.lift));
+        stats.isoLines += lineDraw(iso, ISO_COLOR, "iso lines");
+      }
+      if (settings.normals && mesh.faces.indices.length > 0) {
+        const whiskers = (prep.whiskers ??= normalWhiskers(
+          mesh,
+          WHISKER_BUDGET / shapes.length,
+          prep.size * WHISKER_LENGTH,
+        ));
+        stats.whiskers += lineDraw(whiskers, WHISKER_COLOR, "normals");
       }
     });
     engine.requestRender();
@@ -792,11 +860,24 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       el(
         "dd",
         {},
-        (stats.wireLines + stats.edgeLines).toLocaleString(),
+        (
+          stats.wireLines +
+          stats.edgeLines +
+          stats.isoLines +
+          stats.whiskers
+        ).toLocaleString(),
         el(
           "small",
           {},
-          ` (${stats.wireLines.toLocaleString()} wireframe, ${stats.edgeLines.toLocaleString()} B-rep edges)`,
+          ` (${[
+            [stats.wireLines, "wireframe"],
+            [stats.edgeLines, "B-rep edges"],
+            [stats.isoLines, "iso lines"],
+            [stats.whiskers, "normals"],
+          ]
+            .filter(([n]) => (n as number) > 0)
+            .map(([n, what]) => `${(n as number).toLocaleString()} ${what}`)
+            .join(", ")})`,
         ),
       ),
       el("dt", {}, "tessellateBrep took"),
@@ -812,6 +893,51 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     );
   };
   showStats();
+
+  const toggle = (
+    label: string,
+    key: "byKind" | "iso" | "normals",
+  ): HTMLLabelElement =>
+    check(
+      label,
+      () => settings[key],
+      (on) => {
+        settings[key] = on;
+        legend.hidden = !settings.byKind;
+        build();
+        showStats();
+      },
+    );
+  // The legend of the surface kinds, with how many faces of each are in view.
+  const legend = el("ul", { hidden: true, ariaLabel: "Surface kinds" });
+  KIND_NAMES.forEach((name, kind) => {
+    const faces = shapes.reduce(
+      (n, shape) =>
+        n +
+        [...shape.form.faceSurface].filter(
+          (surface) => shape.form.surfaceKind[surface] === kind,
+        ).length,
+      0,
+    );
+    const swatch = el("span", {
+      ariaHidden: "true",
+      style: `display:inline-block;width:12px;height:12px;border-radius:3px;margin-inline-end:8px;vertical-align:-1px;background:${KIND_COLORS[kind]};box-shadow:inset 0 0 0 1px rgb(0 0 0 / 0.35)`,
+    });
+    legend.append(
+      el("li", {}, swatch, `${name}, ${faces} face${faces === 1 ? "" : "s"}`),
+    );
+  });
+  legend.append(
+    el(
+      "li",
+      {},
+      el(
+        "small",
+        {},
+        "Okabe–Ito colours, which stay apart under colour blindness.",
+      ),
+    ),
+  );
 
   const validity = el("ul");
   shapes.forEach((shape, s) => {
@@ -877,6 +1003,21 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         build();
         showStats();
       },
+    ),
+    el("h3", {}, "Analysis"),
+    toggle("Color by surface kind", "byKind"),
+    legend,
+    toggle("Iso lines", "iso"),
+    el(
+      "small",
+      {},
+      "8 lines each way across every face, through the exact surface, kept inside the trim.",
+    ),
+    toggle("Normals", "normals"),
+    el(
+      "small",
+      {},
+      "Whiskers along the face normal at a sample of vertices, 5% of the shape's size.",
     ),
     el("h3", {}, "Shapes, in grid order"),
     validity,

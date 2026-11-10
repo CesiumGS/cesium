@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { BrepBuilder } from "../src/brep/build.ts";
 import { evaluateSurface } from "../src/brep/evaluate.ts";
-import { tessellateBrep, type BrepMesh } from "../src/brep/tessellate.ts";
+import {
+  faceTrim,
+  tessellateBrep,
+  type BrepMesh,
+} from "../src/brep/tessellate.ts";
 import {
   boxBrep,
   cappedCylinderBrep,
@@ -438,5 +442,32 @@ describe("tessellateBrep: trims by the even-odd rule", () => {
     ]);
     // Its box is 2 × 2 and a trimmed 8 × 8 grid keeps 3 of 4 quadrants: 96 triangles.
     expect(l.faces.indices.length / 3).toBe(96);
+  });
+});
+
+describe("faceTrim", () => {
+  it("gives a face's domain and tells inside from outside the trim", () => {
+    // The trimmed NURBS face: the unit square with a hole of r = 0.2 at (0.5, 0.5).
+    const trim = faceTrim(trimmedNurbsBrep(), 0)!;
+    expect(trim.domain).toEqual([0, 1, 0, 1]);
+    expect(trim.trimmed).toBe(true);
+    expect(trim.contains(0.1, 0.1)).toBe(true);
+    expect(trim.contains(0.5, 0.5)).toBe(false);
+    expect(trim.contains(0.5, 0.65)).toBe(false);
+    expect(trim.contains(0.5, 0.8)).toBe(true);
+  });
+
+  it("is the whole box for an untrimmed face", () => {
+    const trim = faceTrim(boxBrep(), 0)!;
+    expect(trim.trimmed).toBe(false);
+    expect(trim.contains(0.5, 0.5)).toBe(true);
+    expect(trim.contains(-1, 0.5)).toBe(false);
+  });
+
+  it("is undefined for a face index with no loops", () => {
+    const form = boxBrep();
+    const copy = { ...form, faceLoops: Uint32Array.from(form.faceLoops) };
+    copy.faceLoops[1] = 0;
+    expect(faceTrim(copy, 0)).toBeUndefined();
   });
 });

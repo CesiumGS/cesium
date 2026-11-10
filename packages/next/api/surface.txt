@@ -66,6 +66,7 @@ entry	name	kind	tier
 .	EntityRef	interface	-
 .	Exposure	type	-
 .	EyeExposure	type	-
+.	FaceTrim	interface	-
 .	FeatureStyle	class	-
 .	FeatureStyleOptions	interface	-
 .	FeatureTable	interface	-
@@ -289,6 +290,7 @@ entry	name	kind	tier
 .	eyeObserver	function	-
 .	faceCount	function	-
 .	faceNormal	function	-
+.	faceTrim	function	-
 .	fromDegrees	function	-
 .	ionDefaults	const	-
 .	isCapacityError	function	-

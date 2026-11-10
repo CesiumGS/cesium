@@ -29,6 +29,8 @@ export { validateBrep, type BrepProblem } from "./validate.ts";
 export { readBrepExtension, writeBrepExtension } from "./gltf.ts";
 export {
   tessellateBrep,
+  faceTrim,
+  type FaceTrim,
   type BrepMesh,
   type TessellateOptions,
 } from "./tessellate.ts";

@@ -194,21 +194,25 @@ export function tessellateBrep(
 
 // Faces.
 
-interface FaceMesh {
-  positions: Float64Array;
-  normals: Float64Array;
-  indices: Uint32Array;
-  /** The chordal error m this face's grid allows beyond the tolerance, or 0. */
-  error: number;
+/** A face's (u, v) domain and trim. */
+export interface FaceTrim {
+  /** The (u, v) box of the outer loop's pcurve samples: u0, u1, v0, v1. */
+  readonly domain: readonly [number, number, number, number];
+  /** False when the loop is an axis-aligned rectangle that fills the box. */
+  readonly trimmed: boolean;
+  /** The loops as (u, v) polygons, interleaved, when trimmed; empty otherwise. */
+  readonly loops: readonly Float64Array[];
+  /** Whether (u, v) is inside the face's trim, by the even-odd rule the tessellator uses; true everywhere in the box when untrimmed. */
+  contains(u: number, v: number): boolean;
 }
 
-function tessellateFace(
-  form: BrepForm,
-  face: number,
-  tolerance: number,
-  maxGrid: number,
-  trimGrid: number,
-): FaceMesh | undefined {
+/**
+ * The domain of a face and its trim, as the tessellator reads them: the box
+ * of the outer loop, and the even-odd rule over every loop's polygon (16
+ * samples per pcurve segment). Undefined for a face with no loops or a
+ * loop that has no finite extent.
+ */
+export function faceTrim(form: BrepForm, face: number): FaceTrim | undefined {
   const firstLoop = form.faceLoops[face * 2]!;
   const loopCount = form.faceLoops[face * 2 + 1]!;
   if (loopCount === 0) {
@@ -234,7 +238,6 @@ function tessellateFace(
   )) {
     return undefined;
   }
-
   const trimmed = isTrimmed(form, firstLoop, loopCount, u1 - u0, v1 - v0);
   const loops: Float64Array[] = [];
   if (trimmed) {
@@ -242,6 +245,39 @@ function tessellateFace(
       loops.push(sampleLoop(form, firstLoop + k, POLYGON_SAMPLES));
     }
   }
+  return {
+    domain: [u0, u1, v0, v1],
+    trimmed,
+    loops,
+    contains: (u, v) =>
+      trimmed
+        ? insideEvenOdd(loops, u, v)
+        : u >= u0 && u <= u1 && v >= v0 && v <= v1,
+  };
+}
+
+interface FaceMesh {
+  positions: Float64Array;
+  normals: Float64Array;
+  indices: Uint32Array;
+  /** The chordal error m this face's grid allows beyond the tolerance, or 0. */
+  error: number;
+}
+
+function tessellateFace(
+  form: BrepForm,
+  face: number,
+  tolerance: number,
+  maxGrid: number,
+  trimGrid: number,
+): FaceMesh | undefined {
+  const trim = faceTrim(form, face);
+  if (!trim) {
+    return undefined;
+  }
+  const [u0, u1, v0, v1] = trim.domain;
+  const trimmed = trim.trimmed;
+  const loops = trim.loops;
 
   const surface = form.faceSurface[face]!;
   const demand = curvature(form, surface, [u0, u1, v0, v1], tolerance);
