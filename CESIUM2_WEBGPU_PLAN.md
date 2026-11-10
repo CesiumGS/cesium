@@ -8883,6 +8883,14 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 10. F-reps.
 11. Subdivision surfaces, through the patch path of step 5 and the query interface.
 
+**A solid modeling sample with CSG (owner, 2026-11-10; start 2026-11-13).** A second B-rep example beside "B-reps: a first look": a small CAD tool whose interface is a CSG tree, showing the division above, where the application owns modeling and the engine draws and queries the result. SMLib in WebAssembly is the kernel (the spike's build already holds its booleans and fillets).
+
+- **The tree:** primitives (box, cylinder, sphere, cone, torus) with parameters and transforms as leaves; union, difference and intersection as nodes. Editing a parameter re-evaluates in a worker: SMLib makes the solid, it converts to `BrepForm`, and `tessellateBrep` draws it until step 5's GPU path exists.
+- **Picks to the tree:** a picked face highlights the node that made it, from the kernel's record of which input each output face came from: the stable topology names above, in practice.
+- **Editing as §13.33 describes it:** drag previews as transient geometry, updates face by face, and queries that skip what is being dragged.
+- **First, a spike:** box minus cylinder in WebAssembly, converted to `BrepForm` and drawn in the first-look example. It measures the boolean's time and checks that the result validates. Its conversion (SMLib's b-rep to `BrepForm`) is the one `fromUsd` needs too, so step 8's start moves here, with SMLib's pinned setup step and build script (above).
+- **Open:** SMLib's booleans' speed and robustness in WebAssembly (not yet measured: Spike A only tessellated primitives); whether its face provenance is exposed through SM_API; the worker protocol for a re-evaluated solid.
+
 **Sequencing with the vector design (owner, 2026-11-09).** B-reps go first, but the kernels they share with vectors are set by vectors, their harder user: per-pixel coverage under glyph and label density with the band cap under pressure, strokes with the styling language's full control, and the owner's measured prototype as evidence. A trim loop is a small glyph in (u, v). So:
 
 1. B-rep work that doesn't touch the shared kernels starts first: both spikes, the query interface, the render form, GPU patch tessellation through placement, and exact picks, snapping and measurement. Spike B's trim coverage test is throwaway.
