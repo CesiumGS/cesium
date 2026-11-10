@@ -1,173 +1,317 @@
-import { Board, type BoardStep } from "../diagram.tsx";
-import { DataTable, Figure, Note, Page, Section, Written } from "../parts.tsx";
+import { Fragment } from "react";
+import { Figure, Note, Page, Section, Written } from "../parts.tsx";
 
-/** What applications decide, beside the engine mechanism it runs on. */
-const SPLIT: BoardStep[] = [
+type State = "built" | "partly" | "planned";
+
+const STATE_TEXT: Record<State, string> = {
+  built: "Built",
+  partly: "Partly built",
+  planned: "Planned",
+};
+
+interface Block {
+  name: string;
+  what: string;
+  state: State;
+}
+
+/** The engine's public mechanisms, in the matrix's column order. */
+const MECHANISMS: (Block & { short: string })[] = [
   {
-    id: "a-exaggerate",
-    lane: 0,
-    row: 0,
-    title: "Vertical exaggeration",
-    body: "The factor, which content, and the surface it's measured from.",
+    short: "Placement",
+    name: "Placement and frames",
+    what: "The reference frame tree, and one model of placing content: rigid, fitted, or any map an application supplies.",
+    state: "partly",
   },
   {
-    id: "e-place",
-    lane: 1,
-    row: 0,
-    planned: true,
-    title: "Placement",
-    body: "Any map from content to the scene, with its Jacobian for normals and its inverse for picks and measurements, for every representation and the globe.",
+    short: "Geometry",
+    name: "Representations",
+    what: "Meshes, B-reps, implicit surfaces, points and splats, volumes, subdivision: each drawn, each answering queries.",
+    state: "partly",
   },
   {
-    id: "a-compare",
-    lane: 0,
-    row: 1,
-    title: "Comparison",
-    body: "Which views, how they're linked: a swipe, a split, a CAD quad view.",
+    short: "Styling",
+    name: "Styling and scalar fields",
+    what: "One language compiled to the GPU, per feature: colour ramps, run-time data by element ID, time, emphasis.",
+    state: "partly",
   },
   {
-    id: "e-views",
-    lane: 1,
-    row: 1,
-    title: "Views and cameras",
-    body: "Viewports, linked views, controllers and touch. Orthographic and XR cameras are planned.",
+    short: "Clipping",
+    name: "Sections and clipping",
+    what: "Planes and volumes that cut every representation, with capped faces. Terrain regions only, today.",
+    state: "partly",
   },
   {
-    id: "a-model",
-    lane: 0,
-    row: 2,
-    title: "Modeling",
-    body: "A CSG tree, a kernel of its own, history and undo.",
+    short: "Queries",
+    name: "Queries",
+    what: "Rays, picks, snaps and measurements, each with its accuracy, refined in stages by a host's services.",
+    state: "partly",
   },
   {
-    id: "e-brep",
-    lane: 1,
-    row: 2,
-    title: "The B-rep form and geometry queries",
-    body: "Exact surfaces drawn and answered, with stable IDs. Drafted; GPU tessellation is planned.",
+    short: "Views",
+    name: "Views and cameras",
+    what: "Many views, viewports and linked views, controllers and touch; orthographic and XR cameras later.",
+    state: "partly",
   },
   {
-    id: "a-analyse",
-    lane: 0,
-    row: 3,
-    title: "Analysis",
-    body: "Cut and fill, a scan's deviation, a viewshed, a stress result: the values.",
+    short: "Time",
+    name: "Time",
+    what: "The scene clock, and values bound to it.",
+    state: "partly",
   },
   {
-    id: "e-style",
-    lane: 1,
-    row: 3,
-    planned: true,
-    title: "Styling and scalar fields",
-    body: "One language compiled to the GPU and evaluated per feature: colour ramps, run-time data by element ID, time, emphasis and X-ray. Built for live points.",
-  },
-  {
-    id: "a-select",
-    lane: 0,
-    row: 4,
-    title: "Which elements matter",
-    body: "Isolate a system, schedule a sequence, mark a clash.",
-  },
-  {
-    id: "a-cut",
-    lane: 0,
-    row: 5,
-    title: "Where to cut",
-    body: "A section along a tunnel, a floor's height, a clip box.",
-  },
-  {
-    id: "e-clip",
-    lane: 1,
-    row: 5,
-    planned: true,
-    title: "Sections and clipping",
-    body: "Across every representation, with capped faces, and queries that respect the cut.",
-  },
-  {
-    id: "a-services",
-    lane: 0,
-    row: 6,
-    title: "Its own services",
-    body: "Exact snaps from design data, a server's queries.",
-  },
-  {
-    id: "e-query",
-    lane: 1,
-    row: 6,
-    title: "Queries with stated accuracy",
-    body: "Rays, picks, snaps and measurements, answered at once and refined in stages.",
+    short: "Light",
+    name: "Physical light",
+    what: "Sun, sky and atmosphere in physical units, shadows and exposure.",
+    state: "built",
   },
 ];
 
-interface Mechanism {
-  name: string;
-  what: string;
-  state: "Built" | "Partly built" | "Drafted" | "Planned";
-  uses: string;
-}
-
-const MECHANISMS: Mechanism[] = [
+const MACHINERY: Block[] = [
   {
-    name: "Frames and placement",
-    what: "The reference frame tree, and one model of placement from content to the scene: rigid, dual position and fitted maps, and any map an application supplies.",
-    state: "Partly built",
-    uses: "Every domain. Design coordinates, other bodies, exaggeration (an application's placement), reprojected models, curves through placement.",
+    name: "GPU tessellation and curves",
+    what: "Patches by screen-space error; one curve, coverage and stroke kernel for vectors and B-reps. A CPU stand-in today.",
+    state: "planned",
+  },
+  {
+    name: "GPU-driven drawing",
+    what: "Culling and listing in compute, indirect draws, the world's shared tables.",
+    state: "built",
+  },
+  {
+    name: "The frame graph",
+    what: "Passes and the textures between them, sized and scheduled per view.",
+    state: "built",
   },
   {
     name: "Streaming",
-    what: "3D Tiles selection, caching and loading, with stable IDs for elements, faces, edges and vertices across tiles.",
-    state: "Partly built",
-    uses: "Captured meshes, design models, terrain and imagery; B-reps and fallback meshes in tiles; edits overriding tiles.",
-  },
-  {
-    name: "Representations",
-    what: "Meshes, B-reps, implicit surfaces, points and splats, volumes, subdivision surfaces: each drawn and each answering the same queries.",
-    state: "Partly built",
-    uses: "Meshes and live points are built; the B-rep form is drafted; the rest are planned.",
-  },
-  {
-    name: "Geometry queries",
-    what: "One interface per object, with a scene layer above it for frames, instants and asynchronous answers. Every answer states its accuracy.",
-    state: "Drafted",
-    uses: "Picks, snaps, measurement, lines of sight, viewsheds, clash checks, a host's own query services.",
-  },
-  {
-    name: "Tessellation and curves",
-    what: "GPU tessellation by screen-space error, and one curve, coverage and stroke kernel shared by vectors and B-reps.",
-    state: "Planned",
-    uses: "B-reps and their trims, reprojected models, vector lines and fills, catenaries, alignments, labels.",
-  },
-  {
-    name: "Styling and scalar fields",
-    what: "One styling language compiled to the GPU and evaluated per feature, with run-time data by element ID, time, and colour ramps for values.",
-    state: "Partly built",
-    uses: "Vector styling, per-element overrides at scale, construction sequences over time, analysis results, heat maps, differences between captures.",
-  },
-  {
-    name: "Sections and clipping",
-    what: "Planes and volumes that cut every representation, with capped faces, and queries that respect the cut.",
-    state: "Planned",
-    uses: "Buildings by storey, tunnels, block models, plant models, plan and section drawings.",
-  },
-  {
-    name: "Views and cameras",
-    what: "Many views on one device, viewports, linked views, camera controllers with touch, and later orthographic and XR cameras.",
-    state: "Partly built",
-    uses: "Comparison layouts, CAD quad views, drawings printed to scale, phones and headsets.",
-  },
-  {
-    name: "Time",
-    what: "The scene clock and values bound to it.",
-    state: "Partly built",
-    uses: "Construction sequences, live sensor data, simulation replays, floods over time, sun studies, missions.",
-  },
-  {
-    name: "Physical light",
-    what: "The sun, sky and atmosphere in physical units, shadows and exposure.",
-    state: "Built",
-    uses: "Sun hours on a city, shadow studies, the sky from street level to orbit.",
+    what: "3D Tiles selection, loading and caching. Stable IDs across tiles are planned.",
+    state: "partly",
   },
 ];
+
+const DOMAINS = [
+  "Design and engineering",
+  "Construction",
+  "Reality capture",
+  "Analysis",
+  "Geoscience",
+  "Operations",
+  "Simulation",
+];
+
+/** Each gallery example, the mechanisms it proves (indices into MECHANISMS), and whether it exists. */
+const EXAMPLES: {
+  domain: string;
+  name: string;
+  uses: number[];
+  built?: boolean;
+}[] = [
+  {
+    domain: "Design and engineering",
+    name: "B-reps: a first look",
+    uses: [1, 4, 5],
+    built: true,
+  },
+  {
+    domain: "Design and engineering",
+    name: "Solid modeling with CSG, two kernels, a quad view",
+    uses: [1, 2, 4, 5],
+  },
+  {
+    domain: "Design and engineering",
+    name: "A process plant: isolate, X-ray",
+    uses: [1, 2, 3, 4, 5],
+  },
+  {
+    domain: "Design and engineering",
+    name: "A building by storey",
+    uses: [2, 3, 4, 5],
+  },
+  {
+    domain: "Design and engineering",
+    name: "A drawing sheet printed to scale",
+    uses: [0, 2, 3, 5],
+  },
+  {
+    domain: "Design and engineering",
+    name: "Changes between two design versions",
+    uses: [2, 5],
+  },
+  {
+    domain: "Design and engineering",
+    name: "Rail clearance along a track",
+    uses: [0, 1, 2, 4],
+  },
+  {
+    domain: "Construction",
+    name: "A construction sequence on a timeline",
+    uses: [2, 5, 6],
+  },
+  { domain: "Construction", name: "Cut and fill", uses: [1, 2, 3, 4] },
+  {
+    domain: "Reality capture",
+    name: "Change between two scans, with a swipe",
+    uses: [1, 2, 5],
+  },
+  {
+    domain: "Reality capture",
+    name: "Inspection photos on the model",
+    uses: [0, 1, 4, 5],
+  },
+  {
+    domain: "Analysis",
+    name: "A bridge's analysis results",
+    uses: [0, 1, 2, 6],
+  },
+  { domain: "Analysis", name: "A viewshed", uses: [2, 4, 7] },
+  { domain: "Analysis", name: "Sun hours on a city", uses: [2, 6, 7] },
+  {
+    domain: "Geoscience",
+    name: "Drillholes and geological surfaces",
+    uses: [0, 1, 2, 3, 5],
+  },
+  {
+    domain: "Geoscience",
+    name: "A tunnel through geology",
+    uses: [0, 1, 3, 4, 5],
+  },
+  {
+    domain: "Geoscience",
+    name: "A block model cut by a section",
+    uses: [1, 2, 3],
+  },
+  { domain: "Geoscience", name: "A geophysical survey", uses: [0, 1, 2] },
+  {
+    domain: "Operations",
+    name: "Underground utilities",
+    uses: [0, 1, 2, 4],
+  },
+  { domain: "Operations", name: "A flood over terrain", uses: [1, 2, 6] },
+  {
+    domain: "Operations",
+    name: "A transmission line",
+    uses: [0, 1, 2, 4],
+  },
+  {
+    domain: "Simulation",
+    name: "An agent replay in a station",
+    uses: [1, 2, 6],
+  },
+];
+
+function Blocks({ blocks }: { blocks: readonly Block[] }) {
+  return (
+    <div className="vision-blocks">
+      {blocks.map((b) => (
+        <section key={b.name} className={`vision-block ${b.state}`}>
+          <h3>{b.name}</h3>
+          <p>{b.what}</p>
+          <span className="vision-state">{STATE_TEXT[b.state]}</span>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function VisionStack() {
+  return (
+    <div className="vision">
+      <div className="vision-layer apps">
+        <p className="vision-label">Applications</p>
+        <div className="vision-domains">
+          {DOMAINS.map((d) => (
+            <span key={d}>{d}</span>
+          ))}
+        </div>
+        <p className="vision-brings">
+          They bring the policy: exaggeration settings, comparison layouts,
+          modeling kernels, analyses, the data that styles their elements, and
+          their own query services.
+        </p>
+      </div>
+      <div className="vision-layer">
+        <p className="vision-label">Engine mechanisms: the public surface</p>
+        <Blocks blocks={MECHANISMS} />
+      </div>
+      <div className="vision-layer">
+        <p className="vision-label">Shared GPU machinery</p>
+        <Blocks blocks={MACHINERY} />
+      </div>
+      <div className="vision-layer platform">
+        <p className="vision-label">Platform</p>
+        <p>WebGPU, with shaders in WGSL and Slang</p>
+      </div>
+    </div>
+  );
+}
+
+function UsesMatrix() {
+  let lastDomain = "";
+  return (
+    <div className="table-wrap vision-matrix">
+      <table>
+        <caption className="visually-hidden">
+          Gallery examples by domain, and the engine mechanisms each uses
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Example</th>
+            {MECHANISMS.map((m) => (
+              <th scope="col" key={m.short} title={m.name}>
+                {m.short}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {EXAMPLES.map((e) => {
+            const head = e.domain !== lastDomain;
+            lastDomain = e.domain;
+            return (
+              <Fragment key={e.name}>
+                {head ? (
+                  <tr className="vision-domain">
+                    <th scope="colgroup" colSpan={MECHANISMS.length + 1}>
+                      {e.domain}
+                    </th>
+                  </tr>
+                ) : null}
+                <tr>
+                  <th scope="row">
+                    {e.name}
+                    {e.built ? (
+                      <span className="vision-built"> · in the gallery</span>
+                    ) : null}
+                  </th>
+                  {MECHANISMS.map((m, i) => (
+                    <td key={m.short}>
+                      {e.uses.includes(i) ? (
+                        <span aria-label="uses" className="vision-dot">
+                          ●
+                        </span>
+                      ) : (
+                        <span className="visually-hidden">no</span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              </Fragment>
+            );
+          })}
+          <tr className="vision-total">
+            <th scope="row">Examples using it</th>
+            {MECHANISMS.map((m, i) => (
+              <td key={m.short}>
+                {EXAMPLES.filter((e) => e.uses.includes(i)).length}
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export function Unified() {
   return (
@@ -176,64 +320,50 @@ export function Unified() {
       status="sketch"
       lede={
         <>
-          A small number of engine mechanisms, each general enough to serve many
-          uses: design, construction, reality capture, analysis, geoscience and
-          operations. Applications supply the policy; the engine supplies the
-          mechanism. This tab is the current vision, and says which parts exist.
+          A small number of engine mechanisms, on a small amount of shared GPU
+          machinery, each general enough to serve many uses: design,
+          construction, reality capture, analysis, geoscience and operations.
+          Applications supply the policy; the engine supplies the mechanism.
+          This is the current vision, and says which parts exist.
         </>
       }
     >
       <Note title="How far it goes">
         <p>
-          A vision, drawn from the overall plan's sections 13.26, 13.33 and
-          13.34. Some mechanisms are built, some drafted, most still planned;
-          the table below says which.
+          A vision, from the overall plan's sections 13.26, 13.33 and 13.34.
+          Each block says whether it is built, partly built or planned. The{" "}
+          <a href="#/architecture">System architecture tab</a> shows the modules
+          as they are in code today.
         </p>
       </Note>
 
-      <Section title="The split">
-        <p>
-          The same pattern keeps recurring. Something a domain needs turns out
-          to be an application's choice made through an engine mechanism that
-          already serves other uses, not a feature of its own.
-        </p>
-        <Figure caption="What applications decide, and the engine mechanism each runs on. Dashed cards are mechanisms not yet built in their general form.">
-          <Board
-            label="What applications decide, and the engine mechanisms under them"
-            lanes={["The application decides", "The engine provides"]}
-            steps={SPLIT}
-            edges={[
-              { from: "a-exaggerate", to: "e-place" },
-              { from: "a-compare", to: "e-views" },
-              { from: "a-model", to: "e-brep" },
-              { from: "a-analyse", to: "e-style" },
-              { from: "a-select", to: "e-style" },
-              { from: "a-cut", to: "e-clip" },
-              { from: "a-services", to: "e-query" },
-            ]}
-          />
+      <Section title="The architecture">
+        <Figure caption="Every domain sits on the same eight mechanisms, and they on the same four pieces of GPU machinery. Solid blocks are built, striped ones partly built, dashed ones planned.">
+          <VisionStack />
         </Figure>
+        <p>
+          The line between applications and the engine kept landing in the same
+          place as the plan grew:
+        </p>
         <ul>
           <li>
-            <strong>Exaggeration</strong> is a placement, not a scene setting:
-            the test of the placement design is that an application can
-            exaggerate everything, the globe included, through placements alone,
-            and still measure true heights.
+            <strong>Vertical exaggeration</strong> is an application's
+            placement, not a scene setting. The placement design's test is that
+            an application can exaggerate everything, the globe included,
+            through placements alone, and still measure true heights.
           </li>
           <li>
-            <strong>Comparison</strong> is linked views and viewports, and a
+            <strong>Comparison</strong> is linked views and viewports. A
             difference between two captures is an analysis drawn as a scalar
             field.
           </li>
           <li>
             <strong>Overrides</strong> for millions of elements are the styling
-            language with data an application supplies, not a separate override
-            system.
+            language with data an application supplies, not a separate system.
           </li>
           <li>
             <strong>Modeling</strong> stays with the application or a kernel it
-            brings. The engine draws exact geometry and answers queries on it,
-            and two different kernels can feed the same B-rep form.
+            brings. Two different kernels can feed the same B-rep form.
           </li>
         </ul>
         <Written
@@ -242,23 +372,16 @@ export function Unified() {
         />
       </Section>
 
-      <Section title="The mechanisms">
-        <DataTable
-          label="The engine's mechanisms, their state, and what uses them"
-          columns={[
-            { head: "Mechanism", cell: (r) => r.name },
-            { head: "What it is", cell: (r) => r.what },
-            { head: "State", cell: (r) => r.state },
-            { head: "What uses it", cell: (r) => r.uses },
-          ]}
-          rows={MECHANISMS}
-        />
+      <Section title="What each use needs">
         <p>
-          The <a href="#/architecture">System architecture tab</a> shows how the
-          built ones are layered in code. The <a href="#/breps">B-reps tab</a>,{" "}
-          <a href="#/tessellation">Tessellation</a> and{" "}
-          <a href="#/vector">Vector rendering</a> go deeper into three of them.
+          The gallery examples planned to prove the mechanisms, by domain. Read
+          down a column for how far a mechanism reaches, across a row for what a
+          use needs. Styling and representations carry the most.
         </p>
+        <Figure caption="Gallery examples and the mechanisms each uses. One is in the gallery today; the rest are planned.">
+          <UsesMatrix />
+        </Figure>
+        <Written from="the overall plan, section 13.34" on="2026-11-10" />
       </Section>
 
       <Section title="The rule it gives">
@@ -270,14 +393,6 @@ export function Unified() {
           serves one use is a sign the line between application and engine is in
           the wrong place.
         </p>
-        <p>
-          The gallery is where this is checked. Each planned example proves one
-          mechanism on a real use: a viewshed on queries and scalar fields, a
-          plant model on per-element styling, a CAD quad view on linked views, a
-          tunnel on sections, a solid modeling tool on the B-rep form with two
-          kernels.
-        </p>
-        <Written from="the overall plan, section 13.34" on="2026-11-10" />
       </Section>
     </Page>
   );

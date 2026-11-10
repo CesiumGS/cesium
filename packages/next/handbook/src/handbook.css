@@ -2146,3 +2146,131 @@ span.api-source {
     display: block;
   }
 }
+
+/* One core, many uses: the vision as a stack of layers, and its matrix. */
+.vision {
+  display: grid;
+  gap: var(--stratakit-space-200);
+}
+.vision-layer {
+  padding: var(--stratakit-space-300);
+  border-radius: 10px;
+  background: var(--stratakit-color-bg-neutral-base);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.vision-layer.apps {
+  background: transparent;
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+}
+.vision-layer.platform {
+  background: var(--stratakit-color-bg-accent-muted);
+}
+.section .vision-label {
+  margin: 0 0 var(--stratakit-space-200);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.section .vision-layer p {
+  max-inline-size: none;
+}
+.vision-domains {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-150, 6px);
+}
+.vision-domains span {
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+}
+.section .vision-brings {
+  margin: var(--stratakit-space-200) 0 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.vision-blocks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--stratakit-space-200);
+}
+.vision-block {
+  display: flex;
+  flex-direction: column;
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  border-radius: 8px;
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  background: var(--stratakit-color-bg-page-base);
+  line-height: 1.4;
+}
+.vision-block.built {
+  background: var(--stratakit-color-bg-accent-muted);
+  border-color: var(--stratakit-color-border-accent-base);
+}
+.vision-block.partly {
+  border-color: var(--stratakit-color-border-accent-base);
+  background: repeating-linear-gradient(
+    135deg,
+    var(--stratakit-color-bg-accent-muted) 0 6px,
+    transparent 6px 12px
+  );
+}
+.vision-block.planned {
+  border-style: dashed;
+  background: transparent;
+}
+.section .vision-block h3 {
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-md);
+}
+.section .vision-block p {
+  margin: var(--stratakit-space-100) 0 var(--stratakit-space-200);
+  flex: 1;
+}
+.vision-state {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.vision-matrix table {
+  border-collapse: collapse;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.vision-matrix th,
+.vision-matrix td {
+  padding: 4px 8px;
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.vision-matrix thead th {
+  text-align: center;
+  font-weight: 600;
+}
+.vision-matrix thead th:first-child,
+.vision-matrix tbody th {
+  text-align: start;
+  font-weight: 400;
+}
+.vision-matrix td {
+  text-align: center;
+}
+.vision-matrix tr.vision-domain th {
+  padding-block-start: var(--stratakit-space-300);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.vision-dot {
+  color: var(--stratakit-color-icon-accent-base, currentColor);
+}
+.vision-built {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.vision-matrix tr.vision-total th,
+.vision-matrix tr.vision-total td {
+  font-weight: 600;
+  border-block-end: none;
+}
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
