@@ -157,17 +157,6 @@ class Vector3DTileContent {
 
   set show(value) {
     this._show = value;
-    this.applyShow(this.show);
-  }
-
-  // Applies the show. Should **I** start writing comments here now?
-  applyShow(show) {
-    if (!defined(this._features)) {
-      createFeatures(this);
-    }
-    for (const feature of this._features) {
-      feature.show = show;
-    }
   }
 
   hasProperty(batchId, name) {
@@ -226,15 +215,21 @@ class Vector3DTileContent {
     if (defined(this._polygons)) {
       this._polygons.classificationType = this._tileset.classificationType;
       this._polygons.debugWireframe = this._tileset.debugWireframe;
-      this._polygons.update(frameState);
+      if ((this._polygons.ready && this._show) || !this._polygons.ready) {
+        this._polygons.update(frameState);
+      }
       ready = ready && this._polygons.ready;
     }
     if (defined(this._polylines)) {
-      this._polylines.update(frameState);
+      if ((this._polylines.ready && this._show) || !this._polylines.ready) {
+        this._polylines.update(frameState);
+      }
       ready = ready && this._polylines.ready;
     }
     if (defined(this._points)) {
-      this._points.update(frameState);
+      if ((this._points.ready && this._show) || !this._points.ready) {
+        this._points.update(frameState);
+      }
       ready = ready && this._points.ready;
     }
     if (defined(this._batchTable) && ready) {

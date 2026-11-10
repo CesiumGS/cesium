@@ -129,15 +129,6 @@ class Geometry3DTileContent {
 
   set show(value) {
     this._show = value;
-    this.applyShow(this.show);
-  }
-  applyShow(show) {
-    if (!defined(this._features)) {
-      createFeatures(this);
-    }
-    for (const feature of this._features) {
-      feature.show = show;
-    }
   }
 
   hasProperty(batchId, name) {
@@ -177,7 +168,9 @@ class Geometry3DTileContent {
     if (defined(this._geometries)) {
       this._geometries.classificationType = this._tileset.classificationType;
       this._geometries.debugWireframe = this._tileset.debugWireframe;
-      this._geometries.update(frameState);
+      if ((this._geometries.ready && this._show) || !this._geometries.ready) {
+        this._geometries.update(frameState);
+      }
     }
 
     if (defined(this._batchTable) && this._geometries.ready) {
