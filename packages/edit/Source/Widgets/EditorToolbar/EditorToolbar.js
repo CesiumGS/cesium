@@ -163,22 +163,13 @@ class EditorToolbar {
     );
     button.appendChild(icon);
 
-    // Both names share a grid cell, so the button is as wide as the longer one.
-    const labels = document.createElement("span");
-    labels.className = "cesium-editor-toolbar-mode-labels";
-    for (const [name, hidden] of [
-      ["Object Mode", "viewModel.editing"],
-      ["Edit Mode", "!viewModel.editing"],
-    ]) {
-      const label = document.createElement("span");
-      label.textContent = name;
-      label.setAttribute(
-        "data-bind",
-        `css: { 'cesium-editor-toolbar-mode-label-hidden': ${hidden} }`,
-      );
-      labels.appendChild(label);
-    }
-    button.appendChild(labels);
+    const label = document.createElement("span");
+    label.className = "cesium-editor-toolbar-mode-label";
+    label.setAttribute(
+      "data-bind",
+      "text: viewModel.editing ? 'Edit Mode' : 'Object Mode'",
+    );
+    button.appendChild(label);
 
     group.appendChild(button);
     return group;
