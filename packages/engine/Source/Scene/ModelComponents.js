@@ -1577,9 +1577,6 @@ export class EmissiveStrength {
 /**
  * Material properties for the BENTLEY_materials_line_style extension.
  *
- * @alias ModelComponents.LineStyle
- * @constructor
- *
  * @private
  */
 export class LineStyle {
@@ -1604,9 +1601,6 @@ export class LineStyle {
 /**
  * Planar fill properties from the BENTLEY_materials_planar_fill extension.
  * Controls the rendering behavior of planar polygon fills for CAD-style visualization.
- *
- * @alias ModelComponents.PlanarFill
- * @constructor
  *
  * @private
  */

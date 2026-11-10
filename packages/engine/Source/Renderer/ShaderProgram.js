@@ -386,6 +386,11 @@ function findUniforms(gl, program) {
               locations.push(loc);
             }
           }
+
+          if (locations.length === 0) {
+            continue;
+          }
+
           uniformArray = createUniformArray(
             gl,
             activeUniform,
