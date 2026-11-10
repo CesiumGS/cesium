@@ -8661,7 +8661,7 @@ Not built. Air-gapped and offline use can't download data at runtime, so ephemer
 
 ### 13.26 For later: an architectural review of geometry through placement (owner, 2026-11-08)
 
-Do this around plan 5f's fitted operations, before building them. Goal: one elegant way of handling reference frames and reprojection through the geometry pipeline, without patched-together machinery. Things it has to settle:
+Do this before b-rep step 5, the GPU tessellation engine (§13.33), which evaluates placements at points the content never had and takes normals from the placement's Jacobian: a dual position can do neither (moved up by the owner, 2026-11-09). It also has to come before plan 5f's fitted operations are built. Goal: one elegant way of handling reference frames and reprojection through the geometry pipeline, without patched-together machinery. Things it has to settle:
 
 - **One model of a placement:** rigid, dual position and fitted operation as cases of a single idea, and what each layer owns: the frame tree (rigid), coordinate operations (non-rigid), content (precomputed results), and the renderer's placement seam (applying the mapping per vertex).
 - **Normals and tangents.** Today a dual-position vertex moves but keeps its rigid normal: 0.197 degrees on the 44 km corridor, 0.225 calculated at 50 km. Tried on 2026-11-08: deriving it per fragment from both positions. It fails, because the design position isn't in the fragment stage, a varying would cost every draw, and float32 derivative noise is estimated at about 0.13 degrees up close. Other options: a second normal, 12 bytes a vertex or about 4 octahedrally encoded; a displacement varying on placed draws; or dropping dual positions for a fitted operation with its Jacobian.
@@ -8868,7 +8868,7 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 2. Spike: one trimmed NURBS face on the GPU (tessellation by screen-space error and the per-pixel trim), against SMLib's tessellation for accuracy and cost. It also tests the shared fill idea. Both spikes are decision tools. Done; see the result below.
 3. The query interface, with the mesh adapter and an f-rep slot.
 4. The render b-rep form and the glTF extension draft, with the TypeScript loader and analytic surfaces.
-5. The GPU tessellation engine: edges first, patches, planar faces as fills.
+5. The GPU tessellation engine: edges first, patches, planar faces as fills. Preceded by the placement review (§13.26), so it builds on one model of a placement.
 6. Trims and edges on the shared vector kernels, from the vector design.
 7. Exact picks, snapping and measurement, then the server-backed queries.
 8. SMLib as a module: `fromUsd`, healing, sections.

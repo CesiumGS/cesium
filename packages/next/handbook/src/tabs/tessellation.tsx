@@ -180,9 +180,9 @@ export function Tessellation() {
           One kind of placement is an exception today. A dual position has no
           function between its vertices, so it can't be evaluated at new points,
           and it states no bound. The plan reviews placement as a whole before
-          fitted operations (plan 5f): rigid, dual-position and fitted
-          placements become cases of one model, and dual positions may give way
-          to fitted operations, whose Jacobian gives exact normals.
+          this engine is built: rigid, dual-position and fitted placements
+          become cases of one model, and dual positions may give way to fitted
+          operations, whose Jacobian gives exact normals.
         </p>
         <p>
           The Rendering tab's frame graph has a dashed row for the engine's
