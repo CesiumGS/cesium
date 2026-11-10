@@ -128,8 +128,10 @@ export function orbitPose(
  * Orbits the view's camera around a focus point, for inspecting models and
  * tilesets: drag rotates (heading/pitch), right- or shift-drag pans in the
  * local east-north plane, wheel zooms the range. On touch, one finger
- * rotates, a pinch zooms the range, a two-finger drag pans and a two-finger
- * rotation turns the heading (`touchGestures.ts`). Only reacts inside the
+ * rotates. Two fingers pinch, twist and pan together: the pinch scales the
+ * range by the inverse of the spread, the twist turns the heading and the
+ * pan moves the target with the midpoint; sliding both up or down changes
+ * the pitch (`touchGestures.ts`). Only reacts inside the
  * view's rectangle; a drag starts anywhere in it (nothing is picked).
  *
  * With a `frame`, heading turns about the frame's up (clockwise from
@@ -157,7 +159,7 @@ export class InspectController {
   /** Called after the controller moves the camera, and when a drag starts or ends. */
   onChange?: () => void;
   private frame_?: OrbitBasis;
-  private mode: "none" | "rotate" | "pan" | "pinch" | "twist" = "none";
+  private mode: "none" | "rotate" | "pan" | "two" = "none";
   private lastX = 0;
   private lastY = 0;
   /** The camera's version after this controller last placed it. */
@@ -380,10 +382,9 @@ export class InspectController {
       },
       oneEnd: () => this.end(),
       twoStart: () => this.end(),
-      twoBegin: (kind) => {
+      twoBegin: () => {
         this.resync();
-        this.mode =
-          kind === "pinch" ? "pinch" : kind === "drag" ? "pan" : "twist";
+        this.mode = "two";
         this.onChange?.();
       },
       twoMove: (m) => {
@@ -391,20 +392,38 @@ export class InspectController {
           this.end();
           return;
         }
-        if (m.kind === "pinch" && this.mode === "pinch") {
+        if (this.mode !== "two") {
+          return;
+        }
+        const [sx, sy] = this.pixelScale();
+        const r = this.view.pixelRect();
+        if (m.kind === "tilt") {
+          // The pitch changes by the angle the slide covers in the view;
+          // sliding up lowers the camera toward the horizon.
+          this.pitch = Math.min(
+            Math.max(
+              this.pitch -
+                ((m.dy * sy) / r.height) *
+                  this.view.camera.fovy(r.width / r.height),
+              -maxPitch,
+            ),
+            maxPitch,
+          );
+        } else {
+          // A pixel is as many meters as the view shows at the target.
+          const perPixel =
+            (2 *
+              this.range *
+              Math.tan(this.view.camera.fovy(r.width / r.height) / 2)) /
+            r.height;
+          this.pan(m.dx * sx, m.dy * sy, perPixel);
+          // The scene turns with the fingers, so the heading goes the
+          // other way (a heading grows clockwise seen from above).
+          this.heading -= m.angle;
           this.range = Math.min(
             Math.max(this.range / m.scale, this.minRange),
             this.maxRange,
           );
-        } else if (m.kind === "drag" && this.mode === "pan") {
-          const [sx, sy] = this.pixelScale();
-          this.pan(m.dx * sx, m.dy * sy);
-        } else if (m.kind === "rotate" && this.mode === "twist") {
-          // The scene turns with the fingers, so the heading goes the
-          // other way (a heading grows clockwise seen from above).
-          this.heading -= m.angle;
-        } else {
-          return;
         }
         this.apply();
       },
@@ -470,12 +489,14 @@ export class InspectController {
   }
 
   /** Pans the target by a drag of (dx, dy) target pixels. */
-  private pan(dx: number, dy: number): void {
-    const height = this.view.pixelRect().height;
+  private pan(
+    dx: number,
+    dy: number,
+    scale = (this.range * 1.2) / this.view.pixelRect().height,
+  ): void {
     // Pan in the plane perpendicular to up (the target's local
     // east-north plane without a frame), rotated by the heading.
     const { east: eastAxis, north: northAxis } = this.basis();
-    const scale = (this.range * 1.2) / height;
     const c = Math.cos(this.heading);
     const s = Math.sin(this.heading);
     // Screen right/up mapped to east/north for the current heading.

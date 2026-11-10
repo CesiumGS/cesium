@@ -1,54 +1,41 @@
-// Touch gestures: the classifier, the tracker's rules (a second finger ends
-// a one-finger drag, classification sticks, a third finger is ignored) and
-// a pinch moving each controller's camera in. Node, no GPU.
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { Ellipsoid } from "../src/math/ellipsoid.ts";
-import * as m4 from "../src/math/mat4.ts";
-import * as v3 from "../src/math/vec3.ts";
-import { Camera } from "../src/scene/Camera.ts";
-import { GlobeController } from "../src/scene/GlobeController.ts";
-import { InspectController } from "../src/scene/InspectController.ts";
-import { OrbitController } from "../src/scene/OrbitController.ts";
-import { OffscreenTarget } from "../src/scene/renderTarget.ts";
+// Touch gestures: the tracker's rules (a second finger ends a one-finger
+// drag, two fingers act together unless they tilt, a third finger is
+// ignored) and the browser-gesture hold. The controllers are in
+// touchControllers.test.ts. Node, no GPU.
+import { describe, expect, it } from "vitest";
 import {
   TouchGestures,
-  classifyTwoFinger,
   holdBrowserGestures,
+  isTilt,
   type TouchGestureListener,
   type TwoFingerMove,
 } from "../src/scene/touchGestures.ts";
-import type { Engine } from "../src/scene/Engine.ts";
-import type { View } from "../src/scene/View.ts";
-import { fakeEngine } from "./fakeGpu.ts";
 
 const pt = (x: number, y: number) => ({ x, y });
 
-describe("classifyTwoFinger", () => {
+describe("isTilt", () => {
   const a0 = pt(0, 0);
   const b0 = pt(100, 0);
 
-  it("waits for 8 px of total movement over both fingers", () => {
-    // Apart by 2 px each: 4 px in all.
-    expect(classifyTwoFinger(a0, b0, pt(-2, 0), pt(102, 0))).toBeUndefined();
-    // Just under 8 (7.8), and exactly 8.
-    expect(
-      classifyTwoFinger(a0, b0, pt(-3.9, 0), pt(103.9, 0)),
-    ).toBeUndefined();
-    expect(classifyTwoFinger(a0, b0, pt(-4, 0), pt(104, 0))).toBe("pinch");
+  it("takes both fingers mostly vertical, the same way, at a steady distance", () => {
+    expect(isTilt(a0, b0, pt(1, -8), pt(101, -8))).toBe(true);
+    expect(isTilt(a0, b0, pt(0, 8), pt(100, 9))).toBe(true);
   });
 
-  it("calls a change of distance a pinch, in or out", () => {
-    expect(classifyTwoFinger(a0, b0, pt(4, 0), pt(96, 0))).toBe("pinch");
+  it("refuses fingers going opposite ways (a twist)", () => {
+    expect(isTilt(a0, b0, pt(0, 8), pt(100, -8))).toBe(false);
   });
 
-  it("calls both fingers moving the same way a drag", () => {
-    expect(classifyTwoFinger(a0, b0, pt(4, 3), pt(104, 3))).toBe("drag");
-    expect(classifyTwoFinger(a0, b0, pt(0, -8), pt(100, -8))).toBe("drag");
+  it("refuses a move that is not mostly vertical in each finger", () => {
+    expect(isTilt(a0, b0, pt(5, 8), pt(105, 8))).toBe(false);
+    expect(isTilt(a0, b0, pt(0, 8), pt(100, 0))).toBe(false);
+    // Exactly twice as far down as across is not "more than".
+    expect(isTilt(a0, b0, pt(4, 8), pt(104, 8))).toBe(false);
   });
 
-  it("calls a change of angle a rotation, either way", () => {
-    expect(classifyTwoFinger(a0, b0, pt(0, 4), pt(100, -4))).toBe("rotate");
-    expect(classifyTwoFinger(a0, b0, pt(0, -4), pt(100, 4))).toBe("rotate");
+  it("refuses a change of distance of 10% or more (a pinch)", () => {
+    expect(isTilt(a0, b0, pt(-10, 40), pt(110, 40))).toBe(false);
+    expect(isTilt(a0, b0, pt(-4, 40), pt(104, 40))).toBe(true);
   });
 });
 
@@ -61,7 +48,7 @@ function record() {
     oneMove: (x, y) => log.push(`one~ ${x},${y}`),
     oneEnd: () => log.push("one-"),
     twoStart: () => log.push("two+"),
-    twoBegin: (kind) => log.push(`begin ${kind}`),
+    twoBegin: (mode) => log.push(`begin ${mode}`),
     twoMove: (m) => {
       log.push(`two~ ${m.kind}`);
       moves.push(m);
@@ -77,6 +64,8 @@ function record() {
   });
   return { touch, log, moves, ev };
 }
+
+const last = <T>(items: T[]): T => items[items.length - 1]!;
 
 describe("TouchGestures", () => {
   it("ignores mouse and pen pointers", () => {
@@ -102,57 +91,105 @@ describe("TouchGestures", () => {
     expect(log).toEqual(["one+ 10,20", "one-", "two+"]);
   });
 
-  it("classifies once and keeps the kind until a finger lifts", () => {
+  it("holds two fingers' first 10 px, then reports them from where they started", () => {
     const { touch, log, moves, ev } = record();
     touch.down(ev(1, 0, 0));
     touch.down(ev(2, 100, 0));
-    // Under the threshold: nothing reported.
-    touch.move(ev(1, -1, 0));
+    touch.move(ev(1, -3, 0));
+    touch.move(ev(2, 103, 0)); // 6 px of 10
     expect(log).toEqual(["one+ 0,0", "one-", "two+"]);
-    touch.move(ev(1, -5, 0));
-    touch.move(ev(2, 105, 0));
-    // The move that classified it reports nothing: reports start there.
-    expect(log.slice(3)).toEqual(["begin pinch"]);
-    touch.move(ev(2, 110, 0));
-    expect(log.at(-1)).toBe("two~ pinch");
-    // A big drag now is still a pinch: the fingers move together.
-    touch.move(ev(1, -5, 60));
-    touch.move(ev(2, 115, 60));
-    expect(moves.every((m) => m.kind === "pinch")).toBe(true);
-    expect(touch.twoFingerKind).toBe("pinch");
-    // The reports multiply up to the distance's change since the classifying move.
-    const product = moves.reduce(
-      (p, m) => p * (m.kind === "pinch" ? m.scale : 1),
-      1,
-    );
-    expect(product).toBeCloseTo(120 / 110, 9);
+    touch.move(ev(1, -5, 0)); // 8
+    touch.move(ev(2, 105, 0)); // 10: decided
+    expect(log.slice(3)).toEqual(["begin combined", "two~ combined"]);
+    const m = moves[0]!;
+    if (m.kind !== "combined") {
+      throw new Error("not combined");
+    }
+    // The 10 px so far in one report: the spread 100 to 110.
+    expect(m.scale).toBeCloseTo(1.1, 12);
+    expect(m.angle).toBeCloseTo(0, 12);
+    expect([m.x, m.y, m.dx, m.dy]).toEqual([50, 0, 0, 0]);
   });
 
-  it("reports a drag's midpoint motion and a rotation's angle", () => {
-    const a = record();
-    a.touch.down(a.ev(1, 0, 0));
-    a.touch.down(a.ev(2, 100, 0));
-    a.touch.move(a.ev(1, 5, 5));
-    a.touch.move(a.ev(2, 105, 5)); // begins: a drag
-    a.touch.move(a.ev(1, 15, 5));
-    a.touch.move(a.ev(2, 115, 5));
-    const last = a.moves.at(-1)!;
-    expect(last.kind === "drag" && last.dx).toBeCloseTo(5, 9);
-    expect(a.moves.length).toBeGreaterThan(0);
+  it("applies pinch, twist and pan together at every move, unthresholded", () => {
+    const { touch, moves, ev } = record();
+    touch.down(ev(1, 0, 0));
+    touch.down(ev(2, 100, 0));
+    touch.move(ev(1, -5, 0));
+    touch.move(ev(2, 105, 0));
+    moves.length = 0;
+    // A 0.1 px nudge of one finger still reports, with all three.
+    touch.move(ev(2, 105, 0.1));
+    const m = last(moves);
+    if (m.kind !== "combined") {
+      throw new Error("not combined");
+    }
+    expect(m.scale).toBeCloseTo(Math.hypot(110, 0.1) / 110, 9);
+    expect(m.angle).toBeCloseTo(Math.atan2(0.1, 110), 9);
+    expect(m.dx).toBeCloseTo(0, 12);
+    expect(m.dy).toBeCloseTo(0.05, 12);
+    // A move with everything at once: the midpoint, the spread and the angle.
+    touch.move(ev(1, 10, 20));
+    const n = last(moves);
+    if (n.kind !== "combined") {
+      throw new Error("not combined");
+    }
+    expect(n.x).toBeCloseTo(57.5, 9);
+    expect(n.y).toBeCloseTo(10.05, 9);
+    expect(n.dx).toBeCloseTo(7.5, 9);
+    expect(n.scale).toBeLessThan(1);
+    expect(n.angle).toBeLessThan(0);
+  });
 
-    const r = record();
-    r.touch.down(r.ev(1, 0, 0));
-    r.touch.down(r.ev(2, 100, 0));
-    r.touch.move(r.ev(1, 0, 5));
-    r.touch.move(r.ev(2, 100, -5)); // begins: a rotation
-    r.touch.move(r.ev(1, 0, 50));
-    r.touch.move(r.ev(2, 100, -50));
-    const turned = r.moves.reduce(
-      (s, m) => s + (m.kind === "rotate" ? m.angle : 0),
-      0,
-    );
-    // Clockwise on screen (y down) is positive.
-    expect(turned).toBeCloseTo(Math.atan2(-100, 100) - Math.atan2(-10, 100), 9);
+  it("reports a clockwise turn of the fingers as a positive angle", () => {
+    const { touch, moves, ev } = record();
+    touch.down(ev(1, 0, 0));
+    touch.down(ev(2, 100, 0));
+    touch.move(ev(1, 0, -5));
+    touch.move(ev(2, 100, 5)); // 10 px: the right finger down, the left up
+    const m = last(moves);
+    if (m.kind !== "combined") {
+      throw new Error("not combined");
+    }
+    expect(m.angle).toBeGreaterThan(0);
+    expect(m.angle).toBeCloseTo(Math.atan2(10, 100), 9);
+  });
+
+  it("enters tilt when both fingers slide up together, and only tilts after", () => {
+    const { touch, log, moves, ev } = record();
+    touch.down(ev(1, 0, 100));
+    touch.down(ev(2, 100, 100));
+    touch.move(ev(1, 0, 95));
+    touch.move(ev(2, 100, 95)); // 10 px, both up
+    expect(log.slice(3)).toEqual(["begin tilt", "two~ tilt"]);
+    expect(touch.twoFingerMode).toBe("tilt");
+    // Later the fingers spread and turn: still only tilt, the midpoint's slide.
+    touch.move(ev(1, -30, 80));
+    touch.move(ev(2, 140, 70));
+    expect(moves.every((m) => m.kind === "tilt")).toBe(true);
+    const m = last(moves);
+    expect(m.kind === "tilt" && m.dy).toBeCloseTo(-12.5, 9);
+  });
+
+  it("does not tilt for a pinch, a twist or one finger moving", () => {
+    for (const moves of [
+      [
+        [-5, 0, 105, 0],
+        [-5, 0, 105, 0],
+      ],
+      [[0, -5, 100, 5]],
+      [[0, -10, 100, 0]],
+    ]) {
+      const { touch, log, ev } = record();
+      touch.down(ev(1, 0, 100));
+      touch.down(ev(2, 100, 100));
+      for (const [ax, ay, bx, by] of moves as number[][]) {
+        touch.move(ev(1, ax!, 100 + ay!));
+        touch.move(ev(2, bx!, 100 + by!));
+      }
+      expect(log).toContain("begin combined");
+      expect(touch.twoFingerMode).toBe("combined");
+    }
   });
 
   it("ignores a third finger", () => {
@@ -166,23 +203,30 @@ describe("TouchGestures", () => {
     expect(log).toEqual(["one+ 0,0", "one-", "two+"]);
   });
 
-  it("starts a fresh one-finger drag where the finger is when one lifts", () => {
+  it("starts a fresh one-finger drag where the finger is when one lifts, and decides again for the next pair", () => {
     const { touch, log, ev } = record();
     touch.down(ev(1, 0, 0));
     touch.down(ev(2, 100, 0));
     touch.move(ev(1, -5, 0));
     touch.move(ev(2, 105, 0));
-    log.length = 0;
+    expect(touch.twoFingerMode).toBe("combined");
     touch.up(ev(1, -5, 0));
-    expect(log).toEqual(["two-", "one+ 105,0"]);
-    expect(touch.twoFingerKind).toBeUndefined();
+    expect(touch.twoFingerMode).toBeUndefined();
+    log.length = 0;
     touch.move(ev(2, 110, 3));
-    expect(log.at(-1)).toBe("one~ 110,3");
-    // A new second finger is classified afresh.
-    touch.down(ev(4, 10, 3));
-    touch.move(ev(2, 114, 3));
-    touch.move(ev(4, 6, 3));
-    expect(log.at(-1)).toBe("begin pinch");
+    expect(log).toEqual(["one~ 110,3"]);
+    log.length = 0;
+    touch.up(ev(2, 110, 3));
+    expect(log).toEqual(["one-"]);
+  });
+
+  it("a finger lifting during two ends them and restarts one at the other's place", () => {
+    const { touch, log, ev } = record();
+    touch.down(ev(1, 0, 0));
+    touch.down(ev(2, 100, 7));
+    log.length = 0;
+    touch.up(ev(1, 0, 0));
+    expect(log).toEqual(["two-", "one+ 100,7"]);
   });
 });
 
@@ -228,163 +272,5 @@ describe("holdBrowserGestures", () => {
     expect(props.get("touch-action")).toBe("none");
     b();
     expect(props.get("touch-action")).toBe("pan-y");
-  });
-});
-
-// ------------------------------------------------------------ controllers
-
-const SIZE = 100;
-/** The engine's tick loop, standing still. */
-const frames = { onTick: () => () => {} };
-
-function pointerEvent(type: string, id: number, x: number, y: number) {
-  return Object.assign(new Event(type, { cancelable: true }), {
-    pointerId: id,
-    pointerType: "touch",
-    clientX: x,
-    clientY: y,
-    button: 0,
-    shiftKey: false,
-    ctrlKey: false,
-  });
-}
-
-function box() {
-  const element = new EventTarget() as EventTarget & Record<string, unknown>;
-  element.getBoundingClientRect = () => ({
-    left: 0,
-    top: 0,
-    width: SIZE,
-    height: SIZE,
-  });
-  element.setPointerCapture = () => {};
-  element.releasePointerCapture = () => {};
-  element.hasPointerCapture = () => false;
-  const fire = (type: string, id: number, x: number, y: number) =>
-    element.dispatchEvent(pointerEvent(type, id, x, y));
-  /** Two fingers 20 px apart about the middle spread to `spread` px apart. */
-  const pinch = (spread: number) => {
-    fire("pointerdown", 1, 40, 50);
-    fire("pointerdown", 2, 60, 50);
-    for (let i = 1; i <= 5; i++) {
-      const half = 10 + ((spread / 2 - 10) * i) / 5;
-      fire("pointermove", 1, 50 - half, 50);
-      fire("pointermove", 2, 50 + half, 50);
-    }
-  };
-  return { element: element as unknown as HTMLElement, pinch, fire };
-}
-
-const flatView = (camera: Camera, extra: object = {}) =>
-  ({
-    camera,
-    world: { findBodyAnchor: () => undefined },
-    anchorPlacement: () => m4.mat4(),
-    target: { width: SIZE, height: SIZE },
-    contains: () => true,
-    pixelRect: () => ({ x: 0, y: 0, width: SIZE, height: SIZE }),
-    ...extra,
-  }) as unknown as View;
-
-describe("a pinch moves the camera in", () => {
-  let engine: Engine | undefined;
-  afterEach(() => vi.restoreAllMocks());
-
-  it("GlobeController: lower toward the point under the midpoint", async () => {
-    engine = await fakeEngine();
-    const world = engine.createWorld();
-    const view = engine.addView({
-      target: new OffscreenTarget(SIZE, SIZE),
-      world,
-    });
-    view.camera.lookAt(Float64Array.of(6_378_137, 0, 0), 0.4, -0.5, 3_000);
-    vi.spyOn(view, "pickPosition").mockResolvedValue(undefined);
-    const { element, pinch } = box();
-    const controller = new GlobeController(view, element, frames);
-    const height = () =>
-      Ellipsoid.WGS84.cartesianToCartographic(view.camera.position, {
-        longitude: 0,
-        latitude: 0,
-        height: 0,
-      })!.height;
-    const before = height();
-    pinch(60);
-    expect(height()).toBeLessThan(before * 0.7);
-    expect(controller.inputs).toBeGreaterThan(0);
-    controller.dispose();
-    engine.removeWorld(world);
-  });
-
-  it("GlobeController: a rotation turns the heading and keeps the camera level", async () => {
-    engine = await fakeEngine();
-    const world = engine.createWorld();
-    const view = engine.addView({
-      target: new OffscreenTarget(SIZE, SIZE),
-      world,
-    });
-    view.camera.lookAt(Float64Array.of(6_378_137, 0, 0), 0.4, -0.5, 3_000);
-    vi.spyOn(view, "pickPosition").mockResolvedValue(undefined);
-    const { element, fire } = box();
-    const controller = new GlobeController(view, element, frames);
-    const camera = view.camera;
-    const before = v3.copy(v3.vec3(), camera.right);
-    // A ground point right of the middle of the view.
-    const right = Ellipsoid.WGS84.rayIntersection(
-      camera.position,
-      camera.rayDirection(0.6, 0, 1, v3.vec3()),
-      v3.vec3(),
-    )!;
-    fire("pointerdown", 1, 40, 50);
-    fire("pointerdown", 2, 60, 50);
-    for (let i = 1; i <= 5; i++) {
-      // Clockwise on screen: the left finger up, the right finger down.
-      fire("pointermove", 1, 40 + i, 50 - 4 * i);
-      fire("pointermove", 2, 60 - i, 50 + 4 * i);
-    }
-    expect(v3.dot(camera.right, before)).toBeLessThan(0.99);
-    // The scene turned clockwise with the fingers: that point went down.
-    const rel = v3.sub(v3.vec3(), right, camera.position);
-    expect(v3.dot(rel, camera.up) / v3.dot(rel, camera.direction)).toBeLessThan(
-      -0.01,
-    );
-    const up = Ellipsoid.WGS84.geodeticSurfaceNormal(
-      camera.position,
-      v3.vec3(),
-    )!;
-    // No roll: the right stays level.
-    expect(Math.abs(v3.dot(camera.right, up))).toBeLessThan(1e-6);
-    controller.dispose();
-    engine.removeWorld(world);
-  });
-
-  it("OrbitController: closer to the ground", () => {
-    const camera = new Camera();
-    camera.lookAt(Float64Array.of(6_378_137, 0, 0), 0, -1, 10_000);
-    const { element, pinch } = box();
-    const controller = new OrbitController(flatView(camera), element);
-    const height = () =>
-      Ellipsoid.WGS84.cartesianToCartographic(camera.position, {
-        longitude: 0,
-        latitude: 0,
-        height: 0,
-      })!.height;
-    const before = height();
-    pinch(60);
-    expect(height()).toBeLessThan(before * 0.8);
-    controller.dispose();
-  });
-
-  it("InspectController: a smaller range", () => {
-    const camera = new Camera();
-    const { element, pinch } = box();
-    const controller = new InspectController(flatView(camera), element);
-    controller.focus(Float64Array.of(6_378_137, 0, 0), 0, -0.5, 100);
-    pinch(60);
-    expect(controller.range).toBeLessThan(50);
-    expect(v3.distance(camera.position, controller.target)).toBeCloseTo(
-      controller.range,
-      6,
-    );
-    controller.dispose();
   });
 });

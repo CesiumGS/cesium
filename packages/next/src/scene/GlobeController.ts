@@ -25,10 +25,12 @@ import {
  * - shift-drag: look around from where the camera is;
  * - spin keeps its momentum after release (1.x inertia); wheel zoom glides.
  *
- * Touch: one finger grabs like the left button; two fingers pinch (zoom
- * toward the point under their midpoint), drag (tilt and turn like the
- * middle button) or rotate (turn the heading about the point under the
- * midpoint); see `touchGestures.ts`.
+ * Touch: one finger grabs like the left button. Two fingers pinch, twist
+ * and pan together: the pinch zooms toward the point under their midpoint
+ * by the inverse of the spread, the twist turns the heading about that
+ * point (level), and the point stays under the midpoint as it moves. Two
+ * fingers sliding up or down together tilt the pitch about it instead (the
+ * heading stays); see `touchGestures.ts`.
  *
  * The camera never rolls (1.x constrains it to the Earth's axis): every
  * motion levels it about its view direction. A zoom keeps the heading and
@@ -101,8 +103,7 @@ export class GlobeController {
   inputs = 0;
 
   /** `sky`: a drag begun off the globe, which moves nothing. */
-  private mode:
-    "none" | "grab" | "sky" | "zoom" | "tilt" | "look" | "pinch" | "twist" =
+  private mode: "none" | "grab" | "sky" | "zoom" | "tilt" | "look" | "two" =
     "none";
   private lastX = 0;
   private lastY = 0;
@@ -352,48 +353,43 @@ export class GlobeController {
       },
       oneEnd: () => this.finish(),
       // The one-finger turn's momentum must not carry on under two fingers.
-      twoStart: () => this.stop(),
-      twoBegin: (kind, cx, cy) => {
+      // The point under the fingers' midpoint is what they pinch, twist and
+      // tilt about.
+      twoStart: (cx, cy) => {
         const [x, y] = this.clientPixel(cx, cy);
         this.startGesture(x, y);
-        if (kind === "pinch") {
-          this.mode = "pinch";
-          this.zoomPixel = [x, y];
-          this.anchorAt(x, y);
-          if (!this.hasAnchor) {
-            this.zoomPixel = undefined;
-            this.ground(this.anchor);
-          }
-        } else if (kind === "drag") {
+        this.mode = "two";
+        this.anchorAt(x, y);
+        if (!this.hasAnchor) {
+          this.ground(this.anchor);
+        }
+      },
+      twoBegin: (mode) => {
+        if (mode === "tilt") {
           this.mode = "tilt";
-          const r = this.view.pixelRect();
-          this.anchorAt(r.x + r.width / 2, r.y + r.height / 2);
-        } else {
-          this.mode = "twist";
-          this.anchorAt(x, y);
-          if (!this.hasAnchor) {
-            this.ground(this.anchor);
-          }
         }
       },
       twoMove: (m) => {
         if (!this.stillOnEarth()) {
           return;
         }
-        const [x, y] = this.clientPixel(m.x, m.y);
-        if (m.kind === "pinch" && this.mode === "pinch") {
-          // The distance shrinks by the ratio the fingers spread by; the
-          // point under the midpoint stays under it as it moves.
-          if (this.zoomPixel) {
-            this.zoomPixel = [x, y];
+        if (m.kind === "tilt" && this.mode === "tilt") {
+          // The pitch changes by the angle the midpoint's slide covers in
+          // the view; the heading stays.
+          this.tiltBy(this.pixelAngle(m.dy));
+        } else if (m.kind === "combined" && this.mode === "two") {
+          const [x, y] = this.clientPixel(m.x, m.y);
+          if (m.angle !== 0) {
+            this.twist(m.angle);
           }
-          this.zoomToward(this.anchor, 1 - 1 / m.scale, this.zoomPixel);
-        } else if (m.kind === "drag" && this.mode === "tilt") {
-          const [sx, sy] = this.pixelScale();
-          const height = this.view.pixelRect().height;
-          this.tilt((m.dx * sx) / height, (m.dy * sy) / height);
-        } else if (m.kind === "rotate" && this.mode === "twist") {
-          this.twist(m.angle);
+          // The distance shrinks by the ratio the fingers spread by, and
+          // the point under the midpoint follows it, as a grab does (over
+          // the sky there is nothing to hold).
+          this.zoomToward(
+            this.anchor,
+            1 - 1 / m.scale,
+            this.hasAnchor ? [x, y] : undefined,
+          );
         }
       },
       twoEnd: () => {
@@ -401,6 +397,13 @@ export class GlobeController {
         this.stop();
       },
     };
+  }
+
+  /** The angle (radians) a vertical move of `dy` CSS pixels covers in the view. */
+  private pixelAngle(dy: number): number {
+    const [, sy] = this.pixelScale();
+    const r = this.view.pixelRect();
+    return ((dy * sy) / r.height) * this.view.camera.fovy(r.width / r.height);
   }
 
   private onWheel(e: WheelEvent): void {
@@ -680,7 +683,28 @@ export class GlobeController {
       return;
     }
     rotateAbout(camera, this.anchor, up, -dx * Math.PI);
-    // Pitch, without going below the pivot's horizon or past straight down.
+    this.pitchBy(dy * Math.PI);
+    this.level();
+    this.keepAboveGround();
+  }
+
+  /** Changes the pitch about the anchor by `angle` radians, the heading kept. */
+  private tiltBy(angle: number): void {
+    this.pitchBy(angle);
+    this.level();
+    this.keepAboveGround();
+  }
+
+  /**
+   * Raises the camera's elevation above the anchor's horizon by `angle`,
+   * without going below the horizon or past straight down.
+   */
+  private pitchBy(angle: number): void {
+    const camera = this.view.camera;
+    const up = this.ellipsoid.geodeticSurfaceNormal(this.anchor, v3.vec3());
+    if (!up) {
+      return;
+    }
     const toCamera = v3.normalize(
       v3.vec3(),
       v3.sub(v3.vec3(), camera.position, this.anchor),
@@ -689,12 +713,10 @@ export class GlobeController {
       Math.min(Math.max(v3.dot(toCamera, up), -1), 1),
     );
     const next = Math.min(
-      Math.max(elevation + dy * Math.PI, 0.01),
+      Math.max(elevation + angle, 0.01),
       Math.PI / 2 - 0.001,
     );
     rotateAbout(camera, this.anchor, camera.right, -(next - elevation));
-    this.level();
-    this.keepAboveGround();
   }
 
   /**
@@ -1008,7 +1030,7 @@ export class GlobeController {
 }
 
 /** Rotates the camera about an axis through `point`. */
-function rotateAbout(
+export function rotateAbout(
   camera: View["camera"],
   point: Vec3,
   axis: Vec3,

@@ -1,7 +1,7 @@
-// Touch input for the camera controllers: one finger drags, two fingers
-// pinch, drag or rotate (plan 5d's ruling 26). The tracker's core takes
-// plain numbers and has no DOM dependency; `holdBrowserGestures` is the one
-// piece that touches an element.
+// Touch input for the camera controllers: one finger drags; two fingers
+// pinch, twist and pan together, or tilt (plan 5d's ruling 26). The tracker
+// takes plain numbers and has no DOM dependency; `holdBrowserGestures` is
+// the one piece that touches an element.
 
 /** A point in CSS pixels. */
 export interface TouchPoint {
@@ -9,50 +9,37 @@ export interface TouchPoint {
   y: number;
 }
 
-/** What two fingers are doing: spreading, moving together, or turning. */
-export type TwoFingerKind = "pinch" | "drag" | "rotate";
+/**
+ * What two fingers are doing: `combined` (pinch, twist and pan at once, as
+ * the maps apps do) or `tilt` (both sliding up or down together).
+ */
+export type TwoFingerMode = "combined" | "tilt";
 
-/** Total finger movement, in CSS pixels, before two fingers are classified. */
-export const TWO_FINGER_THRESHOLD = 8;
+/** Total finger movement, in CSS pixels, within which `tilt` is decided. */
+export const TILT_DECISION_DISTANCE = 10;
 
 /**
- * Classifies two fingers by how they moved from (a0, b0) to (a1, b1), or
- * returns undefined while the two have moved less than `threshold` CSS px
- * in total (summed over both fingers). Each kind is measured as the share
- * of the fingers' movement it explains: the change in their distance
- * (pinch), twice the midpoint's movement (drag), and the arc their angle
- * change sweeps at their distance (rotate). The largest wins; a tie goes
- * to drag, then pinch.
+ * Whether two fingers that moved from (a0, b0) to (a1, b1) are tilting:
+ * each finger's move is mostly vertical (|dy| > 2 |dx|), both go the same
+ * way, and the distance between them changed by less than 10%.
  */
-export function classifyTwoFinger(
+export function isTilt(
   a0: TouchPoint,
   b0: TouchPoint,
   a1: TouchPoint,
   b1: TouchPoint,
-  threshold = TWO_FINGER_THRESHOLD,
-): TwoFingerKind | undefined {
-  const moved =
-    Math.hypot(a1.x - a0.x, a1.y - a0.y) + Math.hypot(b1.x - b0.x, b1.y - b0.y);
-  if (moved < threshold) {
-    return undefined;
+): boolean {
+  const mostlyVertical = (p: TouchPoint, q: TouchPoint) =>
+    Math.abs(q.y - p.y) > 2 * Math.abs(q.x - p.x);
+  if (!mostlyVertical(a0, a1) || !mostlyVertical(b0, b1)) {
+    return false;
+  }
+  if (Math.sign(a1.y - a0.y) !== Math.sign(b1.y - b0.y)) {
+    return false;
   }
   const d0 = Math.hypot(b0.x - a0.x, b0.y - a0.y);
   const d1 = Math.hypot(b1.x - a1.x, b1.y - a1.y);
-  const pinch = Math.abs(d1 - d0);
-  const drag =
-    2 *
-    Math.hypot(
-      (a1.x + b1.x - a0.x - b0.x) / 2,
-      (a1.y + b1.y - a0.y - b0.y) / 2,
-    );
-  const rotate =
-    d0 > 0 && d1 > 0
-      ? Math.abs(wrap(angleOf(a1, b1) - angleOf(a0, b0))) * ((d0 + d1) / 2)
-      : 0;
-  if (drag >= pinch && drag >= rotate) {
-    return "drag";
-  }
-  return pinch >= rotate ? "pinch" : "rotate";
+  return d0 > 0 && Math.abs(d1 - d0) < 0.1 * d0;
 }
 
 function angleOf(a: TouchPoint, b: TouchPoint): number {
@@ -67,14 +54,27 @@ function wrap(angle: number): number {
 }
 
 /**
- * One report of a classified two-finger gesture, since the last one. The
- * midpoint is in CSS pixels. Screen angles are measured clockwise (y points
- * down), so a clockwise turn of the fingers is positive.
+ * One report of two fingers, since the last one. The midpoint is in CSS
+ * pixels. Screen angles are measured clockwise (y points down), so a
+ * clockwise turn of the fingers is positive.
+ *
+ * `combined` carries all three at once: `scale` is the ratio of the
+ * distances between the fingers (now over before; 1 when either is zero),
+ * `angle` the change in the line between them, and `dx`, `dy` the
+ * midpoint's movement; `x`, `y` is the midpoint now. `tilt` carries the
+ * midpoint's movement only.
  */
 export type TwoFingerMove =
-  | { kind: "pinch"; x: number; y: number; scale: number }
-  | { kind: "drag"; x: number; y: number; dx: number; dy: number }
-  | { kind: "rotate"; x: number; y: number; angle: number };
+  | {
+      kind: "combined";
+      x: number;
+      y: number;
+      scale: number;
+      angle: number;
+      dx: number;
+      dy: number;
+    }
+  | { kind: "tilt"; x: number; y: number; dx: number; dy: number };
 
 /** What the controller hears. Positions are CSS pixels (client coordinates). */
 export interface TouchGestureListener {
@@ -89,10 +89,11 @@ export interface TouchGestureListener {
   /** A second finger went down; `x`, `y` is the midpoint. */
   twoStart?(x: number, y: number): void;
   /**
-   * The two fingers were classified, at this midpoint. Movement before this
-   * (the first 8 px) is dropped; `twoMove` reports from here on.
+   * The two fingers moved 10 px in total and were decided: `tilt`, or
+   * `combined` (which is the case from the start, until then). The movement
+   * so far is reported by the `twoMove` that follows at once.
    */
-  twoBegin?(kind: TwoFingerKind, x: number, y: number): void;
+  twoBegin?(mode: TwoFingerMode, x: number, y: number): void;
   twoMove?(move: TwoFingerMove): void;
   /** A finger of the pair lifted. A fresh one-finger gesture follows (`oneStart`). */
   twoEnd?(): void;
@@ -113,14 +114,16 @@ interface Finger extends TouchPoint {
 /**
  * Follows the touch pointers on one element and turns them into one-finger
  * and two-finger gestures for a listener. A second finger ends the
- * one-finger gesture, so nothing jumps. Two fingers are classified once, and
- * stay that kind until a finger lifts. A third finger is ignored. Lifting
- * back to one finger starts a fresh one-finger gesture where that finger is.
- * Pointers of other types are ignored.
+ * one-finger gesture, so nothing jumps. Two fingers pinch, twist and pan at
+ * every move, unthresholded, unless both start sliding up or down together
+ * within the first 10 px of movement: that is a tilt, and only tilt applies
+ * until a finger lifts. A third finger is ignored. Lifting back to one
+ * finger starts a fresh one-finger gesture where that finger is. Pointers
+ * of other types are ignored.
  */
 export class TouchGestures {
   private fingers: Finger[] = [];
-  private kind: TwoFingerKind | undefined;
+  private mode: TwoFingerMode | undefined;
   /** Where the two fingers were when the second one came down. */
   private start: [TouchPoint, TouchPoint] = [
     { x: 0, y: 0 },
@@ -129,19 +132,16 @@ export class TouchGestures {
   /** The pair's midpoint, distance and angle at the last report. */
   private last = { x: 0, y: 0, distance: 0, angle: 0 };
 
-  constructor(
-    private readonly listener: TouchGestureListener,
-    private readonly threshold = TWO_FINGER_THRESHOLD,
-  ) {}
+  constructor(private readonly listener: TouchGestureListener) {}
 
   /** The fingers followed (at most two). */
   get count(): number {
     return this.fingers.length;
   }
 
-  /** The two fingers' kind once classified. */
-  get twoFingerKind(): TwoFingerKind | undefined {
-    return this.kind;
+  /** The two fingers' mode once decided. */
+  get twoFingerMode(): TwoFingerMode | undefined {
+    return this.mode;
   }
 
   /** Follows a touch pointer that went down; false if it is ignored. */
@@ -160,11 +160,12 @@ export class TouchGestures {
     }
     this.listener.oneEnd?.();
     const [a, b] = this.fingers as [Finger, Finger];
-    this.kind = undefined;
+    this.mode = undefined;
     this.start = [
       { x: a.x, y: a.y },
       { x: b.x, y: b.y },
     ];
+    this.remember(a, b);
     const m = midpoint(a, b);
     this.listener.twoStart?.(m.x, m.y);
     return true;
@@ -184,53 +185,45 @@ export class TouchGestures {
     }
     const [a, b] = this.fingers as [Finger, Finger];
     const m = midpoint(a, b);
-    if (this.kind === undefined) {
-      this.kind = classifyTwoFinger(
-        this.start[0],
-        this.start[1],
-        a,
-        b,
-        this.threshold,
-      );
-      if (this.kind !== undefined) {
-        this.remember(a, b);
-        this.listener.twoBegin?.(this.kind, m.x, m.y);
+    if (this.mode === undefined) {
+      const [a0, b0] = this.start;
+      const moved =
+        Math.hypot(a.x - a0.x, a.y - a0.y) + Math.hypot(b.x - b0.x, b.y - b0.y);
+      if (moved < TILT_DECISION_DISTANCE) {
+        return;
       }
-      return;
+      this.mode = isTilt(a0, b0, a, b) ? "tilt" : "combined";
+      this.listener.twoBegin?.(this.mode, m.x, m.y);
     }
-    const distance = Math.hypot(b.x - a.x, b.y - a.y);
-    const angle = angleOf(a, b);
     const last = this.last;
-    if (this.kind === "pinch") {
-      // A zero distance has no ratio; wait for the fingers to part.
-      if (last.distance > 0 && distance > 0) {
-        this.listener.twoMove?.({
-          kind: "pinch",
-          x: m.x,
-          y: m.y,
-          scale: distance / last.distance,
-        });
-        this.remember(a, b);
-      }
-      return;
-    }
-    if (this.kind === "drag") {
+    if (this.mode === "tilt") {
       this.listener.twoMove?.({
-        kind: "drag",
+        kind: "tilt",
         x: m.x,
         y: m.y,
         dx: m.x - last.x,
         dy: m.y - last.y,
       });
-    } else {
-      this.listener.twoMove?.({
-        kind: "rotate",
-        x: m.x,
-        y: m.y,
-        angle: wrap(angle - last.angle),
-      });
+      this.remember(a, b);
+      return;
     }
-    this.remember(a, b);
+    const distance = Math.hypot(b.x - a.x, b.y - a.y);
+    // A zero distance has no ratio or angle: wait for the fingers to part.
+    const usable = last.distance > 0 && distance > 0;
+    this.listener.twoMove?.({
+      kind: "combined",
+      x: m.x,
+      y: m.y,
+      scale: usable ? distance / last.distance : 1,
+      angle: usable ? wrap(angleOf(a, b) - last.angle) : 0,
+      dx: m.x - last.x,
+      dy: m.y - last.y,
+    });
+    if (usable) {
+      this.remember(a, b);
+    } else {
+      this.last = { ...this.last, x: m.x, y: m.y };
+    }
   }
 
   /** A touch pointer lifted or was cancelled. */
@@ -244,7 +237,7 @@ export class TouchGestures {
     }
     const wasTwo = this.fingers.length === 2;
     this.fingers = this.fingers.filter((f) => f !== finger);
-    this.kind = undefined;
+    this.mode = undefined;
     if (wasTwo) {
       this.listener.twoEnd?.();
       const rest = this.fingers[0]!;
