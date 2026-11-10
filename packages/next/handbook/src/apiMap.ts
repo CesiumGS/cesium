@@ -1107,6 +1107,35 @@ export const API_ROWS: readonly ApiRow[] = [
     source: "Overall plan, section 13.33",
   },
 
+  {
+    group: "picking",
+    next: ["BrepForm", "BrepBuilder", "validateBrep"],
+    supporting: [
+      "BezierCurves",
+      "BrepProblem",
+      "BrepUse",
+      "NurbsCurve",
+      "NurbsSurface",
+      "SurfaceKind",
+      "SurfaceSample",
+      "edgeCount",
+      "evaluateCurve2",
+      "evaluateCurve3",
+      "evaluateSurface",
+      "faceCount",
+      "faceNormal",
+      "nurbsCurveToSegments",
+      "nurbsSurfaceToPatches",
+      "readBrepExtension",
+      "surfaceCount",
+      "vertexCount",
+      "writeBrepExtension",
+    ],
+    status: "new",
+    note: "The engine's own B-rep form as typed arrays, with exact evaluation, an exact NURBS split, a builder, a validator and the draft BENTLEY_brep glTF extension. Nothing draws it yet. A draft before the API review.",
+    source: "Overall plan, section 13.33",
+  },
+
   // ------------------------------------------------- Points and vector data
   {
     group: "points",

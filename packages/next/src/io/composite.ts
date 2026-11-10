@@ -172,6 +172,8 @@ export function mergeAssets(parts: GltfAsset[]): GltfAsset {
     warnings: [],
   };
   const lights: NonNullable<GltfAsset["lights"]> = [];
+  const breps: NonNullable<GltfAsset["breps"]> = [];
+  let anyBreps = false;
   const warnings = new Set<string>();
   const credits = new Set<string>();
   parts.forEach((part, index) => {
@@ -180,6 +182,7 @@ export function mergeAssets(parts: GltfAsset[]): GltfAsset {
     const textureBase = merged.textures.length;
     const imageBase = merged.images.length;
     const tableBase = merged.featureTables.length;
+    const brepBase = breps.length;
     const shift = (texture: number | undefined) =>
       texture === undefined ? undefined : texture + textureBase;
     for (const mesh of part.meshes) {
@@ -187,6 +190,7 @@ export function mergeAssets(parts: GltfAsset[]): GltfAsset {
       const table = mesh.featureTable ?? (part.instances ? 0 : undefined);
       merged.meshes.push({
         ...mesh,
+        ...(mesh.brep !== undefined ? { brep: mesh.brep + brepBase } : {}),
         ...(table !== undefined ? { featureTable: table + tableBase } : {}),
         ...(mesh.propertyTextures
           ? {
@@ -219,6 +223,11 @@ export function mergeAssets(parts: GltfAsset[]): GltfAsset {
     }
     merged.images.push(...part.images);
     merged.featureTables.push(...part.featureTables);
+    // B-reps (BENTLEY_brep) by part, with each mesh's index shifted above.
+    if (part.breps) {
+      anyBreps = true;
+      breps.push(...part.breps);
+    }
     for (const draw of part.draws) {
       merged.draws.push({
         ...draw,
@@ -242,6 +251,9 @@ export function mergeAssets(parts: GltfAsset[]): GltfAsset {
   });
   if (lights.length > 0) {
     merged.lights = lights;
+  }
+  if (anyBreps) {
+    merged.breps = breps;
   }
   if (credits.size > 0) {
     // `Tileset3D.credits` splits a copyright on semicolons.

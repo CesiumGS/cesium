@@ -8920,7 +8920,17 @@ The conversion half of the spike remains: one real trimmed NURBS solid (an SMLib
 7. The client snap's search of the screen aperture isn't moved yet (it still uses its own triangle test): it needs a cone or screen-space query.
 8. There is no acceleration structure: queries are linear in triangles, as before.
 
-**Open:** the extension's name and schema; whether tiles store NURBS or pre-split Bézier patches (size against loader work); how b-rep edges meet the vector design's exact circles and clothoids; SMLib on real trimmed models (speed, correctness, memory); the USD input path; an error bound that is safe for rational surfaces; crack-free edges between patches of different density.
+**Step 4 draft (2026-11-10, plan `docs/superpowers/plans/2026-11-10-brep-4-render-form.md`).** `src/brep`: the render form as typed arrays (surfaces analytic or rational Bézier patches; faces, loops, uses, edges and vertices; pcurves and 3D curves as exact rational Bézier of degree ≤ 3; tolerances; one string table of stable IDs; a content version), exact float64 evaluation, the exact NURBS split by knot insertion (agreeing with de Boor within 1e-9 m), `BrepBuilder` for hosts and `validateBrep`, which never throws. The draft glTF extension `BENTLEY_brep` (`src/brep/BENTLEY_brep.md`) holds the arrays in raw bufferViews (glTF accessors have no float64) beside a primitive's fallback triangles, and is never required; `parseGltf` reads it, drops a malformed b-rep with a warning, and composites carry it. Nothing draws it yet. The validator checks pcurve images against a polyline of the edge, so curved edges need about 1 mm of tolerance; make it exact with step 7's closest points.
+
+**Questions for the API review (step 4):**
+
+1. Bézier patches are stored in place of NURBS: size against loader work.
+2. Pcurves and edges are exact rational Bézier of degree ≤ 3, and quadratic segments are made later, by the renderer.
+3. One `ids` string table, faces then edges then vertices.
+4. Float64 throughout the file.
+5. The `BENTLEY_` prefix, and the name.
+
+**Open:** the extension's name, and review of its schema; whether tiles store NURBS or pre-split Bézier patches (size against loader work); how b-rep edges meet the vector design's exact circles and clothoids; SMLib on real trimmed models (speed, correctness, memory); the USD input path; an error bound that is safe for rational surfaces; crack-free edges between patches of different density.
 
 ## 14. Follow-ups
 

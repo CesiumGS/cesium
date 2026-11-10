@@ -358,6 +358,32 @@ export {
   type SdfGeometryOptions,
   type SegmentDistance,
 } from "./geometry/index.ts";
+// B-reps (plan §13.33, a draft before the API review): the render form,
+// exact evaluation, a builder and a validator, and the glTF extension draft.
+export {
+  BrepBuilder,
+  validateBrep,
+  nurbsSurfaceToPatches,
+  nurbsCurveToSegments,
+  evaluateSurface,
+  faceNormal,
+  evaluateCurve2,
+  evaluateCurve3,
+  faceCount,
+  edgeCount,
+  vertexCount,
+  surfaceCount,
+  readBrepExtension,
+  writeBrepExtension,
+  type SurfaceKind,
+  type BezierCurves,
+  type BrepForm,
+  type BrepUse,
+  type BrepProblem,
+  type NurbsCurve,
+  type NurbsSurface,
+  type SurfaceSample,
+} from "./brep/index.ts";
 export {
   NO_ACCELERATION,
   type AccelerationStructures,

@@ -52,6 +52,12 @@ const DECLARATIONS = [
     what: "Alignment geometry beside the frame, for exact snaps and stationing.",
     state: "In use by the design globe.",
   },
+  {
+    name: "BENTLEY_brep",
+    what: "A B-rep beside a fallback mesh: surfaces, trims, edges and stable IDs as typed arrays. A client without it draws the fallback triangles.",
+    state:
+      "Draft, in src/brep/BENTLEY_brep.md. Read by the loader; nothing draws it yet.",
+  },
 ];
 
 const WEBGPU: {

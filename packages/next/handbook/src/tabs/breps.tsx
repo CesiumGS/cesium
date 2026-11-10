@@ -164,8 +164,10 @@ export function Breps() {
       <Note title="How far it goes">
         <p>
           The query interface and its mesh and distance-field adapters were
-          drafted on 2026-11-09, ahead of an API review, and have open
-          questions. No B-rep can be loaded or drawn yet.
+          drafted on 2026-11-09, and the render form, its builder and validator,
+          and the glTF extension draft on 2026-11-10, all ahead of an API
+          review, with open questions. B-reps load from glTF, but nothing draws
+          them yet.
         </p>
       </Note>
 
@@ -467,7 +469,7 @@ export function Breps() {
 
       <Section title="Still to write">
         <ul>
-          <li>The extension's name and schema.</li>
+          <li>The extension's name, and review of its schema.</li>
           <li>
             Whether tiles store NURBS or pre-split Bézier patches: size against
             loader work.

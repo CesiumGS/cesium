@@ -16,6 +16,8 @@ import type { BrepForm } from "../src/brep/form.ts";
 import { readBrepExtension, writeBrepExtension } from "../src/brep/gltf.ts";
 import { validateBrep } from "../src/brep/validate.ts";
 import { parseGltf } from "../src/io/gltfParse.ts";
+import { mergeAssets } from "../src/io/composite.ts";
+import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import {
   boxBrep,
   cappedCylinderBrep,
@@ -111,6 +113,19 @@ describe("BENTLEY_brep writer and reader", () => {
     ).breps;
     expect(first!.surfaceKind).toBe(5);
     expect(second!.surfaceKind).toBe(5 + views.length / 2);
+  });
+
+  it("writes no zero-length bufferView, as glTF forbids them", () => {
+    // The box has no Bézier patches, so several of its arrays are empty.
+    const written = writeBrepExtension([boxBrep()], 0);
+    const views = written.bufferViews as Array<{ byteLength: number }>;
+    expect(views.every((v) => v.byteLength > 0)).toBe(true);
+    const read = readBrepExtension(
+      { extensions: { BENTLEY_brep: written.extension } },
+      viewsOf(written, 0, 0),
+      [],
+    )[0];
+    expectEqualForms(read!, boxBrep());
   });
 
   it("copies an array whose bufferView is not aligned, and reads it right", () => {
@@ -322,5 +337,34 @@ describe("parseGltf with BENTLEY_brep", () => {
     );
     expect(asset.breps).toBeUndefined();
     expect(asset.meshes[0]!.brep).toBeUndefined();
+  });
+});
+
+describe("mergeAssets with b-reps", () => {
+  it("carries each part's b-reps and shifts the meshes' indices", () => {
+    const mesh = (brep?: number) =>
+      ({
+        positions: new Float32Array(9),
+        indices: new Uint32Array([0, 1, 2]),
+        ...(brep !== undefined ? { brep } : {}),
+      }) as GltfAsset["meshes"][number];
+    const part = (breps: GltfAsset["breps"], meshes: GltfAsset["meshes"]) =>
+      ({
+        meshes,
+        materials: [],
+        textures: [],
+        images: [],
+        draws: [],
+        featureTables: [],
+        warnings: [],
+        ...(breps ? { breps } : {}),
+      }) as GltfAsset;
+    const merged = mergeAssets([
+      part([boxBrep()], [mesh(0)]),
+      part(undefined, [mesh()]),
+      part([cappedCylinderBrep(), boxBrep()], [mesh(1)]),
+    ]);
+    expect(merged.breps).toHaveLength(3);
+    expect(merged.meshes.map((m) => m.brep)).toEqual([0, undefined, 2]);
   });
 });

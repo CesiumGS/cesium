@@ -50,8 +50,9 @@ The extension is listed in `extensionsUsed` and is never in
 Every array property below is a bufferView index. The bufferView's bytes are
 the array, little-endian, with the element type given in the table. The
 bufferView's byteOffset must be a multiple of the element size (a writer pads
-each array to 8 bytes), and its byte length a whole number of elements. A
-bufferView of an empty array may have byte length 0.
+each array to 8 bytes), and its byte length a whole number of elements. An
+empty array has no bufferView, since glTF forbids byte length 0: its property
+is left out, and a reader takes a missing property as empty.
 
 | Property          | Element type | Count               | Description                                                                                 |
 | ----------------- | ------------ | ------------------- | ------------------------------------------------------------------------------------------- |
@@ -149,4 +150,3 @@ truncated, the client drops it with a warning and draws the triangles.
   version.
 - Whether Bézier patches are the right interchange form for freeform
   surfaces, against NURBS with knot vectors.
-- Whether bufferViews of byte length 0 should be allowed for empty arrays.

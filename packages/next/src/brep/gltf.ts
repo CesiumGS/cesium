@@ -129,6 +129,12 @@ function readArray<T extends ArrayType>(
   type: T,
   bufferView: (index: number) => Uint8Array,
 ): InstanceType<T> {
+  // An empty array has no bufferView, as glTF forbids zero-length ones; the
+  // counts check below catches a property missing from a form that needs it.
+  if (index === undefined) {
+    const Empty = type;
+    return new Empty(0) as InstanceType<T>;
+  }
   if (typeof index !== "number" || !Number.isInteger(index) || index < 0) {
     throw new BrepReadError(`${name}: not a bufferView index`);
   }
@@ -269,12 +275,17 @@ export function writeBrepExtension(
   const bufferViews: object[] = [];
   const chunks: Uint8Array[] = [];
   let length = 0;
-  const add = (array: TypedArray | Uint8Array): number => {
+  // An empty array gets no bufferView (glTF forbids zero-length ones), and its
+  // property is left out; the reader takes a missing one as empty.
+  const add = (array: TypedArray | Uint8Array): number | undefined => {
     const bytes = new Uint8Array(
       array.buffer,
       array.byteOffset,
       array.byteLength,
     );
+    if (bytes.length === 0) {
+      return undefined;
+    }
     bufferViews.push({
       buffer: 0,
       byteOffset: length,
@@ -287,12 +298,18 @@ export function writeBrepExtension(
   const breps = forms.map((form) => {
     const out: Record<string, unknown> = { version: form.version };
     for (const [name] of ARRAYS) {
-      out[name] = add(form[name] as unknown as TypedArray);
+      const view = add(form[name] as unknown as TypedArray);
+      if (view !== undefined) {
+        out[name] = view;
+      }
     }
     for (const name of ["curves2", "curves3"] as const) {
       const curves: Record<string, number> = {};
       for (const [key] of CURVE_ARRAYS) {
-        curves[key] = add(form[name][key]);
+        const view = add(form[name][key]);
+        if (view !== undefined) {
+          curves[key] = view;
+        }
       }
       out[name] = curves;
     }
@@ -304,7 +321,11 @@ export function writeBrepExtension(
     });
     const values = new Uint8Array(offsets[encoded.length]!);
     encoded.forEach((bytes, i) => values.set(bytes, offsets[i]!));
-    out.ids = { values: add(values), offsets: add(offsets) };
+    const valuesView = add(values);
+    out.ids = {
+      ...(valuesView !== undefined ? { values: valuesView } : {}),
+      offsets: add(offsets),
+    };
     return out;
   });
   const binary = new Uint8Array(length);
