@@ -3,6 +3,7 @@ import "../core/disposeShim.ts";
 import { trackTextures } from "./textureTracking.ts";
 import { Emitter } from "../core/Emitter.ts";
 import { checkLayouts, requiredLimitsFor, type LimitsTier } from "./limits.ts";
+import { describePipelineErrors } from "./pipelineErrors.ts";
 
 /**
  * Optional WebGPU features, grouped by what they unlock. Every entry has a
@@ -199,6 +200,8 @@ async function requestDevice(
   });
   // Layouts over the limits fail here with a readable message.
   checkLayouts(device);
+  // A rejected pipeline names itself, even where the browser gives no message.
+  describePipelineErrors(device);
   return { adapter, device };
 }
 

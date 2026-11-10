@@ -230,6 +230,7 @@ export function Viewer() {
         }
         setHost(made);
       } catch (error) {
+        console.error(error);
         if (!cancelled) {
           setState({
             phase: "failed",
@@ -907,8 +908,26 @@ function sourceDetail(source: Source): string {
   }
 }
 
-const message = (error: unknown) =>
-  error instanceof Error ? error.message : String(error);
+/**
+ * An error in words. One with no message (some browsers throw those) says its
+ * type and where it was thrown, from the first lines of its stack, so a
+ * failure on a phone, with no console to hand, still says what failed.
+ */
+const message = (error: unknown) => {
+  if (!(error instanceof Error)) {
+    return String(error);
+  }
+  if (error.message) {
+    return error.message;
+  }
+  const where = (error.stack ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && line !== error.name)
+    .slice(0, 3)
+    .join(" ← ");
+  return `${error.name || "Error"} with no message${where ? ` at ${where}` : ""}`;
+};
 
 // ---------------------------------------------------------------- pieces
 

@@ -50,9 +50,11 @@ groupshared uint levels[64];
 void reduce(uint3 cell : SV_GroupID, uint3 pixel : SV_GroupThreadID, uint lane : SV_GroupIndex) {
   uint3 size;
   grid.GetDimensions(size.x, size.y, size.z);
-  if (cell.x >= size.x || cell.y >= size.y) {
-    return; // the whole workgroup: `cell` is the same for all of it
-  }
+  // No return before the barrier: `cell` is the same for the whole workgroup,
+  // but Safari's uniformity analysis can't see that through the generated
+  // WGSL and rejects the pipeline. A cell past the grid samples a clamped
+  // pixel and simply never stores.
+  bool inGrid = cell.x < size.x && cell.y < size.y;
   uint2 imageSize;
   image.GetDimensions(imageSize.x, imageSize.y);
   uint2 p = min(cell.xy * CELL + pixel.xy * 2u + 1u, imageSize - 1u);
@@ -65,7 +67,7 @@ void reduce(uint3 cell : SV_GroupID, uint3 pixel : SV_GroupThreadID, uint lane :
   samples[lane] = float3(logs, 1.0) / 64.0;
   levels[lane] = level(logs.x);
   GroupMemoryBarrierWithGroupSync();
-  if (lane >= BINS) {
+  if (!inGrid || lane >= BINS) {
     return;
   }
   float3 sum = float3(0.0);
