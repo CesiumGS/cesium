@@ -4,6 +4,7 @@ import { Check, DeveloperError, defined } from "@cesium/core";
 import SelectTool from "../../Editor/SelectTool.js";
 import TranslateTool from "../../Editor/TranslateTool.js";
 import EditorCameraControls from "./EditorCameraControls.js";
+import EditorGrid from "./EditorGrid.js";
 import EditorOutliner from "../EditorOutliner/EditorOutliner.js";
 import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
 
@@ -11,6 +12,7 @@ import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
 /** @import MeshEditor from "../../Editor/MeshEditor.js"; */
 /** @import { EditorToolbarOptions, EditorToolbarModeEntry, EditorToolbarToolEntry } from "../EditorToolbar/EditorToolbarViewModel.js"; */
 /** @import { Command } from "@cesium/widgets"; */
+/** @import { EditorGridOptions } from "./EditorGrid.js"; */
 
 /**
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -23,10 +25,10 @@ import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  * @typedef {object} ViewerEditorMixinOptions
  * @property {MeshEditor} editor An editor in the viewer's scene.
- * @property {boolean} [toolbar=true] Whether to add a toolbar.
- * @property {EditorToolbarOptions} [toolbarOptions] The toolbar's options. Without <code>tools</code>, the toolbar offers the {@link ViewerEditorTools}.
+ * @property {EditorToolbarOptions} [toolbar] The toolbar's options, or undefined for no toolbar. Without <code>tools</code>, the toolbar offers the {@link ViewerEditorTools}.
  * @property {boolean} [outliner=false] Whether to add an outliner, showing the editor's meshes and groups.
- * @property {EditorKeyBindings|false} [keyBindings] Replacement shortcuts, or false to disable them.
+ * @property {EditorGridOptions} [grid] The options of an {@link EditorGrid} to add to the scene, or undefined for no grid.
+ * @property {EditorKeyBindings|false} [keyBindings] Replacement shortcuts, or false to disable them. Mode and tool shortcuts require a toolbar.
  */
 
 /**
@@ -57,13 +59,15 @@ const viewerPropertyNames = [
   "editorTools",
   "editorToolbar",
   "editorOutliner",
+  "editorGrid",
 ];
 
 /**
- * Adds default tools to the editor, and an {@link EditorToolbar}, optionally
- * an {@link EditorOutliner}, and keyboard shortcuts to a {@link Viewer},
- * exposing them as <code>viewer.editor</code>, <code>viewer.editorTools</code>,
- * <code>viewer.editorToolbar</code> and <code>viewer.editorOutliner</code>.
+ * Adds default tools to the editor, and optionally an {@link EditorToolbar},
+ * an {@link EditorOutliner} and an {@link EditorGrid}, and keyboard shortcuts
+ * to a {@link Viewer}, exposing them as <code>viewer.editor</code>,
+ * <code>viewer.editorTools</code>, <code>viewer.editorToolbar</code>,
+ * <code>viewer.editorOutliner</code> and <code>viewer.editorGrid</code>.
  * Escape cancels the active tool's interaction.
  * <p>
  * Also replaces the camera's mouse input with controls that
@@ -80,13 +84,18 @@ const viewerPropertyNames = [
  * @param {ViewerEditorMixinOptions} options The editor and widget options.
  *
  * @exception {DeveloperError} options.editor must be in the viewer's scene.
- * @exception {DeveloperError} editor, editorTools, editorToolbar or editorOutliner is already defined by another mixin.
+ * @exception {DeveloperError} editor, editorTools, editorToolbar, editorOutliner or editorGrid is already defined by another mixin.
  * @exception {DeveloperError} A key binding refers to an unknown entry.
  *
  * @example
  * const viewer = new Cesium.Viewer("cesiumContainer");
  * const editor = await Cesium.MeshEditor.addToScene(viewer.scene);
- * viewer.extend(Cesium.viewerEditorMixin, { editor, outliner: true });
+ * viewer.extend(Cesium.viewerEditorMixin, {
+ *   editor,
+ *   toolbar: {},
+ *   outliner: true,
+ *   grid: { origin: Cesium.Cartesian3.fromDegrees(-123.07, 44.05) },
+ * });
  * editor.activeTool = viewer.editorTools.select;
  */
 function viewerEditorMixin(viewer, options) {
@@ -98,6 +107,9 @@ function viewerEditorMixin(viewer, options) {
     throw new DeveloperError(
       "options.editor must be added to the viewer's scene.",
     );
+  }
+  if (defined(options.grid)) {
+    Check.typeOf.object("options.grid.origin", options.grid.origin);
   }
   //>>includeEnd('debug');
 
@@ -113,19 +125,21 @@ function viewerEditorMixin(viewer, options) {
     select: SelectTool.addTo(editor),
     translate: TranslateTool.addTo(editor),
   });
-  const toolbarOptions = {
-    ...options.toolbarOptions,
-    tools: options.toolbarOptions?.tools ?? createToolEntries(tools),
-  };
   const toolbar = createWidget(
     viewer,
-    options.toolbar !== false,
+    defined(options.toolbar),
     "cesium-viewer-editorToolbarContainer",
-    (container) => new EditorToolbar(container, editor, toolbarOptions),
+    (container) =>
+      new EditorToolbar(container, editor, {
+        ...options.toolbar,
+        tools: options.toolbar?.tools ?? createToolEntries(tools),
+      }),
   );
+
   let outliner;
   let removeKeyBindings;
   let cameraControls;
+
   try {
     outliner = createWidget(
       viewer,
@@ -133,12 +147,14 @@ function viewerEditorMixin(viewer, options) {
       "cesium-viewer-editorOutlinerContainer",
       (container) => new EditorOutliner(container, editor),
     );
+
     removeKeyBindings = installKeyBindings(
       viewer,
       toolbar,
       editor,
       options.keyBindings,
     );
+
     cameraControls = new EditorCameraControls(viewer, editor);
   } catch (error) {
     removeKeyBindings?.();
@@ -146,12 +162,17 @@ function viewerEditorMixin(viewer, options) {
     destroyWidget(toolbar);
     throw error;
   }
-  defineViewerEditorProperties(viewer, editor, tools, toolbar, outliner);
+
+  const { grid, removeGrid } = addGrid(viewer, options.grid);
+
+  defineViewerEditorProperties(viewer, editor, tools, toolbar, outliner, grid);
+
   installCleanup(
     viewer,
     [toolbar, outliner],
     removeKeyBindings,
     cameraControls,
+    removeGrid,
   );
 }
 
@@ -224,6 +245,7 @@ function destroyWidget(widget) {
  * @param {ViewerEditorTools} tools
  * @param {EditorToolbar|undefined} toolbar
  * @param {EditorOutliner|undefined} outliner
+ * @param {EditorGrid|undefined} grid
  * @ignore
  */
 function defineViewerEditorProperties(
@@ -232,6 +254,7 @@ function defineViewerEditorProperties(
   tools,
   toolbar,
   outliner,
+  grid,
 ) {
   Object.defineProperties(viewer, {
     editor: {
@@ -246,6 +269,9 @@ function defineViewerEditorProperties(
     editorOutliner: {
       get: () => outliner,
     },
+    editorGrid: {
+      get: () => grid,
+    },
   });
 }
 
@@ -256,9 +282,16 @@ function defineViewerEditorProperties(
  * @param {Array<ViewerEditorWidget|undefined>} widgets
  * @param {Function} removeKeyBindings
  * @param {EditorCameraControls} cameraControls
+ * @param {Function} removeGrid
  * @ignore
  */
-function installCleanup(viewer, widgets, removeKeyBindings, cameraControls) {
+function installCleanup(
+  viewer,
+  widgets,
+  removeKeyBindings,
+  cameraControls,
+  removeGrid,
+) {
   const destroyViewer = viewer.destroy;
   viewer.destroy = function () {
     cameraControls.destroy();
@@ -266,7 +299,39 @@ function installCleanup(viewer, widgets, removeKeyBindings, cameraControls) {
     for (const widget of widgets) {
       destroyWidget(widget);
     }
+    removeGrid();
     return destroyViewer.apply(viewer, arguments);
+  };
+}
+
+/**
+ * Adds a grid to the viewer's scene.
+ *
+ * @param {Viewer} viewer
+ * @param {EditorGridOptions|undefined} gridOptions
+ * @returns {{grid: EditorGrid|undefined, removeGrid: Function}} The grid, if any, and a function that removes it.
+ * @ignore
+ */
+function addGrid(viewer, gridOptions) {
+  if (!defined(gridOptions)) {
+    return { grid: undefined, removeGrid: () => {} };
+  }
+
+  const scene = viewer.scene;
+
+  /** @type {EditorGrid} */
+  const grid = scene.primitives.add(
+    new EditorGrid({
+      ...gridOptions,
+      ellipsoid: gridOptions.ellipsoid ?? scene.ellipsoid,
+    }),
+  );
+
+  return {
+    grid,
+    removeGrid: () => {
+      scene.primitives.remove(grid);
+    },
   };
 }
 
