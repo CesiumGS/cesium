@@ -49,21 +49,31 @@ import {
 } from "./meshes.ts";
 
 /**
- * B-reps, a first look: exact CAD shapes (a box, a capped cylinder, a
- * trimmed NURBS face) held as B-reps and tessellated on the CPU for now,
- * with their edges. A fourth shape, the box again, went through the draft
- * `BENTLEY_brep` glTF extension: written into a GLB, read back, and
- * tessellated from what was read. Tap a face or an edge for its ID.
+ * B-reps, a first look: nine exact CAD shapes held as B-reps (a box, a capped
+ * cylinder, a trimmed NURBS face, a sphere, a torus, a cone frustum, a plate
+ * with bolt holes, a filleted block with a hole, and the box again through the
+ * draft `BENTLEY_brep` glTF extension) on a 3 x 3 grid, tessellated on the
+ * CPU for now.
+ *
+ * A toolbar over the view switches the display mode (keys 1 to 4): shaded,
+ * shaded + wireframe, flat + wireframe, wireframe. The panel's analysis views
+ * colour faces by surface kind, draw iso lines (kept inside each face's trim)
+ * and normal whiskers. A click picks a face or an edge: the face is
+ * highlighted and the panel shows the exact point of the surface nearest the
+ * pick, found by Gauss-Newton in (u, v), a preview of the exact queries to
+ * come.
  *
  * The CPU tessellator is the small, kept one (`tessellateBrep`), not the
- * reference. The slider is its chordal tolerance: the most a triangle may
- * sag from the exact surface. The trimmed face's hole is cut by dropping
- * triangles whose centre falls outside the trim, so it reads jagged; the
- * edges drawn on top hide that.
+ * reference. The slider is its chordal tolerance in millimetres in the scene:
+ * each shape is drawn at a scale and tessellated at the tolerance divided by
+ * it. A trimmed face's hole is cut by dropping triangles whose centre falls
+ * outside the trim, so it reads jagged; the edges drawn on top hide that.
  *
  * `parseGltf` runs in the engine's worker and is not public, so the glTF
  * shape reads the GLB's JSON and binary chunk here and hands them to
- * `readBrepExtension`, which is what `parseGltf` calls.
+ * `readBrepExtension`, which is what `parseGltf` calls. The shape files
+ * import the B-rep entry's module directly, so that tests can run them
+ * without a GPU.
  */
 
 const SITE = fromDegrees(-75.1652, 39.9526, 0);
