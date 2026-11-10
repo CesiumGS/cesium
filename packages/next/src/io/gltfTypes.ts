@@ -4,6 +4,7 @@
  * node transforms. Everything here is transferable.
  */
 
+import type { BrepForm } from "../brep/form.ts";
 import type { PropertyTextureData } from "../scene/meshes.ts";
 
 export interface GltfMesh {
@@ -19,6 +20,11 @@ export interface GltfMesh {
   featureIds?: Uint32Array;
   /** Size of the local feature-ID space. */
   featureCount?: number;
+  /**
+   * `BENTLEY_brep`: this mesh's triangles are the fallback of `GltfAsset.breps[brep]`.
+   * Set only when that b-rep read cleanly.
+   */
+  brep?: number;
   /** Index into `GltfAsset.featureTables` describing the features. */
   featureTable?: number;
   /** "line-list" for glTF LINES/LINE_STRIP/LINE_LOOP; default triangle-list. */
@@ -183,6 +189,12 @@ export interface GltfAsset {
   lights?: GltfLight[];
   /** Property tables (or the b3dm batch table) that meshes' features index. */
   featureTables: FeatureTable[];
+  /**
+   * `BENTLEY_brep` b-reps, by their index in the root extension; present only
+   * when the extension is. An entry is `undefined` when that b-rep did not
+   * read cleanly (a warning says why).
+   */
+  breps?: (BrepForm | undefined)[];
   /** b3dm RTC_CENTER: translation of the whole model, in tile (z-up) space. */
   rtcCenter?: [number, number, number];
   /**

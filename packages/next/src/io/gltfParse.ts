@@ -35,6 +35,7 @@ import type {
   GltfTexture,
 } from "./gltfTypes.ts";
 import { readLight } from "./gltfLights.ts";
+import { brepBuffers, readBrepExtension } from "../brep/gltf.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- glTF JSON is untyped here */
 type Json = any;
@@ -53,6 +54,7 @@ const SUPPORTED_EXTENSIONS = new Set([
   "EXT_mesh_gpu_instancing", // instance ranges, culled per instance
   "EXT_instance_features", // per-instance feature IDs
   "KHR_lights_punctual", // point and spot lights (directional ones skipped)
+  "BENTLEY_brep", // draft: b-rep beside a fallback mesh (src/brep/BENTLEY_brep.md)
 ]);
 
 const COMPONENTS: Record<string, number> = {
@@ -423,6 +425,10 @@ async function parseTile(
     visit(root, identity());
   }
 
+  // The b-reps are read before the meshes, which name them.
+  const breps = json.extensions?.BENTLEY_brep
+    ? readBrepExtension(json, bufferView, warnings)
+    : undefined;
   const meshes: GltfMesh[] = [];
   const built = new Map<string, { mesh: number; material: number } | null>();
   for (const { key, meshIndex, primitive: p } of instances) {
@@ -469,6 +475,10 @@ async function parseTile(
       const textured = propertyTextures(json, primitive, warnings);
       if (textured) {
         mesh.propertyTextures = textured;
+      }
+      const brep = primitive.extensions?.BENTLEY_brep?.brep;
+      if (typeof brep === "number" && breps?.[brep]) {
+        mesh.brep = brep;
       }
       delete mesh.unwelded;
       meshes.push(mesh);
@@ -547,6 +557,15 @@ async function parseTile(
   if (i3dm) {
     transfer.push(i3dm.matrices.buffer, i3dm.batchIds.buffer);
   }
+  for (const form of breps ?? []) {
+    if (form) {
+      for (const buffer of brepBuffers(form)) {
+        if (!transfer.includes(buffer)) {
+          transfer.push(buffer);
+        }
+      }
+    }
+  }
   for (const mesh of meshes) {
     for (const array of [
       mesh.positions,
@@ -574,6 +593,7 @@ async function parseTile(
       draws,
       ...(lights.length > 0 ? { lights } : {}),
       featureTables,
+      ...(breps ? { breps } : {}),
       ...(b3dm?.rtcCenter ? { rtcCenter: b3dm.rtcCenter } : {}),
       ...(i3dm
         ? {
