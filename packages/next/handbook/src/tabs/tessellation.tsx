@@ -123,7 +123,7 @@ const SPIKE = [
 export function Tessellation() {
   return (
     <Page
-      title="Tessellation (not built)"
+      title="Tessellation"
       status="sketch"
       lede={
         <>

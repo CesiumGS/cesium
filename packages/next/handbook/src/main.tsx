@@ -79,7 +79,7 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
       { id: "breps", label: "B-reps and geometry queries", view: Breps },
       {
         id: "tessellation",
-        label: "Tessellation (not built)",
+        label: "Tessellation",
         view: Tessellation,
       },
       { id: "ion", label: "Cesium ion", view: Ion },
