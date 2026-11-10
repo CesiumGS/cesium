@@ -8864,7 +8864,7 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 
 **Order.**
 
-1. Spike: SMLib in WebAssembly (size, startup, threads, exceptions; converting a USD BRep sample to the render form).
+1. Spike: SMLib in WebAssembly (size, startup, threads, exceptions; converting a USD BRep sample to the render form). Done for the kernel; see the result below.
 2. Spike: one trimmed NURBS face on the GPU (tessellation by screen-space error and the per-pixel trim), against SMLib's tessellation for accuracy and cost. It also tests the shared fill idea. Both spikes are decision tools.
 3. The query interface, with the mesh adapter and an f-rep slot.
 4. The render b-rep form and the glTF extension draft, with the TypeScript loader and analytic surfaces.
@@ -8884,7 +8884,17 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 
 The extensions here are drafts for this proof of concept and free to change, so a format chosen early is no constraint.
 
-**Open:** the extension's name and schema; whether tiles store NURBS or pre-split Bézier patches (size against loader work); how b-rep edges meet the vector design's exact circles and clothoids; SMLib's WebAssembly size.
+**Spike A result (2026-11-09).** SMLib and its C API layer build to WebAssembly with Emscripten and run under Node, with no source edits. Measured at `-O3`:
+
+- Size: 1.11 MiB brotli for the whole kernel (1.63 MB gzip, 5.1 MB raw), plus 19 KB gzip of glue. A trimmed export list, `-Oz` and LTO are not yet tried.
+- Instantiate: about 11 ms. Warm tessellation of analytic solids: a box in 3 ms, a cylinder in 7.5 ms, a sphere (224 triangles) in 11 ms.
+- Needs: exceptions (`-fexceptions`); a stack of at least 4 MB, since the default 64 KB corrupts the heap (the real need isn't measured); memory growth.
+- Doesn't need: threads or SharedArrayBuffer, so no cross-origin isolation; a filesystem; OpenUSD, Boost or Python. The only outside dependency, TBB, becomes a short serial stand-in, so tessellation runs on one thread per worker.
+- USD input: the existing reader links OpenUSD. Building OpenUSD to WebAssembly is judged large and risky (inferred, not tried). Cheaper paths: a small reader of the BRep attributes that builds SMLib b-reps through its API, or an offline conversion to SMLib's native format.
+
+The conversion half of the spike remains: one real trimmed NURBS solid (an SMLib native file or one built by hand), with positions, normals and indices extracted to typed arrays, timed against native, and the size options tried.
+
+**Open:** the extension's name and schema; whether tiles store NURBS or pre-split Bézier patches (size against loader work); how b-rep edges meet the vector design's exact circles and clothoids; SMLib on real trimmed models (speed, correctness, memory); the USD input path.
 
 ## 14. Follow-ups
 
