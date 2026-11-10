@@ -1,3 +1,5 @@
+// Symbol.dispose and DisposableStack where the browser lacks them (Safari).
+import "../core/disposeShim.ts";
 import { trackTextures } from "./textureTracking.ts";
 import { Emitter } from "../core/Emitter.ts";
 import { checkLayouts, requiredLimitsFor, type LimitsTier } from "./limits.ts";

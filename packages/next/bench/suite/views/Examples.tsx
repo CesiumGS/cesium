@@ -1,3 +1,5 @@
+// Symbol.dispose and DisposableStack where the browser lacks them (Safari).
+import "../../../src/core/disposeShim.ts";
 import "./examples.css";
 import {
   Alert,

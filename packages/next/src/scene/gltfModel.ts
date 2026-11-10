@@ -1,3 +1,5 @@
+// Symbol.dispose and DisposableStack where the browser lacks them (Safari).
+import "../core/disposeShim.ts";
 import { MipGenerator } from "../gpu/MipGenerator.ts";
 import { MaterialFlags } from "../render/layout.ts";
 import * as m4 from "../math/mat4.ts";

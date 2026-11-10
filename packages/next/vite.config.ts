@@ -419,6 +419,9 @@ export default defineConfig({
       "@lezer/highlight",
     ],
   },
+  // Lower syntax Safari doesn't parse yet (`using` declarations), in dev
+  // as in the build, so Dyno and the examples run on an iPhone too.
+  oxc: { target: "es2023" },
   plugins: [
     ...(devHttps ? [basicSsl()] : []),
     basisTranscoderEsm(),
