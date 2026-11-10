@@ -77,7 +77,7 @@ Places where the spec, read against the code and the 5a and 5b plans, is contrad
 
 ## Leave room for (overall plan §13.34)
 
-Vertical exaggeration: per-body volumes, clamping and impostors read an exaggeration factor rather than assume it is 1, so a later exaggeration doesn't have to revisit them. Nothing to build here.
+Per-body volumes, clamping and impostors follow the drawn, placed surface rather than assume the unplaced one, so an application's placement that exaggerates heights (the placement review's test, §13.26) needs nothing more from them. Nothing to build here.
 
 ## Global Constraints
 

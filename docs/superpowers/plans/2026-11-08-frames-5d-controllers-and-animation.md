@@ -113,7 +113,7 @@ Places where the spec, read against the code and the earlier plans, is contradic
 ## Leave room for (overall plan §13.34)
 
 - Time-bound values that scale to millions of elements (per-element appearance over time, for construction scheduling): evaluated on the GPU, not per element in JavaScript. Keep the animation core's value types able to target a GPU column.
-- Comparison views (a swipe or split between two captures or designs) as linked views.
+- View linking and viewports general enough for an application's comparison views (a swipe or a split between two captures or designs). Comparison is the application's, not an engine feature.
 - The orthographic camera as the base for printing to scale.
 - An XR camera and its controller (WebXR) as one more controller kind: the controller interface shouldn't assume a mouse, a single view or a fixed projection.
 
