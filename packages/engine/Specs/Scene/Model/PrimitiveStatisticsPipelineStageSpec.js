@@ -138,6 +138,20 @@ describe(
       });
     });
 
+    it("counts a shared property table once for multiple primitives", async function () {
+      const gltfLoader = await loadGltf(buildingsMetadata);
+      const components = gltfLoader.components;
+      const primitive = components.nodes[1].primitives[0];
+      const renderResources = mockRenderResources(components);
+
+      PrimitiveStatisticsPipelineStage.process(renderResources, primitive);
+      PrimitiveStatisticsPipelineStage.process(renderResources, primitive);
+
+      expect(renderResources.model.statistics.propertyTablesByteLength).toBe(
+        components.structuralMetadata.propertyTablesByteLength,
+      );
+    });
+
     it("_countGeometry computes memory usage for a triangle mesh", function () {
       return loadGltf(boxTextured).then(function (gltfLoader) {
         const statistics = new ModelStatistics();

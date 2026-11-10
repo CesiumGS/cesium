@@ -120,6 +120,19 @@ describe("Scene/MVTDataProvider", function () {
     provider.destroy();
   });
 
+  it("creates content tiles when minZoom > maxZoom", async function () {
+    const provider = await MVTDataProvider.fromUrl(url, {
+      minZoom: 2,
+      maxZoom: 1,
+    });
+    const hasContent = (tile) =>
+      !tile.hasEmptyContent || tile.children.some(hasContent);
+
+    expect(hasContent(provider.tileset.root)).toBe(true);
+
+    provider.destroy();
+  });
+
   it("derives only the children that intersect the extent", async function () {
     const provider = await MVTDataProvider.fromUrl(url, {
       minZoom: 10,

@@ -216,7 +216,7 @@ class UrlTemplate3DTilesDataProvider {
       resource: this._resource,
       extent: extent,
       minZoom: options.minZoom,
-      maxZoom: options.maxZoom,
+      maxZoom: Math.max(options.minZoom, options.maxZoom),
     };
     const root = this._tileset._root;
     const range = computeTileRangeForExtent(tilingScheme, extent, 0);
@@ -333,9 +333,7 @@ function buildRuntimeTilesetJson(extent) {
 
 /**
  * Creates the tiles of one level within the given tile range as children of
- * <code>parent</code>, skipping tiles outside the extent. Tiles above
- * <code>minZoom</code> have no content, so traversal can cull their branches
- * before any content tiles are created.
+ * <code>parent</code>, skipping tiles outside the extent.
  *
  * @param {TileSource} source
  * @param {Cesium3DTile} parent
@@ -366,7 +364,6 @@ function deriveTiles(source, parent, level, minX, maxX, minY, maxY) {
 
       let geometricError = 0.0;
       if (level < minZoom) {
-        // Keep the root's coarse error so refinement reaches minZoom.
         geometricError = computeGeometricError(0);
       } else if (level < maxZoom) {
         geometricError = computeGeometricError(level);

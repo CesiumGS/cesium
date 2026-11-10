@@ -202,7 +202,7 @@ function countBinaryMetadata(statistics, model) {
     countPropertyTextures(statistics, structuralMetadata);
 
     // Property tables are accounted for here.
-    statistics.propertyTablesByteLength +=
+    statistics.propertyTablesByteLength =
       structuralMetadata.propertyTablesByteLength;
 
     // Skip property attributes since those are handled in countGeometry().
