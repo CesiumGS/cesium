@@ -846,7 +846,7 @@ function processPropertyTableProperty(
  * Adds the metadataClass and metadataStatistics entries of a property, but only
  * when a custom shader reads them: their values are baked into the GLSL, so
  * emitting them for every property would give each distinct class definition
- * (e.g. per-tile min/max) its own shader program.
+ * or set of statistics its own shader program, even when nothing reads them.
  * @param {ShaderBuilder} shaderBuilder The shader builder for the primitive
  * @param {object} propertyInfo Info about the property
  * @param {object} usedMetadataProperties Metadata properties used in the primitive's shader by other stages

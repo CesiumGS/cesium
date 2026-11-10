@@ -6,7 +6,7 @@
 
 #### Fixes :wrench:
 
-- `metadataClass` and `metadataStatistics` values are now only added to a model's shader for the properties a `CustomShader` reads through `fsInput.metadataClass` / `fsInput.metadataStatistics` (or the `vsInput` equivalents). Since these values are baked into the GLSL, tilesets whose tiles embed different class definitions (e.g. per-tile `min`/`max`) previously compiled a separate shader program for every tile. [#14008](https://github.com/CesiumGS/cesium/pull/14008)
+- `metadataClass` and `metadataStatistics` values are now only added to a model's shader for the properties a `CustomShader` reads through `fsInput.metadataClass` / `fsInput.metadataStatistics` (or the `vsInput` equivalents). Since these values are baked into the GLSL, tilesets whose tiles embed different class definitions or statistics previously compiled a separate shader program for each variant. [#14008](https://github.com/CesiumGS/cesium/pull/14008)
 
 ## 1.147 - 2026-11-02
 
