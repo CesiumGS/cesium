@@ -12,6 +12,7 @@ import {
   type BrepForm,
 } from "../src/brep/form.ts";
 import { validateBrep } from "../src/brep/validate.ts";
+import { sphereBrep } from "../examples/brep-first-look/fixtures.ts";
 import {
   boxBrep,
   cappedCylinderBrep,
@@ -309,5 +310,30 @@ describe("BrepBuilder", () => {
         ],
       ]),
     ).toThrow(/no edge 7/);
+  });
+});
+
+describe("degenerate edges at a pole", () => {
+  it("validates a sphere whose poles are zero-length edges with pcurves along the pole", () => {
+    expect(validateBrep(sphereBrep())).toEqual([]);
+  });
+
+  it("rejects a pole whose pcurve strays off the vertex", () => {
+    const form = sphereBrep();
+    // Lift the south pole's pcurve off v = -π/2: its image leaves the vertex.
+    const south = form.usePcurve[0]!;
+    const at = form.curves2.first[south]! * 3;
+    const broken = {
+      ...form,
+      curves2: {
+        ...form.curves2,
+        points: Float64Array.from(form.curves2.points),
+      },
+    };
+    broken.curves2.points[at + 1] = -0.5;
+    broken.curves2.points[at + 4] = -0.5;
+    expect(validateBrep(broken).some((p) => p.kind === "pcurveOffEdge")).toBe(
+      true,
+    );
   });
 });

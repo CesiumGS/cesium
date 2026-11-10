@@ -8,7 +8,7 @@ import {
   faceNormal,
   type BrepForm,
   type BrepMesh,
-} from "../../src/index.ts";
+} from "../../src/brep/index.ts";
 
 /** How the faces are drawn. */
 export type DisplayMode = "shaded" | "shadedWire" | "flatWire" | "wire";

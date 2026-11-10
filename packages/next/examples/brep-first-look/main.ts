@@ -15,7 +15,16 @@ import {
   type MeshData,
 } from "../../src/index.ts";
 import type { ExampleContext } from "../types.ts";
-import { boxBrep, cappedCylinderBrep, trimmedNurbsBrep } from "./fixtures.ts";
+import {
+  boxBrep,
+  cappedCylinderBrep,
+  coneFrustumBrep,
+  filletedBlockBrep,
+  plateBrep,
+  sphereBrep,
+  torusBrep,
+  trimmedNurbsBrep,
+} from "./fixtures.ts";
 import {
   boundsSize,
   flatFaces,
@@ -45,6 +54,8 @@ import {
 
 const SITE = fromDegrees(-75.1652, 39.9526, 0);
 const DEG = Math.PI / 180;
+/** Between the middles of neighbouring shapes in the grid, m. */
+const SPACING = 4;
 
 /** A shape in the row: its form, where it stands and how big it is drawn. */
 interface Shape {
@@ -54,6 +65,8 @@ interface Shape {
   x: number;
   /** North of the layout's middle, m. */
   y: number;
+  /** Where it stands in the grid, in words: "top row, left". */
+  place: string;
   scale: number;
   /** A sheet is seen from both sides. */
   doubleSided: boolean;
@@ -348,37 +361,66 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   if (signal.aborted) {
     return () => undefined;
   }
-  const shapes: Shape[] = [
-    { name: "Box", form: box, x: -7.5, y: 0, scale: 1, doubleSided: false },
+  // A 3 × 3 grid on the ground, 4 m between the middles, the first shape at
+  // the top left (north-west) and rows running south. Each shape is drawn at
+  // a scale that makes them read together.
+  const ROWS = ["top", "middle", "bottom"];
+  const COLUMNS = ["left", "middle", "right"];
+  const entries: Array<Omit<Shape, "x" | "y" | "place">> = [
+    { name: "Box", form: box, scale: 0.55, doubleSided: false },
     {
       name: "Capped cylinder",
       form: cappedCylinderBrep(),
-      x: -3,
-      y: 0,
-      scale: 1,
+      scale: 0.8,
       doubleSided: false,
     },
     {
       name: "Trimmed NURBS face",
       form: trimmedNurbsBrep(),
-      x: 1.5,
-      y: 0,
       scale: 0.03,
       doubleSided: true,
       note: "100 m across, drawn at 0.03",
     },
+    { name: "Sphere", form: sphereBrep(), scale: 1.2, doubleSided: false },
+    { name: "Torus", form: torusBrep(), scale: 0.9, doubleSided: false },
+    {
+      name: "Cone frustum",
+      form: coneFrustumBrep(),
+      scale: 1.3,
+      doubleSided: false,
+    },
+    {
+      name: "Plate with bolt holes",
+      form: plateBrep(),
+      scale: 0.8,
+      doubleSided: false,
+    },
+    {
+      name: "Filleted block with a hole",
+      form: filletedBlockBrep(),
+      scale: 1.4,
+      doubleSided: false,
+    },
   ];
   if (viaGltf) {
-    shapes.push({
+    entries.push({
       name: "Box via glTF",
       form: viaGltf,
-      x: 6,
-      y: 0,
-      scale: 1,
+      scale: 0.55,
       doubleSided: false,
       note: gltfNote,
     });
   }
+  const shapes: Shape[] = entries.map((entry, i) => {
+    const row = Math.floor(i / 3);
+    const column = i % 3;
+    return {
+      ...entry,
+      x: (column - 1) * SPACING,
+      y: (1 - row) * SPACING,
+      place: `${ROWS[row]} row, ${COLUMNS[column]}`,
+    };
+  });
 
   // ------------------------------------------------------------ the scene
   const ellipsoid = Ellipsoid.WGS84;
@@ -624,11 +666,11 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   // The row's middle, Earth-fixed.
   viewer.zoomTo(
     {
-      center: vec3.add(vec3.vec3(), origin, vec3.vec3(-0.5, 0, 1.2)),
-      radius: 10,
+      center: vec3.add(vec3.vec3(), origin, vec3.vec3(0, 0, 0.6)),
+      radius: 6.8,
     },
     0,
-    -28 * DEG,
+    -42 * DEG,
   );
   viewer.setSun(150, 40);
 
@@ -777,7 +819,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     const item = el(
       "li",
       {},
-      el("strong", {}, `${shape.name}: `),
+      el("strong", {}, `${shape.name}`),
+      el("small", {}, ` (${shape.place}): `),
       problems.length === 0
         ? "valid"
         : `${problems.length} problem${problems.length === 1 ? "" : "s"}`,
@@ -835,7 +878,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         showStats();
       },
     ),
-    el("h3", {}, "Shapes"),
+    el("h3", {}, "Shapes, in grid order"),
     validity,
     el("h3", {}, "Picked"),
     picked,
