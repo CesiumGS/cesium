@@ -17,6 +17,7 @@ import {
 import { createRoot } from "react-dom/client";
 import { data, day } from "./data.ts";
 import { Api } from "./tabs/api.tsx";
+import { Breps } from "./tabs/breps.tsx";
 import { Architecture } from "./tabs/architecture.tsx";
 import { Benchmarks } from "./tabs/benchmarks.tsx";
 import { Cameras } from "./tabs/cameras.tsx";
@@ -75,6 +76,7 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
       { id: "precision", label: "Precision and accuracy", view: Precision },
       { id: "shading", label: "Shading and linker", view: Shading },
       { id: "vector", label: "Vector rendering", view: Vector },
+      { id: "breps", label: "B-reps and geometry queries", view: Breps },
       {
         id: "tessellation",
         label: "Tessellation (not built)",

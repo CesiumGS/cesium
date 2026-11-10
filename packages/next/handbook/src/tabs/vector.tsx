@@ -73,6 +73,17 @@ export function Vector() {
         />
       </Section>
 
+      <Section title="Shared with B-reps">
+        <p>
+          Vector lines, fills and strokes share their kernels with B-rep edges,
+          trimmed faces and CAD edge styles. The vector design sets those
+          kernels, as vectors are their harder user. The{" "}
+          <a href="#/breps">B-reps tab</a> lists what's shared and the order the
+          work goes in.
+        </p>
+        <Written from="the overall plan, section 13.33" on="2026-11-09" />
+      </Section>
+
       <Section title="Still to write">
         <ul>
           <li>The style language, and how it relates to 3D Tiles styling.</li>
