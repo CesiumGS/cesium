@@ -1080,6 +1080,33 @@ export const API_ROWS: readonly ApiRow[] = [
     note: "An optional module for light time, Doppler, geodesics, occultation and line of sight, each with a stated accuracy.",
   },
 
+  {
+    group: "picking",
+    next: ["GeometryQueries", "meshGeometry", "sdfGeometry"],
+    supporting: [
+      "ClosestPoint",
+      "ClosestPointOptions",
+      "DisplayMesh",
+      "DistanceField",
+      "EntityInfo",
+      "EntityKind",
+      "EntityRef",
+      "GeometryAccuracy",
+      "GeometryBounds",
+      "GeometryHit",
+      "GeometryKind",
+      "GeometryRayAnswer",
+      "MeshGeometryOptions",
+      "MeshSource",
+      "RayHitOptions",
+      "SdfGeometryOptions",
+      "SegmentDistance",
+    ],
+    status: "new",
+    note: "One query interface per object, for meshes, distance fields and later B-reps: ray hits, closest points and topology, each answer with its accuracy. A draft before the API review.",
+    source: "Overall plan, section 13.33",
+  },
+
   // ------------------------------------------------- Points and vector data
   {
     group: "points",

@@ -8907,6 +8907,19 @@ The conversion half of the spike remains: one real trimmed NURBS solid (an SMLib
 - SMLib, at the same tolerance from 600 m: 209 triangles, 0.498 px, 9.6 ms to tessellate, and about 270 ms more to build and trim the face (WebAssembly, one thread, Node). Both meshes lie within the target of the true surface; the distance between the two meshes wasn't measured. This supports tessellating on the GPU, with SMLib for conversion and reference.
 - Not covered: 32-bit evaluation in a globe position (the engine must evaluate relative to a nearby origin, as it does elsewhere); cracks between spans; compute-driven tessellation, which one face can't judge and step 5 measures with many patches.
 
+**Step 3 draft (2026-11-09, plan `docs/superpowers/plans/2026-11-09-brep-3-geometry-queries.md`).** `GeometryQueries` in `src/geometry`: one interface per object, synchronous, in float64 and in the object's placed coordinates, with an optional `origin` that keeps the arithmetic precise at Earth-fixed scale. Queries: bounds, ray hits (hit, miss or unknown), closest point (on a face, edge or vertex), segment distance, topology and display at a tolerance. Every answer carries its accuracy. Two adapters: `meshGeometry` (triangles as stored, placed in float64) and `sdfGeometry`, the f-rep slot (sphere tracing with a step cap). Tileset rays (`castTilesetRays`) and the client snap's occlusion test run on the mesh adapter, with unchanged results. The scene layer (`SpatialQueries`) keeps frames, instants, batching, asynchronous answers and revisions.
+
+**Questions for the API review:**
+
+1. Two layers: a synchronous object layer under the asynchronous scene layer. Should a server's staged answers arrive as a scene-layer backend, as drafted, or should the object layer be asynchronous?
+2. Frames and instants live at the scene layer, and object answers are in placed coordinates. Should each object state its frame and instant?
+3. `EntityRef` is a number plus an optional feature ID, and mesh edges are half-edges (`triangle * 3 + side`). Stable source IDs need strings or a source table.
+4. `GeometryAccuracy` is one number in metres. Should it compose with the measure module's `AccuracyTerm`s, and is it a bound or 1σ?
+5. Is `display(tolerance)` a query, or does it belong to the render form (steps 4 and 5)?
+6. `segmentDistance` exists for the "missed by less than its error" verdict. Keep it, or replace it with a ray answer that carries the near miss?
+7. The client snap's search of the screen aperture isn't moved yet (it still uses its own triangle test): it needs a cone or screen-space query.
+8. There is no acceleration structure: queries are linear in triangles, as before.
+
 **Open:** the extension's name and schema; whether tiles store NURBS or pre-split Bézier patches (size against loader work); how b-rep edges meet the vector design's exact circles and clothoids; SMLib on real trimmed models (speed, correctness, memory); the USD input path; an error bound that is safe for rational surfaces; crack-free edges between patches of different density.
 
 ## 14. Follow-ups

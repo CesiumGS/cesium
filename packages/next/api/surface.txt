@@ -27,6 +27,8 @@ entry	name	kind	tier
 .	Clamp	interface	-
 .	ClampOptions	interface	-
 .	ClockChange	type	-
+.	ClosestPoint	interface	-
+.	ClosestPointOptions	interface	-
 .	CompiledSlangEntry	interface	-
 .	CompiledStyle	interface	-
 .	ContentSummary	interface	-
@@ -39,6 +41,8 @@ entry	name	kind	tier
 .	DEFAULT_IMAGERY_SLICES	const	-
 .	DEFAULT_SKY	const	-
 .	DesignPlacement	interface	-
+.	DisplayMesh	interface	-
+.	DistanceField	interface	-
 .	DrawHandle	interface	-
 .	DrawOptions	interface	-
 .	DualPosition	interface	-
@@ -51,6 +55,9 @@ entry	name	kind	tier
 .	EngineErrorKind	type	-
 .	EngineErrors	class	-
 .	EngineOptions	interface	-
+.	EntityInfo	interface	-
+.	EntityKind	type	-
+.	EntityRef	interface	-
 .	Exposure	type	-
 .	EyeExposure	type	-
 .	FeatureStyle	class	-
@@ -63,6 +70,12 @@ entry	name	kind	tier
 .	FrameResolver	interface	-
 .	FrameStats	interface	-
 .	FrameUnavailableError	class	-
+.	GeometryAccuracy	interface	-
+.	GeometryBounds	interface	-
+.	GeometryHit	interface	-
+.	GeometryKind	type	-
+.	GeometryQueries	interface	-
+.	GeometryRayAnswer	type	-
 .	GlarePupil	type	-
 .	GlareSettings	interface	-
 .	GlareTier	type	-
@@ -99,7 +112,9 @@ entry	name	kind	tier
 .	MaterialFlags	const	-
 .	MaterialOptions	type	-
 .	MeshData	interface	-
+.	MeshGeometryOptions	interface	-
 .	MeshHandle	interface	-
+.	MeshSource	interface	-
 .	ModelInstances	interface	-
 .	ModelPlacement	class	-
 .	ModelPool	class	-
@@ -151,6 +166,7 @@ entry	name	kind	tier
 .	REQUEST_PURPOSES	const	-
 .	RayAnswer	interface	-
 .	RayBackend	interface	-
+.	RayHitOptions	interface	-
 .	RayQuery	interface	-
 .	RayTarget	type	-
 .	RayTargetName	type	-
@@ -164,6 +180,8 @@ entry	name	kind	tier
 .	SceneClock	interface	-
 .	SceneItem	class	-
 .	SceneItemOptions	interface	-
+.	SdfGeometryOptions	interface	-
+.	SegmentDistance	interface	-
 .	SelectionView	interface	-
 .	ShaderControl	interface	-
 .	ShaderOverrides	interface	-
@@ -276,6 +294,7 @@ entry	name	kind	tier
 .	mat4.viewRotation	function	-
 .	maxDisplacement	function	-
 .	memorySlangCache	function	-
+.	meshGeometry	function	-
 .	modelUsage	function	-
 .	observerPointSpread	function	-
 .	orbitBasis	function	-
@@ -288,6 +307,7 @@ entry	name	kind	tier
 .	resolveUri	function	-
 .	runBulk	function	-
 .	scaleToEv100	const	-
+.	sdfGeometry	function	-
 .	secondDerivativeBound	function	-
 .	summarizeContent	function	-
 .	tableResolver	function	-

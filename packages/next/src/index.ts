@@ -334,6 +334,30 @@ export {
   type UnknownSpan,
 } from "./query/queries.ts";
 export { terrainQueries } from "./query/terrainBackend.ts";
+// Geometry queries per object (plan §13.33, a draft before the API review):
+// meshes and distance fields today, b-reps next.
+export {
+  meshGeometry,
+  sdfGeometry,
+  type ClosestPoint,
+  type ClosestPointOptions,
+  type DisplayMesh,
+  type DistanceField,
+  type EntityInfo,
+  type EntityKind,
+  type EntityRef,
+  type GeometryAccuracy,
+  type GeometryBounds,
+  type GeometryHit,
+  type GeometryKind,
+  type GeometryQueries,
+  type GeometryRayAnswer,
+  type MeshGeometryOptions,
+  type MeshSource,
+  type RayHitOptions,
+  type SdfGeometryOptions,
+  type SegmentDistance,
+} from "./geometry/index.ts";
 export {
   NO_ACCELERATION,
   type AccelerationStructures,
