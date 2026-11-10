@@ -471,4 +471,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Kanchan Basnet](https://github.com/Kanchanbasnet)
 - [Mhayk Whandson](https://github.com/mhayk)
 - [TianHengZhuang](https://github.com/TianHengZhuang)
+- [Peter Mayrhofer](https://github.com/mapeGeoinfo)
 - [Mike](https://github.com/dev1837457)
