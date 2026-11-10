@@ -82,6 +82,7 @@ class GlobeSurfaceShader {
  * @property {boolean} [showUndergroundColor]
  * @property {boolean} [translucent]
  * @property {boolean} [vectorAntialias]
+ * @property {boolean} [applyVectors] Whether to composite the tile's draped vectors in this pass.
  * @private
  */
 
@@ -140,7 +141,7 @@ class GlobeSurfaceShaderSet {
     const showUndergroundColor = options.showUndergroundColor;
     const translucent = options.translucent;
     const vectorData = surfaceTile.vectorData;
-    const hasVectorLayer = vectorData?.show;
+    const hasVectorLayer = options.applyVectors && vectorData?.show;
     const hasVectorPolylines = hasVectorLayer && vectorData.hasPolylines;
     const hasVectorPolygons = hasVectorLayer && vectorData.hasPolygons;
     const vectorAntialias = hasVectorLayer && options.vectorAntialias;

@@ -11,28 +11,22 @@ rule:
   # Match all declarations at module scope that are preceded immediately by a
   # JSDoc comment. Exclude JSDoc comments containing tags that would exclude
   # the token from generated types, or which generate a types entry unrelated
-  # to the declaratino (such as @typedef).
-  kind: function_declaration
-  pattern: function $TOKEN
+  # to the declaration (such as @typedef).
+  any:
+    - {kind: function_declaration, pattern: function $TOKEN}
+    - {kind: lexical_declaration, pattern: const $TOKEN = $ARG}
+    - {kind: lexical_declaration, pattern: let $TOKEN = $ARG}
+    - {kind: class_declaration, pattern: class $TOKEN}
   inside:
     kind: program
   follows:
     kind: comment
     regex: "/\\*\\*"
-    not:
-      regex: "@ignore|@private|@typedef"
-  # Exclude declarations later exported from the module, or assigned to a
-  # parent object. Determining whether the parent object is itself exported
-  # not yet implemented.
+    not: {regex: "@ignore|@private|@typedef|@import"}
+  # Exclude declarations later exported from the module, either explicitly
+  # or as part of an Object.freeze(...) call (for enums).
   not:
     precedes:
+      kind: export_statement
+      has: {kind: identifier, pattern: $TOKEN, stopBy: end}
       stopBy: end
-      any:
-        - kind: export_statement
-          pattern: export default $TOKEN
-        - kind: export_statement
-          pattern: export { $TOKEN }
-        - kind: expression_statement
-          has:
-            kind: assignment_expression
-            pattern: $PROP = $TOKEN
