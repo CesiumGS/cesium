@@ -30,8 +30,12 @@ export interface InspectorOptions {
   expanded?: boolean;
   /** Snapshot interval, ms (default 250). */
   interval?: number;
-  /** The corner it sits in (default top left). */
-  placement?: "top-left" | "top-right";
+  /**
+   * The corner it sits in (default top left). At the bottom it opens
+   * upward, the summary line staying put at the bottom, and it clears the
+   * credits and time controls that share the bottom edge.
+   */
+  placement?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
   /** Where open sections and expansion are remembered (localStorage key prefix). */
   storageKey?: string;
 }
@@ -85,10 +89,10 @@ export function attachInspector(
   const interval = options.interval ?? 250;
   const storageKey = options.storageKey ?? "cesium-inspector";
   const root = document.createElement("div");
-  root.className =
-    options.placement === "top-right"
-      ? "cesium-inspector right"
-      : "cesium-inspector";
+  const placement = options.placement ?? "top-left";
+  root.className = `cesium-inspector${placement.endsWith("right") ? " right" : ""}${
+    placement.startsWith("bottom") ? " bottom" : ""
+  }`;
   // The panel is for reading and clicking, not for the camera underneath.
   for (const type of ["pointerdown", "pointerup", "wheel", "dblclick"]) {
     root.addEventListener(type, (e) => e.stopPropagation());
@@ -1058,6 +1062,12 @@ const CSS = `
 }
 .cesium-inspector.expanded { width: 320px; }
 .cesium-inspector.right { left: auto; right: 8px; }
+/* At the bottom it opens upward: the summary line stays at the bottom edge and the sections stack above it. */
+/* It leaves the top 60 px free for an app's own controls in the corner above. */
+.cesium-inspector.bottom { top: auto; bottom: 8px; max-height: calc(100% - 68px); flex-direction: column-reverse; }
+.cesium-inspector.bottom.expanded .ci-header { border-top: 1px solid var(--ci-border); border-radius: 0 0 6px 6px; }
+/* Above the credits bar and the time controls (36 px high at 8 px) when the viewer shows them. */
+:has(> .cesium-credits:not([hidden]), > .cesium-time:not([hidden])) > .cesium-inspector.bottom { bottom: 52px; max-height: calc(100% - 112px); }
 .cesium-inspector .ci-header {
   all: unset;
   box-sizing: border-box;

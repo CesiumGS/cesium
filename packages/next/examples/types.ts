@@ -95,6 +95,12 @@ export interface ExampleInfo {
    * editor or other tools that want the room).
    */
   layout?: "overlay" | "side";
+  /**
+   * The corner of the view the viewer's inspector (frame rate, timings,
+   * memory) sits in: "top-left" (the default), or "bottom-left" for an
+   * example that keeps its own controls over the view's top left.
+   */
+  inspector?: "top-left" | "bottom-left";
   /** Its panel's heading, where "Controls" undersells it (a story, facts). */
   panelTitle?: string;
   /**

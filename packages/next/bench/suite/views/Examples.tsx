@@ -454,10 +454,11 @@ function ExampleRunner({
           globe: info.globe,
           ...(info.noWarningNotice ? { warningNotice: false } : {}),
           maxInstances: MAX_INSTANCES,
-          // Frame rate, timings, memory; top left (panels are top right).
+          // Frame rate, timings, memory; top left (panels are top right),
+          // or where the example asks for it.
           inspector: {
             storageKey: "dyno.examples.inspector",
-            placement: "top-left",
+            placement: info.inspector ?? "top-left",
           },
           ...(token ? { accessToken: token } : {}),
         });

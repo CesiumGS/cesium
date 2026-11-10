@@ -62,11 +62,13 @@ export const EXAMPLES: ExampleInfo[] = [
     id: "brep-first-look",
     title: "B-reps: a first look",
     description:
-      "Exact CAD shapes as B-reps: a box, a capped cylinder and a trimmed NURBS face, tessellated on the CPU for now, with their edges. Tap a face or an edge for its ID.",
+      "Nine exact CAD shapes as B-reps (a box, a sphere, a torus, a plate with bolt holes, a filleted block and more), tessellated on the CPU for now. Switch display modes, colour by surface kind, draw iso lines and normals, and pick a face for its exact point on the surface.",
     labels: ["B-reps", "CAD"],
     globe: false,
     layout: "side",
     stackNarrow: true,
+    // Its display-mode toolbar takes the view's top left.
+    inspector: "bottom-left",
     load: () => import("./brep-first-look/main.ts"),
     source: () =>
       import("./brep-first-look/main.ts?raw").then((m) => m.default),
