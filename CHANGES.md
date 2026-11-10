@@ -21,6 +21,7 @@
 - Fixed the globe failing to render when clamped vector data is combined with many imagery layers. [#13922](https://github.com/CesiumGS/cesium/pull/13922)
 - Fixed the TypeScript types of `Camera.frustum`, which now accepts an `OrthographicOffCenterFrustum`, and of `TextureUniform`'s `typedArray`, which now accepts any typed array. [#14030](https://github.com/CesiumGS/cesium/pull/14030)
 - `metadataClass` and `metadataStatistics` values are now only added to a model's shader for the properties a `CustomShader` reads through `fsInput.metadataClass` / `fsInput.metadataStatistics` (or the `vsInput` equivalents). Since these values are baked into the GLSL, tilesets whose tiles embed different class definitions or statistics previously compiled a separate shader program for each variant. [#14008](https://github.com/CesiumGS/cesium/pull/14008)
+- Fixed `Heap.insert` keeping a reference to the element it removes once the heap is full. Through `RequestScheduler`, a destroyed `Cesium3DTileset` could stay in memory with its whole tile tree. [#13894](https://github.com/CesiumGS/cesium/issues/13894)
 
 ## 1.147 - 2026-11-02
 
