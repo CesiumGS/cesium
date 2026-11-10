@@ -57,6 +57,12 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
     return container.querySelector(".cesium-editor-toolbar-mode > button");
   }
 
+  function getVisibleModeLabel() {
+    return container.querySelector(
+      ".cesium-editor-toolbar-mode-labels > span:not(.cesium-editor-toolbar-mode-label-hidden)",
+    ).textContent;
+  }
+
   function getComponents() {
     return container.querySelector(".cesium-editor-toolbar-components");
   }
@@ -121,17 +127,15 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
         container.querySelectorAll(".cesium-editor-toolbar-mode > button")
           .length,
       ).toBe(1);
-      expect(modeButton.title).toBe("Object Mode");
-      expect(modeButton.getAttribute("aria-label")).toBe("Edit Mode");
-      expect(modeButton.getAttribute("aria-pressed")).toBe("false");
+      expect(getVisibleModeLabel()).toBe("Object Mode");
+      expect(modeButton.title).toBe("Switch to Edit Mode");
       expect(getComponents().style.display).toBe("none");
 
       modeButton.click();
 
       expect(editor.mode).toBe(EditMode.VERTEX);
-      expect(modeButton.title).toBe("Edit Mode");
-      expect(modeButton.getAttribute("aria-label")).toBe("Edit Mode");
-      expect(modeButton.getAttribute("aria-pressed")).toBe("true");
+      expect(getVisibleModeLabel()).toBe("Edit Mode");
+      expect(modeButton.title).toBe("Switch to Object Mode");
       expect(modeButton.querySelector("path").getAttribute("d")).not.toBe(
         objectIcon,
       );
@@ -140,23 +144,52 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
       modeButton.click();
 
       expect(editor.mode).toBe(EditMode.NONE);
-      expect(modeButton.title).toBe("Object Mode");
+      expect(getVisibleModeLabel()).toBe("Object Mode");
       expect(modeButton.querySelector("path").getAttribute("d")).toBe(
         objectIcon,
       );
       expect(getComponents().style.display).toBe("none");
     });
 
-    it("labels the component buttons with distinct icons", function () {
+    it("names the mode toggle with its visible label", function () {
       toolbar = new EditorToolbar(container, editor);
+      const modeButton = getModeButton();
+      const labels = modeButton.querySelectorAll(
+        ".cesium-editor-toolbar-mode-labels > span",
+      );
 
+      expect(Array.from(labels).map((label) => label.textContent)).toEqual([
+        "Object Mode",
+        "Edit Mode",
+      ]);
+      expect(modeButton.hasAttribute("aria-label")).toBe(false);
+      expect(modeButton.hasAttribute("aria-pressed")).toBe(false);
+    });
+
+    it("draws component icons as a dimmed cube under distinct highlights", function () {
+      toolbar = new EditorToolbar(container, editor);
+      const buttons = Array.from(getComponents().children);
+
+      expect(buttons.map((button) => button.title)).toEqual([
+        "Vertex",
+        "Edge",
+        "Face",
+      ]);
       expect(
-        Array.from(getComponents().children).map((button) => button.title),
+        buttons.map((button) => button.getAttribute("aria-label")),
       ).toEqual(["Vertex", "Edge", "Face"]);
-      const icons = Array.from(
-        container.querySelectorAll(".cesium-editor-toolbar-group path"),
-      ).map((path) => path.getAttribute("d"));
-      expect(new Set(icons).size).toBe(4);
+      const highlights = buttons.map((button) => {
+        const paths = button.querySelectorAll("svg[aria-hidden='true'] > path");
+        expect(paths.length).toBe(2);
+        expect(
+          paths[0].classList.contains("cesium-editor-toolbar-icon-dimmed"),
+        ).toBe(true);
+        expect(
+          paths[1].classList.contains("cesium-editor-toolbar-icon-dimmed"),
+        ).toBe(false);
+        return paths[1].getAttribute("d");
+      });
+      expect(new Set(highlights).size).toBe(3);
     });
 
     it("shows the current component mode in Edit Mode", function () {
@@ -164,7 +197,7 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
       toolbar = new EditorToolbar(container, editor);
       const [vertexButton, edgeButton, faceButton] = getComponents().children;
 
-      expect(getModeButton().title).toBe("Edit Mode");
+      expect(getVisibleModeLabel()).toBe("Edit Mode");
       expect(getComponents().style.display).not.toBe("none");
       expect(isPressed(vertexButton)).toBe(false);
       expect(isPressed(edgeButton)).toBe(true);
@@ -192,7 +225,6 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
 
       editor.mode = EditMode.VERTEX | EditMode.FACE;
 
-      expect(getModeButton().getAttribute("aria-pressed")).toBe("true");
       expect(isPressed(vertexButton)).toBe(true);
       expect(isPressed(edgeButton)).toBe(false);
       expect(isPressed(faceButton)).toBe(true);
@@ -320,6 +352,19 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
       editor.activeTool = translateTool;
       expect(getToolButton().title).toBe("Translate");
       expect(getToolDropdown().style.display).toBe("none");
+    });
+
+    it("puts the tool dropdown before the mode buttons", function () {
+      toolbar = new EditorToolbar(container, editor, { tools });
+
+      const groups = Array.from(
+        container.querySelector(".cesium-editor-toolbar").children,
+      ).map((element) =>
+        ["tool", "mode", "components"].find((kind) =>
+          element.classList.contains(`cesium-editor-toolbar-${kind}`),
+        ),
+      );
+      expect(groups).toEqual(["tool", "mode", "components"]);
     });
 
     it("omits the tool dropdown without tool entries", function () {
