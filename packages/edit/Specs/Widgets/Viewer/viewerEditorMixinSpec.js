@@ -1,6 +1,7 @@
-import { Event } from "@cesium/core";
+import { Cartesian3, Ellipsoid, Event } from "@cesium/core";
 import {
   EditMode,
+  EditorGrid,
   EditorOutliner,
   EditorToolbar,
   SelectTool,
@@ -72,7 +73,12 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
         canvas: document.createElement("canvas"),
         primitives: {
           contains: (primitive) => primitive === editor,
+          add: jasmine
+            .createSpy("primitives.add")
+            .and.callFake((primitive) => primitive),
+          remove: jasmine.createSpy("primitives.remove"),
         },
+        ellipsoid: Ellipsoid.WGS84,
         screenSpaceCameraController: {
           enableInputs: true,
           enableCollisionDetection: true,
@@ -104,8 +110,8 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
     return event;
   }
 
-  it("exposes the provided editor and creates a toolbar by default", function () {
-    viewerEditorMixin(viewer, { editor });
+  it("exposes the provided editor and creates a toolbar with toolbar options", function () {
+    viewerEditorMixin(viewer, { editor, toolbar: {} });
 
     expect(viewer.editor).toBe(editor);
     expect(viewer.editorToolbar).toBeInstanceOf(EditorToolbar);
@@ -118,7 +124,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   });
 
   it("adds default tools to the editor and the toolbar", function () {
-    viewerEditorMixin(viewer, { editor });
+    viewerEditorMixin(viewer, { editor, toolbar: {} });
 
     expect(SelectTool.addTo).toHaveBeenCalledOnceWith(editor);
     expect(TranslateTool.addTo).toHaveBeenCalledOnceWith(editor);
@@ -133,7 +139,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   });
 
   it("exposes the default tools without a toolbar", function () {
-    viewerEditorMixin(viewer, { editor, toolbar: false });
+    viewerEditorMixin(viewer, { editor });
 
     expect(viewer.editorTools.select).toBe(selectTool);
     expect(viewer.editorTools.translate).toBe(translateTool);
@@ -166,12 +172,78 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
 
     viewer.editorOutliner = {};
     expect(() => viewerEditorMixin(viewer, { editor })).toThrowDeveloperError();
+    delete viewer.editorOutliner;
+
+    viewer.editorGrid = {};
+    expect(() => viewerEditorMixin(viewer, { editor })).toThrowDeveloperError();
     expect(viewer.container.children.length).toBe(0);
+  });
+
+  describe("grid", function () {
+    const origin = Cartesian3.fromDegrees(-123.0, 44.0, 100.0);
+
+    it("is not created by default", function () {
+      viewerEditorMixin(viewer, { editor });
+
+      expect(viewer.editorGrid).toBeUndefined();
+      expect(viewer.scene.primitives.add).not.toHaveBeenCalled();
+    });
+
+    it("is added to the scene with grid options", function () {
+      viewerEditorMixin(viewer, { editor, grid: { origin, spacing: 0.5 } });
+
+      const grid = viewer.editorGrid;
+      expect(grid).toBeInstanceOf(EditorGrid);
+      expect(viewer.scene.primitives.add).toHaveBeenCalledOnceWith(grid);
+      expect(grid.origin).toEqual(origin);
+      expect(grid.spacing).toBe(0.5);
+      expect(grid.ellipsoid).toBe(Ellipsoid.WGS84);
+    });
+
+    it("uses an ellipsoid from its options", function () {
+      viewerEditorMixin(viewer, {
+        editor,
+        grid: { origin, ellipsoid: Ellipsoid.UNIT_SPHERE },
+      });
+
+      expect(viewer.editorGrid.ellipsoid).toBe(Ellipsoid.UNIT_SPHERE);
+    });
+
+    it("requires an origin", function () {
+      expect(() =>
+        viewerEditorMixin(viewer, { editor, toolbar: {}, grid: {} }),
+      ).toThrowDeveloperError();
+
+      expect(viewer.scene.primitives.add).not.toHaveBeenCalled();
+      expect(viewer.container.children.length).toBe(0);
+    });
+
+    it("is removed with the viewer", function () {
+      viewerEditorMixin(viewer, { editor, grid: { origin } });
+      const grid = viewer.editorGrid;
+
+      viewer.destroy();
+
+      expect(viewer.scene.primitives.remove).toHaveBeenCalledOnceWith(grid);
+    });
+
+    it("isn't added if the mixin fails", function () {
+      expect(() =>
+        viewerEditorMixin(viewer, {
+          editor,
+          toolbar: {},
+          grid: { origin },
+          keyBindings: { modes: { x: "missing" } },
+        }),
+      ).toThrowDeveloperError();
+
+      expect(viewer.scene.primitives.add).not.toHaveBeenCalled();
+    });
   });
 
   describe("outliner", function () {
     it("is not created by default", function () {
-      viewerEditorMixin(viewer, { editor });
+      viewerEditorMixin(viewer, { editor, toolbar: {} });
 
       expect(viewer.editorOutliner).toBeUndefined();
       expect(viewer.container.children.length).toBe(1);
@@ -190,7 +262,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
     });
 
     it("can be created without the toolbar", function () {
-      viewerEditorMixin(viewer, { editor, toolbar: false, outliner: true });
+      viewerEditorMixin(viewer, { editor, outliner: true });
 
       expect(viewer.editorToolbar).toBeUndefined();
       expect(viewer.editorOutliner).toBeInstanceOf(EditorOutliner);
@@ -219,6 +291,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
       expect(() =>
         viewerEditorMixin(viewer, {
           editor,
+          toolbar: {},
           outliner: true,
           keyBindings: { modes: { x: "missing" } },
         }),
@@ -231,7 +304,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   it("forwards toolbar options", function () {
     const modes = [{ id: "vertex", label: "Vertex", mode: EditMode.VERTEX }];
     const tools = [{ id: "select", label: "Select", tool: selectTool }];
-    viewerEditorMixin(viewer, { editor, toolbarOptions: { modes, tools } });
+    viewerEditorMixin(viewer, { editor, toolbar: { modes, tools } });
 
     expect(viewer.editorToolbar.viewModel.modeEntries).toBe(modes);
     expect(viewer.editorToolbar.viewModel.toolEntries).toBe(tools);
@@ -244,8 +317,8 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
     expect(editor.mode).toBe(EditMode.VERTEX);
   });
 
-  it("can omit the toolbar", function () {
-    viewerEditorMixin(viewer, { editor, toolbar: false });
+  it("does not create a toolbar without toolbar options", function () {
+    viewerEditorMixin(viewer, { editor });
 
     expect(viewer.editor).toBe(editor);
     expect(viewer.editorToolbar).toBeUndefined();
@@ -253,7 +326,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   });
 
   it("maps 0 to Object and 1, 2, and 3 to component modes", function () {
-    viewerEditorMixin(viewer, { editor });
+    viewerEditorMixin(viewer, { editor, toolbar: {} });
 
     expect(press("2").defaultPrevented).toBe(true);
     expect(editor.mode).toBe(EditMode.EDGE);
@@ -266,7 +339,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   });
 
   it("selects tools with s and g", function () {
-    viewerEditorMixin(viewer, { editor });
+    viewerEditorMixin(viewer, { editor, toolbar: {} });
     editor.mode = EditMode.VERTEX;
 
     expect(press("g").defaultPrevented).toBe(true);
@@ -276,7 +349,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   });
 
   it("does not activate an unsupported tool with a shortcut", function () {
-    viewerEditorMixin(viewer, { editor });
+    viewerEditorMixin(viewer, { editor, toolbar: {} });
 
     const event = press("g");
     expect(event.defaultPrevented).toBe(false);
@@ -284,7 +357,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   });
 
   it("cancels the active tool with Escape without changing mode", function () {
-    viewerEditorMixin(viewer, { editor });
+    viewerEditorMixin(viewer, { editor, toolbar: {} });
     editor.mode = EditMode.FACE;
     editor.activeTool = translateTool;
 
@@ -295,7 +368,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   });
 
   it("ignores Escape when there is no active tool", function () {
-    viewerEditorMixin(viewer, { editor });
+    viewerEditorMixin(viewer, { editor, toolbar: {} });
 
     expect(press("Escape").defaultPrevented).toBe(false);
     expect(selectTool.cancel).not.toHaveBeenCalled();
@@ -305,6 +378,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   it("supports custom entry shortcuts", function () {
     viewerEditorMixin(viewer, {
       editor,
+      toolbar: {},
       keyBindings: { modes: { f: "face" }, tools: { t: "translate" } },
     });
 
@@ -323,6 +397,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
     expect(() =>
       viewerEditorMixin(viewer, {
         editor,
+        toolbar: {},
         keyBindings: { tools: { r: "rotate" } },
       }),
     ).toThrowDeveloperError();
@@ -331,7 +406,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   });
 
   it("can disable keyboard handling", function () {
-    viewerEditorMixin(viewer, { editor, keyBindings: false });
+    viewerEditorMixin(viewer, { editor, toolbar: {}, keyBindings: false });
     editor.activeTool = selectTool;
 
     press("2");
@@ -341,7 +416,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   });
 
   it("does not install shortcuts without a toolbar", function () {
-    viewerEditorMixin(viewer, { editor, toolbar: false });
+    viewerEditorMixin(viewer, { editor });
     editor.activeTool = selectTool;
 
     press("2");
@@ -351,7 +426,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   });
 
   it("ignores handled events, modified shortcuts, and text input", function () {
-    viewerEditorMixin(viewer, { editor });
+    viewerEditorMixin(viewer, { editor, toolbar: {} });
 
     const handled = new KeyboardEvent("keydown", {
       key: "2",
@@ -372,14 +447,14 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   });
 
   it("leaves Tab available for focus navigation", function () {
-    viewerEditorMixin(viewer, { editor });
+    viewerEditorMixin(viewer, { editor, toolbar: {} });
 
     expect(press("Tab").defaultPrevented).toBe(false);
     expect(editor.mode).toBe(EditMode.NONE);
   });
 
   it("focuses the owning window on pointerdown", function () {
-    viewerEditorMixin(viewer, { editor });
+    viewerEditorMixin(viewer, { editor, toolbar: {} });
     spyOn(window, "focus");
 
     viewer.container.dispatchEvent(
@@ -393,14 +468,14 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
       viewer.container,
       "addEventListener",
     ).and.callThrough();
-    viewerEditorMixin(viewer, { editor });
+    viewerEditorMixin(viewer, { editor, toolbar: {} });
 
     const types = addEventListener.calls.allArgs().map((args) => args[0]);
     expect(types).toEqual(["pointerdown"]);
   });
 
   it("destroys the toolbar and removes listeners with the viewer", function () {
-    viewerEditorMixin(viewer, { editor });
+    viewerEditorMixin(viewer, { editor, toolbar: {} });
     const toolbar = viewer.editorToolbar;
     const toolbarContainer = toolbar.container;
     spyOn(toolbar, "destroy").and.callThrough();
@@ -420,7 +495,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
   });
 
   it("leaves editor destruction to the scene", function () {
-    viewerEditorMixin(viewer, { editor });
+    viewerEditorMixin(viewer, { editor, toolbar: {} });
 
     viewer.destroy();
 
@@ -429,14 +504,14 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
 
   describe("camera controls", function () {
     it("replace the camera controller's inputs", function () {
-      viewerEditorMixin(viewer, { editor });
+      viewerEditorMixin(viewer, { editor, toolbar: {} });
 
       expect(viewer.addController).toHaveBeenCalledTimes(3);
       expect(viewer.scene.screenSpaceCameraController.enableInputs).toBe(false);
     });
 
     it("are removed with the viewer", function () {
-      viewerEditorMixin(viewer, { editor });
+      viewerEditorMixin(viewer, { editor, toolbar: {} });
       const added = viewer.addController.calls.allArgs().map((args) => args[0]);
 
       viewer.destroy();
@@ -451,6 +526,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
       expect(() =>
         viewerEditorMixin(viewer, {
           editor,
+          toolbar: {},
           keyBindings: { modes: { x: "missing" } },
         }),
       ).toThrowDeveloperError();
