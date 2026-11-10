@@ -564,6 +564,19 @@ describe(
             expect(pickedObjects[2].primitive).toEqual(rectangle2);
           }, 3);
         });
+
+        it("stops drill picking when a picked object cannot be hidden", function () {
+          const rectangle = createLargeRectangle(0.0);
+          Object.defineProperty(rectangle, "show", {
+            get: () => true,
+            set: () => {},
+          });
+
+          expect(scene).toDrillPickAndCall(function (pickedObjects) {
+            expect(pickedObjects.length).toEqual(1);
+            expect(pickedObjects[0].primitive).toEqual(rectangle);
+          });
+        });
       });
 
       async function picksFromRayTileset(style) {
