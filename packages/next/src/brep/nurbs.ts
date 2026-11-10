@@ -63,6 +63,26 @@ function checkKnots(
   }
 }
 
+/** Throws unless the coordinates and the weights have the lengths the count asks for. */
+function checkSizes(
+  what: string,
+  pointsLength: number,
+  expectedPoints: number,
+  weights: Float64Array | undefined,
+  expectedWeights: number,
+): void {
+  if (pointsLength !== expectedPoints) {
+    throw new Error(
+      `${what}: ${pointsLength} point values, expected ${expectedPoints}`,
+    );
+  }
+  if (weights && weights.length !== expectedWeights) {
+    throw new Error(
+      `${what}: ${weights.length} weights, expected ${expectedWeights}`,
+    );
+  }
+}
+
 /** Inserts the knot value u once (Piegl and Tiller A5.1). The knot must lie in a span. */
 function insertOnce(
   degree: number,
@@ -99,7 +119,9 @@ function insertOnce(
   }
   knots.splice(k + 1, 0, u);
   points.length = 0;
-  points.push(...out);
+  for (const q of out) {
+    points.push(q);
+  }
 }
 
 /**
@@ -173,6 +195,23 @@ export function nurbsSurfaceToPatches(surface: NurbsSurface): {
   points: Float64Array;
 } {
   const { degreeU, degreeV, countU, countV } = surface;
+  for (const [axis, degree] of [
+    ["u", degreeU],
+    ["v", degreeV],
+  ] as const) {
+    if (!Number.isInteger(degree) || degree < 1 || degree > 7) {
+      throw new Error(
+        `nurbsSurfaceToPatches: degree ${degree} in ${axis} is not 1 to 7`,
+      );
+    }
+  }
+  checkSizes(
+    "nurbsSurfaceToPatches",
+    surface.points.length,
+    countU * countV * 3,
+    surface.weights,
+    countU * countV,
+  );
   checkKnots("nurbsSurfaceToPatches u", degreeU, surface.knotsU, countU);
   checkKnots("nurbsSurfaceToPatches v", degreeV, surface.knotsV, countV);
   const grid = homogeneous(surface.points, surface.weights, countU * countV, 3);
@@ -242,6 +281,13 @@ export function nurbsCurveToSegments(curve: NurbsCurve): {
   if (!Number.isInteger(degree) || degree < 1 || degree > 3) {
     throw new Error(`nurbsCurveToSegments: degree ${degree} is not 1 to 3`);
   }
+  checkSizes(
+    "nurbsCurveToSegments",
+    curve.points.length,
+    count * dimension,
+    curve.weights,
+    count,
+  );
   checkKnots("nurbsCurveToSegments", degree, curve.knots, count);
   const points = homogeneous(curve.points, curve.weights, count, dimension);
   const knots = Array.from(curve.knots);

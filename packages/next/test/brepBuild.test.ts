@@ -177,7 +177,109 @@ describe("validateBrep on a broken box", () => {
   });
 });
 
+describe("validateBrep, malformed and cone", () => {
+  it("reports one malformed problem, and does not throw, with curves2 missing", () => {
+    const box = copy(boxBrep()) as Record<string, unknown>;
+    delete box.curves2;
+    let problems: ReturnType<typeof validateBrep> = [];
+    expect(() => {
+      problems = validateBrep(box as unknown as BrepForm);
+    }).not.toThrow();
+    expect(problems).toHaveLength(1);
+    expect(problems[0]!.kind).toBe("malformed");
+    expect(problems[0]!.message).toMatch(/could not be read/);
+  });
+
+  it("finds a cone whose half-angle is a quarter turn or more", () => {
+    for (const angle of [Math.PI / 2, -Math.PI / 2, 2, NaN]) {
+      const b = new BrepBuilder();
+      b.cone([0, 0, 0], [1, 0, 0], [0, 1, 0], 1, angle);
+      const problems = validateBrep(b.build());
+      expect(problems).toContainEqual(
+        expect.objectContaining({
+          kind: "degenerate",
+          entity: "surface",
+          index: 0,
+        }),
+      );
+    }
+    const ok = new BrepBuilder();
+    ok.cone([0, 0, 0], [1, 0, 0], [0, 1, 0], 1, 0.5);
+    expect(
+      validateBrep(ok.build()).filter((p) => p.entity === "surface"),
+    ).toEqual([]);
+  });
+});
+
 describe("BrepBuilder", () => {
+  it("leaves the builder unchanged when a face throws on its second use", () => {
+    const b = new BrepBuilder();
+    const s = b.plane([0, 0, 0], [1, 0, 0], [0, 1, 0]);
+    const v = [b.vertex([0, 0, 0]), b.vertex([1, 0, 0]), b.vertex([0, 1, 0])];
+    const e = [
+      b.edge(v[0]!, v[1]!),
+      b.edge(v[1]!, v[2]!),
+      b.edge(v[2]!, v[0]!),
+    ];
+    const before = JSON.stringify(b.build(), (_k, x) =>
+      ArrayBuffer.isView(x) ? Array.from(x as unknown as number[]) : x,
+    );
+    const quartic = {
+      degree: 4,
+      knots: Float64Array.from([0, 0, 0, 0, 0, 1, 1, 1, 1, 1]),
+      count: 5,
+      dimension: 2 as const,
+      points: new Float64Array(10),
+    };
+    expect(() =>
+      b.face(s, [
+        [
+          {
+            edge: e[0]!,
+            pcurve: [
+              [0, 0],
+              [1, 0],
+            ],
+          },
+          { edge: e[1]!, pcurve: quartic },
+        ],
+      ]),
+    ).toThrow(/degree 4/);
+    const after = JSON.stringify(b.build(), (_k, x) =>
+      ArrayBuffer.isView(x) ? Array.from(x as unknown as number[]) : x,
+    );
+    expect(after).toBe(before);
+    b.face(s, [
+      [
+        {
+          edge: e[0]!,
+          pcurve: [
+            [0, 0],
+            [1, 0],
+          ],
+        },
+        {
+          edge: e[1]!,
+          pcurve: [
+            [1, 0],
+            [0, 1],
+          ],
+        },
+        {
+          edge: e[2]!,
+          pcurve: [
+            [0, 1],
+            [0, 0],
+          ],
+        },
+      ],
+    ]);
+    const form = b.build();
+    expect(faceCount(form)).toBe(1);
+    expect(form.useEdge.length).toBe(3);
+    expect(validateBrep(form)).toEqual([]);
+  });
+
   it("throws a clear error for a pcurve of degree 4 or an unknown edge", () => {
     const b = new BrepBuilder();
     const s = b.plane([0, 0, 0], [1, 0, 0], [0, 1, 0]);

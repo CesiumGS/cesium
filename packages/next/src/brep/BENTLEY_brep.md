@@ -116,7 +116,7 @@ An empty string means none.
 
 ## Parameterizations
 
-With frame origin `o`, axes `x` and `y`, and `z = x × y`. Units: u and v in
+With the surface's origin `o`, axes `x` and `y`, and `z = x × y`. Units: u and v in
 radians where angular, metres otherwise.
 
 - Plane: `P = o + u·x + v·y`.

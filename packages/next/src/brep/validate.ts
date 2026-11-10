@@ -7,7 +7,12 @@ import { SurfaceKind, type BezierCurves, type BrepForm } from "./form.ts";
 /** One thing wrong with a form, naming the entity and its index. */
 export interface BrepProblem {
   readonly kind:
-    "index" | "openLoop" | "pcurveOffEdge" | "edgeUses" | "degenerate";
+    | "index"
+    | "openLoop"
+    | "pcurveOffEdge"
+    | "edgeUses"
+    | "degenerate"
+    | "malformed";
   readonly entity: "surface" | "face" | "loop" | "use" | "edge" | "vertex";
   readonly index: number;
   readonly message: string;
@@ -39,10 +44,10 @@ export function validateBrep(form: BrepForm): BrepProblem[] {
     }
   } catch (error) {
     problems.push({
-      kind: "index",
+      kind: "malformed",
       entity: "face",
       index: 0,
-      message: `the form could not be read: ${String(error)}`,
+      message: `the form could not be read (${String(error)})`,
     });
   }
   return problems;
@@ -489,8 +494,8 @@ function analyticProblem(form: BrepForm, s: number): string | undefined {
       return `surface ${s} has radius ${a}, expected above 0`;
     }
   } else if (kind === SurfaceKind.Cone) {
-    if (!(a >= 0) || !Number.isFinite(c)) {
-      return `surface ${s} has radius ${a} and half-angle ${c}`;
+    if (!(a >= 0) || !(Math.abs(c) < Math.PI / 2)) {
+      return `surface ${s} has radius ${a} and half-angle ${c}, expected a radius of 0 or more and |half-angle| below π/2`;
     }
   } else if (kind === SurfaceKind.Torus) {
     if (!(a > 0) || !(c > 0)) {

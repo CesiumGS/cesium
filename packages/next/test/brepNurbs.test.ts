@@ -478,3 +478,45 @@ describe("derivatives of patches and segments", () => {
     expect([...b.derivative]).toEqual([10, 20, 30]);
   });
 });
+
+describe("nurbsSurfaceToPatches and nurbsCurveToSegments, bad input", () => {
+  it("throws for a surface degree outside 1 to 7", () => {
+    const base = spikeB();
+    expect(() => nurbsSurfaceToPatches({ ...base, degreeU: 8 })).toThrow(
+      /degree 8 in u is not 1 to 7/,
+    );
+    expect(() => nurbsSurfaceToPatches({ ...base, degreeV: 0 })).toThrow(
+      /degree 0 in v is not 1 to 7/,
+    );
+  });
+
+  it("throws for a surface with the wrong number of point values or weights", () => {
+    const base = spikeB();
+    expect(() =>
+      nurbsSurfaceToPatches({ ...base, points: base.points.slice(3) }),
+    ).toThrow(/point values/);
+    expect(() =>
+      nurbsSurfaceToPatches({ ...base, weights: new Float64Array(5) }),
+    ).toThrow(/weights/);
+  });
+
+  it("throws for a curve of degree 4, or with the wrong sizes", () => {
+    const line = {
+      degree: 1,
+      knots: Float64Array.from([0, 0, 1, 1]),
+      count: 2,
+      dimension: 2 as const,
+      points: Float64Array.from([0, 0, 1, 1]),
+    };
+    expect(() => nurbsCurveToSegments(line)).not.toThrow();
+    expect(() => nurbsCurveToSegments({ ...line, degree: 4 })).toThrow(
+      /degree 4 is not 1 to 3/,
+    );
+    expect(() =>
+      nurbsCurveToSegments({ ...line, points: Float64Array.of(0, 0, 1) }),
+    ).toThrow(/point values/);
+    expect(() =>
+      nurbsCurveToSegments({ ...line, weights: Float64Array.of(1) }),
+    ).toThrow(/weights/);
+  });
+});

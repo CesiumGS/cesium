@@ -6,8 +6,8 @@
 
 /**
  * Surface kinds. Analytic kinds use the parameterizations below; Bézier
- * surfaces are lists of patches. With frame origin `o`, axes `x` and `y`, and
- * `z = x × y` (u and v in radians where angular, metres otherwise):
+ * surfaces are lists of patches. With the surface's origin `o`, axes `x` and
+ * `y`, and `z = x × y` (u and v in radians where angular, metres otherwise):
  *
  * - Plane: `P = o + u·x + v·y`.
  * - Cylinder: `P = o + r(cos u·x + sin u·y) + v·z`.

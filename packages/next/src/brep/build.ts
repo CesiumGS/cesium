@@ -25,6 +25,12 @@ export interface BrepUse {
   readonly pcurve: NurbsCurve | readonly [ArrayLike<number>, ArrayLike<number>];
 }
 
+/** A curve already split and checked, ready to add. */
+interface Prepared {
+  readonly degree: number;
+  readonly points: Float64Array;
+}
+
 /** A growing list of rational Bézier curve segments of one dimension. */
 class CurveList {
   private readonly degree: number[] = [];
@@ -66,6 +72,22 @@ class CurveList {
   nurbs(curve: NurbsCurve): [number, number] {
     const split = nurbsCurveToSegments(curve);
     return this.add(split.degree, split.points);
+  }
+
+  /** Splits and checks a pcurve without adding it. */
+  prepare(pcurve: BrepUse["pcurve"]): Prepared {
+    if (isPoints(pcurve)) {
+      const h: number[] = [];
+      for (const p of pcurve) {
+        for (let k = 0; k < this.dimension; k++) {
+          h.push(p[k]!);
+        }
+        h.push(1);
+      }
+      return { degree: 1, points: Float64Array.from(h) };
+    }
+    const split = nurbsCurveToSegments(pcurve);
+    return { degree: split.degree, points: split.points };
   }
 
   toCurves(): BezierCurves {
@@ -271,23 +293,26 @@ export class BrepBuilder {
         }
       }
     }
+    // Split and check every pcurve first, so a throw leaves the builder as it was.
+    const prepared = loops.map((loop) =>
+      loop.map((use) => this.curves2.prepare(use.pcurve)),
+    );
     const index = this.faceSurface.length;
     this.faceSurface.push(surface);
     this.faceReversed.push(options?.reversed ? 1 : 0);
     this.faceLoops.push(this.loopUses.length / 2, loops.length);
     this.faceIds.push(options?.id ?? "");
-    for (const loop of loops) {
+    loops.forEach((loop, l) => {
       this.loopUses.push(this.useCount, loop.length);
-      for (const use of loop) {
-        const range = isPoints(use.pcurve)
-          ? this.curves2.line(use.pcurve[0], use.pcurve[1])
-          : this.curves2.nurbs(use.pcurve);
+      loop.forEach((use, u) => {
+        const made = prepared[l]![u]!;
+        const range = this.curves2.add(made.degree, made.points);
         this.useEdge.push(use.edge);
         this.useReversed.push(use.reversed ? 1 : 0);
         this.usePcurve.push(range[0], range[1]);
         this.useCount++;
-      }
-    }
+      });
+    });
     return index;
   }
 
