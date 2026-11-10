@@ -1,6 +1,28 @@
 # Change Log
 
-## 1.147 - 2026-11-01
+## 1.148 - 2026-12-01
+
+### cesium
+
+#### Breaking Changes :mega:
+
+- CesiumJS builds now target ES2022 instead of ES2020. Class fields are no longer rewritten into helper functions, so browsers must support ES2022 syntax such as public and private class fields. [#14023](https://github.com/CesiumGS/cesium/pull/14023)
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)
+- Added support for Custom Shaders in Gaussian Splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
+
+#### Fixes :wrench:
+
+- Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
+- Fixed the globe failing to render when clamped vector data is combined with many imagery layers. [#13922](https://github.com/CesiumGS/cesium/pull/13922)
+- Fixed the TypeScript types of `Camera.frustum`, which now accepts an `OrthographicOffCenterFrustum`, and of `TextureUniform`'s `typedArray`, which now accepts any typed array. [#14030](https://github.com/CesiumGS/cesium/pull/14030)
+- `metadataClass` and `metadataStatistics` values are now only added to a model's shader for the properties a `CustomShader` reads through `fsInput.metadataClass` / `fsInput.metadataStatistics` (or the `vsInput` equivalents). Since these values are baked into the GLSL, tilesets whose tiles embed different class definitions or statistics previously compiled a separate shader program for each variant. [#14008](https://github.com/CesiumGS/cesium/pull/14008)
+
+## 1.147 - 2026-11-02
 
 ### @cesium/core
 
@@ -13,7 +35,7 @@
 #### Additions :tada:
 
 - Added support for glTF models with the [KHR_materials_emissive_strength extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength). [#13961](https://github.com/CesiumGS/cesium/pull/13961)
-- Added experimental `IonAssetElementService` for querying, filtering, aggregating, and navigating element metadata for Cesium ion assets backed by BIM/CAD databases, along with the extensible `ElementService` base class.[#13995](https://github.com/CesiumGS/cesium/pull/13995)
+- Added experimental `IonAssetElementService` for querying, filtering, aggregating, and navigating element metadata for Cesium ion assets backed by BIM/CAD databases, along with the extensible `ElementService` base class. [#13995](https://github.com/CesiumGS/cesium/pull/13995)
 
 #### Fixes :wrench:
 
@@ -21,6 +43,10 @@
 - Fixed dynamic environment lighting on models and tilesets near or below the ellipsoid surface. [#13988](https://github.com/CesiumGS/cesium/pull/13988)
 - Fixed `pointCloudShading.backFaceCulling` not hiding back-facing points on some platforms. [#13989](https://github.com/CesiumGS/cesium/pull/13989)
 - Fixed `Cesium3DTileset` repeatedly loading and unloading the same tiles when they don't fit within `cacheBytes` plus `maximumCacheOverflowBytes`. [#13999](https://github.com/CesiumGS/cesium/pull/13999)
+
+### Announcements :loudspeaker:
+
+- The private glTF processing utilities previously located in `@cesium/engine/Source/Scene/GltfPipeline/` have moved to a new internal package, `@cesium/gltf`, which is now a dependency of `@cesium/engine`. These utilities were not, and are not part of the public API. Nonetheless, code that previously imported these files directly from `@cesium/engine` will need to be updated. [#13896](https://github.com/CesiumGS/cesium/pull/13896)
 
 ## 1.146 - 2026-10-01
 
