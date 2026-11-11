@@ -31,6 +31,7 @@
 - Fixed `Heap.insert` keeping a reference to the element it removes once the heap is full. Through `RequestScheduler`, a destroyed `Cesium3DTileset` could stay in memory with its whole tile tree. [#13894](https://github.com/CesiumGS/cesium/issues/13894)
 - Fixed the page hanging, or polylines being drawn with the wrong translucency, when the color of polylines with different depth fail materials changed between opaque and translucent. [#13952](https://github.com/CesiumGS/cesium/issues/13952)
 - Fixed slow loading of models and tilesets using the `CESIUM_primitive_outline` extension, and reduced the size of their outline vertex buffers. [#12084](https://github.com/CesiumGS/cesium/pull/12084)
+- Fixed a `Primitive` rendering inside-out when the product of its `modelMatrix` and an instance's `modelMatrix` is a mirroring transform, i.e. it has a negative determinant. The triangle winding order is now reversed when the geometry is baked to world coordinates, so back face culling keeps culling the back faces of the mirrored geometry. Mirrored triangle strips and fans are expanded to triangle lists, and the other strips and fans of the batch are expanded too, so instances keep a consistent representation before they are combined. [#13791](https://github.com/CesiumGS/cesium/issues/13791)
 
 ## 1.147 - 2026-11-02
 
