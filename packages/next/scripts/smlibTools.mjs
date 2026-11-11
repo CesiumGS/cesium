@@ -184,7 +184,11 @@ async function pool(jobs, limit) {
 /** Where this build's objects and module go: keyed by what goes into them. */
 function buildPaths() {
   const objectKey = hash(EMSDK_VERSION, COMPILE_FLAGS.join(" "));
-  const bindings = readFileSync(join(inputs, "bindings.cpp"), "utf8");
+  // Line endings normalized, so a checkout's CRLF or LF keys the same build.
+  const bindings = readFileSync(
+    join(inputs, "bindings.cpp"),
+    "utf8",
+  ).replaceAll("\r\n", "\n");
   const buildKey = hash(objectKey, bindings, LINK_FLAGS.join(" "));
   return {
     objects: join(smlibStore, `obj-${objectKey}`),
