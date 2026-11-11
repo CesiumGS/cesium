@@ -336,10 +336,13 @@ export {
 } from "./query/queries.ts";
 export { terrainQueries } from "./query/terrainBackend.ts";
 // Geometry queries per object (plan §13.33, a draft before the API review):
-// meshes and distance fields today, b-reps next.
+// meshes, b-reps and distance fields.
 export {
+  brepGeometry,
   meshGeometry,
   sdfGeometry,
+  type BrepGeometry,
+  type BrepGeometryOptions,
   type ClosestPoint,
   type ClosestPointOptions,
   type DisplayMesh,
@@ -355,7 +358,9 @@ export {
   type GeometryRayAnswer,
   type MeshGeometryOptions,
   type MeshSource,
+  type PickHint,
   type RayHitOptions,
+  type RefinedPick,
   type SdfGeometryOptions,
   type SegmentDistance,
 } from "./geometry/index.ts";

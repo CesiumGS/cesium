@@ -12,6 +12,8 @@ entry	name	kind	tier
 .	Body	interface	-
 .	BrepBuilder	class	-
 .	BrepForm	interface	-
+.	BrepGeometry	interface	-
+.	BrepGeometryOptions	interface	-
 .	BrepMesh	interface	-
 .	BrepProblem	interface	-
 .	BrepUse	interface	-
@@ -143,6 +145,7 @@ entry	name	kind	tier
 .	PLACEMENT_MONOMIALS	const	-
 .	PLACEMENT_TERMS	const	-
 .	PickCamera	interface	-
+.	PickHint	interface	-
 .	PickInterpreter	interface	-
 .	PickResult	interface	-
 .	Placement	type	-
@@ -180,6 +183,7 @@ entry	name	kind	tier
 .	RayTarget	type	-
 .	RayTargetName	type	-
 .	RayVerdict	type	-
+.	RefinedPick	interface	-
 .	RenderTarget	interface	-
 .	RequestPurpose	type	-
 .	Rig	interface	-
@@ -267,6 +271,7 @@ entry	name	kind	tier
 .	World	class	-
 .	WorldMemory	interface	-
 .	astrophotoCurveStage	function	-
+.	brepGeometry	function	-
 .	cameraGlare	function	-
 .	cameraObserver	function	-
 .	cartographic	function	-

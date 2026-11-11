@@ -1083,8 +1083,10 @@ export const API_ROWS: readonly ApiRow[] = [
 
   {
     group: "picking",
-    next: ["GeometryQueries", "meshGeometry", "sdfGeometry"],
+    next: ["GeometryQueries", "brepGeometry", "meshGeometry", "sdfGeometry"],
     supporting: [
+      "BrepGeometry",
+      "BrepGeometryOptions",
       "ClosestPoint",
       "ClosestPointOptions",
       "DisplayMesh",
@@ -1099,12 +1101,14 @@ export const API_ROWS: readonly ApiRow[] = [
       "GeometryRayAnswer",
       "MeshGeometryOptions",
       "MeshSource",
+      "PickHint",
       "RayHitOptions",
+      "RefinedPick",
       "SdfGeometryOptions",
       "SegmentDistance",
     ],
     status: "new",
-    note: "One query interface per object, for meshes, distance fields and later B-reps: ray hits, closest points and topology, each answer with its accuracy. A draft before the API review.",
+    note: "One query interface per object, for meshes, B-reps and distance fields: ray hits, closest points and topology, each answer with its accuracy and, for a B-rep, the route it took (a closed form, or Newton on a patch) and a refine-a-pick entry for GPU picks. A draft before the API review.",
     source: "Overall plan, section 13.33",
   },
 

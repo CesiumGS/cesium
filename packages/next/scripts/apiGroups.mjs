@@ -102,7 +102,7 @@ export const GROUPS = [
     entry: ".",
     title: "Geometry & queries",
     blurb:
-      "Mesh and distance-field geometry, spatial queries, rays and picking.",
+      "Mesh, B-rep and distance-field geometry, spatial queries, rays and picking.",
   },
   {
     id: "core.brep",

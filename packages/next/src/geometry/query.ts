@@ -18,7 +18,10 @@ export interface EntityRef {
 export interface GeometryAccuracy {
   readonly meters: number;
   readonly exact: boolean;
+  /** The composed terms (model tolerance, representation error, edge tolerance) and how the answer was found. */
   readonly note: string;
+  /** How the answer was found, on its own (b-reps: "closed form, cylinder", "Newton on Bézier patch", …). */
+  readonly route?: string;
 }
 
 export interface GeometryBounds {
@@ -71,6 +74,8 @@ export interface ClosestPoint {
   readonly entity: EntityRef;
   readonly normal?: Float64Array;
   readonly uv?: readonly [number, number];
+  /** Along an edge (b-reps): 0 at its start to 1 at its end, by curve segments of equal share. */
+  readonly t?: number;
   readonly accuracy: GeometryAccuracy;
 }
 
