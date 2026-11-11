@@ -693,7 +693,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "triangulateRegion",
     ],
     status: "changed",
-    note: "Clips are world objects, not per tileset or model: `world.addClip(set)` with planes, boxes and extruded polygons in any frame, combined by union or intersection, keeping inside or outside, and views opt in by mask. Each set is tested per fragment on the true point or the drawn one, whichever its frame reaches rigidly, so a cut named in ITRF stays at its true height under exaggeration. Picks and the view's queries respect them; world questions take a clip set explicitly. Caps, curved clips and exemptions come later. Plan §13.26, increment 8.",
+    note: "Clips are world objects, not per tileset or model: `world.addClip(set)` with planes, boxes and extruded polygons in any frame, combined by union or intersection, keeping inside or outside, and views opt in by mask. Each set is tested per fragment on the true point or the drawn one, whichever its frame reaches rigidly, so a cut named in ITRF stays at its true height under exaggeration. Picks and the view's queries respect them; world questions take a clip set explicitly. Caps close a cut: exact for a b-rep (`BrepCaps`, `sectionBrep`), cut from the triangles for a mesh (`MeshCaps`). Curved clips and exemptions come later. Plan §13.26, increment 8.",
   },
   {
     group: "tiles",

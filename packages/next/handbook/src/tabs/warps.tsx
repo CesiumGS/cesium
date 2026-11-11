@@ -1247,28 +1247,22 @@ export function Warps() {
           ]}
           rows={NOT_BUILT}
         />
-        <h3>Clips, decided and not built</h3>
+        <h3>Clips</h3>
         <p>
-          Increment 8, after what it rests on. A clip is a world object defined
-          in a named reference frame, presentation ones included, and views opt
-          into it by mask. It is tested in its own frame: exactly on the true
-          point per fragment when its route to the content's true side is rigid,
-          exactly on the drawn point when its route to the root is, and by a
-          signed distance fitted per tile when neither is. Planes, boxes and
-          extruded polygons share one loop over a storage buffer, combine by
-          union or intersection, and absorb today's terrain clips. B-rep caps
-          are exact; mesh caps are real geometry cut in compute and joined into
-          loops, with open chains drawn as section lines. Queries take{" "}
-          <C>clips: &quot;view&quot; | ClipSet | &quot;none&quot;</C>. The
-          plan's section 13.26, &quot;Clip planes and caps&quot;, has all ten
-          decisions, and the clipping deep dive follows the build.
+          Built as increments 8a and 8b, apart from clips curved by a warp (8c,
+          in progress). A clip is a world object named in a reference frame, and
+          each is tested on the true point or the drawn one, whichever its frame
+          reaches rigidly. The Clipping tab has how, the numbers and what&apos;s
+          left.
         </p>
         <h3>Names, pending the API review</h3>
         <p>
           <C>Warp</C> (the name the owner accepted) and <C>Route</C> are in the
-          code, but only <C>warpFrame</C> and its types are exported from an
-          entry point. <C>Route</C>, <C>Warp</C>, <C>resolveRoute</C> and{" "}
-          <C>NonRigidRouteError</C> live in <C>src/camera/route.ts</C>.
+          code and exported from the <C>/frames</C> entry point, with{" "}
+          <C>routeForward</C>, <C>routeInverse</C>, <C>warpForward</C> and{" "}
+          <C>warpInverse</C>, which apply each warp at the scale in force.{" "}
+          <C>resolveRoute</C> and <C>NonRigidRouteError</C> live in{" "}
+          <C>src/camera/route.ts</C> and aren&apos;t exported.
           &quot;Placement&quot; is retiring as the umbrella term, since it means
           four things: <C>SceneItem.placement</C>, a per-draw <C>Placement</C>,{" "}
           <C>DesignPlacement</C>, and <C>ModelPlacement</C>. The plan proposes{" "}
@@ -1280,7 +1274,7 @@ export function Warps() {
         </p>
         <Written
           from="the overall plan, section 13.26, and what the code has"
-          on="2026-11-10"
+          on="2026-11-11"
         />
       </Section>
 

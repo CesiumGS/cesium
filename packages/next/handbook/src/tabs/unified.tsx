@@ -38,7 +38,7 @@ const MECHANISMS: (Block & { short: string })[] = [
   {
     short: "Clipping",
     name: "Sections and clipping",
-    what: "Planes and volumes that cut every representation, with capped faces. Terrain regions only, today.",
+    what: "Planes, boxes and polygon prisms that cut every representation, in any frame, with capped faces: exact on a b-rep, joined loops on a mesh. Clips a warp curves aren't built.",
     state: "partly",
   },
   {

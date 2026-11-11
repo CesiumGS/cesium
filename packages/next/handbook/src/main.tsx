@@ -22,6 +22,7 @@ import { Breps } from "./tabs/breps.tsx";
 import { Architecture } from "./tabs/architecture.tsx";
 import { Benchmarks } from "./tabs/benchmarks.tsx";
 import { Cameras } from "./tabs/cameras.tsx";
+import { Clipping } from "./tabs/clipping.tsx";
 import { Compatibility } from "./tabs/compatibility.tsx";
 import { Compare } from "./tabs/compare.tsx";
 import { Differences } from "./tabs/differences.tsx";
@@ -76,6 +77,7 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
       { id: "scene", label: "Scene representation", view: Scene },
       { id: "frames", label: "Frame tree", view: Frames },
       { id: "warps", label: "Warps and routes", view: Warps },
+      { id: "clipping", label: "Clipping", view: Clipping },
       { id: "cameras", label: "Cameras", view: Cameras },
       { id: "rendering", label: "Rendering", view: Rendering },
       { id: "shadows", label: "Shadows", view: Shadows },

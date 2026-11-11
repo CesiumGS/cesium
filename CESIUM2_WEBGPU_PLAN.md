@@ -8981,14 +8981,15 @@ _Revised increments, replacing the list above:_
 4. The globe as an item, and `warpAt` granularity. Done (2026-11-11).
 5. The pick variant, and its kernel fetching the triangle. Done (2026-11-11).
 6. Measurements and snaps in true frames, with their graphics drawn through the route. Done (2026-11-11).
-7. The "Vertical exaggeration" example: the application defines a frame and a rig, nothing per item. Done (2026-11-11). It found engine gaps, being fixed.
+7. The "Vertical exaggeration" example: the application defines a frame and a rig, nothing per item. Done (2026-11-11). It found engine gaps, closed with increment 8b (below).
 8. Clips and caps, as decided below:
    - **8a, world clips.** Done (2026-11-11).
-   - **8b, caps.** In progress.
+   - **8b, caps.** Done (2026-11-11).
+   - **8c, curved clips.** In progress.
 
 Increments 1 to 3 come before b-rep step 5.
 
-**Overnight summary (2026-11-11).** Placement increments 4 to 7 and 8a landed as four commits, each with a GPU spike or Node tests. Picks report a domain point and the exact true point with no inverse of any warp (5); measurements and snaps are in true frames, and the drawn distance is named as one (6); world clips are tested per fragment in true or drawn space (8a); the vertical exaggeration example holds true heights constant across ×1 to ×10 with no refit on the slider (7). Increment 8b (caps) and a fix for the engine gaps the example found are in progress. The one owner decision pending is the proposal below, "no placement modes".
+**Overnight summary (2026-11-11).** Placement increments 4 to 7, 8a and 8b landed as five commits, each with a GPU spike or Node tests. Picks report a domain point and the exact true point with no inverse of any warp (5); measurements and snaps are in true frames, and the drawn distance is named as one (6); world clips are tested per fragment in true or drawn space (8a); the vertical exaggeration example holds true heights constant across ×1 to ×10 with no refit on the slider (7). Caps landed with 8b: exact for b-reps, joined loops for meshes, and the example's engine gaps closed with it. Increment 8c (curved clips) is in progress, and the CSG sample's core (§13.33) was started ahead of its date. The handbook gained its clipping deep dive. The one owner decision pending is the proposal below, "no placement modes".
 
 **Increment 1, in progress (2026-11-10).** Slices A to C are done. Each was implemented by a Sonnet 5.5 agent from a brief, against a contract committed first (`camera/route.ts`, `scene/warpTerms.ts`).
 
@@ -9084,7 +9085,7 @@ Increments 1 to 3 come before b-rep step 5.
 
 True heights stay put while the drawn ones follow the slider. `test/verticalExaggerationExample.test.ts` asks the questions in Node.
 
-- **Engine gaps it found,** which the example works around, and which are being fixed now:
+- **Engine gaps it found,** which the example worked around, and which increment 8b closed (see "Engine gaps closed", below):
   - `anchorPosition` is a drawn position, so an application that asks for where an anchor is gets the drawn one;
   - there are no public scale-aware warp functions, so an application can't evaluate its map at a slider's multiplier through the engine;
   - a pick lags its tick, so one read just after the slider moves can be at the old multiplier;
@@ -9099,7 +9100,38 @@ True heights stay put while the drawn ones follow the slider. `test/verticalExag
 - **Lazy pipelines.** A view without clips keeps the unclipped pipelines and early depth. The clipped variant of each pipeline and bundle (`clippedBundle`) is made when a view first uses a clip, so nothing recompiles when a clip's shapes change.
 - **Queries.** Every pick and snap takes `clips: "view" | ClipSet | "none"` (`ClipsOption`; a list of sets too), `clipFilter` and `clipSetKeeps` test points in float64. Picks and snaps default to the view's clips.
 - **The spike** (`spikes/clips.html`, NVIDIA GPU) passes 10 of 10. On a ×10 tower, a plane cut in the true frame lands at row 287, against the route's 287.9. Tested on the drawn point it would be 345. The Node test is `test/clips.test.ts`.
-- **Deferred:** curved clips (a route rigid on neither side, which waits for the `.w` channel fit), `TerrainClips` as clip shapes, exemptions (the styling language's), and caps (increment 8b, in progress).
+- **Deferred:** curved clips (a route rigid on neither side, which waits for the `.w` channel fit: increment 8c, in progress), `TerrainClips` as clip shapes, exemptions (the styling language's), and caps (increment 8b, done below).
+
+**Increment 8b is done (2026-11-11).** Caps close a cut: exact for a b-rep, real geometry for a mesh.
+
+- **B-rep caps are exact sections.** `sectionBrep` cuts every face by each plane of the clip and builds planar faces on it with `BrepBuilder`, drawn through `addBrep`, so they are diced per view with per-pixel trims and are queried and picked as any form. The cap's outer loops run counter-clockwise in the plane's (u, v), holes clockwise.
+
+  | Surface              | Section                                           | Accuracy                                                                                            |
+  | -------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+  | Plane                | A line                                            | Exact                                                                                               |
+  | Cylinder             | An ellipse, or two lines parallel to the axis     | Exact                                                                                               |
+  | Sphere               | A circle                                          | Exact                                                                                               |
+  | Cone, torus          | Circles where the plane is square to the axis     | Exact                                                                                               |
+  | Cone, torus, oblique | Marched on the (u, v) grid, then fitted in cubics | Within the tolerance (1e-5 of the size by default; the tests use 1e-6 m and the fit stays under it) |
+  | Bézier patches       | Marched and fitted                                | The same                                                                                            |
+
+- **The bias replaces a per-draw exemption.** The owner's call was to exclude a cap from its own clip. A cap lies on the clip's plane, so a per-fragment test would drop half of it to rounding, and excluding it needs a per-draw exemption, which is the styling language's and isn't built (decision 10). So each cap lies a bias inside the kept side: 2e-5 of the solid's size (at least 1e-6 m) for a b-rep, 1e-6 m for a mesh, applied to the cap's plane and to each limit plane of a box. When the styling language's exemptions land, the bias can go.
+- **Planes that touch.** A plane lying on a face or an edge is nudged 1e-6 of the size into the solid so it has a loop to cap, and the report counts it. A set of planes, or of one box, has caps (`capPlanes`: each plane limited by the others, inside for an intersection and outside for a union). A set with a polygon or several boxes reports why it has none.
+- **Mesh caps are on the CPU.** `MeshCaps` cuts each tile's triangles into segments keyed by element ID, caches the cut per tile, plane and revision, joins the segments across every tile (ends within 1% of the largest geometric error, at least 1e-6 of the largest tile), nests and triangulates the loops with holes, and draws chains that don't close as section lines, never filled. A report counts open chains and near misses (an end within 100 snaps of another's, probably tiles at different levels of detail that haven't met). A compute pass is a later step behind the same `TileSection`.
+- **Scheduling and style.** `CapScheduler` rebuilds within 4 ms a tick, at most every 100 ms per cap while its clip moves, and swaps new draws in before the old go. `style(input)` returns a colour per cap (a b-rep's, or a mesh element's by feature ID): the styling language's hook, for hatching later.
+- **Checked.** `spikes/caps.html` passes 7 of 7 on the GPU (a capped cylinder following a moving clip, a block with a bore, a closed mesh, an open wall's section line, a mesh split across two tiles). Node tests: `test/brepSection*.test.ts`, `test/caps.test.ts`, `test/meshCaps.test.ts`. On NIST's CTC-05 (208 faces, through Open CASCADE), caps along each axis and aslant close and validate, and the middle ones match a ray oracle to about 0.3% (the test allows 1%).
+- **Not built:** the compute section pass, caps for polygon and multi-shape sets, caps made automatically from `addClip` and a tileset's tiles (an application creates `BrepCaps` and `MeshCaps` and feeds them), and hatching.
+- The handbook's clipping deep dive is written (the Clipping tab).
+
+**Engine gaps closed (2026-11-11).** The vertical exaggeration example's gaps, closed in the same commit as 8b (7326cfa3c4), and its workarounds removed (`fits.ts` is gone).
+
+- **`anchorPosition` is honest.** It stays the drawn position, written in the anchor's coordinates, and says so; `truePosition` and `truePick(pick)` give the true one.
+- **Scale-aware maps are exported** from `/frames`: `routeForward`, `routeInverse`, `warpForward`, `warpInverse`, `truePick`, and the types `Route`, `Warp` and `WarpScale`. Each warp is applied at its live scale, which a warp's own `inverse` is not (it is the inverse at scale 1).
+- **A pick keeps its route.** `CorePick.route` is the route that drew the hit, scales frozen at their values when the pick pass was encoded, so a pick that resolves after the slider moved is inverted at the multiplier it was drawn at.
+- **`world.warpStats()`** (provisional) counts fits run, refits, placements, moved draws and pending fits, and the warped draws by state, so an application needs no reach past the API for the fit counter.
+- **`View.toPixel` and `GlobeController` are warp-aware.** `toPixel` carries a true position through the anchor's route, and the controller keeps the camera above the ground as drawn.
+- **`setRig` re-roots across a warp.** The camera is carried through the route (its position mapped, its axes by the Jacobian there) rather than refused.
+- **A moved draw refitted wrongly, and is fixed.** A draw whose transform moved was handed back the fit held for its route's stamp, which was made for the old matrix. A box moved from 1,000 m to 3,000 m up under ×10 drew at 12,005 m instead of 30,005 m. It now drops that fit and asks again (`test/warpMovedDraw.test.ts`: 10,005 m, then 30,005 m, with no refit counted). Also `test/warpCameraPick.test.ts` and `test/warpScaleExports.test.ts`.
 
 **Spike runner and a build message.** `node scripts/runSpike.mjs` runs a spike's checks headless in Edge on this machine's GPU, as described under increment 4: the page is visible and focused because a hidden browser tab throttles timers. Separately, the deliberate failing bundle build in `scripts/checkBundle.mjs` printed Vite's "Build failed" line although its error is the one the check expects; it now builds silently (de36500ada).
 
