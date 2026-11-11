@@ -464,7 +464,7 @@ const TESTS = [
   {
     file: "test/queryClips.test.ts",
     covers:
-      "The ray queries with clips: the default for a query with and without a view, a view's sets, a set of its own and none, and `\"view\"` refused without a view; the terrain's first kept hit, and clear when the clips remove every hit; the draw cast re-casting from behind each removed hit, only the rays still searching, and refusing a ray through endless removed surfaces; a tileset's geometry; the distance field's ray; and a view's clip changes counted in the query's revision.",
+      "The ray queries with clips: the default for a query with and without a view, a view's sets, a set of its own and none, and `\"view\"` refused without a view; the terrain's first kept hit, and no block and no hit (an unknown verdict, as for terrain-region holes) when the clips remove every hit; the draw cast re-casting from behind each removed hit, only the rays still searching, and refusing a ray through endless removed surfaces; a tileset's geometry; the distance field's ray; and a view's clip changes counted in the query's revision.",
   },
   {
     file: "test/caps.test.ts",
