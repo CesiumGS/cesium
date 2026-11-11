@@ -17,6 +17,7 @@ import {
 import { createRoot } from "react-dom/client";
 import { data, day } from "./data.ts";
 import { Api } from "./tabs/api.tsx";
+import { ApiReference } from "./tabs/reference.tsx";
 import { Breps } from "./tabs/breps.tsx";
 import { Architecture } from "./tabs/architecture.tsx";
 import { Benchmarks } from "./tabs/benchmarks.tsx";
@@ -55,6 +56,7 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
       { id: "architecture", label: "System architecture", view: Architecture },
       { id: "unified", label: "One core, many uses", view: Unified },
       { id: "api", label: "Public API", view: Api },
+      { id: "reference", label: "API reference", view: ApiReference },
       { id: "differences", label: "Differences from 1.x", view: Differences },
       { id: "compare", label: "1.x to 2.0 API", view: Compare },
     ],
@@ -95,8 +97,12 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
 const TABS = GROUPS.flatMap((g) => g.tabs);
 const FIRST = TABS[0]!;
 
+// A tab's own pages come after its id: `#/reference/Engine`.
 const tabFromHash = (): Tab =>
-  TABS.find((t) => `#/${t.id}` === location.hash) ?? FIRST;
+  TABS.find(
+    (t) =>
+      location.hash === `#/${t.id}` || location.hash.startsWith(`#/${t.id}/`),
+  ) ?? FIRST;
 
 function useTab(): Tab {
   const [tab, setTab] = useState(tabFromHash);

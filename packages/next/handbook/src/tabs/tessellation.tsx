@@ -1,95 +1,299 @@
 import { Board, type BoardStep } from "../diagram.tsx";
 import {
   C,
+  CodeBlock,
   DataTable,
   Figure,
+  Flow,
   Note,
   Page,
   Section,
   Written,
 } from "../parts.tsx";
 
-const SEAM: BoardStep[] = [
+const PIPELINE: BoardStep[] = [
   {
-    id: "placement",
-    lane: 0,
-    row: 1,
-    title: "A placement is data and a function",
-    body: (
-      <>
-        A buffer of parameters plus <C>placement.slang</C>, not code inside one
-        shader, so a compute pass can evaluate it at points the content never
-        had.
-      </>
-    ),
-  },
-  {
-    id: "query",
-    lane: 0,
-    row: 2,
-    title: "A query, per draw and per view",
-    body: (
-      <>
-        <C>placementOf</C> in the frames module says which placement applies,
-        for which render root, and why.
-      </>
-    ),
-  },
-  {
-    id: "bounds",
+    id: "spans",
     lane: 0,
     row: 0,
-    title: "Stated bounds",
+    title: "Span records",
     body: (
       <>
-        <C>errorBound</C> and <C>secondDerivativeBound</C> say enough about a
-        placement to choose a sampling rate by screen-space error.
+        <C>prepareGpuPatches</C>: one 48-word record for each face and span,
+        with its error constants, speeds and bounding spheres. Control nets
+        follow, once each.
       </>
     ),
-  },
-  {
-    id: "arguments",
-    lane: 0,
-    row: 3,
-    title: "Indirect draw arguments",
-    body: (
-      <>
-        A draw record points at its batch's arguments, through{" "}
-        <C>DrawArguments</C>, so a compute pass can write the counts.
-      </>
-    ),
-  },
-  {
-    id: "edges",
-    lane: 1,
-    row: 0,
-    planned: true,
-    title: "Edges first",
-    body: "Each shared edge is tessellated once at the view's tolerance, and both faces take their boundary from it, so faces can't crack apart.",
-  },
-  {
-    id: "patches",
-    lane: 1,
-    row: 1,
-    planned: true,
-    title: "Patches by screen-space error",
-    body: "Surfaces evaluated in source coordinates, then placed, in compute. The error is measured after placement.",
   },
   {
     id: "trims",
-    lane: 1,
-    row: 2,
-    planned: true,
-    title: "Trims per pixel",
-    body: "The whole parameter domain is drawn. The pixel stage tests inside or outside the trim in (u, v), with the vector fill's coverage.",
+    lane: 0,
+    row: 1,
+    title: "Trim pieces",
+    body: (
+      <>
+        <C>buildFaceTrim</C>: a trimmed face's loops as monotone quadratics, in
+        bands of v.
+      </>
+    ),
   },
   {
-    id: "draw",
+    id: "dice",
     lane: 1,
-    row: 3,
-    planned: true,
-    title: "Draw indirectly",
-    body: "With the counts the compute pass wrote.",
+    row: 0,
+    title: "Cull, dice, arguments",
+    body: (
+      <>
+        <C>dicePatches</C> sizes each span's grid for the view's pixels and
+        lists chunks of 4 × 4 cells. <C>writePatchArgs</C> writes one indexed
+        indirect draw.
+      </>
+    ),
+  },
+  {
+    id: "vertex",
+    lane: 2,
+    row: 0,
+    title: "Vertex stage",
+    body: (
+      <>
+        <C>vsPatch</C> evaluates a chunk's 5 × 5 vertices: the surface and its
+        exact normal, then the draw's placement.
+      </>
+    ),
+  },
+  {
+    id: "fragment",
+    lane: 2,
+    row: 1,
+    title: "Trim test",
+    body: (
+      <>
+        A trimmed face's fragment tests its (u, v) against the pieces, and
+        discards outside.
+      </>
+    ),
+  },
+];
+
+const PATHS = [
+  {
+    path: "GPU patch draws",
+    how: "Each view, in compute, to an error in pixels: half a pixel unless the draw says otherwise. Trims tested per pixel.",
+    uses: (
+      <>
+        Every face the GPU can evaluate, in the main pass, shadows, ambient
+        occlusion and picks, through <C>World.addBrep</C>.
+      </>
+    ),
+  },
+  {
+    path: "CPU tessellator",
+    how: (
+      <>
+        Once, to a chordal error in metres, on a uniform grid for each face.
+        Trims by discarding cells. <C>tessellateBrep</C>.
+      </>
+    ),
+    uses: (
+      <>
+        Faces the GPU can't evaluate (a patch of degree above 3), as a CPU mesh
+        inside <C>World.addBrep</C>. The fallback mesh beside a b-rep in a glTF
+        file, which the plan has a tiler write offline. The mesh that picks and
+        rays use until the b-rep adapter exists. The edge lines and overlays in
+        the first-look example. The reference in tests and spikes.
+      </>
+    ),
+  },
+];
+
+const BOUNDS = [
+  {
+    surface: "Plane",
+    sag: "None: one cell.",
+  },
+  {
+    surface: "Cylinder, cone",
+    sag: "The sagitta of a circle of the widest radius, 2 r sin²(θ / 4), with θ a cell's width in angle. None along the ruling: one cell there.",
+  },
+  {
+    surface: "Sphere",
+    sag: "The meridian's sagitta, plus the parallel's sagitta scaled by the widest cosine of latitude.",
+  },
+  {
+    surface: "Torus",
+    sag: "The sagitta of the circle of R + r about the axis, plus that of the tube's circle r.",
+  },
+  {
+    surface: "Rational Bézier on a cylinder, cone or sphere",
+    sag: "The same, from the identity. A NURBS circle isn't uniform in angle, so θ is the patch's bounded rate in angle times the cell's width. A sphere's chord comes from the bounded speeds.",
+  },
+  {
+    surface: "Any other rational Bézier",
+    sag: "(P_ss h² + 2 P_st h k + P_tt k²) / 8, from bounds on the second derivatives.",
+  },
+];
+
+const CPU_NUMBERS = [
+  {
+    case: "SMLib sphere, radius 1.5 m, 1 mm, before the identity bound",
+    triangles: "24,000",
+    time: "53 ms",
+    error: "Capped at 2.1 mm",
+  },
+  {
+    case: "The same, with the sphere's identity",
+    triangles: "15,500",
+    time: "44 ms",
+    error: "Within 1 mm",
+  },
+  {
+    case: "Box minus a cylinder, 1 mm",
+    triangles: "7,500",
+    time: "18 ms",
+    error: "Within 1 mm",
+  },
+  {
+    case: "200 analytic faces, 550 spans",
+    triangles: "7,700",
+    time: "19–22 ms",
+    error: "The same as the GPU run's",
+  },
+  {
+    case: "NIST CTC-05, 208 faces, 1 mm",
+    triangles: "373,000",
+    time: "720–770 ms",
+    error: "Within 1 mm",
+  },
+];
+
+const CONSTANTS = [
+  {
+    surface: "Cylinder, cone",
+    d: "w / 8, 0, 0",
+    note: "w is the widest radius in the span: a cone's larger end.",
+  },
+  {
+    surface: "Sphere",
+    d: "r cos φ / 8, 0, r / 8",
+    note: "φ is the latitude in the span nearest the equator.",
+  },
+  {
+    surface: "Torus",
+    d: "(R + r) / 8, 0, r / 8",
+    note: "",
+  },
+  {
+    surface: "Rational Bézier on a cylinder or cone",
+    d: "w a² / 8, 2 w a b / 8, w b² / 8",
+    note: "w is the radius, and a and b the patch's rates in angle per unit u and v.",
+  },
+  {
+    surface: "Rational Bézier on a sphere",
+    d: "k a², 2 k c, k b²",
+    note: "a, b and c are the bounded speeds and their dot product per unit. k bounds the chord's sag from the span's whole chord.",
+  },
+  {
+    surface: "Any other rational Bézier",
+    d: "P_ss / 8, 2 P_st / 8, P_tt / 8",
+    note: "Per unit parameter squared, so each is divided by the patch's widths. Bounds hold for any positive weights.",
+  },
+];
+
+const TOLERANCES = [
+  {
+    which: "Model",
+    what: "How exact the source claims to be: an edge's or vertex's gap, 1e-6 m as built.",
+    enters:
+      "A floor for the trims' fit: a trim piece is fitted to the larger of the face's least edge tolerance and the display tolerance. Nowhere in the dicing.",
+  },
+  {
+    which: "Representation",
+    what: "How far the form's surface is from the source's. A NURBS split into Bézier patches has none. A surface that was approximated carries it as surfaceError.",
+    enters:
+      "The CPU's stated error adds it. The GPU keeps it on the span, outside the display error, and never dices to it.",
+  },
+  {
+    which: "Display",
+    what: "Pixels, for one view.",
+    enters:
+      "The dice's target (0.5 px by default, errorPixels), and the trims' fit: 1e-4 of a face's size, a tenth of a pixel on a face that fills a thousand pixels. The CPU tessellator's tolerance, in metres, is the same kind.",
+  },
+];
+
+const BEFORE_AFTER = [
+  {
+    what: "Vertex invocations, 200 faces and 5,150 cells",
+    before: "211,200 (41 a cell)",
+    after: "18,750 (3.6 a cell)",
+  },
+  {
+    what: "GPU frame, the same 200 faces",
+    before: "0.74 ms",
+    after: "0.12 ms (cull 0.011, dice 0.009, opaque 0.10)",
+  },
+  {
+    what: "CTC-05's GPU time, at 1.3 radii",
+    before: "0.60 ms",
+    after: "0.10–0.13 ms",
+  },
+  {
+    what: "CTC-05's trim pieces",
+    before: "5,624",
+    after: "3,531",
+  },
+  {
+    what: "CTC-05's trim time",
+    before: "157 ms",
+    after: "53 ms",
+  },
+  {
+    what: "CTC-05's busiest band",
+    before: "66 pieces, bands at most 64",
+    after: "27 pieces, bands up to 256",
+  },
+  {
+    what: "The plate's pieces and bands",
+    before: "54 pieces in 64 bands",
+    after: "22 pieces in 32 bands",
+  },
+  {
+    what: "Span preparation, 200 analytic faces",
+    before: "24 ms",
+    after: "9 ms",
+  },
+  {
+    what: "Span and trim preparation, CTC-05",
+    before: "180–240 ms",
+    after: "115–120 ms",
+  },
+];
+
+const CTC = [
+  {
+    what: "Faces drawn",
+    gpu: "208 of 208",
+    cpu: "208",
+  },
+  {
+    what: "Work before drawing, once",
+    gpu: "115–120 ms: spans and trims",
+    cpu: "720–770 ms: the grids, to 1 mm",
+  },
+  {
+    what: "GPU time, at 1.3 radii",
+    gpu: "0.10–0.13 ms",
+    cpu: "0.47 ms",
+  },
+  {
+    what: "Triangles",
+    gpu: "Per view, to half a pixel; not recorded for this part",
+    cpu: "373,000 at 1 mm",
+  },
+  {
+    what: "Where a trim meets a curve",
+    gpu: "Clean edge, cut per pixel",
+    cpu: "A sawtooth, one cell wide",
   },
 ];
 
@@ -120,141 +324,661 @@ const SPIKE = [
   },
 ];
 
+const CHECKS = [
+  {
+    where: "spikes/brepPatches.html",
+    checks:
+      "An analytic cylinder, a sphere's span and a weighted rational patch, each at 20 m and 5.5 m, read back as bytes the fragment stage writes: every interior pixel's point against the true surface. The counts against the CPU twin. No uncovered pixel inside a face's silhouette. A warped patch against the twin. Shadows, ambient occlusion and picks raise no GPU error.",
+    result:
+      "Within 0.32 px of the surface (target 0.5 px). Counts match, no cracks, the warp matches.",
+  },
+  {
+    where: "spikes/brepTrims.html (runBrepTrims)",
+    checks:
+      "Each pixel's classification against the CPU's, on a plate with round, rectangular and triangular holes, a cylinder drilled across and a trimmed B-spline face. Closed solids for pinholes along seams: a box minus a cylinder, the same from Open CASCADE, and CTC-05. Shadows, ambient occlusion and picks. The times against tessellateBrep.",
+    result:
+      "17 of 17 checks pass, in about 30 s headless on an NVIDIA RTX 3000 Ada. The gallery draws 39 of 39 faces on the GPU.",
+  },
+  {
+    where: "test/brepGpuPatches.test.ts",
+    checks:
+      "Records for each surface kind. The error constants against dense sampling of the true surface, including weights that aren't 1 and a sphere's pole. The counts keep the target, put the same cells on a boundary two spans share, and grow under a placement's curvature. The winding of a diced span.",
+    result: "Offline, no GPU.",
+  },
+  {
+    where: "test/brepGpuTrims.test.ts",
+    checks:
+      "The float64 twin of the fragment's test against the CPU's classification, away from the boundary. The dilation's reach. Tolerances. The loop closing straight pieces. That skipping the dilation's taps never changes an answer.",
+    result: "Offline, no GPU.",
+  },
+  {
+    where: "test/brepTessellateBounds.test.ts",
+    checks:
+      "Every CPU triangle sampled densely against the true cylinder, sphere, cone, torus and free-form patches with weights that aren't 1, within the stated error. The Bernstein bounds against exact on a quadratic arc.",
+    result: "Offline.",
+  },
+  {
+    where: "test/brepPatchDraws.test.ts, test/patchLayout.test.ts",
+    checks:
+      "World.addBrep's draws and pipelines, and that the shaders read the span, trim and chunk words where the TypeScript writes them.",
+    result: "Offline.",
+  },
+];
+
+const FORMULA = `error(n_u, n_v)  <=  C_u / n_u²  +  C_uv / (n_u n_v)  +  C_v / n_v²     metres
+C_u = D_u (u width)²    C_uv = D_uv (u width)(v width)    C_v = D_v (v width)²`;
+
+const DICE = `pixels = rows · scale / depth        pixels per model metre, at the face's nearest point
+error  = target / pixels             metres a cell may leave
+D_u / ρ_u²  +  D_uv / (ρ_u ρ_v)  +  D_v / ρ_v²  <=  error      ρ: cells per unit of u and v
+n_u = clamp(ceil(ρ_u · u width), 1, 64)    n_v likewise`;
+
 export function Tessellation() {
   return (
     <Page
       title="Tessellation"
-      status="sketch"
+      status="current"
       lede={
         <>
-          The plan calls for one GPU tessellation engine, for B-reps and for
-          reprojected models. Its design is now outlined and two spikes have
-          measured the riskiest parts, but none of it is in the engine. What the
-          code has is the seam it will plug into.
+          A b-rep is drawn by one GPU path for every face: span records diced
+          each view to an error in pixels, evaluated in the vertex stage, with
+          trims tested per pixel. A CPU tessellator is still there for the
+          fallback mesh, for mesh queries and for tests. This tab says what the
+          code does, the bounds it rests on, and what has been measured.
         </>
       }
     >
-      <Note title="Not built">
+      <Note title="How much of this is built">
         <p>
-          The engine does no subdivision of any kind today. Only the left-hand
-          column of the figure below exists in the code. The right-hand column
-          is the plan's design, and the spike results below come from throwaway
-          code outside the engine.
+          The GPU path is built for every face whose patches are of degree 3 or
+          less, and has run on one GPU, an NVIDIA RTX 3000 Ada, through the
+          lab's spikes. A face with a higher-degree patch is still a CPU mesh
+          inside <C>World.addBrep</C>. The call is provisional and internal,
+          ahead of the API review.
+        </p>
+        <p>
+          Only b-reps are diced. The plan has one engine serving reprojected
+          models too, but no mesh is subdivided today, and the last sections
+          list what else isn't built. A b-rep in a glTF file is read, but the
+          model path doesn't draw it: a host gives the form to{" "}
+          <C>World.addBrep</C>.
         </p>
       </Note>
 
-      <Section title="What it's for">
+      <Section title="Two paths, and what each is for">
         <p>
-          One engine serves two kinds of content that need view-dependent
-          tessellation. B-reps: trimmed NURBS and other analytic surfaces from
-          CAD, which the <a href="#/breps">B-reps tab</a> covers. And
-          reprojected models, whose placement bends them, so a flat face isn't
-          flat once placed.
+          The CPU tessellator was first, and drew everything. It cost too much
+          and drew trims badly. NIST's CTC-05 part, a real CAD model of 208
+          faces, takes it 720 to 770 ms and 373,000 triangles at 1 mm, and a
+          planar face shows a sawtooth wherever its trim meets a curve, because
+          the trim is a cell being kept or dropped. The GPU path replaced it in
+          the drawing, so the engine no longer needs a mesh to draw a b-rep.
         </p>
+        <DataTable
+          label="The two tessellation paths"
+          columns={[
+            { head: "Path", cell: (r) => r.path },
+            { head: "How it chooses and cuts", cell: (r) => r.how },
+            { head: "What uses it", cell: (r) => r.uses },
+          ]}
+          rows={PATHS}
+        />
         <p>
-          Tessellation runs on the GPU from the start, for each view, and not on
-          the CPU at load. The CPU kernel the plan uses for conversion, SMLib,
-          took about 10 ms to tessellate one simple face in WebAssembly. A model
-          has thousands of faces.
-        </p>
-      </Section>
-
-      <Section title="The seam, and the engine">
-        <Figure caption="Solid cards exist today. Dashed cards are the plan's design, and aren't built.">
-          <Board
-            label="The seam, and the engine that will consume it"
-            lanes={["In the code today", "Not built: the engine"]}
-            steps={SEAM}
-            edges={[
-              { from: "placement", to: "patches" },
-              { from: "query", to: "patches" },
-              { from: "bounds", to: "edges" },
-              { from: "arguments", to: "draw" },
-              { from: "edges", to: "patches", vertical: true },
-              { from: "patches", to: "trims", vertical: true },
-              { from: "trims", to: "draw", vertical: true },
-            ]}
-          />
-        </Figure>
-        <p>
-          One kind of placement is an exception today. A dual position has no
-          function between its vertices, so it can't be evaluated at new points,
-          and it states no bound. Placements are now cases of one form, a
-          weighted sum of displacement terms, with a fitted term's Jacobian
-          giving exact normals; the <a href="#/warps">Warps and routes tab</a>{" "}
-          has it. Today's dual positions stay as input, converted to a morph
-          term, until the API review.
-        </p>
-        <p>
-          The Rendering tab's frame graph has a dashed row for the engine's
-          compute pass. Where the pass goes isn't settled yet.
+          The CPU path takes metres in the source's units. The GPU path takes
+          pixels, for each view. That is why they aren't one function with two
+          settings: the CPU can't know the view.
         </p>
         <Written
           from={
             <>
-              the overall plan, section 13.33, and the plan 5 spec, sections 3
-              and 8, with <C>src/shaders/placement.slang</C>,{" "}
-              <C>src/scene/placement.ts</C>, <C>src/frames/placementQuery.ts</C>{" "}
-              and <C>src/render/drawArguments.ts</C>
+              the overall plan, section 13.33, <C>src/scene/world/brep.ts</C>{" "}
+              and <C>src/brep/tessellate.ts</C>
             </>
           }
-          on="2026-11-09"
+          on="2026-11-11"
         />
       </Section>
 
-      <Section title="The design, step by step">
-        <ul>
-          <li>
-            <strong>Edges first.</strong> A B-rep edge belongs to two faces. It
-            is tessellated once, from the edge alone, and both faces stitch to
-            it. This is the vector pipeline's curve refinement, so the same code
-            refines vector lines and B-rep edges.
-          </li>
-          <li>
-            <strong>Patches by screen-space error.</strong> NURBS are split into
-            rational Bézier patches when they load. Each patch's grid density
-            comes from a bound on its second differences, converted to pixels,
-            with a target of half a pixel.
-          </li>
-          <li>
-            <strong>Evaluate in source coordinates, then place.</strong> Each
-            evaluated point goes through the draw's placement. Subdivision
-            measures error after placement, including how much the placement
-            bends across a patch. Normals are the surface's derivatives times
-            the placement's Jacobian, so they're exact.
-          </li>
-          <li>
-            <strong>Trims per pixel.</strong> A trimmed face's whole parameter
-            domain is drawn, and the pixel stage tests each pixel inside or
-            outside the trim loop in (u, v). The test is the vector fill's
-            per-pixel coverage of quadratic curves, so trim edges are exact and
-            antialiased, with no trim textures and no triangulation on the CPU.
-          </li>
-          <li>
-            <strong>Planar faces are fills.</strong> A planar face is a vector
-            polygon on a plane: one quad and the coverage test, while the
-            placement stays close to affine over it.
-          </li>
-          <li>
-            <strong>Slivers.</strong> Each face's trim comes from its own
-            parameter space, so pixel slivers along a shared edge are possible.
-            Faces cover half a pixel extra, and edges draw on top.
-          </li>
-        </ul>
-        <Written from="the overall plan, section 13.33" on="2026-11-09" />
+      <Section title="The pipeline">
+        <Figure caption="Every box is built. The CPU work happens when the form is added, and the rest every view.">
+          <Board
+            label="The GPU tessellation pipeline"
+            lanes={[
+              "On the CPU, when added",
+              "On the GPU, each view, in compute",
+              "On the GPU, in the draw",
+            ]}
+            steps={PIPELINE}
+            edges={[
+              { from: "spans", to: "dice" },
+              { from: "dice", to: "vertex" },
+              { from: "vertex", to: "fragment", vertical: true },
+              { from: "trims", to: "fragment" },
+            ]}
+          />
+        </Figure>
+        <p>
+          A solid is two patch draws: the faces whose trim is their whole
+          rectangle in (u, v), and the faces with a trim. They run through
+          different pipelines, so the first keeps early depth. Each draw has its
+          own chunk list and one indirect draw, so the CPU needn't wait to learn
+          how many triangles a view made.
+        </p>
       </Section>
 
-      <Section title="What a spike measured">
+      <Section title="The CPU tessellator">
         <p>
-          One rational bicubic NURBS face, 100 m across, made of 3 × 3 spans
-          with one control point of weight 2, and a circular hole in (u, v). It
-          was drawn in Chrome on an Apple GPU. The vertex shader evaluated a
-          grid for each span, and the pixel shader computed exact normals and
-          cut the hole. Grid density came from the bound, with a target of 0.5
-          px.
+          Each face's (u, v) domain, from <C>faceTrim</C>, is cut into one
+          uniform grid. The grid is the one with the fewest cells whose error
+          bound is within the tolerance, with at most 128 cells a side. A
+          trimmed face gets at least 48 a side so its trim reads. The bounds are
+          sound, not estimates: tests sample every triangle densely against the
+          true surface.
         </p>
         <DataTable
-          label="One trimmed NURBS face on the GPU"
+          label="What a cell leaves, by surface"
+          columns={[
+            { head: "Surface", cell: (r) => r.surface },
+            { head: "Chordal error of a cell", cell: (r) => r.sag },
+          ]}
+          rows={BOUNDS}
+        />
+        <p>
+          The bounds on a rational patch are the part that took care. A point of
+          a patch is a convex combination of its control points, and the
+          Bernstein coefficients of a polynomial bound it. Speed, second
+          derivative and angular rate about an axis are each a ratio of
+          polynomials, and the ratio of a numerator's coefficients to a
+          denominator's bounds it for any positive weights. Each bound is the
+          largest over 2 × 2 sub-patches by de Casteljau, since the bounds
+          tighten as a patch is cut. A patch that reaches an identity's axis has
+          no positive denominator, so it takes the net bound instead.
+        </p>
+        <p>
+          A trim is the even-odd rule over the loops' polygons: a triangle whose
+          centre is outside is dropped. The edge lines drawn on top hide the
+          jagged line this leaves. A grid can't do better than its cell, which
+          is the sawtooth. The mesh states the error it can leave: the
+          tolerance, or more where the grid cap binds, plus a surface's
+          representation error.
+        </p>
+        <DataTable
+          label="The CPU tessellator, measured"
+          columns={[
+            { head: "Case", cell: (r) => r.case },
+            { head: "Triangles", numeric: true, cell: (r) => r.triangles },
+            { head: "Time", numeric: true, cell: (r) => r.time },
+            { head: "Error", cell: (r) => r.error },
+          ]}
+          rows={CPU_NUMBERS}
+        />
+        <p>
+          The identity matters most for a NURBS cylinder: the net bound spent
+          cells along its straight rulings, where the identity needs one.
+        </p>
+        <Written
+          from={
+            <>
+              <C>src/brep/tessellate.ts</C>, <C>src/brep/bounds.ts</C>,{" "}
+              <C>test/brepTessellateBounds.test.ts</C> and the overall plan,
+              section 13.33
+            </>
+          }
+          on="2026-11-11"
+        />
+      </Section>
+
+      <Section title="The GPU path: span records and error constants">
+        <p>
+          A <em>span</em> is the part of one Bézier patch, or of one angular
+          piece of an analytic surface (cut at quarter turns), under the face's
+          rectangle: the bounding rectangle of its loops' pcurves, from their
+          control-point hulls. <C>prepareGpuPatches</C> writes one record of 48
+          words for each face and span. It holds the kind, the frame or the
+          control net's place, the rectangle, two bounding spheres (the span's
+          and its face's), the face's densities and speeds, and a trim word. The
+          nets follow the records, once each, and then the trim data. All of it
+          goes into the draw's range of the slab's arena, and the shaders read
+          it from there. The GPU evaluates up to degree 3 in each direction.
+        </p>
+        <p>
+          A grid of <em>n_u</em> × <em>n_v</em> cells over a span stays within a
+          sum of three terms of the surface, in model space and before any
+          placement:
+        </p>
+        <CodeBlock language="text" code={FORMULA} />
+        <p>
+          The constants <em>D</em> are the CPU bounds above, per unit of
+          parameter, with the cell's height and width split out. They are the
+          largest over the face's spans.
+        </p>
+        <DataTable
+          label="The error constants"
+          columns={[
+            { head: "Surface", cell: (r) => r.surface },
+            { head: "D_u, D_uv, D_v", cell: (r) => r.d },
+            { head: "Note", cell: (r) => r.note },
+          ]}
+          rows={CONSTANTS}
+        />
+        <p>
+          Where an identity's bound fails, as for a patch that reaches the axis,
+          the span takes the net bound instead. A failed speed bound becomes a
+          huge finite number, so the cell cap takes over.
+        </p>
+        <Written
+          from={
+            <>
+              <C>src/brep/gpuPatches.ts</C>, <C>src/shaders/patch.slang</C> and{" "}
+              <C>test/brepGpuPatches.test.ts</C>
+            </>
+          }
+          on="2026-11-11"
+        />
+      </Section>
+
+      <Section title="Dicing, for each view">
+        <p>
+          After the cull, <C>dicePatches</C> runs one thread for each span of
+          each visible patch draw. The CPU twin, <C>diceCounts</C>, is the same
+          arithmetic, and the spike checks the GPU's counts against it.
+        </p>
+        <Flow
+          label="What a span's thread does"
+          steps={[
+            {
+              title: "Skip what's out of view",
+              body: (
+                <>
+                  The span's sphere against the frustum. A draw under a
+                  placement isn't skipped: a warp moves what the sphere bounds.
+                </>
+              ),
+            },
+            {
+              title: "Pixels for a metre",
+              body: (
+                <>
+                  From the view's projection rows and the depth of the{" "}
+                  <em>face's</em> nearest point, the same for every span of the
+                  face. A perspective and an orthographic view alike: the depth
+                  is the clip w, which an orthographic projection holds at 1.
+                </>
+              ),
+            },
+            {
+              title: "Cells for a unit",
+              body: (
+                <>
+                  Solve for <em>ρ_u</em> and <em>ρ_v</em> so the error stays
+                  within the target. The terms that aren't zero share it
+                  equally, and the cross term's share raises both rates if it
+                  needs more.
+                </>
+              ),
+            },
+            {
+              title: "Round and chunk",
+              body: (
+                <>
+                  Round up to 1 to 64 cells a side. Cut the span into chunks of
+                  4 × 4 cells, and append each to the draw's list with an atomic
+                  count.
+                </>
+              ),
+            },
+            {
+              title: "Write the arguments",
+              body: (
+                <>
+                  <C>writePatchArgs</C>: one indexed indirect draw of 96 indices
+                  for each chunk, with the chunk count. A draw that the cull
+                  dropped has none.
+                </>
+              ),
+            },
+          ]}
+        />
+        <CodeBlock language="text" code={DICE} />
+        <p>
+          <strong>No cracks between spans.</strong> A boundary two spans of a
+          face share runs along one parameter, where both have the same extent
+          and the same cells for each unit, since every span takes the face's
+          densities and the face's nearest distance. A grid line's position is
+          the rectangle's start plus a fraction of its width, exact at the end,
+          so both spans put the same floats there. The spike checks that no
+          pixel inside a silhouette is left uncovered. Between <em>faces</em>,
+          nothing is shared: see Direct trimming, and the last section.
+        </p>
+        <p>
+          <strong>Chunks with shared vertices.</strong> A chunk of 4 × 4 cells
+          is 5 × 5 vertices over a static 16-bit index buffer, so a vertex is
+          evaluated once for the cells around it. The first design drew
+          non-indexed 8 × 8 chunks. A span averages about 9 cells, so most of a
+          chunk was degenerate and each grid point was evaluated six times. A
+          reversed face is the grid mirrored along u, so the same indices face
+          outward, and columns and rows past a span's counts repeat its last
+          line, whose cells have no area.
+        </p>
+        <p>
+          <strong>Under a placement.</strong> A warp or reprojection moves the
+          surface after it is evaluated, and the error is measured in the placed
+          space. The CPU bounds the placement for each draw: its Jacobian's norm{" "}
+          <em>J</em> and its second derivative's bound <em>K</em>. The dice
+          takes <em>D′ = J·D + K·speed² / 8</em>, term by term, with the speeds
+          in each parameter from the record. A term with no derivative bound,
+          such as an attribute, pushes the count to the cap.
+        </p>
+        <p>
+          <strong>Limits.</strong> A span has at most 64 cells a side, and a
+          draw lists at most 65,536 chunks by default (<C>maxChunks</C>, a
+          million cells). Past that the error exceeds the target without a
+          message, and the stats show chunks asked for and drawn apart. Unlike
+          the CPU mesh, the GPU path doesn't state the error it achieved.
+        </p>
+        <Written
+          from={
+            <>
+              <C>src/shaders/dice.slang</C>, <C>src/brep/gpuPatches.ts</C>,{" "}
+              <C>src/scene/world/patches.ts</C> and{" "}
+              <C>test/brepGpuPatches.test.ts</C>
+            </>
+          }
+          on="2026-11-11"
+        />
+      </Section>
+
+      <Section title="Evaluating in the vertex stage">
+        <p>
+          <C>vsPatch</C> takes a chunk's record, span and cell origin, and a
+          vertex's place in the chunk, and finds its (u, v) from the span's
+          rectangle. It goes through the same <C>vertexOut</C> as every other
+          draw, so the draw's placement and the Jacobian's normal turn apply.
+        </p>
+        <ul>
+          <li>
+            <strong>Analytic surfaces</strong> use their formulas (plane,
+            cylinder, cone, sphere, torus), with the normal in closed form. Its
+            scalar factor, a radius or a cosine, keeps its sign, so the normal
+            follows the surface through a negative one.
+          </li>
+          <li>
+            <strong>Rational Béziers</strong> read their net from the arena (the
+            shader holds at most 16 points) and run de Casteljau on the
+            homogeneous coordinates, (xw, yw, zw, w), along s in each row and
+            then along t. The same passes give the first derivatives, and the
+            quotient rule makes them the surface's. The normal is the exact ∂u ×
+            ∂v. At a pole, where one derivative vanishes, it is taken a
+            thousandth of the way toward the span's middle.
+          </li>
+          <li>
+            <strong>The varyings.</strong> The face is the vertex's feature. The
+            UV varying carries (u, v) less the rectangle's corner, so a float32
+            holds it however far the face's parameters are from zero. The trim
+            data's offset rides in the instance ids beside the feature.
+          </li>
+        </ul>
+        <p>
+          The float64 twin, <C>evaluateSpan</C>, is what the spike compares each
+          pixel with. A shared test checks that the shader's words and the
+          TypeScript's records agree.
+        </p>
+        <Written
+          from={
+            <>
+              <C>src/shaders/patch.slang</C>, <C>src/shaders/surface.slang</C>{" "}
+              and <C>test/patchLayout.test.ts</C>
+            </>
+          }
+          on="2026-11-11"
+        />
+      </Section>
+
+      <Section title="Direct trimming">
+        <p>
+          A trimmed face is diced over its whole rectangle, and the fragment
+          stage decides each pixel is inside the trim or not, from the face's
+          own pcurves in (u, v). It is Slug's glyph method (Lengyel, 2017):
+          horizontal bands, quadratic pieces, and a winding number from a ray.
+          Here the ray runs along +u and the bands are in v. The kernel is{" "}
+          <C>coverage.slang</C>, written for the vector fills to share.
+        </p>
+        <Flow
+          label="From a pcurve to a pixel"
+          steps={[
+            {
+              title: "Close the loop",
+              body: (
+                <>
+                  Where one use doesn't end where the next starts, to the
+                  float32 the shader reads, a straight piece joins them, as the
+                  CPU's polygon does. A ray's count never depends on a gap.
+                </>
+              ),
+            },
+            {
+              title: "Cut at the extrema of v",
+              body: (
+                <>
+                  Each pcurve, a rational Bézier of degree 1 to 3, becomes parts
+                  that are monotone in v. A horizontal part crosses no ray and
+                  is dropped.
+                </>
+              ),
+            },
+            {
+              title: "Fit a quadratic",
+              body: (
+                <>
+                  A non-rational quadratic through each part's ends and middle,
+                  halving the part until the quadratic is within the tolerance
+                  of the curve at 7 parameters.
+                </>
+              ),
+            },
+            {
+              title: "Sort into bands",
+              body: (
+                <>
+                  Up to 256 bands split the rectangle's v. Each lists the pieces
+                  that overlap it, longest reach in u first. Bands double while
+                  the mean list is over 1.5 pieces. A band no piece overlaps
+                  holds one winding.
+                </>
+              ),
+            },
+            {
+              title: "Count crossings",
+              body: (
+                <>
+                  A fragment reads its band, solves one quadratic a piece in
+                  closed form, and adds a sign where the crossing is beyond it
+                  in u. It stops at the first piece whose reach falls short.
+                </>
+              ),
+            },
+            {
+              title: "Dilate by half a pixel",
+              body: (
+                <>
+                  Keep a point inside, or within half a pixel of the boundary,
+                  so seams between faces close.
+                </>
+              ),
+            },
+          ]}
+        />
+        <p>
+          <strong>The half-open rule.</strong> A piece is stored rising in v,
+          with a sign, and crosses the ray at <em>v</em> when{" "}
+          <em>y0 ≤ v &lt; y2</em>. A ray through a vertex counts one of the two
+          pieces that meet there. Through a local extremum it counts none or
+          both, with opposite signs. No special cases are needed, and the count
+          is the winding number.
+        </p>
+        <p>
+          <strong>The tolerance.</strong> A piece may stray from the pcurve by
+          the larger of the face's least edge tolerance (the model's) and{" "}
+          <C>DISPLAY_TRIM_TOLERANCE</C>, 1e-4 of the face's size. In (u, v) that
+          is divided by the hypotenuse of the face's speeds, and never below
+          2e-7 of the rectangle's side, which float32 can't hold. A face whose
+          busiest band lists over 16 pieces is fitted again at four times the
+          tolerance, up to twice. Drawing needs no better, as a pick is refined
+          exactly from the surface. At the model's tolerance a round hole was
+          about 66 pieces.
+        </p>
+        <p>
+          <strong>Dilation against seams.</strong> Neighbouring faces trim along
+          their own pcurve images of the same edge, so they meet within the
+          edge's tolerance plus the tessellation error, and a pinhole can open
+          between them. The fragment keeps a point whose winding isn't zero, or
+          whose nearest crossing along u is within half a pixel (<C>fwidth</C>
+          of the (u, v) varying, halved), or whose winding at half a pixel above
+          or below isn't zero. The test is plus-shaped: it keeps an outside
+          point within 0.7 of that reach in any direction, and none beyond 1.4.
+          The two taps along v are skipped where no piece in reach could change
+          them. On a plate that fills a 3840 × 2160 view, the opaque pass takes
+          0.67 ms with the skip and 0.73 ms without.
+        </p>
+        <p>
+          <strong>Pipelines.</strong> The faces with a trim are a draw of their
+          own, with ten pipelines (opaque, depth, shadow, height and prepass,
+          each one- and double-sided) whose fragment stages test and discard.
+          The complete faces' ten have no fragment test, so they keep early
+          depth. After a depth prepass the opaque pass doesn't repeat the test:
+          only the fragments that survived reach it, at equal depth.
+        </p>
+        <p>
+          <strong>Picks.</strong> A pick reads the feature target, which holds
+          the face, and the depth, which a discarded fragment leaves unwritten.
+          A pick through a hole finds the face behind it, and one on the
+          material finds the face, as the spike checks. The plan has the pick
+          carry (u, v) for an exact point on the surface; that readback isn't
+          built.
+        </p>
+        <p>
+          <strong>Prior art.</strong> Guthe and others (2005) trimmed and
+          tessellated NURBS on the GPU. Schollmeyer and Fröhlich trimmed NURBS
+          directly in the pixel stage (2009), and went on to anti-aliased
+          trimming of large NURBS models (2019). Lengyel's Slug (2017) is the
+          bands and winding, for glyphs. This is Slug's test over pcurve pieces,
+          with a dilation instead of anti-aliasing. The papers weren't re-read
+          for this page.
+        </p>
+        <Written
+          from={
+            <>
+              <C>src/brep/gpuTrims.ts</C>, <C>src/shaders/coverage.slang</C>,{" "}
+              <C>src/shaders/surface.slang</C>, <C>test/brepGpuTrims.test.ts</C>{" "}
+              and the overall plan, section 13.33
+            </>
+          }
+          on="2026-11-11"
+        />
+      </Section>
+
+      <Section title="Three tolerances, never mixed">
+        <p>
+          The plan keeps three tolerances apart. Tessellation touches all three,
+          in different places.
+        </p>
+        <DataTable
+          label="The three tolerances"
+          columns={[
+            { head: "Tolerance", cell: (r) => r.which },
+            { head: "What it is", cell: (r) => r.what },
+            { head: "Where tessellation uses it", cell: (r) => r.enters },
+          ]}
+          rows={TOLERANCES}
+        />
+        <p>
+          The plan's rule: a measured answer, such as a snap or a distance,
+          states the model tolerance plus the representation error. A display
+          tolerance enters an answer only when it comes from a mesh, and then it
+          is provisional and says so. Drawing is never the measurement.
+        </p>
+        <Written
+          from={
+            <>
+              the overall plan, section 13.33 (the brainstorm on modeling and
+              render geometry), <C>src/brep/gpuTrims.ts</C> and{" "}
+              <C>src/brep/tessellate.ts</C>
+            </>
+          }
+          on="2026-11-11"
+        />
+      </Section>
+
+      <Section title="What has been measured">
+        <p>
+          All on one machine, with an NVIDIA RTX 3000 Ada (Lovelace), except the
+          first spike. The first run of the GPU path was correct and slow, and a
+          performance pass followed.
+        </p>
+        <ul>
+          <li>
+            As first built (part 2), the gallery's frame took 10–12 ms of GPU
+            time and 33–50 ms of CPU, where the CPU path took about 1 ms of
+            each. Preparing CTC-05 took 1.5 s.
+          </li>
+          <li>
+            The pass fixed the vertex count, the trims' size and the CPU
+            preparation, below. The gallery's CPU time after the pass isn't in
+            the plan.
+          </li>
+          <li>
+            A cold first run in a page takes two to three times as long as the
+            preparation figures below.
+          </li>
+        </ul>
+        <DataTable
+          label="Before and after the performance pass"
+          columns={[
+            { head: "Measure", cell: (r) => r.what },
+            { head: "Before", cell: (r) => r.before },
+            { head: "After", cell: (r) => r.after },
+          ]}
+          rows={BEFORE_AFTER}
+        />
+        <p>
+          The busiest band didn't fall from a looser tolerance: it is a face
+          with many holes, and each hole costs a band two pieces at least. The
+          finer bands did it.
+        </p>
+        <DataTable
+          label="NIST CTC-05 on the GPU path and the CPU tessellator"
+          columns={[
+            { head: "Measure", cell: (r) => r.what },
+            { head: "GPU path", cell: (r) => r.gpu },
+            { head: "CPU tessellator", cell: (r) => r.cpu },
+          ]}
+          rows={CTC}
+        />
+        <p>
+          The mesh is triangles made in advance, so its time has no dicing in
+          it. The GPU path's frame for the 200 analytic faces does: 0.12 ms,
+          against the mesh's 0.18 ms, with 0.011 ms of it the cull and 0.009 ms
+          the dice.
+        </p>
+        <DataTable
+          label="What the spikes and tests check"
+          columns={[
+            { head: "Where", cell: (r) => <C>{r.where}</C> },
+            { head: "What it checks", cell: (r) => r.checks },
+            { head: "Result", cell: (r) => r.result },
+          ]}
+          rows={CHECKS}
+        />
+        <p>
+          The first spike came before any of this was in the engine. One
+          rational bicubic NURBS face, 100 m across, with 3 × 3 spans, one
+          control point of weight 2, and a circular hole, was drawn in Chrome on
+          an Apple GPU. The grid density came from a bound on the net's second
+          differences, with a target of 0.5 px, and the error was measured
+          against 512 × 512 exact evaluations a span.
+        </p>
+        <DataTable
+          label="The first spike: one trimmed NURBS face on the GPU"
           columns={[
             { head: "Camera distance", numeric: true, cell: (r) => r.distance },
             { head: "Grid per span", cell: (r) => r.n },
@@ -265,72 +989,93 @@ export function Tessellation() {
           ]}
           rows={SPIKE}
         />
-        <ul>
-          <li>
-            The measured error is against 512 × 512 exact evaluations per span,
-            so it's accuracy against the surface, not agreement between two
-            meshes.
-          </li>
-          <li>
-            The bound was never exceeded, and over-tessellated by at most about
-            1.6 times in pixels. At 150 m it had almost no margin, so the engine
-            needs a bound that accounts for weights, or a safety factor.
-          </li>
-          <li>
-            Cutting the hole per pixel cost nothing measurable. But a circle is
-            one distance test, so this doesn't settle the cost of general trim
-            curves.
-          </li>
-          <li>
-            SMLib tessellated the same face to the same tolerance in 209
-            triangles, with 0.498 px error, in 9.6 ms. Building and trimming the
-            face took about 270 ms more. That was WebAssembly on one thread
-            under Node.
-          </li>
-          <li>
-            One face can't judge compute-driven against vertex-driven drawing.
-            That waits for many patches.
-          </li>
-        </ul>
+        <p>
+          That bound was never exceeded, but at 150 m it had almost no margin
+          with a weight of 2. That is why the engine's bounds are Bernstein
+          bounds that hold for any positive weights. SMLib tessellated the same
+          face to the same tolerance in 209 triangles, with 0.498 px error, in
+          9.6 ms; building and trimming the face took about 270 ms more, in
+          WebAssembly on one thread under Node.
+        </p>
         <Written
-          from="the overall plan, section 13.33, Spike B result"
-          on="2026-11-09"
+          from={
+            <>
+              the overall plan, section 13.33 (Part 1's cost, the performance
+              pass and Spike B), <C>spikes/brepPatches.ts</C>,{" "}
+              <C>spikes/brepTrims.ts</C> and the tests
+            </>
+          }
+          on="2026-11-11"
         />
       </Section>
 
-      <Section title="Until then">
+      <Section title="Meshes the engine didn't generate">
         <p>
           A flat face of edge <em>d</em> sags below the curved Earth by about{" "}
           <em>d</em>²/8<em>R</em> at its middle: 2 cm for 1 km, and 2 m for 10
           km. For reprojected models the engine didn't generate, the plan's
-          answer until this engine exists is to state a rule and measure. The
-          producer declares a chord tolerance, and a tile that declares none has
-          its largest face's sag measured and stated as its display error. Picks
-          and snaps on it carry that as an accuracy term.
+          answer is to state a rule and measure. The producer declares a chord
+          tolerance, and a tile that declares none has its largest face's sag
+          measured and stated as its display error. Picks and snaps on it carry
+          that as an accuracy term. Diced patches under a placement handle the
+          same bend for b-reps; nothing does for a mesh.
         </p>
         <Written from="the plan 5 spec, section 13.4" on="2026-11-08" />
       </Section>
 
-      <Section title="Still to write">
+      <Section title="Not yet">
         <ul>
-          <li>An error bound that's safe for rational surfaces.</li>
           <li>
-            Crack-free edges between patches of different density, with its
-            test: shared-edge vertices bitwise equal from both sides.
+            <strong>Anti-aliased trim edges.</strong> The test is hard, with a
+            half-pixel dilation, so a trim edge is as smooth as the pixel grid
+            allows and no smoother. The edge lines draw over it. Schollmeyer and
+            Fröhlich's 2019 work is the plan's reference for the real thing.
           </li>
           <li>
-            How surfaces stay accurate in 32-bit floats at a globe position:
-            evaluated relative to a nearby origin, as the engine does elsewhere.
+            <strong>Stitching to shared edge samples.</strong> Faces don't share
+            their edge's samples. The plan judges the dilation and the edge
+            lines enough for drawing, and the spike's solids show no pinholes.
+            The edge lines themselves are the CPU tessellator's: the engine
+            draws none for a b-rep, and doesn't tessellate edges once for both
+            faces, as the earlier design had it.
           </li>
           <li>
-            The trim test on general curves, which waits for the vector design's
-            coverage kernel.
+            <strong>The stats readback.</strong> The first-look example's cells
+            and triangles row read "nothing diced in this view" while CTC-05
+            drew 208 of 208 faces. The plan's guess is that{" "}
+            <C>World.readPatchStats</C> reads a view or frame the dice didn't
+            run for. A change that marks whether a draw was diced was
+            uncommitted in the working tree when this was written.
           </li>
           <li>
-            What a per-pixel trim does to antialiasing, a depth-only pass,
-            shadows and picking. Each needs the same test.
+            <strong>Worker-side import.</strong> <C>World.addBrep</C> prepares
+            spans and trims on the calling thread: 115 to 120 ms for CTC-05, and
+            two to three times that cold. Nothing moves it to a worker, and it
+            repacks the whole form, which the CSG edit loop will feel.
+          </li>
+          <li>
+            <strong>The b-rep adapter behind GeometryQueries.</strong> Until it
+            exists, the CPU tessellator feeds the mesh adapter that picks and
+            rays use, and a pick gives a face and no (u, v). The B-reps tab has
+            the plan.
+          </li>
+          <li>
+            <strong>Degree above 3.</strong> A face with such a patch is a CPU
+            mesh, not a GPU draw.
+          </li>
+          <li>
+            <strong>Reprojected meshes.</strong> Nothing subdivides an ordinary
+            mesh, so the plan's second use for this engine has no code.
+          </li>
+          <li>
+            <strong>Other GPUs.</strong> Every figure here is from one NVIDIA
+            GPU, except the first spike's, from an Apple GPU in Chrome.
           </li>
         </ul>
+        <Written
+          from="the overall plan, section 13.33 (the follow-ups), and what the code has"
+          on="2026-11-11"
+        />
       </Section>
     </Page>
   );

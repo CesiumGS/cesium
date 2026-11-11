@@ -106,7 +106,7 @@ const SHARED = [
   {
     piece: "Per-pixel fill coverage",
     vector: "Polygons and glyphs",
-    brep: "Trimmed faces, tested in (u, v)",
+    brep: "Trimmed faces, tested in (u, v): built, in coverage.slang",
   },
   {
     piece: "Stroke styles",
@@ -157,7 +157,8 @@ export function Breps() {
           How the engine is meant to draw and query exact CAD geometry: one
           query interface for meshes, B-reps and implicit surfaces, one render
           form for B-reps, and the kernels B-reps share with vector rendering.
-          The query interface is drafted; the rest is planned.
+          The query interface is drafted and drawing is built; the B-rep adapter
+          and the rest are planned.
         </>
       }
     >
@@ -166,8 +167,12 @@ export function Breps() {
           The query interface and its mesh and distance-field adapters were
           drafted on 2026-11-09, and the render form, its builder and validator,
           and the glTF extension draft on 2026-11-10, all ahead of an API
-          review, with open questions. B-reps load from glTF, but nothing draws
-          them yet.
+          review, with open questions. B-reps load from glTF, and a host can
+          draw a form with the provisional <C>World.addBrep</C>, which dices
+          every face on the GPU (the{" "}
+          <a href="#/tessellation">Tessellation tab</a>). The model path doesn't
+          draw a loaded one yet, and the B-rep adapter behind the query
+          interface isn't built.
         </p>
       </Note>
 
@@ -342,19 +347,37 @@ export function Breps() {
 
       <Section title="Drawing them">
         <p>
-          B-reps are tessellated on the GPU for each view: edges first, patches
-          by screen-space error, and trims tested per pixel. The{" "}
-          <a href="#/tessellation">Tessellation tab</a> has the design and what
-          a spike measured.
+          Every face of a B-rep is drawn by one GPU path, built and provisional
+          (<C>World.addBrep</C>). Each face becomes span records, one for each
+          Bézier patch or angular piece of an analytic surface. They are diced
+          for each view to an error in pixels, evaluated in the vertex stage
+          from the surface's own formulas or de Casteljau, and a trimmed face is
+          tested per pixel against its pcurves. The CPU tessellator remains for
+          the fallback mesh, the mesh that queries use until the B-rep adapter
+          exists, faces with a patch above degree 3, and tests. The{" "}
+          <a href="#/tessellation">Tessellation tab</a> has the pipeline, the
+          bounds, the trim test and what was measured. What isn't built from the
+          earlier design is tessellating each shared edge once for both faces.
         </p>
+        <Written
+          from={
+            <>
+              the overall plan, section 13.33, and{" "}
+              <C>src/scene/world/brep.ts</C>
+            </>
+          }
+          on="2026-11-11"
+        />
       </Section>
 
       <Section title="Exact answers, mostly without a kernel">
         <ul>
           <li>
-            <strong>Picks.</strong> The winning pick fragment writes the face ID
-            and (u, v). The CPU evaluates the surface there in float64 with one
-            Newton step, so a pick is exact with no ray-surface solve.
+            <strong>Picks.</strong> The pick fragment writes the face ID, and
+            the plan has it write (u, v) too. The CPU would then evaluate the
+            surface there in float64 with one Newton step, so a pick is exact
+            with no ray-surface solve. Today a pick returns the face; the (u, v)
+            readback isn't built.
           </li>
           <li>
             <strong>Closest points and ray hits.</strong> Closed form on
@@ -464,7 +487,12 @@ export function Breps() {
             replaces entities, and draping.
           </li>
         </ol>
-        <Written from="the overall plan, section 13.33" on="2026-11-09" />
+        <p>
+          In practice the coverage kernel was built first, for B-rep trims:{" "}
+          <C>coverage.slang</C>, written for the vector fills to share. The
+          vector design's contracts are still to be set over it.
+        </p>
+        <Written from="the overall plan, section 13.33" on="2026-11-11" />
       </Section>
 
       <Section title="Still to write">
