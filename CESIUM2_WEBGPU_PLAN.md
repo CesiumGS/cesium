@@ -8716,7 +8716,15 @@ _One placement interface, exact on the CPU and fitted for the GPU._
 - Exaggeration by a factor k is `blend(identity, fit of h·n̂, t = k − 1)`, which exists today. The slider writes one float; nothing is refit when k changes.
 - Two independent parameters at once, such as exaggeration during the 2D morph, refit when either changes. Measure that before designing more.
 - The fit's error bound joins the tile's geometric error in screen-space error, so a coarse tile with a poor fit refines. That covers globe tiles near the root, where a cubic fits a hemisphere badly.
-- Dual positions aren't maps. They exist only at the content's vertices, and can't be resampled or inverted. They stay as a producer's precomputed result: a second normal semantic is optional, and they are refused where resampling is needed (b-rep step 5, curves). The design globe moves to fitted operations, as the review's normals bullet proposed.
+- **Dual positions leave the engine (owner, 2026-11-10).** A dual position isn't a map. It's per-vertex data: a second position the producer made, mixed by a parameter. That's application code over content: a custom vertex shader mixing `positionMC` toward a named attribute, which `CustomShader` already supports.
+  - The attribute is declared vertex-only, so it costs no varying.
+  - `displacement` declares how far it moves vertices, which pads the bounds.
+  - A second normal attribute, if the producer wrote one, sets `normalMC`.
+  - The parameter is the shader's uniform.
+  - Picks need nothing from it: the primitive-index route below interpolates the content's own positions, so a pick reports the design point whatever the shader drew.
+  - It's also glTF's morph target with one target, so when morph targets arrive (before the map, with skins) a producer can ship it that way instead.
+  - `DualPosition` drops out of the closed set, which leaves maps only: fitted operations and their blends. `Tileset3D.dualPosition`'s metadata reading moves to the design globe example, with its shader. The example later moves to fitted operations.
+  - The cost is accepted: the content can't be resampled, so it can't feed b-rep step 5 or curves. That's the same as today.
 
 _What each layer owns:_
 
@@ -8742,7 +8750,7 @@ _Bounds, LOD, culling and shadows._
 _Picks, snaps and measurements: view questions answered with true points._
 
 - The pick pass writes the primitive index beside the feature, using WebGPU's `primitive-index` feature where it's available.
-- The CPU forward-maps that triangle's three vertices, intersects the camera ray with the placed triangle for barycentrics, and interpolates the true vertices. The result is exact on the content triangle, with no inverse, for any placement, dual positions included.
+- The CPU forward-maps that triangle's three vertices, intersects the camera ray with the placed triangle for barycentrics, and interpolates the true vertices. The result is exact on the content triangle, with no inverse, whatever moved the vertices: a map or a custom shader.
 - Without the feature: depth, then Newton on `PlacementMap.inverse`. The answer is provisional, and its accuracy includes the fit's error bound.
 - The CPU terrain-pick fallback tests placed triangles.
 - The GPU snap pass (5f) works in drawn space, with its pixel tolerance there, and returns true points the same way.
@@ -8773,7 +8781,7 @@ _The other open items:_
 
 _The acceptance increments, in order:_
 
-1. `PlacementMap` and the frames layer's per-tile fitter and cache, with refits on a root change.
+1. `PlacementMap` and the frames layer's per-tile fitter and cache, with refits on a root change. `DualPosition` is removed, and the design globe example becomes a custom shader.
 2. The Jacobian in the vertex stage, for normals and tangents.
 3. Bounds through the map, `stretch` in screen-space error, and the horizon occluder.
 4. The globe and terrain take a placement.
