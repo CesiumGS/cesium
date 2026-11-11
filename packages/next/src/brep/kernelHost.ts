@@ -14,6 +14,7 @@ import { prepareGpuPatches, type GpuPatches } from "./gpuPatches.ts";
 import {
   checkRecipe,
   countBooleans,
+  recipeLeaves,
   transferable,
   type BooleanOperation,
   type FormWork,
@@ -24,6 +25,7 @@ import {
   type Placement,
   type Primitive,
   type SolidRecipe,
+  type StepPart,
 } from "./kernelProtocol.ts";
 import { OcctKernel, type OcctSolid } from "./occt.ts";
 import { SmlibKernel, type SmlibSolid } from "./smlib.ts";
@@ -61,6 +63,8 @@ function makePrimitive<S>(kernel: Primitives<S>, p: Primitive): S {
 /** What evaluating a recipe needs of a kernel, the same for both. Solids are `delete`d idempotently. */
 interface Evaluator<S extends { delete(): void }> {
   primitives: Primitives<S>;
+  /** A new solid of an imported STEP part (not for SMLib). */
+  step?(key: number): S;
   place(solid: S, placement: Placement): S;
   tag(solid: S, tag: number): S;
   /** Combines two solids into one, taking both (each is deleted or consumed). */
@@ -82,9 +86,19 @@ function smlibEvaluator(kernel: SmlibKernel): Evaluator<SmlibSolid> {
   };
 }
 
-function occtEvaluator(kernel: OcctKernel): Evaluator<OcctSolid> {
+function occtEvaluator(
+  kernel: OcctKernel,
+  steps: ReadonlyMap<number, OcctSolid>,
+): Evaluator<OcctSolid> {
   return {
     primitives: kernel,
+    step: (key) => {
+      const part = steps.get(key);
+      if (!part) {
+        throw new Error(`the STEP part ${key} isn't loaded in the worker`);
+      }
+      return kernel.clone(part);
+    },
     place: (solid, placement) => kernel.place(solid, placement),
     tag: (solid, tag) => kernel.tag(solid, tag),
     // Makes a new solid and leaves its operands, which are freed here.
@@ -122,11 +136,21 @@ const yieldNow = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 export class KernelHost {
   private readonly queue: KernelRequest[] = [];
   private readonly cancelled = new Set<number>();
+  /** STEP parts kept for recipes' `step` leaves, centred, by key. */
+  private readonly steps = new Map<number, OcctSolid>();
   private running = false;
   private smlib: Promise<SmlibKernel> | undefined;
   private occt: Promise<OcctKernel> | undefined;
 
   constructor(private readonly options: KernelHostOptions) {}
+
+  /** Frees what the host keeps (the STEP parts). A worker's termination does the same; tests call it. */
+  dispose(): void {
+    for (const part of this.steps.values()) {
+      part.delete();
+    }
+    this.steps.clear();
+  }
 
   /** Takes a request from the page. */
   receive(request: KernelRequest): void {
@@ -233,6 +257,13 @@ export class KernelHost {
       }
       case "importStep":
         return this.importStep(id, request.bytes, request);
+      case "registerStep":
+        return this.registerStep(id, request.key, request.bytes);
+      case "releaseStep":
+        this.steps.get(request.key)?.delete();
+        this.steps.delete(request.key);
+        this.options.post({ type: "stepReleased", id, key: request.key }, []);
+        return;
       case "evaluate":
         return this.evaluate(id, request.kernel, request.recipe, request);
       case "boolean":
@@ -318,6 +349,74 @@ export class KernelHost {
     }
   }
 
+  /**
+   * Imports a STEP file and keeps it as one solid (a file of several is
+   * fused), centred on the middle of its bounds, under `key`.
+   */
+  private async registerStep(
+    id: number,
+    key: number,
+    bytes: Uint8Array,
+  ): Promise<void> {
+    const loadMs = await this.ensure(id, "occt");
+    const kernel = await this.loadOcct();
+    let solids: OcctSolid[] = [];
+    let part: OcctSolid | undefined;
+    try {
+      await this.stage(id, "Importing STEP…");
+      let start = performance.now();
+      solids = kernel.importStep(bytes);
+      const importMs = performance.now() - start;
+      const count = solids.length;
+      if (count === 0) {
+        throw new Error("the STEP file holds no solid");
+      }
+      await this.stage(id, "Measuring the part…");
+      start = performance.now();
+      // The fuse takes both operands, so what it consumed leaves the list.
+      part = solids.shift()!;
+      while (solids.length > 0) {
+        const next = solids.shift()!;
+        const left = part;
+        part = undefined;
+        part = occtEvaluator(kernel, this.steps).combine("union", left, next);
+      }
+      const { form } = kernel.toForm(part);
+      const { min, max } = formBounds(form);
+      part = kernel.place(part, {
+        translate: [
+          -(min[0]! + max[0]!) / 2,
+          -(min[1]! + max[1]!) / 2,
+          -(min[2]! + max[2]!) / 2,
+        ],
+      });
+      const info: StepPart = {
+        solids: count,
+        faces: form.faceSurface.length,
+        size: [max[0]! - min[0]!, max[1]! - min[1]!, max[2]! - min[2]!],
+      };
+      const convertMs = performance.now() - start;
+      this.steps.get(key)?.delete();
+      this.steps.set(key, part);
+      part = undefined;
+      this.options.post(
+        {
+          type: "stepRegistered",
+          id,
+          key,
+          part: info,
+          loadMs,
+          importMs,
+          convertMs,
+        },
+        [],
+      );
+    } finally {
+      solids.forEach((solid) => solid.delete());
+      part?.delete();
+    }
+  }
+
   private async evaluate(
     id: number,
     kernel: KernelName,
@@ -325,6 +424,14 @@ export class KernelHost {
     work: FormWork,
   ): Promise<void> {
     checkRecipe(recipe);
+    if (
+      kernel === "smlib" &&
+      recipeLeaves(recipe).some((leaf) => leaf.type === "step")
+    ) {
+      throw new Error(
+        `${NAMES[kernel]} can't read STEP files: use Open CASCADE`,
+      );
+    }
     const loadMs = await this.ensure(id, kernel);
     if (kernel === "smlib") {
       return this.evaluateWith(
@@ -339,7 +446,7 @@ export class KernelHost {
     return this.evaluateWith(
       id,
       kernel,
-      occtEvaluator(await this.loadOcct()),
+      occtEvaluator(await this.loadOcct(), this.steps),
       recipe,
       work,
       loadMs,
@@ -366,10 +473,21 @@ export class KernelHost {
         kernelMs += performance.now() - start;
       }
     };
+    const stepSolid = (key: number): S => {
+      if (!evaluator.step) {
+        throw new Error(
+          `${NAMES[kernel]} can't read STEP files: use Open CASCADE`,
+        );
+      }
+      return evaluator.step(key);
+    };
     const build = async (node: SolidRecipe): Promise<S> => {
-      if (node.type === "primitive") {
+      if (node.type !== "boolean") {
         return timed(() => {
-          let solid = makePrimitive(evaluator.primitives, node.primitive);
+          let solid =
+            node.type === "step"
+              ? stepSolid(node.step)
+              : makePrimitive(evaluator.primitives, node.primitive);
           try {
             if (node.placement) {
               solid = evaluator.place(solid, node.placement);

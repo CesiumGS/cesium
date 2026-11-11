@@ -6,6 +6,7 @@
 // and the result carries the leaves' tags.
 import { describe, expect, it } from "vitest";
 import { boxBrep } from "../examples/brep-first-look/fixtures.ts";
+import { KernelSession, STEP_NEEDS_OCCT } from "../examples/csg/evaluator.ts";
 import { KernelCancelled, KernelClient } from "../src/brep/kernelClient.ts";
 import type { Placement, SolidRecipe } from "../src/brep/kernelProtocol.ts";
 import type { OcctKernel, OcctSolid } from "../src/brep/occt.ts";
@@ -91,6 +92,15 @@ function fakeOcct(log: Log) {
     toForm: (solid: Fake) => {
       log.calls.push(`convert ${solid.name}`);
       return { form: boxBrep(), faceTags: Int32Array.of(1, 2, 3, 3, 4, 2) };
+    },
+    // Two solids, so the part is a fuse.
+    importStep: () => [
+      log.solid("step") as unknown as OcctSolid,
+      log.solid("step") as unknown as OcctSolid,
+    ],
+    clone: (solid: Fake) => {
+      log.calls.push(`clone ${solid.name}`);
+      return log.solid("clone") as unknown as OcctSolid;
     },
   } as unknown as OcctKernel;
 }
@@ -260,6 +270,95 @@ describe("the kernel worker's evaluate request", () => {
       0,
     );
     expect(log.live.size).toBe(0);
+    client.dispose();
+  });
+});
+
+describe("STEP parts in the kernel worker", () => {
+  const bytes = () => new TextEncoder().encode("ISO-10303-21;");
+  const withStep: SolidRecipe = {
+    type: "boolean",
+    operation: "union",
+    operands: [
+      box(1),
+      { type: "step", tag: 2, step: 5, placement: { translate: [0, 0, 1] } },
+    ],
+  };
+
+  it("keeps an imported file as one centred part, and builds a recipe's step leaf from a copy of it", async () => {
+    const log = new Log();
+    const client = setup(log);
+    const made = await client.registerStep(5, bytes());
+    // Two solids are fused, then the part is centred (one placed solid is left).
+    expect(log.calls.slice(0, 2)).toEqual(["make step#1", "make step#2"]);
+    expect(log.calls).toContain("union step#1 step#2");
+    expect(made.part.solids).toBe(2);
+    expect(made.part.size.every((s) => s > 0)).toBe(true);
+    const kept = [...log.live];
+    expect(kept).toHaveLength(1);
+
+    log.calls.length = 0;
+    const result = await client.evaluate("occt", withStep);
+    expect(result.booleans).toBe(1);
+    // The part itself is only cloned; the clone is placed, then tagged.
+    expect(log.calls).toContain(`clone ${kept[0]}`);
+    expect(log.calls.some((c) => c.startsWith(`place ${kept[0]}`))).toBe(false);
+    expect(log.calls.some((c) => /^tag placed#\d+ 2$/.test(c))).toBe(true);
+    expect([...log.live]).toEqual(kept);
+
+    await client.releaseStep(5);
+    expect(log.live.size).toBe(0);
+    client.dispose();
+  });
+
+  it("frees the part when the worker ends, and replaces one under the same key", async () => {
+    const log = new Log();
+    const client = setup(log);
+    await client.registerStep(5, bytes());
+    await client.registerStep(5, bytes());
+    expect(log.live.size).toBe(1);
+    client.dispose();
+    expect(log.live.size).toBe(0);
+  });
+
+  it("says which part is missing, and frees what the recipe made", async () => {
+    const log = new Log();
+    const client = setup(log);
+    await expect(client.evaluate("occt", withStep)).rejects.toThrow(
+      /STEP part 5 isn't loaded/,
+    );
+    expect(log.live.size).toBe(0);
+    client.dispose();
+  });
+
+  it("refuses a step leaf in SMLib, before making anything", async () => {
+    const log = new Log();
+    const client = setup(log);
+    await expect(client.evaluate("smlib", withStep)).rejects.toThrow(
+      /can't read STEP files/,
+    );
+    expect(log.calls).toEqual([]);
+    client.dispose();
+  });
+
+  it("is not superseded by evaluations, and the session refuses SMLib for a step leaf", async () => {
+    const log = new Log();
+    const client = setup(log);
+    const registered = client.registerStep(5, bytes());
+    const evaluated = client.evaluate("occt", box(1));
+    await Promise.all([registered, evaluated]);
+    expect(log.live.size).toBe(1);
+    const session = new KernelSession({
+      createWorker: () =>
+        loopback({
+          loadSmlib: async () => fakeSmlib(log),
+          loadOcct: async () => fakeOcct(log),
+        }),
+    });
+    await expect(
+      session.evaluate("smlib", withStep, { final: false }),
+    ).rejects.toThrow(STEP_NEEDS_OCCT);
+    session.dispose();
     client.dispose();
   });
 });

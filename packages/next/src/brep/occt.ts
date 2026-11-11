@@ -1039,6 +1039,11 @@ export class OcctKernel {
     });
   }
 
+  /** A new solid on the same shape, with no tags: a second owner (`place` copies the geometry; this shares it). */
+  clone(solid: OcctSolid): OcctSolid {
+    return new OcctSolid(copyOf(solid.shape));
+  }
+
   /**
    * The solid turned about the world's x, then y, then z axes (degrees,
    * through the origin) and moved by `translate`, as a new solid; the one

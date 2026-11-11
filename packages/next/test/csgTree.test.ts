@@ -9,12 +9,14 @@ import {
   addChild,
   createLeaf,
   createOp,
+  createStepLeaf,
   defaultBracket,
   duplicateNode,
   facesOfNode,
   facesToLeaves,
   findNode,
   indentNode,
+  isStepLeaf,
   leavesOf,
   moveNode,
   newTree,
@@ -26,6 +28,8 @@ import {
   removeNode,
   treeFromRecipe,
   type CsgTree,
+  type LeafNode,
+  type StepLeaf,
   type TreeNode,
 } from "../examples/csg/tree.ts";
 import {
@@ -56,7 +60,10 @@ describe("the tree and its recipe", () => {
       leavesOf(tree.root).map((l) => l.id),
     );
     // A box is centred on the origin, then placed.
-    const base = recipeLeaves(recipe)[0]!;
+    const leaves = recipeLeaves(recipe).flatMap((l) =>
+      l.type === "primitive" ? [l] : [],
+    );
+    const base = leaves[0]!;
     expect(base.primitive).toEqual({
       kind: "box",
       origin: [-1.2, -0.75, -0.1],
@@ -64,7 +71,7 @@ describe("the tree and its recipe", () => {
     });
     expect(base.placement).toEqual({ translate: [0, -0.05, 0.1] });
     // The cutter is turned about y only; a leaf at the origin has no placement.
-    const cutter = recipeLeaves(recipe).find(
+    const cutter = leaves.find(
       (l) => l.primitive.kind === "cylinder" && l.placement?.rotate?.[1] === 90,
     )!;
     expect(cutter.placement).toEqual({
@@ -149,6 +156,108 @@ describe("the tree and its recipe", () => {
     expect(recipeOf(tree.root)).toBeUndefined();
     const empty = newTree();
     expect(recipeOf(empty.root)).toBeUndefined();
+  });
+});
+
+describe("STEP leaves", () => {
+  const step = { key: 7, file: "part.stp", size: [0.4, 0.2, 0.1] as const };
+  const withStep = () => {
+    const tree = defaultBracket();
+    const leaf = createStepLeaf(
+      tree,
+      { ...step, size: [...step.size] },
+      { name: "Part", rotate: [0, 0, 90], translate: [0.3, 0, 0.05] },
+    );
+    addChild(tree, tree.root.id, leaf);
+    return { tree, leaf };
+  };
+
+  it("becomes a step leaf of the recipe, tagged by id and placed like a primitive", () => {
+    const { tree, leaf } = withStep();
+    const recipe = recipeOf(tree.root)!;
+    expect(() => checkRecipe(recipe)).not.toThrow();
+    const leaves = recipeLeaves(recipe);
+    expect(leaves).toHaveLength(leavesOf(tree.root).length);
+    expect(leaves.at(-1)).toEqual({
+      type: "step",
+      tag: leaf.id,
+      step: 7,
+      placement: { rotate: [0, 0, 90], translate: [0.3, 0, 0.05] },
+    });
+    expect(countBooleans(recipe)).toBe(9);
+    // A step leaf at the origin has no placement either.
+    const bare = createStepLeaf(newTree(), { ...step, size: [...step.size] });
+    expect(recipeOf(bare)).toEqual({ type: "step", tag: 2, step: 7 });
+  });
+
+  it("round-trips through the worker's format, JSON and a structured clone", () => {
+    const { tree } = withStep();
+    const recipe = recipeOf(tree.root)!;
+    const sent = structuredClone(JSON.parse(JSON.stringify(recipe)));
+    expect(sent).toEqual(recipe);
+    const back = treeFromRecipe(sent);
+    expect(recipeOf(back.root)).toEqual(recipe);
+    const part = leavesOf(back.root).find(isStepLeaf)!;
+    expect(part.step.key).toBe(7);
+    expect(part.translate).toEqual([0.3, 0, 0.05]);
+    expect(new Set(ids(back)).size).toBe(ids(back).length);
+  });
+
+  it("round-trips the tree itself through JSON, and checks a step leaf's data", () => {
+    const { tree } = withStep();
+    const parsed = parseTree(JSON.parse(JSON.stringify(tree)));
+    expect(parsed).toEqual(tree);
+    const broken = (edit: (part: Record<string, unknown>) => void) => {
+      const copy = JSON.parse(JSON.stringify(tree));
+      edit(copy.root.children.at(-1).step);
+      return () => parseTree(copy);
+    };
+    expect(broken((s) => (s.key = 1.5))).toThrow(/STEP part is incomplete/);
+    expect(broken((s) => delete s.file)).toThrow(/STEP part is incomplete/);
+    expect(broken((s) => (s.size = [1, 2]))).toThrow(/STEP part is incomplete/);
+  });
+
+  it("duplicates with its own placement and size, sharing the part's key", () => {
+    const { tree, leaf } = withStep();
+    const copy = duplicateNode(tree, leaf.id)!;
+    expect(isStepLeaf(copy as LeafNode)).toBe(true);
+    const twin = copy as StepLeaf;
+    expect(twin.id).not.toBe(leaf.id);
+    expect(twin.step.key).toBe(leaf.step.key);
+    expect(twin.step.size).not.toBe(leaf.step.size);
+    expect(twin.translate).not.toBe(leaf.translate);
+    expect(new Set(ids(tree)).size).toBe(ids(tree).length);
+  });
+
+  it("has the faces its tag names: provenance finds the imported leaf", () => {
+    const { tree, leaf } = withStep();
+    const other = leavesOf(tree.root)[0]!;
+    const tags = Int32Array.of(leaf.id, other.id, leaf.id);
+    expect(facesOfNode(leaf, tags)).toEqual([0, 2]);
+    expect(facesToLeaves(tree, tags).map((l) => l?.name)).toEqual([
+      "Part",
+      other.name,
+      "Part",
+    ]);
+  });
+
+  it("previews as the box of its bounds, placed", () => {
+    const { leaf } = withStep();
+    leaf.rotate = [0, 0, 0];
+    leaf.translate = [1, 2, 3];
+    const { positions } = outlineOf(leaf);
+    const lo = [Infinity, Infinity, Infinity];
+    const hi = [-Infinity, -Infinity, -Infinity];
+    positions.forEach((v, i) => {
+      lo[i % 3] = Math.min(lo[i % 3]!, v);
+      hi[i % 3] = Math.max(hi[i % 3]!, v);
+    });
+    expect(lo.map((v, i) => +(v - [1, 2, 3][i]!).toFixed(6))).toEqual([
+      -0.2, -0.1, -0.05,
+    ]);
+    expect(hi.map((v, i) => +(v - [1, 2, 3][i]!).toFixed(6))).toEqual([
+      0.2, 0.1, 0.05,
+    ]);
   });
 });
 

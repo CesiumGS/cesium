@@ -1,4 +1,5 @@
-import { primitiveOf, type LeafNode, type Vec3 } from "./tree.ts";
+import { isStepLeaf, primitiveOf, type LeafNode, type Vec3 } from "./tree.ts";
+import type { Primitive } from "../../src/brep/kernelProtocol.ts";
 
 /**
  * The transient preview of a primitive while a parameter is dragged (plan
@@ -81,9 +82,19 @@ const X: Vec3 = [1, 0, 0];
 const Y: Vec3 = [0, 1, 0];
 const Z: Vec3 = [0, 0, 1];
 
-/** The leaf's wire: its primitive's, then its placement. */
+/** The leaf's wire: its primitive's (a STEP part's is its bounds' box), then its placement. */
 export function outlineOf(leaf: LeafNode): Outline {
-  const primitive = primitiveOf(leaf);
+  const primitive: Primitive = isStepLeaf(leaf)
+    ? {
+        kind: "box",
+        origin: [
+          -leaf.step.size[0] / 2,
+          -leaf.step.size[1] / 2,
+          -leaf.step.size[2] / 2,
+        ],
+        size: leaf.step.size,
+      }
+    : primitiveOf(leaf);
   const wire = new Wire();
   switch (primitive.kind) {
     case "box": {

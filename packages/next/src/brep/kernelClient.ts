@@ -16,6 +16,7 @@ import type {
   KernelRequest,
   Primitive,
   SolidRecipe,
+  StepPart,
 } from "./kernelProtocol.ts";
 
 /** What a client needs of a worker: a Web Worker has it. */
@@ -58,6 +59,13 @@ export interface CallOptions {
 
 export interface ImportResult {
   forms: KernelForm[];
+  loadMs: number;
+  importMs: number;
+  convertMs: number;
+}
+
+export interface RegisterStepResult {
+  part: StepPart;
   loadMs: number;
   importMs: number;
   convertMs: number;
@@ -139,6 +147,43 @@ export class KernelClient {
     }
     const { forms, loadMs, importMs, convertMs } = reply;
     return { forms, loadMs, importMs, convertMs };
+  }
+
+  /**
+   * Imports a STEP file with Open CASCADE and keeps its solid in the worker
+   * under `key`, for `evaluate`'s recipes' `step` leaves (a file of several
+   * solids is fused; the part is centred on its bounds). Not superseded by
+   * evaluations. The bytes' buffer moves to the worker, as `importStep`'s.
+   */
+  async registerStep(
+    key: number,
+    bytes: Uint8Array,
+    options: Pick<CallOptions, "onStage"> = {},
+  ): Promise<RegisterStepResult> {
+    const whole =
+      bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength;
+    const moved = whole ? bytes : bytes.slice();
+    const reply = await this.send(
+      (id) => ({ type: "registerStep", id, key, bytes: moved }),
+      { supersedable: false, onStage: options.onStage },
+      [moved.buffer as ArrayBuffer],
+    );
+    if (reply.type !== "stepRegistered") {
+      throw new Error(`unexpected reply ${reply.type}`);
+    }
+    const { part, loadMs, importMs, convertMs } = reply;
+    return { part, loadMs, importMs, convertMs };
+  }
+
+  /** Frees the part `registerStep` kept under `key`. */
+  async releaseStep(key: number): Promise<void> {
+    const reply = await this.send((id) => ({ type: "releaseStep", id, key }), {
+      supersedable: false,
+      onStage: undefined,
+    });
+    if (reply.type !== "stepReleased") {
+      throw new Error(`unexpected reply ${reply.type}`);
+    }
   }
 
   /** A boolean of two primitives (the first tagged 1, the second 2) in a kernel, converted to the render form. */

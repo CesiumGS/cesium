@@ -47,6 +47,10 @@ export type BooleanOperation = "union" | "difference" | "intersection";
  * name the leaf each face came from. A node folds its operands left to right:
  * a union or intersection of all of them, a difference of the first minus the
  * rest. A node with one operand is that operand; with none it is an error.
+ *
+ * A `step` leaf is a solid imported earlier (`registerStep`) under `step`'s
+ * key, centred on the middle of its bounds and placed like a primitive. Only
+ * Open CASCADE reads it.
  */
 export type SolidRecipe =
   | {
@@ -56,10 +60,30 @@ export type SolidRecipe =
       placement?: Placement;
     }
   | {
+      type: "step";
+      tag: number;
+      /** The key the solid was registered under. */
+      step: number;
+      placement?: Placement;
+    }
+  | {
       type: "boolean";
       operation: BooleanOperation;
       operands: SolidRecipe[];
     };
+
+/** A recipe's leaf: a primitive or an imported solid. */
+export type RecipeLeaf = Exclude<SolidRecipe, { type: "boolean" }>;
+
+/** What `registerStep` made of a file. */
+export interface StepPart {
+  /** How many solids the file held (more than one are fused into the part). */
+  solids: number;
+  /** The part's faces. */
+  faces: number;
+  /** Its extent along x, y and z, m. The part is centred on the middle of its bounds. */
+  size: Vec3;
+}
 
 /** A form with what the worker measured of it, so the page needn't. */
 export interface KernelForm {
@@ -100,6 +124,12 @@ export interface FormWork {
 export type KernelRequest =
   | { type: "load"; id: number; kernel: KernelName; url?: string }
   | ({ type: "importStep"; id: number; bytes: Uint8Array } & FormWork)
+  /**
+   * Imports a STEP file with Open CASCADE and keeps its solid in the worker
+   * under `key` (replacing one already there), for recipes' `step` leaves.
+   */
+  | { type: "registerStep"; id: number; key: number; bytes: Uint8Array }
+  | { type: "releaseStep"; id: number; key: number }
   | ({
       type: "boolean";
       id: number;
@@ -132,6 +162,18 @@ export type KernelReply =
       convertMs: number;
     }
   | {
+      type: "stepRegistered";
+      id: number;
+      key: number;
+      part: StepPart;
+      /** Loading the module, when this request did: 0 once it was loaded. */
+      loadMs: number;
+      importMs: number;
+      /** Fusing the solids, centring the part and measuring it. */
+      convertMs: number;
+    }
+  | { type: "stepReleased"; id: number; key: number }
+  | {
       type: "boolean";
       id: number;
       result: KernelForm;
@@ -157,17 +199,15 @@ export type KernelReply =
 type TypedArray = ArrayBufferView & { readonly buffer: ArrayBufferLike };
 
 /** The leaves of a recipe, left to right. */
-export function recipeLeaves(
-  recipe: SolidRecipe,
-): Extract<SolidRecipe, { type: "primitive" }>[] {
-  return recipe.type === "primitive"
-    ? [recipe]
-    : recipe.operands.flatMap(recipeLeaves);
+export function recipeLeaves(recipe: SolidRecipe): RecipeLeaf[] {
+  return recipe.type === "boolean"
+    ? recipe.operands.flatMap(recipeLeaves)
+    : [recipe];
 }
 
 /** How many booleans a recipe makes (a node of n operands makes n - 1). */
 export function countBooleans(recipe: SolidRecipe): number {
-  return recipe.type === "primitive"
+  return recipe.type !== "boolean"
     ? 0
     : Math.max(0, recipe.operands.length - 1) +
         recipe.operands.reduce((n, operand) => n + countBooleans(operand), 0);
@@ -177,7 +217,7 @@ export function countBooleans(recipe: SolidRecipe): number {
 export function checkRecipe(recipe: SolidRecipe): void {
   const seen = new Set<number>();
   const visit = (node: SolidRecipe): void => {
-    if (node.type === "primitive") {
+    if (node.type !== "boolean") {
       if (!Number.isInteger(node.tag) || node.tag < 1 || seen.has(node.tag)) {
         throw new Error(`the recipe's leaf tag ${node.tag} isn't unique`);
       }

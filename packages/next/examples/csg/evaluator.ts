@@ -5,8 +5,16 @@ import {
 import type { BrepForm } from "../../src/brep/form.ts";
 import type { FormBounds } from "../../src/brep/formBounds.ts";
 import type { GpuPatches } from "../../src/brep/gpuPatches.ts";
-import type { KernelName, SolidRecipe } from "../../src/brep/kernelProtocol.ts";
+import {
+  recipeLeaves,
+  type KernelName,
+  type SolidRecipe,
+} from "../../src/brep/kernelProtocol.ts";
 import type { BrepProblem } from "../../src/brep/validate.ts";
+
+/** Why SMLib can't build a tree with a STEP part. */
+export const STEP_NEEDS_OCCT =
+  "a STEP part needs Open CASCADE (SMLib doesn't read STEP files)";
 
 /**
  * Re-evaluating the tree as it is edited (plan §13.33, editing): the
@@ -74,15 +82,45 @@ export class KernelSession {
   }
 
   /**
+   * Imports a STEP file in Open CASCADE's worker and keeps its solid there
+   * under `key`, for recipes' `step` leaves (see `KernelClient.registerStep`).
+   */
+  async registerStep(
+    key: number,
+    bytes: Uint8Array,
+    onStage?: (stage: string) => void,
+  ) {
+    const made = await this.clients.occt.registerStep(
+      key,
+      bytes,
+      onStage ? { onStage } : {},
+    );
+    this.loaded.add("occt");
+    return made;
+  }
+
+  /** Frees the part kept under `key`. */
+  async releaseStep(key: number): Promise<void> {
+    await this.clients.occt.releaseStep(key);
+  }
+
+  /**
    * Evaluates a recipe in a kernel. A newer call on the same kernel
    * supersedes this one (it rejects with `KernelCancelled`). A final
-   * evaluation is also checked (`validateBrep`); a preview isn't.
+   * evaluation is also checked (`validateBrep`); a preview isn't. STEP
+   * parts are Open CASCADE's: SMLib refuses a recipe that has one.
    */
   async evaluate(
     kernel: KernelName,
     recipe: SolidRecipe,
     options: { final: boolean; onStage?: (stage: string) => void },
   ): Promise<Evaluated> {
+    if (
+      kernel === "smlib" &&
+      recipeLeaves(recipe).some((l) => l.type === "step")
+    ) {
+      throw new Error(STEP_NEEDS_OCCT);
+    }
     const start = performance.now();
     const made = await this.clients[kernel].evaluate(kernel, recipe, {
       validate: options.final,

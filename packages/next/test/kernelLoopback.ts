@@ -44,6 +44,8 @@ export function loopback(
     },
     terminate() {
       port.terminated = true;
+      // A real worker's memory goes with it.
+      host.dispose();
     },
     addEventListener(type: string, listener: unknown) {
       (listeners as Record<string, unknown[]>)[type]!.push(listener);

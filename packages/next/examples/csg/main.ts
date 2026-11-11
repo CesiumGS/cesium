@@ -21,7 +21,17 @@ import {
   KernelSession,
   type Evaluated,
 } from "./evaluator.ts";
+import {
+  DEFAULT_LIGHTING,
+  LIGHTING_RANGES,
+  applyLighting,
+  decodeLighting,
+  encodeLighting,
+  type Lighting,
+} from "./lighting.ts";
 import { outlineOf } from "./preview.ts";
+import { STEP_SAMPLES, fetchStepSample, isStepFile } from "./stepFiles.ts";
+import { DoubleBuffer, afterFrames } from "./swap.ts";
 import {
   OPERATIONS,
   OPERATION_LABELS,
@@ -30,11 +40,13 @@ import {
   addChild,
   createLeaf,
   createOp,
+  createStepLeaf,
   defaultBracket,
   duplicateNode,
   facesOfNode,
   findNode,
   indentNode,
+  isStepLeaf,
   leavesOf,
   moveNode,
   outdentNode,
@@ -58,10 +70,17 @@ import { CSS, el, field, segmented, type Phase } from "./ui.ts";
  * - The tree (`tree.ts`) is plain data: leaves are primitives with
  *   parameters and a placement, nodes are unions, differences and
  *   intersections. It becomes a recipe (`SolidRecipe`) that a kernel in a Web
- *   Worker evaluates: SMLib or Open CASCADE, switched in the panel, each
- *   converting its solid to the engine's one render form and saying which
- *   leaf made every face. The page only receives the form, with its patches
- *   prepared for the GPU, and gives it to `World.addBrep`.
+ *   Worker evaluates: Open CASCADE (the default, which measured faster here)
+ *   or SMLib, switched in the panel, each converting its solid to the
+ *   engine's one render form and saying which leaf made every face. The page
+ *   only receives the form, with its patches prepared for the GPU, and gives
+ *   it to `World.addBrep`.
+ * - A STEP leaf is an imported solid (`stepFiles.ts`: a NIST sample from
+ *   /step-samples/, a picked file or one dropped on the view). Open CASCADE's
+ *   worker keeps the part (`registerStep`), centred on its bounds, and a
+ *   recipe's `step` leaf is a copy of it with its own placement, so its faces
+ *   carry the leaf's tag like a primitive's. Only Open CASCADE builds with
+ *   it; with SMLib selected the sample says so and keeps the last solid.
  * - Picks go to the tree: a picked face names its leaf from the kernel's face
  *   tags (SMLib's attribute, OCCT's history) and the tree row, the path to the
  *   root and the leaf's faces light up; selecting a row lights the faces of
@@ -72,6 +91,16 @@ import { CSS, el, field, segmented, type Phase } from "./ui.ts";
  *   pending, so a slow kernel skips states); the solid is checked on release.
  *   Picking is off while a parameter is dragged, so queries never read what
  *   the drag is about to replace.
+ * - Changing the solid never shows a bad frame (`swap.ts`): a new solid's
+ *   draws used a stand-in until their shader's texture loaded, and the face
+ *   palette read from that stand-in gave black, so the whole model flashed
+ *   black at every re-evaluation. The new solid is added hidden, drawn for a
+ *   few frames, and swapped in for the old one in one step; a new palette
+ *   replaces the texture of the shader that is there rather than making a
+ *   shader whose texture has to load.
+ * - Lighting (`lighting.ts`): the sun's direction and strength, shadows,
+ *   ambient occlusion and its radius, the sky's light and the exposure, kept
+ *   in the link's `light` parameter.
  *
  * TODO (plan §13.33, owner 2026-11-10): the four-view layout, CAD's quad
  * view in third-angle projection (Top over Front, Right beside Front, and an
@@ -96,6 +125,11 @@ const PALETTE_WIDTH = 256;
 const PALETTE_WGSL = /* wgsl */ `
 fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
   if (fsInput.featureId < uniforms.base) {
+    return;
+  }
+  // Until the palette has loaded the engine binds a 1 x 1 stand-in, and
+  // reading a face's texel from it gives black: the plain colour then.
+  if (textureDimensions(palette, 0).x < ${PALETTE_WIDTH}u) {
     return;
   }
   let face = fsInput.featureId - uniforms.base;
@@ -145,7 +179,6 @@ export async function run({
   view.background = "color";
   view.clearColor = [0.78, 0.82, 0.88];
   view.lighting.environment = "procedural";
-  view.observer.exposure = { ev100: 15 };
 
   const session = new KernelSession();
   const scheduler = new EvaluationScheduler({
@@ -153,10 +186,12 @@ export async function run({
   });
   const tree: { current: CsgTree } = { current: defaultBracket() };
   const settings = {
-    kernel: (params.kernel === "occt" ? "occt" : "smlib") as KernelName,
+    kernel: (params.kernel === "smlib" ? "smlib" : "occt") as KernelName,
     edges: true,
     byLeaf: true,
   };
+  /** The sun, shadows, occlusion, sky and exposure (`lighting.ts`), from the link's `light`. */
+  const lighting: Lighting = decodeLighting(params.light);
   /** The selected node, and the face a pick chose (the node's own faces are drawn lighter than it). */
   let selectedId: number | undefined;
   let pickedFace: number | undefined;
@@ -254,7 +289,7 @@ export async function run({
     -30 * DEG,
     -32 * DEG,
   );
-  viewer.setSun(150, 40);
+  applyLighting(viewer, lighting);
 
   // ---------------------------------------------------------- the solid
   type BrepHandle = ReturnType<typeof world.addBrep>;
@@ -263,23 +298,57 @@ export async function run({
     handle: BrepHandle;
     /** Draw indices of the faces' draws, for picks. */
     faceDraws: Set<number>;
+    /**
+     * Each face draw's colour shader, kept so a new palette replaces the
+     * texture in place: a new shader reads a stand-in until its texture
+     * has loaded (a palette read before that was black).
+     */
+    shaders: Map<DrawHandle, CustomShader>;
     edges?: { draw: DrawHandle; mesh: MeshHandle };
     /** Main thread work, ms: giving the form to `addBrep`, and the edges' overlay. */
     brepMs: number;
     edgesMs: number;
   }
+  /** The solid on screen. A newer one is added hidden and swapped in once it has drawn right (`swap.ts`). */
   let shown: Shown | undefined;
   let failure: string | undefined;
 
+  const removeSolid = (solid: Shown) => {
+    world.removeBrep(solid.handle);
+    if (solid.edges) {
+      world.removeDraw(solid.edges.draw);
+      world.removeMesh(solid.edges.mesh);
+    }
+  };
+  /** Shows or hides all of a solid's draws. */
+  const setSolidVisible = (solid: Shown, visible: boolean) => {
+    for (const draw of faceDraws(solid.handle)) {
+      world.setVisible(draw, visible);
+    }
+    if (solid.edges) {
+      world.setVisible(solid.edges.draw, visible);
+    }
+  };
+  const buffer = new DoubleBuffer<Shown>({
+    reveal: (next, previous) => {
+      shown = next;
+      setSolidVisible(next, true);
+      if (previous) {
+        removeSolid(previous);
+      }
+      if (next.result.final && !dragging) {
+        clearPreview();
+      }
+      refreshResult();
+      refreshTree();
+      refreshPicked();
+      engine.requestRender();
+    },
+    discard: removeSolid,
+  });
+
   const removeShown = () => {
-    if (!shown) {
-      return;
-    }
-    world.removeBrep(shown.handle);
-    if (shown.edges) {
-      world.removeDraw(shown.edges.draw);
-      world.removeMesh(shown.edges.mesh);
-    }
+    buffer.clear();
     shown = undefined;
   };
 
@@ -320,37 +389,63 @@ export async function run({
     return image;
   };
 
-  /** Colours the faces by leaf; the selection's and the picked face's in their own colours. */
-  const applyColours = () => {
-    if (!shown) {
-      return;
-    }
-    for (const draw of faceDraws(shown.handle)) {
-      const palette = paletteOf(shown.result);
-      world.setDrawShader(
-        draw,
-        new CustomShader({
-          fragment: PALETTE_WGSL,
-          uniforms: {
-            base: { type: "u32", value: world.featureIdOf(draw) },
-            palette: {
-              type: "texture2d",
-              value: palette,
-              nearest: true,
-              clamp: true,
-            },
+  /** Colours a solid's faces by leaf; the selection's and the picked face's in their own colours. */
+  const colour = (solid: Shown) => {
+    const palette = paletteOf(solid.result);
+    for (const draw of faceDraws(solid.handle)) {
+      const shader = solid.shaders.get(draw);
+      if (shader) {
+        shader.setUniform("palette", palette);
+        continue;
+      }
+      const made = new CustomShader({
+        fragment: PALETTE_WGSL,
+        uniforms: {
+          base: { type: "u32", value: world.featureIdOf(draw) },
+          palette: {
+            type: "texture2d",
+            value: palette,
+            nearest: true,
+            clamp: true,
           },
-          label: "CSG: face colours",
-        }),
-      );
+        },
+        label: "CSG: face colours",
+      });
+      solid.shaders.set(draw, made);
+      world.setDrawShader(draw, made);
+    }
+  };
+
+  /** Colours the solid shown, and the one waiting to replace it. */
+  const applyColours = () => {
+    if (shown) {
+      colour(shown);
+    }
+    if (buffer.pending) {
+      colour(buffer.pending);
     }
     engine.requestRender();
   };
 
-  /** Replaces what is drawn with a kernel's result. */
+  /** Frames a new solid draws hidden before it is shown: a pipeline compiled, a texture loaded, its patches diced. */
+  const SETTLE_FRAMES = 3;
+
+  /**
+   * Waits until a solid's draws would show what they should. TODO: replace
+   * with `engine.whenReady(view, { draws })` once it lands: it knows when no
+   * draw uses a stand-in and the patches are diced; this compiles the
+   * shaders and then waits a few frames, with the palette's robust fragment
+   * stage covering what that misses.
+   */
+  const settled = async (solid: Shown) => {
+    await Promise.allSettled(
+      [...solid.shaders.values()].map((shader) => engine.compileShader(shader)),
+    );
+    await afterFrames(engine, SETTLE_FRAMES, { signal });
+  };
+
+  /** Adds a kernel's result hidden, and shows it, in place of the solid shown, once it has drawn right. */
   const show = (result: Evaluated) => {
-    const previous = shown;
-    shown = undefined;
     const start = performance.now();
     const handle = world.addBrep(result.form, {
       origin,
@@ -368,22 +463,17 @@ export async function run({
       result,
       handle,
       faceDraws: new Set(faceDraws(handle).map((draw) => draw.index)),
+      shaders: new Map(),
       brepMs,
       edgesMs: 0,
     };
-    shown = next;
     if (settings.edges) {
       addEdges(next);
     }
-    // The old solid goes once the new one is in: no frame without a solid.
-    if (previous) {
-      world.removeBrep(previous.handle);
-      if (previous.edges) {
-        world.removeDraw(previous.edges.draw);
-        world.removeMesh(previous.edges.mesh);
-      }
-    }
-    applyColours();
+    colour(next);
+    setSolidVisible(next, false);
+    engine.requestRender();
+    void buffer.stage(next, () => settled(next));
   };
 
   /** The form's edges, lifted off the faces, as a line overlay (a CPU mesh of edges only). */
@@ -430,15 +520,22 @@ export async function run({
 
   const setEdges = (on: boolean) => {
     settings.edges = on;
-    if (!shown) {
-      return;
-    }
-    if (!on && shown.edges) {
-      world.removeDraw(shown.edges.draw);
-      world.removeMesh(shown.edges.mesh);
-      delete shown.edges;
-    } else if (on && !shown.edges) {
-      addEdges(shown);
+    for (const solid of [shown, buffer.pending]) {
+      if (!solid) {
+        continue;
+      }
+      if (!on && solid.edges) {
+        world.removeDraw(solid.edges.draw);
+        world.removeMesh(solid.edges.mesh);
+        delete solid.edges;
+      } else if (on && !solid.edges) {
+        addEdges(solid);
+        // A solid still waiting stays hidden, edges too.
+        const added = solid.edges as Shown["edges"];
+        if (added && solid !== shown) {
+          world.setVisible(added.draw, false);
+        }
+      }
     }
     refreshResult();
     engine.requestRender();
@@ -584,9 +681,6 @@ export async function run({
       }
       failure = undefined;
       show(result);
-      if (final && !dragging) {
-        clearPreview();
-      }
       console.info(
         `csg: ${KERNEL_NAMES[kernel]}${final ? "" : " (preview)"}: kernel ${result.timings.kernelMs.toFixed(1)} ms (${result.booleans} booleans), convert ${result.timings.convertMs.toFixed(1)} ms, prepare ${ms(result.timings.prepareMs)}, ${result.form.faceSurface.length} faces`,
       );
@@ -675,14 +769,14 @@ export async function run({
     "Kernel",
     [
       {
-        value: "smlib",
-        label: "SMLib",
-        title: "SMLib in WebAssembly (Apache 2.0)",
-      },
-      {
         value: "occt",
         label: "Open CASCADE",
         title: "Open CASCADE in WebAssembly (LGPL 2.1), about 23 MB",
+      },
+      {
+        value: "smlib",
+        label: "SMLib",
+        title: "SMLib in WebAssembly (Apache 2.0)",
       },
     ],
     () => settings.kernel,
@@ -693,7 +787,7 @@ export async function run({
       return;
     }
     settings.kernel = kernel;
-    setParams({ kernel: kernel === "smlib" ? undefined : kernel });
+    setParams({ kernel: kernel === "occt" ? undefined : kernel });
     kernelNote();
     scheduler.commit();
   };
@@ -701,8 +795,8 @@ export async function run({
   const kernelNote = () => {
     kernelAbout.textContent =
       settings.kernel === "smlib"
-        ? "SMLib: every face arrives as Bézier patches, carrying its analytic identity. Provenance is an attribute SMLib copies through booleans."
-        : "Open CASCADE: faces stay analytic. Provenance is each boolean's history (Modified, IsDeleted).";
+        ? "SMLib: every face arrives as Bézier patches, carrying its analytic identity. Provenance is an attribute SMLib copies through booleans. It doesn't read STEP files."
+        : "Open CASCADE: faces stay analytic. Provenance is each boolean's history (Modified, IsDeleted). It also reads STEP files.";
   };
   kernelNote();
 
@@ -712,11 +806,31 @@ export async function run({
     ariaLabel: "CSG tree",
   });
   const tools = el("div", { className: "csg-tools" });
+  const stepTools = el("div", { className: "csg-tools" });
   const inspector = el("div", { className: "csg-group" });
   const resultBox = el("div", { className: "csg-group" });
   const pickedBox = el("div", { className: "csg-group" });
 
+  /** STEP parts the OCCT worker holds for leaves of the tree, by key. */
+  const stepKeys = new Set<number>();
+  let nextStepKey = 1;
+  /** Frees the parts no leaf uses any more (a leaf removed, or one of a copy). */
+  const releaseUnusedSteps = () => {
+    const used = new Set(
+      leavesOf(tree.current.root)
+        .filter(isStepLeaf)
+        .map((leaf) => leaf.step.key),
+    );
+    for (const key of [...stepKeys]) {
+      if (!used.has(key)) {
+        stepKeys.delete(key);
+        session.releaseStep(key).catch(() => undefined);
+      }
+    }
+  };
+
   const structureChanged = () => {
+    releaseUnusedSteps();
     refreshTree();
     refreshInspector();
     scheduler.commit();
@@ -795,7 +909,9 @@ export async function run({
           "span",
           { className: "csg-badge" },
           node.type === "leaf"
-            ? PRIMITIVE_SPECS[node.kind].label
+            ? isStepLeaf(node)
+              ? "STEP"
+              : PRIMITIVE_SPECS[node.kind].label
             : OPERATION_LABELS[node.operation],
           faces === undefined
             ? ""
@@ -820,7 +936,9 @@ export async function run({
     refreshTools();
   };
 
-  const addAt = (what: string) => {
+  /** Where a new node goes: under the selected operation, or after the selected leaf. */
+  const insertion = ():
+    { target: OpNode; at: number | undefined } | undefined => {
     const selected =
       selectedId === undefined ? undefined : findNode(tree.current, selectedId);
     const target: OpNode | undefined =
@@ -830,23 +948,115 @@ export async function run({
           ? parentOf(tree.current, selected.id)
           : tree.current.root;
     if (!target) {
-      return;
+      return undefined;
     }
-    const at =
-      selected && selected.type === "leaf"
-        ? target.children.indexOf(selected) + 1
-        : undefined;
-    const node: TreeNode = (PRIMITIVE_KINDS as readonly string[]).includes(what)
-      ? createLeaf(tree.current, what as PrimitiveKind, {
-          translate: [0, 0, 0.6],
-        })
-      : createOp(tree.current, what as OpNode["operation"]);
-    addChild(tree.current, target.id, node, at);
+    return {
+      target,
+      at:
+        selected && selected.type === "leaf"
+          ? target.children.indexOf(selected) + 1
+          : undefined,
+    };
+  };
+  const addNode = (
+    node: TreeNode,
+    place: NonNullable<ReturnType<typeof insertion>>,
+  ) => {
+    addChild(tree.current, place.target.id, node, place.at);
     selectedId = node.id;
     pickedFace = undefined;
     structureChanged();
     refreshPicked();
     applyColours();
+  };
+  const addAt = (what: string) => {
+    const place = insertion();
+    if (!place) {
+      return;
+    }
+    const node: TreeNode = (PRIMITIVE_KINDS as readonly string[]).includes(what)
+      ? createLeaf(tree.current, what as PrimitiveKind, {
+          translate: [0, 0, 0.6],
+        })
+      : createOp(tree.current, what as OpNode["operation"]);
+    addNode(node, place);
+  };
+
+  // ------------------------------------------------------ STEP leaves
+  let importing = 0;
+  /**
+   * Imports a STEP file in Open CASCADE's worker (whatever kernel builds
+   * the solid) and adds it to the tree as a leaf, resting on the ground.
+   * The solid is built from it only by Open CASCADE.
+   */
+  const importStep = async (
+    name: string,
+    file: string,
+    read: () => Promise<Uint8Array>,
+  ) => {
+    const mine = ++importing;
+    let problem: string | undefined;
+    busy(`Reading ${file}…`);
+    try {
+      const bytes = await read();
+      if (!isStepFile(bytes)) {
+        throw new Error("it isn't a STEP file");
+      }
+      const key = nextStepKey++;
+      const { part } = await session.registerStep(key, bytes, (stage) => {
+        if (mine !== importing) {
+          return;
+        }
+        if (stage.startsWith("Loading")) {
+          setLoading(`${stage} (about 23 MB the first time)`);
+        } else {
+          busy(`${file}: ${stage}`);
+        }
+      });
+      if (signal.aborted) {
+        return;
+      }
+      stepKeys.add(key);
+      const leaf = createStepLeaf(
+        tree.current,
+        { key, file, size: [part.size[0], part.size[1], part.size[2]] },
+        { name, translate: [0, 0, part.size[2] / 2] },
+      );
+      const place = insertion();
+      if (place) {
+        addNode(leaf, place);
+      }
+      console.info(
+        `csg: ${file}: ${part.solids} solid${part.solids === 1 ? "" : "s"}, ${part.faces} faces, ${part.size.map((v) => v.toFixed(3)).join(" × ")} m`,
+      );
+    } catch (error) {
+      if (error instanceof KernelCancelled || signal.aborted) {
+        return;
+      }
+      problem = `${file} couldn't be imported: ${error instanceof Error ? error.message : String(error)}`;
+      console.warn("csg: the STEP import failed:", error);
+    }
+    if (mine === importing) {
+      busy(undefined);
+      setLoading(undefined);
+      if (problem) {
+        status.textContent = problem;
+        status.dataset.bad = "";
+        status.hidden = false;
+      }
+    }
+  };
+  const importFile = (file: File) =>
+    importStep(
+      file.name.replace(/\.(step|stp)$/i, ""),
+      file.name,
+      async () => new Uint8Array(await file.arrayBuffer()),
+    );
+  const importSample = (file: string) => {
+    const sample = STEP_SAMPLES.find((s) => s.file === file)!;
+    return importStep(sample.name, sample.file, () =>
+      fetchStepSample(sample.file, signal),
+    );
   };
   const removeSelected = (id = selectedId) => {
     if (id === undefined) {
@@ -1021,22 +1231,33 @@ export async function run({
       );
     } else {
       parts.push(
-        el("h4", {}, "Parameters"),
-        ...PRIMITIVE_SPECS[node.kind].params.map((spec) =>
-          field({
-            label: spec.label,
-            value: node.params[spec.key]!,
-            min: spec.min,
-            max: spec.max,
-            step: spec.step,
-            floor: spec.min,
-            unit: "m",
-            onChange: (value, phase) => {
-              node.params[spec.key] = value;
-              edited(node, phase);
-            },
-          }),
-        ),
+        ...(isStepLeaf(node)
+          ? [
+              el("h4", {}, "STEP part"),
+              el(
+                "p",
+                { className: "csg-note" },
+                `${node.step.file}, ${node.step.size.map((v) => v.toFixed(3)).join(" × ")} m, centred on its bounds. Open CASCADE only.`,
+              ),
+            ]
+          : [
+              el("h4", {}, "Parameters"),
+              ...PRIMITIVE_SPECS[node.kind].params.map((spec) =>
+                field({
+                  label: spec.label,
+                  value: node.params[spec.key]!,
+                  min: spec.min,
+                  max: spec.max,
+                  step: spec.step,
+                  floor: spec.min,
+                  unit: "m",
+                  onChange: (value, phase) => {
+                    node.params[spec.key] = value;
+                    edited(node, phase);
+                  },
+                }),
+              ),
+            ]),
         el("h4", {}, "Turn about x, then y, then z"),
         ...(["x", "y", "z"] as const).map((axis, i) =>
           field({
@@ -1269,12 +1490,162 @@ export async function run({
     })(),
   );
 
+  // ------------------------------------------------------------ lighting
+  const lit = () => {
+    applyLighting(viewer, lighting);
+  };
+  const persistLighting = () => setParams({ light: encodeLighting(lighting) });
+  const lightingFields = el("div", { className: "csg-group" });
+  const refreshLighting = () => {
+    const slider = (
+      label: string,
+      key: keyof typeof LIGHTING_RANGES,
+      unit?: string,
+    ) =>
+      field({
+        label,
+        value: lighting[key],
+        ...LIGHTING_RANGES[key],
+        floor: LIGHTING_RANGES[key].min,
+        ...(unit ? { unit } : {}),
+        onChange: (value, phase) => {
+          lighting[key] = value;
+          lit();
+          if (phase !== "drag") {
+            persistLighting();
+          }
+        },
+      });
+    const check = (
+      label: string,
+      title: string,
+      key: "shadows" | "ambientOcclusion",
+    ) => {
+      const box = el("input", {
+        type: "checkbox",
+        checked: lighting[key],
+        onchange: () => {
+          lighting[key] = box.checked;
+          lit();
+          persistLighting();
+        },
+      });
+      return el("label", { title }, label, box);
+    };
+    lightingFields.replaceChildren(
+      el("h4", {}, "Sun"),
+      slider("Azimuth", "azimuth", "°"),
+      slider("Elevation", "elevation", "°"),
+      slider("Intensity", "sun", "×"),
+      el("h4", {}, "Shadows and occlusion"),
+      el(
+        "div",
+        { className: "csg-toggles" },
+        check("Shadows", "The sun's cascaded shadow maps.", "shadows"),
+        check(
+          "Ambient occlusion",
+          "The sky's light hidden by nearby surfaces (GTAO).",
+          "ambientOcclusion",
+        ),
+      ),
+      slider("AO radius", "aoRadius", "m"),
+      el("h4", {}, "Sky and camera"),
+      slider("Sky light", "sky", "×"),
+      slider("Exposure", "exposure", "EV"),
+      el(
+        "button",
+        {
+          type: "button",
+          title: "Back to the sample's own light",
+          onclick: () => {
+            Object.assign(lighting, DEFAULT_LIGHTING);
+            lit();
+            persistLighting();
+            refreshLighting();
+          },
+        },
+        "Reset lighting",
+      ),
+      el(
+        "p",
+        { className: "csg-note" },
+        "Intensity 1 is the atmosphere's own light; another value is a white sun of that many times 100 klx. The engine's shadows have no softness or cascade options yet, and ambient occlusion has a radius but no strength.",
+      ),
+    );
+  };
+
+  // ----------------------------------------------------------- the panel
+  const stepSelect = el(
+    "select",
+    {
+      ariaLabel: "Import a NIST STEP sample",
+      title:
+        "A NIST test model, served from /step-samples/ (npm run setup fetches them)",
+      onchange: () => {
+        if (stepSelect.value) {
+          void importSample(stepSelect.value);
+          stepSelect.value = "";
+        }
+      },
+    },
+    el("option", { value: "", textContent: "STEP sample…" }),
+    ...STEP_SAMPLES.map((sample) =>
+      el("option", {
+        value: sample.file,
+        textContent: `${sample.name}: ${sample.description}`,
+      }),
+    ),
+  );
+  const stepInput = el("input", {
+    type: "file",
+    accept: ".step,.stp",
+    hidden: true,
+    onchange: () => {
+      const file = stepInput.files?.[0];
+      stepInput.value = "";
+      if (file) {
+        void importFile(file);
+      }
+    },
+  });
+  stepTools.append(
+    stepSelect,
+    el(
+      "button",
+      {
+        type: "button",
+        title:
+          "Import a STEP file from disk (or drop one on the view): Open CASCADE builds with it",
+        onclick: () => stepInput.click(),
+      },
+      "Open STEP…",
+    ),
+    stepInput,
+  );
+  const dragOver = (event: DragEvent) => {
+    if (event.dataTransfer?.types.includes("Files")) {
+      event.preventDefault();
+    }
+  };
+  const drop = (event: DragEvent) => {
+    const file = [...(event.dataTransfer?.files ?? [])].find((f) =>
+      /\.(step|stp)$/i.test(f.name),
+    );
+    if (file) {
+      event.preventDefault();
+      void importFile(file);
+    }
+  };
+  view_.addEventListener("dragover", dragOver);
+  view_.addEventListener("drop", drop);
+
   panel.append(
     kernelChoice.element,
     kernelAbout,
     el("h3", {}, "Tree"),
     treeList,
     tools,
+    stepTools,
     el("h3", {}, "Selected node"),
     inspector,
     el("h3", {}, "Solid"),
@@ -1283,12 +1654,15 @@ export async function run({
     pickedBox,
     el("h3", {}, "Display"),
     toggles,
+    el("h3", {}, "Lighting"),
+    lightingFields,
     el(
       "p",
       { className: "csg-note" },
       "One perspective view for now. The four-view layout (top, front, right and an isometric) waits for the orthographic camera.",
     ),
   );
+  refreshLighting();
   refreshTree();
   refreshInspector();
   refreshResult();
@@ -1313,6 +1687,8 @@ export async function run({
     view_.removeEventListener("pointerdown", pointerDown);
     view_.removeEventListener("pointerup", pointerUp);
     view_.removeEventListener("keydown", onKey);
+    view_.removeEventListener("dragover", dragOver);
+    view_.removeEventListener("drop", drop);
     view_.classList.remove("csg-view");
     if (previousTabIndex === null) {
       view_.removeAttribute("tabindex");

@@ -87,20 +87,45 @@ export const PRIMITIVE_SPECS: Record<
   },
 };
 
-export interface LeafNode {
+/** What a STEP leaf's solid is: a part registered in the OCCT worker under `key`. */
+export interface StepRef {
+  /** The worker's key for the part (`KernelClient.registerStep`); only meaningful in the session that made it. */
+  key: number;
+  /** The file's name, or the sample's. */
+  file: string;
+  /** The part's extent along x, y and z, m: for the drag's wire. */
+  size: Vec3;
+}
+
+interface LeafBase {
   type: "leaf";
   /** Positive and unique in its tree: the tag its faces carry. */
   id: number;
   name: string;
   /** A disabled node is left out of the recipe. */
   enabled: boolean;
-  kind: PrimitiveKind;
   params: Record<string, number>;
   /** Degrees: about the world's x, then y, then z through the origin. */
   rotate: Vec3;
   /** Where its middle goes, m. */
   translate: Vec3;
 }
+
+/** A primitive with parameters. */
+export interface PrimitiveLeaf extends LeafBase {
+  kind: PrimitiveKind;
+}
+
+/** An imported solid (Open CASCADE only), centred on its bounds like a primitive. */
+export interface StepLeaf extends LeafBase {
+  kind: "step";
+  step: StepRef;
+}
+
+export type LeafNode = PrimitiveLeaf | StepLeaf;
+
+export const isStepLeaf = (leaf: LeafNode): leaf is StepLeaf =>
+  leaf.kind === "step";
 
 export interface OpNode {
   type: "op";
@@ -149,8 +174,8 @@ export function defaultParams(kind: PrimitiveKind): Record<string, number> {
 function makeLeaf(
   id: number,
   kind: PrimitiveKind,
-  init: Partial<Omit<LeafNode, "type" | "id" | "kind">> = {},
-): LeafNode {
+  init: LeafInit = {},
+): PrimitiveLeaf {
   return {
     type: "leaf",
     id,
@@ -163,13 +188,42 @@ function makeLeaf(
   };
 }
 
+type LeafInit = Partial<Omit<LeafBase, "type" | "id">>;
+
+function makeStepLeaf(
+  id: number,
+  step: StepRef,
+  init: LeafInit = {},
+): StepLeaf {
+  return {
+    type: "leaf",
+    id,
+    name: init.name ?? step.file,
+    enabled: init.enabled ?? true,
+    kind: "step",
+    step: { ...step, size: [...step.size] },
+    params: {},
+    rotate: init.rotate ?? [0, 0, 0],
+    translate: init.translate ?? [0, 0, 0],
+  };
+}
+
 /** A leaf, not yet in the tree (`addChild` puts it there). */
 export function createLeaf(
   tree: CsgTree,
   kind: PrimitiveKind,
-  init: Partial<Omit<LeafNode, "type" | "id" | "kind">> = {},
-): LeafNode {
+  init: LeafInit = {},
+): PrimitiveLeaf {
   return makeLeaf(tree.nextId++, kind, init);
+}
+
+/** A leaf of an imported STEP part, not yet in the tree. */
+export function createStepLeaf(
+  tree: CsgTree,
+  step: StepRef,
+  init: LeafInit = {},
+): StepLeaf {
+  return makeStepLeaf(tree.nextId++, step, init);
 }
 
 export function createOp(
@@ -189,7 +243,7 @@ export function createOp(
 }
 
 /** The primitive a leaf makes, centred on the origin, m. */
-export function primitiveOf(leaf: LeafNode): Primitive {
+export function primitiveOf(leaf: PrimitiveLeaf): Primitive {
   const p = leaf.params;
   switch (leaf.kind) {
     case "box":
@@ -248,6 +302,14 @@ export function recipeOf(node: TreeNode): SolidRecipe | undefined {
   }
   if (node.type === "leaf") {
     const placement = placementOf(node);
+    if (isStepLeaf(node)) {
+      return {
+        type: "step",
+        tag: node.id,
+        step: node.step.key,
+        ...(placement ? { placement } : {}),
+      };
+    }
     return {
       type: "primitive",
       tag: node.id,
@@ -266,7 +328,7 @@ export function recipeOf(node: TreeNode): SolidRecipe | undefined {
 /** A leaf from a primitive in the convention `primitiveOf` makes (centred on the origin). */
 function leafOfPrimitive(
   recipe: Extract<SolidRecipe, { type: "primitive" }>,
-): LeafNode {
+): PrimitiveLeaf {
   const { primitive: p, placement } = recipe;
   const placed = {
     rotate: placement?.rotate ? ([...placement.rotate] as Vec3) : undefined,
@@ -316,15 +378,32 @@ function leafOfPrimitive(
 /**
  * A tree from a recipe `recipeOf` made (leaf tags become ids and the nodes
  * get the ids after them; names are the kinds' and operations'). A lone
- * primitive goes under a union, since the root is an operation.
+ * primitive goes under a union, since the root is an operation. A STEP leaf
+ * comes back with the key only: the recipe doesn't say the file or the size.
  */
 export function treeFromRecipe(recipe: SolidRecipe): CsgTree {
   const tree = newTree();
   tree.nextId = Math.max(0, ...recipeLeaves(recipe).map((l) => l.tag)) + 1;
-  const make = (node: SolidRecipe): TreeNode =>
-    node.type === "primitive"
-      ? leafOfPrimitive(node)
-      : createOp(tree, node.operation, undefined, node.operands.map(make));
+  const make = (node: SolidRecipe): TreeNode => {
+    if (node.type === "primitive") {
+      return leafOfPrimitive(node);
+    }
+    if (node.type === "step") {
+      return makeStepLeaf(
+        node.tag,
+        { key: node.step, file: "STEP part", size: [0, 0, 0] },
+        {
+          ...(node.placement?.rotate
+            ? { rotate: [...node.placement.rotate] as Vec3 }
+            : {}),
+          ...(node.placement?.translate
+            ? { translate: [...node.placement.translate] as Vec3 }
+            : {}),
+        },
+      );
+    }
+    return createOp(tree, node.operation, undefined, node.operands.map(make));
+  };
   const root = make(recipe);
   tree.root =
     root.type === "op" ? root : createOp(tree, "union", "Model", [root]);
@@ -467,15 +546,24 @@ export function duplicateNode(tree: CsgTree, id: number): TreeNode | undefined {
   if (!parent || !node) {
     return undefined;
   }
-  const copy = (source: TreeNode): TreeNode =>
-    source.type === "leaf"
+  const copyLeaf = (source: LeafNode): LeafNode => {
+    const common = {
+      id: tree.nextId++,
+      params: { ...source.params },
+      rotate: [...source.rotate] as Vec3,
+      translate: [...source.translate] as Vec3,
+    };
+    return isStepLeaf(source)
       ? {
           ...source,
-          id: tree.nextId++,
-          params: { ...source.params },
-          rotate: [...source.rotate],
-          translate: [...source.translate],
+          ...common,
+          step: { ...source.step, size: [...source.step.size] as Vec3 },
         }
+      : { ...source, ...common };
+  };
+  const copy = (source: TreeNode): TreeNode =>
+    source.type === "leaf"
+      ? copyLeaf(source)
       : {
           ...source,
           id: tree.nextId++,
@@ -530,6 +618,7 @@ interface RawNode {
   name?: unknown;
   enabled?: unknown;
   kind?: string;
+  step?: { key?: unknown; file?: unknown; size?: unknown };
   params?: Record<string, unknown>;
   rotate?: unknown;
   translate?: unknown;
@@ -565,6 +654,27 @@ export function parseTree(data: unknown): CsgTree {
       enabled: n.enabled !== false,
     };
     if (n.type === "leaf") {
+      if (n.kind === "step") {
+        const raw = n.step;
+        if (
+          !raw ||
+          typeof raw !== "object" ||
+          !Number.isInteger(raw.key) ||
+          typeof raw.file !== "string" ||
+          !isVec3(raw.size)
+        ) {
+          throw new Error(`${where}'s STEP part is incomplete`);
+        }
+        return {
+          ...common,
+          type: "leaf",
+          kind: "step",
+          step: { key: raw.key as number, file: raw.file, size: [...raw.size] },
+          params: {},
+          rotate: vec3(n.rotate, where),
+          translate: vec3(n.translate, where),
+        };
+      }
       if (!PRIMITIVE_KINDS.includes(n.kind as PrimitiveKind)) {
         throw new Error(`${where} has an unknown primitive "${n.kind}"`);
       }

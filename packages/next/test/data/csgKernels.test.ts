@@ -1,9 +1,10 @@
-// The CSG sample's recipes in the real kernels (plan §13.33): a tree of
+﻿// The CSG sample's recipes in the real kernels (plan Â§13.33): a tree of
 // primitives and booleans, made in SMLib and in Open CASCADE behind the
 // worker's loopback, comes back as one valid, outward-facing form whose
 // faces are tagged by the leaf that made them; placements turn and move the
 // same way in both kernels (and as the example's preview draws them); and
 // Open CASCADE leaves no handle alive.
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -22,6 +23,7 @@ import { OcctKernel, type OcctModule } from "../../src/brep/occt.ts";
 import { SmlibKernel, type SmlibModule } from "../../src/brep/smlib.ts";
 import { occtDirectory } from "../../scripts/occtTools.mjs";
 import { smlibDirectory } from "../../scripts/smlibTools.mjs";
+import { stepSamplesDirectory } from "../../scripts/stepSamples.mjs";
 import { loopback } from "../kernelLoopback.ts";
 import { expectSolidForm, inBox } from "./brepSolids.ts";
 import { trackHandles } from "./occtHandles.ts";
@@ -90,7 +92,7 @@ describe.each(KERNELS)("%s: placements", (kernel) => {
     );
 
   it("turns about x by a right-handed angle, then moves", async () => {
-    // A cylinder up z from the origin, turned +90° about x, lies along -y.
+    // A cylinder up z from the origin, turned +90Â° about x, lies along -y.
     const b = await bounds(
       leaf(
         1,
@@ -112,7 +114,7 @@ describe.each(KERNELS)("%s: placements", (kernel) => {
     );
     near(y.min, [0, -0.25, -0.25]);
     near(y.max, [1, 0.25, 0.25]);
-    // A box turned 90° about z: (x, y) goes to (-y, x).
+    // A box turned 90Â° about z: (x, y) goes to (-y, x).
     const z = await bounds(
       leaf(
         1,
@@ -122,8 +124,8 @@ describe.each(KERNELS)("%s: placements", (kernel) => {
     );
     near(z.min, [-2, 1, 0]);
     near(z.max, [0, 2, 3]);
-    // x then z: a box [0,1] × [0,2] × [0,3] turned 90° about x becomes
-    // [0,1] × [-3,0] × [0,2]; then 90° about z takes (x, y) to (-y, x).
+    // x then z: a box [0,1] Ã— [0,2] Ã— [0,3] turned 90Â° about x becomes
+    // [0,1] Ã— [-3,0] Ã— [0,2]; then 90Â° about z takes (x, y) to (-y, x).
     const xz = await bounds(
       leaf(
         1,
@@ -301,4 +303,126 @@ describe.each(KERNELS)("%s: the default bracket", (kernel) => {
     client.dispose();
     expect(handles.describe()).toEqual([]);
   }, 120_000);
+});
+
+describe("occt: STEP parts as leaves", () => {
+  const sample = () =>
+    new Uint8Array(
+      readFileSync(join(stepSamplesDirectory()!, "nist_ftc_06_asme1_rd.stp")),
+    );
+  const near = (actual: number, expected: number, tolerance: number) =>
+    expect(Math.abs(actual - expected)).toBeLessThan(tolerance);
+
+  it("registers a NIST part centred on its bounds, and places it like a primitive", async () => {
+    const { client, handles } = setup();
+    const { part } = await client.registerStep(3, sample());
+    expect(part.solids).toBe(1);
+    expect(part.faces).toBe(144);
+    // FTC-06 is 0.305 m by 0.098 m by 0.248 m.
+    near(part.size[0], 0.3048, 1e-3);
+    near(part.size[2], 0.24765, 1e-3);
+
+    const centred = await client.evaluate("occt", {
+      type: "step",
+      tag: 5,
+      step: 3,
+    });
+    const { min, max } = centred.result.bounds;
+    for (let a = 0; a < 3; a++) {
+      near(min[a]! + max[a]!, 0, 2e-3);
+      near(max[a]! - min[a]!, part.size[a]!, 2e-3);
+    }
+    expect(new Set(centred.result.faceTags)).toEqual(new Set([5]));
+
+    // Turned 90Â° about z, then moved: x and y swap, z is the same.
+    const placed = await client.evaluate("occt", {
+      type: "step",
+      tag: 5,
+      step: 3,
+      placement: { rotate: [0, 0, 90], translate: [1, 2, 3] },
+    });
+    near(placed.result.bounds.min[0]! + placed.result.bounds.max[0]!, 2, 4e-3);
+    near(placed.result.bounds.min[1]! + placed.result.bounds.max[1]!, 4, 4e-3);
+    near(placed.result.bounds.min[2]! + placed.result.bounds.max[2]!, 6, 4e-3);
+    near(
+      placed.result.bounds.max[0]! - placed.result.bounds.min[0]!,
+      part.size[1],
+      0.02,
+    );
+    near(
+      placed.result.bounds.max[1]! - placed.result.bounds.min[1]!,
+      part.size[0],
+      0.02,
+    );
+    client.dispose();
+    expect(handles.describe()).toEqual([]);
+  }, 120_000);
+
+  it("takes part in a boolean: valid, with the step leaf's faces tagged by it", async () => {
+    const { client, handles } = setup();
+    const { part } = await client.registerStep(3, sample());
+    // What is past x = 0.05 of the part, cut by a box tagged 8.
+    const made = await client.evaluate(
+      "occt",
+      {
+        type: "boolean",
+        operation: "intersection",
+        operands: [
+          { type: "step", tag: 7, step: 3 },
+          leaf(8, { kind: "box", origin: [0.05, -1, -1], size: [1, 2, 2] }),
+        ],
+      },
+      { validate: true, prepare: true },
+    );
+    expect(made.result.problems).toEqual([]);
+    expect(made.result.patches!.faces.length).toBe(
+      made.result.form.faceSurface.length,
+    );
+    const tags = made.result.faceTags!;
+    expect(new Set(tags)).toEqual(new Set([7, 8]));
+    // The cut leaves face(s) of the box, and many of the part's own.
+    expect(tags.filter((t) => t === 8).length).toBeGreaterThanOrEqual(1);
+    expect(tags.filter((t) => t === 7).length).toBeGreaterThan(20);
+    const { min, max } = made.result.bounds;
+    near(min[0]!, 0.05, 2e-3);
+    near(max[0]!, part.size[0] / 2, 2e-3);
+
+    // The same part twice in one recipe (two leaves, one key), and a cut with a primitive.
+    const twice = await client.evaluate(
+      "occt",
+      {
+        type: "boolean",
+        operation: "union",
+        operands: [
+          { type: "step", tag: 1, step: 3 },
+          {
+            type: "step",
+            tag: 2,
+            step: 3,
+            placement: { translate: [part.size[0] + 0.1, 0, 0] },
+          },
+        ],
+      },
+      { validate: true },
+    );
+    expect(twice.result.problems).toEqual([]);
+    expect(new Set(twice.result.faceTags)).toEqual(new Set([1, 2]));
+    expect(twice.result.form.faceSurface.length).toBe(288);
+
+    await client.releaseStep(3);
+    await expect(
+      client.evaluate("occt", { type: "step", tag: 1, step: 3 }),
+    ).rejects.toThrow(/isn't loaded/);
+    client.dispose();
+    expect(handles.describe()).toEqual([]);
+  }, 180_000);
+
+  it("is Open CASCADE's: SMLib refuses a recipe with a step leaf", async () => {
+    const { client, handles } = setup();
+    await expect(
+      client.evaluate("smlib", { type: "step", tag: 1, step: 3 }),
+    ).rejects.toThrow(/can't read STEP files/);
+    client.dispose();
+    expect(handles.describe()).toEqual([]);
+  }, 60_000);
 });
