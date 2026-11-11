@@ -1025,6 +1025,26 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * The number of features in the feature ID set used for picking and styling
+   * (see {@link Model#featureIdLabel} and {@link Model#instanceFeatureIdLabel}),
+   * or zero when the model has none or is not ready. A change of label takes
+   * effect when the model is next updated.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {number}
+   * @readonly
+   *
+   * @see Model#getFeature
+   */
+  featuresLength: {
+    get: function () {
+      const featureTable = this._featureTables[this._featureTableId];
+      return defined(featureTable) ? featureTable.featuresLength : 0;
+    },
+  },
+
+  /**
    * A user-defined object that is returned when the model is picked.
    *
    * @memberof Model.prototype
@@ -1919,6 +1939,53 @@ Model.prototype.getNode = function (name) {
   //>>includeEnd('debug');
 
   return this._nodesByName.get(name);
+};
+
+/**
+ * Returns a feature of the feature ID set used for picking and styling
+ * (see {@link Model#featureIdLabel} and {@link Model#instanceFeatureIdLabel}),
+ * as {@link Scene#pick} returns it, to show, hide or color it without picking.
+ * A change of label takes effect when the model is next updated.
+ *
+ * @param {number} featureId The feature's ID, from 0 to {@link Model#featuresLength} - 1.
+ * @returns {ModelFeature} The feature.
+ *
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ * @exception {DeveloperError} The model has no feature ID set for picking and styling.
+ * @exception {DeveloperError} featureId is required and must be between 0 and featuresLength - 1.
+ *
+ * @example
+ * // Hide every feature whose "kind" property is "tree"
+ * for (let i = 0; i < model.featuresLength; ++i) {
+ *   const feature = model.getFeature(i);
+ *   feature.show = feature.getProperty("kind") !== "tree";
+ * }
+ */
+Model.prototype.getFeature = function (featureId) {
+  const featureTable = this._featureTables[this._featureTableId];
+
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+    );
+  }
+  if (!defined(featureTable)) {
+    throw new DeveloperError(
+      "The model has no feature ID set for picking and styling. Make sure featureIdLabel or instanceFeatureIdLabel names one.",
+    );
+  }
+  const featuresLength = featureTable.featuresLength;
+  if (!defined(featureId) || featureId < 0 || featureId >= featuresLength) {
+    throw new DeveloperError(
+      `featureId is required and must be between 0 and featuresLength - 1 (${
+        featuresLength - 1
+      }).`,
+    );
+  }
+  //>>includeEnd('debug');
+
+  return featureTable.getFeature(featureId);
 };
 
 /**

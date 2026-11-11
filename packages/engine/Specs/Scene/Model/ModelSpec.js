@@ -2118,6 +2118,56 @@ describe(
         expect(model.featureTableId).toEqual(0);
       });
 
+      it("featuresLength and getFeature use the selected feature table", async function () {
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: buildingsMetadata,
+          },
+          scene,
+        );
+        const featureTable = model.featureTables[model.featureTableId];
+        expect(model.featuresLength).toEqual(10);
+        expect(model.getFeature(3)).toBe(featureTable.getFeature(3));
+      });
+
+      it("getFeature throws when model is not ready", async function () {
+        const model = await Model.fromGltfAsync({
+          gltf: buildingsMetadata,
+        });
+
+        expect(function () {
+          model.getFeature(0);
+        }).toThrowDeveloperError();
+      });
+
+      it("getFeature throws for a feature ID out of range", async function () {
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: buildingsMetadata,
+          },
+          scene,
+        );
+        expect(function () {
+          return model.getFeature(10);
+        }).toThrowDeveloperError();
+        expect(function () {
+          return model.getFeature(-1);
+        }).toThrowDeveloperError();
+      });
+
+      it("featuresLength is zero and getFeature throws for a model without features", async function () {
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGlbUrl,
+          },
+          scene,
+        );
+        expect(model.featuresLength).toEqual(0);
+        expect(function () {
+          return model.getFeature(0);
+        }).toThrowDeveloperError();
+      });
+
       it("featureIdLabel setter works", async function () {
         const model = await loadAndZoomToModelAsync(
           {

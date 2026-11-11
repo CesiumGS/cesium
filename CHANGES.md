@@ -18,6 +18,7 @@
 
 #### Additions :tada:
 
+- Added `Model.featuresLength` and `Model.getFeature`, which return the features of a model's feature ID set used for picking and styling, to show, hide or color them without picking. [#14042](https://github.com/CesiumGS/cesium/pull/14042)
 - Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)
 - Added support for Custom Shaders in Gaussian Splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
 

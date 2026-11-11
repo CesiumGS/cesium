@@ -51,15 +51,7 @@ class Model3DTileContent {
   }
 
   get featuresLength() {
-    const model = this._model;
-    const featureTables = model.featureTables;
-    const featureTableId = model.featureTableId;
-
-    if (defined(featureTables) && defined(featureTables[featureTableId])) {
-      return featureTables[featureTableId].featuresLength;
-    }
-
-    return 0;
+    return this._model.featuresLength;
   }
 
   get pointsLength() {
@@ -194,27 +186,7 @@ class Model3DTileContent {
     }
     //>>includeEnd('debug');
 
-    const featureTable = model.featureTables[featureTableId];
-
-    //>>includeStart('debug', pragmas.debug);
-    if (!defined(featureTable)) {
-      throw new DeveloperError(
-        "No feature table found for the selected feature ID set",
-      );
-    }
-    //>>includeEnd('debug');
-
-    //>>includeStart('debug', pragmas.debug);
-    const featuresLength = featureTable.featuresLength;
-    if (!defined(featureId) || featureId < 0 || featureId >= featuresLength) {
-      throw new DeveloperError(
-        `featureId is required and must be between 0 and featuresLength - 1 (${
-          featuresLength - 1
-        }).`,
-      );
-    }
-    //>>includeEnd('debug');
-    return featureTable.getFeature(featureId);
+    return model.getFeature(featureId);
   }
 
   hasProperty(featureId, name) {
