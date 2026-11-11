@@ -111,7 +111,7 @@ const TILES = [
   {
     risk: "Compute between draws",
     why: "A compute pass ends any render pass around it. GPU-driven culling and tessellation are compute-heavy by design.",
-    here: "Culling runs in compute each tick, and the planned tessellation engine is compute too.",
+    here: "Culling runs in compute each tick, and the b-rep dice is compute too, in a pass of its own each view. A b-rep face of degree 3 or less draws through it.",
   },
   {
     risk: "Memory",

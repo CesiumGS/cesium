@@ -91,7 +91,7 @@ export const PASSES: Record<string, PassNote> = {
     kind: "compute",
     summary: "Which draws this view sees, and their draw arguments.",
     detail:
-      "The first view's cull uploads changed table rows. Then the batches' counts clear, cullRecords and cullInstances append visible items, and writeDrawArgs writes the indirect arguments. Point sets follow, with cullPoints and writePointArgs. This is also the one place large coordinates meet the camera.",
+      "The first view's cull uploads changed table rows. Then the batches' counts clear, cullRecords and cullInstances append visible items, and writeDrawArgs writes the indirect arguments. Point sets follow, with cullPoints and writePointArgs. A b-rep's patch draws are then diced for this view, in a compute pass of their own that the graph doesn't list: dicePatches sizes each span's grid and writePatchArgs writes the indirect arguments. The Tessellation tab follows it. This is also the one place large coordinates meet the camera.",
     reads: ["view block", "draw records", "transforms"],
     writes: ["items", "draw arguments"],
   },
@@ -328,7 +328,7 @@ export const SEAMS: readonly SeamNote[] = [
     passes: ["shadows", "cull", "prepass", "opaque", "translucent"],
     today: "One indirect draw per batch, its items bound as a vertex buffer.",
     readyFor:
-      "Multi-draw indirect, GPU-driven submission, or a later compute pass writing the counts",
+      "Multi-draw indirect or GPU-driven submission. The patch dice already writes its own counts, with writePatchArgs",
     guards: [
       {
         file: "test/seams.test.ts",
@@ -366,7 +366,7 @@ export const SEAMS: readonly SeamNote[] = [
     ],
     passes: ["shadows", "prepass", "opaque", "translucent"],
     today: "A placements buffer, evaluated in the vertex stage.",
-    readyFor: "Another per-draw data backend, or later tessellation",
+    readyFor: "Another per-draw data backend",
     guards: [
       {
         file: "test/seams.test.ts",
@@ -588,15 +588,5 @@ export const DECISIONS: readonly DecisionNote[] = [
 ];
 
 export const COMING = [
-  "A GPU tessellation engine, later: not built, with its seam (S4 and S2) kept open. The Tessellation tab holds its place.",
+  "Subdividing ordinary meshes: the dice serves b-reps only, and nothing subdivides a reprojected model. The Tessellation tab lists what else isn't built.",
 ];
-
-/** A pass the plan calls for and nothing builds: the chart's dashed row. */
-export const PLANNED_PASS = {
-  after: "cull",
-  name: "tessellation",
-  kind: "compute, not built",
-  seams: ["S4", "S2"],
-  reads: ["draw records"],
-  writes: ["draw arguments"],
-};

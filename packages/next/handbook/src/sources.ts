@@ -534,6 +534,42 @@ export const SOURCES = {
     checked: "2026-11-09",
     note: "Its abstract was read, on this page and in a search result. The paper's body wasn't: its PDF came back as unreadable data, and its publisher's page refused the connection. So what it says of glare's pyramid and level weights isn't confirmed here.",
   },
+  gutheTrimming: {
+    short: "Guthe and others, 2005",
+    title:
+      "Guthe, Balázs and Klein: GPU-based trimming and tessellation of NURBS and T-Spline surfaces",
+    url: "https://doi.org/10.1145/1073204.1073305",
+    pageDate: "ACM Transactions on Graphics 24(3), July 2005 (SIGGRAPH 2005)",
+    checked: "2026-11-11",
+    note: "The venue, year and abstract were confirmed from a search summary and the University of Bayreuth's repository entry. The paper itself wasn't read.",
+  },
+  schollmeyerDirect: {
+    short: "Schollmeyer and Fröhlich, 2009",
+    title:
+      "Schollmeyer and Fröhlich: Direct Trimming of NURBS Surfaces on the GPU",
+    url: "https://doi.org/10.1145/1531326.1531353",
+    pageDate:
+      "ACM Transactions on Graphics 28(3), article 47, August 2009 (SIGGRAPH 2009)",
+    checked: "2026-11-11",
+    note: "The venue, year and abstract were confirmed from a search summary. The paper itself wasn't read.",
+  },
+  schollmeyerAntiAliased: {
+    short: "Schollmeyer and Fröhlich, 2019",
+    title:
+      "Schollmeyer and Fröhlich: Efficient and Anti-Aliased Trimming for Rendering Large NURBS Models",
+    url: "https://doi.org/10.1109/TVCG.2018.2814987",
+    pageDate: "IEEE TVCG 25(3), March 2019",
+    checked: "2026-11-11",
+    note: "The venue, year and abstract were confirmed from a search summary. The paper itself wasn't read.",
+  },
+  lengyelSlug: {
+    short: "Lengyel, 2017",
+    title: "Lengyel: GPU-Centered Font Rendering Directly from Glyph Outlines",
+    url: "https://jcgt.org/published/0006/02/02/",
+    pageDate: "Journal of Computer Graphics Techniques 6(2), 2017",
+    checked: "2026-11-11",
+    note: "The venue, year and abstract were confirmed from a search summary. The paper itself wasn't read.",
+  },
 } as const satisfies Record<string, Source>;
 
 export type SourceId = keyof typeof SOURCES;

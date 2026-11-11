@@ -140,7 +140,7 @@ const goals = (): readonly Goal[] => [
       ],
       [
         "target",
-        "Splats, tessellation and XR aren't built. Tessellation has a tab holding its place.",
+        "Splats and XR aren't built. B-reps are diced on the GPU, but nothing subdivides an ordinary mesh. The Tessellation tab has the detail.",
       ],
     ],
     tab: "rendering",

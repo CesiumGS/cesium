@@ -1,6 +1,7 @@
 import { Board, type BoardStep } from "../diagram.tsx";
 import {
   C,
+  Cite,
   CodeBlock,
   DataTable,
   Figure,
@@ -8,6 +9,7 @@ import {
   Note,
   Page,
   Section,
+  Sources,
   Written,
 } from "../parts.tsx";
 
@@ -738,9 +740,10 @@ export function Tessellation() {
         <p>
           A trimmed face is diced over its whole rectangle, and the fragment
           stage decides each pixel is inside the trim or not, from the face's
-          own pcurves in (u, v). It is Slug's glyph method (Lengyel, 2017):
-          horizontal bands, quadratic pieces, and a winding number from a ray.
-          Here the ray runs along +u and the bands are in v. The kernel is{" "}
+          own pcurves in (u, v). It is Slug's glyph method (
+          <Cite id="lengyelSlug" />
+          ): horizontal bands, quadratic pieces, and a winding number from a
+          ray. Here the ray runs along +u and the bands are in v. The kernel is{" "}
           <C>coverage.slang</C>, written for the vector fills to share.
         </p>
         <Flow
@@ -857,13 +860,17 @@ export function Tessellation() {
           built.
         </p>
         <p>
-          <strong>Prior art.</strong> Guthe and others (2005) trimmed and
-          tessellated NURBS on the GPU. Schollmeyer and Fröhlich trimmed NURBS
-          directly in the pixel stage (2009), and went on to anti-aliased
-          trimming of large NURBS models (2019). Lengyel's Slug (2017) is the
-          bands and winding, for glyphs. This is Slug's test over pcurve pieces,
-          with a dilation instead of anti-aliasing. The papers weren't re-read
-          for this page.
+          <strong>Prior art.</strong> Guthe and others trimmed and tessellated
+          NURBS on the GPU (<Cite id="gutheTrimming" />
+          ). Schollmeyer and Fröhlich trimmed NURBS directly in the pixel stage
+          (
+          <Cite id="schollmeyerDirect" />
+          ), and went on to anti-aliased trimming of large NURBS models (
+          <Cite id="schollmeyerAntiAliased" />
+          ). Lengyel's Slug (<Cite id="lengyelSlug" />) is the bands and
+          winding, for glyphs. This is Slug's test over pcurve pieces, with a
+          dilation instead of anti-aliasing. The papers weren't re-read for this
+          page.
         </p>
         <Written
           from={
@@ -1029,7 +1036,8 @@ export function Tessellation() {
             <strong>Anti-aliased trim edges.</strong> The test is hard, with a
             half-pixel dilation, so a trim edge is as smooth as the pixel grid
             allows and no smoother. The edge lines draw over it. Schollmeyer and
-            Fröhlich's 2019 work is the plan's reference for the real thing.
+            Fröhlich's 2019 work (<Cite id="schollmeyerAntiAliased" />) is the
+            plan's reference for the real thing.
           </li>
           <li>
             <strong>Stitching to shared edge samples.</strong> Faces don't share
@@ -1077,6 +1085,14 @@ export function Tessellation() {
           on="2026-11-11"
         />
       </Section>
+      <Sources
+        ids={[
+          "gutheTrimming",
+          "schollmeyerDirect",
+          "schollmeyerAntiAliased",
+          "lengyelSlug",
+        ]}
+      />
     </Page>
   );
 }

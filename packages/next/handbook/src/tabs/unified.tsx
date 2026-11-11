@@ -70,8 +70,8 @@ const MECHANISMS: (Block & { short: string })[] = [
 const MACHINERY: Block[] = [
   {
     name: "GPU tessellation and curves",
-    what: "Patches by screen-space error; one curve, coverage and stroke kernel for vectors and B-reps. A CPU stand-in today.",
-    state: "planned",
+    what: "Patches by screen-space error; one curve, coverage and stroke kernel for vectors and B-reps. Built for B-reps, diced each view with per-pixel trims. Vectors don't share it yet.",
+    state: "partly",
   },
   {
     name: "GPU-driven drawing",

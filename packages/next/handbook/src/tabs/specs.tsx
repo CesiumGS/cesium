@@ -56,7 +56,7 @@ const DECLARATIONS = [
     name: "BENTLEY_brep",
     what: "A B-rep beside a fallback mesh: surfaces, trims, edges and stable IDs as typed arrays. A client without it draws the fallback triangles.",
     state:
-      "Draft, in src/brep/BENTLEY_brep.md. Read by the loader; nothing draws it yet.",
+      "Draft, in src/brep/BENTLEY_brep.md. Read by the loader. The model path doesn't draw it: a host gives the form to the provisional World.addBrep, which draws it on the GPU.",
   },
 ];
 
@@ -136,7 +136,7 @@ const WEBGPU: {
       </>
     ),
     engine:
-      "A later seam for reprojected models and B-reps, in plan 5, section 8. See the Tessellation tab.",
+      "A seam for reprojected models and B-reps, in plan 5, section 8. Built for B-reps, provisional and internal; a reprojected model isn't subdivided yet. See the Tessellation tab.",
   },
   {
     feature: "Subgroups",

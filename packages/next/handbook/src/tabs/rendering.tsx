@@ -22,7 +22,6 @@ import {
   IMPORTED_FORMATS,
   PASSES,
   PASS_GROUPS,
-  PLANNED_PASS,
   SEAMS,
 } from "../pipeline.ts";
 
@@ -356,47 +355,6 @@ function FrameGraphChart() {
                             );
                           })}
                         </tr>
-                        {p.name === PLANNED_PASS.after ? (
-                          <tr className="graph-planned">
-                            <th className="graph-pass" scope="row">
-                              <span className="graph-pass-name">
-                                {PLANNED_PASS.name}
-                              </span>
-                              <span className="graph-pass-kind">
-                                {PLANNED_PASS.kind}
-                              </span>
-                              {shown("Seams") ? (
-                                <div className="tags">
-                                  {PLANNED_PASS.seams.map(seamTag)}
-                                </div>
-                              ) : null}
-                            </th>
-                            {columns.map((column, i) => {
-                              const write =
-                                PLANNED_PASS.writes.includes(column);
-                              const read = PLANNED_PASS.reads.includes(column);
-                              return (
-                                <td
-                                  className={
-                                    startsBuffers(i)
-                                      ? "graph-cell graph-split"
-                                      : "graph-cell"
-                                  }
-                                  key={column}
-                                >
-                                  {read || write ? (
-                                    <span
-                                      className="graph-mark"
-                                      title={`Not built: it would ${write ? "write" : "read"} ${column}`}
-                                    >
-                                      {write ? "W" : "R"}
-                                    </span>
-                                  ) : null}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ) : null}
                       </Fragment>
                     );
                   })}
