@@ -5,7 +5,11 @@
 // can't evaluate (a patch of degree above 3) stays a CPU mesh, so a caller
 // gets the whole solid. Provisional.
 import type { BrepForm } from "../../brep/form.ts";
-import { packGpuPatches, prepareGpuPatches } from "../../brep/gpuPatches.ts";
+import {
+  packGpuPatches,
+  prepareGpuPatches,
+  type GpuPatches,
+} from "../../brep/gpuPatches.ts";
 import { tessellateBrep } from "../../brep/tessellate.ts";
 import type { Mat4 } from "../../math/mat4.ts";
 import type { Vec3 } from "../../math/vec3.ts";
@@ -64,6 +68,14 @@ export interface BrepOptions extends Pick<
    */
   trimTolerance?: number;
   /**
+   * The form's `prepareGpuPatches` result when it was made elsewhere (the
+   * kernel worker does): from the same form with the same `trimTolerance`
+   * and the origin this call would use (the form's centre, or [0, 0, 0] with
+   * `transform`). Saves the main thread the preparing, which is most of
+   * `addBrep`'s time on a part of hundreds of faces.
+   */
+  prepared?: GpuPatches;
+  /**
    * Which faces are a CPU mesh. "unsupported" (default): only those the GPU
    * can't draw. "trimmed": also every face with a trim, as before the
    * per-pixel trim test; a diagnostic, to compare the two on one solid.
@@ -110,12 +122,14 @@ export function addBrep(
     );
   }
   const faceCount = form.faceSurface.length;
-  const prepared = prepareGpuPatches(form, {
-    ...(options.transform ? { origin: [0, 0, 0] } : {}),
-    ...(options.trimTolerance !== undefined
-      ? { trimTolerance: options.trimTolerance }
-      : {}),
-  });
+  const prepared =
+    options.prepared ??
+    prepareGpuPatches(form, {
+      ...(options.transform ? { origin: [0, 0, 0] } : {}),
+      ...(options.trimTolerance !== undefined
+        ? { trimTolerance: options.trimTolerance }
+        : {}),
+    });
   const cpuTrimmed = options.cpuFaces === "trimmed";
   const onGpu = (face: number): boolean => {
     const f = prepared.faces[face]!;

@@ -16,6 +16,7 @@ import {
   type MeshData,
 } from "../../src/index.ts";
 import { SurfaceKind } from "../../src/brep/index.ts";
+import type { BrepProblem } from "../../src/brep/validate.ts";
 import type { ExampleContext } from "../types.ts";
 import {
   boxBrep,
@@ -45,23 +46,25 @@ import {
   boundsSize,
   flatFaces,
   liftedEdges,
-  meshBounds,
   wireLines,
   type DisplayMode,
   type LineMesh,
 } from "./meshes.ts";
 import {
   KERNELS,
+  KernelSession,
   RECIPES,
   STEP_SAMPLES,
-  loadStep,
-  runKernels,
+  boundsFromKernel,
+  patchesFromKernel,
+  problemsFromKernel,
   type KernelLoad,
   type KernelResult,
   type StageReporter,
   type StepImport,
   type StepSample,
 } from "./kernels.ts";
+import { formBounds, type FormBounds } from "../../src/brep/formBounds.ts";
 
 /**
  * B-reps, a first look, in three scenes.
@@ -345,29 +348,20 @@ const TOOLBAR_CSS = `
 const LIFT = 0.0025;
 /** In GPU mode, the CPU mesh of the overlays, and of the modes that need triangles: its chordal tolerance, m in the scene. */
 const OVERLAY_TOLERANCE = 0.001;
-/** A coarse CPU tessellation's tolerance, m in the b-rep: it finds a shape's size and its lowest point for the GPU draws. */
-const BOUNDS_TOLERANCE = 0.002;
 /** The error targets the GPU slider spans, pixels (a log scale). */
 const MIN_PIXELS = 0.25;
 const MAX_PIXELS = 4;
-/** A form's bounds from a coarse tessellation, m in its coordinates: its size and its lowest point, found once per form. */
-const coarseBoundsCache = new WeakMap<
-  BrepForm,
-  { min: [number, number, number]; max: [number, number, number] }
->();
-function coarseBounds(form: BrepForm) {
-  let bounds = coarseBoundsCache.get(form);
-  if (!bounds) {
-    bounds = meshBounds([
-      tessellateBrep(form, { tolerance: BOUNDS_TOLERANCE }),
-    ]);
-    coarseBoundsCache.set(form, bounds);
-  }
+/** A form's bounds, m in its coordinates, found once per form: from the worker that made it, else from the form itself (`formBounds`: no tessellation). */
+const boundsCache = new WeakMap<BrepForm, FormBounds>();
+function boundsOfForm(form: BrepForm): FormBounds {
+  let bounds = boundsCache.get(form) ?? boundsFromKernel(form);
+  bounds ??= formBounds(form);
+  boundsCache.set(form, bounds);
   return bounds;
 }
 
 /** The bounds of several. */
-function unionBounds(all: ReadonlyArray<ReturnType<typeof coarseBounds>>) {
+function unionBounds(all: readonly FormBounds[]) {
   const min: [number, number, number] = [Infinity, Infinity, Infinity];
   const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
   for (const bounds of all) {
@@ -539,6 +533,8 @@ function readGlb(bytes: Uint8Array): { form?: BrepForm; warnings: string[] } {
 
 export async function run({ viewer, panel, signal }: ExampleContext) {
   const { engine, world, view } = viewer;
+  // The kernels' Web Workers, made when a scene first needs them.
+  const kernels = new KernelSession();
   viewer.creditsShown = false;
   viewer.setControls("orbit");
   view.background = "color";
@@ -647,7 +643,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     | { shapes: Shape[]; loads: KernelLoad[]; results: KernelResult[] }
     | undefined;
   const makeKernelScene = async (stage: StageReporter) => {
-    const { loads, results } = await runKernels(stage);
+    const { loads, results } = await kernels.runKernels(stage);
     const shapes: Shape[] = [];
     for (const result of results) {
       if (!result.form) {
@@ -690,18 +686,13 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     stage: StageReporter,
   ): Promise<StepScene> => {
     const none = { height: 1, radius: 3 };
-    const load = await loadStep(sample.file, stage);
+    const load = await kernels.loadStep(sample.file, stage);
     if ("problem" in load) {
       return { sample, shapes: [], problem: load.problem, framing: none };
     }
     try {
-      // A coarse tessellation, only to size the part.
-      await stage("Measuring the part…");
-      const start = performance.now();
-      const { min, max } = unionBounds(load.forms.map(coarseBounds));
-      console.info(
-        `brep-first-look: ${sample.name} measured in ${(performance.now() - start).toFixed(0)} ms`,
-      );
+      // The part's size, from its form (the worker measured it).
+      const { min, max } = unionBounds(load.forms.map(boundsOfForm));
       const size = [0, 1, 2].map((k) => max[k]! - min[k]!);
       const longest = Math.max(...size);
       const scale = longest > 0 ? STEP_SIZE / longest : 1;
@@ -843,20 +834,20 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   /** GPU mode's CPU meshes by shape: edges only, and with faces once something needs them. */
   const overlayEdges = new Map<Shape, BrepMesh>();
   const overlayFaces = new Map<Shape, BrepMesh>();
-  /** A coarse tessellation's size and lowest point of a shape, m in its b-rep. */
+  /** A shape's size and lowest point, m in its b-rep. */
   const boundsOf = (shape: Shape) => {
-    const { min, max } = coarseBounds(shape.form);
+    const { min, max } = boundsOfForm(shape.form);
     return {
       size: Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]),
       floor: min[2],
     };
   };
 
-  const problemCache = new Map<Shape, ReturnType<typeof validateBrep>>();
+  const problemCache = new Map<Shape, readonly BrepProblem[]>();
   const problemsOf = (shape: Shape) => {
     let problems = problemCache.get(shape);
     if (!problems) {
-      problems = validateBrep(shape.form);
+      problems = problemsFromKernel(shape.form) ?? validateBrep(shape.form);
       problemCache.set(shape, problems);
     }
     return problems;
@@ -1128,6 +1119,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         errorPixels: settings.pixels,
         // The CPU mesh of any faces the GPU path doesn't draw yet.
         cpuTolerance: OVERLAY_TOLERANCE / shape.scale,
+        // From the kernel's worker when the shape came from one.
+        ...(patchesFromKernel(shape.form)
+          ? { prepared: patchesFromKernel(shape.form)! }
+          : {}),
       });
       stats.gpu.prepareMs += performance.now() - start;
       // Each draw of the solid (the complete faces, the trimmed ones, the CPU mesh) reads its own palette.
@@ -1998,7 +1993,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       (n, shape) => n + problemsOf(shape).length,
       0,
     );
-    const { min, max } = unionBounds(forms.map(coarseBounds));
+    const { min, max } = unionBounds(forms.map(boundsOfForm));
     const scale = ss.shapes[0]?.scale ?? 1;
     const ms = (t: number) => `${t.toFixed(0)} ms`;
     const list = el("dl");
@@ -2160,10 +2155,14 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         }),
       );
     });
-  /** Names the load's stage on the view and waits for it to be painted. */
+  /** Names the load's stage on the view and waits for it to be painted: for stages that block this thread. */
   const reportStage: StageReporter = async (text) => {
     loadingText.textContent = text;
     await nextPaint();
+  };
+  /** Names a stage a worker is working on, which doesn't block this thread: nothing to wait for. */
+  const workerStage: StageReporter = (text) => {
+    loadingText.textContent = text;
   };
   /**
    * Runs a load behind the overlay: the controls off, the view dimmed (the
@@ -2189,6 +2188,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     const start = performance.now();
     show(next);
     const shownMs = performance.now() - start;
+    performance.measure(`brep-first-look: ${label}: show (main thread)`, {
+      start,
+      duration: shownMs,
+    });
     await nextPaint();
     console.info(
       `brep-first-look: ${label} shown in ${shownMs.toFixed(0)} ms (GPU prepare ${stats.gpu.prepareMs.toFixed(0)} ms, edges and bounds ${stats.ms.toFixed(0)} ms), first frame after ${(performance.now() - start - shownMs).toFixed(0)} ms more`,
@@ -2199,7 +2202,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     const sample = STEP_SAMPLES[index]!;
     sceneNote.textContent = `Importing ${sample.name} with Open CASCADE (about 23 MB to load the first time)…`;
     await loadScene(async (stage) => {
-      const made = await makeStepScene(sample, stage);
+      const made = await makeStepScene(sample, workerStage);
       if (signal.aborted) {
         return;
       }
@@ -2233,7 +2236,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           sceneNote.textContent =
             "Loading SMLib and Open CASCADE (about 28 MB the first time)…";
           const start = performance.now();
-          kernelScene = await makeKernelScene(stage);
+          kernelScene = await makeKernelScene(workerStage);
           console.info(
             `brep-first-look: kernels loaded and run in ${(performance.now() - start).toFixed(0)} ms`,
           );
@@ -2533,6 +2536,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     loading.remove();
     delete view_.dataset.loading;
     clearInterval(gpuTimer);
+    kernels.dispose();
     releaseBreps();
     for (const d of [...draws, ...selectionDraws, ...extras]) {
       world.removeDraw(d);

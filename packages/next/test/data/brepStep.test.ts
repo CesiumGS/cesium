@@ -22,6 +22,7 @@ import {
   type OcctSolid,
 } from "../../src/brep/occt.ts";
 import { tessellateBrep } from "../../src/brep/tessellate.ts";
+import { formBounds } from "../../src/brep/formBounds.ts";
 import { validateBrep } from "../../src/brep/validate.ts";
 import { occtDirectory } from "../../scripts/occtTools.mjs";
 import {
@@ -198,6 +199,16 @@ describe("NIST STEP samples", () => {
         expect(max[k]! - min[k]!).toBeGreaterThan(extent - 5e-4);
         expect(max[k]! - min[k]!).toBeLessThan(extent + 5e-4);
       });
+
+      // formBounds, from the form alone: holds the tessellation, to a share of the part's size.
+      const bounds = formBounds(form);
+      const longest = Math.max(...[0, 1, 2].map((k) => max[k]! - min[k]!));
+      for (let k = 0; k < 3; k++) {
+        expect(bounds.min[k]!).toBeLessThanOrEqual(min[k]! + 1e-6);
+        expect(bounds.max[k]!).toBeGreaterThanOrEqual(max[k]! - 1e-6);
+        expect(bounds.min[k]!).toBeGreaterThan(min[k]! - 0.05 * longest);
+        expect(bounds.max[k]!).toBeLessThan(max[k]! + 0.05 * longest);
+      }
 
       // Faces point outward as a whole: the mesh's volume is the solid's.
       const volume = kernel.volume(solid);

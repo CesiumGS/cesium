@@ -1,6 +1,17 @@
 import type { BrepForm } from "../../src/index.ts";
-import { OcctKernel, type OcctSolid } from "../../src/brep/occt.ts";
-import { SmlibKernel } from "../../src/brep/smlib.ts";
+import type { BrepProblem } from "../../src/brep/validate.ts";
+import {
+  KernelClient,
+  type KernelClientOptions,
+} from "../../src/brep/kernelClient.ts";
+import type {
+  BooleanOperation,
+  KernelForm,
+  KernelName as WorkerKernel,
+  Primitive,
+} from "../../src/brep/kernelProtocol.ts";
+import type { FormBounds } from "../../src/brep/formBounds.ts";
+import type { GpuPatches } from "../../src/brep/gpuPatches.ts";
 
 /**
  * The kernels behind the example's second and third scenes. The CSG spike's
@@ -10,18 +21,12 @@ import { SmlibKernel } from "../../src/brep/smlib.ts";
  * input it came from. The STEP scene imports NIST's parts through the same
  * Open CASCADE module, loaded once for both. The modules load only when a
  * scene needs them, from the dev server's /smlib/ and /occt/ (npm run setup
- * fetches and builds them), on the main thread: the CSG sample will run them
- * in a worker.
+ * fetches and builds them), and run in Web Workers (`KernelClient`, one per
+ * kernel, so the two work at once): the page only receives forms, with their
+ * bounds and problems already worked out.
  */
 
-/** The primitives both kernels make the same way, m. */
-interface Primitives<S> {
-  box(origin: ArrayLike<number>, size: ArrayLike<number>): S;
-  cylinder(base: ArrayLike<number>, radius: number, height: number): S;
-  sphere(centre: ArrayLike<number>, radius: number): S;
-}
-
-export type Operation = "difference" | "union" | "intersection";
+export type Operation = BooleanOperation;
 
 /** A boolean of two primitives, named for the panel. */
 interface Recipe {
@@ -29,7 +34,8 @@ interface Recipe {
   operation: Operation;
   a: string;
   b: string;
-  make<S>(k: Primitives<S>): [S, S];
+  /** The inputs, m: the first is tagged 1 and the second 2. */
+  inputs: readonly [Primitive, Primitive];
   /** How big the result is drawn. */
   scale: number;
 }
@@ -40,9 +46,9 @@ export const RECIPES: readonly Recipe[] = [
     operation: "difference",
     a: "the box",
     b: "the cylinder",
-    make: (k) => [
-      k.box([-1, -1, 0], [2, 2, 1]),
-      k.cylinder([0, 0, -0.5], 0.5, 2),
+    inputs: [
+      { kind: "box", origin: [-1, -1, 0], size: [2, 2, 1] },
+      { kind: "cylinder", base: [0, 0, -0.5], radius: 0.5, height: 2 },
     ],
     scale: 0.9,
   },
@@ -51,9 +57,9 @@ export const RECIPES: readonly Recipe[] = [
     operation: "union",
     a: "the box",
     b: "the sphere",
-    make: (k) => [
-      k.box([-0.8, -0.8, 0], [1.6, 1.6, 1.6]),
-      k.sphere([0.8, 0.8, 1.6], 0.7),
+    inputs: [
+      { kind: "box", origin: [-0.8, -0.8, 0], size: [1.6, 1.6, 1.6] },
+      { kind: "sphere", centre: [0.8, 0.8, 1.6], radius: 0.7 },
     ],
     scale: 0.8,
   },
@@ -62,9 +68,9 @@ export const RECIPES: readonly Recipe[] = [
     operation: "intersection",
     a: "the box",
     b: "the sphere",
-    make: (k) => [
-      k.box([-0.8, -0.8, 0], [1.6, 1.6, 1.6]),
-      k.sphere([0, 0, 0.8], 1.05),
+    inputs: [
+      { kind: "box", origin: [-0.8, -0.8, 0], size: [1.6, 1.6, 1.6] },
+      { kind: "sphere", centre: [0, 0, 0.8], radius: 1.05 },
     ],
     scale: 1.1,
   },
@@ -72,22 +78,30 @@ export const RECIPES: readonly Recipe[] = [
 
 export type KernelName = "SMLib" | "Open CASCADE";
 export const KERNELS: readonly KernelName[] = ["SMLib", "Open CASCADE"];
+const WORKER_KERNEL: Record<KernelName, WorkerKernel> = {
+  SMLib: "smlib",
+  "Open CASCADE": "occt",
+};
 
-/** The one Open CASCADE module, loaded on first use and shared by the scenes. */
-let occtLoad: Promise<OcctKernel> | undefined;
-let occtReady = false;
-function loadOcct(): Promise<OcctKernel> {
-  occtLoad ??= OcctKernel.load().then(
-    (kernel) => {
-      occtReady = true;
-      return kernel;
-    },
-    (error: unknown) => {
-      occtLoad = undefined;
-      throw error;
-    },
-  );
-  return occtLoad;
+/** What a worker worked out of a form besides the form, by form. */
+const measures = new WeakMap<BrepForm, KernelForm>();
+/** A form's box, from the worker that made it (or undefined: ask `formBounds`). */
+export function boundsFromKernel(form: BrepForm): FormBounds | undefined {
+  return measures.get(form)?.bounds;
+}
+/** A form's `validateBrep` findings, from the worker that made it (or undefined: run it). */
+export function problemsFromKernel(
+  form: BrepForm,
+): readonly BrepProblem[] | undefined {
+  return measures.get(form)?.problems;
+}
+/** A form's GPU patches, prepared by the worker that made it (or undefined: `addBrep` prepares them). */
+export function patchesFromKernel(form: BrepForm): GpuPatches | undefined {
+  return measures.get(form)?.patches;
+}
+function remember(part: KernelForm): BrepForm {
+  measures.set(part.form, part);
+  return part.form;
 }
 
 /** One recipe made by one kernel. */
@@ -109,10 +123,8 @@ export interface KernelLoad {
   problem?: string;
 }
 
-/** One kernel behind the same calls: make a recipe, tag, boolean, convert. */
-interface Runner {
-  run(recipe: Recipe): Omit<KernelResult, "kernel" | "recipe">;
-}
+/** Called as a load moves to its next stage. The kernels run in workers, so it isn't waited for. */
+export type StageReporter = (stage: string) => void | Promise<void>;
 
 function sources(tags: Int32Array, recipe: Recipe): string[] {
   return Array.from(tags, (tag) =>
@@ -120,113 +132,132 @@ function sources(tags: Int32Array, recipe: Recipe): string[] {
   );
 }
 
-function smlibRunner(kernel: SmlibKernel): Runner {
-  return {
-    run(recipe) {
-      const [a, b] = recipe.make(kernel);
-      kernel.tag(a, 1);
-      kernel.tag(b, 2);
-      let start = performance.now();
-      const result = kernel.boolean(recipe.operation, a, b);
-      const booleanMs = performance.now() - start;
-      start = performance.now();
-      try {
-        const brep = kernel.toForm(result);
-        return {
-          form: brep.form,
-          faceSources: sources(brep.faceTags, recipe),
-          booleanMs,
-          convertMs: performance.now() - start,
-        };
-      } finally {
-        result.delete();
-      }
-    },
-  };
-}
+/**
+ * The kernels' workers for one visit to the example: one per kernel, made
+ * when first needed and ended by `dispose`. Open CASCADE's serves the STEP
+ * scene and the Two kernels scene both.
+ */
+export class KernelSession {
+  private readonly clients: Record<KernelName, KernelClient>;
 
-function occtRunner(kernel: OcctKernel): Runner {
-  return {
-    run(recipe) {
-      const [a, b] = recipe.make(kernel);
-      let result: OcctSolid | undefined;
-      try {
-        let start = performance.now();
-        result = kernel.boolean(
-          recipe.operation,
-          kernel.tag(a, 1),
-          kernel.tag(b, 2),
-        );
-        const booleanMs = performance.now() - start;
-        start = performance.now();
-        const brep = kernel.toForm(result);
-        return {
-          form: brep.form,
-          faceSources: sources(brep.faceTags, recipe),
-          booleanMs,
-          convertMs: performance.now() - start,
-        };
-      } finally {
-        // OCCT's solids are the caller's to free; the form is its own copy.
-        result?.delete();
-        b.delete();
-        a.delete();
-      }
-    },
-  };
-}
+  constructor(options?: KernelClientOptions) {
+    this.clients = {
+      SMLib: new KernelClient(options),
+      "Open CASCADE": new KernelClient(options),
+    };
+  }
 
-/** Called as a load moves to its next stage; awaited, so a caller can let the browser paint the stage before the work that blocks. */
-export type StageReporter = (stage: string) => void | Promise<void>;
-
-/** Loads both kernels and makes every recipe in each. Never throws: failures are in the results. */
-export async function runKernels(
-  stage: StageReporter = () => undefined,
-): Promise<{
-  loads: KernelLoad[];
-  results: KernelResult[];
-}> {
-  const loaders: Record<KernelName, () => Promise<Runner>> = {
-    SMLib: async () => smlibRunner(await SmlibKernel.load()),
-    "Open CASCADE": async () => occtRunner(await loadOcct()),
-  };
-  const loads: KernelLoad[] = [];
-  const results: KernelResult[] = [];
-  // Both modules download at once; each then runs on its own.
-  await stage("Loading SMLib and Open CASCADE…");
-  const loaded = await Promise.all(
-    KERNELS.map(async (kernel) => {
-      const start = performance.now();
-      try {
-        const runner = await loaders[kernel]();
-        loads.push({ kernel, ms: performance.now() - start });
-        return runner;
-      } catch (error) {
-        loads.push({
-          kernel,
-          problem: `didn't load (${String(error)}); npm run setup fetches it, and the dev server serves it`,
-        });
-        return undefined;
-      }
-    }),
-  );
-  for (const recipe of RECIPES) {
-    for (const [k, kernel] of KERNELS.entries()) {
-      const runner = loaded[k];
-      if (!runner) {
-        results.push({ kernel, recipe, problem: "not loaded" });
-        continue;
-      }
-      await stage(`${kernel}: ${recipe.name}…`);
-      try {
-        results.push({ kernel, recipe, ...runner.run(recipe) });
-      } catch (error) {
-        results.push({ kernel, recipe, problem: String(error) });
-      }
+  dispose(): void {
+    for (const client of Object.values(this.clients)) {
+      client.dispose();
     }
   }
-  loads.sort((a, b) => KERNELS.indexOf(a.kernel) - KERNELS.indexOf(b.kernel));
-  return { loads, results };
+
+  /** Loads both kernels and makes every recipe in each, the two kernels at once. Never throws: failures are in the results. */
+  async runKernels(stage: StageReporter = () => undefined): Promise<{
+    loads: KernelLoad[];
+    results: KernelResult[];
+  }> {
+    const loads: KernelLoad[] = [];
+    const results: KernelResult[] = [];
+    void stage("Loading SMLib and Open CASCADE…");
+    await Promise.all(
+      KERNELS.map(async (kernel) => {
+        const client = this.clients[kernel];
+        const start = performance.now();
+        try {
+          await client.load(WORKER_KERNEL[kernel]);
+          loads.push({ kernel, ms: performance.now() - start });
+        } catch (error) {
+          loads.push({
+            kernel,
+            problem: `didn't load (${String(error)}); npm run setup fetches it, and the dev server serves it`,
+          });
+          for (const recipe of RECIPES) {
+            results.push({ kernel, recipe, problem: "not loaded" });
+          }
+          return;
+        }
+        for (const recipe of RECIPES) {
+          void stage(`${kernel}: ${recipe.name}…`);
+          try {
+            const made = await client.boolean(
+              WORKER_KERNEL[kernel],
+              {
+                operation: recipe.operation,
+                a: recipe.inputs[0],
+                b: recipe.inputs[1],
+              },
+              { validate: true, prepare: true },
+            );
+            results.push({
+              kernel,
+              recipe,
+              form: remember(made.result),
+              faceSources: sources(made.result.faceTags!, recipe),
+              booleanMs: made.booleanMs,
+              convertMs: made.convertMs,
+            });
+          } catch (error) {
+            results.push({ kernel, recipe, problem: String(error) });
+          }
+        }
+      }),
+    );
+    loads.sort((a, b) => KERNELS.indexOf(a.kernel) - KERNELS.indexOf(b.kernel));
+    return { loads, results };
+  }
+
+  /**
+   * Fetches a NIST model from /step-samples/ and imports it with Open
+   * CASCADE in its worker (the module loads on first use): the file's solids
+   * come back as render forms, in metres whatever the file's units, already
+   * measured and checked.
+   */
+  async loadStep(
+    file: string,
+    stage: StageReporter = () => undefined,
+  ): Promise<StepLoad> {
+    void stage(`Fetching ${file}…`);
+    const start = performance.now();
+    let bytes: Uint8Array;
+    try {
+      const response = await fetch(`/step-samples/${file}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      bytes = new Uint8Array(await response.arrayBuffer());
+      // A server with no such folder answers with its home page.
+      const magic = "ISO-10303-21";
+      if (new TextDecoder().decode(bytes.subarray(0, magic.length)) !== magic) {
+        throw new Error("not a STEP file");
+      }
+    } catch (error) {
+      return {
+        problem: `${file} didn't load (${String(error)}); npm run setup fetches NIST's models, and the dev server serves them`,
+      };
+    }
+    const fetchMs = performance.now() - start;
+    const size = bytes.length;
+    try {
+      const imported = await this.clients["Open CASCADE"].importStep(bytes, {
+        onStage: (text) => void stage(text),
+        validate: true,
+        prepare: true,
+      });
+      return {
+        file,
+        bytes: size,
+        forms: imported.forms.map(remember),
+        fetchMs,
+        loadMs: imported.loadMs,
+        importMs: imported.importMs,
+        convertMs: imported.convertMs,
+      };
+    } catch (error) {
+      return { problem: `${file}: ${String(error)}` };
+    }
+  }
 }
 
 /** One of NIST's test models in the store (scripts/stepSamples.mjs pins the same files). */
@@ -282,75 +313,3 @@ export interface StepImport {
 
 /** A STEP import, or why there isn't one. Never throws. */
 export type StepLoad = StepImport | { problem: string };
-
-/**
- * Fetches a NIST model from /step-samples/ and imports it with Open CASCADE:
- * the module loads on first use, the file's solids are converted to render
- * forms (in metres, whatever the file's units) and then freed, as the forms
- * are their own copy.
- */
-export async function loadStep(
-  file: string,
-  stage: StageReporter = () => undefined,
-): Promise<StepLoad> {
-  await stage(`Fetching ${file}…`);
-  let start = performance.now();
-  let bytes: Uint8Array;
-  try {
-    const response = await fetch(`/step-samples/${file}`);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    bytes = new Uint8Array(await response.arrayBuffer());
-    // A server with no such folder answers with its home page.
-    const magic = "ISO-10303-21";
-    if (new TextDecoder().decode(bytes.subarray(0, magic.length)) !== magic) {
-      throw new Error("not a STEP file");
-    }
-  } catch (error) {
-    return {
-      problem: `${file} didn't load (${String(error)}); npm run setup fetches NIST's models, and the dev server serves them`,
-    };
-  }
-  const fetchMs = performance.now() - start;
-  let kernel: OcctKernel;
-  const loaded = occtReady;
-  start = performance.now();
-  try {
-    if (!loaded) {
-      await stage("Loading Open CASCADE…");
-    }
-    kernel = await loadOcct();
-  } catch (error) {
-    return {
-      problem: `Open CASCADE didn't load (${String(error)}); npm run setup fetches it, and the dev server serves it`,
-    };
-  }
-  const loadMs = loaded ? 0 : performance.now() - start;
-  let solids: OcctSolid[] = [];
-  try {
-    // Both steps block the page: the stage is shown before each starts.
-    await stage("Importing STEP…");
-    start = performance.now();
-    solids = kernel.importStep(bytes);
-    const importMs = performance.now() - start;
-    await stage(
-      `Converting ${solids.length} ${solids.length === 1 ? "solid" : "solids"} to B-reps…`,
-    );
-    start = performance.now();
-    const forms = solids.map((solid) => kernel.toForm(solid).form);
-    return {
-      file,
-      bytes: bytes.length,
-      forms,
-      fetchMs,
-      loadMs,
-      importMs,
-      convertMs: performance.now() - start,
-    };
-  } catch (error) {
-    return { problem: `${file}: ${String(error)}` };
-  } finally {
-    solids.forEach((solid) => solid.delete());
-  }
-}

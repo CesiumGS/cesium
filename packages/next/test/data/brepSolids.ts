@@ -4,6 +4,7 @@
 import { expect } from "vitest";
 import { evaluateSurface } from "../../src/brep/evaluate.ts";
 import { SurfaceKind, type BrepForm } from "../../src/brep/form.ts";
+import { formBounds } from "../../src/brep/formBounds.ts";
 import { tessellateBrep } from "../../src/brep/tessellate.ts";
 import { validateBrep } from "../../src/brep/validate.ts";
 
@@ -47,9 +48,33 @@ export function outwardShares(form: BrepForm, inside: Inside): number[] {
   return total.map((count, face) => (passed[face] ?? 0) / count);
 }
 
+/** formBounds holds a fine tessellation of the form, to within 3% of its size beyond it. */
+export function expectBoundsHold(form: BrepForm): void {
+  const mesh = tessellateBrep(form, { tolerance: 1e-4 });
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  mesh.faces.positions.forEach((v, i) => {
+    const p = v + mesh.origin[i % 3]!;
+    min[i % 3] = Math.min(min[i % 3]!, p);
+    max[i % 3] = Math.max(max[i % 3]!, p);
+  });
+  const bounds = formBounds(form);
+  const longest = Math.max(...[0, 1, 2].map((k) => max[k]! - min[k]!));
+  // The tessellator keeps a trimmed face's triangles whose centre is inside
+  // the trim, so its mesh may overhang a trim by up to a triangle.
+  const overhang = 0.03 * longest;
+  for (let k = 0; k < 3; k++) {
+    expect(bounds.min[k]!).toBeLessThanOrEqual(min[k]! + overhang);
+    expect(bounds.max[k]!).toBeGreaterThanOrEqual(max[k]! - overhang);
+    expect(bounds.min[k]!).toBeGreaterThan(min[k]! - 0.03 * longest - 1e-4);
+    expect(bounds.max[k]!).toBeLessThan(max[k]! + 0.03 * longest + 1e-4);
+  }
+}
+
 /** The form validates and, on every face, over 95% of its triangles face out. */
 export function expectSolidForm(form: BrepForm, inside: Inside): void {
   expect(validateBrep(form)).toEqual([]);
+  expectBoundsHold(form);
   const shares = outwardShares(form, inside);
   expect(shares.length).toBe(form.faceSurface.length);
   for (const share of shares) {
