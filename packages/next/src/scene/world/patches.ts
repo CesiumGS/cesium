@@ -111,6 +111,7 @@ export function addPatchMesh(
       spans: data.spanCount,
       errorPixels,
       maxChunks,
+      trimmed: data.trimmed,
     },
   };
 }

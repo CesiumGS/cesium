@@ -118,7 +118,7 @@ describe("the surface boundary", () => {
     const fields = [...surface.code.matchAll(/struct (pixelInput_\d+)/g)].map(
       (m) => m[1]!,
     );
-    expect(fields.length, "every fragment entry point's inputs").toBe(11);
+    expect(fields.length, "every fragment entry point's inputs").toBe(14);
     for (const name of fields) {
       // Each entry point's inputs are those `VsOut` puts out, at its
       // locations (an entry may read fewer: none here do).

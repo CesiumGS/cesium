@@ -26,7 +26,7 @@ import {
   writePointParams,
 } from "../../scene/world/points.ts";
 import { resolveTransforms } from "../../scene/world/transforms.ts";
-import type { Batch } from "../../scene/world/types.ts";
+import type { Batch, PatchMesh } from "../../scene/world/types.ts";
 import type { WorldRaster } from "./worldRaster.ts";
 import type { WorldScene } from "../../scene/world/worldScene.ts";
 
@@ -467,27 +467,20 @@ export function recordBundle(
     0;
   // Patch draws: their own pipelines, with the chunk vertex stage; their
   // materials are opaque (cut-outs and blending are not drawn through them).
+  // A draw of faces with a trim has its own (`...Trimmed`: the fragment stage
+  // tests the trim), so the rest keep early depth.
   const patchKey = (batch: Batch): SurfaceKey => {
-    const sided = batch.doubleSided;
-    return prepass
-      ? sided
-        ? "prepassPatchDoubleSided"
-        : "prepassPatch"
+    const pass = prepass
+      ? "prepass"
       : depth
-        ? sided
-          ? "depthPatchDoubleSided"
-          : "depthPatch"
+        ? "depth"
         : height
-          ? sided
-            ? "heightPatchDoubleSided"
-            : "heightPatch"
+          ? "height"
           : shadow
-            ? sided
-              ? "shadowPatchDoubleSided"
-              : "shadowPatch"
-            : sided
-              ? "opaquePatchDoubleSided"
-              : "opaquePatch";
+            ? "shadow"
+            : "opaque";
+    const trimmed = (batch.mesh as PatchMesh).patches.trimmed;
+    return `${pass}Patch${trimmed ? "Trimmed" : ""}${batch.doubleSided ? "DoubleSided" : ""}`;
   };
   const keyOf = (batch: Batch): SurfaceKey =>
     batch.patches

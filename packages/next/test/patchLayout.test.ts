@@ -4,11 +4,18 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  NO_TRIM,
   SPAN,
   SPAN_NEEDS_TRIM,
   SPAN_REVERSED,
   SPAN_WORDS,
+  TRIM_PENDING,
 } from "../src/brep/gpuPatches.ts";
+import {
+  TRIM_BAND_WORDS,
+  TRIM_HEADER_WORDS,
+  TRIM_SEGMENT_WORDS,
+} from "../src/brep/gpuTrims.ts";
 import { RecordFlags } from "../src/render/layout.ts";
 import { CHUNK_BYTES, PATCH_DICE_BYTES } from "../src/scene/world/patches.ts";
 import { SURFACE_VERTEX_BOUNDARY } from "../src/shaders/link/index.ts";
@@ -74,6 +81,59 @@ describe("patch.slang", () => {
     expect(patch.get("MAX_CELLS")).toBe(64);
     // The chunk's packing holds the counts and origins in a byte each.
     expect(patch.get("MAX_CELLS")!).toBeLessThan(256);
+  });
+});
+
+describe("the trim test", () => {
+  const coverage = source("src/shaders/coverage.slang");
+  const words = constants(coverage);
+  const surface = source("src/shaders/surface.slang");
+  const patch = constants(source("src/shaders/patch.slang"));
+
+  it("reads the trim data where gpuTrims.ts writes it", () => {
+    expect(words.get("COVERAGE_HEADER")).toBe(TRIM_HEADER_WORDS);
+    expect(words.get("COVERAGE_BAND_WORDS")).toBe(TRIM_BAND_WORDS);
+    expect(words.get("COVERAGE_PIECE_WORDS")).toBe(TRIM_SEGMENT_WORDS);
+    // A piece: x0 y0 x1 y1 x2 y2, the reach, the sign.
+    for (const [offset, word] of [
+      ["s + 6u", "the reach"],
+      ["s + 1u", "y0"],
+      ["s + 5u", "y2"],
+      ["s + 3u", "y1"],
+      ["s + 2u", "x1"],
+      ["s + 4u", "x2"],
+      ["s + 7u", "the sign"],
+    ] as const) {
+      expect(coverage, word).toContain(`words[${offset}]`);
+    }
+    // A band: the list's offset, its count, its winding.
+    expect(coverage).toContain("words[record + 1u]");
+    expect(coverage).toContain("words[record + 2u]");
+  });
+
+  it("agrees with the span's trim words", () => {
+    expect(patch.get("NO_TRIM")).toBe(NO_TRIM);
+    expect(patch.get("TRIM_PENDING")).toBe(TRIM_PENDING);
+  });
+
+  it("carries the trim data's offset in the instance varying, one more than it, and reads it in the trimmed fragments", () => {
+    expect(surface).toMatch(/s\.trim >= TRIM_PENDING \? 0u : s\.trim \+ 1u/);
+    expect(surface).toMatch(/out\.ids\.z = patchData\.trim;/);
+    expect(surface).toMatch(
+      /covers\(vertices, r\.positionOffset \+ at - 1u, in\.uv, reach\)/,
+    );
+    // The derivative before any branch, in uniform control flow.
+    expect(surface).toMatch(
+      /bool trimCovered\(SurfaceVaryings in\) \{\s*float2 reach = 0\.5 \* fwidth\(in\.uv\);/,
+    );
+  });
+
+  it("has fragment entries the trimmed pipelines name", () => {
+    const context = source("src/scene/RenderContext.ts");
+    for (const name of ["fsTrimmed", "shadowTrimmedFs", "prepassTrimmedFs"]) {
+      expect(surface).toMatch(new RegExp(`\\b${name}\\(`));
+      expect(context).toContain(`"${name}"`);
+    }
   });
 });
 

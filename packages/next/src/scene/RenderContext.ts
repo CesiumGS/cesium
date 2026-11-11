@@ -142,7 +142,10 @@ export interface SurfacePipelines {
    * Patch draws (`World.addPatchMesh`), one- and double-sided: the pass's
    * vertex stage is `vsPatch` (`vsPatchDepth` in the depth-only passes),
    * one instance a chunk of cells from the draw's own list. In the
-   * opaque pass they shade at the depth `depthPatch` wrote.
+   * opaque pass they shade at the depth `depthPatch` wrote. `Trimmed`: a
+   * patch draw of faces with a trim, whose fragment stage tests it and
+   * discards (surface.slang `trimCovered`); kept apart so the others
+   * keep early depth.
    */
   opaquePatch: GPURenderPipeline;
   opaquePatchDoubleSided: GPURenderPipeline;
@@ -154,6 +157,16 @@ export interface SurfacePipelines {
   heightPatchDoubleSided: GPURenderPipeline;
   prepassPatch: GPURenderPipeline;
   prepassPatchDoubleSided: GPURenderPipeline;
+  opaquePatchTrimmed: GPURenderPipeline;
+  opaquePatchTrimmedDoubleSided: GPURenderPipeline;
+  depthPatchTrimmed: GPURenderPipeline;
+  depthPatchTrimmedDoubleSided: GPURenderPipeline;
+  shadowPatchTrimmed: GPURenderPipeline;
+  shadowPatchTrimmedDoubleSided: GPURenderPipeline;
+  heightPatchTrimmed: GPURenderPipeline;
+  heightPatchTrimmedDoubleSided: GPURenderPipeline;
+  prepassPatchTrimmed: GPURenderPipeline;
+  prepassPatchTrimmedDoubleSided: GPURenderPipeline;
 }
 
 /** One of a shader's pipelines (`SurfacePipelines`). */
@@ -196,6 +209,16 @@ export const SURFACE_KEYS: readonly SurfaceKey[] = [
   "heightPatchDoubleSided",
   "prepassPatch",
   "prepassPatchDoubleSided",
+  "opaquePatchTrimmed",
+  "opaquePatchTrimmedDoubleSided",
+  "depthPatchTrimmed",
+  "depthPatchTrimmedDoubleSided",
+  "shadowPatchTrimmed",
+  "shadowPatchTrimmedDoubleSided",
+  "heightPatchTrimmed",
+  "heightPatchTrimmedDoubleSided",
+  "prepassPatchTrimmed",
+  "prepassPatchTrimmedDoubleSided",
 ];
 
 export interface Pipelines extends SurfacePipelines {
@@ -946,6 +969,7 @@ async function createPipelines(
     prepassed = topology === "triangle-list",
     points = false,
     patches = false,
+    trimmed = false,
   ) =>
     device.createRenderPipelineAsync({
       label,
@@ -959,8 +983,9 @@ async function createPipelines(
       },
       fragment: {
         module: shaders,
-        // Point sets: their symbols' coverage as the sample mask.
-        entryPoint: points ? "fsPoints" : "fs",
+        // Point sets: their symbols' coverage as the sample mask. Trimmed
+        // patch faces: the trim test (surface.slang `fsTrimmed`).
+        entryPoint: points ? "fsPoints" : trimmed ? "fsTrimmed" : "fs",
         // Cutouts were decided per sample by the depth (`depthCoverageFs`).
         ...(depthPrepass && prepassed
           ? { constants: { 0: 1 } } // surface.slang `cutOutInDepth`, by its id
@@ -991,6 +1016,7 @@ async function createPipelines(
     masked: boolean,
     layout: GPUPipelineLayout = opaqueLayout,
     patches = false,
+    trimmed = false,
   ) =>
     device.createRenderPipelineAsync({
       label,
@@ -1002,7 +1028,11 @@ async function createPipelines(
       },
       fragment: {
         module: shaders,
-        entryPoint: masked ? "depthCoverageFs" : "shadowPlaceholderFs",
+        entryPoint: masked
+          ? "depthCoverageFs"
+          : trimmed
+            ? "shadowTrimmedFs"
+            : "shadowPlaceholderFs",
         targets: SCENE_TARGETS.colorFormats.map((format) => ({
           format,
           writeMask: 0,
@@ -1032,6 +1062,7 @@ async function createPipelines(
     layout: GPUPipelineLayout = opaqueLayout,
     bias = true,
     patches = false,
+    trimmed = false,
   ) =>
     device.createRenderPipelineAsync({
       label,
@@ -1043,15 +1074,18 @@ async function createPipelines(
       },
       // Masked: the material's alpha cutoff and placeholders' clip; else
       // the clip alone (a record turns placeholder without the bundle
-      // being recorded again, so every caster checks). Height captures
-      // (no bias) keep translucent terrain as ground (`heightFs`).
+      // being recorded again, so every caster checks); a trimmed patch
+      // face's adds its trim. Height captures (no bias) keep translucent
+      // terrain as ground (`heightFs`).
       fragment: {
         module: shaders,
         entryPoint: masked
           ? bias
             ? "shadowFs"
             : "heightFs"
-          : "shadowPlaceholderFs",
+          : trimmed
+            ? "shadowTrimmedFs"
+            : "shadowPlaceholderFs",
         targets: [],
       },
       primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },
@@ -1162,6 +1196,7 @@ async function createPipelines(
     cullMode: GPUCullMode,
     layout: GPUPipelineLayout = opaqueLayout,
     patches = false,
+    trimmed = false,
   ) =>
     device.createRenderPipelineAsync({
       label,
@@ -1173,7 +1208,7 @@ async function createPipelines(
       },
       fragment: {
         module: shaders,
-        entryPoint: "prepassFs",
+        entryPoint: trimmed ? "prepassTrimmedFs" : "prepassFs",
         targets: [{ format: "rgba16float" }],
       },
       primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },
@@ -1435,6 +1470,114 @@ async function createPipelines(
           name("prepass.patch.doubleSided"),
           "none",
           o,
+          true,
+        ),
+      // Trimmed patch faces: the same stages with the trim test's fragment
+      // entries (`fsTrimmed`, `shadowTrimmedFs`, `prepassTrimmedFs`).
+      opaquePatchTrimmed: () =>
+        opaquePipeline(
+          caster,
+          name("opaque.patch.trimmed"),
+          "back",
+          tri,
+          o,
+          undefined,
+          false,
+          true,
+          true,
+        ),
+      opaquePatchTrimmedDoubleSided: () =>
+        opaquePipeline(
+          caster,
+          name("opaque.patch.trimmed.doubleSided"),
+          "none",
+          tri,
+          o,
+          undefined,
+          false,
+          true,
+          true,
+        ),
+      depthPatchTrimmed: () =>
+        depthPipeline(
+          caster,
+          name("depth.patch.trimmed"),
+          "back",
+          false,
+          o,
+          true,
+          true,
+        ),
+      depthPatchTrimmedDoubleSided: () =>
+        depthPipeline(
+          caster,
+          name("depth.patch.trimmed.doubleSided"),
+          "none",
+          false,
+          o,
+          true,
+          true,
+        ),
+      shadowPatchTrimmed: () =>
+        shadowPipeline(
+          caster,
+          name("shadow.patch.trimmed"),
+          "back",
+          false,
+          o,
+          true,
+          true,
+          true,
+        ),
+      shadowPatchTrimmedDoubleSided: () =>
+        shadowPipeline(
+          caster,
+          name("shadow.patch.trimmed.doubleSided"),
+          "none",
+          false,
+          o,
+          true,
+          true,
+          true,
+        ),
+      heightPatchTrimmed: () =>
+        shadowPipeline(
+          caster,
+          name("height.patch.trimmed"),
+          "back",
+          false,
+          o,
+          false,
+          true,
+          true,
+        ),
+      heightPatchTrimmedDoubleSided: () =>
+        shadowPipeline(
+          caster,
+          name("height.patch.trimmed.doubleSided"),
+          "none",
+          false,
+          o,
+          false,
+          true,
+          true,
+        ),
+      prepassPatchTrimmed: () =>
+        prepassPipeline(
+          caster,
+          name("prepass.patch.trimmed"),
+          "back",
+          o,
+          true,
+          true,
+        ),
+      prepassPatchTrimmedDoubleSided: () =>
+        prepassPipeline(
+          caster,
+          name("prepass.patch.trimmed.doubleSided"),
+          "none",
+          o,
+          true,
           true,
         ),
     };

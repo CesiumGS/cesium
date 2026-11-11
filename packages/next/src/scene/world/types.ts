@@ -167,6 +167,8 @@ export interface PatchMesh extends MeshHandle {
     readonly errorPixels: number;
     /** The most chunks of 8 � 8 cells a draw of it lists per view. */
     readonly maxChunks: number;
+    /** Some span's face needs the trim test: its draws use the trimmed pipelines (`SurfacePipelines`). */
+    readonly trimmed: boolean;
   };
 }
 

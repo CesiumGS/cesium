@@ -30,6 +30,7 @@
 // `__extern_cpp` here (shaders/link SURFACE_BOUNDARY).
 
 import common;
+import coverage;
 import patch;
 import placement;
 import surfaceBoundary;
@@ -431,7 +432,9 @@ struct SurfaceVaryings {
 };
 
 // `ids.z`'s top bit: the fragment is on a globe tile's skirt (`vertexOut`);
-// the bits below are the instance.
+// the bits below are the instance. A patch draw's is its face's trim data
+// (`PatchVertex.trim`), which the trimmed fragment entries read: the
+// instance of a draw without instances is 0.
 static const uint SKIRT_BIT = 0x80000000u;
 
 // The camera-relative position of what is being drawn, set before the
@@ -699,6 +702,7 @@ struct PatchVertex {
   float3 normal;
   float2 uv;       // (u, v) less the face rect's corner
   uint face;       // its feature
+  uint trim;       // the face's trim data's offset + 1 in the draw's table, 0: none
   bool live;
 };
 
@@ -717,6 +721,7 @@ PatchVertex patchVertex(DrawRecord r, uint vertexIndex) {
   uint ci = (packed & 255u) + cell % CHUNK_CELLS;
   uint cj = ((packed >> 8u) & 255u) + cell / CHUNK_CELLS;
   result.face = s.face;
+  result.trim = s.trim >= TRIM_PENDING ? 0u : s.trim + 1u;
   result.live = ci < nu && cj < nv;
   result.position = float3(0.0);
   result.normal = float3(0.0, 0.0, 1.0);
@@ -768,6 +773,7 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   bool patched = (r.flags & 128u) != 0u;
   PatchVertex patchData;
   patchData.face = 0u;
+  patchData.trim = 0u;
   patchData.live = true;
   uint instance = p.instance;
   float3 position = float3(0.0);
@@ -856,6 +862,9 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   // each skirt triangle lists one first, so the provoking vertex marks
   // every skirt fragment and no surface one (`terrainAlpha`).
   out.ids.z = instance | (vertexIndex >= r.skirtStart ? SKIRT_BIT : 0u);
+  if (patched) {
+    out.ids.z = patchData.trim;
+  }
   out.named0 = stage.named0;
   out.named1 = stage.named1;
   out.named2 = stage.named2;
@@ -1224,6 +1233,9 @@ CesiumFragment fragmentOf(SurfaceVaryings in, float3 geometric, float3 drawn) {
   f.screen = in.position.xy;
   f.time = view.time.x;
   f.instanceIndex = in.ids.z & ~SKIRT_BIT;
+  if ((r.flags & 128u) != 0u) {
+    f.instanceIndex = 0u; // a patch draw's `ids.z` is its trim
+  }
   f.draw = in.ids.x;
   f.directory = r.attributes;
   // The fragment's feature, local to the draw (feature tables).
@@ -1322,6 +1334,49 @@ void shadowPlaceholderFs(SurfaceVaryings in) {
 [shader("fragment")]
 float4 prepassFs(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) : SV_Target0 {
   cutOut(in);
+  float3 n = normalize(in.normal);
+  if (!frontFacing) {
+    n = -n;
+  }
+  return float4(n, 1.0);
+}
+
+// A trimmed patch face's per-pixel test (RecordFlags.patches; coverage.slang,
+// src/brep/gpuTrims.ts): the fragment's (u, v) from the face rect's corner
+// (`uv`), against the trim data its vertices carried (`ids.z`: the offset + 1
+// in the draw's table, 0 for none), kept inside or within half a pixel of
+// the boundary, by fwidth(uv) per axis: pinholes at seams between faces
+// close, and the edge lines draw over the dilation. The derivative is taken
+// first, in uniform control flow.
+bool trimCovered(SurfaceVaryings in) {
+  float2 reach = 0.5 * fwidth(in.uv);
+  uint at = in.ids.z;
+  if (at == 0u) {
+    return true;
+  }
+  DrawRecord r = drawRecord(in.ids.x);
+  return covers(vertices, r.positionOffset + at - 1u, in.uv, reach);
+}
+
+// The casters' and the depth pass's fragment for a trimmed patch face: the
+// placeholders' clip (`shadowPlaceholderFs`) and the trim.
+[shader("fragment")]
+void shadowTrimmedFs(SurfaceVaryings in) {
+  bool covered = trimCovered(in);
+  DrawRecord r = drawRecord(in.ids.x);
+  if (!covered || clippedOut(r, in.relPosition)) {
+    discard;
+  }
+}
+
+// `prepassFs` for a trimmed patch face.
+[shader("fragment")]
+float4 prepassTrimmedFs(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) : SV_Target0 {
+  bool covered = trimCovered(in);
+  cutOut(in);
+  if (!covered) {
+    discard;
+  }
   float3 n = normalize(in.normal);
   if (!frontFacing) {
     n = -n;
@@ -1804,8 +1859,7 @@ struct FsOut {
   float4 display : SV_Target2;
 };
 
-[shader("fragment")]
-FsOut fs(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) {
+FsOut shadeOpaque(SurfaceVaryings in, bool frontFacing) {
   Surface s = shadeSurface(in, frontFacing, false);
   if (!cutOutInDepth &&
       (materials[drawRecord(in.ids.x).materialIndex].flags & 8u) != 0u && s.alpha < OPAQUE_ALPHA) {
@@ -1825,6 +1879,27 @@ FsOut fs(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) {
   } else {
     out.color = float4(s.color, s.sceneShare);
     out.display = float4(0.0);
+  }
+  return out;
+}
+
+[shader("fragment")]
+FsOut fs(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) {
+  return shadeOpaque(in, frontFacing);
+}
+
+// A trimmed patch face's opaque pass (RecordFlags.patches, `fsTrimmed`): the
+// same shading, and a fragment outside the face's trim discarded. After the
+// depth prepass (`cutOutInDepth`) the depth pass has done it (`shadowTrimmedFs`
+// with the same test), so only the fragments that survived reach here at
+// equal depth and the test isn't repeated. Without a prepass the shading
+// goes first (it needs uniform control flow) and the discard follows.
+[shader("fragment")]
+FsOut fsTrimmed(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) {
+  bool covered = cutOutInDepth || trimCovered(in);
+  FsOut out = shadeOpaque(in, frontFacing);
+  if (!covered) {
+    discard;
   }
   return out;
 }

@@ -53,3 +53,15 @@ export {
   type GpuSpan,
   type PrepareOptions,
 } from "./gpuPatches.ts";
+export {
+  MAX_TRIM_BANDS,
+  TRIM_BAND_WORDS,
+  TRIM_HEADER_WORDS,
+  TRIM_SEGMENT_WORDS,
+  buildFaceTrim,
+  trimCovers,
+  trimCrossings,
+  trimTolerance,
+  type FaceTrimData,
+  type TrimToleranceInput,
+} from "./gpuTrims.ts";

@@ -9519,6 +9519,20 @@ Nothing stands in for TBB. SMLib's TBB code (parallel UV trim curves and tessell
 - **Part 1's cost (200 faces, 550 spans):** dicing on the GPU costs 0.026 ms. The main pass costs 0.78 ms for 10,300 triangles, against 0.12 ms for `tessellateBrep`'s 7,700. Two causes, for a performance pass after part 2:
   - 211,200 vertex invocations for 5,150 cells. Spans average about 9 cells, so 8×8 chunks are mostly degenerate, and each grid point is evaluated six times. Indexed chunks with shared vertices, and chunks sized to the spans, fix both.
   - Preparing spans on the CPU (34 ms) costs more than tessellating (19 ms), mostly in the Bernstein bounds. That matters for the CSG edit loop.
+- **Part 2 is built (2026-11-11, from a brief; not yet run on a GPU).** Every face draws on the GPU; `World.addBrep` has no CPU mesh in the drawing path (`cpuFaces: "trimmed"` restores the old split, as a diagnostic).
+  - _Trim data_ (`brep/gpuTrims.ts`, in the face's arena range after the control points): each loop's pcurves, closed by straight pieces where uses don't meet, are cut at their extrema in v and fitted by monotone non-rational quadratics within the least of the edges' tolerances and 1e-5 of the face's size, over hypot(speed_u, speed_v) in (u, v) (not below 2e-7 of the rect's side). Up to 64 bands of v, each listing its pieces by reach in u.
+  - _The kernel_ (`shaders/coverage.slang`, shared with the vector fills later): the winding number of a ray along +u with the half-open endpoint rule, one quadratic solved in closed form per piece. Dilation: half a pixel (`fwidth(uv) / 2`) along u from the nearest crossing, and along v from the winding at (u, v ± half a pixel): a plus-shaped dilation that keeps what is within 0.7 of a half pixel of the boundary and nothing beyond 1.4 of it, which closes seam pinholes.
+  - _Pipelines_: a solid is two patch draws, complete faces (early depth) and trimmed faces (`...PatchTrimmed` keys for the opaque, depth, shadow, height and prepass passes, whose fragment entries test and discard). Picks read the feature target and the depth the discards leave unwritten.
+  - `spikes/brepTrims.html` (`runBrepTrims()`) checks the classification per pixel against the CPU's, closed solids for pinholes, shadows, AO and picks, and the times against `tessellateBrep`.
+  - **On an NVIDIA Lovelace GPU (2026-11-11):** every face draws on the GPU.
+    - The gallery draws 39 of 39 faces on the GPU. The plate's bolt holes, the filleted block's hole and the trimmed NURBS face are cut per pixel with clean edges, where the CPU path showed a sawtooth.
+    - CTC-05 draws 208 of 208.
+    - Not good enough yet, for the performance and correctness pass next:
+      - The gallery's frame costs 10–12 ms of GPU time and 33–50 ms of CPU time. The CPU path costs about 1 ms of each.
+      - Preparing CTC-05 (spans and trims) takes 1.5 s.
+      - The trim tolerance of 1e-6 m gives about 66 pieces per round hole. Drawing needs only the display tolerance, since picks are refined exactly.
+      - `runBrepTrims()` runs through the classification checks and the built and OCCT closed solids, then stalls at CTC-05's stage without an error.
+      - One screenshot showed black box faces in GPU mode, unconfirmed.
 
 **The handbook's deep dives (owner, 2026-11-10).** As this work lands, the handbook gains four deep dives. Each is written when its subject is built, and kept to what is built:
 

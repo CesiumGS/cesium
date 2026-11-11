@@ -64,30 +64,52 @@ describe("World.addBrep", () => {
   });
   const options = { maxDraws: 64, vertexBytes: 1 << 20, indexBytes: 1 << 20 };
 
-  it("draws a capped cylinder's side as a patch draw and its caps from a CPU mesh", () => {
+  it("draws a capped cylinder's side and its caps all from the GPU: the caps' trim as a draw of its own", () => {
     const world = engine.createWorld(options);
     const brep = world.addBrep(cappedCylinderBrep());
-    expect(brep.gpuFaces).toEqual([0]);
-    expect(brep.cpuFaces).toEqual([1, 2]);
+    expect(brep.gpuFaces).toEqual([0, 1, 2]);
+    expect(brep.trimmedFaces).toEqual([1, 2]);
+    expect(brep.cpuFaces).toEqual([]);
     expect(brep.unsupported).toEqual([]);
     expect(brep.patches).toBeDefined();
-    expect(brep.mesh).toBeDefined();
+    expect(brep.trimmed).toBeDefined();
+    expect(brep.mesh).toBeUndefined();
     const o = brep.patches!.index * RECORD_WORDS;
     const u = world.raster.recordsU32;
     expect(u[o + FLAGS_WORD]! & RecordFlags.patches).toBe(RecordFlags.patches);
     // The side is four quarter-turn spans; the record counts them.
     expect(u[o + DrawRecordLayout.indexCount / 4]).toBe(4);
     expect(
-      u[brep.mesh!.index * RECORD_WORDS + FLAGS_WORD]! & RecordFlags.patches,
-    ).toBe(0);
+      u[brep.trimmed!.index * RECORD_WORDS + FLAGS_WORD]! & RecordFlags.patches,
+    ).toBe(RecordFlags.patches);
     // A patch draw batches alone, with its own chunk list.
     const draw = world.raster.patchDraws.get(brep.patches!.index)!;
     expect(draw.batch.patches).toBe(true);
     expect(draw.batch.chunks).toBe(draw.chunks);
     expect(draw.batch.items).toBe(1);
     expect(draw.mesh.patches.spans).toBe(4);
+    expect(draw.mesh.patches.trimmed).toBe(false);
+    const trimmed = world.raster.patchDraws.get(brep.trimmed!.index)!;
+    expect(trimmed.mesh.patches.trimmed).toBe(true);
+    expect(trimmed.mesh.patches.spans).toBe(2);
     world.removeBrep(brep);
     expect(world.raster.patchDraws.size).toBe(0);
+    world.destroy();
+  });
+
+  it("sends the trimmed faces to a CPU mesh when asked: cpuFaces 'trimmed', the diagnostic split", () => {
+    const world = engine.createWorld(options);
+    const brep = world.addBrep(cappedCylinderBrep(), { cpuFaces: "trimmed" });
+    expect(brep.gpuFaces).toEqual([0]);
+    expect(brep.trimmedFaces).toEqual([]);
+    expect(brep.cpuFaces).toEqual([1, 2]);
+    expect(brep.trimmed).toBeUndefined();
+    expect(brep.mesh).toBeDefined();
+    expect(
+      world.raster.recordsU32[brep.mesh!.index * RECORD_WORDS + FLAGS_WORD]! &
+        RecordFlags.patches,
+    ).toBe(0);
+    world.removeBrep(brep);
     world.destroy();
   });
 
@@ -127,6 +149,28 @@ describe("World.addBrep", () => {
     expect(drawn.find((c) => c.name === "drawIndirect")!.args[1]).toBe(
       world.raster.drawArguments.slotOf(brep.patches!.index),
     );
+    world.removeBrep(brep);
+    world.destroy();
+  });
+
+  it("draws a trimmed face's batch in the trimmed pipelines, the others in the others", () => {
+    const world = engine.createWorld(options);
+    const brep = world.addBrep(cappedCylinderBrep());
+    drawn.length = 0;
+    world.prepareFrame();
+    const pipelines = engine.ctx.pipelines;
+    const set = drawn
+      .filter((c) => c.name === "setPipeline")
+      .map((c) => c.args[0]);
+    expect(set).toContain(pipelines.opaquePatch);
+    expect(set).toContain(pipelines.opaquePatchTrimmed);
+    // Each batch's chunk list is its own: the trimmed one's is bound with its pipeline.
+    const trimmed = world.raster.patchDraws.get(brep.trimmed!.index)!;
+    expect(
+      drawn.some(
+        (c) => c.name === "setVertexBuffer" && c.args[1] === trimmed.chunks,
+      ),
+    ).toBe(true);
     world.removeBrep(brep);
     world.destroy();
   });
@@ -199,6 +243,11 @@ describe("World.addBrep", () => {
     const brep = world.addBrep(form, {
       origin: Float64Array.of(10, 0, 0),
       model,
+      cpuFaces: "trimmed",
+    });
+    const gpu = world.addBrep(form, {
+      origin: Float64Array.of(10, 0, 0),
+      model,
     });
     // Each draw's model space is the form's less its own origin.
     const world3 = (
@@ -230,7 +279,13 @@ describe("World.addBrep", () => {
     expect(cap[0]).toBeCloseTo(9, 6);
     expect(cap[1]).toBeCloseTo(0, 6);
     expect(cap[2]).toBeCloseTo(3, 6);
+    // The trimmed patch draw puts the cap's point in the same place.
+    const trimmedCap = world3(gpu.trimmed!, [0, 1, 3], patchOrigin);
+    expect(trimmedCap[0]).toBeCloseTo(9, 6);
+    expect(trimmedCap[1]).toBeCloseTo(0, 6);
+    expect(trimmedCap[2]).toBeCloseTo(3, 6);
     world.removeBrep(brep);
+    world.removeBrep(gpu);
     world.destroy();
   });
   it("hangs the draws off child transforms of a shared transform, and removes them", () => {

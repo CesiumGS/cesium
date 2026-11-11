@@ -44,6 +44,11 @@ static const uint KIND_TORUS = 4u;
 public static const uint SPAN_REVERSED_BIT = 256u;
 public static const uint SPAN_NEEDS_TRIM_BIT = 512u;
 
+// `SPAN_TRIM`'s word: the trim data's offset in words from the table's start,
+// or one of these (src/brep/gpuPatches.ts NO_TRIM, TRIM_PENDING).
+public static const uint NO_TRIM = 4294967295u;
+public static const uint TRIM_PENDING = 4294967294u;
+
 // The most cells a span's side holds, and a chunk's side in cells
 // (src/brep/gpuPatches.ts MAX_CELLS; dice.slang writes chunks of this).
 public static const uint MAX_CELLS = 64u;

@@ -309,16 +309,23 @@ describe("prepareGpuPatches: records", () => {
 });
 
 describe("packGpuPatches", () => {
-  it("writes the records, then each control net once", () => {
+  it("writes the records, then each control net once, then the trim data", () => {
     const p = prepareGpuPatches(trimmedNurbsBrep(), ORIGIN);
     const data = packGpuPatches(p);
+    const trim = p.faces[0]!.trim!;
     expect(data.spanCount).toBe(9);
-    expect(data.words.length).toBe(9 * SPAN_WORDS + 9 * 16 * 4);
+    expect(data.trimmed).toBe(true);
+    expect(data.words.length).toBe(
+      9 * SPAN_WORDS + 9 * 16 * 4 + trim.words.length,
+    );
     const o = 4 * SPAN_WORDS;
     const span = p.spans[4]!;
     expect(data.words[o + SPAN.kind]! & 0xff).toBe(SurfaceKind.Bezier);
     expect(data.words[o + SPAN.degrees]).toBe(3 | (3 << 8));
-    expect(data.words[o + SPAN.trim]).toBe(TRIM_PENDING);
+    // The trim word was pending: it is the data's offset, after the control nets.
+    expect(span.trim).toBe(TRIM_PENDING);
+    expect(data.words[o + SPAN.trim]).toBe(9 * SPAN_WORDS + 9 * 16 * 4);
+    expect(data.spans[4]!.trim).toBe(data.words[o + SPAN.trim]);
     expect(data.f32[o + SPAN.rect]).toBeCloseTo(span.rect[0], 6);
     expect(data.f32[o + SPAN.density + 2]).toBeCloseTo(span.density[2], 3);
     const at = data.words[o + SPAN.controls]!;

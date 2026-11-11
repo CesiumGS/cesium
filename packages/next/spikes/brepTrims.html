@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>B-rep Trims</title>
+  </head>
+  <body>
+    <!-- Step 5, part 2: b-rep faces trimmed per pixel on the GPU; open with ?bench and call runBrepTrims(). -->
+    <div id="root"></div>
+    <script type="module">
+      import { harness } from "./brepTrims.ts";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runBrepTrims");
+    </script>
+  </body>
+</html>

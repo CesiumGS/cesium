@@ -8,8 +8,8 @@
 // GPU dices each span into an n_u × n_v grid, evaluating the surface at every
 // vertex (analytic formulas as form.ts documents, or de Casteljau on the
 // homogeneous net) and drawing the whole rect; a face whose trim is exactly
-// its rect (`needsTrim` false) is complete, others wait for the per-pixel
-// trim test of part 2.
+// its rect (`needsTrim` false) is complete, others carry trim data
+// (gpuTrims.ts) that the fragment stage tests per pixel.
 //
 // Error: a triangulated n_u × n_v grid over a span lies within
 //   C_u / n_u² + C_uv / (n_u n_v) + C_v / n_v²
@@ -44,6 +44,7 @@ import {
   type Frame,
 } from "./bounds.ts";
 import { evaluatePatch } from "./bezier.ts";
+import { buildFaceTrim, trimTolerance, type FaceTrimData } from "./gpuTrims.ts";
 import { faceTrim } from "./tessellate.ts";
 import { SurfaceKind, type BrepForm } from "./form.ts";
 
@@ -55,7 +56,7 @@ export const MAX_GPU_DEGREE = 3;
 export const MAX_CELLS = 64;
 /** `GpuSpan.trim` of a face whose trim is its rect: no trim data. */
 export const NO_TRIM = 0xffffffff;
-/** `GpuSpan.trim` of a face that needs a trim test, until part 2 writes its data. */
+/** `GpuSpan.trim` of a face that needs a trim test, until `packGpuPatches` writes the data's offset. */
 export const TRIM_PENDING = 0xfffffffe;
 /** The widest angle of one analytic span, rad: wider rects are cut so a span keeps a useful bound and a bounding sphere. */
 const ANALYTIC_PIECE = Math.PI / 2;
@@ -125,7 +126,7 @@ export interface GpuSpan {
   readonly speed: readonly [number, number];
   /** How far the stored geometry may be from the modeling surface, m (not part of the display error). */
   readonly representationError: number;
-  /** `NO_TRIM` for a face the rect completes, else `TRIM_PENDING` until part 2 writes trim data. */
+  /** `NO_TRIM` for a face the rect completes, else `TRIM_PENDING` here and the trim data's word offset in the packed spans (`packGpuPatches`). */
   readonly trim: number;
   readonly needsTrim: boolean;
 }
@@ -141,6 +142,8 @@ export interface GpuFace {
   readonly reversed: boolean;
   /** The bounding rect of the loops' pcurves (control-point hulls). */
   readonly rect: Box | undefined;
+  /** The loops as the fragment's trim test reads them (gpuTrims.ts); only for a face that needs one and the GPU can draw. */
+  readonly trim: FaceTrimData | undefined;
   /** Its spans in `GpuPatches.spans`. */
   readonly first: number;
   readonly count: number;
@@ -163,15 +166,17 @@ export interface PrepareOptions {
   readonly origin?: ArrayLike<number>;
 }
 
-/** The records and control points packed for the GPU: spans, then control points. */
+/** The records, control points and trim data packed for the GPU: spans, then control points, then trims. */
 export interface GpuPatchData {
   readonly words: Uint32Array;
   readonly f32: Float32Array;
   readonly spanCount: number;
-  /** The packed spans, in record order. */
+  /** The packed spans, in record order, with their trim words as written. */
   readonly spans: readonly GpuSpan[];
   /** A sphere around the packed spans. */
   readonly sphere: Sphere;
+  /** Some packed span's face needs the trim test: the draw uses the trimmed pipelines. */
+  readonly trimmed: boolean;
 }
 
 /**
@@ -216,8 +221,9 @@ export function prepareGpuPatches(
 /**
  * The records of the faces `include` keeps (default: every supported face),
  * as the words the shaders read: `SPAN_WORDS` per span, then each control
- * point they use once, four floats homogeneous. Control offsets in the
- * records are words from the start.
+ * point they use once, four floats homogeneous, then each trimmed face's
+ * trim data (gpuTrims.ts). Control and trim offsets in the records are words
+ * from the start.
  */
 export function packGpuPatches(
   patches: GpuPatches,
@@ -234,9 +240,27 @@ export function packGpuPatches(
       controlWords += span.net.length;
     }
   }
-  const words = new Uint32Array(kept.length * SPAN_WORDS + controlWords);
+  let trimWords = 0;
+  const trimAt = new Map<number, number>();
+  for (const span of kept) {
+    const data = patches.faces[span.face]!.trim;
+    if (data && !trimAt.has(span.face)) {
+      trimAt.set(
+        span.face,
+        kept.length * SPAN_WORDS + controlWords + trimWords,
+      );
+      trimWords += data.words.length;
+    }
+  }
+  const words = new Uint32Array(
+    kept.length * SPAN_WORDS + controlWords + trimWords,
+  );
   const f32 = new Float32Array(words.buffer);
-  kept.forEach((span, index) => {
+  const packed = kept.map((span): GpuSpan => {
+    const at = trimAt.get(span.face);
+    return at === undefined ? span : { ...span, trim: at };
+  });
+  packed.forEach((span, index) => {
     const o = index * SPAN_WORDS;
     const put = (at: number, values: ArrayLike<number>): void => {
       for (let k = 0; k < values.length; k++) {
@@ -269,12 +293,16 @@ export function packGpuPatches(
       f32[at + k] = net[k]!;
     }
   }
+  for (const [face, at] of trimAt) {
+    words.set(patches.faces[face]!.trim!.words, at);
+  }
   return {
     words,
     f32,
-    spanCount: kept.length,
-    spans: kept,
-    sphere: enclose(kept.map((s) => s.sphere)),
+    spanCount: packed.length,
+    spans: packed,
+    sphere: enclose(packed.map((s) => s.sphere)),
+    trimmed: packed.some((s) => s.needsTrim),
   };
 }
 
@@ -652,6 +680,7 @@ function prepareFace(
       needsTrim,
       reversed,
       rect,
+      trim: undefined,
       sphere: undefined,
     },
     spans: [] as GpuSpan[],
@@ -751,6 +780,16 @@ function prepareFace(
   }
   const faceSphere = enclose(densities.map((d) => d.sphere));
   const trimWord = needsTrim ? TRIM_PENDING : NO_TRIM;
+  let trimData: FaceTrimData | undefined;
+  if (needsTrim && trim) {
+    const { uv } = trimTolerance({
+      edgeTolerances: loopEdgeTolerances(form, face),
+      size: 2 * faceSphere[3],
+      speed,
+      rect,
+    });
+    trimData = buildFaceTrim(form, face, rect, uv, trim.contains);
+  }
   const spans = pieces.map((piece, index): GpuSpan => {
     const d = densities[index]!;
     const wu = piece.rect[1] - piece.rect[0];
@@ -786,10 +825,24 @@ function prepareFace(
       needsTrim,
       reversed,
       rect,
+      trim: trimData,
       sphere: faceSphere,
     },
     spans,
   };
+}
+
+/** The tolerances, m, of the edges the face's loops use. */
+function* loopEdgeTolerances(form: BrepForm, face: number): Iterable<number> {
+  const firstLoop = form.faceLoops[face * 2]!;
+  const loops = form.faceLoops[face * 2 + 1]!;
+  for (let loop = firstLoop; loop < firstLoop + loops; loop++) {
+    const firstUse = form.loopUses[loop * 2]!;
+    const uses = form.loopUses[loop * 2 + 1]!;
+    for (let use = firstUse; use < firstUse + uses; use++) {
+      yield form.edgeTolerance[form.useEdge[use]!]!;
+    }
+  }
 }
 
 const EMPTY = new Float64Array(0);

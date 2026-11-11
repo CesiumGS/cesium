@@ -665,14 +665,17 @@ export class World {
   }
 
   /**
-   * @internal Provisional (CESIUM2_WEBGPU_PLAN.md §13.33, step 5, part 1).
-   * A b-rep solid in this world: its faces that are complete as their (u, v)
-   * rect (a box's, a cylinder's side) as one patch draw diced per view in
-   * pixels of error (`errorPixels`), and, until the per-pixel trim test
-   * lands, the faces that need it as a CPU mesh of the chordal error
-   * `cpuTolerance`. The form's coordinates are placed as `addDraw` places a
-   * mesh (`parent`, `origin`, `model`), or by a shared `transform`. Faces
-   * are features, as the form's face indices. `removeBrep` takes it away.
+   * @internal Provisional (CESIUM2_WEBGPU_PLAN.md §13.33, step 5, part 2).
+   * A b-rep solid in this world: every face the GPU can evaluate as a patch
+   * draw diced per view in pixels of error (`errorPixels`), faces that are
+   * complete as their (u, v) rect (a box's, a cylinder's side) in one draw and
+   * faces with a trim, tested per pixel in the fragment stage, in another;
+   * only a face the GPU can't draw (a patch above degree 3) is a CPU mesh of
+   * the chordal error `cpuTolerance` (`cpuFaces: "trimmed"` also sends every
+   * trimmed face there, to compare). The form's coordinates are placed as
+   * `addDraw` places a mesh (`parent`, `origin`, `model`), or by a shared
+   * `transform`. Faces are features, as the form's face indices.
+   * `removeBrep` takes it away.
    */
   addBrep(form: BrepForm, options?: BrepOptions): BrepHandle {
     return addBrep(this, form, options);
