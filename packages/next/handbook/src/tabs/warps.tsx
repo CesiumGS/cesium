@@ -184,6 +184,10 @@ const NAMES = [
     what: "A reference frame whose edge to its parent is a warp: `warpFrame(name, parent, spec)`, with `spec` a `Warp` without its ends. Public from the `/frames` entry point, with `WarpFrame`, `WarpSpec` and `isWarpFrame`.",
   },
   {
+    name: "`verticalExaggeration`, `heightOffset`, `scaleAbout`, `blendWarps`, `warpFromFunction`, `reprojectionWarp`",
+    what: "Helpers that return a `WarpSpec` for `warpFrame`, with the Jacobian, the inverse and the revision done (the next section). The first five are from `/frames`, the last from `/proj`.",
+  },
+  {
     name: "`FrameResolver.route`",
     what: "`route(frame, base, seconds)`: rigid runs composed into one 4×4 each, and a step for every warp, `inverse` where the route runs from a warp's child back to its parent. A route that crosses no warp is one rigid step, the matrix `resolve` gives.",
   },
@@ -264,6 +268,11 @@ const MEASURES: Array<{ check: string; result: string; where: string }> = [
 
 const TESTS = [
   {
+    file: "warpHelpers.test.ts",
+    covers:
+      "Each helper's forward, Jacobian (against differences) and inverse at Earth scale, at the poles, on WGS84, a sphere, a triaxial ellipsoid and a plane; exaggeration against its definition (heights scaled, latitude and longitude kept); the numerical Jacobian's step against a small domain; blends; reprojection with a Mercator operation, a service's answer and an engineering frame; and the helpers through `warpFrame`, `route()` and `routeForward`, with `changed()` waking watchers.",
+  },
+  {
     file: "frameWarp.test.ts",
     covers:
       "A warp as an edge: the route's steps, rigid runs either side, a round trip to 1 µm at Earth scale both ways, `resolve` and `motion` refusing, revisions and `watch`, accuracy in quadrature, a bound-only warp stating no σ, `resolveRoute` for a resolver without `route`.",
@@ -343,6 +352,55 @@ const NOT_BUILT = [
   },
 ];
 
+const HELPERS = [
+  {
+    name: "`verticalExaggeration({ factor, reference?, baseHeight?, scale? })`",
+    makes:
+      "Height above a reference multiplied by `factor` about `baseHeight`, along the surface's normal: latitude and longitude kept. The reference is WGS84 by default, `{ ellipsoid }`, `{ sphere: radius }` or `{ plane: { origin?, normal? } }`. `scale` is a slider: at `s` heights are multiplied by `1 + s(factor − 1)`, and the engine fits the unit displacement once.",
+    jacobian:
+      "Exact closed form, at any height and at the poles: `(I + hS)⁻¹(I + h′S − nnᵀ) + (dh′/dh)nnᵀ`, with `S` the surface's shape operator. Exact inverse.",
+    kind: "Presentation",
+  },
+  {
+    name: "`heightOffset(metres, { reference?, presentation?, scale? })`",
+    makes:
+      "A constant offset along the reference's normal, to lift content clear of terrain or sink it.",
+    jacobian: "Exact, the same form with `h′ = h + metres`. Exact inverse.",
+    kind: "Presentation (`presentation: false` for a real offset)",
+  },
+  {
+    name: "`scaleAbout(point, factors, { ellipsoid?, presentation?, scale? })`",
+    makes:
+      "An anisotropic scale about a point on the body, along its local east, north and up: one number or three.",
+    jacobian: "The matrix `E·diag(f)·Eᵀ`, constant. Exact inverse.",
+    kind: "Presentation",
+  },
+  {
+    name: "`blendWarps(a, b, t)`",
+    makes:
+      "`(1 − t)·a(p) + t·b(p)` of two warps between the same frames, each at its own scale. To fade one warp in from nothing, give it a `scale` instead.",
+    jacobian:
+      "The same blend of theirs, exact. Newton's inverse. Accuracy: the weighted sum of theirs.",
+    kind: "Presentation if either is",
+  },
+  {
+    name: "`warpFromFunction(map, { presentation, ... })`",
+    makes:
+      "Your own map, as a plain function from a point to a point in metres. Nothing to know about Jacobians.",
+    jacobian:
+      "Central differences, with a step of `(3·ε·R·L²)^(1/3)` where `L` is the domain's radius, else `|p|`: right to about 1e-10 for a map smooth on the scale of `L` (measured 4e-10 on a ×10 exaggeration at Earth scale). Newton's inverse, or the `inverse` you give.",
+    kind: "You say: `presentation` is required",
+  },
+  {
+    name: "`reprojectionWarp(operation, { parent?, areaOfInterest? })` from `/proj`",
+    makes:
+      "A coordinate operation (PROJ's `RecordedOperation`, any `CoordinateOperation`, a service's `ResolvedCoordinates`, or an `EngineeringFrame` with its site transform) as the edge between a design CRS's frame and the body-fixed one. The design frame is the body frame's child by default.",
+    jacobian:
+      "Numerical, as `warpFromFunction`; the inverse is the operation's own, exact. Accuracy is the operation's `sigma`; an operation that states none gives a warp that says its accuracy is unstated, never exact.",
+    kind: "Not a presentation warp",
+  },
+];
+
 export function Warps() {
   return (
     <Page
@@ -362,10 +420,10 @@ export function Warps() {
         <p>
           Increments 1 to 3 of the plan are built: routes and the fitter, the
           GPU form with its Jacobian and the varying swap, and drawn bounds. The
-          last section lists what isn't. Applications define the only warps
-          there are today. The engine's own reprojections still go through the{" "}
-          <C>Placement</C> kinds, which are converted to the same terms inside
-          the engine.
+          last section lists what isn't. Applications make the only warps there
+          are today, with the helpers below or by hand. The engine's own
+          reprojections still go through the <C>Placement</C> kinds, which are
+          converted to the same terms inside the engine.
         </p>
       </Note>
 
@@ -381,7 +439,10 @@ export function Warps() {
         <p>
           The test of the model is the third. An application can exaggerate
           everything through the model alone, and the engine has no exaggeration
-          feature: it is the application's warp, about 40 lines.
+          feature: <C>verticalExaggeration</C> is a helper over the same warp an
+          application could write by hand. It is one call. The snippet shows the
+          helpers first, and the hand-written warp, about 25 lines with its
+          Jacobian, last.
         </p>
         <CodeBlock language="ts" code={snippetText("warp.next.ts")} />
         <p>
@@ -395,6 +456,61 @@ export function Warps() {
         <Written
           from="the overall plan, section 13.26, and spikes/warpRoute.ts"
           on="2026-11-10"
+        />
+      </Section>
+
+      <Section title="Common warps, without a Jacobian">
+        <p>
+          Most applications want one of a few warps and shouldn't have to know
+          what a Jacobian is: the matrix of how a map stretches space, which the
+          engine reads for its fits, for selection and for Newton's method. Each
+          helper returns a <C>WarpSpec</C> for <C>warpFrame</C> with the
+          Jacobian, the inverse, the description for reports and{" "}
+          <C>presentation</C> done. Every one but <C>blendWarps</C>,{" "}
+          <C>warpFromFunction</C> and <C>reprojectionWarp</C> has an exact
+          closed form for both.
+        </p>
+        <DataTable
+          label="The warp helpers"
+          columns={[
+            { head: "Call", cell: (r) => <Ticks text={r.name} /> },
+            { head: "Makes", cell: (r) => <Ticks text={r.makes} /> },
+            {
+              head: "Jacobian and inverse",
+              cell: (r) => <Ticks text={r.jacobian} />,
+            },
+            { head: "Kind", cell: (r) => <Ticks text={r.kind} /> },
+          ]}
+          rows={HELPERS}
+        />
+        <p>
+          <strong>Changing one.</strong> The helpers' warps are live: setting{" "}
+          <C>factor</C>, <C>baseHeight</C>, <C>metres</C>, <C>factors</C> or{" "}
+          <C>t</C> calls <C>changed()</C>, which bumps the revision, so every
+          route through it is refitted, and invalidates the frames built on it,
+          so watchers hear. <C>warpFromFunction</C>'s function has no setter to
+          catch, so call <C>changed()</C> after it starts behaving differently.
+          A slider doesn't need that: give <C>scale</C> a world's{" "}
+          <C>PlacementParameter</C> and it is one float.
+        </p>
+        <p>
+          <strong>Accuracy.</strong> The exact helpers round-trip to about a
+          nanometre at Earth scale (the ellipsoid's foot is solved to float64's
+          rounding, finer than the 1.x algorithm's stop). A numerical Jacobian
+          never changes where Newton converges, only how the engine estimates
+          the warp's stretch, and its error is stated with the helper. A map
+          with features smaller than its step needs a smaller <C>step</C>, a
+          smaller <C>domain</C>, or the hand-written warp.
+        </p>
+        <Written
+          from={
+            <>
+              <C>src/frames/warps.ts</C>, <C>src/frames/heightWarps.ts</C>,{" "}
+              <C>src/proj/reprojectionWarp.ts</C> and{" "}
+              <C>test/warpHelpers.test.ts</C>
+            </>
+          }
+          on="2026-11-11"
         />
       </Section>
 

@@ -9,7 +9,13 @@ import { Frame } from "./Frame.ts";
 import type { FrameAccuracy } from "./frameAccuracy.ts";
 
 /** A `Warp` without its ends: `from` is the parent and `to` the new frame. */
-export type WarpSpec = Omit<Warp, "from" | "to">;
+export type WarpSpec = Omit<Warp, "from" | "to"> & {
+  /**
+   * Called once with the frame built on this spec: how a helper's
+   * `changed()` finds the frames to `invalidate()`.
+   */
+  readonly attach?: (frame: WarpFrame) => void;
+};
 
 /**
  * A child of `parent` placed by a warp: `p_child = warp.forward(p_parent)`.
@@ -18,7 +24,8 @@ export type WarpSpec = Omit<Warp, "from" | "to">;
  * Say so with `invalidate()` too, which also wakes whoever `watch`es the
  * frames resolver. The frame's accuracy is the warp's `accuracy.sigma` (1σ);
  * a warp stating only a `bound` has no accuracy stated here, as a bound is
- * not a σ; a warp stating neither is exact by definition.
+ * not a σ; a warp stating neither is exact by definition (an `accuracy` with
+ * only a note says the accuracy is unknown).
  */
 export class WarpFrame<N extends string = string> extends Frame<N> {
   readonly warp: Warp;
@@ -35,6 +42,7 @@ export class WarpFrame<N extends string = string> extends Frame<N> {
       { cache: false, accuracy: () => accuracyOf(spec) },
     );
     this.spec = spec;
+    spec.attach?.(this);
     const inverse = spec.inverse;
     this.warp = {
       from: parent,
@@ -123,6 +131,9 @@ function accuracyOf(spec: WarpSpec): FrameAccuracy {
     return {
       note: `${what}: states only a worst-case bound of ${a.bound} m, which is not a 1σ${a.note !== undefined ? ` (${a.note})` : ""}`,
     };
+  }
+  if (a !== undefined) {
+    return { note: `${what}: ${a.note ?? "states no accuracy"}` };
   }
   return {
     byDefinition: true,

@@ -85,6 +85,27 @@ export {
   type WarpSpec,
 } from "./warpFrame.ts";
 export {
+  warpFromFunction,
+  scaleAbout,
+  blendWarps,
+  type BlendedWarp,
+  type ChangeableWarp,
+  type FunctionWarp,
+  type PointMap,
+  type ScaleAbout,
+  type ScaleAboutOptions,
+  type WarpFromFunctionOptions,
+} from "./warps.ts";
+export {
+  verticalExaggeration,
+  heightOffset,
+  type HeightOffset,
+  type HeightOffsetOptions,
+  type HeightReference,
+  type VerticalExaggeration,
+  type VerticalExaggerationOptions,
+} from "./heightWarps.ts";
+export {
   framePoint,
   convertPoint,
   eastNorthUpFrame,
