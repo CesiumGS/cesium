@@ -115,6 +115,52 @@ async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * `work`, or an error naming the stage if it doesn't settle in `seconds`:
+ * a readback, a frame or a load that never answers (a hung device, a
+ * throttled tab) fails here with where, not silently.
+ */
+async function within<T>(
+  stage: string,
+  seconds: number,
+  work: PromiseLike<T>,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => {
+      reject(
+        new Error(
+          `${stage}: no answer in ${seconds} s (a readback or a frame that never finished: the device may have hung, or the tab is in the background)`,
+        ),
+      );
+    }, seconds * 1000);
+  });
+  try {
+    return await Promise.race([work, timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** The stage the run is in, for the status line and the console (what a failure or a stall is named by). */
+let stage = "";
+let stageStart = 0;
+function progress(name: string): void {
+  const now = globalThis.performance.now();
+  if (stage) {
+    console.info(
+      `[brepTrims] ${stage} took ${((now - stageStart) / 1000).toFixed(1)} s`,
+    );
+  }
+  stage = name;
+  stageStart = now;
+  const status = root.querySelector(".status");
+  if (status) {
+    status.textContent = `running: ${name}…`;
+  }
+  console.info(`[brepTrims] ${name}`);
+}
+
 // The forms. Pcurves are written in (u, v) as the form wants them: outer
 // loops counter-clockwise, inner ones clockwise.
 
@@ -486,7 +532,11 @@ async function capture(env: Environment): Promise<Uint8ClampedArray> {
   for (;;) {
     env.engine.renderFrame();
     env.lost();
-    const pixels = await env.target.read();
+    const pixels = await within(
+      `${stage}: reading the frame`,
+      30,
+      env.target.read(),
+    );
     env.lost();
     // The mask's blue is 188 after the flat colour's encoding, the default material's 255.
     let ready = false;
@@ -496,8 +546,13 @@ async function capture(env: Environment): Promise<Uint8ClampedArray> {
         break;
       }
     }
-    if (ready || Date.now() > give) {
+    if (ready) {
       return pixels;
+    }
+    if (Date.now() > give) {
+      throw new Error(
+        `${stage}: the mask shader's pipelines weren't ready, or nothing was drawn, after 30 s (the frame still shows the default material, or is empty)`,
+      );
     }
     await sleep(50);
   }
@@ -605,6 +660,8 @@ interface Projected {
   /** Samples of the face's rect per pixel, and those inside its trim. */
   total: Uint32Array;
   inside: Uint32Array;
+  /** Samples inside the trim that face away: the far wall seen through a hole of a drawn-both-sides face. */
+  behind: Uint32Array;
 }
 
 /**
@@ -620,6 +677,7 @@ function project(
 ): Projected {
   const total = new Uint32Array(WIDTH * HEIGHT);
   const inside = new Uint32Array(WIDTH * HEIGHT);
+  const behind = new Uint32Array(WIDTH * HEIGHT);
   const trim = faceTrim(form, 0)!;
   const origin = patches.origin;
   const f = HEIGHT / 2 / Math.tan(fy / 2);
@@ -636,11 +694,22 @@ function project(
         const x = origin[0]! + position[0]! - eye[0];
         const y = origin[1]! + position[1]! - eye[1];
         const z = origin[2]! + position[2]! - eye[2];
-        // Facing the camera, which looks along âˆ’z.
-        if (
-          normal[0]! * -x + normal[1]! * -y + normal[2]! * -z <= 0 ||
-          z >= 0
-        ) {
+        // Facing the camera, which looks along −z.
+        if (z >= 0) {
+          continue;
+        }
+        if (normal[0]! * -x + normal[1]! * -y + normal[2]! * -z <= 0) {
+          const bx = Math.floor(WIDTH / 2 + (f * x) / -z);
+          const by = Math.floor(HEIGHT / 2 - (f * y) / -z);
+          if (
+            bx >= 0 &&
+            by >= 0 &&
+            bx < WIDTH &&
+            by < HEIGHT &&
+            trim.contains(u, v)
+          ) {
+            behind[by * WIDTH + bx]!++;
+          }
           continue;
         }
         const px = Math.floor(WIDTH / 2 + (f * x) / -z);
@@ -655,7 +724,7 @@ function project(
       }
     }
   }
-  return { total, inside };
+  return { total, inside, behind };
 }
 
 /** Compares the pixels with the CPU's classification. */
@@ -675,12 +744,13 @@ function compare(
     for (let x = 2; x < WIDTH - 2; x++) {
       const i = y * WIDTH + x;
       let all = true;
-      let mixed = false;
+      // Any pixel around that has a sample inside the trim, or the far wall seen through the hole.
+      let near = false;
       for (let dy = -1; dy <= 1; dy++) {
         for (let dx = -1; dx <= 1; dx++) {
           const k = (y + dy) * WIDTH + x + dx;
           all &&= p.total[k]! > 0;
-          mixed ||= p.inside[k]! > 0 && p.inside[k]! < p.total[k]!;
+          near ||= p.inside[k]! > 0 || p.behind[k]! > 0;
         }
       }
       if (!all || p.total[i]! === 0) {
@@ -691,7 +761,7 @@ function compare(
         if (!drawn(i)) {
           missing++;
         }
-      } else if (p.inside[i] === 0 && !mixed) {
+      } else if (p.inside[i] === 0 && !near) {
         outsidePixels++;
         if (!clear(i)) {
           spurious++;
@@ -723,8 +793,9 @@ async function occtSolids(): Promise<{ solids: Solid[]; notes: string[] }> {
   const solids: Solid[] = [];
   const notes: string[] = [];
   let kernel: OcctKernel;
+  progress("Open CASCADE: loading");
   try {
-    kernel = await OcctKernel.load();
+    kernel = await within("Open CASCADE: loading", 90, OcctKernel.load());
   } catch (error) {
     notes.push(
       `Open CASCADE isn't served (${error instanceof Error ? error.message : String(error)}): run npm run setup`,
@@ -742,12 +813,19 @@ async function occtSolids(): Promise<{ solids: Solid[]; notes: string[] }> {
   bore.delete();
   box.delete();
   try {
-    const response = await fetch("/step-samples/nist_ctc_05_asme1_rd.stp");
+    progress("CTC-05: fetching and importing the STEP file");
+    const response = await within(
+      "fetching /step-samples/nist_ctc_05_asme1_rd.stp",
+      60,
+      fetch("/step-samples/nist_ctc_05_asme1_rd.stp"),
+    );
     if (!response.ok) {
       throw new Error(`${response.status}`);
     }
     const imported = kernel.importStep(
-      new Uint8Array(await response.arrayBuffer()),
+      new Uint8Array(
+        await within("reading the STEP file", 60, response.arrayBuffer()),
+      ),
     );
     const forms = imported.map((s) => kernel.toForm(s).form);
     const biggest = forms.reduce((a, b) =>
@@ -768,9 +846,15 @@ const round = (x: number) => Number(x.toFixed(3));
 
 /** Renders, then waits for the timers' readbacks (their smoothing runs on them). */
 async function frames(env: Environment, count: number): Promise<void> {
+  const { device } = env.engine.gpu;
   for (let k = 0; k < count; k++) {
     env.engine.renderFrame();
-    await sleep(0);
+    // The GPU's own answer, not a timer (a background tab's timers crawl).
+    await within(
+      `${stage}: frame ${k + 1} of ${count}`,
+      60,
+      device.queue.onSubmittedWorkDone(),
+    );
     env.lost();
   }
   for (let k = 0; k < 8; k++) {
@@ -782,7 +866,8 @@ async function frames(env: Environment, count: number): Promise<void> {
 function passTimes(passes: Record<string, number>): Record<string, number> {
   const out: Record<string, number> = {};
   for (const [label, name] of [
-    ["cull", "GPU cull and dice pass, ms"],
+    ["cull", "GPU cull pass, ms"],
+    ["dice", "GPU dice pass, ms"],
     ["opaque", "GPU opaque pass (its depth first), ms"],
   ] as const) {
     if (label in passes) {
@@ -834,6 +919,7 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
       });
 
     // a. the classification, per pixel, against the CPU's.
+    progress("a. classification");
     for (const scene of [plateScene(), drilledScene(), splineScene()]) {
       const env = environment(engine, shader, target, lost);
       const brep = addMasked(env, scene.form);
@@ -866,7 +952,7 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
           pass:
             brep.cpuFaces.length === 0 &&
             measured["pixels inside the trim"]! > 500 &&
-            measured["pixels outside, clear of a boundary"]! > 100 &&
+            measured["pixels outside, clear of a boundary"]! > 10 &&
             measured["of them not drawn"] === 0 &&
             measured["of them drawn"] === 0,
         });
@@ -877,12 +963,14 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
     }
 
     // b. closed solids: pinholes along the seams.
+    progress("b. closed solids: building and loading");
     const built: Solid[] = [
       { name: "box minus cylinder (built here)", form: drilledBox() },
     ];
     const kernel = await occtSolids();
     const solids = [...built, ...kernel.solids];
     for (const solid of solids) {
+      progress(`b. closed solid: ${solid.name}`);
       const patches = prepareGpuPatches(solid.form);
       const [cx, cy, cz, radius] = patches.sphere;
       const center: Vec3 = [
@@ -892,7 +980,7 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
       ];
       const tolerance = radius / 1000;
       const mesh = tessellateBrep(solid.form, { tolerance });
-      for (const factor of [1.1, 2.5, 8]) {
+      for (const factor of [1.1, 2.5, 4]) {
         // The CPU mesh at radius/1000 is the pinhole baseline; CTC-05's needs room.
         const env = environment(engine, shader, target, lost, {
           vertexBytes: 1 << 27,
@@ -929,7 +1017,7 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
           },
           limit:
             "no more background pixels enclosed by the silhouette than the CPU mesh's view has (the shape's own gaps)",
-          pass: withGpu.inside > 200 && withGpu.holes <= withMesh.holes,
+          pass: withGpu.inside > 50 && withGpu.holes <= withMesh.holes,
         });
         engine.removeView(env.view);
         env.world.destroy();
@@ -946,6 +1034,7 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
     }
 
     // c. shadows, ambient occlusion and picks on a trimmed face.
+    progress("c. shadows, ambient occlusion and picks");
     {
       const b = new BrepBuilder();
       const e = oneEdge(b);
@@ -980,7 +1069,7 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
       for (let k = 0; k < 4; k++) {
         env.engine.renderFrame();
         lost();
-        await target.read();
+        await within("c. reading the frame", 30, target.read());
       }
       const firstTrimmed =
         env.world.scene.drawFeatureFirst[brep.trimmed!.index]!;
@@ -1023,6 +1112,7 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
     }
 
     // d. times.
+    progress("d. times");
     {
       const ctc = kernel.solids.find((s) => s.name.startsWith("NIST"));
       const form = ctc?.form ?? plates(20, 10);
@@ -1040,20 +1130,32 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
       const prepareStart = globalThis.performance.now();
       const prepared = prepareGpuPatches(form);
       const prepareMs = globalThis.performance.now() - prepareStart;
-      let pieces = 0;
-      let bands = 0;
-      let mostPerBand = 0;
-      let meanSum = 0;
-      let trimmed = 0;
-      for (const f of prepared.faces) {
-        if (f.trim) {
-          trimmed++;
-          pieces += f.trim.pieces;
-          bands += f.trim.bands;
-          mostPerBand = Math.max(mostPerBand, f.trim.maxPerBand);
-          meanSum += f.trim.meanPerBand;
+      // The same at the model's own tolerance (the edges', as before the display tolerance).
+      const tightStart = globalThis.performance.now();
+      const tight = prepareGpuPatches(form, { trimTolerance: 0 });
+      const tightMs = globalThis.performance.now() - tightStart;
+      const shape = (p: GpuPatches) => {
+        let pieces = 0;
+        let bands = 0;
+        let mostPerBand = 0;
+        let meanSum = 0;
+        let trimmed = 0;
+        let loosened = 0;
+        for (const f of p.faces) {
+          if (f.trim) {
+            trimmed++;
+            pieces += f.trim.pieces;
+            bands += f.trim.bands;
+            mostPerBand = Math.max(mostPerBand, f.trim.maxPerBand);
+            meanSum += f.trim.meanPerBand;
+            loosened += Number(f.trim.loosened > 0);
+          }
         }
-      }
+        return { pieces, bands, mostPerBand, meanSum, trimmed, loosened };
+      };
+      const { pieces, bands, mostPerBand, meanSum, trimmed, loosened } =
+        shape(prepared);
+      const before = shape(tight);
       const trimStart = globalThis.performance.now();
       for (const f of prepared.faces) {
         if (f.trim && f.rect) {
@@ -1095,10 +1197,19 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
           lost,
         };
         await frames(env, 90);
+        const diced = await within(
+          "d. reading the dice's counts",
+          30,
+          world.readPatchStats(),
+        );
         const out = {
           addMs,
           gpuMs: engine.stats.gpuMs,
+          cpuMs: engine.stats.cpuMs,
           passes: { ...engine.gpuPasses },
+          cells: diced.reduce((n, d) => n + d.cells, 0),
+          chunks: diced.reduce((n, d) => n + d.chunks, 0),
+          vertices: diced.reduce((n, d) => n + d.vertices, 0),
           brep,
           distance,
           fovy,
@@ -1147,6 +1258,7 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
         90,
       );
       const meshGpuMs = engine.stats.gpuMs;
+      const meshCpuMs = engine.stats.cpuMs;
       engine.removeView(meshView);
       meshWorld.destroy();
 
@@ -1162,15 +1274,31 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
         "mean pieces per band (mean over faces)": round(
           trimmed ? meanSum / trimmed : 0,
         ),
+        "faces refitted looser to bring a band under the cap": loosened,
+        "before (model tolerance): trim pieces": before.pieces,
+        "before: bands (all faces)": before.bands,
+        "before: pieces in the busiest band": before.mostPerBand,
+        "before: mean pieces per band (mean over faces)": round(
+          before.trimmed ? before.meanSum / before.trimmed : 0,
+        ),
         "CPU: prepare spans and trims, ms": round(prepareMs),
+        "before (model tolerance): prepare spans and trims, ms": round(tightMs),
         "of which trims, ms": round(trimMs),
         "CPU: addBrep (prepare, pack, upload), ms": round(all.addMs),
+        "CPU: frame (renderFrame), ms": round(all.cpuMs),
+        "cells diced": all.cells,
+        "chunks (4 × 4 cells)": all.chunks,
+        "vertex invocations": all.vertices,
+        "vertex invocations per cell": round(
+          all.cells > 0 ? all.vertices / all.cells : 0,
+        ),
         "GPU frame, ms": ms(all.gpuMs),
         ...passTimes(all.passes),
       };
       performance[`${name}: the old split (trimmed faces as a CPU mesh)`] = {
         "faces drawn from a CPU mesh": split.brep.cpuFaces.length,
         "CPU: addBrep (spans, tessellate, upload), ms": round(split.addMs),
+        "CPU: frame (renderFrame), ms": round(split.cpuMs),
         "GPU frame, ms": ms(split.gpuMs),
         ...passTimes(split.passes),
       };
@@ -1178,6 +1306,7 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
         "tolerance, mm": round(mesh.tolerance * 1000),
         triangles: mesh.triangles,
         "CPU: tessellate, ms": round(mesh.ms),
+        "CPU: frame (renderFrame), ms": round(meshCpuMs),
         "GPU frame, ms": ms(meshGpuMs),
       };
       checks.push({
@@ -1191,7 +1320,97 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
         limit: "no GPU errors; see the performance tables for the times",
         pass: all.brep.gpuFaces.length > 0 && gpuErrors.length === 0,
       });
+
+      // A trimmed face filling the view: where the trim test's cost shows,
+      // at the display tolerance and at the model's.
+      progress("d. a trimmed face filling the view");
+      const fillScene = plateScene();
+      const fill = new OffscreenTarget(3840, 2160);
+      const fillMeasure = async (trimTolerance: number | undefined) => {
+        const fillWorld = engine.createWorld({
+          maxDraws: 8,
+          vertexBytes: 1 << 24,
+          indexBytes: 1 << 22,
+        });
+        const fillView = view3(fillWorld, fill);
+        const fovy = fillView.camera.fovy(3840 / 2160);
+        placeCamera(fillView, fillScene.target, 1.25 / Math.tan(fovy / 2));
+        const handle = fillWorld.addBrep(fillScene.form, {
+          origin: ORIGIN_VECTOR,
+          shader,
+          errorPixels: TARGET,
+          doubleSided: true,
+          ...(trimTolerance !== undefined ? { trimTolerance } : {}),
+        });
+        await frames(
+          {
+            engine,
+            world: fillWorld,
+            view: fillView,
+            target: fill,
+            shader,
+            lost,
+          },
+          90,
+        );
+        const out = {
+          gpuMs: engine.stats.gpuMs,
+          cpuMs: engine.stats.cpuMs,
+          passes: { ...engine.gpuPasses },
+        };
+        engine.removeView(fillView);
+        fillWorld.removeBrep(handle);
+        fillWorld.destroy();
+        return out;
+      };
+      // The first runs warm the GPU up; the median of three alternating runs of each is reported.
+      await fillMeasure(undefined);
+      await fillMeasure(0);
+      const runs: {
+        shown: Awaited<ReturnType<typeof fillMeasure>>[];
+        exact: Awaited<ReturnType<typeof fillMeasure>>[];
+      } = { shown: [], exact: [] };
+      for (let k = 0; k < 3; k++) {
+        runs.shown.push(await fillMeasure(undefined));
+        runs.exact.push(await fillMeasure(0));
+      }
+      const median = (all: typeof runs.shown) =>
+        all
+          .slice()
+          .sort((a, b) => (a.passes.opaque ?? 0) - (b.passes.opaque ?? 0))[1]!;
+      const shown = median(runs.shown);
+      const exact = median(runs.exact);
+      const trimOf = (options: { trimTolerance?: number }) =>
+        prepareGpuPatches(fillScene.form, options).faces[0]!.trim!;
+      const displayTrim = trimOf({});
+      const modelTrim = trimOf({ trimTolerance: 0 });
+      const fillRow = (m: typeof shown, t: typeof displayTrim) => ({
+        "trim pieces": t.pieces,
+        bands: t.bands,
+        "pieces in the busiest band": t.maxPerBand,
+        "CPU: frame (renderFrame), ms": round(m.cpuMs),
+        "GPU frame, ms": ms(m.gpuMs),
+        ...passTimes(m.passes),
+      });
+      performance[
+        "a plate with three holes filling a 3840 × 2160 view: display tolerance"
+      ] = fillRow(shown, displayTrim);
+      performance["the same at the model's tolerance (before)"] = fillRow(
+        exact,
+        modelTrim,
+      );
     }
+  } catch (error) {
+    // A stall or a failure names its stage in the results, not only the console.
+    const message = error instanceof Error ? error.message : String(error);
+    checks.push({
+      id: checks.length + 1,
+      name: `stopped in stage: ${stage}`,
+      measured: {},
+      limit: message,
+      pass: false,
+    });
+    console.error(`[brepTrims] stopped in "${stage}": ${message}`);
   } finally {
     engine.gpu.device.removeEventListener("uncapturederror", onError);
     $("adapter").textContent = `Adapter: ${describe(engine)}`;

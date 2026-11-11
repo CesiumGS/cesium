@@ -97,6 +97,8 @@ export class WorldRaster {
   prepassFor?: GPURenderBundle;
   readonly cullParamsData = new Uint32Array(4);
   readonly cullPassDesc: GPUComputePassDescriptor = { label: "cull" };
+  /** The patch dice's own pass, timed apart from the cull. */
+  readonly dicePassDesc: GPUComputePassDescriptor = { label: "dice" };
   /**
    * The draw arguments, the item lists and the batches' draws
    * (the draw-arguments seam).

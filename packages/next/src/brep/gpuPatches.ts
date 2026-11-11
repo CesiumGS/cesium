@@ -164,6 +164,12 @@ export interface GpuPatches {
 export interface PrepareOptions {
   /** What positions are relative to (default: the center of the form's bounds). */
   readonly origin?: ArrayLike<number>;
+  /**
+   * The display tolerance of the trims as a share of a face's size (default
+   * `DISPLAY_TRIM_TOLERANCE`, 1e-4): how far a trim piece may stray from the
+   * face's pcurves in the drawing. Picks are refined exactly.
+   */
+  readonly trimTolerance?: number;
 }
 
 /** The records, control points and trim data packed for the GPU: spans, then control points, then trims. */
@@ -207,7 +213,13 @@ export function prepareGpuPatches(
   const spans: GpuSpan[] = [];
   const count = form.faceSurface.length;
   for (let face = 0; face < count; face++) {
-    const built = prepareFace(form, face, origin, netFor);
+    const built = prepareFace(
+      form,
+      face,
+      origin,
+      netFor,
+      options.trimTolerance,
+    );
     faces.push({
       ...built.face,
       first: spans.length,
@@ -666,6 +678,7 @@ function prepareFace(
   face: number,
   origin: Float64Array,
   netFor: (patch: number) => Float64Array,
+  display?: number,
 ): { face: Omit<GpuFace, "first" | "count">; spans: GpuSpan[] } {
   const reversed = form.faceReversed[face] === 1;
   const surface = form.faceSurface[face]!;
@@ -787,6 +800,7 @@ function prepareFace(
       size: 2 * faceSphere[3],
       speed,
       rect,
+      ...(display !== undefined ? { display } : {}),
     });
     trimData = buildFaceTrim(form, face, rect, uv, trim.contains);
   }
@@ -897,23 +911,30 @@ function pieceDensity(
         d = [(p0 + Math.abs(p1)) / 8, 0, Math.abs(p1) / 8];
         speed = [p0 + Math.abs(p1), Math.abs(p1)];
     }
-    // Every point of the span is within the speeds' reach of a sample.
-    const steps = 16;
-    const points: number[][] = [];
-    for (let j = 0; j <= steps; j++) {
-      for (let i = 0; i <= steps; i++) {
-        const p = analyticPoint(
-          kind,
-          frame,
-          params,
-          u0 + (wu * i) / steps,
-          v0 + (wv * j) / steps,
-        );
-        points.push([p[0]!, p[1]!, p[2]!]);
-      }
-    }
-    const pad = (speed[0] * wu + speed[1] * wv) / (2 * steps);
-    return { d, speed, sphere: ball(points, pad), slack: 0 };
+    // Every point of the span is within the speeds' reach of a sample. The
+    // lines of a plane, and of a cylinder or cone along v, are straight: their
+    // ends bound them, so those directions take no samples between and no pad.
+    const bentU = kind !== SurfaceKind.Plane;
+    const bentV = kind === SurfaceKind.Sphere || kind === SurfaceKind.Torus;
+    const stepsU = bentU ? 16 : 1;
+    const stepsV = bentV ? 16 : 1;
+    const pad =
+      (bentU ? (speed[0] * wu) / (2 * stepsU) : 0) +
+      (bentV ? (speed[1] * wv) / (2 * stepsV) : 0);
+    return {
+      d,
+      speed,
+      sphere: analyticBall(
+        kind,
+        frame,
+        params,
+        piece.rect,
+        stepsU,
+        stepsV,
+        pad,
+      ),
+      slack: 0,
+    };
   }
 
   const patch = piece.patch;
@@ -1062,6 +1083,105 @@ function maxAbsCos(v0: number, v1: number): number {
     return 1;
   }
   return Math.max(Math.abs(Math.cos(lo)), Math.abs(Math.cos(hi)));
+}
+
+/**
+ * A ball around an analytic span's surface, grown by `pad`: the
+ * (stepsU + 1) × (stepsV + 1) samples of its rect (`analyticPoint`'s, the
+ * trigonometry once a column and a row, in one flat array), centred on their
+ * box.
+ */
+function analyticBall(
+  kind: SurfaceKind,
+  frame: Float64Array,
+  params: readonly [number, number],
+  rect: Box,
+  stepsU: number,
+  stepsV: number,
+  pad: number,
+): Sphere {
+  const [p0, p1] = params;
+  const [u0, u1, v0, v1] = rect;
+  const x = [frame[3]!, frame[4]!, frame[5]!];
+  const y = [frame[6]!, frame[7]!, frame[8]!];
+  const z = cross(x, y);
+  const nu = stepsU + 1;
+  const nv = stepsV + 1;
+  const cu = new Float64Array(nu);
+  const su = new Float64Array(nu);
+  const us = new Float64Array(nu);
+  for (let i = 0; i < nu; i++) {
+    const u = u0 + ((u1 - u0) * i) / stepsU;
+    us[i] = u;
+    cu[i] = Math.cos(u);
+    su[i] = Math.sin(u);
+  }
+  const tan = kind === SurfaceKind.Cone ? Math.tan(p1) : 0;
+  const points = new Float64Array(nu * nv * 3);
+  const low = [Infinity, Infinity, Infinity];
+  const high = [-Infinity, -Infinity, -Infinity];
+  let at = 0;
+  for (let j = 0; j < nv; j++) {
+    const v = v0 + ((v1 - v0) * j) / stepsV;
+    const cv = kind === SurfaceKind.Sphere ? Math.cos(v) : 0;
+    const sv = kind === SurfaceKind.Sphere ? Math.sin(v) : 0;
+    const tv = kind === SurfaceKind.Torus ? Math.cos(v) : 0;
+    const torusZ = kind === SurfaceKind.Torus ? p1 * Math.sin(v) : 0;
+    for (let i = 0; i < nu; i++) {
+      let a: number;
+      let b: number;
+      let c: number;
+      switch (kind) {
+        case SurfaceKind.Plane:
+          a = us[i]!;
+          b = v;
+          c = 0;
+          break;
+        case SurfaceKind.Cylinder:
+          a = p0 * cu[i]!;
+          b = p0 * su[i]!;
+          c = v;
+          break;
+        case SurfaceKind.Cone: {
+          const radius = p0 + v * tan;
+          a = radius * cu[i]!;
+          b = radius * su[i]!;
+          c = v;
+          break;
+        }
+        case SurfaceKind.Sphere:
+          a = p0 * cv * cu[i]!;
+          b = p0 * cv * su[i]!;
+          c = p0 * sv;
+          break;
+        default: {
+          const radius = p0 + p1 * tv;
+          a = radius * cu[i]!;
+          b = radius * su[i]!;
+          c = torusZ;
+        }
+      }
+      for (let k = 0; k < 3; k++) {
+        const value = frame[k]! + a * x[k]! + b * y[k]! + c * z[k]!;
+        points[at++] = value;
+        low[k] = Math.min(low[k]!, value);
+        high[k] = Math.max(high[k]!, value);
+      }
+    }
+  }
+  const centre = low.map((l, k) => (l + high[k]!) / 2);
+  let r = 0;
+  for (let k = 0; k < points.length; k += 3) {
+    r = Math.max(
+      r,
+      Math.hypot(
+        points[k]! - centre[0]!,
+        points[k + 1]! - centre[1]!,
+        points[k + 2]! - centre[2]!,
+      ),
+    );
+  }
+  return [centre[0]!, centre[1]!, centre[2]!, r + pad];
 }
 
 /** A ball around points, grown by `pad`: centred on their box. */

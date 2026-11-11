@@ -1,5 +1,10 @@
 import type { DrawConstants } from "./drawConstants.ts";
-import { BATCH_WORD, INDIRECT_SIZE, RECORD_WORDS } from "./layout.ts";
+import {
+  BATCH_WORD,
+  INDIRECT_SIZE,
+  PATCH_CHUNK_CELLS,
+  RECORD_WORDS,
+} from "./layout.ts";
 
 /** What a batch's draw needs to know of it (scene/world/types.ts `Batch`). */
 export interface ArgumentBatch {
@@ -12,12 +17,31 @@ export interface ArgumentBatch {
   /** A point set: six vertices per point, without indices. */
   readonly points: boolean;
   /**
-   * A patch draw (`PatchDraw`): the arguments are a non-indexed draw's,
-   * one instance a chunk of cells, which are `chunks`, the draw's own list.
+   * A patch draw (`PatchDraw`): the arguments are an indexed draw's over
+   * the patch chunk's indices (`patchIndices`), one instance a chunk of
+   * cells, which are `chunks`, the draw's own list.
    */
   readonly patches: boolean;
   readonly chunks: GPUBuffer | undefined;
   readonly mesh: { readonly indexCount: number; readonly firstIndex: number };
+}
+
+/** The indices of one chunk of PATCH_CHUNK_CELLS² cells over its (n + 1)² vertices, row by row: each cell's two triangles, counter-clockwise in (i, j). */
+export function patchChunkIndices(cells = PATCH_CHUNK_CELLS): Uint16Array {
+  const stride = cells + 1;
+  const indices = new Uint16Array(cells * cells * 6);
+  let at = 0;
+  for (let j = 0; j < cells; j++) {
+    for (let i = 0; i < cells; i++) {
+      const a = j * stride + i;
+      const b = a + 1;
+      const c = a + stride + 1;
+      const d = a + stride;
+      indices.set([a, b, c, a, c, d], at);
+      at += 6;
+    }
+  }
+  return indices;
 }
 
 /**
@@ -40,6 +64,8 @@ export class DrawArguments {
   private arguments: GPUBuffer;
   private items: GPUBuffer;
   private direct: GPUBuffer;
+  /** The one index buffer every patch chunk draws over. */
+  private readonly patchIndices: GPUBuffer;
 
   /**
    * `live`: whether a record slot holds a draw (a removed draw's record
@@ -54,6 +80,13 @@ export class DrawArguments {
   ) {
     this.arguments = this.createArguments(batchRows);
     [this.items, this.direct] = this.createLists(items);
+    const indices = patchChunkIndices();
+    this.patchIndices = device.createBuffer({
+      label: "world.patchIndices",
+      size: Math.ceil(indices.byteLength / 4) * 4,
+      usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
+    });
+    device.queue.writeBuffer(this.patchIndices, 0, indices);
   }
 
   /**
@@ -131,19 +164,24 @@ export class DrawArguments {
    * slice of the item list, then indexed, or for a point set six vertices
    * per point without indices. "direct" draws every item without the
    * cull's arguments (point sets and patch draws draw only as a view's
-   * cull and dice listed them: their chunks are the instances).
+   * cull and dice listed them: their chunks are the instances). Returns
+   * whether it replaced the bound index buffer (a patch draw binds the one
+   * all chunks share): the caller binds its slab's again before the next
+   * draw that reads one.
    */
   drawBatch(
     pass: GPURenderPassEncoder | GPURenderBundleEncoder,
     batch: ArgumentBatch,
     direct: boolean,
-  ): void {
+  ): boolean {
     if (batch.patches) {
       if (!direct && batch.chunks) {
         pass.setVertexBuffer(0, batch.chunks);
-        pass.drawIndirect(this.arguments, batch.index * INDIRECT_SIZE);
+        pass.setIndexBuffer(this.patchIndices, "uint16");
+        pass.drawIndexedIndirect(this.arguments, batch.index * INDIRECT_SIZE);
+        return true;
       }
-      return;
+      return false;
     }
     pass.setVertexBuffer(
       0,
@@ -160,12 +198,14 @@ export class DrawArguments {
     } else {
       pass.drawIndexedIndirect(this.arguments, batch.index * INDIRECT_SIZE);
     }
+    return false;
   }
 
   destroy(): void {
     this.arguments.destroy();
     this.items.destroy();
     this.direct.destroy();
+    this.patchIndices.destroy();
   }
 
   private createArguments(rows: number): GPUBuffer {

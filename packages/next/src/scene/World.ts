@@ -92,7 +92,9 @@ import {
 } from "./world/meshes.ts";
 import {
   addPatchMesh,
+  readPatchStats,
   setPatchErrorPixels,
+  type PatchDrawStats,
   type PatchMeshOptions,
 } from "./world/patches.ts";
 import {
@@ -642,7 +644,7 @@ export class World {
    * @internal Provisional (CESIUM2_WEBGPU_PLAN.md §13.33, step 5, part 1).
    * A b-rep's patches as a mesh: the span records and control points
    * `packGpuPatches` makes, in the arena. A draw of it (`addDraw`) is
-   * diced per view on the GPU into chunks of 8 × 8 cells (dice.slang) and
+   * diced per view on the GPU into chunks of 4 × 4 cells (dice.slang) and
    * drawn with the face as the feature; its materials are opaque.
    * `faces` is the form's face count (the local feature IDs).
    */
@@ -652,6 +654,16 @@ export class World {
     options?: PatchMeshOptions,
   ): PatchMesh {
     return addPatchMesh(this, data, faces, options);
+  }
+
+  /**
+   * @internal Provisional. What the last view's dice made of each patch draw:
+   * spans, cells, chunks, triangles and vertex invocations, read back
+   * asynchronously (it copies after the frames submitted so far, so call it
+   * after a frame has rendered). Measurements, not frames.
+   */
+  readPatchStats(): Promise<PatchDrawStats[]> {
+    return readPatchStats(this);
   }
 
   /** @internal Provisional. A patch draw's target error, pixels. */
@@ -1683,8 +1695,9 @@ export class World {
     timestampWrites?: GPUComputePassTimestampWrites,
     points = true,
     pixels = 0,
+    diceWrites?: () => GPUComputePassTimestampWrites | undefined,
   ): void {
-    encodeCull(this, encoder, timestampWrites, points, pixels);
+    encodeCull(this, encoder, timestampWrites, points, pixels, diceWrites);
   }
 
   /**

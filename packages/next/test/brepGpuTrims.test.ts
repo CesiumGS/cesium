@@ -17,6 +17,7 @@ import {
   type GpuFace,
 } from "../src/brep/gpuPatches.ts";
 import {
+  DISPLAY_TRIM_TOLERANCE,
   MAX_TRIM_BANDS,
   TRIM_BAND_WORDS,
   TRIM_HEADER_WORDS,
@@ -640,6 +641,7 @@ describe("the trim data", () => {
     expect(trimCrossings(data.words, at, 3, 1.5, 0)).toEqual({
       winding: 0,
       nearest: Infinity,
+      taps: false,
     });
   });
 
@@ -657,8 +659,9 @@ describe("the trim data", () => {
     expect(caps.faces.filter((f) => f.trim).length).toBe(2);
   });
 
-  it("takes the least of the edges' tolerance and 1e-5 of the size, over the speeds, never below a few float32 steps", () => {
+  it("takes the larger of the edges' least tolerance and the display tolerance (1e-4 of the size), over the speeds, never below a few float32 steps", () => {
     const rect: Box = [0, 10, 0, 4];
+    // The model's tolerance (1e-4) is under the display's (1e-4 of 100 m).
     expect(
       trimTolerance({
         edgeTolerances: [1e-3, 1e-4],
@@ -666,14 +669,132 @@ describe("the trim data", () => {
         speed: [3, 4],
         rect,
       }).meters,
-    ).toBe(1e-4);
+    ).toBeCloseTo(DISPLAY_TRIM_TOLERANCE * 100, 12);
+    // Above the display tolerance, the model's counts.
+    expect(
+      trimTolerance({
+        edgeTolerances: [0.05, 0.2],
+        size: 100,
+        speed: [3, 4],
+        rect,
+      }).meters,
+    ).toBe(0.05);
+    // Under it, the display's.
+    expect(
+      trimTolerance({
+        edgeTolerances: [1e-3, 5e-2],
+        size: 100,
+        speed: [3, 4],
+        rect,
+      }).meters,
+    ).toBeCloseTo(1e-2, 12);
     expect(
       trimTolerance({ edgeTolerances: [1e-3], size: 10, speed: [3, 4], rect })
         .uv,
-    ).toBeCloseTo(1e-4 / 5, 12);
+    ).toBeCloseTo(1e-3 / 5, 12);
+    // Without the display tolerance (display 0), the model's: a few float32 steps at the least.
     expect(
-      trimTolerance({ edgeTolerances: [1e-12], size: 10, speed: [3, 4], rect })
-        .uv,
+      trimTolerance({
+        edgeTolerances: [1e-12],
+        size: 10,
+        speed: [3, 4],
+        rect,
+        display: 0,
+      }).uv,
     ).toBeCloseTo(2e-6, 12);
+    expect(
+      trimTolerance({
+        edgeTolerances: [1e-3],
+        size: 10,
+        speed: [3, 4],
+        rect,
+        display: 1e-2,
+      }).meters,
+    ).toBeCloseTo(0.1, 12);
+  });
+
+  it("needs fewer pieces at the display tolerance than at the model's, and never more than its cap in a band after loosening where it can", () => {
+    const b = new BrepBuilder();
+    const e = oneEdge(b);
+    b.face(b.plane([0, 0, 0], [1, 0, 0], [0, 1, 0]), [
+      [
+        {
+          edge: e,
+          pcurve: [
+            [0, 0],
+            [10, 0],
+          ] as const,
+        },
+        {
+          edge: e,
+          pcurve: [
+            [10, 0],
+            [10, 10],
+          ] as const,
+        },
+        {
+          edge: e,
+          pcurve: [
+            [10, 10],
+            [0, 10],
+          ] as const,
+        },
+        {
+          edge: e,
+          pcurve: [
+            [0, 10],
+            [0, 0],
+          ] as const,
+        },
+      ],
+      [{ edge: e, pcurve: circle(5, 5, 3, true) }],
+    ]);
+    const form = b.build();
+    const trimOf = (options: { trimTolerance?: number }) =>
+      prepareGpuPatches(form, options).faces.find((f) => f.trim)!.trim!;
+    const model = trimOf({ trimTolerance: 0 });
+    const display = trimOf({});
+    expect(display.pieces).toBeLessThan(model.pieces);
+    expect(display.maxPerBand).toBeLessThanOrEqual(model.maxPerBand);
+    expect(display.tolerance).toBeGreaterThan(model.tolerance);
+    expect(display.error).toBeLessThanOrEqual(display.tolerance * 1.0001);
+    expect(display.loosened).toBeLessThanOrEqual(2);
+  });
+
+  it("skips the dilation's taps only where they could not change the answer", () => {
+    const form = plate();
+    const { face, index } = firstTrimmed(form);
+    const data = packGpuPatches(prepareGpuPatches(form));
+    const rect = face.rect as Box;
+    const at = data.spans.find((s) => s.face === index)!.trim;
+    const extent = Math.max(rect[1] - rect[0], rect[3] - rect[2]);
+    const rand = random(5);
+    let skipped = 0;
+    let taken = 0;
+    for (const reachFraction of [1e-3, 1e-2, 5e-2]) {
+      const reach = reachFraction * extent;
+      for (let k = 0; k < 4000; k++) {
+        const u = rand() * (rect[1] - rect[0]);
+        const v = rand() * (rect[3] - rect[2]);
+        const skip = trimCovers(data.words, at, u, v, reach, reach, true);
+        const full = trimCovers(data.words, at, u, v, reach, reach, false);
+        expect(skip, `(${u}, ${v}) at ${reach}`).toBe(full);
+        const here = trimCrossings(data.words, at, u, v, reach, reach);
+        if (
+          here.winding === 0 &&
+          here.nearest > reach &&
+          reachFraction < 2e-3
+        ) {
+          if (here.taps) {
+            taken++;
+          } else {
+            skipped++;
+          }
+        }
+      }
+    }
+    // At a pixel's reach most points outside are far from every boundary: the taps are skipped.
+    expect(skipped).toBeGreaterThan(taken);
+    expect(taken).toBeGreaterThan(0);
   });
 });

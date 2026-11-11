@@ -55,8 +55,14 @@ export interface BrepOptions extends Pick<
   errorPixels?: number;
   /** The chordal error, m, of the CPU mesh of the faces the GPU path doesn't draw (default 1 mm). */
   cpuTolerance?: number;
-  /** The most chunks of 8 × 8 cells a patch draw lists per view (default 16,384). */
+  /** The most chunks of 4 × 4 cells a patch draw lists per view (default 65,536). */
   maxChunks?: number;
+  /**
+   * The display tolerance of the faces' trims as a share of a face's size
+   * (default 1e-4, `DISPLAY_TRIM_TOLERANCE`): how far a trim piece may stray
+   * from the face's pcurves in the drawing. Picks are refined exactly.
+   */
+  trimTolerance?: number;
   /**
    * Which faces are a CPU mesh. "unsupported" (default): only those the GPU
    * can't draw. "trimmed": also every face with a trim, as before the
@@ -104,10 +110,12 @@ export function addBrep(
     );
   }
   const faceCount = form.faceSurface.length;
-  const prepared = prepareGpuPatches(
-    form,
-    options.transform ? { origin: [0, 0, 0] } : {},
-  );
+  const prepared = prepareGpuPatches(form, {
+    ...(options.transform ? { origin: [0, 0, 0] } : {}),
+    ...(options.trimTolerance !== undefined
+      ? { trimTolerance: options.trimTolerance }
+      : {}),
+  });
   const cpuTrimmed = options.cpuFaces === "trimmed";
   const onGpu = (face: number): boolean => {
     const f = prepared.faces[face]!;

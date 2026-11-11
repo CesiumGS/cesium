@@ -118,6 +118,8 @@ struct View_std140_0
 };
 
 @binding(0) @group(0) var<uniform> view_0 : View_std140_0;
+@binding(3) @group(2) var<storage, read_write> stats_0 : array<atomic<u32>>;
+
 @binding(2) @group(2) var<storage, read_write> chunks_0 : array<vec4<u32>>;
 
 struct SpanWords_0
@@ -327,8 +329,10 @@ fn dicePatches(@builtin(global_invocation_id) gid_0 : vec3<u32>)
     }
     var nu_0 : u32 = cellCount_0(ru_1 * (s_1.rect_0.y - s_1.rect_0.x));
     var nv_0 : u32 = cellCount_0(rv_1 * (s_1.rect_0.w - s_1.rect_0.z));
-    var across_0 : u32 = (nu_0 + u32(8) - u32(1)) / u32(8);
-    var total_0 : u32 = across_0 * ((nv_0 + u32(8) - u32(1)) / u32(8));
+    var across_0 : u32 = (nu_0 + u32(4) - u32(1)) / u32(4);
+    var total_0 : u32 = across_0 * ((nv_0 + u32(4) - u32(1)) / u32(4));
+    var _S12 : u32 = atomicAdd(&(stats_0[i32(0)]), u32(1));
+    var _S13 : u32 = atomicAdd(&(stats_0[i32(1)]), nu_0 * nv_0);
     var first_0 : u32 = atomicAdd(&(args_0[a_0 + u32(4)]), total_0);
     var c_0 : u32 = u32(0);
     loop
@@ -340,15 +344,15 @@ fn dicePatches(@builtin(global_invocation_id) gid_0 : vec3<u32>)
         {
             break;
         }
-        var _S12 : u32 = first_0 + c_0;
-        if((_S12 >= (dice_0.capacity_0)))
+        var _S14 : u32 = first_0 + c_0;
+        if((_S14 >= (dice_0.capacity_0)))
         {
             break;
         }
-        var _S13 : u32 = c_0 % across_0;
-        var i0_0 : u32 = _S13 * u32(8);
-        var _S14 : u32 = c_0 / across_0;
-        chunks_0[_S12] = vec4<u32>(dice_0.record_0, index_0, (((((i0_0 | ((((_S14 * u32(8)) << (u32(8))))))) | (((nu_0 << (u32(16))))))) | (((nv_0 << (u32(24)))))), u32(0));
+        var _S15 : u32 = c_0 % across_0;
+        var i0_0 : u32 = _S15 * u32(4);
+        var _S16 : u32 = c_0 / across_0;
+        chunks_0[_S14] = vec4<u32>(dice_0.record_0, index_0, (((((i0_0 | ((((_S16 * u32(4)) << (u32(8))))))) | (((nu_0 << (u32(16))))))) | (((nv_0 << (u32(24)))))), u32(0));
         c_0 = c_0 + u32(1);
     }
     return;
@@ -359,12 +363,16 @@ fn dicePatches(@builtin(global_invocation_id) gid_0 : vec3<u32>)
 fn writePatchArgs()
 {
     var a_1 : u32 = dice_0.batch_0 * u32(5);
-    var _S15 : u32 = atomicLoad(&(args_0[a_1 + u32(4)]));
-    var _S16 : u32 = min(_S15, dice_0.capacity_0);
-    atomicStore(&(args_0[a_1]), u32(384));
-    atomicStore(&(args_0[a_1 + u32(1)]), _S16);
+    var _S17 : u32 = a_1 + u32(4);
+    var _S18 : u32 = atomicLoad(&(args_0[_S17]));
+    var _S19 : u32 = min(_S18, dice_0.capacity_0);
+    atomicStore(&(stats_0[i32(2)]), _S18);
+    atomicStore(&(stats_0[i32(3)]), _S19);
+    atomicStore(&(args_0[a_1]), u32(96));
+    atomicStore(&(args_0[a_1 + u32(1)]), _S19);
     atomicStore(&(args_0[a_1 + u32(2)]), u32(0));
     atomicStore(&(args_0[a_1 + u32(3)]), u32(0));
+    atomicStore(&(args_0[_S17]), u32(0));
     return;
 }
 

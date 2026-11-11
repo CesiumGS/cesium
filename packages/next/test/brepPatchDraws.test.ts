@@ -33,8 +33,13 @@ function recordingEncoder(calls: Recorded[]): GPUCommandEncoder {
     },
   );
   return {
-    clearBuffer: () => undefined,
-    beginComputePass: () => pass,
+    clearBuffer: (...args: unknown[]) => {
+      calls.push({ name: "clearBuffer", args });
+    },
+    beginComputePass: (...args: unknown[]) => {
+      calls.push({ name: "beginComputePass", args });
+      return pass;
+    },
   } as unknown as GPUCommandEncoder;
 }
 
@@ -53,7 +58,12 @@ describe("World.addBrep", () => {
     ) => {
       const encoder = create(d) as unknown as Record<string, unknown>;
       if (d.label === "world.bundle") {
-        for (const name of ["setPipeline", "setVertexBuffer", "drawIndirect"]) {
+        for (const name of [
+          "setPipeline",
+          "setVertexBuffer",
+          "setIndexBuffer",
+          "drawIndexedIndirect",
+        ]) {
           encoder[name] = (...args: unknown[]) => {
             drawn.push({ name, args });
           };
@@ -146,9 +156,15 @@ describe("World.addBrep", () => {
     expect(drawn.find((c) => c.name === "setVertexBuffer")!.args[1]).toBe(
       draw.chunks,
     );
-    expect(drawn.find((c) => c.name === "drawIndirect")!.args[1]).toBe(
+    expect(drawn.find((c) => c.name === "drawIndexedIndirect")!.args[1]).toBe(
       world.raster.drawArguments.slotOf(brep.patches!.index),
     );
+    // Chunks are indexed: the patch draw binds the 16-bit chunk indices, then the slab's again for what follows.
+    const binds = drawn
+      .filter((c) => c.name === "setIndexBuffer")
+      .map((c) => c.args[1]);
+    expect(binds).toContain("uint16");
+    expect(draw.stats).toBeDefined();
     world.removeBrep(brep);
     world.destroy();
   });
@@ -196,6 +212,18 @@ describe("World.addBrep", () => {
     expect(
       calls.some((c) => c.name === "setBindGroup" && c.args[1] === draw.group),
     ).toBe(true);
+    // The dice runs in a pass of its own (timed apart from the cull), and its counts are cleared first.
+    const passes = calls.filter((c) => c.name === "beginComputePass");
+    expect(passes.map((c) => (c.args[0] as { label: string }).label)).toEqual([
+      "cull",
+      "dice",
+    ]);
+    expect(
+      calls.some((c) => c.name === "clearBuffer" && c.args[0] === draw.stats),
+    ).toBe(true);
+    expect(names.indexOf("clearBuffer")).toBeLessThan(
+      names.lastIndexOf("beginComputePass"),
+    );
     // A thread a span, 64 a group: six spans, one group; then the arguments.
     const dispatches = calls.filter((c) => c.name === "dispatchWorkgroups");
     expect(dispatches.at(-2)!.args).toEqual([1]);

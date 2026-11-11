@@ -83,6 +83,7 @@ export interface CullWorld extends Pick<World, "ctx" | "hasDraw" | "slabs"> {
     | "batchList"
     | "cullBindGroup"
     | "cullPassDesc"
+    | "dicePassDesc"
     | "drawArguments"
     | "drawBatches"
     | "drawConstants"
@@ -143,6 +144,7 @@ export interface PrepareWorld extends Pick<
     | "cullPassDesc"
     | "depthBundle_"
     | "depthFor"
+    | "dicePassDesc"
     | "drawArguments"
     | "drawBatches"
     | "drawConstants"
@@ -295,6 +297,7 @@ export function encodeCull(
   timestampWrites?: GPUComputePassTimestampWrites,
   points = true,
   pixels = 0,
+  diceWrites?: () => GPUComputePassTimestampWrites | undefined,
 ): void {
   const { pipelines, currentViewBindGroup } = world.ctx;
   // The batches' instance counts start at zero (cull.slang `append`
@@ -360,22 +363,30 @@ export function encodeCull(
     pass.dispatchWorkgroups(1);
   }
   // Patch draws the cull kept: their spans into chunks of cells, then
-  // their draws' arguments (over the item counts the cull wrote there).
+  // their draws' arguments (over the item counts the cull wrote there), in
+  // a pass of their own so the timer shows the dice apart from the cull.
   // A draw no view shows has zeroed arguments already.
+  pass.end();
   if (world.raster.patchDraws.size) {
-    pass.setBindGroup(1, world.raster.patchWorldBindGroup);
+    for (const draw of world.raster.patchDraws.values()) {
+      encoder.clearBuffer(draw.stats);
+    }
+    world.raster.dicePassDesc.timestampWrites = diceWrites?.();
+    const dice = encoder.beginComputePass(world.raster.dicePassDesc);
+    dice.setBindGroup(0, currentViewBindGroup);
+    dice.setBindGroup(1, world.raster.patchWorldBindGroup);
     for (const draw of world.raster.patchDraws.values()) {
       if (draw.batch.shown === 0) {
         continue;
       }
-      pass.setBindGroup(2, draw.group);
-      pass.setPipeline(pipelines.dicePatches);
-      pass.dispatchWorkgroups(Math.ceil(draw.mesh.patches.spans / 64));
-      pass.setPipeline(pipelines.writePatchArgs);
-      pass.dispatchWorkgroups(1);
+      dice.setBindGroup(2, draw.group);
+      dice.setPipeline(pipelines.dicePatches);
+      dice.dispatchWorkgroups(Math.ceil(draw.mesh.patches.spans / 64));
+      dice.setPipeline(pipelines.writePatchArgs);
+      dice.dispatchWorkgroups(1);
     }
+    dice.end();
   }
-  pass.end();
 }
 
 /** Assigns each batch its slice of the item list and uploads the batch table. */
@@ -581,7 +592,10 @@ export function recordBundle(
       group = wantedGroup;
       encoder.setBindGroup(2, group);
     }
-    world.raster.drawArguments.drawBatch(encoder, batch, direct);
+    // A patch draw's index buffer replaced the slab's: the next draw binds it again.
+    if (world.raster.drawArguments.drawBatch(encoder, batch, direct)) {
+      slab = -1;
+    }
   }
   return encoder.finish();
 }

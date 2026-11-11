@@ -16,7 +16,8 @@ import {
   TRIM_HEADER_WORDS,
   TRIM_SEGMENT_WORDS,
 } from "../src/brep/gpuTrims.ts";
-import { RecordFlags } from "../src/render/layout.ts";
+import { PATCH_CHUNK_CELLS, RecordFlags } from "../src/render/layout.ts";
+import { patchChunkIndices } from "../src/render/drawArguments.ts";
 import { CHUNK_BYTES, PATCH_DICE_BYTES } from "../src/scene/world/patches.ts";
 import { SURFACE_VERTEX_BOUNDARY } from "../src/shaders/link/index.ts";
 
@@ -76,11 +77,28 @@ describe("patch.slang", () => {
     expect(source("src/shaders/surface.slang")).toMatch(/s\.kind == 5u/);
   });
 
-  it("makes chunks of 8 × 8 cells of at most 64 a side", () => {
-    expect(patch.get("CHUNK_CELLS")).toBe(8);
+  it("makes chunks of 4 × 4 cells of at most 64 a side, drawn indexed", () => {
+    expect(patch.get("CHUNK_CELLS")).toBe(4);
+    expect(PATCH_CHUNK_CELLS).toBe(patch.get("CHUNK_CELLS"));
     expect(patch.get("MAX_CELLS")).toBe(64);
     // The chunk's packing holds the counts and origins in a byte each.
     expect(patch.get("MAX_CELLS")!).toBeLessThan(256);
+    // The chunk's vertices are a (n + 1)² grid of 16-bit indices, row by row.
+    const side = PATCH_CHUNK_CELLS + 1;
+    expect(side * side).toBeLessThan(65536);
+    const indices = patchChunkIndices();
+    expect(indices).toHaveLength(6 * PATCH_CHUNK_CELLS * PATCH_CHUNK_CELLS);
+    expect(Math.max(...indices)).toBe(side * side - 1);
+    // Every vertex is used, and each cell's two triangles share its diagonal.
+    expect(new Set(indices).size).toBe(side * side);
+    expect([...indices.slice(0, 6)]).toEqual([
+      0,
+      1,
+      side + 1,
+      0,
+      side + 1,
+      side,
+    ]);
   });
 });
 

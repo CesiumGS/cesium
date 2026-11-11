@@ -253,6 +253,25 @@
             }
         },
         {
+            "name": "stats",
+            "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 3},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "access": "readWrite",
+                "resultType": {
+                    "kind": "scalar",
+                    "scalarType": "uint32",
+                    "sizes": [
+                        {"kind": "uniform", "value": 4, "alignment": 4}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
             "name": "view",
             "binding": {"kind": "descriptorTableSlot", "index": 0},
             "type": {
@@ -2210,6 +2229,25 @@
                 }
             },
             {
+                "name": "stats",
+                "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 3},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "access": "readWrite",
+                    "resultType": {
+                        "kind": "scalar",
+                        "scalarType": "uint32",
+                        "sizes": [
+                            {"kind": "uniform", "value": 4, "alignment": 4}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
                 "name": "view",
                 "binding": {"kind": "descriptorTableSlot", "index": 0},
                 "type": {
@@ -3969,6 +4007,10 @@
                     "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 2}
                 },
                 {
+                    "name": "stats",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 3}
+                },
+                {
                     "name": "view",
                     "binding": {"kind": "descriptorTableSlot", "index": 0}
                 },
@@ -4028,6 +4070,10 @@
                 {
                     "name": "chunks",
                     "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 2}
+                },
+                {
+                    "name": "stats",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 3}
                 },
                 {
                     "name": "view",

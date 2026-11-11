@@ -4,7 +4,7 @@
 // owns the per-view dice's parameters and chunk list. The dice and the vertex
 // stage are shaders/dice.slang and surface.slang `patchVertex`.
 import type { GpuPatchData } from "../../brep/gpuPatches.ts";
-import { NO_STREAM } from "../../render/layout.ts";
+import { NO_STREAM, PATCH_CHUNK_CELLS } from "../../render/layout.ts";
 import { CapacityError } from "../CapacityError.ts";
 import { weightInterval } from "../warpBounds.ts";
 import { termCurvatureBound, termDerivativeBound } from "../warpEvaluate.ts";
@@ -18,10 +18,12 @@ import { queueUpload } from "./uploads.ts";
 export const PATCH_DICE_BYTES = 32;
 /** A chunk: a record, a span, its cells' origin and counts, a spare word. */
 export const CHUNK_BYTES = 16;
+/** What a draw's dice counts (shaders/dice.slang `stats`): 4 words. */
+export const PATCH_STATS_BYTES = 16;
 /** The target error a cell may leave, pixels: half a pixel. */
 export const DEFAULT_ERROR_PIXELS = 0.5;
-/** Chunks of 8 × 8 cells a draw lists per view, at most (a million cells). */
-export const DEFAULT_MAX_CHUNKS = 16384;
+/** Chunks of 4 × 4 cells a draw lists per view, at most (a million cells). */
+export const DEFAULT_MAX_CHUNKS = 65536;
 
 /** Scene side: a patch mesh's geometry into the world's slabs. */
 export interface PatchMeshWorld extends Pick<World, "ctx" | "slabs"> {
@@ -40,7 +42,7 @@ export interface PatchDrawWorld extends Pick<World, "ctx" | "slabs"> {
 export interface PatchMeshOptions {
   /** The target error, pixels, draws of it start with (default half a pixel). */
   readonly errorPixels?: number;
-  /** The most chunks of 8 × 8 cells a draw lists per view (default 16,384). */
+  /** The most chunks of 4 × 4 cells a draw lists per view (default 65,536). */
   readonly maxChunks?: number;
 }
 
@@ -116,7 +118,7 @@ export function addPatchMesh(
   };
 }
 
-/** A patch draw's dice group 2: its parameters, its slab's arena and its chunks. */
+/** A patch draw's dice group 2: its parameters, its slab's arena, its chunks and its counts. */
 export function patchGroup(
   world: PatchDrawWorld,
   draw: PatchDraw,
@@ -128,6 +130,7 @@ export function patchGroup(
       draw.params,
       world.slabs.get(draw.mesh.slab).vertexBuffer,
       draw.chunks,
+      draw.stats,
     ].map((buffer, binding) => ({ binding, resource: { buffer } })),
   });
 }
@@ -157,6 +160,14 @@ export function createPatchDraw(
         GPUBufferUsage.STORAGE |
         GPUBufferUsage.VERTEX |
         GPUBufferUsage.COPY_SRC,
+    }),
+    stats: device.createBuffer({
+      label: "world.patchDice.stats",
+      size: PATCH_STATS_BYTES,
+      usage:
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.COPY_SRC |
+        GPUBufferUsage.COPY_DST,
     }),
     capacity,
     group: undefined as never,
@@ -192,6 +203,77 @@ export function writePatchParams(
 export function releasePatchDraw(draw: PatchDraw): void {
   draw.params.destroy();
   draw.chunks.destroy();
+  draw.stats.destroy();
+}
+
+/** What a view's dice made of one patch draw (`World.readPatchStats`). */
+export interface PatchDrawStats {
+  /** The draw's record (`DrawHandle.index`). */
+  readonly record: number;
+  /** The draw's spans, and those the dice kept in the view. */
+  readonly spans: number;
+  readonly spansDiced: number;
+  /** Cells diced, and the chunks they need and the draw lists (fewer when the list's capacity binds). */
+  readonly cells: number;
+  readonly chunksAsked: number;
+  readonly chunks: number;
+  /** Triangles drawn: two a cell. */
+  readonly triangles: number;
+  /** Vertex-stage invocations: (n + 1)² a chunk, n the chunk's side in cells. */
+  readonly vertices: number;
+  /** Vertex invocations per cell: 1.56 at the least, for a span of whole chunks. */
+  readonly verticesPerCell: number;
+}
+
+/**
+ * The last view's dice counts for every patch draw, read back (the buffers
+ * the dice kernel wrote, copied after the frames submitted so far). For
+ * measurements, not frames: it submits a copy and waits for the map.
+ */
+export async function readPatchStats(
+  world: PatchDrawWorld,
+): Promise<PatchDrawStats[]> {
+  const { device } = world.ctx;
+  const draws = [...world.raster.patchDraws.entries()];
+  if (draws.length === 0) {
+    return [];
+  }
+  const readback = device.createBuffer({
+    label: "world.patchDice.readback",
+    size: draws.length * PATCH_STATS_BYTES,
+    usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+  });
+  const encoder = device.createCommandEncoder({ label: "patchStats" });
+  draws.forEach(([, draw], i) => {
+    encoder.copyBufferToBuffer(
+      draw.stats,
+      0,
+      readback,
+      i * PATCH_STATS_BYTES,
+      PATCH_STATS_BYTES,
+    );
+  });
+  device.queue.submit([encoder.finish()]);
+  await readback.mapAsync(GPUMapMode.READ);
+  const words = new Uint32Array(readback.getMappedRange().slice(0));
+  readback.destroy();
+  const side = PATCH_CHUNK_CELLS + 1;
+  return draws.map(([record, draw], i) => {
+    const cells = words[i * 4 + 1]!;
+    const chunks = words[i * 4 + 3]!;
+    const vertices = chunks * side * side;
+    return {
+      record,
+      spans: draw.mesh.patches.spans,
+      spansDiced: words[i * 4]!,
+      cells,
+      chunksAsked: words[i * 4 + 2]!,
+      chunks,
+      triangles: 2 * cells,
+      vertices,
+      verticesPerCell: cells > 0 ? vertices / cells : 0,
+    };
+  });
 }
 
 /**

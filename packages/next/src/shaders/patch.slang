@@ -51,8 +51,10 @@ public static const uint TRIM_PENDING = 4294967294u;
 
 // The most cells a span's side holds, and a chunk's side in cells
 // (src/brep/gpuPatches.ts MAX_CELLS; dice.slang writes chunks of this).
+// A chunk is drawn indexed: (CHUNK_CELLS + 1)² vertices shared by its cells'
+// triangles, over the static index buffer in render/drawArguments.ts.
 public static const uint MAX_CELLS = 64u;
-public static const uint CHUNK_CELLS = 8u;
+public static const uint CHUNK_CELLS = 4u;
 
 public struct PatchSpan {
   public uint kind;
@@ -116,6 +118,50 @@ public PatchSpan unpackSpan(SpanWords w) {
   s.density = f3(w, SPAN_DENSITY);
   s.speed = float2(asfloat(w.u[SPAN_SPEED]), asfloat(w.u[SPAN_SPEED + 1u]));
   s.trim = w.u[SPAN_TRIM];
+  return s;
+}
+
+float3 load3(StructuredBuffer<float> words, uint at) {
+  return float3(words[at], words[at + 1u], words[at + 2u]);
+}
+float4 load4(StructuredBuffer<float> words, uint at) {
+  return float4(words[at], words[at + 1u], words[at + 2u], words[at + 3u]);
+}
+
+// The span the vertex stage needs, read from the arena at `base`: not the
+// bounds and densities the dice used (they stay zero), and the frame only
+// for an analytic span, the patch's domain only for a Bézier one. A vertex
+// is read often, so each word not used is a read saved.
+public PatchSpan loadSpan(StructuredBuffer<float> words, uint base) {
+  PatchSpan s;
+  uint k = asuint(words[base + SPAN_KIND]);
+  s.kind = k & 255u;
+  s.reversed = (k & SPAN_REVERSED_BIT) != 0u;
+  uint d = asuint(words[base + SPAN_DEGREES]);
+  s.degreeU = d & 255u;
+  s.degreeV = (d >> 8u) & 255u;
+  s.face = asuint(words[base + SPAN_FACE]);
+  s.controls = asuint(words[base + SPAN_CONTROLS]);
+  s.rect = load4(words, base + SPAN_RECT);
+  s.corner = float2(words[base + SPAN_CORNER], words[base + SPAN_CORNER + 1u]);
+  s.trim = asuint(words[base + SPAN_TRIM]);
+  s.origin = float3(0.0);
+  s.axisX = float3(0.0);
+  s.axisY = float3(0.0);
+  s.params = float2(0.0);
+  s.domain = float4(0.0);
+  s.sphere = float4(0.0);
+  s.faceSphere = float4(0.0);
+  s.density = float3(0.0);
+  s.speed = float2(0.0);
+  if (s.kind == 5u) {
+    s.domain = load4(words, base + SPAN_DOMAIN);
+  } else {
+    s.origin = load3(words, base + SPAN_ORIGIN);
+    s.axisX = load3(words, base + SPAN_AXIS_X);
+    s.axisY = load3(words, base + SPAN_AXIS_Y);
+    s.params = float2(words[base + SPAN_PARAMS], words[base + SPAN_PARAMS + 1u]);
+  }
   return s;
 }
 

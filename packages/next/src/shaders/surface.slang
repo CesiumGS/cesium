@@ -690,48 +690,34 @@ float3 column3(float4x4 m, int c) {
 // counts packed), set by the patch vertex entries before `vertexOut`.
 static uint4 patchChunk;
 
-// A patch draw's vertex: 6 vertices a cell (two triangles, counter-clockwise
-// in (u, v), the other way for a reversed face, so they face outward), 8 × 8
-// cells a chunk; cells past the span's counts are not live. The triangles
-// index the quad's corners (0, 0), (1, 0), (1, 1), (0, 1).
-static const uint PATCH_TRIANGLES[12] = { 0u, 1u, 2u, 0u, 2u, 3u, 0u, 2u, 1u, 0u, 3u, 2u };
-static const uint2 PATCH_CORNERS[4] = { uint2(0u, 0u), uint2(1u, 0u), uint2(1u, 1u), uint2(0u, 1u) };
-
+// A patch draw's vertex, indexed: a chunk of 4 × 4 cells is 5 × 5 shared
+// vertices, over a static index buffer (render/drawArguments.ts) whose
+// triangles are counter-clockwise in (i, j). A reversed face is the grid
+// mirrored along u (i = n_u less the column), which turns the triangles the
+// other way, so they face outward. Columns and rows past the span's counts
+// repeat its last line: the cells there have no area, and the rasterizer
+// drops them.
 struct PatchVertex {
   float3 position;
   float3 normal;
   float2 uv;       // (u, v) less the face rect's corner
   uint face;       // its feature
   uint trim;       // the face's trim data's offset + 1 in the draw's table, 0: none
-  bool live;
 };
 
 PatchVertex patchVertex(DrawRecord r, uint vertexIndex) {
   PatchVertex result;
   uint base = r.positionOffset + patchChunk.y * SPAN_WORDS;
-  SpanWords words;
-  for (uint k = 0u; k < SPAN_WORDS; k++) {
-    words.u[k] = asuint(vertices[base + k]);
-  }
-  PatchSpan s = unpackSpan(words);
+  PatchSpan s = loadSpan(vertices, base);
   uint packed = patchChunk.z;
   uint nu = (packed >> 16u) & 255u;
   uint nv = (packed >> 24u) & 255u;
-  uint cell = vertexIndex / 6u;
-  uint ci = (packed & 255u) + cell % CHUNK_CELLS;
-  uint cj = ((packed >> 8u) & 255u) + cell / CHUNK_CELLS;
+  uint column = min((packed & 255u) + vertexIndex % (CHUNK_CELLS + 1u), nu);
+  uint row = min(((packed >> 8u) & 255u) + vertexIndex / (CHUNK_CELLS + 1u), nv);
+  uint i = s.reversed ? nu - column : column;
+  uint j = row;
   result.face = s.face;
   result.trim = s.trim >= TRIM_PENDING ? 0u : s.trim + 1u;
-  result.live = ci < nu && cj < nv;
-  result.position = float3(0.0);
-  result.normal = float3(0.0, 0.0, 1.0);
-  result.uv = float2(0.0);
-  if (!result.live) {
-    return result;
-  }
-  uint2 corner = PATCH_CORNERS[PATCH_TRIANGLES[(s.reversed ? 6u : 0u) + vertexIndex % 6u]];
-  uint i = ci + corner.x;
-  uint j = cj + corner.y;
   // The grid's lines are exact at the ends, so spans meet on the same floats.
   float u = i == nu ? s.rect.y : s.rect.x + (s.rect.y - s.rect.x) * float(i) / float(nu);
   float v = j == nv ? s.rect.w : s.rect.z + (s.rect.w - s.rect.z) * float(j) / float(nv);
@@ -774,7 +760,9 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   PatchVertex patchData;
   patchData.face = 0u;
   patchData.trim = 0u;
-  patchData.live = true;
+  patchData.position = float3(0.0);
+  patchData.normal = float3(0.0, 0.0, 1.0);
+  patchData.uv = float2(0.0);
   uint instance = p.instance;
   float3 position = float3(0.0);
   float4 anchor = float4(0.0);
@@ -878,10 +866,6 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   float4 world = mul(m, float4(stage.positionMC, 1.0));
   out.relPosition = placedDraw ? mul(m, float4(designPosition, 1.0)).xyz : world.xyz;
   out.position = mul(view.viewProj, world);
-  // A cell past its span's counts: a triangle of no area outside the clip volume.
-  if (patched && !patchData.live) {
-    out.position = float4(0.0, 0.0, -1.0, 1.0);
-  }
   // A billboard (RecordFlags.billboard): the instance's position, its
   // corner's model xy as pixels on screen (times the size and the
   // instance's scale), facing the camera; in front of everything within

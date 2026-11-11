@@ -54,6 +54,8 @@ export {
   type PrepareOptions,
 } from "./gpuPatches.ts";
 export {
+  DISPLAY_TRIM_TOLERANCE,
+  MAX_PIECES_PER_BAND,
   MAX_TRIM_BANDS,
   TRIM_BAND_WORDS,
   TRIM_HEADER_WORDS,

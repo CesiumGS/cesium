@@ -1091,7 +1091,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         cpuTolerance: OVERLAY_TOLERANCE / shape.scale,
       });
       stats.gpu.prepareMs += performance.now() - start;
-      for (const draw of [handle.patches, handle.mesh]) {
+      // Each draw of the solid (the complete faces, the trimmed ones, the CPU mesh) reads its own palette.
+      for (const draw of [handle.patches, handle.trimmed, handle.mesh]) {
         if (draw) {
           world.setDrawShader(draw, paletteShader(shape, draw));
         }
@@ -1518,16 +1519,44 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   const stepDrawnOut = el("span");
   /** The GPU's time in the passes that dice and draw, smoothed by the engine. */
   const gpuTimeOut = el("dd");
+  /** What the view's dice made, read back from the GPU (`World.readPatchStats`, engine-internal). */
+  const gpuCountsOut = el("dd");
+  let countsPending = false;
+  const showGpuCounts = () => {
+    if (countsPending || breps.length === 0) {
+      return;
+    }
+    countsPending = true;
+    world
+      .readPatchStats()
+      .then((draws) => {
+        const sum = (f: (d: (typeof draws)[number]) => number) =>
+          draws.reduce((n, d) => n + f(d), 0);
+        const cells = sum((d) => d.cells);
+        gpuCountsOut.textContent =
+          cells > 0
+            ? `${cells.toLocaleString()} cells, ${sum((d) => d.triangles).toLocaleString()} triangles in ${sum((d) => d.chunks).toLocaleString()} chunks of 4 × 4; ${sum((d) => d.vertices).toLocaleString()} vertex invocations (${(sum((d) => d.vertices) / cells).toFixed(1)} a cell)${sum((d) => d.chunksAsked - d.chunks) > 0 ? "; chunk list full: raise maxChunks" : ""}`
+            : "nothing diced in this view";
+      })
+      .catch((error: unknown) => {
+        gpuCountsOut.textContent = `not read: ${error instanceof Error ? error.message : String(error)}`;
+      })
+      .finally(() => {
+        countsPending = false;
+      });
+  };
   const showGpuTime = () => {
     const passes = engine.gpuPasses;
     const ms = (name: string) =>
       passes[name] !== undefined ? `${passes[name]!.toFixed(2)} ms` : undefined;
     const cull = ms("cull");
+    const dice = ms("dice");
     const opaque = ms("opaque");
     gpuTimeOut.textContent =
       cull && opaque
-        ? `${cull} cull + dice, ${opaque} opaque pass (whole scene)`
+        ? `${cull} cull, ${dice ?? "no"} dice, ${opaque} opaque pass (whole scene)`
         : "not measured: needs the timestamp-query feature";
+    showGpuCounts();
   };
   /** GPU mode: what `addBrep` made, summed over the shapes. */
   const gpuSums = () => {
@@ -1618,7 +1647,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
               ),
               el("dt", {}, "GPU time"),
               gpuTimeOut,
-              ...row("Cells, triangles", "per-view counts: not exposed yet"),
+              el("dt", {}, "Cells, triangles"),
+              gpuCountsOut,
               ...row(
                 "Error target",
                 `${px(settings.pixels)} on screen, per view`,

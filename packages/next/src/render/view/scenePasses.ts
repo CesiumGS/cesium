@@ -182,6 +182,8 @@ export function cullPass(
       engine.raster.timer.passWrites("cull"),
       true,
       frame.width * frame.height,
+      // The patch dice's own pass, asked for only if it runs.
+      () => engine.raster.timer.passWrites("dice"),
     );
   };
 }

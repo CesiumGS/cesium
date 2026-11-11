@@ -361,6 +361,8 @@ export const ALL_VIEWS = 0xffffffff;
 export const DRAW_ITEM_SIZE = DrawItemLayout.size;
 /** `drawIndexedIndirect` args: indexCount, instanceCount, firstIndex, baseVertex, firstInstance. */
 export const INDIRECT_SIZE = 20;
+/** A patch draw's chunk: cells along a side (shaders/patch.slang `CHUNK_CELLS`), drawn as (n + 1)² shared vertices. */
+export const PATCH_CHUNK_CELLS = 4;
 /** `struct Material` — 64 bytes. */
 export const MATERIAL_SIZE = MaterialLayout.size;
 export const MATERIAL_WORDS = M.size;

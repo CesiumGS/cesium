@@ -27,23 +27,37 @@ public static const uint COVERAGE_HEADER = 4u;
 public static const uint COVERAGE_BAND_WORDS = 3u;
 public static const uint COVERAGE_PIECE_WORDS = 8u;
 
-// What a ray finds: the winding number to +x, and the distance in x to the
-// nearest crossing on either side (not beyond `reach`: then it's 3e38).
+// What a ray finds: the winding number to +x, the distance in x to the
+// nearest crossing on either side (not beyond `reach`: then it's 3e38), and
+// whether the plus-shaped dilation's two taps along y (the rows p.y ± reach.y)
+// could find another winding (`taps`). It is false when every piece the taps
+// could meet is on all three rows, with a crossing that can't change sides
+// (it moves within the piece's width in x, and is farther than that from p),
+// and a tap isn't in another band: the taps would answer as the ray did, and
+// `covers` skips them.
 public struct Crossings {
   public int winding;
   public float nearest;
+  public bool taps;
 };
 
 // `words` is the buffer the data lives in (a slab's arena), `base` its first
 // word, `p` the point in the outline's own coordinates and `reach` how far
-// either side of p the nearest crossing is wanted.
-public Crossings crossings(StructuredBuffer<float> words, uint base, float2 p, float reach) {
+// either side of p the nearest crossing is wanted along x, and the taps along
+// y (0 for a tap itself: only the winding is wanted).
+public Crossings crossings(StructuredBuffer<float> words, uint base, float2 p, float2 reach) {
   Crossings result;
   result.winding = 0;
   result.nearest = 3.0e38;
+  result.taps = false;
   uint bands = asuint(words[base]);
   float scale = words[base + 1u];
   int band = clamp(int(floor(p.y * scale)), 0, int(bands) - 1);
+  if (reach.y > 0.0) {
+    int below = clamp(int(floor((p.y - reach.y) * scale)), 0, int(bands) - 1);
+    int above = clamp(int(floor((p.y + reach.y) * scale)), 0, int(bands) - 1);
+    result.taps = below != band || above != band;
+  }
   uint record = base + COVERAGE_HEADER + uint(band) * COVERAGE_BAND_WORDS;
   uint list = base + asuint(words[record]);
   uint count = asuint(words[record + 1u]);
@@ -53,14 +67,21 @@ public Crossings crossings(StructuredBuffer<float> words, uint base, float2 p, f
   }
   for (uint i = 0u; i < count; i++) {
     uint s = base + asuint(words[list + i]);
-    if (words[s + 6u] < p.x - reach) {
+    if (words[s + 6u] < p.x - reach.x) {
       break;
     }
     float y0 = words[s + 1u] - p.y;
     float y2 = words[s + 5u] - p.y;
-    if (y0 > 0.0 || y2 <= 0.0) {
+    bool onRay = y0 <= 0.0 && y2 > 0.0;
+    if (!onRay) {
+      // A piece the ray doesn't meet that a tap's row does: the tap sees what the ray can't.
+      if (y0 <= reach.y && y2 > -reach.y) {
+        result.taps = true;
+      }
       continue;
     }
+    // A piece on the ray that ends between the rows, is gone from one tap's.
+    bool ends = y0 > -reach.y || y2 <= reach.y;
     float y1 = words[s + 3u] - p.y;
     float a = y0 - 2.0 * y1 + y2;
     float b = y0 - y1;
@@ -77,6 +98,11 @@ public Crossings crossings(StructuredBuffer<float> words, uint base, float2 p, f
     if (x > 0.0) {
       result.winding += words[s + 7u] > 0.0 ? 1 : -1;
     }
+    // On every row, the crossing moves within the piece's width in x: it matters to a tap only if that reaches p.
+    float width = words[s + 6u] - min(words[s], min(words[s + 2u], words[s + 4u]));
+    if (ends || width >= abs(x)) {
+      result.taps = true;
+    }
   }
   return result;
 }
@@ -87,14 +113,19 @@ public Crossings crossings(StructuredBuffer<float> words, uint base, float2 p, f
 // reach.y) does (the pieces are monotone in y, so a near-horizontal piece
 // is seen from above or below, not along the ray). That keeps an outside
 // point whose nearest boundary is within reach / sqrt(2) in any direction,
-// and none beyond reach · sqrt(2): a plus-shaped dilation.
+// and none beyond reach · sqrt(2): a plus-shaped dilation. The taps are
+// skipped where the ray shows no piece near enough in y to change them
+// (`Crossings.taps`): most fragments, which are far from a boundary.
 public bool covers(StructuredBuffer<float> words, uint base, float2 p, float2 reach) {
-  Crossings here = crossings(words, base, p, reach.x);
+  Crossings here = crossings(words, base, p, reach);
   if (here.winding != 0 || here.nearest <= reach.x) {
     return true;
   }
-  if (crossings(words, base, p + float2(0.0, reach.y), 0.0).winding != 0) {
+  if (!here.taps) {
+    return false;
+  }
+  if (crossings(words, base, p + float2(0.0, reach.y), float2(0.0)).winding != 0) {
     return true;
   }
-  return crossings(words, base, p - float2(0.0, reach.y), 0.0).winding != 0;
+  return crossings(words, base, p - float2(0.0, reach.y), float2(0.0)).winding != 0;
 }

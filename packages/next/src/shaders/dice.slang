@@ -1,9 +1,10 @@
 // B-rep patch dicing (CESIUM2_WEBGPU_PLAN.md §13.33, "Step 5 redirected",
 // part 1): per view, after the cull, `dicePatches` turns each visible patch
-// draw's spans into chunks of at most 8 × 8 cells and `writePatchArgs` writes
-// the draw's one non-indexed indirect draw (vertexCount = 8 · 8 · 6 and
+// draw's spans into chunks of at most 4 × 4 cells and `writePatchArgs` writes
+// the draw's one indexed indirect draw (indexCount = 4 · 4 · 6 and
 // instanceCount = chunks). The vertex stage (surface.slang `patchVertex`)
-// evaluates a chunk's cells.
+// evaluates a chunk's 5 × 5 shared vertices. Chunks are small because spans
+// are: a span of a few cells in a side would waste most of a larger chunk.
 //
 // A patch draw is its own batch and its own record (the item is the
 // record's), so a draw's dispatch reads its cull count from the batch's
@@ -46,6 +47,10 @@ struct PatchDice {
 // The draw's chunks: (record, span, cell origin and counts packed, 0), one
 // instance each: `i0 | j0 << 8 | n_u << 16 | n_v << 24`, the origin in cells.
 [[vk::binding(2, 2)]] RWStructuredBuffer<uint4> chunks;
+// What the view's dice made, for readbacks (scene/world/patches.ts
+// `readPatchStats`): spans diced, cells, chunks asked for, chunks drawn.
+// Cleared before the cull.
+[[vk::binding(3, 2)]] RWStructuredBuffer<Atomic<uint>> stats;
 
 // The cells a side of `x` per unit takes, 1 to MAX_CELLS (NaN or beyond: the most).
 uint cellCount(float x) {
@@ -122,6 +127,8 @@ void dicePatches(uint3 gid : SV_DispatchThreadID) {
 
   uint across = (nu + CHUNK_CELLS - 1u) / CHUNK_CELLS;
   uint total = across * ((nv + CHUNK_CELLS - 1u) / CHUNK_CELLS);
+  stats[0].add(1u);
+  stats[1].add(nu * nv);
   uint first = countChunks(a, total);
   for (uint c = 0u; c < total; c++) {
     if (first + c >= dice.capacity) {
@@ -134,11 +141,14 @@ void dicePatches(uint3 gid : SV_DispatchThreadID) {
 }
 
 // The draw's arguments from the chunks the dice wrote: one instance each of
-// a chunk's 8 × 8 cells × 6 vertices (no chunks: none drawn).
+// a chunk's 4 × 4 cells × 6 indices (no chunks: none drawn).
 [shader("compute")]
 [numthreads(1, 1, 1)]
 void writePatchArgs() {
   uint a = argumentSlot(dice.batch);
-  storePatchArguments(
-      a, 6u * CHUNK_CELLS * CHUNK_CELLS, min(countedChunks(a), dice.capacity));
+  uint asked = countedChunks(a);
+  uint drawn = min(asked, dice.capacity);
+  stats[2].store(asked);
+  stats[3].store(drawn);
+  storePatchArguments(a, 6u * CHUNK_CELLS * CHUNK_CELLS, drawn);
 }

@@ -474,6 +474,8 @@ export interface PatchDraw {
   params: GPUBuffer;
   /** The chunks, 16 bytes each: instance-step vertex data and the dice's output. */
   chunks: GPUBuffer;
+  /** What the view's dice made (shaders/dice.slang `stats`): 4 words, read back by `readPatchStats`. */
+  stats: GPUBuffer;
   capacity: number;
   group: GPUBindGroup;
   errorPixels: number;

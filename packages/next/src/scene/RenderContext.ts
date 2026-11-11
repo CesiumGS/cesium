@@ -670,8 +670,8 @@ async function createPipelines(
     ],
   });
   // The patch dice's: records, items (its draw's camera-relative matrix)
-  // and arguments in group 1, its draw's parameters, arena and chunks in
-  // group 2: 5 storage buffers.
+  // and arguments in group 1, its draw's parameters, arena, chunks and
+  // counts in group 2: 6 storage buffers.
   const cullPatchWorldLayout = device.createBindGroupLayout({
     label: "cull.patchWorld",
     entries: [
@@ -686,6 +686,7 @@ async function createPipelines(
       { binding: 0, visibility: COMPUTE, buffer: { type: "uniform" } },
       storage(1, true, COMPUTE), // the slab's arena: spans and control points
       storage(2, false, COMPUTE), // the draw's chunks
+      storage(3, false, COMPUTE), // what the dice counted, for readbacks
     ],
   });
   const drawWorldLayout = device.createBindGroupLayout({

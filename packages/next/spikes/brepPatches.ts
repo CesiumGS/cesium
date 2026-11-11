@@ -45,6 +45,7 @@ import {
   type World,
 } from "../src/index.ts";
 import { placeWithTerms } from "../src/scene/warpEvaluate.ts";
+import { PATCH_CHUNK_CELLS } from "../src/render/layout.ts";
 import { fitLattice } from "../src/scene/warpFit.ts";
 import type { WarpTerms } from "../src/scene/warpTerms.ts";
 import { setPlacement } from "../src/scene/world/placements.ts";
@@ -625,9 +626,9 @@ async function readCells(
       spans.set(span, entry);
     }
   }
-  if (args[0] !== 6 * 64) {
+  if (args[0] !== 6 * PATCH_CHUNK_CELLS * PATCH_CHUNK_CELLS) {
     throw new Error(
-      `a patch draw's arguments hold ${args[0]} vertices; expected ${6 * 64}`,
+      `a patch draw's arguments hold ${args[0]} indices; expected ${6 * PATCH_CHUNK_CELLS * PATCH_CHUNK_CELLS}`,
     );
   }
   return spans;
@@ -664,7 +665,8 @@ function add(env: Environment, scene: Scene): Setup {
 function passTimes(passes: Record<string, number>): Record<string, number> {
   const out: Record<string, number> = {};
   for (const [label, name] of [
-    ["cull", "GPU cull and dice pass, ms"],
+    ["cull", "GPU cull pass, ms"],
+    ["dice", "GPU dice pass, ms"],
     ["opaque", "GPU opaque pass (its depth first), ms"],
   ] as const) {
     if (label in passes) {
@@ -1096,8 +1098,16 @@ async function runBrepPatches(): Promise<BrepPatchesResult> {
       const counted = await readCells(env, draw);
       const cellCount = sum(counted.values(), (c) => c.nu * c.nv);
       const chunkCount = sum(counted.values(), (c) => c.chunks);
+      // The dice's own counts, read back (`World.readPatchStats`), against the chunk list's.
+      const [diced] = await world.readPatchStats();
+      // What 8 × 8 chunks drawn without indices would have cost on the same spans.
+      const oldChunks = sum(
+        counted.values(),
+        (c) => Math.ceil(c.nu / 8) * Math.ceil(c.nv / 8),
+      );
       const passes = { ...engine.gpuPasses };
       const gpuMs = engine.stats.gpuMs;
+      const cpuMs = engine.stats.cpuMs;
       // The tessellator at the error the pixels allow at the wall's nearest depth.
       const aspect = 768 / 384;
       const fovy = view.camera.fovy(aspect);
@@ -1135,20 +1145,32 @@ async function runBrepPatches(): Promise<BrepPatchesResult> {
       });
       await frames(90);
       const meshGpuMs = engine.stats.gpuMs;
+      const meshCpuMs = engine.stats.cpuMs;
       engine.removeView(meshView);
       meshWorld.destroy();
 
       const round = (x: number) => Number(x.toFixed(3));
+      const side = PATCH_CHUNK_CELLS + 1;
       performance["GPU dicing"] = {
         faces: form.faceSurface.length,
         spans: prepared.spans.length,
         "target error, px": TARGET,
         "cells diced": cellCount,
         triangles: 2 * cellCount,
-        "chunks (vertex groups of 384)": chunkCount,
-        "vertices processed": chunkCount * 384,
+        [`chunks (${PATCH_CHUNK_CELLS} × ${PATCH_CHUNK_CELLS} cells, ${side * side} shared vertices)`]:
+          chunkCount,
+        "vertex invocations, indexed chunks": chunkCount * side * side,
+        "vertex invocations per cell, indexed chunks": round(
+          (chunkCount * side * side) / cellCount,
+        ),
+        "before: 8 × 8 chunks, 6 vertices a cell, invocations": oldChunks * 384,
+        "before: invocations per cell": round((oldChunks * 384) / cellCount),
+        "readback of the dice: cells": diced?.cells ?? 0,
+        "readback of the dice: chunks": diced?.chunks ?? 0,
+        "readback of the dice: spans diced": diced?.spansDiced ?? 0,
         "CPU: prepare spans, ms": round(prepareMs),
         "CPU: addBrep (prepare, pack, upload), ms": round(addMs),
+        "CPU: frame (renderFrame), ms": round(cpuMs),
         "GPU frame, ms": Number.isNaN(gpuMs)
           ? "n/a (no timestamp-query)"
           : round(gpuMs),
@@ -1159,6 +1181,7 @@ async function runBrepPatches(): Promise<BrepPatchesResult> {
         "tolerance, mm": round(tolerance * 1000),
         triangles,
         "CPU: tessellate, ms": round(tessellateMs),
+        "CPU: frame (renderFrame), ms": round(meshCpuMs),
         "GPU frame, ms": Number.isNaN(meshGpuMs)
           ? "n/a (no timestamp-query)"
           : round(meshGpuMs),
@@ -1169,11 +1192,17 @@ async function runBrepPatches(): Promise<BrepPatchesResult> {
         measured: {
           "triangles diced": 2 * cellCount,
           "triangles tessellated (same error)": triangles,
+          "dice readback agrees with the chunk list":
+            diced?.cells === cellCount && diced?.chunks === chunkCount ? 1 : 0,
           "GPU errors": gpuErrors.length,
         },
         limit:
-          "no GPU errors; the diced faces draw (see the table for the times)",
-        pass: cellCount > 0 && gpuErrors.length === 0,
+          "no GPU errors; the diced faces draw; the dice's counts read back are the chunk list's (see the table for the times)",
+        pass:
+          cellCount > 0 &&
+          gpuErrors.length === 0 &&
+          diced?.cells === cellCount &&
+          diced?.chunks === chunkCount,
       });
     }
   } finally {

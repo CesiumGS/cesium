@@ -19,16 +19,21 @@
 // a straight piece joins them, as the CPU's polygon does, so the count of a
 // ray never depends on a gap. Horizontal pieces cross no ray and are dropped.
 //
-// Tolerance. The 3D deviation a piece may add is the least of the face's edge
-// tolerances and 1e-5 of the face's size, which in (u, v) is that over
+// Tolerance. The 3D deviation a piece may add is the display tolerance: the
+// larger of the face's least edge tolerance (the model's, 1e-6 m as built) and
+// `DISPLAY_TRIM_TOLERANCE` of the face's size, which in (u, v) is that over
 // hypot(speed_u, speed_v): the largest |∂P/∂u| and |∂P/∂v| over the face
 // (`GpuSpan.speed`), whose Frobenius norm bounds the Jacobian's, so a deviation
 // of e in (u, v) moves a point by at most hypot(speeds) · e. It is not smaller
 // than 2e-7 of the rect's larger side, a few float32 steps, which the shader's
-// coordinates cannot hold anyway.
+// coordinates cannot hold anyway. A face whose busiest band lists more than
+// `MAX_PIECES_PER_BAND` pieces is fitted again at 4 times the tolerance, up to
+// twice, which `FaceTrimData.tolerance` and `loosened` report.
 //
-// Bands. They split the rect's v evenly (B of 1 to 64, doubled while the mean
-// pieces a band lists is above 2.5 and the doubling helps), and list each piece
+// Bands. They split the rect's v evenly (B of 1 to 256, doubled while the mean
+// pieces a band lists is above 1.5 and the doubling helps: a fragment reads the
+// whole of its band's list, so finer bands cost the arena a few words and the
+// fragment less), and list each piece
 // that overlaps, longest reach in u first, so the fragment stops at the first
 // whose reach is short of it. A band no piece overlaps holds one winding for
 // all of it, from the CPU's classification of its middle (an empty band is
@@ -56,9 +61,23 @@ export const TRIM_BAND_WORDS = 3;
 /** Words of a piece. */
 export const TRIM_SEGMENT_WORDS = 8;
 /** The most bands a face has. */
-export const MAX_TRIM_BANDS = 64;
+export const MAX_TRIM_BANDS = 256;
+/**
+ * The display tolerance of a trim, as a share of the face's size: the
+ * deviation the pieces may add, a tenth of a pixel on a face that fills a
+ * thousand-pixel view. The plan's three tolerances are the model's (an
+ * edge's own, 1e-6 m as built), the representation's (what the stored
+ * geometry may differ by) and the display's, which is this: drawing needs no
+ * better, and picks are refined exactly in float64 from the surface.
+ */
+export const DISPLAY_TRIM_TOLERANCE = 1e-4;
+/** A face's band lists no more pieces than this where the tolerance can be loosened to make it so. */
+export const MAX_PIECES_PER_BAND = 16;
+/** Times the tolerance is multiplied by `LOOSEN` to bring the busiest band under `MAX_PIECES_PER_BAND`. */
+const LOOSENINGS = 2;
+const LOOSEN = 4;
 /** Bands double while a band lists more pieces than this on average. */
-const TARGET_PER_BAND = 2.5;
+const TARGET_PER_BAND = 1.5;
 /** A band's range holds a piece's reach this far over, as a share of the rect's v extent (float32 rounding of the band's index). */
 const BAND_PAD = 1e-5;
 /** The most times one pcurve segment is halved. */
@@ -82,6 +101,8 @@ export interface FaceTrimData {
   /** The deviation the pieces may add, and the most they did, in (u, v) units. */
   readonly tolerance: number;
   readonly error: number;
+  /** How many times the tolerance was multiplied to bring the busiest band down (`MAX_PIECES_PER_BAND`). */
+  readonly loosened: number;
 }
 
 /** What a trim's tolerance comes from. */
@@ -94,19 +115,29 @@ export interface TrimToleranceInput {
   readonly speed: readonly [number, number];
   /** The rect's sides in (u, v). */
   readonly rect: Box;
+  /** The display tolerance as a share of `size` (default `DISPLAY_TRIM_TOLERANCE`). */
+  readonly display?: number;
 }
 
-/** The deviation a trim piece may add: m, and in (u, v) units (see the top). */
+/**
+ * The deviation a trim piece may add: m, and in (u, v) units (see the top).
+ * The display tolerance, the largest of the edges' least tolerance and
+ * `display` × the face's size.
+ */
 export function trimTolerance(input: TrimToleranceInput): {
   meters: number;
   uv: number;
 } {
-  let meters = 1e-5 * input.size;
+  let model = Infinity;
   for (const t of input.edgeTolerances) {
     if (t > 0) {
-      meters = Math.min(meters, t);
+      model = Math.min(model, t);
     }
   }
+  const meters = Math.max(
+    Number.isFinite(model) ? model : 0,
+    (input.display ?? DISPLAY_TRIM_TOLERANCE) * input.size,
+  );
   const extent = Math.max(
     input.rect[1] - input.rect[0],
     input.rect[3] - input.rect[2],
@@ -191,9 +222,23 @@ function rational(p: readonly H[]): Curve {
 }
 
 function point(p: readonly H[], t: number): [number, number] {
-  const out = new Float64Array(4);
-  rational(p)(t, out);
-  return [out[0]!, out[1]!];
+  // Bernstein weights of degree 1 to 3, without building a curve.
+  const s = 1 - t;
+  const b =
+    p.length === 2
+      ? [s, t]
+      : p.length === 3
+        ? [s * s, 2 * s * t, t * t]
+        : [s * s * s, 3 * s * s * t, 3 * s * t * t, t * t * t];
+  let x = 0;
+  let y = 0;
+  let w = 0;
+  for (let i = 0; i < p.length; i++) {
+    x += b[i]! * p[i]![0];
+    y += b[i]! * p[i]![1];
+    w += b[i]! * p[i]![2];
+  }
+  return [x / w, y / w];
 }
 
 function quadratic(q: Quad): Curve {
@@ -400,7 +445,13 @@ interface Piece {
   readonly reach: number;
 }
 
-/** The trim data of a face with the loops `form` gives it, over the rect (u0, u1, v0, v1). `inside` is the CPU's classification (for bands no piece crosses). */
+/**
+ * The trim data of a face with the loops `form` gives it, over the rect (u0,
+ * u1, v0, v1). `inside` is the CPU's classification (for bands no piece
+ * crosses). The pieces are fitted to `tolerance` (u, v units), loosened up to
+ * `LOOSENINGS` times while the busiest band lists more than
+ * `MAX_PIECES_PER_BAND` pieces.
+ */
 export function buildFaceTrim(
   form: BrepForm,
   face: number,
@@ -408,6 +459,28 @@ export function buildFaceTrim(
   tolerance: number,
   inside: (u: number, v: number) => boolean,
 ): FaceTrimData {
+  let data = fitFaceTrim(form, face, rect, tolerance, inside);
+  let loosened = 0;
+  while (data.maxPerBand > MAX_PIECES_PER_BAND && loosened < LOOSENINGS) {
+    loosened++;
+    data = fitFaceTrim(
+      form,
+      face,
+      rect,
+      tolerance * LOOSEN ** loosened,
+      inside,
+    );
+  }
+  return { ...data, loosened };
+}
+
+function fitFaceTrim(
+  form: BrepForm,
+  face: number,
+  rect: Box,
+  tolerance: number,
+  inside: (u: number, v: number) => boolean,
+): Omit<FaceTrimData, "loosened"> {
   const round = Math.fround;
   const u0 = rect[0];
   const v0 = rect[2];
@@ -504,7 +577,7 @@ function assemble(
   tolerance: number,
   error: number,
   inside: (u: number, v: number) => boolean,
-): FaceTrimData {
+): Omit<FaceTrimData, "loosened"> {
   const round = Math.fround;
   const height = rect[3] - rect[2];
   const pad = BAND_PAD * height;
@@ -530,7 +603,7 @@ function assemble(
     let current = mean(1);
     while (current > TARGET_PER_BAND && bands < MAX_TRIM_BANDS) {
       const next = mean(bands * 2);
-      if (next > 0.85 * current) {
+      if (next > 0.9 * current) {
         break;
       }
       bands *= 2;
@@ -596,9 +669,13 @@ function assemble(
 
 /**
  * The winding number of a ray along +u from `(u, v)` (relative to the rect's
- * corner) over the pieces of the data at `base` in `words`, and the distance
- * to the nearest crossing on either side up to `reach` (Infinity beyond):
- * shaders/coverage.slang `trimCrossings`.
+ * corner) over the pieces of the data at `base` in `words`, the distance
+ * to the nearest crossing on either side up to `reach` (Infinity beyond),
+ * and whether the dilation's taps at v ± `reachV` could find another
+ * winding (`taps`; false when `reachV` is 0): a piece that ends between the
+ * rows, or that the rows' crossings can swap sides of u on, or that only a
+ * tap's row meets, or a tap in another band: shaders/coverage.slang
+ * `crossings`.
  */
 export function trimCrossings(
   words: Uint32Array,
@@ -606,16 +683,21 @@ export function trimCrossings(
   u: number,
   v: number,
   reach: number,
-): { winding: number; nearest: number } {
+  reachV = 0,
+): { winding: number; nearest: number; taps: boolean } {
   const f32 = new Float32Array(words.buffer, words.byteOffset, words.length);
   const bands = words[base]!;
   const scale = f32[base + 1]!;
-  const band = Math.min(Math.max(Math.floor(v * scale), 0), bands - 1);
+  const bandOf = (y: number): number =>
+    Math.min(Math.max(Math.floor(y * scale), 0), bands - 1);
+  const band = bandOf(v);
+  let taps =
+    reachV > 0 && (bandOf(v - reachV) !== band || bandOf(v + reachV) !== band);
   const record = base + TRIM_HEADER_WORDS + band * TRIM_BAND_WORDS;
   const list = base + words[record]!;
   const count = words[record + 1]!;
   if (count === 0) {
-    return { winding: words[record + 2]! | 0, nearest: Infinity };
+    return { winding: words[record + 2]! | 0, nearest: Infinity, taps };
   }
   let winding = 0;
   let nearest = Infinity;
@@ -627,9 +709,14 @@ export function trimCrossings(
     const y0 = f32[s + 1]! - v;
     const y1 = f32[s + 3]! - v;
     const y2 = f32[s + 5]! - v;
-    if (y0 > 0 || y2 <= 0) {
+    const onRay = y0 <= 0 && y2 > 0;
+    if (!onRay) {
+      if (y0 <= reachV && y2 > -reachV) {
+        taps = true;
+      }
       continue;
     }
+    const ends = y0 > -reachV || y2 <= reachV;
     const a = y0 - 2 * y1 + y2;
     const b = y0 - y1;
     const d = Math.sqrt(Math.max(b * b - a * y0, 0));
@@ -648,17 +735,23 @@ export function trimCrossings(
     if (x > 0) {
       winding += f32[s + 7]! > 0 ? 1 : -1;
     }
+    const width = f32[s + 6]! - Math.min(f32[s]!, f32[s + 2]!, f32[s + 4]!);
+    if (ends || width >= Math.abs(x)) {
+      taps = true;
+    }
   }
-  return { winding, nearest };
+  return { winding, nearest, taps };
 }
 
 /**
  * Whether a fragment at `(u, v)` (relative to the rect's corner) is kept:
  * inside by the winding rule, or within `reachU` along u or `reachV` along v
- * of the boundary (shaders/coverage.slang `trimCovers`). Along u the
- * nearest crossing on the ray decides; along v the winding at (u, v ± reachV).
- * With the reaches half a pixel, the dilation is that, to a half-pixel
- * Chebyshev distance at most.
+ * of the boundary (shaders/coverage.slang `covers`). Along u the
+ * nearest crossing on the ray decides; along v the winding at (u, v ± reachV),
+ * which is skipped where the ray found no piece near enough in v to change it
+ * (`taps`). With the reaches half a pixel, the dilation is that, to a
+ * half-pixel Chebyshev distance at most. `skipTaps` false always takes them
+ * (the reference the skip is checked against).
  */
 export function trimCovers(
   words: Uint32Array,
@@ -667,10 +760,14 @@ export function trimCovers(
   v: number,
   reachU: number,
   reachV: number,
+  skipTaps = true,
 ): boolean {
-  const here = trimCrossings(words, base, u, v, reachU);
+  const here = trimCrossings(words, base, u, v, reachU, reachV);
   if (here.winding !== 0 || here.nearest <= reachU) {
     return true;
+  }
+  if (skipTaps && !here.taps) {
+    return false;
   }
   return (
     trimCrossings(words, base, u, v + reachV, 0).winding !== 0 ||
