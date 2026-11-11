@@ -14,7 +14,10 @@
 //    grids;
 //  - SMLib in WebAssembly (scripts/smlibTools.mjs): the pinned usd-brep
 //    commit and emsdk (about 750 MB), built into their own store, for the
-//    b-rep examples and their kernel.
+//    b-rep examples and their kernel;
+//  - Open CASCADE in WebAssembly (scripts/occtTools.mjs): replicad's build,
+//    one pinned npm version checked against its integrity hash, the CSG
+//    sample's second kernel (LGPL 2.1, so never bundled).
 // Nothing here is committed: both live outside version control.
 // Usage: npm run setup --workspace @cesium/next [-- --skip-build] [--frames-span[ =]2000-2050] [--grids[ =]portfolio,tests]
 import { execFileSync } from "node:child_process";
@@ -27,6 +30,7 @@ import { ensureFrameData, parseGrids, parseSpan } from "./frameData.mjs";
 import { moduleRunner } from "./designTiles/moduleRunner.mjs";
 import { ensureSlangc, ensureSlangWasm } from "./slangTools.mjs";
 import { ensureSmlib } from "./smlibTools.mjs";
+import { ensureOcct } from "./occtTools.mjs";
 
 // `--frames-span y0-y1` or `--frames-span=y0-y1`, checked before any work.
 const spanArg = process.argv.findIndex(
@@ -100,6 +104,8 @@ console.log(`slang-wasm: ${await ensureSlangWasm()}`);
 
 // SMLib in WebAssembly.
 console.log(`smlib: ${await ensureSmlib()}`);
+// Open CASCADE in WebAssembly.
+console.log(`occt: ${ensureOcct()}`);
 
 // The frames data: ephemeris excerpts, leap seconds, Earth orientation, PROJ
 // and its grids.

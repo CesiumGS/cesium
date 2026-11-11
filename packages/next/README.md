@@ -46,6 +46,17 @@ build and converts its solids to `BrepForm`; the dev server serves it at
 measures size, startup, tessellation and a boolean. `SMLIB_DIR` points at
 another build.
 
+**Open CASCADE in WebAssembly** (plan §13.33, the CSG sample's second kernel).
+`setup` also fetches replicad's OpenCascade.js build (`replicad-opencascadejs`,
+one npm version pinned in `scripts/occtTools.mjs` and checked against its
+integrity hash, about 20 MB) into `~/.cesium-bench/occt`. Only the
+single-threaded build is kept, since the threaded one needs cross-origin
+isolation. It is LGPL 2.1, so it is never bundled: the dev server serves it at
+`/occt/`, and `src/brep/occt.ts` loads it on request and converts its solids
+to `BrepForm`. Check the licence before distributing anything built with it.
+`node scripts/occtTools.mjs` fetches it alone, and `OCCT_DIR` points at
+another copy.
+
 **Frames data** (`src/time`, `src/ephemeris`; `loadFrameData()`). `setup`
 also fetches the data the frames layer needs, into `~/.cesium-bench/frames`
 (or `FRAMES_DATA_DIR`), from the URLs in `scripts/frameData.mjs`:

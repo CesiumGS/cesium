@@ -10,9 +10,8 @@ import {
   type SmlibModule,
   type SmlibSolid,
 } from "../../src/brep/smlib.ts";
-import { tessellateBrep } from "../../src/brep/tessellate.ts";
-import { validateBrep } from "../../src/brep/validate.ts";
 import { smlibDirectory } from "../../scripts/smlibTools.mjs";
+import { expectSolidForm, type Inside } from "./brepSolids.ts";
 
 const directory = smlibDirectory();
 let kernel: SmlibKernel;
@@ -29,59 +28,11 @@ beforeAll(async () => {
   kernel = new SmlibKernel(await imported.default());
 });
 
-/** How far off a face its outside and inside are probed, m. */
-const PROBE = 1e-3;
-
-/**
- * For every face, the share of its triangles whose centre, moved PROBE along
- * the face's normal, is outside the solid, and moved against it, inside.
- */
-function outwardShares(
-  brep: SmlibBrep,
-  inside: (x: number, y: number, z: number) => boolean,
-): number[] {
-  const mesh = tessellateBrep(brep.form, { tolerance: 1e-5 });
-  const { positions, normals, indices, featureIds } = mesh.faces;
-  const o = mesh.origin;
-  const passed: number[] = [];
-  const total: number[] = [];
-  for (let t = 0; t < indices.length; t += 3) {
-    const c = [0, 0, 0];
-    const n = [0, 0, 0];
-    for (let k = 0; k < 3; k++) {
-      const v = indices[t + k]!;
-      for (let a = 0; a < 3; a++) {
-        c[a]! += (positions[v * 3 + a]! + o[a]!) / 3;
-        n[a]! += normals[v * 3 + a]!;
-      }
-    }
-    const length = Math.hypot(n[0]!, n[1]!, n[2]!);
-    const face = featureIds[indices[t]!]!;
-    const at = (s: number) =>
-      inside(
-        c[0]! + (s * PROBE * n[0]!) / length,
-        c[1]! + (s * PROBE * n[1]!) / length,
-        c[2]! + (s * PROBE * n[2]!) / length,
-      );
-    total[face] = (total[face] ?? 0) + 1;
-    passed[face] = (passed[face] ?? 0) + (!at(1) && at(-1) ? 1 : 0);
-  }
-  return total.map((count, face) => (passed[face] ?? 0) / count);
-}
-
 /** Converts, then checks validity and outward faces against `inside`. */
-function expectSolid(
-  solid: SmlibSolid,
-  inside: (x: number, y: number, z: number) => boolean,
-): SmlibBrep {
+function expectSolid(solid: SmlibSolid, inside: Inside): SmlibBrep {
   const brep = kernel.toForm(solid);
-  expect(validateBrep(brep.form)).toEqual([]);
   expect(Array.from(brep.faceSideUnknown)).not.toContain(1);
-  const shares = outwardShares(brep, inside);
-  expect(shares.length).toBe(brep.form.faceSurface.length);
-  for (const share of shares) {
-    expect(share).toBeGreaterThan(0.95);
-  }
+  expectSolidForm(brep.form, inside);
   return brep;
 }
 
