@@ -1,0 +1,16 @@
+/* Cursors for the data attributes EditorCursor sets on the viewer's canvas.
+   Later rules win: the active tool overrides the mode, and navigating
+   overrides both. */
+canvas[data-cesium-edit-mode~="vertex"],
+canvas[data-cesium-edit-mode~="edge"],
+canvas[data-cesium-edit-mode~="face"] {
+  cursor: crosshair;
+}
+
+canvas[data-cesium-edit-tool="translate"] {
+  cursor: move;
+}
+
+canvas[data-cesium-edit-navigating] {
+  cursor: grabbing;
+}
