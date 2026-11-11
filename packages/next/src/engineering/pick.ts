@@ -14,6 +14,8 @@ import type { CorePick, PickInterpreter } from "../scene/pick.ts";
 import type { CoordinateOperation } from "../frames/coordinates.ts";
 import { designPoint, type DesignPoint } from "./EngineeringFrame.ts";
 import { DESIGN_NOT_INVERTED, engineeringPlacement } from "./placement.ts";
+import type { DrawnThrough } from "../frames/drawn.ts";
+import { truePick, type TruePick } from "../frames/pickTruth.ts";
 
 /**
  * The camera a pick's position and feature were read with, for projecting
@@ -71,10 +73,13 @@ export interface DesignPick {
    */
   readonly body: Body;
   /**
-   * Metres, as displayed, in the hit anchor's coordinates
-   * (`CorePick.anchorPosition`): body-fixed under a body anchor (Earth-fixed
-   * for content on the Earth), else that anchor's own. Body-fixed always for
-   * a `PickView` without `pickPoint` (`pickPosition`).
+   * Metres, in the hit anchor's coordinates (`CorePick.anchorPosition`'s
+   * frame): body-fixed under a body anchor (Earth-fixed for content on the
+   * Earth), else that anchor's own. Where the content is, as displayed by
+   * its placement: under a warp the view draws it elsewhere (`drawn`), and
+   * this is its domain point's true position (`CorePick.truePosition`), or
+   * a provisional inverse of the drawn one (`provisional`). Body-fixed
+   * always for a `PickView` without `pickPoint` (`pickPosition`).
    */
   readonly position: Float64Array;
   /** The listed tileset whose content was hit. */
@@ -92,8 +97,26 @@ export interface DesignPick {
    * (`SceneItem.designPlacement`).
    */
   readonly design?: DesignPoint<CoordinateOperation>;
-  /** Metres: one CSS pixel's footprint at the hit. */
+  /**
+   * Metres, a worst case: one CSS pixel's footprint at the hit, in true
+   * metres (the pixel's drawn size over σ_min of the route, where the view
+   * draws the content through a warp), plus the point's own bound where it
+   * is one (an inverted drawn position's residual).
+   */
   readonly tolerance: number;
+  /**
+   * What the view drew the hit content through, when through a warp
+   * (`drawnThrough`): `position` is where the content is, and this says
+   * where it is drawn differs. Absent when drawn as it is.
+   */
+  readonly drawn?: DrawnThrough;
+  /** Where the hit is drawn (the view's render space), m, when `drawn`. */
+  readonly drawnPosition?: Float64Array;
+  /**
+   * True where `position` is an estimate: no domain point was resolved and
+   * the drawn position went back through the route's inverse.
+   */
+  readonly provisional?: boolean;
 }
 
 /** @internal `pickDesign`'s answer, with what snapping builds on. */
@@ -108,6 +131,8 @@ export interface FramedPick {
   /** The hit draw and its tile, on a listed tileset. */
   readonly draw?: DrawHandle;
   readonly tile?: Tile;
+  /** The pick as a true point, from a core pick: its route, σ range and how it was found. */
+  readonly truth?: TruePick;
 }
 
 function targetPixelRatio(target: PickView["target"]): number {
@@ -183,21 +208,27 @@ export function designPickInterpreter(
   tilesets: readonly Tileset3D[],
 ): PickInterpreter<FramedPick> {
   return {
-    interpret: (core) =>
-      framed(
+    interpret: (core) => {
+      const truth = truePick(core);
+      return framed(
         core.anchor?.body ?? view.body,
-        core.anchorPosition,
+        truth.position,
         core.feature,
         core.draw,
         core.camera,
         tilesets,
-      ),
+        truth,
+      );
+    },
   };
 }
 
 /**
  * `pickDesign`'s answer for a hit at `position` on `draw`, read with
- * `camera` (in `position`'s coordinates).
+ * `camera` (in `position`'s coordinates). With `truth` (a core pick's),
+ * `position` is the true point and the tolerance is the pixel's in true
+ * metres: the camera's coordinates are those the content is drawn in, and
+ * a pixel there is at most 1/σ_min of that many true metres.
  */
 function framed(
   body: Body,
@@ -206,13 +237,16 @@ function framed(
   draw: DrawHandle | undefined,
   camera: PickCamera,
   tilesets: readonly Tileset3D[],
+  truth?: TruePick,
 ): FramedPick {
   const distance = Math.hypot(
     camera.position[0]! - position[0]!,
     camera.position[1]! - position[1]!,
     camera.position[2]! - position[2]!,
   );
-  const tolerance = (distance * 2 * Math.tan(camera.fovy / 2)) / camera.height;
+  const tolerance = truth
+    ? truth.trueFootprint + truth.bound
+    : (distance * 2 * Math.tan(camera.fovy / 2)) / camera.height;
   let tileset: Tileset3D | undefined;
   let volume: TileVolume | undefined;
   let hitDraw: DrawHandle | undefined;
@@ -258,11 +292,17 @@ function framed(
     ...(feature !== undefined && { feature }),
     ...(design !== undefined && { design }),
     tolerance,
+    ...(truth?.drawn !== undefined && { drawn: truth.drawn }),
+    ...(truth?.drawnPosition !== undefined && {
+      drawnPosition: truth.drawnPosition,
+    }),
+    ...(truth?.provisional === true && { provisional: true }),
   };
   return {
     pick,
     camera,
     ...(hitDraw !== undefined && { draw: hitDraw, tile: hitTile }),
+    ...(truth !== undefined && { truth }),
   };
 }
 

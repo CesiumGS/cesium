@@ -129,6 +129,12 @@ export {
   type FramedPoint,
   type FramesPickInterpreterOptions,
 } from "./pickInterpreter.ts";
+export {
+  drawnThrough,
+  isPresentationFrame,
+  type DrawnThrough,
+  type DrawnWarp,
+} from "./drawn.ts";
 export type {
   AreaOfInterest,
   CoordinateOperation,

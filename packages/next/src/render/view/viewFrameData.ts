@@ -117,6 +117,14 @@ export interface ViewFrame {
   readonly sky: SkyView;
   /** The sun's shadow maps were fitted for this view this frame. */
   shadowed: boolean;
+  /**
+   * The view's clip table (scene/world/clips.ts): its buffer, made when the
+   * view first has clips and kept (a pick of an idle view reads it), and the
+   * bytes written this tick: 0 when the view has no clip to apply, and its
+   * passes then use the pipelines without the clip test.
+   */
+  clipBuffer: GPUBuffer | undefined;
+  clipBytes: number;
   /** Ambient occlusion is computed for this view this frame. */
   ambient: boolean;
   /** Its kernels' parameters (ao.slang `AoParams`). */
@@ -182,6 +190,7 @@ export function destroyViewFrame(frame: ViewFrame): void {
   frame.sky.starArgs.destroy();
   frame.sky.table.destroy();
   frame.sky.faceUniforms.destroy();
+  frame.clipBuffer?.destroy();
   frame.ids.destroy();
   frame.depth.destroy();
 }

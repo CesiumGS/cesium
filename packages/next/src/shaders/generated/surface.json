@@ -1670,6 +1670,28 @@
             }
         },
         {
+            "name": "clipTable",
+            "binding": {"kind": "descriptorTableSlot", "index": 17},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    },
+                    "sizes": [
+                        {"kind": "uniform", "value": 16, "alignment": 16}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
             "name": "records",
             "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0},
             "type": {
@@ -2574,6 +2596,17 @@
         {
             "name": "cutOutInDepth",
             "binding": {"kind": "specializationConstant", "index": 0},
+            "type": {
+                "kind": "scalar",
+                "scalarType": "bool",
+                "sizes": [
+                    {"kind": "specializationConstant", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "clipsOn",
+            "binding": {"kind": "specializationConstant", "index": 1},
             "type": {
                 "kind": "scalar",
                 "scalarType": "bool",
@@ -4522,6 +4555,28 @@
                 }
             },
             {
+                "name": "clipTable",
+                "binding": {"kind": "descriptorTableSlot", "index": 17},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        },
+                        "sizes": [
+                            {"kind": "uniform", "value": 16, "alignment": 16}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
                 "name": "records",
                 "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0},
                 "type": {
@@ -5435,6 +5490,17 @@
                 }
             },
             {
+                "name": "clipsOn",
+                "binding": {"kind": "specializationConstant", "index": 1},
+                "type": {
+                    "kind": "scalar",
+                    "scalarType": "bool",
+                    "sizes": [
+                        {"kind": "specializationConstant", "value": 1}
+                    ]
+                }
+            },
+            {
                 "name": "translucency",
                 "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 0},
                 "type": {
@@ -6280,6 +6346,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -6362,6 +6432,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -6957,6 +7031,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -7039,6 +7117,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -7634,6 +7716,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -7716,6 +7802,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -8349,6 +8439,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -8431,6 +8525,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -9026,6 +9124,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -9108,6 +9210,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -9741,6 +9847,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -9823,6 +9933,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -10434,6 +10548,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -10516,6 +10634,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -11213,6 +11335,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -11295,6 +11421,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -11992,6 +12122,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -12074,6 +12208,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -12757,6 +12895,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -12839,6 +12981,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -13522,6 +13668,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -13604,6 +13754,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -14298,6 +14452,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -14380,6 +14538,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -15019,6 +15181,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -15101,6 +15267,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -15763,6 +15933,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -15845,6 +16019,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -16484,6 +16662,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -16566,6 +16748,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",
@@ -17231,6 +17417,10 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 18}
                 },
                 {
+                    "name": "clipTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 17}
+                },
+                {
                     "name": "records",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
                 },
@@ -17313,6 +17503,10 @@
                 {
                     "name": "cutOutInDepth",
                     "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "clipsOn",
+                    "binding": {"kind": "specializationConstant", "index": 1}
                 },
                 {
                     "name": "translucency",

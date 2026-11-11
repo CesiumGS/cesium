@@ -71,16 +71,18 @@ export type PointAccuracyTerm =
       readonly frame: string;
       readonly kind: "pick";
       readonly part: "footprint" | "depth";
-      /** 1σ, m. */
+      /** A worst-case bound, m (in true metres under a view warp). */
       readonly meters: number;
+      readonly basis?: "bound";
       readonly note: string;
     }
   | {
       /** The placement's design reference frame (`DesignPlacement.frameName`). */
       readonly frame: string;
       readonly kind: "content";
-      /** 1σ, m. */
+      /** A worst-case bound, m. */
       readonly meters: number;
+      readonly basis?: "bound";
       readonly note: string;
     }
   | ({
@@ -137,6 +139,21 @@ export interface PointAccuracy {
   readonly meters: number | undefined;
   /** What `meters` is: 1σ (the default) or a 95% bound. */
   readonly confidence: "1σ" | "95%";
+  /**
+   * A picked point (`createFramesPickInterpreter`): 1σ, from the terms that
+   * are 1σ (each edge's stated figure), without the pick's and the content's
+   * bounds, which `meters` takes as 1σ. `undefined` when an edge is not
+   * stated.
+   */
+  readonly sigma?: number | undefined;
+  /**
+   * A picked point: the worst case, the sum of the terms that are bounds
+   * (`basis: "bound"`: the pick's pixel footprint and depth rounding, the
+   * content's displayed error, a fit's error bound, a domain point's own,
+   * an inverse's residual), in metres. Never converted to a 1σ nor added to
+   * `sigma`: a bound and a σ answer different questions.
+   */
+  readonly bound?: number;
   /**
    * One term per figure on each edge of the route, nearest the point first
    * (a picked point's `pick` and `content` terms before them), then the

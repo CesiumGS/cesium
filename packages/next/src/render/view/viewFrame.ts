@@ -290,6 +290,8 @@ function buildViewFrame(
     fxaaImage: undefined,
     sky: engine.raster.sky.createView(),
     shadowed: false,
+    clipBuffer: undefined,
+    clipBytes: 0,
     ambient: false,
     lightCount: 0,
     depthRange: undefined,

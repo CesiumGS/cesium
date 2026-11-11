@@ -30,6 +30,17 @@ export interface GeometryBounds {
   readonly accuracy: GeometryAccuracy;
 }
 
+/**
+ * A test of points in float64, in the coordinates a geometry's answers are
+ * in (placed coordinates): the clips a query applies (`clipFilter`,
+ * scene/world/clips.ts). A hit or closest point the clips remove isn't an
+ * answer: the ray goes on behind it, the search on to what is kept.
+ */
+export interface ClipFilter {
+  /** Whether the clips keep `point`. */
+  keeps(point: ArrayLike<number>): boolean;
+}
+
 export interface RayHitOptions {
   /** The part of the segment searched, as fractions from `from` to `to` (defaults 0 and 1, inclusive). */
   readonly tMin?: number;
@@ -38,6 +49,8 @@ export interface RayHitOptions {
   readonly origin?: ArrayLike<number>;
   /** Stop at the first hit found, not the nearest. */
   readonly anyHit?: boolean;
+  /** Clips applied: a hit where they remove the surface is passed over. */
+  readonly clips?: ClipFilter;
 }
 
 export interface GeometryHit {
@@ -66,6 +79,13 @@ export interface ClosestPointOptions {
   /** Answer undefined when the closest point is farther than this, m. */
   readonly maxDistance?: number;
   readonly origin?: ArrayLike<number>;
+  /**
+   * Clips applied: only what they keep is searched. The nearest kept point of
+   * a partly clipped face is found within a sixteenth of the face's size (a
+   * mesh) or among the face's own nearest points (a b-rep): the answer says so
+   * (`accuracy.exact` false).
+   */
+  readonly clips?: ClipFilter;
 }
 
 export interface ClosestPoint {
@@ -113,7 +133,11 @@ export interface GeometryQueries {
   segmentDistance(
     from: ArrayLike<number>,
     to: ArrayLike<number>,
-    options?: { readonly origin?: ArrayLike<number> },
+    options?: {
+      readonly origin?: ArrayLike<number>;
+      /** Clips applied, as for `closestPoint`. */
+      readonly clips?: ClipFilter;
+    },
   ): SegmentDistance;
   entity(ref: EntityRef): EntityInfo | undefined;
   /** Triangles within `tolerance` m, or undefined when it draws only on the GPU. */

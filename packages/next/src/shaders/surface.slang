@@ -113,6 +113,9 @@ struct Shadows {
 static const uint LIGHT_HEADER_BYTES = 80u;  // sizeof(LightHeader)
 static const uint LIGHT_BYTES = 64u;         // sizeof(Light)
 static const uint CLUSTERS_BYTES = LIGHT_HEADER_BYTES + MAX_VIEW_LIGHTS * LIGHT_BYTES;
+// The view's clips (scene/world/clips.ts `packClipTable`: its layout, and the
+// constants below, are that file's), camera-relative in the shading axes.
+[[vk::binding(17, 0)]] StructuredBuffer<float4> clipTable;
 
 [[vk::binding(0, 1)]] StructuredBuffer<DrawRecord> records;
 [[vk::binding(1, 1)]] StructuredBuffer<DrawItem> items;
@@ -1238,6 +1241,11 @@ float terrainAlpha(DrawRecord r, SurfaceVaryings in) {
 // lines cut out here.
 [vk::constant_id(0)] const bool cutOutInDepth = false;
 
+// True in the pipelines of a view that has clips (RenderContext.ts, by its
+// id, 1): the clip test is then in every fragment stage that writes depth,
+// color, a shadow, the prepass or a pick. False, the test is compiled out of
+// the pipeline, which keeps its early depth.
+[vk::constant_id(1)] const bool clipsOn = false;
 
 // The surface's camera-relative position as drawn, for what light and the
 // air do to it. The varying (`relPosition`) is the draw's transform on the
@@ -1262,6 +1270,124 @@ float3 drawnPosition(SurfaceVaryings in, DrawRecord r) {
     p = (right * (ndc.x / dot(right, right)) + up * (ndc.y / dot(up, up)) + view.viewProj[3].xyz) * w;
   }
   return p;
+}
+
+// --- the view's clips -------------------------------------------------------------
+//
+// The table (`clipTable`, scene/world/clips.ts `packClipTable`) in float4
+// rows: row 0 the number of sets and a flag (some set is tested on the drawn
+// point), rows 1 to MAX_CLIP_SETS a set's first row, shapes, flags and a
+// reserved word for the styling language's exemptions (not built), then
+// each shape: a header (kind, its rows with the header, polygon vertices)
+// and its rows. Every loop has a constant bound, and every row is clamped.
+static const uint MAX_CLIP_SETS = 8u;
+static const uint MAX_CLIP_SHAPES = 16u;
+static const uint MAX_CLIP_POLYGON_VERTICES = 128u;
+static const uint CLIP_TABLE_ROWS = 4096u;
+static const uint CLIP_PLANE = 0u;
+static const uint CLIP_BOX = 1u;
+static const uint CLIP_POLYGON = 2u;
+static const uint CLIP_SET_INTERSECTION = 1u;
+static const uint CLIP_SET_KEEP_OUTSIDE = 2u;
+static const uint CLIP_SET_DRAWN = 4u;
+
+float4 clipRow(uint row) {
+  return clipTable[min(row, CLIP_TABLE_ROWS - 1u)];
+}
+
+// A polygon's vertex `i` (x, y), two to a row from `first`.
+float2 clipVertex(uint first, uint i) {
+  float4 v = clipRow(first + (i >> 1u));
+  return (i & 1u) == 0u ? v.xy : v.zw;
+}
+
+// Whether the shape whose header is row `at` holds `p` (camera-relative).
+bool insideClipShape(uint at, float3 p) {
+  uint4 head = asuint(clipRow(at));
+  float4 a = clipRow(at + 1u);
+  float ua = dot(a.xyz, p) + a.w;
+  if (head.x == CLIP_PLANE) {
+    return ua <= 0.0;
+  }
+  float4 b = clipRow(at + 2u);
+  float4 c = clipRow(at + 3u);
+  float ub = dot(b.xyz, p) + b.w;
+  float uc = dot(c.xyz, p) + c.w;
+  if (head.x == CLIP_BOX) {
+    return max(abs(ua), max(abs(ub), abs(uc))) <= 1.0;
+  }
+  float2 zRange = clipRow(at + 4u).xy;
+  if (uc < zRange.x || uc > zRange.y) {
+    return false;
+  }
+  uint count = min(head.z, MAX_CLIP_POLYGON_VERTICES);
+  bool inside = false;
+  for (uint i = 0u; i < MAX_CLIP_POLYGON_VERTICES; i++) {
+    if (i >= count) {
+      break;
+    }
+    float2 s = clipVertex(at + 5u, i);
+    float2 e = clipVertex(at + 5u, i + 1u == count ? 0u : i + 1u);
+    if ((s.y > ub) != (e.y > ub)) {
+      float crossing = s.x + (ub - s.y) * (e.x - s.x) / (e.y - s.y);
+      if (ua < crossing) {
+        inside = !inside;
+      }
+    }
+  }
+  return inside;
+}
+
+// Whether every clip set of the view keeps the fragment: false where a
+// fragment is clipped away. The true point is location 4, the drawn point is
+// rebuilt only when some set is tested there (`drawnPosition`; a shadow
+// cascade's or height capture's orthographic view keeps the varying, so a set
+// in drawn space is tested at the true point there).
+bool clipsKeep(SurfaceVaryings in, DrawRecord r) {
+  uint4 head = asuint(clipRow(0u));
+  uint sets = min(head.x, MAX_CLIP_SETS);
+  float3 trueAt = in.relPosition;
+  float3 drawnAt = (head.y & 1u) != 0u ? drawnPosition(in, r) : trueAt;
+  for (uint s = 0u; s < MAX_CLIP_SETS; s++) {
+    if (s >= sets) {
+      break;
+    }
+    uint4 entry = asuint(clipRow(1u + s));
+    float3 p = (entry.z & CLIP_SET_DRAWN) != 0u ? drawnAt : trueAt;
+    bool every = (entry.z & CLIP_SET_INTERSECTION) != 0u;
+    bool region = every;
+    uint at = entry.x;
+    uint shapes = min(entry.y, MAX_CLIP_SHAPES);
+    for (uint k = 0u; k < MAX_CLIP_SHAPES; k++) {
+      if (k >= shapes) {
+        break;
+      }
+      bool inside = insideClipShape(at, p);
+      if (every ? !inside : inside) {
+        region = !every;
+        break;
+      }
+      at += max(asuint(clipRow(at)).y, 1u);
+    }
+    bool kept = (entry.z & CLIP_SET_KEEP_OUTSIDE) != 0u ? !region : region;
+    if (!kept) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Discards a fragment the view's clips remove; compiled out of a view without
+// them.
+bool clipsDiscard(SurfaceVaryings in, DrawRecord r) {
+  return clipsOn && !clipsKeep(in, r);
+}
+
+// What the record doesn't draw at this fragment in this view: a placeholder
+// outside its boxes, clipped terrain (`clippedOut`, tested where the content
+// is stored), and what the view's clips remove.
+bool clippedAway(DrawRecord r, SurfaceVaryings in) {
+  return clippedOut(r, in.relPosition) || clipsDiscard(in, r);
 }
 
 // A fragment as the custom shader's fragment stage takes it (`drawn`: the
@@ -1341,7 +1467,7 @@ void cutOut(SurfaceVaryings in) {
       discard;
     }
   }
-  if (clippedOut(r, in.relPosition)) {
+  if (clippedAway(r, in)) {
     discard;
   }
 }
@@ -1371,7 +1497,7 @@ void heightFs(SurfaceVaryings in) {
 [shader("fragment")]
 void shadowPlaceholderFs(SurfaceVaryings in) {
   DrawRecord r = drawRecord(in.ids.x);
-  if (clippedOut(r, in.relPosition)) {
+  if (clippedAway(r, in)) {
     discard;
   }
 }
@@ -1411,7 +1537,7 @@ bool trimCovered(SurfaceVaryings in) {
 void shadowTrimmedFs(SurfaceVaryings in) {
   bool covered = trimCovered(in);
   DrawRecord r = drawRecord(in.ids.x);
-  if (!covered || clippedOut(r, in.relPosition)) {
+  if (!covered || clippedAway(r, in)) {
     discard;
   }
 }
@@ -1442,7 +1568,7 @@ float4 depthCoverageFs(SurfaceVaryings in) : SV_Target0 {
   Material material = materials[r.materialIndex];
   float alpha = materialAlpha(in);
   float ramp = max(fwidth(alpha), 1e-4);
-  if (clippedOut(r, in.relPosition)) {
+  if (clippedAway(r, in)) {
     discard;
   }
   float cutoff = (material.flags & 8u) != 0u ? OPAQUE_ALPHA : material.alphaCutoff;
@@ -1784,6 +1910,11 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   // equal, so the depth test already left it out: only the placeholders'
   // cheap test is repeated.
   if (placeholderOut(r, in.relPosition)) {
+    discard;
+  }
+  // The view's clips: after the depth prepass the depth pass has done them
+  // (`clippedAway`), and the depth test leaves the clipped fragments out.
+  if ((translucent || !cutOutInDepth) && clipsDiscard(in, r)) {
     discard;
   }
   float terrain = 1.0;
@@ -2271,7 +2402,7 @@ float momentDepth(float3 relPosition) {
 float blendedAlpha(SurfaceVaryings in) {
   DrawRecord r = drawRecord(in.ids.x);
   float alpha = materialAlpha(in);
-  if (clippedOut(r, in.relPosition)) {
+  if (clippedAway(r, in)) {
     discard;
   }
   return clamp(alpha, 0.0, 1.0);

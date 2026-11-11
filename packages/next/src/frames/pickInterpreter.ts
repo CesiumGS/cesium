@@ -8,6 +8,8 @@ import type { CorePick, PickInterpreter } from "../scene/pick.ts";
 import type { Placement } from "../scene/placement.ts";
 import type { AnchorHandle, DrawHandle } from "../scene/world/types.ts";
 import type { Instant } from "../time/Instant.ts";
+import type { DrawnThrough } from "./drawn.ts";
+import { truePick, type TruePick } from "./pickTruth.ts";
 import type { DesignPlacement } from "../streaming/designPlacement.ts";
 import type { CatalogFrameName, FrameCatalog } from "./catalog.ts";
 import { Frame } from "./Frame.ts";
@@ -40,19 +42,28 @@ export interface FramedPoint {
     readonly coordinates: Float64Array;
   };
   /**
-   * How accurately the point is known, 1σ, composed from its own terms
-   * (root-sum-square, as `pointAccuracy`), nearest the point first:
+   * How accurately the point is known, composed from its own terms, nearest
+   * the point first. Bounds and 1σ are kept apart (the owner's answer 4,
+   * provisional): `bound` adds the terms that are worst cases, `sigma` adds
+   * the terms that are 1σ in quadrature (as `pointAccuracy` does), and
+   * neither is converted into the other. `meters` is the root-sum-square of
+   * every term, bounds included as if 1σ: conservative, kept for readers
+   * that want one number, and not a 1σ.
    *
-   * - the pick's (`kind: "pick"`): one CSS pixel's footprint at the hit
-   *   (`pickDesign`'s tolerance), and the rounding of the float32 depth
-   *   the position was read from (half a step);
+   * - the pick's (`kind: "pick"`, a bound): one CSS pixel's footprint at the
+   *   hit (`pickDesign`'s tolerance; under a view warp in true metres,
+   *   over σ_min of the route), and the rounding of the float32 depth the
+   *   position was read from (half a step), likewise;
+   * - the point's own (`kind: "content"`, a bound): where the pick variant
+   *   resolved a domain point, that point's stated accuracy; where it went
+   *   back through the route's inverse, the inverse's residual;
    * - the content's (`kind: "content"`), with design coordinates: how far
    *   its placement draws the design from where it truly is
    *   (`displayError`; 0 m when reprojected, and when hosted: drawn as
-   *   delivered);
-   * - the draw's per-vertex placement's (`kind: "content"`), for a fitted
-   *   operation or a blend (`World.setPlacement`): its stated error bound,
-   *   a blend's ends' weighted by `|1 − t|` and `|t|`, taken as 1σ;
+   *   delivered), a bound;
+   * - the draw's per-vertex placement's (`kind: "content"`, a bound), for a
+   *   fitted operation or a blend (`World.setPlacement`): its stated error
+   *   bound, a blend's ends' weighted by `|1 − t|` and `|t|`;
    * - `frame`'s own: each edge from `frame` up to the nearest catalog
    *   reference frame at or above it, as it states its accuracy at the
    *   pick's instant. For content on a body that is its body-fixed
@@ -89,6 +100,21 @@ export interface FramedPoint {
    * - correlations between terms.
    */
   readonly accuracy: PointAccuracy;
+  /**
+   * What the view drew the hit content through, when through a warp
+   * ("drawn ×10 vertically; values are true"): `frame` and the point are
+   * where the content is. Absent when drawn as it is. A measurement taken
+   * from this point passes it on (`MeasureOptions.drawn`).
+   */
+  readonly drawn?: DrawnThrough;
+  /** Where the hit is drawn (the view's render space), m, when `drawn`. */
+  readonly drawnPosition?: Float64Array;
+  /**
+   * True where the point is an estimate: no domain point was resolved and
+   * the drawn position went back through the route's inverse (the
+   * accuracy's `bound` includes the inverse's residual).
+   */
+  readonly provisional?: boolean;
   /**
    * The point in `frame` (any reference frame of the catalog's tree), at
    * the pick's instant. Throws as `frameTransform` does (a reference frame
@@ -152,6 +178,8 @@ export function createFramesPickInterpreter(
       const root = frameOf(pick.root);
       let frame = frameOf(pick.anchor);
       let coordinates = pick.anchorPosition;
+      // The anchor's own binding names the frame; under none the render root does.
+      const named = frame !== undefined || pick.anchor === undefined;
       if (!frame) {
         frame = root;
         coordinates = pick.position;
@@ -160,6 +188,14 @@ export function createFramesPickInterpreter(
         return undefined;
       }
       const instant = resolver.instant(pick.seconds);
+      // Where the content is, not where the view draws it: the pick's
+      // domain point where it has one, else the drawn position through the
+      // route's inverse (provisional), else the depth's. Under no anchor's
+      // binding the render root's own coordinates are all there is.
+      const truth = named ? truePick(pick) : undefined;
+      if (truth !== undefined) {
+        coordinates = truth.position;
+      }
       const point = framePoint(frame, coordinates, instant);
       const body = catalog.bodyOf(frame);
       let bodyFixed: Float64Array | undefined;
@@ -197,6 +233,11 @@ export function createFramesPickInterpreter(
         ...(body !== undefined && { body }),
         ...(bodyFixed !== undefined && { bodyFixed }),
         ...(design !== undefined && { design }),
+        ...(truth?.drawn !== undefined && { drawn: truth.drawn }),
+        ...(truth?.drawnPosition !== undefined && {
+          drawnPosition: truth.drawnPosition,
+        }),
+        ...(truth?.provisional === true && { provisional: true }),
         accuracy: composed(
           pick,
           frame,
@@ -205,6 +246,7 @@ export function createFramesPickInterpreter(
           design,
           vertex,
           catalog,
+          truth,
         ),
         in: (target: Frame) => convertPoint(point, target).position,
       };
@@ -214,7 +256,7 @@ export function createFramesPickInterpreter(
 
 /** How a picked point's terms combine, with where its reference frame terms stop. */
 const combination = (upTo: string) =>
-  `root-sum-square of independent 1σ terms: the pick's (a pixel's footprint and the depth's rounding, each a bound taken as 1σ), the content's placement, and each edge from the point's reference frame ${upTo} (each rotation error times the point's distance from that frame's origin, an upper bound: the accuracy names no axis)`;
+  `\`bound\`: the sum of the worst-case terms (the pick's pixel footprint and depth rounding, the point's own, the content's placement); \`sigma\`: root-sum-square of the independent 1σ terms, each edge from the point's reference frame ${upTo} (each rotation error times the point's distance from that frame's origin, an upper bound: the accuracy names no axis); \`meters\`: root-sum-square of all of them with each bound taken as 1σ, conservative and kept for one-number readers (a bound is never a 1σ)`;
 
 /** A picked point's accuracy: its pick, content and reference frame terms. */
 function composed(
@@ -225,18 +267,34 @@ function composed(
   design: FramedPoint["design"],
   vertex: Placement | undefined,
   catalog: FrameCatalog,
+  truth: TruePick | undefined,
 ): PointAccuracy {
-  const terms: PointAccuracyTerm[] = [...pickTerms(pick, frame.name)];
+  const terms: PointAccuracyTerm[] = [
+    ...pickTerms(pick, frame.name, truth?.trueFootprint, truth?.footprint),
+  ];
+  if (truth !== undefined && truth.bound > 0) {
+    terms.push({
+      frame: frame.name,
+      kind: "content",
+      meters: truth.bound,
+      basis: "bound",
+      note:
+        truth.how === "inverse"
+          ? "the point is the drawn position carried back through the route's inverse (no domain point was resolved): the inverse's residual, the drawn position it maps back to against the one read"
+          : "the point's own bound: the domain point's stated accuracy on the content's triangle or face",
+    });
+  }
   const bound = vertexBound(vertex);
   if (bound !== undefined) {
     terms.push({
       frame: frame.name,
       kind: "content",
       meters: bound,
+      basis: "bound",
       note:
         vertex!.kind === "fitted"
-          ? "the draw's fitted operation (its per-vertex placement): its stated error bound against the coordinate operation it was fitted to, taken as 1σ"
-          : `the draw's blend at t = ${(vertex as { t: { value: number } }).t.value} (its per-vertex placement): its ends' stated error bounds weighted by |1 − t| and |t|, taken as 1σ`,
+          ? "the draw's fitted operation (its per-vertex placement): its stated error bound against the coordinate operation it was fitted to (a worst case)"
+          : `the draw's blend at t = ${(vertex as { t: { value: number } }).t.value} (its per-vertex placement): its ends' stated error bounds weighted by |1 − t| and |t| (a worst case)`,
     });
   }
   if (design !== undefined) {
@@ -245,6 +303,7 @@ function composed(
       frame: placement.frameName,
       kind: "content",
       meters: placement.displayError(design.coordinates),
+      basis: "bound",
       note:
         placement.mode === "hosted"
           ? "the hosted placement draws the content as delivered (displayError): the host's reprojection, which the engine doesn't reproduce, isn't in this figure"
@@ -260,12 +319,23 @@ function composed(
   }
   terms.push(...frameTerms(frame, stop, coordinates, instant));
   const unstated = terms.find((t) => t.kind === "unstated");
+  const bounds = terms.filter(
+    (t) => "basis" in t && t.basis === "bound" && t.meters !== undefined,
+  );
+  const sigmas = terms.filter((t) => !("basis" in t && t.basis === "bound"));
   return {
     confidence: "1σ",
     meters:
       unstated === undefined
         ? Math.hypot(...terms.map((t) => t.meters ?? NaN))
         : undefined,
+    sigma:
+      unstated === undefined
+        ? Math.hypot(...sigmas.map((t) => t.meters ?? NaN))
+        : undefined,
+    ...(bounds.length > 0 && {
+      bound: bounds.reduce((sum, t) => sum + t.meters!, 0),
+    }),
     terms,
     ...(unstated !== undefined && { unboundedBy: unstated.frame }),
     combination: combination(
@@ -298,23 +368,39 @@ function vertexBound(vertex: Placement | undefined): number | undefined {
 /**
  * The pick's own terms: one CSS pixel's footprint at the hit, and half a
  * float32 step of the depth it was read from, carried along the ray. Each
- * is a bound, taken as 1σ (conservative: an error uniform over a width w
- * has σ = w/√12).
+ * is a worst-case bound (an error uniform over a width w has σ = w/√12,
+ * which this does not claim). Under a view warp, where `trueFootprint` is
+ * given (a pixel's drawn size over σ_min of the route, in true metres),
+ * both are scaled by the same factor: they were measured in what is drawn.
  */
-function pickTerms(pick: CorePick, frame: string): PointAccuracyTerm[] {
+function pickTerms(
+  pick: CorePick,
+  frame: string,
+  trueFootprint?: number,
+  footprint?: number,
+): PointAccuracyTerm[] {
   const c = pick.camera;
   const p = pick.anchorPosition;
   const dx = p[0]! - c.position[0]!;
   const dy = p[1]! - c.position[1]!;
   const dz = p[2]! - c.position[2]!;
   const distance = Math.hypot(dx, dy, dz);
+  const toTrue =
+    trueFootprint !== undefined && footprint !== undefined && footprint > 0
+      ? trueFootprint / footprint
+      : 1;
+  const where =
+    toTrue === 1
+      ? ""
+      : ", in true metres (the drawn size over σ_min of the view's warp)";
   const terms: PointAccuracyTerm[] = [
     {
       frame,
       kind: "pick",
       part: "footprint",
-      meters: (distance * 2 * Math.tan(c.fovy / 2)) / c.height,
-      note: "one CSS pixel's footprint at the hit: the pick reads the pixel's centre, which may be this far from where the click was meant",
+      meters: ((distance * 2 * Math.tan(c.fovy / 2)) / c.height) * toTrue,
+      basis: "bound",
+      note: `one CSS pixel's footprint at the hit${where}: the pick reads the pixel's centre, which may be this far from where the click was meant`,
     },
   ];
   // Reverse-Z: the stored depth is near / z, z along the view axis; its
@@ -327,8 +413,9 @@ function pickTerms(pick: CorePick, frame: string): PointAccuracyTerm[] {
       frame,
       kind: "pick",
       part: "depth",
-      meters: (distance * step) / 2 / depth,
-      note: "half a float32 step of the depth buffer's depth at the hit, along the ray",
+      meters: ((distance * step) / 2 / depth) * toTrue,
+      basis: "bound",
+      note: `half a float32 step of the depth buffer's depth at the hit, along the ray${where}`,
     });
   }
   return terms;

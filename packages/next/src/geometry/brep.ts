@@ -41,6 +41,7 @@ import {
 import { faceTrim, tessellateBrep, type FaceTrim } from "../brep/tessellate.ts";
 import type { QueryRay } from "../query/queries.ts";
 import type {
+  ClipFilter,
   ClosestPoint,
   ClosestPointOptions,
   DisplayMesh,
@@ -104,6 +105,10 @@ const KIND_NAMES = ["plane", "cylinder", "cone", "sphere", "torus"];
 const PATCH_ROUTE = "Newton on Bézier patch";
 const EDGE_ROUTE = "Newton on edge curve";
 const MODEL_TOLERANCE = 1e-7;
+/** Removed surfaces a clipped ray passes through before the answer is "unknown". */
+const MAX_CLIPPED_HITS = 64;
+/** The fraction of the segment a clipped ray steps past a removed hit. */
+const CLIPPED_STEP = 1e-9;
 
 const dot = (a: ArrayLike<number>, b: ArrayLike<number>): number =>
   a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!;
@@ -696,6 +701,45 @@ export function brepGeometry(
     return { found, unsettled };
   };
 
+  /**
+   * `cast`, passing over hits the clips remove (placed points tested by
+   * `clips`): the ray goes on from just behind each one, up to
+   * `MAX_CLIPPED_HITS` of them.
+   */
+  const castKept = (
+    from: V3,
+    d: V3,
+    tMin: number,
+    tMax: number,
+    anyHit: boolean,
+    origin: V3,
+    clips: ClipFilter | undefined,
+  ): { found: RayFound | undefined; unsettled: number } => {
+    if (!clips) {
+      return cast(from, d, tMin, tMax, anyHit);
+    }
+    let start = tMin;
+    let unsettled = 0;
+    for (let i = 0; i < MAX_CLIPPED_HITS; i++) {
+      const r = cast(from, d, start, tMax, false);
+      unsettled += r.unsettled;
+      if (!r.found) {
+        return { found: undefined, unsettled };
+      }
+      const point: V3 = [
+        from[0] + r.found.t * d[0],
+        from[1] + r.found.t * d[1],
+        from[2] + r.found.t * d[2],
+      ];
+      if (clips.keeps(toPlaced(point, origin))) {
+        return { found: r.found, unsettled };
+      }
+      start = r.found.t + CLIPPED_STEP;
+    }
+    // Too many removed surfaces in a row to say what is behind them.
+    return { found: undefined, unsettled: unsettled + 1 };
+  };
+
   const rayHit = (ray: QueryRay, o: RayHitOptions = {}): GeometryRayAnswer => {
     const p = prepare();
     const origin = originOf(o.origin);
@@ -707,12 +751,14 @@ export function brepGeometry(
     if (!(dot(d, d) > 0 && Number.isFinite(dot(d, d)))) {
       return { verdict: "miss", accuracy: none };
     }
-    const { found, unsettled } = cast(
+    const { found, unsettled } = castKept(
       from,
       d,
       o.tMin ?? 0,
       o.tMax ?? 1,
       o.anyHit === true,
+      origin,
+      o.clips,
     );
     if (!found) {
       return unsettled > 0
@@ -889,11 +935,16 @@ export function brepGeometry(
     wantEdge: boolean,
     wantVertex: boolean,
     bound0: number,
+    // Whether a candidate (in the form's coordinates) is kept by the clips.
+    keeps?: (position: ArrayLike<number>) => boolean,
   ): Candidate | undefined => {
     const pr = prepare();
     let best: Candidate | undefined;
     const limit = () => best?.distance ?? bound0;
     const offer = (c: Candidate): void => {
+      if (keeps && !keeps(c.position)) {
+        return;
+      }
       if (c.distance <= bound0 && (!best || c.distance < best.distance)) {
         best = c;
       }
@@ -990,12 +1041,14 @@ export function brepGeometry(
     }
     const origin = originOf(o.origin);
     const p = toLocal(point, origin);
+    const clips = o.clips;
     const found = closestLocal(
       p,
       wantFace,
       wantEdge,
       wantVertex,
       o.maxDistance === undefined ? Infinity : o.maxDistance / scale,
+      clips && ((position) => clips.keeps(toPlaced(position, origin))),
     );
     if (!found) {
       return undefined;
@@ -1003,6 +1056,13 @@ export function brepGeometry(
     const position = toPlaced(found.position, origin);
     const distance = found.distance * scale;
     const pr = prepare();
+    // The nearest points of each face are offered one by one: a face the
+    // clips cut in part may have a kept point nearer than any offered.
+    const clipNote = clips
+      ? "; clipped: candidates the clips remove are dropped, so the nearest kept point of a partly clipped face may be missed"
+      : "";
+    const clipped = (a: GeometryAccuracy): GeometryAccuracy =>
+      clips ? { ...a, exact: false, note: `${a.note}${clipNote}` } : a;
     if (found.kind === "face") {
       const data = pr.faces[found.face!]!;
       const [u, v] = found.uv!;
@@ -1015,7 +1075,7 @@ export function brepGeometry(
         entity: { kind: "face", index: found.face! },
         normal: directionToPlaced([flip * n[0], flip * n[1], flip * n[2]]),
         uv: [u, v],
-        accuracy: faceAccuracy(found.route, data),
+        accuracy: clipped(faceAccuracy(found.route, data)),
       };
     }
     if (found.kind === "edge") {
@@ -1024,28 +1084,40 @@ export function brepGeometry(
         distance,
         entity: { kind: "edge", index: found.edge! },
         t: found.t,
-        accuracy: accuracyOf(found.route, {
-          edge: form.edgeTolerance[found.edge!]!,
-        }),
+        accuracy: clipped(
+          accuracyOf(found.route, {
+            edge: form.edgeTolerance[found.edge!]!,
+          }),
+        ),
       };
     }
     return {
       position,
       distance,
       entity: { kind: "vertex", index: found.vertex! },
-      accuracy: accuracyOf(found.route, {
-        vertex: form.vertexTolerance[found.vertex!]!,
-      }),
+      accuracy: clipped(
+        accuracyOf(found.route, {
+          vertex: form.vertexTolerance[found.vertex!]!,
+        }),
+      ),
     };
   };
 
   const segmentDistance = (
     from: ArrayLike<number>,
     to: ArrayLike<number>,
-    o: { readonly origin?: ArrayLike<number> } = {},
+    o: {
+      readonly origin?: ArrayLike<number>;
+      readonly clips?: ClipFilter;
+    } = {},
   ): SegmentDistance => {
     const pr = prepare();
     const origin = originOf(o.origin);
+    const clips = o.clips;
+    const keeps =
+      clips &&
+      ((position: ArrayLike<number>) =>
+        clips.keeps(toPlaced(position, origin)));
     const a = toLocal(from, origin);
     const d = sub(toLocal(to, origin), a);
     const near = accuracyOf("closest points", { surface: pr.maxSurfaceError });
@@ -1053,7 +1125,7 @@ export function brepGeometry(
       return { distance: Infinity, accuracy: near };
     }
     const length = Math.hypot(d[0], d[1], d[2]);
-    if (length > 0 && cast(a, d, 0, 1, true).found) {
+    if (length > 0 && castKept(a, d, 0, 1, true, origin, clips).found) {
       return {
         distance: 0,
         accuracy: accuracyOf("ray crossing", { surface: pr.maxSurfaceError }),
@@ -1066,6 +1138,7 @@ export function brepGeometry(
         false,
         false,
         Infinity,
+        keeps,
       )?.distance ?? Infinity;
     const SAMPLES = 32;
     const values = Array.from({ length: SAMPLES + 1 }, (_, i) =>
@@ -1106,9 +1179,8 @@ export function brepGeometry(
       distance: best * scale,
       accuracy: accuracyOf("closest points along the segment", {
         surface: pr.maxSurfaceError,
-        exact: length === 0,
-        extra:
-          "sampled at 33 points and refined: a dip narrower than a 32nd of the segment can be missed",
+        exact: length === 0 && !clips,
+        extra: `sampled at 33 points and refined: a dip narrower than a 32nd of the segment can be missed${clips ? "; clipped: candidates the clips remove are dropped, so the nearest kept point of a partly clipped face may be missed" : ""}`,
       }),
     };
   };

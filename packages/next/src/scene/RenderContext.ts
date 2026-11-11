@@ -48,6 +48,7 @@ import {
   type Linker,
   type ShaderUnit,
 } from "../shaders/link/index.ts";
+import { CLIP_TABLE_BYTES, isClipped, unclipped } from "./world/clips.ts";
 import { ShaderCache } from "./ShaderCache.ts";
 import { ShaderBindings } from "./ShaderBindings.ts";
 import { UNIFORM_BINDING, textureBinding } from "./uniforms.ts";
@@ -188,6 +189,17 @@ export interface SurfacePipelines {
 /** One of a shader's pipelines (`SurfacePipelines`). */
 export type SurfaceKey = keyof SurfacePipelines;
 
+/** A surface pipeline with the clip test on, for a view that has clips. */
+export type ClippedKey = `${SurfaceKey}Clipped`;
+/** What a custom shader's pipelines are asked for by. */
+export type PipelineKey = SurfaceKey | ClippedKey;
+export const isClippedKey = (key: PipelineKey): key is ClippedKey =>
+  isClipped(key);
+export const unclippedKey = (key: ClippedKey): SurfaceKey =>
+  unclipped<SurfaceKey>(key);
+/** A clipped pipeline's label ends with this: `surfacePipeline` sets its constant. */
+const CLIPPED_LABEL = " (clipped)";
+
 export const SURFACE_KEYS: readonly SurfaceKey[] = [
   "opaque",
   "opaqueDoubleSided",
@@ -283,7 +295,20 @@ export interface Pipelines extends SurfacePipelines {
    */
   surface(
     shader: CustomShader,
-  ): Promise<(key: SurfaceKey) => Promise<GPURenderPipeline>>;
+  ): Promise<(key: PipelineKey) => Promise<GPURenderPipeline>>;
+  /**
+   * The engine's own pipeline `key` with the clip test on, for a view
+   * that has clips: made when first asked for (a pipeline a page's
+   * content doesn't use is never made), and undefined until it is, when
+   * `ready` is called once (the world records its bundles again). Until
+   * then the unclipped one draws.
+   */
+  clippedPipeline(
+    key: SurfaceKey,
+    ready: () => void,
+  ): GPURenderPipeline | undefined;
+  /** Makes every clipped pipeline now, for a page that must not show a frame uncut. */
+  warmClipped(): Promise<void>;
   /**
    * A custom shader's group-2 layout: the texture set's and its uniforms'
    * (uniforms.ts); undefined without uniforms.
@@ -408,6 +433,12 @@ export interface RenderContext {
   lightBuffer: GPUBuffer;
   lightAssignGroup: GPUBindGroup;
   /**
+   * The view's clip table (scene/world/clips.ts `packClipTable`, copied in
+   * per view before its passes, as the view block is), bound in the view
+   * group at 17. Read only by the clipped pipelines (`clipsOn`).
+   */
+  currentClipBuffer: GPUBuffer;
+  /**
    * The view bind group for drawing into the shadow maps: the same, with
    * a placeholder where the maps are bound (a texture can't be read and
    * drawn into in one pass).
@@ -491,6 +522,11 @@ export async function createRenderContext(
     size: SHADOWS_SIZE,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
+  const currentClipBuffer = device.createBuffer({
+    label: "currentClips",
+    size: CLIP_TABLE_BYTES,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+  });
   // Reverse-Z: a receiver is lit where it is at least as near the sun as
   // the nearest caster.
   const shadowSampler = device.createSampler({
@@ -516,6 +552,7 @@ export async function createRenderContext(
     { binding: 14, resource: shadowSampler },
     { binding: 15, resource: { buffer: aoBuffer } },
     { binding: 16, resource: sky.aerialScreen },
+    { binding: 17, resource: { buffer: currentClipBuffer } },
     { binding: 18, resource: { buffer: lightBuffer } },
   ];
   const shadowViewBindGroup = device.createBindGroup({
@@ -580,6 +617,7 @@ export async function createRenderContext(
     currentShadowsBuffer,
     aoBuffer,
     lightBuffer,
+    currentClipBuffer,
     lightAssignGroup: device.createBindGroup({
       label: "lights.assign",
       layout: pipelines.lightsAssign.getBindGroupLayout(0),
@@ -670,6 +708,10 @@ async function createPipelines(
         visibility: FRAGMENT,
         texture: { viewDimension: "2d-array" },
       },
+      // The view's clips (scene/world/clips.ts): the fragment stage's loop
+      // over sets and shapes. A fragment-stage storage buffer more: 7 of the
+      // base tier's 8 in the opaque layout, 8 in the translucent one.
+      storage(17, true, FRAGMENT),
       // Point and spot lights, then their froxels' lists (scene/lights.ts).
       storage(18, true, FRAGMENT),
     ],
@@ -994,6 +1036,24 @@ async function createPipelines(
   // With the depth drawn first, triangles shade where their depth is the
   // pass's (surfaceVertex.wgsl's positions are invariant); lines draw as before.
   const depthPrepass = overrides.opaque === undefined;
+  // The surface variants' pipelines. A clipped one (`clipped` in its label,
+  // `surfaceBuilder`) is the same stages with the clip test switched on in the
+  // module (surface.slang `clipsOn`, pipeline constant 1), made only when a
+  // view has clips: the others keep a fragment stage without the test.
+  const surfacePipeline = (
+    descriptor: GPURenderPipelineDescriptor,
+  ): Promise<GPURenderPipeline> =>
+    device.createRenderPipelineAsync(
+      descriptor.label?.endsWith(CLIPPED_LABEL) && descriptor.fragment
+        ? {
+            ...descriptor,
+            fragment: {
+              ...descriptor.fragment,
+              constants: { ...descriptor.fragment.constants, 1: 1 },
+            },
+          }
+        : descriptor,
+    );
   const opaquePipeline = (
     shaders: GPUShaderModule,
     label: string,
@@ -1005,7 +1065,7 @@ async function createPipelines(
     patches = false,
     trimmed = false,
   ) =>
-    device.createRenderPipelineAsync({
+    surfacePipeline({
       label,
       layout,
       vertex: {
@@ -1052,7 +1112,7 @@ async function createPipelines(
     patches = false,
     trimmed = false,
   ) =>
-    device.createRenderPipelineAsync({
+    surfacePipeline({
       label,
       layout,
       vertex: {
@@ -1098,7 +1158,7 @@ async function createPipelines(
     patches = false,
     trimmed = false,
   ) =>
-    device.createRenderPipelineAsync({
+    surfacePipeline({
       label,
       layout,
       vertex: {
@@ -1145,7 +1205,7 @@ async function createPipelines(
     patches = false,
     trimmed = false,
   ) =>
-    device.createRenderPipelineAsync({
+    surfacePipeline({
       label,
       layout,
       vertex: {
@@ -1194,7 +1254,7 @@ async function createPipelines(
     sampleCount = 1,
     layout: GPUPipelineLayout = translucentPipelineLayout,
   ) =>
-    device.createRenderPipelineAsync({
+    surfacePipeline({
       label,
       layout,
       multisample: { count: sampleCount },
@@ -1263,7 +1323,7 @@ async function createPipelines(
     patches = false,
     trimmed = false,
   ) =>
-    device.createRenderPipelineAsync({
+    surfacePipeline({
       label,
       layout,
       vertex: {
@@ -1310,8 +1370,11 @@ async function createPipelines(
     translucent: () => GPUShaderModule,
     // A custom shader's with its uniforms (group 2: `setLayout`).
     layouts?: { opaque: GPUPipelineLayout; translucent: GPUPipelineLayout },
+    // The clipped variants (`surfacePipeline`).
+    clipped = false,
   ): (key: SurfaceKey) => Promise<GPURenderPipeline> {
-    const name = (label: string) => `${prefix}${label}`;
+    const name = (label: string) =>
+      `${prefix}${label}${clipped ? CLIPPED_LABEL : ""}`;
     const o = layouts?.opaque;
     const t = layouts?.translucent;
     const tri = "triangle-list";
@@ -1672,7 +1735,7 @@ async function createPipelines(
   // line in the stage's own code.
   const surface = async (
     shader: CustomShader,
-  ): Promise<(key: SurfaceKey) => Promise<GPURenderPipeline>> => {
+  ): Promise<(key: PipelineKey) => Promise<GPURenderPipeline>> => {
     const { label } = shader;
     // The shader's units after the engine's: a name it defines twice, or a
     // stage the boundary wants missing, stops it here, in its own terms.
@@ -1697,7 +1760,23 @@ async function createPipelines(
         bindGroupLayouts: [viewLayout, drawWorldLayout, set, translucentLayout],
       }),
     };
-    return surfaceBuilder(`${label} `, opaque, opaque, () => opaque, layouts);
+    const plain = surfaceBuilder(
+      `${label} `,
+      opaque,
+      opaque,
+      () => opaque,
+      layouts,
+    );
+    const clipped = surfaceBuilder(
+      `${label} `,
+      opaque,
+      opaque,
+      () => opaque,
+      layouts,
+      true,
+    );
+    return (key) =>
+      isClippedKey(key) ? clipped(unclippedKey(key)) : plain(key);
   };
 
   const [
@@ -2022,6 +2101,42 @@ async function createPipelines(
     ]);
     return { sources, sprite };
   };
+  // The clipped variants of the engine's own set, each made when first asked
+  // for (`Pipelines.clippedPipeline`).
+  const clippedBuilder = surfaceBuilder(
+    "",
+    opaqueModule,
+    casterModule,
+    () => translucentModule,
+    undefined,
+    true,
+  );
+  const clippedMade = new Map<SurfaceKey, GPURenderPipeline>();
+  const clippedMaking = new Map<SurfaceKey, Promise<void>>();
+  const clippedWaiting = new Set<() => void>();
+  const makeClipped = (key: SurfaceKey): Promise<void> => {
+    let making = clippedMaking.get(key);
+    if (!making) {
+      making = clippedBuilder(key).then(
+        (pipeline) => {
+          clippedMade.set(key, pipeline);
+          const waiting = [...clippedWaiting];
+          clippedWaiting.clear();
+          for (const ready of waiting) {
+            ready();
+          }
+        },
+        (error: unknown) => {
+          console.error(
+            `[cesium/next] pipeline: the clipped ${key} pipeline failed: ${error instanceof Error ? error.message : String(error)} (its draws are not clipped in this pass)`,
+          );
+        },
+      );
+      clippedMaking.set(key, making);
+    }
+    return making;
+  };
+
   return {
     viewLayout,
     cullWorldLayout,
@@ -2042,6 +2157,18 @@ async function createPipelines(
     splatResolve,
     ...builtinSurface,
     surface,
+    clippedPipeline: (key, ready) => {
+      const made = clippedMade.get(key);
+      if (made) {
+        return made;
+      }
+      clippedWaiting.add(ready);
+      void makeClipped(key);
+      return undefined;
+    },
+    warmClipped: async () => {
+      await Promise.all(SURFACE_KEYS.map((key) => makeClipped(key)));
+    },
     setLayout,
     depthPrepass,
     aoTrace,

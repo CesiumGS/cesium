@@ -3,6 +3,7 @@ import { updateEnvironment } from "./environment.ts";
 import { updateExposure, adaptExposure } from "./exposure.ts";
 import { resolvePicks, whenMapped, halfToFloat } from "./picks.ts";
 import { writeTranslucency } from "./translucency.ts";
+import { writeClips } from "./clipTable.ts";
 import { writeView } from "./viewBlocks.ts";
 import { viewFrameFor } from "./viewFrame.ts";
 import type {
@@ -250,6 +251,7 @@ export function render(
     // applied; automatic exposure never moved).
     updateExposure(engine, view);
     writeView(engine, view, slots, rect);
+    writeClips(engine, view, frame);
     updateEnvironment(engine, view);
     slots++;
 
@@ -271,7 +273,9 @@ export function render(
       world.stamp = stamp;
       world.bundle = view.world.prepareFrame();
     }
-    frame.bundle = world.bundle;
+    frame.bundle =
+      (frame.clipBytes > 0 && view.world.clippedBundle("opaque")) ||
+      world.bundle;
     // After the world's transforms are resolved for the frame.
     writeTranslucency(engine, view);
   }

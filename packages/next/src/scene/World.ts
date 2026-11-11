@@ -163,10 +163,13 @@ import {
   prepassBundle,
   depthBundle,
   pickBundle,
+  clippedBundle,
+  type BundleKind,
   encodeCull,
   translucentRange,
   encodeTranslucent,
 } from "../render/world/bundles.ts";
+import { WorldClips, type ClipSet, type WorldClip } from "./world/clips.ts";
 import { WorldScene } from "./world/worldScene.ts";
 import type { PatchPickSource } from "./world/domains.ts";
 import { WorldRaster } from "../render/world/worldRaster.ts";
@@ -192,6 +195,8 @@ export class World {
    * it once a frame.
    */
   readonly warps: WorldWarps = new WorldWarps(this);
+  /** @internal The world's clip sets (`addClip`, scene/world/clips.ts). */
+  readonly clipSets: WorldClips = new WorldClips(this);
   /** @internal What one draw costs the tables (`DrawSink.drawOverheadBytes`). */
   readonly drawOverheadBytes = DRAW_OVERHEAD_BYTES;
   /** @internal A custom shader's pipeline is ready: draw with it from now on. */
@@ -1461,6 +1466,7 @@ export class World {
         // the shadow bundle alone, or leaves it, and that is recorded again.
         if (batch.shown === 0 && batch.casters === (mask === 0 ? 0 : 1)) {
           this.raster.casters = undefined;
+          this.raster.clippedBundles.delete("shadow");
         }
       }
     }
@@ -1772,6 +1778,53 @@ export class World {
     return pickBundle(this);
   }
 
+  /**
+   * @internal The bundle of `kind` with the clip test on, for a view that
+   * has clips (`clippedBundle`); undefined before the world's first frame.
+   */
+  clippedBundle(kind: BundleKind): GPURenderBundle | undefined {
+    return clippedBundle(this, kind);
+  }
+
+  /**
+   * Adds a clip: shapes in a reference frame, combined, keeping their
+   * inside or outside (`ClipSet`). It cuts nothing until a view uses it
+   * (`View.clipMask`, the clip's `bit`). Each clip is tested where its
+   * frame is, and moves with it. At most 32 per world.
+   */
+  addClip(set: ClipSet): WorldClip {
+    const clip = this.clipSets.add(set);
+    this.clipsChanged();
+    return clip;
+  }
+
+  /** Replaces a clip's shapes, frame and rules; the views that use it redraw. */
+  setClip(clip: WorldClip, set: ClipSet): void {
+    this.clipSets.set(clip, set);
+    this.clipsChanged();
+  }
+
+  /** Removes a clip; views that used it no longer cut with it. A removed clip's bit goes to the next clip added: clear it in the views' masks first if they should not take it. */
+  removeClip(clip: WorldClip): void {
+    this.clipSets.remove(clip);
+    this.clipsChanged();
+  }
+
+  /** The clip's set as it was added (frozen), or undefined once removed. */
+  clipOf(clip: WorldClip): ClipSet | undefined {
+    return this.clipSets.get(clip);
+  }
+
+  /** Counts changes to the world's clips: added, set and removed. */
+  get clipsRevision(): number {
+    return this.clipSets.revision;
+  }
+
+  private clipsChanged(): void {
+    this.version++;
+    this.changedViews = ALL_VIEWS;
+  }
+
   /** Encodes this world's per-view culling: clear batch counts, cull, write args. */
   /**
    * One view's cull. `points`: also its point draws' (pointCull.slang),
@@ -1854,8 +1907,9 @@ export class World {
     pass: GPURenderPassEncoder,
     keyOf: (doubleSided: boolean) => SurfaceKey,
     group: GPUBindGroup,
+    clipped = false,
   ): void {
-    encodeTranslucent(this, pass, keyOf, group);
+    encodeTranslucent(this, pass, keyOf, group, clipped);
   }
 
   /** The vertex arena buffer holding `mesh` (its slab's, scene/Slabs.ts). */

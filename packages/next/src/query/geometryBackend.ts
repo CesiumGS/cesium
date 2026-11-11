@@ -7,6 +7,7 @@
 import type { Ellipsoid } from "../math/ellipsoid.ts";
 import { volumeObb, type Obb, type TileVolume } from "../streaming/volumes.ts";
 import { dot, meshGeometry, sub, type V3 } from "../geometry/mesh.ts";
+import type { ClipFilter } from "../geometry/query.ts";
 import { crossing } from "./ellipsoidBackend.ts";
 import type { QueryRay, RayAnswer, UnknownSpan } from "./queries.ts";
 
@@ -37,6 +38,12 @@ export interface TilesetRayOptions {
   readonly ellipsoid?: Ellipsoid;
   /** Hits this close (m) to either end are the observer's own ground (default 1 mm). */
   readonly endTolerance?: number;
+  /**
+   * Clips applied (`clipFilter`, scene/world/clips.ts), in the tileset's
+   * anchor coordinates: a hit where they remove the surface is passed over.
+   * Picks and snaps pass their view's; world questions pass none.
+   */
+  readonly clips?: ClipFilter;
 }
 
 /** The part of the segment `[0, 1]` inside `obb` grown by `grow` m, or undefined. */
@@ -201,6 +208,7 @@ export function castTilesetRays(
           const answer = mesh.rayHit(ray, {
             tMin: Math.max(lo, tolerance / span),
             tMax: Math.min(hi, 1 - tolerance / span),
+            ...(options.clips && { clips: options.clips }),
           });
           if (answer.verdict === "hit") {
             nearest =
@@ -213,7 +221,9 @@ export function castTilesetRays(
           for (const g of tile.geometry) {
             near = Math.min(
               near,
-              meshGeometry(g).segmentDistance(ray.from, ray.to).distance,
+              meshGeometry(g).segmentDistance(ray.from, ray.to, {
+                ...(options.clips && { clips: options.clips }),
+              }).distance,
             );
           }
         }

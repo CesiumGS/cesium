@@ -166,7 +166,11 @@ export function encodeDomainPick(
   terrain: { stops: number; through: number },
 ): PendingDomain | undefined {
   const world = view.world;
-  const bundle = world.pickBundle();
+  // A view with clips picks through them: the pick variant has the clip test
+  // too, and the view's own table (it is the shared one's content only while
+  // the view's passes run).
+  const clipped = frame.clipBytes > 0 && frame.clipBuffer !== undefined;
+  const bundle = (clipped && world.clippedBundle("pick")) || world.pickBundle();
   if (!bundle || !frame.block) {
     return undefined;
   }
@@ -212,6 +216,15 @@ export function encodeDomainPick(
     block.byteLength,
   );
   world.encodeCull(enc, undefined, false);
+  if (clipped) {
+    enc.copyBufferToBuffer(
+      frame.clipBuffer!,
+      0,
+      engine.ctx.currentClipBuffer,
+      0,
+      frame.clipBytes,
+    );
+  }
   const pass = enc.beginRenderPass({
     label: "pick.domain",
     colorAttachments: [

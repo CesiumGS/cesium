@@ -98,6 +98,15 @@ export class WorldRaster {
   pickBundle_?: GPURenderBundle;
   pickFor?: GPURenderBundle;
   prepassFor?: GPURenderBundle;
+  /**
+   * The bundles of the same kinds with the clip test on, for views that have
+   * clips (`clippedBundle`), by kind, each with the draw bundle it was
+   * recorded with.
+   */
+  readonly clippedBundles = new Map<
+    string,
+    { bundle: GPURenderBundle; for: GPURenderBundle }
+  >();
   readonly cullParamsData = new Uint32Array(4);
   readonly cullPassDesc: GPUComputePassDescriptor = { label: "cull" };
   /** The patch dice's own pass, timed apart from the cull. */

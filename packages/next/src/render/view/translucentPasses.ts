@@ -99,6 +99,7 @@ export function translucentPass(
           dummies.zero,
           dummies.higher,
         ]),
+        frame.clipBytes > 0,
       );
       pass.end();
       // Each pixel's list sorted and blended, into the accumulation
@@ -156,6 +157,7 @@ export function translucentPass(
         dummies.zero,
         dummies.higher,
       ]),
+      frame.clipBytes > 0,
     );
     first.end();
     colorTargets[0]!.view = get(accumulatedLit);
@@ -168,6 +170,7 @@ export function translucentPass(
       (doubleSided) =>
         doubleSided ? "translucentColorDoubleSided" : "translucentColor",
       translucentGroup(engine, frame, 2, [dummies.buffer, zero, higher]),
+      frame.clipBytes > 0,
     );
     second.end();
   };

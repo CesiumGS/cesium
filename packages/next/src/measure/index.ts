@@ -25,6 +25,20 @@ export {
 } from "./accuracy.ts";
 export { surfaceDistance, type SurfaceDistance } from "./surface.ts";
 export {
+  drawnDistance,
+  type DrawnDistance,
+  type DrawnDistanceOptions,
+  type DrawnView,
+} from "./drawn.ts";
+export {
+  DrawnCurve,
+  sampleSegment,
+  type CurveOptions,
+  type DrawnAnchor,
+  type DrawnSamples,
+  type ScreenScale,
+} from "./curve.ts";
+export {
   terrainLineOfSight,
   type TerrainLineOfSight,
   type TerrainLineOfSightOptions,

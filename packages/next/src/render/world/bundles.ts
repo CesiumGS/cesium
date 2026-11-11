@@ -20,6 +20,7 @@ import {
 } from "../layout.ts";
 import { bindSlab } from "./tables.ts";
 import type { SurfaceKey } from "../../scene/RenderContext.ts";
+import { clippedKey } from "../../scene/world/clips.ts";
 import type { World } from "../../scene/World.ts";
 import { uploadTables } from "../../scene/world/featureTables.ts";
 import {
@@ -51,6 +52,7 @@ export interface BundleWorld extends Pick<
     | "bundle"
     | "casters"
     | "castersFor"
+    | "clippedBundles"
     | "depthBundle_"
     | "depthFor"
     | "drawArguments"
@@ -142,6 +144,7 @@ export interface PrepareWorld extends Pick<
     | "bundle"
     | "casters"
     | "castersFor"
+    | "clippedBundles"
     | "cullBindGroup"
     | "cullParams"
     | "cullParamsData"
@@ -314,6 +317,33 @@ export function pickBundle(world: BundleWorld): GPURenderBundle | undefined {
   return world.raster.pickBundle_;
 }
 
+/**
+ * The bundle of `kind` for a view whose clips are on: the same draws with
+ * the clipped pipelines (`RenderContext.clippedPipeline`), recorded when
+ * first asked for and again whenever the unclipped bundle is (it carries
+ * the draws' and pipelines' changes). Undefined before the world's first
+ * frame. A view without clips uses the plain bundles above, and their
+ * pipelines have no clip test.
+ */
+export function clippedBundle(
+  world: BundleWorld,
+  kind: BundleKind,
+): GPURenderBundle | undefined {
+  const base = world.raster.bundle;
+  if (!base) {
+    return undefined;
+  }
+  let entry = world.raster.clippedBundles.get(kind);
+  if (!entry || entry.for !== base) {
+    entry = { bundle: recordBundle(world, kind, true), for: base };
+    world.raster.clippedBundles.set(kind, entry);
+  }
+  return entry.bundle;
+}
+
+export type BundleKind =
+  "opaque" | "shadow" | "height" | "prepass" | "depth" | "pick";
+
 export function encodeCull(
   world: CullWorld,
   encoder: GPUCommandEncoder,
@@ -464,8 +494,8 @@ function writeBatches(world: CullWorld): void {
  */
 export function recordBundle(
   world: BundleWorld,
-  kind:
-    "opaque" | "shadow" | "height" | "prepass" | "depth" | "pick" = "opaque",
+  kind: BundleKind = "opaque",
+  clipped = false,
 ): GPURenderBundle {
   const { device, targets, currentViewBindGroup } = world.ctx;
   // Height captures draw the casters, with their own pipelines.
@@ -627,12 +657,17 @@ export function recordBundle(
       bindSlab(world, encoder, slab);
     }
     const key = keyOf(batch);
-    const wanted = batchPipeline(world, batch, key);
+    const { pipeline: wanted, custom } = batchPipeline(
+      world,
+      batch,
+      key,
+      clipped,
+    );
     if (wanted !== pipeline) {
       pipeline = wanted;
       encoder.setPipeline(pipeline);
     }
-    const wantedGroup = setGroup(world, batch, wanted, key);
+    const wantedGroup = setGroup(world, batch, custom);
     if (wantedGroup !== group) {
       group = wantedGroup;
       encoder.setBindGroup(2, group);
@@ -647,18 +682,38 @@ export function recordBundle(
 
 /**
  * A batch's pipeline for a pass: its custom shader's once made, else the
- * engine's (then recorded again when it is ready).
+ * engine's (then recorded again when it is ready). `clipped`: for a view with
+ * clips, the shader's clipped one, else its plain one, else the engine's
+ * clipped one, else the engine's plain one (while the others are made).
+ * `custom` is whether it is the shader's.
  */
 function batchPipeline(
   world: BundleWorld,
   batch: Batch,
   key: SurfaceKey,
-): GPURenderPipeline {
-  return (
-    (batch.shader &&
-      world.ctx.shaders.pipeline(batch.shader, key, world.shaderReady)) ??
-    world.ctx.pipelines[key]
-  );
+  clipped = false,
+): { pipeline: GPURenderPipeline; custom: boolean } {
+  const shader = batch.shader;
+  if (shader) {
+    const own =
+      (clipped &&
+        world.ctx.shaders.pipeline(
+          shader,
+          clippedKey(key),
+          world.shaderReady,
+        )) ||
+      world.ctx.shaders.pipeline(shader, key, world.shaderReady);
+    if (own) {
+      return { pipeline: own, custom: true };
+    }
+  }
+  return {
+    pipeline:
+      (clipped &&
+        world.ctx.pipelines.clippedPipeline(key, world.shaderReady)) ||
+      world.ctx.pipelines[key],
+    custom: false,
+  };
 }
 
 /**
@@ -668,12 +723,11 @@ function batchPipeline(
 function setGroup(
   world: BundleWorld,
   batch: Batch,
-  pipeline: GPURenderPipeline,
-  key: SurfaceKey,
+  custom: boolean,
 ): GPUBindGroup {
   const shader = batch.shader;
   const plain = world.raster.textureSets[batch.textureSet]!;
-  if (!shader || pipeline === world.ctx.pipelines[key]) {
+  if (!shader || !custom) {
     return plain;
   }
   const layout = world.ctx.pipelines.setLayout(shader);
@@ -807,6 +861,7 @@ export function encodeTranslucent(
   pass: GPURenderPassEncoder,
   keyOf: (doubleSided: boolean) => SurfaceKey,
   group: GPUBindGroup,
+  clipped = false,
 ): void {
   pass.setBindGroup(0, world.ctx.currentViewBindGroup);
   pass.setBindGroup(3, group);
@@ -828,12 +883,17 @@ export function encodeTranslucent(
       bindSlab(world, pass, slab);
     }
     const key = keyOf(batch.doubleSided);
-    const wanted = batchPipeline(world, batch, key);
+    const { pipeline: wanted, custom } = batchPipeline(
+      world,
+      batch,
+      key,
+      clipped,
+    );
     if (wanted !== current) {
       current = wanted;
       pass.setPipeline(wanted);
     }
-    const wantedGroup = setGroup(world, batch, wanted, key);
+    const wantedGroup = setGroup(world, batch, custom);
     if (wantedGroup !== bound) {
       bound = wantedGroup;
       pass.setBindGroup(2, bound);

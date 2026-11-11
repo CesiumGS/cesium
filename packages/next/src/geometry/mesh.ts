@@ -5,6 +5,7 @@
 // far from the coordinates' origin keeps its precision when given an origin.
 import type { QueryRay } from "../query/queries.ts";
 import type {
+  ClipFilter,
   ClosestPoint,
   ClosestPointOptions,
   DisplayMesh,
@@ -225,6 +226,53 @@ function pointSegment(p: V3, a: V3, b: V3): { point: V3; s: number } {
 const edgeKey = (i: number, j: number): string =>
   i < j ? `${i}:${j}` : `${j}:${i}`;
 
+/** How finely a partly clipped triangle is divided: 8 pieces to an edge at most. */
+const CLIP_DEPTH = 3;
+
+/**
+ * The parts of triangle `abc` that `keeps` holds, as triangles of a division
+ * into 4 each time (down to `CLIP_DEPTH`): a piece whose corners and centre
+ * are all kept stays whole, one with none kept is dropped (a kept region
+ * smaller than a piece can be missed), the others divide.
+ */
+function keptPieces(
+  a: V3,
+  b: V3,
+  c: V3,
+  keeps: (p: V3) => boolean,
+  depth: number,
+  out: Array<[V3, V3, V3]>,
+): void {
+  const centre: V3 = [
+    (a[0] + b[0] + c[0]) / 3,
+    (a[1] + b[1] + c[1]) / 3,
+    (a[2] + b[2] + c[2]) / 3,
+  ];
+  const samples = [keeps(a), keeps(b), keeps(c), keeps(centre)];
+  if (samples.every(Boolean)) {
+    out.push([a, b, c]);
+    return;
+  }
+  if (depth === 0 || !samples.some(Boolean)) {
+    if (samples[3]) {
+      out.push([a, b, c]);
+    }
+    return;
+  }
+  const mid = (p: V3, q: V3): V3 => [
+    (p[0] + q[0]) / 2,
+    (p[1] + q[1]) / 2,
+    (p[2] + q[2]) / 2,
+  ];
+  const ab = mid(a, b);
+  const bc = mid(b, c);
+  const ca = mid(c, a);
+  keptPieces(a, ab, ca, keeps, depth - 1, out);
+  keptPieces(ab, b, bc, keeps, depth - 1, out);
+  keptPieces(ca, bc, c, keeps, depth - 1, out);
+  keptPieces(ab, bc, ca, keeps, depth - 1, out);
+}
+
 const IDENTITY = Float64Array.from([
   1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
 ]);
@@ -364,6 +412,7 @@ export function meshGeometry(
       ray.to[2]! - (origin?.[2] ?? 0),
     ];
     const d = sub(to, from);
+    const clips = o.clips;
     let best: number | undefined;
     let bestTriangle = -1;
     for (let t = 0; t < triangleCount; t++) {
@@ -381,12 +430,22 @@ export function meshGeometry(
       ) {
         continue;
       }
-      if (best === undefined || hit < best) {
-        best = hit;
-        bestTriangle = t;
-        if (o.anyHit) {
-          break;
-        }
+      if (best !== undefined && hit >= best) {
+        continue;
+      }
+      // A hit the clips remove isn't there: the ray goes on behind it.
+      if (
+        clips &&
+        !clips.keeps(
+          [0, 1, 2].map((i) => from[i]! + hit * d[i]! + (origin?.[i] ?? 0)),
+        )
+      ) {
+        continue;
+      }
+      best = hit;
+      bestTriangle = t;
+      if (o.anyHit) {
+        break;
       }
     }
     if (best === undefined) {
@@ -445,18 +504,44 @@ export function meshGeometry(
     const origin = o.origin;
     const placed = place(origin);
     const p = toRelative(point, origin);
+    const clips = o.clips;
+    /** `q` (relative to the origin) is kept by the clips. */
+    const kept = (q: ArrayLike<number>): boolean =>
+      !clips || clips.keeps([0, 1, 2].map((i) => q[i]! + (origin?.[i] ?? 0)));
+    /** The slack of the refinement under way, m: set on the answer it produces. */
+    let refining = 0;
+    /** The answer's slack, m: what the division of a partly clipped face leaves. */
+    let slack = 0;
     let best = Infinity;
     let at: V3 | undefined;
     let entity: EntityRef | undefined;
     let face = -1;
-    const offer = (q: V3, ref: EntityRef, t: number): void => {
+    const offer = (q: V3, ref: EntityRef, t: number, checked = false): void => {
       const dist = Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
-      if (dist < best) {
+      if (dist < best && (checked || kept(q))) {
         best = dist;
         at = q;
         entity = ref;
         face = t;
+        slack = refining;
       }
+    };
+    /** The nearest kept part of a face whose nearest point the clips removed. */
+    const offerKept = (a: V3, b: V3, c: V3, t: number): void => {
+      const pieces: Array<[V3, V3, V3]> = [];
+      keptPieces(a, b, c, kept, CLIP_DEPTH, pieces);
+      refining =
+        Math.max(
+          Math.hypot(...sub(a, b)),
+          Math.hypot(...sub(b, c)),
+          Math.hypot(...sub(c, a)),
+        ) /
+        2 ** CLIP_DEPTH;
+      for (const [pa, pb, pc] of pieces) {
+        const r = closestOnTriangle(p, pa, pb, pc);
+        offer(r.point, faceRef(t), t, true);
+      }
+      refining = 0;
     };
     for (let t = 0; t < triangleCount; t++) {
       if (!usable[t]) {
@@ -472,6 +557,18 @@ export function meshGeometry(
         // The most specific kind allowed: a vertex or an edge of the face
         // lies on the face itself.
         const r = closestOnTriangle(p, a, b, c);
+        if (clips && !kept(r.point)) {
+          if (
+            Math.hypot(
+              p[0] - r.point[0],
+              p[1] - r.point[1],
+              p[2] - r.point[2],
+            ) < best
+          ) {
+            offerKept(a, b, c, t);
+          }
+          continue;
+        }
         if (r.region === "vertex" && wantVertex) {
           offer(r.point, vertexRef(ids[r.corner]!), t);
         } else if (r.region === "vertex" && wantEdge) {
@@ -508,8 +605,9 @@ export function meshGeometry(
       [0, 1, 2],
       (i) => at![i]! + (origin?.[i] ?? 0),
     );
+    const answered = clippedAccuracy(slack);
     if (entity.kind !== "face") {
-      return { position, distance: best, entity, accuracy };
+      return { position, distance: best, entity, accuracy: answered };
     }
     const a = corner(placed, indices[3 * face]!);
     const n = cross(
@@ -519,18 +617,25 @@ export function meshGeometry(
     const length = Math.hypot(n[0], n[1], n[2]);
     const flip = dot(n, sub(p, a)) < 0 ? -1 : 1;
     const normal = Float64Array.from(n, (x) => (flip * x) / length);
-    return { position, distance: best, entity, normal, accuracy };
+    return { position, distance: best, entity, normal, accuracy: answered };
   };
 
   const segmentDistance = (
     from: ArrayLike<number>,
     to: ArrayLike<number>,
-    o: { readonly origin?: ArrayLike<number> } = {},
+    o: {
+      readonly origin?: ArrayLike<number>;
+      readonly clips?: ClipFilter;
+    } = {},
   ): SegmentDistance => {
     const placed = place(o.origin);
     const p = toRelative(from, o.origin);
     const q = toRelative(to, o.origin);
     const d = sub(q, p);
+    const clips = o.clips;
+    const kept = (v: V3): boolean =>
+      !clips || clips.keeps([0, 1, 2].map((i) => v[i]! + (o.origin?.[i] ?? 0)));
+    let slack = 0;
     let best = Infinity;
     for (let t = 0; t < triangleCount && best > 0; t++) {
       if (!usable[t]) {
@@ -539,6 +644,30 @@ export function meshGeometry(
       const a = corner(placed, indices[3 * t]!);
       const b = corner(placed, indices[3 * t + 1]!);
       const c = corner(placed, indices[3 * t + 2]!);
+      if (clips) {
+        const pieces: Array<[V3, V3, V3]> = [];
+        keptPieces(a, b, c, kept, CLIP_DEPTH, pieces);
+        if (
+          pieces.length > 0 &&
+          !(pieces.length === 1 && pieces[0]![1] === b)
+        ) {
+          slack = Math.max(
+            slack,
+            Math.hypot(...sub(a, b)) / 2 ** CLIP_DEPTH,
+            Math.hypot(...sub(b, c)) / 2 ** CLIP_DEPTH,
+            Math.hypot(...sub(c, a)) / 2 ** CLIP_DEPTH,
+          );
+        }
+        for (const [pa, pb, pc] of pieces) {
+          best = Math.min(
+            best,
+            hitTriangle(p, d, pa, pb, pc) !== undefined
+              ? 0
+              : segmentTriangle(p, q, pa, pb, pc),
+          );
+        }
+        continue;
+      }
       best = Math.min(
         best,
         hitTriangle(p, d, a, b, c) !== undefined
@@ -546,8 +675,18 @@ export function meshGeometry(
           : segmentTriangle(p, q, a, b, c),
       );
     }
-    return { distance: best, accuracy };
+    return { distance: best, accuracy: clippedAccuracy(slack) };
   };
+
+  /** The accuracy of an answer that divided partly clipped triangles by `slack` m. */
+  const clippedAccuracy = (slack: number): GeometryAccuracy =>
+    slack > 0
+      ? {
+          meters: error + slack,
+          exact: false,
+          note: `${accuracy.note}; clipped: where a face is partly cut, the nearest kept part is found by dividing it, within ${slack.toPrecision(2)} m`,
+        }
+      : accuracy;
 
   // Which usable faces use each edge (keyed by the sorted vertex pair) and
   // each vertex: built on the first `entity` call.

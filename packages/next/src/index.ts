@@ -48,6 +48,21 @@ export {
   type StyleExpression,
 } from "./scene/FeatureStyle.ts";
 export { World } from "./scene/World.ts";
+// Clips (plan §13.26, increment 8a): shapes in a reference frame that cut
+// the content of the views that use them (`World.addClip`, `View.clipMask`).
+export {
+  clipFilter,
+  clipSetKeeps,
+  clipSetsOf,
+  MAX_CLIP_SETS,
+  MAX_CLIP_SHAPES,
+  MAX_CLIP_POLYGON_VERTICES,
+  MAX_WORLD_CLIPS,
+  type ClipSet,
+  type ClipShape,
+  type ClipsOption,
+  type WorldClip,
+} from "./scene/world/clips.ts";
 export {
   type DrawHandle,
   type DrawOptions,
@@ -349,6 +364,7 @@ export {
   sdfGeometry,
   type BrepGeometry,
   type BrepGeometryOptions,
+  type ClipFilter,
   type ClosestPoint,
   type ClosestPointOptions,
   type DisplayMesh,

@@ -3,6 +3,7 @@
 // every answer. Meshes, b-reps and distance fields. A draft before the API
 // review.
 export type {
+  ClipFilter,
   ClosestPoint,
   ClosestPointOptions,
   DisplayMesh,

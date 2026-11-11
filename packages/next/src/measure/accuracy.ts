@@ -27,8 +27,18 @@ export interface AccuracyTerm {
     | "projection"
     | "pick"
     | "geoidFallback";
-  /** 1σ in meters, or `undefined` when its size is not known. */
+  /**
+   * Meters, or `undefined` when its size is not known: 1σ, or a worst-case
+   * bound where `basis` is `"bound"`.
+   */
   meters: number | undefined;
+  /**
+   * What `meters` is: `"sigma"` (1σ, the default) or `"bound"` (worst case:
+   * a pick's pixel footprint, a snap's geometric error). The two never
+   * convert into each other: `AccuracyStatement.sigma` adds the first in
+   * quadrature, `bound` adds the second linearly.
+   */
+  basis?: "sigma" | "bound";
   note: string;
 }
 
@@ -52,8 +62,17 @@ export type WarningCode =
 
 /** What a measurement claims to know, term by term. */
 export interface AccuracyStatement {
-  /** The root sum square of the terms; `undefined` if any term is (R7). */
+  /**
+   * The root sum square of every term, bounds included as if they were 1σ
+   * (conservative; kept for readers that want one number); `undefined` if
+   * any term is (R7). Prefer `sigma` and `bound`, which keep the two
+   * apart.
+   */
   meters: number | undefined;
+  /** 1σ: the root sum square of the terms that are 1σ (not `basis: "bound"`); `undefined` if any of them is unknown. */
+  sigma?: number | undefined;
+  /** Worst case: the sum of the terms that are bounds (a pick's footprint, a snap's tolerance); absent when there is none. */
+  bound?: number;
   terms: AccuracyTerm[];
   warnings: string[];
   /**
@@ -277,6 +296,7 @@ function pickTerm(end: string, obtained: DesignPointObtained): AccuracyTerm {
   return {
     source: "pick",
     meters: obtained.tolerance,
+    basis: "bound",
     note:
       obtained.how === "pick"
         ? `End ${end}: the design point was picked: the pick's tolerance`
@@ -454,8 +474,17 @@ export function accuracyOf(
   }
 
   const known = terms.every((t) => t.meters !== undefined);
+  const sigmas = terms.filter((t) => t.basis !== "bound");
+  const bounds = terms.filter((t) => t.basis === "bound");
   return {
     meters: known ? rss(...terms.map((t) => t.meters!)) : undefined,
+    sigma: sigmas.every((t) => t.meters !== undefined)
+      ? rss(...sigmas.map((t) => t.meters!))
+      : undefined,
+    ...(bounds.length > 0 &&
+      bounds.every((t) => t.meters !== undefined) && {
+        bound: bounds.reduce((sum, t) => sum + t.meters!, 0),
+      }),
     terms,
     warnings,
     warningCodes,

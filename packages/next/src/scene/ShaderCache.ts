@@ -1,21 +1,17 @@
 import type { CustomShader } from "./CustomShader.ts";
 import type { EngineErrors } from "../gpu/EngineErrors.ts";
-import {
-  SURFACE_KEYS,
-  type SurfaceKey,
-  type SurfacePipelines,
-} from "./RenderContext.ts";
+import { SURFACE_KEYS, type PipelineKey } from "./RenderContext.ts";
 
-type Factory = (key: SurfaceKey) => Promise<GPURenderPipeline>;
+type Factory = (key: PipelineKey) => Promise<GPURenderPipeline>;
 
 interface Entry {
   /** Settles when the shader has compiled: its pipeline factory, or the error. */
   validated: Promise<Factory>;
   factory?: Factory;
   failed: boolean;
-  pipelines: Partial<SurfacePipelines>;
+  pipelines: Partial<Record<PipelineKey, GPURenderPipeline>>;
   /** Pipelines being made. */
-  making: Map<SurfaceKey, Promise<GPURenderPipeline>>;
+  making: Map<PipelineKey, Promise<GPURenderPipeline>>;
   /** Called once when a pipeline asked for is ready (worlds record again). */
   waiting: Set<() => void>;
 }
@@ -43,7 +39,7 @@ export class ShaderCache {
    */
   pipeline(
     shader: CustomShader,
-    key: SurfaceKey,
+    key: PipelineKey,
     ready: () => void,
   ): GPURenderPipeline | undefined {
     const entry = this.entry(shader);
@@ -70,7 +66,7 @@ export class ShaderCache {
     );
   }
 
-  private make(entry: Entry, key: SurfaceKey): Promise<GPURenderPipeline> {
+  private make(entry: Entry, key: PipelineKey): Promise<GPURenderPipeline> {
     const making = entry.factory!(key);
     entry.making.set(key, making);
     making.then(

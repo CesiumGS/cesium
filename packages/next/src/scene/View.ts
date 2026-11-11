@@ -8,6 +8,7 @@ import { type ViewLighting } from "../render/layout.ts";
 import { EARTH, bodyKey, type Body } from "./Body.ts";
 import type { CorePick } from "./pick.ts";
 import type { SceneItem } from "./SceneItem.ts";
+import { MAX_CLIP_SETS, type ClipSet, type WorldClip } from "./world/clips.ts";
 import {
   type RenderTarget,
   type Viewport,
@@ -310,8 +311,58 @@ export class View {
     return this.state.world;
   }
   set world(value: World) {
+    if (this.state.world !== undefined && this.state.world !== value) {
+      // A mask's bits name the old world's clips.
+      this.clipMask_ = 0;
+    }
     this.state.world = value;
     this.wake?.();
+  }
+  private clipMask_ = 0;
+  /**
+   * The clips this view cuts with: a bit per `WorldClip` of its world (the
+   * clip's `bit`), as a draw's `viewMask` names views. 0 (the default) is
+   * none. A view uses at most `MAX_CLIP_SETS` (8) clips. Every fragment stage
+   * that writes color, depth, a shadow, ambient occlusion's prepass or a pick
+   * leaves out what the clips remove; a view without any keeps pipelines
+   * without the test (and early depth).
+   */
+  get clipMask(): number {
+    return this.clipMask_;
+  }
+  set clipMask(mask: number) {
+    if (!Number.isInteger(mask) || mask < 0 || mask > 0xffffffff) {
+      throw new RangeError(
+        `View.clipMask: ${mask} is not a 32-bit mask of clip bits.`,
+      );
+    }
+    const used = this.world.clipSets.inMask(mask).length;
+    if (used > MAX_CLIP_SETS) {
+      throw new RangeError(
+        `View.clipMask: ${used} clips; a view uses at most ${MAX_CLIP_SETS}.`,
+      );
+    }
+    if (mask !== this.clipMask_) {
+      this.clipMask_ = mask >>> 0;
+      this.wake?.();
+    }
+  }
+  /** Sets `clipMask` to these clips (none: no clips). */
+  setClips(clips: readonly WorldClip[]): void {
+    let mask = 0;
+    for (const clip of clips) {
+      if (this.world.clipOf(clip) === undefined) {
+        throw new Error("View.setClips: a clip is not in this view's world.");
+      }
+      mask |= clip.bit;
+    }
+    this.clipMask = mask >>> 0;
+  }
+  /** The clip sets this view cuts with now: those of its mask that are still in the world. */
+  clipSets(): readonly ClipSet[] {
+    return this.clipMask_ === 0
+      ? []
+      : this.world.clipSets.setsInMask(this.clipMask_);
   }
   get viewport(): Viewport {
     return this.state.viewport;

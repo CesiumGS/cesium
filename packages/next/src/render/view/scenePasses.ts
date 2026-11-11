@@ -23,6 +23,7 @@ import {
   SHADOWS_SIZE,
 } from "../../scene/shadows.ts";
 import type { EngineRaster } from "./engineRaster.ts";
+import { encodeClipTable } from "./clipTable.ts";
 
 /** Rasterizer side: pass bodies up to the opaque image. */
 export interface ScenePassEngine extends Pick<
@@ -65,10 +66,15 @@ export function shadowsPass(
     depthStencilAttachment: shadowDepth,
   };
   return (enc) => {
+    // The view's clip table first: every pass of the view that draws, this
+    // one's casters included, reads it.
+    encodeClipTable(engine, enc, frame);
     if (!frame.shadowed) {
       return;
     }
-    const casters = view.world.shadowBundle();
+    const casters =
+      (frame.clipBytes > 0 && view.world.clippedBundle("shadow")) ||
+      view.world.shadowBundle();
     for (let k = 0; k < SHADOW_CASCADES; k++) {
       enc.copyBufferToBuffer(
         engine.raster.cascadeStaging,
@@ -268,7 +274,10 @@ export function prepassPassBody(
     prepassDepthAttachment.view = get(prepassDepth);
     prepassPass.timestampWrites = engine.raster.timer.passWrites("prepass");
     const pass = enc.beginRenderPass(prepassPass);
-    pass.executeBundles([view.world.prepassBundle()]);
+    pass.executeBundles([
+      (frame.clipBytes > 0 && view.world.clippedBundle("prepass")) ||
+        view.world.prepassBundle(),
+    ]);
     pass.end();
   };
 }
@@ -425,7 +434,9 @@ export function opaquePassBody(
     // Its depth first, then its shading where that depth is (each
     // sample shaded once, not every fragment drawn over it).
     if (engine.ctx.pipelines.depthPrepass) {
-      frame.bundles[0] = view.world.depthBundle();
+      frame.bundles[0] =
+        (frame.clipBytes > 0 && view.world.clippedBundle("depth")) ||
+        view.world.depthBundle();
       frame.bundles[1] = frame.bundle!;
     } else {
       frame.bundles[0] = frame.bundle!;

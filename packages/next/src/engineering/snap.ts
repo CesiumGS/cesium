@@ -10,8 +10,13 @@ import { projectToPixel } from "../scene/Camera.ts";
 import type { PickResult } from "../scene/View.ts";
 import type { CoordinateOperation } from "../frames/coordinates.ts";
 import type { SceneItem } from "../scene/SceneItem.ts";
+import { routeMap } from "../scene/warpBounds.ts";
 import type { TileGeometry } from "../streaming/Tile.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
+import { routeForward, type Route } from "../camera/route.ts";
+import { invertAffine } from "../math/mat4.ts";
+import type { DrawnThrough } from "../frames/drawn.ts";
+import type { TruePick } from "../frames/pickTruth.ts";
 import {
   designPoint,
   type DesignPoint,
@@ -25,7 +30,9 @@ import { engineeringPlacement } from "./placement.ts";
  * The camera a snap's pick was read with, and its view's size in CSS
  * pixels: what a server needs to snap as the screen shows it (1.x passes the
  * `Camera` and the canvas size). In the hit's coordinates (body-fixed for
- * content on a body), from the tick the pick read.
+ * content on a body), from the tick the pick read. Under a view warp
+ * (`SnapResult.drawn`) it sees content where the view draws it: a true
+ * point is projected with it through `ServiceSnapRequest.toDrawn`.
  */
 export type SnapCamera = PickCamera;
 
@@ -41,8 +48,11 @@ export interface SnapRequest {
 /** What a snap landed on (1.x `SnapService.Result`, and more). */
 export interface SnapResult {
   /**
-   * The snapped point, the one to use: body-fixed metres, as displayed. With
-   * `design`, the exact design answer, where the placement draws it.
+   * The snapped point, the one to use: body-fixed metres, where the content
+   * is, as its placement displays it. A view that draws the content through
+   * a warp draws it elsewhere (`drawn`, `drawnPosition`); this is the true
+   * point, never inverted from the drawn one. With `design`, the exact
+   * design answer, where the placement draws it.
    */
   readonly snapPoint: Float64Array;
   /**
@@ -109,6 +119,17 @@ export interface SnapResult {
    * not what is drawn in front of it (`refiningSnap`).
    */
   readonly serverOutOfSight?: string;
+  /**
+   * What the view drew the content through, when through a warp
+   * (`drawnThrough`: "drawn ×10 vertically; values are true"). The snap
+   * worked in drawn space (the aperture is pixels on the screen, candidates
+   * go forward through the route for their screen distance) and returns true
+   * points: `snapPoint`, `hitPoint`, `curve` and `normal` are the
+   * content's. Absent when drawn as it is.
+   */
+  readonly drawn?: DrawnThrough;
+  /** Where `snapPoint` is drawn (the view's render space), m, when `drawn`. */
+  readonly drawnPosition?: Float64Array;
 }
 
 /**
@@ -132,6 +153,25 @@ export interface ServiceSnapRequest {
   readonly canvasHeight: number;
   /** The snap tolerance in CSS pixels (1.x `snapAperture`). */
   readonly aperture: number;
+  /**
+   * Where the view draws content through a warp: `camera` sees the content
+   * where it is drawn, so a true point (`testPoint`, `closePoint`, a
+   * candidate) is projected with `camera` after `toDrawn`. Absent when
+   * drawn as it is, where a point is projected as it is.
+   */
+  readonly toDrawn?: (point: ArrayLike<number>) => Float64Array;
+  /**
+   * [σ_min, σ_max] of the view's warp near the hit: a drawn distance over a
+   * true one is at least σ_min and at most σ_max. Divide drawn tolerances
+   * by σ_min to get true ones.
+   */
+  readonly stretch?: readonly [number, number];
+  /**
+   * `aperture` as the most true metres a point within it can be from the
+   * cursor's hit: the aperture's pixels at the hit, over σ_min. The same as
+   * the aperture's size at the hit when drawn as it is.
+   */
+  readonly apertureMeters?: number;
 }
 
 /**
@@ -218,6 +258,112 @@ function drawnGeometry(g: TileGeometry, item: SceneItem): TileGeometry {
 }
 
 /**
+ * What a snap keeps of a view that draws content through a warp: the map
+ * from a true point (the anchor's coordinates) to where the pick's camera
+ * sees it, and the route's stretch there.
+ */
+interface DrawnSnap {
+  readonly toDrawn: (p: ArrayLike<number>) => Float64Array;
+  readonly stretch: readonly [number, number];
+  readonly apertureMeters: number;
+  readonly through: DrawnThrough;
+  readonly route: Route;
+  /** `snapPoint` as drawn: the route's image, render space. */
+  readonly render: (p: ArrayLike<number>) => Float64Array;
+}
+
+/** What each client result under a view warp was found with: read by `refiningSnap` and a server's check, whichever client made it. */
+const DRAWN = new WeakMap<SnapResult, DrawnSnap>();
+
+/** Where the pick's camera sees `point` (a true point of the result's anchor): `point` itself when drawn as it is. */
+function drawnPoint(
+  result: SnapResult,
+  point: ArrayLike<number>,
+): ArrayLike<number> {
+  return DRAWN.get(result)?.toDrawn(point) ?? point;
+}
+
+/** What a server is told of the view's warp: `toDrawn`, `stretch`, `apertureMeters`. */
+function drawnRequest(
+  result: SnapResult,
+): Pick<ServiceSnapRequest, "toDrawn" | "stretch" | "apertureMeters"> {
+  const drawn = DRAWN.get(result);
+  return drawn === undefined
+    ? {}
+    : {
+        toDrawn: drawn.toDrawn,
+        stretch: drawn.stretch,
+        apertureMeters: drawn.apertureMeters,
+      };
+}
+
+/** The hit draw's geometry behind a result, for checking a server's. */
+interface SnapContext {
+  readonly geometry?: TileGeometry;
+  readonly error: number;
+  readonly drawn?: DrawnSnap;
+  /** `geometry` as drawn, made when a server's answer is first checked. */
+  drawnGeometry?: TileGeometry;
+}
+
+function drawnSnapOf(
+  truth: TruePick | undefined,
+  aperture: number,
+): DrawnSnap | undefined {
+  const route = truth?.route;
+  if (truth === undefined || route === undefined || truth.drawn === undefined) {
+    return undefined;
+  }
+  // The pick's camera is the render camera in the anchor's affine
+  // coordinates: the drawn point goes there the way the camera did.
+  const after = truth.placement
+    ? invertAffine(new Float64Array(16), truth.placement)
+    : undefined;
+  const map = routeMap(route, after);
+  return {
+    toDrawn: (p) => map(p, new Float64Array(3)),
+    render: (p) => routeForward(route, p),
+    stretch: truth.drawn.stretch ?? [1, 1],
+    apertureMeters: aperture * truth.trueFootprint,
+    through: truth.drawn,
+    route,
+  };
+}
+
+/** `g` as the view draws it: vertices through `toDrawn`, in the camera's coordinates. */
+function geometryAsDrawn(
+  g: TileGeometry,
+  toDrawn: (p: ArrayLike<number>) => Float64Array,
+): TileGeometry {
+  const { positions, matrix: m } = g;
+  const count = Math.floor(positions.length / 3);
+  const drawn = new Float64Array(3 * count);
+  const p = new Float64Array(3);
+  for (let v = 0; v < count; v++) {
+    const x = positions[3 * v]!,
+      y = positions[3 * v + 1]!,
+      z = positions[3 * v + 2]!;
+    p[0] = m[0]! * x + m[4]! * y + m[8]! * z + m[12]!;
+    p[1] = m[1]! * x + m[5]! * y + m[9]! * z + m[13]!;
+    p[2] = m[2]! * x + m[6]! * y + m[10]! * z + m[14]!;
+    drawn.set(toDrawn(p), 3 * v);
+  }
+  // Relative to the first vertex's drawn place, which the matrix carries, so
+  // float32 positions keep their precision at Earth scale.
+  const origin = drawn.slice(0, 3);
+  const local = new Float32Array(3 * count);
+  for (let v = 0; v < count; v++) {
+    for (let k = 0; k < 3; k++) {
+      local[3 * v + k] = drawn[3 * v + k]! - origin[k]!;
+    }
+  }
+  const matrix = new Float64Array(16);
+  matrix[0] = matrix[5] = matrix[10] = matrix[15] = 1;
+  matrix.set(origin, 12);
+  return { ...g, positions: local, matrix };
+}
+
+/**
  * The client side (1.x `Scene#snap`), on the CPU over the triangles tiles
  * keep with `retainGeometry` until plan 5's GPU snap pass replaces it. From
  * `pickDesign`'s hit, the hit draw's vertices are projected with the camera
@@ -227,6 +373,13 @@ function drawnGeometry(g: TileGeometry, item: SceneItem): TileGeometry {
  * tile's mesh, which stands for the true geometry within the tile's
  * geometric error: that is the tolerance (a geometric error of 0 is taken at
  * its word), and no client snap is exact.
+ *
+ * Where the view draws the content through a warp (a vertical exaggeration,
+ * a reprojection) the snap works in what is drawn and answers in what is
+ * true: the aperture is pixels on the screen, so each vertex goes forward
+ * through the route for its screen distance and for the sight tests, and the
+ * point returned is the vertex (or the edge's point at the same parameter)
+ * of the true mesh, in float64, never inverted. `SnapResult.drawn` says so.
  *
  * A vertex or edge point the hit draw's own triangles hide from the camera
  * (the line of sight crosses one of them before reaching it) is passed over
@@ -243,25 +396,32 @@ export class ClientSnapService {
    */
   private readonly scratch = new Scratch();
   /** The hit draw's geometry behind each result, for checking a server's. */
-  private readonly context = new WeakMap<
-    SnapResult,
-    { geometry: TileGeometry; error: number }
-  >();
+  private readonly context = new WeakMap<SnapResult, SnapContext>();
 
   constructor(readonly tilesets: readonly Tileset3D[]) {}
 
   /**
-   * @internal Whether the hit draw behind a result of this service hides
-   * `point` from the result's camera, by more than the tile's geometric
-   * error (and a millimetre). False when that draw kept no geometry.
+   * @internal Whether the hit draw, as it is drawn, hides `point` (a true
+   * point) from the result's camera, by more than the tile's geometric
+   * error (drawn: at most σ_max times it) and a millimetre. False when that
+   * draw kept no geometry.
    */
   hides(result: SnapResult, point: ArrayLike<number>): boolean {
     const context = this.context.get(result);
     const camera = result.camera;
-    return (
-      context !== undefined &&
-      camera !== undefined &&
-      hiddenFrom(context.geometry, camera, point, context.error + 1e-3)
+    if (context?.geometry === undefined || camera === undefined) {
+      return false;
+    }
+    const drawn = context.drawn;
+    if (drawn === undefined) {
+      return hiddenFrom(context.geometry, camera, point, context.error + 1e-3);
+    }
+    context.drawnGeometry ??= geometryAsDrawn(context.geometry, drawn.toDrawn);
+    return hiddenFrom(
+      context.drawnGeometry,
+      camera,
+      drawn.toDrawn(point),
+      context.error * drawn.stretch[1] + 1e-3,
     );
   }
 
@@ -272,9 +432,10 @@ export class ClientSnapService {
     if (framed === undefined) {
       return undefined;
     }
-    const { pick, camera, draw, tile } = framed;
+    const { pick, camera, draw, tile, truth } = framed;
     const tileset = pick.tileset;
     const hitPoint = pick.position;
+    const drawn = drawnSnapOf(truth, aperture);
     const common = {
       hitPoint,
       exact: false,
@@ -284,21 +445,42 @@ export class ClientSnapService {
       ...(pick.item !== undefined && { item: pick.item }),
       ...(pick.feature !== undefined && { feature: pick.feature }),
       ...(camera !== undefined && { camera }),
+      ...(drawn !== undefined && { drawn: drawn.through }),
     } as const;
-    const surface = (tolerance: number): SnapResult => ({
-      ...common,
-      snapPoint: Float64Array.from(hitPoint),
-      distance: 0,
-      kind: "surface",
-      ...(pick.design !== undefined && {
-        design: designPoint(pick.design.engineeringFrame, pick.design.design, {
-          how: "snap",
-          tolerance,
-          kind: "surface",
+    /** A result, with where it is drawn when the view warps. */
+    const shown = (result: SnapResult): SnapResult => {
+      const out =
+        drawn === undefined
+          ? result
+          : { ...result, drawnPosition: drawn.render(result.snapPoint) };
+      this.context.set(out, {
+        error: tile?.geometricError ?? 0,
+        ...(drawn !== undefined && { drawn }),
+      });
+      if (drawn !== undefined) {
+        DRAWN.set(out, drawn);
+      }
+      return out;
+    };
+    const surface = (tolerance: number): SnapResult =>
+      shown({
+        ...common,
+        snapPoint: Float64Array.from(hitPoint),
+        distance: 0,
+        kind: "surface",
+        ...(pick.design !== undefined && {
+          design: designPoint(
+            pick.design.engineeringFrame,
+            pick.design.design,
+            {
+              how: "snap",
+              tolerance,
+              kind: "surface",
+            },
+          ),
         }),
-      }),
-      tolerance,
-    });
+        tolerance,
+      });
     if (
       camera === undefined ||
       tileset === undefined ||
@@ -327,10 +509,22 @@ export class ClientSnapService {
     const found =
       geometry === undefined
         ? undefined
-        : nearest(geometry, camera, x, y, aperture, this.scratch);
+        : nearest(
+            geometry,
+            camera,
+            x,
+            y,
+            aperture,
+            this.scratch,
+            drawn?.toDrawn,
+          );
     const kept = (result: SnapResult): SnapResult => {
       if (geometry !== undefined) {
-        this.context.set(result, { geometry, error: tile.geometricError });
+        this.context.set(result, {
+          geometry,
+          error: tile.geometricError,
+          ...(drawn !== undefined && { drawn }),
+        });
       }
       return result;
     };
@@ -341,23 +535,25 @@ export class ClientSnapService {
     const placement = engineeringPlacement(
       pick.item !== undefined ? pick.item.designPlacement : tileset.placement,
     );
-    return kept({
-      ...common,
-      snapPoint: found.point,
-      distance: found.distance,
-      kind: found.kind,
-      ...(found.normal !== undefined && { normal: found.normal }),
-      ...(found.curve !== undefined && { curve: found.curve }),
-      ...(pick.design !== undefined &&
-        placement !== undefined && {
-          design: designPoint(
-            placement.frame,
-            placement.designOf(found.point),
-            { how: "snap", tolerance, kind: found.kind },
-          ),
-        }),
-      tolerance,
-    });
+    return kept(
+      shown({
+        ...common,
+        snapPoint: found.point,
+        distance: found.distance,
+        kind: found.kind,
+        ...(found.normal !== undefined && { normal: found.normal }),
+        ...(found.curve !== undefined && { curve: found.curve }),
+        ...(pick.design !== undefined &&
+          placement !== undefined && {
+            design: designPoint(
+              placement.frame,
+              placement.designOf(found.point),
+              { how: "snap", tolerance, kind: found.kind },
+            ),
+          }),
+        tolerance,
+      }),
+    );
   }
 }
 
@@ -464,6 +660,7 @@ export async function refiningSnap(
         canvasWidth: camera.width,
         canvasHeight: camera.height,
         aperture: request.aperture,
+        ...drawnRequest(found),
       },
       signal,
     );
@@ -486,16 +683,22 @@ export async function refiningSnap(
         // The client's feature and camera, never the server's.
         const { feature: ignored, ...rest } = answer;
         void ignored;
+        const render = DRAWN.get(found)?.render(answer.snapPoint);
         refined = {
           ...rest,
           hitPoint: answer.hitPoint ?? found.hitPoint,
           distance: cursorDistance(
             camera,
-            answer.shownPoint ?? answer.snapPoint,
+            drawnPoint(found, answer.shownPoint ?? answer.snapPoint),
             request,
           ),
           tileset: answer.tileset ?? tileset,
           ...(found.item !== undefined && { item: found.item }),
+          ...(found.drawn !== undefined &&
+            render !== undefined && {
+              drawn: found.drawn,
+              drawnPosition: render,
+            }),
           source: "server",
           provisional: false,
           ...(found.feature !== undefined && { feature: found.feature }),
@@ -631,7 +834,7 @@ function refusal(
     r.shownPoint !== undefined
       ? [r.shownPoint, "shownPoint"]
       : [r.snapPoint, "snapPoint"];
-  const distance = cursorDistance(camera, shown, request);
+  const distance = cursorDistance(camera, drawnPoint(found, shown), request);
   if (Number.isNaN(distance)) {
     return `${name} behind the camera or nearer than its near plane`;
   }
@@ -790,6 +993,7 @@ function nearest(
   cy: number,
   aperture: number,
   s: Scratch,
+  toDrawn?: (p: ArrayLike<number>) => Float64Array,
 ): Found | undefined {
   const { positions, indices, matrix: m } = g;
   const count = Math.floor(positions.length / 3);
@@ -823,9 +1027,19 @@ function nearest(
     const x = positions[3 * v]!,
       y = positions[3 * v + 1]!,
       z = positions[3 * v + 2]!;
-    const px = m[0]! * x + m[4]! * y + m[8]! * z + tx,
-      py = m[1]! * x + m[5]! * y + m[9]! * z + ty,
+    let px: number, py: number, pz: number;
+    if (toDrawn) {
+      // Where the view draws the vertex, in the camera's coordinates: the
+      // aperture is on the screen. The vertex itself stays true.
+      const d = toDrawn(absolute(v));
+      px = d[0]! - e[0]!;
+      py = d[1]! - e[1]!;
+      pz = d[2]! - e[2]!;
+    } else {
+      px = m[0]! * x + m[4]! * y + m[8]! * z + tx;
+      py = m[1]! * x + m[5]! * y + m[9]! * z + ty;
       pz = m[2]! * x + m[6]! * y + m[10]! * z + tz;
+    }
     rel[3 * v] = px;
     rel[3 * v + 1] = py;
     rel[3 * v + 2] = pz;
@@ -1043,14 +1257,43 @@ function nearest(
       }
       // The eye is at 0: facing it is a negative dot with p.
       const facing = n[0]! * p[0]! + n[1]! * p[1]! + n[2]! * p[2]! < 0;
+      // Which way the triangle faces is as it is drawn; its normal is the
+      // true triangle's, wound as drawn.
+      const normal = toDrawn
+        ? trueNormal(indices[t]!, indices[t + 1]!, indices[t + 2]!)
+        : n;
+      const size = toDrawn
+        ? Math.hypot(normal[0]!, normal[1]!, normal[2]!)
+        : length;
+      if (!(size > 0)) {
+        continue;
+      }
       for (let k = 0; k < 3; k++) {
-        n[k] = (n[k]! / length) * (facing ? 1 : -1);
+        normal[k] = (normal[k]! / size) * (facing ? 1 : -1);
       }
       if (facing) {
-        return { ...found, normal: n };
+        return { ...found, normal };
       }
-      fallback ??= n;
+      fallback ??= normal;
     }
     return fallback === undefined ? found : { ...found, normal: fallback };
+  }
+
+  /** The (unnormalized) normal of the true triangle of vertices a, b, c, in float64. */
+  function trueNormal(a: number, b: number, c: number): Float64Array {
+    const A = absolute(a),
+      B = absolute(b),
+      C = absolute(c);
+    const ux = B[0]! - A[0]!,
+      uy = B[1]! - A[1]!,
+      uz = B[2]! - A[2]!;
+    const vx = C[0]! - A[0]!,
+      vy = C[1]! - A[1]!,
+      vz = C[2]! - A[2]!;
+    return Float64Array.from([
+      uy * vz - uz * vy,
+      uz * vx - ux * vz,
+      ux * vy - uy * vx,
+    ]);
   }
 }

@@ -32,6 +32,9 @@ import { Camera } from "./Camera.ts";
 import { SHADOW_CASCADES, SHADOWS_STRIDE } from "./shadows.ts";
 import { LIGHTS_SIZE } from "./lights.ts";
 import { World } from "./World.ts";
+import type { FrameKey } from "../camera/frameResolver.ts";
+import type { ClipFilter } from "../geometry/query.ts";
+import { clipFilter, clipSetsOf, type ClipsOption } from "./world/clips.ts";
 import { WARP_BUDGET_MS } from "./world/warps.ts";
 import { type AnchorHandle, type WorldOptions } from "./world/types.ts";
 import { CameraLayer } from "../camera/CameraLayer.ts";
@@ -974,6 +977,26 @@ export class Engine {
       entry.tick = this.scene.cameraTick;
     }
     return entry.camera;
+  }
+
+  /**
+   * A float64 test of points in `frame` (default: the view's body anchor,
+   * where Earth-fixed content and its queries are) against clips, for the
+   * geometry queries' `clips` option (`RayHitOptions.clips`): `clips` is the
+   * view's (the default, for picks and snaps), a `ClipSet` or list of them,
+   * or `"none"` (for world questions: distance, clearance, line of sight).
+   * Each point is routed into each set's own frame at the scene time. Undefined
+   * when there is nothing to test.
+   */
+  clipFilter(
+    view: View,
+    options: { clips?: ClipsOption; frame?: FrameKey } = {},
+  ): ClipFilter | undefined {
+    return clipFilter(clipSetsOf(options.clips, view.clipSets(), "view"), {
+      resolver: this.cameras.resolver(view.world),
+      frame: options.frame ?? view.bodyAnchor ?? view.world.root,
+      seconds: this.cameras.clock(view.world)?.seconds ?? 0,
+    });
   }
 
   /**

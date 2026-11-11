@@ -21,6 +21,7 @@ import {
   type WarningCode,
 } from "./accuracy.ts";
 import { downlinkWithSolution, uplink, type Leg } from "./doppler.ts";
+import { requireTrueFrame, type DrawnThrough } from "../frames/drawn.ts";
 import { lineOfSight } from "./lineOfSight.ts";
 import type { ShapiroBody } from "./lightTime.ts";
 import { surfaceDistance } from "./surface.ts";
@@ -43,6 +44,16 @@ export interface MeasureOptions {
    * points in the same frame; throws when the frame has no such alignment.
    */
   readonly alignment?: string;
+  /**
+   * What the view drew the points' content through (`drawnThrough` of the
+   * hit anchor's route, as a pick, a snap or `FramedPoint.drawn` gives it):
+   * the result repeats it as `Measurement.drawn`, so a reader is told when
+   * what was on the screen was exaggerated. The values are true whatever
+   * it says: a measurement is never in a presentation frame (`measure`
+   * throws `PresentationRouteError` for a point in one; `drawnDistance` is
+   * the question about the drawing).
+   */
+  readonly drawn?: DrawnThrough;
 }
 
 /** A point for `measure`: in a frame, or in an engineering frame's design coordinates. */
@@ -86,6 +97,18 @@ export interface AlignmentMeasurement {
 export interface Measurement {
   /** The instant the measurement is for. */
   readonly instant: Instant;
+  /**
+   * The frame the values are in: `a`'s, a true frame (never a presentation
+   * frame: one is refused). `distance` and `overBody` are in it.
+   */
+  readonly frame: Frame;
+  /**
+   * Present when options said what the view drew the content through
+   * (`MeasureOptions.drawn`): whether it drew it exaggerated or reprojected.
+   * `drawn.statement` is words for a readout ("drawn ×10 vertically; values
+   * are true"). The measurement's values are true either way.
+   */
+  readonly drawn?: DrawnThrough;
   /** The straight-line distance between the points at `instant`, m, in `a`'s frame. */
   readonly distance: number;
   /** The vector b − a in `deltaFrame`'s axes, m (a vector: only the rotation applies). */
@@ -298,6 +321,8 @@ function measureWith(
   checkInputs("measure", pointA, pointB, options);
   const a = resolvePoint(pointA, frames);
   const b = resolvePoint(pointB, frames);
+  requireTrueFrame("measure", a.frame);
+  requireTrueFrame("measure", b.frame);
   const deltaFrame = options.deltaFrame ?? a.frame;
   const pa = convertPoint(a, a.frame, instant).position;
   const pb = convertPoint(b, a.frame, instant).position;
@@ -414,6 +439,8 @@ function measureWith(
   accuracy.warningCodes = [...(accuracy.warningCodes ?? []), ...warningCodes];
   return {
     instant,
+    frame: a.frame,
+    ...(options.drawn !== undefined && { drawn: options.drawn }),
     distance: coincident ? 0 : separation,
     delta,
     deltaFrame,
