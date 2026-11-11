@@ -75,11 +75,18 @@ export const KERNELS: readonly KernelName[] = ["SMLib", "Open CASCADE"];
 
 /** The one Open CASCADE module, loaded on first use and shared by the scenes. */
 let occtLoad: Promise<OcctKernel> | undefined;
+let occtReady = false;
 function loadOcct(): Promise<OcctKernel> {
-  occtLoad ??= OcctKernel.load().catch((error: unknown) => {
-    occtLoad = undefined;
-    throw error;
-  });
+  occtLoad ??= OcctKernel.load().then(
+    (kernel) => {
+      occtReady = true;
+      return kernel;
+    },
+    (error: unknown) => {
+      occtLoad = undefined;
+      throw error;
+    },
+  );
   return occtLoad;
 }
 
@@ -169,8 +176,13 @@ function occtRunner(kernel: OcctKernel): Runner {
   };
 }
 
+/** Called as a load moves to its next stage; awaited, so a caller can let the browser paint the stage before the work that blocks. */
+export type StageReporter = (stage: string) => void | Promise<void>;
+
 /** Loads both kernels and makes every recipe in each. Never throws: failures are in the results. */
-export async function runKernels(): Promise<{
+export async function runKernels(
+  stage: StageReporter = () => undefined,
+): Promise<{
   loads: KernelLoad[];
   results: KernelResult[];
 }> {
@@ -181,6 +193,7 @@ export async function runKernels(): Promise<{
   const loads: KernelLoad[] = [];
   const results: KernelResult[] = [];
   // Both modules download at once; each then runs on its own.
+  await stage("Loading SMLib and Open CASCADE…");
   const loaded = await Promise.all(
     KERNELS.map(async (kernel) => {
       const start = performance.now();
@@ -198,18 +211,19 @@ export async function runKernels(): Promise<{
     }),
   );
   for (const recipe of RECIPES) {
-    KERNELS.forEach((kernel, k) => {
+    for (const [k, kernel] of KERNELS.entries()) {
       const runner = loaded[k];
       if (!runner) {
         results.push({ kernel, recipe, problem: "not loaded" });
-        return;
+        continue;
       }
+      await stage(`${kernel}: ${recipe.name}…`);
       try {
         results.push({ kernel, recipe, ...runner.run(recipe) });
       } catch (error) {
         results.push({ kernel, recipe, problem: String(error) });
       }
-    });
+    }
   }
   loads.sort((a, b) => KERNELS.indexOf(a.kernel) - KERNELS.indexOf(b.kernel));
   return { loads, results };
@@ -259,6 +273,8 @@ export interface StepImport {
   bytes: number;
   forms: BrepForm[];
   fetchMs: number;
+  /** Loading the Open CASCADE module: 0 once it was loaded. */
+  loadMs: number;
   importMs: number;
   /** All the solids, together. */
   convertMs: number;
@@ -273,7 +289,11 @@ export type StepLoad = StepImport | { problem: string };
  * forms (in metres, whatever the file's units) and then freed, as the forms
  * are their own copy.
  */
-export async function loadStep(file: string): Promise<StepLoad> {
+export async function loadStep(
+  file: string,
+  stage: StageReporter = () => undefined,
+): Promise<StepLoad> {
+  await stage(`Fetching ${file}…`);
   let start = performance.now();
   let bytes: Uint8Array;
   try {
@@ -294,18 +314,29 @@ export async function loadStep(file: string): Promise<StepLoad> {
   }
   const fetchMs = performance.now() - start;
   let kernel: OcctKernel;
+  const loaded = occtReady;
+  start = performance.now();
   try {
+    if (!loaded) {
+      await stage("Loading Open CASCADE…");
+    }
     kernel = await loadOcct();
   } catch (error) {
     return {
       problem: `Open CASCADE didn't load (${String(error)}); npm run setup fetches it, and the dev server serves it`,
     };
   }
+  const loadMs = loaded ? 0 : performance.now() - start;
   let solids: OcctSolid[] = [];
   try {
+    // Both steps block the page: the stage is shown before each starts.
+    await stage("Importing STEP…");
     start = performance.now();
     solids = kernel.importStep(bytes);
     const importMs = performance.now() - start;
+    await stage(
+      `Converting ${solids.length} ${solids.length === 1 ? "solid" : "solids"} to B-reps…`,
+    );
     start = performance.now();
     const forms = solids.map((solid) => kernel.toForm(solid).form);
     return {
@@ -313,6 +344,7 @@ export async function loadStep(file: string): Promise<StepLoad> {
       bytes: bytes.length,
       forms,
       fetchMs,
+      loadMs,
       importMs,
       convertMs: performance.now() - start,
     };

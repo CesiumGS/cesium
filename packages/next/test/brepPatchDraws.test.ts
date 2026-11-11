@@ -235,6 +235,30 @@ describe("World.addBrep", () => {
     world.destroy();
   });
 
+  it("marks a patch draw diced only once a cull pass has run its dice, and reads that back with the counts", async () => {
+    const world = engine.createWorld(options);
+    const brep = world.addBrep(boxBrep());
+    const draw = world.raster.patchDraws.get(brep.patches!.index)!;
+    // Added, not yet in any frame: its counts are zero because nothing has run, not because nothing is in view.
+    expect(draw.diced).toBe(false);
+    const g = globalThis as Record<string, unknown>;
+    g.GPUMapMode ??= { READ: 1, WRITE: 2 };
+    const [before] = await world.readPatchStats();
+    expect(before).toMatchObject({ record: brep.patches!.index, cells: 0 });
+    expect(before!.diced).toBe(false);
+    world.prepareFrame();
+    world.encodeCull(recordingEncoder([]), undefined, false);
+    expect(draw.diced).toBe(true);
+    const [after] = await world.readPatchStats();
+    expect(after!.diced).toBe(true);
+    // A view that shows none of it dices nothing: cleared and not marked.
+    draw.batch.shown = 0;
+    world.encodeCull(recordingEncoder([]), undefined, false);
+    expect(draw.diced).toBe(false);
+    world.removeBrep(brep);
+    world.destroy();
+  });
+
   it("refuses an option that doesn't fit, and takes nothing", () => {
     const world = engine.createWorld(options);
     const before = world.arenaBytes;

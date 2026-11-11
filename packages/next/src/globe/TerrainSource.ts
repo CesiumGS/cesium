@@ -61,6 +61,11 @@ export type TerrainLoader = (
     /** Meters; an upsampled tile's per edge: west, south, east, north. */
     skirtHeight: number | readonly number[];
     /**
+     * The tile also carries `h·n̂` per vertex (`HEIGHT_NORMAL_ATTRIBUTE`),
+     * for a globe drawn under a height-scale warp.
+     */
+    heightNormal?: boolean;
+    /**
      * A tile below the last level with data: clipped from the nearest tile
      * with data, over `rect`, from its `heights`, or, once they have left
      * the cache, from its content at `url`.
@@ -138,6 +143,12 @@ export class TerrainSource {
   /** The ellipsoid: every tile exists, generated rather than fetched. */
   readonly flat: boolean;
   private readonly levelZeroError: number;
+  /**
+   * Whether tiles loaded now carry `h·n̂` (`HEIGHT_NORMAL_ATTRIBUTE`): set by
+   * the globe drawn from this source, which asks its world whether its
+   * anchor's route is a height-scale warp (scene/world/warps.ts).
+   */
+  wantsHeightNormal?: () => boolean;
 
   private constructor(
     readonly url: string,
@@ -534,6 +545,7 @@ export class TerrainSource {
         ...(this.headers ? { headers: this.headers } : {}),
         rect: rectangle(a),
         skirtHeight,
+        ...(this.wantsHeightNormal?.() ? { heightNormal: true } : {}),
         ...(data
           ? {
               upsample: {

@@ -476,6 +476,8 @@ export interface PatchDraw {
   chunks: GPUBuffer;
   /** What the view's dice made (shaders/dice.slang `stats`): 4 words, read back by `readPatchStats`. */
   stats: GPUBuffer;
+  /** Whether the last cull pass encoded dispatched the draw's dice: false until a frame is encoded after the draw is added, and while no view shows it. */
+  diced: boolean;
   capacity: number;
   group: GPUBindGroup;
   errorPixels: number;

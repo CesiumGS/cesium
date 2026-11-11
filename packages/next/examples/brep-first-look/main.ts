@@ -58,6 +58,7 @@ import {
   runKernels,
   type KernelLoad,
   type KernelResult,
+  type StageReporter,
   type StepImport,
   type StepSample,
 } from "./kernels.ts";
@@ -261,8 +262,38 @@ const TOOLBAR_CSS = `
 .bf-toolbar button:focus-visible::after { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .bf-toolbar button::after { transition: none; }
+  .bf-spinner { animation: none; }
+  .bf-view canvas { transition: none; }
 }
 .bf-view:focus-visible { outline: 2px solid var(--cesium-ui-focus, Highlight); outline-offset: -2px; }
+
+/* A load in progress: the view dims behind a card that names the stage. */
+.bf-view canvas { transition: opacity 160ms; }
+.bf-view[data-loading] canvas { opacity: 0.5; }
+.bf-loading {
+  position: absolute; inset: 0; z-index: 3;
+  display: grid; place-items: center; pointer-events: none;
+}
+.bf-loading[hidden] { display: none; }
+.bf-loading > div {
+  display: flex; align-items: center; gap: 10px;
+  max-width: calc(100% - 24px); padding: 10px 16px;
+  border-radius: 8px;
+  background: color-mix(in oklab, Canvas 88%, transparent);
+  color: CanvasText;
+  border: 1px solid color-mix(in oklab, CanvasText 18%, transparent);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
+  backdrop-filter: blur(8px);
+  font: 400 13px/18px var(--cesium-ui-font, system-ui, sans-serif);
+}
+.bf-spinner {
+  flex: none; width: 16px; height: 16px; box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid color-mix(in oklab, CanvasText 22%, transparent);
+  border-top-color: var(--cesium-ui-accent, AccentColor);
+  animation: bf-spin 0.8s linear infinite;
+}
+@keyframes bf-spin { to { transform: rotate(360deg); } }
 
 /* The panel: a scene switch, compact toggles and tables. */
 .bf-segmented {
@@ -615,8 +646,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   let kernelScene:
     | { shapes: Shape[]; loads: KernelLoad[]; results: KernelResult[] }
     | undefined;
-  const makeKernelScene = async () => {
-    const { loads, results } = await runKernels();
+  const makeKernelScene = async (stage: StageReporter) => {
+    const { loads, results } = await runKernels(stage);
     const shapes: Shape[] = [];
     for (const result of results) {
       if (!result.form) {
@@ -654,15 +685,23 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   let stepChoice = 0;
   // A NIST part, fetched and imported with Open CASCADE, drawn alone in the
   // middle at a scale of its own.
-  const makeStepScene = async (sample: StepSample): Promise<StepScene> => {
+  const makeStepScene = async (
+    sample: StepSample,
+    stage: StageReporter,
+  ): Promise<StepScene> => {
     const none = { height: 1, radius: 3 };
-    const load = await loadStep(sample.file);
+    const load = await loadStep(sample.file, stage);
     if ("problem" in load) {
       return { sample, shapes: [], problem: load.problem, framing: none };
     }
     try {
       // A coarse tessellation, only to size the part.
+      await stage("Measuring the part…");
+      const start = performance.now();
       const { min, max } = unionBounds(load.forms.map(coarseBounds));
+      console.info(
+        `brep-first-look: ${sample.name} measured in ${(performance.now() - start).toFixed(0)} ms`,
+      );
       const size = [0, 1, 2].map((k) => max[k]! - min[k]!);
       const longest = Math.max(...size);
       const scale = longest > 0 ? STEP_SIZE / longest : 1;
@@ -1163,7 +1202,11 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           addGpuFaces(shape, lift);
         }
         const made = breps.find((b) => b.shape === shape);
-        for (const draw of [made?.handle.patches, made?.handle.mesh]) {
+        for (const draw of [
+          made?.handle.patches,
+          made?.handle.trimmed,
+          made?.handle.mesh,
+        ]) {
           if (draw) {
             parts.set(draw.index, { shape, kind: "face" });
           }
@@ -1365,7 +1408,18 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     showStats();
   };
   syncButtons();
-  view_.append(style, toolbar);
+  const loadingText = el("span");
+  const loading = el(
+    "div",
+    { className: "bf-loading", role: "status", hidden: true },
+    el(
+      "div",
+      {},
+      el("span", { className: "bf-spinner", ariaHidden: "true" }),
+      loadingText,
+    ),
+  );
+  view_.append(style, toolbar, loading);
   const onKey = (event: KeyboardEvent) => {
     if (event.key === "Escape") {
       clearSelection();
@@ -1456,8 +1510,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       settings.pixels = pixelsOf(Number(pixelsInput.value));
       pixelsOut.textContent = px(settings.pixels);
       for (const { handle } of breps) {
-        if (handle.patches) {
-          world.setPatchErrorPixels(handle.patches, settings.pixels);
+        for (const draw of [handle.patches, handle.trimmed]) {
+          if (draw) {
+            world.setPatchErrorPixels(draw, settings.pixels);
+          }
         }
       }
       showStats();
@@ -1530,8 +1586,14 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     world
       .readPatchStats()
       .then((draws) => {
+        const diced = draws.filter((d) => d.diced);
+        if (diced.length === 0) {
+          gpuCountsOut.textContent =
+            "no view has diced these yet (waiting for a frame, or none shows them)";
+          return;
+        }
         const sum = (f: (d: (typeof draws)[number]) => number) =>
-          draws.reduce((n, d) => n + f(d), 0);
+          diced.reduce((n, d) => n + f(d), 0);
         const cells = sum((d) => d.cells);
         gpuCountsOut.textContent =
           cells > 0
@@ -1958,7 +2020,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       ...row("Drawn by", stepDrawnOut),
       ...row(
         "Times",
-        `fetch ${ms(load.fetchMs)}, import ${ms(load.importMs)}, convert ${ms(load.convertMs)}, `,
+        `${load.loadMs > 0 ? `load Open CASCADE ${ms(load.loadMs)}, ` : ""}fetch ${ms(load.fetchMs)}, import ${ms(load.importMs)}, convert ${ms(load.convertMs)}, `,
         stepTessellateOut,
       ),
     );
@@ -2087,37 +2149,106 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     showStats();
     frame();
   };
+  /** Lets the browser paint before the work that follows blocks it; a hidden tab never paints, so it only waits a moment. */
+  const nextPaint = () =>
+    new Promise<void>((resolve) => {
+      const timer = setTimeout(resolve, 150);
+      requestAnimationFrame(() =>
+        setTimeout(() => {
+          clearTimeout(timer);
+          resolve();
+        }),
+      );
+    });
+  /** Names the load's stage on the view and waits for it to be painted. */
+  const reportStage: StageReporter = async (text) => {
+    loadingText.textContent = text;
+    await nextPaint();
+  };
+  /**
+   * Runs a load behind the overlay: the controls off, the view dimmed (the
+   * scene it shows stays until the new one replaces it) and a card naming
+   * the stage the load is in.
+   */
+  const loadScene = async (work: (stage: StageReporter) => Promise<void>) => {
+    busy(true);
+    view_.dataset.loading = "";
+    loading.hidden = false;
+    try {
+      await work(reportStage);
+    } finally {
+      loading.hidden = true;
+      delete view_.dataset.loading;
+      busy(false);
+    }
+  };
+  const facesOf = (list: Shape[]) =>
+    list.reduce((n, shape) => n + shape.form.faceSurface.length, 0);
+  /** `show`, timed and logged, then the wait for the new scene's first frame, which the overlay covers. */
+  const showLoaded = async (next: SceneName, label: string) => {
+    const start = performance.now();
+    show(next);
+    const shownMs = performance.now() - start;
+    await nextPaint();
+    console.info(
+      `brep-first-look: ${label} shown in ${shownMs.toFixed(0)} ms (GPU prepare ${stats.gpu.prepareMs.toFixed(0)} ms, edges and bounds ${stats.ms.toFixed(0)} ms), first frame after ${(performance.now() - start - shownMs).toFixed(0)} ms more`,
+    );
+  };
   /** Imports one of NIST's parts and shows it: the first one loads Open CASCADE. */
   const showStep = async (index: number) => {
     const sample = STEP_SAMPLES[index]!;
-    busy(true);
     sceneNote.textContent = `Importing ${sample.name} with Open CASCADE (about 23 MB to load the first time)…`;
-    const made = await makeStepScene(sample);
-    busy(false);
-    if (signal.aborted) {
-      return;
-    }
-    stepChoice = index;
-    stepSelect.value = String(index);
-    stepScene = made;
-    show("step");
+    await loadScene(async (stage) => {
+      const made = await makeStepScene(sample, stage);
+      if (signal.aborted) {
+        return;
+      }
+      stepChoice = index;
+      stepSelect.value = String(index);
+      stepScene = made;
+      if (made.load) {
+        const { load } = made;
+        console.info(
+          `brep-first-look: ${sample.name}: load Open CASCADE ${load.loadMs.toFixed(0)} ms, fetch ${load.fetchMs.toFixed(0)} ms, import ${load.importMs.toFixed(0)} ms, convert ${load.convertMs.toFixed(0)} ms`,
+        );
+        await stage(`Preparing ${facesOf(made.shapes)} faces for the GPU…`);
+        if (signal.aborted) {
+          return;
+        }
+      }
+      await showLoaded("step", sample.name);
+    });
   };
   const setScene = async (next: SceneName) => {
     if (next === scene) {
       return;
     }
-    if (next === "kernels" && !kernelScene) {
-      busy(true);
-      sceneNote.textContent =
-        "Loading SMLib and Open CASCADE (about 28 MB the first time)…";
-      kernelScene = await makeKernelScene();
-      busy(false);
-      if (signal.aborted) {
-        return;
-      }
-    }
     if (next === "step") {
       await showStep(stepChoice);
+      return;
+    }
+    if (next === "kernels") {
+      await loadScene(async (stage) => {
+        if (!kernelScene) {
+          sceneNote.textContent =
+            "Loading SMLib and Open CASCADE (about 28 MB the first time)…";
+          const start = performance.now();
+          kernelScene = await makeKernelScene(stage);
+          console.info(
+            `brep-first-look: kernels loaded and run in ${(performance.now() - start).toFixed(0)} ms`,
+          );
+        }
+        if (signal.aborted) {
+          return;
+        }
+        await stage(
+          `Preparing ${facesOf(kernelScene.shapes)} faces for the GPU…`,
+        );
+        if (signal.aborted) {
+          return;
+        }
+        await showLoaded("kernels", "Two kernels");
+      });
       return;
     }
     show(next);
@@ -2399,6 +2530,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     }
     style.remove();
     toolbar.remove();
+    loading.remove();
+    delete view_.dataset.loading;
     clearInterval(gpuTimer);
     releaseBreps();
     for (const d of [...draws, ...selectionDraws, ...extras]) {

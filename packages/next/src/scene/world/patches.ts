@@ -169,6 +169,7 @@ export function createPatchDraw(
         GPUBufferUsage.COPY_SRC |
         GPUBufferUsage.COPY_DST,
     }),
+    diced: false,
     capacity,
     group: undefined as never,
     errorPixels: mesh.patches.errorPixels,
@@ -210,6 +211,12 @@ export function releasePatchDraw(draw: PatchDraw): void {
 export interface PatchDrawStats {
   /** The draw's record (`DrawHandle.index`). */
   readonly record: number;
+  /**
+   * Whether the counts are a view's: false while no frame has been encoded
+   * since the draw was added (the counts are zero then, not measured), or
+   * when no view shows it.
+   */
+  readonly diced: boolean;
   /** The draw's spans, and those the dice kept in the view. */
   readonly spans: number;
   readonly spansDiced: number;
@@ -244,6 +251,8 @@ export async function readPatchStats(
     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
   });
   const encoder = device.createCommandEncoder({ label: "patchStats" });
+  // What the buffers hold is what the frames encoded so far made of them.
+  const diced = draws.map(([, draw]) => draw.diced);
   draws.forEach(([, draw], i) => {
     encoder.copyBufferToBuffer(
       draw.stats,
@@ -264,6 +273,7 @@ export async function readPatchStats(
     const vertices = chunks * side * side;
     return {
       record,
+      diced: diced[i]!,
       spans: draw.mesh.patches.spans,
       spansDiced: words[i * 4]!,
       cells,

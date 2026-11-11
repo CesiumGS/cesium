@@ -370,6 +370,7 @@ export function encodeCull(
   if (world.raster.patchDraws.size) {
     for (const draw of world.raster.patchDraws.values()) {
       encoder.clearBuffer(draw.stats);
+      draw.diced = false;
     }
     world.raster.dicePassDesc.timestampWrites = diceWrites?.();
     const dice = encoder.beginComputePass(world.raster.dicePassDesc);
@@ -379,6 +380,7 @@ export function encodeCull(
       if (draw.batch.shown === 0) {
         continue;
       }
+      draw.diced = true;
       dice.setBindGroup(2, draw.group);
       dice.setPipeline(pipelines.dicePatches);
       dice.dispatchWorkgroups(Math.ceil(draw.mesh.patches.spans / 64));
