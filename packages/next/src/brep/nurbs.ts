@@ -306,6 +306,117 @@ export function nurbsCurveToSegments(curve: NurbsCurve): {
   return { degree, domains, points: out };
 }
 
+/** Euclidean coordinates and weights from homogeneous points. */
+function euclidean(
+  points: Points,
+  dimension: number,
+): { points: Float64Array; weights: Float64Array } {
+  const coords = new Float64Array(points.length * dimension);
+  const weights = new Float64Array(points.length);
+  points.forEach((p, i) => {
+    const w = p[dimension]!;
+    weights[i] = w;
+    for (let c = 0; c < dimension; c++) {
+      coords[i * dimension + c] = p[c]! / w;
+    }
+  });
+  return { points: coords, weights };
+}
+
+/**
+ * The part of the curve over [t0, t1], exactly, as a curve of its own with
+ * the same parameterization: knots at t0 and t1 are raised to the degree,
+ * and the control points between are kept. t0 and t1 are clamped to the
+ * curve's range, which must leave t0 < t1.
+ */
+export function trimNurbsCurve(
+  curve: NurbsCurve,
+  t0: number,
+  t1: number,
+): NurbsCurve {
+  const { degree, count, dimension } = curve;
+  checkSizes(
+    "trimNurbsCurve",
+    curve.points.length,
+    count * dimension,
+    curve.weights,
+    count,
+  );
+  checkKnots("trimNurbsCurve", degree, curve.knots, count);
+  const u0 = curve.knots[degree]!;
+  const u1 = curve.knots[count]!;
+  const a = Math.max(t0, u0);
+  const b = Math.min(t1, u1);
+  if (!(a < b)) {
+    throw new Error(
+      `trimNurbsCurve: [${t0}, ${t1}] leaves nothing of [${u0}, ${u1}]`,
+    );
+  }
+  if (a === u0 && b === u1) {
+    return curve;
+  }
+  const points = homogeneous(curve.points, curve.weights, count, dimension);
+  const knots = Array.from(curve.knots);
+  for (const t of [a, b]) {
+    if (t === u0 || t === u1) {
+      continue;
+    }
+    let multiplicity = knots.filter((knot) => knot === t).length;
+    while (multiplicity < degree) {
+      insertOnce(degree, knots, points, t);
+      multiplicity++;
+    }
+  }
+  // With t at multiplicity `degree` (or clamped), the curve passes through
+  // the control point at lastIndexOf(t) − degree.
+  const first = knots.lastIndexOf(a) - degree;
+  const last = knots.indexOf(b) - 1;
+  const inner = knots.filter((knot) => knot > a && knot < b);
+  const kept = euclidean(points.slice(first, last + 1), dimension);
+  return {
+    degree,
+    dimension,
+    count: last - first + 1,
+    knots: Float64Array.from([
+      ...new Array<number>(degree + 1).fill(a),
+      ...inner,
+      ...new Array<number>(degree + 1).fill(b),
+    ]),
+    points: kept.points,
+    weights: kept.weights,
+  };
+}
+
+/** The same curve run backwards, over the same parameter range. */
+export function reverseNurbsCurve(curve: NurbsCurve): NurbsCurve {
+  const { degree, count, dimension } = curve;
+  checkSizes(
+    "reverseNurbsCurve",
+    curve.points.length,
+    count * dimension,
+    curve.weights,
+    count,
+  );
+  checkKnots("reverseNurbsCurve", degree, curve.knots, count);
+  const n = curve.knots.length;
+  const sum = curve.knots[0]! + curve.knots[n - 1]!;
+  const knots = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    knots[i] = sum - curve.knots[n - 1 - i]!;
+  }
+  const points = new Float64Array(count * dimension);
+  for (let i = 0; i < count; i++) {
+    for (let c = 0; c < dimension; c++) {
+      points[i * dimension + c] =
+        curve.points[(count - 1 - i) * dimension + c]!;
+    }
+  }
+  const weights = curve.weights
+    ? Float64Array.from(curve.weights).reverse()
+    : undefined;
+  return { degree, dimension, count, knots, points, weights };
+}
+
 /** The last span with knots[k] ≤ u < knots[k + 1], or the last non-empty span at the end. */
 function findSpan(
   degree: number,

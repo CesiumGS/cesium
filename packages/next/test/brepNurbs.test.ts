@@ -15,6 +15,8 @@ import {
   evaluateNurbsSurface,
   nurbsCurveToSegments,
   nurbsSurfaceToPatches,
+  reverseNurbsCurve,
+  trimNurbsCurve,
   type NurbsSurface,
 } from "../src/brep/nurbs.ts";
 import { spikeBSurface as spikeB } from "./brepFixtures.ts";
@@ -317,6 +319,60 @@ describe("nurbsCurveToSegments", () => {
         3,
         (t - a) / (b - a),
       ).position;
+      const want = evaluateNurbsCurve(curve, t);
+      for (let k = 0; k < 3; k++) {
+        expect(Math.abs(got[k]! - want[k]!)).toBeLessThan(1e-9);
+      }
+    }
+  });
+});
+
+describe("trimNurbsCurve and reverseNurbsCurve", () => {
+  const curve = {
+    degree: 3,
+    knots: Float64Array.from([0, 0, 0, 0, 0.3, 0.7, 1, 1, 1, 1]),
+    count: 6,
+    dimension: 3 as const,
+    points: Float64Array.from([
+      0, 0, 0, 1, 2, 0, 2, 3, 1, 4, 3, 2, 5, 1, 2, 6, 0, 3,
+    ]),
+    weights: Float64Array.from([1, 0.1, 10, 1, 2, 1]),
+  };
+
+  it("keeps the curve over [t0, t1] with its parameterization, ending on its points there", () => {
+    for (const [t0, t1] of [
+      [0.12, 0.83],
+      [0.3, 0.7],
+      [0, 0.5],
+      [0.45, 1],
+    ] as const) {
+      const part = trimNurbsCurve(curve, t0, t1);
+      const random = lcg(11);
+      for (let n = 0; n <= 40; n++) {
+        const t = n === 40 ? t1 : t0 + (t1 - t0) * (n === 0 ? 0 : random());
+        const got = evaluateNurbsCurve(part, t);
+        const want = evaluateNurbsCurve(curve, t);
+        for (let k = 0; k < 3; k++) {
+          expect(Math.abs(got[k]! - want[k]!)).toBeLessThan(1e-9);
+        }
+      }
+      expect(part.knots[0]).toBe(t0);
+      expect(part.knots[part.knots.length - 1]).toBe(t1);
+    }
+  });
+
+  it("returns the curve itself for its whole range, clamps to it, and throws for an empty one", () => {
+    expect(trimNurbsCurve(curve, 0, 1)).toBe(curve);
+    expect(trimNurbsCurve(curve, -1, 2)).toBe(curve);
+    expect(() => trimNurbsCurve(curve, 0.5, 0.5)).toThrow(/leaves nothing/);
+  });
+
+  it("runs the same points backwards", () => {
+    const back = reverseNurbsCurve(curve);
+    const random = lcg(13);
+    for (let n = 0; n < 40; n++) {
+      const t = random();
+      const got = evaluateNurbsCurve(back, 1 - t);
       const want = evaluateNurbsCurve(curve, t);
       for (let k = 0; k < 3; k++) {
         expect(Math.abs(got[k]! - want[k]!)).toBeLessThan(1e-9);
