@@ -1,9 +1,10 @@
 // SMLib in WebAssembly (plan §13.33, scripts/smlib/README.md): NVIDIA's
 // usd-brep at one pinned commit, built with one pinned Emscripten into a
 // store outside the repo (~/.cesium-bench/smlib/<commit>), never committed.
-// What is committed is how to build it: the serial TBB stand-in
-// (scripts/smlib/tbb/), the JavaScript-facing bindings
-// (scripts/smlib/bindings.cpp) and this script.
+// What is committed is how to build it: the JavaScript-facing bindings
+// (scripts/smlib/bindings.cpp) and this script. SMLib needs nothing else:
+// its TBB code compiles only with SM_USE_TBB, which usd-brep's own build
+// doesn't define either, so it runs on one thread.
 //
 //   node scripts/smlibTools.mjs           fetch, build, print the folder
 //   node scripts/smlibTools.mjs --check   ... then load it in Node and measure
@@ -163,12 +164,6 @@ const hash = (...parts) => {
   return h.digest("hex").slice(0, 16);
 };
 
-const standIn = () =>
-  readdirSync(join(inputs, "tbb"))
-    .sort()
-    .map((name) => name + readFileSync(join(inputs, "tbb", name), "utf8"))
-    .join("\0");
-
 const cppFiles = (dir) =>
   readdirSync(dir)
     .filter((name) => name.endsWith(".cpp") && name !== "StdAfx.cpp")
@@ -186,10 +181,33 @@ async function pool(jobs, limit) {
   await Promise.all(Array.from({ length: limit }, worker));
 }
 
+/** Where this build's objects and module go: keyed by what goes into them. */
+function buildPaths() {
+  const objectKey = hash(EMSDK_VERSION, COMPILE_FLAGS.join(" "));
+  const bindings = readFileSync(join(inputs, "bindings.cpp"), "utf8");
+  const buildKey = hash(objectKey, bindings, LINK_FLAGS.join(" "));
+  return {
+    objects: join(smlibStore, `obj-${objectKey}`),
+    out: join(smlibStore, `build-${buildKey}`),
+  };
+}
+
+/**
+ * The folder holding this build's smlib.mjs (SMLIB_DIR, else the store's),
+ * or undefined if it isn't built: the dev server serves it at /smlib/.
+ */
+export function smlibDirectory() {
+  if (process.env.SMLIB_DIR) {
+    return process.env.SMLIB_DIR;
+  }
+  const { out } = buildPaths();
+  return existsSync(join(out, "smlib.wasm")) ? out : undefined;
+}
+
 /**
  * The folder holding smlib.mjs and smlib.wasm, building them first if the
- * store lacks this build. Objects are cached by compile flags and stand-in,
- * the module by everything that goes into it.
+ * store lacks this build. Objects are cached by compiler and flags, the
+ * module by everything that goes into it.
  */
 export async function ensureSmlib(log = console.log) {
   if (process.env.SMLIB_DIR) {
@@ -197,22 +215,18 @@ export async function ensureSmlib(log = console.log) {
   }
   const source = ensureSmlibSource(log);
   ensureEmsdk(log);
-  const bindings = readFileSync(join(inputs, "bindings.cpp"), "utf8");
-  const objectKey = hash(EMSDK_VERSION, COMPILE_FLAGS.join(" "), standIn());
-  const buildKey = hash(objectKey, bindings, LINK_FLAGS.join(" "));
-  const out = join(smlibStore, `build-${buildKey}`);
+  const { objects, out } = buildPaths();
   if (existsSync(join(out, "smlib.wasm"))) {
     return out;
   }
 
-  const objects = join(smlibStore, `obj-${objectKey}`);
   mkdirSync(objects, { recursive: true });
   // Each library's own include order, as its premake5.lua has it: both have
   // a StdAfx.h, and a quoted include finds the first.
   const smlibInc = join(source, "source", "SMLib", "inc");
   const smApiInc = join(source, "source", "SM_API", "inc");
-  const smlibIncludes = [`-I${inputs}`, `-I${smlibInc}`];
-  const smApiIncludes = [`-I${inputs}`, `-I${smApiInc}`, `-I${smlibInc}`];
+  const smlibIncludes = [`-I${smlibInc}`];
+  const smApiIncludes = [`-I${smApiInc}`, `-I${smlibInc}`];
   const units = [
     ...cppFiles(join(source, "source", "SMLib", "src")).map((f) => [
       f,

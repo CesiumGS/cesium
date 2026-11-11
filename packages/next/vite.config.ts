@@ -26,6 +26,7 @@ import { skyPackDevRoute, skyPackGuard } from "./scripts/vitePluginSkyPack.ts";
 import { framesDataDirectory } from "./scripts/frameData.mjs";
 import { framesDataExclusion, projGridsPlugin } from "./scripts/projGrids.mjs";
 import { slangWasmDirectory } from "./scripts/slangTools.mjs";
+import { smlibDirectory } from "./scripts/smlibTools.mjs";
 
 // CesiumJS 1.x core math, used only as a test oracle for parity checks.
 const oracle = fileURLToPath(new URL("../core/Source", import.meta.url));
@@ -354,6 +355,9 @@ const cesiumReleases =
 const slangWasm = existsSync(join(slangWasmDirectory(), "slang-wasm.js"))
   ? slangWasmDirectory()
   : undefined;
+// SMLib in WebAssembly (the b-rep examples' kernel): SMLIB_DIR, or the build
+// `npm run setup` makes in its store (scripts/smlibTools.mjs).
+const smlib = smlibDirectory();
 // Sample models and tilesets checked into the 1.x repo, for parity tests.
 const specsData = fileURLToPath(new URL("../../Specs/Data", import.meta.url));
 
@@ -450,6 +454,7 @@ export default defineConfig({
       : []),
     ...(projGrids ? [projGridsPlugin("/proj-grids", projGrids)] : []),
     ...(slangWasm ? [serveDirectory("/slang-wasm", slangWasm)] : []),
+    ...(smlib ? [serveDirectory("/smlib", smlib)] : []),
   ],
   // Worker bundles take their own plugins (the Basis glue is decoded there).
   worker: { plugins: () => [basisTranscoderEsm(), skyPackGuard()] },

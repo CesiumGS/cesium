@@ -38,11 +38,13 @@ It also fetches the Slang toolchain, pinned to one release in
 one commit (SMLib and its SM_API) and emsdk at one version (about 750 MB),
 both pinned in `scripts/smlibTools.mjs`, into `~/.cesium-bench/smlib` and
 `~/.cesium-bench/emsdk`. It builds `smlib.mjs` and `smlib.wasm` there, which
-takes a few minutes the first time. What it
-builds with is committed in `scripts/smlib/`: a serial stand-in for TBB and the
-bindings JavaScript calls. `node scripts/smlibTools.mjs --check` builds it alone,
-then loads it in Node and measures size, startup, tessellation and a boolean.
-`SMLIB_DIR` points at another build.
+takes a few minutes the first time. What it builds with is committed: the
+bindings JavaScript calls, in `scripts/smlib/`. `src/brep/smlib.ts` loads the
+build and converts its solids to `BrepForm`; the dev server serves it at
+`/smlib/`, and `npm run test:data` tests the conversion against it.
+`node scripts/smlibTools.mjs --check` builds it alone, then loads it in Node and
+measures size, startup, tessellation and a boolean. `SMLIB_DIR` points at
+another build.
 
 **Frames data** (`src/time`, `src/ephemeris`; `loadFrameData()`). `setup`
 also fetches the data the frames layer needs, into `~/.cesium-bench/frames`
