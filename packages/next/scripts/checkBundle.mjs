@@ -77,7 +77,7 @@ const SLANG_MODULES = /[\\/]src[\\/]scene[\\/]slang(?:Worker)?\.ts(?:\?|$)/;
  * what loads with it (`eager`: the main chunk and the chunks it imports
  * statically, transitively) and what loads on demand (`lazy`).
  */
-async function buildPage(work, name, code) {
+async function buildPage(work, name, code, logLevel = "error") {
   const entry = join(work, `${name}.js`);
   writeFileSync(entry, code);
   const outDir = join(work, `dist-${name}`);
@@ -86,7 +86,7 @@ async function buildPage(work, name, code) {
     root,
     base: "./",
     publicDir: false,
-    logLevel: "error",
+    logLevel,
     plugins: [basisTranscoderEsm(), skyPackGuard()],
     build: {
       outDir,
@@ -219,6 +219,9 @@ try {
       `import m from ${JSON.stringify(join(packDir, "manifest.json?url"))};\n` +
         `import p from ${JSON.stringify(join(packDir, "points.bin?url"))};\n` +
         `console.log(m, p);\n`,
+      // This build is expected to fail: its error is checked below, so
+      // vite's own "Build failed" line would only mislead.
+      "silent",
     );
   } catch (error) {
     refused = String(error?.message ?? error);
