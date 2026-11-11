@@ -8674,6 +8674,119 @@ Do this before b-rep step 5, the GPU tessellation engine (§13.33), which evalua
 - **What the tile format carries,** and how it relates to glTF 2.1 external assets and 3D Tiles (§13.25).
 - **Curves through placement.** Vector geometry as render curves: an exact source (a circle or clothoid in its own CRS), then placement, then quadratic segments with an optional rational weight and a per-segment error bound, refined by view. A conic stays a conic only under projective maps, and a reprojection isn't one, so a circle is exact in design coordinates only, and a measure or snap goes back to the source. Quadratics through a perspective view become rational. Planar faces with curved trims and 3D Tiles 2.0's 3D-native vectors both meet this; curved surfaces meet the tessellation seam, and b-reps (§13.20).
 
+**The review (2026-11-10).** Not yet approved by the owner.
+
+_Today there are three placement ideas, built separately:_
+
+- The frame tree, which is rigid (`FrameResolver`).
+- The render placement (`scene/placement.ts`, `shaders/placement.slang`): per draw, in model space, before the custom vertex stage, from a closed set:
+  - dual position
+  - a cubic fitted over a tile
+  - a blend of two fits by a parameter
+- `DesignPlacement` (`streaming/designPlacement.ts`): CPU only, with `displayed` and an exact `designOf`. Engineering snaps and picks use it to get back to design coordinates.
+
+They already share most of what's needed: a CPU twin in float64, `maxDisplacement` padding tile bounds, `secondDerivativeBound` for resampling, and a parameter written once a tick. What's missing, measured against the acceptance test:
+
+- Normals don't turn with the placement.
+- Rays ignore placements (`World.castRays` and the CPU terrain-pick fallback in `render/view/picks.ts`).
+- Picks can't invert a non-rigid placement.
+- Nothing recomputes a placement for a new root.
+- The globe isn't a scene item, so it can't take a placement.
+- LOD doesn't know a placement stretches error.
+- There are no clip planes.
+- Custom shaders get a placed `positionMC` with an unplaced `normalMC`.
+
+_The model: true coordinates, then one drawn map._
+
+- **True coordinates** are content after its coordinate operation and the frame tree. That is where content _is_, and every world question is asked there: distances, line of sight, clearance, volumes, scalar fields, section planes, b-rep queries.
+- A reprojection belongs here. It's exact in float64 on the CPU (`DesignPlacement.displayed` and `designOf` are this). Its GPU fit is an approximation of truth, with an error bound: the existing `displayError`.
+- **The drawn map** is applied last, in the vertex stage. It decides where content is _drawn_, never where it _is_: vertical exaggeration, design view's flattening, the 2D and 3D morph, exploded views.
+- A world answer never changes when the drawn map does. That's the acceptance test's "measurements report true heights", made a rule.
+- This also settles today's "rays don't see placements": it's right for world questions, and wrong for view questions.
+
+_One placement interface, exact on the CPU and fitted for the GPU._
+
+- A `PlacementMap` is defined in a named frame, with:
+  - `forward`, `inverse` and `jacobian` in float64
+  - `bounds(volume)`
+  - `stretch(volume)`: the largest singular value of its Jacobian over the volume
+  - a revision
+- Both a coordinate operation and a drawn map are `PlacementMap`s. The application writes its maps. The engine composes them on the CPU, exact, and fits the composition per tile and per root: one cubic, as today's `FittedOperation`.
+- The GPU keeps evaluating a single fitted term, or a blend of two, so the shader and the buffer don't grow and there's no chain to walk.
+- Exaggeration by a factor k is `blend(identity, fit of h·n̂, t = k − 1)`, which exists today. The slider writes one float; nothing is refit when k changes.
+- Two independent parameters at once, such as exaggeration during the 2D morph, refit when either changes. Measure that before designing more.
+- The fit's error bound joins the tile's geometric error in screen-space error, so a coarse tile with a poor fit refines. That covers globe tiles near the root, where a cubic fits a hemisphere badly.
+- Dual positions aren't maps. They exist only at the content's vertices, and can't be resampled or inverted. They stay as a producer's precomputed result: a second normal semantic is optional, and they are refused where resampling is needed (b-rep step 5, curves). The design globe moves to fitted operations, as the review's normals bullet proposed.
+
+_What each layer owns:_
+
+- **The frames layer:** coordinate operations, the frame tree, and a placement cache keyed by item, tile, root, and map revision. It refits on `routeRevision` and `watch`. This is the missing per-root hook of §7.2 step 3, so `DrawPlacementInfo.root` names a root that something was computed for.
+- **Content:** true geometry in its own CRS, with metadata naming that CRS. Nothing is baked: "hosted" content declares that its producer reprojected it.
+- **Items:** a placement per scene item. The globe becomes an item, or at least takes a placement, ahead of §13.25's full version.
+- **The renderer:** the seam it has now, plus the Jacobian.
+
+_Normals and tangents._
+
+- The vertex stage evaluates the fit's Jacobian analytically: about 60 more multiply-adds, and no varying.
+- It turns the normal by the cofactor matrix (det·J⁻ᵀ, so no inverse is needed) and the tangent by J.
+- Exaggeration needs this, not just tolerates it: with k = 10, slopes are ten times steeper.
+- A custom shader sees the placed `positionMC` and the turned `normalMC`, and `designPositionMC` in the vertex stage.
+
+_Bounds, LOD, culling and shadows._
+
+- Bounds go through `PlacementMap.bounds`, with today's padding as the fallback.
+- Screen-space error multiplies geometric error by `stretch`. Otherwise k = 10 would draw terrain ten times coarser than its error allows.
+- The horizon occluder is the map's image of the ellipsoid. Exaggerating heights above the ellipsoid leaves the ellipsoid where it is.
+- Shadow casters already share the vertex path, so they follow the map.
+
+_Picks, snaps and measurements: view questions answered with true points._
+
+- The pick pass writes the primitive index beside the feature, using WebGPU's `primitive-index` feature where it's available.
+- The CPU forward-maps that triangle's three vertices, intersects the camera ray with the placed triangle for barycentrics, and interpolates the true vertices. The result is exact on the content triangle, with no inverse, for any placement, dual positions included.
+- Without the feature: depth, then Newton on `PlacementMap.inverse`. The answer is provisional, and its accuracy includes the fit's error bound.
+- The CPU terrain-pick fallback tests placed triangles.
+- The GPU snap pass (5f) works in drawn space, with its pixel tolerance there, and returns true points the same way.
+- Measurements report true values, name their frame, and say when what was drawn was exaggerated.
+- Their lines and labels are content in true coordinates, drawn through the same map. A straight true segment draws as a curve, sampled by the curves-through-placement path.
+- `GeometryQueries` answer in true coordinates only. The pick refinement entry from the b-rep brainstorm (§13.33) takes a pick's (draw, primitive, barycentrics), or (face, u, v), never a drawn position.
+
+_Clip and section planes:_
+
+- They're defined in a named frame and transformed on the CPU into each draw's model space.
+- They're evaluated per vertex on the pre-placement design position. A plane's distance is linear in true coordinates, so on a planar content triangle the interpolated distance is exact, whatever the drawn map does.
+- They cost inter-stage budget: a varying, or WebGPU's `clip-distances` feature. Confirm what that feature draws from `maxInterStageShaderVariables` before choosing. Packing today's 12 user locations comes first.
+- Caps are content in true coordinates, drawn through the map.
+- Picks, snaps and queries test the plane on true points, in float64.
+- A view-fixed cut is the other kind: it's in render space, for "cut away the near half".
+
+_The other open items:_
+
+- **2D and Columbus view:**
+  - A whole-world flat map follows from design view's mechanism: a world-spanning CRS as the root, with globe tiles fitted per tile.
+  - The 2D and 3D morph is a blend.
+  - At the antimeridian, tiles are drawn twice with an instance offset of one circumference.
+  - Columbus view is the same, with heights kept.
+- **Instances:** applied before the map. A pool's fit spans every instance's bounds, and a pool splits by cluster when the fit's error bound is too large.
+- **Skins and morph targets:** applied before the map, when animation arrives.
+- **The tile format:** see "Content" above. A glTF 2.1 external asset carries its own CRS and transform, which the item composes like any coordinate operation.
+- **Curves through placement and b-rep step 5:** both sample the exact source in true coordinates and evaluate the fit at points the content never had. Their error budgets take `secondDerivativeBound` and `stretch`.
+
+_The acceptance increments, in order:_
+
+1. `PlacementMap` and the frames layer's per-tile fitter and cache, with refits on a root change.
+2. The Jacobian in the vertex stage, for normals and tangents.
+3. Bounds through the map, `stretch` in screen-space error, and the horizon occluder.
+4. The globe and terrain take a placement.
+5. Picks by primitive index and barycentrics, with the Newton fallback; and the terrain-pick fallback placed.
+6. Measurements and snaps in true coordinates, with their graphics drawn through the map.
+7. An example, "Vertical exaggeration":
+   - The application writes the height-scale map (about 40 lines), not the engine.
+   - The scene has the globe, terrain, a tileset and measurements.
+   - The tests read true heights while k goes from 1 to 10.
+8. Clip planes on the design position, with caps.
+
+Increments 1 to 3 come before b-rep step 5. Increment 8 comes with §13.34's capabilities (2).
+
 ### 13.27 CAD display extensions, with the vector design (owner, 2026-11-08)
 
 Do soon, designed together with vector drawing, because they overlap with it. `BENTLEY_materials_planar_fill`, `BENTLEY_materials_line_style`, `BENTLEY_materials_point_style` and `EXT_mesh_primitive_edge_visibility` are implemented in 1.x and not in 2.0 (noted in §11's CAD display extensions). Most of the CAD content in the catalog uses none of them: a scan on 2026-11-08 found none in `bim-design-model`, `aec-design` or `aec-site`. Test content: ion asset 4665927 uses `EXT_mesh_primitive_edge_visibility` (7 of 7 sampled tiles) and `BENTLEY_materials_planar_fill` (5 of 7). Add it to the catalog, with its license checked.
