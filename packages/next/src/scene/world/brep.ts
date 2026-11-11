@@ -1,9 +1,11 @@
 // A b-rep as a world's draws (CESIUM2_WEBGPU_PLAN.md §13.33, "Step 5
-// redirected", part 2): every face the GPU can draw is a patch draw, diced per
-// view, in two: the faces whose trim is their rect (early depth), and the
-// faces with a trim, whose fragment stage tests it per pixel. A face the GPU
-// can't evaluate (a patch of degree above 3) stays a CPU mesh, so a caller
-// gets the whole solid. Provisional.
+// redirected", part 2): every face is a patch draw, diced per view, in two:
+// the faces whose trim is their rect (early depth), and the faces with a
+// trim, whose fragment stage tests it per pixel. Patches of degree 1 to 7
+// are evaluated on the GPU alike. Only a face with nothing to draw (no loop
+// of a finite extent, no patch under its rect) is left out, reported in
+// `unsupported`; the CPU mesh is a diagnostic (`cpuFaces: "trimmed"`).
+// Provisional.
 import type { BrepForm } from "../../brep/form.ts";
 import {
   packGpuPatches,
@@ -60,7 +62,7 @@ export interface BrepOptions extends Pick<
   model?: Mat4;
   /** The error a cell of the GPU path may leave, pixels (default half a pixel). */
   errorPixels?: number;
-  /** The chordal error, m, of the CPU mesh of the faces the GPU path doesn't draw (default 1 mm). */
+  /** The chordal error, m, of the CPU mesh of `cpuFaces: "trimmed"` (default 1 mm). */
   cpuTolerance?: number;
   /** The most chunks of 4 × 4 cells a patch draw lists per view (default 65,536). */
   maxChunks?: number;
@@ -79,9 +81,9 @@ export interface BrepOptions extends Pick<
    */
   prepared?: GpuPatches;
   /**
-   * Which faces are a CPU mesh. "unsupported" (default): only those the GPU
-   * can't draw. "trimmed": also every face with a trim, as before the
-   * per-pixel trim test; a diagnostic, to compare the two on one solid.
+   * Which faces are a CPU mesh. "unsupported" (default): none, every face is
+   * on the GPU. "trimmed": every face with a trim, as before the per-pixel
+   * trim test; a diagnostic, to compare the two on one solid.
    */
   cpuFaces?: "unsupported" | "trimmed";
 }
@@ -92,14 +94,14 @@ export interface BrepHandle {
   readonly patches: DrawHandle | undefined;
   /** The faces drawn by GPU dicing with the per-pixel trim test. Undefined when none is. */
   readonly trimmed: DrawHandle | undefined;
-  /** The faces drawn from a CPU mesh (unsupported ones; trimmed ones with `cpuFaces: "trimmed"`). Undefined when none is. */
+  /** The faces drawn from a CPU mesh (`cpuFaces: "trimmed"`'s trimmed ones). Undefined when none is. */
   readonly mesh: DrawHandle | undefined;
   /** Every face drawn by GPU dicing, trimmed or not. */
   readonly gpuFaces: readonly number[];
   /** Those of `gpuFaces` that have a trim test. */
   readonly trimmedFaces: readonly number[];
   readonly cpuFaces: readonly number[];
-  /** Faces the GPU path can't draw at all (and why), which are in `cpuFaces`. */
+  /** Faces with nothing to draw (and why: no loop of a finite extent, no patch under the rect), drawn by neither path. */
   readonly unsupported: readonly { face: number; reason: string }[];
   /** The chordal error the CPU mesh states, m. */
   readonly cpuError: number;
@@ -134,27 +136,25 @@ export function addBrep(
         : {}),
     });
   const cpuTrimmed = options.cpuFaces === "trimmed";
-  const onGpu = (face: number): boolean => {
-    const f = prepared.faces[face]!;
-    return f.supported && !(cpuTrimmed && f.needsTrim);
-  };
   const gpuFaces: number[] = [];
   const trimmedFaces: number[] = [];
   const cpuFaces: number[] = [];
+  const unsupported: { face: number; reason: string }[] = [];
   for (let face = 0; face < faceCount; face++) {
-    if (onGpu(face)) {
+    const f = prepared.faces[face]!;
+    if (!f.supported) {
+      unsupported.push({ face, reason: f.reason ?? "" });
+    } else if (cpuTrimmed && f.needsTrim) {
+      cpuFaces.push(face);
+    } else {
       gpuFaces.push(face);
-      if (prepared.faces[face]!.needsTrim) {
+      if (f.needsTrim) {
         trimmedFaces.push(face);
       }
-    } else {
-      cpuFaces.push(face);
     }
   }
-  const unsupported = prepared.faces
-    .filter((f) => !f.supported)
-    .map((f) => ({ face: f.face, reason: f.reason ?? "" }));
-
+  const onGpu = new Set(gpuFaces);
+  const onCpu = new Set(cpuFaces);
   const meshes: MeshHandle[] = [];
   const transforms: TransformHandle[] = [];
   const draws: DrawHandle[] = [];
@@ -231,7 +231,10 @@ export function addBrep(
     const patchDrawOf = (
       include: (face: { needsTrim: boolean; face: number }) => boolean,
     ): DrawHandle | undefined => {
-      const data = packGpuPatches(prepared, (f) => onGpu(f.face) && include(f));
+      const data = packGpuPatches(
+        prepared,
+        (f) => onGpu.has(f.face) && include(f),
+      );
       if (data.spanCount === 0) {
         return undefined;
       }
@@ -260,7 +263,7 @@ export function addBrep(
     if (cpuFaces.length > 0) {
       const cpu = tessellateBrep(form, {
         tolerance: options.cpuTolerance ?? DEFAULT_CPU_TOLERANCE,
-        faces: (face) => !onGpu(face),
+        faces: (face) => onCpu.has(face),
       });
       cpuError = cpu.error;
       if (cpu.faces.indices.length > 0) {

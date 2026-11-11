@@ -28,7 +28,9 @@
 //   at most k times its square (k from the span's whole chord, the error's
 //   convex shape under the line to it).
 // - Free-form Bézier: (P_ss h² + 2 P_st h k + P_tt k²) / 8 from the sound
-//   Bernstein bounds of the net (bounds.ts `netBounds`, any positive weights).
+//   Bernstein bounds of the net (bounds.ts `netBounds`, any positive weights
+//   and any degree: the products and ratios are over Bernstein bases of the
+//   net's own degrees, up to 7 in each direction).
 // The GPU takes the face's densities, the largest D over its spans, and a
 // distance the same for all of them (the face's nearest), so every span of a
 // face puts the same number of cells per unit of (u, v) and neighbouring
@@ -50,8 +52,8 @@ import { SurfaceKind, type BrepForm } from "./form.ts";
 
 /** Words of a span's record on the GPU (f32 and u32 alike). */
 export const SPAN_WORDS = 48;
-/** The highest Bézier degree the GPU evaluates, per direction. */
-export const MAX_GPU_DEGREE = 3;
+/** The highest Bézier degree the GPU evaluates, per direction: the form's most (form.ts). */
+export const MAX_GPU_DEGREE = 7;
 /** The most cells along a span's side the GPU dices to. */
 export const MAX_CELLS = 64;
 /** `GpuSpan.trim` of a face whose trim is its rect: no trim data. */
@@ -187,8 +189,8 @@ export interface GpuPatchData {
 
 /**
  * A record for every face of the form: its span records, its rect and whether
- * it needs a trim test. Faces the GPU can't draw (a patch of degree above 3,
- * no loops, no patch under the rect) are marked, with no spans.
+ * it needs a trim test. Faces the GPU can't draw (no loops, no patch under the
+ * rect, a degree the form doesn't allow) are marked, with no spans.
  */
 export function prepareGpuPatches(
   form: BrepForm,

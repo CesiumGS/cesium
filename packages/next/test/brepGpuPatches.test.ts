@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { BrepBuilder, type SurfaceIdentity } from "../src/brep/build.ts";
 import { SurfaceKind, type BrepForm } from "../src/brep/form.ts";
+import { evaluateNurbsSurface } from "../src/brep/nurbs.ts";
 import {
   MAX_CELLS,
   NO_TRIM,
@@ -22,6 +23,7 @@ import {
 } from "../src/brep/gpuPatches.ts";
 import {
   boxBrep,
+  highDegreeSurface,
   boxFace,
   cappedCylinderBrep,
   lineProfile,
@@ -279,32 +281,125 @@ describe("prepareGpuPatches: records", () => {
     expect(p.spans[0]!.representationError).toBeCloseTo(2.5e-5, 9);
     expect([p.spans[0]!.degreeU, p.spans[0]!.degreeV]).toEqual([2, 1]);
   });
+});
 
-  it("marks a face with a patch of degree above 3 as one the GPU can't draw", () => {
-    const n = 5;
-    const points = new Float64Array(n * 2 * 3);
-    for (let j = 0; j < 2; j++) {
-      for (let i = 0; i < n; i++) {
-        points.set([i, j, (i * i) / 4], (j * n + i) * 3);
+describe("patches of degree 4 to 7", () => {
+  const DEGREES = [
+    [4, 1],
+    [1, 5],
+    [4, 4],
+    [5, 3],
+    [3, 6],
+    [7, 7],
+  ] as const;
+
+  it("are drawn by the GPU: one span a patch, its degrees and whole net in the records", () => {
+    for (const [du, dv] of DEGREES) {
+      const form = oneFace(
+        (b) => b.nurbsSurface(highDegreeSurface(du, dv, { spansU: 2 })),
+        [0, 1, 0, 1],
+      );
+      const p = prepareGpuPatches(form, ORIGIN);
+      expect(p.faces[0]!.supported).toBe(true);
+      expect(p.spans).toHaveLength(2);
+      const data = packGpuPatches(p);
+      const points = (du + 1) * (dv + 1);
+      expect(data.words.length).toBe(2 * SPAN_WORDS + 2 * points * 4);
+      p.spans.forEach((span, i) => {
+        expect([span.degreeU, span.degreeV]).toEqual([du, dv]);
+        expect(span.net.length).toBe(points * 4);
+        const o = i * SPAN_WORDS;
+        expect(data.words[o + SPAN.degrees]).toBe(du | (dv << 8));
+        const at = data.words[o + SPAN.controls]!;
+        for (let k = 0; k < points * 4; k++) {
+          expect(data.f32[at + k]).toBeCloseTo(span.net[k]!, 5);
+        }
+      });
+    }
+  });
+
+  it("have the surface's points and normals in the CPU twin, weights or not", () => {
+    for (const weighted of [false, true]) {
+      for (const [du, dv] of DEGREES) {
+        const surface = highDegreeSurface(du, dv, {
+          spansU: 2,
+          spansV: 2,
+          weighted,
+        });
+        const form = oneFace((b) => b.nurbsSurface(surface), [0.1, 0.9, 0, 1]);
+        const p = prepareGpuPatches(form, ORIGIN);
+        expect(p.spans).toHaveLength(4);
+        const normalAt = (u: number, v: number): number[] => {
+          const h = 1e-6;
+          const at = (x: number, y: number) =>
+            evaluateNurbsSurface(surface, x, y);
+          const a = at(u + h, v);
+          const b = at(u - h, v);
+          const c = at(u, v + h);
+          const d = at(u, v - h);
+          const du3 = [0, 1, 2].map((k) => a[k]! - b[k]!);
+          const dv3 = [0, 1, 2].map((k) => c[k]! - d[k]!);
+          const n = [
+            du3[1]! * dv3[2]! - du3[2]! * dv3[1]!,
+            du3[2]! * dv3[0]! - du3[0]! * dv3[2]!,
+            du3[0]! * dv3[1]! - du3[1]! * dv3[0]!,
+          ];
+          const length = Math.hypot(...n);
+          return n.map((x) => x / length);
+        };
+        for (const span of p.spans) {
+          const grid = diceSpan(span, 5, 4);
+          for (let k = 0; k < grid.parameters.length / 2; k++) {
+            const u = grid.parameters[k * 2]!;
+            const v = grid.parameters[k * 2 + 1]!;
+            // Inside the patch, where the finite differences stay in range.
+            const inside = (x: number, lo: number, hi: number) =>
+              Math.min(Math.max(x, lo + 1e-5), hi - 1e-5);
+            const direct = evaluateNurbsSurface(surface, u, v);
+            for (let c = 0; c < 3; c++) {
+              expect(grid.positions[k * 3 + c]!).toBeCloseTo(direct[c]!, 9);
+            }
+            const n = normalAt(
+              inside(u, span.domain[0], span.domain[1]),
+              inside(v, span.domain[2], span.domain[3]),
+            );
+            for (let c = 0; c < 3; c++) {
+              expect(grid.normals[k * 3 + c]!).toBeCloseTo(n[c]!, 3);
+            }
+          }
+        }
       }
     }
+  });
+
+  it("have error constants that hold under dense sampling, tightly for at least one grid", () => {
+    const grids = [...GRIDS, [32, 32], [7, 40]] as const;
+    for (const [du, dv] of DEGREES) {
+      const form = oneFace(
+        (b) => b.nurbsSurface(highDegreeSurface(du, dv)),
+        [0, 1, 0, 1],
+      );
+      const [span] = prepareGpuPatches(form, ORIGIN).spans;
+      expect(span!.c.some((c) => c > 0)).toBe(true);
+      expect(holds(span!, undefined, grids)).toBeGreaterThan(0.01);
+    }
+  });
+
+  it("have error constants that hold for part of a patch, and put the same cells on shared boundaries", () => {
     const form = oneFace(
-      (b) =>
-        b.nurbsSurface({
-          degreeU: 4,
-          degreeV: 1,
-          knotsU: Float64Array.from([0, 0, 0, 0, 0, 1, 1, 1, 1, 1]),
-          knotsV: Float64Array.from([0, 0, 1, 1]),
-          countU: n,
-          countV: 2,
-          points,
-        }),
-      [0, 1, 0, 1],
+      (b) => b.nurbsSurface(highDegreeSurface(5, 4, { spansU: 2, spansV: 2 })),
+      [0.2, 0.8, 0.1, 0.7],
     );
-    const p = prepareGpuPatches(form);
-    expect(p.faces[0]!.supported).toBe(false);
-    expect(p.faces[0]!.reason).toMatch(/degree 4/);
-    expect(p.spans).toHaveLength(0);
+    const p = prepareGpuPatches(form, ORIGIN);
+    expect(p.spans).toHaveLength(4);
+    for (const span of p.spans) {
+      holds(span, undefined, GRIDS);
+    }
+    const counts = p.spans.map((s) => diceCounts(s, 0.01));
+    expect(counts[0]!.nu).toBe(counts[2]!.nu);
+    expect(counts[1]!.nu).toBe(counts[3]!.nu);
+    expect(counts[0]!.nv).toBe(counts[1]!.nv);
+    expect(counts[2]!.nv).toBe(counts[3]!.nv);
   });
 });
 

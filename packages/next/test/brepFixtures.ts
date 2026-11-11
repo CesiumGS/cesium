@@ -43,6 +43,56 @@ export function spikeBSurface(
   };
 }
 
+/**
+ * A rational NURBS surface of degree `degreeU` × `degreeV` (1 to 7) over x, y
+ * in [0, 10] m: `spansU` × `spansV` Bézier patches under uniform clamped
+ * knots on [0, 1], heights up to 2 m that wave across the net, weights from
+ * 0.6 to 1.6 (all 1 when `weighted` is false).
+ */
+export function highDegreeSurface(
+  degreeU: number,
+  degreeV: number,
+  options: { spansU?: number; spansV?: number; weighted?: boolean } = {},
+): NurbsSurface {
+  const { spansU = 1, spansV = 1, weighted = true } = options;
+  const countU = degreeU + spansU;
+  const countV = degreeV + spansV;
+  const clamped = (degree: number, spans: number): Float64Array =>
+    Float64Array.from([
+      ...new Array<number>(degree + 1).fill(0),
+      ...Array.from({ length: spans - 1 }, (_, i) => (i + 1) / spans),
+      ...new Array<number>(degree + 1).fill(1),
+    ]);
+  const points = new Float64Array(countU * countV * 3);
+  const weights = new Float64Array(countU * countV).fill(1);
+  for (let j = 0; j < countV; j++) {
+    for (let i = 0; i < countU; i++) {
+      const k = j * countU + i;
+      points.set(
+        [
+          (i / (countU - 1)) * 10,
+          (j / (countV - 1)) * 10,
+          2 * Math.sin(1.3 * i + 0.4) * Math.cos(0.9 * j + 0.2),
+        ],
+        k * 3,
+      );
+      if (weighted) {
+        weights[k] = 1.1 + 0.5 * Math.sin(2.1 * i + 1.7 * j);
+      }
+    }
+  }
+  return {
+    degreeU,
+    degreeV,
+    knotsU: clamped(degreeU, spansU),
+    knotsV: clamped(degreeV, spansV),
+    countU,
+    countV,
+    points,
+    weights,
+  };
+}
+
 /** The tolerance, m, of edges whose curves a 64-sample polyline only approximates. */
 const POLYLINE_TOLERANCE = 1e-3;
 

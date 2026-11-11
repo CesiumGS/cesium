@@ -1,7 +1,8 @@
 // B-rep patches diced on the GPU (plan §13.33, "Step 5 redirected", part 1):
 // faces the rect completes (no trim test) drawn from span records and control
 // points, the grid per view. An analytic cylinder face, a dome (a sphere's
-// span) and a free-form weighted rational Bézier patch, each at two
+// span) and a free-form weighted rational Bézier patch, and one of degree 5 × 4 (the wide
+// evaluation path), each at two
 // distances, drawn alone with a shader that writes what the fragment stage
 // sees into the image as bytes (each value as two 8-bit levels, high and low,
 // as exact sRGB levels, and a check byte: where two triangles share a pixel
@@ -56,7 +57,8 @@ const TEMPLATE = `
 <h1>B-rep patches diced on the GPU</h1>
 <p>
   Faces drawn from patch records, the grid chosen per view in pixels of error.
-  An analytic cylinder, a dome and a weighted rational Bézier patch at two
+  An analytic cylinder, a dome, a weighted rational Bézier patch and one of
+  degree 5 × 4 at two
   distances, read back as bytes the fragment stage writes: each pixel's drawn
   point against the true surface, the cells the dice chose against the CPU
   twin, cracks between spans, and a warped patch against its CPU twin. Then 200
@@ -220,6 +222,50 @@ function patchSurface(): NurbsSurface {
   };
 }
 
+/** A weighted NURBS surface of degree 5 in u and 4 in v over [−1.5, 1.5]², two patches each way: the hill and hollow with a ripple, weights 0.5 to 2.4. */
+function highSurface(): NurbsSurface {
+  const degreeU = 5;
+  const degreeV = 4;
+  const countU = degreeU + 2;
+  const countV = degreeV + 2;
+  const clamped = (degree: number) =>
+    Float64Array.from([
+      ...new Array<number>(degree + 1).fill(0),
+      0.5,
+      ...new Array<number>(degree + 1).fill(1),
+    ]);
+  const points = new Float64Array(countU * countV * 3);
+  const weights = new Float64Array(countU * countV).fill(1);
+  for (let j = 0; j < countV; j++) {
+    for (let i = 0; i < countU; i++) {
+      const x = -1.5 + (3 * i) / (countU - 1);
+      const y = -1.5 + (3 * j) / (countV - 1);
+      points.set(
+        [
+          x,
+          y,
+          0.55 * Math.cos(1.3 * x) * Math.sin(1.1 * y + 0.4) +
+            0.12 * Math.sin(2.9 * i + 1.3 * j),
+        ],
+        (j * countU + i) * 3,
+      );
+    }
+  }
+  weights[3 * countU + 2] = 2.4;
+  weights[1 * countU + 5] = 0.5;
+  weights[4 * countU + 4] = 1.7;
+  return {
+    degreeU,
+    degreeV,
+    knotsU: clamped(degreeU),
+    knotsV: clamped(degreeV),
+    countU,
+    countV,
+    points,
+    weights,
+  };
+}
+
 interface Scene {
   name: string;
   form: BrepForm;
@@ -251,6 +297,11 @@ function scenes(): Scene[] {
     rectFace(b, b.nurbsSurface(patchSurface()), [0, 1, 0, 1], [0, 0, 0]);
     return b.build();
   })();
+  const high = (() => {
+    const b = new BrepBuilder();
+    rectFace(b, b.nurbsSurface(highSurface()), [0, 1, 0, 1], [0, 0, 0]);
+    return b.build();
+  })();
   return [
     {
       name: "cylinder face (analytic, 4 spans)",
@@ -267,6 +318,12 @@ function scenes(): Scene[] {
     {
       name: "weighted rational Bézier patch (9 spans)",
       form: patch,
+      distance: undefined,
+      target: [0, 0, 0.2],
+    },
+    {
+      name: "weighted rational Bézier patch of degree 5 × 4 (4 spans)",
+      form: high,
       distance: undefined,
       target: [0, 0, 0.2],
     },

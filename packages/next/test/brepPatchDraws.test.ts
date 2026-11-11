@@ -1,5 +1,5 @@
-// A b-rep as a world's draws (World.addBrep, provisional): its complete faces
-// are one patch draw that the view's cull and dice feed, the rest a CPU mesh.
+// A b-rep as a world's draws (World.addBrep, provisional): every face is a
+// patch draw that the view's cull and dice feed, whatever its patches' degree.
 import { beforeAll, describe, expect, it } from "vitest";
 import {
   PLACEMENT_MONOMIALS,
@@ -11,8 +11,14 @@ import type { Engine } from "../src/scene/Engine.ts";
 import { placementBounds } from "../src/scene/world/patches.ts";
 import type { WarpTerms } from "../src/scene/warpTerms.ts";
 import { prepareGpuPatches, tessellateBrep } from "../src/brep/index.ts";
+import { BrepBuilder } from "../src/brep/build.ts";
 import type { DrawHandle } from "../src/scene/world/types.ts";
-import { boxBrep, cappedCylinderBrep } from "./brepFixtures.ts";
+import {
+  boxBrep,
+  boxFace,
+  cappedCylinderBrep,
+  highDegreeSurface,
+} from "./brepFixtures.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 interface Recorded {
@@ -129,6 +135,52 @@ describe("World.addBrep", () => {
     expect(brep.gpuFaces).toEqual([0, 1, 2, 3, 4, 5]);
     expect(brep.cpuFaces).toEqual([]);
     expect(brep.mesh).toBeUndefined();
+    world.removeBrep(brep);
+    world.destroy();
+  });
+
+  it("draws a face of any patch degree to 7 from the GPU: no CPU mesh", () => {
+    for (const [du, dv] of [
+      [5, 5],
+      [7, 2],
+      [3, 7],
+    ] as const) {
+      const world = engine.createWorld(options);
+      const b = new BrepBuilder();
+      boxFace(
+        b,
+        b.nurbsSurface(highDegreeSurface(du, dv, { spansU: 2 })),
+        [0, 1, 0, 1],
+      );
+      const brep = world.addBrep(b.build());
+      expect(brep.gpuFaces).toEqual([0]);
+      expect(brep.cpuFaces).toEqual([]);
+      expect(brep.unsupported).toEqual([]);
+      expect(brep.mesh).toBeUndefined();
+      expect(brep.patches).toBeDefined();
+      expect(
+        world.raster.patchDraws.get(brep.patches!.index)!.mesh.patches.spans,
+      ).toBe(2);
+      world.removeBrep(brep);
+      world.destroy();
+    }
+  });
+
+  it("leaves a face with nothing to draw undrawn, and makes no CPU mesh for it", () => {
+    const world = engine.createWorld(options);
+    const form = boxBrep();
+    const prepared = prepareGpuPatches(form);
+    const faces = prepared.faces.map((f, i) =>
+      i === 2 ? { ...f, supported: false, reason: "nothing to draw" } : f,
+    );
+    const brep = world.addBrep(form, { prepared: { ...prepared, faces } });
+    expect(brep.gpuFaces).toEqual([0, 1, 3, 4, 5]);
+    expect(brep.cpuFaces).toEqual([]);
+    expect(brep.unsupported).toEqual([{ face: 2, reason: "nothing to draw" }]);
+    expect(brep.mesh).toBeUndefined();
+    expect(
+      world.raster.patchDraws.get(brep.patches!.index)!.mesh.patches.spans,
+    ).toBe(5);
     world.removeBrep(brep);
     world.destroy();
   });

@@ -726,17 +726,7 @@ PatchVertex patchVertex(DrawRecord r, uint vertexIndex) {
   float v = j == nv ? s.rect.w : s.rect.z + (s.rect.w - s.rect.z) * float(j) / float(nv);
   PatchPoint point;
   if (s.kind == 5u) {
-    float4 net[16];
-    uint count = (s.degreeU + 1u) * (s.degreeV + 1u);
-    for (uint n = 0u; n < 16u; n++) {
-      if (n < count) {
-        uint at = r.positionOffset + s.controls + n * 4u;
-        net[n] = float4(vertices[at], vertices[at + 1u], vertices[at + 2u], vertices[at + 3u]);
-      } else {
-        net[n] = float4(0.0);
-      }
-    }
-    point = evaluateBezier(s, net, u, v);
+    point = evaluateBezierSpan(s, vertices, r.positionOffset, u, v);
   } else {
     point = evaluateAnalytic(s, u, v);
   }

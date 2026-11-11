@@ -9,7 +9,8 @@
 // (surface.slang `patchVertex`) evaluates the surface at each cell's corners
 // with the functions here: the analytic formulas as src/brep/form.ts
 // documents them, and rational Béziers by de Casteljau in homogeneous
-// coordinates. Normals are the exact ∂u × ∂v (the face's reversal applies
+// coordinates, of degree 1 to 7 (a cubic path with a fixed net, a wider one
+// above 3). Normals are the exact ∂u × ∂v (the face's reversal applies
 // in the caller). The float64 CPU twin is `evaluateSpan` there.
 module patch;
 
@@ -271,6 +272,92 @@ void bezierPatch(PatchSpan sp, float4 net[16], float s, float t, out float3 posi
   dt = (ht.xyz - ht.w * position) / w;
 }
 
+// The same for a degree up to 7 in each direction (the form's most): the
+// first n + 1 of 8 points. A separate, wider copy so the cubic path above
+// keeps its smaller arrays.
+void casteljauWide(float4 p[8], uint n, float t, out float4 value, out float4 derivative) {
+  float s = 1.0 - t;
+  derivative = float4(0.0);
+  for (uint level = 1u; level <= 7u; level++) {
+    if (level > n) {
+      break;
+    }
+    if (level == n) {
+      derivative = float(n) * (p[1] - p[0]);
+    }
+    for (uint i = 0u; i + level <= n; i++) {
+      p[i] = s * p[i] + t * p[i + 1u];
+    }
+  }
+  value = p[0];
+}
+
+// `bezierPatch` for a net of any degree up to 7 × 7, read from the arena at
+// word `at` (4 per control point, s fastest) a row at a time: no 64-point
+// copy is held, only a row's 8 points and the rows' values and derivatives.
+void bezierPatchWide(StructuredBuffer<float> words, uint at, uint du, uint dv, float s, float t, out float3 position, out float3 ds, out float3 dt) {
+  float4 rowValue[8];
+  float4 rowDerivative[8];
+  for (uint j = 0u; j <= 7u; j++) {
+    rowValue[j] = float4(0.0);
+    rowDerivative[j] = float4(0.0);
+    if (j > dv) {
+      continue;
+    }
+    float4 p[8];
+    uint row = at + j * (du + 1u) * 4u;
+    for (uint i = 0u; i <= 7u; i++) {
+      if (i <= du) {
+        p[i] = load4(words, row + i * 4u);
+      } else {
+        p[i] = float4(0.0);
+      }
+    }
+    casteljauWide(p, du, s, rowValue[j], rowDerivative[j]);
+  }
+  float4 h;
+  float4 ht;
+  float4 hs;
+  float4 unused;
+  casteljauWide(rowValue, dv, t, h, ht);
+  casteljauWide(rowDerivative, dv, t, hs, unused);
+  float w = h.w;
+  position = h.xyz / w;
+  ds = (hs.xyz - hs.w * position) / w;
+  dt = (ht.xyz - ht.w * position) / w;
+}
+
+// (u, v) as the local (s, t) of the span's patch domain.
+float2 patchParameters(PatchSpan sp, float u, float v) {
+  float2 width = float2(sp.domain.y - sp.domain.x, sp.domain.w - sp.domain.z);
+  return float2(
+      width.x > 0.0 ? clamp((u - sp.domain.x) / width.x, 0.0, 1.0) : 0.0,
+      width.y > 0.0 ? clamp((v - sp.domain.z) / width.y, 0.0, 1.0) : 0.0);
+}
+
+// `evaluateBezier` for a net of degree above 3, read from the arena at `at`.
+PatchPoint evaluateBezierWide(PatchSpan sp, StructuredBuffer<float> words, uint at, float u, float v) {
+  float2 st = patchParameters(sp, u, v);
+  float3 ds;
+  float3 dt;
+  PatchPoint point;
+  bezierPatchWide(words, at, sp.degreeU, sp.degreeV, st.x, st.y, point.position, ds, dt);
+  float3 n = cross(ds, dt);
+  float scale = max(dot(ds, ds), dot(dt, dt));
+  if (dot(n, n) <= 1e-12 * scale * scale) {
+    float2 middle = float2(
+        0.5 * (sp.rect.x + sp.rect.y), 0.5 * (sp.rect.z + sp.rect.w));
+    float2 inside = float2(u, v) + (middle - float2(u, v)) * 1e-3;
+    float2 st2 = patchParameters(sp, inside.x, inside.y);
+    float3 p2;
+    bezierPatchWide(words, at, sp.degreeU, sp.degreeV, st2.x, st2.y, p2, ds, dt);
+    n = cross(ds, dt);
+  }
+  float length2 = dot(n, n);
+  point.normal = length2 > 0.0 ? n * rsqrt(length2) : float3(0.0, 0.0, 1.0);
+  return point;
+}
+
 // A Bézier span's surface at (u, v) of its patch's domain, given its net
 // (the caller read it). At a pole (a degenerate row, where ∂s or ∂t
 // vanishes) the normal is taken a little inside the span.
@@ -297,4 +384,26 @@ public PatchPoint evaluateBezier(PatchSpan sp, float4 net[16], float u, float v)
   float length2 = dot(n, n);
   point.normal = length2 > 0.0 ? n * rsqrt(length2) : float3(0.0, 0.0, 1.0);
   return point;
+}
+
+// A Bézier span's surface at (u, v), its control net read from the arena at
+// `base` plus the record's offset. A degree of at most 3 in both directions
+// (the cubic path) copies the net to a fixed array and evaluates it there;
+// anything above, up to 7 (the form's most), takes the wide path, which
+// reads the points a row at a time.
+public PatchPoint evaluateBezierSpan(PatchSpan sp, StructuredBuffer<float> words, uint base, float u, float v) {
+  if (sp.degreeU > 3u || sp.degreeV > 3u) {
+    return evaluateBezierWide(sp, words, base + sp.controls, u, v);
+  }
+  float4 net[16];
+  uint count = (sp.degreeU + 1u) * (sp.degreeV + 1u);
+  for (uint n = 0u; n < 16u; n++) {
+    if (n < count) {
+      uint at = base + sp.controls + n * 4u;
+      net[n] = float4(words[at], words[at + 1u], words[at + 2u], words[at + 3u]);
+    } else {
+      net[n] = float4(0.0);
+    }
+  }
+  return evaluateBezier(sp, net, u, v);
 }
