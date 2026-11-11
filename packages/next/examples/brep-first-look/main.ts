@@ -47,17 +47,29 @@ import {
   type DisplayMode,
   type LineMesh,
 } from "./meshes.ts";
-import { smlibSolids } from "./smlib.ts";
+import {
+  KERNELS,
+  RECIPES,
+  runKernels,
+  type KernelLoad,
+  type KernelResult,
+} from "./kernels.ts";
 
 /**
- * B-reps, a first look: nine exact CAD shapes held as B-reps (a box, a capped
- * cylinder, a trimmed NURBS face, a sphere, a torus, a cone frustum, a plate
- * with bolt holes, a filleted block with a hole, and the box again through the
- * draft `BENTLEY_brep` glTF extension) on a 3 x 3 grid, tessellated on the
- * CPU for now. A fourth column holds three booleans (a box minus a cylinder,
- * and a box and a sphere united and intersected) made live by SMLib in
- * WebAssembly and converted to the render form, the CSG spike (plan
- * §13.33); a picked face of one says which input it came from.
+ * B-reps, a first look, in two scenes.
+ *
+ * - Gallery: nine exact CAD shapes held as B-reps (a box, a capped cylinder,
+ *   a trimmed NURBS face, a sphere, a torus, a cone frustum, a plate with
+ *   bolt holes, a filleted block with a hole, and the box again through the
+ *   draft `BENTLEY_brep` glTF extension) on a 3 x 3 grid.
+ * - Two kernels: three booleans (a box minus a cylinder, and a box and a
+ *   sphere united and intersected) made live by SMLib and by Open CASCADE in
+ *   WebAssembly, side by side, each converted to the same render form: the
+ *   CSG spike (plan §13.33). SMLib's faces arrive as Bézier patches, OCCT's
+ *   as analytic kinds. A picked face says which input it came from. The
+ *   kernels load only when the scene is first shown.
+ *
+ * Everything is tessellated on the CPU for now.
  *
  * A toolbar over the view switches the display mode (keys 1 to 4): shaded,
  * shaded + wireframe, flat + wireframe, wireframe. The panel's analysis views
@@ -100,6 +112,8 @@ interface Shape {
   doubleSided: boolean;
   /** Said in the panel: where the form came from. */
   note?: string;
+  /** The kernel that made it, for the Kernels scene's shapes. */
+  kernel?: string;
   /** Per face: the input of a boolean it came from, said when it's picked. */
   faceSources?: readonly string[];
 }
@@ -218,6 +232,51 @@ const TOOLBAR_CSS = `
   .bf-toolbar button::after { transition: none; }
 }
 .bf-view:focus-visible { outline: 2px solid var(--cesium-ui-focus, Highlight); outline-offset: -2px; }
+
+/* The panel: a scene switch, compact toggles and tables. */
+.bf-segmented {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+  padding: 2px; gap: 2px;
+  border-radius: var(--stratakit-radius-md, 6px);
+  background: var(--stratakit-color-bg-page-depth, rgb(0 0 0 / 0.06));
+  border: 1px solid var(--stratakit-color-border-neutral-base, rgb(0 0 0 / 0.15));
+}
+:where(.examples-panel) .bf-segmented button {
+  border: 0; border-radius: calc(var(--stratakit-radius-md, 6px) - 2px);
+  background: transparent; padding: 5px 8px; font-weight: 500;
+}
+:where(.examples-panel) .bf-segmented button[aria-pressed="true"] {
+  background: var(--stratakit-color-bg-accent-base, var(--cesium-ui-accent, AccentColor));
+  color: var(--stratakit-color-text-accent-on-base, #fff);
+}
+.bf-segmented button:disabled { opacity: 0.6; cursor: progress; }
+.bf-toggles {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 4px var(--stratakit-space-300, 12px);
+}
+:where(.examples-panel) .bf-toggles label { justify-content: flex-end; flex-direction: row-reverse; }
+:where(.examples-panel) .bf-tolerance { grid-template-columns: auto 1fr auto; }
+.bf-tolerance output { white-space: nowrap; }
+.bf-legend { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+.bf-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.bf-table th, .bf-table td {
+  padding: 4px 6px; text-align: left; vertical-align: top;
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted, rgb(0 0 0 / 0.08));
+}
+.bf-table th {
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary, inherit);
+}
+.bf-table td small { display: block; color: var(--stratakit-color-text-neutral-secondary, inherit); }
+.bf-table td small.bf-place { display: inline; margin-inline-start: 6px; }
+.bf-table caption {
+  caption-side: bottom; text-align: left; padding-top: 6px;
+  color: var(--stratakit-color-text-neutral-secondary, inherit);
+}
+.bf-ok { color: var(--stratakit-color-text-positive-base, #1a7f37); }
+.bf-bad { color: var(--stratakit-color-text-critical-base, #cf222e); }
+.bf-stats > summary { font-weight: 500; }
+.bf-stats > dl { margin-top: 6px; }
 `;
 
 /** How far lines lift off the faces, as a fraction of a shape's size. */
@@ -411,16 +470,11 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   if (signal.aborted) {
     return () => undefined;
   }
-  const solids = await smlibSolids();
-  if (signal.aborted) {
-    return () => undefined;
-  }
-  // A 3 × 3 grid on the ground, 4 m between the middles, the first shape at
-  // the top left (north-west) and rows running south, and a fourth column on
-  // the right for SMLib's booleans. Each shape is drawn at a scale that makes
-  // them read together.
+  // The gallery: a 3 × 3 grid on the ground, 4 m between the middles, the
+  // first shape at the top left (north-west) and rows running south. Each
+  // shape is drawn at a scale that makes them read together.
   const ROWS = ["top", "middle", "bottom"];
-  const COLUMNS = ["left", "centre left", "centre right", "right"];
+  const COLUMNS = ["left", "middle", "right"];
   const entries: Array<Omit<Shape, "x" | "y" | "place">> = [
     { name: "Box", form: box, scale: 0.55, doubleSided: false },
     {
@@ -466,19 +520,45 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       note: gltfNote,
     });
   }
-  const shapes: Shape[] = [
-    ...entries.map((entry, i) => ({
-      entry,
-      row: Math.floor(i / 3),
-      column: i % 3,
-    })),
-    ...solids.shapes.map((entry, i) => ({ entry, row: i, column: 3 })),
-  ].map(({ entry, row, column }) => ({
+  const gallery: Shape[] = entries.map((entry, i) => ({
     ...entry,
-    x: (column - 1.5) * SPACING,
-    y: (1 - row) * SPACING,
-    place: `${ROWS[row]} row, ${COLUMNS[column]}`,
+    x: ((i % 3) - 1) * SPACING,
+    y: (1 - Math.floor(i / 3)) * SPACING,
+    place: `${ROWS[Math.floor(i / 3)]} row, ${COLUMNS[i % 3]}`,
   }));
+
+  // The kernels: each boolean in SMLib (west) and Open CASCADE (east), one
+  // row each, made when the scene is first shown.
+  let kernelScene:
+    | { shapes: Shape[]; loads: KernelLoad[]; results: KernelResult[] }
+    | undefined;
+  const makeKernelScene = async () => {
+    const { loads, results } = await runKernels();
+    const shapes: Shape[] = [];
+    for (const result of results) {
+      if (!result.form) {
+        continue;
+      }
+      const row = RECIPES.indexOf(result.recipe);
+      const column = KERNELS.indexOf(result.kernel);
+      shapes.push({
+        name: result.recipe.name,
+        kernel: result.kernel,
+        form: result.form,
+        scale: result.recipe.scale,
+        doubleSided: false,
+        x: (column - 0.5) * SPACING,
+        y: (1 - row) * SPACING,
+        place: `${ROWS[row]} row, ${column === 0 ? "west" : "east"}`,
+        faceSources: result.faceSources,
+      });
+    }
+    return { shapes, loads, results };
+  };
+
+  type SceneName = "gallery" | "kernels";
+  let scene: SceneName = "gallery";
+  let shapes: Shape[] = gallery;
 
   // ------------------------------------------------------------ the scene
   const ellipsoid = Ellipsoid.WGS84;
@@ -570,7 +650,15 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   };
   const prepared: Array<Prepared | undefined> = [];
 
-  const problemsOf = shapes.map((shape) => validateBrep(shape.form));
+  const problemCache = new Map<Shape, ReturnType<typeof validateBrep>>();
+  const problemsOf = (shape: Shape) => {
+    let problems = problemCache.get(shape);
+    if (!problems) {
+      problems = validateBrep(shape.form);
+      problemCache.set(shape, problems);
+    }
+    return problems;
+  };
 
   // Tessellates every shape: when the tolerance changes.
   const tessellate = () => {
@@ -883,15 +971,19 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   tessellate();
   build();
 
-  // The grid's middle, Earth-fixed.
-  viewer.zoomTo(
-    {
-      center: vec3.add(vec3.vec3(), origin, vec3.vec3(0, 0, 0.6)),
-      radius: 8.4,
-    },
-    0,
-    -42 * DEG,
-  );
+  // Frames the scene's grid from its middle, Earth-fixed: the gallery's
+  // 3 × 3 or the kernels' 2 × 3.
+  const frame = () => {
+    viewer.zoomTo(
+      {
+        center: vec3.add(vec3.vec3(), origin, vec3.vec3(0, 0, 0.6)),
+        radius: scene === "gallery" ? 6.8 : 6.2,
+      },
+      0,
+      -42 * DEG,
+    );
+  };
+  frame();
   viewer.setSun(150, 40);
 
   const el = <K extends keyof HTMLElementTagNameMap>(
@@ -975,13 +1067,14 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     label: string,
     get: () => boolean,
     set: (v: boolean) => void,
+    title?: string,
   ) => {
     const box = el("input", {
       type: "checkbox",
       checked: get(),
       onchange: () => set(box.checked),
     });
-    return el("label", {}, label, box);
+    return el("label", title ? { title } : {}, label, box);
   };
 
   // Tolerance on a log scale: 0.1 mm to 50 mm.
@@ -999,6 +1092,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     max: "1",
     step: "0.001",
     value: String(toleranceT(settings.tolerance)),
+    ariaLabel: "Chordal tolerance, millimetres in the scene",
     oninput: () => {
       settings.tolerance = toleranceOf(Number(toleranceInput.value));
       toleranceOut.textContent = mm(settings.tolerance);
@@ -1007,21 +1101,26 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       showStats();
     },
   });
+
+  // The tessellation's numbers, folded to one line.
+  const statsSummary = el("summary");
   const statsOut = el("dl");
   const showStats = () => {
+    const lines =
+      stats.wireLines + stats.edgeLines + stats.isoLines + stats.whiskers;
+    statsSummary.textContent = `${stats.triangles.toLocaleString()} triangles, ${stats.ms.toFixed(0)} ms, error ${
+      stats.capped.length > 0
+        ? `${mm(stats.error)} (over)`
+        : `≤ ${mm(stats.error)}`
+    }`;
     statsOut.replaceChildren(
-      el("dt", {}, "Triangles drawn"),
+      el("dt", {}, "Triangles"),
       el("dd", {}, stats.triangles.toLocaleString()),
-      el("dt", {}, "Lines drawn"),
+      el("dt", {}, "Lines"),
       el(
         "dd",
         {},
-        (
-          stats.wireLines +
-          stats.edgeLines +
-          stats.isoLines +
-          stats.whiskers
-        ).toLocaleString(),
+        lines.toLocaleString(),
         el(
           "small",
           {},
@@ -1036,23 +1135,52 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
             .join(", ")})`,
         ),
       ),
-      el("dt", {}, "tessellateBrep took"),
+      el("dt", {}, "tessellateBrep"),
       el("dd", {}, `${stats.ms.toFixed(1)} ms for ${shapes.length} shapes`),
-      el("dt", {}, "Largest chordal error on screen"),
+      el("dt", {}, "Chordal error"),
       el(
         "dd",
         {},
         stats.capped.length > 0
-          ? `${mm(stats.error)}, over the tolerance: the grid cap binds on ${stats.capped.join(", ")}`
-          : `${mm(stats.error)}, within the tolerance`,
+          ? `${mm(stats.error)} on screen, over the tolerance: the grid cap binds on ${stats.capped.join(", ")}`
+          : `${mm(stats.error)} on screen, within the tolerance`,
       ),
     );
   };
-  showStats();
 
+  // The legend of the surface kinds, with how many faces of each are in view.
+  const legend = el("ul", {
+    hidden: true,
+    className: "bf-legend",
+    ariaLabel: "Surface kinds",
+  });
+  const renderLegend = () => {
+    legend.replaceChildren();
+    KIND_NAMES.forEach((name, kind) => {
+      const faces = shapes.reduce(
+        (n, shape) =>
+          n +
+          [...shape.form.faceSurface].filter(
+            (surface) => shape.form.surfaceKind[surface] === kind,
+          ).length,
+        0,
+      );
+      if (faces === 0) {
+        return;
+      }
+      const swatch = el("span", {
+        ariaHidden: "true",
+        style: `display:inline-block;width:12px;height:12px;border-radius:3px;margin-inline-end:8px;vertical-align:-1px;background:${KIND_COLORS[kind]};box-shadow:inset 0 0 0 1px rgb(0 0 0 / 0.35)`,
+      });
+      legend.append(
+        el("li", {}, swatch, `${name}, ${faces} face${faces === 1 ? "" : "s"}`),
+      );
+    });
+  };
   const toggle = (
     label: string,
     key: "byKind" | "iso" | "normals",
+    title: string,
   ): HTMLLabelElement =>
     check(
       label,
@@ -1063,127 +1191,306 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         build();
         showStats();
       },
+      title,
     );
-  // The legend of the surface kinds, with how many faces of each are in view.
-  const legend = el("ul", { hidden: true, ariaLabel: "Surface kinds" });
-  KIND_NAMES.forEach((name, kind) => {
-    const faces = shapes.reduce(
-      (n, shape) =>
-        n +
-        [...shape.form.faceSurface].filter(
-          (surface) => shape.form.surfaceKind[surface] === kind,
-        ).length,
-      0,
-    );
-    const swatch = el("span", {
-      ariaHidden: "true",
-      style: `display:inline-block;width:12px;height:12px;border-radius:3px;margin-inline-end:8px;vertical-align:-1px;background:${KIND_COLORS[kind]};box-shadow:inset 0 0 0 1px rgb(0 0 0 / 0.35)`,
-    });
-    legend.append(
-      el("li", {}, swatch, `${name}, ${faces} face${faces === 1 ? "" : "s"}`),
-    );
-  });
-  legend.append(
-    el(
-      "li",
-      {},
-      el(
-        "small",
-        {},
-        "Okabe–Ito colours, which stay apart under colour blindness.",
-      ),
-    ),
-  );
 
-  const validity = el("ul");
-  shapes.forEach((shape, s) => {
-    const problems = problemsOf[s]!;
-    const item = el(
-      "li",
-      {},
-      el("strong", {}, `${shape.name}`),
-      el("small", {}, ` (${shape.place}): `),
-      problems.length === 0
-        ? "valid"
-        : `${problems.length} problem${problems.length === 1 ? "" : "s"}`,
-    );
-    if (problems.length > 0) {
-      const list = el("ul");
-      for (const problem of problems) {
-        list.append(
+  // What's in the scene: the gallery's shapes, or the kernels side by side.
+  const mark = (ok: boolean, text: string) =>
+    el("span", { className: ok ? "bf-ok" : "bf-bad" }, text);
+  const problemList = (shape: Shape) => {
+    const list = el("ul");
+    for (const problem of problemsOf(shape)) {
+      list.append(
+        el(
+          "li",
+          {},
+          `${problem.kind}, ${problem.entity} ${problem.index}: ${problem.message}`,
+        ),
+      );
+    }
+    return list;
+  };
+  const shapesOut = el("div");
+  const renderGallery = () => {
+    const body = el("tbody");
+    for (const shape of shapes) {
+      const problems = problemsOf(shape);
+      body.append(
+        el(
+          "tr",
+          { title: shape.note ?? "" },
           el(
-            "li",
+            "td",
             {},
-            `${problem.kind}, ${problem.entity} ${problem.index}: ${problem.message}`,
+            shape.name,
+            el("small", { className: "bf-place" }, shape.place),
           ),
+          el("td", {}, String(shape.form.faceSurface.length)),
+          el(
+            "td",
+            {},
+            problems.length === 0
+              ? mark(true, "valid")
+              : mark(false, `${problems.length} problems`),
+          ),
+        ),
+      );
+    }
+    const broken = shapes.filter((s) => problemsOf(s).length > 0);
+    shapesOut.replaceChildren(
+      el(
+        "table",
+        { className: "bf-table" },
+        el(
+          "thead",
+          {},
+          el(
+            "tr",
+            {},
+            el("th", {}, "Shape"),
+            el("th", {}, "Faces"),
+            el("th", {}, "Form"),
+          ),
+        ),
+        body,
+      ),
+      ...broken.map((shape) =>
+        el(
+          "details",
+          {},
+          el("summary", {}, `${shape.name}: problems`),
+          problemList(shape),
+        ),
+      ),
+    );
+  };
+  /** "6 planes, 1 cylinder": a form's faces by surface kind. */
+  const kindsOf = (form: BrepForm) => {
+    const counts = new Map<number, number>();
+    for (const surface of form.faceSurface) {
+      const kind = form.surfaceKind[surface]!;
+      counts.set(kind, (counts.get(kind) ?? 0) + 1);
+    }
+    return [...counts]
+      .sort((a, b) => a[0] - b[0])
+      .map(([kind, n]) => {
+        const name = KIND_NAMES[kind] ?? "?";
+        // Bézier is a name; the others are words.
+        return `${n} ${name === "Bézier" ? name : name.toLowerCase()}`;
+      })
+      .join(", ");
+  };
+  const renderKernels = () => {
+    const ks = kernelScene;
+    if (!ks) {
+      return;
+    }
+    const body = el("tbody");
+    for (const recipe of RECIPES) {
+      const cells = KERNELS.map((kernel) => {
+        const result = ks.results.find(
+          (r) => r.recipe === recipe && r.kernel === kernel,
         );
+        const shape = ks.shapes.find(
+          (s) => s.kernel === kernel && s.name === recipe.name,
+        );
+        if (!result?.form || !shape) {
+          return el(
+            "td",
+            {},
+            mark(false, "failed"),
+            el("small", {}, result?.problem ?? ""),
+          );
+        }
+        const problems = problemsOf(shape);
+        return el(
+          "td",
+          {},
+          `${result.booleanMs!.toFixed(1)} + ${result.convertMs!.toFixed(1)} ms `,
+          problems.length === 0 ? mark(true, "✓") : mark(false, "✗"),
+          el("small", {}, kindsOf(result.form)),
+        );
+      });
+      body.append(
+        el("tr", {}, el("th", { scope: "row" }, recipe.name), ...cells),
+      );
+    }
+    const loads = ks.loads
+      .map((l) =>
+        l.ms !== undefined
+          ? `${l.kernel} loaded in ${l.ms.toFixed(0)} ms`
+          : `${l.kernel} ${l.problem}`,
+      )
+      .join("; ");
+    const broken = ks.shapes.filter((s) => problemsOf(s).length > 0);
+    shapesOut.replaceChildren(
+      el(
+        "table",
+        { className: "bf-table" },
+        el(
+          "caption",
+          {},
+          `Boolean + conversion to the render form, then the faces by surface kind; ✓ is a valid form. ${loads}.`,
+        ),
+        el(
+          "thead",
+          {},
+          el(
+            "tr",
+            {},
+            el("th", {}, ""),
+            ...KERNELS.map((k) => el("th", { scope: "col" }, k)),
+          ),
+        ),
+        body,
+      ),
+      ...broken.map((shape) =>
+        el(
+          "details",
+          {},
+          el("summary", {}, `${shape.name}, ${shape.kernel}: problems`),
+          problemList(shape),
+        ),
+      ),
+    );
+  };
+  const renderShapes = () =>
+    scene === "gallery" ? renderGallery() : renderKernels();
+
+  // The scene switch.
+  const SCENES: Record<SceneName, { label: string; note: string }> = {
+    gallery: {
+      label: "Gallery",
+      note: "Nine b-reps written with BrepBuilder, the last read back through the draft BENTLEY_brep glTF extension.",
+    },
+    kernels: {
+      label: "Two kernels",
+      note: "Each boolean made live by SMLib (west) and Open CASCADE (east) in WebAssembly, converted to the same render form. A picked face says which input it came from.",
+    },
+  };
+  const sceneNote = el("p");
+  const sceneButtons = (Object.keys(SCENES) as SceneName[]).map((name) =>
+    el("button", {
+      type: "button",
+      textContent: SCENES[name].label,
+      onclick: () => void setScene(name),
+    }),
+  );
+  const syncScene = () => {
+    sceneButtons.forEach((button, i) => {
+      button.setAttribute(
+        "aria-pressed",
+        String((Object.keys(SCENES) as SceneName[])[i] === scene),
+      );
+    });
+    sceneNote.textContent = SCENES[scene].note;
+  };
+  const setScene = async (next: SceneName) => {
+    if (next === scene) {
+      return;
+    }
+    if (next === "kernels" && !kernelScene) {
+      for (const button of sceneButtons) {
+        button.disabled = true;
       }
-      item.append(list);
+      sceneNote.textContent =
+        "Loading SMLib and Open CASCADE (about 28 MB the first time)…";
+      kernelScene = await makeKernelScene();
+      for (const button of sceneButtons) {
+        button.disabled = false;
+      }
+      if (signal.aborted) {
+        return;
+      }
     }
-    if (shape.note) {
-      item.append(el("br"), el("small", {}, shape.note));
-    }
-    validity.append(item);
-  });
-  if (solids.problem) {
-    validity.append(el("li", {}, el("small", {}, solids.problem)));
-  }
+    scene = next;
+    shapes = next === "gallery" ? gallery : kernelScene!.shapes;
+    selection = undefined;
+    prepared.length = 0;
+    tessellate();
+    build();
+    syncScene();
+    renderShapes();
+    renderLegend();
+    showStats();
+    frame();
+  };
 
   const picked = el("div", { className: "bf-selection" });
 
   panel.append(
-    el("h3", {}, "Tessellation"),
+    el(
+      "div",
+      {
+        className: "bf-segmented",
+        role: "group",
+        ariaLabel: "Scene",
+      },
+      ...sceneButtons,
+    ),
+    sceneNote,
+    el("h3", {}, "Display"),
     el(
       "label",
-      { className: "slider" },
-      "Chordal tolerance, mm in the scene",
+      {
+        className: "slider bf-tolerance",
+        title:
+          "Millimetres in the scene: each shape is tessellated at the tolerance divided by the scale it's drawn at.",
+      },
+      "Tolerance",
       toleranceInput,
       toleranceOut,
     ),
     el(
-      "p",
-      {},
-      el(
-        "small",
-        {},
-        "Each shape is drawn at a scale and tessellated at the tolerance divided by it, so the slider is millimetres on screen in the scene's units.",
+      "div",
+      { className: "bf-toggles" },
+      check(
+        "B-rep edges",
+        () => settings.edges,
+        (on) => {
+          settings.edges = on;
+          build();
+          showStats();
+        },
+        "The exact edges, drawn over the faces.",
+      ),
+      toggle(
+        "Colour by kind",
+        "byKind",
+        "Each face coloured by its surface kind (Okabe–Ito colours, which stay apart under colour blindness).",
+      ),
+      toggle(
+        "Iso lines",
+        "iso",
+        "8 lines each way across every face, through the exact surface, kept inside the trim.",
+      ),
+      toggle(
+        "Normals",
+        "normals",
+        "Whiskers along the face normal at a sample of vertices, 5% of the shape's size.",
       ),
     ),
-    statsOut,
-    check(
-      "B-rep edges",
-      () => settings.edges,
-      (on) => {
-        settings.edges = on;
-        build();
-        showStats();
-      },
-    ),
-    el("h3", {}, "Analysis"),
-    toggle("Color by surface kind", "byKind"),
     legend,
-    toggle("Iso lines", "iso"),
-    el(
-      "small",
-      {},
-      "8 lines each way across every face, through the exact surface, kept inside the trim.",
-    ),
-    toggle("Normals", "normals"),
-    el(
-      "small",
-      {},
-      "Whiskers along the face normal at a sample of vertices, 5% of the shape's size.",
-    ),
-    el("h3", {}, "Shapes, in grid order"),
-    validity,
+    el("details", { className: "bf-stats" }, statsSummary, statsOut),
+    el("h3", {}, "Shapes"),
+    shapesOut,
     el("h3", {}, "Selection"),
     picked,
     el(
-      "p",
+      "details",
       {},
-      "Faces are tessellated on a grid in (u, v) and the trimmed face's hole is cut by dropping triangles whose centre falls outside it, so its rim is jagged; the edges drawn over it are exact. This is the small CPU tessellator, not the reference.",
+      el("summary", {}, "About the tessellator"),
+      el(
+        "p",
+        {},
+        "Faces are tessellated on the CPU, on a grid in (u, v). A trimmed face's hole is cut by dropping the triangles whose centre falls outside it, so its rim is jagged; the edges drawn over it are exact. This is the small CPU tessellator, not the reference, until the GPU path (step 5).",
+      ),
     ),
   );
+  syncScene();
+  renderShapes();
+  renderLegend();
+  showStats();
 
   // What the selection says: the face or edge, and for a face the exact
   // point of the surface nearest where it was picked.
@@ -1213,7 +1520,12 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     const id = form.ids[sel.kind === "face" ? sel.index : faces + sel.index];
     const list = el("dl");
     list.append(
-      ...row("Shape", `${sel.shape.name} (${sel.shape.place})`),
+      ...row(
+        "Shape",
+        `${sel.shape.name}${sel.shape.kernel ? `, by ${sel.shape.kernel}` : ""}`,
+        el("small", {}, ` (${sel.shape.place})`),
+      ),
+      ...(sel.shape.note ? row("About it", sel.shape.note) : []),
       ...row(
         sel.kind === "face" ? "Face" : "Edge",
         `${sel.index}${id ? `, ID "${id}"` : ""}`,
@@ -1242,7 +1554,13 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         ? row(
             "Made from",
             `${sel.shape.faceSources[sel.index] ?? "?"} `,
-            el("small", {}, "SMLib's face tags, through the boolean"),
+            el(
+              "small",
+              {},
+              sel.shape.kernel === "Open CASCADE"
+                ? "from OCCT's history of the boolean"
+                : "from SMLib's face tags, carried through the boolean",
+            ),
           )
         : []),
       ...row(
