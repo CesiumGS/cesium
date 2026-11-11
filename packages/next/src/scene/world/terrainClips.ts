@@ -59,6 +59,8 @@ export interface ClipWorld extends Pick<
     | "materialsDirty"
     | "placementTable"
     | "pointCounts"
+    | "patchDraws"
+    | "patchWorldBindGroup"
     | "pointCullBindGroup"
     | "pointDraws"
     | "pointSetCount"

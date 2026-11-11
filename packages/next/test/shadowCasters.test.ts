@@ -538,9 +538,18 @@ describe("the shadow pipeline", () => {
     // The caster pipelines use the depth entry, of the engine's own module.
     const context = source("src/scene/RenderContext.ts");
     const shadow = context.slice(context.indexOf("const shadowPipeline = ("));
-    expect(shadow.slice(0, 600)).toContain('entryPoint: "vsDepth"');
+    // Patch draws take the same function through their chunk entry.
+    expect(shadow.slice(0, 600)).toMatch(
+      /entryPoint: (?:patches \? "vsPatchDepth" : )?"vsDepth"/,
+    );
     expect(source("src/shaders/surfaceVertex.wgsl")).toMatch(
       /fn vsDepth[^}]*surfaceDepthVertex/,
+    );
+    expect(source("src/shaders/surfaceVertex.wgsl")).toMatch(
+      /fn vsPatchDepth[^}]*surfacePatchDepthVertex/,
+    );
+    expect(surface).toMatch(
+      /surfacePatchDepthVertex\(uint vertexIndex, uint4 chunk\) \{\s*patchChunk = chunk;\s*return vertexOut\(vertexIndex, chunk\.x, false\);/,
     );
   });
 });

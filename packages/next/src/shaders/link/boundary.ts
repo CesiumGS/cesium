@@ -64,10 +64,18 @@ export const SURFACE_BOUNDARY: Boundary = {
  */
 export const SURFACE_VERTEX_BOUNDARY: Boundary = {
   name: "surface vertex",
-  requires: ["surfaceVertex", "surfacePointVertex", "surfaceDepthVertex"].map(
-    (name) => ({ name, params: ["u32", "u32"], result: "SurfaceVertex" }),
-  ),
-  provides: ["vs", "vsPoints", "vsDepth"],
+  requires: [
+    ...["surfaceVertex", "surfacePointVertex", "surfaceDepthVertex"].map(
+      (name) => ({ name, params: ["u32", "u32"], result: "SurfaceVertex" }),
+    ),
+    // A patch draw's: its chunk (dice.slang) in place of the item.
+    ...["surfacePatchVertex", "surfacePatchDepthVertex"].map((name) => ({
+      name,
+      params: ["u32", "vec4<u32>"],
+      result: "SurfaceVertex",
+    })),
+  ],
+  provides: ["vs", "vsPoints", "vsDepth", "vsPatch", "vsPatchDepth"],
 };
 
 /** The point cull's (pointCull.slang): a vector style's symbols' kernel. */

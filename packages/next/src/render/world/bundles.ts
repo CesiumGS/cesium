@@ -91,6 +91,8 @@ export interface CullWorld extends Pick<World, "ctx" | "hasDraw" | "slabs"> {
     | "frameComputes"
     | "instanceHighWater"
     | "instances"
+    | "patchDraws"
+    | "patchWorldBindGroup"
     | "pendingUploads"
     | "pointCounts"
     | "pointCullBindGroup"
@@ -156,6 +158,8 @@ export interface PrepareWorld extends Pick<
     | "materialsDirty"
     | "materialsF32"
     | "materialsU32"
+    | "patchDraws"
+    | "patchWorldBindGroup"
     | "pendingUploads"
     | "placementTable"
     | "pointCounts"
@@ -355,6 +359,22 @@ export function encodeCull(
     pass.setPipeline(pipelines.writePointArgs);
     pass.dispatchWorkgroups(1);
   }
+  // Patch draws the cull kept: their spans into chunks of cells, then
+  // their draws' arguments (over the item counts the cull wrote there).
+  // A draw no view shows has zeroed arguments already.
+  if (world.raster.patchDraws.size) {
+    pass.setBindGroup(1, world.raster.patchWorldBindGroup);
+    for (const draw of world.raster.patchDraws.values()) {
+      if (draw.batch.shown === 0) {
+        continue;
+      }
+      pass.setBindGroup(2, draw.group);
+      pass.setPipeline(pipelines.dicePatches);
+      pass.dispatchWorkgroups(Math.ceil(draw.mesh.patches.spans / 64));
+      pass.setPipeline(pipelines.writePatchArgs);
+      pass.dispatchWorkgroups(1);
+    }
+  }
   pass.end();
 }
 
@@ -445,46 +465,72 @@ export function recordBundle(
     (world.raster.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
       (MaterialFlags.alphaMask | MaterialFlags.alphaBlend)) !==
     0;
-  const keyOf = (batch: Batch): SurfaceKey =>
-    prepass
-      ? batch.doubleSided
-        ? "prepassDoubleSided"
-        : "prepass"
+  // Patch draws: their own pipelines, with the chunk vertex stage; their
+  // materials are opaque (cut-outs and blending are not drawn through them).
+  const patchKey = (batch: Batch): SurfaceKey => {
+    const sided = batch.doubleSided;
+    return prepass
+      ? sided
+        ? "prepassPatchDoubleSided"
+        : "prepassPatch"
       : depth
-        ? masked(batch)
-          ? batch.doubleSided
-            ? "depthMaskedDoubleSided"
-            : "depthMasked"
-          : batch.doubleSided
-            ? "depthDoubleSided"
-            : "depth"
+        ? sided
+          ? "depthPatchDoubleSided"
+          : "depthPatch"
         : height
+          ? sided
+            ? "heightPatchDoubleSided"
+            : "heightPatch"
+          : shadow
+            ? sided
+              ? "shadowPatchDoubleSided"
+              : "shadowPatch"
+            : sided
+              ? "opaquePatchDoubleSided"
+              : "opaquePatch";
+  };
+  const keyOf = (batch: Batch): SurfaceKey =>
+    batch.patches
+      ? patchKey(batch)
+      : prepass
+        ? batch.doubleSided
+          ? "prepassDoubleSided"
+          : "prepass"
+        : depth
           ? masked(batch)
             ? batch.doubleSided
-              ? "heightMaskedDoubleSided"
-              : "heightMasked"
+              ? "depthMaskedDoubleSided"
+              : "depthMasked"
             : batch.doubleSided
-              ? "heightDoubleSided"
-              : "height"
-          : shadow
+              ? "depthDoubleSided"
+              : "depth"
+          : height
             ? masked(batch)
               ? batch.doubleSided
-                ? "shadowMaskedDoubleSided"
-                : "shadowMasked"
+                ? "heightMaskedDoubleSided"
+                : "heightMasked"
               : batch.doubleSided
-                ? "shadowDoubleSided"
-                : "shadow"
-            : batch.points
-              ? "opaquePoints"
-              : batch.mesh.topology === "line-list"
-                ? "opaqueLines"
-                : batch.instanced
-                  ? batch.doubleSided
-                    ? "opaqueInstancedDoubleSided"
-                    : "opaqueInstanced"
-                  : batch.doubleSided
-                    ? "opaqueDoubleSided"
-                    : "opaque";
+                ? "heightDoubleSided"
+                : "height"
+            : shadow
+              ? masked(batch)
+                ? batch.doubleSided
+                  ? "shadowMaskedDoubleSided"
+                  : "shadowMasked"
+                : batch.doubleSided
+                  ? "shadowDoubleSided"
+                  : "shadow"
+              : batch.points
+                ? "opaquePoints"
+                : batch.mesh.topology === "line-list"
+                  ? "opaqueLines"
+                  : batch.instanced
+                    ? batch.doubleSided
+                      ? "opaqueInstancedDoubleSided"
+                      : "opaqueInstanced"
+                    : batch.doubleSided
+                      ? "opaqueDoubleSided"
+                      : "opaque";
   const rank = (batch: Batch) =>
     batch.mesh.topology === "line-list" ? 2 : Number(batch.doubleSided);
   // Only batches some view draws (`Batch.shown`), and for shadows those
@@ -719,6 +765,7 @@ export function encodeTranslucent(
   for (const batch of world.raster.batchList) {
     if (
       batch.shown === 0 ||
+      batch.patches ||
       !translucent(world, batch) ||
       world.raster.brokenTextureSets.has(batch.textureSet)
     ) {

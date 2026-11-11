@@ -30,6 +30,8 @@ import {
 import type { Body } from "./Body.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
 import type { MeshData } from "./meshes.ts";
+import type { BrepForm } from "../brep/form.ts";
+import type { GpuPatchData } from "../brep/gpuPatches.ts";
 import { featureName, featureProperties } from "../io/features.ts";
 import type { RenderContext, SurfaceKey } from "./RenderContext.ts";
 import type { CustomShader } from "./CustomShader.ts";
@@ -48,6 +50,7 @@ import type {
   WorldOptions,
   WorldMemory,
   MeshHandle,
+  PatchMesh,
   PointMesh,
   MaterialOptions,
   TextureSetOptions,
@@ -87,6 +90,17 @@ import {
   setPointProperties,
   removeMesh,
 } from "./world/meshes.ts";
+import {
+  addPatchMesh,
+  setPatchErrorPixels,
+  type PatchMeshOptions,
+} from "./world/patches.ts";
+import {
+  addBrep,
+  removeBrep,
+  type BrepHandle,
+  type BrepOptions,
+} from "./world/brep.ts";
 import {
   textureDestroyed,
   addMaterial,
@@ -622,6 +636,51 @@ export class World {
     },
   ): PointMesh {
     return addPointMesh(this, capacity, streams);
+  }
+
+  /**
+   * @internal Provisional (CESIUM2_WEBGPU_PLAN.md §13.33, step 5, part 1).
+   * A b-rep's patches as a mesh: the span records and control points
+   * `packGpuPatches` makes, in the arena. A draw of it (`addDraw`) is
+   * diced per view on the GPU into chunks of 8 × 8 cells (dice.slang) and
+   * drawn with the face as the feature; its materials are opaque.
+   * `faces` is the form's face count (the local feature IDs).
+   */
+  addPatchMesh(
+    data: GpuPatchData,
+    faces: number,
+    options?: PatchMeshOptions,
+  ): PatchMesh {
+    return addPatchMesh(this, data, faces, options);
+  }
+
+  /** @internal Provisional. A patch draw's target error, pixels. */
+  setPatchErrorPixels(handle: DrawHandle, errorPixels: number): void {
+    if (!this.hasDraw(handle)) {
+      throw new Error("setPatchErrorPixels: the draw was removed");
+    }
+    setPatchErrorPixels(this, handle.index, errorPixels);
+    this.version++;
+    this.changedViews = 0xffffffff;
+  }
+
+  /**
+   * @internal Provisional (CESIUM2_WEBGPU_PLAN.md §13.33, step 5, part 1).
+   * A b-rep solid in this world: its faces that are complete as their (u, v)
+   * rect (a box's, a cylinder's side) as one patch draw diced per view in
+   * pixels of error (`errorPixels`), and, until the per-pixel trim test
+   * lands, the faces that need it as a CPU mesh of the chordal error
+   * `cpuTolerance`. The form's coordinates are placed as `addDraw` places a
+   * mesh (`parent`, `origin`, `model`), or by a shared `transform`. Faces
+   * are features, as the form's face indices. `removeBrep` takes it away.
+   */
+  addBrep(form: BrepForm, options?: BrepOptions): BrepHandle {
+    return addBrep(this, form, options);
+  }
+
+  /** @internal Provisional. Removes what `addBrep` made. */
+  removeBrep(handle: BrepHandle): void {
+    removeBrep(this, handle);
   }
 
   /** Writes points' properties (`addPointMesh` streams) from `first` on. */

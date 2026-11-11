@@ -2,10 +2,10 @@
 // own because their position must be `@invariant` (the opaque pass's depth,
 // `vsDepth`, and its shading, `vs`, must agree to the bit: the shading tests
 // for equal depth), which Slang doesn't emit. Everything else is Slang's:
-// these put out what `surfaceVertex`, `surfacePointVertex` and
-// `surfaceDepthVertex` return, at the locations surface.slang's fragment
-// entry points read (`SurfaceVaryings`, in field order: test/linker.test.ts
-// checks the two agree).
+// these put out what `surfaceVertex`, `surfacePointVertex`,
+// `surfaceDepthVertex` and the patch pair return, at the locations
+// surface.slang's fragment entry points read (`SurfaceVaryings`, in field
+// order: test/linker.test.ts checks the two agree).
 
 struct VsOut {
   @builtin(position) @invariant position: vec4f,
@@ -45,4 +45,17 @@ fn vsPoints(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> 
 @vertex
 fn vsDepth(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut {
   return vsOut(surfaceDepthVertex(vertexIndex, item));
+}
+
+// A patch draw's (RecordFlags.patches): one instance a chunk of cells, the
+// chunk (the record, a span, its cells' origin and counts) read from the
+// draw's own list in place of the item list.
+@vertex
+fn vsPatch(@builtin(vertex_index) vertexIndex: u32, @location(0) chunk: vec4u) -> VsOut {
+  return vsOut(surfacePatchVertex(vertexIndex, chunk));
+}
+
+@vertex
+fn vsPatchDepth(@builtin(vertex_index) vertexIndex: u32, @location(0) chunk: vec4u) -> VsOut {
+  return vsOut(surfacePatchDepthVertex(vertexIndex, chunk));
 }

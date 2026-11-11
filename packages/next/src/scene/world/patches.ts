@@ -1,0 +1,266 @@
+// A world's b-rep patch draws (provisional, CESIUM2_WEBGPU_PLAN.md §13.33,
+// "Step 5 redirected", part 1): a patch mesh puts a b-rep's span records and
+// control points (src/brep/gpuPatches.ts) in a slab's arena, and a draw of it
+// owns the per-view dice's parameters and chunk list. The dice and the vertex
+// stage are shaders/dice.slang and surface.slang `patchVertex`.
+import type { GpuPatchData } from "../../brep/gpuPatches.ts";
+import { NO_STREAM } from "../../render/layout.ts";
+import { CapacityError } from "../CapacityError.ts";
+import { weightInterval } from "../warpBounds.ts";
+import { termCurvatureBound, termDerivativeBound } from "../warpEvaluate.ts";
+import type { World } from "../World.ts";
+import type { WorldRaster } from "../../render/world/worldRaster.ts";
+import type { WorldScene } from "./worldScene.ts";
+import type { DrawPlacement, PatchDraw, PatchMesh } from "./types.ts";
+import { queueUpload } from "./uploads.ts";
+
+/** `PatchDice` (shaders/dice.slang): 8 words. */
+export const PATCH_DICE_BYTES = 32;
+/** A chunk: a record, a span, its cells' origin and counts, a spare word. */
+export const CHUNK_BYTES = 16;
+/** The target error a cell may leave, pixels: half a pixel. */
+export const DEFAULT_ERROR_PIXELS = 0.5;
+/** Chunks of 8 × 8 cells a draw lists per view, at most (a million cells). */
+export const DEFAULT_MAX_CHUNKS = 16384;
+
+/** Scene side: a patch mesh's geometry into the world's slabs. */
+export interface PatchMeshWorld extends Pick<World, "ctx" | "slabs"> {
+  readonly raster: Pick<
+    WorldRaster,
+    "pendingUploads" | "uploadChunks" | "uploadsPending"
+  >;
+  readonly scene: Pick<WorldScene, "meshRanges" | "nextMeshId">;
+}
+
+/** Rasterizer side: a patch draw's buffers and group. */
+export interface PatchDrawWorld extends Pick<World, "ctx" | "slabs"> {
+  readonly raster: Pick<WorldRaster, "patchDraws">;
+}
+
+export interface PatchMeshOptions {
+  /** The target error, pixels, draws of it start with (default half a pixel). */
+  readonly errorPixels?: number;
+  /** The most chunks of 8 × 8 cells a draw lists per view (default 16,384). */
+  readonly maxChunks?: number;
+}
+
+/**
+ * The packed patches (`packGpuPatches`) as a mesh: one range of the arena.
+ * `faces` is the form's face count: the draw's local feature IDs.
+ */
+export function addPatchMesh(
+  world: PatchMeshWorld,
+  data: GpuPatchData,
+  faces: number,
+  options: PatchMeshOptions = {},
+): PatchMesh {
+  const errorPixels = options.errorPixels ?? DEFAULT_ERROR_PIXELS;
+  const maxChunks = options.maxChunks ?? DEFAULT_MAX_CHUNKS;
+  if (!(errorPixels > 0 && Number.isFinite(errorPixels))) {
+    throw new RangeError(
+      `addPatchMesh: errorPixels is ${errorPixels}; it is a positive number of pixels.`,
+    );
+  }
+  if (!Number.isInteger(maxChunks) || maxChunks < 1) {
+    throw new RangeError(
+      `addPatchMesh: maxChunks is ${maxChunks}; it is a positive integer.`,
+    );
+  }
+  if (data.spanCount === 0) {
+    throw new RangeError("addPatchMesh: no spans.");
+  }
+  const bytes = data.words.byteLength;
+  const slab = world.slabs.pick(bytes, 0);
+  const offset = slab && world.slabs.allocateVertex(slab, bytes);
+  if (!slab || offset === undefined) {
+    throw new CapacityError(
+      "vertex arena",
+      `patches of ${bytes.toLocaleString("en-US")} bytes: ${world.slabs.refusal(bytes, 0) ?? "no slab has a range that size free"}`,
+    );
+  }
+  queueUpload(world, slab.vertexBuffer, offset, data.words);
+  const id = world.scene.nextMeshId++;
+  world.scene.meshRanges.set(id, {
+    slab: slab.id,
+    vertex: [[offset, bytes]],
+    index: [0, 0],
+  });
+  const [x, y, z, radius] = data.sphere;
+  return {
+    id,
+    slab: slab.id,
+    firstIndex: 0,
+    // Non-zero so the cull draws it (cullTables `drawable`).
+    indexCount: data.spanCount,
+    vertexCount: 0,
+    streams: {
+      position: offset / 4,
+      normal: NO_STREAM,
+      uv: NO_STREAM,
+      color: NO_STREAM,
+      tangent: NO_STREAM,
+      featureId: NO_STREAM,
+      attributes: NO_STREAM,
+    },
+    featureCount: Math.max(1, faces),
+    topology: "triangle-list",
+    center: [x, y, z],
+    radius,
+    patches: {
+      table: offset / 4,
+      spans: data.spanCount,
+      errorPixels,
+      maxChunks,
+    },
+  };
+}
+
+/** A patch draw's dice group 2: its parameters, its slab's arena and its chunks. */
+export function patchGroup(
+  world: PatchDrawWorld,
+  draw: PatchDraw,
+): GPUBindGroup {
+  return world.ctx.device.createBindGroup({
+    label: "world.patchDice",
+    layout: world.ctx.pipelines.patchDiceLayout,
+    entries: [
+      draw.params,
+      world.slabs.get(draw.mesh.slab).vertexBuffer,
+      draw.chunks,
+    ].map((buffer, binding) => ({ binding, resource: { buffer } })),
+  });
+}
+
+/** A patch draw's buffers and group, for the record `record` in `batch`. */
+export function createPatchDraw(
+  world: PatchDrawWorld,
+  mesh: PatchMesh,
+  batch: PatchDraw["batch"],
+  record: number,
+): PatchDraw {
+  const { device } = world.ctx;
+  const capacity = mesh.patches.maxChunks;
+  const draw: PatchDraw = {
+    mesh,
+    batch,
+    params: device.createBuffer({
+      label: "world.patchDice.params",
+      size: PATCH_DICE_BYTES,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    }),
+    chunks: device.createBuffer({
+      label: "world.patchDice.chunks",
+      size: capacity * CHUNK_BYTES,
+      // COPY_SRC: checks read the chunks the dice listed.
+      usage:
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.VERTEX |
+        GPUBufferUsage.COPY_SRC,
+    }),
+    capacity,
+    group: undefined as never,
+    errorPixels: mesh.patches.errorPixels,
+    jacobian: 1,
+    curvature: 0,
+  };
+  draw.group = patchGroup(world, draw);
+  world.raster.patchDraws.set(record, draw);
+  writePatchParams(world, draw, record);
+  return draw;
+}
+
+/** A patch draw's `PatchDice` parameters. */
+export function writePatchParams(
+  world: Pick<World, "ctx">,
+  draw: PatchDraw,
+  record: number,
+): void {
+  const data = new Uint32Array(PATCH_DICE_BYTES / 4);
+  const f32 = new Float32Array(data.buffer);
+  data[0] = record;
+  data[1] = draw.batch.index;
+  data[2] = draw.mesh.patches.spans;
+  data[3] = draw.capacity;
+  f32[4] = draw.errorPixels;
+  f32[5] = draw.jacobian;
+  f32[6] = draw.curvature;
+  world.ctx.device.queue.writeBuffer(draw.params, 0, data);
+}
+
+/** Frees a patch draw's buffers. */
+export function releasePatchDraw(draw: PatchDraw): void {
+  draw.params.destroy();
+  draw.chunks.destroy();
+}
+
+/**
+ * What a placement adds to a patch's error, as bounds over the whole draw:
+ * `jacobian`, the norm of the placement's Jacobian (1 plus each term's
+ * largest weight times its derivative's bound), which scales the error the
+ * surface leaves, and `curvature`, the placement's second derivative's
+ * bound, which adds `curvature · speed² / 8` to each constant (dice.slang).
+ * Weights take the largest value their parameters' ranges allow. Without a
+ * placement: 1 and 0.
+ */
+export function placementBounds(
+  placed: Pick<DrawPlacement, "terms" | "center" | "base"> | undefined,
+): { jacobian: number; curvature: number } {
+  let jacobian = 1;
+  let curvature = 0;
+  for (const { term, weight } of placed?.terms ?? []) {
+    const [lo, hi] = weightInterval(weight);
+    const w = Math.max(Math.abs(lo), Math.abs(hi));
+    // How far the draw's points are from the lattice's centre, in its units.
+    const reach =
+      term.kind === "cubic"
+        ? (Math.hypot(
+            placed!.center[0] - term.center[0]!,
+            placed!.center[1] - term.center[1]!,
+            placed!.center[2] - term.center[2]!,
+          ) +
+            placed!.base) /
+          term.scale
+        : 1;
+    const d = termDerivativeBound(term, reach);
+    const c = termCurvatureBound(term, reach);
+    // An attribute has no derivative to bound: the cell cap takes over.
+    jacobian += w * (Number.isNaN(d) ? 1e6 : d);
+    curvature += w * (Number.isNaN(c) ? 1e6 : c);
+  }
+  return { jacobian, curvature };
+}
+
+/** Sets a patch draw's target error, pixels. */
+export function setPatchErrorPixels(
+  world: PatchDrawWorld,
+  record: number,
+  errorPixels: number,
+): void {
+  const draw = world.raster.patchDraws.get(record);
+  if (!draw) {
+    throw new Error("setPatchErrorPixels: not a patch draw");
+  }
+  if (!(errorPixels > 0 && Number.isFinite(errorPixels))) {
+    throw new RangeError(
+      `setPatchErrorPixels: ${errorPixels} is not a positive number of pixels.`,
+    );
+  }
+  draw.errorPixels = errorPixels;
+  writePatchParams(world, draw, record);
+}
+
+/** A patch draw's placement changed: its bounds follow. */
+export function updatePatchPlacement(
+  world: Pick<World, "ctx"> & {
+    readonly raster: Pick<WorldRaster, "patchDraws">;
+  },
+  record: number,
+  placed: Pick<DrawPlacement, "terms" | "center" | "base"> | undefined,
+): void {
+  const draw = world.raster.patchDraws.get(record);
+  if (!draw) {
+    return;
+  }
+  Object.assign(draw, placementBounds(placed));
+  writePatchParams(world, draw, record);
+}

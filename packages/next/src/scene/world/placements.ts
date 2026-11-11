@@ -10,6 +10,7 @@ import {
   CENTER_WORD,
 } from "../../render/layout.ts";
 import type { World } from "../World.ts";
+import { updatePatchPlacement } from "./patches.ts";
 import {
   type Placement,
   type PlacementParameter,
@@ -34,12 +35,13 @@ import type { WorldScene } from "./worldScene.ts";
 /** Scene side, writing the rasterizer's placement table and records. */
 export interface PlacementWorld extends Pick<
   World,
-  "changedViews" | "hasDraw" | "markDirty" | "version"
+  "changedViews" | "ctx" | "hasDraw" | "markDirty" | "version"
 > {
   readonly raster: Pick<
     WorldRaster,
     | "drawBatches"
     | "drawConstants"
+    | "patchDraws"
     | "placementTable"
     | "recordsF32"
     | "recordsU32"
@@ -221,6 +223,7 @@ export function setPlacement(
     if (old) {
       world.raster.drawConstants.setPlacement(index, NO_PLACEMENT);
       writeSphere(world, index, old.center, base);
+      updatePatchPlacement(world, index, undefined);
       world.scene.contentRevision_++;
       world.markDirty(index);
     }
@@ -250,6 +253,7 @@ export function setPlacement(
   };
   world.raster.drawConstants.setPlacement(index, at);
   writeSphere(world, index, sphere.center, sphere.radius);
+  updatePatchPlacement(world, index, world.scene.drawPlacements[index]);
   world.scene.contentRevision_++;
   world.markDirty(index);
 }
@@ -311,6 +315,7 @@ function parameterChanged(
     const sphere = spheres[k++]!;
     placed.pad = sphere.pad;
     writeSphere(world, index, sphere.center, sphere.radius);
+    updatePatchPlacement(world, index, placed);
     world.raster.uploadsPending = true;
     views |= world.raster.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
   }

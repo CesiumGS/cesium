@@ -98,6 +98,30 @@ public void storeArgument(uint a, uint word, uint value) {
   args[a + word].store(value);
 }
 
+// A patch draw's batch (the dice kernels, dice.slang): its arguments are a
+// non-indexed draw's, one instance a chunk of cells. Word 4 (unused by a
+// non-indexed draw, and cleared with the rest) counts the chunks the dice
+// wrote; `storePatchArguments` then replaces the cull's item count.
+// `countChunks` returns the count before, the first slot of the chunks.
+[ForceInline]
+public uint countChunks(uint a, uint n) {
+  uint first = args[a + 4u].add(n);
+  return first;
+}
+
+[ForceInline]
+public uint countedChunks(uint a) {
+  return args[a + 4u].load();
+}
+
+[ForceInline]
+public void storePatchArguments(uint a, uint vertexCount, uint chunkCount) {
+  args[a].store(vertexCount);
+  args[a + 1u].store(chunkCount);
+  args[a + 2u].store(0u);
+  args[a + 3u].store(0u);
+}
+
 public static const uint NONE = 0xffffffffu;
 public static const uint WHITE = 0xffffffffu;
 

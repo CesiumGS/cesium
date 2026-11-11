@@ -11,6 +11,7 @@ import {
 import aoWgsl from "../shaders/generated/ao.wgsl?raw";
 import { SHADOW_CASCADES, SHADOW_SIZE, SHADOWS_SIZE } from "./shadows.ts";
 import cullWgsl from "../shaders/generated/cull.wgsl?raw";
+import diceWgsl from "../shaders/generated/dice.wgsl?raw";
 import pointCullWgsl from "../shaders/generated/pointCull.wgsl?raw";
 import splatWgsl from "../shaders/generated/splat.wgsl?raw";
 import scatterWgsl from "../shaders/generated/scatter.wgsl?raw";
@@ -137,6 +138,22 @@ export interface SurfacePipelines {
   translucentMomentsDoubleSided: GPURenderPipeline;
   translucentColor: GPURenderPipeline;
   translucentColorDoubleSided: GPURenderPipeline;
+  /**
+   * Patch draws (`World.addPatchMesh`), one- and double-sided: the pass's
+   * vertex stage is `vsPatch` (`vsPatchDepth` in the depth-only passes),
+   * one instance a chunk of cells from the draw's own list. In the
+   * opaque pass they shade at the depth `depthPatch` wrote.
+   */
+  opaquePatch: GPURenderPipeline;
+  opaquePatchDoubleSided: GPURenderPipeline;
+  depthPatch: GPURenderPipeline;
+  depthPatchDoubleSided: GPURenderPipeline;
+  shadowPatch: GPURenderPipeline;
+  shadowPatchDoubleSided: GPURenderPipeline;
+  heightPatch: GPURenderPipeline;
+  heightPatchDoubleSided: GPURenderPipeline;
+  prepassPatch: GPURenderPipeline;
+  prepassPatchDoubleSided: GPURenderPipeline;
 }
 
 /** One of a shader's pipelines (`SurfacePipelines`). */
@@ -169,6 +186,16 @@ export const SURFACE_KEYS: readonly SurfaceKey[] = [
   "translucentMomentsDoubleSided",
   "translucentColor",
   "translucentColorDoubleSided",
+  "opaquePatch",
+  "opaquePatchDoubleSided",
+  "depthPatch",
+  "depthPatchDoubleSided",
+  "shadowPatch",
+  "shadowPatchDoubleSided",
+  "heightPatch",
+  "heightPatchDoubleSided",
+  "prepassPatch",
+  "prepassPatchDoubleSided",
 ];
 
 export interface Pipelines extends SurfacePipelines {
@@ -176,6 +203,10 @@ export interface Pipelines extends SurfacePipelines {
   cullWorldLayout: GPUBindGroupLayout;
   /** The point cull's group 1: records, transforms, indirect arguments. */
   cullPointWorldLayout: GPUBindGroupLayout;
+  /** The patch dice's group 1: records, draw items, indirect arguments. */
+  cullPatchWorldLayout: GPUBindGroupLayout;
+  /** The dice's group 2, a patch draw's: its parameters, the slab's arena, its chunks. */
+  patchDiceLayout: GPUBindGroupLayout;
   drawWorldLayout: GPUBindGroupLayout;
   textureSetLayout: GPUBindGroupLayout;
   /** Per-record cull and compaction. */
@@ -184,6 +215,12 @@ export interface Pipelines extends SurfacePipelines {
   cullInstances: GPUComputePipeline;
   /** Per-batch indirect args. */
   writeDrawArgs: GPUComputePipeline;
+  /**
+   * A patch draw's per-view dice into its chunks, then its draw arguments
+   * (dice.slang); group 0 the view, 1 `cullPatchWorldLayout`, 2 the draw's.
+   */
+  dicePatches: GPUComputePipeline;
+  writePatchArgs: GPUComputePipeline;
   /**
    * Point draws' per-view cull into their lists and their indirect args
    * (pointCull.slang, with the default style: no splats); group 2 of their
@@ -609,6 +646,25 @@ async function createPipelines(
       storage(7, false, COMPUTE), // indirect args
     ],
   });
+  // The patch dice's: records, items (its draw's camera-relative matrix)
+  // and arguments in group 1, its draw's parameters, arena and chunks in
+  // group 2: 5 storage buffers.
+  const cullPatchWorldLayout = device.createBindGroupLayout({
+    label: "cull.patchWorld",
+    entries: [
+      storage(0, true, COMPUTE), // records
+      storage(3, false, COMPUTE), // draw items
+      storage(7, false, COMPUTE), // indirect args
+    ],
+  });
+  const patchDiceLayout = device.createBindGroupLayout({
+    label: "cull.patchDice",
+    entries: [
+      { binding: 0, visibility: COMPUTE, buffer: { type: "uniform" } },
+      storage(1, true, COMPUTE), // the slab's arena: spans and control points
+      storage(2, false, COMPUTE), // the draw's chunks
+    ],
+  });
   const drawWorldLayout = device.createBindGroupLayout({
     label: "draw.world",
     entries: [
@@ -853,9 +909,30 @@ async function createPipelines(
   const pointCullPipelineLayout = device.createPipelineLayout({
     bindGroupLayouts: [viewLayout, cullPointWorldLayout, pointCullLayout],
   });
+  const diceLayout = device.createPipelineLayout({
+    bindGroupLayouts: [viewLayout, cullPatchWorldLayout, patchDiceLayout],
+  });
+  const diceModule = module("dice", diceWgsl);
   const opaqueLayout = device.createPipelineLayout({
     bindGroupLayouts: [viewLayout, drawWorldLayout, textureSetLayout],
   });
+
+  // The vertex stage's instance data: a draw index (one u32 from the batch's
+  // slice of the item list, bound at the batch's offset), or for a patch
+  // draw a chunk (four u32s) from its own list.
+  const instanceBuffers = (patches: boolean): GPUVertexBufferLayout[] => [
+    {
+      arrayStride: patches ? 16 : 4,
+      stepMode: "instance",
+      attributes: [
+        {
+          shaderLocation: 0,
+          offset: 0,
+          format: patches ? "uint32x4" : "uint32",
+        },
+      ],
+    },
+  ];
 
   // With the depth drawn first, triangles shade where their depth is the
   // pass's (surfaceVertex.wgsl's positions are invariant); lines draw as before.
@@ -868,6 +945,7 @@ async function createPipelines(
     layout: GPUPipelineLayout = opaqueLayout,
     prepassed = topology === "triangle-list",
     points = false,
+    patches = false,
   ) =>
     device.createRenderPipelineAsync({
       label,
@@ -875,16 +953,9 @@ async function createPipelines(
       vertex: {
         module: shaders,
         // Point sets: six vertices per listed point, the batch's one item.
-        entryPoint: points ? "vsPoints" : "vs",
-        // The draw index: one u32 per instance from the batch's slice of the
-        // instance list, bound at the batch's offset.
-        buffers: [
-          {
-            arrayStride: 4,
-            stepMode: "instance",
-            attributes: [{ shaderLocation: 0, offset: 0, format: "uint32" }],
-          },
-        ],
+        // Patch draws: a chunk of cells an instance.
+        entryPoint: patches ? "vsPatch" : points ? "vsPoints" : "vs",
+        buffers: instanceBuffers(patches),
       },
       fragment: {
         module: shaders,
@@ -919,20 +990,15 @@ async function createPipelines(
     cullMode: GPUCullMode,
     masked: boolean,
     layout: GPUPipelineLayout = opaqueLayout,
+    patches = false,
   ) =>
     device.createRenderPipelineAsync({
       label,
       layout,
       vertex: {
         module: shaders,
-        entryPoint: "vsDepth",
-        buffers: [
-          {
-            arrayStride: 4,
-            stepMode: "instance",
-            attributes: [{ shaderLocation: 0, offset: 0, format: "uint32" }],
-          },
-        ],
+        entryPoint: patches ? "vsPatchDepth" : "vsDepth",
+        buffers: instanceBuffers(patches),
       },
       fragment: {
         module: shaders,
@@ -965,20 +1031,15 @@ async function createPipelines(
     masked: boolean,
     layout: GPUPipelineLayout = opaqueLayout,
     bias = true,
+    patches = false,
   ) =>
     device.createRenderPipelineAsync({
       label,
       layout,
       vertex: {
         module: shaders,
-        entryPoint: "vsDepth",
-        buffers: [
-          {
-            arrayStride: 4,
-            stepMode: "instance",
-            attributes: [{ shaderLocation: 0, offset: 0, format: "uint32" }],
-          },
-        ],
+        entryPoint: patches ? "vsPatchDepth" : "vsDepth",
+        buffers: instanceBuffers(patches),
       },
       // Masked: the material's alpha cutoff and placeholders' clip; else
       // the clip alone (a record turns placeholder without the bundle
@@ -1100,20 +1161,15 @@ async function createPipelines(
     label: string,
     cullMode: GPUCullMode,
     layout: GPUPipelineLayout = opaqueLayout,
+    patches = false,
   ) =>
     device.createRenderPipelineAsync({
       label,
       layout,
       vertex: {
         module: shaders,
-        entryPoint: "vsDepth",
-        buffers: [
-          {
-            arrayStride: 4,
-            stepMode: "instance",
-            attributes: [{ shaderLocation: 0, offset: 0, format: "uint32" }],
-          },
-        ],
+        entryPoint: patches ? "vsPatchDepth" : "vsDepth",
+        buffers: instanceBuffers(patches),
       },
       fragment: {
         module: shaders,
@@ -1296,6 +1352,91 @@ async function createPipelines(
           1,
           t,
         ),
+      // Patch draws: `caster`'s stages (a whole-shader override has `vs` and
+      // `fs` only, as for points); opaque ones shade at the depth's equal.
+      opaquePatch: () =>
+        opaquePipeline(
+          caster,
+          name("opaque.patch"),
+          "back",
+          tri,
+          o,
+          undefined,
+          false,
+          true,
+        ),
+      opaquePatchDoubleSided: () =>
+        opaquePipeline(
+          caster,
+          name("opaque.patch.doubleSided"),
+          "none",
+          tri,
+          o,
+          undefined,
+          false,
+          true,
+        ),
+      depthPatch: () =>
+        depthPipeline(caster, name("depth.patch"), "back", false, o, true),
+      depthPatchDoubleSided: () =>
+        depthPipeline(
+          caster,
+          name("depth.patch.doubleSided"),
+          "none",
+          false,
+          o,
+          true,
+        ),
+      shadowPatch: () =>
+        shadowPipeline(
+          caster,
+          name("shadow.patch"),
+          "back",
+          false,
+          o,
+          true,
+          true,
+        ),
+      shadowPatchDoubleSided: () =>
+        shadowPipeline(
+          caster,
+          name("shadow.patch.doubleSided"),
+          "none",
+          false,
+          o,
+          true,
+          true,
+        ),
+      heightPatch: () =>
+        shadowPipeline(
+          caster,
+          name("height.patch"),
+          "back",
+          false,
+          o,
+          false,
+          true,
+        ),
+      heightPatchDoubleSided: () =>
+        shadowPipeline(
+          caster,
+          name("height.patch.doubleSided"),
+          "none",
+          false,
+          o,
+          false,
+          true,
+        ),
+      prepassPatch: () =>
+        prepassPipeline(caster, name("prepass.patch"), "back", o, true),
+      prepassPatchDoubleSided: () =>
+        prepassPipeline(
+          caster,
+          name("prepass.patch.doubleSided"),
+          "none",
+          o,
+          true,
+        ),
     };
     return (key) => builders[key]();
   }
@@ -1339,6 +1480,8 @@ async function createPipelines(
     writeDrawArgs,
     cullPoints,
     writePointArgs,
+    dicePatches,
+    writePatchArgs,
     splatResolve,
     builtinSurface,
     aoTrace,
@@ -1383,6 +1526,16 @@ async function createPipelines(
       label: "cull.pointArgs",
       layout: pointCullPipelineLayout,
       compute: { module: pointCullModule, entryPoint: "writePointArgs" },
+    }),
+    device.createComputePipelineAsync({
+      label: "dice.patches",
+      layout: diceLayout,
+      compute: { module: diceModule, entryPoint: "dicePatches" },
+    }),
+    device.createComputePipelineAsync({
+      label: "dice.patchArgs",
+      layout: diceLayout,
+      compute: { module: diceModule, entryPoint: "writePatchArgs" },
     }),
     (() => {
       const splatModule = module("splats", splatWgsl);
@@ -1629,11 +1782,15 @@ async function createPipelines(
     viewLayout,
     cullWorldLayout,
     cullPointWorldLayout,
+    cullPatchWorldLayout,
+    patchDiceLayout,
     drawWorldLayout,
     textureSetLayout,
     cullRecords,
     cullInstances,
     writeDrawArgs,
+    dicePatches,
+    writePatchArgs,
     pointCullLayout,
     cullPoints,
     writePointArgs,

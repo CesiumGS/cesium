@@ -18,7 +18,10 @@
 //     needs WGSL's `@invariant` on its position (the opaque pass's depth
 //     and its shading must agree to the bit: the shading tests for equal
 //     depth), which Slang doesn't emit; they call `surfaceVertex`,
-//     `surfacePointVertex` and `surfaceDepthVertex` here;
+//     `surfacePointVertex` and `surfaceDepthVertex` here, and for a b-rep
+//     patch draw (RecordFlags.patches, dice.slang) `surfacePatchVertex` and
+//     `surfacePatchDepthVertex`, which take a chunk of cells in place of an
+//     item;
 //   - the moments' bindings (their format is the device's: RenderContext),
 //     read through `loadMomentsZero`, `loadMomentsHigher`;
 //   - the stages (a custom shader's generated glue, or the engine's own):
@@ -27,6 +30,7 @@
 // `__extern_cpp` here (shaders/link SURFACE_BOUNDARY).
 
 import common;
+import patch;
 import placement;
 import surfaceBoundary;
 
@@ -678,6 +682,76 @@ float3 column3(float4x4 m, int c) {
   return float3(m[0][c], m[1][c], m[2][c]);
 }
 
+// A patch draw's chunk (RecordFlags.patches; dice.slang writes them: the
+// record, a span of the draw, the chunk's cells' origin and the span's cell
+// counts packed), set by the patch vertex entries before `vertexOut`.
+static uint4 patchChunk;
+
+// A patch draw's vertex: 6 vertices a cell (two triangles, counter-clockwise
+// in (u, v), the other way for a reversed face, so they face outward), 8 × 8
+// cells a chunk; cells past the span's counts are not live. The triangles
+// index the quad's corners (0, 0), (1, 0), (1, 1), (0, 1).
+static const uint PATCH_TRIANGLES[12] = { 0u, 1u, 2u, 0u, 2u, 3u, 0u, 2u, 1u, 0u, 3u, 2u };
+static const uint2 PATCH_CORNERS[4] = { uint2(0u, 0u), uint2(1u, 0u), uint2(1u, 1u), uint2(0u, 1u) };
+
+struct PatchVertex {
+  float3 position;
+  float3 normal;
+  float2 uv;       // (u, v) less the face rect's corner
+  uint face;       // its feature
+  bool live;
+};
+
+PatchVertex patchVertex(DrawRecord r, uint vertexIndex) {
+  PatchVertex result;
+  uint base = r.positionOffset + patchChunk.y * SPAN_WORDS;
+  SpanWords words;
+  for (uint k = 0u; k < SPAN_WORDS; k++) {
+    words.u[k] = asuint(vertices[base + k]);
+  }
+  PatchSpan s = unpackSpan(words);
+  uint packed = patchChunk.z;
+  uint nu = (packed >> 16u) & 255u;
+  uint nv = (packed >> 24u) & 255u;
+  uint cell = vertexIndex / 6u;
+  uint ci = (packed & 255u) + cell % CHUNK_CELLS;
+  uint cj = ((packed >> 8u) & 255u) + cell / CHUNK_CELLS;
+  result.face = s.face;
+  result.live = ci < nu && cj < nv;
+  result.position = float3(0.0);
+  result.normal = float3(0.0, 0.0, 1.0);
+  result.uv = float2(0.0);
+  if (!result.live) {
+    return result;
+  }
+  uint2 corner = PATCH_CORNERS[PATCH_TRIANGLES[(s.reversed ? 6u : 0u) + vertexIndex % 6u]];
+  uint i = ci + corner.x;
+  uint j = cj + corner.y;
+  // The grid's lines are exact at the ends, so spans meet on the same floats.
+  float u = i == nu ? s.rect.y : s.rect.x + (s.rect.y - s.rect.x) * float(i) / float(nu);
+  float v = j == nv ? s.rect.w : s.rect.z + (s.rect.w - s.rect.z) * float(j) / float(nv);
+  PatchPoint point;
+  if (s.kind == 5u) {
+    float4 net[16];
+    uint count = (s.degreeU + 1u) * (s.degreeV + 1u);
+    for (uint n = 0u; n < 16u; n++) {
+      if (n < count) {
+        uint at = r.positionOffset + s.controls + n * 4u;
+        net[n] = float4(vertices[at], vertices[at + 1u], vertices[at + 2u], vertices[at + 3u]);
+      } else {
+        net[n] = float4(0.0);
+      }
+    }
+    point = evaluateBezier(s, net, u, v);
+  } else {
+    point = evaluateAnalytic(s, u, v);
+  }
+  result.position = point.position;
+  result.normal = s.reversed ? -point.normal : point.normal;
+  result.uv = float2(u, v) - s.corner;
+  return result;
+}
+
 SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   DrawItem p = items[item];
   uint draw = p.record;
@@ -688,6 +762,13 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   // A point set (RecordFlags.points): six vertices a point, its anchor
   // pulled from the position stream; the point is the instance.
   bool points = (r.flags & 64u) != 0u;
+  // A patch draw (RecordFlags.patches): the vertex is a cell's corner of a
+  // chunk of a span, evaluated here (`patchVertex`); its face is the feature
+  // and its uv the face's (u, v) from the rect's corner (the trim test's).
+  bool patched = (r.flags & 128u) != 0u;
+  PatchVertex patchData;
+  patchData.face = 0u;
+  patchData.live = true;
   uint instance = p.instance;
   float3 position = float3(0.0);
   float4 anchor = float4(0.0);
@@ -697,16 +778,22 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
     anchor = read4(r.positionOffset, instance);
     position = float3(POINT_OFFSET[corner], 0.0);
     out.uv = POINT_UV[corner];
+  } else if (patched) {
+    patchData = patchVertex(r, vertexIndex);
+    position = patchData.position;
+    out.uv = patchData.uv;
   } else {
     position = read3(r.positionOffset, vertexIndex);
   }
   cesiumAnchor = mul(m, float4(anchor.xyz, 1.0)).xyz;
   float3 normal = float3(0.0, 0.0, 1.0);
-  if (r.normalOffset != NO_STREAM) {
+  if (patched) {
+    normal = patchData.normal;
+  } else if (r.normalOffset != NO_STREAM) {
     normal = read3(r.normalOffset, vertexIndex);
   }
   // (A point draw's `uvOffset` is its list, not uvs.)
-  if (!points && r.uvOffset != NO_STREAM) {
+  if (!points && !patched && r.uvOffset != NO_STREAM) {
     out.uv = read2(r.uvOffset, vertexIndex);
   }
   float4 vertexColor = float4(1.0);
@@ -728,6 +815,10 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   if (points) {
     localFeature = instance;
     tableFeature = instance;
+  }
+  if (patched) {
+    localFeature = patchData.face;
+    tableFeature = patchData.face;
   }
   // The draw's placement (placement.slang), before the custom vertex
   // stage, in model space: the transform carries the large offset. The
@@ -778,6 +869,10 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   float4 world = mul(m, float4(stage.positionMC, 1.0));
   out.relPosition = placedDraw ? mul(m, float4(designPosition, 1.0)).xyz : world.xyz;
   out.position = mul(view.viewProj, world);
+  // A cell past its span's counts: a triangle of no area outside the clip volume.
+  if (patched && !patchData.live) {
+    out.position = float4(0.0, 0.0, -1.0, 1.0);
+  }
   // A billboard (RecordFlags.billboard): the instance's position, its
   // corner's model xy as pixels on screen (times the size and the
   // instance's scale), facing the camera; in front of everything within
@@ -836,6 +931,8 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   out.ids.y = r.featureId;
   if (points) {
     out.ids.y = r.featureId + instance;
+  } else if (patched) {
+    out.ids.y = r.featureId == 0u ? 0u : r.featureId + patchData.face;
   } else if (p.feature != 0u) {
     out.ids.y = p.feature;
   } else if (r.featureIdOffset != NO_STREAM) {
@@ -862,6 +959,16 @@ export __extern_cpp SurfaceVertex surfacePointVertex(uint vertexIndex, uint item
 }
 export __extern_cpp SurfaceVertex surfaceDepthVertex(uint vertexIndex, uint item) {
   return vertexOut(vertexIndex, item, false);
+}
+// A patch draw's: its chunk (dice.slang) in place of the item list's entry;
+// the chunk's first word is the record, which is its item.
+export __extern_cpp SurfaceVertex surfacePatchVertex(uint vertexIndex, uint4 chunk) {
+  patchChunk = chunk;
+  return vertexOut(vertexIndex, chunk.x, true);
+}
+export __extern_cpp SurfaceVertex surfacePatchDepthVertex(uint vertexIndex, uint4 chunk) {
+  patchChunk = chunk;
+  return vertexOut(vertexIndex, chunk.x, false);
 }
 
 // --- the opaque passes' fragments ---------------------------------------------

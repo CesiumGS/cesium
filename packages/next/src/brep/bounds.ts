@@ -42,13 +42,13 @@ export function frameOf(form: BrepForm, surface: number): Frame {
 }
 
 /** A patch's homogeneous control net: degrees, and x·w, y·w, z·w, w per point with s fastest. */
-interface Net {
+export interface Net {
   readonly du: number;
   readonly dv: number;
   readonly h: Float64Array;
 }
 
-function netOf(form: BrepForm, patch: number): Net {
+export function netOf(form: BrepForm, patch: number): Net {
   const du = form.patchDegree[patch * 2]!;
   const dv = form.patchDegree[patch * 2 + 1]!;
   const first = form.patchFirst[patch]!;
@@ -84,7 +84,7 @@ function restrict(a: readonly number[], lo: number, hi: number): number[] {
 }
 
 /** The net of the patch's part over [s0, s1] × [t0, t1], reparameterized to [0, 1]². */
-function restrictNet(
+export function restrictNet(
   net: Net,
   s0: number,
   s1: number,

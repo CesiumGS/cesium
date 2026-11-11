@@ -252,6 +252,27 @@ export function termDisplacementBound(
 }
 
 /**
+ * A bound on one term's first derivative at weight 1 (the norm of its
+ * Jacobian, model units per model unit): a lattice's worst cell, each
+ * term of order `n ≥ 1` counting `|c| n · reach^(n − 1)` (a monomial's
+ * gradient has L1 norm at most that), times `cells / scale`; NaN for an
+ * attribute.
+ */
+export function termDerivativeBound(
+  term: CubicLattice | AttributeTerm,
+  reach = 1,
+): number {
+  if (term.kind === "attribute") {
+    return Number.NaN;
+  }
+  const v = localReach(term, reach);
+  const sum = overCells(term, (l1, order) =>
+    order < 1 ? 0 : l1 * order * v ** (order - 1),
+  );
+  return (sum * term.cells) / term.scale;
+}
+
+/**
  * A bound on one term's second derivative at weight 1 (model units per
  * model unit squared): a lattice's worst cell, each term of order `n ≥ 2`
  * counting `|c| n (n − 1) · reach^(n − 2)`, times `(cells / scale)²` (each

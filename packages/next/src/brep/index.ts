@@ -34,3 +34,22 @@ export {
   type BrepMesh,
   type TessellateOptions,
 } from "./tessellate.ts";
+export {
+  MAX_CELLS,
+  MAX_GPU_DEGREE,
+  NO_TRIM,
+  SPAN_WORDS,
+  TRIM_PENDING,
+  diceCounts,
+  diceDensity,
+  diceSpan,
+  evaluateSpan,
+  packGpuPatches,
+  prepareGpuPatches,
+  spanError,
+  type GpuFace,
+  type GpuPatchData,
+  type GpuPatches,
+  type GpuSpan,
+  type PrepareOptions,
+} from "./gpuPatches.ts";

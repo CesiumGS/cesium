@@ -60,6 +60,8 @@ export interface MaterialWorld extends Pick<
     | "materialsU32"
     | "placementTable"
     | "pointCounts"
+    | "patchDraws"
+    | "patchWorldBindGroup"
     | "pointCullBindGroup"
     | "pointDraws"
     | "pointSetCount"

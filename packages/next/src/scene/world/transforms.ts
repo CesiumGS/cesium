@@ -71,6 +71,8 @@ export interface TransformWorld extends Pick<
     | "materialsU32"
     | "placementTable"
     | "pointCounts"
+    | "patchDraws"
+    | "patchWorldBindGroup"
     | "pointCullBindGroup"
     | "pointDraws"
     | "pointSetCount"

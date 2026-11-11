@@ -4,6 +4,7 @@ import { MATERIAL_SIZE, DRAW_ITEM_SIZE, ALL_VIEWS } from "../layout.ts";
 import { resized, grownSize } from "../../scene/MirroredTable.ts";
 import type { Slab } from "../../scene/Slabs.ts";
 import type { World } from "../../scene/World.ts";
+import { patchGroup } from "../../scene/world/patches.ts";
 import { pointGroup } from "../../scene/world/points.ts";
 import type { WorldRaster } from "./worldRaster.ts";
 import type { WorldScene } from "../../scene/world/worldScene.ts";
@@ -48,6 +49,8 @@ export interface TableWorld extends Pick<
     | "materialsDirty"
     | "placementTable"
     | "pointCounts"
+    | "patchDraws"
+    | "patchWorldBindGroup"
     | "pointCullBindGroup"
     | "pointDraws"
     | "pointSetCount"
@@ -329,6 +332,15 @@ export function createCullBindGroup(world: TableWorld): void {
       ] as const
     ).map(([binding, b]) => ({ binding, resource: { buffer: b } })),
   });
+  world.raster.patchWorldBindGroup = world.ctx.device.createBindGroup({
+    label: "world.cull.patches",
+    layout: world.ctx.pipelines.cullPatchWorldLayout,
+    entries: [
+      { binding: 0, resource: { buffer: world.recordBuffer } },
+      { binding: 3, resource: { buffer: world.itemBuffer } },
+      { binding: 7, resource: { buffer: world.raster.drawArguments.buffer } },
+    ],
+  });
   world.raster.pointCullBindGroup = world.ctx.device.createBindGroup({
     label: "world.cull.points",
     layout: world.ctx.pipelines.cullPointWorldLayout,
@@ -398,6 +410,11 @@ export function slabReplaced(world: TableWorld, slab: Slab): void {
   for (const draw of world.raster.pointDraws.values()) {
     if (draw.mesh.slab === slab.id) {
       draw.group = pointGroup(world, draw);
+    }
+  }
+  for (const draw of world.raster.patchDraws.values()) {
+    if (draw.mesh.slab === slab.id) {
+      draw.group = patchGroup(world, draw);
     }
   }
   world.raster.bundle = undefined;

@@ -11,6 +11,12 @@ export interface ArgumentBatch {
   readonly items: number;
   /** A point set: six vertices per point, without indices. */
   readonly points: boolean;
+  /**
+   * A patch draw (`PatchDraw`): the arguments are a non-indexed draw's,
+   * one instance a chunk of cells, which are `chunks`, the draw's own list.
+   */
+  readonly patches: boolean;
+  readonly chunks: GPUBuffer | undefined;
   readonly mesh: { readonly indexCount: number; readonly firstIndex: number };
 }
 
@@ -124,13 +130,21 @@ export class DrawArguments {
    * A batch's draw, after its slab, pipeline and groups are bound: its
    * slice of the item list, then indexed, or for a point set six vertices
    * per point without indices. "direct" draws every item without the
-   * cull's arguments (point sets draw only as a view's cull listed them).
+   * cull's arguments (point sets and patch draws draw only as a view's
+   * cull and dice listed them: their chunks are the instances).
    */
   drawBatch(
     pass: GPURenderPassEncoder | GPURenderBundleEncoder,
     batch: ArgumentBatch,
     direct: boolean,
   ): void {
+    if (batch.patches) {
+      if (!direct && batch.chunks) {
+        pass.setVertexBuffer(0, batch.chunks);
+        pass.drawIndirect(this.arguments, batch.index * INDIRECT_SIZE);
+      }
+      return;
+    }
     pass.setVertexBuffer(
       0,
       direct ? this.direct : this.items,
@@ -161,6 +175,7 @@ export class DrawArguments {
       usage:
         GPUBufferUsage.STORAGE |
         GPUBufferUsage.INDIRECT |
+        GPUBufferUsage.COPY_SRC |
         GPUBufferUsage.COPY_DST,
     });
   }

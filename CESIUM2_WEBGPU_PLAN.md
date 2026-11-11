@@ -9498,6 +9498,27 @@ Nothing stands in for TBB. SMLib's TBB code (parallel UV trim curves and tessell
 - **The varying budget:** a patch draw's UV varying carries the face's (u, v), offset to the rectangle's corner so float32 holds it. No varying is added. Depth, shadow and pick passes need the same discard, so patch draws get a fragment stage there.
 - **Picks:** each fragment knows its face and (u, v), so a pick is a domain point (§13.26's brainstorm) and the exact point is a float64 evaluation.
 - **What the CPU tessellator keeps:** the offline glTF fallback mesh, the mesh adapter for queries until the b-rep adapter exists, and the reference in tests. Nothing it does is in the drawing path.
+- **Part 1 is done (2026-11-10, a Sonnet 5.5 agent from a brief).**
+  - `brep/gpuPatches.ts` writes a 48-word record per (face, span) for every face. Each holds:
+    - its kind, analytic frame or control net, and face rectangle in (u, v);
+    - its spheres;
+    - the face's per-unit densities;
+    - error constants C_u, C_uv and C_v from a sagitta, an identity, or sound Bernstein bounds;
+    - a trim word.
+  - Records and nets live in the vertex arena.
+  - `dicePatches` runs after the cull. It takes a thread per span, sizes the grid from pixels per metre at the face's nearest point (perspective and orthographic), appends chunks of up to 8×8 cells, and writes one non-indexed indirect draw per patch draw.
+  - `vsPatch` evaluates the surface (analytic formulas, or de Casteljau in homogeneous coordinates) and its exact normal. It goes through the same `vertexOut`, so placement and the Jacobian normal apply. The UV varying carries (u, v) relative to the rectangle's corner.
+  - There are 10 pipeline keys: opaque, depth, shadow, height and prepass, each one- and double-sided.
+  - `World.addBrep` is provisional. Faces whose trim is their rectangle go to the GPU, and the rest stay on a CPU mesh until part 2.
+  - `spikes/brepPatches.html` passes on an NVIDIA Lovelace GPU:
+    - The analytic cylinder, the sphere span and a weighted rational patch are within 0.32 px of the surface (target 0.5 px), at 20 m and 5.5 m.
+    - The cell counts match the CPU twin.
+    - There are no cracks between spans.
+    - A warped patch matches the twin.
+    - Shadows, AO and picks work.
+- **Part 1's cost (200 faces, 550 spans):** dicing on the GPU costs 0.026 ms. The main pass costs 0.78 ms for 10,300 triangles, against 0.12 ms for `tessellateBrep`'s 7,700. Two causes, for a performance pass after part 2:
+  - 211,200 vertex invocations for 5,150 cells. Spans average about 9 cells, so 8×8 chunks are mostly degenerate, and each grid point is evaluated six times. Indexed chunks with shared vertices, and chunks sized to the spans, fix both.
+  - Preparing spans on the CPU (34 ms) costs more than tessellating (19 ms), mostly in the Bernstein bounds. That matters for the CSG edit loop.
 
 **The handbook's deep dives (owner, 2026-11-10).** As this work lands, the handbook gains four deep dives. Each is written when its subject is built, and kept to what is built:
 

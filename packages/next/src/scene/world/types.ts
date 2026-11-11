@@ -152,6 +152,24 @@ export interface PointMesh extends MeshHandle {
   };
 }
 
+/**
+ * A b-rep's patches as a mesh (`World.addPatchMesh`, provisional): the
+ * span records and control points (src/brep/gpuPatches.ts) in the slab's
+ * arena, drawn by a view's dice kernel and vertex stage instead of from
+ * vertices. A draw of it (`addDraw`) is a patch draw (`PatchDraw`).
+ */
+export interface PatchMesh extends MeshHandle {
+  readonly patches: {
+    /** Arena word of the first span record. */
+    readonly table: number;
+    readonly spans: number;
+    /** The target error a cell may leave, pixels, a draw starts with. */
+    readonly errorPixels: number;
+    /** The most chunks of 8 � 8 cells a draw of it lists per view. */
+    readonly maxChunks: number;
+  };
+}
+
 export interface TextureBinding {
   view: GPUTextureView;
   sampler: GPUSampler;
@@ -376,6 +394,10 @@ export interface Batch {
   billboard: boolean;
   /** A point set's: drawn without indices, six vertices per point. */
   points: boolean;
+  /** A patch draw's (`PatchDraw`): its chunks, not an item list, are its instances. */
+  patches: boolean;
+  /** A patch draw's chunk list, which the draw binds as its instances. */
+  chunks: GPUBuffer | undefined;
   /** Its draws have instances: outside the opaque pass's depth prepass. */
   instanced: boolean;
   /** Draw items: records without instances plus instances. */
@@ -436,6 +458,26 @@ export interface PointDraw {
   culler: PointCuller | undefined;
   /** Symbols up to this many pixels are splatted (0: none). */
   tiny: number;
+}
+
+/**
+ * A patch draw (`World.addDraw` of a patch mesh) and its per-view dice:
+ * the kernels' parameters and group (shaders/dice.slang), and the chunks
+ * they list, which are the draw's instances.
+ */
+export interface PatchDraw {
+  mesh: PatchMesh;
+  batch: Batch;
+  /** `PatchDice`: the draw's record, batch, span count, capacity, target error and a placement's bounds. */
+  params: GPUBuffer;
+  /** The chunks, 16 bytes each: instance-step vertex data and the dice's output. */
+  chunks: GPUBuffer;
+  capacity: number;
+  group: GPUBindGroup;
+  errorPixels: number;
+  /** A placement's bounds on the surface's error (scene/world/patches.ts `placementBounds`): 1 and 0 without one. */
+  jacobian: number;
+  curvature: number;
 }
 
 /**

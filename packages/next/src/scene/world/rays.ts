@@ -292,7 +292,7 @@ export function rayJobs(
     }
     jobs = slabJobs;
     if (
-      flags & RecordFlags.hidden ||
+      flags & (RecordFlags.hidden | RecordFlags.patches) ||
       (options.collisionOnly && !(flags & RecordFlags.collision)) ||
       (!only && (u[o + VIEW_MASK_WORD]! & mask) === 0)
     ) {

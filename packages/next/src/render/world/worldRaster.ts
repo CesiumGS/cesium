@@ -4,6 +4,7 @@ import { CLIP_BOXES, CLIP_BOX_FLOATS } from "../layout.ts";
 import type {
   SubmissionMode,
   Batch,
+  PatchDraw,
   PointDraw,
 } from "../../scene/world/types.ts";
 import type { DrawConstants } from "../drawConstants.ts";
@@ -113,6 +114,10 @@ export class WorldRaster {
     feature: GPUBuffer;
     group: GPUBindGroup;
   };
+  /** Patch draws by draw index: their per-view dice (dice.slang). */
+  readonly patchDraws = new Map<number, PatchDraw>();
+  /** The dice's group 1: records, items and the draw arguments (`cullPatchWorldLayout`). */
+  patchWorldBindGroup!: GPUBindGroup;
   batchBuffer!: GPUBuffer;
   /**
    * GPU rows of the draw tables (records, batches, their counts and

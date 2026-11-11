@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>B-rep Patches</title>
+  </head>
+  <body>
+    <!-- Step 5, part 1: b-rep faces diced on the GPU; open with ?bench and call runBrepPatches(). -->
+    <div id="root"></div>
+    <script type="module">
+      import { harness } from "./brepPatches.ts";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runBrepPatches");
+    </script>
+  </body>
+</html>

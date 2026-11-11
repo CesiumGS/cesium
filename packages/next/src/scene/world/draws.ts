@@ -26,12 +26,18 @@ import type { CustomShader } from "../CustomShader.ts";
 import type { World } from "../World.ts";
 import { warnUnavailable } from "./featureTables.ts";
 import { releasePlacement } from "./placements.ts";
+import {
+  createPatchDraw,
+  releasePatchDraw,
+  writePatchParams,
+} from "./patches.ts";
 import { POINT_CULL_BYTES, pointGroup, writePointParams } from "./points.ts";
 import { anchorAt, IDENTITY, resolveTransforms } from "./transforms.ts";
 import type {
   Batch,
   DrawOptions,
   DrawHandle,
+  PatchMesh,
   PointMesh,
   PointDraw,
 } from "./types.ts";
@@ -76,6 +82,7 @@ export interface DrawWorld extends Pick<
     | "instanceAllocator"
     | "instanceStreamRanges"
     | "instances"
+    | "patchDraws"
     | "pendingUploads"
     | "placementTable"
     | "pointCounts"
@@ -168,9 +175,12 @@ export interface AddDrawWorld extends Pick<
     | "materialsDirty"
     | "materialsF32"
     | "materialsU32"
+    | "patchDraws"
     | "pendingUploads"
     | "placementTable"
     | "pointCounts"
+    | "patchDraws"
+    | "patchWorldBindGroup"
     | "pointCullBindGroup"
     | "pointDraws"
     | "pointSetCount"
@@ -226,7 +236,8 @@ const ZERO = Float64Array.of(0, 0, 0);
 /**
  * The batch for draws of these fields, made (or a free one reused) when
  * none exists. A point set's draws batch alone: each batch's arguments
- * are its set's list (cull.slang `writePointArgs`).
+ * are its set's list (cull.slang `writePointArgs`); so do a patch draw's,
+ * whose dice writes them (dice.slang).
  */
 function batchFor(
   world: DrawWorld,
@@ -238,11 +249,12 @@ function batchFor(
     shader: CustomShader | undefined;
     billboard: boolean;
     points: boolean;
+    patches: boolean;
     instanced: boolean;
     draw: number;
   },
 ): Batch {
-  const key = `${f.mesh.id}|${f.material}|${f.textureSet}|${f.doubleSided ? 1 : 0}|${f.shader?.id ?? 0}|${f.billboard ? 1 : 0}|${f.instanced ? 1 : 0}${f.points ? `|${f.draw}` : ""}`;
+  const key = `${f.mesh.id}|${f.material}|${f.textureSet}|${f.doubleSided ? 1 : 0}|${f.shader?.id ?? 0}|${f.billboard ? 1 : 0}|${f.instanced ? 1 : 0}${f.points || f.patches ? `|${f.draw}` : ""}`;
   let batch = world.raster.batches.get(key);
   if (batch) {
     return batch;
@@ -258,6 +270,8 @@ function batchFor(
     batch.shader = f.shader;
     batch.billboard = f.billboard;
     batch.points = f.points;
+    batch.patches = f.patches;
+    batch.chunks = undefined;
     batch.instanced = f.instanced;
     batch.shown = 0;
     batch.casters = 0;
@@ -272,6 +286,8 @@ function batchFor(
       shader: f.shader,
       billboard: f.billboard,
       points: f.points,
+      patches: f.patches,
+      chunks: undefined,
       instanced: f.instanced,
       items: 0,
       itemBase: 0,
@@ -328,6 +344,12 @@ export function addDraw(world: AddDrawWorld, options: DrawOptions): DrawHandle {
   if (pointSet && (!options.billboard || options.instances)) {
     throw new Error(
       "addDraw: a point mesh draws as a billboard, without instances",
+    );
+  }
+  const patchSet = (options.mesh as Partial<PatchMesh>).patches;
+  if (patchSet && (options.billboard || options.instances)) {
+    throw new Error(
+      "addDraw: a patch mesh draws without instances or billboards",
     );
   }
   // A point draw's own list of points to draw (each view's cull writes
@@ -525,6 +547,7 @@ export function addDraw(world: AddDrawWorld, options: DrawOptions): DrawHandle {
     shader,
     billboard,
     points: pointSet !== undefined,
+    patches: patchSet !== undefined,
     instanced,
     draw: index,
   });
@@ -573,6 +596,7 @@ export function addDraw(world: AddDrawWorld, options: DrawOptions): DrawHandle {
         : 0) |
       (options.billboard ? RecordFlags.billboard : 0) |
       (pointSet ? RecordFlags.points : 0) |
+      (patchSet ? RecordFlags.patches : 0) |
       (options.ground === false ? RecordFlags.notGround : 0) |
       (options.collision ? RecordFlags.collision : 0) |
       (options.underlay ? RecordFlags.underlay : 0),
@@ -614,6 +638,14 @@ export function addDraw(world: AddDrawWorld, options: DrawOptions): DrawHandle {
     draw.group = pointGroup(world, draw);
     world.raster.pointDraws.set(index, draw);
   }
+  if (patchSet) {
+    batch.chunks = createPatchDraw(
+      world,
+      mesh as PatchMesh,
+      batch,
+      index,
+    ).chunks;
+  }
   const handle: DrawHandle = {
     index,
     generation: world.raster.drawGeneration[index]!,
@@ -652,6 +684,7 @@ export function setDrawShader(
     shader,
     billboard: old.billboard,
     points: old.points,
+    patches: old.patches,
     instanced: old.instanced,
     draw: index,
   });
@@ -689,6 +722,12 @@ export function setDrawShader(
     point.batch = batch;
     writePointParams(world, point, index);
   }
+  const patches = world.raster.patchDraws.get(index);
+  if (patches) {
+    patches.batch = batch;
+    batch.chunks = patches.chunks;
+    writePatchParams(world, patches, index);
+  }
   world.markDirty(index);
   world.raster.bundle = undefined;
   world.raster.translucentDraws = undefined;
@@ -722,6 +761,7 @@ export function setDrawMaterial(
     shader: old.shader,
     billboard: old.billboard,
     points: old.points,
+    patches: old.patches,
     instanced: old.instanced,
     draw: index,
   });
@@ -755,6 +795,12 @@ export function setDrawMaterial(
     point.batch = batch;
     writePointParams(world, point, index);
   }
+  const patches = world.raster.patchDraws.get(index);
+  if (patches) {
+    patches.batch = batch;
+    batch.chunks = patches.chunks;
+    writePatchParams(world, patches, index);
+  }
   world.markDirty(index);
   world.raster.bundle = undefined;
   world.raster.translucentDraws = undefined;
@@ -773,6 +819,7 @@ export function twinDraw(
   const o = index * RECORD_WORDS;
   if (
     batch.points ||
+    batch.patches ||
     batch.billboard ||
     world.raster.recordsU32[o + INSTANCE_COUNT_WORD]! > 0
   ) {
@@ -850,6 +897,11 @@ export function removeDraw(world: DrawWorld, handle: DrawHandle): void {
     pointDraw.params.destroy();
     world.raster.freePointCounters.push(pointDraw.counter);
     world.raster.pointDraws.delete(handle.index);
+  }
+  const patchDraw = world.raster.patchDraws.get(handle.index);
+  if (patchDraw) {
+    releasePatchDraw(patchDraw);
+    world.raster.patchDraws.delete(handle.index);
   }
   const streams = world.raster.instanceStreamRanges[handle.index];
   if (streams) {

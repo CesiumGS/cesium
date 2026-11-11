@@ -397,6 +397,13 @@ export const RecordFlags = {
    * billboard; the point is the instance index and local feature.
    */
   points: 64,
+  /**
+   * A b-rep patch draw (`World.addPatchMesh`): its position stream is the
+   * table of span records (src/brep/gpuPatches.ts), `indexCount` their
+   * count, and the vertex stage evaluates the surface in chunks of cells
+   * the view's dice kernel listed (dice.slang). Its feature is the face.
+   */
+  patches: 128,
 } as const;
 
 /**

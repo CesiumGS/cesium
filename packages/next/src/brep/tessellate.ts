@@ -31,6 +31,8 @@ export interface TessellateOptions {
   readonly maxGrid?: number;
   /** Grid cells per side for a trimmed face, so the trim reads (default 48). */
   readonly trimGrid?: number;
+  /** Only the faces this keeps are tessellated (default: every face); each keeps its index as its feature. */
+  readonly faces?: (face: number) => boolean;
 }
 
 export interface BrepMesh {
@@ -128,6 +130,9 @@ export function tessellateBrep(
   const faces = form.faceSurface.length;
   let faceVertices = 0;
   for (let face = 0; face < faces; face++) {
+    if (options.faces && !options.faces(face)) {
+      continue;
+    }
     const done = tessellateFace(form, face, tolerance, maxGrid, trimGrid);
     if (!done) {
       continue;

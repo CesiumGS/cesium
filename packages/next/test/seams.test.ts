@@ -275,6 +275,9 @@ const ARGUMENT_ACCESSORS = [
   "countedInstances",
   "storeIndexedArguments",
   "storeArgument",
+  "countChunks",
+  "countedChunks",
+  "storePatchArguments",
 ] as const;
 
 /** Lines of a Slang module that index `args[` outside its accessors. */
