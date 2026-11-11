@@ -8,6 +8,7 @@ import type { GlobeTile } from "../globe/TerrainSource.ts";
 import type { ContentSummary } from "./pipeline.ts";
 import type { SceneItem } from "../scene/SceneItem.ts";
 import type { RequestPurpose } from "./Stepwise.ts";
+import type { DrawnCache } from "./tileWarp.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
@@ -133,6 +134,8 @@ export class Tile {
   fillFromParent = false;
   /** Horizon-occlusion point of `volume` (`aboveHorizon`). */
   occludee?: Occludee & { volume: TileVolume };
+  /** Where its draws put `volume` under a warped anchor (`drawnTile`). */
+  drawnCache?: DrawnCache;
   /** Terrain tiles: quadtree address and 1.x globe selection state. */
   globe?: GlobeTile;
 

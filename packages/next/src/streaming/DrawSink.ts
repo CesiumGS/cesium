@@ -9,6 +9,7 @@ import type {
   ModelResourceOptions,
 } from "../scene/gltfModel.ts";
 import type {
+  AnchorHandle,
   ClipBox,
   ClipHandle,
   DrawHandle,
@@ -18,6 +19,7 @@ import type {
 } from "../scene/world/types.ts";
 import type { RequestScheduler } from "./RequestScheduler.ts";
 import type { Tileset3D } from "./Tileset3D.ts";
+import type { TileWarp } from "./tileWarp.ts";
 import type { AccelerationStructures } from "./acceleration.ts";
 
 /** Draws, their meshes, transforms and clips, as content changes them. */
@@ -42,6 +44,12 @@ export interface DrawSink {
    * (`max(1 mm, error / 64)`). Optional: a sink with no warps ignores it.
    */
   setDrawGeometricError?(handle: DrawHandle, error: number): void;
+  /**
+   * The map from an anchor's coordinates to where its content is drawn,
+   * when its route to the view's root crosses a warp: selection then runs
+   * on drawn volumes (`TileWarp`). Optional: a sink with no warps has none.
+   */
+  tileWarp?(anchor: AnchorHandle): TileWarp | undefined;
   drawMatrix<T extends Float64Array = Float64Array<ArrayBuffer>>(
     handle: DrawHandle,
     out?: T,

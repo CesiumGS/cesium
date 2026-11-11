@@ -21,6 +21,7 @@ import {
   volumeIntersectPlane,
   type TileVolume,
 } from "./volumes.ts";
+import { drawnContentVolume, drawnTile, type TileWarp } from "./tileWarp.ts";
 
 /** Planes per box in `SelectionView.casterPlanes`. */
 export const CASTER_PLANES = 6;
@@ -61,6 +62,13 @@ export interface SelectionView {
   height: number;
   /** 1.x `frameState.pixelRatio` (the globe divides its fog term by it). */
   pixelRatio?: number;
+  /**
+   * Set when the tileset hangs under an anchor placed across a warp: its
+   * tiles are selected on their drawn volumes (`drawnTile`), with the
+   * geometric error stretched by the map, and are not horizon-culled. The
+   * camera, planes and distances are in the anchor's coordinates as ever.
+   */
+  warp?: TileWarp;
 }
 
 /**
@@ -441,11 +449,14 @@ export class StepwiseSelection implements TileSelection {
     }
     // 1.x selectTile: skip if the content bounding volume is out of view.
     const state = tile.viewState(view.id);
-    if (tile.contentVolume && state.planeMask !== MASK_INSIDE) {
+    const contentVolume = view.warp
+      ? drawnContentVolume(tile, view.warp)
+      : tile.contentVolume;
+    if (contentVolume && state.planeMask !== MASK_INSIDE) {
       for (let p = 0; p < view.planes.length / 4; p++) {
         if (
           volumeIntersectPlane(
-            tile.contentVolume,
+            contentVolume,
             view.planes.subarray(p * 4, p * 4 + 3),
             view.planes[p * 4 + 3]!,
           ) === OUTSIDE
@@ -528,23 +539,31 @@ export class StepwiseSelection implements TileSelection {
     const parentMask = tile.parent
       ? tile.parent.viewState(view.id).planeMask
       : MASK_INDETERMINATE;
-    state.distance = volumeDistance(
-      tile.volume,
-      view.position,
-      view.cartographic,
-    );
-    const center = volumeCenter(tile.volume);
+    const volume = this.volumeOf(tile, view);
+    state.distance = volumeDistance(volume, view.position, view.cartographic);
+    const center = volumeCenter(volume);
     state.centerZDepth =
       (center[0]! - view.position[0]!) * view.direction[0]! +
       (center[1]! - view.position[1]!) * view.direction[1]! +
       (center[2]! - view.position[2]!) * view.direction[2]!;
     state.sse = this.screenSpaceError(tile, view, false, 0);
-    state.planeMask = planeMask(tile.volume, view.planes, parentMask);
+    state.planeMask = planeMask(volume, view.planes, parentMask);
     state.visible = state.planeMask !== MASK_OUTSIDE;
+    // The request volume stays where it was written: it says where the
+    // viewer must be, and is tested against the camera as it is.
     state.inRequestVolume =
       !tile.requestVolume ||
       volumeDistance(tile.requestVolume, view.position, view.cartographic) ===
         0;
+  }
+
+  /**
+   * The volume selection tests a tile as: its own, or, under a warped
+   * anchor, where its draws put it (`drawnTile`), since the camera is where
+   * things are drawn.
+   */
+  protected volumeOf(tile: Tile, view: SelectionView): TileVolume {
+    return view.warp ? drawnTile(tile, view.warp).volume : tile.volume;
   }
 
   /** 1.x getScreenSpaceError (perspective). */
@@ -554,11 +573,19 @@ export class StepwiseSelection implements TileSelection {
     useParentGeometricError: boolean,
     rootError: number,
   ): number {
-    const error = useParentGeometricError
+    const source = useParentGeometricError && tile.parent ? tile.parent : tile;
+    let error = useParentGeometricError
       ? tile.parent
         ? tile.parent.geometricError
         : rootError
       : tile.geometricError;
+    if (view.warp) {
+      // A geometric error is a length in the tile's own metres: the map
+      // stretches it by at most σ_max over the volume (an estimate), and its
+      // fit adds its own error.
+      const drawn = drawnTile(source, view.warp);
+      error = error * drawn.sigmaMax + drawn.fit;
+    }
     if (error === 0) {
       return 0;
     }

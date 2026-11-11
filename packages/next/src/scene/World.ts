@@ -8,6 +8,7 @@ import type { Placement, PlacementParameter } from "./placement.ts";
 import { PlacementTable } from "./placementTable.ts";
 import type { SceneItem, SceneItemOptions } from "./SceneItem.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
+import type { TileWarp } from "../streaming/tileWarp.ts";
 import {
   INSTANCE_WORDS,
   INSTANCE_COUNT_WORD,
@@ -921,6 +922,16 @@ export class World {
   }
 
   /**
+   * @internal The map from an anchor's coordinates to where its content is
+   * drawn, when the anchor's route to the view's root crosses a warp:
+   * selection runs on drawn volumes (streaming/tileWarp.ts). Undefined for
+   * an anchor placed rigidly.
+   */
+  tileWarp(anchor: AnchorHandle): TileWarp | undefined {
+    return this.warps.tileWarp(anchor.slot);
+  }
+
+  /**
    * Changes one instance of an instanced draw: its matrix (relative to the
    * draw's transform), visibility or tint.
    */
@@ -1428,15 +1439,28 @@ export class World {
   }
 
   /**
-   * A placement parameter (plan 5a's call 42): one float in this world's
-   * placements buffer, which every placement naming it reads, so a morph
-   * writes 4 bytes a tick however many draws it moves. Setting its `value`
-   * to a non-finite number throws a `RangeError` (as `value` here does)
-   * and keeps the old value; a dual position or blend that grows past its
-   * bounds (`maxDisplacement`) as it changes grows its draws' bounds too.
+   * A parameter (plan 5a's call 42): one float in this world's placements
+   * buffer, which every placement naming it reads, so a morph writes 4 bytes
+   * a tick however many draws it moves. Setting its `value` to a non-finite
+   * number throws a `RangeError` (as `value` here does) and keeps the old
+   * value.
+   *
+   * `options.range` `[min, max]` declares the values it will take (`value`
+   * must be in it, and `min` not above `max`). The bounds of every draw
+   * whose placement reads it are then made once, for the whole range (a
+   * weight is at most two affine factors of parameters: its extreme over
+   * their ranges), so a change within it writes the one float and walks no
+   * draw. A value outside the range throws a `RangeError` and keeps the old
+   * one: declare the range you drag over. Without a range a change
+   * recomputes its draws' bounds at the value it has (the sphere's centre
+   * moves by the displacement there, and its radius grows by the residual:
+   * `drawnSphere`), as it always did.
    */
-  createPlacementParameter(value: number): PlacementParameter {
-    return createPlacementParameter(this, value);
+  createPlacementParameter(
+    value: number,
+    options?: { readonly range?: readonly [number, number] },
+  ): PlacementParameter {
+    return createPlacementParameter(this, value, options);
   }
 
   /**

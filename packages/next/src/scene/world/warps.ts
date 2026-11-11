@@ -18,12 +18,13 @@ import type { FrameKey } from "../../camera/frameResolver.ts";
 import {
   warpScaleOf,
   withFrozenScales,
+  withScalesAt,
   withoutScales,
   type Route,
   type Warp,
   type WarpScale,
 } from "../../camera/route.ts";
-import { mat4, multiply } from "../../math/mat4.ts";
+import { invertAffine, mat4, multiply } from "../../math/mat4.ts";
 import {
   CENTER_WORD,
   FLAGS_WORD,
@@ -34,6 +35,7 @@ import {
   TRANSFORM_WORD,
 } from "../../render/layout.ts";
 import { checkPlacement, type Placement } from "../placement.ts";
+import { drawnBounds, routeMap, type DrawnMap } from "../warpBounds.ts";
 import { affinePart, fitLattice, routeDisplacement } from "../warpFit.ts";
 import { WarpFitCache } from "../warpFitCache.ts";
 import { checkTerms, termsOf } from "../warpEvaluate.ts";
@@ -45,6 +47,7 @@ import {
   type WarpTerms,
 } from "../warpTerms.ts";
 import type { World } from "../World.ts";
+import type { TileWarp, WarpedPoints } from "../../streaming/tileWarp.ts";
 import { setPlacement } from "./placements.ts";
 import { drawMatrix } from "./transforms.ts";
 import type { DrawHandle } from "./types.ts";
@@ -104,10 +107,80 @@ export interface DrawWarpStatus {
   readonly state: "fitted" | "stale" | "pending";
 }
 
+/** A scale without a range is bounded in buckets of this many to the unit: its drawn volumes are made for the bucket's two ends. */
+const SCALE_BUCKETS = 64;
+
+/** What selection reads of one warped anchor (`World.tileWarp`): drawn bounds from its route, remade when the route or a scale's bucket changes. */
+class AnchorTileWarp implements TileWarp {
+  version = 0;
+  #key = "";
+  #maps: DrawnMap[] = [];
+
+  constructor(private readonly warps: WorldWarps) {}
+
+  get fitVersion(): number {
+    return this.warps.fitVersion;
+  }
+
+  bounds(points: ArrayLike<number>, spacing?: number): WarpedPoints {
+    return drawnBounds(this.#maps, points, spacing);
+  }
+
+  fitError(draws: readonly DrawHandle[]): number {
+    return this.warps.fitError(draws);
+  }
+
+  /**
+   * Remakes the maps when the anchor's route changed or a scaled warp
+   * left its bucket: the map to the anchor's coordinates (`A⁻¹ · route`,
+   * `A` its place), at the ends of each scale's range (or bucket). With
+   * several scales the ends are taken together: an estimate.
+   */
+  refresh(route: Route, stamp: number): void {
+    const parts: string[] = [`${stamp}`];
+    for (const s of route.steps) {
+      if (s.kind === "warp" && s.warp.scale) {
+        parts.push(
+          s.warp.scale.range
+            ? "r"
+            : String(Math.floor(warpScaleOf(s.warp) * SCALE_BUCKETS)),
+        );
+      }
+    }
+    const key = parts.join(":");
+    if (key === this.#key) {
+      return;
+    }
+    this.#key = key;
+    this.version++;
+    const after = invertAffine(mat4(), affinePart(route));
+    if (parts.length === 1) {
+      this.#maps = [routeMap(route, after)];
+      return;
+    }
+    const end = (high: boolean) => (warp: Warp) => {
+      const s = warpScaleOf(warp);
+      const range = warp.scale!.range;
+      if (range) {
+        return high ? range[1] : range[0];
+      }
+      const bucket = Math.floor(s * SCALE_BUCKETS);
+      return (bucket + (high ? 1 : 0)) / SCALE_BUCKETS;
+    };
+    this.#maps = [
+      routeMap(withScalesAt(route, end(false)), after),
+      routeMap(withScalesAt(route, end(true)), after),
+    ];
+  }
+}
+
 export class WorldWarps {
   /** Entries leave with their draws (`drawRemoved`), so no cap evicts a fit a draw still waits for. */
   readonly cache = new WarpFitCache(2 ** 30);
   readonly #anchors = new Map<number, AnchorWarp>();
+  readonly #tileWarps = new Map<number, AnchorTileWarp>();
+  /** Goes up when a draw's fit is drawn or forgotten (`TileWarp.fitVersion`). */
+  fitVersion = 0;
   readonly #draws = new Map<number, DrawWarp>();
   /** Draws whose current fit is not yet drawn. */
   readonly #waiting = new Set<number>();
@@ -157,6 +230,40 @@ export class WorldWarps {
     }
   }
 
+  /**
+   * What selection reads of the anchor in `slot` (0: the world's root), when
+   * its route crosses a warp: the drawn bounds of volumes and the stretch of
+   * errors. Undefined for an anchor placed rigidly. Reflects the last
+   * `frame`.
+   */
+  tileWarp(slot: number): TileWarp | undefined {
+    const anchor = this.#anchors.get(slot);
+    if (!anchor) {
+      this.#tileWarps.delete(slot);
+      return undefined;
+    }
+    let warp = this.#tileWarps.get(slot);
+    if (!warp) {
+      warp = new AnchorTileWarp(this);
+      this.#tileWarps.set(slot, warp);
+    }
+    warp.refresh(anchor.route, anchor.stamp);
+    return warp;
+  }
+
+  /** The worst error (m) of the fits now drawn for `draws` against their route; 0 where none is drawn. */
+  fitError(draws: readonly DrawHandle[]): number {
+    let worst = 0;
+    for (const handle of draws) {
+      const applied = this.#state(handle)?.applied;
+      // A failed fit is drawn as no warp: its bound is a sentinel.
+      if (applied && applied.errorBound < Number.MAX_VALUE) {
+        worst = Math.max(worst, applied.errorBound);
+      }
+    }
+    return worst;
+  }
+
   /** How the draw is warped and where its fit is, if it is. */
   status(handle: DrawHandle): DrawWarpStatus | undefined {
     const d = this.#state(handle);
@@ -188,6 +295,7 @@ export class WorldWarps {
     this.#errors.delete(handle.index);
     const d = this.#draws.get(handle.index);
     if (d) {
+      this.fitVersion++;
       this.#draws.delete(handle.index);
       this.#waiting.delete(handle.index);
       this.cache.forget(d.key);
@@ -307,6 +415,7 @@ export class WorldWarps {
   clear(): void {
     this.cache.clear();
     this.#anchors.clear();
+    this.#tileWarps.clear();
     this.#draws.clear();
     this.#waiting.clear();
     this.#errors.clear();
@@ -537,12 +646,11 @@ export class WorldWarps {
     const handle = this.#handle(index, d);
     const record = this.world.raster;
     const o = index * RECORD_WORDS;
-    const center = [0, 1, 2].map(
-      (i) => record.recordsF32[o + CENTER_WORD + i]!,
-    );
-    const radius =
-      this.world.scene.drawPlacements[index]?.base ??
-      record.recordsF32[o + RADIUS_WORD]!;
+    const own = this.world.scene.drawPlacements[index];
+    const center = own
+      ? [...own.center]
+      : [0, 1, 2].map((i) => record.recordsF32[o + CENTER_WORD + i]!);
+    const radius = own?.base ?? record.recordsF32[o + RADIUS_WORD]!;
     const matrix = drawMatrix(this.world, handle, new Float64Array(16))!;
     d.matrix.set(matrix);
     const stamp = anchor.stamp;
@@ -589,6 +697,7 @@ export class WorldWarps {
   ): void {
     if (lattice !== d.applied) {
       d.applied = lattice;
+      this.fitVersion++;
       d.weight = anchor.linear
         ? {
             scale: 1,

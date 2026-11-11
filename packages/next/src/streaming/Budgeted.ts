@@ -41,6 +41,7 @@ import {
   aboveHorizon,
   volumeIntersectPlane,
   volumeSpan,
+  type TileVolume,
 } from "./volumes.ts";
 
 export interface BudgetedOptions extends StepwiseOptions {
@@ -169,9 +170,15 @@ export class BudgetedSelection extends StepwiseSelection {
       return;
     }
     super.updateVisibility(tile, state, view, pass);
+    // Not under a warped anchor: the horizon test's occluder is the true
+    // ellipsoid shrunk to the volume's lowest height, and the drawn Earth
+    // under a warp is another shape (a drawn height need not be the true
+    // one), so no occludee made from drawn bounds would be sound.
+    // The frustum and the screen-space error still cull and refine.
     if (
       state.visible &&
       this.horizonCulling &&
+      view.warp === undefined &&
       !aboveHorizon(tile, view.position)
     ) {
       state.visible = false;
@@ -758,8 +765,10 @@ export class BudgetedSelection extends StepwiseSelection {
     if (
       !planes ||
       this.prefetchErrorScale <= 0 ||
-      !insidePlanes(tile, planes) ||
-      (this.horizonCulling && !aboveHorizon(tile, view.position))
+      !insidePlanes(this.volumeOf(tile, view), planes) ||
+      (this.horizonCulling &&
+        view.warp === undefined &&
+        !aboveHorizon(tile, view.position))
     ) {
       return;
     }
@@ -808,11 +817,12 @@ export class BudgetedSelection extends StepwiseSelection {
     if (!motion || this.motionBenefit <= 0 || !load) {
       return true;
     }
-    const c = tile.volume.sphere.center;
+    const sphere = this.volumeOf(tile, view).sphere;
+    const c = sphere.center;
     const dx = c[0]! - view.position[0]!;
     const dy = c[1]! - view.position[1]!;
     const dz = c[2]! - view.position[2]!;
-    const d = Math.max(Math.hypot(dx, dy, dz), tile.volume.sphere.radius, 1);
+    const d = Math.max(Math.hypot(dx, dy, dz), sphere.radius, 1);
     const r = Math.max(Math.hypot(dx, dy, dz), 1e-6);
     const ux = dx / r;
     const uy = dy / r;
@@ -1091,11 +1101,11 @@ function unit(a: readonly number[]): number[] {
   return [a[0]! / l, a[1]! / l, a[2]! / l];
 }
 
-/** Whether the tile's volume reaches inside all of `planes`. */
-function insidePlanes(tile: Tile, planes: Float64Array): boolean {
+/** Whether the volume reaches inside all of `planes`. */
+function insidePlanes(volume: TileVolume, planes: Float64Array): boolean {
   for (let k = 0; k < planes.length; k += 4) {
     const r = volumeIntersectPlane(
-      tile.volume,
+      volume,
       planes.subarray(k, k + 3),
       planes[k + 3]!,
     );

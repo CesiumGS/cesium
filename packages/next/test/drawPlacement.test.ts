@@ -74,8 +74,8 @@ afterEach(() => {
   }
 });
 
-const t = (value: number): PlacementParameter =>
-  world.createPlacementParameter(value);
+const t = (value: number, range?: [number, number]): PlacementParameter =>
+  world.createPlacementParameter(value, range ? { range } : undefined);
 
 function dual(parameter: PlacementParameter, maxDistance = 2): DualPosition {
   return { kind: "dual", semantic: PARTNER, t: parameter, maxDistance };
@@ -387,10 +387,10 @@ describe("World placements", () => {
     expect(p.value).toBe(0.5);
     expect(words(draw)).toEqual(before);
     expect(before.table.parameter(parameterWord(draw))).toBe(0.5);
-    // Within float32 it goes through.
+    // Within float32 it goes through: |t| · maxDistance (t = 2, 2e38).
     p.value = 2;
     expect(words(draw).radius).toBeCloseTo(
-      Math.fround(before.radius - 1e38 + 2e38),
+      Math.fround(before.radius - 0.5e38 + 2e38),
       -32,
     );
     world.removeDraw(draw);
@@ -545,36 +545,66 @@ describe("World placements", () => {
     expect(world.drawPlacement(draw)).toBeUndefined();
   });
 
-  it("a placement grows the draw's bounding radius by its largest displacement", () => {
+  it("a placement moves the draw's bounding sphere by its displacement at the centre and grows it by the residual", () => {
     const draw = addQuad();
     const base = words(draw).radius;
     expect(base).toBeCloseTo(Math.SQRT2, 6);
     const p = t(0.5);
     world.setPlacement(draw, dual(p, 2));
-    expect(words(draw).radius).toBeCloseTo(base + 2, 6);
-    // Past 1 it extrapolates: the bounds follow t (|t| · maxDistance).
+    // A dual position has no displacement at the centre: it only grows, by
+    // |t| · maxDistance.
+    expect(words(draw).radius).toBeCloseTo(base + 1, 6);
+    expect(words(draw).center).toEqual([0, 0, 0]);
     p.value = 3;
     expect(words(draw).radius).toBeCloseTo(base + 6, 6);
     p.value = -0.25;
-    expect(words(draw).radius).toBeCloseTo(base + 2, 6);
-    // A fitted operation: Σ |c|, here over a tile the mesh fits in.
+    expect(words(draw).radius).toBeCloseTo(base + 0.5, 6);
+    // A fitted operation: its constant moves the centre; the radius grows by
+    // what the rest does over the sphere (x² · (0, −2, 0) over |x| ≤ √2/2).
     const f = fitted({ 0: [1, 0, 0], 4: [0, -2, 0] }, { scale: 2 });
     world.setPlacement(draw, f);
-    expect(words(draw).radius).toBeCloseTo(base + 3, 6);
-    // A tile smaller than the mesh: the terms count its reach.
+    expect(words(draw).center).toEqual([1, 0, 0]);
+    expect(words(draw).radius).toBeCloseTo(base + 1 + 0.01, 5);
+    // A tile smaller than the mesh: the sphere reaches further across it.
     const small = fitted({ 0: [1, 0, 0], 4: [0, -2, 0] }, { scale: 0.5 });
     world.setPlacement(draw, small);
     const reach = Math.SQRT2 / 0.5;
-    expect(words(draw).radius).toBeCloseTo(base + 1 + 2 * reach * reach, 4);
-    // Removing it gives the radius back, exactly.
+    expect(words(draw).radius).toBeCloseTo(base + 2 * reach * reach + 0.01, 4);
+    // Removing it gives the sphere back, exactly.
     world.setPlacement(draw, undefined);
     expect(words(draw).radius).toBe(base);
+    expect(words(draw).center).toEqual([0, 0, 0]);
+  });
+
+  it("a placement leaves other draws' records alone, and unplacing restores its own bit for bit", () => {
+    const placed = addQuad();
+    const bystander = addQuad();
+    const record = (draw: DrawHandle) =>
+      Array.from(
+        { length: RECORD_WORDS },
+        (_, i) => world.raster.recordsU32[draw.index * RECORD_WORDS + i]!,
+      );
+    const before = [record(placed), record(bystander)];
+    const p = t(0);
+    world.setPlacement(placed, {
+      kind: "blend",
+      from: "identity",
+      to: fitted({ 0: [4, 0, 0], 4: [0, 1, 0] }),
+      t: p,
+    });
+    expect(record(placed)).not.toEqual(before[0]);
+    p.value = 0.7;
+    p.value = -3;
+    expect(record(bystander)).toEqual(before[1]);
+    world.setPlacement(placed, undefined);
+    expect(record(placed)).toEqual(before[0]);
+    expect(record(bystander)).toEqual(before[1]);
   });
 
   it("one parameter moves every draw that names it, with one 4-byte write", () => {
     const a = addQuad();
     const b = addQuad();
-    const p = t(0);
+    const p = t(0, [0, 1]);
     world.setPlacement(a, dual(p));
     world.setPlacement(b, {
       kind: "blend",
@@ -585,7 +615,7 @@ describe("World placements", () => {
     const { table } = words(a);
     const word = parameterWord(a);
     expect(parameterWord(b)).toBe(word);
-    const radii = [words(a).radius, words(b).radius];
+    const spheres = [words(a), words(b)].map((w) => [w.radius, ...w.center]);
     engine.renderFrame();
     const version = world.version;
     const writes = writesDuring(() => {
@@ -593,12 +623,46 @@ describe("World placements", () => {
     });
     expect(writes).toEqual([[table.buffer, word * 4, 4]]);
     expect(table.parameter(word)).toBe(0.5);
-    // Both draws' views redraw; no record changed.
+    // Both draws' views redraw; no record changed: the range holds for both.
     expect(world.version).toBeGreaterThan(version);
     expect(world.changedViews).not.toBe(0);
-    expect([words(a).radius, words(b).radius]).toEqual(radii);
+    expect([words(a), words(b)].map((w) => [w.radius, ...w.center])).toEqual(
+      spheres,
+    );
     // The same value again writes nothing.
     expect(writesDuring(() => (p.value = 0.5))).toEqual([]);
+  });
+
+  it("without a range a parameter's change moves the sphere with the value, writing the record", () => {
+    const draw = addQuad();
+    const p = t(0);
+    world.setPlacement(draw, {
+      kind: "blend",
+      from: "identity",
+      to: fitted({ 0: [4, 0, 0] }),
+      t: p,
+    });
+    expect(words(draw).center).toEqual([0, 0, 0]);
+    p.value = 0.5;
+    expect(words(draw).center).toEqual([2, 0, 0]);
+    p.value = 1;
+    expect(words(draw).center).toEqual([4, 0, 0]);
+  });
+
+  it("a parameter's range is checked on creation and on every change", () => {
+    expect(() => t(0.5, [1, 0])).toThrow(/min above max/);
+    expect(() => t(0.5, [Number.NaN, 1])).toThrow(RangeError);
+    expect(() => t(0.5, [0, 1e39])).toThrow(/float32/);
+    expect(() => t(2, [0, 1])).toThrow(/outside the parameter's range/);
+    const p = t(0.5, [0, 1]);
+    expect(p.range).toEqual([0, 1]);
+    expect(() => {
+      p.value = 1.5;
+    }).toThrow(/outside the parameter's range \[0, 1\]/);
+    expect(p.value).toBe(0.5); // refused: kept
+    p.value = 1; // the ends are in
+    expect(p.value).toBe(1);
+    expect(t(3).range).toBeUndefined();
   });
 
   it("never writes a vertex buffer", () => {

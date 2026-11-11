@@ -3,6 +3,7 @@ import type { RenderContext } from "../scene/RenderContext.ts";
 import {
   BATCH_WORD,
   CASTER_MASK_WORD,
+  CENTER_WORD,
   CLIP_BLOCK_WORD,
   COLOR_WORD,
   FLAGS_WORD,
@@ -143,6 +144,20 @@ export class DrawConstants {
    */
   setRadius(index: number, radius: number): void {
     this.table.f32[index * RECORD_WORDS + RADIUS_WORD] = radius;
+    this.table.mark(index);
+  }
+
+  /**
+   * The record's bounding sphere's centre and radius (model units): a
+   * placement moves it by the displacement at the centre
+   * (`World.setPlacement`), which the cull kernel then tests.
+   */
+  setBounds(index: number, center: ArrayLike<number>, radius: number): void {
+    const o = index * RECORD_WORDS;
+    this.table.f32[o + CENTER_WORD] = center[0]!;
+    this.table.f32[o + CENTER_WORD + 1] = center[1]!;
+    this.table.f32[o + CENTER_WORD + 2] = center[2]!;
+    this.table.f32[o + RADIUS_WORD] = radius;
     this.table.mark(index);
   }
 

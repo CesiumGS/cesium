@@ -38,6 +38,7 @@ import {
   type CubicLattice,
   type WarpTerms,
 } from "../src/scene/warpTerms.ts";
+import { drawnSphere } from "../src/scene/warpBounds.ts";
 import type { World } from "../src/scene/World.ts";
 import { drawTerms, setPlacement } from "../src/scene/world/placements.ts";
 import type { DrawHandle } from "../src/scene/world/types.ts";
@@ -815,7 +816,7 @@ describe("the placements buffer", () => {
     world.removeDraw(draw);
   });
 
-  it("grows the draw's bounds by the terms' displacement, weights and all", () => {
+  it("moves the draw's sphere and pads it by the terms' residual, weights and all", () => {
     draw = addQuad();
     const k = t(1);
     const l = lattice(2, 5);
@@ -827,11 +828,16 @@ describe("the placements buffer", () => {
     ];
     setPlacement(world, draw, terms);
     const placement = world.scene.drawPlacements[draw.index]!;
-    expect(placement.pad).toBe(termsMaxDisplacement(terms, placement.reach));
+    const sphere = () => drawnSphere(terms, placement.bounds);
+    // The weight (k − 1) is 0 here: nothing moves, and nothing pads.
+    expect(placement.pad).toBeCloseTo(sphere().pad, 6);
+    expect(placement.pad).toBeLessThan(1e-5);
     const before = placement.pad;
     k.value = 5;
+    // Without a range the draw follows the value: the weight 4 scales both.
     expect(placement.pad).toBeGreaterThan(before);
-    expect(placement.pad).toBe(termsMaxDisplacement(terms, placement.reach));
+    expect(placement.pad).toBeGreaterThanOrEqual(sphere().pad);
+    expect(placement.pad).toBeLessThanOrEqual(sphere().pad + 1e-3);
     world.removeDraw(draw);
   });
 });

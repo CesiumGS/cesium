@@ -10,6 +10,8 @@ import type { FrameKey, FrameResolver } from "./frameResolver.ts";
 /** A number that is read live and moves a warp's strength; a `PlacementParameter` has this shape. */
 export interface WarpScale {
   readonly value: number;
+  /** The values it will take, when it declares them (a `PlacementParameter`'s `range`): its draws' bounds then hold over all of it. */
+  readonly range?: readonly [number, number];
 }
 
 /**
@@ -283,6 +285,14 @@ export function withoutScales(route: Route): Route {
 /** `route` with each warp's scale fixed at its value now: a snapshot a fit can run on later. */
 export function withFrozenScales(route: Route): Route {
   return mapScales(route, (w) => ({ value: warpScaleOf(w) }));
+}
+
+/** `route` with each scaled warp's scale fixed at `valueOf(warp)`: the ends of an interval of a slider, to bound what it draws. */
+export function withScalesAt(
+  route: Route,
+  valueOf: (warp: Warp) => number,
+): Route {
+  return mapScales(route, (w) => ({ value: valueOf(w) }));
 }
 
 /**

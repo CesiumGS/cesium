@@ -35,6 +35,7 @@ export interface TilesetUpdate extends Pick<
   | "imageryPending"
   | "imageryReady"
   | "imageryRefines"
+  | "isGlobe"
   | "lastSelected"
   | "lights"
   | "markCastsOnly"
@@ -221,8 +222,13 @@ export function update(
   for (const item of tileset.state.itemList) {
     wanted |= item.views;
   }
+  const warp = tileset.isGlobe
+    ? undefined
+    : tileset.world.tileWarp?.(tileset.anchor);
   const views = tileset.show
-    ? allViews.filter((view) => ((wanted >>> view.id) & 1) !== 0)
+    ? allViews
+        .filter((view) => ((wanted >>> view.id) & 1) !== 0)
+        .map((view) => (warp ? { ...view, warp } : view))
     : [];
   if (allViews.length === 0) {
     // No view yet (e.g. its world isn't shown yet): stay active, so the

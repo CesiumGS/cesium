@@ -13,19 +13,21 @@ import type { World } from "../World.ts";
 import {
   type Placement,
   type PlacementParameter,
+  checkInRange,
+  checkParameterRange,
   checkParameterValue,
   checkPlacement,
   finite32,
 } from "../placement.ts";
+import { checkTerms, termsOf, termsParameters } from "../warpEvaluate.ts";
 import {
-  checkTerms,
-  termBounds,
-  termsMaxDisplacement,
-  termsOf,
-  termsParameters,
-} from "../warpEvaluate.ts";
-import type { CubicLattice, WarpTerms } from "../warpTerms.ts";
-import type { ParameterSlot, DrawHandle } from "./types.ts";
+  drawnSphere,
+  roundUp32,
+  termBoundsOver,
+  type TermBounds,
+} from "../warpBounds.ts";
+import type { WarpTerms } from "../warpTerms.ts";
+import type { ParameterSlot, DrawHandle, DrawPlacement } from "./types.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
 
@@ -53,13 +55,23 @@ function isTerms(placement: Placement | WarpTerms): placement is WarpTerms {
   return Array.isArray(placement);
 }
 
+/** `World.changedViews` for every view. */
+const ALL_VIEWS = 0xffffffff;
+
 export function createPlacementParameter(
   world: PlacementWorld,
   value: number,
+  options: { readonly range?: readonly [number, number] } = {},
 ): PlacementParameter {
   checkParameterValue("createPlacementParameter", value);
+  let range: readonly [number, number] | undefined;
+  if (options.range !== undefined) {
+    checkParameterRange("createPlacementParameter", options.range);
+    range = Object.freeze([options.range[0], options.range[1]] as const);
+    checkInRange("createPlacementParameter", range, value);
+  }
   const word = world.raster.placementTable.allocateParameter(value);
-  const slot: ParameterSlot = { word, draws: new Set() };
+  const slot: ParameterSlot = { word, draws: new Set(), readers: 0 };
   let current = value;
   const changed = () => parameterChanged(world, slot, current);
   const parameter: PlacementParameter = Object.seal({
@@ -68,6 +80,7 @@ export function createPlacementParameter(
     },
     set value(next: number) {
       checkParameterValue("PlacementParameter", next);
+      checkInRange("PlacementParameter", range, next);
       if (next === current) {
         return;
       }
@@ -80,15 +93,55 @@ export function createPlacementParameter(
         throw error;
       }
     },
+    get range() {
+      return range;
+    },
   });
   world.scene.parameters.set(parameter, slot);
   return parameter;
 }
 
 /**
+ * Where the record's culling sphere is for `placed` at its parameters'
+ * values now (`drawnSphere`): its base centre moved by the displacement at
+ * it, in float32 as the record holds it, and the base radius grown by the
+ * residual and by what rounding the centre cost. Refused where float32
+ * can't hold it.
+ */
+function placedSphere(
+  caller: string,
+  placed: Pick<DrawPlacement, "base" | "center" | "terms" | "bounds">,
+): { center: [number, number, number]; radius: number; pad: number } {
+  const { shift, pad } = drawnSphere(placed.terms, placed.bounds);
+  const center: [number, number, number] = [0, 0, 0];
+  let rounding = 0;
+  for (let a = 0; a < 3; a++) {
+    const exact = placed.center[a]! + shift[a]!;
+    finite32(caller, "the draw's moved bounding centre", exact);
+    center[a] = Math.fround(exact);
+    rounding += (center[a]! - exact) ** 2;
+  }
+  const grown = pad + Math.sqrt(rounding);
+  finite32(caller, "the draw's grown bounding radius", placed.base + grown);
+  return { center, radius: roundUp32(placed.base + grown), pad: grown };
+}
+
+/** Writes the record's bounding sphere (which marks the record for upload). */
+function writeSphere(
+  world: PlacementWorld,
+  index: number,
+  center: readonly number[],
+  radius: number,
+): void {
+  world.raster.drawConstants.setBounds(index, center, radius);
+}
+
+/**
  * Sets a draw's warp (`World.setPlacement` for a public `Placement`,
  * converted by `termsOf`; `WarpTerms` directly, for the engine's own
- * routes): the same refusals, the same bounds growth.
+ * routes): the same refusals. Its culling sphere moves by the displacement
+ * at its centre and grows by the residual only (`drawnSphere`), for every
+ * value in its parameters' ranges.
  */
 export function setPlacement(
   world: PlacementWorld,
@@ -145,17 +198,29 @@ export function setPlacement(
   }
   const old = world.scene.drawPlacements[index];
   const base = old ? old.base : world.raster.recordsF32[o + RADIUS_WORD]!;
-  const reach = next ? placementReach(world, index, next, base) : 1;
-  const bounds = next ? termBounds(next, reach) : [];
-  const pad = next ? termsMaxDisplacement(next, reach, bounds) : 0;
+  const center: readonly [number, number, number] = old
+    ? old.center
+    : [
+        world.raster.recordsF32[o + CENTER_WORD]!,
+        world.raster.recordsF32[o + CENTER_WORD + 1]!,
+        world.raster.recordsF32[o + CENTER_WORD + 2]!,
+      ];
+  let sphere: ReturnType<typeof placedSphere> | undefined;
+  let bounds: TermBounds[] = [];
   if (next) {
-    finite32("setPlacement", "the draw's grown bounding radius", base + pad);
+    bounds = next.map(({ term }) => termBoundsOver(term, center, base));
+    sphere = placedSphere("setPlacement", {
+      base,
+      center,
+      terms: next,
+      bounds,
+    });
   }
   releasePlacement(world, index);
-  if (!next) {
+  if (!next || !sphere) {
     if (old) {
       world.raster.drawConstants.setPlacement(index, NO_PLACEMENT);
-      world.raster.drawConstants.setRadius(index, base);
+      writeSphere(world, index, old.center, base);
       world.scene.contentRevision_++;
       world.markDirty(index);
     }
@@ -165,24 +230,26 @@ export function setPlacement(
     next,
     (t) => world.scene.parameters.get(t)!.word,
   );
-  const slots = termsParameters(next).map((t) =>
-    world.scene.parameters.get(t)!,
-  );
-  for (const slot of slots) {
-    slot.draws.add(index);
-  }
+  const parameters = termsParameters(next);
+  const slots = parameters.map((t) => world.scene.parameters.get(t)!);
+  parameters.forEach((t, i) => {
+    slots[i]!.readers++;
+    if (t.range === undefined) {
+      slots[i]!.draws.add(index);
+    }
+  });
   world.scene.drawPlacements[index] = {
     placement: source,
     terms: next,
     at,
     base,
-    pad,
-    reach,
+    center,
+    pad: sphere.pad,
     bounds,
     slots,
   };
   world.raster.drawConstants.setPlacement(index, at);
-  world.raster.drawConstants.setRadius(index, base + pad);
+  writeSphere(world, index, sphere.center, sphere.radius);
   world.scene.contentRevision_++;
   world.markDirty(index);
 }
@@ -206,41 +273,45 @@ export function drawTerms(
     : undefined;
 }
 
-/** A parameter changed: its float, and its draws' bounds and views. */
+/**
+ * A parameter changed: its float, and the bounds and views of the draws
+ * that follow its value (a parameter with a range has none: its draws'
+ * bounds hold over the whole range, so only the float is written).
+ */
 function parameterChanged(
   world: PlacementWorld,
   slot: ParameterSlot,
   value: number,
 ): void {
-  if (slot.draws.size === 0) {
+  if (slot.readers === 0) {
     world.raster.placementTable.setParameter(slot.word, value);
     return;
   }
-  // The bounds first, all checked before anything is written: each draw's
-  // from its terms' cached bounds, so a morph's tick costs a few
-  // multiplications a draw (they come out equal, between 0 and 1).
-  const pads: number[] = [];
+  if (slot.draws.size === 0) {
+    // Ranged: every reader's bounds hold over the range, so only the float
+    // is written (no draw is walked); views redraw, whichever show them.
+    world.raster.placementTable.setParameter(slot.word, value);
+    world.version++;
+    world.changedViews |= ALL_VIEWS;
+    return;
+  }
+  // The spheres first, all checked before anything is written: each from
+  // its terms' cached bounds, so a tick costs a few multiplications a draw.
+  const spheres: Array<ReturnType<typeof placedSphere>> = [];
   for (const index of slot.draws) {
-    const placed = world.scene.drawPlacements[index]!;
-    const pad = termsMaxDisplacement(placed.terms, placed.reach, placed.bounds);
-    finite32(
-      "PlacementParameter",
-      "a draw's grown bounding radius",
-      placed.base + pad,
+    spheres.push(
+      placedSphere("PlacementParameter", world.scene.drawPlacements[index]!),
     );
-    pads.push(pad);
   }
   world.raster.placementTable.setParameter(slot.word, value);
   let views = 0;
   let k = 0;
   for (const index of slot.draws) {
     const placed = world.scene.drawPlacements[index]!;
-    const pad = pads[k++]!;
-    if (pad !== placed.pad) {
-      placed.pad = pad;
-      world.raster.drawConstants.setRadius(index, placed.base + pad);
-      world.raster.uploadsPending = true;
-    }
+    const sphere = spheres[k++]!;
+    placed.pad = sphere.pad;
+    writeSphere(world, index, sphere.center, sphere.radius);
+    world.raster.uploadsPending = true;
     views |= world.raster.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
   }
   world.version++;
@@ -255,39 +326,10 @@ export function releasePlacement(world: PlacementWorld, index: number): void {
   }
   world.raster.placementTable.remove(placed.at, placed.terms);
   for (const slot of placed.slots) {
+    slot.readers--;
     slot.draws.delete(index);
   }
   world.scene.drawPlacements[index] = undefined;
-}
-
-/**
- * How far a draw's vertices reach in its lattices' normalized coordinates
- * (at least 1): its bounding sphere's farthest point from a lattice's
- * center over its scale, the largest of them.
- */
-function placementReach(
-  world: PlacementWorld,
-  index: number,
-  terms: WarpTerms,
-  radius: number,
-): number {
-  const o = index * RECORD_WORDS + CENTER_WORD;
-  const f32 = world.raster.recordsF32;
-  const reach = (l: CubicLattice) =>
-    (Math.hypot(
-      f32[o]! - l.center[0]!,
-      f32[o + 1]! - l.center[1]!,
-      f32[o + 2]! - l.center[2]!,
-    ) +
-      radius) /
-    l.scale;
-  let r = 1;
-  for (const { term } of terms) {
-    if (term.kind === "cubic") {
-      r = Math.max(r, reach(term));
-    }
-  }
-  return r;
 }
 
 export function releasePlacementParameter(

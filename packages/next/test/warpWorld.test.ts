@@ -38,6 +38,7 @@ import { drawTerms } from "../src/scene/world/placements.ts";
 import type { AnchorHandle, DrawHandle } from "../src/scene/world/types.ts";
 import type { SelectionView } from "../src/streaming/Stepwise.ts";
 import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
+import { drawnTile } from "../src/streaming/tileWarp.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
@@ -185,6 +186,8 @@ interface Setup {
 function setup(
   options: {
     scaled?: "world" | "plain";
+    /** The world scale's range (`createPlacementParameter`). */
+    range?: [number, number];
     second?: boolean;
     rigid?: boolean;
     prime?: boolean;
@@ -197,7 +200,10 @@ function setup(
   const itrf = catalog.get("ITRF");
   const scale: PlacementParameter | undefined =
     options.scaled === "world"
-      ? world.createPlacementParameter(1)
+      ? world.createPlacementParameter(
+          1,
+          options.range ? { range: options.range } : undefined,
+        )
       : options.scaled === "plain"
         ? { value: 1 }
         : undefined;
@@ -620,20 +626,29 @@ describe("draws across a warp", () => {
     ).toThrow(/at most 3|room for 2/);
   });
 
-  it("covers the warp in a draw's bounds, so culling keeps warped tiles", () => {
+  it("moves a draw's bounds with the warp and pads by the residual, so culling keeps warped tiles", () => {
     const s = setup();
     const draw = addQuad(s, { half: 200 });
     const mesh = quad(200);
+    const o = draw.index * RECORD_WORDS + CENTER_WORD;
     const base =
       s.world.raster.recordsF32[draw.index * RECORD_WORDS + RADIUS_WORD]!;
+    const home = [0, 1, 2].map((i) => s.world.raster.recordsF32[o + i]!);
     s.step();
     const radius =
       s.world.raster.recordsF32[draw.index * RECORD_WORDS + RADIUS_WORD]!;
-    const o = draw.index * RECORD_WORDS + CENTER_WORD;
     const center = [0, 1, 2].map((i) => s.world.raster.recordsF32[o + i]!);
-    // It grew by about the displacement (tens of kilometres), and every
-    // displaced vertex is inside the sphere the cull kernel tests.
-    expect(radius).toBeGreaterThan(base + 20_000);
+    // The centre moved by the displacement there (tens of kilometres at
+    // k = 10), and the radius grew by the residual alone: the old padding
+    // by the whole displacement would be over 20 km. Every displaced vertex
+    // is inside the sphere the cull kernel tests.
+    const moved = Math.hypot(
+      center[0]! - home[0]!,
+      center[1]! - home[1]!,
+      center[2]! - home[2]!,
+    );
+    expect(moved).toBeGreaterThan(20_000);
+    expect(radius).toBeLessThan(base + 5_000);
     const terms = drawTerms(s.world, draw)!;
     const out = new Float64Array(3);
     for (let i = 0; i < mesh.positions.length / 3; i++) {
@@ -890,6 +905,143 @@ describe("tiles across a warp", () => {
     } finally {
       engine.removeTileset(tileset);
     }
+  });
+
+  it("selects a loaded tile on its drawn volume, through the world's map", async () => {
+    const s = setup();
+    const tileset = await load(s);
+    try {
+      const select = vi.spyOn(tileset.state.policy, "select");
+      tileset.update([selection()]);
+      const view = select.mock.calls.at(-1)![2];
+      expect(view.warp).toBeDefined();
+      const drawn = drawnTile(tileset.root, view.warp!);
+      const at = routeForward(route(s), [R + 3000, 0, 0]);
+      const sphere = drawn.volume.sphere;
+      // 3 km up at k = 10 is drawn 30 km up; the sphere holds that point.
+      expect(at[0]).toBeCloseTo(R + 30_000, 3);
+      expect(
+        Math.hypot(
+          sphere.center[0]! - at[0]!,
+          sphere.center[1]! - at[1]!,
+          sphere.center[2]! - at[2]!,
+        ),
+      ).toBeLessThanOrEqual(sphere.radius);
+      expect(sphere.center[0]!).toBeGreaterThan(R + 20_000);
+      expect(drawn.sigmaMax).toBeCloseTo(10, 6);
+      // Once its draws are fitted, the fit's error is in the stretched error.
+      s.step();
+      const again = select.mock.calls.length;
+      tileset.update([selection()]);
+      expect(select.mock.calls.length).toBeGreaterThan(again);
+      expect(drawnTile(tileset.root, view.warp!).fit).toBeGreaterThan(0);
+      expect(drawnTile(tileset.root, view.warp!).fit).toBeLessThanOrEqual(
+        640 / 64,
+      );
+    } finally {
+      engine.removeTileset(tileset);
+    }
+  });
+
+  it("selects on the tile's own volume under an anchor placed rigidly", async () => {
+    const s = setup({ rigid: true });
+    const tileset = await load(s);
+    try {
+      const select = vi.spyOn(tileset.state.policy, "select");
+      tileset.update([selection()]);
+      expect(select.mock.calls.at(-1)![2].warp).toBeUndefined();
+      expect(s.world.tileWarp(s.earth)).toBeUndefined();
+    } finally {
+      engine.removeTileset(tileset);
+    }
+  });
+});
+
+describe("a ranged scale", () => {
+  it("writes one float and walks no draw, with bounds that hold at every value", () => {
+    const s = setup({ scaled: "world", range: [0, 1] });
+    const draws = [addQuad(s, { half: 200 }), addQuad(s, { half: 50 })];
+    const meshes = [quad(200), quad(50)];
+    s.step();
+    const bounds = vi.spyOn(s.world.raster.drawConstants, "setBounds");
+    const write = vi.spyOn(s.world.raster.placementTable, "setParameter");
+    const scale = s.scale!;
+    const out = new Float64Array(3);
+    for (const v of [0, 0.3, 1, 0.7, 0]) {
+      scale.value = v;
+      draws.forEach((draw, i) => {
+        const o = draw.index * RECORD_WORDS;
+        const radius = s.world.raster.recordsF32[o + RADIUS_WORD]!;
+        const center = [0, 1, 2].map(
+          (a) => s.world.raster.recordsF32[o + CENTER_WORD + a]!,
+        );
+        const terms = drawTerms(s.world, draw)!;
+        const mesh = meshes[i]!;
+        for (let k = 0; k < mesh.positions.length / 3; k++) {
+          placeWithTerms(
+            terms,
+            [0, 1, 2].map((a) => mesh.positions[k * 3 + a]!),
+            undefined,
+            out,
+          );
+          expect(
+            Math.hypot(
+              out[0]! - center[0]!,
+              out[1]! - center[1]!,
+              out[2]! - center[2]!,
+            ),
+          ).toBeLessThanOrEqual(radius);
+        }
+      });
+    }
+    expect(write).toHaveBeenCalledTimes(5);
+    expect(bounds).not.toHaveBeenCalled();
+    // Out of range: refused, nothing written.
+    expect(() => {
+      scale.value = 1.5;
+    }).toThrow(/outside the parameter's range/);
+    expect(write).toHaveBeenCalledTimes(5);
+  });
+
+  it("without a range, each change walks the draws that follow the value", () => {
+    const s = setup({ scaled: "world" });
+    addQuad(s, { half: 200 });
+    addQuad(s, { half: 50 });
+    s.step();
+    const bounds = vi.spyOn(s.world.raster.drawConstants, "setBounds");
+    s.scale!.value = 0.5;
+    expect(bounds).toHaveBeenCalledTimes(2);
+    s.scale!.value = 2;
+    expect(bounds).toHaveBeenCalledTimes(4);
+  });
+
+  it("keeps selection's drawn volumes for the whole range, and remakes them by bucket without one", () => {
+    const ranged = setup({ scaled: "world", range: [0, 1] });
+    addQuad(ranged);
+    ranged.step();
+    const before = ranged.world.tileWarp(ranged.earth)!;
+    const version = before.version;
+    ranged.scale!.value = 0.2;
+    ranged.step();
+    expect(ranged.world.tileWarp(ranged.earth)!.version).toBe(version);
+    // Its image holds the warp at either end of the range.
+    const points = [R + 3000, 0, 0];
+    const image = ranged.world.tileWarp(ranged.earth)!.bounds(points);
+    expect(image.center[0]!).toBeGreaterThan(R + 3000);
+    expect(image.radius).toBeGreaterThan(5_000);
+
+    const free = setup({ scaled: "world" });
+    addQuad(free);
+    free.step();
+    const start = free.world.tileWarp(free.earth)!.version;
+    free.scale!.value = 0.5;
+    free.step();
+    const moved = free.world.tileWarp(free.earth)!.version;
+    expect(moved).toBeGreaterThan(start);
+    // Within the bucket (1/64) it stays.
+    free.scale!.value = 0.5 + 1 / 256;
+    free.step();
+    expect(free.world.tileWarp(free.earth)!.version).toBe(moved);
   });
 });
 

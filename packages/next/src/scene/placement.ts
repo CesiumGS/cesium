@@ -33,15 +33,13 @@
  * float64 but not in float32 (past about 3.4 × 10^38), where the GPU
  * reads it.
  *
- * A placement moves positions only. A vertex keeps the normal and tangent
- * the mesh stores, so where the move turns the surface the shading normal is
- * off by that turn (0.197 degrees at most on the design globe's 44 km
- * corridor). A fitted operation's Jacobian (plan 5f) would turn them, by its
- * inverse transpose: a term's displacement in shaders/placement.slang
- * (`termDisplacement`) is where the vertex stage would take it from the fit,
- * and the design globe generator
- * (scripts/designTiles.mjs) is where reprojected normals were written before
- * scene items.
+ * A placement turns normals and tangents by its Jacobian J (plan §13.26,
+ * increment 2a): the normal by J's cofactor matrix, the tangent by J
+ * (shaders/placement.slang `placeVertex`, its CPU twin
+ * scene/warpEvaluate.ts `placeJacobianWithTerms`). A dual position or morph
+ * target has no spatial derivative, so under one a vertex keeps the normal
+ * the mesh stores (0.197 degrees off at most on the design globe's 44 km
+ * corridor).
  *
  * Rays don't see placements: `World.castRays`, and terrain line of sight
  * through the query interface, test a placed draw's triangles where its
@@ -55,9 +53,17 @@
  * it, so a morph writes one float a tick (plan 5a's call 42). Setting
  * `value` to a non-finite number throws a `RangeError` and keeps the old
  * value.
+ *
+ * A parameter may declare a `range` (`World.createPlacementParameter`): the
+ * values it will take. The bounds of the draws it moves are then made once
+ * for the whole range, so a change within it writes one float and walks no
+ * draw; a value outside it throws a `RangeError` and keeps the old one.
+ * Without a range, a change recomputes the bounds of its draws.
  */
 export interface PlacementParameter {
   value: number;
+  /** The values it may take, `[min, max]`; undefined: any, with its draws' bounds made at the value it has. */
+  readonly range?: readonly [number, number];
 }
 
 /** The draw's transform alone (as a draw with no placement). */
@@ -185,6 +191,38 @@ export function finite32(caller: string, field: string, value: number): void {
  */
 export function checkParameterValue(caller: string, value: number): void {
   finite32(caller, "the placement parameter's value", value);
+}
+
+/** Refuses a range that isn't `[min, max]` of finite float32 numbers with `min <= max`. */
+export function checkParameterRange(
+  caller: string,
+  range: readonly number[],
+): void {
+  if (range.length !== 2) {
+    throw new RangeError(
+      `${caller}: the range has ${range.length} numbers; it is [min, max].`,
+    );
+  }
+  finite32(caller, "the range's min", range[0]!);
+  finite32(caller, "the range's max", range[1]!);
+  if (range[0]! > range[1]!) {
+    throw new RangeError(
+      `${caller}: the range [${range[0]}, ${range[1]}] has min above max.`,
+    );
+  }
+}
+
+/** Refuses a value outside a parameter's `range` (undefined: any). */
+export function checkInRange(
+  caller: string,
+  range: readonly [number, number] | undefined,
+  value: number,
+): void {
+  if (range && (value < range[0] || value > range[1])) {
+    throw new RangeError(
+      `${caller}: ${value} is outside the parameter's range [${range[0]}, ${range[1]}], for which its draws' bounds were made; create it with a wider range.`,
+    );
+  }
 }
 
 function checkFitted(caller: string, f: FittedOperation, prefix: string): void {

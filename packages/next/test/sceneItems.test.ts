@@ -467,13 +467,13 @@ describe("scene items", () => {
     const still = s.world.add(s.tileset, { placement: 0 });
     const twin = s.first().items!.get(moved)!.draws[0]!;
     const other = s.first().items!.get(still)!.draws[0]!;
-    const base = s.record(own).radius - OFF;
+    const base = s.record(own).radius; // placement 0: the weight is 0, nothing grows
     expect(s.record(twin).radius).toBeCloseTo(base + OFF);
     // Past the end, its bounds grow with |t|, and no other's do.
     moved.placement = -9;
     expect(s.record(twin).radius).toBeCloseTo(base + 9 * OFF);
-    expect(s.record(other).radius).toBeCloseTo(base + OFF);
-    expect(s.record(own).radius).toBeCloseTo(base + OFF);
+    expect(s.record(other).radius).toBeCloseTo(base);
+    expect(s.record(own).radius).toBeCloseTo(base);
     s.remove();
   });
 

@@ -10,6 +10,7 @@ import type { PointCuller } from "../PointCuller.ts";
 import type { SceneItem } from "../SceneItem.ts";
 import type { World } from "../World.ts";
 import type { Placement } from "../placement.ts";
+import type { TermBounds } from "../warpBounds.ts";
 import type { WarpTerms } from "../warpTerms.ts";
 
 /**
@@ -404,12 +405,12 @@ export interface DrawPlacement {
   at: number;
   /** The record's bounding radius without the placement (model units). */
   base: number;
-  /** What the placement adds to it (`termsMaxDisplacement`). */
+  /** The record's bounding sphere's centre without it: the record carries the moved one while placed. */
+  center: readonly [number, number, number];
+  /** What the placement adds to the radius (`drawnSphere`), including the moved centre's float32 rounding. */
   pad: number;
-  /** How far its vertices reach in its lattices' coordinates. */
-  reach: number;
-  /** Each term's displacement bound at `reach` (`termBounds`). */
-  bounds: number[];
+  /** Each term's displacement at the centre and its residual over the sphere (`termBoundsOver`). */
+  bounds: TermBounds[];
   /** The parameters it reads. */
   slots: ParameterSlot[];
 }
@@ -417,7 +418,10 @@ export interface DrawPlacement {
 /** A placement parameter's float and the draws whose placements read it. */
 export interface ParameterSlot {
   word: number;
+  /** Draws with a weight that reads it and has no range: a change recomputes their bounds. A ranged parameter's draws are not here. */
   draws: Set<number>;
+  /** How many draws' placements read it, ranged or not. */
+  readers: number;
 }
 
 /** A point draw (`World.addDraw` of a point mesh) and its per-view cull. */
