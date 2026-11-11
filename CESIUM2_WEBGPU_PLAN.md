@@ -9039,6 +9039,16 @@ Increments 1 to 3 come before b-rep step 5.
 - `routeSingularRange` gives [σ_min, σ_max], about [1.004, 10] at k = 10, for the ray-march and snaps later.
 - Not yet on drawn volumes: shadow casters' selection, the viewer's request volume, and dynamic screen-space error.
 
+**Gaps found writing the handbook's deep dive (2026-11-10).** These are for the next increments:
+
+- Location 4 carries the position before the whole fitted route. It's the true position only when every warp crossed is a presentation warp. Second-review flaw 9's fix for mixed routes, a true point under a non-presentation warp, isn't built.
+- The order-0 term isn't in the cull kernel as hi and lo parts, so float32 cancellation remains (second-review flaw 3).
+- The lattice rows' `.w` scalar is unused (0).
+- `warpAt` doesn't exist yet (increment 4).
+- `Warp`, `Route`, `resolveRoute` and `NonRigidRouteError` aren't exported from an entry point. Only `warpFrame`, `WarpFrame`, `WarpSpec` and `isWarpFrame` are. They wait for the API review's names.
+- A warp's `forward` must write its Jacobian when asked: Newton and σ estimates use it.
+- The 1000 km tile's "4 cells" is 4 per axis (64 cells). The 0.7 ms was its one-cell fit. The 10 km tile's cold fit takes about 6 ms.
+
 **Clip planes and caps: decided by the owner (2026-11-10).** Built as increment 8, once increments 2a and 3 have landed. 2a's varying swap provides the true point per fragment.
 
 1. **A clip is a world object, defined in a frame, which views opt into by mask.** One section cuts federated content and moves with its frame. Clips per item can be added later if a need appears.

@@ -39,6 +39,7 @@ import { Tessellation } from "./tabs/tessellation.tsx";
 import { Shading } from "./tabs/shading.tsx";
 import { Specs } from "./tabs/specs.tsx";
 import { Vector } from "./tabs/vector.tsx";
+import { Warps } from "./tabs/warps.tsx";
 
 interface Tab {
   id: string;
@@ -72,6 +73,7 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
     tabs: [
       { id: "scene", label: "Scene representation", view: Scene },
       { id: "frames", label: "Frame tree", view: Frames },
+      { id: "warps", label: "Warps and routes", view: Warps },
       { id: "cameras", label: "Cameras", view: Cameras },
       { id: "rendering", label: "Rendering", view: Rendering },
       { id: "shadows", label: "Shadows", view: Shadows },

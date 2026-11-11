@@ -262,6 +262,17 @@ export function Frames() {
         </p>
       </Section>
 
+      <Section title="Edges that aren't rigid">
+        <p>
+          A reference frame can also sit on a <em>warp</em>: a smooth map of
+          space, such as a reprojection or an application's vertical
+          exaggeration. <C>warpFrame</C> defines one. <C>FrameResolver.route</C>{" "}
+          returns the steps from content to the render root, and <C>resolve</C>{" "}
+          across a warp throws <C>NonRigidRouteError</C>, as it has no 4×4. The{" "}
+          <a href="#/warps">Warps and routes tab</a> has the rest.
+        </p>
+      </Section>
+
       <Section title="The data behind it">
         <DataTable
           label="Data sources"

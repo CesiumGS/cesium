@@ -179,10 +179,11 @@ export function Tessellation() {
         <p>
           One kind of placement is an exception today. A dual position has no
           function between its vertices, so it can't be evaluated at new points,
-          and it states no bound. The plan reviews placement as a whole before
-          this engine is built: rigid, dual-position and fitted placements
-          become cases of one model, and dual positions may give way to fitted
-          operations, whose Jacobian gives exact normals.
+          and it states no bound. Placements are now cases of one form, a
+          weighted sum of displacement terms, with a fitted term's Jacobian
+          giving exact normals; the <a href="#/warps">Warps and routes tab</a>{" "}
+          has it. Today's dual positions stay as input, converted to a morph
+          term, until the API review.
         </p>
         <p>
           The Rendering tab's frame graph has a dashed row for the engine's
