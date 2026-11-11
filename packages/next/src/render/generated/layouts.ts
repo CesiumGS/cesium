@@ -97,13 +97,14 @@ export const InstanceLayout = {
 
 /** `DrawItem` as `items` holds it: byte offsets. */
 export const DrawItemLayout = {
-  size: 80,
+  size: 96,
   align: 16,
   relModel: 0,
-  record: 64,
-  feature: 68,
-  instance: 72,
-  tint: 76,
+  drawn: 64,
+  record: 80,
+  feature: 84,
+  instance: 88,
+  tint: 92,
 } as const;
 
 /** `Material` as `materials` holds it: byte offsets. */

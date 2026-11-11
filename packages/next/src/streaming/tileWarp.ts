@@ -1,9 +1,11 @@
 // Where a warped anchor's tiles are drawn (plan §13.26, increment 3). Under
 // an anchor whose route to the view's root crosses a warp, a tile is drawn
 // where the route takes its content, not where its bounding volume says:
-// selection (distance, the frustum, the screen-space error) runs on the drawn
-// volume. The scene supplies the map as a `TileWarp`, which keeps streaming
-// free of frames and routes; this module makes and caches the volumes.
+// selection (distance, the frustum, the screen-space error, the viewer's
+// request volume, shadow casters' reach, the dynamic screen-space error) runs
+// on the drawn volume. The scene supplies the map as a `TileWarp`, which
+// keeps streaming free of frames and routes; this module makes and caches the
+// volumes.
 import type { Vec3 } from "../math/vec3.ts";
 import type { DrawHandle } from "../scene/world/types.ts";
 import type { Tile } from "./Tile.ts";
@@ -56,6 +58,7 @@ export interface DrawnCache {
   readonly drawn: DrawnTile;
   fitVersion: number;
   content?: { basis: TileVolume; volume: TileVolume };
+  request?: { basis: TileVolume; volume: TileVolume };
 }
 
 /**
@@ -189,4 +192,28 @@ export function drawnContentVolume(
     cache.content = { basis, volume: carried(basis, warp).volume };
   }
   return cache.content.volume;
+}
+
+/**
+ * The tile's viewer request volume carried through `warp`, as `drawnTile`
+ * carries the bounding volume: the camera is where things are drawn, so it is
+ * tested against where the request volume is drawn. Always a bounding sphere
+ * of the image (a box or region: of its samples' images), so it is larger than
+ * the carried volume itself: conservative, a tile may count the viewer as
+ * inside a little before it is. Undefined without a request volume.
+ */
+export function drawnRequestVolume(
+  tile: Tile,
+  warp: TileWarp,
+): TileVolume | undefined {
+  const basis = tile.requestVolume;
+  if (!basis) {
+    return undefined;
+  }
+  drawnTile(tile, warp);
+  const cache = tile.drawnCache!;
+  if (cache.request?.basis !== basis) {
+    cache.request = { basis, volume: carried(basis, warp).volume };
+  }
+  return cache.request.volume;
 }

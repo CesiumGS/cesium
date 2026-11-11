@@ -327,8 +327,9 @@ export function createCullBindGroup(world: TableWorld): void {
         [3, world.itemBuffer],
         [4, world.raster.drawArguments.itemList],
         [6, world.raster.batchBuffer],
-        [7, world.raster.drawArguments.buffer],
+        [7, world.raster.placementTable.buffer],
         [8, world.raster.cullParams],
+        [9, world.raster.drawArguments.buffer],
       ] as const
     ).map(([binding, b]) => ({ binding, resource: { buffer: b } })),
   });
@@ -338,7 +339,7 @@ export function createCullBindGroup(world: TableWorld): void {
     entries: [
       { binding: 0, resource: { buffer: world.recordBuffer } },
       { binding: 3, resource: { buffer: world.itemBuffer } },
-      { binding: 7, resource: { buffer: world.raster.drawArguments.buffer } },
+      { binding: 9, resource: { buffer: world.raster.drawArguments.buffer } },
     ],
   });
   world.raster.pointCullBindGroup = world.ctx.device.createBindGroup({
@@ -347,7 +348,7 @@ export function createCullBindGroup(world: TableWorld): void {
     entries: [
       { binding: 0, resource: { buffer: world.recordBuffer } },
       { binding: 1, resource: { buffer: world.transformBuffer } },
-      { binding: 7, resource: { buffer: world.raster.drawArguments.buffer } },
+      { binding: 9, resource: { buffer: world.raster.drawArguments.buffer } },
     ],
   });
 }

@@ -526,8 +526,8 @@ describe("casters on the on-demand loop", () => {
         bytes: (name) => (name === "roof.glb" ? 20 : 100) * MiB,
         latency: 2,
         size: [640, 480],
-        // Each 100 MiB tile also holds 2,888 bytes of geometry.
-        options: { cacheBytes: 2 * (100 * MiB + 2888) },
+        // Each 100 MiB tile also holds 2,920 bytes of geometry.
+        options: { cacheBytes: 2 * (100 * MiB + 2920) },
       });
       const [, coldA, roofTile] = s.tiles as [Tile, Tile, Tile];
       s.look(s.view, 2, 4000, 0, 0, 0);

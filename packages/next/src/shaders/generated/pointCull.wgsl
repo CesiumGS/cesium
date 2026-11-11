@@ -128,7 +128,7 @@ struct View_std140_0
 
 @binding(5) @group(2) var<storage, read_write> splatFeature_0 : array<u32>;
 
-@binding(7) @group(1) var<storage, read_write> args_0 : array<atomic<u32>>;
+@binding(9) @group(1) var<storage, read_write> args_0 : array<atomic<u32>>;
 
 var<workgroup> pointsKept_0 : atomic<u32>;
 

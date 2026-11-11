@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Warp Points Checks</title>
+  </head>
+  <body>
+    <!-- Plan §13.26, increment 4: open with ?bench and call runWarpPoints(). -->
+    <div id="root"></div>
+    <script type="module">
+      import { harness } from "./warpPoints.ts";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runWarpPoints");
+    </script>
+  </body>
+</html>

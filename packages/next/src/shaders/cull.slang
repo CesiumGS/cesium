@@ -11,15 +11,17 @@
 
 import common;
 import cullTables;
+import placement;
 
 void append(uint batch, uint item) {
   uint slot = countInstance(argumentSlot(batch));
   itemList[batches[batch].itemBase + slot] = item;
 }
 
-DrawItem drawItem(float4x4 m, uint record, uint feature, uint instance, uint tint) {
+DrawItem drawItem(float4x4 m, float3 drawn, uint record, uint feature, uint instance, uint tint) {
   DrawItem item;
   item.relModel = m;
+  item.drawn = float4(drawn, 0.0);
   item.record = record;
   item.feature = feature;
   item.instance = instance;
@@ -40,7 +42,17 @@ void cullRecords(uint3 gid : SV_DispatchThreadID) {
   }
   Transform t = transforms[r.transform];
   float4x4 m = relativeMatrix(t);
-  items[i] = drawItem(m, i, 0u, 0u, WHITE);
+  // A placed draw is drawn at its origin moved by the placement's order-0
+  // displacement, summed exactly with the camera-relative offset; the
+  // culling sphere (moved by it too, in model space) tests m.
+  float3 drawn = float3(m[0][3], m[1][3], m[2][3]);
+  if (r.placement != NO_PLACEMENT) {
+    float3 offsetHi;
+    float3 offsetLo;
+    placementOffset(r.placement, offsetHi, offsetLo);
+    drawn = drawnTranslation(t, offsetHi, offsetLo);
+  }
+  items[i] = drawItem(m, drawn, i, 0u, 0u, WHITE);
   if (drawable(r, t) && inFrustum(m, r.center, r.radius * t.scale)) {
     append(r.batch, i);
   }
@@ -68,7 +80,7 @@ void cullInstances(uint3 gid : SV_DispatchThreadID) {
     feature = r.featureId + inst.feature;
   }
   uint item = params.firstInstanceItem + j;
-  items[item] = drawItem(m, inst.record, feature, j - r.instanceFirst, inst.tint);
+  items[item] = drawItem(m, float3(m[0][3], m[1][3], m[2][3]), inst.record, feature, j - r.instanceFirst, inst.tint);
   // The largest axis scale: the length of the longest column.
   float scale = t.scale * max(
       length(float3(local[0][0], local[1][0], local[2][0])),

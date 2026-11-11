@@ -289,7 +289,11 @@ export class BudgetedSelection extends StepwiseSelection {
     ) {
       return found;
     }
-    const region = CasterRegion.around(planes, room.receivers(view, selected));
+    const region = CasterRegion.around(
+      planes,
+      room.receivers(view, selected),
+      (tile) => this.volumeOf(tile, view),
+    );
     if (!region) {
       return found;
     }
@@ -984,15 +988,18 @@ class CasterRegion {
   private constructor(
     private readonly boxes: RegionPlane[][],
     private readonly rectangle: RegionPlane[],
+    private readonly volumeOf: (tile: Tile) => TileVolume,
   ) {}
 
   /**
    * The region for `receivers`, or undefined with none. Undefined receivers
-   * (`CasterRoom.receivers`): the boxes alone.
+   * (`CasterRoom.receivers`): the boxes alone. `volumeOf` is the volume a
+   * tile is tested as: its own, or its drawn one under a warped anchor.
    */
   static around(
     planes: Float64Array,
     receivers: ReadonlyArray<readonly Tile[]> | undefined,
+    volumeOf: (tile: Tile) => TileVolume,
   ): CasterRegion | undefined {
     if (receivers?.every((tiles) => tiles.length === 0)) {
       return undefined;
@@ -1010,7 +1017,7 @@ class CasterRegion {
       return undefined;
     }
     if (!receivers) {
-      return new CasterRegion(boxes, []);
+      return new CasterRegion(boxes, [], volumeOf);
     }
     // The light's direction: the normal of a box's plane 4.
     const lz = [planes[16]!, planes[17]!, planes[18]!];
@@ -1023,7 +1030,7 @@ class CasterRegion {
     for (const tiles of receivers) {
       for (const tile of tiles) {
         for (let a = 0; a < 3; a++) {
-          volumeSpan(tile.volume, axes[a]!, span);
+          volumeSpan(volumeOf(tile), axes[a]!, span);
           low[a] = Math.min(low[a]!, span[0]!);
           high[a] = Math.max(high[a]!, span[1]!);
         }
@@ -1038,7 +1045,7 @@ class CasterRegion {
       // Toward the light from the lowest underside; no limit above.
       { n: axes[2]!, d: -low[2]! },
     ];
-    return new CasterRegion(boxes, rectangle);
+    return new CasterRegion(boxes, rectangle, volumeOf);
   }
 
   /**
@@ -1076,7 +1083,7 @@ class CasterRegion {
   private side(tile: Tile, planes: readonly RegionPlane[]): number {
     let side = INSIDE;
     for (const { n, d } of planes) {
-      const r = volumeIntersectPlane(tile.volume, n, d);
+      const r = volumeIntersectPlane(this.volumeOf(tile), n, d);
       if (r === OUTSIDE) {
         return OUTSIDE;
       }

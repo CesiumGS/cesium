@@ -5,8 +5,14 @@ import * as m4 from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { Engine } from "../scene/Engine.ts";
 import type { HeightCapture } from "../scene/heightCaptures.ts";
+import type { MeshData } from "../scene/meshes.ts";
 import type { World } from "../scene/World.ts";
-import type { AnchorHandle, PointMesh } from "../scene/world/types.ts";
+import type {
+  AnchorHandle,
+  DrawHandle,
+  MeshHandle,
+  PointMesh,
+} from "../scene/world/types.ts";
 import { contentAnchor } from "../scene/earthAnchor.ts";
 
 /**
@@ -57,7 +63,21 @@ export interface PointSourceOptions {
   clamp?: { halfExtent: number; size?: number; top?: number; bottom?: number };
   /** The clock (seconds; default the engine's, `Engine.time`). */
   clock?: () => number;
+  /**
+   * Under a warped anchor (a rig on a warp frame) its points' positions go
+   * through the route: fitted over a sphere of this radius (m, default
+   * 50,000) around `origin`, to `warpTolerance` (m, default 0.05). A point
+   * farther than the radius from `origin` is carried by the fit's
+   * extrapolation, which grows less exact with distance.
+   */
+  warpRadius?: number;
+  warpTolerance?: number;
 }
+
+/** The fit's default region around a source's origin, m. */
+const WARP_RADIUS = 50_000;
+/** The fit's default tolerance, m. */
+const WARP_TOLERANCE = 0.05;
 
 /** Words per point in the state buffer (points.slang `State`). */
 const STATE_WORDS = 12;
@@ -65,8 +85,19 @@ const COMPONENTS = { f32: 1, u32: 1, vec2f: 2, vec3f: 3, vec4f: 4 } as const;
 
 const pipelines = new WeakMap<
   GPUDevice,
-  { place: GPUComputePipeline; apply: GPUComputePipeline }
+  {
+    place: GPUComputePipeline;
+    apply: GPUComputePipeline;
+    /** The frame kernel's group 1: the world's placements (placement.slang). */
+    placements: GPUBindGroupLayout;
+  }
 >();
+
+/** A one-triangle mesh: what the carrier draw needs to be a draw. */
+const CARRIER: MeshData = {
+  positions: Float32Array.of(0, 0, 0, 1, 0, 0, 0, 1, 0),
+  indices: Uint32Array.of(0, 1, 2),
+};
 
 /** A dispatch of `n` threads in rows of at most 65,535 groups of 64. */
 export function dispatchSize(n: number): {
@@ -89,6 +120,13 @@ export function dispatchSize(n: number): {
  * point (`World.addPointMesh`). Properties (`setProperties`) sit beside
  * the anchors as streams the styles read; `heading` is written each frame.
  * No CPU work per point per frame, and no per-point instance rows.
+ *
+ * Under a warped anchor the same kernel carries each point through the
+ * route (plan 13.26, increment 4): the source owns a hidden carrier draw,
+ * which the world's warps fit like any draw over a sphere around `origin`,
+ * and the kernel evaluates that fit's lattice at the point's position
+ * before writing the anchor. Layers' draws and model pools, which read the
+ * anchors, need nothing. Until the first fit lands the points are hidden.
  */
 export class PointSource {
   readonly capacity: number;
@@ -119,10 +157,17 @@ export class PointSource {
   /** Rebuilt when the world's tables or slabs are replaced (`groupFor`). */
   private group: GPUBindGroup;
   private groupGeneration: number;
+  /** The world's placements buffer as the kernel's group 1 was made for it (`placementGroup`). */
+  private placementsBound: GPUBuffer | undefined;
+  private placementsGroup: GPUBindGroup | undefined;
+  /** @internal The hidden draw whose warp fit the frame kernel evaluates. */
+  readonly carrier: DrawHandle;
+  private readonly carrierMesh: MeshHandle;
   private readonly noHeights: GPUTexture | undefined;
   private readonly kernels: {
     place: GPUComputePipeline;
     apply: GPUComputePipeline;
+    placements: GPUBindGroupLayout;
   };
   private readonly removeHook: () => void;
   private destroyed = false;
@@ -248,8 +293,19 @@ export class PointSource {
           },
         ],
       });
+      // The world's placements (placement.slang's binding 7 of group 1).
+      const layoutPlacements = device.createBindGroupLayout({
+        label: "points.placements",
+        entries: [
+          {
+            binding: 7,
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: { type: "read-only-storage" },
+          },
+        ],
+      });
       const placeLayout = device.createPipelineLayout({
-        bindGroupLayouts: [layout0],
+        bindGroupLayouts: [layout0, layoutPlacements],
       });
       const applyLayout = device.createPipelineLayout({
         bindGroupLayouts: [layout0, layout1],
@@ -265,10 +321,31 @@ export class PointSource {
           layout: applyLayout,
           compute: { module, entryPoint: "applySamples" },
         }),
+        placements: layoutPlacements,
       };
       pipelines.set(device, kernels);
     }
     this.kernels = kernels;
+    // The carrier: a draw that is never drawn (no views), under the source's
+    // anchor in the source's frame, for the world's warps to fit.
+    const rotation = m4.copy(m4.mat4(), this.frame);
+    rotation[12] = rotation[13] = rotation[14] = 0;
+    this.carrierMesh = world.addMesh(CARRIER);
+    this.carrier = world.addDraw({
+      mesh: this.carrierMesh,
+      parent: this.anchor,
+      origin: options.origin,
+      model: rotation,
+      radius: options.warpRadius ?? WARP_RADIUS,
+      viewMask: 0,
+      ground: false,
+      name: "point source carrier",
+    });
+    world.setDrawGeometricError(
+      this.carrier,
+      (options.warpTolerance ?? WARP_TOLERANCE) * 64,
+    );
+    world.warps.markSourced(this.mesh);
     this.groupGeneration = world.tableGeneration;
     this.group = this.createGroup();
     this.removeHook = world.addFrameCompute((pass) => this.place(pass));
@@ -295,6 +372,20 @@ export class PointSource {
         },
       ],
     });
+  }
+
+  /** The kernel's group 1: the world's placements, rebuilt when the buffer grew. */
+  private placementGroup(): GPUBindGroup {
+    const buffer = this.world.placementBuffer;
+    if (this.placementsBound !== buffer || !this.placementsGroup) {
+      this.placementsBound = buffer;
+      this.placementsGroup = this.engine.gpu.device.createBindGroup({
+        label: "points.placements",
+        layout: this.kernels.placements,
+        entries: [{ binding: 7, resource: { buffer } }],
+      });
+    }
+    return this.placementsGroup;
   }
 
   private currentGroup(): GPUBindGroup {
@@ -333,9 +424,13 @@ export class PointSource {
     f32[10] = this.heights?.top ?? 0;
     f32[11] = this.heights?.bottom ?? 0;
     u32[12] = threads;
+    const placed = this.world.placementOf(this.carrier);
+    u32[13] = placed.row;
+    u32[14] = placed.held ? 1 : 0;
     this.engine.gpu.device.queue.writeBuffer(this.params, 0, this.paramsData);
     pass.setPipeline(this.kernels.place);
     pass.setBindGroup(0, this.currentGroup());
+    pass.setBindGroup(1, this.placementGroup());
     pass.dispatchWorkgroups(x, y);
   }
 
@@ -457,6 +552,8 @@ export class PointSource {
     }
     this.destroyed = true;
     this.removeHook();
+    this.world.removeDraw(this.carrier);
+    this.world.removeMesh(this.carrierMesh);
     this.world.removeMesh(this.mesh);
     this.stateBuffer.destroy();
     this.params.destroy();

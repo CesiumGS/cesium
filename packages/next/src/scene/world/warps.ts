@@ -23,8 +23,12 @@
 // the CPU, in slices within the frame's budget, and its matrix is rewritten
 // (the instance table's, which the cull and vertex stages already read), so
 // a warp costs them nothing. Point sets and instances written by the GPU (a
-// `ModelPool`'s) are drawn at their anchor's place, unwarped: their culls
-// read positions the placement doesn't reach.
+// `ModelPool`'s) are carried through the route by their `PointSource`'s
+// frame kernel (a hidden carrier draw is fitted like any draw, and the
+// kernel evaluates its lattice at each point before writing the anchor the
+// cull, the quads and the pool read), not placed themselves. A point set no
+// source owns is drawn at its anchor's place, unwarped: its cull reads
+// positions the placement doesn't reach.
 //
 // One context per world, fitted for the root of the world's first view.
 // Another view of the world with a different root would need terms per view
@@ -327,6 +331,8 @@ export class WorldWarps {
   >();
   /** Draws whose instances the GPU writes (`markGpuInstances`), by draw index. */
   readonly #gpuInstanced = new Map<number, number>();
+  /** Point meshes a PointSource owns (markSourced). */
+  readonly #sources = new Set<number>();
   /** Warned of already: a message is said once. */
   readonly #said = new Set<string>();
   /** The last frame's report, for what is said between frames. */
@@ -475,9 +481,17 @@ export class WorldWarps {
   }
 
   /**
+   * @internal The point set is a `PointSource`'s: its frame kernel carries
+   * the points through the route, so the draws of the set are not placed.
+   */
+  markSourced(mesh: { readonly id: number }): void {
+    this.#sources.add(mesh.id);
+  }
+
+  /**
    * @internal The draw's instances are written by the GPU (a `ModelPool`'s):
-   * the CPU can't move them by the route, so the draw is drawn at its
-   * anchor's place, unwarped, and the engine says so once.
+   * they are placed by their source's frame kernel (`markSourced`), which
+   * writes the anchors the pool reads, so the draw itself is not.
    */
   markGpuInstances(handle: DrawHandle): void {
     if (!this.world.hasDraw(handle)) {
@@ -983,20 +997,22 @@ export class WorldWarps {
     const flags = raster.recordsU32[o + FLAGS_WORD]!;
     const count = raster.recordsU32[o + INSTANCE_COUNT_WORD]!;
     // A point set's cull reads positions a placement doesn't reach, and a
-    // pool's instances are written by the GPU: both are drawn at their
-    // anchor's affine place, unwarped.
+    // pool's instances are written by the GPU: a `PointSource` carries its
+    // points through the route in the pass that writes them (its carrier
+    // draw, which is a mesh draw to these rules), so neither draw is
+    // placed. A point set no source owns is drawn at its anchor's affine
+    // place, unwarped, and the engine says so once.
     if (flags & RecordFlags.points) {
-      this.#say(
-        "points",
-        "warp: a point set is drawn at its anchor's place, unwarped: its cull reads positions the placement doesn't reach.",
-      );
+      const mesh = raster.drawBatches[index]!.mesh;
+      if (!this.#sources.has(mesh.id)) {
+        this.#say(
+          "points",
+          "warp: a point set no PointSource owns is drawn at its anchor's place, unwarped: its cull reads positions the placement doesn't reach.",
+        );
+      }
       return;
     }
     if (count > 0 && this.#gpuInstanced.get(index) === generation) {
-      this.#say(
-        "gpu-instances",
-        "warp: instances written by the GPU (a ModelPool's) are drawn at their anchor's place, unwarped: the CPU can't move them by the route.",
-      );
       return;
     }
     const kind: DrawKind =

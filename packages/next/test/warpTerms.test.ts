@@ -20,6 +20,7 @@ import {
   WARP_KIND,
   blockRows,
   latticeRows,
+  LATTICE_HEAD_ROWS,
 } from "../src/scene/placementTable.ts";
 import {
   checkTerms,
@@ -683,11 +684,15 @@ describe("the placements buffer", () => {
           v = s.map((x, a) => 2 * (x - i[a]!) - 1);
           cell = (i[2]! * cells + i[1]!) * cells + i[0]!;
         }
-        d = [0, 0, 0];
+        // The constant part (the cull kernel's, hi and lo), then the cells'.
+        d = [0, 1, 2].map(
+          (c) => block.f32[body + 4 + c]! + block.f32[body + 8 + c]!,
+        );
         for (let k = 0; k < PLACEMENT_TERMS; k++) {
           const [a, b, e] = PLACEMENT_MONOMIALS[k]!;
           const m = v[0]! ** a * v[1]! ** b * v[2]! ** e;
-          const r = body + 4 + (cell * PLACEMENT_TERMS + k) * 4;
+          const r =
+            body + LATTICE_HEAD_ROWS * 4 + (cell * PLACEMENT_TERMS + k) * 4;
           for (let c = 0; c < 3; c++) {
             d[c]! += block.f32[r + c]! * m;
           }

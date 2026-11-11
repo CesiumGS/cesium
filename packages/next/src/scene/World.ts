@@ -21,6 +21,8 @@ import {
   FLAGS_WORD,
   CASTER_MASK_WORD,
   VIEW_MASK_WORD,
+  PLACEMENT_WORD,
+  NO_PLACEMENT,
   ALL_VIEWS,
   DRAW_OVERHEAD_BYTES,
   MAX_TERRAIN_CLIPS,
@@ -460,6 +462,10 @@ export class World {
     growPointSets(this, 64);
     this.raster.splats = createSplats(this, 1);
 
+    // The cull binds the placements too (its placed records' offsets).
+    this.raster.placementTable = new PlacementTable(device, () =>
+      tablesReplaced(this),
+    );
     createCullBindGroup(this);
     this.raster.imageryPlaceholder = device
       .createTexture({
@@ -479,9 +485,6 @@ export class World {
       addressModeV: "clamp-to-edge",
       maxAnisotropy: 16,
     });
-    this.raster.placementTable = new PlacementTable(device, () =>
-      tablesReplaced(this),
-    );
     createDrawBindGroup(this);
 
     this.addMaterial({}); // material 0: white, lit, untextured
@@ -1023,10 +1026,13 @@ export class World {
    *   `origin` (its root) and the whole model moves as one.
    *
    * Billboards and instanced draws are always anchored (an instanced draw's
-   * origin is each instance's). A point set, or instances the GPU writes (a
-   * `ModelPool`'s), is drawn at its anchor's place, unwarped. Costs nothing
-   * for a draw not under a warped anchor, which only remembers it. Changing
-   * it refits the draw.
+   * origin is each instance's). The points of a `PointSource`, and the
+   * instances of a `ModelPool` it feeds, are carried through the route by
+   * the source's frame kernel, where it writes each position (a hidden
+   * carrier draw of the source is fitted); a point set no source owns is
+   * drawn at its anchor's place, unwarped. Costs nothing for a draw not
+   * under a warped anchor, which only remembers it. Changing it refits the
+   * draw.
    */
   setWarpAt(handle: DrawHandle, at: WarpAt, origin?: TransformHandle): void {
     this.warps.setWarpAt(handle, at, origin);
@@ -1060,7 +1066,9 @@ export class World {
 
   /**
    * @internal The draw's instances are written by the GPU (a `ModelPool`'s),
-   * so a warp can't move them on the CPU: they are drawn unwarped.
+   * so a warp can't move them on the CPU: their source's frame kernel
+   * carries the points they stand at through the route instead, and the
+   * draw itself is not placed.
    */
   markGpuInstances(handle: DrawHandle): void {
     this.warps.markGpuInstances(handle);
@@ -1929,6 +1937,32 @@ export class World {
   /** The vertex arena buffer holding `mesh` (its slab's, scene/Slabs.ts). */
   vertexBufferOf(mesh: MeshHandle): GPUBuffer {
     return this.slabs.get(mesh.slab).vertexBuffer;
+  }
+
+  /**
+   * @internal The world's placements buffer (scene/placementTable.ts), for
+   * kernels that evaluate a placement (vector/points.slang); replaced as it
+   * grows (`tableGeneration`).
+   */
+  get placementBuffer(): GPUBuffer {
+    return this.raster.placementTable.buffer;
+  }
+
+  /**
+   * @internal A kernel's view of the draw's placement: its block's row in
+   * the placements buffer (`NO_PLACEMENT`, 0xffffffff, for none), and
+   * whether the draw is under a warped anchor whose first fit hasn't
+   * landed (`held`: whatever the kernel writes should be hidden until it
+   * does). The draw's placement is the route's when its anchor is warped
+   * (scene/world/warps.ts).
+   */
+  placementOf(handle: DrawHandle): { row: number; held: boolean } {
+    return {
+      row: this.hasDraw(handle)
+        ? this.raster.recordsU32[handle.index * RECORD_WORDS + PLACEMENT_WORD]!
+        : NO_PLACEMENT,
+      held: this.warps.status(handle)?.state === "pending",
+    };
   }
 
   /** @internal */

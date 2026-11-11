@@ -154,7 +154,7 @@
                             "binding": {"kind": "uniform", "offset": 48, "size": 4, "elementStride": 0}
                         },
                         {
-                            "name": "pad0",
+                            "name": "placement",
                             "type": {
                                 "kind": "scalar",
                                 "scalarType": "uint32",
@@ -165,7 +165,7 @@
                             "binding": {"kind": "uniform", "offset": 52, "size": 4, "elementStride": 0}
                         },
                         {
-                            "name": "pad1",
+                            "name": "held",
                             "type": {
                                 "kind": "scalar",
                                 "scalarType": "uint32",
@@ -343,7 +343,7 @@
                                 "binding": {"kind": "uniform", "offset": 48, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "pad0",
+                                "name": "placement",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -354,7 +354,7 @@
                                 "binding": {"kind": "uniform", "offset": 52, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "pad1",
+                                "name": "held",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -769,6 +769,28 @@
                     {"kind": "descriptorTableSlot", "value": 1}
                 ]
             }
+        },
+        {
+            "name": "placements",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    },
+                    "sizes": [
+                        {"kind": "uniform", "value": 16, "alignment": 16}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
         }
     ],
     "globalScope": {
@@ -927,7 +949,7 @@
                                 "binding": {"kind": "uniform", "offset": 48, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "pad0",
+                                "name": "placement",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -938,7 +960,7 @@
                                 "binding": {"kind": "uniform", "offset": 52, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "pad1",
+                                "name": "held",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -1116,7 +1138,7 @@
                                     "binding": {"kind": "uniform", "offset": 48, "size": 4, "elementStride": 0}
                                 },
                                 {
-                                    "name": "pad0",
+                                    "name": "placement",
                                     "type": {
                                         "kind": "scalar",
                                         "scalarType": "uint32",
@@ -1127,7 +1149,7 @@
                                     "binding": {"kind": "uniform", "offset": 52, "size": 4, "elementStride": 0}
                                 },
                                 {
-                                    "name": "pad1",
+                                    "name": "held",
                                     "type": {
                                         "kind": "scalar",
                                         "scalarType": "uint32",
@@ -1542,6 +1564,28 @@
                         {"kind": "descriptorTableSlot", "value": 1}
                     ]
                 }
+            },
+            {
+                "name": "placements",
+                "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        },
+                        "sizes": [
+                            {"kind": "uniform", "value": 16, "alignment": 16}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
             }
         ]
     },
@@ -1611,6 +1655,10 @@
                 {
                     "name": "samples",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
                 }
             ]
         },
@@ -1679,6 +1727,10 @@
                 {
                     "name": "samples",
                     "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
                 }
             ]
         }

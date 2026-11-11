@@ -124,6 +124,7 @@ struct _MatrixStorage_float4x4_ColMajorstd430_0
 struct DrawItem_std430_0
 {
     @align(16) relModel_0 : _MatrixStorage_float4x4_ColMajorstd430_0,
+    @align(16) drawn_0 : vec4<f32>,
     @align(16) record_1 : u32,
     @align(4) feature_1 : u32,
     @align(8) instance_0 : u32,

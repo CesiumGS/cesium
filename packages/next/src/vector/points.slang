@@ -6,6 +6,14 @@
 // the source's frame and the heading) and its heading into its property
 // stream for styles (`${heading}`). Points beyond `count` and points never
 // sampled get `HIDDEN` as x, which the vertex stage drops.
+//
+// Under a warp (plan 13.26, increment 4) each point's position goes through
+// the route here, in the pass that writes it: `placeAnchor` over the
+// source's carrier draw's lattice (vector/PointSource.ts), so the cull, the
+// quads and a model pool that reads the anchors all see the drawn place. A
+// source whose carrier isn't fitted yet shows nothing (`held`).
+
+import placement;
 
 struct PointParams {
   float time;        // the clock, seconds
@@ -21,8 +29,8 @@ struct PointParams {
   float top;         // its depth range along up, m
   float bottom;
   uint threads;      // threads per row of the dispatch (groups.x × 64)
-  uint pad0;
-  uint pad1;
+  uint placement;    // the carrier's block in the placements buffer (NO_PLACEMENT: none)
+  uint held;         // 1: the warp isn't fitted yet; every point is hidden
   uint pad2;
 };
 
@@ -137,7 +145,7 @@ void placePoints(uint3 gid : SV_DispatchThreadID) {
   }
   uint a = params.anchors + i * 4u;
   State s = state[i];
-  if (i >= params.count || s.sampled < 0.5) {
+  if (i >= params.count || s.sampled < 0.5 || params.held != 0u) {
     vertices[a] = HIDDEN;
     return;
   }
@@ -146,6 +154,7 @@ void placePoints(uint3 gid : SV_DispatchThreadID) {
     // z is the height above the ground; off the capture, above the frame.
     p.z += groundHeight(p.x, p.y, 0.0);
   }
+  p.xyz = placeAnchor(params.placement, p.xyz);
   vertices[a] = p.x;
   vertices[a + 1u] = p.y;
   vertices[a + 2u] = p.z;

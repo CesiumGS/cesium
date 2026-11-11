@@ -1425,6 +1425,21 @@
                             "binding": {"kind": "uniform", "offset": 0, "size": 64, "elementStride": 0}
                         },
                         {
+                            "name": "drawn",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 64, "size": 16, "elementStride": 4}
+                        },
+                        {
                             "name": "record",
                             "type": {
                                 "kind": "scalar",
@@ -1433,7 +1448,7 @@
                                     {"kind": "uniform", "value": 4, "alignment": 4}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 64, "size": 4, "elementStride": 0}
+                            "binding": {"kind": "uniform", "offset": 80, "size": 4, "elementStride": 0}
                         },
                         {
                             "name": "feature",
@@ -1444,7 +1459,7 @@
                                     {"kind": "uniform", "value": 4, "alignment": 4}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 68, "size": 4, "elementStride": 0}
+                            "binding": {"kind": "uniform", "offset": 84, "size": 4, "elementStride": 0}
                         },
                         {
                             "name": "instance",
@@ -1455,7 +1470,7 @@
                                     {"kind": "uniform", "value": 4, "alignment": 4}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 72, "size": 4, "elementStride": 0}
+                            "binding": {"kind": "uniform", "offset": 88, "size": 4, "elementStride": 0}
                         },
                         {
                             "name": "tint",
@@ -1466,11 +1481,11 @@
                                     {"kind": "uniform", "value": 4, "alignment": 4}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 76, "size": 4, "elementStride": 0}
+                            "binding": {"kind": "uniform", "offset": 92, "size": 4, "elementStride": 0}
                         }
                     ],
                     "sizes": [
-                        {"kind": "uniform", "value": 80, "alignment": 16}
+                        {"kind": "uniform", "value": 96, "alignment": 16}
                     ]
                 },
                 "sizes": [
@@ -3322,6 +3337,21 @@
                                 "binding": {"kind": "uniform", "offset": 0, "size": 64, "elementStride": 0}
                             },
                             {
+                                "name": "drawn",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 64, "size": 16, "elementStride": 4}
+                            },
+                            {
                                 "name": "record",
                                 "type": {
                                     "kind": "scalar",
@@ -3330,7 +3360,7 @@
                                         {"kind": "uniform", "value": 4, "alignment": 4}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 64, "size": 4, "elementStride": 0}
+                                "binding": {"kind": "uniform", "offset": 80, "size": 4, "elementStride": 0}
                             },
                             {
                                 "name": "feature",
@@ -3341,7 +3371,7 @@
                                         {"kind": "uniform", "value": 4, "alignment": 4}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 68, "size": 4, "elementStride": 0}
+                                "binding": {"kind": "uniform", "offset": 84, "size": 4, "elementStride": 0}
                             },
                             {
                                 "name": "instance",
@@ -3352,7 +3382,7 @@
                                         {"kind": "uniform", "value": 4, "alignment": 4}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 72, "size": 4, "elementStride": 0}
+                                "binding": {"kind": "uniform", "offset": 88, "size": 4, "elementStride": 0}
                             },
                             {
                                 "name": "tint",
@@ -3363,11 +3393,11 @@
                                         {"kind": "uniform", "value": 4, "alignment": 4}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 76, "size": 4, "elementStride": 0}
+                                "binding": {"kind": "uniform", "offset": 92, "size": 4, "elementStride": 0}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 80, "alignment": 16}
+                            {"kind": "uniform", "value": 96, "alignment": 16}
                         ]
                     },
                     "sizes": [

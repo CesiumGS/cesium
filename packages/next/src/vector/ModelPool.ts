@@ -98,7 +98,9 @@ export class ModelPool {
     });
     this.parts = this.placement.draws.length;
     // The GPU writes its instances each frame: the CPU can't move them by a
-    // warp's route (World.markGpuInstances).
+    // warp's route (World.markGpuInstances). Under a warp the source's frame
+    // kernel has already carried the points they stand at through it
+    // (points.slang), so they are drawn at the route's image of each.
     for (const draw of this.placement.draws) {
       world.markGpuInstances(draw);
     }

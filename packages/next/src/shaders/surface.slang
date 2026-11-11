@@ -751,6 +751,15 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   uint draw = p.record;
   DrawRecord r = drawRecord(draw);
   float4x4 m = p.relModel;
+  // Where a placed draw is drawn: its translation moved by the placement's
+  // order-0 displacement (cull.slang), which placeVertex leaves out. m,
+  // for the true position (the design position's transform), is unmoved.
+  float4x4 drawnModel = m;
+  if (r.placement != NO_PLACEMENT) {
+    drawnModel[0][3] = p.drawn.x;
+    drawnModel[1][3] = p.drawn.y;
+    drawnModel[2][3] = p.drawn.z;
+  }
   SurfaceVertex out;
   out.uv = float2(0.0);
   // A point set (RecordFlags.points): six vertices a point, its anchor
@@ -788,7 +797,7 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   if (billboard && r.placement != NO_PLACEMENT) {
     anchor.xyz = placePosition(r.placement, anchor.xyz, 0u, r.attributes, 0u);
   }
-  cesiumAnchor = mul(m, float4(anchor.xyz, 1.0)).xyz;
+  cesiumAnchor = mul(billboard ? drawnModel : m, float4(anchor.xyz, 1.0)).xyz;
   float3 normal = float3(0.0, 0.0, 1.0);
   if (patched) {
     normal = patchData.normal;
@@ -872,7 +881,7 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   // surface under a warp), and the draw's transform on the position before
   // the placement; for an unplaced draw, where it is drawn.
   out.positionMC = designPosition;
-  float4 world = mul(m, float4(stage.positionMC, 1.0));
+  float4 world = mul(drawnModel, float4(stage.positionMC, 1.0));
   out.relPosition = placedDraw ? mul(m, float4(designPosition, 1.0)).xyz : world.xyz;
   out.position = mul(view.viewProj, world);
   // A billboard (RecordFlags.billboard): the instance's position, its
@@ -880,7 +889,7 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   // instance's scale), facing the camera; in front of everything within
   // its depth-test distance.
   if (billboard) {
-    world = mul(m, float4(anchor.xyz, 1.0));
+    world = mul(drawnModel, float4(anchor.xyz, 1.0));
     out.relPosition = world.xyz;
     float2 corner = stage.positionMC.xy * r.billboardSize * length(column3(m, 0));
     out.position = mul(view.viewProj, world);

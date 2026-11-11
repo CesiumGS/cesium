@@ -1,11 +1,14 @@
 import { attributeHash } from "../render/layout.ts";
 import { PLACEMENT_TERMS } from "./placement.ts";
+import { latticeDisplacement } from "./warpEvaluate.ts";
 import type { WarpTerms } from "./warpTerms.ts";
 
 /**
  * A world's placements buffer (plan 5a's call 42): one storage buffer of
  * float4 rows, bound in the draw group (group 1, binding 7) for the vertex
- * stage only, read in Slang only by shaders/placement.slang. It holds:
+ * stage, in the cull's group (group 1, binding 7, for a placed record's
+ * order-0 offset) and in a point source's frame kernel (group 1, binding 7),
+ * read in Slang only by shaders/placement.slang. It holds:
  *
  * - placement parameters, one float each, four to a row
  *   (`PlacementParameter`): a morph writes one float, 4 bytes, a tick;
@@ -25,12 +28,16 @@ import type { WarpTerms } from "./warpTerms.ts";
  *   parameter`: only `factors` of them are read, the others are zero. The
  *   weight is the scale times the factors' values;
  * - then each lattice's body, in term order: a row `[center xyz (f32), 1 /
- *   scale (f32)]`, then `cells³ × 20` rows, `[x, y, z, 0]` (f32), cell
- *   `(iz · cells + iy) · cells + ix` term `k` at row `1 + cell · 20 + k`
- *   (`CubicLattice`). A row's `w` is the lattice's clip field when it has
- *   one (`ClipField`, a curved clip's signed distance), else 0.
+ *   scale (f32)]`, two rows `[x, y, z, 0]` (f32) holding the lattice's
+ *   displacement at its center as hi then lo parts (the cull kernel adds
+ *   it, summed exactly, to the draw's camera-relative translation: plan
+ *   13.26's flaw 3; the cells hold the lattice less this constant), then
+ *   `cells³ × 20` rows, `[x, y, z, 0]` (f32), cell `(iz · cells + iy) ·
+ *   cells + ix` term `k` at row `3 + cell · 20 + k` (`CubicLattice`). A
+ *   row's `w` is the lattice's clip field when it has one (`ClipField`, a
+ *   curved clip's signed distance), else 0.
  *
- * A lattice of one cell is a body of 21 rows; of eight, 10,241.
+ * A lattice of one cell is a body of 23 rows; of eight, 10,243.
  *
  * Every write goes to the buffer at once (`queue.writeBuffer`), in queue
  * order with the frames that read it. Nothing here writes a vertex buffer
@@ -213,13 +220,27 @@ export class PlacementTable {
       f32[o + 1] = term.center[1]!;
       f32[o + 2] = term.center[2]!;
       f32[o + 3] = 1 / term.scale;
+      // The displacement at the center goes to the cull kernel as hi and lo
+      // (placement.slang `placementOffset`); the cells keep what is left.
+      const constant = latticeDisplacement(
+        term,
+        term.center,
+        new Float64Array(3),
+      );
+      for (let a = 0; a < 3; a++) {
+        const hi = Math.fround(constant[a]!);
+        f32[o + 4 + a] = hi;
+        f32[o + 8 + a] = Math.fround(constant[a]! - hi);
+      }
       const rows = term.cells ** 3 * PLACEMENT_TERMS;
       const clip = term.clip?.coefficients;
       for (let k = 0; k < rows; k++) {
-        const r = o + 4 + k * 4;
-        f32[r] = term.coefficients[3 * k]!;
-        f32[r + 1] = term.coefficients[3 * k + 1]!;
-        f32[r + 2] = term.coefficients[3 * k + 2]!;
+        const r = o + LATTICE_HEAD_ROWS * 4 + k * 4;
+        const order0 = k % PLACEMENT_TERMS === 0;
+        for (let a = 0; a < 3; a++) {
+          f32[r + a] =
+            term.coefficients[3 * k + a]! - (order0 ? constant[a]! : 0);
+        }
         f32[r + 3] = clip ? clip[k]! : 0;
       }
       body += latticeRows(term.cells);
@@ -233,9 +254,12 @@ export const WARP_KIND = { lattice: 1, attribute: 2 } as const;
 /** Rows of a term: its row and its two factors'. */
 export const TERM_ROWS = 3;
 
-/** Rows of a lattice's body: the center and 1 / scale, then a row per cell and term. */
+/** Rows of a lattice's body before its cells: the center and 1 / scale, then its value at the center as hi and lo. */
+export const LATTICE_HEAD_ROWS = 3;
+
+/** Rows of a lattice's body: its head, then a row per cell and term. */
 export function latticeRows(cells: number): number {
-  return 1 + cells ** 3 * PLACEMENT_TERMS;
+  return LATTICE_HEAD_ROWS + cells ** 3 * PLACEMENT_TERMS;
 }
 
 /** Rows of `terms`' block. */

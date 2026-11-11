@@ -30,7 +30,7 @@ import { EARTH } from "../src/scene/Body.ts";
 import { createBox } from "../src/scene/meshes.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import { PLACEMENT_MONOMIALS } from "../src/scene/placement.ts";
-import { blockRows } from "../src/scene/placementTable.ts";
+import { LATTICE_HEAD_ROWS, blockRows } from "../src/scene/placementTable.ts";
 import { evaluateClipField, fitClipField } from "../src/scene/warpFit.ts";
 import type { CubicLattice } from "../src/scene/warpTerms.ts";
 import { drawTerms } from "../src/scene/world/placements.ts";
@@ -447,7 +447,7 @@ describe("a plane in a design frame under a reprojection", () => {
       let value = 0;
       PLACEMENT_MONOMIALS.forEach(([a, b, c], k) => {
         value +=
-          f32[(body + 1 + index * 20 + k) * 4 + 3]! *
+          f32[(body + LATTICE_HEAD_ROWS + index * 20 + k) * 4 + 3]! *
           local[0]! ** a *
           local[1]! ** b *
           local[2]! ** c;

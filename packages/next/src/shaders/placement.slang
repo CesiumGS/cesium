@@ -22,6 +22,8 @@
 // (`NO_PLACEMENT`) gets its position back unchanged and the identity.
 module placement;
 
+import exactSum;
+
 // The placements: parameters (one float each) and each placed draw's
 // block, float4 rows (scene/placementTable.ts). Vertex stage only.
 [[vk::binding(7, 1)]] StructuredBuffer<float4> placements;
@@ -34,6 +36,9 @@ public static const uint PLACEMENT_TERMS = 20u;
 static const uint WARP_LATTICE = 1u;
 static const uint WARP_ATTRIBUTE = 2u;
 static const uint TERM_ROWS = 3u;
+// Rows before a lattice body's cells: the center and 1 / scale, then the
+// lattice's constant displacement (its value at the center) as hi and lo.
+static const uint LATTICE_HEAD_ROWS = 3u;
 
 // Each monomial's exponents of v's x, y and z, 2 bits each (x | y << 2 |
 // z << 4), in scene/placement.ts PLACEMENT_MONOMIALS's order.
@@ -80,8 +85,10 @@ float3 jacobianColumn(float3x3 j, int c) {
 }
 
 // A lattice's displacement at model-space `p` (scene/warpTerms.ts
-// `CubicLattice`), and its Jacobian `dD/dp` into `jacobian`: its body's
-// first row holds the center and 1 / scale, then each cell's rows of
+// `CubicLattice`) less its constant part, which `placementOffset` carries
+// (the cell polynomials' constant coefficients hold the rest), and its
+// Jacobian `dD/dp` into `jacobian`: its body's first row holds the center
+// and 1 / scale, the next two the constant part, then each cell's rows of
 // coefficients per monomial. One cell has v = u. The cell's cubic in v has
 // the derivative of each monomial per axis, and dv/dp = cells / scale on
 // every axis (past the cube the edge cell extrapolates at the same rate).
@@ -109,7 +116,7 @@ float3 latticeDisplacement(uint body, uint cells, float3 p, out float3x3 jacobia
   float4 qx = float4(0.0, 1.0, 2.0 * v.x, 3.0 * v.x * v.x);
   float4 qy = float4(0.0, 1.0, 2.0 * v.y, 3.0 * v.y * v.y);
   float4 qz = float4(0.0, 1.0, 2.0 * v.z, 3.0 * v.z * v.z);
-  uint first = body + 1u + cell * PLACEMENT_TERMS;
+  uint first = body + LATTICE_HEAD_ROWS + cell * PLACEMENT_TERMS;
   float3 d = float3(0.0);
   float3 gx = float3(0.0);
   float3 gy = float3(0.0);
@@ -161,7 +168,10 @@ public struct Placed {
 
 // Where the draw's placement (`DrawRecord.placement`, its block's header
 // row) puts the vertex at model-space `positionMC`, in model space: the
-// position plus each term's weight times its displacement; and the
+// position plus each term's weight times its displacement, less each
+// lattice's constant part (`placementOffset`: the draw's transform carries
+// it, so the drawn position is this one relative to where the draw's origin
+// is drawn); and the
 // placement's Jacobian there, which turns tangents (J t) and normals
 // (`turnNormal`). Without a placement: the position as it is, and the
 // identity. `clip` is the block's first lattice's scalar (not weighted: a
@@ -212,4 +222,73 @@ public float3 turnNormal(float3x3 j, float3 n) {
   float3 a = cross(c1, c2);
   float3 turned = a * n.x + cross(c2, c0) * n.y + cross(c0, c1) * n.z;
   return normalize(dot(c0, a) < 0.0 ? -turned : turned);
+}
+
+// The draw's order-0 displacement: the sum of its lattice terms' weights
+// times their constant parts, in model space, as hi (`hi`) and lo (`lo`)
+// float32 parts that add exactly to the sum to about 1e-14 of it (a
+// product by `twoProd`). The vertex stage's `placeVertex` leaves it out: the
+// cull kernel adds it to the camera-relative transform (cullTables.slang
+// `drawnTranslation`), where it meets the origin's equal and opposite
+// offset from the camera before either is rounded (plan 13.26, the second
+// review's flaw 3: added to a vertex in model space the two cancel at the
+// float32 precision of tens of kilometers, 4 mm at 36 km). Zero for a draw
+// without a placement and for attribute terms.
+public void placementOffset(uint placement, out float3 hi, out float3 lo) {
+  hi = float3(0.0);
+  lo = float3(0.0);
+  if (placement == NO_PLACEMENT) {
+    return;
+  }
+  uint count = asuint(placementRow(placement).x);
+  for (uint i = 0u; i < count; i++) {
+    uint row = placement + 1u + i * TERM_ROWS;
+    uint4 head = asuint(placementRow(row));
+    if ((head.x & 255u) != WARP_LATTICE) {
+      continue;
+    }
+    float w = termWeight(row, head);
+    uint body = placement + head.z;
+    float3 constantHi = placementRow(body + 1u).xyz;
+    float3 constantLo = placementRow(body + 2u).xyz;
+    for (uint a = 0u; a < 3u; a++) {
+      float2 p = twoProd(w, constantHi[a]);
+      float2 s = twoSum(hi[a], p.x);
+      hi[a] = s.x;
+      lo[a] += s.y + p.y + w * constantLo[a];
+    }
+  }
+  for (uint a = 0u; a < 3u; a++) {
+    float2 s = twoSum(hi[a], lo[a]);
+    hi[a] = s.x;
+    lo[a] = s.y;
+  }
+}
+
+// Where a placement of lattice terms puts a point of the model, in model
+// space, in one float32 value: the point's displacement, order 0 included,
+// for the kernels that write a point's position (a point source's frame
+// kernel, vector/points.slang) rather than draw a vertex. Attribute terms
+// (data per vertex) move nothing here.
+public float3 placeAnchor(uint placement, float3 p) {
+  if (placement == NO_PLACEMENT) {
+    return p;
+  }
+  uint count = asuint(placementRow(placement).x);
+  float3 d = float3(0.0);
+  for (uint i = 0u; i < count; i++) {
+    uint row = placement + 1u + i * TERM_ROWS;
+    uint4 head = asuint(placementRow(row));
+    if ((head.x & 255u) != WARP_LATTICE) {
+      continue;
+    }
+    float w = termWeight(row, head);
+    uint body = placement + head.z;
+    float3x3 jacobian;
+    float clip;
+    float3 residual = latticeDisplacement(body, head.w, p, jacobian, clip);
+    float3 offset0 = placementRow(body + 1u).xyz + placementRow(body + 2u).xyz;
+    d += w * (offset0 + residual);
+  }
+  return p + d;
 }

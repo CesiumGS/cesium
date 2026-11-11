@@ -726,8 +726,12 @@ async function createPipelines(
       storage(4, false, COMPUTE), // item list
       // (5: batch counts, now the indirect arguments' instance counts.)
       storage(6, true, COMPUTE), // batches
-      storage(7, false, COMPUTE), // indirect args, visible items counted in
+      // The placements (placement.slang): a placed record's order-0
+      // displacement, summed into the item's drawn translation. The eighth
+      // storage buffer, the base tier's limit.
+      storage(7, true, COMPUTE),
       { binding: 8, visibility: COMPUTE, buffer: { type: "uniform" } },
+      storage(9, false, COMPUTE), // indirect args, visible items counted in
     ],
   });
   // The point cull's world tables: only what its kernels read (records,
@@ -738,7 +742,7 @@ async function createPipelines(
     entries: [
       storage(0, true, COMPUTE), // records
       storage(1, true, COMPUTE), // transforms
-      storage(7, false, COMPUTE), // indirect args
+      storage(9, false, COMPUTE), // indirect args
     ],
   });
   // The patch dice's: records, items (its draw's camera-relative matrix)
@@ -749,7 +753,7 @@ async function createPipelines(
     entries: [
       storage(0, true, COMPUTE), // records
       storage(3, false, COMPUTE), // draw items
-      storage(7, false, COMPUTE), // indirect args
+      storage(9, false, COMPUTE), // indirect args
     ],
   });
   const patchDiceLayout = device.createBindGroupLayout({

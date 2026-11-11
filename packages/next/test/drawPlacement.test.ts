@@ -37,6 +37,7 @@ import {
   WARP_KIND,
   blockRows,
   latticeRows,
+  LATTICE_HEAD_ROWS,
 } from "../src/scene/placementTable.ts";
 import { termsOf } from "../src/scene/warpEvaluate.ts";
 import { type View } from "../src/scene/View.ts";
@@ -526,10 +527,19 @@ describe("World placements", () => {
     expect(Array.from(block.f32.subarray(body, body + 4))).toEqual([
       1, 2, 3, 0.25,
     ]);
+    // The value at the center, hi then lo (the cull kernel adds it), then
+    // the cells less it: the first monomial's row is zero.
     expect(Array.from(block.f32.subarray(body + 4, body + 8))).toEqual([
       1, 2, 3, 0,
     ]);
-    const last = body + 4 + 19 * 4;
+    expect(Array.from(block.f32.subarray(body + 8, body + 12))).toEqual([
+      0, 0, 0, 0,
+    ]);
+    const first = body + LATTICE_HEAD_ROWS * 4;
+    expect(Array.from(block.f32.subarray(first, first + 4))).toEqual([
+      0, 0, 0, 0,
+    ]);
+    const last = first + 19 * 4;
     expect(Array.from(block.f32.subarray(last, last + 4))).toEqual([
       -4, 5, -6, 0,
     ]);
@@ -792,7 +802,8 @@ describe("placement.slang and the TypeScript agree", () => {
     expect(constant("TERM_ROWS")).toBe(TERM_ROWS);
     // A lattice body: its center row, then a row per cell and monomial.
     expect(slang).toMatch(/placementRow\(first \+ k\)/);
-    expect(latticeRows(1)).toBe(1 + PLACEMENT_TERMS);
+    expect(latticeRows(1)).toBe(LATTICE_HEAD_ROWS + PLACEMENT_TERMS);
+    expect(constant("LATTICE_HEAD_ROWS")).toBe(LATTICE_HEAD_ROWS);
     const surface = readFileSync(
       new URL("../src/shaders/surface.slang", import.meta.url),
       "utf8",

@@ -6,6 +6,7 @@
 module cullTables;
 
 import common;
+import exactSum;
 
 public struct Batch {
   public uint itemBase;          // first slot of this batch in `itemList`
@@ -32,7 +33,7 @@ public struct CullParams {
 // (the visible items, counted by `countInstance`), first index, base
 // vertex, first instance. Read and written only through the accessors
 // below (the draw-arguments seam, render/drawArguments.ts).
-[[vk::binding(7, 1)]] public RWStructuredBuffer<Atomic<uint>> args;
+[[vk::binding(9, 1)]] public RWStructuredBuffer<Atomic<uint>> args;
 [[vk::binding(8, 1)]] public ConstantBuffer<CullParams> params;
 
 // A draw's record: the only read of `records` in the cull kernels (the
@@ -156,6 +157,37 @@ public float4x4 relativeMatrix(Transform t) {
       float4(linear[1], rel.y),
       float4(linear[2], rel.z),
       float4(0, 0, 0, 1));
+}
+
+// The translation of `relativeMatrix(t)` with a placement's order-0
+// displacement added: `offsetHi + offsetLo` in the transform's model space
+// (placement.slang `placementOffset`), turned by `t.linear` into the
+// anchor's axes, before the axes of the view's shading frame. The origin's
+// offset from the eye, the displacement's products by the matrix and their
+// error terms are summed in the order that lets the large parts cancel
+// (exactSum.slang), so the result is as accurate as the camera-relative
+// difference was before, whatever the displacement: where the draw is
+// drawn, not where it is.
+public float3 drawnTranslation(Transform t, float3 offsetHi, float3 offsetLo) {
+  AnchorEye eye = anchorEye(t);
+  float3 whole;
+  float3 fraction;
+  SplitPosition(t.originHi, t.originLo)
+      .differenceParts(SplitPosition(eye.eyeHi.xyz, eye.eyeLo.xyz), whole, fraction);
+  float3 rel;
+  for (uint i = 0u; i < 3u; i++) {
+    float2 sum = float2(whole[i], 0.0);
+    float small = fraction[i];
+    for (uint j = 0u; j < 3u; j++) {
+      float2 p = twoProd(t.linear[i][j], offsetHi[j]);
+      float2 s = twoSum(sum.x, p.x);
+      sum = float2(s.x, sum.y + s.y);
+      small += p.y + t.linear[i][j] * offsetLo[j];
+    }
+    rel[i] = sum.x + (sum.y + small);
+  }
+  float3x3 axes = float3x3(eye.axes[0].xyz, eye.axes[1].xyz, eye.axes[2].xyz);
+  return mul(axes, rel);
 }
 
 // Hidden, empty, or not selected for this view (multi-view tile selection

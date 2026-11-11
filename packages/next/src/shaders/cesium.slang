@@ -44,6 +44,11 @@ public struct LabelAttribute { string text; };
 //  - positionMC is the PLACED position: the point as the item draws it, a
 //    blend of the design position and the second position, or past either
 //    end. At placement 0, or without a placement, it is the mesh's own.
+//    Where a placement displaces a draw by tens of kilometers or more,
+//    the displacement of its center (its order-0 term) is not in it: the
+//    draw's transform carries that, summed exactly with the camera's
+//    offset (plan 13.26, the second review's flaw 3), so positionMC is
+//    relative to where the draw's origin is drawn.
 //  - designPositionMC is the position as the mesh stores it (the design
 //    position), whatever the placement. It equals positionMC when there is
 //    no placement.

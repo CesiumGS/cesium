@@ -139,6 +139,11 @@ public struct Instance {
 // without instances, or one instance).
 public struct DrawItem {
   public float4x4 relModel;      // to camera-relative world space, float32-safe
+  // Where the draw's origin is drawn (xyz), camera-relative: relModel's
+  // translation moved by its placement's order-0 displacement, summed
+  // exactly (cullTables drawnTranslation). Read only for a record with a
+  // placement; the same as relModel's translation otherwise.
+  public float4 drawn;
   public uint record;
   public uint feature;           // the instance's global feature ID; 0 = the record's
   public uint instance;          // index within the record's instance range
@@ -224,6 +229,14 @@ public struct SplitPosition {
   /// The offset from `b` to this position.
   public float3 difference(SplitPosition b) {
     return float3(int3(hi) - int3(b.hi)) + (lo - b.lo);
+  }
+
+  /// `difference` as its two exact parts, whole meters and a fraction, for
+  /// a caller that sums more terms into it before rounding (cullTables.slang
+  /// `drawnTranslation`): their sum is `difference`.
+  public void differenceParts(SplitPosition b, out float3 whole, out float3 fraction) {
+    whole = float3(int3(hi) - int3(b.hi));
+    fraction = lo - b.lo;
   }
 
   /// As one float32 value: only for what doesn't need more (a direction

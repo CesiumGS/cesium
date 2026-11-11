@@ -21,7 +21,12 @@ import {
   volumeIntersectPlane,
   type TileVolume,
 } from "./volumes.ts";
-import { drawnContentVolume, drawnTile, type TileWarp } from "./tileWarp.ts";
+import {
+  drawnContentVolume,
+  drawnRequestVolume,
+  drawnTile,
+  type TileWarp,
+} from "./tileWarp.ts";
 
 /** Planes per box in `SelectionView.casterPlanes`. */
 export const CASTER_PLANES = 6;
@@ -66,7 +71,10 @@ export interface SelectionView {
    * Set when the tileset hangs under an anchor placed across a warp: its
    * tiles are selected on their drawn volumes (`drawnTile`), with the
    * geometric error stretched by the map, and are not horizon-culled. The
-   * camera, planes and distances are in the anchor's coordinates as ever.
+   * viewer request volumes (`drawnRequestVolume`), the shadow casters'
+   * reach (`Budgeted`) and the dynamic screen-space error's root volume
+   * are the drawn ones too. The camera, planes and distances are in the
+   * anchor's coordinates as ever.
    */
   warp?: TileWarp;
 }
@@ -549,12 +557,16 @@ export class StepwiseSelection implements TileSelection {
     state.sse = this.screenSpaceError(tile, view, false, 0);
     state.planeMask = planeMask(volume, view.planes, parentMask);
     state.visible = state.planeMask !== MASK_OUTSIDE;
-    // The request volume stays where it was written: it says where the
-    // viewer must be, and is tested against the camera as it is.
+    // The request volume says where the viewer must be. Under a warped
+    // anchor the camera is where things are drawn, so it is tested against
+    // the request volume as drawn (a sphere; the camera's height is then
+    // of no use to it).
+    const request = view.warp
+      ? drawnRequestVolume(tile, view.warp)
+      : tile.requestVolume;
     state.inRequestVolume =
-      !tile.requestVolume ||
-      volumeDistance(tile.requestVolume, view.position, view.cartographic) ===
-        0;
+      !request ||
+      volumeDistance(request, view.position, view.cartographic) === 0;
   }
 
   /**
@@ -601,7 +613,12 @@ export class StepwiseSelection implements TileSelection {
 
   /** 1.x updateDynamicScreenSpaceError, from the root content volume. */
   protected computeDensity(root: Tile, view: SelectionView): number {
-    const volume = root.contentVolume ?? root.volume;
+    // Under a warped anchor, where the content is drawn: a sphere in the
+    // anchor's coordinates, so the height falloff follows the drawn content.
+    const volume = view.warp
+      ? (drawnContentVolume(root, view.warp) ??
+        drawnTile(root, view.warp).volume)
+      : (root.contentVolume ?? root.volume);
     let up: Vec3;
     let direction: Vec3 = view.direction;
     let height: number;
