@@ -1,5 +1,75 @@
 # Frames 5c: The Second Body Implementation Plan
 
+## Proposed amendments after the placement review (2026-11-11, for the owner's decision)
+
+Not applied to the tasks below. Read with §13.26 of the overall plan: increments 1 to 8c, "Placement leftovers closed", and the pending proposal "no placement modes".
+
+**Already done, or partly.**
+
+- Task 2's interpreter half: `FramedPoint.body` and `bodyFixed` exist, from `truePick(pick)`. Only `CorePick.body` is new.
+- Under an anchor whose route crosses a warp, selection already uses drawn volumes, and horizon culling is off. `SelectionView` carries a `TileWarp`, and the error is `geometricError × σ_max + fit error`.
+- World clips work in any reference frame, the Moon's included. Call 5's "Earth-only" now covers only `TerrainClips`.
+- Point sources follow warps, and `View.toPixel(point, anchor)` follows routes.
+
+**What the landed work changes.**
+
+- **Warp domains aren't enforced.** Nothing in drawing reads `Warp.domain`, and `verticalExaggeration` sets none. With a rig on an exaggerated Earth frame, the Moon's anchor routes through the warp (Tasks 4, 5, 7 and 10):
+  - Its tiles are fitted at ×k of 384,400 km of height. At ×10 that's about 3.8 million km, past hi/lo's ±2³¹ m.
+  - The impostor pass reads anchor eyes, so it sits at the route's affine place, unwarped.
+- **The warp context is one per world,** for its first view's root (`Engine.warpTick` warns). Two views on two bodies (Tasks 9 and 10) are fine while their routes are rigid. With a warp, the second view shows the first one's fits.
+- **The impostor's sizes are true sizes.** Under ×k:
+  - Its floor sphere (call 14) writes depth inside craters drawn k times deeper.
+  - Calls 11 and 12 ignore σ_max, which tiles now take, so the handover moves.
+- **Picks.** `anchorPosition` is drawn, and the true point is `truePosition`. Task 2's test "`bodyFixed` equals `pick.anchorPosition`" fails under a warp. An impostor hit has no domain point.
+- **Task 4** separates bodies by their true spheres. Under a warp the drawn spheres differ.
+- **Task 9, call 26:** "back to ITRF for Earth content" moves a rig off the application's exaggerated frame.
+- **Task 8:** normals are now turned by the Jacobian (drawn shading), and the impostor is smooth. The brightness checks hold only at ×1.
+- **"Leave room for" is out of date.** The paths it anticipated exist now, and this plan must follow them.
+- **Names.** "Placement" retires as the umbrella term: `Warp`, `Route` and `Georeference`, and `ModelPlacement` becomes an instance in 5i. If accepted, "no placement modes" rewrites `engineering/georeference.ts`, whose `readEllipsoid` Task 1 moves.
+
+### Must change before execution
+
+1. **Enforce warp domains first** (a Task 0, or placement increment 9).
+   - Proposed: an anchor whose bounding sphere lies outside a warp's domain takes that warp as the identity, and its route counts as rigid.
+   - A height warp's default domain is its body's ellipsoid plus a margin.
+   - `toPixel`, picks and selection read the same rule.
+   - _Effect:_ tests in Tasks 1 and 4 show Moon content under a ×10 Earth rig drawn and culled at its true place. Task 10 gains an `exaggerated` group.
+2. **The impostor follows its anchor's route** (Tasks 5 and 7).
+   - Rigid: as written.
+   - Across a height-scale warp on its own body: its floor and limb radii are R + k·h, exact.
+   - Across any other warp: a drawn sphere from the route's samples, as `TileWarp` makes, or the impostor turns off with one warning.
+   - Its error takes σ_max, as tiles do.
+   - _Effect:_ Tasks 5, 7 and 10 test at ×1 and ×10, with an exaggeration frame over MOON_ME.
+3. **Picks are true** (Tasks 2 and 7).
+   - Tests read `truePick(pick)`.
+   - An impostor pick gets an analytic ray–ellipsoid hit in float64 in the body's frame, carried back through `CorePick.route` when warped. Its accuracy is a `bound` (the relief), not a σ.
+   - _Effect:_ Task 2 shrinks to `CorePick.body` and its tests.
+4. **Two bodies and a warp** (Tasks 3, 9 and 10): either per-view warp terms, or the stated limit with a test that the warning fires. Recommended: the limit, with Task 10's check 6 run with no warp.
+5. **Keep the application's presentation frame** (Task 9). `zoomTo`, `flyTo` and `setSplit` keep a rig whose frame reaches the content's body-fixed frame through presentation warps only. Test it on the vertical exaggeration example's frame.
+6. **Drawn spheres for depth** (Task 4). A body anchor still warped after item 1 uses the route's image of its centre, with its radius times σ_max.
+7. **Task 1 sits on `SelectionView.warp`.**
+   - The ellipsoid parameters apply to unwarped anchors.
+   - Horizon culling stays off under a warp.
+   - Say whether `cartographic` is true or drawn there (it drives fog and the dynamic error), and test it.
+
+### Nice to have
+
+1. The impostor pass ignores world clips. Say so, or skip the pass where a view's clips touch the body.
+2. Run Task 8's 2% check at ×10 too, or add a note that drawn shading differs from the smooth impostor.
+3. Clamping (Task 2):
+    - It passes `clips: "none"`, since clamping is a world question. Every ray backend takes clips since `17e50883e7`.
+    - `ClampOptions.anchor` must be a true anchor, because `frameRays` refuses presentation routes.
+    - Pin both in tests.
+4. Wording: "a draw's placement" becomes "a draw's warp terms" or "where it is drawn".
+
+### Open questions for the owner
+
+1. **Warp domains:** the identity outside them (proposed), a falloff, or content on one body never under another body's height warp?
+2. **Per-view warp terms:** now, or the limit?
+3. **An impostor across a non-height warp:** a fitted drawn sphere, or off?
+4. **"No placement modes":** if it's accepted, does a declared CRS's datum join call 1's body precedence?
+5. **Clips:** should a world clip cut the impostor?
+
 **Updated 2026-11-09.** The file split, its second pass, the sky and observer work and 5b landed after this plan was written. Check paths by symbol. The sky plan's notes for 5c (its "What other plans need") are folded in here: Tasks 3, 7 and 9 and ruling 5 say what changed. Exposure is `view.observer.exposure` now, and `ViewOptions` takes `observer`, not `exposure`.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. The owner chose subagent-driven execution: a fresh implementer per task, a fresh reviewer after each, and a whole-branch review at the end.
@@ -11,7 +81,7 @@
 - **Content takes its body.** A tileset's body comes from its options, its `3DTILES_ellipsoid` or its anchor, and its volumes, horizon culling and selection camera use that body's ellipsoid in that body's anchor. Clamping, models, point sources and picks do the same. The globe, vector layers and terrain clipping stay the Earth's.
 - **A view on another body.** A view whose body is the Moon shades in the Moon anchor's axes (5a's shading axes); its sun, stars and Moon inputs are turned into those axes per view, in float64, until 5e makes the sky per body.
 - **Depth across bodies.** True depth already orders bodies. The bare ellipsoid globe is the exception: it draws as an underlay at 2⁻⁶⁴ of its depth. Content on a body that lies behind the underlay's body takes the same scale, per view and anchor, so it stays behind.
-- **The impostor is the body's coarsest level of detail.** A CPU model per body decides, per view, whether the impostor draws whole, draws as a floor under a loading tileset, or is off. It is the virtual parent of the body's *surface* tilesets: they select nothing in a view until its screen-space error passes the threshold. A GPU pass in the opaque pass ray-casts the impostor's ellipsoid at its true distance, with the sky's own pixel composition, so from the Earth's ground the Moon looks as it does today.
+- **The impostor is the body's coarsest level of detail.** A CPU model per body decides, per view, whether the impostor draws whole, draws as a floor under a loading tileset, or is off. It is the virtual parent of the body's _surface_ tilesets: they select nothing in a view until its screen-space error passes the threshold. A GPU pass in the opaque pass ray-casts the impostor's ellipsoid at its true distance, with the sky's own pixel composition, so from the Earth's ground the Moon looks as it does today.
 - **Declared, lazy, ion.** `engine.declareTileset` holds a source function and no tileset. The first refinement in any view calls it (for ion, the endpoint request), then loads the tileset. Failures keep the impostor and give one warning naming the cause. A 401 refreshes the ion endpoint's short-lived token once and retries.
 - **One material.** Surface tiles on the Moon are shaded by the impostor's Lommel–Seeliger function, normalised the same way, so the handover has no brightness jump. 5e swaps the function for Hapke's.
 - **The Viewer opts in.** `moon: "impostor"` (default, no ion), `"ion"` (Cesium Moon declared), a tileset of the application's, or `false`. Credits follow what draws.
@@ -26,54 +96,54 @@
 
 Each is marked "(plan's call)" where it is used. One line each, then what undoing it costs.
 
-1. **A tileset's body** is `TilesetOptions.body`, else its `3DTILES_ellipsoid`, else its `anchor`'s body, else the Earth. Any two of these that disagree are refused at load with `TilesetBodyError`, naming both. *Undo:* the precedence.
-2. **The core reads `3DTILES_ellipsoid`** (`src/streaming/tilesetBody.ts`), before tile volumes are built; the proj entry's declaration reader calls it. `body: "none"` means no body. An external tileset inherits its parent's body. *Undo:* a reader move.
-3. **Volumes and horizon culling take an ellipsoid,** defaulting to WGS 84, so today's callers get today's numbers. `SelectionView.ellipsoid` is the selection anchor's body's. *Undo:* parameters.
-4. **A tileset under an anchor with no body** (a trajectory's) gets no horizon culling, and region volumes in it are refused, naming the tile. *Undo:* one rule.
-5. **Earth-only by design:** the globe (terrain and the bare ellipsoid), vector layers (GeoJSON is WGS 84 by RFC 7946), terrain clipping, and `measure`'s station code. Each refuses a non-Earth anchor, naming it. Controllers are 5d's. *Undo:* per module.
-6. **Clamping's body is its content's anchor's:** rays are cast in that anchor, against its collision tilesets, and against the globe only on the Earth. *Undo:* one option.
-7. **A pick names its body:** `CorePick.body` (the hit anchor's), and `CorePick.impostor` when the hit is an impostor. *Undo:* additive fields.
-8. **Sky inputs are turned into each view's shading axes** per view, in float64, from 5a's Earth-anchor axes (5a call 30). 5e replaces this with a sky per body. *Undo:* one function.
-9. **Content behind an underlay's body takes the underlay's depth scale,** per view and anchor: a body anchor whose bounding sphere lies across the separating plane from the underlay body's, away from the eye; an anchor with no body whose origin the underlay body's ellipsoid hides from the eye. The scale rides in `AnchorEye.eyeLo.w` (1 by default). *Undo:* one lane and one function.
-10. **Only the Moon has an appearance in 5c** (`Body.appearance`). The impostor is generic; the Earth's look from far away is mostly its air, which is 5e's. *Undo:* data.
-11. **The impostor's geometric error** is the larger of the body's relief (`max(|terrainBand.min|, terrainBand.max)`, 10,800 m for the Moon, from 5b) and its map's texel size (2π × maximum radius ÷ map width). Its distance is the eye's from the sphere of radius maximum radius + `terrainBand.max`, at least 1 m. *Undo:* two formulas.
-12. **The handover threshold** is the surface tileset's maximum screen-space error × `errorBias`, with `errorBias` 0.25 by default: the impostor's error sits at the limb, where the eye sees it, and its map's texels grow past two pixels soon after. Once refined in a view, it stays refined until its error falls below 0.9 × the threshold. *Undo:* two constants.
-13. **Only surface tilesets refine from an impostor** (`TilesetOptions.surface: true`, under the body's own anchor). Other content on the body draws by its own screen-space error. *Undo:* one option.
-14. **Impostor states per view:** `"full"` (not refined, or no surface tile drew in the view last tick), `"floor"` (a surface tile drew: the impostor shrinks to `terrainBand.min − 100 m` and fills only holes), `"off"` (mode `"tileset"`, off screen, or the eye inside the floor sphere). *Undo:* a state machine.
-15. **A declared tileset loads** at its body's impostor's first refinement in any view, or at `load()`. A failure is not retried on its own; `retry()` tries once more. *Undo:* one trigger.
-16. **ion failures by kind:** no token is `"noToken"`, found before any request; 401 `"unauthorized"`; 403 `"forbidden"`; 404 `"notFound"` (the asset isn't in the account's My Assets); anything else `"network"`. A wrong asset type is `"unsupported"`. *Undo:* a table.
-17. **A 401 on content refreshes the headers once,** shared by every 401 in flight, and retries each request once, for 3D Tiles and terrain. *Undo:* one wrapper.
-18. **The impostor pass** draws a full-viewport triangle scissored to the impostor's projected bounding sphere, in the opaque pass after the splats and before the sky, with no shader loop. *Undo:* where it sits.
-19. **The impostor's colour is the sky's own pixel composition,** with the impostor's disk sample, blended by coverage (premultiplied over what is drawn), and depth written where the coverage is at least ½. The sky's disk, which still draws where nothing wrote depth, is placed from the impostor's anchor, so a limb against the sky is today's pixels. *Undo:* shader structure.
-20. **Impostor pick ids** are a reserved range above every world feature id: `IMPOSTOR_FEATURE_BASE = 0xffff_ff00` plus the anchor's slot. *Undo:* a constant.
-21. **A world without a Moon impostor keeps today's sky disk** from `engine.moonPosition` and `engine.moonAxes`, so an application that sets them keeps its pixels. *Undo:* the legacy path.
-22. **Regolith shading on surface tiles:** one regolith body per world in 5c (a second is refused, naming it), each surface's albedo normalised by its source's mean (`TilesetOptions.albedoMean`, else the impostor map's), no sky light on it, and earthshine as a flat term, as on the impostor. *Undo:* one material branch.
-23. **`CESIUM_MOON_ALBEDO_MEAN`** is measured once from `loadIonMoonMap(…).mean` at level 2 and recorded in `src/io/moonMap.ts` with its date. *Undo:* a constant.
-24. **The Viewer's Moon:** `moon?: boolean | "impostor" | "ion" | TilesetSource` (`true` is `"impostor"`, the default; `false` is none), and `moonMap?: "bundled" | "ion"` (default `"bundled"`: 1.x's `moonSmall.jpg`; `"ion"` is today's composed map, an ion request at start the application asks for). *Undo:* option shapes.
-25. **Credits that follow what draws:** `addAttributions(owner, attributions, { shown?: () => boolean })`, with `Tileset3D.drawing`, `DeclaredTileset.drawing` and `Impostor.drawing` (drawn in some view last tick). *Undo:* one predicate.
-26. **The Viewer's camera operations move the rig to the content's body-fixed frame** (`zoomTo`, `flyTo`, framing) and back to ITRF for Earth content, when the Viewer has its catalog. *Undo:* local.
-27. **A split view on a body:** `viewer.setSplit(on: boolean, options?: { body?: Body })`; `split = true` keeps today's Earth split. *Undo:* one method.
-28. **A view link's body is its source view's:** follow copies the pose in that body's anchor; the footprint lies on that body's ellipsoid. *Undo:* local.
-29. **`Viewer.place()` is undefined off the Earth,** so the time controls fall back to UTC there. *Undo:* one guard.
-30. **One check page, `spikes/bodies.html`,** grown by Tasks 4, 7, 8 and 10, with `runBodies(group)` on `globalThis`. *Undo:* a page.
-31. **Ports:** Task 4 checks on 5191, Task 7 on 5192, Task 8 on 5193, Task 9 on 5194, Task 10 on 5195, Task 11 on 5196. *Undo:* none.
-32. **The ion probe is an opt-in data test** (`ION_PROBE=1`) that reads the token from `.env.local` itself and prints only statuses. *Undo:* a test.
+1. **A tileset's body** is `TilesetOptions.body`, else its `3DTILES_ellipsoid`, else its `anchor`'s body, else the Earth. Any two of these that disagree are refused at load with `TilesetBodyError`, naming both. _Undo:_ the precedence.
+2. **The core reads `3DTILES_ellipsoid`** (`src/streaming/tilesetBody.ts`), before tile volumes are built; the proj entry's declaration reader calls it. `body: "none"` means no body. An external tileset inherits its parent's body. _Undo:_ a reader move.
+3. **Volumes and horizon culling take an ellipsoid,** defaulting to WGS 84, so today's callers get today's numbers. `SelectionView.ellipsoid` is the selection anchor's body's. _Undo:_ parameters.
+4. **A tileset under an anchor with no body** (a trajectory's) gets no horizon culling, and region volumes in it are refused, naming the tile. _Undo:_ one rule.
+5. **Earth-only by design:** the globe (terrain and the bare ellipsoid), vector layers (GeoJSON is WGS 84 by RFC 7946), terrain clipping, and `measure`'s station code. Each refuses a non-Earth anchor, naming it. Controllers are 5d's. _Undo:_ per module.
+6. **Clamping's body is its content's anchor's:** rays are cast in that anchor, against its collision tilesets, and against the globe only on the Earth. _Undo:_ one option.
+7. **A pick names its body:** `CorePick.body` (the hit anchor's), and `CorePick.impostor` when the hit is an impostor. _Undo:_ additive fields.
+8. **Sky inputs are turned into each view's shading axes** per view, in float64, from 5a's Earth-anchor axes (5a call 30). 5e replaces this with a sky per body. _Undo:_ one function.
+9. **Content behind an underlay's body takes the underlay's depth scale,** per view and anchor: a body anchor whose bounding sphere lies across the separating plane from the underlay body's, away from the eye; an anchor with no body whose origin the underlay body's ellipsoid hides from the eye. The scale rides in `AnchorEye.eyeLo.w` (1 by default). _Undo:_ one lane and one function.
+10. **Only the Moon has an appearance in 5c** (`Body.appearance`). The impostor is generic; the Earth's look from far away is mostly its air, which is 5e's. _Undo:_ data.
+11. **The impostor's geometric error** is the larger of the body's relief (`max(|terrainBand.min|, terrainBand.max)`, 10,800 m for the Moon, from 5b) and its map's texel size (2π × maximum radius ÷ map width). Its distance is the eye's from the sphere of radius maximum radius + `terrainBand.max`, at least 1 m. _Undo:_ two formulas.
+12. **The handover threshold** is the surface tileset's maximum screen-space error × `errorBias`, with `errorBias` 0.25 by default: the impostor's error sits at the limb, where the eye sees it, and its map's texels grow past two pixels soon after. Once refined in a view, it stays refined until its error falls below 0.9 × the threshold. _Undo:_ two constants.
+13. **Only surface tilesets refine from an impostor** (`TilesetOptions.surface: true`, under the body's own anchor). Other content on the body draws by its own screen-space error. _Undo:_ one option.
+14. **Impostor states per view:** `"full"` (not refined, or no surface tile drew in the view last tick), `"floor"` (a surface tile drew: the impostor shrinks to `terrainBand.min − 100 m` and fills only holes), `"off"` (mode `"tileset"`, off screen, or the eye inside the floor sphere). _Undo:_ a state machine.
+15. **A declared tileset loads** at its body's impostor's first refinement in any view, or at `load()`. A failure is not retried on its own; `retry()` tries once more. _Undo:_ one trigger.
+16. **ion failures by kind:** no token is `"noToken"`, found before any request; 401 `"unauthorized"`; 403 `"forbidden"`; 404 `"notFound"` (the asset isn't in the account's My Assets); anything else `"network"`. A wrong asset type is `"unsupported"`. _Undo:_ a table.
+17. **A 401 on content refreshes the headers once,** shared by every 401 in flight, and retries each request once, for 3D Tiles and terrain. _Undo:_ one wrapper.
+18. **The impostor pass** draws a full-viewport triangle scissored to the impostor's projected bounding sphere, in the opaque pass after the splats and before the sky, with no shader loop. _Undo:_ where it sits.
+19. **The impostor's colour is the sky's own pixel composition,** with the impostor's disk sample, blended by coverage (premultiplied over what is drawn), and depth written where the coverage is at least ½. The sky's disk, which still draws where nothing wrote depth, is placed from the impostor's anchor, so a limb against the sky is today's pixels. _Undo:_ shader structure.
+20. **Impostor pick ids** are a reserved range above every world feature id: `IMPOSTOR_FEATURE_BASE = 0xffff_ff00` plus the anchor's slot. _Undo:_ a constant.
+21. **A world without a Moon impostor keeps today's sky disk** from `engine.moonPosition` and `engine.moonAxes`, so an application that sets them keeps its pixels. _Undo:_ the legacy path.
+22. **Regolith shading on surface tiles:** one regolith body per world in 5c (a second is refused, naming it), each surface's albedo normalised by its source's mean (`TilesetOptions.albedoMean`, else the impostor map's), no sky light on it, and earthshine as a flat term, as on the impostor. _Undo:_ one material branch.
+23. **`CESIUM_MOON_ALBEDO_MEAN`** is measured once from `loadIonMoonMap(…).mean` at level 2 and recorded in `src/io/moonMap.ts` with its date. _Undo:_ a constant.
+24. **The Viewer's Moon:** `moon?: boolean | "impostor" | "ion" | TilesetSource` (`true` is `"impostor"`, the default; `false` is none), and `moonMap?: "bundled" | "ion"` (default `"bundled"`: 1.x's `moonSmall.jpg`; `"ion"` is today's composed map, an ion request at start the application asks for). _Undo:_ option shapes.
+25. **Credits that follow what draws:** `addAttributions(owner, attributions, { shown?: () => boolean })`, with `Tileset3D.drawing`, `DeclaredTileset.drawing` and `Impostor.drawing` (drawn in some view last tick). _Undo:_ one predicate.
+26. **The Viewer's camera operations move the rig to the content's body-fixed frame** (`zoomTo`, `flyTo`, framing) and back to ITRF for Earth content, when the Viewer has its catalog. _Undo:_ local.
+27. **A split view on a body:** `viewer.setSplit(on: boolean, options?: { body?: Body })`; `split = true` keeps today's Earth split. _Undo:_ one method.
+28. **A view link's body is its source view's:** follow copies the pose in that body's anchor; the footprint lies on that body's ellipsoid. _Undo:_ local.
+29. **`Viewer.place()` is undefined off the Earth,** so the time controls fall back to UTC there. _Undo:_ one guard.
+30. **One check page, `spikes/bodies.html`,** grown by Tasks 4, 7, 8 and 10, with `runBodies(group)` on `globalThis`. _Undo:_ a page.
+31. **Ports:** Task 4 checks on 5191, Task 7 on 5192, Task 8 on 5193, Task 9 on 5194, Task 10 on 5195, Task 11 on 5196. _Undo:_ none.
+32. **The ion probe is an opt-in data test** (`ION_PROBE=1`) that reads the token from `.env.local` itself and prints only statuses. _Undo:_ a test.
 
 ## Rulings on the spec
 
 Places where the spec, read against the code and the 5a and 5b plans, is contradictory, can't be built as written, or needs something neither plan produces, and what this plan does.
 
-1. **"The Earth and the Moon share one depth range"** (section 10.3). True depth does, but the Viewer's default globe, the bare ellipsoid, is an underlay drawn at 2⁻⁶⁴ of its depth (`RecordFlags.underlay`, `UNDERLAY_DEPTH`), so anything at true depth draws in front of it: a Moon below the ellipsoid's horizon would show through the ground. *Ruling:* call 9. Content in the underlay's own anchor keeps today's rule, so Earth parity holds.
-2. **"The ion resource layer refreshes the endpoint's short-lived access token, as it does for other ion assets"** (section 10.4). Nothing refreshes today: `resolveIonAsset` caches the endpoint for 45 minutes, and a loaded tileset keeps the headers it was given. *Ruling:* call 17, for 3D Tiles and terrain.
-3. **"The Viewer's default is the impostor only: no token, no download"** (section 10.4) and the anti-goal of ion traffic in a globe-only app (section 3). Today the Viewer composes the Moon's map from Cesium Moon Terrain's tiles (`loadIonMoonMap`) whenever a token is set. *Ruling:* call 24: the default map is the bundled one; the ion map is its own opt-in.
-4. **"A tileset on that body refines from it"** (section 10.4). Read literally, a lunar lander's own tileset would vanish until the camera came within about 2,000 km. *Ruling:* call 13: a body's surface tilesets refine from its impostor; other content is ordinary.
-5. **"Both use the same reflectance model … and the same exposure"** (section 10.4; the exposure is the view's, `view.observer.exposure`) against 5e owning the Moon's material (section 12.2). Tiles today go through the engine's physically based path, which would jump in brightness at the handover. *Ruling:* call 22: 5c gives surface tiles the impostor's Lommel–Seeliger function, which section 10.4 allows; 5e replaces that one function with Hapke's for both.
-6. **"One tile cache and one budget across bodies"** (section 10.2). Each tileset has its own cache budget today (`TilesetOptions.cacheBytes`) and every tileset shares the engine's request scheduler. *Ruling:* read as "nothing per body": 5c adds no per-body cache or budget. A single budget across tilesets is renderer work outside 5c, recorded as carried forward.
-7. **"The same works for any body: the Earth seen from far away without a globe"** (section 10.4). The impostor is built for any body with an appearance, but the Earth's look from far away is mostly its atmosphere, which 5e builds. *Ruling:* call 10.
-8. **Sky inputs for a view on the Moon.** 5a keeps the sky's inputs in the Earth anchor's axes (5a call 30) and shades each view in its body anchor's axes (5a call 18), so a view on the Moon would get the sun from the wrong axes. *Ruling:* call 8.
-9. **The body must be known before tile volumes are built,** but 5a moved the declaration parser out of the core (5a call 7). *Ruling:* call 2.
-10. **Section 18 asks that Cesium Moon's access be checked before the handover is built.** *Ruling:* Task 6's probe (call 32) records what ion's endpoint returns for a good token and a bad one. The case "the asset isn't in My Assets" can be seen only from an account without it; if the owner's account has it, the 404 mapping stays the plan's reading and is listed for the owner.
-11. **"The impostor … sits at infinity behind everything, placed from the sky inputs"** is also a public API today (`engine.moonPosition`, `engine.moonAxes`). *Ruling:* call 21.
+1. **"The Earth and the Moon share one depth range"** (section 10.3). True depth does, but the Viewer's default globe, the bare ellipsoid, is an underlay drawn at 2⁻⁶⁴ of its depth (`RecordFlags.underlay`, `UNDERLAY_DEPTH`), so anything at true depth draws in front of it: a Moon below the ellipsoid's horizon would show through the ground. _Ruling:_ call 9. Content in the underlay's own anchor keeps today's rule, so Earth parity holds.
+2. **"The ion resource layer refreshes the endpoint's short-lived access token, as it does for other ion assets"** (section 10.4). Nothing refreshes today: `resolveIonAsset` caches the endpoint for 45 minutes, and a loaded tileset keeps the headers it was given. _Ruling:_ call 17, for 3D Tiles and terrain.
+3. **"The Viewer's default is the impostor only: no token, no download"** (section 10.4) and the anti-goal of ion traffic in a globe-only app (section 3). Today the Viewer composes the Moon's map from Cesium Moon Terrain's tiles (`loadIonMoonMap`) whenever a token is set. _Ruling:_ call 24: the default map is the bundled one; the ion map is its own opt-in.
+4. **"A tileset on that body refines from it"** (section 10.4). Read literally, a lunar lander's own tileset would vanish until the camera came within about 2,000 km. _Ruling:_ call 13: a body's surface tilesets refine from its impostor; other content is ordinary.
+5. **"Both use the same reflectance model … and the same exposure"** (section 10.4; the exposure is the view's, `view.observer.exposure`) against 5e owning the Moon's material (section 12.2). Tiles today go through the engine's physically based path, which would jump in brightness at the handover. _Ruling:_ call 22: 5c gives surface tiles the impostor's Lommel–Seeliger function, which section 10.4 allows; 5e replaces that one function with Hapke's for both.
+6. **"One tile cache and one budget across bodies"** (section 10.2). Each tileset has its own cache budget today (`TilesetOptions.cacheBytes`) and every tileset shares the engine's request scheduler. _Ruling:_ read as "nothing per body": 5c adds no per-body cache or budget. A single budget across tilesets is renderer work outside 5c, recorded as carried forward.
+7. **"The same works for any body: the Earth seen from far away without a globe"** (section 10.4). The impostor is built for any body with an appearance, but the Earth's look from far away is mostly its atmosphere, which 5e builds. _Ruling:_ call 10.
+8. **Sky inputs for a view on the Moon.** 5a keeps the sky's inputs in the Earth anchor's axes (5a call 30) and shades each view in its body anchor's axes (5a call 18), so a view on the Moon would get the sun from the wrong axes. _Ruling:_ call 8.
+9. **The body must be known before tile volumes are built,** but 5a moved the declaration parser out of the core (5a call 7). _Ruling:_ call 2.
+10. **Section 18 asks that Cesium Moon's access be checked before the handover is built.** _Ruling:_ Task 6's probe (call 32) records what ion's endpoint returns for a good token and a bad one. The case "the asset isn't in My Assets" can be seen only from an account without it; if the owner's account has it, the 404 mapping stays the plan's reading and is listed for the owner.
+11. **"The impostor … sits at infinity behind everything, placed from the sky inputs"** is also a public API today (`engine.moonPosition`, `engine.moonAxes`). _Ruling:_ call 21.
 
 ## Leave room for (overall plan §13.34)
 
@@ -105,7 +175,7 @@ Copied from 5a's and 5b's plans where they apply, with 5c's additions.
   - Every shader loop is bounded by a constant (`for (uint i = 0u; i < CONSTANT; i++)` with an early `break`). The impostor pass adds none. Each changed shader's Metal is read with `node scripts/dumpMsl.mjs <module.wgsl> <entry>` before its first browser run.
 - **Snyk:** each task runs `snyk_code_scan` on the first-party files it adds or changes before it commits, fixes what the scan finds in its own code, and rescans until clean. Findings that predate 5c are reported, not fixed.
 - **Wording:**
-  - "Frame" is never used alone: a *reference frame*, a *tick* ("per tick", never "per frame"), *render space*, *render root*, *a draw's placement*. Compounds that can't be misread keep their names (the frame tree, the frames module, a body-fixed frame). Code names (`Frame`) keep theirs.
+  - "Frame" is never used alone: a _reference frame_, a _tick_ ("per tick", never "per frame"), _render space_, _render root_, _a draw's placement_. Compounds that can't be misread keep their names (the frame tree, the frames module, a body-fixed frame). Code names (`Frame`) keep theirs.
   - House style for docs, comments and UI text: plain, short sentences, units and datums named, no e-notation in prose.
   - Describe the purpose in generic words ("an embeddable rendering core", "a host application's own services").
 

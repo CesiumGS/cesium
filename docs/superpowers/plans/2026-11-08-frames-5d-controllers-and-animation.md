@@ -1,5 +1,75 @@
 # Frames 5d: Controllers, Bindings, Transitions and the Animation Core Implementation Plan
 
+## Proposed amendments after the placement review (2026-11-11, for the owner's decision)
+
+Not applied to the tasks below. Read with §13.26 of the overall plan. This plan also inherits 5c's amendments: warp domains, and two views.
+
+**Already done, or partly.** `setRig` re-roots across a warp (`carryCamera`). `GlobeController` works on the drawn ground and zoom target. `View.toPixel` follows routes; `CorePick.route` freezes a pick's scales. `commonAncestor` exists privately (`frames/resolver.ts`), so Task 10 only exposes it. `dice.slang` handles orthographic views. `routeSingularRange` gives σ_min for snaps.
+
+**What the landed work changes.**
+
+- **Rig frames must reach the root rigidly,** or `CameraLayer` refuses them. Under a rig on an exaggerated frame, an aim target, anchor or pivot in ITRF throws `NonRigidRouteError` in `evaluateRig` (Task 5), `ControllerContext.resolve` (6), the orbit's pivot (8) and live rigs (10). `FrameResolver.motion` may too (Task 12's carry).
+- **Blend frames cross warps.** `commonAncestor(exaggerated, MOON_ME)` is ICRF. That root crosses no warp, so the exaggeration vanishes on the first tick, and the source rig can't be resolved there.
+- **A re-root refits, and can blank.** `scene/world/warps.ts #sync` re-stamps every warped anchor on any root change, so every warped draw refits (0.7 to 40 ms a fit, against 4 ms a tick). An anchor newly across a warp hides its draws until their first fit, so a transition (Task 10) or re-attach (Task 13) ending on an exaggerated root blanks tilesets for some ticks. Terrain is exact.
+- **One warp context per world,** for the first view's root. A transition in view 1 refits every view; one in view 2 shows view 1's fits.
+- **Task 4:**
+  - Moving a warped draw drops its fit (`test/warpMovedDraw.test.ts`), so an animated node under `warpAt: "vertex"` refits every tick.
+  - `placementBlendSetter(SceneItem)` drives the dual-position blend, which the owner moved out of the engine.
+  - A parameter with a `range` throws outside it, so a spring or Bézier that overshoots cancels its animation.
+- **Task 15's lane is taken.** `View.time.z` means a shadow cascade: the cull adds casters, and `drawnPosition` skips its rebuild. That rebuild is also perspective-only (`w = near / depth`), so placed draws in an orthographic main view would light, fog and clip wrongly.
+- **Task 14 misses new `fovy` readers:** `render/view/pickDomain.ts`, `frames/pickTruth.ts`, `measure/curve.ts` (`DrawnCurve`'s 0.5 px), `scene/tileSelection.ts`, and the pick variant's narrow frustum (`render/view/picks.ts`).
+- **Task 6's `bodyFixed`.** `earthFixed` holds under exaggeration (the Earth anchor's affine placement is the identity). Recast as "the rig is on the body frame", `GlobeController.attach` would re-root the exaggeration example onto ITRF.
+- **Task 9's golden test** must run the warp path (`minimumHeight` is above the ground as drawn).
+- **Tasks 16 and 17:** an application's bounds are true; under ×k what's drawn is k times taller.
+- **"What 5d leaves alone" is out of date:** recomputing on a change of root exists, and 5d triggers it.
+
+### Must change before execution
+
+1. **Rig frames across presentation warps take the anchor rule,** as `warpAt: "anchor"` content does (`scene/warpAnchor.ts`: the route's translation and its Jacobian's rotation). An aim at an ITRF model then lands on the model as drawn.
+   - `evaluateRig` takes `place(frame, root, seconds, out)`, built on `resolveRoute`.
+   - `ControllerContext` gains `place` and `route`.
+   - Carries and damping cross by the Jacobian.
+   - _Effect:_ Tasks 5, 6, 8, 10, 12 and 13, tested on the exaggeration example's frame. The refusal goes.
+2. **Transitions across presentation warps** (Tasks 10 and 11).
+   - With both rigs at or under one presentation frame, blend there.
+   - Otherwise blend in the common ancestor of their true frames, and the transition names the warps it leaves and enters.
+   - Exaggeration is the application's (§13.34), so the application fades its `WarpScale` through `onWeight`.
+   - _Test:_ ×10 Earth to the Moon: no throw, two re-roots, and true pick heights constant.
+3. **A re-root neither refits nor blanks** (a prerequisite in `warps.ts`).
+   - Key fits by the route up to its last warp, relative to the anchor, not by the root's identity.
+   - A newly warped draw with a cached fit shows at once.
+   - _Done when:_ `world.warpStats()` counts no fits across a there-and-back transition, and no tile is hidden for a tick.
+4. **Per-view warp terms, or the stated limit,** before Tasks 10, 18 and 20 run two views.
+5. **Task 4:**
+   - `parameterSetter(PlacementParameter)` replaces `placementBlendSetter`: a `WarpScale` now, morph weights later, and no `SceneItem` target.
+   - `animate` clamps or refuses an easing that leaves a parameter's `range`.
+   - A placement with animated nodes defaults to `warpAt: "anchor"` about its root transform. _Test:_ no fits over 100 animated ticks.
+6. **The orthographic camera** (Tasks 14 and 15):
+   - a free lane (`time.w`) or a flag, not `time.z`;
+   - an orthographic rebuild in `drawnPosition`: the ray's origin, plus `far − d·(far − near)` along the direction;
+   - the readers listed above, with picks rayed from `rayOrigin`;
+   - an error of `geometricError × σ_max × height / orthographicHeight + fit error`;
+   - a test that dicing needs no change.
+7. **`bodyFixed` keeps today's meaning,** presentation warps included. Neither `GlobeController.attach` nor the Viewer (Task 18) re-roots a rig that reaches the body frame through presentation warps only.
+8. **Task 9's golden session runs the warp path too,** as `test/warpCameraPick.test.ts` does.
+9. **`fitBounds`, `fitPose` and `fitSelection` fit drawn bounds** when the root crosses a warp.
+
+### Nice to have
+
+ 1. **A section view from a clip** (clip decision 9): `fitPose` from a `WorldClip`'s plane, looking along its normal (Task 16).
+ 2. **The CAD controller** orbits about `pick.drawnPosition`, and values come from `truePick` (Task 17).
+ 3. **Checks and docs:** flights on the exaggeration example in Task 20; transitions with warps in Task 21.
+ 4. **Names:** `ModelPlacement` and `PlacementTemplate` follow 5i's "instance"; `anchorPosition` is drawn.
+
+### Open questions for the owner
+
+1. **A flight that leaves an exaggerated frame:** do warps snap at its ends, does the application fade them through `onWeight` (proposed), or does the engine fade presentation warps?
+2. **A rig target across a warp:** the anchor rule (proposed), or refused?
+3. **Per-view warp terms:** now, or the limit?
+4. **Printing to scale under a presentation warp:** refused, or reported in drawn metres?
+5. **A range-bound parameter and an overshooting easing:** clamp, or refuse?
+6. **Order:** land items 1 and 3, with 5c's domains, as placement increment 9 before 5c and 5d?
+
 **Updated 2026-11-09.** The file split, its second pass, the sky and observer work and 5b landed after this plan was written. Check paths by symbol. The sky plan's notes for 5d (its "What other plans need") are folded in here: `Camera.lens` is renamed `Camera.imagePlane` (owner, its question 5), Task 15 turns glare off in an orthographic view, and the global constraints read `view.observer` for exposure.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. The owner chose subagent-driven execution: a fresh implementer per task, a fresh reviewer after each, and a whole-branch review at the end.
