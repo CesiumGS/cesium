@@ -65,6 +65,9 @@ export class WarpFrame<N extends string = string> extends Frame<N> {
       get scale() {
         return spec.scale;
       },
+      get heightScale() {
+        return spec.heightScale;
+      },
       forward: (p, out, jacobian) => spec.forward(p, out, jacobian),
       ...(inverse !== undefined && {
         inverse: (q: ArrayLike<number>, out: Float64Array) => inverse(q, out),

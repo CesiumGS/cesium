@@ -1,10 +1,30 @@
-// A world's warp context (plan §13.26, increment 1): draws under an anchor
-// whose route to the view's render root crosses a warp are drawn warped, per
-// vertex, by a fit of the route's displacement over each draw's bounding
-// sphere (a lattice term of weight 1, scene/warpFit.ts). The app defines a
-// warp frame and puts the rig on it; nothing is set per item. Until a draw's
-// first fit exists it is held hidden, so unwarped content never flashes; a
-// stale fit stays drawn while a refit runs, within a per-frame budget.
+// A world's warp context (plan §13.26, increments 1 and 4): draws under an
+// anchor whose route to the view's render root crosses a warp are drawn
+// warped. The app defines a warp frame and puts the rig on it; nothing is
+// set per item. Until a draw's first fit exists it is held hidden, so
+// unwarped content never flashes; a stale fit stays drawn while a refit
+// runs, within a per-frame budget.
+//
+// Where the route is evaluated (`WarpAt`, scene/warpAnchor.ts):
+//
+// - "vertex" (the default): per vertex, by a fit of the route over each
+//   draw's bounding sphere (a lattice term of weight 1, scene/warpFit.ts).
+//   A globe's terrain tile under a height-scale warp (`Warp.heightScale`)
+//   is exact instead, with no fit: its vertices carry `h·n̂` and the route's
+//   term is that attribute times (k − 1).
+// - "anchor": once, at the draw's origin. The draw moves rigidly by the
+//   route there, with the rotation of its Jacobian and no scale. An
+//   anchored draw's term is an exact one-cell lattice, so it costs the
+//   vertex stage what a fit does and nothing to fit.
+//
+// Billboards are always anchored: their placement moves the billboard's
+// anchor, and its corners stay pixels on screen. Instanced draws are
+// anchored per instance: each instance's origin goes through the route on
+// the CPU, in slices within the frame's budget, and its matrix is rewritten
+// (the instance table's, which the cull and vertex stages already read), so
+// a warp costs them nothing. Point sets and instances written by the GPU (a
+// `ModelPool`'s) are drawn at their anchor's place, unwarped: their culls
+// read positions the placement doesn't reach.
 //
 // One context per world, fitted for the root of the world's first view.
 // Another view of the world with a different root would need terms per view
@@ -20,21 +40,36 @@ import {
   withFrozenScales,
   withScalesAt,
   withoutScales,
+  type HeightScale,
   type Route,
   type Warp,
   type WarpScale,
 } from "../../camera/route.ts";
+import { HEIGHT_NORMAL_ATTRIBUTE } from "../../globe/heightNormal.ts";
 import { invertAffine, mat4, multiply } from "../../math/mat4.ts";
 import {
   CENTER_WORD,
   FLAGS_WORD,
   INSTANCE_COUNT_WORD,
+  INSTANCE_FIRST_WORD,
+  INSTANCE_WORDS,
   RADIUS_WORD,
   RECORD_WORDS,
   RecordFlags,
   TRANSFORM_WORD,
+  VIEW_MASK_WORD,
+  readInstanceMatrix,
+  writeInstance,
 } from "../../render/layout.ts";
 import { checkPlacement, type Placement } from "../placement.ts";
+import {
+  anchorCorrector,
+  anchorLattice,
+  correctedInstance,
+  invert3,
+  linearPart,
+  type WarpAt,
+} from "../warpAnchor.ts";
 import { drawnBounds, routeMap, type DrawnMap } from "../warpBounds.ts";
 import { affinePart, fitLattice, routeDisplacement } from "../warpFit.ts";
 import { WarpFitCache } from "../warpFitCache.ts";
@@ -45,12 +80,13 @@ import {
   type CubicLattice,
   type TermWeight,
   type WarpTerms,
+  type WeightedTerm,
 } from "../warpTerms.ts";
 import type { World } from "../World.ts";
 import type { TileWarp, WarpedPoints } from "../../streaming/tileWarp.ts";
 import { setPlacement } from "./placements.ts";
 import { drawMatrix } from "./transforms.ts";
-import type { DrawHandle } from "./types.ts";
+import type { DrawHandle, TransformHandle } from "./types.ts";
 
 /** What a frame's fits may cost by default, ms (`Engine.warpBudgetMs`). */
 export const WARP_BUDGET_MS = 4;
@@ -76,36 +112,86 @@ interface AnchorWarp {
   fitRoute: Route;
   /** The scales of the route's scaled warps at `stamp`, in step order (refit mode). */
   scales: number[];
+  /**
+   * Goes up when the route changes or a scale does, which an anchored draw
+   * is evaluated for (its rotation isn't linear in a scale, so a slider
+   * redoes it: one route evaluation a draw, with no fit).
+   */
+  pointStamp: number;
+  /** The route with its scales as they were at `pointStamp`: what anchored draws are evaluated on. */
+  pointRoute: Route;
+  /** The route is one height-scale warp then rigid steps: terrain carrying `h·n̂` is exaggerated exactly. */
+  height: HeightScale | undefined;
+}
+
+/** What a draw is: a mesh drawn once, a billboard (placed at its anchor), or instances (each placed by its own origin). */
+type DrawKind = "mesh" | "billboard" | "instances";
+
+/** An instanced draw's matrices as they were before the route moved them, and where the pass over them is. */
+interface InstanceState {
+  /** The instances' own matrices (column-major 4×4, float32), as the application wrote them. */
+  base: Float32Array;
+  /** The next instance a pass moves, and the anchor stamp it moves them for. */
+  next: number;
+  stamp: number;
+  /** The draw's matrix to its anchor, and its linear part's inverse, for the pass. */
+  readonly matrix: Float64Array;
 }
 
 /** One draw under a warped anchor. */
 interface DrawWarp {
   readonly generation: number;
   readonly slot: number;
-  readonly key: string;
+  readonly kind: DrawKind;
+  /** The cache's key for the draw's fit: it changes with `at`, so a fit of the other kind is never taken. */
+  key: string;
+  /** What the draw asked (`World.setWarpAt`); a billboard or an instanced draw is anchored whatever it asked. */
+  choice: WarpAt;
+  /** The transform whose origin an anchored draw moves about: its own when undefined. */
+  origin: TransformHandle | undefined;
   /** Hidden since it was found, until its first fit lands. */
   held: boolean;
   /** Whether the draw asked to be hidden (`World.setVisible`). */
   userHidden: boolean;
   /** What the draw is placed by of its own (an item's dual position), besides the route. */
   user: Placement | WarpTerms | undefined;
-  /** The lattice drawn now, and the weight it goes with. */
+  /** The lattice drawn now (a fit or an anchored draw's), if the route's term is one. */
   applied: CubicLattice | undefined;
-  weight: TermWeight;
+  /** The route's term drawn now and its weight: `applied`, or terrain's exact `h·n̂`. */
+  routeTerm: WeightedTerm | undefined;
+  /** The route's term is terrain's exact height term: nothing was fitted. */
+  exact: boolean;
+  /** An instanced draw's moves. */
+  readonly instances: InstanceState | undefined;
   /** The anchor stamp whose fit is requested, and the one `applied` is for (−1: an older one). */
   requested: number;
   appliedStamp: number;
   /** The draw's matrix to its anchor when its fit was requested. */
   readonly matrix: Float64Array;
+  /** Where an anchored draw's origin was when its term was requested, in its anchor's coordinates. */
+  readonly originAt: Float64Array;
 }
 
 /** What `WorldWarps.status` says of a draw. */
 export interface DrawWarpStatus {
   /** The route that places the draw's anchor. */
   readonly route: Route;
-  /** "fitted": drawn at the current fit; "stale": an older fit is drawn while a refit runs; "pending": hidden until its first fit. */
+  /** "fitted": drawn at the current fit; "stale": an older fit is drawn while a refit runs; "pending": hidden until its first fit. An instanced draw is "fitted" once every instance has been moved by the current route. */
   readonly state: "fitted" | "stale" | "pending";
+  /** Where the route is evaluated for the draw (`WarpAt`). */
+  readonly at: WarpAt;
+  /** Terrain drawn by its exact height term, with no fit. */
+  readonly exact: boolean;
 }
+
+/** The height a terrain tile's `h·n̂` was made on, and the most it holds (`World.setDrawHeightNormal`). */
+export interface HeightNormalInfo {
+  readonly radii: readonly [number, number, number];
+  readonly maxDistance: number;
+}
+
+/** Instances moved per check of the clock, and at least per frame. */
+const INSTANCE_CHUNK = 256;
 
 /** A scale without a range is bounded in buckets of this many to the unit: its drawn volumes are made for the bucket's two ends. */
 const SCALE_BUCKETS = 64;
@@ -123,7 +209,20 @@ class AnchorTileWarp implements TileWarp {
   }
 
   bounds(points: ArrayLike<number>, spacing?: number): WarpedPoints {
-    return drawnBounds(this.#maps, points, spacing);
+    try {
+      return drawnBounds(this.#maps, points, spacing);
+    } catch {
+      // A map undefined at a sample (a height warp at the body's centre,
+      // which a hemisphere's box reaches): not finite, so the volume stays
+      // where it is (`tileWarp.ts` carried).
+      return {
+        center: [NaN, NaN, NaN] as unknown as WarpedPoints["center"],
+        radius: NaN,
+        sigmaMin: NaN,
+        sigmaMax: NaN,
+        secondDerivative: NaN,
+      };
+    }
   }
 
   fitError(draws: readonly DrawHandle[]): number {
@@ -186,6 +285,24 @@ export class WorldWarps {
   readonly #waiting = new Set<number>();
   /** Tiles' geometric errors by draw index, for the fit's tolerance. */
   readonly #errors = new Map<number, number>();
+  /** What draws asked of `World.setWarpAt`, by draw index. */
+  readonly #choices = new Map<
+    number,
+    { generation: number; at: WarpAt; origin: TransformHandle | undefined }
+  >();
+  /** Terrain tiles' `h·n̂` by draw index (`setHeightNormal`). */
+  readonly #heightNormals = new Map<
+    number,
+    { generation: number; info: HeightNormalInfo }
+  >();
+  /** Draws whose instances the GPU writes (`markGpuInstances`), by draw index. */
+  readonly #gpuInstanced = new Map<number, number>();
+  /** Warned of already: a message is said once. */
+  readonly #said = new Set<string>();
+  /** The last frame's report, for what is said between frames. */
+  #report: ((message: string) => void) | undefined;
+  /** Instanced draws with a pass over their instances under way. */
+  readonly #instancePasses = new Set<number>();
   #root: FrameKey | undefined;
   #rootName = "";
   #rootId = 0;
@@ -231,6 +348,145 @@ export class WorldWarps {
   }
 
   /**
+   * Where the route is evaluated for the draw (`WarpAt`): `"vertex"` by
+   * default, `"anchor"` to keep its shape, moving it rigidly by the route at
+   * `origin`'s origin (the transform's own when undefined). Billboards and
+   * instanced draws are anchored whatever is asked. A draw not under a warped
+   * anchor remembers it. Changing it refits the draw.
+   */
+  setWarpAt(handle: DrawHandle, at: WarpAt, origin?: TransformHandle): void {
+    if (!this.world.hasDraw(handle)) {
+      return;
+    }
+    if (at !== "vertex" && at !== "anchor") {
+      throw new RangeError(
+        `setWarpAt: "${String(at)}" is not "vertex" or "anchor".`,
+      );
+    }
+    const before = this.#choices.get(handle.index);
+    if (
+      before?.generation === handle.generation &&
+      before.at === at &&
+      before.origin === origin
+    ) {
+      return;
+    }
+    if (at === "vertex" && origin === undefined) {
+      this.#choices.delete(handle.index);
+    } else {
+      this.#choices.set(handle.index, {
+        generation: handle.generation,
+        at,
+        origin,
+      });
+    }
+    const d = this.#state(handle);
+    if (d) {
+      d.choice = at;
+      d.origin = origin;
+      this.#rekey(handle.index, d);
+    }
+  }
+
+  /** What the draw asked of `setWarpAt` (`"vertex"` unless it asked otherwise), and what it is drawn as: a billboard or an instanced draw is anchored. */
+  warpAt(
+    handle: DrawHandle,
+  ): { choice: WarpAt; effective: WarpAt } | undefined {
+    if (!this.world.hasDraw(handle)) {
+      return undefined;
+    }
+    const choice = this.#choiceOf(handle.index, handle.generation).at;
+    const d = this.#state(handle);
+    return { choice, effective: d ? effectiveAt(d.kind, d.choice) : choice };
+  }
+
+  /**
+   * @internal A terrain tile's draw carries `h·n̂` per vertex
+   * (`HEIGHT_NORMAL_ATTRIBUTE`) made on the ellipsoid `radii`, and none of
+   * them is longer than `maxDistance`: under a height-scale warp on the same
+   * ellipsoid it is exaggerated exactly, with no fit.
+   */
+  setHeightNormal(handle: DrawHandle, info: HeightNormalInfo): void {
+    if (!this.world.hasDraw(handle)) {
+      return;
+    }
+    this.#heightNormals.set(handle.index, {
+      generation: handle.generation,
+      info,
+    });
+    const d = this.#state(handle);
+    if (d && d.requested >= 0) {
+      d.requested = -1;
+    }
+  }
+
+  /**
+   * The height-scale warp that places the anchor in `slot`, if its route is
+   * one: a globe there wants its tiles to carry `h·n̂`. Reflects the last
+   * `frame`.
+   */
+  heightScaleAt(slot: number): HeightScale | undefined {
+    return this.#anchors.get(slot)?.height;
+  }
+
+  /**
+   * @internal The draw's instances are written by the GPU (a `ModelPool`'s):
+   * the CPU can't move them by the route, so the draw is drawn at its
+   * anchor's place, unwarped, and the engine says so once.
+   */
+  markGpuInstances(handle: DrawHandle): void {
+    if (!this.world.hasDraw(handle)) {
+      return;
+    }
+    this.#gpuInstanced.set(handle.index, handle.generation);
+    // Found already (its anchor was warped as it was added): given back.
+    const d = this.#state(handle);
+    if (d) {
+      this.#draws.delete(handle.index);
+      this.#waiting.delete(handle.index);
+      this.#instancePasses.delete(handle.index);
+      this.cache.forget(d.key);
+      if (d.instances) {
+        this.#restoreInstances(handle.index, d);
+      }
+      this.#setHidden(handle.index, d.userHidden);
+    }
+  }
+
+  /**
+   * @internal `World.setInstance` wrote instance `instance` of the draw: it
+   * is the application's matrix again, so the route moves it afresh.
+   */
+  instanceChanged(handle: DrawHandle, instance: number): void {
+    const d = this.#state(handle);
+    const state = d?.instances;
+    if (!d || !state || instance >= state.base.length / 16) {
+      return;
+    }
+    const raster = this.world.raster;
+    const slot =
+      raster.recordsU32[handle.index * RECORD_WORDS + INSTANCE_FIRST_WORD]! +
+      instance;
+    const m = readInstanceMatrix(
+      raster.instances.f32,
+      slot,
+      new Float64Array(16),
+    );
+    for (let k = 0; k < 16; k++) {
+      state.base[instance * 16 + k] = m[k]!;
+    }
+    // A pass under way moves it when it gets there; one that has been past it
+    // moves it again now.
+    if (instance >= state.next) {
+      return;
+    }
+    const anchor = this.#anchors.get(d.slot);
+    if (anchor) {
+      this.#moveInstances(handle.index, d, anchor, instance, instance + 1);
+    }
+  }
+
+  /**
    * What selection reads of the anchor in `slot` (0: the world's root), when
    * its route crosses a warp: the drawn bounds of volumes and the stretch of
    * errors. Undefined for an anchor placed rigidly. Reflects the last
@@ -271,14 +527,17 @@ export class WorldWarps {
     if (!d || !route) {
       return undefined;
     }
+    const drawn = d.instances ? d.appliedStamp >= 0 : d.routeTerm !== undefined;
     return {
       route,
       state:
-        d.appliedStamp === d.requested && d.applied
+        d.appliedStamp === d.requested && drawn
           ? "fitted"
-          : d.applied
+          : drawn
             ? "stale"
             : "pending",
+      at: effectiveAt(d.kind, d.choice),
+      exact: d.exact,
     };
   }
 
@@ -293,6 +552,9 @@ export class WorldWarps {
   /** A draw is being removed: its fit is forgotten. */
   drawRemoved(handle: DrawHandle): void {
     this.#errors.delete(handle.index);
+    this.#choices.delete(handle.index);
+    this.#heightNormals.delete(handle.index);
+    this.#gpuInstanced.delete(handle.index);
     const d = this.#draws.get(handle.index);
     if (d) {
       this.fitVersion++;
@@ -315,6 +577,13 @@ export class WorldWarps {
     if (!d) {
       return false;
     }
+    if (d.kind !== "mesh" && placement !== undefined) {
+      throw new Error(
+        d.kind === "billboard"
+          ? "setPlacement: a billboard or point draw's positions are offsets on screen; it has no per-vertex placement."
+          : "setPlacement: an instanced draw has no per-vertex placement: it would move a mesh's vertices before each instance's matrix, and not the instances.",
+      );
+    }
     let user: Placement | WarpTerms | undefined;
     if (placement === undefined) {
       user = undefined;
@@ -332,7 +601,7 @@ export class WorldWarps {
     }
     const before = d.user;
     d.user = user;
-    if (d.applied) {
+    if (d.routeTerm) {
       try {
         this.#compose(handle.index, d);
       } catch (error) {
@@ -381,6 +650,7 @@ export class WorldWarps {
     budgetMs: number,
     report: (message: string) => void,
   ): boolean {
+    this.#report = report;
     this.#sync(root, routes);
     if (this.#anchors.size === 0 && this.#draws.size === 0) {
       return false;
@@ -388,7 +658,7 @@ export class WorldWarps {
     this.#track();
     for (const [index, d] of this.#draws) {
       const anchor = this.#anchors.get(d.slot);
-      if (anchor && d.requested !== anchor.stamp) {
+      if (anchor && d.requested !== this.#stampOf(d, anchor)) {
         this.#request(index, d, anchor, report);
       }
     }
@@ -408,7 +678,7 @@ export class WorldWarps {
         this.#adopt(index, d, anchor, lattice, d.requested, report);
       }
     }
-    return this.cache.pending > 0;
+    return this.#runInstances(budgetMs) || this.cache.pending > 0;
   }
 
   /** The world is gone: nothing is kept. */
@@ -419,9 +689,38 @@ export class WorldWarps {
     this.#draws.clear();
     this.#waiting.clear();
     this.#errors.clear();
+    this.#choices.clear();
+    this.#heightNormals.clear();
+    this.#gpuInstanced.clear();
   }
 
   // ------------------------------------------------------------------ steps
+
+  /** The stamp a draw's fit is requested at: its anchor's, or for an anchored draw the one that also follows scales. */
+  #stampOf(d: DrawWarp, anchor: AnchorWarp): number {
+    return effectiveAt(d.kind, d.choice) === "anchor"
+      ? anchor.pointStamp
+      : anchor.stamp;
+  }
+
+  /** The draw's choice (`setWarpAt`) if it is still the draw's. */
+  #choiceOf(
+    index: number,
+    generation: number,
+  ): { at: WarpAt; origin: TransformHandle | undefined } {
+    const c = this.#choices.get(index);
+    return c && c.generation === generation
+      ? c
+      : { at: "vertex", origin: undefined };
+  }
+
+  /** The draw's kind changed what it is fitted as: its cache entry is for the old kind. */
+  #rekey(index: number, d: DrawWarp): void {
+    this.cache.forget(d.key);
+    this.#waiting.delete(index);
+    d.key = `${index}:${d.generation}:${effectiveAt(d.kind, d.choice)}`;
+    d.requested = -1;
+  }
 
   /** Brings the warped anchors up to date with `routes` and `root`. */
   #sync(root: FrameKey | undefined, routes: ReadonlyArray<Route | undefined>) {
@@ -466,7 +765,7 @@ export class WorldWarps {
       if (rootChanged && now === held) {
         now!.stamp = ++this.#clock;
       }
-      if (!now!.linear && now!.scales.length > 0) {
+      if (now!.scales.length > 0) {
         this.#followScales(now!);
       }
     }
@@ -487,14 +786,18 @@ export class WorldWarps {
     const scaled = route.steps.flatMap((s) =>
       s.kind === "warp" && s.warp.scale ? [warpScaleOf(s.warp)] : [],
     );
+    const stamp = ++this.#clock;
     return {
       route,
-      stamp: ++this.#clock,
+      stamp,
       signature: signatureOf(route),
       affine: affinePart(route),
       linear,
       fitRoute: linear ? withoutScales(route) : withFrozenScales(route),
       scales: scaled,
+      pointStamp: stamp,
+      pointRoute: withFrozenScales(route),
+      height: heightScaleOf(route),
     };
   }
 
@@ -532,7 +835,11 @@ export class WorldWarps {
       : undefined;
   }
 
-  /** A scale that is not a weight changed: the fits are redone, as for a revision. */
+  /**
+   * A scale changed: anchored draws are evaluated again (their rotation is
+   * not linear in it), and where it is not a weight (`linear`) the fits are
+   * redone too, as for a revision.
+   */
   #followScales(anchor: AnchorWarp): void {
     let k = 0;
     let changed = false;
@@ -544,8 +851,12 @@ export class WorldWarps {
       }
     }
     if (changed) {
-      anchor.stamp = ++this.#clock;
-      anchor.fitRoute = withFrozenScales(anchor.route);
+      anchor.pointStamp = ++this.#clock;
+      anchor.pointRoute = withFrozenScales(anchor.route);
+      if (!anchor.linear) {
+        anchor.stamp = ++this.#clock;
+        anchor.fitRoute = withFrozenScales(anchor.route);
+      }
     }
   }
 
@@ -576,29 +887,84 @@ export class WorldWarps {
       return;
     }
     const flags = raster.recordsU32[o + FLAGS_WORD]!;
-    // These draws have no per-vertex placement (setPlacement refuses them):
-    // they are drawn at their anchor's affine place, unwarped.
-    if (
-      flags & (RecordFlags.billboard | RecordFlags.points) ||
-      raster.recordsU32[o + INSTANCE_COUNT_WORD]! > 0
-    ) {
+    const count = raster.recordsU32[o + INSTANCE_COUNT_WORD]!;
+    // A point set's cull reads positions a placement doesn't reach, and a
+    // pool's instances are written by the GPU: both are drawn at their
+    // anchor's affine place, unwarped.
+    if (flags & RecordFlags.points) {
+      this.#say(
+        "points",
+        "warp: a point set is drawn at its anchor's place, unwarped: its cull reads positions the placement doesn't reach.",
+      );
       return;
     }
+    if (count > 0 && this.#gpuInstanced.get(index) === generation) {
+      this.#say(
+        "gpu-instances",
+        "warp: instances written by the GPU (a ModelPool's) are drawn at their anchor's place, unwarped: the CPU can't move them by the route.",
+      );
+      return;
+    }
+    const kind: DrawKind =
+      count > 0
+        ? "instances"
+        : flags & RecordFlags.billboard
+          ? "billboard"
+          : "mesh";
     const own = this.world.scene.drawPlacements[index];
-    this.#draws.set(index, {
+    const choice = this.#choiceOf(index, generation);
+    const d: DrawWarp = {
       generation,
       slot,
-      key: `${index}:${generation}`,
+      kind,
+      key: "",
+      choice: choice.at,
+      origin: choice.origin,
       held: true,
       userHidden: (flags & RecordFlags.hidden) !== 0,
       user: own ? (own.placement ?? own.terms) : undefined,
       applied: undefined,
-      weight: constantWeight(1),
+      routeTerm: undefined,
+      exact: false,
+      instances:
+        kind === "instances"
+          ? {
+              base: this.#captureInstances(index, count),
+              next: 0,
+              stamp: -1,
+              matrix: new Float64Array(16),
+            }
+          : undefined,
       requested: -1,
       appliedStamp: -1,
       matrix: new Float64Array(16),
-    });
+      originAt: new Float64Array(3),
+    };
+    d.key = `${index}:${generation}:${effectiveAt(kind, d.choice)}`;
+    this.#draws.set(index, d);
     this.#setHidden(index, true);
+  }
+
+  /** An instanced draw's matrices as the application wrote them (the instance table's). */
+  #captureInstances(index: number, count: number): Float32Array {
+    const raster = this.world.raster;
+    const first =
+      raster.recordsU32[index * RECORD_WORDS + INSTANCE_FIRST_WORD]!;
+    const base = new Float32Array(count * 16);
+    const m = new Float64Array(16);
+    for (let k = 0; k < count; k++) {
+      readInstanceMatrix(raster.instances.f32, first + k, m);
+      base.set(m, k * 16);
+    }
+    return base;
+  }
+
+  /** Reports `message` once, with the frame's report. */
+  #say(key: string, message: string): void {
+    if (this.#report && !this.#said.has(key)) {
+      this.#said.add(key);
+      this.#report(message);
+    }
   }
 
   /** The anchor is no longer warped: its draws go back as they were. */
@@ -612,7 +978,11 @@ export class WorldWarps {
       this.cache.forget(d.key);
       const handle = this.#handle(index, d);
       if (this.world.hasDraw(handle)) {
-        setPlacement(this.world, handle, d.user);
+        if (d.instances) {
+          this.#restoreInstances(index, d);
+        } else {
+          setPlacement(this.world, handle, d.user);
+        }
         this.#setHidden(index, d.userHidden);
       }
     }
@@ -632,11 +1002,39 @@ export class WorldWarps {
       const m = drawMatrix(this.world, this.#handle(index, d), this.#scratch);
       if (m && differs(m, d.matrix)) {
         d.requested = -1;
+        continue;
+      }
+      // An anchored draw moves about another transform's origin.
+      if (d.origin && !d.instances) {
+        const at = this.#originOf(index, d);
+        if (
+          at &&
+          (at[0] !== d.originAt[0] ||
+            at[1] !== d.originAt[1] ||
+            at[2] !== d.originAt[2])
+        ) {
+          d.requested = -1;
+        }
       }
     }
   }
 
-  /** Asks for the draw's fit at the anchor's stamp; drawn at once if it is ready, or a stale one is. */
+  /** The origin an anchored draw moves about, in its anchor's coordinates (float64): its origin transform's, or its own. */
+  #originOf(index: number, d: DrawWarp): Float64Array | undefined {
+    const m = d.origin
+      ? this.world.transformAlive(d.origin)
+        ? this.world.worldMatrix(d.origin, new Float64Array(16))
+        : undefined
+      : drawMatrix(this.world, this.#handle(index, d), new Float64Array(16));
+    return m ? Float64Array.of(m[12]!, m[13]!, m[14]!) : undefined;
+  }
+
+  /**
+   * Asks for the draw's term at the anchor's stamp: terrain's exact height
+   * term, which needs no fit; an anchored draw's lattice or a vertex fit,
+   * both through the cache, drawn at once if it is ready (or a stale one
+   * is); or an instanced draw's pass.
+   */
   #request(
     index: number,
     d: DrawWarp,
@@ -644,6 +1042,18 @@ export class WorldWarps {
     report: (message: string) => void,
   ): void {
     const handle = this.#handle(index, d);
+    const at = effectiveAt(d.kind, d.choice);
+    const stamp = this.#stampOf(d, anchor);
+    const matrix = drawMatrix(this.world, handle, new Float64Array(16))!;
+    d.matrix.set(matrix);
+    d.requested = stamp;
+    if (d.instances) {
+      d.instances.next = 0;
+      d.instances.stamp = stamp;
+      d.instances.matrix.set(matrix);
+      this.#instancePasses.add(index);
+      return;
+    }
     const record = this.world.raster;
     const o = index * RECORD_WORDS;
     const own = this.world.scene.drawPlacements[index];
@@ -651,29 +1061,52 @@ export class WorldWarps {
       ? [...own.center]
       : [0, 1, 2].map((i) => record.recordsF32[o + CENTER_WORD + i]!);
     const radius = own?.base ?? record.recordsF32[o + RADIUS_WORD]!;
-    const matrix = drawMatrix(this.world, handle, new Float64Array(16))!;
-    d.matrix.set(matrix);
-    const stamp = anchor.stamp;
-    const { fitRoute, affine } = anchor;
+    const exact =
+      at === "vertex" ? this.#exactTerm(index, d, anchor, matrix) : undefined;
+    if (exact) {
+      this.cache.forget(d.key);
+      this.#waiting.delete(index);
+      this.#adoptTerm(index, d, exact, undefined, stamp, report);
+      return;
+    }
     const geometricError = this.#errors.get(index) ?? 0;
     const tolerance = Math.max(
       TOLERANCE_FLOOR,
       geometricError * GEOMETRIC_ERROR_SHARE,
     );
     const operation = describeRoute(anchor.route);
-    d.requested = stamp;
-    const stale = this.cache.request(d.key, this.#rootName, stamp, () =>
-      fitDraw(
-        fitRoute,
-        affine,
-        matrix,
-        center,
-        radius,
-        tolerance,
-        operation,
-        report,
-      ),
-    );
+    const { fitRoute, affine, pointRoute } = anchor;
+    let produce: () => CubicLattice;
+    if (at === "anchor") {
+      const origin =
+        this.#originOf(index, d) ??
+        Float64Array.of(matrix[12]!, matrix[13]!, matrix[14]!);
+      d.originAt.set(origin);
+      produce = () =>
+        anchorFit(
+          pointRoute,
+          affine,
+          matrix,
+          origin,
+          center,
+          radius,
+          operation,
+          report,
+        );
+    } else {
+      produce = () =>
+        fitDraw(
+          fitRoute,
+          affine,
+          matrix,
+          center,
+          radius,
+          tolerance,
+          operation,
+          report,
+        );
+    }
+    const stale = this.cache.request(d.key, this.#rootName, stamp, produce);
     const current = this.cache.current(d.key, this.#rootName, stamp);
     if (current) {
       this.#waiting.delete(index);
@@ -686,6 +1119,64 @@ export class WorldWarps {
     }
   }
 
+  /**
+   * Terrain's exact term: the draw's `h·n̂` attribute times the factor's
+   * weight, when the route is a height-scale warp on the ellipsoid the
+   * attribute was made on and the draw's model is a translation (so the
+   * attribute's metres are the model's). Undefined otherwise: the draw is
+   * fitted like any.
+   */
+  #exactTerm(
+    index: number,
+    d: DrawWarp,
+    anchor: AnchorWarp,
+    matrix: Float64Array,
+  ): WeightedTerm | undefined {
+    const height = anchor.height;
+    const held = this.#heightNormals.get(index);
+    if (!height || !held || held.generation !== d.generation) {
+      return undefined;
+    }
+    const { radii, maxDistance } = held.info;
+    if (
+      !sameRadii(radii, height.radii) ||
+      (height.baseHeight ?? 0) !== 0 ||
+      !isTranslation(matrix)
+    ) {
+      return undefined;
+    }
+    const mesh = this.world.raster.drawBatches[index]!.mesh;
+    const components = this.world.scene.meshRanges
+      .get(mesh.id)
+      ?.named?.get(HEIGHT_NORMAL_ATTRIBUTE);
+    if (components === undefined || components < 3) {
+      return undefined;
+    }
+    // (factor − 1) times the scale in force: a world's parameter is read by
+    // the GPU as a weight; any other scale is a constant, redone when it
+    // changes.
+    const k = height.factor - 1;
+    let weight: TermWeight;
+    if (anchor.linear) {
+      weight = {
+        scale: k,
+        factors: [{ parameter: anchor.linear, offset: 0, slope: 1 }],
+      };
+    } else {
+      const s = anchor.scales.length > 0 ? anchor.scales[0]! : 1;
+      weight = constantWeight(k * s);
+    }
+    return {
+      term: {
+        kind: "attribute",
+        semantic: HEIGHT_NORMAL_ATTRIBUTE,
+        absolute: false,
+        maxDistance,
+      },
+      weight,
+    };
+  }
+
   /** Draws `lattice` as the draw's route term, and shows the draw if it was held. */
   #adopt(
     index: number,
@@ -696,34 +1187,196 @@ export class WorldWarps {
     report: (message: string) => void,
   ): void {
     if (lattice !== d.applied) {
-      d.applied = lattice;
-      this.fitVersion++;
-      d.weight = anchor.linear
-        ? {
-            scale: 1,
-            factors: [{ parameter: anchor.linear, offset: 0, slope: 1 }],
-          }
-        : constantWeight(1);
-      try {
-        this.#compose(index, d);
-      } catch (error) {
-        report(
-          `warp: a draw's fit could not be drawn: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
+      const weight: TermWeight =
+        anchor.linear && effectiveAt(d.kind, d.choice) === "vertex"
+          ? {
+              scale: 1,
+              factors: [{ parameter: anchor.linear, offset: 0, slope: 1 }],
+            }
+          : constantWeight(1);
+      this.#adoptTerm(
+        index,
+        d,
+        { term: lattice, weight },
+        lattice,
+        stamp,
+        report,
+      );
+      return;
     }
     d.appliedStamp = stamp;
+    this.#show(index, d);
+  }
+
+  /** Draws `term` as the draw's route term. */
+  #adoptTerm(
+    index: number,
+    d: DrawWarp,
+    term: WeightedTerm,
+    lattice: CubicLattice | undefined,
+    stamp: number,
+    report: (message: string) => void,
+  ): void {
+    d.applied = lattice;
+    d.exact = lattice === undefined;
+    d.routeTerm = term;
+    this.fitVersion++;
+    try {
+      this.#compose(index, d);
+    } catch (error) {
+      report(
+        `warp: a draw's fit could not be drawn: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    d.appliedStamp = stamp;
+    this.#show(index, d);
+  }
+
+  /** Shows the draw if its first term has landed. */
+  #show(index: number, d: DrawWarp): void {
     if (d.held) {
       d.held = false;
       this.#setHidden(index, d.userHidden);
     }
   }
 
-  /** Sets the draw's terms: its own, then its route's lattice. */
+  /** Sets the draw's terms: its own, then its route's. A billboard takes its route's lattice alone, at its anchor. */
   #compose(index: number, d: DrawWarp): void {
-    const own = ownTerms(d.user);
-    const terms: WarpTerms = [...own, { term: d.applied!, weight: d.weight }];
-    setPlacement(this.world, this.#handle(index, d), terms);
+    const own = d.kind === "billboard" ? [] : ownTerms(d.user);
+    const terms: WarpTerms = [...own, d.routeTerm!];
+    setPlacement(this.world, this.#handle(index, d), terms, {
+      anchored: d.kind === "billboard",
+    });
+  }
+
+  /**
+   * Moves the instances of draws with a pass under way, within `budgetMs`
+   * (one chunk of one draw at least, so a pass always goes on); true while
+   * any remain. A pass that has moved every instance shows its draw.
+   */
+  #runInstances(budgetMs: number): boolean {
+    if (this.#instancePasses.size === 0) {
+      return false;
+    }
+    const deadline = performance.now() + budgetMs;
+    let first = true;
+    for (const index of [...this.#instancePasses]) {
+      const d = this.#draws.get(index);
+      const anchor = d && this.#anchors.get(d.slot);
+      const state = d?.instances;
+      if (!d || !anchor || !state) {
+        this.#instancePasses.delete(index);
+        continue;
+      }
+      const count = state.base.length / 16;
+      while (state.next < count && (first || performance.now() < deadline)) {
+        const to = Math.min(count, state.next + INSTANCE_CHUNK);
+        this.#moveInstances(index, d, anchor, state.next, to);
+        state.next = to;
+        first = false;
+      }
+      if (state.next >= count) {
+        this.#instancePasses.delete(index);
+        d.appliedStamp = state.stamp;
+        this.fitVersion++;
+        this.#show(index, d);
+      }
+    }
+    return this.#instancePasses.size > 0;
+  }
+
+  /**
+   * Instances `from` to `to` of the draw drawn at the route's image of their
+   * origins (`correctedInstance`): their own matrices, the application's,
+   * are in `base`, and the instance table gets the moved ones.
+   */
+  #moveInstances(
+    index: number,
+    d: DrawWarp,
+    anchor: AnchorWarp,
+    from: number,
+    to: number,
+  ): void {
+    const state = d.instances!;
+    const raster = this.world.raster;
+    const { f32, u32 } = raster.instances;
+    const first =
+      raster.recordsU32[index * RECORD_WORDS + INSTANCE_FIRST_WORD]!;
+    const wd = state.matrix;
+    const l = linearPart(wd);
+    const lInverse = invert3(l);
+    if (!lInverse) {
+      return;
+    }
+    const corrector = anchorCorrector(anchor.pointRoute, anchor.affine);
+    const base = new Float64Array(16);
+    const out = new Float64Array(16);
+    const f = new Float64Array(3);
+    for (let k = from; k < to; k++) {
+      for (let j = 0; j < 16; j++) {
+        base[j] = state.base[k * 16 + j]!;
+      }
+      // The instance's origin in the anchor's coordinates: the draw's matrix times its own.
+      f[0] =
+        wd[0]! * base[12]! + wd[4]! * base[13]! + wd[8]! * base[14]! + wd[12]!;
+      f[1] =
+        wd[1]! * base[12]! + wd[5]! * base[13]! + wd[9]! * base[14]! + wd[13]!;
+      f[2] =
+        wd[2]! * base[12]! + wd[6]! * base[13]! + wd[10]! * base[14]! + wd[14]!;
+      const correction = corrector(f);
+      const m = correction
+        ? correctedInstance(base, l, lInverse, correction, out)
+        : base;
+      const slot = first + k;
+      const w = slot * INSTANCE_WORDS;
+      writeInstance(
+        f32,
+        u32,
+        slot,
+        m,
+        0,
+        u32[w + 12]!,
+        u32[w + 13]!,
+        u32[w + 14]!,
+        u32[w + 15]!,
+      );
+      raster.instances.mark(slot);
+    }
+    this.world.version++;
+    this.world.changedViews |=
+      raster.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
+  }
+
+  /** An instanced draw's instances go back to the application's matrices. */
+  #restoreInstances(index: number, d: DrawWarp): void {
+    const state = d.instances!;
+    const raster = this.world.raster;
+    const { f32, u32 } = raster.instances;
+    const first =
+      raster.recordsU32[index * RECORD_WORDS + INSTANCE_FIRST_WORD]!;
+    const count = state.base.length / 16;
+    const m = new Float64Array(16);
+    for (let k = 0; k < count; k++) {
+      m.set(state.base.subarray(k * 16, k * 16 + 16));
+      const slot = first + k;
+      const w = slot * INSTANCE_WORDS;
+      writeInstance(
+        f32,
+        u32,
+        slot,
+        m,
+        0,
+        u32[w + 12]!,
+        u32[w + 13]!,
+        u32[w + 14]!,
+        u32[w + 15]!,
+      );
+      raster.instances.mark(slot);
+    }
+    this.#instancePasses.delete(index);
+    this.world.version++;
+    this.world.changedViews |=
+      raster.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
   }
 
   #setHidden(index: number, hidden: boolean): void {
@@ -806,6 +1459,90 @@ function differs(a: Float64Array, b: Float64Array): boolean {
     }
   }
   return false;
+}
+
+/** How a draw is warped: a mesh as it chose, a billboard or instances at their anchors. */
+function effectiveAt(kind: DrawKind, choice: WarpAt): WarpAt {
+  return kind === "mesh" ? choice : "anchor";
+}
+
+/** The route is one forward height-scale warp, and only rigid steps follow it. */
+function heightScaleOf(route: Route): HeightScale | undefined {
+  const [first, ...rest] = route.steps;
+  if (
+    !first ||
+    first.kind !== "warp" ||
+    first.inverse ||
+    first.warp.heightScale === undefined
+  ) {
+    return undefined;
+  }
+  return rest.every((s) => s.kind === "rigid")
+    ? first.warp.heightScale
+    : undefined;
+}
+
+/** Whether two ellipsoids' radii agree to a millimetre. */
+function sameRadii(
+  a: readonly [number, number, number],
+  b: readonly [number, number, number],
+): boolean {
+  return a.every((r, i) => Math.abs(r - b[i]!) <= 1e-3);
+}
+
+/** Whether a column-major 4×4's linear part is the identity (a pure translation). */
+function isTranslation(m: Float64Array): boolean {
+  const identity = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+  const linear = [
+    m[0]!,
+    m[1]!,
+    m[2]!,
+    m[4]!,
+    m[5]!,
+    m[6]!,
+    m[8]!,
+    m[9]!,
+    m[10]!,
+  ];
+  return linear.every((v, i) => Math.abs(v - identity[i]!) <= 1e-12);
+}
+
+/**
+ * The lattice of one anchored draw (`anchorLattice`): the route's image of
+ * `origin` and its rotation there, as the displacement of the draw's model
+ * coordinates over its bounding sphere. Exact, so it is made at once.
+ */
+function anchorFit(
+  route: Route,
+  anchorAffine: Float64Array,
+  matrix: Float64Array,
+  origin: Float64Array,
+  center: number[],
+  radius: number,
+  operation: string,
+  report: (message: string) => void,
+): CubicLattice {
+  const scale = Math.max(radius, 1e-3);
+  const correction = anchorCorrector(route, anchorAffine)(origin);
+  const lattice = correction
+    ? anchorLattice(correction, matrix, origin, { center, scale }, operation)
+    : undefined;
+  if (lattice) {
+    return lattice;
+  }
+  report(
+    `warp: ${operation} is not finite or not invertible at an anchored draw's origin; the draw is drawn unwarped`,
+  );
+  return {
+    kind: "cubic",
+    center,
+    scale,
+    cells: 1,
+    coefficients: new Float64Array(60),
+    errorBound: Number.MAX_VALUE,
+    estimate: true,
+    operation: `anchor failed: ${operation}`,
+  };
 }
 
 /** The route's warps in words, for a fit's `operation`. */

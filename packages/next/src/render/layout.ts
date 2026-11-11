@@ -688,6 +688,25 @@ export function writeInstance(
 }
 const INSTANCE_ROWS = [I.row0, I.row1, I.row2];
 
+/** An instance's matrix (`writeInstance`'s), as a column-major affine 4×4 into `out`. */
+export function readInstanceMatrix(
+  f32: Float32Array,
+  index: number,
+  out: Float64Array,
+): Float64Array {
+  const o = index * INSTANCE_WORDS;
+  for (let r = 0; r < 3; r++) {
+    const row = o + INSTANCE_ROWS[r]!;
+    out[r] = f32[row]!;
+    out[4 + r] = f32[row + 1]!;
+    out[8 + r] = f32[row + 2]!;
+    out[12 + r] = f32[row + 3]!;
+  }
+  out[3] = out[7] = out[11] = 0;
+  out[15] = 1;
+  return out;
+}
+
 /** Packs a linear RGBA tint (0-1) as RGBA8 (`unpack4x8unorm` in WGSL). */
 export function packTint(rgba: ArrayLike<number>, offset = 0): number {
   let packed = 0;

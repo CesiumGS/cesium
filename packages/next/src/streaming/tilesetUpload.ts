@@ -1,6 +1,7 @@
 // Puts a tileset's decoded tiles into its world, within the tick's upload budget.
 import type { DrawSink, TilesetHost } from "./DrawSink.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
+import { heightNormalInfo } from "../globe/heightNormal.ts";
 import { MaterialFlags } from "../scene/contentLimits.ts";
 import { isCapacityError } from "../scene/CapacityError.ts";
 import type { SceneItem } from "../scene/SceneItem.ts";
@@ -166,8 +167,12 @@ export function upload(tileset: TilesetUpload): void {
           ...(shader ? { shader } : {}),
         });
         // The warp fits of a tile's draws share its geometric error's budget.
+        const heights = heightNormalInfo(asset);
         for (const draw of placement.draws) {
           tileset.world.setDrawGeometricError?.(draw, tile.geometricError);
+          if (heights) {
+            tileset.world.setDrawHeightNormal?.(draw, heights);
+          }
         }
         for (const item of tileset.state.itemList) {
           item.place(tile, placement);

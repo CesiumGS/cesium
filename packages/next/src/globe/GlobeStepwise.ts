@@ -25,8 +25,11 @@ import {
   obbIntersectPlane,
   regionDistance,
   regionFromJson,
+  volumeDistance,
+  volumeIntersectPlane,
   type Region,
 } from "../streaming/volumes.ts";
+import { drawnTile } from "../streaming/tileWarp.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { CLIP_BOXES } from "../scene/contentLimits.ts";
 import type { Vec3 } from "../math/vec3.ts";
@@ -387,7 +390,16 @@ export class GlobeStepwiseSelection implements TileSelection {
     const view = P.view;
     const b = this.bounds(tile);
     const state = tile.viewState(view.id);
-    if (!b) {
+    // Under a warped anchor the tile is where its draws put it (the camera
+    // is in drawn space): its drawn volume, and no horizon test.
+    const drawn = view.warp ? drawnTile(tile, view.warp) : undefined;
+    if (drawn) {
+      state.distance = volumeDistance(
+        drawn.volume,
+        view.position,
+        view.cartographic,
+      );
+    } else if (!b) {
       state.distance = NO_BOUNDS_DISTANCE;
     } else if (b.source !== tile) {
       // Heights from an ancestor: the tile can't be nearer than the
@@ -415,6 +427,21 @@ export class GlobeStepwiseSelection implements TileSelection {
     if (P.fogEnabled && fog(state.distance, P.density) >= 1.0) {
       return (state.visible = false);
     }
+    if (drawn) {
+      const warpedPlanes = view.planes;
+      for (let k = 0; k < warpedPlanes.length / 4; k++) {
+        if (
+          volumeIntersectPlane(
+            drawn.volume,
+            warpedPlanes.subarray(k * 4, k * 4 + 3),
+            warpedPlanes[k * 4 + 3]!,
+          ) === OUTSIDE
+        ) {
+          return (state.visible = false);
+        }
+      }
+      return (state.visible = true);
+    }
     if (!b) {
       return (state.visible = true);
     }
@@ -440,10 +467,15 @@ export class GlobeStepwiseSelection implements TileSelection {
   /** 1.x QuadtreePrimitive screenSpaceError (perspective) with fog. */
   private screenSpaceError(P: Pass, tile: Tile): number {
     const distance = tile.viewState(P.view.id).distance;
+    // A geometric error is a length in the tile's own metres: a warp
+    // stretches it by at most σ_max over the tile, and its fit adds its own.
+    const drawn = P.view.warp ? drawnTile(tile, P.view.warp) : undefined;
+    const geometricError = drawn
+      ? tile.geometricError * drawn.sigmaMax + drawn.fit
+      : tile.geometricError;
     // view.height is already divided by the pixel ratio.
     let error =
-      (tile.geometricError * P.view.height) /
-      (distance * P.view.sseDenominator);
+      (geometricError * P.view.height) / (distance * P.view.sseDenominator);
     if (P.fogEnabled) {
       error -= (fog(distance, P.density) * FOG_SSE) / P.pixelRatio;
     }

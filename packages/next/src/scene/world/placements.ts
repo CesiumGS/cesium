@@ -149,6 +149,10 @@ export function setPlacement(
   world: PlacementWorld,
   handle: DrawHandle,
   placement: Placement | WarpTerms | undefined,
+  options: {
+    /** The engine's own route term for a billboard: its placement moves its anchor (lattice terms only). */
+    readonly anchored?: boolean;
+  } = {},
 ): void {
   if (!world.hasDraw(handle)) {
     throw new Error("setPlacement: the draw was removed.");
@@ -168,9 +172,15 @@ export function setPlacement(
   if (next) {
     const flags = world.raster.recordsU32[o + FLAGS_WORD]!;
     if (flags & (RecordFlags.billboard | RecordFlags.points)) {
-      throw new Error(
-        "setPlacement: a billboard or point draw's positions are offsets on screen; it has no per-vertex placement.",
-      );
+      if (
+        !options.anchored ||
+        flags & RecordFlags.points ||
+        next.some(({ term }) => term.kind !== "cubic")
+      ) {
+        throw new Error(
+          "setPlacement: a billboard or point draw's positions are offsets on screen; it has no per-vertex placement.",
+        );
+      }
     }
     if (world.raster.recordsU32[o + INSTANCE_COUNT_WORD]! > 0) {
       throw new Error(

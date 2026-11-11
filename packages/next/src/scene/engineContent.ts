@@ -4,6 +4,7 @@ import { GlobeImagery } from "../globe/GlobeImagery.ts";
 import type { ImageryProvider } from "../globe/ImageryProvider.ts";
 import { TerrainSource } from "../globe/TerrainSource.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
+import { Ellipsoid } from "../math/ellipsoid.ts";
 import type { CustomShader } from "./CustomShader.ts";
 import type { Engine, GlobeOptions } from "./Engine.ts";
 import type { World } from "./World.ts";
@@ -159,6 +160,18 @@ function addGlobeSource(
     maximumScreenSpaceError: 2,
     ...options,
   });
+  // Tiles carry `h·n̂` while the globe's anchor is warped by a height scale
+  // on the same ellipsoid: exaggerating terrain is then exact in height,
+  // with no fit.
+  source.wantsHeightNormal = () => {
+    const scale = world.warps.heightScaleAt(tileset.anchor.slot);
+    return (
+      scale !== undefined &&
+      scale.radii.every(
+        (r, i) => Math.abs(r - Ellipsoid.WGS84.radii[i]!) <= 1e-3,
+      )
+    );
+  };
   const drape = (provider: ImageryProvider) =>
     new GlobeImagery(
       engine.ctx,

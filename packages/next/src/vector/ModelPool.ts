@@ -97,6 +97,11 @@ export class ModelPool {
       pu[k * PART_WORDS + 32] = world.instanceFirst(draw);
     });
     this.parts = this.placement.draws.length;
+    // The GPU writes its instances each frame: the CPU can't move them by a
+    // warp's route (World.markGpuInstances).
+    for (const draw of this.placement.draws) {
+      world.markGpuInstances(draw);
+    }
     this.partBuffer = device.createBuffer({
       label: "modelPool.parts",
       size: partData.byteLength,

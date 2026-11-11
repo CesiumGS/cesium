@@ -17,6 +17,13 @@
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { horizonCullingPoint } from "../math/horizon.ts";
 import type { GltfAsset, GltfMesh } from "../io/gltfTypes.ts";
+import { HEIGHT_NORMAL_ATTRIBUTE } from "./heightNormal.ts";
+
+/** What a decode may be asked besides the tile (`TerrainLoader`'s request). */
+export interface TerrainDecodeOptions {
+  /** Also write each vertex's `h·n̂` (`HEIGHT_NORMAL_ATTRIBUTE`). */
+  heightNormal?: boolean;
+}
 
 /** A tile's extent in radians. */
 export interface Rectangle {
@@ -298,6 +305,7 @@ export function decodeQuantizedMesh(
   buffer: ArrayBuffer,
   rect: Rectangle,
   skirtHeight: number | readonly number[],
+  options: TerrainDecodeOptions = {},
 ): { asset: GltfAsset; info: TerrainTileInfo; transfer: Transferable[] } {
   const view = new DataView(buffer);
   let pos = 0;
@@ -398,6 +406,7 @@ export function decodeQuantizedMesh(
     octNormals,
     available,
     keepHeights: true,
+    ...(options.heightNormal ? { heightNormal: true } : {}),
   });
 }
 
@@ -425,6 +434,8 @@ interface TerrainTileData {
   available?: TileRange[][] | undefined;
   /** Keep the vertices and triangles for height queries (data tiles). */
   keepHeights?: boolean;
+  /** Write `HEIGHT_NORMAL_ATTRIBUTE` for each vertex. */
+  heightNormal?: boolean;
 }
 
 /**
@@ -463,6 +474,7 @@ export function flatTerrainTile(
   rect: Rectangle,
   skirtHeight: number | readonly number[],
   n = 16,
+  options: TerrainDecodeOptions = {},
 ): { asset: GltfAsset; info: TerrainTileInfo; transfer: Transferable[] } {
   const count = n * n;
   const { u, v, h, triangles } = flatTerrainHeights(n);
@@ -521,6 +533,7 @@ export function flatTerrainTile(
     h,
     triangles,
     edges: [column(0), row(0), column(n - 1), row(n - 1)],
+    ...(options.heightNormal ? { heightNormal: true } : {}),
   });
 }
 
@@ -586,6 +599,7 @@ export function upsampleTerrainTile(
   parentRect: Rectangle,
   rect: Rectangle,
   skirtHeight: number | readonly number[],
+  options: TerrainDecodeOptions = {},
 ): { asset: GltfAsset; info: TerrainTileInfo; transfer: Transferable[] } {
   const width = parentRect.east - parentRect.west;
   const height = parentRect.north - parentRect.south;
@@ -761,6 +775,7 @@ export function upsampleTerrainTile(
     edges: [west, south, east, north].map((e) => Uint32Array.from(e)),
     vertexNormals: parent.normals ? Float32Array.from(normals) : undefined,
     keepHeights: true,
+    ...(options.heightNormal ? { heightNormal: true } : {}),
   });
 }
 
@@ -794,6 +809,11 @@ function buildTerrainTile(d: TerrainTileData): {
   const positions = new Float32Array(total * 3);
   const normals = new Float32Array(total * 3);
   const uvs = new Float32Array(total * 2);
+  // `h·n̂` per vertex, when asked (`HEIGHT_NORMAL_ATTRIBUTE`).
+  const heightNormals = d.heightNormal
+    ? new Float32Array(total * 3)
+    : undefined;
+  const up = new Float64Array(3);
   const ellipsoid = Ellipsoid.WGS84;
   const scratch = new Float64Array(3);
   const carto = { longitude: 0, latitude: 0, height: 0 };
@@ -816,6 +836,12 @@ function buildTerrainTile(d: TerrainTileData): {
     positions[dst * 3 + 2] = scratch[2]! - center[2];
     uvs[dst * 2] = uu;
     uvs[dst * 2 + 1] = vv;
+    if (heightNormals) {
+      ellipsoid.geodeticSurfaceNormalCartographic(carto, up);
+      heightNormals[dst * 3] = carto.height * up[0]!;
+      heightNormals[dst * 3 + 1] = carto.height * up[1]!;
+      heightNormals[dst * 3 + 2] = carto.height * up[2]!;
+    }
     if (octNormals) {
       octDecode(octNormals[i * 2]!, octNormals[i * 2 + 1]!, normals, dst * 3);
     } else if (vertexNormals) {
@@ -884,6 +910,13 @@ function buildTerrainTile(d: TerrainTileData): {
     uvs,
     indices,
     ...(skirtCount > 0 ? { skirtStart: vertexCount } : {}),
+    ...(heightNormals
+      ? {
+          attributes: {
+            [HEIGHT_NORMAL_ATTRIBUTE]: { data: heightNormals, components: 3 },
+          },
+        }
+      : {}),
   };
   const matrix = new Float64Array(16);
   matrix[0] = matrix[5] = matrix[10] = matrix[15] = 1;
@@ -942,6 +975,7 @@ function buildTerrainTile(d: TerrainTileData): {
       normals.buffer,
       uvs.buffer,
       indices.buffer,
+      ...(heightNormals ? [heightNormals.buffer] : []),
       ...(d.keepHeights ? [u.buffer, triangles.buffer] : []),
       ...(d.keepHeights && octNormals ? [octNormals.buffer] : []),
     ],

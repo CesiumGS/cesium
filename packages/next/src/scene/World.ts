@@ -123,7 +123,8 @@ import {
   setTerrainClip,
 } from "./world/terrainClips.ts";
 import { castRays } from "./world/rays.ts";
-import { WorldWarps } from "./world/warps.ts";
+import { WorldWarps, type HeightNormalInfo } from "./world/warps.ts";
+import type { WarpAt } from "./warpAnchor.ts";
 import {
   releasePlacementParameter,
   createPlacementParameter,
@@ -996,6 +997,55 @@ export class World {
   }
 
   /**
+   * Where the route that places the draw's anchor is evaluated, when it
+   * crosses a warp (plan §13.26, `warpAt`):
+   *
+   * - `"vertex"`, the default: at every vertex, so content stretches with
+   *   the warp (a reprojection, an exaggeration). Fitted per draw to
+   *   `max(1 mm, geometricError / 64)`, held hidden until the first fit;
+   *   a terrain tile under a height-scale warp is exact instead.
+   * - `"anchor"`: once, at the origin of `origin` (a transform the draw hangs
+   *   under; by default the draw's own), in float64. The draw moves
+   *   rigidly by the route there: its translation, and the rotation of the
+   *   route's Jacobian (so a vehicle stays upright on a curved Earth), with
+   *   no scale or shear, so it keeps its shape. Give a model's draws one
+   *   `origin` (its root) and the whole model moves as one.
+   *
+   * Billboards and instanced draws are always anchored (an instanced draw's
+   * origin is each instance's). A point set, or instances the GPU writes (a
+   * `ModelPool`'s), is drawn at its anchor's place, unwarped. Costs nothing
+   * for a draw not under a warped anchor, which only remembers it. Changing
+   * it refits the draw.
+   */
+  setWarpAt(handle: DrawHandle, at: WarpAt, origin?: TransformHandle): void {
+    this.warps.setWarpAt(handle, at, origin);
+  }
+
+  /** What the draw asked of `setWarpAt`, and what it is drawn as (a billboard or an instanced draw is anchored). */
+  drawWarpAt(
+    handle: DrawHandle,
+  ): { choice: WarpAt; effective: WarpAt } | undefined {
+    return this.warps.warpAt(handle);
+  }
+
+  /**
+   * @internal A terrain tile's draw carries `h·n̂` per vertex made on the
+   * ellipsoid `info.radii` (`HEIGHT_NORMAL_ATTRIBUTE`): under a height-scale
+   * warp on that ellipsoid its route term is exact, with no fit.
+   */
+  setDrawHeightNormal(handle: DrawHandle, info: HeightNormalInfo): void {
+    this.warps.setHeightNormal(handle, info);
+  }
+
+  /**
+   * @internal The draw's instances are written by the GPU (a `ModelPool`'s),
+   * so a warp can't move them on the CPU: they are drawn unwarped.
+   */
+  markGpuInstances(handle: DrawHandle): void {
+    this.warps.markGpuInstances(handle);
+  }
+
+  /**
    * @internal The map from an anchor's coordinates to where its content is
    * drawn, when the anchor's route to the view's root crosses a warp:
    * selection runs on drawn volumes (streaming/tileWarp.ts). Undefined for
@@ -1019,6 +1069,9 @@ export class World {
     },
   ): void {
     setInstance(this, handle, instance, change);
+    if (change.matrix) {
+      this.warps.instanceChanged(handle, instance);
+    }
   }
 
   /**

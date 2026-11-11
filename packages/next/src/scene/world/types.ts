@@ -11,6 +11,7 @@ import type { SceneItem } from "../SceneItem.ts";
 import type { World } from "../World.ts";
 import type { Placement } from "../placement.ts";
 import type { TermBounds } from "../warpBounds.ts";
+import type { WarpAt } from "../warpAnchor.ts";
 import type { WarpTerms } from "../warpTerms.ts";
 
 /**
@@ -259,6 +260,15 @@ export interface DrawOptions {
    * the ground itself (tracks), so it doesn't land on itself.
    */
   ground?: boolean;
+  /**
+   * Where the route that places the draw's anchor is evaluated, when it
+   * crosses a warp (`World.setWarpAt`): per `"vertex"` (the default), or
+   * once at its `"anchor"`, keeping its shape. A billboard or an instanced
+   * draw is anchored whatever this says.
+   */
+  warpAt?: WarpAt;
+  /** With `warpAt: "anchor"`: the transform whose origin it moves about (its own by default). */
+  warpOrigin?: TransformHandle;
 }
 
 /** What a picked feature ID resolves to. */

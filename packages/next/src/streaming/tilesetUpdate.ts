@@ -35,7 +35,6 @@ export interface TilesetUpdate extends Pick<
   | "imageryPending"
   | "imageryReady"
   | "imageryRefines"
-  | "isGlobe"
   | "lastSelected"
   | "lights"
   | "markCastsOnly"
@@ -222,9 +221,9 @@ export function update(
   for (const item of tileset.state.itemList) {
     wanted |= item.views;
   }
-  const warp = tileset.isGlobe
-    ? undefined
-    : tileset.world.tileWarp?.(tileset.anchor);
+  // Under an anchor placed across a warp, selection runs on drawn volumes:
+  // a globe's too (its tiles are fitted like any tile's, scene/world/warps.ts).
+  const warp = tileset.world.tileWarp?.(tileset.anchor);
   const views = tileset.show
     ? allViews
         .filter((view) => ((wanted >>> view.id) & 1) !== 0)

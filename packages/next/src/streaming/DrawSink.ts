@@ -45,6 +45,28 @@ export interface DrawSink {
    */
   setDrawGeometricError?(handle: DrawHandle, error: number): void;
   /**
+   * A terrain tile's draw carries `h·n̂` per vertex made on the ellipsoid
+   * `info.radii` (`HEIGHT_NORMAL_ATTRIBUTE`), none longer than
+   * `info.maxDistance`: under a height-scale warp it is exaggerated exactly.
+   * Optional: a sink with no warps ignores it.
+   */
+  setDrawHeightNormal?(
+    handle: DrawHandle,
+    info: {
+      readonly radii: readonly [number, number, number];
+      readonly maxDistance: number;
+    },
+  ): void;
+  /**
+   * Where a draw's route is evaluated under a warp (`World.setWarpAt`).
+   * Optional: a sink with no warps ignores it.
+   */
+  setWarpAt?(
+    handle: DrawHandle,
+    at: "vertex" | "anchor",
+    origin?: TransformHandle,
+  ): void;
+  /**
    * The map from an anchor's coordinates to where its content is drawn,
    * when its route to the view's root crosses a warp: selection then runs
    * on drawn volumes (`TileWarp`). Optional: a sink with no warps has none.

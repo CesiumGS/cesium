@@ -47,6 +47,8 @@ self.onmessage = async (
     textureSupport: TextureFormatSupport;
     rect: Rectangle;
     skirtHeight: number | readonly number[];
+    /** A terrain tile also carries `h·n̂` per vertex (`TerrainLoader`). */
+    heightNormal?: boolean;
     /** A terrain tile below the last level with data (`TerrainLoader`). */
     upsample?: { rect: Rectangle; heights?: TerrainHeights; url?: string };
     /** "stars": the star map's six faces. */
@@ -64,11 +66,14 @@ self.onmessage = async (
   const controller = new AbortController();
   controllers.set(id, controller);
   try {
+    const decodeOptions = event.data.heightNormal ? { heightNormal: true } : {};
     if (type === "terrain" && event.data.url.startsWith("ellipsoid:")) {
       // The ellipsoid without terrain data: a flat tile, built here.
       const { asset, info, transfer } = flatTerrainTile(
         event.data.rect,
         event.data.skirtHeight,
+        undefined,
+        decodeOptions,
       );
       self.postMessage({ id, ok: true, result: { asset, info } }, transfer);
       return;
@@ -98,6 +103,7 @@ self.onmessage = async (
         upsample.rect,
         event.data.rect,
         event.data.skirtHeight,
+        decodeOptions,
       );
       if (bytes > 0) {
         // Fetched again: its bytes count (none without a fetch, as the
@@ -128,6 +134,7 @@ self.onmessage = async (
         buffer,
         event.data.rect,
         event.data.skirtHeight,
+        decodeOptions,
       );
       asset.timing = {
         format: "quantized-mesh",

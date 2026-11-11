@@ -3,7 +3,11 @@
  * bounding volumes in Earth-fixed coordinates (see volumes.ts). Content
  * state lives here too; selection policies only read the tree.
  */
-import type { ClipHandle, DrawHandle } from "../scene/world/types.ts";
+import type {
+  ClipHandle,
+  DrawHandle,
+  TransformHandle,
+} from "../scene/world/types.ts";
 import type { GlobeTile } from "../globe/TerrainSource.ts";
 import type { ContentSummary } from "./pipeline.ts";
 import type { SceneItem } from "../scene/SceneItem.ts";
@@ -62,6 +66,8 @@ export interface ItemDraws {
   readonly twins: number[];
   /** Its mesh lacks the placement's attribute: this item skips it. */
   denied: boolean;
+  /** The tile's root transform, the origin its draws move about under `warpAt: "anchor"`. */
+  readonly origin?: TransformHandle;
 }
 
 /** Per-view traversal state, written by a selection policy each frame. */

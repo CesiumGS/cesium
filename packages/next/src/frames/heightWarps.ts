@@ -16,7 +16,7 @@
 // (it uses no latitude or longitude); it fails only where 1 + hκ = 0, a
 // centre of curvature, deep inside the body.
 import { Ellipsoid } from "../math/ellipsoid.ts";
-import type { WarpScale } from "../camera/route.ts";
+import type { HeightScale, WarpScale } from "../camera/route.ts";
 import { LiveWarp, type ChangeableWarp } from "./warps.ts";
 
 /**
@@ -39,6 +39,8 @@ export type HeightReference =
 /** A reference surface: where a point's foot is and how the normal turns. */
 interface Surface {
   readonly name: string;
+  /** The radii of the ellipsoid or sphere, when it is one: the engine exaggerates terrain on it exactly (`HeightScale`). */
+  readonly radii?: readonly [number, number, number];
   /** Writes p's foot and its unit normal, and returns p's signed height above the surface. */
   locate(p: ArrayLike<number>, foot: Float64Array, n: Float64Array): number;
   /** Writes the shape operator at a foot (column-major 3×3, symmetric, zero along `n`). */
@@ -104,6 +106,7 @@ function ellipsoidSurface(ellipsoid: Ellipsoid, name: string): Surface {
   const inv = ellipsoid.oneOverRadiiSquared;
   return {
     name,
+    radii: [ellipsoid.radii[0]!, ellipsoid.radii[1]!, ellipsoid.radii[2]!],
     locate(p, foot, n) {
       if (footOf(ellipsoid, p, foot) === undefined) {
         throw new RangeError(
@@ -147,6 +150,7 @@ function ellipsoidSurface(ellipsoid: Ellipsoid, name: string): Surface {
 function sphereSurface(radius: number): Surface {
   return {
     name: `a sphere of radius ${radius} m`,
+    radii: [radius, radius, radius],
     locate(p, foot, n) {
       const x = p[0]!;
       const y = p[1]!;
@@ -292,6 +296,11 @@ abstract class HeightWarp extends LiveWarp {
     return this.surface.name;
   }
 
+  /** The reference's radii when it is an ellipsoid or a sphere. */
+  protected get surfaceRadii(): readonly [number, number, number] | undefined {
+    return this.surface.radii;
+  }
+
   /** h′ − h at height h. */
   protected abstract lift(h: number): number;
   /** dh′/dh at height h. */
@@ -416,6 +425,14 @@ class VerticalExaggerationImpl
 
   get factor(): number {
     return this.k;
+  }
+
+  /** Declares the warp a height scale on an ellipsoid or sphere reference (`HeightScale`): the engine exaggerates terrain exactly. */
+  get heightScale(): HeightScale | undefined {
+    const radii = this.surfaceRadii;
+    return radii
+      ? { kind: "heightScale", radii, factor: this.k, baseHeight: this.base }
+      : undefined;
   }
 
   set factor(value: number) {

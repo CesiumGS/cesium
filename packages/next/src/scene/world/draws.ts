@@ -652,6 +652,9 @@ export function addDraw(world: AddDrawWorld, options: DrawOptions): DrawHandle {
     name: options.name,
   };
   world.scene.contentRevision_++;
+  if (options.warpAt !== undefined) {
+    world.warps.setWarpAt(handle, options.warpAt, options.warpOrigin);
+  }
   world.warps.drawAdded(handle);
   world.acceleration.drawAdded(handle);
   return handle;

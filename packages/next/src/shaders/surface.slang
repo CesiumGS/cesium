@@ -779,6 +779,12 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   } else {
     position = read3(r.positionOffset, vertexIndex);
   }
+  // A billboard (RecordFlags.billboard) is placed at its anchor: the corners
+  // are pixel offsets on screen, which a placement leaves alone.
+  bool billboard = (r.flags & 16u) != 0u;
+  if (billboard && r.placement != NO_PLACEMENT) {
+    anchor.xyz = placePosition(r.placement, anchor.xyz, 0u, r.attributes, 0u);
+  }
   cesiumAnchor = mul(m, float4(anchor.xyz, 1.0)).xyz;
   float3 normal = float3(0.0, 0.0, 1.0);
   if (patched) {
@@ -818,9 +824,9 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   // stage, in model space: the transform carries the large offset. The
   // placement's Jacobian turns the tangent and the normal with the surface.
   float3 designPosition = position;
-  Placed placed = placeVertex(r.placement, position, vertexIndex, r.attributes, tableFeature);
+  Placed placed = placeVertex(billboard ? NO_PLACEMENT : r.placement, position, vertexIndex, r.attributes, tableFeature);
   position = placed.position;
-  bool placedDraw = r.placement != NO_PLACEMENT;
+  bool placedDraw = r.placement != NO_PLACEMENT && !billboard;
   if (placedDraw) {
     normal = turnNormal(placed.jacobian, normal);
   }
@@ -870,7 +876,6 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   // corner's model xy as pixels on screen (times the size and the
   // instance's scale), facing the camera; in front of everything within
   // its depth-test distance.
-  bool billboard = (r.flags & 16u) != 0u;
   if (billboard) {
     world = mul(m, float4(anchor.xyz, 1.0));
     out.relPosition = world.xyz;

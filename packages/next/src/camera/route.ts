@@ -15,12 +15,38 @@ export interface WarpScale {
 }
 
 /**
+ * The marker of a warp that scales heights above a reference ellipsoid
+ * (plan §13.26, increment 4): `forward(p) = p + (factor − 1)·h·n̂`, with `h`
+ * the geodetic height of `p` above the ellipsoid and `n̂` its normal there,
+ * so a point keeps its longitude and latitude and its height becomes
+ * `factor · h`. At warp scale `s` (`Warp.scale`) the factor in force is
+ * `1 + s·(factor − 1)`. Terrain, whose vertices are (u, v, h) on that
+ * ellipsoid, is exaggerated exactly from it: a vertex attribute `h·n̂`
+ * times a weight, with no fit.
+ */
+export interface HeightScale {
+  readonly kind: "heightScale";
+  /** The reference ellipsoid's radii (x, y, z), m: a sphere's all equal. */
+  readonly radii: readonly [number, number, number];
+  /** What `forward` multiplies heights by (at warp scale 1). */
+  readonly factor: number;
+  /** The height that stays put, m above the ellipsoid (default 0): terrain is exact only for 0. */
+  readonly baseHeight?: number;
+}
+
+/**
  * A non-rigid edge of the frame graph: points in `from` (metres, its axes)
  * map to `to` by `forward`. A coordinate operation is a warp (where content
  * is); so is an application's vertical exaggeration (`presentation`: where
  * it's drawn, never where it is).
  */
 export interface Warp {
+  /**
+   * Declares the warp a vertical exaggeration (`HeightScale`): the engine may
+   * then take it exactly, in height, where content carries heights, instead
+   * of fitting it. Absent for any other warp.
+   */
+  readonly heightScale?: HeightScale;
   readonly from: FrameKey;
   readonly to: FrameKey;
   /** Changes how content is drawn, never where it is (exaggeration, not a reprojection). */
@@ -262,6 +288,7 @@ function mapScales(
         to: w.to,
         presentation: w.presentation,
         revision: w.revision,
+        ...(w.heightScale !== undefined && { heightScale: w.heightScale }),
         ...(w.domain !== undefined && { domain: w.domain }),
         ...(w.accuracy !== undefined && { accuracy: w.accuracy }),
         ...(w.description !== undefined && { description: w.description }),
