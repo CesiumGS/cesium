@@ -74,6 +74,18 @@ export const EXAMPLES: ExampleInfo[] = [
       import("./brep-first-look/main.ts?raw").then((m) => m.default),
   },
   {
+    id: "csg",
+    title: "Solid modeling with CSG",
+    description:
+      "A small CAD tool whose interface is a tree of primitives and booleans, evaluated live by SMLib or Open CASCADE in WebAssembly workers and drawn as B-reps on the GPU. Edit a parameter and the solid re-evaluates as you drag; pick a face to find the node that made it, or select a node to see its faces.",
+    labels: ["B-reps", "CAD", "CSG"],
+    globe: false,
+    layout: "side",
+    stackNarrow: true,
+    load: () => import("./csg/main.ts"),
+    source: () => import("./csg/main.ts?raw").then((m) => m.default),
+  },
+  {
     id: "frames-explorer",
     title: "Frames and projections",
     description:

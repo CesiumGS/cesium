@@ -21,6 +21,7 @@
 import { BrepBuilder } from "./build.ts";
 import type { BrepForm } from "./form.ts";
 import { windLoop, type CurveUse } from "./loops.ts";
+import type { Placement } from "./kernelProtocol.ts";
 import {
   approximateCubic,
   reverseNurbsCurve,
@@ -142,6 +143,24 @@ export interface OcctModule {
   BRepPrimAPI_MakeCylinder: Ctor<Deletable & { Shape(): Shape }>;
   BRepPrimAPI_MakeSphere: Ctor<Deletable & { Shape(): Shape }>;
   BRepPrimAPI_MakeTorus: Ctor<Deletable & { Shape(): Shape }>;
+  BRepPrimAPI_MakeRevol: Ctor<
+    Deletable & { IsDone(): boolean; Shape(): Shape }
+  >;
+  BRepBuilderAPI_MakeEdge: Ctor<Deletable & { Edge(): Shape }>;
+  BRepBuilderAPI_MakeWire: Ctor<Deletable & { Wire(): Shape }>;
+  BRepBuilderAPI_MakeFace: Ctor<Deletable & { Face(): Shape }>;
+  BRepBuilderAPI_Transform: Ctor<
+    Deletable & { IsDone(): boolean; Shape(): Shape }
+  >;
+  gp_Ax1: Ctor<Deletable>;
+  gp_Vec: Ctor<Deletable>;
+  gp_Trsf: Ctor<
+    Deletable & {
+      SetRotation(axis: Deletable, angle: number): void;
+      SetTranslationPart(offset: Deletable): void;
+      Multiply(other: Deletable): void;
+    }
+  >;
   BRepAlgoAPI_Cut: Ctor<BooleanOp>;
   BRepAlgoAPI_Fuse: Ctor<BooleanOp>;
   BRepAlgoAPI_Common: Ctor<BooleanOp>;
@@ -964,6 +983,122 @@ export class OcctKernel {
           ...([this.upAt(keep, centre), major, minor] as never[]),
         ),
     );
+  }
+
+  /**
+   * A cone or frustum up z from the centre of its base, m: the revolution of
+   * its profile about z (this build has no cone maker), whose side is an
+   * analytic cone. A top radius of 0 is a point.
+   */
+  cone(
+    base: ArrayLike<number>,
+    radiusBase: number,
+    radiusTop: number,
+    height: number,
+  ): OcctSolid {
+    const [x, y, z] = [base[0]!, base[1]!, base[2]!];
+    return withScope((keep) => {
+      const corners = [
+        this.point(keep, [x, y, z]),
+        this.point(keep, [x + radiusBase, y, z]),
+        ...(radiusTop > 0
+          ? [this.point(keep, [x + radiusTop, y, z + height])]
+          : []),
+        this.point(keep, [x, y, z + height]),
+      ];
+      const edges = corners.map((from, i) =>
+        keep(
+          keep(
+            new this.oc.BRepBuilderAPI_MakeEdge(
+              ...([from, corners[(i + 1) % corners.length]] as never[]),
+            ),
+          ).Edge(),
+        ),
+      );
+      const wire = keep(
+        keep(new this.oc.BRepBuilderAPI_MakeWire(...(edges as never[]))).Wire(),
+      );
+      const profile = keep(
+        keep(
+          new this.oc.BRepBuilderAPI_MakeFace(...([wire, false] as never[])),
+        ).Face(),
+      );
+      const dir = keep(new this.oc.gp_Dir(...([0, 0, 1] as never[])));
+      const axis = keep(
+        new this.oc.gp_Ax1(...([this.point(keep, [x, y, z]), dir] as never[])),
+      );
+      const revolution = keep(
+        new this.oc.BRepPrimAPI_MakeRevol(
+          ...([profile, axis, true] as never[]),
+        ),
+      );
+      if (!revolution.IsDone()) {
+        throw new Error("OCCT: cone failed");
+      }
+      return new OcctSolid(revolution.Shape());
+    });
+  }
+
+  /**
+   * The solid turned about the world's x, then y, then z axes (degrees,
+   * through the origin) and moved by `translate`, as a new solid; the one
+   * given is deleted. Place a solid before tagging it: its tags name faces of
+   * the shape it was.
+   */
+  place(solid: OcctSolid, placement: Placement): OcctSolid {
+    const { rotate = [0, 0, 0], translate = [0, 0, 0] } = placement;
+    if (rotate.every((a) => a === 0) && translate.every((t) => t === 0)) {
+      return solid;
+    }
+    try {
+      return withScope((keep) => {
+        const trsf = keep(new this.oc.gp_Trsf());
+        // z·y·x: a point turns about x first. `Multiply` composes on the right.
+        let first = true;
+        for (const axis of [2, 1, 0]) {
+          const angle = (rotate[axis]! * Math.PI) / 180;
+          if (angle === 0) {
+            continue;
+          }
+          const unit = [0, 0, 0];
+          unit[axis] = 1;
+          const turn = first ? trsf : keep(new this.oc.gp_Trsf());
+          turn.SetRotation(
+            keep(
+              new this.oc.gp_Ax1(
+                ...([
+                  this.point(keep, [0, 0, 0]),
+                  keep(new this.oc.gp_Dir(...(unit as never[]))),
+                ] as never[]),
+              ),
+            ),
+            angle,
+          );
+          if (!first) {
+            trsf.Multiply(turn);
+          }
+          first = false;
+        }
+        trsf.SetTranslationPart(
+          keep(
+            new this.oc.gp_Vec(
+              ...([translate[0], translate[1], translate[2]] as never[]),
+            ),
+          ),
+        );
+        const moved = keep(
+          new this.oc.BRepBuilderAPI_Transform(
+            ...([solid.shape, trsf, true, false] as never[]),
+          ),
+        );
+        if (!moved.IsDone()) {
+          throw new Error("OCCT: place failed");
+        }
+        return new OcctSolid(moved.Shape());
+      });
+    } finally {
+      solid.delete();
+    }
   }
 
   /**

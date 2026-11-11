@@ -18,9 +18,48 @@ export type Primitive =
   | { kind: "box"; origin: Vec3; size: Vec3 }
   | { kind: "cylinder"; base: Vec3; radius: number; height: number }
   | { kind: "sphere"; centre: Vec3; radius: number }
+  | {
+      /** A frustum up z from the centre of its base; a top radius of 0 is a cone. */
+      kind: "cone";
+      base: Vec3;
+      radiusBase: number;
+      radiusTop: number;
+      height: number;
+    }
   | { kind: "torus"; centre: Vec3; major: number; minor: number };
 
+/**
+ * A rigid placement, applied after a primitive is made: a turn about the
+ * world's x, then y, then z axes through the origin, then a move. Degrees
+ * and m.
+ */
+export interface Placement {
+  rotate?: Vec3;
+  translate?: Vec3;
+}
+
 export type BooleanOperation = "union" | "difference" | "intersection";
+
+/**
+ * A solid as a tree of primitives and booleans (the CSG sample's model, as
+ * data). A leaf's `tag` is a positive integer, unique in the tree: the faces
+ * it makes carry it through every boolean above it, so a result's `faceTags`
+ * name the leaf each face came from. A node folds its operands left to right:
+ * a union or intersection of all of them, a difference of the first minus the
+ * rest. A node with one operand is that operand; with none it is an error.
+ */
+export type SolidRecipe =
+  | {
+      type: "primitive";
+      tag: number;
+      primitive: Primitive;
+      placement?: Placement;
+    }
+  | {
+      type: "boolean";
+      operation: BooleanOperation;
+      operands: SolidRecipe[];
+    };
 
 /** A form with what the worker measured of it, so the page needn't. */
 export interface KernelForm {
@@ -40,6 +79,9 @@ export interface KernelForm {
    * `prepared`, so the page's thread doesn't do that work. Cloned, not moved.
    */
   readonly patches?: GpuPatches;
+  /** How long the worker spent on `validateBrep` and on `prepareGpuPatches`, ms, where it ran them. */
+  readonly validateMs?: number;
+  readonly prepareMs?: number;
 }
 
 /** What a request may ask of the worker for each form it returns. */
@@ -66,6 +108,12 @@ export type KernelRequest =
       a: Primitive;
       b: Primitive;
     } & FormWork)
+  | ({
+      type: "evaluate";
+      id: number;
+      kernel: KernelName;
+      recipe: SolidRecipe;
+    } & FormWork)
   | { type: "cancel"; id: number };
 
 /** Worker to page. */
@@ -91,10 +139,58 @@ export type KernelReply =
       booleanMs: number;
       convertMs: number;
     }
+  | {
+      type: "evaluated";
+      id: number;
+      /** Its `faceTags` are the recipe's leaf tags. */
+      result: KernelForm;
+      loadMs: number;
+      /** Making the primitives, placing them and every boolean, in the kernel. */
+      kernelMs: number;
+      /** The booleans among them. */
+      booleans: number;
+      convertMs: number;
+    }
   | { type: "cancelled"; id: number }
   | { type: "error"; id: number; message: string };
 
 type TypedArray = ArrayBufferView & { readonly buffer: ArrayBufferLike };
+
+/** The leaves of a recipe, left to right. */
+export function recipeLeaves(
+  recipe: SolidRecipe,
+): Extract<SolidRecipe, { type: "primitive" }>[] {
+  return recipe.type === "primitive"
+    ? [recipe]
+    : recipe.operands.flatMap(recipeLeaves);
+}
+
+/** How many booleans a recipe makes (a node of n operands makes n - 1). */
+export function countBooleans(recipe: SolidRecipe): number {
+  return recipe.type === "primitive"
+    ? 0
+    : Math.max(0, recipe.operands.length - 1) +
+        recipe.operands.reduce((n, operand) => n + countBooleans(operand), 0);
+}
+
+/** Throws unless every node has an operand and every leaf a positive integer tag, none repeated. */
+export function checkRecipe(recipe: SolidRecipe): void {
+  const seen = new Set<number>();
+  const visit = (node: SolidRecipe): void => {
+    if (node.type === "primitive") {
+      if (!Number.isInteger(node.tag) || node.tag < 1 || seen.has(node.tag)) {
+        throw new Error(`the recipe's leaf tag ${node.tag} isn't unique`);
+      }
+      seen.add(node.tag);
+      return;
+    }
+    if (node.operands.length === 0) {
+      throw new Error(`the recipe's ${node.operation} has no operands`);
+    }
+    node.operands.forEach(visit);
+  };
+  visit(recipe);
+}
 
 /**
  * A copy of the form that owns its buffers, and the buffers to transfer. A

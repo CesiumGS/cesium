@@ -316,6 +316,21 @@ EMSCRIPTEN_KEEPALIVE int smlib_translate(SmBrep* brep, double dx, double dy,
   });
 }
 
+/** Turns the brep in place about the axis through (px, py, pz) along (ax, ay, az), by degrees. Returns 1 on success. */
+EMSCRIPTEN_KEEPALIVE int smlib_rotate(SmBrep* brep, double px, double py,
+                                      double pz, double ax, double ay,
+                                      double az, double degrees) {
+  return guarded([&] {
+    if (!brep) {
+      gStatus = kInvalid;
+      return 0;
+    }
+    gStatus = SmApiRotate(brep, SmVector3d(px, py, pz), SmVector3d(ax, ay, az),
+                          degrees);
+    return gStatus == SM_SUCCESS ? 1 : 0;
+  });
+}
+
 /**
  * A boolean of `a` and `b`: 0 union, 1 difference (a - b), 2 intersection.
  * On success it returns `a`, changed in place, and `b` is deleted. On failure

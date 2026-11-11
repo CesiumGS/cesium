@@ -12,6 +12,7 @@
 import { BrepBuilder, type SurfaceIdentity } from "./build.ts";
 import { SurfaceKind, type BrepForm } from "./form.ts";
 import { windLoop, type CurveUse } from "./loops.ts";
+import type { Placement } from "./kernelProtocol.ts";
 import {
   reverseNurbsCurve,
   trimNurbsCurve,
@@ -290,6 +291,16 @@ export interface SmlibModule {
     minor: number,
   ): number;
   _smlib_translate(brep: number, dx: number, dy: number, dz: number): number;
+  _smlib_rotate(
+    brep: number,
+    px: number,
+    py: number,
+    pz: number,
+    ax: number,
+    ay: number,
+    az: number,
+    degrees: number,
+  ): number;
   _smlib_boolean(operation: number, a: number, b: number): number;
   _smlib_brep_delete(brep: number): void;
   _smlib_brep_face_count(brep: number): number;
@@ -429,6 +440,49 @@ export class SmlibKernel {
     ) {
       this.fail("translate");
     }
+  }
+
+  /** Turns the solid in place about the axis through `point` along `axis`, by `degrees`. */
+  rotate(
+    solid: SmlibSolid,
+    point: ArrayLike<number>,
+    axis: ArrayLike<number>,
+    degrees: number,
+  ): void {
+    if (
+      !this.module._smlib_rotate(
+        solid.pointer,
+        point[0]!,
+        point[1]!,
+        point[2]!,
+        axis[0]!,
+        axis[1]!,
+        axis[2]!,
+        degrees,
+      )
+    ) {
+      this.fail("rotate");
+    }
+  }
+
+  /**
+   * Turns the solid in place about the world's x, then y, then z axes
+   * (degrees, through the origin) and moves it by `translate`. Returns it.
+   */
+  place(solid: SmlibSolid, placement: Placement): SmlibSolid {
+    const { rotate = [0, 0, 0], translate = [0, 0, 0] } = placement;
+    const origin = [0, 0, 0];
+    for (const axis of [0, 1, 2]) {
+      if (rotate[axis] !== 0) {
+        const unit = [0, 0, 0];
+        unit[axis] = 1;
+        this.rotate(solid, origin, unit, rotate[axis]!);
+      }
+    }
+    if (translate.some((t) => t !== 0)) {
+      this.translate(solid, translate);
+    }
+    return solid;
   }
 
   /**

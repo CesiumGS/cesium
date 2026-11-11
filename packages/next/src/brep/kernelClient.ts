@@ -15,6 +15,7 @@ import type {
   KernelReply,
   KernelRequest,
   Primitive,
+  SolidRecipe,
 } from "./kernelProtocol.ts";
 
 /** What a client needs of a worker: a Web Worker has it. */
@@ -66,6 +67,15 @@ export interface BooleanResult {
   result: KernelForm;
   loadMs: number;
   booleanMs: number;
+  convertMs: number;
+}
+
+export interface EvaluateResult {
+  result: KernelForm;
+  loadMs: number;
+  /** Primitives, placements and booleans, in the kernel. */
+  kernelMs: number;
+  booleans: number;
   convertMs: number;
 }
 
@@ -153,6 +163,34 @@ export class KernelClient {
     }
     const { result, loadMs, booleanMs, convertMs } = reply;
     return { result, loadMs, booleanMs, convertMs };
+  }
+
+  /**
+   * A tree of primitives and booleans made in a kernel and converted to the
+   * render form: its `faceTags` are the recipe's leaf tags, so each face says
+   * which leaf made it. Supersedes the call still pending on this client.
+   */
+  async evaluate(
+    kernel: KernelName,
+    recipe: SolidRecipe,
+    options: CallOptions = {},
+  ): Promise<EvaluateResult> {
+    const reply = await this.send(
+      (id) => ({
+        type: "evaluate",
+        id,
+        kernel,
+        recipe,
+        validate: options.validate ?? false,
+        prepare: options.prepare ?? false,
+      }),
+      { supersedable: true, onStage: options.onStage },
+    );
+    if (reply.type !== "evaluated") {
+      throw new Error(`unexpected reply ${reply.type}`);
+    }
+    const { result, loadMs, kernelMs, booleans, convertMs } = reply;
+    return { result, loadMs, kernelMs, booleans, convertMs };
   }
 
   /** Ends the worker; pending calls reject with `KernelCancelled`. */

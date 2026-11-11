@@ -12,6 +12,8 @@ import { formBounds } from "./formBounds.ts";
 import type { BrepForm } from "./form.ts";
 import { prepareGpuPatches, type GpuPatches } from "./gpuPatches.ts";
 import {
+  checkRecipe,
+  countBooleans,
   transferable,
   type BooleanOperation,
   type FormWork,
@@ -19,7 +21,9 @@ import {
   type KernelName,
   type KernelReply,
   type KernelRequest,
+  type Placement,
   type Primitive,
+  type SolidRecipe,
 } from "./kernelProtocol.ts";
 import { OcctKernel, type OcctSolid } from "./occt.ts";
 import { SmlibKernel, type SmlibSolid } from "./smlib.ts";
@@ -30,6 +34,12 @@ interface Primitives<S> {
   box(origin: ArrayLike<number>, size: ArrayLike<number>): S;
   cylinder(base: ArrayLike<number>, radius: number, height: number): S;
   sphere(centre: ArrayLike<number>, radius: number): S;
+  cone(
+    base: ArrayLike<number>,
+    radiusBase: number,
+    radiusTop: number,
+    height: number,
+  ): S;
   torus(centre: ArrayLike<number>, major: number, minor: number): S;
 }
 
@@ -41,9 +51,53 @@ function makePrimitive<S>(kernel: Primitives<S>, p: Primitive): S {
       return kernel.cylinder(p.base, p.radius, p.height);
     case "sphere":
       return kernel.sphere(p.centre, p.radius);
+    case "cone":
+      return kernel.cone(p.base, p.radiusBase, p.radiusTop, p.height);
     case "torus":
       return kernel.torus(p.centre, p.major, p.minor);
   }
+}
+
+/** What evaluating a recipe needs of a kernel, the same for both. Solids are `delete`d idempotently. */
+interface Evaluator<S extends { delete(): void }> {
+  primitives: Primitives<S>;
+  place(solid: S, placement: Placement): S;
+  tag(solid: S, tag: number): S;
+  /** Combines two solids into one, taking both (each is deleted or consumed). */
+  combine(operation: BooleanOperation, a: S, b: S): S;
+  toForm(solid: S): { form: BrepForm; faceTags: Int32Array };
+}
+
+function smlibEvaluator(kernel: SmlibKernel): Evaluator<SmlibSolid> {
+  return {
+    primitives: kernel,
+    place: (solid, placement) => kernel.place(solid, placement),
+    tag: (solid, tag) => {
+      kernel.tag(solid, tag);
+      return solid;
+    },
+    // Changes `a` in place and consumes `b`.
+    combine: (operation, a, b) => kernel.boolean(operation, a, b),
+    toForm: (solid) => kernel.toForm(solid),
+  };
+}
+
+function occtEvaluator(kernel: OcctKernel): Evaluator<OcctSolid> {
+  return {
+    primitives: kernel,
+    place: (solid, placement) => kernel.place(solid, placement),
+    tag: (solid, tag) => kernel.tag(solid, tag),
+    // Makes a new solid and leaves its operands, which are freed here.
+    combine: (operation, a, b) => {
+      try {
+        return kernel.boolean(operation, a, b);
+      } finally {
+        a.delete();
+        b.delete();
+      }
+    },
+    toForm: (solid) => kernel.toForm(solid),
+  };
 }
 
 /** Thrown at a stage when the request was cancelled. */
@@ -179,6 +233,8 @@ export class KernelHost {
       }
       case "importStep":
         return this.importStep(id, request.bytes, request);
+      case "evaluate":
+        return this.evaluate(id, request.kernel, request.recipe, request);
       case "boolean":
         return this.boolean(
           id,
@@ -204,19 +260,27 @@ export class KernelHost {
   ): Promise<KernelForm[]> {
     const parts = forms.map((form) => ({ form, bounds: formBounds(form) }));
     let problems: BrepProblem[][] | undefined;
+    let validateMs: number | undefined;
     if (work.validate) {
       await this.stage(id, "Checking the form…");
+      const start = performance.now();
       problems = forms.map((form) => validateBrep(form));
+      validateMs = performance.now() - start;
     }
     let patches: GpuPatches[] | undefined;
+    let prepareMs: number | undefined;
     if (work.prepare) {
       await this.stage(id, "Preparing faces for the GPU…");
+      const start = performance.now();
       patches = forms.map((form) => prepareGpuPatches(form));
+      prepareMs = performance.now() - start;
     }
     return parts.map((part, i) => ({
       ...part,
       ...(problems ? { problems: problems[i]! } : {}),
       ...(patches ? { patches: patches[i]! } : {}),
+      ...(validateMs !== undefined ? { validateMs } : {}),
+      ...(prepareMs !== undefined ? { prepareMs } : {}),
       ...(faceTags ? { faceTags } : {}),
     }));
   }
@@ -252,6 +316,120 @@ export class KernelHost {
       // The forms are their own copy; the solids are the host's to free.
       solids.forEach((solid) => solid.delete());
     }
+  }
+
+  private async evaluate(
+    id: number,
+    kernel: KernelName,
+    recipe: SolidRecipe,
+    work: FormWork,
+  ): Promise<void> {
+    checkRecipe(recipe);
+    const loadMs = await this.ensure(id, kernel);
+    if (kernel === "smlib") {
+      return this.evaluateWith(
+        id,
+        kernel,
+        smlibEvaluator(await this.loadSmlib()),
+        recipe,
+        work,
+        loadMs,
+      );
+    }
+    return this.evaluateWith(
+      id,
+      kernel,
+      occtEvaluator(await this.loadOcct()),
+      recipe,
+      work,
+      loadMs,
+    );
+  }
+
+  /** Builds the recipe's tree in the kernel, one stage per boolean (where a cancel stops it, freeing what it holds), and converts the result. */
+  private async evaluateWith<S extends { delete(): void }>(
+    id: number,
+    kernel: KernelName,
+    evaluator: Evaluator<S>,
+    recipe: SolidRecipe,
+    work: FormWork,
+    loadMs: number,
+  ): Promise<void> {
+    const booleans = countBooleans(recipe);
+    let kernelMs = 0;
+    let done = 0;
+    const timed = <T>(fn: () => T): T => {
+      const start = performance.now();
+      try {
+        return fn();
+      } finally {
+        kernelMs += performance.now() - start;
+      }
+    };
+    const build = async (node: SolidRecipe): Promise<S> => {
+      if (node.type === "primitive") {
+        return timed(() => {
+          let solid = makePrimitive(evaluator.primitives, node.primitive);
+          try {
+            if (node.placement) {
+              solid = evaluator.place(solid, node.placement);
+            }
+            return evaluator.tag(solid, node.tag);
+          } catch (error) {
+            solid.delete();
+            throw error;
+          }
+        });
+      }
+      const parts: S[] = [];
+      let acc: S | undefined;
+      try {
+        for (const operand of node.operands) {
+          parts.push(await build(operand));
+        }
+        let combined: S = parts[0]!;
+        acc = combined;
+        for (const next of parts.slice(1)) {
+          done++;
+          await this.stage(
+            id,
+            `${NAMES[kernel]}: ${node.operation} (${done} of ${booleans})…`,
+          );
+          const left: S = combined;
+          combined = timed(() => evaluator.combine(node.operation, left, next));
+          acc = combined;
+        }
+        return combined;
+      } catch (error) {
+        acc?.delete();
+        parts.forEach((part) => part.delete());
+        throw error;
+      }
+    };
+    let brep: { form: BrepForm; faceTags: Int32Array };
+    let convertMs: number;
+    const solid = await build(recipe);
+    try {
+      const start = performance.now();
+      brep = evaluator.toForm(solid);
+      convertMs = performance.now() - start;
+    } finally {
+      solid.delete();
+    }
+    const [result] = await this.measured(id, [brep.form], work, brep.faceTags);
+    const { forms, buffers } = transferable([result!]);
+    this.options.post(
+      {
+        type: "evaluated",
+        id,
+        result: forms[0]!,
+        loadMs,
+        kernelMs,
+        booleans,
+        convertMs,
+      },
+      buffers,
+    );
   }
 
   private async boolean(
