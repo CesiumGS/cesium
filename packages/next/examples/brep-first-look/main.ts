@@ -47,13 +47,17 @@ import {
   type DisplayMode,
   type LineMesh,
 } from "./meshes.ts";
+import { smlibSolids } from "./smlib.ts";
 
 /**
  * B-reps, a first look: nine exact CAD shapes held as B-reps (a box, a capped
  * cylinder, a trimmed NURBS face, a sphere, a torus, a cone frustum, a plate
  * with bolt holes, a filleted block with a hole, and the box again through the
  * draft `BENTLEY_brep` glTF extension) on a 3 x 3 grid, tessellated on the
- * CPU for now.
+ * CPU for now. A fourth column holds three booleans (a box minus a cylinder,
+ * and a box and a sphere united and intersected) made live by SMLib in
+ * WebAssembly and converted to the render form, the CSG spike (plan
+ * §13.33); a picked face of one says which input it came from.
  *
  * A toolbar over the view switches the display mode (keys 1 to 4): shaded,
  * shaded + wireframe, flat + wireframe, wireframe. The panel's analysis views
@@ -96,6 +100,8 @@ interface Shape {
   doubleSided: boolean;
   /** Said in the panel: where the form came from. */
   note?: string;
+  /** Per face: the input of a boolean it came from, said when it's picked. */
+  faceSources?: readonly string[];
 }
 
 /** What one shape's tessellation gives, and what the display modes make of it. */
@@ -405,11 +411,16 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   if (signal.aborted) {
     return () => undefined;
   }
+  const solids = await smlibSolids();
+  if (signal.aborted) {
+    return () => undefined;
+  }
   // A 3 × 3 grid on the ground, 4 m between the middles, the first shape at
-  // the top left (north-west) and rows running south. Each shape is drawn at
-  // a scale that makes them read together.
+  // the top left (north-west) and rows running south, and a fourth column on
+  // the right for SMLib's booleans. Each shape is drawn at a scale that makes
+  // them read together.
   const ROWS = ["top", "middle", "bottom"];
-  const COLUMNS = ["left", "middle", "right"];
+  const COLUMNS = ["left", "centre left", "centre right", "right"];
   const entries: Array<Omit<Shape, "x" | "y" | "place">> = [
     { name: "Box", form: box, scale: 0.55, doubleSided: false },
     {
@@ -455,16 +466,19 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       note: gltfNote,
     });
   }
-  const shapes: Shape[] = entries.map((entry, i) => {
-    const row = Math.floor(i / 3);
-    const column = i % 3;
-    return {
-      ...entry,
-      x: (column - 1) * SPACING,
-      y: (1 - row) * SPACING,
-      place: `${ROWS[row]} row, ${COLUMNS[column]}`,
-    };
-  });
+  const shapes: Shape[] = [
+    ...entries.map((entry, i) => ({
+      entry,
+      row: Math.floor(i / 3),
+      column: i % 3,
+    })),
+    ...solids.shapes.map((entry, i) => ({ entry, row: i, column: 3 })),
+  ].map(({ entry, row, column }) => ({
+    ...entry,
+    x: (column - 1.5) * SPACING,
+    y: (1 - row) * SPACING,
+    place: `${ROWS[row]} row, ${COLUMNS[column]}`,
+  }));
 
   // ------------------------------------------------------------ the scene
   const ellipsoid = Ellipsoid.WGS84;
@@ -869,11 +883,11 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   tessellate();
   build();
 
-  // The row's middle, Earth-fixed.
+  // The grid's middle, Earth-fixed.
   viewer.zoomTo(
     {
       center: vec3.add(vec3.vec3(), origin, vec3.vec3(0, 0, 0.6)),
-      radius: 6.8,
+      radius: 8.4,
     },
     0,
     -42 * DEG,
@@ -1111,6 +1125,9 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     }
     validity.append(item);
   });
+  if (solids.problem) {
+    validity.append(el("li", {}, el("small", {}, solids.problem)));
+  }
 
   const picked = el("div", { className: "bf-selection" });
 
@@ -1221,6 +1238,13 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         "Surface",
         KIND_NAMES[form.surfaceKind[form.faceSurface[sel.index]!]!] ?? "?",
       ),
+      ...(sel.shape.faceSources
+        ? row(
+            "Made from",
+            `${sel.shape.faceSources[sel.index] ?? "?"} `,
+            el("small", {}, "SMLib's face tags, through the boolean"),
+          )
+        : []),
       ...row(
         "Area",
         `${num(faceArea(prep.mesh, sel.index))} m² `,

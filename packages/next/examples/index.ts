@@ -62,7 +62,7 @@ export const EXAMPLES: ExampleInfo[] = [
     id: "brep-first-look",
     title: "B-reps: a first look",
     description:
-      "Nine exact CAD shapes as B-reps (a box, a sphere, a torus, a plate with bolt holes, a filleted block and more), tessellated on the CPU for now. Switch display modes, colour by surface kind, draw iso lines and normals, and pick a face for its exact point on the surface.",
+      "Nine exact CAD shapes as B-reps (a box, a sphere, a torus, a plate with bolt holes, a filleted block and more), and three booleans made live by SMLib in WebAssembly, tessellated on the CPU for now. Switch display modes, colour by surface kind, draw iso lines and normals, and pick a face for its exact point on the surface, or for which input of a boolean it came from.",
     labels: ["B-reps", "CAD"],
     globe: false,
     layout: "side",
