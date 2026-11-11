@@ -1,7 +1,7 @@
 {
   "name": "@cesium/sandcastle",
   "private": true,
-  "version": "0.5.1",
+  "version": "0.5.2",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -27,7 +27,7 @@
     "fastest-levenshtein": "^1.0.16",
     "monaco-editor": "^0.52.2",
     "pako": "^3.0.0",
-    "prettier": "3.9.9",
+    "prettier": "3.9.10",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-markdown": "^10.1.0",
@@ -44,7 +44,7 @@
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.1",
     "pagefind": "^1.3.0",
-    "vite": "8.0.16",
+    "vite": "8.3.5",
     "vite-plugin-static-copy": "^4.1.0",
     "yaml": "^2.9.0"
   },

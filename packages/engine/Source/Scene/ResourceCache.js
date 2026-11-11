@@ -17,13 +17,19 @@ import ResourceCacheStatistics from "./ResourceCacheStatistics.js";
  *
  * @namespace ResourceCache
  *
- * @private
+ * @internal
  */
 function ResourceCache() {}
 
 ResourceCache.cacheEntries = {};
 
-// Statistics about binary data stored in the resource cache
+/**
+ * Statistics about binary data stored in the resource cache.
+ *
+ * @type {ResourceCacheStatistics}
+ *
+ * @internal
+ */
 ResourceCache.statistics = new ResourceCacheStatistics();
 
 /**

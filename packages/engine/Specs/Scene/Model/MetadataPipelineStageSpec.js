@@ -6,7 +6,6 @@ import {
   defined,
 } from "@cesium/core";
 import {
-  ContextLimits,
   GltfLoader,
   MetadataPipelineStage,
   ModelStatistics,
@@ -36,8 +35,6 @@ describe(
       "./Data/Models/glTF-2.0/PropertyTextureWith32BitTypes/glTF/PropertyTextureWith32BitTypes.gltf";
     const boxTexturedBinary =
       "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
-    const buildingsMetadata =
-      "./Data/Models/glTF-2.0/BuildingsMetadata/glTF/buildings-metadata.gltf";
     const tilesetWithMetadataStatistics =
       "./Data/Cesium3DTiles/Metadata/PropertyAttributesPointCloud/tileset.json";
 
@@ -82,32 +79,50 @@ describe(
       return gltfLoader;
     }
 
-    function mockRenderResources(components) {
+    function mockRenderResources(components, options) {
       return {
         shaderBuilder: new ShaderBuilder(),
         model: {
           statistics: new ModelStatistics(),
           structuralMetadata: components.structuralMetadata,
-          customShader: mockCustomShader(components.structuralMetadata),
+          customShader: mockCustomShader(
+            components.structuralMetadata,
+            options,
+          ),
         },
         uniformMap: {},
       };
     }
 
     // The MetadataPipelineStage only adds metadata properties to the shader that are
-    // in use (e.g. by a custom shader, or a point cloud style). This mock adds all
-    // properties in the structural metadata to a mock custom shader.
-    function mockCustomShader(structuralMetadata) {
+    // in use (e.g. by a custom shader, or a point cloud style), and only emits the
+    // metadataClass and metadataStatistics entries a custom shader reads. This mock
+    // adds all properties in the structural metadata to a mock custom shader, reading
+    // their value, class and statistics unless options.metadataOnly is true.
+    function mockCustomShader(structuralMetadata, options) {
       if (!defined(structuralMetadata)) {
         return undefined;
       }
 
+      const metadataOnly = options?.metadataOnly ?? false;
       const vertexShaderLines = [];
       const fragmentShaderLines = [];
+      const shaderLines = (input, propertyName, glslType, index) => {
+        const lines = [
+          `\t${glslType} value${index} = ${input}.metadata.${propertyName};`,
+        ];
+        if (!metadataOnly) {
+          lines.push(
+            `\t${glslType} class${index} = ${input}.metadataClass.${propertyName}.noData;`,
+            `\tfloat statistic${index} = ${input}.metadataStatistics.${propertyName}.mean;`,
+          );
+        }
+        return lines;
+      };
       const fragmentShaderLineTemplate = (propertyName, glslType, index) =>
-        `\t${glslType} value${index} = fsInput.metadata.${propertyName};`;
+        shaderLines("fsInput", propertyName, glslType, index).join("\n");
       const vertexShaderLineTemplate = (propertyName, glslType, index) =>
-        `\t${glslType} value${index} = vsInput.metadata.${propertyName};`;
+        shaderLines("vsInput", propertyName, glslType, index).join("\n");
 
       const propertyAttributes = structuralMetadata.propertyAttributes;
       const propertyTextures = structuralMetadata.propertyTextures;
@@ -383,109 +398,6 @@ describe(
           expect(uniformMap.u_poloidalAngle_scale()).toBe(0.3306939635357677);
         },
       );
-    });
-
-    function expectFragmentInitializeMetadataLine(shaderBuilder, regex) {
-      const func =
-        shaderBuilder._functions[
-          MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS
-        ];
-      const matching = func.body.filter((line) => regex.test(line));
-      expect(matching.length)
-        .withContext(`no line matching ${regex} in ${func.body.join("\n")}`)
-        .toBe(1);
-    }
-
-    it("Adds property tables to the shader", function () {
-      return loadGltf(buildingsMetadata).then(function (gltfLoader) {
-        const components = gltfLoader.components;
-        const node = components.nodes[1];
-        const primitive = node.primitives[0];
-        const frameState = scene.frameState;
-        const renderResources = mockRenderResources(components);
-
-        MetadataPipelineStage.process(renderResources, primitive, frameState);
-
-        const shaderBuilder = renderResources.shaderBuilder;
-        const propertyTable = components.structuralMetadata.getPropertyTable(0);
-        expect(propertyTable.texture).toBeDefined();
-        expect(propertyTable.texture.width).toBe(10);
-        expect(renderResources.uniformMap.u_propertyTableTexture_0()).toBe(
-          propertyTable.texture,
-        );
-
-        ShaderBuilderTester.expectHasFragmentStruct(
-          shaderBuilder,
-          MetadataPipelineStage.STRUCT_ID_METADATA_FS,
-          MetadataPipelineStage.STRUCT_NAME_METADATA,
-          [
-            "    float height;",
-            "    int id;",
-            "    int employeeCount;",
-            "    float temperatureCelsius;",
-          ],
-        );
-
-        // One texel per feature: texel (featureId, propertyIndex), with the
-        // STRING property "year" skipped in the index.
-        expectFragmentInitializeMetadataLine(
-          shaderBuilder,
-          /height_rawChannels = texelFetch\(u_propertyTableTexture_0, ivec2\(featureIds\.featureId_\d+, 0\), 0\);/,
-        );
-        expectFragmentInitializeMetadataLine(
-          shaderBuilder,
-          /id_rawChannels = texelFetch\(u_propertyTableTexture_0, ivec2\(featureIds\.featureId_\d+, 1\), 0\);/,
-        );
-        expectFragmentInitializeMetadataLine(
-          shaderBuilder,
-          /employeeCount_rawChannels = texelFetch\(u_propertyTableTexture_0, ivec2\(featureIds\.featureId_\d+, 2\), 0\);/,
-        );
-        expectFragmentInitializeMetadataLine(
-          shaderBuilder,
-          /temperatureCelsius_rawChannels = texelFetch\(u_propertyTableTexture_0, ivec2\(featureIds\.featureId_\d+, 3\), 0\);/,
-        );
-      });
-    });
-
-    it("Reads a property table wider than the maximum texture size from several rows per property", function () {
-      const maximumTextureSize = ContextLimits.maximumTextureSize;
-      // 10 features wrap onto 2 rows of 8 texels per property
-      ContextLimits._maximumTextureSize = 8;
-
-      return loadGltf(buildingsMetadata)
-        .then(function (gltfLoader) {
-          const components = gltfLoader.components;
-          const node = components.nodes[1];
-          const primitive = node.primitives[0];
-          const frameState = scene.frameState;
-          const renderResources = mockRenderResources(components);
-
-          MetadataPipelineStage.process(renderResources, primitive, frameState);
-
-          const shaderBuilder = renderResources.shaderBuilder;
-          const propertyTable =
-            components.structuralMetadata.getPropertyTable(0);
-          expect(propertyTable.texture).toBeDefined();
-          expect(propertyTable.texture.width).toBe(8);
-          expect(propertyTable.texture.height).toBe(8);
-
-          // texel (featureId % width, propertyIndex * rowsPerProperty + featureId / width)
-          expectFragmentInitializeMetadataLine(
-            shaderBuilder,
-            /height_rawChannels = texelFetch\(u_propertyTableTexture_0, ivec2\(featureIds\.(featureId_\d+) % 8, 0 \+ featureIds\.\1 \/ 8\), 0\);/,
-          );
-          expectFragmentInitializeMetadataLine(
-            shaderBuilder,
-            /id_rawChannels = texelFetch\(u_propertyTableTexture_0, ivec2\(featureIds\.(featureId_\d+) % 8, 2 \+ featureIds\.\1 \/ 8\), 0\);/,
-          );
-          expectFragmentInitializeMetadataLine(
-            shaderBuilder,
-            /temperatureCelsius_rawChannels = texelFetch\(u_propertyTableTexture_0, ivec2\(featureIds\.(featureId_\d+) % 8, 6 \+ featureIds\.\1 \/ 8\), 0\);/,
-          );
-        })
-        .finally(function () {
-          ContextLimits._maximumTextureSize = maximumTextureSize;
-        });
     });
 
     it("Adds property textures to the shader", function () {
@@ -782,6 +694,122 @@ describe(
           expect(uniformMap.u_valueTransformProperty_scale()).toEqual(
             new Cartesian2(2, 2),
           );
+        },
+      );
+    });
+
+    it("Omits metadataClass and metadataStatistics entries the custom shader does not read", function () {
+      if (!context.webgl2) {
+        return;
+      }
+
+      return loadGltf(propertyTextureWithVectorProperties).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const node = components.nodes[0];
+          const primitive = node.primitives[0];
+          const frameState = scene.frameState;
+          const renderResources = mockRenderResources(components, {
+            metadataOnly: true,
+          });
+
+          MetadataPipelineStage.process(renderResources, primitive, frameState);
+
+          const shaderBuilder = renderResources.shaderBuilder;
+
+          // The values are still read...
+          ShaderBuilderTester.expectHasFragmentStruct(
+            shaderBuilder,
+            MetadataPipelineStage.STRUCT_ID_METADATA_FS,
+            MetadataPipelineStage.STRUCT_NAME_METADATA,
+            [
+              "    vec2 vec2Property;",
+              "    uint uint8Property;",
+              "    uvec3 uint8vec3Property;",
+              "    vec3 arrayProperty;",
+              "    vec2 valueTransformProperty;",
+            ],
+          );
+
+          // ...but no class or statistics constants are baked into the shader,
+          // so models with different class definitions share one program.
+          ShaderBuilderTester.expectHasFragmentStruct(
+            shaderBuilder,
+            MetadataPipelineStage.STRUCT_ID_METADATA_CLASS_FS,
+            MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
+            [],
+          );
+          ShaderBuilderTester.expectHasFragmentStruct(
+            shaderBuilder,
+            MetadataPipelineStage.STRUCT_ID_METADATA_STATISTICS_FS,
+            MetadataPipelineStage.STRUCT_NAME_METADATA_STATISTICS,
+            [],
+          );
+          const initializeMetadata =
+            shaderBuilder._functions[
+              MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS
+            ];
+          const constantLines = initializeMetadata.body.filter((line) =>
+            /metadataClass\.|metadataStatistics\./.test(line),
+          );
+          expect(constantLines).toEqual([]);
+        },
+      );
+    });
+
+    it("Shares one shader program across models whose class definitions differ, unless the custom shader reads the class", function () {
+      if (!context.webgl2) {
+        return;
+      }
+
+      return loadGltf(propertyTextureWithVectorProperties).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const primitive = components.nodes[0].primitives[0];
+          const frameState = scene.frameState;
+          const classProperty =
+            components.structuralMetadata.propertyTextures[0].class.properties
+              .uint8vec3Property;
+
+          // Builds the primitive's shader program once per class range; the
+          // shader cache keys programs by generated source, so two builds that
+          // produce the same text return the same program.
+          function buildPrograms(options) {
+            const programs = [];
+            for (const max of [
+              [30, 17, 50],
+              [60, 34, 100],
+            ]) {
+              classProperty._max = max;
+              const renderResources = mockRenderResources(components, options);
+              MetadataPipelineStage.process(
+                renderResources,
+                primitive,
+                frameState,
+              );
+              programs.push(
+                renderResources.shaderBuilder.buildShaderProgram(context),
+              );
+            }
+            return programs;
+          }
+
+          const shaderCache = context.shaderCache;
+          const initialCount = shaderCache.numberOfShaders;
+
+          const shared = buildPrograms({ metadataOnly: true });
+          expect(shared[0]).toBe(shared[1]);
+          expect(shaderCache.numberOfShaders).toBe(initialCount + 1);
+
+          const distinct = buildPrograms({ metadataOnly: false });
+          expect(distinct[0]).not.toBe(distinct[1]);
+          expect(shaderCache.numberOfShaders).toBe(initialCount + 3);
+
+          for (const program of shared.concat(distinct)) {
+            program.destroy();
+          }
+          shaderCache.destroyReleasedShaderPrograms();
+          expect(shaderCache.numberOfShaders).toBe(initialCount);
         },
       );
     });
