@@ -31,6 +31,7 @@
 - Fixed `Heap.insert` keeping a reference to the element it removes once the heap is full. Through `RequestScheduler`, a destroyed `Cesium3DTileset` could stay in memory with its whole tile tree. [#13894](https://github.com/CesiumGS/cesium/issues/13894)
 - Fixed the page hanging, or polylines being drawn with the wrong translucency, when the color of polylines with different depth fail materials changed between opaque and translucent. [#13952](https://github.com/CesiumGS/cesium/issues/13952)
 - Fixed slow loading of models and tilesets using the `CESIUM_primitive_outline` extension, and reduced the size of their outline vertex buffers. [#12084](https://github.com/CesiumGS/cesium/pull/12084)
+- Fixed `EXT_structural_metadata` property tables not being available to custom shaders when a property's buffer view is longer than `count × elementSize`. The trailing bytes are now ignored, as they already were when reading values on the CPU. [#14006](https://github.com/CesiumGS/cesium/pull/14006)
 
 ## 1.147 - 2026-11-02
 

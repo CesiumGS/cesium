@@ -238,17 +238,20 @@ function collectGpuCompatiblePropertyInfo(
     }
 
     const property = properties[propertyId];
-    const bufferView = defined(property)
+    let bufferView = defined(property)
       ? bufferViews[property.values]
       : createNoDataBufferView(classProperty, numFeatures);
 
-    const bufferViewLength = bufferView.length;
     const bytesPerElement = classProperty.cpuBytesPerElement();
-    const numBufferElements = bufferViewLength / bytesPerElement;
-    if (numBufferElements !== numFeatures) {
+    const requiredByteLength = numFeatures * bytesPerElement;
+    if (bufferView.length < requiredByteLength) {
       throw new RuntimeError(
-        `Property with ID: "${propertyId}" has (${numBufferElements}), which does not match number of features in the property table: (${numFeatures}).`,
+        `Property with ID: "${propertyId}" has (${bufferView.length / bytesPerElement}), which does not match number of features in the property table: (${numFeatures}).`,
       );
+    }
+    // Ignore trailing bytes, as MetadataTableProperty does on the CPU.
+    if (bufferView.length > requiredByteLength) {
+      bufferView = bufferView.subarray(0, requiredByteLength);
     }
 
     propertyInfos.push({

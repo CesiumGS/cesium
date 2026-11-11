@@ -636,7 +636,67 @@ describe(
         expect(console.warn).toHaveBeenCalled();
       });
 
-      it("throws an error if a property's buffer length does not match the number of features", function () {
+      it("reads only count elements from a property buffer view that is longer than the number of features", function () {
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                a: { type: "SCALAR", componentType: "UINT8" },
+                b: { type: "SCALAR", componentType: "UINT16" },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "Features",
+              class: "feature",
+              count: 3,
+              properties: {
+                a: { values: 0 },
+                b: { values: 1 },
+              },
+            },
+          ],
+        };
+
+        // Both buffer views are padded to 8 bytes, as some writers align byteLength.
+        const bufferViews = {
+          0: new Uint8Array([1, 2, 3, 0, 0, 0, 0, 0]),
+          1: new Uint8Array([0x02, 0x01, 0x04, 0x03, 0x06, 0x05, 0, 0]),
+        };
+
+        let createdTextureOptions;
+        spyOn(Texture, "create").and.callFake(function (options) {
+          createdTextureOptions = options;
+          return new Texture(options);
+        });
+
+        structuralMetadata = parseStructuralMetadata({
+          extension: extension,
+          schema: MetadataSchema.fromJson(schemaJson),
+          bufferViews: bufferViews,
+          context: context,
+        });
+
+        const texture = structuralMetadata.getPropertyTable(0).texture;
+        expect(texture).toBeDefined();
+        expect(texture.width).toBe(3);
+        expect(texture.height).toBe(2);
+
+        const packed = createdTextureOptions.source.arrayBufferView;
+        const expected = [
+          // Row 0 (a: UINT8)
+          1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0,
+          // Row 1 (b: UINT16, little-endian)
+          0x02, 0x01, 0, 0, 0x04, 0x03, 0, 0, 0x06, 0x05, 0, 0,
+        ];
+        expect(Array.from(packed)).toEqual(expected);
+      });
+
+      it("throws an error if a property's buffer view is shorter than the number of features", function () {
         const schemaJson = {
           classes: {
             feature: {
@@ -937,54 +997,6 @@ describe(
           0, // b[7]
         ];
         expect(Array.from(packed)).toEqual(expected);
-      });
-
-      it("does not create a texture when a buffer view contains extra bytes beyond numFeatures", function () {
-        const schemaJson = {
-          classes: {
-            feature: {
-              properties: {
-                a: { type: "SCALAR", componentType: "UINT8" },
-              },
-            },
-          },
-        };
-
-        const extension = {
-          propertyTables: [
-            {
-              name: "PaddedFeatures",
-              class: "feature",
-              count: 3,
-              properties: {
-                a: { values: 0 },
-              },
-            },
-          ],
-        };
-
-        const bufferViews = {
-          // Four values for a property table with only three features.
-          0: new Uint8Array([7, 8, 9, 0]),
-        };
-
-        spyOn(Texture, "create");
-        spyOn(console, "warn");
-
-        expect(function () {
-          structuralMetadata = parseStructuralMetadata({
-            extension: extension,
-            schema: MetadataSchema.fromJson(schemaJson),
-            bufferViews: bufferViews,
-            context: context,
-          });
-        }).not.toThrow();
-
-        expect(structuralMetadata.getPropertyTable(0).texture).toBeUndefined();
-        expect(Texture.create).not.toHaveBeenCalled();
-        expect(console.warn).toHaveBeenCalledWith(
-          'Failed to create texture for property table "PaddedFeatures": Property with ID: "a" has (4), which does not match number of features in the property table: (3).',
-        );
       });
     });
   },
