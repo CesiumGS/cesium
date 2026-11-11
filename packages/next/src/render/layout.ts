@@ -439,7 +439,22 @@ export const RecordFlags = {
    * the view's dice kernel listed (dice.slang). Its feature is the face.
    */
   patches: 128,
+  /**
+   * How a patch draw shows the tessellation (`World.setPatchDisplay`), in the
+   * opaque pass's fragment stage: the dice grid's cell edges and triangle
+   * diagonals (`patchWire`), iso lines in (u, v), as many divisions of the
+   * face's parameter rect as bits 16 to 23 say (`patchIso`), the triangles'
+   * own normals (`patchFlat`); with `patchLinesOnly` only those lines are
+   * drawn, in every pass.
+   */
+  patchWire: 256,
+  patchIso: 512,
+  patchFlat: 1024,
+  patchLinesOnly: 2048,
 } as const;
+
+/** Where `RecordFlags.patchIso`'s division count sits in a record's flags. */
+export const PATCH_ISO_SHIFT = 16;
 
 /**
  * Depth scale of `RecordFlags.underlay` draws (2^-64, exact in floats).

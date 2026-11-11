@@ -80,6 +80,7 @@ import {
   scratchPlanes,
 } from "../render/view/viewBlocks.ts";
 import { dropPersistent, render } from "../render/view/renderTick.ts";
+import { whenReady, type WhenReadyOptions } from "./engineReady.ts";
 import {
   loadGltfFile,
   compileShader,
@@ -858,6 +859,23 @@ export class Engine {
    */
   async compileShader(shader: CustomShader): Promise<void> {
     return compileShader(this, shader);
+  }
+
+  /**
+   * Provisional. Resolves once `view`'s next frames show what its world's
+   * draws should: no draw is drawn with a stand-in (the default material
+   * while a custom shader's pipelines compile, or white while its textures
+   * load), and each patch draw (`World.addBrep`) has been diced and drawn
+   * at least once. For a page that keeps its loading indicator up until
+   * its first frame is right; call it after adding the draws, and again
+   * after changing them (a new shader, a replaced draw). `options.draws`
+   * waits for those draws only. The loop runs frames while it waits, also
+   * on demand; a disabled view isn't drawn, so nothing is ready until it is
+   * enabled (`timeoutMs` ends the wait). It rejects with the signal's reason if aborted, and
+   * resolves anyway after `timeoutMs`, reporting an engine error.
+   */
+  whenReady(view: View, options?: WhenReadyOptions): Promise<void> {
+    return whenReady(this, view, options);
   }
 
   /**

@@ -16,7 +16,11 @@ import {
   TRIM_HEADER_WORDS,
   TRIM_SEGMENT_WORDS,
 } from "../src/brep/gpuTrims.ts";
-import { PATCH_CHUNK_CELLS, RecordFlags } from "../src/render/layout.ts";
+import {
+  PATCH_CHUNK_CELLS,
+  PATCH_ISO_SHIFT,
+  RecordFlags,
+} from "../src/render/layout.ts";
 import { patchChunkIndices } from "../src/render/drawArguments.ts";
 import { CHUNK_BYTES, PATCH_DICE_BYTES } from "../src/scene/world/patches.ts";
 import { SURFACE_VERTEX_BOUNDARY } from "../src/shaders/link/index.ts";
@@ -57,6 +61,7 @@ describe("patch.slang", () => {
       SPAN_DENSITY: SPAN.density,
       SPAN_SPEED: SPAN.speed,
       SPAN_TRIM: SPAN.trim,
+      SPAN_FACE_EXTENT: SPAN.faceExtent,
     };
     for (const [name, word] of Object.entries(names)) {
       expect(patch.get(name), name).toBe(word);
@@ -179,6 +184,29 @@ describe("the dice and the vertex stage", () => {
   it("agree on the record flag", () => {
     expect(RecordFlags.patches).toBe(128);
     expect(surface).toMatch(/bool patched = \(r\.flags & 128u\) != 0u;/);
+  });
+
+  it("agree on the display flags and where the iso lines' divisions are", () => {
+    const words = constants(surface);
+    expect(words.get("PATCH_WIRE_BIT")).toBe(RecordFlags.patchWire);
+    expect(words.get("PATCH_ISO_BIT")).toBe(RecordFlags.patchIso);
+    expect(words.get("PATCH_FLAT_BIT")).toBe(RecordFlags.patchFlat);
+    expect(words.get("PATCH_LINES_ONLY_BIT")).toBe(RecordFlags.patchLinesOnly);
+    expect(words.get("PATCH_ISO_SHIFT")).toBe(PATCH_ISO_SHIFT);
+    // The divisions' byte clears the flags below it.
+    expect(
+      Object.values(RecordFlags).every((flag) => flag < 1 << PATCH_ISO_SHIFT),
+    ).toBe(true);
+  });
+
+  it("carry the dice grid's coordinates and the face's extent in the tangent slot of a patch draw", () => {
+    expect(surface).toMatch(
+      /out\.tangent = float4\(patchData\.grid, patchData\.extent\);/,
+    );
+    // Only the fragment stage's lines read them, in uniform control flow.
+    expect(surface).toMatch(
+      /PatchWidths patchWidths\(SurfaceVaryings in\) \{[^}]*fwidth\(in\.tangent\.x\)/,
+    );
   });
 
   it("evaluate a draw once: through the common vertex function", () => {

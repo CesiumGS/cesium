@@ -33,6 +33,7 @@ public static const uint SPAN_FACE_SPHERE = 29u;
 public static const uint SPAN_DENSITY = 33u;
 public static const uint SPAN_SPEED = 36u;
 public static const uint SPAN_TRIM = 41u;
+public static const uint SPAN_FACE_EXTENT = 42u;
 
 // SurfaceKind (src/brep/form.ts).
 static const uint KIND_PLANE = 0u;
@@ -164,6 +165,12 @@ public PatchSpan loadSpan(StructuredBuffer<float> words, uint base) {
     s.params = float2(words[base + SPAN_PARAMS], words[base + SPAN_PARAMS + 1u]);
   }
   return s;
+}
+
+// The face rect's widths in u and v, which the vertex stage reads only for
+// a draw that shows iso lines.
+public float2 loadFaceExtent(StructuredBuffer<float> words, uint base) {
+  return float2(words[base + SPAN_FACE_EXTENT], words[base + SPAN_FACE_EXTENT + 1u]);
 }
 
 // The analytic surfaces (form.ts, with x, y and z = x × y): a local point

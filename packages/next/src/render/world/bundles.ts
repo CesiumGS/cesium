@@ -67,6 +67,7 @@ export interface BundleWorld extends Pick<
     | "materialsU32"
     | "pickBundle_"
     | "pickFor"
+    | "pipelineGaps"
     | "placementTable"
     | "prepassBundle_"
     | "prepassFor"
@@ -170,6 +171,7 @@ export interface PrepareWorld extends Pick<
     | "patchDraws"
     | "patchWorldBindGroup"
     | "pendingUploads"
+    | "pipelineGaps"
     | "placementTable"
     | "pointCounts"
     | "pointCullBindGroup"
@@ -239,9 +241,11 @@ export function prepareFrame(world: PrepareWorld): GPURenderBundle {
     world.raster.translucentDraws = undefined;
   }
   if (!world.raster.bundle) {
+    world.raster.pipelineGaps.clear();
     writeBatches(world);
     world.raster.bundle = recordBundle(world);
   } else if (world.raster.batchesShownChanged) {
+    world.raster.pipelineGaps.clear();
     world.raster.bundle = recordBundle(world);
   }
   world.raster.batchesShownChanged = false;
@@ -630,6 +634,7 @@ export function recordBundle(
         a.mesh.slab - b.mesh.slab,
     );
   const direct = world.raster._submission === "direct";
+  const gaps = new Set<Batch>();
   let pipeline: GPURenderPipeline | undefined;
   let group: GPUBindGroup | undefined;
   let slab = -1;
@@ -657,12 +662,14 @@ export function recordBundle(
       bindSlab(world, encoder, slab);
     }
     const key = keyOf(batch);
-    const { pipeline: wanted, custom } = batchPipeline(
-      world,
-      batch,
-      key,
-      clipped,
-    );
+    const {
+      pipeline: wanted,
+      custom,
+      pending,
+    } = batchPipeline(world, batch, key, clipped);
+    if (pending) {
+      gaps.add(batch);
+    }
     if (wanted !== pipeline) {
       pipeline = wanted;
       encoder.setPipeline(pipeline);
@@ -676,6 +683,12 @@ export function recordBundle(
     if (world.raster.drawArguments.drawBatch(encoder, batch, direct, pick)) {
       slab = -1;
     }
+  }
+  const gapKey = clipped ? `${kind}+clip` : kind;
+  if (gaps.size > 0) {
+    world.raster.pipelineGaps.set(gapKey, gaps);
+  } else {
+    world.raster.pipelineGaps.delete(gapKey);
   }
   return encoder.finish();
 }
@@ -692,27 +705,35 @@ function batchPipeline(
   batch: Batch,
   key: SurfaceKey,
   clipped = false,
-): { pipeline: GPURenderPipeline; custom: boolean } {
+): { pipeline: GPURenderPipeline; custom: boolean; pending: boolean } {
   const shader = batch.shader;
+  let pending = false;
   if (shader) {
-    const own =
-      (clipped &&
-        world.ctx.shaders.pipeline(
-          shader,
-          clippedKey(key),
-          world.shaderReady,
-        )) ||
-      world.ctx.shaders.pipeline(shader, key, world.shaderReady);
-    if (own) {
-      return { pipeline: own, custom: true };
+    const { shaders, shaderBindings } = world.ctx;
+    // Textures still loading read white: the batch isn't final either.
+    pending = shaderBindings.pending(shader);
+    if (clipped) {
+      const own = shaders.pipeline(shader, clippedKey(key), world.shaderReady);
+      if (own) {
+        return { pipeline: own, custom: true, pending };
+      }
+      pending ||= shaders.pending(shader, clippedKey(key));
     }
+    const own = shaders.pipeline(shader, key, world.shaderReady);
+    if (own) {
+      return { pipeline: own, custom: true, pending };
+    }
+    pending ||= shaders.pending(shader, key);
+  }
+  const standIn =
+    clipped && world.ctx.pipelines.clippedPipeline(key, world.shaderReady);
+  if (clipped && !standIn) {
+    pending ||= world.ctx.pipelines.clippedPending(key);
   }
   return {
-    pipeline:
-      (clipped &&
-        world.ctx.pipelines.clippedPipeline(key, world.shaderReady)) ||
-      world.ctx.pipelines[key],
+    pipeline: standIn || world.ctx.pipelines[key],
     custom: false,
+    pending,
   };
 }
 

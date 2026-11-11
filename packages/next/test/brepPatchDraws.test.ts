@@ -6,7 +6,12 @@ import {
   PLACEMENT_TERMS,
 } from "../src/scene/placement.ts";
 import { DrawRecordLayout } from "../src/render/generated/layouts.ts";
-import { FLAGS_WORD, RECORD_WORDS, RecordFlags } from "../src/render/layout.ts";
+import {
+  FLAGS_WORD,
+  PATCH_ISO_SHIFT,
+  RECORD_WORDS,
+  RecordFlags,
+} from "../src/render/layout.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { placementBounds } from "../src/scene/world/patches.ts";
 import type { WarpTerms } from "../src/scene/warpTerms.ts";
@@ -423,6 +428,55 @@ describe("World.addBrep", () => {
     expect(() => world.setPatchErrorPixels(brep.patches!, 0)).toThrow(
       RangeError,
     );
+    world.removeBrep(brep);
+    world.destroy();
+  });
+  it("shows a patch draw's tessellation by flags in its record, which only a patch draw has", () => {
+    const world = engine.createWorld(options);
+    const brep = world.addBrep(boxBrep());
+    const flagsOf = () =>
+      world.raster.recordsU32[brep.patches!.index * RECORD_WORDS + FLAGS_WORD]!;
+    const before = flagsOf();
+    expect(before & RecordFlags.patches).toBeTruthy();
+    world.setPatchDisplay(brep.patches!, { wire: true, iso: 4, flat: true });
+    expect(flagsOf() & RecordFlags.patchWire).toBeTruthy();
+    expect(flagsOf() & RecordFlags.patchFlat).toBeTruthy();
+    expect(flagsOf() & RecordFlags.patchLinesOnly).toBe(0);
+    expect(flagsOf() >>> PATCH_ISO_SHIFT).toBe(4);
+    expect(flagsOf() & RecordFlags.patches).toBeTruthy();
+    world.setPatchDisplay(brep.patches!, {});
+    expect(flagsOf()).toBe(before);
+    const mesh = world.addMesh({
+      positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+      indices: new Uint32Array([0, 1, 2]),
+    });
+    const plain = world.addDraw({ mesh, material: world.addMaterial({}) });
+    expect(() => world.setPatchDisplay(plain, { wire: true })).toThrow(
+      /patch draw/,
+    );
+    world.removeDraw(plain);
+    world.removeBrep(brep);
+    world.destroy();
+  });
+
+  it("is ready once a frame has recorded its draws and the dice has run them", () => {
+    const world = engine.createWorld(options);
+    const brep = world.addBrep(boxBrep());
+    expect(world.ready()).toBe(false);
+    world.prepareFrame();
+    // Recorded, not yet diced.
+    expect(world.ready([brep.patches!])).toBe(false);
+    world.encodeCull(recordingEncoder([]), undefined, false);
+    expect(world.ready()).toBe(true);
+    expect(world.ready([brep.patches!])).toBe(true);
+    // A stand-in recorded for its batch holds it back, and a record again forgets it.
+    world.raster.pipelineGaps.set(
+      "opaque",
+      new Set([world.raster.drawBatches[brep.patches!.index]!]),
+    );
+    expect(world.ready([brep.patches!])).toBe(false);
+    world.shaderReady();
+    expect(world.ready()).toBe(false);
     world.removeBrep(brep);
     world.destroy();
   });

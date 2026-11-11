@@ -107,6 +107,13 @@ export class WorldRaster {
     string,
     { bundle: GPURenderBundle; for: GPURenderBundle }
   >();
+  /**
+   * Per bundle recorded (kind, and "+clip" for the clipped one), the batches
+   * it draws with a stand-in: their custom shader's pipeline is still being
+   * made, or its textures are loading (`World.ready`). Cleared when the draw
+   * bundle is recorded again.
+   */
+  readonly pipelineGaps = new Map<string, ReadonlySet<Batch>>();
   readonly cullParamsData = new Uint32Array(4);
   readonly cullPassDesc: GPUComputePassDescriptor = { label: "cull" };
   /** The patch dice's own pass, timed apart from the cull. */

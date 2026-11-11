@@ -98,10 +98,21 @@ import { formBounds, type FormBounds } from "../../src/brep/formBounds.ts";
  *   CPU-meshed faces all go through the same feature IDs.
  * - CPU: `tessellateBrep` at a chordal tolerance, as before.
  *
- * Overlays (B-rep edges, iso lines, normals, the selected face or edge) and
- * the display modes that need triangles of their own (flat shading, the
- * wireframe) are always CPU geometry, at 1 mm in the scene in GPU mode; the
- * faces of that mesh are only made when one of them is asked for.
+ * In GPU mode the wireframe, flat shading and iso lines are the GPU's too
+ * (`World.setPatchDisplay`, provisional): the patch draws' fragment stage
+ * draws the dice grid's cell edges and triangle diagonals at a constant width
+ * on screen, so the tessellation can be watched changing as the camera moves
+ * (the panel counts its cells and triangles for the view, live); iso lines are
+ * fixed divisions of each face's (u, v) rect, and flat shading is each
+ * triangle's own normal. A trimmed face keeps its trim cut in all of them.
+ * B-rep edges, normals and the selected face are CPU geometry (1 mm in the
+ * scene in GPU mode, made when asked for); the CPU mode makes triangles and
+ * lines of its own for all of them.
+ *
+ * The first frame is the right one: the host's start spinner, and the overlay
+ * of scene, model, tessellator and colour changes, stay up until
+ * `Engine.whenReady` says the shaders' pipelines are compiled, their palettes
+ * loaded and the faces diced, so nothing pops from the default material.
  *
  * A toolbar over the view switches the display mode (keys 1 to 4): shaded,
  * shaded + wireframe, flat + wireframe, wireframe. The panel's analysis views
@@ -322,6 +333,8 @@ const TOOLBAR_CSS = `
 :where(.examples-panel) .bf-toggles label { justify-content: flex-end; flex-direction: row-reverse; }
 :where(.examples-panel) .bf-tolerance { grid-template-columns: auto 1fr auto; }
 .bf-tolerance output { white-space: nowrap; }
+.bf-live { font-size: 0.9em; }
+.bf-live output { font-variant-numeric: tabular-nums; }
 .bf-legend { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
 .bf-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .bf-table th, .bf-table td {
@@ -348,6 +361,10 @@ const TOOLBAR_CSS = `
 const LIFT = 0.0025;
 /** In GPU mode, the CPU mesh of the overlays, and of the modes that need triangles: its chordal tolerance, m in the scene. */
 const OVERLAY_TOLERANCE = 0.001;
+/** The GPU's iso lines: divisions of each face's (u, v) rect, as many lines each way less one. */
+const ISO_DIVISIONS = 8;
+/** How long a scene may take to show right before it shows anyway, ms (a pipeline or palette that never arrives). */
+const READY_TIMEOUT_MS = 15000;
 /** The error targets the GPU slider spans, pixels (a log scale). */
 const MIN_PIXELS = 0.25;
 const MAX_PIXELS = 4;
@@ -1138,6 +1155,31 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     }
   };
 
+  /**
+   * GPU mode: how the display mode and the iso toggle show on the faces,
+   * as fragment-stage display of each patch draw (`World.setPatchDisplay`):
+   * the wireframe is the dice grid itself, so it changes with the view.
+   */
+  const applyDisplay = () => {
+    if (!settings.gpu) {
+      return;
+    }
+    const display = {
+      wire: settings.mode !== "shaded",
+      flat: settings.mode === "flatWire",
+      linesOnly: settings.mode === "wire",
+      iso: settings.iso ? ISO_DIVISIONS : false,
+    };
+    for (const { handle } of breps) {
+      for (const draw of [handle.patches, handle.trimmed]) {
+        if (draw) {
+          world.setPatchDisplay(draw, display);
+        }
+      }
+    }
+    engine.requestRender();
+  };
+
   const build = () => {
     for (const d of draws) {
       world.removeDraw(d);
@@ -1151,10 +1193,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     stats.whiskers = 0;
     const showFaces = settings.mode !== "wire";
     const showWire = settings.mode !== "shaded";
-    // The faces come from the GPU in the shaded modes; the others need triangles.
-    const gpuFaces =
-      settings.gpu &&
-      (settings.mode === "shaded" || settings.mode === "shadedWire");
+    // GPU mode: every mode's faces come from the GPU, and its wireframe, flat
+    // shading and iso lines are drawn by the fragment stage from each view's
+    // dice (`applyDisplay`). The CPU mode builds triangles and lines of its own.
+    const gpuFaces = settings.gpu;
     if (!gpuFaces || brepsFor !== String(settings.byKind)) {
       releaseBreps();
     }
@@ -1162,8 +1204,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     shapes.forEach((shape, s) => {
       if (
         settings.gpu &&
-        (showWire ||
-          settings.normals ||
+        (settings.normals ||
           (selection?.kind === "face" && selection.shape === shape))
       ) {
         withFaces(s);
@@ -1237,7 +1278,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         parts.set(draw.index, { shape, kind: "face" });
         stats.triangles += mesh.faces.indices.length / 3;
       }
-      if (showWire && mesh.faces.indices.length > 0) {
+      if (!gpuFaces && showWire && mesh.faces.indices.length > 0) {
         const wire = (prep.wire ??= wireLines(mesh, prep.lift));
         const data: MeshData = {
           positions: wire.positions,
@@ -1305,7 +1346,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         parts.set(draw.index, { shape, kind: "face" });
         return lines.indices.length / 2;
       };
-      if (settings.iso) {
+      if (settings.iso && !gpuFaces) {
         const iso = (prep.iso ??= isoLines(shape.form, mesh.origin, prep.lift));
         stats.isoLines += lineDraw(iso, ISO_COLOR, "iso lines");
       }
@@ -1318,6 +1359,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         stats.whiskers += lineDraw(whiskers, WHISKER_COLOR, "normals");
       }
     });
+    applyDisplay();
     applySelection();
   };
   tessellate();
@@ -1526,6 +1568,18 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     pixelsOut,
   );
   const tessellationNote = el("small", {});
+  /** The cells and triangles the view's dice made right now, live (`World.readPatchStats`). */
+  const liveOut = el("output", {}, "…");
+  const liveRow = el(
+    "div",
+    {
+      className: "bf-live",
+      title:
+        "What the GPU diced for the view in its last frame: it changes as the camera moves, and the wireframe draws exactly these cells.",
+    },
+    "In this view: ",
+    liveOut,
+  );
   const tessellatorButtons = (["GPU", "CPU"] as const).map((name) =>
     el("button", {
       type: "button",
@@ -1544,9 +1598,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     pixelsRow.hidden = !settings.gpu;
     toleranceRow.hidden = settings.gpu;
     tessellationNote.textContent = settings.gpu
-      ? `Edges, iso lines, normals, the wireframe and flat shading are CPU geometry at ${OVERLAY_TOLERANCE * 1000} mm.`
+      ? `The wireframe, flat shading and iso lines are drawn by the GPU from each view's dice grid, so the cells change as the camera moves. B-rep edges, normals and the selected face are CPU geometry at ${OVERLAY_TOLERANCE * 1000} mm.`
       : "";
     tessellationNote.hidden = !settings.gpu;
+    liveRow.hidden = !settings.gpu;
   };
   const setTessellator = (gpu: boolean) => {
     if (gpu === settings.gpu) {
@@ -1554,12 +1609,19 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     }
     settings.gpu = gpu;
     syncTessellator();
-    releaseBreps();
-    overlayEdges.clear();
-    overlayFaces.clear();
-    tessellate();
-    build();
-    showStats();
+    const change = () => {
+      releaseBreps();
+      overlayEdges.clear();
+      overlayFaces.clear();
+      tessellate();
+      build();
+      showStats();
+    };
+    if (gpu) {
+      void settle("Compiling shaders and dicing the faces…", change);
+    } else {
+      change();
+    }
   };
 
   // The tessellation's numbers, folded to one line.
@@ -1585,11 +1647,16 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         if (diced.length === 0) {
           gpuCountsOut.textContent =
             "no view has diced these yet (waiting for a frame, or none shows them)";
+          liveOut.textContent = "waiting for a frame…";
           return;
         }
         const sum = (f: (d: (typeof draws)[number]) => number) =>
           diced.reduce((n, d) => n + f(d), 0);
         const cells = sum((d) => d.cells);
+        liveOut.textContent =
+          cells > 0
+            ? `${cells.toLocaleString()} cells, ${sum((d) => d.triangles).toLocaleString()} triangles`
+            : "nothing diced";
         gpuCountsOut.textContent =
           cells > 0
             ? `${cells.toLocaleString()} cells, ${sum((d) => d.triangles).toLocaleString()} triangles in ${sum((d) => d.chunks).toLocaleString()} chunks of 4 × 4; ${sum((d) => d.vertices).toLocaleString()} vertex invocations (${(sum((d) => d.vertices) / cells).toFixed(1)} a cell)${sum((d) => d.chunksAsked - d.chunks) > 0 ? "; chunk list full: raise maxChunks" : ""}`
@@ -1672,12 +1739,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         : `edges and bounds ${stats.ms.toFixed(0)} ms`;
       stepDrawnOut.textContent = drawn
         ? `GPU, ${sums.faces} of ${total} faces diced per view${sums.cpuFaces > 0 ? `, ${sums.cpuFaces} on a CPU mesh` : ""}`
-        : `CPU mesh: ${settings.mode === "wire" ? "wireframe" : "flat shading"} needs triangles`;
+        : "no faces on the GPU";
       statsSummary.textContent = drawn
         ? `${sums.faces} faces on the GPU, ${sums.cpuFaces} on the CPU, error ≤ ${px(settings.pixels)}`
-        : settings.mode === "wire"
-          ? `wireframe: ${stats.wireLines.toLocaleString()} lines of the CPU mesh`
-          : `flat shading: ${stats.triangles.toLocaleString()} triangles of the CPU mesh`;
+        : "no faces on the GPU";
       showGpuTime();
       statsOut.replaceChildren(
         ...(drawn
@@ -1712,8 +1777,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
               ),
             ]
           : row(
-              "Triangles",
-              `${cpuTriangles.toLocaleString()} on the CPU: this mode needs triangles, at ≤ ${OVERLAY_TOLERANCE * 1000} mm`,
+              "Faces",
+              "none on the GPU (drawing them failed: see the console)",
             )),
         el("dt", {}, "Lines"),
         linesOut,
@@ -1791,8 +1856,16 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       (on) => {
         settings[key] = on;
         legend.hidden = !settings.byKind;
-        build();
-        showStats();
+        const change = () => {
+          build();
+          showStats();
+        };
+        // New colours are new draws, with palettes to load: behind the overlay.
+        if (key === "byKind" && settings.gpu) {
+          void settle("Colouring the faces…", change);
+        } else {
+          change();
+        }
       },
       title,
     );
@@ -2183,7 +2256,41 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   };
   const facesOf = (list: Shape[]) =>
     list.reduce((n, shape) => n + shape.form.faceSurface.length, 0);
-  /** `show`, timed and logged, then the wait for the new scene's first frame, which the overlay covers. */
+  /** Makes a change behind the overlay and keeps it up until the scene shows right. */
+  const settle = (text: string, change: () => void) =>
+    loadScene(async (stage) => {
+      await stage(text);
+      if (signal.aborted) {
+        return;
+      }
+      change();
+      await untilReady();
+    });
+  /** Every draw the scene shows now: the faces, their overlays and the selection. */
+  const sceneDraws = () => [
+    ...draws,
+    ...selectionDraws,
+    ...breps.flatMap(({ handle }) =>
+      [handle.patches, handle.trimmed, handle.mesh].filter(
+        (draw): draw is DrawHandle => draw !== undefined,
+      ),
+    ),
+  ];
+  /**
+   * Resolves once the scene's next frames show it right: its shaders' pipelines
+   * compiled and palettes loaded (a face drawn before is the default material,
+   * which then pops) and its patches diced (`Engine.whenReady`). Never rejects:
+   * a slow or failed pipeline shows what there is after a timeout.
+   */
+  const untilReady = (): Promise<void> =>
+    engine
+      .whenReady(view, {
+        draws: sceneDraws(),
+        signal,
+        timeoutMs: READY_TIMEOUT_MS,
+      })
+      .catch(() => undefined);
+  /** `show`, timed and logged, then the wait for the new scene's first right frame, which the overlay covers. */
   const showLoaded = async (next: SceneName, label: string) => {
     const start = performance.now();
     show(next);
@@ -2192,9 +2299,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       start,
       duration: shownMs,
     });
-    await nextPaint();
+    await reportStage("Compiling shaders and dicing the faces…");
+    await untilReady();
     console.info(
-      `brep-first-look: ${label} shown in ${shownMs.toFixed(0)} ms (GPU prepare ${stats.gpu.prepareMs.toFixed(0)} ms, edges and bounds ${stats.ms.toFixed(0)} ms), first frame after ${(performance.now() - start - shownMs).toFixed(0)} ms more`,
+      `brep-first-look: ${label} shown in ${shownMs.toFixed(0)} ms (GPU prepare ${stats.gpu.prepareMs.toFixed(0)} ms, edges and bounds ${stats.ms.toFixed(0)} ms), first right frame after ${(performance.now() - start - shownMs).toFixed(0)} ms more`,
     );
   };
   /** Imports one of NIST's parts and shows it: the first one loads Open CASCADE. */
@@ -2254,7 +2362,13 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       });
       return;
     }
-    show(next);
+    await loadScene(async (stage) => {
+      await stage("Compiling shaders and dicing the faces…");
+      if (signal.aborted) {
+        return;
+      }
+      await showLoaded(next, "Gallery");
+    });
   };
 
   const picked = el("div", { className: "bf-selection" });
@@ -2279,6 +2393,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       ...tessellatorButtons,
     ),
     pixelsRow,
+    liveRow,
     toleranceRow,
     tessellationNote,
     el("h3", {}, "Display"),
@@ -2303,7 +2418,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       toggle(
         "Iso lines",
         "iso",
-        "8 lines each way across every face, through the exact surface, kept inside the trim.",
+        "8 lines each way across every face, through the exact surface, kept inside the trim (in GPU mode: 8 equal steps of each face's (u, v) rect, drawn live by the GPU).",
       ),
       toggle(
         "Normals",
@@ -2324,7 +2439,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       el(
         "p",
         {},
-        "GPU: each face is diced per view into cells of a grid in (u, v), sized so a cell leaves at most the error in pixels, and its surface is evaluated in the vertex stage. Faces the GPU path can't draw yet are meshed on the CPU inside World.addBrep. The edges drawn over the faces are exact.",
+        "GPU: each face is diced per view into cells of a grid in (u, v), sized so a cell leaves at most the error in pixels, and its surface is evaluated in the vertex stage. The wireframe draws those cells (and each cell's triangle diagonal) in the fragment stage, so it changes with the view. Faces the GPU path can't draw yet are meshed on the CPU inside World.addBrep. The edges drawn over the faces are exact.",
       ),
       el(
         "p",
@@ -2522,6 +2637,23 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   };
   viewer.container.addEventListener("pointerdown", pointerDown);
   viewer.container.addEventListener("pointerup", pointerUp);
+
+  // The host keeps its start spinner up until `run` returns: the first frame it
+  // reveals shows the faces coloured, not in the default material. It holds
+  // the view undrawn meanwhile (and the canvas hidden), so the view is drawn
+  // here, unseen, for the pipelines to compile and the faces to dice.
+  const drawnHidden =
+    !view.enabled && viewer.canvas.style.visibility === "hidden";
+  if (drawnHidden) {
+    view.enabled = true;
+  }
+  try {
+    await untilReady();
+  } finally {
+    if (drawnHidden) {
+      view.enabled = false;
+    }
+  }
 
   return () => {
     viewer.container.removeEventListener("pointerdown", pointerDown);

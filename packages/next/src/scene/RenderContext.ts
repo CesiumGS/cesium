@@ -307,6 +307,8 @@ export interface Pipelines extends SurfacePipelines {
     key: SurfaceKey,
     ready: () => void,
   ): GPURenderPipeline | undefined;
+  /** Whether the engine's clipped pipeline `key` is still to come: asked for, neither made nor failed. */
+  clippedPending(key: SurfaceKey): boolean;
   /** Makes every clipped pipeline now, for a page that must not show a frame uncut. */
   warmClipped(): Promise<void>;
   /**
@@ -1130,7 +1132,9 @@ async function createPipelines(
           ? "depthCoverageFs"
           : trimmed
             ? "shadowTrimmedFs"
-            : "shadowPlaceholderFs",
+            : patches
+              ? "shadowPatchFs"
+              : "shadowPlaceholderFs",
         targets: SCENE_TARGETS.colorFormats.map((format) => ({
           format,
           writeMask: 0,
@@ -1183,7 +1187,9 @@ async function createPipelines(
             : "heightFs"
           : trimmed
             ? "shadowTrimmedFs"
-            : "shadowPlaceholderFs",
+            : patches
+              ? "shadowPatchFs"
+              : "shadowPlaceholderFs",
         targets: [],
       },
       primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },
@@ -1337,7 +1343,11 @@ async function createPipelines(
       },
       fragment: {
         module: shaders,
-        entryPoint: trimmed ? "prepassTrimmedFs" : "prepassFs",
+        entryPoint: trimmed
+          ? "prepassTrimmedFs"
+          : patches
+            ? "prepassPatchFs"
+            : "prepassFs",
         targets: [{ format: "rgba16float" }],
       },
       primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },
@@ -2118,6 +2128,7 @@ async function createPipelines(
   const clippedMade = new Map<SurfaceKey, GPURenderPipeline>();
   const clippedMaking = new Map<SurfaceKey, Promise<void>>();
   const clippedWaiting = new Set<() => void>();
+  const clippedFailed = new Set<SurfaceKey>();
   const makeClipped = (key: SurfaceKey): Promise<void> => {
     let making = clippedMaking.get(key);
     if (!making) {
@@ -2131,6 +2142,12 @@ async function createPipelines(
           }
         },
         (error: unknown) => {
+          clippedFailed.add(key);
+          const waiting = [...clippedWaiting];
+          clippedWaiting.clear();
+          for (const ready of waiting) {
+            ready();
+          }
           console.error(
             `[cesium/next] pipeline: the clipped ${key} pipeline failed: ${error instanceof Error ? error.message : String(error)} (its draws are not clipped in this pass)`,
           );
@@ -2170,6 +2187,7 @@ async function createPipelines(
       void makeClipped(key);
       return undefined;
     },
+    clippedPending: (key) => !clippedMade.has(key) && !clippedFailed.has(key),
     warmClipped: async () => {
       await Promise.all(SURFACE_KEYS.map((key) => makeClipped(key)));
     },

@@ -693,6 +693,20 @@ float3 column3(float4x4 m, int c) {
 // counts packed), set by the patch vertex entries before `vertexOut`.
 static uint4 patchChunk;
 
+// A patch draw's display bits, in its record's flags (RecordFlags.patchWire
+// and the rest, layout.ts; the iso lines' division count is in bits 16 to
+// 23), and the line colours: linear, display-referred as unlit lines are.
+static const uint PATCH_WIRE_BIT = 256u;
+static const uint PATCH_ISO_BIT = 512u;
+static const uint PATCH_FLAT_BIT = 1024u;
+static const uint PATCH_LINES_ONLY_BIT = 2048u;
+static const uint PATCH_ISO_SHIFT = 16u;
+static const float3 WIRE_COLOR = float3(0.2, 0.2, 0.22);
+static const float3 WIRE_ONLY_COLOR = float3(0.09, 0.09, 0.1);
+static const float3 ISO_LINE_COLOR = float3(0.02, 0.12, 0.55);
+// A line's half width, pixels.
+static const float LINE_HALF_WIDTH = 0.5;
+
 // A patch draw's vertex, indexed: a chunk of 4 × 4 cells is 5 × 5 shared
 // vertices, over a static index buffer (render/drawArguments.ts) whose
 // triangles are counter-clockwise in (i, j). A reversed face is the grid
@@ -706,6 +720,8 @@ struct PatchVertex {
   float2 uv;       // (u, v) less the face rect's corner
   uint face;       // its feature
   uint trim;       // the face's trim data's offset + 1 in the draw's table, 0: none
+  float2 grid;     // the vertex's column and row of its span's cell grid (before a reversal's mirror)
+  float2 extent;   // the face rect's widths in u and v, read only by a draw with iso lines
 };
 
 PatchVertex patchVertex(DrawRecord r, uint vertexIndex) {
@@ -721,6 +737,13 @@ PatchVertex patchVertex(DrawRecord r, uint vertexIndex) {
   uint j = row;
   result.face = s.face;
   result.trim = s.trim >= TRIM_PENDING ? 0u : s.trim + 1u;
+  // What the fragment stage draws the dice grid from (`patchLines`): the
+  // cell coordinates, as the index buffer's triangles have them.
+  result.grid = float2(float(column), float(row));
+  result.extent = float2(0.0);
+  if ((r.flags & PATCH_ISO_BIT) != 0u) {
+    result.extent = loadFaceExtent(vertices, base);
+  }
   // The grid's lines are exact at the ends, so spans meet on the same floats.
   float u = i == nu ? s.rect.y : s.rect.x + (s.rect.y - s.rect.x) * float(i) / float(nu);
   float v = j == nv ? s.rect.w : s.rect.z + (s.rect.w - s.rect.z) * float(j) / float(nv);
@@ -765,6 +788,8 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   patchData.position = float3(0.0);
   patchData.normal = float3(0.0, 0.0, 1.0);
   patchData.uv = float2(0.0);
+  patchData.grid = float2(0.0);
+  patchData.extent = float2(0.0);
   uint instance = p.instance;
   float3 position = float3(0.0);
   float4 anchor = float4(0.0);
@@ -834,7 +859,11 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   }
   // The tangent keeps its handedness (w) under the turn.
   out.tangent = float4(0.0);
-  if (r.tangentOffset != NO_STREAM) {
+  if (patched) {
+    // A patch draw has no tangents: its grid's coordinates and the face's
+    // extent ride in the slot (`patchLines`, the wireframe and iso lines).
+    out.tangent = float4(patchData.grid, patchData.extent);
+  } else if (r.tangentOffset != NO_STREAM) {
     float4 t = read4(r.tangentOffset, vertexIndex);
     float3 turned = placedDraw ? mul(placed.jacobian, t.xyz) : t.xyz;
     out.tangent = float4(normalize(mul(m, float4(turned, 0.0)).xyz), t.w);
@@ -1542,13 +1571,112 @@ bool trimCovered(SurfaceVaryings in) {
   return covers(vertices, r.positionOffset + at - 1u, in.uv, reach);
 }
 
+// --- a patch draw's tessellation shown (RecordFlags.patchWire, ...) ----------
+
+// The display bits of a draw: 0 unless it is a patch draw.
+uint patchDisplay(DrawRecord r) {
+  return (r.flags & 128u) != 0u
+      ? r.flags & (PATCH_WIRE_BIT | PATCH_ISO_BIT | PATCH_FLAT_BIT | PATCH_LINES_ONLY_BIT)
+      : 0u;
+}
+
+// The widths of a pixel in the dice grid's coordinates (`SurfaceVaryings.tangent`'s
+// xy) and in their difference (the cell's diagonal), and in (u, v): in uniform
+// control flow, before anything discards. Spans meet at cell edges, where the
+// coordinates jump: the quad over one has a wide pixel, which only thickens
+// the line already there.
+struct PatchWidths {
+  float3 grid;
+  float2 uv;
+};
+
+PatchWidths patchWidths(SurfaceVaryings in) {
+  PatchWidths w;
+  w.grid = float3(
+      fwidth(in.tangent.x), fwidth(in.tangent.y), fwidth(in.tangent.x - in.tangent.y));
+  w.uv = fwidth(in.uv);
+  return w;
+}
+
+// How much of the fragment the lines cover, 0 to 1: x the grid's (each cell's
+// edges and its diagonal, from the cell corner (0, 0) to (1, 1) as the index
+// buffer cuts it), y the iso lines' (the face's (u, v) rect in as many
+// divisions as the draw says, not at its edges). Lines are `LINE_HALF_WIDTH`
+// pixels each side of the line, with a pixel of ramp.
+float2 patchLines(SurfaceVaryings in, uint display, PatchWidths w, uint divisions) {
+  float2 cover = float2(0.0);
+  if ((display & PATCH_WIRE_BIT) != 0u) {
+    float2 g = in.tangent.xy;
+    float2 f = frac(g);
+    float2 edge = min(f, 1.0 - f) / max(w.grid.xy, 1.0e-6);
+    float d = min(min(edge.x, edge.y), abs(f.x - f.y) / max(w.grid.z, 1.0e-6));
+    cover.x = saturate(LINE_HALF_WIDTH + 0.5 - d);
+  }
+  if ((display & PATCH_ISO_BIT) != 0u && divisions > 1u) {
+    float2 extent = max(in.tangent.zw, 1.0e-20);
+    float n = float(divisions);
+    float2 t = in.uv / extent * n;
+    float2 k = round(t);
+    float2 d = abs(t - k) / max(w.uv / extent * n, 1.0e-6);
+    // Interior lines only: the face's edges are the B-rep's.
+    float2 inside = float2(
+        (k.x >= 1.0 && k.x <= n - 1.0) ? 1.0 : 0.0,
+        (k.y >= 1.0 && k.y <= n - 1.0) ? 1.0 : 0.0);
+    float nearest = min(d.x + (1.0 - inside.x) * 1.0e6, d.y + (1.0 - inside.y) * 1.0e6);
+    cover.y = saturate(LINE_HALF_WIDTH + 0.5 - nearest);
+  }
+  return cover;
+}
+
+// The colour of the lines at a fragment and their coverage: iso lines over
+// the grid's, in the lines-only view's darker colour for the grid.
+float4 patchLineColor(float2 cover, uint display) {
+  float3 wire = (display & PATCH_LINES_ONLY_BIT) != 0u ? WIRE_ONLY_COLOR : WIRE_COLOR;
+  float total = 1.0 - (1.0 - cover.x) * (1.0 - cover.y);
+  float3 color = (wire * cover.x * (1.0 - cover.y) + ISO_LINE_COLOR * cover.y) / max(total, 1.0e-4);
+  return float4(color, total);
+}
+
+// Whether a lines-only patch draw leaves the fragment out: it is off its
+// lines. Every pass tests it, so the depth the opaque pass shades at is the
+// lines' alone.
+bool offLines(SurfaceVaryings in, DrawRecord r) {
+  PatchWidths w = patchWidths(in);
+  uint display = patchDisplay(r);
+  if ((display & PATCH_LINES_ONLY_BIT) == 0u) {
+    return false;
+  }
+  // Lines cast no shadow: a shadow map's pixels are not the view's.
+  if (view.time.z > 0.5) {
+    return true;
+  }
+  float2 cover = patchLines(in, display, w, (r.flags >> PATCH_ISO_SHIFT) & 255u);
+  return max(cover.x, cover.y) < 0.5;
+}
+
+// The lines the opaque pass draws over the fragment (rgb, coverage): set by
+// `shadeSurface`, read by `shadeOpaque`.
+static float4 patchLine = float4(0.0);
+
 // The casters' and the depth pass's fragment for a trimmed patch face: the
 // placeholders' clip (`shadowPlaceholderFs`) and the trim.
 [shader("fragment")]
 void shadowTrimmedFs(SurfaceVaryings in) {
   bool covered = trimCovered(in);
   DrawRecord r = drawRecord(in.ids.x);
-  if (!covered || clippedAway(r, in)) {
+  bool off = offLines(in, r);
+  if (!covered || off || clippedAway(r, in)) {
+    discard;
+  }
+}
+
+// The casters' and the depth pass's fragment for a patch face the rect
+// completes: the placeholders' clip, and a lines-only draw's lines.
+[shader("fragment")]
+void shadowPatchFs(SurfaceVaryings in) {
+  DrawRecord r = drawRecord(in.ids.x);
+  bool off = offLines(in, r);
+  if (off || clippedAway(r, in)) {
     discard;
   }
 }
@@ -1557,8 +1685,24 @@ void shadowTrimmedFs(SurfaceVaryings in) {
 [shader("fragment")]
 float4 prepassTrimmedFs(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) : SV_Target0 {
   bool covered = trimCovered(in);
+  bool off = offLines(in, drawRecord(in.ids.x));
   cutOut(in);
-  if (!covered) {
+  if (!covered || off) {
+    discard;
+  }
+  float3 n = normalize(in.normal);
+  if (!frontFacing) {
+    n = -n;
+  }
+  return float4(n, 1.0);
+}
+
+// `prepassFs` for a patch face the rect completes.
+[shader("fragment")]
+float4 prepassPatchFs(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) : SV_Target0 {
+  bool off = offLines(in, drawRecord(in.ids.x));
+  cutOut(in);
+  if (off) {
     discard;
   }
   float3 n = normalize(in.normal);
@@ -1898,6 +2042,8 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   float3 dPdy = ddy(drawn);
   float2 dUVdx = ddx(in.uv);
   float2 dUVdy = ddy(in.uv);
+  uint display = patchDisplay(r);
+  PatchWidths widths = patchWidths(in);
 
   if ((flags & 512u) != 0u) {
     // 1.x compatibility diagnostic: gamma 2.2 decode of unorm color textures.
@@ -1957,7 +2103,7 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   if (materialHasTexture(material, TEXTURE_NORMAL)) {
     float3 t;
     float3 b;
-    if (in.tangent.w != 0.0) {
+    if (in.tangent.w != 0.0 && (r.flags & 128u) == 0u) {
       t = normalize(in.tangent.xyz - n * dot(n, in.tangent.xyz));
       b = cross(n, t) * in.tangent.w;
     } else {
@@ -1983,6 +2129,18 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   if (!frontFacing) {
     geometric = -geometric;
   }
+  // Flat shading (`RecordFlags.patchFlat`): each triangle's own normal, from the
+  // screen derivatives of its position, on the side the surface's faces.
+  if ((display & PATCH_FLAT_BIT) != 0u) {
+    float3 facet = cross(dPdx, dPdy);
+    float length2 = dot(facet, facet);
+    if (length2 > 0.0) {
+      facet *= rsqrt(length2);
+      facet = dot(facet, geometric) < 0.0 ? -facet : facet;
+      geometric = facet;
+      n = facet;
+    }
+  }
 
   // The custom shader's material (CustomShader.ts's defaults: unchanged).
   CesiumFragment fragment = fragmentOf(in, geometric, drawn);
@@ -1991,6 +2149,18 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
       (flags & 1u) != 0u || (r.flags & 2u) != 0u);
   cesiumFragmentStage(fragment, custom);
   baseColor = float4(custom.baseColor, custom.alpha * terrain);
+  // The lines over the surface (`shadeOpaque` mixes them in): a lines-only
+  // draw shows nothing else, its depth being theirs where there is a prepass.
+  if (display != 0u) {
+    float2 cover = patchLines(in, display, widths, (r.flags >> PATCH_ISO_SHIFT) & 255u);
+    patchLine = patchLineColor(cover, display);
+    if ((display & PATCH_LINES_ONLY_BIT) != 0u) {
+      if (!cutOutInDepth && patchLine.w < 0.5) {
+        discard;
+      }
+      patchLine.w = 1.0;
+    }
+  }
   // Alpha mask, on the custom shader's alpha (the depth pass's cut, else here).
   if (!cutOutInDepth && (flags & 4u) != 0u && baseColor.a < material.alphaCutoff) {
     discard;
@@ -2132,6 +2302,9 @@ FsOut shadeOpaque(SurfaceVaryings in, bool frontFacing) {
   }
   FsOut out;
   out.featureId = uint2(in.ids.y & 0xffffu, in.ids.y >> 16u);
+  // A patch draw's lines (`shadeSurface`), mixed in by their coverage: the
+  // display target carries them premultiplied, the scene's light the rest.
+  float lined = patchLine.w;
   if (s.unlit) {
     // Unlit color is display-referred (photographs: globe imagery,
     // photogrammetry such as Google's tiles): it goes to the display target,
@@ -2140,10 +2313,10 @@ FsOut shadeOpaque(SurfaceVaryings in, bool frontFacing) {
     // and alpha 0 keeps it out of the exposure meter (meter.slang): a view
     // full of symbols, or of unlit photogrammetry, doesn't meter as black.
     out.color = float4(0.0);
-    out.display = float4(s.color, 1.0);
+    out.display = float4(lerp(s.color, patchLine.rgb, lined), 1.0);
   } else {
-    out.color = float4(s.color, s.sceneShare);
-    out.display = float4(0.0);
+    out.color = float4(s.color * (1.0 - lined), s.sceneShare * (1.0 - lined));
+    out.display = float4(patchLine.rgb * lined, lined);
   }
   return out;
 }

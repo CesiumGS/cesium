@@ -96,9 +96,12 @@ import {
   addPatchMesh,
   readPatchStats,
   setPatchErrorPixels,
+  withPatchDisplay,
+  type PatchDisplay,
   type PatchDrawStats,
   type PatchMeshOptions,
 } from "./world/patches.ts";
+import { drawsReady } from "./world/ready.ts";
 import {
   addBrep,
   removeBrep,
@@ -681,6 +684,15 @@ export class World {
     return readPatchStats(this);
   }
 
+  /**
+   * @internal Provisional (`Engine.whenReady`). Whether, as of the last
+   * frame, `draws` (default: all) drew with the pipelines and textures of
+   * their shaders and their patch draws were diced.
+   */
+  ready(draws?: readonly DrawHandle[]): boolean {
+    return drawsReady(this, draws);
+  }
+
   /** @internal Provisional. A patch draw's target error, pixels. */
   setPatchErrorPixels(handle: DrawHandle, errorPixels: number): void {
     if (!this.hasDraw(handle)) {
@@ -689,6 +701,31 @@ export class World {
     setPatchErrorPixels(this, handle.index, errorPixels);
     this.version++;
     this.changedViews = 0xffffffff;
+  }
+
+  /**
+   * @internal Provisional. How a patch draw shows its tessellation, live and
+   * per view: the dice grid's wireframe, iso lines, flat shading, or only
+   * the lines (`PatchDisplay`); an omitted field is off. They are drawn by
+   * the fragment stage, so they follow every view's dice, and a trimmed
+   * face's trim still cuts them. Picks are not affected.
+   */
+  setPatchDisplay(handle: DrawHandle, display: PatchDisplay): void {
+    if (!this.hasDraw(handle) || !this.raster.patchDraws.has(handle.index)) {
+      throw new Error("setPatchDisplay: not a live patch draw");
+    }
+    const flags =
+      this.raster.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+    if (
+      this.raster.drawConstants.setFlags(
+        handle.index,
+        withPatchDisplay(flags, display),
+      )
+    ) {
+      this.raster.uploadsPending = true;
+      this.version++;
+      this.changedViews = 0xffffffff;
+    }
   }
 
   /**

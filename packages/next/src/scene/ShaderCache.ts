@@ -14,6 +14,8 @@ interface Entry {
   making: Map<PipelineKey, Promise<GPURenderPipeline>>;
   /** Called once when a pipeline asked for is ready (worlds record again). */
   waiting: Set<() => void>;
+  /** Pipelines whose making failed: their passes keep the engine's. */
+  failedKeys: Set<PipelineKey>;
 }
 
 /**
@@ -55,6 +57,21 @@ export class ShaderCache {
   }
 
   /**
+   * Whether the shader's pipeline for `key` is still to come: asked for
+   * (`pipeline`) and neither made nor failed. False once it is made, or the
+   * shader or the pipeline failed (the engine's draws that pass for good).
+   */
+  pending(shader: CustomShader, key: PipelineKey): boolean {
+    const entry = this.entries.get(shader.code);
+    return (
+      entry !== undefined &&
+      !entry.failed &&
+      !entry.pipelines[key] &&
+      !entry.failedKeys.has(key)
+    );
+  }
+
+  /**
    * Compiles the shader and makes all of its pipelines; settles when they
    * are ready or the shader failed.
    */
@@ -79,6 +96,11 @@ export class ShaderCache {
       },
       (error: unknown) => {
         // This pass keeps drawing the batch with the engine's pipeline.
+        entry.failedKeys.add(key);
+        for (const callback of entry.waiting) {
+          callback();
+        }
+        entry.waiting.clear();
         this.report(
           "pipeline",
           `${error instanceof Error ? error.message : String(error)} (its draws use the engine's shader in this pass)`,
@@ -108,6 +130,7 @@ export class ShaderCache {
       pipelines: {},
       making: new Map(),
       waiting: new Set(),
+      failedKeys: new Set(),
     };
     entry = created;
     this.entries.set(shader.code, created);
@@ -124,6 +147,10 @@ export class ShaderCache {
       },
       (error: unknown) => {
         created.failed = true;
+        // Worlds record again: their draws now use the engine's shader for good.
+        for (const callback of created.waiting) {
+          callback();
+        }
         created.waiting.clear();
         this.report(
           "shader",

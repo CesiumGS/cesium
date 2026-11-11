@@ -87,6 +87,7 @@ export const SPAN = {
   speed: 36,
   error: 38,
   trim: 41,
+  faceExtent: 42,
 } as const;
 /** Bits of `SPAN.kind`'s word above the kind. */
 export const SPAN_REVERSED = 1 << 8;
@@ -116,6 +117,8 @@ export interface GpuSpan {
   readonly rect: Box;
   /** The face rect's lowest u and v: the UV varying is (u, v) minus this. */
   readonly corner: readonly [number, number];
+  /** The face rect's widths in u and v: the GPU's iso lines are fractions of them. */
+  readonly faceExtent: readonly [number, number];
   /** Bounding sphere of the span's surface, model space. */
   readonly sphere: Sphere;
   /** Bounding sphere of the face's spans. */
@@ -295,6 +298,7 @@ export function packGpuPatches(
     put(SPAN.domain, span.domain);
     put(SPAN.rect, span.rect);
     put(SPAN.corner, span.corner);
+    put(SPAN.faceExtent, span.faceExtent);
     put(SPAN.sphere, span.sphere);
     put(SPAN.faceSphere, span.faceSphere);
     put(SPAN.density, span.density);
@@ -824,6 +828,7 @@ function prepareFace(
       domain: piece.domain,
       rect: piece.rect,
       corner,
+      faceExtent: [rect[1] - rect[0], rect[3] - rect[2]],
       sphere: d.sphere,
       faceSphere,
       c: [d.d[0] * wu * wu, d.d[1] * wu * wv, d.d[2] * wv * wv],

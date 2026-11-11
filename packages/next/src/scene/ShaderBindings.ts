@@ -23,6 +23,8 @@ interface Resources {
   made: number;
   /** Bumped when a texture changes (bind groups are made again). */
   version: number;
+  /** Textures still loading: the shader reads white from them meanwhile. */
+  loading: number;
 }
 
 /**
@@ -72,6 +74,14 @@ export class ShaderBindings {
   }
 
   /**
+   * Whether any of the shader's textures is still loading (its draws read
+   * white from it): starts the shader's loads if they haven't.
+   */
+  pending(shader: CustomShader): boolean {
+    return this.resourcesOf(shader).loading > 0;
+  }
+
+  /**
    * Writes changed uniform buffers and starts changed textures loading;
    * whether anything changed since the last call that consumed it
    * (frames then redraw).
@@ -116,6 +126,7 @@ export class ShaderBindings {
       textures: new Map(),
       made: shader.textureVersion,
       version: 0,
+      loading: 0,
     };
     if (bytes > 0) {
       r.buffer = this.device.createBuffer({
@@ -159,11 +170,16 @@ export class ShaderBindings {
       } else {
         current.from = declaration;
       }
+      r.loading++;
       void this.image(declaration.value).then(
         (image) => {
+          r.loading--;
           const latest = r.textures.get(name)!;
           if (latest.from !== declaration) {
-            return; // replaced while it loaded
+            // Replaced while it loaded; bundles recorded now don't wait for this one.
+            this.generation++;
+            this.wake();
+            return;
           }
           const texture = this.device.createTexture({
             label: `${shader.label} ${name}`,
@@ -192,6 +208,9 @@ export class ShaderBindings {
           this.wake();
         },
         (error: unknown) => {
+          r.loading--;
+          this.generation++;
+          this.wake();
           console.error(
             `[cesium/next] ${shader.label}: texture ${name}: ${error instanceof Error ? error.message : String(error)}`,
           );

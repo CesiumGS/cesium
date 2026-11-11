@@ -4,7 +4,12 @@
 // owns the per-view dice's parameters and chunk list. The dice and the vertex
 // stage are shaders/dice.slang and surface.slang `patchVertex`.
 import type { GpuPatchData } from "../../brep/gpuPatches.ts";
-import { NO_STREAM, PATCH_CHUNK_CELLS } from "../../render/layout.ts";
+import {
+  NO_STREAM,
+  PATCH_CHUNK_CELLS,
+  PATCH_ISO_SHIFT,
+  RecordFlags,
+} from "../../render/layout.ts";
 import { CapacityError } from "../CapacityError.ts";
 import { weightInterval } from "../warpBounds.ts";
 import { termCurvatureBound, termDerivativeBound } from "../warpEvaluate.ts";
@@ -321,6 +326,50 @@ export function placementBounds(
     curvature += w * (Number.isNaN(c) ? 1e6 : c);
   }
   return { jacobian, curvature };
+}
+
+/** What a patch draw shows of its tessellation (`World.setPatchDisplay`). */
+export interface PatchDisplay {
+  /** The dice grid's cell edges and triangle diagonals, drawn in the fragment stage at a constant width on screen: they change with the view's dice. */
+  readonly wire?: boolean;
+  /** Iso lines in (u, v): this many divisions of each face's parameter rect (true: 8). */
+  readonly iso?: boolean | number;
+  /** Each triangle shaded by its own normal. */
+  readonly flat?: boolean;
+  /** Only the lines are drawn (in every pass: nothing else of the faces hides or shades what is behind them). */
+  readonly linesOnly?: boolean;
+}
+
+const DISPLAY_MASK =
+  RecordFlags.patchWire |
+  RecordFlags.patchIso |
+  RecordFlags.patchFlat |
+  RecordFlags.patchLinesOnly |
+  (255 << PATCH_ISO_SHIFT);
+
+/** A draw's record flags with `display` in place of its display bits. */
+export function withPatchDisplay(flags: number, display: PatchDisplay): number {
+  const divisions =
+    display.iso === true
+      ? 8
+      : display.iso === false || display.iso === undefined
+        ? 0
+        : Math.floor(display.iso);
+  if (!(divisions >= 0 && divisions <= 255)) {
+    throw new RangeError(
+      `setPatchDisplay: ${String(display.iso)} iso divisions; 2 to 255 (or a boolean).`,
+    );
+  }
+  return (
+    ((flags & ~DISPLAY_MASK) |
+      (display.wire ? RecordFlags.patchWire : 0) |
+      (divisions > 1
+        ? RecordFlags.patchIso | (divisions << PATCH_ISO_SHIFT)
+        : 0) |
+      (display.flat ? RecordFlags.patchFlat : 0) |
+      (display.linesOnly ? RecordFlags.patchLinesOnly : 0)) >>>
+    0
+  );
 }
 
 /** Sets a patch draw's target error, pixels. */
