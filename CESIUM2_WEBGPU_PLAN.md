@@ -8938,8 +8938,55 @@ Nothing stands in for TBB. SMLib's TBB code (parallel UV trim curves and tessell
 - **Checked** (`test/data/brepSmlib.test.ts`, in `npm run test:data`): a box, cylinder, sphere, torus and cone frustum, box minus cylinder, and box with sphere united and intersected. Each form validates with no problems. On every face, over 95% of its triangles have the solid's outside off the face's normal and the inside behind it, checked against the exact solid. With every face flipped, that share is 0.
 - **Face provenance: yes, for SMLib.** An application attribute (`SmLongAttribute`, id above 10,000, copy behaviour) on each input's faces is copied by SMLib to the faces a boolean makes from them. Box minus cylinder gives six faces tagged as the box, including the top and bottom with the hole as an inner loop, and one tagged as the cylinder. In the example, a picked face says which input it came from. This is the CSG sample's picks-to-the-tree, without SMLib's stable topology names.
 - **Timings.** Warm, in Node: box minus cylinder in about 5 ms, and the conversion in about 1 ms. Cold, in Chrome on the main thread: loading the module takes 68 ms, the three booleans 7 to 57 ms, and their conversions 3 to 10 ms.
-- **Found: analytic kinds are lost.** SMLib's analytic surfaces are B-splines whose NURBS parameterization isn't the form's analytic one: an angle, for example, maps to a rational function of the NURBS parameter. Trim curves live in the NURBS parameterization, so every face converts as Bézier patches. That's exact, but "Colour by surface kind" shows only Bézier. The CPU tessellator's Bézier error bound is also looser than its analytic one: an SMLib sphere costs 53 ms and 24k triangles at 1 mm, where the analytic fixture costs 7.5 ms and 6k triangles, and its bound reaches 2.1 mm before the grid cap. Planes could keep their kind, because their map is affine. Quadrics would need their trim curves refit in the analytic parameterization, which is no longer exact. Step 5's GPU path measures error per view, so this is about cost there, not accuracy.
+- **Found: analytic kinds are lost.** SMLib's analytic surfaces are B-splines whose NURBS parameterization isn't the form's analytic one: an angle, for example, maps to a rational function of the NURBS parameter. Trim curves live in the NURBS parameterization, so every face converts as Bézier patches. That's exact, but "Colour by surface kind" shows only Bézier. The CPU tessellator's Bézier error bound is also looser than its analytic one: an SMLib sphere costs 53 ms and 24k triangles at 1 mm, where the analytic fixture costs 7.5 ms and 6k triangles, and its bound reaches 2.1 mm before the grid cap. Planes could keep their kind, because their map is affine. Quadrics would need their trim curves refit in the analytic parameterization, which is no longer exact. Step 5's GPU path measures error per view, so this is about cost there, not accuracy. The brainstorm below takes it further.
 - **Not done yet:** OCCT's half; the kernel interface the sample switches behind (the wrapper here is SMLib's own); running the kernel in a worker; the four views.
+
+**Brainstorm: modeling geometry and render geometry (owner, 2026-11-10).** Not decided; a session to think through. It was prompted by the finding above: the same exact cylinder costs several times more to draw once it arrives as a NURBS. The suspicion is that the form joins two things that could be kept apart. One is what the model _is_: the kernel's geometry, its parameterization, its tolerances and its names. The other is what gets _drawn_: whatever the GPU evaluates fastest within a visual tolerance.
+
+- **Two kinds of geometry, kept apart:**
+  - _Modeling geometry_ is the source's: SMLib's B-splines, OCCT's analytic surfaces, a USD BRep. It has the kernel's parameterization and tolerances (SMLib's 1e-5 m), stable topology names and history. Measurement and snapping answer against it, or against an exact copy of it.
+  - _Render geometry_ is chosen for the GPU: rational Bézier patches, analytic kinds where cheaper, and planar faces as fills. Its one duty is to lie within the visual tolerance of the modeling surface, and to meet its neighbours on shared edges.
+  - The two needn't share a parameterization. Today they must, for one reason: pcurves and picks live in the surface's (u, v). The pick fragment writes (face, u, v), and the CPU evaluates the exact surface there. Whatever separates them must keep that path exact, or state the error it adds.
+- **Three tolerances, never mixed:**
+  - _Model tolerance:_ how exact the source claims to be, such as edge and vertex gaps (`edgeTolerance`, `vertexTolerance`).
+  - _Representation error:_ how far the form's surface is from the source's. NURBS split into Bézier patches has none. An approximated curve or surface, such as SMLib's `ApproximateCurve` for intersection curves (the export's `approximationGap`), offsets and sweeps, or a refit, carries its error. The form has no per-surface field for it yet.
+  - _Display tolerance:_ pixels, per view, and never reported as accuracy.
+  - The rule: a measured answer states model tolerance plus representation error. A display tolerance enters an answer only when the answer comes from a mesh, and then the answer is provisional and says so, as staged server answers already do. Step 3's open question (`GeometryAccuracy` as one number, or composed with `AccuracyTerm`s) gets its terms from this list.
+- **Getting the analytic kinds back, ranked:**
+  1. _Keep the NURBS parameterization, and add the surface's analytic identity beside it:_ its kind, frame and radii, which SMLib reports for free (`IsKindOf(SmCylinder_TYPE)`, `SmAxis2Placement`), as does OCCT. Pcurves and picks don't change. Closest points and ray hits use the closed form in 3D, which needs no (u, v). The tessellator bounds error from the known curvature (a sagitta, `r(1 − cos θ/2)`) instead of the Bézier net. "Colour by surface kind" works again. This is the separation in its smallest form: identity for queries and error bounds, parameterization for drawing and picks.
+  2. _Planes only:_ map NURBS (u, v) to the plane's affinely, and transform pcurves exactly. Cheap, but it covers less than option 1, which planes also get.
+  3. _Refit pcurves in the analytic parameterization:_ no longer exact, so it needs a stated representation error. Last resort.
+  - On the GPU, a rational biquadratic patch costs about as much to evaluate as `cos`/`sin`. The 7× cost measured on the CPU is probably a loose error bound making extra triangles more than evaluation (to be measured, below). So option 1 may recover the cost without the analytic evaluator. This is also the plan's open item "an error bound that is safe for rational surfaces". Spike B's net bound had almost no margin with a weight of 2, and is loose for circles.
+- **API implications:**
+  - _The form:_ `surfaceKind` splits into how to evaluate (analytic or Bézier) and what it is (an identity of kind, frame and params, possibly "none"). Each surface gains a representation error. `BENTLEY_brep` gains both as optional arrays, with the fallback mesh unchanged.
+  - _`BrepBuilder`:_ `nurbsSurface(surface, { identity, error })`, so a kernel-neutral host passes what it knows. SMLib's and OCCT's converters fill both.
+  - _Queries:_ every answer names what it ran against (source, form, or mesh) and its accuracy terms. `display(tolerance)` stays a separate query, since a mesh is never the measurement.
+  - _Tessellation options:_ the CPU path takes metres in the source's units, and the GPU path takes pixels per view, with placement error added under reprojection (above). Both report the error they achieved, not only the target.
+  - _The kernel interface (CSG sample):_ kernel to form, plus identity and representation error per surface, plus face provenance (tags, history). The engine never asks the kernel to draw.
+- **Bypassing the CPU tessellator.** What it does today:
+  - It draws everything until step 5.
+  - It writes the glTF fallback mesh.
+  - It feeds the mesh adapter that picks and rays use.
+  - It feeds the example's overlays: selection, iso lines and whiskers.
+  - It's the self-check in tests.
+
+  Step 5 can take over most of this:
+  - _Drawing:_ compute evaluates patches per view from the form and draws them indirect, so no CPU mesh exists to draw. In the CSG edit loop, the CPU tessellation (13–53 ms per solid here) drops out of the latency. What's left is the kernel (about 5 ms), the conversion (about 1 ms), the upload and one frame.
+  - _Picks:_ already exact without a mesh (face ID and (u, v) from the pick fragment, then float64 evaluation).
+  - _Rays and closest points away from the screen:_ a hierarchy over patch bounds (the control net's convex hull contains its patch exactly), then subdivision and Newton. No tessellation, and the answers are exact, not mesh-accurate.
+  - _Areas, volumes and lengths:_ quadrature on patches, or the kernel, never a sum over triangles.
+  - _What stays on the CPU:_ the fallback mesh, written offline by the tiler, not at runtime; a coarse proxy for culling, which the control nets give; and the reference, which is SMLib's (step 4b).
+  - _The catch is trims:_ per-pixel trims wait for the shared coverage kernel (the vector-design sequencing above). An interim split: the GPU path for untrimmed faces, faces with rectangular trims and planar faces (fills), and the CPU only for trimmed curved faces until the kernel lands. Building trim curve bands on the CPU is cheap next to tessellating.
+
+- **To find out first:**
+  - On the GPU, the cost of a rational patch with a curvature bound from its identity, against the analytic evaluator, on the SMLib sphere and cylinder: is option 1 enough?
+  - How much of the CPU tessellator's cost on SMLib's solids is the bound, measured by giving it the curvature bound.
+  - Whether OCCT's analytic surfaces (`Geom_CylindricalSurface` and kin, parameterized by angle in radians) match the form's analytic kinds up to an affine map of (u, v). If so, its converter writes analytic faces directly, only SMLib needs identities, and the CSG sample's two kernels show the split from both sides.
+  - Where a representation error comes from for kernels that approximate, and whether they report it, as SMLib's `ApproximateCurve` does.
+- **Candidate next steps, small first:**
+  1. Surface identity and representation error in the form, the builder and the SMLib export.
+  2. A curvature-aware bound in `tessellateBrep` for surfaces with an identity, and a weight-aware net bound for the rest.
+  3. A slice of step 5: untrimmed and planar faces on the GPU, with the CSG sample's edit loop as the measure.
 
 **Spike B result (2026-11-09).** One rational bicubic NURBS face (100 m square, 3x3 Bézier spans, one control point of weight 2) with a circular hole in (u, v), drawn in Chrome on an Apple GPU. The vertex shader evaluates an n x n grid per span. The pixel shader computes the exact normal and cuts the hole by signed distance in (u, v). n is chosen per view from the bound 0.75·D/n² on the second differences of the Bézier net, converted to pixels, with a target of 0.5 px. Measured:
 
