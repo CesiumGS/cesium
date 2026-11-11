@@ -328,11 +328,11 @@ export function Breps() {
         />
         <p>
           Built with Emscripten and run under Node, with no source edits. The
-          timings are simple analytic solids, not real models. Its threading
-          library was replaced by a short serial stand-in, so tessellation runs
-          on one thread in each worker. Reading USD itself needs OpenUSD, which
-          would be large to build for the browser; a small reader of our own, or
-          converting offline, looks cheaper.
+          timings are simple analytic solids, not real models. It runs on one
+          thread in each worker: SMLib's threading code is compiled out in its
+          own build too, so nothing stands in for it. Reading USD itself needs
+          OpenUSD, which would be large to build for the browser; a small reader
+          of our own, or converting offline, looks cheaper.
         </p>
         <Written
           from="the overall plan, section 13.33, Spike A result"
