@@ -1,4 +1,5 @@
 import {
+  CustomShader,
   Ellipsoid,
   MaterialFlags,
   eastNorthUpToFixedFrame,
@@ -82,7 +83,21 @@ import {
  *   and how long each step took, and whether the form is valid. The part is
  *   drawn scaled to about 2.4 m; PMI is not shown.
  *
- * Everything is tessellated on the CPU for now.
+ * Faces are drawn by one of two tessellators, chosen in the panel.
+ *
+ * - GPU (default): `World.addBrep` (provisional, plan §13.33, step 5) puts
+ *   each shape's faces in the engine, diced per view on the GPU to an error
+ *   target in pixels (the slider, `setPatchErrorPixels`). Faces the GPU path
+ *   can't draw yet are a CPU mesh inside `addBrep`; the panel counts both,
+ *   from what `addBrep` returns. Colours by face come from a custom shader
+ *   that reads a palette by the face's feature ID, so picks, colours and the
+ *   CPU-meshed faces all go through the same feature IDs.
+ * - CPU: `tessellateBrep` at a chordal tolerance, as before.
+ *
+ * Overlays (B-rep edges, iso lines, normals, the selected face or edge) and
+ * the display modes that need triangles of their own (flat shading, the
+ * wireframe) are always CPU geometry, at 1 mm in the scene in GPU mode; the
+ * faces of that mesh are only made when one of them is asked for.
  *
  * A toolbar over the view switches the display mode (keys 1 to 4): shaded,
  * shaded + wireframe, flat + wireframe, wireframe. The panel's analysis views
@@ -93,7 +108,7 @@ import {
  * come.
  *
  * The CPU tessellator is the small, kept one (`tessellateBrep`), not the
- * reference. The slider is its chordal tolerance in millimetres in the scene:
+ * reference. Its slider is the chordal tolerance in millimetres in the scene:
  * each shape is drawn at a scale and tessellated at the tolerance divided by
  * it. A trimmed face's hole is cut by dropping triangles whose centre falls
  * outside the trim, so it reads jagged; the edges drawn on top hide that.
@@ -133,11 +148,14 @@ interface Shape {
 
 /** What one shape's tessellation gives, and what the display modes make of it. */
 interface Prepared {
+  /** The CPU mesh the overlays are made from. In GPU mode its faces are empty until something needs them (`faces`). */
   mesh: BrepMesh;
+  /** Whether `mesh` has its faces. */
+  faces: boolean;
   /** How far lines are lifted off the faces, m in the b-rep's units. */
   lift: number;
-  /** The lowest point of the faces, m. */
-  lowest: number;
+  /** The lowest point of the faces, m in the b-rep's coordinates. */
+  floor: number;
   wire?: LineMesh;
   flat?: ReturnType<typeof flatFaces>;
   edges?: LineMesh;
@@ -294,6 +312,54 @@ const TOOLBAR_CSS = `
 
 /** How far lines lift off the faces, as a fraction of a shape's size. */
 const LIFT = 0.0025;
+/** In GPU mode, the CPU mesh of the overlays, and of the modes that need triangles: its chordal tolerance, m in the scene. */
+const OVERLAY_TOLERANCE = 0.001;
+/** A coarse CPU tessellation's tolerance, m in the b-rep: it finds a shape's size and its lowest point for the GPU draws. */
+const BOUNDS_TOLERANCE = 0.002;
+/** The error targets the GPU slider spans, pixels (a log scale). */
+const MIN_PIXELS = 0.25;
+const MAX_PIXELS = 4;
+/** A form's bounds from a coarse tessellation, m in its coordinates: its size and its lowest point, found once per form. */
+const coarseBoundsCache = new WeakMap<
+  BrepForm,
+  { min: [number, number, number]; max: [number, number, number] }
+>();
+function coarseBounds(form: BrepForm) {
+  let bounds = coarseBoundsCache.get(form);
+  if (!bounds) {
+    bounds = meshBounds([
+      tessellateBrep(form, { tolerance: BOUNDS_TOLERANCE }),
+    ]);
+    coarseBoundsCache.set(form, bounds);
+  }
+  return bounds;
+}
+
+/** The bounds of several. */
+function unionBounds(all: ReadonlyArray<ReturnType<typeof coarseBounds>>) {
+  const min: [number, number, number] = [Infinity, Infinity, Infinity];
+  const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
+  for (const bounds of all) {
+    for (let k = 0; k < 3; k++) {
+      min[k] = Math.min(min[k]!, bounds.min[k]!);
+      max[k] = Math.max(max[k]!, bounds.max[k]!);
+    }
+  }
+  return { min, max };
+}
+/** The palette's width in texels: a face's colour is at (id mod width, id div width). */
+const PALETTE_WIDTH = 256;
+/** Colours a face by its place in a palette (`uniforms.base`: the draw's first feature ID). */
+const PALETTE_WGSL = /* wgsl */ `
+fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
+  if (fsInput.featureId < uniforms.base) {
+    return;
+  }
+  let face = fsInput.featureId - uniforms.base;
+  let at = vec2<i32>(i32(face % ${PALETTE_WIDTH}u), i32(face / ${PALETTE_WIDTH}u));
+  (*material).baseColor *= textureLoad(palette, at, 0).rgb;
+}
+`;
 /** Linear colours of unlit lines: the B-rep edges, and the tessellation's wire. */
 const EDGE_COLOR: [number, number, number, number] = [0, 0, 0, 1];
 const WIRE_MID: [number, number, number, number] = [0.2, 0.2, 0.22, 1];
@@ -451,8 +517,12 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   view.observer.exposure = { ev100: 15 };
 
   const settings = {
-    /** m. */
+    /** CPU mode: the chordal tolerance, m in the scene. */
     tolerance: 0.001,
+    /** Whether the faces are diced on the GPU (`World.addBrep`) or tessellated on the CPU. */
+    gpu: true,
+    /** GPU mode: the error target, pixels. */
+    pixels: 0.5,
     mode: "shaded" as DisplayMode,
     edges: true,
     byKind: false,
@@ -592,9 +662,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     }
     try {
       // A coarse tessellation, only to size the part.
-      const { min, max } = meshBounds(
-        load.forms.map((form) => tessellateBrep(form, { tolerance: 0.002 })),
-      );
+      const { min, max } = unionBounds(load.forms.map(coarseBounds));
       const size = [0, 1, 2].map((k) => max[k]! - min[k]!);
       const longest = Math.max(...size);
       const scale = longest > 0 ? STEP_SIZE / longest : 1;
@@ -708,6 +776,11 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
 
   /** What each shape's draws are, rebuilt when the tolerance or the mode changes. */
   let draws: DrawHandle[] = [];
+  /** GPU mode: the shapes' b-reps in the world (`World.addBrep`), kept while their colours and the mode keep them. */
+  type BrepHandle = ReturnType<typeof world.addBrep>;
+  let breps: Array<{ shape: Shape; handle: BrepHandle }> = [];
+  /** What `breps` was made for: the colours it carries and the tolerance of its CPU mesh. */
+  let brepsFor = "";
   const parts = new Map<number, Part>();
   const stats = {
     triangles: 0,
@@ -720,8 +793,25 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     error: 0,
     /** Shapes whose grid cap leaves more than the tolerance. */
     capped: [] as string[],
+    /** GPU mode. */
+    gpu: {
+      /** ms in `addBrep`: the CPU's work to prepare the spans and the CPU mesh. */
+      prepareMs: 0,
+      failed: [] as string[],
+    },
   };
   const prepared: Array<Prepared | undefined> = [];
+  /** GPU mode's CPU meshes by shape: edges only, and with faces once something needs them. */
+  const overlayEdges = new Map<Shape, BrepMesh>();
+  const overlayFaces = new Map<Shape, BrepMesh>();
+  /** A coarse tessellation's size and lowest point of a shape, m in its b-rep. */
+  const boundsOf = (shape: Shape) => {
+    const { min, max } = coarseBounds(shape.form);
+    return {
+      size: Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]),
+      floor: min[2],
+    };
+  };
 
   const problemCache = new Map<Shape, ReturnType<typeof validateBrep>>();
   const problemsOf = (shape: Shape) => {
@@ -733,13 +823,40 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     return problems;
   };
 
-  // Tessellates every shape: when the tolerance changes.
+  /** The overlays' CPU mesh in GPU mode, edges only. */
+  const overlayOf = (shape: Shape, withFaces: boolean) => {
+    const cache = withFaces ? overlayFaces : overlayEdges;
+    let mesh = cache.get(shape);
+    if (!mesh) {
+      mesh = tessellateBrep(shape.form, {
+        tolerance: OVERLAY_TOLERANCE / shape.scale,
+        ...(withFaces ? {} : { faces: () => false }),
+      });
+      cache.set(shape, mesh);
+    }
+    return mesh;
+  };
+
+  // Tessellates every shape: when the tolerance changes, or in GPU mode when the scene does.
   const tessellate = () => {
     const start = performance.now();
     stats.error = 0;
     stats.capped = [];
     shapes.forEach((shape, s) => {
       try {
+        if (settings.gpu) {
+          const { size, floor } = boundsOf(shape);
+          const faces = overlayFaces.has(shape);
+          prepared[s] = {
+            mesh: overlayOf(shape, faces),
+            faces,
+            lift: size * LIFT,
+            floor,
+            size,
+            stand: 0,
+          };
+          return;
+        }
         // The slider is millimetres in the scene: the shape is drawn at
         // `scale`, so its b-rep is tessellated at tolerance ÷ scale.
         const mesh = tessellateBrep(shape.form, {
@@ -756,7 +873,14 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
             ? mesh.faces.positions
             : mesh.edges.positions,
         );
-        prepared[s] = { mesh, lift: size * LIFT, lowest, size, stand: 0 };
+        prepared[s] = {
+          mesh,
+          faces: true,
+          lift: size * LIFT,
+          floor: lowest + mesh.origin[2]!,
+          size,
+          stand: 0,
+        };
         stats.error = Math.max(stats.error, mesh.error * shape.scale);
         if (mesh.error > (settings.tolerance / shape.scale) * 1.0000001) {
           stats.capped.push(shape.name);
@@ -767,6 +891,22 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       }
     });
     stats.ms = performance.now() - start;
+  };
+  /** GPU mode: gives a shape's CPU mesh its faces (a wireframe, flat shading, normals or a selected face needs them). True if they were made, which moves the mesh's origin: draws made from it are made again. */
+  const withFaces = (s: number): boolean => {
+    const prep = prepared[s];
+    if (!settings.gpu || !prep || prep.faces) {
+      return false;
+    }
+    prepared[s] = {
+      mesh: overlayOf(shapes[s]!, true),
+      faces: true,
+      lift: prep.lift,
+      floor: prep.floor,
+      size: prep.size,
+      stand: prep.stand,
+    };
+    return true;
   };
 
   // ------------------------------------------------------------ selection
@@ -883,6 +1023,86 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     engine.requestRender();
   };
 
+  /** The tint of a shape's face as drawn: by what its surface is, or a light grey each. */
+  const faceColor = (shape: Shape, face: number) =>
+    settings.byKind
+      ? kindColors[shape.form.surfaceIdentity[shape.form.faceSurface[face]!]!]!
+      : tint(face);
+  /** A shape's face colours as the GPU draws read them: texel `face` is its colour (linear, as stored). */
+  const paletteOf = (shape: Shape) => {
+    const faces = shape.form.faceSurface.length;
+    const image = new ImageData(
+      PALETTE_WIDTH,
+      Math.max(1, Math.ceil(faces / PALETTE_WIDTH)),
+    );
+    for (let face = 0; face < faces; face++) {
+      const [r, g, b] = faceColor(shape, face);
+      image.data.set(
+        [r, g, b, 1].map((v) => Math.round(v * 255)),
+        face * 4,
+      );
+    }
+    return image;
+  };
+  /** Colours a draw of a b-rep by face: its feature IDs index the palette, from the draw's first one. */
+  const paletteShader = (shape: Shape, draw: DrawHandle) =>
+    new CustomShader({
+      fragment: PALETTE_WGSL,
+      uniforms: {
+        base: { type: "u32", value: world.featureIdOf(draw) },
+        palette: {
+          type: "texture2d",
+          value: paletteOf(shape),
+          nearest: true,
+          clamp: true,
+        },
+      },
+      label: `${shape.name}: face colours`,
+    });
+  /** Takes a b-rep's draws, meshes and transforms out of the world. */
+  const releaseBreps = () => {
+    for (const { handle } of breps) {
+      world.removeBrep(handle);
+    }
+    breps = [];
+    brepsFor = "";
+    stats.gpu.prepareMs = 0;
+    stats.gpu.failed = [];
+  };
+  /** A shape's faces by `World.addBrep`, placed as the CPU draws are, and coloured by face. */
+  const addGpuFaces = (shape: Shape, stand: number) => {
+    const start = performance.now();
+    try {
+      const handle = world.addBrep(shape.form, {
+        origin,
+        model: toWorld(
+          mat4.multiply(
+            mat4.mat4(),
+            translation(shape.x, shape.y, stand),
+            mat4.fromScale(mat4.mat4(), shape.scale, shape.scale, shape.scale),
+          ),
+        ),
+        material: facesMaterial,
+        color: [1, 1, 1, 1],
+        doubleSided: shape.doubleSided,
+        name: `${shape.name}: face`,
+        errorPixels: settings.pixels,
+        // The CPU mesh of any faces the GPU path doesn't draw yet.
+        cpuTolerance: OVERLAY_TOLERANCE / shape.scale,
+      });
+      stats.gpu.prepareMs += performance.now() - start;
+      for (const draw of [handle.patches, handle.mesh]) {
+        if (draw) {
+          world.setDrawShader(draw, paletteShader(shape, draw));
+        }
+      }
+      breps.push({ shape, handle });
+    } catch (error) {
+      console.warn(`drawing ${shape.name} on the GPU:`, error);
+      stats.gpu.failed.push(shape.name);
+    }
+  };
+
   const build = () => {
     for (const d of draws) {
       world.removeDraw(d);
@@ -896,7 +1116,23 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     stats.whiskers = 0;
     const showFaces = settings.mode !== "wire";
     const showWire = settings.mode !== "shaded";
+    // The faces come from the GPU in the shaded modes; the others need triangles.
+    const gpuFaces =
+      settings.gpu &&
+      (settings.mode === "shaded" || settings.mode === "shadedWire");
+    if (!gpuFaces || brepsFor !== String(settings.byKind)) {
+      releaseBreps();
+    }
+    brepsFor = gpuFaces ? String(settings.byKind) : "";
     shapes.forEach((shape, s) => {
+      if (
+        settings.gpu &&
+        (showWire ||
+          settings.normals ||
+          (selection?.kind === "face" && selection.shape === shape))
+      ) {
+        withFaces(s);
+      }
       const prep = prepared[s];
       if (!prep) {
         return;
@@ -905,7 +1141,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       // Relative positions, then the mesh's own centre, then scaled, then
       // stood on the ground at the shape's place.
       const centre = mesh.origin;
-      const lift = -(prep.lowest + centre[2]!) * shape.scale;
+      const lift = -prep.floor * shape.scale;
       prep.stand = lift;
       const place = translation(shape.x, shape.y, lift);
       // place · scale · translate(centre)
@@ -921,7 +1157,17 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         ),
       ));
 
-      if (showFaces && mesh.faces.indices.length > 0) {
+      if (gpuFaces) {
+        if (!breps.some((b) => b.shape === shape)) {
+          addGpuFaces(shape, lift);
+        }
+        const made = breps.find((b) => b.shape === shape);
+        for (const draw of [made?.handle.patches, made?.handle.mesh]) {
+          if (draw) {
+            parts.set(draw.index, { shape, kind: "face" });
+          }
+        }
+      } else if (showFaces && mesh.faces.indices.length > 0) {
         const source =
           settings.mode === "flatWire"
             ? (prep.flat ??= flatFaces(mesh))
@@ -929,13 +1175,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         const count = source.positions.length / 3;
         const colors = new Float32Array(count * 4);
         for (let i = 0; i < count; i++) {
-          const face = source.featureIds[i]!;
-          const tinted = settings.byKind
-            ? kindColors[
-                shape.form.surfaceIdentity[shape.form.faceSurface[face]!]!
-              ]!
-            : tint(face);
-          colors.set([...tinted, 1], i * 4);
+          colors.set([...faceColor(shape, source.featureIds[i]!), 1], i * 4);
         }
         const data: MeshData = {
           positions: source.positions,
@@ -1185,16 +1425,216 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       showStats();
     },
   });
+  const toleranceRow = el(
+    "label",
+    {
+      className: "slider bf-tolerance",
+      title:
+        "Millimetres in the scene: each shape is tessellated at the tolerance divided by the scale it's drawn at.",
+    },
+    "Tolerance",
+    toleranceInput,
+    toleranceOut,
+  );
+
+  // The GPU's error target on a log scale: a quarter of a pixel to 4.
+  const pixelsOf = (t: number) =>
+    MIN_PIXELS * Math.pow(MAX_PIXELS / MIN_PIXELS, t);
+  const pixelsT = (px: number) =>
+    Math.log(px / MIN_PIXELS) / Math.log(MAX_PIXELS / MIN_PIXELS);
+  const px = (v: number) => `${v.toFixed(2)} px`;
+  const pixelsOut = el("output", {}, px(settings.pixels));
+  const pixelsInput = el("input", {
+    type: "range",
+    min: "0",
+    max: "1",
+    step: "0.001",
+    value: String(pixelsT(settings.pixels)),
+    ariaLabel: "Error target of the GPU's dicing, pixels",
+    oninput: () => {
+      settings.pixels = pixelsOf(Number(pixelsInput.value));
+      pixelsOut.textContent = px(settings.pixels);
+      for (const { handle } of breps) {
+        if (handle.patches) {
+          world.setPatchErrorPixels(handle.patches, settings.pixels);
+        }
+      }
+      showStats();
+    },
+  });
+  const pixelsRow = el(
+    "label",
+    {
+      className: "slider bf-tolerance",
+      title:
+        "The most a diced cell may leave between its triangles and the surface, in pixels on screen: each view dices to it, so zooming in refines.",
+    },
+    "Error",
+    pixelsInput,
+    pixelsOut,
+  );
+  const tessellationNote = el("small", {});
+  const tessellatorButtons = (["GPU", "CPU"] as const).map((name) =>
+    el("button", {
+      type: "button",
+      textContent: name,
+      title:
+        name === "GPU"
+          ? "World.addBrep: every face diced per view on the GPU to an error in pixels."
+          : "tessellateBrep: one mesh on the CPU at a chordal tolerance in millimetres.",
+      onclick: () => setTessellator(name === "GPU"),
+    }),
+  );
+  const syncTessellator = () => {
+    tessellatorButtons.forEach((button, i) => {
+      button.setAttribute("aria-pressed", String((i === 0) === settings.gpu));
+    });
+    pixelsRow.hidden = !settings.gpu;
+    toleranceRow.hidden = settings.gpu;
+    tessellationNote.textContent = settings.gpu
+      ? `Edges, iso lines, normals, the wireframe and flat shading are CPU geometry at ${OVERLAY_TOLERANCE * 1000} mm.`
+      : "";
+    tessellationNote.hidden = !settings.gpu;
+  };
+  const setTessellator = (gpu: boolean) => {
+    if (gpu === settings.gpu) {
+      return;
+    }
+    settings.gpu = gpu;
+    syncTessellator();
+    releaseBreps();
+    overlayEdges.clear();
+    overlayFaces.clear();
+    tessellate();
+    build();
+    showStats();
+  };
 
   // The tessellation's numbers, folded to one line.
   const statsSummary = el("summary");
   const statsOut = el("dl");
-  /** The STEP part's tessellation time, which moves with the tolerance. */
+  /** The STEP part's tessellation: what drew it and what it cost, which moves with the controls. */
   const stepTessellateOut = el("span");
+  const stepDrawnOut = el("span");
+  /** The GPU's time in the passes that dice and draw, smoothed by the engine. */
+  const gpuTimeOut = el("dd");
+  const showGpuTime = () => {
+    const passes = engine.gpuPasses;
+    const ms = (name: string) =>
+      passes[name] !== undefined ? `${passes[name]!.toFixed(2)} ms` : undefined;
+    const cull = ms("cull");
+    const opaque = ms("opaque");
+    gpuTimeOut.textContent =
+      cull && opaque
+        ? `${cull} cull + dice, ${opaque} opaque pass (whole scene)`
+        : "not measured: needs the timestamp-query feature";
+  };
+  /** GPU mode: what `addBrep` made, summed over the shapes. */
+  const gpuSums = () => {
+    const sums = {
+      faces: 0,
+      cpuFaces: 0,
+      cpuTriangles: 0,
+      spans: 0,
+      unsupported: [] as string[],
+    };
+    for (const { shape, handle } of breps) {
+      sums.faces += handle.gpuFaces.length;
+      sums.cpuFaces += handle.cpuFaces.length;
+      for (const mesh of handle.meshes) {
+        const patches = (mesh as { patches?: { spans: number } }).patches;
+        if (patches) {
+          sums.spans += patches.spans;
+        } else {
+          sums.cpuTriangles += mesh.indexCount / 3;
+        }
+      }
+      for (const { face, reason } of handle.unsupported) {
+        sums.unsupported.push(`${shape.name}, face ${face}: ${reason}`);
+      }
+    }
+    return sums;
+  };
   const showStats = () => {
-    stepTessellateOut.textContent = `${stats.ms.toFixed(0)} ms`;
     const lines =
       stats.wireLines + stats.edgeLines + stats.isoLines + stats.whiskers;
+    const linesOut = el(
+      "dd",
+      {},
+      lines.toLocaleString(),
+      el(
+        "small",
+        {},
+        ` (${[
+          [stats.wireLines, "wireframe"],
+          [stats.edgeLines, "B-rep edges"],
+          [stats.isoLines, "iso lines"],
+          [stats.whiskers, "normals"],
+        ]
+          .filter(([n]) => (n as number) > 0)
+          .map(([n, what]) => `${(n as number).toLocaleString()} ${what}`)
+          .join(", ")})`,
+      ),
+    );
+    if (settings.gpu) {
+      const sums = gpuSums();
+      const total = sums.faces + sums.cpuFaces;
+      const drawn = breps.length > 0;
+      const cpuTriangles = drawn ? sums.cpuTriangles : stats.triangles;
+      stepTessellateOut.textContent = drawn
+        ? `prepare ${stats.gpu.prepareMs.toFixed(0)} ms, edges ${stats.ms.toFixed(0)} ms`
+        : `edges and bounds ${stats.ms.toFixed(0)} ms`;
+      stepDrawnOut.textContent = drawn
+        ? `GPU, ${sums.faces} of ${total} faces diced per view${sums.cpuFaces > 0 ? `, ${sums.cpuFaces} on a CPU mesh` : ""}`
+        : `CPU mesh: ${settings.mode === "wire" ? "wireframe" : "flat shading"} needs triangles`;
+      statsSummary.textContent = drawn
+        ? `${sums.faces} faces on the GPU, ${sums.cpuFaces} on the CPU, error ≤ ${px(settings.pixels)}`
+        : settings.mode === "wire"
+          ? `wireframe: ${stats.wireLines.toLocaleString()} lines of the CPU mesh`
+          : `flat shading: ${stats.triangles.toLocaleString()} triangles of the CPU mesh`;
+      showGpuTime();
+      statsOut.replaceChildren(
+        ...(drawn
+          ? [
+              ...row(
+                "On the GPU",
+                `${sums.faces} of ${total} faces, ${sums.spans.toLocaleString()} spans`,
+              ),
+              ...row(
+                "On a CPU mesh",
+                sums.cpuFaces > 0
+                  ? `${sums.cpuFaces} faces, ${cpuTriangles.toLocaleString()} triangles at ≤ ${OVERLAY_TOLERANCE * 1000} mm`
+                  : "none",
+              ),
+              ...(sums.unsupported.length > 0
+                ? row("Not on the GPU", sums.unsupported.join("; "))
+                : []),
+              ...(stats.gpu.failed.length > 0
+                ? row("Failed", stats.gpu.failed.join(", "))
+                : []),
+              ...row(
+                "CPU prepare",
+                `${stats.gpu.prepareMs.toFixed(1)} ms in addBrep for ${breps.length} shapes, edges and bounds ${stats.ms.toFixed(1)} ms`,
+              ),
+              el("dt", {}, "GPU time"),
+              gpuTimeOut,
+              ...row("Cells, triangles", "per-view counts: not exposed yet"),
+              ...row(
+                "Error target",
+                `${px(settings.pixels)} on screen, per view`,
+              ),
+            ]
+          : row(
+              "Triangles",
+              `${cpuTriangles.toLocaleString()} on the CPU: this mode needs triangles, at ≤ ${OVERLAY_TOLERANCE * 1000} mm`,
+            )),
+        el("dt", {}, "Lines"),
+        linesOut,
+      );
+      return;
+    }
+    stepTessellateOut.textContent = `tessellate ${stats.ms.toFixed(0)} ms`;
+    stepDrawnOut.textContent = `CPU, ${stats.triangles.toLocaleString()} triangles at ≤ ${mm(stats.error)}`;
     statsSummary.textContent = `${stats.triangles.toLocaleString()} triangles, ${stats.ms.toFixed(0)} ms, error ${
       stats.capped.length > 0
         ? `${mm(stats.error)} (over)`
@@ -1204,24 +1644,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       el("dt", {}, "Triangles"),
       el("dd", {}, stats.triangles.toLocaleString()),
       el("dt", {}, "Lines"),
-      el(
-        "dd",
-        {},
-        lines.toLocaleString(),
-        el(
-          "small",
-          {},
-          ` (${[
-            [stats.wireLines, "wireframe"],
-            [stats.edgeLines, "B-rep edges"],
-            [stats.isoLines, "iso lines"],
-            [stats.whiskers, "normals"],
-          ]
-            .filter(([n]) => (n as number) > 0)
-            .map(([n, what]) => `${(n as number).toLocaleString()} ${what}`)
-            .join(", ")})`,
-        ),
-      ),
+      linesOut,
       el("dt", {}, "tessellateBrep"),
       el("dd", {}, `${stats.ms.toFixed(1)} ms for ${shapes.length} shapes`),
       el("dt", {}, "Chordal error"),
@@ -1234,6 +1657,12 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       ),
     );
   };
+  // The engine smooths the pass times as frames render: the panel follows.
+  const gpuTimer = setInterval(() => {
+    if (settings.gpu && breps.length > 0) {
+      showGpuTime();
+    }
+  }, 500);
 
   // The legend of the surface kinds, with how many faces of each are in view.
   const legend = el("ul", {
@@ -1477,9 +1906,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       (n, shape) => n + problemsOf(shape).length,
       0,
     );
-    const { min, max } = meshBounds(
-      prepared.flatMap((prep) => (prep ? [prep.mesh] : [])),
-    );
+    const { min, max } = unionBounds(forms.map(coarseBounds));
     const scale = ss.shapes[0]?.scale ?? 1;
     const ms = (t: number) => `${t.toFixed(0)} ms`;
     const list = el("dl");
@@ -1498,9 +1925,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           ? mark(true, "✓ valid")
           : mark(false, `✗ ${problems} problems`),
       ),
+      ...row("Drawn by", stepDrawnOut),
       ...row(
         "Times",
-        `fetch ${ms(load.fetchMs)}, import ${ms(load.importMs)}, convert ${ms(load.convertMs)}, tessellate `,
+        `fetch ${ms(load.fetchMs)}, import ${ms(load.importMs)}, convert ${ms(load.convertMs)}, `,
         stepTessellateOut,
       ),
     );
@@ -1618,6 +2046,9 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           : stepScene!.shapes;
     selection = undefined;
     prepared.length = 0;
+    releaseBreps();
+    overlayEdges.clear();
+    overlayFaces.clear();
     tessellate();
     build();
     syncScene();
@@ -1677,18 +2108,16 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     ),
     sceneNote,
     stepPicker,
-    el("h3", {}, "Display"),
+    el("h3", {}, "Tessellation"),
     el(
-      "label",
-      {
-        className: "slider bf-tolerance",
-        title:
-          "Millimetres in the scene: each shape is tessellated at the tolerance divided by the scale it's drawn at.",
-      },
-      "Tolerance",
-      toleranceInput,
-      toleranceOut,
+      "div",
+      { className: "bf-segmented", role: "group", ariaLabel: "Tessellator" },
+      ...tessellatorButtons,
     ),
+    pixelsRow,
+    toleranceRow,
+    tessellationNote,
+    el("h3", {}, "Display"),
     el(
       "div",
       { className: "bf-toggles" },
@@ -1727,15 +2156,21 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     el(
       "details",
       {},
-      el("summary", {}, "About the tessellator"),
+      el("summary", {}, "About the tessellators"),
       el(
         "p",
         {},
-        "Faces are tessellated on the CPU, on a grid in (u, v). A trimmed face's hole is cut by dropping the triangles whose centre falls outside it, so its rim is jagged; the edges drawn over it are exact. This is the small CPU tessellator, not the reference, until the GPU path (step 5).",
+        "GPU: each face is diced per view into cells of a grid in (u, v), sized so a cell leaves at most the error in pixels, and its surface is evaluated in the vertex stage. Faces the GPU path can't draw yet are meshed on the CPU inside World.addBrep. The edges drawn over the faces are exact.",
+      ),
+      el(
+        "p",
+        {},
+        "CPU: the small tessellator, not the reference, on a grid in (u, v). A trimmed face's hole is cut by dropping the triangles whose centre falls outside it, so its rim is jagged.",
       ),
     ),
   );
   syncScene();
+  syncTessellator();
   renderShapes();
   renderLegend();
   showStats();
@@ -1897,7 +2332,12 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       index: info.localId,
       point: ecef && prep ? toShape(ecef, part.shape, prep.stand) : undefined,
     };
-    applySelection();
+    // A face's overlay and its area come from the CPU mesh's faces, which GPU mode makes now.
+    if (part.kind === "face" && withFaces(shapes.indexOf(part.shape))) {
+      build();
+    } else {
+      applySelection();
+    }
   };
   const clearSelection = () => {
     if (selection) {
@@ -1929,6 +2369,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     }
     style.remove();
     toolbar.remove();
+    clearInterval(gpuTimer);
+    releaseBreps();
     for (const d of [...draws, ...selectionDraws, ...extras]) {
       world.removeDraw(d);
     }

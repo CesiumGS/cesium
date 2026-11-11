@@ -62,7 +62,7 @@ export const EXAMPLES: ExampleInfo[] = [
     id: "brep-first-look",
     title: "B-reps: a first look",
     description:
-      "Nine exact CAD shapes as B-reps; a second scene with booleans made live by two kernels in WebAssembly, SMLib and Open CASCADE, side by side in one render form; and a third that imports real parts from NIST's STEP test models with Open CASCADE. Switch display modes, colour by surface kind, draw iso lines and normals, and pick a face for its exact point on the surface, or for which input of a boolean it came from.",
+      "Nine exact CAD shapes as B-reps; a second scene with booleans made live by two kernels in WebAssembly, SMLib and Open CASCADE, side by side in one render form; and a third that imports real parts from NIST's STEP test models with Open CASCADE. Draw the faces on the GPU, diced per view to an error in pixels, or tessellate them on the CPU. Switch display modes, colour by surface kind, draw iso lines and normals, and pick a face for its exact point on the surface, or for which input of a boolean it came from.",
     labels: ["B-reps", "CAD"],
     globe: false,
     layout: "side",
