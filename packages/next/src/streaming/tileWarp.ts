@@ -20,12 +20,24 @@ export interface WarpedPoints {
   readonly sigmaMax: number;
   /** An estimate of the map's second-derivative norm over the samples. */
   readonly secondDerivative: number;
+  /**
+   * What `TileWarp.rebound` takes to make these again for the scale as it
+   * is later; present only for a map that is affine in its scale.
+   */
+  readonly image?: object;
 }
 
 /** A tileset's anchor's route, as selection uses it (`World.tileWarp`). */
 export interface TileWarp {
   /** Goes up whenever the map changes (the route, a scaled warp's value past a bucket): drawn volumes made under an older one are remade. */
   readonly version: number;
+  /**
+   * Goes up when only the scale a map is affine in has moved past a bucket
+   * (`version` stays): volumes made from an `image` are made again by
+   * `rebound`, with no map evaluated. Absent where the map isn't affine in
+   * its scale.
+   */
+  readonly scaleVersion?: number;
   /** Goes up whenever a fit lands or goes: the tiles' fit errors are read again. */
   readonly fitVersion: number;
   /**
@@ -36,6 +48,8 @@ export interface TileWarp {
    * the samples only.
    */
   bounds(points: ArrayLike<number>, spacing?: number): WarpedPoints;
+  /** What `bounds` gave, for the scale as it is now: the `image` it came with, taken again. */
+  rebound?(image: object): WarpedPoints;
   /** The worst error (m) of the fits drawing these draws against the route; 0 where there is none yet. */
   fitError(draws: readonly DrawHandle[]): number;
 }
@@ -50,15 +64,34 @@ export interface DrawnTile {
   fit: number;
 }
 
+/** A volume carried through a map, and how to carry it again for the scale as it is later, where the map allows. */
+interface Carried {
+  readonly volume: TileVolume;
+  readonly sigmaMax: number;
+  readonly remake?: () => Carried;
+}
+
 /** What a tile keeps of its drawn volumes, for one map and the volumes they were made from. */
 export interface DrawnCache {
   readonly warp: TileWarp;
   readonly version: number;
+  /** The warp's `scaleVersion` the volumes were made at. */
+  scaleVersion: number;
   readonly basis: TileVolume;
-  readonly drawn: DrawnTile;
+  drawn: DrawnTile;
+  /** Makes `drawn` again for a moved scale. */
+  remake?: () => Carried;
   fitVersion: number;
-  content?: { basis: TileVolume; volume: TileVolume };
-  request?: { basis: TileVolume; volume: TileVolume };
+  content?: {
+    basis: TileVolume;
+    volume: TileVolume;
+    remake?: () => Carried;
+  };
+  request?: {
+    basis: TileVolume;
+    volume: TileVolume;
+    remake?: () => Carried;
+  };
 }
 
 /**
@@ -110,49 +143,83 @@ function sphereVolume(center: Vec3, radius: number): TileVolume {
 }
 
 /** The volume carried through `warp`: a box or region by its image's bounding sphere, a sphere by its centre's image and σ_max · radius. A map that fails on a sample (not finite) leaves the volume where it is. */
-function carried(
-  volume: TileVolume,
-  warp: TileWarp,
-): { volume: TileVolume; sigmaMax: number } {
+function carried(volume: TileVolume, warp: TileWarp): Carried {
   const made = carry(volume, warp);
+  const c = made.volume.kind === "sphere" ? made.volume.sphere : undefined;
+  if (
+    c &&
+    Number.isFinite(c.radius) &&
+    Number.isFinite(c.center[0]! + c.center[1]! + c.center[2]!) &&
+    Number.isFinite(made.sigmaMax)
+  ) {
+    return made.remake
+      ? { ...made, remake: () => carriedAgain(volume, made.remake!) }
+      : made;
+  }
+  return { volume, sigmaMax: 1 };
+}
+
+/** `remake`'s volume, with `carried`'s check that it is finite. */
+function carriedAgain(volume: TileVolume, remake: () => Carried): Carried {
+  const made = remake();
   const c = made.volume.kind === "sphere" ? made.volume.sphere : undefined;
   return c &&
     Number.isFinite(c.radius) &&
     Number.isFinite(c.center[0]! + c.center[1]! + c.center[2]!) &&
     Number.isFinite(made.sigmaMax)
-    ? made
+    ? {
+        ...made,
+        ...(made.remake && {
+          remake: () => carriedAgain(volume, made.remake!),
+        }),
+      }
     : { volume, sigmaMax: 1 };
 }
 
-function carry(
-  volume: TileVolume,
-  warp: TileWarp,
-): { volume: TileVolume; sigmaMax: number } {
+function carry(volume: TileVolume, warp: TileWarp): Carried {
   if (volume.kind === "sphere") {
     const c = volume.sphere.center;
     const r = volume.sphere.radius;
     const at = warp.bounds([c[0]!, c[1]!, c[2]!]);
     const around = warp.bounds(samples(volume).points, r);
-    const sigmaMax = Math.max(at.sigmaMax, around.sigmaMax);
-    // |f(p) − f(c)| ≤ σ_max·r + ½·M₂·r² (an estimate, M₂ from the samples).
-    const grown = sigmaMax * r + (around.secondDerivative * r * r) / 2;
-    return { volume: sphereVolume(at.center, grown), sigmaMax };
+    const make = (at: WarpedPoints, around: WarpedPoints): Carried => {
+      const sigmaMax = Math.max(at.sigmaMax, around.sigmaMax);
+      // |f(p) − f(c)| ≤ σ_max·r + ½·M₂·r² (an estimate, M₂ from the samples).
+      const grown = sigmaMax * r + (around.secondDerivative * r * r) / 2;
+      return {
+        volume: sphereVolume(at.center, grown),
+        sigmaMax,
+        ...(warp.rebound &&
+          at.image &&
+          around.image && {
+            remake: () =>
+              make(warp.rebound!(at.image!), warp.rebound!(around.image!)),
+          }),
+      };
+    };
+    return make(at, around);
   }
   const { points, spacing } = samples(volume);
-  const image = warp.bounds(points, spacing);
-  return {
+  const make = (image: WarpedPoints): Carried => ({
     volume: sphereVolume(image.center, image.radius),
     sigmaMax: image.sigmaMax,
-  };
+    ...(warp.rebound &&
+      image.image && { remake: () => make(warp.rebound!(image.image!)) }),
+  });
+  return make(warp.bounds(points, spacing));
 }
 
 /**
  * Where `tile`'s draws put its volume under `warp`, cached on the tile for
  * the map's version and the volume it came from (a padded or tightened
  * volume is a new object); the fit's error is read again when fits change.
+ * When only the scale the map is affine in moved (`TileWarp.scaleVersion`)
+ * the volumes are made again from what the first bounds kept, with no map
+ * evaluated.
  */
 export function drawnTile(tile: Tile, warp: TileWarp): DrawnTile {
   const basis = tile.volume;
+  const scaleVersion = warp.scaleVersion ?? 0;
   let cache = tile.drawnCache;
   if (
     !cache ||
@@ -160,15 +227,36 @@ export function drawnTile(tile: Tile, warp: TileWarp): DrawnTile {
     cache.version !== warp.version ||
     cache.basis !== basis
   ) {
-    const { volume, sigmaMax } = carried(basis, warp);
+    const { volume, sigmaMax, remake } = carried(basis, warp);
     cache = {
       warp,
       version: warp.version,
+      scaleVersion,
       basis,
       drawn: { volume, sigmaMax, fit: 0 },
+      ...(remake && { remake }),
       fitVersion: -1,
     };
     tile.drawnCache = cache;
+  } else if (cache.scaleVersion !== scaleVersion) {
+    cache.scaleVersion = scaleVersion;
+    const { volume, sigmaMax, remake } =
+      cache.remake?.() ?? carried(basis, warp);
+    cache.drawn = { volume, sigmaMax, fit: cache.drawn.fit };
+    cache.remake = remake;
+    for (const key of ["content", "request"] as const) {
+      const kept = cache[key];
+      if (kept?.remake) {
+        const again = kept.remake();
+        cache[key] = {
+          basis: kept.basis,
+          volume: again.volume,
+          ...(again.remake && { remake: again.remake }),
+        };
+      } else if (kept) {
+        delete cache[key];
+      }
+    }
   }
   if (cache.fitVersion !== warp.fitVersion) {
     cache.fitVersion = warp.fitVersion;
@@ -189,7 +277,8 @@ export function drawnContentVolume(
   drawnTile(tile, warp); // makes the cache this one lives in
   const cache = tile.drawnCache!;
   if (cache.content?.basis !== basis) {
-    cache.content = { basis, volume: carried(basis, warp).volume };
+    const { volume, remake } = carried(basis, warp);
+    cache.content = { basis, volume, ...(remake && { remake }) };
   }
   return cache.content.volume;
 }
@@ -213,7 +302,8 @@ export function drawnRequestVolume(
   drawnTile(tile, warp);
   const cache = tile.drawnCache!;
   if (cache.request?.basis !== basis) {
-    cache.request = { basis, volume: carried(basis, warp).volume };
+    const { volume, remake } = carried(basis, warp);
+    cache.request = { basis, volume, ...(remake && { remake }) };
   }
   return cache.request.volume;
 }

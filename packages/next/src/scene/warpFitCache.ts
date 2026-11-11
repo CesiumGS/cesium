@@ -16,6 +16,12 @@ export interface WarpFit {
   readonly fitted: number;
 }
 
+/** A fit made a step at a time (a generator yielding after each step, returning the lattice), so a frame's budget can cut it short and a later frame resume it. */
+export type FitSteps = Generator<void, CubicLattice, void>;
+
+/** A queued fit: the lattice at once, or the steps that make it. */
+export type FitJob = () => CubicLattice | FitSteps;
+
 interface Entry {
   readonly id: string;
   readonly key: string;
@@ -24,16 +30,24 @@ interface Entry {
   /** The route revision `lattice` was fitted at. */
   fitted: number;
   /** The queued fit and the revision it is for. */
-  job: (() => CubicLattice) | undefined;
+  job: FitJob | undefined;
   revision: number;
+  /** A fit begun and not finished, with the revision it is for. */
+  running: { readonly steps: FitSteps; readonly revision: number } | undefined;
   /** Last `request`, for LRU and for newest-first running. */
   touched: number;
+}
+
+function isSteps(made: CubicLattice | FitSteps): made is FitSteps {
+  return typeof (made as FitSteps).next === "function";
 }
 
 export class WarpFitCache {
   readonly #entries = new Map<string, Entry>();
   /** The ids of each key's entries, one for each variant it was requested under. */
   readonly #byKey = new Map<string, Set<string>>();
+  /** The entries with a fit queued or begun. */
+  readonly #queued = new Set<Entry>();
   readonly #maxEntries: number;
   readonly #maxVariants: number;
   #clock = 0;
@@ -54,15 +68,9 @@ export class WarpFitCache {
     this.#maxVariants = maxVariants;
   }
 
-  /** Queued fits not yet run. */
+  /** Fits queued and not yet finished. */
   get pending(): number {
-    let n = 0;
-    for (const e of this.#entries.values()) {
-      if (e.job) {
-        n++;
-      }
-    }
-    return n;
+    return this.#queued.size;
   }
 
   /** Entries held. */
@@ -74,13 +82,14 @@ export class WarpFitCache {
    * The fit for `key` under `variant` at route `revision`: the current one,
    * or (queueing `job`) the previous one, stale but drawable, or `undefined`
    * when there never was one. A request is the newest, to run first. A fit
-   * under another variant is never taken: it is of another displacement.
+   * under another variant is never taken: it is of another displacement. A
+   * fit already begun for this revision goes on where it was.
    */
   request(
     key: string,
     variant: string,
     revision: number,
-    job: () => CubicLattice,
+    job: FitJob,
   ): CubicLattice | undefined {
     const id = `${variant}\u0000${key}`;
     let e = this.#entries.get(id);
@@ -92,6 +101,7 @@ export class WarpFitCache {
         fitted: NaN,
         job: undefined,
         revision,
+        running: undefined,
         touched: 0,
       };
       this.#entries.set(id, e);
@@ -105,10 +115,13 @@ export class WarpFitCache {
     e.touched = ++this.#clock;
     if (e.lattice && e.fitted === revision) {
       e.job = undefined;
-    } else {
+      e.running = undefined;
+    } else if (e.running?.revision !== revision) {
+      e.running = undefined;
       e.job = job;
       e.revision = revision;
     }
+    this.#track(e);
     const lattice = e.lattice;
     this.#trimVariants(e);
     this.#evict(e);
@@ -129,34 +142,60 @@ export class WarpFitCache {
   }
 
   /**
-   * Runs queued fits, newest request first, until `budgetMs` is spent. At
-   * least one runs per call when any is queued, so a budget below one fit
-   * still makes progress. A job that throws is dropped and its error
-   * rethrown; the others stay queued. Returns how many ran.
+   * Runs queued fits, newest request first, a step at a time, until
+   * `budgetMs` is spent: a fit made in steps stops between two and goes on
+   * in a later call. At least one step (or one fit made at once) runs per
+   * call when any is queued, so a budget below one still makes progress. A
+   * job that throws is dropped and its error rethrown; the others stay
+   * queued. Returns how many fits finished.
    */
   run(budgetMs: number, now: () => number = () => performance.now()): number {
     const start = now();
     let ran = 0;
     do {
-      let next: [string, Entry] | undefined;
-      for (const pair of this.#entries) {
-        if (pair[1].job && (!next || pair[1].touched > next[1].touched)) {
-          next = pair;
+      let e: Entry | undefined;
+      for (const queued of this.#queued) {
+        if (!e || queued.touched > e.touched) {
+          e = queued;
         }
       }
-      if (!next) {
+      if (!e) {
         break;
       }
-      const [id, e] = next;
-      const job = e.job!;
-      const revision = e.revision;
-      e.job = undefined;
-      ran++;
-      const lattice = job();
-      if (this.#entries.get(id) === e) {
-        e.lattice = lattice;
-        e.fitted = revision;
+      let lattice: CubicLattice | undefined;
+      let revision = e.revision;
+      try {
+        if (!e.running) {
+          const job = e.job!;
+          e.job = undefined;
+          const made = job();
+          if (isSteps(made)) {
+            e.running = { steps: made, revision };
+          } else {
+            lattice = made;
+          }
+        }
+        if (e.running) {
+          revision = e.running.revision;
+          const step = e.running.steps.next();
+          if (step.done) {
+            lattice = step.value;
+            e.running = undefined;
+          }
+        }
+      } catch (error) {
+        e.running = undefined;
+        this.#track(e);
+        throw error;
       }
+      if (lattice) {
+        ran++;
+        if (this.#entries.get(e.id) === e) {
+          e.lattice = lattice;
+          e.fitted = revision;
+        }
+      }
+      this.#track(e);
     } while (now() - start < budgetMs);
     return ran;
   }
@@ -164,6 +203,10 @@ export class WarpFitCache {
   /** Drops every fit and queued job for `key`, under any variant. */
   forget(key: string): void {
     for (const id of this.#byKey.get(key) ?? []) {
+      const e = this.#entries.get(id);
+      if (e) {
+        this.#queued.delete(e);
+      }
       this.#entries.delete(id);
     }
     this.#byKey.delete(key);
@@ -193,15 +236,28 @@ export class WarpFitCache {
     e.lattice = fit.lattice;
     e.fitted = fit.fitted;
     e.job = undefined;
+    e.running = undefined;
+    this.#track(e);
   }
 
   clear(): void {
     this.#entries.clear();
     this.#byKey.clear();
+    this.#queued.clear();
+  }
+
+  /** Keeps `#queued` to the entries with a fit to run. */
+  #track(e: Entry): void {
+    if (e.job || e.running) {
+      this.#queued.add(e);
+    } else {
+      this.#queued.delete(e);
+    }
   }
 
   #drop(e: Entry): void {
     this.#entries.delete(e.id);
+    this.#queued.delete(e);
     const ids = this.#byKey.get(e.key);
     ids?.delete(e.id);
     if (ids?.size === 0) {

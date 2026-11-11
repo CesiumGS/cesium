@@ -25,6 +25,8 @@ Engineers who will build exaggeration into their own viewer, and geoscientists w
 
 The default overlay panel over the view, in the gallery's plain controls style. Labels for pins and the ruler are HTML over the canvas, placed from the true point's pixel (`View.toPixel` carries it through the route). A pick shows a ring that stays on the true point as the heights change.
 
+While the terrain and buildings load, a card over the view (the B-reps example's: a spinner and the stage) says what is awaited: the terrain, the buildings, then the tiles still queued to fit (`world.warpStats()`). It goes once the terrain and buildings are drawn and no fit is pending, for good (`loading.ts`: a camera that moves loads more, which doesn't bring it back), and takes no input.
+
 ## Known edges
 
 - A pick's point is the content's own where the pick resolved a domain point (a mesh's triangle or a b-rep face); on the bare ellipsoid or a billboard it is the drawn point taken back through the route (provisional, and the page says so).

@@ -7,6 +7,52 @@
   z-index: 2;
 }
 
+/* A load in progress: a card that names the stage, over a view that stays live. */
+.vex-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.vex-loading[hidden] {
+  display: none;
+}
+.vex-loading > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 24px);
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: color-mix(in oklab, Canvas 88%, transparent);
+  color: CanvasText;
+  border: 1px solid color-mix(in oklab, CanvasText 18%, transparent);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
+  backdrop-filter: blur(8px);
+  font: 400 13px/18px var(--cesium-ui-font, system-ui, sans-serif);
+}
+.vex-spinner {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid color-mix(in oklab, CanvasText 22%, transparent);
+  border-top-color: var(--cesium-ui-accent, AccentColor);
+  animation: vex-spin 0.8s linear infinite;
+}
+@keyframes vex-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vex-spinner {
+    animation: none;
+  }
+}
+
 .vex-label {
   position: absolute;
   left: 0;

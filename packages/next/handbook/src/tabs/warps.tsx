@@ -1017,7 +1017,9 @@ export function Warps() {
             3 × 3 × 3 grid and the image's bounding sphere padded for bulge by{" "}
             <C>(1/8)·M₂·L²</C>, with M₂ estimated from Jacobian differences. It
             is cached per map version and fit version. Distance, the frustum and
-            the content volume use it.
+            the content volume use it. A ranged scale is bounded per bucket (16
+            over the range), not for the whole range, so selection follows the
+            value a slider is at rather than the most the warp can do.
           </li>
           <li>
             <strong>Screen-space error</strong> is geometric error × σ_max + the

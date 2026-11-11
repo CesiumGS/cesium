@@ -74,9 +74,21 @@ import {
   linearPart,
   type WarpAt,
 } from "../warpAnchor.ts";
-import { drawnBounds, routeMap, type DrawnMap } from "../warpBounds.ts";
-import { affinePart, fitLattice, routeDisplacement } from "../warpFit.ts";
-import { WarpFitCache, type WarpFit } from "../warpFitCache.ts";
+import {
+  drawnBounds,
+  routeMap,
+  scaledBounds,
+  scaledImage,
+  type DrawnMap,
+  type ScaledImage,
+} from "../warpBounds.ts";
+import { affinePart, fitLatticeSteps, routeDisplacement } from "../warpFit.ts";
+import {
+  WarpFitCache,
+  type FitJob,
+  type FitSteps,
+  type WarpFit,
+} from "../warpFitCache.ts";
 import { WorldCurvedClips } from "./curvedClips.ts";
 import { checkTerms, termsOf } from "../warpEvaluate.ts";
 import {
@@ -248,11 +260,59 @@ const MAX_NAMES = 4096;
 /** A scale without a range is bounded in buckets of this many to the unit: its drawn volumes are made for the bucket's two ends. */
 const SCALE_BUCKETS = 64;
 
+/**
+ * A scale with a range is bounded in this many buckets over it, the same
+ * way. Selection's drawn volumes hold for the whole bucket the value is in,
+ * not the whole range: at the range's top a tile's screen-space error is
+ * stretched by the most the warp can do, which, held for a slider at the
+ * bottom, has the tileset refine and load far past what is drawn.
+ */
+const RANGE_BUCKETS = 16;
+
+/** A scaled warp's bucket now: a key for it, and the ends of the values it holds for. */
+function scaleBucket(warp: Warp): { key: string; low: number; high: number } {
+  const value = warpScaleOf(warp);
+  const range = warp.scale!.range;
+  if (range && value >= range[0] && value <= range[1]) {
+    const span = range[1] - range[0];
+    if (!(span > 0)) {
+      return { key: "r", low: range[0], high: range[1] };
+    }
+    const bucket = Math.min(
+      RANGE_BUCKETS - 1,
+      Math.floor(((value - range[0]) / span) * RANGE_BUCKETS),
+    );
+    return {
+      key: `r${bucket}`,
+      low: range[0] + (span * bucket) / RANGE_BUCKETS,
+      high: range[0] + (span * (bucket + 1)) / RANGE_BUCKETS,
+    };
+  }
+  const bucket = Math.floor(value * SCALE_BUCKETS);
+  return {
+    key: String(bucket),
+    low: bucket / SCALE_BUCKETS,
+    high: (bucket + 1) / SCALE_BUCKETS,
+  };
+}
+
 /** What selection reads of one warped anchor (`World.tileWarp`): drawn bounds from its route, remade when the route or a scale's bucket changes. */
 class AnchorTileWarp implements TileWarp {
   version = 0;
+  scaleVersion = 0;
   #key = "";
+  #identity = "";
   #maps: DrawnMap[] = [];
+  /**
+   * A route of one scaled warp among rigid steps is affine in the scale: its
+   * map at scale 0 and at scale 1, from which the bounds for any interval of
+   * the scale follow (`scaledImage`), so a slider that crosses a bucket
+   * remakes no tile's map evaluations.
+   */
+  #affine: { base: DrawnMap; full: DrawnMap } | undefined;
+  /** The scale values the drawn volumes hold for (the bucket the value is in). */
+  #low = 0;
+  #high = 1;
 
   constructor(private readonly warps: WorldWarps) {}
 
@@ -262,6 +322,11 @@ class AnchorTileWarp implements TileWarp {
 
   bounds(points: ArrayLike<number>, spacing?: number): WarpedPoints {
     try {
+      const affine = this.#affine;
+      if (affine) {
+        const image = scaledImage(affine.base, affine.full, points, spacing);
+        return { ...scaledBounds(image, this.#low, this.#high), image };
+      }
       return drawnBounds(this.#maps, points, spacing);
     } catch {
       // A map undefined at a sample (a height warp at the body's centre,
@@ -277,6 +342,13 @@ class AnchorTileWarp implements TileWarp {
     }
   }
 
+  rebound(image: object): WarpedPoints {
+    return {
+      ...scaledBounds(image as ScaledImage, this.#low, this.#high),
+      image,
+    };
+  }
+
   fitError(draws: readonly DrawHandle[]): number {
     return this.warps.fitError(draws);
   }
@@ -284,25 +356,59 @@ class AnchorTileWarp implements TileWarp {
   /**
    * Remakes the maps when the anchor's route changed or a scaled warp
    * left its bucket: the map to the anchor's coordinates (`A⁻¹ · route`,
-   * `A` its place), at the ends of each scale's range (or bucket). With
-   * several scales the ends are taken together: an estimate.
+   * `A` its place), at the ends of each scale's bucket (`scaleBucket`). With
+   * several scales the ends are taken together: an estimate. A route that is
+   * affine in its one scale keeps its maps across buckets, and `scaleVersion`
+   * says the bucket moved.
    */
   refresh(route: Route, stamp: number): void {
     const parts: string[] = [`${stamp}`];
+    const buckets = new Map<Warp, { key: string; low: number; high: number }>();
     for (const s of route.steps) {
       if (s.kind === "warp" && s.warp.scale) {
-        parts.push(
-          s.warp.scale.range
-            ? "r"
-            : String(Math.floor(warpScaleOf(s.warp) * SCALE_BUCKETS)),
-        );
+        const bucket = scaleBucket(s.warp);
+        parts.push(bucket.key);
+        buckets.set(s.warp, bucket);
       }
     }
-    const key = parts.join(":");
+    const only = route.steps.find((s) => s.kind === "warp" && s.warp.scale);
+    const affine =
+      buckets.size === 1 &&
+      only?.kind === "warp" &&
+      !only.inverse &&
+      route.steps.every((s) => s === only || s.kind === "rigid");
+    const identity = affine ? `${stamp}:a` : parts.join(":");
+    const key = affine ? `${identity}:${parts[1]}` : identity;
     if (key === this.#key) {
       return;
     }
     this.#key = key;
+    if (affine) {
+      const bucket = buckets.get(only.warp)!;
+      this.#low = bucket.low;
+      this.#high = bucket.high;
+      this.scaleVersion++;
+      if (identity === this.#identity) {
+        return;
+      }
+      this.#identity = identity;
+      this.version++;
+      const after = invertAffine(mat4(), affinePart(route));
+      this.#maps = [];
+      this.#affine = {
+        base: routeMap(
+          withScalesAt(route, () => 0),
+          after,
+        ),
+        full: routeMap(
+          withScalesAt(route, () => 1),
+          after,
+        ),
+      };
+      return;
+    }
+    this.#identity = identity;
+    this.#affine = undefined;
     this.version++;
     const after = invertAffine(mat4(), affinePart(route));
     if (parts.length === 1) {
@@ -310,13 +416,8 @@ class AnchorTileWarp implements TileWarp {
       return;
     }
     const end = (high: boolean) => (warp: Warp) => {
-      const s = warpScaleOf(warp);
-      const range = warp.scale!.range;
-      if (range) {
-        return high ? range[1] : range[0];
-      }
-      const bucket = Math.floor(s * SCALE_BUCKETS);
-      return (bucket + (high ? 1 : 0)) / SCALE_BUCKETS;
+      const bucket = buckets.get(warp)!;
+      return high ? bucket.high : bucket.low;
     };
     this.#maps = [
       routeMap(withScalesAt(route, end(false)), after),
@@ -1299,7 +1400,7 @@ export class WorldWarps {
     );
     const operation = describeRoute(anchor.route);
     const { fitRoute, affine, pointRoute } = anchor;
-    let produce: () => CubicLattice;
+    let produce: FitJob;
     if (at === "anchor") {
       const origin =
         this.#originOf(index, d) ??
@@ -1823,7 +1924,7 @@ function describeRoute(route: Route): string {
  * matrix and `anchorAffine` the anchor's place; the lattice's error is
  * returned in metres, as it is measured in the model's units.
  */
-function fitDraw(
+function* fitDraw(
   route: Route,
   anchorAffine: Float64Array,
   matrix: Float64Array,
@@ -1832,12 +1933,12 @@ function fitDraw(
   tolerance: number,
   operation: string,
   report: (message: string) => void,
-): CubicLattice {
+): FitSteps {
   const scale = Math.max(radius, 1e-3);
   try {
     const metres = Math.hypot(matrix[0]!, matrix[1]!, matrix[2]!) || 1;
     const affine = multiply(mat4(), anchorAffine, matrix);
-    const fit = fitLattice(
+    const fit = yield* fitLatticeSteps(
       routeDisplacement(route, matrix, affine),
       { center, scale },
       { tolerance: tolerance / metres, operation },

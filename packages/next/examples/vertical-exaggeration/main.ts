@@ -11,10 +11,11 @@ import { truePick, type Frames } from "@cesium/next/frames";
 import { Instant } from "@cesium/next/time";
 import type { Dispose, ExampleContext } from "../types.ts";
 import {
-  MAX_EXAGGERATION,
   createExaggeration,
+  MAX_EXAGGERATION,
   scaleOf,
 } from "./exaggeration.ts";
+import { createLoading, type LoadingState } from "./loading.ts";
 import { createPins } from "./pins.ts";
 import { CAMERA, CLOSE_UP, PLACES, positionOf, type Shot } from "./places.ts";
 import {
@@ -128,6 +129,53 @@ export async function run({
     viewer.container.prepend(overlay);
   }
   scope.defer(() => overlay.remove());
+
+  // A card names what the view waits for until the terrain and buildings are
+  // drawn and no fit is pending; the view stays live under it, and it takes
+  // no input.
+  const loadingText = document.createElement("span");
+  const loadingCard = document.createElement("div");
+  loadingCard.className = "vex-loading";
+  loadingCard.setAttribute("role", "status");
+  const loadingBody = document.createElement("div");
+  const spinner = document.createElement("span");
+  spinner.className = "vex-spinner";
+  spinner.setAttribute("aria-hidden", "true");
+  loadingBody.append(spinner, loadingText);
+  loadingCard.append(loadingBody);
+  loadingText.textContent = "Loading terrain…";
+  overlay.append(loadingCard);
+  let buildings: LoadingState["buildings"] = "waiting";
+  let tileset:
+    | {
+        readonly stats: {
+          readonly loaded: number;
+          readonly selected: ReadonlyMap<number, number>;
+        };
+      }
+    | undefined;
+  const loading = createLoading();
+  const loadingStarted = performance.now();
+  const loadingTimer = setInterval(() => {
+    if (
+      buildings === "loading" &&
+      tileset !== undefined &&
+      tileset.stats.loaded > 0 &&
+      [...tileset.stats.selected.values()].some((n) => n > 0)
+    ) {
+      buildings = "drawn";
+    }
+    const stage = loading.update({ stats: world.warpStats(), buildings });
+    // Content that never settles (a tileset with nothing near the camera)
+    // doesn't hold the card up forever.
+    if (stage === undefined || performance.now() - loadingStarted > 90_000) {
+      loadingCard.hidden = true;
+      clearInterval(loadingTimer);
+      return;
+    }
+    loadingText.textContent = stage;
+  }, 250);
+  scope.defer(() => clearInterval(loadingTimer));
 
   const sites = createSites(PLACES);
   const pins = createPins(viewer, sites, overlay);
@@ -543,16 +591,21 @@ export async function run({
       buildingsNote.textContent = notes.join(" ");
     }
   };
+  buildings = "loading";
   void viewer
     .addTileset({ ion: ION_OSM_BUILDINGS })
-    .then((tileset) => {
+    .then((added) => {
       if (signal.aborted) {
-        viewer.remove(tileset);
+        viewer.remove(added);
         return;
       }
-      scope.defer(() => viewer.remove(tileset));
+      tileset = added;
+      scope.defer(() => viewer.remove(added));
     })
-    .catch((error: unknown) => failed("Cesium OSM Buildings", error));
+    .catch((error: unknown) => {
+      buildings = "failed";
+      failed("Cesium OSM Buildings", error);
+    });
   void addTruck().catch((error: unknown) => failed("The truck model", error));
 
   return () => {

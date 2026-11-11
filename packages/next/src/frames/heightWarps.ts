@@ -56,23 +56,26 @@ interface Surface {
  * checked to a micrometre or better. Near the centre it defers to the
  * ellipsoid's own.
  */
+const probe = new Float64Array(3);
+const projector = new Float64Array(9);
+
 function footOf(
   ellipsoid: Ellipsoid,
   p: ArrayLike<number>,
   foot: Float64Array,
 ): Float64Array | undefined {
-  const start = ellipsoid.scaleToGeodeticSurface(
-    Float64Array.of(p[0]!, p[1]!, p[2]!),
-    foot,
-  );
+  const px = p[0]!;
+  const py = p[1]!;
+  const pz = p[2]!;
+  probe[0] = px;
+  probe[1] = py;
+  probe[2] = pz;
+  const start = ellipsoid.scaleToGeodeticSurface(probe, foot);
   if (start === undefined) {
     return undefined;
   }
   const o = ellipsoid.oneOverRadii;
   const os = ellipsoid.oneOverRadiiSquared;
-  const px = p[0]!;
-  const py = p[1]!;
-  const pz = p[2]!;
   const x2 = px * px * o[0]! * o[0]!;
   const y2 = py * py * o[1]! * o[1]!;
   const z2 = pz * pz * o[2]! * o[2]!;
@@ -80,8 +83,10 @@ function footOf(
     return foot;
   }
   // λ from the foot the ellipsoid found, by its largest component.
-  const dominant = [Math.abs(px), Math.abs(py), Math.abs(pz)];
-  const axis = dominant.indexOf(Math.max(...dominant));
+  const ax = Math.abs(px);
+  const ay = Math.abs(py);
+  const az = Math.abs(pz);
+  const axis = ax >= ay && ax >= az ? 0 : ay >= az ? 1 : 2;
   let lambda = (p[axis]! / foot[axis]! - 1) / os[axis]!;
   for (let i = 0; i < 30; i++) {
     const xm = 1 / (1 + lambda * os[0]!);
@@ -129,16 +134,21 @@ function ellipsoidSurface(ellipsoid: Ellipsoid, name: string): Surface {
     // The implicit surface's shape operator: P·diag(1/radii²)·P / |m|, with
     // m = diag(1/radii²)·foot (the gradient is 2m), and P = I − nnᵀ.
     shape(foot, n, out) {
-      const m = [foot[0]! * inv[0]!, foot[1]! * inv[1]!, foot[2]! * inv[2]!];
-      const length = Math.hypot(m[0]!, m[1]!, m[2]!);
-      const d = [inv[0]!, inv[1]!, inv[2]!];
+      const mx = foot[0]! * inv[0]!;
+      const my = foot[1]! * inv[1]!;
+      const mz = foot[2]! * inv[2]!;
+      const length = Math.hypot(mx, my, mz);
+      // P = I − nnᵀ, symmetric.
+      for (let c = 0; c < 3; c++) {
+        for (let r = 0; r < 3; r++) {
+          projector[c * 3 + r] = (r === c ? 1 : 0) - n[r]! * n[c]!;
+        }
+      }
       for (let c = 0; c < 3; c++) {
         for (let r = 0; r < 3; r++) {
           let sum = 0;
           for (let a = 0; a < 3; a++) {
-            const pr = (r === a ? 1 : 0) - n[r]! * n[a]!;
-            const pc = (c === a ? 1 : 0) - n[c]! * n[a]!;
-            sum += pr * d[a]! * pc;
+            sum += projector[a * 3 + r]! * inv[a]! * projector[a * 3 + c]!;
           }
           out[c * 3 + r] = sum / length;
         }

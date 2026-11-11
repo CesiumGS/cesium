@@ -15,6 +15,8 @@ import {
   roundUp32,
   routeMap,
   routeSingularRange,
+  scaledBounds,
+  scaledImage,
   singularValues,
   termBoundsOver,
   weightFollowsValue,
@@ -500,5 +502,73 @@ describe("a map's drawn bounding sphere", () => {
     // 3 km up moves 27 km: the sphere sits well off the true points.
     expect(b.center[0]!).toBeGreaterThan(R + 20_000);
     expect(b.sigmaMax).toBeCloseTo(10, 9);
+  });
+});
+
+describe("a map affine in its scale", () => {
+  const scaled = (value: number): Warp => ({
+    ...exaggeration(10),
+    scale: { value },
+  });
+  const points = [
+    R + 3000,
+    0,
+    0,
+    R + 3500,
+    400,
+    0,
+    R + 2600,
+    0,
+    -300,
+    R + 900,
+    -600,
+    500,
+    R + 3300,
+    200,
+    300,
+  ];
+  const mapAt = (s: number) =>
+    routeMap(route({ kind: "warp", warp: scaled(s), inverse: false }));
+
+  it("gives, from the map at 0 and 1, the bounds drawnBounds gives for an interval, and a little more", () => {
+    const image = scaledImage(mapAt(0), mapAt(1), points, 700);
+    for (const [low, high] of [
+      [0, 1],
+      [0.25, 0.3],
+      [0.9, 1],
+      [0.5, 0.5],
+    ] as const) {
+      const exact = drawnBounds([mapAt(low), mapAt(high)], points, 700);
+      const made = scaledBounds(image, low, high);
+      // Holds every image the exact one does, at the interval's scales.
+      const out = new Float64Array(3);
+      for (const s of [low, (low + high) / 2, high]) {
+        const at = mapAt(s);
+        for (let i = 0; i < points.length / 3; i++) {
+          at(points.slice(i * 3, i * 3 + 3), out);
+          expect(
+            Math.hypot(
+              out[0]! - made.center[0]!,
+              out[1]! - made.center[1]!,
+              out[2]! - made.center[2]!,
+            ),
+          ).toBeLessThanOrEqual(made.radius);
+        }
+      }
+      expect(made.radius).toBeGreaterThanOrEqual(exact.radius * 0.999);
+      expect(made.radius).toBeLessThan(exact.radius * 1.5 + 10);
+      expect(made.sigmaMax).toBeGreaterThanOrEqual(exact.sigmaMax - 1e-9);
+      expect(made.sigmaMax).toBeLessThan(exact.sigmaMax * 1.001);
+      expect(made.sigmaMin).toBeCloseTo(exact.sigmaMin, 2);
+      expect(made.secondDerivative).toBeCloseTo(exact.secondDerivative, 12);
+    }
+  });
+
+  it("gets tighter as the interval narrows, where the whole range is far larger", () => {
+    const image = scaledImage(mapAt(0), mapAt(1), points, 0);
+    const whole = scaledBounds(image, 0, 1);
+    const near = scaledBounds(image, 0.3, 0.35);
+    expect(near.radius).toBeLessThan(whole.radius / 3);
+    expect(near.sigmaMax).toBeCloseTo(1 + 9 * 0.35, 6);
   });
 });

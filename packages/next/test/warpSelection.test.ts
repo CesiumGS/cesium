@@ -320,6 +320,50 @@ describe("selection on drawn volumes", () => {
     expect(drawnTile(root, exaggeration(3))).not.toBe(second);
   });
 
+  it("makes a tile's volumes again from what bounds kept when only the scale moved", () => {
+    const root = tree();
+    const map = routeMap(exaggerationRoute(10));
+    const calls = { bounds: 0, rebound: 0 };
+    const warp = {
+      version: 1,
+      scaleVersion: 1,
+      fitVersion: 0,
+      high: 1,
+      bounds(points: ArrayLike<number>, spacing?: number) {
+        calls.bounds++;
+        const b = drawnBounds([map], points, spacing);
+        return { ...b, image: { at: warp.high } };
+      },
+      rebound(image: object) {
+        calls.rebound++;
+        // The same sphere, made smaller for a scale that came down.
+        const b = drawnBounds([map], [R + 3000, 0, 0], 0);
+        return {
+          ...b,
+          radius: 10 * warp.high,
+          image: { ...image, at: warp.high },
+        };
+      },
+      fitError: () => 0,
+    };
+    const first = drawnTile(root, warp);
+    expect(calls).toEqual({ bounds: 1, rebound: 0 });
+    expect(drawnTile(root, warp)).toBe(first);
+    warp.high = 0.5;
+    warp.scaleVersion++;
+    const second = drawnTile(root, warp);
+    expect(second).not.toBe(first);
+    expect(calls).toEqual({ bounds: 1, rebound: 1 });
+    expect(second.volume.sphere.radius).toBe(5);
+    // The same version and scale: kept.
+    expect(drawnTile(root, warp)).toBe(second);
+    // A map that moved: bounds again.
+    const before = calls.bounds;
+    warp.version++;
+    drawnTile(root, warp);
+    expect(calls.bounds).toBe(before + 1);
+  });
+
   it("carries a sphere volume's centre and stretches its radius", () => {
     const json: Json = {
       geometricError: 100,

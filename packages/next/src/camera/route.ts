@@ -176,21 +176,37 @@ export function resolveRoute(
   };
 }
 
+const forwardAt = new Float64Array(3);
+const forwardFrom = new Float64Array(3);
+let forwarding = false;
+
 /** A point of `route.frame` carried to `route.base`, in float64, each warp at the scale it has now (`warpForward`). */
 export function routeForward(
   route: Route,
   p: ArrayLike<number>,
   out: Float64Array = new Float64Array(3),
 ): Float64Array {
-  const at = new Float64Array([p[0]!, p[1]!, p[2]!]);
-  for (const step of route.steps) {
-    if (step.kind === "rigid") {
-      transformPoint(step.matrix, at, at);
-    } else if (step.inverse) {
-      warpInverse(step.warp, at, at);
-    } else {
-      warpForward(step.warp, at.slice(), at);
+  // The scratch is shared unless a warp's own `forward` came back here.
+  const shared = !forwarding;
+  const at = shared ? forwardAt : new Float64Array(3);
+  const from = shared ? forwardFrom : new Float64Array(3);
+  at[0] = p[0]!;
+  at[1] = p[1]!;
+  at[2] = p[2]!;
+  forwarding = true;
+  try {
+    for (const step of route.steps) {
+      if (step.kind === "rigid") {
+        transformPoint(step.matrix, at, at);
+      } else if (step.inverse) {
+        warpInverse(step.warp, at, at);
+      } else {
+        from.set(at);
+        warpForward(step.warp, from, at);
+      }
     }
+  } finally {
+    forwarding = !shared;
   }
   out.set(at);
   return out;

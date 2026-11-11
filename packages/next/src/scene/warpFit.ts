@@ -199,14 +199,20 @@ export function evaluateLattice(
   return out;
 }
 
-/** Fits `cells` per axis over the cube [−1, 1]³ of u. */
-function fitCells(
+/**
+ * Fits `cells` per axis over the cube [−1, 1]³ of u, a cell at a time (it
+ * yields before each but the first). `giveUp` is a residual past which the
+ * level is a miss whatever the cells left: it stops there, `whole` false and
+ * the lattice unfinished, its `errorBound` the worst residual so far.
+ */
+function* fitCellsSteps(
   displacement: DisplacementFunction,
   center: Float64Array,
   scale: number,
   cells: number,
   operation: string | undefined,
-): CubicLattice {
+  giveUp: number,
+): Generator<void, { lattice: CubicLattice; whole: boolean }, void> {
   const b = fitBasis();
   const fitN = b.fitV.length / 3;
   const checkN = b.checkV.length / 3;
@@ -216,18 +222,23 @@ function fitCells(
   const samples = new Float64Array(fitN * 3);
   const half = 1 / cells;
   let worst = 0;
-  for (let iz = 0; iz < cells; iz++) {
-    for (let iy = 0; iy < cells; iy++) {
-      for (let ix = 0; ix < cells; ix++) {
+  let whole = true;
+  let ix = 0;
+  let iy = 0;
+  let iz = 0;
+  const at = (v: Float64Array, s: number) => {
+    // u = −1 + (2 i + v + 1) / cells
+    p[0] = center[0]! + scale * (-1 + (2 * ix + v[3 * s]! + 1) * half);
+    p[1] = center[1]! + scale * (-1 + (2 * iy + v[3 * s + 1]! + 1) * half);
+    p[2] = center[2]! + scale * (-1 + (2 * iz + v[3 * s + 2]! + 1) * half);
+  };
+  cellsLoop: for (iz = 0; iz < cells; iz++) {
+    for (iy = 0; iy < cells; iy++) {
+      for (ix = 0; ix < cells; ix++) {
         const cell = (iz * cells + iy) * cells + ix;
-        const at = (v: Float64Array, s: number) => {
-          // u = −1 + (2 i + v + 1) / cells
-          p[0] = center[0]! + scale * (-1 + (2 * ix + v[3 * s]! + 1) * half);
-          p[1] =
-            center[1]! + scale * (-1 + (2 * iy + v[3 * s + 1]! + 1) * half);
-          p[2] =
-            center[2]! + scale * (-1 + (2 * iz + v[3 * s + 2]! + 1) * half);
-        };
+        if (cell > 0) {
+          yield;
+        }
         for (let s = 0; s < fitN; s++) {
           at(b.fitV, s);
           displacement(p, d);
@@ -269,36 +280,45 @@ function fitCells(
             );
           }
           worst = Math.max(worst, r);
+          if (worst > giveUp) {
+            whole = false;
+            break cellsLoop;
+          }
         }
       }
     }
   }
   return {
-    kind: "cubic",
-    center: Array.from(center),
-    scale,
-    cells,
-    coefficients,
-    errorBound: worst,
-    estimate: true,
-    ...(operation === undefined ? {} : { operation }),
+    lattice: {
+      kind: "cubic",
+      center: Array.from(center),
+      scale,
+      cells,
+      coefficients,
+      errorBound: worst,
+      estimate: true,
+      ...(operation === undefined ? {} : { operation }),
+    },
+    whole,
   };
 }
 
 /**
  * Fits `displacement` over the tile's sphere (the cube [−1, 1]³ of u covers
- * it) with a lattice of cubics: 1 cell per axis, doubling (1, 2, 4, 8) until
- * `errorBound ≤ tolerance` or `maxCells`. Returns the last fit, so a caller
- * reads from its `errorBound` whether it missed. The bound is the largest
- * residual at a grid of 9³ points per cell, an estimate and no proof
- * (`estimate` is true); a caller wanting the plan's `geometricError / 64`
- * with a millimetre floor passes `max(1e-3, geometricError / 64)`.
+ * it) with a lattice of cubics, a cell at a time (it yields before each but
+ * the first, so a caller may spread a fit over frames; `fitLattice` is the
+ * same at once). Starts
+ * at 1 cell per axis; a level that misses `tolerance` is given up on at the
+ * first cell that does, and the next is the one the miss predicts: a cubic's
+ * error falls as the fourth power of the cell, so a miss by a factor of f
+ * wants f^¼ times the cells, from (1, 2, 4, 8) at least the next up, until
+ * `errorBound ≤ tolerance` or `maxCells`.
  */
-export function fitLattice(
+export function* fitLatticeSteps(
   displacement: DisplacementFunction,
   tile: { center: ArrayLike<number>; scale: number },
   options: { tolerance: number; maxCells?: number; operation?: string },
-): CubicLattice {
+): Generator<void, CubicLattice, void> {
   if (!(tile.scale > 0) || !Number.isFinite(tile.scale)) {
     throw new RangeError(
       `fitLattice: scale is ${tile.scale}; it must be positive`,
@@ -315,17 +335,52 @@ export function fitLattice(
     tile.center[2]!,
   ]);
   const maxCells = options.maxCells ?? LATTICE_CELLS[LATTICE_CELLS.length - 1]!;
-  let fit: CubicLattice | undefined;
-  for (const cells of LATTICE_CELLS) {
-    if (fit && cells > maxCells) {
-      break;
+  const levels = LATTICE_CELLS.filter((c, i) => i === 0 || c <= maxCells);
+  let level = 0;
+  for (;;) {
+    const cells = levels[level]!;
+    const last = level === levels.length - 1;
+    const { lattice } = yield* fitCellsSteps(
+      displacement,
+      center,
+      tile.scale,
+      cells,
+      options.operation,
+      last ? Infinity : options.tolerance,
+    );
+    if (last || lattice.errorBound <= options.tolerance) {
+      return lattice;
     }
-    fit = fitCells(displacement, center, tile.scale, cells, options.operation);
-    if (fit.errorBound <= options.tolerance) {
-      break;
+    const wanted = cells * (lattice.errorBound / options.tolerance) ** 0.25;
+    level++;
+    while (level < levels.length - 1 && levels[level]! < wanted) {
+      level++;
     }
   }
-  return fit!;
+}
+
+/**
+ * Fits `displacement` over the tile's sphere (the cube [−1, 1]³ of u covers
+ * it) with a lattice of cubics: 1 cell per axis, then more (up to 8, `maxCells`)
+ * until `errorBound ≤ tolerance`, as `fitLatticeSteps` has it. Returns the
+ * last fit, so a caller reads from its `errorBound` whether it missed. The
+ * bound is the largest residual at a grid of 9³ points per cell, an estimate
+ * and no proof (`estimate` is true); a caller wanting the plan's
+ * `geometricError / 64` with a millimetre floor passes `max(1e-3,
+ * geometricError / 64)`.
+ */
+export function fitLattice(
+  displacement: DisplacementFunction,
+  tile: { center: ArrayLike<number>; scale: number },
+  options: { tolerance: number; maxCells?: number; operation?: string },
+): CubicLattice {
+  const steps = fitLatticeSteps(displacement, tile, options);
+  for (;;) {
+    const next = steps.next();
+    if (next.done) {
+      return next.value;
+    }
+  }
 }
 
 /** A scalar of model point `p` (a curved clip's signed distance, `fitClipField`). */

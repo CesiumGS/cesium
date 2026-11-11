@@ -1161,33 +1161,71 @@ describe("a ranged scale", () => {
     expect(bounds).toHaveBeenCalledTimes(4);
   });
 
-  it("keeps selection's drawn volumes for the whole range, and remakes them by bucket without one", () => {
+  it("keeps selection's drawn volumes over the bucket of a range a value is in, and over a 64th of the unit without one", () => {
     const ranged = setup({ scaled: "world", range: [0, 1] });
     addQuad(ranged);
     ranged.step();
     const before = ranged.world.tileWarp(ranged.earth)!;
-    const version = before.version;
-    ranged.scale!.value = 0.2;
+    const { version, scaleVersion } = before;
+    // From 1 to 0.95: the top sixteenth of the range still.
+    ranged.scale!.value = 0.95;
     ranged.step();
     expect(ranged.world.tileWarp(ranged.earth)!.version).toBe(version);
-    // Its image holds the warp at either end of the range.
+    expect(ranged.world.tileWarp(ranged.earth)!.scaleVersion).toBe(
+      scaleVersion,
+    );
+    // Its image holds the warp at either end of the bucket, no more: not
+    // the 13 km the whole range would make it.
     const points = [R + 3000, 0, 0];
     const image = ranged.world.tileWarp(ranged.earth)!.bounds(points);
     expect(image.center[0]!).toBeGreaterThan(R + 3000);
-    expect(image.radius).toBeGreaterThan(5_000);
+    expect(image.radius).toBeGreaterThan(500);
+    expect(image.radius).toBeLessThan(2_000);
+    // Another bucket moves the scale, not the map: the volumes are made again
+    // from what `bounds` kept, and hold the value there.
+    ranged.scale!.value = 0.5;
+    ranged.step();
+    const moved = ranged.world.tileWarp(ranged.earth)!;
+    expect(moved.version).toBe(version);
+    expect(moved.scaleVersion!).toBeGreaterThan(scaleVersion!);
+    const there = moved.bounds(points);
+    const again = moved.rebound!(there.image!);
+    expect(Array.from(again.center)).toEqual(Array.from(there.center));
+    expect(again.radius).toBe(there.radius);
+    expect(there.radius).toBeLessThan(2_000);
+    expect(
+      Math.abs(there.center[0]! - (R + 3000 * (1 + 0.5 * 9))),
+    ).toBeLessThanOrEqual(there.radius);
+    // The image of the old bucket, taken again for this one.
+    const stale = moved.rebound!(image.image!);
+    expect(stale.center[0]!).toBeCloseTo(there.center[0]!, 6);
 
     const free = setup({ scaled: "world" });
     addQuad(free);
     free.step();
-    const start = free.world.tileWarp(free.earth)!.version;
+    const start = free.world.tileWarp(free.earth)!.scaleVersion!;
     free.scale!.value = 0.5;
     free.step();
-    const moved = free.world.tileWarp(free.earth)!.version;
-    expect(moved).toBeGreaterThan(start);
+    const crossed = free.world.tileWarp(free.earth)!.scaleVersion!;
+    expect(crossed).toBeGreaterThan(start);
     // Within the bucket (1/64) it stays.
     free.scale!.value = 0.5 + 1 / 256;
     free.step();
-    expect(free.world.tileWarp(free.earth)!.version).toBe(moved);
+    expect(free.world.tileWarp(free.earth)!.scaleVersion).toBe(crossed);
+  });
+
+  it("remakes the maps for a bucket when the route isn't affine in its scale", () => {
+    const s = setup({ scaled: "world", range: [0, 1], second: true });
+    addQuad(s);
+    s.step();
+    const warp = s.world.tileWarp(s.earth)!;
+    const version = warp.version;
+    s.scale!.value = 0.5;
+    s.step();
+    expect(s.world.tileWarp(s.earth)!.version).toBeGreaterThan(version);
+    expect(s.world.tileWarp(s.earth)!.bounds([R + 3000, 0, 0]).image).toBe(
+      undefined,
+    );
   });
 });
 

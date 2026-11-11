@@ -8,6 +8,7 @@ import {
   affinePart,
   evaluateLattice,
   fitLattice,
+  fitLatticeSteps,
   routeDisplacement,
 } from "../src/scene/warpFit.ts";
 import { WarpFitCache } from "../src/scene/warpFitCache.ts";
@@ -166,6 +167,70 @@ describe("fitLattice", () => {
       fitLattice(wave, tile, { tolerance: 0, maxCells: 4, operation: "wave" })
         .operation,
     ).toBe("wave");
+  });
+
+  describe("in steps", () => {
+    const wave = (p: Float64Array, out: Float64Array) => {
+      out[0] = 3 * Math.sin(p[0]! / 40) + 0.5 * Math.cos(p[1]! / 25);
+      out[1] = 2 * Math.sin((p[1]! + p[2]!) / 55);
+      out[2] = Math.cos(p[2]! / 30) * Math.sin(p[0]! / 70);
+    };
+    const tile = { center: [10, -20, 5], scale: 200 };
+
+    const drive = (steps: ReturnType<typeof fitLatticeSteps>) => {
+      let yields = 0;
+      for (;;) {
+        const next = steps.next();
+        if (next.done) {
+          return { lattice: next.value, yields };
+        }
+        yields++;
+      }
+    };
+
+    it("makes the lattice fitLattice does, yielding between cells and never inside a single one", () => {
+      const tolerance = 0.01;
+      const { lattice, yields } = drive(
+        fitLatticeSteps(wave, tile, { tolerance }),
+      );
+      const whole = fitLattice(wave, tile, { tolerance });
+      expect(lattice).toEqual(whole);
+      expect(lattice.cells).toBeGreaterThan(1);
+      expect(yields).toBeGreaterThan(0);
+      expect(
+        drive(fitLatticeSteps(wave, tile, { tolerance: 1e9 })).yields,
+      ).toBe(0);
+    });
+
+    it("goes to the cells a miss predicts, not through each doubling", () => {
+      let calls = 0;
+      const counted = (p: Float64Array, out: Float64Array) => {
+        calls++;
+        wave(p, out);
+      };
+      const perCell = 125 + 729;
+      const missBy1 = fitLattice(wave, tile, { tolerance: 0, maxCells: 1 });
+      // A target the 1-cell fit misses by well over 16: 4 cells at least.
+      const tolerance = missBy1.errorBound / 40;
+      const fit = fitLattice(counted, tile, { tolerance });
+      expect(fit.errorBound).toBeLessThanOrEqual(tolerance);
+      expect(fit.cells).toBeGreaterThanOrEqual(4);
+      // Each missed level gave up within its first cell (at most 1, 2 or 4 cells' worth here) and the lattice that passed was made whole.
+      expect(calls).toBeLessThanOrEqual(perCell * (fit.cells ** 3 + 3));
+    });
+
+    it("gives up on a level at its first missing cell", () => {
+      let calls = 0;
+      const counted = (p: Float64Array, out: Float64Array) => {
+        calls++;
+        wave(p, out);
+      };
+      const perCell = 125 + 729;
+      // Unreachable: 1 cell misses, and the 8-cell level is the last, run whole.
+      const fit = fitLattice(counted, tile, { tolerance: 1e-12 });
+      expect(fit.cells).toBe(8);
+      expect(calls).toBeLessThanOrEqual(perCell * (1 + 512));
+    });
   });
 
   it("rejects non-finite displacements and bad tiles", () => {
@@ -432,6 +497,114 @@ describe("WarpFitCache", () => {
     expect(order).toEqual(["d", "c", "b"]);
     expect(cache.run(100, c.now)).toBe(1);
     expect(cache.run(100, c.now)).toBe(0);
+  });
+
+  describe("a fit in steps", () => {
+    /** A fit of `steps` steps, 4 ms each: the clock `c` moves as it works. */
+    const stepped = (
+      c: ReturnType<typeof clock>,
+      steps: number,
+      tag: number,
+      log: string[] = [],
+    ) =>
+      function* (): Generator<void, CubicLattice, void> {
+        for (let i = 0; i < steps; i++) {
+          log.push(`${tag}.${i}`);
+          c.tick(4);
+          yield;
+        }
+        return lattice(tag);
+      };
+
+    it("stops between steps when the budget is spent, and goes on in the next call", () => {
+      const cache = new WarpFitCache();
+      const c = clock();
+      const log: string[] = [];
+      cache.request("a", "w", 1, () => stepped(c, 5, 7, log)());
+      expect(cache.run(9, c.now)).toBe(0);
+      expect(log).toEqual(["7.0", "7.1", "7.2"]);
+      expect(cache.pending).toBe(1);
+      expect(cache.current("a", "w", 1)).toBeUndefined();
+      expect(cache.run(9, c.now)).toBe(1);
+      expect(log).toHaveLength(5);
+      expect(cache.pending).toBe(0);
+      expect(cache.current("a", "w", 1)?.errorBound).toBe(7);
+    });
+
+    it("runs at least one step however small the budget", () => {
+      const cache = new WarpFitCache();
+      const c = clock();
+      const log: string[] = [];
+      cache.request("a", "w", 1, () => stepped(c, 3, 1, log)());
+      cache.run(0, c.now);
+      expect(log).toEqual(["1.0"]);
+      cache.run(0, c.now);
+      cache.run(0, c.now);
+      expect(cache.run(0, c.now)).toBe(1);
+      expect(cache.pending).toBe(0);
+    });
+
+    it("runs the newest request first, a begun fit waiting its turn", () => {
+      const cache = new WarpFitCache();
+      const c = clock();
+      const log: string[] = [];
+      cache.request("a", "w", 1, () => stepped(c, 2, 1, log)());
+      cache.run(0, c.now);
+      cache.request("b", "w", 1, () => stepped(c, 1, 2, log)());
+      expect(cache.pending).toBe(2);
+      cache.run(100, c.now);
+      expect(log).toEqual(["1.0", "2.0", "1.1"]);
+      expect(cache.pending).toBe(0);
+    });
+
+    it("goes on for a request at the revision it was begun for, and starts over for another", () => {
+      const cache = new WarpFitCache();
+      const c = clock();
+      const log: string[] = [];
+      cache.request("a", "w", 1, () => stepped(c, 3, 1, log)());
+      cache.run(0, c.now);
+      cache.request("a", "w", 1, () => stepped(c, 3, 2, log)());
+      expect(cache.pending).toBe(1);
+      cache.run(100, c.now);
+      expect(log).toEqual(["1.0", "1.1", "1.2"]);
+      expect(cache.current("a", "w", 1)?.errorBound).toBe(1);
+
+      cache.request("b", "w", 1, () => stepped(c, 3, 3, log)());
+      cache.run(0, c.now);
+      cache.request("b", "w", 2, () => stepped(c, 2, 4, log)());
+      cache.run(100, c.now);
+      expect(log.slice(3)).toEqual(["3.0", "4.0", "4.1"]);
+      expect(cache.current("b", "w", 1)).toBeUndefined();
+      expect(cache.current("b", "w", 2)?.errorBound).toBe(4);
+    });
+
+    it("forgets a begun fit with its key, and drops one that throws", () => {
+      const cache = new WarpFitCache();
+      const c = clock();
+      cache.request("a", "w", 1, () => stepped(c, 3, 1)());
+      cache.run(0, c.now);
+      expect(cache.pending).toBe(1);
+      cache.forget("a");
+      expect(cache.pending).toBe(0);
+      expect(cache.run(10, c.now)).toBe(0);
+
+      cache.request("b", "w", 1, function* (): Generator<
+        void,
+        CubicLattice,
+        void
+      > {
+        yield;
+        throw new Error("no fit");
+      });
+      cache.request("c", "w", 1, () => stepped(c, 1, 5)());
+      cache.run(0, c.now);
+      cache.run(0, c.now);
+      expect(() => {
+        cache.run(0, c.now);
+        cache.run(0, c.now);
+      }).toThrow("no fit");
+      expect(cache.pending).toBe(0);
+    });
   });
 
   it("returns the stale fit while a new revision is pending, then the new one", () => {

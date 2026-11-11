@@ -309,6 +309,8 @@ export type DrawnMap = (
 /** The step used to difference a map that has no Jacobian, m. */
 const DIFFERENCE_STEP = 0.5;
 
+const IDENTITY_3 = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+
 function differenceJacobian(
   map: DrawnMap,
   p: ArrayLike<number>,
@@ -358,6 +360,7 @@ function transform(m: ArrayLike<number>, p: Float64Array): void {
 export function routeMap(route: Route, after?: ArrayLike<number>): DrawnMap {
   const differenced = route.steps.some((s) => s.kind === "warp" && s.inverse);
   const at = new Float64Array(3);
+  const from = new Float64Array(3);
   const step = new Float64Array(9);
   const map: DrawnMap = (p, out, jacobian) => {
     if (jacobian && differenced) {
@@ -375,13 +378,14 @@ export function routeMap(route: Route, after?: ArrayLike<number>): DrawnMap {
     at[0] = p[0]!;
     at[1] = p[1]!;
     at[2] = p[2]!;
-    jacobian.set([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+    jacobian.set(IDENTITY_3);
     for (const s of route.steps) {
       if (s.kind === "rigid") {
         transform(s.matrix, at);
         leftMultiply(s.matrix, jacobian);
       } else {
-        warpForward(s.warp, at.slice(), at, step);
+        from.set(at);
+        warpForward(s.warp, from, at, step);
         // jacobian = step · jacobian
         for (let c = 0; c < 3; c++) {
           const x = jacobian[c * 3]!;
@@ -403,20 +407,24 @@ export function routeMap(route: Route, after?: ArrayLike<number>): DrawnMap {
   return map;
 }
 
-/** The singular values of a column-major 3×3, [smallest, largest]. */
-export function singularValues(j: ArrayLike<number>): [number, number] {
-  const c0 = [j[0]!, j[1]!, j[2]!];
-  const c1 = [j[3]!, j[4]!, j[5]!];
-  const c2 = [j[6]!, j[7]!, j[8]!];
-  const dot = (a: number[], b: number[]) =>
-    a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!;
+/** The singular values of the column-major 3×3 at `j[at…]`, written to `out` as [smallest, largest]. */
+function singularInto(j: ArrayLike<number>, at: number, out: number[]): void {
+  const a0 = j[at]!;
+  const a1 = j[at + 1]!;
+  const a2 = j[at + 2]!;
+  const b0 = j[at + 3]!;
+  const b1 = j[at + 4]!;
+  const b2 = j[at + 5]!;
+  const c0 = j[at + 6]!;
+  const c1 = j[at + 7]!;
+  const c2 = j[at + 8]!;
   // The eigenvalues of JᵀJ (symmetric), by the trigonometric solution.
-  const s00 = dot(c0, c0);
-  const s11 = dot(c1, c1);
-  const s22 = dot(c2, c2);
-  const s01 = dot(c0, c1);
-  const s02 = dot(c0, c2);
-  const s12 = dot(c1, c2);
+  const s00 = a0 * a0 + a1 * a1 + a2 * a2;
+  const s11 = b0 * b0 + b1 * b1 + b2 * b2;
+  const s22 = c0 * c0 + c1 * c1 + c2 * c2;
+  const s01 = a0 * b0 + a1 * b1 + a2 * b2;
+  const s02 = a0 * c0 + a1 * c1 + a2 * c2;
+  const s12 = b0 * c0 + b1 * c1 + b2 * c2;
   const off = s01 * s01 + s02 * s02 + s12 * s12;
   let high: number;
   let low: number;
@@ -441,7 +449,15 @@ export function singularValues(j: ArrayLike<number>): [number, number] {
     high = q + 2 * p * Math.cos(phi);
     low = q + 2 * p * Math.cos(phi + (2 * Math.PI) / 3);
   }
-  return [Math.sqrt(Math.max(low, 0)), Math.sqrt(Math.max(high, 0))];
+  out[0] = Math.sqrt(Math.max(low, 0));
+  out[1] = Math.sqrt(Math.max(high, 0));
+}
+
+/** The singular values of a column-major 3×3, [smallest, largest]. */
+export function singularValues(j: ArrayLike<number>): [number, number] {
+  const out: [number, number] = [0, 0];
+  singularInto(j, 0, out);
+  return out;
 }
 
 /** What a map does to a volume: its image's bounding sphere and its stretch. An estimate (samples, not a proof). */
@@ -478,76 +494,245 @@ export function drawnBounds(
   spacing = 0,
 ): DrawnBounds {
   const count = Math.floor(points.length / 3);
-  const images: number[] = [];
+  const images = new Float64Array(maps.length * count * 3);
+  const jacobians = new Float64Array(count * 9);
+  const at = new Float64Array(3);
   const out = new Float64Array(3);
+  const jacobian = new Float64Array(9);
+  const sigma = [0, 0];
   let sigmaMin = Infinity;
   let sigmaMax = 0;
-  let secondDerivative = 0;
+  // The largest squared secant of the Jacobian; its root is M₂.
+  let change2 = 0;
+  let next = 0;
   for (const map of maps) {
-    const jacobians: Float64Array[] = [];
     for (let i = 0; i < count; i++) {
-      const jacobian = new Float64Array(9);
-      map(
-        [points[i * 3]!, points[i * 3 + 1]!, points[i * 3 + 2]!],
-        out,
-        jacobian,
-      );
-      jacobians.push(jacobian);
-      images.push(out[0]!, out[1]!, out[2]!);
-      const [low, high] = singularValues(jacobian);
-      sigmaMin = Math.min(sigmaMin, low);
-      sigmaMax = Math.max(sigmaMax, high);
+      at[0] = points[i * 3]!;
+      at[1] = points[i * 3 + 1]!;
+      at[2] = points[i * 3 + 2]!;
+      map(at, out, jacobian);
+      jacobians.set(jacobian, i * 9);
+      images[next++] = out[0]!;
+      images[next++] = out[1]!;
+      images[next++] = out[2]!;
+      singularInto(jacobian, 0, sigma);
+      sigmaMin = Math.min(sigmaMin, sigma[0]!);
+      sigmaMax = Math.max(sigmaMax, sigma[1]!);
     }
     for (let i = 0; i < count; i++) {
+      const xi = points[i * 3]!;
+      const yi = points[i * 3 + 1]!;
+      const zi = points[i * 3 + 2]!;
       for (let j = i + 1; j < count; j++) {
-        const distance = Math.hypot(
-          points[i * 3]! - points[j * 3]!,
-          points[i * 3 + 1]! - points[j * 3 + 1]!,
-          points[i * 3 + 2]! - points[j * 3 + 2]!,
-        );
-        if (distance === 0) {
+        const dx = xi - points[j * 3]!;
+        const dy = yi - points[j * 3 + 1]!;
+        const dz = zi - points[j * 3 + 2]!;
+        const distance2 = dx * dx + dy * dy + dz * dz;
+        if (distance2 === 0) {
           continue;
         }
         let change = 0;
         for (let k = 0; k < 9; k++) {
-          change += (jacobians[i]![k]! - jacobians[j]![k]!) ** 2;
+          const d = jacobians[i * 9 + k]! - jacobians[j * 9 + k]!;
+          change += d * d;
         }
-        secondDerivative = Math.max(
-          secondDerivative,
-          Math.sqrt(change) / distance,
-        );
+        change2 = Math.max(change2, change / distance2);
       }
     }
   }
-  const lo = [Infinity, Infinity, Infinity];
-  const hi = [-Infinity, -Infinity, -Infinity];
+  const secondDerivative = Math.sqrt(change2);
+  let lo0 = Infinity;
+  let lo1 = Infinity;
+  let lo2 = Infinity;
+  let hi0 = -Infinity;
+  let hi1 = -Infinity;
+  let hi2 = -Infinity;
   for (let i = 0; i < images.length; i += 3) {
-    for (let a = 0; a < 3; a++) {
-      lo[a] = Math.min(lo[a]!, images[i + a]!);
-      hi[a] = Math.max(hi[a]!, images[i + a]!);
-    }
+    lo0 = Math.min(lo0, images[i]!);
+    lo1 = Math.min(lo1, images[i + 1]!);
+    lo2 = Math.min(lo2, images[i + 2]!);
+    hi0 = Math.max(hi0, images[i]!);
+    hi1 = Math.max(hi1, images[i + 1]!);
+    hi2 = Math.max(hi2, images[i + 2]!);
   }
   const center = Float64Array.of(
-    (lo[0]! + hi[0]!) / 2,
-    (lo[1]! + hi[1]!) / 2,
-    (lo[2]! + hi[2]!) / 2,
+    (lo0 + hi0) / 2,
+    (lo1 + hi1) / 2,
+    (lo2 + hi2) / 2,
   );
-  let radius = 0;
+  let radius2 = 0;
   for (let i = 0; i < images.length; i += 3) {
-    radius = Math.max(
-      radius,
-      Math.hypot(
-        images[i]! - center[0]!,
-        images[i + 1]! - center[1]!,
-        images[i + 2]! - center[2]!,
-      ),
-    );
+    const dx = images[i]! - center[0]!;
+    const dy = images[i + 1]! - center[1]!;
+    const dz = images[i + 2]! - center[2]!;
+    radius2 = Math.max(radius2, dx * dx + dy * dy + dz * dz);
   }
+  const radius = Math.sqrt(radius2);
   return {
     center,
     radius: radius + (secondDerivative * spacing * spacing) / 8,
     sigmaMin: Number.isFinite(sigmaMin) ? sigmaMin : 1,
     sigmaMax: sigmaMax || 1,
+    secondDerivative,
+  };
+}
+
+/**
+ * What a map that is affine in the scale it carries does to some points,
+ * kept in a few numbers: the map at scale `s` is `M(0) + s·(M(1) − M(0))`,
+ * Jacobian included (one scaled warp among rigid steps: `warpForward`'s
+ * `p + s·(forward(p) − p)`). `scaledBounds` gives the bounds for any
+ * interval of the scale from it, with no map evaluated again.
+ */
+export interface ScaledImage {
+  /** The centre and radius of a sphere holding the images at scale 0. */
+  readonly base: readonly [number, number, number, number];
+  /** The centre and radius of a sphere holding the displacements from scale 0 to 1. */
+  readonly shift: readonly [number, number, number, number];
+  /** [σ_min, σ_max] of the Jacobians at scale 0, then at scale 1, over the samples. */
+  readonly sigma: readonly [number, number, number, number];
+  /** The largest |J(p) − J(q)|_F / |p − q| at scale 1 (at scale s it is s times this: the Jacobian is affine in s and the rigid part's is constant). */
+  readonly secondDerivative: number;
+  /** The spacing of the samples (`drawnBounds`'s). */
+  readonly spacing: number;
+}
+
+/**
+ * The `ScaledImage` of `points` (n × 3, flat) under the map at scale 0
+ * (`base`) and at scale 1 (`full`).
+ */
+export function scaledImage(
+  base: DrawnMap,
+  full: DrawnMap,
+  points: ArrayLike<number>,
+  spacing = 0,
+): ScaledImage {
+  const count = Math.floor(points.length / 3);
+  const at = new Float64Array(3);
+  const b = new Float64Array(3);
+  const f = new Float64Array(3);
+  const jb = new Float64Array(9);
+  const jf = new Float64Array(9);
+  const sigma = [0, 0];
+  const images = new Float64Array(count * 3);
+  const shifts = new Float64Array(count * 3);
+  const jacobians = new Float64Array(count * 9);
+  const lo = [Infinity, Infinity, Infinity, Infinity, Infinity, Infinity];
+  const hi = [-Infinity, -Infinity, -Infinity, -Infinity, -Infinity, -Infinity];
+  let min0 = Infinity;
+  let max0 = 0;
+  let min1 = Infinity;
+  let max1 = 0;
+  for (let i = 0; i < count; i++) {
+    at[0] = points[i * 3]!;
+    at[1] = points[i * 3 + 1]!;
+    at[2] = points[i * 3 + 2]!;
+    base(at, b, jb);
+    full(at, f, jf);
+    jacobians.set(jf, i * 9);
+    for (let a = 0; a < 3; a++) {
+      images[i * 3 + a] = b[a]!;
+      shifts[i * 3 + a] = f[a]! - b[a]!;
+      lo[a] = Math.min(lo[a]!, b[a]!);
+      hi[a] = Math.max(hi[a]!, b[a]!);
+      lo[3 + a] = Math.min(lo[3 + a]!, f[a]! - b[a]!);
+      hi[3 + a] = Math.max(hi[3 + a]!, f[a]! - b[a]!);
+    }
+    singularInto(jb, 0, sigma);
+    min0 = Math.min(min0, sigma[0]!);
+    max0 = Math.max(max0, sigma[1]!);
+    singularInto(jf, 0, sigma);
+    min1 = Math.min(min1, sigma[0]!);
+    max1 = Math.max(max1, sigma[1]!);
+  }
+  let change2 = 0;
+  for (let i = 0; i < count; i++) {
+    for (let j = i + 1; j < count; j++) {
+      const dx = points[i * 3]! - points[j * 3]!;
+      const dy = points[i * 3 + 1]! - points[j * 3 + 1]!;
+      const dz = points[i * 3 + 2]! - points[j * 3 + 2]!;
+      const distance2 = dx * dx + dy * dy + dz * dz;
+      if (distance2 === 0) {
+        continue;
+      }
+      let change = 0;
+      for (let k = 0; k < 9; k++) {
+        const d = jacobians[i * 9 + k]! - jacobians[j * 9 + k]!;
+        change += d * d;
+      }
+      change2 = Math.max(change2, change / distance2);
+    }
+  }
+  const sphere = (
+    values: Float64Array,
+    from: number,
+  ): [number, number, number, number] => {
+    const cx = (lo[from]! + hi[from]!) / 2;
+    const cy = (lo[from + 1]! + hi[from + 1]!) / 2;
+    const cz = (lo[from + 2]! + hi[from + 2]!) / 2;
+    let r2 = 0;
+    for (let i = 0; i < values.length; i += 3) {
+      const x = values[i]! - cx;
+      const y = values[i + 1]! - cy;
+      const z = values[i + 2]! - cz;
+      r2 = Math.max(r2, x * x + y * y + z * z);
+    }
+    return [cx, cy, cz, Math.sqrt(r2)];
+  };
+  return {
+    base: sphere(images, 0),
+    shift: sphere(shifts, 3),
+    sigma: [
+      Number.isFinite(min0) ? min0 : 1,
+      max0 || 1,
+      Number.isFinite(min1) ? min1 : 1,
+      max1 || 1,
+    ],
+    secondDerivative: Math.sqrt(change2),
+    spacing,
+  };
+}
+
+/**
+ * The bounds of a `ScaledImage`'s points for the scale anywhere in
+ * [`low`, `high`] (within [0, 1]): a sphere about the images at the middle
+ * scale, holding the base sphere, its displacement's spread at `high` and
+ * the drift across the interval, so a little larger than `drawnBounds`'s;
+ * σ_max by the Jacobian's affine dependence on the scale (a norm is
+ * convex), σ_min interpolated, as an estimate.
+ */
+export function scaledBounds(
+  image: ScaledImage,
+  low: number,
+  high: number,
+): DrawnBounds {
+  const { base, shift, sigma } = image;
+  const middle = (low + high) / 2;
+  const drift = ((high - low) / 2) * Math.hypot(shift[0], shift[1], shift[2]);
+  // The scales are within [0, 1] in use; a value outside it still gets a bound.
+  const largest = Math.max(Math.abs(low), Math.abs(high));
+  const secondDerivative = largest * image.secondDerivative;
+  const along = (a: number, b: number, s: number) =>
+    Math.abs(1 - s) * a + Math.abs(s) * b;
+  return {
+    center: Float64Array.of(
+      base[0] + middle * shift[0],
+      base[1] + middle * shift[1],
+      base[2] + middle * shift[2],
+    ),
+    radius:
+      base[3] +
+      largest * shift[3] +
+      drift +
+      (secondDerivative * image.spacing * image.spacing) / 8,
+    sigmaMin: Math.min(
+      along(sigma[0], sigma[2], low),
+      along(sigma[0], sigma[2], high),
+    ),
+    sigmaMax: Math.max(
+      along(sigma[1], sigma[3], low),
+      along(sigma[1], sigma[3], high),
+    ),
     secondDerivative,
   };
 }
