@@ -58,6 +58,10 @@
 
 - The private glTF processing utilities previously located in `@cesium/engine/Source/Scene/GltfPipeline/` have moved to a new internal package, `@cesium/gltf`, which is now a dependency of `@cesium/engine`. These utilities were not, and are not part of the public API. Nonetheless, code that previously imported these files directly from `@cesium/engine` will need to be updated. [#13896](https://github.com/CesiumGS/cesium/pull/13896)
 
+#### Fixes :wrench:
+
+- Fixed `Scene.pickPosition` executing the commands of the previous frame again when `Scene.pickTranslucentDepth` is `true`, leading to the error: "This object was destroyed" [#13979](https://github.com/CesiumGS/cesium/pull/13979)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
