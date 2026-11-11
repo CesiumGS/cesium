@@ -20,7 +20,7 @@ const TIERS = ["stable", "experimental", "internal"];
 const HEADER = "entry\tname\tkind\ttier";
 
 /** The entry name to source file map: the package's `exports`. */
-const packageEntries = (root) => {
+export const packageEntries = (root) => {
   const { exports = {} } = JSON.parse(
     readFileSync(resolve(root, "package.json"), "utf8"),
   );
@@ -38,7 +38,7 @@ const packageEntries = (root) => {
 };
 
 /** The repo's compiler options, with nothing emitted. */
-const compilerOptions = (root) => {
+export const compilerOptions = (root) => {
   const path = resolve(root, "tsconfig.json");
   const { config } = ts.readConfigFile(path, ts.sys.readFile);
   const parsed = ts.parseJsonConfigFileContent(config, ts.sys, root);
@@ -56,7 +56,7 @@ const KINDS = [
 ];
 
 /** Every kind the symbol has, in a fixed order (`const`, then `type`, say). */
-const kindsOf = (symbol, name) => {
+export const kindsOf = (symbol, name) => {
   const kinds = KINDS.filter(([, flag]) => symbol.flags & flag).map(
     ([kind]) => kind,
   );
@@ -69,7 +69,7 @@ const kindsOf = (symbol, name) => {
 };
 
 /** The tier tag found on any declaration of the symbol; `-` without one. */
-const tierOf = (symbol, name) => {
+export const tierOf = (symbol, name) => {
   const found = new Set();
   for (const declaration of symbol.declarations ?? []) {
     for (const tag of ts.getJSDocTags(declaration)) {

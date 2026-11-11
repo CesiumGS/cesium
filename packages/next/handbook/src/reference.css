@@ -1,0 +1,435 @@
+/*
+ * The API reference tab (src/tabs/reference.tsx): a list of groups beside the
+ * page being read. It borrows the handbook's chips, tables and code surface,
+ * and only adds what a reference needs. No cards: rows are set apart by space
+ * and hairlines.
+ */
+
+.page:has(.ref-layout) {
+  max-inline-size: 1240px;
+}
+
+.ref-loading {
+  margin-block-start: var(--stratakit-space-600);
+}
+
+.ref-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: var(--stratakit-space-800);
+  margin-block-start: var(--stratakit-space-600);
+  align-items: start;
+}
+.ref-main {
+  min-width: 0;
+  scroll-margin-block-start: var(--stratakit-space-400);
+}
+
+/* ------------------------------------------------------------- the index */
+
+.ref-index {
+  position: sticky;
+  top: var(--stratakit-space-400);
+  max-block-size: calc(100vh - var(--stratakit-space-800));
+  overflow-y: auto;
+  padding-inline-end: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: 1.4;
+}
+.ref-index a {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+  padding: 3px var(--stratakit-space-200);
+  border-radius: 4px;
+  color: var(--stratakit-color-text-neutral-primary);
+  text-decoration: none;
+}
+.main .ref-index a {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.ref-index a:hover {
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+}
+.ref-index a[aria-current] {
+  background: var(--stratakit-color-bg-glow-on-surface-accent-pressed);
+  font-weight: 600;
+}
+.ref-index a:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: -2px;
+}
+.ref-index-empty {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.main .ref-index a.ref-index-empty {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.ref-index-entry {
+  margin-block-start: var(--stratakit-space-400);
+}
+.ref-index-entry h2 {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 var(--stratakit-space-100);
+  padding-inline: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 600;
+}
+.ref-index-entry h2 span {
+  font-family: var(--stratakit-font-family-mono);
+  font-size: 0.85em;
+  font-weight: 400;
+  color: var(--stratakit-color-text-neutral-secondary);
+  overflow-wrap: anywhere;
+}
+.ref-index ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ref-count {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------- the tools */
+
+.ref-tools {
+  display: grid;
+  gap: var(--stratakit-space-300);
+  margin-block-end: var(--stratakit-space-500);
+}
+
+/* -------------------------------------------------------------- overview */
+
+.ref-overview section {
+  margin-block-end: var(--stratakit-space-700);
+}
+.ref-overview h2,
+.ref-group-head h2,
+.ref-results-title {
+  margin: 0 0 var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-headline-md);
+  font-weight: 600;
+  line-height: 1.25;
+  outline: none;
+}
+.ref-entry-line,
+.ref-group-head p {
+  margin: 0 0 var(--stratakit-space-400);
+  max-inline-size: 72ch;
+}
+.ref-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--stratakit-space-500) var(--stratakit-space-600);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ref-groups h3 {
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-lg);
+  font-weight: 600;
+}
+.ref-groups p {
+  margin: var(--stratakit-space-100) 0 0;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.ref-sample {
+  font-family: var(--stratakit-font-family-mono);
+  overflow-wrap: anywhere;
+}
+.ref-kinds {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* ----------------------------------------------------------- the results */
+
+.ref-table {
+  border-collapse: collapse;
+  inline-size: 100%;
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: 1.45;
+}
+.ref-table thead th {
+  padding: var(--stratakit-space-100) var(--stratakit-space-200);
+  text-align: start;
+  font-weight: 600;
+  border-block-end: 2px solid var(--stratakit-color-border-neutral-base);
+}
+.ref-table td {
+  padding: var(--stratakit-space-150, 6px) var(--stratakit-space-200);
+  vertical-align: top;
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.ref-table td:first-child {
+  white-space: nowrap;
+}
+.ref-name {
+  font-family: var(--stratakit-font-family-mono);
+  font-weight: 600;
+}
+.ref-where {
+  display: block;
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+  white-space: normal;
+}
+.ref-via {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+.ref-kind,
+.ref-badge {
+  display: inline-block;
+  margin-inline-start: var(--stratakit-space-150, 6px);
+  padding: 0 6px;
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 10px;
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.ref-table .ref-kind:first-child {
+  margin-inline-start: 0;
+}
+.ref-kind-class,
+.ref-kind-function {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.ref-kind-small {
+  margin-inline-start: var(--stratakit-space-200);
+}
+.ref-tier-experimental {
+  border-color: var(--stratakit-color-border-attention-base);
+}
+.ref-tier-internal,
+.ref-deprecated {
+  border-color: var(--stratakit-color-border-negative-base);
+}
+
+/* ------------------------------------------------------------ a symbol */
+
+.ref-crumbs {
+  margin: 0 0 var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-sm);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.ref-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--stratakit-space-100);
+  margin: 0 0 var(--stratakit-space-300);
+  font-size: var(--stratakit-font-size-headline-md);
+  font-weight: 600;
+  line-height: 1.25;
+  outline: none;
+  overflow-wrap: anywhere;
+}
+.ref-title code {
+  font-family: var(--stratakit-font-family-mono);
+}
+.ref-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--stratakit-space-100) var(--stratakit-space-400);
+  margin: 0 0 var(--stratakit-space-400);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.ref-facts dt {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.ref-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.ref-symbol h3 {
+  margin: var(--stratakit-space-600) 0 var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-lg);
+  font-weight: 600;
+}
+.ref-code pre {
+  font-size: 0.88em;
+  white-space: pre;
+}
+.ref-symbol .codeblock {
+  margin-block-end: var(--stratakit-space-300);
+}
+.ref-doc {
+  max-inline-size: 72ch;
+}
+.ref-doc p,
+.ref-doc ul,
+.ref-note,
+.ref-returns,
+.ref-tag {
+  margin: 0 0 var(--stratakit-space-300);
+}
+.ref-doc ul {
+  padding-inline-start: 1.25em;
+}
+.ref-note {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.ref-type {
+  font-family: var(--stratakit-font-family-mono);
+  font-size: 0.88em;
+  overflow-wrap: anywhere;
+}
+.main a.ref-link {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+.main .codeblock a.ref-link {
+  color: var(--tk-type);
+}
+
+/* The hierarchy: the lineage down to this symbol, then what builds on it. */
+.ref-tree {
+  margin: 0 0 var(--stratakit-space-300);
+  padding: 0;
+  list-style: none;
+  font-family: var(--stratakit-font-family-mono);
+  font-size: 0.92em;
+}
+.ref-tree li {
+  padding-block: 2px;
+}
+.ref-tree-here {
+  border-inline-start: 3px solid var(--stratakit-color-border-accent-strong);
+  margin-inline-start: -3px;
+  padding-inline-start: var(--stratakit-space-200);
+}
+.ref-tree-note {
+  font-family: var(--stratakit-font-family-body, inherit);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+
+/* Members: a line of code, then its docs, set apart by a hairline. */
+.ref-members {
+  margin-block-start: var(--stratakit-space-600);
+}
+.ref-members > h3 {
+  margin-block-start: 0;
+}
+.ref-member {
+  padding-block: var(--stratakit-space-300);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.ref-member .ref-member-code {
+  margin-block-end: var(--stratakit-space-200);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+}
+.ref-member-code pre {
+  padding: 0;
+  overflow-x: auto;
+}
+.ref-member-detail {
+  margin-block-start: var(--stratakit-space-200);
+}
+.ref-inherited {
+  margin-block-end: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.ref-inherited summary {
+  cursor: pointer;
+}
+.ref-inherited summary:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.ref-inherited p {
+  margin: var(--stratakit-space-100) 0 0;
+  font-family: var(--stratakit-font-family-mono);
+  overflow-wrap: anywhere;
+}
+.ref-inherited p:last-child {
+  font-family: inherit;
+}
+
+.ref-ns {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  columns: 2 260px;
+  column-gap: var(--stratakit-space-600);
+}
+.ref-ns li {
+  break-inside: avoid;
+  padding-block: 2px;
+}
+.ref-ns a {
+  font-family: var(--stratakit-font-family-mono);
+  font-weight: 600;
+}
+.ref-ns-doc {
+  display: block;
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+.ref-index-fold {
+  margin-block-end: var(--stratakit-space-200);
+}
+.ref-index-fold summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding-block: var(--stratakit-space-100);
+}
+.ref-index-fold summary:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+
+/* Beside the tab list, the index needs a wide window; below that it goes on top. */
+@media (max-width: 1340px) {
+  .ref-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--stratakit-space-500);
+  }
+  .ref-index {
+    position: static;
+    max-block-size: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0 var(--stratakit-space-500);
+    padding-block-end: var(--stratakit-space-400);
+    border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+  }
+  .ref-index-all {
+    grid-column: 1 / -1;
+  }
+  .ref-index-entry {
+    margin-block-start: var(--stratakit-space-300);
+  }
+}
+
+@media (max-width: 900px) {
+  .ref-table td:first-child {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media print {
+  .ref-index,
+  .ref-tools {
+    display: none;
+  }
+  .ref-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -130,6 +130,31 @@ and static members checked against 1.x's source, while its instance members were
 from that source by hand, checked 2026-11-08. Use `yourIonToken` as the placeholder
 in any snippet.
 
+## The API reference
+
+`src/tabs/reference.tsx` is the page for reading the whole public API: every
+export of each `package.json` entry point, with its signatures, parameters, class
+hierarchy, members, docs and source line. It is generated, not written:
+`scripts/apiReference.mjs` reads the entry points with the TypeScript compiler (the
+same files and rules as `api/surface.txt`) and writes
+`handbook/generated/reference.json`, which `npm run handbook:data` runs and the tab
+loads when it opens. `node scripts/apiReference.mjs` alone writes just that file and
+prints each group's count.
+
+Groups are by entry point, then by area. `scripts/apiGroups.mjs` is the only place
+they're defined: rules map a declaring file or directory to a group, and overrides
+map a name. There is no "Other": a symbol no rule places is reported by the generator,
+shown as "Unmapped", and fails `test/apiReference.test.ts` until a rule is added. The
+test also checks that every line of `api/surface.txt` is in the reference, with the
+same kind and tier, and that no rule places nothing.
+
+Members marked `@internal`, and private and protected members, are left out. A
+member a class inherits from another exported symbol is listed by name under that
+symbol; its signature and docs are on the parent. A `{@link}` and the name of an
+exported symbol in a type or in backticks are links. Pages are `#/reference/<id>` (an
+id is `Name`, or `entry:Name` outside the core) and `#/reference/group/<group id>`.
+The 1.x to 2.0 comparison stays its own tab.
+
 ## Code blocks
 
 Use `CodeBlock` from `src/parts.tsx`, never a bare `pre`. It takes a language

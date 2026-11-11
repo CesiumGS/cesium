@@ -18,6 +18,10 @@
 //   bench     bench/results (`node bench/run.mjs`, or BENCH_RESULTS_DIR) and
 //             handbook/baselines
 //
+// It also writes handbook/generated/reference.json, the API reference's data,
+// from scripts/apiReference.mjs (run alone, `node scripts/apiReference.mjs`
+// writes just that).
+//
 // It also copies the page's font into handbook/generated/, from the setup
 // store, fetching it there first against a pinned hash, so the built page
 // loads nothing from the network.
@@ -43,6 +47,7 @@ import { runInNewContext } from "node:vm";
 import { gzipSync } from "node:zlib";
 import ts from "typescript";
 import { verifiedDownload } from "./verifiedDownload.mjs";
+import { describeReference, writeReference } from "./apiReference.mjs";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -1047,6 +1052,19 @@ export async function generate({ root = packageRoot, bundles = true } = {}) {
   mkdirSync(outDir, { recursive: true });
   await provideFont(outDir);
   writeFileSync(outFile, `${JSON.stringify(data, null, 1)}\n`);
+  // The API reference reads the same entry points as the surface map.
+  const reference = writeReference({ root });
+  if (
+    reference.report.unmapped.length > 0 ||
+    reference.report.unusedRules.length > 0 ||
+    reference.report.emptyGroups.length > 0
+  ) {
+    for (const line of describeReference(reference).filter((l) =>
+      /UNMAPPED|UNUSED|EMPTY|Add a rule/.test(l),
+    )) {
+      console.warn(`handbook: api reference:${line}`);
+    }
+  }
   return data;
 }
 
