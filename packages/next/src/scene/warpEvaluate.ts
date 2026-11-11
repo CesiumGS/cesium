@@ -425,3 +425,120 @@ export function checkTerms(caller: string, terms: WarpTerms): void {
     }
   });
 }
+
+/** `x`'s derivative at the power `e` (0 to 3): `e · x^(e−1)`. */
+function powerDerivative(x: number, e: number): number {
+  return e === 0 ? 0 : e === 1 ? 1 : e === 2 ? 2 * x : 3 * x * x;
+}
+
+/**
+ * A lattice's Jacobian `dD/dp` at `p`, column-major into `out` (9 values,
+ * `out[3 * column + row]`, as Slang's `float3x3` reads): each monomial's
+ * derivative in the cell's local coordinate `v`, times `dv/dp = cells / scale`
+ * on every axis. The twin of shaders/placement.slang `latticeDisplacement`.
+ */
+export function latticeJacobian(
+  lattice: CubicLattice,
+  p: ArrayLike<number>,
+  out: Float64Array,
+): Float64Array {
+  const n = lattice.cells;
+  const inv = 1 / lattice.scale;
+  // The cell and the local coordinate `v`, as `latticeDisplacement` finds them.
+  const v = [0, 0, 0];
+  let cell = 0;
+  for (let a = 0; a < 3; a++) {
+    const u = (p[a]! - lattice.center[a]!) * inv;
+    if (n === 1) {
+      v[a] = u;
+      continue;
+    }
+    const s = (u + 1) * 0.5 * n;
+    const i = Math.min(Math.max(Math.floor(s), 0), n - 1);
+    v[a] = 2 * (s - i) - 1;
+    cell += i * n ** a;
+  }
+  const dvdp = n * inv;
+  const base = cell * PLACEMENT_TERMS;
+  const c = lattice.coefficients;
+  out.fill(0);
+  for (let k = 0; k < PLACEMENT_TERMS; k++) {
+    const [a, b, e] = PLACEMENT_MONOMIALS[k]!;
+    const px = power(v[0]!, a);
+    const py = power(v[1]!, b);
+    const pz = power(v[2]!, e);
+    const g = [
+      powerDerivative(v[0]!, a) * py * pz,
+      px * powerDerivative(v[1]!, b) * pz,
+      px * py * powerDerivative(v[2]!, e),
+    ];
+    const r = (base + k) * 3;
+    for (let axis = 0; axis < 3; axis++) {
+      for (let row = 0; row < 3; row++) {
+        out[axis * 3 + row]! += c[r + row]! * g[axis]! * dvdp;
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * The Jacobian of the placement `terms` give at model-space `position`:
+ * `J = I + Σ wᵢ·Jᵢ`, column-major into `out` (9 values), where a lattice's
+ * `Jᵢ` is its cubic's derivative (`latticeJacobian`) and an attribute's is
+ * zero (data has no derivative in space: the position's own is the
+ * identity, and a normal is not turned by it). The float64 twin of
+ * shaders/placement.slang `placeVertex`'s `jacobian`.
+ */
+export function placeJacobianWithTerms(
+  terms: WarpTerms,
+  position: ArrayLike<number>,
+  out: Float64Array,
+): Float64Array {
+  out.fill(0);
+  out[0] = out[4] = out[8] = 1;
+  const j = new Float64Array(9);
+  for (const { term, weight } of terms) {
+    const w = weightOf(weight);
+    if (term.kind !== "cubic") {
+      continue;
+    }
+    latticeJacobian(term, position, j);
+    for (let i = 0; i < 9; i++) {
+      out[i]! += w * j[i]!;
+    }
+  }
+  return out;
+}
+
+/**
+ * A normal turned by the Jacobian `j` (column-major, 9 values): the
+ * cofactor matrix `det(J)·J⁻ᵀ` on `n`, normalized, kept on its side under a
+ * negative determinant. The twin of shaders/placement.slang `turnNormal`.
+ */
+export function turnNormalByJacobian(
+  j: ArrayLike<number>,
+  n: ArrayLike<number>,
+  out: Float64Array,
+): Float64Array {
+  const cross = (a: number, b: number): [number, number, number] => {
+    const [ax, ay, az] = [j[a * 3]!, j[a * 3 + 1]!, j[a * 3 + 2]!];
+    const [bx, by, bz] = [j[b * 3]!, j[b * 3 + 1]!, j[b * 3 + 2]!];
+    return [ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx];
+  };
+  const c0 = cross(1, 2);
+  const c1 = cross(2, 0);
+  const c2 = cross(0, 1);
+  const det = j[0]! * c0[0] + j[1]! * c0[1] + j[2]! * c0[2];
+  const sign = det < 0 ? -1 : 1;
+  let length = 0;
+  for (let i = 0; i < 3; i++) {
+    out[i] = (c0[i]! * n[0]! + c1[i]! * n[1]! + c2[i]! * n[2]!) * sign;
+    length += out[i]! * out[i]!;
+  }
+  length = Math.sqrt(length);
+  for (let i = 0; i < 3; i++) {
+    out[i]! /= length;
+  }
+  return out;
+}

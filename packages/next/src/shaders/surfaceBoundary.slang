@@ -27,7 +27,7 @@ module surfaceBoundary;
 public export __extern_cpp struct CesiumVertex {
   public __extern_cpp float3 positionMC;        // placed (`VertexInput`'s doc)
   public __extern_cpp float3 designPositionMC;  // as the mesh stores it
-  public __extern_cpp float3 normalMC;
+  public __extern_cpp float3 normalMC;          // as the mesh stores it, turned by a placement's Jacobian
   public __extern_cpp float2 texCoord0;   // (0, 0) without TEXCOORD_0
   public __extern_cpp float4 color0;      // white without COLOR_0
   public __extern_cpp uint featureId0;    // local feature ID; 0xffffffff: none
@@ -52,7 +52,7 @@ public export __extern_cpp struct CesiumVertexResult {
 
 // A surface point as the engine knows it.
 public export __extern_cpp struct CesiumFragment {
-  public __extern_cpp float3 positionMC;  // model coordinates, interpolated
+  public __extern_cpp float3 positionMC;  // model coordinates of the design position (as the mesh stores it), interpolated
   public __extern_cpp float3 positionEC;  // relative to the camera, Earth-fixed axes (m)
   public __extern_cpp float3 positionWC;  // Earth-fixed (float32: about a meter at the Earth's scale)
   public __extern_cpp float3 normal;      // geometric normal, Earth-fixed axes, toward the viewer
@@ -108,13 +108,13 @@ public export __extern_cpp struct SurfaceVertex {
   // location: a fragment stage's inputs are at most 16 with its built-ins
   // (front_facing, sample_mask and sample_index each count: `fsListSamples`).
   public __extern_cpp uint3 ids;
-  public __extern_cpp float3 relPosition; // camera-relative world position
+  public __extern_cpp float3 relPosition; // the draw's transform on the position before its placement (where it is drawn if unplaced), camera-relative
   public __extern_cpp float4 tangent;     // xyz world tangent, w handedness; w = 0: none
   // Aerial perspective marched per vertex (`aerialMarch`), pre-exposed
   // in-scatter and transmittance; unused where the view reads the volume.
   public __extern_cpp float3 airInscatter;
   public __extern_cpp float3 airTransmittance;
-  public __extern_cpp float3 positionMC;  // the mesh's own (model) coordinates
+  public __extern_cpp float3 positionMC;  // the design position (as the mesh stores it), unplaced
   // A custom shader's named attributes and metadata, packed into four
   // slots (CustomShader.ts `namedCode`). The engine's own stages leave
   // them zero and read none: slots a fragment stage doesn't read cost

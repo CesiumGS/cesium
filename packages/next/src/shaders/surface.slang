@@ -434,9 +434,9 @@ static const uint SKIRT_BIT = 0x80000000u;
 // stages run, so styles compiled to them (vector/VectorStyle.ts) read a
 // feature's distance from the camera (`${view.distance}`): in the vertex
 // stage a point set's point, an instance's origin or the draw's; in the
-// fragment stage the fragment's position, which for billboards and points
-// is their anchor (their corners are offsets on screen). No varying of its
-// own: every inter-stage location is in use.
+// fragment stage the surface's position as drawn (`drawnPosition`), which
+// for billboards and points is their anchor (their corners are offsets on
+// screen). No varying of its own: every inter-stage location is in use.
 static float3 cesiumAnchor;
 
 // A point set's quad (RecordFlags.points): six vertices as four corners,
@@ -714,11 +714,6 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
     vertexColor = read4(r.colorOffset, vertexIndex);
   }
   out.color = unpackUnorm4x8ToFloat(p.tint) * vertexColor;
-  out.tangent = float4(0.0);
-  if (r.tangentOffset != NO_STREAM) {
-    float4 t = read4(r.tangentOffset, vertexIndex);
-    out.tangent = float4(normalize(mul(m, float4(t.xyz, 0.0)).xyz), t.w);
-  }
   uint localFeature = 0xffffffffu;
   if (r.featureIdOffset != NO_STREAM) {
     localFeature = asuint(vertices[r.featureIdOffset + vertexIndex]);
@@ -735,9 +730,22 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
     tableFeature = instance;
   }
   // The draw's placement (placement.slang), before the custom vertex
-  // stage, in model space: the transform carries the large offset.
+  // stage, in model space: the transform carries the large offset. The
+  // placement's Jacobian turns the tangent and the normal with the surface.
   float3 designPosition = position;
-  position = placePosition(r.placement, position, vertexIndex, r.attributes, tableFeature);
+  Placed placed = placeVertex(r.placement, position, vertexIndex, r.attributes, tableFeature);
+  position = placed.position;
+  bool placedDraw = r.placement != NO_PLACEMENT;
+  if (placedDraw) {
+    normal = turnNormal(placed.jacobian, normal);
+  }
+  // The tangent keeps its handedness (w) under the turn.
+  out.tangent = float4(0.0);
+  if (r.tangentOffset != NO_STREAM) {
+    float4 t = read4(r.tangentOffset, vertexIndex);
+    float3 turned = placedDraw ? mul(placed.jacobian, t.xyz) : t.xyz;
+    out.tangent = float4(normalize(mul(m, float4(turned, 0.0)).xyz), t.w);
+  }
   // The custom shader's vertex stage (CustomShader.ts's defaults: unchanged).
   CesiumVertex v;
   v.positionMC = position;
@@ -762,9 +770,13 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   out.named2 = stage.named2;
   out.named3 = stage.named3;
   normal = stage.normalMC;
-  out.positionMC = stage.positionMC;
+  // Fragment stage's design position (the mesh's own, whatever the
+  // placement and the custom stage: a procedural pattern keeps to the
+  // surface under a warp), and the draw's transform on the position before
+  // the placement; for an unplaced draw, where it is drawn.
+  out.positionMC = designPosition;
   float4 world = mul(m, float4(stage.positionMC, 1.0));
-  out.relPosition = world.xyz;
+  out.relPosition = placedDraw ? mul(m, float4(designPosition, 1.0)).xyz : world.xyz;
   out.position = mul(view.viewProj, world);
   // A billboard (RecordFlags.billboard): the instance's position, its
   // corner's model xy as pixels on screen (times the size and the
@@ -1019,7 +1031,10 @@ float terrainOpacity(uint mask, float3 p, uint which) {
 static bool terrainSeen = true;
 
 // What the record doesn't draw at `p` in this view: a mixed-LOD
-// placeholder outside its boxes, clipped terrain inside its regions.
+// placeholder outside its boxes, clipped terrain inside its regions. The
+// boxes and regions are tiling and terrain's, in the world as the content is
+// stored, so they are tested at `relPosition` (the transform on the
+// design position), not where a placement draws the surface.
 bool placeholderOut(DrawRecord r, float3 p) {
   return (r.placeholderMask & view.viewBit) != 0u && !insideClipBoxes(r.clipBlock, p);
 }
@@ -1061,14 +1076,40 @@ float terrainAlpha(DrawRecord r, SurfaceVaryings in) {
 [vk::constant_id(0)] const bool cutOutInDepth = false;
 
 
-// A fragment as the custom shader's fragment stage takes it.
-CesiumFragment fragmentOf(SurfaceVaryings in, float3 geometric) {
+// The surface's camera-relative position as drawn, for what light and the
+// air do to it. The varying (`relPosition`) is the draw's transform on the
+// vertex's position before its placement, which for a draw without one is
+// where it is drawn: used as it is. A placed draw's is rebuilt from the
+// fragment's window position and depth, through the view's rotation-only
+// perspective (reverse-Z, infinite far): `viewProj`'s rows 0, 1 and 3 are
+// orthogonal (right scaled by f / aspect, up by f, and the view direction,
+// which is clip w), so with x and y in NDC and w = near / depth the point is
+// w * (right * x / |row0|² + up * y / |row1|² + direction). Camera-relative,
+// so nothing large. Billboards and the underlay draw somewhere other than
+// their surface, and a shadow cascade's or height capture's view
+// (View.time.z, y) is orthographic with a window of its own: they keep the
+// varying (where the transform alone puts a placed draw, as the clips do).
+float3 drawnPosition(SurfaceVaryings in, DrawRecord r) {
+  float3 p = in.relPosition;
+  if (r.placement != NO_PLACEMENT && (r.flags & 24u) == 0u && view.time.y + view.time.z < 0.5) {
+    float2 ndc = in.position.xy * view.viewport.zw * float2(2.0, -2.0) + float2(-1.0, 1.0);
+    float3 right = view.viewProj[0].xyz;
+    float3 up = view.viewProj[1].xyz;
+    float w = view.near / in.position.z;
+    p = (right * (ndc.x / dot(right, right)) + up * (ndc.y / dot(up, up)) + view.viewProj[3].xyz) * w;
+  }
+  return p;
+}
+
+// A fragment as the custom shader's fragment stage takes it (`drawn`: the
+// surface's position as drawn, `drawnPosition`).
+CesiumFragment fragmentOf(SurfaceVaryings in, float3 geometric, float3 drawn) {
   DrawRecord r = drawRecord(in.ids.x);
-  cesiumAnchor = in.relPosition;
+  cesiumAnchor = drawn;
   CesiumFragment f;
   f.positionMC = in.positionMC;
-  f.positionEC = in.relPosition;
-  f.positionWC = in.relPosition + cameraPosition();
+  f.positionEC = drawn;
+  f.positionWC = drawn + cameraPosition();
   f.normal = geometric;
   f.texCoord0 = in.uv;
   f.color0 = in.color * r.color;
@@ -1118,7 +1159,7 @@ float materialAlpha(SurfaceVaryings in) {
   MaterialOutput custom = materialOutput(
       color.rgb, color.a, material.metallic, material.roughness, geometric, 1.0,
       material.emissive, (material.flags & 1u) != 0u || (r.flags & 2u) != 0u);
-  cesiumFragmentStage(fragmentOf(in, geometric), custom);
+  cesiumFragmentStage(fragmentOf(in, geometric, drawnPosition(in, r)), custom);
   return custom.alpha * terrainAlpha(r, in);
 }
 
@@ -1430,8 +1471,9 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   uint lightsPacked = r.lightsSlice;
   float3 lightsSample = imagery.Sample(
       imagerySampler, float3(imageryUv(lightsPacked, in.uv), float(max(lightsPacked & 4095u, 1u) - 1u))).rgb;
-  float3 dPdx = ddx(in.relPosition);
-  float3 dPdy = ddy(in.relPosition);
+  float3 drawn = drawnPosition(in, r);
+  float3 dPdx = ddx(drawn);
+  float3 dPdy = ddy(drawn);
   float2 dUVdx = ddx(in.uv);
   float2 dUVdy = ddy(in.uv);
 
@@ -1516,7 +1558,7 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   }
 
   // The custom shader's material (CustomShader.ts's defaults: unchanged).
-  CesiumFragment fragment = fragmentOf(in, geometric);
+  CesiumFragment fragment = fragmentOf(in, geometric, drawn);
   MaterialOutput custom = materialOutput(
       baseColor.rgb, baseColor.a, metallic, roughness, n, occlusion, emissive,
       (flags & 1u) != 0u || (r.flags & 2u) != 0u);
@@ -1541,7 +1583,7 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   occlusion = custom.occlusion;
   emissive = custom.emissive;
 
-  float3 v = -normalize(in.relPosition);
+  float3 v = -normalize(drawn);
   float3 l = normalize(view.sunDirection.xyz);
   float nDotV = clamp(dot(n, v), 0.0, 1.0);
   float3 f0 = lerp(float3(0.04), baseColor.rgb, metallic);
@@ -1553,21 +1595,21 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   bool moonShadows = shadows.fade.w > 0.5;
   float sunVisible = dot(n, l) > 0.0 ? 1.0 : 0.0;
   if (sunVisible > 0.0 && !moonShadows) {
-    sunVisible *= sunShadow(in.relPosition, geometric);
+    sunVisible *= sunShadow(drawn, geometric);
   }
-  float3 direct = sunReflected * sunIlluminance(in.relPosition) * sunVisible;
+  float3 direct = sunReflected * sunIlluminance(drawn) * sunVisible;
   // The Moon's light: the sun's, reflected (its share in `moonLight.w`),
   // through the air toward it, shadowed by the cascades at night.
   float3 moonward = view.moonLight.xyz;
   if (view.moonLight.w > 0.0 && view.sunLight.z > 0.5 && dot(n, moonward) > 0.0) {
     float moonVisible = 1.0;
     if (moonShadows) {
-      moonVisible = sunShadow(in.relPosition, geometric);
+      moonVisible = sunShadow(drawn, geometric);
     }
     direct += directReflectance(n, v, moonward, f0, diffuseColor, alpha, nDotV)
-        * sunlightThroughAir(in.relPosition, moonward) * view.moonLight.w * moonVisible;
+        * sunlightThroughAir(drawn, moonward) * view.moonLight.w * moonVisible;
   }
-  direct += punctualLight(in.position.xy, in.relPosition, n, v, f0, diffuseColor, alpha, nDotV);
+  direct += punctualLight(in.position.xy, drawn, n, v, f0, diffuseColor, alpha, nDotV);
 
   // Image-based lighting (Fdez-Agüera 2019 multiple scattering).
   float2 lut = brdfLut.SampleLevel(environmentSampler, float2(nDotV, roughness), 0.0).rg;
@@ -1610,7 +1652,7 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
     ap.inscatter = float3(0.0);
     ap.transmittance = float3(1.0);
     if (march < 1.0) {
-      ap = aerialPerspective(in.position.xy, in.relPosition);
+      ap = aerialPerspective(in.position.xy, drawn);
     }
     if (march > 0.0) {
       AerialPerspective a;
@@ -1944,7 +1986,7 @@ MomentsOut fsMoments(SurfaceVaryings in) {
     discard;
   }
   float absorbance = -log(1.0 - alpha);
-  float z = momentDepth(in.relPosition);
+  float z = momentDepth(drawnPosition(in, drawRecord(in.ids.x)));
   float z2 = z * z;
   MomentsOut out;
   out.zero = absorbance;
@@ -2027,7 +2069,7 @@ AccumulatedOut fsMomentColor(SurfaceVaryings in, bool frontFacing : SV_IsFrontFa
   uint2 p = uint2(in.position.xy);
   float b0 = loadMomentsZero(p).r;
   float4 sums = loadMomentsHigher(p);
-  float w = transmittanceBefore(b0, sums, momentDepth(in.relPosition)) * alpha;
+  float w = transmittanceBefore(b0, sums, momentDepth(drawnPosition(in, drawRecord(in.ids.x)))) * alpha;
   // Bright layers summed stay below fp16's largest value.
   float3 weighted = min(s.color * w, float3(16384.0));
   AccumulatedOut out;

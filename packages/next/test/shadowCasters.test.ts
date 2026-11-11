@@ -534,7 +534,7 @@ describe("the shadow pipeline", () => {
     expect(surface).toMatch(
       /surfaceVertex\(uint vertexIndex, uint item\) \{\s*return vertexOut\(vertexIndex, item, true\);/,
     );
-    expect(surface.match(/placePosition\(/g)!.length).toBe(1);
+    expect(surface.match(/placeVertex\(/g)!.length).toBe(1);
     // The caster pipelines use the depth entry, of the engine's own module.
     const context = source("src/scene/RenderContext.ts");
     const shadow = context.slice(context.indexOf("const shadowPipeline = ("));

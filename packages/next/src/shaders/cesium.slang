@@ -47,13 +47,17 @@ public struct LabelAttribute { string text; };
 //  - designPositionMC is the position as the mesh stores it (the design
 //    position), whatever the placement. It equals positionMC when there is
 //    no placement.
-//  - normalMC is the normal as the mesh stores it. A placement doesn't turn
-//    it: where the surface is turned by the move, the shading normal is off by
-//    that turn (0.197 degrees at most on the 44 km design globe corridor).
-// The fragment stage has only the placed position (`FragmentInput.positionMC`):
-// a design position there would cost one more interpolated value on every
-// draw, and the engine's inter-stage locations are all in use. To use the
-// design position in a fragment, carry what is needed in a named attribute.
+//  - normalMC is the normal after the placement: the mesh's own normal
+//    turned by the placement's Jacobian (its cofactor matrix, normalized),
+//    so it is the normal of the surface as drawn, however steeply the warp
+//    bends it. A term from a second position (an attribute) has no
+//    derivative in space and leaves the normal as stored. Without a
+//    placement it is the mesh's own, as stored.
+// The fragment stage's `FragmentInput.positionMC` is the DESIGN position,
+// not the placed one (a Pref, as RenderMan's reference position is): a
+// procedural texture built on it stays on the surface as a warp moves it.
+// Where the placed position is wanted in a fragment, `positionEC` is where
+// the surface is drawn.
 public struct VertexInput {
   public float3 positionMC;
   public float3 designPositionMC;
@@ -77,7 +81,7 @@ public struct VertexOutput {
 
 // A surface point as the fragment stage sees it.
 public struct FragmentInput {
-  public float3 positionMC;  // model coordinates as drawn (placed, for an item with a placement), interpolated
+  public float3 positionMC;  // model coordinates of the design position (the mesh's own, before any placement or vertexMain), interpolated
   public float3 positionEC;  // relative to the camera, Earth-fixed axes (m)
   public float3 positionWC;  // Earth-fixed (float32: about a meter)
   public float3 normal;      // geometric normal, toward the viewer

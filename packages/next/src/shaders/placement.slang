@@ -5,14 +5,21 @@
 // evaluate it at sample points the content never had (section 8.2). A
 // term's displacement is a cubic lattice's or a vertex attribute's; its
 // weight a constant times up to two factors of a parameter's float. The
-// float64 CPU twin is scene/warpEvaluate.ts `placeWithTerms`; the buffer's
-// layout is scene/placementTable.ts's.
+// float64 CPU twins are scene/warpEvaluate.ts `placeWithTerms` and
+// `placeJacobianWithTerms`; the buffer's layout is
+// scene/placementTable.ts's.
 //
-// The surface vertex stage calls `placePosition` on the mesh's position
+// The surface vertex stage calls `placeVertex` on the mesh's position
 // before the custom vertex stage, so the draw's transform carries the
 // large offset and the placement moves vertices in model space (call 40).
-// A record without a placement (`NO_PLACEMENT`) gets its position back
-// unchanged.
+// It returns the placement's Jacobian J = I + sum of wi * dDi/dp beside
+// the position (plan 13.26, increment 2a): the stage turns the vertex's
+// tangent by J and its normal by J's cofactor matrix (`turnNormal`), so
+// shading follows the surface as drawn, however steep a warp makes it. A
+// lattice's Jacobian is the cubic's analytic derivative; an attribute
+// term's is zero (data has no derivative in space), so under one the
+// normal stays as the mesh stores it. A record without a placement
+// (`NO_PLACEMENT`) gets its position back unchanged and the identity.
 module placement;
 
 // The placements: parameters (one float each) and each placed draw's
@@ -52,11 +59,6 @@ float placementParameter(uint word) {
   return placementRow(word >> 2u)[word & 3u];
 }
 
-// `x` to the power `e` (0 to 3).
-float powerOf(float x, uint e) {
-  return e == 0u ? 1.0 : (e == 1u ? x : (e == 2u ? x * x : x * x * x));
-}
-
 // A term's weight: its row's scale times its factors' values, each
 // `offset + slope * parameter` (the factor rows follow the term's).
 float termWeight(uint row, uint4 head) {
@@ -69,12 +71,24 @@ float termWeight(uint row, uint4 head) {
   return w;
 }
 
+static const float3x3 IDENTITY_JACOBIAN = float3x3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+static const float3x3 ZERO_JACOBIAN = float3x3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+
+// A matrix's column (Slang's `m[i]` is its row).
+float3 jacobianColumn(float3x3 j, int c) {
+  return float3(j[0][c], j[1][c], j[2][c]);
+}
+
 // A lattice's displacement at model-space `p` (scene/warpTerms.ts
-// `CubicLattice`): its body's first row holds the center and 1 / scale,
-// then each cell's rows of coefficients per monomial. One cell has v = u.
-float3 latticeDisplacement(uint body, uint cells, float3 p) {
+// `CubicLattice`), and its Jacobian `dD/dp` into `jacobian`: its body's
+// first row holds the center and 1 / scale, then each cell's rows of
+// coefficients per monomial. One cell has v = u. The cell's cubic in v has
+// the derivative of each monomial per axis, and dv/dp = cells / scale on
+// every axis (past the cube the edge cell extrapolates at the same rate).
+float3 latticeDisplacement(uint body, uint cells, float3 p, out float3x3 jacobian) {
   float4 origin = placementRow(body);
   float3 v = (p - origin.xyz) * origin.w;
+  float dvdp = origin.w;
   uint cell = 0u;
   if (cells > 1u) {
     float n = float(cells);
@@ -83,42 +97,101 @@ float3 latticeDisplacement(uint body, uint cells, float3 p) {
     v = 2.0 * (s - f) - 1.0;
     uint3 i = uint3(f);
     cell = (i.z * cells + i.y) * cells + i.x;
+    dvdp *= n;
   }
+  // Each axis' powers 1, v, v², v³ and their derivatives 0, 1, 2v, 3v².
+  float4 px = float4(1.0, v.x, v.x * v.x, v.x * v.x * v.x);
+  float4 py = float4(1.0, v.y, v.y * v.y, v.y * v.y * v.y);
+  float4 pz = float4(1.0, v.z, v.z * v.z, v.z * v.z * v.z);
+  float4 qx = float4(0.0, 1.0, 2.0 * v.x, 3.0 * v.x * v.x);
+  float4 qy = float4(0.0, 1.0, 2.0 * v.y, 3.0 * v.y * v.y);
+  float4 qz = float4(0.0, 1.0, 2.0 * v.z, 3.0 * v.z * v.z);
   uint first = body + 1u + cell * PLACEMENT_TERMS;
   float3 d = float3(0.0);
+  float3 gx = float3(0.0);
+  float3 gy = float3(0.0);
+  float3 gz = float3(0.0);
   for (uint k = 0u; k < PLACEMENT_TERMS; k++) {
     uint e = TERM_POWERS[k];
-    float m = powerOf(v.x, e & 3u) * powerOf(v.y, (e >> 2u) & 3u) * powerOf(v.z, (e >> 4u) & 3u);
-    d += placementRow(first + k).xyz * m;
+    uint a = e & 3u;
+    uint b = (e >> 2u) & 3u;
+    uint c = (e >> 4u) & 3u;
+    float3 coefficient = placementRow(first + k).xyz;
+    d += coefficient * (px[a] * py[b] * pz[c]);
+    gx += coefficient * (qx[a] * (py[b] * pz[c]));
+    gy += coefficient * (qy[b] * (px[a] * pz[c]));
+    gz += coefficient * (qz[c] * (px[a] * py[b]));
   }
+  jacobian = transpose(float3x3(gx * dvdp, gy * dvdp, gz * dvdp));
   return d;
 }
 
 // A term's displacement Di at model-space `p` (`head`: its row's words,
 // `block`: the block's first row): the lattice's, or the vertex's
 // attribute (minus the point, if it holds a position) from the mesh's
-// attribute directory (`directory`, the vertex, its feature's row).
-float3 termDisplacement(uint4 head, uint block, float3 p, uint vertexIndex, uint directory, uint feature) {
+// attribute directory (`directory`, the vertex, its feature's row); and
+// its Jacobian `dDi/dp` into `jacobian`. An attribute is data, with no
+// derivative in space, so its Jacobian is zero: the point's own is the
+// identity (`Placed.jacobian`), and a normal is not turned by it.
+float3 termDisplacement(uint4 head, uint block, float3 p, uint vertexIndex, uint directory, uint feature,
+                        out float3x3 jacobian) {
   if ((head.x & 255u) == WARP_LATTICE) {
-    return latticeDisplacement(block + head.z, head.w, p);
+    return latticeDisplacement(block + head.z, head.w, p, jacobian);
   }
+  jacobian = ZERO_JACOBIAN;
   float3 other = placementAttribute(directory, head.z, vertexIndex, feature).xyz;
   return head.w != 0u ? other - p : other;
 }
 
+// Where a placement puts a vertex, and how it turns its surface.
+public struct Placed {
+  public float3 position;     // model space
+  public float3x3 jacobian;   // d(position) / d(design position): I + the sum of wi * dDi/dp
+};
+
 // Where the draw's placement (`DrawRecord.placement`, its block's header
 // row) puts the vertex at model-space `positionMC`, in model space: the
-// position plus each term's weight times its displacement.
-public float3 placePosition(uint placement, float3 positionMC, uint vertexIndex, uint directory, uint feature) {
+// position plus each term's weight times its displacement; and the
+// placement's Jacobian there, which turns tangents (J t) and normals
+// (`turnNormal`). Without a placement: the position as it is, and the
+// identity.
+public Placed placeVertex(uint placement, float3 positionMC, uint vertexIndex, uint directory, uint feature) {
+  Placed placed;
+  placed.position = positionMC;
+  placed.jacobian = IDENTITY_JACOBIAN;
   if (placement == NO_PLACEMENT) {
-    return positionMC;
+    return placed;
   }
   uint count = asuint(placementRow(placement).x);
   float3 d = float3(0.0);
+  float3x3 j = ZERO_JACOBIAN;
   for (uint i = 0u; i < count; i++) {
     uint row = placement + 1u + i * TERM_ROWS;
     uint4 head = asuint(placementRow(row));
-    d += termWeight(row, head) * termDisplacement(head, placement, positionMC, vertexIndex, directory, feature);
+    float w = termWeight(row, head);
+    float3x3 jd;
+    d += w * termDisplacement(head, placement, positionMC, vertexIndex, directory, feature, jd);
+    j += w * jd;
   }
-  return positionMC + d;
+  placed.position = positionMC + d;
+  placed.jacobian = IDENTITY_JACOBIAN + j;
+  return placed;
+}
+
+// `placeVertex`'s position alone.
+public float3 placePosition(uint placement, float3 positionMC, uint vertexIndex, uint directory, uint feature) {
+  return placeVertex(placement, positionMC, vertexIndex, directory, feature).position;
+}
+
+// A normal `n` turned by a placement's Jacobian `j`: the cofactor matrix
+// (det(J) J⁻ᵀ, no inverse) takes a surface's normal to the normal of the
+// surface J carries it to, and a negative determinant (a fold) keeps the
+// normal on its side. Unit length.
+public float3 turnNormal(float3x3 j, float3 n) {
+  float3 c0 = jacobianColumn(j, 0);
+  float3 c1 = jacobianColumn(j, 1);
+  float3 c2 = jacobianColumn(j, 2);
+  float3 a = cross(c1, c2);
+  float3 turned = a * n.x + cross(c2, c0) * n.y + cross(c0, c1) * n.z;
+  return normalize(dot(c0, a) < 0.0 ? -turned : turned);
 }

@@ -64,20 +64,24 @@ export type {
  * **Placed items.** A scene item (`World.add`) at a placement other than 0
  * moves each vertex in model space before `vertexMain` runs, by its
  * parameter at that moment (`SceneItem.placement`, any finite number):
- *  - `vsInput.positionMC`, and `fsInput.positionMC` after it, is the placed
- *    position: the point as the item draws it, a blend of the design position
- *    and the second position, past either end when the parameter is. At
- *    placement 0 it is the mesh's own. A procedural texture built on it
- *    slides over the surface as the parameter changes, and differs between
- *    items.
+ *  - `vsInput.positionMC` is the placed position: the point as the item
+ *    draws it, a blend of the design position and the second position, past
+ *    either end when the parameter is. At placement 0 it is the mesh's own.
  *  - `vsInput.designPositionMC` is the mesh's own position, whatever the
- *    placement. The fragment stage doesn't have it: that would cost another
- *    interpolated value on every draw, and the engine's inter-stage locations
- *    are all in use.
- *  - `vsInput.normalMC` is the mesh's own normal. Placement moves a vertex
- *    but doesn't turn its normal, so where the move turns the surface the
- *    shading normal is off by that turn: 0.197 degrees at most on the design
- *    globe's 44 km corridor.
+ *    placement.
+ *  - `fsInput.positionMC` is the DESIGN position (the mesh's own, before the
+ *    placement and `vertexMain`), whatever the placement: a Pref, as
+ *    RenderMan's reference position is. A procedural texture built on it
+ *    stays on the surface as the parameter changes, and is the same on
+ *    items placed differently. It is what `vsInput.designPositionMC` was at
+ *    the vertices, interpolated. (Before, it was the position `vertexMain`
+ *    returned; a pattern that wants that carries it in a named attribute.)
+ *  - `vsInput.normalMC` is the normal after the placement: the mesh's normal
+ *    turned by the placement's Jacobian (its cofactor matrix, normalized), so
+ *    it is the normal of the surface as drawn, however steeply the placement
+ *    bends it. A placement from a second position (a dual one) has no
+ *    derivative in space and leaves the normal as stored. The tangent turns
+ *    with the surface, keeping its handedness.
  *  - `positionEC` and `positionWC` are where it is drawn, as always.
  * Named attributes are read as stored. An item's own `shader` replaces the
  * tileset's (`customShader` or `style`) for that item; it doesn't combine
