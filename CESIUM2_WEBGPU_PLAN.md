@@ -8979,12 +8979,16 @@ _Revised increments, replacing the list above:_
 2. The Jacobian for normals and tangents, with the varying swap (reformulation 3). Clip planes and caps became increment 8, decided below.
 3. Drawn bounds in cull and selection, parameter ranges, and the horizon.
 4. The globe as an item, and `warpAt` granularity. Done (2026-11-11).
-5. The pick variant, and its kernel fetching the triangle.
-6. Measurements and snaps in true frames, with their graphics drawn through the route.
-7. The "Vertical exaggeration" example: the application defines a frame and a rig, nothing per item.
-8. Clips and caps, as decided below.
+5. The pick variant, and its kernel fetching the triangle. Done (2026-11-11).
+6. Measurements and snaps in true frames, with their graphics drawn through the route. Done (2026-11-11).
+7. The "Vertical exaggeration" example: the application defines a frame and a rig, nothing per item. Done (2026-11-11). It found engine gaps, being fixed.
+8. Clips and caps, as decided below:
+   - **8a, world clips.** Done (2026-11-11).
+   - **8b, caps.** In progress.
 
 Increments 1 to 3 come before b-rep step 5.
+
+**Overnight summary (2026-11-11).** Placement increments 4 to 7 and 8a landed as four commits, each with a GPU spike or Node tests. Picks report a domain point and the exact true point with no inverse of any warp (5); measurements and snaps are in true frames, and the drawn distance is named as one (6); world clips are tested per fragment in true or drawn space (8a); the vertical exaggeration example holds true heights constant across ×1 to ×10 with no refit on the slider (7). Increment 8b (caps) and a fix for the engine gaps the example found are in progress. The one owner decision pending is the proposal below, "no placement modes".
 
 **Increment 1, in progress (2026-11-10).** Slices A to C are done. Each was implemented by a Sonnet 5.5 agent from a brief, against a contract committed first (`camera/route.ts`, `scene/warpTerms.ts`).
 
@@ -9054,7 +9058,50 @@ Increments 1 to 3 come before b-rep step 5.
 - **Not built:**
   - exact terrain for any warp but a height scale on its own ellipsoid, such as flattening: those are fitted;
   - warping point sets and a `ModelPool`'s instances;
-  - picks by domain point (increment 5).
+  - picks by domain point (increment 5, done below).
+
+**Increment 5 is done (2026-11-11).** A pick says where the hit is in the content, and the exact point there, with no inverse of any warp.
+
+- **The pick variant** of the surface shader records the draw, the feature, and the triangle (or b-rep face) with its barycentrics (or (u, v)) beside the depth; a kernel fetches the stored triangle. `CorePick.domain` (`PickDomain`) is that domain point. `truePosition`, in the hit anchor's frame, is the content's own point, evaluated in float64 and carried by the draw's matrix. `drawnPosition` is the depth's, in the render root's frame. Both are `PickPoint`s, each with its frame, and `accuracy` says what `truePosition` is: exact on a b-rep face (`refinePick`), on the triangle for a mesh.
+- **Never inverted.** A warp may have no inverse, or a fitted one that is only close; the pick reads the triangle it hit instead. Where the variant's hit isn't the image's (another draw or feature), and for the bare ellipsoid, billboards and points, there is no domain point and the depth's `position` is all there is.
+- **The spike** (`spikes/pickDomain.html`, NVIDIA GPU) passes 8 of 8. A ×10 tile's true point is 10.07 m from the drawn one, and lies on its triangle to 1.6e-10 m. The Node test is `test/pickDomain.test.ts`.
+
+**Increment 6 is done (2026-11-11).** Measurements and snaps are in true frames, and what is drawn is the only drawn thing.
+
+- **True by default.** `measure` runs on true points, a pick's `truePosition` where it has one. Snaps (`engineering/snap.ts`) return true points too.
+- **`drawnDistance`** (`measure/drawn.ts`) is the one question about the drawing, named so it can't be mistaken for a measurement. It returns the distance between the drawn ends, the length of the true segment as it is drawn (`pathLength`) and the true distance beside them, with a label that carries the warps' words. It scales with a vertical exaggeration; the true distance doesn't. For what a vector style needs: dash lengths, label spacing, symbol density.
+- **Graphics through the route.** A straight true segment draws as a curve under a warp. `DrawnCurve` (`measure/curve.ts`) samples it adaptively until the drawn polyline is within 0.5 px of the routed curve (1 mm without a camera), and samples again when the route, a warp's scale or the camera's pixel size changes. Labels anchor at routed points.
+- **Accuracy keeps its two kinds apart.** A term is `sigma` (1σ, added in quadrature) or `bound` (worst case: a pick's pixel footprint, a snap's geometric error, added linearly). `AccuracyStatement.sigma` and `.bound` are separate; the old root sum square stays for readers that want one number.
+- **Checked** by `test/measureTruth.test.ts`.
+
+**Increment 7 is done (2026-11-11).** `examples/vertical-exaggeration` is the placement review's acceptance test: Matterhorn and Zermatt on Cesium World Terrain, OSM buildings and the milk truck. The application writes a frame and a rig (`exaggeration.ts`) and sets nothing on any item.
+
+| Quantity                     | ×1 to ×10                      |
+| ---------------------------- | ------------------------------ |
+| Pick's true height           | 2,824 m, constant              |
+| Zermatt to the Matterhorn    | about 2,660 m, constant        |
+| Refits when the slider moves | 0 (one float, the term weight) |
+
+True heights stay put while the drawn ones follow the slider. `test/verticalExaggerationExample.test.ts` asks the questions in Node.
+
+- **Engine gaps it found,** which the example works around, and which are being fixed now:
+  - `anchorPosition` is a drawn position, so an application that asks for where an anchor is gets the drawn one;
+  - there are no public scale-aware warp functions, so an application can't evaluate its map at a slider's multiplier through the engine;
+  - a pick lags its tick, so one read just after the slider moves can be at the old multiplier;
+  - there is no public fit counter (`fits.ts` is the one place the page reaches past the API);
+  - `View.toPixel` and the camera controller are not warp-aware;
+  - a rig can't re-root across a warp (`CameraLayer` refuses it, increment 1D), so the camera keeps its true place.
+
+**Increment 8a is done (2026-11-11).** World clips, tested per fragment in the space where they are exact.
+
+- **A world object.** `world.addClip(set)` takes a `ClipSet` (`ClipShape`s: planes, boxes and extruded polygons, in a reference frame, combined by union or intersection, keeping the inside or outside) and returns a `WorldClip`. A view opts in by mask (`View.clipMask`, `View.setClips`). `setClip`, `removeClip` and `clipOf` complete it. A world holds 32 clips, a view uses 8 and a set takes 16 shapes (`MAX_WORLD_CLIPS`, `MAX_CLIP_SETS`, `MAX_CLIP_SHAPES`), all in one storage table of 4,096 rows. A polygon takes up to 128 vertices.
+- **True or drawn space, per fragment.** Each clip is planned by its route: if its route to the content's true side is rigid it is tested on the true point (location 4 where that is the true position, increment 2a's varying swap), and if its route to the root is rigid it is tested on the drawn point rebuilt from the fragment's position. A curved clip, rigid on neither, isn't built (below).
+- **Lazy pipelines.** A view without clips keeps the unclipped pipelines and early depth. The clipped variant of each pipeline and bundle (`clippedBundle`) is made when a view first uses a clip, so nothing recompiles when a clip's shapes change.
+- **Queries.** Every pick and snap takes `clips: "view" | ClipSet | "none"` (`ClipsOption`; a list of sets too), `clipFilter` and `clipSetKeeps` test points in float64. Picks and snaps default to the view's clips.
+- **The spike** (`spikes/clips.html`, NVIDIA GPU) passes 10 of 10. On a ×10 tower, a plane cut in the true frame lands at row 287, against the route's 287.9. Tested on the drawn point it would be 345. The Node test is `test/clips.test.ts`.
+- **Deferred:** curved clips (a route rigid on neither side, which waits for the `.w` channel fit), `TerrainClips` as clip shapes, exemptions (the styling language's), and caps (increment 8b, in progress).
+
+**Spike runner and a build message.** `node scripts/runSpike.mjs` runs a spike's checks headless in Edge on this machine's GPU, as described under increment 4: the page is visible and focused because a hidden browser tab throttles timers. Separately, the deliberate failing bundle build in `scripts/checkBundle.mjs` printed Vite's "Build failed" line although its error is the one the check expects; it now builds silently (de36500ada).
 
 **Gaps found writing the handbook's deep dive (2026-11-10).** These are for the next increments:
 
