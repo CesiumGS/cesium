@@ -11,6 +11,7 @@ import {
   type BrepForm,
 } from "../src/brep/form.ts";
 import {
+  approximateCubic,
   evaluateNurbsCurve,
   evaluateNurbsSurface,
   nurbsCurveToSegments,
@@ -324,6 +325,54 @@ describe("nurbsCurveToSegments", () => {
         expect(Math.abs(got[k]! - want[k]!)).toBeLessThan(1e-9);
       }
     }
+  });
+});
+
+describe("approximateCubic", () => {
+  // A rational quintic in 3D, as a kernel's intersection curve can be.
+  const quintic = {
+    degree: 5,
+    knots: Float64Array.from([0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1]),
+    count: 6,
+    dimension: 3 as const,
+    points: Float64Array.from([
+      0, 0, 0, 1, 2, 0, 2, -1, 1, 3, 3, 2, 4, 0, 1, 5, 1, 0,
+    ]),
+    weights: Float64Array.from([1, 0.7, 1.4, 0.9, 1.2, 1]),
+  };
+
+  it("follows a quintic within the tolerance with cubics, over the same range", () => {
+    const { curve, error } = approximateCubic(quintic, 1e-6);
+    expect(curve.degree).toBe(3);
+    expect(error).toBeLessThanOrEqual(1e-6);
+    expect(curve.knots[0]).toBe(0);
+    expect(curve.knots[curve.knots.length - 1]).toBe(1);
+    // It splits exactly into the form's segments.
+    expect(() => nurbsCurveToSegments(curve)).not.toThrow();
+    const random = lcg(17);
+    for (let n = 0; n < 200; n++) {
+      const t = random();
+      const got = evaluateNurbsCurve(curve, t);
+      const want = evaluateNurbsCurve(quintic, t);
+      const off = Math.hypot(
+        got[0]! - want[0]!,
+        got[1]! - want[1]!,
+        got[2]! - want[2]!,
+      );
+      // Measured at 16 points a piece; between them, a little over.
+      expect(off).toBeLessThan(2e-6);
+    }
+  });
+
+  it("measures its error with the distance it's given", () => {
+    const doubled = approximateCubic(
+      quintic,
+      1e-4,
+      (a, b) => 2 * Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!),
+    );
+    const plain = approximateCubic(quintic, 1e-4);
+    expect(doubled.error).toBeLessThanOrEqual(1e-4);
+    expect(doubled.curve.count).toBeGreaterThanOrEqual(plain.curve.count);
   });
 });
 

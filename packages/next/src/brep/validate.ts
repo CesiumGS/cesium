@@ -22,6 +22,8 @@ export interface BrepProblem {
 const SLACK = 1e-9;
 /** The samples of an edge's 3D curve, per segment, that its polyline joins. */
 const EDGE_SAMPLES = 64;
+/** Newton steps refining a point's distance to an edge from its polyline. */
+const NEWTON_STEPS = 6;
 /** Where along a use, from 0 to 1, its pcurve's image is checked. */
 const USE_CHECKS = [0, 0.25, 0.5, 0.75, 1];
 /** How far a surface's axes may stray from unit length and orthogonal. */
@@ -32,8 +34,9 @@ const FRAME_TOLERANCE = 1e-6;
  * use's pcurve end, through the surface, within the edge's tolerance of the
  * next use's start); that each use's pcurve maps onto its edge's 3D curve
  * within the edge's tolerance (at its two ends and 3 interior points, against
- * 64 samples of the edge curve per segment); and that each edge has 1 or 2
- * uses. Geometry is checked only when every index is in range.
+ * the exact curve: the nearest of 64 samples per segment, refined by Newton);
+ * and that each edge has 1 or 2 uses. Geometry is checked only when every
+ * index is in range.
  */
 export function validateBrep(form: BrepForm): BrepProblem[] {
   const problems: BrepProblem[] = [];
@@ -413,7 +416,7 @@ function checkGeometry(form: BrepForm, out: BrepProblem[]): void {
         const line = polyline(edge);
         for (const s of USE_CHECKS) {
           const p = image(form, surface, use, s);
-          const off = distanceToPolyline(p, line);
+          const off = distanceToEdge(form, edge, line, p);
           if (!(off <= tolerance)) {
             add(
               out,
@@ -547,9 +550,14 @@ function distance(a: Float64Array, b: Float64Array): number {
   return Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
 }
 
-/** The distance, m, from a point to a polyline of 3-float points. */
-function distanceToPolyline(p: Float64Array, line: Float64Array): number {
+/** The distance, m, from a point to a polyline of 3-float points, and where: the piece and the fraction along it. */
+function nearestOnPolyline(
+  p: Float64Array,
+  line: Float64Array,
+): { distance: number; piece: number; t: number } {
   let best = Infinity;
+  let piece = 0;
+  let at = 0;
   const n = line.length / 3;
   for (let i = 0; i + 1 < n; i++) {
     const ax = line[i * 3]!;
@@ -571,10 +579,49 @@ function distanceToPolyline(p: Float64Array, line: Float64Array): number {
     );
     if (d < best) {
       best = d;
+      piece = i;
+      at = t;
     }
   }
   if (n === 1) {
     best = Math.hypot(p[0]! - line[0]!, p[1]! - line[1]!, p[2]! - line[2]!);
+  }
+  return { distance: best, piece, t: at };
+}
+
+/**
+ * The distance, m, from a point to an edge's exact curve: the nearest point
+ * of its polyline, refined by Newton on the curve segment there. The
+ * polyline alone is off a curved edge by its chord error (about 4e-5 m on a
+ * 0.5 m circle), more than a kernel's tolerance.
+ */
+function distanceToEdge(
+  form: BrepForm,
+  edge: number,
+  line: Float64Array,
+  p: Float64Array,
+): number {
+  const near = nearestOnPolyline(p, line);
+  const first = form.edgeCurve[edge * 2]!;
+  const count = form.edgeCurve[edge * 2 + 1]!;
+  const along = (near.piece + near.t) / EDGE_SAMPLES;
+  const segment = Math.min(Math.floor(along), count - 1);
+  let t = Math.min(1, along - segment);
+  let best = near.distance;
+  for (let i = 0; i < NEWTON_STEPS; i++) {
+    const { position: c, derivative: d } = evaluateCurve3(
+      form,
+      first + segment,
+      t,
+    );
+    const off = [c[0]! - p[0]!, c[1]! - p[1]!, c[2]! - p[2]!];
+    best = Math.min(best, Math.hypot(off[0]!, off[1]!, off[2]!));
+    const dd = d[0]! * d[0]! + d[1]! * d[1]! + d[2]! * d[2]!;
+    if (!(dd > 0)) {
+      break;
+    }
+    t -= (off[0]! * d[0]! + off[1]! * d[1]! + off[2]! * d[2]!) / dd;
+    t = Math.max(0, Math.min(1, t));
   }
   return best;
 }

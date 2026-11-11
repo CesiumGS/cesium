@@ -7,10 +7,10 @@
 // `BrepBuilder`. Every surface and curve arrives as a NURBS, as SMLib holds
 // it, so every face is a Bézier surface here: SMLib's analytic surfaces are
 // B-splines whose parameterization isn't the form's analytic one.
-import { BrepBuilder, type BrepUse } from "./build.ts";
+import { BrepBuilder } from "./build.ts";
 import type { BrepForm } from "./form.ts";
+import { windLoop, type CurveUse } from "./loops.ts";
 import {
-  evaluateNurbsCurve,
   reverseNurbsCurve,
   trimNurbsCurve,
   type NurbsCurve,
@@ -19,8 +19,6 @@ import {
 
 /** The layout version the reader knows (bindings.cpp's kExportVersion). */
 const EXPORT_VERSION = 1;
-/** Samples per use for a loop's signed area in (u, v). */
-const AREA_SAMPLES = 16;
 
 /** A b-rep from SMLib, as the form and what the kernel said about its faces. */
 export interface SmlibBrep {
@@ -102,52 +100,6 @@ function readSurface(cursor: Cursor): NurbsSurface {
   return { degreeU, degreeV, countU, countV, knotsU, knotsV, points, weights };
 }
 
-/** A use as the builder takes it, with its pcurve as a curve. */
-interface Use {
-  edge: number;
-  reversed: boolean;
-  pcurve: NurbsCurve;
-}
-
-/** Twice the signed area a loop encloses in (u, v): positive counter-clockwise. */
-function loopArea(uses: readonly Use[]): number {
-  let area = 0;
-  let previous: Float64Array | undefined;
-  let first: Float64Array | undefined;
-  for (const use of uses) {
-    const { knots, degree, count } = use.pcurve;
-    const t0 = knots[degree]!;
-    const t1 = knots[count]!;
-    for (let i = 0; i < AREA_SAMPLES; i++) {
-      const p = evaluateNurbsCurve(
-        use.pcurve,
-        t0 + ((t1 - t0) * i) / AREA_SAMPLES,
-      );
-      if (previous) {
-        area += previous[0]! * p[1]! - p[0]! * previous[1]!;
-      } else {
-        first = p;
-      }
-      previous = p;
-    }
-  }
-  if (previous && first) {
-    area += previous[0]! * first[1]! - first[0]! * previous[1]!;
-  }
-  return area;
-}
-
-/** The loop run the other way: uses in reverse order, each reversed. */
-function reverseLoop(uses: readonly Use[]): Use[] {
-  return uses
-    .map((use) => ({
-      edge: use.edge,
-      reversed: !use.reversed,
-      pcurve: reverseNurbsCurve(use.pcurve),
-    }))
-    .reverse();
-}
-
 /**
  * Builds the render form from a record smlib_brep_export wrote (its layout
  * is documented there). Loops are turned to the form's winding, outer loops
@@ -223,7 +175,7 @@ export function readSmlibExport(
 
   // Poles become zero-length edges at their vertex, one per use.
   let nextEdge = edgeCount;
-  const uses: (Use | undefined)[] = [];
+  const uses: (CurveUse | undefined)[] = [];
   for (let u = 0; u < useCount; u++) {
     const type = cursor.int();
     const target = cursor.int();
@@ -255,34 +207,23 @@ export function readSmlibExport(
   const faceTags = new Int32Array(faceCount);
   const faceSideUnknown = new Uint8Array(faceCount);
   faces.forEach((face, f) => {
-    const faceLoops: Use[][] = [];
+    const faceLoops: ReturnType<typeof windLoop>[] = [];
     for (let l = face.firstLoop; l < face.firstLoop + face.loops; l++) {
       const loop = loops[l]!;
-      const list: Use[] = [];
+      const list: CurveUse[] = [];
       for (let u = loop.first; u < loop.first + loop.count; u++) {
         const use = uses[u];
         if (use) {
           list.push(use);
         }
       }
-      if (list.length === 0) {
-        continue;
+      if (list.length > 0) {
+        faceLoops.push(windLoop(list, faceLoops.length === 0));
       }
-      const outer = faceLoops.length === 0;
-      const area = loopArea(list);
-      faceLoops.push((outer ? area < 0 : area > 0) ? reverseLoop(list) : list);
     }
-    builder.face(
-      surfaces[face.surface]!,
-      faceLoops.map((loop) =>
-        loop.map((use): BrepUse => ({
-          edge: use.edge,
-          reversed: use.reversed,
-          pcurve: use.pcurve,
-        })),
-      ),
-      { reversed: face.outward === 0 },
-    );
+    builder.face(surfaces[face.surface]!, faceLoops, {
+      reversed: face.outward === 0,
+    });
     faceTags[f] = face.tag;
     faceSideUnknown[f] = face.outward === -1 ? 1 : 0;
   });

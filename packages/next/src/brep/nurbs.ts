@@ -502,3 +502,115 @@ export function evaluateNurbsCurve(curve: NurbsCurve, t: number): Float64Array {
   }
   return out;
 }
+
+/** Samples per piece where `approximateCubic` measures its error. */
+const APPROXIMATION_SAMPLES = 16;
+/** The most halvings of a piece: 2^12 pieces at most. */
+const APPROXIMATION_DEPTH = 12;
+
+/**
+ * A piecewise cubic that follows the curve (any degree) within
+ * `tolerance`, for a kernel's curve above the form's degree 3. Each piece is
+ * the Hermite cubic through the curve's ends and tangents there, halved
+ * until its error, measured at 16 points each matched by parameter, is
+ * within the tolerance; matching by parameter bounds the distance between
+ * the shapes. `distance` measures it (default: Euclidean in the curve's own
+ * coordinates; a pcurve passes one through its surface, so the error is in
+ * metres). Returns the cubic over the same parameter range and the largest
+ * error measured, which a converter adds to the edge's tolerance as the
+ * representation error.
+ */
+export function approximateCubic(
+  curve: NurbsCurve,
+  tolerance: number,
+  distance: (a: Float64Array, b: Float64Array) => number = (a, b) => {
+    let sum = 0;
+    for (let c = 0; c < a.length; c++) {
+      sum += (a[c]! - b[c]!) ** 2;
+    }
+    return Math.sqrt(sum);
+  },
+): { curve: NurbsCurve; error: number } {
+  const { degree, count, dimension } = curve;
+  checkSizes(
+    "approximateCubic",
+    curve.points.length,
+    count * dimension,
+    curve.weights,
+    count,
+  );
+  checkKnots("approximateCubic", degree, curve.knots, count);
+  const t0 = curve.knots[degree]!;
+  const t1 = curve.knots[count]!;
+  const h = (t1 - t0) * 1e-6;
+  const at = (t: number) =>
+    evaluateNurbsCurve(curve, Math.min(t1, Math.max(t0, t)));
+  // The tangent by central differences, one-sided at the ends.
+  const tangent = (t: number) => {
+    const a = at(Math.max(t0, t - h));
+    const b = at(Math.min(t1, t + h));
+    const span = Math.min(t1, t + h) - Math.max(t0, t - h);
+    return a.map((x, c) => (b[c]! - x) / span);
+  };
+  /** The Hermite cubic's four control points over [a, b]. */
+  const hermite = (a: number, b: number) => {
+    const p0 = at(a);
+    const p3 = at(b);
+    const d0 = tangent(a);
+    const d3 = tangent(b);
+    const third = (b - a) / 3;
+    return [
+      p0,
+      p0.map((x, c) => x + third * d0[c]!),
+      p3.map((x, c) => x - third * d3[c]!),
+      p3,
+    ];
+  };
+  const bezier = (p: Float64Array[], s: number) => {
+    const r = 1 - s;
+    return p[0]!.map(
+      (_, c) =>
+        r * r * r * p[0]![c]! +
+        3 * r * r * s * p[1]![c]! +
+        3 * r * s * s * p[2]![c]! +
+        s * s * s * p[3]![c]!,
+    );
+  };
+  const pieces: { a: number; b: number; p: Float64Array[] }[] = [];
+  let worst = 0;
+  const fit = (a: number, b: number, depth: number) => {
+    const p = hermite(a, b);
+    let error = 0;
+    for (let i = 1; i < APPROXIMATION_SAMPLES; i++) {
+      const s = i / APPROXIMATION_SAMPLES;
+      error = Math.max(error, distance(bezier(p, s), at(a + (b - a) * s)));
+    }
+    if (error > tolerance && depth < APPROXIMATION_DEPTH) {
+      const mid = (a + b) / 2;
+      fit(a, mid, depth + 1);
+      fit(mid, b, depth + 1);
+      return;
+    }
+    worst = Math.max(worst, error);
+    pieces.push({ a, b, p });
+  };
+  fit(t0, t1, 0);
+
+  const knots: number[] = [t0, t0, t0, t0];
+  const points: number[] = [...pieces[0]!.p[0]!];
+  for (const piece of pieces) {
+    points.push(...piece.p[1]!, ...piece.p[2]!, ...piece.p[3]!);
+    knots.push(piece.b, piece.b, piece.b);
+  }
+  knots.push(t1);
+  return {
+    curve: {
+      degree: 3,
+      dimension,
+      count: pieces.length * 3 + 1,
+      knots: Float64Array.from(knots),
+      points: Float64Array.from(points),
+    },
+    error: worst,
+  };
+}
