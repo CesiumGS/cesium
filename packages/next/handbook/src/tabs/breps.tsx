@@ -63,7 +63,7 @@ const FLOW: BoardStep[] = [
     lane: 3,
     row: 1,
     title: "B-rep adapter",
-    body: "Answers rays, closest points and pick refinement from the form, with accuracy as terms. Built, a draft: not yet behind a drawn B-rep.",
+    body: "Answers rays, closest points and pick refinement from the form, with accuracy as terms. Built, a draft: a drawn B-rep's picks refine through it; its other answers aren't wired to World.addBrep.",
   },
 ];
 
@@ -483,9 +483,9 @@ const STATUS: { piece: string; state: State; where: string }[] = [
   },
   {
     piece: "Exact picks: the GPU writes (u, v)",
-    state: "Planned",
+    state: "Provisional",
     where:
-      "The pick pass writes the face's feature ID only, so nothing calls refinePick with a real pick yet",
+      "The pick variant of the surface shader (vsPatchPick) writes (face, u, v) for a patch draw, and World.addBrep gives the draw a pick source whose refinePick turns it into the face's exact point (CorePick.truePosition)",
   },
   {
     piece: "Distance between two geometries, across reference frames",
@@ -546,8 +546,9 @@ export function Breps() {
           form for B-reps, kernels that stay outside the engine and hand it that
           form, and one query interface over meshes, distance fields and B-reps.
           The form, the converters for two kernels, STEP import, drawing and the
-          B-rep query adapter, with accuracy as composed terms, are built. Exact
-          picks need the GPU to write (u, v), which it doesn't yet.
+          B-rep query adapter, with accuracy as composed terms, are built. A
+          pick on a drawn B-rep face carries (face, u, v) from the GPU and
+          refines to an exact point.
         </>
       }
     >
@@ -559,10 +560,10 @@ export function Breps() {
           query interface, with mesh, B-rep and distance-field adapters. The
           mesh adapter is used, for tileset rays and snap occlusion. No drawn
           B-rep goes through the B-rep adapter yet: it answers from a form
-          handed to it, and <C>World.addBrep</C> doesn&apos;t wire it in.
-          Planned: a kernel or a server as more routes, the GPU writing (u, v),
-          and everything that crosses representations or reference frames. The
-          table at the end of this page has each piece.
+          handed to it, and <C>World.addBrep</C> wires in only its pick
+          refinement. Planned: a kernel or a server as more routes, and
+          everything that crosses representations or reference frames. The table
+          at the end of this page has each piece.
         </p>
       </Note>
 
@@ -1036,8 +1037,9 @@ export function Breps() {
           it reads the form directly. The interface keeps{" "}
           <C>display(tolerance)</C> only as a convenience for consumers that
           want triangles, such as fallbacks, exports and tests. The mesh adapter
-          serves tilesets today. The engine has no B-rep behind any adapter yet,
-          so a pick on a drawn one returns its face and not an exact point.
+          serves tilesets today. A pick on a drawn B-rep face carries (face, u,
+          v) and refines through the B-rep adapter to an exact point; its rays
+          and closest points aren&apos;t behind a drawn B-rep yet.
         </p>
 
         <h3>Accuracy as composed terms</h3>
@@ -1114,12 +1116,12 @@ export function Breps() {
           What is built is the part that already exists on geometry:{" "}
           <C>EntityRef</C> names a face, edge or vertex with its feature ID, and
           a hit or closest point carries (u, v) where the geometry has them. The
-          pick pass writes the face's feature ID. Writing (u, v), and refining
-          it to an exact point with its accuracy as an entry beside{" "}
-          <C>closestPoint</C>, is half built: <C>refinePick</C> on the B-rep
-          adapter takes a pick hint, and the GPU doesn't write (u, v) yet. The
-          example previews the refinement with Gauss–Newton steps in (u, v).
-          Fields and the proposal's morph targets aren't built.
+          pick variant of the surface shader writes (face, u, v) for a patch
+          draw (built in the placement review&apos;s increment 5), and{" "}
+          <C>refinePick</C> on the B-rep adapter refines it to an exact point
+          with its accuracy, as an entry beside <C>closestPoint</C>. The example
+          previews the refinement with Gauss–Newton steps in (u, v). Fields and
+          the proposal's morph targets aren't built.
         </p>
 
         <h3>One use that crosses representations (planned)</h3>
@@ -1248,11 +1250,11 @@ export function Breps() {
       <Section title="Exact answers, mostly without a kernel">
         <ul>
           <li>
-            <strong>Picks.</strong> The pick fragment writes the face ID, and
-            the plan has it write (u, v) too. The CPU then evaluates the surface
-            there in float64 with a Newton step, so a pick is exact with no
-            ray-surface solve. <C>refinePick</C> is built, and the (u, v)
-            readback isn't: today a pick returns the face.
+            <strong>Picks.</strong> The pick variant writes (face, u, v) for a
+            patch draw. The CPU then evaluates the surface there in float64 with
+            a Newton step, so a pick is exact with no ray-surface solve. Both{" "}
+            <C>refinePick</C> and the (u, v) readback are built, for faces of
+            degree 1 to 7.
           </li>
           <li>
             <strong>Closest points and ray hits.</strong> Closed form on

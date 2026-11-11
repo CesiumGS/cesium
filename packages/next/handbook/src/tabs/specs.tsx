@@ -12,40 +12,36 @@ import {
 
 const TILESET_PROPOSALS: { name: string; where: ReactNode; what: string }[] = [
   {
-    name: "A placement mode on the source CRS",
-    where: (
-      <>
-        3D Tiles 2.0, on <Cite id="crsSource" />
-      </>
-    ),
-    what: 'One field, "placement": "rigid" | "reprojected", saying whether content in a design CRS is meant to be placed rigidly at an anchor or reprojected vertex by vertex. Nothing in 3D Tiles, glTF or OGC can say "reprojected" today.',
-  },
-  {
     name: "Alignments",
     where: "3D Tiles, possibly glTF",
     what: "Horizontal and vertical alignment geometry as tileset data: lines, arcs, clothoid spirals, grades, parabolic vertical curves and stationing, with segment kinds named after IFC 4.3's IfcAlignment. Exact snapping and station-offset readouts then work on streamed content.",
   },
   {
     name: "A declared coordinate operation",
-    where: "3D Tiles 2.0",
-    what: "Which operation the producer used to reproject, as WKT2 COORDINATEOPERATION or BOUNDCRS rather than a PROJ pipeline string, so a consumer can reproduce the placement exactly. Every grid it names must be a published, hashed grid.",
-  },
-  {
-    name: "A site transform mapped to IFC",
     where: (
       <>
-        3D Tiles 2.0, after <Cite id="ifc" />
+        Beside <C>EXT_geospatial_crs</C> in the 3D Tiles 2.0 draft
       </>
     ),
-    what: "Rotation, scale and origin matching IFC 4.3's IfcMapConversionScaled, so IFC-sourced tilesets can carry it unchanged.",
+    what: "Which operation the producer used to reproject, as WKT2 COORDINATEOPERATION or BOUNDCRS rather than a PROJ pipeline string, so a consumer can reproduce the placement exactly, and an accuracy for it. Every grid it names must be a published, hashed grid. A CRS names where the content is, not how it was moved there.",
+  },
+  {
+    name: "IFC's scale semantics for a local site",
+    where: (
+      <>
+        3D Tiles 2.0 draft, after <Cite id="ifc" />
+      </>
+    ),
+    what: "A local CRS with EXT_georeference already gives an origin and, from the node's own transform, a rotation and scale. What may be missing is IfcMapConversionScaled's separate horizontal and vertical scale factors and what they scale (grid or ground distances). To check against the draft before proposing anything.",
   },
 ];
 
 const DECLARATIONS = [
   {
     name: "BENTLEY_engineering_frame",
-    what: "Declares a tileset's engineering frame: its design CRS, placement mode and site transform. It composes with ESRI_crs, EXT_geospatial_crs_source and 3DTILES_ellipsoid rather than replacing them.",
-    state: "In use by the design globe. 5f may add a declared chord tolerance.",
+    what: "Declares a tileset's engineering frame: its design CRS, placement mode and site transform. It composes with ESRI_crs, the 3D Tiles 2.0 draft's EXT_geospatial_crs and EXT_georeference, and 3DTILES_ellipsoid rather than replacing them.",
+    state:
+      "In use by the design globe. If the owner accepts the plan's proposal of no placement modes (section 13.26), the mode field goes. 5f may add a declared chord tolerance.",
   },
   {
     name: "BENTLEY_alignments",
@@ -177,10 +173,20 @@ export function Specs() {
       <Section title="3D Tiles and glTF">
         <p>
           The design globe's tileset declaration overlaps existing work for its
-          CRS (<C>ESRI_crs</C> in 3D Tiles 1.1, and <Cite id="crsSource" /> in
-          the 3D Tiles 2.0 work, which <Cite id="tiles" /> lists as in
-          development) and its body (<C>3DTILES_ellipsoid</C>). So it composes
-          with those, and only what is new is worth proposing:
+          CRS (<C>ESRI_crs</C> in 3D Tiles 1.1, and in the 3D Tiles 2.0 draft,
+          which <Cite id="tiles" /> lists as in development,{" "}
+          <C>EXT_geospatial_crs</C> with its <C>_wkid</C> and <C>_wkt2</C>{" "}
+          format extensions; <Cite id="crsSource" />, an open draft, isn&apos;t
+          in the branch&apos;s list) and its placement (<C>EXT_georeference</C>:
+          a node anchored at a longitude, latitude and height, with
+          east-up-north axes applied after the node&apos;s transform) and body (
+          <C>3DTILES_ellipsoid</C>). Those extensions are in glTF 2.1&apos;s
+          vendor folder on the CesiumGS/glTF branch <C>3d-tiles-2.0</C>. The
+          CRS&apos;s type (geographic, geocentric, projected, compound or local)
+          already says how content reaches the Earth, so the earlier idea of a
+          placement mode on the CRS is proposed for removal (plan, section
+          13.26). The declaration composes with those, and only what is new is
+          worth proposing:
         </p>
         <DataTable
           label="Proposals for 3D Tiles and glTF"
@@ -198,9 +204,10 @@ export function Specs() {
         </p>
         <p>
           <strong>Candidates to add:</strong> a declared chord tolerance for
-          reprojected models (plan 5, section 13.4), and a <C>hosted</C>{" "}
-          placement mode for content a producer or host reprojected itself
-          (section 7.9).
+          reprojected models (plan 5, section 13.4). A <C>hosted</C> placement
+          mode is no longer a candidate: content already in the body&apos;s
+          frame is a geocentric CRS, whose route is the identity (section
+          13.26).
         </p>
         <p>
           <strong>Proposed, not built:</strong> an explicit colour space in the
@@ -220,8 +227,8 @@ export function Specs() {
           rows={DECLARATIONS}
         />
         <Written
-          from="the overall plan, section 13.14, and the plan 5 spec, section 15.3"
-          on="2026-11-08"
+          from="the overall plan, sections 13.14 and 13.26, and the plan 5 spec, section 15.3"
+          on="2026-11-11"
         />
       </Section>
 

@@ -6907,10 +6907,12 @@ work, CesiumGS/glTF#131) and its body (`3DTILES_ellipsoid`; the 2.0 root
 CRS). The declaration is renamed `BENTLEY_engineering_frame` and composes
 with those. What is new, and worth proposing:
 
-- **A placement mode on the source CRS (3D Tiles 2.0, #131):** one field,
+- **A placement mode on the source CRS (3D Tiles 2.0, #131):** _proposed for withdrawal
+  (2026-11-11, awaiting the owner); see "no placement modes" in §13.26._ It was one field,
   `"placement": "rigid" | "reprojected"`, saying whether content in a design
   CRS is meant to be placed rigidly at an anchor or reprojected vertex by
-  vertex. Nothing in 3D Tiles, glTF or OGC can say "reprojected" today.
+  vertex. The 3D Tiles 2.0 draft's CRS types and `EXT_georeference` select
+  the route instead.
 - **Alignments (3D Tiles, and possibly glTF):** horizontal and vertical
   alignment geometry (lines, arcs, clothoid spirals, grades, parabolic vertical
   curves, stationing) as tileset data, with segment kinds named after IFC
@@ -9180,13 +9182,32 @@ True heights stay put while the drawn ones follow the slider. `test/verticalExag
 - So the engine never asks how to place content; it routes from the declared CRS, and whether the route is rigid is a property of the route. The one reason "rigid" existed for projected content was to approximate the reprojection near an anchor, sagging away from it. The fits make that approximation pointless: same drawing cost, no sag.
 - **The real distinction underneath is grid against ground distances.** That is a property of the CRS, not a mode. A design in a projected CRS has grid distances, scaled by the projection; reprojecting is right. A design meant to keep its dimensions on the ground belongs in an engineering CRS with a site transform. `IfcMapConversionScaled`'s scale factors are how IFC carries the difference.
 - **Consequences, if accepted:**
-  - Drop the proposal "A placement mode on the source CRS" (Spec extensions tab).
-  - `BENTLEY_engineering_frame` loses its placement-mode field and keeps the design CRS and site transform.
+  - The Spec extensions tab already drops the proposal "A placement mode on the source CRS", and reworks the others (below).
+  - `BENTLEY_engineering_frame` loses its placement-mode field. It keeps what the 2.0 draft's extensions can't say (below), and may shrink to that.
   - `DesignPlacement.mode` goes, and `Georeference` (the API review's name) is just the route from the content's CRS to the body frame.
-  - `georeferenceTileset` reads only the CRS and the site transform.
+  - `georeferenceTileset` reads the CRS and the node's georeference or the site transform, and picks the route from the CRS's type.
   - The design globe moves to the warp path; its projected content was "reprojected" anyway.
-- **`EXT_geospatial_crs_source` itself:** content still has to name its CRS, and neither 3D Tiles nor glTF can. So keep the existing extension for naming the source CRS, without adding a mode to it. Drop it only if 3D Tiles 2.0 gains a CRS of its own; then use that.
-- **Not built until the owner agrees:** it changes a public API (`DesignPlacement`, `georeferenceTileset`) and a declared extension.
+- **The 3D Tiles 2.0 finding (owner, 2026-11-11), which corrects the text that was here.** That text said neither 3D Tiles nor glTF can name a CRS, and kept `EXT_geospatial_crs_source` for it. The 3D Tiles 2.0 draft (CesiumGS/3d-tiles, branch `draft-2.0`, `next/2.0/README.md`) lists four glTF 2.1 extensions, in CesiumGS/glTF's branch `3d-tiles-2.0`, folder `extensions/2.1/Vendor` (read 2026-11-11). `EXT_geospatial_crs_source` (open PR #131) isn't among them. They are optional, and written against glTF 2.1:
+  - **`EXT_geospatial_crs`:** declares an asset's CRS, overriding glTF's own coordinate system (-x right, +y up, +z forward, metres). It has a type: _geographic_ (longitude, latitude, height), _geocentric_ (global x, y, z), _projected_ (x, y, height in a 2D projection), _compound_ (horizontal plus vertical) or _local_ (x, y, z). Its `format` is defined by sub-extensions, and a CRS's axes and units are the CRS's own (its example is a projected CRS in U.S. Survey Feet, +x east, +y north, +z up).
+  - **`EXT_geospatial_crs_wkid`:** format `wkid`: an `authority` and an integer `wkid` (EPSG 4978 in its example), an optional `vcsWkid` for a vertical CRS, and an optional `epoch` for a dynamic CRS. Other authorities appear (its example has `IAU_2015` for another body).
+  - **`EXT_geospatial_crs_wkt2`:** format `wkt2`: a WKT2 string, such as UTM zone 11N.
+  - **`EXT_georeference`:** on a node. Anchors its local origin at a `longitude`, `latitude` (degrees) and `height` (metres) on WGS 84, or on the ellipsoid of the declared CRS when `EXT_geospatial_crs` is present. It rotates the node to east-north-up axes with -x east, +y up (the geodetic normal) and +z north, and it applies _after_ the node's own transform.
+- **So the CRS type selects the route, with no mode field:**
+
+  | Declared CRS                       | Route to the body frame                                                                                                    | Edge                  |
+  | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+  | Geocentric (ECEF, ITRF; EPSG 4978) | None, or a transformation between frames when the epochs or datums differ                                                  | Identity              |
+  | Geographic, projected or compound  | A coordinate operation from the CRS to the body's geographic CRS, then to geocentric (a datum shift and a projection)      | Warp, fitted per tile |
+  | Local, with `EXT_georeference`     | The node's translation, rotation and scale (the site transform), then the anchor's east-north-up frame, then to geocentric | Rigid                 |
+
+  A local CRS without `EXT_georeference` or a site transform has no route, and the engine should say so rather than guess.
+
+- **What may still need a Bentley extension.** Each is to check against the draft's text before proposing, and none is needed to remove the mode:
+  - _A declared coordinate operation and its accuracy._ A CRS says where content is, not which operation the producer used to move it there. Two operations between the same CRSs can differ by metres (a ballpark transformation against a gridded one), so a producer who reprojected needs to say which, as WKT2 `COORDINATEOPERATION` or `BOUNDCRS`, so a consumer reproduces the placement exactly (the Spec extensions tab's proposal, kept).
+  - _`IfcMapConversionScaled`'s scale semantics._ A node's scale and an `EXT_georeference` anchor can carry IFC's origin, rotation and one scale. IFC's separate horizontal and vertical factors, and what they scale (grid or ground distances), may not fit. Left open, and reworked in the Spec extensions tab.
+  - _Alignments:_ nothing in the four extensions carries alignment geometry, so `BENTLEY_alignments` stays as a proposal.
+  - _The site transform at the tileset level._ `EXT_georeference` is on a glTF node, so a tileset whose tiles all share a site transform either repeats it per tile or declares it once. A tileset-level declaration may remain, as what `BENTLEY_engineering_frame` holds, without a mode.
+- **Not built until the owner agrees:** it changes a public API (`DesignPlacement`, `georeferenceTileset`) and a declared extension. The code already reads `EXT_geospatial_crs`'s shape (`src/engineering/georeference.ts`), so reading the 2.0 draft's CRS and node anchor is a small step.
 
 **Clip planes and caps: decided by the owner (2026-11-10).** Built as increment 8, once increments 2a and 3 have landed. 2a's varying swap provides the true point per fragment.
 
@@ -9502,6 +9523,31 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 - **Not built:** the four-view layout (it needs 5d's orthographic camera) and fillets.
 
 **Also (§13.34):** step 3's queries respect clipping and read scalar fields, step 5 draws section caps on B-reps, and step 7's exact picks work through a cut.
+
+**The CSG sample, direct manipulation (owner, 2026-11-11).** The owner asked for 3D widgets for manipulating the solid: extrusions on faces, grabbing and dragging points or lines, "whatever SolidWorks does, how close can we get?". Phases, each usable alone. Phases 1 to 3 are a direct-modeling tool (what SpaceClaim and the Fusion 360 and SolidWorks "move face" tools do). Phases 4 and 5 are the parametric core of SolidWorks and Onshape, a much larger step. A reasonable target for a sample is 1 to 3, and a small version of 4.
+
+1. **Gizmos on tree leaves, with drag previews.** Translate, rotate and scale handles on the selected leaf (arrows, rings, boxes), dragged along an axis or in a plane, changing the leaf's move, rotation or parameters. The preview is today's: transient wire proxy, re-evaluation at most every 120 ms in the worker, a newer request superseding an older one. Handles are picked through the same pick pass as the solid. Effort: about a week, all in the sample.
+2. **Face push-pull mapped to the parameter that made the face.** Face provenance says which leaf made a picked face, and the leaf's kind says which parameter that face is:
+   - A box's face moves that side (size on that axis, plus the move that keeps the opposite face fixed). A cylinder's side is its radius, and its caps are its height (and the move). A sphere's face is its radius, a cone's side its angle or radius, a torus's its major or minor radius, decided by where the drag started.
+   - The drag distance is measured along the face's normal at the picked (u, v) (`refinePick` gives it, exactly).
+   - Snapping uses the engine's exact queries: closest point and distance to other faces' planes and edges' curves within a pixel radius, with the snap kind named (face plane, edge, vertex, midpoint) and the distance shown as a measurement.
+   - A face whose leaf was cut by a boolean pushes the leaf's parameter, so the result changes by what the tree means (a hole's wall changes the hole's radius). Faces with no single parameter (a face made by a boolean's intersection curve) fall to phase 3. Effort: 1 to 2 weeks. Application-side, apart from one engine need: a face's pick must carry its tree node and provenance, which the sample already does.
+3. **Direct b-rep edits on result faces, as feature nodes.** For a face or edge that no leaf parameter explains, apply an OCCT local operation to the result and record it as a _feature node_ in the tree, so the history stays a tree that re-evaluates:
+   - Extrude or cut a planar face: `BRepFeat_MakePrism` (a prism of the face's own shape, fused or cut). Offset a face, or thicken: `BRepOffsetAPI_MakeOffsetShape` (and `MakeThickSolid` for shelling).
+   - Fillet or chamfer picked edges: `BRepFilletAPI_MakeFillet` and `MakeChamfer`, with the radius dragged as a handle at the edge's midpoint. These are the "fillets" the sample still waits on.
+   - A feature node stores the operation, its parameters, and _references to the faces or edges it acted on_ (the next phase's hard part). The SMLib kernel has its own booleans and fillets, so a kernel without the operation disables the handle rather than the sample. Effort: 2 to 3 weeks for extrude, offset, fillet and chamfer on one kernel.
+4. **Sketch-based features.** The SolidWorks and Onshape core: pick a planar face or a datum plane, draw a 2D sketch (lines, arcs, circles, splines), constrain it (coincident, horizontal, tangent, equal, dimensions), then extrude, revolve or cut it:
+   - A 2D constraint solver. `planegcs` (FreeCAD's sketcher solver, compiled to WebAssembly in the npm package `@salusoft89/planegcs`) is licensed LGPL-2.1, the same as OCCT's, so it would be a separately loaded module in the example only, with the same licence check as OCCT's before anything built with it is distributed (confirmed from a web search on 2026-11-11; read the package's licence file before relying on it). A small custom solver (Newton on the constraints' equations, for points, lines, circles and the common dimensions) is the alternative, enough for a sample.
+   - The sketch is a node: a plane (a face reference or a datum), the entities and constraints, and the solved result as a wire. Its solved wire becomes an OCCT face, and `BRepPrimAPI_MakePrism` or `MakeRevol` makes the solid for the feature.
+   - Sketch drawing is a 2D mode on the plane: the view looks straight at it (an orthographic camera, 5d), entities draw as the vector layer's lines, and dragging a point re-solves live. Effort: 3 to 6 weeks for a useful subset.
+5. **Parametric history, rebuild, and stable face naming.** A model that re-evaluates when a parameter changes keeps feature nodes working only if the faces they reference are found again. That is the _topological naming problem_: after a change, a face's index or identity may differ, and a feature that referenced "face 7" may attach to the wrong face or none.
+   - Within a tree of leaves and booleans the sample already survives it: a face's identity is its leaf's tag, kept by each boolean's history.
+   - For feature nodes, name a face by its _origin_ (which feature made it, and which of that feature's faces: "the top of extrude 2's side 3") rather than an index, from the kernel's history of what each operation modified, generated or deleted (OCCT's `BRepBuilderAPI_MakeShape::Modified`, `Generated` and `IsDeleted`, and `BRepTools_History` for chaining them; OCAF's `TNaming` is the older, heavier mechanism). Where a name can't be resolved, the feature reports it and stops there, rather than guessing, as Onshape and SolidWorks flag a failed feature.
+   - Effort: open-ended; the first version (names from history, a clear failure) is 2 to 4 weeks, and robust naming is a research problem. Application-side.
+
+**What the engine gives, and what is the application's.** The engine provides: exact picks (a face's (u, v), refined to an exact point and normal); snapping and closest-point and distance queries on b-reps; measurement with accuracy as terms; GPU tessellation, so a re-evaluated solid redraws without a CPU mesh; kernels in workers; transient geometry and the vector layer for handles and sketches; linked views and viewports for the four-view layout; and clipping with exact caps for sections. The application owns: the tree and feature nodes, the gizmos and their behaviour, the parameter mapping, the sketch and its solver, history and naming, undo and redo, and the kernel calls. The engine never asks a kernel to draw or to edit.
+
+**Open (CSG sample, direct manipulation):** how a push-pull on a face with no single parameter is shown before phase 3 exists; whether SMLib gets the phase 3 operations or the feature nodes need OCCT (SMLib's face tags already do provenance, but its history for naming is unmeasured); a sketch solver's licence against its size; and whether the sample should stop at phase 3 and treat 4 and 5 as a separate product's work.
 
 **Sequencing with the vector design (owner, 2026-11-09).** B-reps go first, but the kernels they share with vectors are set by vectors, their harder user: per-pixel coverage under glyph and label density with the band cap under pressure, strokes with the styling language's full control, and the owner's measured prototype as evidence. A trim loop is a small glyph in (u, v). So:
 
@@ -9832,6 +9878,94 @@ More examples (owner, 2026-11-10), each pushing something the list above doesn't
 - **Rail clearance:** a train's clearance envelope swept along the track, clashes with structures marked. Curves through placement; sweeps; clash display.
 - **A drawing sheet:** a title block with plan and section viewports at stated scales, printed. Printing to scale.
 - **An agent replay in a station:** pedestrian simulation played back, with a density heat map on the floors. Live points (§13.11) and the timeline: an early proof.
+
+### 13.35 Brainstorm: a black hole visualization (owner, 2026-11-11)
+
+**The question.** The owner remembers a paper on curved ray tracing around a black hole. It is James, von Tunzelmann, Franklin and Thorne, "Gravitational lensing by spinning black holes in astrophysics, and in the movie Interstellar", _Classical and Quantum Gravity_ 32 (2015) 065001 (arXiv:1502.03808; citation checked by web search, 2026-11-11). It describes the Double Negative Gravitational Renderer (DNGR), which traces light through the spacetime of a spinning (Kerr) black hole as ray bundles, so each pixel's footprint is filtered, and so shows the caustics and critical curves of the images. The question: can the warp and reprojection system do it?
+
+**Not as a warp, in general.** A warp is a map of points: content's position goes to a drawn position, injectively, and the result is rasterized as triangles. Gravitational lensing breaks both halves:
+
+- **It isn't injective.** One source can have several images: a primary and a secondary image on the two sides of the hole, then ever fainter ones nearer the shadow's edge (the photon ring), and an Einstein ring when the source, the hole and the observer line up. A point maps to several places, and a warp maps it to one. A region behind the hole is also mapped onto the whole sky around the shadow, twice over, with its parity flipped for the secondary image.
+- **It depends on the observer.** The deflection of a ray depends on the camera's position relative to the hole (its distance and the angle between each ray and the hole), so there is no map of the content alone. Warps in the placement model are properties of frames and routes, not of a view, and a pick, a snap or a measurement inverts none of them (§13.26). A lensing map would change with every camera move, and its inverse isn't a function.
+- **The direction that is a function.** From the camera, backwards, each pixel's ray has exactly one path: it either escapes to a direction on the sky, ends on the disk or other matter, or falls into the horizon. So lensing is a well-defined map from _screen to sky_ (what the paper's renderer computes), and a multi-valued map from sky to screen (all a warp could be).
+
+**What fits.**
+
+- **(a) Per-pixel null-geodesic ray marching in a compute pass.** One thread per pixel integrates the camera's ray backwards through the hole's spacetime and shades what it reaches: the sky (a star catalogue or a cube map), an accretion disk, or the horizon (black). It is the same shape as the ray-marched f-reps and volumes (§13.33, §13.34 item 4): a full-screen compute pass, with the ray generator, the depth composite and the budget controls shared. Occluding scene content gives a depth that ends the ray.
+  - _Schwarzschild first_ (a non-spinning hole; units G = c = 1, with M the mass, `r_s = 2M`). Light's orbits are planar, in the plane of the hole, the camera and the ray. In that plane, with `u = 1/r`, the orbit satisfies the Binet equation `d²u/dφ² + u = 3Mu²`. Either integrate it per ray with RK4 (a fixed or adaptive step in φ), or the geodesic equation as a first-order system in the orbit plane. Known values to test against: the photon sphere at `r = 3M`, a shadow of impact parameter `b_c = 3√3 M` (about 2.6 `r_s`), a deflection of about `4M/b` far away. For a static camera at radius `r_c` and a ray at angle ψ from the direction of the hole, `b = r_c sin ψ / √(1 − 2M/r_c)`.
+  - _A table replaces the integration for Schwarzschild._ Because orbits are planar and depend only on `b`, the total deflection is a 1D function of `b` (and of `r_c`), and the position along the orbit where it crosses the disk's plane is a 2D function of `b` and φ. Computed once per camera distance on the CPU or in a compute pass, and looked up per pixel, a frame costs a texture fetch for each, with a few more for the disk. This is the fast route, and exact to the table's resolution.
+  - _Kerr later._ A spinning hole's geodesics aren't planar. They conserve energy, angular momentum about the spin axis, and the Carter constant, but each ray needs integration (as DNGR does, with ray bundles for filtering). In Boyer-Lindquist coordinates the poles are singular, so a production version would use horizon-penetrating coordinates (Kerr-Schild) or an adaptive step near the axis. A table of rays per camera is possible only for a fixed camera.
+  - _Sampling the sky and filtering._ The sky is a sampled cube map or the night sky's star data, which must be filtered by the ray's footprint (the paper's bundle) or stars flicker and tear at the critical curves. The cheap version traces a pixel's neighbours and uses the difference of their directions as the footprint. The disk is a texture or a thin emissive model with a temperature and, optionally, Doppler shift and beaming.
+- **(b) Rasterized content, lensed by a deflection map.** Render the scene without lensing to a texture, trace the camera's rays through (a) to get each pixel's deflected _direction_, and resample the unlensed render at it (a screen-space remap, as for refraction). It works for content that's far behind the hole, whose position is a direction (a planet or the Moon behind it, a sky, a distant tileset). It is wrong for content near the hole: with parallax the ray isn't a straight line, so a depth can't turn a direction into a point. Where the map sends several pixels to one direction, the remap shows several copies of the content, which is the secondary image, but only if the content is inside the render's field of view, so the render needs margin. Approximate, and honest about it.
+- **(c) Where warps do help: a weak-field presentation warp.** Far from the hole, a ray's deflection is small (`4M/b` radians), there is one dominant image, and a point's apparent position is its position moved by that deflection. That is a smooth injective map in a region that excludes the shadow and its ring, so it can be a presentation warp (§13.26) for content far from the hole: a starfield, a scale model of the neighbourhood. It is tied to one observer, so the engine would refit it as the camera moves, and it doesn't draw secondary images. It also shows the lensing's size honestly without a compute pass.
+
+**Effort (estimates, not measured).**
+
+| Piece                                                           | Effort             | Shares with                                  |
+| --------------------------------------------------------------- | ------------------ | -------------------------------------------- |
+| (a) Schwarzschild: per-pixel pass, cube-map sky, a simple disk  | about 1 to 2 weeks | The ray-marched f-rep and volume pass        |
+| (a) the deflection table, and the filtered sky                  | about 1 week       | The night sky's data, the post-process stage |
+| (b) deflection map applied to a rendered scene                  | about 1 week       | Custom post-processing (§13.22)              |
+| (c) weak-field warp                                             | a few days         | The warp path as built                       |
+| (a) Kerr: integration, bundles, horizon-penetrating coordinates | about 3 to 5 weeks | Nothing beyond the pass                      |
+
+**An example sketch: "A black hole beside the Moon".** A world with Earth and the Moon (the frames layer places them, in float64), and a black hole as another body with its own frame, a mass slider and a spin switch later. The camera orbits.
+
+- The hole's pass runs only over the pixels near it (a screen box from its shadow and ring, from the frames layer's camera position in the hole's frame, so it works in units of M and keeps float32 precision).
+- The Moon, when behind the hole, is lensed by (b): its ring appears around the shadow. The sky is lensed by (a).
+- A scale to be clear about: a real 10 solar-mass hole has `r_s ≈ 29.5 km`, so at the Moon's distance (384,400 km) its shadow is about 41 arcseconds across, 0.2 pixels wide in a wide view, and invisible. A shadow as wide as the Moon's disc (about 1,750 km in radius at that distance) needs about 230 solar masses and `r_s ≈ 670 km`. The example is labelled as an illustration at a chosen scale, not a physical scenario, and a slider moves from the real one to the visible one, which is itself a lesson in scale.
+- The Moon's physical distance from the hole sets how much of the Moon is lensed, and the camera's position sets the rest.
+
+**Open questions.**
+
+- How much physics: a static, non-rotating camera and hole (a table), or a moving camera (aberration, which changes the apparent direction of every ray) and a spinning hole (Kerr).
+- Whether (b) is good enough for the Moon beside a hole, or whether any scene content near a hole should be ray traced through (a)'s pass (the Moon as a textured sphere, found by the geodesic's intersection with it).
+- Whether a warp (c) belongs in the engine's placement model at all, since it depends on an observer. It may be an application's presentation instead.
+- Cost on integrated GPUs: a table is cheap, but per-pixel integration of Kerr rays at full resolution may need a half-resolution pass and a reprojection.
+- Colour: relativistic redshift and beaming, and a temperature model for the disk, belong to the shading and are optional.
+- Whether this is an engine feature or a gallery example only. The recurring part is the ray-marching pass shared with f-reps and volumes; the geodesics are the example's.
+
+### 13.36 For later: modularizing the renderer without sacrifices now (owner, 2026-11-11)
+
+**The question.** How would the renderer split into modules, with no cost to what is built now, and should 3D Tiles be its own module or package, with the 3D Tiles styling language compiler? These are notes for later. The rule from §13.14 and §13.17 holds: no compromise in the WebGPU approach while the prototype is built.
+
+**A candidate split.** By what an application might leave out:
+
+| Module             | Holds                                                                                               |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| Core               | The GPU layer, the frame graph and passes, the loop, views and cameras, the world's tables, queries |
+| Surface pipeline   | The surface shader, culling, draw arguments, shadows, picks of triangles                            |
+| Vector             | Vector layers, labels, strokes and the coverage kernels                                             |
+| Sky and atmosphere | The sky, sun, night sky, clouds, aerial perspective                                                 |
+| Globe and terrain  | The globe, imagery, terrain, clamping                                                               |
+| B-reps and patches | The render form, patch tessellation, trims, caps, the B-rep query adapter                           |
+| Picks and queries  | The query interface, picks, snaps, measurement                                                      |
+| 3D Tiles           | Tile trees, selection, requests, cache, parsers, tile styling's bindings                            |
+
+**The seams are in place.** What lets the split happen later:
+
+- `DrawSink` and `TilesetHost` (`src/streaming/DrawSink.ts`): what streaming reads of the engine that runs it, and what content writes into the world. Content never holds the world or the renderer.
+- The import-boundary tiers (`test/importBoundary.test.ts`): `gpu`, `renderer`, `scene` and `content`, assigned by file. Content must not reach the renderer or the GPU layer, or the classes that hold both (`World`, `Engine`, `RenderContext`); the renderer may not reach content's internals. A short list of named exceptions (public signatures, imagery's GPU compositing) and the renderer's reads of content (four edges, §13.17) are the debts, and a stale entry fails the test.
+- The file split's contexts: `tilesetLoad`, `tilesetUpdate`, `tilesetUpload`, `tilesetEviction` and `tilesetCasters` each take a narrow context (`engine: TilesetHost`, a `DrawSink`) rather than the class, as the world and render functions do.
+- The seams' tests (`test/seams.test.ts`): draw records, draw arguments, geometry submission, placements, and ray queries are reached only through one file each, and a bypass fails.
+- The entry points already split the foundation: `time`, `frames`, `proj`, `measure` and `widgets` are their own entries, each with a layer rule.
+
+**Cheaply, now.**
+
+- Keep every seam, and keep adding the test with the seam.
+- No cross-tier imports: new code lands in the tier it belongs to, and an exception is a named entry with a reason, never a quiet import. The four renderer-reads-content edges are the first to retire.
+- Data-only contracts between tiers: a draw's records, a `BrepForm`, a style's compiled form, a query request and its answer are plain data (typed arrays and objects), so a module can be loaded separately, run in a worker, or be replaced.
+- Don't introduce a module system, a package split or dynamic registration yet. A boundary that is only a rule in a test costs nothing to move.
+
+**Later, when a second consumer appears.** The split into packages (or lazily loaded chunks) follows a real need: an application that doesn't want a part. The work then is mechanical: move files to a package per the tiers, export the contracts, and make the renderer register passes and pipelines instead of importing them (a plugin interface for passes). The entry points are a start; a `@cesium/next/tiles` entry could come before a separate package.
+
+**Should 3D Tiles be its own module?** Where the styling language lives: `src/scene/styleExpression.ts` (about 1,000 lines, "3D Tiles styling expressions (the 1.x `Cesium3DTileStyle` language) compiled to WGSL over a feature's metadata", Node-safe), with `src/scene/FeatureStyle.ts` (about 300 lines) binding it to tile features. `src/vector/VectorStyle.ts` and `src/vector/VectorLayer.ts` also import `styleExpression.ts`, so vectors already share it. The 3D Tiles code is `src/streaming`, plus the globe's tile use (`src/tiles` is 2.5 KB).
+
+- _For a separate module:_ an application with no tilesets (a b-rep viewer, a globe of imagery and vectors, a gallery of f-reps) wouldn't ship streaming's roughly 270 KB of source, the glTF and tile parsers, or the cache. The tier test already says content doesn't reach the renderer, so extraction is cheap, and a clean boundary makes the 3D Tiles 2.0 work (§13.14) land in one place. It also proves the seams.
+- _Against:_ `src/scene` is the biggest directory (about 1.2 MB of source), and the globe, terrain and clamping lean on tiles' machinery, so "tiles" isn't separable from the globe without a deeper split. Extra entry points cost build, test and documentation work. An application that uses the engine mostly for tilesets (most do) sees no saving.
+- _The styling language._ §13.34 item 5 plans its generalization: the same language compiles to one GPU kernel interface for every kind of geometry, with run-time data by element ID, time, and display modes. That argues for keeping the language core-level, where it is (in `scene`, shared by vectors, points and tiles), with 3D Tiles' bindings (`FeatureStyle`, the metadata-to-property mapping, the 1.x conformance tests) in the tiles module. The language's compiler is not the 3D Tiles module's, and the module is the language's first user.
+- _A proposal:_ keep one package until a second consumer exists. First, move the styling language's compiler and its tile binding apart by file (the compiler into a `style` folder of its own in the scene tier, with `FeatureStyle` in `streaming`), and add a tier rule for it, so the extraction later is a move. Second, let a `tiles` entry point (`@cesium/next/tiles`) export the streaming API, so applications can import only what they use and the bundler drops the rest. Third, a package only if a bundle-size measure (the check in `scripts/checkBundle.mjs`) shows tilesets cost an application that doesn't use them.
+- _Open:_ whether the globe belongs with the 3D Tiles module (it renders and streams tiles) or its own; whether the renderer should register its passes (a plugin interface) before any module can leave; and what bundle size an application with no tiles actually pays today, which is the measure to take first.
 
 ## 14. Follow-ups
 
