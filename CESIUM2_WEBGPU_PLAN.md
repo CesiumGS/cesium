@@ -9548,6 +9548,10 @@ Nothing stands in for TBB. SMLib's TBB code (parallel UV trim curves and tessell
     - _The example's colours._ The trimmed draw of a solid had no palette shader, so its faces drew in the default material (the top faces were whiter than the CPU's); the black box faces could not be reproduced: GPU and CPU renders of the three scenes differ only along silhouettes and shadow edges, from eight camera poses each.
     - _The spike's stall._ Not reproduced here: the run completes in 30 s. The spike now waits for the GPU's answer (`onSubmittedWorkDone`) instead of timers (a background tab's timers crawl), every readback, frame and load has a per-stage timeout that fails naming the stage, `capture` fails rather than returns when its shader is not ready, and a stage's failure is a check. Its classification check had counted a face's far wall seen through a hole, and pixels beside the boundary, as errors: fixed, and all 17 checks pass.
 
+- **Follow-ups after the performance pass (2026-11-11):**
+  - The example's "Cells, triangles" row reads "nothing diced in this view" while CTC-05 draws 208 of 208 faces on the GPU. `readPatchStats` probably reads a view or frame the dice didn't run for.
+  - Spikes run in a hidden browser tab crawl, because Chrome throttles timers there, so `runBrepTrims()` must run in a visible tab or headless. The agent's headless run on this machine's GPU (RTX 3000 Ada) passed all 17 checks in about 30 s.
+
 **The handbook's deep dives (owner, 2026-11-10).** As this work lands, the handbook gains four deep dives. Each is written when its subject is built, and kept to what is built:
 
 1. **Warps and routes:** true coordinates and the drawn map, warps as frame-graph edges, routes, per-tile lattice fits and their error, weighted terms, Jacobian normals, drawn bounds and LOD, parameter ranges, and the varying swap. Increments 1 to 3 are built, so it can be written now.
