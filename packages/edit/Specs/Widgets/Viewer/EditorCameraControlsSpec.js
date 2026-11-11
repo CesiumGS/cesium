@@ -103,6 +103,19 @@ describe("Widgets/Viewer/EditorCameraControls", function () {
     expect(zoom.usePointerPosition).toBe(true);
   });
 
+  it("lists each button its controllers drag with once", function () {
+    const orbit = getController(ScreenSpaceTiltOrbitCameraController);
+    const pan = getController(HybridScreenSpacePanCameraController);
+    const buttons = [
+      ...orbit.dragInputs,
+      ...pan.mapController.dragInputs,
+      ...pan.elevatorController.dragInputs,
+    ].map((input) => input.button);
+
+    expect(EditorCameraControls.dragButtons).toEqual([...new Set(buttons)]);
+    expect(EditorCameraControls.dragButtons).toEqual([MouseButton.MIDDLE]);
+  });
+
   describe("orbit pivot", function () {
     it("is the center of the active meshes", function () {
       editor.meshes = [

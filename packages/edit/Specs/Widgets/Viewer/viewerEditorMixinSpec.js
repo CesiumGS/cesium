@@ -187,12 +187,12 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
     });
 
     it("stops reactivating the select tool after the viewer is destroyed", function () {
-      viewerEditorMixin(viewer, { editor });
       const listenerCount = editor.modeChanged.numberOfListeners;
+      viewerEditorMixin(viewer, { editor });
 
       viewer.destroy();
 
-      expect(editor.modeChanged.numberOfListeners).toBe(listenerCount - 1);
+      expect(editor.modeChanged.numberOfListeners).toBe(listenerCount);
       editor.mode = EditMode.VERTEX;
       editor.activeTool = translateTool;
       editor.mode = EditMode.NONE;
@@ -631,6 +631,35 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
 
       expect(viewer.addController).not.toHaveBeenCalled();
       expect(viewer.scene.screenSpaceCameraController.enableInputs).toBe(true);
+    });
+  });
+
+  describe("cursor", function () {
+    it("reflects the mode and tool on the canvas", function () {
+      viewerEditorMixin(viewer, { editor });
+      const canvas = viewer.scene.canvas;
+
+      expect(canvas.getAttribute("data-cesium-edit-mode")).toBe("none");
+      expect(canvas.getAttribute("data-cesium-edit-tool")).toBe("select");
+
+      editor.mode = EditMode.VERTEX;
+      editor.activeTool = translateTool;
+
+      expect(canvas.getAttribute("data-cesium-edit-mode")).toBe("vertex");
+      expect(canvas.getAttribute("data-cesium-edit-tool")).toBe("translate");
+    });
+
+    it("is removed with the viewer", function () {
+      viewerEditorMixin(viewer, { editor });
+
+      viewer.destroy();
+
+      expect(viewer.scene.canvas.hasAttribute("data-cesium-edit-mode")).toBe(
+        false,
+      );
+      expect(viewer.scene.canvas.hasAttribute("data-cesium-edit-tool")).toBe(
+        false,
+      );
     });
   });
 });

@@ -30,6 +30,31 @@ const MINIMUM_DISTANCE = 1.0;
  */
 const DEFAULT_PIVOT_DISTANCE = 10.0;
 
+/** @ignore */
+const ORBIT_DRAG_INPUTS = Object.freeze([
+  Object.freeze({ button: MouseButton.MIDDLE }),
+]);
+
+/** @ignore */
+const PAN_DRAG_INPUTS = Object.freeze([
+  Object.freeze({
+    button: MouseButton.MIDDLE,
+    modifier: KeyboardEventModifier.SHIFT,
+  }),
+]);
+
+/**
+ * The mouse buttons that drag the camera, whatever the modifiers.
+ *
+ * @type {ReadonlyArray<MouseButton>}
+ * @ignore
+ */
+const DRAG_BUTTONS = Object.freeze([
+  ...new Set(
+    [...ORBIT_DRAG_INPUTS, ...PAN_DRAG_INPUTS].map((input) => input.button),
+  ),
+]);
+
 const scratchRay = new Ray();
 const scratchPivot = new Cartesian3();
 const scratchOffset = new Cartesian3();
@@ -54,6 +79,16 @@ const scratchSphere = new BoundingSphere();
  * @private
  */
 class EditorCameraControls {
+  /**
+   * The mouse buttons that drag the camera, whatever the modifiers, as
+   * {@link MouseButton} values, which match <code>MouseEvent.button</code>.
+   *
+   * @type {ReadonlyArray<MouseButton>}
+   */
+  static get dragButtons() {
+    return DRAG_BUTTONS;
+  }
+
   /** @type {Viewer} */
   #viewer;
 
@@ -134,7 +169,7 @@ class EditorCameraControls {
    */
   #createOrbitController() {
     const controller = new ScreenSpaceTiltOrbitCameraController({
-      dragInputs: [{ button: MouseButton.MIDDLE }],
+      dragInputs: [...ORBIT_DRAG_INPUTS],
     });
     controller.pickWorldPosition = (scene, windowPosition, result) =>
       this.#getPivot(result);
@@ -159,16 +194,13 @@ class EditorCameraControls {
    */
   #createPanController() {
     const controller = new HybridScreenSpacePanCameraController();
-    const dragInputs = [
-      { button: MouseButton.MIDDLE, modifier: KeyboardEventModifier.SHIFT },
-    ];
 
     for (const panController of [
       controller.mapController,
       controller.elevatorController,
     ]) {
       // Read when the controller is added, so set before then.
-      panController.dragInputs = dragInputs;
+      panController.dragInputs = [...PAN_DRAG_INPUTS];
       panController.pickWorldPosition = this.#pickAtPivotDepth.bind(this);
     }
 
