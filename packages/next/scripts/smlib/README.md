@@ -8,7 +8,7 @@ there with the pinned emsdk.
 `bindings.cpp` is the C functions JavaScript calls, over SM_API's C++, and the
 only input here: `src/brep/smlib.ts` is its other side. It covers these areas.
 
-- **Solids.** Primitives, translation, booleans, validity and volume. Breps
+- **Solids.** Primitives, translation and rotation, booleans, validity and volume. Breps
   are pointers the caller frees.
 - **Face tags.** An application attribute on every face of a solid, copied
   by SMLib to the faces a boolean makes from it, so each face of a result
