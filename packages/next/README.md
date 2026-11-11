@@ -34,6 +34,17 @@ It also fetches the Slang toolchain, pinned to one release in
 `node scripts/slangTools.mjs` fetches just these. `SLANGC` and
 `SLANG_WASM_DIR` still point elsewhere if set.
 
+**SMLib in WebAssembly** (plan §13.33), only with `--smlib`
+(`npm run setup --workspace @cesium/next -- --smlib`), as it downloads about
+750 MB and builds for minutes. It fetches NVIDIA's usd-brep at one commit
+(SMLib and its SM_API) and emsdk at one version, both pinned in
+`scripts/smlibTools.mjs`, into `~/.cesium-bench/smlib` and
+`~/.cesium-bench/emsdk`, and builds `smlib.mjs` and `smlib.wasm` there. What it
+builds with is committed in `scripts/smlib/`: a serial stand-in for TBB and the
+bindings JavaScript calls. `node scripts/smlibTools.mjs --check` builds it alone,
+then loads it in Node and measures size, startup, tessellation and a boolean.
+`SMLIB_DIR` points at another build.
+
 **Frames data** (`src/time`, `src/ephemeris`; `loadFrameData()`). `setup`
 also fetches the data the frames layer needs, into `~/.cesium-bench/frames`
 (or `FRAMES_DATA_DIR`), from the URLs in `scripts/frameData.mjs`:

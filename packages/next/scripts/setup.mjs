@@ -11,9 +11,12 @@
 //    Slang playground);
 //  - the design globe's generated tilesets and exact answers
 //    (scripts/designTiles.mjs) into the frames store, after its data and
-//    grids.
+//    grids;
+//  - with --smlib, SMLib in WebAssembly (scripts/smlibTools.mjs): the
+//    pinned usd-brep commit and emsdk, built into its own store. Opt in, as
+//    emsdk is a large download and the build takes minutes.
 // Nothing here is committed: both live outside version control.
-// Usage: npm run setup --workspace @cesium/next [-- --skip-build] [--frames-span[ =]2000-2050] [--grids[ =]portfolio,tests]
+// Usage: npm run setup --workspace @cesium/next [-- --skip-build] [--frames-span[ =]2000-2050] [--grids[ =]portfolio,tests] [--smlib]
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -23,6 +26,7 @@ import { ensureRelease, releasesDirectory } from "../bench/suite/release.mjs";
 import { ensureFrameData, parseGrids, parseSpan } from "./frameData.mjs";
 import { moduleRunner } from "./designTiles/moduleRunner.mjs";
 import { ensureSlangc, ensureSlangWasm } from "./slangTools.mjs";
+import { ensureSmlib } from "./smlibTools.mjs";
 
 // `--frames-span y0-y1` or `--frames-span=y0-y1`, checked before any work.
 const spanArg = process.argv.findIndex(
@@ -93,6 +97,11 @@ for (const version of releases) {
 // The Slang toolchain: slangc (build time) and the WebAssembly build (runtime).
 console.log(`slangc: ${await ensureSlangc()}`);
 console.log(`slang-wasm: ${await ensureSlangWasm()}`);
+
+// SMLib in WebAssembly, on request.
+if (process.argv.includes("--smlib")) {
+  console.log(`smlib: ${await ensureSmlib()}`);
+}
 
 // The frames data: ephemeris excerpts, leap seconds, Earth orientation, PROJ
 // and its grids.
