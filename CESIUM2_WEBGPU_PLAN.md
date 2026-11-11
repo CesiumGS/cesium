@@ -9477,6 +9477,29 @@ Nothing stands in for TBB. SMLib's TBB code (parallel UV trim curves and tessell
      - Implemented by a Sonnet 5.5 agent from a brief.
   3. A slice of step 5: untrimmed and planar faces on the GPU, with the CSG sample's edit loop as the measure.
 
+**Step 5 redirected: one GPU path for every face (owner, 2026-11-10).** The owner asked whether the GPU could handle every input, with no CPU fallback. It can, by a published method, and step 5 is built that way instead of the interim split above. The "STEP file" scene shows why: CTC-05's 208 faces take the CPU tessellator 768 ms and 373k triangles at 1 mm, and its planar faces show a sawtooth wherever the cell-discarding trim meets a curve.
+
+- **Direct trimming:**
+  - Each face is diced per view on the GPU over the bounding rectangle of its trim loops in (u, v). Analytic surfaces use their formulas; Bézier spans use de Casteljau in homogeneous coordinates.
+  - The fragment stage discards outside the trim region by an exact test on the face's pcurves: a winding number, with the curves sorted into bands in v, as Slug does for glyphs (Lengyel, 2017). That is the shared coverage kernel the vector design reserves, built here first.
+  - Prior art: Guthe et al. (2005) for GPU trimming and tessellation of NURBS; Schollmeyer and Fröhlich, "Direct Trimming of NURBS Surfaces on the GPU" (2009), and their anti-aliased trimming of large NURBS models (2019).
+- **Fast paths:** a face whose trim is its rectangle skips the test, and so do grid cells classified as fully inside. Their fragments keep early depth.
+- **Seams:** neighbouring faces trim along their own pcurve images of the same edge, so they meet within the edge's tolerance plus the tessellation error. A dilation of about half a pixel outward in (u, v) closes pinholes, and the edge lines draw over the seam. Stitching to shared edge samples isn't needed for drawing.
+- **The varying budget:** a patch draw's UV varying carries the face's (u, v), offset to the rectangle's corner so float32 holds it. No varying is added. Depth, shadow and pick passes need the same discard, so patch draws get a fragment stage there.
+- **Picks:** each fragment knows its face and (u, v), so a pick is a domain point (§13.26's brainstorm) and the exact point is a float64 evaluation.
+- **What the CPU tessellator keeps:** the offline glTF fallback mesh, the mesh adapter for queries until the b-rep adapter exists, and the reference in tests. Nothing it does is in the drawing path.
+
+**The handbook's deep dives (owner, 2026-11-10).** As this work lands, the handbook gains four deep dives. Each is written when its subject is built, and kept to what is built:
+
+1. **Warps and routes:** true coordinates and the drawn map, warps as frame-graph edges, routes, per-tile lattice fits and their error, weighted terms, Jacobian normals, drawn bounds and LOD, parameter ranges, and the varying swap. Increments 1 to 3 are built, so it can be written now.
+2. **Clipping:** clips as world objects in any frame, how each is evaluated, shapes and combining, exact b-rep caps and geometric mesh caps, styling, and clips in queries. After increment 8.
+3. **The tessellation pipeline:** the CPU tessellator and its sound bounds, GPU dicing per view, direct trimming, seams, error in pixels, and what each path is for. After step 5.
+4. **B-reps and the geometry interface:**
+   - `GeometryQueries` as the one interface over meshes, SDFs and b-reps, with domain points and fields, and accuracy as terms.
+   - Modeling geometry against display geometry: surface identity, representation error, and the three tolerances.
+   - The relationship to CAD kernels (SMLib, OCCT, STEP): the engine never asks a kernel to draw.
+   - Written in parts as step 3's b-rep adapter and step 5 land.
+
 **Spike B result (2026-11-09).** One rational bicubic NURBS face (100 m square, 3x3 Bézier spans, one control point of weight 2) with a circular hole in (u, v), drawn in Chrome on an Apple GPU. The vertex shader evaluates an n x n grid per span. The pixel shader computes the exact normal and cuts the hole by signed distance in (u, v). n is chosen per view from the bound 0.75·D/n² on the second differences of the Bézier net, converted to pixels, with a target of 0.5 px. Measured:
 
 | Distance | n   | Triangles | Bound   | Measured error | GPU time |
