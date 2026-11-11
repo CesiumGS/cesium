@@ -8994,6 +8994,36 @@ _Open questions for the owner:_
 5. Is 0.25–0.5 m of imprecision in the middle of the 2D morph acceptable, given both ends are exact?
 6. Should a "drawn distance" query exist, labelled as such?
 
+**The owner's answers (2026-11-10).** These lock the second review, with question 4 provisional.
+
+1. **Content stretches per vertex.** That is what reprojection means. `warpAt: "anchor"` stays for things that must keep their shape, such as a vehicle model, a symbol or a billboard. It's forced for billboards and points, and is an item's choice otherwise.
+2. **Shading reads drawn positions, and lookups keyed by height read the true height.** The owner leaned towards drawn; this is the reasoning for the split.
+   - A true height isn't drawn anywhere. It's a value the shader looks something up with.
+   - Normals, shadows, light directions and distances, and the length of the path through air are geometry, so they're drawn.
+   - A hypsometric tint, contours, a style's height thresholds and the air's density are lookups keyed by height. Keyed by drawn height, a legend reading 1,000 m would sit at 100 m of true height when k = 10, and an exaggerated summit would stand in near-vacuum.
+   - Integrating the drawn path while reading density at the true height is the same as warping the atmosphere along with everything else. That is the consistent picture.
+   - The true height comes from the free `.w` scalar (reformulation 2), or from the true-position varying (reformulation 3).
+   - Not settled: whether the owner agrees.
+3. **Terrain keeps (u, v, h).** Exaggeration and flattening are exact in height for terrain, with no fit along it.
+4. **Accuracy: both, provisionally.**
+   - A worst-case `bound` comes from fits, representation error, tessellation and float32 rounding. Bounds compose linearly, by the (L, ε) algebra.
+   - A statistical `sigma` comes from the frames layer, surveys and ephemerides. Sigmas compose in quadrature, as `frames/pointAccuracy.ts` already does.
+   - This fits what exists. `Confidence` already has `"max"` beside `"1σ"` and `"95%"` (`frames/frameAccuracy.ts`). `GeometryAccuracy`'s `meters` and `exact` become `bound` plus `sigma`.
+   - What changes: no bound is "taken as 1σ" any more, as `frames/pickInterpreter.ts` does today. A report shows both figures, and never converts one into the other silently.
+5. **0.25–0.5 m in the middle of the morph is acceptable** until it's shown not to be.
+6. **A drawn-distance query exists,** named as one, in a presentation frame. Vector styling needs it: dash lengths, label spacing and symbol density in what's drawn.
+
+**Names: "placement" retires as the umbrella term.** It has come to mean four different things: `SceneItem.placement`, a per-draw `Placement`, `DesignPlacement`, and `ModelPlacement`, which is a placed glTF instance. The new model's terms, with the standards' names beside them:
+
+- **`Warp`:** a non-rigid edge of the frame graph, exact on the CPU.
+- **`Route`:** the composed path from a content frame to the root. This is ISO 19111's _concatenated coordinate operation_ and PROJ's _pipeline_. `FrameResolver` already says `routeRevision`.
+- **Warp terms:** the GPU form, an internal name.
+- **`Georeference`** instead of `DesignPlacement`. That is the 3D Tiles and CAD term of art, and its modes map onto the new model: rigid is a rigid edge, reprojected is a warp edge, and hosted needs neither.
+- **Scene items:** they attach to a frame, and their morph targets take weights: `world.add(tileset, { frame, weights })`. `ModelPlacement` becomes an instance, as USD names it.
+- "Place" survives as an ordinary verb.
+
+The renames themselves wait for the API review (5i). New code from increment 1 uses these names.
+
 ### 13.27 CAD display extensions, with the vector design (owner, 2026-11-08)
 
 Do soon, designed together with vector drawing, because they overlap with it. `BENTLEY_materials_planar_fill`, `BENTLEY_materials_line_style`, `BENTLEY_materials_point_style` and `EXT_mesh_primitive_edge_visibility` are implemented in 1.x and not in 2.0 (noted in §11's CAD display extensions). Most of the CAD content in the catalog uses none of them: a scan on 2026-11-08 found none in `bim-design-model`, `aec-design` or `aec-site`. Test content: ion asset 4665927 uses `EXT_mesh_primitive_edge_visibility` (7 of 7 sampled tiles) and `BENTLEY_materials_planar_fill` (5 of 7). Add it to the catalog, with its license checked.
