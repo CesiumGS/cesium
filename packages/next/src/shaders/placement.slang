@@ -1,9 +1,12 @@
 // A draw's per-vertex placement (spec section 7.6; plan 5a's calls 40 to
-// 43): data in the world's placements buffer plus this function, not code
-// inside one shader, so a later compute pass can evaluate it at sample
-// points the content never had (section 8.2). Its float64 CPU twin is
-// scene/placement.ts `placePosition`; the buffer's layout is
-// scene/placementTable.ts's.
+// 43; plan 13.26): up to three weighted displacement terms,
+// p' = p + sum of wi * Di(p), data in the world's placements buffer plus
+// this function, not code inside one shader, so a later compute pass can
+// evaluate it at sample points the content never had (section 8.2). A
+// term's displacement is a cubic lattice's or a vertex attribute's; its
+// weight a constant times up to two factors of a parameter's float. The
+// float64 CPU twin is scene/warpEvaluate.ts `placeWithTerms`; the buffer's
+// layout is scene/placementTable.ts's.
 //
 // The surface vertex stage calls `placePosition` on the mesh's position
 // before the custom vertex stage, so the draw's transform carries the
@@ -20,11 +23,12 @@ public static const uint NO_PLACEMENT = 0xffffffffu;
 // Terms of a fitted operation's polynomial per axis (scene/placement.ts).
 public static const uint PLACEMENT_TERMS = 20u;
 
-static const uint PLACEMENT_DUAL = 1u;
-static const uint PLACEMENT_FITTED = 2u;
-static const uint PLACEMENT_BLEND = 3u;
+// Term kinds, and the rows of a term (scene/placementTable.ts).
+static const uint WARP_LATTICE = 1u;
+static const uint WARP_ATTRIBUTE = 2u;
+static const uint TERM_ROWS = 3u;
 
-// Each term's exponents of u's x, y and z, 2 bits each (x | y << 2 |
+// Each monomial's exponents of v's x, y and z, 2 bits each (x | y << 2 |
 // z << 4), in scene/placement.ts PLACEMENT_MONOMIALS's order.
 static const uint TERM_POWERS[20] = {
   0u, 1u, 4u, 16u,
@@ -53,47 +57,68 @@ float powerOf(float x, uint e) {
   return e == 0u ? 1.0 : (e == 1u ? x : (e == 2u ? x * x : x * x * x));
 }
 
-// A fitted body's displacement at model-space `p`: its center and
-// 1 / scale, then a row of coefficients per term.
-float3 fittedDisplacement(uint body, float3 p) {
+// A term's weight: its row's scale times its factors' values, each
+// `offset + slope * parameter` (the factor rows follow the term's).
+float termWeight(uint row, uint4 head) {
+  float w = asfloat(head.y);
+  uint factors = (head.x >> 8u) & 3u;
+  for (uint f = 0u; f < factors; f++) {
+    float4 factor = placementRow(row + 1u + f);
+    w *= factor.y + factor.z * placementParameter(asuint(factor.x));
+  }
+  return w;
+}
+
+// A lattice's displacement at model-space `p` (scene/warpTerms.ts
+// `CubicLattice`): its body's first row holds the center and 1 / scale,
+// then each cell's rows of coefficients per monomial. One cell has v = u.
+float3 latticeDisplacement(uint body, uint cells, float3 p) {
   float4 origin = placementRow(body);
-  float3 u = (p - origin.xyz) * origin.w;
+  float3 v = (p - origin.xyz) * origin.w;
+  uint cell = 0u;
+  if (cells > 1u) {
+    float n = float(cells);
+    float3 s = (v + 1.0) * (0.5 * n);
+    float3 f = clamp(floor(s), float3(0.0), float3(n - 1.0));
+    v = 2.0 * (s - f) - 1.0;
+    uint3 i = uint3(f);
+    cell = (i.z * cells + i.y) * cells + i.x;
+  }
+  uint first = body + 1u + cell * PLACEMENT_TERMS;
   float3 d = float3(0.0);
   for (uint k = 0u; k < PLACEMENT_TERMS; k++) {
     uint e = TERM_POWERS[k];
-    float m = powerOf(u.x, e & 3u) * powerOf(u.y, (e >> 2u) & 3u) * powerOf(u.z, (e >> 4u) & 3u);
-    d += placementRow(body + 1u + k).xyz * m;
+    float m = powerOf(v.x, e & 3u) * powerOf(v.y, (e >> 2u) & 3u) * powerOf(v.z, (e >> 4u) & 3u);
+    d += placementRow(first + k).xyz * m;
   }
   return d;
 }
 
-// Where the draw's placement (`DrawRecord.placement`) puts the vertex at
-// model-space `positionMC`, in model space: the dual position read from
-// the mesh's attribute directory (`directory`, the vertex, its feature's
-// row), a fitted operation's displacement added, or a blend of two.
+// A term's displacement Di at model-space `p` (`head`: its row's words,
+// `block`: the block's first row): the lattice's, or the vertex's
+// attribute (minus the point, if it holds a position) from the mesh's
+// attribute directory (`directory`, the vertex, its feature's row).
+float3 termDisplacement(uint4 head, uint block, float3 p, uint vertexIndex, uint directory, uint feature) {
+  if ((head.x & 255u) == WARP_LATTICE) {
+    return latticeDisplacement(block + head.z, head.w, p);
+  }
+  float3 other = placementAttribute(directory, head.z, vertexIndex, feature).xyz;
+  return head.w != 0u ? other - p : other;
+}
+
+// Where the draw's placement (`DrawRecord.placement`, its block's header
+// row) puts the vertex at model-space `positionMC`, in model space: the
+// position plus each term's weight times its displacement.
 public float3 placePosition(uint placement, float3 positionMC, uint vertexIndex, uint directory, uint feature) {
   if (placement == NO_PLACEMENT) {
     return positionMC;
   }
-  uint4 header = asuint(placementRow(placement));
-  if (header.x == PLACEMENT_DUAL) {
-    float3 other = placementAttribute(directory, header.z, vertexIndex, feature).xyz;
-    return lerp(positionMC, other, placementParameter(header.y));
+  uint count = asuint(placementRow(placement).x);
+  float3 d = float3(0.0);
+  for (uint i = 0u; i < count; i++) {
+    uint row = placement + 1u + i * TERM_ROWS;
+    uint4 head = asuint(placementRow(row));
+    d += termWeight(row, head) * termDisplacement(head, placement, positionMC, vertexIndex, directory, feature);
   }
-  if (header.x == PLACEMENT_FITTED) {
-    return positionMC + fittedDisplacement(placement + 1u, positionMC);
-  }
-  if (header.x == PLACEMENT_BLEND) {
-    float t = placementParameter(header.y);
-    float3 from = float3(0.0);
-    float3 to = float3(0.0);
-    if (header.z != NO_PLACEMENT) {
-      from = fittedDisplacement(header.z, positionMC);
-    }
-    if (header.w != NO_PLACEMENT) {
-      to = fittedDisplacement(header.w, positionMC);
-    }
-    return positionMC + lerp(from, to, t);
-  }
-  return positionMC;
+  return positionMC + d;
 }

@@ -16,6 +16,11 @@
  * - **a blend** of two placements by `t`, each the identity or a fitted
  *   operation (plan 5a's call 43).
  *
+ * Inside the engine a placement is a `WarpTerms` (scene/warpTerms.ts,
+ * converted by scene/warpEvaluate.ts `termsOf`): `placePosition` and the
+ * bounds here are its reference twins, and the world's placements buffer
+ * and shaders/placement.slang hold only terms.
+ *
  * Every placement states how far it can move a vertex (`maxDisplacement`):
  * the draw's bounds grow by that much. The core never bakes a placement
  * into vertex buffers, so a later tessellation engine can evaluate the
@@ -32,8 +37,9 @@
  * the mesh stores, so where the move turns the surface the shading normal is
  * off by that turn (0.197 degrees at most on the design globe's 44 km
  * corridor). A fitted operation's Jacobian (plan 5f) would turn them, by its
- * inverse transpose: `placePosition` in shaders/placement.slang is where the
- * vertex stage would take it from the fit, and the design globe generator
+ * inverse transpose: a term's displacement in shaders/placement.slang
+ * (`termDisplacement`) is where the vertex stage would take it from the fit,
+ * and the design globe generator
  * (scripts/designTiles.mjs) is where reprojected normals were written before
  * scene items.
  *

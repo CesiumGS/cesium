@@ -10,6 +10,7 @@ import type { PointCuller } from "../PointCuller.ts";
 import type { SceneItem } from "../SceneItem.ts";
 import type { World } from "../World.ts";
 import type { Placement } from "../placement.ts";
+import type { WarpTerms } from "../warpTerms.ts";
 
 /**
  * A world's ceilings (CESIUM2_WEBGPU_PLAN.md §13.15, "Growable tables"):
@@ -395,15 +396,20 @@ export interface Batch {
 
 /** A draw's per-vertex placement (`World.setPlacement`). */
 export interface DrawPlacement {
-  placement: Placement;
+  /** The public placement it was set from; undefined when set from terms. */
+  placement: Placement | undefined;
+  /** What the GPU evaluates: the placement as terms, or the terms it was set with. */
+  terms: WarpTerms;
   /** Its block's header row in the placements buffer. */
   at: number;
   /** The record's bounding radius without the placement (model units). */
   base: number;
-  /** What the placement adds to it (`maxDisplacement`). */
+  /** What the placement adds to it (`termsMaxDisplacement`). */
   pad: number;
-  /** How far its vertices reach in a fitted operation's coordinates. */
+  /** How far its vertices reach in its lattices' coordinates. */
   reach: number;
+  /** Each term's displacement bound at `reach` (`termBounds`). */
+  bounds: number[];
   /** The parameters it reads. */
   slots: ParameterSlot[];
 }

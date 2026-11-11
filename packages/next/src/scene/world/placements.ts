@@ -6,7 +6,6 @@ import {
   INSTANCE_COUNT_WORD,
   RADIUS_WORD,
   NO_PLACEMENT,
-  ALL_VIEWS,
   VIEW_MASK_WORD,
   CENTER_WORD,
 } from "../../render/layout.ts";
@@ -16,10 +15,16 @@ import {
   type PlacementParameter,
   checkParameterValue,
   checkPlacement,
-  maxDisplacement,
   finite32,
-  type FittedOperation,
 } from "../placement.ts";
+import {
+  checkTerms,
+  termBounds,
+  termsMaxDisplacement,
+  termsOf,
+  termsParameters,
+} from "../warpEvaluate.ts";
+import type { CubicLattice, WarpTerms } from "../warpTerms.ts";
 import type { ParameterSlot, DrawHandle } from "./types.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
@@ -44,11 +49,8 @@ export interface PlacementWorld extends Pick<
   >;
 }
 
-/** The parameters a placement reads. */
-function parametersOf(placement: Placement): PlacementParameter[] {
-  return placement.kind === "dual" || placement.kind === "blend"
-    ? [placement.t]
-    : [];
+function isTerms(placement: Placement | WarpTerms): placement is WarpTerms {
+  return Array.isArray(placement);
 }
 
 export function createPlacementParameter(
@@ -59,7 +61,7 @@ export function createPlacementParameter(
   const word = world.raster.placementTable.allocateParameter(value);
   const slot: ParameterSlot = { word, draws: new Set() };
   let current = value;
-  const changed = (old: number) => parameterChanged(world, slot, old, current);
+  const changed = () => parameterChanged(world, slot, current);
   const parameter: PlacementParameter = Object.seal({
     get value() {
       return current;
@@ -72,7 +74,7 @@ export function createPlacementParameter(
       const old = current;
       current = next;
       try {
-        changed(old);
+        changed();
       } catch (error) {
         current = old; // refused: nothing was written
         throw error;
@@ -83,22 +85,32 @@ export function createPlacementParameter(
   return parameter;
 }
 
+/**
+ * Sets a draw's warp (`World.setPlacement` for a public `Placement`,
+ * converted by `termsOf`; `WarpTerms` directly, for the engine's own
+ * routes): the same refusals, the same bounds growth.
+ */
 export function setPlacement(
   world: PlacementWorld,
   handle: DrawHandle,
-  placement: Placement | undefined,
+  placement: Placement | WarpTerms | undefined,
 ): void {
   if (!world.hasDraw(handle)) {
     throw new Error("setPlacement: the draw was removed.");
   }
   const index = handle.index;
-  const next =
-    placement !== undefined && placement.kind !== "affine"
-      ? placement
-      : undefined;
+  let source: Placement | undefined;
+  let next: WarpTerms | undefined;
+  if (placement !== undefined && isTerms(placement)) {
+    checkTerms("setPlacement", placement);
+    next = placement;
+  } else if (placement !== undefined && placement.kind !== "affine") {
+    checkPlacement("setPlacement", placement);
+    source = placement;
+    next = termsOf(placement);
+  }
   const o = index * RECORD_WORDS;
   if (next) {
-    checkPlacement("setPlacement", next);
     const flags = world.raster.recordsU32[o + FLAGS_WORD]!;
     if (flags & (RecordFlags.billboard | RecordFlags.points)) {
       throw new Error(
@@ -110,29 +122,32 @@ export function setPlacement(
         "setPlacement: an instanced draw has no per-vertex placement: it would move a mesh's vertices before each instance's matrix, and not the instances.",
       );
     }
-    for (const t of parametersOf(next)) {
+    for (const t of termsParameters(next)) {
       if (!world.scene.parameters.has(t)) {
         throw new Error(
           "setPlacement: the placement's t isn't a parameter of this world (World.createPlacementParameter).",
         );
       }
     }
-    if (next.kind === "dual") {
-      const mesh = world.raster.drawBatches[index]!.mesh;
-      const components = world.scene.meshRanges
-        .get(mesh.id)
-        ?.named?.get(next.semantic);
-      if (components === undefined || components < 3) {
-        throw new RangeError(
-          `setPlacement: the draw's mesh has no ${next.semantic} attribute of 3 components for its dual position.`,
-        );
+    for (const { term } of next) {
+      if (term.kind === "attribute") {
+        const mesh = world.raster.drawBatches[index]!.mesh;
+        const components = world.scene.meshRanges
+          .get(mesh.id)
+          ?.named?.get(term.semantic);
+        if (components === undefined || components < 3) {
+          throw new RangeError(
+            `setPlacement: the draw's mesh has no ${term.semantic} attribute of 3 components for its dual position.`,
+          );
+        }
       }
     }
   }
   const old = world.scene.drawPlacements[index];
   const base = old ? old.base : world.raster.recordsF32[o + RADIUS_WORD]!;
   const reach = next ? placementReach(world, index, next, base) : 1;
-  const pad = next ? maxDisplacement(next, reach) : 0;
+  const bounds = next ? termBounds(next, reach) : [];
+  const pad = next ? termsMaxDisplacement(next, reach, bounds) : 0;
   if (next) {
     finite32("setPlacement", "the draw's grown bounding radius", base + pad);
   }
@@ -150,16 +165,20 @@ export function setPlacement(
     next,
     (t) => world.scene.parameters.get(t)!.word,
   );
-  const slots = parametersOf(next).map((t) => world.scene.parameters.get(t)!);
+  const slots = termsParameters(next).map((t) =>
+    world.scene.parameters.get(t)!,
+  );
   for (const slot of slots) {
     slot.draws.add(index);
   }
   world.scene.drawPlacements[index] = {
-    placement: next,
+    placement: source,
+    terms: next,
     at,
     base,
     pad,
     reach,
+    bounds,
     slots,
   };
   world.raster.drawConstants.setPlacement(index, at);
@@ -177,31 +196,33 @@ export function drawPlacement(
     : undefined;
 }
 
+/** The terms the draw's GPU evaluates, whichever way they were set. */
+export function drawTerms(
+  world: PlacementWorld,
+  handle: DrawHandle,
+): WarpTerms | undefined {
+  return world.hasDraw(handle)
+    ? world.scene.drawPlacements[handle.index]?.terms
+    : undefined;
+}
+
 /** A parameter changed: its float, and its draws' bounds and views. */
 function parameterChanged(
   world: PlacementWorld,
   slot: ParameterSlot,
-  old: number,
   value: number,
 ): void {
   if (slot.draws.size === 0) {
     world.raster.placementTable.setParameter(slot.word, value);
     return;
   }
-  // Between 0 and 1 no kind's bounds move (a dual position's are fixed
-  // for |t| ≤ 1, a blend's for 0 ≤ t ≤ 1): the float alone, and every
-  // view redraws, with no walk over the draws (a morph's every tick).
-  if (old >= 0 && old <= 1 && value >= 0 && value <= 1) {
-    world.raster.placementTable.setParameter(slot.word, value);
-    world.version++;
-    world.changedViews = ALL_VIEWS;
-    return;
-  }
-  // The bounds first, all checked before anything is written.
+  // The bounds first, all checked before anything is written: each draw's
+  // from its terms' cached bounds, so a morph's tick costs a few
+  // multiplications a draw (they come out equal, between 0 and 1).
   const pads: number[] = [];
   for (const index of slot.draws) {
     const placed = world.scene.drawPlacements[index]!;
-    const pad = maxDisplacement(placed.placement, placed.reach);
+    const pad = termsMaxDisplacement(placed.terms, placed.reach, placed.bounds);
     finite32(
       "PlacementParameter",
       "a draw's grown bounding radius",
@@ -232,7 +253,7 @@ export function releasePlacement(world: PlacementWorld, index: number): void {
   if (!placed) {
     return;
   }
-  world.raster.placementTable.remove(placed.at, placed.placement);
+  world.raster.placementTable.remove(placed.at, placed.terms);
   for (const slot of placed.slots) {
     slot.draws.delete(index);
   }
@@ -240,36 +261,33 @@ export function releasePlacement(world: PlacementWorld, index: number): void {
 }
 
 /**
- * How far a draw's vertices reach in a fitted operation's normalized
- * coordinates (at least 1): its bounding sphere's farthest point from
- * the operation's center over its scale.
+ * How far a draw's vertices reach in its lattices' normalized coordinates
+ * (at least 1): its bounding sphere's farthest point from a lattice's
+ * center over its scale, the largest of them.
  */
 function placementReach(
   world: PlacementWorld,
   index: number,
-  placement: Placement,
+  terms: WarpTerms,
   radius: number,
 ): number {
   const o = index * RECORD_WORDS + CENTER_WORD;
   const f32 = world.raster.recordsF32;
-  const reach = (f: "identity" | FittedOperation) =>
-    f === "identity"
-      ? 1
-      : (Math.hypot(
-          f32[o]! - f.center[0]!,
-          f32[o + 1]! - f.center[1]!,
-          f32[o + 2]! - f.center[2]!,
-        ) +
-          radius) /
-        f.scale;
-  switch (placement.kind) {
-    case "fitted":
-      return Math.max(1, reach(placement));
-    case "blend":
-      return Math.max(1, reach(placement.from), reach(placement.to));
-    default:
-      return 1;
+  const reach = (l: CubicLattice) =>
+    (Math.hypot(
+      f32[o]! - l.center[0]!,
+      f32[o + 1]! - l.center[1]!,
+      f32[o + 2]! - l.center[2]!,
+    ) +
+      radius) /
+    l.scale;
+  let r = 1;
+  for (const { term } of terms) {
+    if (term.kind === "cubic") {
+      r = Math.max(r, reach(term));
+    }
   }
+  return r;
 }
 
 export function releasePlacementParameter(

@@ -32,7 +32,13 @@ import {
   type PlacementBlend,
   type PlacementParameter,
 } from "../src/scene/placement.ts";
-import { FITTED_ROWS, PLACEMENT_KIND } from "../src/scene/placementTable.ts";
+import {
+  TERM_ROWS,
+  WARP_KIND,
+  blockRows,
+  latticeRows,
+} from "../src/scene/placementTable.ts";
+import { termsOf } from "../src/scene/warpEvaluate.ts";
 import { type View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { World } from "../src/scene/World.ts";
@@ -110,6 +116,12 @@ const words = (draw: DrawHandle) => {
     center: [0, 1, 2].map((i) => internal.recordsF32[o + CENTER_WORD + i]!),
     table: internal.placementTable,
   };
+};
+
+/** The float of the draw's first term's first weight factor (its block's words). */
+const parameterWord = (draw: DrawHandle): number => {
+  const { placement, table } = words(draw);
+  return table.words(placement, 1 + TERM_ROWS).u32[8]!;
 };
 
 /** Every `writeBuffer` while `run` runs: buffer, offset and bytes. */
@@ -374,9 +386,7 @@ describe("World placements", () => {
     expect(writes).toEqual([]);
     expect(p.value).toBe(0.5);
     expect(words(draw)).toEqual(before);
-    expect(
-      before.table.parameter(before.table.words(before.placement, 1).u32[1]!),
-    ).toBe(0.5);
+    expect(before.table.parameter(parameterWord(draw))).toBe(0.5);
     // Within float32 it goes through.
     p.value = 2;
     expect(words(draw).radius).toBeCloseTo(
@@ -492,27 +502,44 @@ describe("World placements", () => {
     const p = t(0.75);
     world.setPlacement(draw, dual(p));
     let { placement, table } = words(draw);
-    let block = table.words(placement, 1);
-    expect(block.u32[0]).toBe(PLACEMENT_KIND.dual);
-    expect(table.parameter(block.u32[1]!)).toBe(0.75);
-    expect(block.u32[2]).toBe(attributeHash(PARTNER));
+    // The header, then one attribute term and its weight's one factor.
+    let block = table.words(placement, 1 + TERM_ROWS);
+    expect(block.u32[0]).toBe(1);
+    expect(block.u32[4]).toBe(WARP_KIND.attribute | (1 << 8));
+    expect(block.f32[5]).toBe(1);
+    expect(block.u32[6]).toBe(attributeHash(PARTNER));
+    expect(block.u32[7]).toBe(1);
+    expect(table.parameter(block.u32[8]!)).toBe(0.75);
+    expect(Array.from(block.f32.subarray(9, 11))).toEqual([0, 1]);
     const f = fitted(
       { 0: [1, 2, 3], 19: [-4, 5, -6] },
       { center: [1, 2, 3], scale: 4 },
     );
     world.setPlacement(draw, f);
     ({ placement, table } = words(draw));
-    block = table.words(placement, 1 + FITTED_ROWS);
-    expect(block.u32[0]).toBe(PLACEMENT_KIND.fitted);
-    expect(Array.from(block.f32.subarray(4, 8))).toEqual([1, 2, 3, 0.25]);
-    expect(Array.from(block.f32.subarray(8, 12))).toEqual([1, 2, 3, 0]);
-    expect(Array.from(block.f32.subarray(84, 88))).toEqual([-4, 5, -6, 0]);
+    block = table.words(placement, blockRows(termsOf(f)!));
+    expect(block.u32[0]).toBe(1);
+    expect(block.u32[4]).toBe(WARP_KIND.lattice);
+    expect(block.u32[6]).toBe(1 + TERM_ROWS); // its body, from the header
+    expect(block.u32[7]).toBe(1);
+    const body = (1 + TERM_ROWS) * 4;
+    expect(Array.from(block.f32.subarray(body, body + 4))).toEqual([
+      1, 2, 3, 0.25,
+    ]);
+    expect(Array.from(block.f32.subarray(body + 4, body + 8))).toEqual([
+      1, 2, 3, 0,
+    ]);
+    const last = body + 4 + 19 * 4;
+    expect(Array.from(block.f32.subarray(last, last + 4))).toEqual([
+      -4, 5, -6, 0,
+    ]);
+    expect(block.f32.length).toBe((1 + TERM_ROWS + latticeRows(1)) * 4);
     world.setPlacement(draw, { kind: "blend", from: "identity", to: f, t: p });
     ({ placement, table } = words(draw));
-    block = table.words(placement, 1);
-    expect(block.u32[0]).toBe(PLACEMENT_KIND.blend);
-    expect(block.u32[2]).toBe(NO_PLACEMENT);
-    expect(block.u32[3]).toBe(placement + 1);
+    block = table.words(placement, 1 + TERM_ROWS);
+    expect(block.u32[0]).toBe(1);
+    expect(block.u32[4]).toBe(WARP_KIND.lattice | (1 << 8));
+    expect(table.parameter(block.u32[8]!)).toBe(0.75);
     world.setPlacement(draw, { kind: "affine" });
     expect(words(draw).placement).toBe(NO_PLACEMENT);
     expect(world.drawPlacement(draw)).toBeUndefined();
@@ -556,8 +583,8 @@ describe("World placements", () => {
       t: p,
     });
     const { table } = words(a);
-    const word = table.words(words(a).placement, 1).u32[1]!;
-    expect(table.words(words(b).placement, 1).u32[1]).toBe(word);
+    const word = parameterWord(a);
+    expect(parameterWord(b)).toBe(word);
     const radii = [words(a).radius, words(b).radius];
     engine.renderFrame();
     const version = world.version;
@@ -696,12 +723,12 @@ describe("placement.slang and the TypeScript agree", () => {
     );
     expect(constant("PLACEMENT_TERMS")).toBe(PLACEMENT_TERMS);
     expect(constant("NO_PLACEMENT")).toBe(NO_PLACEMENT);
-    expect(constant("PLACEMENT_DUAL")).toBe(PLACEMENT_KIND.dual);
-    expect(constant("PLACEMENT_FITTED")).toBe(PLACEMENT_KIND.fitted);
-    expect(constant("PLACEMENT_BLEND")).toBe(PLACEMENT_KIND.blend);
-    // A fitted body: its center row, then a row per term.
-    expect(slang).toMatch(/placementRow\(body \+ 1u \+ k\)/);
-    expect(FITTED_ROWS).toBe(1 + PLACEMENT_TERMS);
+    expect(constant("WARP_LATTICE")).toBe(WARP_KIND.lattice);
+    expect(constant("WARP_ATTRIBUTE")).toBe(WARP_KIND.attribute);
+    expect(constant("TERM_ROWS")).toBe(TERM_ROWS);
+    // A lattice body: its center row, then a row per cell and monomial.
+    expect(slang).toMatch(/placementRow\(first \+ k\)/);
+    expect(latticeRows(1)).toBe(1 + PLACEMENT_TERMS);
     const surface = readFileSync(
       new URL("../src/shaders/surface.slang", import.meta.url),
       "utf8",

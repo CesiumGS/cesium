@@ -1,9 +1,6 @@
-import { NO_PLACEMENT, attributeHash } from "../render/layout.ts";
-import {
-  PLACEMENT_TERMS,
-  type FittedOperation,
-  type Placement,
-} from "./placement.ts";
+import { attributeHash } from "../render/layout.ts";
+import { PLACEMENT_TERMS } from "./placement.ts";
+import type { WarpTerms } from "./warpTerms.ts";
 
 /**
  * A world's placements buffer (plan 5a's call 42): one storage buffer of
@@ -12,15 +9,27 @@ import {
  *
  * - placement parameters, one float each, four to a row
  *   (`PlacementParameter`): a morph writes one float, 4 bytes, a tick;
- * - each placed draw's block, which its record's `placement` word points
- *   at (the row of its header).
+ * - each placed draw's block (`WarpTerms`, plan 13.26), which its record's
+ *   `placement` word points at (the row of its header).
  *
- * A block's header row holds words: its kind (`PLACEMENT_KIND`), its
- * parameter's float (dual, blend), and the dual attribute's name hash
- * (`attributeHash`), or a blend's two fitted bodies' rows (`NO_PLACEMENT`
- * for the identity). A fitted body is `FITTED_ROWS` rows: the center and
- * 1/scale, then each term's x, y, z coefficients. A fitted block's body
- * follows its header; a blend's bodies follow its header, `from` first.
+ * A block is, in rows (words are u32 unless marked f32; `at` is its first row):
+ *
+ * - `at`: the header, `[term count (1 to 3), 0, 0, 0]`;
+ * - `at + 1 + 3i`: term `i`'s row, `[kind | factors << 8, weight scale
+ *   (f32), a, b]`, with `kind` a `WARP_KIND`: a lattice has `a` the row of
+ *   its body from `at` and `b` its cells per axis; an attribute has `a` the
+ *   name's hash (`attributeHash`) and `b` 1 if it is absolute (it holds a
+ *   position: the displacement is it minus the point's), else 0;
+ * - the two rows after it, the weight's factors, `[parameter's word,
+ *   offset (f32), slope (f32), 0]`, the factor's value `offset + slope ·
+ *   parameter`: only `factors` of them are read, the others are zero. The
+ *   weight is the scale times the factors' values;
+ * - then each lattice's body, in term order: a row `[center xyz (f32), 1 /
+ *   scale (f32)]`, then `cells³ × 20` rows, `[x, y, z, 0]` (f32), cell
+ *   `(iz · cells + iy) · cells + ix` term `k` at row `1 + cell · 20 + k`
+ *   (`CubicLattice`).
+ *
+ * A lattice of one cell is a body of 21 rows; of eight, 10,241.
  *
  * Every write goes to the buffer at once (`queue.writeBuffer`), in queue
  * order with the frames that read it. Nothing here writes a vertex buffer
@@ -92,14 +101,11 @@ export class PlacementTable {
     return this.f32[word]!;
   }
 
-  /**
-   * Writes `placement`'s block (any kind but affine) and returns its
-   * header row. `slotOf` gives a parameter's word.
-   */
-  add(placement: Placement, slotOf: (p: { value: number }) => number): number {
-    const rows = blockRows(placement);
+  /** Writes `terms`' block and returns its header row. `slotOf` gives a parameter's word. */
+  add(terms: WarpTerms, slotOf: (p: { value: number }) => number): number {
+    const rows = blockRows(terms);
     const at = this.allocate(rows);
-    this.pack(placement, at, slotOf);
+    this.pack(terms, at, slotOf);
     this.device.queue.writeBuffer(
       this.gpu,
       at * 16,
@@ -110,9 +116,9 @@ export class PlacementTable {
     return at;
   }
 
-  /** Frees the block at `at` of `placement`'s size, for reuse. */
-  remove(at: number, placement: Placement): void {
-    const rows = blockRows(placement);
+  /** Frees the block at `at` of `terms`' size, for reuse. */
+  remove(at: number, terms: WarpTerms): void {
+    const rows = blockRows(terms);
     let list = this.freeBlocks.get(rows);
     if (!list) {
       list = [];
@@ -172,82 +178,71 @@ export class PlacementTable {
   }
 
   private pack(
-    placement: Placement,
+    terms: WarpTerms,
     at: number,
     slotOf: (p: { value: number }) => number,
   ): void {
     const u32 = this.u32;
+    const f32 = this.f32;
     const h = at * 4;
-    u32.fill(0, h, h + 4);
-    switch (placement.kind) {
-      case "dual":
-        u32[h] = PLACEMENT_KIND.dual;
-        u32[h + 1] = slotOf(placement.t);
-        u32[h + 2] = attributeHash(placement.semantic);
-        return;
-      case "fitted":
-        u32[h] = PLACEMENT_KIND.fitted;
-        this.packFitted(placement, at + 1);
-        return;
-      case "blend": {
-        u32[h] = PLACEMENT_KIND.blend;
-        u32[h + 1] = slotOf(placement.t);
-        let body = at + 1;
-        u32[h + 2] = NO_PLACEMENT;
-        u32[h + 3] = NO_PLACEMENT;
-        if (placement.from !== "identity") {
-          u32[h + 2] = body;
-          this.packFitted(placement.from, body);
-          body += FITTED_ROWS;
-        }
-        if (placement.to !== "identity") {
-          u32[h + 3] = body;
-          this.packFitted(placement.to, body);
-        }
+    u32.fill(0, h, h + (1 + TERM_ROWS * terms.length) * 4);
+    u32[h] = terms.length;
+    let body = 1 + TERM_ROWS * terms.length;
+    terms.forEach(({ term, weight }, i) => {
+      const t = (at + 1 + TERM_ROWS * i) * 4;
+      u32[t] =
+        (term.kind === "cubic" ? WARP_KIND.lattice : WARP_KIND.attribute) |
+        (weight.factors.length << 8);
+      f32[t + 1] = weight.scale;
+      weight.factors.forEach((factor, j) => {
+        const r = t + 4 + 4 * j;
+        u32[r] = slotOf(factor.parameter);
+        f32[r + 1] = factor.offset;
+        f32[r + 2] = factor.slope;
+      });
+      if (term.kind === "attribute") {
+        u32[t + 2] = attributeHash(term.semantic);
+        u32[t + 3] = term.absolute ? 1 : 0;
         return;
       }
-      case "affine":
-        throw new Error("PlacementTable: the affine placement has no block.");
-    }
-  }
-
-  private packFitted(f: FittedOperation, at: number): void {
-    const o = at * 4;
-    const f32 = this.f32;
-    f32[o] = f.center[0]!;
-    f32[o + 1] = f.center[1]!;
-    f32[o + 2] = f.center[2]!;
-    f32[o + 3] = 1 / f.scale;
-    for (let k = 0; k < PLACEMENT_TERMS; k++) {
-      const r = o + 4 + k * 4;
-      f32[r] = f.coefficients[3 * k]!;
-      f32[r + 1] = f.coefficients[3 * k + 1]!;
-      f32[r + 2] = f.coefficients[3 * k + 2]!;
-      f32[r + 3] = 0;
-    }
+      u32[t + 2] = body;
+      u32[t + 3] = term.cells;
+      const o = (at + body) * 4;
+      f32[o] = term.center[0]!;
+      f32[o + 1] = term.center[1]!;
+      f32[o + 2] = term.center[2]!;
+      f32[o + 3] = 1 / term.scale;
+      const rows = term.cells ** 3 * PLACEMENT_TERMS;
+      for (let k = 0; k < rows; k++) {
+        const r = o + 4 + k * 4;
+        f32[r] = term.coefficients[3 * k]!;
+        f32[r + 1] = term.coefficients[3 * k + 1]!;
+        f32[r + 2] = term.coefficients[3 * k + 2]!;
+        f32[r + 3] = 0;
+      }
+      body += latticeRows(term.cells);
+    });
   }
 }
 
-/** Header kinds (shaders/placement.slang `PLACEMENT_DUAL`…). */
-export const PLACEMENT_KIND = { dual: 1, fitted: 2, blend: 3 } as const;
+/** Term kinds in a term's row (shaders/placement.slang `WARP_LATTICE`…). */
+export const WARP_KIND = { lattice: 1, attribute: 2 } as const;
 
-/** Rows of a fitted body: the center and 1/scale, then a row per term. */
-export const FITTED_ROWS = 1 + PLACEMENT_TERMS;
+/** Rows of a term: its row and its two factors'. */
+export const TERM_ROWS = 3;
 
-/** Rows of `placement`'s block (0 for affine). */
-export function blockRows(placement: Placement): number {
-  switch (placement.kind) {
-    case "affine":
-      return 0;
-    case "dual":
-      return 1;
-    case "fitted":
-      return 1 + FITTED_ROWS;
-    case "blend":
-      return (
-        1 +
-        (placement.from === "identity" ? 0 : FITTED_ROWS) +
-        (placement.to === "identity" ? 0 : FITTED_ROWS)
-      );
+/** Rows of a lattice's body: the center and 1 / scale, then a row per cell and term. */
+export function latticeRows(cells: number): number {
+  return 1 + cells ** 3 * PLACEMENT_TERMS;
+}
+
+/** Rows of `terms`' block. */
+export function blockRows(terms: WarpTerms): number {
+  let rows = 1 + TERM_ROWS * terms.length;
+  for (const { term } of terms) {
+    if (term.kind === "cubic") {
+      rows += latticeRows(term.cells);
+    }
   }
+  return rows;
 }
