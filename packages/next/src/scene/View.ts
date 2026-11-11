@@ -24,8 +24,7 @@ import {
   anchorCamera,
   setCameraFromAnchor,
   pickPlacements,
-  placementOf,
-  rotate,
+  pointToRender,
 } from "./viewAnchors.ts";
 import { ViewAnchorState } from "./viewAnchorState.ts";
 import {
@@ -653,9 +652,10 @@ export class View {
   /**
    * @internal This view's placements now, for a pick to keep (render space
    * ← anchor, copied): the table root's (key `undefined`) and each anchor
-   * of its world's, `undefined` at the identity.
+   * of its world's, `undefined` at the identity; with the routes of those
+   * drawn across a warp, scales frozen (`routes`, by anchor slot).
    */
-  pickPlacements(): Map<AnchorHandle | undefined, Float64Array | undefined> {
+  pickPlacements(): ReturnType<typeof pickPlacements> {
     return pickPlacements(this);
   }
 
@@ -705,11 +705,20 @@ export class View {
    * nearer than its near plane (not drawn). Off-screen positions in front
    * of it give pixels outside the view.
    *
+   * The position is carried to render space as the view draws that anchor:
+   * through its rigid placement, or, where the anchor is drawn across a warp
+   * (a vertical exaggeration, a reprojection: `anchorRoute`), through its
+   * route, each warp at the scale it has now. So a point of the Earth in
+   * true coordinates (the body anchor's, ITRF) lands on the pixel its
+   * content is drawn at. A position a warp doesn't map (outside its domain)
+   * is not drawn.
+   *
    * Without `anchor`, the view's body anchor (`bodyAnchor`: Earth-fixed
    * for the Earth), or the world's `root` while the world has none.
    * `world.root` is the transform table's root: render space while its
-   * placement (`setAnchorPlacement(undefined, …)`) is the identity. An
-   * explicit `undefined` is refused, so it can't be read as either.
+   * placement (`setAnchorPlacement(undefined, …)`) is the identity and it
+   * crosses no warp. An explicit `undefined` is refused, so it can't be
+   * read as either.
    */
   toPixel(
     position: ArrayLike<number>,
@@ -720,16 +729,17 @@ export class View {
         "toPixel: the anchor is undefined; pass world.root for the transform table's root, or omit it for the body anchor.",
       );
     }
-    const m = placementOf(
+    const p = pointToRender(
       this,
       anchor.length > 0 ? anchor[0] : (this.bodyAnchor ?? this.world.root),
+      position,
+      new Float64Array(3),
       "toPixel",
     );
-    if (m) {
-      const p = new Float64Array(3);
-      rotate(m, position, p, true);
-      position = p;
+    if (!p) {
+      return undefined;
     }
+    position = p;
     const rect = this.pixelRect();
     const ratio =
       this.target instanceof CanvasTarget ? this.target.pixelRatio : 1;

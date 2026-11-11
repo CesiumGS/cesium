@@ -1,6 +1,5 @@
 import { EARTH, type DrawHandle, type MeshHandle } from "@cesium/next";
 import type { Viewer } from "@cesium/next/widgets";
-import type { Exaggeration } from "./exaggeration.ts";
 
 /** Segments along the ruler: the map bends a straight line, so it is drawn in pieces. */
 const SEGMENTS = 64;
@@ -22,12 +21,9 @@ export interface Ruler {
   dispose(): void;
 }
 
-export function createRuler(
-  viewer: Viewer,
-  exaggeration: Exaggeration,
-  overlay: HTMLElement,
-): Ruler {
+export function createRuler(viewer: Viewer, overlay: HTMLElement): Ruler {
   const { world, view, engine } = viewer;
+  const earth = world.bodyAnchor(EARTH);
   const label = document.createElement("div");
   label.className = "vex-label ruler";
   label.hidden = true;
@@ -35,7 +31,6 @@ export function createRuler(
   let mesh: MeshHandle | undefined;
   let draw: DrawHandle | undefined;
   const middle = new Float64Array(3);
-  const drawn = new Float64Array(3);
   let shown = false;
 
   const remove = () => {
@@ -56,8 +51,7 @@ export function createRuler(
     if (!shown) {
       return;
     }
-    exaggeration.drawn(middle, drawn);
-    const px = view.toPixel(drawn, world.root);
+    const px = view.toPixel(middle, earth);
     label.hidden = px === undefined;
     if (px) {
       label.style.transform = `translate(${px[0]!.toFixed(1)}px, ${px[1]!.toFixed(1)}px) translate(-50%, -50%)`;

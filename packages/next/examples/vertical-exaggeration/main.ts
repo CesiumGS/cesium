@@ -2,13 +2,12 @@ import "./vertical-exaggeration.css";
 import {
   EARTH,
   Ellipsoid,
-  defaultRig,
   eastNorthUpToFixedFrame,
   mat4,
   type CorePick,
   type ModelPlacement,
 } from "@cesium/next";
-import type { Frames } from "@cesium/next/frames";
+import { truePick, type Frames } from "@cesium/next/frames";
 import { Instant } from "@cesium/next/time";
 import type { Dispose, ExampleContext } from "../types.ts";
 import {
@@ -16,7 +15,6 @@ import {
   createExaggeration,
   scaleOf,
 } from "./exaggeration.ts";
-import { watchFits } from "./fits.ts";
 import { createPins } from "./pins.ts";
 import { CAMERA, CLOSE_UP, PLACES, positionOf, type Shot } from "./places.ts";
 import {
@@ -41,9 +39,10 @@ import { createSites, trackGround } from "./sites.ts";
  * made once and scaled by the slider's one float. Pins are billboards, so
  * they stay upright; the truck can too (`warpAt: "anchor"`).
  *
- * Questions are asked in true coordinates. A pick comes back drawn, in the
- * frame the camera is on; the application takes it back through the map
- * (`exaggeration.truth`) and reads its height in ITRF. The ruler's numbers
+ * Questions are asked in true coordinates. A pick's drawn position is in the
+ * frame the camera is on, but the pick also gives the true point (`truePick`:
+ * the content's own point, or the drawn one taken back through the route it
+ * was drawn by) and the page reads its height in ITRF. The ruler's numbers
  * come from the measure module on those true points, so they don't move
  * with the slider; the drawn heights beside them do.
  */
@@ -95,25 +94,15 @@ export async function run({
   });
   const exaggeration = createExaggeration(viewer.frames, scale);
   const itrf = viewer.frames.get("ITRF");
-  // Back to the table's root first: a view on ITRF can't re-root rigidly
-  // onto a warped frame.
-  engine.cameras.setRig(view, defaultRig(world));
+  // The viewer's camera is on ITRF: the rig moves it onto the frame across
+  // the warp, the camera carried through the route.
   engine.cameras.setRig(view, {
     position: { frame: exaggeration.frame },
     orientation: { kind: "free" },
   });
-  // The camera works in the frame it sits on, so it keeps above the ground
-  // as drawn: the terrain's true height times the exaggeration.
-  const trueGround = viewer.controller.surfaceHeight;
-  viewer.controller.surfaceHeight = (longitude, latitude) => {
-    const h = trueGround?.(longitude, latitude);
-    return h === undefined ? undefined : h * exaggeration.factor;
-  };
-  scope.defer(() => {
-    viewer.controller.surfaceHeight = trueGround;
-  });
-  const fits = watchFits(world);
-  scope.defer(() => fits.stop());
+  // The camera controller keeps above the ground as drawn: it takes the
+  // true ground height (the viewer's) through the view's route itself.
+  const earth = world.bodyAnchor(EARTH);
 
   const frameCamera = (shot: Shot = CAMERA) => {
     const t = shot.target;
@@ -141,9 +130,9 @@ export async function run({
   scope.defer(() => overlay.remove());
 
   const sites = createSites(PLACES);
-  const pins = createPins(viewer, exaggeration, sites, overlay);
+  const pins = createPins(viewer, sites, overlay);
   scope.defer(() => pins.dispose());
-  const ruler = createRuler(viewer, exaggeration, overlay);
+  const ruler = createRuler(viewer, overlay);
   scope.defer(() => ruler.dispose());
 
   const notes: string[] = [];
@@ -256,7 +245,8 @@ export async function run({
   const routeOut = el("dd");
   const runOut = el("dd");
   const refitOut = el("dd");
-  const route = () => view.anchorRoute(world.bodyAnchor(EARTH));
+  const drawsOut = el("dd");
+  const route = () => view.anchorRoute(earth);
 
   const fillPick = () => {
     pickTable.root.hidden = pickFrame.hidden = picked === undefined;
@@ -278,7 +268,7 @@ export async function run({
       ground === undefined ? "–" : metres(ground),
       ground === undefined ? "–" : metres(ground * exaggeration.factor),
     );
-    pickFrame.textContent = `True: ${picked.frame}, heights above ${picked.heightsAbove}.`;
+    pickFrame.textContent = `True: ${picked.frame}, heights above ${picked.heightsAbove}${picked.provisional ? "; estimated by taking the drawn point back through the map" : ""}.`;
   };
 
   const fillMeasure = () => {
@@ -333,9 +323,13 @@ export async function run({
 
   const fillStats = () => {
     const r = route();
+    const stats = world.warpStats();
+    const n = (x: number) => x.toLocaleString("en-US");
     routeOut.textContent = r ? String(r.revision) : "–";
-    runOut.textContent = `${fits.run.toLocaleString("en-US")}, ${fits.queued.toLocaleString("en-US")} waiting`;
-    refitOut.textContent = fits.refits.toLocaleString("en-US");
+    runOut.textContent = `${n(stats.fitsRun)}, ${n(stats.pending)} waiting`;
+    refitOut.textContent = n(stats.refits);
+    const { draws } = stats;
+    drawsOut.textContent = `${n(draws.total)}: ${n(draws.exact)} exact, ${n(draws.fitted)} fitted, ${n(draws.stale)} stale, ${n(draws.pending)} waiting`;
   };
 
   const refresh = () => {
@@ -348,13 +342,12 @@ export async function run({
   // ------------------------------------------------------------- the pick
   const mark = el("div", { className: "vex-pick", hidden: true });
   overlay.append(mark);
-  const drawnMark = new Float64Array(3);
   const offMark = engine.onAfterTick(() => {
     if (!picked) {
       return;
     }
-    exaggeration.drawn(picked.point, drawnMark);
-    const px = view.toPixel(drawnMark, world.root);
+    // The true point: the view draws it through its route.
+    const px = view.toPixel(picked.point, earth);
     mark.hidden = px === undefined;
     if (px) {
       mark.style.transform = `translate(${px[0]!.toFixed(1)}px, ${px[1]!.toFixed(1)}px) translate(-50%, -50%)`;
@@ -374,9 +367,8 @@ export async function run({
     }
     const rect = viewer.canvas.getBoundingClientRect();
     const ratio = viewer.canvas.width / Math.max(1, rect.width);
-    // The pick reads the image of a tick a few frames on: the multiplier
-    // it was asked at is the one its point was drawn with.
-    const factor = exaggeration.factor;
+    // The pick resolves a few frames on, but carries the route as it was
+    // drawn then, so the slider may move meanwhile.
     void view
       .pickPoint(
         (e.clientX - rect.left) * ratio,
@@ -384,7 +376,7 @@ export async function run({
       )
       .then((pick) => {
         if (pick && !signal.aborted) {
-          take(pick, factor);
+          take(pick);
         }
       });
   };
@@ -395,9 +387,14 @@ export async function run({
     viewer.canvas.removeEventListener("pointerup", onUp);
   });
 
-  /** A pick, back through the map to the true point it drew. */
-  function take(pick: CorePick, factor: number) {
-    picked = readPick(exaggeration, itrf, pick.position, factor);
+  /** A pick's true point: the content's own where the pick found one, else the drawn one taken back through the route it was drawn by. */
+  function take(pick: CorePick) {
+    const truth = truePick(pick);
+    // Heights are read in ITRF, the Earth's anchor's coordinates.
+    if (truth.frame !== earth) {
+      return;
+    }
+    picked = readPick(exaggeration, itrf, truth);
     refresh();
     engine.requestRender();
   }
@@ -455,6 +452,8 @@ export async function run({
       runOut,
       el("dt", {}, "Refits"),
       refitOut,
+      el("dt", {}, "Warped draws"),
+      drawsOut,
     ),
     el(
       "p",

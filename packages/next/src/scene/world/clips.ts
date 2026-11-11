@@ -762,6 +762,96 @@ export const isClipped = (key: string): boolean => key.endsWith("Clipped");
 export const unclipped = <K extends string>(key: `${K}Clipped`): K =>
   key.slice(0, -"Clipped".length) as K;
 
+// --- caps: the planes a set's boundary lies on -------------------------------------
+
+/** A plane of a clip set's boundary, in the set's frame, with what limits the cap on it. */
+export interface CapPlane {
+  /** A point on the plane. */
+  readonly point: Vec3Like;
+  /** The cap's outward normal: out of what the set keeps. */
+  readonly normal: Vec3Like;
+  /**
+   * Half-spaces the cap is limited to (the other sides of a box, the other
+   * planes of the set): a point `p` is kept when `normal · (p − point) ≤ 0`.
+   */
+  readonly limits: ReadonlyArray<{
+    readonly point: Vec3Like;
+    readonly normal: Vec3Like;
+  }>;
+}
+
+/**
+ * The planes a set's kept region is bounded by, for caps (plan §13.26, item 5
+ * and 6): a set of planes, or of one box. Each plane's cap is the section by it,
+ * limited to where it bounds what is kept: with the shapes combined by
+ * intersection that is inside the other planes' half-spaces; by union, outside
+ * them. A set of polygons or of several boxes has curved or concave
+ * boundaries that a plane-by-plane cap cannot say: `unsupported` names why.
+ */
+export function capPlanes(
+  set: ClipSet,
+): { readonly planes: CapPlane[] } | { readonly unsupported: string } {
+  const shapes = set.shapes;
+  type Half = { point: Vec3Like; normal: Vec3Like };
+  let halves: Half[];
+  let intersection: boolean;
+  if (shapes.every((s) => s.kind === "plane")) {
+    halves = shapes.map((s) => {
+      const p = s as Extract<ClipShape, { kind: "plane" }>;
+      return { point: p.point, normal: p.normal };
+    });
+    intersection = (set.combine ?? "union") === "intersection";
+  } else if (shapes.length === 1 && shapes[0]!.kind === "box") {
+    const box = shapes[0] as Extract<ClipShape, { kind: "box" }>;
+    const axes = box.axes ?? IDENTITY_AXES;
+    halves = [];
+    for (let k = 0; k < 3; k++) {
+      for (const sign of [1, -1]) {
+        halves.push({
+          point: [
+            box.center[0] + sign * box.halfExtents[k]! * axes[k]![0],
+            box.center[1] + sign * box.halfExtents[k]! * axes[k]![1],
+            box.center[2] + sign * box.halfExtents[k]! * axes[k]![2],
+          ],
+          normal: [sign * axes[k]![0], sign * axes[k]![1], sign * axes[k]![2]],
+        });
+      }
+    }
+    intersection = true;
+  } else {
+    return {
+      unsupported:
+        "caps are built for sets of planes, or of one box; this set has polygons or several shapes of other kinds.",
+    };
+  }
+  const outward = set.keep === "outside" ? -1 : 1;
+  const planes = halves.map((half, i) => ({
+    point: half.point,
+    normal: [
+      outward * half.normal[0] + 0,
+      outward * half.normal[1] + 0,
+      outward * half.normal[2] + 0,
+    ] as unknown as Vec3Like,
+    // The inside of each other half-space where the shapes intersect, its outside where they unite.
+    limits:
+      halves.length === 1
+        ? []
+        : halves
+            .filter((_, j) => j !== i)
+            .map((other) => ({
+              point: other.point,
+              normal: (intersection
+                ? other.normal
+                : [
+                    0 - other.normal[0],
+                    0 - other.normal[1],
+                    0 - other.normal[2],
+                  ]) as Vec3Like,
+            })),
+  }));
+  return { planes };
+}
+
 // --- queries ---------------------------------------------------------------------
 
 /**

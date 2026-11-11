@@ -24,6 +24,8 @@ import {
 } from "./route.ts";
 import { tableResolver } from "./tableResolver.ts";
 import { affinePart } from "../scene/warpFit.ts";
+import { routeMap } from "../scene/warpBounds.ts";
+import type { Camera } from "../scene/Camera.ts";
 
 /** @internal What the camera layer needs of its engine. */
 export interface CameraLayerHost {
@@ -80,6 +82,11 @@ interface ViewState {
 
 /**
  * Each view's rig and render root (`Engine.cameras`, plan 5a's call 23).
+ *
+ * A re-root across a warp (a view on ITRF moved onto a vertical
+ * exaggeration's frame, or back) has no 4×4: the camera is carried through
+ * the route instead, its position mapped forward and its axes by the
+ * route's Jacobian there, each warp at the scale it has then.
  *
  * Each tick (and at the start of a `renderFrame` outside the loop) it
  * evaluates each view's rig at the clock's seconds and places every anchor
@@ -227,7 +234,9 @@ export class CameraLayer {
    * Sets the view's rig and evaluates it at once. When its position
    * reference frame differs from the view's root, the view re-roots: the
    * camera is re-expressed from the old root into the new one at the
-   * clock's seconds, so nothing placed rigidly moves on screen. While that
+   * clock's seconds, so nothing placed rigidly moves on screen (across a
+   * warp the camera is carried through the route instead, and what is drawn
+   * through it moves with the warp). While that
    * can't be resolved yet, the view stays on its old root (reported once)
    * and re-roots on the first tick that can. Throws, naming it, for an
    * offset, forward or up that isn't finite.
@@ -506,9 +515,26 @@ export class CameraLayer {
     ) {
       return false; // nothing it depends on changed since it failed
     }
-    let x: Float64Array;
+    const camera = view.camera;
     try {
-      x = this.checked(resolver, from, to, seconds, this.x);
+      let x: Float64Array | undefined;
+      try {
+        x = this.checked(resolver, from, to, seconds, this.x);
+      } catch (error) {
+        if (!(error instanceof NonRigidRouteError) || !resolver.route) {
+          throw error;
+        }
+      }
+      if (x) {
+        m4.transformPoint(camera.position, x, camera.position);
+        m4.transformDirection(camera.direction, x, camera.direction);
+        m4.transformDirection(camera.up, x, camera.up);
+        m4.transformDirection(camera.right, x, camera.right);
+      } else {
+        // Across a warp there is no 4×4: the camera is carried through the
+        // route (its position mapped, its axes by the Jacobian there).
+        carryCamera(camera, resolveRoute(resolver, from, to, seconds));
+      }
     } catch (error) {
       state.rerootTo = to;
       state.rerootResolver = resolver;
@@ -522,11 +548,6 @@ export class CameraLayer {
       );
       return false;
     }
-    const camera = view.camera;
-    m4.transformPoint(camera.position, x, camera.position);
-    m4.transformDirection(camera.direction, x, camera.direction);
-    m4.transformDirection(camera.up, x, camera.up);
-    m4.transformDirection(camera.right, x, camera.right);
     camera.version++;
     state.root = to;
     state.rerootTo = undefined;
@@ -824,6 +845,52 @@ export class CameraLayer {
       state.held.delete(key);
     }
   }
+}
+
+/**
+ * The camera carried through `route`: its position by the route's map, its
+ * axes by the route's Jacobian there (so it keeps looking along what its
+ * direction pointed at), made orthonormal again. Throws, changing nothing,
+ * where the map is not finite or squashes the view direction.
+ */
+function carryCamera(camera: Camera, route: Route): void {
+  const p = v3.vec3();
+  const j = new Float64Array(9);
+  routeMap(route)(camera.position, p, j);
+  if (!(p.every(Number.isFinite) && j.every(Number.isFinite))) {
+    throw new RangeError(
+      `${route.frame.name} to ${route.base.name}: the route's map is not finite at the camera`,
+    );
+  }
+  const jacobian = (v: ArrayLike<number>) =>
+    v3.vec3(
+      j[0]! * v[0]! + j[3]! * v[1]! + j[6]! * v[2]!,
+      j[1]! * v[0]! + j[4]! * v[1]! + j[7]! * v[2]!,
+      j[2]! * v[0]! + j[5]! * v[1]! + j[8]! * v[2]!,
+    );
+  const dir = jacobian(camera.direction);
+  const up = jacobian(camera.up);
+  const right = v3.vec3();
+  const length = v3.length(dir);
+  if (!(length > 0)) {
+    throw new RangeError(
+      `${route.frame.name} to ${route.base.name}: the route flattens the camera's view direction`,
+    );
+  }
+  v3.scale(dir, dir, 1 / length);
+  v3.cross(right, dir, up);
+  const r = v3.length(right);
+  if (!(r > 1e-12)) {
+    throw new RangeError(
+      `${route.frame.name} to ${route.base.name}: the route carries the camera's up along its view direction`,
+    );
+  }
+  v3.scale(right, right, 1 / r);
+  v3.cross(up, right, dir);
+  v3.copy(camera.position, p);
+  v3.copy(camera.direction, dir);
+  v3.copy(camera.up, up);
+  v3.copy(camera.right, right);
 }
 
 /** A resolver's answer that isn't a finite rigid matrix. */

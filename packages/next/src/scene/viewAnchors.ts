@@ -1,7 +1,7 @@
 // A view's placements of its world's anchors, and its camera relative to an
 // anchor (View's anchor methods).
 import type { FrameKey } from "../camera/frameResolver.ts";
-import type { Route } from "../camera/route.ts";
+import { routeForward, withFrozenScales, type Route } from "../camera/route.ts";
 import { rigidMatrixError } from "../math/transforms.ts";
 import { MAX_ANCHORS } from "../render/layout.ts";
 import { Camera, type CameraPose } from "./Camera.ts";
@@ -258,15 +258,49 @@ export function setCameraFromAnchor(
   camera.version++;
 }
 
-export function pickPlacements(
-  view: ViewAnchorContext,
-): Map<AnchorHandle | undefined, Float64Array | undefined> {
+export function pickPlacements(view: ViewAnchorContext): Map<
+  AnchorHandle | undefined,
+  Float64Array | undefined
+> & {
+  routes: ReadonlyArray<Route | undefined>;
+} {
   const out = new Map<AnchorHandle | undefined, Float64Array | undefined>();
   const copy = (m: Float64Array | undefined) => m && Float64Array.from(m);
   out.set(undefined, copy(placementOf(view, undefined, "pickPlacements")));
   for (const anchor of view.world.anchors) {
     out.set(anchor, copy(placementOf(view, anchor, "pickPlacements")));
   }
+  // The routes as drawn now: a scale is read at the tick the pick pass is
+  // encoded, not when the pick resolves frames later.
+  const routes = anchorRoutes(view).map((r) =>
+    r === undefined ? undefined : withFrozenScales(r),
+  );
+  return Object.assign(out, { routes });
+}
+
+/**
+ * `position`, a point in `anchor`'s coordinates (`undefined` or the world's
+ * `root`: the table's root), as this view draws it, in render space: through
+ * the anchor's route when it crosses a warp (each warp at its scale now),
+ * else through its rigid placement. Undefined where a warp can't map it.
+ */
+export function pointToRender(
+  view: ViewAnchorContext,
+  anchor: AnchorHandle | FrameKey | undefined,
+  position: ArrayLike<number>,
+  out: Float64Array,
+  caller: string,
+): Float64Array | undefined {
+  const slot = placementSlot(view, anchor, caller);
+  const route = view.anchorState.routes[slot];
+  if (route) {
+    try {
+      return routeForward(route, position, out);
+    } catch {
+      return undefined;
+    }
+  }
+  rotate(placementOf(view, anchor, caller), position, out, true);
   return out;
 }
 

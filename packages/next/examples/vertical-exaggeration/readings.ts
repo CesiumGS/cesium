@@ -1,4 +1,9 @@
-import { framePoint, type Frame, type Frames } from "@cesium/next/frames";
+import {
+  framePoint,
+  type Frame,
+  type Frames,
+  type TruePick,
+} from "@cesium/next/frames";
 import { measure } from "@cesium/next/measure";
 import type { Instant } from "@cesium/next/time";
 import type { Exaggeration, Geodetic } from "./exaggeration.ts";
@@ -11,30 +16,32 @@ export interface PickReading {
   /** The point (ITRF, m) and its geodetic position: heights are true ones. */
   readonly point: Float64Array;
   readonly true: Geodetic;
-  /** The height it is drawn at, in the application's frame. */
+  /** The height it is drawn at when read, in the application's frame. */
   readonly drawnHeight: number;
+  /** The point is an estimate: the drawn point went back through the route's inverse. */
+  readonly provisional: boolean;
 }
 
 /**
- * A pick's point, as `View.pickPoint` reads it: where it is drawn, in the
- * render root's metres (the application's frame, whose rig the camera sits
- * on). The way back through the map gives the point itself: its true height
- * is the same at any exaggeration, and the drawn height is the factor times
- * it. `factor` is the multiplier the pick's image was drawn at.
+ * A pick's true point (`truePick`: the content's own point where the pick
+ * resolved one, else the drawn point through the route's inverse at the
+ * scale it was drawn at), in the Earth's anchor's coordinates, ITRF. Its
+ * height is the same at any exaggeration; the drawn height is the factor in
+ * force times it.
  */
 export function readPick(
   exaggeration: Exaggeration,
   itrf: Frame,
-  drawnPoint: ArrayLike<number>,
-  factor?: number,
+  truth: Pick<TruePick, "position" | "provisional">,
 ): PickReading {
-  const point = exaggeration.truth(drawnPoint, undefined, factor);
+  const point = Float64Array.from(truth.position);
   return {
     frame: itrf.name,
     heightsAbove: "the WGS84 ellipsoid",
     point,
     true: exaggeration.geodetic(point),
-    drawnHeight: exaggeration.geodetic(drawnPoint).height,
+    drawnHeight: exaggeration.geodetic(exaggeration.drawn(point)).height,
+    provisional: truth.provisional,
   };
 }
 

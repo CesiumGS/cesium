@@ -13,7 +13,6 @@ import {
   scaleOf,
   type Exaggeration,
 } from "../examples/vertical-exaggeration/exaggeration.ts";
-import { watchFits } from "../examples/vertical-exaggeration/fits.ts";
 import {
   PLACES,
   positionOf,
@@ -22,13 +21,19 @@ import {
   readMeasurement,
   readPick,
 } from "../examples/vertical-exaggeration/readings.ts";
-import { routeForward, routeInverse, type Route } from "../src/camera/route.ts";
+import {
+  routeForward,
+  routeInverse,
+  withFrozenScales,
+  type Route,
+} from "../src/camera/route.ts";
 import {
   createFrameCatalog,
   type FrameCatalog,
 } from "../src/frames/catalog.ts";
 import { Frame } from "../src/frames/Frame.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
+import { truePick } from "../src/frames/pickTruth.ts";
 import { isWarpFrame } from "../src/frames/warpFrame.ts";
 import { heightNormalInfo } from "../src/globe/heightNormal.ts";
 import { upsampleTerrainTile } from "../src/globe/quantizedMesh.ts";
@@ -37,11 +42,13 @@ import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import * as m4 from "../src/math/mat4.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
+import type { CorePick } from "../src/scene/pick.ts";
 import { createBillboard, type MeshData } from "../src/scene/meshes.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { View } from "../src/scene/View.ts";
 import { placeWithTerms } from "../src/scene/warpEvaluate.ts";
 import type { World } from "../src/scene/World.ts";
+import type { WarpStats } from "../src/scene/world/warps.ts";
 import { drawTerms } from "../src/scene/world/placements.ts";
 import type { AnchorHandle, DrawHandle } from "../src/scene/world/types.ts";
 import { Instant } from "../src/time/Instant.ts";
@@ -97,7 +104,7 @@ interface Setup {
   exaggeration: Exaggeration;
   catalog: FrameCatalog;
   itrf: Frame;
-  fits: ReturnType<typeof watchFits>;
+  stats(): WarpStats;
   route(): Route;
   step(): boolean;
 }
@@ -119,7 +126,6 @@ function setup(factor = 4): Setup {
     position: { frame: exaggeration.frame as Frame },
     orientation: { kind: "free" },
   });
-  const fits = watchFits(world);
   const s: Setup = {
     world,
     view,
@@ -127,7 +133,7 @@ function setup(factor = 4): Setup {
     exaggeration,
     catalog,
     itrf: catalog.get("ITRF"),
-    fits,
+    stats: () => world.warpStats(),
     route: () => view.anchorRoute(earth)!,
     step() {
       engine.cameras.update();
@@ -208,6 +214,23 @@ const apart = (a: ArrayLike<number>, b: ArrayLike<number>) =>
 
 const instant = Instant.fromTdb(0);
 
+/** What the engine gives for a pick of the Earth at `drawn`: the route that drew it (the view's now unless given) and the drawn position, with no domain point. */
+function pickAt(s: Setup, drawn: Float64Array, route?: Route): CorePick {
+  return {
+    view: s.view,
+    position: drawn,
+    root: s.exaggeration.frame,
+    anchor: s.earth,
+    anchorPosition: Float64Array.from(drawn),
+    ...(route && { route }),
+    camera: {
+      position: Float64Array.of(drawn[0]! + 1000, drawn[1]!, drawn[2]!),
+      fovy: 1,
+      height: 480,
+    },
+  } as unknown as CorePick;
+}
+
 describe("the example's frame and rig", () => {
   it("is one warp frame over ITRF with a height-scale warp, and the Earth is drawn through it", () => {
     const s = setup();
@@ -261,7 +284,7 @@ describe("heights across k = 1 to 10", () => {
         [0, 1, 2].map((a) => center[12 + a]! + mesh.positions[i * 3 + a]!),
       ),
     );
-    const fitsBefore = s.fits.run;
+    const fitsBefore = s.stats().fitsRun;
     for (const k of KS) {
       s.exaggeration.factor = k;
       s.step();
@@ -274,8 +297,8 @@ describe("heights across k = 1 to 10", () => {
         expect(height(back)).toBeCloseTo(trueHeights[n]!, 1);
       });
     }
-    expect(s.fits.run).toBe(fitsBefore);
-    expect(s.fits.refits).toBe(0);
+    expect(s.stats().fitsRun).toBe(fitsBefore);
+    expect(s.stats().refits).toBe(0);
   });
 
   it("reads true heights through the pick path, whatever k, with drawn heights at k times them", () => {
@@ -294,7 +317,11 @@ describe("heights across k = 1 to 10", () => {
         // The application's helper draws it in the same place.
         expect(apart(s.exaggeration.drawn(point), atPick)).toBeLessThan(1e-6);
         // The pick's way back: the true point, in ITRF.
-        const read = readPick(s.exaggeration, s.itrf, atPick);
+        const read = readPick(
+          s.exaggeration,
+          s.itrf,
+          truePick(pickAt(s, atPick)),
+        );
         expect(read.frame).toBe("ITRF");
         expect(read.true.height).toBeCloseTo(trueHeight, 6);
         expect(apart(read.point, point)).toBeLessThan(1e-6);
@@ -307,16 +334,21 @@ describe("heights across k = 1 to 10", () => {
     }
   });
 
-  it("reads a pick at the multiplier it was drawn at, if the slider has moved since", () => {
+  it("reads a pick at the multiplier it was drawn at, if the slider has moved since: the pick carries its route", () => {
     const s = setup(7);
     s.step();
     const atPick = routeForward(s.route(), SUMMIT);
+    // What the engine keeps with a pick: the route, its scales frozen.
+    const pick = pickAt(s, atPick, withFrozenScales(s.route()));
     s.exaggeration.factor = 2;
     s.step();
-    const late = readPick(s.exaggeration, s.itrf, atPick);
-    expect(late.true.height).not.toBeCloseTo(4478, 0);
-    const read = readPick(s.exaggeration, s.itrf, atPick, 7);
+    const read = readPick(s.exaggeration, s.itrf, truePick(pick));
     expect(read.true.height).toBeCloseTo(4478, 6);
+    expect(read.provisional).toBe(true);
+    expect(read.drawnHeight).toBeCloseTo(2 * 4478, 6);
+    // Without it the view's route now (�2) reads the point �7 drawn wrongly.
+    const late = readPick(s.exaggeration, s.itrf, truePick(pickAt(s, atPick)));
+    expect(late.true.height).not.toBeCloseTo(4478, 0);
   });
 
   it("measures the same true heights and distances at every k, with the drawn ones beside them", async () => {
@@ -332,12 +364,12 @@ describe("heights across k = 1 to 10", () => {
       const a = readPick(
         s.exaggeration,
         s.itrf,
-        routeForward(s.route(), VALLEY),
+        truePick(pickAt(s, routeForward(s.route(), VALLEY))),
       ).point;
       const b = readPick(
         s.exaggeration,
         s.itrf,
-        routeForward(s.route(), SUMMIT),
+        truePick(pickAt(s, routeForward(s.route(), SUMMIT))),
       ).point;
       const m = readMeasurement(s.exaggeration, s.itrf, frames, a, b, instant);
       first ??= m;
@@ -383,7 +415,7 @@ describe("heights across k = 1 to 10", () => {
     expect(s.world.warps.status(plain)?.state).toBe("fitted");
     expect(s.world.warps.status(pin)?.state).toBe("fitted");
     const revision = s.route().revision;
-    const run = s.fits.run;
+    const run = s.stats().fitsRun;
     expect(run).toBeGreaterThan(0);
     for (const k of KS) {
       s.exaggeration.factor = k;
@@ -395,15 +427,15 @@ describe("heights across k = 1 to 10", () => {
     expect(s.route().revision).toBe(revision);
     // Fitted draws are not fitted again; the billboard is placed again at
     // each tick (one route evaluation), which is not a fit.
-    expect(s.fits.run).toBe(run);
-    expect(s.fits.refits).toBe(0);
-    expect(s.fits.replaced).toBeGreaterThan(0);
-    expect(s.fits.queued).toBe(0);
+    expect(s.stats().fitsRun).toBe(run);
+    expect(s.stats().refits).toBe(0);
+    expect(s.stats().replaced).toBeGreaterThan(0);
+    expect(s.stats().pending).toBe(0);
     // Changing the warp itself is the other thing: its route is refitted.
     s.exaggeration.warp.factor = 20;
     s.step();
     expect(s.route().revision).toBeGreaterThan(revision);
-    expect(s.fits.refits).toBeGreaterThan(0);
+    expect(s.stats().refits).toBeGreaterThan(0);
     expect(s.exaggeration.factor).toBeCloseTo(1 + scaleOf(3) * 19, 9);
   });
 });

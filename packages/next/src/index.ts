@@ -48,21 +48,58 @@ export {
   type StyleExpression,
 } from "./scene/FeatureStyle.ts";
 export { World } from "./scene/World.ts";
+export type { WarpStats } from "./scene/world/warps.ts";
 // Clips (plan §13.26, increment 8a): shapes in a reference frame that cut
 // the content of the views that use them (`World.addClip`, `View.clipMask`).
 export {
   clipFilter,
   clipSetKeeps,
   clipSetsOf,
+  capPlanes,
   MAX_CLIP_SETS,
   MAX_CLIP_SHAPES,
   MAX_CLIP_POLYGON_VERTICES,
   MAX_WORLD_CLIPS,
+  type CapPlane,
   type ClipSet,
   type ClipShape,
   type ClipsOption,
   type WorldClip,
 } from "./scene/world/clips.ts";
+// Caps for clips (plan §13.26, increment 8b): exact b-rep caps and mesh caps,
+// rebuilt within a per-frame budget.
+export {
+  BrepCaps,
+  CapScheduler,
+  DEFAULT_CAP_COLOR,
+  DEFAULT_SECTION_LINE_COLOR,
+  MeshCaps,
+  type BrepCapsOptions,
+  type BrepCapsReport,
+  type CapBias,
+  type CapColor,
+  type CapDrawOptions,
+  type CapDraws,
+  type CapPlacement,
+  type CapSchedulerOptions,
+  type CapStyle,
+  type CapStyleInput,
+  type CapTick,
+  type MeshCapsOptions,
+  type MeshCapsReport,
+} from "./scene/world/caps.ts";
+export {
+  assembleMeshCaps,
+  meshPlane,
+  sectionTile,
+  triangulateRegion,
+  type ElementCap,
+  type MeshCapPlane,
+  type MeshCapReport,
+  type MeshCapGeometry,
+  type MeshCapTile,
+  type TileSection,
+} from "./scene/world/meshCaps.ts";
 export {
   type DrawHandle,
   type DrawOptions,
@@ -405,7 +442,13 @@ export {
   writeBrepExtension,
   tessellateBrep,
   faceTrim,
+  sectionBrep,
   type BrepMesh,
+  type CapFace,
+  type SectionOptions,
+  type SectionPlaneInput,
+  type SectionReport,
+  type SectionResult,
   type FaceTrim,
   type TessellateOptions,
   type SurfaceKind,

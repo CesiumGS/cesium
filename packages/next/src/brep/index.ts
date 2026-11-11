@@ -26,6 +26,14 @@ export {
 } from "./nurbs.ts";
 export { BrepBuilder, type BrepUse, type SurfaceIdentity } from "./build.ts";
 export { validateBrep, type BrepProblem } from "./validate.ts";
+export {
+  sectionBrep,
+  type CapFace,
+  type SectionOptions,
+  type SectionPlaneInput,
+  type SectionReport,
+  type SectionResult,
+} from "./section.ts";
 export { readBrepExtension, writeBrepExtension } from "./gltf.ts";
 export {
   tessellateBrep,

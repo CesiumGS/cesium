@@ -7,7 +7,6 @@ import {
   type TransformHandle,
 } from "@cesium/next";
 import type { Viewer } from "@cesium/next/widgets";
-import type { Exaggeration } from "./exaggeration.ts";
 import type { Site } from "./sites.ts";
 
 /** Pixels a pin stands tall. */
@@ -82,7 +81,6 @@ export interface Pins {
  */
 export function createPins(
   viewer: Viewer,
-  exaggeration: Exaggeration,
   sites: readonly Site[],
   overlay: HTMLElement,
 ): Pins {
@@ -90,7 +88,6 @@ export function createPins(
   const earth = world.bodyAnchor(EARTH);
   const mesh: MeshHandle = world.addMesh(pinMesh());
   const pins = new Map<Site, Pin>();
-  const drawn = new Float64Array(3);
 
   const place = (site: Site) => {
     const matrix = mat4.setTranslation(mat4.mat4(), site.position);
@@ -124,8 +121,8 @@ export function createPins(
 
   const offTick = engine.onAfterTick(() => {
     for (const { site, label } of pins.values()) {
-      exaggeration.drawn(site.position, drawn);
-      const px = view.toPixel(drawn, world.root);
+      // The true position: the view carries it through its route.
+      const px = view.toPixel(site.position, earth);
       if (px === undefined) {
         label.hidden = true;
         continue;

@@ -82,7 +82,11 @@ export interface Warp {
     out: Float64Array,
     jacobian?: Float64Array,
   ): Float64Array;
-  /** `q` in `to` back to `from`. When absent, the engine solves by Newton (`warpInverse`). */
+  /**
+   * `q` in `to` back to `from`, at scale 1 (as `forward`). When absent, the
+   * engine solves by Newton (`warpInverse`). Call `warpInverse`, not this,
+   * to invert the warp as it is drawn: it takes the `scale` in force.
+   */
   inverse?(q: ArrayLike<number>, out: Float64Array): Float64Array;
 }
 
@@ -172,11 +176,11 @@ export function resolveRoute(
   };
 }
 
-/** A point of `route.frame` carried to `route.base`, in float64. */
+/** A point of `route.frame` carried to `route.base`, in float64, each warp at the scale it has now (`warpForward`). */
 export function routeForward(
   route: Route,
   p: ArrayLike<number>,
-  out = new Float64Array(3),
+  out: Float64Array = new Float64Array(3),
 ): Float64Array {
   const at = new Float64Array([p[0]!, p[1]!, p[2]!]);
   for (const step of route.steps) {
@@ -192,11 +196,11 @@ export function routeForward(
   return out;
 }
 
-/** A point of `route.base` carried back to `route.frame`, in float64: each step undone, last first. */
+/** A point of `route.base` carried back to `route.frame`, in float64: each step undone, last first, each warp at the scale it has now (`warpInverse`). */
 export function routeInverse(
   route: Route,
   q: ArrayLike<number>,
-  out = new Float64Array(3),
+  out: Float64Array = new Float64Array(3),
 ): Float64Array {
   const at = new Float64Array([q[0]!, q[1]!, q[2]!]);
   const inv = new Float64Array(16);
@@ -331,7 +335,7 @@ export function withScalesAt(
 export function warpInverse(
   warp: Warp,
   q: ArrayLike<number>,
-  out = new Float64Array(3),
+  out: Float64Array = new Float64Array(3),
   { tolerance = 1e-9, iterations = 32 } = {},
 ): Float64Array {
   const scale = warpScaleOf(warp);

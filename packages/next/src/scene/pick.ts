@@ -6,6 +6,7 @@
 // module's tags it with its reference frame (`createFramesPickInterpreter`),
 // the engineering module's with design coordinates (`pickDesign`).
 import type { FrameKey } from "../camera/frameResolver.ts";
+import type { Route } from "../camera/route.ts";
 import type { GeometryAccuracy } from "../geometry/query.ts";
 import { UNDERLAY_DEPTH } from "../render/layout.ts";
 import type { CameraPose } from "./Camera.ts";
@@ -67,8 +68,26 @@ export interface CorePick {
    * anchor.
    */
   readonly anchor: AnchorHandle | undefined;
-  /** The same point in `anchor`'s coordinates (Earth-fixed under the Earth's anchor), m. */
+  /**
+   * `position` carried to `anchor`'s axes by the anchor's rigid placement
+   * (Earth-fixed under the Earth's anchor), m: where the content is DRAWN,
+   * written in the anchor's coordinates. Where the anchor is drawn across a
+   * warp (a vertical exaggeration, a reprojection) the warp is not undone
+   * here, so this is not where the content is: take `truePosition` (the
+   * content's own point, when `domain` is set) or `truePick(pick).position`
+   * (which also inverts the route where there is no domain point) for the
+   * point in the anchor's true coordinates. With no warp the two agree.
+   */
   readonly anchorPosition: Float64Array;
+  /**
+   * The route that drew the hit anchor's content at that tick, when it
+   * crosses a warp, with each warp's `scale` frozen at its value then: a pick
+   * resolves a few frames after the call, and a slider may have moved since,
+   * so this (not `view.anchorRoute`) is what inverts the drawn `position`
+   * as it was drawn. Its `revision` is the route's revision then. Absent for
+   * an anchor drawn rigidly.
+   */
+  readonly route?: Route;
   /**
    * The hit draw, if a draw was hit and is still in the world when the
    * readback maps (looked up then, from the feature ID read).
@@ -130,7 +149,13 @@ export interface PickTick {
   readonly placements: ReadonlyMap<
     AnchorHandle | undefined,
     Float64Array | undefined
-  >;
+  > & {
+    /**
+     * The routes of the anchors drawn across a warp at that tick, by anchor
+     * slot (0: the table's root), scales frozen (`View.pickPlacements`).
+     */
+    readonly routes?: ReadonlyArray<Route | undefined>;
+  };
   /** The view's camera, in render space. */
   readonly camera: CameraPose;
   readonly near: number;
@@ -250,12 +275,14 @@ export function corePick(
           (2 * z * tick.tanY) / tick.height,
         )
       : undefined;
+  const route = tick.placements.routes?.[anchor?.slot ?? 0];
   return {
     view: tick.view,
     position,
     root: tick.root,
     anchor,
     anchorPosition: alongRay(camera, tanX, tanY, tick.ndcX, tick.ndcY, z),
+    ...(route && { route }),
     draw,
     feature: pickResult(featureId, info),
     ...(info?.item && { item: info.item }),

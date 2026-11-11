@@ -79,6 +79,16 @@ export {
 } from "./catalog.ts";
 export { createSkyState, skyState, type SkyState } from "./sky.ts";
 export {
+  routeForward,
+  routeInverse,
+  warpForward,
+  warpInverse,
+  type Route,
+  type Warp,
+  type WarpScale,
+} from "./warpMaps.ts";
+export { truePick, type TruePick, type TruthHow } from "./pickTruth.ts";
+export {
   warpFrame,
   WarpFrame,
   isWarpFrame,

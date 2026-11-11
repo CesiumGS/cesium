@@ -165,6 +165,8 @@ interface DrawWarp {
   readonly instances: InstanceState | undefined;
   /** The anchor stamp whose fit is requested, and the one `applied` is for (−1: an older one). */
   requested: number;
+  /** The route stamp the draw was last asked its term at: a later ask is a refit, a placing again or a move. */
+  askedStamp: number | undefined;
   appliedStamp: number;
   /** The draw's matrix to its anchor when its fit was requested. */
   readonly matrix: Float64Array;
@@ -182,6 +184,33 @@ export interface DrawWarpStatus {
   readonly at: WarpAt;
   /** Terrain drawn by its exact height term, with no fit. */
   readonly exact: boolean;
+}
+
+/**
+ * What the world's warps have done (`World.warpStats`; provisional): the
+ * counts since the world was made, and how its warped draws stand now.
+ */
+export interface WarpStats {
+  /** Per-vertex fits made: one for each tile or draw as it first appears under a warp. The slider adds none (one fit of the unit displacement serves every scale). */
+  readonly fitsRun: number;
+  /** Per-vertex fits asked for a draw already fitted, because its route changed (the warp itself did, or a scale that can't be fitted once). */
+  readonly refits: number;
+  /** Anchored draws (billboards, a model kept upright) placed: one route evaluation each, not a fit. */
+  readonly placed: number;
+  /** Anchored or instanced draws placed again by a route change or a slider move. */
+  readonly replaced: number;
+  /** Draws asked for again with their route as it was: their transform moved, or `setWarpAt` changed where they are placed. A fit or a placing, by the draw's kind. */
+  readonly moved: number;
+  /** Fits asked for and not yet run. */
+  readonly pending: number;
+  /** The draws under a warped anchor, by how they stand: "exact" is terrain drawn by its height term with no fit (also counted in its fitted, stale or pending state). */
+  readonly draws: {
+    readonly total: number;
+    readonly fitted: number;
+    readonly stale: number;
+    readonly pending: number;
+    readonly exact: number;
+  };
 }
 
 /** The height a terrain tile's `h·n̂` was made on, and the most it holds (`World.setDrawHeightNormal`). */
@@ -316,6 +345,14 @@ export class WorldWarps {
   get pending(): number {
     return this.cache.pending;
   }
+
+  readonly #counts = {
+    fitsRun: 0,
+    refits: 0,
+    placed: 0,
+    replaced: 0,
+    moved: 0,
+  };
 
   /** Draws drawn warped now. */
   get size(): number {
@@ -520,6 +557,55 @@ export class WorldWarps {
     return worst;
   }
 
+  /**
+   * Counts a draw asked for its term again: by a changed route stamp (a
+   * refit, or for an anchored or instanced draw, placing it again), or with
+   * the route as it was (`moved`: its transform moved, or it was set to be
+   * placed elsewhere).
+   */
+  #countAsk(d: DrawWarp, stamp: number, anchored: boolean): void {
+    const before = d.askedStamp;
+    d.askedStamp = stamp;
+    if (before === undefined) {
+      return;
+    }
+    const stats = this.#counts;
+    if (before === stamp) {
+      stats.moved++;
+    } else if (anchored) {
+      stats.replaced++;
+    } else {
+      stats.refits++;
+    }
+  }
+
+  /** How a draw's term stands: drawn at the current one, at an older one, or not yet. */
+  #stateOf(d: DrawWarp): DrawWarpStatus["state"] {
+    const drawn = d.instances ? d.appliedStamp >= 0 : d.routeTerm !== undefined;
+    return d.appliedStamp === d.requested && drawn
+      ? "fitted"
+      : drawn
+        ? "stale"
+        : "pending";
+  }
+
+  /** The work done for warped draws, and how they stand (`World.warpStats`). */
+  stats(): WarpStats {
+    const draws = { total: 0, fitted: 0, stale: 0, pending: 0, exact: 0 };
+    for (const d of this.#draws.values()) {
+      draws.total++;
+      draws[this.#stateOf(d)]++;
+      if (d.exact) {
+        draws.exact++;
+      }
+    }
+    return {
+      ...this.#counts,
+      pending: this.cache.pending,
+      draws,
+    };
+  }
+
   /** How the draw is warped and where its fit is, if it is. */
   status(handle: DrawHandle): DrawWarpStatus | undefined {
     const d = this.#state(handle);
@@ -527,15 +613,9 @@ export class WorldWarps {
     if (!d || !route) {
       return undefined;
     }
-    const drawn = d.instances ? d.appliedStamp >= 0 : d.routeTerm !== undefined;
     return {
       route,
-      state:
-        d.appliedStamp === d.requested && drawn
-          ? "fitted"
-          : drawn
-            ? "stale"
-            : "pending",
+      state: this.#stateOf(d),
       at: effectiveAt(d.kind, d.choice),
       exact: d.exact,
     };
@@ -936,6 +1016,7 @@ export class WorldWarps {
             }
           : undefined,
       requested: -1,
+      askedStamp: undefined,
       appliedStamp: -1,
       matrix: new Float64Array(16),
       originAt: new Float64Array(3),
@@ -1001,7 +1082,7 @@ export class WorldWarps {
       }
       const m = drawMatrix(this.world, this.#handle(index, d), this.#scratch);
       if (m && differs(m, d.matrix)) {
-        d.requested = -1;
+        this.#outdated(d);
         continue;
       }
       // An anchored draw moves about another transform's origin.
@@ -1013,10 +1094,20 @@ export class WorldWarps {
             at[1] !== d.originAt[1] ||
             at[2] !== d.originAt[2])
         ) {
-          d.requested = -1;
+          this.#outdated(d);
         }
       }
     }
+  }
+
+  /**
+   * The draw's term was made for a matrix or an origin it no longer has: it is
+   * asked for again, and the fit held for the route's stamp is dropped, which
+   * the cache would otherwise hand back as current (the stamp is the same).
+   */
+  #outdated(d: DrawWarp): void {
+    d.requested = -1;
+    this.cache.forget(d.key);
   }
 
   /** The origin an anchored draw moves about, in its anchor's coordinates (float64): its origin transform's, or its own. */
@@ -1048,6 +1139,7 @@ export class WorldWarps {
     d.matrix.set(matrix);
     d.requested = stamp;
     if (d.instances) {
+      this.#countAsk(d, stamp, true);
       d.instances.next = 0;
       d.instances.stamp = stamp;
       d.instances.matrix.set(matrix);
@@ -1106,6 +1198,17 @@ export class WorldWarps {
           report,
         );
     }
+    const stats = this.#counts;
+    const run = produce;
+    produce = () => {
+      if (at === "anchor") {
+        stats.placed++;
+      } else {
+        stats.fitsRun++;
+      }
+      return run();
+    };
+    this.#countAsk(d, stamp, at === "anchor");
     const stale = this.cache.request(d.key, this.#rootName, stamp, produce);
     const current = this.cache.current(d.key, this.#rootName, stamp);
     if (current) {

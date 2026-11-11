@@ -123,7 +123,11 @@ import {
   setTerrainClip,
 } from "./world/terrainClips.ts";
 import { castRays } from "./world/rays.ts";
-import { WorldWarps, type HeightNormalInfo } from "./world/warps.ts";
+import {
+  WorldWarps,
+  type HeightNormalInfo,
+  type WarpStats,
+} from "./world/warps.ts";
 import type { WarpAt } from "./warpAnchor.ts";
 import {
   releasePlacementParameter,
@@ -1033,6 +1037,16 @@ export class World {
     handle: DrawHandle,
   ): { choice: WarpAt; effective: WarpAt } | undefined {
     return this.warps.warpAt(handle);
+  }
+
+  /**
+   * Provisional. What the world's warps have done, and how its warped draws
+   * stand: fits made and asked again, anchored draws placed, fits waiting,
+   * and the draws under a warped anchor by state (fitted, stale, pending,
+   * exact). Counts are since the world was made; a read changes nothing.
+   */
+  warpStats(): WarpStats {
+    return this.warps.stats();
   }
 
   /**

@@ -4,6 +4,7 @@ import { Ellipsoid } from "../math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { View } from "./View.ts";
+import { routeForward, routeInverse, routeIsRigid } from "../camera/route.ts";
 import { EarthFixedGuard, earthFixed } from "./earthAnchor.ts";
 import {
   TouchGestures,
@@ -45,7 +46,11 @@ import {
  *
  * It works in Earth-fixed coordinates: while the Earth's anchor isn't at
  * the identity in the view's render space (a rig off the Earth), it
- * ignores input and warns once (plan 5a's call 27).
+ * ignores input and warns once (plan 5a's call 27). Where the Earth is
+ * drawn across a warp (`View.anchorRoute`) it works on what is drawn: the
+ * picks it orbits and zooms about are drawn points (`View.pickPosition`),
+ * the camera is in the render space, and the ground it keeps above is the
+ * true ground carried through the route.
  */
 export class GlobeController {
   /** Ignore input at these target pixels, e.g. where another view sits on top. */
@@ -69,7 +74,11 @@ export class GlobeController {
   /**
    * Height of the ground (meters above the ellipsoid) at a longitude and
    * latitude in radians, e.g. `terrain.sampleHeight`; undefined where it
-   * isn't known yet. Without it the ellipsoid is the ground.
+   * isn't known yet. Without it the ellipsoid is the ground. True heights:
+   * where the Earth is drawn across a warp (a vertical exaggeration) the
+   * controller carries the ground through the view's route, so the camera
+   * keeps above the ground as drawn, and the zoom target is the drawn
+   * ground (`View.anchorRoute`). Don't scale them yourself.
    */
   surfaceHeight?: (longitude: number, latitude: number) => number | undefined;
   /** Share of the spin momentum kept per 1/60 s (1.x inertiaSpin). */
@@ -594,9 +603,54 @@ export class GlobeController {
     // The terrain's height there where it's loaded: the zoom is then a
     // share of the camera's height above the ground, not the ellipsoid
     // (which is above the ground where the geoid is negative).
-    c.height =
-      (this.surfaceHeight && this.surfaceHeight(c.longitude, c.latitude)) ?? 0;
+    c.height = this.groundHeight(c.longitude, c.latitude) ?? 0;
     this.ellipsoid.cartographicToCartesian(c, out);
+  }
+
+  /**
+   * The height of the ground under the camera as it is drawn, in render
+   * space, where `surfaceHeight` says it is: the same number where the Earth
+   * is drawn unwarped. Where it is drawn across a warp (a vertical
+   * exaggeration: `View.anchorRoute`) the ground's true point under the
+   * camera's true position goes through the route, and its drawn height is
+   * the answer, so the camera keeps above the ground it sees. Undefined
+   * where the ground isn't known yet.
+   */
+  private groundHeight(
+    longitude: number,
+    latitude: number,
+  ): number | undefined {
+    const trueHeight = (lon: number, lat: number) =>
+      this.surfaceHeight ? this.surfaceHeight(lon, lat) : 0;
+    const anchor = this.view.bodyAnchor;
+    const route = anchor && this.view.anchorRoute(anchor);
+    if (route && !routeIsRigid(route)) {
+      try {
+        const at = { longitude: 0, latitude: 0, height: 0 };
+        const here = this.ellipsoid.cartesianToCartographic(
+          routeInverse(route, this.view.camera.position),
+          at,
+        );
+        const ground = here && trueHeight(here.longitude, here.latitude);
+        if (ground === undefined) {
+          return undefined;
+        }
+        if (here) {
+          at.height = ground;
+          const drawn = routeForward(
+            route,
+            this.ellipsoid.cartographicToCartesian(at, v3.vec3()),
+          );
+          const there = this.ellipsoid.cartesianToCartographic(drawn, at);
+          if (there) {
+            return there.height;
+          }
+        }
+      } catch {
+        // A route that can't carry this point: the plain height stands.
+      }
+    }
+    return trueHeight(longitude, latitude);
   }
 
   /**
@@ -797,9 +851,7 @@ export class GlobeController {
     if (!c) {
       return;
     }
-    const ground = this.surfaceHeight
-      ? this.surfaceHeight(c.longitude, c.latitude)
-      : 0;
+    const ground = this.groundHeight(c.longitude, c.latitude);
     if (ground === undefined) {
       return; // not loaded there yet
     }

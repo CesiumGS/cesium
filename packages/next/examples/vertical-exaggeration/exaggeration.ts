@@ -1,7 +1,9 @@
 import { Ellipsoid, cartographic, type PlacementParameter } from "@cesium/next";
 import {
   verticalExaggeration,
+  warpForward,
   warpFrame,
+  warpInverse,
   type FrameCatalog,
   type VerticalExaggeration,
   type WarpFrame,
@@ -41,22 +43,15 @@ export interface Exaggeration {
   readonly warp: VerticalExaggeration;
   /** The multiplier in force; setting it writes the one float the slider writes. */
   factor: number;
-  /** Where a true point (ITRF, m) is drawn, in `frame`'s metres, at the multiplier in force or at `factor`. */
-  drawn(
-    point: ArrayLike<number>,
-    out?: Float64Array,
-    factor?: number,
-  ): Float64Array;
+  /** Where a true point (ITRF, m) is drawn, in `frame`'s metres, at the multiplier in force (`warpForward`). */
+  drawn(point: ArrayLike<number>, out?: Float64Array): Float64Array;
   /**
-   * The true point (ITRF, m) drawn at `point` in `frame`: the way back for a
-   * pick. A pick reads the image of an earlier tick, so give the `factor` it
-   * was drawn at if the slider may have moved since.
+   * The true point (ITRF, m) drawn at `point` in `frame`, at the multiplier
+   * in force (`warpInverse`). A pick gives its true point itself (`truePick`),
+   * which is read at the multiplier it was drawn at; this is for the
+   * application's own drawn points.
    */
-  truth(
-    point: ArrayLike<number>,
-    out?: Float64Array,
-    factor?: number,
-  ): Float64Array;
+  truth(point: ArrayLike<number>, out?: Float64Array): Float64Array;
   /** The geodetic position of a point in ITRF. */
   geodetic(point: ArrayLike<number>): Geodetic;
 }
@@ -77,18 +72,8 @@ export function createExaggeration(
   });
   const frame = warpFrame(FRAME_NAME, catalog.get("ITRF"), warp);
   catalog.add(frame);
-  // The warp as the engine draws it is the full factor, scaled by `scale`.
-  // To answer for the position now, a second helper holds the multiplier in
-  // force: the application's own readout, never drawn, on no frame.
-  const now = verticalExaggeration({ factor: 1 });
   // The multiplier in force: the warp's own factor at the slider's position.
   const factorNow = () => 1 + scale.value * (warp.factor - 1);
-  const hold = (factor: number = factorNow()): VerticalExaggeration => {
-    if (now.factor !== factor) {
-      now.factor = factor;
-    }
-    return now;
-  };
   return {
     frame,
     warp,
@@ -98,11 +83,11 @@ export function createExaggeration(
     set factor(factor: number) {
       scale.value = (factor - 1) / (warp.factor - 1);
     },
-    drawn: (point, out = new Float64Array(3), factor) =>
-      hold(factor).forward(point, out),
-    // The helper always has its inverse; its type calls it optional.
-    truth: (point, out = new Float64Array(3), factor) =>
-      hold(factor).inverse!(point, out),
+    // The frame's warp, taken at the scale in force: what the engine draws.
+    drawn: (point, out = new Float64Array(3)) =>
+      warpForward(frame.warp, point, out),
+    truth: (point, out = new Float64Array(3)) =>
+      warpInverse(frame.warp, point, out),
     geodetic(point) {
       const c = Ellipsoid.WGS84.cartesianToCartographic(
         Float64Array.of(point[0]!, point[1]!, point[2]!),

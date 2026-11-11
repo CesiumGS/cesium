@@ -40,7 +40,7 @@ export interface TruePick {
   readonly drawn?: DrawnThrough;
   /** Where it is drawn (render space), m, when through a warp. */
   readonly drawnPosition?: Float64Array;
-  /** The route that draws the hit anchor's content, when it crosses a warp. */
+  /** The route that draws the hit anchor's content, when it crosses a warp: the pick's own (`CorePick.route`, each scale as it was when drawn), else the view's now. */
   readonly route?: Route;
   /** Render space ← the anchor, when the view gave it (a route's affine part). */
   readonly placement?: Float64Array;
@@ -70,8 +70,11 @@ interface RouteView {
   anchorPlacement?(anchor: CorePick["anchor"]): Float64Array | undefined;
 }
 
-/** The warped route that draws the hit's content, if the view has one. */
+/** The warped route that draws the hit's content: the one kept with the pick, else the view's own now. */
 function warpedRoute(pick: CorePick): Route | undefined {
+  if (pick.route !== undefined) {
+    return pick.route;
+  }
   const view = pick.view as unknown as RouteView;
   const route = view.anchorRoute?.(pick.anchor);
   return route !== undefined && !routeIsRigid(route) ? route : undefined;
