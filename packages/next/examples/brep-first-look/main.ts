@@ -1282,7 +1282,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         const name = KIND_NAMES[key >> 1] ?? "?";
         // Bézier is a name; the others are words.
         const word = name === "Bézier" ? name : name.toLowerCase();
-        return `${n} ${word}${key & 1 ? " as Bézier" : ""}`;
+        const plural = n === 1 ? word : word === "torus" ? "tori" : `${word}s`;
+        return `${n} ${plural}${key & 1 ? " as Bézier" : ""}`;
       })
       .join(", ");
   };

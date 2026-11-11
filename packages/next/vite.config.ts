@@ -61,16 +61,24 @@ const contentTypes: Record<string, string> = {
  */
 function serveDirectory(
   prefix: string,
-  root: string,
+  root: string | (() => string | undefined),
   { exclude }: { exclude?: (path: string) => boolean } = {},
 ): Plugin {
-  // Absolute, without a trailing separator, so `base + sep` is the prefix of
-  // everything inside it and of nothing beside it (`/a/frames-old`).
-  const base = resolvePath(root);
   return {
     name: `serve-directory${prefix}`,
     configureServer(server) {
       server.middlewares.use(prefix, (req, res, next) => {
+        // A function is asked per request: a store keyed by its inputs (SMLib's
+        // build) moves when they change, without restarting the server.
+        const folder = typeof root === "string" ? root : root();
+        if (!folder) {
+          res.statusCode = 404;
+          res.end();
+          return;
+        }
+        // Absolute, without a trailing separator, so `base + sep` is the prefix of
+        // everything inside it and of nothing beside it (`/a/frames-old`).
+        const base = resolvePath(folder);
         let decoded: string;
         try {
           decoded = decodeURIComponent((req.url ?? "/").split("?")[0]!);
@@ -357,8 +365,8 @@ const slangWasm = existsSync(join(slangWasmDirectory(), "slang-wasm.js"))
   ? slangWasmDirectory()
   : undefined;
 // SMLib in WebAssembly (the b-rep examples' kernel): SMLIB_DIR, or the build
-// `npm run setup` makes in its store (scripts/smlibTools.mjs).
-const smlib = smlibDirectory();
+// `npm run setup` makes in its store (scripts/smlibTools.mjs), looked up per
+// request, since editing the bindings moves the build.
 // Open CASCADE in WebAssembly (the CSG sample's second kernel, LGPL 2.1):
 // OCCT_DIR, or the build `npm run setup` fetches (scripts/occtTools.mjs).
 // Served, never bundled.
@@ -459,7 +467,7 @@ export default defineConfig({
       : []),
     ...(projGrids ? [projGridsPlugin("/proj-grids", projGrids)] : []),
     ...(slangWasm ? [serveDirectory("/slang-wasm", slangWasm)] : []),
-    ...(smlib ? [serveDirectory("/smlib", smlib)] : []),
+    serveDirectory("/smlib", smlibDirectory),
     ...(occt ? [serveDirectory("/occt", occt)] : []),
   ],
   // Worker bundles take their own plugins (the Basis glue is decoded there).
