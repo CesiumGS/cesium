@@ -18,10 +18,12 @@ function computePixelDatatype(context, preferFloat) {
   if (preferFloat && context.floatingPointTexture && context.colorBufferFloat) {
     return PixelDatatype.FLOAT;
   }
-  if (context.halfFloatingPointTexture) {
+  // The history is a render target, so the format must be color-renderable,
+  // not just sampleable.
+  if (context.halfFloatingPointTexture && context.colorBufferHalfFloat) {
     return PixelDatatype.HALF_FLOAT;
   }
-  if (context.floatingPointTexture) {
+  if (context.floatingPointTexture && context.colorBufferFloat) {
     return PixelDatatype.FLOAT;
   }
   return PixelDatatype.UNSIGNED_BYTE;
