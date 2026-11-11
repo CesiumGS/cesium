@@ -8,6 +8,12 @@
 
 - CesiumJS builds now target ES2022 instead of ES2020. Class fields are no longer rewritten into helper functions, so browsers must support ES2022 syntax such as public and private class fields. [#14023](https://github.com/CesiumGS/cesium/pull/14023)
 
+### @cesium/core
+
+#### Fixes :wrench:
+
+- Fixed `HermitePolynomialApproximation.interpolate` returning zero instead of the sample value for constant samples with zero derivatives. [#13934](https://github.com/CesiumGS/cesium/pull/13934)
+
 ### @cesium/engine
 
 #### Additions :tada:
