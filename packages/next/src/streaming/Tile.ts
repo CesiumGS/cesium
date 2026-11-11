@@ -457,6 +457,22 @@ export class Tile {
    * tile there took 0.5 s of AEC's load (r38).
    */
   get contentOrigin(): string {
+    if (this.originCache !== undefined) {
+      return this.originCache;
+    }
+    this.originCache = this.findOrigin();
+    return this.originCache;
+  }
+
+  /**
+   * The content's origin, computed once: `yieldToView` asks it of every
+   * tile in flight for every request that finds its origin full, and an
+   * absolute URI cost two URL parses each time (a ×10 exaggeration, which
+   * wants many more tiles, spent most of its load there).
+   */
+  private originCache?: string;
+
+  private findOrigin(): string {
     const uri = this.contentUri;
     if (uri === undefined) {
       return "";

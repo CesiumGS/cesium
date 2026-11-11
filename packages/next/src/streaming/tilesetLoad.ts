@@ -52,6 +52,14 @@ export function request(
   requests: Map<Tile, number>,
   purposes: Map<Tile, RequestPurpose>,
 ): void {
+  // A pass that found no caster to cancel for an origin finds none again:
+  // scanning every tile in flight per wanted tile made this quadratic.
+  const nothingToYield = new Set<string>();
+  const yieldOnce = (origin: string) => {
+    if (!nothingToYield.has(origin) && !yieldToView(tileset, origin)) {
+      nothingToYield.add(origin);
+    }
+  };
   const order = [...requests.entries()].sort(
     (a, b) => a[1] - b[1] || a[0].depth - b[0].depth,
   );
@@ -94,7 +102,7 @@ export function request(
     const origin = tile.contentOrigin;
     if (full.has(origin)) {
       if (!prefetch) {
-        yieldToView(tileset, origin);
+        yieldOnce(origin);
       }
       visibleWaiting ||=
         !prefetch && tileset.state.policy.prefetchAfterVisible === true;
@@ -104,7 +112,7 @@ export function request(
     if (!tileset.engine.requests.tryAcquire(origin)) {
       full.add(origin);
       if (!prefetch) {
-        yieldToView(tileset, origin);
+        yieldOnce(origin);
       }
       visibleWaiting ||=
         !prefetch && tileset.state.policy.prefetchAfterVisible === true;
@@ -141,7 +149,7 @@ export function request(
  * A view's request found the origin's window, which tilesets share, full:
  * cancels one shadow caster in flight there, whose slot comes back for it.
  */
-function yieldToView(owner: TilesetLoad, origin: string): void {
+function yieldToView(owner: TilesetLoad, origin: string): boolean {
   for (const tileset of owner.engine.tilesets) {
     for (const [tile, controller] of tileset.state.loading) {
       if (
@@ -150,10 +158,11 @@ function yieldToView(owner: TilesetLoad, origin: string): void {
         isCaster(tile)
       ) {
         cancelLoad(tileset, tile, controller);
-        return;
+        return true;
       }
     }
   }
+  return false;
 }
 
 async function loadContent(
