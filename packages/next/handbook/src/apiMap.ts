@@ -1139,7 +1139,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "writeBrepExtension",
     ],
     status: "new",
-    note: "The engine's own B-rep form as typed arrays, with exact evaluation, an exact NURBS split, a builder, a validator, the draft BENTLEY_brep glTF extension and a small CPU tessellator that turns it into meshes and edge lines. Nothing draws it on the GPU yet. A draft before the API review.",
+    note: "The engine's own B-rep form as typed arrays, with exact evaluation, an exact NURBS split, a builder, a validator, the draft BENTLEY_brep glTF extension and a small CPU tessellator that turns it into meshes and edge lines. The GPU draws it through the provisional, internal World.addBrep: spans diced each view to a pixel error, with trims tested per pixel (see the Tessellation tab). A draft before the API review.",
     source: "Overall plan, section 13.33",
   },
 
