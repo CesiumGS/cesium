@@ -9049,6 +9049,23 @@ Increments 1 to 3 come before b-rep step 5.
 - A warp's `forward` must write its Jacobian when asked: Newton and σ estimates use it.
 - The 1000 km tile's "4 cells" is 4 per axis (64 cells). The 0.7 ms was its one-cell fit. The 10 km tile's cold fit takes about 6 ms.
 
+**Proposal: no placement modes (owner's question, 2026-11-11). Needs the owner's decision.** The owner asked whether "rigid" and "reprojected" need to be separate. Can one represent the other? Is a rigid placement just an ordinary transform in the frame tree? Is `EXT_geospatial_crs_source` needed, and can placement have no modes?
+
+- **The answer is yes, no modes.** The mode says something the content's CRS already says, once it's declared fully:
+  - **The content is in an engineering CRS:** local Cartesian, ground distances, as a building or plant is authored. It's tied to the Earth by a declared similarity transform (a site transform, as IFC's `IfcMapConversion` is). That's a rigid edge in the frame tree, an ordinary transform, drawn with no warp. Today's "rigid".
+  - **The content is in a projected or geographic CRS:** grid coordinates, as civil alignments and survey data are. Its route to the body frame is a coordinate operation: a warp edge, fitted per tile (§13.26). Today's "reprojected".
+  - **The content is already in the body's frame:** ECEF or ITRF. That's the identity route. Today's "hosted".
+- So the engine never asks how to place content; it routes from the declared CRS, and whether the route is rigid is a property of the route. The one reason "rigid" existed for projected content was to approximate the reprojection near an anchor, sagging away from it. The fits make that approximation pointless: same drawing cost, no sag.
+- **The real distinction underneath is grid against ground distances.** That is a property of the CRS, not a mode. A design in a projected CRS has grid distances, scaled by the projection; reprojecting is right. A design meant to keep its dimensions on the ground belongs in an engineering CRS with a site transform. `IfcMapConversionScaled`'s scale factors are how IFC carries the difference.
+- **Consequences, if accepted:**
+  - Drop the proposal "A placement mode on the source CRS" (Spec extensions tab).
+  - `BENTLEY_engineering_frame` loses its placement-mode field and keeps the design CRS and site transform.
+  - `DesignPlacement.mode` goes, and `Georeference` (the API review's name) is just the route from the content's CRS to the body frame.
+  - `georeferenceTileset` reads only the CRS and the site transform.
+  - The design globe moves to the warp path; its projected content was "reprojected" anyway.
+- **`EXT_geospatial_crs_source` itself:** content still has to name its CRS, and neither 3D Tiles nor glTF can. So keep the existing extension for naming the source CRS, without adding a mode to it. Drop it only if 3D Tiles 2.0 gains a CRS of its own; then use that.
+- **Not built until the owner agrees:** it changes a public API (`DesignPlacement`, `georeferenceTileset`) and a declared extension.
+
 **Clip planes and caps: decided by the owner (2026-11-10).** Built as increment 8, once increments 2a and 3 have landed. 2a's varying swap provides the true point per fragment.
 
 1. **A clip is a world object, defined in a frame, which views opt into by mask.** One section cuts federated content and moves with its frame. Clips per item can be added later if a need appears.
