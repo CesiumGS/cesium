@@ -478,3 +478,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [TianHengZhuang](https://github.com/TianHengZhuang)
 - [Yu Cheng](https://github.com/KtzeAbyss)
 - [Peter Mayrhofer](https://github.com/mapeGeoinfo)
+- [CalamityXeroc](https://github.com/CalamityXeroc)
