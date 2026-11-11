@@ -9532,7 +9532,7 @@ Nothing stands in for TBB. SMLib's TBB code (parallel UV trim curves and tessell
       - Preparing CTC-05 (spans and trims) takes 1.5 s.
       - The trim tolerance of 1e-6 m gives about 66 pieces per round hole. Drawing needs only the display tolerance, since picks are refined exactly.
       - `runBrepTrims()` runs through the classification checks and the built and OCCT closed solids, then stalls at CTC-05's stage without an error.
-      - One screenshot showed black box faces in GPU mode, unconfirmed.
+      - One screenshot showed black box faces in GPU mode: it was captured before the scene finished loading (owner, 2026-11-11), not a bug.
   - **The performance and correctness pass (2026-11-11, on the same GPU, from a brief):**
     - _Indexed chunks._ A patch draw is now one indexed indirect draw over a static 16-bit index buffer: a chunk is 4 × 4 cells and 5 × 5 shared vertices (`CHUNK_CELLS` 4; the dice writes `indexCount` 96 and the chunk count, and zeroes word 4 of the arguments, the chunk counter, after reading it). A reversed face is the grid mirrored along u, so the static indices face outward; columns and rows past a span's counts repeat its last line, so their cells have no area. The vertex stage reads only the words it needs of a span (`loadSpan`): 48 words a vertex became about 22 for an analytic span.
       - 200 faces (550 spans, 5,150 cells): 211,200 vertex invocations (41 a cell) became 18,750 (3.6 a cell); the GPU frame 0.74 ms became 0.12 ms (the mesh's is 0.18 ms), of which the cull is 0.011, the dice 0.009 and the opaque pass 0.10.
