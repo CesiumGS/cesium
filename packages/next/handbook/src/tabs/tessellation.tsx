@@ -101,9 +101,9 @@ const PATHS = [
       <>
         Faces the GPU can't evaluate (a patch of degree above 3), as a CPU mesh
         inside <C>World.addBrep</C>. The fallback mesh beside a b-rep in a glTF
-        file, which the plan has a tiler write offline. The mesh that picks and
-        rays use until the b-rep adapter exists. The edge lines and overlays in
-        the first-look example. The reference in tests and spikes.
+        file, which the plan has a tiler write offline. The B-rep adapter's{" "}
+        <C>display(tolerance)</C> mesh. The edge lines and overlays in the
+        first-look example. The reference in tests and spikes.
       </>
     ),
   },
@@ -1057,15 +1057,24 @@ export function Tessellation() {
           </li>
           <li>
             <strong>Worker-side import.</strong> <C>World.addBrep</C> prepares
-            spans and trims on the calling thread: 115 to 120 ms for CTC-05, and
-            two to three times that cold. Nothing moves it to a worker, and it
-            repacks the whole form, which the CSG edit loop will feel.
+            spans and trims on the calling thread unless it is handed the
+            result: 115 to 120 ms for CTC-05, and two to three times that cold.
+            The kernel worker's protocol can run the same preparation beside the
+            conversion (<C>prepareGpuPatches</C>), and{" "}
+            <C>BrepOptions.prepared</C> takes it, which saves the main thread
+            most of that time. A form edited on the page, or from a host that
+            runs no kernel worker, still prepares on the calling thread, and
+            every edit repacks the whole form, which the CSG edit loop will
+            feel.
           </li>
           <li>
-            <strong>The b-rep adapter behind GeometryQueries.</strong> Until it
-            exists, the CPU tessellator feeds the mesh adapter that picks and
-            rays use, and a pick gives a face and no (u, v). The B-reps tab has
-            the plan.
+            <strong>The b-rep adapter behind a drawn b-rep.</strong> The b-rep
+            adapter (<C>brepGeometry</C>) exists and answers from a form, but
+            nothing wires it to <C>World.addBrep</C>. The CPU tessellator
+            doesn't feed the mesh adapter for a drawn b-rep: only tileset rays
+            and the client snap's occlusion test use the mesh adapter, so a pick
+            on a drawn b-rep gives a face and no (u, v). The B-reps tab has the
+            adapter.
           </li>
           <li>
             <strong>Degree above 3.</strong> A face with such a patch is a CPU

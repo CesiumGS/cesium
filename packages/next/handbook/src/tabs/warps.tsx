@@ -264,6 +264,14 @@ const MEASURES: Array<{ check: string; result: string; where: string }> = [
     where:
       "spikes/placement.html, NVIDIA Lovelace GPU (the older run: Apple M2)",
   },
+  {
+    check:
+      "Four kinds of item near the pole, in one view rooted on a ×10 height warp, each's bounding box in the image against the float64 route and the view's projection: a terrain tile with `h·n̂` (exact), the same tile fitted, an anchored billboard, and a pole with `warpAt: \"anchor\"`. Then the globe, its tiles generated in a worker.",
+    result:
+      "All four kinds within 0.58 px at ×10 and at ×4.6 (the scale at 0.4, one float, no refit of the exact tile); the limit is 1.5 px. The globe's 4,760 tile draws were drawn exact, none pending.",
+    where:
+      "spikes/warpGlobe.html, run with scripts/runSpike.mjs on this machine's GPU in Edge, 2026-11-11",
+  },
 ];
 
 const TESTS = [
@@ -302,6 +310,11 @@ const TESTS = [
     covers:
       "The Jacobian against central differences; cofactor normals perpendicular to placed triangles, folds included; the drawn position rebuilt from the window position and depth; the varyings' 13 locations.",
   },
+  {
+    file: "warpGlobe.test.ts",
+    covers:
+      "A terrain tile's `h·n̂` term: held a frame after its upload, then exact with no fit, and what the worker makes. An acceptance world of terrain, a tileset, a model with instances and a billboard under ×10 heights. `warpAt` on an item, both ways; the anchor's rotation from a Jacobian with its stretch dropped, for a draw and for an instance's matrix. The globe selected on drawn volumes, and asked for `h·n̂` only under a height scale on its own ellipsoid.",
+  },
 ];
 
 const NOT_BUILT = [
@@ -311,14 +324,14 @@ const NOT_BUILT = [
       "One warp context per world, fitted for the root of the world's first view. Another view with a different root shows the first view's draws, and the engine warns once.",
   },
   {
-    what: "Billboards, points and instanced draws",
+    what: "Point sets and a `ModelPool`'s instances",
     state:
-      'Drawn at their anchor\'s affine place, unwarped (`placementOf` says `fit: "unwarped"`). The owner\'s rule: content stretches per vertex, and a `warpAt: "anchor"` choice keeps a vehicle model or symbol its shape, forced for billboards and points. `warpAt` isn\'t in the code (increment 4).',
+      "Drawn at their anchor's affine place, unwarped, and the engine says so once: a point set's cull reads positions a placement doesn't reach, and a pool's instances are written by the GPU, which the CPU can't move by the route. The owner's rule forced points to `\"anchor\"`; they aren't warped at all yet.",
   },
   {
-    what: "The globe as a scene item",
+    what: "Exact terrain for any warp but a height scale",
     state:
-      "The globe takes no warp, so the acceptance test's \"globe and terrain included\" isn't met yet. Meshes and tilesets under an anchor are (increment 4). The owner also ruled that terrain keeps (u, v, height), so exaggeration and flattening are exact in height with no fit along it.",
+      "Terrain is exact only under a warp that declares `Warp.heightScale` on its own ellipsoid (WGS84, base height 0), through the `h·n̂` attribute. Flattening, a reprojection or any other warp is fitted per vertex like a tileset, to `max(1 mm, geometricError / 64)`.",
   },
   {
     what: "Picks by domain point",
@@ -418,10 +431,11 @@ export function Warps() {
     >
       <Note title="How much of this is built">
         <p>
-          Increments 1 to 3 of the plan are built: routes and the fitter, the
-          GPU form with its Jacobian and the varying swap, and drawn bounds. The
-          last section lists what isn't. Applications make the only warps there
-          are today, with the helpers below or by hand. The engine's own
+          Increments 1 to 4 of the plan are built: routes and the fitter, the
+          GPU form with its Jacobian and the varying swap, drawn bounds, and the
+          globe, billboards and instances under a warp, with <C>warpAt</C>. The
+          last section lists what isn&apos;t. Applications make the only warps
+          there are today, with the helpers below or by hand. The engine's own
           reprojections still go through the <C>Placement</C> kinds, which are
           converted to the same terms inside the engine.
         </p>
@@ -1042,6 +1056,128 @@ export function Warps() {
         />
       </Section>
 
+      <Section title="The globe, and content that keeps its shape">
+        <p>
+          Content stretches with a warp by default, which is what a reprojection
+          means. A vehicle or a symbol shouldn&apos;t: a car doesn&apos;t grow
+          ten times as tall because the terrain under it does. <C>warpAt</C>{" "}
+          says where the route is evaluated.
+        </p>
+        <ul>
+          <li>
+            <strong>
+              <C>warpAt: &quot;vertex&quot;</C>
+            </strong>
+            , the default: at every vertex, by the fit of the previous section.
+          </li>
+          <li>
+            <strong>
+              <C>warpAt: &quot;anchor&quot;</C>
+            </strong>
+            : once, at the draw&apos;s origin, in float64. The draw moves
+            rigidly by the route there, with the translation and the rotation of
+            the warp&apos;s Jacobian, the orthogonal factor of its polar
+            decomposition. Scale and shear are dropped. A ×10 exaggeration
+            leaves a car as tall as it was (the rotation is the identity), and a
+            reprojection turns it with the grid&apos;s convergence without
+            scaling it. With no warp in the route the result is the identity.
+            The draw&apos;s term is an exact one-cell lattice, so it costs the
+            vertex stage what a fit does and nothing to fit. A slider redoes it,
+            since the rotation isn&apos;t linear in a scale: one route
+            evaluation a draw.
+          </li>
+        </ul>
+        <DataTable
+          label="What each kind of content does under a warp"
+          columns={[
+            { head: "Content", cell: (r) => <Ticks text={r.what} /> },
+            { head: "Evaluated", cell: (r) => <Ticks text={r.at} /> },
+            { head: "How", cell: (r) => <Ticks text={r.how} /> },
+          ]}
+          rows={[
+            {
+              what: "A mesh, a tileset's tiles",
+              at: '`"vertex"`, or `"anchor"` when the item asks',
+              how: "`SceneItemOptions.warpAt` and a setter, which refits the loaded tiles. `World.setWarpAt(draw, at, origin?)` and `DrawOptions.warpAt` are the draw's. Give a model's draws one `origin` and the whole model moves as one. `World.drawWarpAt` says what was asked and what is drawn.",
+            },
+            {
+              what: "A billboard",
+              at: '`"anchor"`, forced',
+              how: "Its anchor goes through the route and its corners stay pixels on screen.",
+            },
+            {
+              what: "Instanced draws",
+              at: '`"anchor"`, per instance, forced',
+              how: "Each instance's origin goes through the route on the CPU, in slices within the frame's budget, and its matrix in the instance table is rewritten. The cull and vertex stages already read that table, so a warp costs them nothing. `World.setInstance` writes the application's matrix again, and the route moves it afresh.",
+            },
+            {
+              what: "A point set, a `ModelPool`'s instances",
+              at: "Not warped",
+              how: "Drawn at their anchor's affine place. The engine says so once.",
+            },
+            {
+              what: "The globe's terrain",
+              at: '`"vertex"`, exact under a height scale',
+              how: "The next paragraph.",
+            },
+          ]}
+        />
+        <h3>The globe under a warp</h3>
+        <p>
+          <C>Engine.addEllipsoid</C>&apos;s globe is placed like any content
+          under an anchor, so its tiles are selected on drawn volumes and fitted
+          per vertex, and the horizon test is off. For a vertical exaggeration
+          that is wasteful, since the owner ruled that terrain keeps its (u, v,
+          height). A warp may declare itself one with the{" "}
+          <C>Warp.heightScale</C> marker: the radii of its reference ellipsoid,
+          its factor and its base height. The helper <C>verticalExaggeration</C>{" "}
+          sets it for an ellipsoid or a sphere. When the route is one
+          height-scale warp followed by rigid steps, on the ellipsoid a terrain
+          tile was made on (WGS84, base height 0), the tile is exaggerated
+          exactly, with no fit:
+        </p>
+        <ul>
+          <li>
+            Each vertex carries <C>h·n̂</C>, its geodetic height times the
+            ellipsoid&apos;s normal there, as the <C>_HEIGHT_NORMAL</C>{" "}
+            attribute. The globe asks its tile source, which generates in a
+            worker, for it only while the anchor&apos;s route is a height scale
+            on its own ellipsoid.
+          </li>
+          <li>
+            The route&apos;s term is that attribute times (k − 1), added to the
+            vertex. The slider is one float, the term&apos;s weight, at scale 1
+            or 0.4 alike.
+          </li>
+          <li>
+            A tile without the attribute, or made on another ellipsoid, is
+            fitted like a tileset&apos;s, and the draw is held until its first
+            term lands.
+          </li>
+        </ul>
+        <p>
+          <strong>The spike.</strong> A terrain tile with <C>h·n̂</C>, the same
+          tile fitted, an anchored billboard and a pole kept upright are drawn
+          in a view rooted on a ×10 warp. Each is measured in the image against
+          the float64 route: all four kinds are within 0.58 px at ×10 and at
+          ×4.6, the scale at 0.4 with one float written. Then the globe&apos;s
+          tiles, generated in a worker, must be drawn under the warp: 4,760 tile
+          draws were drawn exact, none pending. The spike&apos;s checks run
+          headless on a GPU with{" "}
+          <C>node scripts/runSpike.mjs &lt;url&gt; &lt;fn&gt;</C>.
+        </p>
+        <Written
+          from={
+            <>
+              <C>src/scene/warpAnchor.ts</C>, <C>src/scene/world/warps.ts</C>,{" "}
+              <C>src/globe/heightNormal.ts</C>, <C>src/camera/route.ts</C>,{" "}
+              <C>spikes/warpGlobe.ts</C> and <C>test/warpGlobe.test.ts</C>
+            </>
+          }
+          on="2026-11-11"
+        />
+      </Section>
+
       <Section title="Accuracy">
         <p>
           A stated accuracy never claims more than its inputs support. Each
@@ -1180,11 +1316,12 @@ export function Warps() {
           from={
             <>
               <C>spikes/warpRoute.ts</C>, <C>spikes/placementNormals.ts</C>,{" "}
-              <C>spikes/placement.ts</C> and the tests above, with the
-              measurements recorded in the plan, section 13.26
+              <C>spikes/placement.ts</C>, <C>spikes/warpGlobe.ts</C> and the
+              tests above, with the measurements recorded in the plan, section
+              13.26
             </>
           }
-          on="2026-11-10"
+          on="2026-11-11"
         />
       </Section>
     </Page>

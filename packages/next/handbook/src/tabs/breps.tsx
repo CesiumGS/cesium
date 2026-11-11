@@ -62,9 +62,8 @@ const FLOW: BoardStep[] = [
     id: "adapter",
     lane: 3,
     row: 1,
-    planned: true,
     title: "B-rep adapter",
-    body: "Answers picks, snaps and measurements from the form. Being built.",
+    body: "Answers rays, closest points and pick refinement from the form, with accuracy as terms. Built, a draft: not yet behind a drawn B-rep.",
   },
 ];
 
@@ -101,9 +100,8 @@ const LAYERS: BoardStep[] = [
     id: "brep",
     lane: 2,
     row: 2,
-    planned: true,
     title: "B-rep adapter",
-    body: "Chooses a route for each query: closed form, Newton steps on patches and edges, a kernel, or a mesh. Being built.",
+    body: "Chooses a route for each query: closed form, or Newton steps on patches and edges. A kernel or a mesh would be more routes, and aren't built. Built, a draft.",
   },
   {
     id: "server",
@@ -266,27 +264,31 @@ const STEP_PARTS = [
 const ROUTES = [
   {
     route: "Closed form",
-    for: "Closest points and ray hits on analytic surfaces, and on SMLib's, through the surface's identity: in 3D, with no (u, v) needed.",
-    exact: "Exact in float64, to the identity",
-    state: "Being built. The exact evaluators exist.",
+    for: "Ray hits and closest points on planes, cylinders, cones, spheres and tori: quadratics, quartic roots for tori, and the surfaces' stationary points. Edges that are lines too.",
+    exact: "Exact in float64, to the surface",
+    state:
+      "Built. The answer names its route, for example closed form, cylinder.",
   },
   {
     route: "Subdivision and Newton steps",
-    for: "Free-form patches. The control net bounds each patch exactly, so a hierarchy over the nets can reject most of them.",
-    exact: "Exact to the patches",
-    state: "Being built. The Bernstein bounds exist, for tessellation.",
+    for: "Bézier patches (rays: subdivision, then Newton; closest points: branch and bound, then Newton) and edge curves (projection or bisection, then Newton). A hierarchy over each face's box, and each patch's control net, keeps a query to the surfaces near it.",
+    exact: "Exact to the patches and curves",
+    state:
+      "Built. The answer's route reads Newton on Bézier patch or Newton on edge curve. A ray that doesn't settle is unknown.",
   },
   {
     route: "A kernel call",
     for: "Intersections, sections, clashes, healing, and areas and volumes.",
     exact: "The kernel's, with its own tolerance",
-    state: "Planned. The kernels run in workers but answer no queries yet.",
+    state:
+      "Planned. The kernels run in workers (provisional) but answer no queries yet.",
   },
   {
     route: "A mesh",
     for: "Anything, at once, while a better answer is on its way.",
     exact: "Provisional, with the tessellation's error",
-    state: "The mesh adapter exists. Nothing feeds it a drawn B-rep yet.",
+    state:
+      "Planned as a route. The mesh adapter exists, and nothing feeds it a drawn B-rep. The B-rep adapter's display is a reference mesh, not a route.",
   },
 ];
 
@@ -299,7 +301,7 @@ const TERMS = [
   {
     term: "Representation error",
     composes: "Worst-case bound",
-    from: "The form's surface errors, and approximated curves",
+    from: "The form's surface errors, and approximated curves. Both converters write a surface error of 0, so today it is only an edge's, from Open CASCADE's cubic approximation",
   },
   {
     term: "Display tolerance",
@@ -343,25 +345,25 @@ const QUERIES = [
     query: "bounds",
     mesh: "Box of the placed vertices",
     field: "The field's box",
-    brep: "Patch hulls",
+    brep: "From the form, not a tessellation (formBounds): holds the faces within 0.1% of the part's size",
   },
   {
     query: "rayHit",
     mesh: "Nearest triangle, exact for the mesh",
     field: "Sphere tracing; unknown if it runs out of steps",
-    brep: "From the pick's (u, v), one Newton step",
+    brep: "Closed forms, or subdivision and Newton on patches; unknown if one doesn't settle. Carries (u, v)",
   },
   {
     query: "closestPoint",
     mesh: "Vertex, edge or face it lands on",
     field: "Projection along the gradient",
-    brep: "Closed form, or subdivision and Newton",
+    brep: "A face, edge or vertex: closed form, branch and bound with Newton, or the curve's projection. Carries (u, v) or t",
   },
   {
     query: "segmentDistance",
     mesh: "Exact, for near misses",
     field: "Sampled: an upper bound",
-    brep: "Subdivision",
+    brep: "Zero on a crossing, else 33 closest points along the segment with the minima refined: not exact, a narrow dip can be missed",
   },
   {
     query: "entity",
@@ -456,27 +458,34 @@ const STATUS: { piece: string; state: State; where: string }[] = [
     where: "src/brep/formBounds.ts",
   },
   {
-    piece: "GeometryQueries, with mesh and distance-field adapters",
+    piece: "GeometryQueries, with mesh, B-rep and distance-field adapters",
     state: "Draft",
-    where: "src/geometry. Only the mesh adapter is used",
+    where:
+      "src/geometry. The mesh adapter serves tileset rays and snaps; the B-rep adapter isn't behind a drawn B-rep yet",
   },
   {
     piece: "The B-rep adapter",
-    state: "Being built",
+    state: "Draft",
     where:
-      "A brepGeometry beside meshGeometry, in src/geometry, uncommitted when this was written. Not wired to World.addBrep",
+      "brepGeometry in src/geometry/brep.ts. Rays, closest points, segment distance, entities, bounds and display, answered from the form. Not wired to World.addBrep",
   },
   {
     piece: "Accuracy as terms that name their route",
-    state: "Being built",
+    state: "Draft",
     where:
-      "GeometryAccuracy is still meters, exact and note. The adapter writes its terms into the note and adds a route",
+      "The note lists model tolerance, surface and edge terms, and GeometryAccuracy has an optional route. Only the B-rep adapter fills them. The bound-and-σ pair and display tolerance are open",
   },
   {
-    piece: "Exact picks: the (u, v) readback and its refinement",
-    state: "Being built",
+    piece: "Exact picks: refining a pick onto the face",
+    state: "Draft",
     where:
-      "The adapter takes a pick hint and refines it. The GPU doesn't write (u, v) yet. The example previews the refinement (examples/brep-first-look/exact.ts)",
+      "refinePick(face, hint) in the B-rep adapter: Newton from the pick's (u, v), or the nearest point to its point. The example previews the same refinement (examples/brep-first-look/exact.ts)",
+  },
+  {
+    piece: "Exact picks: the GPU writes (u, v)",
+    state: "Planned",
+    where:
+      "The pick pass writes the face's feature ID only, so nothing calls refinePick with a real pick yet",
   },
   {
     piece: "Distance between two geometries, across reference frames",
@@ -521,7 +530,8 @@ const INTERFACE = `interface GeometryQueries {
 interface GeometryAccuracy {
   readonly meters: number;
   readonly exact: boolean;
-  readonly note: string;
+  readonly note: string;   // the composed terms, and how it was found
+  readonly route?: string; // B-reps: "closed form, cylinder", ...
 }`;
 
 export function Breps() {
@@ -533,10 +543,10 @@ export function Breps() {
         <>
           How the engine holds, draws and queries exact CAD geometry: one render
           form for B-reps, kernels that stay outside the engine and hand it that
-          form, and one query interface over meshes, distance fields and, next,
-          B-reps. The form, the converters for two kernels, STEP import and
-          drawing are built. The B-rep query adapter, with accuracy as composed
-          terms and exact picks, is being built and isn't in yet.
+          form, and one query interface over meshes, distance fields and B-reps.
+          The form, the converters for two kernels, STEP import, drawing and the
+          B-rep query adapter, with accuracy as composed terms, are built. Exact
+          picks need the GPU to write (u, v), which it doesn't yet.
         </>
       }
     >
@@ -545,12 +555,13 @@ export function Breps() {
           Built: the render form and its glTF extension (a draft), SMLib and
           Open CASCADE converting into it, STEP import and export, kernels in
           workers (provisional), and GPU drawing of every face. Drafted: the
-          query interface. Only its mesh adapter is in use, for tileset rays and
-          snap occlusion. Being built, and uncommitted when this was written:
-          the B-rep adapter, with accuracy as terms and a refined pick. The
-          sections below describe its design, as planned. Planned: everything
-          that crosses representations or reference frames. The table at the end
-          of this page has each piece.
+          query interface, with mesh, B-rep and distance-field adapters. The
+          mesh adapter is used, for tileset rays and snap occlusion. No drawn
+          B-rep goes through the B-rep adapter yet: it answers from a form
+          handed to it, and <C>World.addBrep</C> doesn&apos;t wire it in.
+          Planned: a kernel or a server as more routes, the GPU writing (u, v),
+          and everything that crosses representations or reference frames. The
+          table at the end of this page has each piece.
         </p>
       </Note>
 
@@ -694,7 +705,7 @@ export function Breps() {
           repository, the dev server serves them at <C>/smlib/</C> and{" "}
           <C>/occt/</C>, and a page loads one only when asked.
         </p>
-        <Figure caption="From kernels to the engine. The dashed card is planned.">
+        <Figure caption="From kernels to the engine.">
           <Board
             label="Kernels to the render form to the engine"
             lanes={["Source", "Conversion", "Form", "Engine"]}
@@ -944,7 +955,7 @@ export function Breps() {
             { head: "Query", cell: (r) => <C>{r.query}</C> },
             { head: "Mesh (built)", cell: (r) => r.mesh },
             { head: "Distance field (drafted)", cell: (r) => r.field },
-            { head: "B-rep (being built)", cell: (r) => r.brep },
+            { head: "B-rep (built)", cell: (r) => r.brep },
           ]}
           rows={QUERIES}
         />
@@ -969,10 +980,12 @@ export function Breps() {
           Everything the render form and the kernels are sits below this
           interface. Picks, snapping, measurement and the scene layer see one
           interface for each object and never the split behind it. The B-rep
-          adapter (<C>brepGeometry</C>, beside <C>meshGeometry</C> and{" "}
-          <C>sdfGeometry</C>) is being built. It holds the form with its
-          identities, and would take a kernel or a server as more routes. It
-          chooses how to answer each query, and callers don't.
+          adapter (
+          <C>brepGeometry(form, {"{ matrix, origin, modelTolerance }"})</C> in{" "}
+          <C>src/geometry/brep.ts</C>, beside <C>meshGeometry</C> and{" "}
+          <C>sdfGeometry</C>) is built. It answers from the form, never from a
+          mesh, and callers don't choose how: the adapter picks a route per
+          surface. A kernel or a server would be more routes, and aren't built.
         </p>
         <DataTable
           label="The routes a B-rep adapter chooses between"
@@ -985,25 +998,62 @@ export function Breps() {
           rows={ROUTES}
         />
         <p>
-          The GPU path never goes through the interface: it reads the form
-          directly. The interface keeps <C>display(tolerance)</C> only as a
-          convenience for consumers that want triangles, such as fallbacks,
-          exports and tests. The built mesh adapter serves tilesets today. The
-          engine has no B-rep behind any adapter yet, so a pick on a drawn one
-          returns its face and not an exact point.
+          A hierarchy over each face's box (analytic faces by intervals, Bézier
+          faces by their control nets' hulls) is built on the first query. A
+          face's trim is the tessellator's polygon, except within twice its sag
+          of a pcurve, where the pcurves decide. Each answer names its domain
+          point: <C>uv</C> on a face, or <C>t</C> along an edge, 0 at its start
+          to 1 at its end. <C>refinePick(face, hint)</C> is the refine-a-pick
+          entry: from a hint's (u, v), Newton onto the face's surface; from its
+          point, the nearest point on the face; else the surface at its (u, v).
+          It returns the exact position, normal and (u, v), whether that lies
+          inside the trim, and the accuracy.
+        </p>
+        <DataTable
+          label="The B-rep adapter measured on NIST's CTC-05"
+          columns={[
+            { head: "Query", cell: (r) => r.query },
+            { head: "Time", cell: (r) => r.time, numeric: true },
+          ]}
+          rows={[
+            { query: "rayHit", time: "0.03 to 0.06 ms" },
+            { query: "closestPoint", time: "About 1.1 ms" },
+            { query: "refinePick", time: "About 0.12 ms" },
+            { query: "segmentDistance", time: "About 50 ms" },
+            {
+              query: "The first query, which builds the hierarchy",
+              time: "0.13 to 0.16 s",
+            },
+          ]}
+        />
+        <p>
+          CTC-05 is a real CAD part of 208 faces, imported from STEP with Open
+          CASCADE. The times are warm runs in Node on a development machine and
+          will vary. <C>segmentDistance</C> is the slow one: 33 closest points
+          and their refinements. The GPU path never goes through the interface:
+          it reads the form directly. The interface keeps{" "}
+          <C>display(tolerance)</C> only as a convenience for consumers that
+          want triangles, such as fallbacks, exports and tests. The mesh adapter
+          serves tilesets today. The engine has no B-rep behind any adapter yet,
+          so a pick on a drawn one returns its face and not an exact point.
         </p>
 
         <h3>Accuracy as composed terms</h3>
         <p>
           Today an answer's accuracy is one number in metres, a flag for exact,
-          and a note. The plan replaces it with terms, and the answer names the
-          route it took: the source, the form, a mesh, or a server. The adapter
-          being built moves toward that: it writes the model tolerance,
-          representation error and edge tolerance into the note, and adds the
-          route as its own field. The mesh adapter is the degenerate case, where
-          the source, form and mesh are one, so its terms collapse to what it
-          reports now. A server is one more route, and upgrades a provisional
-          answer when it arrives.
+          a note, and an optional <C>route</C>. The plan replaces it with terms,
+          and the answer names the route it took: the source, the form, a mesh,
+          or a server. The B-rep adapter moves toward that: its note lists the
+          model tolerance (0.1 µm by default, Open CASCADE's confusion), the
+          surface's representation error and the edge's tolerance, each in
+          placed metres, and its <C>route</C> field says how the answer was
+          found, such as closed form, cylinder, or Newton on Bézier patch. The{" "}
+          <C>meters</C> figure is their sum. Both converters write a surface
+          error of 0, so the only representation error today is on edges, from
+          Open CASCADE's cubic approximation of curves above degree 3. The mesh
+          adapter is the degenerate case, where the source, form and mesh are
+          one, so its terms collapse to what it reports now. A server is one
+          more route, and upgrades a provisional answer when it arrives.
         </p>
         <DataTable
           label="The terms of an answer's accuracy"
@@ -1064,10 +1114,10 @@ export function Breps() {
           a hit or closest point carries (u, v) where the geometry has them. The
           pick pass writes the face's feature ID. Writing (u, v), and refining
           it to an exact point with its accuracy as an entry beside{" "}
-          <C>closestPoint</C>, is being built: the adapter takes a pick hint,
-          and the GPU doesn't write (u, v) yet. The example previews the
-          refinement with Gauss–Newton steps in (u, v). Fields and the
-          proposal's morph targets aren't built.
+          <C>closestPoint</C>, is half built: <C>refinePick</C> on the B-rep
+          adapter takes a pick hint, and the GPU doesn't write (u, v) yet. The
+          example previews the refinement with Gauss–Newton steps in (u, v).
+          Fields and the proposal's morph targets aren't built.
         </p>
 
         <h3>One use that crosses representations (planned)</h3>
@@ -1088,9 +1138,9 @@ export function Breps() {
           tile's geometric error as a term, a distance-between-two-geometries
           query (a closest pair, with an entity on each side) beside{" "}
           <C>segmentDistance</C>, and the frames layer's transform accuracy
-          feeding the terms. Apart from the adapter being built, none of that
-          exists. It is the example to write once the adapter lands. The{" "}
-          <a href="#/frames">Frame tree</a> and{" "}
+          feeding the terms. Apart from the B-rep adapter, none of that exists,
+          and the adapter has no drawn B-rep behind it yet. It is the example to
+          write once one does. The <a href="#/frames">Frame tree</a> and{" "}
           <a href="#/precision">Precision and accuracy</a> tabs have the frames
           side.
         </p>
@@ -1193,16 +1243,17 @@ export function Breps() {
         <ul>
           <li>
             <strong>Picks.</strong> The pick fragment writes the face ID, and
-            the plan has it write (u, v) too. The CPU would then evaluate the
-            surface there in float64 with one Newton step, so a pick is exact
-            with no ray-surface solve. Today a pick returns the face; the (u, v)
-            readback isn't built.
+            the plan has it write (u, v) too. The CPU then evaluates the surface
+            there in float64 with a Newton step, so a pick is exact with no
+            ray-surface solve. <C>refinePick</C> is built, and the (u, v)
+            readback isn't: today a pick returns the face.
           </li>
           <li>
             <strong>Closest points and ray hits.</strong> Closed form on
-            analytic surfaces; subdivision and Newton steps on Bézier patches,
-            in a worker. A hierarchy over the patches' control nets would skip
-            most of them, since a net's hull holds its patch exactly.
+            analytic surfaces; subdivision and Newton steps on Bézier patches. A
+            hierarchy over the faces' and patches' boxes skips most of them,
+            since a net's hull holds its patch exactly. Built, synchronous, on
+            the calling thread. A worker is planned.
           </li>
           <li>
             <strong>Areas, volumes and lengths.</strong> Quadrature on patches,
@@ -1227,8 +1278,8 @@ export function Breps() {
           </li>
         </ul>
         <p>
-          Most of this is planned. The adapter being built covers closest points
-          and ray hits on faces and edges, and the refined pick.
+          Most of this is planned. The B-rep adapter covers closest points, ray
+          hits, the distance from a segment, and the refined pick.
         </p>
       </Section>
 
