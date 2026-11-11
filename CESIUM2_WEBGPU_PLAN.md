@@ -8985,11 +8985,11 @@ _Revised increments, replacing the list above:_
 8. Clips and caps, as decided below:
    - **8a, world clips.** Done (2026-11-11).
    - **8b, caps.** Done (2026-11-11).
-   - **8c, curved clips.** In progress.
+   - **8c, curved clips.** Done (2026-11-11).
 
 Increments 1 to 3 come before b-rep step 5.
 
-**Overnight summary (2026-11-11).** Placement increments 4 to 7, 8a and 8b landed as five commits, each with a GPU spike or Node tests. Picks report a domain point and the exact true point with no inverse of any warp (5); measurements and snaps are in true frames, and the drawn distance is named as one (6); world clips are tested per fragment in true or drawn space (8a); the vertical exaggeration example holds true heights constant across ×1 to ×10 with no refit on the slider (7). Caps landed with 8b: exact for b-reps, joined loops for meshes, and the example's engine gaps closed with it. Increment 8c (curved clips) is in progress, and the CSG sample's core (§13.33) was started ahead of its date. The handbook gained its clipping deep dive. The one owner decision pending is the proposal below, "no placement modes".
+**Overnight summary (2026-11-11).** Placement increments 4 to 7, 8a, 8b and 8c landed, each with a GPU spike or Node tests. Picks report a domain point and the exact true point with no inverse of any warp (5); measurements and snaps are in true frames, and the drawn distance is named as one (6); world clips are tested per fragment in true or drawn space (8a); the vertical exaggeration example holds true heights constant across ×1 to ×10 with no refit on the slider (7). Caps landed with 8b: exact for b-reps, joined loops for meshes, and the example's engine gaps closed with it. Curved clips landed with 8c: a clip across a non-rigid route is cut along a signed distance fitted per draw (spike 7 of 7). The CSG sample's core (§13.33) was built ahead of its date: a tree of leaves and booleans evaluated in a worker through either kernel, with picks naming the leaf and drag previews (the four-view layout and fillets wait). The handbook gained its clipping deep dive, updated for 8c. The one owner decision pending is the proposal below, "no placement modes".
 
 **Increment 1, in progress (2026-11-10).** Slices A to C are done. Each was implemented by a Sonnet 5.5 agent from a brief, against a contract committed first (`camera/route.ts`, `scene/warpTerms.ts`).
 
@@ -9100,7 +9100,7 @@ True heights stay put while the drawn ones follow the slider. `test/verticalExag
 - **Lazy pipelines.** A view without clips keeps the unclipped pipelines and early depth. The clipped variant of each pipeline and bundle (`clippedBundle`) is made when a view first uses a clip, so nothing recompiles when a clip's shapes change.
 - **Queries.** Every pick and snap takes `clips: "view" | ClipSet | "none"` (`ClipsOption`; a list of sets too), `clipFilter` and `clipSetKeeps` test points in float64. Picks and snaps default to the view's clips.
 - **The spike** (`spikes/clips.html`, NVIDIA GPU) passes 10 of 10. On a ×10 tower, a plane cut in the true frame lands at row 287, against the route's 287.9. Tested on the drawn point it would be 345. The Node test is `test/clips.test.ts`.
-- **Deferred:** curved clips (a route rigid on neither side, which waits for the `.w` channel fit: increment 8c, in progress), `TerrainClips` as clip shapes, exemptions (the styling language's), and caps (increment 8b, done below).
+- **Deferred:** curved clips (a route rigid on neither side: increment 8c, done below), `TerrainClips` as clip shapes, exemptions (the styling language's), and caps (increment 8b, done below).
 
 **Increment 8b is done (2026-11-11).** Caps close a cut: exact for a b-rep, real geometry for a mesh.
 
@@ -9122,6 +9122,16 @@ True heights stay put while the drawn ones follow the slider. `test/verticalExag
 - **Checked.** `spikes/caps.html` passes 7 of 7 on the GPU (a capped cylinder following a moving clip, a block with a bore, a closed mesh, an open wall's section line, a mesh split across two tiles). Node tests: `test/brepSection*.test.ts`, `test/caps.test.ts`, `test/meshCaps.test.ts`. On NIST's CTC-05 (208 faces, through Open CASCADE), caps along each axis and aslant close and validate, and the middle ones match a ray oracle to about 0.3% (the test allows 1%).
 - **Not built:** the compute section pass, caps for polygon and multi-shape sets, caps made automatically from `addClip` and a tileset's tiles (an application creates `BrepCaps` and `MeshCaps` and feeds them), and hatching.
 - The handbook's clipping deep dive is written (the Clipping tab).
+
+**Increment 8c is done (2026-11-11, `391ffca72c`).** A clip across a non-rigid route is cut along a signed distance fitted per draw.
+
+- **Curved.** A clip set whose frame reaches neither the content's true side nor the render root rigidly is curved (`src/scene/world/curvedClips.ts`).
+- **Evaluated in float64, fitted as a lattice.** Per draw, its signed distance is evaluated in float64 (model to anchor, along the route, into the set's frame) and fitted as a scalar cubic lattice in the placement rows' `.w`. A draw without a lattice gets a weight-0 carrier lattice, at most 4 cells per axis.
+- **On the GPU.** The vertex stage evaluates the lattice and passes it in `airTransmittance.w`, which takes no extra location. The fragment stage discards above 0. Picks share it, and `clipFilter` routes in float64.
+- **The spike** (`spikes/curvedClips.html`) passes 7 of 7. A wavy plane on a 24 m plate fits to 4.6 cm, about half a pixel. A box window's kinks fit to 1.49 m. The ×10 plate is cut on its true surface. The Node test is `test/curvedClips.test.ts`.
+- **Limits:** one curved field per world (one view's curved sets combine by max, and differing views are reported); moving a curved clip refits every draw within the per-frame budget; a warp-scale change after the fit isn't followed; billboards, points and instances aren't cut by curved clips; a draw already at 3 terms with no lattice has no room for a carrier; and a draw is uncut until its field lands.
+- **Not done:** folding `TerrainClips` into clip shapes (it carries translucency, holes, pick stops and `sampleHeight` semantics), and `clips` on `RayQuery`, the terrain's ray and the draw ray backends.
+- The Clipping tab is updated.
 
 **Engine gaps closed (2026-11-11).** The vertical exaggeration example's gaps, closed in the same commit as 8b (7326cfa3c4), and its workarounds removed (`fits.ts` is gone).
 
@@ -9463,6 +9473,17 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 - **A four-view layout (owner, 2026-11-10):** CAD's quad view in third-angle projection, Top above Front, Right beside Front, and an isometric perspective in the fourth corner. Four views in one canvas by viewports; the three projected views linked (one target and zoom, and a pan moving the matching axis in the others) while the perspective orbits on its own; a pick in any view highlights the same face and tree node in all four. It exercises an application's comparison views (§13.34) on the engine's linked views and viewports, and 5d's orthographic camera; until 5d lands, the projected views use a very long lens or the layout waits.
 - **First, a spike:** box minus cylinder in each kernel in WebAssembly, converted to `BrepForm` and drawn in the first-look example. It measures each boolean's time and checks that both results validate, and for OCCT records the build's size (a full build is tens of megabytes; a custom one with modeling and STEP only is smaller), whether it needs threads and so cross-origin isolation, and how actively its WebAssembly build is maintained. Its conversion (SMLib's b-rep to `BrepForm`) is the one `fromUsd` needs too, so step 8's start moves here, with SMLib's pinned setup step and build script (above).
 - **Open:** both kernels' robustness on real models (their first measures are in "CSG spike, SMLib's half" and "OCCT's half" below, and both answer face provenance); the worker protocol for a re-evaluated solid; OCCT's licence (LGPL 2.1 with Open CASCADE's exception, unlike SMLib's Apache 2.0): kept as a separate, lazily loaded WebAssembly module in the example only, and checked before anything built with it is distributed. If OCCT proves too heavy, or its licence doesn't fit, the sample runs on SMLib alone and the interface costs nothing extra.
+
+**Core built early (2026-11-11, `70c9917e9e`).** The sample's core is in `examples/csg`, ahead of its 2026-11-13 start.
+
+- **The tree** (`tree.ts`): box, cylinder, sphere, cone and torus leaves with parameters, a rotation and a move; union, difference and intersection nodes that fold left to right; a JSON round trip.
+- **The panel:** a kernel switch (SMLib or OCCT), tree editing, an inspector, timings and validity.
+- **Worker evaluation:** the kernel protocol has a new `evaluate` request. A leaf's tag survives every boolean, by SMLib's face tags and by OCCT's history.
+- **Picks to the tree:** a pick names the leaf that made the face ("Face 9: plane, made by Upright"), and selecting a row lights its faces.
+- **Drag previews:** an orange wire proxy while a parameter is dragged, re-evaluation at most every 120 ms, and a newer request supersedes an older one.
+- **New kernel functions:** SMLib's `smlib_rotate` binding (it needs the SMLib rebuild that `npm run setup` does), and OCCT's cone, made by revolving a profile.
+- **Timings:** an 8-boolean bracket takes about 50 ms warm and 250 to 450 ms cold in SMLib, and about 240 ms in OCCT.
+- **Not built:** the four-view layout (it needs 5d's orthographic camera) and fillets.
 
 **Also (§13.34):** step 3's queries respect clipping and read scalar fields, step 5 draws section caps on B-reps, and step 7's exact picks work through a cut.
 

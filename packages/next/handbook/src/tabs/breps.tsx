@@ -499,8 +499,9 @@ const STATUS: { piece: string; state: State; where: string }[] = [
   },
   {
     piece: "The kernel interface, and the CSG sample",
-    state: "Planned",
-    where: "Starts 2026-11-13",
+    state: "Provisional",
+    where:
+      "examples/csg: the core is built; the four-view layout and fillets are not",
   },
   {
     piece: "BrepSource.fromUsd, the tiler, and editing overrides",
@@ -876,13 +877,14 @@ export function Breps() {
         <p>
           A kernel call blocks for tens to hundreds of milliseconds, so the
           kernels run in Web Workers behind a typed protocol. It is provisional,
-          and the CSG sample, the first real user, will reshape it.{" "}
-          <C>KernelClient</C> (<C>kernelClient.ts</C>) makes one worker on its
-          first call, and a client per kernel runs both at once, since SMLib's
-          context isn't thread-safe and Open CASCADE's is heavy.{" "}
-          <C>KernelHost</C> (<C>kernelHost.ts</C>) runs the requests of{" "}
-          <C>kernelProtocol.ts</C>: load, import a STEP file, a boolean of two
-          primitives, and cancel.
+          and the CSG sample, its first real user, has already added an{" "}
+          <C>evaluate</C> request to it. <C>KernelClient</C> (
+          <C>kernelClient.ts</C>) makes one worker on its first call, and a
+          client per kernel runs both at once, since SMLib's context isn't
+          thread-safe and Open CASCADE's is heavy. <C>KernelHost</C> (
+          <C>kernelHost.ts</C>) runs the requests of <C>kernelProtocol.ts</C>:
+          load, import a STEP file, a boolean of two primitives, evaluate a
+          tree, and cancel.
         </p>
         <ul>
           <li>

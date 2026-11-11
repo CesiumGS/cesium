@@ -51,8 +51,8 @@ const SPACES = [
   {
     scene: "The same scene",
     named: "A frame on the content's side",
-    tested: "Neither: a curved surface in the scene",
-    why: "Rigid on neither side. Increment 8c, in progress. Today the view leaves the set out and says so once.",
+    tested: "A fitted signed distance, per draw",
+    why: "Rigid on neither side, so the clip is a curved surface in the content's own coordinates (increment 8c). Its distance is evaluated in float64 and fitted as a lattice.",
   },
 ];
 
@@ -352,19 +352,40 @@ const SPACE_STEPS = [
     body: (
       <p>
         Neither route is rigid, so the clip is a curved surface in the scene.
-        Increment 8c fits its signed distance per tile. Until it lands, the set
-        is left out of the view&apos;s table and the engine reports it once.
+        Per draw, the CPU evaluates its signed distance in float64 and fits it
+        as a scalar cubic lattice. The vertex stage evaluates the lattice and
+        the fragment stage discards above zero.
       </p>
     ),
-    aside: "In progress, not built.",
+    aside: "Increment 8c, built. The section on curved clips has the limits.",
   },
 ];
 
 const NOT_BUILT = [
   {
-    what: "Curved clips (increment 8c)",
+    what: "Curved clips on billboards, points and instances",
     state:
-      "In progress, by another agent. A set rigid on neither side is left out of the view's table and reported. Its signed distance will be fitted per tile in the lattice rows' free `.w` channel, with the fit's error added to the set's.",
+      "Curved clips (increment 8c) cut meshes, b-rep patches and tiles. A draw with no per-vertex placement, which is a billboard, a point set or an instanced draw, is cut by the true or drawn tests only, and the engine says so once.",
+  },
+  {
+    what: "More than one curved field per world",
+    state:
+      "A draw's `.w` channel holds one scalar. One view's curved sets combine by max, and views that use different curved sets share the first one's field: the others are reported.",
+  },
+  {
+    what: "A curved clip that moves, and a warp scaled after the fit",
+    state:
+      "Moving a curved clip refits every draw it cuts, within the per-frame budget, so a drag shows a stale field until the refit lands. A warp-scale change after the fit isn't followed until something else triggers a refit.",
+  },
+  {
+    what: "Room for a carrier",
+    state:
+      "A draw already at 3 warp terms with no lattice has nowhere to put the field and is left uncut, and the engine says so once.",
+  },
+  {
+    what: "`clips` on ray queries, terrain and draw ray backends",
+    state:
+      "`clipFilter` routes curved sets in float64, but `RayQuery`, the terrain's ray and the draw ray backends don't take a `clips` option yet.",
   },
   {
     what: "Exemptions",
@@ -374,7 +395,7 @@ const NOT_BUILT = [
   {
     what: "Terrain regions as clip shapes",
     state:
-      "`TerrainClips` (a globe's `terrain.addRegion`) still has its own mechanism, in the shader's `clipBoxes` beside this table. Folding it into `ClipShape` isn't done.",
+      "`TerrainClips` (a globe's `terrain.addRegion`) still has its own mechanism, in the shader's `clipBoxes` beside this table. Folding it into `ClipShape` isn't done: it carries translucency, holes, pick stops and `sampleHeight` semantics that a clip shape doesn't.",
   },
   {
     what: "A compute section pass for meshes",
@@ -426,9 +447,20 @@ const SPIKES = [
     detail:
       "A capped cylinder, whose cap fills the section's ellipse and follows the clip when it moves; a block with a bore, whose hole stays open; a closed mesh, whose cap fills the section; an open L-shaped wall, which gets a section line and no cap; a closed mesh split across two tiles, whose cap closes; and no GPU validation error.",
   },
+  {
+    check: "Curved clips against float64 (spikes/curvedClips.ts)",
+    result: "7 of 7",
+    detail:
+      "A wavy plane across a 24 m plate, fitted to 4.6 cm, about half a pixel; a box window whose kinks fit to 1.49 m; the ×10 plate cut on its true surface.",
+  },
 ];
 
 const TESTS = [
+  {
+    file: "test/curvedClips.test.ts",
+    covers:
+      "The set's signed distance in float64; the fit's stated error, which refines with cells; a plane in a design frame under a reprojection planned as curved and cutting a large tile along the bent surface; the field in the rows' `.w` channel as the vertex stage reads it, on a route's lattice or a carrier; the table's row; a moved or removed clip; differing views reported and one view's sets combined by max; and `clipFilter` routing in float64.",
+  },
   {
     file: "test/clips.test.ts",
     covers:
@@ -474,9 +506,9 @@ export function Clipping() {
     >
       <Note title="How much of this is built">
         <p>
-          Increment 8a (world clips) and 8b (caps) are built. Clips curved by a
-          warp, which are increment 8c, are being built now and are not in this
-          page&apos;s numbers. The last section lists what is missing.
+          Increment 8a (world clips), 8b (caps) and 8c (curved clips, cut along
+          a fitted signed distance) are built. The last section lists what is
+          missing.
         </p>
       </Note>
 
@@ -548,9 +580,9 @@ export function Clipping() {
         <p>
           Both land within a pixel of the route, which the spike requires (1.5
           px). A set that can&apos;t be placed for a view, because its reference
-          frame is unavailable or it is curved, is left out of that view&apos;s
-          table for the tick and reported once through the engine&apos;s error
-          channel.
+          frame is unavailable, is left out of that view&apos;s table for the
+          tick and reported once through the engine&apos;s error channel. A set
+          that is rigid on neither side is curved, and is cut as below.
         </p>
         <Written
           from="src/scene/world/clips.ts (planClip), src/render/view/clipTable.ts, test/clips.test.ts and spikes/clips.ts"
@@ -693,6 +725,47 @@ export function Clipping() {
         </ul>
         <Written
           from="src/scene/world/clips.ts (clipFilter), src/scene/Engine.ts, src/geometry/query.ts and test/clips.test.ts"
+          on="2026-11-11"
+        />
+      </Section>
+
+      <Section title="Curved clips">
+        <p>
+          A set whose reference frame reaches neither the content&apos;s true
+          side nor the render root rigidly is curved: in the content&apos;s own
+          coordinates its surface bends with the warp. A plane named in a design
+          frame cuts the true surface of an exaggerated tile, wherever that is
+          drawn.
+        </p>
+        <ul>
+          <li>
+            <strong>Evaluated in float64.</strong> Per draw, a point goes from
+            the model to its anchor, along the route, into the set&apos;s frame,
+            where the set&apos;s signed distance is exact.
+          </li>
+          <li>
+            <strong>Fitted as a lattice.</strong> That distance is fitted as a
+            scalar cubic lattice, in the placement rows&apos; free <C>.w</C>. A
+            draw with no lattice gets a carrier lattice of weight 0, with at
+            most 4 cells per axis.
+          </li>
+          <li>
+            <strong>Vertex, then fragment.</strong> The vertex stage evaluates
+            the lattice and passes the value in <C>airTransmittance.w</C>, which
+            takes no extra location. The fragment stage discards above 0. Picks
+            share it, and <C>clipFilter</C> routes in float64.
+          </li>
+        </ul>
+        <p>
+          The limits: a world has one curved field, so one view&apos;s curved
+          sets combine by max and differing views are reported. Moving a curved
+          clip refits every draw it cuts within the per-frame budget. A warp
+          scaled after the fit isn&apos;t followed. Billboards, points and
+          instances aren&apos;t cut. A draw already at 3 terms with no lattice
+          has no room for a carrier. A draw is uncut until its field lands.
+        </p>
+        <Written
+          from="src/scene/world/curvedClips.ts, src/scene/warpFit.ts, src/shaders/placement.slang and test/curvedClips.test.ts"
           on="2026-11-11"
         />
       </Section>
