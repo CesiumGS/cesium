@@ -99,9 +99,10 @@ const PATHS = [
     ),
     uses: (
       <>
-        Faces the GPU can't evaluate (a patch of degree above 3), as a CPU mesh
-        inside <C>World.addBrep</C>. The fallback mesh beside a b-rep in a glTF
-        file, which the plan has a tiler write offline. The B-rep adapter's{" "}
+        The <C>cpuFaces: &quot;trimmed&quot;</C> diagnostic of{" "}
+        <C>World.addBrep</C>, which draws the trimmed faces as a CPU mesh to
+        compare with the GPU's. The fallback mesh beside a b-rep in a glTF file,
+        which the plan has a tiler write offline. The B-rep adapter's{" "}
         <C>display(tolerance)</C> mesh. The edge lines and overlays in the
         first-look example. The reference in tests and spikes.
       </>
@@ -330,16 +331,16 @@ const CHECKS = [
   {
     where: "spikes/brepPatches.html",
     checks:
-      "An analytic cylinder, a sphere's span and a weighted rational patch, each at 20 m and 5.5 m, read back as bytes the fragment stage writes: every interior pixel's point against the true surface. The counts against the CPU twin. No uncovered pixel inside a face's silhouette. A warped patch against the twin. Shadows, ambient occlusion and picks raise no GPU error.",
+      "An analytic cylinder, a sphere's span, a weighted rational patch and a weighted patch of degree 5 × 4 (the wide path), each at 20 m and 5.5 m, read back as bytes the fragment stage writes: every interior pixel's point against the true surface. The counts against the CPU twin. No uncovered pixel inside a face's silhouette. A warped patch against the twin. Shadows, ambient occlusion and picks raise no GPU error.",
     result:
-      "Within 0.32 px of the surface (target 0.5 px). Counts match, no cracks, the warp matches.",
+      "Within 0.32 px of the surface (target 0.5 px); the 5 × 4 patch within 0.055 px. Counts match, no cracks, the warp matches.",
   },
   {
     where: "spikes/brepTrims.html (runBrepTrims)",
     checks:
       "Each pixel's classification against the CPU's, on a plate with round, rectangular and triangular holes, a cylinder drilled across and a trimmed B-spline face. Closed solids for pinholes along seams: a box minus a cylinder, the same from Open CASCADE, and CTC-05. Shadows, ambient occlusion and picks. The times against tessellateBrep.",
     result:
-      "17 of 17 checks pass, in about 30 s headless on an NVIDIA RTX 3000 Ada. The gallery draws 39 of 39 faces on the GPU.",
+      "17 of 17 checks pass, in about 30 s headless on an NVIDIA RTX 3000 Ada, among them CTC-05: 208 of 208 faces on the GPU, with no pinholes at three distances. The gallery draws 39 of 39 faces on the GPU.",
   },
   {
     where: "test/brepGpuPatches.test.ts",
@@ -392,11 +393,12 @@ export function Tessellation() {
     >
       <Note title="How much of this is built">
         <p>
-          The GPU path is built for every face whose patches are of degree 3 or
-          less, and has run on one GPU, an NVIDIA RTX 3000 Ada, through the
-          lab's spikes. A face with a higher-degree patch is still a CPU mesh
-          inside <C>World.addBrep</C>. The call is provisional and internal,
-          ahead of the API review.
+          The GPU path is built for every face whose patches are of degree 1 to
+          7 (<C>MAX_GPU_DEGREE</C>), and has run on one GPU, an NVIDIA RTX 3000
+          Ada, through the lab&apos;s spikes. Only a face with nothing to draw
+          is <C>unsupported</C>. There is no CPU mesh in drawing, apart from the{" "}
+          <C>cpuFaces: &quot;trimmed&quot;</C> diagnostic. The call is
+          provisional and internal, ahead of the API review.
         </p>
         <p>
           Only b-reps are diced. The plan has one engine serving reprojected
@@ -541,7 +543,7 @@ export function Tessellation() {
           and its face's), the face's densities and speeds, and a trim word. The
           nets follow the records, once each, and then the trim data. All of it
           goes into the draw's range of the slab's arena, and the shaders read
-          it from there. The GPU evaluates up to degree 3 in each direction.
+          it from there. The GPU evaluates up to degree 7 in each direction.
         </p>
         <p>
           A grid of <em>n_u</em> × <em>n_v</em> cells over a span stays within a
@@ -705,13 +707,18 @@ export function Tessellation() {
             follows the surface through a negative one.
           </li>
           <li>
-            <strong>Rational Béziers</strong> read their net from the arena (the
-            shader holds at most 16 points) and run de Casteljau on the
-            homogeneous coordinates, (xw, yw, zw, w), along s in each row and
-            then along t. The same passes give the first derivatives, and the
-            quotient rule makes them the surface's. The normal is the exact ∂u ×
-            ∂v. At a pole, where one derivative vanishes, it is taken a
-            thousandth of the way toward the span's middle.
+            <strong>Rational Béziers</strong> read their net from the arena and
+            run de Casteljau on the homogeneous coordinates, (xw, yw, zw, w),
+            along s in each row and then along t. Up to degree 3 in both
+            directions, the cubic path copies the net into a 16-point array, and
+            costs one compare per vertex to choose it. Above 3, up to 7 (
+            <C>MAX_GPU_DEGREE</C>), a wide path reads the arena one row at a
+            time, holding a row&apos;s 8 points and the rows&apos; values and
+            derivatives, never a 64-point copy. The same passes give the first
+            derivatives, and the quotient rule makes them the surface&apos;s.
+            The normal is the exact ∂u × ∂v. At a pole, where one derivative
+            vanishes, it is taken a thousandth of the way toward the span&apos;s
+            middle.
           </li>
           <li>
             <strong>The varyings.</strong> The face is the vertex's feature. The
@@ -1077,8 +1084,10 @@ export function Tessellation() {
             adapter.
           </li>
           <li>
-            <strong>Degree above 3.</strong> A face with such a patch is a CPU
-            mesh, not a GPU draw.
+            <strong>The wide path's measurements.</strong> One patch of degree 5
+            × 4, weighted, within 0.055 px of the surface. Nothing times it
+            against the cubic path, and no Open CASCADE or SMLib solid with
+            patches of degree 4 or more is in the spike.
           </li>
           <li>
             <strong>Reprojected meshes.</strong> Nothing subdivides an ordinary

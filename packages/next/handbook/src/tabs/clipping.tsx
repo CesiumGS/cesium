@@ -383,11 +383,6 @@ const NOT_BUILT = [
       "A draw already at 3 warp terms with no lattice has nowhere to put the field and is left uncut, and the engine says so once.",
   },
   {
-    what: "`clips` on ray queries, terrain and draw ray backends",
-    state:
-      "`clipFilter` routes curved sets in float64, but `RayQuery`, the terrain's ray and the draw ray backends don't take a `clips` option yet.",
-  },
-  {
     what: "Exemptions",
     state:
       "Content that a clip leaves alone, such as terrain left whole, is the styling language's: run-time data by element ID. The table's set rows keep a reserved word for it (`CLIP_SET_EXEMPT`). There is no list per clip, and no per-draw switch.",
@@ -465,6 +460,11 @@ const TESTS = [
     file: "test/clips.test.ts",
     covers:
       "Shapes, validation, combining and keeping; the table against float64 far from the origin; which space a set is tested in, for no warp, a presentation warp and a reprojection; the view's mask and a view without clips; and the queries, with ray, closest point and segment distance passing over what is removed, and points routed into each set's reference frame.",
+  },
+  {
+    file: "test/queryClips.test.ts",
+    covers:
+      "The ray queries with clips: the default for a query with and without a view, a view's sets, a set of its own and none, and `\"view\"` refused without a view; the terrain's first kept hit, and clear when the clips remove every hit; the draw cast re-casting from behind each removed hit, only the rays still searching, and refusing a ray through endless removed surfaces; a tileset's geometry; the distance field's ray; and a view's clip changes counted in the query's revision.",
   },
   {
     file: "test/caps.test.ts",
@@ -710,11 +710,38 @@ export function Clipping() {
           which is what a world question such as a distance, a clearance or a
           line of sight wants.
         </p>
+        <p>
+          Every ray backend takes the same option. <C>RayQuery.clips</C> is a{" "}
+          <C>ClipsOption</C>: <C>&quot;view&quot;</C>, a <C>ClipSet</C> or list,
+          or <C>&quot;none&quot;</C>. It defaults to <C>&quot;view&quot;</C>{" "}
+          when the query names a view (picks and snaps) and to{" "}
+          <C>&quot;none&quot;</C> when it doesn&apos;t, which suits a world
+          question. The tileset, terrain and draw targets honor it. A
+          body&apos;s ellipsoid and an impostor are no drawn surface and ignore
+          it.
+        </p>
         <ul>
           <li>
             A ray passes over a hit that the clips remove and goes on, a
             b-rep&apos;s included.
           </li>
+          <li>
+            The terrain&apos;s march goes past a removed hit. A terrain that the
+            clips remove entirely answers &quot;unknown&quot;.
+          </li>
+          <li>
+            The GPU draw cast casts again from just behind a removed hit, at
+            most 256 times for a ray, skipping 1 mm (or a millionth of the
+            distance). A kept surface closer than that behind a removed one is
+            passed over, and a ray that crosses more than 256 removed surfaces
+            is an error.
+          </li>
+          <li>
+            <C>sdfGeometry.rayHit</C> marches past removed hits.{" "}
+            <C>closestPoint</C> and <C>segmentDistance</C> on a signed distance
+            field still ignore clips.
+          </li>
+          <li>A standing query answers again when the clips change.</li>
           <li>
             The closest point is the nearest kept one. On a partly clipped face
             it is found within a sixteenth of the face&apos;s size for a mesh,
@@ -724,7 +751,7 @@ export function Clipping() {
           <li>A segment&apos;s distance counts only what is kept.</li>
         </ul>
         <Written
-          from="src/scene/world/clips.ts (clipFilter), src/scene/Engine.ts, src/geometry/query.ts and test/clips.test.ts"
+          from="src/scene/world/clips.ts (clipFilter), src/scene/world/rays.ts, src/query/queries.ts, src/globe/terrainRay.ts, src/geometry/sdf.ts, src/geometry/query.ts and test/clips.test.ts, queryClips.test.ts"
           on="2026-11-11"
         />
       </Section>

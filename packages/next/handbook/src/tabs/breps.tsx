@@ -125,7 +125,7 @@ const FORM = [
     group: "Patches",
     arrays: "patchDegree, patchFirst, patchPoints, patchDomain",
     notes:
-      "Degree 1 to 7 in u and v, homogeneous float64 control points (weights above zero), and the span each covers in its surface's (u, v). The GPU path draws degree 3 and below.",
+      "Degree 1 to 7 in u and v, homogeneous float64 control points (weights above zero), and the span each covers in its surface's (u, v). The GPU path draws every degree, 1 to 7.",
   },
   {
     group: "Faces and loops",
@@ -1225,10 +1225,14 @@ export function Breps() {
           Bézier patch or angular piece of an analytic surface. They are diced
           for each view to an error in pixels, evaluated in the vertex stage
           from the surface's own formulas or de Casteljau, and a trimmed face is
-          tested per pixel against its pcurves. The CPU tessellator remains for
-          the fallback mesh, faces with a patch above degree 3, the example's
-          overlays and tests. The <a href="#/tessellation">Tessellation tab</a>{" "}
-          has the pipeline, the bounds, the trim test and what was measured.
+          tested per pixel against its pcurves. Patches of degree 1 to 7 take
+          the same path; a face with nothing to draw is the only one reported as{" "}
+          <C>unsupported</C>, and nothing in drawing is a CPU mesh unless{" "}
+          <C>cpuFaces: &quot;trimmed&quot;</C> asks for one as a diagnostic. The
+          CPU tessellator remains for mesh queries, the fallback mesh beside a
+          b-rep in a glTF file, the example&apos;s overlays and tests. The{" "}
+          <a href="#/tessellation">Tessellation tab</a> has the pipeline, the
+          bounds, the trim test and what was measured.
         </p>
         <Written
           from={

@@ -145,7 +145,7 @@ const QUESTIONS = [
       "Distances, clearance, line of sight, volumes, sections, b-rep queries",
     asked: "True coordinates, in a named reference frame",
     state:
-      "Ray queries are built that way: they carry rays through coordinate-operation warps and refuse a route that crosses a presentation warp. Measurements that report true values are increment 6, not built.",
+      "Ray queries are built that way: they carry rays through coordinate-operation warps and refuse a route that crosses a presentation warp. Measurements and snaps report true values (increment 6, `src/measure/`, `src/engineering/snap.ts`).",
   },
   {
     question: "Which tiles to load, and how finely",
@@ -163,7 +163,7 @@ const QUESTIONS = [
     question: "What is under the cursor",
     asked: "A view question with a true answer",
     state:
-      "Not built. A pick still reads the depth that was drawn, so it reports a drawn position. Picks by domain point are increment 5.",
+      "Built (increment 5). A pick carries the draw, the feature and the triangle's barycentrics or the b-rep face's (u, v), so `CorePick.domain` and `truePosition` are the content's own point and `drawnPosition` is the depth's, with no inverse of any warp.",
   },
   {
     question:
@@ -360,16 +360,6 @@ const NOT_BUILT = [
     what: "Exact terrain for any warp but a height scale",
     state:
       "Terrain is exact only under a warp that declares `Warp.heightScale` on its own ellipsoid (WGS84, base height 0), through the `h·n̂` attribute. Flattening, a reprojection or any other warp is fitted per vertex like a tileset, to `max(1 mm, geometricError / 64)`.",
-  },
-  {
-    what: "Picks by domain point",
-    state:
-      "A pick variant that returns the item, the primitive and barycentrics, so the true point is interpolated from the content's own vertices and needs no inverse of any warp (increment 5). Until then picks, `World.castRays` and the CPU terrain-pick fallback read undeformed bounds and the drawn depth.",
-  },
-  {
-    what: "Measurements, snaps, and the example",
-    state:
-      'Measurements and snaps in true frames, with their graphics drawn through the route (increment 6), then the "Vertical exaggeration" example (increment 7): the application defines the warp frame and the rig, as in the snippet above. A drawn-distance query, named as one, is also decided.',
   },
   {
     what: "Height-keyed lookups",
@@ -1384,13 +1374,28 @@ export function Warps() {
           ]}
           rows={NOT_BUILT}
         />
+        <h3>Picks, measurements and snaps</h3>
+        <p>
+          Built as increments 5 and 6 (commits <C>8b59cdf9d3</C> and{" "}
+          <C>e57950a4a8</C>). A pick says where the hit is in the content, as{" "}
+          <C>CorePick.domain</C>, and gives the exact <C>truePosition</C> beside
+          the drawn one, with no inverse of any warp (
+          <C>src/render/view/pickDomain.ts</C>, <C>src/scene/pickDomain.ts</C>,
+          the spike <C>spikes/pickDomain.html</C> and{" "}
+          <C>test/pickDomain.test.ts</C>). <C>measure</C> and the snaps in{" "}
+          <C>src/engineering/snap.ts</C> work on true points.{" "}
+          <C>drawnDistance</C> is the one named question about the drawing, and{" "}
+          <C>DrawnCurve</C> (<C>src/measure/curve.ts</C>) draws a straight true
+          segment through the route within 0.5 px (
+          <C>test/measureTruth.test.ts</C>
+          ). The plan&apos;s section 13.26 has the numbers.
+        </p>
         <h3>Clips</h3>
         <p>
-          Built as increments 8a and 8b, apart from clips curved by a warp (8c,
-          in progress). A clip is a world object named in a reference frame, and
-          each is tested on the true point or the drawn one, whichever its frame
-          reaches rigidly. The Clipping tab has how, the numbers and what&apos;s
-          left.
+          Built as increments 8a, 8b and 8c. A clip is a world object named in a
+          reference frame, and each is tested on the true point or the drawn
+          one, whichever its frame reaches rigidly. The Clipping tab has how,
+          the numbers and what&apos;s left.
         </p>
         <h3>Names, pending the API review</h3>
         <p>
