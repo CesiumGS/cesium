@@ -196,24 +196,29 @@ export class Engine {
    */
   readonly queries: SpatialQueries = createSpatialQueries(
     {
-      terrain: terrainBackend((query) => {
-        const route = this.queryRoute(query);
-        return globeTarget(
-          this.tilesets,
-          route.world,
-          query.anchor,
-          route.viewMask ?? 0xffffffff,
-        );
-      }),
+      terrain: terrainBackend(
+        (query) => {
+          const route = this.queryRoute(query);
+          return globeTarget(
+            this.tilesets,
+            route.world,
+            query.anchor,
+            route.viewMask ?? 0xffffffff,
+          );
+        },
+        (query) => this.queryClips(query),
+      ),
       draws: drawBackend((query) => {
         const route = this.queryRoute(query);
+        const clips = this.queryClips(query);
         return {
           world: route.world,
           options: {
             ...(query.anchor && { anchor: query.anchor }),
             ...(route.viewMask !== undefined && { viewMask: route.viewMask }),
+            ...(clips && { clips }),
           },
-          key: `${route.world.id}/${query.anchor?.slot ?? 0}/${route.viewMask ?? "all"}`,
+          key: `${route.world.id}/${query.anchor?.slot ?? 0}/${route.viewMask ?? "all"}/${clips ? this.queryClipsKey(query) : "none"}`,
           // Where these aren't drawn the cast tests nothing: unknown there.
           tilesets: this.tilesets
             .filter(

@@ -326,6 +326,7 @@ async function answerTarget(
                 rays,
                 targets: [target],
                 ...(query.view && { view: query.view }),
+                ...(query.clips !== undefined && { clips: query.clips }),
                 ...(query.terrain && { terrain: query.terrain }),
                 world,
               };

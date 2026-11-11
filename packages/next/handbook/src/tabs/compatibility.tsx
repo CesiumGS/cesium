@@ -254,8 +254,10 @@ export function Compatibility() {
         <h3>Limits</h3>
         <p>
           Binding counts are written into shaders, so they're designed to the
-          spec's defaults and checked by a test. Capacities, such as table rows
-          and arena bytes, are data: they grow toward the device's limits.
+          spec's defaults and checked by a test: the cull kernel binds eight
+          storage buffers, the default limit, so it takes no more. Capacities,
+          such as table rows and arena bytes, are data: they grow toward the
+          device's limits.
         </p>
         <DataTable
           label="Limits and what devices report"

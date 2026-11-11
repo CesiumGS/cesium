@@ -272,6 +272,19 @@ const MEASURES: Array<{ check: string; result: string; where: string }> = [
     where:
       "spikes/warpGlobe.html, run with scripts/runSpike.mjs on this machine's GPU in Edge, 2026-11-11",
   },
+  {
+    check:
+      "Each lattice's centre as float32 hi and lo summed into the camera-relative translation by the cull, against the same draw with the constant added in model space, both measured from the image against the float64 route (`runWarpPrecision`).",
+    result:
+      "A 37 km displacement: 0.43 mm before, 0.03 mm after. A 3,600 km translation: 9.8 mm before, 0.01 mm after. Verified on NVIDIA under D3D12 only; a platform that reassociates float math falls back to the old accuracy.",
+    where: "spikes/warpPrecision.html, NVIDIA GPU, 2026-11-11",
+  },
+  {
+    check:
+      "A `PointSource` across a warp: the frame kernel's anchors against the CPU twin over 14 km moves (`runWarpPoints`).",
+    result: "Every anchor within 0.9 mm of the twin.",
+    where: "spikes/warpPoints.html, NVIDIA GPU, 2026-11-11",
+  },
 ];
 
 const TESTS = [
@@ -315,6 +328,21 @@ const TESTS = [
     covers:
       "A terrain tile's `h·n̂` term: held a frame after its upload, then exact with no fit, and what the worker makes. An acceptance world of terrain, a tileset, a model with instances and a billboard under ×10 heights. `warpAt` on an item, both ways; the anchor's rotation from a Jacobian with its stretch dropped, for a draw and for an instance's matrix. The globe selected on drawn volumes, and asked for `h·n̂` only under a height scale on its own ellipsoid.",
   },
+  {
+    file: "warpPrecision.test.ts",
+    covers:
+      "The order-0 term packed as hi and lo, with the cells holding the rest and a weight scaling it; the cull's exact sum emulated in float32 (`Math.fround`) against the model-space sum: a 37 km displacement from 3.2 mm to 0.06 mm, a whole-world map at street level from 125 mm to 0.001 mm; a point source's kernel keeping the whole displacement.",
+  },
+  {
+    file: "warpDrawnVolumes.test.ts",
+    covers:
+      "Casters tested against the cascade box where they are drawn, and the light-space rectangle built from where receivers are drawn; the request volume a conservative sphere, cached with the drawn volumes; the dynamic screen-space error following where the root is drawn, and computed with the warp or not at all. A fake warp moves each tile far from where its volume says.",
+  },
+  {
+    file: "warpPoints.test.ts",
+    covers:
+      "A source held until its carrier's first fit, then with a block in the placements buffer; each point carried through the route within the fit's error; no block under a rigid route; nothing said of a source's points and one report for a point set no source owns; a pool's draws left alone, since its source's points carry the warp.",
+  },
 ];
 
 const NOT_BUILT = [
@@ -324,9 +352,9 @@ const NOT_BUILT = [
       "One warp context per world, fitted for the root of the world's first view. Another view with a different root shows the first view's draws, and the engine warns once.",
   },
   {
-    what: "Point sets and a `ModelPool`'s instances",
+    what: "Point sets with no owner",
     state:
-      "Drawn at their anchor's affine place, unwarped, and the engine says so once: a point set's cull reads positions a placement doesn't reach, and a pool's instances are written by the GPU, which the CPU can't move by the route. The owner's rule forced points to `\"anchor\"`; they aren't warped at all yet.",
+      "A point set made without a `PointSource` is still drawn at its anchor's affine place, unwarped, and the engine says so once per world. A `PointSource` and its pool follow a warp (the leftovers' section).",
   },
   {
     what: "Exact terrain for any warp but a height scale",
@@ -349,9 +377,9 @@ const NOT_BUILT = [
       "Tints, contours and air density read the true height, which needs it at a fragment. It waits for the API review and a spike.",
   },
   {
-    what: "Float32 constants, and a free scalar",
+    what: "A free scalar, and relaxed math",
     state:
-      "A lattice's constant term is added in model space before the camera-relative transform, so two large float32 numbers can cancel (the plan estimates 4 mm at a 36 km displacement). The planned fix, the order-0 term as high and low parts in the cull kernel, isn't built. Nor is the lattice rows' unused fourth component carrying a fitted scalar per tile (true height, a curved section): it is zero.",
+      "The lattice rows' fourth component is used only by curved clips (increment 8c); a fitted true height per tile isn't built. The exact centre sum (the leftovers' section) was verified on NVIDIA under D3D12 only: where the platform reassociates float math, as Dawn's relaxed math does on Apple GPUs, it falls back to the older accuracy.",
   },
   {
     what: "Fitting off the main thread",
@@ -359,9 +387,9 @@ const NOT_BUILT = [
       "Warps are JavaScript closures, which a worker can't be sent, so fits run on the main thread within the budget.",
   },
   {
-    what: "More users of drawn volumes",
+    what: "A user of the singular range",
     state:
-      "Shadow casters' selection, the viewer's request volume, and dynamic screen-space error still use undrawn volumes. `routeSingularRange` gives [σ_min, σ_max], but nothing reads it yet: it is for the ray-march step and snap tolerances.",
+      "`routeSingularRange` gives [σ_min, σ_max], but nothing reads it yet: it is for the ray-march step and snap tolerances.",
   },
 ];
 
@@ -434,10 +462,13 @@ export function Warps() {
           Increments 1 to 4 of the plan are built: routes and the fitter, the
           GPU form with its Jacobian and the varying swap, drawn bounds, and the
           globe, billboards and instances under a warp, with <C>warpAt</C>. The
-          last section lists what isn&apos;t. Applications make the only warps
-          there are today, with the helpers below or by hand. The engine's own
-          reprojections still go through the <C>Placement</C> kinds, which are
-          converted to the same terms inside the engine.
+          placement leftovers are closed too: an exact centre in the cull
+          kernel, drawn volumes for shadows, requests and dynamic error, and
+          point sets and pools that follow a warp. The last section lists what
+          isn&apos;t. Applications make the only warps there are today, with the
+          helpers below or by hand. The engine's own reprojections still go
+          through the <C>Placement</C> kinds, which are converted to the same
+          terms inside the engine.
         </p>
       </Note>
 
@@ -1111,9 +1142,9 @@ export function Warps() {
               how: "Each instance's origin goes through the route on the CPU, in slices within the frame's budget, and its matrix in the instance table is rewritten. The cull and vertex stages already read that table, so a warp costs them nothing. `World.setInstance` writes the application's matrix again, and the route moves it afresh.",
             },
             {
-              what: "A point set, a `ModelPool`'s instances",
-              at: "Not warped",
-              how: "Drawn at their anchor's affine place. The engine says so once.",
+              what: "A `PointSource`, and the `ModelPool` it feeds",
+              at: '`"vertex"` per point, fitted; a pool moves by position only',
+              how: "The source owns a hidden carrier draw, fitted like any draw's. The frame kernel evaluates that fit per point before it writes the anchor, so the cull, the quads and the pool read warped anchors. Pool models are moved, not turned. A point set with no owner is still unwarped and reported once.",
             },
             {
               what: "The globe's terrain",
@@ -1172,6 +1203,112 @@ export function Warps() {
               <C>src/scene/warpAnchor.ts</C>, <C>src/scene/world/warps.ts</C>,{" "}
               <C>src/globe/heightNormal.ts</C>, <C>src/camera/route.ts</C>,{" "}
               <C>spikes/warpGlobe.ts</C> and <C>test/warpGlobe.test.ts</C>
+            </>
+          }
+          on="2026-11-11"
+        />
+      </Section>
+
+      <Section title="Placement leftovers closed">
+        <p>
+          Three things the first slices left are built: the float32 centre, the
+          drawn volumes selection hadn&apos;t reached, and points.
+        </p>
+        <h3>An exact centre</h3>
+        <p>
+          A lattice&apos;s constant term used to be added in model space before
+          the camera-relative transform, so two large float32 numbers cancelled:
+          about 4 mm at a 36 km displacement, and a fraction of a metre for a
+          whole-world flat map seen at street level. Now each lattice&apos;s
+          centre value goes to the cull kernel as float32 high and low parts,
+          and the cull adds them to the camera-relative translation with
+          error-free float32 arithmetic (two-sum and two-product,{" "}
+          <C>src/shaders/exactSum.slang</C>, used by <C>drawnTranslation</C>).
+          The cells hold the lattice minus that constant, so the vertex stage
+          adds only small numbers. Custom shaders&apos; <C>positionMC</C> on a
+          placed draw excludes the centre displacement.
+        </p>
+        <ul>
+          <li>
+            <strong>The cost</strong> is in the cull, not the vertex stage.{" "}
+            <C>DrawItem</C> grew from 80 to 96 bytes (<C>DrawItem.drawn</C>, the
+            drawn translation). The cull now binds the placements buffer, which
+            makes 8 storage buffers, the spec&apos;s default limit and the base
+            tier&apos;s; the indirect arguments moved to binding 9.
+          </li>
+          <li>
+            <strong>Where it holds.</strong> The error terms need the compiler
+            to keep the order of float operations. On a platform that
+            reassociates, such as Dawn&apos;s relaxed math on Apple GPUs, they
+            fold to zero and accuracy is the old one, never worse. It was
+            verified on NVIDIA under D3D12 only.
+          </li>
+        </ul>
+        <DataTable
+          label="Before and after the exact centre"
+          columns={[
+            { head: "Case", cell: (r) => r.what },
+            { head: "Before", cell: (r) => r.before, numeric: true },
+            { head: "After", cell: (r) => r.after, numeric: true },
+            { head: "Measured", cell: (r) => r.where },
+          ]}
+          rows={[
+            {
+              what: "A 37 km displacement",
+              before: "0.43 mm",
+              after: "0.03 mm",
+              where: "GPU, spikes/warpPrecision.html",
+            },
+            {
+              what: "A 3,600 km translation",
+              before: "9.8 mm",
+              after: "0.01 mm",
+              where: "GPU, spikes/warpPrecision.html",
+            },
+            {
+              what: "A 37 km displacement, float32 emulated in Node",
+              before: "3.2 mm",
+              after: "0.06 mm",
+              where: "test/warpPrecision.test.ts",
+            },
+            {
+              what: "A whole-world flat map, street-level view",
+              before: "125 mm",
+              after: "0.001 mm",
+              where: "test/warpPrecision.test.ts",
+            },
+          ]}
+        />
+        <h3>More users of drawn volumes</h3>
+        <p>
+          Under a warped anchor three more reads use what is drawn, as distance,
+          the frustum and error already did: the{" "}
+          <strong>shadow casters&apos; selection</strong>, the{" "}
+          <strong>viewer&apos;s request volume</strong> (a conservative sphere
+          around its image) and the <strong>dynamic screen-space error</strong>.
+          With no warp, selection is as it was.
+        </p>
+        <h3>Points and pools follow a warp</h3>
+        <p>
+          A <C>PointSource</C> owns a hidden carrier draw, fitted like any draw
+          over the source&apos;s region. <C>points.slang</C> evaluates that fit
+          per point before it writes the anchor, and the cull, the quads and a{" "}
+          <C>ModelPool</C> read the warped anchors, so they need nothing. Pool
+          models move by position only: they aren&apos;t turned. Two options
+          size the fit: <C>PointSourceOptions.warpRadius</C> (default 50 km,
+          around <C>origin</C>) and <C>PointSourceOptions.warpTolerance</C>{" "}
+          (default 0.05 m). Over 14 km moves, the GPU&apos;s anchors are within
+          0.9 mm of the CPU twin. A point set with no owner is still reported,
+          once per world, as not warped.
+        </p>
+        <Written
+          from={
+            <>
+              <C>src/shaders/exactSum.slang</C>, <C>src/shaders/cull.slang</C>,{" "}
+              <C>src/scene/placementTable.ts</C>,{" "}
+              <C>src/streaming/tileWarp.ts</C>, <C>src/vector/PointSource.ts</C>
+              , <C>spikes/warpPrecision.ts</C>, <C>spikes/warpPoints.ts</C> and
+              the three tests below
             </>
           }
           on="2026-11-11"
@@ -1310,9 +1447,10 @@ export function Warps() {
           from={
             <>
               <C>spikes/warpRoute.ts</C>, <C>spikes/placementNormals.ts</C>,{" "}
-              <C>spikes/placement.ts</C>, <C>spikes/warpGlobe.ts</C> and the
-              tests above, with the measurements recorded in the plan, section
-              13.26
+              <C>spikes/placement.ts</C>, <C>spikes/warpGlobe.ts</C>,{" "}
+              <C>spikes/warpPrecision.ts</C>, <C>spikes/warpPoints.ts</C> and
+              the tests above, with the measurements recorded in the plan,
+              section 13.26
             </>
           }
           on="2026-11-11"

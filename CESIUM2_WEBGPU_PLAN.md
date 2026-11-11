@@ -8989,7 +8989,7 @@ _Revised increments, replacing the list above:_
 
 Increments 1 to 3 come before b-rep step 5.
 
-**Overnight summary (2026-11-11).** Placement increments 4 to 7, 8a, 8b and 8c landed, each with a GPU spike or Node tests. Picks report a domain point and the exact true point with no inverse of any warp (5); measurements and snaps are in true frames, and the drawn distance is named as one (6); world clips are tested per fragment in true or drawn space (8a); the vertical exaggeration example holds true heights constant across ×1 to ×10 with no refit on the slider (7). Caps landed with 8b: exact for b-reps, joined loops for meshes, and the example's engine gaps closed with it. Curved clips landed with 8c: a clip across a non-rigid route is cut along a signed distance fitted per draw (spike 7 of 7). The CSG sample's core (§13.33) was built ahead of its date: a tree of leaves and booleans evaluated in a worker through either kernel, with picks naming the leaf and drag previews (the four-view layout and fillets wait). The handbook gained its clipping deep dive, updated for 8c. The one owner decision pending is the proposal below, "no placement modes".
+**Overnight summary (2026-11-11).** Placement increments 4 to 7, 8a, 8b and 8c landed, each with a GPU spike or Node tests. Picks report a domain point and the exact true point with no inverse of any warp (5); measurements and snaps are in true frames, and the drawn distance is named as one (6); world clips are tested per fragment in true or drawn space (8a); the vertical exaggeration example holds true heights constant across ×1 to ×10 with no refit on the slider (7). Caps landed with 8b: exact for b-reps, joined loops for meshes, and the example's engine gaps closed with it. Curved clips landed with 8c: a clip across a non-rigid route is cut along a signed distance fitted per draw (spike 7 of 7). The CSG sample's core (§13.33) was built ahead of its date: a tree of leaves and booleans evaluated in a worker through either kernel, with picks naming the leaf and drag previews (the four-view layout and fillets wait). The handbook gained its clipping deep dive, updated for 8c. The placement leftovers are closed (`c0179db727`): each lattice's centre reaches the cull as float32 hi and lo parts, summed exactly, so a 37 km displacement is 0.03 mm on the GPU (was 0.43) and `DrawItem` is 96 bytes; shadow, request and dynamic-error volumes are drawn volumes; and point sets and pools follow warps (`warpRadius`, `warpTolerance`). The one owner decision pending is the proposal below, "no placement modes".
 
 **Increment 1, in progress (2026-11-10).** Slices A to C are done. Each was implemented by a Sonnet 5.5 agent from a brief, against a contract committed first (`camera/route.ts`, `scene/warpTerms.ts`).
 
@@ -9042,14 +9042,14 @@ Increments 1 to 3 come before b-rep step 5.
   - At k = 10 selection goes one level deeper than at k = 1. On a 200 km tile, 5,000 random warped points all land inside the drawn sphere, which is 4.9% larger than the 9-point sphere.
 - Horizon culling is off under a warped anchor: its true-ellipsoid occluder says nothing about a drawn Earth.
 - `routeSingularRange` gives [σ_min, σ_max], about [1.004, 10] at k = 10, for the ray-march and snaps later.
-- Not yet on drawn volumes: shadow casters' selection, the viewer's request volume, and dynamic screen-space error.
+- Not yet on drawn volumes: shadow casters' selection, the viewer's request volume, and dynamic screen-space error (done: "Placement leftovers closed", below).
 
 **Increment 4 is done (2026-11-11).** The globe, terrain, billboards and instances follow a warp, and an item can keep its shape.
 
 - **`warpAt: "vertex" | "anchor"`.** `SceneItemOptions.warpAt` (and a setter that refits the loaded tiles), `World.setWarpAt(draw, at, origin?)`, `DrawOptions.warpAt` and `World.drawWarpAt`, which says what a draw asked and what it is drawn as. Vertex, the default, stretches content by the per-draw fit. Anchor evaluates the route once, at the draw's origin in float64 (`scene/warpAnchor.ts`).
   - **The anchor rule.** The draw gets the route's translation and the rotation of its Jacobian, the orthogonal factor of the polar decomposition, relative to the route's rigid part. Scale and shear are dropped, so a ×10 exaggeration leaves a car as tall as it was, and a reprojection turns it with the grid's convergence without scaling it. A route with no warp gives the identity. The term is an exact one-cell lattice: it costs the vertex stage what a fit does, and nothing to fit. A scale redoes it, since the rotation isn't linear in a scale. Give a model's draws one `origin` and the whole model moves as one.
   - **Forced.** A billboard is always anchored: its anchor goes through the route and its corners stay pixels on screen. Instanced draws are anchored per instance, on the CPU: each instance's origin goes through the route, in slices within the frame's budget, and its matrix in the instance table is rewritten, which the cull and vertex stages already read. `World.setInstance` writes the application's matrix again, so the route moves it afresh.
-  - **Not warped, and reported.** Point sets, whose cull reads positions a placement doesn't reach, and a `ModelPool`'s instances, which the GPU writes. They are drawn at their anchor's affine place, and the engine says so once. The owner's rule had points anchored; they aren't moved at all yet.
+  - **Not warped, and reported.** Point sets, whose cull reads positions a placement doesn't reach, and a `ModelPool`'s instances, which the GPU writes. They are drawn at their anchor's affine place, and the engine says so once. The owner's rule had points anchored; they aren't moved at all yet. (Since closed for a `PointSource` and its pool; see "Placement leftovers closed", below.)
 - **The globe under a warp.** Its tiles are placed like any content: selected on drawn volumes, fitted per vertex, with the horizon test off. A warp may declare `Warp.heightScale` (`HeightScale`: the reference's radii, the factor, a base height), which `verticalExaggeration` sets for an ellipsoid or a sphere. Under one height-scale warp followed by rigid steps, on the ellipsoid a terrain tile was made on (WGS84, base height 0), the tile is exact in height with no fit, the owner's answer 3:
   - each vertex carries `h·n̂`, its geodetic height times the ellipsoid's normal there (`_HEIGHT_NORMAL`, `globe/heightNormal.ts`), and the globe asks its source, in a worker, for it only while the anchor's route is such a warp;
   - the route's term is that attribute times (k − 1). The slider is one float, the term's weight;
@@ -9058,7 +9058,7 @@ Increments 1 to 3 come before b-rep step 5.
 - **Running a spike headless.** `node scripts/runSpike.mjs <spike page URL> <run function>` (for example `http://127.0.0.1:5190/spikes/warpGlobe.html?bench runWarpGlobe`, with the dev server running) loads it in a visible, focused Edge on this machine's GPU and prints the checks. A page hidden behind other windows throttles timers, and spikes then crawl or stall.
 - **Not built:**
   - exact terrain for any warp but a height scale on its own ellipsoid, such as flattening: those are fitted;
-  - warping point sets and a `ModelPool`'s instances;
+  - warping point sets and a `ModelPool`'s instances (done: "Placement leftovers closed", below);
   - picks by domain point (increment 5, done below).
 
 **Increment 5 is done (2026-11-11).** A pick says where the hit is in the content, and the exact point there, with no inverse of any warp.
@@ -9143,12 +9143,28 @@ True heights stay put while the drawn ones follow the slider. `test/verticalExag
 - **`setRig` re-roots across a warp.** The camera is carried through the route (its position mapped, its axes by the Jacobian there) rather than refused.
 - **A moved draw refitted wrongly, and is fixed.** A draw whose transform moved was handed back the fit held for its route's stamp, which was made for the old matrix. A box moved from 1,000 m to 3,000 m up under ×10 drew at 12,005 m instead of 30,005 m. It now drops that fit and asks again (`test/warpMovedDraw.test.ts`: 10,005 m, then 30,005 m, with no refit counted). Also `test/warpCameraPick.test.ts` and `test/warpScaleExports.test.ts`.
 
+**Placement leftovers closed (2026-11-11, `c0179db727`).** The three things increments 1 to 4 left are built.
+
+- **The centre is exact (second-review flaw 3).** Each lattice's centre value goes to the cull kernel as float32 high and low parts, summed into the camera-relative translation with exact float32 arithmetic (`src/shaders/exactSum.slang`: two-sum and two-product), and the cells hold the lattice minus that constant. `DrawItem` grew from 80 to 96 bytes (`DrawItem.drawn`). The cull binds the placements buffer, so it has 8 storage buffers, the base tier's limit, and the indirect arguments moved to binding 9. A custom shader's `positionMC` on a placed draw excludes the centre displacement. Where the platform reassociates float math (Dawn's relaxed math on Apple), the error terms fold to zero and accuracy is the old one; verified only on NVIDIA under D3D12.
+
+  | Case                                            | Before  | After    |
+  | ----------------------------------------------- | ------- | -------- |
+  | 37 km displacement, GPU                         | 0.43 mm | 0.03 mm  |
+  | 3,600 km translation, GPU                       | 9.8 mm  | 0.01 mm  |
+  | 37 km displacement, float32 emulation in Node   | 3.2 mm  | 0.06 mm  |
+  | Whole-world map at street level, Node emulation | 125 mm  | 0.001 mm |
+
+- **More drawn volumes.** Shadow-caster selection, the viewer's request volume (a conservative sphere of its image) and the dynamic screen-space error use drawn volumes under a warped anchor.
+- **Point sets and pools follow a warp.** A `PointSource` owns a hidden carrier draw fitted like any draw, and `points.slang` evaluates the fit per point before it writes the anchor. Pools move by position only, not turned. New options: `PointSourceOptions.warpRadius` (default 50 km) and `warpTolerance` (default 0.05 m). GPU anchors are within 0.9 mm of the twin over 14 km moves. The once-per-world "not warped" report remains for point sets no source owns.
+- **Checked.** Spikes `spikes/warpPrecision.html` (`runWarpPrecision`) and `spikes/warpPoints.html` (`runWarpPoints`); tests `test/warpPrecision.test.ts`, `test/warpDrawnVolumes.test.ts` and `test/warpPoints.test.ts`.
+- **Still not built:** the lattice rows' free `.w` scalar for a fitted true height, and fitting off the main thread.
+
 **Spike runner and a build message.** `node scripts/runSpike.mjs` runs a spike's checks headless in Edge on this machine's GPU, as described under increment 4: the page is visible and focused because a hidden browser tab throttles timers. Separately, the deliberate failing bundle build in `scripts/checkBundle.mjs` printed Vite's "Build failed" line although its error is the one the check expects; it now builds silently (de36500ada).
 
 **Gaps found writing the handbook's deep dive (2026-11-10).** These are for the next increments:
 
 - Location 4 carries the position before the whole fitted route. It's the true position only when every warp crossed is a presentation warp. Second-review flaw 9's fix for mixed routes, a true point under a non-presentation warp, isn't built.
-- The order-0 term isn't in the cull kernel as hi and lo parts, so float32 cancellation remains (second-review flaw 3).
+- The order-0 term isn't in the cull kernel as hi and lo parts, so float32 cancellation remains (second-review flaw 3). Closed: "Placement leftovers closed", below.
 - The lattice rows' `.w` scalar is unused (0).
 - `warpAt` is built (increment 4, above).
 - `Warp`, `Route`, `resolveRoute` and `NonRigidRouteError` aren't exported from an entry point. Only `warpFrame`, `WarpFrame`, `WarpSpec` and `isWarpFrame` are. They wait for the API review's names.
