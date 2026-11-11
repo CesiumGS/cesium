@@ -13,6 +13,7 @@ import {
 } from "../camera/frameResolver.ts";
 import {
   NonRigidRouteError,
+  warpForward,
   warpInverse,
   type Route,
   type RouteStep,
@@ -622,7 +623,7 @@ class Resolver implements FramesResolver {
         if (leg.inverse) {
           warpInverse(w, at, at);
         } else {
-          w.forward(at.slice(), at);
+          warpForward(w, at.slice(), at);
         }
         continue;
       }

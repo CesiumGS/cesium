@@ -82,6 +82,19 @@ export class WarpFitCache {
   }
 
   /**
+   * The fit for `key` on `root` if it is current at `revision` (no queueing,
+   * no touching): a pending fit's result, once `run` has made it.
+   */
+  current(
+    key: string,
+    root: string,
+    revision: number,
+  ): CubicLattice | undefined {
+    const e = this.#entries.get(`${root}\u0000${key}`);
+    return e && e.fitted === revision ? e.lattice : undefined;
+  }
+
+  /**
    * Runs queued fits, newest request first, until `budgetMs` is spent. At
    * least one runs per call when any is queued, so a budget below one fit
    * still makes progress. A job that throws is dropped and its error

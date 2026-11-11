@@ -165,6 +165,10 @@ export function upload(tileset: TilesetUpload): void {
           collision: tileset.state.collision,
           ...(shader ? { shader } : {}),
         });
+        // The warp fits of a tile's draws share its geometric error's budget.
+        for (const draw of placement.draws) {
+          tileset.world.setDrawGeometricError?.(draw, tile.geometricError);
+        }
         for (const item of tileset.state.itemList) {
           item.place(tile, placement);
         }

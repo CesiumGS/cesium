@@ -106,6 +106,7 @@ import {
   setTerrainClip,
 } from "./world/terrainClips.ts";
 import { castRays } from "./world/rays.ts";
+import { WorldWarps } from "./world/warps.ts";
 import {
   releasePlacementParameter,
   createPlacementParameter,
@@ -165,6 +166,12 @@ export class World {
   readonly raster: WorldRaster = new WorldRaster();
   /** @internal Scene data: transforms, anchors, material keys, placements, feature tables. */
   readonly scene: WorldScene = new WorldScene();
+  /**
+   * @internal Draws under an anchor whose route to the render root crosses a
+   * warp, drawn warped by fits of it (scene/world/warps.ts). The engine steps
+   * it once a frame.
+   */
+  readonly warps: WorldWarps = new WorldWarps(this);
   /** @internal What one draw costs the tables (`DrawSink.drawOverheadBytes`). */
   readonly drawOverheadBytes = DRAW_OVERHEAD_BYTES;
   /** @internal A custom shader's pipeline is ready: draw with it from now on. */
@@ -793,7 +800,11 @@ export class World {
    * `source`'s transform goes.
    */
   twinDraw(source: DrawHandle): DrawHandle | undefined {
-    return twinDraw(this, source);
+    const twin = twinDraw(this, source);
+    if (twin) {
+      this.warps.inherit(source, twin);
+    }
+    return twin;
   }
 
   /**
@@ -899,6 +910,14 @@ export class World {
 
   removeDraw(handle: DrawHandle): void {
     removeDraw(this, handle);
+  }
+
+  /**
+   * @internal A tile's geometric error (m), the budget its draw's warp fit
+   * shares when its anchor's route crosses a warp: `max(1 mm, error / 64)`.
+   */
+  setDrawGeometricError(handle: DrawHandle, error: number): void {
+    this.warps.setGeometricError(handle, error);
   }
 
   /**
@@ -1443,12 +1462,17 @@ export class World {
    * after the mesh's vertices.
    */
   setPlacement(handle: DrawHandle, placement: Placement | undefined): void {
+    if (this.warps.setUser(handle, placement)) {
+      return; // drawn warped by its route: kept, with the route's term
+    }
     setPlacement(this, handle, placement);
   }
 
   /** The draw's per-vertex placement (`setPlacement`), if any. */
   drawPlacement(handle: DrawHandle): Placement | undefined {
-    return drawPlacement(this, handle);
+    return this.warps.has(handle)
+      ? this.warps.userPlacement(handle)
+      : drawPlacement(this, handle);
   }
 
   /** Changes a draw's tint (linear RGBA, multiplied with its material). */
@@ -1463,6 +1487,9 @@ export class World {
   setVisible(handle: DrawHandle, visible: boolean): void {
     if (!this.hasDraw(handle)) {
       return;
+    }
+    if (this.warps.setVisible(handle, visible)) {
+      return; // held hidden until its route's fit lands: remembered
     }
     const flags =
       this.raster.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
@@ -1668,6 +1695,7 @@ export class World {
 
   destroy(): void {
     this.destroyed_ = true;
+    this.warps.clear();
     this.stopTracking();
     // Its tables' string ids go back to the shared table.
     for (const uploaded of this.scene.tableColumns.values()) {

@@ -16,7 +16,14 @@ import {
   type FrameResolver,
 } from "./frameResolver.ts";
 import { defaultRig, isDefaultRig, rigError, type Rig } from "./rig.ts";
+import {
+  NonRigidRouteError,
+  resolveRoute,
+  routeIsRigid,
+  type Route,
+} from "./route.ts";
 import { tableResolver } from "./tableResolver.ts";
+import { affinePart } from "../scene/warpFit.ts";
 
 /** @internal What the camera layer needs of its engine. */
 export interface CameraLayerHost {
@@ -84,6 +91,13 @@ interface ViewState {
  * so a globe-only scene resolves nothing, and every placement stays at
  * the identity until `World.placeAnchor` is called.
  *
+ * An anchor whose route to the root crosses a warp (a warp frame the rig
+ * sits on; `FrameResolver.route`) is placed by the route's affine part (its
+ * rigid steps composed, the warps as identity) and marked with the route
+ * (`View.anchorRoute`): its content is drawn warped, per vertex, by fits
+ * of the route (scene/world/warps.ts). The rig's own frames must reach the
+ * root rigidly, as the root follows the rig.
+ *
  * A reference frame that can't be resolved (a `FrameUnavailableError`, any
  * other throw, a matrix that isn't finite and rigid) leaves the view's last
  * good placement of it and the camera's last good pose. Each failure is
@@ -103,6 +117,8 @@ export class CameraLayer {
   private readonly m = [0, 1, 2, 3].map(() => new Float64Array(16));
   private readonly current = new Float64Array(16);
   private readonly x = new Float64Array(16);
+  /** The route `resolveAnchor` last left, when it crossed a warp. */
+  private routed: Route | undefined;
 
   /** @internal Made by the engine. */
   constructor(private readonly host: CameraLayerHost) {}
@@ -532,7 +548,7 @@ export class CameraLayer {
     for (let i = -1; i < anchors.length; i++) {
       const anchor = i < 0 ? undefined : anchors[i]!;
       const key = anchor ?? world.root;
-      const m = this.resolveOrReport(
+      const m = this.resolveAnchor(
         state,
         resolver,
         key,
@@ -550,8 +566,50 @@ export class CameraLayer {
         view.setAnchorPlacement(anchor, m);
         moved = true;
       }
+      view.setAnchorRoute(anchor, this.routed);
     }
     return moved;
+  }
+
+  /**
+   * An anchor's placement in `root`, or undefined after reporting why not.
+   * Rigid: the resolver's matrix, as ever. Across a warp: the route's affine
+   * part (its rigid steps composed, the warps as identity), the route left
+   * in `routed` for the view to mark the anchor with; the warps are drawn
+   * per vertex (scene/world/warps.ts), not placed.
+   */
+  private resolveAnchor(
+    state: ViewState,
+    resolver: FrameResolver,
+    frame: FrameKey,
+    root: FrameKey,
+    seconds: number,
+    out: Float64Array,
+    what: (frame: FrameKey) => string,
+  ): Float64Array | undefined {
+    this.routed = undefined;
+    try {
+      return this.checked(resolver, frame, root, seconds, out);
+    } catch (error) {
+      if (!(error instanceof NonRigidRouteError) || !resolver.route) {
+        this.report(state, frame, what(frame), error);
+        return undefined;
+      }
+    }
+    try {
+      const route = resolveRoute(resolver, frame, root, seconds);
+      const affine = affinePart(route);
+      const bad = rigidMatrixError(affine);
+      if (bad) {
+        throw new NotRigidError(frame, root, bad);
+      }
+      m4.copy(out, affine);
+      this.routed = routeIsRigid(route) ? undefined : route;
+      return out;
+    } catch (error) {
+      this.report(state, frame, what(frame), error);
+      return undefined;
+    }
   }
 
   /** Evaluates the rig's pose in `root`; true if the camera moved. */
@@ -726,7 +784,12 @@ export class CameraLayer {
     what: string,
     error: unknown,
   ): void {
-    const reason = error instanceof Error ? error.message : String(error);
+    const reason =
+      error instanceof NonRigidRouteError
+        ? `${error.frame} to ${error.base} crosses a warp, so it has no rigid placement: a rig's frames (position, anchor, orientation) must reach its render root rigidly (put the rig on the warped frame, or one under it), and content across a warp needs a resolver with route()`
+        : error instanceof Error
+          ? error.message
+          : String(error);
     const kind =
       error instanceof FrameUnavailableError ? ` (${error.reason})` : "";
     // The failure itself, whatever asked and in whichever direction: one

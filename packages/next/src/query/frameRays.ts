@@ -9,6 +9,12 @@ import {
   type FrameKey,
   type FrameResolver,
 } from "../camera/frameResolver.ts";
+import {
+  PresentationRouteError,
+  resolveRoute,
+  routeForward,
+  routeIsRigid,
+} from "../camera/route.ts";
 import { C } from "../math/constants.ts";
 import type { World } from "../scene/World.ts";
 import type { AnchorHandle } from "../scene/world/types.ts";
@@ -67,6 +73,34 @@ function apply(
   return out;
 }
 
+/** A carrier of points between two frames (`carrier`). */
+type Carrier = (p: ArrayLike<number>) => Float64Array;
+
+/**
+ * A carrier of points of `from` into `to` at `seconds`, in float64: a rigid
+ * route by its matrix, a route across warps point by point (`routeForward`;
+ * a ray is carried by its two ends, so it stays straight in `to`). A rays
+ * query asks for true coordinates, so a route across a presentation warp (a
+ * drawn frame, as a vertical exaggeration) is refused, naming the frames.
+ */
+function carrier(
+  resolver: FrameResolver,
+  from: FrameKey,
+  to: FrameKey,
+  seconds: number,
+): Carrier {
+  const route = resolveRoute(resolver, from, to, seconds);
+  if (route.presentation) {
+    throw new PresentationRouteError(from.name, to.name);
+  }
+  const first = route.steps[0]!;
+  if (first.kind === "rigid" && routeIsRigid(route)) {
+    const m = first.matrix;
+    return (p) => apply(m, p);
+  }
+  return (p) => routeForward(route, p);
+}
+
 /**
  * The scene time each ray places `anchor` at: `seconds` when geometric, else
  * `seconds − τ`, with τ the light time from the ray's start to its closest
@@ -81,11 +115,15 @@ function placementTimes(
   if (query.correction !== "lightTime") {
     return query.rays.map(() => query.seconds);
   }
-  const m = new Float64Array(16);
   return query.rays.map((ray) => {
     let tau = 0;
     for (let i = 0; i < 2; i++) {
-      resolver.resolve(anchor, frame, query.seconds - tau, m);
+      const origin = carrier(
+        resolver,
+        anchor,
+        frame,
+        query.seconds - tau,
+      )(ORIGIN);
       const dx = ray.to[0]! - ray.from[0]!;
       const dy = ray.to[1]! - ray.from[1]!;
       const dz = ray.to[2]! - ray.from[2]!;
@@ -96,9 +134,9 @@ function placementTimes(
               1,
               Math.max(
                 0,
-                ((m[12]! - ray.from[0]!) * dx +
-                  (m[13]! - ray.from[1]!) * dy +
-                  (m[14]! - ray.from[2]!) * dz) /
+                ((origin[0]! - ray.from[0]!) * dx +
+                  (origin[1]! - ray.from[1]!) * dy +
+                  (origin[2]! - ray.from[2]!) * dz) /
                   d2,
               ),
             )
@@ -108,6 +146,8 @@ function placementTimes(
     return query.seconds - tau;
   });
 }
+
+const ORIGIN = [0, 0, 0] as const;
 
 /**
  * One target in one anchor: the rays carried in, answered, and the hits
@@ -127,12 +167,25 @@ async function inAnchor(
 ): Promise<RayAnswer[]> {
   const { resolver } = host;
   const times = placementTimes(query, resolver, frame, anchor);
-  const m = new Float64Array(16);
+  // One route per distinct time (a geometric query has one).
+  const carrierAt = (from: FrameKey, to: FrameKey) => {
+    const bySeconds = new Map<number, Carrier>();
+    return (s: number): Carrier => {
+      let c = bySeconds.get(s);
+      if (!c) {
+        c = carrier(resolver, from, to, s);
+        bySeconds.set(s, c);
+      }
+      return c;
+    };
+  };
+  const into = carrierAt(frame, anchor);
   const rays: QueryRay[] = query.rays.map((ray, i) => {
-    resolver.resolve(frame, anchor, times[i]!, m);
-    return { from: apply(m, ray.from), to: apply(m, ray.to) };
+    const carry = into(times[i]!);
+    return { from: carry(ray.from), to: carry(ray.to) };
   });
   const answers = await answer(rays, times);
+  const back = reportIn !== anchor ? carrierAt(anchor, reportIn) : undefined;
   return answers.map((a, i) => {
     const s = times[i]!;
     const ray = query.rays[i]!;
@@ -162,9 +215,8 @@ async function inAnchor(
       return { ...a, accuracy };
     }
     let position = a.hit.position;
-    if (reportIn !== anchor) {
-      resolver.resolve(anchor, reportIn, s, m);
-      position = apply(m, position);
+    if (back) {
+      position = back(s)(position);
     }
     return {
       ...a,
@@ -211,6 +263,11 @@ export async function castFrameRays(
     } catch (error) {
       if (signal?.aborted) {
         throw abortReason(signal);
+      }
+      // A presentation route is a mistake in the query, not a route that is
+      // not there yet: it rejects, naming the frames.
+      if (error instanceof PresentationRouteError) {
+        throw error;
       }
       const message =
         error instanceof FrameUnavailableError
@@ -284,6 +341,9 @@ async function answerTarget(
       } catch (error) {
         if (signal?.aborted) {
           throw abortReason(signal);
+        }
+        if (error instanceof PresentationRouteError) {
+          throw error;
         }
         // One anchor's route failing leaves the others; all failing is
         // the route's failure.

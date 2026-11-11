@@ -2,6 +2,7 @@ import { Camera, projectToPixel, type CameraPose } from "./Camera.ts";
 import type { World } from "./World.ts";
 import type { AnchorHandle } from "./world/types.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
+import type { Route } from "../camera/route.ts";
 import type { FeatureValue } from "../io/gltfTypes.ts";
 import { type ViewLighting } from "../render/layout.ts";
 import { EARTH, bodyKey, type Body } from "./Body.ts";
@@ -17,6 +18,8 @@ import {
   syncAnchors,
   anchorPlacement,
   setAnchorPlacement,
+  setAnchorRoute,
+  anchorRoutes,
   anchorCamera,
   setCameraFromAnchor,
   pickPlacements,
@@ -544,6 +547,31 @@ export class View {
     matrix: ArrayLike<number>,
   ): void {
     setAnchorPlacement(this, anchor, matrix);
+  }
+
+  /**
+   * @internal Marks `anchor` (or, with `undefined`, the table's root) as
+   * placed across a warp by `route` (its placement is then the route's
+   * affine part), or as rigid again with no route. The camera layer sets it.
+   */
+  setAnchorRoute(
+    anchor: AnchorHandle | undefined,
+    route: Route | undefined,
+  ): void {
+    setAnchorRoute(this, anchor, route);
+  }
+
+  /** @internal The routes of anchors placed across a warp, by slot (0: the table's root). */
+  anchorRoutes(): ReadonlyArray<Route | undefined> {
+    return anchorRoutes(this);
+  }
+
+  /** The route that places `anchor` (or the table's root) when it crosses a warp: its warps, whether it is a presentation, its revision. Undefined for a rigid anchor. */
+  anchorRoute(anchor: AnchorHandle | undefined): Route | undefined {
+    if (anchor && this.world.anchorOf(anchor) !== anchor) {
+      return undefined;
+    }
+    return anchorRoutes(this)[anchor?.slot ?? 0];
   }
 
   /**

@@ -37,6 +37,11 @@ export interface DrawSink {
   removeTransform(handle: TransformHandle): void;
   addDraw(options: DrawOptions): DrawHandle;
   removeDraw(handle: DrawHandle): void;
+  /**
+   * A tile's geometric error (m): the budget its draw's warp fit shares
+   * (`max(1 mm, error / 64)`). Optional: a sink with no warps ignores it.
+   */
+  setDrawGeometricError?(handle: DrawHandle, error: number): void;
   drawMatrix<T extends Float64Array = Float64Array<ArrayBuffer>>(
     handle: DrawHandle,
     out?: T,

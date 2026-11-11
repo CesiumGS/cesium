@@ -4,6 +4,7 @@
 // consumes (section 8.4): a query, not only what the frames module pushes
 // into the core.
 import type { FrameKey } from "../camera/frameResolver.ts";
+import type { Route } from "../camera/route.ts";
 import type { Placement } from "../scene/placement.ts";
 import type { View } from "../scene/View.ts";
 import type { World } from "../scene/World.ts";
@@ -65,6 +66,33 @@ export interface DrawPlacementInfo {
     /** An attribute that holds a position, not a displacement. */
     readonly absolute?: boolean;
   }[];
+  /**
+   * Where the draw's anchor reaches the render root across a warp (plan
+   * 13.26): the warps crossed in order, whether any is a presentation (the
+   * draw is then drawn where it is not), and the state of the draw's fit.
+   * Its lattice, `terms`' last entry, has the cells, error and estimate.
+   * Absent for a rigid route.
+   */
+  readonly route?: {
+    readonly warps: readonly {
+      readonly description: string;
+      readonly presentation: boolean;
+      /** The route goes from the warp's `to` back to its `from`. */
+      readonly inverse: boolean;
+      /** The warp's scale now, when it has one (1: the warp as stated). */
+      readonly scale?: number;
+    }[];
+    readonly presentation: boolean;
+    /** The route's revision; a fit is redone when it changes. */
+    readonly revision: number;
+    /**
+     * "fitted": drawn at the current fit; "stale": an older fit is drawn
+     * while a refit runs; "pending": hidden until its first fit; "unwarped":
+     * a billboard, point or instanced draw, which has no per-vertex
+     * placement and is drawn at its anchor's affine place.
+     */
+    readonly fit: "fitted" | "stale" | "pending" | "unwarped";
+  };
 }
 
 /**
@@ -88,15 +116,19 @@ export function placementOf(
     ? (resolver.binding(anchor)?.name ?? anchor.name)
     : world.root.name;
   const transform = `the draw's transform from ${content} to the render root, ${root.name}`;
+  const through = routeOf(view.anchorRoute(anchor), world.warps.status(draw));
   const placed = world.scene.drawPlacements[draw.index];
   if (!placed) {
     return {
       kind: "affine",
       root,
-      operation: transform,
-      errorBound: 0,
+      operation: through
+        ? `${transform}, across ${through.warps.map((w) => w.description).join(", then ")} (${through.fit})`
+        : transform,
+      ...(through ? {} : { errorBound: 0 }),
       resamplable: true,
       terms: [],
+      ...(through && { route: through }),
     };
   }
   const terms = placed.terms;
@@ -106,6 +138,7 @@ export function placementOf(
     root,
     operation: `${terms.map(({ term }, i) => describe(term, weights[i]!)).join(" plus ")}, then ${transform}`,
     resamplable: terms.every(({ term }) => term.kind !== "attribute"),
+    ...(through && { route: through }),
     terms: terms.map(({ term }, i) =>
       term.kind === "cubic"
         ? {
@@ -135,6 +168,35 @@ export function placementOf(
     }
   });
   return { ...info, errorBound: error, estimate };
+}
+
+/** The route a draw's anchor is placed by across warps, as the query reports it; undefined for a rigid one. */
+function routeOf(
+  route: Route | undefined,
+  status: { readonly state: "fitted" | "stale" | "pending" } | undefined,
+): NonNullable<DrawPlacementInfo["route"]> | undefined {
+  if (!route) {
+    return undefined;
+  }
+  return {
+    warps: route.steps.flatMap((step) =>
+      step.kind === "warp"
+        ? [
+            {
+              description:
+                step.warp.description ??
+                `${step.warp.from.name} to ${step.warp.to.name}`,
+              presentation: step.warp.presentation,
+              inverse: step.inverse,
+              ...(step.warp.scale && { scale: step.warp.scale.value }),
+            },
+          ]
+        : [],
+    ),
+    presentation: route.presentation,
+    revision: route.revision,
+    fit: status?.state ?? "unwarped",
+  };
 }
 
 /** The public kind nearest to terms set directly. */

@@ -1,6 +1,7 @@
 // A view's placements of its world's anchors, and its camera relative to an
 // anchor (View's anchor methods).
 import type { FrameKey } from "../camera/frameResolver.ts";
+import type { Route } from "../camera/route.ts";
 import { rigidMatrixError } from "../math/transforms.ts";
 import { MAX_ANCHORS } from "../render/layout.ts";
 import { Camera, type CameraPose } from "./Camera.ts";
@@ -21,6 +22,7 @@ export interface ViewAnchorContext extends Pick<
     | "placed"
     | "placementOwners"
     | "placements"
+    | "routes"
   >;
 }
 
@@ -154,6 +156,64 @@ export function setAnchorPlacement(
   view.wake?.();
 }
 
+/** Whether two routes make the same warp of the same content: nothing a fit depends on differs. */
+function sameRoute(a: Route, b: Route): boolean {
+  if (
+    a.revision !== b.revision ||
+    a.frame !== b.frame ||
+    a.base !== b.base ||
+    a.steps.length !== b.steps.length
+  ) {
+    return false;
+  }
+  for (let i = 0; i < a.steps.length; i++) {
+    const x = a.steps[i]!;
+    const y = b.steps[i]!;
+    if (x.kind === "rigid" && y.kind === "rigid") {
+      for (let k = 0; k < 16; k++) {
+        if (x.matrix[k] !== y.matrix[k]) {
+          return false;
+        }
+      }
+    } else if (
+      x.kind !== "warp" ||
+      y.kind !== "warp" ||
+      x.warp !== y.warp ||
+      x.inverse !== y.inverse
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Marks `anchor` (or the table's root) as placed across a warp by `route`,
+ * or as rigid again (`undefined`). A route that is the same as the one held
+ * keeps the held one and wakes nothing.
+ */
+export function setAnchorRoute(
+  view: ViewAnchorContext,
+  anchor: AnchorHandle | undefined,
+  route: Route | undefined,
+): void {
+  const slot = placementSlot(view, anchor, "setAnchorRoute");
+  const held = view.anchorState.routes[slot];
+  if (held === route || (held && route && sameRoute(held, route))) {
+    return;
+  }
+  view.anchorState.routes[slot] = route;
+  view.wake?.();
+}
+
+/** The routes of the anchors placed across a warp, by slot (slot 0: the table's root). */
+export function anchorRoutes(
+  view: ViewAnchorContext,
+): ReadonlyArray<Route | undefined> {
+  syncAnchors(view);
+  return view.anchorState.routes;
+}
+
 export function anchorCamera(
   view: ViewAnchorContext,
   anchor: AnchorHandle | undefined,
@@ -248,6 +308,7 @@ function placementSlot(
     // The slot's last placement was for a removed anchor (normally
     // forgotten already, by syncAnchors).
     view.anchorState.placementOwners[slot] = anchor as AnchorHandle;
+    view.anchorState.routes[slot] = undefined;
     if (view.anchorState.placed[slot] === 1) {
       view.anchorState.placed[slot] = 0;
       view.anchorState.anchorRevision_++;
@@ -278,6 +339,7 @@ export function syncAnchors(view: ViewAnchorContext): void {
     if (owner && world.anchorOf(owner) !== owner) {
       view.anchorState.placementOwners[slot] = undefined;
       view.anchorState.placed[slot] = 0;
+      view.anchorState.routes[slot] = undefined;
     }
   }
   if (!first) {

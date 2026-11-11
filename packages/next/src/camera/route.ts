@@ -7,6 +7,11 @@
 // a presentation warp.
 import type { FrameKey, FrameResolver } from "./frameResolver.ts";
 
+/** A number that is read live and moves a warp's strength; a `PlacementParameter` has this shape. */
+export interface WarpScale {
+  readonly value: number;
+}
+
 /**
  * A non-rigid edge of the frame graph: points in `from` (metres, its axes)
  * map to `to` by `forward`. A coordinate operation is a warp (where content
@@ -34,8 +39,15 @@ export interface Warp {
   /** Words for reports (a PROJ pipeline, "vertical exaggeration × 10"). */
   readonly description?: string;
   /**
-   * `p` in `from` to `out` in `to`. With `jacobian` (9 numbers), also writes
-   * ∂out/∂p there, column-major. Must be injective on its domain.
+   * How much of the warp applies, read live (a `PlacementParameter` is one,
+   * and a slider writes one float): `forward` is the warp at 1, and at `s`
+   * the warp is `p + s·(forward(p) − p)`. Absent, always 1. Use
+   * `warpForward` and `warpInverse`, which honour it.
+   */
+  readonly scale?: WarpScale;
+  /**
+   * `p` in `from` to `out` in `to`, at scale 1. With `jacobian` (9 numbers),
+   * also writes ∂out/∂p there, column-major. Must be injective on its domain.
    */
   forward(
     p: ArrayLike<number>,
@@ -74,6 +86,25 @@ export class NonRigidRouteError extends Error {
       `${frame} to ${base}: the route crosses a warp, so it has no 4×4; use the resolver's route()`,
     );
     this.name = "NonRigidRouteError";
+    this.frame = frame;
+    this.base = base;
+  }
+}
+
+/**
+ * Thrown where a question needs true coordinates (a ray query) and its route
+ * crosses a presentation warp: the frames say where content is drawn, not
+ * where it is.
+ */
+export class PresentationRouteError extends Error {
+  readonly frame: string;
+  readonly base: string;
+
+  constructor(frame: string, base: string) {
+    super(
+      `${frame} to ${base}: the route crosses a presentation warp (a drawn frame, as a vertical exaggeration), and this asks for true coordinates; name a frame reached without crossing it`,
+    );
+    this.name = "PresentationRouteError";
     this.frame = frame;
     this.base = base;
   }
@@ -126,7 +157,7 @@ export function routeForward(
     } else if (step.inverse) {
       warpInverse(step.warp, at, at);
     } else {
-      step.warp.forward(at.slice(), at);
+      warpForward(step.warp, at.slice(), at);
     }
   }
   out.set(at);
@@ -147,7 +178,7 @@ export function routeInverse(
       invertRigid(step.matrix, inv);
       transformPoint(inv, at, at);
     } else if (step.inverse) {
-      step.warp.forward(at.slice(), at);
+      warpForward(step.warp, at.slice(), at);
     } else {
       warpInverse(step.warp, at, at);
     }
@@ -156,10 +187,109 @@ export function routeInverse(
   return out;
 }
 
+/** A warp's scale now: 1 without one. Throws for a value that isn't finite. */
+export function warpScaleOf(warp: Warp): number {
+  const s = warp.scale?.value ?? 1;
+  if (!Number.isFinite(s)) {
+    throw new RangeError(
+      `warp ${warp.description ?? `${warp.from.name} to ${warp.to.name}`}: its scale is ${s}; it takes a finite number`,
+    );
+  }
+  return s;
+}
+
+/**
+ * `p` carried by the warp at its scale: `p + s·(forward(p) − p)` (`forward`
+ * itself at 1, the identity at 0). With `jacobian`, ∂out/∂p likewise,
+ * `I + s(J − I)`. `p` may be `out`.
+ */
+export function warpForward(
+  warp: Warp,
+  p: ArrayLike<number>,
+  out: Float64Array,
+  jacobian?: Float64Array,
+): Float64Array {
+  const s = warpScaleOf(warp);
+  if (s === 1) {
+    return warp.forward(p, out, jacobian);
+  }
+  const x = p[0]!;
+  const y = p[1]!;
+  const z = p[2]!;
+  if (s === 0) {
+    out[0] = x;
+    out[1] = y;
+    out[2] = z;
+    jacobian?.set([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+    return out;
+  }
+  warp.forward([x, y, z], out, jacobian);
+  out[0] = x + s * (out[0]! - x);
+  out[1] = y + s * (out[1]! - y);
+  out[2] = z + s * (out[2]! - z);
+  if (jacobian) {
+    for (let c = 0; c < 3; c++) {
+      for (let r = 0; r < 3; r++) {
+        const i = c * 3 + r;
+        const id = r === c ? 1 : 0;
+        jacobian[i] = id + s * (jacobian[i]! - id);
+      }
+    }
+  }
+  return out;
+}
+
+/** `route` with every warp's scale taken at `scaleOf` (undefined: scale 1, no scale). */
+function mapScales(
+  route: Route,
+  scaleOf: (warp: Warp) => WarpScale | undefined,
+): Route {
+  if (!route.steps.some((s) => s.kind === "warp" && s.warp.scale)) {
+    return route;
+  }
+  return {
+    ...route,
+    steps: route.steps.map((step) => {
+      if (step.kind === "rigid" || !step.warp.scale) {
+        return step;
+      }
+      const w = step.warp;
+      const scale = scaleOf(w);
+      const fixed: Warp = {
+        from: w.from,
+        to: w.to,
+        presentation: w.presentation,
+        revision: w.revision,
+        ...(w.domain !== undefined && { domain: w.domain }),
+        ...(w.accuracy !== undefined && { accuracy: w.accuracy }),
+        ...(w.description !== undefined && { description: w.description }),
+        ...(scale !== undefined && { scale }),
+        forward: (p, out, jacobian) => w.forward(p, out, jacobian),
+        ...(w.inverse !== undefined && {
+          inverse: (q: ArrayLike<number>, out: Float64Array) =>
+            w.inverse!(q, out),
+        }),
+      };
+      return { kind: "warp", warp: fixed, inverse: step.inverse };
+    }),
+  };
+}
+
+/** `route` with every warp at scale 1: what its scaled warps fit as unit displacements. */
+export function withoutScales(route: Route): Route {
+  return mapScales(route, () => undefined);
+}
+
+/** `route` with each warp's scale fixed at its value now: a snapshot a fit can run on later. */
+export function withFrozenScales(route: Route): Route {
+  return mapScales(route, (w) => ({ value: warpScaleOf(w) }));
+}
+
 /**
  * `q` in the warp's `to` back to its `from`: its own `inverse` when it has
- * one, else Newton from `q` with its Jacobian, to `tolerance` metres.
- * Throws when it doesn't converge (the warp isn't injective near `q`).
+ * one (at scale 1), else Newton from `q` with its Jacobian at its scale, to
+ * `tolerance` metres. Throws when it doesn't converge (the warp isn't
+ * injective near `q`).
  */
 export function warpInverse(
   warp: Warp,
@@ -167,15 +297,20 @@ export function warpInverse(
   out = new Float64Array(3),
   { tolerance = 1e-9, iterations = 32 } = {},
 ): Float64Array {
-  if (warp.inverse) {
+  const scale = warpScaleOf(warp);
+  if (scale === 1 && warp.inverse) {
     return warp.inverse(q, out);
   }
   const target = [q[0]!, q[1]!, q[2]!];
+  if (scale === 0) {
+    out.set(target);
+    return out;
+  }
   const p = new Float64Array(target);
   const f = new Float64Array(3);
   const j = new Float64Array(9);
   for (let k = 0; k < iterations; k++) {
-    warp.forward(p, f, j);
+    warpForward(warp, p, f, j);
     const r = [f[0]! - target[0]!, f[1]! - target[1]!, f[2]! - target[2]!];
     const step = solve3(j, r);
     p[0] = p[0]! - step[0]!;

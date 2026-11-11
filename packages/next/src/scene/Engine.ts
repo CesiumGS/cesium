@@ -32,6 +32,7 @@ import { Camera } from "./Camera.ts";
 import { SHADOW_CASCADES, SHADOWS_STRIDE } from "./shadows.ts";
 import { LIGHTS_SIZE } from "./lights.ts";
 import { World } from "./World.ts";
+import { WARP_BUDGET_MS } from "./world/warps.ts";
 import { type AnchorHandle, type WorldOptions } from "./world/types.ts";
 import { CameraLayer } from "../camera/CameraLayer.ts";
 import { ANCHOR_EYE_REACH } from "./anchorEyes.ts";
@@ -93,6 +94,8 @@ import { EngineRaster } from "../render/view/engineRaster.ts";
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
+  /** What the warp fits may cost a frame, ms (default 4): `WorldWarps.frame`'s budget. */
+  warpBudgetMs?: number;
   /** Replace built-in shaders with complete WGSL modules (e.g. from Slang). */
   shaders?: ShaderOverrides;
   /**
@@ -133,6 +136,9 @@ export interface FrameStats {
 
 /** Values in one view's on-demand fingerprint (see `viewChanged`). */
 const VIEW_KEY_LENGTH = 30;
+
+/** No anchor is placed across a warp. */
+const NO_ROUTES: readonly undefined[] = [];
 
 /** Options for a globe surface: terrain or the ellipsoid. */
 export interface GlobeOptions extends TilesetOptions {
@@ -400,6 +406,14 @@ export class Engine {
   /** Per view, the anchors its eye was last too far from (reported once). */
   private readonly farAnchors = new WeakMap<View, Set<AnchorHandle>>();
   private readonly freeViewIds: number[] = [];
+  /**
+   * What fitting the draws' warps may cost a frame, ms (plan §13.26): fits
+   * past it wait for the next frame, their draws held hidden or drawn at
+   * their last fit, and the loop stays awake while any wait.
+   */
+  warpBudgetMs = WARP_BUDGET_MS;
+  /** Worlds whose views disagree on the render root, warned once. */
+  private readonly warpWarned = new WeakSet<World>();
   private readonly maxViews: number;
   private frameHandle = 0;
   /** An animation frame is requested for the loop (`start`). */
@@ -565,6 +579,7 @@ export class Engine {
     // M0: device-loss recovery stops at the device. Rebuilding worlds from
     // their CPU-side sources arrives with the streaming cache (M2).
     const engine = new Engine(gpu, ctx, sky, options.maxViews ?? 16);
+    engine.warpBudgetMs = options.warpBudgetMs ?? WARP_BUDGET_MS;
     engine.setHaze(
       options.visibility === undefined ? 60 : (options.visibility ?? undefined),
       options.aerosol ?? "continental",
@@ -1348,6 +1363,13 @@ export class Engine {
       } catch (error) {
         this.reportLoopError("the camera layer", error);
       }
+      // The warp fits after the placements (they carry the routes), before
+      // change detection: what they finish draws in this tick.
+      try {
+        busy = this.warpTick(this.warpBudgetMs) || busy;
+      } catch (error) {
+        this.reportLoopError("the warp fits", error);
+      }
       // Each view's placements, checked against its world (a removed
       // anchor, another world: `View.anchorRevision`), so the wake that
       // finding raises is this tick's own, like the listeners'.
@@ -1388,6 +1410,52 @@ export class Engine {
       this.stats.idle = true; // asleep: nothing more to render
     }
   };
+
+  /**
+   * Steps each world's warp context (`WorldWarps.frame`): the routes of the
+   * anchors its first view placed across a warp, and that view's render
+   * root. A world's other views with another root show the first's fits
+   * (terms per view are a follow-up): warned once. True while fits are
+   * pending.
+   */
+  private warpTick(budgetMs: number): boolean {
+    let busy = false;
+    const report = (message: string) =>
+      this.ctx.errors.report("frame", message);
+    for (let w = 0; w < this.worlds.length; w++) {
+      const world = this.worlds[w]!;
+      let first: View | undefined;
+      for (let i = 0; i < this.views.length; i++) {
+        const view = this.views[i]!;
+        if (view.world !== world) {
+          continue;
+        }
+        if (!first) {
+          first = view;
+        } else if (
+          world.warps.active &&
+          !this.warpWarned.has(world) &&
+          this.cameras.root(view) !== this.cameras.root(first)
+        ) {
+          this.warpWarned.add(world);
+          report(
+            `warp: a world's draws are warped for the render root of its first view (${this.cameras.root(first).name}), and another view has ${this.cameras.root(view).name}; it shows the first's warps (terms per view are a follow-up)`,
+          );
+        }
+      }
+      if (!first && !world.warps.active && world.warps.size === 0) {
+        continue;
+      }
+      busy =
+        world.warps.frame(
+          first ? this.cameras.root(first) : undefined,
+          first ? first.anchorRoutes() : NO_ROUTES,
+          budgetMs,
+          report,
+        ) || busy;
+    }
+    return busy;
+  }
 
   /**
    * The world a query's rays are in, and the views whose drawn content
@@ -1514,6 +1582,10 @@ export class Engine {
     // Selection runs when a camera moved or content streams; a frame then
     // renders only for the views that can see what changed.
     updateTilesets(this, (tileset) => all || moved || tileset.active);
+    // Tiles just placed are fitted before they draw (held hidden until then).
+    if (this.warpTick(this.warpBudgetMs)) {
+      this.wake();
+    }
     for (let i = 0; i < views.length; i++) {
       const view = views[i]!;
       if (
@@ -1648,6 +1720,9 @@ export class Engine {
   renderFrame(): void {
     if (!this.ticking) {
       this.cameras.update();
+      // Outside the loop nothing slices the fits: finish them, so a capture
+      // shows every draw warped.
+      this.warpTick(Infinity);
       // Outside the loop nothing slices the upload: finish it, so a
       // capture shows the stars.
       while (this.raster.sky.uploading) {

@@ -9002,12 +9002,15 @@ Increments 1 to 3 come before b-rep step 5.
   - One cubic term with one cell costs 23 row reads and 20 multiply-adds, against 22 and 20 before.
   - The placement spike passes on an NVIDIA Lovelace GPU, every vertex within half a pixel of the CPU twin: dual at t = 1.5, a fitted operation, and blends at t = 0.75 and −0.5.
 
-**Next: slice D, the wiring.**
+- **D, the wiring:** the GPU spike (`spikes/warpRoute.html`) passes on an NVIDIA Lovelace GPU. Quads anchored in ITRF are drawn in a view rooted on a ×10 height warp, at scales 0, 0.4 and 1. Every vertex is within 0.06 px of `routeForward`, and a change of scale only rewrites the term's weight.
+  - `CameraLayer` places an anchor across a warp by the route's affine part and marks it with the route (`View.anchorRoute`). A rig frame that crosses a warp to the root is refused, with a message.
+  - `scene/world/warps.ts` is one context per world, for the root of its first view (the engine warns once if another view disagrees). It finds the draws under a warped anchor and holds each hidden until its first fit. It fits the route over the draw's bounding sphere (tolerance `max(1 mm, geometricError / 64)`), and applies the lattice as a term of weight 1 after the draw's own terms. A route term is read at the undeformed position, so with a morph it is first-order.
+  - The engine runs the cache once a frame, 4 ms by default (`Engine.warpBudgetMs`), and stays awake while fits are pending.
+  - A warp may carry a `scale` (a `PlacementParameter` is one). With one scaled warp, forward, followed by rigid steps only, the unit displacement is fitted once and the scale is the term's weight: a slider writes one float. Otherwise a change refits, as a revision bump does.
+  - `frameRays` carries rays by `resolveRoute` and refuses presentation routes. `placementOf` reports the route and the fit's state.
+  - Not yet: billboards, points and instanced draws are drawn at their anchor's affine place, unwarped. Selection, picks and ray casts still read undeformed bounds and depth (increments 3 and 5). Normals are not warped (increment 2).
 
-- The view keeps its root on the chart its camera is in.
-- Items whose route to the root crosses a warp get per-tile fits from the cache, through the internal `setPlacement(terms)` and `drawTerms`.
-- Callers of `resolve` that can see a warp move to `resolveRoute`: `camera/CameraLayer.ts` (`checked`), and `query/frameRays.ts`, which refuses presentation routes.
-- `placementQuery` reports the route.
+**Increment 1 is done (2026-11-10).** The example is increment 7.
 
 _Open questions for the owner:_
 
