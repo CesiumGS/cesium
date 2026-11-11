@@ -35,6 +35,27 @@ export function boundsSize(positions: Float32Array): number {
   return Math.max(max[0]! - min[0]!, max[1]! - min[1]!, max[2]! - min[2]!);
 }
 
+/** The bounds of the faces of some meshes together, m in the b-rep's units (each mesh's origin added back). */
+export function meshBounds(
+  meshes: ReadonlyArray<{
+    faces: { positions: Float32Array };
+    origin: ArrayLike<number>;
+  }>,
+): { min: [number, number, number]; max: [number, number, number] } {
+  const min: [number, number, number] = [Infinity, Infinity, Infinity];
+  const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
+  for (const { faces, origin } of meshes) {
+    const p = faces.positions;
+    for (let i = 0; i < p.length; i++) {
+      const k = i % 3;
+      const v = p[i]! + origin[k]!;
+      min[k] = Math.min(min[k]!, v);
+      max[k] = Math.max(max[k]!, v);
+    }
+  }
+  return { min, max };
+}
+
 /**
  * The tessellation's triangle edges, each once per face, as a line list on
  * the face's own vertices, lifted by `lift` along their normals so that the

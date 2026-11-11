@@ -6,7 +6,7 @@ Clean-slate, WebGPU-only engine prototype. See `CESIUM2_WEBGPU_PLAN.md` at the r
 
 ```sh
 npm install                                 # at the repo root
-npm run setup --workspace @cesium/next      # the 1.x build, the CesiumJS releases Dyno and the benchmarks run, the Slang WASM build, SMLib
+npm run setup --workspace @cesium/next      # the 1.x build, the CesiumJS releases Dyno and the benchmarks run, the Slang WASM build, SMLib, Open CASCADE, NIST's STEP samples
 ```
 
 `setup` builds this repository's 1.x (`npm run build` at the root) if
@@ -56,6 +56,20 @@ isolation. It is LGPL 2.1, so it is never bundled: the dev server serves it at
 to `BrepForm`. Check the licence before distributing anything built with it.
 `node scripts/occtTools.mjs` fetches it alone, and `OCCT_DIR` points at
 another copy.
+
+**NIST STEP test models** (plan §13.33, the first-look example's "STEP file"
+scene). `setup` also fetches four parts of NIST's MBE PMI test models (the
+geometry-only STEP AP203 files of FTC-06, FTC-10, FTC-11 and CTC-05, 0.9 MB) from
+NIST's official zip on nist.gov (about 14 MB to fetch, `scripts/stepSamples.mjs`
+pins its URL and SHA-256, and each kept file's) into
+`~/.cesium-bench/step/nist-pmi/<version>`, with a `NOTICE.txt`. The dev server
+serves them at `/step-samples/`, and the example imports them with Open CASCADE.
+They are a US government work (17 U.S.C. § 105, NIST open licence,
+https://www.nist.gov/open/license), public domain in the US; NIST asks for
+credit, which the scene and `NOTICE.txt` give: "NIST MBE PMI test model",
+doi:10.18434/mds2-1452. Without them the scene says setup hasn't been run.
+`node scripts/stepSamples.mjs` fetches them alone, and `STEP_SAMPLES_DIR`
+points at another folder.
 
 **Frames data** (`src/time`, `src/ephemeris`; `loadFrameData()`). `setup`
 also fetches the data the frames layer needs, into `~/.cesium-bench/frames`

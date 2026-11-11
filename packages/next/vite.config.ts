@@ -28,6 +28,7 @@ import { framesDataExclusion, projGridsPlugin } from "./scripts/projGrids.mjs";
 import { slangWasmDirectory } from "./scripts/slangTools.mjs";
 import { smlibDirectory } from "./scripts/smlibTools.mjs";
 import { occtDirectory } from "./scripts/occtTools.mjs";
+import { stepSamplesDirectory } from "./scripts/stepSamples.mjs";
 
 // CesiumJS 1.x core math, used only as a test oracle for parity checks.
 const oracle = fileURLToPath(new URL("../core/Source", import.meta.url));
@@ -371,6 +372,9 @@ const slangWasm = existsSync(join(slangWasmDirectory(), "slang-wasm.js"))
 // OCCT_DIR, or the build `npm run setup` fetches (scripts/occtTools.mjs).
 // Served, never bundled.
 const occt = occtDirectory();
+// NIST's STEP test models (the b-rep example's "STEP file" scene): the store
+// `npm run setup` fills, or STEP_SAMPLES_DIR (scripts/stepSamples.mjs), looked
+// up per request. Public domain, served at /step-samples/.
 // Sample models and tilesets checked into the 1.x repo, for parity tests.
 const specsData = fileURLToPath(new URL("../../Specs/Data", import.meta.url));
 
@@ -469,6 +473,7 @@ export default defineConfig({
     ...(slangWasm ? [serveDirectory("/slang-wasm", slangWasm)] : []),
     serveDirectory("/smlib", smlibDirectory),
     ...(occt ? [serveDirectory("/occt", occt)] : []),
+    serveDirectory("/step-samples", stepSamplesDirectory),
   ],
   // Worker bundles take their own plugins (the Basis glue is decoded there).
   worker: { plugins: () => [basisTranscoderEsm(), skyPackGuard()] },

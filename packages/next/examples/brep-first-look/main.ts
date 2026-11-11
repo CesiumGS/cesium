@@ -44,6 +44,7 @@ import {
   boundsSize,
   flatFaces,
   liftedEdges,
+  meshBounds,
   wireLines,
   type DisplayMode,
   type LineMesh,
@@ -51,13 +52,17 @@ import {
 import {
   KERNELS,
   RECIPES,
+  STEP_SAMPLES,
+  loadStep,
   runKernels,
   type KernelLoad,
   type KernelResult,
+  type StepImport,
+  type StepSample,
 } from "./kernels.ts";
 
 /**
- * B-reps, a first look, in two scenes.
+ * B-reps, a first look, in three scenes.
  *
  * - Gallery: nine exact CAD shapes held as B-reps (a box, a capped cylinder,
  *   a trimmed NURBS face, a sphere, a torus, a cone frustum, a plate with
@@ -70,6 +75,12 @@ import {
  *   carry their analytic identity, OCCT's as analytic kinds. A picked face
  *   says which input it came from. The kernels load only when the scene is
  *   first shown.
+ * - STEP file: real CAD parts, NIST's public-domain MBE PMI test models
+ *   (geometry only), fetched from the dev server's /step-samples/ (`npm run
+ *   setup` puts them in the store), imported with Open CASCADE and converted
+ *   to the same render form, one part at a time. The panel says what came in
+ *   and how long each step took, and whether the form is valid. The part is
+ *   drawn scaled to about 2.4 m; PMI is not shown.
  *
  * Everything is tessellated on the CPU for now.
  *
@@ -558,7 +569,67 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     return { shapes, loads, results };
   };
 
-  type SceneName = "gallery" | "kernels";
+  /** How big a STEP part is drawn, its largest extent, m: NIST's run from 63 mm to over 500 mm. */
+  const STEP_SIZE = 2.4;
+  /** A STEP part as the scene shows it, or why it can't be. */
+  interface StepScene {
+    sample: StepSample;
+    shapes: Shape[];
+    load?: StepImport;
+    problem?: string;
+    /** How the camera frames the part: the height of its middle and its radius, m in the scene. */
+    framing: { height: number; radius: number };
+  }
+  let stepScene: StepScene | undefined;
+  let stepChoice = 0;
+  // A NIST part, fetched and imported with Open CASCADE, drawn alone in the
+  // middle at a scale of its own.
+  const makeStepScene = async (sample: StepSample): Promise<StepScene> => {
+    const none = { height: 1, radius: 3 };
+    const load = await loadStep(sample.file);
+    if ("problem" in load) {
+      return { sample, shapes: [], problem: load.problem, framing: none };
+    }
+    try {
+      // A coarse tessellation, only to size the part.
+      const { min, max } = meshBounds(
+        load.forms.map((form) => tessellateBrep(form, { tolerance: 0.002 })),
+      );
+      const size = [0, 1, 2].map((k) => max[k]! - min[k]!);
+      const longest = Math.max(...size);
+      const scale = longest > 0 ? STEP_SIZE / longest : 1;
+      const shapes: Shape[] = load.forms.map((form, i) => ({
+        name:
+          load.forms.length === 1
+            ? sample.name
+            : `${sample.name}, solid ${i + 1}`,
+        form,
+        scale,
+        x: 0,
+        y: 0,
+        place: sample.file,
+        doubleSided: false,
+      }));
+      return {
+        sample,
+        shapes,
+        load,
+        framing: {
+          height: (size[2]! * scale) / 2,
+          radius: (Math.hypot(size[0]!, size[1]!, size[2]!) * scale) / 2,
+        },
+      };
+    } catch (error) {
+      return {
+        sample,
+        shapes: [],
+        problem: `${sample.file} couldn't be tessellated (${String(error)})`,
+        framing: none,
+      };
+    }
+  };
+
+  type SceneName = "gallery" | "kernels" | "step";
   let scene: SceneName = "gallery";
   let shapes: Shape[] = gallery;
 
@@ -973,13 +1044,24 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   tessellate();
   build();
 
-  // Frames the scene's grid from its middle, Earth-fixed: the gallery's
-  // 3 × 3 or the kernels' 2 × 3.
+  // Frames the scene from its middle, Earth-fixed: the gallery's 3 × 3, the
+  // kernels' 2 × 3, or the STEP part.
   const frame = () => {
+    const part = scene === "step" ? stepScene?.framing : undefined;
     viewer.zoomTo(
       {
-        center: vec3.add(vec3.vec3(), origin, vec3.vec3(0, 0, 0.6)),
-        radius: scene === "gallery" ? 6.8 : 6.2,
+        center: part
+          ? vec3.add(
+              vec3.vec3(),
+              origin,
+              mat4.transformPoint(
+                vec3.vec3(),
+                enu,
+                vec3.vec3(0, 0, part.height),
+              ),
+            )
+          : vec3.add(vec3.vec3(), origin, vec3.vec3(0, 0, 0.6)),
+        radius: part ? part.radius * 0.8 : scene === "gallery" ? 6.8 : 6.2,
       },
       0,
       -42 * DEG,
@@ -1107,7 +1189,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   // The tessellation's numbers, folded to one line.
   const statsSummary = el("summary");
   const statsOut = el("dl");
+  /** The STEP part's tessellation time, which moves with the tolerance. */
+  const stepTessellateOut = el("span");
   const showStats = () => {
+    stepTessellateOut.textContent = `${stats.ms.toFixed(0)} ms`;
     const lines =
       stats.wireLines + stats.edgeLines + stats.isoLines + stats.whiskers;
     statsSummary.textContent = `${stats.triangles.toLocaleString()} triangles, ${stats.ms.toFixed(0)} ms, error ${
@@ -1199,6 +1284,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   // What's in the scene: the gallery's shapes, or the kernels side by side.
   const mark = (ok: boolean, text: string) =>
     el("span", { className: ok ? "bf-ok" : "bf-bad" }, text);
+  const row = (label: string, ...value: Array<Node | string>) => [
+    el("dt", {}, label),
+    el("dd", {}, ...value),
+  ];
   const problemList = (shape: Shape) => {
     const list = el("ul");
     for (const problem of problemsOf(shape)) {
@@ -1266,15 +1355,17 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       ),
     );
   };
-  /** "6 planes, 1 cylinder as Bézier": a form's faces by what their surface is, and held as patches. */
-  const kindsOf = (form: BrepForm) => {
+  /** "6 planes, 1 cylinder as Bézier": the faces of some forms by what their surface is, and held as patches. */
+  const kindsOf = (forms: readonly BrepForm[]) => {
     const counts = new Map<number, number>();
-    for (const surface of form.faceSurface) {
-      const patches =
-        form.surfaceKind[surface] === SurfaceKind.Bezier &&
-        form.surfaceIdentity[surface] !== SurfaceKind.Bezier;
-      const key = form.surfaceIdentity[surface]! * 2 + (patches ? 1 : 0);
-      counts.set(key, (counts.get(key) ?? 0) + 1);
+    for (const form of forms) {
+      for (const surface of form.faceSurface) {
+        const patches =
+          form.surfaceKind[surface] === SurfaceKind.Bezier &&
+          form.surfaceIdentity[surface] !== SurfaceKind.Bezier;
+        const key = form.surfaceIdentity[surface]! * 2 + (patches ? 1 : 0);
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
     }
     return [...counts]
       .sort((a, b) => a[0] - b[0])
@@ -1282,7 +1373,12 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         const name = KIND_NAMES[key >> 1] ?? "?";
         // Bézier is a name; the others are words.
         const word = name === "Bézier" ? name : name.toLowerCase();
-        const plural = n === 1 ? word : word === "torus" ? "tori" : `${word}s`;
+        const plural =
+          n === 1 || word === "Bézier"
+            ? word
+            : word === "torus"
+              ? "tori"
+              : `${word}s`;
         return `${n} ${plural}${key & 1 ? " as Bézier" : ""}`;
       })
       .join(", ");
@@ -1315,7 +1411,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           {},
           `${result.booleanMs!.toFixed(1)} + ${result.convertMs!.toFixed(1)} ms `,
           problems.length === 0 ? mark(true, "✓") : mark(false, "✗"),
-          el("small", {}, kindsOf(result.form)),
+          el("small", {}, kindsOf([result.form])),
         );
       });
       body.append(
@@ -1361,8 +1457,100 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       ),
     );
   };
+  /** The STEP scene's panel: what came in from the file, what it took, and whether the form is valid. */
+  const renderStep = () => {
+    const ss = stepScene;
+    if (!ss) {
+      return;
+    }
+    if (!ss.load) {
+      shapesOut.replaceChildren(
+        el("p", { className: "bf-bad" }, ss.problem ?? "Nothing to show."),
+      );
+      return;
+    }
+    const { load } = ss;
+    const forms = ss.shapes.map((shape) => shape.form);
+    const faces = forms.reduce((n, form) => n + form.faceSurface.length, 0);
+    const broken = ss.shapes.filter((shape) => problemsOf(shape).length > 0);
+    const problems = broken.reduce(
+      (n, shape) => n + problemsOf(shape).length,
+      0,
+    );
+    const { min, max } = meshBounds(
+      prepared.flatMap((prep) => (prep ? [prep.mesh] : [])),
+    );
+    const scale = ss.shapes[0]?.scale ?? 1;
+    const ms = (t: number) => `${t.toFixed(0)} ms`;
+    const list = el("dl");
+    list.append(
+      ...row("File", `${load.file}, ${(load.bytes / 1024).toFixed(1)} KiB`),
+      ...row("Solids", String(ss.shapes.length)),
+      ...row("Faces", `${faces}: ${kindsOf(forms)}`),
+      ...row(
+        "Size",
+        `${[0, 1, 2].map((k) => ((max[k]! - min[k]!) * 1000).toFixed(0)).join(" × ")} mm`,
+        el("small", {}, ` (drawn ×${scale.toFixed(1)})`),
+      ),
+      ...row(
+        "Form",
+        problems === 0
+          ? mark(true, "✓ valid")
+          : mark(false, `✗ ${problems} problems`),
+      ),
+      ...row(
+        "Times",
+        `fetch ${ms(load.fetchMs)}, import ${ms(load.importMs)}, convert ${ms(load.convertMs)}, tessellate `,
+        stepTessellateOut,
+      ),
+    );
+    shapesOut.replaceChildren(
+      list,
+      ...broken.map((shape) =>
+        el(
+          "details",
+          {},
+          el("summary", {}, `${shape.name}: problems`),
+          problemList(shape),
+        ),
+      ),
+      el(
+        "p",
+        {},
+        el(
+          "small",
+          {},
+          "NIST MBE PMI test model, public domain (",
+          el(
+            "a",
+            {
+              href: "https://www.nist.gov/open/license",
+              target: "_blank",
+              rel: "noreferrer",
+            },
+            "NIST open licence",
+          ),
+          "), ",
+          el(
+            "a",
+            {
+              href: "https://doi.org/10.18434/mds2-1452",
+              target: "_blank",
+              rel: "noreferrer",
+            },
+            "doi:10.18434/mds2-1452",
+          ),
+          ". PMI (GD&T annotations) is not shown.",
+        ),
+      ),
+    );
+  };
   const renderShapes = () =>
-    scene === "gallery" ? renderGallery() : renderKernels();
+    scene === "gallery"
+      ? renderGallery()
+      : scene === "kernels"
+        ? renderKernels()
+        : renderStep();
 
   // The scene switch.
   const SCENES: Record<SceneName, { label: string; note: string }> = {
@@ -1374,6 +1562,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       label: "Two kernels",
       note: "Each boolean made live by SMLib (west) and Open CASCADE (east) in WebAssembly, converted to the same render form. A picked face says which input it came from.",
     },
+    step: {
+      label: "STEP file",
+      note: "A real CAD part from NIST, imported from its STEP file by Open CASCADE in WebAssembly and converted to the same render form.",
+    },
   };
   const sceneNote = el("p");
   const sceneButtons = (Object.keys(SCENES) as SceneName[]).map((name) =>
@@ -1383,6 +1575,20 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       onclick: () => void setScene(name),
     }),
   );
+  const stepSelect = el(
+    "select",
+    { onchange: () => void showStep(Number(stepSelect.value)) },
+    ...STEP_SAMPLES.map((sample, i) =>
+      el("option", { value: String(i) }, sample.name),
+    ),
+  );
+  const stepAbout = el("p");
+  const stepPicker = el(
+    "div",
+    { hidden: true },
+    el("label", {}, "Model", stepSelect),
+    stepAbout,
+  );
   const syncScene = () => {
     sceneButtons.forEach((button, i) => {
       button.setAttribute(
@@ -1391,27 +1597,25 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       );
     });
     sceneNote.textContent = SCENES[scene].note;
+    stepPicker.hidden = scene !== "step";
+    stepAbout.textContent = STEP_SAMPLES[stepChoice]?.description ?? "";
+    shapesTitle.textContent = scene === "step" ? "Model" : "Shapes";
   };
-  const setScene = async (next: SceneName) => {
-    if (next === scene) {
-      return;
+  const busy = (on: boolean) => {
+    for (const button of sceneButtons) {
+      button.disabled = on;
     }
-    if (next === "kernels" && !kernelScene) {
-      for (const button of sceneButtons) {
-        button.disabled = true;
-      }
-      sceneNote.textContent =
-        "Loading SMLib and Open CASCADE (about 28 MB the first time)…";
-      kernelScene = await makeKernelScene();
-      for (const button of sceneButtons) {
-        button.disabled = false;
-      }
-      if (signal.aborted) {
-        return;
-      }
-    }
+    stepSelect.disabled = on;
+  };
+  /** Makes `next` the scene, drawing its shapes. */
+  const show = (next: SceneName) => {
     scene = next;
-    shapes = next === "gallery" ? gallery : kernelScene!.shapes;
+    shapes =
+      next === "gallery"
+        ? gallery
+        : next === "kernels"
+          ? kernelScene!.shapes
+          : stepScene!.shapes;
     selection = undefined;
     prepared.length = 0;
     tessellate();
@@ -1422,8 +1626,44 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     showStats();
     frame();
   };
+  /** Imports one of NIST's parts and shows it: the first one loads Open CASCADE. */
+  const showStep = async (index: number) => {
+    const sample = STEP_SAMPLES[index]!;
+    busy(true);
+    sceneNote.textContent = `Importing ${sample.name} with Open CASCADE (about 23 MB to load the first time)…`;
+    const made = await makeStepScene(sample);
+    busy(false);
+    if (signal.aborted) {
+      return;
+    }
+    stepChoice = index;
+    stepSelect.value = String(index);
+    stepScene = made;
+    show("step");
+  };
+  const setScene = async (next: SceneName) => {
+    if (next === scene) {
+      return;
+    }
+    if (next === "kernels" && !kernelScene) {
+      busy(true);
+      sceneNote.textContent =
+        "Loading SMLib and Open CASCADE (about 28 MB the first time)…";
+      kernelScene = await makeKernelScene();
+      busy(false);
+      if (signal.aborted) {
+        return;
+      }
+    }
+    if (next === "step") {
+      await showStep(stepChoice);
+      return;
+    }
+    show(next);
+  };
 
   const picked = el("div", { className: "bf-selection" });
+  const shapesTitle = el("h3", {}, "Shapes");
 
   panel.append(
     el(
@@ -1436,6 +1676,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       ...sceneButtons,
     ),
     sceneNote,
+    stepPicker,
     el("h3", {}, "Display"),
     el(
       "label",
@@ -1479,7 +1720,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     ),
     legend,
     el("details", { className: "bf-stats" }, statsSummary, statsOut),
-    el("h3", {}, "Shapes"),
+    shapesTitle,
     shapesOut,
     el("h3", {}, "Selection"),
     picked,
@@ -1505,10 +1746,6 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   const num = (x: number) => x.toFixed(4);
   const triple = (v: ArrayLike<number>) =>
     `(${num(v[0]!)}, ${num(v[1]!)}, ${num(v[2]!)})`;
-  const row = (label: string, ...value: Array<Node | string>) => [
-    el("dt", {}, label),
-    el("dd", {}, ...value),
-  ];
   showSelection = () => {
     const sel = selection;
     const prep = sel ? prepared[shapes.indexOf(sel.shape)] : undefined;

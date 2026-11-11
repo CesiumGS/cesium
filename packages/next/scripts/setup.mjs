@@ -17,8 +17,11 @@
 //    b-rep examples and their kernel;
 //  - Open CASCADE in WebAssembly (scripts/occtTools.mjs): replicad's build,
 //    one pinned npm version checked against its integrity hash, the CSG
-//    sample's second kernel (LGPL 2.1, so never bundled).
-// Nothing here is committed: both live outside version control.
+//    sample's second kernel (LGPL 2.1, so never bundled);
+//  - NIST's public-domain STEP test models (scripts/stepSamples.mjs): four
+//    parts from NIST's official zip (about 14 MB to fetch, 0.9 MB kept), each
+//    pinned by SHA-256, for the b-rep example's "STEP file" scene.
+// Nothing here is committed: all of it lives outside version control.
 // Usage: npm run setup --workspace @cesium/next [-- --skip-build] [--frames-span[ =]2000-2050] [--grids[ =]portfolio,tests]
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -31,6 +34,7 @@ import { moduleRunner } from "./designTiles/moduleRunner.mjs";
 import { ensureSlangc, ensureSlangWasm } from "./slangTools.mjs";
 import { ensureSmlib } from "./smlibTools.mjs";
 import { ensureOcct } from "./occtTools.mjs";
+import { ensureStepSamples } from "./stepSamples.mjs";
 
 // `--frames-span y0-y1` or `--frames-span=y0-y1`, checked before any work.
 const spanArg = process.argv.findIndex(
@@ -106,6 +110,8 @@ console.log(`slang-wasm: ${await ensureSlangWasm()}`);
 console.log(`smlib: ${await ensureSmlib()}`);
 // Open CASCADE in WebAssembly.
 console.log(`occt: ${ensureOcct()}`);
+// NIST's STEP test models, for the OCCT scene.
+console.log(`step samples: ${await ensureStepSamples()}`);
 
 // The frames data: ephemeris excerpts, leap seconds, Earth orientation, PROJ
 // and its grids.
