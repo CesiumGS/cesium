@@ -8795,6 +8795,120 @@ _The acceptance increments, in order:_
 
 Increments 1 to 3 come before b-rep step 5. Increment 8 comes with §13.34's capabilities (2).
 
+**Brainstorm: one geometry interface, from domains, fields and maps (owner's question, 2026-11-10).** The question: is there one change to the abstractions that lifts the limits above, such as dual positions that can't be resampled and picks that need an inverse, without costing the main pass? A proposal for review. If accepted, it revises the dual-position bullet and increment 5 above.
+
+_What the limits have in common._ Data is attached to _vertices_, not to _where on the geometry_ it is.
+
+- A dual position can't be resampled because nothing says which point of the surface a vertex stands for. It's the same per-vertex data that resamples fine when it's tied to a domain.
+- A pick needs an inverse because it reports a _position_, then has to work back to which geometry it hit. Report _which geometry_ instead, and the position follows.
+
+_The model: every representation is a domain, an embedding, and fields._
+
+- **The domain** is where on the geometry, as a discrete element plus continuous coordinates. Its value is a _domain point_:
+
+  | Representation | Domain point                     |
+  | -------------- | -------------------------------- |
+  | Mesh           | (triangle, barycentrics)         |
+  | B-rep          | (face, u, v), or (edge, t)       |
+  | Curve          | (segment, t)                     |
+  | Terrain        | (tile, longitude, latitude)      |
+  | Points         | (point)                          |
+  | Volume or SDF  | (cell, x, y, z), or just x, y, z |
+
+  It's pbrt's `SurfaceInteraction` (a point with its uv, its derivatives and its shape), made the currency of the whole engine.
+
+- **The embedding** takes a domain point to true coordinates. It's exact on the CPU in float64, and evaluable on the GPU with a stated error. A mesh's is linear interpolation; a b-rep's is its surfaces.
+- **Fields** are values on the domain: colours, scalars, element IDs, normals, and _displacements_. This is RenderMan's and USD's _primvars_, whose interpolation classes say how a value is spread over the domain:
+  - _constant:_ one value for the whole geometry
+  - _uniform:_ one value per element (per face)
+  - _varying:_ linear over each element's parameters
+  - _vertex:_ through the geometry's own basis. On a NURBS surface that means the control points.
+  - _faceVarying:_ per corner of each face
+
+  §13.34's scalar fields (1) are fields. The styling language's run-time data by element ID (5) is a uniform field.
+
+- **Maps** act on space, not on the domain: coordinate operations and drawn maps, as the review above has them.
+
+_Two kinds of data, two meanings:_
+
+|                               | Defined on space                                     | Defined on the domain                                      |
+| ----------------------------- | ---------------------------------------------------- | ---------------------------------------------------------- |
+| Changes where content _is_    | A coordinate operation (a reprojection)              | A deformer for a state: 4D construction, a survey epoch    |
+| Changes only how it's _drawn_ | A drawn map (exaggeration, flattening, the 2D morph) | A drawn deformer (an analysis shape at ×50); colour fields |
+
+- Queries, clipping and measurement apply the first row only.
+- The pipeline per sample: domain point → embedding → the deformers for its state (true) → the coordinate operation (true coordinates) → drawn deformers → the drawn map.
+
+_What it lifts:_
+
+- **Resampling.** A field on a continuous domain can be evaluated at any domain point, so GPU tessellation and curve sampling get it for free.
+  - Dual positions become _morph targets_: displacement fields with a weight, the general glTF and USD mechanism, which animation needs anyway. The content carries the targets, and the application sets the weights. That's the owner's boundary, with no concept in the engine that is specific to dual positions.
+  - A displacement in the geometry's own basis costs almost nothing. On a mesh it's a vertex attribute, which is today's dual position. On a b-rep it's three more components per control point, evaluated by the same de Casteljau steps as the surface. On a curve it's the same again.
+  - A mesh's vertex data is linear over each triangle, so a measurement line draped over a morphed mesh samples it too.
+  - Data on one domain doesn't move to another at run time: a producer refits analysis results onto a b-rep's basis, and states the error, as a representation error. Data on a tile's mesh changes with level of detail; element IDs don't. A b-rep's (face, u, v) is the same at every level, which makes picks and fields on b-reps stable across LOD.
+- **Inverses.** Every draw path writes a domain point: draw, element, and coordinates. A pick, a snap and a field read then evaluate the embedding in true coordinates, exactly. No inverse of any map or deformer is needed. This is the _visibility buffer_ (Burns and Hunt, 2013), and nvdiffrast's `rasterize` then `interpolate`.
+  - The one exception is ray marching (SDFs and volumes), whose domain is space itself. It marches in drawn space and evaluates the field at the map's inverse: one fixed-point step, `x − D(x)`, for a near-identity fit. Steps shrink by the map's `stretch`, the Lipschitz bound of Hart's sphere tracing.
+- **One interface.** A representation adapter provides:
+  - `evaluate(domainPoint, state)`: position, derivatives and accuracy
+  - its fields
+  - its queries, in true coordinates, each answer carrying its domain point
+  - its draw path: fixed samples (meshes, points), generated samples (b-reps, curves, terrain), or ray marched (SDFs, volumes)
+
+  `GeometryQueries` keeps its shape. What changes is that answers name their domain point, and the frames layer, not the adapter, owns placement.
+
+_Cost: the main pass doesn't change._
+
+- Domain points are written only by the pick and snap variants, which are separate pipelines whose other varyings are free.
+- On meshes, in core WebGPU with no optional feature:
+  1. The pick variant draws non-indexed, `indexCount` vertices, and reads each index itself. This needs `STORAGE` usage on index buffers.
+  2. `vertex_index % 3` gives the corner, interpolated into barycentrics.
+  3. `vertex_index / 3` is the triangle, passed flat.
+  4. Losing the vertex cache doesn't matter over a pick's few pixels.
+- Generated samples interpolate their (u, v), which is two floats. Points write their index.
+- Morph targets cost one more attribute read per target per vertex, and only where they're present.
+- Going further: a visibility buffer for the main pass too, re-evaluating attributes from domain points per pixel, would remove the varying budget as a limit altogether. That's a large change (MSAA, translucency, re-fetch cost); measure it before considering it, not as part of this.
+
+_Names._
+
+- "Fitted operation" is the engine's own coinage, not a term of art.
+- In geodesy, the per-tile cubic is a _polynomial transformation_ approximating a concatenated coordinate operation. EPSG has "General polynomial" and "Reversible polynomial" methods; GDAL's approximate transformer is the same idea, interpolated linearly with a stated error.
+- Twenty cubic terms in normalized offset-and-scale coordinates is exactly the numerator of photogrammetry's _rational function model_ (RPC00B).
+- In graphics, a smooth map of space is a _warp_, and a polynomial one in Bernstein form is a _free-form deformation_ (FFD; Sederberg and Parry, 1986).
+- Candidate names: `Warp` for the exact map (today's draft `PlacementMap`), and `BezierWarp` for its GPU form (today's `FittedOperation`). For the owner to decide.
+
+_The non-linear math worth using:_
+
+1. **The per-tile cubic in Bernstein form, as an FFD:**
+   - The convex hull of its control points bounds displacement, Jacobian, `stretch` and second derivatives soundly. These are the same Bernstein bounds as `brep/bounds.ts`.
+   - Neighbouring tiles can share boundary control points, so independent fits don't crack at tile seams. Today two fits may disagree there by up to twice their error bound.
+   - A polynomial warp of a Bézier patch is again a Bézier patch, of three times the degree, so a placed b-rep or curve stays exact relative to the fit.
+2. **A rational function model where the map has a projective part:** a cubic over a cubic. Oblique imagery and camera-like projections become exact, and strongly non-linear maps fit a coarse tile better, at twice the evaluation cost.
+3. **A hierarchical B-spline lattice** (multilevel B-spline approximation; Lee, Wolberg and Shin, 1997) aligned with the tile tree, instead of independent fits.
+   - It is C² everywhere, and only the cells that change get refit.
+   - It costs 64 control-point reads against 20 terms now.
+   - The trick of evaluating cubic B-splines in eight trilinear texture fetches (Sigg and Hadwiger, _GPU Gems 2_, chapter 20) is ruled out: hardware filter weights carry about 8 fractional bits, far too coarse for millimetres.
+   - Take this only if seams or refitting show up in measurements.
+4. **Slang's automatic differentiation:** `fwd_diff` of `placePosition` gives the Jacobian for normals with no hand-written derivatives. Confirm it on the WGSL target. The CPU twin uses dual numbers, and a test compares the two.
+5. **Newton with that Jacobian** for the few inverses left: ray-march fallbacks, and depth-only picks.
+
+_Lessons from the renderers:_
+
+- **RenderMan:**
+  - `displacementbound`: the bound is declared, not discovered. That's `maxDisplacement`, and `CustomShader.displacement`.
+  - `Pref`: the reference position that textures and analysis stick to while the shape deforms. That's the true position.
+  - REYES: split and dice in parameter space, then displace. That's b-rep step 5's order: sample the domain, then deform, then warp.
+  - Deformation blur: time-sampled positions are morph targets keyed by time.
+- **USD:** primvars and their interpolation classes for fields; `UsdSkel` blend shapes for morph targets. The owner leans towards USD's concepts (§13.25), so these are the names to use.
+- **pbrt:**
+  - Normals transform by the inverse transpose, as the cofactor matrix above.
+  - Floating-point error bounds (the γₙ terms, carried as `pError`) turn our float32 noise estimates into sound accuracy terms.
+  - `AnimatedTransform`'s motion bounds solve for where the derivative is zero over a time interval. That's how to bound a blend over a range of its parameter, such as a slider being dragged, instead of at one value.
+- **Differentiable renderers:**
+  - nvdiffrast's barycentric and triangle-ID buffer: picks as domain points.
+  - Mitsuba 3 and Dr.Jit: forward-mode derivatives through the whole pipeline.
+  - What we take: derivatives as a property of the pipeline, not hand-written per kind. That gives Jacobians for normals, and the sensitivity of a point to a placement's parameters. That sensitivity is what aligning a model to a site by optimization needs (§13.34's AR, 7).
+  - What we leave: the gradients of visibility.
+
 ### 13.27 CAD display extensions, with the vector design (owner, 2026-11-08)
 
 Do soon, designed together with vector drawing, because they overlap with it. `BENTLEY_materials_planar_fill`, `BENTLEY_materials_line_style`, `BENTLEY_materials_point_style` and `EXT_mesh_primitive_edge_visibility` are implemented in 1.x and not in 2.0 (noted in §11's CAD display extensions). Most of the CAD content in the catalog uses none of them: a scan on 2026-11-08 found none in `bim-design-model`, `aec-design` or `aec-site`. Test content: ion asset 4665927 uses `EXT_mesh_primitive_edge_visibility` (7 of 7 sampled tiles) and `BENTLEY_materials_planar_fill` (5 of 7). Add it to the catalog, with its license checked.
