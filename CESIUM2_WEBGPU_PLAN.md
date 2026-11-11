@@ -8985,6 +8985,30 @@ _Revised increments, replacing the list above:_
 
 Increments 1 to 3 come before b-rep step 5.
 
+**Increment 1, in progress (2026-11-10).** Slices A to C are done. Each was implemented by a Sonnet 5.5 agent from a brief, against a contract committed first (`camera/route.ts`, `scene/warpTerms.ts`).
+
+- **A, routes:**
+  - `warpFrame(name, parent, { presentation, revision, forward })` defines a frame on a warp edge, and `FrameResolver.route()` returns its steps.
+  - `resolve`, `motion` and `frameTransform` throw `NonRigidRouteError` across a warp.
+  - `accuracy` adds a warp's σ in quadrature, and puts a bound in the note, never as σ.
+  - `warpInverse` stops on a relative step, since a 1e-9 m residual is below float64 precision at Earth scale.
+- **B, the fitter:**
+  - `fitLattice` fits each cell by Householder QR on 5³ Chebyshev–Lobatto samples, and measures the error on a 9³ grid, so the error is an estimate.
+  - With k = 10 exaggeration at Everest, a 10 km tile fits in one cell to 0.43 mm in 0.7 ms. A 1000 km tile reaches geometricError/64 with 4 cells (304 m) in 40 ms.
+  - On 2,000 random points, the observed error is at most 0.85 of the estimate.
+  - `WarpFitCache` keeps fits per key and root, returns the stale fit while a refit is queued, runs within a per-frame budget, and evicts the least recently used.
+- **C, the GPU form:**
+  - Draws place by up to three weighted terms in the table and the Slang. Public `Placement`s are converted by `termsOf`, so behaviour is unchanged.
+  - One cubic term with one cell costs 23 row reads and 20 multiply-adds, against 22 and 20 before.
+  - The placement spike passes on an NVIDIA Lovelace GPU, every vertex within half a pixel of the CPU twin: dual at t = 1.5, a fitted operation, and blends at t = 0.75 and −0.5.
+
+**Next: slice D, the wiring.**
+
+- The view keeps its root on the chart its camera is in.
+- Items whose route to the root crosses a warp get per-tile fits from the cache, through the internal `setPlacement(terms)` and `drawTerms`.
+- Callers of `resolve` that can see a warp move to `resolveRoute`: `camera/CameraLayer.ts` (`checked`), and `query/frameRays.ts`, which refuses presentation routes.
+- `placementQuery` reports the route.
+
 _Open questions for the owner:_
 
 1. Should models and instances stretch per vertex or move per anchor by default?
