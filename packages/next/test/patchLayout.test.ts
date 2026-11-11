@@ -190,7 +190,7 @@ describe("the dice and the vertex stage", () => {
 
   it("have vertex entries the boundary requires, and the wrapper provides", () => {
     const wgsl = source("src/shaders/surfaceVertex.wgsl");
-    for (const name of ["vsPatch", "vsPatchDepth"]) {
+    for (const name of ["vsPatch", "vsPatchDepth", "vsPatchPick"]) {
       expect(wgsl).toMatch(
         new RegExp(
           `fn ${name}\\(@builtin\\(vertex_index\\) vertexIndex: u32, @location\\(0\\) chunk: vec4u\\)`,
@@ -198,10 +198,11 @@ describe("the dice and the vertex stage", () => {
       );
       expect(SURFACE_VERTEX_BOUNDARY.provides).toContain(name);
     }
+    // The pass's, the depth's and the pick variant's.
     expect(
       SURFACE_VERTEX_BOUNDARY.requires.filter(
         (r) => r.params[1] === "vec4<u32>",
       ),
-    ).toHaveLength(2);
+    ).toHaveLength(3);
   });
 });

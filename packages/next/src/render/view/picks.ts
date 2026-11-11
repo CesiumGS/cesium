@@ -11,6 +11,12 @@ import {
   pickResult,
 } from "../../scene/pick.ts";
 import { CanvasTarget } from "../../scene/renderTarget.ts";
+import {
+  type PendingDomain,
+  encodeDomainPick,
+  readDomain,
+  standsInForTerrain,
+} from "./pickDomain.ts";
 import type { EngineRaster } from "./engineRaster.ts";
 import type { EngineScene } from "../../scene/engineScene.ts";
 
@@ -22,12 +28,14 @@ export interface PickEngine extends Pick<
   readonly raster: Pick<
     EngineRaster,
     | "commandBuffers"
+    | "pickDomain"
     | "pickParams"
     | "pickParamsData"
     | "pickReadback"
     | "pickResult"
     | "picks"
     | "viewFrames"
+    | "viewStaging"
   >;
   readonly scene: Pick<EngineScene, "viewIds">;
 }
@@ -58,6 +66,12 @@ export interface PendingPick {
    * not (`translucentTerrainPick`).
    */
   translucent: { depth: number; featureId: number } | undefined;
+  /**
+   * The pick variant's pass, for a `View.pickPoint` (the content's own
+   * point at the hit), and for terrain placed across a warp, which it traces
+   * in place of `translucent`.
+   */
+  domain: PendingDomain | undefined;
 }
 
 interface PendingCamera {
@@ -92,6 +106,46 @@ export function halfToFloat(h: number): number {
   return sign * 2 ** (exponent - 15) * (1 + fraction / 1024);
 }
 
+/**
+ * The terrain regions of the globes in the view's world that a pick's
+ * drawn terrain is placed across a warp for: masks of the slots a pick
+ * stops at (below full opacity, unless `pickThrough`) and goes through. The
+ * CPU's ray (`translucentTerrainPick`) traces terrain as it is, not as it is
+ * drawn, so there the pass stands in for it. Zero without such globes.
+ */
+function terrainStops(
+  engine: PickEngine,
+  view: View,
+): { stops: number; through: number } {
+  let stops = 0;
+  let through = 0;
+  for (const globe of placedGlobes(engine, view)) {
+    for (const region of globe.clips.partial) {
+      if (region.slot < 0) {
+        continue;
+      }
+      if (region.pickThrough) {
+        through |= 1 << region.slot;
+      } else {
+        stops |= 1 << region.slot;
+      }
+    }
+  }
+  return { stops: stops >>> 0, through: through >>> 0 };
+}
+
+/** The view's world's shown globes on its body anchor whose anchor is placed across a warp in the view. */
+function placedGlobes(engine: PickEngine, view: View): Globe[] {
+  return engine.tilesets.filter(
+    (t): t is Globe =>
+      t instanceof Globe &&
+      t.world === view.world &&
+      t.show &&
+      t.anchor === view.bodyAnchor &&
+      view.anchorRoute(t.anchor) !== undefined,
+  );
+}
+
 /** @internal */
 export function encodePick(
   engine: PickEngine,
@@ -99,6 +153,7 @@ export function encodePick(
   view: View,
   frame: ViewFrame,
   request: View["pendingPicks"][number],
+  inTick = true,
 ): void {
   const { device, pipelines } = engine.ctx;
   const { width, height } = frame;
@@ -151,6 +206,19 @@ export function encodePick(
       request.resolvePosition &&
       positionCamera(engine, view, tanX, tanY, ndcX, ndcY),
     translucent: translucentTerrainPick(engine, view, tanX, tanY, ndcX, ndcY),
+    domain:
+      request.resolvePoint || placedGlobes(engine, view).length > 0
+        ? encodeDomainPick(
+            engine,
+            enc,
+            view,
+            frame,
+            engine.raster.pickParamsData[0]!,
+            engine.raster.pickParamsData[1]!,
+            inTick,
+            terrainStops(engine, view),
+          )
+        : undefined,
   });
 }
 
@@ -160,7 +228,9 @@ export function encodePick(
  * so the drawn terrain is traced on the CPU along the pick's ray, in the
  * tick the pick reads, and its depth and feature are kept to stand in for
  * the GPU's where they are nearer (`resolvePicks`). Undefined without
- * such terrain on the ray.
+ * such terrain on the ray. The ray is in true coordinates, so a globe
+ * placed across a warp (drawn exaggerated, as an example) isn't traced
+ * here: the pick variant's pass stands in for it (`terrainStops`).
  */
 function translucentTerrainPick(
   engine: PickEngine,
@@ -175,7 +245,8 @@ function translucentTerrainPick(
       t instanceof Globe &&
       t.world === view.world &&
       t.show &&
-      t.anchor === view.bodyAnchor,
+      t.anchor === view.bodyAnchor &&
+      view.anchorRoute(t.anchor) === undefined,
   );
   if (globes.length === 0) {
     return undefined;
@@ -284,11 +355,14 @@ function pickTick(
 export function resolvePicks(engine: PickEngine, picks: PendingPick[]): void {
   for (const pick of picks) {
     const { view, readback, request, camera: c, tick } = pick;
-    whenMapped(readback, () => {
+    const read = () => {
       const words = new Uint32Array(readback.getMappedRange());
       let featureId = words[0]!;
       let depth = new Float32Array(words.buffer, 4, 1)[0]!;
       readback.unmap();
+      // What the pick variant's pass read, if it ran (the content's own
+      // point at the hit; terrain drawn across a warp).
+      const sample = pick.domain && readDomain(engine, pick.domain);
       // Translucent terrain nearer than what the opaque pass holds
       // (reverse-Z: nearer is greater) stands in for it.
       const translucent = pick.translucent;
@@ -296,9 +370,19 @@ export function resolvePicks(engine: PickEngine, picks: PendingPick[]): void {
         featureId = translucent.featureId;
         depth = translucent.depth;
       }
+      // Where the terrain is drawn across a warp, the CPU can't trace it:
+      // the variant's pass, which draws it as drawn, stands in.
+      if (
+        pick.domain &&
+        sample &&
+        standsInForTerrain(pick.domain, sample, depth)
+      ) {
+        featureId = sample.feature;
+        depth = sample.depth;
+      }
       engine.raster.pickReadback.push(readback);
       if (request.resolvePoint) {
-        request.resolvePoint(corePick(tick!, featureId, depth));
+        request.resolvePoint(corePick(tick!, featureId, depth, sample));
         return;
       }
       if (request.resolvePosition && c) {
@@ -322,7 +406,16 @@ export function resolvePicks(engine: PickEngine, picks: PendingPick[]): void {
         return;
       }
       request.resolve!(pickResult(featureId, view.world.feature(featureId)));
-    });
+    };
+    if (pick.domain) {
+      // Both mapped before either is read, as the pass wrote them together.
+      const domain = pick.domain.readback;
+      whenMapped(domain, () => {
+        whenMapped(readback, read);
+      });
+    } else {
+      whenMapped(readback, read);
+    }
   }
 }
 
@@ -346,7 +439,7 @@ export function serveIdlePick(engine: PickEngine, rendering: Set<View>): void {
       continue;
     }
     const encoder = engine.ctx.device.createCommandEncoder(PICK_ENCODER);
-    encodePick(engine, encoder, view, frame, view.pendingPicks.shift()!);
+    encodePick(engine, encoder, view, frame, view.pendingPicks.shift()!, false);
     engine.raster.commandBuffers[0] = encoder.finish();
     engine.ctx.device.queue.submit(engine.raster.commandBuffers);
     resolvePicks(engine, engine.raster.picks);

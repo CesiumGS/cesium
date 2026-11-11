@@ -9,6 +9,7 @@ import type {
 } from "./types.ts";
 import type { PlacementParameter } from "../placement.ts";
 import type { FeatureTable } from "../../io/gltfTypes.ts";
+import type { PatchPickSource } from "./domains.ts";
 
 /** One per world, made once with it, and filled by its constructor. */
 export class WorldScene {
@@ -45,6 +46,8 @@ export class WorldScene {
   readonly freeTransforms: number[] = [];
   /** Each draw's per-vertex placement, by draw slot (`setPlacement`). */
   readonly drawPlacements: Array<DrawPlacement | undefined> = [];
+  /** Where a patch draw's faces are exact, by draw slot (`setPickSource`). */
+  readonly pickSources = new Map<number, PatchPickSource>();
   /** This world's placement parameters: their float and their draws. */
   readonly parameters = new WeakMap<PlacementParameter, ParameterSlot>();
   materialCount = 0;

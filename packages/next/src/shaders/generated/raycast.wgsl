@@ -97,6 +97,17 @@ struct Instance_std430_0
 
 @binding(7) @group(0) var<storage, read_write> hits_0 : array<atomic<u32>>;
 
+@binding(8) @group(0) var<storage, read_write> pickResult_0 : array<u32>;
+
+@binding(9) @group(0) var<storage, read> pickBatchSlabs_0 : array<u32>;
+
+struct PickTriangleParams_std140_0
+{
+    @align(16) slab_0 : u32,
+    @align(16) pad_0 : vec3<u32>,
+};
+
+@binding(10) @group(0) var<uniform> pickTriangleParams_0 : PickTriangleParams_std140_0;
 var<private> _S1 : vec3<u32>;
 
 fn WorkgroupCount_0() -> vec3<u32>
@@ -222,6 +233,51 @@ fn main(@builtin(workgroup_id) wg_0 : vec3<u32>, @builtin(local_invocation_index
     {
         var _S11 : u32 = atomicMin(&(hits_0[job_0.ray_0]), (bitcast<u32>((d_0))));
     }
+    return;
+}
+
+@compute
+@workgroup_size(1, 1, 1)
+fn pickTriangle()
+{
+    var draw_0 : u32 = pickResult_0[i32(0)];
+    var number_0 : u32 = pickResult_0[i32(2)];
+    var _S12 : bool;
+    if(pickResult_0[i32(0)] == u32(4294967295))
+    {
+        _S12 = true;
+    }
+    else
+    {
+        _S12 = number_0 == u32(4294967295);
+    }
+    if(_S12)
+    {
+        return;
+    }
+    if(pickBatchSlabs_0[records_0[draw_0].batch_0] != (pickTriangleParams_0.slab_0))
+    {
+        return;
+    }
+    var _S13 : u32 = records_0[draw_0].firstIndex_0 + number_0 * u32(3);
+    var k_0 : u32 = u32(0);
+    loop
+    {
+        if((k_0 < u32(3)))
+        {
+        }
+        else
+        {
+            break;
+        }
+        var p_1 : vec3<f32> = position_0(records_0[draw_0].positionOffset_0, indices_0[_S13 + k_0]);
+        var _S14 : u32 = k_0 * u32(3);
+        pickResult_0[u32(10) + _S14] = (bitcast<u32>((p_1.x)));
+        pickResult_0[u32(11) + _S14] = (bitcast<u32>((p_1.y)));
+        pickResult_0[u32(12) + _S14] = (bitcast<u32>((p_1.z)));
+        k_0 = k_0 + u32(1);
+    }
+    pickResult_0[i32(9)] = u32(1);
     return;
 }
 

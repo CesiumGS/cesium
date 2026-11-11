@@ -6,10 +6,17 @@
 // module's tags it with its reference frame (`createFramesPickInterpreter`),
 // the engineering module's with design coordinates (`pickDesign`).
 import type { FrameKey } from "../camera/frameResolver.ts";
+import type { GeometryAccuracy } from "../geometry/query.ts";
 import { UNDERLAY_DEPTH } from "../render/layout.ts";
 import type { CameraPose } from "./Camera.ts";
 import { type PickResult, type View } from "./View.ts";
 import { inverseRotate } from "./viewAnchors.ts";
+import {
+  type DomainSample,
+  type PickDomain,
+  resolveDomain,
+  sampleHit,
+} from "./pickDomain.ts";
 import type { SceneItem } from "./SceneItem.ts";
 import type { World } from "./World.ts";
 import type { AnchorHandle, DrawHandle, FeatureInfo } from "./world/types.ts";
@@ -30,6 +37,14 @@ export interface PickCamera extends CameraPose {
   /** The view's size in CSS pixels. */
   readonly width: number;
   readonly height: number;
+}
+
+/** A point a pick reports, with the reference frame it is in (`CorePick.truePosition`). */
+export interface PickPoint {
+  /** Metres, float64. */
+  readonly position: Float64Array;
+  /** The frame it is in: the hit anchor's (`CorePick.anchor`), or the render root's (`CorePick.root`). */
+  readonly frame: FrameKey;
 }
 
 /**
@@ -67,6 +82,29 @@ export interface CorePick {
   readonly seconds: number;
   /** That tick's camera, in `anchor`'s coordinates. */
   readonly camera: PickCamera;
+  /**
+   * Where the hit is in the content's own domain, when the pick variant
+   * resolved it (a mesh's triangle and the barycentrics, or a b-rep face and
+   * its (u, v)); then `truePosition`, `drawnPosition` and `accuracy` are
+   * set too. Undefined for content without a domain to evaluate (the bare
+   * ellipsoid, billboards, points, a face with no b-rep) and where the
+   * variant's hit isn't the one the image holds: the depth's `position`
+   * is all there is.
+   */
+  readonly domain?: PickDomain;
+  /**
+   * The content's own point there, in `anchorPosition`'s coordinates
+   * (`frame` names them): the stored triangle's or the exact face's, carried
+   * by the draw's matrix. A placement that bends the draw (a warp), or a
+   * custom shader's vertex stage that moves it, changed where it is drawn,
+   * not where it is: this is where the content is, never inverted from the
+   * drawn position.
+   */
+  readonly truePosition?: PickPoint;
+  /** Where it is drawn: `position`, in render space (the frame is `root`). */
+  readonly drawnPosition?: PickPoint;
+  /** How well `truePosition` is known: exact for a b-rep face (`refinePick`); on the triangle for a mesh. */
+  readonly accuracy?: GeometryAccuracy;
 }
 
 /** Turns a core pick into what an application asks for, or undefined when it can't. */
@@ -169,6 +207,7 @@ export function corePick(
   tick: PickTick,
   featureId: number,
   depth: number,
+  sample?: DomainSample,
 ): CorePick | undefined {
   const z = depthDistance(tick.near, depth);
   if (z === undefined) {
@@ -199,6 +238,18 @@ export function corePick(
   inverseRotate(m, c.direction, camera.direction, false);
   inverseRotate(m, c.up, camera.up, false);
   inverseRotate(m, c.right, camera.right, false);
+  // The variant's hit counts where it is the image's: the same draw and feature.
+  const resolved =
+    sample && info && sampleHit(sample) && sample.feature === featureId
+      ? resolveDomain(
+          sample,
+          tick.world,
+          info.draw,
+          info.localId,
+          // A pixel's size at the hit, m (a CSS pixel's; the device's is no larger).
+          (2 * z * tick.tanY) / tick.height,
+        )
+      : undefined;
   return {
     view: tick.view,
     position,
@@ -210,5 +261,11 @@ export function corePick(
     ...(info?.item && { item: info.item }),
     seconds: tick.seconds,
     camera,
+    ...(resolved && {
+      domain: resolved.domain,
+      truePosition: { position: resolved.position, frame: anchor ?? tick.root },
+      drawnPosition: { position, frame: tick.root },
+      accuracy: resolved.accuracy,
+    }),
   };
 }

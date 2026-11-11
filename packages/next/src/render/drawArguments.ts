@@ -173,6 +173,7 @@ export class DrawArguments {
     pass: GPURenderPassEncoder | GPURenderBundleEncoder,
     batch: ArgumentBatch,
     direct: boolean,
+    pick = false,
   ): boolean {
     if (batch.patches) {
       if (!direct && batch.chunks) {
@@ -191,6 +192,15 @@ export class DrawArguments {
     const { mesh } = batch;
     if (batch.points) {
       if (!direct) {
+        pass.drawIndirect(this.arguments, batch.index * INDIRECT_SIZE);
+      }
+    } else if (pick) {
+      // The pick variant's vertex stage reads its own indices: the same
+      // arguments as a non-indexed draw's (the base vertex and first
+      // instance are 0), `indexCount` vertices from `firstIndex`.
+      if (direct) {
+        pass.draw(mesh.indexCount, batch.items, mesh.firstIndex, 0);
+      } else {
         pass.drawIndirect(this.arguments, batch.index * INDIRECT_SIZE);
       }
     } else if (direct) {

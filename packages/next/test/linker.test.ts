@@ -115,15 +115,28 @@ describe("the surface boundary", () => {
 
   it("passes the vertex entries' outputs to the fragment entries' inputs", () => {
     const out = locations(vertex.code, "VsOut");
+    const pickOut = locations(vertex.code, "VsPickOut");
     const fields = [...surface.code.matchAll(/struct (pixelInput_\d+)/g)].map(
       (m) => m[1]!,
     );
-    expect(fields.length, "every fragment entry point's inputs").toBe(14);
+    expect(fields.length, "every fragment entry point's inputs").toBe(16);
+    // The pick variant's vertex entries put out the same, and the triangle
+    // number (flat) one location past them.
+    expect(pickOut).toEqual(new Map([...out, ["triangle", out.size]]));
+    let picks = 0;
     for (const name of fields) {
       // Each entry point's inputs are those `VsOut` puts out, at its
-      // locations (an entry may read fewer: none here do).
-      expect(locations(surface.code, name), name).toEqual(out);
+      // locations (an entry may read fewer: none here do); the pick
+      // variant's, those of `VsPickOut`.
+      const inputs = locations(surface.code, name);
+      if (inputs.has("triangle")) {
+        picks++;
+        expect(inputs, name).toEqual(pickOut);
+      } else {
+        expect(inputs, name).toEqual(out);
+      }
     }
+    expect(picks, "the pick variant's fragment entry points").toBe(2);
     // And `SurfaceVertex` is `VsOut`'s fields in its order.
     const vertexFields = /struct SurfaceVertex\s*\{([^}]*)\}/
       .exec(surface.code)![1]!

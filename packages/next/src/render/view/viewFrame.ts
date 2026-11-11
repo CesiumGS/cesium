@@ -81,6 +81,7 @@ export interface ViewFrameEngine extends Pick<
     | "meters"
     | "overlayColor"
     | "overlayResources"
+    | "pickDomain"
     | "pickParams"
     | "pickParamsData"
     | "pickReadback"
@@ -255,6 +256,7 @@ function buildViewFrame(
     output,
     slot: 0,
     viewBytes: VIEW_SIZE,
+    block: undefined,
     clearTarget: true,
     bundle: undefined,
     bundles: [],

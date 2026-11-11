@@ -955,7 +955,13 @@ export const API_ROWS: readonly ApiRow[] = [
   {
     group: "picking",
     old: ["Scene.pick", "Scene.pickPosition", "PickId"],
-    next: ["PickResult", "CorePick", "PickInterpreter"],
+    next: [
+      "PickResult",
+      "CorePick",
+      "PickInterpreter",
+      "PickDomain",
+      "PickPoint",
+    ],
     supporting: [
       "frames:FramesPickInterpreterOptions",
       "frames:createFramesPickInterpreter",

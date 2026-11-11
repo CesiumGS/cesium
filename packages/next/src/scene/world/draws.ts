@@ -106,6 +106,7 @@ export interface DrawWorld extends Pick<
     | "names"
     | "nextTableId"
     | "parameters"
+    | "pickSources"
     | "tableColumns"
     | "tableIds"
     | "transformGeneration"
@@ -211,6 +212,7 @@ export interface AddDrawWorld extends Pick<
     | "nextFeatureId"
     | "nextTableId"
     | "parameters"
+    | "pickSources"
     | "tableColumns"
     | "tableIds"
     | "transformAnchor"
@@ -915,6 +917,7 @@ export function removeDraw(world: DrawWorld, handle: DrawHandle): void {
   releaseOwnedTransform(world, handle.index);
   world.scene.names[handle.index] = undefined;
   world.scene.featureTables[handle.index] = undefined;
+  world.scene.pickSources.delete(handle.index);
   // The slot may be reused; its old feature range must not resolve to it.
   world.scene.drawFeatureFirst[handle.index] = -1;
   world.raster.freeSlots.push(handle.index);

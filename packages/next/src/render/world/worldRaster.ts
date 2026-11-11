@@ -94,6 +94,9 @@ export class WorldRaster {
   prepassBundle_?: GPURenderBundle;
   depthBundle_?: GPURenderBundle;
   depthFor?: GPURenderBundle;
+  /** The pick variant's bundle, likewise (`World.pickBundle`). */
+  pickBundle_?: GPURenderBundle;
+  pickFor?: GPURenderBundle;
   prepassFor?: GPURenderBundle;
   readonly cullParamsData = new Uint32Array(4);
   readonly cullPassDesc: GPUComputePassDescriptor = { label: "cull" };

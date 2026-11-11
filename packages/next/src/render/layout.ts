@@ -206,6 +206,29 @@ export function writeViewBlock(
 }
 
 /**
+ * A pick's block from a view's (render/view/pickDomain.ts), in place: the
+ * planes of the pick window's frustum (the cull's), and in the shading-only
+ * `iblFrame`, which a pick doesn't shade, the window's centre in NDC (xy)
+ * and half size (zw) in [0], and in [1] the masks of the terrain regions
+ * the pick stops at (xy: low and high 16 bits) and goes through (zw), as
+ * floats (shaders/surface.slang, "the pick variant").
+ */
+export function writePickBlock(
+  out: Float32Array,
+  planes: ArrayLike<number>,
+  window: readonly [number, number, number, number],
+  stops: number,
+  through: number,
+): void {
+  out.set(planes, V.planes);
+  out.set(window, V.iblFrame);
+  out[V.iblFrame + 4] = stops & 0xffff;
+  out[V.iblFrame + 5] = stops >>> 16;
+  out[V.iblFrame + 6] = through & 0xffff;
+  out[V.iblFrame + 7] = through >>> 16;
+}
+
+/**
  * Bytes of a view block whose anchor table holds its first `slots` slots:
  * what is uploaded and copied (`View.anchors` is last, and a world's draws
  * name only the slots it uses).
@@ -363,6 +386,16 @@ export const DRAW_ITEM_SIZE = DrawItemLayout.size;
 export const INDIRECT_SIZE = 20;
 /** A patch draw's chunk: cells along a side (shaders/patch.slang `CHUNK_CELLS`), drawn as (n + 1)² shared vertices. */
 export const PATCH_CHUNK_CELLS = 4;
+/**
+ * A pick's window: its target is this many pixels on a side, around the
+ * pixel picked (shaders/surface.slang `PICK_SIZE`; render/view/pickDomain.ts).
+ */
+export const PICK_SIZE = 3;
+/** The pick's targets: draw and feature and primitive, then the domain's values; its depth. */
+export const PICK_FORMATS = ["rgba32uint", "rgba32float"] as const;
+export const PICK_DEPTH_FORMAT = "depth32float";
+/** A pick's result: words of `shaders/pickDomain.slang`'s buffer, 4 bytes each. */
+export const PICK_RESULT_WORDS = 20;
 /** `struct Material` — 64 bytes. */
 export const MATERIAL_SIZE = MaterialLayout.size;
 export const MATERIAL_WORDS = M.size;

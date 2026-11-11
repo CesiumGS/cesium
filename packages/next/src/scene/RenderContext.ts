@@ -4,6 +4,8 @@ import type { Capabilities } from "../gpu/GpuDevice.ts";
 import { MipGenerator } from "../gpu/MipGenerator.ts";
 import { Environment } from "../gpu/Environment.ts";
 import {
+  PICK_DEPTH_FORMAT,
+  PICK_FORMATS,
   PROPERTY_TEXTURES,
   PROPERTY_TEXTURE_BINDING,
   VIEW_SIZE,
@@ -23,6 +25,7 @@ import type { GlarePipelines } from "../render/post/glare.ts";
 import presentWgsl from "../shaders/generated/present.wgsl?raw";
 import overlayWgsl from "../shaders/generated/overlay.wgsl?raw";
 import pickWgsl from "../shaders/generated/pick.wgsl?raw";
+import pickDomainWgsl from "../shaders/generated/pickDomain.wgsl?raw";
 import meterWgsl from "../shaders/generated/meter.wgsl?raw";
 import adaptWgsl from "../shaders/generated/adapt.wgsl?raw";
 import lightsWgsl from "../shaders/generated/lights.wgsl?raw";
@@ -167,6 +170,19 @@ export interface SurfacePipelines {
   heightPatchTrimmedDoubleSided: GPURenderPipeline;
   prepassPatchTrimmed: GPURenderPipeline;
   prepassPatchTrimmedDoubleSided: GPURenderPipeline;
+  /**
+   * The pick variant (surface.slang, "the pick variant"): the opaque pass's
+   * vertex stage and discards into a few pixels' targets (`PICK_FORMATS`),
+   * writing the draw, its triangle and barycentrics, or a patch draw's
+   * face and (u, v). One- and double-sided; masked or not, instanced or
+   * not, they are one (the fragment stage tests the material).
+   */
+  pickSurface: GPURenderPipeline;
+  pickSurfaceDoubleSided: GPURenderPipeline;
+  pickSurfacePatch: GPURenderPipeline;
+  pickSurfacePatchDoubleSided: GPURenderPipeline;
+  pickSurfacePatchTrimmed: GPURenderPipeline;
+  pickSurfacePatchTrimmedDoubleSided: GPURenderPipeline;
 }
 
 /** One of a shader's pipelines (`SurfacePipelines`). */
@@ -219,6 +235,12 @@ export const SURFACE_KEYS: readonly SurfaceKey[] = [
   "heightPatchTrimmedDoubleSided",
   "prepassPatchTrimmed",
   "prepassPatchTrimmedDoubleSided",
+  "pickSurface",
+  "pickSurfaceDoubleSided",
+  "pickSurfacePatch",
+  "pickSurfacePatchDoubleSided",
+  "pickSurfacePatchTrimmed",
+  "pickSurfacePatchTrimmedDoubleSided",
 ];
 
 export interface Pipelines extends SurfacePipelines {
@@ -289,6 +311,14 @@ export interface Pipelines extends SurfacePipelines {
   overlay: GPURenderPipeline;
   overlayLayout: GPUBindGroupLayout;
   pick: GPUComputePipeline;
+  /**
+   * The pick variant's readback: `pickGather` (shaders/pickDomain.slang)
+   * reads the middle pixel of its targets; `pickTriangle` (raycast.slang,
+   * which reads triangles), run for each slab, adds the hit triangle's
+   * stored positions.
+   */
+  pickGather: GPUComputePipeline;
+  pickTriangle: GPUComputePipeline;
   /** Scatter upload of table entries (`scatter.slang`). */
   scatter: GPUComputePipeline;
   scatterLayout: GPUBindGroupLayout;
@@ -709,6 +739,9 @@ async function createPipelines(
       // Placements (placement.slang, scene/placementTable.ts): parameters
       // and per-draw blocks, read before the custom vertex stage.
       storage(7, true, VERTEX),
+      // The slab's indices, for the pick variant's vertex stage to read
+      // its own (surface.slang `pickIndices`).
+      storage(8, true, VERTEX),
     ],
   });
   const textureSetEntries: GPUBindGroupLayoutEntry[] = [
@@ -1099,6 +1132,37 @@ async function createPipelines(
         depthBias: bias ? -2 : 0,
         depthBiasSlopeScale: bias ? -1.5 : 0,
         depthBiasClamp: 0,
+      },
+    });
+
+  // The pick variant: the opaque pass's vertex stage and discards (the
+  // casters' module), into the pick's few-pixel targets, single-sampled.
+  const pickPipeline = (
+    shaders: GPUShaderModule,
+    label: string,
+    cullMode: GPUCullMode,
+    layout: GPUPipelineLayout = opaqueLayout,
+    patches = false,
+    trimmed = false,
+  ) =>
+    device.createRenderPipelineAsync({
+      label,
+      layout,
+      vertex: {
+        module: shaders,
+        entryPoint: patches ? "vsPatchPick" : "vsPick",
+        buffers: instanceBuffers(patches),
+      },
+      fragment: {
+        module: shaders,
+        entryPoint: trimmed ? "pickTrimmedFs" : "pickFs",
+        targets: PICK_FORMATS.map((format) => ({ format })),
+      },
+      primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },
+      depthStencil: {
+        format: PICK_DEPTH_FORMAT,
+        depthWriteEnabled: true,
+        depthCompare: "greater",
       },
     });
 
@@ -1581,6 +1645,24 @@ async function createPipelines(
           true,
           true,
         ),
+      pickSurface: () => pickPipeline(caster, name("pick"), "back", o),
+      pickSurfaceDoubleSided: () =>
+        pickPipeline(caster, name("pick.doubleSided"), "none", o),
+      pickSurfacePatch: () =>
+        pickPipeline(caster, name("pick.patch"), "back", o, true),
+      pickSurfacePatchDoubleSided: () =>
+        pickPipeline(caster, name("pick.patch.doubleSided"), "none", o, true),
+      pickSurfacePatchTrimmed: () =>
+        pickPipeline(caster, name("pick.patch.trimmed"), "back", o, true, true),
+      pickSurfacePatchTrimmedDoubleSided: () =>
+        pickPipeline(
+          caster,
+          name("pick.patch.trimmed.doubleSided"),
+          "none",
+          o,
+          true,
+          true,
+        ),
     };
     return (key) => builders[key]();
   }
@@ -1635,6 +1717,8 @@ async function createPipelines(
     fxaa,
     overlay,
     pick,
+    pickGather,
+    pickTriangle,
     scatter,
     raycast,
     meter,
@@ -1791,6 +1875,22 @@ async function createPipelines(
       label: "pick",
       layout: "auto",
       compute: { module: module("pick", pickWgsl), entryPoint: "main" },
+    }),
+    device.createComputePipelineAsync({
+      label: "pickDomain.gather",
+      layout: "auto",
+      compute: {
+        module: module("pickDomain", pickDomainWgsl),
+        entryPoint: "gather",
+      },
+    }),
+    device.createComputePipelineAsync({
+      label: "pickDomain.triangle",
+      layout: "auto",
+      compute: {
+        module: module("raycast", raycastWgsl),
+        entryPoint: "pickTriangle",
+      },
     }),
     device.createComputePipelineAsync({
       label: "scatter",
@@ -1954,6 +2054,8 @@ async function createPipelines(
     overlay,
     overlayLayout,
     pick,
+    pickGather,
+    pickTriangle,
     scatter,
     scatterLayout,
     raycast,

@@ -130,7 +130,13 @@ export {
   type RenderTarget,
   type Viewport,
 } from "./scene/renderTarget.ts";
-export type { CorePick, PickCamera, PickInterpreter } from "./scene/pick.ts";
+export type {
+  CorePick,
+  PickCamera,
+  PickInterpreter,
+  PickPoint,
+} from "./scene/pick.ts";
+export type { PickDomain } from "./scene/pickDomain.ts";
 export type { SkyPackManifest } from "./atmosphere/skyPack.ts";
 export {
   PLACEMENT_MONOMIALS,

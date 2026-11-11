@@ -969,6 +969,64 @@ export __extern_cpp SurfaceVertex surfacePatchDepthVertex(uint vertexIndex, uint
   return vertexOut(vertexIndex, chunk.x, false);
 }
 
+// --- the pick variant's vertex stage ---------------------------------------------
+//
+// A pick draws what the opaque pass drew into a few pixels (`PICK_SIZE`
+// square) around the cursor, with the same custom vertex stage and
+// placement, and writes per pixel what it hit as a point of the content's
+// own domain: the draw, its triangle and the barycentrics, or for a b-rep
+// patch draw its face and (u, v). No position is inverted: the CPU
+// evaluates the content's own point (scene/pickDomain.ts).
+//
+// A mesh draws non-indexed, `indexCount` vertices from `firstIndex`: the
+// vertex pulls its own index (`pickIndices`, the slab's index buffer as
+// storage), its triangle is `vertex / 3` and its corner `vertex % 3`, which
+// interpolates to the barycentrics (in `airInscatter`, which a pick does not
+// shade) with no `primitive-index`. The triangle number is one flat varying
+// more (`pickFs`' inputs are the surface's and this one, which costs a
+// location only here).
+//
+// The pick's block is the view's with a window and the terrain's stops in
+// the shading-only `iblFrame` (viewBlocks.ts / render/view/pickDomain.ts):
+// [0] the window's centre in NDC (xy) and half size (zw); [1] the masks of
+// the terrain regions a pick stops at (xy: low and high 16 bits) and goes
+// through (zw), as float values.
+[[vk::binding(8, 1)]] StructuredBuffer<uint> pickIndices;
+static uint pickTriangleNumber;
+
+// The pixels a pick's target is on a side (render/layout.ts `PICK_SIZE`).
+static const uint PICK_SIZE = 3u;
+
+// Clip space of the view to that of the pick's window.
+SurfaceVertex pickWindowed(SurfaceVertex v) {
+  float4 window = view.iblFrame[0];
+  v.position.xy = (v.position.xy - window.xy * v.position.w) / window.zw;
+  return v;
+}
+
+export __extern_cpp SurfaceVertex surfacePickVertex(uint vertexIndex, uint item) {
+  DrawRecord r = drawRecord(items[item].record);
+  uint at = vertexIndex - r.firstIndex;
+  pickTriangleNumber = at / 3u;
+  uint corner = at % 3u;
+  SurfaceVertex out = vertexOut(pickIndices[vertexIndex], item, false);
+  out.airInscatter = float3(corner == 0u ? 1.0 : 0.0, corner == 1u ? 1.0 : 0.0, corner == 2u ? 1.0 : 0.0);
+  return pickWindowed(out);
+}
+// A patch draw's: its face's rect corner, to add to the fragment's (u, v).
+export __extern_cpp SurfaceVertex surfacePatchPickVertex(uint vertexIndex, uint4 chunk) {
+  patchChunk = chunk;
+  pickTriangleNumber = 0u;
+  SurfaceVertex out = vertexOut(vertexIndex, chunk.x, false);
+  DrawRecord r = drawRecord(chunk.x);
+  PatchSpan s = loadSpan(vertices, r.positionOffset + chunk.y * SPAN_WORDS);
+  out.airInscatter = float3(s.corner, 0.0);
+  return pickWindowed(out);
+}
+export __extern_cpp uint surfacePickTriangle() {
+  return pickTriangleNumber;
+}
+
 // --- the opaque passes' fragments ---------------------------------------------
 
 // Bits of a record's `clipBlock` holding the block (layout.ts
@@ -1389,6 +1447,82 @@ float4 depthCoverageFs(SurfaceVaryings in) : SV_Target0 {
   }
   float cutoff = (material.flags & 8u) != 0u ? OPAQUE_ALPHA : material.alphaCutoff;
   return float4(0.0, 0.0, 0.0, clamp((alpha - cutoff) / ramp + 0.5, 0.0, 1.0));
+}
+
+// --- the pick variant's fragment stage ---------------------------------------------
+
+// The pick's one input beyond the surface's (`surfacePickTriangle`), flat.
+struct PickTriangle {
+  uint triangle : TRIANGLE;
+};
+
+struct PickOut {
+  // The draw, its global feature ID, the triangle (0xffffffff: a patch
+  // draw's face) and the instance among the draw's.
+  uint4 ids : SV_Target0;
+  // Barycentrics (xyz), or a patch draw's (u, v) from its face rect's corner
+  // (xy) and that corner (zw).
+  float4 domain : SV_Target1;
+};
+
+// A float of the pick's block read as a mask's half (two halves a mask,
+// exact in a float).
+uint pickMask(float low, float high) {
+  return uint(low) | (uint(high) << 16u);
+}
+
+// The window's pixel as a pixel of the view's frame, as the fragment stages
+// of the other passes read their `position.xy`.
+float2 pickFramePixel(float2 pixel) {
+  float4 window = view.iblFrame[0];
+  float2 ndc = pixel / float(PICK_SIZE) * float2(2.0, -2.0) + float2(-1.0, 1.0);
+  float2 full = window.xy + ndc * window.zw;
+  return (full * float2(0.5, -0.5) + 0.5) * view.viewport.xy;
+}
+
+// Ground drawn below full opacity is what a pick stops at (a region of
+// `Globe.terrain` without `pickThrough`, `View.pick`): the pick's block
+// lists the regions that stop (`iblFrame[1].xy`) and those that go through
+// (`.zw`); a fragment inside a region that goes through and none that stops
+// is a hole for the pick.
+bool pickGoesThrough(DrawRecord r, float3 p) {
+  uint through = r.terrainClip & pickMask(view.iblFrame[1].z, view.iblFrame[1].w);
+  if (through == 0u || terrainOpacity(through, p, REGIONS_SEEN) >= 1.0) {
+    return false;
+  }
+  uint stops = r.terrainClip & pickMask(view.iblFrame[1].x, view.iblFrame[1].y);
+  return terrainOpacity(stops, p, REGIONS_SEEN) >= 1.0;
+}
+
+// The opaque pass's discards (alpha cutoff, placeholders, clipped terrain,
+// and a trimmed face's trim), then the domain point. The derivative the trim
+// needs is taken first, in uniform control flow.
+PickOut pickOutput(SurfaceVaryings in, uint triangle, bool trimmed) {
+  SurfaceVaryings s = in;
+  s.position.xy = pickFramePixel(s.position.xy);
+  bool covered = trimmed ? trimCovered(s) : true;
+  cutOut(s);
+  DrawRecord r = drawRecord(s.ids.x);
+  if (!covered || pickGoesThrough(r, s.relPosition)) {
+    discard;
+  }
+  bool patched = (r.flags & 128u) != 0u;
+  PickOut o;
+  o.ids = uint4(s.ids.x, s.ids.y,
+                patched ? 0xffffffffu : triangle,
+                patched ? 0u : (s.ids.z & ~SKIRT_BIT));
+  o.domain = patched ? float4(s.uv, s.airInscatter.xy) : float4(s.airInscatter, 0.0);
+  return o;
+}
+
+[shader("fragment")]
+PickOut pickFs(SurfaceVaryings in, PickTriangle extra) {
+  return pickOutput(in, extra.triangle, false);
+}
+
+[shader("fragment")]
+PickOut pickTrimmedFs(SurfaceVaryings in, PickTriangle extra) {
+  return pickOutput(in, extra.triangle, true);
 }
 
 // --- lights, shadows, occlusion --------------------------------------------------

@@ -74,8 +74,29 @@ export const SURFACE_VERTEX_BOUNDARY: Boundary = {
       params: ["u32", "vec4<u32>"],
       result: "SurfaceVertex",
     })),
+    // The pick variant's (surface.slang): a mesh's, a patch draw's, and the
+    // triangle number the last of them set.
+    {
+      name: "surfacePickVertex",
+      params: ["u32", "u32"],
+      result: "SurfaceVertex",
+    },
+    {
+      name: "surfacePatchPickVertex",
+      params: ["u32", "vec4<u32>"],
+      result: "SurfaceVertex",
+    },
+    { name: "surfacePickTriangle", params: [], result: "u32" },
   ],
-  provides: ["vs", "vsPoints", "vsDepth", "vsPatch", "vsPatchDepth"],
+  provides: [
+    "vs",
+    "vsPoints",
+    "vsDepth",
+    "vsPatch",
+    "vsPatchDepth",
+    "vsPick",
+    "vsPatchPick",
+  ],
 };
 
 /** The point cull's (pointCull.slang): a vector style's symbols' kernel. */

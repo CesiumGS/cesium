@@ -145,8 +145,10 @@ entry	name	kind	tier
 .	PLACEMENT_MONOMIALS	const	-
 .	PLACEMENT_TERMS	const	-
 .	PickCamera	interface	-
+.	PickDomain	interface	-
 .	PickHint	interface	-
 .	PickInterpreter	interface	-
+.	PickPoint	interface	-
 .	PickResult	interface	-
 .	Placement	type	-
 .	PlacementBlend	interface	-

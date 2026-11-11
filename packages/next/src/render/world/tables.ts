@@ -378,6 +378,8 @@ function createSlabDrawGroup(world: SlabBindWorld, slab: Slab): void {
       { binding: 6, resource: world.raster.imagerySampler },
       // Placements (placement.slang): the vertex stage's.
       { binding: 7, resource: { buffer: world.raster.placementTable.buffer } },
+      // The slab's indices: the pick variant's vertex stage reads its own.
+      { binding: 8, resource: { buffer: slab.indexBuffer } },
     ],
   });
 }

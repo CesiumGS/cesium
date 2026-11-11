@@ -11,9 +11,11 @@ import {
   type GpuPatches,
 } from "../../brep/gpuPatches.ts";
 import { tessellateBrep } from "../../brep/tessellate.ts";
+import { brepGeometry, type BrepGeometry } from "../../geometry/brep.ts";
 import type { Mat4 } from "../../math/mat4.ts";
 import type { Vec3 } from "../../math/vec3.ts";
 import type { World } from "../World.ts";
+import type { PatchPickSource } from "./domains.ts";
 import type {
   DrawHandle,
   DrawOptions,
@@ -32,6 +34,7 @@ export type BrepWorld = Pick<
   | "removeDraw"
   | "removeMesh"
   | "removeTransform"
+  | "setPickSource"
 >;
 
 /**
@@ -199,6 +202,14 @@ export function addBrep(
       ...(m ? { model: m } : {}),
     };
   };
+  // Where the patch draws' faces are exact for picks (`World.setPickSource`):
+  // the form as a geometry, made when a pick first asks.
+  let geometry: BrepGeometry | undefined;
+  const pickSource: PatchPickSource = {
+    origin: prepared.origin,
+    refinePick: (face, hint) =>
+      (geometry ??= brepGeometry(form)).refinePick(face, hint),
+  };
   const common = {
     ...(options.color ? { color: options.color } : {}),
     ...(options.doubleSided !== undefined
@@ -239,6 +250,7 @@ export function addBrep(
         ...common,
       });
       draws.push(draw);
+      world.setPickSource(draw, pickSource);
       return draw;
     };
     const patchDraw = patchDrawOf((f) => !f.needsTrim);

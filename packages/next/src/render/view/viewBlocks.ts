@@ -273,7 +273,14 @@ export function writeView(
   engine.raster.viewDataU32[(index * VIEW_STRIDE) / 4 + VIEW_BIT_WORD] =
     engine.viewBit(view);
   const bytes = viewBlockBytes(engine.scene.anchorEyes.count);
-  engine.raster.viewFrames.get(view)!.viewBytes = bytes;
+  const frame = engine.raster.viewFrames.get(view)!;
+  frame.viewBytes = bytes;
+  // A pick of the view makes its own block from this one (`encodeDomainPick`).
+  const at = (index * VIEW_STRIDE) / 4;
+  if (frame.block?.length !== bytes / 4) {
+    frame.block = new Float32Array(bytes / 4);
+  }
+  frame.block.set(engine.raster.viewData.subarray(at, at + bytes / 4));
   engine.ctx.device.queue.writeBuffer(
     engine.raster.viewStaging,
     index * VIEW_STRIDE,

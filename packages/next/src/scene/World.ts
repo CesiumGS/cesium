@@ -162,11 +162,13 @@ import {
   heightBundle,
   prepassBundle,
   depthBundle,
+  pickBundle,
   encodeCull,
   translucentRange,
   encodeTranslucent,
 } from "../render/world/bundles.ts";
 import { WorldScene } from "./world/worldScene.ts";
+import type { PatchPickSource } from "./world/domains.ts";
 import { WorldRaster } from "../render/world/worldRaster.ts";
 
 /**
@@ -1147,6 +1149,30 @@ export class World {
   }
 
   /**
+   * @internal Provisional. Where a patch draw's faces are exact, for picks:
+   * the b-rep they draw (`PatchPickSource`), which gives a pick's (face, u,
+   * v) its own point. `addBrep` sets it for the patch draws it makes; it goes
+   * with the draw. Undefined clears it.
+   */
+  setPickSource(handle: DrawHandle, source: PatchPickSource | undefined): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
+    if (source) {
+      this.scene.pickSources.set(handle.index, source);
+    } else {
+      this.scene.pickSources.delete(handle.index);
+    }
+  }
+
+  /** @internal `setPickSource`'s. */
+  pickSource(handle: DrawHandle): PatchPickSource | undefined {
+    return this.hasDraw(handle)
+      ? this.scene.pickSources.get(handle.index)
+      : undefined;
+  }
+
+  /**
    * Removes a transform and its descendants. Draws placed by them must be
    * removed first. An anchor goes through `removeAnchor`.
    */
@@ -1735,6 +1761,15 @@ export class World {
    */
   depthBundle(): GPURenderBundle {
     return depthBundle(this);
+  }
+
+  /**
+   * @internal The bundle a pick variant draws (render/view/pickDomain.ts):
+   * meshes non-indexed and patch draws, after the view's cull; undefined
+   * before the world's first frame.
+   */
+  pickBundle(): GPURenderBundle | undefined {
+    return pickBundle(this);
   }
 
   /** Encodes this world's per-view culling: clear batch counts, cull, write args. */

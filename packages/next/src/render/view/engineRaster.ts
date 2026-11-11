@@ -20,6 +20,7 @@ import type { RenderTarget } from "../../scene/renderTarget.ts";
 import type { World } from "../../scene/World.ts";
 import type { EnvironmentProbe } from "../../gpu/Environment.ts";
 import type { PendingPick } from "./picks.ts";
+import type { PickDomainResources } from "./pickDomain.ts";
 import type { ViewBlock } from "../layout.ts";
 import type { HeightCapture } from "../../scene/heightCaptures.ts";
 
@@ -80,6 +81,8 @@ export class EngineRaster {
   pickParams!: GPUBuffer;
   pickResult!: GPUBuffer;
   readonly pickParamsData = new Uint32Array(4);
+  /** The pick variant's targets and result (pickDomainResources), made when first picked. */
+  pickDomain: PickDomainResources | undefined;
   readonly picks: PendingPick[] = [];
   /** Exposure meter readings this tick, mapped after submit. */
   readonly meters: Array<{

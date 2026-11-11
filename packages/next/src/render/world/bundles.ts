@@ -15,6 +15,8 @@ import {
   VIEW_MASK_WORD,
   TRANSFORM_WORDS,
   INSTANCE_WORDS,
+  PICK_DEPTH_FORMAT,
+  PICK_FORMATS,
 } from "../layout.ts";
 import { bindSlab } from "./tables.ts";
 import type { SurfaceKey } from "../../scene/RenderContext.ts";
@@ -61,6 +63,8 @@ export interface BundleWorld extends Pick<
     | "imageryView"
     | "instances"
     | "materialsU32"
+    | "pickBundle_"
+    | "pickFor"
     | "placementTable"
     | "prepassBundle_"
     | "prepassFor"
@@ -291,6 +295,25 @@ export function depthBundle(world: BundleWorld): GPURenderBundle {
   return world.raster.depthBundle_;
 }
 
+/**
+ * The bundle drawing what a pick variant draws (`recordBundle` `pick`): meshes
+ * non-indexed and patch draws, into the pick's targets, current with
+ * `prepareFrame`'s. Undefined before the first.
+ */
+export function pickBundle(world: BundleWorld): GPURenderBundle | undefined {
+  if (!world.raster.bundle) {
+    return undefined;
+  }
+  if (
+    !world.raster.pickBundle_ ||
+    world.raster.pickFor !== world.raster.bundle
+  ) {
+    world.raster.pickBundle_ = recordBundle(world, "pick");
+    world.raster.pickFor = world.raster.bundle;
+  }
+  return world.raster.pickBundle_;
+}
+
 export function encodeCull(
   world: CullWorld,
   encoder: GPUCommandEncoder,
@@ -441,7 +464,8 @@ function writeBatches(world: CullWorld): void {
  */
 export function recordBundle(
   world: BundleWorld,
-  kind: "opaque" | "shadow" | "height" | "prepass" | "depth" = "opaque",
+  kind:
+    "opaque" | "shadow" | "height" | "prepass" | "depth" | "pick" = "opaque",
 ): GPURenderBundle {
   const { device, targets, currentViewBindGroup } = world.ctx;
   // Height captures draw the casters, with their own pipelines.
@@ -449,20 +473,29 @@ export function recordBundle(
   const shadow = kind === "shadow" || height;
   const prepass = kind === "prepass";
   const depth = kind === "depth";
+  // The pick variant: single-sampled, into the pick's few-pixel targets.
+  const pick = kind === "pick";
   const encoder = device.createRenderBundleEncoder(
-    shadow || prepass
+    pick
       ? {
-          label: `world.${kind}Bundle`,
-          colorFormats: prepass ? ["rgba16float"] : [],
-          depthStencilFormat: "depth32float",
+          label: "world.pickBundle",
+          colorFormats: [...PICK_FORMATS],
+          depthStencilFormat: PICK_DEPTH_FORMAT,
           sampleCount: 1,
         }
-      : {
-          label: depth ? "world.depthBundle" : "world.bundle",
-          colorFormats: targets.colorFormats,
-          depthStencilFormat: targets.depthFormat,
-          sampleCount: targets.sampleCount,
-        },
+      : shadow || prepass
+        ? {
+            label: `world.${kind}Bundle`,
+            colorFormats: prepass ? ["rgba16float"] : [],
+            depthStencilFormat: "depth32float",
+            sampleCount: 1,
+          }
+        : {
+            label: depth ? "world.depthBundle" : "world.bundle",
+            colorFormats: targets.colorFormats,
+            depthStencilFormat: targets.depthFormat,
+            sampleCount: targets.sampleCount,
+          },
   );
   encoder.setBindGroup(
     0,
@@ -483,60 +516,66 @@ export function recordBundle(
   // A draw of faces with a trim has its own (`...Trimmed`: the fragment stage
   // tests the trim), so the rest keep early depth.
   const patchKey = (batch: Batch): SurfaceKey => {
-    const pass = prepass
-      ? "prepass"
-      : depth
-        ? "depth"
-        : height
-          ? "height"
-          : shadow
-            ? "shadow"
-            : "opaque";
+    const pass = pick
+      ? "pickSurface"
+      : prepass
+        ? "prepass"
+        : depth
+          ? "depth"
+          : height
+            ? "height"
+            : shadow
+              ? "shadow"
+              : "opaque";
     const trimmed = (batch.mesh as PatchMesh).patches.trimmed;
     return `${pass}Patch${trimmed ? "Trimmed" : ""}${batch.doubleSided ? "DoubleSided" : ""}`;
   };
   const keyOf = (batch: Batch): SurfaceKey =>
     batch.patches
       ? patchKey(batch)
-      : prepass
+      : pick
         ? batch.doubleSided
-          ? "prepassDoubleSided"
-          : "prepass"
-        : depth
-          ? masked(batch)
-            ? batch.doubleSided
-              ? "depthMaskedDoubleSided"
-              : "depthMasked"
-            : batch.doubleSided
-              ? "depthDoubleSided"
-              : "depth"
-          : height
+          ? "pickSurfaceDoubleSided"
+          : "pickSurface"
+        : prepass
+          ? batch.doubleSided
+            ? "prepassDoubleSided"
+            : "prepass"
+          : depth
             ? masked(batch)
               ? batch.doubleSided
-                ? "heightMaskedDoubleSided"
-                : "heightMasked"
+                ? "depthMaskedDoubleSided"
+                : "depthMasked"
               : batch.doubleSided
-                ? "heightDoubleSided"
-                : "height"
-            : shadow
+                ? "depthDoubleSided"
+                : "depth"
+            : height
               ? masked(batch)
                 ? batch.doubleSided
-                  ? "shadowMaskedDoubleSided"
-                  : "shadowMasked"
+                  ? "heightMaskedDoubleSided"
+                  : "heightMasked"
                 : batch.doubleSided
-                  ? "shadowDoubleSided"
-                  : "shadow"
-              : batch.points
-                ? "opaquePoints"
-                : batch.mesh.topology === "line-list"
-                  ? "opaqueLines"
-                  : batch.instanced
-                    ? batch.doubleSided
-                      ? "opaqueInstancedDoubleSided"
-                      : "opaqueInstanced"
-                    : batch.doubleSided
-                      ? "opaqueDoubleSided"
-                      : "opaque";
+                  ? "heightDoubleSided"
+                  : "height"
+              : shadow
+                ? masked(batch)
+                  ? batch.doubleSided
+                    ? "shadowMaskedDoubleSided"
+                    : "shadowMasked"
+                  : batch.doubleSided
+                    ? "shadowDoubleSided"
+                    : "shadow"
+                : batch.points
+                  ? "opaquePoints"
+                  : batch.mesh.topology === "line-list"
+                    ? "opaqueLines"
+                    : batch.instanced
+                      ? batch.doubleSided
+                        ? "opaqueInstancedDoubleSided"
+                        : "opaqueInstanced"
+                      : batch.doubleSided
+                        ? "opaqueDoubleSided"
+                        : "opaque";
   const rank = (batch: Batch) =>
     batch.mesh.topology === "line-list" ? 2 : Number(batch.doubleSided);
   // Only batches some view draws (`Batch.shown`), and for shadows those
@@ -568,7 +607,11 @@ export function recordBundle(
     if (
       batch.items === 0 ||
       world.raster.brokenTextureSets.has(batch.textureSet) ||
-      ((shadow || prepass || depth) && batch.mesh.topology === "line-list") ||
+      ((shadow || prepass || depth || pick) &&
+        batch.mesh.topology === "line-list") ||
+      // Picks of points and billboards are the depth's: their corners are
+      // offsets on screen, not a surface of the content's.
+      (pick && (batch.points || batch.billboard)) ||
       // Point sets and instances shade outside the opaque pass's depth
       // prepass; point sets aren't ground either (their strips are the
       // opaque pass's alone).
@@ -595,7 +638,7 @@ export function recordBundle(
       encoder.setBindGroup(2, group);
     }
     // A patch draw's index buffer replaced the slab's: the next draw binds it again.
-    if (world.raster.drawArguments.drawBatch(encoder, batch, direct)) {
+    if (world.raster.drawArguments.drawBatch(encoder, batch, direct, pick)) {
       slab = -1;
     }
   }

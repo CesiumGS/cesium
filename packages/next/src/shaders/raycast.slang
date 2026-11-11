@@ -112,3 +112,42 @@ void main(uint3 wg : SV_GroupID, uint lane : SV_GroupIndex) {
     hits[job.ray].min(asuint(d));
   }
 }
+
+// A pick's hit triangle (render/view/pickDomain.ts, shaders/pickDomain.slang):
+// the triangle's three stored positions, as the vertex arena holds them
+// (before any placement or transform), into the pick's result for the CPU to
+// weight by the barycentrics. Run once for each slab that holds meshes; the
+// one holding the hit draw's mesh writes. The result's words are
+// pickDomain.slang's (render/layout.ts `PICK_RESULT_WORDS`): the draw (0),
+// the triangle (2), whether the positions follow (9), the positions (10 to 18).
+struct PickTriangleParams {
+  uint slab;
+  uint3 pad;
+};
+
+[[vk::binding(8, 0)]] RWStructuredBuffer<uint> pickResult;
+// Per batch, the slab of its mesh.
+[[vk::binding(9, 0)]] StructuredBuffer<uint> pickBatchSlabs;
+[[vk::binding(10, 0)]] ConstantBuffer<PickTriangleParams> pickTriangleParams;
+
+[shader("compute")]
+[numthreads(1, 1, 1)]
+void pickTriangle() {
+  uint draw = pickResult[0];
+  uint number = pickResult[2];
+  if (draw == NONE || number == NONE) {
+    return;
+  }
+  DrawRecord r = drawRecord(draw);
+  if (pickBatchSlabs[r.batch] != pickTriangleParams.slab) {
+    return;
+  }
+  uint first = r.firstIndex + number * 3u;
+  for (uint k = 0u; k < 3u; k++) {
+    float3 p = position(r.positionOffset, indices[first + k]);
+    pickResult[10u + k * 3u] = asuint(p.x);
+    pickResult[11u + k * 3u] = asuint(p.y);
+    pickResult[12u + k * 3u] = asuint(p.z);
+  }
+  pickResult[9] = 1u;
+}

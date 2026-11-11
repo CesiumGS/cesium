@@ -73,6 +73,11 @@ export interface ViewFrame {
    * anchor table's used slots (`viewBlockBytes`).
    */
   viewBytes: number;
+  /**
+   * The view block as last written (`writeView`), for a pick of the view to
+   * make its own from, also while the view is idle (render/view/pickDomain.ts).
+   */
+  block: Float32Array | undefined;
   /** First view drawn into its target this frame. */
   clearTarget: boolean;
   bundle: GPURenderBundle | undefined;

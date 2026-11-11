@@ -91,6 +91,7 @@ export interface RenderTickEngine extends Pick<
     | "overlayColor"
     | "overlayResources"
     | "persistent"
+    | "pickDomain"
     | "pickParams"
     | "pickParamsData"
     | "pickReadback"
