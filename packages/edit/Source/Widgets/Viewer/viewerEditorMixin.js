@@ -4,6 +4,7 @@ import { Check, DeveloperError, defined } from "@cesium/core";
 import SelectTool from "../../Editor/SelectTool.js";
 import TranslateTool from "../../Editor/TranslateTool.js";
 import EditorCameraControls from "./EditorCameraControls.js";
+import EditorCursor from "./EditorCursor.js";
 import EditorGrid from "./EditorGrid.js";
 import EditorOutliner from "../EditorOutliner/EditorOutliner.js";
 import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
@@ -142,6 +143,7 @@ function viewerEditorMixin(viewer, options) {
   let outliner;
   let removeKeyBindings;
   let cameraControls;
+  let cursor;
 
   try {
     outliner = createWidget(
@@ -159,7 +161,9 @@ function viewerEditorMixin(viewer, options) {
     );
 
     cameraControls = new EditorCameraControls(viewer, editor);
+    cursor = new EditorCursor(viewer, editor, tools);
   } catch (error) {
+    cameraControls?.destroy();
     removeKeyBindings?.();
     destroyWidget(outliner);
     destroyWidget(toolbar);
@@ -177,6 +181,7 @@ function viewerEditorMixin(viewer, options) {
     [toolbar, outliner],
     removeKeyBindings,
     cameraControls,
+    cursor,
     removeGrid,
     removeDefaultTool,
   );
@@ -307,6 +312,7 @@ function defineViewerEditorProperties(
  * @param {Array<ViewerEditorWidget|undefined>} widgets
  * @param {Function} removeKeyBindings
  * @param {EditorCameraControls} cameraControls
+ * @param {EditorCursor} cursor
  * @param {Function} removeGrid
  * @param {Function} removeDefaultTool
  * @ignore
@@ -316,12 +322,14 @@ function installCleanup(
   widgets,
   removeKeyBindings,
   cameraControls,
+  cursor,
   removeGrid,
   removeDefaultTool,
 ) {
   const destroyViewer = viewer.destroy;
   viewer.destroy = function () {
     removeDefaultTool();
+    cursor.destroy();
     cameraControls.destroy();
     removeKeyBindings();
     for (const widget of widgets) {
