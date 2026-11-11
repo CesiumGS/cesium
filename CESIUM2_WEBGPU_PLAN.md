@@ -9013,6 +9013,32 @@ Increments 1 to 3 come before b-rep step 5.
 
 **Increment 1 is done (2026-11-10).** The example is increment 7.
 
+**Increment 2a is done (2026-11-10).**
+
+- `placement.slang`'s `placeVertex` returns the position and the Jacobian J = I + Σ wᵢ·Jᵢ. A lattice's derivative is analytic, chained by cells/scale. Dual positions and morph targets add nothing, so under one a vertex keeps its stored normal.
+- The vertex stage turns the normal by J's cofactor matrix and the tangent by J, keeping its sign. The CPU twin is `placeJacobianWithTerms`, tested against central differences.
+- Cost for one cubic term with one cell: still 23 reads, 80 float3 multiply-adds against 20, and about 44 more for the normal and tangent.
+- The varying swap. Location 8 is the design `positionMC`. Location 4 is the true camera-relative position, the draw's affine transform of the design position.
+  - An unplaced draw's fragment uses location 4 as it is, bit-identical to before.
+  - A placed draw rebuilds its drawn position from `@builtin(position)` and the view's rotation-only reverse-Z projection, in about 17 multiply-adds.
+  - Still 13 user locations.
+- For custom shaders, `fsInput.positionMC` is now the design position, as RenderMan's `Pref` is, and `vsInput.normalMC` is the turned normal. Slang playground presets that displace in `vertexMain` and read `positionMC` look slightly different.
+- `spikes/placementNormals.html` passes on an NVIDIA Lovelace GPU, at k = 10 and then 4 (one float written, no refit), with the unplaced path held to the same checks. Turned normals are within 0.003° of the twin, and positions within 0.03 mm. The placement and warp-route spikes still pass.
+
+**Increment 3 is done (2026-11-10).**
+
+- A placed draw's culling sphere moves by Σ w̄ᵢ·Dᵢ(c), and grows by the residual: weight half-widths times |Dᵢ(c)|, plus |w|max times each term's bound on |Dᵢ(p) − Dᵢ(c)| and its fit error (`scene/warpBounds.ts`).
+  - The record's centre and radius are rewritten through `DrawConstants.setBounds`, and `cull.slang` is unchanged. Unplaced records are never written.
+  - At k = 10 a 400 m quad's sphere grows by 2.5 km instead of more than 20 km.
+- `createPlacementParameter(value, { range: [min, max] })`. Bounds are made once over the range, so a change inside it writes one float and walks no draws. A value outside the range throws. Without a range, bounds follow the current value.
+- Selection under a warped anchor uses drawn volumes (`World.tileWarp`, `streaming/tileWarp.ts`).
+  - A tile's volume is sampled on a 3×3×3 grid, and the drawn sphere is padded for bulge by (1/8)·M₂·L², with M₂ estimated from Jacobian differences.
+  - Screen-space error is geometricError × σ_max + fit error, with σ_max an estimate.
+  - At k = 10 selection goes one level deeper than at k = 1. On a 200 km tile, 5,000 random warped points all land inside the drawn sphere, which is 4.9% larger than the 9-point sphere.
+- Horizon culling is off under a warped anchor: its true-ellipsoid occluder says nothing about a drawn Earth.
+- `routeSingularRange` gives [σ_min, σ_max], about [1.004, 10] at k = 10, for the ray-march and snaps later.
+- Not yet on drawn volumes: shadow casters' selection, the viewer's request volume, and dynamic screen-space error.
+
 **Clip planes and caps: decided by the owner (2026-11-10).** Built as increment 8, once increments 2a and 3 have landed. 2a's varying swap provides the true point per fragment.
 
 1. **A clip is a world object, defined in a frame, which views opt into by mask.** One section cuts federated content and moves with its frame. Clips per item can be added later if a need appears.
