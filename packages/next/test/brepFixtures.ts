@@ -1,7 +1,7 @@
 // Fixtures for the b-rep tests: a box, a capped cylinder and a trimmed NURBS
 // face (Spike B's surface). Lengths are metres.
 import { BrepBuilder } from "../src/brep/build.ts";
-import type { BrepForm } from "../src/brep/form.ts";
+import { SurfaceKind, type BrepForm } from "../src/brep/form.ts";
 import {
   evaluateNurbsSurface,
   type NurbsCurve,
@@ -380,5 +380,187 @@ export function trimmedNurbsBrep(): BrepForm {
     ],
     { id: "trimmed" },
   );
+  return b.build();
+}
+
+/**
+ * A chain of rational quadratic arcs of the unit circle through `angles`
+ * (rad), as control points, weights and knots. The knots are uniform, so
+ * arcs of different angles make the parameterization uneven in angle.
+ */
+export function arcChain(angles: readonly number[]): {
+  points: [number, number][];
+  weights: number[];
+  knots: number[];
+} {
+  const points: [number, number][] = [];
+  const weights: number[] = [];
+  const arcs = angles.length - 1;
+  for (let i = 0; i < arcs; i++) {
+    const half = (angles[i + 1]! - angles[i]!) / 2;
+    const middle = angles[i]! + half;
+    if (i === 0) {
+      points.push([Math.cos(angles[0]!), Math.sin(angles[0]!)]);
+      weights.push(1);
+    }
+    points.push([
+      Math.cos(middle) / Math.cos(half),
+      Math.sin(middle) / Math.cos(half),
+    ]);
+    weights.push(Math.cos(half));
+    points.push([Math.cos(angles[i + 1]!), Math.sin(angles[i + 1]!)]);
+    weights.push(1);
+  }
+  const knots = [0, 0, 0];
+  for (let i = 1; i < arcs; i++) {
+    knots.push(i / arcs, i / arcs);
+  }
+  knots.push(1, 1, 1);
+  return { points, weights, knots };
+}
+
+/**
+ * A NURBS surface of revolution about the z axis: u is the circle through
+ * `angles` (see `arcChain`), v the profile, given as (radius, z) points with
+ * weights and knots of the given degree.
+ */
+export function revolvedSurface(
+  angles: readonly number[],
+  profile: {
+    degree: number;
+    points: readonly (readonly [number, number])[];
+    weights: readonly number[];
+    knots: readonly number[];
+  },
+): NurbsSurface {
+  const circle = arcChain(angles);
+  const countU = circle.points.length;
+  const countV = profile.points.length;
+  const points = new Float64Array(countU * countV * 3);
+  const weights = new Float64Array(countU * countV);
+  for (let j = 0; j < countV; j++) {
+    for (let i = 0; i < countU; i++) {
+      const [radius, z] = profile.points[j]!;
+      points.set(
+        [radius * circle.points[i]![0], radius * circle.points[i]![1], z],
+        (j * countU + i) * 3,
+      );
+      weights[j * countU + i] = circle.weights[i]! * profile.weights[j]!;
+    }
+  }
+  return {
+    degreeU: 2,
+    degreeV: profile.degree,
+    knotsU: Float64Array.from(circle.knots),
+    knotsV: Float64Array.from(profile.knots),
+    countU,
+    countV,
+    points,
+    weights,
+  };
+}
+
+/** A straight profile from (r0, 0) to (r1, height): a cylinder when r0 = r1, else a cone. */
+export function lineProfile(r0: number, r1: number, height: number) {
+  return {
+    degree: 1,
+    points: [
+      [r0, 0],
+      [r1, height],
+    ] as const,
+    weights: [1, 1],
+    knots: [0, 0, 1, 1],
+  };
+}
+
+/** A meridian through the latitudes `angles` (rad) of a sphere of radius r, as a profile. */
+export function meridianProfile(r: number, angles: readonly number[]) {
+  const arc = arcChain(angles);
+  return {
+    degree: 2,
+    points: arc.points.map(([x, y]) => [r * x, r * y] as const),
+    weights: arc.weights,
+    knots: arc.knots,
+  };
+}
+
+/** The unit-less angles of a circle cut into arcs of the given fractions of a turn. */
+export function turnAngles(fractions: readonly number[]): number[] {
+  const total = fractions.reduce((a, b) => a + b, 0);
+  const out = [0];
+  for (const f of fractions) {
+    out.push(out[out.length - 1]! + (2 * Math.PI * f) / total);
+  }
+  return out;
+}
+
+/**
+ * A one-face form on `surface` of a builder, over the (u, v) box, with a
+ * rectangular loop. Its edges are straight lines between arbitrary vertices:
+ * for tessellation and for forms that need a face, not for validation.
+ */
+export function boxFace(
+  b: BrepBuilder,
+  surface: number,
+  box: readonly [number, number, number, number],
+): void {
+  const [u0, u1, v0, v1] = box;
+  const v = [0, 1, 2, 3].map((i) => b.vertex([i, 0, 0]));
+  const e = [0, 1, 2, 3].map((i) => b.edge(v[i]!, v[(i + 1) % 4]!));
+  b.face(surface, [
+    [
+      {
+        edge: e[0]!,
+        pcurve: [
+          [u0, v0],
+          [u1, v0],
+        ],
+      },
+      {
+        edge: e[1]!,
+        pcurve: [
+          [u1, v0],
+          [u1, v1],
+        ],
+      },
+      {
+        edge: e[2]!,
+        pcurve: [
+          [u1, v1],
+          [u0, v1],
+        ],
+      },
+      {
+        edge: e[3]!,
+        pcurve: [
+          [u0, v1],
+          [u0, v0],
+        ],
+      },
+    ],
+  ]);
+}
+
+/**
+ * A r = 0.5 m, 2 m tall cylinder of one NURBS face, as SMLib holds it: three
+ * arcs of 90°, 150° and 120° under uniform knots, with its analytic identity
+ * and a representation error of 25 µm.
+ */
+export function nurbsCylinderBrep(): BrepForm {
+  const b = new BrepBuilder();
+  const surface = b.nurbsSurface(
+    revolvedSurface(turnAngles([3, 5, 4]), lineProfile(0.5, 0.5, 2)),
+    {
+      identity: {
+        kind: SurfaceKind.Cylinder,
+        origin: [0, 0, 0],
+        x: [1, 0, 0],
+        y: [0, 1, 0],
+        params: [0.5, 0],
+      },
+      error: 2.5e-5,
+    },
+  );
+  boxFace(b, surface, [0, 1, 0, 1]);
   return b.build();
 }

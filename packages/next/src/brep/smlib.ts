@@ -6,9 +6,11 @@
 // record of doubles, and `readSmlibExport` builds the form from it with
 // `BrepBuilder`. Every surface and curve arrives as a NURBS, as SMLib holds
 // it, so every face is a Bézier surface here: SMLib's analytic surfaces are
-// B-splines whose parameterization isn't the form's analytic one.
-import { BrepBuilder } from "./build.ts";
-import type { BrepForm } from "./form.ts";
+// B-splines whose parameterization isn't the form's analytic one. Those
+// surfaces also arrive with their analytic identity (kind, frame, radii),
+// which the form keeps beside the patches.
+import { BrepBuilder, type SurfaceIdentity } from "./build.ts";
+import { SurfaceKind, type BrepForm } from "./form.ts";
 import { windLoop, type CurveUse } from "./loops.ts";
 import {
   reverseNurbsCurve,
@@ -18,7 +20,7 @@ import {
 } from "./nurbs.ts";
 
 /** The layout version the reader knows (bindings.cpp's kExportVersion). */
-const EXPORT_VERSION = 1;
+const EXPORT_VERSION = 2;
 
 /** A b-rep from SMLib, as the form and what the kernel said about its faces. */
 export interface SmlibBrep {
@@ -131,7 +133,22 @@ export function readSmlibExport(
   const builder = new BrepBuilder({ version: options?.version });
   const surfaces: number[] = [];
   for (let s = 0; s < surfaceCount; s++) {
-    surfaces.push(builder.nurbsSurface(readSurface(cursor)));
+    const kind = cursor.int();
+    if (kind > SurfaceKind.Bezier) {
+      throw new Error(`readSmlibExport: surface ${s} has identity ${kind}`);
+    }
+    let identity: SurfaceIdentity | undefined;
+    if (kind !== SurfaceKind.Bezier) {
+      const frame = cursor.take(9);
+      identity = {
+        kind,
+        origin: frame.subarray(0, 3),
+        x: frame.subarray(3, 6),
+        y: frame.subarray(6, 9),
+        params: [cursor.next(), cursor.next()],
+      };
+    }
+    surfaces.push(builder.nurbsSurface(readSurface(cursor), { identity }));
   }
 
   const vertexTolerance: number[] = [];

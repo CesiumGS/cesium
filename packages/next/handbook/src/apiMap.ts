@@ -1119,6 +1119,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "FaceTrim",
       "NurbsCurve",
       "NurbsSurface",
+      "SurfaceIdentity",
       "SurfaceKind",
       "SurfaceSample",
       "TessellateOptions",

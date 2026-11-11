@@ -99,11 +99,23 @@ class CurveList {
   }
 }
 
+/** A surface's analytic identity, in the form's conventions. */
+export interface SurfaceIdentity {
+  readonly kind: SurfaceKind;
+  readonly origin: ArrayLike<number>;
+  readonly x: ArrayLike<number>;
+  readonly y: ArrayLike<number>;
+  /** Cylinder [r, 0]; cone [r at v = 0, half-angle]; sphere [r, 0]; torus [major, minor]; plane [0, 0]. */
+  readonly params: readonly [number, number];
+}
+
 /** Writes a b-rep render form, one entity at a time. */
 export class BrepBuilder {
   private readonly version: number;
 
   private readonly surfaceKind: number[] = [];
+  private readonly surfaceIdentity: number[] = [];
+  private readonly surfaceError: number[] = [];
   private readonly surfaceFrame: number[] = [];
   private readonly surfaceParams: number[] = [];
   private readonly surfacePatches: number[] = [];
@@ -193,17 +205,55 @@ export class BrepBuilder {
     return this.analytic(SurfaceKind.Torus, origin, x, y, major, minor);
   }
 
-  /** A NURBS surface, stored as the rational Bézier patches it splits into exactly. */
-  nurbsSurface(surface: NurbsSurface): number {
+  /**
+   * A NURBS surface, stored as the rational Bézier patches it splits into
+   * exactly. `identity` says what the surface is when it lies on an analytic
+   * one: the kind, and that kind's frame and params as in the methods above
+   * (the identity's (u, v) needn't be the NURBS'). `error`, m, is how far the
+   * patches may be from the modeling surface, 0 when exact.
+   */
+  nurbsSurface(
+    surface: NurbsSurface,
+    options?: { identity?: SurfaceIdentity; error?: number },
+  ): number {
+    const identity = options?.identity;
+    const error = options?.error ?? 0;
+    if (identity) {
+      if (!(
+        identity.kind >= SurfaceKind.Plane && identity.kind < SurfaceKind.Bezier
+      )) {
+        throw new Error(
+          `BrepBuilder.nurbsSurface: identity kind ${identity.kind} is not analytic`,
+        );
+      }
+      const numbers = [
+        ...Array.from(identity.origin).slice(0, 3),
+        ...Array.from(identity.x).slice(0, 3),
+        ...Array.from(identity.y).slice(0, 3),
+        ...identity.params,
+      ];
+      if (numbers.length !== 11 || !numbers.every(Number.isFinite)) {
+        throw new Error(
+          "BrepBuilder.nurbsSurface: identity needs finite origin, x, y and params",
+        );
+      }
+    }
+    if (!(error >= 0 && Number.isFinite(error))) {
+      throw new Error(
+        "BrepBuilder.nurbsSurface: error must be a finite number of metres, 0 or more",
+      );
+    }
     const split = nurbsSurfaceToPatches(surface);
     const index = this.surfaceKind.length;
     const patches = split.domains.length / 4;
     const perPatch = (split.degreeU + 1) * (split.degreeV + 1);
     this.surfaceKind.push(SurfaceKind.Bezier);
-    for (let i = 0; i < 9; i++) {
-      this.surfaceFrame.push(0);
+    this.surfaceIdentity.push(identity?.kind ?? SurfaceKind.Bezier);
+    this.surfaceError.push(error);
+    for (const axis of [identity?.origin, identity?.x, identity?.y]) {
+      this.surfaceFrame.push(axis?.[0] ?? 0, axis?.[1] ?? 0, axis?.[2] ?? 0);
     }
-    this.surfaceParams.push(0, 0);
+    this.surfaceParams.push(identity?.params[0] ?? 0, identity?.params[1] ?? 0);
     this.surfacePatches.push(this.patchDegree.length / 2, patches);
     for (let p = 0; p < patches; p++) {
       this.patchDegree.push(split.degreeU, split.degreeV);
@@ -321,6 +371,8 @@ export class BrepBuilder {
     return {
       version: this.version,
       surfaceKind: Uint8Array.from(this.surfaceKind),
+      surfaceIdentity: Uint8Array.from(this.surfaceIdentity),
+      surfaceError: Float32Array.from(this.surfaceError),
       surfaceFrame: Float64Array.from(this.surfaceFrame),
       surfaceParams: Float64Array.from(this.surfaceParams),
       surfacePatches: Uint32Array.from(this.surfacePatches),
@@ -356,6 +408,8 @@ export class BrepBuilder {
   ): number {
     const index = this.surfaceKind.length;
     this.surfaceKind.push(kind);
+    this.surfaceIdentity.push(kind);
+    this.surfaceError.push(0);
     for (const axis of [origin, x, y]) {
       this.surfaceFrame.push(axis[0]!, axis[1]!, axis[2]!);
     }

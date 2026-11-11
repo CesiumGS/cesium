@@ -21,6 +21,7 @@ import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import {
   boxBrep,
   cappedCylinderBrep,
+  nurbsCylinderBrep,
   trimmedNurbsBrep,
 } from "./brepFixtures.ts";
 
@@ -126,6 +127,69 @@ describe("BENTLEY_brep writer and reader", () => {
       [],
     )[0];
     expectEqualForms(read!, boxBrep());
+  });
+
+  it("round trips a Bézier surface's identity and error", () => {
+    const form = nurbsCylinderBrep();
+    const written = writeBrepExtension([form], 0);
+    const entry = (
+      written.extension as { breps: Array<Record<string, unknown>> }
+    ).breps[0]!;
+    expect(typeof entry.surfaceIdentity).toBe("number");
+    expect(typeof entry.surfaceError).toBe("number");
+    const warnings: string[] = [];
+    const [read] = readBrepExtension(
+      { extensions: { BENTLEY_brep: written.extension } },
+      viewsOf(written, 0),
+      warnings,
+    );
+    expect(warnings).toEqual([]);
+    expectEqualForms(read!, form);
+    expect(Array.from(read!.surfaceKind)).toEqual([5]);
+    expect(Array.from(read!.surfaceIdentity)).toEqual([1]);
+    expect(read!.surfaceError[0]).toBeCloseTo(2.5e-5, 9);
+    expect(Array.from(read!.surfaceParams)).toEqual([0.5, 0]);
+    expect(validateBrep(read!).filter((p) => p.entity === "surface")).toEqual(
+      [],
+    );
+  });
+
+  it("reads a b-rep without surfaceIdentity or surfaceError as identity = kind and error 0", () => {
+    const form = nurbsCylinderBrep();
+    const written = writeBrepExtension([form], 0);
+    const entry = (
+      written.extension as { breps: Array<Record<string, unknown>> }
+    ).breps[0]!;
+    const bare = { ...entry };
+    delete bare.surfaceIdentity;
+    delete bare.surfaceError;
+    const warnings: string[] = [];
+    const [read] = readBrepExtension(
+      { extensions: { BENTLEY_brep: { breps: [bare] } } },
+      viewsOf(written, 0),
+      warnings,
+    );
+    expect(warnings).toEqual([]);
+    expect(Array.from(read!.surfaceKind)).toEqual([5]);
+    expect(Array.from(read!.surfaceIdentity)).toEqual([5]);
+    expect(Array.from(read!.surfaceError)).toEqual([0]);
+  });
+
+  it("skips a b-rep whose identity count does not match", () => {
+    const form = nurbsCylinderBrep();
+    const bad: BrepForm = {
+      ...form,
+      surfaceIdentity: Uint8Array.of(1, 1),
+    };
+    const written = writeBrepExtension([bad], 0);
+    const warnings: string[] = [];
+    const read = readBrepExtension(
+      { extensions: { BENTLEY_brep: written.extension } },
+      viewsOf(written, 0),
+      warnings,
+    );
+    expect(read).toEqual([undefined]);
+    expect(warnings[0]).toMatch(/surfaceIdentity/);
   });
 
   it("copies an array whose bufferView is not aligned, and reads it right", () => {

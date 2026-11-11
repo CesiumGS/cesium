@@ -524,6 +524,7 @@ export function occtToForm(
         type === oc.GeomAbs_SurfaceType.GeomAbs_BSplineSurface ||
         type === oc.GeomAbs_SurfaceType.GeomAbs_BezierSurface
       ) {
+        // A B-spline or Bézier surface in OCCT is free-form: no identity.
         surface = builder.nurbsSurface(surfaceOf(adaptor.BSpline()));
       } else {
         throw new Error(

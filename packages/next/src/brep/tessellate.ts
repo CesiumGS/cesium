@@ -3,9 +3,19 @@
 // serves a host that loads no WebAssembly and the gallery example. It is not
 // the reference: the exact float64 evaluation is the ground truth for chordal
 // error. Each face's (u, v) domain is cut into a uniform grid whose density
-// comes from a chordal-error bound. Triangles whose centre falls outside the
-// face's trim are dropped, and the edges drawn on top hide the jagged trim.
-// Lengths are metres and angles are radians.
+// comes from a chordal-error bound: the sag of the analytic surface, or for a
+// Bézier surface with an analytic identity, of that identity from the
+// patches' angular or linear speed, or else from the net's second derivatives
+// (src/brep/bounds.ts). Triangles whose centre falls outside the face's trim
+// are dropped, and the edges drawn on top hide the jagged trim. Lengths are
+// metres and angles are radians.
+import {
+  axisRadius,
+  axisRates,
+  frameOf,
+  netBounds,
+  speedBounds,
+} from "./bounds.ts";
 import {
   evaluateCurve2,
   evaluateCurve3,
@@ -51,18 +61,19 @@ const DEFAULT_TRIM_GRID = 48;
 const POLYGON_SAMPLES = 16;
 /** The most lines one edge segment gets. */
 const MAX_EDGE_LINES = 256;
-/** Spike B's safety factor of 2 for rational weights, times its 0.75 bound. */
-const PATCH_BOUND = 2 * 0.75;
 /** The chordal sag of a curve segment is at most this times its largest second difference, per line squared. */
 const CURVE_BOUND = 0.125;
 
-/** How many cells one direction needs, and the chordal error m a given cell count leaves. */
+/**
+ * The chordal error, m, that a face's grid of `nu` × `nv` cells leaves over
+ * its (u, v) box: an upper bound, never increasing with either count. `slack`
+ * is how far the stored geometry may lie from the surface the bound is
+ * against.
+ */
 interface Demand {
-  readonly cells: number;
-  readonly errorAt: (cells: number) => number;
+  readonly errorAt: (nu: number, nv: number) => number;
+  readonly slack: number;
 }
-
-const NO_CURVATURE: Demand = { cells: 1, errorAt: () => 0 };
 
 /** A growing list of typed-array pieces, joined at the end. */
 class Chunks<T extends Float64Array | Uint32Array> {
@@ -267,7 +278,7 @@ interface FaceMesh {
   /** (u, v) of each vertex, 2 per vertex. */
   uvs: Float64Array;
   indices: Uint32Array;
-  /** The chordal error m this face's grid allows beyond the tolerance, or 0. */
+  /** The chordal error m this face's grid allows, when above the tolerance, else 0. */
   error: number;
 }
 
@@ -287,17 +298,18 @@ function tessellateFace(
   const loops = trim.loops;
 
   const surface = form.faceSurface[face]!;
-  const demand = curvature(form, surface, [u0, u1, v0, v1], tolerance);
-  let error = 0;
-  const cellsFor = (d: Demand, span: number): number => {
-    const wanted = trimmed ? Math.max(d.cells, trimGrid) : d.cells;
-    if (d.cells > maxGrid) {
-      error = Math.max(error, d.errorAt(maxGrid));
-    }
-    return span > 0 ? Math.min(wanted, maxGrid) : 1;
+  const demand = curvature(form, surface, [u0, u1, v0, v1]);
+  const grid = chooseGrid(demand.errorAt, tolerance, maxGrid, u1 > u0, v1 > v0);
+  const cellsFor = (wanted: number, span: number): number => {
+    const bumped = trimmed ? Math.max(wanted, trimGrid) : wanted;
+    return span > 0 ? Math.min(bumped, maxGrid) : 1;
   };
-  const nu = cellsFor(demand.u, u1 - u0);
-  const nv = cellsFor(demand.v, v1 - v0);
+  const nu = cellsFor(grid.nu, u1 - u0);
+  const nv = cellsFor(grid.nv, v1 - v0);
+  let error = grid.capped ? demand.errorAt(nu, nv) : 0;
+  if (demand.slack > 0) {
+    error = Math.max(error, tolerance) + demand.slack;
+  }
 
   // The grid's vertices.
   const stride = nu + 1;
@@ -541,140 +553,250 @@ function insideEvenOdd(
 
 // Grid density.
 
-/** The cells needed per direction for chordal error, over the (u, v) box. */
+/** The chordal error left by a grid, over the (u, v) box; see `Demand`. */
 function curvature(
   form: BrepForm,
   surface: number,
   box: readonly [number, number, number, number],
-  tolerance: number,
-): { u: Demand; v: Demand } {
+): Demand {
   const [u0, u1, v0, v1] = box;
+  const spanU = u1 - u0;
+  const spanV = v1 - v0;
   const kind = form.surfaceKind[surface] as SurfaceKind;
   const p0 = Math.abs(form.surfaceParams[surface * 2]!);
   const p1 = form.surfaceParams[surface * 2 + 1]!;
+  const exact = (errorAt: Demand["errorAt"]): Demand => ({ errorAt, slack: 0 });
   switch (kind) {
     case SurfaceKind.Plane:
-      return { u: NO_CURVATURE, v: NO_CURVATURE };
+      return exact(() => 0);
     case SurfaceKind.Cylinder:
-      return { u: chord(p0, u1 - u0, tolerance), v: NO_CURVATURE };
+      return exact((nu) => sagitta(p0, spanU / nu));
     case SurfaceKind.Cone: {
       // The radius grows along v, so the box's largest radius sets the density.
       const t = Math.tan(p1);
       const radius = Math.max(Math.abs(p0 + v0 * t), Math.abs(p0 + v1 * t));
-      return { u: chord(radius, u1 - u0, tolerance), v: NO_CURVATURE };
+      return exact((nu) => sagitta(radius, spanU / nu));
     }
-    case SurfaceKind.Sphere:
-      return {
-        u: chord(p0, u1 - u0, tolerance),
-        v: chord(p0, v1 - v0, tolerance),
-      };
-    case SurfaceKind.Torus:
-      return {
-        u: chord(p0 + Math.abs(p1), u1 - u0, tolerance),
-        v: chord(Math.abs(p1), v1 - v0, tolerance),
-      };
+    case SurfaceKind.Sphere: {
+      // A triangle's depth below the sphere is at most the sag along the
+      // meridian plus the sag across the parallel at its widest: the point
+      // projects into the meridian plane's chord, and its radius there
+      // shortens by at most the parallel's sag.
+      const widest =
+        v0 <= 0 && v1 >= 0 ? 1 : Math.max(Math.cos(v0), Math.cos(v1), 0);
+      return exact(
+        (nu, nv) => sagitta(p0, spanV / nv) + widest * sagitta(p0, spanU / nu),
+      );
+    }
+    case SurfaceKind.Torus: {
+      // The same argument about the tube: the tube's circle in the meridian
+      // plane, then the radius about the axis shortening by the sag of u.
+      const minor = Math.abs(p1);
+      return exact(
+        (nu, nv) =>
+          sagitta(p0 + minor, spanU / nu) + sagitta(minor, spanV / nv),
+      );
+    }
     case SurfaceKind.Bezier:
-      return bezierDemand(form, surface, box, tolerance);
+      return bezierDemand(form, surface, box);
     default:
       throw new Error(`tessellateBrep: unknown surface kind ${kind}`);
   }
 }
 
-/** A circular arc of the given radius, m, and span, rad: the smallest n with r(1 − cos(span / 2n)) ≤ tolerance. */
-function chord(radius: number, span: number, tolerance: number): Demand {
-  const sag = (n: number): number => 2 * radius * Math.sin(span / (4 * n)) ** 2;
-  if (!(span > 0 && radius > 0)) {
-    return NO_CURVATURE;
+/** How far the chord of a circular arc of the given radius, m, and angle, rad, sags: r(1 − cos(angle / 2)), whole radius at a half turn or more. */
+function sagitta(radius: number, angle: number): number {
+  if (!(radius > 0 && angle > 0)) {
+    return 0;
   }
-  // r(1 − cos(a)) = 2r·sin²(a / 2), so sin(span / 4n) ≤ √(tolerance / 2r).
-  const s = Math.sqrt(tolerance / (2 * radius));
-  const cells = s >= 1 ? 1 : Math.max(1, Math.ceil(span / (4 * Math.asin(s))));
-  return { cells, errorAt: sag };
+  return 2 * radius * Math.sin(Math.min(angle, Math.PI) / 4) ** 2;
+}
+
+/**
+ * The smallest grid, by cell count, whose error is within the tolerance and
+ * whose sides are at most `cap` (1 for a side with no extent). When none is,
+ * the cheapest grid that leaves the error `cap` × `cap` cells would, and
+ * `capped`.
+ */
+function chooseGrid(
+  errorAt: Demand["errorAt"],
+  tolerance: number,
+  cap: number,
+  hasU: boolean,
+  hasV: boolean,
+): { nu: number; nv: number; capped: boolean } {
+  const maxU = hasU ? cap : 1;
+  const maxV = hasV ? cap : 1;
+  // The least n in [1, limit] that passes `ok`, which never goes back to failing.
+  const fewest = (limit: number, ok: (n: number) => boolean): number => {
+    let low = 1;
+    let high = limit;
+    while (low < high) {
+      const mid = (low + high) >> 1;
+      if (ok(mid)) {
+        high = mid;
+      } else {
+        low = mid + 1;
+      }
+    }
+    return low;
+  };
+  const floor = errorAt(maxU, maxV);
+  if (!(floor <= tolerance)) {
+    const keep = floor * (1 + 1e-9);
+    const nv = fewest(maxV, (n) => errorAt(maxU, n) <= keep);
+    const nu = fewest(maxU, (n) => errorAt(n, nv) <= keep);
+    return { nu, nv, capped: true };
+  }
+  let best = { nu: maxU, nv: maxV };
+  for (
+    let nv = fewest(maxV, (n) => errorAt(maxU, n) <= tolerance);
+    nv <= maxV && nv < best.nu * best.nv;
+    nv++
+  ) {
+    const nu = fewest(maxU, (n) => errorAt(n, nv) <= tolerance);
+    if (nu * nv < best.nu * best.nv) {
+      best = { nu, nv };
+    }
+  }
+  return { ...best, capped: false };
 }
 
 function bezierDemand(
   form: BrepForm,
   surface: number,
   box: readonly [number, number, number, number],
-  tolerance: number,
-): { u: Demand; v: Demand } {
+): Demand {
   const [u0, u1, v0, v1] = box;
   const first = form.surfacePatches[surface * 2]!;
   const count = form.surfacePatches[surface * 2 + 1]!;
   const eps = 1e-9;
   const spanU = u1 - u0;
   const spanV = v1 - v0;
-  const startsU = new Set<string>();
-  const startsV = new Set<string>();
-  let largestU = 0;
-  let largestV = 0;
+  // The patches the box covers more than a sliver of, with their domains' widths.
+  const patches: { patch: number; wu: number; wv: number }[] = [];
   for (let patch = first; patch < first + count; patch++) {
     const pu0 = form.patchDomain[patch * 4]!;
     const pu1 = form.patchDomain[patch * 4 + 1]!;
     const pv0 = form.patchDomain[patch * 4 + 2]!;
     const pv1 = form.patchDomain[patch * 4 + 3]!;
-    // A patch counts when the box covers more than a sliver of it.
     if (pu1 <= u0 + eps * spanU || pu0 >= u1 - eps * spanU) {
       continue;
     }
     if (pv1 <= v0 + eps * spanV || pv0 >= v1 - eps * spanV) {
       continue;
     }
-    startsU.add(pu0.toPrecision(12));
-    startsV.add(pv0.toPrecision(12));
-    const [du, dv] = patchSecondDifferences(form, patch);
-    largestU = Math.max(largestU, du);
-    largestV = Math.max(largestV, dv);
+    patches.push({ patch, wu: pu1 - pu0, wv: pv1 - pv0 });
   }
-  const demand = (largest: number, patches: number): Demand => {
-    const perPatch = Math.max(
-      1,
-      Math.ceil(Math.sqrt((PATCH_BOUND * largest) / tolerance)),
-    );
-    const along = Math.max(1, patches);
-    return {
-      cells: perPatch * along,
-      errorAt: (cells) => (PATCH_BOUND * largest) / (cells / along) ** 2,
-    };
-  };
+  const slack = form.surfaceError[surface]!;
+  const identity = form.surfaceIdentity[surface] as SurfaceKind;
+  const known =
+    identity === SurfaceKind.Bezier
+      ? undefined
+      : identityDemand(form, surface, identity, patches, spanU, spanV);
+  if (known) {
+    return { errorAt: known, slack };
+  }
+
+  // Free-form: a cell of h × k leaves at most (h² P_ss + 2hk P_st + k² P_tt) / 8
+  // between the surface and its triangles (the interpolation error of a
+  // triangle, from the second derivatives' bounds in bounds.ts). It assumes
+  // the surface is smooth across the seams between patches.
+  let uu = 0;
+  let uv = 0;
+  let vv = 0;
+  for (const { patch, wu, wv } of patches) {
+    const bound = netBounds(form, patch);
+    uu = Math.max(uu, bound.ss / wu ** 2);
+    uv = Math.max(uv, bound.st / (wu * wv));
+    vv = Math.max(vv, bound.tt / wv ** 2);
+  }
   return {
-    u: demand(largestU, startsU.size),
-    v: demand(largestV, startsV.size),
+    errorAt: (nu, nv) => {
+      const h = spanU / nu;
+      const k = spanV / nv;
+      return (uu * h * h + 2 * uv * h * k + vv * k * k) / 8;
+    },
+    slack: 0,
   };
 }
 
-/** A patch's largest second difference of divided control points, m, along u and along v. */
-function patchSecondDifferences(
+/**
+ * The error of a grid over a Bézier surface that lies on an analytic one,
+ * from the identity's own geometry instead of the net's, or undefined when
+ * the patches don't allow it (the torus, or a patch that reaches the axis).
+ * The parameterization of a NURBS circle is not uniform in angle, so each
+ * patch's rate is bounded (bounds.ts) and a cell's angle is the rate times
+ * its width. Rates are Lipschitz bounds, so they hold across patch seams.
+ */
+function identityDemand(
   form: BrepForm,
-  patch: number,
-): [number, number] {
-  const degreeU = form.patchDegree[patch * 2]!;
-  const degreeV = form.patchDegree[patch * 2 + 1]!;
-  const first = form.patchFirst[patch]!;
-  const pts = form.patchPoints;
-  const at = (i: number, j: number, k: number): number => {
-    const p = (first + j * (degreeU + 1) + i) * 4;
-    return pts[p + k]! / pts[p + 3]!;
-  };
-  const second = (i: number, j: number, di: number, dj: number): number =>
-    Math.hypot(
-      at(i + di, j + dj, 0) - 2 * at(i, j, 0) + at(i - di, j - dj, 0),
-      at(i + di, j + dj, 1) - 2 * at(i, j, 1) + at(i - di, j - dj, 1),
-      at(i + di, j + dj, 2) - 2 * at(i, j, 2) + at(i - di, j - dj, 2),
-    );
-  let largestU = 0;
-  let largestV = 0;
-  for (let j = 0; j <= degreeV; j++) {
-    for (let i = 1; i < degreeU; i++) {
-      largestU = Math.max(largestU, second(i, j, 1, 0));
+  surface: number,
+  identity: SurfaceKind,
+  patches: readonly { patch: number; wu: number; wv: number }[],
+  spanU: number,
+  spanV: number,
+): Demand["errorAt"] | undefined {
+  const frame = frameOf(form, surface);
+  const radius = Math.abs(form.surfaceParams[surface * 2]!);
+  switch (identity) {
+    case SurfaceKind.Plane:
+      return () => 0;
+    case SurfaceKind.Cylinder:
+    case SurfaceKind.Cone: {
+      // A cell's corners lie within an arc of the circle about the axis, as
+      // wide as the rates times the cell. Its triangles lie within that
+      // arc's circular segment, and for a cone the segment's circle scales
+      // about the apex by at most the widest radius.
+      let rateU = 0;
+      let rateV = 0;
+      let widest = identity === SurfaceKind.Cone ? 0 : radius;
+      for (const { patch, wu, wv } of patches) {
+        const rates = axisRates(form, patch, frame);
+        if (!rates) {
+          return undefined;
+        }
+        rateU = Math.max(rateU, rates.s / wu);
+        rateV = Math.max(rateV, rates.t / wv);
+        if (identity === SurfaceKind.Cone) {
+          widest = Math.max(widest, axisRadius(form, patch, frame));
+        }
+      }
+      return (nu, nv) =>
+        sagitta(widest, (rateU * spanU) / nu + (rateV * spanV) / nv);
     }
-  }
-  for (let j = 1; j < degreeV; j++) {
-    for (let i = 0; i <= degreeU; i++) {
-      largestV = Math.max(largestV, second(i, j, 0, 1));
+    case SurfaceKind.Sphere: {
+      // Three corners on a sphere, whose edges are at most A, B (along u, v)
+      // and C (across a cell): the triangle's points sit at distance √(r² −
+      // W) from the centre with W at most C² / 4 (C² ≥ A² + B², so the
+      // enclosing circle's diameter is C), and the cell's edges are at most
+      // the speeds times the cell's sides.
+      let speedU = 0;
+      let speedV = 0;
+      let across = 0;
+      for (const { patch, wu, wv } of patches) {
+        const speeds = speedBounds(form, patch, frame);
+        if (!speeds) {
+          return undefined;
+        }
+        speedU = Math.max(speedU, Math.sqrt(speeds.ss) / wu);
+        speedV = Math.max(speedV, Math.sqrt(speeds.tt) / wv);
+        across = Math.max(across, speeds.st / (wu * wv));
+      }
+      return (nu, nv) => {
+        const a = (speedU * spanU) / nu;
+        const b = (speedV * spanV) / nv;
+        const c = Math.min(
+          a + b,
+          Math.sqrt(a * a + b * b + (2 * across * spanU * spanV) / (nu * nv)),
+        );
+        const left = radius * radius - (c * c) / 4;
+        return left > 0 ? (c * c) / 4 / (radius + Math.sqrt(left)) : radius;
+      };
     }
+    default:
+      return undefined;
   }
-  return [largestU, largestV];
 }
 
 // Edges.

@@ -13,9 +13,11 @@ type ArrayType =
 
 type TypedArray = Uint8Array | Uint32Array | Float32Array | Float64Array;
 
-/** Every typed array of a form, in the form's property order, with its type. */
+/** Every typed array of a form, in the form's property order, with its type. A reader takes `surfaceIdentity` and `surfaceError` as optional. */
 const ARRAYS: ReadonlyArray<readonly [keyof BrepForm & string, ArrayType]> = [
   ["surfaceKind", Uint8Array],
+  ["surfaceIdentity", Uint8Array],
+  ["surfaceError", Float32Array],
   ["surfaceFrame", Float64Array],
   ["surfaceParams", Float64Array],
   ["surfacePatches", Uint32Array],
@@ -92,7 +94,13 @@ function readOne(
   }
   const form: Record<string, unknown> = { version };
   for (const [name, type] of ARRAYS) {
-    form[name] = readArray(e[name], name, type, bufferView);
+    if (e[name] === undefined && name === "surfaceIdentity") {
+      form[name] = (form.surfaceKind as Uint8Array).slice();
+    } else if (e[name] === undefined && name === "surfaceError") {
+      form[name] = new Float32Array((form.surfaceKind as Uint8Array).length);
+    } else {
+      form[name] = readArray(e[name], name, type, bufferView);
+    }
   }
   for (const name of ["curves2", "curves3"] as const) {
     const curves = e[name] as Record<string, unknown> | undefined;
@@ -176,6 +184,8 @@ function checkCounts(f: BrepForm): void {
     }
   };
   const surfaces = f.surfaceKind.length;
+  need("surfaceIdentity", f.surfaceIdentity.length, surfaces, "1 per surface");
+  need("surfaceError", f.surfaceError.length, surfaces, "1 per surface");
   need("surfaceFrame", f.surfaceFrame.length, 9 * surfaces, "9 per surface");
   need("surfaceParams", f.surfaceParams.length, 2 * surfaces, "2 per surface");
   need(

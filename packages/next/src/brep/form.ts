@@ -17,6 +17,12 @@
  * - Bézier: the patch whose domain holds (u, v). The patch's local parameters
  *   are `s = (u − u0)/(u1 − u0)` and `t = (v − v0)/(v1 − v0)`. A point on a
  *   shared boundary takes the lower-index patch.
+ *
+ * A surface's _identity_ is what it is, as one of these kinds. An analytic
+ * surface's identity is its kind. A Bézier surface's is the analytic kind it
+ * lies on when its kernel says so (SMLib's cylinders are NURBS), else
+ * `Bezier`, meaning free-form. The identity's (u, v) need not be the
+ * patches': it serves 3D queries and error bounds, not pcurves.
  */
 export const enum SurfaceKind {
   Plane = 0,
@@ -44,9 +50,13 @@ export interface BrepForm {
 
   // Surfaces, one entry each.
   readonly surfaceKind: Uint8Array;
-  /** 9 per surface: origin (3, m), x axis (3), y axis (3), unit and orthogonal; z = x × y. Unused for Bézier. */
+  /** Per surface: what it is, as a `SurfaceKind`. Equals `surfaceKind` for an analytic surface; for a Bézier one, an analytic kind or `Bezier` (free-form). */
+  readonly surfaceIdentity: Uint8Array;
+  /** Per surface: how far the stored geometry (analytic, or the patches) may be from the modeling surface, m. 0 when exact. */
+  readonly surfaceError: Float32Array;
+  /** 9 per surface: origin (3, m), x axis (3), y axis (3), unit and orthogonal; z = x × y. For the identity; 0 when it is `Bezier`. */
   readonly surfaceFrame: Float64Array;
-  /** 2 per surface: Cylinder [r, 0]; Cone [r at v = 0, half-angle]; Sphere [r, 0]; Torus [major R, minor r]; else 0. Metres and radians. */
+  /** 2 per surface, for the identity: Cylinder [r, 0]; Cone [r at v = 0, half-angle]; Sphere [r, 0]; Torus [major R, minor r]; else 0. Metres and radians. */
   readonly surfaceParams: Float64Array;
   /** 2 per surface: [first patch, patch count]; Bézier only, else [0, 0]. */
   readonly surfacePatches: Uint32Array;

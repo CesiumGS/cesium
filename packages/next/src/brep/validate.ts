@@ -77,6 +77,8 @@ function checkIndices(form: BrepForm, out: BrepProblem[]): void {
   const loops = form.loopUses.length / 2;
 
   const lengths: [string, number, number, BrepProblem["entity"]][] = [
+    ["surfaceIdentity", form.surfaceIdentity.length, surfaces, "surface"],
+    ["surfaceError", form.surfaceError.length, surfaces, "surface"],
     ["surfaceFrame", form.surfaceFrame.length, surfaces * 9, "surface"],
     ["surfaceParams", form.surfaceParams.length, surfaces * 2, "surface"],
     ["surfacePatches", form.surfacePatches.length, surfaces * 2, "surface"],
@@ -133,6 +135,30 @@ function checkIndices(form: BrepForm, out: BrepProblem[]): void {
     if (kind > SurfaceKind.Bezier) {
       add(out, "index", "surface", s, `surface ${s} has unknown kind ${kind}`);
       continue;
+    }
+    const identity = form.surfaceIdentity[s]!;
+    if (
+      identity > SurfaceKind.Bezier ||
+      (kind !== SurfaceKind.Bezier && identity !== kind)
+    ) {
+      add(
+        out,
+        "index",
+        "surface",
+        s,
+        `surface ${s} has identity ${identity} on kind ${kind}`,
+      );
+    }
+    if (!(
+      form.surfaceError[s]! >= 0 && Number.isFinite(form.surfaceError[s]!)
+    )) {
+      add(
+        out,
+        "degenerate",
+        "surface",
+        s,
+        `surface ${s} has an error of ${form.surfaceError[s]}, expected 0 or more`,
+      );
     }
     if (kind !== SurfaceKind.Bezier) {
       continue;

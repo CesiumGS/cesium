@@ -54,32 +54,34 @@ each array to 8 bytes), and its byte length a whole number of elements. An
 empty array has no bufferView, since glTF forbids byte length 0: its property
 is left out, and a reader takes a missing property as empty.
 
-| Property          | Element type | Count               | Description                                                                                 |
-| ----------------- | ------------ | ------------------- | ------------------------------------------------------------------------------------------- |
-| `version`         | number       |                     | The content version; goes up when the geometry changes.                                     |
-| `surfaceKind`     | Uint8        | S                   | Surface kinds: 0 plane, 1 cylinder, 2 cone, 3 sphere, 4 torus, 5 Bézier.                    |
-| `surfaceFrame`    | Float64      | 9 S                 | Origin (3, m), x axis (3), y axis (3), unit and orthogonal; z = x × y. Unused for Bézier.   |
-| `surfaceParams`   | Float64      | 2 S                 | Cylinder [r, 0]; cone [r at v = 0, half-angle]; sphere [r, 0]; torus [R, r]; else 0.        |
-| `surfacePatches`  | Uint32       | 2 S                 | [first patch, patch count]; Bézier only, else [0, 0].                                       |
-| `patchDegree`     | Uint8        | 2 P                 | Degree in u, degree in v (1 to 7).                                                          |
-| `patchFirst`      | Uint32       | P                   | Index of the patch's first control point in `patchPoints`, in points. Points run u fastest. |
-| `patchPoints`     | Float64      | 4 per control point | Homogeneous: x·w, y·w, z·w, w (w > 0), m.                                                   |
-| `patchDomain`     | Float64      | 4 P                 | u0, u1, v0, v1: the patch's span in its surface's parameter space.                          |
-| `faceSurface`     | Uint32       | F                   | The face's surface.                                                                         |
-| `faceReversed`    | Uint8        | F                   | 1 when the face's outward normal is −(∂u × ∂v), else 0.                                     |
-| `faceLoops`       | Uint32       | 2 F                 | [first loop, loop count]. A face's first loop is its outer loop.                            |
-| `loopUses`        | Uint32       | 2 per loop          | [first use, use count]. Outer loops run counter-clockwise in (u, v), inner ones clockwise.  |
-| `useEdge`         | Uint32       | U                   | The use's edge.                                                                             |
-| `useReversed`     | Uint8        | U                   | 1 when the use runs from the edge's end vertex to its start.                                |
-| `usePcurve`       | Uint32       | 2 U                 | [first segment, segment count] in `curves2`, already in the use's direction.                |
-| `edgeVertices`    | Uint32       | 2 E                 | Start vertex, end vertex.                                                                   |
-| `edgeCurve`       | Uint32       | 2 E                 | [first segment, segment count] in `curves3`, start to end.                                  |
-| `edgeTolerance`   | Float32      | E                   | How far the edge's curve and its uses' images may be apart, m.                              |
-| `vertexPosition`  | Float64      | 3 V                 | m.                                                                                          |
-| `vertexTolerance` | Float32      | V                   | How far the vertex may be from its edges' ends, m.                                          |
-| `curves2`         | object       |                     | Curve segments in 2D (u, v): `degree`, `first`, `points`.                                   |
-| `curves3`         | object       |                     | Curve segments in 3D, m: `degree`, `first`, `points`.                                       |
-| `ids`             | object       |                     | `values` and `offsets`.                                                                     |
+| Property          | Element type | Count               | Description                                                                                                                                                                  |
+| ----------------- | ------------ | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`         | number       |                     | The content version; goes up when the geometry changes.                                                                                                                      |
+| `surfaceKind`     | Uint8        | S                   | Surface kinds: 0 plane, 1 cylinder, 2 cone, 3 sphere, 4 torus, 5 Bézier.                                                                                                     |
+| `surfaceIdentity` | Uint8        | S                   | Optional. What the surface is, as a kind: its own for an analytic surface; for a Bézier one, the analytic kind it lies on, or 5 (free-form). Absent: equal to `surfaceKind`. |
+| `surfaceError`    | Float32      | S                   | Optional. How far the stored geometry may be from the modeling surface, m. Absent: 0.                                                                                        |
+| `surfaceFrame`    | Float64      | 9 S                 | Origin (3, m), x axis (3), y axis (3), unit and orthogonal; z = x × y. Of the identity; 0 when it is 5.                                                                      |
+| `surfaceParams`   | Float64      | 2 S                 | Of the identity: cylinder [r, 0]; cone [r at v = 0, half-angle]; sphere [r, 0]; torus [R, r]; else 0.                                                                        |
+| `surfacePatches`  | Uint32       | 2 S                 | [first patch, patch count]; Bézier only, else [0, 0].                                                                                                                        |
+| `patchDegree`     | Uint8        | 2 P                 | Degree in u, degree in v (1 to 7).                                                                                                                                           |
+| `patchFirst`      | Uint32       | P                   | Index of the patch's first control point in `patchPoints`, in points. Points run u fastest.                                                                                  |
+| `patchPoints`     | Float64      | 4 per control point | Homogeneous: x·w, y·w, z·w, w (w > 0), m.                                                                                                                                    |
+| `patchDomain`     | Float64      | 4 P                 | u0, u1, v0, v1: the patch's span in its surface's parameter space.                                                                                                           |
+| `faceSurface`     | Uint32       | F                   | The face's surface.                                                                                                                                                          |
+| `faceReversed`    | Uint8        | F                   | 1 when the face's outward normal is −(∂u × ∂v), else 0.                                                                                                                      |
+| `faceLoops`       | Uint32       | 2 F                 | [first loop, loop count]. A face's first loop is its outer loop.                                                                                                             |
+| `loopUses`        | Uint32       | 2 per loop          | [first use, use count]. Outer loops run counter-clockwise in (u, v), inner ones clockwise.                                                                                   |
+| `useEdge`         | Uint32       | U                   | The use's edge.                                                                                                                                                              |
+| `useReversed`     | Uint8        | U                   | 1 when the use runs from the edge's end vertex to its start.                                                                                                                 |
+| `usePcurve`       | Uint32       | 2 U                 | [first segment, segment count] in `curves2`, already in the use's direction.                                                                                                 |
+| `edgeVertices`    | Uint32       | 2 E                 | Start vertex, end vertex.                                                                                                                                                    |
+| `edgeCurve`       | Uint32       | 2 E                 | [first segment, segment count] in `curves3`, start to end.                                                                                                                   |
+| `edgeTolerance`   | Float32      | E                   | How far the edge's curve and its uses' images may be apart, m.                                                                                                               |
+| `vertexPosition`  | Float64      | 3 V                 | m.                                                                                                                                                                           |
+| `vertexTolerance` | Float32      | V                   | How far the vertex may be from its edges' ends, m.                                                                                                                           |
+| `curves2`         | object       |                     | Curve segments in 2D (u, v): `degree`, `first`, `points`.                                                                                                                    |
+| `curves3`         | object       |                     | Curve segments in 3D, m: `degree`, `first`, `points`.                                                                                                                        |
+| `ids`             | object       |                     | `values` and `offsets`.                                                                                                                                                      |
 
 S, P, F, U, E and V are the counts of surfaces, patches, faces, edge uses,
 edges and vertices. A reader derives them from the arrays and checks that
@@ -128,6 +130,14 @@ radians where angular, metres otherwise.
 - Bézier: the patch whose domain holds (u, v). The patch's local parameters are
   `s = (u − u0)/(u1 − u0)` and `t = (v − v0)/(v1 − v0)`. A point on a shared
   boundary takes the lower-index patch.
+
+A Bézier surface may also carry an _identity_ (`surfaceIdentity`), the analytic
+surface it lies on, with that kind's frame and params in the forms above. A
+kernel whose cylinders are NURBS says so this way. The identity's (u, v) need
+not match the patches': pcurves stay in the patches' (u, v), and the identity
+serves 3D queries and error bounds. `surfaceError` is how far the stored
+geometry (analytic, or the patches) may be from the modeling surface; 0 when
+exact.
 
 ## The fallback rule
 

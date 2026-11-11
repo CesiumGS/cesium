@@ -43,6 +43,8 @@ function bezierForm(split: ReturnType<typeof nurbsSurfaceToPatches>): BrepForm {
   return {
     version: 1,
     surfaceKind: Uint8Array.of(SurfaceKind.Bezier),
+    surfaceIdentity: Uint8Array.of(SurfaceKind.Bezier),
+    surfaceError: Float32Array.of(0),
     surfaceFrame: new Float64Array(9),
     surfaceParams: new Float64Array(2),
     surfacePatches: Uint32Array.of(0, patches),

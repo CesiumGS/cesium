@@ -36,7 +36,7 @@ constexpr long kUnsupported = -3;
 constexpr ULONG kTagAttribute = 10001;
 
 // The version of smlib_brep_export's layout (scripts/smlib/README.md).
-constexpr double kExportVersion = 1;
+constexpr double kExportVersion = 2;
 
 // A tessellated brep, as tessellateBrep's faces: unwelded between faces, each
 // vertex carrying its face's index in the brep (SmApiGetFaces order).
@@ -120,6 +120,52 @@ void putCurve(std::vector<double>& out, SmBSplineCurve* curve, int dimension) {
   for (ULONG i = 0; i < count; ++i) {
     putPoint(out, nurb->pol->Pw[i], dimension);
   }
+}
+
+// What an SM_API surface is, as the form's analytic kinds (src/brep/form.ts):
+// the kind (0 plane, 1 cylinder, 2 cone, 3 sphere, 4 torus), then the frame
+// (origin, x, y) and two params in the form's conventions; or 5 alone for a
+// surface that isn't one of them. SMLib's analytic surfaces subclass
+// SmBSplineSurface, and their NURBS parameterization isn't the form's.
+void putIdentity(std::vector<double>& out, SmSurface* surface) {
+  auto put = [&](double kind, const SmAxis2Placement& frame, double a,
+                 double b) {
+    const SmPoint3d o = frame.GetOrigin();
+    const SmVector3d x = frame.GetXAxis();
+    const SmVector3d y = frame.GetYAxis();
+    out.insert(out.end(),
+               {kind, o.x, o.y, o.z, x.x, x.y, x.z, y.x, y.y, y.z, a, b});
+  };
+  if (surface->IsKindOf(SmCone_TYPE)) {
+    // A cylinder is a cone in SMLib. The canonical placement sits at the
+    // bottom circle, with its z axis up the cone and the radius there.
+    SmAxis2Placement frame;
+    double radius = 0.0;
+    double semiAngleDeg = 0.0;
+    if (static_cast<SmCone*>(surface)->GetCanonical(frame, radius,
+                                                    semiAngleDeg) ==
+        SM_SUCCESS) {
+      if (surface->IsKindOf(SmCylinder_TYPE)) {
+        put(1, frame, radius, 0.0);
+      } else {
+        put(2, frame, radius, SM_DEG2RAD(semiAngleDeg));
+      }
+      return;
+    }
+  } else if (surface->IsKindOf(SmSphere_TYPE)) {
+    auto* sphere = static_cast<SmSphere*>(surface);
+    put(3, sphere->GetPosition(), sphere->GetRadius(), 0.0);
+    return;
+  } else if (surface->IsKindOf(SmTorus_TYPE)) {
+    auto* torus = static_cast<SmTorus*>(surface);
+    put(4, torus->GetPosition(), torus->GetMajorRadius(),
+        torus->GetMinorRadius());
+    return;
+  } else if (surface->IsKindOf(SmPlane_TYPE)) {
+    put(0, static_cast<SmPlane*>(surface)->GetPosition(), 0.0, 0.0);
+    return;
+  }
+  out.push_back(5);
 }
 
 // degree u, degree v, count u, count v, knot counts and knots in u then v,
@@ -475,13 +521,18 @@ EMSCRIPTEN_KEEPALIVE int smlib_brep_tag_faces(SmBrep* brep, long tag) {
  * The brep's topology and exact geometry as one record of doubles, for the
  * TypeScript reader (src/brep/smlib.ts) to build a BrepForm from. Every
  * surface and curve is a NURBS, as SMLib holds it: its analytic surfaces are
- * B-splines, and trim curves live in their NURBS parameterization.
+ * B-splines, and trim curves live in their NURBS parameterization. A surface
+ * that is analytic also says what it is (its identity), beside the NURBS.
  *
  *   header   version, surfaces, vertices, edges, faces, loops, uses,
  *            the largest gap from approximating a curve (m)
- *   surface  degree u, degree v, count u, count v, knot count u, knots u,
- *            knot count v, knots v, then count u × count v × (x, y, z, w),
- *            u fastest
+ *   surface  identity: kind (0 plane, 1 cylinder, 2 cone, 3 sphere, 4 torus,
+ *            5 none); for kinds 0 to 4 then origin (3), x axis (3), y axis
+ *            (3) and 2 params in the form's conventions (cylinder r, 0;
+ *            cone r at v = 0, half-angle in radians; sphere r, 0; torus
+ *            major, minor; plane 0, 0). Then the NURBS: degree u, degree v,
+ *            count u, count v, knot count u, knots u, knot count v, knots v,
+ *            then count u × count v × (x, y, z, w), u fastest
  *   vertex   x, y, z, tolerance
  *   edge     start vertex, end vertex, t0, t1, tolerance, then its 3D
  *            curve: degree, count, knot count, knots, count × (x, y, z, w).
@@ -535,6 +586,7 @@ EMSCRIPTEN_KEEPALIVE Export* smlib_brep_export(SmBrep* brep) {
         gStatus = kUnsupported;
         return nullptr;
       }
+      putIdentity(d, surface);
       putSurface(d, static_cast<SmBSplineSurface*>(surface));
     }
 

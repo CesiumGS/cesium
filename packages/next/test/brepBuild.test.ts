@@ -8,6 +8,7 @@ import {
 import {
   edgeCount,
   faceCount,
+  SurfaceKind,
   vertexCount,
   type BrepForm,
 } from "../src/brep/form.ts";
@@ -16,7 +17,10 @@ import { sphereBrep } from "../examples/brep-first-look/fixtures.ts";
 import {
   boxBrep,
   cappedCylinderBrep,
+  lineProfile,
+  revolvedSurface,
   trimmedNurbsBrep,
+  turnAngles,
 } from "./brepFixtures.ts";
 
 /** A copy of a form with its own arrays, so a test may break them. */
@@ -310,6 +314,101 @@ describe("BrepBuilder", () => {
         ],
       ]),
     ).toThrow(/no edge 7/);
+  });
+});
+
+describe("BrepBuilder surface identity and error", () => {
+  const cylinder = () =>
+    revolvedSurface(turnAngles([1, 1, 1, 1]), lineProfile(2, 2, 3));
+  const axes = [
+    [1, 2, 3],
+    [1, 0, 0],
+    [0, 1, 0],
+  ] as const;
+
+  it("gives an analytic surface its own kind as its identity, and no error", () => {
+    const b = new BrepBuilder();
+    b.plane(...axes);
+    b.cylinder(...axes, 2);
+    b.cone(...axes, 2, 0.3);
+    b.sphere(...axes, 2);
+    b.torus(...axes, 5, 1);
+    const form = b.build();
+    expect(Array.from(form.surfaceIdentity)).toEqual(
+      Array.from(form.surfaceKind),
+    );
+    expect(Array.from(form.surfaceIdentity)).toEqual([0, 1, 2, 3, 4]);
+    expect(Array.from(form.surfaceError)).toEqual([0, 0, 0, 0, 0]);
+  });
+
+  it("defaults a NURBS surface to free-form, with an error of 0 and no frame", () => {
+    const b = new BrepBuilder();
+    b.nurbsSurface(cylinder());
+    const form = b.build();
+    expect(Array.from(form.surfaceKind)).toEqual([SurfaceKind.Bezier]);
+    expect(Array.from(form.surfaceIdentity)).toEqual([SurfaceKind.Bezier]);
+    expect(Array.from(form.surfaceError)).toEqual([0]);
+    expect(Array.from(form.surfaceFrame)).toEqual(new Array(9).fill(0));
+    expect(Array.from(form.surfaceParams)).toEqual([0, 0]);
+  });
+
+  it("stores a NURBS surface's identity, frame, params and error, beside its patches", () => {
+    const b = new BrepBuilder();
+    b.plane(...axes);
+    b.nurbsSurface(cylinder(), {
+      identity: {
+        kind: SurfaceKind.Cylinder,
+        origin: axes[0],
+        x: axes[1],
+        y: axes[2],
+        params: [2, 0],
+      },
+      error: 1e-4,
+    });
+    const form = b.build();
+    expect(Array.from(form.surfaceKind)).toEqual([
+      SurfaceKind.Plane,
+      SurfaceKind.Bezier,
+    ]);
+    expect(Array.from(form.surfaceIdentity)).toEqual([
+      SurfaceKind.Plane,
+      SurfaceKind.Cylinder,
+    ]);
+    expect(form.surfaceError[1]).toBeCloseTo(1e-4, 9);
+    expect(Array.from(form.surfaceFrame.slice(9))).toEqual([
+      1, 2, 3, 1, 0, 0, 0, 1, 0,
+    ]);
+    expect(Array.from(form.surfaceParams.slice(2))).toEqual([2, 0]);
+    expect(form.surfacePatches[3]).toBeGreaterThan(0);
+  });
+
+  it("rejects an identity that is not analytic, and a bad error, leaving the builder unchanged", () => {
+    const b = new BrepBuilder();
+    const frame = { origin: axes[0], x: axes[1], y: axes[2] };
+    expect(() =>
+      b.nurbsSurface(cylinder(), {
+        identity: { ...frame, kind: SurfaceKind.Bezier, params: [0, 0] },
+      }),
+    ).toThrow(/not analytic/);
+    expect(() =>
+      b.nurbsSurface(cylinder(), {
+        identity: { ...frame, kind: SurfaceKind.Sphere, params: [NaN, 0] },
+      }),
+    ).toThrow(/finite/);
+    for (const error of [-1, NaN, Infinity]) {
+      expect(() => b.nurbsSurface(cylinder(), { error })).toThrow(/error/);
+    }
+    expect(b.build().surfaceKind.length).toBe(0);
+  });
+
+  it("validates an identity that disagrees with an analytic kind", () => {
+    const b = new BrepBuilder();
+    b.sphere(...axes, 2);
+    const form = b.build();
+    const bad = { ...form, surfaceIdentity: Uint8Array.of(SurfaceKind.Plane) };
+    expect(validateBrep(bad).some((p) => /identity/.test(p.message))).toBe(
+      true,
+    );
   });
 });
 

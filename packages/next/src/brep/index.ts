@@ -24,7 +24,7 @@ export {
   type NurbsCurve,
   type NurbsSurface,
 } from "./nurbs.ts";
-export { BrepBuilder, type BrepUse } from "./build.ts";
+export { BrepBuilder, type BrepUse, type SurfaceIdentity } from "./build.ts";
 export { validateBrep, type BrepProblem } from "./validate.ts";
 export { readBrepExtension, writeBrepExtension } from "./gltf.ts";
 export {

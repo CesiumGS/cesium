@@ -2,7 +2,8 @@
 // solid it should be (plan §13.33, the CSG spike): the form validates, and
 // every face's outside really is outside. Shared by the SMLib and OCCT tests.
 import { expect } from "vitest";
-import type { BrepForm } from "../../src/brep/form.ts";
+import { evaluateSurface } from "../../src/brep/evaluate.ts";
+import { SurfaceKind, type BrepForm } from "../../src/brep/form.ts";
 import { tessellateBrep } from "../../src/brep/tessellate.ts";
 import { validateBrep } from "../../src/brep/validate.ts";
 
@@ -54,6 +55,94 @@ export function expectSolidForm(form: BrepForm, inside: Inside): void {
   for (const share of shares) {
     expect(share).toBeGreaterThan(0.95);
   }
+}
+
+/**
+ * How far a point is from a surface's analytic identity (form.ts's
+ * parameterizations), m. NaN when the identity is free-form.
+ */
+export function distanceToIdentity(
+  form: BrepForm,
+  surface: number,
+  p: ArrayLike<number>,
+): number {
+  const kind = form.surfaceIdentity[surface]! as SurfaceKind;
+  const f = form.surfaceFrame;
+  const a = form.surfaceParams[surface * 2]!;
+  const b = form.surfaceParams[surface * 2 + 1]!;
+  const at = (k: number) => [
+    f[surface * 9 + k]!,
+    f[surface * 9 + k + 1]!,
+    f[surface * 9 + k + 2]!,
+  ];
+  const [o, x, y] = [at(0), at(3), at(6)] as [number[], number[], number[]];
+  const z = [
+    x[1]! * y[2]! - x[2]! * y[1]!,
+    x[2]! * y[0]! - x[0]! * y[2]!,
+    x[0]! * y[1]! - x[1]! * y[0]!,
+  ];
+  const d = [p[0]! - o[0]!, p[1]! - o[1]!, p[2]! - o[2]!];
+  const dot = (u: number[], v: number[]) =>
+    u[0]! * v[0]! + u[1]! * v[1]! + u[2]! * v[2]!;
+  const [px, py, pz] = [dot(d, x), dot(d, y), dot(d, z)] as [
+    number,
+    number,
+    number,
+  ];
+  switch (kind) {
+    case SurfaceKind.Plane:
+      return Math.abs(pz);
+    case SurfaceKind.Cylinder:
+      return Math.abs(Math.hypot(px, py) - a);
+    case SurfaceKind.Cone:
+      return (
+        Math.abs(Math.hypot(px, py) - (a + pz * Math.tan(b))) * Math.cos(b)
+      );
+    case SurfaceKind.Sphere:
+      return Math.abs(Math.hypot(px, py, pz) - a);
+    case SurfaceKind.Torus:
+      return Math.abs(Math.hypot(Math.hypot(px, py) - a, pz) - b);
+    default:
+      return NaN;
+  }
+}
+
+/**
+ * Samples every patch of every Bézier surface that has an analytic identity,
+ * on a 5 × 5 grid of its own (u, v), and expects each point on the identity
+ * within `tolerance`. Returns how many surfaces had an identity.
+ */
+export function expectPatchesOnIdentity(
+  form: BrepForm,
+  tolerance = 1e-6,
+): number {
+  let identified = 0;
+  for (let s = 0; s < form.surfaceKind.length; s++) {
+    if (
+      form.surfaceKind[s] !== SurfaceKind.Bezier ||
+      form.surfaceIdentity[s] === SurfaceKind.Bezier
+    ) {
+      continue;
+    }
+    identified++;
+    const first = form.surfacePatches[s * 2]!;
+    const count = form.surfacePatches[s * 2 + 1]!;
+    for (let patch = first; patch < first + count; patch++) {
+      const [u0, u1, v0, v1] = form.patchDomain.subarray(
+        patch * 4,
+        patch * 4 + 4,
+      );
+      for (let i = 0; i <= 4; i++) {
+        for (let j = 0; j <= 4; j++) {
+          const u = u0! + ((u1! - u0!) * i) / 4;
+          const v = v0! + ((v1! - v0!) * j) / 4;
+          const point = evaluateSurface(form, s, u, v).position;
+          expect(distanceToIdentity(form, s, point)).toBeLessThan(tolerance);
+        }
+      }
+    }
+  }
+  return identified;
 }
 
 export const inBox =

@@ -15,9 +15,11 @@ only input here: `src/brep/smlib.ts` is its other side. It covers these areas.
   says which input it came from.
 - **Export.** `smlib_brep_export` writes a brep as one record of doubles:
   its topology from SMLib's `SmBrepData`, every surface and curve as the NURBS
-  SMLib holds, each face's outward side (from the faceuse that bounds a void
-  region), each edge's tolerance, and its face tags. The comment above the
-  function gives the layout, and `readSmlibExport` reads it.
+  SMLib holds (a surface that is a plane, cylinder, cone, sphere or torus also
+  says so, with its frame and radii), each face's outward side (from the
+  faceuse that bounds a void region), each edge's tolerance, and its face
+  tags. The comment above the function gives the layout, and `readSmlibExport`
+  reads it.
 - **Tessellation.** SMLib's own meshes, in the face layout of
   `tessellateBrep`: vertices are unwelded between faces, and each vertex
   carries its face's index in the brep.

@@ -385,6 +385,7 @@ export {
   type BezierCurves,
   type BrepForm,
   type BrepUse,
+  type SurfaceIdentity,
   type BrepProblem,
   type NurbsCurve,
   type NurbsSurface,

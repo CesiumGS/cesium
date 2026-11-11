@@ -14,6 +14,7 @@ import {
   type DrawHandle,
   type MeshData,
 } from "../../src/index.ts";
+import { SurfaceKind } from "../../src/brep/index.ts";
 import type { ExampleContext } from "../types.ts";
 import {
   boxBrep,
@@ -65,15 +66,16 @@ import {
  * - Two kernels: three booleans (a box minus a cylinder, and a box and a
  *   sphere united and intersected) made live by SMLib and by Open CASCADE in
  *   WebAssembly, side by side, each converted to the same render form: the
- *   CSG spike (plan §13.33). SMLib's faces arrive as Bézier patches, OCCT's
- *   as analytic kinds. A picked face says which input it came from. The
- *   kernels load only when the scene is first shown.
+ *   CSG spike (plan §13.33). SMLib's faces arrive as Bézier patches that
+ *   carry their analytic identity, OCCT's as analytic kinds. A picked face
+ *   says which input it came from. The kernels load only when the scene is
+ *   first shown.
  *
  * Everything is tessellated on the CPU for now.
  *
  * A toolbar over the view switches the display mode (keys 1 to 4): shaded,
  * shaded + wireframe, flat + wireframe, wireframe. The panel's analysis views
- * colour faces by surface kind, draw iso lines (kept inside each face's trim)
+ * colour faces by what their surface is, draw iso lines (kept inside each face's trim)
  * and normal whiskers. A click picks a face or an edge: the face is
  * highlighted and the panel shows the exact point of the surface nearest the
  * pick, found by Gauss-Newton in (u, v), a preview of the exact queries to
@@ -859,7 +861,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           const face = source.featureIds[i]!;
           const tinted = settings.byKind
             ? kindColors[
-                shape.form.surfaceKind[shape.form.faceSurface[face]!]!
+                shape.form.surfaceIdentity[shape.form.faceSurface[face]!]!
               ]!
             : tint(face);
           colors.set([...tinted, 1], i * 4);
@@ -1161,7 +1163,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         (n, shape) =>
           n +
           [...shape.form.faceSurface].filter(
-            (surface) => shape.form.surfaceKind[surface] === kind,
+            (surface) => shape.form.surfaceIdentity[surface] === kind,
           ).length,
         0,
       );
@@ -1264,19 +1266,23 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       ),
     );
   };
-  /** "6 planes, 1 cylinder": a form's faces by surface kind. */
+  /** "6 planes, 1 cylinder as Bézier": a form's faces by what their surface is, and held as patches. */
   const kindsOf = (form: BrepForm) => {
     const counts = new Map<number, number>();
     for (const surface of form.faceSurface) {
-      const kind = form.surfaceKind[surface]!;
-      counts.set(kind, (counts.get(kind) ?? 0) + 1);
+      const patches =
+        form.surfaceKind[surface] === SurfaceKind.Bezier &&
+        form.surfaceIdentity[surface] !== SurfaceKind.Bezier;
+      const key = form.surfaceIdentity[surface]! * 2 + (patches ? 1 : 0);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
     }
     return [...counts]
       .sort((a, b) => a[0] - b[0])
-      .map(([kind, n]) => {
-        const name = KIND_NAMES[kind] ?? "?";
+      .map(([key, n]) => {
+        const name = KIND_NAMES[key >> 1] ?? "?";
         // Bézier is a name; the others are words.
-        return `${n} ${name === "Bézier" ? name : name.toLowerCase()}`;
+        const word = name === "Bézier" ? name : name.toLowerCase();
+        return `${n} ${word}${key & 1 ? " as Bézier" : ""}`;
       })
       .join(", ");
   };
@@ -1330,7 +1336,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         el(
           "caption",
           {},
-          `Boolean + conversion to the render form, then the faces by surface kind; ✓ is a valid form. ${loads}.`,
+          `Boolean + conversion to the render form, then the faces by what their surface is (as Bézier when held as patches); ✓ is a valid form. ${loads}.`,
         ),
         el(
           "thead",
@@ -1457,7 +1463,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       toggle(
         "Colour by kind",
         "byKind",
-        "Each face coloured by its surface kind (Okabe–Ito colours, which stay apart under colour blindness).",
+        "Each face coloured by what its surface is, so a cylinder held as NURBS patches still reads as a cylinder (Okabe–Ito colours, which stay apart under colour blindness).",
       ),
       toggle(
         "Iso lines",
@@ -1545,10 +1551,14 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       picked.replaceChildren(list);
       return;
     }
+    const surface = form.faceSurface[sel.index]!;
+    const held =
+      form.surfaceKind[surface] === SurfaceKind.Bezier &&
+      form.surfaceIdentity[surface] !== SurfaceKind.Bezier;
     list.append(
       ...row(
         "Surface",
-        KIND_NAMES[form.surfaceKind[form.faceSurface[sel.index]!]!] ?? "?",
+        `${KIND_NAMES[form.surfaceIdentity[surface]!] ?? "?"}${held ? ", held as Bézier patches" : ""}`,
       ),
       ...(sel.shape.faceSources
         ? row(

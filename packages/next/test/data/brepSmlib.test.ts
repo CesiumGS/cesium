@@ -4,14 +4,21 @@
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
+import { SurfaceKind, type BrepForm } from "../../src/brep/form.ts";
 import {
   SmlibKernel,
   type SmlibBrep,
   type SmlibModule,
   type SmlibSolid,
 } from "../../src/brep/smlib.ts";
+import { tessellateBrep } from "../../src/brep/tessellate.ts";
 import { smlibDirectory } from "../../scripts/smlibTools.mjs";
-import { expectSolidForm, type Inside } from "./brepSolids.ts";
+import {
+  distanceToIdentity,
+  expectPatchesOnIdentity,
+  expectSolidForm,
+  type Inside,
+} from "./brepSolids.ts";
 
 const directory = smlibDirectory();
 let kernel: SmlibKernel;
@@ -148,6 +155,206 @@ describe("SMLib to BrepForm", () => {
       } finally {
         result.delete();
       }
+    }
+  });
+});
+
+/** The surface of a face, and its z axis (x × y) and radius. */
+function surfaceOf(form: BrepForm, face: number) {
+  const s = form.faceSurface[face]!;
+  const f = form.surfaceFrame;
+  const o = Array.from(f.subarray(s * 9, s * 9 + 3));
+  const x = Array.from(f.subarray(s * 9 + 3, s * 9 + 6));
+  const y = Array.from(f.subarray(s * 9 + 6, s * 9 + 9));
+  const z = [
+    x[1]! * y[2]! - x[2]! * y[1]!,
+    x[2]! * y[0]! - x[0]! * y[2]!,
+    x[0]! * y[1]! - x[1]! * y[0]!,
+  ];
+  return {
+    surface: s,
+    origin: o,
+    z,
+    a: form.surfaceParams[s * 2]!,
+    b: form.surfaceParams[s * 2 + 1]!,
+    identity: form.surfaceIdentity[s]!,
+  };
+}
+
+/** The faces' surface identities, by kind. */
+function identities(form: BrepForm): Record<number, number> {
+  const out: Record<number, number> = {};
+  for (let f = 0; f < form.faceSurface.length; f++) {
+    const id = form.surfaceIdentity[form.faceSurface[f]!]!;
+    out[id] = (out[id] ?? 0) + 1;
+  }
+  return out;
+}
+
+/** The sampled worst distance of a mesh's triangle points to their faces' identities, m. */
+function worstFromIdentity(form: BrepForm, tolerance: number) {
+  const mesh = tessellateBrep(form, { tolerance });
+  const { positions, indices, featureIds } = mesh.faces;
+  const o = mesh.origin;
+  const at = (i: number) => [
+    positions[i * 3]! + o[0]!,
+    positions[i * 3 + 1]! + o[1]!,
+    positions[i * 3 + 2]! + o[2]!,
+  ];
+  let worst = 0;
+  for (let t = 0; t < indices.length; t += 3) {
+    const v = [at(indices[t]!), at(indices[t + 1]!), at(indices[t + 2]!)];
+    const surface = form.faceSurface[featureIds[indices[t]!]!]!;
+    for (const w of [
+      [1 / 3, 1 / 3, 1 / 3],
+      [0.5, 0.5, 0],
+      [0, 0.5, 0.5],
+      [0.5, 0, 0.5],
+      [0.75, 0.25, 0],
+      [0.25, 0.25, 0.5],
+    ]) {
+      const q = [0, 1, 2].map(
+        (k) => w[0]! * v[0]![k]! + w[1]! * v[1]![k]! + w[2]! * v[2]![k]!,
+      );
+      worst = Math.max(worst, distanceToIdentity(form, surface, q));
+    }
+  }
+  return { mesh, worst };
+}
+
+describe("SMLib surface identities", () => {
+  it("names a box's six planes, and puts its patches on them", () => {
+    const box = kernel.box([0, 0, 0], [2, 3, 1]);
+    try {
+      const { form } = kernel.toForm(box);
+      expect(Array.from(form.surfaceKind)).toEqual(new Array(6).fill(5));
+      expect(identities(form)).toEqual({ [SurfaceKind.Plane]: 6 });
+      expect(Array.from(form.surfaceError)).toEqual(new Array(6).fill(0));
+      expect(expectPatchesOnIdentity(form)).toBe(6);
+    } finally {
+      box.delete();
+    }
+  });
+
+  it("names the cylinder of a box minus a cylinder, with its radius and axis", () => {
+    const box = kernel.box([0, 0, 0], [2, 2, 1]);
+    const hole = kernel.cylinder([1, 1, -0.5], 0.5, 2);
+    const cut = kernel.boolean("difference", box, hole);
+    try {
+      const { form } = kernel.toForm(cut);
+      expect(identities(form)).toEqual({
+        [SurfaceKind.Plane]: 6,
+        [SurfaceKind.Cylinder]: 1,
+      });
+      const face = Array.from({ length: form.faceSurface.length }, (_, f) =>
+        surfaceOf(form, f),
+      ).find((s) => s.identity === SurfaceKind.Cylinder)!;
+      expect(form.surfaceKind[face.surface]).toBe(SurfaceKind.Bezier);
+      expect(face.a).toBeCloseTo(0.5, 9);
+      // The axis is z, through (1, 1): the frame's origin lies on it.
+      expect(Math.abs(face.z[2]!)).toBeCloseTo(1, 9);
+      expect(Math.hypot(face.z[0]!, face.z[1]!)).toBeLessThan(1e-9);
+      expect(face.origin[0]).toBeCloseTo(1, 9);
+      expect(face.origin[1]).toBeCloseTo(1, 9);
+      expect(expectPatchesOnIdentity(form)).toBe(7);
+    } finally {
+      cut.delete();
+    }
+  });
+
+  it("names a sphere, with its centre and radius", () => {
+    const sphere = kernel.sphere([0.5, -1, 1], 1.5);
+    try {
+      const { form } = kernel.toForm(sphere);
+      const face = surfaceOf(form, 0);
+      expect(face.identity).toBe(SurfaceKind.Sphere);
+      expect(face.a).toBeCloseTo(1.5, 9);
+      expect(face.origin[0]).toBeCloseTo(0.5, 9);
+      expect(face.origin[1]).toBeCloseTo(-1, 9);
+      expect(face.origin[2]).toBeCloseTo(1, 9);
+      expect(expectPatchesOnIdentity(form)).toBe(1);
+    } finally {
+      sphere.delete();
+    }
+  });
+
+  it("names a torus and a cone frustum, in the form's conventions", () => {
+    const torus = kernel.torus([0, 0, 0], 2, 0.5);
+    const cone = kernel.cone([0, 0, 0], 1, 0.4, 1.5);
+    try {
+      const t = surfaceOf(kernel.toForm(torus).form, 0);
+      expect(t.identity).toBe(SurfaceKind.Torus);
+      expect([t.a, t.b]).toEqual([2, 0.5]);
+      expect(Math.abs(t.z[2]!)).toBeCloseTo(1, 9);
+      const form = kernel.toForm(cone).form;
+      const sides = Array.from({ length: form.faceSurface.length }, (_, f) =>
+        surfaceOf(form, f),
+      ).filter((s) => s.identity === SurfaceKind.Cone);
+      expect(sides.length).toBe(1);
+      // Radius 1 at the base, narrowing 0.6 over 1.5 m, whichever way the frame's z points.
+      expect(Math.abs(Math.tan(sides[0]!.b))).toBeCloseTo(0.4, 9);
+      expect(expectPatchesOnIdentity(form)).toBe(3);
+      expect(expectPatchesOnIdentity(kernel.toForm(torus).form)).toBe(1);
+    } finally {
+      torus.delete();
+      cone.delete();
+    }
+  });
+});
+
+describe("SMLib faces on the tessellator's error bound", () => {
+  it("meshes a sphere within the stated error, at 1 mm, and well under the net bound's grid cap", () => {
+    const sphere = kernel.sphere([0, 0, 1], 1.5);
+    try {
+      const { form } = kernel.toForm(sphere);
+      const { mesh, worst } = worstFromIdentity(form, 1e-3);
+      expect(mesh.error).toBe(1e-3);
+      expect(worst).toBeLessThanOrEqual(mesh.error + 1e-6);
+      expect(worst).toBeGreaterThan(0.5e-3);
+      // Without the identity, the net bound stays at the grid cap (32768 triangles).
+      expect(mesh.faces.indices.length / 3).toBeLessThan(20_000);
+    } finally {
+      sphere.delete();
+    }
+  });
+
+  it("meshes a box's cylinder face in one cell along its axis", () => {
+    const box = kernel.box([0, 0, 0], [2, 2, 1]);
+    const hole = kernel.cylinder([1, 1, -0.5], 0.5, 2);
+    const cut = kernel.boolean("difference", box, hole);
+    try {
+      const { form } = kernel.toForm(cut);
+      const { mesh, worst } = worstFromIdentity(form, 1e-3);
+      expect(mesh.error).toBe(1e-3);
+      expect(worst).toBeLessThanOrEqual(mesh.error + 1e-6);
+      const wall = Array.from({ length: form.faceSurface.length }, (_, f) => f)
+        .filter(
+          (f) =>
+            form.surfaceIdentity[form.faceSurface[f]!] === SurfaceKind.Cylinder,
+        )
+        .map(
+          (f) =>
+            Array.from(mesh.faces.featureIds).filter((id) => id === f).length,
+        );
+      // Vertices: (cells + 1) × 2 around a circle of 0.5 m at 1 mm is about 50 cells.
+      expect(wall[0]).toBeLessThan(2 * 70);
+    } finally {
+      cut.delete();
+    }
+  });
+
+  it("holds on a torus and a cone, which take the net bound and the identity", () => {
+    const torus = kernel.torus([0, 0, 0], 2, 0.5);
+    const cone = kernel.cone([0, 0, 0], 1, 0.4, 1.5);
+    try {
+      for (const solid of [torus, cone]) {
+        const { form } = kernel.toForm(solid);
+        const { mesh, worst } = worstFromIdentity(form, 5e-3);
+        expect(worst).toBeLessThanOrEqual(mesh.error + 1e-6);
+      }
+    } finally {
+      torus.delete();
+      cone.delete();
     }
   });
 });

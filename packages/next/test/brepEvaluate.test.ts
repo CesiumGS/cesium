@@ -26,6 +26,8 @@ function oneSurface(kind: SurfaceKind, p0 = 0, p1 = 0, reversed = 0): BrepForm {
   return {
     version: 1,
     surfaceKind: Uint8Array.of(kind),
+    surfaceIdentity: Uint8Array.of(kind),
+    surfaceError: Float32Array.of(0),
     surfaceFrame: Float64Array.from([...O, ...X, ...Y]),
     surfaceParams: Float64Array.of(p0, p1),
     surfacePatches: Uint32Array.of(0, 0),
