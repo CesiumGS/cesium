@@ -93,7 +93,7 @@ const catalog = publicCatalog as unknown as {
   render?: RenderSettings;
 };
 
-const route = getRouteApi("/explorer");
+const route = getRouteApi("/_runs/explorer");
 
 /**
  * An engine spec (engines.mjs) as a configuration the explorer can load:

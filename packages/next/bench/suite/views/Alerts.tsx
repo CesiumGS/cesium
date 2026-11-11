@@ -262,7 +262,8 @@ const groupStatus = (triage: TriageFile, g: Group) =>
 
 export function Alerts() {
   const { summaries } = useRuns();
-  const kind: Kind = getRouteApi("/alerts").useSearch().kind ?? "regression";
+  const kind: Kind =
+    getRouteApi("/_runs/alerts").useSearch().kind ?? "regression";
   const navigate = useNavigate({ from: "/alerts" });
   const [shown, setShown] = useState(DEFAULT_SHOWN);
 

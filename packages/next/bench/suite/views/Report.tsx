@@ -28,7 +28,7 @@ import { dateOf, runOption } from "./runParts.tsx";
  * the Explorer in the app.
  */
 
-const route = getRouteApi("/runs/$run");
+const route = getRouteApi("/_runs/runs/$run");
 
 export function Report() {
   const { summaries } = useRuns();

@@ -32,11 +32,11 @@ import { useTheme } from "../theme.tsx";
  * What Dyno's views share (DESIGN.md): page anatomy (`Page`, `Section`),
  * pickers with Dyno's conventions (`Choice`, `Chips`), empty states,
  * help popovers, chart hosting, change formatting, the runs (the
- * router's root loader) and per-viewer stored state. Built on StrataKit
+ * runs layout's loader) and per-viewer stored state. Built on StrataKit
  * (MUI themed by @stratakit/mui).
  */
 
-const rootApi = getRouteApi("__root__");
+const layoutApi = getRouteApi("/_runs");
 
 // The charts' own styles (shared with the CLI's standalone reports),
 // diagnostics' (waterfalls, path segments) included.
@@ -44,9 +44,9 @@ const chartStyle = document.createElement("style");
 chartStyle.textContent = CHART_CSS + DIAGNOSE_CSS;
 document.head.append(chartStyle);
 
-/** Every run's summary and the results index (loaded before any view). */
+/** Every run's summary and the results index (the runs layout's loader). */
 export function useRuns(): Runs {
-  return rootApi.useLoaderData() as Runs;
+  return layoutApi.useLoaderData() as Runs;
 }
 
 /** Whether the resolved color scheme is dark (charts follow it). */

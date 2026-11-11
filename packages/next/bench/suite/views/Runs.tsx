@@ -51,7 +51,7 @@ import {
  * A run opens its report; two selected runs open Compare.
  */
 
-const route = getRouteApi("/runs");
+const route = getRouteApi("/_runs/runs");
 
 type Headline = ReturnType<typeof headline>;
 interface Row {

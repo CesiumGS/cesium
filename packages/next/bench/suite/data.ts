@@ -138,8 +138,8 @@ export function full(name: string): Promise<Json> {
 
 let runs: Promise<Runs> | undefined;
 /**
- * The results directory's runs, loaded once per page (the router's root
- * loader; `useRuns()` reads it in views).
+ * The results directory's runs, loaded once per page (the runs layout
+ * route's loader; `useRuns()` reads it in views).
  */
 export function loadRuns(): Promise<Runs> {
   runs ??= (async () => {

@@ -55,7 +55,7 @@ import "./scenes.css";
  * and licenses.
  */
 
-const sceneRoute = getRouteApi("/scenes/$scene");
+const sceneRoute = getRouteApi("/_runs/scenes/$scene");
 
 /** Metrics a scene's page shows (lower is better for each). */
 const BEST = [

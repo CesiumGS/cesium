@@ -30,7 +30,7 @@ import { HEADLINES, runOption } from "./runParts.tsx";
  * machines or render settings differ.
  */
 
-const route = getRouteApi("/compare");
+const route = getRouteApi("/_runs/compare");
 const DEFAULT_METRICS = [
   "settleMs",
   "cpuP50",

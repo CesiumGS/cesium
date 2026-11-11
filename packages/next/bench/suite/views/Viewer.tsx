@@ -86,7 +86,7 @@ const catalog = publicCatalog as unknown as {
   engines: { default: string[]; baseline: string; candidate: string };
 };
 
-const route = getRouteApi("/viewer");
+const route = getRouteApi("/_runs/viewer");
 
 const VIEW_DEFAULTS: ViewSettings = {
   policy: "budgeted",

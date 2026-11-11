@@ -39,7 +39,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { EXAMPLES } from "../../examples/index.ts";
 import { HARNESSES } from "../../lab/pages.ts";
 import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
-import { cellKey, cellTitle, runLabel, type Summary } from "./data.ts";
+import {
+  cellKey,
+  cellTitle,
+  loadRuns,
+  runLabel,
+  type Summary,
+} from "./data.ts";
 import logomark from "./assets/cesium-logomark.svg";
 import wordmarkDark from "./assets/Cesium_Logo_Color_Overlay_Light.png";
 import wordmarkLight from "./assets/Cesium_Logo_Color_Overlay.png";
@@ -113,6 +119,39 @@ export function ShellError({ error }: { error: unknown }) {
   );
 }
 
+/** The views that read the runs; a machine with none gets the first run. */
+export function RunsLayout() {
+  const { summaries } = useRuns();
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  return summaries.length || worksWithoutRuns(path) ? <Outlet /> : <FirstRun />;
+}
+
+/**
+ * The page's runs for the rail's counts and the palette, empty until they
+ * arrive. The shell never waits for them (`loadRuns` is cached, so views
+ * that read them cost no extra fetches).
+ */
+function useSummaries(): Summary[] {
+  const [summaries, setSummaries] = useState<Summary[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    loadRuns().then(
+      (runs) => {
+        if (!cancelled) {
+          setSummaries(runs.summaries);
+        }
+      },
+      () => {
+        // The runs' own views show the error.
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return summaries;
+}
+
 /** Things to look at: untriaged regressions, images to review. */
 function useAttention(summaries: Summary[]): {
   alerts: number;
@@ -170,7 +209,7 @@ function useAttention(summaries: Summary[]): {
 }
 
 export function Shell() {
-  const { summaries } = useRuns();
+  const summaries = useSummaries();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { choice, scheme, setChoice } = useTheme();
@@ -378,7 +417,7 @@ export function Shell() {
         className={`content viz ${scheme}`}
         aria-label={active?.label ?? "Dyno"}
       >
-        {summaries.length || worksWithoutRuns(path) ? <Outlet /> : <FirstRun />}
+        <Outlet />
       </main>
 
       <CommandPalette

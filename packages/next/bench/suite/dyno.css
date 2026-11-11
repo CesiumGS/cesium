@@ -69,10 +69,9 @@ body {
   display: flex;
   align-items: center;
   gap: var(--stratakit-space-300);
-  padding: var(--stratakit-space-800);
 }
 .shell-error {
-  margin: var(--stratakit-space-800);
+  margin: 0;
 }
 
 /* ---------------------------------------------------------------- page anatomy */

@@ -49,7 +49,7 @@ import {
  * baseline per headline metric.
  */
 
-const route = getRouteApi("/analysis");
+const route = getRouteApi("/_runs/analysis");
 const ALL = "*";
 
 /** Metric names for chart titles and columns (sentence case, units implied). */

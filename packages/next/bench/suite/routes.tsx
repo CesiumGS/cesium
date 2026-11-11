@@ -6,14 +6,15 @@ import {
 } from "@tanstack/react-router";
 import { loadRuns } from "./data.ts";
 import { searchToParams } from "./views/exampleRun.ts";
-import { Shell, ShellError, ShellPending } from "./shell.tsx";
+import { RunsLayout, Shell, ShellError, ShellPending } from "./shell.tsx";
 
 /**
  * Dyno's routes (hash history: /#/overview?…), following the navigation
  * in DESIGN.md. Each view is its own chunk, loaded on first visit; its
  * state is the route's path and search params, validated here so views
- * get typed values and links stay shareable. The root loader reads the
- * runs once for every view.
+ * get typed values and links stay shareable. The views that read the
+ * runs sit under a pathless layout route whose loader reads them once;
+ * the others (images, examples, Lab) and the shell don't wait for them.
  */
 
 const str = (v: unknown) =>
@@ -31,8 +32,13 @@ const bool = (v: unknown) => (v === true || v === "true" ? true : undefined);
 const clean = <T extends Record<string, unknown>>(o: T) =>
   Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as T;
 
-export const rootRoute = createRootRoute({
-  component: Shell,
+export const rootRoute = createRootRoute({ component: Shell });
+
+/** The parent of the views that read the runs (`useRuns()`). */
+export const runsLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: "_runs",
+  component: RunsLayout,
   loader: loadRuns,
   pendingComponent: ShellPending,
   errorComponent: ShellError,
@@ -51,7 +57,7 @@ const indexRoute = createRoute({
 });
 
 export const overviewRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => runsLayoutRoute,
   path: "/overview",
   component: lazyRouteComponent(
     () => import("./views/Overview.tsx"),
@@ -69,7 +75,7 @@ export interface TrendsSearch {
   pin?: string;
 }
 export const trendsRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => runsLayoutRoute,
   path: "/trends",
   validateSearch: (s: Record<string, unknown>): TrendsSearch =>
     clean({
@@ -86,7 +92,7 @@ export interface RunsSearch {
   q?: string;
 }
 export const runsRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => runsLayoutRoute,
   path: "/runs",
   validateSearch: (s: Record<string, unknown>): RunsSearch =>
     clean({ q: str(s.q) }),
@@ -95,7 +101,7 @@ export const runsRoute = createRoute({
 
 /** One run's report; `$run` is the results file's name. */
 export const runRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => runsLayoutRoute,
   path: "/runs/$run",
   component: lazyRouteComponent(() => import("./views/Report.tsx"), "Report"),
 });
@@ -106,7 +112,7 @@ export interface CompareSearch {
   config?: string;
 }
 export const compareRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => runsLayoutRoute,
   path: "/compare",
   validateSearch: (s: Record<string, unknown>): CompareSearch =>
     clean({ a: str(s.a), b: str(s.b), config: str(s.config) }),
@@ -117,7 +123,7 @@ export interface AlertsSearch {
   kind?: "regression" | "improvement" | "all";
 }
 export const alertsRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => runsLayoutRoute,
   path: "/alerts",
   validateSearch: (s: Record<string, unknown>): AlertsSearch =>
     clean({
@@ -132,14 +138,14 @@ export const alertsRoute = createRoute({
 // ------------------------------------------------------------ scenes
 
 export const scenesRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => runsLayoutRoute,
   path: "/scenes",
   component: lazyRouteComponent(() => import("./views/Scenes.tsx"), "Scenes"),
 });
 
 /** A scene's page; `$scene` is its key (scene id, or id|scenario). */
 export const sceneRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => runsLayoutRoute,
   path: "/scenes/$scene",
   component: lazyRouteComponent(
     () => import("./views/Scenes.tsx"),
@@ -158,7 +164,7 @@ export interface ExplorerSearch {
   cesium?: string;
 }
 export const explorerRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => runsLayoutRoute,
   path: "/explorer",
   validateSearch: (s: Record<string, unknown>): ExplorerSearch =>
     clean({
@@ -187,7 +193,7 @@ export interface ViewerSearch {
   at?: string;
 }
 export const viewerRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => runsLayoutRoute,
   path: "/viewer",
   validateSearch: (s: Record<string, unknown>): ViewerSearch =>
     clean({
@@ -244,7 +250,7 @@ export interface AnalysisSearch {
   scene?: string;
 }
 export const analysisRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => runsLayoutRoute,
   path: "/analysis",
   validateSearch: (s: Record<string, unknown>): AnalysisSearch =>
     clean({
@@ -279,7 +285,7 @@ export const labPageRoute = createRoute({
 
 /** Getting started: the setup checked and a first run. */
 export const startRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => runsLayoutRoute,
   path: "/start",
   component: lazyRouteComponent(
     () => import("./views/FirstRun.tsx"),
@@ -289,21 +295,23 @@ export const startRoute = createRoute({
 
 export const routeTree = rootRoute.addChildren([
   indexRoute,
-  overviewRoute,
-  trendsRoute,
-  runsRoute,
-  runRoute,
-  compareRoute,
-  alertsRoute,
-  scenesRoute,
-  sceneRoute,
-  explorerRoute,
-  viewerRoute,
+  runsLayoutRoute.addChildren([
+    overviewRoute,
+    trendsRoute,
+    runsRoute,
+    runRoute,
+    compareRoute,
+    alertsRoute,
+    scenesRoute,
+    sceneRoute,
+    explorerRoute,
+    viewerRoute,
+    analysisRoute,
+    startRoute,
+  ]),
   imagesRoute,
   examplesRoute,
   exampleRoute,
-  analysisRoute,
   labRoute,
   labPageRoute,
-  startRoute,
 ]);

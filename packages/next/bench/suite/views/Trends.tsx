@@ -95,7 +95,7 @@ import {
  * choices are the viewer's own (localStorage).
  */
 
-const route = getRouteApi("/trends");
+const route = getRouteApi("/_runs/trends");
 
 /** The view's URL state, with defaults filled in. */
 interface ViewState {
