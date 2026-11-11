@@ -76,7 +76,7 @@ import {
 } from "../warpAnchor.ts";
 import { drawnBounds, routeMap, type DrawnMap } from "../warpBounds.ts";
 import { affinePart, fitLattice, routeDisplacement } from "../warpFit.ts";
-import { WarpFitCache } from "../warpFitCache.ts";
+import { WarpFitCache, type WarpFit } from "../warpFitCache.ts";
 import { WorldCurvedClips } from "./curvedClips.ts";
 import { checkTerms, termsOf } from "../warpEvaluate.ts";
 import {
@@ -105,10 +105,22 @@ const GEOMETRIC_ERROR_SHARE = 1 / 64;
 /** One warped anchor: its route, and what its draws' fits were made for. */
 interface AnchorWarp {
   route: Route;
-  /** Goes up when the fits made are out of date; never repeats. */
+  /**
+   * Names the fits this route's draws need: it changes when the warps'
+   * revisions or the scales a fit follows do, and comes back when they do. The
+   * same for two routes whose displacements are the same, whatever their
+   * roots.
+   */
   stamp: number;
-  /** What a fit depends on: its warps and the rigid steps before the last of them. */
-  signature: { warps: Warp[]; inverse: boolean[]; prefix: number[] };
+  /** Names what a fit's displacement is made of apart from the stamp's revisions and scales: its warps and the rigid steps before the last of them. The cache's variant. */
+  shape: number;
+  /** What a fit depends on: its warps and the rigid steps before the last of them, and the revisions the warps had. */
+  signature: {
+    warps: Warp[];
+    inverse: boolean[];
+    prefix: number[];
+    revisions: number[];
+  };
   /** The matrix the anchor is placed by: the route's rigid steps composed. */
   affine: Float64Array;
   /** The single scaled warp's parameter, when one fit of its unit displacement serves every scale. */
@@ -118,9 +130,9 @@ interface AnchorWarp {
   /** The scales of the route's scaled warps at `stamp`, in step order (refit mode). */
   scales: number[];
   /**
-   * Goes up when the route changes or a scale does, which an anchored draw
-   * is evaluated for (its rotation isn't linear in a scale, so a slider
-   * redoes it: one route evaluation a draw, with no fit).
+   * Changes when the route's displacement or a scale does, which an anchored
+   * draw is evaluated for (its rotation isn't linear in a scale, so a slider
+   * redoes it: one route evaluation a draw, with no fit). Named like `stamp`.
    */
   pointStamp: number;
   /** The route with its scales as they were at `pointStamp`: what anchored draws are evaluated on. */
@@ -227,6 +239,12 @@ export interface HeightNormalInfo {
 /** Instances moved per check of the clock, and at least per frame. */
 const INSTANCE_CHUNK = 256;
 
+/** The shapes of route a draw's fits are kept for. */
+const SHAPES_PER_DRAW = 4;
+
+/** Names kept for shapes and versions; past it they are dropped, and fits are made again rather than reused. */
+const MAX_NAMES = 4096;
+
 /** A scale without a range is bounded in buckets of this many to the unit: its drawn volumes are made for the bucket's two ends. */
 const SCALE_BUCKETS = 64;
 
@@ -308,8 +326,12 @@ class AnchorTileWarp implements TileWarp {
 }
 
 export class WorldWarps {
-  /** Entries leave with their draws (`drawRemoved`), so no cap evicts a fit a draw still waits for. */
-  readonly cache = new WarpFitCache(2 ** 30);
+  /**
+   * Fits by draw and route shape. Entries leave with their draws
+   * (`drawRemoved`), so no cap evicts a fit a draw still waits for; a draw
+   * keeps the last few shapes it was fitted for, to come back to.
+   */
+  readonly cache = new WarpFitCache(2 ** 30, SHAPES_PER_DRAW);
   readonly #anchors = new Map<number, AnchorWarp>();
   readonly #tileWarps = new Map<number, AnchorTileWarp>();
   /** Goes up when a draw's fit is drawn or forgotten (`TileWarp.fitVersion`). */
@@ -339,9 +361,19 @@ export class WorldWarps {
   #report: ((message: string) => void) | undefined;
   /** Instanced draws with a pass over their instances under way. */
   readonly #instancePasses = new Set<number>();
-  #root: FrameKey | undefined;
-  #rootName = "";
-  #rootId = 0;
+  /** Draws let go of when their anchor stopped being warped, with what their fits were made for: a fit is taken up again only if the draw is as it was. */
+  readonly #released = new Map<
+    number,
+    {
+      generation: number;
+      key: string;
+      matrix: Float64Array;
+      origin: Float64Array;
+      fits: WarpFit[];
+    }
+  >();
+  /** Names for route shapes and versions (`#name`). */
+  readonly #names = new Map<string, number>();
   #clock = 0;
   #transformRevision = -1;
   readonly #scratch = new Float64Array(16);
@@ -662,12 +694,15 @@ export class WorldWarps {
     this.#choices.delete(handle.index);
     this.#heightNormals.delete(handle.index);
     this.#gpuInstanced.delete(handle.index);
+    this.#released.delete(handle.index);
+    for (const at of ["vertex", "anchor"]) {
+      this.cache.forget(`${handle.index}:${handle.generation}:${at}`);
+    }
     const d = this.#draws.get(handle.index);
     if (d) {
       this.fitVersion++;
       this.#draws.delete(handle.index);
       this.#waiting.delete(handle.index);
-      this.cache.forget(d.key);
     }
   }
 
@@ -779,7 +814,11 @@ export class WorldWarps {
         this.#waiting.delete(index);
         continue;
       }
-      const lattice = this.cache.current(d.key, this.#rootName, d.requested);
+      const lattice = this.cache.current(
+        d.key,
+        String(anchor.shape),
+        d.requested,
+      );
       if (lattice) {
         this.#waiting.delete(index);
         this.#adopt(index, d, anchor, lattice, d.requested, report);
@@ -800,6 +839,8 @@ export class WorldWarps {
     this.#choices.clear();
     this.#heightNormals.clear();
     this.#gpuInstanced.clear();
+    this.#released.clear();
+    this.#names.clear();
   }
 
   // ------------------------------------------------------------------ steps
@@ -832,11 +873,6 @@ export class WorldWarps {
 
   /** Brings the warped anchors up to date with `routes` and `root`. */
   #sync(root: FrameKey | undefined, routes: ReadonlyArray<Route | undefined>) {
-    const rootChanged = root !== this.#root;
-    if (rootChanged) {
-      this.#root = root;
-      this.#rootName = `r${++this.#rootId}`;
-    }
     if (this.#anchors.size === 0 && !routes.some(isRoute)) {
       return; // nothing is warped: the common frame costs this
     }
@@ -857,21 +893,18 @@ export class WorldWarps {
         this.#anchors.set(slot, now);
         fresh.push(slot);
       } else if (held.route !== route) {
-        if (
-          route.revision !== held.route.revision ||
-          !same(signatureOf(route), held.signature)
-        ) {
-          now = this.#anchorWarp(route);
-          this.#anchors.set(slot, now);
-        } else {
-          // The same warp placed again: what follows its last warp is not
-          // in a fit (it cancels), so the fits stay; `affine` stays the
+        const signature = signatureOf(route);
+        if (same(signature, held.signature)) {
+          // The same warps, with the same rigid steps before the last, at
+          // the same revisions, placed again (as another root's route
+          // is): what follows the last warp is not in a fit (it cancels),
+          // so the fits stay and nothing is redone; `affine` stays the
           // one they were made with.
           held.route = route;
+        } else {
+          now = this.#anchorWarp(route, signature);
+          this.#anchors.set(slot, now);
         }
-      }
-      if (rootChanged && now === held) {
-        now!.stamp = ++this.#clock;
       }
       if (now!.scales.length > 0) {
         this.#followScales(now!);
@@ -889,24 +922,57 @@ export class WorldWarps {
   }
 
   /** A route's warp state: its fit route, and whether one unit fit serves every scale. */
-  #anchorWarp(route: Route): AnchorWarp {
+  #anchorWarp(route: Route, signature = signatureOf(route)): AnchorWarp {
     const linear = this.#linearScale(route);
     const scaled = route.steps.flatMap((s) =>
       s.kind === "warp" && s.warp.scale ? [warpScaleOf(s.warp)] : [],
     );
-    const stamp = ++this.#clock;
-    return {
+    const shape = this.#name(`s${shapeOf(signature)}`);
+    const anchor: AnchorWarp = {
       route,
-      stamp,
-      signature: signatureOf(route),
+      stamp: 0,
+      shape,
+      signature,
       affine: affinePart(route),
       linear,
       fitRoute: linear ? withoutScales(route) : withFrozenScales(route),
       scales: scaled,
-      pointStamp: stamp,
+      pointStamp: 0,
       pointRoute: withFrozenScales(route),
       height: heightScaleOf(route),
     };
+    this.#restamp(anchor, true);
+    return anchor;
+  }
+
+  /** Names `key`, the same each time while it is remembered. */
+  #name(key: string): number {
+    let name = this.#names.get(key);
+    if (name === undefined) {
+      if (this.#names.size >= MAX_NAMES) {
+        this.#names.clear();
+      }
+      name = ++this.#clock;
+      this.#names.set(key, name);
+    }
+    return name;
+  }
+
+  /**
+   * Names the anchor's fits' version and its anchored draws': the shape, the
+   * warps' revisions and the scales a fit (or a placing) follows. A state the
+   * anchor was in before has its name again, so what was fitted for it is
+   * current.
+   */
+  #restamp(anchor: AnchorWarp, fits: boolean): void {
+    const base = `${anchor.shape}:${anchor.signature.revisions.join(",")}`;
+    const scales = anchor.scales.join(",");
+    if (fits) {
+      anchor.stamp = this.#name(
+        anchor.linear ? `f${base}` : `f${base}:${scales}`,
+      );
+    }
+    anchor.pointStamp = this.#name(`p${base}:${scales}`);
   }
 
   /**
@@ -959,12 +1025,11 @@ export class WorldWarps {
       }
     }
     if (changed) {
-      anchor.pointStamp = ++this.#clock;
       anchor.pointRoute = withFrozenScales(anchor.route);
       if (!anchor.linear) {
-        anchor.stamp = ++this.#clock;
         anchor.fitRoute = withFrozenScales(anchor.route);
       }
+      this.#restamp(anchor, !anchor.linear);
     }
   }
 
@@ -1054,6 +1119,31 @@ export class WorldWarps {
     d.key = `${index}:${generation}:${effectiveAt(kind, d.choice)}`;
     this.#draws.set(index, d);
     this.#setHidden(index, true);
+    this.#checkReleased(index, d);
+  }
+
+  /** A draw found again keeps its fits only if it is where and as it was when they were made. */
+  #checkReleased(index: number, d: DrawWarp): void {
+    const kept = this.#released.get(index);
+    if (!kept) {
+      return;
+    }
+    this.#released.delete(index);
+    const handle = this.#handle(index, d);
+    const m = drawMatrix(this.world, handle, this.#scratch);
+    let as = kept.generation === d.generation && kept.key === d.key && !!m;
+    if (as && differs(m!, kept.matrix)) {
+      as = false;
+    }
+    if (as && effectiveAt(d.kind, d.choice) === "anchor") {
+      const at = this.#originOf(index, d);
+      as = !!at && at.every((v, i) => v === kept.origin[i]);
+    }
+    if (as) {
+      for (const fit of kept.fits) {
+        this.cache.restore(d.key, fit);
+      }
+    }
   }
 
   /** An instanced draw's matrices as the application wrote them (the instance table's). */
@@ -1086,7 +1176,18 @@ export class WorldWarps {
       }
       this.#draws.delete(index);
       this.#waiting.delete(index);
-      this.cache.forget(d.key);
+      // Its fits are kept for if the anchor is warped again (a re-root back),
+      // out of the cache, which holds nothing for an unwarped draw.
+      const fits = this.cache.take(d.key);
+      if (fits.length > 0 && d.requested >= 0 && !d.instances) {
+        this.#released.set(index, {
+          generation: d.generation,
+          key: d.key,
+          matrix: d.matrix.slice(),
+          origin: d.originAt.slice(),
+          fits,
+        });
+      }
       const handle = this.#handle(index, d);
       if (this.world.hasDraw(handle)) {
         if (d.instances) {
@@ -1239,8 +1340,13 @@ export class WorldWarps {
       return run();
     };
     this.#countAsk(d, stamp, at === "anchor");
-    const stale = this.cache.request(d.key, this.#rootName, stamp, produce);
-    const current = this.cache.current(d.key, this.#rootName, stamp);
+    const stale = this.cache.request(
+      d.key,
+      String(anchor.shape),
+      stamp,
+      produce,
+    );
+    const current = this.cache.current(d.key, String(anchor.shape), stamp);
     if (current) {
       this.#waiting.delete(index);
       this.#adopt(index, d, anchor, current, stamp, report);
@@ -1550,7 +1656,7 @@ function ownTerms(user: Placement | WarpTerms | undefined): WarpTerms {
   return isTerms(user) ? user : (termsOf(user) ?? []);
 }
 
-/** What a fit depends on in a route. */
+/** What a fit depends on in a route: its warps (at their revisions) and the rigid steps before the last of them. */
 function signatureOf(route: Route): AnchorWarp["signature"] {
   let last = -1;
   route.steps.forEach((s, i) => {
@@ -1562,11 +1668,13 @@ function signatureOf(route: Route): AnchorWarp["signature"] {
     warps: [],
     inverse: [],
     prefix: [],
+    revisions: [],
   };
   route.steps.forEach((s, i) => {
     if (s.kind === "warp") {
       signature.warps.push(s.warp);
       signature.inverse.push(s.inverse);
+      signature.revisions.push(s.warp.revision);
     } else if (i < last) {
       signature.prefix.push(...s.matrix);
     }
@@ -1578,11 +1686,30 @@ function same(a: AnchorWarp["signature"], b: AnchorWarp["signature"]): boolean {
   return (
     a.warps.length === b.warps.length &&
     a.warps.every(
-      (w, i) => w === b.warps[i] && a.inverse[i] === b.inverse[i],
+      (w, i) =>
+        w === b.warps[i] &&
+        a.inverse[i] === b.inverse[i] &&
+        a.revisions[i] === b.revisions[i],
     ) &&
     a.prefix.length === b.prefix.length &&
     a.prefix.every((v, i) => v === b.prefix[i])
   );
+}
+
+const warpIds = new WeakMap<Warp, number>();
+let warpIdCount = 0;
+
+/** The signature without its revisions, as a string: two routes with it have displacements of one kind, refitted when a revision moves. */
+function shapeOf(signature: AnchorWarp["signature"]): string {
+  const warps = signature.warps.map((w, i) => {
+    let id = warpIds.get(w);
+    if (id === undefined) {
+      id = ++warpIdCount;
+      warpIds.set(w, id);
+    }
+    return `${id}${signature.inverse[i] ? "i" : "f"}`;
+  });
+  return `${warps.join(",")}|${signature.prefix.join(",")}`;
 }
 
 function differs(a: Float64Array, b: Float64Array): boolean {

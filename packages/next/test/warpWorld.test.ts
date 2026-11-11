@@ -223,10 +223,11 @@ function setup(
       presentation: true,
       revision: 1,
       description: "lifted 1 m",
-      forward(p, out) {
+      forward(p, out, jacobian) {
         out[0] = p[0]!;
         out[1] = p[1]!;
         out[2] = p[2]! + 1;
+        jacobian?.set([1, 0, 0, 0, 1, 0, 0, 0, 1]);
         return out;
       },
     });
@@ -766,38 +767,183 @@ describe("a warp's scale", () => {
 });
 
 describe("the render root", () => {
-  it("refits when the view re-roots, drawing the old fit meanwhile", () => {
+  /** A rigid child of `parent`, added to the catalog. */
+  function child(
+    s: Setup,
+    name: string,
+    parent: Frame,
+    x: number,
+    y = 0,
+    z = 0,
+  ): Frame {
+    const frame = Frame.constant(name, parent, translation(x, y, z), {
+      accuracy: { meters: 0.3, note: "survey" },
+    });
+    s.catalog.add(frame);
+    return frame;
+  }
+
+  const rigOn = (s: Setup, frame: Frame): void =>
+    engine.cameras.setRig(s.view, {
+      position: { frame },
+      orientation: { kind: "free" },
+    });
+
+  /** Takes the camera off the origin, where the exaggeration is singular and a re-root can't be made. */
+  const liftCamera = (s: Setup): void => {
+    s.view.camera.position[0] = R + 4000;
+    s.view.camera.version++;
+  };
+
+  it("keeps its fit when the view re-roots by a rigid step after the warp: nothing refitted, nothing hidden", () => {
     const s = setup();
+    liftCamera(s);
     const draw = addQuad(s);
     s.step();
     expect(s.fits.count).toBe(1);
     const before = lattice(s, draw);
     // A frame under `exaggerated`, 1 km up: the route to it is the warp, then a rigid step.
-    const mast = Frame.constant(
-      "mast",
-      s.exaggerated,
-      translation(0, 0, 1000),
-      {
-        accuracy: { meters: 0.3, note: "survey" },
-      },
-    );
-    s.catalog.add(mast);
-    engine.cameras.setRig(s.view, {
-      position: { frame: mast },
-      orientation: { kind: "free" },
-    });
+    const mast = child(s, "mast", s.exaggerated, 0, 0, 1000);
+    rigOn(s, mast);
     expect(route(s).steps.map((x) => x.kind)).toEqual(["warp", "rigid"]);
-    s.step(0);
+    expect(s.step(0)).toBe(false);
     expect(hidden(s, draw)).toBe(false);
-    expect(s.fits.count).toBe(2);
-    const after = lattice(s, draw)!;
-    // What follows the last warp is not in the fit: the same map.
-    expect(after).not.toBe(before);
-    expect(Array.from(after.coefficients)).toEqual(
-      Array.from(before!.coefficients),
-    );
+    expect(s.fits.count).toBe(1);
+    expect(s.world.warps.stats().refits).toBe(0);
+    // What follows the last warp is not in the fit: the very same one.
+    expect(lattice(s, draw)).toBe(before);
+    expect(s.world.warps.status(draw)?.state).toBe("fitted");
     const { worst, bound } = twinError(s, draw, quad());
     expect(worst).toBeLessThanOrEqual(bound + 1e-6);
+    // Another rigid root, and back to the first: still nothing.
+    rigOn(s, child(s, "tower", s.exaggerated, 50, 60, 70));
+    s.step(0);
+    rigOn(s, s.exaggerated);
+    s.step(0);
+    expect(s.fits.count).toBe(1);
+    expect(lattice(s, draw)).toBe(before);
+    expect(hidden(s, draw)).toBe(false);
+  });
+
+  it("reuses a fit when the view returns to a root it had, across an unwarped one", () => {
+    const s = setup();
+    liftCamera(s);
+    const draw = addQuad(s);
+    s.step();
+    const before = lattice(s, draw);
+    expect(s.fits.count).toBe(1);
+    // On ITRF the route is rigid: the draw goes back to unwarped.
+    rigOn(s, s.itrf);
+    s.step(0);
+    expect(s.world.warps.has(draw)).toBe(false);
+    expect(hidden(s, draw)).toBe(false);
+    // Back on the warp frame: drawn at once with the fit it had, none run.
+    rigOn(s, s.exaggerated);
+    s.step(0);
+    expect(hidden(s, draw)).toBe(false);
+    expect(s.world.warps.has(draw)).toBe(true);
+    expect(s.world.warps.status(draw)?.state).toBe("fitted");
+    expect(lattice(s, draw)).toBe(before);
+    expect(s.fits.count).toBe(1);
+    expect(s.world.warps.pending).toBe(0);
+  });
+
+  it("draws a stale fit of an equivalent route, not nothing, for a draw newly under a warp", () => {
+    const s = setup();
+    liftCamera(s);
+    const draws = [addQuad(s), addQuad(s)];
+    s.step();
+    const before = draws.map((d) => lattice(s, d));
+    rigOn(s, s.itrf);
+    s.step(0);
+    // The warp changes while the draws are unwarped.
+    s.state.k = 4;
+    s.spec.revision++;
+    rigOn(s, s.exaggerated);
+    // One fit runs; the other draw shows the fit it had.
+    expect(s.step(0)).toBe(true);
+    expect(draws.map((d) => hidden(s, d))).toEqual([false, false]);
+    const states = draws.map((d) => s.world.warps.status(d)!.state);
+    expect(states.filter((x) => x === "stale")).toHaveLength(1);
+    expect(draws.filter((d, i) => lattice(s, d) === before[i])).toHaveLength(1);
+    s.step(0);
+    expect(draws.map((d) => s.world.warps.status(d)!.state)).toEqual([
+      "fitted",
+      "fitted",
+    ]);
+    expect(s.fits.count).toBe(4);
+  });
+
+  it("holds a draw hidden that has no fit to take up when a re-root puts it under a warp", () => {
+    const s = setup();
+    liftCamera(s);
+    rigOn(s, s.itrf);
+    s.step();
+    const draws = [addQuad(s), addQuad(s)];
+    s.step();
+    expect(draws.map((d) => hidden(s, d))).toEqual([false, false]);
+    rigOn(s, s.exaggerated);
+    s.step(0);
+    expect(draws.filter((d) => hidden(s, d))).toHaveLength(1);
+  });
+
+  it("refits when the route itself changes, drawing the old fit meanwhile, and reuses it on the way back", () => {
+    const s = setup({ second: true, prime: false });
+    liftCamera(s);
+    rigOn(s, s.exaggerated);
+    const draws = [addQuad(s), addQuad(s)];
+    s.step();
+    expect(s.fits.count).toBe(2);
+    const before = draws.map((d) => lattice(s, d)!);
+    // `flat` is a second warp under `exaggerated`: the route gains a warp.
+    rigOn(s, s.rig);
+    expect(route(s).steps.map((x) => x.kind)).toEqual(["warp", "warp"]);
+    expect(s.step(0)).toBe(true);
+    expect(draws.map((d) => hidden(s, d))).toEqual([false, false]);
+    expect(
+      draws.filter((d) => s.world.warps.status(d)?.state === "stale"),
+    ).toHaveLength(1);
+    s.step(0);
+    expect(s.fits.count).toBe(4);
+    expect(draws.map((d) => s.world.warps.status(d)?.state)).toEqual([
+      "fitted",
+      "fitted",
+    ]);
+    const mesh = quad();
+    draws.forEach((draw, i) => {
+      expect(lattice(s, draw)).not.toBe(before[i]);
+      const { worst, bound } = twinError(s, draw, mesh);
+      expect(worst).toBeLessThanOrEqual(bound + 1e-6);
+    });
+    // Back to the first route: its fits are still held.
+    rigOn(s, s.exaggerated);
+    expect(s.step(0)).toBe(false);
+    draws.forEach((draw, i) => expect(lattice(s, draw)).toBe(before[i]));
+    expect(s.fits.count).toBe(4);
+    expect(draws.map((d) => s.world.warps.status(d)?.state)).toEqual([
+      "fitted",
+      "fitted",
+    ]);
+  });
+
+  it("refits for a warp's new revision on a re-root, drawing the old fit meanwhile", () => {
+    const s = setup();
+    liftCamera(s);
+    const draws = [addQuad(s), addQuad(s)];
+    s.step();
+    const before = draws.map((d) => lattice(s, d));
+    s.state.k = 4;
+    s.spec.revision++;
+    rigOn(s, child(s, "mast", s.exaggerated, 0, 0, 1000));
+    expect(s.step(0)).toBe(true);
+    expect(draws.map((d) => hidden(s, d))).toEqual([false, false]);
+    expect(draws.filter((d, i) => lattice(s, d) === before[i])).toHaveLength(1);
+    s.step(0);
+    expect(s.fits.count).toBe(4);
+    expect(draws.map((d) => s.world.warps.status(d)?.state)).toEqual([
+      "fitted",
+      "fitted",
+    ]);
   });
 
   it("warns once when another view of the world has another root", () => {

@@ -476,6 +476,28 @@ describe("WarpFitCache", () => {
     cache.forget("zzz");
   });
 
+  it("keeps the last few variants of a key, and takes and restores its fits", () => {
+    const cache = new WarpFitCache(512, 2);
+    for (const v of ["a", "b", "c"]) {
+      cache.request("k", v, 1, () => lattice(v.charCodeAt(0)));
+      cache.run(10);
+    }
+    // "a", the least recently requested, was dropped.
+    expect(cache.size).toBe(2);
+    expect(cache.request("k", "a", 1, () => lattice(0))).toBeUndefined();
+    cache.run(10);
+    const fits = cache.take("k");
+    expect(fits.map((f) => f.variant).sort()).toEqual(["a", "c"]);
+    expect(cache.size).toBe(0);
+    for (const fit of fits) {
+      cache.restore("k", fit);
+    }
+    expect(cache.pending).toBe(0);
+    expect(cache.current("k", "c", 1)?.errorBound).toBe(99);
+    expect(cache.request("k", "a", 1, () => lattice(5))?.errorBound).toBe(0);
+    expect(cache.pending).toBe(0);
+  });
+
   it("drops a job that throws and keeps the others", () => {
     const cache = new WarpFitCache();
     cache.request("a", "w", 1, () => lattice(1));
