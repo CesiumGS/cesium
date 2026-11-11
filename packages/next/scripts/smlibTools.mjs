@@ -7,7 +7,7 @@
 //
 //   node scripts/smlibTools.mjs           fetch, build, print the folder
 //   node scripts/smlibTools.mjs --check   ... then load it in Node and measure
-//   npm run setup -- --smlib              the same as part of setup
+//   npm run setup                         the same, as part of setup
 //
 // SMLIB_DIR overrides the store's build (a folder holding smlib.mjs).
 import { execFile, execFileSync } from "node:child_process";

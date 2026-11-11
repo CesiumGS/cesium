@@ -6,7 +6,7 @@ Clean-slate, WebGPU-only engine prototype. See `CESIUM2_WEBGPU_PLAN.md` at the r
 
 ```sh
 npm install                                 # at the repo root
-npm run setup --workspace @cesium/next      # the 1.x build, the CesiumJS releases Dyno and the benchmarks run, the Slang WASM build
+npm run setup --workspace @cesium/next      # the 1.x build, the CesiumJS releases Dyno and the benchmarks run, the Slang WASM build, SMLib
 ```
 
 `setup` builds this repository's 1.x (`npm run build` at the root) if
@@ -34,12 +34,11 @@ It also fetches the Slang toolchain, pinned to one release in
 `node scripts/slangTools.mjs` fetches just these. `SLANGC` and
 `SLANG_WASM_DIR` still point elsewhere if set.
 
-**SMLib in WebAssembly** (plan §13.33), only with `--smlib`
-(`npm run setup --workspace @cesium/next -- --smlib`), as it downloads about
-750 MB and builds for minutes. It fetches NVIDIA's usd-brep at one commit
-(SMLib and its SM_API) and emsdk at one version, both pinned in
-`scripts/smlibTools.mjs`, into `~/.cesium-bench/smlib` and
-`~/.cesium-bench/emsdk`, and builds `smlib.mjs` and `smlib.wasm` there. What it
+**SMLib in WebAssembly** (plan §13.33). `setup` fetches NVIDIA's usd-brep at
+one commit (SMLib and its SM_API) and emsdk at one version (about 750 MB),
+both pinned in `scripts/smlibTools.mjs`, into `~/.cesium-bench/smlib` and
+`~/.cesium-bench/emsdk`. It builds `smlib.mjs` and `smlib.wasm` there, which
+takes a few minutes the first time. What it
 builds with is committed in `scripts/smlib/`: a serial stand-in for TBB and the
 bindings JavaScript calls. `node scripts/smlibTools.mjs --check` builds it alone,
 then loads it in Node and measures size, startup, tessellation and a boolean.

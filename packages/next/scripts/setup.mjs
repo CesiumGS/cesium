@@ -12,11 +12,11 @@
 //  - the design globe's generated tilesets and exact answers
 //    (scripts/designTiles.mjs) into the frames store, after its data and
 //    grids;
-//  - with --smlib, SMLib in WebAssembly (scripts/smlibTools.mjs): the
-//    pinned usd-brep commit and emsdk, built into its own store. Opt in, as
-//    emsdk is a large download and the build takes minutes.
+//  - SMLib in WebAssembly (scripts/smlibTools.mjs): the pinned usd-brep
+//    commit and emsdk (about 750 MB), built into their own store, for the
+//    b-rep examples and their kernel.
 // Nothing here is committed: both live outside version control.
-// Usage: npm run setup --workspace @cesium/next [-- --skip-build] [--frames-span[ =]2000-2050] [--grids[ =]portfolio,tests] [--smlib]
+// Usage: npm run setup --workspace @cesium/next [-- --skip-build] [--frames-span[ =]2000-2050] [--grids[ =]portfolio,tests]
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -98,10 +98,8 @@ for (const version of releases) {
 console.log(`slangc: ${await ensureSlangc()}`);
 console.log(`slang-wasm: ${await ensureSlangWasm()}`);
 
-// SMLib in WebAssembly, on request.
-if (process.argv.includes("--smlib")) {
-  console.log(`smlib: ${await ensureSmlib()}`);
-}
+// SMLib in WebAssembly.
+console.log(`smlib: ${await ensureSmlib()}`);
 
 // The frames data: ephemeris excerpts, leap seconds, Earth orientation, PROJ
 // and its grids.
