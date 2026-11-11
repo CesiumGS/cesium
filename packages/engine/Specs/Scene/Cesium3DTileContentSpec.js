@@ -77,6 +77,7 @@ describe(
     //  "./Data/Cesium3DTiles/GaussianSplats/sh_unit_cube/tileset.json";
     const geometryAll =
       "./Data/Cesium3DTiles/Geometry/GeometryTileAll/tileset.json";
+    const vectorUsStatesUrl = "./Data/vector/sample-us-states-v02.tileset.json";
 
     // The set of test cases
     const testCases = [];
@@ -126,6 +127,11 @@ describe(
       url: geometryAll,
     });
 
+    testCases.push({
+      description: "Vector (glTF)",
+      url: vectorUsStatesUrl,
+    });
+
     let scene;
     beforeAll(function () {
       const canvas = createCanvas(100, 100);
@@ -151,6 +157,7 @@ describe(
             scene,
             testCase.url,
           );
+          tileset.maximumScreenSpaceError = 0.0;
           scene.camera.flyToBoundingSphere(tileset.boundingSphere, {
             duration: 0,
           });
@@ -165,21 +172,11 @@ describe(
           // Gather all contents, and set 'show=false' for all of them
           const contents = gatherAllContentsFromTileset(tileset);
           for (const content of contents) {
-            // TODO DEBUG MESSAGE
-            console.log("Setting show=false on ", content);
-
             content.show = false;
           }
 
           // Perform another spec-rendering pass, and expect NO draw commands
           scene.renderForSpecs();
-
-          // TODO DEBUG MESSAGE
-          console.log(
-            `The commandList show=false for ${testCase.description} is `,
-            commandList,
-          );
-
           expect(commandList.length).toBe(0);
         });
       });
