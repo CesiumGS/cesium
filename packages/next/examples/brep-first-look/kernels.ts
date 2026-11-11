@@ -1,5 +1,5 @@
 import type { BrepForm } from "../../src/index.ts";
-import { OcctKernel } from "../../src/brep/occt.ts";
+import { OcctKernel, type OcctSolid } from "../../src/brep/occt.ts";
 import { SmlibKernel } from "../../src/brep/smlib.ts";
 
 /**
@@ -130,21 +130,29 @@ function occtRunner(kernel: OcctKernel): Runner {
   return {
     run(recipe) {
       const [a, b] = recipe.make(kernel);
-      let start = performance.now();
-      const result = kernel.boolean(
-        recipe.operation,
-        kernel.tag(a, 1),
-        kernel.tag(b, 2),
-      );
-      const booleanMs = performance.now() - start;
-      start = performance.now();
-      const brep = kernel.toForm(result);
-      return {
-        form: brep.form,
-        faceSources: sources(brep.faceTags, recipe),
-        booleanMs,
-        convertMs: performance.now() - start,
-      };
+      let result: OcctSolid | undefined;
+      try {
+        let start = performance.now();
+        result = kernel.boolean(
+          recipe.operation,
+          kernel.tag(a, 1),
+          kernel.tag(b, 2),
+        );
+        const booleanMs = performance.now() - start;
+        start = performance.now();
+        const brep = kernel.toForm(result);
+        return {
+          form: brep.form,
+          faceSources: sources(brep.faceTags, recipe),
+          booleanMs,
+          convertMs: performance.now() - start,
+        };
+      } finally {
+        // OCCT's solids are the caller's to free; the form is its own copy.
+        result?.delete();
+        b.delete();
+        a.delete();
+      }
     },
   };
 }

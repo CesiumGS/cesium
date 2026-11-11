@@ -14,6 +14,10 @@
 //
 // The module's classes are typed here by the members this file uses: the
 // build's own declarations are 1.5 MB and live in the store, not the repo.
+//
+// Every embind object lives in the WASM heap until its `delete()`: a `new`, a
+// shape from an explorer, a curve or surface a call returns. Temporaries are
+// freed by `withScope`; what escapes (`OcctSolid`) is owned by its caller.
 import { BrepBuilder } from "./build.ts";
 import type { BrepForm } from "./form.ts";
 import { windLoop, type CurveUse } from "./loops.ts";
@@ -25,6 +29,42 @@ import {
 
 interface Deletable {
   delete(): void;
+}
+
+/** Registers an embind handle with its scope, and returns it. */
+export type Keep = <T extends Deletable>(handle: T) => T;
+
+/**
+ * Runs `fn`, then deletes every handle it passed to `keep`, last first, even
+ * if it throws. Handles that must outlive the scope (a result) are not kept.
+ */
+export function withScope<T>(fn: (keep: Keep) => T): T {
+  const handles: Deletable[] = [];
+  let result: T;
+  try {
+    result = fn((handle) => {
+      handles.push(handle);
+      return handle;
+    });
+  } finally {
+    freeAll(handles);
+  }
+  return result;
+}
+
+/** Deletes the handles last first. All are tried; a failure is thrown once the rest are freed. */
+function freeAll(handles: readonly Deletable[]): void {
+  let failure: unknown;
+  for (let i = handles.length - 1; i >= 0; i--) {
+    try {
+      handles[i]!.delete();
+    } catch (error) {
+      failure ??= error;
+    }
+  }
+  if (failure !== undefined) {
+    throw failure;
+  }
 }
 interface Pnt extends Deletable {
   X(): number;
@@ -55,7 +95,7 @@ interface SurfaceAdaptor extends Deletable {
   Value(u: number, v: number): Pnt;
   BSpline(): BSplineSurface;
 }
-interface BSplineSurface {
+interface BSplineSurface extends Deletable {
   UDegree(): number;
   VDegree(): number;
   NbUPoles(): number;
@@ -73,7 +113,7 @@ interface BSplineSurface {
   SetUNotPeriodic(): void;
   SetVNotPeriodic(): void;
 }
-interface BSplineCurve {
+interface BSplineCurve extends Deletable {
   Degree(): number;
   NbPoles(): number;
   NbKnots(): number;
@@ -127,7 +167,7 @@ export interface OcctModule {
   BRepAdaptor_Surface: Ctor<SurfaceAdaptor>;
   BRepAdaptor_Curve2d: Ctor<
     Deletable & {
-      Curve(): object;
+      Curve(): Deletable;
       FirstParameter(): number;
       LastParameter(): number;
     }
@@ -140,12 +180,41 @@ export interface OcctModule {
       edge: Shape,
       first: number,
       last: number,
-    ): { returnValue: object; First: number; Last: number };
+    ): { returnValue: Deletable; First: number; Last: number };
   };
-  Geom_TrimmedCurve: Ctor<object>;
-  Geom2d_TrimmedCurve: Ctor<object>;
-  GeomConvert: { CurveToBSplineCurve(curve: object): BSplineCurve };
-  Geom2dConvert: { CurveToBSplineCurve(curve: object): BSplineCurve };
+  Geom_TrimmedCurve: Ctor<Deletable>;
+  Geom2d_TrimmedCurve: Ctor<Deletable>;
+  GeomConvert: { CurveToBSplineCurve(curve: Deletable): BSplineCurve };
+  Geom2dConvert: { CurveToBSplineCurve(curve: Deletable): BSplineCurve };
+  STEPControl_Reader: Ctor<
+    Deletable & {
+      ReadFile(path: string): OcEnum;
+      TransferRoots(progress: Deletable): number;
+      OneShape(): Shape;
+    }
+  >;
+  STEPControl_Writer: Ctor<
+    Deletable & {
+      Transfer(
+        shape: Shape,
+        mode: OcEnum,
+        compgraph: boolean,
+        progress: Deletable,
+      ): OcEnum;
+      Write(path: string): OcEnum;
+    }
+  >;
+  STEPControl_StepModelType: Record<"STEPControl_AsIs", OcEnum>;
+  IFSelect_ReturnStatus: Record<"IFSelect_RetDone", OcEnum>;
+  Interface_Static: { SetCVal(name: string, value: string): boolean };
+  /** Emscripten's virtual file system, the way STEP files reach the reader and writer. */
+  FS: {
+    writeFile(path: string, data: Uint8Array): void;
+    readFile(path: string): Uint8Array;
+    unlink(path: string): void;
+  };
+  /** The WASM linear memory, whose size only grows. */
+  wasmMemory: { readonly buffer: ArrayBuffer };
   TopAbs_ShapeEnum: Record<
     | "TopAbs_SOLID"
     | "TopAbs_FACE"
@@ -400,10 +469,12 @@ function scaleUv(curve: NurbsCurve, su: number, sv: number): NurbsCurve {
 class ShapeSet {
   readonly shapes: Shape[] = [];
 
-  constructor(oc: OcctModule, shape: Shape, kind: OcEnum) {
+  /** The shapes are freed with `keep`'s scope. */
+  constructor(oc: OcctModule, keep: Keep, shape: Shape, kind: OcEnum) {
     each(oc, shape, kind, (s) => {
       if (this.indexOf(s) < 0) {
-        this.shapes.push(s);
+        this.shapes.push(keep(s));
+        return true;
       }
     });
   }
@@ -414,19 +485,34 @@ class ShapeSet {
   }
 }
 
+/**
+ * Visits the sub-shapes of a kind. Each is a new handle, deleted after its
+ * visit unless the visitor returns true and so takes it over.
+ */
 function each(
   oc: OcctModule,
   shape: Shape,
   kind: OcEnum,
-  visit: (shape: Shape) => void,
+  visit: (shape: Shape) => boolean | void,
 ): void {
   const explorer = new oc.TopExp_Explorer(
     ...([shape, kind, oc.TopAbs_ShapeEnum.TopAbs_SHAPE] as never[]),
   );
-  for (; explorer.More(); explorer.Next()) {
-    visit(explorer.Current());
+  try {
+    for (; explorer.More(); explorer.Next()) {
+      const current = explorer.Current();
+      let taken = false;
+      try {
+        taken = visit(current) === true;
+      } finally {
+        if (!taken) {
+          current.delete();
+        }
+      }
+    }
+  } finally {
+    explorer.delete();
   }
-  explorer.delete();
 }
 
 /**
@@ -447,49 +533,65 @@ export function occtToForm(
     version?: number;
   },
 ): OcctBrep {
+  return withScope((keep) => convert(oc, keep, shape, options));
+}
+
+function convert(
+  oc: OcctModule,
+  keep: Keep,
+  shape: Shape,
+  options?: {
+    tags?: ReadonlyArray<{ face: Shape; tag: number }>;
+    version?: number;
+  },
+): OcctBrep {
   const O = oc.TopAbs_Orientation;
   const S = oc.TopAbs_ShapeEnum;
   const builder = new BrepBuilder({ version: options?.version });
-  const vertices = new ShapeSet(oc, shape, S.TopAbs_VERTEX);
-  const edges = new ShapeSet(oc, shape, S.TopAbs_EDGE);
-  const faces = new ShapeSet(oc, shape, S.TopAbs_FACE);
+  const vertices = new ShapeSet(oc, keep, shape, S.TopAbs_VERTEX);
+  const edges = new ShapeSet(oc, keep, shape, S.TopAbs_EDGE);
+  const faces = new ShapeSet(oc, keep, shape, S.TopAbs_FACE);
 
   // Edges first, as data: each with its vertices in its own direction and
   // its 3D curve between them; a degenerate edge (a sphere's pole) is
   // zero-length. Their tolerances may still grow as pcurves are approximated.
-  const edgeData = edges.shapes.map((edgeShape) => {
-    // Oriented() returns a plain shape: cast it back, for BRep_Tool's overloads.
-    const edge = oc.TopoDS.Edge(
-      oc.TopoDS.Edge(edgeShape).Oriented(O.TopAbs_FORWARD),
-    );
-    let start = -1;
-    let end = -1;
-    each(oc, edge, S.TopAbs_VERTEX, (v) => {
-      const index = vertices.indexOf(v);
-      if (v.Orientation() === O.TopAbs_FORWARD) {
-        start = index;
-      } else if (v.Orientation() === O.TopAbs_REVERSED) {
-        end = index;
+  const edgeData = edges.shapes.map((edgeShape) =>
+    withScope((keep) => {
+      // Oriented() returns a plain shape: cast it back, for BRep_Tool's overloads.
+      const typed = keep(oc.TopoDS.Edge(edgeShape));
+      const edge = keep(oc.TopoDS.Edge(keep(typed.Oriented(O.TopAbs_FORWARD))));
+      let start = -1;
+      let end = -1;
+      each(oc, edge, S.TopAbs_VERTEX, (v) => {
+        const index = vertices.indexOf(v);
+        if (v.Orientation() === O.TopAbs_FORWARD) {
+          start = index;
+        } else if (v.Orientation() === O.TopAbs_REVERSED) {
+          end = index;
+        }
+      });
+      start = start < 0 ? end : start;
+      end = end < 0 ? start : end;
+      let tolerance = oc.BRep_Tool.Tolerance(edge);
+      if (oc.BRep_Tool.Degenerated(edge)) {
+        return { start, end, tolerance, curve: undefined };
       }
-    });
-    start = start < 0 ? end : start;
-    end = end < 0 ? start : end;
-    let tolerance = oc.BRep_Tool.Tolerance(edge);
-    if (oc.BRep_Tool.Degenerated(edge)) {
-      return { start, end, tolerance, curve: undefined };
-    }
-    const c = oc.BRep_Tool.Curve(edge, 0, 0);
-    const trimmed = new oc.Geom_TrimmedCurve(
-      ...([c.returnValue, c.First, c.Last, true, true] as never[]),
-    );
-    let curve = curveOf(oc.GeomConvert.CurveToBSplineCurve(trimmed), 3);
-    if (curve.degree > MAX_CURVE_DEGREE) {
-      const cubic = approximateCubic(curve, approximationTarget(tolerance));
-      curve = cubic.curve;
-      tolerance += cubic.error;
-    }
-    return { start, end, tolerance, curve };
-  });
+      const c = oc.BRep_Tool.Curve(edge, 0, 0);
+      keep(c.returnValue);
+      const trimmed = keep(
+        new oc.Geom_TrimmedCurve(
+          ...([c.returnValue, c.First, c.Last, true, true] as never[]),
+        ),
+      );
+      let curve = curveOf(keep(oc.GeomConvert.CurveToBSplineCurve(trimmed)), 3);
+      if (curve.degree > MAX_CURVE_DEGREE) {
+        const cubic = approximateCubic(curve, approximationTarget(tolerance));
+        curve = cubic.curve;
+        tolerance += cubic.error;
+      }
+      return { start, end, tolerance, curve };
+    }),
+  );
 
   // Faces: the surface, then its loops, with the face taken forward so that
   // edge orientations are relative to the surface's (u, v).
@@ -500,10 +602,14 @@ export function occtToForm(
     face: Shape;
   }[] = [];
   for (let f = 0; f < faces.shapes.length; f++) {
-    const face = oc.TopoDS.Face(faces.shapes[f]!);
-    const forward = oc.TopoDS.Face(face.Oriented(O.TopAbs_FORWARD));
-    const adaptor = new oc.BRepAdaptor_Surface(...([forward, true] as never[]));
-    try {
+    const face = faces.shapes[f]!;
+    withScope((keep) => {
+      const forward = keep(
+        oc.TopoDS.Face(keep(face.Oriented(O.TopAbs_FORWARD))),
+      );
+      const adaptor = keep(
+        new oc.BRepAdaptor_Surface(...([forward, true] as never[])),
+      );
       const at = (u: number, v: number): Vec3 => {
         const p = adaptor.Value(u, v);
         const out: Vec3 = [p.X(), p.Y(), p.Z()];
@@ -525,7 +631,7 @@ export function occtToForm(
         type === oc.GeomAbs_SurfaceType.GeomAbs_BezierSurface
       ) {
         // A B-spline or Bézier surface in OCCT is free-form: no identity.
-        surface = builder.nurbsSurface(surfaceOf(adaptor.BSpline()));
+        surface = builder.nurbsSurface(surfaceOf(keep(adaptor.BSpline())));
       } else {
         throw new Error(
           `occtToForm: face ${f} is on a surface the form can't carry exactly yet`,
@@ -535,81 +641,88 @@ export function occtToForm(
       const throughSurface = (a: Float64Array, b: Float64Array) =>
         length(sub(at(a[0]!, a[1]!), at(b[0]!, b[1]!)));
 
-      const outerWire = oc.BRepTools.OuterWire(forward);
+      const outerWire = keep(oc.BRepTools.OuterWire(forward));
       const loops: CurveUse[][] = [];
-      each(oc, forward, S.TopAbs_WIRE, (wireShape) => {
-        const wire = oc.TopoDS.Wire(wireShape);
-        const uses: CurveUse[] = [];
-        each(oc, wire, S.TopAbs_EDGE, (edgeShape) => {
-          const orientation = edgeShape.Orientation();
-          if (
-            orientation !== O.TopAbs_FORWARD &&
-            orientation !== O.TopAbs_REVERSED
-          ) {
-            return;
-          }
-          const edge = oc.TopoDS.Edge(edgeShape);
-          const index = edges.indexOf(edge);
-          // BRep_Tool.CurveOnSurface's face overload doesn't bind in this
-          // build; the adaptor reads the same pcurve, the seam's side picked
-          // by the edge's orientation.
-          const pc = new oc.BRepAdaptor_Curve2d(
-            ...([edge, forward] as never[]),
+      each(oc, forward, S.TopAbs_WIRE, (wireShape) =>
+        withScope((keep) => {
+          const wire = keep(oc.TopoDS.Wire(wireShape));
+          const uses: CurveUse[] = [];
+          each(oc, wire, S.TopAbs_EDGE, (edgeShape) =>
+            withScope((keep) => {
+              const orientation = edgeShape.Orientation();
+              if (
+                orientation !== O.TopAbs_FORWARD &&
+                orientation !== O.TopAbs_REVERSED
+              ) {
+                return;
+              }
+              const edge = keep(oc.TopoDS.Edge(edgeShape));
+              const index = edges.indexOf(edge);
+              // BRep_Tool.CurveOnSurface's face overload doesn't bind in this
+              // build; the adaptor reads the same pcurve, the seam's side picked
+              // by the edge's orientation.
+              const pc = keep(
+                new oc.BRepAdaptor_Curve2d(...([edge, forward] as never[])),
+              );
+              const trimmed = keep(
+                new oc.Geom2d_TrimmedCurve(
+                  ...([
+                    keep(pc.Curve()),
+                    pc.FirstParameter(),
+                    pc.LastParameter(),
+                    true,
+                    true,
+                  ] as never[]),
+                ),
+              );
+              let inUv = curveOf(
+                keep(oc.Geom2dConvert.CurveToBSplineCurve(trimmed)),
+                2,
+              );
+              if (inUv.degree > MAX_CURVE_DEGREE) {
+                const data = edgeData[index]!;
+                const cubic = approximateCubic(
+                  inUv,
+                  approximationTarget(data.tolerance),
+                  throughSurface,
+                );
+                inUv = cubic.curve;
+                data.tolerance += cubic.error;
+              }
+              const along = scaleUv(inUv, su, sv);
+              const reversed = orientation === O.TopAbs_REVERSED;
+              uses.push({
+                edge: index,
+                reversed,
+                pcurve: reversed ? reverseNurbsCurve(along) : along,
+              });
+            }),
           );
-          const trimmed = new oc.Geom2d_TrimmedCurve(
-            ...([
-              pc.Curve(),
-              pc.FirstParameter(),
-              pc.LastParameter(),
-              true,
-              true,
-            ] as never[]),
-          );
-          pc.delete();
-          let inUv = curveOf(oc.Geom2dConvert.CurveToBSplineCurve(trimmed), 2);
-          if (inUv.degree > MAX_CURVE_DEGREE) {
-            const data = edgeData[index]!;
-            const cubic = approximateCubic(
-              inUv,
-              approximationTarget(data.tolerance),
-              throughSurface,
-            );
-            inUv = cubic.curve;
-            data.tolerance += cubic.error;
+          if (uses.length > 0) {
+            const ordered = chain(uses);
+            if (wire.IsSame(outerWire)) {
+              loops.unshift(ordered);
+            } else {
+              loops.push(ordered);
+            }
           }
-          const along = scaleUv(inUv, su, sv);
-          const reversed = orientation === O.TopAbs_REVERSED;
-          uses.push({
-            edge: index,
-            reversed,
-            pcurve: reversed ? reverseNurbsCurve(along) : along,
-          });
-        });
-        if (uses.length > 0) {
-          const ordered = chain(uses);
-          if (wire.IsSame(outerWire)) {
-            loops.unshift(ordered);
-          } else {
-            loops.push(ordered);
-          }
-        }
-      });
+        }),
+      );
       // The form's normal is ∂u × ∂v in its own (u, v): a turned u turns it.
       const reversed = (face.Orientation() === O.TopAbs_REVERSED) !== su < 0;
       faceData.push({ surface, loops, reversed, face });
-    } finally {
-      adaptor.delete();
-    }
+    });
   }
 
   // Now the builder: vertices, edges with their final tolerances, faces.
   for (const vertex of vertices.shapes) {
-    const v = oc.TopoDS.Vertex(vertex);
-    const p = oc.BRep_Tool.Pnt(v);
-    builder.vertex([p.X(), p.Y(), p.Z()], {
-      tolerance: oc.BRep_Tool.Tolerance(v),
+    withScope((keep) => {
+      const v = keep(oc.TopoDS.Vertex(vertex));
+      const p = keep(oc.BRep_Tool.Pnt(v));
+      builder.vertex([p.X(), p.Y(), p.Z()], {
+        tolerance: oc.BRep_Tool.Tolerance(v),
+      });
     });
-    p.delete();
   }
   for (const { start, end, tolerance, curve } of edgeData) {
     builder.edge(start, end, { curve, tolerance });
@@ -752,17 +865,37 @@ function chain(uses: readonly CurveUse[]): CurveUse[] {
 /** A boolean's operation. */
 export type OcctBoolean = "union" | "difference" | "intersection";
 
-/** A shape in OCCT's memory, with the tags its faces carry. */
+/**
+ * A shape in OCCT's memory, with the tags its faces carry. It owns its
+ * embind handles: whoever gets one from the kernel frees it with `delete`
+ * (as with SmlibSolid). A boolean leaves its operands alive.
+ */
 export class OcctSolid {
+  private deleted = false;
+
   constructor(
     readonly shape: Shape,
-    readonly tags: ReadonlyArray<{ face: Shape; tag: number }> = [],
+    /** The tagged faces: handles of their own, freed with the solid. */
+    readonly tags: { face: Shape; tag: number }[] = [],
   ) {}
+
+  delete(): void {
+    if (!this.deleted) {
+      this.deleted = true;
+      freeAll([this.shape, ...this.tags.map(({ face }) => face)]);
+    }
+  }
 }
+
+/** A copy of the handle, to the same shape: for a second owner. */
+const copyOf = (shape: Shape): Shape => shape.Oriented(shape.Orientation());
+
+let stepFiles = 0;
 
 /**
  * OCCT through replicad's OpenCascade.js build: primitives, booleans, face
- * tags through a boolean's history, validity, volume and the render form.
+ * tags through a boolean's history, validity, volume, the render form and
+ * STEP files. Solids it returns are the caller's to `delete`.
  */
 export class OcctKernel {
   constructor(readonly oc: OcctModule) {}
@@ -775,70 +908,81 @@ export class OcctKernel {
     return new OcctKernel(await imported.default());
   }
 
-  private make(maker: Deletable & { Shape(): Shape }): OcctSolid {
-    const solid = new OcctSolid(maker.Shape());
-    maker.delete();
-    return solid;
+  /** A solid from a primitive's maker, which is freed. */
+  private make(
+    build: (keep: Keep) => Deletable & { Shape(): Shape },
+  ): OcctSolid {
+    return withScope((keep) => new OcctSolid(keep(build(keep)).Shape()));
   }
 
-  private point(p: ArrayLike<number>): Pnt {
-    return new this.oc.gp_Pnt(...([p[0], p[1], p[2]] as never[]));
+  private point(keep: Keep, p: ArrayLike<number>): Pnt {
+    return keep(new this.oc.gp_Pnt(...([p[0], p[1], p[2]] as never[])));
   }
 
   /** An axis frame at `origin`, up z. */
-  private upAt(origin: ArrayLike<number>): Deletable {
-    const dir = new this.oc.gp_Dir(...([0, 0, 1] as never[]));
-    return new this.oc.gp_Ax2(...([this.point(origin), dir] as never[]));
+  private upAt(keep: Keep, origin: ArrayLike<number>): Deletable {
+    const dir = keep(new this.oc.gp_Dir(...([0, 0, 1] as never[])));
+    return keep(
+      new this.oc.gp_Ax2(...([this.point(keep, origin), dir] as never[])),
+    );
   }
 
   /** A box from its corner, its sides along x, y and z, m. */
   box(origin: ArrayLike<number>, size: ArrayLike<number>): OcctSolid {
     return this.make(
-      new this.oc.BRepPrimAPI_MakeBox(
-        ...([this.point(origin), size[0], size[1], size[2]] as never[]),
-      ),
+      (keep) =>
+        new this.oc.BRepPrimAPI_MakeBox(
+          ...([this.point(keep, origin), size[0], size[1], size[2]] as never[]),
+        ),
     );
   }
 
   /** A cylinder up z from the centre of its base, m. */
   cylinder(base: ArrayLike<number>, radius: number, height: number): OcctSolid {
     return this.make(
-      new this.oc.BRepPrimAPI_MakeCylinder(
-        ...([this.upAt(base), radius, height] as never[]),
-      ),
+      (keep) =>
+        new this.oc.BRepPrimAPI_MakeCylinder(
+          ...([this.upAt(keep, base), radius, height] as never[]),
+        ),
     );
   }
 
   sphere(centre: ArrayLike<number>, radius: number): OcctSolid {
     return this.make(
-      new this.oc.BRepPrimAPI_MakeSphere(
-        ...([this.point(centre), radius] as never[]),
-      ),
+      (keep) =>
+        new this.oc.BRepPrimAPI_MakeSphere(
+          ...([this.point(keep, centre), radius] as never[]),
+        ),
     );
   }
 
   /** A torus about z, m. */
   torus(centre: ArrayLike<number>, major: number, minor: number): OcctSolid {
     return this.make(
-      new this.oc.BRepPrimAPI_MakeTorus(
-        ...([this.upAt(centre), major, minor] as never[]),
-      ),
+      (keep) =>
+        new this.oc.BRepPrimAPI_MakeTorus(
+          ...([this.upAt(keep, centre), major, minor] as never[]),
+        ),
     );
-  }
-
-  /** Tags every face, so the faces booleans make from them say where they came from. */
-  tag(solid: OcctSolid, tag: number): OcctSolid {
-    const tags = [...solid.tags];
-    each(this.oc, solid.shape, this.oc.TopAbs_ShapeEnum.TopAbs_FACE, (face) =>
-      tags.push({ face, tag }),
-    );
-    return new OcctSolid(solid.shape, tags);
   }
 
   /**
-   * The boolean of `a` and `b` as a new solid. Each tagged input face that
-   * survives passes its tag to the faces it became (OCCT's `Modified`), or
-   * keeps it if it came through unchanged.
+   * Tags every face of the solid in place, so the faces booleans make from
+   * them say where they came from. Returns the same solid.
+   */
+  tag(solid: OcctSolid, tag: number): OcctSolid {
+    each(this.oc, solid.shape, this.oc.TopAbs_ShapeEnum.TopAbs_FACE, (face) => {
+      solid.tags.push({ face, tag });
+      return true;
+    });
+    return solid;
+  }
+
+  /**
+   * The boolean of `a` and `b` as a new solid, which the caller deletes (the
+   * operands stay alive). Each tagged input face that survives passes its tag
+   * to the faces it became (OCCT's `Modified`), or keeps it if it came
+   * through unchanged.
    */
   boolean(operation: OcctBoolean, a: OcctSolid, b: OcctSolid): OcctSolid {
     const Op = {
@@ -846,55 +990,64 @@ export class OcctKernel {
       difference: this.oc.BRepAlgoAPI_Cut,
       intersection: this.oc.BRepAlgoAPI_Common,
     }[operation];
-    const progress = new this.oc.Message_ProgressRange();
-    const op = new Op(...([a.shape, b.shape, progress] as never[]));
-    progress.delete();
-    if (!op.IsDone()) {
-      op.delete();
-      throw new Error(`OCCT: ${operation} failed`);
-    }
-    const tags: { face: Shape; tag: number }[] = [];
-    for (const { face, tag } of [...a.tags, ...b.tags]) {
-      if (op.IsDeleted(face)) {
-        continue;
+    return withScope((keep) => {
+      const progress = keep(new this.oc.Message_ProgressRange());
+      const op = keep(new Op(...([a.shape, b.shape, progress] as never[])));
+      if (!op.IsDone()) {
+        throw new Error(`OCCT: ${operation} failed`);
       }
-      const modified = op.Modified(face);
-      if (modified.Size() === 0) {
-        tags.push({ face, tag });
+      const result = new OcctSolid(op.Shape());
+      try {
+        for (const { face, tag } of [...a.tags, ...b.tags]) {
+          if (op.IsDeleted(face)) {
+            continue;
+          }
+          const modified = keep(op.Modified(face));
+          if (modified.Size() === 0) {
+            result.tags.push({ face: copyOf(face), tag });
+          }
+          while (modified.Size() > 0) {
+            result.tags.push({ face: modified.First(), tag });
+            modified.RemoveFirst();
+          }
+        }
+      } catch (error) {
+        result.delete();
+        throw error;
       }
-      while (modified.Size() > 0) {
-        tags.push({ face: modified.First(), tag });
-        modified.RemoveFirst();
-      }
-      modified.delete();
-    }
-    const result = new OcctSolid(op.Shape(), tags);
-    op.delete();
-    return result;
+      return result;
+    });
   }
 
   /** OCCT's own check (BRepCheck_Analyzer, with geometry). */
   isValid(solid: OcctSolid): boolean {
-    const check = new this.oc.BRepCheck_Analyzer(
-      ...([solid.shape, true] as never[]),
+    return withScope((keep) =>
+      keep(
+        new this.oc.BRepCheck_Analyzer(...([solid.shape, true] as never[])),
+      ).IsValid(),
     );
-    const valid = check.IsValid();
-    check.delete();
-    return valid;
   }
 
   /** The enclosed volume, m³. */
   volume(solid: OcctSolid): number {
-    const props = new this.oc.GProp_GProps();
-    this.oc.BRepGProp.VolumeProperties(solid.shape, props, false, false, false);
-    const volume = props.Mass();
-    props.delete();
-    return volume;
+    return withScope((keep) => {
+      const props = keep(new this.oc.GProp_GProps());
+      this.oc.BRepGProp.VolumeProperties(
+        solid.shape,
+        props,
+        false,
+        false,
+        false,
+      );
+      return props.Mass();
+    });
   }
 
   faceCount(solid: OcctSolid): number {
     let n = 0;
-    each(this.oc, solid.shape, this.oc.TopAbs_ShapeEnum.TopAbs_FACE, () => n++);
+    each(this.oc, solid.shape, this.oc.TopAbs_ShapeEnum.TopAbs_FACE, () => {
+      n++;
+    });
     return n;
   }
 
@@ -903,5 +1056,102 @@ export class OcctKernel {
       tags: solid.tags,
       version: options?.version,
     });
+  }
+
+  /**
+   * The solids of a STEP file (AP203/214/242, as OCCT reads), in metres: the
+   * file's own units are converted. Solids inside compounds and assemblies
+   * count, each with its placement; free shells and surfaces don't. The
+   * caller deletes the solids. Throws if the bytes aren't a readable STEP
+   * file, or hold nothing OCCT transfers. The bytes pass through the
+   * module's in-memory file system, as the reader only takes a path.
+   */
+  importStep(bytes: Uint8Array): OcctSolid[] {
+    const oc = this.oc;
+    return withScope((keep) => {
+      const reader = keep(new oc.STEPControl_Reader());
+      this.useMetres();
+      const status = this.throughFile(bytes, (path) => reader.ReadFile(path));
+      if (status !== oc.IFSelect_ReturnStatus.IFSelect_RetDone) {
+        throw new Error("OCCT: the STEP file can't be read");
+      }
+      const progress = keep(new oc.Message_ProgressRange());
+      if (reader.TransferRoots(progress) === 0) {
+        throw new Error("OCCT: the STEP file has nothing to transfer");
+      }
+      const solids: OcctSolid[] = [];
+      try {
+        each(
+          oc,
+          keep(reader.OneShape()),
+          oc.TopAbs_ShapeEnum.TopAbs_SOLID,
+          (shape) => {
+            solids.push(new OcctSolid(shape));
+            return true;
+          },
+        );
+      } catch (error) {
+        solids.forEach((solid) => solid.delete());
+        throw error;
+      }
+      return solids;
+    });
+  }
+
+  /** The solids as a STEP file (AP214), in metres. The inverse of `importStep`. */
+  exportStep(solids: OcctSolid | readonly OcctSolid[]): Uint8Array {
+    const oc = this.oc;
+    return withScope((keep) => {
+      const writer = keep(new oc.STEPControl_Writer());
+      this.useMetres();
+      for (const solid of Array.isArray(solids) ? solids : [solids]) {
+        const progress = keep(new oc.Message_ProgressRange());
+        const status = writer.Transfer(
+          solid.shape,
+          oc.STEPControl_StepModelType.STEPControl_AsIs,
+          true,
+          progress,
+        );
+        if (status !== oc.IFSelect_ReturnStatus.IFSelect_RetDone) {
+          throw new Error("OCCT: a solid can't be written as STEP");
+        }
+      }
+      const { status, data } = this.throughFile(undefined, (path) => {
+        const done = writer.Write(path);
+        return { status: done, data: oc.FS.readFile(path) };
+      });
+      if (status !== oc.IFSelect_ReturnStatus.IFSelect_RetDone) {
+        throw new Error("OCCT: the STEP file can't be written");
+      }
+      return data;
+    });
+  }
+
+  /** STEP's length unit, which the reader and writer convert to and from, as metres (a module-wide setting). */
+  private useMetres(): void {
+    const set = this.oc.Interface_Static.SetCVal;
+    if (!set("xstep.cascade.unit", "M") || !set("write.step.unit", "M")) {
+      throw new Error("OCCT: STEP unit parameters are missing");
+    }
+  }
+
+  /** Runs `use` on a path in the module's file system, holding `bytes` if given, and removes it. */
+  private throughFile<T>(
+    bytes: Uint8Array | undefined,
+    use: (path: string) => T,
+  ): T {
+    const path = `/occt-${stepFiles++}.step`;
+    try {
+      if (bytes) {
+        this.oc.FS.writeFile(path, bytes);
+      }
+      return use(path);
+    } finally {
+      try {
+        this.oc.FS.unlink(path);
+      } catch {
+        // Nothing was written.
+      }
+    }
   }
 }
