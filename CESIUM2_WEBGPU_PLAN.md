@@ -9003,7 +9003,7 @@ _Open questions for the owner:_
    - A hypsometric tint, contours, a style's height thresholds and the air's density are lookups keyed by height. Keyed by drawn height, a legend reading 1,000 m would sit at 100 m of true height when k = 10, and an exaggerated summit would stand in near-vacuum.
    - Integrating the drawn path while reading density at the true height is the same as warping the atmosphere along with everything else. That is the consistent picture.
    - The true height comes from the free `.w` scalar (reformulation 2), or from the true-position varying (reformulation 3).
-   - Not settled: whether the owner agrees.
+   - Not settled: whether the owner agrees. The owner wants to see it first: a spike comparing a tint and a height-based haze keyed to drawn and to true height, on an exaggerated terrain patch. It's deferred to the API review (5i), to be judged with the rest of the API.
 3. **Terrain keeps (u, v, h).** Exaggeration and flattening are exact in height for terrain, with no fit along it.
 4. **Accuracy: both, provisionally.**
    - A worst-case `bound` comes from fits, representation error, tessellation and float32 rounding. Bounds compose linearly, by the (L, ε) algebra.
