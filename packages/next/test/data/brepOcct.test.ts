@@ -293,7 +293,11 @@ describe("OCCT STEP files", () => {
   // OCCT 8's STEP reader returns the complementary patch (the corner's 1/8
   // of the ball, not the 7/8 outside) for this sphere face, whose loop runs
   // along the sphere's seam both ways. The sphere on the box's origin corner,
-  // and the other primitives and booleans here, round-trip.
+  // and the other primitives and booleans here, round-trip. Likely
+  // Open-Cascade-SAS/OCCT#1652: since 7.7.0, ShapeFix_Face adds natural
+  // bounds to a single wire on a doubly periodic surface instead of
+  // reversing it. Its workaround (FixAddNaturalBoundMode = 0) can't be set
+  // through this build: its parameter map's base type isn't bound.
   it.fails("round-trips a sphere face with its seam in the loop", () => {
     const union = own(
       kernel.boolean(

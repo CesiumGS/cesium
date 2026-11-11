@@ -27,28 +27,34 @@ describe("runBulk", () => {
   });
 
   it("slices: steps that take 1 ms are spread over several tasks, none past its budget by more than a step", async () => {
-    const slices: number[] = [];
+    // Counted in steps, not milliseconds: a step that starts after its
+    // slice's deadline is the overrun, and a loaded machine's preemption
+    // can stretch a step's wall time without the runner doing anything wrong.
+    const late: number[] = [];
+    let deadline = Infinity;
     const scheduler = timeSlices(5);
     await runBulk(
       40,
       () => {
+        if (performance.now() >= deadline) {
+          late[late.length - 1]! += 1;
+        }
         burn(1);
       },
       {
         scheduler: {
           run: (slice, signal) =>
-            scheduler.run((deadline) => {
-              const t0 = performance.now();
-              const finished = slice(deadline);
-              slices.push(performance.now() - t0);
-              return finished;
+            scheduler.run((d) => {
+              deadline = d;
+              late.push(0);
+              return slice(d);
             }, signal),
         },
       },
     );
-    expect(slices.length).toBeGreaterThan(3);
-    for (const ms of slices) {
-      expect(ms).toBeLessThan(5 + 3);
+    expect(late.length).toBeGreaterThan(3);
+    for (const steps of late) {
+      expect(steps).toBeLessThanOrEqual(1);
     }
   });
 
