@@ -77,7 +77,7 @@ export const EXAMPLES: ExampleInfo[] = [
     id: "csg",
     title: "Solid modeling with CSG",
     description:
-      "A small CAD tool whose interface is a tree of primitives and booleans, evaluated live by SMLib or Open CASCADE in WebAssembly workers and drawn as B-reps on the GPU. Edit a parameter and the solid re-evaluates as you drag; pick a face to find the node that made it, or select a node to see its faces.",
+      "A small CAD tool whose interface is a tree of primitives and booleans, evaluated live by Open CASCADE or SMLib in WebAssembly workers and drawn as B-reps on the GPU. Edit a parameter and the solid re-evaluates as you drag; import a STEP file as a leaf; pick a face to find the node that made it, or select a node to see its faces. The sun, shadows, occlusion, sky light and exposure are in the panel.",
     labels: ["B-reps", "CAD", "CSG"],
     globe: false,
     layout: "side",
@@ -122,5 +122,17 @@ export const EXAMPLES: ExampleInfo[] = [
     load: () => import("./vertical-exaggeration/main.ts"),
     source: () =>
       import("./vertical-exaggeration/main.ts?raw").then((m) => m.default),
+  },
+  {
+    id: "clipping",
+    title: "Clipping and sections",
+    description:
+      "A section plane and a clip box through an exact B-rep part, a closed mesh model and a mesh tileset at once: drag the handles in the view, union or intersect the planes, keep the inside or the outside, close the cut with caps (exact for the B-rep, loops for the meshes), pick through it, and compare with a second view that doesn't use the clips.",
+    labels: ["Clipping", "Sections", "B-reps", "3D Tiles"],
+    globe: false,
+    layout: "side",
+    stackNarrow: true,
+    load: () => import("./clipping/main.ts"),
+    source: () => import("./clipping/main.ts?raw").then((m) => m.default),
   },
 ];

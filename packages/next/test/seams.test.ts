@@ -357,6 +357,9 @@ export function bufferBinds(text: string): string[] {
 const RETAINED_NOT_FOR_RAYS: Record<string, string> = {
   "examples/design-globe/siteLoader.ts":
     "keeps its tiles' geometry for the measure tool's snaps",
+  "examples/clipping/main.ts": "feeds its tiles' triangles to MeshCaps",
+  "examples/clipping/picks.ts":
+    "wraps each tile in meshGeometry for exact first hits through the clips; castTilesetRays answers visibility only",
 };
 
 describe("seam detectors flag bypasses", () => {

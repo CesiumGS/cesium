@@ -1,0 +1,198 @@
+/* Clipping and sections: the handles drawn over the views, the loading
+   card, and the panel's small controls. Themed by the gallery's custom
+   properties, as the B-reps example is. */
+
+/* One layer per view: the planes, the box and (in the interactive one) the
+   handles. Only the handles take the pointer, so the orbit controls under
+   them keep every other drag. */
+.cl-overlay {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+.cl-overlay-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.cl-plane {
+  fill: rgb(40 120 255 / 0.07);
+  stroke: rgb(30 100 235 / 0.9);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.cl-box {
+  fill: none;
+  stroke: rgb(235 120 20 / 0.95);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 3;
+}
+.cl-arrow {
+  stroke: rgb(30 100 235);
+  stroke-width: 2;
+}
+.cl-handle {
+  pointer-events: all;
+  fill: #fff;
+  stroke: rgb(30 100 235);
+  stroke-width: 2.5;
+  cursor: grab;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.5));
+}
+.cl-handle-rotate {
+  fill: rgb(30 100 235);
+  stroke: #fff;
+}
+.cl-handle-move,
+.cl-handle[class*="cl-handle-face"] {
+  stroke: rgb(235 120 20);
+}
+.cl-handle:hover {
+  stroke-width: 3.5;
+}
+.cl-overlay-svg.dragging .cl-handle {
+  cursor: grabbing;
+}
+
+/* What each half of a split screen is. */
+.cl-label {
+  position: absolute;
+  bottom: 10px;
+  z-index: 2;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 0.6);
+  color: #fff;
+  font: 500 12px/18px var(--cesium-ui-font, system-ui, sans-serif);
+  pointer-events: none;
+}
+.cl-label-main {
+  left: 12px;
+}
+.cl-label-second {
+  right: 12px;
+}
+.cl-label[hidden] {
+  display: none;
+}
+
+/* Where the last pick is. */
+.cl-pick {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.6),
+    inset 0 0 0 1px rgb(0 0 0 / 0.6);
+  pointer-events: none;
+}
+.cl-pick[hidden] {
+  display: none;
+}
+
+/* A load in progress: the view dims behind a card that names the stage. */
+.cl-view canvas {
+  transition: opacity 160ms;
+}
+.cl-view[data-loading] canvas {
+  opacity: 0.5;
+}
+.cl-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.cl-loading[hidden] {
+  display: none;
+}
+.cl-loading > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 24px);
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: color-mix(in oklab, Canvas 88%, transparent);
+  color: CanvasText;
+  border: 1px solid color-mix(in oklab, CanvasText 18%, transparent);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
+  backdrop-filter: blur(8px);
+  font: 400 13px/18px var(--cesium-ui-font, system-ui, sans-serif);
+}
+.cl-spinner {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid color-mix(in oklab, CanvasText 22%, transparent);
+  border-top-color: var(--cesium-ui-accent, AccentColor);
+  animation: cl-spin 0.8s linear infinite;
+}
+@keyframes cl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cl-spinner {
+    animation: none;
+  }
+  .cl-view canvas {
+    transition: none;
+  }
+}
+
+/* The panel: a labelled two-way switch, and the notes. */
+.cl-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200, 8px);
+}
+.cl-segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding: 2px;
+  gap: 2px;
+  border-radius: var(--stratakit-radius-md, 6px);
+  background: var(--stratakit-color-bg-page-depth, rgb(0 0 0 / 0.06));
+  border: 1px solid
+    var(--stratakit-color-border-neutral-base, rgb(0 0 0 / 0.15));
+}
+:where(.examples-panel) .cl-segmented button {
+  border: 0;
+  border-radius: calc(var(--stratakit-radius-md, 6px) - 2px);
+  background: transparent;
+  padding: 3px 10px;
+  font-weight: 500;
+}
+:where(.examples-panel) .cl-segmented button[aria-pressed="true"] {
+  background: var(
+    --stratakit-color-bg-accent-base,
+    var(--cesium-ui-accent, AccentColor)
+  );
+  color: var(--stratakit-color-text-accent-on-base, #fff);
+}
+.examples-panel .cl-note {
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.examples-panel .cl-note[hidden] {
+  display: none;
+}
+.examples-panel dd {
+  overflow-wrap: anywhere;
+}
