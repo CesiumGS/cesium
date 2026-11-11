@@ -7,6 +7,8 @@ import ts from "typescript";
 import { expect, it } from "vitest";
 
 const root = join(import.meta.dirname, "..");
+/** TypeScript names files with forward slashes, whatever the platform. */
+const slash = (path: string) => path.split(sep).join("/");
 
 function libraryOptions(config: string): ts.CompilerOptions {
   const path = join(root, config);
@@ -144,10 +146,10 @@ it("the published declarations compile with skipLibCheck off", () => {
   const { options, entries, emitted } = emitDeclarations();
   // A consumer that imports every entry point, over the emitted declarations
   // alone: an exported declaration naming a stripped member is an error here.
-  const consumer = join(root, OUT, "consumer.ts");
+  const consumer = slash(join(root, OUT, "consumer.ts"));
   const virtual = new Map<string, string>();
   for (const [file, text] of emitted) {
-    virtual.set(join(root, OUT, file), text);
+    virtual.set(slash(join(root, OUT, file)), text);
   }
   virtual.set(
     consumer,
@@ -161,10 +163,10 @@ it("the published declarations compile with skipLibCheck off", () => {
   const host = ts.createCompilerHost({ ...options, skipLibCheck: false });
   const { fileExists, readFile, getSourceFile } = host;
   host.fileExists = (f) => virtual.has(f) || fileExists(f);
-  const out = join(root, OUT) + sep;
+  const out = `${slash(join(root, OUT))}/`;
   const directoryExists = host.directoryExists?.bind(host);
   host.directoryExists = (d) =>
-    (d + sep).startsWith(out) || (directoryExists?.(d) ?? false);
+    `${slash(d)}/`.startsWith(out) || (directoryExists?.(d) ?? false);
   host.readFile = (f) => virtual.get(f) ?? readFile(f);
   host.getSourceFile = (f, languageVersion, ...rest) =>
     virtual.has(f)
@@ -183,7 +185,7 @@ it("the published declarations compile with skipLibCheck off", () => {
       paths: Object.fromEntries(
         Object.entries(ENTRIES).map(([name, entry]) => [
           name,
-          [join(root, OUT, `${entry}.d.ts`)],
+          [slash(join(root, OUT, `${entry}.d.ts`))],
         ]),
       ),
       types: ["@webgpu/types"],
@@ -194,7 +196,7 @@ it("the published declarations compile with skipLibCheck off", () => {
     expect(
       ts.resolveModuleName(name, consumer, program.getCompilerOptions(), host)
         .resolvedModule?.resolvedFileName,
-    ).toBe(join(root, OUT, `${entry}.d.ts`));
+    ).toBe(slash(join(root, OUT, `${entry}.d.ts`)));
   }
   const errors = ts
     .getPreEmitDiagnostics(program)

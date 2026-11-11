@@ -37,7 +37,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { dirname, join, relative } from "node:path";
+import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { runInNewContext } from "node:vm";
 import { gzipSync } from "node:zlib";
@@ -938,7 +938,7 @@ async function provideFont(outDir) {
 const envEntries = (path) =>
   existsSync(path)
     ? readFileSync(path, "utf8")
-        .split("\n")
+        .split(/\r?\n/)
         .map((line) => /^\s*(?:export\s+)?([\w.-]+)\s*=\s*(.*)$/.exec(line))
         .filter(Boolean)
         .map((m) => [m[1], m[2].trim().replace(/^(["'])(.*)\1$/, "$2")])
@@ -978,7 +978,7 @@ export function findSecrets(
   for (const file of files) {
     for (const [key, value] of envEntries(file)) {
       if (value.length >= 8 && html.includes(value)) {
-        found.push(`the value of ${key} from ${file.replace(/^.*\//, "")}`);
+        found.push(`the value of ${key} from ${basename(file)}`);
       }
     }
   }

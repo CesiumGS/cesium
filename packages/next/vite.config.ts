@@ -527,6 +527,11 @@ export default defineConfig({
             : "test/data/**",
         ],
     environment: "node",
+    // Tests and hooks that spawn git or build a TypeScript program run several
+    // seconds when the whole suite shares the machine, and longer on Windows,
+    // where process starts and file access are slower than on macOS/Linux.
+    testTimeout: 30_000,
+    hookTimeout: 60_000,
     // StrataKit's icons import their .svg files: inlined, Vite turns those
     // into URLs, so the frames explorer's panel parts render in Node
     // (test/framesExplorerMemoReads.test.ts).

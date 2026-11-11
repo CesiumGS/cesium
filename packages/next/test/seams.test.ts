@@ -888,7 +888,7 @@ describe("the ray seam", () => {
     const violations: string[] = [];
     const allowed = new Set<string>();
     for (const path of scanned) {
-      const where = relative(root, path);
+      const where = relative(root, path).replaceAll("\\", "/");
       const found = rayBypasses(program, program.getSourceFile(path)!);
       for (const line of found.rays) {
         violations.push(`${where}:${line} reaches rays around src/query`);

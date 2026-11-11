@@ -52,13 +52,20 @@ export function rayProgram(
   const getSourceFile = host.getSourceFile.bind(host);
   const fileExists = host.fileExists.bind(host);
   const readFile = host.readFile.bind(host);
+  // The compiler asks for files by forward-slash names, whatever the platform.
+  const served: Readonly<Record<string, string>> = Object.fromEntries(
+    Object.entries(virtual).map(([name, text]) => [
+      name.replaceAll("\\", "/"),
+      text,
+    ]),
+  );
   host.getSourceFile = (name, version, ...rest) =>
-    name in virtual
-      ? ts.createSourceFile(name, virtual[name]!, version, true)
+    name in served
+      ? ts.createSourceFile(name, served[name]!, version, true)
       : getSourceFile(name, version, ...rest);
-  host.fileExists = (name) => name in virtual || fileExists(name);
-  host.readFile = (name) => virtual[name] ?? readFile(name);
-  return ts.createProgram([...roots, ...Object.keys(virtual)], OPTIONS, host);
+  host.fileExists = (name) => name in served || fileExists(name);
+  host.readFile = (name) => served[name] ?? readFile(name);
+  return ts.createProgram([...roots, ...Object.keys(served)], OPTIONS, host);
 }
 
 /**

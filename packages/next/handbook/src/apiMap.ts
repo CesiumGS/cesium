@@ -1405,6 +1405,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "frames:convertPoint",
       "frames:rigPreset",
       "frames:twoVectorFrame",
+      "frames:warpFrame",
     ],
     supporting: [
       "frames:AreaOfInterest",
@@ -1480,6 +1481,9 @@ export const API_ROWS: readonly ApiRow[] = [
       "frames:TwoVectorDegenerateError",
       "frames:TwoVectorFrame",
       "frames:VectorDefinition",
+      "frames:WarpFrame",
+      "frames:WarpSpec",
+      "frames:isWarpFrame",
       "frames:angularVelocity",
       "frames:axesAt",
       "frames:frameVelocity",

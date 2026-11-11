@@ -186,6 +186,13 @@ describe("a sample cache on disk", () => {
     return d;
   };
   const mode = (path: string) => statSync(path).mode & 0o777;
+  // Windows has no POSIX permission bits (chmod only toggles read-only).
+  const posix = process.platform !== "win32";
+  const expectMode = (path: string, want: number) => {
+    if (posix) {
+      expect(mode(path)).toBe(want);
+    }
+  };
   const sections = { sampled: "2026-11-08", ground: { "10000,-41": 98.9 } };
 
   it("defaults to samples/ in the frames data directory, never the shared temporary one", () => {
@@ -201,8 +208,8 @@ describe("a sample cache on disk", () => {
     mkdirSync(join(d, "samples"), { mode: 0o755 });
     chmodSync(join(d, "samples"), 0o755);
     writeSampleCache(file, sections);
-    expect(mode(join(d, "samples"))).toBe(0o700);
-    expect(mode(file)).toBe(0o600);
+    expectMode(join(d, "samples"), 0o700);
+    expectMode(file, 0o600);
     expect(readSampleCache(file, checkedCorridorSections)).toEqual(sections);
   });
 
@@ -210,9 +217,9 @@ describe("a sample cache on disk", () => {
     const d = scratch();
     const file = join(d, "mine", "deeper", "s.json");
     writeSampleCache(file, sections);
-    expect(mode(join(d, "mine"))).toBe(0o700);
-    expect(mode(join(d, "mine", "deeper"))).toBe(0o700);
-    expect(mode(file)).toBe(0o600);
+    expectMode(join(d, "mine"), 0o700);
+    expectMode(join(d, "mine", "deeper"), 0o700);
+    expectMode(file, 0o600);
   });
 
   it("leaves a --samples path's own private folder as it is", () => {
@@ -221,25 +228,29 @@ describe("a sample cache on disk", () => {
     mkdirSync(folder);
     chmodSync(folder, 0o755);
     writeSampleCache(join(folder, "s.json"), sections);
-    expect(mode(folder)).toBe(0o755);
-    expect(mode(join(folder, "s.json"))).toBe(0o600);
+    expectMode(folder, 0o755);
+    expectMode(join(folder, "s.json"), 0o600);
   });
 
-  it("neither writes nor reads a cache in a folder others can write (UX re-review N1, N2)", () => {
-    const d = scratch();
-    const shared = join(d, "shared");
-    mkdirSync(shared);
-    chmodSync(shared, 0o777);
-    const file = join(shared, "s.json");
-    expect(() => writeSampleCache(file, sections)).toThrow(/isn't private/);
-    expect(() => statSync(file)).toThrow();
-    // A file planted there, as one could be in /tmp, is never taken.
-    writeFileSync(file, JSON.stringify(sections));
-    expect(() => readSampleCache(file, checkedCorridorSections)).toThrow(
-      /isn't private/,
-    );
-    expect(mode(shared)).toBe(0o777);
-  });
+  // Windows has no group/other write bit to refuse on; the user-profile ACLs apply.
+  it.skipIf(!posix)(
+    "neither writes nor reads a cache in a folder others can write (UX re-review N1, N2)",
+    () => {
+      const d = scratch();
+      const shared = join(d, "shared");
+      mkdirSync(shared);
+      chmodSync(shared, 0o777);
+      const file = join(shared, "s.json");
+      expect(() => writeSampleCache(file, sections)).toThrow(/isn't private/);
+      expect(() => statSync(file)).toThrow();
+      // A file planted there, as one could be in /tmp, is never taken.
+      writeFileSync(file, JSON.stringify(sections));
+      expect(() => readSampleCache(file, checkedCorridorSections)).toThrow(
+        /isn't private/,
+      );
+      expect(mode(shared)).toBe(0o777);
+    },
+  );
 
   it("is undefined when there is none, and reads nothing from the old shared-temporary default", () => {
     const d = scratch();

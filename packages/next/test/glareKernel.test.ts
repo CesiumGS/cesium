@@ -228,9 +228,9 @@ describe("the live path", () => {
           readFileSync(file, "utf8"),
         ),
     );
-    expect(importers.map((f) => f.slice(src.length))).toEqual([
-      "/io/worker.ts",
-    ]);
+    expect(
+      importers.map((f) => f.slice(src.length).replaceAll("\\", "/")),
+    ).toEqual(["/io/worker.ts"]);
   });
 });
 

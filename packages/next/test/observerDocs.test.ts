@@ -2,9 +2,10 @@
 // date and its rule about sky data, and the paper it cites.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const root = new URL("../", import.meta.url).pathname;
+const root = fileURLToPath(new URL("../", import.meta.url));
 const read = (path: string) => readFileSync(join(root, path), "utf8");
 /** The day this task was done. */
 const TASK_DAY = "2026-11-09";

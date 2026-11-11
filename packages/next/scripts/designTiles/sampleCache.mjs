@@ -35,7 +35,10 @@ export function sampleCacheFile(name) {
 function privateFolder(dir, file) {
   const st = statSync(dir);
   const own = process.getuid === undefined || st.uid === process.getuid();
-  if (!st.isDirectory() || !own || (st.mode & 0o022) !== 0) {
+  // Windows reports no group/other mode bits (a directory is always 0o777),
+  // so the user-profile ACLs on the frames data directory stand in there.
+  const shared = process.platform !== "win32" && (st.mode & 0o022) !== 0;
+  if (!st.isDirectory() || !own || shared) {
     throw new Error(
       `sample cache: ${file}: its folder ${dir} isn't private (yours, written by no one else); give --samples a private folder`,
     );

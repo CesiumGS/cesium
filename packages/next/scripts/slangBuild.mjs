@@ -25,7 +25,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { SLANG_VERSION, slangcPath } from "./slangTools.mjs";
@@ -108,10 +108,14 @@ export function dependents(changed, sources = slangSources()) {
 
 /** The header every generated file starts with. */
 function header(source) {
-  return `// Generated from ${relative(root, source)} by slangc ${SLANG_VERSION}
+  const from = relative(root, source).split(sep).join("/");
+  return `// Generated from ${from} by slangc ${SLANG_VERSION}
 // (scripts/slangBuild.mjs). Do not edit: change the .slang and regenerate.
 `;
 }
+
+/** slangc's output, as the checked-in files hold it: LF (slangc writes CRLF on Windows). */
+const slangOutput = (path) => readFileSync(path, "utf8").replaceAll("\r\n", "\n");
 
 /**
  * Compiles one entry source into `outDir`: `<name>.wgsl` and
@@ -140,9 +144,9 @@ export function compile(slangc, source, outDir = GENERATED, includes = []) {
     mkdirSync(outDir, { recursive: true });
     writeFileSync(
       join(outDir, `${name}.wgsl`),
-      header(source) + readFileSync(wgsl, "utf8"),
+      header(source) + slangOutput(wgsl),
     );
-    writeFileSync(join(outDir, `${name}.json`), readFileSync(json, "utf8"));
+    writeFileSync(join(outDir, `${name}.json`), slangOutput(json));
   } catch (e) {
     const message = String(e.stderr ?? e.message).trim();
     throw new Error(`${relative(root, source)}:\n${message}`, { cause: e });
