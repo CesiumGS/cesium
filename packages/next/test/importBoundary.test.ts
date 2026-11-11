@@ -76,6 +76,8 @@ function layerOf(file: string): Layer {
 const FRAMES_CORE_VALUES = new Set([
   "src/scene/Body.ts",
   "src/camera/frameResolver.ts",
+  // Routes and warps (plan §13.26): the resolver's contract, like frameResolver.ts.
+  "src/camera/route.ts",
   // The bulk shape (5b): neutral, it imports nothing.
   "src/core/bulk.ts",
 ]);

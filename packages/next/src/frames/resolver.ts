@@ -11,6 +11,12 @@ import {
   type FrameMotion,
   type FrameResolver,
 } from "../camera/frameResolver.ts";
+import {
+  NonRigidRouteError,
+  warpInverse,
+  type Route,
+  type RouteStep,
+} from "../camera/route.ts";
 import { Emitter } from "../core/Emitter.ts";
 import * as m4 from "../math/mat4.ts";
 import { rigidMatrixError } from "../math/transforms.ts";
@@ -29,6 +35,7 @@ import type { FrameAccuracy } from "./frameAccuracy.ts";
 import { framePoint } from "./local.ts";
 import { rotationPart } from "./matrix.ts";
 import { pointAccuracy } from "./pointAccuracy.ts";
+import { isWarpFrame, type WarpFrame } from "./warpFrame.ts";
 
 /**
  * A reference frame drawn on its analytic stand-in because the instant is
@@ -75,6 +82,7 @@ export interface FramesResolver extends FrameResolver {
     seconds: number,
     out: FrameMotion,
   ): FrameMotion;
+  route(frame: FrameKey, base: FrameKey, seconds: number): Route;
   accuracy(
     point: ArrayLike<number>,
     frame: FrameKey,
@@ -113,6 +121,8 @@ class Resolver implements FramesResolver {
   private readonly watchers = new Set<() => void>();
   /** Frames asked for at "precise" (or found not to be the catalog's). */
   private readonly asked = new WeakSet<Frame>();
+  /** Warp frames whose changes wake the watchers. */
+  private readonly hooked = new WeakSet<WarpFrame>();
   /** Frames marked as a rig's. */
   private readonly rigFrames = new WeakSet<Frame>();
   /** The catalog's own stand-in reference frames, by frame. */
@@ -211,8 +221,11 @@ class Resolver implements FramesResolver {
       return m4.identity(out);
     }
     if (a && b) {
+      if (this.crossesWarp(a, b)) {
+        throw new NonRigidRouteError(frame.name, base.name);
+      }
       this.askPrecise(a, b);
-      this.route(a, b, this.instant(seconds), out);
+      this.compose(a, b, this.instant(seconds), out);
     } else {
       // An unbound end sits at the other's origin, in its axes (call 29).
       m4.identity(out);
@@ -225,6 +238,68 @@ class Resolver implements FramesResolver {
       m4.multiply(out, this.localB, out);
     }
     return this.scaled ? this.rigid(out) : out;
+  }
+
+  /**
+   * The route from `frame` to `base`: one rigid step (`resolve`'s matrix)
+   * when it crosses no warp; else its rigid runs, each composed as
+   * `resolve` composes them (an anchor's node-relative matrix folded into
+   * the first and last), and a warp step for each warp edge, `inverse` where
+   * the route goes from the warp's `to` back to its `from`.
+   */
+  route(frame: FrameKey, base: FrameKey, seconds: number): Route {
+    const a = this.reference(frame, this.localA);
+    const aLocal = this.hasLocal ? this.localA.slice() : undefined;
+    const b = this.reference(base, this.localB);
+    const bLocal = this.hasLocal ? this.localB.slice() : undefined;
+    if (!a || !b || !this.crossesWarp(a, b)) {
+      return {
+        frame,
+        base,
+        seconds,
+        steps: [
+          {
+            kind: "rigid",
+            matrix: this.resolve(frame, base, seconds, new Float64Array(16)),
+          },
+        ],
+        presentation: false,
+        revision: this.routeRevision(frame, base),
+      };
+    }
+    this.askPrecise(a, b);
+    const instant = this.instant(seconds);
+    const steps: RouteStep[] = [];
+    let presentation = false;
+    if (aLocal) {
+      steps.push({ kind: "rigid", matrix: aLocal });
+    }
+    for (const leg of this.legs(a, b)) {
+      if (leg.kind === "warp") {
+        steps.push({
+          kind: "warp",
+          warp: leg.frame.warp,
+          inverse: leg.inverse,
+        });
+        presentation ||= leg.frame.warp.presentation;
+      } else {
+        const m = new Float64Array(16);
+        this.scaled = false;
+        this.compose(leg.from, leg.to, instant, m);
+        pushRigid(steps, this.scaled ? this.rigid(m) : m);
+      }
+    }
+    if (bLocal) {
+      pushRigid(steps, m4.invertAffine(bLocal, bLocal));
+    }
+    return {
+      frame,
+      base,
+      seconds,
+      steps,
+      presentation,
+      revision: this.routeRevision(frame, base),
+    };
   }
 
   /**
@@ -242,6 +317,7 @@ class Resolver implements FramesResolver {
     let frames = 0;
     if (a && b) {
       this.askPrecise(a, b);
+      this.hookWarps(a, b);
       frames = routeRevision(a, b);
     }
     let nodes = 0;
@@ -304,6 +380,9 @@ class Resolver implements FramesResolver {
         ]
       : [x, y, z];
     const instant = this.instant(seconds);
+    if (this.crossesWarp(a, b)) {
+      return this.warpAccuracy(p, a, b, instant);
+    }
     const result = pointAccuracy(framePoint(a, p, instant), b, instant);
     return {
       meters: result.meters,
@@ -442,8 +521,147 @@ class Resolver implements FramesResolver {
     return name ?? undefined;
   }
 
+  /** Whether the route from `a` to `b` crosses a warp edge. */
+  private crossesWarp(a: Frame, b: Frame): boolean {
+    const top = commonAncestor(a, b);
+    for (const start of [a, b]) {
+      for (let f = start; f !== top; f = f.parent!) {
+        if (isWarpFrame(f)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * The route from `a` to `b` as legs in order: runs of tree edges (from
+   * one frame to another, composable by `compose`) and warp edges.
+   */
+  private legs(a: Frame, b: Frame): Leg[] {
+    const top = commonAncestor(a, b);
+    const legs: Leg[] = [];
+    let start = a;
+    for (let f = a; f !== top; f = f.parent!) {
+      if (isWarpFrame(f)) {
+        if (start !== f) {
+          legs.push({ kind: "tree", from: start, to: f });
+        }
+        legs.push({ kind: "warp", frame: f, inverse: true });
+        start = f.parent!;
+      }
+    }
+    const down: Frame[] = [];
+    for (let f = b; f !== top; f = f.parent!) {
+      down.push(f);
+    }
+    for (let i = down.length - 1; i >= 0; i--) {
+      const f = down[i]!;
+      if (isWarpFrame(f)) {
+        if (start !== f.parent) {
+          legs.push({ kind: "tree", from: start, to: f.parent! });
+        }
+        legs.push({ kind: "warp", frame: f, inverse: false });
+        start = f;
+      }
+    }
+    if (start !== b) {
+      legs.push({ kind: "tree", from: start, to: b });
+    }
+    return legs;
+  }
+
+  /** Makes the warp frames on the route from `a` to `b` wake the watchers when they change. */
+  private hookWarps(a: Frame, b: Frame): void {
+    const top = commonAncestor(a, b);
+    for (const start of [a, b]) {
+      for (let f = start; f !== top; f = f.parent!) {
+        if (isWarpFrame(f) && !this.hooked.has(f)) {
+          this.hooked.add(f);
+          f.onChange(() => {
+            for (const listener of this.watchers) {
+              listener();
+            }
+          });
+        }
+      }
+    }
+  }
+
+  /**
+   * `accuracy` over a route that crosses warps: each rigid run through the
+   * frames' composition, each warp by its `accuracy.sigma`, the point
+   * carried through the route to place each term; the 1σ terms add in
+   * quadrature. A warp stating only a `bound` is not stated (a bound is
+   * not a σ).
+   */
+  private warpAccuracy(
+    p: number[],
+    a: Frame,
+    b: Frame,
+    instant: Instant,
+  ): { readonly meters: number | undefined; readonly note: string } {
+    const at = Float64Array.from(p);
+    const terms: string[] = [];
+    let squares = 0;
+    let unstated: string | undefined;
+    const m = new Float64Array(16);
+    for (const leg of this.legs(a, b)) {
+      if (leg.kind === "warp") {
+        const w = leg.frame.warp;
+        const label = w.description ?? `${w.from.name} to ${w.to.name}`;
+        const { sigma, bound } = w.accuracy ?? {};
+        if (sigma !== undefined) {
+          squares += sigma * sigma;
+          terms.push(
+            `${label} ±${sigma.toPrecision(3)} m${bound !== undefined ? ` (worst case ${bound} m)` : ""}`,
+          );
+        } else if (bound !== undefined) {
+          unstated ??= `${label} states only a worst-case bound of ${bound} m, not a 1σ`;
+        }
+        if (leg.inverse) {
+          warpInverse(w, at, at);
+        } else {
+          w.forward(at.slice(), at);
+        }
+        continue;
+      }
+      const result = pointAccuracy(
+        framePoint(leg.from, at, instant),
+        leg.to,
+        instant,
+      );
+      if (result.meters === undefined) {
+        unstated ??= `${result.unboundedBy ?? result.refusedBy ?? result.simulatedBy ?? "a route term"} states no accuracy the route can use`;
+      } else {
+        squares += result.meters * result.meters;
+        terms.push(
+          `${leg.from.name} to ${leg.to.name} ±${result.meters.toPrecision(3)} m`,
+        );
+      }
+      this.scaled = false;
+      this.compose(leg.from, leg.to, instant, m);
+      if (this.scaled) {
+        this.rigid(m);
+      }
+      const x = at[0]!;
+      const y = at[1]!;
+      const z = at[2]!;
+      at[0] = m[0]! * x + m[4]! * y + m[8]! * z + m[12]!;
+      at[1] = m[1]! * x + m[5]! * y + m[9]! * z + m[13]!;
+      at[2] = m[2]! * x + m[6]! * y + m[10]! * z + m[14]!;
+    }
+    if (unstated !== undefined) {
+      return { meters: undefined, note: `not bounded: ${unstated}` };
+    }
+    return {
+      meters: Math.sqrt(squares),
+      note: `route ${a.name} to ${b.name} through a warp: ${terms.length > 0 ? terms.join(", ") : "every term exact"}; root-sum-square of independent 1σ terms`,
+    };
+  }
+
   /** `out`, p_to = out · p_from, composed as `frameTransform` does, edge by edge. */
-  private route(
+  private compose(
     from: Frame,
     to: Frame,
     instant: Instant,
@@ -574,6 +792,24 @@ function isNode(key: FrameKey): boolean {
   return "transform" in key && "world" in key;
 }
 
+/** A run of a route: tree edges from one frame to another, or one warp edge. */
+type Leg =
+  | { kind: "tree"; from: Frame; to: Frame }
+  | { kind: "warp"; frame: WarpFrame; inverse: boolean };
+
+/** Adds a rigid step, composed into the last when that is rigid too. */
+function pushRigid(steps: RouteStep[], m: Float64Array): void {
+  const last = steps[steps.length - 1];
+  if (last?.kind === "rigid") {
+    steps[steps.length - 1] = {
+      kind: "rigid",
+      matrix: m4.multiply(new Float64Array(16), m, last.matrix),
+    };
+  } else {
+    steps.push({ kind: "rigid", matrix: m });
+  }
+}
+
 /** How many ancestors `f` has. */
 function depth(f: Frame): number {
   let d = 0;
@@ -642,6 +878,12 @@ function commonAncestor(from: Frame, to: Frame): Frame {
  *   that isn't rigid reaches the camera layer, which refuses it.
  * - The reference frames named directly (a rig's) are marked as used by
  *   `"rig"`; anchors' bindings as used by the application.
+ * - A warp frame (`warpFrame`) is a non-rigid edge. `route` carries it as
+ *   a warp step; `resolve` and `motion` across it throw
+ *   `NonRigidRouteError`; a route not crossing it is as it was. Its
+ *   `revision` counts in `routeRevision`; `watch` hears `catalog.add` of
+ *   it and its `invalidate()`. `accuracy` adds its `accuracy.sigma` in
+ *   quadrature; one stating only a `bound` leaves `meters` undefined.
  */
 export function createFramesResolver(
   catalog: FrameCatalog,

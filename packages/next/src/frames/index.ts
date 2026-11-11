@@ -79,6 +79,12 @@ export {
 } from "./catalog.ts";
 export { createSkyState, skyState, type SkyState } from "./sky.ts";
 export {
+  warpFrame,
+  WarpFrame,
+  isWarpFrame,
+  type WarpSpec,
+} from "./warpFrame.ts";
+export {
   framePoint,
   convertPoint,
   eastNorthUpFrame,

@@ -54,7 +54,7 @@ export function tableResolver(world: World): FrameResolver {
     );
   };
 
-  return {
+  const table: FrameResolver = {
     resolve(frame, base, _seconds, out) {
       if (frame === base) {
         return m4.identity(out);
@@ -67,6 +67,21 @@ export function tableResolver(world: World): FrameResolver {
       m4.invertAffine(b, b);
       return m4.multiply(out, b, a);
     },
+    route(frame, base, seconds) {
+      return {
+        frame,
+        base,
+        seconds,
+        steps: [
+          {
+            kind: "rigid",
+            matrix: table.resolve(frame, base, seconds, new Float64Array(16)),
+          },
+        ],
+        presentation: false,
+        revision: table.routeRevision(frame, base),
+      };
+    },
     routeRevision(frame, base) {
       // Between anchors and the root only anchor places matter; through a
       // node, any transform.
@@ -75,6 +90,7 @@ export function tableResolver(world: World): FrameResolver {
         : world.anchorPlaceRevision;
     },
   };
+  return table;
 }
 
 /** Whether `key` names a transform node (`World.frameOf`). */

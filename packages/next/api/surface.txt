@@ -423,6 +423,8 @@ frames	TwoVectorDefinition	interface	-
 frames	TwoVectorDegenerateError	class	-
 frames	TwoVectorFrame	class	-
 frames	VectorDefinition	type	-
+frames	WarpFrame	class	-
+frames	WarpSpec	type	-
 frames	accuracySpan	function	-
 frames	angularVelocity	function	-
 frames	attachSky	function	-
@@ -441,6 +443,7 @@ frames	frameBias	function	-
 frames	framePoint	function	-
 frames	frameTransform	function	-
 frames	frameVelocity	function	-
+frames	isWarpFrame	function	-
 frames	loadFrameData	function	-
 frames	loadFrameRoles	function	-
 frames	parseOem	function	-
@@ -457,6 +460,7 @@ frames	separationAccuracy	function	-
 frames	skyState	function	-
 frames	toParentMatrix	function	-
 frames	twoVectorFrame	function	-
+frames	warpFrame	function	-
 frames	worldTransformFrame	function	-
 measure	AccuracyStatement	interface	-
 measure	AccuracyTerm	interface	-

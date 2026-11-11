@@ -5,7 +5,7 @@
 // concatenated coordinate operation, PROJ's pipeline): rigid steps and warp
 // steps in order. "True" coordinates are any frame reached without crossing
 // a presentation warp.
-import type { FrameKey } from "./frameResolver.ts";
+import type { FrameKey, FrameResolver } from "./frameResolver.ts";
 
 /**
  * A non-rigid edge of the frame graph: points in `from` (metres, its axes)
@@ -84,6 +84,35 @@ export function routeIsRigid(route: Route): boolean {
   return route.steps.every((s) => s.kind === "rigid");
 }
 
+/**
+ * `resolver`'s route from `frame` to `base`: its own `route`, or for a
+ * resolver without one, a single rigid step from `resolve` (which then has
+ * no warps to cross).
+ */
+export function resolveRoute(
+  resolver: FrameResolver,
+  frame: FrameKey,
+  base: FrameKey,
+  seconds: number,
+): Route {
+  if (resolver.route) {
+    return resolver.route(frame, base, seconds);
+  }
+  return {
+    frame,
+    base,
+    seconds,
+    steps: [
+      {
+        kind: "rigid",
+        matrix: resolver.resolve(frame, base, seconds, new Float64Array(16)),
+      },
+    ],
+    presentation: false,
+    revision: resolver.routeRevision(frame, base),
+  };
+}
+
 /** A point of `route.frame` carried to `route.base`, in float64. */
 export function routeForward(
   route: Route,
@@ -152,7 +181,14 @@ export function warpInverse(
     p[0] = p[0]! - step[0]!;
     p[1] = p[1]! - step[1]!;
     p[2] = p[2]! - step[2]!;
-    if (Math.hypot(r[0]!, r[1]!, r[2]!) <= tolerance) {
+    // At Earth scale the residual stalls at a few ulps (~1e-9 m): a step
+    // below the rounding of `p` is as converged as float64 gets.
+    const floor =
+      64 * Number.EPSILON * Math.max(1, Math.hypot(p[0], p[1], p[2]));
+    if (
+      Math.hypot(r[0]!, r[1]!, r[2]!) <= tolerance ||
+      Math.hypot(step[0]!, step[1]!, step[2]!) <= floor
+    ) {
       out.set(p);
       return out;
     }

@@ -3,6 +3,7 @@
 // them over its catalog, and the core's own resolver over its transform
 // table. Plan 5a's call 14: `FrameUnavailableError` lives here, so the camera
 // layer recognises "not ready" from any resolver.
+import type { Route } from "./route.ts";
 
 /** Anything that names a reference frame. A frames-module `Frame` satisfies it. */
 export interface FrameKey {
@@ -67,7 +68,9 @@ export interface FrameResolver {
   /**
    * `frame`'s place in `base` at scene `seconds` (UTC seconds since 1970):
    * `out` such that p_base = out · p_frame, column-major float64, metres.
-   * Throws `FrameUnavailableError` when it can't answer yet.
+   * Throws `FrameUnavailableError` when it can't answer yet, and
+   * `NonRigidRouteError` when the route crosses a warp (a non-rigid edge
+   * has no 4×4; ask `route`).
    */
   resolve(
     frame: FrameKey,
@@ -75,7 +78,17 @@ export interface FrameResolver {
     seconds: number,
     out: Float64Array,
   ): Float64Array;
-  /** How fast `frame` moves in `base` at `seconds`, written into `out`. */
+  /**
+   * The path from `frame` to `base` at scene `seconds`: rigid steps and warp
+   * steps in order (`Route`). A route that crosses no warp is one rigid step
+   * with `resolve`'s matrix. Throws `FrameUnavailableError` as `resolve`
+   * does. A resolver without it has only rigid routes (`resolveRoute`).
+   */
+  route?(frame: FrameKey, base: FrameKey, seconds: number): Route;
+  /**
+   * How fast `frame` moves in `base` at `seconds`, written into `out`. A
+   * resolver may throw `NonRigidRouteError` for a route that crosses a warp.
+   */
   motion?(
     frame: FrameKey,
     base: FrameKey,
@@ -86,7 +99,10 @@ export interface FrameResolver {
    * How accurately a point in `frame` (metres, in its axes) is placed in
    * `base` at `seconds`, 1σ: `meters` is `undefined` when the route states
    * none, and `note` says why or from what. Without it a route is taken as
-   * exact: "the transform table states no error".
+   * exact: "the transform table states no error". Across a warp, the warp's
+   * `accuracy.sigma` joins the 1σ composition; a warp that states only a
+   * `bound` leaves `meters` undefined (a bound is not a σ) and the note
+   * names it.
    */
   accuracy?(
     point: ArrayLike<number>,
@@ -98,12 +114,14 @@ export interface FrameResolver {
    * Goes up when the inputs of the route from `frame` to `base` change
    * (data arriving, a transform set), never with time alone: the camera
    * layer skips a tick's work while the time, the root and every route's
-   * revision stay as they were.
+   * revision stay as they were. It counts the `revision` of each warp on
+   * the route, so a warp's changing bumps it.
    */
   routeRevision(frame: FrameKey, base: FrameKey): number;
   /**
    * Calls `listener` when a route's revision may have gone up without the
-   * clock moving (data arriving, a binding changed). The camera layer
+   * clock moving (data arriving, a binding changed, a warp frame defined or
+   * its revision changed). The camera layer
    * watches its resolvers so that on-demand rendering wakes for it.
    * Returns a remover.
    */
