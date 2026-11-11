@@ -8976,12 +8976,13 @@ _Flaws found, with fixes:_
 _Revised increments, replacing the list above:_
 
 1. Routes and `Warp`, and the fitter, with lattice cells and a per-frame budget. Weighted terms replace the closed set.
-2. The Jacobian for normals and tangents, with the varying swap (reformulation 3). Clip planes per fragment on the true point, with caps.
+2. The Jacobian for normals and tangents, with the varying swap (reformulation 3). Clip planes and caps became increment 8, decided below.
 3. Drawn bounds in cull and selection, parameter ranges, and the horizon.
 4. The globe as an item, and `warpAt` granularity.
 5. The pick variant, and its kernel fetching the triangle.
 6. Measurements and snaps in true frames, with their graphics drawn through the route.
 7. The "Vertical exaggeration" example: the application defines a frame and a rig, nothing per item.
+8. Clips and caps, as decided below.
 
 Increments 1 to 3 come before b-rep step 5.
 
@@ -9012,20 +9013,28 @@ Increments 1 to 3 come before b-rep step 5.
 
 **Increment 1 is done (2026-11-10).** The example is increment 7.
 
-**Clip planes and caps: open questions for the API review (5i).** Increment 2 is split. 2a, the Jacobian and the varying swap, gives clipping per fragment on the true point. The API to clip with, and caps, wait for the API review. Proposals, not decisions:
+**Clip planes and caps: decided by the owner (2026-11-10).** Built as increment 8, once increments 2a and 3 have landed. 2a's varying swap provides the true point per fragment.
 
-1. **Where a clip lives:** a world object defined in a frame, which views opt into with a mask, as `viewMask` works. Not one clipping collection per tileset, model or globe, as 1.x has it. One section then cuts federated content, a plan view can be sectioned while the 3D view isn't, and the section moves with its frame.
-2. **Frames:** true frames only. A presentation frame is refused. Evaluated per fragment on the true point.
-3. **Shapes:** planes, boxes and extruded polygons (1.x's clipping polygons, and today's `TerrainClips`), combined as a union or an intersection, keeping inside or outside. A fixed set read in one loop over a storage buffer, so a new configuration doesn't recompile the shader.
-4. **Caps, by representation:**
-   - B-reps get exact caps: the plane cut through the solid is planar faces with trimmed loops, tessellated, queryable and pickable.
-   - Closed meshes get caps per pixel from back faces, shaded with the plane's normal. That needs closed surfaces, which many tiles aren't.
-   - Point clouds and volumes get none. A volume shows its slice.
-   - A cap's look, such as hatching per material, is a style rule (the styling language, §13.27's planar fill), not a property of the clip.
-5. **Queries:** the clip set is a view's. Picks and snaps in that view respect it. World questions ignore it unless given one explicitly. A pick on a cap returns a point on the cut face.
-6. **Section views:** a plane can also define an orthographic camera looking at the cut (5d), which leads to printing to scale (§13.34, 6).
-
-Clipping per element, such as "don't clip the terrain", goes through the styling language's run-time data by element ID, not a separate exemption list.
+1. **A clip is a world object, defined in a frame, which views opt into by mask.** One section cuts federated content and moves with its frame. Clips per item can be added later if a need appears.
+2. **Clips may be named in any frame, presentation frames included.** A plane drawn in design space, for example, stays where the user drew it when the scene is warped into another frame. Each clip is evaluated in its own frame:
+   - If its route to the content's true side is rigid, it's tested exactly on the true point.
+   - If its route to the root, the drawn side, is rigid, it's tested exactly on the drawn point, which is rebuilt per fragment.
+   - If neither is rigid, the plane is curved in the scene. Its signed distance is fitted per tile, in the lattice rows' free `.w` channel that the second review pointed out: one clip per draw costs nothing, and more need rows. Its error joins the fit's.
+   - Queries test clips in float64, by routing points to the clip's frame.
+3. **Shapes:** planes, boxes and extruded polygons, which absorb today's `TerrainClips`. One loop over a storage buffer, so no shader recompiles.
+4. **Combining:** union or intersection, keeping inside or outside, per clip set.
+5. **B-rep caps are exact.** The cut through the solid gives planar faces with trimmed loops. These join the form as faces that can be tessellated, queried and picked. Curved cuts (case 2) give non-planar section faces, through the same path.
+6. **Mesh caps are real geometry,** because content may be open meshes:
+   - A compute pass cuts each tile's triangles by the clip and writes segments keyed by element ID.
+   - Segments are joined into loops per element across every loaded tile, because a solid often spans several.
+   - Closed loops are triangulated into caps. Chains that don't close are drawn as section lines instead of being filled, and a report says so.
+   - Caps are cached per tile, clip and revision, and rebuilt within a per-frame budget.
+   - Known gap: tiles at different levels of detail may not meet, so a loop can stay open until they settle.
+   - B-rep caps are exact, and mesh caps are as accurate as the mesh's geometric error.
+7. **Cap styling is the styling language's:** hatching per material or element, through §13.27's planar fill.
+8. **Queries support both uses.** Every query takes `clips: "view" | ClipSet | "none"`. Picks and snaps default to their view's clips. World questions, such as distance, clearance and line of sight, default to none, and can pass a set.
+9. **A plane can define an orthographic section view** looking at the cut (5d's orthographic camera), which leads to printing to scale (§13.34, 6).
+10. **Exemptions are the styling language's:** run-time data by element ID, for example "don't clip the terrain". There is no exemption list per clip.
 
 **Increment 2a, normals and the varying swap (2026-11-10).** Reformulations 2 and 3 of the second review, without the height lookup, which waits for the API review.
 
@@ -9034,6 +9043,15 @@ Clipping per element, such as "don't clip the terrain", goes through the styling
 - **The varyings, 13 user locations as before.** Location 8 is the design `positionMC`. Location 4 is the draw's transform on the position before the placement, which for an unplaced draw is where it is drawn, bit for bit as before. A placed draw's drawn position is rebuilt in the fragment stage from `@builtin(position)` and the view's `viewProj`, whose rows 0, 1 and 3 are orthogonal for the rotation-only perspective: `w · (right·x/|row0|² + up·y/|row1|² + direction)`, `w = near / depth`, camera-relative, no new view field. Billboards, the underlay and shadow and height-capture views (orthographic, with a window of their own) keep the varying. Clips (mixed-LOD boxes, terrain regions) stay on the varying: they are defined on the content as stored.
 - **Custom shaders.** `fsInput.positionMC` is the design position, a Pref: a procedural texture stays on the surface under a warp, and no longer follows `vertexMain`'s displacement (carry that in a named attribute). `vsInput.normalMC` is the turned normal after a placement.
 - Checked by `test/placementJacobian.test.ts` (central differences, cofactor against placed triangles, the unprojection in float64) and `spikes/placementNormals.html` on the GPU.
+
+**Increment 3, drawn bounds, parameter ranges, selection and the horizon (2026-11-10).** Flaws 1, 2 (the error budget in selection), 6 and 7 of the second review.
+
+- **A draw's sphere moves, then pads by the residual.** The cull kernel tests the record's `center` and `radius`, so the record carries the moved sphere and `cull.slang` is unchanged. The base centre and radius are kept on the draw's placement, and an unplaced draw's record is never written. For a term with weight in [w₁, w₂] (middle w̄, half-width ω) the centre moves by Σ w̄ᵢ·Dᵢ(c) (float64, rounded to float32), and the radius grows by Σ (ωᵢ·|Dᵢ(c)| + max|wᵢ|·residualᵢ), with the float32 rounding of the centre added and the whole rounded up. `residualᵢ` bounds |Dᵢ(p) − Dᵢ(c)| over the sphere plus the fit's `errorBound` (`scene/warpBounds.ts`, `latticeResidual`). Per cell the sphere's box touches, the polynomial is expanded about a point in it: the linear part counts the smaller of Σ|cₐ|hₐ and its Frobenius norm times the distance, orders 2 and 3 count |c|·(Π(|mₐ| + hₐ)^eₐ − Π|mₐ|^eₐ), and the exact |D_cell(m) − D(c)| carries a jump between cells. A tile fitted over its own sphere gets about the size of its Jacobian times the radius: the 400 m quad of `warpWorld.test.ts`, 3 km up at k = 10 and tilted 67° to the local horizontal, grew by about 20 km before and grows by 2.5 km now. An attribute term has no displacement at the centre; it pads by max|w|·`maxDistance`.
+- **Parameters declare a range.** `World.createPlacementParameter(value, { range: [min, max] })`. Bounds of the draws reading it are made once, over the range (a weight is `scale × Π` of at most two affine factors: the extreme at a corner of the box of ranges, or at the stationary point of a quadratic when one parameter is used twice), so a change within it writes one float and walks no draw. A value outside the range throws a `RangeError` and keeps the old one, so a parameter never leaves what its bounds were made for. Without a range a change walks the draws that read it and recomputes their spheres at the value it has, as before. `Warp.scale` is a `WarpScale`, which may carry a `range` too; a world parameter used as a scale does, and selection's drawn volumes then hold for the whole range.
+- **Selection on drawn volumes.** An anchor whose route crosses a warp has a `TileWarp` (`World.tileWarp(anchor)`, `streaming/tileWarp.ts`): the map `A⁻¹ · route`, from the anchor's coordinates to where they are drawn in them, where `A` is the anchor's place, so the camera, the planes and the distances stay as they are. `Tileset3D.update` puts it on each `SelectionView`. A tile's volume goes to its drawn bounding sphere (its centre and 8 corners through the map, cached on the tile per map version and fit version; the map's version moves with the route, or a scale's bucket of 1/64 when it has no range, in which case both ends of the bucket are carried), distance, the frustum planes and the content volume use that, and the screen-space error uses `geometricError × σ_max + fit error`. σ_max is the largest singular value of the Jacobian at those samples: an estimate. A route's Jacobian is composed from its steps' (`warpForward`), differenced for an inverse step. The globe is left alone, as are the viewer request volume, dynamic SSE and shadow casters, which still read true volumes.
+- **The horizon.** Off for tiles under a warped anchor. The occluder is the ellipsoid shrunk to the volume's lowest height, which says nothing about a drawn Earth: at k = 10 the drawn heights differ, and under a general warp there is no ellipsoid. No occludee made from drawn bounds would be sound, so the frustum and the error decide.
+- **[σ_min, σ_max].** `routeSingularRange(route, volume)`: about [1, k] for exaggeration by k (radially k, across it (R + kh) / (R + h)). σ_min sets the ray-march step and divides snap tolerances (flaw 6); not wired yet.
+- Checked by `test/warpBounds.test.ts` (random placed points against moved spheres for lattices of 1, 2 and 4 cells and weights of two factors, intervals by brute force, σ for k = 10), `test/warpSelection.test.ts` (k = 10 selects a level deeper than k = 1 at the same camera, and the tile is culled where it is drawn; the horizon) and `test/warpWorld.test.ts` (a ranged scale writes one float and walks no draw; selection through the engine).
 
 _Open questions for the owner:_
 
