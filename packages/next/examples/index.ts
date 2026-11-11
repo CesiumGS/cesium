@@ -100,4 +100,15 @@ export const EXAMPLES: ExampleInfo[] = [
     load: () => import("./design-globe/main.ts"),
     source: () => import("./design-globe/main.ts?raw").then((m) => m.default),
   },
+  {
+    id: "vertical-exaggeration",
+    title: "Vertical exaggeration",
+    description:
+      "Everything drawn up to ten times as tall (globe, terrain, buildings, a model, pins) by one reference frame and a camera rig, with nothing set on any item. Picks and measurements go back through the map and report true heights.",
+    labels: ["Terrain", "Frames", "Measurement"],
+    globe: "terrain",
+    load: () => import("./vertical-exaggeration/main.ts"),
+    source: () =>
+      import("./vertical-exaggeration/main.ts?raw").then((m) => m.default),
+  },
 ];

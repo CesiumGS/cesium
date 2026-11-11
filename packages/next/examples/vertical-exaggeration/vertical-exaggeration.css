@@ -1,0 +1,96 @@
+/* Vertical exaggeration: the labels over the view and the panel's table. */
+.vex-overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.vex-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1px 6px 2px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 0.6);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.vex-label[hidden] {
+  display: none;
+}
+.vex-label b {
+  font-weight: 600;
+}
+.vex-label-height {
+  font-size: 11px;
+  opacity: 0.85;
+}
+.vex-label.ruler {
+  background: rgb(255 217 26 / 0.92);
+  color: #1b1b1b;
+  font-weight: 600;
+}
+
+/* Where the last pick is, kept on the true point as the heights change. */
+.vex-pick {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.6),
+    inset 0 0 0 1px rgb(0 0 0 / 0.6);
+}
+.vex-pick[hidden] {
+  display: none;
+}
+
+.vex-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.vex-table th,
+.vex-table td {
+  padding: var(--stratakit-space-50, 2px) 0;
+  text-align: right;
+  font-weight: normal;
+}
+.vex-table thead th {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.vex-table tbody th {
+  text-align: left;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.vex-table td {
+  padding-left: var(--stratakit-space-200, 8px);
+}
+.vex-table td.true {
+  font-weight: 600;
+}
+.vex-table[hidden] {
+  display: none;
+}
+
+.examples-panel .vex-frame,
+.examples-panel .vex-note {
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.examples-panel .vex-frame[hidden],
+.examples-panel .vex-note[hidden] {
+  display: none;
+}
