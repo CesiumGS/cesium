@@ -8762,7 +8762,7 @@ _Clip and section planes:_
 
 - They're defined in a named frame and transformed on the CPU into each draw's model space.
 - They're evaluated per vertex on the pre-placement design position. A plane's distance is linear in true coordinates, so on a planar content triangle the interpolated distance is exact, whatever the drawn map does.
-- They cost inter-stage budget: a varying, or WebGPU's `clip-distances` feature. Confirm what that feature draws from `maxInterStageShaderVariables` before choosing. Packing today's 12 user locations comes first.
+- They cost inter-stage budget: a varying, or WebGPU's `clip-distances` feature. Confirm what that feature draws from `maxInterStageShaderVariables` before choosing. Packing today's 13 user locations comes first.
 - Caps are content in true coordinates, drawn through the map.
 - Picks, snaps and queries test the plane on true points, in float64.
 - A view-fixed cut is the other kind: it's in render space, for "cut away the near half".
@@ -8908,6 +8908,91 @@ _Lessons from the renderers:_
   - Mitsuba 3 and Dr.Jit: forward-mode derivatives through the whole pipeline.
   - What we take: derivatives as a property of the pipeline, not hand-written per kind. That gives Jacobians for normals, and the sensitivity of a point to a placement's parameters. That sensitivity is what aligning a model to a site by optimization needs (§13.34's AR, 7).
   - What we leave: the gradients of visibility.
+
+**Second review (Fable 5.2, 2026-11-10): adjust, don't replace.** The owner accepted the brainstorm, with `Warp` as the name for the exact map. An independent review then kept its core (float64-exact maps, a per-tile cubic on the GPU, picks as domain points) and found three reformulations that cut concepts, and gaps to close before increment 1. Its code citations were spot-checked. This is the current proposal: where it differs from the review or the brainstorm above, it wins. It is not locked until the owner answers the questions at the end.
+
+_Three reformulations:_
+
+1. **A warp is an edge of the frame graph, and "true" is not a layer.**
+   - `Warp { from, to, presentation, revision, domain?, forward(p, out, jacobian?), inverse? }`. Without an `inverse`, the engine uses Newton.
+   - `FrameResolver` gains `route(frame, base, seconds)`, which returns the rigid part, the presentation edges, the forward map, the accuracy and a revision. Today it returns a 4×4 only.
+   - Coordinate operations and exaggeration are both edges. The acceptance test becomes: define a frame `exaggerated` over ITRF with the application's warp, and put the camera rig on it. Every item already routes to the root, so nothing is set per item.
+   - "True" means any frame reached without crossing a presentation edge. A query names its frame, and the resolver refuses a presentation frame unless drawn values are asked for.
+   - Design view's flattening is a change of chart, not a drawn map: spec §13.2 makes the engineering frame the root. The 2D morph blends two roots (spec §7.3).
+   - Deformers fold into the embedding as `embed(domainPoint, weights)`, each target flagged presentation or not. That fixes an ordering bug above: a drawn deformer is a vector in content coordinates, so it can't be added after a non-rigid operation.
+   - `bounds` and `stretch` leave the interface. The engine derives them from the fit's Bernstein hull plus its error, as `brep/bounds.ts` does, so an application's warp is `forward` alone.
+2. **One GPU form: a weighted sum of displacement terms.**
+   - p′ = p + Σ wᵢ·Dᵢ, with at most three terms. Each Dᵢ is a cubic or a vertex attribute.
+   - It replaces `DualPosition | FittedOperation | PlacementBlend`. A blend, exaggeration (w = k − 1), and morph targets (which is what dual positions become) are all cases of it.
+   - Two parameters need no refit. Exaggeration during the 2D morph is three terms with weights t, (k − 1)(1 − t) and (k − 1)t, because both charts are affine in height.
+   - The order-0 term moves to the cull kernel as hi and lo parts, beside the camera-relative matrix it already writes per view. The vertex stage keeps orders 1 to 3: 19 rows.
+   - Measured cost: about 22 reads and 200 float operations per placed vertex for one term with its Jacobian and cofactor matrix (the Jacobian alone is about 90 multiply-adds, not 60). Each further term on the same centre adds 19 reads and 57 multiply-adds. Unplaced vertices pay one compare.
+   - The rows' unused `.w` carries one fitted scalar per tile for free: the true height for contours, or a curved section surface.
+3. **Interpolate the true point, and reconstruct the drawn one.**
+   - Two varyings (locations 4 and 8) both carry drawn positions, which `@builtin(position)` already holds.
+   - Location 8 becomes the design `positionMC`, and location 4 the true camera-relative position. The drawn position is unprojected per fragment, in about 10 multiply-adds.
+   - Interpolation is barycentric, so each fragment gets the true point at its domain point. Then:
+     - Clip planes, clip boxes and terrain clip regions test true points per fragment. That needs no new varying, no optional feature, and works for any number of planes. `clip-distances`, already requested, becomes an optional optimisation.
+     - Procedural textures stop sliding under a warp, as RenderMan's `Pref` intends.
+     - The pick variant writes the true position, so the "depth, then Newton" fallback goes.
+
+_Accuracy as an algebra._ Each stage is a pair (L, ε): its Lipschitz bound and its error. They compose as (L₂L₁, L₂ε₁ + ε₂). The screen-space error's "times stretch" and "plus fit error" are that one rule. A bound and 1σ are carried separately: today a fit's bound is "taken as 1σ" (`engineering/pickInterpreter.ts`).
+
+_Flaws found, with fixes:_
+
+1. **Bounds pad instead of moving.**
+   - Each tile's sphere grows by `maxDisplacement` around its true centre: tens of kilometres at k = 10.
+   - Selection measures distance to true volumes while the camera is in drawn space, so LOD comes out too coarse.
+   - A parameter outside [0, 1] walks every draw each tick, and t = k − 1 always is. The blend's pad is 17 times too large at k = 10.
+   - Fix: move the centre by the order-0 term in the cull kernel and pad by the residual only; run selection on drawn volumes; and have parameters declare a range, padded once.
+2. **Fit error can't share geometric error's budget.**
+   - Two neighbouring fits may disagree by twice their bound. Against a 16-pixel threshold that's a visible crack wherever there are no skirts, and refining the tile downloads content to fix a fit.
+   - Fix: require fit error ≤ geometricError/64, which is 0.25 px at the threshold. Reach it with a small lattice of cubics per tile (cell = ⌊u·n⌋, the same reads), with a millimetre floor for leaves.
+   - Shared Bernstein control points work only where tile faces are lattice planes of the fit's variable, and model-space tiles aren't. So drop the seam claim in the brainstorm's math item 1.
+3. **Float32 constants.** The fit's constant is added in model space before the camera-relative transform, so two large float32 numbers cancel. The estimate is about 4 mm at a 36 km displacement, and 0.25–0.5 m for a whole-world flat map viewed at street level. Fix: the order-0 term in hi and lo parts in the cull kernel (reformulation 2), and keep the root on the chart the camera is in.
+4. **There is no pick pipeline to vary.**
+   - Picks today read the main pass's feature target and depth in a compute pass.
+   - Fix: add a pick variant, culled to a frustum a few pixels wide, with the same discards and custom vertex stage. Its kernel returns (item, primitive, barycentrics) and the triangle's three stored positions from the vertex arena, so custom-shader draws and generated samples need no CPU mesh.
+   - WebGPU's `primitive-index` is fragment-only and resets per instance, which is fine since batches draw as instances. It costs one inter-stage variable, so it's for the pick variant, never the main pass.
+5. **Anchored content refuses placements.**
+   - Billboards, points and instanced draws throw (`render/placements.ts`), and "instances before the map" shears each instance.
+   - Fix: a granularity, `warpAt: "vertex" | "anchor"`, where anchor evaluates the route at the origin. It's the application's choice per item, and forced for billboards.
+6. **The ray-march step uses the wrong bound.**
+   - The Lipschitz constant of f∘W⁻¹ is 1/σ_min, not `stretch` (σ_max). Exaggeration by 10 leaves steps unchanged, and compression shrinks them.
+   - Fix: state both, as [σ_min, σ_max], and divide snap tolerances by σ_min.
+7. **Horizon culling.**
+   - The occludee point is precomputed from true heights.
+   - The occluder is the ellipsoid shrunk by the minimum height.
+   - Both change with k, so recompute them from drawn bounds.
+8. **Fitting on the main thread.** A warp written as a JavaScript closure can't run in a worker, and a root change refits everything. Fit lazily within a per-frame budget, with padded bounds until a fit is ready, and label a sampled error an estimate, not a bound.
+9. **The clip-plane claim above fails across a non-rigid operation.** One composed fit hides the intermediate true point. Reformulation 3 gives the true point per fragment.
+10. **Aerial perspective marches from the drawn position,** so at k = 10 mountains reach into thin air. It should read the true position, or the owner rules otherwise (question 2).
+11. **Corrections.**
+    - There are 13 user locations, not 12, and they're full along with three builtins.
+    - Keep Slang's `fwd_diff` as a test oracle. The hand-written derivative is about 30 rows in the same loop.
+    - `clip-distances` costs ⌈N/4⌉ vertex outputs and nothing on the fragment side, so eight distances fit today. `maxInterStageShaderVariables` defaults to 16.
+    - Not yet confirmed: `fwd_diff` on the WGSL target, the Chrome version that shipped `primitive-index`, and `INDEX | STORAGE` usage on one buffer.
+
+_Revised increments, replacing the list above:_
+
+1. Routes and `Warp`, and the fitter, with lattice cells and a per-frame budget. Weighted terms replace the closed set.
+2. The Jacobian for normals and tangents, with the varying swap (reformulation 3). Clip planes per fragment on the true point, with caps.
+3. Drawn bounds in cull and selection, parameter ranges, and the horizon.
+4. The globe as an item, and `warpAt` granularity.
+5. The pick variant, and its kernel fetching the triangle.
+6. Measurements and snaps in true frames, with their graphics drawn through the route.
+7. The "Vertical exaggeration" example: the application defines a frame and a rig, nothing per item.
+
+Increments 1 to 3 come before b-rep step 5.
+
+_Open questions for the owner:_
+
+1. Should models and instances stretch per vertex or move per anchor by default?
+2. Should aerial perspective, local lights and height-based styles read true or drawn positions?
+3. May terrain keep (u, v, h)? Exaggeration and flattening would then be exact in height, with no fit along it.
+4. Is accuracy reported as a bound, as 1σ, or both?
+5. Is 0.25–0.5 m of imprecision in the middle of the 2D morph acceptable, given both ends are exact?
+6. Should a "drawn distance" query exist, labelled as such?
 
 ### 13.27 CAD display extensions, with the vector design (owner, 2026-11-08)
 
