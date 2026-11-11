@@ -3,6 +3,9 @@
 // triangles; one workgroup runs a job, one thread tests one triangle
 // (Möller–Trumbore, both faces) and keeps the nearest hit per ray with an
 // atomic min on the distance's bits (non-negative floats order as u32s).
+// Clips are not tested here: the kernel keeps one hit per ray, so a hit the
+// clips remove is found on the CPU in float64 and the ray cast again from
+// behind it (scene/world/rays.ts).
 // Brute force over candidate draws: a BVH replaces the job list later
 // (plan §13.10). A cast's rays are in one anchor's coordinates
 // (CastOptions.anchor), and only draws under that anchor are candidates,

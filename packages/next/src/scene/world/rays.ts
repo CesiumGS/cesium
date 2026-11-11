@@ -16,6 +16,7 @@ import {
 import type { World } from "../World.ts";
 import { uploadTables } from "./featureTables.ts";
 import { resolveTransforms, checkAnchor } from "./transforms.ts";
+import type { ClipFilter } from "../../geometry/query.ts";
 import type { CastRay, CastOptions } from "./types.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
@@ -105,10 +106,93 @@ export interface CastWorld extends Pick<
 /** Hit distance bits meaning "no hit" (the largest finite float). */
 const NO_HIT = 0x7f7fffff;
 
+/** Casts a ray goes through at most, each past a hit the clips removed. */
+const MAX_CLIP_CASTS = 256;
+
+/**
+ * The nearest hit of each ray that the clips keep (`CastOptions.clips`). The
+ * GPU keeps one hit per ray, the nearest, so a ray whose hit the clips
+ * remove is cast again from just behind it (the rays still searching, in
+ * one more dispatch), until a kept hit or the segment's end: the first kept
+ * hit is the answer. The hit is tested where the GPU found it, in float64
+ * from the ray's origin; the new start is 1 mm (or a millionth of the
+ * distance) past it, so a kept surface closer than that behind a removed one
+ * is passed over.
+ */
 export async function castRays(
   world: CastWorld,
   rays: readonly CastRay[],
   options: CastOptions = {},
+): Promise<Array<number | undefined>> {
+  const { clips, ...cast } = options;
+  const once = (these: readonly CastRay[]) => castOnce(world, these, cast);
+  return clips ? castPastClips(rays, clips, once) : once(rays);
+}
+
+/** `castRays`'s search past removed hits, over a `cast` that finds each ray's nearest hit. */
+export async function castPastClips(
+  rays: readonly CastRay[],
+  clips: ClipFilter,
+  cast: (rays: readonly CastRay[]) => Promise<Array<number | undefined>>,
+): Promise<Array<number | undefined>> {
+  const out = await cast(rays);
+  /** Where each searching ray starts, m along its own. */
+  const start = rays.map(() => 0);
+  const at = new Float64Array(3);
+  let searching = rays.flatMap((_, i) => (out[i] === undefined ? [] : [i]));
+  for (let pass = 0; searching.length > 0; pass++) {
+    const again: number[] = [];
+    for (const i of searching) {
+      const ray = rays[i]!;
+      const distance = start[i]! + out[i]!;
+      for (let k = 0; k < 3; k++) {
+        at[k] = ray.origin[k]! + distance * ray.direction[k]!;
+      }
+      if (clips.keeps(at)) {
+        out[i] = distance;
+        continue;
+      }
+      const next = distance + Math.max(1e-3, distance * 1e-6);
+      if (next > ray.maxDistance) {
+        out[i] = undefined;
+        continue;
+      }
+      start[i] = next;
+      again.push(i);
+    }
+    if (again.length === 0) {
+      break;
+    }
+    if (pass >= MAX_CLIP_CASTS) {
+      throw new Error(
+        `castRays: a ray crossed more than ${MAX_CLIP_CASTS} surfaces the clips remove.`,
+      );
+    }
+    const hits = await cast(
+      again.map((i) => {
+        const ray = rays[i]!;
+        return {
+          origin: Float64Array.from(
+            [0, 1, 2],
+            (k) => ray.origin[k]! + start[i]! * ray.direction[k]!,
+          ),
+          direction: ray.direction,
+          maxDistance: ray.maxDistance - start[i]!,
+        };
+      }),
+    );
+    again.forEach((i, j) => {
+      out[i] = hits[j];
+    });
+    searching = again.filter((i) => out[i] !== undefined);
+  }
+  return out;
+}
+
+async function castOnce(
+  world: CastWorld,
+  rays: readonly CastRay[],
+  options: Omit<CastOptions, "clips">,
 ): Promise<Array<number | undefined>> {
   const out: Array<number | undefined> = rays.map(() => undefined);
   if (rays.length === 0) {

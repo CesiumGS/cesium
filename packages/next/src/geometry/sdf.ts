@@ -2,7 +2,9 @@
 // interface. Rays sphere-trace, closest points project down the gradient, and
 // segment distances are sampled. The field is evaluated in its own
 // coordinates as given: `origin` in the options is accepted and ignored, as
-// the field has no large coordinates of its own to centre on.
+// the field has no large coordinates of its own to centre on. `clips` apply to
+// rays (a hit they remove is marched past); closest points and segment
+// distances don't take them yet.
 import type { QueryRay } from "../query/queries.ts";
 import type {
   ClosestPoint,
@@ -135,7 +137,9 @@ export function sdfGeometry(
     if (length === 0) {
       // No direction to march: only a start inside the field is a hit.
       const inside = f(from[0]!, from[1]!, from[2]!);
-      return inside < 0 ? hitAt(t0, inside) : miss;
+      return inside < 0 && (!o.clips || o.clips.keeps(from))
+        ? hitAt(t0, inside)
+        : miss;
     }
 
     // Clip [t0, t1] to the bounds box (slab test).
@@ -160,14 +164,36 @@ export function sdfGeometry(
       return miss;
     }
 
-    // Sphere-trace in metres along the segment: t += distance / length.
+    // Sphere-trace in metres along the segment: t += distance / length. A hit
+    // the clips remove isn't there: the march steps past it and goes on, by
+    // |distance| from then on (inside the field the distance is negative, and
+    // the next surface is where it comes back to zero).
+    const point = new Float64Array(3);
+    const kept = (at: number): boolean => {
+      if (!o.clips) {
+        return true;
+      }
+      point[0] = from[0]! + at * dx;
+      point[1] = from[1]! + at * dy;
+      point[2] = from[2]! + at * dz;
+      return o.clips.keeps(point);
+    };
+    let passed = false;
     let t = t0;
     for (let step = 0; step < maxSteps; step++) {
       const dist = f(from[0]! + t * dx, from[1]! + t * dy, from[2]! + t * dz);
-      if (dist < epsilon) {
-        return hitAt(t, t === t0 ? dist : 0);
+      if (passed ? Math.abs(dist) < epsilon : dist < epsilon) {
+        if (kept(t)) {
+          return hitAt(t, t === t0 ? dist : 0);
+        }
+        passed = true;
+        t += (2 * epsilon) / length;
+        if (t > t1) {
+          return miss;
+        }
+        continue;
       }
-      t += dist / length;
+      t += (passed ? Math.abs(dist) : dist) / length;
       if (t > t1) {
         return miss;
       }

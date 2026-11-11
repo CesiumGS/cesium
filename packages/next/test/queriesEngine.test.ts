@@ -18,6 +18,7 @@ import { EARTH } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { type View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
+import type { ClipSet } from "../src/scene/world/clips.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
 import { Globe } from "../src/globe/Globe.ts";
 import { fakeEngine } from "./fakeGpu.ts";
@@ -400,6 +401,66 @@ describe("Engine.queries through a real globe, as one view draws it", () => {
       expect(unseen.rays[0]!.unknown.map((s) => s.reason)).toEqual([
         "notLoaded",
       ]);
+    } finally {
+      engine.tilesets.splice(engine.tilesets.indexOf(globe), 1);
+      globe.destroy();
+    }
+  });
+
+  it("applies the view's clips by default, and not with clips: none or without a view", async () => {
+    const LON = 0.3;
+    const LAT = 0.2;
+    const source = await terrain(14);
+    let tile = source.root.children.find((t) =>
+      contains(t.globe!.rectangle, LON, LAT),
+    )!;
+    while (tile.globe!.level < 12) {
+      source.expand(tile);
+      tile = tile.children.find((t) => contains(t.globe!.rectangle, LON, LAT))!;
+    }
+    await source.loadTile(tile, new AbortController().signal);
+    tile.state = "ready";
+    const world = engine.createWorld();
+    const globe = Globe.create(engine, world, source, {});
+    engine.tilesets.push(globe);
+    const view = engine.addView({
+      target: new OffscreenTarget(64, 48),
+      world,
+      observer: { exposure: { ev100: 15 } },
+    });
+    tile.viewMask = engine.viewBit(view);
+    try {
+      // A hole through the 50 m surface under the ray (keep what is outside the box).
+      const set: ClipSet = {
+        frame: globe.anchor,
+        keep: "outside",
+        shapes: [
+          {
+            kind: "box",
+            center: Array.from(at(LON, LAT, 50)) as [number, number, number],
+            halfExtents: [100, 100, 100],
+          },
+        ],
+      };
+      view.setClips([world.addClip(set)]);
+      const ask = (more: Partial<RayQuery>): RayQuery => ({
+        anchor: globe.anchor,
+        seconds: 0,
+        rays: [{ from: at(LON, LAT, 500), to: at(LON, LAT, -500) }],
+        targets: ["terrain"],
+        ...more,
+      });
+      const clipped = await engine.queries.castRays(ask({ view }));
+      expect(clipped.rays[0]!.verdict).not.toBe("blocked");
+      expect(clipped.rays[0]!.hit).toBeUndefined();
+      for (const more of [{ view, clips: "none" as const }, { world }]) {
+        const plain = await engine.queries.castRays(ask(more));
+        expect(plain.rays[0]!.verdict).toBe("blocked");
+        expect(plain.rays[0]!.hit!.t).toBeCloseTo(450 / 1000, 3);
+      }
+      // A world question can still name a set of its own.
+      const named = await engine.queries.castRays(ask({ world, clips: set }));
+      expect(named.rays[0]!.verdict).not.toBe("blocked");
     } finally {
       engine.tilesets.splice(engine.tilesets.indexOf(globe), 1);
       globe.destroy();

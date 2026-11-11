@@ -6,6 +6,7 @@
  * callers (`queries.ts`).
  */
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
+import type { ClipFilter } from "../geometry/query.ts";
 import { castTerrainRay, type TerrainRayTarget } from "../globe/terrainRay.ts";
 import type { World } from "../scene/World.ts";
 import type { AnchorHandle } from "../scene/world/types.ts";
@@ -37,6 +38,7 @@ export function terrainRayAnswer(
   to: ArrayLike<number>,
   target: TerrainRayTarget,
   options: TerrainQueryOptions = {},
+  clips?: ClipFilter,
 ): RayAnswer {
   const source = options.sourceAccuracy;
   const ray = castTerrainRay(from, to, target, {
@@ -44,6 +46,7 @@ export function terrainRayAnswer(
     ...(options.groundRadius !== undefined
       ? { groundRadius: options.groundRadius }
       : {}),
+    ...(clips && { clips }),
   });
   if (!ray) {
     return {
@@ -196,12 +199,23 @@ export function terrainRayAnswer(
  */
 export type TerrainTargetFor = (query: RayQuery) => TerrainRayTarget | string;
 
-/** The terrain backend: each ray of each query traced on the CPU. */
-export function terrainBackend(targetFor: TerrainTargetFor): RayBackend {
+/**
+ * The clips a query's rays apply (`RayQuery.clips`), as a float64 test of
+ * points in the coordinates of the backend's anchor, or none.
+ */
+export type QueryClipsFor = (query: RayQuery) => ClipFilter | undefined;
+
+/** The terrain backend: each ray of each query traced on the CPU, past terrain the clips remove. */
+export function terrainBackend(
+  targetFor: TerrainTargetFor,
+  clipsFor?: QueryClipsFor,
+): RayBackend {
   return {
     answer: (queries) =>
       queries.map((query) => {
         const target = targetFor(query);
+        const clips =
+          typeof target === "string" ? undefined : clipsFor?.(query);
         return query.rays.map((ray) =>
           typeof target === "string"
             ? {
@@ -209,7 +223,7 @@ export function terrainBackend(targetFor: TerrainTargetFor): RayBackend {
                 unknown: [{ from: 0, to: 1, reason: "unsupported" }],
                 accuracy: { note: target },
               }
-            : terrainRayAnswer(ray.from, ray.to, target, query.terrain),
+            : terrainRayAnswer(ray.from, ray.to, target, query.terrain, clips),
         );
       }),
   };
@@ -248,15 +262,16 @@ export function globeTarget(
  */
 export function terrainQueries(
   target: TerrainRayTarget,
-  host: Partial<QueryHost> = {},
+  host: Partial<QueryHost> & { readonly clips?: QueryClipsFor } = {},
 ): SpatialQueries {
+  const { clips, ...queryHost } = host;
   return createSpatialQueries(
-    { terrain: terrainBackend(() => target) },
+    { terrain: terrainBackend(() => target, clips) },
     {
       revision: () => 0,
       loading: () => false,
       onTick: () => () => {},
-      ...host,
+      ...queryHost,
     },
   );
 }

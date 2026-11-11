@@ -697,9 +697,10 @@ export class World {
    * draw diced per view in pixels of error (`errorPixels`), faces that are
    * complete as their (u, v) rect (a box's, a cylinder's side) in one draw and
    * faces with a trim, tested per pixel in the fragment stage, in another;
-   * only a face the GPU can't draw (a patch above degree 3) is a CPU mesh of
-   * the chordal error `cpuTolerance` (`cpuFaces: "trimmed"` also sends every
-   * trimmed face there, to compare). The form's coordinates are placed as
+   * only a face with nothing to draw (no loop of a finite extent) is left
+   * out; every patch of degree 1 to 7 is on the GPU. `cpuFaces: "trimmed"`
+   * sends every trimmed face to a CPU mesh of the chordal error
+   * `cpuTolerance` instead, to compare. The form's coordinates are placed as
    * `addDraw` places a mesh (`parent`, `origin`, `model`), or by a shared
    * `transform`. Faces are features, as the form's face indices.
    * `removeBrep` takes it away.
@@ -1605,7 +1606,8 @@ export class World {
    * the draws under that anchor they may hit, and resolves each ray's
    * nearest hit distance in meters, or undefined. Brute force on the GPU
    * over the draws whose bounds a ray crosses (`raycast.slang`); one
-   * readback.
+   * readback. With `options.clips`, a hit the clips remove is passed over:
+   * the ray is cast again from behind it, so the nearest kept hit comes back.
    *
    * A draw's per-vertex placement (`setPlacement`) isn't applied: its
    * triangles are tested where its vertex buffers have them, unplaced

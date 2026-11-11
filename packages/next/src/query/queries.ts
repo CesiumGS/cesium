@@ -28,6 +28,7 @@ import type { Body } from "../scene/Body.ts";
 import type { View } from "../scene/View.ts";
 import type { World } from "../scene/World.ts";
 import type { AnchorHandle } from "../scene/world/types.ts";
+import type { ClipsOption } from "../scene/world/clips.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 
 /** The targets the anchor-level backends answer: the drawn terrain, or the world's draws. */
@@ -116,6 +117,17 @@ export interface RayQuery {
    * draws (default: what any view draws, in the anchor's world).
    */
   readonly view?: View;
+  /**
+   * The clips the rays apply: surface they remove isn't met (a hit there is
+   * passed over, the ray goes on to what is kept). `"view"`: those of
+   * `view` (`View.clipMask`); a `ClipSet` or list of them; `"none"`. Default:
+   * `"view"` when the query names a `view` (picks and snaps), else `"none"`
+   * (world questions: distance, clearance, line of sight). `"view"` without
+   * a `view` is refused. Every target honors it: the drawn terrain, the
+   * world's draws, a tileset's geometry (not a body's ellipsoid or an
+   * impostor, which are no drawn surface).
+   */
+  readonly clips?: ClipsOption;
   /** For the terrain target. */
   readonly terrain?: TerrainQueryOptions;
 }

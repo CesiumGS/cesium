@@ -34,7 +34,12 @@ import { LIGHTS_SIZE } from "./lights.ts";
 import { World } from "./World.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
 import type { ClipFilter } from "../geometry/query.ts";
-import { clipFilter, clipSetsOf, type ClipsOption } from "./world/clips.ts";
+import {
+  clipFilter,
+  clipSetsOf,
+  type ClipSet,
+  type ClipsOption,
+} from "./world/clips.ts";
 import { curvedClipSets } from "../render/view/clipTable.ts";
 import { WARP_BUDGET_MS } from "./world/warps.ts";
 import { type AnchorHandle, type WorldOptions } from "./world/types.ts";
@@ -237,10 +242,14 @@ export class Engine {
         const { world } = this.queryRoute(query);
         // Draws come, go and change views as tiles load and selections
         // move (terrain's too), and terrain clips change; draws under an
-        // anchor also move with its nodes.
+        // anchor also move with its nodes. Clips a query applies change
+        // with the world's clips and the view's mask.
         return (
           world.contentRevision +
-          (query.targets.includes("draws") ? world.transformRevision : 0)
+          (query.targets.includes("draws") ? world.transformRevision : 0) +
+          ((query.clips ?? (query.view ? "view" : "none")) === "none"
+            ? 0
+            : world.clipsRevision + (query.view?.clipMaskRevision ?? 0))
         );
       },
       loading: (query) => {
@@ -262,18 +271,23 @@ export class Engine {
             world,
             resolver: this.cameras.resolver(world),
             anchorQueries: this.queries,
-            tilesetRays: (tileset, rays) => {
+            tilesetRays: (tileset, rays, asked) => {
               const body = tileset.anchor.body;
+              const clips = this.queryClips(asked, tileset.anchor);
               return castTilesetRays(tileset, rays, {
                 ...(body?.terrainBand && { band: body.terrainBand }),
                 ...(body && { ellipsoid: body.ellipsoid }),
+                ...(clips && { clips }),
               });
             },
           },
           signal,
         );
       },
-      check: (query) => void this.queryRoute(query),
+      check: (query) => {
+        void this.queryRoute(query);
+        void this.queryClips(query);
+      },
       report: (error) => this.reportLoopError("a standing query", error),
     },
   );
@@ -1542,6 +1556,62 @@ export class Engine {
       );
     }
     return { world, viewMask: view ? this.viewBit(view) : undefined };
+  }
+
+  /** The clips a query applies (`RayQuery.clips`): the option, and the default (the view's for a query with a view, else none). */
+  private queryClipsOption(query: RayQuery): ClipsOption {
+    const option = query.clips ?? (query.view ? "view" : "none");
+    if (option === "view" && !query.view) {
+      throw new Error(
+        'queries: clips "view" needs the query\'s view (RayQuery.view).',
+      );
+    }
+    return option;
+  }
+
+  /**
+   * A float64 test of points in `frame` (default: the query's anchor, else
+   * the world's root) against the clips the query applies, or undefined for
+   * none. Throws for `clips: "view"` without a view.
+   */
+  private queryClips(
+    query: RayQuery,
+    frame?: FrameKey,
+  ): ClipFilter | undefined {
+    const option = this.queryClipsOption(query);
+    if (option === "none") {
+      return undefined;
+    }
+    const { world } = this.queryRoute(query);
+    return clipFilter(clipSetsOf(option, query.view?.clipSets(), "view"), {
+      resolver: this.cameras.resolver(world),
+      frame: frame ?? query.anchor ?? world.root,
+      seconds: query.seconds,
+    });
+  }
+
+  /** What the clips of a query are, to tell which queries may share a cast: their sets, and the time they are routed at. */
+  private queryClipsKey(query: RayQuery): string {
+    const option = this.queryClipsOption(query);
+    const { world } = this.queryRoute(query);
+    const sets =
+      option === "view"
+        ? `view${query.view ? this.viewBit(query.view) : ""}:${query.view?.clipMask ?? 0}`
+        : (Array.isArray(option) ? option : [option as ClipSet])
+            .map((set) => this.clipSetId(set))
+            .join(",");
+    return `${sets}@${world.clipsRevision}@${query.seconds}`;
+  }
+
+  private readonly clipSetIds = new WeakMap<ClipSet, number>();
+  private clipSetCount = 0;
+  private clipSetId(set: ClipSet): number {
+    let id = this.clipSetIds.get(set);
+    if (id === undefined) {
+      id = ++this.clipSetCount;
+      this.clipSetIds.set(set, id);
+    }
+    return id;
   }
 
   private reportLoopError(where: string, error: unknown): void {

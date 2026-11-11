@@ -34,6 +34,7 @@
  * their rays go through §13.10's batched GPU API (`World.castRays`). See
  * the extension point in `terrainLineOfSight`.
  */
+import type { ClipFilter } from "../geometry/query.ts";
 import { Ellipsoid, type Cartographic } from "../math/ellipsoid.ts";
 import type { Rectangle, TerrainHeights } from "./quantizedMesh.ts";
 
@@ -108,6 +109,12 @@ export interface TerrainRayOptions {
    * observer's own ground in `margin` (default 30, a source's posting).
    */
   groundRadius?: number;
+  /**
+   * Clips applied (`clipFilter`, scene/world/clips.ts), in the segment's
+   * Earth-fixed coordinates: terrain they remove is a hole, as a region of
+   * the globe's is: the segment goes on behind it.
+   */
+  clips?: ClipFilter;
 }
 
 export interface TerrainRayResult {
@@ -336,18 +343,34 @@ export function castTerrainRay(
     samples++;
   };
 
-  // Clipped terrain is a hole: no hits or clearance there.
+  // Clipped terrain is a hole (a region of the globe, or the query's clips):
+  // no hits or clearance there, and the march goes on behind it.
   const clippedPoint = new Float64Array(3);
   const isClipped = target.clipped?.bind(target);
+  const clips = options.clips;
   const clippedAt = (t: number): boolean => {
-    if (!isClipped) {
+    if (!isClipped && !clips) {
       return false;
     }
     clippedPoint[0] = ray.ox + ray.dx * t;
     clippedPoint[1] = ray.oy + ray.dy * t;
     clippedPoint[2] = ray.oz + ray.dz * t;
-    return isClipped(clippedPoint);
+    return (
+      (isClipped !== undefined && isClipped(clippedPoint)) ||
+      (clips !== undefined && !clips.keeps(clippedPoint))
+    );
   };
+  // Where the query's clips removed the first surface crossing: past it the
+  // segment is in the ground by the clips' doing, not by a crack in the
+  // surface, so a sample below the surface there is not a block.
+  let removedT = Infinity;
+  const removedByClips = (t: number): boolean =>
+    clips !== undefined &&
+    !clips.keeps([
+      ray.ox + ray.dx * t,
+      ray.oy + ray.dy * t,
+      ray.oz + ray.dz * t,
+    ]);
 
   // A cell's footprint ends: (u, v) and the geodetic normal at each.
   const uv0 = new Float64Array(2);
@@ -451,9 +474,13 @@ export function castTerrainRay(
         stamp[k] = segment;
         // Only this tile's own span: elsewhere another tile is drawn.
         const t = intersect(ray, p, i0 * 3, i1 * 3, i2 * 3);
-        if (t > hitLo && t <= hitHi && t < hitT && !clippedAt(t)) {
-          hitT = t;
-          hitLevel = level;
+        if (t > hitLo && t <= hitHi && t < hitT) {
+          if (!clippedAt(t)) {
+            hitT = t;
+            hitLevel = level;
+          } else if (t < removedT && removedByClips(t)) {
+            removedT = t;
+          }
         }
       }
       // The footprint's piece inside the triangle, on [t0, t1] linearized.
@@ -696,6 +723,9 @@ export function castTerrainRay(
   }
   if (best < Infinity) {
     result.minClearance = { meters: best, t: bestT, level: bestLevel };
+  }
+  if (belowT > removedT) {
+    belowT = Infinity;
   }
   const blockedT = Math.min(hitT, belowT);
   if (blockedT < Infinity) {

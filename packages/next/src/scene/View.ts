@@ -313,11 +313,14 @@ export class View {
     if (this.state.world !== undefined && this.state.world !== value) {
       // A mask's bits name the old world's clips.
       this.clipMask_ = 0;
+      this.clipMaskRevision++;
     }
     this.state.world = value;
     this.wake?.();
   }
   private clipMask_ = 0;
+  /** @internal Counts changes to `clipMask`: a standing query's revision (`RayQuery.clips`). */
+  clipMaskRevision = 0;
   /**
    * The clips this view cuts with: a bit per `WorldClip` of its world (the
    * clip's `bit`), as a draw's `viewMask` names views. 0 (the default) is
@@ -343,6 +346,7 @@ export class View {
     }
     if (mask !== this.clipMask_) {
       this.clipMask_ = mask >>> 0;
+      this.clipMaskRevision++;
       this.wake?.();
     }
   }

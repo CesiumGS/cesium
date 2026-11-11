@@ -1,5 +1,6 @@
 // The types of a world's options, handles and internal tables.
 import type { FrameKey } from "../../camera/frameResolver.ts";
+import type { ClipFilter } from "../../geometry/query.ts";
 import type { FeatureTable, FeatureValue } from "../../io/gltfTypes.ts";
 import type { Mat4 } from "../../math/mat4.ts";
 import type { Vec3 } from "../../math/vec3.ts";
@@ -364,6 +365,13 @@ export interface CastOptions {
    * leaves the globes' out).
    */
   exclude?: (draw: number) => boolean;
+  /**
+   * Clips applied (`clipFilter`, scene/world/clips.ts), in the cast's anchor's
+   * coordinates: a hit where they remove the surface is passed over, and the
+   * nearest kept hit is the answer. Each pass over a removed hit costs one more
+   * dispatch (for the rays still searching).
+   */
+  clips?: ClipFilter;
 }
 
 /** A placement in the world's transform table (`addTransform`). */
