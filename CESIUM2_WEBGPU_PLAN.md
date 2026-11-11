@@ -9138,8 +9138,20 @@ Nothing stands in for TBB. SMLib's TBB code (parallel UV trim curves and tessell
   - Answered by OCCT's half (above): its analytic surfaces match the form's up to an affine map (only the cone's v scales), so it writes analytic faces directly and only SMLib needs identities. The two kernels in the first-look example show the split from both sides.
   - Where a representation error comes from for kernels that approximate, and whether they report it, as SMLib's `ApproximateCurve` does.
 - **Candidate next steps, small first:**
-  1. Surface identity and representation error in the form, the builder and the SMLib export.
-  2. A curvature-aware bound in `tessellateBrep` for surfaces with an identity, and a weight-aware net bound for the rest.
+  1. Surface identity and representation error in the form, the builder and the SMLib export. **Done 2026-11-10.**
+     - `BrepForm` gains `surfaceIdentity` and `surfaceError`. A Bézier surface with an identity keeps that identity's frame and params in `surfaceFrame` and `surfaceParams`.
+     - `BrepBuilder.nurbsSurface(surface, { identity, error })`.
+     - `BENTLEY_brep` carries both as optional arrays.
+     - SMLib's export (layout version 2) names planes, cylinders, cones, spheres and tori from `GetCanonical` and `GetPosition`. A cylinder is a cone in SMLib.
+     - The validator checks both arrays.
+     - The example colours faces by identity and says "held as Bézier patches".
+  2. A curvature-aware bound in `tessellateBrep` for surfaces with an identity, and a weight-aware net bound for the rest. **Done 2026-11-10.**
+     - `brep/bounds.ts` bounds a rational patch's speed and its angular rate about the identity's axis. The bounds come from Bernstein coefficients over 2 × 2 sub-patches, so they hold for any positive weights.
+     - A cylinder's ruling needs one cell.
+     - Tests sample every triangle densely against the true surface.
+     - SMLib's sphere (r 1.5 m) at 1 mm: 15.5k triangles in 44 ms, within 1 mm. Before: 24k triangles in 53 ms, capped at 2.1 mm.
+     - Box minus cylinder: 7.5k triangles in 18 ms.
+     - Implemented by a Sonnet 5.5 agent from a brief.
   3. A slice of step 5: untrimmed and planar faces on the GPU, with the CSG sample's edit loop as the measure.
 
 **Spike B result (2026-11-09).** One rational bicubic NURBS face (100 m square, 3x3 Bézier spans, one control point of weight 2) with a circular hole in (u, v), drawn in Chrome on an Apple GPU. The vertex shader evaluates an n x n grid per span. The pixel shader computes the exact normal and cuts the hole by signed distance in (u, v). n is chosen per view from the bound 0.75·D/n² on the second differences of the Bézier net, converted to pixels, with a target of 0.5 px. Measured:
