@@ -213,7 +213,7 @@ class Cesium3DTileContent {
    * <br>
    * Setting this to <code>true</code> will make this content (and all its
    * inner contents, if applicable) visible. It will return <code>true</code>
-   * if this conetnt and all its inner contents are currently visible.
+   * if this content and all its inner contents are currently visible.
    *
    * @type {boolean}
    *
