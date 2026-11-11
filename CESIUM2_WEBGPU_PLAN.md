@@ -9012,6 +9012,29 @@ Increments 1 to 3 come before b-rep step 5.
 
 **Increment 1 is done (2026-11-10).** The example is increment 7.
 
+**Clip planes and caps: open questions for the API review (5i).** Increment 2 is split. 2a, the Jacobian and the varying swap, gives clipping per fragment on the true point. The API to clip with, and caps, wait for the API review. Proposals, not decisions:
+
+1. **Where a clip lives:** a world object defined in a frame, which views opt into with a mask, as `viewMask` works. Not one clipping collection per tileset, model or globe, as 1.x has it. One section then cuts federated content, a plan view can be sectioned while the 3D view isn't, and the section moves with its frame.
+2. **Frames:** true frames only. A presentation frame is refused. Evaluated per fragment on the true point.
+3. **Shapes:** planes, boxes and extruded polygons (1.x's clipping polygons, and today's `TerrainClips`), combined as a union or an intersection, keeping inside or outside. A fixed set read in one loop over a storage buffer, so a new configuration doesn't recompile the shader.
+4. **Caps, by representation:**
+   - B-reps get exact caps: the plane cut through the solid is planar faces with trimmed loops, tessellated, queryable and pickable.
+   - Closed meshes get caps per pixel from back faces, shaded with the plane's normal. That needs closed surfaces, which many tiles aren't.
+   - Point clouds and volumes get none. A volume shows its slice.
+   - A cap's look, such as hatching per material, is a style rule (the styling language, §13.27's planar fill), not a property of the clip.
+5. **Queries:** the clip set is a view's. Picks and snaps in that view respect it. World questions ignore it unless given one explicitly. A pick on a cap returns a point on the cut face.
+6. **Section views:** a plane can also define an orthographic camera looking at the cut (5d), which leads to printing to scale (§13.34, 6).
+
+Clipping per element, such as "don't clip the terrain", goes through the styling language's run-time data by element ID, not a separate exemption list.
+
+**Increment 2a, normals and the varying swap (2026-11-10).** Reformulations 2 and 3 of the second review, without the height lookup, which waits for the API review.
+
+- **The Jacobian.** `placeVertex` (placement.slang) returns `Placed { position, jacobian }`, with J = I + Σ wᵢ·Jᵢ. A lattice's Jᵢ is the cubic's analytic derivative, chained by dv/dp = cells / scale. An attribute term (a morph target, a dual position) has no derivative in space: its Jᵢ is zero, so under one the normal stays as stored. `NO_PLACEMENT` is still one compare. `surface.slang` turns the normal by the cofactor matrix (`turnNormal`, no inverse, a fold keeps the normal on its side) and the tangent by J, keeping w. The twin is `placeJacobianWithTerms` in `scene/warpEvaluate.ts`.
+- **Cost per vertex,** one cubic term, one cell: 23 row reads, as before. Multiply-adds: 80 float3 against 20 (the value and the three columns of J, each a float3 of the monomial's coefficient), and 7 scalar products per monomial against 2. Then about 35 for the normal's cofactor and normalize, and 9 for the tangent. Reads dominate; this is ALU.
+- **The varyings, 13 user locations as before.** Location 8 is the design `positionMC`. Location 4 is the draw's transform on the position before the placement, which for an unplaced draw is where it is drawn, bit for bit as before. A placed draw's drawn position is rebuilt in the fragment stage from `@builtin(position)` and the view's `viewProj`, whose rows 0, 1 and 3 are orthogonal for the rotation-only perspective: `w · (right·x/|row0|² + up·y/|row1|² + direction)`, `w = near / depth`, camera-relative, no new view field. Billboards, the underlay and shadow and height-capture views (orthographic, with a window of their own) keep the varying. Clips (mixed-LOD boxes, terrain regions) stay on the varying: they are defined on the content as stored.
+- **Custom shaders.** `fsInput.positionMC` is the design position, a Pref: a procedural texture stays on the surface under a warp, and no longer follows `vertexMain`'s displacement (carry that in a named attribute). `vsInput.normalMC` is the turned normal after a placement.
+- Checked by `test/placementJacobian.test.ts` (central differences, cofactor against placed triangles, the unprojection in float64) and `spikes/placementNormals.html` on the GPU.
+
 _Open questions for the owner:_
 
 1. Should models and instances stretch per vertex or move per anchor by default?
