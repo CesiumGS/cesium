@@ -8,6 +8,8 @@ import {
   CLIP_TABLE_ROWS,
   packClipTable,
   planClip,
+  type ClipSet,
+  type ClipViewPlacement,
   type PlannedClip,
 } from "../../scene/world/clips.ts";
 import type { Engine } from "../../scene/Engine.ts";
@@ -19,11 +21,57 @@ export type ClipTableEngine = Pick<Engine, "bodyCamera" | "cameras" | "ctx">;
 
 const scratch = new Float32Array(CLIP_TABLE_ROWS * 4);
 
+/** What a view's clips are placed by this tick. */
+function placementOf(
+  engine: Pick<ClipTableEngine, "cameras">,
+  view: View,
+): ClipViewPlacement {
+  const world = view.world;
+  const body = view.bodyAnchor;
+  return {
+    resolver: engine.cameras.resolver(world),
+    seconds: engine.cameras.clock(world)?.seconds ?? 0,
+    root: engine.cameras.root(view),
+    body: body ?? world.root,
+    bodyPlacement: view.anchorPlacement(body),
+    bodyRoute: view.anchorRoute(body),
+  };
+}
+
+/**
+ * The view's clip sets that are curved surfaces in it (planClip's `curved`):
+ * what the world fits a field for (`WorldCurvedClips.frame`). A set that
+ * can't be placed is left to `writeClips` to report.
+ */
+export function curvedClipSets(
+  engine: Pick<ClipTableEngine, "cameras">,
+  view: View,
+): ClipSet[] {
+  const sets = view.clipSets();
+  if (sets.length === 0) {
+    return [];
+  }
+  const placement = placementOf(engine, view);
+  const curved: ClipSet[] = [];
+  for (const set of sets) {
+    try {
+      if (planClip(set, placement).space === "curved") {
+        curved.push(set);
+      }
+    } catch {
+      // reported by writeClips
+    }
+  }
+  return curved;
+}
+
 /**
  * Places `view`'s clips for this tick and uploads its table; sets
  * `frame.clipBytes` (0 for none). A clip that can't be placed (its frame is
- * unavailable, or it is a curved surface in this view) is left out and
- * reported, once, as the camera layer reports a frame it can't resolve.
+ * unavailable) is left out and reported, once, as the camera layer reports a
+ * frame it can't resolve. The view's curved sets are one table row: their
+ * field is the world's (`WorldCurvedClips`), a draw's fitted distance; when
+ * the world's field is another view's, they are left out and reported.
  */
 export function writeClips(
   engine: ClipTableEngine,
@@ -36,24 +84,13 @@ export function writeClips(
     return;
   }
   const world = view.world;
-  const body = view.bodyAnchor;
-  const placement = {
-    resolver: engine.cameras.resolver(world),
-    seconds: engine.cameras.clock(world)?.seconds ?? 0,
-    root: engine.cameras.root(view),
-    body: body ?? world.root,
-    bodyPlacement: view.anchorPlacement(body),
-    bodyRoute: view.anchorRoute(body),
-  };
+  const placement = placementOf(engine, view);
   const plans: PlannedClip[] = [];
+  const curved: PlannedClip[] = [];
   for (const set of sets) {
     try {
       const plan = planClip(set, placement);
-      if ("curved" in plan) {
-        engine.ctx.errors.report("camera", plan.curved);
-      } else {
-        plans.push(plan);
-      }
+      (plan.space === "curved" ? curved : plans).push(plan);
     } catch (error) {
       const reason =
         error instanceof FrameUnavailableError
@@ -64,6 +101,16 @@ export function writeClips(
       engine.ctx.errors.report(
         "camera",
         `a clip in ${set.frame.name} is left out of a view this tick: ${reason}`,
+      );
+    }
+  }
+  if (curved.length > 0) {
+    if (world.warps.curved.serves(curved.map((p) => p.set))) {
+      plans.push(curved[0]!);
+    } else {
+      engine.ctx.errors.report(
+        "camera",
+        `the curved clip${curved.length === 1 ? "" : "s"} in ${curved.map((p) => p.set.frame.name).join(", ")} ${curved.length === 1 ? "is" : "are"} left out of a view this tick: the world's draws carry one curved field, which is not this view's yet.`,
       );
     }
   }

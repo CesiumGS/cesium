@@ -35,6 +35,7 @@ import { World } from "./World.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
 import type { ClipFilter } from "../geometry/query.ts";
 import { clipFilter, clipSetsOf, type ClipsOption } from "./world/clips.ts";
+import { curvedClipSets } from "../render/view/clipTable.ts";
 import { WARP_BUDGET_MS } from "./world/warps.ts";
 import { type AnchorHandle, type WorldOptions } from "./world/types.ts";
 import { CameraLayer } from "../camera/CameraLayer.ts";
@@ -1447,12 +1448,14 @@ export class Engine {
       this.ctx.errors.report("frame", message);
     for (let w = 0; w < this.worlds.length; w++) {
       const world = this.worlds[w]!;
+      const worldViews: View[] = [];
       let first: View | undefined;
       for (let i = 0; i < this.views.length; i++) {
         const view = this.views[i]!;
         if (view.world !== world) {
           continue;
         }
+        worldViews.push(view);
         if (!first) {
           first = view;
         } else if (
@@ -1465,6 +1468,22 @@ export class Engine {
             `warp: a world's draws are warped for the render root of its first view (${this.cameras.root(first).name}), and another view has ${this.cameras.root(view).name}; it shows the first's warps (terms per view are a follow-up)`,
           );
         }
+      }
+      // A curved clip's field on the world's draws, for the views' curved sets.
+      const demands = worldViews
+        .map((view) => curvedClipSets(this, view))
+        .filter((sets) => sets.length > 0);
+      if (demands.length > 0 || world.warps.curved.active) {
+        busy =
+          world.warps.curved.frame(
+            {
+              resolver: this.cameras.resolver(world),
+              seconds: this.cameras.clock(world)?.seconds ?? 0,
+              demands,
+            },
+            budgetMs,
+            report,
+          ) || busy;
       }
       if (!first && !world.warps.active && world.warps.size === 0) {
         continue;

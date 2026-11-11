@@ -113,7 +113,7 @@ public export __extern_cpp struct SurfaceVertex {
   // Aerial perspective marched per vertex (`aerialMarch`), pre-exposed
   // in-scatter and transmittance; unused where the view reads the volume.
   public __extern_cpp float3 airInscatter;
-  public __extern_cpp float3 airTransmittance;
+  public __extern_cpp float4 airTransmittance; // xyz transmittance; w: a curved clip's fitted distance (`Placed.clip`)
   public __extern_cpp float3 positionMC;  // the design position (as the mesh stores it), unplaced
   // A custom shader's named attributes and metadata, packed into four
   // slots (CustomShader.ts `namedCode`). The engine's own stages leave

@@ -85,7 +85,10 @@ float3 jacobianColumn(float3x3 j, int c) {
 // coefficients per monomial. One cell has v = u. The cell's cubic in v has
 // the derivative of each monomial per axis, and dv/dp = cells / scale on
 // every axis (past the cube the edge cell extrapolates at the same rate).
-float3 latticeDisplacement(uint body, uint cells, float3 p, out float3x3 jacobian) {
+// Each row's `w` is a scalar over the same cells (`ClipField`, a curved
+// clip's signed distance, 0 where the lattice has none), evaluated beside the
+// displacement from the same rows into `clip`.
+float3 latticeDisplacement(uint body, uint cells, float3 p, out float3x3 jacobian, out float clip) {
   float4 origin = placementRow(body);
   float3 v = (p - origin.xyz) * origin.w;
   float dvdp = origin.w;
@@ -111,18 +114,22 @@ float3 latticeDisplacement(uint body, uint cells, float3 p, out float3x3 jacobia
   float3 gx = float3(0.0);
   float3 gy = float3(0.0);
   float3 gz = float3(0.0);
+  float scalar = 0.0;
   for (uint k = 0u; k < PLACEMENT_TERMS; k++) {
     uint e = TERM_POWERS[k];
     uint a = e & 3u;
     uint b = (e >> 2u) & 3u;
     uint c = (e >> 4u) & 3u;
-    float3 coefficient = placementRow(first + k).xyz;
+    float4 row = placementRow(first + k);
+    float3 coefficient = row.xyz;
     d += coefficient * (px[a] * py[b] * pz[c]);
+    scalar += row.w * (px[a] * py[b] * pz[c]);
     gx += coefficient * (qx[a] * (py[b] * pz[c]));
     gy += coefficient * (qy[b] * (px[a] * pz[c]));
     gz += coefficient * (qz[c] * (px[a] * py[b]));
   }
   jacobian = transpose(float3x3(gx * dvdp, gy * dvdp, gz * dvdp));
+  clip = scalar;
   return d;
 }
 
@@ -132,13 +139,15 @@ float3 latticeDisplacement(uint body, uint cells, float3 p, out float3x3 jacobia
 // attribute directory (`directory`, the vertex, its feature's row); and
 // its Jacobian `dDi/dp` into `jacobian`. An attribute is data, with no
 // derivative in space, so its Jacobian is zero: the point's own is the
-// identity (`Placed.jacobian`), and a normal is not turned by it.
+// identity (`Placed.jacobian`), and a normal is not turned by it. A lattice
+// also gives its clip field's value into `clip` (0 for an attribute).
 float3 termDisplacement(uint4 head, uint block, float3 p, uint vertexIndex, uint directory, uint feature,
-                        out float3x3 jacobian) {
+                        out float3x3 jacobian, out float clip) {
   if ((head.x & 255u) == WARP_LATTICE) {
-    return latticeDisplacement(block + head.z, head.w, p, jacobian);
+    return latticeDisplacement(block + head.z, head.w, p, jacobian, clip);
   }
   jacobian = ZERO_JACOBIAN;
+  clip = 0.0;
   float3 other = placementAttribute(directory, head.z, vertexIndex, feature).xyz;
   return head.w != 0u ? other - p : other;
 }
@@ -147,6 +156,7 @@ float3 termDisplacement(uint4 head, uint block, float3 p, uint vertexIndex, uint
 public struct Placed {
   public float3 position;     // model space
   public float3x3 jacobian;   // d(position) / d(design position): I + the sum of wi * dDi/dp
+  public float clip;          // the first lattice's clip field at the design position (a curved clip's signed distance); 0 if none
 };
 
 // Where the draw's placement (`DrawRecord.placement`, its block's header
@@ -154,24 +164,32 @@ public struct Placed {
 // position plus each term's weight times its displacement; and the
 // placement's Jacobian there, which turns tangents (J t) and normals
 // (`turnNormal`). Without a placement: the position as it is, and the
-// identity.
+// identity. `clip` is the block's first lattice's scalar (not weighted: a
+// lattice that only carries it has weight 0).
 public Placed placeVertex(uint placement, float3 positionMC, uint vertexIndex, uint directory, uint feature) {
   Placed placed;
   placed.position = positionMC;
   placed.jacobian = IDENTITY_JACOBIAN;
+  placed.clip = 0.0;
   if (placement == NO_PLACEMENT) {
     return placed;
   }
   uint count = asuint(placementRow(placement).x);
   float3 d = float3(0.0);
   float3x3 j = ZERO_JACOBIAN;
+  bool clipTaken = false;
   for (uint i = 0u; i < count; i++) {
     uint row = placement + 1u + i * TERM_ROWS;
     uint4 head = asuint(placementRow(row));
     float w = termWeight(row, head);
     float3x3 jd;
-    d += w * termDisplacement(head, placement, positionMC, vertexIndex, directory, feature, jd);
+    float clip;
+    d += w * termDisplacement(head, placement, positionMC, vertexIndex, directory, feature, jd, clip);
     j += w * jd;
+    if (!clipTaken && (head.x & 255u) == WARP_LATTICE) {
+      placed.clip = clip;
+      clipTaken = true;
+    }
   }
   placed.position = positionMC + d;
   placed.jacobian = IDENTITY_JACOBIAN + j;

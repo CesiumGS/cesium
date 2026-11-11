@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Curved Clips Checks</title>
+  </head>
+  <body>
+    <!-- Plan §13.26, increment 8c: open with ?bench and call runCurvedClips(). -->
+    <div id="root"></div>
+    <script type="module">
+      import { harness } from "./curvedClips.ts";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runCurvedClips");
+    </script>
+  </body>
+</html>

@@ -28,6 +28,7 @@ import {
   type TermBounds,
 } from "../warpBounds.ts";
 import type { WarpTerms } from "../warpTerms.ts";
+import type { WorldCurvedClips } from "./curvedClips.ts";
 import type { ParameterSlot, DrawHandle, DrawPlacement } from "./types.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
@@ -37,6 +38,8 @@ export interface PlacementWorld extends Pick<
   World,
   "changedViews" | "ctx" | "hasDraw" | "markDirty" | "version"
 > {
+  /** Where a curved clip's field is put on the terms (absent in a fake). */
+  readonly warps?: { readonly curved: Pick<WorldCurvedClips, "decorate"> };
   readonly raster: Pick<
     WorldRaster,
     | "drawBatches"
@@ -209,6 +212,9 @@ export function setPlacement(
     }
   }
   const old = world.scene.drawPlacements[index];
+  // A curved clip's field rides on the draw's first lattice, or on one made to
+  // carry it (curvedClips.ts): whichever way the terms were set.
+  next = world.warps?.curved.decorate(index, next) ?? next;
   const base = old ? old.base : world.raster.recordsF32[o + RADIUS_WORD]!;
   const center: readonly [number, number, number] = old
     ? old.center

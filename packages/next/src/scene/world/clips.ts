@@ -20,8 +20,18 @@
 // - **Drawn.** The set's route to the render root is rigid: the table is
 //   tested on the drawn point, which a placed draw rebuilds per fragment
 //   (surface.slang `drawnPosition`), and an unplaced one reads from location 4.
-// - **Curved.** Neither is rigid: the set is a curved surface in the scene. Not
-//   built: such a set is left out of the view's table and the engine says so.
+// - **Curved.** Neither is rigid: the set is a curved surface in the scene
+//   (the route from the content to the set's frame crosses a reprojection
+//   that bends it). Its signed distance is fitted per draw, over the draw's
+//   lattice, into the rows' free fourth channel (`WorldCurvedClips`,
+//   curvedClips.ts): the vertex stage evaluates it at the design position
+//   (surface.slang `Placed.clip`, in `airTransmittance.w`), the varying
+//   interpolates it, and the fragment stage discards by its sign. The cut is
+//   accurate to the fit's error, and to the mesh's own chords: the distance
+//   is interpolated between vertices as the surface is. A draw carries one
+//   field (`.w`), so a world's views may use one set of curved sets (their
+//   fields combine by max: kept where every curved set keeps); another
+//   view's different curved sets are left out and reported.
 //
 // Queries test in float64 by routing points into the set's own frame
 // (`clipFilter`).
@@ -117,10 +127,13 @@ export const CLIP_POLYGON = 2;
 export const CLIP_SET_INTERSECTION = 1;
 export const CLIP_SET_KEEP_OUTSIDE = 2;
 export const CLIP_SET_DRAWN = 4;
+/** A curved set: its signed distance was fitted per draw (the row has no shapes). */
+export const CLIP_SET_CURVED = 8;
 /** Reserved: the styling language's exemptions by element data (a set row's w). */
 export const CLIP_SET_EXEMPT = 3;
-/** The header's flag: some set is tested on the drawn point. */
+/** The header's flags: some set is tested on the drawn point; some set is curved. */
 export const CLIP_ANY_DRAWN = 1;
+export const CLIP_ANY_CURVED = 2;
 
 /** Beyond this a polygon's z range is unbounded: float32 holds it exactly enough. */
 const UNBOUNDED = 1e30;
@@ -298,6 +311,101 @@ export function clipSetKeeps(set: ClipSet, p: ArrayLike<number>): boolean {
   return set.keep === "outside" ? !region : region;
 }
 
+// --- signed distances, in float64 (what a curved clip fits) --------------------
+
+/** The distance from `(x, y)` to a polygon's ring, negative inside (even-odd, as `shapeContains`). */
+function ringDistance(
+  ring: ReadonlyArray<readonly [number, number]>,
+  x: number,
+  y: number,
+): number {
+  let nearest = Infinity;
+  let inside = false;
+  for (let i = 0, n = ring.length; i < n; i++) {
+    const a = ring[i]!;
+    const b = ring[(i + 1) % n]!;
+    const ex = b[0] - a[0];
+    const ey = b[1] - a[1];
+    const length2 = ex * ex + ey * ey;
+    const t =
+      length2 > 0
+        ? Math.min(
+            1,
+            Math.max(0, ((x - a[0]) * ex + (y - a[1]) * ey) / length2),
+          )
+        : 0;
+    nearest = Math.min(
+      nearest,
+      Math.hypot(x - a[0] - t * ex, y - a[1] - t * ey),
+    );
+    if (a[1] > y !== b[1] > y) {
+      const crossing = a[0] + ((y - a[1]) * ex) / (b[1] - a[1]);
+      if (x < crossing) {
+        inside = !inside;
+      }
+    }
+  }
+  return inside ? -nearest : nearest;
+}
+
+/**
+ * The shape's signed distance at `p` (in the set's frame): negative inside,
+ * zero on the boundary, positive outside, `shapeContains` where it is ≤ 0.
+ * A plane's and a polygon's (extruded: the larger of the ring's and the z
+ * range's) are exact; a box's is the largest overshoot along its axes (exact
+ * outside a face, a lower bound near an edge or corner).
+ */
+export function shapeDistance(shape: ClipShape, p: ArrayLike<number>): number {
+  switch (shape.kind) {
+    case "plane": {
+      const n = shape.normal;
+      const q = shape.point;
+      return (
+        (n[0] * (p[0]! - q[0]) +
+          n[1] * (p[1]! - q[1]) +
+          n[2] * (p[2]! - q[2])) /
+        Math.hypot(n[0], n[1], n[2])
+      );
+    }
+    case "box": {
+      const a = shape.axes ?? IDENTITY_AXES;
+      const h = shape.halfExtents;
+      const dx = p[0]! - shape.center[0];
+      const dy = p[1]! - shape.center[1];
+      const dz = p[2]! - shape.center[2];
+      let d = -Infinity;
+      for (let k = 0; k < 3; k++) {
+        const u = a[k]![0] * dx + a[k]![1] * dy + a[k]![2] * dz;
+        d = Math.max(d, Math.abs(u) - h[k]!);
+      }
+      return d;
+    }
+    case "polygon": {
+      let d = ringDistance(shape.ring, p[0]!, p[1]!);
+      const z = shape.zRange;
+      if (z) {
+        d = Math.max(d, z[0] - p[2]!, p[2]! - z[1]);
+      }
+      return d;
+    }
+  }
+}
+
+/**
+ * The set's signed distance at `p` with its keep rule folded in: the set
+ * keeps `p` where it is ≤ 0. The region's is the shapes' least (union) or
+ * greatest (intersection); keeping the outside negates it.
+ */
+export function clipSetDistance(set: ClipSet, p: ArrayLike<number>): number {
+  const all = set.combine === "intersection";
+  let region = all ? -Infinity : Infinity;
+  for (const shape of set.shapes) {
+    const d = shapeDistance(shape, p);
+    region = all ? Math.max(region, d) : Math.min(region, d);
+  }
+  return set.keep === "outside" ? -region : region;
+}
+
 // --- the world's clips ---------------------------------------------------------
 
 /** A world's clip sets by bit (`World.addClip`). */
@@ -429,9 +537,13 @@ export interface ClipViewPlacement {
   readonly bodyRoute: Route | undefined;
 }
 
-export type ClipSpace = "true" | "drawn";
+export type ClipSpace = "true" | "drawn" | "curved";
 
-/** A set placed for a view: which point it is tested on, and its frame in the shading axes. */
+/**
+ * A set placed for a view: which point it is tested on, and its frame in the
+ * shading axes. A curved set has no matrix (the identity): its distance is
+ * fitted per draw (`WorldCurvedClips`).
+ */
 export interface PlannedClip {
   readonly set: ClipSet;
   readonly space: ClipSpace;
@@ -459,13 +571,10 @@ function isNonRigid(error: unknown): boolean {
 /**
  * Chooses the space `set` is tested in for a view, and the matrix that takes
  * the set's frame to the shading axes there. Throws what the resolver throws
- * when it can't answer (`FrameUnavailableError`); returns a message in
- * `curved` when neither route is rigid.
+ * when it can't answer (`FrameUnavailableError`). Neither route rigid: the
+ * set is `curved` (fitted per draw, `WorldCurvedClips`).
  */
-export function planClip(
-  set: ClipSet,
-  view: ClipViewPlacement,
-): PlannedClip | { readonly curved: string } {
+export function planClip(set: ClipSet, view: ClipViewPlacement): PlannedClip {
   if (locationFourIsTrue(view.bodyRoute)) {
     try {
       const matrix = view.resolver.resolve(
@@ -496,10 +605,11 @@ export function planClip(
       throw error;
     }
   }
-  return {
-    curved: `the clip in ${set.frame.name} is a curved surface in this view (its frame reaches neither the content's true side nor the render root rigidly); curved clips are not built, so the view leaves it out.`,
-  };
+  return { set, space: "curved", matrix: identity16() };
 }
+
+const identity16 = (): Float64Array =>
+  Float64Array.of(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 
 function multiplyRigid(
   a: ArrayLike<number>,
@@ -546,7 +656,9 @@ function invertRigid(m: ArrayLike<number>): Float64Array {
  * - row 0 (uints): the number of sets, `CLIP_ANY_DRAWN` when some set is tested on
  *   the drawn point;
  * - rows 1 to `MAX_CLIP_SETS` (uints): a set's first row, its shape count, its
- *   flags (`CLIP_SET_*`), and a reserved word (exemptions);
+ *   flags (`CLIP_SET_*`), and a reserved word (exemptions). A curved set
+ *   (`CLIP_SET_CURVED`, header flag `CLIP_ANY_CURVED`) has no shapes: the
+ *   fragment tests the draw's fitted distance (a varying) instead;
  * - then each shape: a header row (uints: kind, rows with the header, vertex
  *   count), and its rows. A plane: (n, d) with inside n·p + d ≤ 0. A box: three
  *   rows (a, w) with u = a·p + w, inside when all |u| ≤ 1. A polygon: three
@@ -568,8 +680,19 @@ export function packClipTable(
   out.fill(0, 0, CLIP_HEADER_ROWS * 4);
   let row = CLIP_HEADER_ROWS;
   let anyDrawn = false;
+  let anyCurved = false;
   plans.forEach((plan, s) => {
     const first = row;
+    if (plan.space === "curved") {
+      // No shapes: the draw's fitted distance is the test.
+      const at = (1 + s) * 4;
+      u32[at] = first;
+      u32[at + 1] = 0;
+      u32[at + 2] = CLIP_SET_CURVED;
+      u32[at + 3] = 0;
+      anyCurved = true;
+      return;
+    }
     const m = plan.matrix;
     const rotate = (v: ArrayLike<number>): [number, number, number] => [
       m[0]! * v[0]! + m[4]! * v[1]! + m[8]! * v[2]!,
@@ -663,7 +786,7 @@ export function packClipTable(
     u32[at + 3] = 0;
   });
   u32[0] = plans.length;
-  u32[1] = anyDrawn ? CLIP_ANY_DRAWN : 0;
+  u32[1] = (anyDrawn ? CLIP_ANY_DRAWN : 0) | (anyCurved ? CLIP_ANY_CURVED : 0);
   if (row > CLIP_TABLE_ROWS) {
     throw new RangeError(
       `the clip table needs ${row} rows, more than ${CLIP_TABLE_ROWS}.`,
@@ -719,12 +842,17 @@ function tableShapeInside(
   return odd;
 }
 
-/** The table's float32 view of `plans`, as the GPU reads it (a twin of the fragment test, for checks). */
+/**
+ * The table's float32 view of `plans`, as the GPU reads it (a twin of the
+ * fragment test, for checks). `curved` is the draw's fitted distance at the
+ * fragment, which a curved set's row tests.
+ */
 export function tableKeeps(
   table: Float32Array,
   space: {
     readonly true: ArrayLike<number>;
     readonly drawn: ArrayLike<number>;
+    readonly curved?: number;
   },
 ): boolean {
   const u32 = new Uint32Array(table.buffer, table.byteOffset, table.length);
@@ -733,6 +861,12 @@ export function tableKeeps(
     const at = (1 + s) * 4;
     const shapes = Math.min(u32[at + 1]!, MAX_CLIP_SHAPES);
     const flags = u32[at + 2]!;
+    if ((flags & CLIP_SET_CURVED) !== 0) {
+      if ((space.curved ?? 0) > 0) {
+        return false;
+      }
+      continue;
+    }
     const p = (flags & CLIP_SET_DRAWN) !== 0 ? space.drawn : space.true;
     const all = (flags & CLIP_SET_INTERSECTION) !== 0;
     let region = all;

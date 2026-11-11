@@ -27,7 +27,8 @@ import type { WarpTerms } from "./warpTerms.ts";
  * - then each lattice's body, in term order: a row `[center xyz (f32), 1 /
  *   scale (f32)]`, then `cells³ × 20` rows, `[x, y, z, 0]` (f32), cell
  *   `(iz · cells + iy) · cells + ix` term `k` at row `1 + cell · 20 + k`
- *   (`CubicLattice`).
+ *   (`CubicLattice`). A row's `w` is the lattice's clip field when it has
+ *   one (`ClipField`, a curved clip's signed distance), else 0.
  *
  * A lattice of one cell is a body of 21 rows; of eight, 10,241.
  *
@@ -213,12 +214,13 @@ export class PlacementTable {
       f32[o + 2] = term.center[2]!;
       f32[o + 3] = 1 / term.scale;
       const rows = term.cells ** 3 * PLACEMENT_TERMS;
+      const clip = term.clip?.coefficients;
       for (let k = 0; k < rows; k++) {
         const r = o + 4 + k * 4;
         f32[r] = term.coefficients[3 * k]!;
         f32[r + 1] = term.coefficients[3 * k + 1]!;
         f32[r + 2] = term.coefficients[3 * k + 2]!;
-        f32[r + 3] = 0;
+        f32[r + 3] = clip ? clip[k]! : 0;
       }
       body += latticeRows(term.cells);
     });

@@ -512,8 +512,7 @@ describe("which space a clip is tested in", () => {
     expect(
       (planClip(planeIn(shifted), s.placement()) as PlannedClip).space,
     ).toBe("drawn");
-    const curved = planClip(planeIn(s.itrf), s.placement());
-    expect("curved" in curved && curved.curved).toMatch(/curved surface/);
+    expect(planClip(planeIn(s.itrf), s.placement()).space).toBe("curved");
   });
 
   it("a view's table end to end: each set in its space, against float64 on the route", () => {

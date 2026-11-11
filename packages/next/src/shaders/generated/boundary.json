@@ -788,16 +788,16 @@
                             "name": "airTransmittance",
                             "type": {
                                 "kind": "vector",
-                                "elementCount": 3,
+                                "elementCount": 4,
                                 "elementType": {
                                     "kind": "scalar",
                                     "scalarType": "float32"
                                 },
                                 "sizes": [
-                                    {"kind": "uniform", "value": 12, "alignment": 16}
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 128, "size": 12, "elementStride": 4}
+                            "binding": {"kind": "uniform", "offset": 128, "size": 16, "elementStride": 4}
                         },
                         {
                             "name": "positionMC",
@@ -1694,16 +1694,16 @@
                                 "name": "airTransmittance",
                                 "type": {
                                     "kind": "vector",
-                                    "elementCount": 3,
+                                    "elementCount": 4,
                                     "elementType": {
                                         "kind": "scalar",
                                         "scalarType": "float32"
                                     },
                                     "sizes": [
-                                        {"kind": "uniform", "value": 12, "alignment": 16}
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 128, "size": 12, "elementStride": 4}
+                                "binding": {"kind": "uniform", "offset": 128, "size": 16, "elementStride": 4}
                             },
                             {
                                 "name": "positionMC",

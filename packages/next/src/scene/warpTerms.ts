@@ -16,6 +16,22 @@ export const MAX_WARP_TERMS = 3;
 export const LATTICE_CELLS = [1, 2, 4, 8] as const;
 
 /**
+ * A scalar fitted over a lattice's cells, in the free fourth channel of its
+ * rows (`.w`): a curved clip's signed distance (plan §13.26, increment 8c).
+ * The same cells and local coordinates as the displacement, 20 monomials a
+ * cell: coefficient `cell · 20 + term`, metres, the sign
+ * being the clip's keep rule (kept where it is ≤ 0).
+ */
+export interface ClipField {
+  /** `cells³ × 20` coefficients. */
+  readonly coefficients: Float64Array;
+  /** How far the field may be from the signed distance it was fitted to over the tile, m. */
+  readonly errorBound: number;
+  /** True when `errorBound` was measured at samples rather than proven. */
+  readonly estimate: boolean;
+}
+
+/**
  * A displacement fitted to a route over one tile, as a lattice of cubics:
  *
  * - `u = (p − center) / scale` puts the tile in [−1, 1]³ (`scale` is its
@@ -46,6 +62,8 @@ export interface CubicLattice {
   readonly estimate: boolean;
   /** What it was fitted to, in words (the route's warps). */
   readonly operation?: string;
+  /** A curved clip's signed distance over the same cells, in the rows' `.w`; the draw's first lattice carries it. */
+  readonly clip?: ClipField;
 }
 
 /**

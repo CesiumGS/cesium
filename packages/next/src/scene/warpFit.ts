@@ -5,7 +5,11 @@
 import { invertAffine, multiply, mat4 } from "../math/mat4.ts";
 import { routeForward, type Route } from "../camera/route.ts";
 import { PLACEMENT_MONOMIALS, PLACEMENT_TERMS } from "./placement.ts";
-import { LATTICE_CELLS, type CubicLattice } from "./warpTerms.ts";
+import {
+  LATTICE_CELLS,
+  type ClipField,
+  type CubicLattice,
+} from "./warpTerms.ts";
 
 /** The displacement at model point `p`, written to `out` (3). */
 export type DisplacementFunction = (p: Float64Array, out: Float64Array) => void;
@@ -322,6 +326,150 @@ export function fitLattice(
     }
   }
   return fit!;
+}
+
+/** A scalar of model point `p` (a curved clip's signed distance, `fitClipField`). */
+export type ScalarFunction = (p: Float64Array) => number;
+
+/** The `ClipField` of `cells` cells per axis over the cube [−1, 1]³ of u, and the worst residual at its check points. */
+function fitScalarCells(
+  scalar: ScalarFunction,
+  center: ArrayLike<number>,
+  scale: number,
+  cells: number,
+  operation: string | undefined,
+): ClipField {
+  const b = fitBasis();
+  const fitN = b.fitV.length / 3;
+  const checkN = b.checkV.length / 3;
+  const coefficients = new Float64Array(cells ** 3 * PLACEMENT_TERMS);
+  const p = new Float64Array(3);
+  const samples = new Float64Array(fitN);
+  const half = 1 / cells;
+  let worst = 0;
+  for (let iz = 0; iz < cells; iz++) {
+    for (let iy = 0; iy < cells; iy++) {
+      for (let ix = 0; ix < cells; ix++) {
+        const c0 = ((iz * cells + iy) * cells + ix) * PLACEMENT_TERMS;
+        const at = (v: Float64Array, s: number) => {
+          p[0] = center[0]! + scale * (-1 + (2 * ix + v[3 * s]! + 1) * half);
+          p[1] =
+            center[1]! + scale * (-1 + (2 * iy + v[3 * s + 1]! + 1) * half);
+          p[2] =
+            center[2]! + scale * (-1 + (2 * iz + v[3 * s + 2]! + 1) * half);
+        };
+        for (let s = 0; s < fitN; s++) {
+          at(b.fitV, s);
+          samples[s] = scalar(p);
+        }
+        for (let k = 0; k < PLACEMENT_TERMS; k++) {
+          let sum = 0;
+          for (let s = 0; s < fitN; s++) {
+            sum += b.solve[k * fitN + s]! * samples[s]!;
+          }
+          coefficients[c0 + k] = sum;
+        }
+        for (let s = 0; s < checkN; s++) {
+          at(b.checkV, s);
+          let r = scalar(p);
+          for (let k = 0; k < PLACEMENT_TERMS; k++) {
+            r -=
+              coefficients[c0 + k]! *
+              b.checkMonomials[s * PLACEMENT_TERMS + k]!;
+          }
+          if (!Number.isFinite(r)) {
+            throw new RangeError(
+              `fitClipField: the clip's distance is not finite near the tile${operation ? ` (${operation})` : ""}`,
+            );
+          }
+          worst = Math.max(worst, Math.abs(r));
+        }
+      }
+    }
+  }
+  return { coefficients, errorBound: worst, estimate: true };
+}
+
+/**
+ * Fits a scalar (a curved clip's signed distance) over the tile's sphere in
+ * model space, cells as `fitLattice`: `cells` fixed (the draw's position
+ * lattice has them, and the scalar shares its rows), or doubling (1, 2, 4, 8)
+ * from 1 until `errorBound ≤ tolerance` or `maxCells`. The field's cells are
+ * the lattice's: `center`, `scale` and `cells` are the lattice's own.
+ */
+export function fitClipField(
+  scalar: ScalarFunction,
+  tile: { center: ArrayLike<number>; scale: number },
+  options: {
+    tolerance: number;
+    cells?: number;
+    maxCells?: number;
+    operation?: string;
+  },
+): { field: ClipField; cells: number } {
+  if (!(tile.scale > 0) || !Number.isFinite(tile.scale)) {
+    throw new RangeError(
+      `fitClipField: scale is ${tile.scale}; it must be positive`,
+    );
+  }
+  if (options.cells !== undefined) {
+    return {
+      field: fitScalarCells(
+        scalar,
+        tile.center,
+        tile.scale,
+        options.cells,
+        options.operation,
+      ),
+      cells: options.cells,
+    };
+  }
+  const maxCells = options.maxCells ?? LATTICE_CELLS[LATTICE_CELLS.length - 1]!;
+  let fit: { field: ClipField; cells: number } | undefined;
+  for (const cells of LATTICE_CELLS) {
+    if (fit && cells > maxCells) {
+      break;
+    }
+    fit = {
+      field: fitScalarCells(
+        scalar,
+        tile.center,
+        tile.scale,
+        cells,
+        options.operation,
+      ),
+      cells,
+    };
+    if (fit.field.errorBound <= options.tolerance) {
+      break;
+    }
+  }
+  return fit!;
+}
+
+/** A clip field's value at model point `p` (the lattice's cells and local coordinates), float64: the GPU's twin. */
+export function evaluateClipField(
+  lattice: Pick<CubicLattice, "center" | "scale" | "cells">,
+  field: ClipField,
+  p: ArrayLike<number>,
+): number {
+  const n = lattice.cells;
+  const cell = [0, 0, 0];
+  const v = [0, 0, 0];
+  for (let a = 0; a < 3; a++) {
+    const t = (((p[a]! - lattice.center[a]!) / lattice.scale + 1) / 2) * n;
+    const i = Math.min(n - 1, Math.max(0, Math.floor(t)));
+    cell[a] = i;
+    v[a] = 2 * (t - i) - 1;
+  }
+  const base = ((cell[2]! * n + cell[1]!) * n + cell[0]!) * PLACEMENT_TERMS;
+  const mono = new Float64Array(PLACEMENT_TERMS);
+  monomials(v, 0, mono, 0);
+  let sum = 0;
+  for (let k = 0; k < PLACEMENT_TERMS; k++) {
+    sum += field.coefficients[base + k]! * mono[k]!;
+  }
+  return sum;
 }
 
 /** The draw's affine part of `route`: its rigid steps composed in order, warps taken as identity. Column-major 4×4. */

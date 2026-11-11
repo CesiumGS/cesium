@@ -72,7 +72,7 @@ export const ENGINE_STRUCTS = {
     { name: "relPosition", type: "vec3f" },
     { name: "tangent", type: "vec4f" },
     { name: "airInscatter", type: "vec3f" },
-    { name: "airTransmittance", type: "vec3f" },
+    { name: "airTransmittance", type: "vec4f" },
     { name: "positionMC", type: "vec3f" },
     { name: "named0", type: "vec4f" },
     { name: "named1", type: "vec4f" },

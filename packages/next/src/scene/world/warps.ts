@@ -73,6 +73,7 @@ import {
 import { drawnBounds, routeMap, type DrawnMap } from "../warpBounds.ts";
 import { affinePart, fitLattice, routeDisplacement } from "../warpFit.ts";
 import { WarpFitCache } from "../warpFitCache.ts";
+import { WorldCurvedClips } from "./curvedClips.ts";
 import { checkTerms, termsOf } from "../warpEvaluate.ts";
 import {
   MAX_WARP_TERMS,
@@ -338,8 +339,15 @@ export class WorldWarps {
   #clock = 0;
   #transformRevision = -1;
   readonly #scratch = new Float64Array(16);
+  /** A curved clip's field on the draws' lattices (curvedClips.ts). */
+  readonly curved: WorldCurvedClips;
 
-  constructor(private readonly world: World) {}
+  constructor(private readonly world: World) {
+    this.curved = new WorldCurvedClips(
+      world,
+      (index) => this.#errors.get(index) ?? 0,
+    );
+  }
 
   /** Fits queued and not yet run. */
   get pending(): number {
@@ -544,7 +552,7 @@ export class WorldWarps {
     return warp;
   }
 
-  /** The worst error (m) of the fits now drawn for `draws` against their route; 0 where none is drawn. */
+  /** The worst error (m) of the fits now drawn for `draws` against their route, and of their curved clips' fields; 0 where none is drawn. */
   fitError(draws: readonly DrawHandle[]): number {
     let worst = 0;
     for (const handle of draws) {
@@ -552,6 +560,9 @@ export class WorldWarps {
       // A failed fit is drawn as no warp: its bound is a sentinel.
       if (applied && applied.errorBound < Number.MAX_VALUE) {
         worst = Math.max(worst, applied.errorBound);
+      }
+      if (this.world.hasDraw(handle)) {
+        worst = Math.max(worst, this.curved.errorOf(handle.index));
       }
     }
     return worst;
@@ -623,6 +634,7 @@ export class WorldWarps {
 
   /** A draw was added: hidden at once when its anchor is warped, before any frame can draw it. */
   drawAdded(handle: DrawHandle): void {
+    this.curved.drawAdded(handle);
     if (this.#anchors.size === 0) {
       return;
     }
@@ -631,6 +643,7 @@ export class WorldWarps {
 
   /** A draw is being removed: its fit is forgotten. */
   drawRemoved(handle: DrawHandle): void {
+    this.curved.drawRemoved(handle);
     this.#errors.delete(handle.index);
     this.#choices.delete(handle.index);
     this.#heightNormals.delete(handle.index);
@@ -763,6 +776,7 @@ export class WorldWarps {
 
   /** The world is gone: nothing is kept. */
   clear(): void {
+    this.curved.clear();
     this.cache.clear();
     this.#anchors.clear();
     this.#tileWarps.clear();

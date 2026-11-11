@@ -426,7 +426,7 @@ struct SurfaceVaryings {
   float3 relPosition : RELPOSITION;
   float4 tangent : TANGENT;
   float3 airInscatter : AIRINSCATTER;
-  float3 airTransmittance : AIRTRANSMITTANCE;
+  float4 airTransmittance : AIRTRANSMITTANCE; // w: the fitted clip distance of a curved clip (`Placed.clip`)
   float3 positionMC : POSITIONMC;
   float4 named0 : NAMEDA;
   float4 named1 : NAMEDB;
@@ -897,14 +897,14 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
     }
   }
   out.airInscatter = float3(0.0);
-  out.airTransmittance = float3(1.0);
+  out.airTransmittance = float4(1.0, 1.0, 1.0, placed.clip);
   // Unlit draws (billboards, point sets, lines) show their color as is,
   // without the air (`shade`'s unlit path): no march for them.
   bool unlitDraw = (r.flags & 2u) != 0u;
   if (withAir && !unlitDraw && view.sunLight.w > 0.5 && view.bodyRadii.w > 0.0) {
     AerialPerspective a = aerialMarch(world.xyz);
     out.airInscatter = a.inscatter;
-    out.airTransmittance = a.transmittance;
+    out.airTransmittance = float4(a.transmittance, placed.clip);
   }
   // Underlay (the bare ellipsoid): behind all other content (UNDERLAY_DEPTH
   // in layout.ts).
@@ -1290,6 +1290,12 @@ static const uint CLIP_POLYGON = 2u;
 static const uint CLIP_SET_INTERSECTION = 1u;
 static const uint CLIP_SET_KEEP_OUTSIDE = 2u;
 static const uint CLIP_SET_DRAWN = 4u;
+// A curved set (scene/world/clips.ts `CLIP_SET_CURVED`): neither point is
+// the one it is tested on; its signed distance was fitted over the draw's
+// lattice (the rows' `w`), evaluated per vertex at the design position and
+// interpolated (`airTransmittance.w`), kept where it is ≤ 0. The set's
+// shapes are not in the table.
+static const uint CLIP_SET_CURVED = 8u;
 
 float4 clipRow(uint row) {
   return clipTable[min(row, CLIP_TABLE_ROWS - 1u)];
@@ -1353,6 +1359,12 @@ bool clipsKeep(SurfaceVaryings in, DrawRecord r) {
       break;
     }
     uint4 entry = asuint(clipRow(1u + s));
+    if ((entry.z & CLIP_SET_CURVED) != 0u) {
+      if (in.airTransmittance.w > 0.0) {
+        return false;
+      }
+      continue;
+    }
     float3 p = (entry.z & CLIP_SET_DRAWN) != 0u ? drawnAt : trueAt;
     bool every = (entry.z & CLIP_SET_INTERSECTION) != 0u;
     bool region = every;
@@ -2073,7 +2085,7 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
     if (march > 0.0) {
       AerialPerspective a;
       a.inscatter = in.airInscatter;
-      a.transmittance = in.airTransmittance;
+      a.transmittance = in.airTransmittance.xyz;
       // From high up, the screen grid: per vertex, the coarsest tiles'
       // triangles drew the day/night line in blocky streaks.
       float screen = view.iblFrame[1].w;
