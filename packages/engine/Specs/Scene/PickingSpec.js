@@ -464,19 +464,17 @@ describe(
           ]);
         }
 
-        it("picks sample indices that do not fit in 16 bits", async function () {
+        it("picks samples whose pick ids do not fit in 16 bits", async function () {
           if (!scene.context.webgl2) {
             return;
           }
-          const dimensions = new Cartesian3(300, 300, 1);
+          const dimensions = new Cartesian3(256, 256, 1);
           const primitive = await addSingleTilePrimitive({ dimensions });
           const cells = [
             [0, 0],
-            [179, 217], // 65279
-            [180, 217], // 65280
-            [135, 218], // 65535
-            [136, 218], // 65536
-            [299, 299], // 89999
+            [255, 254], // 65279
+            [0, 255], // 65280
+            [255, 255], // 65535, pick id 2^16
           ];
           for (const [x, y] of cells) {
             const sampleIndex = x + y * dimensions.x;
@@ -493,20 +491,20 @@ describe(
           }
         });
 
-        it("picks sample indices that do not fit in 24 bits", async function () {
+        it("picks samples whose pick ids do not fit in 24 bits", async function () {
           if (!scene.context.webgl2) {
             return;
           }
-          // The top layer starts at sample index 2^24
-          const dimensions = new Cartesian3(512, 512, 65);
+          // The last sample has index 2^24 - 1, so its pick id is 2^24
+          const dimensions = new Cartesian3(256, 256, 256);
           await addSingleTilePrimitive({
             dimensions,
             componentType: MetadataComponentType.UINT8,
           });
-          const topLayer = 64 * dimensions.x * dimensions.y;
+          const topLayer = 255 * dimensions.x * dimensions.y;
           for (const [x, y] of [
             [0, 0],
-            [511, 511],
+            [255, 255],
           ]) {
             const sampleIndex = topLayer + x + y * dimensions.x;
             lookAtCell(dimensions, x, y);
@@ -521,19 +519,21 @@ describe(
           if (!scene.context.webgl2) {
             return;
           }
-          const dimensions = new Cartesian3(300, 300, 1);
-          const padding = new Cartesian3(1, 1, 0);
+          // No padding after along y, so the last row of cells has sample
+          // indices of at least 65280
+          const dimensions = new Cartesian3(254, 255, 1);
           await addSingleTilePrimitive({
             dimensions,
-            paddingBefore: padding,
-            paddingAfter: padding,
+            paddingBefore: new Cartesian3(1, 1, 0),
+            paddingAfter: new Cartesian3(1, 0, 0),
           });
           for (const [x, y] of [
             [0, 0],
-            [299, 299],
+            [0, 254], // 65281
+            [253, 254], // 65534
           ]) {
-            // Sample indices count the padding: the tile is 302 x 302 x 1
-            const sampleIndex = x + 1 + (y + 1) * (dimensions.x + 2);
+            // Sample indices count the padding: the tile is 256 x 256 x 1
+            const sampleIndex = x + 1 + (y + 1) * 256;
             lookAtCell(dimensions, x, y);
             expect(scene).toPickVoxelAndCall(function (voxelCell) {
               expect(voxelCell).toBeDefined();
@@ -549,7 +549,7 @@ describe(
           if (!scene.context.webgl2) {
             return;
           }
-          const dimensions = new Cartesian3(300, 300, 1);
+          const dimensions = new Cartesian3(256, 256, 1);
           const primitive = await addSingleTilePrimitive({ dimensions });
           const traversal = primitive._traversal;
           const keyframeNode = traversal.findKeyframeNode(0);
@@ -557,11 +557,11 @@ describe(
             traversal,
             "findKeyframeNode",
           ).and.returnValue(keyframeNode);
-          // Tile 200 would not fit in this megatexture, but the decoding does
+          // Tile 300 would not fit in this megatexture, but the decoding does
           // not depend on it, and the pick id is above 2^24.
-          const tileIndex = 200;
-          const sampleIndex = 89999;
-          const pickId = tileIndex * 90000 + sampleIndex + 1;
+          const tileIndex = 300;
+          const sampleIndex = 65535;
+          const pickId = tileIndex * 65536 + sampleIndex + 1;
           spyOn(scene, "pick").and.returnValue({ primitive });
           spyOn(scene._picking, "pickVoxelCoordinate").and.returnValue(
             pickIdToBytes(pickId),
@@ -578,7 +578,7 @@ describe(
             return;
           }
           const primitive = await addSingleTilePrimitive({
-            dimensions: new Cartesian3(300, 300, 1),
+            dimensions: new Cartesian3(256, 256, 1),
           });
           const findKeyframeNode = spyOn(
             primitive._traversal,
