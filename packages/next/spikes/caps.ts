@@ -443,7 +443,10 @@ async function runCaps(): Promise<CapsResult> {
 
     // --- 1. a capped cylinder, cut, then the clip moves ---------------------------
     {
-      const scheduler = new CapScheduler({ intervalMs: 0 });
+      const scheduler = new CapScheduler({
+        intervalMs: 0,
+        budgetMs: Infinity,
+      });
       const s = scene(engine, lost);
       const { world, view } = s;
       const place = {
@@ -492,7 +495,7 @@ async function runCaps(): Promise<CapsResult> {
         const clip = world.addClip(set);
         view.setClips([clip]);
         caps.setClip(set, 0);
-        const tick = scheduler.tick(1e9);
+        const tick = scheduler.tick();
         await s.frames(4);
         const pixels = await s.capture();
         show(`1. a capped cylinder cut at z = ${z} (cap: red)`, pixels);
