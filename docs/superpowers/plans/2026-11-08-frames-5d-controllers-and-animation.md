@@ -1,74 +1,40 @@
 # Frames 5d: Controllers, Bindings, Transitions and the Animation Core Implementation Plan
 
-## Proposed amendments after the placement review (2026-11-11, for the owner's decision)
+**New base (2026-11-12):** after the transform graph's Task 6 (`2026-11-12-transform-graph.md`: `smoothFrame` replacing `warpFrame`, per-view routes, `view.setParameter`, `switchFrame`, the globe placeable in a frame, and `Warp.presentation`, `Route.presentation` and `PresentationRouteError` gone), and after 5c, which sits on it. Check every warp, route, pick and parameter name below by symbol against that.
 
-Not applied to the tasks below. Read with §13.26 of the overall plan. This plan also inherits 5c's amendments: warp domains, and two views.
+## After the transform graph (2026-11-12)
 
-**Already done, or partly.** `setRig` re-roots across a warp (`carryCamera`). `GlobeController` works on the drawn ground and zoom target. `View.toPixel` follows routes; `CorePick.route` freezes a pick's scales. `commonAncestor` exists privately (`frames/resolver.ts`), so Task 10 only exposes it. `dice.slang` handles orthographic views. `routeSingularRange` gives σ_min for snaps.
+This replaces the amendments written on 2026-11-11 for §13.26's warps (and 5c's, which they inherited), with their open questions. Read with §13.37 of the overall plan, `2026-11-12-transform-graph.md` and 5c's matching section.
 
-**What the landed work changes.**
+**What changed.**
 
-- **Rig frames must reach the root rigidly,** or `CameraLayer` refuses them. Under a rig on an exaggerated frame, an aim target, anchor or pivot in ITRF throws `NonRigidRouteError` in `evaluateRig` (Task 5), `ControllerContext.resolve` (6), the orbit's pivot (8) and live rigs (10). `FrameResolver.motion` may too (Task 12's carry).
-- **Blend frames cross warps.** `commonAncestor(exaggerated, MOON_ME)` is ICRF. That root crosses no warp, so the exaggeration vanishes on the first tick, and the source rig can't be resolved there.
-- **A re-root refits, and can blank.** `scene/world/warps.ts #sync` re-stamps every warped anchor on any root change, so every warped draw refits (0.7 to 40 ms a fit, against 4 ms a tick). An anchor newly across a warp hides its draws until their first fit, so a transition (Task 10) or re-attach (Task 13) ending on an exaggerated root blanks tilesets for some ticks. Terrain is exact.
-- **One warp context per world,** for the first view's root. A transition in view 1 refits every view; one in view 2 shows view 1's fits.
-- **Task 4:**
-  - Moving a warped draw drops its fit (`test/warpMovedDraw.test.ts`), so an animated node under `warpAt: "vertex"` refits every tick.
-  - `placementBlendSetter(SceneItem)` drives the dual-position blend, which the owner moved out of the engine.
-  - A parameter with a `range` throws outside it, so a spring or Bézier that overshoots cancels its animation.
-- **Task 15's lane is taken.** `View.time.z` means a shadow cascade: the cull adds casters, and `drawnPosition` skips its rebuild. That rebuild is also perspective-only (`w = near / depth`), so placed draws in an orthographic main view would light, fog and clip wrongly.
-- **Task 14 misses new `fovy` readers:** `render/view/pickDomain.ts`, `frames/pickTruth.ts`, `measure/curve.ts` (`DrawnCurve`'s 0.5 px), `scene/tileSelection.ts`, and the pick variant's narrow frustum (`render/view/picks.ts`).
-- **Task 6's `bodyFixed`.** `earthFixed` holds under exaggeration (the Earth anchor's affine placement is the identity). Recast as "the rig is on the body frame", `GlobeController.attach` would re-root the exaggeration example onto ITRF.
-- **Task 9's golden test** must run the warp path (`minimumHeight` is above the ground as drawn).
-- **Tasks 16 and 17:** an application's bounds are true; under ×k what's drawn is k times taller.
-- **"What 5d leaves alone" is out of date:** recomputing on a change of root exists, and 5d triggers it.
+- **The camera sits outside every deformer,** so the picture doesn't depend on the rig's frame. A rig, a controller or a transition never leaves or enters a warp, and nothing keeps "the application's frame".
+- **A frame under a deformer is displayed by the anchor rule:** the route's image of its origin, the rotation from the polar part of J, and a stretch [σ_min, σ_max]. That is the definition of displaying a frame, not an exception. `NonRigidRouteError` remains only for asking a matrix of a smooth route, so rigs, pivots and aim targets take displayed poses, and an aim at a model under the deformer lands on it as drawn.
+- **A re-root can't refit or blank.** It changes the affine run above a smooth node, not the route's shape key nor the node's content side. Compiled routes recompile nothing, and a fallback fit (for a function the compiler refuses) is keyed by the content side only.
+- **Views.** Per-view parameters and switch nodes replace the one warp context per world.
+- **Parameters have two ranges:** `valid` (from the function: the exaggeration needs k > 0) and `expected` (a hint for bounds).
+- **Still true, and not about warps:** `setRig` re-roots through `carryCamera`; `GlobeController` works on the drawn ground and zoom target; `View.toPixel` follows routes; `CorePick.route` freezes a pick's scales; `commonAncestor` exists privately (`frames/resolver.ts`), so Task 10 only exposes it; `dice.slang` handles orthographic views; `routeSingularRange` gives σ_min for snaps. The review's orthographic findings carry into Tasks 14 and 15.
 
-### Must change before execution
+**The former open questions** (§13.37):
 
-1. **Rig frames across presentation warps take the anchor rule,** as `warpAt: "anchor"` content does (`scene/warpAnchor.ts`: the route's translation and its Jacobian's rotation). An aim at an ITRF model then lands on the model as drawn.
-   - `evaluateRig` takes `place(frame, root, seconds, out)`, built on `resolveRoute`.
-   - `ControllerContext` gains `place` and `route`.
-   - Carries and damping cross by the Jacobian.
-   - _Effect:_ Tasks 5, 6, 8, 10, 12 and 13, tested on the exaggeration example's frame. The refusal goes.
-2. **Transitions across presentation warps** (Tasks 10 and 11).
-   - With both rigs at or under one presentation frame, blend there.
-   - Otherwise blend in the common ancestor of their true frames, and the transition names the warps it leaves and enters.
-   - Exaggeration is the application's (§13.34), so the application fades its `WarpScale` through `onWeight`.
-   - _Test:_ ×10 Earth to the Moon: no throw, two re-roots, and true pick heights constant.
-3. **A re-root neither refits nor blanks** (a prerequisite in `warps.ts`).
-   - Key fits by the route up to its last warp, relative to the anchor, not by the root's identity.
-   - A newly warped draw with a cached fit shows at once.
-   - _Done when:_ `world.warpStats()` counts no fits across a there-and-back transition, and no tile is hidden for a tick.
-4. **Per-view warp terms, or the stated limit,** before Tasks 10, 18 and 20 run two views.
-5. **Task 4:**
-   - `parameterSetter(PlacementParameter)` replaces `placementBlendSetter`: a `WarpScale` now, morph weights later, and no `SceneItem` target.
-   - `animate` clamps or refuses an easing that leaves a parameter's `range`.
-   - A placement with animated nodes defaults to `warpAt: "anchor"` about its root transform. _Test:_ no fits over 100 animated ticks.
-6. **The orthographic camera** (Tasks 14 and 15):
-   - a free lane (`time.w`) or a flag, not `time.z`;
-   - an orthographic rebuild in `drawnPosition`: the ray's origin, plus `far − d·(far − near)` along the direction;
-   - the readers listed above, with picks rayed from `rayOrigin`;
-   - an error of `geometricError × σ_max × height / orthographicHeight + fit error`;
-   - a test that dicing needs no change.
-7. **`bodyFixed` keeps today's meaning,** presentation warps included. Neither `GlobeController.attach` nor the Viewer (Task 18) re-roots a rig that reaches the body frame through presentation warps only.
-8. **Task 9's golden session runs the warp path too,** as `test/warpCameraPick.test.ts` does.
-9. **`fitBounds`, `fitPose` and `fitSelection` fit drawn bounds** when the root crosses a warp.
+1. **A flight that leaves an exaggerated frame:** there is none to leave. The picture doesn't depend on the rig, so nothing snaps. An application that wants a fade animates the parameter through `onWeight` and `view.setParameter`, and the engine fades nothing.
+2. **A rig target across a warp:** the anchor rule, as above. The refusal goes.
+3. **Per-view warp terms:** per-view parameters, and switch nodes for different structures (owner, 2026-11-12), built in the transform plan's Task 6. The stated limit is dropped.
+4. **Printing to scale under a deformer:** report the singular values of J along the route from the content's node to the sheet. That is one scale for a similarity, two (H and V) when constant along the sheet's axes, and a range otherwise. Task 14 adds `View.scaleAt`. The printing step (§13.34, 6) refuses only when one scale is demanded and the range exceeds its tolerance.
+5. **A range-bound parameter and an overshooting easing:** two ranges. `animate` clamps an easing to `valid` and a direct set outside it throws. Leaving `expected` rebuilds bounds and never throws.
+6. **Order:** 5c and 5d start after the transform graph's Task 6, so there is no placement increment 9. 5c comes first, as before.
 
-### Nice to have
+**Tasks.**
 
- 1. **A section view from a clip** (clip decision 9): `fitPose` from a `WorldClip`'s plane, looking along its normal (Task 16).
- 2. **The CAD controller** orbits about `pick.drawnPosition`, and values come from `truePick` (Task 17).
- 3. **Checks and docs:** flights on the exaggeration example in Task 20; transitions with warps in Task 21.
- 4. **Names:** `ModelPlacement` and `PlacementTemplate` follow 5i's "instance"; `anchorPosition` is drawn.
-
-### Open questions for the owner
-
-1. **A flight that leaves an exaggerated frame:** do warps snap at its ends, does the application fade them through `onWeight` (proposed), or does the engine fade presentation warps?
-2. **A rig target across a warp:** the anchor rule (proposed), or refused?
-3. **Per-view warp terms:** now, or the limit?
-4. **Printing to scale under a presentation warp:** refused, or reported in drawn metres?
-5. **A range-bound parameter and an overshooting easing:** clamp, or refuse?
-6. **Order:** land items 1 and 3, with 5c's domains, as placement increment 9 before 5c and 5d?
+- **Dropped:**
+  - the refusal of non-rigid rig frames;
+  - blend frames that name the warps they leave and enter;
+  - the prerequisite in `scene/world/warps.ts` (`#sync`, keyed fits), which goes with the one warp context;
+  - per-view terms or the stated limit before Tasks 10, 18 and 20;
+  - `placementBlendSetter`, and `warpAt: "anchor"` as the default for animated nodes;
+  - "`bodyFixed` keeps today's meaning through presentation warps" (no frame is kept).
+- **Changed, in place:** Tasks 4, 5, 6, 8, 9, 10, 12, 13, 14, 15, 16, 17 and 20, the Self-review's 5f line, "What 5d leaves alone", and a new call 48.
+- **Added:** `View.scaleAt` (Task 14), `Bounds.node` and a section view from a clip (Task 16), and an exaggerated-Earth setting in Task 20's matrix and a browser group.
 
 **Updated 2026-11-09.** The file split, its second pass, the sky and observer work and 5b landed after this plan was written. Check paths by symbol. The sky plan's notes for 5d (its "What other plans need") are folded in here: `Camera.lens` is renamed `Camera.imagePlane` (owner, its question 5), Task 15 turns glare off in an orthographic view, and the global constraints read `view.observer` for exposure.
 
@@ -90,7 +56,7 @@ Not applied to the tasks below. Read with §13.26 of the overall plan. This plan
 
 **Spec:** `docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md`, section 11 (sub-plan 5d) as the authority, with sections 6 to 8 for the layers and rigs, section 13 for what 5f expects, and section 14 for what 5g expects. **Builds on:** `docs/superpowers/plans/2026-11-07-frames-5a-core-and-camera-chain.md`, `...-5b-frames-library.md`, `...-5c-second-body.md`.
 
-**Base:** the commit that closes 5c (its Task 11, "Plan: frames 5c results"). 5b is built and merged (44c03b94cf); 5c is written but not built. If an executed name differs from its plan, follow `api/surface.txt` and the code, and say so in the task's commit message. Other agents share this checkout: each task starts with `git status` for the code it will change, and waits for the owner of any uncommitted edit.
+**Base:** the commit that closes 5c (its Task 11, "Plan: frames 5c results"), which sits on the transform graph's Task 6. 5b is built and merged (44c03b94cf); 5c is written but not built. If an executed name differs from its plan, follow `api/surface.txt` and the code, and say so in the task's commit message. Other agents share this checkout: each task starts with `git status` for the code it will change, and waits for the owner of any uncommitted edit.
 
 ## What 5d takes from 5b and 5c
 
@@ -108,14 +74,14 @@ Only what those plans' Interfaces blocks produce. Anything else 5d needs, it add
 
 **Not produced by either, so 5d adds it:** a resolver's common ancestor (Task 10), quaternions (Task 2), a retained glTF node tree (Task 4), a rig's kind, damping and reference (Task 5), the body-fixed guard (Task 6).
 
-**From §13.14's 5a lists:** 5d touches only the 5i note that "placement" means five things, so its setter is named for the blend, not the placement (Task 4). It adds to 5i's list in Task 21.
+**From §13.14's 5a lists:** 5d touches only the 5i note that "placement" means five things, so its setter is named for the parameter, not the placement (Task 4). It adds to 5i's list in Task 21.
 
-**What 5d leaves alone.** No model of a placement, no change to how normals or per-vertex kinds work, and no recomputing a placement on a change of root: those wait for §13.26. Models don't become scene items, and there is no scene graph and no `Entity` class: §13.25's full version and §13.29's names wait for their brainstorm and 5i. The design globe keeps its own flights until 5f.
+**What 5d leaves alone.** No change to how normals or per-vertex kinds work, and nothing added to how a route is recomputed on a change of root: those are the transform graph's, and 5d only triggers them. Models don't become scene items, and there is no scene graph and no `Entity` class: §13.25's full version and §13.29's names wait for their brainstorm and 5i. The design globe keeps its own flights until 5f.
 
 ## Author's calls
 
 Each is marked "(author's call N)" where it is used. One line each, then what undoing it costs.
-In order: the animation core (1 to 11), rigs (12 to 16), controllers (17 to 23), bindings (24 to 28), free flight (29 to 32), the orthographic camera (33 to 37), transitions (38 to 47).
+In order: the animation core (1 to 11), rigs (12 to 16), controllers (17 to 23), bindings (24 to 28), free flight (29 to 32), the orthographic camera (33 to 37), transitions (38 to 47), displayed frames (48).
 
 1. **`src/animation/` imports only `src/core` and `src/math`,** enforced in `test/importBoundary.test.ts`. _Undo:_ one rule.
 2. **`Engine.timeline`** advances in the loop after the tick listeners (so the clock has moved) and before `cameras.update`, and at the start of `renderFrame()` outside the loop. _Undo:_ one call site.
@@ -164,6 +130,7 @@ In order: the animation core (1 to 11), rigs (12 to 16), controllers (17 to 23),
 45. **The Viewer's defaults for flights:** an arc over the view's body when both ends are on it, straight otherwise, and an app-wide duration of 0 when `prefers-reduced-motion` matches. The camera layer reads no DOM. _Undo:_ two lines.
 46. **CAD's standard views animate on the timeline,** turning the camera about the focus at a constant distance. A straight blend would dip through the model. Any input stops them. _Undo:_ local.
 47. **One check page,** `spikes/controllers.html`, with `runControllers(group)` on `globalThis`. **Ports:** Task 15 on 5191, Task 19 on 5192, Task 20 on 5193, Task 21 on 5194. _Undo:_ none.
+48. **A frame under a deformer is displayed by the anchor rule.** `place(frame, base, seconds, out)` gives its displayed pose in `base`: the route's image of its origin, the rotation from the polar part of J, and the stretch [σ_min, σ_max] (the transform graph's route, in float64). Rigs, pivots, aim targets, blend poses and carries read displayed poses. `resolve` keeps the rigid matrix and throws `NonRigidRouteError` only for a smooth route. _Undo:_ one function.
 
 ## Rulings on the spec
 
@@ -351,13 +318,13 @@ New files, by responsibility (modified code is named by symbol in each task):
 
 **Interfaces:**
 
-- Consumes: Task 3; 5a's `PlacementParameter`, `SceneItem.placement`, `World.frameOf`, `World.setTransform`, `PointSource.update`.
+- Consumes: Task 3; the transform graph's smooth-node parameters (`view.setParameter`, each with a `valid` and an `expected` range); 5a's `SceneItem.placement`, `World.frameOf`, `World.setTransform`, `PointSource.update`.
 - Produces (author's calls 10 and 11):
   - `GltfNode { name?: string; parent: number; local: Float64Array }`, kept in the `PlacementTemplate`, and each `GltfDraw` and `GltfLight` naming its `node`;
   - `type NodeTransform = { readonly matrix: ArrayLike<number> } | { readonly translation?: ArrayLike<number>; readonly rotation?: ArrayLike<number>; readonly scale?: ArrayLike<number> }`: fields left out keep the node's own;
   - `ModelPlacement.nodes: readonly { readonly index: number; readonly name: string | undefined; readonly parent: number }[]`;
   - `ModelPlacement.setNodeTransform(node: string | number, transform: NodeTransform): void`, `ModelPlacement.resetNodeTransform(node?: string | number): void`. It throws naming the node and listing the names for an unknown one, naming the placement's instances for an instanced one, and naming a non-finite value. A placement's `bounds()` reflects moved nodes;
-  - `placementBlendSetter(target: PlacementParameter | SceneItem): (t: number) => void` (for an item, its position blend, whatever 5i renames it);
+  - `parameterSetter(param: SmoothParameter, view?: View): (value: number) => void`: writes the parameter's value, or with a `view` that view's through `view.setParameter` (an exaggeration factor now, a morph weight in 5f). It clamps an animation's value to `valid`, so a spring or Bézier that overshoots doesn't cancel its animation, while a direct set outside `valid` throws. Leaving `expected` rebuilds bounds and never throws. There is no `SceneItem` target;
   - `nodeTransformSetter(placement: ModelPlacement, node: string | number, part: "matrix" | "translation" | "rotation" | "scale"): (value: ArrayLike<number>) => void`.
 
 - [ ] **Step 1: Write the failing tests:**
@@ -368,14 +335,15 @@ New files, by responsibility (modified code is named by symbol in each task):
     - a light at a moved node moves; `bounds()` moves;
     - the refusals above; `setNodeTransform` after `remove()` throws as `setTransform` does.
   - `test/animationSetters.test.ts`:
-    - `placementBlendSetter` writes a parameter and an item's blend; a non-finite value throws through `Timeline`'s one report;
+    - `parameterSetter` writes a parameter globally and per view; an easing that overshoots `valid` is clamped and the animation runs on, a direct set outside it throws, and leaving `expected` rebuilds bounds and throws nothing; a non-finite value throws through `Timeline`'s one report;
+    - an animated affine node over a draw under a smooth node: over 100 animated ticks nothing recompiles and no fit is made, since the route's shape key is stable and only the draw's centre constant changes;
     - an azimuth sampler on a scene clock (`samplerValue`, `nodeTransformSetter`) gives the dish its key's rotation at a key, and the earlier one scrubbed back;
     - a track: `timeline.bind` with a position sampler and `placement.setTransform` puts the model at the key; a rig `{ position: { frame: world.root, anchor: world.frameOf(placement.transform, "track"), offset: [0, 0, 100] }, orientation: { kind: "free" } }` on the table resolver rides 100 m above it (ruling 1);
     - a clamped track: `timeline.bind` writes `PointSource.update` samples each clock change, with `clamp` set: the source sees each sample, and the clamp's capture is requested as today.
 - [ ] **Step 2: Run** and confirm they fail.
 - [ ] **Step 3: Implement.** Parsing keeps today's draw and instance order, so nothing else moves. A node with neither draws nor lights below it needs no table transform. A subtree recompute writes only the transforms below the moved node.
 - [ ] **Step 4: Run** the tests, `test/models.test.ts` and `test/glb.test.ts` unchanged, `npm test`, tsc, eslint, prettier.
-- [ ] **Step 5: Surface and commit** with "scene: per-node transforms on a placed model, and setters for a placement's blend and a node".
+- [ ] **Step 5: Surface and commit** with "scene: per-node transforms on a placed model, and setters for a parameter and a node".
 
 ### Task 5: The rig: kind, reference, damping, and one evaluation
 
@@ -392,12 +360,12 @@ New files, by responsibility (modified code is named by symbol in each task):
   - `Rig.kind?: string` (author's call 13); `Rig.damping?: RigDamping`, `interface RigDamping { readonly position?: number; readonly orientation?: number }` (author's call 14);
   - `freeRig(rig: Rig): Rig` (author's call 12);
   - `interface RigPose { readonly position: Float64Array; readonly direction: Float64Array; readonly up: Float64Array; readonly right: Float64Array }`;
-  - `evaluateRig(rig: Rig, free: CameraPose, root: FrameKey, seconds: number, resolve: (frame: FrameKey, base: FrameKey, seconds: number, out: Float64Array) => Float64Array, out: RigPose): void`, throwing `RigPoseError` (with `frame`) for an aim target at the camera or an up along the view (author's call 15);
+  - `evaluateRig(rig: Rig, free: CameraPose, root: FrameKey, seconds: number, place: (frame: FrameKey, base: FrameKey, seconds: number, out: Float64Array) => Float64Array, out: RigPose): void`, throwing `RigPoseError` (with `frame`) for an aim target at the camera or an up along the view (author's call 15). `place` is call 48's displayed pose, so a rig frame under a deformer is no error, and `CameraLayer` stops requiring rig frames to reach the root rigidly;
   - `CameraLayer.update(now?: number): boolean`, default `performance.now()`; busy while a spring moves, whatever the clock.
   - The root's hidden slot past `ANCHOR_EYE_REACH` (author's call 16).
 
 - [ ] **Step 1: Write the failing tests:**
-  - `test/evaluateRig.test.ts`: every case `test/cameraLayer.test.ts` already pins for `pose` gives the same numbers, exactly, through `evaluateRig`; `freeRig` of `axes`, of `aim` and of an offset rig, each with its reference and `anchor` as call 12 says; `freeRig` of a free rig is the same object; `isDefaultRig` is false with damping or a reference; `rigError` names a bad `reference.up` or `damping` that isn't positive; a preset from `rigPreset` has `kind` equal to its name.
+  - `test/evaluateRig.test.ts`: every case `test/cameraLayer.test.ts` already pins for `pose` gives the same numbers, exactly, through `evaluateRig`; `freeRig` of `axes`, of `aim` and of an offset rig, each with its reference and `anchor` as call 12 says; `freeRig` of a free rig is the same object; `isDefaultRig` is false with damping or a reference; `rigError` names a bad `reference.up` or `damping` that isn't positive; a preset from `rigPreset` has `kind` equal to its name; with no smooth node `place` equals `resolve`, so every case above is exact; an aim at a model under a ×10 lift over Earth content points at the route's image of its origin within 10⁻⁹ rad, and an `axes` rig on that model takes the rotation of J's polar part.
   - `test/rigDamping.test.ts` (`fakeEngine`, injected `now`, a paused clock):
     - a rig whose offset jumps 100 m, `damping.position` 1: after 1 s the camera has 100 · (1 + 1)/e of it left, within 10⁻⁶ m, though the clock is paused; `update` is busy until it snaps within 1 mm, and false after;
     - a followed anchor at 100 m/s, τ 0.5: the steady lag is 100 m within 1%;
@@ -441,6 +409,8 @@ New files, by responsibility (modified code is named by symbol in each task):
       root(): FrameKey;
       seconds(): number;
       resolve(frame: FrameKey, base: FrameKey, out: Float64Array): Float64Array;
+      place(frame: FrameKey, base: FrameKey, out: Float64Array): Float64Array; // displayed pose (call 48)
+      route(frame: FrameKey, base: FrameKey): Route; // for σ and J, when a controller wants them
       setRig(rig: Rig): void;
       readonly timeline: Timeline;
       pick(x: number, y: number): Promise<CorePick | undefined>;
@@ -464,7 +434,8 @@ New files, by responsibility (modified code is named by symbol in each task):
   - `setController` to another detaches the first; to `undefined` no controller runs; removing the view detaches, and no later tick calls it (Review Focus 4);
   - `options.camera`: a linked view's camera is `context.camera`;
   - a damped rig: `context.camera` is the goal, not `view.camera`;
-  - `bodyFixed`: a rig on `world.bodyAnchor(MOON)` is fixed for `MOON` and not `EARTH`; the guard warns once, naming the Moon; a view with no body anchor reads as fixed, as today's root does;
+  - `bodyFixed`: a rig on `world.bodyAnchor(MOON)` is fixed for `MOON` and not `EARTH`; the guard warns once, naming the Moon; a view with no body anchor reads as fixed, as today's root does; with a ×10 lift over Earth content, a rig on ITRF is fixed for the Earth, and attaching a controller re-roots nothing and leaves every route as it was;
+  - `context.place` of a frame under that lift is its displayed pose (call 48), `context.resolve` of it throws `NonRigidRouteError`, and `context.route` gives its σ range;
   - with no controller set, `cameras.update` does what it did: `test/cameraLayer.test.ts` passes with only the guard's rename.
 - [ ] **Step 2: Run** and confirm it fails.
 - [ ] **Step 3: Implement.** A view's controller lives in `ViewState`. No allocation per tick.
@@ -526,7 +497,7 @@ New files, by responsibility (modified code is named by symbol in each task):
   - `interface OrbitControllerOptions { readonly pivot?: { readonly frame?: FrameKey; readonly point?: ArrayLike<number> }; readonly frame?: OrbitFrame; readonly body?: Body; readonly minRange?: number | false; readonly maxRange?: number | false; readonly pitchLimit?: number | false }`. The pivot defaults to the rig's `anchor`, else the position reference frame's origin.
   - Actions: `orbit`, `tilt` (pitch only), `pan`, `zoom`.
   - `attach` returns `freeRig(rig)` when the rig isn't free.
-  - Each `update`: the pivot and the up are resolved in the root at the clock's seconds. If they moved, the camera is placed from `heading`, `pitch` and `range`, in them. A pan's offset from the pivot moves with it. This is what the explorer's `followRig` does by hand.
+  - Each `update`: the pivot and the up are placed in the root at the clock's seconds (`context.place`, so a pivot on a frame under a deformer is where it is drawn, with the up from the displayed rotation). If they moved, the camera is placed from `heading`, `pitch` and `range`, in them. A pan's offset from the pivot moves with it. This is what the explorer's `followRig` does by hand.
   - A range outside the limits (landing from an interrupted flight) widens them to where it landed, until the camera is inside them again, as the explorer's `landedLimits` does.
   - `orbitBasis`, `orbitPose`, `enuBasis`, `OrbitFrame`, `OrbitBasis` stay exported. `planOrbit` and `followZoom` take an `OrbitController`.
 
@@ -536,6 +507,7 @@ New files, by responsibility (modified code is named by symbol in each task):
   - no body: on the table resolver, in render space with no body option, the up is +Z and the pivot the origin;
   - a moving pivot: a stub resolver moves the pivot 1,000 km per tick and turns its axes: heading, pitch and range hold within 10⁻⁹, and the camera's offset in those axes holds within 1 µm; a panned pivot's offset moves with it (the explorer's "carries a panned pivot" case, ported);
   - a rolled reference: reference up [0, 1, 0]: heading turns about it, and `camera.up · up > 0`;
+  - a pivot on a model under a ×10 lift over Earth content: no throw, the pivot is the model's displayed place, and heading, pitch and range hold in the displayed axes as the model moves;
   - a preset: `freeRig(rigPreset("orbital", …).rig)` (a synthetic target, as 5b's test): the first tick doesn't move the camera beyond the re-expression, and up comes from the preset's axes;
   - each off switch: `pitchLimit: false`: a long drag carries the camera over the pole, with position continuous and the sign of `offset · up` changing; `minRange: false`: the wheel passes 0.01 m without stopping at the old floor; `maxRange: false`: no ceiling;
   - landed limits: the three cases in the explorer's test, ported;
@@ -564,8 +536,9 @@ New files, by responsibility (modified code is named by symbol in each task):
   - Actions: `orbit` (grab), `zoom` (wheel and drag), `tilt`, `look`.
   - It keeps `focus`, `stop`, `moving`, `target`, `heading`, `pitch`, `range`, `inputs`, `surfaceHeight`, and today's tunables. `enabled` and `ignore` go: the layer's one controller and `GestureInput.ignore` replace them. Momentum steps in `update(seconds)`, not its own `onTick` or `requestAnimationFrame` callback.
   - `attach` returns a rig on `world.bodyAnchor(body)` if the view isn't already `bodyFixed`, and `freeRig(rig)` otherwise.
+  - The camera is outside the deformer, so `minimumHeight` and a zoom's floor are heights in the drawn space: `surfaceHeight` returns the true height, which the controller carries through the route at that point (the lift's f(h)).
 
-- [ ] **Step 1: A golden test before anything changes** (`test/globeController.test.ts`, "today's Earth"): against the class as it stands when this task starts, with `performance.now` stubbed and `pickPosition` resolving `undefined`, drive one scripted session: a grab, five wheel notches, a tilt, a look, a release with momentum. Record the camera's position, direction and up after each stage as numbers in the test. It passes now. This is what the task must not change.
+- [ ] **Step 1: A golden test before anything changes** (`test/globeController.test.ts`, "today's Earth"): against the class as it stands when this task starts, with `performance.now` stubbed and `pickPosition` resolving `undefined`, drive one scripted session: a grab, five wheel notches, a tilt, a look, a release with momentum. Record the camera's position, direction and up after each stage as numbers in the test. It passes now. This is what the task must not change. A second golden session runs the same script with a ×10 lift over Earth content, recorded the same way: `minimumHeight` is then above the ground as drawn (`surfaceHeight`'s true height through the route).
 - [ ] **Step 2: The pure move.** `git mv`. The golden test still passes. Commit on its own.
 - [ ] **Step 3: Write the failing tests,** the golden session unchanged (through `bindInput`, the stub now driving `update`) and within 10⁻⁹ m. New, with `describe.each([EARTH, MOON])`, on a view with that body and a rig on its anchor:
   - a grab holds the point under the cursor within 1 px across a 50 px drag;
@@ -598,6 +571,7 @@ New files, by responsibility (modified code is named by symbol in each task):
   - `class Transition { readonly view: View; readonly from: Rig; readonly to: Rig; readonly blendFrame: FrameKey; readonly weight: number; readonly animation: Animation<number>; readonly finished: Promise<TransitionEnd>; cancel(): void }`;
   - `CameraLayer.transition(view: View, options: TransitionOptions): Transition`, `CameraLayer.running(view: View): Transition | undefined`;
   - While one runs, `root(view)` is its blend reference frame and `rig(view)` a free rig on it. `controller(view)` is `undefined`, the source's being kept for an interruption. At the end, `setRig(view, to)`, the target's pose, and `options.controller` attached.
+  - The blend reference frame is a tree ancestor of both rigs' position reference frames, so it is never under a deformer (they sit over content). Each rig's pose in it is its displayed pose (`place`, call 48). A transition crosses no warp, never throws for one, and leaves every deformer's parameters alone. An application that wants a fade animates a parameter through `onWeight` and `parameterSetter`.
   - A slerp of orientation, field of view linear, `near` geometric. Straight path in this task; Task 11 adds the rest. Perspective only here; Task 16 adds the dolly.
 
 - [ ] **Step 1: Write the failing test** (`fakeEngine`, a stub resolver with a small tree, an injected `now`, `FakeClock`):
@@ -613,6 +587,8 @@ New files, by responsibility (modified code is named by symbol in each task):
   - free parts ride along: a source with a free pose in a moving reference frame moves with it through the blend;
   - the controller: the source's detaches at the start, `options.controller` attaches at the end, and input before then doesn't reach it;
   - `onWeight` sees each tick's weight, 1 at the end;
+  - an exaggerated Earth: with a ×10 lift over Earth content, a transition from a rig on ITRF to one on MOON_ME gives no throw, two re-roots, the Earth drawn ×10 throughout with its parameter untouched, the Moon unwarped, and true pick heights (`pickIn(pick, "true")`) constant. Over a there-and-back nothing recompiles, no fallback fit is made, and no draw is hidden for a tick (the scheduler's counts, `world.warpStats()` or its successor);
+  - a rig whose target is a model under that lift: the blend's pose is the displayed pose, and the end is within 1 px of the target rig's own evaluation;
   - Review Focus 1: the target throws `FrameUnavailableError` for 5 ticks at weight 0.4: no NaN, the pose and weight hold, `held(view)` names it, one report goes out, `finished` stays pending, and it goes on after;
   - Review Focus 2: `clock.seconds` set back an hour in a wall-clock transition: the next tick's pose is the blend at the new time. A `clock: "scene"` transition: scrubbed before its start the camera is at the source's pose; past its end it arrives once, and scrubbing back doesn't start it again;
   - Review Focus 4: `removeView`, a change of `view.world`, `setRig`, `setController` and the engine's destroy each settle `finished` as `"cancelled"`, with no later tick touching the view;
@@ -681,6 +657,7 @@ New files, by responsibility (modified code is named by symbol in each task):
   - `finish`: a press and a wheel during the flight reach no controller and no `inputs` count; after arrival the next press works; a press held through the arrival starts nothing (Review Focus 3);
   - programmatic, over a running transition: under `stop`, the new one starts from the current pose, with no jump, and the old `finished` is `"stopped"`; under `finish`, the new one waits for the arrival, and a third replaces it, the second ending `"cancelled"`; under `handover`, the carry joins the new blend;
   - a drag under way when a programmatic transition starts: the controller gets `end` first (Review Focus 3);
+  - a followed anchor under a ×10 lift over Earth content moves at J·v in the root's axes, and the carry and damping lag read that displayed motion (differences of `place`), so a re-root during a handover keeps the displayed velocity continuous there too;
   - a spring easing on a plain `Animation`, replaced with `velocity: old.velocity`, keeps its slope (the spec's words, on the animation core);
   - Review Focus 4: an interruption on a removed view does nothing, and `finished` is already settled.
 - [ ] **Step 2: Run** and confirm it fails.
@@ -733,6 +710,7 @@ New files, by responsibility (modified code is named by symbol in each task):
   - `rangeLimit`: stops at it; `false`: doesn't;
   - re-attach: flying from near the Earth to the Moon, the root changes from the Earth's reference frame to the Moon's at the boundary of call 30, and a rigid point's pixel moves under 10⁻³ px across that tick beyond what the flight itself moved it; hovering across the boundary changes it once (the 0.8 hysteresis);
   - the hand-over: below 0.02 R, `onOffer` is called once; `accept()` starts a transition that ends with a `GlobeController` on that body and the root on its reference frame, with no step larger than the transition's own; no second offer until above 0.03 R; `auto` starts at once; `off` never;
+  - an exaggerated Earth: with a ×10 lift over Earth content, speed and the hand-over height read the body's ellipsoid, which a lift fixes, so every number above equals its ×1 value;
   - Review Focus 1: a body's reference frame that throws `FrameUnavailableError` is skipped for that tick, with one report, and flight goes on.
   - orthographic: ignored, warned once (joins after Task 14, `it.todo` here).
 - [ ] **Step 2: Run** and confirm it fails.
@@ -745,7 +723,7 @@ New files, by responsibility (modified code is named by symbol in each task):
 **Files:**
 
 - Create: `test/orthographic.test.ts`
-- Modify: `Camera` (`orthographic`, `imagePlane`, `metresPerPixel`, `rayOrigin`, `rayDirection`, `projection`, `frustumPlanes`, `copyFrom`), `projectToPixel`, `View.anchorCamera`, `View.setCameraFromAnchor`, `View`'s `project`, `m4` (`orthographicReverseZ`), `depthDistance`, `alongRay`, `PickCamera`, `PickTick`, `PendingCamera`, `corePick`, `pickInterpreter`, the engineering `pick` and `snap`, `Engine`'s selection views, `writeLights`, `positionCamera`, `pickTick`, `Stepwise`, `GlobeStepwise`, `Budgeted`, `GlobeBudgeted`, `isScaledSpacePointVisible`'s callers, `fitCascades`, `packViewLights`, `ViewLink.groundPoint`, `OrbitController` (its wheel scales `height`), the globe and free-fly guards, the seams test, the core entry point, `api/surface.txt`
+- Modify: `Camera` (`orthographic`, `imagePlane`, `metresPerPixel`, `rayOrigin`, `rayDirection`, `projection`, `frustumPlanes`, `copyFrom`), `projectToPixel`, `View.anchorCamera`, `View.setCameraFromAnchor`, `View`'s `project`, `m4` (`orthographicReverseZ`), `depthDistance`, `alongRay`, `PickCamera`, `PickTick`, `PendingCamera`, `corePick`, `pickInterpreter`, the engineering `pick` and `snap`, `Engine`'s selection views, `writeLights`, `positionCamera`, `pickTick`, `Stepwise`, `GlobeStepwise`, `Budgeted`, `GlobeBudgeted`, `isScaledSpacePointVisible`'s callers, the other `.fovy` readers (`render/view/pickDomain.ts`, `frames/pickTruth.ts`, `measure/curve.ts` for `DrawnCurve`'s 0.5 px, `scene/tileSelection.ts`, and the pick variant's narrow frustum in `render/view/picks.ts`), `fitCascades`, `packViewLights`, `ViewLink.groundPoint`, `OrbitController` (its wheel scales `height`), the globe and free-fly guards, the seams test, the core entry point, `api/surface.txt`
 
 **Interfaces:**
 
@@ -756,7 +734,8 @@ New files, by responsibility (modified code is named by symbol in each task):
   - `Camera.far(): number`; `Camera.metresPerPixel(distance: number, pixelHeight: number, aspect: number): number`; `Camera.rayOrigin(ndcX, ndcY, aspect, out: Vec3): Vec3`;
   - `m4.orthographicReverseZ(out, halfX, halfY, near, far)`;
   - `isScaledSpacePointVisibleParallel(direction, occludee, minimumHeight)`, beside the existing test, for an eye at infinity;
-  - `SelectionView.orthographicHeight?: number`: with it, a tile's screen-space error is `error × height / orthographicHeight`, at every distance;
+  - `SelectionView.orthographicHeight?: number`: with it, a tile's screen-space error is `error × σ_max × height / orthographicHeight + fit error`, at every distance (σ_max is 1 on a rigid route);
+  - `View.scaleAt(point: ArrayLike<number>, node?: FrameKey): { readonly min: number; readonly max: number }`: the singular values [σ_min, σ_max] of J along the route from the point's node (default the content's own) to the view's render space (`routeSingularRange`). Times the orthographic view's pixels per metre, this is the print scale: one value for a similarity, two when H and V differ, a range otherwise. Refusing a demanded single scale is the printing step's (§13.34, 6);
   - `depthDistance` takes `{ near, far? }`: with `far`, distance is `far − depth × (far − near)`; underlay scaling as today;
   - `PickCamera` keeps `fovy` for hosts and gains `orthographicHeight?`; the tolerance sites read `pickMetresPerPixel(camera, distance)`.
   - A new seam in `test/seams.test.ts`: `.fovy` is read only in `Camera`'s file and where a `PickCamera` is built, naming the line otherwise (author's call 34). `Camera.fovy` stays for hosts, and in an orthographic view returns the narrowest dolly field of view.
@@ -771,7 +750,9 @@ New files, by responsibility (modified code is named by symbol in each task):
   - fog off in an orthographic selection view;
   - the horizon: a point on the far side is hidden, a near-limb point visible; 1,000 sampled points agree with the perspective test from an eye 10⁹ radii out along −direction;
   - depth: `depthDistance` at near, far and the middle, within 10⁻⁶ m; underlay scaling holds;
-  - picks: `corePick` at a pixel gives the point that projects there, and its `camera` carries the image plane; pick tolerance in `pickInterpreter` is `metresPerPixel`;
+  - picks: `corePick` at a pixel gives the point that projects there, and its `camera` carries the image plane; pick tolerance in `pickInterpreter` is `metresPerPixel`; picks are rayed from `rayOrigin`, including the pick variant's narrow frustum;
+  - `scaleAt`: with a ×10 lift over Earth content at 100 m height it gives [1, 10] within 10⁻³, and [1, 1] with no deformer;
+  - dicing needs no change (`dice.slang` already handles orthographic views): a test pins it;
   - copies: `copyFrom`, `anchorCamera`, `setCameraFromAnchor` and a re-root keep `orthographic`;
   - cascades: every cascade's sphere contains its slice's 8 corners;
   - lights: `packViewLights` writes a one-cell grid, and a light outside the extents is dropped;
@@ -797,14 +778,15 @@ A browser check (port 5191, author's call 47).
 
 - Consumes: Task 14.
 - Produces (author's calls 35 and 36):
-  - `View.time`'s z lane is 1 in an orthographic view, and the block keeps its size;
+  - an orthographic view is flagged in a free lane of the view block (`View.time`'s w, or a flag), not z, which marks a shadow cascade (the cull adds casters and `drawnPosition` skips its rebuild); the block keeps its size;
+  - `drawnPosition`'s rebuild, perspective-only today (`w = near / depth`), gains an orthographic form (or its successor does, after the transform graph's compiled routes): the ray's origin plus `far − d·(far − near)` along the direction, so placed draws light, fog and clip rightly in an orthographic main view;
   - the surface shader's view vector is the camera's −forward there, and `-normalize(relPosition)` otherwise;
   - `depthRange`'s parameters carry `far` (0 in perspective): distance is `far − d × (far − near)` when set;
   - `frame.ambient` is false in an orthographic view;
   - `Sky.write` reads `camera.imagePlane`, and in an orthographic view gives the sky the narrowest dolly's tangents (it has no `starExposure` parameter now; star cells take the sky's tangents and need no change);
   - glare is off in an orthographic view, beside `frame.ambient`: `resolveGlare` gives `off` there. There's no angle for a veil to spread over, and the narrowest dolly's tangents would make every star's radiance enormous.
 
-- [ ] **Step 1: Write the failing Node test** (`fakeEngine`): the view block's `time[2]` is 1 only when orthographic; a perspective view's block is byte-for-byte today's; `frame.ambient` is false; the depth range's parameters; the sky's `tanY` equals tan(0.05°), positive and finite; `resolveGlare` gives `off`; stars at the narrowest dolly's tangents have no NaN; `veilWeights` gives zeros.
+- [ ] **Step 1: Write the failing Node test** (`fakeEngine`): the view block's flag lane is 1 only when orthographic, and a shadow cascade's `time.z` is unchanged; a placed draw's rebuilt position in an orthographic view equals its projected pixel's ray point within 10⁻⁶ m; a perspective view's block is byte-for-byte today's; `frame.ambient` is false; the depth range's parameters; the sky's `tanY` equals tan(0.05°), positive and finite; `resolveGlare` gives `off`; stars at the narrowest dolly's tangents have no NaN; `veilWeights` gives zeros.
 - [ ] **Step 2: Run** and confirm it fails.
 - [ ] **Step 3: Implement.** `npm run shaders`. Read the Metal of each changed entry with `node scripts/dumpMsl.mjs`.
 - [ ] **Step 4: Run** the test, `npm run shaders:check`, tsc, eslint, prettier, `npm test`.
@@ -822,13 +804,14 @@ A browser check (port 5191, author's call 47).
 
 - Consumes: Tasks 10 and 14.
 - Produces (author's call 37):
-  - `type Bounds = { readonly center: ArrayLike<number>; readonly radius: number } | { readonly min: ArrayLike<number>; readonly max: ArrayLike<number> }`;
+  - `type Bounds = { readonly center: ArrayLike<number>; readonly radius: number } | { readonly min: ArrayLike<number>; readonly max: ArrayLike<number> }`, each with an optional `node?: FrameKey`. Bounds are an application's, so true: those given at a node under a deformer are fitted as their drawn bounds through the route (`drawnBounds`), since under ×k what's drawn is k times taller. Without `node` they are in the render space as given;
   - `Camera.fitBounds(bounds: Bounds, options: { readonly aspect: number; readonly margin?: number }): this`: keeps the direction, moves the camera back along it, and in orthographic sets `height` and `far`. Default `margin` 1.1. What to fit is the application's;
   - `fitPose(camera: Camera, bounds: Bounds, options): TargetPose`, the same as a pose, for a transition;
+  - `sectionPose(clip: WorldClip, bounds: Bounds, options): TargetPose`: a section view from a clip (clip decision 9), looking along the clip plane's normal, fitted as `fitPose` does;
   - A transition between projections: in perspective to the end that has orthographic, with tan(fov/2) geometric toward tan(0.05°) and the camera backing along its view so the focus plane's scale holds; the projection switches at that end. `focusDistance` defaults to the distance to the target's aim, else to the orthographic pose's position along the view.
 
 - [ ] **Step 1: Write the failing tests:**
-  - `test/fitBounds.test.ts`: a sphere fits within the view on a wide and a narrow aspect, touching within 1% of `margin` in the tighter direction; a box's 8 corners project inside; orthographic sets `height` and `far` so nothing is clipped; a radius of 0 uses 1 m; empty or non-finite bounds throw, naming them (Review Focus 5); direction and up are unchanged.
+  - `test/fitBounds.test.ts`: a sphere fits within the view on a wide and a narrow aspect, touching within 1% of `margin` in the tighter direction; a box's 8 corners project inside; orthographic sets `height` and `far` so nothing is clipped; a radius of 0 uses 1 m; empty or non-finite bounds throw, naming them (Review Focus 5); direction and up are unchanged; bounds at a node under a ×10 lift over Earth content fit within the view as drawn (the drawn box's corners project inside), and the same box with no deformer fits as before; `sectionPose` of a plane clip looks along its normal with the clip's plane face-on, and its corners inside.
   - `test/transitionDolly.test.ts`:
     - perspective to orthographic, one pose: a point on the focus plane stays within 0.01 px on every tick; the camera backs away as the formula says;
     - at the switch, on a square view 1,024 px tall, a point one view height off the focus plane moves under 1 px (call 37's claim);
@@ -855,11 +838,11 @@ A browser check (port 5191, author's call 47).
 - Produces (author's calls 20 and 46):
   - `class CadController implements CameraController`, `kind: "cad"`, constructed `new CadController(options?: CadControllerOptions)`;
   - `interface CadControllerOptions { readonly fit?: () => Bounds | undefined; readonly minDistance?: number | false; readonly viewSeconds?: number }`: `fit` is what "fit the selection" fits, the application's; `minDistance` default 0.01 m; `viewSeconds` default 0.6;
-  - `attach` returns `freeRig(rig)`. Actions: `orbit` (about the point under the cursor, from `context.pick`; until it answers, the point on the view axis at the last focus depth), `pan`, `zoom` (to the cursor), `fitSelection`, `viewTop`, `viewFront`, `viewSide`, `viewIsometric`;
+  - `attach` returns `freeRig(rig)`. Actions: `orbit` (about the point under the cursor, from `context.pick`; until it answers, the point on the view axis at the last focus depth), `pan`, `zoom` (to the cursor), `fitSelection`, `viewTop`, `viewFront`, `viewSide`, `viewIsometric`. The pivot is the pick's displayed position (`pickIn(pick, "drawn")`), and any value the controller reports about it is the true one (`pickIn(pick, "true")`). `fit`'s bounds may carry a `node` (Task 16);
   - The standard views, in the axes of the rig's `reference` (else the position reference frame's), Z up: top looks along −Z with up +Y; front looks along +Y with up +Z; side looks along −X with up +Z; isometric looks along (−1, 1, −1)/√3 with up +Z.
 
 - [ ] **Step 1: Write the failing test,** with `describe.each(["perspective", "orthographic"])`, in render space with no frames module, and on a stub reference frame turned 30° from the root:
-  - orbit about a picked point: its pixel holds within 10⁻⁶ px over a drag, off the view's centre; a late pick changes the pivot with no jump; a pick that answers `undefined` uses the depth plane; no surface is needed to start;
+  - orbit about a picked point: its pixel holds within 10⁻⁶ px over a drag, off the view's centre; a late pick changes the pivot with no jump; a pick that answers `undefined` uses the depth plane; no surface is needed to start; with a ×10 lift over Earth content, an orbit about a picked point holds its pixel within 10⁻⁶ px, and the height it reports is the true one;
   - pan: the point under the cursor follows it within 10⁻⁶ px (at the pivot's depth in perspective, at any depth in orthographic);
   - zoom: the point under the cursor holds its pixel within 10⁻⁶ px. In orthographic, `height` scales and the camera pans. In perspective, it stops at `minDistance`, or passes with `false`;
   - `fitSelection`: `fit`'s box's 8 corners are in view after the action, and with no `fit`, or `fit` returning `undefined`, nothing happens and nothing throws;
@@ -949,7 +932,7 @@ A browser check (port 5193).
 - Produces: nothing new. A gap found here is fixed in the task that owns the code.
 
 - [ ] **Step 1: Write the failing or passing tests.** Any that pass at once were already earned; any that fail are fixed where the code lives.
-  - `test/controllersMatrix.test.ts`: `describe.each` over `GlobeController`, `OrbitController`, `FreeFlyController`, `CadController`, by three settings: on the Earth (frames resolver on the stubbed catalog, rig on ITRF), on the Moon (rig on MOON_ME, a view with `body: MOON`), and in render space without the frames module (table resolver, default rig; a globe on `EARTH`'s anchor there). Each: synthetic pointer, wheel, touch and key events under the `default` map, each bound action moving the camera or skipped as listed, no NaN, no thrown error, and `camera.version` moving only when the camera did. The `default` map binds to each.
+  - `test/controllersMatrix.test.ts`: `describe.each` over `GlobeController`, `OrbitController`, `FreeFlyController`, `CadController`, by four settings: on the Earth (frames resolver on the stubbed catalog, rig on ITRF), on the Moon (rig on MOON_ME, a view with `body: MOON`), in render space without the frames module (table resolver, default rig; a globe on `EARTH`'s anchor there), and on the Earth under a ×10 lift over its content (rig on ITRF, a model and the terrain under the deformer: picks report true heights through `pickIn`). Each: synthetic pointer, wheel, touch and key events under the `default` map, each bound action moving the camera or skipped as listed, no NaN, no thrown error, and `camera.version` moving only when the camera did. The `default` map binds to each.
   - `test/data/transitionOrion.test.ts` (the store; `FRAMES_DATA=1`): the Artemis II trajectory in the catalog, `Clock` at 3,600× on an injected clock: a transition from a rig on ITRF to an orbit rig on Orion. `root(view)` is the blend reference frame throughout and Orion's after; at the end Orion's origin projects within 1 px of the rig's own answer at 1,024 px (ruling 10); it holds for a scene-clock transition too. Then `rigPreset("orbital", …)` as the target.
   - Free flight from the Earth to the Moon on the catalog (`test/controllersMatrix.test.ts`, stubbed data): the root goes from ITRF to MOON_ME, with a rigid point's pixel moving under 10⁻³ px at the change beyond the flight's own motion.
   - `test/replayServed.test.ts`, what 5g and 5f need, on an injected clock:
@@ -958,9 +941,9 @@ A browser check (port 5193).
     - a scene-clock node animation scrubbed backward across its start shows the earlier state;
     - a table of rig and controller per reference frame (§14.4): a stage's body-fixed frame with an orbit, ITRF and MOON_ME with their globe controls, GCRF with an orbit and reference up +Z and no preset (ruling 8), each reached by a transition, with `root` and `rig` right on the next tick;
     - a rig on a piecewise reference frame across its change: no jump, and across its end `held(view)` says so;
-    - a named `blendFrame` with `onWeight` driving a `placementBlendSetter` (5f's morph): `t` follows the weight on every tick and is exactly 1 at the end, and the root is the named reference frame until then.
+    - a named `blendFrame` with `onWeight` driving a `parameterSetter` (5f's morph): `t` follows the weight on every tick and is exactly 1 at the end, and the root is the named reference frame until then.
 - [ ] **Step 2: Run** them. Fix each failure where the code lives, with that task's test added.
-- [ ] **Step 3: Browser check.** `spikes/controllers.html` gains groups `flight` (a transition on a rig that follows a moving node, its target's pixel read from the image within 1 px at the end) and `controllers` (each controller, by synthetic events on the real canvas, moves the view with a clean console). One group at a time. Stop the server.
+- [ ] **Step 3: Browser check.** `spikes/controllers.html` gains groups `flight` (a transition on a rig that follows a moving node, its target's pixel read from the image within 1 px at the end) and `controllers` (each controller, by synthetic events on the real canvas, moves the view with a clean console), and `exaggerated` (on the vertical exaggeration example: a flight from the ×10 Earth to the Moon and back, an orbit about a model under the deformer, and a free flight through the lift's air; each target's pixel within 1 px, no tile hidden for a tick, the exaggeration unchanged throughout). One group at a time. Stop the server.
 - [ ] **Step 4: Run** `npm test`, `npm run test:data`, tsc, eslint, prettier.
 - [ ] **Step 5: Commit** with "camera: the done-when checks: every controller on each body, a flight to Orion at 3,600×, and free flight to the Moon".
 
@@ -972,7 +955,7 @@ A browser check (port 5193).
 - Modify: the package's README, the handbook's `cameras` tab, the overall plan's §13.14
 
 - [ ] **Step 1: Write the failing test** (`test/cameraDocs.test.ts`): every value export `api/surface.txt` lists from `src/animation` and `src/camera` (by a list in the test) is named in the README, and the handbook's `cameras` tab has a "checked" date no older than this task's. It fails until Step 2.
-- [ ] **Step 2: README and handbook.** Document the animation core (clocks, easing, samplers, `Timeline.bind`), setters, per-node transforms, rig kinds and damping and references, the controller seam, each controller's actions and constraints, bindings with their grammar and presets, transitions with their paths, defaults and interruptions, the orthographic camera and what is off in it, `fitBounds`. Update the handbook's `cameras` tab in the same change: prose, "checked" date, status. Keep it to generic words.
+- [ ] **Step 2: README and handbook.** Document the animation core (clocks, easing, samplers, `Timeline.bind`), setters, per-node transforms, rig kinds and damping and references, the controller seam, each controller's actions and constraints, bindings with their grammar and presets, transitions with their paths, defaults and interruptions, the orthographic camera and what is off in it, `fitBounds`, `scaleAt`, and frames under a deformer (displayed poses, transitions that cross none). Update the handbook's `cameras` tab in the same change: prose, "checked" date, status. Keep it to generic words.
 - [ ] **Step 3: Plan note** in §13.14, "Frames 5d results": the measured values, the author's calls and rulings one line each, and a "Carried forward from frames plan 5d" list of real deferred work, without nits, written before the ledger is deleted. It includes: ambient occlusion and the light grid in orthographic views; a moving clamped model's path; the design globe's flights moving to transitions (5f); the note for 5g's table on GCRF (ruling 8); and for 5i: `Timeline.bind`'s name, `InspectController`'s rename, the controllers' folder, and what examples reach past the public API.
 - [ ] **Step 4: Gates:**
   - `npx tsc --noEmit -p .`, `npx tsc --noEmit -p tsconfig.lib.json`, `npx eslint .`, `npx prettier --check .`;
@@ -987,8 +970,8 @@ A browser check (port 5193).
 ## Self-review
 
 - **Spec coverage.** 11.2: not camera-specific, timing and playback, `finished` (Task 3); easing (1); glTF samplers (2); per-animation clock, scrubbing, one timeline, awake rules (3); setters (4). 11.3: constraints with off switches (8, 9, 13, 17); policies over the rig (6); free flight, its speed, re-attach, hand-over, level (13); CAD with standard views and `fitBounds` (16, 17); full replacement (6); any body (9, 20); orbit with no pick (8); rolled reference frames (5, 8); damping (5); orthographic with its forms (14, 15). 11.4: actions, the serializable map, presets, custom actions, grammar, refusal, skipping (7). 11.5: configurable timing, live blend, cut (10); paths (11); interruption (12); three levels (11); blend reference frame (10); slerp and field of view (10); the dolly (16); the end (10); per-node transforms (4). 11.6: injected clocks (3 and throughout); every controller by synthetic input on three settings (20); Orion at 3,600× (20); free flight (13, 20); the explorer (19).
-- **For later sub-plans.** 5f: a named `blendFrame`, `onWeight`, `placementBlendSetter`, the CAD and globe controllers at each end, `Camera.orthographic` and the dolly. 5g: wall and scene clocks side by side, per-node transforms, transitions as the directors' moves, `running`, `held`, separate stops for camera and clock, the table of rig and controller per reference frame.
-- **Type consistency.** `RigReference`, `RigDamping`, `freeRig`, `RigPose`, `evaluateRig` (Task 5); `ActionEvent`, `ControllerContext`, `CameraController` (6); `BindingMap`, `GestureInput`, `BINDING_PRESETS`, `STANDARD_ACTIONS` (7); `TargetPose`, `TransitionOptions`, `Transition`, `TransitionEnd` (10); `TransitionPath`, `TransitionDefaults` (11); `FlyBody`, `FreeFlyOptions` (13); `Orthographic`, `ImagePlane` (14); `Bounds`, `fitPose` (16); `CadControllerOptions` (17).
+- **For later sub-plans.** 5f: a named `blendFrame`, `onWeight`, `parameterSetter`, the CAD and globe controllers at each end, `Camera.orthographic` and the dolly. 5g: wall and scene clocks side by side, per-node transforms, transitions as the directors' moves, `running`, `held`, separate stops for camera and clock, the table of rig and controller per reference frame.
+- **Type consistency.** `RigReference`, `RigDamping`, `freeRig`, `RigPose`, `evaluateRig` with `place` (Task 5); `ActionEvent`, `ControllerContext`, `CameraController` (6); `BindingMap`, `GestureInput`, `BINDING_PRESETS`, `STANDARD_ACTIONS` (7); `TargetPose`, `TransitionOptions`, `Transition`, `TransitionEnd` (10); `TransitionPath`, `TransitionDefaults` (11); `FlyBody`, `FreeFlyOptions` (13); `Orthographic`, `ImagePlane` (14); `Bounds`, `fitPose` (16); `CadControllerOptions` (17).
 - **Review Focus.** Each line's test sits in its owning task's Step 1 and is marked there.
 - **Proportion.** The plan decides names, values and tests. It gives no bodies except the formulas the spec leaves open.
 

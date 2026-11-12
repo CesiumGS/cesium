@@ -1,74 +1,44 @@
 # Frames 5c: The Second Body Implementation Plan
 
-## Proposed amendments after the placement review (2026-11-11, for the owner's decision)
+**New base (2026-11-12):** after the transform graph's Task 6 (`2026-11-12-transform-graph.md`: `smoothFrame` replacing `warpFrame`, per-view routes, `view.setParameter`, `switchFrame`, the globe placeable in a frame, and `Warp.presentation`, `Route.presentation` and `PresentationRouteError` gone). Check every warp, route and pick name below by symbol against that.
 
-Not applied to the tasks below. Read with §13.26 of the overall plan: increments 1 to 8c, "Placement leftovers closed", and the pending proposal "no placement modes".
+## After the transform graph (2026-11-12)
 
-**Already done, or partly.**
+This replaces the amendments written on 2026-11-11 for §13.26's warps, and their open questions. Read with §13.37 of the overall plan and `2026-11-12-transform-graph.md`.
 
-- Task 2's interpreter half: `FramedPoint.body` and `bodyFixed` exist, from `truePick(pick)`. Only `CorePick.body` is new.
-- Under an anchor whose route crosses a warp, selection already uses drawn volumes, and horizon culling is off. `SelectionView` carries a `TileWarp`, and the error is `geometricError × σ_max + fit error`.
-- World clips work in any reference frame, the Moon's included. Call 5's "Earth-only" now covers only `TerrainClips`.
-- Point sources follow warps, and `View.toPixel(point, anchor)` follows routes.
+**What changed.**
 
-**What the landed work changes.**
+- **A deformer sits over the content it deforms, and the camera sits outside.** Where something is placed decides what is warped. The Moon's anchor isn't under the Earth's deformer, so its route stays rigid: its tiles, volumes, culling, depth and impostor see no warp, and nothing is fitted at ×k of 384,400 km. Nothing needs enforcing, so there is no Task 0.
+- **Reach is the function's own.** The exaggeration is a lift, constant above a ceiling, so no point moves more than (k − 1) × the ceiling (180 km at ×10 with a 20 km ceiling), and hi/lo's ±2³¹ m is never at risk. A body's ellipsoid is a fixed point of a lift.
+- **Views.** Per-view parameters (`view.setParameter`) and switch nodes replace the one warp context per world. Two views on two bodies, or at ×1 and ×10, are ordinary routes.
+- **Picks.** A pick carries the content's domain point and node, and `pickIn(pick, node | "true" | "drawn" | Frame)` carries it to any node in float64. "True" and "drawn" are two nodes, not flags, and `anchorPosition` is the drawn one.
+- **Still true from the review:**
+  - `FramedPoint.body` and `bodyFixed` exist, so Task 2 adds only `CorePick.body`;
+  - under a route with a smooth node, selection uses drawn volumes with `geometricError × σ_max` plus the fit error, and horizon culling is off;
+  - world clips work in any reference frame, so call 5's "Earth-only" covers only `TerrainClips`;
+  - point sources and `View.toPixel` follow routes.
 
-- **Warp domains aren't enforced.** Nothing in drawing reads `Warp.domain`, and `verticalExaggeration` sets none. With a rig on an exaggerated Earth frame, the Moon's anchor routes through the warp (Tasks 4, 5, 7 and 10):
-  - Its tiles are fitted at ×k of 384,400 km of height. At ×10 that's about 3.8 million km, past hi/lo's ±2³¹ m.
-  - The impostor pass reads anchor eyes, so it sits at the route's affine place, unwarped.
-- **The warp context is one per world,** for its first view's root (`Engine.warpTick` warns). Two views on two bodies (Tasks 9 and 10) are fine while their routes are rigid. With a warp, the second view shows the first one's fits.
-- **The impostor's sizes are true sizes.** Under ×k:
-  - Its floor sphere (call 14) writes depth inside craters drawn k times deeper.
-  - Calls 11 and 12 ignore σ_max, which tiles now take, so the handover moves.
-- **Picks.** `anchorPosition` is drawn, and the true point is `truePosition`. Task 2's test "`bodyFixed` equals `pick.anchorPosition`" fails under a warp. An impostor hit has no domain point.
-- **Task 4** separates bodies by their true spheres. Under a warp the drawn spheres differ.
-- **Task 9, call 26:** "back to ITRF for Earth content" moves a rig off the application's exaggerated frame.
-- **Task 8:** normals are now turned by the Jacobian (drawn shading), and the impostor is smooth. The brightness checks hold only at ×1.
-- **"Leave room for" is out of date.** The paths it anticipated exist now, and this plan must follow them.
-- **Names.** "Placement" retires as the umbrella term: `Warp`, `Route` and `Georeference`, and `ModelPlacement` becomes an instance in 5i. If accepted, "no placement modes" rewrites `engineering/georeference.ts`, whose `readEllipsoid` Task 1 moves.
+**The former open questions** (§13.37):
 
-### Must change before execution
+1. **Warp domains:** none. Scope is placement, and reach is the profile's. The Moon beside an exaggerated Earth is a regression test in Tasks 1, 4 and 10, not a feature.
+2. **Per-view warp terms:** per-view parameters, and switch nodes for different structures (owner, 2026-11-12), built in the transform plan's Task 6. The stated limit and its warning test are dropped.
+3. **An impostor across a non-height warp:** it is content, and goes through its route like a tile.
+   - Rigid, the default: as written.
+   - Under a lift on its own body: the ellipsoid is a fixed point, so the limb is exact. Its error takes σ_max, since the relief scales, and its floor sphere takes the drawn depth of `terrainBand.min`.
+   - Under any other smooth node: the impostor is off with one warning naming the node, and surface tiles draw by their own route. A proxy mesh through the ordinary vertex path is later work.
+4. **A CRS's datum and body precedence:** georeferencing is data (no placement modes, §13.26). The loader reads the CRS in `georeference`, places the content at the datum's body node and passes the body as `TilesetOptions.body`, so it is call 1's first source. A disagreement with `3DTILES_ellipsoid` or the anchor is refused, naming both. The core reads no CRS.
+5. **Should a world clip cut the impostor?** **Open.** Fable's answer, taken as the default: yes. The impostor is a level of detail of the content, and levels must agree on what is visible. Task 7 builds it so unless the owner says otherwise.
 
-1. **Enforce warp domains first** (a Task 0, or placement increment 9).
-   - Proposed: an anchor whose bounding sphere lies outside a warp's domain takes that warp as the identity, and its route counts as rigid.
-   - A height warp's default domain is its body's ellipsoid plus a margin.
-   - `toPixel`, picks and selection read the same rule.
-   - _Effect:_ tests in Tasks 1 and 4 show Moon content under a ×10 Earth rig drawn and culled at its true place. Task 10 gains an `exaggerated` group.
-2. **The impostor follows its anchor's route** (Tasks 5 and 7).
-   - Rigid: as written.
-   - Across a height-scale warp on its own body: its floor and limb radii are R + k·h, exact.
-   - Across any other warp: a drawn sphere from the route's samples, as `TileWarp` makes, or the impostor turns off with one warning.
-   - Its error takes σ_max, as tiles do.
-   - _Effect:_ Tasks 5, 7 and 10 test at ×1 and ×10, with an exaggeration frame over MOON_ME.
-3. **Picks are true** (Tasks 2 and 7).
-   - Tests read `truePick(pick)`.
-   - An impostor pick gets an analytic ray–ellipsoid hit in float64 in the body's frame, carried back through `CorePick.route` when warped. Its accuracy is a `bound` (the relief), not a σ.
-   - _Effect:_ Task 2 shrinks to `CorePick.body` and its tests.
-4. **Two bodies and a warp** (Tasks 3, 9 and 10): either per-view warp terms, or the stated limit with a test that the warning fires. Recommended: the limit, with Task 10's check 6 run with no warp.
-5. **Keep the application's presentation frame** (Task 9). `zoomTo`, `flyTo` and `setSplit` keep a rig whose frame reaches the content's body-fixed frame through presentation warps only. Test it on the vertical exaggeration example's frame.
-6. **Drawn spheres for depth** (Task 4). A body anchor still warped after item 1 uses the route's image of its centre, with its radius times σ_max.
-7. **Task 1 sits on `SelectionView.warp`.**
-   - The ellipsoid parameters apply to unwarped anchors.
-   - Horizon culling stays off under a warp.
-   - Say whether `cartographic` is true or drawn there (it drives fog and the dynamic error), and test it.
+**Tasks.**
 
-### Nice to have
-
-1. The impostor pass ignores world clips. Say so, or skip the pass where a view's clips touch the body.
-2. Run Task 8's 2% check at ×10 too, or add a note that drawn shading differs from the smooth impostor.
-3. Clamping (Task 2):
-    - It passes `clips: "none"`, since clamping is a world question. Every ray backend takes clips since `17e50883e7`.
-    - `ClampOptions.anchor` must be a true anchor, because `frameRays` refuses presentation routes.
-    - Pin both in tests.
-4. Wording: "a draw's placement" becomes "a draw's warp terms" or "where it is drawn".
-
-### Open questions for the owner
-
-1. **Warp domains:** the identity outside them (proposed), a falloff, or content on one body never under another body's height warp?
-2. **Per-view warp terms:** now, or the limit?
-3. **An impostor across a non-height warp:** a fitted drawn sphere, or off?
-4. **"No placement modes":** if it's accepted, does a declared CRS's datum join call 1's body precedence?
-5. **Clips:** should a world clip cut the impostor?
+- **Dropped:**
+  - Task 0 (warp domains);
+  - the stated limit for two views, and its test;
+  - "keep the application's presentation frame" in Task 9;
+  - fitted drawn spheres for impostors;
+  - the clause that `ClampOptions.anchor` must be a true anchor (`PresentationRouteError` is removed, so no ray backend refuses a route).
+- **Changed, in place:** Task 1 (selection under a smooth route, `cartographic`, the reader's new home), Task 2 (picks through `pickIn`, clamping's `clips: "none"` pinned), Task 4 (separation by drawn spheres), Task 5 (error with σ_max, the floor), Task 7 (the pass follows its route, a domain point for picks, world clips), Task 8 (the check at ×1), Task 9 (call 26), Task 10 (check 9, an exaggerated Earth), call 1, "Leave room for" and the wording rule.
+- **Added:** no new task. Review Focus 6 and the tests named above.
 
 **Updated 2026-11-09.** The file split, its second pass, the sky and observer work and 5b landed after this plan was written. Check paths by symbol. The sky plan's notes for 5c (its "What other plans need") are folded in here: Tasks 3, 7 and 9 and ruling 5 say what changed. Exposure is `view.observer.exposure` now, and `ViewOptions` takes `observer`, not `exposure`.
 
@@ -90,13 +60,13 @@ Not applied to the tasks below. Read with §13.26 of the overall plan: increment
 
 **Spec:** `docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md`, section 10 (sub-plan 5c) and its done-when list, with sections 5 to 8 for terms and 5a's seams, section 12 for what 5e expects, and section 14 for what 5g expects. **Builds on:** `docs/superpowers/plans/2026-11-07-frames-5a-core-and-camera-chain.md` and `docs/superpowers/plans/2026-11-07-frames-5b-frames-library.md`; every 5a and 5b name below is those plans' Interfaces blocks'.
 
-**Base:** the current tip of `cesium-2.0-webgpu-poc`. 5b is built and merged (44c03b94cf); the old `frames-5c` branch holds no work. If an executed 5a or 5b name differs from its plan, follow `api/surface.txt` and the code, and say so in the task's commit message. Other agents share this checkout: each task starts with `git status` for the files it will change and waits for the owner of any uncommitted edit.
+**Base:** the current tip of `cesium-2.0-webgpu-poc`, which must include the transform graph's Task 6 (see the note at the top). 5b is built and merged (44c03b94cf); the old `frames-5c` branch holds no work. If an executed 5a or 5b name differs from its plan, follow `api/surface.txt` and the code, and say so in the task's commit message. Other agents share this checkout: each task starts with `git status` for the files it will change and waits for the owner of any uncommitted edit.
 
 ## Calls made by this plan
 
 Each is marked "(plan's call)" where it is used. One line each, then what undoing it costs.
 
-1. **A tileset's body** is `TilesetOptions.body`, else its `3DTILES_ellipsoid`, else its `anchor`'s body, else the Earth. Any two of these that disagree are refused at load with `TilesetBodyError`, naming both. _Undo:_ the precedence.
+1. **A tileset's body** is `TilesetOptions.body` (which the georeference loader sets from a declared CRS's datum), else its `3DTILES_ellipsoid`, else its `anchor`'s body, else the Earth. Any two of these that disagree are refused at load with `TilesetBodyError`, naming both. _Undo:_ the precedence.
 2. **The core reads `3DTILES_ellipsoid`** (`src/streaming/tilesetBody.ts`), before tile volumes are built; the proj entry's declaration reader calls it. `body: "none"` means no body. An external tileset inherits its parent's body. _Undo:_ a reader move.
 3. **Volumes and horizon culling take an ellipsoid,** defaulting to WGS 84, so today's callers get today's numbers. `SelectionView.ellipsoid` is the selection anchor's body's. _Undo:_ parameters.
 4. **A tileset under an anchor with no body** (a trajectory's) gets no horizon culling, and region volumes in it are refused, naming the tile. _Undo:_ one rule.
@@ -147,7 +117,7 @@ Places where the spec, read against the code and the 5a and 5b plans, is contrad
 
 ## Leave room for (overall plan §13.34)
 
-Per-body volumes, clamping and impostors follow the drawn, placed surface rather than assume the unplaced one, so an application's placement that exaggerates heights (the placement review's test, §13.26) needs nothing more from them. Nothing to build here.
+Per-body volumes, clamping and impostors take their route from where their content sits, so a deformer over one body's content (an application's exaggeration, §13.37) reaches that content and no other body's. Nothing to build here beyond the tests named in Tasks 1, 4, 5, 7 and 10.
 
 ## Global Constraints
 
@@ -175,7 +145,7 @@ Copied from 5a's and 5b's plans where they apply, with 5c's additions.
   - Every shader loop is bounded by a constant (`for (uint i = 0u; i < CONSTANT; i++)` with an early `break`). The impostor pass adds none. Each changed shader's Metal is read with `node scripts/dumpMsl.mjs <module.wgsl> <entry>` before its first browser run.
 - **Snyk:** each task runs `snyk_code_scan` on the first-party files it adds or changes before it commits, fixes what the scan finds in its own code, and rescans until clean. Findings that predate 5c are reported, not fixed.
 - **Wording:**
-  - "Frame" is never used alone: a _reference frame_, a _tick_ ("per tick", never "per frame"), _render space_, _render root_, _a draw's placement_. Compounds that can't be misread keep their names (the frame tree, the frames module, a body-fixed frame). Code names (`Frame`) keep theirs.
+  - "Frame" is never used alone: a _reference frame_, a _tick_ ("per tick", never "per frame"), _render space_, _render root_, _a draw's route_. Compounds that can't be misread keep their names (the frame tree, the frames module, a body-fixed frame). Code names (`Frame`) keep theirs.
   - House style for docs, comments and UI text: plain, short sentences, units and datums named, no e-notation in prose.
   - Describe the purpose in generic words ("an embeddable rendering core", "a host application's own services").
 
@@ -186,6 +156,7 @@ Copied from 5a's and 5b's plans where they apply, with 5c's additions.
 3. **ion access that fails, then changes:** a token pasted after the warning, a token that expires an hour into a session, or a 401 burst across many tiles. One warning per failure, no request loop, `retry()` tries once, one refresh serves every 401 in flight, and no message carries the token. Tests: Task 6.
 4. **Declarations that disagree:** a tileset whose `3DTILES_ellipsoid` names the Moon given `body: EARTH` or an Earth anchor, a surface tileset under an anchor that isn't its body's, region volumes with `body: "none"`. Each is refused with an error naming both sides, and nothing is drawn on the wrong ellipsoid. Tests: Tasks 1 and 5.
 5. **The bare ellipsoid globe with another body behind it, beside it, or with the eye between them:** the Moon setting behind the ellipsoid's horizon from the ground, Earthset from beyond the Moon, a spacecraft passing behind the Earth. Content behind the underlay's body stays behind it and content in front stays in front, at every eye position, with no flicker at the limbs. Tests: Tasks 4 and 10.
+6. **A deformer over one body's content with another body in the scene:** an exaggeration over the Earth's content, a camera at the Moon or at ITRF, the Moon's tiles, impostor and picks. The Moon's route stays rigid, so it is drawn, culled and picked as at ×1, and a second view at ×1 beside a first at ×10 shows each its own Earth. Tests: Tasks 1, 4, 5, 7 and 10.
 
 ---
 
@@ -218,7 +189,7 @@ Where each of today's 21 files naming `Ellipsoid.WGS84` lands (the spec counted 
 **Files:**
 
 - Create: `src/streaming/tilesetBody.ts`, `test/tilesetBody.test.ts`
-- Modify: `src/math/horizon.ts`, `src/streaming/volumes.ts`, `src/streaming/Stepwise.ts`, `src/streaming/Budgeted.ts`, `src/streaming/debugVolumes.ts`, `src/streaming/Tile.ts` (`loadTilesetJson` reads the body first), `src/streaming/Tileset3D.ts`, `src/scene/Engine.ts` (`selectionViews`), `src/engineering/georeference.ts` (`readEllipsoid` calls the core reader), `src/index.ts`, `api/surface.txt`
+- Modify: `src/math/horizon.ts`, `src/streaming/volumes.ts`, `src/streaming/Stepwise.ts`, `src/streaming/Budgeted.ts`, `src/streaming/debugVolumes.ts`, `src/streaming/Tile.ts` (`loadTilesetJson` reads the body first), `src/streaming/Tileset3D.ts`, `src/scene/Engine.ts` (`selectionViews`), the module that holds `readEllipsoid` (`src/engineering/georeference.ts`, or where the transform graph's `Georeference` left it: `grep -rn readEllipsoid`; it calls the core reader), `src/index.ts`, `api/surface.txt`
 - Test: `test/tilesetBody.test.ts`, `test/volumes.test.ts`, `test/horizon.test.ts` (each existing or new as the code has them)
 
 **Interfaces:**
@@ -232,6 +203,7 @@ Where each of today's 21 files naming `Ellipsoid.WGS84` lands (the spec counted 
   - `horizon.ts`: `horizonCullingPoint(direction, positions, minimumHeight, radii?: ArrayLike<number>)` and `isScaledSpacePointVisible(camera, occludee, minimumHeight, radii?)`, `radii` defaulting to WGS 84's (plan's call 3).
   - `volumes.ts`: an `ellipsoid: Ellipsoid = Ellipsoid.WGS84` last parameter on `obbFromRectangle`, `regionFromJson`, `volumeFromJson`, `volumeOccludee` and `aboveHorizon`. `aboveHorizon(tile, camera, ellipsoid?)`; the cached occludee stays keyed by the volume (a tile's ellipsoid never changes).
   - `SelectionView.ellipsoid?: Ellipsoid`: the selection anchor's body's. `cartographic` is on it; without a body, `cartographic` is `{ longitude: 0, latitude: 0, height: |position| }` and `Budgeted` skips horizon culling (plan's call 4). `Stepwise`'s module-level ellipsoid becomes `view.ellipsoid ?? Ellipsoid.WGS84`.
+  - Under an anchor whose route has a smooth node, the ellipsoid parameters apply to the content's own frame and horizon culling stays off. `cartographic` is the eye's position in the content's own frame (true), carried down the route in float64; where fog or the dynamic error needs the drawn height, it reads the camera's render-space position. Anchors whose routes are rigid, the Moon's beside an exaggerated Earth included, are untouched.
   - `loadTilesetJson` takes `body?: Body | null` (resolved by call 1 before any tile is built), builds every volume on its ellipsoid, and refuses a region volume when the body is `null`, naming the tile's path. An external tileset inherits its parent's body; its own `3DTILES_ellipsoid`, if it disagrees, adds one warning and is ignored.
   - `georeference.ts`'s `readEllipsoid` is `tilesetBody` plus its own refusal of `"none"`; its messages and the proj tests are unchanged.
 
@@ -269,6 +241,10 @@ it("the Moon anchor's selection view is on the Moon's ellipsoid", () => {
   // cartographic.height = |eye in the Moon anchor| − 1,737,400 within 1e-6 m; ellipsoid === Ellipsoid.MOON
 });
 it("an anchor with no body gets no horizon culling", ...);
+it("a ×10 lift over Earth content leaves the Moon's selection view as it was", () => {
+  // the Moon anchor's route is rigid: its selection view toEqual the one without the deformer, horizon culling on;
+  // the Earth anchor's carries σ_max and has horizon culling off, and its cartographic height is the true one
+});
 ```
 
   `stubTileset` is `test/tilesetPlacement.test.ts`'s stubbed harness, moved to a shared helper if it isn't one already.
@@ -300,7 +276,8 @@ it("an anchor with no body gets no horizon culling", ...);
   - `sampleHeightMostDetailed(world, [p], { body: MOON })` casts in the Moon's anchor; with no body it casts as today (rays `toEqual` today's);
   - a model placed at (10° E, 20° N, 0 m) under the Moon's anchor sits at `Ellipsoid.MOON.cartographicToCartesian(…)` within 1 × 10⁻⁶ m; a point source's up axis there is the Moon's normal;
   - `addTerrain`, `addEllipsoid` and a vector layer under the Moon's anchor each throw, naming the anchor and "the Earth";
-  - a pick on Moon content: `pick.body === MOON`; through the frames interpreter, `point.frame.name === "MOON_ME"` and `point.bodyFixed` equals `pick.anchorPosition`; on Earth content, ITRF and the Earth, as before.
+  - a pick on Moon content: `pick.body === MOON`; through the frames interpreter, `point.frame.name === "MOON_ME"` and `pickIn(pick, "true")` gives the body-fixed point (it equals `pick.anchorPosition` only where the route is rigid, as the Moon's is). With a ×10 lift over Earth content, an Earth pick's `pickIn(pick, ITRF)` gives the true height and a Moon pick is unchanged; on Earth content, ITRF and the Earth, as before;
+  - clamping passes `clips: "none"` to its rays, since clamping is a world question (every ray backend takes clips since `17e50883e7`).
 - [ ] **Step 2: Run** and confirm they fail.
 - [ ] **Step 3: Implement.**
 - [ ] **Step 4: Run** the tests, `test/heightClamping*.test.ts` and `test/corePick.test.ts` unchanged, `npm test`, `npm run test:data`, tsc, eslint, prettier.
@@ -351,6 +328,7 @@ A browser check (port 5191).
     - U's own anchor stays 1, so the Earth's content keeps today's rule.
   - `AnchorEye.eyeLo.w` holds the scale (plan's call 9; if 5a used that lane, the next free one, said in the commit message). `surface.slang`'s vertex stages and `pointCull.slang`'s depth multiply clip-space z by it. With every scale 1, the multiply is exact and Earth pixels are unchanged.
   - Picks already read depths at or below `UNDERLAY_DEPTH` as underlay, so a pick on scaled content resolves its true distance; a test pins it.
+  - Separation uses each anchor's drawn sphere: under a route with a smooth node, the image of its centre with its radius times σ_max (`drawnBounds`); otherwise the true sphere. With a lift over Earth content (a fixed point at the ellipsoid), the Earth's sphere grows by its displacement bound and the Moon's is unchanged.
   - The check page `spikes/bodies.html` (plan's call 30): `runBodies("depth")`, on a core-only scene (no ion, no frames module): the bare ellipsoid globe and a sphere mesh of the Moon's radius under the Moon's anchor, placed by hand.
 
 - [ ] **Step 1: Write the failing test** (`test/anchorDepth.test.ts`):
@@ -366,6 +344,7 @@ it("leaves the Moon in front from beyond it, and decides at the separating plane
 });
 it("puts a spacecraft's anchor behind the Earth only while the Earth hides its origin", ...);  // Review Focus 5
 it("never scales the underlay's own anchor", ...);
+it("a ×10 lift over Earth content leaves the Moon's scale as it was, and separates the Earth by its drawn sphere", ...);   // Review Focus 6
 it("a pick on scaled content resolves its true distance", ...);   // within 1e-3 relative
 it("with every scale 1, the view block's floats are the ones before this task", ...);
 ```
@@ -399,13 +378,14 @@ it("with every scale 1, the view block's floats are the ones before this task", 
     - `readonly body: Body`, `readonly anchor: AnchorHandle` (`world.bodyAnchor(body)`), `mode: ImpostorMode`, `errorBias: number` (finite and positive, else a `RangeError` naming it);
     - `readonly geometricError: number` (plan's call 11), recomputed when the map changes;
     - `setMap(image: ImageBitmap | null, mean?: number): void`; `readonly mapWidth: number`, `readonly mapMean: number`;
-    - `screenSpaceError(view: View): number`, from the camera in the impostor's anchor and the view's `sseDenominator` and height (plan's call 11);
+    - `screenSpaceError(view: View): number`, from the camera in the impostor's anchor and the view's `sseDenominator` and height (plan's call 11), times σ_max of the anchor's route at the body's centre, as tiles take it (1 for a rigid route);
     - `refines(view: View): boolean`, with the threshold and hysteresis of plan's call 12 (the threshold's maximum screen-space error is the first surface tileset's, else 16);
     - `state(view: View): ImpostorState` (plan's call 14);
     - `readonly surfaces: readonly (Tileset3D | DeclaredTileset)[]` (Task 6 adds the declared kind);
     - `readonly drawing: boolean` (its state wasn't `"off"` in some view last tick);
     - `dispose(): void`.
   - `engine.addImpostor(world: World, body: Body, options?: ImpostorOptions): Impostor`: one per world and body (a second throws naming the body); a body without `appearance` throws naming "appearance". `engine.impostors(world): readonly Impostor[]`.
+  - **Across a smooth node:** the impostor is content, so it takes its anchor's route. Under a lift on its own body the limb stays at the ellipsoid (a fixed point), and `"floor"` uses the drawn depth of `terrainBand.min` less 100 m. Under any other smooth node its state is `"off"`, with one warning naming the node. A rigid route is as written.
   - `TilesetOptions.surface?: boolean` (plan's call 13): a surface tileset must hang under its body's anchor (else `TilesetBodyError` naming `surface` and `anchor`). When its body has an impostor in its world, it is the impostor's virtual parent: in a view where `impostor.refines(view)` is false, the tileset selects nothing, requests nothing and draws nothing. Without an impostor, `surface` changes nothing.
   - `Tileset3D.drawing: boolean`: some tile drew in some view last tick; `Tileset3D.drawnIn(view: View): boolean`.
 
@@ -437,6 +417,8 @@ it("is off when the eye is inside its floor sphere", ...);   // Review Focus 1: 
 it("a tileset on the Moon that isn't its surface draws by its own error", ...);
 it("refuses a surface tileset under another anchor, a second impostor, and a body without appearance", ...);  // Review Focus 4
 it("impostor mode never refines; errorBias 1 refines at 16 px", ...);
+it("a ×10 lift over the Moon's content scales the error by σ_max and moves the handover out; a ×10 lift over the Earth's leaves the Moon's numbers alone", ...);   // Review Focus 6
+it("under another smooth node over the Moon's content it is off, with one warning naming the node", ...);
 ```
 
 - [ ] **Step 2: Run** and confirm they fail.
@@ -525,13 +507,18 @@ A browser check (port 5192).
   - Glare: `glareSources`' `tapVisible` reads `sky.moon` and `sky.moonSize`. With the Moon in the opaque pass, its depth blocks the taps by itself. The sky plan's eclipse check (its Task 12) keeps passing; its analytic test goes if the uniform does.
   - The Moon's impostor's map is `engine.setMoonMap`'s. With a Moon impostor in its world, the sky's disk for a view is placed from the impostor's anchor; without one, from `engine.moonPosition` as today (plan's call 21).
   - `IMPOSTOR_FEATURE_BASE = 0xffff_ff00` (plan's call 20). A pick reading such an id resolves `CorePick.impostor = body`, `anchor` that slot's anchor, `draw` and `feature` undefined. The frames interpreter adds an accuracy term `"impostor"`, the body's relief in metres, noted "the body's ellipsoid, not its terrain".
+  - An impostor pick's domain point is the analytic ray–ellipsoid hit in float64 in the body's frame, at the body's node, so `pickIn(pick, node)` carries it through any route. Its accuracy is a `bound` (the relief), not a σ.
+  - **World clips** (open question 5, built as proposed unless the owner says otherwise): `impostor.slang` tests the world's clips at the hit point, taken to each clip's node by the route, so a clip that cuts the surface tiles cuts the impostor.
+  - The pass takes each impostor's state, radii and depth from the anchor's route (Task 5): rigid as written, a lift on its own body as Task 5 says, any other smooth node no pass.
 
 - [ ] **Step 1: Write the failing test** (`test/impostorPass.test.ts`, `fakeEngine`):
   - `impostorBlock` for the Moon seen from the Earth's ground: the centre's direction equals the normalised eye-to-centre vector in shading axes within 1 × 10⁻⁷, the sine is 1,737,400 m over the distance, the brightness scale and earthshine equal `Sky.write`'s for the same instant;
   - the scissor contains the projected limb plus one pixel and stays inside the viewport; an impostor behind the camera or off screen records no draw on the fake pass;
   - `"floor"` sets the floor scale to (1,737,400 − 9,200 − 100) / 1,737,400;
   - a pick whose readback carries `IMPOSTOR_FEATURE_BASE + slot` resolves `impostor === MOON`, no draw, and an `"impostor"` accuracy term of 10,800 m through the frames interpreter;
-  - `world.feature(IMPOSTOR_FEATURE_BASE)` is undefined, and no world feature id can reach the range (the allocator refuses it).
+  - `world.feature(IMPOSTOR_FEATURE_BASE)` is undefined, and no world feature id can reach the range (the allocator refuses it);
+  - the impostor pick's domain point equals the analytic hit within 1 mm, and `pickIn(pick, ITRF)` carries it through the Moon's route; a ×10 lift over Earth content changes neither the pick nor the block;
+  - a plane clip across the Moon cuts the impostor where it cuts the surface tiles (the fake pass's clip uniforms, and the pass's records).
 - [ ] **Step 2: Run** and confirm it fails.
 - [ ] **Step 3: Implement** the Slang (the sky refactor first, then `impostor.slang`), `npm run shaders`, `npm run shaders:check`; read the Metal of `skyStarsFragment` and the impostor's fragment (`node scripts/dumpMsl.mjs src/shaders/generated/<module>.wgsl <entry>`). Then the TypeScript.
 - [ ] **Step 4: Run** the test, `npm test`, tsc, eslint, prettier.
@@ -539,7 +526,8 @@ A browser check (port 5192).
   1. the Moon from the ground at one instant, drawn once by today's sky disk (no impostor) and once as the impostor: its interior pixels are identical and its limb within the gate's tolerance;
   2. Earthset from beyond the Moon: the impostor hides the Earth's globe;
   3. moonset behind the bare ellipsoid's horizon: hidden (Task 4's scale);
-  4. a pick on the impostor reports the Moon and its relief.
+  4. a pick on the impostor reports the Moon and its relief;
+  5. a clip plane through the Moon cuts the impostor and the surface tile alike.
 - [ ] **Step 6: Browser check (port 5192):** `/spikes/bodies.html?bench`, `runBodies("impostor")` and `runBodies("depth")`; every check passes. Then `parity` and `alloc`, one at a time, against the base commit. Record the metrics. Stop the server.
 - [ ] **Step 7: Surface and commit** with "atmosphere: the impostor pass: a body ray-cast at its true distance in the opaque pass, with the sky's own pixel; picks on it".
 
@@ -569,7 +557,7 @@ A browser check (port 5193).
 - [ ] **Step 2: Run** and confirm it fails.
 - [ ] **Step 3: Implement,** `npm run shaders`, `npm run shaders:check`, and read `surface.wgsl`'s fragment Metal.
 - [ ] **Step 4: Run** the test, `npm test`, tsc, eslint, prettier.
-- [ ] **Step 5: Grow the page's `material` group:** a sphere mesh of the Moon's radius, its texture a uniform grey of the impostor map's mean, flagged as a surface draw, beside the impostor at the same distance and phase; their disks' mean luminances agree within 2%, at full, at quarter and at a thin crescent. With a token, log `loadIonMoonMap({ level: 2 }).mean` once (never the token) and write it as `CESIUM_MOON_ALBEDO_MEAN` with the date.
+- [ ] **Step 5: Grow the page's `material` group:** a sphere mesh of the Moon's radius, its texture a uniform grey of the impostor map's mean, flagged as a surface draw, beside the impostor at the same distance and phase; their disks' mean luminances agree within 2%, at full, at quarter and at a thin crescent. The check runs at ×1: under a deformer over the Moon's content, tile normals are turned by the route's Jacobian (drawn shading) and the impostor is smooth, so they differ by design, and the page says so. With a token, log `loadIonMoonMap({ level: 2 }).mean` once (never the token) and write it as `CESIUM_MOON_ALBEDO_MEAN` with the date.
 - [ ] **Step 6: Browser check (port 5193):** `runBodies("material")` and `runBodies("impostor")` pass; then `parity`, `models`, `tileset` and `customShader`, one at a time, against the base commit. Stop the server.
 - [ ] **Step 7: Surface and commit** with "atmosphere: one Lommel–Seeliger material for the Moon's impostor and its surface tiles".
 
@@ -592,7 +580,7 @@ A browser check (port 5194).
     - `Viewer.moon: { readonly impostor: Impostor; readonly tileset?: DeclaredTileset } | undefined`.
   - `ViewerWarning.kind` gains `"moonTileset"`: a declared Moon's failure, with its message.
   - `addAttributions(owner: object, attributions: IonAttribution[], options?: { shown?: () => boolean })` (plan's call 25). The Moon tileset's attributions show while `declared.drawing`; the ion map's while `impostor.drawing`; the bundled map needs none (its source is checked here and written in the doc comment; if none is found, it goes to the owner's list).
-  - `zoomTo`, `flyTo` and framing of content on another body set the view's rig on `viewer.frames.bodyFixed(body)` and fit the content with the camera in that body's anchor; Earth content sets it back on ITRF (plan's call 26).
+  - `zoomTo`, `flyTo` and framing of content on another body set the view's rig on `viewer.frames.bodyFixed(body)` and fit the content with the camera in that body's anchor; Earth content sets it back on ITRF (plan's call 26). The picture doesn't depend on the rig's frame, since deformers sit over content and the camera outside, so these moves keep no application frame.
   - `setSplit(on: boolean, options?: { body?: Body }): void` (plan's call 27): the second view is made with that body and a rig on its body-fixed frame, and copies the first view's observer.
   - `ViewLink`'s body is the source view's (plan's call 28); `orbitFocus` takes the view's body.
   - `place()` is undefined for a view off the Earth (plan's call 29).
@@ -604,6 +592,7 @@ A browser check (port 5194).
   - `credits()` lacks Cesium Moon's attributions until its tiles draw, has them while they draw, and drops them when the camera leaves;
   - `zoomTo(moonTileset)` leaves `engine.cameras.root(view).name === "MOON_ME"`; `zoomTo` an Earth tileset after it gives `"ITRF"`;
   - `setSplit(true, { body: MOON })` makes a second view on the Moon with its rig on MOON_ME and the first view's `observer`;
+  - with a ×10 lift over Earth content, `zoomTo(moonTileset)` and back leave the deformer's node and parameters as they were, the Earth ×10 in the first view and the Moon unexaggerated throughout, and a second view with `view.setParameter(factor, 1)` shows the Earth at ×1 beside the first at ×10;
   - a link from a Moon view copies the pose in the Moon's anchor within 1 × 10⁻⁹ m, and its footprint lies on the Moon's ellipsoid;
   - `place()` on a Moon view is undefined.
 - [ ] **Step 2: Run** and confirm they fail.
@@ -632,9 +621,10 @@ A browser check (port 5195), with a token.
   6. **Two views:** one on each body, side by side, both drawn in one tick.
   7. **Picks:** a pick on the Moon reports MOON_ME coordinates, one on the Earth ITRF.
   8. **Limbs:** the Moon's limb from the Earth and the Earth's from the Moon show no z-fighting between two renders 1 mm apart.
+  9. **An exaggerated Earth beside the Moon:** with a ×10 lift (ceiling 20 km) over the Earth's content and the camera at ITRF, checks 3, 5 and 7 hold with the Moon's numbers unchanged (its pixels, handover distance and pick), the Earth's terrain is drawn ×10 and hidden Earth pixels match, and a second view with `view.setParameter(factor, 1)` shows the Earth at ×1 in the same tick. The Moon's content is never fitted or compiled at ×k.
 
 - [ ] **Step 1: Write the group.** The page reads the token through `ionToken()`, passes it to the Viewer and nothing else, and prints values only.
-- [ ] **Step 2: Browser check (port 5195):** `/spikes/bodies.html?bench`, then `runBodies("together")`, `runBodies("impostor")`, `runBodies("material")` and `runBodies("depth")`; every check passes. Save review screenshots of checks 1, 3, 5 and 6 in the git-ignored `design-screenshots/`, with no token or settings panel in view. Then `parity`, `globe`, `heights` and `lod`, one at a time, against the base commit. Record every value in the commit message. Stop the server.
+- [ ] **Step 2: Browser check (port 5195):** `/spikes/bodies.html?bench`, then `runBodies("together")`, `runBodies("impostor")`, `runBodies("material")` and `runBodies("depth")`; every check passes. Save review screenshots of checks 1, 3, 5, 6 and 9 in the git-ignored `design-screenshots/`, with no token or settings panel in view. Then `parity`, `globe`, `heights` and `lod`, one at a time, against the base commit. Record every value in the commit message. Stop the server.
 - [ ] **Step 3: Fix** what a check finds, in the module that owns it, naming the earlier task in the commit message, and rerun the group.
 - [ ] **Step 4: Commit** `spikes/bodies.ts spikes/bodies.html` (and any fix's files) with "spikes: the Earth and the Moon together: handover, depth, two views, picks". List anything the page reached past the public API for, for 5i.
 
@@ -644,7 +634,7 @@ A browser check (port 5195), with a token.
 
 - Modify: `packages/next/README.md`, `CESIUM2_WEBGPU_PLAN.md` §13.14
 
-- [ ] **Step 1: README.** Document a tileset's body and `3DTILES_ellipsoid`; per-body volumes, horizon culling, clamping and picks; what stays Earth-only; a view on another body; depth across bodies and the underlay; impostors (states, error, threshold, bias, modes), surface tilesets, declared tilesets and their failures; header refresh; the shared material; the Viewer's `moon` and `moonMap`; credits that follow what draws.
+- [ ] **Step 1: README.** Document a tileset's body and `3DTILES_ellipsoid`; per-body volumes, horizon culling, clamping and picks; what stays Earth-only; a view on another body; depth across bodies and the underlay; impostors (states, error, threshold, bias, modes, and what a deformer over a body's content does to them), surface tilesets, declared tilesets and their failures; header refresh; the shared material; the Viewer's `moon` and `moonMap`; credits that follow what draws.
 - [ ] **Step 2: Plan note** in §13.14, "Frames 5c results": the measured values (the check page's, the parity metrics against the base commit, the bundle size, the ion probe's statuses, `CESIUM_MOON_ALBEDO_MEAN`), the plan's calls and rulings one line each, the owner's open items (the 404 case if unseen; the bundled map's credit if unfound), and a "Carried forward" list of real deferred work from this plan's ledger, without nits, written before the ledger is deleted. It includes a single cache budget across tilesets (ruling 6), the Earth's appearance for its impostor (5e), and controllers on the Moon (5d). Mark the section 16 row "The Moon as a tileset" closed, naming the tasks.
 - [ ] **Step 3: Gates:**
   - `npx tsc --noEmit -p .`, `npx eslint .`, `npx prettier --check .`;
