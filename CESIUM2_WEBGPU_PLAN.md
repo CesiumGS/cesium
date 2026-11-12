@@ -6907,8 +6907,8 @@ work, CesiumGS/glTF#131) and its body (`3DTILES_ellipsoid`; the 2.0 root
 CRS). The declaration is renamed `BENTLEY_engineering_frame` and composes
 with those. What is new, and worth proposing:
 
-- **A placement mode on the source CRS (3D Tiles 2.0, #131):** _proposed for withdrawal
-  (2026-11-11, awaiting the owner); see "no placement modes" in §13.26._ It was one field,
+- **A placement mode on the source CRS (3D Tiles 2.0, #131):** _withdrawn
+  (owner, 2026-11-11); see "no placement modes" in §13.26._ It was one field,
   `"placement": "rigid" | "reprojected"`, saying whether content in a design
   CRS is meant to be placed rigidly at an anchor or reprojected vertex by
   vertex. The 3D Tiles 2.0 draft's CRS types and `EXT_georeference` select
@@ -9173,7 +9173,7 @@ True heights stay put while the drawn ones follow the slider. `test/verticalExag
 - A warp's `forward` must write its Jacobian when asked: Newton and σ estimates use it.
 - The 1000 km tile's "4 cells" is 4 per axis (64 cells). The 0.7 ms was its one-cell fit. The 10 km tile's cold fit takes about 6 ms.
 
-**Proposal: no placement modes (owner's question, 2026-11-11). Needs the owner's decision.** The owner asked whether "rigid" and "reprojected" need to be separate. Can one represent the other? Is a rigid placement just an ordinary transform in the frame tree? Is `EXT_geospatial_crs_source` needed, and can placement have no modes?
+**Decided: no placement modes (owner's question, 2026-11-11; approved by the owner 2026-11-11).** The owner asked whether "rigid" and "reprojected" need to be separate. Can one represent the other? Is a rigid placement just an ordinary transform in the frame tree? Is `EXT_geospatial_crs_source` needed, and can placement have no modes?
 
 - **The answer is yes, no modes.** The mode says something the content's CRS already says, once it's declared fully:
   - **The content is in an engineering CRS:** local Cartesian, ground distances, as a building or plant is authored. It's tied to the Earth by a declared similarity transform (a site transform, as IFC's `IfcMapConversion` is). That's a rigid edge in the frame tree, an ordinary transform, drawn with no warp. Today's "rigid".
@@ -9181,7 +9181,7 @@ True heights stay put while the drawn ones follow the slider. `test/verticalExag
   - **The content is already in the body's frame:** ECEF or ITRF. That's the identity route. Today's "hosted".
 - So the engine never asks how to place content; it routes from the declared CRS, and whether the route is rigid is a property of the route. The one reason "rigid" existed for projected content was to approximate the reprojection near an anchor, sagging away from it. The fits make that approximation pointless: same drawing cost, no sag.
 - **The real distinction underneath is grid against ground distances.** That is a property of the CRS, not a mode. A design in a projected CRS has grid distances, scaled by the projection; reprojecting is right. A design meant to keep its dimensions on the ground belongs in an engineering CRS with a site transform. `IfcMapConversionScaled`'s scale factors are how IFC carries the difference.
-- **Consequences, if accepted:**
+- **Consequences (approved 2026-11-11; to build in the API review, 5i, with the renames):**
   - The Spec extensions tab already drops the proposal "A placement mode on the source CRS", and reworks the others (below).
   - `BENTLEY_engineering_frame` loses its placement-mode field. It keeps what the 2.0 draft's extensions can't say (below), and may shrink to that.
   - `DesignPlacement.mode` goes, and `Georeference` (the API review's name) is just the route from the content's CRS to the body frame.
@@ -9207,7 +9207,7 @@ True heights stay put while the drawn ones follow the slider. `test/verticalExag
   - _`IfcMapConversionScaled`'s scale semantics._ A node's scale and an `EXT_georeference` anchor can carry IFC's origin, rotation and one scale. IFC's separate horizontal and vertical factors, and what they scale (grid or ground distances), may not fit. Left open, and reworked in the Spec extensions tab.
   - _Alignments:_ nothing in the four extensions carries alignment geometry, so `BENTLEY_alignments` stays as a proposal.
   - _The site transform at the tileset level._ `EXT_georeference` is on a glTF node, so a tileset whose tiles all share a site transform either repeats it per tile or declares it once. A tileset-level declaration may remain, as what `BENTLEY_engineering_frame` holds, without a mode.
-- **Not built until the owner agrees:** it changes a public API (`DesignPlacement`, `georeferenceTileset`) and a declared extension. The code already reads `EXT_geospatial_crs`'s shape (`src/engineering/georeference.ts`), so reading the 2.0 draft's CRS and node anchor is a small step.
+- **Built with the API review (5i):** it changes a public API (`DesignPlacement`, `georeferenceTileset`) and a declared extension. The code already reads `EXT_geospatial_crs`'s shape (`src/engineering/georeference.ts`), so reading the 2.0 draft's CRS and node anchor is a small step.
 
 **Clip planes and caps: decided by the owner (2026-11-10).** Built as increment 8, once increments 2a and 3 have landed. 2a's varying swap provides the true point per fragment.
 
