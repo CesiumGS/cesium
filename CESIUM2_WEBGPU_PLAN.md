@@ -10004,7 +10004,7 @@ The handbook's "Transform graph (draft)" tab (`527e3bded1`) is the visual tour o
 - **Otherwise** (a moving centre, a time-varying field): each frame, a compute pass evaluates the compiled function in df64 at each draw's centre. That costs about 4 µs for 1,024 draws in the GPU spike. The vertex stage evaluates the residual on float32 offsets from the centre, so no CPU work is done per frame.
 - **Selection bounds** come from interval evaluation of the IR over each parameter's expected range, or cheap per-frame analytic bounds for the built-ins.
 
-**One view's content under different transforms: a tree, with per-view parameters and per-view switch nodes (the lead's recommendation; the owner asked for more on it).**
+**One view's content under different transforms: a tree, with per-view parameters and per-view switch nodes (decided by the owner, 2026-11-12: switch nodes to start, a DAG only if this gets inelegant).**
 
 1. **Same structure, different strengths** (view A at ×10, view B at ×1): the deformer's parameters take a value per view. This covers most uses with a plain tree, and the GPU cost is a per-view uniform.
 2. **Different structures** (view A exaggerated, view B a plan-and-profile sheet or a UTM chart): a **switch node** whose transform is chosen per view, like a USD variant set or OpenSceneGraph's switch node with camera masks. Every view still sees a tree, so a pixel's route, and so its pick, is unambiguous. "True" frames are unaffected because they sit below the switch.
@@ -10012,7 +10012,7 @@ The handbook's "Transform graph (draft)" tab (`527e3bded1`) is the visual tour o
 
 A general DAG (a node with several parents) adds nothing the switch doesn't. It would make "which route did this pixel take" depend on more than the view.
 
-**Naming and modules (proposed).**
+**Naming and modules (decided by the owner, 2026-11-12).**
 
 - **The mathematical category:** smooth maps that are locally invertible where content is (local diffeomorphisms), and invertible where a route goes down through them (diffeomorphisms onto their image). Affine maps are the special case.
 - **Proposed API:** `affine(...)` and `smooth({ forward, inverse?, params })` nodes; "smooth transform" in the docs. "Warp" remains the friendly word for presentation-minded ones (3ds Max calls these "space warps").

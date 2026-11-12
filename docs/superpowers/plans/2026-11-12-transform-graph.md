@@ -12,7 +12,7 @@
 | 5 | `e242b4609b`, `e3b3d015de` |
 
 - **Task 5 left two things open:** tessellation is a spike only, and Taylor bounds aren't used for selection on geodetic routes.
-- **Tasks 6–8 wait on the owner's confirmation** of the tree with per-view switch nodes and of the names (`affine`/`smooth`; modules `transform`, `frames`, `georeference`, `transforms`), because task 6 changes the public API.
+- **Tasks 6–8 unblocked (owner, 2026-11-12):** the tree with per-view switch nodes and the names (`affine`/`smooth`; modules `transform`, `frames`, `georeference`, `transforms`) are confirmed. After task 8, a handbook revamp for the new model (owner).
 - **The exaggeration example's remaining ~1 s long task** is warped tile bounds in selection (`drawnTile` → `scaledImage`), not shader compilation.
 
 > **For agentic workers:** execute task by task, with a fresh implementer per task. Verification is lean, as the owner asked on 2026-11-11:
@@ -39,7 +39,7 @@
 - warps land before the shared IR work;
 - the raw layer is called "transform graph".
 
-**Lead's defaults, pending the owner's confirmation:**
+**Decided by the owner (2026-11-12), formerly the lead's defaults:**
 
 - a tree with per-view parameters and switch nodes, not a DAG;
 - `affine(...)` / `smooth(...)` nodes;
