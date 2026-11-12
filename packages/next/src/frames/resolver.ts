@@ -17,6 +17,7 @@ import {
   warpInverse,
   type Route,
   type RouteStep,
+  type Warp,
 } from "../camera/route.ts";
 import { Emitter } from "../core/Emitter.ts";
 import * as m4 from "../math/mat4.ts";
@@ -24,6 +25,7 @@ import { rigidMatrixError } from "../math/transforms.ts";
 import type { AnchorHandle, TransformFrameKey } from "../scene/world/types.ts";
 import { Instant } from "../time/Instant.ts";
 import type { LeapSeconds } from "../time/leapSeconds.ts";
+import type { ViewId } from "../transform/graph.ts";
 import {
   ANALYTIC_ACCURACY,
   analyticEdges,
@@ -36,7 +38,12 @@ import type { FrameAccuracy } from "./frameAccuracy.ts";
 import { framePoint } from "./local.ts";
 import { rotationPart } from "./matrix.ts";
 import { pointAccuracy } from "./pointAccuracy.ts";
-import { isWarpFrame, type WarpFrame } from "./warpFrame.ts";
+import {
+  isNonRigidFrame,
+  smoothEdgeOf,
+  type SmoothFrame,
+  type SwitchFrame,
+} from "./smoothFrame.ts";
 
 /**
  * A reference frame drawn on its analytic stand-in because the instant is
@@ -122,8 +129,8 @@ class Resolver implements FramesResolver {
   private readonly watchers = new Set<() => void>();
   /** Frames asked for at "precise" (or found not to be the catalog's). */
   private readonly asked = new WeakSet<Frame>();
-  /** Warp frames whose changes wake the watchers. */
-  private readonly hooked = new WeakSet<WarpFrame>();
+  /** Smooth and switch frames whose changes wake the watchers. */
+  private readonly hooked = new WeakSet<SmoothFrame | SwitchFrame>();
   /** Frames marked as a rig's. */
   private readonly rigFrames = new WeakSet<Frame>();
   /** The catalog's own stand-in reference frames, by frame. */
@@ -207,6 +214,17 @@ class Resolver implements FramesResolver {
     seconds: number,
     out: Float64Array,
   ): Float64Array {
+    return this.resolveFor(frame, base, seconds, out, undefined);
+  }
+
+  /** `resolve` for `view`: a switch frame that chose the identity is crossed, any other non-rigid edge refused. */
+  private resolveFor(
+    frame: FrameKey,
+    base: FrameKey,
+    seconds: number,
+    out: Float64Array,
+    view: ViewId | undefined,
+  ): Float64Array {
     if (frame === base) {
       return m4.identity(out);
     }
@@ -222,7 +240,7 @@ class Resolver implements FramesResolver {
       return m4.identity(out);
     }
     if (a && b) {
-      if (this.crossesWarp(a, b)) {
+      if (this.crossesWarp(a, b, view, true)) {
         throw new NonRigidRouteError(frame.name, base.name);
       }
       this.askPrecise(a, b);
@@ -242,18 +260,24 @@ class Resolver implements FramesResolver {
   }
 
   /**
-   * The route from `frame` to `base`: one rigid step (`resolve`'s matrix)
-   * when it crosses no warp; else its rigid runs, each composed as
-   * `resolve` composes them (an anchor's node-relative matrix folded into
-   * the first and last), and a warp step for each warp edge, `inverse` where
-   * the route goes from the warp's `to` back to its `from`.
+   * The route from `frame` to `base` (for `view`, which a switch frame
+   * chooses by): one rigid step (`resolve`'s matrix) when it crosses no
+   * smooth edge; else its rigid runs, each composed as `resolve` composes
+   * them (an anchor's node-relative matrix folded into the first and last),
+   * and a warp step for each smooth edge, forward where the route goes up
+   * from a frame to its parent and inverse where it goes down.
    */
-  route(frame: FrameKey, base: FrameKey, seconds: number): Route {
+  route(
+    frame: FrameKey,
+    base: FrameKey,
+    seconds: number,
+    view?: ViewId,
+  ): Route {
     const a = this.reference(frame, this.localA);
     const aLocal = this.hasLocal ? this.localA.slice() : undefined;
     const b = this.reference(base, this.localB);
     const bLocal = this.hasLocal ? this.localB.slice() : undefined;
-    if (!a || !b || !this.crossesWarp(a, b)) {
+    if (!a || !b || !this.crossesWarp(a, b, view)) {
       return {
         frame,
         base,
@@ -261,28 +285,31 @@ class Resolver implements FramesResolver {
         steps: [
           {
             kind: "rigid",
-            matrix: this.resolve(frame, base, seconds, new Float64Array(16)),
+            matrix: this.resolveFor(
+              frame,
+              base,
+              seconds,
+              new Float64Array(16),
+              view,
+            ),
           },
         ],
-        presentation: false,
         revision: this.routeRevision(frame, base),
       };
     }
     this.askPrecise(a, b);
     const instant = this.instant(seconds);
     const steps: RouteStep[] = [];
-    let presentation = false;
     if (aLocal) {
       steps.push({ kind: "rigid", matrix: aLocal });
     }
-    for (const leg of this.legs(a, b)) {
+    for (const leg of this.legs(a, b, view)) {
       if (leg.kind === "warp") {
         steps.push({
           kind: "warp",
-          warp: leg.frame.warp,
+          warp: leg.warp,
           inverse: leg.inverse,
         });
-        presentation ||= leg.frame.warp.presentation;
       } else {
         const m = new Float64Array(16);
         this.scaled = false;
@@ -298,7 +325,6 @@ class Resolver implements FramesResolver {
       base,
       seconds,
       steps,
-      presentation,
       revision: this.routeRevision(frame, base),
     };
   }
