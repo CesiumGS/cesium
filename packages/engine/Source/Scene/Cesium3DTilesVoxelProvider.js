@@ -648,8 +648,22 @@ function validateTilesetJson(tilesetJson) {
   }
 }
 
+const supportedVoxelTypes = [
+  MetadataType.SCALAR,
+  MetadataType.VEC2,
+  MetadataType.VEC3,
+  MetadataType.VEC4,
+];
+
+const supportedVoxelComponentTypes = [
+  MetadataComponentType.UINT8,
+  MetadataComponentType.FLOAT32,
+  MetadataComponentType.FLOAT64,
+];
+
 /**
- * Validates the metadata schema for a given class.
+ * Validates that every property of the voxel metadata class has a type and
+ * component type that can be rendered as voxels.
  * @param {MetadataSchema} schema The metadata schema
  * @param {string} className The name of the class containing voxel metadata properties
  * @private
@@ -663,12 +677,14 @@ function validateMetadataSchema(schema, className) {
   }
   Object.values(properties).forEach((property) => {
     const { type, componentType } = property;
-    if (!MetadataType.validate(type)) {
-      throw new RuntimeError(`Unsupported voxel metadata type ${type}`);
-    }
-    if (!MetadataComponentType.validate(componentType)) {
+    if (!supportedVoxelTypes.includes(type)) {
       throw new RuntimeError(
-        `Unsupported voxel metadata component type ${componentType}`,
+        `Unsupported voxel metadata type ${type}. Supported types are ${supportedVoxelTypes.join(", ")}`,
+      );
+    }
+    if (!supportedVoxelComponentTypes.includes(componentType)) {
+      throw new RuntimeError(
+        `Unsupported voxel metadata component type ${componentType}. Supported component types are ${supportedVoxelComponentTypes.join(", ")}`,
       );
     }
   });
