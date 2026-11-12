@@ -10223,6 +10223,141 @@ Sizes and licences marked _checked_ come from the npm registry and jsDelivr file
 4. The example, with the design overlay and deviation.
 5. Real-time replay.
 
+### 13.40 Brainstorm: one styling layer on the IR, for vectors, geometry and tiles (owner, 2026-11-12)
+
+**The owner's thought:** a styling language more general than one coupled to the 3D Tiles spec.
+
+- The owner's prototype (the vector style lab, ported for points in `src/vector/VectorStyle.ts`) shows what the runtime must support in data passed back and forth with the language. We aren't tied to the existing styling approach.
+- The IR may be where a styling layer lives, serving vector styling, geometry styling and more.
+- To think through: how this overlaps with shading languages, and a prior-art search (SVG, GML and others have similar concepts).
+
+**What exists to build on:**
+
+- the 1.x expression compiler, to WGSL over a feature's metadata (`src/scene/styleExpression.ts`);
+- the vector style lab's draft for points: `parameters`, `defines`, `scales`, layer groups with `filter` and `let`, `shape` marks and symbols, `model()`, `placement`, with scopes for properties, `param`, `view.distance` and `view.time`. It's evaluated per point per frame on the GPU, including a cull kernel.
+- the transform IR (§13.37): pure, typed scalar programs with autodiff, intervals, WGSL, df64 and a float64 CPU evaluator, parsed from restricted JS.
+
+#### 1. What a style is: three parts that are usually tangled
+
+1. **Selection:** which features a rule applies to (filters, classes, element IDs, feature state such as selected or hovered, scale ranges).
+2. **Encoding:** pure functions from a feature's data and its context (view, time, parameters) to visual channels (colour, size, width, opacity, symbol, offset, label text), often through scales: categorical, linear, quantile, log.
+3. **Marks, or symbolizers:** what is drawn for a feature (a point symbol, a stroked line, a filled polygon, a label, a model, an extrusion, a b-rep face's material, an edge's line style), and how its geometry is made or modified (offsets, dashes, extrusion, geometry generators).
+
+Most style languages fuse these per format. The proposal separates them, with selection and marks declarative and encodings in the IR.
+
+#### 2. Overlap with shading languages: the same IR, different rates
+
+**A style's encodings and a shader's code are both pure expression graphs over typed inputs.** What differs is the rate at which each value varies:
+
+- **constant:** a parameter;
+- **per frame or per view:** time, camera;
+- **per feature:** properties;
+- **per vertex:** position, length along a line;
+- **per fragment:** the pixel's position, distance to an edge.
+
+Real-time shading research made this explicit, and it's the key compiler idea here:
+
+- **Computation frequencies:** Stanford's real-time shading system, "A real-time procedural shading system for programmable graphics hardware" (Proudfoot, Mark, Tzvetkov, Hanrahan, SIGGRAPH 2001), partitioned a shader by frequency: constant, per primitive group, per vertex, per fragment.
+- **Rates as types:** Spark, "Spark: modular, composable shaders for graphics hardware" (Foley and Hanrahan, SIGGRAPH 2011).
+- **Uniform and varying:** RenderMan Shading Language's distinction.
+
+**So: one IR, with rate inference.** Each IR node gets the slowest rate its inputs allow. The compiler splits a style or shader into the pieces below. Moving a parameter then touches a uniform, and a property change touches one feature's row: the per-point evaluation the vector style lab already does, generalized.
+
+- a CPU part, run once or per frame;
+- a per-feature compute pass, writing a style table: today's per-point cull kernel and the style-table rows;
+- a vertex part;
+- a fragment part.
+
+**Where styling stops and shading starts.** A style's outputs are the inputs of a material and a geometry stage:
+
+- base colour, opacity, emissive, patterns;
+- line width, dashes, offsets, extrusion height;
+- the symbol.
+
+A shader turns material inputs and lights into radiance. The engine's custom shaders (`fragmentMain` over `FragmentInput` and `MaterialOutput`) are the lower level, and a style compiles into them. MaterialX's split, a surface shader node fed by pattern graphs plus a displacement shader, is the closest analogue.
+
+**Geometry styling is the transform graph's business.** Offsets, extrusions, a profile's vertical exaggeration and a wave effect on a line are per-vertex functions, the same IR as smooth nodes. A style that displaces geometry declares a smooth node on the content it styles, so picks, measurements and bounds come for free through the route (§13.37).
+
+#### 3. Prior art
+
+Details from memory; check before quoting.
+
+| Prior art                                                                                     | What it gets right                                                                                                                                                                                                                      | What it lacks for us                                             |
+| --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **SVG and CSS**                                                                               | Presentation attributes and the cascade (selectors, specificity, inheritance, computed values); paint servers (gradients, patterns); markers on lines; filters as a graph                                                               | 2D only; the cascade's cost and ambiguity; no data-driven scales |
+| **OGC SLD and Symbology Encoding** (with Filter Encoding; GML is the geometry, not the style) | Rules with filters and scale-denominator ranges; symbolizers per geometry kind (point, line, polygon, text, raster); geometry functions in a symbolizer                                                                                 | XML; weak expressions; no 3D or GPU model                        |
+| **KML styles**                                                                                | Style maps (normal and highlight states), shared styles by URL                                                                                                                                                                          | Fixed channels, no expressions                                   |
+| **Mapbox/MapLibre GL style spec**                                                             | Sources and layers; paint against layout properties; typed JSON S-expression expressions (`interpolate`, `step`, `match`, `case`, `zoom`, `feature-state`); data-driven and zoom-driven styling compiled to GPU uniforms and attributes | 2D-and-a-half; expressions in JSON only; no user functions       |
+| **CartoCSS (Mapnik)**                                                                         | CSS-like selectors over data and zoom; attachments (several symbolizers per feature)                                                                                                                                                    | Preprocessed to XML; not GPU                                     |
+| **Tangram**                                                                                   | YAML scenes with JS functions for properties and inline GLSL shader blocks per style; draw groups mixing styles                                                                                                                         | Ad-hoc; JS evaluated on the CPU per feature                      |
+| **deck.gl**                                                                                   | Layers with accessors (JS, on the CPU) and attribute transitions; shader modules and injection hooks                                                                                                                                    | Accessors aren't compiled; the GPU path is shader injection      |
+| **Esri CIM symbols and Arcade**                                                               | The richest cartographic model: symbol layers, marker placements along lines, geometric effects (offset, dash, wave), plus Arcade, a restricted JS-like expression language for symbology and labels                                    | Proprietary; large                                               |
+| **QGIS symbology**                                                                            | Renderers (categorized, graduated, rule-based) and geometry generators: a style that makes geometry from expressions                                                                                                                    | CPU; desktop                                                     |
+| **Vega and Vega-Lite (grammar of graphics)**                                                  | Data, transforms, marks, encodings, scales and signals, which are reactive parameters. The cleanest separation of selection, encoding and marks, and the model the vector style lab already echoes with `scales` and `parameters`       | Charts, not geometry at scale                                    |
+| **3D Tiles 1.x styling**                                                                      | Expressions over metadata (a JS subset), `conditions`, `defines`, `show`, `color`, `pointSize`                                                                                                                                          | Points and meshes only; few channels; not general                |
+| **MaterialX, USD UsdShade, OSL, Unreal material instances**                                   | Typed node graphs and parameterized instances, with codegen to several backends                                                                                                                                                         | Shading only, with no selection, scales or symbols               |
+
+**What to take from each:**
+
+- **Vega-Lite:** the selection / encoding / mark separation and signals.
+- **MapLibre:** typed expressions with a JSON interchange form, and zoom and feature-state as inputs.
+- **SLD and CIM:** symbolizers per geometry kind, symbol layers and effects.
+- **SVG and CSS:** paint servers and markers. Possibly a restricted cascade for themes, but not CSS's full cascade.
+- **QGIS geometry generators and CIM effects:** geometry styling, here as smooth nodes.
+- **Spark and RenderMan:** rates.
+- **MaterialX:** the style-to-material boundary and multi-backend codegen.
+- **Arcade:** a restricted JS-like language for styling (§13.38's question 1).
+
+#### 4. A sketch of the layering
+
+```text
+front ends   : 1.x 3D Tiles styles · the vector style lab's documents · restricted JS/TS functions · (MapLibre styles)
+                                │  (each lowers to)
+style model  : sources → rules (selection: filter, class, element ID, feature state, view range)
+               → marks per geometry kind (point · line · polygon · label · model · mesh · b-rep face · b-rep edge)
+               → channels, each an IR program; scales and parameters as IR helpers and uniforms
+                                │
+IR           : typed, pure, rate-inferred (constant · frame · view · feature · vertex · fragment); shared with
+               the transform graph's smooth nodes and with custom shaders' material functions
+                                │  (rate partition)
+back ends    : per-feature compute (style table, cull) · vertex · fragment WGSL · CPU float64 evaluator
+               (picks, legends, hit tests, queries) · an interpreter for cesium-native (the JSON IR as the spec artefact)
+```
+
+**What the runtime contract needs, which the owner's prototype exposes.** These are the data passed back and forth:
+
+- **Inputs:**
+  - feature properties from a columnar store, by element ID;
+  - feature state: selected, hovered, a run-time override (§13.34's overrides);
+  - view context: distance, screen size per metre, zoom-equivalent, viewport;
+  - time and the clock;
+  - parameters;
+  - geometry inputs at their rate: position (true or drawn, §13.37), normal, length along a line, area, a b-rep face's (u, v).
+- **Outputs:**
+  - each mark's channels;
+  - geometry modifiers, as smooth nodes;
+  - label requests (text, anchor, priority) for a collision and placement pass;
+  - legend entries, which the CPU evaluator derives from the scales;
+  - pick payloads.
+- **Feedback loops:**
+  - label collision results back into visibility;
+  - aggregation over features (clustering, a density surface from afar, as the tracks example does) as a per-view compute reduction the style can read.
+
+#### 5. Open questions
+
+1. **Cascade:** ordered rules with the first or last match, or CSS-like specificity? Ordered rules are simpler and GPU-friendly.
+2. **Language surface:** does the new language keep the vector style lab's JSON document as the primary surface, with restricted JS for functions, or invert that (JS/TS styles, with JSON as the compiled interchange)?
+3. **Spec work:** propose the JSON IR as the 3D Tiles 2.0 styling interchange, so cesium-native and other runtimes implement one small interpreter instead of each front end?
+4. **Element-wise overrides:** how do run-time overrides by element ID (§13.34) layer over rules: as feature state read by expressions, or as a separate override table applied after the style?
+5. **Text and labels:** they need a CPU collision pass, the one place a style's output can't stay on the GPU. Which channels does that make CPU-rate?
+
+**Spikes, after the IR work of §13.38:**
+
+- (a) Rate inference on the existing IR, compiling one vector-style-lab layer into per-feature, vertex and fragment parts. Compare with today's per-point evaluation for the same output and cost.
+- (b) The same style applied to points, a line layer and b-rep faces: one document, three marks.
+- (c) A geometry-styling channel (extrusion or offset) lowered to a smooth node, with true and drawn picks.
+- (d) The 1.x 3D Tiles styles lowered into the new style model, as the conformance base.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
