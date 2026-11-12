@@ -383,6 +383,53 @@ export function fitLattice(
   }
 }
 
+/**
+ * Fits `displacement` with exactly `cells` cells per axis (no adaptivity:
+ * `fitLattice` picks a count by tolerance), at once. It is the reference the
+ * GPU fit (`GpuWarpFitter`) is measured against: the same cells, samples and
+ * solve, in float64, `errorBound` the worst residual at the 9³ check points.
+ */
+export function fitLatticeAt(
+  displacement: DisplacementFunction,
+  tile: { center: ArrayLike<number>; scale: number },
+  cells: number,
+  options: { operation?: string } = {},
+): CubicLattice {
+  if (!(tile.scale > 0) || !Number.isFinite(tile.scale)) {
+    throw new RangeError(
+      `fitLatticeAt: scale is ${tile.scale}; it must be positive`,
+    );
+  }
+  const center = new Float64Array([
+    tile.center[0]!,
+    tile.center[1]!,
+    tile.center[2]!,
+  ]);
+  const steps = fitCellsSteps(
+    displacement,
+    center,
+    tile.scale,
+    cells,
+    options.operation,
+    Infinity,
+  );
+  for (;;) {
+    const next = steps.next();
+    if (next.done) {
+      return next.value.lattice;
+    }
+  }
+}
+
+/**
+ * The fit's solve operator, `PLACEMENT_TERMS × FIT_POINTS³` row-major: row `k`
+ * takes the displacement at the cell's fit points (x fastest, the points
+ * `-cos(π i / 4)` per axis) to term `k`'s coefficient. The GPU fit uploads it.
+ */
+export function fitSolveOperator(): Float64Array {
+  return fitBasis().solve;
+}
+
 /** A scalar of model point `p` (a curved clip's signed distance, `fitClipField`). */
 export type ScalarFunction = (p: Float64Array) => number;
 
