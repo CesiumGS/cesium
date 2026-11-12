@@ -1,5 +1,20 @@
 # The transform graph: implementation plan
 
+**Status (2026-11-12):** tasks 1–5 have landed.
+
+| Task | Commits |
+| --- | --- |
+| 1 | `7726acf613` |
+| 2 | `a868441a50` |
+| 3 | `a3c59bda7b` |
+| 4a | `dfb2b88dde` |
+| 4b | `23c7b191be`, `811ed8814a` |
+| 5 | `e242b4609b`, `e3b3d015de` |
+
+- **Task 5 left two things open:** tessellation is a spike only, and Taylor bounds aren't used for selection on geodetic routes.
+- **Tasks 6–8 wait on the owner's confirmation** of the tree with per-view switch nodes and of the names (`affine`/`smooth`; modules `transform`, `frames`, `georeference`, `transforms`), because task 6 changes the public API.
+- **The exaggeration example's remaining ~1 s long task** is warped tile bounds in selection (`drawnTile` → `scaledImage`), not shader compilation.
+
 > **For agentic workers:** execute task by task, with a fresh implementer per task. Verification is lean, as the owner asked on 2026-11-11:
 >
 > - each task runs typecheck, eslint and prettier on its files, its own targeted tests, and at most one headless check;
