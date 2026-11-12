@@ -31,7 +31,7 @@ import {
 } from "./lighting.ts";
 import { outlineOf } from "./preview.ts";
 import { STEP_SAMPLES, fetchStepSample, isStepFile } from "./stepFiles.ts";
-import { DoubleBuffer, afterFrames } from "./swap.ts";
+import { DoubleBuffer } from "./swap.ts";
 import {
   OPERATIONS,
   OPERATION_LABELS,
@@ -94,8 +94,10 @@ import { CSS, el, field, segmented, type Phase } from "./ui.ts";
  * - Changing the solid never shows a bad frame (`swap.ts`): a new solid's
  *   draws used a stand-in until their shader's texture loaded, and the face
  *   palette read from that stand-in gave black, so the whole model flashed
- *   black at every re-evaluation. The new solid is added hidden, drawn for a
- *   few frames, and swapped in for the old one in one step; a new palette
+ *   black at every re-evaluation. The new solid is added hidden, drawn until
+ *   `engine.whenReady` says no draw uses a stand-in (with a timeout, so a
+ *   swap can't hang; a newer solid aborts the wait), and swapped in for the
+ *   old one in one step; a new palette
  *   replaces the texture of the shader that is there rather than making a
  *   shader whose texture has to load.
  * - Lighting (`lighting.ts`): the sun's direction and strength, shadows,
@@ -427,21 +429,32 @@ export async function run({
     engine.requestRender();
   };
 
-  /** Frames a new solid draws hidden before it is shown: a pipeline compiled, a texture loaded, its patches diced. */
-  const SETTLE_FRAMES = 3;
+  /**
+   * How long a new solid may wait to be right before it is shown as it is, ms:
+   * `whenReady` ends the wait then (reporting it), so a swap can't hang on a
+   * pipeline or texture that never comes.
+   */
+  const READY_TIMEOUT_MS = 2000;
 
   /**
-   * Waits until a solid's draws would show what they should. TODO: replace
-   * with `engine.whenReady(view, { draws })` once it lands: it knows when no
-   * draw uses a stand-in and the patches are diced; this compiles the
-   * shaders and then waits a few frames, with the palette's robust fragment
-   * stage covering what that misses.
+   * Waits until a solid's draws would show what they should: none uses a
+   * stand-in (a shader's pipelines compiled, its palette texture loaded) and
+   * its patches are diced (`Engine.whenReady`). `superseded` aborts when a
+   * newer solid replaces this one, so the wait ends rather than running on.
+   * The shaders are compiled first, which saves frames of waiting.
    */
-  const settled = async (solid: Shown) => {
+  const settled = async (solid: Shown, superseded: AbortSignal) => {
     await Promise.allSettled(
       [...solid.shaders.values()].map((shader) => engine.compileShader(shader)),
     );
-    await afterFrames(engine, SETTLE_FRAMES, { signal });
+    await engine.whenReady(view, {
+      draws: [
+        ...faceDraws(solid.handle),
+        ...(solid.edges ? [solid.edges.draw] : []),
+      ],
+      signal: AbortSignal.any([signal, superseded]),
+      timeoutMs: READY_TIMEOUT_MS,
+    });
   };
 
   /** Adds a kernel's result hidden, and shows it, in place of the solid shown, once it has drawn right. */
@@ -473,7 +486,7 @@ export async function run({
     colour(next);
     setSolidVisible(next, false);
     engine.requestRender();
-    void buffer.stage(next, () => settled(next));
+    void buffer.stage(next, (superseded) => settled(next, superseded));
   };
 
   /** The form's edges, lifted off the faces, as a line overlay (a CPU mesh of edges only). */

@@ -20,15 +20,16 @@ import {
 } from "../brep-first-look/kernels.ts";
 import { filletedBlockBrep } from "../brep-first-look/fixtures.ts";
 import { formBounds } from "../../src/brep/formBounds.ts";
+import { SectionClient } from "../../src/brep/sectionClient.ts";
 import type { Dispose, ExampleContext } from "../types.ts";
 import { SectionCaps, type CapPart, type CapsReport } from "./caps.ts";
-import { loadGltfTriangles } from "./gltf.ts";
 import { SectionOverlay } from "./overlay.ts";
 import { createPanel, el, type PanelModel } from "./panel.ts";
 import {
   brepTarget,
   firstHit,
-  meshTarget,
+  meshCapTarget,
+  modelTarget,
   tilesetTarget,
   type Found,
   type PickTarget,
@@ -59,9 +60,9 @@ import {
  *
  * The content: NIST's CTC-05 from the STEP store, imported by Open CASCADE
  * in its worker and drawn as exact faces (a block with a bore if the worker
- * can't load), a closed torus (a glTF from the specs data, read twice: by the
- * engine for drawing and here for its triangles, which the engine keeps for
- * no caller), and the specs data's sample tileset of ten buildings.
+ * can't load), a closed torus (a glTF from the specs data, loaded with
+ * `retainGeometry` so the engine keeps its triangles for the caps and the
+ * picks), and the specs data's sample tileset of ten buildings.
  *
  * The section is two clip sets in the world, named in ITRF: a set of one or
  * two planes (union or intersection, keeping the inside or the outside) and
@@ -71,11 +72,13 @@ import {
  * because a handle in the scene would be cut by its own plane.
  *
  * The caps are the application's (nothing yet makes them): `BrepCaps` for the
- * part, exact, and `MeshCaps` for the torus and the tileset's tiles, which it
- * is fed (`setTile`) from `Tile.geometry`, a tileset's retained triangles. A
- * `CapScheduler` rebuilds them within a budget as a handle moves. A pick
- * is asked of the GPU (clip-aware, as the view draws) and of the geometry
- * queries in float64 (`rayHit`, with the view's clips and without them).
+ * part, exact, sectioned in the section worker so the page's thread only
+ * draws what comes back, and `MeshCaps` for the torus and the tileset's tiles,
+ * which it is fed (`setTile`) from the model's and `Tile.geometry`'s retained
+ * triangles. A `CapScheduler` on the engine rebuilds them as a handle moves,
+ * and wakes the engine when it has to. A pick is asked of the GPU (clip-aware,
+ * as the view draws) and of the geometry queries in float64 (`rayHit`, with
+ * the view's clips and without them), the mesh caps' polygons included.
  *
  * Curved clip: the plane is named in a frame under ITRF that a reprojection
  * waves (sections.ts), so no rigid test can draw it and the engine cuts it
@@ -97,8 +100,8 @@ const PART_AT: V3 = [-75, -150, 0];
 const TORUS_AT: V3 = [60, -150, 0];
 const DEG = Math.PI / 180;
 const DEFAULT_CAP_COLOR = "#e8913a";
-/** How long a moving clip rests before the b-rep caps are rebuilt, ms. */
-const BREP_SETTLE_MS = 200;
+/** The part's draws are named so a pick can tell them from the caps'. */
+const PART_NAME = "B-rep part";
 /** The camera frames the scene about here, local metres. */
 const MIDDLE: V3 = [0, -60, 18];
 
@@ -123,6 +126,7 @@ export async function run({
 }: ExampleContext): Promise<Dispose> {
   const { engine, world, view } = viewer;
   const kernels = new KernelSession();
+  scope.defer(() => kernels.dispose());
   viewer.creditsShown = false;
   viewer.setControls("orbit");
   view.background = "color";
@@ -213,7 +217,11 @@ export async function run({
   scope.defer(() => world.removeDraw(ground));
 
   // ------------------------------------------------------ clips and views
-  const scheduler = new CapScheduler();
+  const scheduler = new CapScheduler({ engine });
+  scope.defer(() => scheduler.dispose());
+  // The b-rep sections run in their own worker: the page only draws them.
+  const sections = new SectionClient();
+  scope.defer(() => sections.dispose());
   let design: ReturnType<typeof createDesignFrame> | undefined;
   let planeSet: ClipSet = planeClip(site, state, itrf);
   let boxSet: ClipSet = boxClip(site, state, itrf);
@@ -255,38 +263,29 @@ export async function run({
     }
     view.setClips(used);
     second?.setClips(model.secondClipped ? used : []);
-    followCaps(true);
-    clearTimeout(settleTimer);
-    settleTimer = setTimeout(() => followCaps(false), BREP_SETTLE_MS);
+    followCaps();
     overlay.update();
     engine.requestRender();
   }
-  let settleTimer: ReturnType<typeof setTimeout> | undefined;
-  scope.defer(() => clearTimeout(settleTimer));
 
-  /** `moving`: a clip is being dragged, so the b-rep caps wait for it to settle. */
-  function followCaps(moving = false): void {
+  /** The caps follow the clips as they are (the scheduler rebuilds them, and wakes the engine when they change). */
+  function followCaps(): void {
     // Caps are for planes in a rigid frame: a curved plane has none.
     capSets[0]?.follow(
       state.plane.on && !state.curved ? planeSet : undefined,
       model.caps.brep,
       model.caps.mesh,
-      moving,
     );
     capSets[1]?.follow(
       state.box.on ? boxSet : undefined,
       model.caps.brep,
       model.caps.mesh,
-      moving,
     );
     panelControls.setCapNote(
       state.curved && state.plane.on
         ? "The plane is curved: caps are built for planes in a rigid frame, so it has none. The box's still do."
         : undefined,
     );
-    // The scheduler runs in the engine's tick, which a resting engine skips:
-    // nothing wakes it when caps go out of date.
-    engine.requestRender();
   }
 
   // ----------------------------------------------------------- the views
@@ -439,10 +438,8 @@ export async function run({
   // -------------------------------------------------------------- content
   const notes: string[] = [];
   const targets: PickTarget[] = [];
-  /** The part's draws, to tell a pick on it. */
-  const partDraws = new Set<number>();
   const parts: CapPart[] = [];
-  let torusTile: Omit<MeshCapTile, "id" | "revision"> | undefined;
+  let torusTiles: Array<Omit<MeshCapTile, "id" | "revision">> = [];
   let tilesetFeed: (() => void) | undefined;
 
   const loadPart = async (): Promise<void> => {
@@ -487,15 +484,10 @@ export async function run({
         material: partMaterial,
         color: [0.74, 0.79, 0.88, 1],
         doubleSided: true,
-        name: "B-rep part",
+        name: PART_NAME,
         ...(prepared ? { prepared } : {}),
       });
       scope.defer(() => world.removeBrep(handle));
-      for (const draw of [handle.patches, handle.trimmed, handle.mesh]) {
-        if (draw) {
-          partDraws.add(draw.index);
-        }
-      }
       parts.push({ form, origin: site.origin, model: drawn, formToFrame });
       targets.push(
         brepTarget("B-rep part", () => form, formToFrame, site.origin),
@@ -510,31 +502,30 @@ export async function run({
     const matrix = site.matrix(
       placement([TORUS_AT[0], TORUS_AT[1], 0.25 * size], size, true),
     );
-    const [triangles, resource] = await Promise.all([
-      loadGltfTriangles(TORUS, signal),
-      viewer.loadModel(TORUS, {
-        signal,
-        axes: "none",
-        name: "Closed mesh model",
-      }),
-    ]);
+    const resource = await viewer.loadModel(TORUS, {
+      signal,
+      axes: "none",
+      name: "Closed mesh model",
+      retainGeometry: true,
+    });
     using held = resource;
     if (signal.aborted) {
       return;
     }
-    scope.use(held.place({ modelMatrix: matrix, name: "Closed mesh model" }));
-    torusTile = { ...triangles, matrix, geometricError: 0 };
-    targets.push(
-      meshTarget(
-        "Closed mesh model",
-        triangles.positions,
-        triangles.indices,
-        matrix,
-      ),
+    const placed = scope.use(
+      held.place({ modelMatrix: matrix, name: "Closed mesh model" }),
     );
-    notes.push(
-      `TorusQuantized.gltf: ${triangles.indices.length / 3} triangles, closed.`,
-    );
+    // The engine's own copy of the triangles, each draw's matrix as placed.
+    const geometry = placed.geometry() ?? [];
+    torusTiles = geometry.map((g) => ({
+      positions: g.positions,
+      indices: g.indices,
+      matrix: g.matrix,
+      geometricError: 0,
+    }));
+    targets.push(modelTarget("Closed mesh model", placed));
+    const count = geometry.reduce((n, g) => n + g.indices.length / 3, 0);
+    notes.push(`TorusQuantized.gltf: ${count} triangles, closed.`);
   };
 
   const loadTileset = async (): Promise<void> => {
@@ -617,7 +608,7 @@ export async function run({
   });
   panelControls.setContent(notes.join(" "));
   if (signal.aborted) {
-    return () => kernels.dispose();
+    return () => undefined;
   }
 
   // The caps, a set of them for each clip, fed the torus and the tiles.
@@ -629,16 +620,17 @@ export async function run({
       material: capMaterial,
       color: capColor,
       name,
+      runner: sections,
     });
     scope.defer(() => caps.dispose());
-    if (torusTile) {
+    torusTiles.forEach((tile, i) => {
       caps.setTile({
-        id: "torus",
+        id: `torus ${i}`,
         revision: 1,
-        ...torusTile,
-        featureIds: new Uint32Array(torusTile.positions.length / 3).fill(1),
+        ...tile,
+        featureIds: new Uint32Array(tile.positions.length / 3).fill(1),
       });
-    }
+    });
     return caps;
   };
   capSets.push(makeCaps("Section cap (plane)"), makeCaps("Section cap (box)"));
@@ -649,15 +641,25 @@ export async function run({
         () => capSets[0]?.capForm(i),
         part.formToFrame,
         site.origin,
+        true,
       ),
       brepTarget(
         "B-rep cap (box)",
         () => capSets[1]?.capForm(i),
         part.formToFrame,
         site.origin,
+        true,
       ),
     );
   });
+  targets.push(
+    meshCapTarget("Mesh cap (plane)", (from, to, keeps) =>
+      capSets[0]?.meshHit(from, to, keeps),
+    ),
+    meshCapTarget("Mesh cap (box)", (from, to, keeps) =>
+      capSets[1]?.meshHit(from, to, keeps),
+    ),
+  );
   applyClips();
 
   // ------------------------------------------------------------ each tick
@@ -706,17 +708,26 @@ export async function run({
     }
   };
 
+  // The scheduler ticks before this (it was made first), on the engine's own
+  // frames: nothing here asks for a render for the caps.
+  let reportTimer: ReturnType<typeof setTimeout> | undefined;
+  scope.defer(() => clearTimeout(reportTimer));
   const offTick = engine.onAfterTick((now) => {
     tilesetFeed?.();
-    const tick = scheduler.tick();
-    if (tick.rebuilt > 0 || tick.pending > 0) {
-      engine.requestRender();
-    }
     overlay.update();
     markPick();
     if (now - lastReport > 250) {
       lastReport = now;
       showCaps();
+    } else if (reportTimer === undefined) {
+      // The last numbers land even when the engine goes to rest.
+      reportTimer = setTimeout(
+        () => {
+          reportTimer = undefined;
+          engine.wake();
+        },
+        260 - (now - lastReport),
+      );
     }
   });
   scope.defer(offTick);
@@ -767,7 +778,7 @@ export async function run({
       ? undefined
       : capSet >= 0
         ? `section cap of the ${capSet === 0 ? "plane" : "box"}`
-        : partDraws.has(draw.index)
+        : draw.name === PART_NAME
           ? `B-rep part, face ${info?.localId}`
           : (draw.name ?? `tileset, feature ${hit?.name ?? hit?.featureId}`);
     pickReadout.set(
@@ -782,25 +793,23 @@ export async function run({
       found
         ? `${found.target}, ${found.entity}, ${found.distance.toFixed(2)} m along; ${found.accuracy}`
         : "no hit";
-    pickReadout.set(
-      "Exact, clipped",
-      describe(
-        firstHit(
-          targets,
-          from,
-          direction,
-          3000,
-          site.origin,
-          engine.clipFilter(at),
-        ),
-      ),
+    const clipped = firstHit(
+      targets,
+      from,
+      direction,
+      3000,
+      site.origin,
+      engine.clipFilter(at),
     );
+    pickReadout.set("Exact, clipped", describe(clipped));
     pickReadout.set(
       "Exact, whole",
       describe(firstHit(targets, from, direction, 3000, site.origin)),
     );
     // On a cap, the point on the cut face: the ray meets the cap's plane in
-    // float64, where the depth read is good to float32 at this range.
+    // float64, where the depth read is good to float32 at this range. The
+    // cap's own geometry (a b-rep's exact face, a mesh cap's polygon) says
+    // the same point, when the ray meets it.
     if (point && capSet >= 0) {
       const l = site.local(point);
       const planes = cutPlanes(state, capSet === 0 ? "plane" : "box");
@@ -816,9 +825,14 @@ export async function run({
         dot(sub(nearest.point, o), nearest.normal) / dot(d, nearest.normal);
       const exact = add(o, scale(d, t));
       const offset = sub(exact, nearest.point);
+      const onCap = clipped?.target.includes("cap") ? clipped : undefined;
       pickReadout.set(
         "On the cap",
-        `${nearest.name}: u ${metres(dot(offset, nearest.u))}, v ${metres(dot(offset, nearest.v))} on the cut face; the depth read is ${(length(sub(l, exact)) * 1000).toFixed(0)} mm from it`,
+        `${nearest.name}: u ${metres(dot(offset, nearest.u))}, v ${metres(dot(offset, nearest.v))} on the cut face; the depth read is ${(length(sub(l, exact)) * 1000).toFixed(0)} mm from it. ${
+          onCap
+            ? `The ${onCap.target} gives ${where(onCap.position)} (${onCap.entity}), ${(length(sub(site.local(onCap.position), l)) * 1000).toFixed(0)} mm from the depth read`
+            : "The cap's own geometry is not met by the ray (it is still being built, or the ray runs along its edge)"
+        }`,
       );
     } else {
       pickReadout.set("On the cap", "not on a cap");
@@ -849,7 +863,5 @@ export async function run({
   // zero set of its field in the plane, a 2-D contour that would join
   // `SectionCaps` as a third kind of cap, and its pick joins `targets`.
 
-  return () => {
-    kernels.dispose();
-  };
+  return () => undefined;
 }

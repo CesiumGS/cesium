@@ -152,4 +152,52 @@ describe("ModelResource and ModelPlacement", () => {
     expect(world.hasDraw(draws[0]!)).toBe(true);
     p.remove();
   });
+
+  it("keeps a model's triangles only when asked, placed as the draws are", () => {
+    using plain = engine.uploadModel(world, triangle());
+    const q = plain.place(at);
+    expect(q.geometry()).toBeUndefined();
+    q.remove();
+
+    using model = engine.uploadModel(world, triangle(), {
+      retainGeometry: true,
+    });
+    const p = model.place(at);
+    const [g] = p.geometry()!;
+    expect(p.geometry()).toHaveLength(1);
+    expect(g!.draw).toBe(p.draws[0]);
+    expect(Array.from(g!.positions)).toEqual([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+    expect(Array.from(g!.indices)).toEqual([0, 1, 2]);
+    // The matrix is the draw's, float64, and follows the placement.
+    expect(g!.matrix[12]).toBe(6378137);
+    const moved = Float64Array.from(at.modelMatrix);
+    moved[12] = 6378237;
+    p.setTransform(moved);
+    expect(p.geometry()![0]!.matrix[12]).toBe(6378237);
+    // Placed twice, the placements share the arrays and not the matrices.
+    const r = model.place(at);
+    expect(r.geometry()![0]!.positions).toBe(p.geometry()![0]!.positions);
+    expect(r.geometry()![0]!.matrix[12]).toBe(6378137);
+    r.remove();
+    p.remove();
+    expect(() => p.geometry()).toThrow(/removed/);
+  });
+
+  it("keeps no triangles of lines or instanced placements", () => {
+    const lines = triangle();
+    lines.meshes[0]!.topology = "line-list";
+    using model = engine.uploadModel(world, lines, { retainGeometry: true });
+    const p = model.place(at);
+    expect(p.geometry()).toEqual([]);
+    p.remove();
+    using instanced = engine.uploadModel(world, triangle(), {
+      retainGeometry: true,
+    });
+    const i = instanced.place({
+      ...at,
+      instances: { matrices: Float64Array.from(at.modelMatrix) },
+    });
+    expect(i.geometry()).toEqual([]);
+    i.remove();
+  });
 });

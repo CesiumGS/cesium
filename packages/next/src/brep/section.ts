@@ -393,9 +393,13 @@ function facePieces(ctx: Context, face: number, plane: SectionPlane): Piece[] {
 }
 
 /** Whether the plane lies on a face of the solid, or contains an edge of it. */
-function touches(ctx: Context, plane: SectionPlane): boolean {
+function* touches(
+  ctx: Context,
+  plane: SectionPlane,
+): Generator<void, boolean, void> {
   const { form } = ctx;
   for (let face = 0; face < form.faceSurface.length; face++) {
+    yield;
     if (edgeCrossings(form, face, plane, ctx.scale).coplanar) {
       return true;
     }
@@ -427,12 +431,12 @@ interface PlaneSection {
   readonly regions: Region[];
 }
 
-function sectionPlane(
+function* sectionPlane(
   ctx: Context,
   input: SectionPlaneInput,
   index: number,
   nudge: number,
-): PlaneSection {
+): Generator<void, PlaneSection, void> {
   const { form, report } = ctx;
   const base = planeFrame(input.point, input.normal);
   // Shifted into the solid (against the outward normal) when nudged.
@@ -450,6 +454,7 @@ function sectionPlane(
   const faces = form.faceSurface.length;
   for (let face = 0; face < faces; face++) {
     pieces.push(...facePieces(ctx, face, plane));
+    yield;
   }
   if (pieces.length === 0) {
     return { plane, regions: [] };
@@ -527,6 +532,71 @@ function pieceCurve(
 }
 
 /**
+ * The caps of the solid for planes, in steps: a `SectionJob` does the same
+ * work as `sectionBrep`, a face of a plane at a time, so a caller can spread
+ * it over frames (`step(budgetMs)`) and keep drawing what it had until the
+ * result is whole.
+ */
+export class SectionJob {
+  private readonly steps: Generator<void, SectionResult, void>;
+  private result_: SectionResult | undefined;
+  private units = 0;
+
+  constructor(
+    form: BrepForm,
+    planes: readonly SectionPlaneInput[],
+    options: SectionOptions = {},
+  ) {
+    const size = formSize(form);
+    const tolerance = options.tolerance ?? Math.max(1e-7, 1e-5 * size);
+    if (!(tolerance > 0 && Number.isFinite(tolerance))) {
+      throw new RangeError(
+        "sectionBrep: tolerance must be a positive finite number of metres",
+      );
+    }
+    this.steps = sectionSteps(form, planes, options, size, tolerance);
+  }
+
+  /** Whether every step has been taken. */
+  get done(): boolean {
+    return this.result_ !== undefined;
+  }
+
+  /** Steps taken so far (a step is one face of one plane, or one plane's assembly). */
+  get stepsTaken(): number {
+    return this.units;
+  }
+
+  /** The caps; throws until `done`. */
+  get result(): SectionResult {
+    if (!this.result_) {
+      throw new Error("SectionJob: the section is not done");
+    }
+    return this.result_;
+  }
+
+  /**
+   * Works for about `budgetMs` (a step in progress is not split, and one is
+   * always taken). Returns whether the job is done.
+   */
+  step(budgetMs: number): boolean {
+    const start = performance.now();
+    while (!this.result_) {
+      const next = this.steps.next();
+      this.units++;
+      if (next.done) {
+        this.result_ = next.value;
+        break;
+      }
+      if (performance.now() - start >= budgetMs) {
+        break;
+      }
+    }
+    return this.done;
+  }
+}
+
+/**
  * The caps of the solid for planes: planar faces whose outer loop is the
  * section, with the holes it has, as a form of their own.
  */
@@ -535,13 +605,18 @@ export function sectionBrep(
   planes: readonly SectionPlaneInput[],
   options: SectionOptions = {},
 ): SectionResult {
-  const size = formSize(form);
-  const tolerance = options.tolerance ?? Math.max(1e-7, 1e-5 * size);
-  if (!(tolerance > 0 && Number.isFinite(tolerance))) {
-    throw new RangeError(
-      "sectionBrep: tolerance must be a positive finite number of metres",
-    );
-  }
+  const job = new SectionJob(form, planes, options);
+  job.step(Infinity);
+  return job.result;
+}
+
+function* sectionSteps(
+  form: BrepForm,
+  planes: readonly SectionPlaneInput[],
+  options: SectionOptions,
+  size: number,
+  tolerance: number,
+): Generator<void, SectionResult, void> {
   const report: SectionReport = {
     planes: planes.length,
     facesCut: 0,
@@ -562,16 +637,20 @@ export function sectionBrep(
     options.version !== undefined ? { version: options.version } : undefined,
   );
   const faces: CapFace[] = [];
-  let any = false;
-  planes.forEach((input, index) => {
+  for (const [index, input] of planes.entries()) {
     // On a face or an edge: the plane moves a hair into the solid.
-    const nudged = touches(ctx, planeFrame(input.point, input.normal));
+    const nudged = yield* touches(ctx, planeFrame(input.point, input.normal));
     if (nudged) {
       report.nudged++;
     }
-    const section = sectionPlane(ctx, input, index, nudged ? 1e-6 * size : 0);
+    const section = yield* sectionPlane(
+      ctx,
+      input,
+      index,
+      nudged ? 1e-6 * size : 0,
+    );
     if (section.regions.length === 0) {
-      return;
+      continue;
     }
     const { plane, regions } = section;
     const surface = builder.plane(plane.origin, plane.x, plane.y);
@@ -625,9 +704,13 @@ export function sectionBrep(
         holes: region.holes.length,
         sources,
       });
-      any = true;
     });
-  });
+    yield;
+  }
   report.fitError = fit.maxError;
-  return { form: any ? builder.build() : undefined, faces, report };
+  return {
+    form: faces.length > 0 ? builder.build() : undefined,
+    faces,
+    report,
+  };
 }

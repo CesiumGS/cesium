@@ -42,7 +42,8 @@ export type BrepWorld = Pick<
 /**
  * Where the form is, as `DrawOptions` places a draw (`parent`, `origin`
  * and `model`, with the form's coordinates, m, in the model's frame) or by
- * a shared `transform`; and how it draws. Provisional.
+ * a shared `transform`; and how it draws. Its draws are named `name` (default
+ * "brep"), as a pick reports them. Provisional.
  */
 export interface BrepOptions extends Pick<
   DrawOptions,
@@ -112,6 +113,8 @@ export interface BrepHandle {
 }
 
 const DEFAULT_CPU_TOLERANCE = 1e-3;
+/** The name of a b-rep's draws when `BrepOptions.name` gives none: `world.feature(id).draw.name` says it. */
+export const DEFAULT_BREP_NAME = "brep";
 
 export function addBrep(
   world: BrepWorld,
@@ -217,7 +220,7 @@ export function addBrep(
       : {}),
     ...(options.ground !== undefined ? { ground: options.ground } : {}),
     ...(options.material !== undefined ? { material: options.material } : {}),
-    ...(options.name !== undefined ? { name: options.name } : {}),
+    name: options.name ?? DEFAULT_BREP_NAME,
     ...(options.shader ? { shader: options.shader } : {}),
     ...(options.textureSet !== undefined
       ? { textureSet: options.textureSet }

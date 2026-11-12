@@ -7,6 +7,7 @@ entry	name	kind	tier
 .	Attribution	interface	-
 .	BASE_BINDING_LIMITS	const	-
 .	BASE_CAPACITY_LIMITS	const	-
+.	BREP_CAP_NAME	const	-
 .	BezierCurves	interface	-
 .	BingImagery	class	-
 .	Body	interface	-
@@ -34,6 +35,7 @@ entry	name	kind	tier
 .	CapColor	type	-
 .	CapDrawOptions	interface	-
 .	CapDraws	interface	-
+.	CapEngine	interface	-
 .	CapFace	interface	-
 .	CapPlacement	type	-
 .	CapPlane	interface	-
@@ -142,13 +144,19 @@ entry	name	kind	tier
 .	MAX_TERRAIN_CLIPS	const	-
 .	MAX_TERRAIN_CLIP_VERTICES	const	-
 .	MAX_WORLD_CLIPS	const	-
+.	MESH_CAP_LINE_NAME	const	-
+.	MESH_CAP_NAME	const	-
 .	MOON	const	-
 .	MOON_ALBEDO	const	-
 .	MaterialFlags	const	-
 .	MaterialOptions	type	-
 .	MeshCapGeometry	interface	-
+.	MeshCapHit	interface	-
 .	MeshCapPlane	interface	-
+.	MeshCapRegion	interface	-
 .	MeshCapReport	interface	-
+.	MeshCapSurface	interface	-
+.	MeshCapSurfaceHit	interface	-
 .	MeshCapTile	interface	-
 .	MeshCaps	class	-
 .	MeshCapsOptions	interface	-
@@ -157,6 +165,7 @@ entry	name	kind	tier
 .	MeshGeometryOptions	interface	-
 .	MeshHandle	interface	-
 .	MeshSource	interface	-
+.	ModelGeometry	interface	-
 .	ModelInstances	interface	-
 .	ModelPlacement	class	-
 .	ModelPool	class	-
@@ -229,10 +238,14 @@ entry	name	kind	tier
 .	SceneItem	class	-
 .	SceneItemOptions	interface	-
 .	SdfGeometryOptions	interface	-
+.	SectionJob	class	-
 .	SectionOptions	interface	-
+.	SectionOutcome	interface	-
 .	SectionPlaneInput	interface	-
 .	SectionReport	interface	-
+.	SectionRequest	interface	-
 .	SectionResult	interface	-
+.	SectionRunner	interface	-
 .	SegmentDistance	interface	-
 .	SelectionView	interface	-
 .	ShaderControl	interface	-
@@ -376,6 +389,7 @@ entry	name	kind	tier
 .	orbitBasis	function	-
 .	orbitPose	function	-
 .	placePosition	function	-
+.	rayHitRegions	function	-
 .	readBrepExtension	function	-
 .	readWithProgress	function	-
 .	resamplable	function	-
@@ -383,6 +397,7 @@ entry	name	kind	tier
 .	resolveIonAsset	function	-
 .	resolveUri	function	-
 .	runBulk	function	-
+.	runSection	function	-
 .	scaleToEv100	const	-
 .	sdfGeometry	function	-
 .	secondDerivativeBound	function	-
@@ -393,6 +408,7 @@ entry	name	kind	tier
 .	tableResolver	function	-
 .	terrainQueries	function	-
 .	tessellateBrep	function	-
+.	tileBounds	function	-
 .	tileHeaderKey	function	-
 .	timeSlices	function	-
 .	triangulateRegion	function	-

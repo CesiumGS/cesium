@@ -4,6 +4,8 @@ import {
   type BrepForm,
   type ClipFilter,
   type GeometryQueries,
+  type MeshCapSurfaceHit,
+  type ModelPlacement,
   type Tileset3D,
 } from "@cesium/next";
 
@@ -11,6 +13,52 @@ import {
 export interface PickTarget {
   readonly name: string;
   queries(): GeometryQueries | undefined;
+  /** A cap exists because of the clips: only a pick with them can meet it. */
+  readonly clippedOnly?: boolean;
+  /** Instead of `queries`, a test of its own for the segment from `from` to `to` (the mesh caps' polygons); `keeps` drops a point the clips remove. */
+  segmentHit?(
+    from: ArrayLike<number>,
+    to: ArrayLike<number>,
+    keeps: ((point: ArrayLike<number>) => boolean) | undefined,
+  ):
+    | {
+        /** Along the segment, 0 to 1. */
+        readonly t: number;
+        readonly position: Float64Array;
+        readonly entity: string;
+        readonly uv: readonly [number, number];
+        readonly accuracy: string;
+      }
+    | undefined;
+}
+
+/** The mesh caps of a clip set, hit exactly on their polygons (float64, in the clip's frame). */
+export function meshCapTarget(
+  name: string,
+  caps: (
+    from: ArrayLike<number>,
+    to: ArrayLike<number>,
+    keeps: ((point: ArrayLike<number>) => boolean) | undefined,
+  ) => MeshCapSurfaceHit | undefined,
+): PickTarget {
+  return {
+    name,
+    clippedOnly: true,
+    queries: () => undefined,
+    segmentHit(from, to, keeps) {
+      const hit = caps(from, to, keeps);
+      return (
+        hit && {
+          t: hit.t,
+          position: Float64Array.from(hit.point),
+          entity: `element ${hit.feature}, plane ${hit.surface}`,
+          uv: hit.uv,
+          accuracy:
+            "exact (the cap's polygon, on the plane a bias inside the clip's)",
+        }
+      );
+    },
+  };
 }
 
 /** A b-rep placed by a similarity matrix: its exact queries. */
@@ -19,10 +67,12 @@ export function brepTarget(
   form: () => BrepForm | undefined,
   matrix: Float64Array,
   origin: Float64Array,
+  clippedOnly = false,
 ): PickTarget {
   const cache = new WeakMap<BrepForm, GeometryQueries>();
   return {
     name,
+    ...(clippedOnly ? { clippedOnly } : {}),
     queries() {
       const f = form();
       if (!f) {
@@ -38,21 +88,23 @@ export function brepTarget(
   };
 }
 
-/** A triangle mesh placed by a matrix. */
-export function meshTarget(
+/** A placed model's triangles (loaded with `retainGeometry`), as they stand when first asked. */
+export function modelTarget(
   name: string,
-  positions: Float32Array,
-  indices: Uint32Array,
-  matrix: Float64Array,
+  placement: ModelPlacement,
 ): PickTarget {
   let q: GeometryQueries | undefined;
   return {
     name,
-    queries: () =>
-      (q ??= meshGeometry(
-        { positions, indices, matrix },
-        { note: "the mesh as loaded (float32 positions)" },
-      )),
+    queries() {
+      if (!q) {
+        const parts = (placement.geometry() ?? []).map((g) =>
+          meshGeometry(g, { note: "the model's mesh (float32 positions)" }),
+        );
+        q = parts.length > 0 ? union(parts) : undefined;
+      }
+      return q;
+    },
   };
 }
 
@@ -135,6 +187,24 @@ export function firstHit(
   ];
   let best: Found | undefined;
   for (const target of targets) {
+    if (target.clippedOnly && !clips) {
+      continue;
+    }
+    if (target.segmentHit) {
+      const hit = target.segmentHit(from, to, clips && ((p) => clips.keeps(p)));
+      const distance = hit && hit.t * reach;
+      if (hit && (!best || distance! < best.distance)) {
+        best = {
+          target: target.name,
+          distance: distance!,
+          position: hit.position,
+          entity: hit.entity,
+          uv: [hit.uv[0], hit.uv[1]],
+          accuracy: hit.accuracy,
+        };
+      }
+      continue;
+    }
     const answer = target
       .queries()
       ?.rayHit({ from, to }, { origin, ...(clips ? { clips } : {}) });

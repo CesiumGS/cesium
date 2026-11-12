@@ -8,7 +8,9 @@ import {
   type ClipSet,
   type DrawHandle,
   type MeshCapReport,
+  type MeshCapSurfaceHit,
   type MeshCapTile,
+  type SectionRunner,
   type World,
 } from "@cesium/next";
 
@@ -28,8 +30,10 @@ export interface CapsOptions {
   readonly parts: readonly CapPart[];
   readonly material: number;
   readonly color: () => CapColor;
-  /** Names the caps' draws, for picks. */
+  /** Names the caps' draws, for picks: `<name>: b-rep` and `<name>: mesh`. */
   readonly name: string;
+  /** Sections the b-rep parts off the page's thread (the section worker). */
+  readonly runner: SectionRunner;
 }
 
 /** What the caps of one clip set made, summed over the parts and the mesh tiles. */
@@ -39,7 +43,11 @@ export interface CapsReport {
     readonly faces: number;
     readonly area: number;
     readonly unsupported: string | undefined;
+    /** From a clip's change to the caps drawn. */
     readonly ms: number;
+    /** Of it, the section (in the worker) and the page's drawing of the caps. */
+    readonly sectionMs: number;
+    readonly drawMs: number;
     /** Chains of a section that did not close, over the parts. */
     readonly openChains: number;
   };
@@ -58,8 +66,8 @@ export interface CapsReport {
  * The caps of one clip set: an exact one for each b-rep part, and the mesh
  * caps of every tile the application has fed (`setTile`). The application
  * makes and feeds them (nothing yet does it when a clip is added or a tile
- * loads), and the scheduler rebuilds them within its budget as the clip
- * moves.
+ * loads), and the scheduler rebuilds them as the clip moves: the b-rep
+ * sections in the section worker, the mesh cuts within the frame's budget.
  */
 export class SectionCaps {
   private readonly brep: BrepCaps[];
@@ -69,7 +77,7 @@ export class SectionCaps {
   private meshOn = false;
 
   constructor(private readonly options: CapsOptions) {
-    const { world, scheduler, color, material, name } = options;
+    const { world, scheduler, color, material, name, runner } = options;
     this.brep = options.parts.map((part) => {
       const caps = new BrepCaps(world, {
         form: part.form,
@@ -81,45 +89,29 @@ export class SectionCaps {
           name: `${name}: b-rep`,
         },
         style: () => color(),
+        runner,
       });
       scheduler.add(caps);
       return caps;
     });
     // A cap lies inside what it closes, so a view that doesn't clip never sees it.
-    // Its bias (how far inside the kept side) must beat the clip test's
-    // float32 rounding at the viewing distance: the default 1 µm is far
-    // below it at hundreds of metres, and half the cap is cut away as speckle.
     this.mesh = new MeshCaps(world, {
       place: (origin) => ({ origin }),
       material,
       name: `${name}: mesh`,
-      bias: { meters: 0.003 },
       style: () => color(),
       lineColor: [1, 0.25, 0.05, 1],
     });
     scheduler.add(this.mesh);
   }
 
-  /**
-   * Follows `set` (none: no caps); each kind of cap only while its switch is
-   * on. With `holdBrep` the b-rep caps are left as they are: a stale cap is
-   * always out of sight (inside the solid, or in what the clip removes), and
-   * a rebuild takes a good part of a second on a part of 200 faces, so a
-   * moving clip holds them until it settles.
-   */
-  follow(
-    set: ClipSet | undefined,
-    brep: boolean,
-    mesh: boolean,
-    holdBrep = false,
-  ): void {
+  /** Follows `set` (none: no caps); each kind of cap only while its switch is on. */
+  follow(set: ClipSet | undefined, brep: boolean, mesh: boolean): void {
     this.set = set;
     this.brepOn = brep;
     this.meshOn = mesh;
-    if (!holdBrep) {
-      for (const caps of this.brep) {
-        caps.setClip(set && brep ? set : undefined);
-      }
+    for (const caps of this.brep) {
+      caps.setClip(set && brep ? set : undefined);
     }
     this.mesh.setClip(set && mesh ? set : undefined);
   }
@@ -142,17 +134,18 @@ export class SectionCaps {
     return this.brep[i]?.capForm;
   }
 
-  /** Whether `draw` is one of these caps': which cap a pick landed on. */
+  /** The first place the segment from `from` to `to` (ITRF, float64) meets the mesh caps, exactly; `keeps` drops what the view's clips remove. */
+  meshHit(
+    from: ArrayLike<number>,
+    to: ArrayLike<number>,
+    keeps?: (point: ArrayLike<number>) => boolean,
+  ): MeshCapSurfaceHit | undefined {
+    return this.mesh.rayHit(from, to, keeps);
+  }
+
+  /** Whether `draw` is one of these caps': which cap a pick landed on (the draws are named). */
   owns(draw: DrawHandle): boolean {
-    if (draw.name?.startsWith(`${this.options.name}: mesh`)) {
-      return true;
-    }
-    return this.brep.some((caps) => {
-      const d = caps.draw;
-      return [d?.patches, d?.trimmed, d?.mesh].some(
-        (h) => h !== undefined && h.index === draw.index,
-      );
-    });
+    return draw.name?.startsWith(`${this.options.name}: `) ?? false;
   }
 
   report(): CapsReport {
@@ -168,6 +161,8 @@ export class SectionCaps {
         area: sum((r) => r.area),
         unsupported: brep.find((r) => r.unsupported)?.unsupported,
         ms: sum((r) => r.ms),
+        sectionMs: sum((r) => r.sectionMs),
+        drawMs: sum((r) => r.drawMs),
         openChains: sum((r) => r.section?.openChains.length ?? 0),
       },
       mesh: {

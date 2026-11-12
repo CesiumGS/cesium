@@ -28,12 +28,19 @@ export { BrepBuilder, type BrepUse, type SurfaceIdentity } from "./build.ts";
 export { validateBrep, type BrepProblem } from "./validate.ts";
 export {
   sectionBrep,
+  SectionJob,
   type CapFace,
   type SectionOptions,
   type SectionPlaneInput,
   type SectionReport,
   type SectionResult,
 } from "./section.ts";
+export {
+  runSection,
+  type SectionOutcome,
+  type SectionRequest,
+  type SectionRunner,
+} from "./sectionHost.ts";
 export { readBrepExtension, writeBrepExtension } from "./gltf.ts";
 export {
   tessellateBrep,

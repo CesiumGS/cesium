@@ -1,77 +1,9 @@
 // Changing the CSG sample's solid without a bad frame (plan §13.33): the new
-// solid waits hidden until it has drawn a few frames, then replaces the old
-// one in one step, and a newer one supersedes a solid still waiting.
-import { describe, expect, it, vi } from "vitest";
-import { DoubleBuffer, afterFrames } from "../examples/csg/swap.ts";
-
-/** An engine whose frames the test renders by hand. */
-function fakeEngine() {
-  const listeners = new Set<() => void>();
-  const engine = {
-    stats: { framesRendered: 0 },
-    requestRender: vi.fn(),
-    onAfterTick(listener: () => void) {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-  };
-  return {
-    engine,
-    listeners,
-    frame() {
-      engine.stats.framesRendered++;
-      [...listeners].forEach((listener) => listener());
-    },
-  };
-}
-
-describe("waiting for frames", () => {
-  it("resolves after the frames asked for, keeping the loop running meanwhile", async () => {
-    const { engine, frame, listeners } = fakeEngine();
-    let done = false;
-    const waiting = afterFrames(engine, 3).then(() => (done = true));
-    for (let i = 0; i < 2; i++) {
-      frame();
-      await Promise.resolve();
-      expect(done).toBe(false);
-    }
-    expect(engine.requestRender).toHaveBeenCalled();
-    frame();
-    await waiting;
-    expect(done).toBe(true);
-    expect(listeners.size).toBe(0);
-  });
-
-  it("counts frames from the call, not from the engine's start", async () => {
-    const { engine, frame } = fakeEngine();
-    engine.stats.framesRendered = 100;
-    const waiting = afterFrames(engine, 1);
-    frame();
-    await waiting;
-  });
-
-  it("gives up after the timeout, and rejects when aborted", async () => {
-    vi.useFakeTimers();
-    try {
-      const { engine, listeners } = fakeEngine();
-      const slow = afterFrames(engine, 5, { timeoutMs: 500 });
-      vi.advanceTimersByTime(500);
-      await slow;
-      expect(listeners.size).toBe(0);
-
-      const controller = new AbortController();
-      const aborted = afterFrames(engine, 5, { signal: controller.signal });
-      controller.abort(new Error("gone"));
-      await expect(aborted).rejects.toThrow("gone");
-      expect(listeners.size).toBe(0);
-      await expect(
-        afterFrames(engine, 1, { signal: controller.signal }),
-      ).rejects.toThrow("gone");
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-});
+// solid waits hidden until the engine says it is ready (`Engine.whenReady`),
+// then replaces the old one in one step, and a newer one supersedes a solid
+// still waiting, aborting its wait.
+import { describe, expect, it } from "vitest";
+import { DoubleBuffer } from "../examples/csg/swap.ts";
 
 describe("the double buffer", () => {
   const setup = () => {
@@ -134,6 +66,36 @@ describe("the double buffer", () => {
     await newestC;
     expect(buffer.current).toBe("c");
     expect(log).toEqual(["reveal a", "discard b", "reveal c over a"]);
+  });
+
+  it("aborts the wait of a solid that a newer one or a clear replaces", async () => {
+    const { buffer } = setup();
+    const signals: AbortSignal[] = [];
+    const hang = (superseded: AbortSignal) => {
+      signals.push(superseded);
+      return new Promise<void>(() => {});
+    };
+    void buffer.stage("a", hang);
+    void buffer.stage("b", hang);
+    expect(signals.map((s) => s.aborted)).toEqual([true, false]);
+    buffer.clear();
+    expect(signals[1]!.aborted).toBe(true);
+  });
+
+  it("a wait that ends by its abort changes nothing", async () => {
+    const { buffer, log } = setup();
+    const wait = (superseded: AbortSignal) =>
+      new Promise<void>((_, reject) =>
+        superseded.addEventListener("abort", () =>
+          reject(superseded.reason ?? new Error("aborted")),
+        ),
+      );
+    const stale = buffer.stage("a", wait);
+    const gate = Promise.resolve();
+    const newest = buffer.stage("b", () => gate);
+    await Promise.all([stale, newest]);
+    expect(buffer.current).toBe("b");
+    expect(log).toEqual(["discard a", "reveal b"]);
   });
 
   it("shows a solid whose wait failed, rather than never changing", async () => {

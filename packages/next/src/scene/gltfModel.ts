@@ -68,8 +68,79 @@ export interface ModelResourceOptions {
    * Unity's `UploadMeshData(markNoLongerReadable)`.
    */
   releaseSourceData?: boolean;
+  /**
+   * Keeps the triangles of every drawn mesh on the CPU (default false), for
+   * the application's own geometry work (section caps, queries): read per
+   * placement with `ModelPlacement.geometry()`, as `TilesetOptions.retainGeometry`
+   * does for tiles. Held until the model is freed; lines, points and instanced
+   * draws are not kept.
+   */
+  retainGeometry?: boolean;
   /** A name, for the inspector and warnings. */
   name?: string;
+}
+
+/**
+ * One draw's triangles of a placed model (`ModelResource` with
+ * `retainGeometry`; `ModelPlacement.geometry`): as `TileGeometry` is for a
+ * tile.
+ */
+export interface ModelGeometry {
+  readonly draw: DrawHandle;
+  /** xyz per vertex, in the draw's model space. */
+  readonly positions: Float32Array;
+  /** Three per triangle. */
+  readonly indices: Uint32Array;
+  /** The draw's float64 matrix now (column-major), in its anchor's coordinates: Earth-fixed under the Earth's. */
+  readonly matrix: Float64Array;
+  /** The mesh's named attributes of 3 float components, as loaded. */
+  readonly attributes?: Readonly<Record<string, Float32Array>>;
+}
+
+/** A mesh's triangles kept by a model, per draw (undefined: none kept for it). */
+interface RetainedMesh {
+  readonly positions: Float32Array;
+  readonly indices: Uint32Array;
+  readonly attributes?: Record<string, Float32Array>;
+}
+
+/**
+ * The triangles of an asset's draws, in draw order: triangle lists that are
+ * not instanced. Draws of one mesh share its arrays, and views into a larger
+ * buffer are copied so they don't keep it alive.
+ */
+function retainMeshes(asset: GltfAsset): (RetainedMesh | undefined)[] {
+  const kept = new Map<number, RetainedMesh>();
+  const own = <T extends Float32Array | Uint32Array>(a: T): T =>
+    a.byteLength === a.buffer.byteLength ? a : (a.slice() as T);
+  return asset.draws.map((d) => {
+    const mesh = asset.meshes[d.mesh];
+    if (
+      asset.instances !== undefined ||
+      mesh === undefined ||
+      d.instances !== undefined ||
+      (d.part !== undefined && asset.parts?.[d.part]?.instances) ||
+      (mesh.topology ?? "triangle-list") !== "triangle-list"
+    ) {
+      return undefined;
+    }
+    let arrays = kept.get(d.mesh);
+    if (arrays === undefined) {
+      const attributes: Record<string, Float32Array> = {};
+      for (const [name, a] of Object.entries(mesh.attributes ?? {})) {
+        if (a.components === 3 && a.data instanceof Float32Array) {
+          attributes[name] = own(a.data);
+        }
+      }
+      arrays = {
+        positions: own(mesh.positions),
+        indices: own(mesh.indices),
+        ...(Object.keys(attributes).length > 0 ? { attributes } : {}),
+      };
+      kept.set(d.mesh, arrays);
+    }
+    return arrays;
+  });
 }
 
 /** Where a placement stands: a matrix, or a place on the ellipsoid. */
@@ -296,6 +367,8 @@ export class ModelResource implements Disposable {
   readonly template: PlacementTemplate;
   /** @internal The engine's context and clamping. */
   readonly host: ModelHost;
+  /** @internal The triangles kept per draw (`retainGeometry`), or undefined. */
+  readonly retained: readonly (RetainedMesh | undefined)[] | undefined;
   /** The asset until its source data is released. */
   private asset: GltfAsset | undefined;
   private readonly state: ModelUsage;
@@ -315,6 +388,7 @@ export class ModelResource implements Disposable {
     this.name = options.name;
     this.colorTransfer = options.colorTransfer ?? "srgb";
     this.axes = options.axes ?? "gltf";
+    this.retained = options.retainGeometry ? retainMeshes(asset) : undefined;
     this.template = {
       draws: asset.draws,
       lights: asset.lights ?? [],
@@ -990,6 +1064,32 @@ export class ModelPlacement implements Disposable {
     this.transform = transform;
     this.instanceCount = instanceCount;
     this.instanceFrames = instanceFrames;
+  }
+
+  /**
+   * The triangles of its draws as placed now (each draw's matrix moves with
+   * the placement), when its model was loaded with `retainGeometry`;
+   * undefined otherwise. Draws that are not triangle lists, and instanced
+   * placements, have none.
+   */
+  geometry(): ModelGeometry[] | undefined {
+    this.alive("geometry");
+    const retained = this.model.retained;
+    if (!retained) {
+      return undefined;
+    }
+    const out: ModelGeometry[] = [];
+    if (this.instanceCount > 0) {
+      return out;
+    }
+    this.draws.forEach((draw, i) => {
+      const mesh = retained[i];
+      const matrix = mesh && this.model.world.drawMatrix(draw);
+      if (mesh && matrix) {
+        out.push({ draw, ...mesh, matrix });
+      }
+    });
+    return out;
   }
 
   /** Its ground clamping, with a `heightReference`. */

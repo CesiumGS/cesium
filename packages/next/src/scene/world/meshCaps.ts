@@ -79,6 +79,43 @@ export function meshPlane(plane: MeshCapPlane): SectionPlane {
   return planeFrame(plane.point, plane.normal);
 }
 
+/**
+ * A tile's box in the clip's frame, from its positions' box moved by its
+ * matrix (so a little roomy when the matrix turns); undefined for no vertices.
+ */
+export function tileBounds(
+  tile: MeshCapTile,
+): { lo: [number, number, number]; hi: [number, number, number] } | undefined {
+  const p = tile.positions;
+  if (p.length < 3) {
+    return undefined;
+  }
+  const lo = [Infinity, Infinity, Infinity];
+  const hi = [-Infinity, -Infinity, -Infinity];
+  for (let i = 0; i + 2 < p.length; i += 3) {
+    for (let k = 0; k < 3; k++) {
+      lo[k] = Math.min(lo[k]!, p[i + k]!);
+      hi[k] = Math.max(hi[k]!, p[i + k]!);
+    }
+  }
+  const m = tile.matrix ?? IDENTITY;
+  const out = {
+    lo: [Infinity, Infinity, Infinity] as [number, number, number],
+    hi: [-Infinity, -Infinity, -Infinity] as [number, number, number],
+  };
+  for (let corner = 0; corner < 8; corner++) {
+    const x = corner & 1 ? hi[0]! : lo[0]!;
+    const y = corner & 2 ? hi[1]! : lo[1]!;
+    const z = corner & 4 ? hi[2]! : lo[2]!;
+    for (let r = 0; r < 3; r++) {
+      const v = m[r]! * x + m[4 + r]! * y + m[8 + r]! * z + m[12 + r]!;
+      out.lo[r] = Math.min(out.lo[r]!, v);
+      out.hi[r] = Math.max(out.hi[r]!, v);
+    }
+  }
+  return out;
+}
+
 /** Cuts a tile's triangles by the plane. */
 export function sectionTile(
   tile: MeshCapTile,
@@ -214,10 +251,85 @@ export interface MeshCapGeometry {
   readonly triangles: MeshData | undefined;
   /** The chains that did not close, as a line-list mesh in the same frame; undefined when none. */
   readonly lines: MeshData | undefined;
+  /** The caps as polygons in the plane's (u, v): what `triangles` fills, for exact queries (`rayHitRegions`). */
+  readonly regions: readonly MeshCapRegion[];
   /** Where the meshes' coordinates are measured from, in the clip's frame. */
   readonly origin: readonly [number, number, number];
   readonly plane: SectionPlane;
   readonly report: MeshCapReport;
+}
+
+/** One filled region of a cap: an outer loop (counter-clockwise) and its holes (clockwise), in the plane's (u, v), m from its origin. */
+export interface MeshCapRegion {
+  /** The element's ID. */
+  readonly feature: number;
+  readonly outer: readonly P2[];
+  readonly holes: readonly (readonly P2[])[];
+}
+
+/** Where a segment met a cap. */
+export interface MeshCapHit {
+  /** Along the segment from `from` to `to`, 0 to 1. */
+  readonly t: number;
+  /** In the clip's frame, on the cap's plane, in float64. */
+  readonly point: [number, number, number];
+  /** The cap element's ID. */
+  readonly feature: number;
+  /** On the plane, from its origin. */
+  readonly uv: P2;
+}
+
+/**
+ * Where the segment from `from` to `to` (in the clip's frame) meets the
+ * regions of a plane, exactly in float64: the plane is crossed and the point
+ * is tested against the regions' loops. `keeps` drops a hit the caller's
+ * clips remove. Undefined when it meets none.
+ */
+export function rayHitRegions(
+  frame: SectionPlane,
+  regions: readonly MeshCapRegion[],
+  from: ArrayLike<number>,
+  to: ArrayLike<number>,
+  keeps?: (point: ArrayLike<number>) => boolean,
+): MeshCapHit | undefined {
+  const o = frame.origin;
+  const z = frame.z;
+  const d0 =
+    z[0] * (from[0]! - o[0]) +
+    z[1] * (from[1]! - o[1]) +
+    z[2] * (from[2]! - o[2]);
+  const d1 =
+    z[0] * (to[0]! - o[0]) + z[1] * (to[1]! - o[1]) + z[2] * (to[2]! - o[2]);
+  if (d0 === d1) {
+    return undefined;
+  }
+  const t = d0 / (d0 - d1);
+  if (!(t >= 0 && t <= 1)) {
+    return undefined;
+  }
+  const point: [number, number, number] = [
+    from[0]! + t * (to[0]! - from[0]!),
+    from[1]! + t * (to[1]! - from[1]!),
+    from[2]! + t * (to[2]! - from[2]!),
+  ];
+  const rx = point[0] - o[0];
+  const ry = point[1] - o[1];
+  const rz = point[2] - o[2];
+  const uv: P2 = [
+    frame.x[0] * rx + frame.x[1] * ry + frame.x[2] * rz,
+    frame.y[0] * rx + frame.y[1] * ry + frame.y[2] * rz,
+  ];
+  for (const region of regions) {
+    if (
+      insideRing(region.outer, uv) &&
+      !region.holes.some((hole) => insideRing(hole, uv))
+    ) {
+      return keeps && !keeps(point)
+        ? undefined
+        : { t, point, feature: region.feature, uv };
+    }
+  }
+  return undefined;
 }
 
 export interface AssembleOptions {
@@ -666,6 +778,7 @@ export function assembleMeshCaps(
   const lineFeatures: number[] = [];
   const lineIndices: number[] = [];
   const elements: ElementCap[] = [];
+  const regions: MeshCapRegion[] = [];
   let closedLoops = 0;
   let openChains = 0;
   let nearMisses = 0;
@@ -719,6 +832,7 @@ export function assembleMeshCaps(
     }
     let filled = 0;
     for (const o of outers) {
+      regions.push({ feature, outer: o.ring, holes: o.holes });
       const tri = triangulateRegion(o.ring, o.holes);
       const base = positions.length / 3;
       for (const p of tri.points) {
@@ -799,6 +913,7 @@ export function assembleMeshCaps(
   return {
     triangles,
     lines: linesMesh,
+    regions,
     origin: [frame.origin[0], frame.origin[1], frame.origin[2]],
     plane: frame,
     report: {

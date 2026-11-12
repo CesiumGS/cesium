@@ -19,7 +19,12 @@
 // or element, by planar fill, not built yet): a cap has a feature ID per
 // element and a default flat colour, and `style` is where the language will
 // hook in.
-import { sectionBrep, type SectionReport } from "../../brep/section.ts";
+import {
+  SectionJob,
+  type SectionOptions,
+  type SectionReport,
+} from "../../brep/section.ts";
+import type { SectionOutcome, SectionRunner } from "../../brep/sectionHost.ts";
 import type { BrepForm } from "../../brep/form.ts";
 import type { Mat4 } from "../../math/mat4.ts";
 import type { World } from "../World.ts";
@@ -28,12 +33,17 @@ import { capPlanes, type CapPlane, type ClipSet } from "./clips.ts";
 import {
   assembleMeshCaps,
   meshPlane,
+  rayHitRegions,
   sectionTile,
+  tileBounds,
+  type MeshCapHit,
   type MeshCapPlane,
+  type MeshCapRegion,
   type MeshCapReport,
   type MeshCapTile,
   type TileSection,
 } from "./meshCaps.ts";
+import type { SectionPlane } from "../../brep/sectionCurves.ts";
 import type { DrawHandle, DrawOptions, MeshHandle } from "./types.ts";
 
 /** Linear RGBA. */
@@ -199,6 +209,18 @@ export interface Rebuildable {
   readonly changedAt: number;
   /** Brings the caps up to date; for a part that can be done in pieces, `budgetMs` is how long it may take. Returns whether it is done. */
   rebuild(budgetMs: number): boolean;
+  /** The caps wait on work that runs elsewhere (a worker), which calls `onChange` when it is done: the scheduler need not tick meanwhile. */
+  readonly waiting?: boolean;
+  /** Set by the scheduler: called when the caps go out of date (a clip or a tile changed), or when work that ran elsewhere finishes, so a resting engine wakes to rebuild. */
+  onChange?: (() => void) | undefined;
+}
+
+/** What a scheduler needs of an engine to run itself: `Engine` has it. */
+export interface CapEngine {
+  /** Calls `listener` at the end of each frame of the loop; returns the remover. */
+  onAfterTick(listener: (now: number) => void): () => void;
+  /** Asks the loop for a tick. */
+  wake(): void;
 }
 
 export interface CapSchedulerOptions {
@@ -206,6 +228,16 @@ export interface CapSchedulerOptions {
   readonly intervalMs?: number;
   /** The time a tick may spend, ms (default 4): a rebuild that starts may run past it, as one section is not split. */
   readonly budgetMs?: number;
+  /**
+   * The engine whose loop runs the scheduler: it ticks at the end of every
+   * frame, and a clip or tile that changes wakes the loop (as does work still
+   * to do), so caps are rebuilt without the application calling `tick` or
+   * `requestRender`. Without it the application calls `tick` and wakes the
+   * engine itself (`wake`).
+   */
+  readonly engine?: CapEngine;
+  /** Called when something needs a tick (an item changed or finished work elsewhere): `engine.wake` by default. */
+  readonly wake?: () => void;
 }
 
 /** What a tick did. */
@@ -218,45 +250,97 @@ export interface CapTick {
   readonly spentMs: number;
 }
 
-/** Rebuilds caps within a per-frame budget (`tick` once a frame). */
+/** Rebuilds caps within a per-frame budget (`tick` once a frame, or by itself with `engine`). */
 export class CapScheduler {
   private readonly items = new Set<Rebuildable & { lastBuilt?: number }>();
   private readonly interval: number;
   private readonly budget: number;
+  private readonly wake: (() => void) | undefined;
+  private offTick: (() => void) | undefined;
+  private timer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(options: CapSchedulerOptions = {}) {
     this.interval = options.intervalMs ?? 100;
     this.budget = options.budgetMs ?? 4;
+    const { engine } = options;
+    this.wake = options.wake ?? (engine ? () => engine.wake() : undefined);
+    if (engine) {
+      this.offTick = engine.onAfterTick(() => {
+        this.tick();
+      });
+    }
   }
 
   add(item: Rebuildable): void {
     this.items.add(item);
+    item.onChange = () => this.wake?.();
+    if (item.dirty) {
+      this.wake?.();
+    }
   }
 
   remove(item: Rebuildable): void {
-    this.items.delete(item);
+    if (this.items.delete(item)) {
+      item.onChange = undefined;
+    }
+  }
+
+  /** Stops ticking with the engine and lets go of the items. */
+  dispose(): void {
+    this.offTick?.();
+    this.offTick = undefined;
+    clearTimeout(this.timer);
+    this.timer = undefined;
+    for (const item of this.items) {
+      item.onChange = undefined;
+    }
+    this.items.clear();
   }
 
   tick(now: number = performance.now()): CapTick {
     const start = performance.now();
     let rebuilt = 0;
     let pending = 0;
+    /** Whether the next frame can make progress, and the soonest a throttled item is due. */
+    let progress = false;
+    let soonest = Infinity;
     for (const item of this.items) {
       if (!item.dirty) {
         continue;
       }
-      const due =
-        item.lastBuilt === undefined || now - item.lastBuilt >= this.interval;
+      const wait =
+        item.lastBuilt === undefined
+          ? 0
+          : Math.max(0, this.interval - (now - item.lastBuilt));
       const spent = performance.now() - start;
-      if (!due || (rebuilt > 0 && spent >= this.budget)) {
+      if (wait > 0 || (rebuilt > 0 && spent >= this.budget)) {
         pending++;
+        if (wait > 0) {
+          soonest = Math.min(soonest, wait);
+        } else {
+          progress = true;
+        }
         continue;
       }
       if (item.rebuild(Math.max(0, this.budget - spent))) {
         item.lastBuilt = now;
         rebuilt++;
+        // The clip may have moved again while it was rebuilt.
+        progress ||= item.dirty;
       } else {
         pending++;
+        // Work that runs elsewhere reports when it is done (`onChange`).
+        progress ||= !item.waiting;
+      }
+    }
+    if (this.wake) {
+      if (progress) {
+        this.wake();
+      }
+      clearTimeout(this.timer);
+      this.timer = undefined;
+      if (soonest < Infinity) {
+        this.timer = setTimeout(this.wake, soonest);
       }
     }
     return { rebuilt, pending, spentMs: performance.now() - start };
@@ -283,6 +367,17 @@ export interface BrepCapsOptions {
   readonly bias?: CapBias;
   /** The section's tolerance, m (default `sectionBrep`'s). */
   readonly tolerance?: number;
+  /**
+   * Where the section is computed. Default: on this thread in pieces, each
+   * `rebuild(budgetMs)` doing what it can in its budget, so a part of
+   * hundreds of faces costs a few milliseconds a frame (and the caps take
+   * the more frames, for as long as the section takes). A runner
+   * (`SectionClient`, the section worker) does it off this thread: the
+   * caps follow at the pace of the worker, and the thread does only the
+   * drawing. Either way the caps already drawn stay until the new ones are
+   * whole.
+   */
+  readonly runner?: SectionRunner;
 }
 
 /** What a rebuild of b-rep caps made. */
@@ -296,8 +391,32 @@ export interface BrepCapsReport {
   /** Why the set has no caps (it is unsupported), or undefined. */
   readonly unsupported: string | undefined;
   readonly section: SectionReport | undefined;
-  /** How long the rebuild took, ms. */
+  /** How long the rebuild took from the clip's change to the caps drawn, ms. */
   readonly ms: number;
+  /** Of that, the section and the preparing for the GPU where they ran (the worker's, or this thread's), and the page's drawing of the caps, ms. */
+  readonly sectionMs: number;
+  readonly drawMs: number;
+  /** Whether the section ran in a worker (`BrepCapsOptions.runner`). */
+  readonly offThread: boolean;
+}
+
+/** The name of a b-rep cap's draws, for picks (`DrawOptions.name`; set `CapDrawOptions.name` to change it). */
+export const BREP_CAP_NAME = "brep cap";
+/** The name of mesh caps' draws, and of their section lines. */
+export const MESH_CAP_NAME = "mesh cap";
+export const MESH_CAP_LINE_NAME = "mesh cap section line";
+
+/** A section on its way: this thread's job, or a runner's promise. */
+interface Section {
+  /** The clip's generation it was started for. */
+  readonly generation: number;
+  readonly started: number;
+  readonly scale: number;
+  readonly planes: number;
+  readonly job: SectionJob | undefined;
+  /** What a runner answered, once it has. */
+  outcome: SectionOutcome | undefined;
+  failure: unknown;
 }
 
 /** The exact caps of one solid under one clip set. */
@@ -306,7 +425,11 @@ export class BrepCaps implements Rebuildable {
   private handle: BrepHandle | undefined;
   private form: BrepForm | undefined;
   private built = true;
+  private generation = 0;
+  private section: Section | undefined;
+  private disposed = false;
   changedAt = 0;
+  onChange: (() => void) | undefined;
   /** What the last rebuild made. */
   report: BrepCapsReport = {
     planes: 0,
@@ -315,6 +438,9 @@ export class BrepCaps implements Rebuildable {
     unsupported: undefined,
     section: undefined,
     ms: 0,
+    sectionMs: 0,
+    drawMs: 0,
+    offThread: false,
   };
 
   constructor(
@@ -336,16 +462,75 @@ export class BrepCaps implements Rebuildable {
     return !this.built;
   }
 
+  /** A runner's section is under way: nothing to tick until it reports. */
+  get waiting(): boolean {
+    const s = this.section;
+    return (
+      s !== undefined &&
+      s.job === undefined &&
+      s.outcome === undefined &&
+      s.failure === undefined
+    );
+  }
+
   /** The clip the caps follow (or none: no caps). The caps are rebuilt by `rebuild`, or by the scheduler. */
   setClip(set: ClipSet | undefined, now: number = performance.now()): void {
     this.set = set;
     this.built = false;
+    this.generation++;
     this.changedAt = now;
+    this.onChange?.();
   }
 
-  rebuild(): boolean {
-    const start = performance.now();
+  /**
+   * Brings the caps up to date, within `budgetMs` when the section is on
+   * this thread. With a runner it starts the section and returns false until
+   * the runner answers (a later call draws the result). A clip that moved
+   * meanwhile keeps the caps out of date: the finished section is drawn
+   * (close to where the clip is) and the next one started.
+   */
+  rebuild(budgetMs: number = Infinity): boolean {
+    if (this.built) {
+      return true;
+    }
+    if (!this.section) {
+      const started = this.start();
+      if (started === "done") {
+        return true;
+      }
+    }
+    const section = this.section!;
+    let outcome: SectionOutcome | undefined;
+    if (section.job) {
+      if (!section.job.step(budgetMs)) {
+        return false;
+      }
+      outcome = {
+        result: section.job.result,
+        patches: undefined,
+        sectionMs: performance.now() - section.started,
+        prepareMs: 0,
+      };
+    } else if (section.failure !== undefined) {
+      // Once: the caps are not tried again until the clip changes.
+      this.section = undefined;
+      this.built = section.generation === this.generation;
+      const failure = section.failure;
+      throw failure instanceof Error ? failure : new Error(String(failure));
+    } else {
+      outcome = section.outcome;
+      if (!outcome) {
+        return false;
+      }
+    }
+    this.section = undefined;
+    return this.finish(section, outcome);
+  }
+
+  /** Starts a section for the clip as it is; "done" when there is nothing to section. */
+  private start(): "done" | "started" {
     const { options } = this;
+    const started = performance.now();
     const planes = this.set ? capPlanes(this.set) : { planes: [] };
     if ("unsupported" in planes) {
       this.replace(undefined);
@@ -355,10 +540,13 @@ export class BrepCaps implements Rebuildable {
         area: 0,
         unsupported: planes.unsupported,
         section: undefined,
-        ms: performance.now() - start,
+        ms: performance.now() - started,
+        sectionMs: 0,
+        drawMs: 0,
+        offThread: false,
       };
       this.built = true;
-      return true;
+      return "done";
     }
     const m = options.formToFrame ?? IDENTITY;
     const { inverse, scale } = invertSimilarity(m);
@@ -374,36 +562,114 @@ export class BrepCaps implements Rebuildable {
         normal: direction(inverse, l.normal),
       })),
     }));
-    const section =
-      inForm.length > 0
-        ? sectionBrep(options.form, inForm, {
-            ...(options.tolerance !== undefined
-              ? { tolerance: options.tolerance / scale }
+    if (inForm.length === 0) {
+      this.replace(undefined);
+      this.report = {
+        planes: 0,
+        faces: 0,
+        area: 0,
+        unsupported: undefined,
+        section: undefined,
+        ms: performance.now() - started,
+        sectionMs: 0,
+        drawMs: 0,
+        offThread: false,
+      };
+      this.built = true;
+      return "done";
+    }
+    const sectionOptions: SectionOptions = {
+      ...(options.tolerance !== undefined
+        ? { tolerance: options.tolerance / scale }
+        : {}),
+    };
+    const { runner } = options;
+    const section: Section = {
+      generation: this.generation,
+      started,
+      scale,
+      planes: inForm.length,
+      job: runner
+        ? undefined
+        : new SectionJob(options.form, inForm, sectionOptions),
+      outcome: undefined,
+      failure: undefined,
+    };
+    this.section = section;
+    if (runner) {
+      const draw = options.draw;
+      const settle = () => {
+        if (!this.disposed) {
+          this.onChange?.();
+        }
+      };
+      runner
+        .run({
+          form: options.form,
+          planes: inForm,
+          options: sectionOptions,
+          prepare: {
+            ...(draw?.transform ? { origin: [0, 0, 0] } : {}),
+            ...(draw?.trimTolerance !== undefined
+              ? { trimTolerance: draw.trimTolerance }
               : {}),
-          })
-        : undefined;
+          },
+        })
+        .then(
+          (outcome) => {
+            section.outcome = outcome;
+            settle();
+          },
+          (error: unknown) => {
+            section.failure = error ?? new Error("the section failed");
+            settle();
+          },
+        );
+    }
+    return "started";
+  }
+
+  /** Draws a finished section, and swaps it in before the old caps go, so no frame is without the caps. */
+  private finish(section: Section, outcome: SectionOutcome): boolean {
+    const { options } = this;
+    const { result } = outcome;
+    const current = section.generation === this.generation;
+    // Where the clip has gone since: no caps wanted, so none are drawn.
+    const wanted = this.set !== undefined;
     let handle: BrepHandle | undefined;
-    if (section?.form) {
+    let draw = 0;
+    if (result.form && wanted) {
+      const drawStart = performance.now();
       const styled = options.style?.({ kind: "brep", feature: undefined });
       const color = styled ?? options.color ?? DEFAULT_CAP_COLOR;
-      handle = addBrep(this.world, section.form, {
+      handle = addBrep(this.world, result.form, {
         ...options.draw,
+        name: options.draw?.name ?? BREP_CAP_NAME,
         color,
         doubleSided: true,
+        ...(outcome.patches ? { prepared: outcome.patches } : {}),
       });
+      draw = performance.now() - drawStart;
     }
-    this.replace(handle, section?.form);
+    this.replace(handle, wanted ? result.form : undefined);
+    const { scale } = section;
     this.report = {
-      planes: inForm.length,
-      faces: section?.faces.length ?? 0,
-      area:
-        (section?.faces.reduce((s, f) => s + f.area, 0) ?? 0) * scale * scale,
+      planes: section.planes,
+      faces: result.faces.length,
+      area: result.faces.reduce((s, f) => s + f.area, 0) * scale * scale,
       unsupported: undefined,
-      section: section?.report,
-      ms: performance.now() - start,
+      section: result.report,
+      ms: performance.now() - section.started,
+      sectionMs: outcome.sectionMs + outcome.prepareMs,
+      drawMs: draw,
+      offThread: options.runner !== undefined,
     };
-    this.built = true;
-    return true;
+    this.built = current;
+    if (!current) {
+      // The clip moved on: draw what was made and make the next.
+      this.onChange?.();
+    }
+    return current;
   }
 
   /** Swaps in the new draws before the old ones go, so no frame is without the caps. */
@@ -416,6 +682,8 @@ export class BrepCaps implements Rebuildable {
   }
 
   dispose(): void {
+    this.disposed = true;
+    this.section = undefined;
     this.replace(undefined);
     this.set = undefined;
     this.built = true;
@@ -454,12 +722,13 @@ export interface MeshCapsOptions {
   /** The colour of the section lines. */
   readonly lineColor?: CapColor;
   readonly style?: CapStyle;
+  /** How far inside what the clip keeps the caps lie (default: as the b-rep caps': 2e-5 of the tiles' size, at least 1e-6 m). */
   readonly bias?: CapBias;
   /** Views that draw the caps (`DrawOptions.viewMask`). */
   readonly viewMask?: number;
   /** The ends of segments within this are one point (see `assembleMeshCaps`). */
   readonly snap?: number;
-  /** The name of the draws, for picks. */
+  /** The name of the draws, for picks (default "mesh cap", and "mesh cap section line" for the lines). */
   readonly name?: string;
 }
 
@@ -481,6 +750,28 @@ interface CutEntry {
   readonly section: TileSection;
 }
 
+/** One plane's caps as polygons, for exact queries (`MeshCaps.surfaces`). */
+export interface MeshCapSurface {
+  /** The plane in the clip's frame: its origin, axes and outward normal `z`. The regions' (u, v) are measured along `x` and `y` from `origin`. */
+  readonly plane: SectionPlane;
+  /** The filled regions: an outer loop and its holes, per element. */
+  readonly regions: readonly MeshCapRegion[];
+  /** How far inside what the clip keeps the plane lies, m: the cap's polygons are on it, not on the clip's own plane. */
+  readonly bias: number;
+}
+
+/** Where a segment met a mesh cap. */
+export interface MeshCapSurfaceHit extends MeshCapHit {
+  /** The index in `MeshCaps.surfaces` of the plane's cap it is on. */
+  readonly surface: number;
+}
+
+/** A bias (m) for content of a size: 2e-5 of its diagonal, at least 1e-6, up to a power of two so growing content doesn't change it at every tile. */
+function biasForSize(size: number): number {
+  const bias = Number.isFinite(size) ? 2e-5 * size : 0;
+  return bias > 1e-6 ? 2 ** Math.ceil(Math.log2(bias)) : 1e-6;
+}
+
 /** The mesh caps of a set of tiles under one clip set. */
 export class MeshCaps implements Rebuildable {
   private set: ClipSet | undefined;
@@ -488,8 +779,15 @@ export class MeshCaps implements Rebuildable {
   /** Cuts by plane key then tile. */
   private cuts = new Map<string, Map<string | number, CutEntry>>();
   private draws: { draw: DrawHandle; mesh: MeshHandle }[] = [];
+  private caps: MeshCapSurface[] = [];
+  /** Each tile's box in the clip's frame, per revision (for the default bias). */
+  private readonly boxes = new Map<
+    string | number,
+    { revision: number; box: ReturnType<typeof tileBounds> }
+  >();
   private built = true;
   changedAt = 0;
+  onChange: (() => void) | undefined;
   report: MeshCapsReport = {
     planes: [],
     unsupported: undefined,
@@ -508,20 +806,54 @@ export class MeshCaps implements Rebuildable {
     return !this.built;
   }
 
+  /**
+   * The caps as polygons, one per plane of the clip, in the clip's frame:
+   * what is drawn, for exact queries (`rayHit`). Empty until built, and when
+   * the clip has no caps.
+   */
+  get surfaces(): readonly MeshCapSurface[] {
+    return this.caps;
+  }
+
+  /**
+   * Where the segment from `from` to `to` (in the clip's frame, float64)
+   * first meets a cap, exactly: the plane is crossed and the point tested
+   * against the cap's loops. The point is on the cap's plane, which lies
+   * `bias` inside the clip's own. `keeps` drops a hit the caller's clips
+   * remove (a point in the same frame).
+   */
+  rayHit(
+    from: ArrayLike<number>,
+    to: ArrayLike<number>,
+    keeps?: (point: ArrayLike<number>) => boolean,
+  ): MeshCapSurfaceHit | undefined {
+    let best: MeshCapSurfaceHit | undefined;
+    this.caps.forEach((cap, surface) => {
+      const hit = rayHitRegions(cap.plane, cap.regions, from, to, keeps);
+      if (hit && (!best || hit.t < best.t)) {
+        best = { ...hit, surface };
+      }
+    });
+    return best;
+  }
+
   /** Adds a tile, or replaces the one of its id (a new `revision` is a new cut). */
   setTile(tile: MeshCapTile, now: number = performance.now()): void {
     this.tiles.set(tile.id, tile);
     this.built = false;
     this.changedAt = now;
+    this.onChange?.();
   }
 
   removeTile(id: string | number, now: number = performance.now()): void {
     if (this.tiles.delete(id)) {
+      this.boxes.delete(id);
       for (const cuts of this.cuts.values()) {
         cuts.delete(id);
       }
       this.built = false;
       this.changedAt = now;
+      this.onChange?.();
     }
   }
 
@@ -529,6 +861,35 @@ export class MeshCaps implements Rebuildable {
     this.set = set;
     this.built = false;
     this.changedAt = now;
+    this.onChange?.();
+  }
+
+  /**
+   * The bias that beats the clip test's float32 rounding at the content's
+   * size (as the b-rep caps' does, 2e-5 of it): the clip test and the cap's
+   * vertices are float32, so a cap a micrometre inside the plane would be
+   * dropped to speckle at tens of metres or more.
+   */
+  private defaultBias(): number {
+    const lo = [Infinity, Infinity, Infinity];
+    const hi = [-Infinity, -Infinity, -Infinity];
+    for (const tile of this.tiles.values()) {
+      let held = this.boxes.get(tile.id);
+      if (held?.revision !== tile.revision) {
+        held = { revision: tile.revision, box: tileBounds(tile) };
+        this.boxes.set(tile.id, held);
+      }
+      const { box } = held;
+      if (box) {
+        for (let k = 0; k < 3; k++) {
+          lo[k] = Math.min(lo[k]!, box.lo[k]!);
+          hi[k] = Math.max(hi[k]!, box.hi[k]!);
+        }
+      }
+    }
+    return biasForSize(
+      Math.hypot(hi[0]! - lo[0]!, hi[1]! - lo[1]!, hi[2]! - lo[2]!),
+    );
   }
 
   /** Cuts tiles within `budgetMs`, then, when every tile has its cut, assembles and draws the caps. Returns whether the caps are now up to date. */
@@ -537,6 +898,7 @@ export class MeshCaps implements Rebuildable {
     const planes = this.set ? capPlanes(this.set) : { planes: [] };
     if ("unsupported" in planes) {
       this.clearDraws();
+      this.caps = [];
       this.report = {
         planes: [],
         unsupported: planes.unsupported,
@@ -548,7 +910,7 @@ export class MeshCaps implements Rebuildable {
       this.built = true;
       return true;
     }
-    const bias = this.options.bias?.meters ?? 1e-6;
+    const bias = this.options.bias?.meters ?? this.defaultBias();
     const biased = biasedCapPlanes(planes.planes, bias);
     const keys = biased.map((p) => planeKey(p));
     // Drop the cuts of planes the clip no longer has.
@@ -597,6 +959,7 @@ export class MeshCaps implements Rebuildable {
       return false;
     }
     const reports: MeshCapReport[] = [];
+    const surfaces: MeshCapSurface[] = [];
     const made: { draw: DrawHandle; mesh: MeshHandle }[] = [];
     try {
       biased.forEach((plane, i) => {
@@ -609,6 +972,7 @@ export class MeshCaps implements Rebuildable {
             : {}),
         });
         reports.push(caps.report);
+        surfaces.push({ plane: caps.plane, regions: caps.regions, bias });
         const origin = Float64Array.from(caps.origin);
         const place = this.options.place?.(origin) ?? { origin };
         const common = {
@@ -616,15 +980,13 @@ export class MeshCaps implements Rebuildable {
           ...(this.options.viewMask !== undefined
             ? { viewMask: this.options.viewMask }
             : {}),
-          ...(this.options.name !== undefined
-            ? { name: this.options.name }
-            : {}),
         };
         if (caps.triangles) {
           const mesh = this.world.addMesh(this.styled(caps.triangles));
           const draw = this.world.addDraw({
             mesh,
             ...common,
+            name: this.options.name ?? MESH_CAP_NAME,
             color: this.options.style
               ? WHITE
               : (this.options.color ?? DEFAULT_CAP_COLOR),
@@ -643,6 +1005,7 @@ export class MeshCaps implements Rebuildable {
           const draw = this.world.addDraw({
             mesh,
             ...common,
+            name: this.options.name ?? MESH_CAP_LINE_NAME,
             color: this.options.lineColor ?? DEFAULT_SECTION_LINE_COLOR,
             unlit: true,
           });
@@ -658,6 +1021,7 @@ export class MeshCaps implements Rebuildable {
     }
     this.clearDraws();
     this.draws = made;
+    this.caps = surfaces;
     this.report = {
       planes: reports,
       unsupported: undefined,
@@ -702,7 +1066,9 @@ export class MeshCaps implements Rebuildable {
 
   dispose(): void {
     this.clearDraws();
+    this.caps = [];
     this.tiles.clear();
+    this.boxes.clear();
     this.cuts.clear();
     this.built = true;
   }
