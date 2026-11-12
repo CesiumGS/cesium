@@ -17,7 +17,12 @@ import FeatureLayer from "./FeatureLayer.js";
  *
  * @example
  * const tileset = await Cesium.Cesium3DTileset.fromUrl(url);
+ * // Layers from the root tileset exist once fromUrl resolves.
  * tileset.featureLayers.getByName("Roads")[0].show = false;
+ * // Layers discovered later are added as they load.
+ * tileset.featureLayers.layerAdded.addEventListener((layer) => {
+ *   layer.show = layer.name !== "Vegetation";
+ * });
  *
  * @internalConstructor
  *
@@ -38,8 +43,7 @@ class FeatureLayerCollection {
 
     /**
      * Raised synchronously when a layer is added, before any of its tiles are requested.
-     * Layers available when a provider is created, such as a tileset's root groups,
-     * are added before listeners can be attached.
+     * Not raised yet: all current layers exist before listeners can be attached.
      *
      * @type {Event<function(FeatureLayer):void>}
      */
