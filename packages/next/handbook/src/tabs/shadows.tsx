@@ -97,7 +97,8 @@ const TICK: BoardStep[] = [
     body: (
       <>
         One bundle, <C>World.shadowBundle()</C>, runs for all four, into this
-        cascade's layer of a <C>depth32float</C> array.
+        cascade's layer of a <C>depth32float</C> array. A draw under a route
+        links its position-only module.
       </>
     ),
   },
@@ -385,6 +386,14 @@ const WHAT_CASTS: [string, string][] = [
   ["Translucent terrain", "None inside its region, as glass."],
   ["Clipped terrain", "Nothing inside the clip."],
   [
+    "A clip's ghost",
+    "None for a blended ghost, which draws only in the translucent passes. A stipple ghost casts where it keeps a pixel.",
+  ],
+  [
+    "Content under a route",
+    "Where it is drawn: the casters' pipelines link the route's position-only module, so a vertical exaggeration or a reprojection moves the shadow with the picture.",
+  ],
+  [
     "A coarse tile kept while its children load",
     "Only outside the children's boxes, so it doesn't shadow what's drawn beside it.",
   ],
@@ -585,6 +594,15 @@ export function Shadows() {
           stands in another anchor's coordinates, only the boxes limit them, up
           to 50 km past a cascade's sphere toward the light.
         </p>
+        <p>
+          Under a route, those volumes are drawn volumes. A tile the transform
+          graph moves (an exaggerated terrain tile, a reprojected model) is
+          tested for shadow by where it is drawn, not by where its coordinates
+          put it, so a mountain stretched tenfold casts from its stretched
+          bounds. The request and dynamic-error volumes follow the same rule.
+          Which draws are warped is the placement's decision, and the{" "}
+          <a href="#/transform-graph">Transform graph tab</a> has the rest.
+        </p>
         <h3>How much room they get</h3>
         <p>
           There's one cache budget, and casters have no share of it. What views
@@ -651,11 +669,12 @@ export function Shadows() {
           from={
             <>
               <C>src/streaming/Tileset3D.ts</C>,{" "}
-              <C>src/streaming/Budgeted.ts</C>, <C>src/scene/shadows.ts</C> and{" "}
+              <C>src/streaming/Budgeted.ts</C>, <C>src/streaming/tileWarp.ts</C>
+              , <C>src/scene/shadows.ts</C> and{" "}
               <C>src/shaders/cullTables.slang</C>
             </>
           }
-          on="2026-11-08"
+          on="2026-11-12"
         />
       </Section>
 

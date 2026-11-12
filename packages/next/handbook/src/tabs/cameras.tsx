@@ -147,12 +147,42 @@ export function Cameras() {
         />
       </Section>
 
+      <Section title="Under an exaggeration the camera stays still">
+        <p>
+          A deformer, a smooth edge of the{" "}
+          <a href="#/transform-graph">transform graph</a>, warps what sits under
+          it, not the camera's frame. Vertical exaggeration puts the camera at
+          ITRF and the deformer over the content's node, so the camera doesn't
+          move when a slider does, and terrain, tilesets and pins rise toward
+          it. Placing the deformer between ITRF and the camera instead would
+          warp the camera's own frame and move it. Where an application wants
+          the camera inside a deformed space, it sits at a node under the
+          deformer.
+        </p>
+        <p>
+          A lens on the camera branch (distortion applied after the view) is a
+          scene in the transform graph gallery, with known gaps: streaming
+          tilesets through it draw nothing, because selection works through a
+          map with z ≤ 0; moving the camera re-derives every draw's route, at
+          250 to 400 ms a tick; and routes through a smooth step's inverse don't
+          compile. The general fix, an "eye step" evaluated in the vertex stage
+          from uniforms, is follow-up task 11 in the transform graph plan.
+        </p>
+        <Written
+          from="the overall plan, section 13.37, and the transform graph plan's task 11"
+          on="2026-11-12"
+        />
+      </Section>
+
       <Section title="What's still being built">
         <p>
           Plan 5a is in progress, and these names may still move. Controllers
           beyond the globe's, gesture bindings, transitions between live rigs
-          and the animation core come in sub-plan 5d; rig presets such as
-          orbital and cockpit come after 5b's two-vector reference frames.
+          and the animation core come in sub-plan 5d, which was rewritten
+          against the transform graph. So does the orthographic camera, which is
+          still planned: sections, plan and profile views and printing to scale
+          wait for it. Rig presets such as orbital and cockpit come after 5b's
+          two-vector reference frames.
         </p>
       </Section>
     </Page>

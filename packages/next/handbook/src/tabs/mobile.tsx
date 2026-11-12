@@ -86,7 +86,7 @@ const TILES = [
   {
     risk: "Passes",
     why: "A tile-based GPU keeps a pass's attachments in fast on-chip memory and writes them out when the pass ends. Every pass boundary is a round trip to main memory.",
-    here: "The frame graph has about two dozen passes (shadows, culling, the depth prepass, ambient occlusion and its blur, the sky, opaque, translucency, glare and post). Most of their attachments are stored, and only a few are discarded.",
+    here: "The frame graph has about two dozen passes (shadows, culling, the depth prepass, ambient occlusion and its blur, the sky, section caps, opaque, translucency, glare and post). Most of their attachments are stored, and only a few are discarded. A view with GPU section caps adds a parity pass into two more targets.",
   },
   {
     risk: "Load and store",
@@ -101,7 +101,7 @@ const TILES = [
   {
     risk: "Reading what was just drawn",
     why: "Sampling the depth or colour of the current pass forces the tile out to memory. Effects that read depth or colour mid-frame split passes.",
-    here: "Ambient occlusion, glare, aerial perspective and translucency all read earlier results.",
+    here: "Ambient occlusion, glare, aerial perspective and translucency all read earlier results. So do a clip's ghosts and a b-rep's translucent patches, which blend in the translucency passes.",
   },
   {
     risk: "Precision and bandwidth",
@@ -111,7 +111,7 @@ const TILES = [
   {
     risk: "Compute between draws",
     why: "A compute pass ends any render pass around it. GPU-driven culling and tessellation are compute-heavy by design.",
-    here: "Culling runs in compute each tick, and the b-rep dice is compute too, in a pass of its own each view. A b-rep face of degree 3 or less draws through it.",
+    here: "Culling runs in compute each tick, and the b-rep dice is compute too, in a pass of its own each view. Every b-rep face, of degree 1 to 7, draws through it. A route with a parameter that doesn't separate adds a df64 compute pass for the draws' centre constants.",
   },
   {
     risk: "Memory",

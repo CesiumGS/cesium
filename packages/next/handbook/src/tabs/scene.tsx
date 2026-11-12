@@ -41,13 +41,13 @@ const OWNS = [
   },
   {
     what: "Anchor",
-    owns: "A top-level transform whose place in render space is set per view. It names a reference frame.",
+    owns: "A top-level transform whose place in render space is set per view. It names a reference frame (a node of the transform graph).",
     relation:
       "Any number per world. Content under it keeps anchor-relative transforms.",
   },
   {
     what: "Reference frame",
-    owns: "Where one frame is in another at a time, as a tree. Hierarchy lives here.",
+    owns: "Where one frame is in another at a time, as a tree. Hierarchy lives here, and so does what's warped: an edge may be smooth.",
     relation: "The core's resolver answers, or the optional frames module.",
   },
 ];
@@ -411,7 +411,60 @@ export function Scene() {
           Hierarchy has a home already. An item hangs under its tileset's
           anchor, an anchor names a reference frame, and the frame tree answers
           where one frame is in another at a given time. So there's one tree,
-          and it describes where things are, not how they're drawn.
+          and the content's place in it decides how it's drawn: see the next
+          section.
+        </p>
+      </Section>
+
+      <Section title="Content placed in frames">
+        <p>
+          Where content sits in the{" "}
+          <a href="#/transform-graph">transform graph</a> decides what is
+          warped. A deformer over the Earth's content exaggerates the terrain
+          and the tileset and leaves the Moon alone; the camera stays outside
+          it. Content gets there by its anchor:
+        </p>
+        <ul>
+          <li>
+            <C>FramesResolver.bindAnchor(anchor, frame)</C> binds an anchor to a
+            frame. Tiles under it are in that frame's own coordinates and are
+            drawn through its route to the camera.
+          </li>
+          <li>
+            <C>TilesetOptions.anchor</C> gives a tileset its anchor, fixed at
+            load. Content with body-fixed (ECEF) metres, as most is, belongs in
+            a frame whose coordinates are body-fixed, such as one under ITRF.
+          </li>
+          <li>
+            <C>rootTransform: "none"</C> leaves out the root tile's{" "}
+            <C>transform</C>, for a tileset authored in a projected CRS: its
+            tiles stay in design coordinates, and the frame of that CRS is the
+            projection.
+          </li>
+          <li>
+            <C>GlobeOptions.frame</C> (and <C>Globe.frame</C>) does the same for
+            terrain and imagery. The default is the body-fixed frame, and
+            terrain keeps its exact height term under an exaggeration.
+          </li>
+          <li>
+            <C>Georeference</C> is the core interface for where a tileset's
+            design coordinates are drawn and the exact way back. The{" "}
+            <a href="#/georeferencing">Georeferencing</a> tab has it.
+          </li>
+        </ul>
+      </Section>
+
+      <Section title="Beyond tilesets">
+        <p>
+          A world also draws content that isn't a tileset, through the same draw
+          records and anchors. B-reps (<C>world.addBrep</C>) are tessellated on
+          the GPU per view, and a b-rep with a blended material draws in the
+          translucent passes. A CSG workspace (the CSG example) builds a tree of
+          solids in a worker and draws the result as a b-rep.{" "}
+          <C>engine.whenReady(view)</C> resolves once the view has rendered a
+          frame in which no draw used a stand-in, so a page can hold its spinner
+          until the first correct image. The <a href="#/breps">B-reps</a> tab
+          has the details.
         </p>
       </Section>
 
@@ -442,13 +495,13 @@ export function Scene() {
 
       <Section title="What's planned">
         <p>
-          The small version is what's built. Two pieces of work are planned,
-          with no dates. A later brainstorm (overall plan, section 13.25) takes
-          up models and per-node transforms as items, the globe as an item, one
-          tileset across worlds, groups and editing, before or with the API
-          review. An architectural review (section 13.26) looks at geometry
-          through placement: one model of a placement, normals, and what's
-          carried per vertex or per instance.
+          The small version is what's built. The architectural review of
+          geometry through placement (overall plan, section 13.26) became the
+          transform graph, which is built: see the{" "}
+          <a href="#/transform-graph">Transform graph</a> tab. What's still
+          planned, with no dates, is a brainstorm (section 13.25) on models and
+          per-node transforms as items, the globe as an item, one tileset across
+          worlds, groups and editing, before or with the API review.
         </p>
         <h3>Related work being looked at</h3>
         <p>
@@ -474,8 +527,8 @@ export function Scene() {
           </li>
         </ul>
         <Written
-          from="the overall plan, sections 13.25 and 13.26"
-          on="2026-11-08"
+          from="the overall plan, sections 13.25, 13.26 and 13.37, and src/scene/Engine.ts"
+          on="2026-11-12"
         />
       </Section>
 

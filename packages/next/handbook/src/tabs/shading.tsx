@@ -105,7 +105,7 @@ export function Shading() {
             },
             {
               title: "Make the pipeline",
-              body: "Pipelines come from links and are cached by the linked code, compiled asynchronously. A draw whose pipeline isn't ready is skipped, not stalled.",
+              body: "Pipelines come from links and are cached by the linked code, compiled asynchronously. A draw whose pipeline isn't ready is skipped, not stalled. A draw under a transform-graph route links a variant for the route's shape through routeVertex, the same way.",
             },
           ]}
         />
@@ -298,6 +298,61 @@ export function Shading() {
           Open question: how stable exported names are across Slang releases.
           Slang suffixes names, such as <C>records_0</C>.
         </p>
+      </Section>
+
+      <Section title="What a fragment shader can read">
+        <p>
+          Beyond the boundary's own inputs, three groups matter to a shader that
+          decides by where or how a fragment sits.
+        </p>
+        <ul>
+          <li>
+            <strong>The true position.</strong>{" "}
+            <C>FragmentInput.truePositionEC</C> is where the content is,
+            camera-relative like <C>positionEC</C>, before a transform-graph
+            route (a vertical exaggeration, a reprojection) draws it elsewhere.
+            A height or a distance that is a property of the content, not of the
+            picture, is read from it. Where nothing moves the draw it is{" "}
+            <C>positionEC</C>.
+          </li>
+          <li>
+            <strong>The globe&apos;s own shader.</strong> <C>Globe.shader</C>{" "}
+            takes the same stages for the terrain or the ellipsoid, as a tileset
+            item&apos;s <C>shader</C>: set it before the tiles load or after,
+            and the loaded ones change at once. Under an exaggeration it reads
+            both the true and the drawn position, so a lookup keyed by height
+            can take either.
+          </li>
+          <li>
+            <strong>Clip effects.</strong> A clip set's effect tells a shader
+            what the cut did, through <C>clipDistance</C> (metres to the cut,
+            negative on the kept side), <C>clipFlags</C> (whether this fragment
+            is removed or a ghost), <C>clipId</C> (which set reports) and{" "}
+            <C>clipParams</C> (the set&apos;s own four numbers). A shader can
+            glow or fade near a cut, or shade a ghost its own way. Where no set
+            reports, distance is 3.4e38 and the id is all ones.
+          </li>
+        </ul>
+        <h3>A finding: height visuals</h3>
+        <p>
+          The vertical exaggeration example&apos;s &quot;Height visuals&quot;
+          panel keys a tint, contours and a height haze to true height or to
+          drawn height, side by side. Keyed to true height, the tint and the
+          haze match the legend, at ×1 to ×10. Keyed to drawn height they
+          don&apos;t: at ×10 the colour reads ten times the height the legend
+          names. So a shader that colours by height reads <C>truePositionEC</C>.
+          The <a href="#/transform-graph">Transform graph tab</a> has the
+          exaggeration.
+        </p>
+        <Written
+          from={
+            <>
+              <C>src/globe/Globe.ts</C>, <C>src/scene/CustomShader.ts</C> and{" "}
+              <C>src/scene/world/clips.ts</C>
+            </>
+          }
+          on="2026-11-12"
+        />
       </Section>
 
       <Section title="Keeping the GPU safe">

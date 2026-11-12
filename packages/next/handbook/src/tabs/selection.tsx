@@ -570,6 +570,54 @@ export function Selection() {
           ground and collision flags, so removing an item doesn't drop content
           from height queries. The Scene representation tab shows how these fit.
         </p>
+        <h3>Under a transform graph</h3>
+        <p>
+          When a deformer sits over a tileset's content (vertical exaggeration,
+          say), selection tests a tile where it draws, not where it was written.
+          The <a href="#/transform-graph">Transform graph</a> tab says how
+          routes are built. What selection does with one:
+        </p>
+        <ul>
+          <li>
+            <strong>Drawn bounds per tile:</strong> a tile's volume is carried
+            through its anchor's route into a bounding sphere, with the
+            Jacobian's largest stretch and the fit's error added to its
+            geometric error. They are made once per route and kept on the tile.
+          </li>
+          <li>
+            <strong>Ranged-scale buckets:</strong> a parameter that declares a
+            range, such as an exaggeration slider, is bounded in 16 buckets over
+            it (a parameter with no range, in 64 to the unit). A route that is
+            affine in its one scale rebounds from what the first bounds kept,
+            with no map evaluated, so dragging a slider across a bucket remakes
+            no tile's bounds from scratch.
+          </li>
+          <li>
+            <strong>Per-view route bounds:</strong> each view selects on its own
+            route's drawn bounds. Views whose routes differ in structure, as
+            behind a switch node, are drawn through twins of the draws, and a
+            tile keeps drawn volumes for the route last asked and three others,
+            so views asking in turn remake nothing. A view whose route crosses
+            no smooth node selects on the plain bounds.
+          </li>
+          <li>
+            <strong>Fits are stepped and budgeted:</strong> a route that can't
+            be compiled is fitted per tile, a slice at a time within the frame's
+            budget, so a ×10 exaggeration over thousands of tiles doesn't stall
+            a tick. A re-root that leaves the route's shape unchanged refits
+            nothing.
+          </li>
+        </ul>
+        <Note title="Bounds from a Taylor model are not used yet">
+          <p>
+            The graph can bound a tile by interval evaluation of the compiled
+            function (a first-order Taylor model). On geodetic routes it came
+            out 5 to 28 times looser than sampling, because the unrolled
+            foot-point iteration swells the intervals, so selection still
+            samples. Bounding the converged map instead is task 9 of the
+            transform graph plan.
+          </p>
+        </Note>
         <h3>When nothing has changed</h3>
         <p>
           A tileset's update runs only if a camera moved, something global
@@ -642,6 +690,13 @@ export function Selection() {
           The engine compares the field of view over how fast the tile crosses
           it against the median load time of recent content. What's drawn stays
           until the camera slows.
+        </p>
+        <p>
+          A tile's content origin is worked out once and kept on the tile, as
+          request order asks it of every wanted tile each tick. When an origin's
+          window is full, a view's request yields a shadow caster in flight
+          there, once per origin per pass, so a pass with nothing to yield
+          doesn't rescan every tile in flight.
         </p>
         <h3>The request window</h3>
         <p>
@@ -806,10 +861,11 @@ export function Selection() {
         <Written
           from={
             <>
-              <C>src/streaming/</C> and <C>src/globe/</C>
+              <C>src/streaming/</C>, <C>src/globe/</C> and the transform graph
+              plan's task 5 and per-view routes notes
             </>
           }
-          on="2026-11-08"
+          on="2026-11-12"
         />
       </Section>
 

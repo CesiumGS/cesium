@@ -112,7 +112,8 @@ const TICK: BoardStep[] = [
     body: (
       <>
         <C>prepareFrame</C> composes changed transforms in float64, writes
-        materials, and records bundles only if batches changed.
+        materials and each draw's route centre constants, and records bundles
+        only if batches changed.
       </>
     ),
     tags: [seamTag("S1"), seamTag("S2"), decisionTag("D2"), decisionTag("D6")],
@@ -736,15 +737,59 @@ export function Rendering() {
         </Figure>
       </Section>
 
+      <Section title="Draws under a route">
+        <p>
+          Where the transform graph moves content (a vertical exaggeration, a
+          reprojection), the renderer compiles the route instead of fitting it.
+          One pipeline variant exists per route shape, linked like a custom
+          shader through <C>routeVertex</C> and compiled one at a time, so a
+          scene that adds many routes doesn't stall a frame. Each draw's centre
+          constants sit in its row of the placements buffer, as{" "}
+          <C>WARP_ROUTE</C>. A parameter the route is affine in becomes a
+          per-route uniform, so a slider writes a few floats. Any other makes
+          the centre constants dynamic, and a df64 compute pass evaluates them
+          each frame.
+        </p>
+        <p>
+          The depth, shadow, height, pick and line passes link a position-only
+          module with no Jacobian, so they draw where the colour pass does. A
+          route the compiler refuses falls back to a fit per draw. Placement
+          decides what is warped, and the{" "}
+          <a href="#/transform-graph">Transform graph tab</a> has the compiler,
+          the paths and what was measured.
+        </p>
+        <Written
+          from={
+            <>
+              the overall plan, section 13.37, and{" "}
+              <C>docs/superpowers/plans/2026-11-12-transform-graph.md</C>
+            </>
+          }
+          on="2026-11-12"
+        />
+      </Section>
+
+      <Section title="Knowing a frame is right">
+        <p>
+          Content draws with stand-ins until its pipelines and textures are
+          ready, and patch draws wait for their first dice.{" "}
+          <C>engine.whenReady(view, {"{ draws, signal, timeoutMs }"})</C>{" "}
+          resolves after a frame in which no draw used a stand-in and every
+          patch draw was diced, so a page can hold a spinner, or keep the old
+          content up, until the first correct frame.
+        </p>
+      </Section>
+
       <Section title="Translucent terrain">
         <p>
           The globe's terrain can draw at an opacity inside a region, or
           everywhere, so that what lies under the ground shows through it in
           place. It adds no pass. The blended tiles go through the split every
-          blended surface already goes through. At opacity 0.999 the terrain
-          moves between the opaque pass and the blended passes: its shadows,
-          ambient occlusion and depth stop there, so a fade steps in lighting at
-          that opacity.
+          blended surface already goes through, which is also where a b-rep's
+          translucent patch draws and a clip's ghosts are blended, in both
+          translucency methods. At opacity 0.999 the terrain moves between the
+          opaque pass and the blended passes: its shadows, ambient occlusion and
+          depth stop there, so a fade steps in lighting at that opacity.
         </p>
         <Figure caption="Tiles a region doesn't touch draw exactly as they would without it. A tile it does touch keeps its own draws and swaps only their material.">
           <TranslucentTerrainFlow />

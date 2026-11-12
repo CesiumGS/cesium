@@ -275,7 +275,7 @@ const GROUPS: readonly { title: string; views: readonly ViewNote[] }[] = [
       },
       {
         name: "Examples",
-        what: "What 2.0 is for, one use case each, with its source: real-time tracks, translucency, the Slang playground, frames and projections, and design coordinates on the globe.",
+        what: "What 2.0 is for, one use case each, with its source: real-time tracks, translucency, the Slang playground, b-reps and CSG solid modeling, frames and projections, design coordinates on the globe, vertical exaggeration, clipping and sections, clip effects, and the transform graph gallery.",
         when: "To see a feature working, or read how it's used.",
         how: "Examples in the rail, or g x.",
       },

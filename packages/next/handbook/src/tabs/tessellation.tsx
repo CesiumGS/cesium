@@ -85,7 +85,8 @@ const PATHS = [
     uses: (
       <>
         Every face the GPU can evaluate, in the main pass, shadows, ambient
-        occlusion and picks, through <C>World.addBrep</C>.
+        occlusion, picks and, for a blended material, the translucent passes,
+        through <C>World.addBrep</C>.
       </>
     ),
   },
@@ -401,10 +402,12 @@ export function Tessellation() {
           provisional and internal, ahead of the API review.
         </p>
         <p>
-          Only b-reps are diced. The plan has one engine serving reprojected
-          models too, but no mesh is subdivided today, and the last sections
-          list what else isn't built. A b-rep in a glTF file is read, but the
-          model path doesn't draw it: a host gives the form to{" "}
+          Only b-reps are diced. The plan has one engine serving meshes under a
+          route too. A spike subdivides a mesh by the route&apos;s height (see
+          Meshes the engine didn&apos;t generate), but it isn&apos;t wired in,
+          so no mesh is subdivided in the engine today, and the last sections
+          list what else isn&apos;t built. A b-rep in a glTF file is read, but
+          the model path doesn&apos;t draw it: a host gives the form to{" "}
           <C>World.addBrep</C>.
         </p>
       </Note>
@@ -595,7 +598,7 @@ export function Tessellation() {
               body: (
                 <>
                   The span's sphere against the frustum. A draw under a
-                  placement isn't skipped: a warp moves what the sphere bounds.
+                  placement isn't skipped: a route moves what the sphere bounds.
                 </>
               ),
             },
@@ -665,13 +668,14 @@ export function Tessellation() {
           line, whose cells have no area.
         </p>
         <p>
-          <strong>Under a placement.</strong> A warp or reprojection moves the
-          surface after it is evaluated, and the error is measured in the placed
-          space. The CPU bounds the placement for each draw: its Jacobian's norm{" "}
-          <em>J</em> and its second derivative's bound <em>K</em>. The dice
-          takes <em>D′ = J·D + K·speed² / 8</em>, term by term, with the speeds
-          in each parameter from the record. A term with no derivative bound,
-          such as an attribute, pushes the count to the cap.
+          <strong>Under a placement.</strong> A route (a vertical exaggeration,
+          a reprojection) moves the surface after it is evaluated, and the error
+          is measured in the placed space. The CPU bounds the placement for each
+          draw: its Jacobian's norm <em>J</em> and its second derivative's bound{" "}
+          <em>K</em>. The dice takes <em>D′ = J·D + K·speed² / 8</em>, term by
+          term, with the speeds in each parameter from the record. A term with
+          no derivative bound, such as an attribute, pushes the count to the
+          cap.
         </p>
         <p>
           <strong>Limits.</strong> A span has at most 64 cells a side, and a
@@ -862,9 +866,10 @@ export function Tessellation() {
           <strong>Picks.</strong> A pick reads the feature target, which holds
           the face, and the depth, which a discarded fragment leaves unwritten.
           A pick through a hole finds the face behind it, and one on the
-          material finds the face, as the spike checks. The plan has the pick
-          carry (u, v) for an exact point on the surface; that readback isn't
-          built.
+          material finds the face, as the spike checks. The pick variant also
+          writes (u, v), and the CPU evaluates the surface there in float64 (
+          <C>refinePick</C>), so a pick on a patch draw is exact. The B-reps tab
+          has it.
         </p>
         <p>
           <strong>Prior art.</strong> Guthe and others trimmed and tessellated
@@ -888,6 +893,48 @@ export function Tessellation() {
             </>
           }
           on="2026-11-11"
+        />
+      </Section>
+
+      <Section title="Translucent, wireframe and edges">
+        <ul>
+          <li>
+            <strong>Translucent.</strong> A patch draw with a blended material
+            draws in both translucency methods, and as a clip's ghost, with its
+            per-pixel trims, reading the view&apos;s diced chunks. It leaves the
+            opaque, depth, prepass, shadow and pick bundles, so it casts no
+            shadow and a pick passes through it.
+          </li>
+          <li>
+            <strong>The tessellation, shown.</strong>{" "}
+            <C>World.setPatchDisplay(draw, display)</C> draws the dice
+            grid&apos;s cell edges and diagonals, iso lines in (u, v) or flat
+            shading from the patch fragment stage. They follow every view&apos;s
+            dice as the camera moves, so what a view diced is what you see. It
+            replaced a wireframe made on the CPU.
+          </li>
+          <li>
+            <strong>Edges.</strong> A b-rep&apos;s edges are the exact curves,
+            not a line pushed along a face&apos;s normal. The line pipeline
+            pulls them toward the camera in clip depth alone (1 + 4e-3, in{" "}
+            <C>vsLines</C>), and its depth test is greater-or-equal, so an edge
+            wins over the face it lies on and a line over a line of the same
+            depth shows as the later one.
+          </li>
+          <li>
+            <strong>Readiness.</strong> <C>engine.whenReady(view)</C> resolves
+            after a frame in which every patch draw was diced and none used a
+            stand-in.
+          </li>
+        </ul>
+        <Written
+          from={
+            <>
+              <C>src/scene/world/patches.ts</C>, <C>src/shaders/patch.slang</C>{" "}
+              and the B-reps tab
+            </>
+          }
+          on="2026-11-12"
         />
       </Section>
 
@@ -1032,9 +1079,34 @@ export function Tessellation() {
           tolerance, and a tile that declares none has its largest face's sag
           measured and stated as its display error. Picks and snaps on it carry
           that as an accuracy term. Diced patches under a placement handle the
-          same bend for b-reps; nothing does for a mesh.
+          same bend for b-reps; nothing in the engine does for a mesh yet.
         </p>
-        <Written from="the plan 5 spec, section 13.4" on="2026-11-08" />
+        <p>
+          A spike (<C>spikes/routeTessellation.ts</C>) shows how. Where a mesh
+          is drawn under a smooth route, the route&apos;s own bend sets how
+          finely each triangle is cut: <C>curvatureOver</C> takes the second
+          derivative bound M₂ from the route&apos;s Jacobian by differences (the
+          autodiff Hessian at Earth scale is rounding noise), and{" "}
+          <C>subdivisionFor</C> gives n = ⌈√(M₂L²/8 / tolerance)⌉ for a triangle
+          of edge L. A compute pass and an indirect draw, in the pattern of{" "}
+          <C>dice.slang</C>, subdivide. A 50 km tile under ×10 exaggeration,
+          seen from 10 km, comes to 0.08 px of error against 102 px
+          unsubdivided; its two triangles take n = 36 (2,592 sub-triangles), and
+          128 triangles take n = 5.
+        </p>
+        <p>
+          It isn&apos;t wired in. A mesh draw needs a batch kind of its own, a
+          vertex entry in every pass&apos;s pipeline (depth, shadow, pick) that
+          decodes the triangle, n and the sub-triangle, and attribute
+          interpolation. It also needs per-edge levels from each edge&apos;s
+          length: one level for a triangle leaves cracks between neighbours of
+          different n. The transform-graph plan lists these as its tessellation
+          follow-ups, tasks 9 and 10.
+        </p>
+        <Written
+          from="the plan 5 spec, section 13.4, and section 13.37"
+          on="2026-11-12"
+        />
       </Section>
 
       <Section title="Not yet">
@@ -1050,17 +1122,16 @@ export function Tessellation() {
             <strong>Stitching to shared edge samples.</strong> Faces don't share
             their edge's samples. The plan judges the dilation and the edge
             lines enough for drawing, and the spike's solids show no pinholes.
-            The edge lines themselves are the CPU tessellator's: the engine
-            draws none for a b-rep, and doesn't tessellate edges once for both
-            faces, as the earlier design had it.
+            The edges drawn on top are the exact curves, polylines that the line
+            pipeline pulls forward in depth; the engine still doesn't tessellate
+            an edge once for both faces, as the earlier design had it.
           </li>
           <li>
-            <strong>The stats readback.</strong> The first-look example's cells
-            and triangles row read "nothing diced in this view" while CTC-05
-            drew 208 of 208 faces. The plan's guess is that{" "}
-            <C>World.readPatchStats</C> reads a view or frame the dice didn't
-            run for. A change that marks whether a draw was diced was
-            uncommitted in the working tree when this was written.
+            <strong>The stats readback.</strong> A draw is now marked once the
+            dice has run for it, which <C>engine.whenReady</C> relies on. The
+            first-look example once read &quot;nothing diced in this view&quot;
+            while CTC-05 drew 208 of 208 faces; <C>World.readPatchStats</C> was
+            reading a view or frame the dice hadn&apos;t run for.
           </li>
           <li>
             <strong>Worker-side import.</strong> <C>World.addBrep</C> prepares
@@ -1090,8 +1161,10 @@ export function Tessellation() {
             patches of degree 4 or more is in the spike.
           </li>
           <li>
-            <strong>Reprojected meshes.</strong> Nothing subdivides an ordinary
-            mesh, so the plan's second use for this engine has no code.
+            <strong>Reprojected meshes.</strong> Nothing in the engine
+            subdivides an ordinary mesh. The route-driven spike does it in a
+            compute pass and an indirect draw, but it needs per-edge levels and
+            an entry in each pass&apos;s pipeline before it is wired in.
           </li>
           <li>
             <strong>Other GPUs.</strong> Every figure here is from one NVIDIA

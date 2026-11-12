@@ -277,7 +277,7 @@ const PICK_TERMS = [
   {
     term: "Content",
     kind: "Accuracy",
-    size: "A placement's display error, or a fitted operation's stated bound",
+    size: "A placement's display error, a fitted operation's stated bound, or a smooth node's declared accuracy",
     why: "How far the content is drawn from where its design says it is. A hosted placement's reprojection is the host's to state.",
   },
   {
@@ -399,8 +399,8 @@ export function Precision() {
         <p>
           <strong>The rules:</strong> float64 on the CPU throughout. The GPU
           sees only camera-relative values. Nothing large is ever rotated in
-          float32. Any per-vertex placement keeps its large offsets split, and
-          evaluates only small tile-local terms in float32.
+          float32. Any per-vertex placement or compiled route keeps its large
+          offsets split, and evaluates only small tile-local terms in float32.
         </p>
         <Written
           from="the plan 5 spec, sections 4 and 7.4, and the source"
@@ -496,8 +496,8 @@ export function Precision() {
             <C>maxDisplacement</C>, and the draw's bounds grow by that much. A
             fitted operation's <C>secondDerivativeBound</C> bounds how far its
             curve departs from the flat triangles between vertices. For a draw
-            under a warped anchor, bounds move with the warp and pad by the
-            residual instead: see the{" "}
+            under a deformer, selection's bounds are carried through the route
+            to where the draw is drawn: see the{" "}
             <a href="#/transform-graph">Transform graph tab</a>.
           </li>
           <li>
@@ -509,20 +509,81 @@ export function Precision() {
         </ul>
       </Section>
 
+      <Section title="Compiled routes: a centre constant and an exact residual">
+        <p>
+          A route through smooth nodes (an exaggeration, a projection) is
+          compiled to one GPU function. The{" "}
+          <a href="#/transform-graph">Transform graph tab</a> has the compiler;
+          what matters here is where the precision goes. A vertex is an offset δ
+          from its draw's centre c, and the route is F(c + δ) = F(c) + [F(c + δ)
+          − F(c)].
+        </p>
+        <ul>
+          <li>
+            <strong>The centre constant:</strong> F(c) is a double-float (df64)
+            value, held on the GPU as float32 high and low parts. It comes from
+            float64 on the CPU, or from a df64 compute pass for a parameter that
+            doesn't separate. The same hi/lo split carries each draw's position
+            and its warp centre to the cull.
+          </li>
+          <li>
+            <strong>The residual:</strong> the bracket is evaluated in float32
+            by a rule for each op that gives the change from its operands'
+            changes and centre values, with no subtraction of nearly equal
+            numbers (<C>Δ(ab) = a_c·Δb + b_c·Δa + Δa·Δb</C>,{" "}
+            <C>Δ log a = log1p(Δa / a_c)</C>). A position 6.4e6 m from the
+            origin, or a UTM easting, keeps its millimetres, where evaluating
+            the function in float32 would lose them.
+          </li>
+          <li>
+            <strong>Measured against float64</strong> (precision limits of the
+            drawing, not accuracy of the transform): a ×10 exaggeration's lift
+            within 2.6, 3.3 and 9.1 mm on 1, 2 and 8 km tiles; a nested UTM
+            route within 0.58 mm; normals within 3e-5°.
+          </li>
+          <li>
+            <strong>What's not covered:</strong> the exact centre sum was
+            checked on NVIDIA under D3D12 only. A shader compiler that
+            reassociates, as Dawn's relaxed math does on Apple GPUs, can lose
+            the centre's extra accuracy.
+          </li>
+          <li>
+            <strong>The fallback:</strong> a function the compiler refuses is
+            fitted per tile instead, which is the polynomial placement above.
+          </li>
+        </ul>
+        <Written
+          from="the overall plan, section 13.37, and spikes/transformGraph.html"
+          on="2026-11-12"
+        />
+      </Section>
+
       <Section title="Picks">
         <p>
           A pick reads a depth back from the GPU, then rebuilds the position on
           the CPU in float64, from the camera as it was at the pick's tick:{" "}
           <C>z = near ÷ depth</C>, then the eye plus <C>z</C> along the pixel's
           ray. Because it reads the depth that was drawn, a pick agrees with any
-          placement. Being a float64 says nothing about how well the point is
-          known, so the pick states that separately.
+          placement or route. Being a float64 says nothing about how well the
+          point is known, so the pick states that separately.
+        </p>
+        <p>
+          <C>pickIn(pick, "true" | "drawn" | node)</C> carries the point to any
+          node of the graph in float64, and <C>pointIn</C> and <C>measureIn</C>{" "}
+          do the same for points and distances you already have. A pick of
+          exaggerated terrain can therefore report its true height, and a
+          measurement can be read in a projected CRS's own coordinates. Each
+          answer comes with the route's Jacobian, so a distance knows how much
+          the drawing stretched it.
         </p>
         <p>
           With the frames module, <C>createFramesPickInterpreter</C> tags the
           point with its reference frame and composes its accuracy from these
-          terms, 1σ, as a root sum square. The composed figure is an accuracy.
-          Two of its terms are precision limits feeding into it:
+          terms, 1σ, as a root sum square. <C>accuracyAlong(route, point, σ)</C>{" "}
+          does the same along any route of the graph: Σ_out = J Σ Jᵀ plus each
+          smooth node's declared <C>accuracy</C>, with J chained edge by edge.
+          The composed figure is an accuracy. Two of its terms are precision
+          limits feeding into it:
         </p>
         <DataTable
           label="Terms of a pick's accuracy"

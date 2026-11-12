@@ -77,11 +77,16 @@ export function Vector() {
         <p>
           Vector lines, fills and strokes share their kernels with B-rep edges,
           trimmed faces and CAD edge styles. The vector design sets those
-          kernels, as vectors are their harder user. The{" "}
+          kernels, as vectors are their harder user. Two are already running for
+          B-reps: <C>coverage.slang</C>, the per-pixel winding test over
+          quadratic pieces in bands, which tests every trimmed face&apos;s (u,
+          v) against its pcurves on the GPU, and the line pipeline that draws a
+          solid&apos;s exact edges, pulled toward the camera in depth alone. A
+          vector fill or stroke would reuse them, but none is built. The{" "}
           <a href="#/breps">B-reps tab</a> lists what's shared and the order the
           work goes in.
         </p>
-        <Written from="the overall plan, section 13.33" on="2026-11-09" />
+        <Written from="the overall plan, section 13.33" on="2026-11-12" />
       </Section>
 
       <Section title="Still to write">

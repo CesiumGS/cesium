@@ -53,7 +53,7 @@ export const PASSES: Record<string, PassNote> = {
     kind: "compute, render",
     summary: "Each cascade: its own cull, then the casters' depth.",
     detail:
-      "For each of the 4 cascades, the cascade's view block is copied in, the world is culled again for it, without point sets, and the casters' bundle draws depth into that layer of the shadow map. The Shadows tab follows this through.",
+      "For each of the 4 cascades, the cascade's view block is copied in, the world is culled again for it, without point sets, and the casters' bundle draws depth into that layer of the shadow map. A draw under a route links the route's position-only module, with no Jacobian, so its shadow falls where it is drawn. A clip cuts a caster out, and a clip's ghost casts none. The Shadows tab follows this through.",
     skipped: "When the view has no shadows this tick.",
     reads: ["view block", "draw records", "transforms", "clip regions"],
     writes: ["items", "draw arguments", "shadow map"],
@@ -125,7 +125,7 @@ export const PASSES: Record<string, PassNote> = {
     kind: "render",
     summary: "Single-sampled depth and normals, for ambient occlusion.",
     detail:
-      "Draws what the view culled, with the casters' vertex stage and the opaque pass's discards. Its targets are what screen-space passes read.",
+      "Draws what the view culled, with the casters' vertex stage and the opaque pass's discards, clips included. A draw under a route uses the position-only route module here, as in the shadow and pick passes. Its targets are what screen-space passes read.",
     skipped: "When ambient occlusion is off for the view.",
     reads: [
       "view block",
@@ -152,12 +152,20 @@ export const PASSES: Record<string, PassNote> = {
     detail:
       "Strips of a few pixels a star, from the sky cells the cull found on screen, into a layer of its own that the sky's draw reads in the opaque pass. A star's light is kept whatever its spread.",
   },
+  "section-caps": {
+    group: "The opaque scene",
+    kind: "render",
+    summary: "Parity of each section's cap faces, two bits to a face.",
+    detail:
+      "For a view with `View.clipCaps` and clips that make a face, the solids' surfaces beyond each cap face are counted into two single-sampled targets, a bit a face, by a blend that toggles. The opaque pass then draws the cap with one triangle over the view, after the content, where the count is odd: a solid cut by a plane shows its inside as a face, on the GPU, for any solid and any clip.",
+    skipped: "When the view has no caps, or no clip that makes a face.",
+  },
   opaque: {
     group: "The opaque scene",
     kind: "render",
     summary: "Depth first, then shading where that depth is, at 4 × MSAA.",
     detail:
-      "The world's depth bundle draws first with no color, then its shading bundle shades where depth is equal, so each sample shades once. Point symbols the cull rasterized draw next, then the sky. Lit color goes to rgba16float, unlit color to a separate display-referred target, and feature IDs to rg16uint.",
+      "The world's depth bundle draws first with no color, then its shading bundle shades where depth is equal, so each sample shades once. A draw under a transform-graph route is a pipeline variant of its own, linked like a custom shader, with the route's centre constants in its placements row; the depth bundle uses the position-only module. Clips cut here and hand a custom shader their distance, flags, id and parameters. Point symbols the cull rasterized draw next, then the section caps, then the sky. Lit color goes to rgba16float, unlit color to a separate display-referred target, and feature IDs to rg16uint.",
     reads: [
       "view block",
       "draw records",
@@ -174,7 +182,7 @@ export const PASSES: Record<string, PassNote> = {
     kind: "compute, render",
     summary: "Per-pixel lists, or moments, chosen per view.",
     detail:
-      'A scene item below opacity 1 draws only here, so it writes no depth, casts no shadow and takes no ambient occlusion. In "exact" mode, blended fragments go into per-pixel lists, and a compute pass sorts and blends each list. In "moments" mode, one pass writes their moments and a second their weighted light. Translucent terrain is drawn here like any other blended surface, with no pass of its own.',
+      'A scene item below opacity 1 draws only here, so it writes no depth, casts no shadow and takes no ambient occlusion. In "exact" mode, blended fragments go into per-pixel lists, and a compute pass sorts and blends each list. In "moments" mode, one pass writes their moments and a second their weighted light. Translucent terrain is drawn here like any other blended surface, with no pass of its own. So are a b-rep\'s patch draws with a blended material, in both methods, with their per-pixel trims, reading the view\'s diced chunks; and the ghosts of a clip\'s translucent effect, which are cut out of the opaque passes and blended here.',
     reads: [
       "view block",
       "draw records",
@@ -588,5 +596,5 @@ export const DECISIONS: readonly DecisionNote[] = [
 ];
 
 export const COMING = [
-  "Subdividing ordinary meshes: the dice serves b-reps only, and nothing subdivides a reprojected model. The Tessellation tab lists what else isn't built.",
+  "Subdividing ordinary meshes: the dice serves b-reps only. A spike subdivides a mesh under a smooth route by the route's height, but it isn't wired in, so nothing subdivides a model under a route yet. The Tessellation tab lists what else isn't built.",
 ];
