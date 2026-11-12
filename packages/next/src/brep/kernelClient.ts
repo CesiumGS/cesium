@@ -85,6 +85,21 @@ export interface EvaluateResult {
   kernelMs: number;
   booleans: number;
   convertMs: number;
+  /** The worker's copy of the form for the reply, ms. */
+  packMs: number;
+  /** The worker's waits on its message loop between stages, ms. */
+  stageMs: number;
+  /** Faces the conversion took from the worker's cache of the last Open CASCADE solid. */
+  extractReused: number;
+  /** Request posted to the page's receipt of the reply, split by where the time went, ms. */
+  hops: {
+    /** The page's post to the worker taking the request up. */
+    request: number;
+    /** The worker's own time on it. */
+    worker: number;
+    /** The worker's post to the page's message event: serializing, the hop, deserializing. */
+    reply: number;
+  };
 }
 
 interface Pending {
@@ -220,6 +235,7 @@ export class KernelClient {
     recipe: SolidRecipe,
     options: CallOptions = {},
   ): Promise<EvaluateResult> {
+    const postedAt = performance.timeOrigin + performance.now();
     const reply = await this.send(
       (id) => ({
         type: "evaluate",
@@ -231,11 +247,35 @@ export class KernelClient {
       }),
       { supersedable: true, onStage: options.onStage },
     );
+    const receivedAt = performance.timeOrigin + performance.now();
     if (reply.type !== "evaluated") {
       throw new Error(`unexpected reply ${reply.type}`);
     }
-    const { result, loadMs, kernelMs, booleans, convertMs } = reply;
-    return { result, loadMs, kernelMs, booleans, convertMs };
+    const {
+      result,
+      loadMs,
+      kernelMs,
+      booleans,
+      convertMs,
+      packMs,
+      stageMs,
+      extractReused,
+    } = reply;
+    return {
+      result,
+      loadMs,
+      kernelMs,
+      booleans,
+      convertMs,
+      packMs,
+      stageMs,
+      extractReused,
+      hops: {
+        request: reply.startedAt - postedAt,
+        worker: reply.sentAt - reply.startedAt,
+        reply: receivedAt - reply.sentAt,
+      },
+    };
   }
 
   /** Ends the worker; pending calls reject with `KernelCancelled`. */

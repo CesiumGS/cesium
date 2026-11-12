@@ -21,6 +21,8 @@ export function loopback(
     messageerror: [] as Array<(event: { message?: string }) => void>,
   };
   const host = new KernelHost({
+    // Messages travel on timers here, so the host yields on a timer too: a cancel sent as a stage was reported arrives before the next stage.
+    yield: () => new Promise<void>((resolve) => setTimeout(resolve, 0)),
     ...options,
     post(reply, transfer) {
       const data = structuredClone(reply, { transfer });

@@ -176,6 +176,8 @@ export interface OcctModule {
     ): void;
   };
   TopExp_Explorer: Ctor<Explorer>;
+  /** A shape's hash, equal for shapes `IsSame` says are the same (the build's own binding). Absent in other builds. */
+  ReplicadShapeHasher?: { HashCode(shape: Shape, upperBound: number): number };
   TopoDS: {
     Face(shape: Shape): Shape;
     Edge(shape: Shape): Shape;
@@ -480,29 +482,75 @@ function scaleUv(curve: NurbsCurve, su: number, sv: number): NurbsCurve {
 
 /**
  * The distinct sub-shapes of a kind, in the order first met, found by
- * `IsSame` (which ignores orientation). This build can't construct OCCT's
- * indexed map and its shapes expose no hash, so finding one is a linear
- * scan: quadratic over a shape, fine for a sample's solids, not for big
- * imported models.
+ * `IsSame` (which ignores orientation) among those with the same
+ * `ReplicadShapeHasher` hash (which does too). The build can't construct
+ * OCCT's indexed map, so the buckets are ours; without the hasher a lookup
+ * is a linear scan, quadratic over a shape.
  */
 class ShapeSet {
   readonly shapes: Shape[] = [];
+  private readonly buckets = new Map<number, number[]>();
+  private readonly hasher: OcctModule["ReplicadShapeHasher"];
 
-  /** The shapes are freed with `keep`'s scope. */
-  constructor(oc: OcctModule, keep: Keep, shape: Shape, kind: OcEnum) {
-    each(oc, shape, kind, (s) => {
-      if (this.indexOf(s) < 0) {
-        this.shapes.push(keep(s));
-        return true;
+  /** The shapes of a kind in `shape` (none without one: `indexOrAdd` fills it); they are freed with `keep`'s scope. */
+  constructor(
+    oc: OcctModule,
+    private readonly keep: Keep,
+    shape: Shape | undefined,
+    kind: OcEnum,
+  ) {
+    this.hasher = oc.ReplicadShapeHasher;
+    if (shape) {
+      each(oc, shape, kind, (s) => {
+        const hash = this.hashOf(s);
+        if (this.find(hash, s) < 0) {
+          this.insert(hash, keep(s));
+          return true;
+        }
+      });
+    }
+  }
+
+  private hashOf(shape: Shape): number {
+    return this.hasher ? this.hasher.HashCode(shape, HASH_RANGE) : 0;
+  }
+
+  private insert(hash: number, shape: Shape): number {
+    const index = this.shapes.length;
+    this.shapes.push(shape);
+    const bucket = this.buckets.get(hash);
+    if (bucket) {
+      bucket.push(index);
+    } else {
+      this.buckets.set(hash, [index]);
+    }
+    return index;
+  }
+
+  private find(hash: number, shape: Shape): number {
+    for (const index of this.buckets.get(hash) ?? []) {
+      if (this.shapes[index]!.IsSame(shape)) {
+        return index;
       }
-    });
+    }
+    return -1;
   }
 
   /** The 0-based index of the shape, or -1. */
   indexOf(shape: Shape): number {
-    return this.shapes.findIndex((s) => s.IsSame(shape));
+    return this.find(this.hashOf(shape), shape);
+  }
+
+  /** The index of the shape, which joins the set (as a handle of its own) if it wasn't in it. */
+  indexOrAdd(shape: Shape): number {
+    const hash = this.hashOf(shape);
+    const found = this.find(hash, shape);
+    return found >= 0 ? found : this.insert(hash, this.keep(copyOf(shape)));
   }
 }
+
+/** The hash's range: OCCT's hashers take an upper bound and answer within [1, bound]. */
+const HASH_RANGE = 0x7fffffff;
 
 /**
  * Visits the sub-shapes of a kind. Each is a new handle, deleted after its
@@ -534,6 +582,168 @@ function each(
   }
 }
 
+/** What a conversion keeps of an edge: its 3D curve as the form has it. */
+interface EdgeRecord {
+  /** Our own handle, to find the edge again by `IsSame`. */
+  readonly shape: Shape;
+  readonly curve: NurbsCurve;
+  /** The edge's tolerance when the curve was made (a curve is only valid for it). */
+  readonly tolerance: number;
+  /** What approximating the curve added to the tolerance. */
+  readonly added: number;
+}
+
+/** What a conversion keeps of a face's edge use. */
+interface UseRecord {
+  readonly edge: Shape;
+  readonly reversed: boolean;
+  readonly pcurve: NurbsCurve;
+  /** What approximating the pcurve added to the edge's tolerance. */
+  readonly added: number;
+}
+
+/** What a conversion keeps of a face: its surface and loops, as the form has them. */
+interface FaceRecord {
+  readonly shape: Shape;
+  readonly make: (builder: BrepBuilder) => number;
+  readonly loops: readonly (readonly UseRecord[])[];
+  /** Whether the surface's u is turned (the face's own orientation is read again each time). */
+  readonly reversed: boolean;
+}
+
+/**
+ * The faces and edges of the last shape `toForm` converted, to reuse in the
+ * next when they are the same OCCT faces and edges (`IsSame`: the same
+ * underlying shape, whatever its orientation). A boolean leaves the faces
+ * it doesn't touch as they were, so a form edited a little at a time
+ * converts only what changed: the rest costs a hash each. It holds OCCT
+ * handles, which `release` frees (a worker's termination does too).
+ */
+export class ExtractCache {
+  faces = new Map<number, FaceRecord[]>();
+  edges = new Map<number, EdgeRecord[]>();
+  /** Faces taken from the cache by the last conversion, and converted. */
+  reused = 0;
+  converted = 0;
+
+  release(): void {
+    for (const bucket of this.faces.values()) {
+      bucket.forEach((record) => freeRecord(record));
+    }
+    for (const bucket of this.edges.values()) {
+      bucket.forEach((record) => record.shape.delete());
+    }
+    this.faces.clear();
+    this.edges.clear();
+  }
+}
+
+function freeRecord(record: FaceRecord): void {
+  record.shape.delete();
+  record.loops.forEach((loop) => loop.forEach((use) => use.edge.delete()));
+}
+
+/** One conversion's use of an `ExtractCache`: finds records, makes new ones, and swaps them in when it succeeds. */
+class ExtractRun {
+  private readonly faces = new Map<number, FaceRecord[]>();
+  private readonly edges = new Map<number, EdgeRecord[]>();
+  private readonly reusedFaces = new Set<FaceRecord>();
+  private readonly reusedEdges = new Set<EdgeRecord>();
+  private readonly fresh: Array<FaceRecord | EdgeRecord> = [];
+  private reused = 0;
+
+  constructor(
+    private readonly cache: ExtractCache,
+    private readonly hash: (shape: Shape) => number,
+  ) {}
+
+  private static find<T extends { shape: Shape }>(
+    map: Map<number, T[]>,
+    hash: number,
+    shape: Shape,
+    accept: (record: T) => boolean = () => true,
+  ): T | undefined {
+    return map.get(hash)?.find((r) => r.shape.IsSame(shape) && accept(r));
+  }
+
+  private static add<T>(map: Map<number, T[]>, hash: number, record: T): void {
+    const bucket = map.get(hash);
+    if (bucket) {
+      bucket.push(record);
+    } else {
+      map.set(hash, [record]);
+    }
+  }
+
+  face(shape: Shape): { hash: number; record: FaceRecord | undefined } {
+    const hash = this.hash(shape);
+    const record = ExtractRun.find(this.cache.faces, hash, shape);
+    if (record) {
+      this.reused++;
+      this.reusedFaces.add(record);
+      ExtractRun.add(this.faces, hash, record);
+    }
+    return { hash, record };
+  }
+
+  newFace(hash: number, record: FaceRecord): void {
+    this.fresh.push(record);
+    ExtractRun.add(this.faces, hash, record);
+  }
+
+  edge(
+    shape: Shape,
+    tolerance: number,
+  ): { hash: number; record: EdgeRecord | undefined } {
+    const hash = this.hash(shape);
+    const record = ExtractRun.find(
+      this.cache.edges,
+      hash,
+      shape,
+      (r) => r.tolerance === tolerance,
+    );
+    if (record) {
+      this.reusedEdges.add(record);
+      ExtractRun.add(this.edges, hash, record);
+    }
+    return { hash, record };
+  }
+
+  newEdge(hash: number, record: EdgeRecord): void {
+    this.fresh.push(record);
+    ExtractRun.add(this.edges, hash, record);
+  }
+
+  /** The conversion succeeded: what it didn't reuse of the old goes, what it made stays. */
+  commit(count: number): void {
+    for (const bucket of this.cache.faces.values()) {
+      bucket
+        .filter((r) => !this.reusedFaces.has(r))
+        .forEach((r) => freeRecord(r));
+    }
+    for (const bucket of this.cache.edges.values()) {
+      bucket
+        .filter((r) => !this.reusedEdges.has(r))
+        .forEach((r) => r.shape.delete());
+    }
+    this.cache.faces = this.faces;
+    this.cache.edges = this.edges;
+    this.cache.reused = this.reused;
+    this.cache.converted = count - this.reused;
+  }
+
+  /** The conversion failed: what it made goes, the cache stays as it was. */
+  abort(): void {
+    for (const record of this.fresh) {
+      if ("loops" in record) {
+        freeRecord(record);
+      } else {
+        record.shape.delete();
+      }
+    }
+  }
+}
+
 /**
  * Builds the render form from an OCCT shape (a solid, or anything with
  * faces). `tags` names input faces; each face of the form takes the tag of
@@ -542,32 +752,56 @@ function each(
  * the edge's tolerance, and the error it makes widens that tolerance: the
  * representation error, stated where the validator and queries read it.
  * Throws for a surface it can't carry exactly (an offset, a sweep, a surface
- * of revolution).
+ * of revolution). With a `cache`, the faces and edges the last call to
+ * `occtToForm` with it converted aren't converted again.
  */
 export function occtToForm(
   oc: OcctModule,
   shape: Shape,
-  options?: {
-    tags?: ReadonlyArray<{ face: Shape; tag: number }>;
-    version?: number;
-  },
+  options?: ConvertOptions,
 ): OcctBrep {
   return withScope((keep) => convert(oc, keep, shape, options));
+}
+
+interface ConvertOptions {
+  tags?: ReadonlyArray<{ face: Shape; tag: number }>;
+  version?: number;
+  cache?: ExtractCache;
 }
 
 function convert(
   oc: OcctModule,
   keep: Keep,
   shape: Shape,
-  options?: {
-    tags?: ReadonlyArray<{ face: Shape; tag: number }>;
-    version?: number;
-  },
+  options?: ConvertOptions,
+): OcctBrep {
+  const hasher = oc.ReplicadShapeHasher;
+  const run =
+    options?.cache && hasher
+      ? new ExtractRun(options.cache, (s) => hasher.HashCode(s, HASH_RANGE))
+      : undefined;
+  try {
+    const converted = convertShape(oc, keep, shape, options, run);
+    run?.commit(converted.form.faceSurface.length);
+    return converted;
+  } catch (error) {
+    run?.abort();
+    throw error;
+  }
+}
+
+function convertShape(
+  oc: OcctModule,
+  keep: Keep,
+  shape: Shape,
+  options: ConvertOptions | undefined,
+  run: ExtractRun | undefined,
 ): OcctBrep {
   const O = oc.TopAbs_Orientation;
   const S = oc.TopAbs_ShapeEnum;
   const builder = new BrepBuilder({ version: options?.version });
-  const vertices = new ShapeSet(oc, keep, shape, S.TopAbs_VERTEX);
+  // The vertices are those of the edges, met as the edges are converted.
+  const vertices = new ShapeSet(oc, keep, undefined, S.TopAbs_VERTEX);
   const edges = new ShapeSet(oc, keep, shape, S.TopAbs_EDGE);
   const faces = new ShapeSet(oc, keep, shape, S.TopAbs_FACE);
 
@@ -582,7 +816,7 @@ function convert(
       let start = -1;
       let end = -1;
       each(oc, edge, S.TopAbs_VERTEX, (v) => {
-        const index = vertices.indexOf(v);
+        const index = vertices.indexOrAdd(v);
         if (v.Orientation() === O.TopAbs_FORWARD) {
           start = index;
         } else if (v.Orientation() === O.TopAbs_REVERSED) {
@@ -595,6 +829,16 @@ function convert(
       if (oc.BRep_Tool.Degenerated(edge)) {
         return { start, end, tolerance, curve: undefined };
       }
+      const known = run?.edge(edgeShape, tolerance);
+      if (known?.record) {
+        return {
+          start,
+          end,
+          tolerance: tolerance + known.record.added,
+          curve: known.record.curve,
+        };
+      }
+      const made = tolerance;
       const c = oc.BRep_Tool.Curve(edge, 0, 0);
       keep(c.returnValue);
       const trimmed = keep(
@@ -607,6 +851,14 @@ function convert(
         const cubic = approximateCubic(curve, approximationTarget(tolerance));
         curve = cubic.curve;
         tolerance += cubic.error;
+      }
+      if (run && known) {
+        run.newEdge(known.hash, {
+          shape: copyOf(edgeShape),
+          curve,
+          tolerance: made,
+          added: tolerance - made,
+        });
       }
       return { start, end, tolerance, curve };
     }),
@@ -622,6 +874,26 @@ function convert(
   }[] = [];
   for (let f = 0; f < faces.shapes.length; f++) {
     const face = faces.shapes[f]!;
+    const known = run?.face(face);
+    if (known?.record) {
+      const record = known.record;
+      const surface = record.make(builder);
+      const loops = record.loops.map((loop) =>
+        loop.map((use): CurveUse => {
+          const index = edges.indexOf(use.edge);
+          edgeData[index]!.tolerance += use.added;
+          return { edge: index, reversed: use.reversed, pcurve: use.pcurve };
+        }),
+      );
+      faceData.push({
+        surface,
+        loops,
+        reversed:
+          (face.Orientation() === O.TopAbs_REVERSED) !== record.reversed,
+        face,
+      });
+      continue;
+    }
     withScope((keep) => {
       const forward = keep(
         oc.TopoDS.Face(keep(face.Oriented(O.TopAbs_FORWARD))),
@@ -637,12 +909,12 @@ function convert(
       };
       const type = adaptor.GetType();
       const analytic = analyticOf(oc, type, at);
-      let surface: number;
+      let make: (b: BrepBuilder) => number;
       let su = 1;
       let sv = 1;
       if (analytic) {
         checkIdentity(analytic, at, f);
-        surface = analytic.make(builder);
+        make = (b) => analytic.make(b);
         su = analytic.su;
         sv = analytic.sv;
       } else if (
@@ -650,86 +922,122 @@ function convert(
         type === oc.GeomAbs_SurfaceType.GeomAbs_BezierSurface
       ) {
         // A B-spline or Bézier surface in OCCT is free-form: no identity.
-        surface = builder.nurbsSurface(surfaceOf(keep(adaptor.BSpline())));
+        const nurbs = surfaceOf(keep(adaptor.BSpline()));
+        make = (b) => b.nurbsSurface(nurbs);
       } else {
         throw new Error(
           `occtToForm: face ${f} is on a surface the form can't carry exactly yet`,
         );
       }
-      // A pcurve's error is measured where it matters, through the surface.
+      const surface = make(builder);
+      // A pcurve's error is measured where it matters, through the surface:
+      // an analytic one in closed form (checked against OCCT's above), not
+      // through a call into the kernel for each sample.
+      const surfaceAt = analytic
+        ? (u: number, v: number): Vec3 => analytic.form(u * su, v * sv)
+        : at;
       const throughSurface = (a: Float64Array, b: Float64Array) =>
-        length(sub(at(a[0]!, a[1]!), at(b[0]!, b[1]!)));
+        length(sub(surfaceAt(a[0]!, a[1]!), surfaceAt(b[0]!, b[1]!)));
 
       const outerWire = keep(oc.BRepTools.OuterWire(forward));
       const loops: CurveUse[][] = [];
-      each(oc, forward, S.TopAbs_WIRE, (wireShape) =>
-        withScope((keep) => {
-          const wire = keep(oc.TopoDS.Wire(wireShape));
-          const uses: CurveUse[] = [];
-          each(oc, wire, S.TopAbs_EDGE, (edgeShape) =>
-            withScope((keep) => {
-              const orientation = edgeShape.Orientation();
-              if (
-                orientation !== O.TopAbs_FORWARD &&
-                orientation !== O.TopAbs_REVERSED
-              ) {
-                return;
-              }
-              const edge = keep(oc.TopoDS.Edge(edgeShape));
-              const index = edges.indexOf(edge);
-              // BRep_Tool.CurveOnSurface's face overload doesn't bind in this
-              // build; the adaptor reads the same pcurve, the seam's side picked
-              // by the edge's orientation.
-              const pc = keep(
-                new oc.BRepAdaptor_Curve2d(...([edge, forward] as never[])),
-              );
-              const trimmed = keep(
-                new oc.Geom2d_TrimmedCurve(
-                  ...([
-                    keep(pc.Curve()),
-                    pc.FirstParameter(),
-                    pc.LastParameter(),
-                    true,
-                    true,
-                  ] as never[]),
-                ),
-              );
-              let inUv = curveOf(
-                keep(oc.Geom2dConvert.CurveToBSplineCurve(trimmed)),
-                2,
-              );
-              if (inUv.degree > MAX_CURVE_DEGREE) {
-                const data = edgeData[index]!;
-                const cubic = approximateCubic(
-                  inUv,
-                  approximationTarget(data.tolerance),
-                  throughSurface,
+      // For the cache: each use's edge and what its pcurve added to the edge's tolerance.
+      const kept = new Map<CurveUse, { edge: Shape; added: number }>();
+      try {
+        each(oc, forward, S.TopAbs_WIRE, (wireShape) =>
+          withScope((keep) => {
+            const wire = keep(oc.TopoDS.Wire(wireShape));
+            const uses: CurveUse[] = [];
+            each(oc, wire, S.TopAbs_EDGE, (edgeShape) =>
+              withScope((keep) => {
+                const orientation = edgeShape.Orientation();
+                if (
+                  orientation !== O.TopAbs_FORWARD &&
+                  orientation !== O.TopAbs_REVERSED
+                ) {
+                  return;
+                }
+                const edge = keep(oc.TopoDS.Edge(edgeShape));
+                const index = edges.indexOf(edge);
+                // BRep_Tool.CurveOnSurface's face overload doesn't bind in this
+                // build; the adaptor reads the same pcurve, the seam's side picked
+                // by the edge's orientation.
+                const pc = keep(
+                  new oc.BRepAdaptor_Curve2d(...([edge, forward] as never[])),
                 );
-                inUv = cubic.curve;
-                data.tolerance += cubic.error;
+                const trimmed = keep(
+                  new oc.Geom2d_TrimmedCurve(
+                    ...([
+                      keep(pc.Curve()),
+                      pc.FirstParameter(),
+                      pc.LastParameter(),
+                      true,
+                      true,
+                    ] as never[]),
+                  ),
+                );
+                let inUv = curveOf(
+                  keep(oc.Geom2dConvert.CurveToBSplineCurve(trimmed)),
+                  2,
+                );
+                let added = 0;
+                if (inUv.degree > MAX_CURVE_DEGREE) {
+                  const data = edgeData[index]!;
+                  const cubic = approximateCubic(
+                    inUv,
+                    approximationTarget(data.tolerance),
+                    throughSurface,
+                  );
+                  inUv = cubic.curve;
+                  data.tolerance += cubic.error;
+                  added = cubic.error;
+                }
+                const along = scaleUv(inUv, su, sv);
+                const reversed = orientation === O.TopAbs_REVERSED;
+                const use: CurveUse = {
+                  edge: index,
+                  reversed,
+                  pcurve: reversed ? reverseNurbsCurve(along) : along,
+                };
+                uses.push(use);
+                if (run) {
+                  kept.set(use, { edge: copyOf(edgeShape), added });
+                }
+              }),
+            );
+            if (uses.length > 0) {
+              const ordered = chain(uses);
+              if (wire.IsSame(outerWire)) {
+                loops.unshift(ordered);
+              } else {
+                loops.push(ordered);
               }
-              const along = scaleUv(inUv, su, sv);
-              const reversed = orientation === O.TopAbs_REVERSED;
-              uses.push({
-                edge: index,
-                reversed,
-                pcurve: reversed ? reverseNurbsCurve(along) : along,
-              });
-            }),
-          );
-          if (uses.length > 0) {
-            const ordered = chain(uses);
-            if (wire.IsSame(outerWire)) {
-              loops.unshift(ordered);
-            } else {
-              loops.push(ordered);
             }
-          }
-        }),
-      );
-      // The form's normal is ∂u × ∂v in its own (u, v): a turned u turns it.
-      const reversed = (face.Orientation() === O.TopAbs_REVERSED) !== su < 0;
-      faceData.push({ surface, loops, reversed, face });
+          }),
+        );
+        // The form's normal is ∂u × ∂v in its own (u, v): a turned u turns it.
+        const reversed = (face.Orientation() === O.TopAbs_REVERSED) !== su < 0;
+        faceData.push({ surface, loops, reversed, face });
+        if (run && known) {
+          run.newFace(known.hash, {
+            shape: copyOf(face),
+            make,
+            loops: loops.map((loop) =>
+              loop.map((use) => ({
+                edge: kept.get(use)!.edge,
+                reversed: use.reversed,
+                pcurve: use.pcurve,
+                added: kept.get(use)!.added,
+              })),
+            ),
+            reversed: su < 0,
+          });
+          kept.clear();
+        }
+      } finally {
+        // Handles not handed to a record are freed.
+        kept.forEach(({ edge }) => edge.delete());
+      }
     });
   }
 
@@ -747,17 +1055,29 @@ function convert(
     builder.edge(start, end, { curve, tolerance });
   }
   const faceTags = new Int32Array(faceData.length).fill(-1);
+  const tagged = new Map<number, { face: Shape; tag: number }[]>();
+  const hash = (s: Shape) =>
+    oc.ReplicadShapeHasher ? oc.ReplicadShapeHasher.HashCode(s, HASH_RANGE) : 0;
+  for (const entry of options?.tags ?? []) {
+    const key = hash(entry.face);
+    const bucket = tagged.get(key);
+    if (bucket) {
+      bucket.push(entry);
+    } else {
+      tagged.set(key, [entry]);
+    }
+  }
   faceData.forEach(({ surface, loops, reversed, face }, f) => {
     builder.face(
       surface,
       loops.map((loop, l) => windLoop(loop, l === 0)),
       { reversed },
     );
-    for (const { face: tagged, tag } of options?.tags ?? []) {
-      if (tagged.IsSame(face)) {
-        faceTags[f] = tag;
-        break;
-      }
+    const match = tagged
+      .get(hash(face))
+      ?.find((entry) => entry.face.IsSame(face));
+    if (match) {
+      faceTags[f] = match.tag;
     }
   });
   return { form: builder.build(), faceTags };
@@ -1191,10 +1511,14 @@ export class OcctKernel {
     return n;
   }
 
-  toForm(solid: OcctSolid, options?: { version?: number }): OcctBrep {
+  toForm(
+    solid: OcctSolid,
+    options?: { version?: number; cache?: ExtractCache },
+  ): OcctBrep {
     return occtToForm(this.oc, solid.shape, {
       tags: solid.tags,
       version: options?.version,
+      ...(options?.cache ? { cache: options.cache } : {}),
     });
   }
 

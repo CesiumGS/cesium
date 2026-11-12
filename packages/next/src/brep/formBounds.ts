@@ -30,6 +30,7 @@
 // roundness is in the edges, so a form whose edge curves stray from its
 // surfaces (see `validateBrep`) has the bounds of its edges.
 import { restrictNet, netOf, type Net } from "./bounds.ts";
+import { faceDigests } from "./faceDigest.ts";
 import { SurfaceKind, type BezierCurves, type BrepForm } from "./form.ts";
 import { faceTrim, type FaceTrim } from "./tessellate.ts";
 
@@ -42,6 +43,31 @@ export interface FormBounds {
 export interface FormBoundsOptions {
   /** How far a curve's or patch's box may exceed it, as a share of the form's size (default 1e-3). */
   readonly tolerance?: number;
+  /**
+   * What a call made of the faces of a form, to reuse for the faces of the
+   * next that are the same (`faceDigest`): the box of a face's edges and of
+   * its loops' pcurves, the work every face costs. Pass the same cache to each
+   * call of a form edited a little at a time; it keeps the faces of the last.
+   */
+  readonly cache?: BoundsCache;
+}
+
+/** What `formBounds` keeps of the faces it bounded, to reuse (`FormBoundsOptions.cache`). */
+export interface BoundsCache {
+  tolerance: number | undefined;
+  entries: Map<
+    string,
+    {
+      /** The box of the face's edges' 3D curves. */
+      edges: { min: readonly number[]; max: readonly number[] } | undefined;
+      /** The rect of its loops' pcurves: u0, u1, v0, v1. */
+      rect: readonly [number, number, number, number] | undefined;
+    }
+  >;
+}
+
+export function createBoundsCache(): BoundsCache {
+  return { tolerance: undefined, entries: new Map() };
 }
 
 /** The most times a patch is cut in four. */
@@ -119,17 +145,35 @@ export function formBounds(
   }
   const freeform: Array<{ face: number; rect: Rect }> = [];
   const faces = form.faceSurface.length;
+  const cache = options.cache;
+  const previous =
+    cache && cache.tolerance === tolerance ? cache.entries : undefined;
+  const entries: BoundsCache["entries"] = new Map();
+  const digests = cache ? faceDigests(form) : undefined;
   for (let face = 0; face < faces; face++) {
-    const edges = curveBounds(
-      form.curves3,
-      3,
-      loopSegments(form, face, false),
-      tolerance,
-    );
+    const digest = digests?.[face];
+    let kept =
+      digest === undefined
+        ? undefined
+        : (entries.get(digest) ?? previous?.get(digest));
+    if (!kept) {
+      kept = {
+        edges: curveBounds(
+          form.curves3,
+          3,
+          loopSegments(form, face, false),
+          tolerance,
+        ),
+        rect: loopRect(form, face, tolerance),
+      };
+    }
+    if (digest !== undefined) {
+      entries.set(digest, kept);
+    }
+    const { edges, rect } = kept;
     if (edges) {
       known.box(edges.min, edges.max);
     }
-    const rect = loopRect(form, face, tolerance);
     if (!rect) {
       continue;
     }
@@ -140,6 +184,10 @@ export function formBounds(
     } else if (kind === SurfaceKind.Sphere || kind === SurfaceKind.Torus) {
       interiorPoints(form, face, surface, kind, rect, known);
     }
+  }
+  if (cache) {
+    cache.tolerance = tolerance;
+    cache.entries = entries;
   }
   const budget = { cells: MAX_CELLS };
   for (const { face, rect } of freeform) {

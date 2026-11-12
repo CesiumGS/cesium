@@ -106,6 +106,10 @@ export interface KernelForm {
   /** How long the worker spent on `validateBrep` and on `prepareGpuPatches`, ms, where it ran them. */
   readonly validateMs?: number;
   readonly prepareMs?: number;
+  /** How many faces' preparation was taken from the worker's cache of the last evaluation, of all the form's. */
+  readonly facesReused?: number;
+  /** How long `formBounds` took in the worker, ms. */
+  readonly boundsMs?: number;
 }
 
 /** What a request may ask of the worker for each form it returns. */
@@ -192,6 +196,15 @@ export type KernelReply =
       /** The booleans among them. */
       booleans: number;
       convertMs: number;
+      /** Making the reply's copy of the form (`transferable`), ms. */
+      packMs: number;
+      /** Faces the conversion took from the worker's cache of the last Open CASCADE solid, not converted again. */
+      extractReused: number;
+      /** What the stages' waits on the message loop added, ms (a cancel can get in at each). */
+      stageMs: number;
+      /** When the worker took the request up and when it posted this reply, epoch ms (`performance.timeOrigin + performance.now()`), for the page to tell the worker's time from the hops. */
+      startedAt: number;
+      sentAt: number;
     }
   | { type: "cancelled"; id: number }
   | { type: "error"; id: number; message: string };

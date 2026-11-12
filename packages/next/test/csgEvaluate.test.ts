@@ -172,19 +172,21 @@ describe("the kernel worker's evaluate request", () => {
     client.dispose();
   });
 
-  it("frees Open CASCADE's operands as it goes, and its result", async () => {
+  it("keeps Open CASCADE's operands and results for the next evaluation, and frees them when the worker ends", async () => {
     const log = new Log();
     const client = setup(log);
     await client.evaluate("occt", recipe);
-    // Each boolean reads its operands, which are then freed, and the next one reads the result.
+    // Each boolean reads its operands and leaves them; the next one reads the result.
     expect(log.calls.filter((c) => /^(union|difference)/.test(c))).toEqual([
       "union box#1 placed#3",
       "difference union#4 box#5",
-      "difference difference#8 placed#7",
+      "difference difference#6 placed#8",
     ]);
     expect(log.calls.at(-1)).toMatch(/^convert difference#/);
-    expect(log.live.size).toBe(0);
+    // The leaves and the folds are the cache's now.
+    expect(log.live.size).toBeGreaterThan(0);
     client.dispose();
+    expect(log.live.size).toBe(0);
   });
 
   it("makes a lone leaf and a one-operand node as themselves", async () => {
@@ -243,8 +245,8 @@ describe("the kernel worker's evaluate request", () => {
     await expect(first).rejects.toBeInstanceOf(KernelCancelled);
     const made = await second;
     expect(made.booleans).toBe(0);
-    expect(log.live.size).toBe(0);
     client.dispose();
+    expect(log.live.size).toBe(0);
   });
 
   it("stops at the next boolean when cancelled part way, freeing the solids it holds", async () => {
@@ -304,7 +306,7 @@ describe("STEP parts in the kernel worker", () => {
     expect(log.calls).toContain(`clone ${kept[0]}`);
     expect(log.calls.some((c) => c.startsWith(`place ${kept[0]}`))).toBe(false);
     expect(log.calls.some((c) => /^tag placed#\d+ 2$/.test(c))).toBe(true);
-    expect([...log.live]).toEqual(kept);
+    expect(log.live.has(kept[0]!)).toBe(true);
 
     await client.releaseStep(5);
     expect(log.live.size).toBe(0);
@@ -327,8 +329,8 @@ describe("STEP parts in the kernel worker", () => {
     await expect(client.evaluate("occt", withStep)).rejects.toThrow(
       /STEP part 5 isn't loaded/,
     );
-    expect(log.live.size).toBe(0);
     client.dispose();
+    expect(log.live.size).toBe(0);
   });
 
   it("refuses a step leaf in SMLib, before making anything", async () => {
@@ -347,7 +349,8 @@ describe("STEP parts in the kernel worker", () => {
     const registered = client.registerStep(5, bytes());
     const evaluated = client.evaluate("occt", box(1));
     await Promise.all([registered, evaluated]);
-    expect(log.live.size).toBe(1);
+    // The part, and the box the evaluation keeps for the next one.
+    expect(log.live.size).toBe(2);
     const session = new KernelSession({
       createWorker: () =>
         loopback({
@@ -359,6 +362,133 @@ describe("STEP parts in the kernel worker", () => {
       session.evaluate("smlib", withStep, { final: false }),
     ).rejects.toThrow(STEP_NEEDS_OCCT);
     session.dispose();
+    client.dispose();
+  });
+});
+
+describe("the kernel worker's solid cache (Open CASCADE)", () => {
+  const booleansOf = (log: Log) =>
+    log.calls.filter((c) => /^(union|difference|intersection) /.test(c));
+  const union = (...operands: SolidRecipe[]): SolidRecipe => ({
+    type: "boolean",
+    operation: "union",
+    operands,
+  });
+  const at = (tag: number, x: number) => box(tag, { translate: [x, 0, 0] });
+
+  it("makes nothing again for a recipe it has made", async () => {
+    const log = new Log();
+    const client = setup(log);
+    await client.evaluate("occt", recipe);
+    log.calls.length = 0;
+    // An equal recipe, not the same object.
+    const again = await client.evaluate("occt", structuredClone(recipe));
+    expect(again.booleans).toBe(3);
+    expect(log.calls).toEqual([expect.stringMatching(/^convert /)]);
+    client.dispose();
+    expect(log.live.size).toBe(0);
+  });
+
+  it("makes again only the leaf an edit changed and the booleans above it", async () => {
+    const log = new Log();
+    const client = setup(log);
+    await client.evaluate("occt", recipe);
+    log.calls.length = 0;
+    // The last operand of the difference moves: one boolean, on the fold of the others.
+    const edited = structuredClone(recipe);
+    (edited as { operands: SolidRecipe[] }).operands[2] = box(4, {
+      rotate: [0, 45, 0],
+    });
+    await client.evaluate("occt", edited);
+    expect(booleansOf(log)).toHaveLength(1);
+    expect(log.calls.filter((c) => /^make (box|placed)/.test(c))).toHaveLength(
+      2,
+    );
+    client.dispose();
+    expect(log.live.size).toBe(0);
+  });
+
+  it("folds what an edit changed last, so dragging one of many operands is one boolean", async () => {
+    const log = new Log();
+    const client = setup(log);
+    const counts: number[] = [];
+    for (const x of [0, 1, 2]) {
+      log.calls.length = 0;
+      // The second of four operands moves each time.
+      await client.evaluate(
+        "occt",
+        union(at(1, 0), at(2, x), at(3, 5), at(4, 7)),
+      );
+      counts.push(booleansOf(log).length);
+    }
+    // The first makes all three; the second's changed operand goes last, behind three that are new to that fold; then one.
+    expect(counts).toEqual([3, 3, 1]);
+    client.dispose();
+    expect(log.live.size).toBe(0);
+  });
+
+  it("keeps a difference's first operand first", async () => {
+    const log = new Log();
+    const client = setup(log);
+    const difference = (...operands: SolidRecipe[]): SolidRecipe => ({
+      type: "boolean",
+      operation: "difference",
+      operands,
+    });
+    await client.evaluate("occt", difference(at(1, 0), at(2, 1), at(3, 2)));
+    log.calls.length = 0;
+    await client.evaluate("occt", difference(at(1, 9), at(2, 1), at(3, 2)));
+    // The base moved: it is still the first operand, so both cuts are made again.
+    expect(booleansOf(log)).toHaveLength(2);
+    expect(booleansOf(log)[0]).toMatch(/^difference /);
+    client.dispose();
+    expect(log.live.size).toBe(0);
+  });
+
+  it("forgets its solids when a STEP part is replaced", async () => {
+    const log = new Log();
+    const client = setup(log);
+    const withPart: SolidRecipe = union(box(1), {
+      type: "step",
+      tag: 2,
+      step: 5,
+    });
+    await client.registerStep(5, new TextEncoder().encode("ISO-10303-21;"));
+    await client.evaluate("occt", withPart);
+    await client.registerStep(5, new TextEncoder().encode("ISO-10303-21;"));
+    log.calls.length = 0;
+    await client.evaluate("occt", withPart);
+    // The leaf is cloned again from the new part, and the union redone.
+    expect(log.calls.some((c) => c.startsWith("clone "))).toBe(true);
+    expect(booleansOf(log)).toHaveLength(1);
+    client.dispose();
+    expect(log.live.size).toBe(0);
+  });
+
+  it("reuses the faces it prepared for the GPU last time, at the same anchor", async () => {
+    const log = new Log();
+    const client = setup(log);
+    for (const kernel of ["occt", "smlib"] as const) {
+      const first = await client.evaluate(kernel, box(1), { prepare: true });
+      expect(first.result.facesReused).toBe(0);
+      // The fake kernels give the same box each time: every face is the last one's.
+      const second = await client.evaluate(kernel, box(2), { prepare: true });
+      expect(second.result.facesReused).toBe(6);
+      expect(second.result.patches!.origin).toEqual(
+        first.result.patches!.origin,
+      );
+    }
+    client.dispose();
+  });
+
+  it("keeps nothing for SMLib, whose booleans consume their operands", async () => {
+    const log = new Log();
+    const client = setup(log);
+    await client.evaluate("smlib", recipe);
+    expect(log.live.size).toBe(0);
+    log.calls.length = 0;
+    await client.evaluate("smlib", recipe);
+    expect(booleansOf(log)).toHaveLength(3);
     client.dispose();
   });
 });

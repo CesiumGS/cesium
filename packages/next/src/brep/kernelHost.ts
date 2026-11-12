@@ -8,9 +8,19 @@
 // is seen and it stops, freeing what it holds. A kernel call itself (a
 // boolean, a STEP import) can't be interrupted, so a cancel waits for the
 // call that is running.
-import { formBounds } from "./formBounds.ts";
+import {
+  createBoundsCache,
+  formBounds,
+  type BoundsCache,
+  type FormBounds,
+} from "./formBounds.ts";
 import type { BrepForm } from "./form.ts";
-import { prepareGpuPatches, type GpuPatches } from "./gpuPatches.ts";
+import {
+  createPrepareCache,
+  prepareGpuPatches,
+  type GpuPatches,
+  type PrepareCache,
+} from "./gpuPatches.ts";
 import {
   checkRecipe,
   countBooleans,
@@ -27,7 +37,7 @@ import {
   type SolidRecipe,
   type StepPart,
 } from "./kernelProtocol.ts";
-import { OcctKernel, type OcctSolid } from "./occt.ts";
+import { ExtractCache, OcctKernel, type OcctSolid } from "./occt.ts";
 import { SmlibKernel, type SmlibSolid } from "./smlib.ts";
 import { validateBrep, type BrepProblem } from "./validate.ts";
 
@@ -69,7 +79,120 @@ interface Evaluator<S extends { delete(): void }> {
   tag(solid: S, tag: number): S;
   /** Combines two solids into one, taking both (each is deleted or consumed). */
   combine(operation: BooleanOperation, a: S, b: S): S;
+  /**
+   * Combines two solids into a new one and leaves both as they were, so a
+   * solid can be an operand again (SMLib's change `a` and consume `b`, so it
+   * has none). Where this is, a host keeps solids from one evaluation to the
+   * next (`SolidCache`).
+   */
+  combineKeeping?(operation: BooleanOperation, a: S, b: S): S;
   toForm(solid: S): { form: BrepForm; faceTags: Int32Array };
+}
+
+const nodeKeys = new WeakMap<SolidRecipe, string>();
+
+/** A node of a recipe as a string: equal for equal trees (the leaves' tags and placements included). */
+function keyOf(node: SolidRecipe): string {
+  let key = nodeKeys.get(node);
+  if (key === undefined) {
+    key =
+      node.type === "boolean"
+        ? `${node.operation}(${node.operands.map(keyOf).join(",")})`
+        : JSON.stringify(node);
+    nodeKeys.set(node, key);
+  }
+  return key;
+}
+
+/**
+ * The solids of the last evaluation, by the key of the tree they came from
+ * (and, for the partial folds of a node with several operands, by the keys of
+ * the operands folded so far), so an edit re-makes only the leaves it changed
+ * and the booleans above them, and each fold starts from the longest prefix
+ * already made. A node's operands are folded unchanged ones first, in the
+ * order they were last folded, and those the edit changed last: a union or an
+ * intersection is the same in any order, and so is what a difference takes
+ * away from its first operand; so dragging one operand of many redoes one
+ * boolean, not all of them. `finish` frees what an evaluation didn't use.
+ */
+class SolidCache<S extends { delete(): void }> {
+  private readonly entries = new Map<string, S>();
+  private used = new Set<string>();
+  /** The keys of the last evaluation's nodes, and where each came in its fold. */
+  private known = new Set<string>();
+  private rank = new Map<string, number>();
+
+  get(key: string): S | undefined {
+    const solid = this.entries.get(key);
+    if (solid) {
+      this.used.add(key);
+    }
+    return solid;
+  }
+
+  set(key: string, solid: S): void {
+    this.entries.set(key, solid);
+    this.used.add(key);
+  }
+
+  /** A node's operands in the order to fold them (see the class). */
+  ordered(node: Extract<SolidRecipe, { type: "boolean" }>): SolidRecipe[] {
+    const first = node.operation === "difference" ? 1 : 0;
+    const rest = node.operands.slice(first).map((operand, i) => {
+      const key = keyOf(operand);
+      return {
+        operand,
+        stable: this.known.has(key),
+        rank: this.rank.get(key) ?? first + i,
+      };
+    });
+    rest.sort(
+      (a, b) => Number(!a.stable) - Number(!b.stable) || a.rank - b.rank,
+    );
+    return [...node.operands.slice(0, first), ...rest.map((r) => r.operand)];
+  }
+
+  begin(): void {
+    this.used = new Set();
+  }
+
+  /** The evaluation of `recipe` succeeded: what it didn't use is freed; its nodes and their folding order are what the next knows. */
+  finish(recipe: SolidRecipe): void {
+    // A solid may be under several keys (a node's, a fold's): freed once.
+    const before = new Set(this.entries.values());
+    for (const key of [...this.entries.keys()]) {
+      if (!this.used.has(key)) {
+        this.entries.delete(key);
+      }
+    }
+    const after = new Set(this.entries.values());
+    before.forEach((solid) => {
+      if (!after.has(solid)) {
+        solid.delete();
+      }
+    });
+    const known = new Set<string>();
+    const rank = new Map<string, number>();
+    const visit = (node: SolidRecipe): void => {
+      known.add(keyOf(node));
+      if (node.type === "boolean") {
+        this.ordered(node).forEach((operand, i) => rank.set(keyOf(operand), i));
+        node.operands.forEach(visit);
+      }
+    };
+    visit(recipe);
+    this.known = known;
+    this.rank = rank;
+  }
+
+  /** Frees every solid (the STEP parts changed, or the host ends). */
+  clear(): void {
+    new Set(this.entries.values()).forEach((solid) => solid.delete());
+    this.entries.clear();
+    this.used = new Set();
+    this.known = new Set();
+    this.rank = new Map();
+  }
 }
 
 function smlibEvaluator(kernel: SmlibKernel): Evaluator<SmlibSolid> {
@@ -89,6 +212,7 @@ function smlibEvaluator(kernel: SmlibKernel): Evaluator<SmlibSolid> {
 function occtEvaluator(
   kernel: OcctKernel,
   steps: ReadonlyMap<number, OcctSolid>,
+  extract?: ExtractCache,
 ): Evaluator<OcctSolid> {
   return {
     primitives: kernel,
@@ -101,6 +225,7 @@ function occtEvaluator(
     },
     place: (solid, placement) => kernel.place(solid, placement),
     tag: (solid, tag) => kernel.tag(solid, tag),
+    combineKeeping: (operation, a, b) => kernel.boolean(operation, a, b),
     // Makes a new solid and leaves its operands, which are freed here.
     combine: (operation, a, b) => {
       try {
@@ -110,7 +235,8 @@ function occtEvaluator(
         b.delete();
       }
     },
-    toForm: (solid) => kernel.toForm(solid),
+    toForm: (solid) =>
+      kernel.toForm(solid, extract ? { cache: extract } : undefined),
   };
 }
 
@@ -123,6 +249,8 @@ export interface KernelHostOptions {
   /** Loads a kernel from a URL (default: the dev server's build). Tests pass their own. */
   loadSmlib?: (url?: string) => Promise<SmlibKernel>;
   loadOcct?: (url?: string) => Promise<OcctKernel>;
+  /** Lets the message loop run (default: a message to itself). A test whose transport is a timer yields on a timer. */
+  yield?: () => Promise<void>;
 }
 
 const NAMES: Record<KernelName, string> = {
@@ -130,12 +258,90 @@ const NAMES: Record<KernelName, string> = {
   occt: "Open CASCADE",
 };
 
-/** Lets the message loop run, so a waiting `cancel` is delivered. */
-const yieldNow = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+/**
+ * Lets the message loop run, so a waiting `cancel` is delivered. A message
+ * to ourselves, not a timer: a worker's `setTimeout(0)` waits a few ms (4 once
+ * nested, more on a busy machine), and a request has a dozen stages.
+ */
+const yielders: Array<() => void> = [];
+let yielding: MessageChannel | undefined;
+function yieldNow(): Promise<void> {
+  if (typeof MessageChannel === "undefined") {
+    return new Promise<void>((resolve) => setTimeout(resolve, 0));
+  }
+  if (!yielding) {
+    const channel = new MessageChannel();
+    channel.port1.onmessage = () => {
+      yielders.shift()?.();
+      if (yielders.length === 0) {
+        (channel.port1 as { unref?(): void }).unref?.();
+      }
+    };
+    yielding = channel;
+  }
+  const channel = yielding;
+  return new Promise<void>((resolve) => {
+    yielders.push(resolve);
+    // Node keeps a process alive for an open port: only while a yield waits.
+    (channel.port1 as { ref?(): void }).ref?.();
+    channel.port2.postMessage(null);
+  });
+}
+
+/** Now on the clock all threads of the page share, epoch ms. */
+const epochNow = () => performance.timeOrigin + performance.now();
+
+/**
+ * Where a form's patches are anchored: the cache's last anchor while the
+ * form's centre stays within one size of it (the faces prepared there are
+ * still good), else the centre. Positions are float32 relative to it, so a
+ * form's own size away costs nothing noticeable.
+ */
+function anchorFor(bounds: FormBounds, cache: PrepareCache): Float64Array {
+  const centre = Float64Array.from(
+    bounds.min,
+    (low, k) => (low + bounds.max[k]!) / 2,
+  );
+  const size = Math.max(
+    bounds.max[0] - bounds.min[0],
+    bounds.max[1] - bounds.min[1],
+    bounds.max[2] - bounds.min[2],
+  );
+  const last = cache.origin;
+  return last &&
+    Math.hypot(
+      last[0]! - centre[0]!,
+      last[1]! - centre[1]!,
+      last[2]! - centre[2]!,
+    ) <= size
+    ? last
+    : centre;
+}
 
 export class KernelHost {
   private readonly queue: KernelRequest[] = [];
   private readonly cancelled = new Set<number>();
+  /** When each request arrived, epoch ms, and how long its stages waited on the message loop. */
+  private readonly arrived = new Map<number, number>();
+  private readonly stalled = new Map<number, number>();
+  /** What the last evaluation on each kernel made of its faces (their bounds, their patches for the GPU), to reuse in the next. */
+  private readonly faceCaches = new Map<
+    KernelName,
+    { prepare: PrepareCache; bounds: BoundsCache }
+  >();
+  /** The Open CASCADE solids of the last evaluation, to build the next from. */
+  private readonly solidCache = new SolidCache<OcctSolid>();
+  /** The faces and edges of the last Open CASCADE solid converted, to reuse in the next. */
+  private readonly extract = new ExtractCache();
+
+  private faceCache(kernel: KernelName) {
+    let cache = this.faceCaches.get(kernel);
+    if (!cache) {
+      cache = { prepare: createPrepareCache(), bounds: createBoundsCache() };
+      this.faceCaches.set(kernel, cache);
+    }
+    return cache;
+  }
   /** STEP parts kept for recipes' `step` leaves, centred, by key. */
   private readonly steps = new Map<number, OcctSolid>();
   private running = false;
@@ -146,6 +352,9 @@ export class KernelHost {
 
   /** Frees what the host keeps (the STEP parts). A worker's termination does the same; tests call it. */
   dispose(): void {
+    this.faceCaches.clear();
+    this.solidCache.clear();
+    this.extract.release();
     for (const part of this.steps.values()) {
       part.delete();
     }
@@ -158,6 +367,7 @@ export class KernelHost {
       this.cancelled.add(request.id);
       return;
     }
+    this.arrived.set(request.id, epochNow());
     this.queue.push(request);
     void this.pump();
   }
@@ -170,7 +380,7 @@ export class KernelHost {
     try {
       while (this.queue.length > 0) {
         // A cancel sent just after its request arrives before it starts.
-        await yieldNow();
+        await (this.options.yield ?? yieldNow)();
         const request = this.queue.shift()!;
         if (request.type === "cancel") {
           continue;
@@ -189,6 +399,8 @@ export class KernelHost {
           );
         } finally {
           this.cancelled.delete(request.id);
+          this.arrived.delete(request.id);
+          this.stalled.delete(request.id);
         }
       }
     } finally {
@@ -198,8 +410,13 @@ export class KernelHost {
 
   /** Names the stage to the page, and lets a cancel in. */
   private async stage(id: number, stage: string): Promise<void> {
+    const start = performance.now();
     this.options.post({ type: "stage", id, stage }, []);
-    await yieldNow();
+    await (this.options.yield ?? yieldNow)();
+    this.stalled.set(
+      id,
+      (this.stalled.get(id) ?? 0) + performance.now() - start,
+    );
     if (this.cancelled.has(id)) {
       throw new Cancelled();
     }
@@ -260,6 +477,7 @@ export class KernelHost {
       case "registerStep":
         return this.registerStep(id, request.key, request.bytes);
       case "releaseStep":
+        this.solidCache.clear();
         this.steps.get(request.key)?.delete();
         this.steps.delete(request.key);
         this.options.post({ type: "stepReleased", id, key: request.key }, []);
@@ -288,8 +506,14 @@ export class KernelHost {
     forms: readonly BrepForm[],
     work: FormWork,
     faceTags?: Int32Array,
+    cache?: { prepare: PrepareCache; bounds: BoundsCache },
   ): Promise<KernelForm[]> {
-    const parts = forms.map((form) => ({ form, bounds: formBounds(form) }));
+    const boundsStart = performance.now();
+    const parts = forms.map((form) => ({
+      form,
+      bounds: formBounds(form, cache ? { cache: cache.bounds } : {}),
+    }));
+    const boundsMs = performance.now() - boundsStart;
     let problems: BrepProblem[][] | undefined;
     let validateMs: number | undefined;
     if (work.validate) {
@@ -303,7 +527,16 @@ export class KernelHost {
     if (work.prepare) {
       await this.stage(id, "Preparing faces for the GPU…");
       const start = performance.now();
-      patches = forms.map((form) => prepareGpuPatches(form));
+      patches = parts.map(({ form, bounds }) =>
+        prepareGpuPatches(form, {
+          ...(cache
+            ? {
+                cache: cache.prepare,
+                origin: anchorFor(bounds, cache.prepare),
+              }
+            : {}),
+        }),
+      );
       prepareMs = performance.now() - start;
     }
     return parts.map((part, i) => ({
@@ -312,6 +545,10 @@ export class KernelHost {
       ...(patches ? { patches: patches[i]! } : {}),
       ...(validateMs !== undefined ? { validateMs } : {}),
       ...(prepareMs !== undefined ? { prepareMs } : {}),
+      ...(prepareMs !== undefined && cache
+        ? { facesReused: cache.prepare.reused }
+        : {}),
+      boundsMs,
       ...(faceTags ? { faceTags } : {}),
     }));
   }
@@ -396,6 +633,7 @@ export class KernelHost {
         size: [max[0]! - min[0]!, max[1]! - min[1]!, max[2]! - min[2]!],
       };
       const convertMs = performance.now() - start;
+      this.solidCache.clear();
       this.steps.get(key)?.delete();
       this.steps.set(key, part);
       part = undefined;
@@ -446,7 +684,7 @@ export class KernelHost {
     return this.evaluateWith(
       id,
       kernel,
-      occtEvaluator(await this.loadOcct(), this.steps),
+      occtEvaluator(await this.loadOcct(), this.steps, this.extract),
       recipe,
       work,
       loadMs,
@@ -481,38 +719,45 @@ export class KernelHost {
       }
       return evaluator.step(key);
     };
-    const build = async (node: SolidRecipe): Promise<S> => {
-      if (node.type !== "boolean") {
-        return timed(() => {
-          let solid =
-            node.type === "step"
-              ? stepSolid(node.step)
-              : makePrimitive(evaluator.primitives, node.primitive);
-          try {
-            if (node.placement) {
-              solid = evaluator.place(solid, node.placement);
-            }
-            return evaluator.tag(solid, node.tag);
-          } catch (error) {
-            solid.delete();
-            throw error;
+    const makeLeaf = (node: Exclude<SolidRecipe, { type: "boolean" }>): S =>
+      timed(() => {
+        let solid =
+          node.type === "step"
+            ? stepSolid(node.step)
+            : makePrimitive(evaluator.primitives, node.primitive);
+        try {
+          if (node.placement) {
+            solid = evaluator.place(solid, node.placement);
           }
-        });
+          return evaluator.tag(solid, node.tag);
+        } catch (error) {
+          solid.delete();
+          throw error;
+        }
+      });
+    const stageFor = (operation: BooleanOperation) =>
+      this.stage(
+        id,
+        `${NAMES[kernel]}: ${operation} (${done} of ${booleans})…`,
+      );
+    const cache = evaluator.combineKeeping
+      ? (this.solidCache as unknown as SolidCache<S>)
+      : undefined;
+    const buildPlain = async (node: SolidRecipe): Promise<S> => {
+      if (node.type !== "boolean") {
+        return makeLeaf(node);
       }
       const parts: S[] = [];
       let acc: S | undefined;
       try {
         for (const operand of node.operands) {
-          parts.push(await build(operand));
+          parts.push(await buildPlain(operand));
         }
         let combined: S = parts[0]!;
         acc = combined;
         for (const next of parts.slice(1)) {
           done++;
-          await this.stage(
-            id,
-            `${NAMES[kernel]}: ${node.operation} (${done} of ${booleans})…`,
-          );
+          await stageFor(node.operation);
           const left: S = combined;
           combined = timed(() => evaluator.combine(node.operation, left, next));
           acc = combined;
@@ -524,18 +769,90 @@ export class KernelHost {
         throw error;
       }
     };
+    /**
+     * With the cache, a node's solid (and the solids of a fold's first
+     * operands) is kept from the last evaluation: only what an edit changed
+     * is made again. The cache's solids are borrowed, not freed here.
+     */
+    const buildCached = async (
+      node: SolidRecipe,
+      keeping: SolidCache<S>,
+    ): Promise<S> => {
+      const key = keyOf(node);
+      const hit = keeping.get(key);
+      if (hit) {
+        return hit;
+      }
+      if (node.type !== "boolean") {
+        const made = makeLeaf(node);
+        keeping.set(key, made);
+        return made;
+      }
+      const operands = keeping.ordered(node);
+      const keys = operands.map(keyOf);
+      const last = operands.length - 1;
+      // The fold's solid after its first i + 1 operands.
+      const foldKey = (i: number) =>
+        i === last
+          ? key
+          : i === 0
+            ? keys[0]!
+            : `${node.operation}|${keys.slice(0, i + 1).join(",")}`;
+      let from = 0;
+      let start: S | undefined;
+      for (let i = last; i >= 1 && !start; i--) {
+        start = keeping.get(foldKey(i));
+        from = i;
+      }
+      if (!start) {
+        from = 0;
+      } else {
+        for (let i = 1; i < from; i++) {
+          keeping.get(foldKey(i));
+        }
+      }
+      let acc: S = start ?? (await buildCached(operands[0]!, keeping));
+      for (let i = from + 1; i <= last; i++) {
+        const next = await buildCached(operands[i]!, keeping);
+        done++;
+        await stageFor(node.operation);
+        const left: S = acc;
+        acc = timed(() =>
+          evaluator.combineKeeping!(node.operation, left, next),
+        );
+        keeping.set(foldKey(i), acc);
+      }
+      return acc;
+    };
     let brep: { form: BrepForm; faceTags: Int32Array };
     let convertMs: number;
-    const solid = await build(recipe);
+    let solid: S;
+    if (cache) {
+      cache.begin();
+      solid = await buildCached(recipe, cache);
+      cache.finish(recipe);
+    } else {
+      solid = await buildPlain(recipe);
+    }
     try {
       const start = performance.now();
       brep = evaluator.toForm(solid);
       convertMs = performance.now() - start;
     } finally {
-      solid.delete();
+      if (!cache) {
+        solid.delete();
+      }
     }
-    const [result] = await this.measured(id, [brep.form], work, brep.faceTags);
+    const [result] = await this.measured(
+      id,
+      [brep.form],
+      work,
+      brep.faceTags,
+      this.faceCache(kernel),
+    );
+    const packStart = performance.now();
     const { forms, buffers } = transferable([result!]);
+    const packMs = performance.now() - packStart;
     this.options.post(
       {
         type: "evaluated",
@@ -545,6 +862,11 @@ export class KernelHost {
         kernelMs,
         booleans,
         convertMs,
+        packMs,
+        extractReused: kernel === "occt" ? this.extract.reused : 0,
+        stageMs: this.stalled.get(id) ?? 0,
+        startedAt: this.arrived.get(id) ?? epochNow(),
+        sentAt: epochNow(),
       },
       buffers,
     );

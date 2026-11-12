@@ -47,6 +47,7 @@ import {
 } from "./bounds.ts";
 import { evaluatePatch } from "./bezier.ts";
 import { buildFaceTrim, trimTolerance, type FaceTrimData } from "./gpuTrims.ts";
+import { faceDigests } from "./faceDigest.ts";
 import { faceTrim } from "./tessellate.ts";
 import { SurfaceKind, type BrepForm } from "./form.ts";
 
@@ -175,6 +176,38 @@ export interface PrepareOptions {
    * face's pcurves in the drawing. Picks are refined exactly.
    */
   readonly trimTolerance?: number;
+  /**
+   * Faces prepared before, to reuse: a face whose digest (`faceDigest`) is in
+   * the cache, prepared for the same origin and trim tolerance, isn't
+   * prepared again. Pass the same cache to each call of a form edited a
+   * little at a time (`createPrepareCache`); the call leaves in it the faces
+   * of this form, so it never holds more than one form's worth. The origin
+   * must be the cache's own to reuse anything: pass `cache.origin` when the
+   * form's centre has moved only a little (`PrepareCache.origin`).
+   */
+  readonly cache?: PrepareCache;
+}
+
+/** What `prepareGpuPatches` keeps of the faces it prepared, to reuse (`PrepareOptions.cache`). */
+export interface PrepareCache {
+  /** The origin and trim tolerance the entries were prepared for. */
+  key: string | undefined;
+  /** The origin the entries were prepared for, to prepare the next form at too. */
+  origin: Float64Array | undefined;
+  entries: Map<string, { face: GpuFace; spans: readonly GpuSpan[] }>;
+  /** Faces taken from the cache and faces prepared, by the last call. */
+  reused: number;
+  prepared: number;
+}
+
+export function createPrepareCache(): PrepareCache {
+  return {
+    key: undefined,
+    origin: undefined,
+    entries: new Map(),
+    reused: 0,
+    prepared: 0,
+  };
 }
 
 /** The records, control points and trim data packed for the GPU: spans, then control points, then trims. */
@@ -200,6 +233,12 @@ export function prepareGpuPatches(
   options: PrepareOptions = {},
 ): GpuPatches {
   const origin = Float64Array.from(options.origin ?? formCenter(form));
+  const cache = options.cache;
+  const cacheKey = `${origin.join(",")}|${options.trimTolerance ?? ""}`;
+  const previous = cache && cache.key === cacheKey ? cache.entries : undefined;
+  const entries: PrepareCache["entries"] = new Map();
+  const digests = cache ? faceDigests(form) : undefined;
+  let reused = 0;
   const nets = new Map<number, Float64Array>();
   const netFor = (patch: number): Float64Array => {
     let h = nets.get(patch);
@@ -218,19 +257,50 @@ export function prepareGpuPatches(
   const spans: GpuSpan[] = [];
   const count = form.faceSurface.length;
   for (let face = 0; face < count; face++) {
-    const built = prepareFace(
-      form,
-      face,
-      origin,
-      netFor,
-      options.trimTolerance,
-    );
+    let built: { face: GpuFace; spans: readonly GpuSpan[] } | undefined;
+    let digest: string | undefined;
+    if (cache) {
+      digest = digests![face]!;
+      const hit = entries.get(digest) ?? previous?.get(digest);
+      if (hit) {
+        reused++;
+        built = {
+          face: hit.face.face === face ? hit.face : { ...hit.face, face },
+          spans: hit.spans.map((span) =>
+            span.face === face ? span : { ...span, face },
+          ),
+        };
+      }
+    }
+    if (!built) {
+      const fresh = prepareFace(
+        form,
+        face,
+        origin,
+        netFor,
+        options.trimTolerance,
+      );
+      built = {
+        face: { ...fresh.face, first: 0, count: fresh.spans.length },
+        spans: fresh.spans,
+      };
+    }
+    if (digest !== undefined) {
+      entries.set(digest, built);
+    }
     faces.push({
       ...built.face,
       first: spans.length,
       count: built.spans.length,
     });
     spans.push(...built.spans);
+  }
+  if (cache) {
+    cache.key = cacheKey;
+    cache.origin = origin;
+    cache.entries = entries;
+    cache.reused = reused;
+    cache.prepared = count - reused;
   }
   return { origin, faces, spans, sphere: enclose(spans.map((s) => s.sphere)) };
 }
