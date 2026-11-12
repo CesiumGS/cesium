@@ -539,6 +539,220 @@ export function outdentNode(tree: CsgTree, id: number): boolean {
   return true;
 }
 
+// ----------------------------------------------- drag and drop, grouping
+
+/** Where a dropped node goes relative to the row it is dropped on. */
+export type DropZone = "before" | "after" | "into";
+
+/** A drop's result: the operation the node ends up under and its index there once it has left its old place. */
+export interface DropPlan {
+  parentId: number;
+  index: number;
+}
+
+/** Whether `id` is `ancestorId` or lies under it. */
+export function isWithin(
+  tree: CsgTree,
+  id: number,
+  ancestorId: number,
+): boolean {
+  return pathTo(tree, id).some((node) => node.id === ancestorId);
+}
+
+/**
+ * Where dropping `dragId` on `targetId` puts it, or undefined when the drop
+ * is refused: the root doesn't move, a node can't go into itself or
+ * anything under it, "into" needs an operation (it goes last among its
+ * operands), "before" and "after" need a target with a parent, and a drop
+ * that leaves the node where it is isn't a move.
+ */
+export function planDrop(
+  tree: CsgTree,
+  dragId: number,
+  targetId: number,
+  zone: DropZone,
+): DropPlan | undefined {
+  const dragged = findNode(tree, dragId);
+  const target = findNode(tree, targetId);
+  const from = parentOf(tree, dragId);
+  if (!dragged || !target || !from || isWithin(tree, targetId, dragId)) {
+    return undefined;
+  }
+  let parent: OpNode | undefined;
+  let index: number;
+  if (zone === "into") {
+    if (target.type !== "op") {
+      return undefined;
+    }
+    parent = target;
+    index = target.children.filter((child) => child.id !== dragId).length;
+  } else {
+    parent = parentOf(tree, targetId);
+    if (!parent) {
+      return undefined;
+    }
+    const others = parent.children.filter((child) => child.id !== dragId);
+    index = others.findIndex((child) => child.id === targetId);
+    index += zone === "after" ? 1 : 0;
+  }
+  if (
+    parent.id === from.id &&
+    index === from.children.findIndex((child) => child.id === dragId)
+  ) {
+    return undefined;
+  }
+  return { parentId: parent.id, index };
+}
+
+/** Why `planDrop` refuses a drop, in words for the person dragging; undefined when it doesn't. */
+export function dropRefusal(
+  tree: CsgTree,
+  dragId: number,
+  targetId: number,
+  zone: DropZone,
+): string | undefined {
+  if (planDrop(tree, dragId, targetId, zone)) {
+    return undefined;
+  }
+  if (dragId === tree.root.id) {
+    return "The model itself can't be moved";
+  }
+  if (isWithin(tree, targetId, dragId)) {
+    return "A node can't go inside itself";
+  }
+  if (targetId === tree.root.id && zone !== "into") {
+    return "Nothing goes before or after the model: drop inside it";
+  }
+  if (zone === "into" && findNode(tree, targetId)?.type !== "op") {
+    return "Only an operation can hold other nodes";
+  }
+  return "Already there";
+}
+
+/**
+ * What a planned drop means, for a label while dragging: where it lands
+ * among the operands, and, in a difference, which operand becomes the base.
+ */
+export function describeDrop(
+  tree: CsgTree,
+  dragId: number,
+  plan: DropPlan,
+): string {
+  const dragged = findNode(tree, dragId)!;
+  const parent = findNode(tree, plan.parentId) as OpNode;
+  const others = parent.children.filter((child) => child.id !== dragId);
+  const old = parentOf(tree, dragId);
+  const wasBase =
+    old?.operation === "difference" && old.children[0]?.id === dragId;
+  const name = (node: TreeNode | undefined) => `"${node?.name ?? "?"}"`;
+  if (parent.operation === "difference") {
+    if (plan.index === 0) {
+      const demoted = others[0];
+      return `${name(dragged)} becomes the base of ${parent.name}${demoted ? `; ${name(demoted)} is cut from it` : ""}`;
+    }
+    return `${name(dragged)} is cut from ${name(others[0])} in ${parent.name}`;
+  }
+  if (wasBase && old) {
+    const next = old.children[1];
+    return `Into ${parent.name} (${OPERATION_LABELS[parent.operation].toLowerCase()}), position ${plan.index + 1}${next ? `; ${name(next)} becomes the base of ${old.name}` : ""}`;
+  }
+  return `Into ${parent.name} (${OPERATION_LABELS[parent.operation].toLowerCase()}), position ${plan.index + 1}`;
+}
+
+/** Moves a node as `planDrop` planned. */
+export function applyDrop(
+  tree: CsgTree,
+  dragId: number,
+  plan: DropPlan,
+): boolean {
+  const from = parentOf(tree, dragId);
+  const to = findNode(tree, plan.parentId);
+  const node = findNode(tree, dragId);
+  if (!from || to?.type !== "op" || !node || isWithin(tree, to.id, dragId)) {
+    return false;
+  }
+  from.children.splice(
+    from.children.findIndex((child) => child.id === dragId),
+    1,
+  );
+  to.children.splice(Math.min(plan.index, to.children.length), 0, node);
+  return true;
+}
+
+/** What an operand is in its operation: a difference's first is the base, the rest are cut from it; undefined when order doesn't matter. */
+export function operandRole(
+  parent: OpNode,
+  index: number,
+): "base" | "cutter" | undefined {
+  if (parent.operation !== "difference") {
+    return undefined;
+  }
+  return index === 0 ? "base" : "cutter";
+}
+
+/**
+ * Whether `wrapNodes` can group these: two or more distinct nodes that
+ * aren't the root and none of which is under another.
+ */
+export function canWrap(tree: CsgTree, ids: readonly number[]): boolean {
+  if (new Set(ids).size < 2) {
+    return false;
+  }
+  return ids.every(
+    (id) =>
+      id !== tree.root.id &&
+      !!findNode(tree, id) &&
+      ids.every((other) => other === id || !isWithin(tree, id, other)),
+  );
+}
+
+/**
+ * Groups nodes under a new operation, in the order given, which takes the
+ * place of the first (so a difference's base is the first node chosen).
+ * Returns it, or undefined when `canWrap` refuses.
+ */
+export function wrapNodes(
+  tree: CsgTree,
+  ids: readonly number[],
+  operation: BooleanOperation,
+): OpNode | undefined {
+  if (!canWrap(tree, ids)) {
+    return undefined;
+  }
+  const nodes = ids.map((id) => findNode(tree, id)!);
+  const first = nodes[0]!;
+  const parent = parentOf(tree, first.id)!;
+  // Nodes taken out of `parent` from before `first` move its place earlier.
+  const at =
+    parent.children.indexOf(first) -
+    parent.children.filter(
+      (child, i) => nodes.includes(child) && i < parent.children.indexOf(first),
+    ).length;
+  for (const node of nodes) {
+    const from = parentOf(tree, node.id)!;
+    from.children.splice(from.children.indexOf(node), 1);
+  }
+  const group = createOp(tree, operation, OPERATION_LABELS[operation], nodes);
+  parent.children.splice(at, 0, group);
+  return group;
+}
+
+/** Replaces an operation with its operands, in its place in the one above. Returns whether it did. */
+export function dissolveOp(tree: CsgTree, id: number): boolean {
+  const node = findNode(tree, id);
+  const parent = parentOf(tree, id);
+  if (node?.type !== "op" || !parent) {
+    return false;
+  }
+  parent.children.splice(parent.children.indexOf(node), 1, ...node.children);
+  return true;
+}
+
+/** A copy of the tree that shares nothing with it. */
+export function cloneTree(tree: CsgTree): CsgTree {
+  return structuredClone(tree);
+}
+
 /** A copy of a node with fresh ids, just after the original. Returns it. */
 export function duplicateNode(tree: CsgTree, id: number): TreeNode | undefined {
   const parent = parentOf(tree, id);

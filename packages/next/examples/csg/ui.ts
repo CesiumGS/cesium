@@ -1,10 +1,13 @@
+import { icon, type IconName } from "./icons.ts";
+
 /**
  * The CSG sample's panel parts (plain DOM, themed by the gallery's custom
- * properties): element helper, number-and-slider fields that say which phase
- * of an edit they are in, a segmented control, and the example's styles.
+ * properties): an element helper, icon buttons with tooltips, numeric
+ * fields whose label scrubs the value, sliders that say which phase of an
+ * edit they are in, a segmented control and a popover.
  */
 
-/** Where an edit is: a slider moving, a typed value, or the end of either. */
+/** Where an edit is: a value being scrubbed or dragged, a typed value, or the end of either. */
 export type Phase = "drag" | "type" | "commit";
 
 export const el = <K extends keyof HTMLElementTagNameMap>(
@@ -16,6 +19,198 @@ export const el = <K extends keyof HTMLElementTagNameMap>(
   e.append(...children);
   return e;
 };
+
+export interface IconButtonOptions {
+  icon: IconName;
+  /** The name, for the tooltip and assistive technology. */
+  label: string;
+  /** The shortcut, shown in the tooltip. */
+  shortcut?: string;
+  /** A text beside the icon. */
+  text?: string;
+  onClick(event: MouseEvent): void;
+}
+
+export interface IconButton {
+  element: HTMLButtonElement;
+  setLabel(label: string): void;
+  setPressed(on: boolean | undefined): void;
+  setEnabled(on: boolean): void;
+}
+
+/** A button with an icon and a tooltip that names it and its shortcut. */
+export function iconButton(options: IconButtonOptions): IconButton {
+  const element = el(
+    "button",
+    {
+      type: "button",
+      className: "csg-btn",
+      onclick: (event: MouseEvent) => options.onClick(event),
+    },
+    icon(options.icon),
+    ...(options.text
+      ? [el("span", { className: "csg-btn-text" }, options.text)]
+      : []),
+  );
+  const setLabel = (label: string) => {
+    element.ariaLabel = label;
+    element.dataset.tip = options.shortcut
+      ? `${label} (${options.shortcut})`
+      : label;
+  };
+  setLabel(options.label);
+  return {
+    element,
+    setLabel,
+    setPressed: (on) =>
+      on === undefined
+        ? element.removeAttribute("aria-pressed")
+        : element.setAttribute("aria-pressed", String(on)),
+    setEnabled: (on) => {
+      element.disabled = !on;
+    },
+  };
+}
+
+/** A thin rule between groups of buttons. */
+export const divider = () =>
+  el("span", { className: "csg-divider", role: "separator" });
+
+export interface ScrubOptions {
+  label: string;
+  value: number;
+  /** One pixel of scrubbing, and an arrow key, change the value by this much. */
+  step: number;
+  /** The smallest value accepted. */
+  min?: number;
+  max?: number;
+  unit?: string;
+  /** Called with the new value and where the edit is. */
+  onChange(value: number, phase: Phase): void;
+}
+
+const decimals = (step: number) =>
+  Math.max(0, Math.min(4, Math.ceil(-Math.log10(step))));
+
+export interface Scrub {
+  element: HTMLElement;
+  /** Shows a value changed from outside (not while it is being typed in). */
+  set(value: number): void;
+}
+
+/**
+ * A number with its label: dragging the label across scrubs the value (shift
+ * for a tenth of the step, alt for ten times), typing in the field and the
+ * arrow keys change it too. Reports `drag` while scrubbing and `commit` on
+ * release; `type` on each keystroke and `commit` on enter or leaving.
+ */
+export function scrub(options: ScrubOptions): Scrub {
+  const digits = decimals(options.step);
+  const min = options.min ?? -Infinity;
+  const max = options.max ?? Infinity;
+  const clamp = (v: number) => Math.min(max, Math.max(min, v));
+  let value = options.value;
+  const number = el("input", {
+    type: "number",
+    step: String(options.step),
+    value: value.toFixed(digits),
+    ariaLabel: options.label,
+  });
+  const label = el(
+    "span",
+    { className: "csg-scrub", title: "Drag to change" },
+    options.label,
+  );
+  let grab: { x: number; value: number; moved: boolean } | undefined;
+  label.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) {
+      return;
+    }
+    event.preventDefault();
+    label.setPointerCapture(event.pointerId);
+    grab = { x: event.clientX, value, moved: false };
+  });
+  label.addEventListener("pointermove", (event) => {
+    if (!grab) {
+      return;
+    }
+    const dx = event.clientX - grab.x;
+    if (!grab.moved && Math.abs(dx) < 3) {
+      return;
+    }
+    grab.moved = true;
+    const fine = event.shiftKey ? 0.1 : event.altKey ? 10 : 1;
+    value = clamp(
+      Math.round(
+        (grab.value + dx * options.step * fine) / (options.step * 0.1),
+      ) *
+        (options.step * 0.1),
+    );
+    number.value = value.toFixed(digits);
+    options.onChange(value, "drag");
+  });
+  const release = (event: PointerEvent) => {
+    if (!grab) {
+      return;
+    }
+    const { moved } = grab;
+    grab = undefined;
+    label.releasePointerCapture(event.pointerId);
+    if (moved) {
+      options.onChange(value, "commit");
+    } else {
+      number.focus();
+      number.select();
+    }
+  };
+  label.addEventListener("pointerup", release);
+  label.addEventListener("pointercancel", release);
+  const typed = (phase: Phase) => {
+    const v = Number(number.value);
+    if (number.value === "" || !Number.isFinite(v) || v < min || v > max) {
+      return false;
+    }
+    value = v;
+    options.onChange(v, phase);
+    return true;
+  };
+  number.addEventListener("input", () => typed("type"));
+  number.addEventListener("change", () => {
+    if (!typed("commit")) {
+      number.value = value.toFixed(digits);
+    }
+  });
+  number.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      number.blur();
+    } else if (event.key === "Escape") {
+      number.value = value.toFixed(digits);
+      number.blur();
+      event.stopPropagation();
+    }
+  });
+  return {
+    element: el(
+      "label",
+      { className: "csg-prop" },
+      label,
+      el(
+        "span",
+        { className: "csg-number" },
+        number,
+        ...(options.unit
+          ? [el("span", { className: "csg-unit" }, options.unit)]
+          : []),
+      ),
+    ),
+    set: (v) => {
+      value = v;
+      if (document.activeElement !== number) {
+        number.value = v.toFixed(digits);
+      }
+    },
+  };
+}
 
 export interface FieldOptions {
   label: string;
@@ -30,9 +225,6 @@ export interface FieldOptions {
   /** Called with the new value and where the edit is. */
   onChange(value: number, phase: Phase): void;
 }
-
-const decimals = (step: number) =>
-  Math.max(0, Math.min(4, Math.ceil(-Math.log10(step))));
 
 /**
  * A slider with a number field beside it. Moving the slider reports `drag`
@@ -128,139 +320,64 @@ export function segmented<T extends string>(
   };
 }
 
-export const CSS = `
-.csg-view:focus-visible { outline: 2px solid var(--cesium-ui-focus, Highlight); outline-offset: -2px; }
-.csg-view canvas { transition: opacity 160ms; }
-.csg-view[data-loading] canvas { opacity: 0.5; }
-@media (prefers-reduced-motion: reduce) {
-  .csg-view canvas { transition: none; }
-  .csg-spinner { animation: none; }
+/**
+ * A card that opens under a button and closes on an outside click or
+ * escape. `content` is filled when it opens, so it shows what is current.
+ */
+export function popover(
+  host: HTMLElement,
+  anchor: HTMLElement,
+  fill: (card: HTMLElement) => void,
+): { toggle(): void; close(): void; readonly open: boolean } {
+  const card = el("div", {
+    className: "csg-popover",
+    role: "dialog",
+    hidden: true,
+  });
+  host.append(card);
+  let open = false;
+  const outside = (event: PointerEvent) => {
+    if (
+      !card.contains(event.target as Node) &&
+      !anchor.contains(event.target as Node)
+    ) {
+      close();
+    }
+  };
+  const escape = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      close();
+      event.stopPropagation();
+    }
+  };
+  const close = () => {
+    if (!open) {
+      return;
+    }
+    open = false;
+    card.hidden = true;
+    anchor.setAttribute("aria-expanded", "false");
+    document.removeEventListener("pointerdown", outside, true);
+    document.removeEventListener("keydown", escape, true);
+  };
+  const show = () => {
+    fill(card);
+    const base = host.getBoundingClientRect();
+    const at = anchor.getBoundingClientRect();
+    card.hidden = false;
+    const width = card.offsetWidth;
+    card.style.left = `${Math.max(8, Math.min(at.left - base.left, base.width - width - 8))}px`;
+    card.style.top = `${at.bottom - base.top + 6}px`;
+    open = true;
+    anchor.setAttribute("aria-expanded", "true");
+    document.addEventListener("pointerdown", outside, true);
+    document.addEventListener("keydown", escape, true);
+  };
+  return {
+    toggle: () => (open ? close() : show()),
+    close,
+    get open() {
+      return open;
+    },
+  };
 }
-
-/* A load or an evaluation in progress: a card over the view that names the stage. */
-.csg-loading {
-  position: absolute; inset: 0; z-index: 3;
-  display: grid; place-items: center; pointer-events: none;
-}
-.csg-loading[hidden] { display: none; }
-.csg-loading > div {
-  display: flex; align-items: center; gap: 10px;
-  max-width: calc(100% - 24px); padding: 10px 16px;
-  border-radius: 8px;
-  background: color-mix(in oklab, Canvas 88%, transparent);
-  color: CanvasText;
-  border: 1px solid color-mix(in oklab, CanvasText 18%, transparent);
-  box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
-  backdrop-filter: blur(8px);
-  font: 400 13px/18px var(--cesium-ui-font, system-ui, sans-serif);
-}
-.csg-spinner {
-  flex: none; width: 16px; height: 16px; box-sizing: border-box;
-  border-radius: 50%;
-  border: 2px solid color-mix(in oklab, CanvasText 22%, transparent);
-  border-top-color: var(--cesium-ui-accent, AccentColor);
-  animation: csg-spin 0.8s linear infinite;
-}
-@keyframes csg-spin { to { transform: rotate(360deg); } }
-
-/* A line over the view's bottom: what the kernel is doing, or what failed. */
-.csg-status {
-  position: absolute; left: 12px; bottom: 12px; z-index: 2; max-width: calc(100% - 24px);
-  padding: 4px 10px; border-radius: 6px;
-  background: color-mix(in oklab, Canvas 88%, transparent);
-  color: CanvasText;
-  border: 1px solid color-mix(in oklab, CanvasText 18%, transparent);
-  font: 400 12px/16px var(--cesium-ui-font, system-ui, sans-serif);
-  pointer-events: none;
-}
-.csg-status[hidden] { display: none; }
-.csg-status[data-bad] { color: var(--stratakit-color-text-critical-base, #cf222e); }
-
-.csg-segmented {
-  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
-  padding: 2px; gap: 2px;
-  border-radius: var(--stratakit-radius-md, 6px);
-  background: var(--stratakit-color-bg-page-depth, rgb(0 0 0 / 0.06));
-  border: 1px solid var(--stratakit-color-border-neutral-base, rgb(0 0 0 / 0.15));
-}
-:where(.examples-panel) .csg-segmented button {
-  border: 0; border-radius: calc(var(--stratakit-radius-md, 6px) - 2px);
-  background: transparent; padding: 5px 8px; font-weight: 500;
-}
-:where(.examples-panel) .csg-segmented button[aria-pressed="true"] {
-  background: var(--stratakit-color-bg-accent-base, var(--cesium-ui-accent, AccentColor));
-  color: var(--stratakit-color-text-accent-on-base, #fff);
-}
-.csg-segmented button:disabled { opacity: 0.6; cursor: progress; }
-
-/* The tree: one row per node, indented by depth. */
-.csg-tree {
-  display: flex; flex-direction: column; gap: 1px;
-  flex: none; min-height: 2.2em; max-height: 280px; overflow: auto; padding: 2px;
-  border-radius: var(--stratakit-radius-md, 6px);
-  background: var(--stratakit-color-bg-page-depth, rgb(0 0 0 / 0.05));
-  border: 1px solid var(--stratakit-color-border-neutral-base, rgb(0 0 0 / 0.15));
-}
-.csg-row {
-  display: flex; align-items: center; gap: 6px;
-  padding: 3px 6px 3px calc(6px + var(--depth, 0) * 14px);
-  border-radius: 4px; cursor: pointer; user-select: none;
-}
-.csg-row:hover { background: color-mix(in oklab, CanvasText 8%, transparent); }
-.csg-row[aria-selected="true"] {
-  background: var(--stratakit-color-bg-accent-base, var(--cesium-ui-accent, AccentColor));
-  color: var(--stratakit-color-text-accent-on-base, #fff);
-}
-.csg-row[data-under]:not([aria-selected="true"]) {
-  background: color-mix(in oklab, var(--cesium-ui-accent, AccentColor) 18%, transparent);
-}
-.csg-row:focus-visible { outline: 2px solid var(--cesium-ui-focus, Highlight); outline-offset: -2px; }
-.csg-row[data-off] .csg-name { opacity: 0.5; text-decoration: line-through; }
-.csg-row input[type="checkbox"] { margin: 0; flex: none; }
-.csg-swatch { flex: none; width: 10px; height: 10px; border-radius: 2px; border: 1px solid color-mix(in oklab, CanvasText 30%, transparent); }
-.csg-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.csg-badge { flex: none; font-size: 11px; opacity: 0.75; font-variant-numeric: tabular-nums; }
-.csg-empty { padding: 8px; opacity: 0.75; }
-
-.csg-tools { display: flex; flex-wrap: wrap; gap: 4px; }
-:where(.examples-panel) .csg-tools button { padding: 3px 8px; min-width: 2.2em; }
-:where(.examples-panel) .csg-tools button:disabled { opacity: 0.4; cursor: default; }
-.csg-tools select { flex: 1; min-width: 7em; }
-
-.csg-field {
-  display: grid; grid-template-columns: 6.5em 1fr 5.5em; align-items: center;
-  gap: var(--stratakit-space-200, 8px);
-}
-.csg-field input[type="range"] { min-width: 0; width: 100%; }
-.csg-number { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
-.csg-number input {
-  width: 4.6em; box-sizing: border-box; font: inherit; color: inherit;
-  padding: 2px 4px; text-align: right; font-variant-numeric: tabular-nums;
-  background: var(--stratakit-color-bg-page-depth, transparent);
-  border: 1px solid var(--stratakit-color-border-neutral-base, rgb(0 0 0 / 0.2));
-  border-radius: var(--stratakit-radius-sm, 4px);
-}
-.csg-name-field input {
-  flex: 1; min-width: 0; font: inherit; color: inherit; padding: 3px 6px;
-  background: var(--stratakit-color-bg-page-depth, transparent);
-  border: 1px solid var(--stratakit-color-border-neutral-base, rgb(0 0 0 / 0.2));
-  border-radius: var(--stratakit-radius-sm, 4px);
-}
-.csg-group { display: grid; gap: 4px; }
-.csg-group > h4 { margin: 4px 0 0; font-size: 11px; font-weight: 600; opacity: 0.75; }
-.csg-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 4px var(--stratakit-space-300, 12px); }
-:where(.examples-panel) .csg-toggles label { justify-content: flex-end; flex-direction: row-reverse; }
-
-.csg-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-.csg-table th, .csg-table td {
-  padding: 3px 6px; text-align: left; vertical-align: top;
-  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted, rgb(0 0 0 / 0.08));
-}
-.csg-table th { font-weight: 600; color: var(--stratakit-color-text-neutral-secondary, inherit); }
-.csg-table td:last-child { text-align: right; }
-.csg-ok { color: var(--stratakit-color-text-positive-base, #1a7f37); }
-.csg-bad { color: var(--stratakit-color-text-critical-base, #cf222e); }
-.csg-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
-:where(.examples-panel) .csg-crumbs button { padding: 1px 6px; }
-.csg-note { font-size: 12px; opacity: 0.8; }
-`;

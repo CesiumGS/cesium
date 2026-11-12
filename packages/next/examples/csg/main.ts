@@ -22,6 +22,13 @@ import {
   type Evaluated,
 } from "./evaluator.ts";
 import {
+  faceNormalAt,
+  planarFaces,
+  planeOffset,
+  surfaceDistance,
+} from "./faceGeometry.ts";
+import { History, type Snapshot } from "./history.ts";
+import {
   DEFAULT_LIGHTING,
   LIGHTING_RANGES,
   applyLighting,
@@ -29,139 +36,118 @@ import {
   encodeLighting,
   type Lighting,
 } from "./lighting.ts";
+import {
+  EDGE_COLOR,
+  HOVER,
+  PALETTE_WGSL,
+  PALETTE_WIDTH,
+  PICK,
+  PREVIEW_COLOR,
+  SELECT,
+  leafColour,
+  leafSwatch,
+} from "./look.ts";
+import { Manipulator, type FaceHandle, type Tool } from "./manipulator.ts";
 import { outlineOf } from "./preview.ts";
+import { createProperties, type FaceSection } from "./properties.ts";
+import { pushPullFor } from "./pushPull.ts";
 import { STEP_SAMPLES, fetchStepSample, isStepFile } from "./stepFiles.ts";
+import { CSS } from "./styles.ts";
 import { DoubleBuffer } from "./swap.ts";
 import {
-  OPERATIONS,
-  OPERATION_LABELS,
   PRIMITIVE_KINDS,
   PRIMITIVE_SPECS,
   addChild,
+  applyDrop,
+  canWrap,
+  cloneTree,
   createLeaf,
-  createOp,
   createStepLeaf,
   defaultBracket,
   duplicateNode,
   facesOfNode,
   findNode,
-  indentNode,
   isStepLeaf,
   leavesOf,
-  moveNode,
-  outdentNode,
   parentOf,
   pathTo,
   recipeOf,
   removeNode,
+  wrapNodes,
+  OPERATION_LABELS,
   type CsgTree,
   type LeafNode,
   type OpNode,
   type PrimitiveKind,
   type TreeNode,
 } from "./tree.ts";
-import { CSS, el, field, segmented, type Phase } from "./ui.ts";
+import { createTreePanel, kindName } from "./treePanel.ts";
+import {
+  divider,
+  el,
+  field,
+  iconButton,
+  popover,
+  segmented,
+  type IconButton,
+} from "./ui.ts";
+import { VIEW_ANGLES, createViewCube, type StandardView } from "./viewCube.ts";
+import { mad, makeRig, type Rig, type V3 } from "./viewMath.ts";
 
 /**
  * A solid modeling sample with CSG (plan §13.33): a small CAD tool whose
  * interface is a tree of primitives and booleans. The application owns the
  * modeling and the engine draws and queries the result.
  *
+ * - The workspace is laid over the view like a CAD application's: a toolbar
+ *   (primitives, STEP import, booleans on the selection, undo and redo,
+ *   standard views, display toggles, lighting, the kernel), the feature tree
+ *   on the left, the selected node's properties on the right and a status
+ *   bar (`treePanel.ts`, `properties.ts`, `ui.ts`, `styles.ts`).
  * - The tree (`tree.ts`) is plain data: leaves are primitives with
  *   parameters and a placement, nodes are unions, differences and
  *   intersections. It becomes a recipe (`SolidRecipe`) that a kernel in a Web
  *   Worker evaluates: Open CASCADE (the default, which measured faster here)
- *   or SMLib, switched in the panel, each converting its solid to the
- *   engine's one render form and saying which leaf made every face. The page
- *   only receives the form, with its patches prepared for the GPU, and gives
- *   it to `World.addBrep`.
- * - A STEP leaf is an imported solid (`stepFiles.ts`: a NIST sample from
- *   /step-samples/, a picked file or one dropped on the view). Open CASCADE's
- *   worker keeps the part (`registerStep`), centred on its bounds, and a
- *   recipe's `step` leaf is a copy of it with its own placement, so its faces
- *   carry the leaf's tag like a primitive's. Only Open CASCADE builds with
- *   it; with SMLib selected the sample says so and keeps the last solid.
- * - Picks go to the tree: a picked face names its leaf from the kernel's face
- *   tags (SMLib's attribute, OCCT's history) and the tree row, the path to the
- *   root and the leaf's faces light up; selecting a row lights the faces of
- *   everything under it.
- * - Editing: dragging a slider shows the edited primitive's wire at once as
- *   transient geometry (`preview.ts`) while the solid re-evaluates at a
- *   throttled rate in the worker (a newer evaluation supersedes one still
- *   pending, so a slow kernel skips states); the solid is checked on release.
- *   Picking is off while a parameter is dragged, so queries never read what
- *   the drag is about to replace.
- * - Changing the solid never shows a bad frame (`swap.ts`): a new solid's
- *   draws used a stand-in until their shader's texture loaded, and the face
- *   palette read from that stand-in gave black, so the whole model flashed
- *   black at every re-evaluation. The new solid is added hidden, drawn until
- *   `engine.whenReady` says no draw uses a stand-in (with a timeout, so a
- *   swap can't hang; a newer solid aborts the wait), and swapped in for the
- *   old one in one step; a new palette
- *   replaces the texture of the shader that is there rather than making a
- *   shader whose texture has to load.
- * - Lighting (`lighting.ts`): the sun's direction and strength, shadows,
- *   ambient occlusion and its radius, the sky's light and the exposure, kept
- *   in the link's `light` parameter.
+ *   or SMLib, each converting its solid to the engine's one render form and
+ *   saying which leaf made every face. The page only receives the form, with
+ *   its patches prepared for the GPU, and gives it to `World.addBrep`.
+ * - Every edit is a command on a stack (`history.ts`): adding, removing,
+ *   grouping, dragging a row to reorder or reparent it, renaming, a
+ *   parameter, a gizmo or push-pull drag. Undo and redo restore the tree and
+ *   the selection and re-evaluate.
+ * - Direct manipulation (`manipulator.ts`, `gizmo.ts`, `pushPull.ts`):
+ *   a translate and rotate gizmo on the selected leaf (arrows, plane
+ *   squares, rings) and a push-pull arrow on a picked face, drawn over the
+ *   view and tested in pixels. A drag is an edit of the leaf with today's
+ *   preview (the wire at once, the solid re-evaluated at a throttled rate)
+ *   and one undo step on release. A face is mapped to the parameter of the
+ *   leaf that made it from the kernel's face provenance, so pulling a hole's
+ *   wall changes the hole's radius.
+ * - A STEP leaf is an imported solid (`stepFiles.ts`). Open CASCADE's worker
+ *   keeps the part (`registerStep`), centred on its bounds, and a recipe's
+ *   `step` leaf is a copy of it with its own placement. Only Open CASCADE
+ *   builds with it; with SMLib selected the sample says so and keeps the
+ *   last solid.
+ * - Changing the solid never shows a bad frame (`swap.ts`): the new solid
+ *   is added hidden, drawn until `engine.whenReady` says no draw uses a
+ *   stand-in, and swapped in for the old one in one step; a new palette
+ *   replaces the texture of the shader that is there.
+ * - Lighting (`lighting.ts`), kept in the link's `light` parameter; the
+ *   display toggles and the tool in `ui`.
  *
- * TODO (plan §13.33, owner 2026-11-10): the four-view layout, CAD's quad
- * view in third-angle projection (Top over Front, Right beside Front, and an
- * isometric perspective), with the three projected views linked and a pick in
- * any highlighting the same face and tree node in all four. It needs step
- * 5d's orthographic camera and the engine's linked views, which aren't built;
- * until then this is one perspective view. The pick-to-tree code
- * (`pickFace`) and the highlight (`applyColours`) are view-independent, so
- * the other views only add their own picks.
+ * Not built: the four-view layout (it needs step 5d's orthographic camera
+ * and linked views), and phase 3, OCCT's local operations on a face or edge
+ * (fillet, chamfer, extrude) as feature nodes, which the push-pull handle
+ * would carry for a face no leaf parameter explains.
  */
 
 const SITE = fromDegrees(-75.1652, 39.9526, 0);
 const DEG = Math.PI / 180;
-/** Linear RGBA of the B-rep edges, the selection's faces, the picked face and the drag preview. */
-const EDGE_COLOR: [number, number, number, number] = [0, 0, 0, 1];
-const SELECT = [1, 0.01, 0.26] as const;
-const PICK = [1, 0.85, 0.02] as const;
-const PREVIEW_COLOR: [number, number, number, number] = [1, 0.32, 0, 1];
 /** How far edges lift off the faces, as a fraction of the solid's size. */
 const LIFT = 0.0025;
-const PALETTE_WIDTH = 256;
-const PALETTE_WGSL = /* wgsl */ `
-fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
-  if (fsInput.featureId < uniforms.base) {
-    return;
-  }
-  // Until the palette has loaded the engine binds a 1 x 1 stand-in, and
-  // reading a face's texel from it gives black: the plain colour then.
-  if (textureDimensions(palette, 0).x < ${PALETTE_WIDTH}u) {
-    return;
-  }
-  let face = fsInput.featureId - uniforms.base;
-  let at = vec2<i32>(i32(face % ${PALETTE_WIDTH}u), i32(face / ${PALETTE_WIDTH}u));
-  (*material).baseColor *= textureLoad(palette, at, 0).rgb;
-}
-`;
-
-/** A leaf's colour in sRGB hue steps of the golden angle, so neighbours differ. */
-function leafHsl(id: number): [number, number, number] {
-  return [(id * 137.508) % 360, 0.6, 0.5];
-}
-function leafSwatch(id: number): string {
-  const [h, s, l] = leafHsl(id);
-  return `hsl(${h.toFixed(0)} ${s * 100}% ${l * 100}%)`;
-}
-/** Linear RGB of a leaf's colour. */
-function leafColour(id: number): [number, number, number] {
-  const [h, s, l] = leafHsl(id);
-  const a = s * Math.min(l, 1 - l);
-  const f = (n: number) => {
-    const k = (n + h / 30) % 12;
-    const c = l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
-    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-  };
-  return [f(0), f(8), f(4)];
-}
 const PLAIN = linearOf("#c9ced6");
-
-const OP_ICONS = { union: "∪", difference: "−", intersection: "∩" } as const;
+/** The grid snapping a drag, m: the ground's grid is every 0.5 m, so ten steps to a square. */
+const GRID_STEP = 0.05;
 
 const ms = (value: number | undefined) =>
   value === undefined
@@ -177,7 +163,6 @@ export async function run({
 }: ExampleContext) {
   const { engine, world, view } = viewer;
   viewer.creditsShown = false;
-  viewer.setControls("orbit");
   view.background = "color";
   view.clearColor = [0.78, 0.82, 0.88];
   view.lighting.environment = "procedural";
@@ -187,24 +172,58 @@ export async function run({
     run: (final) => void evaluate(final),
   });
   const tree: { current: CsgTree } = { current: defaultBracket() };
+  const uiFlags = new Set((params.ui ?? "").split(",").filter(Boolean));
   const settings = {
     kernel: (params.kernel === "smlib" ? "smlib" : "occt") as KernelName,
-    edges: true,
-    byLeaf: true,
+    edges: !uiFlags.has("noedges"),
+    byLeaf: !uiFlags.has("nocolour"),
+    wire: uiFlags.has("wire"),
+    snap: !uiFlags.has("nosnap"),
+    tool: (uiFlags.has("pushpull") ? "pushpull" : "move") as Tool,
   };
+  const persistUi = () =>
+    setParams({
+      ui:
+        [
+          ...(settings.edges ? [] : ["noedges"]),
+          ...(settings.byLeaf ? [] : ["nocolour"]),
+          ...(settings.wire ? ["wire"] : []),
+          ...(settings.snap ? [] : ["nosnap"]),
+          ...(settings.tool === "pushpull" ? ["pushpull"] : []),
+        ].join(",") || undefined,
+    });
   /** The sun, shadows, occlusion, sky and exposure (`lighting.ts`), from the link's `light`. */
   const lighting: Lighting = decodeLighting(params.light);
-  /** The selected node, and the face a pick chose (the node's own faces are drawn lighter than it). */
-  let selectedId: number | undefined;
-  let pickedFace: number | undefined;
-  /** A slider is being dragged: picks are off, and the solid shown is a preview's. */
+
+  /** Selected node ids, in the order chosen: the last is the one the properties show, and the first is a subtraction's base. */
+  let selection: number[] = [];
+  /** A parameter or a gizmo is being dragged: picks are off, and the solid shown is a preview's. */
   let dragging = false;
   let previewLeaf: LeafNode | undefined;
+  let hoverFace: number | undefined;
+  /** A face the pointer picked: its leaf's tag, where, and the solid's normal there. */
+  interface Picked {
+    face: number;
+    tag: number;
+    point?: V3;
+    normal?: V3;
+  }
+  let picked: Picked | undefined;
+  const history = new History({ tree: cloneTree(tree.current), selection: [] });
+
+  const primary = () => selection[selection.length - 1];
+  const selectedNode = (): TreeNode | undefined =>
+    primary() === undefined ? undefined : findNode(tree.current, primary()!);
 
   // ------------------------------------------------------------ the scene
   const origin = Ellipsoid.WGS84.cartographicToCartesian(SITE, vec3.vec3());
   const enu = eastNorthUpToFixedFrame(origin, Ellipsoid.WGS84, mat4.mat4());
   mat4.setTranslation(enu, vec3.vec3());
+  const frame = [
+    [enu[0]!, enu[1]!, enu[2]!],
+    [enu[4]!, enu[5]!, enu[6]!],
+    [enu[8]!, enu[9]!, enu[10]!],
+  ] as const;
   const toWorld = (local: ReturnType<typeof mat4.mat4>) =>
     mat4.multiply(mat4.mat4(), enu, local);
   const translation = (x: number, y: number, z: number) => {
@@ -279,18 +298,41 @@ export async function run({
       color: [0.62, 0.66, 0.72, 1],
     }),
   });
-  viewer.zoomTo(
-    {
-      center: vec3.add(
+  const ecef = (local: ArrayLike<number>) =>
+    vec3.add(
+      vec3.vec3(),
+      origin,
+      mat4.transformPoint(
         vec3.vec3(),
-        origin,
-        mat4.transformPoint(vec3.vec3(), enu, vec3.vec3(0, -0.05, 0.6)),
+        enu,
+        vec3.vec3(local[0]!, local[1]!, local[2]!),
       ),
-      radius: 2.6,
-    },
-    -30 * DEG,
-    -32 * DEG,
-  );
+    );
+  /** Looks at the solid (or the bracket's place before there is one) from a standard view. */
+  const goView = (name: StandardView | "iso") => {
+    const bounds = shown?.result.bounds;
+    const centre: V3 = bounds
+      ? [
+          (bounds.min[0] + bounds.max[0]) / 2,
+          (bounds.min[1] + bounds.max[1]) / 2,
+          (bounds.min[2] + bounds.max[2]) / 2,
+        ]
+      : [0, -0.05, 0.6];
+    const radius = bounds
+      ? Math.max(
+          0.3,
+          0.58 *
+            Math.hypot(
+              bounds.max[0] - bounds.min[0],
+              bounds.max[1] - bounds.min[1],
+              bounds.max[2] - bounds.min[2],
+            ),
+        )
+      : 2.6;
+    const { heading, pitch } = VIEW_ANGLES[name];
+    viewer.zoomTo({ center: ecef(centre), radius }, heading * DEG, pitch * DEG);
+  };
+  viewer.setControls("orbit");
   applyLighting(viewer, lighting);
 
   // ---------------------------------------------------------- the solid
@@ -314,6 +356,7 @@ export async function run({
   /** The solid on screen. A newer one is added hidden and swapped in once it has drawn right (`swap.ts`). */
   let shown: Shown | undefined;
   let failure: string | undefined;
+  goView("iso");
 
   const removeSolid = (solid: Shown) => {
     world.removeBrep(solid.handle);
@@ -322,10 +365,14 @@ export async function run({
       world.removeMesh(solid.edges.mesh);
     }
   };
-  /** Shows or hides all of a solid's draws. */
+  /**
+   * Shows or hides all of a solid's draws. In wireframe the faces stay
+   * hidden, and the edges alone show (the engine draws b-reps in its opaque
+   * passes only, so there is no translucent x-ray of them yet).
+   */
   const setSolidVisible = (solid: Shown, visible: boolean) => {
     for (const draw of faceDraws(solid.handle)) {
-      world.setVisible(draw, visible);
+      world.setVisible(draw, visible && !settings.wire);
     }
     if (solid.edges) {
       world.setVisible(solid.edges.draw, visible);
@@ -341,9 +388,14 @@ export async function run({
       if (next.result.final && !dragging) {
         clearPreview();
       }
+      if (!manipulator?.dragging && !dragging) {
+        refindPicked();
+      }
       refreshResult();
       refreshTree();
-      refreshPicked();
+      refreshProperties();
+      applyColours();
+      manipulator?.invalidate();
       engine.requestRender();
     },
     discard: removeSolid,
@@ -359,12 +411,13 @@ export async function run({
       (draw): draw is DrawHandle => draw !== undefined,
     );
 
-  /** The leaf and the node ids a face's colour depends on. */
-  const selectedLeafIds = (): Set<number> => {
-    const node =
-      selectedId === undefined ? undefined : findNode(tree.current, selectedId);
-    return new Set(node ? leavesOf(node).map((leaf) => leaf.id) : []);
-  };
+  const selectedLeafIds = (): Set<number> =>
+    new Set(
+      selection.flatMap((id) => {
+        const node = findNode(tree.current, id);
+        return node ? leavesOf(node).map((leaf) => leaf.id) : [];
+      }),
+    );
 
   const paletteOf = (result: Evaluated) => {
     const faces = result.form.faceSurface.length;
@@ -376,13 +429,15 @@ export async function run({
     for (let face = 0; face < faces; face++) {
       const tag = result.faceTags[face]!;
       const colour =
-        face === pickedFace
+        face === picked?.face
           ? PICK
-          : chosen.has(tag)
-            ? SELECT
-            : settings.byLeaf && tag > 0
-              ? leafColour(tag)
-              : PLAIN;
+          : face === hoverFace
+            ? HOVER
+            : chosen.has(tag)
+              ? SELECT
+              : settings.byLeaf && tag > 0
+                ? leafColour(tag)
+                : PLAIN;
       image.data.set(
         [colour[0], colour[1], colour[2], 1].map((v) => Math.round(v * 255)),
         face * 4,
@@ -391,7 +446,7 @@ export async function run({
     return image;
   };
 
-  /** Colours a solid's faces by leaf; the selection's and the picked face's in their own colours. */
+  /** Colours a solid's faces by leaf; the selection's, the picked and the hovered face in their own colours. */
   const colour = (solid: Shown) => {
     const palette = paletteOf(solid.result);
     for (const draw of faceDraws(solid.handle)) {
@@ -429,6 +484,14 @@ export async function run({
     engine.requestRender();
   };
 
+  /** Wireframe: the faces are hidden (and can't be picked), the edges show. */
+  const applyWire = () => {
+    if (shown) {
+      setSolidVisible(shown, true);
+    }
+    engine.requestRender();
+  };
+
   /**
    * How long a new solid may wait to be right before it is shown as it is, ms:
    * `whenReady` ends the wait then (reporting it), so a swap can't hang on a
@@ -441,7 +504,6 @@ export async function run({
    * stand-in (a shader's pipelines compiled, its palette texture loaded) and
    * its patches are diced (`Engine.whenReady`). `superseded` aborts when a
    * newer solid replaces this one, so the wait ends rather than running on.
-   * The shaders are compiled first, which saves frames of waiting.
    */
   const settled = async (solid: Shown, superseded: AbortSignal) => {
     await Promise.allSettled(
@@ -605,7 +667,7 @@ export async function run({
     });
   };
 
-  // ------------------------------------------------------- evaluation
+  // ------------------------------------------------------ the workspace
   const view_ = viewer.container;
   const style = el("style", { textContent: CSS });
   view_.classList.add("csg-view");
@@ -613,6 +675,7 @@ export async function run({
   if (previousTabIndex === null) {
     view_.tabIndex = 0;
   }
+  view_.dataset.tool = settings.tool;
   const loadingText = el("span");
   const loading = el(
     "div",
@@ -624,26 +687,47 @@ export async function run({
       loadingText,
     ),
   );
-  const status = el("div", {
-    className: "csg-status",
-    role: "status",
-    hidden: true,
+  const toolbar = el("div", {
+    className: "csg-toolbar",
+    role: "toolbar",
+    ariaLabel: "Modeling tools",
   });
-  view_.append(style, loading, status);
+  const treeHead = el("div", { className: "csg-panel-head" });
+  const propsHead = el("div", { className: "csg-panel-head" });
+  const statusbar = el("div", { className: "csg-statusbar" });
+  const app = el("div", { className: "csg-app" });
+  view_.append(style, loading, app);
 
+  // ------------------------------------------------------ messages
+  const dot = el("span", { className: "csg-dot", ariaHidden: "true" });
+  const kernelText = el("span");
+  const validText = el("span");
+  const messageText = el("span", { className: "csg-message", role: "status" });
+  const timeText = el("span", {
+    title: "The kernel's time for the last evaluation",
+  });
   let sequence = 0;
   let busyTimer: ReturnType<typeof setTimeout> | undefined;
-  /** A line over the view, shown only if the kernel takes longer than a blink. */
+  let messageTimer: ReturnType<typeof setTimeout> | undefined;
+  /** A line in the status bar: a hint, or what failed. */
+  const say = (text: string | undefined, bad = false, forMs = 6000) => {
+    clearTimeout(messageTimer);
+    messageText.textContent = text ?? "";
+    messageText.toggleAttribute("data-bad", bad && !!text);
+    if (text && !bad && forMs > 0) {
+      messageTimer = setTimeout(() => (messageText.textContent = ""), forMs);
+    }
+  };
+  /** What the kernel is doing, shown only if it takes longer than a blink. */
   const busy = (text: string | undefined) => {
     clearTimeout(busyTimer);
     if (text === undefined) {
-      status.hidden = true;
+      dot.dataset.state = failure ? "bad" : "ok";
       return;
     }
     busyTimer = setTimeout(() => {
-      status.textContent = text;
-      delete status.dataset.bad;
-      status.hidden = false;
+      dot.dataset.state = "busy";
+      say(text, false, 0);
     }, 200);
   };
   const setLoading = (text: string | undefined) => {
@@ -654,6 +738,7 @@ export async function run({
     }
   };
 
+  // ------------------------------------------------------ evaluation
   const evaluate = async (final: boolean) => {
     const mine = ++sequence;
     const recipe = recipeOf(tree.current.root);
@@ -662,8 +747,7 @@ export async function run({
       failure = undefined;
       busy(undefined);
       setLoading(undefined);
-      status.textContent = "Nothing to build: no node is enabled.";
-      status.hidden = false;
+      say("Nothing to build: no node is enabled.", false, 0);
       refreshResult();
       refreshTree();
       engine.requestRender();
@@ -705,26 +789,56 @@ export async function run({
       console.warn("csg: the kernel failed:", error);
     }
     if (mine === sequence) {
-      busy(undefined);
+      clearTimeout(busyTimer);
       setLoading(undefined);
       if (failure) {
-        status.textContent = `${KERNEL_NAMES[kernel]} failed: ${failure}. Showing the last good solid.`;
-        status.dataset.bad = "";
-        status.hidden = false;
+        dot.dataset.state = "bad";
+        say(
+          `${KERNEL_NAMES[kernel]} failed: ${failure}. Showing the last good solid.`,
+          true,
+        );
+      } else {
+        dot.dataset.state = "ok";
+        if (
+          messageText.hasAttribute("data-bad") ||
+          messageText.textContent?.endsWith("…")
+        ) {
+          say(undefined);
+        }
       }
       refreshResult();
       refreshTree();
-      refreshPicked();
+      refreshProperties();
     }
   };
 
-  // ------------------------------------------------------------- picks
+  // ------------------------------------------------- the camera and picks
+  const rig = (): Rig | undefined => {
+    const width = viewer.canvas.clientWidth;
+    const height = viewer.canvas.clientHeight;
+    if (!width || !height) {
+      return undefined;
+    }
+    const camera = view.camera;
+    return makeRig(
+      camera,
+      camera.fovy(width / height),
+      width,
+      height,
+      origin,
+      frame,
+    );
+  };
+
   /**
-   * The tree node a pick of the view hits: the picked face's leaf. A face's
+   * The face of the solid at a pixel and the leaf that made it (the face's
    * tag is its leaf's id, from the kernel's record of which input each
-   * output face came from. Returns false when nothing of the solid was hit.
+   * output face came from), or undefined when the pixel isn't over the solid.
    */
-  const pickFace = async (x: number, y: number): Promise<boolean> => {
+  const facePick = async (
+    x: number,
+    y: number,
+  ): Promise<{ face: number; tag: number } | undefined> => {
     // A line of the overlay over the pixel (an edge, the drag's wire) isn't a face: look a pixel or two around it.
     for (const [dx, dy] of [
       [0, 0],
@@ -738,35 +852,145 @@ export async function run({
       const hit = await viewer.pick(x + dx, y + dy);
       const info = hit ? world.feature(hit.featureId) : undefined;
       if (!info) {
-        // Nothing drawn here.
-        return false;
+        return undefined;
       }
       if (!shown?.faceDraws.has(info.draw.index)) {
         continue;
       }
-      const face = info.localId;
-      const tag = shown.result.faceTags[face];
-      pickedFace = face;
-      select(leavesOf(tree.current.root).find((l) => l.id === tag)?.id, true);
-      return true;
+      return { face: info.localId, tag: shown.result.faceTags[info.localId]! };
     }
-    return false;
+    return undefined;
   };
+
+  /** Where the solid is at a pixel, in the sample's metres. */
+  const pointAt = async (x: number, y: number): Promise<V3 | undefined> => {
+    const scale = viewer.canvas.width / Math.max(1, viewer.canvas.clientWidth);
+    const hit = await view.pickPosition(x * scale, y * scale);
+    if (!hit) {
+      return undefined;
+    }
+    const d = [
+      hit[0]! - origin[0]!,
+      hit[1]! - origin[1]!,
+      hit[2]! - origin[2]!,
+    ];
+    return frame.map(
+      (axis) => d[0]! * axis[0]! + d[1]! * axis[1]! + d[2]! * axis[2]!,
+    ) as V3;
+  };
+
+  /** Fills in where on the face it was picked and the solid's normal there; a plane's point is put on the plane. */
+  const locate = (face: Picked, point: V3 | undefined) => {
+    if (!shown || !point) {
+      return;
+    }
+    const { form } = shown.result;
+    const normal = faceNormalAt(form, face.face, point);
+    if (!normal) {
+      return;
+    }
+    // The pick's depth is a little off a plane: the point goes onto it.
+    const off = planeOffset(form, face.face, point);
+    face.point = off === undefined ? point : mad(point, normal, -off);
+    face.normal = normal;
+  };
+
+  /** After a new solid: finds the picked face again by where it was, since a kernel may number faces differently. */
+  const refindPicked = () => {
+    if (!picked || !shown) {
+      return;
+    }
+    const { form, faceTags } = shown.result;
+    if (picked.point) {
+      let best: { face: number; distance: number } | undefined;
+      for (let face = 0; face < faceTags.length; face++) {
+        if (faceTags[face] !== picked.tag) {
+          continue;
+        }
+        const distance = surfaceDistance(form, face, picked.point);
+        if (distance !== undefined && (!best || distance < best.distance)) {
+          best = { face, distance };
+        }
+      }
+      if (best && best.distance < 0.02) {
+        picked = { ...picked, face: best.face };
+        locate(picked, picked.point);
+        return;
+      }
+    }
+    if (faceTags[picked.face] !== picked.tag) {
+      picked = undefined;
+    } else {
+      delete picked.point;
+      delete picked.normal;
+    }
+  };
+
+  const hoverClear = () => {
+    if (hoverFace !== undefined) {
+      hoverFace = undefined;
+      applyColours();
+    }
+  };
+  let hoverBusy = false;
+  let hoverAt = 0;
+  /** Lights the face under the pointer; one pick at a time. */
+  const hovered = async (x: number, y: number) => {
+    if (dragging || hoverBusy || performance.now() - hoverAt < 40) {
+      return;
+    }
+    hoverBusy = true;
+    hoverAt = performance.now();
+    try {
+      const hit = await facePick(x, y);
+      if (!dragging && hit?.face !== hoverFace) {
+        hoverFace = hit?.face;
+        applyColours();
+      }
+    } finally {
+      hoverBusy = false;
+    }
+  };
+
   const onPick = async (event: PointerEvent) => {
     // Nothing is picked while a parameter is dragged: the solid under the pointer is about to be replaced.
     if (dragging) {
       return;
     }
     const rect = viewer.canvas.getBoundingClientRect();
-    if (
-      !(await pickFace(event.clientX - rect.left, event.clientY - rect.top))
-    ) {
-      select(undefined);
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const additive = event.ctrlKey || event.metaKey || event.shiftKey;
+    const hit = await facePick(x, y);
+    if (!hit) {
+      if (!additive) {
+        select([]);
+      }
+      return;
+    }
+    const leaf = leavesOf(tree.current.root).find((l) => l.id === hit.tag);
+    const face: Picked = { face: hit.face, tag: hit.tag };
+    const next =
+      leaf === undefined
+        ? []
+        : additive
+          ? selection.includes(leaf.id)
+            ? selection.filter((id) => id !== leaf.id)
+            : [...selection, leaf.id]
+          : [leaf.id];
+    picked = face;
+    select(next, true);
+    const point = await pointAt(x, y);
+    if (picked === face) {
+      locate(face, point);
+      refreshProperties();
+      manipulator.invalidate();
     }
   };
   let down: { x: number; y: number } | undefined;
   const pointerDown = (e: PointerEvent) => {
-    down = { x: e.clientX, y: e.clientY };
+    down =
+      e.target === viewer.canvas ? { x: e.clientX, y: e.clientY } : undefined;
   };
   const pointerUp = (e: PointerEvent) => {
     if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 4) {
@@ -776,64 +1000,36 @@ export async function run({
   };
   view_.addEventListener("pointerdown", pointerDown);
   view_.addEventListener("pointerup", pointerUp);
+  view_.addEventListener("pointerleave", hoverClear);
 
-  // ------------------------------------------------------------- the panel
-  const kernelChoice = segmented<KernelName>(
-    "Kernel",
-    [
-      {
-        value: "occt",
-        label: "Open CASCADE",
-        title: "Open CASCADE in WebAssembly (LGPL 2.1), about 23 MB",
-      },
-      {
-        value: "smlib",
-        label: "SMLib",
-        title: "SMLib in WebAssembly (Apache 2.0)",
-      },
-    ],
-    () => settings.kernel,
-    (kernel) => setKernel(kernel),
-  );
-  const setKernel = (kernel: KernelName) => {
-    if (kernel === settings.kernel) {
-      return;
-    }
-    settings.kernel = kernel;
-    setParams({ kernel: kernel === "occt" ? undefined : kernel });
-    kernelNote();
-    scheduler.commit();
+  // --------------------------------------------------- history and edits
+  const snapshot = (): Snapshot => ({ tree: tree.current, selection });
+  const refreshHistory = () => {
+    undoButton.setLabel(
+      history.undoLabel ? `Undo ${history.undoLabel}` : "Undo",
+    );
+    redoButton.setLabel(
+      history.redoLabel ? `Redo ${history.redoLabel}` : "Redo",
+    );
+    undoButton.setEnabled(history.canUndo);
+    redoButton.setEnabled(history.canRedo);
   };
-  const kernelAbout = el("p", { className: "csg-note" });
-  const kernelNote = () => {
-    kernelAbout.textContent =
-      settings.kernel === "smlib"
-        ? "SMLib: every face arrives as Bézier patches, carrying its analytic identity. Provenance is an attribute SMLib copies through booleans. It doesn't read STEP files."
-        : "Open CASCADE: faces stay analytic. Provenance is each boolean's history (Modified, IsDeleted). It also reads STEP files.";
+  const record = (label: string) => {
+    history.record(label, snapshot());
+    refreshHistory();
   };
-  kernelNote();
 
-  const treeList = el("div", {
-    className: "csg-tree",
-    role: "tree",
-    ariaLabel: "CSG tree",
-  });
-  const tools = el("div", { className: "csg-tools" });
-  const stepTools = el("div", { className: "csg-tools" });
-  const inspector = el("div", { className: "csg-group" });
-  const resultBox = el("div", { className: "csg-group" });
-  const pickedBox = el("div", { className: "csg-group" });
-
-  /** STEP parts the OCCT worker holds for leaves of the tree, by key. */
+  /** STEP parts the OCCT worker holds for leaves of the tree or of any state undo could return to, by key. */
   const stepKeys = new Set<number>();
   let nextStepKey = 1;
-  /** Frees the parts no leaf uses any more (a leaf removed, or one of a copy). */
+  /** Frees the parts no state uses any more. */
   const releaseUnusedSteps = () => {
-    const used = new Set(
-      leavesOf(tree.current.root)
-        .filter(isStepLeaf)
-        .map((leaf) => leaf.step.key),
-    );
+    const used = history.stepKeys();
+    for (const leaf of leavesOf(tree.current.root)) {
+      if (isStepLeaf(leaf)) {
+        used.add(leaf.step.key);
+      }
+    }
     for (const key of [...stepKeys]) {
       if (!used.has(key)) {
         stepKeys.delete(key);
@@ -842,118 +1038,83 @@ export async function run({
     }
   };
 
-  const structureChanged = () => {
-    releaseUnusedSteps();
+  const refreshAll = () => {
     refreshTree();
-    refreshInspector();
+    refreshProperties();
+    refreshToolbar();
+    applyColours();
+    manipulator?.invalidate();
+  };
+  /** A finished edit of the tree's structure or a node: one undo step, and the solid re-evaluates. */
+  const changed = (label: string) => {
+    record(label);
+    releaseUnusedSteps();
+    refreshAll();
     scheduler.commit();
   };
-  const select = (id: number | undefined, fromPick = false) => {
-    selectedId = id;
+
+  const select = (ids: number[], fromPick = false) => {
+    selection = ids.filter((id) => !!findNode(tree.current, id));
     if (!fromPick) {
-      pickedFace = undefined;
+      picked = undefined;
     }
-    refreshTree();
-    refreshInspector();
-    refreshPicked();
-    applyColours();
-    treeList
-      .querySelector<HTMLElement>(`[data-id="${id}"]`)
-      ?.scrollIntoView({ block: "nearest" });
+    hoverFace = undefined;
+    history.select(selection);
+    refreshAll();
+    if (primary() !== undefined) {
+      treePanel.reveal(primary()!);
+    }
   };
 
-  /** How many faces each node made in the solid shown. */
-  const faceCount = (node: TreeNode) =>
-    shown ? facesOfNode(node, shown.result.faceTags).length : undefined;
+  /** A leaf's parameters or placement changed, from a field or a drag in the view. */
+  const edited = (
+    leaf: LeafNode,
+    phase: "drag" | "type" | "commit",
+    label: string,
+  ) => {
+    showPreview(leaf);
+    properties.sync();
+    if (phase === "drag") {
+      dragging = true;
+      scheduler.drag();
+    } else if (phase === "type") {
+      scheduler.edit();
+    } else {
+      dragging = false;
+      scheduler.commit();
+      record(label);
+    }
+    manipulator.invalidate();
+  };
 
-  const ancestors = (): Set<number> =>
-    new Set(
-      selectedId === undefined
-        ? []
-        : pathTo(tree.current, selectedId)
-            .slice(0, -1)
-            .map((n) => n.id),
+  const restore = (
+    result: { label: string; state: Snapshot } | undefined,
+    verb: string,
+  ) => {
+    if (!result) {
+      return;
+    }
+    clearPreview();
+    dragging = false;
+    tree.current = result.state.tree;
+    selection = result.state.selection.filter(
+      (id) => !!findNode(tree.current, id),
     );
-
-  const refreshTree = () => {
-    const rows: HTMLElement[] = [];
-    const path = ancestors();
-    const visit = (node: TreeNode, depth: number) => {
-      const faces = faceCount(node);
-      const toggle = el("input", {
-        type: "checkbox",
-        checked: node.enabled,
-        title: node.enabled ? "In the model" : "Left out of the model",
-        ariaLabel: `Include ${node.name}`,
-        onclick: (e: Event) => e.stopPropagation(),
-        onchange: () => {
-          node.enabled = toggle.checked;
-          structureChanged();
-        },
-      });
-      const row = el(
-        "div",
-        {
-          className: "csg-row",
-          role: "treeitem",
-          tabIndex: 0,
-          ariaSelected: String(node.id === selectedId),
-          ariaLevel: String(depth + 1),
-          onclick: () => select(node.id),
-          onkeydown: (e: KeyboardEvent) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              select(node.id);
-            } else if (e.key === "Delete" || e.key === "Backspace") {
-              e.preventDefault();
-              removeSelected(node.id);
-            }
-          },
-        },
-        toggle,
-        node.type === "leaf"
-          ? el("span", {
-              className: "csg-swatch",
-              style: `background:${leafSwatch(node.id)}`,
-            })
-          : el("span", { className: "csg-badge" }, OP_ICONS[node.operation]),
-        el("span", { className: "csg-name", title: node.name }, node.name),
-        el(
-          "span",
-          { className: "csg-badge" },
-          node.type === "leaf"
-            ? isStepLeaf(node)
-              ? "STEP"
-              : PRIMITIVE_SPECS[node.kind].label
-            : OPERATION_LABELS[node.operation],
-          faces === undefined
-            ? ""
-            : ` · ${faces} face${faces === 1 ? "" : "s"}`,
-        ),
-      );
-      row.style.setProperty("--depth", String(depth));
-      row.dataset.id = String(node.id);
-      if (!node.enabled) {
-        row.dataset.off = "";
-      }
-      if (path.has(node.id)) {
-        row.dataset.under = "";
-      }
-      rows.push(row);
-      if (node.type === "op") {
-        node.children.forEach((child) => visit(child, depth + 1));
-      }
-    };
-    visit(tree.current.root, 0);
-    treeList.replaceChildren(...rows);
-    refreshTools();
+    picked = undefined;
+    hoverFace = undefined;
+    refreshHistory();
+    refreshAll();
+    scheduler.commit();
+    say(`${verb}: ${result.label}`);
   };
+  const undo = () => restore(history.undo(), "Undid");
+  const redo = () => restore(history.redo(), "Redid");
 
+  // ---------------------------------------------------------- tree edits
   /** Where a new node goes: under the selected operation, or after the selected leaf. */
   const insertion = ():
     { target: OpNode; at: number | undefined } | undefined => {
-    const selected =
-      selectedId === undefined ? undefined : findNode(tree.current, selectedId);
+    const selected = selectedNode();
     const target: OpNode | undefined =
       selected?.type === "op"
         ? selected
@@ -974,25 +1135,91 @@ export async function run({
   const addNode = (
     node: TreeNode,
     place: NonNullable<ReturnType<typeof insertion>>,
+    label: string,
   ) => {
     addChild(tree.current, place.target.id, node, place.at);
-    selectedId = node.id;
-    pickedFace = undefined;
-    structureChanged();
-    refreshPicked();
-    applyColours();
+    selection = [node.id];
+    picked = undefined;
+    changed(label);
+    treePanel.reveal(node.id);
   };
-  const addAt = (what: string) => {
+  const addPrimitive = (kind: PrimitiveKind) => {
     const place = insertion();
-    if (!place) {
+    if (place) {
+      addNode(
+        createLeaf(tree.current, kind, { translate: [0, 0, 0.6] }),
+        place,
+        `Add ${PRIMITIVE_SPECS[kind].label.toLowerCase()}`,
+      );
+    }
+  };
+
+  const booleanState = (operation: OpNode["operation"]) => {
+    const node = selection.length === 1 ? selectedNode() : undefined;
+    if (node?.type === "op") {
+      return node.operation !== operation;
+    }
+    return canWrap(tree.current, selection);
+  };
+  /** Applies a boolean to the selection: two or more nodes are grouped under it, in the order chosen; one operation changes its kind. */
+  const applyBoolean = (operation: OpNode["operation"]) => {
+    const node = selection.length === 1 ? selectedNode() : undefined;
+    if (node?.type === "op") {
+      if (node.operation !== operation) {
+        node.operation = operation;
+        changed(
+          `Make ${node.name} a ${OPERATION_LABELS[operation].toLowerCase()}`,
+        );
+      }
       return;
     }
-    const node: TreeNode = (PRIMITIVE_KINDS as readonly string[]).includes(what)
-      ? createLeaf(tree.current, what as PrimitiveKind, {
-          translate: [0, 0, 0.6],
-        })
-      : createOp(tree.current, what as OpNode["operation"]);
-    addNode(node, place);
+    const group = wrapNodes(tree.current, selection, operation);
+    if (!group) {
+      say(
+        selection.length < 2
+          ? `Select two or more nodes first${operation === "difference" ? ": the first you select is the base" : ""}.`
+          : "Those nodes can't be grouped: one is inside another, or is the model itself.",
+        true,
+      );
+      return;
+    }
+    selection = [group.id];
+    picked = undefined;
+    changed(`${OPERATION_LABELS[operation]} of ${group.children.length} nodes`);
+    treePanel.reveal(group.id);
+  };
+  const removeSelected = () => {
+    const ids = selection.filter((id) => id !== tree.current.root.id);
+    if (ids.length === 0) {
+      return;
+    }
+    const first = ids[0]!;
+    const parent = parentOf(tree.current, first)!;
+    const at = parent.children.findIndex((child) => child.id === first);
+    const names = ids
+      .map((id) => findNode(tree.current, id)?.name ?? "")
+      .join(", ");
+    for (const id of ids) {
+      removeNode(tree.current, id);
+    }
+    const neighbour = parent.children[Math.min(at, parent.children.length - 1)];
+    selection = [neighbour?.id ?? parent.id];
+    picked = undefined;
+    changed(`Delete ${names}`);
+  };
+  const duplicateSelected = () => {
+    const ids = selection.filter((id) => id !== tree.current.root.id);
+    const copies = ids
+      .map((id) => duplicateNode(tree.current, id))
+      .filter((n): n is TreeNode => !!n);
+    if (copies.length === 0) {
+      return;
+    }
+    selection = copies.map((n) => n.id);
+    picked = undefined;
+    changed(
+      `Duplicate ${copies.length === 1 ? copies[0]!.name : `${copies.length} nodes`}`,
+    );
   };
 
   // ------------------------------------------------------ STEP leaves
@@ -1013,7 +1240,7 @@ export async function run({
     try {
       const bytes = await read();
       if (!isStepFile(bytes)) {
-        throw new Error("it isn't a STEP file");
+        throw new Error("it isn't a STEP file (it doesn't begin ISO-10303-21)");
       }
       const key = nextStepKey++;
       const { part } = await session.registerStep(key, bytes, (stage) => {
@@ -1037,7 +1264,7 @@ export async function run({
       );
       const place = insertion();
       if (place) {
-        addNode(leaf, place);
+        addNode(leaf, place, `Import ${name}`);
       }
       console.info(
         `csg: ${file}: ${part.solids} solid${part.solids === 1 ? "" : "s"}, ${part.faces} faces, ${part.size.map((v) => v.toFixed(3)).join(" × ")} m`,
@@ -1050,12 +1277,13 @@ export async function run({
       console.warn("csg: the STEP import failed:", error);
     }
     if (mine === importing) {
-      busy(undefined);
+      clearTimeout(busyTimer);
       setLoading(undefined);
+      dot.dataset.state = failure ? "bad" : "ok";
       if (problem) {
-        status.textContent = problem;
-        status.dataset.bad = "";
-        status.hidden = false;
+        say(problem, true);
+      } else {
+        say(undefined);
       }
     }
   };
@@ -1071,281 +1299,687 @@ export async function run({
       fetchStepSample(sample.file, signal),
     );
   };
-  const removeSelected = (id = selectedId) => {
-    if (id === undefined) {
-      return;
+  const stepInput = el("input", {
+    type: "file",
+    accept: ".step,.stp",
+    hidden: true,
+    onchange: () => {
+      const file = stepInput.files?.[0];
+      stepInput.value = "";
+      if (file) {
+        void importFile(file);
+      }
+    },
+  });
+  const dragOver = (event: DragEvent) => {
+    if (event.dataTransfer?.types.includes("Files")) {
+      event.preventDefault();
     }
-    const parent = parentOf(tree.current, id);
-    if (!parent) {
-      return;
+  };
+  const drop = (event: DragEvent) => {
+    const file = [...(event.dataTransfer?.files ?? [])].find((f) =>
+      /\.(step|stp)$/i.test(f.name),
+    );
+    if (file) {
+      event.preventDefault();
+      void importFile(file);
     }
-    const at = parent.children.findIndex((child) => child.id === id);
-    removeNode(tree.current, id);
-    const neighbour = parent.children[Math.min(at, parent.children.length - 1)];
-    selectedId = neighbour?.id ?? parent.id;
-    pickedFace = undefined;
-    structureChanged();
-    refreshPicked();
+  };
+  view_.addEventListener("dragover", dragOver);
+  view_.addEventListener("drop", drop);
+
+  // ------------------------------------------------------ the tree panel
+  const faceCount = (node: TreeNode) =>
+    shown ? facesOfNode(node, shown.result.faceTags).length : undefined;
+  const treePanel = createTreePanel({
+    tree: () => tree.current,
+    selection: () => selection,
+    select: (id, mode) => {
+      if (mode === "replace") {
+        select([id]);
+      } else if (selection.includes(id)) {
+        select(selection.filter((s) => s !== id));
+      } else {
+        select([...selection, id]);
+      }
+    },
+    faces: faceCount,
+    swatch: leafSwatch,
+    setEnabled: (node, enabled) => {
+      node.enabled = enabled;
+      changed(`${enabled ? "Include" : "Suppress"} ${node.name}`);
+    },
+    rename: (node, name) => {
+      const old = node.name;
+      node.name = name;
+      changed(`Rename ${old} to ${name}`);
+    },
+    drop: (dragId, plan, label) => {
+      if (applyDrop(tree.current, dragId, plan)) {
+        changed(label);
+        say(label);
+      }
+    },
+    remove: (id) => {
+      if (!selection.includes(id)) {
+        selection = [id];
+      }
+      removeSelected();
+    },
+  });
+  const refreshTree = () => treePanel.refresh();
+
+  // ---------------------------------------------------- the properties
+  const properties = createProperties({
+    tree: () => tree.current,
+    selection: () => selection,
+    select: (id) => select([id]),
+    edited: (leaf, phase, label) => edited(leaf, phase, label),
+    rename: (node, name) => {
+      const old = node.name;
+      node.name = name;
+      changed(`Rename ${old} to ${name}`);
+    },
+    setOperation: (node, operation) => {
+      node.operation = operation;
+      changed(
+        `Make ${node.name} a ${OPERATION_LABELS[operation].toLowerCase()}`,
+      );
+    },
+    face: (): FaceSection | undefined => {
+      if (!shown || !picked) {
+        return undefined;
+      }
+      const { form, faceTags } = shown.result;
+      const surface = form.faceSurface[picked.face];
+      if (surface === undefined) {
+        return undefined;
+      }
+      const identity =
+        KIND_NAMES[form.surfaceIdentity[surface]!] ?? "Free-form";
+      const drawn = form.surfaceKind[surface] === 5 ? " (Bézier patches)" : "";
+      const tag = faceTags[picked.face]!;
+      const path = tag > 0 ? pathTo(tree.current, tag) : [];
+      const leaf = path[path.length - 1];
+      const handle = faceHandle();
+      return {
+        text: `Face ${picked.face}: ${identity.toLowerCase()}${drawn}${leaf ? `, made by ${leaf.name}` : ", from no leaf of the tree (the kernel gave it no tag)"}`,
+        crumbs: [...path].reverse(),
+        pushPull: handle
+          ? `Push-pull changes ${handle.leaf.name}'s ${handle.target.label.toLowerCase()} (${handle.target.value.toFixed(3)} m).${settings.tool === "pushpull" ? " Drag the arrow." : " Choose Push/Pull (P), then drag the arrow."}`
+          : leaf && isStepLeaf(leaf as LeafNode)
+            ? "A STEP part has no parameters: move it with the gizmo."
+            : leaf
+              ? picked.point
+                ? "No single parameter makes this face: it comes from where nodes meet. (OCCT local edits would change it as a feature node.)"
+                : "Locating the face…"
+              : "",
+      };
+    },
+    note: (node) =>
+      node.type === "leaf" && isStepLeaf(node) && settings.kernel === "smlib"
+        ? "SMLib can't build a STEP part: switch to Open CASCADE."
+        : leavesOf(node).some(isStepLeaf) && settings.kernel === "smlib"
+          ? "Has a STEP part: Open CASCADE only."
+          : undefined,
+  });
+  const refreshProperties = () => {
+    properties.refresh();
+    updateTitles();
   };
 
-  const refreshTools = () => {
-    const selected =
-      selectedId === undefined ? undefined : findNode(tree.current, selectedId);
-    const parent = selected ? parentOf(tree.current, selected.id) : undefined;
-    const index = parent ? parent.children.indexOf(selected!) : -1;
-    const button = (
+  // ---------------------------------------------- direct manipulation
+  let faceCache:
+    | {
+        picked: Picked;
+        point: V3 | undefined;
+        normal: V3 | undefined;
+        handle: FaceHandle | undefined;
+      }
+    | undefined;
+  const planesCache = new WeakMap<Shown, ReturnType<typeof planarFaces>>();
+  const faceHandle = (): FaceHandle | undefined => {
+    if (!picked || !shown || !picked.point || !picked.normal) {
+      return undefined;
+    }
+    // Made once for a pick (and again when the pick moves): a drag changes the leaf, and the next evaluation's solid mustn't remake it from the changed leaf.
+    if (
+      faceCache?.picked === picked &&
+      faceCache.point === picked.point &&
+      faceCache.normal === picked.normal
+    ) {
+      return faceCache.handle;
+    }
+    const leaf = leavesOf(tree.current.root).find((l) => l.id === picked!.tag);
+    const target = leaf
+      ? pushPullFor(leaf, picked.point, picked.normal)
+      : undefined;
+    let planes = planesCache.get(shown);
+    if (!planes) {
+      planes = planarFaces(shown.result.form);
+      planesCache.set(shown, planes);
+    }
+    const handle =
+      leaf && target
+        ? { leaf, point: picked.point, target, planes, face: picked.face }
+        : undefined;
+    faceCache = {
+      picked,
+      point: picked.point,
+      normal: picked.normal,
+      handle,
+    };
+    return handle;
+  };
+  const manipulator: Manipulator = new Manipulator(
+    {
+      rig,
+      tool: () => settings.tool,
+      gizmoLeaf: () => {
+        const node = selectedNode();
+        return node?.type === "leaf" && node.enabled ? node : undefined;
+      },
+      face: () => {
+        const handle = faceHandle();
+        return handle?.leaf.enabled ? handle : undefined;
+      },
+      grid: () => (settings.snap ? GRID_STEP : 0),
+      edited: (leaf, phase, label) => edited(leaf, phase, label),
+      pushed: (moved) => {
+        if (!picked?.point || !picked.normal) {
+          return;
+        }
+        const next = {
+          ...picked,
+          point: [
+            picked.point[0] + picked.normal[0] * moved,
+            picked.point[1] + picked.normal[1] * moved,
+            picked.point[2] + picked.normal[2] * moved,
+          ] as V3,
+        };
+        picked = next;
+        refreshProperties();
+      },
+      hovered: (x, y) => void hovered(x, y),
+      cursor: (kind) => {
+        if (kind) {
+          view_.dataset.cursor = kind;
+        } else {
+          delete view_.dataset.cursor;
+        }
+      },
+    },
+    view_,
+    viewer.canvas,
+    () => `${view.camera.version}|${selection.join(",")}|${settings.tool}`,
+  );
+
+  // ----------------------------------------------------------- the toolbar
+  const buttons: Record<string, IconButton> = {};
+  const add = (key: string, options: Parameters<typeof iconButton>[0]) => {
+    buttons[key] = iconButton(options);
+    return buttons[key]!.element;
+  };
+  const undoButton = iconButton({
+    icon: "undo",
+    label: "Undo",
+    shortcut: "Ctrl+Z",
+    onClick: undo,
+  });
+  const redoButton = iconButton({
+    icon: "redo",
+    label: "Redo",
+    shortcut: "Ctrl+Y",
+    onClick: redo,
+  });
+  const setTool = (tool: Tool) => {
+    settings.tool = tool;
+    view_.dataset.tool = tool;
+    persistUi();
+    refreshToolbar();
+    refreshProperties();
+    manipulator?.invalidate();
+  };
+  const toggle = (key: "edges" | "wire" | "byLeaf" | "snap", on: boolean) => {
+    settings[key] = on;
+    if (key === "edges") {
+      setEdges(on);
+    } else if (key === "wire") {
+      if (on && !settings.edges) {
+        // Without faces the edges are all there is to see.
+        settings.edges = true;
+        setEdges(true);
+      }
+      applyWire();
+    } else if (key === "byLeaf") {
+      applyColours();
+    }
+    persistUi();
+    refreshToolbar();
+  };
+
+  const lightPopover: { current?: ReturnType<typeof popover> } = {};
+  const stepPopover: { current?: ReturnType<typeof popover> } = {};
+  const detailsPopover: { current?: ReturnType<typeof popover> } = {};
+
+  const kernelChoice = segmented<KernelName>(
+    "Kernel",
+    [
+      {
+        value: "occt",
+        label: "Open CASCADE",
+        title:
+          "Open CASCADE in WebAssembly (LGPL 2.1), about 23 MB. Faces stay analytic; it reads STEP files",
+      },
+      {
+        value: "smlib",
+        label: "SMLib",
+        title:
+          "SMLib in WebAssembly (Apache 2.0). Faces arrive as Bézier patches with their analytic identity; no STEP",
+      },
+    ],
+    () => settings.kernel,
+    (kernel) => setKernel(kernel),
+  );
+  const setKernel = (kernel: KernelName) => {
+    if (kernel === settings.kernel) {
+      return;
+    }
+    settings.kernel = kernel;
+    setParams({ kernel: kernel === "occt" ? undefined : kernel });
+    refreshResult();
+    refreshProperties();
+    scheduler.commit();
+  };
+
+  const group = (...children: Array<HTMLElement | string>) => children;
+  /** Which side panels show: by the button, or by default, by how wide the view is. */
+  const panelsShown = () => {
+    const wide = view_.clientWidth > 640;
+    return {
+      left: app.dataset.left !== "off",
+      right: wide ? app.dataset.right !== "off" : app.dataset.right === "on",
+    };
+  };
+  const syncPanelToggles = () => {
+    const shownNow = panelsShown();
+    leftToggle.setPressed(shownNow.left);
+    rightToggle.setPressed(shownNow.right);
+  };
+  const leftToggle = iconButton({
+    icon: "panelLeft",
+    label: "Feature tree",
+    onClick: () => {
+      app.dataset.left = panelsShown().left ? "off" : "on";
+      syncPanelToggles();
+    },
+  });
+  const rightToggle = iconButton({
+    icon: "panelRight",
+    label: "Properties",
+    onClick: () => {
+      app.dataset.right = panelsShown().right ? "off" : "on";
+      syncPanelToggles();
+    },
+  });
+  const resizeWatch = new ResizeObserver(syncPanelToggles);
+  resizeWatch.observe(view_);
+  syncPanelToggles();
+
+  toolbar.append(
+    ...group(
+      add("move", {
+        icon: "move",
+        label: "Move and rotate gizmo",
+        shortcut: "V",
+        onClick: () => setTool("move"),
+      }),
+      add("pushpull", {
+        icon: "pushPull",
+        label: "Push-pull a face",
+        shortcut: "P",
+        onClick: () => setTool("pushpull"),
+      }),
+    ),
+    divider(),
+    ...PRIMITIVE_KINDS.map((kind, i) =>
+      add(kind, {
+        icon: kind,
+        label: `Add ${PRIMITIVE_SPECS[kind].label.toLowerCase()}`,
+        shortcut: String(i + 1),
+        onClick: () => addPrimitive(kind),
+      }),
+    ),
+    add("step", {
+      icon: "step",
+      label: "Import a STEP part",
+      text: "STEP",
+      onClick: () => stepPopover.current?.toggle(),
+    }),
+    divider(),
+    add("union", {
+      icon: "union",
+      label: "Union of the selection",
+      shortcut: "U",
+      onClick: () => applyBoolean("union"),
+    }),
+    add("difference", {
+      icon: "difference",
+      label: "Subtract: the first selected minus the rest",
+      shortcut: "D",
+      onClick: () => applyBoolean("difference"),
+    }),
+    add("intersection", {
+      icon: "intersection",
+      label: "Intersect the selection",
+      shortcut: "I",
+      onClick: () => applyBoolean("intersection"),
+    }),
+    divider(),
+    undoButton.element,
+    redoButton.element,
+    divider(),
+    add("duplicate", {
+      icon: "copy",
+      label: "Duplicate",
+      shortcut: "Ctrl+D",
+      onClick: duplicateSelected,
+    }),
+    add("delete", {
+      icon: "trash",
+      label: "Delete",
+      shortcut: "Del",
+      onClick: removeSelected,
+    }),
+    divider(),
+    add("fit", {
+      icon: "fit",
+      label: "Zoom to fit",
+      shortcut: "F",
+      onClick: () => goView("iso"),
+    }),
+    add("front", {
+      icon: "front",
+      label: "Front view",
+      shortcut: "⇧F",
+      onClick: () => goView("front"),
+    }),
+    add("top", {
+      icon: "top",
+      label: "Top view",
+      shortcut: "⇧T",
+      onClick: () => goView("top"),
+    }),
+    add("right", {
+      icon: "right",
+      label: "Right view",
+      shortcut: "⇧R",
+      onClick: () => goView("right"),
+    }),
+    add("iso", {
+      icon: "iso",
+      label: "Isometric view",
+      shortcut: "⇧I",
+      onClick: () => goView("iso"),
+    }),
+    divider(),
+    add("edges", {
+      icon: "edges",
+      label: "B-rep edges",
+      shortcut: "E",
+      onClick: () => toggle("edges", !settings.edges),
+    }),
+    add("wire", {
+      icon: "xray",
+      label: "Wireframe: hide the faces, keep the edges",
+      shortcut: "W",
+      onClick: () => toggle("wire", !settings.wire),
+    }),
+    add("colour", {
+      icon: "paint",
+      label: "Colour faces by the leaf that made them",
+      shortcut: "C",
+      onClick: () => toggle("byLeaf", !settings.byLeaf),
+    }),
+    add("snap", {
+      icon: "snap",
+      label: "Snap to the 0.05 m grid (hold Alt to drag free)",
+      shortcut: "G",
+      onClick: () => toggle("snap", !settings.snap),
+    }),
+    add("light", {
+      icon: "light",
+      label: "Lighting",
+      onClick: () => lightPopover.current?.toggle(),
+    }),
+    el("span", { className: "csg-spacer" }),
+    kernelChoice.element,
+    divider(),
+    leftToggle.element,
+    rightToggle.element,
+  );
+  buttons.light!.element.setAttribute("aria-haspopup", "dialog");
+  buttons.step!.element.setAttribute("aria-haspopup", "dialog");
+
+  const refreshToolbar = () => {
+    buttons.move!.setPressed(settings.tool === "move");
+    buttons.pushpull!.setPressed(settings.tool === "pushpull");
+    buttons.edges!.setPressed(settings.edges);
+    buttons.wire!.setPressed(settings.wire);
+    buttons.colour!.setPressed(settings.byLeaf);
+    buttons.snap!.setPressed(settings.snap);
+    const real = selection.filter((id) => id !== tree.current.root.id);
+    for (const op of ["union", "difference", "intersection"] as const) {
+      buttons[op]!.setEnabled(booleanState(op));
+    }
+    buttons.duplicate!.setEnabled(real.length > 0);
+    buttons.delete!.setEnabled(real.length > 0);
+    kernelChoice.sync();
+    refreshHistory();
+  };
+
+  // -------------------------------------------------- popovers' content
+  const fillLighting = (card: HTMLElement) => {
+    const lit = () => applyLighting(viewer, lighting);
+    const persist = () => setParams({ light: encodeLighting(lighting) });
+    const slider = (
+      label: string,
+      key: keyof typeof LIGHTING_RANGES,
+      unit?: string,
+    ) =>
+      field({
+        label,
+        value: lighting[key],
+        ...LIGHTING_RANGES[key],
+        floor: LIGHTING_RANGES[key].min,
+        ...(unit ? { unit } : {}),
+        onChange: (value, phase) => {
+          lighting[key] = value;
+          lit();
+          if (phase !== "drag") {
+            persist();
+          }
+        },
+      });
+    const check = (
       label: string,
       title: string,
-      enabled: boolean,
-      action: () => boolean | void,
-    ) =>
+      key: "shadows" | "ambientOcclusion",
+    ) => {
+      const box = el("input", {
+        type: "checkbox",
+        checked: lighting[key],
+        onchange: () => {
+          lighting[key] = box.checked;
+          lit();
+          persist();
+        },
+      });
+      return el("label", { title }, label, box);
+    };
+    card.replaceChildren(
+      el("h4", {}, "Sun"),
+      slider("Azimuth", "azimuth", "°"),
+      slider("Elevation", "elevation", "°"),
+      slider("Intensity", "sun", "×"),
+      el("h4", {}, "Shadows and occlusion"),
+      el(
+        "div",
+        { className: "csg-toggles" },
+        check("Shadows", "The sun's cascaded shadow maps.", "shadows"),
+        check(
+          "Ambient occlusion",
+          "The sky's light hidden by nearby surfaces (GTAO).",
+          "ambientOcclusion",
+        ),
+      ),
+      slider("AO radius", "aoRadius", "m"),
+      el("h4", {}, "Sky and camera"),
+      slider("Sky light", "sky", "×"),
+      slider("Exposure", "exposure", "EV"),
       el(
         "button",
         {
           type: "button",
-          title,
-          ariaLabel: title,
-          disabled: !enabled,
+          className: "csg-button",
+          title: "Back to the sample's own light",
           onclick: () => {
-            if (action() !== false) {
-              structureChanged();
-              refreshPicked();
-              applyColours();
-            }
+            Object.assign(lighting, DEFAULT_LIGHTING);
+            lit();
+            persist();
+            fillLighting(card);
           },
         },
-        label,
-      );
-    const add = el(
-      "select",
-      {
-        ariaLabel: "Add a node",
-        title:
-          selected?.type === "op"
-            ? `Adds under ${selected.name}`
-            : "Adds after the selected leaf, or under the model",
-        onchange: () => {
-          if (add.value) {
-            addAt(add.value);
-          }
-        },
-      },
-      el("option", { value: "", textContent: "Add…" }),
-      ...PRIMITIVE_KINDS.map((kind) =>
-        el("option", { value: kind, textContent: PRIMITIVE_SPECS[kind].label }),
+        "Reset lighting",
       ),
-      ...OPERATIONS.map((op) =>
-        el("option", { value: op, textContent: OPERATION_LABELS[op] }),
-      ),
-    );
-    const id = selected?.id;
-    tools.replaceChildren(
-      add,
-      button("↑", "Move up", index > 0, () => moveNode(tree.current, id!, -1)),
-      button(
-        "↓",
-        "Move down",
-        !!parent && index < parent.children.length - 1,
-        () => moveNode(tree.current, id!, 1),
-      ),
-      button(
-        "←",
-        "Move out of its operation",
-        !!parent && !!parentOf(tree.current, parent.id),
-        () => outdentNode(tree.current, id!),
-      ),
-      button(
-        "→",
-        "Move into the operation above",
-        index > 0 && parent!.children[index - 1]!.type === "op",
-        () => indentNode(tree.current, id!),
-      ),
-      button("⧉", "Duplicate", !!parent, () => {
-        const copy = duplicateNode(tree.current, id!);
-        selectedId = copy?.id;
-        pickedFace = undefined;
-      }),
-      button("✕", "Remove", !!parent, () => {
-        removeSelected();
-        return false;
-      }),
-    );
-  };
-
-  /** The value of an edit to the selected leaf: the preview at once, the evaluation at the scheduler's pace. */
-  const edited = (leaf: LeafNode, phase: Phase) => {
-    showPreview(leaf);
-    if (phase === "drag") {
-      dragging = true;
-      scheduler.drag();
-    } else if (phase === "type") {
-      scheduler.edit();
-    } else {
-      dragging = false;
-      scheduler.commit();
-    }
-  };
-
-  const refreshInspector = () => {
-    const node =
-      selectedId === undefined ? undefined : findNode(tree.current, selectedId);
-    if (!node) {
-      inspector.replaceChildren(
-        el(
-          "p",
-          { className: "csg-note" },
-          "Select a node in the tree, or click a face of the solid, to edit it.",
-        ),
-      );
-      return;
-    }
-    const name = el("input", {
-      type: "text",
-      value: node.name,
-      ariaLabel: "Name",
-      oninput: () => {
-        node.name = name.value;
-        treeList.querySelector(
-          `[data-id="${node.id}"] .csg-name`,
-        )!.textContent = node.name;
-      },
-    });
-    const parts: Array<Node> = [
       el(
-        "label",
-        { className: "csg-name-field" },
-        el("span", {}, "Name"),
-        name,
+        "p",
+        { className: "csg-note" },
+        "Intensity 1 is what the atmosphere lets through: white at noon, orange when the sun is low.",
       ),
-    ];
-    if (node.type === "op") {
-      const operation = segmented(
-        "Operation",
-        OPERATIONS.map((op) => ({
-          value: op,
-          label: OPERATION_LABELS[op],
-        })),
-        () => node.operation,
-        (op) => {
-          node.operation = op;
-          refreshTree();
-          scheduler.commit();
-        },
-      );
-      parts.push(
-        operation.element,
+    );
+  };
+  const fillStep = (card: HTMLElement) => {
+    card.replaceChildren(
+      el("h4", {}, "Import a STEP part"),
+      el(
+        "div",
+        { className: "csg-menu" },
+        ...STEP_SAMPLES.map((sample) =>
+          el(
+            "button",
+            {
+              type: "button",
+              onclick: () => {
+                stepPopover.current?.close();
+                void importSample(sample.file);
+              },
+            },
+            sample.name,
+            el("small", {}, sample.description),
+          ),
+        ),
         el(
-          "p",
-          { className: "csg-note" },
-          node.operation === "difference"
-            ? "The first operand minus all the rest."
-            : `The ${node.operation} of all its operands.`,
-        ),
-      );
-    } else {
-      parts.push(
-        ...(isStepLeaf(node)
-          ? [
-              el("h4", {}, "STEP part"),
-              el(
-                "p",
-                { className: "csg-note" },
-                `${node.step.file}, ${node.step.size.map((v) => v.toFixed(3)).join(" × ")} m, centred on its bounds. Open CASCADE only.`,
-              ),
-            ]
-          : [
-              el("h4", {}, "Parameters"),
-              ...PRIMITIVE_SPECS[node.kind].params.map((spec) =>
-                field({
-                  label: spec.label,
-                  value: node.params[spec.key]!,
-                  min: spec.min,
-                  max: spec.max,
-                  step: spec.step,
-                  floor: spec.min,
-                  unit: "m",
-                  onChange: (value, phase) => {
-                    node.params[spec.key] = value;
-                    edited(node, phase);
-                  },
-                }),
-              ),
-            ]),
-        el("h4", {}, "Turn about x, then y, then z"),
-        ...(["x", "y", "z"] as const).map((axis, i) =>
-          field({
-            label: `Rotate ${axis}`,
-            value: node.rotate[i]!,
-            min: -180,
-            max: 180,
-            step: 1,
-            floor: -360,
-            unit: "°",
-            onChange: (value, phase) => {
-              node.rotate[i] = value;
-              edited(node, phase);
+          "button",
+          {
+            type: "button",
+            onclick: () => {
+              stepPopover.current?.close();
+              stepInput.click();
             },
-          }),
+          },
+          "Open a file…",
+          el(
+            "small",
+            {},
+            "or drop one on the view. Open Cascade builds with it.",
+          ),
         ),
-        el("h4", {}, "Place its middle"),
-        ...(["x", "y", "z"] as const).map((axis, i) =>
-          field({
-            label: `Move ${axis}`,
-            value: node.translate[i]!,
-            min: -2,
-            max: 2,
-            step: 0.01,
-            floor: -100,
-            unit: "m",
-            onChange: (value, phase) => {
-              node.translate[i] = value;
-              edited(node, phase);
-            },
-          }),
-        ),
-      );
-    }
-    inspector.replaceChildren(...parts);
+      ),
+      el(
+        "p",
+        { className: "csg-note" },
+        "NIST's test models are served from /step-samples/ (npm run setup fetches them).",
+      ),
+    );
   };
 
-  const refreshResult = () => {
+  // ------------------------------------------------------ the panels
+  const treeTitle = el("h3", {}, "Feature tree");
+  const propsTitle = el("h3", {}, "Properties");
+  treeHead.append(treeTitle);
+  propsHead.append(propsTitle);
+  const updateTitles = () => {
+    const node = selection.length === 1 ? selectedNode() : undefined;
+    propsTitle.textContent = node
+      ? `Properties: ${kindName(node)}`
+      : "Properties";
+  };
+  treeTitle.title =
+    "Drag a row to reorder or move it into an operation. Click selects; Ctrl-click adds to the selection.";
+  const treePanelBox = el(
+    "section",
+    { className: "csg-panel csg-tree-panel", ariaLabel: "Feature tree" },
+    treeHead,
+    el("div", { className: "csg-panel-body" }, treePanel.element),
+  );
+  const propsBox = el(
+    "section",
+    { className: "csg-panel csg-props-panel", ariaLabel: "Properties" },
+    propsHead,
+    el("div", { className: "csg-panel-body" }, properties.element),
+  );
+  const cube = createViewCube((name) => goView(name));
+  let cubeVersion = -1;
+  let cubeFrame = 0;
+  const cubeLoop = () => {
+    cubeFrame = requestAnimationFrame(cubeLoop);
+    if (view.camera.version !== cubeVersion) {
+      cubeVersion = view.camera.version;
+      cube.update(rig());
+    }
+  };
+  cubeLoop();
+  app.append(toolbar, treePanelBox, propsBox, statusbar, cube.element);
+  view_.append(stepInput);
+
+  const detailsButton = el(
+    "button",
+    {
+      type: "button",
+      className: "csg-button",
+      title: "How long each step of the last evaluation took",
+      onclick: () => detailsPopover.current?.toggle(),
+    },
+    "Details",
+  );
+  statusbar.append(
+    el("span", {}, dot, kernelText),
+    validText,
+    messageText,
+    timeText,
+    detailsButton,
+  );
+  lightPopover.current = popover(app, buttons.light!.element, fillLighting);
+  stepPopover.current = popover(app, buttons.step!.element, fillStep);
+  detailsPopover.current = popover(app, detailsButton, (card) =>
+    card.replaceChildren(el("h4", {}, "Last evaluation"), ...detailsContent()),
+  );
+
+  /** The table of the last evaluation's steps. */
+  const detailsContent = (): Node[] => {
     if (!shown) {
-      resultBox.replaceChildren(
+      return [
         el(
           "p",
           { className: "csg-note" },
           failure ? `Nothing to show: ${failure}` : "Waiting for the kernel…",
         ),
-      );
-      return;
+      ];
     }
     const { result } = shown;
     const t = result.timings;
     const faces = result.form.faceSurface.length;
-    const problems = result.problems;
-    const row = (label: string, value: Node | string, title?: string) =>
-      el(
-        "tr",
-        title ? { title } : {},
-        el("td", {}, label),
-        el("td", {}, value),
-      );
-    const valid =
-      problems === undefined
-        ? "not checked while dragging"
-        : problems.length === 0
-          ? el("span", { className: "csg-ok" }, "✓ valid, no problems")
-          : el(
-              "span",
-              {
-                className: "csg-bad",
-                title: problems
-                  .slice(0, 6)
-                  .map((p) => `${p.kind}, ${p.entity} ${p.index}: ${p.message}`)
-                  .join("\n"),
-              },
-              `✗ ${problems.length} problem${problems.length === 1 ? "" : "s"}`,
-            );
     const kinds = new Map<string, number>();
     for (let f = 0; f < faces; f++) {
       const name =
@@ -1353,7 +1987,14 @@ export async function run({
         "Free-form";
       kinds.set(name, (kinds.get(name) ?? 0) + 1);
     }
-    resultBox.replaceChildren(
+    const row = (label: string, value: string, title?: string) =>
+      el(
+        "tr",
+        title ? { title } : {},
+        el("td", {}, label),
+        el("td", {}, value),
+      );
+    return [
       el(
         "table",
         { className: "csg-table" },
@@ -1367,14 +2008,9 @@ export async function run({
             [...kinds].map(([k, n]) => `${n} ${k.toLowerCase()}`).join(", "),
           ),
           row(
-            "Validity",
-            valid,
-            "validateBrep, run in the worker on a final evaluation",
-          ),
-          row(
             `Kernel (${result.booleans} booleans)`,
             ms(t.kernelMs),
-            "Making the primitives, placing and tagging them, and every boolean, in the kernel",
+            "Making the primitives, placing and tagging them, and every boolean",
           ),
           row(
             "Convert to B-rep",
@@ -1413,281 +2049,135 @@ export async function run({
             ),
           ]
         : []),
-    );
+    ];
   };
 
-  const refreshPicked = () => {
-    if (!shown || pickedFace === undefined) {
-      pickedBox.replaceChildren(
-        el(
-          "p",
-          { className: "csg-note" },
-          "Click a face to see which node made it.",
-        ),
-      );
+  /** The status bar's summary of the solid shown. */
+  function refreshResult() {
+    kernelText.textContent = KERNEL_NAMES[settings.kernel];
+    if (!shown) {
+      validText.textContent = "";
+      timeText.textContent = "";
       return;
     }
-    const { form, faceTags } = shown.result;
-    const surface = form.faceSurface[pickedFace];
-    if (surface === undefined) {
-      pickedBox.replaceChildren();
-      return;
-    }
-    const identity = KIND_NAMES[form.surfaceIdentity[surface]!] ?? "Free-form";
-    const drawn = form.surfaceKind[surface] === 5 ? " (Bézier patches)" : "";
-    const tag = faceTags[pickedFace]!;
-    const path = tag > 0 ? pathTo(tree.current, tag) : [];
-    pickedBox.replaceChildren(
-      el(
-        "p",
-        {},
-        `Face ${pickedFace}: ${identity.toLowerCase()}${drawn}`,
-        path.length > 0
-          ? `, made by ${path[path.length - 1]!.name}`
-          : ", from no leaf of the tree (the kernel gave it no tag)",
-      ),
-      ...(path.length > 0
-        ? [
-            el(
-              "div",
-              { className: "csg-crumbs", ariaLabel: "Path to the root" },
-              ...[...path].reverse().flatMap((node, i) => [
-                ...(i > 0 ? ["‹"] : []),
-                el(
-                  "button",
-                  {
-                    type: "button",
-                    title: `Select ${node.name}: its faces light up`,
-                    onclick: () => select(node.id, true),
-                  },
-                  node.name,
-                ),
-              ]),
+    const { result } = shown;
+    const faces = result.form.faceSurface.length;
+    const problems = result.problems;
+    validText.textContent = "";
+    validText.append(
+      `${faces} faces · `,
+      problems === undefined
+        ? "checking…"
+        : problems.length === 0
+          ? el("span", { className: "csg-ok" }, "✓ valid")
+          : el(
+              "span",
+              {
+                className: "csg-bad",
+                title: problems
+                  .slice(0, 6)
+                  .map((p) => `${p.kind}, ${p.entity} ${p.index}: ${p.message}`)
+                  .join("\n"),
+              },
+              `✗ ${problems.length} problem${problems.length === 1 ? "" : "s"}`,
             ),
-          ]
-        : []),
     );
-  };
+    timeText.textContent = `${ms(result.timings.kernelMs)} kernel · ${ms(result.timings.roundTripMs)} total`;
+  }
 
-  const toggles = el(
-    "div",
-    { className: "csg-toggles" },
-    (() => {
-      const box = el("input", {
-        type: "checkbox",
-        checked: settings.edges,
-        onchange: () => setEdges(box.checked),
-      });
-      return el(
-        "label",
-        { title: "The exact edges, drawn over the faces." },
-        "B-rep edges",
-        box,
-      );
-    })(),
-    (() => {
-      const box = el("input", {
-        type: "checkbox",
-        checked: settings.byLeaf,
-        onchange: () => {
-          settings.byLeaf = box.checked;
-          applyColours();
-        },
-      });
-      return el(
-        "label",
-        { title: "Each face in the colour of the leaf that made it." },
-        "Colour by leaf",
-        box,
-      );
-    })(),
-  );
-
-  // ------------------------------------------------------------ lighting
-  const lit = () => {
-    applyLighting(viewer, lighting);
-  };
-  const persistLighting = () => setParams({ light: encodeLighting(lighting) });
-  const lightingFields = el("div", { className: "csg-group" });
-  const refreshLighting = () => {
-    const slider = (
-      label: string,
-      key: keyof typeof LIGHTING_RANGES,
-      unit?: string,
-    ) =>
-      field({
-        label,
-        value: lighting[key],
-        ...LIGHTING_RANGES[key],
-        floor: LIGHTING_RANGES[key].min,
-        ...(unit ? { unit } : {}),
-        onChange: (value, phase) => {
-          lighting[key] = value;
-          lit();
-          if (phase !== "drag") {
-            persistLighting();
-          }
-        },
-      });
-    const check = (
-      label: string,
-      title: string,
-      key: "shadows" | "ambientOcclusion",
-    ) => {
-      const box = el("input", {
-        type: "checkbox",
-        checked: lighting[key],
-        onchange: () => {
-          lighting[key] = box.checked;
-          lit();
-          persistLighting();
-        },
-      });
-      return el("label", { title }, label, box);
-    };
-    lightingFields.replaceChildren(
-      el("h4", {}, "Sun"),
-      slider("Azimuth", "azimuth", "°"),
-      slider("Elevation", "elevation", "°"),
-      slider("Intensity", "sun", "×"),
-      el("h4", {}, "Shadows and occlusion"),
-      el(
-        "div",
-        { className: "csg-toggles" },
-        check("Shadows", "The sun's cascaded shadow maps.", "shadows"),
-        check(
-          "Ambient occlusion",
-          "The sky's light hidden by nearby surfaces (GTAO).",
-          "ambientOcclusion",
-        ),
-      ),
-      slider("AO radius", "aoRadius", "m"),
-      el("h4", {}, "Sky and camera"),
-      slider("Sky light", "sky", "×"),
-      slider("Exposure", "exposure", "EV"),
-      el(
-        "button",
-        {
-          type: "button",
-          title: "Back to the sample's own light",
-          onclick: () => {
-            Object.assign(lighting, DEFAULT_LIGHTING);
-            lit();
-            persistLighting();
-            refreshLighting();
-          },
-        },
-        "Reset lighting",
-      ),
-      el(
-        "p",
-        { className: "csg-note" },
-        "Intensity 1 is the atmosphere's own light; another value is a white sun of that many times 100 klx. The engine's shadows have no softness or cascade options yet, and ambient occlusion has a radius but no strength.",
-      ),
-    );
-  };
-
-  // ----------------------------------------------------------- the panel
-  const stepSelect = el(
-    "select",
-    {
-      ariaLabel: "Import a NIST STEP sample",
-      title:
-        "A NIST test model, served from /step-samples/ (npm run setup fetches them)",
-      onchange: () => {
-        if (stepSelect.value) {
-          void importSample(stepSelect.value);
-          stepSelect.value = "";
-        }
-      },
-    },
-    el("option", { value: "", textContent: "STEP sample…" }),
-    ...STEP_SAMPLES.map((sample) =>
-      el("option", {
-        value: sample.file,
-        textContent: `${sample.name}: ${sample.description}`,
-      }),
-    ),
-  );
-  const stepInput = el("input", {
-    type: "file",
-    accept: ".step,.stp",
-    hidden: true,
-    onchange: () => {
-      const file = stepInput.files?.[0];
-      stepInput.value = "";
-      if (file) {
-        void importFile(file);
-      }
-    },
-  });
-  stepTools.append(
-    stepSelect,
-    el(
-      "button",
-      {
-        type: "button",
-        title:
-          "Import a STEP file from disk (or drop one on the view): Open CASCADE builds with it",
-        onclick: () => stepInput.click(),
-      },
-      "Open STEP…",
-    ),
-    stepInput,
-  );
-  const dragOver = (event: DragEvent) => {
-    if (event.dataTransfer?.types.includes("Files")) {
-      event.preventDefault();
-    }
-  };
-  const drop = (event: DragEvent) => {
-    const file = [...(event.dataTransfer?.files ?? [])].find((f) =>
-      /\.(step|stp)$/i.test(f.name),
-    );
-    if (file) {
-      event.preventDefault();
-      void importFile(file);
-    }
-  };
-  view_.addEventListener("dragover", dragOver);
-  view_.addEventListener("drop", drop);
-
-  panel.append(
-    kernelChoice.element,
-    kernelAbout,
-    el("h3", {}, "Tree"),
-    treeList,
-    tools,
-    stepTools,
-    el("h3", {}, "Selected node"),
-    inspector,
-    el("h3", {}, "Solid"),
-    resultBox,
-    el("h3", {}, "Picked face"),
-    pickedBox,
-    el("h3", {}, "Display"),
-    toggles,
-    el("h3", {}, "Lighting"),
-    lightingFields,
-    el(
-      "p",
-      { className: "csg-note" },
-      "One perspective view for now. The four-view layout (top, front, right and an isometric) waits for the orthographic camera.",
-    ),
-  );
-  refreshLighting();
-  refreshTree();
-  refreshInspector();
-  refreshResult();
-  refreshPicked();
-
+  // ----------------------------------------------------------- keyboard
   const onKey = (event: KeyboardEvent) => {
     const target = event.target as HTMLElement;
-    if (event.key === "Escape" && target.tagName !== "INPUT") {
-      select(undefined);
+    // Keys work while focus is anywhere in the workspace, or nowhere (after a click on the view).
+    if (target !== document.body && !view_.contains(target)) {
+      return;
+    }
+    if (
+      target.tagName === "INPUT" ||
+      target.tagName === "SELECT" ||
+      target.tagName === "TEXTAREA"
+    ) {
+      return;
+    }
+    const mod = event.ctrlKey || event.metaKey;
+    const key = event.key.toLowerCase();
+    if (mod) {
+      if (key === "z") {
+        event.preventDefault();
+        if (event.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      } else if (key === "y") {
+        event.preventDefault();
+        redo();
+      } else if (key === "d") {
+        event.preventDefault();
+        duplicateSelected();
+      }
+      return;
+    }
+    if (event.altKey) {
+      return;
+    }
+    if (event.key === "Escape") {
+      if (picked || selection.length > 0) {
+        select([]);
+      }
+    } else if (event.key === "Delete" || event.key === "Backspace") {
+      event.preventDefault();
+      removeSelected();
+    } else if (event.key === "F2") {
+      const id = primary();
+      if (id !== undefined) {
+        treePanel.rename(id);
+      }
+    } else if (event.shiftKey) {
+      const views: Record<string, StandardView | "iso"> = {
+        f: "front",
+        t: "top",
+        r: "right",
+        i: "iso",
+      };
+      const name = views[key];
+      if (name) {
+        goView(name);
+      }
+    } else if (/^[1-5]$/.test(key)) {
+      addPrimitive(PRIMITIVE_KINDS[Number(key) - 1]!);
+    } else if (key === "u") {
+      applyBoolean("union");
+    } else if (key === "d") {
+      applyBoolean("difference");
+    } else if (key === "i") {
+      applyBoolean("intersection");
+    } else if (key === "v") {
+      setTool("move");
+    } else if (key === "p") {
+      setTool("pushpull");
+    } else if (key === "e") {
+      toggle("edges", !settings.edges);
+    } else if (key === "w") {
+      toggle("wire", !settings.wire);
+    } else if (key === "c") {
+      toggle("byLeaf", !settings.byLeaf);
+    } else if (key === "g") {
+      toggle("snap", !settings.snap);
+    } else if (key === "f") {
+      goView("iso");
     }
   };
-  view_.addEventListener("keydown", onKey);
+  document.addEventListener("keydown", onKey);
+
+  // The first state.
+  refreshHistory();
+  refreshToolbar();
+  refreshTree();
+  refreshProperties();
+  refreshResult();
+  dot.dataset.state = "busy";
+  say("Loading the kernel…", false, 0);
 
   // The first evaluation: loads the kernel, then the default bracket.
   scheduler.commit();
@@ -1696,10 +2186,19 @@ export async function run({
     scheduler.stop();
     sequence++;
     clearTimeout(busyTimer);
+    clearTimeout(messageTimer);
     cancelAnimationFrame(previewFrame);
+    cancelAnimationFrame(cubeFrame);
+    manipulator.dispose();
+    treePanel.dispose();
+    resizeWatch.disconnect();
+    lightPopover.current?.close();
+    stepPopover.current?.close();
+    detailsPopover.current?.close();
     view_.removeEventListener("pointerdown", pointerDown);
     view_.removeEventListener("pointerup", pointerUp);
-    view_.removeEventListener("keydown", onKey);
+    view_.removeEventListener("pointerleave", hoverClear);
+    document.removeEventListener("keydown", onKey);
     view_.removeEventListener("dragover", dragOver);
     view_.removeEventListener("drop", drop);
     view_.classList.remove("csg-view");
@@ -1707,9 +2206,13 @@ export async function run({
       view_.removeAttribute("tabindex");
     }
     delete view_.dataset.loading;
+    delete view_.dataset.tool;
+    delete view_.dataset.cursor;
     style.remove();
     loading.remove();
-    status.remove();
+    app.remove();
+    cube.element.remove();
+    stepInput.remove();
     session.dispose();
     removeShown();
     if (preview) {

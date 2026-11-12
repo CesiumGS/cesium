@@ -77,11 +77,13 @@ export const EXAMPLES: ExampleInfo[] = [
     id: "csg",
     title: "Solid modeling with CSG",
     description:
-      "A small CAD tool whose interface is a tree of primitives and booleans, evaluated live by Open CASCADE or SMLib in WebAssembly workers and drawn as B-reps on the GPU. Edit a parameter and the solid re-evaluates as you drag; import a STEP file as a leaf; pick a face to find the node that made it, or select a node to see its faces. The sun, shadows, occlusion, sky light and exposure are in the panel.",
+      "A small CAD tool: a toolbar, a feature tree and a properties panel over the view. Build a solid from primitives and booleans, evaluated live by Open CASCADE or SMLib in WebAssembly workers and drawn as B-reps on the GPU. Drag rows to reorder or reparent the procedure, drag a gizmo to move and turn a part, push or pull a face to change the parameter that made it, import a STEP file, undo anything.",
     labels: ["B-reps", "CAD", "CSG"],
     globe: false,
-    layout: "side",
-    stackNarrow: true,
+    // The workspace is laid over the whole view, so the panel stays empty.
+    layout: "overlay",
+    inspector: "bottom-left",
+    panelTitle: "Solid modeling",
     load: () => import("./csg/main.ts"),
     source: () => import("./csg/main.ts?raw").then((m) => m.default),
   },
