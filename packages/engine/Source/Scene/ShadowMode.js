@@ -44,6 +44,11 @@ const ShadowMode = {
 ShadowMode.NUMBER_OF_SHADOW_MODES = 4;
 
 /**
+ * Determine whether a shadow mode casts shadows.
+ *
+ * @param {ShadowMode} shadowMode The shadow mode.
+ * @returns {boolean} <code>true</code> if the shadow mode casts shadows; otherwise, <code>false</code>.
+ *
  * @private
  */
 ShadowMode.castShadows = function (shadowMode) {
@@ -53,6 +58,11 @@ ShadowMode.castShadows = function (shadowMode) {
 };
 
 /**
+ * Determine whether a shadow mode receives shadows.
+ *
+ * @param {ShadowMode} shadowMode The shadow mode.
+ * @returns {boolean} <code>true</code> if the shadow mode receives shadows; otherwise, <code>false</code>.
+ *
  * @private
  */
 ShadowMode.receiveShadows = function (shadowMode) {
@@ -62,6 +72,12 @@ ShadowMode.receiveShadows = function (shadowMode) {
 };
 
 /**
+ * Get the shadow mode that matches whether shadows are cast and received.
+ *
+ * @param {boolean} castShadows Whether shadows are cast.
+ * @param {boolean} receiveShadows Whether shadows are received.
+ * @returns {ShadowMode} The shadow mode that casts and receives shadows as specified.
+ *
  * @private
  */
 ShadowMode.fromCastReceive = function (castShadows, receiveShadows) {

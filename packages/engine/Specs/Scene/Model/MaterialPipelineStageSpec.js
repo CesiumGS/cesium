@@ -1,13 +1,10 @@
+import { Cartesian3, Cartesian4, Matrix3, combine } from "@cesium/core";
 import {
   _shadersMaterialStageFS,
   AlphaMode,
-  Cartesian4,
-  Cartesian3,
   ClassificationType,
-  combine,
   GltfLoader,
   LightingModel,
-  Matrix3,
   MaterialPipelineStage,
   ModelAlphaOptions,
   ModelStatistics,
@@ -293,6 +290,59 @@ describe(
         u_baseColorTexture: metallicRoughness.baseColorTexture.texture,
         u_metallicRoughnessTexture:
           metallicRoughness.metallicRoughnessTexture.texture,
+      };
+      expectUniformMap(uniformMap, expectedUniforms);
+    });
+
+    it("adds emissiveStrength uniforms when KHR_materials_emissive_strength is present", async function () {
+      const gltfLoader = await loadGltf(boomBox);
+      const primitive = gltfLoader.components.nodes[0].primitives[0];
+
+      const material = primitive.material;
+      material.emissiveStrength = {
+        emissiveStrength: 12,
+      };
+      const metallicRoughness = material.metallicRoughness;
+      const renderResources = mockRenderResources();
+      const { shaderBuilder, uniformMap } = renderResources;
+
+      MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform sampler2D u_baseColorTexture;",
+        "uniform sampler2D u_metallicRoughnessTexture;",
+        "uniform sampler2D u_normalTexture;",
+        "uniform sampler2D u_occlusionTexture;",
+        "uniform sampler2D u_emissiveTexture;",
+        "uniform vec3 u_emissiveFactor;",
+        "uniform float u_emissiveStrength;",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_BASE_COLOR_TEXTURE",
+        "HAS_EMISSIVE_FACTOR",
+        "HAS_EMISSIVE_TEXTURE",
+        "HAS_METALLIC_ROUGHNESS_TEXTURE",
+        "HAS_NORMAL_TEXTURE",
+        "HAS_OCCLUSION_TEXTURE",
+        "TEXCOORD_BASE_COLOR v_texCoord_0",
+        "TEXCOORD_METALLIC_ROUGHNESS v_texCoord_0",
+        "TEXCOORD_NORMAL v_texCoord_0",
+        "TEXCOORD_EMISSIVE v_texCoord_0",
+        "TEXCOORD_OCCLUSION v_texCoord_0",
+        "USE_METALLIC_ROUGHNESS",
+        "HAS_EMISSIVE_STRENGTH",
+      ]);
+
+      const expectedUniforms = {
+        u_normalTexture: material.normalTexture.texture,
+        u_occlusionTexture: material.occlusionTexture.texture,
+        u_baseColorTexture: metallicRoughness.baseColorTexture.texture,
+        u_metallicRoughnessTexture:
+          metallicRoughness.metallicRoughnessTexture.texture,
+        u_emissiveStrength: material.emissiveStrength.emissiveStrength,
       };
       expectUniformMap(uniformMap, expectedUniforms);
     });

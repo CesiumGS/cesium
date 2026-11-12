@@ -1,12 +1,14 @@
-import BoundingSphere from "../../Core/BoundingSphere.js";
-import Cartesian2 from "../../Core/Cartesian2.js";
-import CesiumMath from "../../Core/Math.js";
-import Check from "../../Core/Check.js";
-import clone from "../../Core/clone.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import WebGLConstants from "../../Core/WebGLConstants.js";
+import {
+  BoundingSphere,
+  Cartesian2,
+  Check,
+  Frozen,
+  Math as CesiumMath,
+  Matrix4,
+  WebGLConstants,
+  clone,
+  defined,
+} from "@cesium/core";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";
@@ -714,6 +716,11 @@ ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
     mode === EdgeDisplayMode.EDGES_ONLY
       ? Pass.CESIUM_3D_TILE_EDGES_DIRECT
       : Pass.CESIUM_3D_TILE_EDGES;
+
+  if (edgePass === Pass.CESIUM_3D_TILE_EDGES) {
+    // Renewed per frame; Scene resets this flag before primitives update.
+    frameState.edgeVisibilityRequested = true;
+  }
 
   this._edgeCommand.command.pass = edgePass;
   if (defined(this._edgeCommand.derivedCommand2D)) {

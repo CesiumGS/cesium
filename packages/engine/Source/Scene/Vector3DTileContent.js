@@ -1,14 +1,16 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Rectangle from "../Core/Rectangle.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  Cartesian3,
+  ComponentDatatype,
+  DeveloperError,
+  Ellipsoid,
+  Math as CesiumMath,
+  Matrix4,
+  Rectangle,
+  RuntimeError,
+  defined,
+  destroyObject,
+  getJsonFromTypedArray,
+} from "@cesium/core";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import Vector3DTilePoints from "./Vector3DTilePoints.js";
@@ -33,7 +35,7 @@ class Vector3DTileContent {
     this._tileset = tileset;
     this._tile = tile;
     this._resource = resource;
-
+    this._show = true;
     this._polygons = undefined;
     this._polylines = undefined;
     this._points = undefined;
@@ -148,6 +150,15 @@ class Vector3DTileContent {
     this._group = value;
   }
 
+  /** @inheritdoc */
+  get show() {
+    return this._show;
+  }
+
+  set show(value) {
+    this._show = value;
+  }
+
   hasProperty(batchId, name) {
     return this._batchTable.hasProperty(batchId, name);
   }
@@ -203,15 +214,21 @@ class Vector3DTileContent {
     if (defined(this._polygons)) {
       this._polygons.classificationType = this._tileset.classificationType;
       this._polygons.debugWireframe = this._tileset.debugWireframe;
-      this._polygons.update(frameState);
+      if ((this._polygons.ready && this._show) || !this._polygons.ready) {
+        this._polygons.update(frameState);
+      }
       ready = ready && this._polygons.ready;
     }
     if (defined(this._polylines)) {
-      this._polylines.update(frameState);
+      if ((this._polylines.ready && this._show) || !this._polylines.ready) {
+        this._polylines.update(frameState);
+      }
       ready = ready && this._polylines.ready;
     }
     if (defined(this._points)) {
-      this._points.update(frameState);
+      if ((this._points.ready && this._show) || !this._points.ready) {
+        this._points.update(frameState);
+      }
       ready = ready && this._points.ready;
     }
     if (defined(this._batchTable) && ready) {

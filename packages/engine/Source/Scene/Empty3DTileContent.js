@@ -1,5 +1,4 @@
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError, destroyObject } from "@cesium/core";
 
 /**
  * Represents empty content for tiles in a
@@ -16,7 +15,7 @@ class Empty3DTileContent {
   constructor(tileset, tile) {
     this._tileset = tileset;
     this._tile = tile;
-
+    this._show = true;
     this.featurePropertiesDirty = false;
   }
 
@@ -94,6 +93,15 @@ class Empty3DTileContent {
     //>>includeStart('debug', pragmas.debug);
     throw new DeveloperError("Empty3DTileContent cannot have group metadata");
     //>>includeEnd('debug');
+  }
+
+  /** @inheritdoc */
+  get show() {
+    return this._show;
+  }
+
+  set show(value) {
+    this._show = value;
   }
 
   /**

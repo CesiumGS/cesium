@@ -3,12 +3,9 @@ import {
   Cartesian3,
   Ellipsoid,
   JulianDate,
-  ConstantPositionProperty,
-  Entity,
-  EntityView,
   TrackingReferenceFrame,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { ConstantPositionProperty, Entity, EntityView } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

@@ -1,6 +1,18 @@
 void modelClippingPolygonsStage()
 {
-    vec2 clippingPosition = v_clippingPosition;
-    int regionIndex = v_regionIndex;
-    czm_clipPolygons(model_clippingDistance, CLIPPING_POLYGON_REGIONS_LENGTH, clippingPosition, regionIndex);
+    // The lookup uv was computed per vertex in the vertex stage and
+    // interpolated across the primitive, so the fragment shader only samples it.
+    bool insideAny = vectorClip(v_clippingUv);
+
+#ifdef CLIPPING_INVERSE
+    if (!insideAny)
+    {
+        discard;
+    }
+#else
+    if (insideAny)
+    {
+        discard;
+    }
+#endif
 }

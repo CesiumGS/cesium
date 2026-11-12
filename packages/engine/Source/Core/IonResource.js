@@ -1,11 +1,8 @@
+import { Check, Frozen, RuntimeError, defined } from "@cesium/core";
 import Uri from "urijs";
-import Check from "./Check.js";
 import Credit from "./Credit.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
 import Ion from "./Ion.js";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
 
 /**
  * A function that will be invoked when the access token is refreshed.
@@ -269,6 +266,11 @@ function addClientHeaders(headers = {}) {
 
   return headers;
 }
+
+/**
+ * @private
+ **/
+IonResource._addClientHeaders = addClientHeaders;
 
 function retryCallback(that, error) {
   const ionRoot = that._ionRoot ?? that;

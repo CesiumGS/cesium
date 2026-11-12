@@ -1,4 +1,4 @@
-import { defined } from "@cesium/engine";
+import { defined } from "@cesium/core";
 import knockout from "../ThirdParty/knockout.js";
 
 function expandItemsHandler(data, event) {
@@ -87,7 +87,7 @@ async function setLevels(i3sProvider, levels) {
 
 /**
  * The view model for {@link I3SBuildingSceneLayerExplorer}.
- * @alias I3sBslExplorerViewModel
+ * @alias I3SBuildingSceneLayerExplorerViewModel
  * @constructor
  *
  * @param {I3SDataProvider} i3sProvider I3S Data provider instance.

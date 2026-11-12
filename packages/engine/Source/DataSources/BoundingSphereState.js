@@ -1,26 +1,32 @@
 /**
  * The state of a BoundingSphere computation being performed by a {@link Visualizer}.
  * @enum {number}
- * @private
+ * @internal
  */
-const BoundingSphereState = Object.freeze({
+const BoundingSphereState = {
   /**
    * The BoundingSphere has been computed.
    * @type BoundingSphereState
    * @constant
+   * @private
    */
   DONE: 0,
   /**
    * The BoundingSphere is still being computed.
    * @type BoundingSphereState
    * @constant
+   * @private
    */
   PENDING: 1,
   /**
    * The BoundingSphere does not exist.
    * @type BoundingSphereState
    * @constant
+   * @internal
    */
   FAILED: 2,
-});
+};
+
+Object.freeze(BoundingSphereState);
+
 export default BoundingSphereState;

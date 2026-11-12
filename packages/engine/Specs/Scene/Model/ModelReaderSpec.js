@@ -1,9 +1,4 @@
 import {
-  Model,
-  ModelComponents,
-  ModelUtility,
-  ResourceCache,
-  Math as CesiumMath,
   AttributeCompression,
   AttributeType,
   Cartesian2,
@@ -12,12 +7,18 @@ import {
   Ellipsoid,
   GeographicProjection,
   IndexDatatype,
+  Math as CesiumMath,
   Matrix4,
-  ModelReader,
   Quaternion,
   TranslationRotationScale,
+} from "@cesium/core";
+import {
+  Model,
+  ModelComponents,
+  ModelUtility,
+  ResourceCache,
+  ModelReader,
 } from "../../../index.js";
-
 import createScene from "../../../../../Specs/createScene.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
 

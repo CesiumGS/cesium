@@ -1,6 +1,12 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
+import {
+  Check,
+  Frozen,
+  PixelDatatype,
+  PixelFormat,
+  RuntimeError,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import PropertyTable from "./PropertyTable.js";
 import PropertyTexture from "./PropertyTexture.js";
 import PropertyAttribute from "./PropertyAttribute.js";
@@ -8,10 +14,6 @@ import StructuralMetadata from "./StructuralMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
@@ -126,7 +128,7 @@ const NUM_CHANNELS = 4;
 
 /**
  * Creates a texture from a set of property table properties (those which are GPU compatible).
- * Each row of the texture is a property, with each column corresponding to a given feature.
+ * Property values are packed linearly in a 2D RGBA8 texture.
  *
  * @param {PropertyTable} propertyTable The property table.
  * @param {Object<string, Uint8Array>} bufferViews An object mapping bufferView IDs to Uint8Array objects for the given property table.
@@ -170,11 +172,16 @@ function createTextureForPropertyTable(
     return undefined;
   }
 
-  // In the future, we could use multiple textures if we would exceed the maximum texture size.
-  if (
-    numFeatures > ContextLimits.maximumTextureSize ||
-    numGpuCompatibleProperties > ContextLimits.maximumTextureSize
-  ) {
+  if (numFeatures === 0) {
+    return undefined;
+  }
+
+  const maxTextureSize = ContextLimits.maximumTextureSize;
+  const textureWidth = Math.min(numFeatures, maxTextureSize);
+  const totalTexels = numGpuCompatibleProperties * numFeatures;
+  const textureHeight = Math.ceil(totalTexels / textureWidth);
+
+  if (textureHeight > maxTextureSize) {
     oneTimeWarning(
       "PropertyTableTextureExceedsMaximumSize",
       `Cannot create a texture for the property table "${propertyTable.name}" because it exceeds the maximum texture size of ${ContextLimits.maximumTextureSize}.`,
@@ -185,6 +192,8 @@ function createTextureForPropertyTable(
   const packedBufferView = packPropertyTablePropertiesIntoRGBA8(
     gpuCompatiblePropertyInfo,
     numFeatures,
+    textureWidth,
+    textureHeight,
   );
 
   // Create a sampler fit for sampling raw data without mipmapping / filtering etc.
@@ -202,8 +211,8 @@ function createTextureForPropertyTable(
     sampler: sampler,
     flipY: false,
     source: {
-      width: numFeatures,
-      height: numGpuCompatibleProperties,
+      width: textureWidth,
+      height: textureHeight,
       arrayBufferView: packedBufferView,
     },
   });
@@ -316,10 +325,15 @@ function createNoDataBufferView(classProperty, numFeatures) {
 // Make one big buffer view to load into the texture
 // Since each texel is always 4 bytes (RGBA8 format), elements less than 4 bytes need to be padded (respecting little-endian order).
 // Exception: single-component 64-bit types can be downcast to 32-bit for GPU compatibility (with potential loss of precision / range).
-function packPropertyTablePropertiesIntoRGBA8(propertyInfos, numFeatures) {
+function packPropertyTablePropertiesIntoRGBA8(
+  propertyInfos,
+  numFeatures,
+  textureWidth,
+  textureHeight,
+) {
   const numGpuCompatibleProperties = propertyInfos.length;
   const packedBufferView = new Uint8Array(
-    numGpuCompatibleProperties * numFeatures * NUM_CHANNELS,
+    textureWidth * textureHeight * NUM_CHANNELS,
   );
   const packedDataView = new DataView(
     packedBufferView.buffer,
@@ -334,30 +348,39 @@ function packPropertyTablePropertiesIntoRGBA8(propertyInfos, numFeatures) {
   ) {
     const propertyInfo = propertyInfos[propertyIndex];
     const classProperty = propertyInfo.classProperty;
-    const rowOffset = propertyIndex * numFeatures * NUM_CHANNELS;
+    const propertyLinearTexelOffset = propertyIndex * numFeatures;
     const sourceType = classProperty.valueType;
     const packedType = MetadataComponentType.gpuComponentType(sourceType);
 
     // E.g. When the source component type is INT64, we first downcast each element to INT32 before packing into the GPU buffer.
     if (sourceType !== packedType) {
-      downcastAndPackProperty(propertyInfo, packedDataView, rowOffset);
+      downcastAndPackProperty(
+        propertyInfo,
+        packedDataView,
+        propertyLinearTexelOffset,
+      );
       continue;
     }
 
-    packProperty(propertyInfo, packedBufferView, rowOffset);
+    packProperty(propertyInfo, packedBufferView, propertyLinearTexelOffset);
   }
 
   return packedBufferView;
 }
 
-function packProperty(propertyInfo, packedBufferView, rowOffset) {
+function packProperty(
+  propertyInfo,
+  packedBufferView,
+  propertyLinearTexelOffset,
+) {
   const bufferView = propertyInfo.view;
   const bytesPerElement = propertyInfo.classProperty.cpuBytesPerElement();
   const numElements = bufferView.length / bytesPerElement;
 
   for (let elementIndex = 0; elementIndex < numElements; elementIndex++) {
     const sourceOffset = elementIndex * bytesPerElement;
-    const destinationOffset = rowOffset + elementIndex * NUM_CHANNELS;
+    const destinationOffset =
+      (propertyLinearTexelOffset + elementIndex) * NUM_CHANNELS;
 
     packedBufferView.set(
       bufferView.subarray(sourceOffset, sourceOffset + bytesPerElement),
@@ -369,7 +392,11 @@ function packProperty(propertyInfo, packedBufferView, rowOffset) {
 // This is the slow path - rather than doing a straight copy, we need to interpret and downcast each element before packing it into the GPU buffer.
 // Note: this function does not handle properties with multiple components per element (or arrays). While not complete, this is OK because
 // multi-component properties with 64-bit types - even when downcast to 32 bits - cannot fit into a single RGBA8 texel.
-function downcastAndPackProperty(propertyInfo, packedDataView, rowOffset) {
+function downcastAndPackProperty(
+  propertyInfo,
+  packedDataView,
+  propertyLinearTexelOffset,
+) {
   const classProperty = propertyInfo.classProperty;
   const bufferView = propertyInfo.view;
   const sourceType = classProperty.valueType;
@@ -396,7 +423,8 @@ function downcastAndPackProperty(propertyInfo, packedDataView, rowOffset) {
 
   for (let elementIndex = 0; elementIndex < numElements; elementIndex++) {
     const sourceElementOffset = elementIndex * bytesPerElement;
-    const destinationElementOffset = rowOffset + elementIndex * NUM_CHANNELS;
+    const destinationElementOffset =
+      (propertyLinearTexelOffset + elementIndex) * NUM_CHANNELS;
 
     const value = sourceAccessors.get(sourceElementOffset);
     packedAccessors.set(destinationElementOffset, downcastFunction(value));

@@ -77,7 +77,7 @@ void main()
     }
     #endif
 
-    #ifdef HAS_POINT_CLOUD_SHOW_STYLE
+    #if defined(HAS_POINT_CLOUD_SHOW_STYLE) || defined(HAS_POINT_CLOUD_BACK_FACE_CULLING)
         if (v_pointCloudShow == 0.0)
         {
             discard;
@@ -175,6 +175,10 @@ void main()
 
     #ifdef ENABLE_CLIPPING_POLYGONS
     modelClippingPolygonsStage();
+    #endif
+
+    #ifdef HAS_VECTOR_LOOKUP
+    modelVectorLookupStage(color);
     #endif
 
     //========================================================================

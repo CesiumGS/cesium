@@ -1,7 +1,5 @@
+import { Cartesian3, JulianDate, ReferenceFrame } from "@cesium/core";
 import {
-  Cartesian3,
-  JulianDate,
-  ReferenceFrame,
   ConstantPositionProperty,
   PositionPropertyArray,
   SampledPositionProperty,

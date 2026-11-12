@@ -1,20 +1,22 @@
-import Check from "../Core/Check.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Geometry from "../Core/Geometry.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import CesiumMath from "../Core/Math.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  AttributeType,
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  Frozen,
+  Geometry,
+  IndexDatatype,
+  Math as CesiumMath,
+  RuntimeError,
+  assert,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Buffer from "./Buffer.js";
 import BufferUsage from "./BufferUsage.js";
 import ContextLimits from "./ContextLimits.js";
-import AttributeType from "../Scene/AttributeType.js";
-import assert from "../Core/assert.js";
 
-/** @import {TypedArray, TypedArrayConstructor} from "../Core/globalTypes.js"; */
+/** @import {TypedArray, TypedArrayConstructor} from "@cesium/core"; */
 
 /** @ignore */
 function addAttribute(attributes, attribute, index, context) {
@@ -183,7 +185,7 @@ function bind(gl, attributes, indexBuffer) {
  * @param {object} options Object with the following properties:
  * @param {Context} options.context The context in which the VertexArray gets created.
  * @param {object[]} options.attributes An array of attributes.
- * @param {IndexBuffer} [options.indexBuffer] An optional index buffer.
+ * @param {Buffer} [options.indexBuffer] An optional index buffer.
  *
  * @returns {VertexArray} The vertex array, ready for use with drawing.
  *

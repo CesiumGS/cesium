@@ -1,9 +1,11 @@
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
+import {
+  DeveloperError,
+  Frozen,
+  PixelDatatype,
+  PixelFormat,
+  defined,
+} from "@cesium/core";
 import Resource from "../../Core/Resource.js";
-import PixelFormat from "../../Core/PixelFormat.js";
-import PixelDatatype from "../../Renderer/PixelDatatype.js";
 import Sampler from "../../Renderer/Sampler.js";
 import TextureWrap from "../../Renderer/TextureWrap.js";
 
@@ -12,7 +14,7 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
  * uniform. This is used with {@link CustomShader} and {@link TextureManager}
  *
  * @param {object} options An object with the following properties:
- * @param {Uint8Array} [options.typedArray] A typed array storing the contents of a texture. Values are stored in row-major order. Since WebGL uses a y-up convention for textures, rows are listed from bottom to top.
+ * @param {TypedArray} [options.typedArray] A typed array storing the contents of a texture, its type matching options.pixelDatatype. Values are stored in row-major order. Since WebGL uses a y-up convention for textures, rows are listed from bottom to top.
  * @param {number} [options.width] The width of the image. Required when options.typedArray is present
  * @param {number} [options.height] The height of the image. Required when options.typedArray is present.
  * @param {string|Resource} [options.url] A URL string or resource pointing to a texture image.

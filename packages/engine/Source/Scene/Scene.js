@@ -1,39 +1,42 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import BoxGeometry from "../Core/BoxGeometry.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import createGuid from "../Core/createGuid.js";
-import CullingVolume from "../Core/CullingVolume.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
-import Event from "../Core/Event.js";
-import GeographicProjection from "../Core/GeographicProjection.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import GeometryPipeline from "../Core/GeometryPipeline.js";
-import HeightReference from "./HeightReference.js";
-import Intersect from "../Core/Intersect.js";
-import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import mergeSort from "../Core/mergeSort.js";
-import Occluder from "../Core/Occluder.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
-import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
-import PerspectiveOffCenterFrustum from "../Core/PerspectiveOffCenterFrustum.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  BoundingRectangle,
+  BoundingSphere,
+  BoxGeometry,
+  Cartesian3,
+  Cartographic,
+  Check,
+  Color,
+  ColorGeometryInstanceAttribute,
+  CullingVolume,
+  DeveloperError,
+  Ellipsoid,
+  EllipsoidGeometry,
+  Event,
+  FixedFrameTransforms,
+  Frozen,
+  GeographicProjection,
+  GeometryInstance,
+  GeometryPipeline,
+  Intersect,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix4,
+  Occluder,
+  OrthographicFrustum,
+  OrthographicOffCenterFrustum,
+  PerspectiveFrustum,
+  PerspectiveOffCenterFrustum,
+  Rectangle,
+  clone,
+  createGuid,
+  defined,
+  destroyObject,
+  mergeSort,
+} from "@cesium/core";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
-import Transforms from "../Core/Transforms.js";
+import VectorProvider from "../Core/VectorProvider.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import ComputeEngine from "../Renderer/ComputeEngine.js";
 import Context from "../Renderer/Context.js";
@@ -84,6 +87,7 @@ import getMetadataClassProperty from "./getMetadataClassProperty.js";
 import PickedMetadataInfo from "./PickedMetadataInfo.js";
 import getMetadataProperty from "./getMetadataProperty.js";
 
+/** @ignore */
 const requestRenderAfterFrame = function (scene) {
   return function () {
     scene.frameState.afterRender.push(function () {
@@ -792,6 +796,7 @@ function Scene(options) {
 /**
  * Use this to set the default value for {@link Scene#logarithmicDepthBuffer} in newly constructed Scenes
  * This property relies on fragmentDepth being supported.
+ * @type {boolean}
  */
 Scene.defaultLogDepthBuffer = true;
 
@@ -3503,7 +3508,7 @@ function execute2DViewportCommands(scene, passState) {
     -camera.positionWC.x,
     scratch2DViewportEyePoint,
   );
-  const windowCoordinates = Transforms.pointToGLWindowCoordinates(
+  const windowCoordinates = FixedFrameTransforms.pointToGLWindowCoordinates(
     projectionMatrix,
     viewportTransformation,
     eyePoint,
@@ -3660,6 +3665,56 @@ function executeCommandsInViewport(firstViewport, scene, passState) {
 const scratchCullingVolume = new CullingVolume();
 
 /**
+ * Marks every drapeable collection in the subtree so the vector provider bakes it this frame
+ *
+ * @param {PrimitiveCollection} collection
+ * @param {VectorProvider} vectorProvider
+ * @param {number} frameNumber
+ * @private
+ */
+function markVectorCollections(collection, vectorProvider, frameNumber) {
+  if (!collection.show) {
+    return;
+  }
+
+  const length = collection.length;
+  for (let i = 0; i < length; ++i) {
+    const primitive = collection.get(i);
+    if (primitive instanceof PrimitiveCollection) {
+      markVectorCollections(primitive, vectorProvider, frameNumber);
+      continue;
+    }
+
+    if (
+      primitive.show &&
+      VectorProvider.isSupported(primitive) &&
+      isHeightReferenceClamp(primitive.heightReference)
+    ) {
+      vectorProvider.markForFrame(
+        primitive,
+        frameNumber,
+        primitive.heightReference,
+      );
+    }
+  }
+}
+
+/**
+ * @param {Scene} scene
+ * @param {FrameState} frameState
+ * @private
+ */
+function updateVectorProvider(scene, frameState) {
+  const vectorProvider = scene.vectorProvider;
+  if (!defined(vectorProvider)) {
+    return;
+  }
+
+  const frameNumber = frameState.frameNumber;
+  markVectorCollections(scene._primitives, vectorProvider, frameNumber);
+}
+
+/**
  * @private
  */
 Scene.prototype.updateEnvironment = function () {
@@ -3793,6 +3848,8 @@ Scene.prototype.updateEnvironment = function () {
   if (defined(this._specularEnvironmentCubeMap)) {
     this._specularEnvironmentCubeMap.update(frameState);
   }
+
+  updateVectorProvider(this, frameState);
 };
 
 function updateDebugFrustumPlanes(scene) {
@@ -3884,6 +3941,12 @@ function updateAndRenderPrimitives(scene) {
     scene._enableEdgeVisibility === false
   ) {
     scene._enableEdgeVisibility = true;
+    // Framebuffer setup already ran before primitive updates this frame.
+    scene._view.edgeFramebuffer.update(
+      scene._context,
+      scene._view.viewport,
+      scene._hdr,
+    );
   }
 
   // True only while at least one planar fill primitive is rendering;
@@ -4724,6 +4787,7 @@ Scene.prototype.pick = function (windowPosition, width, height) {
  * @typedef {object} SceneSnapResult
  * @property {object} object The snapped primitive or feature.
  * @property {Cartesian3} position The world-space position of the snap point, un-projected from the snap framebuffer's eye-space depth.
+ * @property {Cartesian3|undefined} surfacePosition The world-space position of the same object's surface fragment nearest the snap point. For a surface snap this equals <code>position</code>; for an edge snap it is a point on a face of the object rather than on its silhouette, or <code>undefined</code> if no surface fragment of the object is visible in the search region.
  * @property {Cartesian2} screenPosition The window coordinates of the snap point.
  * @property {boolean} isEdge <code>true</code> if the snap point lies on an edge; <code>false</code> if it lies on a surface.
  *
@@ -4771,7 +4835,7 @@ Scene.prototype.snap = function (windowPosition, options) {
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {Promise<Object | undefined>} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
+ * @returns {Promise<object | undefined>} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
  *
  * @see Scene#pick
  */
@@ -4820,8 +4884,21 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
     width,
     height,
   );
+  // The pick pass writes tileIndex * samplesPerTile + sampleIndex + 1,
+  // most significant byte first. 0 means no voxel sample was rendered there.
+  const pickId =
+    voxelCoordinate[0] * 16777216 +
+    voxelCoordinate[1] * 65536 +
+    voxelCoordinate[2] * 256 +
+    voxelCoordinate[3];
+  if (pickId === 0) {
+    return;
+  }
+  const { inputDimensions } = voxelPrimitive;
+  const samplesPerTile =
+    inputDimensions.x * inputDimensions.y * inputDimensions.z;
   // Look up the keyframeNode containing this picked cell
-  const tileIndex = 255 * voxelCoordinate[0] + voxelCoordinate[1];
+  const tileIndex = Math.floor((pickId - 1) / samplesPerTile);
   const keyframeNode = voxelPrimitive._traversal.findKeyframeNode(tileIndex);
   if (!defined(keyframeNode)) {
     // The tile rendered at the pick position has since been discarded by
@@ -4829,7 +4906,7 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
     return;
   }
   // Look up the metadata for the picked cell
-  const sampleIndex = 255 * voxelCoordinate[2] + voxelCoordinate[3];
+  const sampleIndex = (pickId - 1) % samplesPerTile;
   return VoxelCell.fromKeyframeNode(
     voxelPrimitive,
     tileIndex,
@@ -5136,7 +5213,7 @@ Scene.prototype.pickFromRayMostDetailed = function (
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
  * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Promise<Object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
+ * @returns {Promise<object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  */

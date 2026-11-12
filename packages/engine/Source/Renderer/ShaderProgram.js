@@ -1,9 +1,11 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  RuntimeError,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import AutomaticUniforms from "./AutomaticUniforms.js";
 import ContextLimits from "./ContextLimits.js";
 import createUniform from "./createUniform.js";
@@ -384,6 +386,11 @@ function findUniforms(gl, program) {
               locations.push(loc);
             }
           }
+
+          if (locations.length === 0) {
+            continue;
+          }
+
           uniformArray = createUniformArray(
             gl,
             activeUniform,

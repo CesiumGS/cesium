@@ -1,4 +1,5 @@
-import { buildVectorGltfFromMVT, PrimitiveType } from "../../index.js";
+import { PrimitiveType } from "@cesium/core";
+import { buildVectorGltfFromMVT } from "../../index.js";
 
 /**
  * Parse a GLB Uint8Array and return the embedded glTF JSON.

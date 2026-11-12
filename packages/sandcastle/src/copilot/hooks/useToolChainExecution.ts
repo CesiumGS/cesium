@@ -16,6 +16,14 @@ import {
 } from "../ai/tools/toolRegistry";
 import { AIClientFactory } from "../ai/clients/AIClientFactory";
 import { buildGeminiFunctionCallPart } from "../ai/clients/geminiShared";
+import { trackEvent } from "../../analytics";
+
+export interface ApplyTrackingContext {
+  model: string;
+  provider: string;
+  /** Whether the active request is a machine-generated auto-fix retry */
+  autoFix: boolean;
+}
 
 type ContentBlock =
   | { type: "text"; text: string }
@@ -32,6 +40,12 @@ interface UseToolChainExecutionParams {
   codeContext: CodeContext;
   onApplyCode: (javascript?: string, html?: string, autoRun?: boolean) => void;
   onClearConsole?: () => void;
+  /**
+   * Returns the model/provider context of the request that produced the
+   * current tool chain, for analytics on applied code. Applies only happen
+   * while a request is active, so the caller sets this before each send.
+   */
+  getApplyTracking?: () => ApplyTrackingContext | null;
   addMessage: (msg: ChatMessageType) => void;
   updateMessage: (id: string, data: Partial<ChatMessageType>) => void;
   appendToolCallToMessage: (
@@ -49,6 +63,7 @@ export function useToolChainExecution({
   codeContext,
   onApplyCode,
   onClearConsole,
+  getApplyTracking,
   addMessage,
   updateMessage,
   appendToolCallToMessage,
@@ -119,6 +134,16 @@ export function useToolChainExecution({
             } else {
               onApplyCode(undefined, modifiedCode, false);
             }
+            // A multi-step tool chain fires once per applied edit. Funnels
+            // comparing against "Copilot Message Sent" (which excludes
+            // auto-fix retries) should filter to source = chat.
+            const tracking = getApplyTracking?.() ?? null;
+            trackEvent("Copilot Code Applied", {
+              ...(tracking
+                ? { model: tracking.model, provider: tracking.provider }
+                : {}),
+              source: tracking?.autoFix ? "auto_fix" : "chat",
+            });
             onClearConsole?.();
           }
         } catch (e) {
@@ -138,7 +163,7 @@ export function useToolChainExecution({
 
       return result;
     },
-    [onApplyCode, onClearConsole],
+    [onApplyCode, onClearConsole, getApplyTracking],
   );
 
   const continueToolChain = useCallback(

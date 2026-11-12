@@ -1,13 +1,10 @@
+import { Cartesian3, Color, DistanceDisplayCondition } from "@cesium/core";
 import {
-  Cartesian3,
-  Color,
-  DistanceDisplayCondition,
   ColorMaterialProperty,
   ConstantProperty,
   EllipsoidGraphics,
   ShadowMode,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 import testMaterialDefinitionChanged from "../../../../Specs/testMaterialDefinitionChanged.js";
 

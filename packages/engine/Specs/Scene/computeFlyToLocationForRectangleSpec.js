@@ -1,10 +1,9 @@
+import { Rectangle } from "@cesium/core";
 import {
-  Rectangle,
   computeFlyToLocationForRectangle,
   Globe,
   SceneMode,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
 

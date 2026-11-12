@@ -1,9 +1,11 @@
-import Color from "../../Core/Color.js";
-import combine from "../../Core/combine.js";
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import Ellipsoid from "../../Core/Ellipsoid.js";
+import {
+  Color,
+  DeveloperError,
+  Ellipsoid,
+  combine,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Pass from "../../Renderer/Pass.js";
 import ModelAnimationLoop from "../ModelAnimationLoop.js";
 import Model from "./Model.js";
@@ -137,6 +139,15 @@ class Model3DTileContent {
 
   set group(value) {
     this._group = value;
+  }
+
+  /** @inheritdoc */
+  get show() {
+    return this._model.show;
+  }
+
+  set show(value) {
+    this._model._show = value;
   }
 
   /**
@@ -308,6 +319,10 @@ class Model3DTileContent {
     ) {
       model._clippingPolygons = tilesetClippingPolygons;
       model._clippingPolygonsState = 0;
+    }
+
+    if (tile.clippingPolygonsNeedRebake) {
+      model._clippingPolygonsNeedRebake = true;
     }
 
     model.update(frameState);
@@ -490,6 +505,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     incrementallyLoadTextures: false,
     customShader: tileset.customShader,
     content: content,
+    scene: tileset._scene,
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
     lightColor: tileset.lightColor,

@@ -1,13 +1,15 @@
 import {
   Cartesian3,
+  FixedFrameTransforms,
   JulianDate,
   Matrix3,
   Matrix4,
   Quaternion,
-  TrackingReferenceFrame,
   TimeInterval,
   TimeIntervalCollection,
-  Transforms,
+  TrackingReferenceFrame,
+} from "@cesium/core";
+import {
   BillboardGraphics,
   BoxGraphics,
   ConstantPositionProperty,
@@ -320,7 +322,7 @@ describe("DataSources/Entity", function () {
     entity.position = new ConstantProperty(position);
 
     const modelMatrix = entity.computeModelMatrix(new JulianDate());
-    const expected = Transforms.eastNorthUpToFixedFrame(position);
+    const expected = FixedFrameTransforms.eastNorthUpToFixedFrame(position);
     expect(modelMatrix).toEqual(expected);
   });
 
@@ -331,7 +333,7 @@ describe("DataSources/Entity", function () {
 
     const result = new Matrix4();
     const modelMatrix = entity.computeModelMatrix(new JulianDate(), result);
-    const expected = Transforms.eastNorthUpToFixedFrame(position);
+    const expected = FixedFrameTransforms.eastNorthUpToFixedFrame(position);
     expect(modelMatrix).toBe(result);
     expect(modelMatrix).toEqual(expected);
   });

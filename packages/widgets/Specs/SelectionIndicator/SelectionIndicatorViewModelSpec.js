@@ -1,7 +1,5 @@
-import { Cartesian2, Cartesian3 } from "@cesium/engine";
-
+import { Cartesian2, Cartesian3 } from "@cesium/core";
 import { SelectionIndicatorViewModel } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

@@ -1,16 +1,18 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  Cartesian2,
+  Check,
+  Color,
+  DeveloperError,
+  Frozen,
+  Math as CesiumMath,
+  PixelDatatype,
+  PixelFormat,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ContextLimits from "./ContextLimits.js";
 import MipmapHint from "./MipmapHint.js";
-import PixelDatatype from "./PixelDatatype.js";
 import Sampler from "./Sampler.js";
 import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";
@@ -83,7 +85,7 @@ function Texture(options) {
   const internalFormat = PixelFormat.toInternalFormat(
     pixelFormat,
     pixelDatatype,
-    context,
+    context.webgl2,
   );
 
   const isCompressed = PixelFormat.isCompressedFormat(internalFormat);
@@ -366,7 +368,7 @@ function loadBufferSource(texture, source) {
     height,
     0,
     pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
     arrayBufferView,
   );
 
@@ -384,7 +386,7 @@ function loadBufferSource(texture, source) {
         mipHeight,
         0,
         pixelFormat,
-        PixelDatatype.toWebGLConstant(pixelDatatype, context),
+        PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
         source.mipLevels[i],
       );
     }
@@ -442,7 +444,7 @@ function loadPartialBufferSource(
     width,
     height,
     pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
     arrayBufferView,
   );
 }
@@ -504,7 +506,7 @@ function loadImageSource(texture, source) {
     0,
     texture._internalFormat,
     texture.pixelFormat,
-    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context.webgl2),
     source,
   );
 }
@@ -533,7 +535,7 @@ function loadPartialImageSource(texture, source, xOffset, yOffset) {
     xOffset,
     yOffset,
     texture.pixelFormat,
-    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context.webgl2),
     source,
   );
 }
@@ -569,7 +571,7 @@ function loadNull(texture) {
     texture._height,
     0,
     texture._pixelFormat,
-    PixelDatatype.toWebGLConstant(texture._pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(texture._pixelDatatype, context.webgl2),
     null,
   );
 }

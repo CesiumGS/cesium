@@ -1,14 +1,10 @@
+import { Cartesian2, clone, combine, defined } from "@cesium/core";
 import {
-  Cartesian2,
-  clone,
-  combine,
-  defined,
   FeatureDetection,
   KeyboardEventModifier,
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
 } from "../../index.js";
-
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 
 describe("Core/ScreenSpaceEventHandler", function () {

@@ -1,6 +1,4 @@
-import CesiumMath from "../Core/Math.js";
-import Check from "../Core/Check.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Check, DeveloperError, Math as CesiumMath } from "@cesium/core";
 import MortonOrder from "../Core/MortonOrder.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 

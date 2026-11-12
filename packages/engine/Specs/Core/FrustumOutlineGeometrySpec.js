@@ -1,12 +1,11 @@
 import {
   Cartesian3,
-  FrustumOutlineGeometry,
   Math as CesiumMath,
   PerspectiveFrustum,
   Quaternion,
   VertexFormat,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { FrustumOutlineGeometry } from "../../index.js";
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/FrustumOutlineGeometry", function () {

@@ -1,19 +1,21 @@
-import Cartesian2 from "./Cartesian2.js";
-import Check from "./Check.js";
+import {
+  Cartesian2,
+  Check,
+  Ellipsoid,
+  Event,
+  Frozen,
+  Rectangle,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import Credit from "./Credit.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import Ellipsoid from "./Ellipsoid.js";
-import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import HeightmapEncoding from "./HeightmapEncoding.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
-import Rectangle from "./Rectangle.js";
 import Request from "./Request.js";
 import RequestState from "./RequestState.js";
 import RequestType from "./RequestType.js";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
 import TileAvailability from "./TileAvailability.js";
 import TileProviderError from "./TileProviderError.js";

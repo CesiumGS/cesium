@@ -1,8 +1,6 @@
+import { Color, ComponentDatatype, defined } from "@cesium/core";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
-import Color from "../../Core/Color.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";
@@ -92,6 +90,10 @@ PickingPipelineStage.process = function (
 
     renderResources.pickId = "czm_pickColor";
     renderResources.snapId = snapIdFromPickId(renderResources.pickId);
+  }
+
+  if (!defined(model.classificationType) && model.hasDrapedVectors()) {
+    renderResources.pickId = `vectorPickColorOver(${renderResources.pickId})`;
   }
 };
 

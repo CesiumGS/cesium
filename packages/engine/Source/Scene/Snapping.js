@@ -1,10 +1,12 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
-import Ray from "../Core/Ray.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Check,
+  Ray,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import { pickBegin, pickEnd } from "./Picking.js";
 import SnapFramebuffer from "./SnapFramebuffer.js";
 
@@ -35,6 +37,7 @@ const Snapping = {};
 
 const scratchRectangle = new BoundingRectangle(0.0, 0.0, 3.0, 3.0);
 const scratchSnapCoord = new Cartesian2();
+const scratchSurfaceCoord = new Cartesian2();
 const scratchSnapRay = new Ray();
 const scratchSnapOffset = new Cartesian3();
 
@@ -47,6 +50,13 @@ const SNAP_OCCLUDER_RADIUS_PIXELS = 3.0;
 // nearer silhouette), so snap doesn't punch through to geometry behind the
 // object the cursor is on.
 const SNAP_OCCLUSION_TOLERANCE = 0.1;
+
+// Width of the region, centered on a winning edge hit, read to find the
+// adjacent surface fragment for surfacePosition. Deliberately centered on the
+// edge hit rather than the cursor: the cursor-centered snap region can clip
+// away the object's surface, potentially causing the server-side backend to
+// give a mismatched snap.
+const SNAP_SURFACE_REGION_WIDTH = 9.0;
 
 function cursorDist(hit) {
   return Math.sqrt(hit.x * hit.x + hit.y * hit.y);
@@ -74,6 +84,25 @@ function selectBestHit(hits) {
   return group.reduce((best, hit) =>
     cursorDist(hit) < cursorDist(best) ? hit : best,
   );
+}
+
+// Find the surface hit belonging to the same object that lies closest to the
+// region center, if any. Unlike an edge hit, whose position lies exactly on
+// the object's silhouette, this point is unambiguously on the object.
+function nearestSurfaceHit(hits, object) {
+  let best;
+  let bestDist = Number.POSITIVE_INFINITY;
+  for (const hit of hits) {
+    if (hit.isEdge || hit.object !== object) {
+      continue;
+    }
+    const dist = hit.x * hit.x + hit.y * hit.y;
+    if (dist < bestDist) {
+      best = hit;
+      bestDist = dist;
+    }
+  }
+  return best;
 }
 
 // Unproject a snap hit's eye-space depth (channel B of the snap framebuffer,
@@ -166,10 +195,39 @@ Snapping.snap = function (scene, windowPosition, options) {
     return undefined;
   }
 
+  // For edge hits, also unproject the nearest same-object surface fragment so
+  // consumers have a seed point that is on the object but off its silhouette.
+  // Found with a read centered on the edge hit itself, so the seed does not
+  // depend on where in the snap region the cursor was.
+  let surfacePosition = position;
+  if (best.isEdge) {
+    const surfaceOrigin = scratchSurfaceCoord;
+    surfaceOrigin.x = windowPosition.x + best.x;
+    surfaceOrigin.y = windowPosition.y + best.y;
+    pickBegin(
+      scene,
+      surfaceOrigin,
+      drawingBufferRectangle,
+      SNAP_SURFACE_REGION_WIDTH,
+      SNAP_SURFACE_REGION_WIDTH,
+      {
+        framebuffer: snapFramebuffer,
+        snap: true,
+      },
+    );
+    const surfaceHits = snapFramebuffer.end(drawingBufferRectangle);
+    pickEnd(scene);
+    const surfaceHit = nearestSurfaceHit(surfaceHits, best.object);
+    surfacePosition = defined(surfaceHit)
+      ? snapHitToWorld(scene, surfaceOrigin, surfaceHit)
+      : undefined;
+  }
+
   return {
     object: best.object,
     isEdge: best.isEdge,
     position: position,
+    surfacePosition: surfacePosition,
     screenPosition: new Cartesian2(
       windowPosition.x + best.x,
       windowPosition.y + best.y,
@@ -179,6 +237,7 @@ Snapping.snap = function (scene, windowPosition, options) {
 
 // Exposed for testing.
 Snapping._selectBestHit = selectBestHit;
+Snapping._nearestSurfaceHit = nearestSurfaceHit;
 Snapping._snapHitToWorld = snapHitToWorld;
 
 export default Snapping;

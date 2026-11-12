@@ -1,8 +1,6 @@
+import { Matrix3, PixelDatatype, PixelFormat } from "@cesium/core";
 import {
   GltfLoaderUtil,
-  Matrix3,
-  PixelDatatype,
-  PixelFormat,
   SupportedImageFormats,
   Texture,
   TextureWrap,

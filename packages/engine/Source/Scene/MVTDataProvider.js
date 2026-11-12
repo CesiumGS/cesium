@@ -1,19 +1,19 @@
 // @ts-check
 
+import { RuntimeError, defined, oneTimeWarning } from "@cesium/core";
 import Axis from "./Axis.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import UrlTemplate3DTilesDataProvider from "./UrlTemplate3DTilesDataProvider.js";
 import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
 import buildVectorGltfFromMVT from "./buildVectorGltfFromMVT.js";
 import decodeMVT from "./decodeMVT.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
-import defined from "../Core/defined.js";
 
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
-/** @import Rectangle from "../Core/Rectangle.js"; */
+/** @import HeightReference from "./HeightReference.js"; */
+/** @import { Rectangle } from "@cesium/core"; */
 /** @import Resource from "../Core/Resource.js"; */
+/** @import Scene from "./Scene.js"; */
 
 /**
  * A Mapbox Vector Tiles (MVT) data provider. Loads .mvt or .pbf tiles, converting tiles
@@ -36,6 +36,12 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
    * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
    * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
    * @param {string} [options.featureIdProperty] MVT property name to use as feature ID.
+   * @param {HeightReference} [options.heightReference] Drapes the decoded points, lines and polygons onto the
+   *   surfaces selected by the value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes onto the globe,
+   *   {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles and models, and
+   *   {@link HeightReference.CLAMP_TO_GROUND} drapes onto both. Requires <code>options.scene</code>.
+   * @param {Scene} [options.scene] The scene the generated tileset is rendered in, required when
+   *   <code>options.heightReference</code> is a clamping value.
    * @returns {Promise<MVTDataProvider>}
    */
   static async fromUrl(url, options) {
@@ -51,6 +57,7 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
    */
   _createTilesetLoadOptions() {
     return {
+      ...super._createTilesetLoadOptions(),
       skipLevelOfDetail: false,
       enablePick: true,
       featureIdLabel: "featureId_0",

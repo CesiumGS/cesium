@@ -1,16 +1,18 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import clone from "../Core/clone.js";
-import Color from "../Core/Color.js";
-import combine from "../Core/combine.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  Cartesian2,
+  Color,
+  DeveloperError,
+  Frozen,
+  Matrix2,
+  Matrix3,
+  Matrix4,
+  clone,
+  combine,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import loadKTX2 from "../Core/loadKTX2.js";
-import Matrix2 from "../Core/Matrix2.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import CubeMap from "../Renderer/CubeMap.js";
 import Texture from "../Renderer/Texture.js";

@@ -1,4 +1,4 @@
-import destroyObject from "../Core/destroyObject.js";
+import { destroyObject } from "@cesium/core";
 
 /**
  * Represents content for a tile in a
@@ -95,6 +95,15 @@ class Tileset3DTileContent {
 
   set group(value) {
     this._group = value;
+  }
+
+  /** @inheritdoc */
+  get show() {
+    return this._tileset.show;
+  }
+
+  set show(value) {
+    this._tileset.show = value;
   }
 
   /**

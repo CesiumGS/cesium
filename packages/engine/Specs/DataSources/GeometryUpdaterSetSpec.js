@@ -1,3 +1,4 @@
+import { Event } from "@cesium/core";
 import createScene from "../../../../Specs/createScene.js";
 import {
   BoxGeometryUpdater,
@@ -6,7 +7,6 @@ import {
   EllipseGeometryUpdater,
   EllipsoidGeometryUpdater,
   Entity,
-  Event,
   GeometryUpdaterSet,
   PlaneGeometryUpdater,
   PolygonGeometryUpdater,

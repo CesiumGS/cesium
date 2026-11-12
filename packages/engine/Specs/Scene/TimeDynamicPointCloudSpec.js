@@ -3,14 +3,16 @@ import {
   Cartesian3,
   Clock,
   ClockStep,
-  defined,
+  FixedFrameTransforms,
   HeadingPitchRange,
   HeadingPitchRoll,
   JulianDate,
   Matrix4,
-  Resource,
   TimeIntervalCollection,
-  Transforms,
+  defined,
+} from "@cesium/core";
+import {
+  Resource,
   Cesium3DTileStyle,
   ClippingPlane,
   ClippingPlaneCollection,
@@ -19,7 +21,6 @@ import {
   ShadowMode,
   TimeDynamicPointCloud,
 } from "../../index.js";
-
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -430,7 +431,7 @@ describe(
     });
 
     it("sets clipping planes", function () {
-      const modelMatrix = Transforms.headingPitchRollToFixedFrame(
+      const modelMatrix = FixedFrameTransforms.headingPitchRollToFixedFrame(
         center,
         new HeadingPitchRoll(0, 0, 0),
       );

@@ -1,17 +1,14 @@
+import { Ellipsoid, Rectangle, RuntimeError } from "@cesium/core";
 import {
-  Ellipsoid,
   GeographicTilingScheme,
-  Rectangle,
   Request,
   Resource,
-  RuntimeError,
   Imagery,
   ImageryLayer,
   ImageryProvider,
   ImageryState,
   SingleTileImageryProvider,
 } from "../../index.js";
-
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/SingleTileImageryProvider", function () {

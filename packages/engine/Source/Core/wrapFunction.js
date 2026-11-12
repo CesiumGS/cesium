@@ -1,11 +1,11 @@
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError } from "@cesium/core";
 
 /**
  * Wraps a function on the provided objects with another function called in the
  * object's context so that the new function is always called immediately
  * before the old one.
  *
- * @private
+ * @internal
  */
 function wrapFunction(obj, oldFunction, newFunction) {
   //>>includeStart('debug', pragmas.debug);
