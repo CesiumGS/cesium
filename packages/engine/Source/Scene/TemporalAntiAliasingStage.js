@@ -16,11 +16,16 @@ import RenderState from "../Renderer/RenderState.js";
 import TemporalAntiAliasing from "../Shaders/PostProcessStages/TemporalAntiAliasing.js";
 import TemporalAntiAliasingVelocity from "../Shaders/PostProcessStages/TemporalAntiAliasingVelocity.js";
 
-function computePixelDatatype(context) {
-  if (context.halfFloatingPointTexture) {
+function computePixelDatatype(context, preferFloat) {
+  if (preferFloat && context.floatingPointTexture && context.colorBufferFloat) {
+    return PixelDatatype.FLOAT;
+  }
+  // The history is a render target, so the format must be color-renderable,
+  // not just sampleable.
+  if (context.halfFloatingPointTexture && context.colorBufferHalfFloat) {
     return PixelDatatype.HALF_FLOAT;
   }
-  if (context.floatingPointTexture) {
+  if (context.floatingPointTexture && context.colorBufferFloat) {
     return PixelDatatype.FLOAT;
   }
   return PixelDatatype.UNSIGNED_BYTE;
@@ -57,6 +62,9 @@ function TemporalAntiAliasingStage(options) {
     feedback = 0.98,
     resetDistance = 0.001,
     resetDot = 0.995,
+    progressive = false,
+    maxProgressiveFrames = 256,
+    historyFloat = progressive,
   } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -69,6 +77,14 @@ function TemporalAntiAliasingStage(options) {
   this.feedback = feedback;
   this.resetDistance = resetDistance;
   this.resetDot = resetDot;
+
+  // Static camera: average history with 1/N weights. Moving camera: regular TAA.
+  this.progressive = progressive;
+  this.maxProgressiveFrames = maxProgressiveFrames;
+  // Half float history loses small 1/N updates after ~128 frames.
+  this.historyFloat = historyFloat;
+  this._frameCount = 0;
+  this._cameraStatic = false;
 
   // Match the fields read by PostProcessStageTextureCache when allocating stage output textures.
   this._textureScale = 1.0;
@@ -166,7 +182,7 @@ function destroyResources(stage) {
 }
 
 function ensureFramebuffers(stage, context, width, height) {
-  const pixelDatatype = computePixelDatatype(context);
+  const pixelDatatype = computePixelDatatype(context, stage.historyFloat);
   const sizeChanged = stage._width !== width || stage._height !== height;
   const pixelChanged = stage._historyPixelDatatype !== pixelDatatype;
 
@@ -236,6 +252,17 @@ function ensureCommands(stage, context) {
     },
     u_feedback: function () {
       return stage.feedback;
+    },
+    u_progressiveWeight: function () {
+      if (
+        !stage.progressive ||
+        !stage._cameraStatic ||
+        stage._frameCount === 0
+      ) {
+        return 0.0;
+      }
+      const n = Math.min(stage._frameCount, stage.maxProgressiveFrames);
+      return 1.0 / (n + 1.0);
     },
     u_reset: function () {
       return stage._needsReset || !stage._hasPreviousViewProjection ? 1.0 : 0.0;
@@ -317,6 +344,27 @@ TemporalAntiAliasingStage.prototype.execute = function (
 
   const frameState = context.uniformState.frameState;
   this._needsReset = this._needsReset || shouldResetHistory(this, frameState);
+
+  const camera = defined(frameState) ? frameState.camera : undefined;
+  this._cameraStatic =
+    this._hasLastCamera &&
+    defined(camera) &&
+    Cartesian3.equalsEpsilon(
+      camera.positionWC,
+      this._lastCameraPositionWC,
+      0.0,
+      1e-6,
+    ) &&
+    Cartesian3.equalsEpsilon(
+      camera.directionWC,
+      this._lastCameraDirectionWC,
+      1e-9,
+    );
+  if (this._needsReset || !this._cameraStatic) {
+    this._frameCount = 0;
+  } else {
+    this._frameCount++;
+  }
 
   ensureFramebuffers(this, context, colorTexture.width, colorTexture.height);
 

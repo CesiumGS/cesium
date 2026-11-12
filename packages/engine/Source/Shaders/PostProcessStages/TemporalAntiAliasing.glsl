@@ -6,6 +6,7 @@ uniform sampler2D velocityTexture;
 
 uniform float u_feedback;
 uniform float u_reset;
+uniform float u_progressiveWeight;
 
 vec3 clampHistoryToNeighborhood(vec2 uv, vec3 historyColor)
 {
@@ -30,6 +31,12 @@ void main()
     vec4 currentColor = texture(colorTexture, v_textureCoordinates);
     if (u_reset > 0.5) {
         out_FragColor = currentColor;
+        return;
+    }
+
+    if (u_progressiveWeight > 0.0) {
+        vec4 accumulated = texture(historyTexture, v_textureCoordinates);
+        out_FragColor = mix(accumulated, currentColor, u_progressiveWeight);
         return;
     }
 

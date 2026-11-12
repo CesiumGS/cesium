@@ -1,0 +1,7 @@
+title: 3D Tiles Gaussian Splatting Stochastic — Development
+description: Compare sorted Gaussian splat rendering with stochastic transparency resolved by temporal anti-aliasing or progressive accumulation, using the tower test tileset.
+labels:
+  - 3D Tiles
+  - Development
+thumbnail: thumbnail.jpg
+development: true
