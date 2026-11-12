@@ -12,7 +12,7 @@ import type { ModelResourceOptions } from "../scene/gltfModel.ts";
 import type { BudgetedOptions } from "./Budgeted.ts";
 import type { TileSelection, RequestPurpose } from "./Stepwise.ts";
 import type { Tile, TileTree } from "./Tile.ts";
-import type { DesignPlacement } from "./designPlacement.ts";
+import type { Georeference } from "../georeference/georeference.ts";
 
 /**
  * A hierarchical content source other than a 3D Tiles tileset.json (plan
@@ -125,7 +125,7 @@ export interface TilesetOptions extends BudgetedOptions {
    * (the proj entry's `TilesetPlacement`, or its own), since the engine
    * never guesses one.
    */
-  placement?: DesignPlacement;
+  placement?: Georeference;
   /**
    * Keeps each loaded tile's triangles on the CPU (`Tile.geometry`) for
    * client-side snapping (`ClientSnapService`), released when the tile

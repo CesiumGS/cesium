@@ -4,20 +4,21 @@
 // the route's own float64 map, as warpGlobe.test.ts does for fits; the GPU's
 // side of it is spikes/transformGraph.ts (`routeVertex`) and spikes/warpGlobe.ts.
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { routeForward } from "../src/camera/route.ts";
+import { routeForward, type SmoothFrameSpec } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import {
   heightOffset,
   verticalExaggeration,
-} from "../src/frames/heightWarps.ts";
+} from "../src/georeference/heightWarps.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { warpFrame, type WarpSpec } from "../src/frames/warpFrame.ts";
-import { scaleAbout } from "../src/frames/warps.ts";
+import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { scaleAbout } from "../src/transforms/scaleAbout.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import * as m4 from "../src/math/mat4.ts";
 import {
   ROUTE_BODY,
   ROUTE_KIND,
+  ROUTE_POINTER_ROWS,
   routeBlockRows,
 } from "../src/scene/routeVariant.ts";
 import { EARTH } from "../src/scene/Body.ts";
@@ -62,20 +63,25 @@ const at = (height: number) =>
   Float64Array.of(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, R + height, 0, 0, 1);
 
 async function setup(
-  make: (scale: ReturnType<World["createPlacementParameter"]>) => WarpSpec,
+  make: (
+    scale: ReturnType<World["createPlacementParameter"]>,
+  ) => SmoothFrameSpec,
 ) {
   const world = engine.createWorld({ maxDraws: 8 });
   worlds.push(world);
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const scale = world.createPlacementParameter(1, { range: [0, 1] });
-  const frame = warpFrame("x", catalog.get("ITRF"), make(scale));
+  const itrf = catalog.get("ITRF");
+  const frame = smoothFrame("x", itrf, make(scale));
   catalog.add(frame);
-  engine.cameras.setResolver(world, createFramesResolver(catalog));
+  const resolver = createFramesResolver(catalog);
   const earth = world.bodyAnchor(EARTH);
+  resolver.bindAnchor(earth, frame);
+  engine.cameras.setResolver(world, resolver);
   const view = engine.addView({ target: new OffscreenTarget(64, 48), world });
   views.push(view);
   engine.cameras.setRig(view, {
-    position: { frame },
+    position: { frame: itrf },
     orientation: { kind: "free" },
   });
   const mesh = createBox();
@@ -84,8 +90,7 @@ async function setup(
   const step = () => {
     engine.cameras.update();
     world.warps.frame(
-      engine.cameras.root(view),
-      view.anchorRoutes(),
+      [{ id: engine.scene.viewIds.get(view)!, routes: view.anchorRoutes() }],
       Infinity,
       (m) => {
         throw new Error(m);
@@ -135,7 +140,13 @@ describe("compiled routes in the renderer", () => {
     expect(block.u32[4]! & 255).toBe(ROUTE_KIND);
     expect(block.f32[5]).toBe(1);
     expect(block.u32[6]).toBe(ROUTE_BODY);
-    expect(block.u32[7]).toBe(anchor.uniformRow);
+    expect(block.u32[7]).toBe(anchor.pointerRow);
+    // The pointer table names this view's uniforms.
+    const pointers = s.world.raster.placementTable.rowWords(
+      anchor.pointerRow,
+      ROUTE_POINTER_ROWS,
+    ).u32;
+    expect(pointers[engine.scene.viewIds.get(s.view)!]).toBe(anchor.uniformRow);
     // Its centre record is the compiler's, made in float64 for the route's value at the draw's centre.
     const body = ROUTE_BODY * 4;
     const centre = [0, 1, 2].map((a) => block.f32[body + a]!);
@@ -266,6 +277,81 @@ describe("compiled routes in the renderer", () => {
     }
   });
 
+  it("gives each view its own value of a parameter: its route, its uniforms, no fit", async () => {
+    const s = await setup((scale) =>
+      verticalExaggeration({ factor: 10, scale }),
+    );
+    const itrf = engine.cameras.root(s.view);
+    const other = engine.addView({
+      target: new OffscreenTarget(64, 48),
+      world: s.world,
+    });
+    views.push(other);
+    engine.cameras.setRig(other, {
+      position: { frame: itrf },
+      orientation: { kind: "free" },
+    });
+    const ids = [s.view, other].map((v) => engine.scene.viewIds.get(v)!);
+    const step = () => {
+      engine.cameras.update();
+      s.world.warps.frame(
+        [s.view, other].map((v, i) => ({
+          id: ids[i]!,
+          routes: v.anchorRoutes(),
+        })),
+        Infinity,
+        (m) => {
+          throw new Error(m);
+        },
+      );
+    };
+    for (let i = 0; i < 4; i++) {
+      step();
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    }
+    other.setParameter(s.scale, 0.2);
+    expect(other.parameterValue(s.scale)).toBe(0.2);
+    expect(s.view.parameterValue(s.scale)).toBe(1);
+    for (let i = 0; i < 3; i++) {
+      step();
+    }
+    const first = s.view.anchorRoute(s.earth)!;
+    const second = other.anchorRoute(s.earth)!;
+    const stretch = (r: typeof first) => {
+      const p = cart(0, 0, 1000);
+      const out = routeForward(r, p, new Float64Array(3));
+      return (
+        WGS84.cartesianToCartographic(out, {
+          longitude: 0,
+          latitude: 0,
+          height: 0,
+        })!.height / 1000
+      );
+    };
+    expect(stretch(first)).toBeCloseTo(10, 3);
+    expect(stretch(second)).toBeCloseTo(1 + 0.2 * 9, 3);
+    // One program and one record; the uniforms are the views' own, and the table points each view at its.
+    const anchor = s.world.warps.routes.routeOf(s.draw.index)!;
+    const view2 = anchor.others.get(ids[1]!);
+    expect(view2).toBeDefined();
+    expect(Array.from(view2!.uniforms)).not.toEqual(
+      Array.from(anchor.uniforms),
+    );
+    const pointers = s.world.raster.placementTable.rowWords(
+      anchor.pointerRow,
+      ROUTE_POINTER_ROWS,
+    ).u32;
+    expect(pointers[ids[0]!]).toBe(anchor.uniformRow);
+    expect(pointers[ids[1]!]).toBe(view2!.uniformRow);
+    expect(s.world.warpStats()).toMatchObject({ fitsRun: 0 });
+    // Clearing it returns the view to the world's value.
+    other.setParameter(s.scale, undefined);
+    expect(other.hasParameterValue(s.scale)).toBe(false);
+    for (let i = 0; i < 3; i++) {
+      step();
+    }
+    expect(stretch(other.anchorRoute(s.earth)!)).toBeCloseTo(10, 3);
+  });
   it("turns a warp helper's smooth spec into a route that matches its own function", () => {
     const point = cart(0.13, 0.8, 0);
     const cases = [

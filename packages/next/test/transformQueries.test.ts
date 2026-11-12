@@ -10,18 +10,18 @@ import {
 } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { frameTransform } from "../src/frames/Frame.ts";
-import { verticalExaggeration as frameExaggeration } from "../src/frames/heightWarps.ts";
+import { verticalExaggeration as frameExaggeration } from "../src/georeference/heightWarps.ts";
 import { graphOfFrames } from "../src/frames/graphOfFrames.ts";
 import { eastNorthUpFrame, framePoint } from "../src/frames/local.ts";
 import { pickIn, graphOfCameraRoute } from "../src/frames/pickIn.ts";
 import { pointAccuracy } from "../src/frames/pointAccuracy.ts";
 import { locatePick, truePick } from "../src/frames/pickTruth.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { warpFrame } from "../src/frames/warpFrame.ts";
+import { smoothFrame } from "../src/frames/smoothFrame.ts";
 import {
   geocentricToGeographic,
   utm,
-  verticalExaggeration,
+  verticalExaggerationEdge,
 } from "../src/georeference/index.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import type { CorePick } from "../src/scene/pick.ts";
@@ -110,7 +110,7 @@ function exaggerationRoute(factor = 10) {
   const ex = graph.add(
     "ex",
     view,
-    verticalExaggeration({ factor, ceiling: 9000 }),
+    verticalExaggerationEdge({ factor, ceiling: 9000 }),
   );
   const content = graph.add(
     "content",
@@ -128,7 +128,7 @@ function utmRoute() {
   const ex = graph.add(
     "ex",
     earth,
-    verticalExaggeration({ factor: 3, ceiling: 9000 }),
+    verticalExaggerationEdge({ factor: 3, ceiling: 9000 }),
   );
   const content = graph.add("content", ex, affine({ matrix: enu(5, 46, 0) }));
   return { graph, world, content, route: routeBetween(content, world) };
@@ -485,11 +485,12 @@ describe("a core pick in any node", () => {
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const itrf = catalog.get("ITRF", { user: "application" });
   const warp = frameExaggeration({ factor: 10 });
-  const drawnFrame = warpFrame("exaggerated", itrf, warp);
-  catalog.add(drawnFrame);
+  const content = smoothFrame("Earth content (exaggerated)", itrf, warp);
+  catalog.add(content);
+  const drawnFrame = itrf;
   const pad = eastNorthUpFrame(
     "Pad",
-    itrf,
+    content,
     Ellipsoid.WGS84,
     Ellipsoid.WGS84.cartographicToCartesian(
       { longitude: 0.2, latitude: 0.7, height: 0 },
@@ -533,7 +534,7 @@ describe("a core pick in any node", () => {
     expect(route.steps.map((s) => s.kind)).toEqual(["rigid", "warp"]);
     expect(pg.nodes).toHaveLength(3);
     expect(pg.true.name).toBe("Pad");
-    expect(pg.drawn.name).toBe("exaggerated");
+    expect(pg.drawn.name).toBe("ITRF");
     near(
       routeBetween(pg.true, pg.drawn).forward(local),
       routeForward(route, local),
@@ -989,7 +990,6 @@ describe("clip sets placed at nodes", () => {
       root: world,
       body: content,
       bodyPlacement: placement,
-      bodyRoute: undefined,
     });
     expect(drawn.space).toBe("drawn");
     const curved = planClip(plane, {
@@ -998,7 +998,6 @@ describe("clip sets placed at nodes", () => {
       root: render,
       body: content,
       bodyPlacement: placement,
-      bodyRoute: undefined,
     });
     expect(curved.space).toBe("curved");
   });

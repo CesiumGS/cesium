@@ -1,7 +1,7 @@
 // What a view keeps of its anchors' placements between ticks (`viewAnchors.ts`).
 // Scene data.
 import { MAX_ANCHORS } from "../render/layout.ts";
-import type { Route } from "../camera/route.ts";
+import type { Route, WarpScale } from "../camera/route.ts";
 import type { AnchorHandle } from "./world/types.ts";
 import type { World } from "./World.ts";
 
@@ -17,6 +17,12 @@ export class ViewAnchorState {
    * drawn warped (scene/world/warps.ts). Undefined for a rigid anchor.
    */
   readonly routes: Array<Route | undefined> = [];
+  /** The routes as the view draws them when it sets a parameter for itself (`View.setParameter`), by the route they were made from, for the `parameterRevision` they were made at; and the view's reading of each slider. */
+  readonly bound: { revision: number; routes: WeakMap<Route, Route> } = {
+    revision: 0,
+    routes: new WeakMap(),
+  };
+  readonly viewScales = new Map<object, WarpScale>();
   /**
    * The anchor each slot's placement was set for; a slot whose anchor was
    * removed (and the slot reused) reads as the identity again.

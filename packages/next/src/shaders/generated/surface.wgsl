@@ -4380,6 +4380,11 @@ fn routeAxisRow( i_6 : u32) -> vec3<f32>
     return view_0.anchors_0.data_1[i32(0)].axes_0[i_6].xyz;
 }
 
+fn routeViewBit() -> u32
+{
+    return view_0.viewBit_0;
+}
+
 fn readNamed( directory_0 : u32,  hash_0 : u32,  vertexIndex_0 : u32,  feature_1 : u32) -> vec4<f32>
 {
     var value_1 : vec4<f32> = vec4<f32>(0.0f);

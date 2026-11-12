@@ -21,7 +21,7 @@ import {
 import type { World } from "./World.ts";
 import type { AnchorHandle, DrawHandle } from "./world/types.ts";
 import type { WarpAt } from "./warpAnchor.ts";
-import type { DesignPlacement } from "../streaming/designPlacement.ts";
+import type { Georeference } from "../georeference/georeference.ts";
 import type { ItemDraws, Tile } from "../streaming/Tile.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 
@@ -106,9 +106,9 @@ export interface SceneItemHost {
   readonly dualPosition:
     { readonly semantic: string; readonly maxDistance: number } | undefined;
   /** Where its positions are drawn (`Tileset3D.placement`). */
-  readonly designPlacement: DesignPlacement | undefined;
+  readonly georeference: Georeference | undefined;
   /** Where its second positions are drawn. */
-  readonly secondPlacement: DesignPlacement | undefined;
+  readonly secondPlacement: Georeference | undefined;
   /** Its shader as a tile is placed with it, if any. */
   readonly contentShader: CustomShader | undefined;
   /** Its loaded tiles. */
@@ -392,10 +392,10 @@ export class SceneItem {
    * placement 1. Undefined between and past them: such a point is drawn where
    * the content has no point, so it has no content coordinates.
    */
-  get designPlacement(): DesignPlacement | undefined {
+  get georeference(): Georeference | undefined {
     const t = this.placementValue;
     return t === 0
-      ? this.host.designPlacement
+      ? this.host.georeference
       : t === 1
         ? this.host.secondPlacement
         : undefined;

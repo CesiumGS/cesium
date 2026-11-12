@@ -492,6 +492,11 @@ export __extern_cpp float3 routeEyeLo() {
 export __extern_cpp float3 routeAxisRow(uint i) {
   return view.anchors[0].axes[i].xyz;
 }
+// This view's bit in record view masks: its index is the bit's position (a
+// route's per-view uniforms are found by it).
+export __extern_cpp uint routeViewBit() {
+  return view.viewBit;
+}
 
 float2 read2(uint offset, uint index) {
   uint b = offset + index * 2u;

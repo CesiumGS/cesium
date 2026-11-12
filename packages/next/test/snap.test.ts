@@ -780,7 +780,7 @@ describe("refiningSnap: the client's snap, then the server's", () => {
     }
 
     it("design coordinates on a placement with no engineering frame", async () => {
-      // A DesignPlacement whose frame isn't an EngineeringFrame: it draws
+      // A Georeference whose frame isn't an EngineeringFrame: it draws
       // and inverts, but gives no design points (engineeringPlacement).
       const plain = { ...pl, frame: { name: "fake" } };
       const ts = tileset({ placement: plain as unknown as TilesetPlacement });

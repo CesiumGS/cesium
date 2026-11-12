@@ -10,7 +10,7 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { routeForward, type Route } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { warpFrame } from "../src/frames/warpFrame.ts";
+import { smoothFrame } from "../src/frames/smoothFrame.ts";
 import * as m4 from "../src/math/mat4.ts";
 import {
   FLAGS_WORD,
@@ -96,25 +96,26 @@ interface Setup {
   step(budget?: number): boolean;
 }
 
-/** A world and a view whose rig sits on `exaggerated` over ITRF (or on ITRF itself when `rigid`). */
+/** A world and a view on ITRF; the Earth's anchor is placed in `exaggerated` under ITRF (or in ITRF itself when `rigid`). */
 function setup(options: { rigid?: boolean; prime?: boolean } = {}): Setup {
   const world = engine.createWorld({ maxDraws: 64 });
   worlds.push(world);
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const itrf = catalog.get("ITRF");
-  const exaggerated = warpFrame("exaggerated", itrf, {
-    presentation: true,
+  const exaggerated = smoothFrame("exaggerated", itrf, {
     revision: 1,
     description: `height × ${K}`,
     forward: (p, out, jacobian) => exaggerate(p, out, jacobian),
   });
   catalog.add(exaggerated);
   const earth = world.bodyAnchor(EARTH);
-  engine.cameras.setResolver(world, createFramesResolver(catalog));
+  const resolver = createFramesResolver(catalog);
+  resolver.bindAnchor(earth, options.rigid ? itrf : exaggerated);
+  engine.cameras.setResolver(world, resolver);
   const view = engine.addView({ target: new OffscreenTarget(64, 48), world });
   views.push(view);
   engine.cameras.setRig(view, {
-    position: { frame: options.rigid ? itrf : exaggerated },
+    position: { frame: itrf },
     orientation: { kind: "free" },
   });
   const s: Setup = {
@@ -124,8 +125,7 @@ function setup(options: { rigid?: boolean; prime?: boolean } = {}): Setup {
     step(budget = Infinity) {
       engine.cameras.update();
       return world.warps.frame(
-        engine.cameras.root(view),
-        view.anchorRoutes(),
+        [{ id: engine.scene.viewIds.get(view)!, routes: view.anchorRoutes() }],
         budget,
         (message) => {
           throw new Error(message);

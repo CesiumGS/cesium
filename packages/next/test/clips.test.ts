@@ -8,7 +8,7 @@ import { routeForward } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import type { Frame } from "../src/frames/Frame.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { warpFrame } from "../src/frames/warpFrame.ts";
+import { smoothFrame } from "../src/frames/smoothFrame.ts";
 import { boxBrep } from "./brepFixtures.ts";
 import { brepGeometry } from "../src/geometry/brep.ts";
 import { meshGeometry } from "../src/geometry/mesh.ts";
@@ -26,7 +26,6 @@ import {
   clipFilter,
   clipSetKeeps,
   clipSetsOf,
-  locationFourIsTrue,
   packClipTable,
   planClip,
   shapeContains,
@@ -421,13 +420,13 @@ describe("which space a clip is tested in", () => {
     }
   });
 
-  /** A world whose view's rig sits on `rig(catalog)`, over ITRF. */
-  function scene(build: (itrf: Frame) => { frames: Frame[]; rig: Frame }) {
+  /** A world whose view's camera is on ITRF and whose Earth anchor is placed in `content(catalog)`, a frame under ITRF (or ITRF itself). */
+  function scene(build: (itrf: Frame) => { frames: Frame[]; content: Frame }) {
     const world = engine.createWorld({ maxDraws: 8 });
     worlds.push(world);
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const itrf = catalog.get("ITRF");
-    const { frames, rig } = build(itrf);
+    const { frames, content } = build(itrf);
     for (const f of frames) {
       catalog.add(f);
     }
@@ -436,8 +435,9 @@ describe("which space a clip is tested in", () => {
     engine.cameras.setResolver(world, resolver);
     const view = engine.addView({ target: new OffscreenTarget(64, 48), world });
     views.push(view);
+    resolver.bindAnchor(earth, content);
     engine.cameras.setRig(view, {
-      position: { frame: rig },
+      position: { frame: itrf },
       orientation: { kind: "free" },
     });
     view.camera.position.set([0, 0, R + 30]);
@@ -449,7 +449,6 @@ describe("which space a clip is tested in", () => {
       root: engine.cameras.root(view),
       body: earth,
       bodyPlacement: view.anchorPlacement(earth),
-      bodyRoute: view.anchorRoute(earth),
     });
     return { world, view, earth, itrf, resolver, catalog, placement, frames };
   }
@@ -460,7 +459,7 @@ describe("which space a clip is tested in", () => {
   });
 
   it("no warp: ITRF content and a clip in ITRF are tested on the true point", () => {
-    const s = scene((itrf) => ({ frames: [], rig: itrf }));
+    const s = scene((itrf) => ({ frames: [], content: itrf }));
     const plan = planClip(planeIn(s.itrf), s.placement()) as PlannedClip;
     expect(plan.space).toBe("true");
     expect(Array.from(plan.matrix)).toEqual([
@@ -468,69 +467,76 @@ describe("which space a clip is tested in", () => {
     ]);
   });
 
-  it("under a presentation warp: a clip in ITRF is true, one in the drawn frame is drawn", () => {
+  it("under a deformer over the content: a clip in the content's frame is true, one in the camera's root is drawn", () => {
     const s = scene((itrf) => {
-      const exaggerated = warpFrame("exaggerated", itrf, {
-        presentation: true,
+      const exaggerated = smoothFrame("exaggerated", itrf, {
         revision: 1,
         forward: (p, out, j) => exaggerate(10, p, out, j),
       });
-      return { frames: [exaggerated], rig: exaggerated };
+      return { frames: [exaggerated], content: exaggerated };
     });
     const exaggerated = s.frames[0]!;
-    expect(locationFourIsTrue(s.view.anchorRoute(s.earth))).toBe(true);
-    const inTrue = planClip(planeIn(s.itrf), s.placement()) as PlannedClip;
+    expect(s.view.anchorRoute(s.earth)).toBeDefined();
+    const inTrue = planClip(planeIn(exaggerated), s.placement()) as PlannedClip;
     expect(inTrue.space).toBe("true");
-    const inDrawn = planClip(
-      planeIn(exaggerated),
-      s.placement(),
-    ) as PlannedClip;
+    const inDrawn = planClip(planeIn(s.itrf), s.placement()) as PlannedClip;
     expect(inDrawn.space).toBe("drawn");
     // The drawn plane's frame is the render root: the shading axes' placement undone.
     expect(inDrawn.matrix[12]).toBeCloseTo(0, 6);
     expect(inDrawn.matrix[0]).toBeCloseTo(1, 12);
   });
 
-  it("under a reprojection the drawn point is the true one: a clip in the root frame is drawn, one in ITRF is curved", () => {
+  it("under a datum shift of the content: a clip in the shifted frame is true, one in the root frame is drawn, one elsewhere is curved", () => {
     const s = scene((itrf) => {
-      const shifted = warpFrame("shifted", itrf, {
-        presentation: false,
+      // The content's frame runs 100 m past ITRF in x.
+      const shifted = smoothFrame("shifted", itrf, {
         revision: 1,
         description: "datum shift",
         forward(p, out, jacobian) {
-          out[0] = p[0]! + 100;
+          out[0] = p[0]! - 100;
           out[1] = p[1]!;
           out[2] = p[2]!;
           jacobian?.set([1, 0, 0, 0, 1, 0, 0, 0, 1]);
           return out;
         },
       });
-      return { frames: [shifted], rig: shifted };
+      const elsewhere = smoothFrame("elsewhere", itrf, {
+        revision: 1,
+        description: "another deformer",
+        forward(p, out, jacobian) {
+          out[0] = p[0]!;
+          out[1] = p[1]! + 50;
+          out[2] = p[2]!;
+          jacobian?.set([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+          return out;
+        },
+      });
+      return { frames: [shifted, elsewhere], content: shifted };
     });
-    const shifted = s.frames[0]!;
-    expect(locationFourIsTrue(s.view.anchorRoute(s.earth))).toBe(false);
+    const [shifted, elsewhere] = s.frames as [Frame, Frame];
     expect(
       (planClip(planeIn(shifted), s.placement()) as PlannedClip).space,
+    ).toBe("true");
+    expect(
+      (planClip(planeIn(s.itrf), s.placement()) as PlannedClip).space,
     ).toBe("drawn");
-    expect(planClip(planeIn(s.itrf), s.placement()).space).toBe("curved");
+    expect(planClip(planeIn(elsewhere), s.placement()).space).toBe("curved");
   });
-
   it("a view's table end to end: each set in its space, against float64 on the route", () => {
     const s = scene((itrf) => {
-      const exaggerated = warpFrame("exaggerated", itrf, {
-        presentation: true,
+      const exaggerated = smoothFrame("exaggerated", itrf, {
         revision: 1,
         forward: (p, out, j) => exaggerate(10, p, out, j),
       });
-      return { frames: [exaggerated], rig: exaggerated };
+      return { frames: [exaggerated], content: exaggerated };
     });
     const exaggerated = s.frames[0]!;
     const trueSet: ClipSet = {
-      frame: s.itrf,
+      frame: exaggerated,
       shapes: [{ kind: "plane", point: [0, 0, R + 1], normal: [0, 0, 1] }],
     };
     const drawnSet: ClipSet = {
-      frame: exaggerated,
+      frame: s.itrf,
       shapes: [
         { kind: "box", center: [0, 0, R + 5], halfExtents: [50, 50, 4] },
       ],
@@ -555,7 +561,7 @@ describe("which space a clip is tested in", () => {
     const camera = engine.bodyCamera(s.view).position;
     packClipTable(plans, camera, table);
     // True point: ITRF, a true height; drawn point: the route's image of it.
-    const route = s.resolver.route!(s.itrf, exaggerated, 0);
+    const route = s.resolver.route!(exaggerated, s.itrf, 0);
     const next = random(3);
     let checked = 0;
     for (let n = 0; n < 500; n++) {
@@ -579,7 +585,7 @@ describe("which space a clip is tested in", () => {
   });
 
   it("a view's mask names the world's clips, and a removed clip no longer cuts", () => {
-    const s = scene((itrf) => ({ frames: [], rig: itrf }));
+    const s = scene((itrf) => ({ frames: [], content: itrf }));
     const a = s.world.addClip(planeIn(s.itrf));
     const b = s.world.addClip(planeIn(s.itrf));
     expect(a.bit).toBe(1);
@@ -605,7 +611,7 @@ describe("which space a clip is tested in", () => {
   });
 
   it("the engine's filter: the view's clips for picks, none for world questions, a set of its own", () => {
-    const s = scene((itrf) => ({ frames: [], rig: itrf }));
+    const s = scene((itrf) => ({ frames: [], content: itrf }));
     const clip = s.world.addClip(planeIn(s.itrf));
     // No clips on the view yet: nothing to test.
     expect(engine.clipFilter(s.view)).toBeUndefined();
@@ -622,7 +628,7 @@ describe("which space a clip is tested in", () => {
   });
 
   it("a view without clips writes no table", () => {
-    const s = scene((itrf) => ({ frames: [], rig: itrf }));
+    const s = scene((itrf) => ({ frames: [], content: itrf }));
     const frame = {
       clipBuffer: undefined,
       clipBytes: 7,
@@ -735,23 +741,22 @@ describe("queries", () => {
   it("points are routed into each set's own frame, in float64", () => {
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const itrf = catalog.get("ITRF");
-    const drawn = warpFrame("drawn", itrf, {
-      presentation: true,
+    const content = smoothFrame("content", itrf, {
       revision: 1,
       forward: (p, out, j) => exaggerate(10, p, out, j),
     });
-    catalog.add(drawn);
+    catalog.add(content);
     const resolver = createFramesResolver(catalog);
-    // A plane 5 m up in the drawn frame is 0.5 m up in true height.
+    // A plane 5 m up in ITRF, where the content is drawn, is 0.5 m up in the content's true height.
     const drawnSet: ClipSet = {
-      frame: drawn,
+      frame: itrf,
       shapes: [{ kind: "plane", point: [0, 0, R + 5], normal: [0, 0, 1] }],
     };
-    const f = clipFilter([drawnSet], { resolver, frame: itrf, seconds: 0 })!;
+    const f = clipFilter([drawnSet], { resolver, frame: content, seconds: 0 })!;
     expect(f.keeps([0, 0, R + 0.4])).toBe(true);
     expect(f.keeps([0, 0, R + 0.6])).toBe(false);
-    const trueSet: ClipSet = { ...drawnSet, frame: itrf };
-    const g = clipFilter([trueSet], { resolver, frame: itrf, seconds: 0 })!;
+    const trueSet: ClipSet = { ...drawnSet, frame: content };
+    const g = clipFilter([trueSet], { resolver, frame: content, seconds: 0 })!;
     expect(g.keeps([0, 0, R + 4])).toBe(true);
   });
 });

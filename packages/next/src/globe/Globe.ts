@@ -16,6 +16,7 @@
  * costs its slot and blocks only, and nothing a tick.
  */
 import type { Engine } from "../scene/Engine.ts";
+import type { FrameKey } from "../camera/frameResolver.ts";
 import type { CustomShader } from "../scene/CustomShader.ts";
 import type { World } from "../scene/World.ts";
 import type { DrawHandle } from "../scene/world/types.ts";
@@ -396,6 +397,31 @@ export class Globe extends Tileset3D {
     if (base) {
       base.shader = shader;
     }
+  }
+
+  /**
+   * The frame the globe's terrain and imagery are placed in (plan §13.37):
+   * the frame its anchor is bound to (`FrameResolver.bindAnchor`), by default
+   * the body-fixed one. A smooth frame under the camera's root (a vertical
+   * exaggeration over the Earth's content) draws the globe, and whatever else
+   * hangs under the same anchor, through its edge while their coordinates stay
+   * true; where the edge is a `verticalExaggeration` of the globe's own body,
+   * terrain keeps its exact `h·n̂` height term. Setting it needs a frame
+   * resolver that binds anchors (`createFramesResolver`, the Viewer's); it
+   * throws, naming the globe, for one without.
+   */
+  get frame(): FrameKey | undefined {
+    return this.engine.cameras.resolver(this.world).binding?.(this.anchor);
+  }
+  set frame(frame: FrameKey) {
+    const resolver = this.engine.cameras.resolver(this.world);
+    if (!resolver.bindAnchor) {
+      throw new Error(
+        "Globe.frame: the world's frame resolver binds no anchors; set one over a frame catalog (engine.cameras.setResolver(world, createFramesResolver(catalog))).",
+      );
+    }
+    resolver.bindAnchor(this.anchor, frame);
+    this.engine.wake();
   }
 
   private constructor(

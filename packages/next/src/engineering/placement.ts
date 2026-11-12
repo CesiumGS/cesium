@@ -4,7 +4,7 @@ import type {
 } from "../frames/coordinates.ts";
 import { cartographic } from "../math/ellipsoid.ts";
 import { EARTH, type Body } from "../scene/Body.ts";
-import type { DesignPlacement } from "../streaming/designPlacement.ts";
+import type { Georeference } from "../georeference/georeference.ts";
 import type { RecordedOperation } from "./crs.ts";
 import { EngineeringFrame, RigidPlacement } from "./EngineeringFrame.ts";
 
@@ -26,7 +26,7 @@ export const DESIGN_NOT_INVERTED =
  */
 export interface TilesetPlacement<
   O extends CoordinateOperation = RecordedOperation,
-> extends DesignPlacement {
+> extends Georeference {
   readonly frame: EngineeringFrame<O>;
   /** The rigid transform; rigid placements only. */
   readonly rigid?: RigidPlacement<O>;
@@ -37,10 +37,10 @@ export interface TilesetPlacement<
  * `frame` is an `EngineeringFrame` (one `placeRigid`, `placeReprojected` or
  * `georeferenceTileset` built, or an application's), else undefined. Picks
  * and snaps get design points only through such a placement; any other
- * `DesignPlacement` draws and inverts, but names no engineering frame.
+ * `Georeference` draws and inverts, but names no engineering frame.
  */
 export function engineeringPlacement(
-  placement: DesignPlacement | undefined,
+  placement: Georeference | undefined,
 ): TilesetPlacement<CoordinateOperation> | undefined {
   const frame: unknown = (placement as Partial<TilesetPlacement> | undefined)
     ?.frame;
@@ -121,7 +121,7 @@ export function placeHosted(
   frameName: string,
   coordinates?: ResolvedCoordinates,
   body: Body = EARTH,
-): DesignPlacement {
+): Georeference {
   const operation = coordinates?.operation;
   return {
     mode: "hosted",

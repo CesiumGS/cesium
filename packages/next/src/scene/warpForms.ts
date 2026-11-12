@@ -9,7 +9,7 @@
 //
 // - `heightLift`: heights above an ellipsoid go to `base + factor (h - base)
 //   + offset`: the vertical exaggeration and the constant lift of
-//   frames/heightWarps.ts, with the height reference an ellipsoid or sphere.
+//   georeference/heightWarps.ts, with the height reference an ellipsoid or sphere.
 // - `heightBump`: a Gaussian lift along the normal about a point, a warp
 //   whose shape (centre, amplitude, width) an application moves every frame.
 // - `scaleAbout`: `p' = c + S (p - c)`, S diagonal, in the form's axes.
@@ -110,7 +110,7 @@ function radiiOf(form: { readonly radii?: Radii }): Radii {
 /**
  * p's foot on the ellipsoid and its height `h` above it, with the unit
  * normal `n` there, in float64: Newton's method on the multiplier of
- * `p = foot + L diag(1/r²) foot`, as frames/heightWarps.ts does.
+ * `p = foot + L diag(1/r²) foot`, as georeference/heightWarps.ts does.
  */
 export function ellipsoidFoot(
   radii: Radii,

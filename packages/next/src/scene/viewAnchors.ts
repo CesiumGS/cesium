@@ -1,7 +1,13 @@
 // A view's placements of its world's anchors, and its camera relative to an
 // anchor (View's anchor methods).
 import type { FrameKey } from "../camera/frameResolver.ts";
-import { routeForward, withFrozenScales, type Route } from "../camera/route.ts";
+import {
+  routeForward,
+  withFrozenScales,
+  type Route,
+  type Warp,
+  type WarpScale,
+} from "../camera/route.ts";
 import { rigidMatrixError } from "../math/transforms.ts";
 import { MAX_ANCHORS } from "../render/layout.ts";
 import { Camera, type CameraPose } from "./Camera.ts";
@@ -12,17 +18,25 @@ import type { ViewAnchorState } from "./viewAnchorState.ts";
 /** Scene side: a view's anchor placements. */
 export interface ViewAnchorContext extends Pick<
   View,
-  "anchorPlacement" | "camera" | "wake" | "world"
+  | "anchorPlacement"
+  | "camera"
+  | "hasParameterValue"
+  | "parameterRevision"
+  | "parameterValue"
+  | "wake"
+  | "world"
 > {
   readonly anchorState: Pick<
     ViewAnchorState,
     | "anchorRevision_"
     | "anchorsRemovals"
     | "anchorsWorld"
+    | "bound"
     | "placed"
     | "placementOwners"
     | "placements"
     | "routes"
+    | "viewScales"
   >;
 }
 
@@ -206,12 +220,75 @@ export function setAnchorRoute(
   view.wake?.();
 }
 
-/** The routes of the anchors placed across a warp, by slot (slot 0: the table's root). */
+/**
+ * The routes of the anchors placed across a warp, by slot (slot 0: the
+ * table's root), as this view draws them: a warp whose slider the view sets
+ * for itself (`View.setParameter`) reads the view's value, live.
+ */
 export function anchorRoutes(
   view: ViewAnchorContext,
 ): ReadonlyArray<Route | undefined> {
   syncAnchors(view);
-  return view.anchorState.routes;
+  const state = view.anchorState;
+  if (state.bound.revision !== view.parameterRevision) {
+    state.bound.revision = view.parameterRevision;
+    state.bound.routes = new WeakMap();
+  }
+  // Without a parameter of its own the view draws the routes as they are.
+  if (!state.routes.some((route) => route && sets(view, route))) {
+    return state.routes;
+  }
+  return state.routes.map((route) =>
+    route && sets(view, route) ? boundRoute(view, route) : route,
+  );
+}
+
+/** Whether a warp of `route` has a slider the view sets for itself. */
+function sets(view: ViewAnchorContext, route: Route): boolean {
+  return route.steps.some(
+    (s) =>
+      s.kind === "warp" && s.warp.scale && view.hasParameterValue(s.warp.scale),
+  );
+}
+
+/** `route` with each warp whose slider the view sets reading the view's value: made once for a route, so the same route is the same object. */
+function boundRoute(view: ViewAnchorContext, route: Route): Route {
+  const state = view.anchorState;
+  let bound = state.bound.routes.get(route);
+  if (!bound) {
+    bound = {
+      ...route,
+      steps: route.steps.map((step) =>
+        step.kind === "warp" &&
+        step.warp.scale &&
+        view.hasParameterValue(step.warp.scale)
+          ? { ...step, warp: boundWarp(view, step.warp) }
+          : step,
+      ),
+    };
+    state.bound.routes.set(route, bound);
+  }
+  return bound;
+}
+
+/** The warp, its slider read from the view: its own properties otherwise (its prototype is the warp, so a live spec stays live). */
+function boundWarp(view: ViewAnchorContext, warp: Warp): Warp {
+  const scale = warp.scale!;
+  let own = view.anchorState.viewScales.get(scale);
+  if (!own) {
+    own = {
+      get value() {
+        return view.parameterValue(scale as never);
+      },
+      get range() {
+        return scale.range;
+      },
+    } satisfies WarpScale;
+    view.anchorState.viewScales.set(scale, own);
+  }
+  return Object.create(warp, {
+    scale: { value: own, enumerable: true },
+  }) as Warp;
 }
 
 export function anchorCamera(
@@ -292,7 +369,7 @@ export function pointToRender(
   caller: string,
 ): Float64Array | undefined {
   const slot = placementSlot(view, anchor, caller);
-  const route = view.anchorState.routes[slot];
+  const route = anchorRoutes(view)[slot];
   if (route) {
     try {
       return routeForward(route, position, out);

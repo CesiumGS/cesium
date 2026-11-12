@@ -11,15 +11,14 @@ import {
   type Warp,
 } from "../src/camera/route.ts";
 
-const itrf = { name: "ITRF" };
-const drawn = { name: "exaggerated" };
+const content = { name: "content" };
+const drawn = { name: "ITRF" };
 
 /** z scaled by `k`, as an exaggeration over a flat reference. */
 function heightScale(k: number): Warp {
   return {
-    from: itrf,
+    from: content,
     to: drawn,
-    presentation: true,
     revision: 1,
     forward(p, out, jacobian) {
       out[0] = p[0]!;
@@ -33,9 +32,8 @@ function heightScale(k: number): Warp {
 
 /** A smooth non-linear warp, inverted only by Newton. */
 const swirl: Warp = {
-  from: itrf,
+  from: content,
   to: drawn,
-  presentation: false,
   revision: 1,
   forward(p, out, jacobian) {
     const [x, y, z] = [p[0]!, p[1]!, p[2]!];
@@ -77,7 +75,6 @@ describe("routes", () => {
         { kind: "warp", warp: heightScale(10), inverse: false },
         { kind: "rigid", matrix: translation(0, -5, 0) },
       ],
-      presentation: true,
       revision: 1,
     };
     expect(routeIsRigid(route)).toBe(false);
@@ -115,11 +112,10 @@ describe("a warp's scale", () => {
   }
 
   const step = (warp: Warp, inverse = false): Route => ({
-    frame: itrf,
+    frame: content,
     base: drawn,
     seconds: 0,
     steps: [{ kind: "warp", warp, inverse }],
-    presentation: true,
     revision: 1,
   });
 

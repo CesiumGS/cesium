@@ -1,6 +1,6 @@
 // The "Vertical exaggeration" example (plan §13.26's acceptance test, increment
-// 7), its frame and rig as the example builds them: a world whose rig sits on
-// the application's frame, a terrain tile and a billboard drawn under it, and
+// 7; §13.37), its frame as the example builds them: a deformer node over the
+// Earth's content under ITRF, where the camera stays; a terrain tile and a billboard drawn under it, and
 // the questions the page asks (a pick's way back through the map, the measure
 // module) answered in true coordinates while k goes from 1 to 10. Checked on
 // the CPU against the route's own float64 map, as warpGlobe.test.ts does; the
@@ -34,7 +34,7 @@ import {
 import { Frame } from "../src/frames/Frame.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
 import { truePick } from "../src/frames/pickTruth.ts";
-import { isWarpFrame } from "../src/frames/warpFrame.ts";
+import { isSmoothFrame } from "../src/frames/smoothFrame.ts";
 import { heightNormalInfo } from "../src/globe/heightNormal.ts";
 import { upsampleTerrainTile } from "../src/globe/quantizedMesh.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
@@ -110,7 +110,7 @@ interface Setup {
   step(): boolean;
 }
 
-/** The example's world: its frame on a catalog's ITRF, the rig on it, and nothing set on any item. */
+/** The example's world: its frame on a catalog's ITRF with the Earth's anchor in it, the rig on ITRF, and nothing set on any item. */
 function setup(factor = 4): Setup {
   const world = engine.createWorld({ maxDraws: 64 });
   worlds.push(world);
@@ -119,12 +119,14 @@ function setup(factor = 4): Setup {
     range: [0, 1],
   });
   const exaggeration = createExaggeration(catalog, scale);
-  engine.cameras.setResolver(world, createFramesResolver(catalog));
+  const resolver = createFramesResolver(catalog);
+  engine.cameras.setResolver(world, resolver);
   const earth = world.bodyAnchor(EARTH);
+  resolver.bindAnchor(earth, exaggeration.frame);
   const view = engine.addView({ target: new OffscreenTarget(64, 48), world });
   views.push(view);
   engine.cameras.setRig(view, {
-    position: { frame: exaggeration.frame as Frame },
+    position: { frame: catalog.get("ITRF") },
     orientation: { kind: "free" },
   });
   const s: Setup = {
@@ -139,8 +141,7 @@ function setup(factor = 4): Setup {
     step() {
       engine.cameras.update();
       return world.warps.frame(
-        engine.cameras.root(view),
-        view.anchorRoutes(),
+        [{ id: engine.scene.viewIds.get(view)!, routes: view.anchorRoutes() }],
         Infinity,
         (message) => {
           throw new Error(message);
@@ -220,7 +221,7 @@ function pickAt(s: Setup, drawn: Float64Array, route?: Route): CorePick {
   return {
     view: s.view,
     position: drawn,
-    root: s.exaggeration.frame,
+    root: s.itrf,
     anchor: s.earth,
     anchorPosition: Float64Array.from(drawn),
     ...(route && { route }),
@@ -233,18 +234,16 @@ function pickAt(s: Setup, drawn: Float64Array, route?: Route): CorePick {
 }
 
 describe("the example's frame and rig", () => {
-  it("is one warp frame over ITRF with a height-scale warp, and the Earth is drawn through it", () => {
+  it("is one smooth frame under ITRF with a height-scale warp, and the Earth is drawn through it", () => {
     const s = setup();
     expect(s.exaggeration.frame.name).toBe(FRAME_NAME);
-    expect(isWarpFrame(s.exaggeration.frame)).toBe(true);
+    expect(isSmoothFrame(s.exaggeration.frame)).toBe(true);
     expect(s.exaggeration.frame.warp.heightScale).toMatchObject({
       kind: "heightScale",
       factor: MAX_EXAGGERATION,
     });
-    expect(s.exaggeration.frame.warp.presentation).toBe(true);
     expect(s.route().steps.map((x) => x.kind)).toEqual(["warp"]);
-    expect(s.route().presentation).toBe(true);
-    expect(engine.cameras.root(s.view)).toBe(s.exaggeration.frame);
+    expect(engine.cameras.root(s.view)).toBe(s.itrf);
     expect(s.exaggeration.factor).toBeCloseTo(4, 12);
   });
 

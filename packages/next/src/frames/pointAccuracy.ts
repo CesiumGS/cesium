@@ -63,7 +63,7 @@ interface TermFlags {
  *   centre, which may be this far from where the click was meant);
  *   `"depth"`, the rounding of the depth buffer's float32 depth at the hit.
  * - `content`: how far the content's placement draws its design from where
- *   it truly is (`DesignPlacement.displayError`; 0 m when reprojected).
+ *   it truly is (`Georeference.displayError`; 0 m when reprojected).
  */
 export type PointAccuracyTerm =
   | {
@@ -77,7 +77,7 @@ export type PointAccuracyTerm =
       readonly note: string;
     }
   | {
-      /** The placement's design reference frame (`DesignPlacement.frameName`). */
+      /** The placement's design reference frame (`Georeference.frameName`). */
       readonly frame: string;
       readonly kind: "content";
       /** A worst-case bound, m. */

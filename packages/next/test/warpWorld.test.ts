@@ -1,21 +1,22 @@
-// A world's draws across a warp (plan §13.26, increment 1, slice D): a view
-// whose rig sits on a warp frame (`exaggerated`, over ITRF) draws content
-// anchored in ITRF warped, per vertex, by fits of the route, which the
+// A world's draws across a warp (plan §13.26, increment 1, slice D; §13.37):
+// a view whose camera is on ITRF draws content placed in a smooth frame under
+// it (`exaggerated`, with the Earth's anchor bound to it) warped, per vertex,
+// by fits of the route, which the
 // engine makes within a budget. Checked on the CPU against the route's own
 // float64 map: the twin of every vertex (`placeWithTerms`, then the anchor
 // and draw matrices) lands on `routeForward` within the fit's error. The
 // GPU side is spikes/warpRoute.html.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
-  PresentationRouteError,
   routeForward,
   type Route,
+  type SmoothFrameSpec,
 } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { Frame } from "../src/frames/Frame.ts";
 import { placementOf } from "../src/frames/placementQuery.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { warpFrame, type WarpSpec } from "../src/frames/warpFrame.ts";
+import { smoothFrame } from "../src/frames/smoothFrame.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
 import {
@@ -158,12 +159,17 @@ interface Setup {
   world: World;
   view: View;
   earth: AnchorHandle;
-  /** The warped anchor's frames. */
-  itrf: Frame;
-  exaggerated: Frame;
-  /** Whatever the rig sits on. */
-  rig: Frame;
-  spec: WarpSpec & { revision: number };
+  /**
+   * The frame the Earth's anchor is placed in: the deformer, whose
+   * coordinates are true and whose edge to `drawn` is the warp (itself when
+   * the setup is rigid).
+   */
+  content: Frame;
+  /** ITRF, the camera's root: where the content is drawn. */
+  drawn: Frame;
+  /** A second deformer between `content` and `drawn` (`second`): the route is the exaggeration, then its lift. */
+  flat: Frame | undefined;
+  spec: SmoothFrameSpec & { revision: number };
   /** The exaggeration `spec.forward` applies, changed with a revision bump. */
   state: { k: number };
   /** The warp's scale, when it has one. */
@@ -177,9 +183,10 @@ interface Setup {
 }
 
 /**
- * A world with a view whose rig sits on `exaggerated` (or on `flat`, a
- * second warp under it, when `second`; on ITRF itself when `rigid`), over
- * ITRF, and the Earth's anchor. `scaled`: the warp has a scale, a world's
+ * A world with a view whose rig sits on ITRF and the Earth's anchor placed
+ * in `exaggerated`, a smooth frame under ITRF (or in `flat`, a second one
+ * under that, when `second`; left on ITRF itself when `rigid`). `scaled`: the
+ * warp has a scale, a world's
  * parameter (a weight the GPU reads) or a `plain` number. The first frame
  * has run, so draws added after are found as they are added.
  */
@@ -208,19 +215,16 @@ function setup(
         ? { value: 1 }
         : undefined;
   const state = { k: options.k ?? 10 };
-  const spec: WarpSpec & { revision: number } = {
-    presentation: true,
+  const spec: SmoothFrameSpec & { revision: number } = {
     revision: 1,
     description: "height × k",
     ...(scale && { scale }),
     forward: (p, out, jacobian) => exaggerate(state.k, p, out, jacobian),
   };
-  const exaggerated = warpFrame("exaggerated", itrf, spec);
-  catalog.add(exaggerated);
-  let rig: Frame = options.rigid ? itrf : exaggerated;
+  // A second deformer sits between the exaggeration and ITRF: the route is the exaggeration, then the lift.
+  let flat: Frame | undefined;
   if (options.second) {
-    const flat = warpFrame("flat", exaggerated, {
-      presentation: true,
+    flat = smoothFrame("flat", itrf, {
       revision: 1,
       description: "lifted 1 m",
       forward(p, out, jacobian) {
@@ -232,15 +236,18 @@ function setup(
       },
     });
     catalog.add(flat);
-    rig = flat;
   }
+  const exaggerated = smoothFrame("exaggerated", flat ?? itrf, spec);
+  catalog.add(exaggerated);
+  const placed: Frame = options.rigid ? itrf : exaggerated;
   const resolver = createFramesResolver(catalog);
   const earth = world.bodyAnchor(EARTH);
+  resolver.bindAnchor(earth, placed);
   engine.cameras.setResolver(world, resolver);
   const view = engine.addView({ target: new OffscreenTarget(64, 48), world });
   views.push(view);
   engine.cameras.setRig(view, {
-    position: { frame: rig },
+    position: { frame: itrf },
     orientation: { kind: "free" },
   });
   const fits = { count: 0 };
@@ -254,9 +261,9 @@ function setup(
     world,
     view,
     earth,
-    itrf,
-    exaggerated,
-    rig,
+    content: exaggerated,
+    drawn: itrf,
+    flat,
     spec,
     state,
     scale,
@@ -266,8 +273,7 @@ function setup(
     step(budget = Infinity) {
       engine.cameras.update();
       return world.warps.frame(
-        engine.cameras.root(view),
-        view.anchorRoutes(),
+        [{ id: engine.scene.viewIds.get(view)!, routes: view.anchorRoutes() }],
         budget,
         (message) => {
           throw new Error(message);
@@ -366,15 +372,14 @@ describe("anchors across a warp", () => {
     const s = setup();
     const r = route(s);
     expect(r.steps.map((x) => x.kind)).toEqual(["warp"]);
-    expect(r.presentation).toBe(true);
-    expect(r.revision).toBe(s.resolver.routeRevision(s.earth, s.rig));
+    expect(r.revision).toBe(s.resolver.routeRevision(s.earth, s.drawn));
     expect(Array.from(s.view.anchorPlacement(s.earth))).toEqual(
       Array.from(m4.mat4()),
     );
     // The table's root, bound to nothing, is rigid and unmarked.
     expect(s.view.anchorRoute(undefined)).toBeUndefined();
     // Where a rigid step precedes the warp, the placement is that step.
-    const mast = Frame.constant("mast", s.itrf, translation(10, 20, 30), {
+    const mast = Frame.constant("mast", s.content, translation(10, 20, 30), {
       accuracy: { meters: 0.3, note: "survey" },
     });
     s.catalog.add(mast);
@@ -390,7 +395,7 @@ describe("anchors across a warp", () => {
 
   it("leaves an anchor on a rigid route as it was, with no route", () => {
     const s = setup();
-    const mast = Frame.constant("mast", s.exaggerated, translation(5, 6, 7), {
+    const mast = Frame.constant("mast", s.drawn, translation(5, 6, 7), {
       accuracy: { meters: 0.3, note: "survey" },
     });
     s.catalog.add(mast);
@@ -406,11 +411,11 @@ describe("anchors across a warp", () => {
   it("refuses a rig whose own frame crosses a warp to the root, keeping its last pose, with a clear message", () => {
     const s = setup();
     engine.cameras.setRig(s.view, {
-      position: { frame: s.exaggerated, anchor: s.earth, offset: [0, 0, 10] },
+      position: { frame: s.drawn, anchor: s.earth, offset: [0, 0, 10] },
       orientation: { kind: "free" },
     });
     const held = engine.cameras.held(s.view);
-    expect(held?.reason).toMatch(/crosses a warp/);
+    expect(held?.reason).toMatch(/crosses a smooth edge/);
     expect(held?.reason).toMatch(/rig's frames/);
   });
 });
@@ -587,7 +592,7 @@ describe("draws across a warp", () => {
     s.step();
     expect(drawTerms(s.world, draw)).toHaveLength(2);
     // The Earth's anchor is bound to the warped frame itself: no warp between.
-    s.resolver.bindAnchor(s.earth, s.exaggerated);
+    s.resolver.bindAnchor(s.earth, s.drawn);
     s.step();
     expect(s.view.anchorRoute(s.earth)).toBeUndefined();
     expect(hidden(s, draw)).toBe(false);
@@ -783,6 +788,12 @@ describe("the render root", () => {
     return frame;
   }
 
+  /** Places the Earth's anchor in `frame`, and the camera layer evaluates the view. */
+  const placeIn = (s: Setup, frame: Frame): void => {
+    s.resolver.bindAnchor(s.earth, frame);
+    engine.cameras.update();
+  };
+
   const rigOn = (s: Setup, frame: Frame): void =>
     engine.cameras.setRig(s.view, {
       position: { frame },
@@ -802,8 +813,8 @@ describe("the render root", () => {
     s.step();
     expect(s.fits.count).toBe(1);
     const before = lattice(s, draw);
-    // A frame under `exaggerated`, 1 km up: the route to it is the warp, then a rigid step.
-    const mast = child(s, "mast", s.exaggerated, 0, 0, 1000);
+    // A frame under ITRF, the camera's root, 1 km up: the route to it is the warp, then a rigid step.
+    const mast = child(s, "mast", s.drawn, 0, 0, 1000);
     rigOn(s, mast);
     expect(route(s).steps.map((x) => x.kind)).toEqual(["warp", "rigid"]);
     expect(s.step(0)).toBe(false);
@@ -816,9 +827,9 @@ describe("the render root", () => {
     const { worst, bound } = twinError(s, draw, quad());
     expect(worst).toBeLessThanOrEqual(bound + 1e-6);
     // Another rigid root, and back to the first: still nothing.
-    rigOn(s, child(s, "tower", s.exaggerated, 50, 60, 70));
+    rigOn(s, child(s, "tower", s.drawn, 50, 60, 70));
     s.step(0);
-    rigOn(s, s.exaggerated);
+    rigOn(s, s.drawn);
     s.step(0);
     expect(s.fits.count).toBe(1);
     expect(lattice(s, draw)).toBe(before);
@@ -833,12 +844,12 @@ describe("the render root", () => {
     const before = lattice(s, draw);
     expect(s.fits.count).toBe(1);
     // On ITRF the route is rigid: the draw goes back to unwarped.
-    rigOn(s, s.itrf);
+    rigOn(s, s.content);
     s.step(0);
     expect(s.world.warps.has(draw)).toBe(false);
     expect(hidden(s, draw)).toBe(false);
     // Back on the warp frame: drawn at once with the fit it had, none run.
-    rigOn(s, s.exaggerated);
+    rigOn(s, s.drawn);
     s.step(0);
     expect(hidden(s, draw)).toBe(false);
     expect(s.world.warps.has(draw)).toBe(true);
@@ -854,12 +865,12 @@ describe("the render root", () => {
     const draws = [addQuad(s), addQuad(s)];
     s.step();
     const before = draws.map((d) => lattice(s, d));
-    rigOn(s, s.itrf);
+    rigOn(s, s.content);
     s.step(0);
     // The warp changes while the draws are unwarped.
     s.state.k = 4;
     s.spec.revision++;
-    rigOn(s, s.exaggerated);
+    rigOn(s, s.drawn);
     // One fit runs; the other draw shows the fit it had.
     expect(s.step(0)).toBe(true);
     expect(draws.map((d) => hidden(s, d))).toEqual([false, false]);
@@ -877,12 +888,12 @@ describe("the render root", () => {
   it("holds a draw hidden that has no fit to take up when a re-root puts it under a warp", () => {
     const s = setup();
     liftCamera(s);
-    rigOn(s, s.itrf);
+    rigOn(s, s.content);
     s.step();
     const draws = [addQuad(s), addQuad(s)];
     s.step();
     expect(draws.map((d) => hidden(s, d))).toEqual([false, false]);
-    rigOn(s, s.exaggerated);
+    rigOn(s, s.drawn);
     s.step(0);
     expect(draws.filter((d) => hidden(s, d))).toHaveLength(1);
   });
@@ -890,13 +901,14 @@ describe("the render root", () => {
   it("refits when the route itself changes, drawing the old fit meanwhile, and reuses it on the way back", () => {
     const s = setup({ second: true, prime: false });
     liftCamera(s);
-    rigOn(s, s.exaggerated);
+    // First placed in `flat`: one warp.
+    s.resolver.bindAnchor(s.earth, s.flat!);
     const draws = [addQuad(s), addQuad(s)];
     s.step();
     expect(s.fits.count).toBe(2);
     const before = draws.map((d) => lattice(s, d)!);
-    // `flat` is a second warp under `exaggerated`: the route gains a warp.
-    rigOn(s, s.rig);
+    // `exaggerated` sits under `flat`: the route gains a warp.
+    placeIn(s, s.content);
     expect(route(s).steps.map((x) => x.kind)).toEqual(["warp", "warp"]);
     expect(s.step(0)).toBe(true);
     expect(draws.map((d) => hidden(s, d))).toEqual([false, false]);
@@ -916,7 +928,7 @@ describe("the render root", () => {
       expect(worst).toBeLessThanOrEqual(bound + 1e-6);
     });
     // Back to the first route: its fits are still held.
-    rigOn(s, s.exaggerated);
+    placeIn(s, s.flat!);
     expect(s.step(0)).toBe(false);
     draws.forEach((draw, i) => expect(lattice(s, draw)).toBe(before[i]));
     expect(s.fits.count).toBe(4);
@@ -934,7 +946,7 @@ describe("the render root", () => {
     const before = draws.map((d) => lattice(s, d));
     s.state.k = 4;
     s.spec.revision++;
-    rigOn(s, child(s, "mast", s.exaggerated, 0, 0, 1000));
+    rigOn(s, child(s, "mast", s.drawn, 0, 0, 1000));
     expect(s.step(0)).toBe(true);
     expect(draws.map((d) => hidden(s, d))).toEqual([false, false]);
     expect(draws.filter((d, i) => lattice(s, d) === before[i])).toHaveLength(1);
@@ -946,18 +958,54 @@ describe("the render root", () => {
     ]);
   });
 
-  it("warns once when another view of the world has another root", () => {
+  it("draws for views with different roots without a word: the warp is the same, what follows it is each view's", () => {
     const s = setup();
     addQuad(s);
+    const mast = child(s, "mast", s.drawn, 0, 0, 1000);
     const other = engine.addView({
       target: new OffscreenTarget(32, 24),
       world: s.world,
     });
     views.push(other);
+    engine.cameras.setRig(other, {
+      position: { frame: mast },
+      orientation: { kind: "free" },
+    });
+    other.camera.position[0] = R + 4000;
+    other.camera.version++;
+    engine.renderFrame();
+    engine.renderFrame();
+    expect(engine.errors.filter((e) => /warp:/.test(e.message))).toHaveLength(
+      0,
+    );
+    expect(other.anchorRoute(s.earth)!.steps.map((x) => x.kind)).toEqual([
+      "warp",
+      "rigid",
+    ]);
+    expect(s.view.anchorRoute(s.earth)!.steps.map((x) => x.kind)).toEqual([
+      "warp",
+    ]);
+  });
+
+  it("says once when another view reaches its root through other smooth edges", () => {
+    const s = setup();
+    addQuad(s);
+    // The second view's root is the deformer itself: no smooth edge for the anchor.
+    const other = engine.addView({
+      target: new OffscreenTarget(32, 24),
+      world: s.world,
+    });
+    views.push(other);
+    engine.cameras.setRig(other, {
+      position: { frame: s.content },
+      orientation: { kind: "free" },
+    });
+    other.camera.position[0] = R + 4000;
+    other.camera.version++;
     engine.renderFrame();
     engine.renderFrame();
     const warnings = engine.errors.filter((e) =>
-      /render root of its first view/.test(e.message),
+      /does not cross a smooth edge/.test(e.message),
     );
     expect(warnings).toHaveLength(1);
     expect(warnings[0]!.count).toBe(1);
@@ -1035,11 +1083,9 @@ describe("tiles across a warp", () => {
         warps: [
           {
             description: "height × k",
-            presentation: true,
             inverse: false,
           },
         ],
-        presentation: true,
         revision: route(s).revision,
         fit: "fitted",
       });
@@ -1241,20 +1287,25 @@ describe("rays through a warp", () => {
   function frames() {
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const itrf = catalog.get("ITRF");
-    const drawn = warpFrame("drawn", itrf, {
-      presentation: true,
+    const drawn = smoothFrame("exaggerated", itrf, {
       revision: 1,
       forward: (p, out, jacobian) => exaggerate(10, p, out, jacobian),
     });
-    const shifted = warpFrame("shifted", itrf, {
-      presentation: false,
+    // A frame whose x runs 100 m past ITRF's: its edge to ITRF takes 100 off.
+    const shifted = smoothFrame("shifted", itrf, {
       revision: 1,
       description: "datum shift",
       forward(p, out, jacobian) {
-        out[0] = p[0]! + 100;
+        out[0] = p[0]! - 100;
         out[1] = p[1]!;
         out[2] = p[2]!;
         jacobian?.set([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+        return out;
+      },
+      inverse(q, out) {
+        out[0] = q[0]! + 100;
+        out[1] = q[1]!;
+        out[2] = q[2]!;
         return out;
       },
     });
@@ -1265,51 +1316,25 @@ describe("rays through a warp", () => {
 
   const A = EARTH.ellipsoid.radii[0]!;
 
-  it("refuses a route across a presentation warp, naming the frames", async () => {
+  it("carries rays through an exaggerating edge by their ends, and says so", async () => {
     const world = engine.createWorld();
     worlds.push(world);
     const { drawn, resolver } = frames();
     engine.cameras.setResolver(world, resolver);
-    await expect(
-      engine.queries.castRays({
-        anchor: undefined,
-        world,
-        frame: drawn,
-        seconds: 0,
-        rays: [{ from: [A + 1000, 0, 0], to: [A - 1000, 0, 0] }],
-        targets: [{ kind: "body", body: EARTH }],
-      }),
-    ).rejects.toThrow(PresentationRouteError);
-    await expect(
-      engine.queries.castRays({
-        anchor: undefined,
-        world,
-        frame: drawn,
-        seconds: 0,
-        rays: [{ from: [A + 1000, 0, 0], to: [A - 1000, 0, 0] }],
-        targets: [{ kind: "body", body: EARTH }],
-      }),
-    ).rejects.toThrow(/drawn to Earth.*presentation warp/);
+    const answer = await engine.queries.castRays({
+      anchor: undefined,
+      world,
+      frame: drawn,
+      seconds: 0,
+      rays: [{ from: [A + 1000, 0, 0], to: [A - 1000, 0, 0] }],
+      targets: [{ kind: "body", body: EARTH }],
+    });
+    expect(answer.rays[0]!.accuracy.note).toMatch(
+      /crosses a smooth edge, so each ray is carried by its ends/,
+    );
   });
 
-  it("refuses a hit reported in a presentation frame", async () => {
-    const world = engine.createWorld();
-    worlds.push(world);
-    const { drawn, resolver } = frames();
-    engine.cameras.setResolver(world, resolver);
-    await expect(
-      engine.queries.castRays({
-        anchor: world.bodyAnchor(EARTH),
-        world,
-        reportIn: drawn,
-        seconds: 0,
-        rays: [{ from: [A + 1000, 0, 0], to: [A - 1000, 0, 0] }],
-        targets: [{ kind: "body", body: EARTH }],
-      }),
-    ).rejects.toThrow(/presentation warp/);
-  });
-
-  it("carries rays through a warp that is not a presentation, and the hit back", async () => {
+  it("carries rays through a datum shift, and the hit back, in the shifted frame", async () => {
     const world = engine.createWorld();
     worlds.push(world);
     const { shifted, resolver } = frames();

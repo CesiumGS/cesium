@@ -17,10 +17,10 @@
 // centre of curvature, deep inside the body.
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import type { HeightScale, WarpScale } from "../camera/route.ts";
-import { heightOffset as heightOffsetEdge } from "../georeference/heightOffset.ts";
-import { verticalExaggeration as verticalExaggerationEdge } from "../georeference/verticalExaggeration.ts";
 import type { SmoothSpec } from "../transform/graph.ts";
-import { LiveWarp, type ChangeableWarp } from "./warps.ts";
+import { LiveWarp, type ChangeableWarp } from "../transforms/liveWarp.ts";
+import { heightOffsetEdge } from "./heightOffset.ts";
+import { verticalExaggerationEdge } from "./verticalExaggeration.ts";
 
 /** A vertical exaggeration scales heights wherever content is: the built-in's ceiling, m, above any of it. */
 const UNBOUNDED_CEILING = 1e9;
@@ -31,7 +31,7 @@ const UNBOUNDED_CEILING = 1e9;
  * `origin` (a point on it, default the origin) and `normal` (default
  * +z, the side heights are positive on) are in the parent frame's metres.
  */
-export type HeightReference =
+export type ReferenceSurface =
   | "ellipsoid"
   | { readonly ellipsoid: Ellipsoid }
   | { readonly sphere: number }
@@ -235,7 +235,7 @@ function describeEllipsoid(e: Ellipsoid): string {
     : `the ellipsoid of radii ${Array.from(e.radii).join(", ")} m`;
 }
 
-function surfaceOf(reference: HeightReference): Surface {
+function surfaceOf(reference: ReferenceSurface): Surface {
   if (reference === "ellipsoid") {
     return ellipsoidSurface(
       Ellipsoid.WGS84,
@@ -389,7 +389,7 @@ export interface VerticalExaggerationOptions {
    */
   readonly factor: number;
   /** What heights are above: the WGS84 ellipsoid by default. */
-  readonly reference?: HeightReference;
+  readonly reference?: ReferenceSurface;
   /** The height that stays where it is, m above the reference: 0 by default. Heights below it are scaled the same way. */
   readonly baseHeight?: number;
   /**
@@ -429,7 +429,6 @@ class VerticalExaggerationImpl
   extends HeightWarp
   implements VerticalExaggeration
 {
-  readonly presentation = true;
   private k: number;
   private base: number;
   private smoothRevision = -1;
@@ -512,8 +511,9 @@ class VerticalExaggerationImpl
  * baseHeight)` along the surface's normal, keeping its latitude and
  * longitude (on an ellipsoid) or its place along the surface. The Jacobian
  * and the inverse are exact closed forms (see the file's header), at any
- * height and at the poles. A presentation warp: it changes where content
- * is drawn, never where it is.
+ * height and at the poles. Place it over the content it exaggerates
+ * (`smoothFrame(name, parent, verticalExaggeration(…))`): that content keeps
+ * its true coordinates and is drawn through the edge.
  *
  * For a slider, give `scale` (a `PlacementParameter` in [0, 1]) and `factor`
  * the largest multiplier: the heights are multiplied by `1 + s(factor − 1)`.
@@ -527,9 +527,7 @@ export function verticalExaggeration(
 /** What `heightOffset` takes. */
 export interface HeightOffsetOptions {
   /** What heights are above: the WGS84 ellipsoid by default. */
-  readonly reference?: HeightReference;
-  /** Default true: lifting content for drawing; false when the offset is real (a datum shift). */
-  readonly presentation?: boolean;
+  readonly reference?: ReferenceSurface;
   /** A live number for a slider: at scale `s` the offset is `s·metres`. */
   readonly scale?: WarpScale;
 }
@@ -541,14 +539,12 @@ export interface HeightOffset extends ChangeableWarp {
 }
 
 class HeightOffsetImpl extends HeightWarp implements HeightOffset {
-  readonly presentation: boolean;
   private offset: number;
   private smoothRevision = -1;
   private smoothSpec: SmoothSpec | undefined;
 
   constructor(metres: number, options: HeightOffsetOptions) {
     super(surfaceOf(options.reference ?? "ellipsoid"), options.scale);
-    this.presentation = options.presentation ?? true;
     this.offset = checkMetres("heightOffset: metres", metres);
   }
 
@@ -594,8 +590,8 @@ class HeightOffsetImpl extends HeightWarp implements HeightOffset {
 /**
  * Every point moved `metres` along the normal of a reference surface (up
  * for positive): lifts content clear of terrain, or sinks it. The
- * Jacobian and the inverse are exact. A presentation warp unless
- * `presentation: false`.
+ * Jacobian and the inverse are exact. Place it over the content it lifts
+ * (`smoothFrame`).
  */
 export function heightOffset(
   metres: number,

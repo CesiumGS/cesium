@@ -136,8 +136,8 @@ describe("the API reference's content", () => {
   });
 
   it("reads class hierarchies both ways", () => {
-    expect(find("frames:Frame").extBy).toContain("frames:WarpFrame");
-    expect(find("frames:WarpFrame").ext?.map((h) => h.id)).toContain(
+    expect(find("frames:Frame").extBy).toContain("frames:SmoothFrame");
+    expect(find("frames:SmoothFrame").ext?.map((h) => h.id)).toContain(
       "frames:Frame",
     );
     expect(find("RenderTarget").implBy).toEqual(

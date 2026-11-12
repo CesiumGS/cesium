@@ -1,7 +1,8 @@
 // The globe, a billboard and anchored content across a warp on the GPU
 // (plan §13.26, increment 4; the Node test is test/warpGlobe.test.ts, and
-// spikes/warpRoute.ts is the model). A view's rig sits on `exaggerated`, a
-// `verticalExaggeration` of 10 over ITRF with a scale the page moves. Near
+// spikes/warpRoute.ts is the model). The Earth's anchor is placed in
+// `exaggerated`, a `verticalExaggeration` of 10 under ITRF with a scale the
+// page moves; the camera stays on ITRF. Near
 // the north pole, unlit and in flat colours:
 //
 //   green    a terrain tile carrying h·n̂ (exact in height, no fit)
@@ -21,9 +22,9 @@ import { routeForward } from "../src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-  verticalExaggeration,
-  warpFrame,
+  smoothFrame,
 } from "../src/frames/index.ts";
+import { verticalExaggeration } from "../src/georeference/index.ts";
 import { HEIGHT_NORMAL_ATTRIBUTE } from "../src/globe/heightNormal.ts";
 import {
   EARTH,
@@ -40,8 +41,8 @@ import type { DrawHandle } from "../src/scene/world/types.ts";
 const TEMPLATE = `
 <h1>The globe, a billboard and anchored content across a warp</h1>
 <p>
-  A view whose rig sits on a warp frame that multiplies height by 10, with a
-  scale (one float). A terrain tile with exact heights, one fitted, a
+  The Earth's content placed in a frame whose edge multiplies height by 10,
+  with a scale (one float). A terrain tile with exact heights, one fitted, a
   billboard and a pole kept upright, each measured in the image against where
   the route puts it; then the globe, whose generated tiles must be drawn
   exactly under the warp.
@@ -193,12 +194,14 @@ async function runWarpGlobe(): Promise<WarpGlobeResult> {
     const itrf = catalog.get("ITRF");
     const scale = world.createPlacementParameter(1, { range: [0, 1] });
     const exaggeration = verticalExaggeration({ factor: K, scale });
-    const exaggerated = warpFrame("exaggerated", itrf, exaggeration);
+    const exaggerated = smoothFrame("exaggerated", itrf, exaggeration);
     catalog.add(exaggerated);
-    engine.cameras.setResolver(world, createFramesResolver(catalog));
+    const resolver = createFramesResolver(catalog);
+    engine.cameras.setResolver(world, resolver);
     const earth = world.bodyAnchor(EARTH);
+    resolver.bindAnchor(earth, exaggerated);
     engine.cameras.setRig(view, {
-      position: { frame: exaggerated },
+      position: { frame: itrf },
       orientation: { kind: "free" },
     });
     view.camera.position.set([0, 0, EYE]);

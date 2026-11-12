@@ -23,6 +23,7 @@ export const ROUTE_BOUNDARY: Boundary = {
     "routeEyeHi",
     "routeEyeLo",
     "routeAxisRow",
+    "routeViewBit",
   ],
 };
 

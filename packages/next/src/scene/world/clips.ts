@@ -12,11 +12,13 @@
 // constant bounds (surface.slang `clipsDiscard`), so no configuration compiles
 // a shader:
 //
-// - **True.** The set's route to the view's body anchor (the content's true
-//   side) is rigid, and the content's route to the render root crosses no
-//   warp but presentation ones: the table is tested on the true point, the
+// - **True.** The set's route to the view's body anchor (the content's own
+//   side) is rigid: the table is tested on the content's point, the
 //   fragment's location 4 (`relPosition`: the draw's transform on the design
-//   position, before any placement).
+//   position, before any placement or route). Where content sits decides
+//   this, not the route: a deformer over the content (a smooth edge between
+//   the content's frame and the root) changes where it is drawn, not the
+//   coordinates it has in its own frame.
 // - **Drawn.** The set's route to the render root is rigid: the table is
 //   tested on the drawn point, which a placed draw rebuilds per fragment
 //   (surface.slang `drawnPosition`), and an unplaced one reads from location 4.
@@ -50,7 +52,6 @@ import {
   resolveRoute,
   routeForward,
   routeIsRigid,
-  type Route,
 } from "../../camera/route.ts";
 
 /** A point or direction as three numbers. */
@@ -147,7 +148,7 @@ export type ClipEffect =
  * element ID, will land (plan §13.26, decision 10). There is no list per clip.
  */
 export interface ClipSet {
-  /** The reference frame the shapes are named in (any frame, presentation frames included). */
+  /** The reference frame the shapes are named in (any frame: content's own, the camera's root, or one between). */
   readonly frame: FrameKey;
   /** At least one, at most `MAX_CLIP_SHAPES`. */
   readonly shapes: readonly ClipShape[];
@@ -716,8 +717,6 @@ export interface ClipViewPlacement {
   readonly body: FrameKey;
   /** Render space ← the body anchor (`View.anchorPlacement`). */
   readonly bodyPlacement: ArrayLike<number>;
-  /** The body anchor's route to the root, when it crosses a warp (`View.anchorRoute`). */
-  readonly bodyRoute: Route | undefined;
 }
 
 export type ClipSpace = "true" | "drawn" | "curved";
@@ -734,19 +733,6 @@ export interface PlannedClip {
   readonly matrix: Float64Array;
 }
 
-/**
- * Whether location 4, the draw's transform on the design position, is the
- * true point under `route`: only when every warp it crosses is a
- * presentation warp (plan §13.26, "Gaps found"). A reprojection moves
- * where content is, so the drawn point is the true one there.
- */
-export function locationFourIsTrue(route: Route | undefined): boolean {
-  return (
-    route === undefined ||
-    route.steps.every((s) => s.kind === "rigid" || s.warp.presentation)
-  );
-}
-
 function isNonRigid(error: unknown): boolean {
   return error instanceof NonRigidRouteError;
 }
@@ -758,19 +744,17 @@ function isNonRigid(error: unknown): boolean {
  * set is `curved` (fitted per draw, `WorldCurvedClips`).
  */
 export function planClip(set: ClipSet, view: ClipViewPlacement): PlannedClip {
-  if (locationFourIsTrue(view.bodyRoute)) {
-    try {
-      const matrix = view.resolver.resolve(
-        set.frame,
-        view.body,
-        view.seconds,
-        new Float64Array(16),
-      );
-      return { set, space: "true", matrix };
-    } catch (error) {
-      if (!isNonRigid(error)) {
-        throw error;
-      }
+  try {
+    const matrix = view.resolver.resolve(
+      set.frame,
+      view.body,
+      view.seconds,
+      new Float64Array(16),
+    );
+    return { set, space: "true", matrix };
+  } catch (error) {
+    if (!isNonRigid(error)) {
+      throw error;
     }
   }
   try {
@@ -1421,9 +1405,9 @@ export function clipSetsOf(
 /**
  * A filter over `sets` for points in `frame` at `seconds`: each point is
  * routed, in float64, into each set's own frame (a rigid route by its
- * matrix; across a warp by the route's forward map) and tested there. A
- * route that crosses a presentation warp is followed: the point is tested
- * where it is drawn, in a set named in a drawn frame. Without a resolver the
+ * matrix; across a smooth edge by the route's forward map) and tested there.
+ * A route that crosses a smooth edge is followed: the point is tested where
+ * it is drawn, in a set named in a drawn frame. Without a resolver the
  * points are taken to be in the sets' frames. Undefined for no sets.
  */
 export function clipFilter(

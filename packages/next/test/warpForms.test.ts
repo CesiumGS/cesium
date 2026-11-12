@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   verticalExaggeration,
   heightOffset,
-} from "../src/frames/heightWarps.ts";
+} from "../src/georeference/heightWarps.ts";
 import { Ellipsoid, cartographic } from "../src/math/ellipsoid.ts";
 import {
   WGS84_RADII,

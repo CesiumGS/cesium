@@ -10,9 +10,11 @@
 // Cases, each in a view that opts into its clips by mask:
 //   1. a cube cut by a plane, and a window cut by a box (two sets);
 //   2. the cube's roof cut by an extruded L-shaped polygon, from above;
-//   3. a tower under a ×10 height warp (the rig sits on the drawn frame), cut
-//      by a plane named in ITRF (true: tested on the location-4 point);
-//   4. the same tower cut by a plane named in the drawn frame (drawn: the
+//   3. a tower under a ×10 height warp (placed in a frame under the camera's
+//      root, ITRF, which is where it is drawn), cut
+//      by a plane named in the tower's own frame (true: tested on the
+//      location-4 point);
+//   4. the same tower cut by a plane named in ITRF, the drawn frame (drawn: the
 //      point rebuilt per fragment);
 //   5. a b-rep (a capped cylinder: untrimmed and trimmed patch draws, and a
 //      CPU mesh) cut by a plane;
@@ -24,7 +26,8 @@ import { routeInverse } from "../src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-  warpFrame,
+  smoothFrame,
+  type Frame,
 } from "../src/frames/index.ts";
 import {
   EARTH,
@@ -164,9 +167,10 @@ interface Scene {
   view: View;
   target: OffscreenTarget;
   earth: AnchorHandle;
-  /** The frames of the scene: ITRF, and the drawn one when the rig sits on a warp. */
-  itrf: ReturnType<ReturnType<typeof createFrameCatalog>["get"]>;
-  drawn: ReturnType<typeof warpFrame> | undefined;
+  /** The frame the content is placed in: its coordinates are the true ones (ITRF when nothing is warped). */
+  content: Frame;
+  /** The camera's root, where the content is drawn, when it is placed in a warped frame. */
+  root: Frame | undefined;
   /** Renders frames until the draws' fits have landed. */
   settle(draws: readonly DrawHandle[]): Promise<void>;
   /** Reads the image. */
@@ -196,21 +200,22 @@ function scene(
   });
   const catalog = createFrameCatalog();
   const itrf = catalog.get("ITRF");
-  let drawn: ReturnType<typeof warpFrame> | undefined;
+  let content: Frame = itrf;
   if (warped) {
-    drawn = warpFrame("drawn", itrf, {
-      presentation: true,
+    content = smoothFrame("Earth content (exaggerated)", itrf, {
       revision: 1,
       description: `height × ${K}`,
       forward: (p, out, jacobian) => exaggerate(K, p, out, jacobian),
       inverse: (q, out) => flatten(K, q, out),
     });
-    catalog.add(drawn);
+    catalog.add(content);
   }
-  engine.cameras.setResolver(world, createFramesResolver(catalog));
+  const resolver = createFramesResolver(catalog);
+  engine.cameras.setResolver(world, resolver);
   const earth = world.bodyAnchor(EARTH);
+  resolver.bindAnchor(earth, content);
   engine.cameras.setRig(view, {
-    position: { frame: drawn ?? itrf },
+    position: { frame: itrf },
     orientation: { kind: "free" },
   });
   const frames = async (n: number) => {
@@ -225,8 +230,8 @@ function scene(
     view,
     target,
     earth,
-    itrf,
-    drawn,
+    content,
+    root: warped ? itrf : undefined,
     async settle(draws) {
       for (let i = 0; i < 200; i++) {
         await frames(1);
@@ -535,11 +540,11 @@ async function runClips(): Promise<ClipsResult> {
       });
       look(view, [0, -30, R + 4], [0, 1, 0], [0, 0, 1]);
       const plane: ClipSet = {
-        frame: s.itrf,
+        frame: s.content,
         shapes: [{ kind: "plane", point: [0, 0, R + 5], normal: [0, 0, 3] }],
       };
       const window: ClipSet = {
-        frame: s.itrf,
+        frame: s.content,
         shapes: [
           {
             kind: "box",
@@ -591,7 +596,7 @@ async function runClips(): Promise<ClipsResult> {
       });
       look(view, [0, 0, R + 24], [0, 0, -1], [0, 1, 0]);
       const hole: ClipSet = {
-        frame: s.itrf,
+        frame: s.content,
         shapes: [
           {
             kind: "polygon",
@@ -648,13 +653,13 @@ async function runClips(): Promise<ClipsResult> {
       const set: ClipSet =
         named === "true"
           ? {
-              frame: s.itrf,
+              frame: s.content,
               shapes: [
                 { kind: "plane", point: [0, 0, R + 1], normal: [0, 0, 1] },
               ],
             }
           : {
-              frame: s.drawn!,
+              frame: s.root!,
               shapes: [
                 { kind: "plane", point: [0, 0, R + 12], normal: [0, 0, 1] },
               ],
@@ -669,7 +674,7 @@ async function runClips(): Promise<ClipsResult> {
       const route = view.anchorRoute(s.earth);
       if (!route) {
         throw new Error(
-          "the Earth's anchor has no route: the rig is not on a warp",
+          "the Earth's anchor has no route: it is not placed in a smooth frame",
         );
       }
       const scratch = new Float64Array(3);
@@ -717,7 +722,7 @@ async function runClips(): Promise<ClipsResult> {
       });
       look(view, [0, -9, R + 1.5], [0, 1, 0], [0, 0, 1]);
       const plane: ClipSet = {
-        frame: s.itrf,
+        frame: s.content,
         shapes: [{ kind: "plane", point: [0, 0, R + 1.8], normal: [0, 0, 1] }],
       };
       view.setClips([world.addClip(plane)]);
@@ -818,7 +823,7 @@ async function runClips(): Promise<ClipsResult> {
       await s.settle([]);
       const before = await pickAt(wx, wy);
       const window: ClipSet = {
-        frame: s.itrf,
+        frame: s.content,
         shapes: [
           {
             kind: "box",
@@ -869,7 +874,7 @@ async function runClips(): Promise<ClipsResult> {
       });
       look(view, [0, -30, R + 4], [0, 1, 0], [0, 0, 1]);
       const clip = world.addClip({
-        frame: s.itrf,
+        frame: s.content,
         shapes: [{ kind: "plane", point: [0, 0, R + 5], normal: [0, 0, 1] }],
       });
       await s.settle([cube]);
@@ -940,7 +945,7 @@ async function runClips(): Promise<ClipsResult> {
       });
       look(view, [0, -30, R + 4], [0, 1, 0], [0, 0, 1]);
       const plane: ClipSet = {
-        frame: s.itrf,
+        frame: s.content,
         shapes: [{ kind: "plane", point: [0, 0, R + 5], normal: [0, 0, 1] }],
       };
       view.setClips([world.addClip(plane)]);

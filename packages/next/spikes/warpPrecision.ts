@@ -7,8 +7,8 @@
 // to the camera-relative translation, summed exactly (cullTables.slang
 // `drawnTranslation`).
 //
-// A rig sits on a warp frame over ITRF, 3 m above a 0.6 m quad's drawn
-// place, looking down through a 15° field of view (1.5 mm a pixel). Two
+// The Earth's anchor is placed in a smooth frame under ITRF, and the camera
+// on ITRF is 3 m above a 0.6 m quad's drawn place, looking down through a 15° field of view (1.5 mm a pixel). Two
 // warps: height × 10 over a sphere, with the quad 4 km up (a 36 km
 // displacement), and a translation of (3,000, 2,000) km. Each of the four
 // corners, measured from the image (as spikes/warpRoute.ts), must land
@@ -20,7 +20,7 @@ import { routeForward } from "../src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-  warpFrame,
+  smoothFrame,
 } from "../src/frames/index.ts";
 import {
   EARTH,
@@ -36,8 +36,9 @@ import type { AnchorHandle, DrawHandle } from "../src/scene/world/types.ts";
 const TEMPLATE = `
 <h1>A placed draw's large displacement against the float64 route</h1>
 <p>
-  A 0.6 m quad anchored in ITRF at the north pole, drawn in a view whose rig
-  sits on a warp frame, 3 m above where the warp puts it. The warp moves it
+  A 0.6 m quad anchored in ITRF at the north pole, placed in a frame
+  whose edge to ITRF is a warp, drawn 3 m below the camera, which sits where
+  the warp puts it. The warp moves it
   by 36 km (height × 10, the quad 4 km up) or by thousands of kilometers (a
   translation). Its corners, measured from the image at 1.5 mm a pixel,
   against where <code>routeForward</code> and the view's projection put
@@ -211,17 +212,18 @@ async function runWarpPrecision(): Promise<WarpPrecisionResult> {
       });
       const catalog = createFrameCatalog();
       const itrf = catalog.get("ITRF");
-      const warped = warpFrame("warped", itrf, {
-        presentation: true,
+      const warped = smoothFrame("warped", itrf, {
         revision: 1,
         description: c.description,
         forward: c.forward,
       });
       catalog.add(warped);
-      engine.cameras.setResolver(world, createFramesResolver(catalog));
+      const resolver = createFramesResolver(catalog);
+      engine.cameras.setResolver(world, resolver);
       const earth = world.bodyAnchor(EARTH);
+      resolver.bindAnchor(earth, warped);
       engine.cameras.setRig(view, {
-        position: { frame: warped },
+        position: { frame: itrf },
         orientation: { kind: "free" },
       });
       // Over the quad's drawn place (the route's image of its origin),
@@ -333,7 +335,7 @@ function project(
   const route = view.anchorRoute(earth);
   if (!route) {
     throw new Error(
-      "the Earth's anchor has no route: the rig is not on a warp",
+      "the Earth's anchor has no route: it is not placed in a smooth frame",
     );
   }
   const eye = view.camera.position;

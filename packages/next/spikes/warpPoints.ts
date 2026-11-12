@@ -1,19 +1,19 @@
 // A point source's points through a warp on the GPU (plan §13.26, increment
-// 4; the Node test is test/warpPoints.test.ts). A rig sits on a warp frame
-// over ITRF that multiplies height over a sphere by 10. A `PointSource` 1 km
+// 4; the Node test is test/warpPoints.test.ts). The Earth's anchor is placed
+// in a smooth frame under ITRF that multiplies height over a sphere by 10. A `PointSource` 1 km
 // above the sphere holds points up to 15 km from its origin; its frame
 // kernel (vector/points.slang) evaluates the fit of its carrier draw at each
 // point before it writes the anchor the cull, the quads and a model pool
 // read. The anchors, read back from the vertex arena, must land within a
 // centimetre of the carrier's float64 twin (`placeWithTerms`), which the
-// Node test puts on the route; and with the rig on ITRF itself they must be
-// the samples, unmoved.
+// Node test puts on the route; and with the anchor left on ITRF itself they
+// must be the samples, unmoved.
 import "../lab/harness.css";
 import type { Harness } from "../lab/harness.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-  warpFrame,
+  smoothFrame,
 } from "../src/frames/index.ts";
 import { EARTH, Engine, OffscreenTarget } from "../src/index.ts";
 import { placeWithTerms } from "../src/scene/warpEvaluate.ts";
@@ -23,10 +23,10 @@ import { PointSource } from "../src/vector/PointSource.ts";
 const TEMPLATE = `
 <h1>A point source's points through a warp</h1>
 <p>
-  Points up to 15 km from a source's origin, 1 km above a sphere, under a rig
-  on a warp frame that multiplies height by 10. Their anchors, as the frame
+  Points up to 15 km from a source's origin, 1 km above a sphere, in a frame
+  whose edge to ITRF multiplies height by 10. Their anchors, as the frame
   kernel writes them, against the carrier draw's float64 twin: within a
-  centimetre. With the rig on ITRF they are the samples.
+  centimetre. With the anchor on ITRF they are the samples.
 </p>
 <div class="status">Run to check on this GPU.</div>
 <div data-id="adapter"></div>
@@ -186,17 +186,18 @@ async function runWarpPoints(): Promise<WarpPointsResult> {
       });
       const catalog = createFrameCatalog();
       const itrf = catalog.get("ITRF");
-      const exaggerated = warpFrame("exaggerated", itrf, {
-        presentation: true,
+      const exaggerated = smoothFrame("exaggerated", itrf, {
         revision: 1,
         description: `height × ${K}`,
         forward: (p, out, jacobian) => exaggerate(p, out, jacobian),
       });
       catalog.add(exaggerated);
-      engine.cameras.setResolver(world, createFramesResolver(catalog));
+      const resolver = createFramesResolver(catalog);
+      engine.cameras.setResolver(world, resolver);
       const earth = world.bodyAnchor(EARTH);
+      resolver.bindAnchor(earth, warped ? exaggerated : itrf);
       engine.cameras.setRig(view, {
-        position: { frame: warped ? exaggerated : itrf },
+        position: { frame: itrf },
         orientation: { kind: "free" },
       });
       view.camera.position.set([ORIGIN[0]!, ORIGIN[1]!, ORIGIN[2]! + 100]);
@@ -247,8 +248,8 @@ async function runWarpPoints(): Promise<WarpPointsResult> {
       checks.push({
         id: checks.length + 1,
         name: warped
-          ? "the rig on height × 10: anchors are the carrier's twin"
-          : "the rig on ITRF: anchors are the samples",
+          ? "the anchor in height × 10: anchors are the carrier's twin"
+          : "the anchor on ITRF: anchors are the samples",
         measured,
         limit: warped
           ? `each point within ${LIMIT} m of the twin; moved more than 8 km`

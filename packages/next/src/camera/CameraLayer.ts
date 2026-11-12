@@ -98,8 +98,8 @@ interface ViewState {
  * so a globe-only scene resolves nothing, and every placement stays at
  * the identity until `World.placeAnchor` is called.
  *
- * An anchor whose route to the root crosses a warp (a warp frame the rig
- * sits on; `FrameResolver.route`) is placed by the route's affine part (its
+ * An anchor whose route to the root crosses a smooth edge (a smooth frame the
+ * anchor is bound to, or one between it and the root; `FrameResolver.route`) is placed by the route's affine part (its
  * rigid steps composed, the warps as identity) and marked with the route
  * (`View.anchorRoute`): its content is drawn warped, per vertex, by fits
  * of the route (scene/world/warps.ts). The rig's own frames must reach the
@@ -533,7 +533,7 @@ export class CameraLayer {
       } else {
         // Across a warp there is no 4×4: the camera is carried through the
         // route (its position mapped, its axes by the Jacobian there).
-        carryCamera(camera, resolveRoute(resolver, from, to, seconds));
+        carryCamera(camera, resolveRoute(resolver, from, to, seconds, view));
       }
     } catch (error) {
       state.rerootTo = to;
@@ -577,6 +577,7 @@ export class CameraLayer {
         seconds,
         this.m[0]!,
         PLACEMENT,
+        view,
       );
       if (m === undefined) {
         continue;
@@ -594,10 +595,11 @@ export class CameraLayer {
 
   /**
    * An anchor's placement in `root`, or undefined after reporting why not.
-   * Rigid: the resolver's matrix, as ever. Across a warp: the route's affine
-   * part (its rigid steps composed, the warps as identity), the route left
-   * in `routed` for the view to mark the anchor with; the warps are drawn
-   * per vertex (scene/world/warps.ts), not placed.
+   * Rigid: the resolver's matrix, as ever. Across a smooth edge: the route's
+   * affine part (its rigid steps composed, the warps as identity), the route
+   * (for `view`, which a switch frame chooses by) left in `routed` for the
+   * view to mark the anchor with; the warps are drawn per vertex
+   * (scene/world/warps.ts), not placed.
    */
   private resolveAnchor(
     state: ViewState,
@@ -607,6 +609,7 @@ export class CameraLayer {
     seconds: number,
     out: Float64Array,
     what: (frame: FrameKey) => string,
+    view?: View,
   ): Float64Array | undefined {
     this.routed = undefined;
     try {
@@ -618,7 +621,7 @@ export class CameraLayer {
       }
     }
     try {
-      const route = resolveRoute(resolver, frame, root, seconds);
+      const route = resolveRoute(resolver, frame, root, seconds, view);
       const affine = affinePart(route);
       const bad = rigidMatrixError(affine);
       if (bad) {
@@ -807,7 +810,7 @@ export class CameraLayer {
   ): void {
     const reason =
       error instanceof NonRigidRouteError
-        ? `${error.frame} to ${error.base} crosses a warp, so it has no rigid placement: a rig's frames (position, anchor, orientation) must reach its render root rigidly (put the rig on the warped frame, or one under it), and content across a warp needs a resolver with route()`
+        ? `${error.frame} to ${error.base} crosses a smooth edge, so it has no rigid placement: a rig's frames (position, anchor, orientation) must reach its render root rigidly (put the rig at a frame reached rigidly from them), and content across a smooth edge needs a resolver with route()`
         : error instanceof Error
           ? error.message
           : String(error);

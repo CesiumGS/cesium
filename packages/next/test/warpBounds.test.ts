@@ -364,7 +364,6 @@ function exaggeration(k: number): Warp {
   return {
     from: key("itrf"),
     to: key("exaggerated"),
-    presentation: true,
     revision: 1,
     forward: (p, out, jacobian) => exaggerate(k, p, out, jacobian),
   };
@@ -376,7 +375,6 @@ function route(...steps: Route["steps"][number][]): Route {
     base: key("exaggerated"),
     seconds: 0,
     steps,
-    presentation: true,
     revision: 1,
   };
 }

@@ -50,6 +50,8 @@ export class WorldScene {
   readonly pickSources = new Map<number, PatchPickSource>();
   /** This world's placement parameters: their float and their draws. */
   readonly parameters = new WeakMap<PlacementParameter, ParameterSlot>();
+  /** How many views set each placement parameter for themselves (`View.setParameter`): its exact height term is off while any does. */
+  readonly overridden = new Map<PlacementParameter, number>();
   materialCount = 0;
   readonly freeMaterials: number[] = [];
   /** Shared materials: slot by record key, key and references by slot. */

@@ -21,7 +21,7 @@ import {
   type WarningCode,
 } from "./accuracy.ts";
 import { downlinkWithSolution, uplink, type Leg } from "./doppler.ts";
-import { requireTrueFrame, type DrawnThrough } from "../frames/drawn.ts";
+import { type DrawnThrough } from "../frames/drawn.ts";
 import { lineOfSight } from "./lineOfSight.ts";
 import type { ShapiroBody } from "./lightTime.ts";
 import { surfaceDistance } from "./surface.ts";
@@ -48,10 +48,9 @@ export interface MeasureOptions {
    * What the view drew the points' content through (`drawnThrough` of the
    * hit anchor's route, as a pick, a snap or `FramedPoint.drawn` gives it):
    * the result repeats it as `Measurement.drawn`, so a reader is told when
-   * what was on the screen was exaggerated. The values are true whatever
-   * it says: a measurement is never in a presentation frame (`measure`
-   * throws `PresentationRouteError` for a point in one; `drawnDistance` is
-   * the question about the drawing).
+   * what was on the screen was exaggerated. The values are in the points'
+   * own frame whatever it says (the coordinates content is placed in, not
+   * where it was drawn; `drawnDistance` is the question about the drawing).
    */
   readonly drawn?: DrawnThrough;
 }
@@ -98,8 +97,7 @@ export interface Measurement {
   /** The instant the measurement is for. */
   readonly instant: Instant;
   /**
-   * The frame the values are in: `a`'s, a true frame (never a presentation
-   * frame: one is refused). `distance` and `overBody` are in it.
+   * The frame the values are in: `a`'s. `distance` and `overBody` are in it.
    */
   readonly frame: Frame;
   /**
@@ -321,8 +319,6 @@ function measureWith(
   checkInputs("measure", pointA, pointB, options);
   const a = resolvePoint(pointA, frames);
   const b = resolvePoint(pointB, frames);
-  requireTrueFrame("measure", a.frame);
-  requireTrueFrame("measure", b.frame);
   const deltaFrame = options.deltaFrame ?? a.frame;
   const pa = convertPoint(a, a.frame, instant).position;
   const pb = convertPoint(b, a.frame, instant).position;

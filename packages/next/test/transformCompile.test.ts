@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   geocentricToGeographic,
   utm,
-  verticalExaggeration,
+  verticalExaggerationEdge,
 } from "../src/georeference/index.ts";
 import {
   clearCompileCache,
@@ -62,7 +62,7 @@ function exaggerationRoute(factor = 10) {
   const ex = graph.add(
     "ex",
     view,
-    verticalExaggeration({ factor, ceiling: 9000 }),
+    verticalExaggerationEdge({ factor, ceiling: 9000 }),
   );
   const content = graph.add(
     "content",
@@ -80,7 +80,7 @@ function utmRoute() {
   const ex = graph.add(
     "ex",
     earth,
-    verticalExaggeration({ factor: 3, ceiling: 9000 }),
+    verticalExaggerationEdge({ factor: 3, ceiling: 9000 }),
   );
   const content = graph.add("content", ex, affine({ matrix: enu(5, 46, 0) }));
   return { graph, ex, route: routeBetween(content, world) };

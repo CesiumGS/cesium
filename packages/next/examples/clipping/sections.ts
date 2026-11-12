@@ -1,9 +1,9 @@
 import type { ClipSet, ClipShape } from "@cesium/next";
 import {
-  warpFrame,
+  smoothFrame,
   type Frame,
   type FrameCatalog,
-  type WarpFrame,
+  type SmoothFrame,
 } from "@cesium/next/frames";
 import {
   add,
@@ -182,43 +182,57 @@ export const bendAt = (east: number, north: number): number =>
   BEND.amplitude * Math.sin(east / BEND.length) * Math.sin(north / BEND.length);
 
 /**
- * A design frame under ITRF, a reprojection that waves heights along the
- * site's up axis (`warpFrame`, with its Jacobian written out). A plane named
- * in it is a rigid plane in no frame the content or the view is in, so the
- * engine cuts it along a signed distance fitted per draw (a curved clip).
+ * A design frame under ITRF whose heights wave along the site's up axis: a
+ * node whose smooth edge takes its own coordinates (design) to ITRF's
+ * (`smoothFrame`, with its Jacobian and its inverse written out). A plane
+ * named in it is a rigid plane in no frame the content or the view is in
+ * (both are at ITRF), so the engine cuts it along a signed distance fitted
+ * per draw (a curved clip), the route from the content down through the edge.
  */
 export function createDesignFrame(
   catalog: FrameCatalog,
   site: Site,
-): WarpFrame<"design"> {
+): SmoothFrame<"design"> {
   const [east, north, up] = site.axes;
-  const frame = warpFrame("design", catalog.get("ITRF") as Frame, {
-    presentation: false,
+  /** East and north of `p` about the site, m. */
+  const horizontal = (p: ArrayLike<number>) => {
+    const d = [
+      p[0]! - site.origin[0]!,
+      p[1]! - site.origin[1]!,
+      p[2]! - site.origin[2]!,
+    ];
+    return [dot(d, east), dot(d, north)] as const;
+  };
+  const frame = smoothFrame("design", catalog.get("ITRF") as Frame, {
     revision: 1,
-    description: "a reprojection that waves heights",
+    description: "a design frame whose heights wave",
     forward(p, out, jacobian) {
-      const d = [
-        p[0]! - site.origin[0]!,
-        p[1]! - site.origin[1]!,
-        p[2]! - site.origin[2]!,
-      ];
-      const e = dot(d, east) / BEND.length;
-      const n = dot(d, north) / BEND.length;
-      const shift = bendAt(dot(d, east), dot(d, north));
+      const [x, y] = horizontal(p);
+      const shift = bendAt(x, y);
       for (let i = 0; i < 3; i++) {
-        out[i] = p[i]! + shift * up[i]!;
+        out[i] = p[i]! - shift * up[i]!;
       }
       if (jacobian) {
         const k = BEND.amplitude / BEND.length;
-        const gEast = k * Math.cos(e) * Math.sin(n);
-        const gNorth = k * Math.sin(e) * Math.cos(n);
+        const gEast = k * Math.cos(x / BEND.length) * Math.sin(y / BEND.length);
+        const gNorth =
+          k * Math.sin(x / BEND.length) * Math.cos(y / BEND.length);
         // Column-major: column j is the output's derivative along input j.
         for (let j = 0; j < 3; j++) {
           const g = gEast * east[j]! + gNorth * north[j]!;
           for (let i = 0; i < 3; i++) {
-            jacobian[j * 3 + i] = (i === j ? 1 : 0) + up[i]! * g;
+            jacobian[j * 3 + i] = (i === j ? 1 : 0) - up[i]! * g;
           }
         }
+      }
+      return out;
+    },
+    // The wave depends on east and north alone, which the shift along up does not change.
+    inverse(q, out) {
+      const [x, y] = horizontal(q);
+      const shift = bendAt(x, y);
+      for (let i = 0; i < 3; i++) {
+        out[i] = q[i]! + shift * up[i]!;
       }
       return out;
     },
@@ -227,7 +241,7 @@ export function createDesignFrame(
   return frame;
 }
 
-/** Where a point named in the design frame is in true space: down the wave, along up. */
+/** Where a point named in the design frame is in true space (the frame's edge): down the wave, along up. */
 export function designToTrue(local: V3): V3 {
   return sub(local, [0, 0, bendAt(local[0], local[1])]);
 }

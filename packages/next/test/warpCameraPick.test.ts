@@ -16,9 +16,9 @@ import { truePick } from "../src/frames/pickTruth.ts";
 import {
   verticalExaggeration,
   type VerticalExaggeration,
-} from "../src/frames/heightWarps.ts";
+} from "../src/georeference/heightWarps.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { warpFrame, type WarpFrame } from "../src/frames/warpFrame.ts";
+import { smoothFrame, type SmoothFrame } from "../src/frames/smoothFrame.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import * as v3 from "../src/math/vec3.ts";
 import { EARTH } from "../src/scene/Body.ts";
@@ -95,23 +95,26 @@ interface Scene {
   earth: AnchorHandle;
   box: DrawHandle;
   catalog: ReturnType<typeof createFrameCatalog>;
-  frame: WarpFrame;
+  resolver: ReturnType<typeof createFramesResolver>;
+  frame: SmoothFrame;
   scale: { value: number };
   warp: VerticalExaggeration;
   /** Heights are drawn this many times as tall at scale `s`: 1 + 9 s. */
   factor(): number;
 }
 
-/** A world with the Earth's anchor, a box on it and a frames resolver; the view not yet on the warp's frame. */
+/** A world with the Earth's anchor placed in the smooth frame `exaggerated` under ITRF, a box on it and a frames resolver; the view not yet rigged. */
 function scene(start = 0.5): Scene {
   const world = engine.createWorld({ maxDraws: 16 });
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const scale = world.createPlacementParameter(start, { range: [0, 1] });
   const warp = fittedOnly(verticalExaggeration({ factor: 10, scale }));
-  const frame = warpFrame("exaggerated", catalog.get("ITRF"), warp);
+  const frame = smoothFrame("exaggerated", catalog.get("ITRF"), warp);
   catalog.add(frame);
-  engine.cameras.setResolver(world, createFramesResolver(catalog));
+  const resolver = createFramesResolver(catalog);
+  engine.cameras.setResolver(world, resolver);
   const earth = world.bodyAnchor(EARTH);
+  resolver.bindAnchor(earth, frame);
   const box = world.addDraw({
     mesh: world.addMesh(createBox()),
     origin: Float64Array.of(R, 0, 0),
@@ -128,6 +131,7 @@ function scene(start = 0.5): Scene {
     earth,
     box,
     catalog,
+    resolver,
     frame,
     scale,
     warp,
@@ -161,7 +165,7 @@ describe("a pick carries the route it was drawn by", () => {
   it("is read at the scale of the tick it was drawn at, whatever the slider does before it resolves", async () => {
     const s = scene(0.5);
     engine.cameras.setRig(s.view, {
-      position: { frame: s.frame },
+      position: { frame: s.catalog.get("ITRF") },
       orientation: { kind: "free" },
     });
     lookDown(s.view.camera, 20_000);
@@ -245,7 +249,7 @@ describe("View.toPixel through the view's route", () => {
   it("carries a point of the Earth's anchor through the warp, at the scale now", () => {
     const s = scene(0.5);
     engine.cameras.setRig(s.view, {
-      position: { frame: s.frame },
+      position: { frame: s.catalog.get("ITRF") },
       orientation: { kind: "free" },
     });
     lookDown(s.view.camera, 40_000);
@@ -303,8 +307,8 @@ describe("View.toPixel through the view's route", () => {
   });
 });
 
-describe("a view on ITRF re-roots onto a frame across a warp", () => {
-  it("carries the camera through the route, and back again", () => {
+describe("a view on ITRF re-roots onto a frame under a smooth edge", () => {
+  it("carries the camera down through the edge's inverse, and back up", () => {
     const s = scene(0.5);
     const itrf = s.catalog.get("ITRF");
     engine.cameras.setRig(s.view, {
@@ -342,18 +346,14 @@ describe("a view on ITRF re-roots onto a frame across a warp", () => {
     expect(engine.cameras.held(s.view)).toBeUndefined();
     expect(engine.cameras.root(s.view)).toBe(s.frame);
     const k = s.factor();
-    // Position: where the route draws it, ×5.5 as tall.
-    expect(height(camera.position)).toBeCloseTo(5000 * k, 4);
-    expect(
-      apart(
-        camera.position,
-        routeForward(s.view.anchorRoute(s.earth)!, before.position),
-      ),
-    ).toBeLessThan(1e-6);
-    // Axes: the Jacobian's image of the direction, orthonormal.
+    // Position: the edge's inverse, so ITRF's 5 km is 5000 / 5.5 m in the content's true coordinates.
+    expect(height(camera.position)).toBeCloseTo(5000 / k, 4);
+    const down = s.view.anchorRoute(s.earth);
+    expect(down === undefined || down.steps.length === 0).toBe(true);
+    // Axes: the Jacobian's inverse image of the direction, orthonormal.
     const step = 1;
     const ahead = routeForward(
-      s.view.anchorRoute(s.earth)!,
+      s.resolver.route(itrf, s.frame, 0),
       v3.scaleAndAdd(v3.vec3(), before.position, before.direction, step),
     );
     const along = v3.normalize(
@@ -364,7 +364,7 @@ describe("a view on ITRF re-roots onto a frame across a warp", () => {
     expect(v3.length(camera.direction)).toBeCloseTo(1, 12);
     expect(v3.dot(camera.direction, camera.up)).toBeCloseTo(0, 12);
     expect(v3.dot(camera.direction, camera.right)).toBeCloseTo(0, 12);
-    // It looks down more steeply than before: heights are stretched.
+    // It looks down less steeply than before: heights are shrunk.
     const pitch = (d: ArrayLike<number>, p: ArrayLike<number>) =>
       Math.asin(
         v3.dot(
@@ -372,7 +372,7 @@ describe("a view on ITRF re-roots onto a frame across a warp", () => {
           WGS84.geodeticSurfaceNormal(p as Float64Array, v3.vec3())!,
         ),
       );
-    expect(pitch(camera.direction, camera.position)).toBeLessThan(
+    expect(pitch(camera.direction, camera.position)).toBeGreaterThan(
       pitch(before.direction, before.position),
     );
 
@@ -405,7 +405,7 @@ describe("the globe controller keeps above the ground as drawn", () => {
   it("lifts a camera that is above the true ground but below the drawn one", () => {
     const s = scene(0.5);
     engine.cameras.setRig(s.view, {
-      position: { frame: s.frame },
+      position: { frame: s.catalog.get("ITRF") },
       orientation: { kind: "free" },
     });
     // Ground 1,000 m: drawn at ×5.5, 5,500 m. 3,000 m is above one only.
@@ -461,7 +461,7 @@ describe("World.warpStats", () => {
   it("counts fits made, refits and placements, and the draws by state", () => {
     const s = scene(0.2);
     engine.cameras.setRig(s.view, {
-      position: { frame: s.frame },
+      position: { frame: s.catalog.get("ITRF") },
       orientation: { kind: "free" },
     });
     const none = s.world.warpStats();
@@ -483,8 +483,12 @@ describe("World.warpStats", () => {
     const step = () => {
       engine.cameras.update();
       s.world.warps.frame(
-        engine.cameras.root(s.view),
-        s.view.anchorRoutes(),
+        [
+          {
+            id: engine.scene.viewIds.get(s.view)!,
+            routes: s.view.anchorRoutes(),
+          },
+        ],
         Infinity,
         (message) => {
           throw new Error(message);

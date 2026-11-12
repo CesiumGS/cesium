@@ -160,6 +160,9 @@ function addGlobeSource(
     maximumScreenSpaceError: 2,
     ...options,
   });
+  if (options.frame) {
+    tileset.frame = options.frame;
+  }
   // Tiles carry `h·n̂` while the globe's anchor is warped by a height scale
   // on the same ellipsoid: exaggerating terrain is then exact in height,
   // with no fit.

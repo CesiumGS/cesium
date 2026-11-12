@@ -67,22 +67,19 @@ export interface DrawPlacementInfo {
     readonly absolute?: boolean;
   }[];
   /**
-   * Where the draw's anchor reaches the render root across a warp (plan
-   * 13.26): the warps crossed in order, whether any is a presentation (the
-   * draw is then drawn where it is not), and the state of the draw's fit.
-   * Its lattice, `terms`' last entry, has the cells, error and estimate.
-   * Absent for a rigid route.
+   * Where the draw's anchor reaches the render root across smooth edges
+   * (plan 13.37): the warps crossed in order and the state of the draw's
+   * fit. Its lattice, `terms`' last entry, has the cells, error and
+   * estimate. Absent for a rigid route.
    */
   readonly route?: {
     readonly warps: readonly {
       readonly description: string;
-      readonly presentation: boolean;
-      /** The route goes from the warp's `to` back to its `from`. */
+      /** The route goes down through the edge, from the warp's `to` (the parent) into its `from`. */
       readonly inverse: boolean;
       /** The warp's scale now, when it has one (1: the warp as stated). */
       readonly scale?: number;
     }[];
-    readonly presentation: boolean;
     /** The route's revision; a fit is redone when it changes. */
     readonly revision: number;
     /**
@@ -186,14 +183,12 @@ function routeOf(
               description:
                 step.warp.description ??
                 `${step.warp.from.name} to ${step.warp.to.name}`,
-              presentation: step.warp.presentation,
               inverse: step.inverse,
               ...(step.warp.scale && { scale: step.warp.scale.value }),
             },
           ]
         : [],
     ),
-    presentation: route.presentation,
     revision: route.revision,
     fit: status?.state ?? "unwarped",
   };

@@ -1,5 +1,5 @@
-// Curved clips (plan §13.26, increment 8c): a plane named in a design frame
-// whose route to the content crosses a reprojection that bends it. Its signed
+// Curved clips (plan §13.26, increment 8c; §13.37): a plane named in a design
+// frame whose route to the content crosses a smooth edge that bends it. Its signed
 // distance is fitted per draw into the lattice rows' `w` channel; these check
 // the fit against float64 on the route, what the table and the packed rows
 // hold, and how the world follows its views' clips. The GPU side is
@@ -10,7 +10,7 @@ import { routeForward } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import type { Frame } from "../src/frames/Frame.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { warpFrame } from "../src/frames/warpFrame.ts";
+import { smoothFrame } from "../src/frames/smoothFrame.ts";
 import {
   CLIP_SET_CURVED,
   CLIP_TABLE_ROWS,
@@ -41,7 +41,7 @@ import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
 const R = 6_378_137;
-/** The reprojection's bend: z' = z + AMPLITUDE · sin(x / WAVELENGTH). */
+/** The design frame's bend: z' = z + AMPLITUDE · sin(x / WAVELENGTH) takes true to design coordinates. */
 const AMPLITUDE = 500;
 const WAVELENGTH = 20_000;
 /** The tile: a cube this wide, over the pole. */
@@ -59,6 +59,29 @@ function bend(
     1,
     0,
     (AMPLITUDE / WAVELENGTH) * Math.cos(p[0]! / WAVELENGTH),
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+  ]);
+  return out;
+}
+
+/** The bend undone: design coordinates to the frame above, with its Jacobian. */
+function unbend(
+  p: ArrayLike<number>,
+  out: Float64Array,
+  jacobian?: Float64Array,
+): Float64Array {
+  out[0] = p[0]!;
+  out[1] = p[1]!;
+  out[2] = p[2]! - AMPLITUDE * Math.sin(p[0]! / WAVELENGTH);
+  jacobian?.set([
+    1,
+    0,
+    -(AMPLITUDE / WAVELENGTH) * Math.cos(p[0]! / WAVELENGTH),
     0,
     1,
     0,
@@ -207,7 +230,7 @@ describe("a curved clip's distance", () => {
   });
 });
 
-describe("a plane in a design frame under a reprojection", () => {
+describe("a plane in a design frame under a bending edge", () => {
   let engine: Engine;
   const worlds: World[] = [];
   const views: View[] = [];
@@ -224,38 +247,38 @@ describe("a plane in a design frame under a reprojection", () => {
   });
 
   /**
-   * A 20 km tile over the pole in the Earth's anchor (ITRF), a design frame
-   * bent from ITRF by a non-presentation warp, and a view whose rig is on
-   * ITRF or, when `exaggerated`, on a ×10 drawn frame.
+   * A 20 km tile over the pole in the Earth's anchor, placed in ITRF or,
+   * when `exaggerated`, in a frame under ITRF that draws it ×10 as tall; a
+   * design frame under that whose smooth edge unbends it; and a view on ITRF.
    */
   function scene(exaggerated = false) {
     const world = engine.createWorld({ maxDraws: 8 });
     worlds.push(world);
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const itrf = catalog.get("ITRF");
-    const design = warpFrame("design", itrf, {
-      presentation: false,
-      revision: 1,
-      description: "a bending reprojection",
-      forward: bend,
-    });
-    catalog.add(design);
-    let rig: Frame = itrf;
+    let content: Frame = itrf;
     if (exaggerated) {
-      rig = warpFrame("exaggerated", itrf, {
-        presentation: true,
+      content = smoothFrame("exaggerated", itrf, {
         revision: 1,
         forward: (p, out, j) => exaggerate(10, p, out, j),
       });
-      catalog.add(rig);
+      catalog.add(content);
     }
+    const design = smoothFrame("design", content, {
+      revision: 1,
+      description: "a bending design frame",
+      forward: unbend,
+      inverse: (q, out) => bend(q, out),
+    });
+    catalog.add(design);
     const resolver = createFramesResolver(catalog);
     engine.cameras.setResolver(world, resolver);
     const earth = world.bodyAnchor(EARTH);
+    resolver.bindAnchor(earth, content);
     const view = engine.addView({ target: new OffscreenTarget(64, 48), world });
     views.push(view);
     engine.cameras.setRig(view, {
-      position: { frame: rig },
+      position: { frame: itrf },
       orientation: { kind: "free" },
     });
     view.camera.position.set([0, 0, R + 30_000]);
@@ -286,8 +309,7 @@ describe("a plane in a design frame under a reprojection", () => {
     const step = (v: View = view) => {
       engine.cameras.update();
       world.warps.frame(
-        engine.cameras.root(v),
-        v.anchorRoutes(),
+        [{ id: engine.scene.viewIds.get(v)!, routes: v.anchorRoutes() }],
         Infinity,
         report,
       );
@@ -310,7 +332,6 @@ describe("a plane in a design frame under a reprojection", () => {
       root: engine.cameras.root(v),
       body: earth,
       bodyPlacement: v.anchorPlacement(earth),
-      bodyRoute: v.anchorRoute(earth),
     });
     /** The draw's clip-carrying lattice and its packed rows' `w`, as the GPU reads them. */
     const lattice = (): CubicLattice | undefined =>
@@ -322,8 +343,8 @@ describe("a plane in a design frame under a reprojection", () => {
       view,
       earth,
       itrf,
+      content,
       design,
-      rig,
       resolver,
       mesh,
       matrix,
@@ -344,7 +365,7 @@ describe("a plane in a design frame under a reprojection", () => {
 
   /** The float64 truth: the draw's model point routed anchor → design, in the set's distance. */
   function truth(s: ReturnType<typeof scene>, set: ClipSet) {
-    const route = s.resolver.route!(s.itrf, set.frame, 0);
+    const route = s.resolver.route!(s.content, set.frame, 0);
     const out = new Float64Array(3);
     return (p: ArrayLike<number>) => {
       const a = Float64Array.of(
@@ -364,7 +385,7 @@ describe("a plane in a design frame under a reprojection", () => {
       planClip(planeIn(exaggerated.design), exaggerated.placement()).space,
     ).toBe("curved");
     // A plane in the content's own frame is not.
-    expect(planClip(planeIn(s.itrf), s.placement()).space).toBe("true");
+    expect(planClip(planeIn(s.content), s.placement()).space).toBe("true");
   });
 
   it("cuts a large tile along the bent surface: the fitted distance matches float64 within its error", () => {
@@ -491,7 +512,7 @@ describe("a plane in a design frame under a reprojection", () => {
   it("puts a curved set in the table as a row of its own, tested by the fitted distance", () => {
     const s = scene();
     const rigid: ClipSet = {
-      frame: s.itrf,
+      frame: s.content,
       shapes: [{ kind: "plane", point: [0, 0, R + 1], normal: [0, 0, 1] }],
     };
     const curved = planeIn(s.design);
@@ -613,7 +634,7 @@ describe("a plane in a design frame under a reprojection", () => {
     s.view.setClips(clips);
     s.step();
     const lattice = s.lattice()!;
-    const route = s.resolver.route!(s.itrf, s.design, 0);
+    const route = s.resolver.route!(s.content, s.design, 0);
     const next = random(21);
     let kept = 0;
     for (let n = 0; n < 1000; n++) {
@@ -641,7 +662,7 @@ describe("a plane in a design frame under a reprojection", () => {
     const set = planeIn(s.design);
     s.view.setClips([s.world.addClip(set)]);
     const filter = engine.clipFilter(s.view)!;
-    const route = s.resolver.route!(s.itrf, s.design, 0);
+    const route = s.resolver.route!(s.content, s.design, 0);
     const next = random(13);
     let kept = 0;
     for (let n = 0; n < 1000; n++) {

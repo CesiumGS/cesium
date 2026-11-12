@@ -30,15 +30,18 @@
 // source owns is drawn at its anchor's place, unwarped: its cull reads
 // positions the placement doesn't reach.
 //
-// One context per world, fitted for the root of the world's first view.
-// Another view of the world with a different root would need terms per view
-// (a follow-up): the engine warns once and the others show the first's.
+// One context per world, which every view feeds: an anchor is warped by the
+// route of the first view that places it across a smooth edge, and the
+// compiled path draws each view by its own route to its own root (a program
+// and its draws' records are shared, the uniforms are per view: routes.ts).
+// What a fit can't do is differ between views in structure: a view that
+// reaches its root through other smooth edges than the first view's is said
+// once, and shows the first's.
 //
 // A route term is evaluated at the undeformed position. Combined with a
 // morph (a dual position) this is first-order: the two displacements add,
 // where exact folding would carry the route through the morphed point
 // (later).
-import type { FrameKey } from "../../camera/frameResolver.ts";
 import {
   warpScaleOf,
   withFrozenScales,
@@ -105,6 +108,36 @@ import { setPlacement } from "./placements.ts";
 import { WorldRoutes, type RoutedAnchor } from "./routes.ts";
 import { drawMatrix } from "./transforms.ts";
 import type { DrawHandle, TransformHandle } from "./types.ts";
+
+/** What a world's warps read of one view: the routes of its anchors placed across a smooth edge, to its own render root. */
+export interface WarpView {
+  /** The view's id: the position of its bit in view masks (`Engine.viewBit`). */
+  readonly id: number;
+  /** The routes by anchor slot (`View.anchorRoutes`). */
+  readonly routes: ReadonlyArray<Route | undefined>;
+}
+
+/** What a draw's route is made of apart from its rigid steps: the smooth edges it crosses, in order and direction. */
+const structures = new WeakMap<Route, string>();
+function structureOf(route: Route | undefined): string {
+  if (!route) {
+    return "";
+  }
+  let key = structures.get(route);
+  if (key === undefined) {
+    key = route.steps
+      .flatMap((s) =>
+        s.kind === "warp"
+          ? [
+              `${s.inverse ? "i" : "f"}${s.warp.smooth?.source ?? s.warp.description ?? "?"}`,
+            ]
+          : [],
+      )
+      .join(",");
+    structures.set(route, key);
+  }
+  return key;
+}
 
 /** What a frame's fits may cost by default, ms (`Engine.warpBudgetMs`). */
 export const WARP_BUDGET_MS = 4;
@@ -913,26 +946,36 @@ export class WorldWarps {
   }
 
   /**
-   * The frame's step, after the camera layer placed the anchors: `routes`
-   * (by anchor slot, `View.anchorRoutes`) are the anchors placed across a
-   * warp for the view whose render root is `root` (undefined: no view). Draws
+   * The frame's step, after the camera layer placed the anchors: each view's
+   * `routes` (by anchor slot, `View.anchorRoutes`) are the anchors placed
+   * across a warp for that view, to its render root. An anchor is warped by
+   * the route of the first view that places it across one, and the other
+   * views' routes to their own roots are drawn by the same program, with
+   * uniforms of their own (a root, a parameter set per view:
+   * routes.ts); a view whose route differs in structure is said once. Draws
    * under them are found and held; new, stale or moved ones are requested;
    * fits run for up to `budgetMs`, and what they make is drawn. Returns
    * whether fits are still pending (the loop stays awake).
    */
   frame(
-    root: FrameKey | undefined,
-    routes: ReadonlyArray<Route | undefined>,
+    views: readonly WarpView[],
     budgetMs: number,
     report: (message: string) => void,
   ): boolean {
     this.#report = report;
-    this.#sync(root, routes);
+    this.#sync(views);
     if (this.#anchors.size === 0 && this.#draws.size === 0) {
       return false;
     }
     for (const [slot, anchor] of this.#anchors) {
-      anchor.routed = this.routes.sync(slot, anchor.route, report);
+      anchor.routed = this.routes.sync(
+        slot,
+        views.flatMap((view) => {
+          const camera = view.routes[slot];
+          return camera ? [{ id: view.id, camera }] : [];
+        }),
+        report,
+      );
     }
     this.#track();
     for (const [index, d] of this.#draws) {
@@ -1061,7 +1104,25 @@ export class WorldWarps {
       return false;
     }
     const held = this.#heightNormals.get(d.index);
-    return !(held && held.generation === d.generation && anchor.height);
+    return !(
+      held &&
+      held.generation === d.generation &&
+      anchor.height &&
+      !this.#overridden(anchor)
+    );
+  }
+
+  /**
+   * Whether a view sets the anchor's slider for itself (`View.setParameter`):
+   * terrain's exact height term has one weight a world's parameter writes for
+   * every view, so while a view overrides it the compiled route draws the
+   * terrain (its uniforms are per view).
+   */
+  #overridden(anchor: AnchorWarp): boolean {
+    return (
+      anchor.linear !== undefined &&
+      (this.world.scene.overridden.get(anchor.linear) ?? 0) > 0
+    );
   }
 
   /** The draw's choice (`setWarpAt`) if it is still the draw's. */
@@ -1083,14 +1144,21 @@ export class WorldWarps {
     d.requested = -1;
   }
 
-  /** Brings the warped anchors up to date with `routes` and `root`. */
-  #sync(root: FrameKey | undefined, routes: ReadonlyArray<Route | undefined>) {
-    if (this.#anchors.size === 0 && !routes.some(isRoute)) {
+  /** Brings the warped anchors up to date with the views' `routes`. */
+  #sync(views: readonly WarpView[]) {
+    let longest = 0;
+    let any = false;
+    for (const view of views) {
+      longest = Math.max(longest, view.routes.length);
+      any ||= view.routes.some(isRoute);
+    }
+    if (this.#anchors.size === 0 && !any) {
       return; // nothing is warped: the common frame costs this
     }
     const fresh: number[] = [];
-    for (let slot = 0; slot < routes.length; slot++) {
-      const route = root === undefined ? undefined : routes[slot];
+    for (let slot = 0; slot < longest; slot++) {
+      const placed = views.filter((view) => view.routes[slot] !== undefined);
+      const route = placed[0]?.routes[slot];
       const held = this.#anchors.get(slot);
       if (!route) {
         if (held) {
@@ -1098,6 +1166,9 @@ export class WorldWarps {
           this.#releaseSlot(slot);
         }
         continue;
+      }
+      if (views.length > 1) {
+        this.#compareViews(slot, route, placed, views);
       }
       let now = held;
       if (!held) {
@@ -1123,13 +1194,38 @@ export class WorldWarps {
       }
     }
     for (const slot of [...this.#anchors.keys()]) {
-      if (slot >= routes.length) {
+      if (slot >= longest) {
         this.#anchors.delete(slot);
         this.#releaseSlot(slot);
       }
     }
     if (fresh.length > 0) {
       this.#scan(new Set(fresh));
+    }
+  }
+
+  /**
+   * Says once when a view's route for an anchor differs in structure from
+   * the one the anchor is warped by (another view's, drawn with a program
+   * and a fit that have one): a view that doesn't warp the anchor at all, or
+   * warps it through other maps.
+   */
+  #compareViews(
+    slot: number,
+    route: Route,
+    placed: readonly WarpView[],
+    views: readonly WarpView[],
+  ): void {
+    const wanted = structureOf(route);
+    for (const view of views) {
+      const other = view.routes[slot];
+      if (other === route || structureOf(other) === wanted) {
+        continue;
+      }
+      this.#say(
+        `structure:${slot}:${view.id}`,
+        `warp: view ${view.id} ${other ? "reaches" : "does not cross a smooth edge to"} its root ${other ? `through other edges than view ${placed[0]!.id}'s route to its own` : `for ${route.frame.name}, where view ${placed[0]!.id}'s route does`}; its content is drawn as view ${placed[0]!.id} draws it (a draw has one route: per-view structure needs a draw per view, which isn't built yet).`,
+      );
     }
   }
 
@@ -1622,7 +1718,12 @@ export class WorldWarps {
   ): WeightedTerm | undefined {
     const height = anchor.height;
     const held = this.#heightNormals.get(index);
-    if (!height || !held || held.generation !== d.generation) {
+    if (
+      !height ||
+      !held ||
+      held.generation !== d.generation ||
+      (anchor.routed && this.#overridden(anchor))
+    ) {
       return undefined;
     }
     const { radii, maxDistance } = held.info;

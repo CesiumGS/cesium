@@ -147,11 +147,15 @@ export interface FrameStats {
 /** Values in one view's on-demand fingerprint (see `viewChanged`). */
 const VIEW_KEY_LENGTH = 30;
 
-/** No anchor is placed across a warp. */
-const NO_ROUTES: readonly undefined[] = [];
-
 /** Options for a globe surface: terrain or the ellipsoid. */
 export interface GlobeOptions extends TilesetOptions {
+  /**
+   * The frame the globe's terrain and imagery are placed in (`Globe.frame`):
+   * its anchor is bound to it, so a smooth edge between it and the camera's
+   * root draws the globe through it. Default the body-fixed frame. Needs a
+   * frame resolver that binds anchors.
+   */
+  frame?: FrameKey;
   /**
    * Imagery draped on the surface (one per world for now). A promise lets
    * the surface's tiles load while the imagery's metadata resolves (1.x
@@ -436,8 +440,6 @@ export class Engine {
    * their last fit, and the loop stays awake while any wait.
    */
   warpBudgetMs = WARP_BUDGET_MS;
-  /** Worlds whose views disagree on the render root, warned once. */
-  private readonly warpWarned = new WeakSet<World>();
   private readonly maxViews: number;
   private frameHandle = 0;
   /** An animation frame is requested for the loop (`start`). */
@@ -1155,6 +1157,7 @@ export class Engine {
   }
 
   removeView(view: View): void {
+    view.releaseParameters();
     this.viewWatches.get(view)?.();
     this.viewWatches.delete(view);
     this.viewKeys.delete(view);
@@ -1475,10 +1478,8 @@ export class Engine {
 
   /**
    * Steps each world's warp context (`WorldWarps.frame`): the routes of the
-   * anchors its first view placed across a warp, and that view's render
-   * root. A world's other views with another root show the first's fits
-   * (terms per view are a follow-up): warned once. True while fits are
-   * pending.
+   * anchors each of its views placed across a smooth edge, to that view's
+   * render root. True while fits are pending.
    */
   private warpTick(budgetMs: number): boolean {
     let busy = false;
@@ -1486,27 +1487,7 @@ export class Engine {
       this.ctx.errors.report("frame", message);
     for (let w = 0; w < this.worlds.length; w++) {
       const world = this.worlds[w]!;
-      const worldViews: View[] = [];
-      let first: View | undefined;
-      for (let i = 0; i < this.views.length; i++) {
-        const view = this.views[i]!;
-        if (view.world !== world) {
-          continue;
-        }
-        worldViews.push(view);
-        if (!first) {
-          first = view;
-        } else if (
-          world.warps.active &&
-          !this.warpWarned.has(world) &&
-          this.cameras.root(view) !== this.cameras.root(first)
-        ) {
-          this.warpWarned.add(world);
-          report(
-            `warp: a world's draws are warped for the render root of its first view (${this.cameras.root(first).name}), and another view has ${this.cameras.root(view).name}; it shows the first's warps (terms per view are a follow-up)`,
-          );
-        }
-      }
+      const worldViews = this.views.filter((view) => view.world === world);
       // A curved clip's field on the world's draws, for the views' curved sets.
       const demands = worldViews
         .map((view) => curvedClipSets(this, view))
@@ -1523,13 +1504,19 @@ export class Engine {
             report,
           ) || busy;
       }
-      if (!first && !world.warps.active && world.warps.size === 0) {
+      if (
+        worldViews.length === 0 &&
+        !world.warps.active &&
+        world.warps.size === 0
+      ) {
         continue;
       }
       busy =
         world.warps.frame(
-          first ? this.cameras.root(first) : undefined,
-          first ? first.anchorRoutes() : NO_ROUTES,
+          worldViews.map((view) => ({
+            id: this.scene.viewIds.get(view)!,
+            routes: view.anchorRoutes(),
+          })),
           budgetMs,
           report,
         ) || busy;

@@ -14,7 +14,7 @@ import {
   type WarpScale as CoreWarpScale,
 } from "../camera/route.ts";
 
-/** A non-rigid edge of the frame graph: a map from one frame to another (see `WarpSpec`, `warpFrame`). */
+/** A smooth edge of the frame tree: a map from a frame's own coordinates to its parent's (see `SmoothFrameSpec`, `smoothFrame`). */
 export type Warp = CoreWarp;
 
 /** The path from a content frame to a base: rigid steps and warp steps in order. */

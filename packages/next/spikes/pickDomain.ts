@@ -4,8 +4,8 @@
 // barycentrics, or a b-rep patch draw's face and (u, v); the content's own
 // point comes from those, never from the drawn position.
 //
-// A view's rig sits on `exaggerated`, a warp frame over ITRF that multiplies
-// height over a sphere by 10 (spikes/warpRoute.ts), with its scale (a
+// The Earth's anchor is placed in `exaggerated`, a smooth frame under ITRF
+// that multiplies height over a sphere by 10 (spikes/warpRoute.ts), with its scale (a
 // placement parameter) at 0 for the first checks, which draw the content as it
 // is, and at 1 for the last, which draws a tile ten times as high. Eight checks
 // on a view of the north pole, each a `View.pickPoint`:
@@ -32,7 +32,7 @@ import { routeForward } from "../src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-  warpFrame,
+  smoothFrame,
 } from "../src/frames/index.ts";
 import {
   CustomShader,
@@ -428,18 +428,19 @@ async function runPickDomain(): Promise<PickDomainResult> {
     const catalog = createFrameCatalog();
     const itrf = catalog.get("ITRF");
     const scale = world.createPlacementParameter(0);
-    const exaggerated = warpFrame("exaggerated", itrf, {
-      presentation: true,
+    const exaggerated = smoothFrame("exaggerated", itrf, {
       revision: 1,
       description: `height × ${K}`,
       scale,
       forward: (p, out, jacobian) => exaggerate(K, p, out, jacobian),
     });
     catalog.add(exaggerated);
-    engine.cameras.setResolver(world, createFramesResolver(catalog));
+    const resolver = createFramesResolver(catalog);
+    engine.cameras.setResolver(world, resolver);
     const earth: AnchorHandle = world.bodyAnchor(EARTH);
+    resolver.bindAnchor(earth, exaggerated);
     engine.cameras.setRig(view, {
-      position: { frame: exaggerated },
+      position: { frame: itrf },
       orientation: { kind: "free" },
     });
     view.camera.position.set([0, 0, SPHERE + EYE_HEIGHT]);
@@ -899,7 +900,7 @@ async function runPickDomain(): Promise<PickDomainResult> {
       const route = view.anchorRoute(earth);
       if (!route) {
         throw new Error(
-          "the Earth's anchor has no route: the rig is not on a warp",
+          "the Earth's anchor has no route: it is not placed in a smooth frame",
         );
       }
       const origin = at(TILE.x, TILE.h);

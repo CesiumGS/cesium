@@ -70,7 +70,6 @@ function warpOf(
   return {
     from: node,
     to: node.parent ?? node,
-    presentation: false,
     revision,
     description: node.name,
     ...(spec.accuracy !== undefined && { accuracy: { sigma: spec.accuracy } }),
@@ -115,7 +114,6 @@ function cameraRoute(
     base,
     seconds,
     steps,
-    presentation: false,
     revision: route.revision,
   };
 }
@@ -136,6 +134,7 @@ export function nodeResolver(
     frame: FrameKey,
     base: FrameKey,
     seconds: number,
+    view: ViewId | undefined = options.view,
   ): Route | undefined => {
     const a = nodeOf(frame);
     const b = nodeOf(base);
@@ -143,7 +142,7 @@ export function nodeResolver(
       return undefined;
     }
     return routeBetween(a, b, {
-      ...(options.view !== undefined && { view: options.view }),
+      ...(view !== undefined && { view }),
       seconds,
     });
   };
@@ -160,11 +159,11 @@ export function nodeResolver(
       out.set(steps.length === 0 ? IDENTITY : (steps[0] as AffineStep).matrix);
       return out;
     },
-    route(frame, base, seconds) {
-      const route = between(frame, base, seconds);
+    route(frame, base, seconds, view) {
+      const route = between(frame, base, seconds, view);
       if (!route) {
         if (inner.route) {
-          return inner.route(frame, base, seconds);
+          return inner.route(frame, base, seconds, view);
         }
         return {
           frame,
@@ -176,7 +175,6 @@ export function nodeResolver(
               matrix: inner.resolve(frame, base, seconds, new Float64Array(16)),
             },
           ],
-          presentation: false,
           revision: inner.routeRevision(frame, base),
         };
       }
@@ -210,6 +208,8 @@ export function nodeResolver(
     },
     ...(inner.motion && { motion: inner.motion.bind(inner) }),
     ...(inner.watch && { watch: inner.watch.bind(inner) }),
+    ...(inner.bindAnchor && { bindAnchor: inner.bindAnchor.bind(inner) }),
+    ...(inner.binding && { binding: inner.binding.bind(inner) }),
   };
   return resolver;
 }

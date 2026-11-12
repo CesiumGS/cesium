@@ -1,11 +1,13 @@
-// Routes through the frame graph, rigid edges and warps (plan §13.26, the
-// second review). A warp is a non-rigid edge: a map from one frame to
-// another, exact in float64, which the engine fits per tile for the GPU. A
-// route is the path from a content frame to a base (ISO 19111's
+// Routes through the frame tree, rigid edges and smooth edges (plan §13.37).
+// A warp is a smooth edge: a map from a frame's own coordinates up to its
+// parent's, exact in float64, which the engine compiles or fits for the GPU.
+// A route is the path from a content frame to a base (ISO 19111's
 // concatenated coordinate operation, PROJ's pipeline): rigid steps and warp
-// steps in order. "True" coordinates are any frame reached without crossing
-// a presentation warp.
-import type { Params, SmoothSpec } from "../transform/graph.ts";
+// steps in order, a warp step forward where the route goes up through the
+// edge and inverse where it goes down. What is placed in a frame has that
+// frame's coordinates, true or not as the application decides, and is drawn
+// through the edges between it and the camera's root.
+import type { Params, SmoothSpec, ViewId } from "../transform/graph.ts";
 import type { FrameKey, FrameResolver } from "./frameResolver.ts";
 
 /** A number that is read live and moves a warp's strength; a `PlacementParameter` has this shape. */
@@ -36,10 +38,12 @@ export interface HeightScale {
 }
 
 /**
- * A non-rigid edge of the frame graph: points in `from` (metres, its axes)
- * map to `to` by `forward`. A coordinate operation is a warp (where content
- * is); so is an application's vertical exaggeration (`presentation`: where
- * it's drawn, never where it is).
+ * A smooth edge of the frame tree: points in `from` (the node's own
+ * coordinates, metres, its axes) map to `to` (its parent) by `forward`, the
+ * direction of the transform graph (src/transform): a deformer over some
+ * content is a node whose forward is the deformation, so what is placed in it
+ * keeps its true coordinates and is drawn through the edge. A coordinate
+ * operation is the same kind of edge.
  */
 export interface Warp {
   /**
@@ -50,8 +54,6 @@ export interface Warp {
   readonly heightScale?: HeightScale;
   readonly from: FrameKey;
   readonly to: FrameKey;
-  /** Changes how content is drawn, never where it is (exaggeration, not a reprojection). */
-  readonly presentation: boolean;
   /** Goes up whenever `forward` changes; the fits of every route through it are redone. */
   readonly revision: number;
   /** Where the warp is defined, in `from`, as a CRS's area of use; everywhere when absent. */
@@ -101,6 +103,19 @@ export interface Warp {
   inverse?(q: ArrayLike<number>, out: Float64Array): Float64Array;
 }
 
+/**
+ * A `Warp` without its ends, for a smooth frame (`smoothFrame`, in the frames
+ * module): `from` is the new frame and `to` its parent. What the helpers
+ * (`verticalExaggeration`, `scaleAbout`, `fromFunction`, …) return.
+ */
+export type SmoothFrameSpec = Omit<Warp, "from" | "to"> & {
+  /**
+   * Called once with each frame built on this spec: how a helper's
+   * `changed()` finds the frames to `invalidate()`.
+   */
+  readonly attach?: (frame: { invalidate(): void }) => void;
+};
+
 /** One step of a route: a rigid transform (column-major 4×4, p_next = m · p) or a warp, either way. */
 export type RouteStep =
   | { readonly kind: "rigid"; readonly matrix: Float64Array }
@@ -113,41 +128,20 @@ export interface Route {
   readonly seconds: number;
   /** At least one step; a route with no warp is one rigid step. */
   readonly steps: readonly RouteStep[];
-  /** Whether it crosses a presentation warp: its answers say where content is drawn, not where it is. */
-  readonly presentation: boolean;
   /** The resolver's `routeRevision(frame, base)`, which counts its warps' revisions too. */
   readonly revision: number;
 }
 
-/** Thrown by `FrameResolver.resolve` for a route that crosses a warp: it has no 4×4. Use `route`. */
+/** Thrown by `FrameResolver.resolve` for a route that crosses a smooth edge: it has no 4×4. Use `route`. */
 export class NonRigidRouteError extends Error {
   readonly frame: string;
   readonly base: string;
 
   constructor(frame: string, base: string) {
     super(
-      `${frame} to ${base}: the route crosses a warp, so it has no 4×4; use the resolver's route()`,
+      `${frame} to ${base}: the route crosses a smooth edge, so it has no 4×4; use the resolver's route()`,
     );
     this.name = "NonRigidRouteError";
-    this.frame = frame;
-    this.base = base;
-  }
-}
-
-/**
- * Thrown where a question needs true coordinates (a ray query) and its route
- * crosses a presentation warp: the frames say where content is drawn, not
- * where it is.
- */
-export class PresentationRouteError extends Error {
-  readonly frame: string;
-  readonly base: string;
-
-  constructor(frame: string, base: string) {
-    super(
-      `${frame} to ${base}: the route crosses a presentation warp (a drawn frame, as a vertical exaggeration), and this asks for true coordinates; name a frame reached without crossing it`,
-    );
-    this.name = "PresentationRouteError";
     this.frame = frame;
     this.base = base;
   }
@@ -168,9 +162,10 @@ export function resolveRoute(
   frame: FrameKey,
   base: FrameKey,
   seconds: number,
+  view?: ViewId,
 ): Route {
   if (resolver.route) {
-    return resolver.route(frame, base, seconds);
+    return resolver.route(frame, base, seconds, view);
   }
   return {
     frame,
@@ -182,7 +177,6 @@ export function resolveRoute(
         matrix: resolver.resolve(frame, base, seconds, new Float64Array(16)),
       },
     ],
-    presentation: false,
     revision: resolver.routeRevision(frame, base),
   };
 }
@@ -336,7 +330,6 @@ function mapScales(
       const fixed: Warp = {
         from: w.from,
         to: w.to,
-        presentation: w.presentation,
         revision: w.revision,
         ...(w.heightScale !== undefined && { heightScale: w.heightScale }),
         ...(w.domain !== undefined && { domain: w.domain }),

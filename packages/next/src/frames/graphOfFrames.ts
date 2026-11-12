@@ -1,15 +1,20 @@
+import { warpForward, warpInverse, type Warp } from "../camera/route.ts";
 import type { Instant } from "../time/Instant.ts";
 import type { EdgeAccuracy } from "../transform/accuracy.ts";
 import {
   affine,
+  smooth,
+  switchEdge,
   TransformGraph,
+  type Edge,
+  type PlainEdge,
   type TransformNode,
 } from "../transform/graph.ts";
 import type { FrameCatalog } from "./catalog.ts";
 import type { Frame } from "./Frame.ts";
 import { framePoint } from "./local.ts";
 import { pointAccuracy } from "./pointAccuracy.ts";
-import { isWarpFrame } from "./warpFrame.ts";
+import { isSwitchFrame, isSmoothFrame } from "./smoothFrame.ts";
 
 /** A catalogue's reference frames as affine nodes of a transform graph. */
 export interface FrameGraph {
@@ -38,9 +43,10 @@ export interface FrameGraph {
 /**
  * Represents the catalogue's tree in use in a transform graph: each `Frame`
  * edge is an affine node whose matrix is `frame.toParent` at the route's
- * seconds (as `resolver.instant` reads them). The frames stay the source of
- * truth and `FrameResolver` keeps working; this is a view of them. A warp
- * frame throws: it becomes a smooth node with the warps (a later task).
+ * seconds (as `resolver.instant` reads them), a smooth frame a smooth node
+ * with the same direction (up to its parent) and a switch frame a switch
+ * node. The frames stay the source of truth and `FrameResolver` keeps
+ * working; this is a view of them.
  */
 export function graphOfFrames(
   catalog: FrameCatalog,
@@ -60,22 +66,9 @@ export function graphOfFrames(
         }
         continue;
       }
-      if (isWarpFrame(frame)) {
-        throw new Error(
-          `graphOfFrames: "${frame.name}" is a warp frame, not an affine edge`,
-        );
-      }
       const parent = frame.parent && nodes.get(frame.parent);
       const made = parent
-        ? graph.add(
-            frame.name,
-            parent,
-            affine({
-              at: (seconds, out) => {
-                frame.toParent(resolver.instant(seconds), out);
-              },
-            }),
-          )
+        ? graph.add(frame.name, parent, edgeOfFrame(frame, resolver))
         : graph.root(frame.name);
       nodes.set(frame, made);
       frames.set(made, frame);
@@ -111,4 +104,48 @@ export function graphOfFrames(
     accuracy,
     sync,
   };
+}
+
+/** A frame's edge to its parent as a graph edge. */
+function edgeOfFrame(
+  frame: Frame,
+  resolver: { instant(seconds: number): Instant },
+): Edge {
+  if (isSmoothFrame(frame)) {
+    return smoothEdgeOfWarp(frame.warp);
+  }
+  if (isSwitchFrame(frame)) {
+    const { byView, default: fallback } = frame.edges();
+    const plain = (warp: Warp | undefined): PlainEdge =>
+      warp ? smoothEdgeOfWarp(warp) : identityEdge();
+    return switchEdge({
+      byView: new Map([...byView].map(([view, warp]) => [view, plain(warp)])),
+      ...(fallback !== null && { default: plain(fallback) }),
+    });
+  }
+  return affine({
+    at: (seconds, out) => {
+      frame.toParent(resolver.instant(seconds), out);
+    },
+  });
+}
+
+const identityEdge = () =>
+  affine({ matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1] });
+
+/** A warp (local to parent, at the scale it has now) as a smooth node. */
+function smoothEdgeOfWarp(warp: Warp) {
+  return smooth({
+    id: warp.description ?? `${warp.from.name} to ${warp.to.name}`,
+    params: {},
+    forward: (p, _params, out, jacobian) => {
+      warpForward(warp, p, out, jacobian);
+    },
+    inverse: (q, _params, out) => {
+      warpInverse(warp, q, out);
+    },
+    ...(warp.accuracy?.sigma !== undefined && {
+      accuracy: warp.accuracy.sigma,
+    }),
+  });
 }

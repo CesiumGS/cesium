@@ -1,19 +1,23 @@
-import { Ellipsoid, cartographic, type PlacementParameter } from "@cesium/next";
 import {
+  Ellipsoid,
+  cartographic,
   verticalExaggeration,
+  type PlacementParameter,
+  type VerticalExaggeration,
+} from "@cesium/next";
+import {
+  smoothFrame,
   warpForward,
-  warpFrame,
   warpInverse,
   type FrameCatalog,
-  type VerticalExaggeration,
-  type WarpFrame,
+  type SmoothFrame,
 } from "@cesium/next/frames";
 
 /** The strongest exaggeration the slider reaches: heights drawn ten times as tall. */
 export const MAX_EXAGGERATION = 10;
 
-/** The name of the application's reference frame: the one the camera sits on. */
-export const FRAME_NAME = "exaggerated";
+/** The name of the application's reference frame: the Earth's content, drawn exaggerated. */
+export const FRAME_NAME = "Earth content (exaggerated)";
 
 /** What the slider writes at first: a position from 0 to 1, for a multiplier of 1 to `MAX_EXAGGERATION`. */
 export const scaleOf = (factor: number): number =>
@@ -27,14 +31,17 @@ export interface Geodetic {
 }
 
 /**
- * The application's vertical exaggeration, all of it: a reference frame whose
- * edge to ITRF is the warp, with a camera rig to sit on it. Nothing is set on
- * any item. Everything in the world stays in true coordinates (ITRF, heights
- * above the WGS84 ellipsoid); the frame is where it is drawn.
+ * The application's vertical exaggeration, all of it: a reference frame over
+ * the Earth's content whose edge to ITRF is the deformation. The globe's
+ * terrain, a tileset, a model and the pins are placed in it, so they keep
+ * their true coordinates (ITRF's, heights above the WGS84 ellipsoid) and are
+ * drawn through the edge; the camera stays at ITRF, where it sees them drawn,
+ * and what is not under the frame (the Moon) is not touched. Nothing is set on
+ * any item.
  */
 export interface Exaggeration {
-  /** The frame to put the camera on: ITRF with heights multiplied by `factor`. */
-  readonly frame: WarpFrame<typeof FRAME_NAME>;
+  /** The frame the Earth's content is placed in: its coordinates are ITRF's, its edge to ITRF multiplies heights by `factor`. */
+  readonly frame: SmoothFrame<typeof FRAME_NAME>;
   /**
    * The helper at its full factor, `MAX_EXAGGERATION`: setting its `factor`
    * changes the warp itself and every route through it is refitted. The
@@ -43,13 +50,13 @@ export interface Exaggeration {
   readonly warp: VerticalExaggeration;
   /** The multiplier in force; setting it writes the one float the slider writes. */
   factor: number;
-  /** Where a true point (ITRF, m) is drawn, in `frame`'s metres, at the multiplier in force (`warpForward`). */
+  /** Where a true point (the frame's coordinates: ITRF's axes, m) is drawn, in ITRF, at the multiplier in force (`warpForward`). */
   drawn(point: ArrayLike<number>, out?: Float64Array): Float64Array;
   /**
-   * The true point (ITRF, m) drawn at `point` in `frame`, at the multiplier
-   * in force (`warpInverse`). A pick gives its true point itself (`truePick`),
-   * which is read at the multiplier it was drawn at; this is for the
-   * application's own drawn points.
+   * The true point drawn at `point` in ITRF, at the multiplier in force
+   * (`warpInverse`). A pick gives its true point itself (`truePick`), which is
+   * read at the multiplier it was drawn at; this is for the application's own
+   * drawn points.
    */
   truth(point: ArrayLike<number>, out?: Float64Array): Float64Array;
   /** The geodetic position of a point in ITRF. */
@@ -57,7 +64,7 @@ export interface Exaggeration {
 }
 
 /**
- * Builds the frame on `catalog` over its ITRF, its strength moved by
+ * Builds the frame on `catalog` under its ITRF, its strength moved by
  * `scale` (a world's placement parameter over [0, 1]). The helper writes the
  * map's Jacobian and inverse, and tells the engine the warp scales heights
  * above the ellipsoid, so terrain is drawn exactly, with no fit.
@@ -70,7 +77,7 @@ export function createExaggeration(
     factor: MAX_EXAGGERATION,
     scale,
   });
-  const frame = warpFrame(FRAME_NAME, catalog.get("ITRF"), warp);
+  const frame = smoothFrame(FRAME_NAME, catalog.get("ITRF"), warp);
   catalog.add(frame);
   // The multiplier in force: the warp's own factor at the slider's position.
   const factorNow = () => 1 + scale.value * (warp.factor - 1);

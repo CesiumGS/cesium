@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import {
   heightOffset as framesHeightOffset,
   verticalExaggeration as framesExaggeration,
-} from "../src/frames/heightWarps.ts";
+} from "../src/georeference/heightWarps.ts";
 import {
   flatten,
   flattenDescriptor,
@@ -21,7 +21,7 @@ import {
   transverseMercator,
   transverseMercatorDescriptor,
   utm,
-  verticalExaggeration,
+  verticalExaggerationEdge,
   verticalExaggerationDescriptor,
   webMercatorDescriptor,
 } from "../src/georeference/index.ts";
@@ -756,10 +756,10 @@ describe("the constructors give edges the graph takes", () => {
     expect(() => edgeOf(bumpDescriptor, { width: 1 })).toThrow(
       /no parameter 'width'/,
     );
-    expect(() => verticalExaggeration({ factor: 0, ceiling: 100 })).toThrow(
+    expect(() => verticalExaggerationEdge({ factor: 0, ceiling: 100 })).toThrow(
       RangeError,
     );
-    expect(() => verticalExaggeration({ factor: 2, ceiling: -1 })).toThrow(
+    expect(() => verticalExaggerationEdge({ factor: 2, ceiling: -1 })).toThrow(
       /above the base/,
     );
     expect(() => twist({ axis: [0, 0, 0], rate: 1 })).toThrow(/non-zero/);
@@ -779,7 +779,7 @@ describe("the constructors give edges the graph takes", () => {
   });
 
   it("carries the source, the separable names and the id on the spec", () => {
-    const edge = verticalExaggeration({ factor: 2, ceiling: 9000 });
+    const edge = verticalExaggerationEdge({ factor: 2, ceiling: 9000 });
     expect(edge.spec.id).toBe("verticalExaggeration");
     expect(edge.spec.separable).toEqual(["factor"]);
     expect(() => parseTransform(edge.spec.source!)).not.toThrow();

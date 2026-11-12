@@ -249,6 +249,8 @@ export const RULES = [
   { entry: ".", from: "src/scene/lights.ts", group: "core.world" },
   { entry: ".", from: "src/scene/placement.ts", group: "core.world" },
   { entry: ".", from: "src/scene/HeightClamping.ts", group: "core.world" },
+  { entry: ".", from: "src/georeference/", group: "core.world" },
+  { entry: ".", from: "src/transforms/", group: "core.world" },
 
   { entry: ".", from: "src/scene/Camera.ts", group: "core.camera" },
   { entry: ".", from: "src/camera/", group: "core.camera" },

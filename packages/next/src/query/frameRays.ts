@@ -9,12 +9,7 @@ import {
   type FrameKey,
   type FrameResolver,
 } from "../camera/frameResolver.ts";
-import {
-  PresentationRouteError,
-  resolveRoute,
-  routeForward,
-  routeIsRigid,
-} from "../camera/route.ts";
+import { resolveRoute, routeForward, routeIsRigid } from "../camera/route.ts";
 import { C } from "../math/constants.ts";
 import type { World } from "../scene/World.ts";
 import type { AnchorHandle } from "../scene/world/types.ts";
@@ -73,15 +68,16 @@ function apply(
   return out;
 }
 
-/** A carrier of points between two frames (`carrier`). */
-type Carrier = (p: ArrayLike<number>) => Float64Array;
+/** A carrier of points between two frames (`carrier`); `smooth` when its route crosses a smooth edge. */
+type Carrier = ((p: ArrayLike<number>) => Float64Array) & {
+  smooth?: true;
+};
 
 /**
  * A carrier of points of `from` into `to` at `seconds`, in float64: a rigid
- * route by its matrix, a route across warps point by point (`routeForward`;
- * a ray is carried by its two ends, so it stays straight in `to`). A rays
- * query asks for true coordinates, so a route across a presentation warp (a
- * drawn frame, as a vertical exaggeration) is refused, naming the frames.
+ * route by its matrix, a route across smooth edges point by point
+ * (`routeForward`; a ray is carried by its two ends, so it stays straight in
+ * `to`, which is the frame the query is answered in).
  */
 function carrier(
   resolver: FrameResolver,
@@ -90,15 +86,14 @@ function carrier(
   seconds: number,
 ): Carrier {
   const route = resolveRoute(resolver, from, to, seconds);
-  if (route.presentation) {
-    throw new PresentationRouteError(from.name, to.name);
-  }
   const first = route.steps[0]!;
   if (first.kind === "rigid" && routeIsRigid(route)) {
     const m = first.matrix;
     return (p) => apply(m, p);
   }
-  return (p) => routeForward(route, p);
+  const carry: Carrier = (p) => routeForward(route, p);
+  carry.smooth = true;
+  return carry;
 }
 
 /**
@@ -180,8 +175,10 @@ async function inAnchor(
     };
   };
   const into = carrierAt(frame, anchor);
+  let carriedPointwise = false;
   const rays: QueryRay[] = query.rays.map((ray, i) => {
     const carry = into(times[i]!);
+    carriedPointwise ||= carry.smooth === true;
     return { from: carry(ray.from), to: carry(ray.to) };
   });
   const answers = await answer(rays, times);
@@ -209,7 +206,7 @@ async function inAnchor(
           : Math.hypot(route.meters, own.meters);
     const accuracy = {
       ...(meters !== undefined && { meters }),
-      note: `route: ${route.note}; target: ${own.note}`,
+      note: `route: ${route.note}; target: ${own.note}${carriedPointwise ? "; the route crosses a smooth edge, so each ray is carried by its ends and is straight in the target's frame" : ""}`,
     };
     if (!a.hit) {
       return { ...a, accuracy };
@@ -264,11 +261,8 @@ export async function castFrameRays(
       if (signal?.aborted) {
         throw abortReason(signal);
       }
-      // A presentation route is a mistake in the query, not a route that is
-      // not there yet: it rejects, naming the frames.
-      if (error instanceof PresentationRouteError) {
-        throw error;
-      }
+      // A route that isn't there yet is not an error of the query: that
+      // target answers unknown, and the others still answer.
       const message =
         error instanceof FrameUnavailableError
           ? `${error.message} (${error.reason})`
@@ -342,9 +336,6 @@ async function answerTarget(
       } catch (error) {
         if (signal?.aborted) {
           throw abortReason(signal);
-        }
-        if (error instanceof PresentationRouteError) {
-          throw error;
         }
         // One anchor's route failing leaves the others; all failing is
         // the route's failure.

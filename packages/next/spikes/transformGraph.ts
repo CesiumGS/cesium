@@ -24,11 +24,12 @@ import type { Harness } from "../lab/harness.ts";
 import {
   geocentricToGeographic,
   utm,
-  verticalExaggeration,
+  verticalExaggerationEdge,
 } from "../src/georeference/index.ts";
 import { Ellipsoid, cartographic } from "../src/math/ellipsoid.ts";
 import {
   ROUTE_BODY,
+  ROUTE_POINTER_ROWS,
   ROUTE_KIND,
   ROUTE_OWN_ROWS,
   routeBlockRows,
@@ -151,7 +152,7 @@ function exaggerationScenario(radius: number, bandTile = false): Scenario {
   const ex = graph.add(
     "ex",
     view,
-    verticalExaggeration({ factor: 10, ceiling: 9000 }),
+    verticalExaggerationEdge({ factor: 10, ceiling: 9000 }),
   );
   const content = graph.add(
     "content",
@@ -187,7 +188,7 @@ function utmScenario(
   const ex = graph.add(
     "ex",
     earth,
-    verticalExaggeration({ factor: 3, ceiling: 9000 }),
+    verticalExaggerationEdge({ factor: 3, ceiling: 9000 }),
   );
   const content = graph.add("content", ex, affine({ matrix: enu(5, 46, 0) }));
   return {
@@ -1129,6 +1130,7 @@ fn routeRow(row: u32) -> vec4f { return rows[row]; }
 fn routeEyeHi() -> vec3f { return frame[0].xyz; }
 fn routeEyeLo() -> vec3f { return frame[1].xyz; }
 fn routeAxisRow(i: u32) -> vec3f { return frame[2u + i].xyz; }
+fn routeViewBit() -> u32 { return 1u; }
 `;
 
 const GLUE_KERNEL = `
@@ -1227,8 +1229,9 @@ async function glue(
   const perDraw = 48;
   const uniformRows = compiled.uniformsLayout.floats / 4;
   const blockRows = routeBlockRows(compiled);
+  // The uniforms, the pointer table (every view id at row 0: its zeros) and the draws' blocks.
   const rowWords = new ArrayBuffer(
-    (uniformRows + blockRows * centres.length) * 16,
+    (uniformRows + ROUTE_POINTER_ROWS + blockRows * centres.length) * 16,
   );
   const f32 = new Float32Array(rowWords);
   const u32 = new Uint32Array(rowWords);
@@ -1258,13 +1261,13 @@ async function glue(
   const vbits = new Uint32Array(verts.buffer);
   const anchorPoints = new Float64Array(3 * samples.count);
   modelCentres.forEach(({ cm, t, d }) => {
-    const at = uniformRows + d * blockRows;
+    const at = uniformRows + ROUTE_POINTER_ROWS + d * blockRows;
     const base = at * 4;
     u32[base] = 1;
     u32[base + 4] = ROUTE_KIND;
     f32[base + 5] = 1;
     u32[base + 6] = ROUTE_BODY;
-    u32[base + 7] = 0;
+    u32[base + 7] = uniformRows;
     const body = base + ROUTE_BODY * 4;
     for (let a = 0; a < 3; a++) {
       f32[body + a] = cm[a]!;

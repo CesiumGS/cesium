@@ -1,8 +1,8 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
-import { verticalExaggeration } from "../src/frames/heightWarps.ts";
+import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { warpFrame } from "../src/frames/warpFrame.ts";
+import { smoothFrame } from "../src/frames/smoothFrame.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import * as m4 from "../src/math/mat4.ts";
 import { EARTH } from "../src/scene/Body.ts";
@@ -30,17 +30,20 @@ describe("scratch", () => {
     worlds.push(world);
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const scale = world.createPlacementParameter(1, { range: [0, 1] });
-    const frame = warpFrame(
+    const itrf = catalog.get("ITRF");
+    const frame = smoothFrame(
       "x",
-      catalog.get("ITRF"),
+      itrf,
       fittedOnly(verticalExaggeration({ factor: 10, scale })),
     );
     catalog.add(frame);
-    engine.cameras.setResolver(world, createFramesResolver(catalog));
+    const resolver = createFramesResolver(catalog);
     const earth = world.bodyAnchor(EARTH);
+    resolver.bindAnchor(earth, frame);
+    engine.cameras.setResolver(world, resolver);
     const view = engine.addView({ target: new OffscreenTarget(64, 48), world });
     engine.cameras.setRig(view, {
-      position: { frame },
+      position: { frame: itrf },
       orientation: { kind: "free" },
     });
     const mesh = createBox();
@@ -52,8 +55,7 @@ describe("scratch", () => {
     const step = () => {
       engine.cameras.update();
       world.warps.frame(
-        engine.cameras.root(view),
-        view.anchorRoutes(),
+        [{ id: engine.scene.viewIds.get(view)!, routes: view.anchorRoutes() }],
         Infinity,
         (m) => {
           throw new Error(m);

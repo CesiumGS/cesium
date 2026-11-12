@@ -8,7 +8,7 @@
 //   J = I + D M + (dh'/dh - 1) n nᵀ + n gᵀ,
 // where dh'/dh = 1 + ∂D/∂h at fixed position and g = ∇ of D through the
 // foot's position (zero when D depends on h alone). This is the closed form
-// of frames/heightWarps.ts (there as A⁻¹(I + h'S - n nᵀ) + (dh'/dh) n nᵀ).
+// of georeference/heightWarps.ts (there as A⁻¹(I + h'S - n nᵀ) + (dh'/dh) n nᵀ).
 // The ellipsoid is a body's radii; the point must be away from its centre.
 import { ellipsoidFoot, type Radii } from "../scene/warpForms.ts";
 

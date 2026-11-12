@@ -61,7 +61,6 @@ function exaggerationRoute(k: number): Route {
   const warp: Warp = {
     from: key("itrf"),
     to: key("exaggerated"),
-    presentation: true,
     revision: 1,
     forward: (p, out, jacobian) => exaggerate(k, p, out, jacobian),
   };
@@ -70,7 +69,6 @@ function exaggerationRoute(k: number): Route {
     base: key("exaggerated"),
     seconds: 0,
     steps: [{ kind: "warp", warp, inverse: false }],
-    presentation: true,
     revision: 1,
   };
 }

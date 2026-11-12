@@ -1,6 +1,8 @@
-// A warp as an edge of the frame graph (plan §13.26, the second review):
-// the frames resolver's `route()` carries it as a warp step, `resolve()`
-// refuses it, and a route that doesn't cross it is as it was.
+// A smooth edge of the frame tree (plan §13.37): a frame whose coordinates
+// map up to its parent's. The frames resolver's `route()` carries it as a
+// warp step, forward going up and inverse going down, `resolve()` refuses
+// it, and a route that doesn't cross it is as it was. A switch frame chooses
+// its edge per view.
 import { describe, expect, it, vi } from "vitest";
 import {
   NonRigidRouteError,
@@ -14,10 +16,13 @@ import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { Frame, frameTransform } from "../src/frames/Frame.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
 import {
-  isWarpFrame,
-  warpFrame,
-  type WarpSpec,
-} from "../src/frames/warpFrame.ts";
+  isSmoothFrame,
+  isSwitchFrame,
+  smoothFrame,
+  switchFrame,
+  type SmoothFrameSpec,
+  type SwitchChoice,
+} from "../src/frames/smoothFrame.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
@@ -49,10 +54,9 @@ function placed(a: number, x: number, y: number, z: number): Float64Array {
  */
 function exaggeration(
   k: number,
-  options: Partial<WarpSpec> = {},
-): WarpSpec & { revision: number } {
+  options: Partial<SmoothFrameSpec> = {},
+): SmoothFrameSpec & { revision: number } {
   return {
-    presentation: true,
     revision: 1,
     description: `height × ${k}`,
     forward(p, out, jacobian) {
@@ -79,10 +83,12 @@ function exaggeration(
   };
 }
 
-function setup(spec: WarpSpec & { revision: number } = exaggeration(10)) {
+function setup(
+  spec: SmoothFrameSpec & { revision: number } = exaggeration(10),
+) {
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const itrf = catalog.get("ITRF");
-  const exaggerated = warpFrame("exaggerated", itrf, spec);
+  const exaggerated = smoothFrame("exaggerated", itrf, spec);
   catalog.add(exaggerated);
   const mast = Frame.constant("mast", exaggerated, placed(0.3, 100, -50, 20), {
     accuracy: { meters: 0.3, note: "survey" },
@@ -98,41 +104,53 @@ function setup(spec: WarpSpec & { revision: number } = exaggeration(10)) {
 
 const POINT = [R * 0.6 + 1234.5, R * 0.7 - 987.6, R * 0.37 + 55.5];
 
-describe("a warp as an edge of the frame graph", () => {
-  it("defines a frame whose warp runs from its parent to it", () => {
+describe("a smooth edge of the frame tree", () => {
+  it("defines a frame whose warp runs from it to its parent", () => {
     const { itrf, exaggerated } = setup();
-    expect(isWarpFrame(exaggerated)).toBe(true);
+    expect(isSmoothFrame(exaggerated)).toBe(true);
+    expect(isSwitchFrame(exaggerated)).toBe(false);
     expect(exaggerated.parent).toBe(itrf);
-    expect(exaggerated.warp.from).toBe(itrf);
-    expect(exaggerated.warp.to).toBe(exaggerated);
-    expect(exaggerated.warp.presentation).toBe(true);
+    expect(exaggerated.warp.from).toBe(exaggerated);
+    expect(exaggerated.warp.to).toBe(itrf);
     const out = new Float64Array(3);
     exaggerated.warp.forward([R + 100, 0, 0], out);
     expect(out[0]).toBeCloseTo(R + 1000, 6);
   });
 
-  it("route() walks the warp forward from its parent and back from its child", () => {
+  it("route() walks the warp forward going up to the parent and back going down", () => {
     const { itrf, exaggerated, resolver } = setup();
-    const down = resolver.route(itrf, exaggerated, SECONDS);
-    expect(down.steps.map((s) => s.kind)).toEqual(["warp"]);
-    expect(down.steps[0]).toMatchObject({ kind: "warp", inverse: false });
     const up = resolver.route(exaggerated, itrf, SECONDS);
-    expect(up.steps).toHaveLength(1);
-    expect(up.steps[0]).toMatchObject({ kind: "warp", inverse: true });
+    expect(up.steps.map((s) => s.kind)).toEqual(["warp"]);
+    expect(up.steps[0]).toMatchObject({ kind: "warp", inverse: false });
     expect(up.frame).toBe(exaggerated);
     expect(up.base).toBe(itrf);
     expect(up.seconds).toBe(SECONDS);
-    const q = routeForward(down, POINT);
+    const down = resolver.route(itrf, exaggerated, SECONDS);
+    expect(down.steps).toHaveLength(1);
+    expect(down.steps[0]).toMatchObject({ kind: "warp", inverse: true });
+    const q = routeForward(up, POINT);
     const r = Math.hypot(...POINT);
     expect(Math.hypot(...q)).toBeCloseTo(R + 10 * (r - R), 5);
+  });
+
+  it("content in the frame is drawn through the edge, and a sibling frame is not", () => {
+    const { catalog, itrf, mast, resolver } = setup();
+    const moon = Frame.constant("moon", itrf, translation(3.844e8, 0, 0));
+    catalog.add(moon);
+    expect(routeIsRigid(resolver.route(moon, itrf, SECONDS))).toBe(true);
+    expect(routeIsRigid(resolver.route(mast, itrf, SECONDS))).toBe(false);
+    // Content in the deformed frame reaches its parent forward; the sibling reaches it as it is.
+    const steps = resolver.route(mast, itrf, SECONDS).steps;
+    expect(steps.map((s) => s.kind)).toEqual(["rigid", "warp"]);
+    expect(steps[1]).toMatchObject({ kind: "warp", inverse: false });
   });
 
   it("composes rigid runs on both sides of the warp, in order", () => {
     const { mast, site, exaggerated, itrf, resolver } = setup();
     const route = resolver.route(mast, site, SECONDS);
     expect(route.steps.map((s) => s.kind)).toEqual(["rigid", "warp", "rigid"]);
-    expect(route.steps[1]).toMatchObject({ kind: "warp", inverse: true });
-    // By hand: mast → exaggerated, then the warp back to ITRF, then ITRF → site.
+    expect(route.steps[1]).toMatchObject({ kind: "warp", inverse: false });
+    // By hand: mast → exaggerated, then the warp up to ITRF, then ITRF → site.
     const instant = resolver.instant(SECONDS);
     const a = frameTransform(mast, exaggerated, instant);
     const local = [
@@ -181,7 +199,7 @@ describe("a warp as an edge of the frame graph", () => {
       NonRigidRouteError,
     );
     expect(() => resolver.resolve(itrf, exaggerated, SECONDS, out)).toThrow(
-      /crosses a warp/,
+      /crosses a smooth edge/,
     );
     expect(() =>
       resolver.motion(mast, site, SECONDS, {
@@ -204,11 +222,9 @@ describe("a warp as an edge of the frame graph", () => {
     expect(route.steps).toHaveLength(1);
     const step = route.steps[0]!;
     expect(step.kind === "rigid" && step.matrix).toEqual(matrix);
-    expect(route.presentation).toBe(false);
     const inside = resolver.route(mast, exaggerated, SECONDS);
     expect(inside.steps).toHaveLength(1);
     expect(inside.steps[0]!.kind).toBe("rigid");
-    expect(inside.presentation).toBe(false);
   });
 
   it("the route's revision is the resolver's, and counts the warp's revision", () => {
@@ -229,13 +245,13 @@ describe("a warp as an edge of the frame graph", () => {
     );
   });
 
-  it("watch hears a warp frame defined and its revision changing", () => {
+  it("watch hears a smooth frame defined and its revision changing", () => {
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const resolver = createFramesResolver(catalog);
     const told = vi.fn();
     const unwatch = resolver.watch(told);
     const spec = exaggeration(3);
-    const exaggerated = warpFrame("exaggerated", catalog.get("ITRF"), spec);
+    const exaggerated = smoothFrame("exaggerated", catalog.get("ITRF"), spec);
     catalog.add(exaggerated);
     expect(told).toHaveBeenCalledTimes(1);
     resolver.routeRevision(exaggerated, catalog.get("ITRF"));
@@ -246,20 +262,6 @@ describe("a warp as an edge of the frame graph", () => {
     unwatch();
     exaggerated.invalidate();
     expect(told).toHaveBeenCalledTimes(heard + 1);
-  });
-
-  it("the route is a presentation route when a warp on it is", () => {
-    const shown = setup(exaggeration(10));
-    expect(
-      shown.resolver.route(shown.mast, shown.site, SECONDS).presentation,
-    ).toBe(true);
-    const real = setup(exaggeration(1.001, { presentation: false }));
-    expect(
-      real.resolver.route(real.mast, real.site, SECONDS).presentation,
-    ).toBe(false);
-    expect(
-      real.resolver.route(real.itrf, real.exaggerated, SECONDS).steps[0],
-    ).toMatchObject({ kind: "warp" });
   });
 
   it("accuracy adds the warp's sigma in quadrature with the rigid edges' and notes its bound", () => {
@@ -295,6 +297,76 @@ describe("a warp as an edge of the frame graph", () => {
   });
 });
 
+describe("a switch frame chooses its edge per view", () => {
+  /** Two views: one sees the exaggeration, one the identity. */
+  const exaggerating = { name: "3D" };
+  const flat = { name: "plan" };
+
+  function withSwitch() {
+    const catalog = createFrameCatalog({ data: syntheticFrameData() });
+    const itrf = catalog.get("ITRF");
+    const spec = exaggeration(10);
+    const chart = switchFrame("chart", itrf, {
+      byView: new Map<object, SwitchChoice>([
+        [exaggerating, spec],
+        [flat, "identity"],
+      ]),
+    });
+    catalog.add(chart);
+    const resolver = createFramesResolver(catalog);
+    return { catalog, itrf, chart, resolver, spec };
+  }
+
+  it("is warped for one view and rigid for the other, in the same tree", () => {
+    const { itrf, chart, resolver } = withSwitch();
+    expect(isSwitchFrame(chart)).toBe(true);
+    const warped = resolver.route(chart, itrf, SECONDS, exaggerating);
+    expect(warped.steps[0]).toMatchObject({ kind: "warp", inverse: false });
+    const through = routeForward(warped, POINT);
+    expect(Math.hypot(...through)).toBeCloseTo(
+      R + 10 * (Math.hypot(...POINT) - R),
+      5,
+    );
+    const rigid = resolver.route(chart, itrf, SECONDS, flat);
+    expect(routeIsRigid(rigid)).toBe(true);
+    const step = rigid.steps[0]!;
+    expect(step.kind === "rigid" && Array.from(step.matrix)).toEqual(
+      Array.from(translation(0, 0, 0)),
+    );
+  });
+
+  it("refuses a matrix across it, and a route without a view or default", () => {
+    const { itrf, chart, resolver } = withSwitch();
+    expect(() =>
+      resolver.resolve(chart, itrf, SECONDS, new Float64Array(16)),
+    ).toThrow(NonRigidRouteError);
+    expect(() => resolver.route(chart, itrf, SECONDS)).toThrow(
+      /no choice .* and no default/,
+    );
+    expect(() =>
+      resolver.route(chart, itrf, SECONDS, { name: "other" }),
+    ).toThrow(/no choice/);
+  });
+
+  it("a default serves the views not named, and the revision counts every choice", () => {
+    const catalog = createFrameCatalog({ data: syntheticFrameData() });
+    const itrf = catalog.get("ITRF");
+    const spec = exaggeration(10);
+    const chart = switchFrame("chart", itrf, {
+      byView: new Map([[flat, "identity" as const]]),
+      default: spec,
+    });
+    catalog.add(chart);
+    const resolver = createFramesResolver(catalog);
+    expect(
+      resolver.route(chart, itrf, SECONDS, exaggerating).steps[0],
+    ).toMatchObject({ kind: "warp" });
+    const before = resolver.routeRevision(chart, itrf);
+    spec.revision++;
+    expect(resolver.routeRevision(chart, itrf)).not.toBe(before);
+  });
+});
+
 describe("routes without a resolver's own route()", () => {
   it("resolveRoute makes one rigid step from resolve", () => {
     const { site, itrf, resolver } = setup();
@@ -316,7 +388,6 @@ describe("routes without a resolver's own route()", () => {
     const route = table.route!(anchor, world.root, SECONDS);
     expect(route.steps).toHaveLength(1);
     expect(route.steps[0]!.kind).toBe("rigid");
-    expect(route.presentation).toBe(false);
     expect(route.revision).toBe(table.routeRevision(anchor, world.root));
     const step = route.steps[0]!;
     expect(step.kind === "rigid" && step.matrix).toEqual(

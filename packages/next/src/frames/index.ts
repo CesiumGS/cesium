@@ -89,32 +89,16 @@ export {
 } from "./warpMaps.ts";
 export { truePick, type TruePick, type TruthHow } from "./pickTruth.ts";
 export {
-  warpFrame,
-  WarpFrame,
-  isWarpFrame,
-  type WarpSpec,
-} from "./warpFrame.ts";
-export {
-  warpFromFunction,
-  scaleAbout,
-  blendWarps,
-  type BlendedWarp,
-  type ChangeableWarp,
-  type FunctionWarp,
-  type PointMap,
-  type ScaleAbout,
-  type ScaleAboutOptions,
-  type WarpFromFunctionOptions,
-} from "./warps.ts";
-export {
-  verticalExaggeration,
-  heightOffset,
-  type HeightOffset,
-  type HeightOffsetOptions,
-  type HeightReference,
-  type VerticalExaggeration,
-  type VerticalExaggerationOptions,
-} from "./heightWarps.ts";
+  smoothFrame,
+  SmoothFrame,
+  switchFrame,
+  SwitchFrame,
+  isSmoothFrame,
+  isSwitchFrame,
+  smoothEdgeOf,
+  type SwitchChoice,
+  type SwitchFrameOptions,
+} from "./smoothFrame.ts";
 export {
   framePoint,
   convertPoint,
@@ -139,12 +123,7 @@ export {
   type FramedPoint,
   type FramesPickInterpreterOptions,
 } from "./pickInterpreter.ts";
-export {
-  drawnThrough,
-  isPresentationFrame,
-  type DrawnThrough,
-  type DrawnWarp,
-} from "./drawn.ts";
+export { drawnThrough, type DrawnThrough, type DrawnWarp } from "./drawn.ts";
 export type {
   AreaOfInterest,
   CoordinateOperation,

@@ -19,7 +19,7 @@ import { View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { World } from "../src/scene/World.ts";
 import type { AnchorHandle, DrawHandle } from "../src/scene/world/types.ts";
-import type { DesignPlacement } from "../src/streaming/designPlacement.ts";
+import type { Georeference } from "../src/georeference/georeference.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;
@@ -41,7 +41,7 @@ let site: DrawHandle;
 let other: DrawHandle;
 
 /** A site grid 10 m east of nothing: design = body-fixed minus (R, 0, 0). */
-const placement: DesignPlacement = {
+const placement: Georeference = {
   mode: "rigid",
   frameName: "site grid",
   displayed: (d, out = new Float64Array(3)) => {

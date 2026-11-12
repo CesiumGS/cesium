@@ -34,24 +34,26 @@ import { createRuler } from "./ruler.ts";
 import { createSites, trackGround } from "./sites.ts";
 
 /**
- * Vertical exaggeration: everything in the scene drawn up to ten times as
- * tall, by one reference frame and a camera rig. Nothing is set on any item.
+ * Vertical exaggeration: the Earth's content drawn up to ten times as tall,
+ * by one reference frame placed over it. Nothing is set on any item.
  *
- * The application's part is `exaggeration.ts`: a frame whose edge to ITRF is
- * the warp (`verticalExaggeration`, so no Jacobian is written by hand), and
- * a rig that puts the camera on it. The globe's terrain, a tileset (Cesium
- * OSM Buildings), a model and the pins all keep their true coordinates and
- * are drawn where the route to that frame puts them: terrain exactly (the
- * helper says it scales heights above the ellipsoid), the rest from a fit
- * made once and scaled by the slider's one float. Pins are billboards, so
- * they stay upright; the truck can too (`warpAt: "anchor"`).
+ * The application's part is `exaggeration.ts`: a frame under ITRF whose
+ * edge to it is the deformation (`verticalExaggeration`, so no Jacobian is
+ * written by hand), and the Earth's anchor placed in it. The globe's terrain,
+ * a tileset (Cesium OSM Buildings), a model and the pins keep their true
+ * coordinates, since the frame's own are ITRF's, and are drawn through the
+ * edge: terrain exactly (the helper says it scales heights above the
+ * ellipsoid), the rest by the compiled route, whose slider is one uniform.
+ * The camera stays at ITRF, where it sees them drawn, and the Moon, which is
+ * not under the frame, is untouched. Pins are billboards, so they stay upright;
+ * the truck can too (`warpAt: "anchor"`).
  *
- * Questions are asked in true coordinates. A pick's drawn position is in the
- * frame the camera is on, but the pick also gives the true point (`truePick`:
- * the content's own point, or the drawn one taken back through the route it
- * was drawn by) and the page reads its height in ITRF. The ruler's numbers
- * come from the measure module on those true points, so they don't move
- * with the slider; the drawn heights beside them do.
+ * Questions are asked in true coordinates. A pick's drawn position is in
+ * ITRF, where the camera is, but the pick also gives the true point
+ * (`truePick`: the content's own point, or the drawn one taken back through
+ * the route it was drawn by) and the page reads its height in the frame.
+ * The ruler's numbers come from the measure module on those true points, so
+ * they don't move with the slider; the drawn heights beside them do.
  */
 
 const ION_OSM_BUILDINGS = 96188;
@@ -90,7 +92,7 @@ export async function run({
       ? text.split(accessToken).join("[redacted]")
       : text;
 
-  // ------------------------------------------------ the frame and the rig
+  // ------------------------------------------- the frame, over the Earth
   const initial = Number(params.x);
   const start =
     Number.isFinite(initial) && initial >= 1 && initial <= MAX_EXAGGERATION
@@ -101,17 +103,21 @@ export async function run({
   });
   const exaggeration = createExaggeration(viewer.frames, scale);
   const itrf = viewer.frames.get("ITRF");
-  // The viewer's camera is on ITRF: the rig moves it onto the frame across
-  // the warp, the camera carried through the route.
-  engine.cameras.setRig(view, {
-    position: { frame: exaggeration.frame },
-    orientation: { kind: "free" },
-  });
+  // The Earth's content goes in the frame: its anchor is bound to it, so the
+  // globe (`viewer.globe.frame` is this binding), the tileset, the truck and
+  // the pins are drawn through its edge. The camera stays on ITRF, the
+  // viewer's own rig.
+  const earth = world.bodyAnchor(EARTH);
+  const resolver = engine.cameras.resolver(world);
+  if (!resolver.bindAnchor) {
+    throw new Error("the viewer's frame resolver binds no anchors");
+  }
+  resolver.bindAnchor(earth, exaggeration.frame);
+  scope.defer(() => resolver.bindAnchor?.(earth, itrf));
   // The camera controller keeps above the ground as drawn: it takes the
   // true ground height (the viewer's) through the view's route itself, and
   // lifts the camera only where the drawn ground would cover it. A margin,
   // since terrain drawn ten times as steep is close to a wall.
-  const earth = world.bodyAnchor(EARTH);
   const minimumHeight = viewer.controller.minimumHeight;
   viewer.controller.minimumHeight = 40;
   scope.defer(() => {
@@ -561,7 +567,7 @@ export async function run({
     el(
       "p",
       {},
-      "One reference frame and a camera rig draw everything taller; no item is set.",
+      "One reference frame over the Earth's content draws it taller; no item is set, and the Moon is not.",
     ),
     el(
       "dl",

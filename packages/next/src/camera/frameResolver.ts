@@ -3,6 +3,8 @@
 // them over its catalog, and the core's own resolver over its transform
 // table. Plan 5a's call 14: `FrameUnavailableError` lives here, so the camera
 // layer recognises "not ready" from any resolver.
+import type { AnchorHandle } from "../scene/world/types.ts";
+import type { ViewId } from "../transform/graph.ts";
 import type { Route } from "./route.ts";
 
 /** Anything that names a reference frame. A frames-module `Frame` satisfies it. */
@@ -80,11 +82,28 @@ export interface FrameResolver {
   ): Float64Array;
   /**
    * The path from `frame` to `base` at scene `seconds`: rigid steps and warp
-   * steps in order (`Route`). A route that crosses no warp is one rigid step
-   * with `resolve`'s matrix. Throws `FrameUnavailableError` as `resolve`
-   * does. A resolver without it has only rigid routes (`resolveRoute`).
+   * steps in order (`Route`), a warp step forward where the route goes up
+   * from a frame to its parent. A route that crosses no smooth edge is one
+   * rigid step with `resolve`'s matrix. `view` is the view the route is for,
+   * which a switch frame chooses its edge by (any object, a name or a
+   * number); without one a switch uses its default. Throws
+   * `FrameUnavailableError` as `resolve` does. A resolver without it has only
+   * rigid routes (`resolveRoute`).
    */
-  route?(frame: FrameKey, base: FrameKey, seconds: number): Route;
+  route?(
+    frame: FrameKey,
+    base: FrameKey,
+    seconds: number,
+    view?: ViewId,
+  ): Route;
+  /**
+   * Binds `anchor` to `frame`: content under the anchor is in `frame`'s
+   * coordinates (a frame of a smooth edge draws it through the edge). A
+   * resolver over a frame catalog has it; the transform table's has not.
+   */
+  bindAnchor?(anchor: AnchorHandle, frame: FrameKey): void;
+  /** The frame `anchor` is bound to, if any. */
+  binding?(anchor: AnchorHandle): FrameKey | undefined;
   /**
    * How fast `frame` moves in `base` at `seconds`, written into `out`. A
    * resolver may throw `NonRigidRouteError` for a route that crosses a warp.

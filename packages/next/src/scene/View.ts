@@ -38,6 +38,11 @@ import {
   observerReadout,
 } from "./observer.ts";
 import { type PostStage, checkStageList } from "./postStage.ts";
+import {
+  checkInRange,
+  checkParameterValue,
+  type PlacementParameter,
+} from "./placement.ts";
 
 /** A line list drawn on top of a view. */
 export interface Overlay {
@@ -638,12 +643,90 @@ export class View {
     setAnchorRoute(this, anchor, route);
   }
 
-  /** @internal The routes of anchors placed across a warp, by slot (0: the table's root). */
+  /** @internal The routes of anchors placed across a warp, by slot (0: the table's root), as this view draws them: a slider this view sets for itself (`setParameter`) reads its value here. */
   anchorRoutes(): ReadonlyArray<Route | undefined> {
     return anchorRoutes(this);
   }
 
-  /** The route that places `anchor` (or the table's root) when it crosses a warp: its warps, whether it is a presentation, its revision. Undefined for a rigid anchor. */
+  /** The values this view sets for itself, by placement parameter (`setParameter`). */
+  private readonly parameterValues = new Map<PlacementParameter, number>();
+  /** @internal Counts the parameters this view sets or follows again: bound routes are made again when it moves. */
+  parameterRevision = 0;
+
+  /**
+   * The value of `parameter` in this view: its own (`setParameter`), else the
+   * parameter's (`PlacementParameter.value`).
+   */
+  parameterValue(parameter: PlacementParameter): number {
+    return this.parameterValues.get(parameter) ?? parameter.value;
+  }
+
+  /**
+   * Whether `parameter` (a `PlacementParameter`, or the `WarpScale` that is
+   * one) has a value of this view's own. @internal
+   */
+  hasParameterValue(parameter: object): boolean {
+    return this.parameterValues.has(parameter as PlacementParameter);
+  }
+
+  /**
+   * Sets a placement parameter for this view alone: the world's one float
+   * stays what every other view sees (and what `parameter.value` says), and
+   * this view draws what the parameter moves (a vertical exaggeration's
+   * slider, a blend's `t`) at `value`, which must lie in the parameter's
+   * `range`. `undefined` makes the view follow the parameter again. Content
+   * the route compiles to the GPU takes it as a uniform of this view's, so
+   * moving it writes a few floats; one that is fitted, or whose parameter
+   * moves per-vertex terms (a draw's `PlacementBlend`), follows the world's
+   * value. While any view sets a parameter, terrain's exact height term (one
+   * weight for every view) gives way to the compiled route.
+   */
+  setParameter(parameter: PlacementParameter, value: number | undefined): void {
+    if (!this.world.scene.parameters.has(parameter)) {
+      throw new Error(
+        "View.setParameter: the parameter isn't one of this view's world (World.createPlacementParameter).",
+      );
+    }
+    const had = this.parameterValues.has(parameter);
+    if (value === undefined) {
+      if (!had) {
+        return;
+      }
+      this.parameterValues.delete(parameter);
+    } else {
+      checkParameterValue("View.setParameter", value);
+      checkInRange("View.setParameter", parameter.range, value);
+      if (had && this.parameterValues.get(parameter) === value) {
+        return;
+      }
+      this.parameterValues.set(parameter, value);
+    }
+    const overridden = this.world.scene.overridden;
+    const has = this.parameterValues.has(parameter);
+    if (has !== had) {
+      this.parameterRevision++;
+    }
+    const count =
+      (overridden.get(parameter) ?? 0) + (has === had ? 0 : has ? 1 : -1);
+    if (count > 0) {
+      overridden.set(parameter, count);
+    } else {
+      overridden.delete(parameter);
+    }
+    // The routes this view draws read it live; its draws are seen again.
+    this.world.version++;
+    this.world.changedViews = 0xffffffff;
+    this.wake?.();
+  }
+
+  /** @internal The view is going: its parameters stop counting as set for it. */
+  releaseParameters(): void {
+    for (const parameter of [...this.parameterValues.keys()]) {
+      this.setParameter(parameter, undefined);
+    }
+  }
+
+  /** The route that places `anchor` (or the table's root) when it crosses a smooth edge: its warps, as this view draws them, and its revision. Undefined for a rigid anchor. */
   anchorRoute(anchor: AnchorHandle | undefined): Route | undefined {
     if (anchor && this.world.anchorOf(anchor) !== anchor) {
       return undefined;

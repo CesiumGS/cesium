@@ -533,7 +533,7 @@ export class ClientSnapService {
     }
     const tolerance = tile.geometricError;
     const placement = engineeringPlacement(
-      pick.item !== undefined ? pick.item.designPlacement : tileset.placement,
+      pick.item !== undefined ? pick.item.georeference : tileset.placement,
     );
     return kept(
       shown({
@@ -810,7 +810,7 @@ function refusal(
   if (r.design !== undefined) {
     const placement = engineeringPlacement(
       found.item !== undefined
-        ? found.item.designPlacement
+        ? found.item.georeference
         : (r.tileset ?? tileset).placement,
     );
     if (placement === undefined) {

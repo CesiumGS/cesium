@@ -3,14 +3,14 @@
 // content on black, drawn into an offscreen target with a clip on, and every
 // pixel read back and compared with what float64 says the clip keeps there:
 // the pixel's ray carried to the surface, to the true point (the route's
-// inverse, where the rig is on a drawn frame), routed into the clip's own
+// inverse, where the content is drawn through a warp), routed into the clip's own
 // frame by the reprojection that bends it (`routeForward`), and tested there
 // (`clipSetKeeps`). Pixels within 1 px of a boundary (of the clip or of the
 // silhouette) are left out, as the other spikes do.
 //
-// The clip is a plane named in a design frame reached from ITRF by a
-// non-presentation warp (z' = z + A sin(x / L) sin(y / L)): on a flat plate in
-// ITRF it is a wavy contour no rigid test can draw. Its signed distance is
+// The clip is a plane named in a design frame under the content's frame, whose
+// smooth edge takes it to true coordinates (the inverse of z' = z + A sin(x /
+// L) sin(y / L)): on a flat plate it is a wavy contour no rigid test can draw. Its signed distance is
 // fitted per draw into the lattice rows' w channel; the vertex stage reads
 // it, the fragment stage discards by its sign.
 //
@@ -18,8 +18,8 @@
 //   1. a plate (a 96 × 96 grid, so the interpolated distance follows the
 //      surface) under an ITRF root, cut by the curved plane: the draw has no
 //      lattice, so it carries the field on one of its own (a carrier);
-//   2. the same plate drawn under a ×10 height warp (the rig sits on the
-//      drawn frame): the field rides on the route's lattice, and the cut is
+//   2. the same plate drawn under a ×10 height warp (its frame sits under the
+//      camera's root): the field rides on the route's lattice, and the cut is
 //      on the true surface;
 //   3. a curved plane and a rigid one in one view, together;
 //   4. a box window in the design frame, keep outside: a distance with kinks;
@@ -31,7 +31,7 @@ import { routeForward, routeInverse } from "../src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-  warpFrame,
+  smoothFrame,
 } from "../src/frames/index.ts";
 import {
   EARTH,
@@ -153,6 +153,33 @@ function bend(
   return out;
 }
 
+/** The bend undone: the design frame to its parent, with its Jacobian. */
+function unbend(
+  q: ArrayLike<number>,
+  out: Float64Array,
+  jacobian?: Float64Array,
+): Float64Array {
+  const sx = Math.sin(q[0]! / LENGTH);
+  const sy = Math.sin(q[1]! / LENGTH);
+  const cx = Math.cos(q[0]! / LENGTH);
+  const cy = Math.cos(q[1]! / LENGTH);
+  out[0] = q[0]!;
+  out[1] = q[1]!;
+  out[2] = q[2]! - AMPLITUDE * sx * sy;
+  jacobian?.set([
+    1,
+    0,
+    -(AMPLITUDE / LENGTH) * cx * sy,
+    0,
+    1,
+    -(AMPLITUDE / LENGTH) * sx * cy,
+    0,
+    0,
+    1,
+  ]);
+  return out;
+}
+
 /** Height above the sphere times `k`, along the radial, with its Jacobian. */
 function exaggerate(
   k: number,
@@ -201,9 +228,10 @@ interface Scene {
   view: View;
   target: OffscreenTarget;
   earth: AnchorHandle;
-  itrf: Frame;
-  design: ReturnType<typeof warpFrame>;
-  /** ITRF to the design frame, in float64: the truth. */
+  /** The frame the content is placed in (true coordinates): ITRF, or the exaggerated frame under it. */
+  content: Frame;
+  design: Frame;
+  /** The content's frame to the design frame, in float64: the truth. */
   toDesign(p: ArrayLike<number>): Float64Array;
   /** Renders frames until the draws' fits and curved fields have landed. */
   settle(draws: readonly DrawHandle[], curved?: boolean): Promise<void>;
@@ -217,7 +245,7 @@ function scene(
   warped: boolean,
   lost: () => void,
   extra: Partial<Parameters<Engine["addView"]>[0]> = {},
-): Scene & { drawn: ReturnType<typeof warpFrame> | undefined } {
+): Scene {
   const world = engine.createWorld({
     maxDraws: 16,
     vertexBytes: 1 << 22,
@@ -234,32 +262,32 @@ function scene(
   });
   const catalog = createFrameCatalog();
   const itrf = catalog.get("ITRF");
-  const design = warpFrame("design", itrf, {
-    presentation: false,
-    revision: 1,
-    description: "a bending reprojection",
-    forward: bend,
-  });
-  catalog.add(design);
-  let drawn: ReturnType<typeof warpFrame> | undefined;
+  let content: Frame = itrf;
   if (warped) {
-    drawn = warpFrame("drawn", itrf, {
-      presentation: true,
+    content = smoothFrame("Earth content (exaggerated)", itrf, {
       revision: 1,
       description: `height × ${K}`,
       forward: (p, out, jacobian) => exaggerate(K, p, out, jacobian),
       inverse: (q, out) => flatten(K, q, out),
     });
-    catalog.add(drawn);
+    catalog.add(content);
   }
+  const design = smoothFrame("design", content, {
+    revision: 1,
+    description: "a bending reprojection",
+    forward: unbend,
+    inverse: (q, out) => bend(q, out),
+  });
+  catalog.add(design);
   const resolver = createFramesResolver(catalog);
   engine.cameras.setResolver(world, resolver);
   const earth = world.bodyAnchor(EARTH);
+  resolver.bindAnchor(earth, content);
   engine.cameras.setRig(view, {
-    position: { frame: drawn ?? itrf },
+    position: { frame: itrf },
     orientation: { kind: "free" },
   });
-  const route = resolver.route!(itrf, design, 0);
+  const route = resolver.route!(content, design, 0);
   const frames = async (n: number) => {
     for (let i = 0; i < n; i++) {
       engine.renderFrame();
@@ -272,9 +300,8 @@ function scene(
     view,
     target,
     earth,
-    itrf,
+    content,
     design,
-    drawn,
     toDesign: (p) => routeForward(route, p),
     frames,
     async settle(draws, curved = false) {
@@ -641,7 +668,7 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
       look(view, [0, 0, PLATE + 40], [0, 0, -1], [0, 1, 0]);
       const curved = curvedPlane(s);
       const rigid: ClipSet = {
-        frame: s.itrf,
+        frame: s.content,
         shapes: [{ kind: "plane", point: [5, 0, PLATE], normal: [1, 0, 0] }],
       };
       view.setClips([world.addClip(curved), world.addClip(rigid)]);

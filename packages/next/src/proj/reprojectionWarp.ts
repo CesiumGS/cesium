@@ -1,44 +1,33 @@
-// A coordinate operation as a warp (plan §13.26): a design CRS's frame sits
-// under the body-fixed frame (`warpFrame(name, bodyFixed, spec)`), and
-// content in it reaches the body, drawn and queried in true places, through
-// the warp. It is built on the frames layer's `warpFromFunction`, so the
-// Jacobian is numerical (see there for its accuracy) and the inverse is the
-// operation's own, exact.
+// A coordinate operation as a smooth edge (plan §13.26, §13.37): a design
+// CRS's frame sits under the body-fixed frame (`smoothFrame(name, bodyFixed,
+// spec)`), its coordinates map up to the body's through the operation, and
+// content placed in it keeps its design coordinates and is drawn at its true
+// place. It is built on `fromFunction`, so the Jacobian is numerical (see
+// there for its accuracy) and the inverse is the operation's own, exact.
 import type {
   AreaOfInterest,
   CoordinateOperation,
   ResolvedCoordinates,
 } from "../frames/coordinates.ts";
-import { warpFromFunction, type FunctionWarp } from "../frames/warps.ts";
 import type { WarpScale } from "../camera/route.ts";
 import { cartographic } from "../math/ellipsoid.ts";
 import { EARTH, type Body } from "../scene/Body.ts";
 import { EngineeringFrame } from "../engineering/EngineeringFrame.ts";
+import { fromFunction, type FunctionWarp } from "../transforms/fromFunction.ts";
 
 /** What `reprojectionWarp` takes besides the operation. */
 export interface ReprojectionWarpOptions {
   /** The body the operation's geodetic coordinates are on: the Earth by default; an engineering frame's own body is used. */
   readonly body?: Body;
   /**
-   * Which frame is the warp's parent, the one `warpFrame` is given. "body"
-   * (default): the body-fixed frame, so the design CRS's frame is its child,
-   * as every other frame under the body-fixed one is: `forward` takes
-   * body-fixed metres to design coordinates. "design": the design CRS's
-   * frame is the parent, and `forward` takes design coordinates to
-   * body-fixed metres. The inverse is the other way round, exact.
-   */
-  readonly parent?: "body" | "design";
-  /**
    * Where the operation is defined, in degrees. The warp's `domain` is a
-   * circle round it in the parent's coordinates, and the numerical
+   * circle round it in the design frame's coordinates, and the numerical
    * derivative's step scales with that circle.
    */
   readonly areaOfInterest?: AreaOfInterest;
   /** A live number moving the warp's strength (see `Warp.scale`): rarely wanted for a reprojection. */
   readonly scale?: WarpScale;
-  /** Default false: a reprojection says where content is. */
-  readonly presentation?: boolean;
-  /** The step of the numerical derivative, in the parent's units (see `warpFromFunction`). */
+  /** The step of the numerical derivative, in the design frame's units (see `fromFunction`). */
   readonly step?: number;
   /** Words for reports, replacing the operation's own. */
   readonly description?: string;
@@ -62,23 +51,23 @@ function finite3(a: ArrayLike<number>, what: string): void {
 }
 
 /**
- * A coordinate operation as a warp between a design CRS and the body-fixed
- * frame. `source` is a PROJ `RecordedOperation` or any `CoordinateOperation`
+ * A coordinate operation as the smooth edge between a design CRS's frame and
+ * its parent, the body-fixed frame: `forward` takes design coordinates to
+ * body-fixed metres, the exact inverse the other way. `source` is a PROJ `RecordedOperation` or any `CoordinateOperation`
  * (the CRS's own coordinates, in its own units, to longitude and latitude in
  * degrees and metres of height), a `ResolvedCoordinates` (a coordinate
  * service's answer), or an `EngineeringFrame` (whose `toBodyFixed` and
  * `fromBodyFixed` it is, a site transform included).
  *
- * Use it as `warpFrame("design", bodyFixed, reprojectionWarp(source))`: the
+ * Use it as `smoothFrame("design", bodyFixed, reprojectionWarp(source))`: the
  * frame's points are the design CRS's coordinates in its own units, and its
- * parent's are body-fixed metres (`options.parent` says the other way). The
- * map to the body is the operation followed by the body's ellipsoid and the
- * map back is its exact reverse; the Jacobian is numerical
- * (`warpFromFunction`), as the operation is a black box.
+ * parent's are body-fixed metres. The map to the body is the operation
+ * followed by the body's ellipsoid and the map back is its exact reverse;
+ * the Jacobian is numerical (`fromFunction`), as the operation is a black
+ * box, and its draws are fitted.
  *
  * Its accuracy is the operation's: its `sigma` when the operation states
- * one, otherwise an accuracy that says it is unstated (never exact). Not a
- * presentation warp.
+ * one, otherwise an accuracy that says it is unstated (never exact).
  */
 export function reprojectionWarp(
   source:
@@ -146,30 +135,22 @@ export function reprojectionWarp(
     };
   }
 
-  const parentIsBody = (options.parent ?? "body") === "body";
-  const forward = parentIsBody ? fromBody : toBody;
-  const inverse = parentIsBody ? toBody : fromBody;
   const accuracy = operation.accuracy;
   const description =
     options.description ??
     `reprojection${name !== undefined ? ` of ${name}` : ""}: ${operation.description}`;
   const domain =
     options.areaOfInterest !== undefined
-      ? domainOf(
-          options.areaOfInterest,
-          body,
-          parentIsBody ? undefined : fromBody,
-        )
+      ? domainOf(options.areaOfInterest, body, fromBody)
       : undefined;
 
-  return warpFromFunction(
-    (p, out) => {
-      forward(p, out);
+  return fromFunction(
+    (p, _params, out) => {
+      toBody(p, out);
       finite3(out, "the reprojection");
       return out;
     },
     {
-      presentation: options.presentation ?? false,
       description,
       ...(domain !== undefined && { domain }),
       accuracy:
@@ -181,16 +162,15 @@ export function reprojectionWarp(
           : { note: "the coordinate operation states no accuracy" },
       ...(options.scale !== undefined && { scale: options.scale }),
       ...(options.step !== undefined && { step: options.step }),
-      inverse: (q, out) => inverse(q, out),
+      inverse: (q, _params, out) => fromBody(q, out),
     },
   );
 }
 
 /**
- * A circle over an area of interest in the parent's coordinates: its
+ * A circle over an area of interest in the design frame's coordinates: its
  * centre's, and the farthest of its corners and edge midpoints. `toDesign`
- * is given when the parent is the design frame (body-fixed metres to design
- * coordinates); body-fixed metres otherwise.
+ * takes body-fixed metres to design coordinates.
  */
 function domainOf(
   area: AreaOfInterest,

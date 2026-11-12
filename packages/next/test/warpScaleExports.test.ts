@@ -6,18 +6,18 @@ import { describe, expect, it } from "vitest";
 import {
   routeForward,
   routeInverse,
-  scaleAbout,
-  verticalExaggeration,
+  smoothFrame,
   warpForward,
-  warpFrame,
-  warpFromFunction,
   warpInverse,
   createFrameCatalog,
   type Route,
   type Warp,
 } from "../src/frames/index.ts";
 import { warpScaleOf } from "../src/camera/route.ts";
-import { liveWarp } from "../src/frames/warps.ts";
+import { verticalExaggeration } from "../src/georeference/index.ts";
+import { fromFunction } from "../src/transforms/fromFunction.ts";
+import { liveWarp } from "../src/transforms/liveWarp.ts";
+import { scaleAbout } from "../src/transforms/scaleAbout.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 
 const WGS84 = Ellipsoid.WGS84;
@@ -35,10 +35,10 @@ const height = (p: ArrayLike<number>) =>
 const apart = (a: ArrayLike<number>, b: ArrayLike<number>) =>
   Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
 
-/** The warp frame of a ×10 exaggeration at the scale the box holds. */
+/** The smooth frame's warp of a ×10 exaggeration at the scale the box holds. */
 function exaggeration(scale: { value: number }): Warp {
   const catalog = createFrameCatalog();
-  return warpFrame(
+  return smoothFrame(
     "exaggerated",
     catalog.get("ITRF"),
     verticalExaggeration({ factor: 10, scale }),
@@ -79,7 +79,6 @@ describe("the public warp functions", () => {
         { kind: "rigid", matrix: shift },
         { kind: "warp", warp, inverse: false },
       ],
-      presentation: true,
       revision: 1,
     };
     const p = at(0.1, 0.7, 1200);
@@ -108,13 +107,13 @@ describe("the public warp functions", () => {
   it("honour the scale of a warp from a function and of a scale about a point, with their exact inverses", () => {
     const state = { value: 0.6 };
     const scaled = scaleAbout(at(0, 0, 0), [1, 1, 3], { scale: state });
-    const lifted = warpFromFunction(
-      (p, out) => {
+    const lifted = fromFunction(
+      (p, _params, out) => {
         out[0] = p[0]!;
         out[1] = p[1]!;
         out[2] = p[2]! + 50_000 * Math.sin(p[0]! / 1e6);
       },
-      { presentation: true, scale: state },
+      { scale: state },
     );
     for (const spec of [scaled, lifted]) {
       const warp = liveWarp(spec);

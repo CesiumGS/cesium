@@ -36,7 +36,6 @@ function placementOf(
     root: engine.cameras.root(view),
     body: body ?? world.root,
     bodyPlacement: view.anchorPlacement(body),
-    bodyRoute: view.anchorRoute(body),
   };
 }
 

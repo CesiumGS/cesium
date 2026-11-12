@@ -133,7 +133,7 @@ export class ExactSnapService implements SnapService {
     // As the item hit draws it: its answer must be where that one is.
     const placement = engineeringPlacement(
       request.item !== undefined
-        ? request.item.designPlacement
+        ? request.item.georeference
         : this.tileset.placement,
     );
     if (request.tileset !== this.tileset || placement === undefined) {

@@ -1,17 +1,16 @@
 // The globe, anchored content and instances across a warp (plan §13.26,
-// increment 4). The acceptance test's world: the rig sits on a frame that
-// exaggerates heights ten times (`verticalExaggeration`, so no Jacobian is
-// written by hand), and a globe's terrain tile, a tileset, a model with
+// increment 4; §13.37). The acceptance test's world: the Earth's content sits
+// in a node under ITRF that exaggerates heights ten times (`verticalExaggeration`,
+// so no Jacobian is written by hand), the camera stays on ITRF, and a globe's terrain tile, a tileset, a model with
 // instances and a billboard all draw, with nothing set per item. Checked on
 // the CPU against the route's own float64 map, as warpWorld.test.ts does;
 // the GPU side is spikes/warpGlobe.html.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { routeForward, type Route } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
-import { Frame } from "../src/frames/Frame.ts";
-import { verticalExaggeration } from "../src/frames/heightWarps.ts";
+import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { warpFrame } from "../src/frames/warpFrame.ts";
+import { smoothFrame } from "../src/frames/smoothFrame.ts";
 import { GlobeBudgetedSelection } from "../src/globe/GlobeBudgeted.ts";
 import { GlobeStepwiseSelection } from "../src/globe/GlobeStepwise.ts";
 import {
@@ -123,7 +122,7 @@ interface Setup {
   step(budget?: number): boolean;
 }
 
-/** A world whose rig sits on `exaggerated`, ×10 over ITRF on the WGS84 ellipsoid, with the strength a ranged slider. */
+/** A world whose Earth content sits in `exaggerated`, ×10 under ITRF on the WGS84 ellipsoid, with the strength a ranged slider. */
 function setup(): Setup {
   const world = engine.createWorld({ maxDraws: 64 });
   worlds.push(world);
@@ -131,15 +130,16 @@ function setup(): Setup {
   const itrf = catalog.get("ITRF");
   const scale = world.createPlacementParameter(1, { range: [0, 1] });
   const exaggeration = fittedOnly(verticalExaggeration({ factor: K, scale }));
-  const exaggerated = warpFrame("exaggerated", itrf, exaggeration);
+  const exaggerated = smoothFrame("exaggerated", itrf, exaggeration);
   catalog.add(exaggerated);
   const resolver = createFramesResolver(catalog);
   const earth = world.bodyAnchor(EARTH);
+  resolver.bindAnchor(earth, exaggerated);
   engine.cameras.setResolver(world, resolver);
   const view = engine.addView({ target: new OffscreenTarget(64, 48), world });
   views.push(view);
   engine.cameras.setRig(view, {
-    position: { frame: exaggerated as Frame },
+    position: { frame: itrf },
     orientation: { kind: "free" },
   });
   const fits = { count: 0 };
@@ -159,8 +159,7 @@ function setup(): Setup {
     step(budget = Infinity) {
       engine.cameras.update();
       return world.warps.frame(
-        engine.cameras.root(view),
-        view.anchorRoutes(),
+        [{ id: engine.scene.viewIds.get(view)!, routes: view.anchorRoutes() }],
         budget,
         (message) => {
           throw new Error(message);
@@ -740,7 +739,6 @@ describe("the anchor's math", () => {
       frame: { name: "a" },
       base: { name: "b" },
       seconds: 0,
-      presentation: false,
       revision: 1,
       steps: [
         {
@@ -749,7 +747,6 @@ describe("the anchor's math", () => {
           warp: {
             from: { name: "a" },
             to: { name: "b" },
-            presentation: false,
             revision: 1,
             forward(p, out, jacobian) {
               out[0] = c * p[0]! - sn * p[1]!;

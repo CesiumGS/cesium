@@ -67,7 +67,6 @@ function exaggeration(k: number): Warp {
   return {
     from: { name: "ECEF" },
     to: { name: "ECEF" },
-    presentation: true,
     revision: 1,
     description: `vertical exaggeration × ${k}`,
     forward(p, out) {
@@ -92,7 +91,6 @@ function exaggerationRoute(enu: Float64Array, k: number): Route {
       { kind: "rigid", matrix: enu },
       { kind: "warp", warp: exaggeration(k), inverse: false },
     ],
-    presentation: true,
     revision: 1,
   };
 }
@@ -365,7 +363,6 @@ describe("routeDisplacement", () => {
   const shear: Warp = {
     from: { name: "A" },
     to: { name: "B" },
-    presentation: false,
     revision: 1,
     forward(p, out) {
       out[0] = p[0]! + 40 * Math.sin(p[1]! / 3000);
@@ -387,7 +384,6 @@ describe("routeDisplacement", () => {
         { kind: "warp", warp: shear, inverse: false },
         { kind: "rigid", matrix: after },
       ],
-      presentation: false,
       revision: 3,
     };
     const modelToFrame = rotation([0, 1, 0], 0.3, [100, -50, 25]);
@@ -437,7 +433,6 @@ describe("routeDisplacement", () => {
       base: { name: "b" },
       seconds: 0,
       steps: [{ kind: "rigid", matrix: m }],
-      presentation: false,
       revision: 1,
     };
     expect(Array.from(affinePart(route))).toEqual(Array.from(m));

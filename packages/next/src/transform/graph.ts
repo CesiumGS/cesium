@@ -3,8 +3,8 @@
 // one of those per view. Content, cameras and lights sit at nodes; a route
 // between two nodes (route.ts) is what warps them. No geo knowledge here.
 
-/** A view's key, for a switch's choices and per-view parameter values. */
-export type ViewId = string | number;
+/** A view's key, for a switch's choices and per-view parameter values: a name, a number, or the engine's own view object. */
+export type ViewId = string | number | object;
 
 /** A smooth function's parameter values: explicit scalars, never closures. */
 export type Params = Readonly<Record<string, number>>;

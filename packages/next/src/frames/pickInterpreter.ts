@@ -10,7 +10,7 @@ import type { AnchorHandle, DrawHandle } from "../scene/world/types.ts";
 import type { Instant } from "../time/Instant.ts";
 import type { DrawnThrough } from "./drawn.ts";
 import { truePick, type TruePick } from "./pickTruth.ts";
-import type { DesignPlacement } from "../streaming/designPlacement.ts";
+import type { Georeference } from "../georeference/georeference.ts";
 import type { CatalogFrameName, FrameCatalog } from "./catalog.ts";
 import { Frame } from "./Frame.ts";
 import { isUnstated } from "./frameAccuracy.ts";
@@ -38,7 +38,7 @@ export interface FramedPoint {
    * point drawn there is neither end's.
    */
   readonly design?: {
-    readonly placement: DesignPlacement;
+    readonly placement: Georeference;
     readonly coordinates: Float64Array;
   };
   /**
@@ -132,7 +132,7 @@ export interface FramesPickInterpreterOptions {
    * whether the point lies within the content (`pickDesign` checks the hit
    * tile's bounds) are this callback's rules; return undefined to refuse.
    */
-  placements?(draw: DrawHandle): DesignPlacement | undefined;
+  placements?(draw: DrawHandle): Georeference | undefined;
 }
 
 /**

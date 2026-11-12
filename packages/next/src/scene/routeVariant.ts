@@ -9,14 +9,17 @@
 //
 // A routed draw's block, in rows of the placements buffer (`at` its first):
 //   at       [1, 0, 0, 0]              one term (the buffer's header)
-//   at + 1   [ROUTE_KIND, 1.0f, ROUTE_BODY, uniform row]   the term's row
+//   at + 1   [ROUTE_KIND, 1.0f, ROUTE_BODY, pointer row]   the term's row
 //   at + 2,3 zero                      (its weight factors: none)
 //   at + 4   [centre xyz, 0]           the draw's centre in model space
 //   at + 5…7 the model-to-anchor linear part L, one column a row, xyz
 //   at + 8…  `DrawCentre` (`perDrawLayout.floats / 4` rows), from `centreRow`
-// The route's per-anchor uniforms (`RouteUniforms`) are a block of their own
-// at the row in the term: one a route, whichever draws read it. The eye in
-// them is the view's, replaced in the shader (`routeEyeHi`, `routeEyeLo`).
+// The route's per-view uniforms (`RouteUniforms`) are blocks of their own,
+// one for each view the route differs in (its matrices to the view's root,
+// its parameters' values in the view): `ROUTE_POINTER_ROWS` rows at the
+// pointer row hold, by view id (the position of the view's bit), the first
+// row of that view's block. The eye in them is the view's, replaced in the
+// shader (`routeEyeHi`, `routeEyeLo`).
 import type { CompiledRoute } from "../transform/compile.ts";
 import { wgslUnit, type ShaderUnit } from "../shaders/link/unit.ts";
 
@@ -26,6 +29,8 @@ export const ROUTE_KIND = 3;
 export const ROUTE_BODY = 4;
 /** Rows of a draw's own data before its `DrawCentre`: the centre and L's three columns. */
 export const ROUTE_OWN_ROWS = 4;
+/** Rows of a route's pointer table: a u32 for each of 32 view ids. */
+export const ROUTE_POINTER_ROWS = 8;
 
 export interface RouteVariant {
   /** A number for the variant, for batch keys and ordering. */
@@ -125,7 +130,9 @@ export function routeUnitWgsl(
     `  let body = placement + term.z;`,
     `  let centre = routeRow(body).xyz;`,
     `  let l = mat3x3f(routeRow(body + 1u).xyz, routeRow(body + 2u).xyz, routeRow(body + 3u).xyz);`,
-    `  let u = tgLoadUniforms(term.w);`,
+    `  let viewId = countTrailingZeros(routeViewBit());`,
+    `  let pointer = bitcast<vec4u>(routeRow(term.w + viewId / 4u));`,
+    `  let u = tgLoadUniforms(pointer[viewId % 4u]);`,
     `  let c = tgLoadCentre(body + ${ROUTE_OWN_ROWS}u);`,
     `  var j: mat3x3f;`,
     `  let relative = tgRoute(l * (position - centre), c, u, &j);`,

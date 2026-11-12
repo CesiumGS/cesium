@@ -1,5 +1,5 @@
 // The drawn distance (CESIUM2_WEBGPU_PLAN.md §13.26, the owner's answer 6): the
-// one question that is about the drawing, in a presentation frame, under a
+// one question that is about the drawing, in the view's render space, under a
 // name that can't be mistaken for a true distance. What a vector style needs
 // (dash lengths, label spacing, symbol density in what is on the screen).
 // Everything else a measurement reports is true (`measure`, `drawnThrough`).
@@ -37,8 +37,8 @@ export interface DrawnDistanceOptions {
 }
 
 /**
- * A distance in what was drawn, in the view's presentation frame (the
- * route's base: the view's render space), and named as one.
+ * A distance in what was drawn, in the view's render space (the route's
+ * base), and named as one.
  */
 export interface DrawnDistance {
   readonly space: "drawn";

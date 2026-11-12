@@ -538,7 +538,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     if (judged.refused !== undefined) {
       return judged.refused;
     }
-    const placement = result.item?.designPlacement;
+    const placement = result.item?.georeference;
     if (result.design === undefined || placement === undefined) {
       return "This site's frame is still loading: no design coordinates yet.";
     }

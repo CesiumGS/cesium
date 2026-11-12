@@ -37,7 +37,7 @@ import {
 import { transformVolume } from "./volumes.ts";
 import { DebugVolumes, type DebugColor } from "./debugVolumes.ts";
 import * as m4 from "../math/mat4.ts";
-import type { DesignPlacement } from "./designPlacement.ts";
+import type { Georeference } from "../georeference/georeference.ts";
 import {
   SceneItem,
   checkItemOptions,
@@ -126,7 +126,7 @@ export class Tileset3D implements TileTree {
   readonly extensions: Readonly<Record<string, unknown>>;
   /**
    * Where the tileset's design coordinates are drawn, and the way back
-   * (`DesignPlacement`): set by the proj entry's `georeferenceTileset` from
+   * (`Georeference`): set by the proj entry's `georeferenceTileset` from
    * the declaration, or by the application (`TilesetOptions.placement`).
    * Without one, picks on
    * it have no design coordinates. Unrelated to `Tile.placement`, which is a
@@ -134,7 +134,7 @@ export class Tileset3D implements TileTree {
    * `modelMatrix` drops it, with a warning: it would no longer describe what
    * is drawn.
    */
-  placement?: DesignPlacement;
+  placement?: Georeference;
   /**
    * The selection policy (`setPolicy` replaces it). Its knobs set here
    * (`maximumScreenSpaceError`, ...) select again and wake the engine's
@@ -579,7 +579,7 @@ export class Tileset3D implements TileTree {
     const now = {
       world: () => this.world,
       dualPosition: () => this.dualPosition_,
-      designPlacement: () => this.placement,
+      georeference: () => this.placement,
       secondPlacement: () => this.state.secondPlacement,
       loadedTiles: () => this.state.loaded,
       baseItem: () => this.state.baseItem,
@@ -592,8 +592,8 @@ export class Tileset3D implements TileTree {
       get dualPosition() {
         return now.dualPosition();
       },
-      get designPlacement() {
-        return now.designPlacement();
+      get georeference() {
+        return now.georeference();
       },
       get secondPlacement() {
         return now.secondPlacement();

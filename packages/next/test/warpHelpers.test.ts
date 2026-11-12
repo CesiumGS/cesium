@@ -1,12 +1,15 @@
-// The warp helpers (plan §13.26): each helper's forward, Jacobian and inverse
-// at Earth scale, the exaggeration against its definition, and the helpers
-// through `warpFrame`, the frames resolver's `route()` and `routeForward`.
+// The smooth-frame helpers (plan §13.26, §13.37): each helper's forward,
+// Jacobian and inverse at Earth scale, the exaggeration against its
+// definition, and the helpers through `smoothFrame`, the frames resolver's
+// `route()` and `routeForward`: forward going up from the frame to its
+// parent.
 import { describe, expect, it, vi } from "vitest";
 import {
   routeForward,
   routeInverse,
   warpForward,
   warpInverse,
+  type SmoothFrameSpec,
   type Warp,
 } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
@@ -14,14 +17,12 @@ import { createFramesResolver } from "../src/frames/resolver.ts";
 import {
   verticalExaggeration,
   heightOffset,
-} from "../src/frames/heightWarps.ts";
-import {
-  blendWarps,
-  liveWarp,
-  scaleAbout,
-  warpFromFunction,
-} from "../src/frames/warps.ts";
-import { warpFrame, type WarpSpec } from "../src/frames/warpFrame.ts";
+} from "../src/georeference/heightWarps.ts";
+import { blend } from "../src/transforms/blend.ts";
+import { fromFunction } from "../src/transforms/fromFunction.ts";
+import { liveWarp } from "../src/transforms/liveWarp.ts";
+import { scaleAbout } from "../src/transforms/scaleAbout.ts";
+import { smoothFrame } from "../src/frames/smoothFrame.ts";
 import { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
 import type { ProjApi } from "../src/engineering/projApi.ts";
 import { reprojectionWarp } from "../src/proj/reprojectionWarp.ts";
@@ -58,7 +59,7 @@ const SAMPLES: [number, number, number][] = [
 ];
 
 /** The Jacobian of `forward` by central differences at 1 m: an independent check of an analytic one. */
-function numerical(warp: WarpSpec, p: ArrayLike<number>, h = 1) {
+function numerical(warp: SmoothFrameSpec, p: ArrayLike<number>, h = 1) {
   const j = new Float64Array(9);
   const plus = new Float64Array(3);
   const minus = new Float64Array(3);
@@ -86,7 +87,7 @@ function maxDiff(a: ArrayLike<number>, b: ArrayLike<number>) {
 
 /** Forward, Jacobian against differences, and the inverse round trip. */
 function checkWarp(
-  warp: WarpSpec,
+  warp: SmoothFrameSpec,
   points: ArrayLike<number>[],
   { jacobian = 1e-7, trip = 1e-6 } = {},
 ) {
@@ -208,9 +209,8 @@ describe("verticalExaggeration", () => {
     );
   });
 
-  it("is a presentation warp with a description", () => {
+  it("has a description", () => {
     const warp = verticalExaggeration({ factor: 10, baseHeight: 5 });
-    expect(warp.presentation).toBe(true);
     expect(warp.description).toBe(
       "vertical exaggeration × 10 of height above the WGS84 ellipsoid, about 5 m",
     );
@@ -231,8 +231,7 @@ describe("verticalExaggeration", () => {
     const j = new Float64Array(9);
     warpForward(warp, p, q, j);
     // The scaled Jacobian is I + s(J − I): the differences of the scaled map.
-    const scaled: WarpSpec = {
-      presentation: true,
+    const scaled: SmoothFrameSpec = {
       revision: 1,
       forward: (a, out) => warpForward(warp, a, out),
     };
@@ -265,10 +264,8 @@ describe("heightOffset", () => {
     ]);
   });
 
-  it("is a presentation warp unless told otherwise, and changes through `metres`", () => {
+  it("changes through `metres`", () => {
     const warp = heightOffset(10);
-    expect(warp.presentation).toBe(true);
-    expect(heightOffset(10, { presentation: false }).presentation).toBe(false);
     const before = warp.revision;
     warp.metres = 20;
     expect(warp.revision).toBe(before + 1);
@@ -320,18 +317,22 @@ describe("scaleAbout", () => {
     const before = warp.revision;
     warp.factors = [1, 1, 4];
     expect(warp.revision).toBe(before + 1);
-    expect(warp.presentation).toBe(true);
     expect(warp.description).toContain("up × 4");
-    expect(scaleAbout(centre, 2, { presentation: false }).presentation).toBe(
-      false,
-    );
   });
 });
 
-describe("warpFromFunction", () => {
-  /** The same exaggeration as a plain function of the point, on a sphere. */
+describe("fromFunction", () => {
+  /**
+   * The same exaggeration as a plain function of the point, on a sphere. It
+   * reads `R` and `k` from its scope, which is outside the restricted subset:
+   * the function stays the CPU path and its draws are fitted.
+   */
   const k = 10;
-  const exaggerate = (p: ArrayLike<number>, out: Float64Array) => {
+  const exaggerate = (
+    p: ArrayLike<number>,
+    _params: Record<string, number>,
+    out: Float64Array,
+  ) => {
     const r = norm(p);
     const f = (R + k * (r - R)) / r;
     out[0] = p[0]! * f;
@@ -344,7 +345,7 @@ describe("warpFromFunction", () => {
   });
 
   it("makes a Jacobian by central differences, right to 1e-9 at Earth scale", () => {
-    const warp = warpFromFunction(exaggerate, { presentation: true });
+    const warp = fromFunction(exaggerate);
     let worst = 0;
     for (const [lon, lat, h] of SAMPLES) {
       const p = at(lon, lat, h * 3 - 400, Ellipsoid.WGS84);
@@ -360,7 +361,11 @@ describe("warpFromFunction", () => {
 
   it("scales its step to the domain: a small domain resolves small features", () => {
     // A bump of width 20 m on a tangent plane: the default step for |p| = R is far too wide.
-    const bump = (p: ArrayLike<number>, out: Float64Array) => {
+    const bump = (
+      p: ArrayLike<number>,
+      _params: Record<string, number>,
+      out: Float64Array,
+    ) => {
       out[0] = p[0]!;
       out[1] = p[1]!;
       out[2] = p[2]! + 3 * Math.exp(-((p[0]! - R) ** 2) / (2 * 20 * 20));
@@ -369,9 +374,8 @@ describe("warpFromFunction", () => {
     const exact = new Float64Array(9);
     exact.set([1, 0, 0, 0, 1, 0, 0, 0, 1]);
     exact[2] = (3 * -15 * Math.exp(-(15 ** 2) / 800)) / 400;
-    const wide = warpFromFunction(bump, { presentation: true });
-    const small = warpFromFunction(bump, {
-      presentation: true,
+    const wide = fromFunction(bump);
+    const small = fromFunction(bump, {
       domain: { center: [R, 0, 0], radius: 100 },
     });
     const jw = new Float64Array(9);
@@ -380,14 +384,14 @@ describe("warpFromFunction", () => {
     small.forward(p, new Float64Array(3), js);
     expect(maxDiff(js, exact)).toBeLessThan(1e-6);
     expect(maxDiff(jw, exact)).toBeGreaterThan(maxDiff(js, exact));
-    const stepped = warpFromFunction(bump, { presentation: true, step: 0.01 });
+    const stepped = fromFunction(bump, { step: 0.01 });
     const jt = new Float64Array(9);
     stepped.forward(p, new Float64Array(3), jt);
     expect(maxDiff(jt, exact)).toBeLessThan(1e-6);
   });
 
   it("inverts by Newton, from the engine's warpInverse, to a micrometre at Earth scale", () => {
-    const warp = warpFromFunction(exaggerate, { presentation: true });
+    const warp = fromFunction(exaggerate);
     for (const [lon, lat, h] of SAMPLES) {
       const p = at(lon, lat, h, Ellipsoid.WGS84);
       const q = warp.forward(p, new Float64Array(3));
@@ -397,12 +401,13 @@ describe("warpFromFunction", () => {
   });
 
   it("takes an exact inverse when given one, and a function that returns its answer", () => {
-    const inverse = vi.fn((q: ArrayLike<number>, out: Float64Array) => {
-      out.set([q[0]! / 2, q[1]! / 2, q[2]! / 2]);
-      return out;
-    });
-    const warp = warpFromFunction((p) => [2 * p[0]!, 2 * p[1]!, 2 * p[2]!], {
-      presentation: false,
+    const inverse = vi.fn(
+      (q: ArrayLike<number>, _params: unknown, out: Float64Array) => {
+        out.set([q[0]! / 2, q[1]! / 2, q[2]! / 2]);
+        return out;
+      },
+    );
+    const warp = fromFunction((p) => [2 * p[0]!, 2 * p[1]!, 2 * p[2]!], {
       inverse,
     });
     const j = new Float64Array(9);
@@ -416,32 +421,28 @@ describe("warpFromFunction", () => {
   });
 
   it("accepts p as out, and throws where the function isn't finite", () => {
-    const warp = warpFromFunction(exaggerate, { presentation: true });
+    const warp = fromFunction(exaggerate);
     const p = at(5, 50, 100);
     const expected = warp.forward(p, new Float64Array(3));
     const aliased = Float64Array.from(p);
     warp.forward(aliased, aliased, new Float64Array(9));
     expect(dist(aliased, expected)).toBe(0);
-    const bad = warpFromFunction(() => [NaN, 0, 0], { presentation: true });
+    const bad = fromFunction(() => [NaN, 0, 0]);
     expect(() => bad.forward([1, 2, 3], new Float64Array(3))).toThrow(
       RangeError,
     );
-    expect(() =>
-      warpFromFunction(exaggerate, { presentation: true, step: -1 }),
-    ).toThrow(RangeError);
+    expect(() => fromFunction(exaggerate, { step: -1 })).toThrow(RangeError);
   });
 
   it("carries its options into the spec", () => {
     const slider = { value: 1 };
-    const warp = warpFromFunction(exaggerate, {
-      presentation: true,
+    const warp = fromFunction(exaggerate, {
       description: "mine",
       domain: { center: [R, 0, 0], radius: 1e6 },
       accuracy: { sigma: 0.1 },
       scale: slider,
     });
     expect(warp).toMatchObject({
-      presentation: true,
       description: "mine",
       accuracy: { sigma: 0.1 },
       scale: slider,
@@ -450,48 +451,40 @@ describe("warpFromFunction", () => {
   });
 });
 
-describe("blendWarps", () => {
+describe("blend", () => {
   const a = verticalExaggeration({ factor: 4 });
-  const b = heightOffset(500, { presentation: false });
+  const b = heightOffset(500);
 
   it("is a at 0, b at 1, and the mix between, with the mix's Jacobian", () => {
     const p = at(-75, 40, 800);
     const qa = a.forward(p, new Float64Array(3));
     const qb = b.forward(p, new Float64Array(3));
-    const blend = blendWarps(a, b, 0.25);
-    const q = blend.forward(p, new Float64Array(3));
+    const mix = blend(a, b, 0.25);
+    const q = mix.forward(p, new Float64Array(3));
     for (let i = 0; i < 3; i++) {
       expect(q[i]).toBeCloseTo(0.75 * qa[i]! + 0.25 * qb[i]!, 6);
     }
-    expect(dist(blendWarps(a, b, 0).forward(p, new Float64Array(3)), qa)).toBe(
-      0,
-    );
-    expect(dist(blendWarps(a, b, 1).forward(p, new Float64Array(3)), qb)).toBe(
-      0,
-    );
-    checkWarp(blend, [p, at(139, 35, 3000)]);
-    expect(blend.presentation).toBe(true);
-    expect(blendWarps(b, b).presentation).toBe(false);
+    expect(dist(blend(a, b, 0).forward(p, new Float64Array(3)), qa)).toBe(0);
+    expect(dist(blend(a, b, 1).forward(p, new Float64Array(3)), qb)).toBe(0);
+    checkWarp(mix, [p, at(139, 35, 3000)]);
   });
 
   it("follows its inputs' revisions and its own t, and combines accuracies without optimism", () => {
-    const first = warpFromFunction((p) => [p[0]!, p[1]!, p[2]!], {
-      presentation: false,
+    const first = fromFunction((p) => [p[0]!, p[1]!, p[2]!], {
       accuracy: { sigma: 1, bound: 3 },
     });
-    const second = warpFromFunction((p) => [p[0]!, p[1]!, p[2]!], {
-      presentation: false,
+    const second = fromFunction((p) => [p[0]!, p[1]!, p[2]!], {
       accuracy: { sigma: 3, bound: 5 },
     });
-    const blend = blendWarps(first, second, 0.5);
-    const before = blend.revision;
+    const mix = blend(first, second, 0.5);
+    const before = mix.revision;
     first.changed();
-    expect(blend.revision).toBe(before + 1);
-    blend.t = 0.75;
-    expect(blend.revision).toBe(before + 2);
-    expect(blend.accuracy).toMatchObject({ sigma: 2.5, bound: 4.5 });
-    expect(() => blendWarps(first, second, 2)).toThrow(RangeError);
-    expect(blend.description).toContain("blend of");
+    expect(mix.revision).toBe(before + 1);
+    mix.t = 0.75;
+    expect(mix.revision).toBe(before + 2);
+    expect(mix.accuracy).toMatchObject({ sigma: 2.5, bound: 4.5 });
+    expect(() => blend(first, second, 2)).toThrow(RangeError);
+    expect(mix.description).toContain("blend of");
   });
 });
 
@@ -525,8 +518,8 @@ describe("reprojectionWarp", () => {
     [-13_600_000, -4_000_000, -20],
   ];
 
-  it("is the operation then the ellipsoid, with a Jacobian and an exact inverse, with the design frame as parent", () => {
-    const warp = reprojectionWarp(mercator(0.5), { parent: "design" });
+  it("is the operation then the ellipsoid, with a Jacobian and an exact inverse: design coordinates to body-fixed metres", () => {
+    const warp = reprojectionWarp(mercator(0.5));
     for (const design of DESIGN) {
       const q = warp.forward(design, new Float64Array(3));
       const llh = mercator(0.5).forward(design);
@@ -541,25 +534,8 @@ describe("reprojectionWarp", () => {
     }
   });
 
-  it("by default the body-fixed frame is the parent: forward is the operation's reverse", () => {
-    const warp = reprojectionWarp(mercator(0.5));
-    for (const design of DESIGN) {
-      const llh = mercator(0.5).forward(design);
-      const position = at(llh[0]!, llh[1]!, llh[2]!);
-      const there = warp.forward(position, new Float64Array(3));
-      expect(dist(there, design)).toBeLessThan(1e-5);
-      expect(
-        dist(warp.inverse(there, new Float64Array(3)), position),
-      ).toBeLessThan(1e-5);
-      const j = new Float64Array(9);
-      warp.forward(position, new Float64Array(3), j);
-      expect(maxDiff(j, numerical(warp, position))).toBeLessThan(1e-6);
-    }
-  });
-
   it("states the operation's accuracy as a sigma, and says so when it states none", () => {
     const stated = reprojectionWarp(mercator(0.5));
-    expect(stated.presentation).toBe(false);
     expect(stated.accuracy).toMatchObject({ sigma: 0.5 });
     expect(stated.description).toBe("reprojection: Web Mercator to WGS84");
     const unstated = reprojectionWarp(mercator(undefined));
@@ -585,26 +561,14 @@ describe("reprojectionWarp", () => {
       },
       { areaOfInterest: { west: -80, south: 35, east: -70, north: 45 } },
     );
-    // The parent is the body-fixed frame: the domain is a sphere of metres.
-    const centre = WGS84.cartesianToCartographic(
-      warp.domain!.center as Float64Array,
-      fromDegrees(0, 0),
-    )!;
-    expect(centre.longitude).toBeCloseTo((-75 * Math.PI) / 180, 10);
-    expect(centre.latitude).toBeCloseTo((40 * Math.PI) / 180, 10);
-    expect(warp.domain!.radius).toBeGreaterThan(5e5);
-    expect(warp.domain!.radius).toBeLessThan(2e6);
-    // With the design frame as the parent it is a circle of design units.
-    const design = reprojectionWarp(operation, {
-      parent: "design",
-      areaOfInterest: { west: -80, south: 35, east: -70, north: 45 },
-    });
-    const llh = operation.forward(design.domain!.center);
+    // The domain is in the design frame's coordinates: a circle of design units.
+    const llh = operation.forward(warp.domain!.center);
     expect(llh[0]).toBeCloseTo(-75, 8);
     expect(llh[1]).toBeCloseTo(40, 3);
+    expect(warp.domain!.radius).toBeGreaterThan(5e5);
+    expect(warp.domain!.radius).toBeLessThan(2e6);
     // An area across 180° has its centre there.
     const across = reprojectionWarp(operation, {
-      parent: "design",
       areaOfInterest: { west: 170, south: -10, east: -170, north: 10 },
     });
     const there = operation.forward(across.domain!.center);
@@ -612,13 +576,10 @@ describe("reprojectionWarp", () => {
   });
 
   it("rejects a point outside the operation's domain", () => {
-    const warp = reprojectionWarp(
-      {
-        ...mercator(1),
-        forward: () => new Float64Array([NaN, 0, 0]),
-      },
-      { parent: "design" },
-    );
+    const warp = reprojectionWarp({
+      ...mercator(1),
+      forward: () => new Float64Array([NaN, 0, 0]),
+    });
     expect(() => warp.forward([1, 2, 3], new Float64Array(3))).toThrow(
       /not finite/,
     );
@@ -656,7 +617,7 @@ describe("reprojectionWarp", () => {
       },
       stub,
     );
-    const warp = reprojectionWarp(frame, { parent: "design" });
+    const warp = reprojectionWarp(frame);
     expect(warp.description).toBe(
       `reprojection of stub: ${frame.operation.description}`,
     );
@@ -673,29 +634,29 @@ describe("reprojectionWarp", () => {
   });
 });
 
-describe("helpers through warpFrame, route() and routeForward", () => {
-  const setup = (spec: WarpSpec) => {
+describe("helpers through smoothFrame, route() and routeForward", () => {
+  const setup = (spec: SmoothFrameSpec) => {
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const itrf = catalog.get("ITRF");
-    const frame = warpFrame("drawn", itrf, spec);
+    const frame = smoothFrame("content", itrf, spec);
     catalog.add(frame);
     return { catalog, itrf, frame, resolver: createFramesResolver(catalog) };
   };
 
-  it("an exaggeration frame's route multiplies heights forward and undoes them back", () => {
+  it("an exaggeration frame's route multiplies heights going up to its parent and undoes them going down", () => {
     const spec = verticalExaggeration({ factor: 10 });
     const { itrf, frame, resolver } = setup(spec);
-    const down = resolver.route(itrf, frame, SECONDS);
-    expect(down.steps.map((s) => s.kind)).toEqual(["warp"]);
-    expect(down.presentation).toBe(true);
     const up = resolver.route(frame, itrf, SECONDS);
+    expect(up.steps.map((s) => s.kind)).toEqual(["warp"]);
+    expect(up.steps[0]).toMatchObject({ inverse: false });
+    const down = resolver.route(itrf, frame, SECONDS);
     for (const [lon, lat, h] of SAMPLES) {
       const p = at(lon, lat, h);
-      const q = routeForward(down, p);
+      const q = routeForward(up, p);
       const c = WGS84.cartesianToCartographic(q, fromDegrees(0, 0))!;
       expect(c.height).toBeCloseTo(10 * h, 4);
-      expect(dist(routeForward(up, q), p)).toBeLessThan(1e-6);
-      expect(dist(routeInverse(down, q), p)).toBeLessThan(1e-6);
+      expect(dist(routeForward(down, q), p)).toBeLessThan(1e-6);
+      expect(dist(routeInverse(up, q), p)).toBeLessThan(1e-6);
     }
     expect(frame.warp.description).toContain("vertical exaggeration × 10");
   });
@@ -705,7 +666,7 @@ describe("helpers through warpFrame, route() and routeForward", () => {
     const { itrf, frame, resolver } = setup(
       verticalExaggeration({ factor: 10, scale: slider }),
     );
-    const route = resolver.route(itrf, frame, SECONDS);
+    const route = resolver.route(frame, itrf, SECONDS);
     const p = at(-75, 40, 1000);
     expect(dist(routeForward(route, p), p)).toBe(0);
     slider.value = 0.5;
@@ -726,25 +687,27 @@ describe("helpers through warpFrame, route() and routeForward", () => {
     spec.factor = 3;
     expect(resolver.routeRevision(frame, itrf)).not.toBe(before);
     expect(told.mock.calls.length).toBeGreaterThan(heard);
-    const q = routeForward(resolver.route(itrf, frame, SECONDS), at(0, 0, 100));
+    const q = routeForward(resolver.route(frame, itrf, SECONDS), at(0, 0, 100));
     expect(
       WGS84.cartesianToCartographic(q, fromDegrees(0, 0))!.height,
     ).toBeCloseTo(300, 4);
     unwatch();
   });
 
-  it("a function warp's frame is invalidated by changed()", () => {
+  it("a function's frame is invalidated by changed(), and fitted: its function reads a free variable", () => {
     let k = 2;
-    const spec = warpFromFunction(
-      (p, out) => {
-        out.set([p[0]! * k, p[1]! * k, p[2]! * k]);
-      },
-      { presentation: true },
-    );
+    const spec = fromFunction((p, _params, out) => {
+      out[0] = p[0]! * k;
+      out[1] = p[1]! * k;
+      out[2] = p[2]! * k;
+    });
+    expect(spec.compiled).toBe(false);
+    expect(spec.fitReason).toContain("free variable");
+    expect(spec.smooth).toBeUndefined();
     const { itrf, frame, resolver } = setup(spec);
     const onChange = vi.fn();
     frame.onChange(onChange);
-    const route = resolver.route(itrf, frame, SECONDS);
+    const route = resolver.route(frame, itrf, SECONDS);
     expect(Array.from(routeForward(route, [1, 2, 3]))).toEqual([2, 4, 6]);
     k = 5;
     spec.changed();
@@ -752,7 +715,7 @@ describe("helpers through warpFrame, route() and routeForward", () => {
     expect(Array.from(routeForward(route, [1, 2, 3]))).toEqual([5, 10, 15]);
   });
 
-  it("a reprojection frame is a true frame, with the operation's accuracy", () => {
+  it("a reprojection frame places design coordinates in the body-fixed frame, with the operation's accuracy", () => {
     const op: CoordinateOperation = {
       forward: (xyz, out = new Float64Array(3)) => {
         out.set([xyz[0]!, xyz[1]!, xyz[2]!]);
@@ -767,14 +730,13 @@ describe("helpers through warpFrame, route() and routeForward", () => {
     };
     const { itrf, frame, resolver } = setup(reprojectionWarp(op));
     const up = resolver.route(frame, itrf, SECONDS);
-    expect(up.presentation).toBe(false);
     const q = routeForward(up, [-75, 40, 100]);
     expect(dist(q, at(-75, 40, 100))).toBeLessThan(1e-6);
     const point = resolver.accuracy([-75, 40, 100], frame, itrf, SECONDS);
     expect(point.meters).toBeCloseTo(0.25, 12);
   });
 
-  it("the warp passed to warpFrame is the same Jacobian-carrying spec", () => {
+  it("the warp passed to smoothFrame is the same Jacobian-carrying spec", () => {
     const spec = verticalExaggeration({ factor: 10 });
     const { frame } = setup(spec);
     const warp: Warp = frame.warp;
@@ -782,5 +744,49 @@ describe("helpers through warpFrame, route() and routeForward", () => {
     warp.forward(at(0, 45, 1000), new Float64Array(3), j);
     expect(Number.isFinite(j[0]!)).toBe(true);
     expect(warp.inverse).toBeDefined();
+  });
+});
+
+describe("fromFunction in the restricted subset", () => {
+  /** A swirl about the z axis whose angle grows with height, with a strength parameter. */
+  const twist = (p: ArrayLike<number>, params: { rate: number }) => {
+    const a = params.rate * p[2]!;
+    return [
+      p[0]! * Math.cos(a) - p[1]! * Math.sin(a),
+      p[0]! * Math.sin(a) + p[1]! * Math.cos(a),
+      p[2]!,
+    ];
+  };
+
+  it("parses to the IR: compiled, with a smooth spec the compiler can take", () => {
+    const warp = fromFunction(twist as never, { params: { rate: 0.01 } });
+    expect(warp.compiled).toBe(true);
+    expect(warp.fitReason).toBeUndefined();
+    expect(warp.smooth?.source).toContain("params.rate");
+    expect(warp.smooth?.params).toEqual({ rate: 0.01 });
+  });
+
+  it("has an exact Jacobian by autodiff, right where central differences are only near", () => {
+    const warp = fromFunction(twist as never, { params: { rate: 0.01 } });
+    const p = [3, -2, 40];
+    const j = new Float64Array(9);
+    warp.forward(p, new Float64Array(3), j);
+    expect(maxDiff(j, numerical(warp, p, 1e-4))).toBeLessThan(1e-7);
+    // d(out_z)/dz = 1 exactly, and d(out_x)/dz = -rate (x sin a + y cos a).
+    const a = 0.01 * 40;
+    expect(j[8]).toBe(1);
+    expect(j[6]).toBeCloseTo(-0.01 * (3 * Math.sin(a) + -2 * Math.cos(a)), 14);
+  });
+
+  it("moves with setParams: the revision, the smooth spec's values and the frame's watchers", () => {
+    const warp = fromFunction(twist as never, { params: { rate: 0.01 } });
+    const before = warp.revision;
+    warp.setParams({ rate: 0.02 });
+    expect(warp.revision).toBe(before + 1);
+    expect(warp.smooth?.params).toEqual({ rate: 0.02 });
+    expect(() => warp.setParams({ nope: 1 })).toThrow(/no parameter 'nope'/);
+    expect(() => warp.setParams({ rate: Number.NaN })).toThrow(RangeError);
+    const q = warp.forward([1, 0, 50], new Float64Array(3));
+    expect(q[0]).toBeCloseTo(Math.cos(0.02 * 50), 14);
   });
 });

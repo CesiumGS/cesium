@@ -252,9 +252,34 @@ export {
   type TilesetStats,
 } from "./streaming/tilesetTypes.ts";
 export type {
-  DesignPlacement,
+  Georeference,
   PlacementMode,
-} from "./streaming/designPlacement.ts";
+} from "./georeference/georeference.ts";
+// The live helpers for a smooth frame (plan §13.37; `smoothFrame` is in
+// `@cesium/next/frames`): geo transforms (`georeference`) and generic ones
+// (`transforms`). Each returns a spec to place over the content it deforms.
+export {
+  verticalExaggeration,
+  heightOffset,
+  type HeightOffset,
+  type HeightOffsetOptions,
+  type ReferenceSurface,
+  type VerticalExaggeration,
+  type VerticalExaggerationOptions,
+} from "./georeference/index.ts";
+export {
+  scaleAbout,
+  blend,
+  fromFunction,
+  type BlendedWarp,
+  type ChangeableWarp,
+  type FromFunctionOptions,
+  type FunctionWarp,
+  type PointFunction,
+  type ScaleAbout,
+  type ScaleAboutOptions,
+} from "./transforms/index.ts";
+export type { SmoothFrameSpec, Warp, WarpScale } from "./camera/route.ts";
 export {
   StepwiseSelection,
   REQUEST_PURPOSES,

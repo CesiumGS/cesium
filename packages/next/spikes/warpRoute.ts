@@ -1,7 +1,7 @@
 // A route across a warp on the GPU against the float64 route (plan §13.26,
-// increment 1, slice D; the Node test is test/warpWorld.test.ts). A view's
-// rig sits on `exaggerated`, a warp frame over ITRF that multiplies height
-// over a sphere by 10 (and by a scale, a world's placement parameter: the
+// increment 1, slice D; the Node test is test/warpWorld.test.ts). The
+// Earth's anchor is placed in `exaggerated`, a smooth frame under ITRF that
+// multiplies height over a sphere by 10 (and by a scale, a world's placement parameter: the
 // slider). Three quads anchored in ITRF at the north pole, a metre up, are
 // drawn unlit into an offscreen target. Nothing is set per item: the engine
 // fits the route over each draw and the shader displaces its vertices
@@ -20,7 +20,7 @@ import { routeForward } from "../src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-  warpFrame,
+  smoothFrame,
 } from "../src/frames/index.ts";
 import {
   EARTH,
@@ -38,8 +38,8 @@ import type { AnchorHandle, DrawHandle } from "../src/scene/world/types.ts";
 const TEMPLATE = `
 <h1>A route across a warp against the float64 route</h1>
 <p>
-  Three quads anchored in ITRF, drawn in a view whose rig sits on a warp
-  frame that multiplies height by 10 (with a scale, one float). Their
+  Three quads anchored in ITRF, placed in a frame whose edge to ITRF
+  multiplies height by 10 (with a scale, one float). Their
   vertices, measured from the image, against where the route
   (<code>routeForward</code>) and the view's projection put them: within
   half a pixel plus the fit's own error.
@@ -181,23 +181,24 @@ async function runWarpRoute(): Promise<WarpRouteResult> {
       clearColor: [0, 0, 0],
       observer: { exposure: UNITLESS_EXPOSURE },
     });
-    // The warp, as an application defines it: a frame over ITRF, with a
-    // scale the page moves. The rig sits on it; the quads say nothing.
+    // The warp, as an application defines it: a frame under ITRF, with a
+    // scale the page moves. The Earth's anchor is placed in it; the quads say nothing.
     const catalog = createFrameCatalog();
     const itrf = catalog.get("ITRF");
     const scale = world.createPlacementParameter(0);
-    const exaggerated = warpFrame("exaggerated", itrf, {
-      presentation: true,
+    const exaggerated = smoothFrame("exaggerated", itrf, {
       revision: 1,
       description: `height × ${K}`,
       scale,
       forward: (p, out, jacobian) => exaggerate(K, p, out, jacobian),
     });
     catalog.add(exaggerated);
-    engine.cameras.setResolver(world, createFramesResolver(catalog));
+    const resolver = createFramesResolver(catalog);
+    engine.cameras.setResolver(world, resolver);
     const earth = world.bodyAnchor(EARTH);
+    resolver.bindAnchor(earth, exaggerated);
     engine.cameras.setRig(view, {
-      position: { frame: exaggerated },
+      position: { frame: itrf },
       orientation: { kind: "free" },
     });
     // Above the quads, in render space, looking down; turned 7° about its
@@ -329,7 +330,7 @@ function project(
   const route = view.anchorRoute(earth);
   if (!route) {
     throw new Error(
-      "the Earth's anchor has no route: the rig is not on a warp",
+      "the Earth's anchor has no route: it is not placed in a smooth frame",
     );
   }
   const eye = view.camera.position;

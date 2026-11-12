@@ -1,6 +1,6 @@
 // Scale about a point along an orthonormal basis (a, b, u): q = o + sum_k
 // s_k e_k (e_k . (p - o)). Output is affine in each factor `s_k`; the inverse
-// is exact. `frames/warps.ts`'s `scaleAbout` (east, north, up at a point) is
+// is exact. `scaleAbout` in `scaleAbout.ts` (east, north, up at a point) is
 // this, so that route's draws take the compiled path. TS only: no Slang entry.
 import type { SmoothEdge } from "../transform/graph.ts";
 import {

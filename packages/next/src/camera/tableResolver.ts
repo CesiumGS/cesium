@@ -78,7 +78,6 @@ export function tableResolver(world: World): FrameResolver {
             matrix: table.resolve(frame, base, seconds, new Float64Array(16)),
           },
         ],
-        presentation: false,
         revision: table.routeRevision(frame, base),
       };
     },

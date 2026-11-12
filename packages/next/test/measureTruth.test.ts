@@ -7,12 +7,7 @@
 // pixel's tolerance goes to true metres by σ_min; a bound and a 1σ stay
 // apart. CPU only: fake views and picks, no engine.
 import { describe, expect, it, vi } from "vitest";
-import {
-  PresentationRouteError,
-  routeForward,
-  type Route,
-  type Warp,
-} from "../src/camera/route.ts";
+import { routeForward, type Route, type Warp } from "../src/camera/route.ts";
 import {
   ClientSnapService,
   refiningSnap,
@@ -23,20 +18,16 @@ import type { PickView } from "../src/engineering/pick.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { createFrames } from "../src/frames/frames.ts";
 import { framePoint } from "../src/frames/local.ts";
-import { verticalExaggeration } from "../src/frames/heightWarps.ts";
+import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
 import { createFramesPickInterpreter } from "../src/frames/pickInterpreter.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { warpFrame } from "../src/frames/warpFrame.ts";
-import { warpFromFunction } from "../src/frames/warps.ts";
+import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { fromFunction } from "../src/transforms/fromFunction.ts";
 import { Ellipsoid, fromDegrees } from "../src/math/ellipsoid.ts";
 import { accuracyOf } from "../src/measure/accuracy.ts";
 import { DrawnCurve, sampleSegment } from "../src/measure/curve.ts";
 import { drawnDistance } from "../src/measure/drawn.ts";
-import {
-  drawnThrough,
-  isPresentationFrame,
-  UNWARPED,
-} from "../src/frames/drawn.ts";
+import { drawnThrough, UNWARPED } from "../src/frames/drawn.ts";
 import { routeStretch } from "../src/frames/routeStretch.ts";
 import { measure } from "../src/measure/measure.ts";
 import { truePick } from "../src/frames/pickTruth.ts";
@@ -58,7 +49,7 @@ const at = (lon: number, lat: number, h: number) =>
 const dist = (a: ArrayLike<number>, b: ArrayLike<number>) =>
   Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
 
-/** An ITRF content frame, a frame drawn ×k from it, and routes between. */
+/** ITRF, where content is drawn, a frame under it that draws its content ×k, and the route from content to ITRF. */
 function exaggerated(factor = 1, scale?: { value: number }) {
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const itrf = catalog.get("ITRF");
@@ -66,16 +57,16 @@ function exaggerated(factor = 1, scale?: { value: number }) {
     factor,
     ...(scale && { scale }),
   });
-  const drawn = warpFrame("drawn", itrf, spec);
-  catalog.add(drawn);
+  const content = smoothFrame("content", itrf, spec);
+  catalog.add(content);
   const resolver = createFramesResolver(catalog);
   return {
     catalog,
     itrf,
-    drawn,
+    content,
     spec,
     resolver,
-    route: (): Route => resolver.route(itrf, drawn, SECONDS),
+    route: (): Route => resolver.route(content, itrf, SECONDS),
   };
 }
 
@@ -83,7 +74,6 @@ describe("measurements are true whatever the exaggeration", () => {
   const frames = createFrames(syntheticFrameData());
   const instant = Instant.fromTdb(0);
   const a = at(10, 40, 100);
-  const b = at(10, 40, 2100);
   const c = at(10.05, 40, 2100);
   const rig = exaggerated(1);
 
@@ -112,30 +102,10 @@ describe("measurements are true whatever the exaggeration", () => {
       expect(m.overBody!.heightDifference).toBeCloseTo(2000, 3);
       expect(m.frame).toBe(frames.itrf);
       expect(m.drawn!.warped).toBe(true);
-      expect(m.drawn!.presentation).toBe(true);
       expect(m.drawn!.statement).toContain(`×${k} vertically`);
       expect(m.drawn!.statement).toMatch(/values are true$/);
     }
     expect(first.drawn).toBeUndefined();
-  });
-
-  it("refuses a point in a presentation frame: its coordinates are where content is drawn", () => {
-    const drawnFrame = warpFrame(
-      "drawn",
-      frames.itrf,
-      verticalExaggeration({ factor: 4 }),
-    );
-    expect(isPresentationFrame(drawnFrame)).toBe(true);
-    expect(isPresentationFrame(frames.itrf)).toBe(false);
-    expect(() =>
-      measure(
-        framePoint(drawnFrame, a),
-        framePoint(drawnFrame, b),
-        instant,
-        frames,
-        { signal: false },
-      ),
-    ).toThrow(PresentationRouteError);
   });
 
   it("says nothing was drawn through a rigid route, or none", () => {
@@ -158,9 +128,9 @@ describe("measurements are true whatever the exaggeration", () => {
       expect(low).toBeGreaterThan(0.99);
       expect(drawnThrough(route, a).stretch).toEqual([low, high]);
     }
-    // A route with an inverse step: its stretch is the inverse's, 1/k.
+    // A route with an inverse step (down into the content's frame): its stretch is the inverse's, 1/k.
     const down = exaggerated(10);
-    const up = down.resolver.route(down.drawn, down.itrf, SECONDS);
+    const up = down.resolver.route(down.itrf, down.content, SECONDS);
     const [lowUp, highUp] = routeStretch(up, routeForward(down.route(), a));
     expect(highUp).toBeCloseTo(1, 3);
     expect(lowUp).toBeCloseTo(0.1, 3);
@@ -187,8 +157,7 @@ describe("the drawn distance, named as one", () => {
       expect(d.pathLength).toBeCloseTo(d.distance, 4);
       expect(d.distance).toBeGreaterThan(before);
       before = d.distance;
-      expect(d.through.presentation).toBe(true);
-      expect(d.frame).toBe(rig.drawn);
+      expect(d.frame).toBe(rig.itrf);
     }
   });
 
@@ -372,21 +341,20 @@ describe("measurement graphics drawn through the route", () => {
     expect(nearCount).toBeGreaterThan(farCount);
   });
 
-  it("holds for a bent warp that moves content (not a presentation)", () => {
-    const bend = warpFromFunction(
-      (p, out) => {
+  it("holds for a bent edge", () => {
+    const bend = fromFunction(
+      (p, _params, out) => {
         out[0] = p[0]!;
         out[1] = p[1]! + (p[0]! * p[0]!) / 40_000;
         out[2] = p[2]!;
       },
-      { presentation: false, description: "a parabola" },
+      { description: "a parabola" },
     );
     const route: Route = {
       frame: { name: "content" },
       base: { name: "render" },
       seconds: 0,
       steps: [{ kind: "warp", warp: asWarp(bend), inverse: false }],
-      presentation: false,
       revision: 1,
     };
     const from = Float64Array.of(-3000, 0, 0);
@@ -499,7 +467,6 @@ describe("measurement graphics drawn through the route", () => {
           ),
         },
       ],
-      presentation: false,
       revision: 0,
     };
     expect(sampleSegment(rigid, a, b).length).toBe(6);
@@ -525,11 +492,10 @@ describe("measurement graphics drawn through the route", () => {
 });
 
 /** A `Warp` for a test route, from a frames-layer warp's fields. */
-function asWarp(w: ReturnType<typeof warpFromFunction>): Warp {
+function asWarp(w: ReturnType<typeof fromFunction>): Warp {
   return {
     from: { name: "content" },
     to: { name: "render" },
-    presentation: w.presentation,
     get revision() {
       return w.revision;
     },
@@ -549,7 +515,6 @@ function stretchZ(k: number): Warp {
   return {
     from: { name: "anchor" },
     to: { name: "render" },
-    presentation: true,
     revision: 1,
     description: `vertical exaggeration × ${k}`,
     forward(p, out, jacobian) {
@@ -573,7 +538,6 @@ const routeOf = (warp: Warp): Route => ({
   base: { name: "render" },
   seconds: 0,
   steps: [{ kind: "warp", warp, inverse: false }],
-  presentation: warp.presentation,
   revision: 1,
 });
 
@@ -696,7 +660,6 @@ describe("snaps in true coordinates", () => {
     expect(Array.from(result!.snapPoint)).toEqual([R, 40, 40]);
     expect(result!.distance).toBeCloseTo(2, 6);
     expect(Array.from(result!.drawnPosition!)).toEqual([R, 40, 120]);
-    expect(result!.drawn!.presentation).toBe(true);
     expect(result!.drawn!.statement).toContain("vertical exaggeration × 3");
     expect(result!.drawn!.statement).toMatch(/values are true$/);
     expect(result!.drawn!.stretch![0]).toBeCloseTo(1, 6);
@@ -799,7 +762,6 @@ describe("snaps in true coordinates", () => {
     expect(result!.source).toBe("server");
     expect(result!.distance).toBeCloseTo(1, 6);
     expect(Array.from(result!.drawnPosition!)).toEqual([R, 40, 120]);
-    expect(result!.drawn!.presentation).toBe(true);
     const request = seen[0]!;
     expect(Array.from(request.toDrawn!([R, 40, 40]))).toEqual([R, 40, 120]);
     expect(request.stretch![1]).toBeCloseTo(3, 6);

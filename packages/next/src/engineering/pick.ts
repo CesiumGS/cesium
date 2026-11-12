@@ -94,7 +94,7 @@ export interface DesignPick {
    * Present only for a hit on a listed tileset that has a placement, when
    * the position, the feature and the camera all come from one tick and
    * the hit tile's bounds contain the position. Drawn with a dual position, only at `t` exactly 0 or 1
-   * (`SceneItem.designPlacement`).
+   * (`SceneItem.georeference`).
    */
   readonly design?: DesignPoint<CoordinateOperation>;
   /**
@@ -266,7 +266,7 @@ function framed(
     }
   }
   const placement = engineeringPlacement(
-    item !== undefined ? item.designPlacement : tileset?.placement,
+    item !== undefined ? item.georeference : tileset?.placement,
   );
   const inside =
     volume !== undefined && nearVolume(volume, position, tolerance + 1);

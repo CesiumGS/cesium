@@ -130,7 +130,7 @@ export function verticalExaggerationDescriptor(
  * and shifted by a constant above it, blended over `band` (default a fifth
  * of the way from the base to the ceiling).
  */
-export function verticalExaggeration(options: {
+export function verticalExaggerationEdge(options: {
   radii?: Radii;
   factor: number;
   ceiling: number;

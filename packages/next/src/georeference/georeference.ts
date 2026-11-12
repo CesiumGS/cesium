@@ -15,7 +15,7 @@ export type PlacementMode = "rigid" | "reprojected" | "hosted";
  * engineering frame, and its `georeferenceTileset` sets one from a
  * tileset's declaration; an application may set its own.
  */
-export interface DesignPlacement {
+export interface Georeference {
   readonly mode: PlacementMode;
   /** The name of the reference frame the design coordinates are in. */
   readonly frameName: string;

@@ -724,13 +724,13 @@ describe("scene items", () => {
     s.tileset.placement = rigid;
     s.tileset.state.secondPlacement = reprojected;
     const item = s.world.add(s.tileset, { placement: 0 });
-    expect(item.designPlacement).toBe(rigid);
+    expect(item.georeference).toBe(rigid);
     item.placement = 1;
-    expect(item.designPlacement).toBe(reprojected);
+    expect(item.georeference).toBe(reprojected);
     item.placement = 0.5;
-    expect(item.designPlacement).toBeUndefined();
+    expect(item.georeference).toBeUndefined();
     item.placement = -9;
-    expect(item.designPlacement).toBeUndefined();
+    expect(item.georeference).toBeUndefined();
     // A moved tileset's placements no longer describe what is drawn.
     const moved = m4.mat4();
     moved[12] = 1;

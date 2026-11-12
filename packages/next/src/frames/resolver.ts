@@ -90,7 +90,7 @@ export interface FramesResolver extends FrameResolver {
     seconds: number,
     out: FrameMotion,
   ): FrameMotion;
-  route(frame: FrameKey, base: FrameKey, seconds: number): Route;
+  route(frame: FrameKey, base: FrameKey, seconds: number, view?: ViewId): Route;
   accuracy(
     point: ArrayLike<number>,
     frame: FrameKey,
@@ -240,7 +240,7 @@ class Resolver implements FramesResolver {
       return m4.identity(out);
     }
     if (a && b) {
-      if (this.crossesWarp(a, b, view, true)) {
+      if (this.crossesWarp(a, b, view)) {
         throw new NonRigidRouteError(frame.name, base.name);
       }
       this.askPrecise(a, b);
@@ -548,12 +548,20 @@ class Resolver implements FramesResolver {
     return name ?? undefined;
   }
 
-  /** Whether the route from `a` to `b` crosses a warp edge. */
-  private crossesWarp(a: Frame, b: Frame): boolean {
+  /**
+   * Whether the route from `a` to `b` crosses a smooth edge: for `view`, a
+   * switch frame by what it chose; without one, any switch frame counts (a
+   * matrix across it would depend on the view).
+   */
+  private crossesWarp(a: Frame, b: Frame, view?: ViewId): boolean {
     const top = commonAncestor(a, b);
     for (const start of [a, b]) {
       for (let f = start; f !== top; f = f.parent!) {
-        if (isWarpFrame(f)) {
+        if (
+          view === undefined
+            ? isNonRigidFrame(f)
+            : smoothEdgeOf(f, view) !== undefined
+        ) {
           return true;
         }
       }
@@ -563,18 +571,20 @@ class Resolver implements FramesResolver {
 
   /**
    * The route from `a` to `b` as legs in order: runs of tree edges (from
-   * one frame to another, composable by `compose`) and warp edges.
+   * one frame to another, composable by `compose`) and smooth edges, a smooth
+   * edge forward where the route goes up from a frame to its parent.
    */
-  private legs(a: Frame, b: Frame): Leg[] {
+  private legs(a: Frame, b: Frame, view?: ViewId): Leg[] {
     const top = commonAncestor(a, b);
     const legs: Leg[] = [];
     let start = a;
     for (let f = a; f !== top; f = f.parent!) {
-      if (isWarpFrame(f)) {
+      const warp = smoothEdgeOf(f, view);
+      if (warp) {
         if (start !== f) {
           legs.push({ kind: "tree", from: start, to: f });
         }
-        legs.push({ kind: "warp", frame: f, inverse: true });
+        legs.push({ kind: "warp", frame: f, warp, inverse: false });
         start = f.parent!;
       }
     }
@@ -584,11 +594,12 @@ class Resolver implements FramesResolver {
     }
     for (let i = down.length - 1; i >= 0; i--) {
       const f = down[i]!;
-      if (isWarpFrame(f)) {
+      const warp = smoothEdgeOf(f, view);
+      if (warp) {
         if (start !== f.parent) {
           legs.push({ kind: "tree", from: start, to: f.parent! });
         }
-        legs.push({ kind: "warp", frame: f, inverse: false });
+        legs.push({ kind: "warp", frame: f, warp, inverse: true });
         start = f;
       }
     }
@@ -598,14 +609,15 @@ class Resolver implements FramesResolver {
     return legs;
   }
 
-  /** Makes the warp frames on the route from `a` to `b` wake the watchers when they change. */
+  /** Makes the smooth and switch frames on the route from `a` to `b` wake the watchers when they change. */
   private hookWarps(a: Frame, b: Frame): void {
     const top = commonAncestor(a, b);
     for (const start of [a, b]) {
       for (let f = start; f !== top; f = f.parent!) {
-        if (isWarpFrame(f) && !this.hooked.has(f)) {
-          this.hooked.add(f);
-          f.onChange(() => {
+        if (isNonRigidFrame(f) && !this.hooked.has(f as SmoothFrame)) {
+          const hooked = f as SmoothFrame | SwitchFrame;
+          this.hooked.add(hooked);
+          hooked.onChange(() => {
             for (const listener of this.watchers) {
               listener();
             }
@@ -616,9 +628,9 @@ class Resolver implements FramesResolver {
   }
 
   /**
-   * `accuracy` over a route that crosses warps: each rigid run through the
-   * frames' composition, each warp by its `accuracy.sigma`, the point
-   * carried through the route to place each term; the 1σ terms add in
+   * `accuracy` over a route that crosses smooth edges: each rigid run through
+   * the frames' composition, each smooth edge by its `accuracy.sigma`, the
+   * point carried through the route to place each term; the 1σ terms add in
    * quadrature. A warp stating only a `bound` is not stated (a bound is
    * not a σ).
    */
@@ -635,7 +647,7 @@ class Resolver implements FramesResolver {
     const m = new Float64Array(16);
     for (const leg of this.legs(a, b)) {
       if (leg.kind === "warp") {
-        const w = leg.frame.warp;
+        const w = leg.warp;
         const label = w.description ?? `${w.from.name} to ${w.to.name}`;
         const { sigma, bound } = w.accuracy ?? {};
         if (sigma !== undefined) {
@@ -819,10 +831,10 @@ function isNode(key: FrameKey): boolean {
   return "transform" in key && "world" in key;
 }
 
-/** A run of a route: tree edges from one frame to another, or one warp edge. */
+/** A run of a route: tree edges from one frame to another, or one smooth edge. */
 type Leg =
   | { kind: "tree"; from: Frame; to: Frame }
-  | { kind: "warp"; frame: WarpFrame; inverse: boolean };
+  | { kind: "warp"; frame: Frame; warp: Warp; inverse: boolean };
 
 /** Adds a rigid step, composed into the last when that is rigid too. */
 function pushRigid(steps: RouteStep[], m: Float64Array): void {
@@ -905,9 +917,13 @@ function commonAncestor(from: Frame, to: Frame): Frame {
  *   that isn't rigid reaches the camera layer, which refuses it.
  * - The reference frames named directly (a rig's) are marked as used by
  *   `"rig"`; anchors' bindings as used by the application.
- * - A warp frame (`warpFrame`) is a non-rigid edge. `route` carries it as
- *   a warp step; `resolve` and `motion` across it throw
- *   `NonRigidRouteError`; a route not crossing it is as it was. Its
+ * - A smooth frame (`smoothFrame`) is a non-rigid edge whose coordinates map
+ *   up to its parent's: content placed in it is drawn through the edge. A
+ *   switch frame (`switchFrame`) chooses its edge per view. `route` carries
+ *   each as a warp step, forward where the route goes up from the frame to
+ *   its parent and inverse where it goes down (`route(frame, base, seconds,
+ *   view)`: the view a switch chooses by); `resolve` and `motion` across
+ *   one throw `NonRigidRouteError`; a route not crossing it is as it was. Its
  *   `revision` counts in `routeRevision`; `watch` hears `catalog.add` of
  *   it and its `invalidate()`. `accuracy` adds its `accuracy.sigma` in
  *   quadrature; one stating only a `bound` leaves `meters` undefined.

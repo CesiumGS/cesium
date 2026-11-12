@@ -46,6 +46,7 @@ import {
   ROUTE_BODY,
   ROUTE_KIND,
   ROUTE_OWN_ROWS,
+  ROUTE_POINTER_ROWS,
   routeBlockRows,
   routeCentreRow,
   routeVariantOf,
@@ -61,7 +62,7 @@ import { affinePart } from "../warpFit.ts";
 import type { World } from "../World.ts";
 import { setDrawRoute } from "./draws.ts";
 import { setPlacement } from "./placements.ts";
-import { bridgeRoute, type BridgedRoute } from "./routeBridge.ts";
+import { bridgeRoute, normalise, type BridgedRoute } from "./routeBridge.ts";
 import type { DrawHandle } from "./types.ts";
 
 /** The pipelines a routed draw needs before it is shown: the opaque pass's and the depth prepass's, one- and double-sided. */
@@ -75,7 +76,43 @@ const WARM_KEYS = [
 /** Draws whose records the CPU makes in one go before a compute pass is worth its setup. */
 const GPU_MIN_DRAWS = 16;
 
-/** One routed anchor: the compiled route and the data its draws read. */
+/** A view's camera route for an anchor: the view's id (the position of its bit in view masks) and its route to the view's root. */
+export interface ViewCamera {
+  readonly id: number;
+  readonly camera: CameraRoute;
+}
+
+/**
+ * What a routed anchor holds of one view: its route to the view's root, as
+ * the compiled program reads it. Views of one anchor share the program and
+ * the draws' records (the route's value at each draw's centre), and differ
+ * in what is a uniform: the matrices after the last warp (a root) and the
+ * values of parameters that are uniforms (a slider set per view).
+ */
+export interface RoutedView {
+  readonly id: number;
+  readonly bridged: BridgedRoute;
+  /** This view's uniforms: their first row in the placements buffer, and their floats. */
+  readonly uniformRow: number;
+  readonly uniforms: Float32Array;
+  /** The parameter values the uniforms were made at. */
+  values: ParamRecord;
+  /** The anchor's place in this view (the route's rigid steps composed), for spheres. */
+  affine: Float64Array;
+  /** The scaled parameters' ranges in this view, by key. */
+  ranges: Record<string, ParamRange>;
+  /** The camera route as the last frame had it, and the maps a draw's sphere is bounded through (made again when `sphereVersion` moves). */
+  camera: CameraRoute;
+  maps: DrawnMap[];
+  mapsVersion: number;
+}
+
+/**
+ * One routed anchor: the compiled route and the data its draws read. The
+ * fields of the route's first view (`primaryView`) are the anchor's own;
+ * `others` are the views whose route has the same shape and the same
+ * data in a draw's record (`centreSignature`), with uniforms of their own.
+ */
 export interface RoutedAnchor {
   /** Names this route's shape and data: a draw requested for another is requested again. */
   readonly id: number;
@@ -83,7 +120,11 @@ export interface RoutedAnchor {
   readonly bridged: BridgedRoute;
   readonly compiled: CompiledRoute;
   readonly variant: RouteVariant;
-  /** The route's uniforms: their first row in the placements buffer, and their floats here. */
+  /** The id of the view the route was made from. */
+  readonly primaryView: number;
+  /** The route's pointer table: its first row in the placements buffer. It holds, for each view id, the first row of that view's uniforms. */
+  readonly pointerRow: number;
+  /** The primary view's uniforms: their first row in the placements buffer, and their floats here. */
   readonly uniformRow: number;
   readonly uniformRows: number;
   readonly uniforms: Float32Array;
@@ -101,6 +142,8 @@ export interface RoutedAnchor {
   camera: CameraRoute;
   maps: DrawnMap[];
   mapsVersion: number;
+  /** The other views that draw the anchor by this route, by view id. */
+  readonly others: Map<number, RoutedView>;
   /** Draws are remade by the compute pass: set when records went stale. */
   gpuStale: boolean;
 }
@@ -169,42 +212,53 @@ export class WorldRoutes {
   }
 
   /**
-   * Brings the slot's compiled route to the camera route as it is now (its
-   * rigid matrices, its warps' parameters, a slider), making it when there is
-   * none or its shape changed. Returns it, or undefined when the route can't
-   * be compiled (`refusal` says why; said once).
+   * Brings the slot's compiled route to the camera routes as they are now
+   * (their rigid matrices, their warps' parameters, a slider), making it when
+   * there is none or its shape changed. `views` are the views that place the
+   * anchor across a warp, the first one the route is made from: a later view
+   * whose route has the same shape and the same data in a draw's record
+   * (`centreSignature`) is drawn by the same program with uniforms of its
+   * own (its root, a parameter set for it), and one that doesn't is
+   * reported once and drawn as the first is. Returns the route, or undefined
+   * when it can't be compiled (`refusal` says why; said once).
    */
   sync(
     slot: number,
-    camera: CameraRoute,
+    views: readonly ViewCamera[],
     report: (message: string) => void,
   ): RoutedAnchor | undefined {
+    const first = views[0]!;
+    const camera = first.camera;
     const held = this.#anchors.get(slot);
-    if (held?.bridged.matches(camera)) {
+    let anchor: RoutedAnchor;
+    if (held && held.primaryView === first.id && held.bridged.matches(camera)) {
       this.#refresh(held, camera);
-      return held;
-    }
-    const shape = shapeOf(camera);
-    if (!held && this.#refused.get(slot)?.shape === shape) {
-      return undefined;
-    }
-    if (held) {
-      this.#drop(slot);
-    }
-    const made = this.#make(slot, camera);
-    if ("reason" in made) {
-      this.#refused.set(slot, { shape, reason: made.reason });
-      if (made.say) {
-        this.#say(
-          `refused:${slot}:${made.reason}`,
-          `warp: ${camera.frame.name} to ${camera.base.name} is fitted, not compiled: ${made.reason}.`,
-          report,
-        );
+      anchor = held;
+    } else {
+      const shape = shapeOf(camera);
+      if (!held && this.#refused.get(slot)?.shape === shape) {
+        return undefined;
       }
-      return undefined;
+      if (held) {
+        this.#drop(slot);
+      }
+      const made = this.#make(slot, first);
+      if ("reason" in made) {
+        this.#refused.set(slot, { shape, reason: made.reason });
+        if (made.say) {
+          this.#say(
+            `refused:${slot}:${made.reason}`,
+            `warp: ${camera.frame.name} to ${camera.base.name} is fitted, not compiled: ${made.reason}.`,
+            report,
+          );
+        }
+        return undefined;
+      }
+      this.#refused.delete(slot);
+      anchor = made;
     }
-    this.#refused.delete(slot);
-    return made;
+    this.#syncViews(anchor, views.slice(1), report);
+    return anchor;
   }
 
   /** The slot is no longer warped: its routed draws go back as they were. */
@@ -398,8 +452,9 @@ export class WorldRoutes {
    */
   #make(
     slot: number,
-    camera: CameraRoute,
+    first: ViewCamera,
   ): RoutedAnchor | { reason: string; say: boolean } {
+    const camera = first.camera;
     if (this.world.warps.curved.active) {
       return {
         reason:
@@ -429,6 +484,8 @@ export class WorldRoutes {
       bridged,
       compiled,
       variant: routeVariantOf(compiled),
+      primaryView: first.id,
+      pointerRow: table.allocateRows(ROUTE_POINTER_ROWS),
       uniformRow: table.allocateRows(uniformRows),
       uniformRows,
       uniforms: new Float32Array(compiled.uniformsLayout.floats),
@@ -440,10 +497,12 @@ export class WorldRoutes {
       camera,
       maps: sphereMaps(camera),
       mapsVersion: 0,
+      others: new Map(),
       gpuStale: false,
     };
     this.#anchors.set(slot, anchor);
     this.#writeUniforms(anchor);
+    this.#writePointers(anchor);
     // Asks for the pipelines now, so they compile while the draws are made.
     void this.pipelines(anchor);
     return anchor;
@@ -486,13 +545,160 @@ export class WorldRoutes {
     this.world.changedViews = 0xffffffff;
   }
 
-  #writeUniforms(anchor: RoutedAnchor): void {
-    anchor.compiled.fillUniforms(anchor.bridged.route, anchor.uniforms);
+  /**
+   * Brings the other views' data to their camera routes: a view new to the
+   * anchor is made (its uniforms in the placements buffer, its pointer set),
+   * one that went is dropped, and one whose route is not the anchor's in
+   * shape or in what a draw's record holds is left out, and said once.
+   */
+  #syncViews(
+    anchor: RoutedAnchor,
+    views: readonly ViewCamera[],
+    report: (message: string) => void,
+  ): void {
+    const wanted = new Set(views.map((v) => v.id));
+    for (const id of [...anchor.others.keys()]) {
+      if (!wanted.has(id)) {
+        this.#dropView(anchor, id);
+      }
+    }
+    const primary = centreSignature(anchor.bridged, anchor.compiled);
+    for (const { id, camera } of views) {
+      const held = anchor.others.get(id);
+      if (held?.bridged.matches(camera)) {
+        this.#refreshView(anchor, held, camera, primary);
+        continue;
+      }
+      if (held) {
+        this.#dropView(anchor, id);
+      }
+      const made = this.#makeView(anchor, id, camera, primary);
+      if (typeof made === "string") {
+        this.#say(
+          `view:${anchor.slot}:${id}:${made}`,
+          `warp: view ${id}'s route for ${camera.frame.name} to ${camera.base.name} ${made}; it shows view ${anchor.primaryView}'s route (a draw has one program and one record: only a root and a parameter that is a uniform may differ between views).`,
+          report,
+        );
+        continue;
+      }
+      anchor.others.set(id, made);
+      this.#writeUniforms(anchor, made);
+      this.#writePointers(anchor);
+      this.world.version++;
+      this.world.changedViews = 0xffffffff;
+    }
+  }
+
+  /** The data of one more view of the anchor, or the words for why its route can't share the anchor's. */
+  #makeView(
+    anchor: RoutedAnchor,
+    id: number,
+    camera: CameraRoute,
+    primary: string,
+  ): RoutedView | string {
+    const bridged = bridgeRoute(camera);
+    if ("reason" in bridged) {
+      return `can't be bridged (${bridged.reason})`;
+    }
+    const compiled = compileRoute(bridged.route, {
+      normals: "auto",
+      centreRows: true,
+    });
+    if (!compiled.ok || compiled.key !== anchor.compiled.key) {
+      return "differs in structure";
+    }
+    if (centreSignature(bridged, compiled) !== primary) {
+      return "differs in what a draw's record is made from (a matrix before the last warp, or a parameter that isn't a uniform)";
+    }
     const table = this.world.raster.placementTable;
-    table
-      .rowWords(anchor.uniformRow, anchor.uniformRows)
-      .f32.set(anchor.uniforms);
-    table.upload(anchor.uniformRow, anchor.uniformRows);
+    return {
+      id,
+      bridged,
+      uniformRow: table.allocateRows(anchor.uniformRows),
+      uniforms: new Float32Array(anchor.compiled.uniformsLayout.floats),
+      values: compiled.paramValues(bridged.route),
+      affine: affinePart(camera),
+      ranges: rangesOf(camera, compiled),
+      camera,
+      maps: sphereMaps(camera),
+      mapsVersion: anchor.sphereVersion,
+    };
+  }
+
+  /** Reads one more view's live matrices and parameters. */
+  #refreshView(
+    anchor: RoutedAnchor,
+    view: RoutedView,
+    camera: CameraRoute,
+    primary: string,
+  ): void {
+    view.camera = camera;
+    const { matrices, params } = view.bridged.refresh(camera);
+    if (!matrices && !params) {
+      return;
+    }
+    if (centreSignature(view.bridged, anchor.compiled) !== primary) {
+      // Its record would no longer be right for it: it is dropped (and made
+      // again, or said, by the next frame's `#syncViews`).
+      this.#dropView(anchor, view.id);
+      return;
+    }
+    const values = anchor.compiled.paramValues(view.bridged.route);
+    const ranges = rangesOf(camera, anchor.compiled);
+    let sphere = matrices || !sameRanges(ranges, view.ranges);
+    for (const key of Object.keys(values)) {
+      sphere ||= values[key] !== view.values[key] && !(key in ranges);
+    }
+    view.values = values;
+    view.ranges = ranges;
+    if (matrices) {
+      view.affine = affinePart(camera);
+    }
+    if (sphere) {
+      anchor.sphereVersion++;
+    }
+    this.#writeUniforms(anchor, view);
+    this.world.version++;
+    this.world.changedViews = 0xffffffff;
+  }
+
+  /** The view's data goes: its views point at the anchor's own again. */
+  #dropView(anchor: RoutedAnchor, id: number): void {
+    const view = anchor.others.get(id);
+    if (!view) {
+      return;
+    }
+    anchor.others.delete(id);
+    this.world.raster.placementTable.releaseRows(
+      view.uniformRow,
+      anchor.uniformRows,
+    );
+    this.#writePointers(anchor);
+    anchor.sphereVersion++;
+    this.world.version++;
+    this.world.changedViews = 0xffffffff;
+  }
+
+  /** Writes the route's uniforms for the anchor's own view, or for `view`. */
+  #writeUniforms(anchor: RoutedAnchor, view?: RoutedView): void {
+    const bridged = view?.bridged ?? anchor.bridged;
+    const uniforms = view?.uniforms ?? anchor.uniforms;
+    const row = view?.uniformRow ?? anchor.uniformRow;
+    anchor.compiled.fillUniforms(bridged.route, uniforms);
+    const table = this.world.raster.placementTable;
+    table.rowWords(row, anchor.uniformRows).f32.set(uniforms);
+    table.upload(row, anchor.uniformRows);
+  }
+
+  /** Writes the pointer table: each view id's first uniform row (a view with none of its own reads the anchor's). */
+  #writePointers(anchor: RoutedAnchor): void {
+    const table = this.world.raster.placementTable;
+    const { u32 } = table.rowWords(anchor.pointerRow, ROUTE_POINTER_ROWS);
+    u32.fill(anchor.uniformRow);
+    for (const [id, view] of anchor.others) {
+      u32[id] = view.uniformRow;
+    }
+    table.upload(anchor.pointerRow, ROUTE_POINTER_ROWS);
   }
 
   /** The anchor's draws' records are stale: the compute pass remakes them, or the CPU does. */
@@ -539,7 +745,7 @@ export class WorldRoutes {
     u32[4] = ROUTE_KIND;
     f32[5] = 1;
     u32[6] = ROUTE_BODY;
-    u32[7] = anchor.uniformRow;
+    u32[7] = anchor.pointerRow;
     const body = ROUTE_BODY * 4;
     f32[body] = d.center[0]!;
     f32[body + 1] = d.center[1]!;
@@ -570,7 +776,11 @@ export class WorldRoutes {
     world.markDirty(d.index);
   }
 
-  /** The record's culling sphere: the route's image of the draw's own, in model space. */
+  /**
+   * The record's culling sphere: the route's image of the draw's own, in
+   * model space, for every view that draws the anchor by this route (the
+   * smallest ball holding each view's image).
+   */
   #setSphere(d: RoutedDraw): void {
     const { world } = this;
     const anchor = d.anchor;
@@ -586,6 +796,14 @@ export class WorldRoutes {
       anchor.maps = sphereMaps(anchor.camera);
       anchor.mapsVersion = anchor.sphereVersion;
     }
+    const views: Array<Pick<RoutedView, "maps" | "affine">> = [anchor];
+    for (const view of anchor.others.values()) {
+      if (view.mapsVersion !== anchor.sphereVersion) {
+        view.maps = sphereMaps(view.camera);
+        view.mapsVersion = anchor.sphereVersion;
+      }
+      views.push(view);
+    }
     const centre = new Float64Array(3);
     transformPoint(m, d.center, centre);
     // The ball's centre and its six axis points, carried through the route's maps (at the ends of the scale's range): an estimate from samples, as selection's drawn volumes are.
@@ -598,40 +816,50 @@ export class WorldRoutes {
         points.push(p[0]!, p[1]!, p[2]!);
       }
     }
-    let ball: { center: Float64Array; radius: number } | undefined;
-    try {
-      ball = drawnBounds(anchor.maps, points, r);
-    } catch {
-      ball = undefined;
+    // Each view's image, as a ball in model space: its centre's offset from the draw's own, and its radius.
+    const balls: Array<{ shift: Float64Array; radius: number }> = [];
+    for (const view of views) {
+      let ball: { center: Float64Array; radius: number } | undefined;
+      try {
+        ball = drawnBounds(view.maps, points, r);
+      } catch {
+        ball = undefined;
+      }
+      // Where the transform alone puts the centre, and the drawn centre's offset from it, in model space.
+      const placed = new Float64Array(3);
+      transformPoint(view.affine, centre, placed);
+      const shift = ball
+        ? solve3(
+            multiply3(view.affine, m),
+            Float64Array.of(
+              ball.center[0]! - placed[0]!,
+              ball.center[1]! - placed[1]!,
+              ball.center[2]! - placed[2]!,
+            ),
+          )
+        : undefined;
+      if (!ball || !shift || !Number.isFinite(ball.radius)) {
+        balls.length = 0;
+        break;
+      }
+      balls.push({ shift, radius: (ball.radius * 1.01) / scale });
     }
-    // Where the transform alone puts the centre, and the drawn centre's offset from it, in model space.
-    const placed = new Float64Array(3);
-    transformPoint(anchor.affine, centre, placed);
-    const shift = ball
-      ? Float64Array.of(
-          ball.center[0]! - placed[0]!,
-          ball.center[1]! - placed[1]!,
-          ball.center[2]! - placed[2]!,
-        )
-      : undefined;
-    const model = shift && solve3(multiply3(anchor.affine, m), shift);
     const index = d.index;
-    if (!ball || !model || !Number.isFinite(ball.radius)) {
-      // Undefined somewhere in the ball (a height at the body's centre): no sphere that holds, so none culls it.
+    if (balls.length === 0) {
+      // Undefined somewhere in a ball (a height at the body's centre): no sphere that holds, so none culls it.
       world.raster.drawConstants.setBounds(index, d.center, 3e38);
       world.raster.uploadsPending = true;
       return;
     }
+    const merged = balls.reduce(mergeBalls);
     let rounding = 0;
     const next = [0, 1, 2].map((a) => {
-      const exact = d.center[a]! + model[a]!;
+      const exact = d.center[a]! + merged.shift[a]!;
       const rounded = Math.fround(exact);
       rounding += (rounded - exact) ** 2;
       return rounded;
     });
-    const radius = roundUp32(
-      (ball.radius * 1.01) / scale + Math.sqrt(rounding),
-    );
+    const radius = roundUp32(merged.radius + Math.sqrt(rounding));
     world.raster.drawConstants.setBounds(index, next, radius);
     world.raster.uploadsPending = true;
     world.version++;
@@ -676,10 +904,12 @@ export class WorldRoutes {
         this.#restore(d);
       }
     }
-    this.world.raster.placementTable.releaseRows(
-      anchor.uniformRow,
-      anchor.uniformRows,
-    );
+    const table = this.world.raster.placementTable;
+    for (const view of anchor.others.values()) {
+      table.releaseRows(view.uniformRow, anchor.uniformRows);
+    }
+    table.releaseRows(anchor.pointerRow, ROUTE_POINTER_ROWS);
+    table.releaseRows(anchor.uniformRow, anchor.uniformRows);
   }
 
   #say(
@@ -886,15 +1116,61 @@ function handleOf(d: RoutedDraw): DrawHandle {
   return { index: d.index, generation: d.generation, name: undefined };
 }
 
-/** What a camera route's compiled form depends on in its shape: its steps' kinds and its warps' functions. */
+/** What a camera route's compiled form depends on in its shape: its steps' kinds (rigid steps at each end and between warps, as `normalise` has them) and its warps' functions. */
 function shapeOf(camera: CameraRoute): string {
-  return camera.steps
+  return normalise(camera.steps)
     .map((s) =>
       s.kind === "rigid"
         ? "r"
         : `${s.inverse ? "i" : "f"}${s.warp.smooth?.source ?? "?"}`,
     )
     .join(",");
+}
+
+/**
+ * What a draw's record (its centre constants) is made from, which views of
+ * one route must share: the rigid matrices before the last warp, and the
+ * values of the parameters that aren't uniforms. What differs per view
+ * without it is a uniform: the matrices after the last warp (a root) and
+ * the values of the parameters that are.
+ */
+function centreSignature(
+  bridged: BridgedRoute,
+  compiled: CompiledRoute,
+): string {
+  const values = compiled.paramValues(bridged.route);
+  return JSON.stringify([
+    bridged.prefixMatrices().map((m) => Array.from(m)),
+    compiled.dynamicParams.map((key) => values[key]),
+  ]);
+}
+
+/** The smallest ball holding both: centres as offsets in model space. */
+function mergeBalls(
+  a: { shift: Float64Array; radius: number },
+  b: { shift: Float64Array; radius: number },
+): { shift: Float64Array; radius: number } {
+  const d = Math.hypot(
+    b.shift[0]! - a.shift[0]!,
+    b.shift[1]! - a.shift[1]!,
+    b.shift[2]! - a.shift[2]!,
+  );
+  if (d + b.radius <= a.radius) {
+    return a;
+  }
+  if (d + a.radius <= b.radius) {
+    return b;
+  }
+  const radius = (d + a.radius + b.radius) / 2;
+  const t = (radius - a.radius) / d;
+  return {
+    shift: Float64Array.of(
+      a.shift[0]! + (b.shift[0]! - a.shift[0]!) * t,
+      a.shift[1]! + (b.shift[1]! - a.shift[1]!) * t,
+      a.shift[2]! + (b.shift[2]! - a.shift[2]!) * t,
+    ),
+    radius,
+  };
 }
 
 /**

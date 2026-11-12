@@ -211,13 +211,7 @@ function allowed(from: Layer, edge: Edge): boolean {
   return (
     from === "frames" &&
     to === "core" &&
-    (edge.typeOnly ||
-      FRAMES_CORE_VALUES.has(edge.to) ||
-      // The old height-warp helpers delegate to the built-in smooth
-      // transforms (plan section 13.37, task 4b) until task 6 moves them
-      // into georeference; the built-ins import only the transform core.
-      edge.to.startsWith("src/transforms/") ||
-      edge.to.startsWith("src/georeference/"))
+    (edge.typeOnly || FRAMES_CORE_VALUES.has(edge.to))
   );
 }
 
@@ -344,9 +338,10 @@ it("proj and measure follow their rules", () => {
   expect(violations("measure")).toEqual([]);
 });
 // The built-in transforms (plan section 13.37) are core modules with no geo
-// or engine knowledge beyond the transform graph and the spike's closed forms
-// (`scene/warpForms.ts`, which imports nothing): they stay loadable on a
-// worker and by the compiler, which imports them.
+// or engine knowledge beyond the transform graph, the route and warp
+// contract (`camera/route.ts`, which the live helpers implement) and the
+// spike's closed forms (`scene/warpForms.ts`, which imports nothing): they
+// stay loadable on a worker and by the compiler, which imports them.
 it("the built-in transforms import only the transform core, math and the closed forms", () => {
   const ownFiles = files.filter(
     (f) => f.startsWith("src/transforms/") || f.startsWith("src/georeference/"),
@@ -361,6 +356,7 @@ it("the built-in transforms import only the transform core, math and the closed 
             edge.to.startsWith("src/transforms/") ||
             edge.to.startsWith("src/georeference/") ||
             edge.to.startsWith("src/math/") ||
+            edge.to === "src/camera/route.ts" ||
             edge.to === "src/scene/warpForms.ts"
           ),
       )

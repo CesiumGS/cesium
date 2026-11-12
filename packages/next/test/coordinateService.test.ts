@@ -35,7 +35,7 @@ import { View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { World } from "../src/scene/World.ts";
 import type { AnchorHandle, DrawHandle } from "../src/scene/world/types.ts";
-import type { PlacementMode } from "../src/streaming/designPlacement.ts";
+import type { PlacementMode } from "../src/georeference/georeference.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const RADIANS = Math.PI / 180;

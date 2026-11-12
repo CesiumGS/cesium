@@ -10,7 +10,21 @@ export {
   type ParamSpec,
   type TransformDescriptor,
 } from "./descriptor.ts";
-export { scaleAbout, scaleAboutDescriptor } from "./scaleAbout.ts";
+export {
+  scaleAbout,
+  scaleAboutDescriptor,
+  scaleAboutEdge,
+  type ScaleAbout,
+  type ScaleAboutOptions,
+} from "./scaleAbout.ts";
+export { LiveWarp, liveWarp, type ChangeableWarp } from "./liveWarp.ts";
+export { blend, type BlendedWarp } from "./blend.ts";
+export {
+  fromFunction,
+  type FromFunctionOptions,
+  type FunctionWarp,
+  type PointFunction,
+} from "./fromFunction.ts";
 export { scaleAlongAxes, scaleAlongAxesDescriptor } from "./scaleAlongAxes.ts";
 export { bump, bumpDescriptor } from "./bump.ts";
 export { bend, bendDescriptor } from "./bend.ts";

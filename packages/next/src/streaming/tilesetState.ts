@@ -17,7 +17,7 @@ import type { DebugColor, DebugVolumes } from "./debugVolumes.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { StageTimes } from "./pipeline.ts";
 import type { SceneItem } from "../scene/SceneItem.ts";
-import type { DesignPlacement } from "./designPlacement.ts";
+import type { Georeference } from "../georeference/georeference.ts";
 
 /** One per tileset, made once with it, and filled by its constructor. */
 export class TilesetState {
@@ -145,7 +145,7 @@ export class TilesetState {
    * position. Without one, a hit at placement 1 has no content coordinates.
    * Changing `modelMatrix` drops it.
    */
-  secondPlacement?: DesignPlacement;
+  secondPlacement?: Georeference;
 
   /** The item drawing the tiles' own draws, if any. */
   baseItem: SceneItem | undefined;

@@ -64,7 +64,7 @@ export function heightOffsetDescriptor(
 }
 
 /** Every point moved `offset` metres up the normal of the ellipsoid of `radii` (default WGS84). */
-export function heightOffset(options: {
+export function heightOffsetEdge(options: {
   radii?: Radii;
   offset: number;
 }): SmoothEdge {
