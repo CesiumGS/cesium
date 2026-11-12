@@ -239,3 +239,22 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
 - **Report** fits run, interpreter-drawn draws and specialized draws.
 
 It depends on nothing else in tasks 9–11, but item 2's interval fallback uses task 9's loops.
+
+### Task 13: the gallery example's camera in object-scale scenes (owner, 2026-11-12)
+
+**What the owner saw:** in the "Transform graph" example's exploded-assembly scene (scene 6), the scroll wheel sometimes zooms out to a very distant position.
+
+**The likely cause** (read from the code, not reproduced yet): the scene uses the Viewer's `GlobeController`.
+
+- Its wheel zoom moves the camera by a share of its distance to the zoom target. The target is the pick under the cursor, and while there is no pick it falls back to the ellipsoid: under the cursor if it's within 20× the camera's height above the ground (`ellipsoidAt`), else the ground below the camera (`ground`).
+- The assembly scene draws no globe, and its parts are small next to the Earth. Over the background, a zoom-out step is therefore measured against the Earth's surface, not the assembly, and one notch can move the camera many times the assembly's size.
+- It happens "sometimes" because it depends on whether the cursor was over a part when the hover pick last landed (`refreshZoomTarget`).
+- `maximumHeight` only caps the far end.
+
+**Fixes:**
+
+1. **In the controller:** with no globe drawn, or when the target is the ellipsoid but there's content near the camera, take the zoom target from the content. Use the last content pick, the nearest content along the cursor ray (`RayQuery` against the world), or the visible content's bounds. Cap a zoom-out step at a few times the distance to the nearest visible content.
+2. **In the example:** object-scale scenes (the assembly, the seismic section, the lens's synthetic city) should use an orbit or CAD controller centred on their content rather than the globe controller.
+   - Plan 5d's controllers (the CAD controller orbiting about `pick.drawnPosition`) are the long-term home.
+   - Until 5d lands, the example can set the globe controller's zoom target to the scene's centre and clamp its range per scene.
+3. **Check:** a test drives wheel events with the cursor over the background in a globe-less scene and asserts each notch changes the distance to the content by at most the wheel's per-notch factor.
