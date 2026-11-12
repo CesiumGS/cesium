@@ -149,4 +149,18 @@ export const EXAMPLES: ExampleInfo[] = [
     load: () => import("./clip-effects/main.ts"),
     source: () => import("./clip-effects/main.ts?raw").then((m) => m.default),
   },
+  {
+    id: "transform-graph",
+    title: "Transform graph",
+    description:
+      "Eight scenes on real data, each a small graph of affine, smooth and switch nodes with content and the camera placed at some of them: exaggerated Alps with the Moon left alone, a split view, a BIM site in UTM under the exaggeration, plan and profile, seismic time to depth, an exploded assembly, a lens on the camera, and subsidence over a city. The graph panel lights the route of each pick, and true values sit beside drawn ones.",
+    labels: ["Frames", "Warps", "Measurement", "Terrain"],
+    globe: "terrain",
+    layout: "side",
+    panelTitle: "Scenes and their graphs",
+    stackNarrow: true,
+    load: () => import("./transform-graph/main.ts"),
+    source: () =>
+      import("./transform-graph/main.ts?raw").then((m) => m.default),
+  },
 ];

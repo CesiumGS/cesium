@@ -1,0 +1,317 @@
+/* Transform graph: the scene picker, the graph panel, labels over the view. */
+.tgx-overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.tgx-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.tgx-loading[hidden] {
+  display: none;
+}
+.tgx-loading > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 24px);
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: color-mix(in oklab, Canvas 88%, transparent);
+  color: CanvasText;
+  border: 1px solid color-mix(in oklab, CanvasText 18%, transparent);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
+  backdrop-filter: blur(8px);
+  font: 400 13px/18px var(--cesium-ui-font, system-ui, sans-serif);
+}
+.tgx-spinner {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid color-mix(in oklab, CanvasText 22%, transparent);
+  border-top-color: var(--cesium-ui-accent, AccentColor);
+  animation: tgx-spin 0.8s linear infinite;
+}
+@keyframes tgx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tgx-spinner {
+    animation: none;
+  }
+}
+
+/* Labels the scenes put over the view. */
+.tgx-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 1px 6px 2px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 0.62);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.tgx-label[hidden] {
+  display: none;
+}
+.tgx-label.tgx-fixed {
+  position: absolute;
+  transform: none;
+}
+.tgx-corner {
+  position: absolute;
+  top: 8px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 0.62);
+  color: #fff;
+  font-size: 12px;
+}
+.tgx-corner.half-left {
+  right: calc(50% + 8px);
+}
+.tgx-corner.half-right {
+  left: calc(50% + 8px);
+}
+.tgx-corner.bottom {
+  top: auto;
+  bottom: 8px;
+}
+.tgx-corner.left {
+  left: 8px;
+}
+.tgx-corner.right {
+  right: 8px;
+}
+.tgx-corner.middle {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Where the last pick is. */
+.tgx-pick {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.6),
+    inset 0 0 0 1px rgb(0 0 0 / 0.6);
+}
+.tgx-pick[hidden] {
+  display: none;
+}
+
+/* The scene picker: eight numbered choices. */
+.tgx-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: var(--stratakit-space-200, 8px);
+}
+.tgx-picker button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 6px;
+  text-align: left;
+  font-size: var(--stratakit-font-size-caption-lg, 12px);
+  line-height: 1.25;
+  border-radius: 4px;
+  border: 1px solid color-mix(in oklab, CanvasText 22%, transparent);
+  background: color-mix(in oklab, Canvas 94%, CanvasText);
+  color: CanvasText;
+  cursor: pointer;
+}
+.tgx-picker button[aria-checked="true"] {
+  border-color: var(--cesium-ui-accent, AccentColor);
+  background: color-mix(
+    in oklab,
+    Canvas 85%,
+    var(--cesium-ui-accent, AccentColor)
+  );
+  font-weight: 600;
+}
+.tgx-picker button:focus-visible {
+  outline: 2px solid var(--cesium-ui-accent, AccentColor);
+  outline-offset: 1px;
+}
+.tgx-num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: color-mix(in oklab, CanvasText 14%, transparent);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.examples-panel .tgx-caption {
+  margin-block: 4px;
+}
+.examples-panel .tgx-point,
+.examples-panel .tgx-note,
+.examples-panel .tgx-small {
+  font-size: var(--stratakit-font-size-caption-lg, 12px);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.tgx-controls,
+.tgx-readouts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tgx-controls .buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* True beside drawn. */
+.tgx-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.tgx-table th,
+.tgx-table td {
+  padding: var(--stratakit-space-50, 2px) 0;
+  text-align: right;
+  font-weight: normal;
+}
+.tgx-table thead th {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg, 12px);
+}
+.tgx-table tbody th {
+  text-align: left;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.tgx-table td {
+  padding-left: var(--stratakit-space-200, 8px);
+}
+.tgx-table td.true {
+  font-weight: 600;
+}
+
+/* The graph: the frame tree, its kinds, what sits where, and the route lit. */
+.tgx-graph {
+  font-size: var(--stratakit-font-size-caption-lg, 12px);
+}
+.tgx-route {
+  margin: 0 0 6px;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.tgx-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 14px;
+  border-left: 1px solid color-mix(in oklab, CanvasText 22%, transparent);
+}
+.tgx-graph > .tgx-tree {
+  padding-left: 0;
+  border-left: 0;
+}
+.tgx-node {
+  margin: 2px 0;
+  padding: 2px 0 2px 4px;
+  border-radius: 4px;
+}
+.tgx-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+}
+.tgx-kind {
+  padding: 0 5px;
+  border-radius: 8px;
+  font-size: 11px;
+  border: 1px solid currentcolor;
+}
+.tgx-kind-root {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.tgx-kind-affine {
+  color: #3b6ea8;
+}
+.tgx-kind-smooth {
+  color: #b5541c;
+}
+.tgx-kind-switch {
+  color: #7a3fa8;
+}
+@media (prefers-color-scheme: dark) {
+  .tgx-kind-affine {
+    color: #7fb2e8;
+  }
+  .tgx-kind-smooth {
+    color: #f0a06a;
+  }
+  .tgx-kind-switch {
+    color: #c79af0;
+  }
+}
+.tgx-detail,
+.tgx-fold {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.tgx-here {
+  list-style: none;
+  margin: 1px 0 0;
+  padding: 0 0 0 10px;
+}
+.tgx-here .tgx-camera {
+  font-style: italic;
+}
+.tgx-node.tgx-on {
+  background: color-mix(
+    in oklab,
+    Canvas 80%,
+    var(--cesium-ui-accent, AccentColor)
+  );
+  box-shadow: inset 3px 0 0 var(--cesium-ui-accent, AccentColor);
+}
+.tgx-node.tgx-on > .tgx-row b::after {
+  content: " ●";
+  color: var(--cesium-ui-accent, AccentColor);
+}
+.tgx-node.tgx-turn > .tgx-row b::after {
+  content: " ◆ (the route turns here)";
+}
+
+.tgx-sources ul {
+  padding-left: 18px;
+  margin: 4px 0;
+}
+.tgx-sources li {
+  font-size: var(--stratakit-font-size-caption-lg, 12px);
+}
+
+@media (max-width: 900px) {
+  .tgx-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
