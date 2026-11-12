@@ -8,7 +8,7 @@
 // scales (`SmoothSpec.identity`): at scale `s` each is
 // `identity + s · (value − identity)`, the warp's `p + s · (f(p) − p)`.
 import {
-  warpScaleOf,
+  smoothValuesOf,
   type Route as CameraRoute,
   type Warp,
 } from "../../camera/route.ts";
@@ -41,19 +41,9 @@ export interface BridgeRefusal {
   readonly reason: string;
 }
 
-/** The parameter values a warp's smooth step has now: the spec's, at the warp's scale. */
+/** The parameter values a warp's smooth step has now (`smoothValuesOf`). */
 export function valuesOf(warp: Warp): Params {
-  const spec = warp.smooth!;
-  const values: Record<string, number> = { ...spec.params };
-  if (warp.scale) {
-    const s = warpScaleOf(warp);
-    for (const [name, identity] of Object.entries(spec.identity ?? {})) {
-      if (name in values) {
-        values[name] = identity + s * (values[name]! - identity);
-      }
-    }
-  }
-  return values;
+  return smoothValuesOf(warp);
 }
 
 function same(a: Params, b: Params): boolean {

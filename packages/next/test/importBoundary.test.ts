@@ -82,6 +82,9 @@ const FRAMES_CORE_VALUES = new Set([
   "src/core/bulk.ts",
   // The transform graph's nodes (plan section 13.37): geo-free, it imports nothing.
   "src/transform/graph.ts",
+  // Queries and accuracy along transform-graph routes (13.37, task 5): geo-free.
+  "src/transform/accuracy.ts",
+  "src/transform/queries.ts",
 ]);
 
 /** The layers each layer may import (values and types). */

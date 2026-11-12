@@ -9,13 +9,13 @@
 // (`graphOfFrames`); the pick's anchor is where the two graphs meet.
 import type { FrameKey } from "../camera/frameResolver.ts";
 import {
+  smoothValuesOf,
   warpForward,
   warpInverse,
   type Route as CameraRoute,
   type Warp,
 } from "../camera/route.ts";
 import type { CorePick } from "../scene/pick.ts";
-import { valuesOf } from "../scene/world/routeBridge.ts";
 import type { SigmaIn } from "../transform/accuracy.ts";
 import {
   affine,
@@ -53,7 +53,7 @@ function edgeOf(warp: Warp, inverse: boolean, index: number): SmoothSpec {
     return {
       ...spec,
       id: spec.id ?? `warp${index}`,
-      params: valuesOf(warp),
+      params: smoothValuesOf(warp),
       ...(sigma !== undefined && { accuracy: sigma }),
     };
   }

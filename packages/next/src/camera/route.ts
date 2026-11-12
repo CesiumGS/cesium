@@ -5,7 +5,7 @@
 // concatenated coordinate operation, PROJ's pipeline): rigid steps and warp
 // steps in order. "True" coordinates are any frame reached without crossing
 // a presentation warp.
-import type { SmoothSpec } from "../transform/graph.ts";
+import type { Params, SmoothSpec } from "../transform/graph.ts";
 import type { FrameKey, FrameResolver } from "./frameResolver.ts";
 
 /** A number that is read live and moves a warp's strength; a `PlacementParameter` has this shape. */
@@ -255,6 +255,25 @@ export function warpScaleOf(warp: Warp): number {
     );
   }
   return s;
+}
+
+/**
+ * The parameter values a warp's smooth step has now: the spec's, at the
+ * warp's scale (each parameter named in `identity` at
+ * `identity + s · (value − identity)`, the warp's `p + s · (f(p) − p)`).
+ */
+export function smoothValuesOf(warp: Warp): Params {
+  const spec = warp.smooth!;
+  const values: Record<string, number> = { ...spec.params };
+  if (warp.scale) {
+    const s = warpScaleOf(warp);
+    for (const [name, identity] of Object.entries(spec.identity ?? {})) {
+      if (name in values) {
+        values[name] = identity + s * (values[name]! - identity);
+      }
+    }
+  }
+  return values;
 }
 
 /**
