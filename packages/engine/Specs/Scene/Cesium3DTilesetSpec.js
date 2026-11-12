@@ -6386,20 +6386,21 @@ describe(
         it("gives features of ungrouped child tiles their parent's layer", async function () {
           const tileset = await Cesium3DTilesTester.loadTileset(
             scene,
-            "Data/Cesium3DTiles/Metadata/Layers/groupedModel.json",
+            tilesetWithLayersUrl,
           );
           const layer = tileset.featureLayers.get(0);
-          const child = tileset.root.children[0];
-          expect(tileset.root.content.getFeature(0).featureLayer).toBe(layer);
+          const groupedModel = tileset.root.children[2];
+          const child = groupedModel.children[0];
+          expect(groupedModel.content.getFeature(0).featureLayer).toBe(layer);
           expect(child.content.getFeature(0).featureLayer).toBe(layer);
         });
 
         it("gives features the parent's layer over their own group", async function () {
           const tileset = await Cesium3DTilesTester.loadTileset(
             scene,
-            "Data/Cesium3DTiles/Metadata/Layers/groupedModel.json",
+            tilesetWithLayersUrl,
           );
-          const groupedChild = tileset.root.children[1];
+          const groupedChild = tileset.root.children[2].children[1];
           expect(groupedChild.content.getFeature(0).featureLayer).toBe(
             tileset.featureLayers.get(0),
           );
@@ -6411,7 +6412,7 @@ describe(
             "Data/Cesium3DTiles/Metadata/Layers/geojson.json",
             { vectorGeoJson: true },
           );
-          const content = tileset.root.children[0].content;
+          const content = tileset.root.content;
           expect(content).toBeInstanceOf(VectorGltf3DTileContent);
           expect(content.getFeature(0, 0).featureLayer).toBe(
             tileset.featureLayers.get(0),
