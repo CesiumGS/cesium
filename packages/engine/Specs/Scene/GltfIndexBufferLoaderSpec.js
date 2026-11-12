@@ -1,7 +1,6 @@
+import { ComponentDatatype, RuntimeError, clone } from "@cesium/core";
 import {
   Buffer,
-  clone,
-  ComponentDatatype,
   DracoLoader,
   GltfBufferViewLoader,
   GltfDracoLoader,
@@ -9,7 +8,6 @@ import {
   JobScheduler,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../index.js";
 import concatTypedArrays from "../../../../Specs/concatTypedArrays.js";
 import createScene from "../../../../Specs/createScene.js";

@@ -1,26 +1,29 @@
 import {
   Cartesian3,
   Cartographic,
-  defined,
   Ellipsoid,
   EventHelper,
   GeographicProjection,
-  GeographicTilingScheme,
   Intersect,
   Math as CesiumMath,
   Rectangle,
   Visibility,
+  defined,
+} from "@cesium/core";
+import {
+  GeographicTilingScheme,
   Camera,
   GlobeSurfaceTileProvider,
   GlobeTranslucencyState,
   ImageryLayerCollection,
   QuadtreePrimitive,
+  QuadtreeTile,
   QuadtreeTileLoadState,
   SceneMode,
+  VectorProvider,
 } from "../../index.js";
 import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
 import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -98,6 +101,9 @@ describe("Scene/QuadtreePrimitive", function () {
         terrainProvider: mockTerrain,
         imageryLayers: imageryLayerCollection,
         surfaceShaderSet: surfaceShaderSet,
+        vectorProvider: new VectorProvider({
+          tilingScheme: mockTerrain.tilingScheme,
+        }),
       });
       quadtree = new QuadtreePrimitive({
         tileProvider: tileProvider,
@@ -1079,6 +1085,195 @@ describe("Scene/QuadtreePrimitive", function () {
 
         // Verify that both callbacks produced the same computed position (indicating a cache hit).
         expect(position1).toEqual(position2);
+      });
+
+      it("position cache stores a distinct cartographic per entry to prevent unintended mutation", function () {
+        // Previously, every pick() inside `updateHeights` passed the same module-level `scratchPosition`,
+        // so every cached entry ended up aliasing a single shared object.
+        // The next pick() mutated every prior entry across every tile.
+        // Observable symptom is clamped billboards jumping to heights from neighbouring tiles
+        // (CesiumGS/cesium#12602).
+
+        // The pick result is converted to a mode-independent cartographic before caching.
+        // We drive two `updateHeight` registrations whose picks return different positions,
+        // then assert that every cached cartographic is a distinct object
+        // AND that none of them were mutated to match the last pick after the fact.
+        // Prior to fix, all cache entries would reference the same object, i.e. the final pick.
+
+        const tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+
+        tileProvider.terrainProvider = {
+          getTileDataAvailable: function () {
+            return true;
+          },
+        };
+
+        // Realistic surface ECEF positions so `cartesianToCartographic` succeeds.
+        const positionA = Cartesian3.fromDegrees(-72.0, 40.0, 100.0);
+        const positionB = Cartesian3.fromDegrees(10.0, -20.0, 250.0);
+        const ellipsoid = Ellipsoid.WGS84;
+        const cartoA = ellipsoid.cartesianToCartographic(positionA);
+        const cartoB = ellipsoid.cartesianToCartographic(positionB);
+        let pickCount = 0;
+
+        tileProvider.loadTile.and.callFake(function (frameState, tile) {
+          tile.state = QuadtreeTileLoadState.DONE;
+          tile.renderable = true;
+          tile.data = {
+            // Match GlobeSurfaceTile.pick: write into the caller's scratch and return the scratch.
+            // Alternate which cartesian is written so successive picks produce distinct results.
+            pick: function (ray, mode, projection, cullBackFaces, result) {
+              pickCount += 1;
+              const src = pickCount % 2 === 1 ? positionA : positionB;
+              return Cartesian3.clone(src, result);
+            },
+            mesh: {},
+          };
+        });
+
+        const quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
+        });
+
+        // Capture every value passed to setPositionCacheEntry.
+        const setPositionSpy = spyOn(
+          QuadtreeTile.prototype,
+          "setPositionCacheEntry",
+        ).and.callThrough();
+
+        // Install two height update callbacks at clearly-different locations
+        // so the tile picks land in different cache entries.
+        quadtree.updateHeight(
+          Cartographic.fromDegrees(-72.0, 40.0),
+          function () {},
+        );
+        quadtree.updateHeight(
+          Cartographic.fromDegrees(10.0, -20.0),
+          function () {},
+        );
+
+        // Process a few render cycles to trigger height updates and cache usage.
+        for (let i = 0; i < 3; ++i) {
+          // Advance the frame so tile selection reruns; selection keys off
+          // `frameState.frameNumber` via `_lastSelectionFrameNumber` /
+          // `_lastSelectionResultFrame` and short-circuits on the same frame.
+          ++scene.frameState.frameNumber;
+          quadtree.update(scene.frameState);
+          quadtree.beginFrame(scene.frameState);
+          quadtree.render(scene.frameState);
+          quadtree.endFrame(scene.frameState);
+        }
+
+        const storedValues = setPositionSpy.calls
+          .allArgs()
+          .map((args) => args[2]);
+
+        // The test only makes sense if both picks ran and at least two distinct positions were cached.
+        expect(pickCount).toBeGreaterThanOrEqual(2);
+        expect(storedValues.length).toBeGreaterThanOrEqual(2);
+
+        // Every stored value must be a distinct object instance.
+        // With the alias bug, two stored entries would reference the same scratch.
+        const uniqueRefs = new Set(storedValues);
+        expect(uniqueRefs.size).toBe(storedValues.length);
+
+        // The stored cartographics must equal the values pick() produced at the time they
+        // were cached. With the bug, every entry would now equal whichever was cached last.
+        const hasPositionA = storedValues.some((v) =>
+          Cartographic.equalsEpsilon(v, cartoA, CesiumMath.EPSILON10),
+        );
+        const hasPositionB = storedValues.some((v) =>
+          Cartographic.equalsEpsilon(v, cartoB, CesiumMath.EPSILON10),
+        );
+        expect(hasPositionA).toBe(true);
+        expect(hasPositionB).toBe(true);
+      });
+
+      it("unprojects the pick result to a cartographic in 2D and Columbus View", function () {
+        // In 2D and Columbus View, GlobeSurfaceTile.pick returns the hit in the
+        // projected map frame (swizzled to (height, easting, northing)), not
+        // ECEF. updateHeights must un-swizzle and unproject that back into a
+        // cartographic for the callback; running cartesianToCartographic on the
+        // projected point (as the code once did) would yield a garbage position.
+        const projection = scene.mapProjection;
+        const originalMode = scene.frameState.mode;
+
+        [SceneMode.SCENE2D, SceneMode.COLUMBUS_VIEW].forEach(function (mode) {
+          const tileProvider = createSpyTileProvider();
+          tileProvider.getReady.and.returnValue(true);
+          tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+          tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+          tileProvider.terrainProvider = {
+            getTileDataAvailable: function () {
+              return true;
+            },
+          };
+
+          // The terrain point the pick "finds" at the registered location.
+          const expected = Cartographic.fromDegrees(-72.0, 40.0, 123.0);
+
+          // Reproduce a GlobeSurfaceTile.pick result in the current mode's frame:
+          // project to (easting, northing, height), then swizzle to (height, easting, northing).
+          const projected = projection.project(expected);
+          const pickInModeFrame = new Cartesian3(
+            projected.z,
+            projected.x,
+            projected.y,
+          );
+
+          tileProvider.loadTile.and.callFake(function (frameState, tile) {
+            tile.state = QuadtreeTileLoadState.DONE;
+            tile.renderable = true;
+            tile.data = {
+              pick: function (
+                ray,
+                pickMode,
+                pickProjection,
+                cullBackFaces,
+                result,
+              ) {
+                return Cartesian3.clone(pickInModeFrame, result);
+              },
+              mesh: {},
+            };
+          });
+
+          const quadtree = new QuadtreePrimitive({
+            tileProvider: tileProvider,
+          });
+
+          let received;
+          quadtree.updateHeight(
+            Cartographic.fromDegrees(-72.0, 40.0),
+            function (carto) {
+              received = Cartographic.clone(carto, received);
+            },
+          );
+
+          scene.frameState.mode = mode;
+          try {
+            for (let i = 0; i < 3; ++i) {
+              // Advance the frame so tile selection reruns each cycle.
+              ++scene.frameState.frameNumber;
+              quadtree.update(scene.frameState);
+              quadtree.beginFrame(scene.frameState);
+              quadtree.render(scene.frameState);
+              quadtree.endFrame(scene.frameState);
+            }
+          } finally {
+            scene.frameState.mode = originalMode;
+          }
+
+          // The callback must receive the true cartographic (mode-independent),
+          // not cartesianToCartographic of the projected point.
+          expect(received).toBeDefined();
+          expect(
+            Cartographic.equalsEpsilon(received, expected, CesiumMath.EPSILON7),
+          ).toBe(true);
+        });
       });
 
       it("gives correct priority to tile loads", function () {

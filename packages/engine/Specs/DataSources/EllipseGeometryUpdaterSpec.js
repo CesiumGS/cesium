@@ -1,8 +1,6 @@
+import { Cartesian3, JulianDate, TimeIntervalCollection } from "@cesium/core";
 import {
   ApproximateTerrainHeights,
-  Cartesian3,
-  JulianDate,
-  TimeIntervalCollection,
   ConstantPositionProperty,
   ConstantProperty,
   EllipseGeometryUpdater,
@@ -12,7 +10,6 @@ import {
   SampledProperty,
   PrimitiveCollection,
 } from "../../index.js";
-
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createGeometryUpdaterGroundGeometrySpecs from "../../../../Specs/createGeometryUpdaterGroundGeometrySpecs.js";

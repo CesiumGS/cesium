@@ -1,30 +1,139 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
+import { Check, Frozen, RuntimeError, defined } from "@cesium/core";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 import { loadSpz } from "@spz-loader/core";
+
+// Cumulative number of SH coefficient floats per splat per channel for each
+// degree. Degree 0 has no extra SH data (base color is stored separately in
+// the "colors" attribute). Degrees 1-3 follow the standard SH basis count:
+// l=1 adds 3 bands × 3 channels = 9; l=2 adds 5 × 3 = 15 (total 24);
+// l=3 adds 7 × 3 = 21 (total 45).
+const SH_FLOATS_PER_SPLAT_BY_DEGREE = [0, 9, 24, 45];
+
+// Non-SH attribute floats per splat: position(3) + scale(3) + rotation(4)
+// + opacity(1) + color(3) = 14.
+const BASE_FLOATS_PER_SPLAT = 14;
+
+// The spz-loader WASM module is compiled with a signed 32-bit address space,
+// giving a hard ceiling of 2 GB. An additional factor of ~2× is required
+// because spz-loader copies every decoded C++ vector into a JavaScript
+// TypedArray. 1.6 GB is used as a conservative pre-flight threshold.
+const WASM_MEMORY_LIMIT_BYTES = 1.6 * 1024 * 1024 * 1024;
+
+// glTF attribute semantics whose values are produced by SPZ decompression.
+// This must stay in sync with the SPZ routing in GltfVertexBufferLoader. Opacity
+// is not listed separately: it is carried in COLOR_0's alpha channel. Spherical
+// harmonics attributes use the SH_DEGREE_* naming and are matched in
+// isSpzSemantic below.
+const spzProvidedSemantics = new Set([
+  "POSITION",
+  "KHR_gaussian_splatting:SCALE",
+  "_SCALE",
+  "KHR_gaussian_splatting:ROTATION",
+  "_ROTATION",
+  "COLOR_0",
+]);
+
+/**
+ * Returns whether the given glTF attribute semantic is one whose values are
+ * provided by SPZ decompression (see the SPZ routing in
+ * {@link GltfVertexBufferLoader}). This is the single source of truth for the
+ * SPZ-provided semantic set so the loader gate and the vertex buffer routing
+ * cannot drift.
+ *
+ * @param {string} gltfSemantic The glTF attribute semantic, e.g. "POSITION".
+ * @returns {boolean} <code>true</code> if SPZ decoding provides this semantic.
+ * @private
+ */
+function isSpzSemantic(gltfSemantic) {
+  if (!defined(gltfSemantic)) {
+    return false;
+  }
+  return (
+    spzProvidedSemantics.has(gltfSemantic) ||
+    gltfSemantic.includes("SH_DEGREE_")
+  );
+}
+
+/**
+ * Derives the point count and maximum spherical harmonics degree for an SPZ
+ * primitive from the glTF JSON, without touching the compressed binary data.
+ * <p>
+ * The SPZ payload is gzip-compressed and therefore cannot be inspected
+ * directly. Instead, <code>numPoints</code> is read from the POSITION
+ * accessor's <code>count</code> field and <code>shDegree</code> is inferred
+ * from the highest-numbered <code>SH_DEGREE_n</code> attribute present in
+ * the primitive. Returns <code>undefined</code> if the required information
+ * is unavailable.
+ * </p>
+ * @param {object} gltf The glTF JSON object.
+ * @param {object} primitive The glTF primitive object.
+ * @returns {{ numPoints: number, shDegree: number }|undefined}
+ * @private
+ */
+function getSpzInfoFromGltf(gltf, primitive) {
+  const attributes = primitive?.attributes;
+  if (!defined(attributes)) {
+    return undefined;
+  }
+
+  const positionAccessorId = attributes["POSITION"];
+  if (!defined(positionAccessorId)) {
+    return undefined;
+  }
+  const accessor = gltf?.accessors?.[positionAccessorId];
+  if (!defined(accessor) || accessor.count <= 0) {
+    return undefined;
+  }
+
+  let shDegree = 0;
+  for (const semantic in attributes) {
+    if (Object.prototype.hasOwnProperty.call(attributes, semantic)) {
+      const match = /SH_DEGREE_(\d+)_COEF_/.exec(semantic);
+      if (match) {
+        shDegree = Math.max(shDegree, parseInt(match[1], 10));
+      }
+    }
+  }
+
+  return { numPoints: accessor.count, shDegree };
+}
+
+/**
+ * Estimates the peak memory consumption (in bytes) of decoding an SPZ file
+ * with the given parameters. The estimate accounts for both the WASM heap
+ * allocations and the JavaScript TypedArray copies produced by spz-loader.
+ * @param {number} numPoints Number of Gaussian splats.
+ * @param {number} shDegree Spherical harmonics degree (0–3).
+ * @returns {number} Estimated byte count.
+ * @private
+ */
+function estimateSpzMemoryBytes(numPoints, shDegree) {
+  const floatsPerPoint =
+    BASE_FLOATS_PER_SPLAT + (SH_FLOATS_PER_SPLAT_BY_DEGREE[shDegree] ?? 0);
+  // ×2 accounts for WASM heap + JS TypedArray mirror.
+  return numPoints * floatsPerPoint * Float32Array.BYTES_PER_ELEMENT * 2;
+}
 
 /**
  * Load a SPZ buffer from a glTF.
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
- * @alias GltfSpzLoader
- * @constructor
- * @augments ResourceLoader
- * @param {object} options Object with the following properties:
- * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {object} options.gltf The glTF JSON.
- * @param {object} options.primitive The primitive containing the SPZ extension.
- * @param {object} options.spz The SPZ extension object.
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {string} [options.cacheKey] The cache key of the resource.
  *
  * @private
  */
 class GltfSpzLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
+   * @param {object} options.gltf The glTF JSON.
+   * @param {object} options.primitive The primitive containing the SPZ extension.
+   * @param {object} options.spz The SPZ extension object.
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   */
   constructor(options) {
     super();
 
@@ -64,7 +173,6 @@ class GltfSpzLoader extends ResourceLoader {
 
   /**
    * The cache key of the resource.
-   * @memberof GltfSpzLoader.prototype
    * @type {string}
    * @readonly
    * @private
@@ -75,7 +183,6 @@ class GltfSpzLoader extends ResourceLoader {
 
   /**
    * The decoded SPZ data.
-   * @memberof GltfSpzLoader.prototype
    * @type {object}
    * @readonly
    * @private
@@ -129,6 +236,36 @@ class GltfSpzLoader extends ResourceLoader {
       return false;
     }
 
+    // Reject oversized SPZ payloads before invoking the WASM decoder.
+    // The spz-loader WASM module has a hard 2 GB memory ceiling; exceeding
+    // it causes an unrecoverable Aborted() call with no useful diagnostic.
+    // See: https://github.com/CesiumGS/cesium/issues/13283
+    //
+    // The SPZ binary is gzip-compressed, so its header cannot be read
+    // directly. Point count and SH degree are therefore derived from the
+    // glTF JSON, which is available at this stage.
+    const spzInfo = getSpzInfoFromGltf(this._gltf, this._primitive);
+    if (defined(spzInfo)) {
+      const estimatedBytes = estimateSpzMemoryBytes(
+        spzInfo.numPoints,
+        spzInfo.shDegree,
+      );
+      if (estimatedBytes > WASM_MEMORY_LIMIT_BYTES) {
+        const estimatedMB = Math.round(estimatedBytes / (1024 * 1024));
+        handleError(
+          this,
+          new RuntimeError(
+            `SPZ data too large to decode: ${spzInfo.numPoints.toLocaleString()} splats ` +
+              `with spherical harmonics degree ${spzInfo.shDegree} would require ` +
+              `approximately ${estimatedMB} MB, which exceeds the WASM memory limit. ` +
+              `Consider using a lower spherical harmonics degree or splitting the ` +
+              `dataset into smaller tiles.`,
+          ),
+        );
+        return false;
+      }
+    }
+
     const decodePromise = loadSpz(this._bufferViewTypedArray, {
       unpackOptions: { coordinateSystem: "UNSPECIFIED" },
     });
@@ -162,7 +299,7 @@ async function loadResources(loader) {
   try {
     const bufferViewLoader = resourceCache.getBufferViewLoader({
       gltf: loader._gltf,
-      bufferViewId: 0,
+      bufferViewId: loader._spz.bufferView,
       gltfResource: loader._gltfResource,
       baseResource: loader._baseResource,
     });
@@ -215,4 +352,5 @@ async function processDecode(loader, decodePromise) {
   }
 }
 
+export { estimateSpzMemoryBytes, getSpzInfoFromGltf, isSpzSemantic };
 export default GltfSpzLoader;

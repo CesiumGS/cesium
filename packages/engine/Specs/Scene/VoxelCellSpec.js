@@ -1,13 +1,14 @@
 import {
   Cartesian3,
-  Cesium3DTilesVoxelProvider,
   Math as CesiumMath,
   Matrix3,
   OrientedBoundingBox,
+} from "@cesium/core";
+import {
+  Cesium3DTilesVoxelProvider,
   VoxelPrimitive,
   VoxelCell,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -121,7 +122,7 @@ describe("Scene/VoxelCell", function () {
       expectedCenter,
       CesiumMath.EPSILON6,
     );
-    const expectedHalfAxes = new Matrix3.fromUniformScale(0.5);
+    const expectedHalfAxes = Matrix3.fromUniformScale(0.5);
     expect(orientedBoundingBox.halfAxes).toEqualEpsilon(
       expectedHalfAxes,
       CesiumMath.EPSILON6,

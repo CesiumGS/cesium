@@ -1,11 +1,14 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Check,
+  Color,
+  DeveloperError,
+  Frozen,
+  Matrix4,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import writeTextToCanvas from "../Core/writeTextToCanvas.js";
 import bitmapSDF from "bitmap-sdf";
 import BillboardCollection from "./BillboardCollection.js";
@@ -19,7 +22,6 @@ import SDFSettings from "./SDFSettings.js";
 import TextureAtlas from "../Renderer/TextureAtlas.js";
 import VerticalOrigin from "./VerticalOrigin.js";
 import GraphemeSplitter from "grapheme-splitter";
-import { Check } from "@cesium/engine";
 
 /**
  * A glyph represents a single character in label.
@@ -85,6 +87,8 @@ function getWhitePixelBillboard(billboardCollection, labelCollection) {
   });
 
   billboard.setImageTexture(billboardTexture);
+  billboard._positionFromParent = true;
+  billboard._labelTranslate = new Cartesian2();
 
   return billboard;
 }
@@ -288,6 +292,9 @@ function rebindAllGlyphs(labelCollection, label) {
     billboard.horizontalOrigin = HorizontalOrigin.LEFT;
     billboard.verticalOrigin = label._verticalOrigin;
     billboard.heightReference = label._heightReference;
+    if (defined(label._clampedPosition)) {
+      billboard._clampedPosition = label._clampedPosition;
+    }
     billboard.scale = label.totalScale;
     billboard.pickPrimitive = label;
     billboard.id = label._id;
@@ -330,7 +337,7 @@ function updateBackgroundBillboard(
   // Label is shown and background is hidden - remove the background billboard
   if (label.show && !showBackground) {
     backgroundBillboardCollection.remove(backgroundBillboard);
-    label._backgroundBillboard = backgroundBillboard = undefined;
+    label._backgroundBillboard = undefined;
     return;
   }
 
@@ -342,6 +349,9 @@ function updateBackgroundBillboard(
   backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
   backgroundBillboard.verticalOrigin = label._verticalOrigin;
   backgroundBillboard.heightReference = label._heightReference;
+  if (defined(label._clampedPosition)) {
+    backgroundBillboard._clampedPosition = label._clampedPosition;
+  }
   backgroundBillboard.scale = label.totalScale;
   backgroundBillboard.pickPrimitive = label;
   backgroundBillboard.id = label._id;
@@ -493,6 +503,12 @@ function repositionAllGlyphs(label) {
         glyph.billboard._labelDimensions.x = totalLineWidth;
         glyph.billboard._labelDimensions.y = totalLineHeight;
         glyph.billboard._labelHorizontalOrigin = horizontalOrigin;
+        if (isHeightReferenceClamp(label.heightReference)) {
+          glyph.billboard._labelTranslate = Cartesian2.clone(
+            glyphPixelOffset,
+            glyph.billboard._labelTranslate,
+          );
+        }
       }
 
       //Compute the next x offset taking into account the kerning performed
@@ -535,19 +551,6 @@ function repositionAllGlyphs(label) {
       glyphPixelOffset,
       backgroundBillboard._labelTranslate,
     );
-  }
-
-  if (isHeightReferenceClamp(label.heightReference)) {
-    for (let glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-      const glyph = glyphs[glyphIndex];
-      const billboard = glyph.billboard;
-      if (defined(billboard)) {
-        billboard._labelTranslate = Cartesian2.clone(
-          glyphPixelOffset,
-          billboard._labelTranslate,
-        );
-      }
-    }
   }
 }
 

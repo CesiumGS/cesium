@@ -1,11 +1,10 @@
+import { Color, NearFarScalar } from "@cesium/core";
 import {
-  Color,
   DrawCommand,
   FrustumCommands,
   Globe,
   GlobeTranslucencyFramebuffer,
   GlobeTranslucencyState,
-  NearFarScalar,
   Pass,
   PassState,
   RenderState,
@@ -13,7 +12,6 @@ import {
   ShaderProgram,
   ShaderSource,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 let scene;

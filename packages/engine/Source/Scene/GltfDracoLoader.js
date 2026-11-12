@@ -1,7 +1,4 @@
-import Check from "../Core/Check.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
+import { Check, ComponentDatatype, Frozen, defined } from "@cesium/core";
 import DracoLoader from "./DracoLoader.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
@@ -13,22 +10,19 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfDracoLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {object} options.gltf The glTF JSON.
- * @param {object} options.primitive The primitive containing the Draco extension.
- * @param {object} options.draco The Draco extension object.
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {string} [options.cacheKey] The cache key of the resource.
- *
  * @private
  */
 class GltfDracoLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
+   * @param {object} options.gltf The glTF JSON.
+   * @param {object} options.primitive The primitive containing the Draco extension.
+   * @param {object} options.draco The Draco extension object.
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   */
   constructor(options) {
     super();
 
@@ -69,7 +63,6 @@ class GltfDracoLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfDracoLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -82,7 +75,6 @@ class GltfDracoLoader extends ResourceLoader {
   /**
    * The decoded data.
    *
-   * @memberof GltfDracoLoader.prototype
    *
    * @type {object}
    * @readonly

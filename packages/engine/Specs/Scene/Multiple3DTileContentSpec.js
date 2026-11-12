@@ -1,10 +1,7 @@
+import { Cartesian3, Color, Event, HeadingPitchRange } from "@cesium/core";
 import {
-  Cartesian3,
   Cesium3DContentGroup,
   Cesium3DTileset,
-  Color,
-  Event,
-  HeadingPitchRange,
   Multiple3DTileContent,
   MetadataClass,
   GroupMetadata,
@@ -62,6 +59,19 @@ describe(
         },
       };
       return generateJsonBuffer(gltf).buffer;
+    }
+
+    function createMockTileset() {
+      return {
+        statistics: {
+          numberOfPendingRequests: 0,
+          numberOfAttemptedRequests: 0,
+        },
+        tileFailed: new Event(),
+        isGltfExtensionUsed: function () {
+          return false;
+        },
+      };
     }
 
     let originalRequestsPerServer;
@@ -177,12 +187,7 @@ describe(
     });
 
     it("requestInnerContents returns promise that resolves to content if successful", async function () {
-      const mockTileset = {
-        statistics: {
-          numberOfPendingRequests: 0,
-          numberOfAttemptedRequests: 0,
-        },
-      };
+      const mockTileset = createMockTileset();
       const tile = {};
       const content = new Multiple3DTileContent(
         mockTileset,
@@ -205,12 +210,7 @@ describe(
     });
 
     it("requestInnerContents returns undefined and updates statistics if all requests cannot be scheduled", function () {
-      const mockTileset = {
-        statistics: {
-          numberOfPendingRequests: 0,
-          numberOfAttemptedRequests: 0,
-        },
-      };
+      const mockTileset = createMockTileset();
       const tile = {};
       const content = new Multiple3DTileContent(
         mockTileset,
@@ -226,13 +226,7 @@ describe(
     });
 
     it("requestInnerContents handles inner content failures", async function () {
-      const mockTileset = {
-        statistics: {
-          numberOfPendingRequests: 0,
-          numberOfAttemptedRequests: 0,
-        },
-        tileFailed: new Event(),
-      };
+      const mockTileset = createMockTileset();
       const tile = {};
       const content = new Multiple3DTileContent(
         mockTileset,
@@ -263,12 +257,7 @@ describe(
     });
 
     it("requestInnerContents handles cancelled requests", async function () {
-      const mockTileset = {
-        statistics: {
-          numberOfPendingRequests: 0,
-          numberOfAttemptedRequests: 0,
-        },
-      };
+      const mockTileset = createMockTileset();
       const tile = {};
       const content = new Multiple3DTileContent(
         mockTileset,

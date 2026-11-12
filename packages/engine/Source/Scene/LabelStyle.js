@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Describes how to draw a label.
  *
@@ -30,4 +32,7 @@ const LabelStyle = {
    */
   FILL_AND_OUTLINE: 2,
 };
-export default Object.freeze(LabelStyle);
+
+Object.freeze(LabelStyle);
+
+export default LabelStyle;

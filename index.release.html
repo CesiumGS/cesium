@@ -28,28 +28,58 @@
         padding-right: 15px;
       }
 
-      .section:nth-child(even) {
-        background-color: #fff;
+      a,
+      a:visited {
+        color: blue;
       }
 
       .section {
         border: none;
         padding: 20px 40px;
+
+        &:nth-child(odd) {
+          background-color: #f5f7f9;
+        }
       }
 
       .section > * {
         max-width: 800px;
       }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #181a1b;
+          color: white;
+        }
+
+        .section:nth-child(odd) {
+          background: #1d1f20;
+        }
+
+        a,
+        a:visited {
+          color: #6dabe4;
+        }
+      }
     </style>
   </head>
-  <body style="background-color: #f5f7f9">
+  <body>
     <div>
       <div class="section">
-        <a href="https://cesium.com/cesiumjs/"
-          ><img
-            src="./Apps/Sandcastle2/images/Cesium_Logo_Color_Overlay.png"
-            style="width: 400px"
-        /></a>
+        <a href="https://cesium.com/cesiumjs/">
+          <picture>
+            <source
+              srcset="
+                ./Apps/Sandcastle2/images/Cesium_Logo_Color_Overlay_Light.png
+              "
+              media="(prefers-color-scheme: dark)"
+            />
+            <img
+              src="./Apps/Sandcastle2/images/Cesium_Logo_Color_Overlay.png"
+              style="width: 400px"
+            />
+          </picture>
+        </a>
       </div>
       <div class="section">
         <h2>Cesium ion</h2>
@@ -151,9 +181,7 @@
             </tr>
           </tbody>
         </table>
-        <div
-          style="padding-top: 300px; font-size: 10pt; vertical-align: bottom"
-        >
+        <div style="padding-top: 300px; font-size: 10pt">
           &copy; 2011-2021 CesiumJS Contributors
         </div>
       </div>

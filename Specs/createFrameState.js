@@ -1,7 +1,6 @@
+import { GeographicProjection, JulianDate } from "@cesium/core";
 import {
   Atmosphere,
-  GeographicProjection,
-  JulianDate,
   Camera,
   CreditDisplay,
   FrameState,

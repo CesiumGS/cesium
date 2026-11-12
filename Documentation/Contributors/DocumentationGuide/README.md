@@ -239,13 +239,10 @@ CesiumMath.EPSILON1 = 0.1;
  * organized into a pyramid of tiles according to a {@link TilingScheme}.  This type describes an
  * interface and is not intended to be instantiated directly.
  *
- * @alias TerrainProvider
- * @constructor
- *
  * @see EllipsoidTerrainProvider
  * @see CesiumTerrainProvider
  */
-function TerrainProvider() {
+class TerrainProvider {
   /* ... */
 }
 ```
@@ -264,19 +261,22 @@ function TerrainProvider() {
 
 ## Classes
 
-Define a class with `@alias` and `@constructor` tags on the constructor function, e.g.,
+Define a class, with description and examples on the class body and `@param` tags on the constructor function, e.g.,
 
 ```javascript
 /**
  * A 3D Cartesian point.
  *
- * @alias Cartesian3
- * @constructor
- *
  * ...
  */
-function Cartesian3(x, y, z) {
-   // ...
+class Cartesian3 {
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    constructor(x, y, z) {
+    // ...
 ```
 
 ## Properties and Constants
@@ -284,19 +284,28 @@ function Cartesian3(x, y, z) {
 - Use `@type` and `@default` (whenever possible, except when the default is `undefined`) to document properties, e.g.,
 
 ```javascript
-function Cartesian3(x, y) {
+/**
+ * ...
+ */
+Cartesian2 {
     /**
-     * The X component.
-     *
-     * @type {number}
-     * @default 0.0
+     * @param {number} x
+     * @param {number} y
      */
-    this.x = x ?? 0.0;
-
+    constructor(x, y) {
+        /**
+         * The X component.
+         *
+         * @type {number}
+         * @default 0.0
+         */
+        this.x = x ?? 0.0;
+        // ...
+    }
     // ...
 ```
 
-- Use `@memberof` when documenting property getter/setters, e.g.,
+- Avoid `@memberof` in new code with ES6 classes. Use `@memberof` only when documenting property getter/setters in older prototype-based classes, e.g.,
 
 ```javascript
 Object.defineProperties(Entity.prototype, {
@@ -568,6 +577,12 @@ We also use JSDoc to build official TypeScript type definitions. Normally this b
 
 ```bash
 npm run build-ts
+```
+
+Our custom lint rules detect some common JSDoc errors. If the linter recognizes the error, its output will usually be more helpful for resolving the problem:
+
+```bash
+npm run sg-scan
 ```
 
 In most cases, the TypeScript compiler will provide a very obvious error and line number which will help you track down the offending, most likely incorrect, JSDoc.

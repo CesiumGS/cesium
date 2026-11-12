@@ -7,9 +7,10 @@ import { cesiumPathReplace, insertImportMap } from "../vite-plugins.js";
 import typescriptCompile from "./typescriptCompile.js";
 
 /** @import { UserConfig, LogLevel } from 'vite' */
+/** @import {Target} from 'vite-plugin-static-copy*/
 
 /**
- * @typedef {Object} ImportObject
+ * @typedef {object} ImportObject
  * @property {string} path The path to use for the import map. ie the path the app can expect to find this at
  * @property {string} typesPath The path to use for intellisense types in monaco
  */
@@ -44,9 +45,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * @param {string} options.basePath Base path for files/routes
  * @param {string} options.cesiumBaseUrl Base path for CesiumJS. This should include the CesiumJS assets and workers etc.
  * @param {string} options.cesiumVersion CesiumJS version to display in the top right
- * @param {string} [options.commitSha] Optional commit hash to display in the top right of the application
+ * @param {string} [options.commitSha] Optional commit hash of the build, attached to analytics events and, unless showCommitInHeader is false, displayed in the top right of the application
+ * @param {boolean} [options.showCommitInHeader] Set to false to keep the commit hash out of the header while still attaching it to analytics events. Defaults to true.
+ * @param {string} [options.branchName] Optional git branch of the build, attached to analytics events
  * @param {ImportList} options.imports Set of imports to add to the import map for the iframe and standalone html pages. These paths should match the URL where it can be accessed within the current environment.
- * @param {{src: string, dest: string}[]} [options.copyExtraFiles] Extra paths passed to viteStaticCopy. Use this to consolidate files for a singular static deployment (ie during production). Source paths should be absolute, dest paths should be relative to the page root. It is up to you to ensure these files exist BEFORE building sandcastle.
+ * @param {string} options.outerOrigin Origin of the outer application
+ * @param {string} options.innerOrigin Origin of the inner viewer bucket. Defaults to the outerOrigin if not provided
+ * @param {Target[]} [options.copyExtraFiles] Extra paths passed to viteStaticCopy. Use this to consolidate files for a singular static deployment (ie during production). Source paths should be absolute, dest paths should be relative to the page root. It is up to you to ensure these files exist BEFORE building sandcastle. viteStaticCopy will preserve directory structure relative to the sandcastle root ignoring any `../` in paths. Use `rename: { stripBase: number | true }` to change this per target.
  */
 export function createSandcastleConfig({
   outDir,
@@ -54,7 +59,11 @@ export function createSandcastleConfig({
   cesiumBaseUrl,
   cesiumVersion,
   commitSha,
+  showCommitInHeader = true,
+  branchName,
   imports,
+  outerOrigin,
+  innerOrigin,
   copyExtraFiles = [],
 }) {
   if (!cesiumVersion || cesiumVersion === "") {
@@ -73,12 +82,14 @@ export function createSandcastleConfig({
 
   const copyPlugin = viteStaticCopy({
     targets: [
-      { src: "templates/Sandcastle.(d.ts|js)", dest: "templates" },
+      { src: "templates/Sandcastle.(d.ts|js)", dest: "" },
       ...copyExtraFiles,
     ],
   });
 
   checkForImport(imports, "cesium");
+  checkForImport(imports, "@cesium/core");
+  checkForImport(imports, "@cesium/gltf");
   checkForImport(imports, "@cesium/engine");
   checkForImport(imports, "@cesium/widgets");
   if (imports["Sandcastle"]) {
@@ -93,11 +104,17 @@ export function createSandcastleConfig({
   };
   /** @type {Object<string, string>} */
   const typePaths = {
-    Sandcastle: "../templates/Sandcastle.d.ts",
+    Sandcastle: "templates/Sandcastle.d.ts",
   };
   for (const [key, value] of Object.entries(imports)) {
     importMap[key] = value.path;
     typePaths[key] = value.typesPath;
+  }
+
+  if (!innerOrigin || innerOrigin === outerOrigin) {
+    console.warn(
+      "\nWARNING: If the inner and outer origin are the same there is no browser protection for secrets. Please check your config if this is not intended",
+    );
   }
 
   config.define = {
@@ -105,6 +122,10 @@ export function createSandcastleConfig({
     __VITE_TYPE_IMPORT_PATHS__: JSON.stringify(typePaths),
     __CESIUM_VERSION__: JSON.stringify(`Cesium ${cesiumVersion}`),
     __COMMIT_SHA__: JSON.stringify(commitSha ?? undefined),
+    __SHOW_COMMIT_SHA__: JSON.stringify(showCommitInHeader),
+    __BRANCH_NAME__: JSON.stringify(branchName ?? undefined),
+    __OUTER_ORIGIN__: JSON.stringify(outerOrigin),
+    __INNER_ORIGIN__: JSON.stringify(innerOrigin ?? outerOrigin),
   };
 
   const plugins = config.plugins ?? [];
@@ -143,7 +164,12 @@ export async function buildStatic(config, logLevel = "warn") {
     throw new Error("Sandcastle typescript build failed");
   }
 
-  console.log("Building Sandcastle with Vite");
+  const { __OUTER_ORIGIN__, __INNER_ORIGIN__ } = config.define;
+
+  console.log(
+    `Building Sandcastle with Vite. App origin: ${__OUTER_ORIGIN__}, Viewer origin: ${__INNER_ORIGIN__}`,
+  );
+  console.log("Outputting build to", config.build.outDir);
   await build({
     ...config,
     root: join(__dirname, "../"),

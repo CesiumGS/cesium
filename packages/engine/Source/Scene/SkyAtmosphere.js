@@ -1,12 +1,14 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
-import GeometryPipeline from "../Core/GeometryPipeline.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import VertexFormat from "../Core/VertexFormat.js";
+import {
+  Cartesian3,
+  Ellipsoid,
+  EllipsoidGeometry,
+  GeometryPipeline,
+  Math as CesiumMath,
+  Matrix4,
+  VertexFormat,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import RenderState from "../Renderer/RenderState.js";

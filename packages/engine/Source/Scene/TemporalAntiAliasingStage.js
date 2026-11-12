@@ -1,14 +1,16 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Color from "../Core/Color.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import Matrix4 from "../Core/Matrix4.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  BoundingRectangle,
+  Cartesian3,
+  Check,
+  Color,
+  Frozen,
+  Matrix4,
+  PixelDatatype,
+  PixelFormat,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import RenderState from "../Renderer/RenderState.js";
 import TemporalAntiAliasing from "../Shaders/PostProcessStages/TemporalAntiAliasing.js";

@@ -1,5 +1,4 @@
-import Check from "./Check.js";
-import defined from "./defined.js";
+import { Check, defined } from "@cesium/core";
 
 /**
  * Array implementation of a heap.
@@ -121,7 +120,7 @@ Heap.prototype.heapify = function (index) {
   const length = this._length;
   const comparator = this._comparator;
   const array = this._array;
-  let candidate = -1;
+  let candidate;
   let inserting = true;
 
   while (inserting) {
@@ -194,6 +193,7 @@ Heap.prototype.insert = function (element) {
 
   if (defined(maximumLength) && this._length > maximumLength) {
     removedElement = array[maximumLength];
+    array[maximumLength] = undefined; // Remove trailing reference
     this._length = maximumLength;
   }
 

@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * An enum identifying the type of request. Used for finer grained logging and priority sorting.
  *
@@ -36,4 +38,7 @@ const RequestType = {
    */
   OTHER: 3,
 };
-export default Object.freeze(RequestType);
+
+Object.freeze(RequestType);
+
+export default RequestType;

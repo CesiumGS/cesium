@@ -1,5 +1,6 @@
-import WebGLConstants from "../Core/WebGLConstants.js";
+// @ts-check
 
+import { WebGLConstants } from "@cesium/core";
 /**
  * Determines which triangles, if any, are culled.
  *
@@ -30,4 +31,7 @@ const CullFace = {
    */
   FRONT_AND_BACK: WebGLConstants.FRONT_AND_BACK,
 };
-export default Object.freeze(CullFace);
+
+Object.freeze(CullFace);
+
+export default CullFace;

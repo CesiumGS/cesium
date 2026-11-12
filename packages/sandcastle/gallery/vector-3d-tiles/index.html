@@ -1,0 +1,46 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  #toolbar {
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  #legend {
+    background: rgba(40, 40, 40, 0.85);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.8;
+    display: none;
+  }
+
+  #legend .item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #legend .swatch {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay">
+  <h1>Loading...</h1>
+</div>
+<div id="toolbar">
+  <select class="cesium-button" id="dropdown">
+    <option value="year">Color by Construction Year</option>
+    <option value="height">Color by Roof Height</option>
+    <option value="tall">Highlight Tall Buildings</option>
+  </select>
+  <div id="legend"></div>
+</div>

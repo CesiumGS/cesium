@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core";
 
 /**
  * Return the `MetadataClassProperty` from the given schema that

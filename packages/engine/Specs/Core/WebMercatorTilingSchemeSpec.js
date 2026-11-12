@@ -4,10 +4,9 @@ import {
   Ellipsoid,
   Math as CesiumMath,
   Rectangle,
-  TilingScheme,
   WebMercatorProjection,
-  WebMercatorTilingScheme,
-} from "../../index.js";
+} from "@cesium/core";
+import { TilingScheme, WebMercatorTilingScheme } from "../../index.js";
 
 describe("Core/WebMercatorTilingScheme", function () {
   let tilingScheme;

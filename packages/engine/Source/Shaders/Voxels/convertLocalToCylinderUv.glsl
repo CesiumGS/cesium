@@ -1,6 +1,4 @@
-uniform vec2 u_cylinderLocalToShapeUvRadius; // x = scale, y = offset
-uniform vec2 u_cylinderLocalToShapeUvHeight; // x = scale, y = offset
-uniform vec2 u_cylinderLocalToShapeUvAngle; // x = scale, y = offset
+uniform vec3 u_cylinderLocalToShapeUvScale; // x = radius scale, y = angle scale, z = height scale
 uniform float u_cylinderShapeUvAngleRangeOrigin;
 uniform mat3 u_cylinderEcToRadialTangentUp;
 uniform ivec4 u_cameraTileCoordinates;
@@ -15,9 +13,9 @@ mat3 convertLocalToShapeSpaceDerivative(in vec3 position) {
 }
 
 vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
-    float radius = shapeUv.x / u_cylinderLocalToShapeUvRadius.x;
-    float angle = shapeUv.y * czm_twoPi / u_cylinderLocalToShapeUvAngle.x;
-    float height = shapeUv.z / u_cylinderLocalToShapeUvHeight.x;
+    float radius = shapeUv.x / u_cylinderLocalToShapeUvScale.x;
+    float angle = shapeUv.y * czm_twoPi / u_cylinderLocalToShapeUvScale.y;
+    float height = shapeUv.z / u_cylinderLocalToShapeUvScale.z;
 
     return vec3(radius, angle, height);
 }
@@ -49,7 +47,7 @@ vec3 convertEcToDeltaShape(in vec3 positionEC) {
 vec3 convertEcToDeltaTile(in vec3 positionEC) {
     vec3 deltaShape = convertEcToDeltaShape(positionEC);
     // Convert to tileset coordinates in [0, 1]
-    float dx = u_cylinderLocalToShapeUvRadius.x * deltaShape.x;
+    float dx = u_cylinderLocalToShapeUvScale.x * deltaShape.x;
     float dy = deltaShape.y / czm_twoPi;
 #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE)
     // Wrap to ensure dy is not crossing through the unoccupied angle range, where
@@ -60,8 +58,8 @@ vec3 convertEcToDeltaTile(in vec3 positionEC) {
     float rotation = floor(rawOutputUvAngle);
     dy -= rotation;
 #endif
-    dy *= u_cylinderLocalToShapeUvAngle.x;
-    float dz = u_cylinderLocalToShapeUvHeight.x * deltaShape.z;
+    dy *= u_cylinderLocalToShapeUvScale.y;
+    float dz = u_cylinderLocalToShapeUvScale.z * deltaShape.z;
     // Convert to tile coordinate changes
     return vec3(dx, dy, dz) * float(1 << u_cameraTileCoordinates.w);
 }

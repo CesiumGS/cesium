@@ -1,7 +1,6 @@
+import { Cartesian3, HeadingPitchRange } from "@cesium/core";
 import {
-  Cartesian3,
   Cesium3DContentGroup,
-  HeadingPitchRange,
   MetadataClass,
   ContentMetadata,
   GroupMetadata,

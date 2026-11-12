@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core";
 
 /**
  * The subdivision scheme for an implicit tileset.
@@ -45,4 +45,6 @@ ImplicitSubdivisionScheme.getBranchingFactor = function (subdivisionScheme) {
   }
 };
 
-export default Object.freeze(ImplicitSubdivisionScheme);
+Object.freeze(ImplicitSubdivisionScheme);
+
+export default ImplicitSubdivisionScheme;

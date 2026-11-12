@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Defined the orientation of stripes in {@link StripeMaterialProperty}.
  *
@@ -16,4 +18,7 @@ const StripeOrientation = {
    */
   VERTICAL: 1,
 };
-export default Object.freeze(StripeOrientation);
+
+Object.freeze(StripeOrientation);
+
+export default StripeOrientation;

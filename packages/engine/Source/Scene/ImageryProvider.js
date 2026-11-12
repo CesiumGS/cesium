@@ -1,11 +1,9 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Check, DeveloperError, defined } from "@cesium/core";
 import loadKTX2 from "../Core/loadKTX2.js";
 import Resource from "../Core/Resource.js";
 
 /**
- * @typedef {HTMLImageElement|HTMLCanvasElement|ImageBitmap} ImageryTypes
+ * @typedef {HTMLImageElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas} ImageryTypes
  *
  * The format in which {@link ImageryProvider} methods return an image may
  * vary by provider, configuration, or server settings.  Most common are

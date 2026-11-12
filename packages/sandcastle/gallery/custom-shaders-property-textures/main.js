@@ -24,7 +24,7 @@ const shaders = {
     fragmentShaderText: `
         void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
         {
-          int horizontalUncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum;
+          uint horizontalUncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum;
           material.diffuse = vec3(float(horizontalUncertainty) / 255.0);
         }
       `,
@@ -33,7 +33,7 @@ const shaders = {
     fragmentShaderText: `
         void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
         {
-          int verticalUncertainty = fsInput.metadata.r3dm_uncertainty_le90sum;
+          uint verticalUncertainty = fsInput.metadata.r3dm_uncertainty_le90sum;
           material.diffuse = vec3(float(verticalUncertainty) / 255.0);
         }
       `,
@@ -43,7 +43,7 @@ const shaders = {
     fragmentShaderText: `
         void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
         {
-          int uncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum + fsInput.metadata.r3dm_uncertainty_le90sum;
+          uint uncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum + fsInput.metadata.r3dm_uncertainty_le90sum;
           material.diffuse = vec3(float(uncertainty) / 255.0);
         }
       `,

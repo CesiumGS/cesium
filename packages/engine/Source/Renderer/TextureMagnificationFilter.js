@@ -1,4 +1,4 @@
-import WebGLConstants from "../Core/WebGLConstants.js";
+import { WebGLConstants } from "@cesium/core";
 
 /**
  * Enumerates all possible filters used when magnifying WebGL textures.
@@ -38,4 +38,6 @@ TextureMagnificationFilter.validate = function (textureMagnificationFilter) {
   );
 };
 
-export default Object.freeze(TextureMagnificationFilter);
+Object.freeze(TextureMagnificationFilter);
+
+export default TextureMagnificationFilter;

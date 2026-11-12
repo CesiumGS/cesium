@@ -1,6 +1,7 @@
 import { type GalleryItem } from "./GalleryItemStore.ts";
 import { decodeBase64Data } from "../Helpers.ts";
 import { getBaseUrl } from "../util/getBaseUrl.ts";
+import { shareIdForPayload, trackEvent } from "../analytics";
 
 const loadGist = async (gist: string) => {
   try {
@@ -12,6 +13,11 @@ const loadGist = async (gist: string) => {
     }
     const code = files["Cesium-Sandcastle.js"]?.content;
     const html = files["Cesium-Sandcastle.html"]?.content;
+    trackEvent("Shared Sandcastle Opened", {
+      // The gist id is already a stable unique id; no need to hash
+      share_id: gist,
+      source: "gist",
+    });
     return {
       title: "Gist Import",
       code,
@@ -20,20 +26,27 @@ const loadGist = async (gist: string) => {
   } catch (error) {
     throw new Error(
       `${error}. Unable to requets gist from GitHub. This could be due to too many requests from your IP or an incorrect gist ID. Instead, copy and paste the code from "https://gist.github.com/${gist}"`,
+      { cause: error },
     );
   }
 };
 
-const fromItem = async ({ getHtmlCode, getJsCode, title }: GalleryItem) => {
+const fromItem = async (item: GalleryItem) => {
+  const { getHtmlCode, getJsCode, title } = item;
   try {
     const [code, html] = await Promise.all([getJsCode(), getHtmlCode()]);
+    trackEvent("Gallery Item Opened", {
+      demo_id: item.id,
+      labels: item.labels,
+      method: "url",
+    });
     return {
       title,
       code,
       html,
     };
   } catch (error) {
-    throw new Error(`Could not load "${title}": ${error}`);
+    throw new Error(`Could not load "${title}": ${error}`, { cause: error });
   }
 };
 
@@ -64,8 +77,13 @@ export function loadFromUrl(
     // This is a legacy support type url that was used by ion.
     // Ideally we use the #c= param as that results in slightly shorter urls
     // The code query parameter is a Base64 encoded JSON string with `code` and `html` properties.
-    const json = JSON.parse(window.atob(codeParam.replaceAll(" ", "+")));
+    const normalizedPayload = codeParam.replaceAll(" ", "+");
+    const json = JSON.parse(window.atob(normalizedPayload));
 
+    trackEvent("Shared Sandcastle Opened", {
+      share_id: shareIdForPayload(normalizedPayload),
+      source: "legacy_code",
+    });
     return {
       title: "New Sandcastle",
       code: json.code,
@@ -76,6 +94,10 @@ export function loadFromUrl(
   if (window.location.hash.indexOf("#c=") === 0) {
     const base64String = window.location.hash.substr(3);
     const { code, html } = decodeBase64Data(base64String);
+    trackEvent("Shared Sandcastle Opened", {
+      share_id: shareIdForPayload(base64String),
+      source: "hash",
+    });
     return {
       title: "New Sandcastle",
       code,

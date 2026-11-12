@@ -1,4 +1,5 @@
-import { Cartesian3, MetadataTable } from "../../index.js";
+import { Cartesian3 } from "@cesium/core";
+import { MetadataTable } from "../../index.js";
 import MetadataTester from "../../../../Specs/MetadataTester.js";
 
 describe("Scene/MetadataTable", function () {

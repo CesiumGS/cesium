@@ -40,6 +40,15 @@ body:
         Browser:
         CesiumJS Version:
         Operating System:
+  - type: checkboxes
+    id: ai-acknowledgment
+    attributes:
+      label: AI acknowledgment
+      options:
+        - label: I used AI to generate this issue report.
+          required: false
+        - label: (If the above is checked) I have reviewed the AI-generated content before submitting.
+          required: false
   - type: markdown
     attributes:
       value: |

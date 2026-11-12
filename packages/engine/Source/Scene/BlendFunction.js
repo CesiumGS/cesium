@@ -1,5 +1,6 @@
-import WebGLConstants from "../Core/WebGLConstants.js";
+// @ts-check
 
+import { WebGLConstants } from "@cesium/core";
 /**
  * Determines how blending factors are computed.
  *
@@ -126,4 +127,7 @@ const BlendFunction = {
    */
   SOURCE_ALPHA_SATURATE: WebGLConstants.SRC_ALPHA_SATURATE,
 };
-export default Object.freeze(BlendFunction);
+
+Object.freeze(BlendFunction);
+
+export default BlendFunction;

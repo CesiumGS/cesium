@@ -105,7 +105,7 @@ function startSnow() {
   scene.primitives.removeAll();
   scene.primitives.add(
     new Cesium.ParticleSystem({
-      modelMatrix: new Cesium.Matrix4.fromTranslation(scene.camera.position),
+      modelMatrix: Cesium.Matrix4.fromTranslation(scene.camera.position),
       minimumSpeed: -1.0,
       maximumSpeed: 0.0,
       lifetime: 15.0,
@@ -141,9 +141,7 @@ const options = [
       scene.primitives.removeAll();
       scene.primitives.add(
         new Cesium.ParticleSystem({
-          modelMatrix: new Cesium.Matrix4.fromTranslation(
-            scene.camera.position,
-          ),
+          modelMatrix: Cesium.Matrix4.fromTranslation(scene.camera.position),
           speed: -1.0,
           lifetime: 15.0,
           emitter: new Cesium.SphereEmitter(rainRadius),

@@ -1,19 +1,21 @@
-import AttributeCompression from "../../Core/AttributeCompression.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Color from "../../Core/Color.js";
-import Check from "../../Core/Check.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
-import WebGLConstants from "../../Core/WebGLConstants.js";
+import {
+  AttributeCompression,
+  AttributeType,
+  Cartesian3,
+  Check,
+  Color,
+  ComponentDatatype,
+  DeveloperError,
+  Frozen,
+  Matrix4,
+  PrimitiveType,
+  WebGLConstants,
+  defined,
+} from "@cesium/core";
 import MersenneTwister from "mersenne-twister";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import AlphaMode from "../AlphaMode.js";
-import AttributeType from "../AttributeType.js";
 import Axis from "../Axis.js";
 import parseBatchTable from "../parseBatchTable.js";
 import DracoLoader from "../DracoLoader.js";
@@ -37,17 +39,15 @@ const MetallicRoughness = ModelComponents.MetallicRoughness;
 /**
  * Loads a .pnts point cloud and transcodes it into a {@link ModelComponents}
  *
- * @alias PntsLoader
- * @constructor
- * @augments ResourceLoader
  * @private
- *
- * @param {object} options An object containing the following properties
- * @param {ArrayBuffer} options.arrayBuffer The array buffer of the pnts contents
- * @param {number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
- * @param {boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
  */
 class PntsLoader extends ResourceLoader {
+  /**
+   * @param {object} options An object containing the following properties
+   * @param {ArrayBuffer} options.arrayBuffer The array buffer of the pnts contents
+   * @param {number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
+   * @param {boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
+   */
   constructor(options) {
     super();
 
@@ -81,7 +81,6 @@ class PntsLoader extends ResourceLoader {
   /**
    * The cache key of the resource
    *
-   * @memberof PntsLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -94,7 +93,6 @@ class PntsLoader extends ResourceLoader {
   /**
    * The loaded components.
    *
-   * @memberof PntsLoader.prototype
    *
    * @type {ModelComponents.Components}
    * @readonly
@@ -108,7 +106,6 @@ class PntsLoader extends ResourceLoader {
    * A world-space transform to apply to the primitives.
    * See {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud#global-semantics}
    *
-   * @memberof PntsLoader.prototype
    *
    * @type {Matrix4}
    * @readonly
@@ -530,19 +527,23 @@ function makeAttributes(loader, parsedContent, context) {
 
   if (defined(parsedContent.normals)) {
     attribute = makeAttribute(loader, parsedContent.normals, context);
+    attribute.count = parsedContent.pointsLength;
     attributes.push(attribute);
   }
 
   if (defined(parsedContent.colors)) {
     attribute = makeAttribute(loader, parsedContent.colors, context);
+    attribute.count = parsedContent.pointsLength;
     attributes.push(attribute);
   } else {
     attribute = makeAttribute(loader, defaultColorAttribute, context);
+    attribute.count = parsedContent.pointsLength;
     attributes.push(attribute);
   }
 
   if (defined(parsedContent.batchIds)) {
     attribute = makeAttribute(loader, parsedContent.batchIds, context);
+    attribute.count = parsedContent.pointsLength;
     attributes.push(attribute);
   }
 

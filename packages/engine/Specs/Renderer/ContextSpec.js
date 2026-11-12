@@ -1,15 +1,11 @@
+import { Color, IndexDatatype, PixelDatatype, PixelFormat } from "@cesium/core";
 import {
-  Color,
-  IndexDatatype,
   Buffer,
   BufferUsage,
   Context,
   ContextLimits,
   ClearCommand,
-  PixelFormat,
-  PixelDatatype,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe(

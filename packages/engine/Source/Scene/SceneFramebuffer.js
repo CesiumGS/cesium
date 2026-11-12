@@ -1,8 +1,6 @@
-import Color from "../Core/Color.js";
-import destroyObject from "../Core/destroyObject.js";
+import { Color, PixelDatatype, destroyObject } from "@cesium/core";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 
 /**
  * @private

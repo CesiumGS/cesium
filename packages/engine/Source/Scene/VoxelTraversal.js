@@ -1,15 +1,17 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import CesiumMath from "../Core/Math.js";
-import CullingVolume from "../Core/CullingVolume.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import {
+  Cartesian2,
+  CullingVolume,
+  Math as CesiumMath,
+  PixelDatatype,
+  PixelFormat,
+  defined,
+  destroyObject,
+  getTimestamp,
+} from "@cesium/core";
 import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
-import getTimestamp from "../Core/getTimestamp.js";
 import KeyframeNode from "./KeyframeNode.js";
 import MetadataType from "./MetadataType.js";
 import Megatexture from "./Megatexture.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
 import SpatialNode from "./SpatialNode.js";
 import Texture from "../Renderer/Texture.js";
@@ -39,6 +41,8 @@ function VoxelTraversal(
   const { provider, dimensions, inputDimensions } = primitive;
   const { types, componentTypes } = provider;
 
+  // The 512 MiB limit also keeps voxel pick ids (one per sample, at least one
+  // byte each) within a signed 32-bit int. See VoxelFS.glsl.
   if (defined(maximumTextureMemoryByteLength)) {
     maximumTextureMemoryByteLength = Math.min(
       Math.max(0, maximumTextureMemoryByteLength),
@@ -602,7 +606,7 @@ function updateKeyframeNodes(that, frameState) {
         that._primitive.tileFailed.raiseEvent();
         continue;
       }
-      let addNodeIndex = 0;
+      let addNodeIndex;
       if (megatexture.isFull()) {
         // If the megatexture is full, try removing a discardable node with the lowest priority.
         addNodeIndex = keyframeNodesInMegatextureCount - 1 - destroyedCount;
