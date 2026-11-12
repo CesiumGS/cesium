@@ -9967,6 +9967,84 @@ More examples (owner, 2026-11-10), each pushing something the list above doesn't
 - _A proposal:_ keep one package until a second consumer exists. First, move the styling language's compiler and its tile binding apart by file (the compiler into a `style` folder of its own in the scene tier, with `FeatureStyle` in `streaming`), and add a tier rule for it, so the extraction later is a move. Second, let a `tiles` entry point (`@cesium/next/tiles`) export the streaming API, so applications can import only what they use and the bundler drops the rest. Third, a package only if a bundle-size measure (the check in `scripts/checkBundle.mjs`) shows tilesets cost an application that doesn't use them.
 - _Open:_ whether the globe belongs with the 3D Tiles module (it renders and streams tiles) or its own; whether the renderer should register its passes (a plugin interface) before any module can leave; and what bundle size an application with no tiles actually pays today, which is the measure to take first.
 
+### 13.37 The transform graph (owner, 2026-11-11)
+
+This revisits §13.26's warps from first principles. Three passes led here:
+
+- The owner asked what a warp is for and how it relates to the frame tree.
+- Fable and the lead wrote independent notes (session files `warps-first-principles-*.md`).
+- The owner's framing replaced both, in `transform-graph-unified.md`.
+
+The handbook's "Transform graph (draft)" tab (`527e3bded1`) is the visual tour of it.
+
+**The design.** One graph of frames.
+
+- **Edges:** each node's edge to its parent is **affine** (a 4×4, cheap to recompute per frame from time or anything else) or **smooth** (a differentiable function with parameters: time, sliders, any input; an optional inverse; a declared accuracy).
+- **Placement:** content, cameras and lights sit at nodes. Where something sits decides what is warped: a deformer over the Earth's content warps the terrain and not the Moon, so there are no modes and no regions.
+- **Compilation:** a compiler collapses affine runs into matrices and differentiates smooth nodes automatically (J for normals, distortion and σ propagation; H for chord error, tessellation and bounds). It emits one fused GPU function per route shape, keyed by structure, with parameter values as uniforms.
+- **Truth on the CPU:** the CPU evaluates the same functions in float64 for picks, measurements (in a named frame) and accuracy (Σ_out = J Σ Jᵀ plus each node's σ).
+- **Data on top:** georeferencing, CRSs, views and charts sit above the graph. The graph itself encodes no meaning.
+
+**Decided by the owner (2026-11-11):**
+
+1. **Application functions are restricted plain JS first;** a builder (or another approach) comes later.
+   - The CPU path is the function itself. Its source (`Function.prototype.toString`) is parsed, not evaluated, into the IR for the GPU and the derivatives.
+   - No `eval` or `new Function`, so it stays CSP-safe.
+   - It is minifier-safe if the subset is pure: no free variables but `Math` and the declared parameters, with lowered syntax accepted (`Math.pow` for `**`).
+   - Anything else is refused with a clear error naming the construct.
+2. **Built-in smooth transforms** are written once in Slang with `[Differentiable]`, mirrored in TS for the CPU, and checked by a parity test, so most applications never write their own.
+3. **Warps land first; the IR layer comes later,** in its own plan step.
+   - The owner is interested in an IR shared by the warp functions, the 3D Tiles styling language and other styling languages for vectors and geometry, sitting beside the custom-shader toolchain. A light IR between the language front ends and the renderer keeps language specifics out of the core.
+   - References: MaterialX node graphs, three.js TSL, Unreal's material graph, SPIR-V.
+4. **Naming:** "transform graph" for the raw layer.
+
+**Parameterized functions.** Parameters are explicit inputs (time, sliders, data), never closures. The compiler handles each by how it enters:
+
+- **Linearly** (an exaggeration factor): it stays a uniform in the GPU residual, with no per-frame work.
+- **Otherwise** (a moving centre, a time-varying field): each frame, a compute pass evaluates the compiled function in df64 at each draw's centre. That costs about 4 µs for 1,024 draws in the GPU spike. The vertex stage evaluates the residual on float32 offsets from the centre, so no CPU work is done per frame.
+- **Selection bounds** come from interval evaluation of the IR over each parameter's expected range, or cheap per-frame analytic bounds for the built-ins.
+
+**One view's content under different transforms: a tree, with per-view parameters and per-view switch nodes (the lead's recommendation; the owner asked for more on it).**
+
+1. **Same structure, different strengths** (view A at ×10, view B at ×1): the deformer's parameters take a value per view. This covers most uses with a plain tree, and the GPU cost is a per-view uniform.
+2. **Different structures** (view A exaggerated, view B a plan-and-profile sheet or a UTM chart): a **switch node** whose transform is chosen per view, like a USD variant set or OpenSceneGraph's switch node with camera masks. Every view still sees a tree, so a pixel's route, and so its pick, is unambiguous. "True" frames are unaffected because they sit below the switch.
+3. **The same content twice in one view** (an inset, a before-and-after): instancing (a reference node), later.
+
+A general DAG (a node with several parents) adds nothing the switch doesn't. It would make "which route did this pixel take" depend on more than the view.
+
+**Naming and modules (proposed).**
+
+- **The mathematical category:** smooth maps that are locally invertible where content is (local diffeomorphisms), and invertible where a route goes down through them (diffeomorphisms onto their image). Affine maps are the special case.
+- **Proposed API:** `affine(...)` and `smooth({ forward, inverse?, params })` nodes; "smooth transform" in the docs. "Warp" remains the friendly word for presentation-minded ones (3ds Max calls these "space warps").
+- **Modules:**
+  - **`transform`** (core): the graph, the compiler and IR, autodiff, routes and accuracy.
+  - **`frames`**: the reference-frame catalogue (ICRF, ITRF, bodies, EOP, ephemerides), which is data feeding the graph. It isn't renamed to "georeference", which names placing _content_: `Georeference` replaces `DesignPlacement`, as §13.26 planned.
+  - **`georeference`**: CRSs (`EXT_geospatial_crs`, WKID, WKT2, `EXT_georeference`), reprojection nodes, and the geo transforms built on `smooth`: vertical exaggeration, height offset, flattening.
+  - **`transforms`**: common smooth transforms (bend, twist, taper, lattice (FFD), scale-about, bump, lens distortion, corridor unroll, velocity model).
+
+**A gallery example: "Transform graph" (planned).** 3D versions of the tour's scenes on real data, each showing its graph and route:
+
+1. Exaggeration over the Earth's content: Alps terrain and OSM Buildings, with the Moon unwarped.
+2. A split view, true and exaggerated, through per-view parameters.
+3. A BIM site in a projected CRS under the exaggeration, with ground and grid distances.
+4. Plan and profile: a road alignment unrolled into a strip with ×10 vertical, in two views (plan and profile) through a switch node.
+5. Seismic time to depth: a public section, for example the F3 Netherlands block (CC BY-SA).
+6. An exploded NIST STEP assembly, with measurements mapped back.
+7. A drone camera's lens distortion over photogrammetry.
+8. A time-varying deformation field: subsidence over a city, animated.
+
+The example lands after the transform graph is built.
+
+**Migration from §13.26's code.**
+
+- **Keep:** float64 maps, fits as the fallback for functions the compiler can't take, picks by domain point, cofactor normals, drawn bounds and curved clips.
+- **Change:**
+  - `warpFrame` becomes a `smooth` node.
+  - The exaggeration example puts the deformer over the Earth's content (not between ITRF and the camera).
+  - `Warp.presentation`, `Warp.domain` and `NonRigidRouteError`'s uses are replaced by placement.
+  - The GPU spike's direct evaluation (`277f2f3e57`) becomes the compiler's back end for the built-ins.
+- **5c and 5d** are rewritten against this before they start.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
