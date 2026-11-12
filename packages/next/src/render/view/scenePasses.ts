@@ -24,6 +24,7 @@ import {
 } from "../../scene/shadows.ts";
 import type { EngineRaster } from "./engineRaster.ts";
 import { encodeClipTable } from "./clipTable.ts";
+import { drawSectionCaps } from "./capPasses.ts";
 
 /** Rasterizer side: pass bodies up to the opaque image. */
 export interface ScenePassEngine extends Pick<
@@ -375,6 +376,8 @@ export function opaquePassBody(
     display,
     displayResolved,
     depth,
+    capLow,
+    capHigh,
   }: {
     starLayer: TextureHandle;
     color: TextureHandle;
@@ -383,6 +386,9 @@ export function opaquePassBody(
     display: TextureHandle;
     displayResolved: TextureHandle;
     depth: TextureHandle;
+    /** The section caps' parity targets (`sectionCapsPass`), read only in a view that has caps. */
+    capLow: TextureHandle;
+    capHigh: TextureHandle;
   },
 ): PassBody {
   // Alpha 0 where nothing is drawn: the exposure meter leaves it out.
@@ -442,6 +448,7 @@ export function opaquePassBody(
       frame.bundles[0] = frame.bundle!;
     }
     pass.executeBundles(frame.bundles);
+    drawSectionCaps(engine, view, frame, pass, get, { capLow, capHigh });
     // Tiny point symbols the cull rasterized, depth-tested over them.
     view.world.drawSplats(pass);
     if (atmosphere) {

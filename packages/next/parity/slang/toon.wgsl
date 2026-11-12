@@ -25,6 +25,7 @@ struct FragmentInput_0
      positionMC_0 : vec3<f32>,
      positionEC_0 : vec3<f32>,
      positionWC_0 : vec3<f32>,
+     truePositionEC_0 : vec3<f32>,
      normal_0 : vec3<f32>,
      texCoord0_0 : vec2<f32>,
      color0_0 : vec4<f32>,
@@ -35,6 +36,10 @@ struct FragmentInput_0
      metadata_0 : Metadata_0,
      instanceIndex_0 : u32,
      instance_0 : InstanceValues_0,
+     clipDistance_0 : f32,
+     clipFlags_0 : u32,
+     clipId_0 : u32,
+     clipParams_0 : vec4<f32>,
 };
 
 struct MaterialOutput_0
@@ -57,7 +62,7 @@ fn fragmentMain_0( fsInput_0 : FragmentInput_0,  material_0 : ptr<function, Mate
     return;
 }
 
-fn cesiumSlangFragment( in_positionMC_0 : vec3<f32>,  in_positionEC_0 : vec3<f32>,  in_positionWC_0 : vec3<f32>,  in_normal_0 : vec3<f32>,  in_texCoord0_0 : vec2<f32>,  in_color0_0 : vec4<f32>,  in_featureId_0 : u32,  in_screen_0 : vec2<f32>,  in_time_0 : f32,  in_instanceIndex_0 : u32,  out_baseColor_0 : ptr<function, vec3<f32>>,  out_alpha_0 : ptr<function, f32>,  out_metallic_0 : ptr<function, f32>,  out_roughness_0 : ptr<function, f32>,  out_normal_0 : ptr<function, vec3<f32>>,  out_occlusion_0 : ptr<function, f32>,  out_emissive_0 : ptr<function, vec3<f32>>,  out_unlit_0 : ptr<function, bool>)
+fn cesiumSlangFragment( in_positionMC_0 : vec3<f32>,  in_positionEC_0 : vec3<f32>,  in_positionWC_0 : vec3<f32>,  in_truePositionEC_0 : vec3<f32>,  in_normal_0 : vec3<f32>,  in_texCoord0_0 : vec2<f32>,  in_color0_0 : vec4<f32>,  in_featureId_0 : u32,  in_screen_0 : vec2<f32>,  in_time_0 : f32,  in_instanceIndex_0 : u32,  in_clipDistance_0 : f32,  in_clipFlags_0 : u32,  in_clipId_0 : u32,  in_clipParams_0 : vec4<f32>,  out_baseColor_0 : ptr<function, vec3<f32>>,  out_alpha_0 : ptr<function, f32>,  out_metallic_0 : ptr<function, f32>,  out_roughness_0 : ptr<function, f32>,  out_normal_0 : ptr<function, vec3<f32>>,  out_occlusion_0 : ptr<function, f32>,  out_emissive_0 : ptr<function, vec3<f32>>,  out_unlit_0 : ptr<function, bool>)
 {
     var _S2 : vec3<f32> = vec3<f32>(0.0f);
     var _S3 : vec2<f32> = vec2<f32>(0.0f);
@@ -69,6 +74,7 @@ fn cesiumSlangFragment( in_positionMC_0 : vec3<f32>,  in_positionEC_0 : vec3<f32
     i_0.positionMC_0 = _S2;
     i_0.positionEC_0 = _S2;
     i_0.positionWC_0 = _S2;
+    i_0.truePositionEC_0 = _S2;
     i_0.normal_0 = _S2;
     i_0.texCoord0_0 = _S3;
     i_0.color0_0 = _S4;
@@ -79,9 +85,14 @@ fn cesiumSlangFragment( in_positionMC_0 : vec3<f32>,  in_positionEC_0 : vec3<f32
     i_0.metadata_0 = _S6;
     i_0.instanceIndex_0 = u32(0);
     i_0.instance_0 = _S7;
+    i_0.clipDistance_0 = 0.0f;
+    i_0.clipFlags_0 = u32(0);
+    i_0.clipId_0 = u32(0);
+    i_0.clipParams_0 = _S4;
     i_0.positionMC_0 = in_positionMC_0;
     i_0.positionEC_0 = in_positionEC_0;
     i_0.positionWC_0 = in_positionWC_0;
+    i_0.truePositionEC_0 = in_truePositionEC_0;
     i_0.normal_0 = in_normal_0;
     i_0.texCoord0_0 = in_texCoord0_0;
     i_0.color0_0 = in_color0_0;
@@ -89,6 +100,10 @@ fn cesiumSlangFragment( in_positionMC_0 : vec3<f32>,  in_positionEC_0 : vec3<f32
     i_0.screen_0 = in_screen_0;
     i_0.time_0 = in_time_0;
     i_0.instanceIndex_0 = in_instanceIndex_0;
+    i_0.clipDistance_0 = in_clipDistance_0;
+    i_0.clipFlags_0 = in_clipFlags_0;
+    i_0.clipId_0 = in_clipId_0;
+    i_0.clipParams_0 = in_clipParams_0;
     var o_0 : MaterialOutput_0;
     o_0.baseColor_0 = _S2;
     o_0.alpha_0 = 0.0f;

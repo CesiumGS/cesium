@@ -54,6 +54,7 @@ export interface BrepOptions extends Pick<
   | "name"
   | "parent"
   | "shader"
+  | "solid"
   | "textureSet"
   | "viewMask"
 > {
@@ -219,6 +220,7 @@ export function addBrep(
       ? { doubleSided: options.doubleSided }
       : {}),
     ...(options.ground !== undefined ? { ground: options.ground } : {}),
+    ...(options.solid ? { solid: true } : {}),
     ...(options.material !== undefined ? { material: options.material } : {}),
     name: options.name ?? DEFAULT_BREP_NAME,
     ...(options.shader ? { shader: options.shader } : {}),

@@ -35,6 +35,14 @@
 //
 // Queries test in float64 by routing points into the set's own frame
 // (`clipFilter`).
+//
+// Effects (`ClipSet.effect`): what a set does with what it doesn't keep.
+// Discard is the default. A ghost draws the removed side blended in the
+// translucent passes (or dithered in the opaque pass: stipple), a shade set
+// removes nothing, and any of them tells a custom shader the fragment's
+// signed distance to the cut (`FragmentInput.clipDistance`, …). The effect
+// rides in three table rows after the set's shapes (`CLIP_EFFECT_ROWS`), so
+// changing it recompiles nothing; a draw `clipExempt` is left alone by all.
 import type { ClipFilter } from "../../geometry/query.ts";
 import type { FrameKey, FrameResolver } from "../../camera/frameResolver.ts";
 import {
@@ -76,13 +84,67 @@ export type ClipShape =
       readonly zRange?: readonly [number, number];
     };
 
+/** Four numbers: a clip effect's parameters for a custom shader. */
+export type Vec4Like = readonly [number, number, number, number];
+
+/**
+ * What a set does with the fragments on the side it doesn't keep, and what
+ * it tells a custom shader (`ClipSet.effect`):
+ *
+ * - `"discard"` (the default): they are cut out of every pass, picks included.
+ * - `{ kind: "discard", params }`: the same, and a custom shader still sees
+ *   the kept fragments' `clipDistance` (negative, metres to the cut), to glow
+ *   or fade near it.
+ * - `{ kind: "translucent", alpha, … }`: a ghost. They are cut out of the opaque
+ *   passes (no depth, shadow, ambient occlusion or pick), and drawn blended at
+ *   `alpha` in the translucent passes, over what lies behind them. `method:
+ *   "stipple"` is the cheap first cut instead: a screen-door dither in the
+ *   opaque pass (no extra pass, writes depth and casts shadows, picks stop on
+ *   the kept pixels), for scenes where the blended pass is too dear.
+ * - `{ kind: "shade", params }`: nothing is removed; the set only tells a custom
+ *   shader (`fsInput.clipDistance`, `clipFlags`, `clipId`, `clipParams`) which
+ *   side a fragment is on and how far from the cut.
+ *
+ * Content a draw exempts from clips (`DrawOptions.clipExempt`) is left
+ * alone by every effect. Effects are for sets tested on the true or the
+ * drawn point; a curved set (increment 8c) always discards.
+ */
+export type ClipEffect =
+  | "discard"
+  | {
+      readonly kind: "discard";
+      /** Given to custom shaders as `fsInput.clipParams`. */
+      readonly params?: Vec4Like;
+    }
+  | {
+      readonly kind: "translucent";
+      /** How much of the removed surface shows, 0 (none) to 1 (not below it), exclusive. Default 0.25. */
+      readonly alpha?: number;
+      /** Linear RGB the ghost is tinted toward. Default white. */
+      readonly tint?: Vec3Like;
+      /** How far toward `tint`, 0 to 1. Default 0 (no tint). */
+      readonly tintStrength?: number;
+      /**
+       * "blend" (default): the translucent passes draw it (needs the view's
+       * ghost batches: every opaque triangle batch again in them, with a clip
+       * test); "stipple": a dither in the opaque pass.
+       */
+      readonly method?: "blend" | "stipple";
+      readonly params?: Vec4Like;
+    }
+  | {
+      readonly kind: "shade";
+      readonly params?: Vec4Like;
+    };
+
 /**
  * Shapes in a frame, combined, and what is kept. A fragment of a view is
- * drawn when every set the view uses keeps it.
+ * drawn when every set the view uses keeps it, or removes it by an effect that
+ * keeps it drawn (`effect`).
  *
- * Exemptions (content that a clip leaves alone, as terrain left whole) are the
- * styling language's: run-time data by element ID, not built yet. The table's
- * set rows keep a word for it (`CLIP_SET_EXEMPT`); there is no list per clip.
+ * Exemptions are per draw (`DrawOptions.clipExempt`, `Tileset3D`'s
+ * `clipExempt`): the hook where the styling language's, run-time data by
+ * element ID, will land (plan §13.26, decision 10). There is no list per clip.
  */
 export interface ClipSet {
   /** The reference frame the shapes are named in (any frame, presentation frames included). */
@@ -93,6 +155,8 @@ export interface ClipSet {
   readonly combine?: "union" | "intersection";
   /** What is kept: what is inside the region (default), or outside it. */
   readonly keep?: "inside" | "outside";
+  /** What happens to what the set doesn't keep (default "discard"). */
+  readonly effect?: ClipEffect;
 }
 
 /** A clip set in a world (`World.addClip`): a bit in `View.clipMask`. */
@@ -131,9 +195,37 @@ export const CLIP_SET_DRAWN = 4;
 export const CLIP_SET_CURVED = 8;
 /** Reserved: the styling language's exemptions by element data (a set row's w). */
 export const CLIP_SET_EXEMPT = 3;
-/** The header's flags: some set is tested on the drawn point; some set is curved. */
+/**
+ * A ghost set (`ClipEffect` "translucent"): what it removes is drawn blended in
+ * the translucent passes, or (`CLIP_SET_STIPPLE`) dithered in the opaque pass.
+ */
+export const CLIP_SET_GHOST = 16;
+export const CLIP_SET_STIPPLE = 32;
+/** A set that removes nothing and only reports (`ClipEffect` "shade"). */
+export const CLIP_SET_SHADE = 64;
+/** A set with effect rows (`CLIP_EFFECT_ROWS`, at the row in bits 8 and up of its flags): it reports to custom shaders. */
+export const CLIP_SET_REPORT = 128;
+/** Where a set's effect rows start, in its flags. */
+export const CLIP_SET_EFFECT_SHIFT = 8;
+/** Rows an effect takes: (tint, strength), (alpha, clip id), params. */
+export const CLIP_EFFECT_ROWS = 3;
+/**
+ * The header's flags: some set is tested on the drawn point; some set is
+ * curved; some set reports (has effect rows); some set is a blended ghost.
+ */
 export const CLIP_ANY_DRAWN = 1;
 export const CLIP_ANY_CURVED = 2;
+export const CLIP_ANY_REPORT = 4;
+export const CLIP_ANY_GHOST = 8;
+/** What `fsInput.clipFlags` carries: this set removes the fragment; it is a ghost. */
+export const CLIP_FLAG_REMOVED = 1;
+export const CLIP_FLAG_GHOST = 2;
+/** `fsInput.clipDistance` where no set reports. */
+export const CLIP_NO_DISTANCE = 3.4e38;
+/** `fsInput.clipId` where no set reports. */
+export const CLIP_NO_ID = 0xffffffff;
+/** The ghost's default alpha. */
+export const CLIP_GHOST_ALPHA = 0.25;
 
 /** Beyond this a polygon's z range is unbounded: float32 holds it exactly enough. */
 const UNBOUNDED = 1e30;
@@ -232,6 +324,61 @@ export function validateClipSet(set: ClipSet): void {
       `a clip set of these shapes needs ${rows} table rows, more than the ${MAX_CLIP_SET_ROWS} a set may take; split it, or simplify the polygons.`,
     );
   }
+  validateClipEffect(set.effect);
+}
+
+/** Throws a `RangeError` naming what is wrong with `effect`. */
+export function validateClipEffect(effect: ClipEffect | undefined): void {
+  if (effect === undefined || effect === "discard") {
+    return;
+  }
+  if (typeof effect !== "object" || effect === null) {
+    throw new RangeError(
+      `a clip effect is "discard" or an object with a kind, not ${String(effect)}.`,
+    );
+  }
+  const params = "params" in effect ? effect.params : undefined;
+  if (params && (params.length !== 4 || !finite(params, 4))) {
+    throw new RangeError("a clip effect's params are four finite numbers.");
+  }
+  if (effect.kind === "translucent") {
+    const alpha = effect.alpha ?? CLIP_GHOST_ALPHA;
+    if (!(alpha >= 0 && alpha < 1)) {
+      throw new RangeError(
+        `a ghost's alpha is from 0 up to, not including, 1 (1 is the surface itself, kept or removed): ${alpha}.`,
+      );
+    }
+    const strength = effect.tintStrength ?? 0;
+    if (!(strength >= 0 && strength <= 1)) {
+      throw new RangeError(`a ghost's tintStrength is 0 to 1: ${strength}.`);
+    }
+    if (effect.tint && !finite(effect.tint)) {
+      throw new RangeError("a ghost's tint is three finite numbers.");
+    }
+    if (
+      effect.method !== undefined &&
+      effect.method !== "blend" &&
+      effect.method !== "stipple"
+    ) {
+      throw new RangeError(
+        `a ghost's method is "blend" or "stipple": ${String(effect.method)}.`,
+      );
+    }
+  } else if (effect.kind !== "discard" && effect.kind !== "shade") {
+    throw new RangeError(
+      `unknown clip effect kind "${String((effect as { kind: unknown }).kind)}": discard, translucent or shade.`,
+    );
+  }
+}
+
+/** Whether a set's removed side is drawn as a blended ghost (the translucent passes draw it). */
+export function isBlendedGhost(set: ClipSet): boolean {
+  const e = set.effect;
+  return (
+    typeof e === "object" &&
+    e.kind === "translucent" &&
+    (e.method ?? "blend") === "blend"
+  );
 }
 
 // --- classification, in float64 ------------------------------------------------
@@ -297,8 +444,15 @@ const IDENTITY_AXES: readonly [Vec3Like, Vec3Like, Vec3Like] = [
   [0, 0, 1],
 ];
 
-/** Whether the set keeps `p` (in the set's frame). */
+/**
+ * Whether the set keeps `p` (in the set's frame). A "shade" set keeps every
+ * point: it removes nothing. A ghost removes what it doesn't keep, as the
+ * opaque passes and picks see it.
+ */
 export function clipSetKeeps(set: ClipSet, p: ArrayLike<number>): boolean {
+  if (typeof set.effect === "object" && set.effect.kind === "shade") {
+    return true;
+  }
   const all = set.combine === "intersection";
   let region = all;
   for (const shape of set.shapes) {
@@ -517,7 +671,36 @@ function freezeSet(set: ClipSet): ClipSet {
     ),
     combine: set.combine ?? "union",
     keep: set.keep ?? "inside",
+    ...(set.effect !== undefined &&
+      set.effect !== "discard" && { effect: freezeEffect(set.effect) }),
   });
+}
+
+function freezeEffect(effect: Exclude<ClipEffect, "discard">): ClipEffect {
+  const params = effect.params && ([...effect.params] as unknown as Vec4Like);
+  switch (effect.kind) {
+    case "discard":
+      return Object.freeze({
+        kind: "discard" as const,
+        ...(params && { params }),
+      });
+    case "shade":
+      return Object.freeze({
+        kind: "shade" as const,
+        ...(params && { params }),
+      });
+    case "translucent":
+      return Object.freeze({
+        kind: "translucent" as const,
+        alpha: effect.alpha ?? CLIP_GHOST_ALPHA,
+        tint: (effect.tint
+          ? [...effect.tint]
+          : [1, 1, 1]) as unknown as Vec3Like,
+        tintStrength: effect.tintStrength ?? 0,
+        method: effect.method ?? "blend",
+        ...(params && { params }),
+      });
+  }
 }
 
 // --- which space a set is tested in, per view ----------------------------------
@@ -656,7 +839,8 @@ function invertRigid(m: ArrayLike<number>): Float64Array {
  * - row 0 (uints): the number of sets, `CLIP_ANY_DRAWN` when some set is tested on
  *   the drawn point;
  * - rows 1 to `MAX_CLIP_SETS` (uints): a set's first row, its shape count, its
- *   flags (`CLIP_SET_*`), and a reserved word (exemptions). A curved set
+ *   flags (`CLIP_SET_*`, with the row of its effect in bits 8 and up), and a
+ *   reserved word (exemptions). A curved set
  *   (`CLIP_SET_CURVED`, header flag `CLIP_ANY_CURVED`) has no shapes: the
  *   fragment tests the draw's fitted distance (a varying) instead;
  * - then each shape: a header row (uints: kind, rows with the header, vertex
@@ -664,7 +848,9 @@ function invertRigid(m: ArrayLike<number>): Float64Array {
  *   rows (a, w) with u = a·p + w, inside when all |u| ≤ 1. A polygon: three
  *   rows (e, w) the same, giving the local x, y, z, then (z least, z greatest),
  *   then its vertices, two a row (x₀, y₀, x₁, y₁), relative to the polygon's
- *   origin.
+ *   origin;
+ * - after a set's shapes, if it has an effect (`CLIP_SET_REPORT`), its
+ *   `CLIP_EFFECT_ROWS`: (tint rgb, tint strength), (alpha), (params).
  */
 export function packClipTable(
   plans: readonly PlannedClip[],
@@ -681,6 +867,8 @@ export function packClipTable(
   let row = CLIP_HEADER_ROWS;
   let anyDrawn = false;
   let anyCurved = false;
+  let anyReport = false;
+  let anyGhost = false;
   plans.forEach((plan, s) => {
     const first = row;
     if (plan.space === "curved") {
@@ -779,20 +967,102 @@ export function packClipTable(
     const at = (1 + s) * 4;
     u32[at] = first;
     u32[at + 1] = plan.set.shapes.length;
-    u32[at + 2] =
+    let flags =
       (plan.set.combine === "intersection" ? CLIP_SET_INTERSECTION : 0) |
       (plan.set.keep === "outside" ? CLIP_SET_KEEP_OUTSIDE : 0) |
       (drawn ? CLIP_SET_DRAWN : 0);
+    const effect = plan.set.effect;
+    if (effect !== undefined && effect !== "discard") {
+      // Three rows after the shapes: (tint, strength), (alpha), params.
+      const params = effect.params ?? [0, 0, 0, 0];
+      let tint: Vec3Like = [1, 1, 1];
+      let strength = 0;
+      let alpha = 0;
+      flags |= CLIP_SET_REPORT | (row << CLIP_SET_EFFECT_SHIFT);
+      if (effect.kind === "translucent") {
+        tint = effect.tint ?? tint;
+        strength = effect.tintStrength ?? 0;
+        alpha = effect.alpha ?? CLIP_GHOST_ALPHA;
+        flags |=
+          (effect.method ?? "blend") === "stipple"
+            ? CLIP_SET_STIPPLE | CLIP_SET_GHOST
+            : CLIP_SET_GHOST;
+        anyGhost ||= (effect.method ?? "blend") === "blend";
+      } else if (effect.kind === "shade") {
+        flags |= CLIP_SET_SHADE;
+      }
+      out.set([tint[0], tint[1], tint[2], strength], row * 4);
+      out.set([alpha, 0, 0, 0], (row + 1) * 4);
+      out.set(params, (row + 2) * 4);
+      row += CLIP_EFFECT_ROWS;
+      anyReport = true;
+    }
+    u32[at + 2] = flags;
     u32[at + 3] = 0;
   });
   u32[0] = plans.length;
-  u32[1] = (anyDrawn ? CLIP_ANY_DRAWN : 0) | (anyCurved ? CLIP_ANY_CURVED : 0);
+  u32[1] =
+    (anyDrawn ? CLIP_ANY_DRAWN : 0) |
+    (anyCurved ? CLIP_ANY_CURVED : 0) |
+    (anyReport ? CLIP_ANY_REPORT : 0) |
+    (anyGhost ? CLIP_ANY_GHOST : 0);
   if (row > CLIP_TABLE_ROWS) {
     throw new RangeError(
       `the clip table needs ${row} rows, more than ${CLIP_TABLE_ROWS}.`,
     );
   }
   return row * 16;
+}
+
+/** Far depth of a ghost no shape bounds (a plane's, or a box's outside), m. */
+export const CLIP_GHOST_FAR = 2e7;
+
+/**
+ * The range of distances from the camera at which a view's blended ghosts can
+ * be drawn, for the translucent passes' moments (`writeTranslucency`), or
+ * undefined for none. A set that removes the inside of its boxes (it keeps the
+ * outside) is bounded by them; any other reaches as far as the view does.
+ */
+export function ghostRange(
+  plans: readonly PlannedClip[],
+  camera: ArrayLike<number>,
+): { near: number; far: number } | undefined {
+  let near = Infinity;
+  let far = 0;
+  for (const { set, matrix: m, space } of plans) {
+    if (space === "curved" || !isBlendedGhost(set)) {
+      continue;
+    }
+    const removesInside = set.keep === "outside";
+    const boxes = set.shapes.filter((s) => s.kind === "box");
+    const bounded =
+      removesInside &&
+      (set.combine === "intersection"
+        ? boxes.length > 0
+        : boxes.length === set.shapes.length);
+    if (!bounded) {
+      near = 0;
+      far = Math.max(far, CLIP_GHOST_FAR);
+      continue;
+    }
+    for (const box of boxes) {
+      if (box.kind !== "box") {
+        continue;
+      }
+      const c = box.center;
+      const x =
+        m[0]! * c[0] + m[4]! * c[1] + m[8]! * c[2] + m[12]! - camera[0]!;
+      const y =
+        m[1]! * c[0] + m[5]! * c[1] + m[9]! * c[2] + m[13]! - camera[1]!;
+      const z =
+        m[2]! * c[0] + m[6]! * c[1] + m[10]! * c[2] + m[14]! - camera[2]!;
+      const radius = Math.hypot(...box.halfExtents);
+      const d = Math.hypot(x, y, z);
+      near = Math.min(near, Math.max(d - radius, 0));
+      far = Math.max(far, d + radius);
+    }
+  }
+  return far > 0 ? { near: Number.isFinite(near) ? near : 0, far } : undefined;
 }
 
 /** Whether the shape whose header is row `r` of `table` holds `p`: the fragment test's twin. */
@@ -845,7 +1115,8 @@ function tableShapeInside(
 /**
  * The table's float32 view of `plans`, as the GPU reads it (a twin of the
  * fragment test, for checks). `curved` is the draw's fitted distance at the
- * fragment, which a curved set's row tests.
+ * fragment, which a curved set's row tests. A ghost's removed side counts as
+ * removed (the opaque passes' view of it) and a "shade" set removes nothing.
  */
 export function tableKeeps(
   table: Float32Array,
@@ -855,15 +1126,57 @@ export function tableKeeps(
     readonly curved?: number;
   },
 ): boolean {
+  return tableVerdict(table, space).keeps;
+}
+
+/** What the clips make of one fragment (surface.slang `clipsKeep`, `clipsReport`). */
+export interface ClipVerdict {
+  /** The fragment is drawn by the pass asked about. */
+  readonly keeps: boolean;
+  /** Only ghost sets remove it, and the pass draws it as the ghost (blended passes: the blend ones; opaque: the stipple's kept pixels). */
+  readonly ghosted: boolean;
+  /** The ghosts' alphas multiplied (1 where none). */
+  readonly alpha: number;
+  /** What a custom shader sees (`fsInput.clipDistance`, `clipFlags`, `clipId`, `clipParams`). */
+  readonly distance: number;
+  readonly flags: number;
+  readonly id: number;
+  readonly params: Vec4Like;
+}
+
+/**
+ * The table's verdict on a fragment: the twin of the fragment stage's. In
+ * `"translucent"` the passes that draw blended ghosts see their sets as
+ * keeping what they ghost; in `"opaque"` (the default) a blended ghost's
+ * removed side is cut out, and a stippled one keeps the pixels `stipple`
+ * (a number from 0 to 1, the dither's value there) is below its alpha at.
+ */
+export function tableVerdict(
+  table: Float32Array,
+  space: {
+    readonly true: ArrayLike<number>;
+    readonly drawn: ArrayLike<number>;
+    readonly curved?: number;
+  },
+  options: { pass?: "opaque" | "translucent"; stipple?: number } = {},
+): ClipVerdict {
   const u32 = new Uint32Array(table.buffer, table.byteOffset, table.length);
+  const translucentPass = options.pass === "translucent";
   const count = Math.min(u32[0]!, MAX_CLIP_SETS);
+  let keeps = true;
+  let ghosted = false;
+  let alpha = 1;
+  let distance = CLIP_NO_DISTANCE;
+  let flagsOut = 0;
+  let id = CLIP_NO_ID;
+  let params: Vec4Like = [0, 0, 0, 0];
   for (let s = 0; s < count; s++) {
     const at = (1 + s) * 4;
     const shapes = Math.min(u32[at + 1]!, MAX_CLIP_SHAPES);
     const flags = u32[at + 2]!;
     if ((flags & CLIP_SET_CURVED) !== 0) {
       if ((space.curved ?? 0) > 0) {
-        return false;
+        keeps = false;
       }
       continue;
     }
@@ -880,11 +1193,104 @@ export function tableKeeps(
       r += u32[r * 4 + 1]!;
     }
     const kept = (flags & CLIP_SET_KEEP_OUTSIDE) !== 0 ? !region : region;
-    if (!kept) {
-      return false;
+    const effectRow = flags >>> CLIP_SET_EFFECT_SHIFT;
+    if ((flags & CLIP_SET_REPORT) !== 0) {
+      // The set with the greatest distance is the one reported.
+      let d = all ? -Infinity : Infinity;
+      let q = u32[at]!;
+      for (let k = 0; k < shapes; k++) {
+        const sd = tableShapeDistance(table, u32, q, p);
+        d = all ? Math.max(d, sd) : Math.min(d, sd);
+        q += u32[q * 4 + 1]!;
+      }
+      d = (flags & CLIP_SET_KEEP_OUTSIDE) !== 0 ? -d : d;
+      if (distance === CLIP_NO_DISTANCE || d > distance) {
+        distance = d;
+        id = s;
+        flagsOut =
+          (!kept ? CLIP_FLAG_REMOVED : 0) |
+          ((flags & CLIP_SET_GHOST) !== 0 ? CLIP_FLAG_GHOST : 0);
+        params = [
+          ...table.subarray((effectRow + 2) * 4, (effectRow + 3) * 4),
+        ] as unknown as Vec4Like;
+      }
+    }
+    if (kept || (flags & CLIP_SET_SHADE) !== 0) {
+      continue;
+    }
+    if ((flags & CLIP_SET_GHOST) === 0) {
+      keeps = false;
+      continue;
+    }
+    const setAlpha = table[(effectRow + 1) * 4]!;
+    if ((flags & CLIP_SET_STIPPLE) !== 0) {
+      if (translucentPass) {
+        continue;
+      }
+      if ((options.stipple ?? 1) < setAlpha) {
+        ghosted = true;
+        continue;
+      }
+      keeps = false;
+    } else if (translucentPass) {
+      ghosted = true;
+      alpha *= setAlpha;
+    } else {
+      keeps = false;
     }
   }
-  return true;
+  return {
+    keeps,
+    ghosted: keeps && ghosted,
+    alpha,
+    distance,
+    flags: flagsOut,
+    id,
+    params,
+  };
+}
+
+/** The shape's signed distance at `p` from the table: the fragment stage's `clipShapeDistance`. */
+function tableShapeDistance(
+  table: Float32Array,
+  u32: Uint32Array,
+  r: number,
+  p: ArrayLike<number>,
+): number {
+  const row = (i: number) => table.subarray(i * 4, i * 4 + 4);
+  const local = (i: number) => {
+    const a = row(r + 1 + i);
+    return a[0]! * p[0]! + a[1]! * p[1]! + a[2]! * p[2]! + a[3]!;
+  };
+  const kind = u32[r * 4]!;
+  if (kind === CLIP_PLANE) {
+    return local(0);
+  }
+  if (kind === CLIP_BOX) {
+    let d = -Infinity;
+    for (let k = 0; k < 3; k++) {
+      const a = row(r + 1 + k);
+      d = Math.max(
+        d,
+        (Math.abs(local(k)) - 1) / Math.hypot(a[0]!, a[1]!, a[2]!),
+      );
+    }
+    return d;
+  }
+  const x = local(0);
+  const y = local(1);
+  const z = local(2);
+  const zr = row(r + 4);
+  const n = u32[r * 4 + 2]!;
+  const vertex = (i: number): [number, number] => {
+    const v = row(r + 5 + (i >> 1));
+    return (i & 1) === 0 ? [v[0]!, v[1]!] : [v[2]!, v[3]!];
+  };
+  const ring: Array<[number, number]> = [];
+  for (let i = 0; i < n; i++) {
+    ring.push(vertex(i));
+  }
+  return Math.max(ringDistance(ring, x, y), zr[0]! - z, z - zr[1]!);
 }
 
 // --- pipeline keys: the clipped variant of a surface pipeline -------------------

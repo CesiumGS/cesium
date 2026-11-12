@@ -1070,8 +1070,9 @@ describe("the shader's translucency", () => {
   });
 
   it("multiplies the alpha in every pass that reads it, and height captures keep it ground", () => {
+    // (And, for a clip ghost's skirts, 0 where the clips ghost them.)
     expect(body(slang, "float materialAlpha(")).toMatch(
-      /return custom\.alpha \* terrainAlpha\(r, in\);/,
+      /return custom\.alpha \* terrainAlpha\(r, in\) \* skirts;/,
     );
     expect(slang).toMatch(
       /baseColor = float4\(custom\.baseColor, custom\.alpha \* terrain\);/,

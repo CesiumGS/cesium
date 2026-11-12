@@ -1,7 +1,7 @@
 // A view's render graph: its targets and its passes, in the order they run.
 // Pass order is registration order: FrameGraph has no sort.
 import { FrameGraph, type TextureHandle } from "../FrameGraph.ts";
-import { VIEW_SIZE } from "../layout.ts";
+import { CAP_PARITY_FORMAT, VIEW_SIZE } from "../layout.ts";
 import { type ViewFrame, destroyViewFrame } from "./viewFrameData.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
@@ -21,6 +21,7 @@ import {
   opaquePassBody,
 } from "./scenePasses.ts";
 import { translucentPass, compositePassBody } from "./translucentPasses.ts";
+import { sectionCapsPass } from "./capPasses.ts";
 import {
   meterPass,
   depthRangePass,
@@ -292,6 +293,8 @@ function buildViewFrame(
     shadowed: false,
     clipBuffer: undefined,
     clipBytes: 0,
+    capFaces: 0,
+    clipGhost: undefined,
     ambient: false,
     lightCount: 0,
     depthRange: undefined,
@@ -409,10 +412,27 @@ function buildViewFrame(
     starsPass(engine, view, frame, { starLayer }),
   );
 
+  // The section caps' parity (`View.clipCaps`): single-sampled bits, a face
+  // each, of whether the solids' surfaces beyond it are odd in number. Only
+  // acquired in a view that has caps.
+  const parity = {
+    width,
+    height,
+    format: CAP_PARITY_FORMAT,
+    usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+  };
+  const capLow = graph.createTexture("caps.low", parity);
+  const capHigh = graph.createTexture("caps.high", parity);
+  graph.addPass(
+    "section-caps",
+    { writes: [capLow, capHigh] },
+    sectionCapsPass(view, frame, { capLow, capHigh }),
+  );
+
   graph.addPass(
     "opaque",
     {
-      reads: [starLayer],
+      reads: [starLayer, capLow, capHigh],
       writes: [color, resolved, ids, display, displayResolved, depth],
     },
     opaquePassBody(engine, view, frame, {
@@ -423,6 +443,8 @@ function buildViewFrame(
       display,
       displayResolved,
       depth,
+      capLow,
+      capHigh,
     }),
   );
 

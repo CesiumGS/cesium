@@ -197,6 +197,10 @@ interface PlacementCommon {
   shader?: CustomShader;
   /** Ground for height captures (default true; `DrawOptions.ground`). */
   ground?: boolean;
+  /** No clip cuts or ghosts any draw of it (default false; `DrawOptions.clipExempt`). */
+  clipExempt?: boolean;
+  /** A closed solid: section caps cut through it (default false; `DrawOptions.solid`). */
+  solid?: boolean;
   name?: string;
   /** Initial view mask of every draw (default: all views). */
   viewMask?: number;
@@ -868,6 +872,8 @@ function placeGltf(
       collision: options.collision,
       underlay: options.underlay,
       ...(options.ground === false ? { ground: false } : {}),
+      ...(options.solid ? { solid: true } : {}),
+      ...(options.clipExempt ? { clipExempt: true } : {}),
       name: options.name,
       viewMask: options.viewMask,
       features:

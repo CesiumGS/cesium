@@ -486,7 +486,13 @@ export function Warps() {
           on the new reference frame, so it is the render root. Every mesh and
           tileset already reaches the root through the tree, so each is drawn
           exaggerated with nothing set on it. The last section says what doesn't
-          yet. A slider is one float.
+          yet. A slider is one float. The camera is a pose in the render space,
+          so it stays where it is while the slider moves and the ground rises
+          toward it; the globe's controller lifts it only where the drawn ground
+          would cover it. Shading that looks something up by height (a colour
+          ramp, a contour, the air's density) can read the true height or the
+          drawn one: the Vertical exaggeration example's “Height visuals” puts
+          the two side by side.
         </p>
         <Written
           from="the overall plan, section 13.26, and spikes/warpRoute.ts"

@@ -3,9 +3,11 @@
 // uploaded into a buffer of the view's own, which the view's passes copy into
 // the shared one before they draw (`clipTablePass`).
 import { FrameUnavailableError } from "../../camera/frameResolver.ts";
+import { packCapFaces } from "../../scene/world/capFaces.ts";
 import {
   CLIP_TABLE_BYTES,
   CLIP_TABLE_ROWS,
+  ghostRange,
   packClipTable,
   planClip,
   type ClipSet,
@@ -80,6 +82,10 @@ export function writeClips(
 ): void {
   const sets = view.clipSets();
   frame.clipBytes = 0;
+  frame.capFaces = 0;
+  view.capFaces = 0;
+  view.capNote = undefined;
+  frame.clipGhost = undefined;
   if (sets.length === 0) {
     return;
   }
@@ -117,15 +123,32 @@ export function writeClips(
   if (plans.length === 0) {
     return;
   }
-  const bytes = packClipTable(plans, engine.bodyCamera(view).position, scratch);
+  const camera = engine.bodyCamera(view).position;
+  const bytes = packClipTable(plans, camera, scratch);
+  frame.clipGhost = ghostRange(plans, camera);
+  // The caps' faces after the sets' rows (`packCapFaces`), when the view has caps.
+  const caps = view.clipCaps
+    ? packCapFaces(
+        plans,
+        camera,
+        view.clipCaps,
+        scratch,
+        bytes / 16,
+        CLIP_TABLE_ROWS,
+      )
+    : undefined;
+  view.capFaces = caps?.faces ?? 0;
+  view.capNote = caps?.note;
+  frame.capFaces = view.capFaces;
+  const total = bytes + (caps ? caps.rows * 16 : 0);
   const device = engine.ctx.device;
   frame.clipBuffer ??= device.createBuffer({
     label: "view.clips",
     size: CLIP_TABLE_BYTES,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
-  device.queue.writeBuffer(frame.clipBuffer, 0, scratch, 0, bytes / 4);
-  frame.clipBytes = bytes;
+  device.queue.writeBuffer(frame.clipBuffer, 0, scratch, 0, total / 4);
+  frame.clipBytes = total;
 }
 
 /**

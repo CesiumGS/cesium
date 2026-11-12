@@ -83,6 +83,12 @@ export type {
  *    derivative in space and leaves the normal as stored. The tangent turns
  *    with the surface, keeping its handedness.
  *  - `positionEC` and `positionWC` are where it is drawn, as always.
+ *  - `fsInput.truePositionEC` is where the content is, camera-relative like
+ *    `positionEC`, before a warp (a vertical exaggeration, a reprojection
+ *    fitted over a tile) draws it elsewhere: a height or a distance that is
+ *    a property of the content, not the picture, is read from it (add the
+ *    camera, `positionWC - positionEC`, for Earth-fixed coordinates).
+ *    Where nothing warps the draw it is `positionEC`.
  * Named attributes are read as stored. An item's own `shader` replaces the
  * tileset's (`customShader` or `style`) for that item; it doesn't combine
  * with it.

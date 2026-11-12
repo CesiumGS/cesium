@@ -41,6 +41,7 @@ import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import * as m4 from "../src/math/mat4.ts";
 import { EARTH } from "../src/scene/Body.ts";
+import { GlobeController } from "../src/scene/GlobeController.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import type { CorePick } from "../src/scene/pick.ts";
 import { createBillboard, type MeshData } from "../src/scene/meshes.ts";
@@ -437,5 +438,63 @@ describe("heights across k = 1 to 10", () => {
     expect(s.route().revision).toBeGreaterThan(revision);
     expect(s.stats().refits).toBeGreaterThan(0);
     expect(s.exaggeration.factor).toBeCloseTo(1 + scaleOf(3) * 19, 9);
+  });
+});
+
+describe("the camera while the slider moves", () => {
+  /** The example's controller on the setup's view, over ground that is 1,000 m (true) everywhere. */
+  function controllerOn(s: Setup): GlobeController {
+    const element = new EventTarget() as EventTarget & Record<string, unknown>;
+    element.getBoundingClientRect = () => ({
+      left: 0,
+      top: 0,
+      width: 64,
+      height: 48,
+    });
+    const controller = new GlobeController(
+      s.view,
+      element as unknown as HTMLElement,
+      { onTick: () => () => {} },
+    );
+    controller.surfaceHeight = () => 1000;
+    controller.minimumHeight = 40;
+    return controller;
+  }
+
+  const heightOf = (view: View) => height(view.camera.position);
+
+  it("stays where it is while the ground rises toward it, and is lifted only where the drawn ground would cover it", () => {
+    const s = setup(1);
+    const controller = controllerOn(s);
+    s.view.camera.lookAt(
+      positionOf(
+        PLACES.find((p) => p.id === "zermatt")!,
+        4000,
+      ),
+      0,
+      -0.3,
+      3000,
+    );
+    const placed = Float64Array.from(s.view.camera.position);
+    const placedHeight = heightOf(s.view);
+    for (const k of [1, 2, 3]) {
+      s.exaggeration.factor = k;
+      s.step();
+      controller.update();
+      // The slider moves the ground, not the camera: bit for bit.
+      expect(Array.from(s.view.camera.position)).toEqual(Array.from(placed));
+    }
+    // At ×5 the drawn ground (5,000 m) is above the camera: it is lifted
+    // over it, by the margin, and no more.
+    s.exaggeration.factor = 5;
+    s.step();
+    controller.update();
+    expect(heightOf(s.view)).toBeCloseTo(5000 + 40, 0);
+    // Back where it was put once the ground falls away again.
+    s.exaggeration.factor = 2;
+    s.step();
+    controller.update();
+    expect(heightOf(s.view)).toBeCloseTo(placedHeight, 3);
+    controller.dispose();
   });
 });

@@ -17,9 +17,10 @@ import {
   INSTANCE_WORDS,
   PICK_DEPTH_FORMAT,
   PICK_FORMATS,
+  CAP_PARITY_FORMAT,
 } from "../layout.ts";
 import { bindSlab } from "./tables.ts";
-import type { SurfaceKey } from "../../scene/RenderContext.ts";
+import type { CapParityKind, SurfaceKey } from "../../scene/RenderContext.ts";
 import { clippedKey } from "../../scene/world/clips.ts";
 import type { World } from "../../scene/World.ts";
 import { uploadTables } from "../../scene/world/featureTables.ts";
@@ -346,7 +347,7 @@ export function clippedBundle(
 }
 
 export type BundleKind =
-  "opaque" | "shadow" | "height" | "prepass" | "depth" | "pick";
+  "opaque" | "shadow" | "height" | "prepass" | "depth" | "pick" | "caps";
 
 export function encodeCull(
   world: CullWorld,
@@ -509,27 +510,36 @@ export function recordBundle(
   const depth = kind === "depth";
   // The pick variant: single-sampled, into the pick's few-pixel targets.
   const pick = kind === "pick";
+  // The section caps' parity pass: the solids' fragments, single-sampled, into
+  // its two parity targets, whatever the clips are (`RenderContext.capParity`).
+  const caps = kind === "caps";
   const encoder = device.createRenderBundleEncoder(
-    pick
+    caps
       ? {
-          label: "world.pickBundle",
-          colorFormats: [...PICK_FORMATS],
-          depthStencilFormat: PICK_DEPTH_FORMAT,
+          label: "world.capsBundle",
+          colorFormats: [CAP_PARITY_FORMAT, CAP_PARITY_FORMAT],
           sampleCount: 1,
         }
-      : shadow || prepass
+      : pick
         ? {
-            label: `world.${kind}Bundle`,
-            colorFormats: prepass ? ["rgba16float"] : [],
-            depthStencilFormat: "depth32float",
+            label: "world.pickBundle",
+            colorFormats: [...PICK_FORMATS],
+            depthStencilFormat: PICK_DEPTH_FORMAT,
             sampleCount: 1,
           }
-        : {
-            label: depth ? "world.depthBundle" : "world.bundle",
-            colorFormats: targets.colorFormats,
-            depthStencilFormat: targets.depthFormat,
-            sampleCount: targets.sampleCount,
-          },
+        : shadow || prepass
+          ? {
+              label: `world.${kind}Bundle`,
+              colorFormats: prepass ? ["rgba16float"] : [],
+              depthStencilFormat: "depth32float",
+              sampleCount: 1,
+            }
+          : {
+              label: depth ? "world.depthBundle" : "world.bundle",
+              colorFormats: targets.colorFormats,
+              depthStencilFormat: targets.depthFormat,
+              sampleCount: targets.sampleCount,
+            },
   );
   encoder.setBindGroup(
     0,
@@ -642,11 +652,13 @@ export function recordBundle(
     if (
       batch.items === 0 ||
       world.raster.brokenTextureSets.has(batch.textureSet) ||
-      ((shadow || prepass || depth || pick) &&
+      ((shadow || prepass || depth || pick || caps) &&
         batch.mesh.topology === "line-list") ||
       // Picks of points and billboards are the depth's: their corners are
       // offsets on screen, not a surface of the content's.
       (pick && (batch.points || batch.billboard)) ||
+      // Nor are they solids.
+      (caps && (batch.points || batch.billboard)) ||
       // Point sets and instances shade outside the opaque pass's depth
       // prepass; point sets aren't ground either (their strips are the
       // opaque pass's alone).
@@ -661,14 +673,19 @@ export function recordBundle(
       slab = batch.mesh.slab;
       bindSlab(world, encoder, slab);
     }
-    const key = keyOf(batch);
+    const key = caps ? undefined : keyOf(batch);
     const {
       pipeline: wanted,
       custom,
       pending,
-    } = batchPipeline(world, batch, key, clipped);
+    } = caps
+      ? capParityPipeline(world, batch)
+      : batchPipeline(world, batch, key!, clipped);
     if (pending) {
       gaps.add(batch);
+    }
+    if (!wanted) {
+      continue;
     }
     if (wanted !== pipeline) {
       pipeline = wanted;
@@ -691,6 +708,35 @@ export function recordBundle(
     world.raster.pipelineGaps.delete(gapKey);
   }
   return encoder.finish();
+}
+
+/**
+ * A batch's pipeline in the section caps' parity pass: the engine's own, by
+ * its kind of draw (a custom shader's stages aren't used: only the surfaces'
+ * positions count). Undefined, pending, while it is made.
+ */
+function capParityPipeline(
+  world: BundleWorld,
+  batch: Batch,
+): {
+  pipeline: GPURenderPipeline | undefined;
+  custom: false;
+  pending: boolean;
+} {
+  const kind: CapParityKind = batch.patches
+    ? (batch.mesh as PatchMesh).patches.trimmed
+      ? "patchTrimmed"
+      : "patch"
+    : "mesh";
+  const pipeline = world.ctx.pipelines.capParity(kind, () => {
+    world.shaderReady();
+    world.ctx.wake();
+  });
+  return {
+    pipeline,
+    custom: false,
+    pending: !pipeline && world.ctx.pipelines.capParityPending(kind),
+  };
 }
 
 /**
@@ -883,6 +929,7 @@ export function encodeTranslucent(
   keyOf: (doubleSided: boolean) => SurfaceKey,
   group: GPUBindGroup,
   clipped = false,
+  ghosts = false,
 ): void {
   pass.setBindGroup(0, world.ctx.currentViewBindGroup);
   pass.setBindGroup(3, group);
@@ -891,10 +938,14 @@ export function encodeTranslucent(
   let bound: GPUBindGroup | undefined;
   let slab = -1;
   for (const batch of world.raster.batchList) {
+    // `ghosts`: the view's clips ghost what they remove, which the
+    // translucent passes draw from every opaque triangle batch too (the
+    // fragment stage keeps only what is ghosted, surface.slang).
     if (
       batch.shown === 0 ||
       batch.patches ||
-      !translucent(world, batch) ||
+      (!ghosts && !translucent(world, batch)) ||
+      (ghosts && batch.mesh.topology !== "triangle-list") ||
       world.raster.brokenTextureSets.has(batch.textureSet)
     ) {
       continue;

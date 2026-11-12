@@ -16,6 +16,12 @@ import {
   scaleOf,
 } from "./exaggeration.ts";
 import { createLoading, type LoadingState } from "./loading.ts";
+import { createHeightPanel } from "./heightPanel.ts";
+import {
+  attach,
+  createHeightVisuals,
+  type HeightKey,
+} from "./heightVisuals.ts";
 import { createPins } from "./pins.ts";
 import { CAMERA, CLOSE_UP, PLACES, positionOf, type Shot } from "./places.ts";
 import {
@@ -102,9 +108,18 @@ export async function run({
     orientation: { kind: "free" },
   });
   // The camera controller keeps above the ground as drawn: it takes the
-  // true ground height (the viewer's) through the view's route itself.
+  // true ground height (the viewer's) through the view's route itself, and
+  // lifts the camera only where the drawn ground would cover it. A margin,
+  // since terrain drawn ten times as steep is close to a wall.
   const earth = world.bodyAnchor(EARTH);
+  const minimumHeight = viewer.controller.minimumHeight;
+  viewer.controller.minimumHeight = 40;
+  scope.defer(() => {
+    viewer.controller.minimumHeight = minimumHeight;
+  });
 
+  // A shot frames the target as it is drawn at the multiplier in force; the
+  // camera then stays where it is as the slider moves.
   const frameCamera = (shot: Shot = CAMERA) => {
     const t = shot.target;
     view.camera.lookAt(
@@ -448,6 +463,58 @@ export async function run({
   }
 
   // ------------------------------------------------------------ the panel
+  // The height visuals: one custom shader on the globe, there while an
+  // effect is on. Their state rides in the URL.
+  const keyOf = (v: string | undefined): HeightKey | undefined =>
+    v === "trueHeight" ? "true" : v === "drawnHeight" ? "drawn" : undefined;
+  const written = (key: HeightKey) =>
+    key === "true" ? "trueHeight" : "drawnHeight";
+  const contourStart = Number(params.contours);
+  const visuals = createHeightVisuals({
+    tint: keyOf(params.tint) !== undefined,
+    lookup: keyOf(params.tint) ?? "true",
+    contours: Number.isFinite(contourStart) ? contourStart : 0,
+    haze: keyOf(params.haze) !== undefined,
+    hazeKey: keyOf(params.haze) ?? "true",
+  });
+  const heightPanel = createHeightPanel(
+    visuals,
+    () => exaggeration.factor,
+    () => {
+      const s = visuals.state;
+      setParams({
+        tint: s.tint ? written(s.lookup) : undefined,
+        contours: s.contours > 0 ? String(s.contours) : undefined,
+        haze: s.haze ? written(s.hazeKey) : undefined,
+      });
+      attach(viewer.globe, visuals);
+      engine.requestRender();
+    },
+  );
+  // The haze's path starts at the camera: its height as drawn and as true
+  // (the camera is in the drawn space). The globe is the viewer's, and may
+  // be replaced.
+  let lastEye = [NaN, NaN];
+  const offVisuals = engine.onAfterTick(() => {
+    attach(viewer.globe, visuals);
+    if (!visuals.state.haze) {
+      return;
+    }
+    const eye = view.camera.position;
+    const drawnHeight = exaggeration.geodetic(eye).height;
+    const trueHeight = exaggeration.geodetic(exaggeration.truth(eye)).height;
+    if (drawnHeight !== lastEye[0] || trueHeight !== lastEye[1]) {
+      lastEye = [drawnHeight, trueHeight];
+      visuals.setCamera(drawnHeight, trueHeight);
+    }
+  });
+  scope.defer(() => {
+    offVisuals();
+    if (viewer.globe?.shader === visuals.shader) {
+      viewer.globe.shader = undefined;
+    }
+  });
+
   const slider = el("input", {
     type: "range",
     min: "1",
@@ -456,15 +523,18 @@ export async function run({
     value: String(exaggeration.factor),
     ariaLabel: "Vertical exaggeration",
   });
-  /** One float: the camera keeps its true place, so it stays above the ground it is drawn over. */
+  /**
+   * One float. The camera is the controller's, in the frame it is drawn in
+   * (the view's render space): it stays where it is while the ground rises
+   * toward it, and the controller lifts it over the ground only where the
+   * drawn ground would cover it, back down to where it was put as the
+   * ground falls away again (`GlobeController.update`).
+   */
   slider.oninput = () => {
-    const camera = view.camera;
-    const eye = exaggeration.truth(camera.position);
     exaggeration.factor = Number(slider.value);
-    exaggeration.drawn(eye, camera.position);
-    camera.version++;
     engine.requestRender();
     refresh();
+    heightPanel.refresh();
   };
   slider.onchange = () => setParams({ x: Number(slider.value).toFixed(1) });
 
@@ -524,6 +594,7 @@ export async function run({
       ),
     ),
     el("label", {}, "Truck keeps its shape", uprightBox),
+    heightPanel.root,
     el("h3", {}, "Picked point"),
     pickHint,
     pickTable.root,

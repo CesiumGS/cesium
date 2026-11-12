@@ -164,6 +164,8 @@ export function upload(tileset: TilesetUpload): void {
           parent: tileset.state.transform,
           viewMask: 0,
           collision: tileset.state.collision,
+          ...(tileset.state.options.clipExempt ? { clipExempt: true } : {}),
+          ...(tileset.state.options.solid ? { solid: true } : {}),
           ...(shader ? { shader } : {}),
         });
         // The warp fits of a tile's draws share its geometric error's budget.

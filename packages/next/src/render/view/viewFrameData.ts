@@ -125,6 +125,15 @@ export interface ViewFrame {
    */
   clipBuffer: GPUBuffer | undefined;
   clipBytes: number;
+  /** Faces of its section caps this tick (`View.clipCaps`); 0 for none. */
+  capFaces: number;
+  /**
+   * The distances from the camera the view's blended clip ghosts can draw at
+   * (`ghostRange`): undefined without any. The translucent passes then also
+   * draw the world's opaque triangle batches, which keep only what a ghost
+   * removes (surface.slang `clipGhosts`).
+   */
+  clipGhost: { near: number; far: number } | undefined;
   /** Ambient occlusion is computed for this view this frame. */
   ambient: boolean;
   /** Its kernels' parameters (ao.slang `AoParams`). */

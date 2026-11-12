@@ -9,6 +9,7 @@ import { EARTH, bodyKey, type Body } from "./Body.ts";
 import type { CorePick } from "./pick.ts";
 import type { SceneItem } from "./SceneItem.ts";
 import { MAX_CLIP_SETS, type ClipSet, type WorldClip } from "./world/clips.ts";
+import type { ClipCaps } from "./world/capFaces.ts";
 import {
   type RenderTarget,
   type Viewport,
@@ -367,6 +368,28 @@ export class View {
       ? []
       : this.world.clipSets.setsInMask(this.clipMask_);
   }
+  private clipCaps_: ClipCaps | undefined;
+  /**
+   * Closes the cut of this view's clips with a cap, wherever a clip passes
+   * through a solid draw (`DrawOptions.solid`): drawn by the GPU every frame
+   * from the clips as they are, so a clip that moves leaves no frame without
+   * its caps. A view without clips, or without solids, has none. Caps are made
+   * for the sets of planes or of one box that the view tests in true space;
+   * none while a curved clip is in the view. Not pickable: ask the geometry
+   * (`BrepCaps`, `MeshCaps`) for exact caps to measure or pick. Off (undefined)
+   * by default.
+   */
+  get clipCaps(): ClipCaps | undefined {
+    return this.clipCaps_;
+  }
+  set clipCaps(value: ClipCaps | undefined) {
+    this.clipCaps_ = value && { ...value };
+    this.wake?.();
+  }
+  /** What the view's caps left out last frame, and why (undefined: nothing). */
+  capNote: string | undefined;
+  /** Faces the view's caps were made of last frame (0: no caps). */
+  capFaces = 0;
   get viewport(): Viewport {
     return this.state.viewport;
   }

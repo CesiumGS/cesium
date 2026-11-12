@@ -37,6 +37,7 @@ struct CesiumFragment_std430_0
     @align(16) positionMC : vec3<f32>,
     @align(16) positionEC : vec3<f32>,
     @align(16) positionWC : vec3<f32>,
+    @align(16) truePositionEC : vec3<f32>,
     @align(16) normal : vec3<f32>,
     @align(16) texCoord0 : vec2<f32>,
     @align(16) color0 : vec4<f32>,
@@ -51,6 +52,10 @@ struct CesiumFragment_std430_0
     @align(16) named1 : vec4<f32>,
     @align(16) named2 : vec4<f32>,
     @align(16) named3 : vec4<f32>,
+    @align(16) clipDistance : f32,
+    @align(4) clipFlags : u32,
+    @align(8) clipId : u32,
+    @align(16) clipParams : vec4<f32>,
 };
 
 @binding(2) @group(0) var<storage, read> cesiumFragment_0 : array<CesiumFragment_std430_0>;
@@ -120,6 +125,7 @@ struct CesiumFragment
      positionMC : vec3<f32>,
      positionEC : vec3<f32>,
      positionWC : vec3<f32>,
+     truePositionEC : vec3<f32>,
      normal : vec3<f32>,
      texCoord0 : vec2<f32>,
      color0 : vec4<f32>,
@@ -134,6 +140,10 @@ struct CesiumFragment
      named1 : vec4<f32>,
      named2 : vec4<f32>,
      named3 : vec4<f32>,
+     clipDistance : f32,
+     clipFlags : u32,
+     clipId : u32,
+     clipParams : vec4<f32>,
 };
 
 struct MaterialOutput

@@ -42,6 +42,23 @@ fn vsPoints(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> 
   return vsOut(surfacePointVertex(vertexIndex, item));
 }
 
+// How far a line is pulled toward the camera, as a fraction of its depth: it
+// draws over the face it lies on (a b-rep's edge, a section's outline)
+// without moving on screen. Lines take no pipeline depth bias (WebGPU
+// requires it zero for them), and lifting them off the surface by a length
+// moves them sideways by more pixels the closer the camera is. Only the
+// depth changes: clip x, y and w, so the line's pixels are the same. Reverse
+// Z: a larger depth is nearer. Measured on b-rep edges, a pull of 1e-3 still
+// breaks them up along the faces' boundary; 4e-3 draws them whole.
+const LINE_DEPTH_PULL: f32 = 4.0e-3;
+
+@vertex
+fn vsLines(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut {
+  var v = surfaceVertex(vertexIndex, item);
+  v.position.z = v.position.z * (1.0 + LINE_DEPTH_PULL);
+  return vsOut(v);
+}
+
 @vertex
 fn vsDepth(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut {
   return vsOut(surfaceDepthVertex(vertexIndex, item));

@@ -393,6 +393,8 @@ export const PATCH_CHUNK_CELLS = 4;
 export const PICK_SIZE = 3;
 /** The pick's targets: draw and feature and primitive, then the domain's values; its depth. */
 export const PICK_FORMATS = ["rgba32uint", "rgba32float"] as const;
+/** The section caps' two parity targets (`View.clipCaps`): a toggle blends into them. */
+export const CAP_PARITY_FORMAT: GPUTextureFormat = "rgba8unorm";
 export const PICK_DEPTH_FORMAT = "depth32float";
 /** A pick's result: words of `shaders/pickDomain.slang`'s buffer, 4 bytes each. */
 export const PICK_RESULT_WORDS = 20;
@@ -451,6 +453,19 @@ export const RecordFlags = {
   patchIso: 512,
   patchFlat: 1024,
   patchLinesOnly: 2048,
+  /**
+   * No clip touches the draw (`DrawOptions.clipExempt`): the view's clip sets
+   * neither cut nor ghost it (surface.slang `CLIP_EXEMPT_FLAG`). The
+   * per-draw hook for what the styling language's exemptions will say by
+   * element. GPU only: picks asked of the CPU still test the draw's hits.
+   */
+  clipExempt: 4096,
+  /**
+   * A closed solid (`DrawOptions.solid`): the view's section caps
+   * (`View.clipCaps`) count its surfaces to know where a cut passes through
+   * it. Not for open surfaces: they would flip the count behind them.
+   */
+  solid: 8192,
 } as const;
 
 /** Where `RecordFlags.patchIso`'s division count sits in a record's flags. */

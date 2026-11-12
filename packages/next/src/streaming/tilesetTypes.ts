@@ -87,6 +87,16 @@ export interface TilesetOptions extends BudgetedOptions {
    * hit it (1.x `enableCollision`, default false).
    */
   enableCollision?: boolean;
+  /**
+   * No clip of the world cuts or ghosts its content (`DrawOptions.clipExempt`):
+   * buried content that stays whole under an excavation. Default false.
+   */
+  clipExempt?: boolean;
+  /**
+   * Its content is closed solids (`DrawOptions.solid`): a view's section caps
+   * (`View.clipCaps`) are cut through them. Default false.
+   */
+  solid?: boolean;
   /** Custom shader stages for all its content (1.x `customShader`). */
   customShader?: CustomShader;
   /**

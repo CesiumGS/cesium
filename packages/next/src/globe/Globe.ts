@@ -16,6 +16,7 @@
  * costs its slot and blocks only, and nothing a tick.
  */
 import type { Engine } from "../scene/Engine.ts";
+import type { CustomShader } from "../scene/CustomShader.ts";
 import type { World } from "../scene/World.ts";
 import type { DrawHandle } from "../scene/world/types.ts";
 import { Tileset3D } from "../streaming/Tileset3D.ts";
@@ -377,6 +378,25 @@ function frozenShape(shape: TerrainRegionShape): TerrainRegionShape {
 export class Globe extends Tileset3D {
   /** Regions of the terrain: cuts, ground that is faded, tinted glass. */
   readonly terrain: GlobeTerrain;
+
+  /**
+   * Custom shader stages for the surface's tiles, as a tileset item's
+   * `shader` (`SceneItemOptions.shader`): the engine's own by default. A
+   * `fragmentMain` shades the terrain or the ellipsoid, and where the globe
+   * is drawn across a warp it reads the true position
+   * (`FragmentInput.truePositionEC`) beside the drawn one, so a lookup keyed
+   * by height can take either. Set it before the tiles load or after: the
+   * loaded ones change at once.
+   */
+  get shader(): CustomShader | undefined {
+    return this.state.baseItem?.shader;
+  }
+  set shader(shader: CustomShader | undefined) {
+    const base = this.state.baseItem;
+    if (base) {
+      base.shader = shader;
+    }
+  }
 
   private constructor(
     engine: Engine,

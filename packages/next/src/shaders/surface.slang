@@ -1324,6 +1324,40 @@ static const uint CLIP_SET_DRAWN = 4u;
 // interpolated (`airTransmittance.w`), kept where it is ≤ 0. The set's
 // shapes are not in the table.
 static const uint CLIP_SET_CURVED = 8u;
+// Effects (scene/world/clips.ts `ClipEffect`, `CLIP_SET_GHOST` and the rest):
+// a ghost set's removed side is drawn blended by the translucent passes, or
+// dithered by the opaque pass (stipple); a shade set removes nothing; a
+// reporting set has three rows after its shapes, at the row in the flags'
+// bits 8 up: (tint, strength), (alpha), (params for a custom shader).
+static const uint CLIP_SET_GHOST = 16u;
+static const uint CLIP_SET_STIPPLE = 32u;
+static const uint CLIP_SET_SHADE = 64u;
+static const uint CLIP_SET_REPORT = 128u;
+static const uint CLIP_SET_EFFECT_SHIFT = 8u;
+// The header's flag: some set reports (has an effect row).
+static const uint CLIP_ANY_REPORT = 4u;
+// `RecordFlags.clipExempt`: no clip touches the draw.
+static const uint CLIP_EXEMPT_FLAG = 4096u;
+
+// The translucent passes draw what ghost sets remove: they set `clipGhosts`,
+// and `clipsKeep` then keeps it, noting that the fragment is a ghost
+// (`clipGhosted`, drawn at `clipGhostAlpha`, tinted `clipGhostTint`: rgb and
+// strength). Stipple ghosts are the opaque pass's: `clipGhosted` is set on the
+// pixels the dither keeps. What a custom shader is told (`clipsReport`) is in
+// the rest.
+static bool clipGhosts = false;
+static bool clipGhosted = false;
+static float clipGhostAlpha = 1.0;
+static float4 clipGhostTint = float4(1.0, 1.0, 1.0, 0.0);
+static float clipDistanceOut = 3.4e38;
+static uint clipFlagsOut = 0u;
+static uint clipIdOut = 0xffffffffu;
+static float4 clipParamsOut = float4(0.0);
+
+// A dither, the same at a pixel in every pass (interleaved gradient noise).
+float clipDither(float2 position) {
+  return frac(52.9829189 * frac(dot(floor(position), float2(0.06711056, 0.00583715))));
+}
 
 float4 clipRow(uint row) {
   return clipTable[min(row, CLIP_TABLE_ROWS - 1u)];
@@ -1372,12 +1406,64 @@ bool insideClipShape(uint at, float3 p) {
   return inside;
 }
 
+// The shape's signed distance at `p` (camera-relative), metres: negative
+// inside, positive outside. Exact for a plane and a polygon's ring; a box's is
+// the largest overshoot along its axes (exact outside a face, a lower bound
+// near an edge or corner). The rows hold a box's axes scaled by its half
+// extents, so the half extent is the reciprocal of a row's length.
+float clipShapeDistance(uint at, float3 p) {
+  uint4 head = asuint(clipRow(at));
+  float4 a = clipRow(at + 1u);
+  float ua = dot(a.xyz, p) + a.w;
+  if (head.x == CLIP_PLANE) {
+    return ua;
+  }
+  float4 b = clipRow(at + 2u);
+  float4 c = clipRow(at + 3u);
+  float ub = dot(b.xyz, p) + b.w;
+  float uc = dot(c.xyz, p) + c.w;
+  if (head.x == CLIP_BOX) {
+    return max((abs(ua) - 1.0) / length(a.xyz),
+               max((abs(ub) - 1.0) / length(b.xyz), (abs(uc) - 1.0) / length(c.xyz)));
+  }
+  float2 zRange = clipRow(at + 4u).xy;
+  uint count = min(head.z, MAX_CLIP_POLYGON_VERTICES);
+  bool inside = false;
+  float nearest = 3.4e38;
+  for (uint i = 0u; i < MAX_CLIP_POLYGON_VERTICES; i++) {
+    if (i >= count) {
+      break;
+    }
+    float2 s = clipVertex(at + 5u, i);
+    float2 e = clipVertex(at + 5u, i + 1u == count ? 0u : i + 1u);
+    float2 edge = e - s;
+    float2 toPoint = float2(ua, ub) - s;
+    float t = clamp(dot(toPoint, edge) / max(dot(edge, edge), 1e-20), 0.0, 1.0);
+    nearest = min(nearest, length(toPoint - edge * t));
+    if ((s.y > ub) != (e.y > ub)) {
+      float crossing = s.x + (ub - s.y) * (e.x - s.x) / (e.y - s.y);
+      if (ua < crossing) {
+        inside = !inside;
+      }
+    }
+  }
+  return max(inside ? -nearest : nearest, max(zRange.x - uc, uc - zRange.y));
+}
+
 // Whether every clip set of the view keeps the fragment: false where a
 // fragment is clipped away. The true point is location 4, the drawn point is
 // rebuilt only when some set is tested there (`drawnPosition`; a shadow
 // cascade's or height capture's orthographic view keeps the varying, so a set
-// in drawn space is tested at the true point there).
+// in drawn space is tested at the true point there). Effects: a shade set
+// keeps what it would remove; a ghost set keeps it in the translucent passes
+// (`clipGhosts`) and where its dither does (stipple), and notes it in
+// `clipGhosted`; a draw with `RecordFlags.clipExempt` is kept whole.
 bool clipsKeep(SurfaceVaryings in, DrawRecord r) {
+  clipGhosted = false;
+  clipGhostAlpha = 1.0;
+  if ((r.flags & CLIP_EXEMPT_FLAG) != 0u) {
+    return true;
+  }
   uint4 head = asuint(clipRow(0u));
   uint sets = min(head.x, MAX_CLIP_SETS);
   float3 trueAt = in.relPosition;
@@ -1411,10 +1497,82 @@ bool clipsKeep(SurfaceVaryings in, DrawRecord r) {
     }
     bool kept = (entry.z & CLIP_SET_KEEP_OUTSIDE) != 0u ? !region : region;
     if (!kept) {
+      if ((entry.z & CLIP_SET_SHADE) != 0u) {
+        continue;
+      }
+      if ((entry.z & CLIP_SET_GHOST) != 0u) {
+        uint effect = entry.z >> CLIP_SET_EFFECT_SHIFT;
+        float alpha = clipRow(effect + 1u).x;
+        if ((entry.z & CLIP_SET_STIPPLE) != 0u) {
+          if (clipGhosts) {
+            continue;
+          }
+          if (clipDither(in.position.xy) < alpha) {
+            clipGhosted = true;
+            clipGhostTint = clipRow(effect);
+            continue;
+          }
+        } else if (clipGhosts) {
+          clipGhosted = true;
+          clipGhostAlpha *= alpha;
+          clipGhostTint = clipRow(effect);
+          continue;
+        }
+      }
       return false;
     }
   }
   return true;
+}
+
+// Tells a custom shader about the fragment (`CesiumFragment.clipDistance`,
+// `clipFlags`, `clipId`, `clipParams`): of the sets that report, the one it is
+// farthest on the removed side of, or nearest to the cut on the kept one, with
+// the distance to it (positive on the removed side, metres), whether it removes
+// the fragment and whether that is a ghost, its number in the view's list, and
+// its parameters.
+void clipsReport(SurfaceVaryings in, DrawRecord r) {
+  if (!clipsOn || (r.flags & CLIP_EXEMPT_FLAG) != 0u) {
+    return;
+  }
+  uint4 head = asuint(clipRow(0u));
+  if ((head.y & CLIP_ANY_REPORT) == 0u) {
+    return;
+  }
+  uint sets = min(head.x, MAX_CLIP_SETS);
+  float3 trueAt = in.relPosition;
+  float3 drawnAt = (head.y & 1u) != 0u ? drawnPosition(in, r) : trueAt;
+  for (uint s = 0u; s < MAX_CLIP_SETS; s++) {
+    if (s >= sets) {
+      break;
+    }
+    uint4 entry = asuint(clipRow(1u + s));
+    if ((entry.z & CLIP_SET_REPORT) == 0u) {
+      continue;
+    }
+    float3 p = (entry.z & CLIP_SET_DRAWN) != 0u ? drawnAt : trueAt;
+    bool every = (entry.z & CLIP_SET_INTERSECTION) != 0u;
+    float d = every ? -3.4e38 : 3.4e38;
+    uint at = entry.x;
+    uint shapes = min(entry.y, MAX_CLIP_SHAPES);
+    for (uint k = 0u; k < MAX_CLIP_SHAPES; k++) {
+      if (k >= shapes) {
+        break;
+      }
+      float shape = clipShapeDistance(at, p);
+      d = every ? max(d, shape) : min(d, shape);
+      at += max(asuint(clipRow(at)).y, 1u);
+    }
+    if ((entry.z & CLIP_SET_KEEP_OUTSIDE) != 0u) {
+      d = -d;
+    }
+    if (clipIdOut == 0xffffffffu || d > clipDistanceOut) {
+      clipDistanceOut = d;
+      clipIdOut = s;
+      clipFlagsOut = (d > 0.0 ? 1u : 0u) | ((entry.z & CLIP_SET_GHOST) != 0u ? 2u : 0u);
+      clipParamsOut = clipRow((entry.z >> CLIP_SET_EFFECT_SHIFT) + 2u);
+    }
+  }
 }
 
 // Discards a fragment the view's clips remove; compiled out of a view without
@@ -1439,6 +1597,7 @@ CesiumFragment fragmentOf(SurfaceVaryings in, float3 geometric, float3 drawn) {
   f.positionMC = in.positionMC;
   f.positionEC = drawn;
   f.positionWC = drawn + cameraPosition();
+  f.truePositionEC = in.relPosition;
   f.normal = geometric;
   f.texCoord0 = in.uv;
   f.color0 = in.color * r.color;
@@ -1457,6 +1616,10 @@ CesiumFragment fragmentOf(SurfaceVaryings in, float3 geometric, float3 drawn) {
   f.named1 = in.named1;
   f.named2 = in.named2;
   f.named3 = in.named3;
+  f.clipDistance = clipDistanceOut;
+  f.clipFlags = clipFlagsOut;
+  f.clipId = clipIdOut;
+  f.clipParams = clipParamsOut;
   return f;
 }
 
@@ -1482,17 +1645,33 @@ MaterialOutput materialOutput(float3 baseColor, float alpha, float metallic, flo
 float materialAlpha(SurfaceVaryings in) {
   DrawRecord r = drawRecord(in.ids.x);
   Material material = materials[r.materialIndex];
+  // The translucent passes draw a ghost set's removed side, and only that of
+  // an opaque material (the opaque pass drew the rest): no alpha elsewhere.
+  // The discard waits until the samples (uniform control flow) are done.
+  bool clipDrops = false;
+  if (clipsOn) {
+    clipDrops = clipGhosts && (!clipsKeep(in, r) || ((material.flags & 8u) == 0u && !clipGhosted));
+    clipsReport(in, r);
+  }
   float4 sampled = materialTexture(material, TEXTURE_BASE_COLOR, in.uv);
   float4 color = material.baseColor * r.color * in.color;
   if (materialHasTexture(material, TEXTURE_BASE_COLOR)) {
     color *= sampled;
+  }
+  if (clipGhosted && clipGhosts) {
+    color.a *= clipGhostAlpha;
   }
   float3 geometric = normalize(in.normal);
   MaterialOutput custom = materialOutput(
       color.rgb, color.a, material.metallic, material.roughness, geometric, 1.0,
       material.emissive, (material.flags & 1u) != 0u || (r.flags & 2u) != 0u);
   cesiumFragmentStage(fragmentOf(in, geometric, drawnPosition(in, r)), custom);
-  return custom.alpha * terrainAlpha(r, in);
+  if (clipDrops) {
+    return 0.0; // no discard here: callers take derivatives of the alpha
+  }
+  // A ghost's skirts only hide cracks in opaque ground, as translucent terrain's.
+  float skirts = (clipGhosts && clipGhosted && (in.ids.z & SKIRT_BIT) != 0u) ? 0.0 : 1.0;
+  return custom.alpha * terrainAlpha(r, in) * skirts;
 }
 
 // The opaque pass's discards: alpha cutoff, blended surfaces' translucent
@@ -1679,6 +1858,77 @@ void shadowPatchFs(SurfaceVaryings in) {
   if (off || clippedAway(r, in)) {
     discard;
   }
+}
+
+// --- section caps' parity (scene/world/capFaces.ts, render/world/capPass.ts) -----
+//
+// A view's caps are drawn where the section passes through a solid: a pixel's
+// ray enters the kept region at a cap face, inside a solid when the solid's
+// surfaces beyond the face are odd in number. This is the pass that counts
+// them: each fragment of a solid draw (`RECORD_SOLID_BIT`), whatever the clips
+// say, toggles the bit of every face it is beyond (the side the camera isn't on),
+// by the blend `capPass.ts` sets (src × (1 − dst) + dst × (1 − src): a toggle),
+// into two rgba8 targets, four faces each. The faces are rows of the clip
+// table after the sets' (`clipRow(0).z` the first, `.w` their number), three a
+// face, the first of them its plane (n, d) with n·p + d < 0 at the camera.
+static const uint RECORD_SOLID_BIT = 8192u;
+static const uint CAP_MAX_FACES = 8u;
+
+struct CapParity {
+  float4 low : SV_Target0;
+  float4 high : SV_Target1;
+};
+
+CapParity capParityOf(DrawRecord r, float3 p) {
+  CapParity o;
+  o.low = float4(0.0);
+  o.high = float4(0.0);
+  if ((r.flags & RECORD_SOLID_BIT) == 0u || clippedOut(r, p)) {
+    discard;
+  }
+  uint4 head = asuint(clipRow(0u));
+  uint count = min(head.w, CAP_MAX_FACES);
+  for (uint k = 0u; k < CAP_MAX_FACES; k++) {
+    if (k >= count) {
+      break;
+    }
+    float4 plane = clipRow(head.z + 3u * k);
+    float beyond = dot(plane.xyz, p) + plane.w > 0.0 ? 1.0 : 0.0;
+    if (k < 4u) {
+      o.low[k] = beyond;
+    } else {
+      o.high[k - 4u] = beyond;
+    }
+  }
+  return o;
+}
+
+// The parity pass's fragment stages: a mesh draw's, a trimmed patch face's and a
+// patch face the rect completes.
+[shader("fragment")]
+CapParity capParityFs(SurfaceVaryings in) {
+  return capParityOf(drawRecord(in.ids.x), in.relPosition);
+}
+
+[shader("fragment")]
+CapParity capParityTrimmedFs(SurfaceVaryings in) {
+  DrawRecord r = drawRecord(in.ids.x);
+  bool covered = trimCovered(in);
+  bool off = offLines(in, r);
+  if (!covered || off) {
+    discard;
+  }
+  return capParityOf(r, in.relPosition);
+}
+
+[shader("fragment")]
+CapParity capParityPatchFs(SurfaceVaryings in) {
+  DrawRecord r = drawRecord(in.ids.x);
+  bool off = offLines(in, r);
+  if (off) {
+    discard;
+  }
+  return capParityOf(r, in.relPosition);
 }
 
 // `prepassFs` for a trimmed patch face.
@@ -2023,6 +2273,25 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   Material material = materials[r.materialIndex];
   uint flags = material.flags;
 
+  // The view's clips: after the depth prepass the depth pass has done them,
+  // and the depth test leaves the clipped fragments out, so only a view with
+  // effects tests again (a stipple's kept pixels, a ghost's tint, what a custom
+  // shader is told). The translucent passes draw what ghost sets remove, and
+  // from an opaque material only that (`materialAlpha`'s twin). The discard
+  // waits for the samples and derivatives below, which need uniform control flow.
+  bool clipDrops = false;
+  if (clipsOn) {
+    clipGhosts = translucent;
+    bool effects = (asuint(clipRow(0u)).y & CLIP_ANY_REPORT) != 0u;
+    if (translucent || !cutOutInDepth || effects) {
+      bool kept = clipsKeep(in, r);
+      clipDrops = translucent ? (!kept || ((flags & 8u) == 0u && !clipGhosted)) : (!kept && !cutOutInDepth);
+    }
+    // A ghost's skirts only hide cracks in opaque ground, as translucent terrain's.
+    clipDrops = clipDrops || (clipGhosted && (in.ids.z & SKIRT_BIT) != 0u);
+    clipsReport(in, r);
+  }
+
   // Everything that needs uniform control flow first: texture samples and
   // derivatives. Missing textures are 1×1 white defaults, gated by the
   // material's texture references (`materialHasTexture`).
@@ -2059,6 +2328,12 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
     // The draw's tint (white unless a debug view tints tiles) still applies.
     baseColor = float4(srgbToLinear(imagerySample.rgb), 1.0) * r.color;
   }
+  if (clipGhosted) {
+    baseColor.rgb = lerp(baseColor.rgb, clipGhostTint.rgb, clipGhostTint.a);
+    if (translucent) {
+      baseColor.a *= clipGhostAlpha;
+    }
+  }
   // Mixed-LOD placeholder: a coarse tile fills only the volumes of its
   // missing finer descendants, at its true depth (plan §13.1); clipped
   // terrain draws nothing inside its regions, and translucent terrain is
@@ -2066,12 +2341,7 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   // clipped or translucent terrain fragment has no depth of its own to
   // equal, so the depth test already left it out: only the placeholders'
   // cheap test is repeated.
-  if (placeholderOut(r, in.relPosition)) {
-    discard;
-  }
-  // The view's clips: after the depth prepass the depth pass has done them
-  // (`clippedAway`), and the depth test leaves the clipped fragments out.
-  if ((translucent || !cutOutInDepth) && clipsDiscard(in, r)) {
+  if (placeholderOut(r, in.relPosition) || clipDrops) {
     discard;
   }
   float terrain = 1.0;
@@ -2584,9 +2854,12 @@ float momentDepth(float3 relPosition) {
 // A blended surface's alpha (`shadeSurface`'s, without its light), with the
 // opaque pass's placeholder clip.
 float blendedAlpha(SurfaceVaryings in) {
+  clipGhosts = true;
   DrawRecord r = drawRecord(in.ids.x);
+  // `materialAlpha` does the view's clips (ghosts kept, in the translucent
+  // passes), so only the placeholders' and terrain regions' are left here.
   float alpha = materialAlpha(in);
-  if (clippedAway(r, in)) {
+  if (clippedOut(r, in.relPosition)) {
     discard;
   }
   return clamp(alpha, 0.0, 1.0);

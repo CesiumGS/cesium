@@ -187,3 +187,110 @@ export function undoAll(steps: ReadonlyArray<() => unknown>): unknown[] {
   }
   return errors;
 }
+
+/** One page visit's claim on the kept engine. */
+export interface EngineLease<T> {
+  /** The engine, once made; rejects with why it couldn't be. */
+  readonly ready: Promise<Shared<T>>;
+  /** Lets go (counted once, however often it's called). */
+  release(): void;
+}
+
+/**
+ * Keeps the Examples page's engine across leaving and coming back: the
+ * device, its pipelines and the workers are seconds of work (most of a
+ * cold example's start) and the page leaves and returns often (the gallery
+ * list and back, React's strict mode in development, which mounts, unmounts
+ * and mounts again). Once the last lease is released the engine is kept
+ * `graceMs` more, and destroyed (through `share`, so after whatever still
+ * holds it) if nothing acquires it by then.
+ */
+export function createEngineKeeper<T>(options: {
+  create(): Promise<T>;
+  destroy(value: T): void;
+  graceMs: number;
+  setTimer?(callback: () => void, ms: number): unknown;
+  clearTimer?(timer: unknown): void;
+}) {
+  const setTimer = options.setTimer ?? ((cb, ms) => setTimeout(cb, ms));
+  const clearTimer =
+    options.clearTimer ??
+    ((timer) => clearTimeout(timer as ReturnType<typeof setTimeout>));
+  interface Entry {
+    ready: Promise<Shared<T>>;
+    leases: number;
+    timer?: unknown;
+    /** The owner's release of the engine, once it's made. */
+    releaseOwner?: () => void;
+    /** The engine was let go before it was made: dropped when it is. */
+    dropped: boolean;
+  }
+  let entry: Entry | undefined;
+
+  const drop = (target: Entry) => {
+    if (entry === target) {
+      entry = undefined;
+    }
+    target.dropped = true;
+    target.releaseOwner?.();
+  };
+
+  return {
+    acquire(): EngineLease<T> {
+      let current = entry;
+      if (current) {
+        if (current.timer !== undefined) {
+          clearTimer(current.timer);
+          current.timer = undefined;
+        }
+      } else {
+        const made: Entry = {
+          leases: 0,
+          dropped: false,
+          ready: options.create().then(
+            (value) => {
+              const owned = share(value, options.destroy);
+              made.releaseOwner = owned.release;
+              if (made.dropped) {
+                owned.release();
+              }
+              return owned.shared;
+            },
+            (error: unknown) => {
+              if (entry === made) {
+                entry = undefined;
+              }
+              throw error;
+            },
+          ),
+        };
+        // Each lease reports the failure to its own caller.
+        made.ready.catch(() => undefined);
+        entry = current = made;
+      }
+      const mine = current;
+      mine.leases++;
+      let released = false;
+      return {
+        ready: mine.ready,
+        release() {
+          if (released) {
+            return;
+          }
+          released = true;
+          if (--mine.leases > 0) {
+            return;
+          }
+          if (options.graceMs <= 0) {
+            drop(mine);
+          } else {
+            mine.timer = setTimer(() => {
+              mine.timer = undefined;
+              drop(mine);
+            }, options.graceMs);
+          }
+        },
+      };
+    },
+  };
+}

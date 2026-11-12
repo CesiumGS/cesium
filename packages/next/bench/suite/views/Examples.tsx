@@ -42,13 +42,13 @@ import { limitsTier } from "../limitsTier.ts";
 import { Empty, Page, Section } from "./common.tsx";
 import { ExampleSwitcher, ExampleThumbnail } from "./ExampleSwitcher.tsx";
 import {
+  createEngineKeeper,
   createParamsStore,
   exampleLink,
   normalizeRun,
   type Params,
   searchToParams,
   type Shared,
-  share,
   undoAll,
 } from "./exampleRun.ts";
 import { captureThumbnail } from "./thumbnails.ts";
@@ -64,6 +64,15 @@ const exampleRoute = getRouteApi("/examples/$id");
 
 /** Instance rows for each example's viewer: 100,000 tracks of a few parts. */
 const MAX_INSTANCES = 1 << 20;
+
+/** How long the engine outlives the page: the gallery list and back, or a double mount, find it ready. */
+const ENGINE_GRACE_MS = 20_000;
+
+const engineKeeper = createEngineKeeper<Engine>({
+  create: () => Engine.create({ limits: limitsTier() }),
+  destroy: (engine) => engine.destroy(),
+  graceMs: ENGINE_GRACE_MS,
+});
 
 export function Examples() {
   return (
@@ -171,32 +180,25 @@ export function ExamplePage() {
   const exists = !!info;
 
   // One engine while the page is open (the device, pipelines and
-  // workers, the costly part); each example gets a viewer of its own on
-  // it, destroyed when the example is left, so nothing one example changed
-  // reaches the next (Sandcastle gets the same from a fresh iframe). Shared:
-  // on leaving, React runs this cleanup before the runner's (parent first),
-  // so the engine goes when the example on it has been disposed, not before.
+  // workers, the costly part), and for `ENGINE_GRACE_MS` after it is left:
+  // the gallery list and back, or a development double mount, reuse it. Each
+  // example gets a viewer of its own on it, destroyed when the example is
+  // left, so nothing one example changed reaches the next (Sandcastle gets
+  // the same from a fresh iframe). Shared: when the keeper lets it go, it is
+  // destroyed once the example on it has been disposed, not before.
   useEffect(() => {
     if (!exists) {
       return;
     }
     let cancelled = false;
-    let release: (() => void) | undefined;
-    Engine.create({ limits: limitsTier() }).then(
-      (e) => {
-        if (cancelled) {
-          e.destroy();
-        } else {
-          const made = share(e, (x) => x.destroy());
-          release = made.release;
-          setShared(made.shared);
-        }
-      },
+    const lease = engineKeeper.acquire();
+    lease.ready.then(
+      (made) => !cancelled && setShared(made),
       (e) => !cancelled && setError(message(e)),
     );
     return () => {
       cancelled = true;
-      release?.();
+      lease.release();
       setShared(undefined);
     };
   }, [exists]);
@@ -535,6 +537,14 @@ function ExampleRunner({
         () => scope.dispose(),
         () => boxElement.replaceChildren(),
         () => viewer?.destroy(),
+        // The console's handle would keep the destroyed viewer, its engine
+        // and world alive until the next example replaced it.
+        () => {
+          const globals = globalThis as { dynoExamplesViewer?: Viewer };
+          if (viewer && globals.dynoExamplesViewer === viewer) {
+            globals.dynoExamplesViewer = undefined;
+          }
+        },
         releaseRun,
       ]);
       // Each leave's own notice (or none), set here, in the cleanup: not

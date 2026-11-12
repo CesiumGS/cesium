@@ -3,12 +3,7 @@
 // lines are lifted off the faces. Positions are relative to the mesh's own
 // origin, as the tessellator's are, and lengths are metres in the b-rep's own
 // units.
-import {
-  evaluateCurve2,
-  faceNormal,
-  type BrepForm,
-  type BrepMesh,
-} from "../../src/brep/index.ts";
+import type { BrepForm, BrepMesh } from "../../src/brep/index.ts";
 
 /** How the faces are drawn. */
 export type DisplayMode = "shaded" | "shadedWire" | "flatWire" | "wire";
@@ -146,108 +141,27 @@ export function flatFaces(mesh: BrepMesh): {
   };
 }
 
-/** One use of an edge by a face: the face, its pcurve segments and its direction. */
-interface EdgeUse {
-  face: number;
-  first: number;
-  count: number;
-  reversed: boolean;
-}
-
-/** The uses of every edge, by edge index. */
-function edgeUses(form: BrepForm): EdgeUse[][] {
-  const uses: EdgeUse[][] = Array.from(
-    { length: form.edgeVertices.length / 2 },
-    () => [],
-  );
-  for (let face = 0; face < form.faceSurface.length; face++) {
-    const firstLoop = form.faceLoops[face * 2]!;
-    for (
-      let l = firstLoop;
-      l < firstLoop + form.faceLoops[face * 2 + 1]!;
-      l++
-    ) {
-      const firstUse = form.loopUses[l * 2]!;
-      for (let u = firstUse; u < firstUse + form.loopUses[l * 2 + 1]!; u++) {
-        uses[form.useEdge[u]!]!.push({
-          face,
-          first: form.usePcurve[u * 2]!,
-          count: form.usePcurve[u * 2 + 1]!,
-          reversed: form.useReversed[u] === 1,
-        });
-      }
-    }
-  }
-  return uses;
-}
-
 /**
- * The b-rep edges as drawn: each point of the tessellated polyline lifted by
- * `lift` along the sum of the normals of the faces that use the edge, taken
- * where the use's pcurve is at the same fraction of the polyline's length.
- * A box's edge lifts diagonally, clear of both faces. Lines take no depth
- * bias, so this is what keeps them in view.
+ * The b-rep edges as drawn: the tessellated polylines themselves, on the
+ * faces' boundaries. They are not moved off the faces: the pipeline pulls
+ * every line toward the camera in depth alone (`vsLines`), so an edge wins
+ * the depth test without shifting on screen, as a lift along the faces'
+ * normals did (diagonally off a box's edge, further the closer the camera).
  */
-export function liftedEdges(
-  form: BrepForm,
-  mesh: BrepMesh,
-  lift: number,
-): LineMesh {
+export function edgeLines(mesh: BrepMesh): LineMesh {
   const { positions, indices, featureIds } = mesh.edges;
-  const lifted = Float32Array.from(positions);
-  const uses = edgeUses(form);
-  const count = featureIds.length;
-  for (let start = 0; start < count;) {
-    const edge = featureIds[start]!;
-    let end = start;
-    while (end < count && featureIds[end] === edge) {
-      end++;
-    }
-    // Fractions along the run, by chord length.
-    const along = new Float64Array(end - start);
-    for (let i = start + 1; i < end; i++) {
-      along[i - start] =
-        along[i - start - 1]! +
-        Math.hypot(
-          positions[i * 3]! - positions[i * 3 - 3]!,
-          positions[i * 3 + 1]! - positions[i * 3 - 2]!,
-          positions[i * 3 + 2]! - positions[i * 3 - 1]!,
-        );
-    }
-    const total = along[end - start - 1]!;
-    for (let i = start; i < end; i++) {
-      const s = total > 0 ? along[i - start]! / total : 0;
-      let x = 0;
-      let y = 0;
-      let z = 0;
-      for (const use of uses[edge]!) {
-        const f = use.reversed ? 1 - s : s;
-        const scaled = Math.min(f * use.count, use.count - 1e-9);
-        const segment = Math.floor(scaled);
-        const uv = evaluateCurve2(
-          form,
-          use.first + segment,
-          scaled - segment,
-        ).position;
-        const n = faceNormal(form, use.face, uv[0]!, uv[1]!);
-        if (n) {
-          x += n[0]!;
-          y += n[1]!;
-          z += n[2]!;
-        }
-      }
-      const length = Math.hypot(x, y, z);
-      if (length > 0) {
-        lifted[i * 3] = lifted[i * 3]! + (x / length) * lift;
-        lifted[i * 3 + 1] = lifted[i * 3 + 1]! + (y / length) * lift;
-        lifted[i * 3 + 2] = lifted[i * 3 + 2]! + (z / length) * lift;
-      }
-    }
-    start = end;
-  }
   return {
-    positions: lifted,
+    positions: Float32Array.from(positions),
     indices: Uint32Array.from(indices),
     featureIds: Uint32Array.from(featureIds),
   };
+}
+
+/** `edgeLines`, for callers that still pass the lift it no longer applies. */
+export function liftedEdges(
+  _form: BrepForm,
+  mesh: BrepMesh,
+  _lift?: number,
+): LineMesh {
+  return edgeLines(mesh);
 }

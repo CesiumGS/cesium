@@ -1622,6 +1622,40 @@ export class World {
     }
   }
 
+  /**
+   * Whether no clip touches the draw (`DrawOptions.clipExempt`): cut, ghosted
+   * or reported.
+   */
+  setClipExempt(handle: DrawHandle, exempt: boolean): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
+    const flags =
+      this.raster.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+    const next = exempt
+      ? flags | RecordFlags.clipExempt
+      : flags & ~RecordFlags.clipExempt;
+    if (this.raster.drawConstants.setFlags(handle.index, next)) {
+      this.raster.uploadsPending = true;
+    }
+  }
+
+  /**
+   * Whether the draw is a closed solid that the section caps of a view
+   * (`View.clipCaps`) count (`DrawOptions.solid`).
+   */
+  setSolid(handle: DrawHandle, solid: boolean): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
+    const flags =
+      this.raster.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+    const next = solid ? flags | RecordFlags.solid : flags & ~RecordFlags.solid;
+    if (this.raster.drawConstants.setFlags(handle.index, next)) {
+      this.raster.uploadsPending = true;
+    }
+  }
+
   /** Whether ray casts with `collisionOnly` may hit the draw. */
   setCollision(handle: DrawHandle, collision: boolean): void {
     if (!this.hasDraw(handle)) {
@@ -1969,8 +2003,9 @@ export class World {
     keyOf: (doubleSided: boolean) => SurfaceKey,
     group: GPUBindGroup,
     clipped = false,
+    ghosts = false,
   ): void {
-    encodeTranslucent(this, pass, keyOf, group, clipped);
+    encodeTranslucent(this, pass, keyOf, group, clipped, ghosts);
   }
 
   /** The vertex arena buffer holding `mesh` (its slab's, scene/Slabs.ts). */

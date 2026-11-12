@@ -7,6 +7,7 @@ import {
 import { describe, expect, it, vi } from "vitest";
 import { parseSearch, stringifySearch } from "../bench/suite/search.ts";
 import {
+  createEngineKeeper,
   createParamsStore,
   exampleLink,
   mergeParams,
@@ -290,5 +291,131 @@ describe("undoAll", () => {
     ]);
     expect(errors).toHaveLength(1);
     expect(destroy).toHaveBeenCalledOnce();
+  });
+});
+
+describe("createEngineKeeper", () => {
+  /** A keeper on a fake clock: `advance` runs the timers that fall due. */
+  function setup(graceMs = 1000) {
+    let now = 0;
+    const timers = new Map<number, { at: number; callback: () => void }>();
+    let nextTimer = 1;
+    const created: string[] = [];
+    const destroyed: string[] = [];
+    const keeper = createEngineKeeper<string>({
+      create: async () => {
+        const name = `engine ${created.length + 1}`;
+        created.push(name);
+        return name;
+      },
+      destroy: (name) => destroyed.push(name),
+      graceMs,
+      setTimer: (callback, ms) => {
+        const id = nextTimer++;
+        timers.set(id, { at: now + ms, callback });
+        return id;
+      },
+      clearTimer: (id) => void timers.delete(id as number),
+    });
+    const advance = (ms: number) => {
+      now += ms;
+      for (const [id, timer] of [...timers]) {
+        if (timer.at <= now) {
+          timers.delete(id);
+          timer.callback();
+        }
+      }
+    };
+    return { keeper, created, destroyed, advance, timers };
+  }
+
+  it("shares one engine between a mount, an unmount and a remount (strict mode)", async () => {
+    const { keeper, created, destroyed, advance } = setup();
+    const first = keeper.acquire();
+    first.release();
+    const second = keeper.acquire();
+    const [a, b] = await Promise.all([first.ready, second.ready]);
+    expect(a).toBe(b);
+    expect(created).toEqual(["engine 1"]);
+    advance(5000);
+    expect(destroyed).toEqual([]);
+    second.release();
+    advance(999);
+    expect(destroyed).toEqual([]);
+    advance(1);
+    expect(destroyed).toEqual(["engine 1"]);
+  });
+
+  it("keeps the engine for the grace period after the last lease, for a returning page", async () => {
+    const { keeper, created, destroyed, advance } = setup();
+    const first = keeper.acquire();
+    await first.ready;
+    first.release();
+    advance(600);
+    const again = keeper.acquire();
+    expect((await again.ready).value).toBe("engine 1");
+    advance(10_000);
+    expect(destroyed).toEqual([]);
+    again.release();
+    advance(1000);
+    expect(destroyed).toEqual(["engine 1"]);
+    // Past the grace period it is made again.
+    const later = keeper.acquire();
+    expect((await later.ready).value).toBe("engine 2");
+    expect(created).toEqual(["engine 1", "engine 2"]);
+  });
+
+  it("destroys only once what still holds the engine lets go", async () => {
+    const { keeper, destroyed, advance } = setup();
+    const lease = keeper.acquire();
+    const shared = await lease.ready;
+    const releaseRun = shared.hold();
+    lease.release();
+    advance(1000);
+    expect(destroyed).toEqual([]);
+    releaseRun();
+    expect(destroyed).toEqual(["engine 1"]);
+  });
+
+  it("counts each release once, however often it is called", async () => {
+    const { keeper, destroyed, advance } = setup();
+    const one = keeper.acquire();
+    const two = keeper.acquire();
+    await one.ready;
+    one.release();
+    one.release();
+    advance(5000);
+    expect(destroyed).toEqual([]);
+    two.release();
+    advance(1000);
+    expect(destroyed).toEqual(["engine 1"]);
+  });
+
+  it("destroys an engine that was let go of before it was made", async () => {
+    const { keeper, destroyed, advance } = setup(0);
+    const lease = keeper.acquire();
+    lease.release();
+    advance(0);
+    await lease.ready;
+    expect(destroyed).toEqual(["engine 1"]);
+  });
+
+  it("makes a new one after a failure, and tells each lease", async () => {
+    let attempts = 0;
+    const keeper = createEngineKeeper<string>({
+      create: async () => {
+        if (++attempts === 1) {
+          throw new Error("no adapter");
+        }
+        return "engine";
+      },
+      destroy: () => {},
+      graceMs: 1000,
+    });
+    const failed = keeper.acquire();
+    await expect(failed.ready).rejects.toThrow("no adapter");
+    const retried = keeper.acquire();
+    expect((await retried.ready).value).toBe("engine");
+    expect(attempts).toBe(2);
   });
 });

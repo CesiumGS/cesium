@@ -1157,6 +1157,7 @@ export class Engine {
   removeView(view: View): void {
     this.viewWatches.get(view)?.();
     this.viewWatches.delete(view);
+    this.viewKeys.delete(view);
     view.wake = undefined;
     view.renderRoot = undefined;
     view.releaseStages();

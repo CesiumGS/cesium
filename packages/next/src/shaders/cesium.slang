@@ -89,6 +89,7 @@ public struct FragmentInput {
   public float3 positionMC;  // model coordinates of the design position (the mesh's own, before any placement or vertexMain), interpolated
   public float3 positionEC;  // relative to the camera, Earth-fixed axes (m)
   public float3 positionWC;  // Earth-fixed (float32: about a meter)
+  public float3 truePositionEC;  // where the content is, before any warp or placement draws it elsewhere, as positionEC (it is positionEC where the draw isn't warped)
   public float3 normal;      // geometric normal, toward the viewer
   public float2 texCoord0;
   public float4 color0;      // vertex color times the draw's tint
@@ -99,6 +100,15 @@ public struct FragmentInput {
   public Metadata metadata;      // interpolated
   public uint instanceIndex;     // index among the draw's instances
   public InstanceValues instance;      // per-instance values (exact)
+  // The view's clips (`ClipEffect`, `ClipSet.effect`): the nearest cut of a set
+  // that reports, positive on the side the set removes (metres; 3.4e38 with
+  // none), `clipFlags` bit 0 when that set removes this fragment (a ghost, or a
+  // shade set's removed side) and bit 1 when it is a ghost, `clipId` its number
+  // in the view's list (0xffffffff: none), `clipParams` the effect's params.
+  public float clipDistance;
+  public uint clipFlags;
+  public uint clipId;
+  public float4 clipParams;
 };
 
 // The material, filled with the glTF material's values first. Linear

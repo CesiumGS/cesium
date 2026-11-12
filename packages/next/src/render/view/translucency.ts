@@ -34,11 +34,20 @@ export function writeTranslucency(
 ): void {
   const frame = engine.raster.viewFrames.get(view)!;
   // Only what this view draws: a blended draw in no view (viewMask) or
-  // hidden switches none of the passes on.
-  const range = view.world.translucentRange(
+  // hidden switches none of the passes on. Its clips' blended ghosts do:
+  // they draw what a clip removes from the opaque content.
+  const drawn = view.world.translucentRange(
     engine.bodyCamera(view).position,
     engine.viewBit(view),
   );
+  const ghost = frame.clipGhost;
+  const range =
+    drawn && ghost
+      ? {
+          near: Math.min(drawn.near, ghost.near),
+          far: Math.max(drawn.far, ghost.far),
+        }
+      : (drawn ?? ghost);
   frame.translucent = range !== undefined;
   if (!range) {
     return;

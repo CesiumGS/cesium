@@ -262,6 +262,20 @@ export interface DrawOptions {
    */
   ground?: boolean;
   /**
+   * No clip cuts or ghosts it (`World.addClip`): buried pipes and the like,
+   * which stay whole under a clip that removes or ghosts the ground over
+   * them. Default false. `World.setClipExempt` changes it later. The test
+   * is the GPU's; picks asked of the CPU still test the draw's hits.
+   */
+  clipExempt?: boolean;
+  /**
+   * A closed solid: the section caps of a view (`View.clipCaps`) are cut
+   * through it, where the clips pass through its inside. Leave it false for an
+   * open surface (terrain, a ground plane, a sheet): its surfaces would flip
+   * the count of those behind it. `World.setSolid` changes it later. Default false.
+   */
+  solid?: boolean;
+  /**
    * Where the route that places the draw's anchor is evaluated, when it
    * crosses a warp (`World.setWarpAt`): per `"vertex"` (the default), or
    * once at its `"anchor"`, keeping its shape. A billboard or an instanced

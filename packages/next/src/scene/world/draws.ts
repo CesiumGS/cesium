@@ -601,6 +601,8 @@ export function addDraw(world: AddDrawWorld, options: DrawOptions): DrawHandle {
       (patchSet ? RecordFlags.patches : 0) |
       (options.ground === false ? RecordFlags.notGround : 0) |
       (options.collision ? RecordFlags.collision : 0) |
+      (options.clipExempt ? RecordFlags.clipExempt : 0) |
+      (options.solid ? RecordFlags.solid : 0) |
       (options.underlay ? RecordFlags.underlay : 0),
     instanceFirst,
     instanceCount,

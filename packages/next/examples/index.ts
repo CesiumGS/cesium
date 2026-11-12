@@ -129,12 +129,24 @@ export const EXAMPLES: ExampleInfo[] = [
     id: "clipping",
     title: "Clipping and sections",
     description:
-      "A section plane and a clip box through an exact B-rep part, a closed mesh model and a mesh tileset at once: drag the handles in the view, union or intersect the planes, keep the inside or the outside, close the cut with caps (exact for the B-rep, loops for the meshes), pick through it, and compare with a second view that doesn't use the clips.",
+      "A section plane and a clip box through an exact B-rep part, a closed mesh model and a mesh tileset at once: drag the handles in the view, union or intersect the planes, keep the inside or the outside, close the cut with instant GPU caps that follow a handle in the same frame (exact B-rep and mesh caps stay for picks and measurements), look square at it through a long lens, pick through it, and compare with a second view that doesn't use the clips.",
     labels: ["Clipping", "Sections", "B-reps", "3D Tiles"],
     globe: false,
     layout: "side",
     stackNarrow: true,
     load: () => import("./clipping/main.ts"),
     source: () => import("./clipping/main.ts?raw").then((m) => m.default),
+  },
+  {
+    id: "clip-effects",
+    title: "Clip effects: ghosts and shaders",
+    description:
+      "A clip box around buried pipes, with the ground inside it a hole, a translucent ghost (blended or stippled) or left whole, and a section plane whose effect a custom shader reads: hatching, fading and glowing by the distance from the cut. Pipes stay whole under a clip that removes what is over them.",
+    labels: ["Clipping", "Terrain", "Translucency", "Custom shading"],
+    globe: false,
+    layout: "side",
+    stackNarrow: true,
+    load: () => import("./clip-effects/main.ts"),
+    source: () => import("./clip-effects/main.ts?raw").then((m) => m.default),
   },
 ];

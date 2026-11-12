@@ -55,6 +55,7 @@ public export __extern_cpp struct CesiumFragment {
   public __extern_cpp float3 positionMC;  // model coordinates of the design position (as the mesh stores it), interpolated
   public __extern_cpp float3 positionEC;  // relative to the camera, Earth-fixed axes (m)
   public __extern_cpp float3 positionWC;  // Earth-fixed (float32: about a meter at the Earth's scale)
+  public __extern_cpp float3 truePositionEC; // the true position (before a warp's map), as positionEC: relative to the camera, Earth-fixed axes (m)
   public __extern_cpp float3 normal;      // geometric normal, Earth-fixed axes, toward the viewer
   public __extern_cpp float2 texCoord0;
   public __extern_cpp float4 color0;      // the vertex color times the draw's and instance's tint
@@ -69,6 +70,15 @@ public export __extern_cpp struct CesiumFragment {
   public __extern_cpp float4 named1;
   public __extern_cpp float4 named2;
   public __extern_cpp float4 named3;
+  // The view's clips, for custom shaders (`ClipEffect`): the nearest cut of a
+  // set that reports, signed (positive on the side the set removes, metres;
+  // 3.4e38 with none), bit 0 when that set removes this fragment (a ghost or
+  // a shade set's removed side) and bit 1 when it is a ghost, the set's number
+  // in the view's list (0xffffffff: none), and its `params`.
+  public __extern_cpp float clipDistance;
+  public __extern_cpp uint clipFlags;
+  public __extern_cpp uint clipId;
+  public __extern_cpp float4 clipParams;
 };
 
 // The material `fragmentMain` may change, filled with the glTF material's

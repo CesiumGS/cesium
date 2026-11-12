@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clip Effects</title>
+    <script>
+      // Other people's edits reload a dev page through Vite's HMR socket: with
+      // ?nohmr a long run (the benchmark) keeps its page.
+      if (new URLSearchParams(location.search).has("nohmr")) {
+        const Native = window.WebSocket;
+        window.WebSocket = function (url, protocols) {
+          if (protocols === "vite-hmr") {
+            const quiet = new EventTarget();
+            quiet.send = quiet.close = () => {};
+            return quiet;
+          }
+          return new Native(url, protocols);
+        };
+        window.WebSocket.prototype = Native.prototype;
+      }
+    </script>
+  </head>
+  <body>
+    <!-- Clip effects: open with ?bench and call runClipEffects() (checks) or runClipBench() (GPU time on the globe). -->
+    <div id="root"></div>
+    <script type="module">
+      import { harness } from "./clipEffects.ts";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runClipEffects");
+    </script>
+  </body>
+</html>

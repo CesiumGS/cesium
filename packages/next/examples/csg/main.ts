@@ -14,7 +14,7 @@ import { KernelCancelled } from "../../src/brep/kernelClient.ts";
 import type { KernelName } from "../../src/brep/kernelProtocol.ts";
 import type { ExampleContext } from "../types.ts";
 import { KIND_NAMES, linearOf } from "../brep-first-look/analysis.ts";
-import { liftedEdges } from "../brep-first-look/meshes.ts";
+import { edgeLines } from "../brep-first-look/meshes.ts";
 import {
   EvaluationScheduler,
   KERNEL_NAMES,
@@ -143,8 +143,6 @@ import { mad, makeRig, type Rig, type V3 } from "./viewMath.ts";
 
 const SITE = fromDegrees(-75.1652, 39.9526, 0);
 const DEG = Math.PI / 180;
-/** How far edges lift off the faces, as a fraction of the solid's size. */
-const LIFT = 0.0025;
 const PLAIN = linearOf("#c9ced6");
 /** The grid snapping a drag, m: the ground's grid is every 0.5 m, so ten steps to a square. */
 const GRID_STEP = 0.05;
@@ -506,9 +504,9 @@ export async function run({
    * newer solid replaces this one, so the wait ends rather than running on.
    */
   const settled = async (solid: Shown, superseded: AbortSignal) => {
-    await Promise.allSettled(
-      [...solid.shaders.values()].map((shader) => engine.compileShader(shader)),
-    );
+    // Not `compileShader` first: it compiles every pipeline of a shader, many
+    // seconds on a cold engine, unbounded by the timeout; `whenReady` waits
+    // for just the pipelines these draws use.
     await engine.whenReady(view, {
       draws: [
         ...faceDraws(solid.handle),
@@ -551,12 +549,10 @@ export async function run({
     void buffer.stage(next, (superseded) => settled(next, superseded));
   };
 
-  /** The form's edges, lifted off the faces, as a line overlay (a CPU mesh of edges only). */
+  /** The form's edges as a line overlay (a CPU mesh of edges only), pulled toward the camera in depth by the line pipeline. */
   const addEdges = (target: Shown) => {
     const start = performance.now();
     const form = target.result.form;
-    const { min, max } = target.result.bounds;
-    const size = Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]);
     try {
       const mesh = tessellateBrep(form, {
         tolerance: 0.001,
@@ -565,7 +561,7 @@ export async function run({
       if (mesh.edges.indices.length === 0) {
         return;
       }
-      const lines = liftedEdges(form, mesh, size * LIFT);
+      const lines = edgeLines(mesh);
       const handle = world.addMesh({
         positions: lines.positions,
         indices: lines.indices,

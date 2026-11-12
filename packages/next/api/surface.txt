@@ -37,8 +37,10 @@ entry	name	kind	tier
 .	CapDraws	interface	-
 .	CapEngine	interface	-
 .	CapFace	interface	-
+.	CapHatch	interface	-
 .	CapPlacement	type	-
 .	CapPlane	interface	-
+.	CapRgba	type	-
 .	CapScheduler	class	-
 .	CapSchedulerOptions	interface	-
 .	CapStyle	type	-
@@ -51,6 +53,8 @@ entry	name	kind	tier
 .	CastRay	interface	-
 .	Clamp	interface	-
 .	ClampOptions	interface	-
+.	ClipCaps	interface	-
+.	ClipEffect	type	-
 .	ClipFilter	interface	-
 .	ClipSet	interface	-
 .	ClipShape	type	-
@@ -68,6 +72,7 @@ entry	name	kind	tier
 .	DAYLIGHT_EXPOSURE	const	-
 .	DAYLIGHT_SUN_ILLUMINANCE	const	-
 .	DEFAULT_CAP_COLOR	const	-
+.	DEFAULT_CLIP_CAP_COLOR	const	-
 .	DEFAULT_IMAGERY_SLICES	const	-
 .	DEFAULT_SECTION_LINE_COLOR	const	-
 .	DEFAULT_SKY	const	-
@@ -334,6 +339,7 @@ entry	name	kind	tier
 .	cartographic	function	-
 .	castTerrainRay	function	-
 .	clipFilter	function	-
+.	clipSetDistance	function	-
 .	clipSetKeeps	function	-
 .	clipSetsOf	function	-
 .	collectFullDetailContents	function	-

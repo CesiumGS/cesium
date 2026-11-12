@@ -4,7 +4,7 @@ import type { V3 } from "./site.ts";
 /** What the panel's switches hold besides the section itself. */
 export interface PanelModel {
   readonly state: SectionState;
-  caps: { brep: boolean; mesh: boolean; color: string };
+  caps: { instant: boolean; hatch: boolean; exact: boolean; color: string };
   split: boolean;
   secondClipped: boolean;
 }
@@ -142,6 +142,7 @@ export function createPanel(
   const degrees = (d: number) => `${d.toFixed(0)}°`;
 
   const capReadout = readout(
+    "GPU caps",
     "B-rep caps",
     "Mesh caps",
     "Section lines",
@@ -282,20 +283,30 @@ export function createPanel(
 
     el("h3", {}, "Caps"),
     toggle(
-      "B-rep caps (exact)",
-      () => model.caps.brep,
+      "Instant caps (drawn by the GPU)",
+      () => model.caps.instant,
       (on) => {
-        model.caps.brep = on;
+        model.caps.instant = on;
+        actions.capsChanged();
+      },
+      "Counts the solids' surfaces behind the cut in every pixel and draws the cap where the count is odd: it follows a handle in the same frame, whatever the content.",
+    ),
+    toggle(
+      "Hatched",
+      () => model.caps.hatch,
+      (on) => {
+        model.caps.hatch = on;
         actions.capsChanged();
       },
     ),
     toggle(
-      "Mesh caps (loops; open chains as lines)",
-      () => model.caps.mesh,
+      "Exact caps (b-rep sections, mesh loops)",
+      () => model.caps.exact,
       (on) => {
-        model.caps.mesh = on;
+        model.caps.exact = on;
         actions.capsChanged();
       },
+      "Geometry rebuilt as a handle moves (the b-rep in a worker): a frame or several behind it, but real faces and polygons that picks and measurements can ask. Under instant caps they lie behind them.",
     ),
     el("label", {}, "Cap colour", colorInput),
     capReadout.root,
@@ -319,7 +330,7 @@ export function createPanel(
     el(
       "p",
       {},
-      "Section view looks square at the cut from the removed side, in perspective: an orthographic camera waits for increment 5d.",
+      "Section view looks square at the cut from the removed side through a long, narrow lens (2°, from a few kilometres): the engine has no orthographic camera yet (plan 5d, tasks 14 and 15), and this differs from one by under a percent across the content. Reset view brings the normal lens back.",
     ),
     toggle(
       "Split screen: a second view",

@@ -4,6 +4,7 @@ import type { Capabilities } from "../gpu/GpuDevice.ts";
 import { MipGenerator } from "../gpu/MipGenerator.ts";
 import { Environment } from "../gpu/Environment.ts";
 import {
+  CAP_PARITY_FORMAT,
   PICK_DEPTH_FORMAT,
   PICK_FORMATS,
   PROPERTY_TEXTURES,
@@ -16,6 +17,7 @@ import cullWgsl from "../shaders/generated/cull.wgsl?raw";
 import diceWgsl from "../shaders/generated/dice.wgsl?raw";
 import pointCullWgsl from "../shaders/generated/pointCull.wgsl?raw";
 import splatWgsl from "../shaders/generated/splat.wgsl?raw";
+import sectionCapWgsl from "../shaders/generated/sectionCap.wgsl?raw";
 import scatterWgsl from "../shaders/generated/scatter.wgsl?raw";
 import raycastWgsl from "../shaders/generated/raycast.wgsl?raw";
 import surfaceWgsl from "../shaders/generated/surface.wgsl?raw";
@@ -188,6 +190,9 @@ export interface SurfacePipelines {
 
 /** One of a shader's pipelines (`SurfacePipelines`). */
 export type SurfaceKey = keyof SurfacePipelines;
+
+/** The kinds of draw the section caps' parity pass draws: meshes, patch faces, trimmed patch faces. */
+export type CapParityKind = "mesh" | "patch" | "patchTrimmed";
 
 /** A surface pipeline with the clip test on, for a view that has clips. */
 export type ClippedKey = `${SurfaceKey}Clipped`;
@@ -370,6 +375,24 @@ export interface Pipelines extends SurfacePipelines {
   /** Either way's layers over the opaque pass's targets (composite.slang). */
   compositeExact: GPURenderPipeline;
   compositeMoments: GPURenderPipeline;
+  /**
+   * The section caps (`View.clipCaps`): the parity pass's pipeline of a kind
+   * of draw (surface.slang `capParityFs` and its two), made when first asked
+   * for, undefined until it is (`ready` is then called once). Bound as the
+   * opaque layout's: the content's own groups.
+   */
+  capParity(
+    kind: CapParityKind,
+    ready: () => void,
+  ): GPURenderPipeline | undefined;
+  /** Whether a parity pipeline is still to come. */
+  capParityPending(kind: CapParityKind): boolean;
+  /**
+   * The cap pass's pipeline (sectionCap.slang), made when first asked for,
+   * with its group 1: the two parity targets as textures.
+   */
+  sectionCap(ready: () => void): GPURenderPipeline | undefined;
+  capLayout: GPUBindGroupLayout;
   /**
    * The moments' targets (absorbance, its moments): 32-bit floats where
    * they blend, else 16-bit; and the bias their precision calls for.
@@ -1078,7 +1101,13 @@ async function createPipelines(
         module: shaders,
         // Point sets: six vertices per listed point, the batch's one item.
         // Patch draws: a chunk of cells an instance.
-        entryPoint: patches ? "vsPatch" : points ? "vsPoints" : "vs",
+        entryPoint: patches
+          ? "vsPatch"
+          : points
+            ? "vsPoints"
+            : topology === "line-list"
+              ? "vsLines"
+              : "vs",
         buffers: instanceBuffers(patches),
       },
       fragment: {
@@ -1103,7 +1132,10 @@ async function createPipelines(
           : {
               format: SCENE_TARGETS.depthFormat,
               depthWriteEnabled: true,
-              depthCompare: "greater",
+              // Lines: a line over a line of the same depth (a selected edge
+              // over its drawn one) shows, as the later draw.
+              depthCompare:
+                topology === "line-list" ? "greater-equal" : "greater",
             },
       multisample: { count: SCENE_TARGETS.sampleCount },
     });
@@ -2158,9 +2190,140 @@ async function createPipelines(
     return making;
   };
 
+  // The section caps' pipelines (`View.clipCaps`), each made when first asked for.
+  const lazily = <K extends string>(
+    what: string,
+    make: (key: K) => Promise<GPURenderPipeline>,
+  ) => {
+    const made = new Map<K, GPURenderPipeline>();
+    const making = new Set<K>();
+    const failed = new Set<K>();
+    const waiting = new Set<() => void>();
+    const settle = () => {
+      const ready = [...waiting];
+      waiting.clear();
+      for (const call of ready) {
+        call();
+      }
+    };
+    return {
+      get(key: K, ready: () => void): GPURenderPipeline | undefined {
+        const pipeline = made.get(key);
+        if (pipeline || failed.has(key)) {
+          return pipeline;
+        }
+        waiting.add(ready);
+        if (!making.has(key)) {
+          making.add(key);
+          make(key).then(
+            (p) => {
+              made.set(key, p);
+              settle();
+            },
+            (error: unknown) => {
+              failed.add(key);
+              settle();
+              console.error(
+                `[cesium/next] pipeline: the ${what} ${key} pipeline failed: ${error instanceof Error ? error.message : String(error)} (section caps are off in its draws)`,
+              );
+            },
+          );
+        }
+        return undefined;
+      },
+      pending: (key: K) => !made.has(key) && !failed.has(key),
+    };
+  };
+  // A parity target's blend toggles a channel where a fragment writes 1:
+  // src × (1 − dst) + dst × (1 − src), so a pixel's bit is the parity of the
+  // fragments that set it, whatever their order.
+  const capParityBlend: GPUBlendComponent = {
+    srcFactor: "one-minus-dst",
+    dstFactor: "one-minus-src",
+    operation: "add",
+  };
+  const capParityTarget: GPUColorTargetState = {
+    format: CAP_PARITY_FORMAT,
+    blend: { color: capParityBlend, alpha: capParityBlend },
+  };
+  const capParityPipelines = lazily<CapParityKind>("cap parity", (kind) => {
+    const patches = kind !== "mesh";
+    return device.createRenderPipelineAsync({
+      label: `capParity.${kind}`,
+      layout: opaqueLayout,
+      vertex: {
+        module: casterModule,
+        entryPoint: patches ? "vsPatchDepth" : "vsDepth",
+        buffers: instanceBuffers(patches),
+      },
+      fragment: {
+        module: casterModule,
+        entryPoint:
+          kind === "mesh"
+            ? "capParityFs"
+            : kind === "patch"
+              ? "capParityPatchFs"
+              : "capParityTrimmedFs",
+        targets: [capParityTarget, capParityTarget],
+      },
+      // Both faces count.
+      primitive: {
+        topology: "triangle-list",
+        cullMode: "none",
+        frontFace: "ccw",
+      },
+    });
+  });
+  const capLayout = device.createBindGroupLayout({
+    label: "sectionCap",
+    entries: [0, 1].map((binding) => ({
+      binding,
+      visibility: FRAGMENT,
+      texture: { sampleType: "unfilterable-float" as const },
+    })),
+  });
+  const sectionCapPipeline = lazily<"cap">("section cap", () => {
+    const capModule = module("sectionCap", sectionCapWgsl);
+    return device.createRenderPipelineAsync({
+      label: "sectionCap",
+      layout: device.createPipelineLayout({
+        bindGroupLayouts: [viewLayout, capLayout],
+      }),
+      vertex: { module: capModule, entryPoint: "vs" },
+      fragment: {
+        module: capModule,
+        entryPoint: "fs",
+        // As the point splats: the scene's light untouched, the display color
+        // over what is drawn.
+        targets: [
+          { format: SCENE_TARGETS.colorFormats[0]!, writeMask: 0 },
+          { format: SCENE_TARGETS.colorFormats[1]! },
+          {
+            format: SCENE_TARGETS.colorFormats[2]!,
+            blend: {
+              color: { srcFactor: "one", dstFactor: "one-minus-src-alpha" },
+              alpha: { srcFactor: "one", dstFactor: "one-minus-src-alpha" },
+            },
+          },
+        ],
+      },
+      primitive: { topology: "triangle-list" },
+      depthStencil: {
+        format: SCENE_TARGETS.depthFormat,
+        depthWriteEnabled: true,
+        depthCompare: "greater",
+      },
+      multisample: { count: SCENE_TARGETS.sampleCount },
+    });
+  });
+
   return {
     viewLayout,
     cullWorldLayout,
+    capLayout,
+    capParity: capParityPipelines.get,
+    capParityPending: capParityPipelines.pending,
+    sectionCap: (ready) => sectionCapPipeline.get("cap", ready),
     cullPointWorldLayout,
     cullPatchWorldLayout,
     patchDiceLayout,

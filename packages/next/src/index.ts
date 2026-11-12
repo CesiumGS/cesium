@@ -54,6 +54,7 @@ export type { WarpStats } from "./scene/world/warps.ts";
 export {
   clipFilter,
   clipSetKeeps,
+  clipSetDistance,
   clipSetsOf,
   capPlanes,
   MAX_CLIP_SETS,
@@ -61,6 +62,7 @@ export {
   MAX_CLIP_POLYGON_VERTICES,
   MAX_WORLD_CLIPS,
   type CapPlane,
+  type ClipEffect,
   type ClipSet,
   type ClipShape,
   type ClipsOption,
@@ -94,6 +96,12 @@ export {
   type MeshCapsOptions,
   type MeshCapsReport,
 } from "./scene/world/caps.ts";
+export {
+  DEFAULT_CLIP_CAP_COLOR,
+  type CapHatch,
+  type CapRgba,
+  type ClipCaps,
+} from "./scene/world/capFaces.ts";
 export {
   assembleMeshCaps,
   meshPlane,

@@ -44,8 +44,8 @@ import {
 } from "./exact.ts";
 import {
   boundsSize,
+  edgeLines,
   flatFaces,
-  liftedEdges,
   wireLines,
   type DisplayMode,
   type LineMesh,
@@ -802,9 +802,25 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   );
   const grid: number[] = [];
   const gridIndices: number[] = [];
+  // 4 mm under the shapes' feet, so an edge of a shape that lies on a grid
+  // line draws over it (lines of equal depth show in no fixed order).
+  const GRID_Z = -0.004;
   for (let i = -half; i <= half; i++) {
     const at = grid.length / 3;
-    grid.push(i, -half, 0, i, half, 0, -half, i, 0, half, i, 0);
+    grid.push(
+      i,
+      -half,
+      GRID_Z,
+      i,
+      half,
+      GRID_Z,
+      -half,
+      i,
+      GRID_Z,
+      half,
+      i,
+      GRID_Z,
+    );
     gridIndices.push(at, at + 1, at + 2, at + 3);
   }
   extras.push(
@@ -1030,8 +1046,9 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           parts.set(draw.index, { shape: sel.shape, kind: "face" });
         }
       } else {
-        // Lifted further than the drawn edges, so it covers them.
-        const lines = liftedEdges(sel.shape.form, mesh, prep.lift * 1.8);
+        // The same polylines as the drawn edges, over them (the later draw
+        // wins a tie in depth).
+        const lines = edgeLines(mesh);
         const outPositions: number[] = [];
         const outIndices: number[] = [];
         for (let i = 0; i < lines.indices.length; i += 2) {
@@ -1301,7 +1318,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         stats.wireLines += wire.indices.length / 2;
       }
       if (settings.edges && mesh.edges.indices.length > 0) {
-        const edges = (prep.edges ??= liftedEdges(shape.form, mesh, prep.lift));
+        const edges = (prep.edges ??= edgeLines(mesh));
         const data: MeshData = {
           positions: edges.positions,
           indices: edges.indices,

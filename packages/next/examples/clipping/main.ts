@@ -6,6 +6,7 @@ import {
   orbitPose,
   type BrepForm,
   type CapColor,
+  type ClipCaps,
   type ClipSet,
   type DrawHandle,
   type MeshCapTile,
@@ -71,19 +72,30 @@ import {
  * whole in the other. The handles are a drawing over the view (overlay.ts),
  * because a handle in the scene would be cut by its own plane.
  *
- * The caps are the application's (nothing yet makes them): `BrepCaps` for the
- * part, exact, sectioned in the section worker so the page's thread only
- * draws what comes back, and `MeshCaps` for the torus and the tileset's tiles,
- * which it is fed (`setTile`) from the model's and `Tile.geometry`'s retained
- * triangles. A `CapScheduler` on the engine rebuilds them as a handle moves,
- * and wakes the engine when it has to. A pick is asked of the GPU (clip-aware,
- * as the view draws) and of the geometry queries in float64 (`rayHit`, with
- * the view's clips and without them), the mesh caps' polygons included.
+ * The caps the views draw are the engine's (`View.clipCaps`): the part, the
+ * torus and the tileset are marked `solid`, and the GPU counts their surfaces
+ * behind each cut face in every pixel and draws the cap where the count is
+ * odd, from the clips as they are in that frame: a handle that moves never
+ * leaves a frame without its cap, and only the views that use the clips have
+ * them. That is the display. The exact caps are for what the GPU can't answer
+ * (picks and measurements), so are off unless asked for: `BrepCaps` for the
+ * part, sectioned in the section worker, and `MeshCaps` for the torus and the
+ * tileset's tiles, fed (`setTile`) from the model's and `Tile.geometry`'s
+ * retained triangles; a `CapScheduler` rebuilds them as a handle moves, and
+ * lags it by the section's time (90 to 300 ms for the part). A pick is asked
+ * of the GPU (clip-aware, as the view draws, but blind to the GPU caps) and of
+ * the geometry queries in float64 (`rayHit`, with the view's clips and without
+ * them), the mesh caps' polygons included.
+ *
+ * Section view looks square at the cut through a 2° lens from a few kilometres:
+ * the engine has no orthographic camera yet (plan 5d, tasks 14 and 15).
  *
  * Curved clip: the plane is named in a frame under ITRF that a reprojection
  * waves (sections.ts), so no rigid test can draw it and the engine cuts it
- * along a signed distance fitted per draw. Caps are for planes in a rigid
- * frame; this one has none.
+ * along a signed distance fitted per draw. Its cut is not a plane the GPU
+ * can intersect a pixel's ray with, so while it is on the view has no GPU cap
+ * at all (the box's included, which would otherwise close a cut the curved
+ * plane has already removed) and says so.
  */
 
 const TORUS =
@@ -143,7 +155,12 @@ export async function run({
   const state = initialState();
   const model: PanelModel = {
     state,
-    caps: { brep: true, mesh: true, color: DEFAULT_CAP_COLOR },
+    caps: {
+      instant: true,
+      hatch: true,
+      exact: false,
+      color: DEFAULT_CAP_COLOR,
+    },
     split: false,
     secondClipped: false,
   };
@@ -268,23 +285,51 @@ export async function run({
     engine.requestRender();
   }
 
-  /** The caps follow the clips as they are (the scheduler rebuilds them, and wakes the engine when they change). */
+  /** What the GPU caps look like (`View.clipCaps`), or none. */
+  const instantCaps = (): ClipCaps | undefined =>
+    model.caps.instant
+      ? {
+          color: capColor(),
+          ...(model.caps.hatch
+            ? { hatch: { spacing: 1.5, angle: 45, width: 0.1, strength: 0.55 } }
+            : {}),
+        }
+      : undefined;
+
+  /**
+   * The caps follow the clips as they are. The GPU's (instant: no geometry to
+   * build, every frame) are the views', and only the views that use the clips
+   * have them; the exact ones (`BrepCaps`, `MeshCaps`: rebuilt by the scheduler,
+   * which wakes the engine when they change) are for picks and measurements,
+   * so are off unless asked for.
+   */
   function followCaps(): void {
-    // Caps are for planes in a rigid frame: a curved plane has none.
+    view.clipCaps = instantCaps();
+    if (second) {
+      second.clipCaps = model.secondClipped ? instantCaps() : undefined;
+    }
+    // Exact caps are for planes in a rigid frame: a curved plane has none.
     capSets[0]?.follow(
       state.plane.on && !state.curved ? planeSet : undefined,
-      model.caps.brep,
-      model.caps.mesh,
+      model.caps.exact,
+      model.caps.exact,
     );
     capSets[1]?.follow(
       state.box.on ? boxSet : undefined,
-      model.caps.brep,
-      model.caps.mesh,
+      model.caps.exact,
+      model.caps.exact,
     );
+    capNote();
+  }
+
+  /** Says why caps are off, from what the view reports and the example's own switches. */
+  function capNote(): void {
     panelControls.setCapNote(
-      state.curved && state.plane.on
-        ? "The plane is curved: caps are built for planes in a rigid frame, so it has none. The box's still do."
-        : undefined,
+      state.curved && (state.plane.on || state.box.on) && model.caps.instant
+        ? "The plane is curved: the GPU draws a cap where a plane is rigid in the view's frame, and the cut of a curved clip is a surface fitted per draw that no pixel can ask for. While it is on, no GPU cap is drawn (the box's included), and the solids show hollow: turn it off and they come back."
+        : view.capNote && model.caps.instant
+          ? view.capNote
+          : undefined,
     );
   }
 
@@ -303,15 +348,27 @@ export async function run({
     return orbitPose(view.camera.position, pivot, enuBasis(pivot), 0);
   };
 
+  /** The lens the view opened with, and the narrow one of the section view. */
+  const NORMAL_FOV = view.camera.fov;
+  const SECTION_FOV = 2 * DEG;
+
   let glideFrame = 0;
   scope.defer(() => cancelAnimationFrame(glideFrame));
-  /** Turns the main view's orbit to a pose in a third of a second. */
+  scope.defer(() => {
+    view.camera.fov = NORMAL_FOV;
+  });
+  /**
+   * Turns the main view's orbit to a pose, and its lens to `to.fov`, in a third
+   * of a second. The range moves with the lens so that what the view shows
+   * across doesn't jump.
+   */
   const glide = (
     target: Float64Array,
-    to: { heading: number; pitch: number; range: number },
+    to: { heading: number; pitch: number; range: number; fov: number },
   ) => {
     cancelAnimationFrame(glideFrame);
     const from = currentPose() ?? to;
+    const fromFov = view.camera.fov;
     // The shortest way round.
     let turn = (to.heading - from.heading) % (2 * Math.PI);
     if (turn > Math.PI) {
@@ -323,11 +380,14 @@ export async function run({
     const step = (now: number) => {
       const k = Math.min(1, (now - start) / 350);
       const e = k * k * (3 - 2 * k);
+      // A lens and a range are ratios: they move in logarithms.
+      const mix = (a: number, b: number) => a * (b / a) ** e;
+      view.camera.fov = mix(fromFov, to.fov);
       viewer.setControls("orbit", {
         target,
         heading: from.heading + turn * e,
         pitch: from.pitch + (to.pitch - from.pitch) * e,
-        range: from.range + (to.range - from.range) * e,
+        range: mix(from.range, to.range),
       });
       engine.requestRender();
       if (k < 1) {
@@ -337,15 +397,19 @@ export async function run({
     glideFrame = requestAnimationFrame(step);
   };
 
-  /** Looks square at the cut from where its cap faces: out of what is kept. */
+  /**
+   * Looks square at the cut from where its cap faces, out of what is kept,
+   * through a long, narrow lens: the engine has no orthographic projection yet
+   * (plan 5d, tasks 14 and 15), and from this far a 2° view across the
+   * content differs from one by less than a percent in scale over its depth,
+   * which a section drawing can't tell. The range fits the clipped content.
+   */
   const sectionView = () => {
     const { n } = planeAxes(state.plane.heading, state.plane.tilt);
     const out = state.planeKeeps === "inside" ? n : scale(n, -1);
     const target = site.world(state.plane.center);
-    const range = Math.max(
-      90,
-      Math.hypot(...sub(site.local(view.camera.position), state.plane.center)),
-    );
+    const radius = state.box.on ? Math.hypot(...state.box.half) : 110;
+    const range = radius / Math.tan(SECTION_FOV / 2);
     const pose = orbitPose(
       site.world(add(state.plane.center, scale(out, range))),
       target,
@@ -353,8 +417,14 @@ export async function run({
       state.plane.heading * DEG,
     );
     if (pose) {
-      glide(target, pose);
+      glide(target, { ...pose, range, fov: SECTION_FOV });
     }
+  };
+
+  const resetView = () => {
+    cancelAnimationFrame(glideFrame);
+    view.camera.fov = NORMAL_FOV;
+    frameScene();
   };
 
   const mainLabel = el("div", { className: "cl-label cl-label-main" });
@@ -415,12 +485,13 @@ export async function run({
     clipChanged: applyClips,
     capsChanged: followCaps,
     colorChanged: () => {
+      followCaps();
       for (const caps of capSets) {
         caps.restyle();
       }
     },
     sectionView,
-    resetView: frameScene,
+    resetView,
     setSplit,
     secondClipChanged: () => {
       paintLabels();
@@ -484,6 +555,7 @@ export async function run({
         material: partMaterial,
         color: [0.74, 0.79, 0.88, 1],
         doubleSided: true,
+        solid: true,
         name: PART_NAME,
         ...(prepared ? { prepared } : {}),
       });
@@ -513,7 +585,11 @@ export async function run({
       return;
     }
     const placed = scope.use(
-      held.place({ modelMatrix: matrix, name: "Closed mesh model" }),
+      held.place({
+        modelMatrix: matrix,
+        name: "Closed mesh model",
+        solid: true,
+      }),
     );
     // The engine's own copy of the triangles, each draw's matrix as placed.
     const geometry = placed.geometry() ?? [];
@@ -532,7 +608,7 @@ export async function run({
     stage("Loading the tileset…");
     const tileset = await viewer.addTileset(
       new URL(TILESET, location.href).href,
-      { retainGeometry: true },
+      { retainGeometry: true, solid: true },
     );
     if (signal.aborted) {
       viewer.remove(tileset);
@@ -669,6 +745,26 @@ export async function run({
     const sum = (f: (r: CapsReport) => number) =>
       reports.reduce((n, r) => n + f(r), 0);
     const { capReadout } = panelControls;
+    capNote();
+    capReadout.set(
+      "GPU caps",
+      !model.caps.instant
+        ? "off"
+        : view.capFaces > 0
+          ? `${view.capFaces} face${view.capFaces === 1 ? "" : "s"}, every frame`
+          : "none to draw",
+    );
+    if (!model.caps.exact) {
+      for (const name of [
+        "B-rep caps",
+        "Mesh caps",
+        "Section lines",
+        "Rebuilt in",
+      ]) {
+        capReadout.set(name, "off");
+      }
+      return;
+    }
     const unsupported = reports.find((r) => r.brep.unsupported)?.brep
       .unsupported;
     capReadout.set(

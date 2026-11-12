@@ -339,7 +339,7 @@
                             "binding": {"kind": "uniform", "offset": 32, "size": 12, "elementStride": 4}
                         },
                         {
-                            "name": "normal",
+                            "name": "truePositionEC",
                             "type": {
                                 "kind": "vector",
                                 "elementCount": 3,
@@ -354,6 +354,21 @@
                             "binding": {"kind": "uniform", "offset": 48, "size": 12, "elementStride": 4}
                         },
                         {
+                            "name": "normal",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 3,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 12, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 64, "size": 12, "elementStride": 4}
+                        },
+                        {
                             "name": "texCoord0",
                             "type": {
                                 "kind": "vector",
@@ -366,7 +381,7 @@
                                     {"kind": "uniform", "value": 8, "alignment": 8}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 64, "size": 8, "elementStride": 4}
+                            "binding": {"kind": "uniform", "offset": 80, "size": 8, "elementStride": 4}
                         },
                         {
                             "name": "color0",
@@ -381,7 +396,7 @@
                                     {"kind": "uniform", "value": 16, "alignment": 16}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 80, "size": 16, "elementStride": 4}
+                            "binding": {"kind": "uniform", "offset": 96, "size": 16, "elementStride": 4}
                         },
                         {
                             "name": "featureId",
@@ -392,7 +407,7 @@
                                     {"kind": "uniform", "value": 4, "alignment": 4}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 96, "size": 4, "elementStride": 0}
+                            "binding": {"kind": "uniform", "offset": 112, "size": 4, "elementStride": 0}
                         },
                         {
                             "name": "screen",
@@ -407,7 +422,7 @@
                                     {"kind": "uniform", "value": 8, "alignment": 8}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 104, "size": 8, "elementStride": 4}
+                            "binding": {"kind": "uniform", "offset": 120, "size": 8, "elementStride": 4}
                         },
                         {
                             "name": "time",
@@ -418,7 +433,7 @@
                                     {"kind": "uniform", "value": 4, "alignment": 4}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 112, "size": 4, "elementStride": 0}
+                            "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
                         },
                         {
                             "name": "instanceIndex",
@@ -429,7 +444,7 @@
                                     {"kind": "uniform", "value": 4, "alignment": 4}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 116, "size": 4, "elementStride": 0}
+                            "binding": {"kind": "uniform", "offset": 132, "size": 4, "elementStride": 0}
                         },
                         {
                             "name": "draw",
@@ -440,7 +455,7 @@
                                     {"kind": "uniform", "value": 4, "alignment": 4}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 120, "size": 4, "elementStride": 0}
+                            "binding": {"kind": "uniform", "offset": 136, "size": 4, "elementStride": 0}
                         },
                         {
                             "name": "directory",
@@ -451,7 +466,7 @@
                                     {"kind": "uniform", "value": 4, "alignment": 4}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 124, "size": 4, "elementStride": 0}
+                            "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
                         },
                         {
                             "name": "localFeature",
@@ -462,7 +477,7 @@
                                     {"kind": "uniform", "value": 4, "alignment": 4}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
+                            "binding": {"kind": "uniform", "offset": 144, "size": 4, "elementStride": 0}
                         },
                         {
                             "name": "named0",
@@ -477,7 +492,7 @@
                                     {"kind": "uniform", "value": 16, "alignment": 16}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 144, "size": 16, "elementStride": 4}
+                            "binding": {"kind": "uniform", "offset": 160, "size": 16, "elementStride": 4}
                         },
                         {
                             "name": "named1",
@@ -492,7 +507,7 @@
                                     {"kind": "uniform", "value": 16, "alignment": 16}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 160, "size": 16, "elementStride": 4}
+                            "binding": {"kind": "uniform", "offset": 176, "size": 16, "elementStride": 4}
                         },
                         {
                             "name": "named2",
@@ -507,7 +522,7 @@
                                     {"kind": "uniform", "value": 16, "alignment": 16}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 176, "size": 16, "elementStride": 4}
+                            "binding": {"kind": "uniform", "offset": 192, "size": 16, "elementStride": 4}
                         },
                         {
                             "name": "named3",
@@ -522,11 +537,59 @@
                                     {"kind": "uniform", "value": 16, "alignment": 16}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 192, "size": 16, "elementStride": 4}
+                            "binding": {"kind": "uniform", "offset": 208, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "clipDistance",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 224, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "clipFlags",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 228, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "clipId",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 232, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "clipParams",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 240, "size": 16, "elementStride": 4}
                         }
                     ],
                     "sizes": [
-                        {"kind": "uniform", "value": 208, "alignment": 16}
+                        {"kind": "uniform", "value": 256, "alignment": 16}
                     ]
                 },
                 "sizes": [
@@ -1245,7 +1308,7 @@
                                 "binding": {"kind": "uniform", "offset": 32, "size": 12, "elementStride": 4}
                             },
                             {
-                                "name": "normal",
+                                "name": "truePositionEC",
                                 "type": {
                                     "kind": "vector",
                                     "elementCount": 3,
@@ -1260,6 +1323,21 @@
                                 "binding": {"kind": "uniform", "offset": 48, "size": 12, "elementStride": 4}
                             },
                             {
+                                "name": "normal",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 12, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 64, "size": 12, "elementStride": 4}
+                            },
+                            {
                                 "name": "texCoord0",
                                 "type": {
                                     "kind": "vector",
@@ -1272,7 +1350,7 @@
                                         {"kind": "uniform", "value": 8, "alignment": 8}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 64, "size": 8, "elementStride": 4}
+                                "binding": {"kind": "uniform", "offset": 80, "size": 8, "elementStride": 4}
                             },
                             {
                                 "name": "color0",
@@ -1287,7 +1365,7 @@
                                         {"kind": "uniform", "value": 16, "alignment": 16}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 80, "size": 16, "elementStride": 4}
+                                "binding": {"kind": "uniform", "offset": 96, "size": 16, "elementStride": 4}
                             },
                             {
                                 "name": "featureId",
@@ -1298,7 +1376,7 @@
                                         {"kind": "uniform", "value": 4, "alignment": 4}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 96, "size": 4, "elementStride": 0}
+                                "binding": {"kind": "uniform", "offset": 112, "size": 4, "elementStride": 0}
                             },
                             {
                                 "name": "screen",
@@ -1313,7 +1391,7 @@
                                         {"kind": "uniform", "value": 8, "alignment": 8}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 104, "size": 8, "elementStride": 4}
+                                "binding": {"kind": "uniform", "offset": 120, "size": 8, "elementStride": 4}
                             },
                             {
                                 "name": "time",
@@ -1324,7 +1402,7 @@
                                         {"kind": "uniform", "value": 4, "alignment": 4}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 112, "size": 4, "elementStride": 0}
+                                "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
                             },
                             {
                                 "name": "instanceIndex",
@@ -1335,7 +1413,7 @@
                                         {"kind": "uniform", "value": 4, "alignment": 4}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 116, "size": 4, "elementStride": 0}
+                                "binding": {"kind": "uniform", "offset": 132, "size": 4, "elementStride": 0}
                             },
                             {
                                 "name": "draw",
@@ -1346,7 +1424,7 @@
                                         {"kind": "uniform", "value": 4, "alignment": 4}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 120, "size": 4, "elementStride": 0}
+                                "binding": {"kind": "uniform", "offset": 136, "size": 4, "elementStride": 0}
                             },
                             {
                                 "name": "directory",
@@ -1357,7 +1435,7 @@
                                         {"kind": "uniform", "value": 4, "alignment": 4}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 124, "size": 4, "elementStride": 0}
+                                "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
                             },
                             {
                                 "name": "localFeature",
@@ -1368,7 +1446,7 @@
                                         {"kind": "uniform", "value": 4, "alignment": 4}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
+                                "binding": {"kind": "uniform", "offset": 144, "size": 4, "elementStride": 0}
                             },
                             {
                                 "name": "named0",
@@ -1383,7 +1461,7 @@
                                         {"kind": "uniform", "value": 16, "alignment": 16}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 144, "size": 16, "elementStride": 4}
+                                "binding": {"kind": "uniform", "offset": 160, "size": 16, "elementStride": 4}
                             },
                             {
                                 "name": "named1",
@@ -1398,7 +1476,7 @@
                                         {"kind": "uniform", "value": 16, "alignment": 16}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 160, "size": 16, "elementStride": 4}
+                                "binding": {"kind": "uniform", "offset": 176, "size": 16, "elementStride": 4}
                             },
                             {
                                 "name": "named2",
@@ -1413,7 +1491,7 @@
                                         {"kind": "uniform", "value": 16, "alignment": 16}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 176, "size": 16, "elementStride": 4}
+                                "binding": {"kind": "uniform", "offset": 192, "size": 16, "elementStride": 4}
                             },
                             {
                                 "name": "named3",
@@ -1428,11 +1506,59 @@
                                         {"kind": "uniform", "value": 16, "alignment": 16}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 192, "size": 16, "elementStride": 4}
+                                "binding": {"kind": "uniform", "offset": 208, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "clipDistance",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 224, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "clipFlags",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 228, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "clipId",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 232, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "clipParams",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 240, "size": 16, "elementStride": 4}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 208, "alignment": 16}
+                            {"kind": "uniform", "value": 256, "alignment": 16}
                         ]
                     },
                     "sizes": [

@@ -309,6 +309,7 @@ describe("a view's chain", () => {
     "prepass",
     "ambient-occlusion",
     "stars",
+    "section-caps",
     "opaque",
     "translucent",
     "meter",
