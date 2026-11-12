@@ -1,4 +1,5 @@
 import type { Instant } from "../time/Instant.ts";
+import type { EdgeAccuracy } from "../transform/accuracy.ts";
 import {
   affine,
   TransformGraph,
@@ -6,6 +7,8 @@ import {
 } from "../transform/graph.ts";
 import type { FrameCatalog } from "./catalog.ts";
 import type { Frame } from "./Frame.ts";
+import { framePoint } from "./local.ts";
+import { pointAccuracy } from "./pointAccuracy.ts";
 import { isWarpFrame } from "./warpFrame.ts";
 
 /** A catalogue's reference frames as affine nodes of a transform graph. */
@@ -13,6 +16,17 @@ export interface FrameGraph {
   readonly graph: TransformGraph;
   /** The node of `frame`, once it is in the catalogue's tree in use. */
   node(frame: Frame): TransformNode | undefined;
+  /** The frame a node stands for. */
+  frameOf(node: TransformNode): Frame | undefined;
+  /**
+   * What each frame edge states of its accuracy, for `accuracyAlong`'s
+   * `affine` option, at scene `seconds` (default 0): the covariance at the
+   * edge's output that `pointAccuracy` composes for that one edge (every
+   * figure, its confidence read as 1σ, rotations by their lever, rotated into
+   * the output's axes); `Infinity` for an edge that is unstated, simulated or
+   * refused, which makes the total unbounded.
+   */
+  accuracy(seconds?: number): EdgeAccuracy;
   /**
    * Adds the frames the tree in use has gained, and bumps the node of each
    * frame whose `revision` moved (data arrived, `invalidate()`), so a route's
@@ -34,6 +48,7 @@ export function graphOfFrames(
   graph: TransformGraph = new TransformGraph(),
 ): FrameGraph {
   const nodes = new Map<Frame, TransformNode>();
+  const frames = new Map<TransformNode, Frame>();
   const seen = new Map<Frame, number>();
   const sync = () => {
     for (const { frame } of catalog.treeInUse()) {
@@ -51,23 +66,49 @@ export function graphOfFrames(
         );
       }
       const parent = frame.parent && nodes.get(frame.parent);
-      nodes.set(
-        frame,
-        parent
-          ? graph.add(
-              frame.name,
-              parent,
-              affine({
-                at: (seconds, out) => {
-                  frame.toParent(resolver.instant(seconds), out);
-                },
-              }),
-            )
-          : graph.root(frame.name),
-      );
+      const made = parent
+        ? graph.add(
+            frame.name,
+            parent,
+            affine({
+              at: (seconds, out) => {
+                frame.toParent(resolver.instant(seconds), out);
+              },
+            }),
+          )
+        : graph.root(frame.name);
+      nodes.set(frame, made);
+      frames.set(made, frame);
       seen.set(frame, frame.revision);
     }
   };
   sync();
-  return { graph, node: (frame) => nodes.get(frame), sync };
+  const accuracy =
+    (seconds = 0): EdgeAccuracy =>
+    (edge) => {
+      const frame = frames.get(edge.node);
+      if (edge.kind !== "affine" || !frame?.parent) {
+        return undefined;
+      }
+      const instant = resolver.instant(seconds);
+      // Up the edge is the frame to its parent; undone, the parent to the frame.
+      const [from, to] = edge.down
+        ? [frame.parent, frame]
+        : [frame, frame.parent];
+      const a = pointAccuracy(
+        framePoint(from, edge.input, instant),
+        to,
+        instant,
+      );
+      return a.meters === undefined || a.covariance === undefined
+        ? Number.POSITIVE_INFINITY
+        : a.covariance;
+    };
+  return {
+    graph,
+    node: (frame) => nodes.get(frame),
+    frameOf: (node) => frames.get(node),
+    accuracy,
+    sync,
+  };
 }

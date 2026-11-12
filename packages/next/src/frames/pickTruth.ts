@@ -92,16 +92,25 @@ export function pixelFootprint(pick: CorePick): number {
   return (distance * 2 * Math.tan(c.fovy / 2)) / c.height;
 }
 
+/** Where a pick's content point is, and how that was found: what `truePick` and `pickIn` build on. */
+export interface LocatedPick {
+  /** The point, in the hit anchor's coordinates (`frame`), m. */
+  readonly position: Float64Array;
+  readonly frame: FrameKey;
+  readonly how: TruthHow;
+  readonly bound: number;
+  readonly note: string;
+  /** The warped route that draws the hit anchor's content, when there is one (`TruePick.route`). */
+  readonly route: Route | undefined;
+}
+
 /**
- * `pick` as a true point: its domain point where the pick variant resolved
- * one (exact, nothing inverted), else the route's inverse of the drawn
- * position, else (no warp) the depth's position, which is the content's to
- * the pixel. The footprint of a pixel is converted to true metres by the
- * route's σ_min.
+ * The content's point under `pick`: its domain point where the pick variant
+ * resolved one (exact, nothing inverted), else the route's inverse of the
+ * drawn position, else (no warp) the depth's position.
  */
-export function truePick(pick: CorePick): TruePick {
+export function locatePick(pick: CorePick): LocatedPick {
   const route = warpedRoute(pick);
-  const footprint = pixelFootprint(pick);
   const frame = pick.truePosition?.frame ?? pick.anchor ?? pick.root;
   let position: Float64Array;
   let how: TruthHow;
@@ -134,6 +143,19 @@ export function truePick(pick: CorePick): TruePick {
     how = "depth";
     note = "the depth's position: nothing bends the content, so drawn is true";
   }
+  return { position, frame, how, bound, note, route };
+}
+
+/**
+ * `pick` as a true point: its domain point where the pick variant resolved
+ * one (exact, nothing inverted), else the route's inverse of the drawn
+ * position, else (no warp) the depth's position. The footprint of a pixel is
+ * converted to true metres by the route's σ_min. `pickIn` (frames/pickIn.ts)
+ * answers in any node from the same located point (`locatePick`).
+ */
+export function truePick(pick: CorePick): TruePick {
+  const { position, frame, how, bound, note, route } = locatePick(pick);
+  const footprint = pixelFootprint(pick);
   const through =
     route !== undefined ? drawnThrough(route, position) : undefined;
   const sigmaMin = through?.stretch?.[0];

@@ -106,6 +106,7 @@
 - **Selection bounds:** interval or Taylor bounds per tile over parameters' expected ranges (and `valid` ranges for clamping), replacing `warpBounds.ts`'s sampling where an IR exists.
 - **Clips:** a clip set is placed at a node. Curved clips come from the route between the clip's node and the content's.
 - **Tessellation:** an H-based chord bound per triangle edge. A compute subdivision pass for meshes whose bound exceeds the tolerance, reusing the b-rep dicing's indirect-draw path. B-rep patches evaluate the route after `vsPatch`'s surface evaluation.
+- **Status (2026-11-12):** built as above except that selection bounds keep sampling and tessellation is a spike (`spikes/routeTessellation.ts`), not wired; results and reasons in CESIUM2_WEBGPU_PLAN.md §13.37, "Queries through routes".
 
 ### Task 6: migrate the engine and examples
 

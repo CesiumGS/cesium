@@ -42,7 +42,7 @@ export interface BridgeRefusal {
 }
 
 /** The parameter values a warp's smooth step has now: the spec's, at the warp's scale. */
-function valuesOf(warp: Warp): Params {
+export function valuesOf(warp: Warp): Params {
   const spec = warp.smooth!;
   const values: Record<string, number> = { ...spec.params };
   if (warp.scale) {

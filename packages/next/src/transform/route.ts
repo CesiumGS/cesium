@@ -41,6 +41,24 @@ export interface SmoothStep {
 
 export type RouteStep = AffineStep | SmoothStep;
 
+/** One edge of a route as `Route.walk` visits it; the arrays are reused between visits. */
+export interface EdgeVisit {
+  readonly node: TransformNode;
+  readonly kind: "affine" | "smooth";
+  /** The route goes down through the edge: it is undone. */
+  readonly down: boolean;
+  readonly spec: SmoothSpec | undefined;
+  /** The smooth edge's parameter values for the route's view. */
+  readonly params: Params | undefined;
+  /** An affine edge's 4×4 as applied (the inverse when `down`), column-major. */
+  readonly matrix: Float64Array | undefined;
+  /** The point before the edge, and after it. */
+  readonly input: Float64Array;
+  readonly output: Float64Array;
+  /** The edge's own Jacobian at `input`, column-major: an affine edge's matrix part; a smooth edge's by its function's, else central differences (a down edge: the inverse of the function's at `output`). */
+  readonly jacobian: Float64Array;
+}
+
 interface Raw {
   readonly node: TransformNode;
   readonly edge: PlainEdge;
@@ -168,6 +186,78 @@ export class Route {
   jacobian(p: ArrayLike<number>, out = new Float64Array(9)): Float64Array {
     this.refresh();
     this.apply(p, this.cur, false, out);
+    return out;
+  }
+
+  /**
+   * Carries `p` along the route one edge at a time (affine edges
+   * individually, not collapsed), calling `visit` after each with the
+   * point before and after it and the edge's own Jacobian at the point
+   * before: what a quantity that changes edge by edge (accuracy) needs.
+   * The arrays in a visit are reused: read them during the call.
+   */
+  walk(
+    p: ArrayLike<number>,
+    visit: (edge: EdgeVisit) => void,
+    out = new Float64Array(3),
+  ): Float64Array {
+    this.refresh();
+    let cur = Float64Array.from([p[0]!, p[1]!, p[2]!]);
+    let next = new Float64Array(3);
+    const jacobian = new Float64Array(9);
+    const matrix = new Float64Array(16);
+    const graph = this.from.graph;
+    const emit = (
+      node: TransformNode,
+      kind: "affine" | "smooth",
+      down: boolean,
+      spec: SmoothSpec | undefined,
+      params: Params | undefined,
+    ) =>
+      visit({
+        node,
+        kind,
+        down,
+        spec,
+        params,
+        matrix: kind === "affine" ? matrix : undefined,
+        input: cur,
+        output: next,
+        jacobian,
+      });
+    for (const run of this.runs) {
+      if (run.kind === "affine") {
+        for (const { node, edge, down } of run.raws) {
+          const a = edge as AffineEdge;
+          if (a.at) {
+            a.at(this.seconds, this.scratch);
+          } else {
+            this.scratch.set(a.matrix!);
+          }
+          if (down) {
+            invertAffine(matrix, this.scratch);
+          } else {
+            matrix.set(this.scratch);
+          }
+          transformPoint(matrix, cur, next);
+          linearPart(matrix, jacobian);
+          emit(node, "affine", down, undefined, undefined);
+          [cur, next] = [next, cur];
+        }
+        continue;
+      }
+      const params = graph.values(run.node, this.view);
+      if (run.down) {
+        solveInverse(run.spec, params, cur, next, run.node.name);
+        smoothJacobian(run.spec, params, next, jacobian);
+        invert3(jacobian, run.node.name);
+      } else {
+        smoothJacobian(run.spec, params, cur, jacobian, next);
+      }
+      emit(run.node, "smooth", run.down, run.spec, params);
+      [cur, next] = [next, cur];
+    }
+    out.set(cur);
     return out;
   }
 

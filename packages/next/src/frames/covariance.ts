@@ -1,31 +1,14 @@
 // 3×3 symmetric helpers for the accuracy composer (frames 5b, Task 4).
 // Matrices are row-major `Float64Array(9)`, in m².
+import { congruence } from "../transform/accuracy.ts";
 
-/** `R C Rᵀ`, with `r` a row-major rotation, written to `out`. */
+/** `R C Rᵀ`, with `r` a row-major rotation, written to `out`: the covariance's congruence, as a route's J Σ Jᵀ. */
 export function rotateCovariance(
   c: ArrayLike<number>,
   r: ArrayLike<number>,
   out: Float64Array,
 ): Float64Array {
-  // t = R C, then out = t Rᵀ.
-  const t = new Float64Array(9);
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 3; j++) {
-      t[i * 3 + j] =
-        r[i * 3]! * c[j]! +
-        r[i * 3 + 1]! * c[3 + j]! +
-        r[i * 3 + 2]! * c[6 + j]!;
-    }
-  }
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 3; j++) {
-      out[i * 3 + j] =
-        t[i * 3]! * r[j * 3]! +
-        t[i * 3 + 1]! * r[j * 3 + 1]! +
-        t[i * 3 + 2]! * r[j * 3 + 2]!;
-    }
-  }
-  return out;
+  return congruence(r, c, out);
 }
 
 /** The eigenvalues (largest first) and eigenvectors of a symmetric 3×3. */

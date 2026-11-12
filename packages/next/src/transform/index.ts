@@ -20,10 +20,48 @@ export {
   routeBetween,
   Route,
   type AffineStep,
+  type EdgeVisit,
   type RouteOptions,
   type RouteStep,
   type SmoothStep,
 } from "./route.ts";
+// Queries on a route: accuracy along it, Taylor-model bounds over a box,
+// and the chord error of a straight edge.
+export {
+  accuracyAlong,
+  congruence,
+  isotropic,
+  type AccuracyOptions,
+  type AccuracyPart,
+  type EdgeAccuracy,
+  type EdgeQuery,
+  type RouteAccuracy,
+  type SigmaIn,
+} from "./accuracy.ts";
+export {
+  chordErrorBound,
+  taylorBounds,
+  type BoundsBox,
+  type TaylorBounds,
+  type TaylorOptions,
+  type TaylorRefusal,
+} from "./taylorBounds.ts";
+export {
+  chordError,
+  curvatureAt,
+  curvatureOver,
+  subdivisionFor,
+} from "./curvature.ts";
+export {
+  measureIn,
+  pointIn,
+  singularRange,
+  type MeasureIn,
+  type MeasureInOptions,
+  type NodePoint,
+  type PointIn,
+  type PointInOptions,
+} from "./queries.ts";
 // The IR a smooth edge's function is parsed into (never evaluated as
 // source): float64 evaluation, derivatives as programs, intervals, WGSL.
 export {
