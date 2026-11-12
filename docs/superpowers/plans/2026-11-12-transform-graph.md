@@ -144,3 +144,63 @@ Build the gallery example from §13.37's eight scenes, on real data, each with i
 ## Order and size
 
 Tasks 1 and 2 can run in parallel. Task 3 needs 2's descriptor shape, Task 4 needs 1 to 3, Task 5 needs 4, and Task 6 needs 5; Tasks 7 and 8 come last. Tasks 2 and 4 are about a week each with agents, and the rest are a few days each.
+
+## Follow-ups: known limits and their general fixes (owner, 2026-11-12; not started)
+
+The owner asked for these to be planned, not started.
+
+### Task 9: the IR and the built-ins (task 3's limits)
+
+The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `expm1`. So:
+
+- the lattice, corridor and flatten sources are generated per shape, which means a new pipeline per polygon or lattice;
+- the ellipsoid foot is 5 unrolled Newton steps;
+- missing ops are rewritten by hand.
+
+**General fix: grow the IR, not the workarounds.**
+
+1. **Array parameters.** Fixed-size arrays of scalars or vec3 (lattice control points, polygon vertices, alignment elements) become uniforms or storage, with indexed reads.
+   - A shape's source no longer embeds its data, so one pipeline serves every polygon of a kind. Only the element count enters the key, bucketed.
+2. **Bounded loops** with a declared maximum iteration count and an early exit: a WGSL `for` with `break`, unrolled only when short.
+   - Newton solves become ordinary IR, with a contraction check, so inverses of bump, lattice and flatten, and the corridor's projection onto its alignment, can be compiled rather than TS-only.
+   - AD goes through the loop by the implicit-function theorem (the solve's Jacobian is the inverse of the forward Jacobian at the solution), not by differentiating the iterations. This also answers task 5's finding that the unrolled foot iteration ruins interval bounds: bound the converged map, not the iteration.
+3. **Missing ops:** `atanh`, `asinh`, `acosh`, `expm1`, `log1p`, `%`/`mod`, `hypot`, with df64 and residual rules.
+
+**Per-family fixes:**
+
+- **Flatten:** today's distance is a local planar approximation. Measure distance to the polygon in a gnomonic frame centred on it, where geodesics are straight lines. Edges are then exact segments, and the planar distance agrees with the geodesic one to second order. Polygons wider than about 500 km are split into tiles.
+- **Corridor unroll:** a polyline's outer corners leave gaps. Use C¹ alignment geometry (lines, circular arcs and clothoids, as IFC 4.3's `IfcAlignment` does), or fillet polyline corners with arcs of radius at least the strip's maximum offset.
+  - An offset curve is regular while |offset| < 1/κ, so the strip has no gaps or folds.
+  - The inverse becomes closed form per element (dot product, `atan2` about the centre, bounded Newton on a clothoid) and compiles.
+- **Bend:** its inverse needs |θ| < π. Injectivity gives a parameter's `valid` range: det J > 0 and no global overlap. Bend derives it, the engine clamps animated values to it and refuses a direct set outside it. Every built-in declares its `valid` range the same way.
+- **TM Jacobian:** central differences today. Use the IR's AD Jacobian, now exact, and drop the difference.
+
+### Task 10: per-view routes without twins (task 6b's limits)
+
+**The limits:**
+
+- billboards, instanced draws and b-rep patch draws get no per-view twin;
+- a ray query with no view sees both a draw and its twin;
+- a view whose route differs only in a draw's record data (a rigid step before the last warp) shows its group's first view.
+
+**General fix: choose the program per (draw, view), not per draw.** Bundles are already recorded per view.
+
+- A draw keeps one record per route group it needs: centre constants in a per-view-group block of the placements buffer, indexed by a small per-view table.
+- Each view's bundle binds that group's pipeline for the draw. The vertex stage reads the block for the view being drawn.
+- That makes one draw serve every view with no twins. Every draw kind gets it, because instances, billboards and patches all read the same per-draw block; patches through `vsPatch`'s route call.
+- Ray queries see one draw and route it per view, or per the view they name. A view-less query uses the true route.
+- The 6b twin machinery (`src/scene/world/variants.ts`) is then deleted.
+- Cost: one extra indexed read per vertex, and a block per route group in use (usually one).
+
+**Also to look into:** a 14 m slab at ×10 on the compiled route draws 3.6 px off. This predates 6b, and was seen with the warpViews spike's buildings. Compare the compiled residual against float64 for tall extents (the residual rules are exact, so suspect the drawn bounds or the depth path) before task 10.
+
+### Task 11: the camera branch (scene 7's gaps; partial work saved)
+
+- **The gaps:**
+  - Streaming tilesets through a lens on the camera branch draw nothing, because selection is done through a map with z ≤ 0.
+  - Moving the camera re-derives routes for every draw, at 250–400 ms a tick.
+  - Routes through a smooth step's inverse don't compile.
+- **The general fix:** a camera-branch smooth node acts in camera space after the view matrix. Call it an "eye step": a per-view post-view smooth step evaluated in the vertex stage from uniforms only, needing no float64 centre because camera-space coordinates are small.
+  - Selection uses the route without the eye step, padded by the eye step's largest displacement at each depth.
+  - Inverse steps compile when they carry an `inverseSource`.
+- **Partial work exists:** a cancelled agent got part of this done (`compileEye.ts`, `cameraEffect.ts`, `inverseSource`, and selection changes). It was reverted because it broke two tests (the frame loop's sleep, a translucent-terrain pick). It is saved in the session files (`lens-wip/`) to resume from.
