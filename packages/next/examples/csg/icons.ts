@@ -36,7 +36,8 @@ const PATHS = {
   iso: '<path d="M8 1.8 13.8 5v6L8 14.2 2.2 11V5z"/><path d="M8 8 2.2 5M8 8l5.8-3M8 8v6.2"/>',
   edges:
     '<path d="M2.5 5 8 2.5 13.5 5v6L8 13.5 2.5 11z"/><path d="M2.5 5 8 7.5 13.5 5M8 7.5v6" stroke-width="2.2"/>',
-  xray: '<path d="M2.5 5 8 2.5 13.5 5v6L8 13.5 2.5 11z" stroke-dasharray="2 1.5"/><path d="M2.5 5 8 7.5 13.5 5M8 7.5v6"/>',
+  xray: '<path d="M2.5 5 8 2.5 13.5 5v6L8 13.5 2.5 11z" fill="currentColor" fill-opacity=".25"/><path d="M2.5 5 8 7.5 13.5 5M8 7.5v6"/>',
+  wire: '<path d="M2.5 5 8 2.5 13.5 5v6L8 13.5 2.5 11z" stroke-dasharray="2 1.5"/><path d="M2.5 5 8 7.5 13.5 5M8 7.5v6"/>',
   paint:
     '<path d="M3 3h6.5l4 4-6 6-4-4z"/><circle cx="6" cy="6" r="1" fill="currentColor"/>',
   snap: '<path d="M2.5 2.5v11h11"/><path d="M2.5 8h11M8 2.5v11" opacity=".5"/><circle cx="8" cy="8" r="1.8" fill="currentColor"/>',

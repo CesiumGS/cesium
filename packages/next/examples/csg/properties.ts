@@ -57,7 +57,7 @@ const SHORTCUTS: ReadonlyArray<[readonly string[], string]> = [
   [["1", "…", "5"], "Add a box, cylinder, sphere, cone or torus"],
   [["U", "D", "I"], "Union, subtract (difference) or intersect the selection"],
   [["P", "V", "B"], "Pick faces (push-pull arrow), parts (gizmo) or the body"],
-  [["G", "E", "W"], "Snap to grid, show edges, wireframe"],
+  [["G", "E", "X", "W"], "Snap to grid, show edges, x-ray, wireframe"],
   [["F", "⇧F", "⇧T", "⇧R", "⇧I"], "Fit, front, top, right, isometric"],
   [["Ctrl Z", "Ctrl Y"], "Undo, redo"],
   [["Del", "Ctrl D", "F2"], "Delete, duplicate, rename"],

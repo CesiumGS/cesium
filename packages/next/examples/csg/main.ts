@@ -220,6 +220,7 @@ export async function run({
     edges: !uiFlags.has("noedges"),
     byLeaf: !uiFlags.has("nocolour"),
     wire: uiFlags.has("wire"),
+    xray: uiFlags.has("xray"),
     snap: !uiFlags.has("nosnap"),
     pick: pickModeOf(uiFlags),
   };
@@ -235,6 +236,7 @@ export async function run({
           ...(settings.edges ? [] : ["noedges"]),
           ...(settings.byLeaf ? [] : ["nocolour"]),
           ...(settings.wire ? ["wire"] : []),
+          ...(settings.xray ? ["xray"] : []),
           ...(settings.snap ? [] : ["nosnap"]),
           ...pickFlag(settings.pick),
         ].join(",") || undefined,
@@ -281,6 +283,12 @@ export async function run({
   const facesMaterial = world.addMaterial({
     baseColor: [1, 1, 1, 1],
     roughness: 0.7,
+  });
+  /** X-ray: the faces blended at this opacity, the edges drawn opaque over them. */
+  const xrayMaterial = world.addMaterial({
+    baseColor: [1, 1, 1, 0.3],
+    roughness: 0.7,
+    flags: MaterialFlags.alphaBlend | MaterialFlags.blendedOnly,
   });
   const groundMaterial = world.addMaterial({
     baseColor: [1, 1, 1, 1],
@@ -414,8 +422,7 @@ export async function run({
   };
   /**
    * Shows or hides all of a solid's draws. In wireframe the faces stay
-   * hidden, and the edges alone show (the engine draws b-reps in its opaque
-   * passes only, so there is no translucent x-ray of them yet).
+   * hidden, and the edges alone show.
    */
   const setSolidVisible = (solid: Shown, visible: boolean) => {
     for (const draw of faceDraws(solid.handle)) {
@@ -586,7 +593,7 @@ export async function run({
     const handle = world.addBrep(result.form, {
       origin,
       model: toWorld(mat4.mat4()),
-      material: facesMaterial,
+      material: settings.xray ? xrayMaterial : facesMaterial,
       color: [1, 1, 1, 1],
       doubleSided: false,
       name: "CSG solid",
@@ -1624,10 +1631,22 @@ export async function run({
     const info = PICK_MODES.find((m) => m.mode === mode)!;
     say(`${info.label}: ${info.title}.`);
   };
-  const toggle = (key: "edges" | "wire" | "byLeaf" | "snap", on: boolean) => {
+  const toggle = (
+    key: "edges" | "wire" | "xray" | "byLeaf" | "snap",
+    on: boolean,
+  ) => {
     settings[key] = on;
     if (key === "edges") {
       setEdges(on);
+    } else if (key === "xray") {
+      if (on && !settings.edges) {
+        settings.edges = true;
+        setEdges(true);
+      }
+      // The material is the draw's: the solid shown is added again with it.
+      if (shown) {
+        show(shown.result);
+      }
     } else if (key === "wire") {
       if (on && !settings.edges) {
         // Without faces the edges are all there is to see.
@@ -1811,8 +1830,14 @@ export async function run({
       shortcut: "E",
       onClick: () => toggle("edges", !settings.edges),
     }),
-    add("wire", {
+    add("xray", {
       icon: "xray",
+      label: "X-ray: see through the faces, edges on top",
+      shortcut: "X",
+      onClick: () => toggle("xray", !settings.xray),
+    }),
+    add("wire", {
+      icon: "wire",
       label: "Wireframe: hide the faces, keep the edges",
       shortcut: "W",
       onClick: () => toggle("wire", !settings.wire),
@@ -1849,6 +1874,7 @@ export async function run({
     }
     buttons.edges!.setPressed(settings.edges);
     buttons.wire!.setPressed(settings.wire);
+    buttons.xray!.setPressed(settings.xray);
     buttons.colour!.setPressed(settings.byLeaf);
     buttons.snap!.setPressed(settings.snap);
     const real = selection.filter((id) => id !== tree.current.root.id);
@@ -2243,6 +2269,8 @@ export async function run({
       toggle("edges", !settings.edges);
     } else if (key === "w") {
       toggle("wire", !settings.wire);
+    } else if (key === "x") {
+      toggle("xray", !settings.xray);
     } else if (key === "c") {
       toggle("byLeaf", !settings.byLeaf);
     } else if (key === "g") {
