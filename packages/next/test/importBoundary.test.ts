@@ -80,6 +80,8 @@ const FRAMES_CORE_VALUES = new Set([
   "src/camera/route.ts",
   // The bulk shape (5b): neutral, it imports nothing.
   "src/core/bulk.ts",
+  // The transform graph's nodes (plan section 13.37): geo-free, it imports nothing.
+  "src/transform/graph.ts",
 ]);
 
 /** The layers each layer may import (values and types). */
