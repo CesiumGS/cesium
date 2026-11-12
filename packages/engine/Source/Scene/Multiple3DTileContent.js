@@ -273,6 +273,25 @@ class Multiple3DTileContent {
     //>>includeEnd('debug');
   }
 
+  /** @inheritdoc */
+  get show() {
+    let result = true;
+    const contents = this._contents;
+    const length = contents.length;
+    for (let i = 0; i < length; ++i) {
+      result = result & contents[i].show;
+    }
+    return result;
+  }
+
+  set show(value) {
+    const contents = this._contents;
+    const length = contents.length;
+    for (let i = 0; i < length; ++i) {
+      contents[i].show = value;
+    }
+  }
+
   /**
    * Get an array of the inner content URLs, regardless of whether they've
    * been fetched or not. This is intended for use with
