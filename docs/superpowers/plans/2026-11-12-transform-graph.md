@@ -204,3 +204,38 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
   - Selection uses the route without the eye step, padded by the eye step's largest displacement at each depth.
   - Inverse steps compile when they carry an `inverseSource`.
 - **Partial work exists:** a cancelled agent got part of this done (`compileEye.ts`, `cameraEffect.ts`, `inverseSource`, and selection changes). It was reverted because it broke two tests (the frame loop's sleep, a translucent-terrain pick). It is saved in the session files (`lens-wip/`) to resume from.
+
+### Task 12: streamed content under smooth nodes as cheap as under affine ones (owner, 2026-11-12)
+
+**What the owner saw:** tilesets streamed through a smooth node load slowly. Fitting isn't the cause: it is the fallback, and the vertical-exaggeration example runs 0 fits. The cost is per-tile work that still happens on the CPU before a tile can draw, and per-shape pipeline compiles. "On the fly" covers only the vertex stage today.
+
+**The costs, measured or read from the code:**
+
+1. **Drawn bounds for selection.** Selection needs each tile's bounding volume after the warp before the GPU sees the tile. It samples the route at 7–27 points per tile in float64, with the exact height solve (`drawnTile` → `scaledImage` → `footOf`).
+   - That was the exaggeration example's remaining long task (about 1 s).
+   - Exaggeration also refines more tiles, so more tiles pay.
+2. **Centre constants on the CPU.** A static route's F(c) is computed once per draw in float64. A lift is microseconds, but the nested UTM route is about 183 ms per 1,024 draws.
+3. **Per-route-shape pipeline compiles.** Generated WGSL of up to about 280 KB takes 2.3–4.3 s per pipeline in the GPU process, compiled one at a time. A routed draw stays hidden until its pipelines exist, so content appears late on first load.
+4. **Terrain loses its exact path under a ceiling.** `verticalExaggeration` with a `ceiling` drops `heightScale` (src/georeference/heightWarps.ts), so the globe's exact `h·n̂` path turns off. Terrain then pays costs 1–3, as in the gallery's scene 1.
+
+**The fixes, in order of payoff:**
+
+1. **Exact terrain under any height profile.** Terrain carries h, so generalize `HeightScale` to a height profile f(h): the lift with a ceiling and blend band, with parameters as uniforms. Terrain under it stays on the exact attribute path, with no bounds sampling and no route compile. Tile bounds come from f over the tile's height range, which is exact and closed form.
+2. **Declared bounds, not sampled.** Each built-in's descriptor gains a closed-form bound over a box and a parameter range: its largest displacement and a Lipschitz constant (σ_max of J). A lift's is |D| ≤ (k−1)·max g(h) over the tile's heights; a projection's comes from its scale-factor range over the box.
+   - Selection composes these along the route: a sphere moves by the bound and scales by the Lipschitz constant. That's a few flops per tile per node.
+   - Sampling stays only for user functions with no declared bound, and for those, task 9's bounded loops make interval bounds on the converged map usable.
+   - Check: on the exaggeration and UTM routes the composed bound must stay conservative against dense sampling, within about 1.5× of its radius.
+3. **Centre constants on the GPU for every draw.** Run the existing df64 centre pass (`centreConstantsWgsl`) for newly added draws as well as dynamic parameters: one dispatch per frame over that frame's new draws, writing the WARP_ROUTE blocks directly. The CPU float64 path stays for picks and queries, which evaluate the route on demand, not per draw.
+4. **No compile before first draw.**
+   - **An interpreter pipeline:** one surface pipeline per pass whose vertex stage evaluates any chain of built-in node families from a small per-route program in a storage buffer (node kinds, parameter offsets, the collapsed affine matrices), switching on node kind. It's the residual form, with the same centre constants.
+   - **Swap in specialized code:** content draws through it at once, the per-shape specialized pipeline compiles in the background, and draws switch when it's ready (OptiX-style: a general kernel first, specialized when ready).
+   - **Pre-warm** the common shapes at engine start: a lift alone, a lift over a projection, and the geocentric ↔ geographic pair.
+   - **Measure:** the interpreter's per-vertex cost against the specialized code, with an aim of within 2× for one or two nodes.
+5. **A non-blocking fit fallback.** A draw the compiler refuses shows at once with the nearest cheap stand-in instead of hiding until its fit: rigid at its anchor, or a one-cell fit made on the GPU (the GPU fit spike: 1,100–4,900 cells/ms). It refines when the full fit lands.
+
+**Done when:** streamed tiles under a built-in smooth node cost about what they cost under an affine node.
+
+- **Profile:** with `scripts/profilePage.mjs` on the vertical-exaggeration example and the gallery's scenes 1 and 3, compare per-tile CPU time, time to first drawn tile, and the longest task against the same scene with the smooth node replaced by its affine part.
+- **Report** fits run, interpreter-drawn draws and specialized draws.
+
+It depends on nothing else in tasks 9–11, but item 2's interval fallback uses task 9's loops.
