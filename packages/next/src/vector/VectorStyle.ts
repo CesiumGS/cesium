@@ -12,8 +12,9 @@ import {
 import type { PointProperty } from "./PointSource.ts";
 
 /**
- * The vector styling language (the vector style lab's draft, "Vector
- * styling for 3D Tiles"), compiled for point layers on the GPU: each
+ * A vector styling language for point layers (a subset of the owner's
+ * vector style lab; the language itself is open, plan §13.40), compiled
+ * for the GPU: each
  * layer's fields become WGSL evaluated per point, per frame, in the
  * point's own vertex and fragment stages, so restyling, parameters and
  * the camera's distance cost no CPU per point.
