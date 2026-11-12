@@ -4,6 +4,7 @@ export type { Declaration, DeclarationKind } from "./declarations.ts";
 export { MAX_LOOP_ITERATIONS, unguardedLoop } from "./loopGuard.ts";
 export { wgslUnit } from "./unit.ts";
 export type { ShaderUnit } from "./unit.ts";
+export { NO_ROUTE_WGSL, ROUTE_BOUNDARY } from "./route.ts";
 export {
   POINT_STYLE_BOUNDARY,
   POOL_STYLE_BOUNDARY,

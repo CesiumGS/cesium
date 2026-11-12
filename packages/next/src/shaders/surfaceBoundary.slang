@@ -102,6 +102,30 @@ public CesiumVertexResult cesiumVertexStage(CesiumVertex v);
 __target_intrinsic(wgsl, "cesiumFragmentStage($0, &($1))")
 public void cesiumFragmentStage(CesiumFragment f, inout MaterialOutput material);
 
+// A draw under a compiled route (transform graph, scene/world/routes.ts) is
+// drawn by its route's pipeline variant: a unit generated from the route
+// defines `routeVertex`, which reads the draw's block in the placements
+// buffer (`routeRow`) and the view's render-space eye and axes, and puts the
+// vertex where the route does. The engine's own unit defines it as "not
+// routed". `position` is camera-relative in the shading axes, as the
+// transform puts a vertex; `displacement` the same minus the unwarped place,
+// in model space; `jx`, `jy`, `jz` the columns of d(model position drawn) /
+// d(model position), so the normal and tangent turn as under a placement.
+public export __extern_cpp struct RoutedVertex {
+  public __extern_cpp bool routed;
+  public __extern_cpp float3 position;
+  public __extern_cpp float3 displacement;
+  public __extern_cpp float3 jx;
+  public __extern_cpp float3 jy;
+  public __extern_cpp float3 jz;
+};
+// `placement`: the draw's block; `position`: the vertex's design position
+// (model space); `truePosition`: where the transform alone puts it
+// (camera-relative); `m0`, `m1`, `m2`: the columns of the transform's linear
+// part, which maps model space to the shading axes.
+__target_intrinsic(wgsl, "routeVertex($0, $1, $2, $3, $4, $5)")
+public RoutedVertex routeVertex(uint placement, float3 position, float3 truePosition, float3 m0, float3 m1, float3 m2);
+
 // A vertex as the vertex entry points (surfaceVertex.wgsl) put it out, in
 // their `VsOut`'s order; `SurfaceVaryings` the same as the fragment
 // entry points read it: Slang gives its fields locations in their order

@@ -11,6 +11,7 @@ export {
   type TransformDescriptor,
 } from "./descriptor.ts";
 export { scaleAbout, scaleAboutDescriptor } from "./scaleAbout.ts";
+export { scaleAlongAxes, scaleAlongAxesDescriptor } from "./scaleAlongAxes.ts";
 export { bump, bumpDescriptor } from "./bump.ts";
 export { bend, bendDescriptor } from "./bend.ts";
 export { twist, twistDescriptor } from "./twist.ts";

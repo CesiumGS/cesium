@@ -5,6 +5,7 @@
 // concatenated coordinate operation, PROJ's pipeline): rigid steps and warp
 // steps in order. "True" coordinates are any frame reached without crossing
 // a presentation warp.
+import type { SmoothSpec } from "../transform/graph.ts";
 import type { FrameKey, FrameResolver } from "./frameResolver.ts";
 
 /** A number that is read live and moves a warp's strength; a `PlacementParameter` has this shape. */
@@ -73,6 +74,16 @@ export interface Warp {
    * `warpForward` and `warpInverse`, which honour it.
    */
   readonly scale?: WarpScale;
+  /**
+   * The warp as a transform-graph smooth step (src/transform): its function
+   * as restricted JS (`source`) with `params` read live and, for a warp with
+   * a `scale`, the `identity` values the scale interpolates from. A draw
+   * whose route crosses only warps that have one is drawn by the compiled
+   * route (scene/world/routes.ts), with no fit; absent, or refused by the
+   * compiler, the warp is fitted as ever. Set by the helpers over the built-in
+   * transforms; it must be the same map as `forward` where content is.
+   */
+  readonly smooth?: SmoothSpec;
   /**
    * `p` in `from` to `out` in `to`, at scale 1. With `jacobian` (9 numbers),
    * also writes ∂out/∂p there, column-major. Must be injective on its domain.

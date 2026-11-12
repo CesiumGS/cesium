@@ -35,6 +35,12 @@ public static const uint PLACEMENT_TERMS = 20u;
 // Term kinds, and the rows of a term (scene/placementTable.ts).
 static const uint WARP_LATTICE = 1u;
 static const uint WARP_ATTRIBUTE = 2u;
+// A compiled route (transform graph, scene/world/routes.ts): the displacement
+// is the route's own function, evaluated by the route's pipeline variant
+// (`routeVertex`), not here. The block's term row is
+// [WARP_ROUTE, 0, body row, the route's uniform rows], and the vertex stage
+// here leaves the position as it is.
+static const uint WARP_ROUTE = 3u;
 static const uint TERM_ROWS = 3u;
 // Rows before a lattice body's cells: the center and 1 / scale, then the
 // lattice's constant displacement (its value at the center) as hi and lo.
@@ -62,6 +68,12 @@ float4 placementRow(uint row) {
 // A parameter's float (its word in the buffer).
 float placementParameter(uint word) {
   return placementRow(word >> 2u)[word & 3u];
+}
+
+// A compiled route's unit reads its draws' rows through this (surface.slang
+// `routeRow`): the same seam, outside this module's own reads.
+public float4 placementBlockRow(uint row) {
+  return placementRow(row);
 }
 
 // A term's weight: its row's scale times its factors' values, each
@@ -155,6 +167,9 @@ float3 termDisplacement(uint4 head, uint block, float3 p, uint vertexIndex, uint
   }
   jacobian = ZERO_JACOBIAN;
   clip = 0.0;
+  if ((head.x & 255u) == WARP_ROUTE) {
+    return float3(0.0);
+  }
   float3 other = placementAttribute(directory, head.z, vertexIndex, feature).xyz;
   return head.w != 0u ? other - p : other;
 }

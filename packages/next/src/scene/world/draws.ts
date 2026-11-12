@@ -23,6 +23,7 @@ import {
 } from "../../render/layout.ts";
 import { CapacityError } from "../CapacityError.ts";
 import type { CustomShader } from "../CustomShader.ts";
+import type { RouteVariant } from "../routeVariant.ts";
 import type { World } from "../World.ts";
 import { warnUnavailable } from "./featureTables.ts";
 import { releasePlacement } from "./placements.ts";
@@ -249,6 +250,7 @@ function batchFor(
     textureSet: number;
     doubleSided: boolean;
     shader: CustomShader | undefined;
+    route?: RouteVariant | undefined;
     billboard: boolean;
     points: boolean;
     patches: boolean;
@@ -256,7 +258,7 @@ function batchFor(
     draw: number;
   },
 ): Batch {
-  const key = `${f.mesh.id}|${f.material}|${f.textureSet}|${f.doubleSided ? 1 : 0}|${f.shader?.id ?? 0}|${f.billboard ? 1 : 0}|${f.instanced ? 1 : 0}${f.points || f.patches ? `|${f.draw}` : ""}`;
+  const key = `${f.mesh.id}|${f.material}|${f.textureSet}|${f.doubleSided ? 1 : 0}|${f.shader?.id ?? 0}|${f.billboard ? 1 : 0}|${f.instanced ? 1 : 0}|${f.route?.id ?? 0}${f.points || f.patches ? `|${f.draw}` : ""}`;
   let batch = world.raster.batches.get(key);
   if (batch) {
     return batch;
@@ -270,6 +272,7 @@ function batchFor(
     batch.material = f.material;
     batch.doubleSided = f.doubleSided;
     batch.shader = f.shader;
+    batch.route = f.route;
     batch.billboard = f.billboard;
     batch.points = f.points;
     batch.patches = f.patches;
@@ -286,6 +289,7 @@ function batchFor(
       material: f.material,
       doubleSided: f.doubleSided,
       shader: f.shader,
+      route: f.route,
       billboard: f.billboard,
       points: f.points,
       patches: f.patches,
@@ -672,14 +676,45 @@ export function setDrawShader(
   if (!world.hasDraw(handle)) {
     throw new Error("setDrawShader: the draw was removed");
   }
-  const index = handle.index;
-  const old = world.raster.drawBatches[index]!;
+  const old = world.raster.drawBatches[handle.index]!;
   if (old.shader === shader) {
     return;
   }
   if (shader) {
     warnUnavailable(world, old.mesh, shader);
   }
+  rebatch(world, handle, shader, old.route);
+}
+
+/**
+ * Draws with a compiled route's pipeline variant (`undefined`: the engine's
+ * or the shader's own): the draw moves to the batch of its mesh, material
+ * and shader with that variant, as for a shader.
+ */
+export function setDrawRoute(
+  world: DrawWorld,
+  handle: DrawHandle,
+  route: RouteVariant | undefined,
+): void {
+  if (!world.hasDraw(handle)) {
+    throw new Error("setDrawRoute: the draw was removed");
+  }
+  const old = world.raster.drawBatches[handle.index]!;
+  if (old.route === route) {
+    return;
+  }
+  rebatch(world, handle, old.shader, route);
+}
+
+/** Moves the draw to the batch with `shader` and `route`, its counts and bounds with it. */
+function rebatch(
+  world: DrawWorld,
+  handle: DrawHandle,
+  shader: CustomShader | undefined,
+  route: RouteVariant | undefined,
+): void {
+  const index = handle.index;
+  const old = world.raster.drawBatches[index]!;
   const o = index * RECORD_WORDS;
   const instanceCount = world.raster.recordsU32[o + INSTANCE_COUNT_WORD]!;
   const items = instanceCount > 0 ? instanceCount : 1;
@@ -689,6 +724,7 @@ export function setDrawShader(
     textureSet: old.textureSet,
     doubleSided: old.doubleSided,
     shader,
+    route,
     billboard: old.billboard,
     points: old.points,
     patches: old.patches,
@@ -766,6 +802,7 @@ export function setDrawMaterial(
     textureSet: old.textureSet,
     doubleSided: old.doubleSided,
     shader: old.shader,
+    route: old.route,
     billboard: old.billboard,
     points: old.points,
     patches: old.patches,

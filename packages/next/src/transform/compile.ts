@@ -41,7 +41,7 @@
 // derivatives in float64) would cost less per vertex for a smooth step
 // with no kinks and stays an option for the normals, whose exact Jacobian
 // is the expensive part of a nested route.
-import { jacobianProgram } from "./ad.ts";
+import { hessianProgram, jacobianProgram } from "./ad.ts";
 import {
   DF64_CORE_WGSL,
   DF64_WGSL,
@@ -62,11 +62,44 @@ import {
 import type { AffineStep, Route, SmoothStep } from "./route.ts";
 
 export interface CompileOptions {
-  /** Emit `transformNormal` and its Jacobian code (default true). */
-  normals?: boolean;
-  /** Emit `centreConstantsWgsl`, the df64 compute pass for dynamic parameters (default true). */
+  /**
+   * The normals' Jacobian (default "exact", as `true`; `false` is "none"):
+   * - "exact": each step's J, evaluated at the vertex by the residual rules;
+   * - "linear": J at the draw's centre and its first-order change in the
+   *   offset (the centre's J and Hessian are per-draw data, from the CPU
+   *   only, so the route has no centre compute pass), for each step whose
+   *   function has no kink (min, max, abs, clamp, select, floor, fract: a
+   *   Jacobian that jumps); a step with one stays exact;
+   * - "auto": "linear" when the route's exact Jacobian costs a lot (the
+   *   steps' Jacobian programs together past `AUTO_LINEAR_NODES` nodes), else
+   *   "exact": the nested projections' normals cost about as much as their
+   *   positions' three Jacobian columns, which a linear model skips.
+   */
+  normals?: boolean | "exact" | "linear" | "auto" | "none";
+  /** Emit `centreConstantsWgsl`, the df64 compute pass for dynamic parameters (default true; never for a route with a linear step). */
   centreCompute?: boolean;
+  /**
+   * The compute pass writes draw `i`'s record at float index `rows[i]` of
+   * `records` (a read-only `array<u32>` at binding 3, `centreBindings.rows`)
+   * rather than `i * perDrawLayout.floats`: the records sit inside a larger
+   * buffer (the engine's placements buffer).
+   */
+  centreRows?: boolean;
 }
+
+/** "auto" normals go linear for a route whose steps' Jacobian programs have more nodes than this together. */
+export const AUTO_LINEAR_NODES = 400;
+
+/** Ops that make a function's Jacobian jump: a step with one never takes linear normals. */
+const KINK_OPS: ReadonlySet<string> = new Set([
+  "abs",
+  "min",
+  "max",
+  "select",
+  "clamp",
+  "floor",
+  "fract",
+]);
 
 /** A packed record: float offsets of named fields, and its length in floats (a multiple of 4). */
 export interface RecordLayout {
@@ -75,6 +108,21 @@ export interface RecordLayout {
 }
 
 export type ParamRecord = Readonly<Record<string, number>>;
+
+/** A smooth step's IR, for what reads it besides the shader (bounds: intervals over a box). */
+export interface CompiledStep {
+  /** Index among the route's collapsed steps (`route.steps`). */
+  readonly stepIndex: number;
+  readonly id: string;
+  /** Parameter names the step's function reads. */
+  readonly locals: readonly string[];
+  /** Each local's key in `paramValues`. */
+  readonly keys: ReadonlyMap<string, string>;
+  /** The value program, composites lowered: 3 outputs. */
+  readonly value: IrProgram;
+  /** J, row-major (`3 * i + j`): 9 outputs; undefined when compiled without normals. */
+  readonly jacobian: IrProgram | undefined;
+}
 
 export interface CompiledRoute {
   readonly ok: true;
@@ -107,11 +155,17 @@ export interface CompiledRoute {
     readonly uniforms: 0;
     /** group 0, binding 1 (read-only storage array<f32>): `packCentres(...)`. */
     readonly centres: 1;
-    /** group 0, binding 2 (storage array<f32>): `perDrawLayout.floats` per draw. */
+    /** group 0, binding 2 (storage array<f32>): `perDrawLayout.floats` per draw, or at `rows` (`centreRows`). */
     readonly records: 2;
+    /** group 0, binding 3 (read-only storage array<u32>), with `centreRows`: each draw's record's first float. */
+    readonly rows: 3;
   };
+  /** How each smooth step's normals are made, in route order ("none" without normals). */
+  readonly normalModes: readonly ("exact" | "linear" | "none")[];
   /** The route's parameter values by `<id>.<name>`. */
   paramValues(route: Route): ParamRecord;
+  /** The smooth steps' IR in route order. */
+  readonly steps: readonly CompiledStep[];
   /** Fills the per-view uniforms for the route's current matrices and parameters; `eye` is in the route's output frame. */
   fillUniforms(
     route: Route,
@@ -203,12 +257,20 @@ interface SmoothInfo {
   readonly spec: SmoothSpec;
   readonly value: IrProgram;
   readonly jacobian: IrProgram | undefined;
+  /** How the step's Jacobian is made in the shader; set once the route's modes are chosen. */
+  normal: "exact" | "linear" | "none";
 }
 
 interface AffineLink {
   readonly kind: "affine";
   readonly index: number;
   readonly uniform: number;
+}
+
+/** A linear step's per-draw floats: J at the centre (row-major) and the Hessian (`9 i + 3 j + k`, the same order). */
+interface LinearFields {
+  readonly j0: number;
+  readonly h0: number;
 }
 
 interface SmoothLink {
@@ -218,6 +280,7 @@ interface SmoothLink {
   readonly valueOut: PassOutput[];
   readonly jac: ResidualPass | undefined;
   readonly jacOut: PassOutput[] | undefined;
+  readonly linear: LinearFields | undefined;
 }
 
 type Link = AffineLink | SmoothLink;
@@ -247,6 +310,57 @@ function programOf(source: string): IrProgram {
   return program;
 }
 
+const jacobians = new WeakMap<IrProgram, IrProgram>();
+const hessians = new WeakMap<IrProgram, IrProgram>();
+
+/** J of a (lowered) value program, lowered, made once. */
+function jacobianOf(value: IrProgram): IrProgram {
+  let program = jacobians.get(value);
+  if (!program) {
+    program = lowerComposites(jacobianProgram(value));
+    jacobians.set(value, program);
+  }
+  return program;
+}
+
+/** H of a (lowered) value program (`9 i + 3 j + k`), made once. */
+function hessianOf(value: IrProgram): IrProgram {
+  let program = hessians.get(value);
+  if (!program) {
+    program = lowerComposites(hessianProgram(value));
+    hessians.set(value, program);
+  }
+  return program;
+}
+
+/** Sets each step's `normal` from the mode asked for (`CompileOptions.normals`). */
+function chooseNormals(
+  infos: readonly SmoothInfo[],
+  requested: "exact" | "linear" | "auto" | "none",
+): void {
+  if (requested === "none") {
+    for (const info of infos) {
+      info.normal = "none";
+    }
+    return;
+  }
+  const smoothSteps = infos.map(
+    (info) => !info.value.nodes.some((node) => KINK_OPS.has(node.op)),
+  );
+  // What linear normals would save: the Jacobian programs of the steps that may take them.
+  const saved = infos.reduce(
+    (sum, info, k) =>
+      sum + (smoothSteps[k] ? (info.jacobian?.nodes.length ?? 0) : 0),
+    0,
+  );
+  const linear =
+    requested === "linear" ||
+    (requested === "auto" && saved > AUTO_LINEAR_NODES);
+  infos.forEach((info, k) => {
+    info.normal = linear && smoothSteps[k] ? "linear" : "exact";
+  });
+}
+
 function hash(text: string): string {
   let h = 0x811c9dc5;
   for (let i = 0; i < text.length; i++) {
@@ -271,8 +385,14 @@ export function compileRoute(
   route: Route,
   options: CompileOptions = {},
 ): CompileResult {
-  const normals = options.normals ?? true;
-  const centreCompute = options.centreCompute ?? true;
+  const requested =
+    options.normals === undefined || options.normals === true
+      ? "exact"
+      : options.normals === false
+        ? "none"
+        : options.normals;
+  const normals = requested !== "none";
+  const centreRows = options.centreRows ?? false;
   const steps = route.steps;
   const infos: SmoothInfo[] = [];
   const seen = new Map<string, number>();
@@ -301,7 +421,7 @@ export function compileRoute(
       if (value.outputs.length !== 3) {
         throw new Error(`it returns ${value.outputs.length} values, not 3`);
       }
-      jacobian = normals ? lowerComposites(jacobianProgram(value)) : undefined;
+      jacobian = normals ? jacobianOf(value) : undefined;
     } catch (error) {
       return {
         ok: false,
@@ -331,19 +451,27 @@ export function compileRoute(
       spec,
       value,
       jacobian,
+      normal: "none",
     });
   }
+  chooseNormals(infos, requested);
+  // Linear normals are per-draw CPU data: no df64 compute pass makes them.
+  const linear = infos.some((info) => info.normal === "linear");
+  const centreCompute = (options.centreCompute ?? true) && !linear;
 
   const key = [
     route.shapeKey,
     hash(infos.map((info) => `${info.id}:${info.spec.source}`).join("\n")),
-    `n${normals ? 1 : 0}c${centreCompute ? 1 : 0}`,
+    `n${normals ? (linear ? infos.map((info) => info.normal[0]).join("") : 1) : 0}c${centreCompute ? 1 : 0}${centreRows ? "r" : ""}`,
   ].join("|");
   let core = cache.get(key);
   if (!core) {
     const last = infos[infos.length - 1];
+    // A last step with linear normals has its Jacobian frozen at the draw's
+    // centre, so none of its parameters is a uniform that changes with no
+    // centre work: they are all centre-dependent.
     const candidates = new Set(
-      last
+      last && last.normal !== "linear"
         ? (last.spec.separable ?? []).filter((p) => last.locals.includes(p))
         : [],
     );
@@ -359,7 +487,7 @@ export function compileRoute(
       plan = attempt;
       break;
     }
-    core = assemble(key, plan, infos, normals, centreCompute);
+    core = assemble(key, plan, infos, normals, centreCompute, centreRows);
     cache.set(key, core);
   }
   return bind(core, route);
@@ -428,16 +556,22 @@ function buildPlan(
     const valueOut = value.emit();
     let jac: ResidualPass | undefined;
     let jacOut: PassOutput[] | undefined;
-    if (info.jacobian) {
+    let linear: LinearFields | undefined;
+    if (info.jacobian && info.normal === "exact") {
       jac = new ResidualPass(info.jacobian, makeHost("j"), set);
       jacOut = jac.emit();
+    } else if (info.normal === "linear") {
+      linear = {
+        j0: draw.alloc(9, `s${info.j}.lj0`, 4),
+        h0: draw.alloc(27, `s${info.j}.lh0`, 4),
+      };
     }
     for (const pass of [value, jac]) {
       for (const name of pass?.demote ?? []) {
         demote.add(name);
       }
     }
-    links.push({ kind: "smooth", info, value, valueOut, jac, jacOut });
+    links.push({ kind: "smooth", info, value, valueOut, jac, jacOut, linear });
   });
   if (demote.size > 0) {
     return demote;
@@ -510,6 +644,7 @@ function assemble(
   infos: readonly SmoothInfo[],
   normals: boolean,
   centreCompute: boolean,
+  centreRows: boolean,
 ): Core {
   const last = infos[infos.length - 1];
   const uniformLayout = plan.uniforms.layout();
@@ -527,6 +662,8 @@ function assemble(
     const centred = new Set([
       ...link.value.centreProgram().params,
       ...(link.jac?.centreProgram().params ?? []),
+      // A linear step's J and H at the centre read what its function does.
+      ...(link.linear ? jacobianOf(link.info.value).params : []),
     ]);
     for (const name of link.info.locals) {
       if (link.info === last && plan.separable.includes(name)) {
@@ -656,6 +793,22 @@ function assemble(
       if (link.jac) {
         fillPass(link.jac, x, local, separable, record);
       }
+      if (link.linear) {
+        // J and its change along each axis at the step's input centre, in float64.
+        const jv = evaluate(jacobianOf(link.info.value), x, local);
+        const hv = evaluate(hessianOf(link.info.value), x, local);
+        for (let k = 0; k < 9; k++) {
+          record[link.linear.j0 + k] = jv[k]!;
+        }
+        for (let a = 0; a < 3; a++) {
+          for (let i = 0; i < 3; i++) {
+            for (let k = 0; k < 3; k++) {
+              record[link.linear.h0 + 9 * a + 3 * i + k] =
+                hv[9 * i + 3 * k + a]!;
+            }
+          }
+        }
+      }
       x.set(result.value);
       if (link.info === last) {
         g = result.derivative;
@@ -678,7 +831,7 @@ function assemble(
   };
 
   const compute = centreCompute
-    ? centreShader(plan, infos, drawLayout.floats, paramList)
+    ? centreShader(plan, infos, drawLayout.floats, paramList, centreRows)
     : undefined;
 
   return {
@@ -692,8 +845,17 @@ function assemble(
     uniformParams: uniformOnly,
     approximations: [...approximate].sort(),
     centreConstantsWgsl: compute?.wgsl,
-    centreBindings: { uniforms: 0, centres: 1, records: 2 },
+    centreBindings: { uniforms: 0, centres: 1, records: 2, rows: 3 },
     paramValues,
+    steps: infos.map((info) => ({
+      stepIndex: info.stepIndex,
+      id: info.id,
+      locals: info.locals,
+      keys: info.keys,
+      value: info.value,
+      jacobian: info.jacobian,
+    })),
+    normalModes: infos.map((info) => info.normal),
     fillUniforms,
     centreConstants,
     centreUniforms(route, count, given, into) {
@@ -804,6 +966,21 @@ function generateWgsl(
         `}`,
         ``,
       );
+    } else if (link.linear) {
+      // J at the draw centre and its first-order change in the offset `dIn`:
+      // J0 + dIn.x dJ/dx + dIn.y dJ/dy + dIn.z dJ/dz, each row-major (row i, column k).
+      const { j0, h0 } = link.linear;
+      const entry = (i: number, k: number) =>
+        `(${slot("c", j0 + 3 * i + k)} + dIn.x * ${slot("c", h0 + 3 * i + k)} + dIn.y * ${slot("c", h0 + 9 + 3 * i + k)} + dIn.z * ${slot("c", h0 + 18 + 3 * i + k)})`;
+      const column = (k: number) =>
+        `vec3f(${entry(0, k)}, ${entry(1, k)}, ${entry(2, k)})`;
+      out.push(
+        `// step ${j}'s Jacobian: linear in the offset from the draw centre.`,
+        `fn tgJacLinear${j}(dIn: vec3f, c: DrawCentre) -> mat3x3f {`,
+        `  return mat3x3f(${column(0)}, ${column(1)}, ${column(2)});`,
+        `}`,
+        ``,
+      );
     }
   }
 
@@ -823,6 +1000,8 @@ function generateWgsl(
       body.push(`  d = tgStep${link.info.j}(d, c, u);`);
       if (link.jac) {
         bodyJ.push(`  jt = tgJac${link.info.j}(d, c, u) * jt;`);
+      } else if (link.linear) {
+        bodyJ.push(`  jt = tgJacLinear${link.info.j}(d, c) * jt;`);
       }
       bodyJ.push(`  d = tgStep${link.info.j}(d, c, u);`);
     }
@@ -896,6 +1075,7 @@ function centreShader(
   infos: readonly SmoothInfo[],
   recordFloats: number,
   paramList: readonly { info: SmoothInfo; name: string; key: string }[],
+  centreRows: boolean,
 ): CentreShader {
   const last = infos[infos.length - 1];
   let cursor = Math.ceil((4 + 2 * paramList.length) / 4) * 4;
@@ -920,6 +1100,9 @@ function centreShader(
     `@group(0) @binding(0) var<uniform> cu: CentreUniforms;`,
     `@group(0) @binding(1) var<storage, read> centres: array<f32>;`,
     `@group(0) @binding(2) var<storage, read_write> records: array<f32>;`,
+    ...(centreRows
+      ? [`@group(0) @binding(3) var<storage, read> rows: array<u32>;`]
+      : []),
     ``,
   ];
   const evalFn = (name: string, pass: ResidualPass, info: SmoothInfo) => {
@@ -958,7 +1141,7 @@ function centreShader(
     `  if (i >= bitcast<u32>(${uf(0)})) {`,
     `    return;`,
     `  }`,
-    `  let rb = i * ${recordFloats}u;`,
+    centreRows ? `  let rb = rows[i];` : `  let rb = i * ${recordFloats}u;`,
     `  var x0 = vec2f(centres[8u * i], centres[8u * i + 4u]);`,
     `  var x1 = vec2f(centres[8u * i + 1u], centres[8u * i + 5u]);`,
     `  var x2 = vec2f(centres[8u * i + 2u], centres[8u * i + 6u]);`,

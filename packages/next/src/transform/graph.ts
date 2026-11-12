@@ -48,6 +48,14 @@ export interface SmoothSpec {
   source?: string;
   /** The parameters the output is affine in (displacement ∝ parameter): uniforms in a GPU residual, with no per-frame work. */
   separable?: readonly string[];
+  /**
+   * The values of separable parameters at which the function is the
+   * identity (an exaggeration's factor 1, an offset's 0). A warp's strength
+   * `s` (a slider) draws the function at `identity + s · (value − identity)`
+   * for each, which is `p + s · (f(p) − p)`; a spec without them can't be
+   * scaled that way.
+   */
+  identity?: Params;
 }
 
 /** An edge placed by a constant matrix, or by one that depends on time. */

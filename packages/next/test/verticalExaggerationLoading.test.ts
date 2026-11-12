@@ -28,6 +28,7 @@ function state(
       stale: 0,
       pending: over.waiting ?? 0,
       exact: over.exact ?? 0,
+      routed: 0,
     },
   };
   return { stats, buildings };

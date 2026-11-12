@@ -39,6 +39,8 @@ import { CLUSTERS_SIZE, LIGHTS_SIZE } from "./lights.ts";
 import { DEFAULT_STAGES, type CustomShader } from "./CustomShader.ts";
 import { POINT_STYLE_DEFAULTS } from "./pointStyle.ts";
 import {
+  NO_ROUTE_WGSL,
+  ROUTE_BOUNDARY,
   SURFACE_BOUNDARY,
   SURFACE_VERTEX_BOUNDARY,
   WgslLinker,
@@ -50,6 +52,7 @@ import {
   type Linker,
   type ShaderUnit,
 } from "../shaders/link/index.ts";
+import type { RouteVariant } from "./routeVariant.ts";
 import { CLIP_TABLE_BYTES, isClipped, unclipped } from "./world/clips.ts";
 import { ShaderCache } from "./ShaderCache.ts";
 import { ShaderBindings } from "./ShaderBindings.ts";
@@ -316,7 +319,8 @@ export interface Pipelines extends SurfacePipelines {
    * with the compiler's messages.
    */
   surface(
-    shader: CustomShader,
+    shader: CustomShader | undefined,
+    route?: RouteVariant,
   ): Promise<(key: PipelineKey) => Promise<GPURenderPipeline>>;
   /**
    * The engine's own pipeline `key` with the clip test on, for a view
@@ -404,6 +408,13 @@ export interface Pipelines extends SurfacePipelines {
   ): GPURenderPipeline | undefined;
   /** Whether a parity pipeline is still to come. */
   capParityPending(kind: CapParityKind): boolean;
+  /** The same for a draw under a compiled route: the engine's stages with the route's vertex stage. */
+  capParityRouted(
+    kind: CapParityKind,
+    route: RouteVariant,
+    ready: () => void,
+  ): GPURenderPipeline | undefined;
+  capParityRoutedPending(kind: CapParityKind, route: RouteVariant): boolean;
   /**
    * The cap pass's pipeline (sectionCap.slang), made when first asked for,
    * with its group 1: the two parity targets as textures.
@@ -629,7 +640,10 @@ export async function createRenderContext(
     caps,
     targets: SCENE_TARGETS,
     pipelines,
-    shaders: new ShaderCache((shader) => pipelines.surface(shader), errors),
+    shaders: new ShaderCache(
+      (shader, route) => pipelines.surface(shader, route),
+      errors,
+    ),
     shaderBindings: new ShaderBindings(device, { whiteView }, mips),
     wake: () => {},
     defaults: {
@@ -998,17 +1012,26 @@ async function createPipelines(
   ];
   // The engine's own stages: no custom shader.
   const engineStages = wgslUnit("engine stages", DEFAULT_STAGES);
-  /** The surface units with `stages`; throws what stops the link. */
+  // The route unit: the engine's own routes nothing; a compiled route's
+  // (scene/world/routes.ts) is generated from it.
+  const engineRoute = wgslUnit("engine route", NO_ROUTE_WGSL);
+  /** The surface units with `stages` and a route unit; throws what stops the link. */
   const surfaceLink = (
     label: string,
     stages: readonly ShaderUnit[],
     boundaries: readonly Boundary[] = [],
+    route: ShaderUnit = engineRoute,
   ): LinkedModule =>
     linkChecked(
       {
         label,
-        units: [...surfaceUnits, ...stages],
-        boundaries: [SURFACE_BOUNDARY, SURFACE_VERTEX_BOUNDARY, ...boundaries],
+        units: [...surfaceUnits, ...stages, route],
+        boundaries: [
+          SURFACE_BOUNDARY,
+          SURFACE_VERTEX_BOUNDARY,
+          ROUTE_BOUNDARY,
+          ...boundaries,
+        ],
       },
       linker,
     );
@@ -1858,14 +1881,21 @@ async function createPipelines(
 
   // A custom shader's pipelines, each made when first asked for: its
   // stages in place of the defaults. The compiler's errors first, at their
-  // line in the stage's own code.
+  // line in the stage's own code. With a compiled route, its vertex stage
+  // too (scene/routeVariant.ts); without a shader, the engine's stages.
   const surface = async (
-    shader: CustomShader,
+    shader: CustomShader | undefined,
+    route?: RouteVariant,
   ): Promise<(key: PipelineKey) => Promise<GPURenderPipeline>> => {
-    const { label } = shader;
+    const label = [shader?.label, route?.label].filter(Boolean).join(" ");
     // The shader's units after the engine's: a name it defines twice, or a
     // stage the boundary wants missing, stops it here, in its own terms.
-    const linked = surfaceLink(label, shader.units, shader.boundaries);
+    const linked = surfaceLink(
+      label,
+      shader ? shader.units : [engineStages],
+      shader?.boundaries ?? [],
+      route?.unit,
+    );
     // Its errors are reported below, once, not as an uncaptured error too.
     device.pushErrorScope("validation");
     const opaque = linkedModule(linked);
@@ -1875,7 +1905,7 @@ async function createPipelines(
     if (failure !== undefined) {
       throw new Error(failure);
     }
-    const set = setLayout(shader);
+    const set = shader && setLayout(shader);
     const layouts = set && {
       opaque: device.createPipelineLayout({
         label: `${label} opaque`,
@@ -2326,18 +2356,22 @@ async function createPipelines(
     format: CAP_PARITY_FORMAT,
     blend: { color: capParityBlend, alpha: capParityBlend },
   };
-  const capParityPipelines = lazily<CapParityKind>("cap parity", (kind) => {
+  const capParityPipeline = (
+    kind: CapParityKind,
+    module: GPUShaderModule,
+    label: string,
+  ) => {
     const patches = kind !== "mesh";
     return device.createRenderPipelineAsync({
-      label: `capParity.${kind}`,
+      label,
       layout: opaqueLayout,
       vertex: {
-        module: casterModule,
+        module,
         entryPoint: patches ? "vsPatchDepth" : "vsDepth",
         buffers: instanceBuffers(patches),
       },
       fragment: {
-        module: casterModule,
+        module,
         entryPoint:
           kind === "mesh"
             ? "capParityFs"
@@ -2353,6 +2387,24 @@ async function createPipelines(
         frontFace: "ccw",
       },
     });
+  };
+  const capParityPipelines = lazily<CapParityKind>("cap parity", (kind) =>
+    capParityPipeline(kind, casterModule, `capParity.${kind}`),
+  );
+  // A compiled route's draws: the engine's stages with the route's vertex stage.
+  const capParityRoutes = new Map<
+    string,
+    { kind: CapParityKind; route: RouteVariant }
+  >();
+  const capParityRouted = lazily<string>("cap parity", (name) => {
+    const { kind, route } = capParityRoutes.get(name)!;
+    const linked = surfaceLink(
+      `capParity ${route.label}`,
+      [engineStages],
+      [],
+      route.unit,
+    );
+    return capParityPipeline(kind, linkedModule(linked), `capParity.${name}`);
   });
   const capLayout = device.createBindGroupLayout({
     label: "sectionCap",
@@ -2403,6 +2455,13 @@ async function createPipelines(
     capLayout,
     capParity: capParityPipelines.get,
     capParityPending: capParityPipelines.pending,
+    capParityRouted: (kind, route, ready) => {
+      const name = `${kind}|${route.key}`;
+      capParityRoutes.set(name, { kind, route });
+      return capParityRouted.get(name, ready);
+    },
+    capParityRoutedPending: (kind, route) =>
+      capParityRouted.pending(`${kind}|${route.key}`),
     sectionCap: (ready) => sectionCapPipeline.get("cap", ready),
     cullPointWorldLayout,
     cullPatchWorldLayout,

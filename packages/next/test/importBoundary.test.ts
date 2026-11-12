@@ -208,7 +208,13 @@ function allowed(from: Layer, edge: Edge): boolean {
   return (
     from === "frames" &&
     to === "core" &&
-    (edge.typeOnly || FRAMES_CORE_VALUES.has(edge.to))
+    (edge.typeOnly ||
+      FRAMES_CORE_VALUES.has(edge.to) ||
+      // The old height-warp helpers delegate to the built-in smooth
+      // transforms (plan section 13.37, task 4b) until task 6 moves them
+      // into georeference; the built-ins import only the transform core.
+      edge.to.startsWith("src/transforms/") ||
+      edge.to.startsWith("src/georeference/"))
   );
 }
 

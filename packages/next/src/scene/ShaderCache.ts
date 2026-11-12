@@ -1,8 +1,16 @@
 import type { CustomShader } from "./CustomShader.ts";
 import type { EngineErrors } from "../gpu/EngineErrors.ts";
 import { SURFACE_KEYS, type PipelineKey } from "./RenderContext.ts";
+import type { RouteVariant } from "./routeVariant.ts";
 
 type Factory = (key: PipelineKey) => Promise<GPURenderPipeline>;
+
+/** What a cache entry is made for: a custom shader (by its code), and a compiled route over it or over the engine's stages. */
+const entryKey = (
+  shader: CustomShader | undefined,
+  route: RouteVariant | undefined,
+): string =>
+  route ? `${shader?.code ?? ""}\u0000route:${route.key}` : shader!.code;
 
 interface Entry {
   /** Settles when the shader has compiled: its pipeline factory, or the error. */
@@ -31,20 +39,26 @@ export class ShaderCache {
   private readonly entries = new Map<string, Entry>();
 
   constructor(
-    private readonly build: (shader: CustomShader) => Promise<Factory>,
+    private readonly build: (
+      shader: CustomShader | undefined,
+      route?: RouteVariant,
+    ) => Promise<Factory>,
     private readonly errors?: EngineErrors,
   ) {}
 
   /**
    * The shader's pipeline for `key`, or undefined while it is made
-   * (`ready` is then called once it is) or if the shader failed.
+   * (`ready` is then called once it is) or if the shader failed. With a
+   * `route`, the pipeline of the shader (or the engine's stages: undefined)
+   * with that compiled route's vertex stage.
    */
   pipeline(
-    shader: CustomShader,
+    shader: CustomShader | undefined,
     key: PipelineKey,
     ready: () => void,
+    route?: RouteVariant,
   ): GPURenderPipeline | undefined {
-    const entry = this.entry(shader);
+    const entry = this.entry(shader, route);
     const pipeline = entry.pipelines[key];
     if (pipeline || entry.failed) {
       return pipeline;
@@ -61,8 +75,12 @@ export class ShaderCache {
    * (`pipeline`) and neither made nor failed. False once it is made, or the
    * shader or the pipeline failed (the engine's draws that pass for good).
    */
-  pending(shader: CustomShader, key: PipelineKey): boolean {
-    const entry = this.entries.get(shader.code);
+  pending(
+    shader: CustomShader | undefined,
+    key: PipelineKey,
+    route?: RouteVariant,
+  ): boolean {
+    const entry = this.entries.get(entryKey(shader, route));
     return (
       entry !== undefined &&
       !entry.failed &&
@@ -76,7 +94,7 @@ export class ShaderCache {
    * are ready or the shader failed.
    */
   async compile(shader: CustomShader): Promise<void> {
-    const entry = this.entry(shader);
+    const entry = this.entry(shader, undefined);
     await entry.validated;
     await Promise.all(
       SURFACE_KEYS.map((key) => entry.making.get(key) ?? this.make(entry, key)),
@@ -118,12 +136,16 @@ export class ShaderCache {
     }
   }
 
-  private entry(shader: CustomShader): Entry {
-    let entry = this.entries.get(shader.code);
+  private entry(
+    shader: CustomShader | undefined,
+    route: RouteVariant | undefined,
+  ): Entry {
+    const name = entryKey(shader, route);
+    let entry = this.entries.get(name);
     if (entry) {
       return entry;
     }
-    const validated = this.build(shader);
+    const validated = this.build(shader, route);
     const created: Entry = {
       validated,
       failed: false,
@@ -133,7 +155,7 @@ export class ShaderCache {
       failedKeys: new Set(),
     };
     entry = created;
-    this.entries.set(shader.code, created);
+    this.entries.set(name, created);
     validated.then(
       (factory) => {
         created.factory = factory;

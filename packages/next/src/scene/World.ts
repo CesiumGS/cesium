@@ -466,9 +466,10 @@ export class World {
     this.raster.splats = createSplats(this, 1);
 
     // The cull binds the placements too (its placed records' offsets).
-    this.raster.placementTable = new PlacementTable(device, () =>
-      tablesReplaced(this),
-    );
+    this.raster.placementTable = new PlacementTable(device, () => {
+      tablesReplaced(this);
+      this.warps.routes.tableReplaced();
+    });
     createCullBindGroup(this);
     this.raster.imageryPlaceholder = device
       .createTexture({

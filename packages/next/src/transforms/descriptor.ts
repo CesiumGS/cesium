@@ -33,6 +33,8 @@ export interface TransformDescriptor {
   readonly inverse?: SmoothInverse;
   /** The parameters the output is affine in (displacement ∝ parameter). */
   readonly separable: readonly string[];
+  /** The separable parameters' values at which the function is the identity (`SmoothSpec.identity`). */
+  readonly identity?: Readonly<Record<string, number>>;
   /** `forward` as restricted-JS text: it parses with `parseTransform` to the same function. */
   readonly source: string;
   /** The entry point in `shaders/transforms.slang` that evaluates it with `fwd_diff`, when there is one. */
@@ -90,6 +92,7 @@ export function edgeOf(
     params: { ...defaultParams(descriptor), ...values },
     source: descriptor.source,
     separable: descriptor.separable,
+    ...(descriptor.identity !== undefined && { identity: descriptor.identity }),
   });
 }
 

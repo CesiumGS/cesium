@@ -184,3 +184,13 @@ fn boundary()
     return;
 }
 
+struct RoutedVertex
+{
+     routed : bool,
+     position : vec3<f32>,
+     displacement : vec3<f32>,
+     jx : vec3<f32>,
+     jy : vec3<f32>,
+     jz : vec3<f32>,
+};
+

@@ -390,12 +390,13 @@ describe("heights across k = 1 to 10", () => {
     }
   });
 
-  it("draws a billboard and fits a plain tile once, and moving the slider asks for no refit", () => {
+  it("draws a billboard, and a plain tile by the compiled route with no fit, and moving the slider asks for nothing", () => {
     const s = setup(1);
     const asset = terrainAsset();
     const mesh = meshOf(asset);
     const center = asset.draws[0]!.matrix;
-    // A tile without the height attribute is fitted, once.
+    // A tile without the height attribute is drawn by the compiled route: the
+    // helper's warp has a smooth spec, so nothing is fitted for it.
     const plain = s.world.addDraw({
       mesh: s.world.addMesh({
         positions: mesh.positions,
@@ -414,10 +415,11 @@ describe("heights across k = 1 to 10", () => {
     });
     s.step();
     expect(s.world.warps.status(plain)?.state).toBe("fitted");
+    expect(s.world.warps.status(plain)?.routed).toBe(true);
     expect(s.world.warps.status(pin)?.state).toBe("fitted");
     const revision = s.route().revision;
-    const run = s.stats().fitsRun;
-    expect(run).toBeGreaterThan(0);
+    expect(s.stats().fitsRun).toBe(0);
+    expect(s.stats().draws.routed).toBe(1);
     for (const k of KS) {
       s.exaggeration.factor = k;
       s.step();
@@ -426,17 +428,19 @@ describe("heights across k = 1 to 10", () => {
     s.exaggeration.factor = 3;
     s.step();
     expect(s.route().revision).toBe(revision);
-    // Fitted draws are not fitted again; the billboard is placed again at
+    // The routed draw is not fitted at all; the billboard is placed again at
     // each tick (one route evaluation), which is not a fit.
-    expect(s.stats().fitsRun).toBe(run);
+    expect(s.stats().fitsRun).toBe(0);
     expect(s.stats().refits).toBe(0);
     expect(s.stats().replaced).toBeGreaterThan(0);
     expect(s.stats().pending).toBe(0);
-    // Changing the warp itself is the other thing: its route is refitted.
+    // Changing the warp itself is a parameter of the compiled route: nothing is refitted.
     s.exaggeration.warp.factor = 20;
     s.step();
     expect(s.route().revision).toBeGreaterThan(revision);
-    expect(s.stats().refits).toBeGreaterThan(0);
+    expect(s.world.warps.status(plain)?.routed).toBe(true);
+    expect(s.stats().fitsRun).toBe(0);
+    expect(s.stats().refits).toBe(0);
     expect(s.exaggeration.factor).toBeCloseTo(1 + scaleOf(3) * 19, 9);
   });
 });

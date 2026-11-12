@@ -50,6 +50,7 @@ export const scaleAboutDescriptor: TransformDescriptor = {
     out[2] = cz + (z - cz) / sz;
   },
   separable: ["cx", "cy", "cz", "sx", "sy", "sz"],
+  identity: { sx: 1, sy: 1, sz: 1 },
   source,
   slang: "scaleAboutParity",
 };

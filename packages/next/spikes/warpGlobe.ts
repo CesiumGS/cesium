@@ -5,7 +5,8 @@
 // the north pole, unlit and in flat colours:
 //
 //   green    a terrain tile carrying h·n̂ (exact in height, no fit)
-//   blue     the same tile without it (fitted per vertex)
+//   blue     the same tile without it (drawn by the compiled route: the
+//            helper's warp has a smooth spec; a fit if the compiler refuses)
 //   red      a billboard, anchored (its anchor goes through the route)
 //   yellow   a pole, `warpAt: "anchor"` (moved rigidly, not stretched)
 //
@@ -352,14 +353,17 @@ async function runWarpGlobe(): Promise<WarpGlobeResult> {
       name: "each kind's term",
       measured: {
         "green exact (1 = yes)": states.green?.exact ? 1 : 0,
-        "blue exact (0 = fitted)": states.blue?.exact ? 1 : 0,
+        "blue exact (0 = no)": states.blue?.exact ? 1 : 0,
+        "blue compiled route (1 = yes, no fit)": states.blue?.routed ? 1 : 0,
         "red anchored (1 = yes)": states.red?.at === "anchor" ? 1 : 0,
         "yellow anchored (1 = yes)": states.yellow?.at === "anchor" ? 1 : 0,
       },
-      limit: "green exact, blue fitted, red and yellow anchored",
+      limit:
+        "green exact, blue drawn by the compiled route, red and yellow anchored",
       pass:
         states.green?.exact === true &&
         states.blue?.exact === false &&
+        states.blue?.routed === true &&
         states.red?.at === "anchor" &&
         states.yellow?.at === "anchor",
     });

@@ -118,6 +118,7 @@ export function verticalExaggerationDescriptor(
       out[2] = z + (h - h2) * frame.n[2]!;
     },
     separable: ["factor"],
+    identity: { factor: 1 },
     source: sourceOf(radii),
     slang: "exaggerationParity",
   };

@@ -64,6 +64,20 @@ export function splitHigh(value: number): number {
 }
 
 /**
+ * `x` as a df64 pair for emulated-double arithmetic in compute kernels
+ * (`transform/df64Wgsl.ts`): `hi` is the nearest float32 and `lo` the
+ * float32 rest, so `hi + lo` is `x` to about 48 bits. Not the whole-meter
+ * split of `splitVec3`: df64 arithmetic carries its own error terms and
+ * doesn't rely on integer highs, but a vertex position must still use
+ * `splitVec3`.
+ */
+export function splitDf64(x: number): [number, number] {
+  const hi = Math.fround(x);
+  const lo = x - hi;
+  return [hi, Math.fround(lo)];
+}
+
+/**
  * Splits each float64 component into a float32 pair: `hi` a whole number
  * of meters (`splitHigh`), `lo = fround(v - hi)`. The GPU recovers small
  * camera-relative offsets as `(hiA - hiB as integers) + (loA - loB)`

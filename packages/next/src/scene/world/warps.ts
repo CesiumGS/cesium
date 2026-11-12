@@ -102,6 +102,7 @@ import {
 import type { World } from "../World.ts";
 import type { TileWarp, WarpedPoints } from "../../streaming/tileWarp.ts";
 import { setPlacement } from "./placements.ts";
+import { WorldRoutes, type RoutedAnchor } from "./routes.ts";
 import { drawMatrix } from "./transforms.ts";
 import type { DrawHandle, TransformHandle } from "./types.ts";
 
@@ -151,6 +152,8 @@ interface AnchorWarp {
   pointRoute: Route;
   /** The route is one height-scale warp then rigid steps: terrain carrying `h·n̂` is exaggerated exactly. */
   height: HeightScale | undefined;
+  /** The route compiled (scene/world/routes.ts), when every warp has a smooth spec the compiler takes: draws it can serve are routed, not fitted. Reflects the last `frame`. */
+  routed: RoutedAnchor | undefined;
 }
 
 /** What a draw is: a mesh drawn once, a billboard (placed at its anchor), or instances (each placed by its own origin). */
@@ -169,6 +172,7 @@ interface InstanceState {
 
 /** One draw under a warped anchor. */
 interface DrawWarp {
+  readonly index: number;
   readonly generation: number;
   readonly slot: number;
   readonly kind: DrawKind;
@@ -190,6 +194,8 @@ interface DrawWarp {
   routeTerm: WeightedTerm | undefined;
   /** The route's term is terrain's exact height term: nothing was fitted. */
   exact: boolean;
+  /** The draw is drawn by its anchor's compiled route (scene/world/routes.ts): nothing was fitted. */
+  routed: boolean;
   /** An instanced draw's moves. */
   readonly instances: InstanceState | undefined;
   /** The anchor stamp whose fit is requested, and the one `applied` is for (−1: an older one). */
@@ -213,6 +219,8 @@ export interface DrawWarpStatus {
   readonly at: WarpAt;
   /** Terrain drawn by its exact height term, with no fit. */
   readonly exact: boolean;
+  /** Drawn by its anchor's compiled route (the transform graph's), with no fit. */
+  readonly routed: boolean;
 }
 
 /**
@@ -239,6 +247,8 @@ export interface WarpStats {
     readonly stale: number;
     readonly pending: number;
     readonly exact: number;
+    /** Drawn by a compiled route: counted in its fitted, stale or pending state too. */
+    readonly routed: number;
   };
 }
 
@@ -250,6 +260,9 @@ export interface HeightNormalInfo {
 
 /** Instances moved per check of the clock, and at least per frame. */
 const INSTANCE_CHUNK = 256;
+
+/** A draw a compiled route serves is requested at this plus the route's id: stamps from `#name` count up from 1 and never reach it. */
+const ROUTED_STAMP = 2 ** 30;
 
 /** The shapes of route a draw's fits are kept for. */
 const SHAPES_PER_DRAW = 4;
@@ -480,12 +493,17 @@ export class WorldWarps {
   readonly #scratch = new Float64Array(16);
   /** A curved clip's field on the draws' lattices (curvedClips.ts). */
   readonly curved: WorldCurvedClips;
+  /** Compiled routes: the draws they draw instead of fits (routes.ts). */
+  readonly routes: WorldRoutes;
+  /** Routed draws waiting for their block and pipelines. */
+  readonly #routedWaiting = new Set<number>();
 
   constructor(private readonly world: World) {
     this.curved = new WorldCurvedClips(
       world,
       (index) => this.#errors.get(index) ?? 0,
     );
+    this.routes = new WorldRoutes(world);
   }
 
   /** Fits queued and not yet run. */
@@ -739,7 +757,9 @@ export class WorldWarps {
 
   /** How a draw's term stands: drawn at the current one, at an older one, or not yet. */
   #stateOf(d: DrawWarp): DrawWarpStatus["state"] {
-    const drawn = d.instances ? d.appliedStamp >= 0 : d.routeTerm !== undefined;
+    const drawn = d.instances
+      ? d.appliedStamp >= 0
+      : d.routeTerm !== undefined || d.routed;
     return d.appliedStamp === d.requested && drawn
       ? "fitted"
       : drawn
@@ -749,12 +769,22 @@ export class WorldWarps {
 
   /** The work done for warped draws, and how they stand (`World.warpStats`). */
   stats(): WarpStats {
-    const draws = { total: 0, fitted: 0, stale: 0, pending: 0, exact: 0 };
+    const draws = {
+      total: 0,
+      fitted: 0,
+      stale: 0,
+      pending: 0,
+      exact: 0,
+      routed: 0,
+    };
     for (const d of this.#draws.values()) {
       draws.total++;
       draws[this.#stateOf(d)]++;
       if (d.exact) {
         draws.exact++;
+      }
+      if (d.routed) {
+        draws.routed++;
       }
     }
     return {
@@ -776,6 +806,7 @@ export class WorldWarps {
       state: this.#stateOf(d),
       at: effectiveAt(d.kind, d.choice),
       exact: d.exact,
+      routed: d.routed,
     };
   }
 
@@ -800,6 +831,8 @@ export class WorldWarps {
       this.cache.forget(`${handle.index}:${handle.generation}:${at}`);
     }
     const d = this.#draws.get(handle.index);
+    this.routes.forget(handle.index);
+    this.#routedWaiting.delete(handle.index);
     if (d) {
       this.fitVersion++;
       this.#draws.delete(handle.index);
@@ -898,6 +931,9 @@ export class WorldWarps {
     if (this.#anchors.size === 0 && this.#draws.size === 0) {
       return false;
     }
+    for (const [slot, anchor] of this.#anchors) {
+      anchor.routed = this.routes.sync(slot, anchor.route, report);
+    }
     this.#track();
     for (const [index, d] of this.#draws) {
       const anchor = this.#anchors.get(d.slot);
@@ -925,17 +961,65 @@ export class WorldWarps {
         this.#adopt(index, d, anchor, lattice, d.requested, report);
       }
     }
-    return this.#runInstances(budgetMs) || this.cache.pending > 0;
+    const routing = this.#stepRouted(budgetMs, report);
+    return this.#runInstances(budgetMs) || this.cache.pending > 0 || routing;
+  }
+
+  /**
+   * Compiled routes' step: draws requested are written within `budgetMs`
+   * (routes.ts), and one whose block is written and whose route's pipelines
+   * are made is drawn (it was held hidden until now, as for a fit). A route
+   * whose pipelines failed is refused: its draws are fitted. True while any
+   * wait.
+   */
+  #stepRouted(budgetMs: number, report: (message: string) => void): boolean {
+    this.routes.run(budgetMs);
+    let busy = this.routes.pending;
+    for (const index of [...this.#routedWaiting]) {
+      const d = this.#draws.get(index);
+      const anchor = d && this.#anchors.get(d.slot);
+      const routed = anchor?.routed;
+      if (!d || !anchor || !routed) {
+        this.#routedWaiting.delete(index);
+        continue;
+      }
+      if (!this.routes.placed(index)) {
+        busy = true;
+        continue;
+      }
+      const state = this.routes.pipelines(routed);
+      if (state === "failed") {
+        this.routes.fail(routed, report);
+        anchor.routed = undefined;
+        this.#routedWaiting.clear();
+        return true;
+      }
+      if (state === "pending") {
+        busy = true;
+        continue;
+      }
+      this.#routedWaiting.delete(index);
+      d.routed = true;
+      d.applied = undefined;
+      d.exact = false;
+      d.routeTerm = undefined;
+      d.appliedStamp = d.requested;
+      this.fitVersion++;
+      this.#show(index, d);
+    }
+    return busy;
   }
 
   /** The world is gone: nothing is kept. */
   clear(): void {
     this.curved.clear();
+    this.routes.clear();
     this.cache.clear();
     this.#anchors.clear();
     this.#tileWarps.clear();
     this.#draws.clear();
     this.#waiting.clear();
+    this.#routedWaiting.clear();
     this.#errors.clear();
     this.#choices.clear();
     this.#heightNormals.clear();
@@ -946,11 +1030,38 @@ export class WorldWarps {
 
   // ------------------------------------------------------------------ steps
 
-  /** The stamp a draw's fit is requested at: its anchor's, or for an anchored draw the one that also follows scales. */
+  /** The stamp a draw's fit is requested at: its anchor's, or for an anchored draw the one that also follows scales. A draw its anchor's compiled route serves has the route's, which a slider or a parameter changing does not move. */
   #stampOf(d: DrawWarp, anchor: AnchorWarp): number {
+    if (this.#routable(d, anchor)) {
+      return ROUTED_STAMP + anchor.routed!.id;
+    }
     return effectiveAt(d.kind, d.choice) === "anchor"
       ? anchor.pointStamp
       : anchor.stamp;
+  }
+
+  /**
+   * Whether the anchor's compiled route draws the draw: a mesh placed per
+   * vertex, with no terms of its own, that no exact term serves (terrain's
+   * `h·n̂`), and not a patch draw (its dice kernel reads the lattices), a point
+   * set or a billboard.
+   */
+  #routable(d: DrawWarp, anchor: AnchorWarp): boolean {
+    if (
+      !anchor.routed ||
+      d.kind !== "mesh" ||
+      effectiveAt(d.kind, d.choice) !== "vertex" ||
+      ownTerms(d.user).length > 0
+    ) {
+      return false;
+    }
+    const flags =
+      this.world.raster.recordsU32[d.index * RECORD_WORDS + FLAGS_WORD]!;
+    if (flags & (RecordFlags.patches | RecordFlags.points)) {
+      return false;
+    }
+    const held = this.#heightNormals.get(d.index);
+    return !(held && held.generation === d.generation && anchor.height);
   }
 
   /** The draw's choice (`setWarpAt`) if it is still the draw's. */
@@ -1041,6 +1152,7 @@ export class WorldWarps {
       pointStamp: 0,
       pointRoute: withFrozenScales(route),
       height: heightScaleOf(route),
+      routed: undefined,
     };
     this.#restamp(anchor, true);
     return anchor;
@@ -1190,6 +1302,7 @@ export class WorldWarps {
     const own = this.world.scene.drawPlacements[index];
     const choice = this.#choiceOf(index, generation);
     const d: DrawWarp = {
+      index,
       generation,
       slot,
       kind,
@@ -1202,6 +1315,7 @@ export class WorldWarps {
       applied: undefined,
       routeTerm: undefined,
       exact: false,
+      routed: false,
       instances:
         kind === "instances"
           ? {
@@ -1275,6 +1389,7 @@ export class WorldWarps {
       if (d.slot !== slot) {
         continue;
       }
+      this.#unroute(index, d);
       this.#draws.delete(index);
       this.#waiting.delete(index);
       // Its fits are kept for if the anchor is warped again (a re-root back),
@@ -1299,6 +1414,7 @@ export class WorldWarps {
         this.#setHidden(index, d.userHidden);
       }
     }
+    this.routes.release(slot);
   }
 
   /** Draws whose transforms moved are fitted again (their matrix to the anchor is in the fit). */
@@ -1352,11 +1468,21 @@ export class WorldWarps {
     return m ? Float64Array.of(m[12]!, m[13]!, m[14]!) : undefined;
   }
 
+  /** The draw leaves a compiled route (it is fitted, or drawn by its exact term): its block and variant go. */
+  #unroute(index: number, d: DrawWarp): void {
+    if (d.routed || this.routes.has(index)) {
+      this.routes.unroute(index);
+      this.#routedWaiting.delete(index);
+      d.routed = false;
+    }
+  }
+
   /**
    * Asks for the draw's term at the anchor's stamp: terrain's exact height
-   * term, which needs no fit; an anchored draw's lattice or a vertex fit,
-   * both through the cache, drawn at once if it is ready (or a stale one
-   * is); or an instanced draw's pass.
+   * term, which needs no fit; the compiled route's draw (no fit: its data is
+   * written within the frame's budget); an anchored draw's lattice or a
+   * vertex fit, both through the cache, drawn at once if it is ready (or a
+   * stale one is); or an instanced draw's pass.
    */
   #request(
     index: number,
@@ -1381,18 +1507,40 @@ export class WorldWarps {
     const record = this.world.raster;
     const o = index * RECORD_WORDS;
     const own = this.world.scene.drawPlacements[index];
-    const center = own
-      ? [...own.center]
-      : [0, 1, 2].map((i) => record.recordsF32[o + CENTER_WORD + i]!);
-    const radius = own?.base ?? record.recordsF32[o + RADIUS_WORD]!;
+    // A routed draw's record holds its drawn sphere: its own is the route's.
+    const routedBase = this.routes.base(index);
+    const center = routedBase
+      ? [...routedBase.center]
+      : own
+        ? [...own.center]
+        : [0, 1, 2].map((i) => record.recordsF32[o + CENTER_WORD + i]!);
+    const radius =
+      routedBase?.radius ?? own?.base ?? record.recordsF32[o + RADIUS_WORD]!;
     const exact =
       at === "vertex" ? this.#exactTerm(index, d, anchor, matrix) : undefined;
     if (exact) {
+      this.#unroute(index, d);
       this.cache.forget(d.key);
       this.#waiting.delete(index);
       this.#adoptTerm(index, d, exact, undefined, stamp, report);
       return;
     }
+    if (anchor.routed && this.#routable(d, anchor)) {
+      // The compiled route draws it: no fit. Held until its block is written and its pipelines are made.
+      this.cache.forget(d.key);
+      this.#waiting.delete(index);
+      this.routes.request(
+        index,
+        d.generation,
+        anchor.routed,
+        matrix,
+        center,
+        radius,
+      );
+      this.#routedWaiting.add(index);
+      return;
+    }
+    this.#unroute(index, d);
     const geometricError = this.#errors.get(index) ?? 0;
     const tolerance = Math.max(
       TOLERANCE_FLOOR,

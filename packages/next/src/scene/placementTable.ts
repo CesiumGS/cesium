@@ -126,13 +126,63 @@ export class PlacementTable {
 
   /** Frees the block at `at` of `terms`' size, for reuse. */
   remove(at: number, terms: WarpTerms): void {
-    const rows = blockRows(terms);
+    this.releaseRows(at, blockRows(terms));
+  }
+
+  /**
+   * `rows` rows, zeroed, that hold no terms: a compiled route's draw block
+   * and uniforms (scene/world/routes.ts), whose layout is theirs
+   * (scene/routeVariant.ts). Freed by `releaseRows`.
+   */
+  allocateRows(rows: number): number {
+    const at = this.allocate(rows);
+    this.f32.fill(0, at * 4, (at + rows) * 4);
+    return at;
+  }
+
+  /** Frees `rows` rows from `at` (`allocateRows`, or a block), for reuse. */
+  releaseRows(at: number, rows: number): void {
     let list = this.freeBlocks.get(rows);
     if (!list) {
       list = [];
       this.freeBlocks.set(rows, list);
     }
     list.push(at);
+  }
+
+  /** The words of rows `at` to `at + rows` to fill in place, then `upload` them. */
+  rowWords(at: number, rows: number): { f32: Float32Array; u32: Uint32Array } {
+    return this.words(at, rows);
+  }
+
+  /** Uploads rows `at` to `at + rows` as filled. */
+  upload(at: number, rows: number): void {
+    this.device.queue.writeBuffer(
+      this.gpu,
+      at * 16,
+      this.f32,
+      at * 4,
+      rows * 4,
+    );
+  }
+
+  /**
+   * A bind group for a compute pass that writes the buffer's rows (a
+   * compiled route's centre constants, scene/world/routes.ts): `entries`
+   * and the buffer at `binding`. The buffer is replaced as it grows, so a
+   * group is made for each pass.
+   */
+  computeGroup(
+    label: string,
+    layout: GPUBindGroupLayout,
+    binding: number,
+    entries: readonly GPUBindGroupEntry[],
+  ): GPUBindGroup {
+    return this.device.createBindGroup({
+      label,
+      layout,
+      entries: [...entries, { binding, resource: { buffer: this.gpu } }],
+    });
   }
 
   /** The block's words as uploaded (for tests and the spike). */
@@ -248,8 +298,8 @@ export class PlacementTable {
   }
 }
 
-/** Term kinds in a term's row (shaders/placement.slang `WARP_LATTICE`…). */
-export const WARP_KIND = { lattice: 1, attribute: 2 } as const;
+/** Term kinds in a term's row (shaders/placement.slang `WARP_LATTICE`…; `route` is a compiled route's, scene/routeVariant.ts). */
+export const WARP_KIND = { lattice: 1, attribute: 2, route: 3 } as const;
 
 /** Rows of a term: its row and its two factors'. */
 export const TERM_ROWS = 3;

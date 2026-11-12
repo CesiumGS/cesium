@@ -392,7 +392,9 @@ export async function run({
     runOut.textContent = `${n(stats.fitsRun)}, ${n(stats.pending)} waiting`;
     refitOut.textContent = n(stats.refits);
     const { draws } = stats;
-    drawsOut.textContent = `${n(draws.total)}: ${n(draws.exact)} exact, ${n(draws.fitted)} fitted, ${n(draws.stale)} stale, ${n(draws.pending)} waiting`;
+    // "fitted" counts every draw drawn at its current term; the exact and compiled ones are not fits.
+    const fits = Math.max(0, draws.fitted - draws.exact - draws.routed);
+    drawsOut.textContent = `${n(draws.total)}: ${n(draws.exact)} exact, ${n(draws.routed)} compiled, ${n(fits)} fitted, ${n(draws.stale)} stale, ${n(draws.pending)} waiting`;
   };
 
   const refresh = () => {
@@ -576,7 +578,7 @@ export async function run({
     el(
       "p",
       {},
-      "One float a tick: tiles are fitted once, never again. Pins are placed again, which is no fit.",
+      "One float a tick: terrain is exact and buildings are drawn by the compiled route, so nothing is fitted or fitted again. Pins are placed again, which is no fit.",
     ),
     el("h3", {}, "View"),
     el(

@@ -20,12 +20,12 @@
 // - floor, comparisons, min, max: exact on (hi, lo).
 // Beyond the ranges (exp of more than 80, an angle of 1e5 radians) results
 // degrade or overflow to inf as float32 does.
+import { splitDf64 } from "../math/transforms.ts";
 import type { IrNode } from "./ir.ts";
 
-/** x as (hi, lo), float32 each: hi + lo is x to 48 bits. */
+/** x as (hi, lo), float32 each: hi + lo is x to 48 bits (`splitDf64`). */
 export function splitDouble(x: number): [number, number] {
-  const hi = Math.fround(x);
-  return [hi, Math.fround(x - hi)];
+  return splitDf64(x);
 }
 
 /** A float32 as a WGSL literal. */

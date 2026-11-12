@@ -32,6 +32,7 @@ import type { World } from "../src/scene/World.ts";
 import type { AnchorHandle, DrawHandle } from "../src/scene/world/types.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
+import { fittedOnly } from "./fittedOnly.ts";
 
 const R = 6_378_137;
 const WIDTH = 64;
@@ -106,7 +107,7 @@ function scene(start = 0.5): Scene {
   const world = engine.createWorld({ maxDraws: 16 });
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const scale = world.createPlacementParameter(start, { range: [0, 1] });
-  const warp = verticalExaggeration({ factor: 10, scale });
+  const warp = fittedOnly(verticalExaggeration({ factor: 10, scale }));
   const frame = warpFrame("exaggerated", catalog.get("ITRF"), warp);
   catalog.add(frame);
   engine.cameras.setResolver(world, createFramesResolver(catalog));

@@ -8,6 +8,7 @@ import type { MeshStreams, MaterialData } from "../../render/layout.ts";
 import type { Body } from "../Body.ts";
 import type { CustomShader } from "../CustomShader.ts";
 import type { PointCuller } from "../PointCuller.ts";
+import type { RouteVariant } from "../routeVariant.ts";
 import type { SceneItem } from "../SceneItem.ts";
 import type { World } from "../World.ts";
 import type { Placement } from "../placement.ts";
@@ -424,6 +425,8 @@ export interface Batch {
   doubleSided: boolean;
   /** Its custom shader; undefined: the engine's. */
   shader: CustomShader | undefined;
+  /** Its draws' compiled route (transform graph): its pipelines' vertex stage; undefined: none. */
+  route: RouteVariant | undefined;
   /** Billboards: not in the shadow and ambient-occlusion passes. */
   billboard: boolean;
   /** A point set's: drawn without indices, six vertices per point. */

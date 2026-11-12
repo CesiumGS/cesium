@@ -476,6 +476,22 @@ export __extern_cpp float4x4 cesiumViewProjection() {
 export __extern_cpp float2 cesiumPixelSize() {
   return view.viewport.zw;
 }
+// What a compiled route's unit reads (`routeVertex`, surfaceBoundary.slang):
+// a row of the placements buffer, and the view's render-space eye (split, as
+// `SplitPosition`) and the rotation from render axes to shading axes by row
+// (anchor slot 0 is the render space).
+export __extern_cpp float4 routeRow(uint row) {
+  return placementBlockRow(row);
+}
+export __extern_cpp float3 routeEyeHi() {
+  return view.anchors[0].eyeHi.xyz;
+}
+export __extern_cpp float3 routeEyeLo() {
+  return view.anchors[0].eyeLo.xyz;
+}
+export __extern_cpp float3 routeAxisRow(uint i) {
+  return view.anchors[0].axes[i].xyz;
+}
 
 float2 read2(uint offset, uint index) {
   uint b = offset + index * 2u;
@@ -854,6 +870,27 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   Placed placed = placeVertex(billboard ? NO_PLACEMENT : r.placement, position, vertexIndex, r.attributes, tableFeature);
   position = placed.position;
   bool placedDraw = r.placement != NO_PLACEMENT && !billboard;
+  // A draw under a compiled route (placement.slang `WARP_ROUTE`) is put where
+  // its route's unit says (`routeVertex`): the model-space position the stage
+  // sees is the design one moved by the displacement, and the Jacobian is the
+  // route's, so the normal and tangent turn with it. The stage's own move
+  // (below) is added to the routed position, rotated by the transform.
+  RoutedVertex routed;
+  routed.routed = false;
+  routed.position = float3(0.0);
+  routed.displacement = float3(0.0);
+  routed.jx = float3(0.0);
+  routed.jy = float3(0.0);
+  routed.jz = float3(0.0);
+  if (placedDraw) {
+    float3 trueRelative = mul(m, float4(designPosition, 1.0)).xyz;
+    routed = routeVertex(r.placement, designPosition, trueRelative, column3(m, 0), column3(m, 1), column3(m, 2));
+    if (routed.routed) {
+      position = designPosition + routed.displacement;
+      placed.jacobian = transpose(float3x3(routed.jx, routed.jy, routed.jz));
+    }
+  }
+  float3 placedPosition = position;
   if (placedDraw) {
     normal = turnNormal(placed.jacobian, normal);
   }
@@ -901,6 +938,9 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   // the placement; for an unplaced draw, where it is drawn.
   out.positionMC = designPosition;
   float4 world = mul(drawnModel, float4(stage.positionMC, 1.0));
+  if (routed.routed) {
+    world = float4(routed.position + mul(m, float4(stage.positionMC - placedPosition, 0.0)).xyz, 1.0);
+  }
   out.relPosition = placedDraw ? mul(m, float4(designPosition, 1.0)).xyz : world.xyz;
   out.position = mul(view.viewProj, world);
   // A billboard (RecordFlags.billboard): the instance's position, its

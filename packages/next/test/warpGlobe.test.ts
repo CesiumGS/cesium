@@ -54,6 +54,7 @@ import type { Tile } from "../src/streaming/Tile.ts";
 import { drawnTile } from "../src/streaming/tileWarp.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
+import { fittedOnly } from "./fittedOnly.ts";
 import { at as ecef, contains, gridTile } from "./terrainRayFixtures.ts";
 
 const R = 6371e3;
@@ -129,7 +130,7 @@ function setup(): Setup {
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const itrf = catalog.get("ITRF");
   const scale = world.createPlacementParameter(1, { range: [0, 1] });
-  const exaggeration = verticalExaggeration({ factor: K, scale });
+  const exaggeration = fittedOnly(verticalExaggeration({ factor: K, scale }));
   const exaggerated = warpFrame("exaggerated", itrf, exaggeration);
   catalog.add(exaggerated);
   const resolver = createFramesResolver(catalog);

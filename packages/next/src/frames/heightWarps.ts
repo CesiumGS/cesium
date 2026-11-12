@@ -17,7 +17,13 @@
 // centre of curvature, deep inside the body.
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import type { HeightScale, WarpScale } from "../camera/route.ts";
+import { heightOffset as heightOffsetEdge } from "../georeference/heightOffset.ts";
+import { verticalExaggeration as verticalExaggerationEdge } from "../georeference/verticalExaggeration.ts";
+import type { SmoothSpec } from "../transform/graph.ts";
 import { LiveWarp, type ChangeableWarp } from "./warps.ts";
+
+/** A vertical exaggeration scales heights wherever content is: the built-in's ceiling, m, above any of it. */
+const UNBOUNDED_CEILING = 1e9;
 
 /**
  * The surface heights are measured from: the WGS84 ellipsoid by default,
@@ -426,6 +432,8 @@ class VerticalExaggerationImpl
   readonly presentation = true;
   private k: number;
   private base: number;
+  private smoothRevision = -1;
+  private smoothSpec: SmoothSpec | undefined;
 
   constructor(options: VerticalExaggerationOptions) {
     super(surfaceOf(options.reference ?? "ellipsoid"), options.scale);
@@ -443,6 +451,28 @@ class VerticalExaggerationImpl
     return radii
       ? { kind: "heightScale", radii, factor: this.k, baseHeight: this.base }
       : undefined;
+  }
+
+  /**
+   * The georeference built-in over the same ellipsoid, for the compiled
+   * route: a ceiling so high that heights are scaled everywhere content is
+   * (this warp has none). A plane reference has no built-in: fitted.
+   */
+  get smooth(): SmoothSpec | undefined {
+    const radii = this.surfaceRadii;
+    if (!radii) {
+      return undefined;
+    }
+    if (this.smoothRevision !== this.ownRevision) {
+      this.smoothRevision = this.ownRevision;
+      this.smoothSpec = verticalExaggerationEdge({
+        radii,
+        factor: this.k,
+        ceiling: UNBOUNDED_CEILING,
+        baseHeight: this.base,
+      }).spec;
+    }
+    return this.smoothSpec;
   }
 
   set factor(value: number) {
@@ -513,6 +543,8 @@ export interface HeightOffset extends ChangeableWarp {
 class HeightOffsetImpl extends HeightWarp implements HeightOffset {
   readonly presentation: boolean;
   private offset: number;
+  private smoothRevision = -1;
+  private smoothSpec: SmoothSpec | undefined;
 
   constructor(metres: number, options: HeightOffsetOptions) {
     super(surfaceOf(options.reference ?? "ellipsoid"), options.scale);
@@ -527,6 +559,19 @@ class HeightOffsetImpl extends HeightWarp implements HeightOffset {
   set metres(value: number) {
     this.offset = checkMetres("heightOffset: metres", value);
     this.changed();
+  }
+
+  /** The georeference built-in over the same ellipsoid, for the compiled route; a plane reference is fitted. */
+  get smooth(): SmoothSpec | undefined {
+    const radii = this.surfaceRadii;
+    if (!radii) {
+      return undefined;
+    }
+    if (this.smoothRevision !== this.ownRevision) {
+      this.smoothRevision = this.ownRevision;
+      this.smoothSpec = heightOffsetEdge({ radii, offset: this.offset }).spec;
+    }
+    return this.smoothSpec;
   }
 
   get description(): string {

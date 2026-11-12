@@ -193,7 +193,19 @@ describe("generated code", () => {
       "@group(0) @binding(2) var<storage, read_write> records",
     );
     expect(text).toContain("fn df_sincos(");
-    expect(c.centreBindings).toEqual({ uniforms: 0, centres: 1, records: 2 });
+    expect(c.centreBindings).toEqual({
+      uniforms: 0,
+      centres: 1,
+      records: 2,
+      rows: 3,
+    });
+    expect(text).not.toContain("rows");
+    const rows = compiled(twistRoute().route, { centreRows: true });
+    expect(rows.centreConstantsWgsl).toContain(
+      "@group(0) @binding(3) var<storage, read> rows: array<u32>;",
+    );
+    expect(rows.centreConstantsWgsl).toContain("let rb = rows[i];");
+    expect(rows.key).not.toBe(c.key);
     expect(
       compiled(twistRoute().route, { centreCompute: false })
         .centreConstantsWgsl,
@@ -470,5 +482,73 @@ describe("refusals and caching", () => {
     const b = compiled(utmRoute().route);
     expect(b.wgsl).toBe(a.wgsl);
     expect(b.perDrawLayout).toEqual(a.perDrawLayout);
+  });
+});
+
+describe("normals' modes", () => {
+  it("are exact by default, and name each step's IR", () => {
+    const c = compiled(utmRoute().route);
+    expect(c.normalModes).toEqual(["exact", "exact", "exact"]);
+    expect(c.steps.map((s) => s.id)).toEqual([
+      "verticalExaggeration",
+      "geocentricToGeographic",
+      "transverseMercator",
+    ]);
+    expect(c.steps.every((s) => s.value.outputs.length === 3)).toBe(true);
+    expect(c.wgsl).not.toContain("tgJacLinear");
+  });
+
+  it("go linear for the smooth steps of a heavy route, never a step with a kink", () => {
+    const exact = compiled(utmRoute().route);
+    const auto = compiled(utmRoute().route, { normals: "auto" });
+    // The exaggeration's lift has min and clamp: its Jacobian jumps, so it stays exact.
+    expect(auto.normalModes).toEqual(["exact", "linear", "linear"]);
+    expect(auto.wgsl).toContain("fn tgJacLinear1(");
+    expect(auto.wgsl).toContain("fn tgJacLinear2(");
+    expect(auto.wgsl).toContain("fn tgJac0(");
+    expect(auto.perDrawLayout.floats).toBeLessThan(exact.perDrawLayout.floats);
+    expect(auto.wgsl.length).toBeLessThan(exact.wgsl.length * 0.7);
+    expect(auto.key).not.toBe(exact.key);
+    // The centre's J and Hessian are per-draw CPU data: no compute pass.
+    expect(auto.centreConstantsWgsl).toBeUndefined();
+    // A last step with linear normals has no uniform parameters: all follow the centre.
+    expect(auto.separableParams).toEqual([]);
+    expect(auto.dynamicParams).toContain("transverseMercator.falseEasting");
+  });
+
+  it("keep a cheap route exact when asked for auto, and refuse nothing", () => {
+    const c = compiled(exaggerationRoute().route, { normals: "auto" });
+    expect(c.normalModes).toEqual(["exact"]);
+    expect(c.centreConstantsWgsl).toBeDefined();
+    expect(c.separableParams).toEqual(["verticalExaggeration.factor"]);
+    expect(
+      compiled(exaggerationRoute().route, { normals: "linear" }).normalModes,
+    ).toEqual(["exact"]);
+  });
+
+  it("write each linear step's J and H at its centre into the record", () => {
+    const { route } = utmRoute();
+    const c = compiled(route, { normals: "linear" });
+    const centre = [12000, -8000, 900];
+    const record = c.centreConstants(centre);
+    for (const name of ["s1.lj0", "s1.lh0", "s2.lj0", "s2.lh0"]) {
+      const at = c.perDrawLayout.fields[name]!;
+      expect(at % 4).toBe(0);
+      const count = name.endsWith("lj0") ? 9 : 27;
+      const words = Array.from(record.subarray(at, at + count));
+      expect(words.some((v) => v !== 0)).toBe(true);
+      expect(words.every(Number.isFinite)).toBe(true);
+    }
+    // The positions are the exact route's, whatever the normals are.
+    const exact = compiled(route);
+    const got = centreValue(c, record, c.paramValues(route));
+    const want = centreValue(
+      exact,
+      exact.centreConstants(centre),
+      exact.paramValues(route),
+    );
+    for (let a = 0; a < 3; a++) {
+      expect(Math.abs(got[a]! - want[a]!)).toBeLessThan(1e-6);
+    }
   });
 });

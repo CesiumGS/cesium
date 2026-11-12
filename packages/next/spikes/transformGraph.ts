@@ -4,10 +4,15 @@
 // Cases:
 //  a. affine · verticalExaggeration ×10 · affine, tiles of 1, 2 and 8 km at
 //     the Earth's radius (and a tile across the lift's blend band);
-//  b. UTM zone 31 above geographic above ×3 exaggeration (nested smooth steps);
+//  b. UTM zone 31 above geographic above ×3 exaggeration (nested smooth steps),
+//     with exact normals and with linear ones (J at the draw's centre and its
+//     first-order change, for the steps with no kink: task 4b);
 //  c. a twist whose rate changes every frame: a dynamic parameter, the
 //     centre constants recomputed per frame by the df64 compute pass;
-//  d. Brown–Conrady lens distortion on a camera branch.
+//  d. Brown–Conrady lens distortion on a camera branch;
+//  e. the renderer's glue (`routeVertex`, scene/routeVariant.ts): a draw's
+//     block of the placements buffer, packed as the world packs it, read by
+//     the glue with a stand-in view (eye, shading axes), against float64.
 // Per case: the worst position error (mm) and normal angle error (degrees)
 // against float64, with the centre constants from the CPU (float64) and from
 // the GPU's df64 pass. Timing: 1M vertices through `transformPoint` and
@@ -22,6 +27,13 @@ import {
   verticalExaggeration,
 } from "../src/georeference/index.ts";
 import { Ellipsoid, cartographic } from "../src/math/ellipsoid.ts";
+import {
+  ROUTE_BODY,
+  ROUTE_KIND,
+  ROUTE_OWN_ROWS,
+  routeBlockRows,
+  routeUnitWgsl,
+} from "../src/scene/routeVariant.ts";
 import {
   compileRoute,
   type CompiledRoute,
@@ -107,6 +119,8 @@ interface Scenario {
   /** Frames to run, each preceded by `frame(k)` (a dynamic parameter moving). */
   frames: number;
   frame?: (k: number) => void;
+  /** How the normals' Jacobian is made (`CompileOptions.normals`; default exact). */
+  normals?: "exact" | "linear";
 }
 
 function tileCentres(
@@ -164,6 +178,7 @@ function utmScenario(
   radius: number,
   vertical: number,
   budgetMm: number,
+  normals: "exact" | "linear" = "exact",
 ): Scenario {
   const graph = new TransformGraph();
   const world = graph.root("utm");
@@ -176,13 +191,14 @@ function utmScenario(
   );
   const content = graph.add("content", ex, affine({ matrix: enu(5, 46, 0) }));
   return {
-    name: `b. UTM 31 · geographic · ×3 exaggeration, ${radius / 1000} km tiles`,
+    name: `b. UTM 31 · geographic · ×3 exaggeration, ${radius / 1000} km tiles${normals === "linear" ? ", linear normals" : ""}`,
     route: routeBetween(content, world),
     centres: (n) => tileCentres(n, 3, 30000, 0, 3000),
     radius,
     vertical,
     positionBudgetMm: budgetMm,
     frames: 1,
+    normals,
   };
 }
 
@@ -378,7 +394,7 @@ interface Pipelines {
   layout: GPUBindGroupLayout;
   points: GPUComputePipeline;
   vertex: GPUComputePipeline | undefined;
-  centre: GPUComputePipeline;
+  centre: GPUComputePipeline | undefined;
   centreLayout: GPUBindGroupLayout;
 }
 
@@ -433,17 +449,22 @@ async function makePipelines(
       entry(2, "storage"),
     ],
   });
-  const centreModule = await compileModule(
-    device,
-    compiled.centreConstantsWgsl!,
-    `${label} centres`,
-  );
+  // A route with linear normals has per-draw CPU data and no compute pass.
+  const centreModule = compiled.centreConstantsWgsl
+    ? await compileModule(
+        device,
+        compiled.centreConstantsWgsl,
+        `${label} centres`,
+      )
+    : undefined;
   const [points, vertex, centre] = await Promise.all([
     make(module, layout, "pointsMain"),
     hasNormals
       ? make(module, layout, "vertexMain")
       : Promise.resolve(undefined),
-    make(centreModule, centreLayout, "centreConstants"),
+    centreModule
+      ? make(centreModule, centreLayout, "centreConstants")
+      : Promise.resolve(undefined),
   ]);
   const made = { layout, points, vertex, centre, centreLayout };
   pipelineCache.set(compiled.key, made);
@@ -765,7 +786,7 @@ class CentrePass {
     const pass = encoder.beginComputePass(
       stamps ? { timestampWrites: stamps } : undefined,
     );
-    pass.setPipeline(this.pipes.centre);
+    pass.setPipeline(this.pipes.centre!);
     pass.setBindGroup(0, this.group);
     pass.dispatchWorkgroups(Math.ceil(this.centres.length / 64));
     pass.end();
@@ -826,7 +847,9 @@ async function accuracy(
   scenario: Scenario,
   checks: Check[],
 ): Promise<void> {
-  const compiled = compileRoute(scenario.route);
+  const compiled = compileRoute(scenario.route, {
+    ...(scenario.normals !== undefined && { normals: scenario.normals }),
+  });
   if (!compiled.ok) {
     throw new Error(`${scenario.name}: ${compiled.reason}`);
   }
@@ -841,7 +864,9 @@ async function accuracy(
     17,
     true,
   );
-  const pass = new CentrePass(gpu, pipes, compiled, scenario.route, centres);
+  const pass = pipes.centre
+    ? new CentrePass(gpu, pipes, compiled, scenario.route, centres)
+    : undefined;
   let cpu: Errors = { positionMm: 0, normalDeg: 0 };
   let df64: Errors = { positionMm: 0, normalDeg: 0 };
   let mismatch = 0;
@@ -862,6 +887,9 @@ async function accuracy(
       positionMm: Math.max(cpu.positionMm, e.positionMm),
       normalDeg: Math.max(cpu.normalDeg, e.normalDeg),
     };
+    if (!pass) {
+      continue;
+    }
     const gpuRec = await pass.run(scenario.route);
     const f = await measure(
       gpu,
@@ -879,7 +907,7 @@ async function accuracy(
     };
     mismatch = Math.max(mismatch, centreMismatchMm(compiled, cpuRec, gpuRec));
   }
-  pass.destroy();
+  pass?.destroy();
   const budget = scenario.positionBudgetMm;
   checks.push({
     name: `${scenario.name}: float64 centre constants`,
@@ -887,11 +915,15 @@ async function accuracy(
       maxPositionMm: fixed(cpu.positionMm),
       budgetMm: budget,
       maxNormalDeg: fixed(cpu.normalDeg, 6),
+      normals: compiled.normalModes.join(","),
       dynamic: compiled.dynamicParams.length,
       separable: compiled.separableParams.join(",") || "-",
     },
     pass: cpu.positionMm <= budget && cpu.normalDeg <= 0.1,
   });
+  if (!pass) {
+    return;
+  }
   checks.push({
     name: `${scenario.name}: df64 GPU centre constants`,
     measured: {
@@ -911,7 +943,9 @@ async function timings(
   checks: Check[],
 ): Promise<void> {
   const { device } = gpu;
-  const compiled = compileRoute(scenario.route);
+  const compiled = compileRoute(scenario.route, {
+    ...(scenario.normals !== undefined && { normals: scenario.normals }),
+  });
   if (!compiled.ok) {
     throw new Error(compiled.reason);
   }
@@ -979,15 +1013,13 @@ async function timings(
   const vertex = pipes.vertex
     ? await run(pipes.vertex)
     : { gpuMs: Number.NaN, wallMs: Number.NaN };
-  const centrePass = new CentrePass(
-    gpu,
-    pipes,
-    compiled,
-    scenario.route,
-    centres,
-  );
-  const centre = await centrePass.time(scenario.route);
-  centrePass.destroy();
+  const centrePass = pipes.centre
+    ? new CentrePass(gpu, pipes, compiled, scenario.route, centres)
+    : undefined;
+  const centre = centrePass
+    ? await centrePass.time(scenario.route)
+    : { gpuMs: Number.NaN, wallMs: Number.NaN };
+  centrePass?.destroy();
   for (const b of [uniforms, recordBuffer, vertBuffer, normalBuffer, ...out]) {
     b.destroy();
   }
@@ -1007,6 +1039,422 @@ async function timings(
   });
 }
 
+type Mat3 = number[];
+
+// Column-major 3×3s.
+const rotX = (a: number): Mat3 => [
+  1,
+  0,
+  0,
+  0,
+  Math.cos(a),
+  Math.sin(a),
+  0,
+  -Math.sin(a),
+  Math.cos(a),
+];
+const rotY = (a: number): Mat3 => [
+  Math.cos(a),
+  0,
+  -Math.sin(a),
+  0,
+  1,
+  0,
+  Math.sin(a),
+  0,
+  Math.cos(a),
+];
+const rotZ = (a: number): Mat3 => [
+  Math.cos(a),
+  Math.sin(a),
+  0,
+  -Math.sin(a),
+  Math.cos(a),
+  0,
+  0,
+  0,
+  1,
+];
+
+function mul3(a: ArrayLike<number>, b: ArrayLike<number>): Mat3 {
+  const out: Mat3 = new Array(9).fill(0);
+  for (let c = 0; c < 3; c++) {
+    for (let r = 0; r < 3; r++) {
+      for (let k = 0; k < 3; k++) {
+        out[3 * c + r]! += a[3 * k + r]! * b[3 * c + k]!;
+      }
+    }
+  }
+  return out;
+}
+
+function inv3(m: ArrayLike<number>): Mat3 {
+  const col = (c: number) => [m[3 * c]!, m[3 * c + 1]!, m[3 * c + 2]!];
+  const cross = (a: number[], b: number[]) => [
+    a[1]! * b[2]! - a[2]! * b[1]!,
+    a[2]! * b[0]! - a[0]! * b[2]!,
+    a[0]! * b[1]! - a[1]! * b[0]!,
+  ];
+  const [a, b, c] = [col(0), col(1), col(2)] as [number[], number[], number[]];
+  const r0 = cross(b, c);
+  const r1 = cross(c, a);
+  const r2 = cross(a, b);
+  const det = a[0]! * r0[0]! + a[1]! * r0[1]! + a[2]! * r0[2]!;
+  // The rows of the inverse are the cross products over the determinant.
+  const out: Mat3 = new Array(9);
+  [r0, r1, r2].forEach((row, r) => {
+    for (let c2 = 0; c2 < 3; c2++) {
+      out[3 * c2 + r] = row[c2]! / det;
+    }
+  });
+  return out;
+}
+
+const GLUE_STUBS = `
+struct RoutedVertex {
+  routed: bool,
+  position: vec3f,
+  displacement: vec3f,
+  jx: vec3f,
+  jy: vec3f,
+  jz: vec3f,
+}
+@group(0) @binding(0) var<storage, read> rows: array<vec4f>;
+@group(0) @binding(1) var<storage, read> verts: array<vec4f>;
+@group(0) @binding(2) var<storage, read> frame: array<vec4f>;
+@group(0) @binding(3) var<storage, read_write> outP: array<vec4f>;
+@group(0) @binding(4) var<storage, read_write> outJ: array<vec4f>;
+@group(0) @binding(5) var<storage, read_write> outD: array<vec4f>;
+fn routeRow(row: u32) -> vec4f { return rows[row]; }
+fn routeEyeHi() -> vec3f { return frame[0].xyz; }
+fn routeEyeLo() -> vec3f { return frame[1].xyz; }
+fn routeAxisRow(i: u32) -> vec3f { return frame[2u + i].xyz; }
+`;
+
+const GLUE_KERNEL = `
+@compute @workgroup_size(64)
+fn glueMain(@builtin(global_invocation_id) gid: vec3u) {
+  let i = gid.x;
+  if (i >= arrayLength(&verts)) {
+    return;
+  }
+  let v = verts[i];
+  let at = bitcast<u32>(v.w);
+  let body = at + ${ROUTE_BODY}u;
+  let m0 = rows[body + 1u].xyz;
+  let m1 = rows[body + 2u].xyz;
+  let m2 = rows[body + 3u].xyz;
+  let truePosition = m0 * v.x + m1 * v.y + m2 * v.z;
+  let r = routeVertex(at, v.xyz, truePosition, m0, m1, m2);
+  outP[i] = vec4f(r.position, f32(r.routed));
+  outJ[3u * i] = vec4f(r.jx, 0.0);
+  outJ[3u * i + 1u] = vec4f(r.jy, 0.0);
+  outJ[3u * i + 2u] = vec4f(r.jz, 0.0);
+  outD[i] = vec4f(r.displacement, 0.0);
+}
+`;
+
+/**
+ * The renderer's glue (scene/routeVariant.ts `routeUnitWgsl`) on the GPU: a
+ * draw's block packed as the world packs it (scene/world/routes.ts), the
+ * route evaluated through `routeVertex` with a stand-in view (an eye, the
+ * shading axes), against float64: position, the model-space displacement and
+ * the model-space Jacobian, from which the normal.
+ */
+async function glue(
+  gpu: Gpu,
+  scenario: Scenario,
+  checks: Check[],
+): Promise<void> {
+  const { device } = gpu;
+  const compiled = compileRoute(scenario.route, {
+    normals: scenario.normals ?? "exact",
+    centreRows: true,
+  });
+  if (!compiled.ok) {
+    throw new Error(`${scenario.name}: ${compiled.reason}`);
+  }
+  const route = scenario.route;
+  const module = await compileModule(
+    device,
+    GLUE_STUBS + routeUnitWgsl(compiled) + GLUE_KERNEL,
+    `${scenario.name} glue`,
+  );
+  const layout = device.createBindGroupLayout({
+    entries: [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "read-only-storage" },
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "read-only-storage" },
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "read-only-storage" },
+      },
+      {
+        binding: 3,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "storage" },
+      },
+      {
+        binding: 4,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "storage" },
+      },
+      {
+        binding: 5,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: "storage" },
+      },
+    ],
+  });
+  const pipeline = await device.createComputePipelineAsync({
+    layout: device.createPipelineLayout({ bindGroupLayouts: [layout] }),
+    compute: { module, entryPoint: "glueMain" },
+  });
+
+  // A linear part with rotation and a scale, the shading axes a rotation.
+  const L = mul3(mul3(rotZ(0.7), rotX(0.3)), [1.7, 0, 0, 0, 1.7, 0, 0, 0, 1.7]);
+  const Linv = inv3(L);
+  const R = mul3(rotZ(-0.4), rotY(0.5));
+  const centres = scenario.centres(8);
+  const perDraw = 48;
+  const uniformRows = compiled.uniformsLayout.floats / 4;
+  const blockRows = routeBlockRows(compiled);
+  const rowWords = new ArrayBuffer(
+    (uniformRows + blockRows * centres.length) * 16,
+  );
+  const f32 = new Float32Array(rowWords);
+  const u32 = new Uint32Array(rowWords);
+  const next = rng(5);
+  const samples = sampleVertices(
+    centres,
+    perDraw,
+    scenario.radius,
+    scenario.vertical,
+    31,
+    true,
+  );
+  // Model-space positions: the draw's centre in model space plus the sample's offset in the model.
+  const modelCentres = centres.map((c, d) => {
+    const cm = Float64Array.of(
+      Math.fround((next() * 2 - 1) * 100),
+      Math.fround((next() * 2 - 1) * 100),
+      Math.fround((next() * 2 - 1) * 100),
+    );
+    const lc = [0, 1, 2].map(
+      (r) => L[r]! * cm[0]! + L[3 + r]! * cm[1]! + L[6 + r]! * cm[2]!,
+    );
+    const t = [0, 1, 2].map((a) => c[a]! - lc[a]!);
+    return { cm, t, d };
+  });
+  const verts = new Float32Array(4 * samples.count);
+  const vbits = new Uint32Array(verts.buffer);
+  const anchorPoints = new Float64Array(3 * samples.count);
+  modelCentres.forEach(({ cm, t, d }) => {
+    const at = uniformRows + d * blockRows;
+    const base = at * 4;
+    u32[base] = 1;
+    u32[base + 4] = ROUTE_KIND;
+    f32[base + 5] = 1;
+    u32[base + 6] = ROUTE_BODY;
+    u32[base + 7] = 0;
+    const body = base + ROUTE_BODY * 4;
+    for (let a = 0; a < 3; a++) {
+      f32[body + a] = cm[a]!;
+    }
+    for (let c = 0; c < 3; c++) {
+      for (let r = 0; r < 3; r++) {
+        f32[body + 4 + 4 * c + r] = L[3 * c + r]!;
+      }
+    }
+    const start = base + (ROUTE_BODY + ROUTE_OWN_ROWS) * 4;
+    const anchorCentre = Float64Array.of(
+      L[0]! * cm[0]! + L[3]! * cm[1]! + L[6]! * cm[2]! + t[0]!,
+      L[1]! * cm[0]! + L[4]! * cm[1]! + L[7]! * cm[2]! + t[1]!,
+      L[2]! * cm[0]! + L[5]! * cm[1]! + L[8]! * cm[2]! + t[2]!,
+    );
+    compiled.centreConstants(
+      anchorCentre,
+      undefined,
+      route,
+      f32.subarray(start, start + compiled.perDrawLayout.floats),
+    );
+    for (let k = 0; k < perDraw; k++) {
+      const i = d * perDraw + k;
+      // The sample's offset (anchor units) becomes a model-space offset.
+      const off = [0, 1, 2].map(
+        (a) => samples.local![3 * i + a]! - centres[d]![a]!,
+      );
+      const lo = [0, 1, 2].map(
+        (r) =>
+          Linv[r]! * off[0]! + Linv[3 + r]! * off[1]! + Linv[6 + r]! * off[2]!,
+      );
+      for (let a = 0; a < 3; a++) {
+        verts[4 * i + a] = Math.fround(cm[a]! + lo[a]!);
+      }
+      vbits[4 * i + 3] = at;
+      const pm = [verts[4 * i]!, verts[4 * i + 1]!, verts[4 * i + 2]!];
+      for (let a = 0; a < 3; a++) {
+        anchorPoints[3 * i + a] =
+          L[a]! * pm[0]! + L[3 + a]! * pm[1]! + L[6 + a]! * pm[2]! + t[a]!;
+      }
+    }
+  });
+
+  const rowBuffer = upload(
+    device,
+    new Uint8Array(rowWords),
+    GPUBufferUsage.STORAGE,
+  );
+  const vertBuffer = upload(device, verts, GPUBufferUsage.STORAGE);
+  const frameBuffer = device.createBuffer({
+    size: 5 * 16,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+  });
+  const bytes = samples.count * 16;
+  const make = (size: number) =>
+    device.createBuffer({
+      size,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+    });
+  const outP = make(bytes);
+  const outJ = make(bytes * 3);
+  const outD = make(bytes);
+  const group = device.createBindGroup({
+    layout,
+    entries: [rowBuffer, vertBuffer, frameBuffer, outP, outJ, outD].map(
+      (buffer, binding) => ({ binding, resource: { buffer } }),
+    ),
+  });
+
+  const eye = new Float64Array(3);
+  const truth = new Float64Array(3);
+  const jac = new Float64Array(9);
+  const uniforms = new Float32Array(compiled.uniformsLayout.floats);
+  let positionMm = 0;
+  let displacementMm = 0;
+  let jacobianRel = 0;
+  let normalDeg = 0;
+  let unrouted = 0;
+  for (let d = 0; d < centres.length; d++) {
+    route.forward(centres[d]!, eye);
+    compiled.fillUniforms(route, uniforms, eye);
+    device.queue.writeBuffer(rowBuffer, 0, uniforms);
+    const frame = new Float32Array(20);
+    for (let a = 0; a < 3; a++) {
+      frame[a] = Math.fround(eye[a]!);
+      frame[4 + a] = Math.fround(eye[a]! - frame[a]!);
+    }
+    for (let i = 0; i < 3; i++) {
+      for (let a = 0; a < 3; a++) {
+        frame[8 + 4 * i + a] = R[3 * a + i]!;
+      }
+    }
+    device.queue.writeBuffer(frameBuffer, 0, frame);
+    const encoder = device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, group);
+    pass.dispatchWorkgroups(Math.ceil(samples.count / 64));
+    pass.end();
+    device.queue.submit([encoder.finish()]);
+    const gotP = await read(device, outP, bytes);
+    const gotJ = await read(device, outJ, bytes * 3);
+    const gotD = await read(device, outD, bytes);
+    for (let k = 0; k < perDraw; k++) {
+      const i = d * perDraw + k;
+      if (gotP[4 * i + 3] !== 1) {
+        unrouted++;
+        continue;
+      }
+      const p = anchorPoints.subarray(3 * i, 3 * i + 3);
+      route.forward(p, truth);
+      const rel = [0, 1, 2].map((a) => truth[a]! - eye[a]!);
+      const world = [0, 1, 2].map(
+        (r) => R[r]! * rel[0]! + R[3 + r]! * rel[1]! + R[6 + r]! * rel[2]!,
+      );
+      for (let a = 0; a < 3; a++) {
+        positionMm = Math.max(
+          positionMm,
+          Math.abs(gotP[4 * i + a]! - world[a]!) * 1000,
+        );
+      }
+      // The displacement: the shading-axes offset from the design position (L·p), back in model space.
+      const pm = [verts[4 * i]!, verts[4 * i + 1]!, verts[4 * i + 2]!];
+      const trueRel = [0, 1, 2].map(
+        (r) => L[r]! * pm[0]! + L[3 + r]! * pm[1]! + L[6 + r]! * pm[2]!,
+      );
+      const dm = [0, 1, 2].map(
+        (r) =>
+          Linv[r]! * (world[0]! - trueRel[0]!) +
+          Linv[3 + r]! * (world[1]! - trueRel[1]!) +
+          Linv[6 + r]! * (world[2]! - trueRel[2]!),
+      );
+      for (let a = 0; a < 3; a++) {
+        displacementMm = Math.max(
+          displacementMm,
+          (Math.abs(gotD[4 * i + a]! - dm[a]!) * 1000) /
+            Math.max(1, Math.abs(dm[a]!) / 1e5),
+        );
+      }
+      route.jacobian(p, jac);
+      const want = mul3(Linv, mul3(R, mul3(jac, L)));
+      const got = Float64Array.from(
+        { length: 9 },
+        (_, n) => gotJ[12 * i + 4 * Math.floor(n / 3) + (n % 3)]!,
+      );
+      let scale = 0;
+      for (const x of want) {
+        scale = Math.max(scale, Math.abs(x));
+      }
+      for (let n = 0; n < 9; n++) {
+        jacobianRel = Math.max(
+          jacobianRel,
+          Math.abs(got[n]! - want[n]!) / scale,
+        );
+      }
+      const n = samples.unit!.subarray(3 * i, 3 * i + 3);
+      const a = cofactorNormal(Float64Array.from(want), n);
+      const b = cofactorNormal(got, n);
+      const dot = a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!;
+      const cx = [
+        a[1]! * b[2]! - a[2]! * b[1]!,
+        a[2]! * b[0]! - a[0]! * b[2]!,
+        a[0]! * b[1]! - a[1]! * b[0]!,
+      ];
+      normalDeg = Math.max(
+        normalDeg,
+        Math.atan2(Math.hypot(cx[0]!, cx[1]!, cx[2]!), dot) / RAD,
+      );
+    }
+  }
+  for (const b of [rowBuffer, vertBuffer, frameBuffer, outP, outJ, outD]) {
+    b.destroy();
+  }
+  checks.push({
+    name: `${scenario.name}: renderer glue (routeVertex)`,
+    measured: {
+      maxPositionMm: fixed(positionMm),
+      maxDisplacementMm: fixed(displacementMm),
+      maxJacobianRel: Number(jacobianRel.toExponential(2)),
+      maxNormalDeg: fixed(normalDeg, 6),
+      normals: compiled.normalModes.join(","),
+      unrouted,
+    },
+    pass:
+      unrouted === 0 &&
+      positionMm <= scenario.positionBudgetMm &&
+      normalDeg <= 0.1,
+  });
+}
+
 export async function runTransformGraph() {
   const gpu = await openGpu();
   const info = gpu.adapter.info;
@@ -1018,6 +1466,7 @@ export async function runTransformGraph() {
     exaggerationScenario(2000, true),
     utmScenario(1000, 500, 1),
     utmScenario(2000, 1000, 2),
+    utmScenario(1000, 500, 1, "linear"),
     twistScenario(),
     lensScenario(),
   ];
@@ -1025,8 +1474,16 @@ export async function runTransformGraph() {
     await accuracy(gpu, scenario, checks);
   }
   for (const scenario of [
+    exaggerationScenario(1000),
+    utmScenario(1000, 500, 1),
+    utmScenario(1000, 500, 1, "linear"),
+  ]) {
+    await glue(gpu, scenario, checks);
+  }
+  for (const scenario of [
     exaggerationScenario(8000),
     utmScenario(1000, 500, 1),
+    utmScenario(1000, 500, 1, "linear"),
     twistScenario(),
     lensScenario(),
   ]) {

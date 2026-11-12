@@ -13,6 +13,8 @@ import {
 } from "../camera/route.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
+import type { SmoothSpec } from "../transform/graph.ts";
+import { scaleAlongAxes } from "../transforms/scaleAlongAxes.ts";
 import type { WarpFrame, WarpSpec } from "./warpFrame.ts";
 
 /**
@@ -83,6 +85,9 @@ export function liveWarp(spec: WarpSpec): Warp {
     },
     get scale() {
       return spec.scale;
+    },
+    get smooth() {
+      return spec.smooth;
     },
     forward: (p, out, jacobian) => spec.forward(p, out, jacobian),
     ...(spec.inverse !== undefined && {
@@ -321,6 +326,8 @@ class ScaleAboutImpl extends LiveWarp implements ScaleAbout {
   private current: [number, number, number];
   private forwardMatrix = new Float64Array(9);
   private inverseMatrix = new Float64Array(9);
+  private smoothRevision = -1;
+  private smoothSpec: SmoothSpec | undefined;
 
   constructor(
     point: ArrayLike<number>,
@@ -350,6 +357,19 @@ class ScaleAboutImpl extends LiveWarp implements ScaleAbout {
 
   get factors(): readonly [number, number, number] {
     return this.current;
+  }
+
+  /** The built-in scale along the same axes, for the compiled route. */
+  get smooth(): SmoothSpec {
+    if (this.smoothRevision !== this.ownRevision) {
+      this.smoothRevision = this.ownRevision;
+      this.smoothSpec = scaleAlongAxes({
+        center: this.center,
+        factors: this.current,
+        axes: this.basis,
+      }).spec;
+    }
+    return this.smoothSpec!;
   }
 
   set factors(value: readonly [number, number, number]) {

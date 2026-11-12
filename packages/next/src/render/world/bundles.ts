@@ -643,6 +643,7 @@ export function recordBundle(
       (a, b) =>
         rank(a) - rank(b) ||
         (a.shader?.id ?? 0) - (b.shader?.id ?? 0) ||
+        (a.route?.id ?? 0) - (b.route?.id ?? 0) ||
         a.textureSet - b.textureSet ||
         a.mesh.slab - b.mesh.slab,
     );
@@ -731,14 +732,24 @@ function capParityPipeline(
       ? "patchTrimmed"
       : "patch"
     : "mesh";
-  const pipeline = world.ctx.pipelines.capParity(kind, () => {
-    world.shaderReady();
-    world.ctx.wake();
-  });
+  const route = batch.route;
+  const pipeline = route
+    ? world.ctx.pipelines.capParityRouted(kind, route, () => {
+        world.shaderReady();
+        world.ctx.wake();
+      })
+    : world.ctx.pipelines.capParity(kind, () => {
+        world.shaderReady();
+        world.ctx.wake();
+      });
   return {
     pipeline,
     custom: false,
-    pending: !pipeline && world.ctx.pipelines.capParityPending(kind),
+    pending:
+      !pipeline &&
+      (route
+        ? world.ctx.pipelines.capParityRoutedPending(kind, route)
+        : world.ctx.pipelines.capParityPending(kind)),
   };
 }
 
@@ -756,23 +767,29 @@ function batchPipeline(
   clipped = false,
 ): { pipeline: GPURenderPipeline; custom: boolean; pending: boolean } {
   const shader = batch.shader;
+  const route = batch.route;
   let pending = false;
-  if (shader) {
+  if (shader || route) {
     const { shaders, shaderBindings } = world.ctx;
     // Textures still loading read white: the batch isn't final either.
-    pending = shaderBindings.pending(shader);
+    pending = shader !== undefined && shaderBindings.pending(shader);
     if (clipped) {
-      const own = shaders.pipeline(shader, clippedKey(key), world.shaderReady);
+      const own = shaders.pipeline(
+        shader,
+        clippedKey(key),
+        world.shaderReady,
+        route,
+      );
       if (own) {
-        return { pipeline: own, custom: true, pending };
+        return { pipeline: own, custom: shader !== undefined, pending };
       }
-      pending ||= shaders.pending(shader, clippedKey(key));
+      pending ||= shaders.pending(shader, clippedKey(key), route);
     }
-    const own = shaders.pipeline(shader, key, world.shaderReady);
+    const own = shaders.pipeline(shader, key, world.shaderReady, route);
     if (own) {
-      return { pipeline: own, custom: true, pending };
+      return { pipeline: own, custom: shader !== undefined, pending };
     }
-    pending ||= shaders.pending(shader, key);
+    pending ||= shaders.pending(shader, key, route);
   }
   const standIn =
     clipped && world.ctx.pipelines.clippedPipeline(key, world.shaderReady);

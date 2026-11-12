@@ -14,6 +14,7 @@ import type { Engine } from "../src/scene/Engine.ts";
 import type { World } from "../src/scene/World.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
+import { fittedOnly } from "./fittedOnly.ts";
 
 const R = 6_378_137;
 let engine: Engine;
@@ -32,7 +33,7 @@ describe("scratch", () => {
     const frame = warpFrame(
       "x",
       catalog.get("ITRF"),
-      verticalExaggeration({ factor: 10, scale }),
+      fittedOnly(verticalExaggeration({ factor: 10, scale })),
     );
     catalog.add(frame);
     engine.cameras.setResolver(world, createFramesResolver(catalog));

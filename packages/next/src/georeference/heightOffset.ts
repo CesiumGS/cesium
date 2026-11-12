@@ -53,6 +53,7 @@ export function heightOffsetDescriptor(
       out[2] = z - offset * frame.n[2]!;
     },
     separable: ["offset"],
+    identity: { offset: 0 },
     source: [
       "(p, params) => {",
       ...footSource(radii),
