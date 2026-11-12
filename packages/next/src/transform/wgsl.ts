@@ -6,7 +6,8 @@
 // Known limits: `pow` with a negative base (or a non-constant exponent
 // reaching one) is undefined in WGSL, where JS gives a number or NaN;
 // constant integer exponents up to 4 become products and are exact.
-// TODO(task 4): the df64 variant, for centre constants in hi/lo pairs.
+// The df64 variant (centre constants in hi/lo pairs) is df64Wgsl.ts's
+// `emitDf64`; the float32 residual form the compiler uses is residual.ts's.
 
 import type { IrNode, IrProgram, Op } from "./ir.ts";
 
