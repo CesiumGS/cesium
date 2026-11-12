@@ -8,6 +8,7 @@ import { drawsReady, type ReadyWorld } from "../src/scene/world/ready.ts";
 import { withPatchDisplay } from "../src/scene/world/patches.ts";
 import { PATCH_ISO_SHIFT, RecordFlags } from "../src/render/layout.ts";
 import type { CustomShader } from "../src/scene/CustomShader.ts";
+import type { RouteVariant } from "../src/scene/routeVariant.ts";
 import type { View } from "../src/scene/View.ts";
 import type { Batch, DrawHandle } from "../src/scene/world/types.ts";
 
@@ -80,6 +81,67 @@ describe("ShaderCache.pending", () => {
     await flush();
     expect(cache.pending(s, "opaque")).toBe(false);
     expect(ready).toBe(1);
+  });
+});
+
+describe("ShaderCache over a compiled route", () => {
+  const route = { key: "route-a" } as unknown as RouteVariant;
+  type Key = Parameters<InstanceType<typeof ShaderCache>["pipeline"]>[1];
+  // A world asks for its pipelines again whenever it is told (`World.shaderReady`).
+  const asks = (cache: InstanceType<typeof ShaderCache>, keys: Key[]) => {
+    const ask = () => {
+      for (const key of keys) {
+        cache.pipeline(undefined, key, () => void setTimeout(ask, 0), route);
+      }
+    };
+    return ask;
+  };
+  const settle = async () => {
+    for (let i = 0; i < 5; i++) {
+      await flush();
+    }
+  };
+
+  it("makes the route's pipelines one at a time, in the order asked", async () => {
+    const started: string[] = [];
+    const finish = new Map<string, () => void>();
+    const cache = new ShaderCache(
+      async () => (key) =>
+        new Promise<GPURenderPipeline>((resolve) => {
+          started.push(key);
+          finish.set(key, () => resolve(pipeline));
+        }),
+    );
+    asks(cache, ["opaque", "opaqueDoubleSided", "depth"])();
+    await settle();
+    expect(started).toEqual(["opaque"]);
+    finish.get("opaque")!();
+    await settle();
+    expect(started).toEqual(["opaque", "opaqueDoubleSided"]);
+    expect(cache.pending(undefined, "opaque", route)).toBe(false);
+    expect(cache.pending(undefined, "depth", route)).toBe(true);
+    finish.get("opaqueDoubleSided")!();
+    await settle();
+    finish.get("depth")!();
+    await settle();
+    expect(started).toEqual(["opaque", "opaqueDoubleSided", "depth"]);
+    expect(cache.pending(undefined, "depth", route)).toBe(false);
+  });
+
+  it("goes on after a pipeline fails", async () => {
+    const cache = new ShaderCache(
+      async () => (key) =>
+        key === "opaque"
+          ? Promise.reject(new Error("no pipeline"))
+          : Promise.resolve(pipeline),
+      { report: () => undefined } as never,
+    );
+    asks(cache, ["opaque", "depth"])();
+    await settle();
+    expect(cache.pending(undefined, "opaque", route)).toBe(false);
+    expect(cache.pipeline(undefined, "depth", () => undefined, route)).toBe(
+      pipeline,
+    );
   });
 });
 

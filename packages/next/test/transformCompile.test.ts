@@ -173,6 +173,28 @@ describe("generated code", () => {
     expect(c.approximations).toEqual([]);
   });
 
+  it("makes a module for the passes that place vertices, with no Jacobian", () => {
+    const { route } = exaggerationRoute();
+    const c = compiled(route);
+    expect(c.wgsl).toContain("fn tgJac0(");
+    expect(c.positionWgsl).not.toContain("tgJac");
+    expect(c.positionWgsl).not.toContain("transformNormal");
+    expect(c.positionWgsl).toContain("struct DrawCentre {");
+    expect(c.positionWgsl).toContain("struct RouteUniforms {");
+    expect(c.positionWgsl).toContain("fn tgStep0(");
+    expect(c.positionWgsl).toMatch(
+      /fn tgRoute\([^)]*jOut: ptr<function, mat3x3f>\) -> vec3f/,
+    );
+    expect(c.positionWgsl.length).toBeLessThan(c.wgsl.length * 0.6);
+    // The position is the same code in both: the passes' depths agree.
+    const chain = (wgsl: string) =>
+      /fn tgRoute[\s\S]*?\n}\n/
+        .exec(wgsl)![0]
+        .split("\n")
+        .filter((line) => line.startsWith("  d = "));
+    expect(chain(c.positionWgsl)).toEqual(chain(c.wgsl));
+  });
+
   it("leaves out the normal code when asked", () => {
     const withNormals = compiled(exaggerationRoute().route);
     const without = compiled(exaggerationRoute().route, { normals: false });

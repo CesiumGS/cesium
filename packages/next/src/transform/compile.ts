@@ -136,6 +136,15 @@ export interface CompiledRoute {
    * nLocal, c, u) -> TransformedVertex`. Positions come out relative to the eye.
    */
   readonly wgsl: string;
+  /**
+   * The same module for the passes that draw positions and not shading
+   * (depth, shadows, picks, lines): the same `DrawCentre`, `RouteUniforms`,
+   * `tgStep<j>` and `tgRoute`, whose Jacobian is the identity and which has
+   * no Jacobian code, no normals. A pipeline's compile time grows with the
+   * code its vertex stage reaches, and a nested or exact route's Jacobian
+   * is several times its positions' (exaggeration: 49 of 58 KB).
+   */
+  readonly positionWgsl: string;
   /** The per-view uniforms (`RouteUniforms`, vec4f members `v0…`): `eyeHi`, `eyeLo`, `affine<i>` (3 columns of vec4), `param:<key>` (a df64 pair for separable parameters), derived values. */
   readonly uniformsLayout: RecordLayout;
   /** The per-draw record (`DrawCentre`, vec4f members `v0…`): `outHi`, `outLo`, `outG:<key>` (hi then lo), and each centre value as `s<step>.<v|j><n>` (then its derivatives). */
@@ -680,6 +689,14 @@ function assemble(
   }
 
   const wgsl = generateWgsl(plan, last, uniformLayout, drawLayout, normals);
+  const positionWgsl = generateWgsl(
+    plan,
+    last,
+    uniformLayout,
+    drawLayout,
+    normals,
+    true,
+  );
 
   const paramList = infos.flatMap((info) =>
     info.locals.map((name) => ({ info, name, key: keyOf(info, name) })),
@@ -838,6 +855,7 @@ function assemble(
     ok: true,
     key,
     wgsl,
+    positionWgsl,
     uniformsLayout: uniformLayout,
     perDrawLayout: drawLayout,
     dynamicParams: dynamic,
@@ -904,6 +922,7 @@ function generateWgsl(
   uniformLayout: RecordLayout,
   drawLayout: RecordLayout,
   normals: boolean,
+  positionsOnly = false,
 ): string {
   const out: string[] = [
     `struct DrawCentre {`,
@@ -955,6 +974,9 @@ function generateWgsl(
       `}`,
       ``,
     );
+    if (positionsOnly) {
+      continue;
+    }
     if (link.jac) {
       const j9 = link.jacOut!.map(sum);
       const column = (col: number) =>
@@ -1013,7 +1035,16 @@ function generateWgsl(
     `}`,
     ``,
   );
-  if (normals) {
+  if (positionsOnly) {
+    out.push(
+      `fn tgRoute(pLocal: vec3f, c: DrawCentre, u: RouteUniforms, jOut: ptr<function, mat3x3f>) -> vec3f {`,
+      ...body,
+      `  *jOut = mat3x3f(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);`,
+      `  return ${centre} + d;`,
+      `}`,
+      ``,
+    );
+  } else if (normals) {
     out.push(
       `fn tgRoute(pLocal: vec3f, c: DrawCentre, u: RouteUniforms, jOut: ptr<function, mat3x3f>) -> vec3f {`,
       ...bodyJ,

@@ -35,6 +35,8 @@ export interface RouteVariant {
   readonly label: string;
   /** The unit that defines `routeVertex`. */
   readonly unit: ShaderUnit;
+  /** The same without the Jacobian (`CompiledRoute.positionWgsl`), for the passes that draw positions only. */
+  readonly positionUnit: ShaderUnit;
   readonly compiled: CompiledRoute;
 }
 
@@ -61,6 +63,10 @@ export function routeVariantOf(compiled: CompiledRoute): RouteVariant {
       key: compiled.key,
       label: `route ${id}`,
       unit: wgslUnit(`route ${id}`, routeUnitWgsl(compiled)),
+      positionUnit: wgslUnit(
+        `route ${id} positions`,
+        routeUnitWgsl(compiled, true),
+      ),
       compiled,
     };
     variants.set(compiled.key, variant);
@@ -68,8 +74,11 @@ export function routeVariantOf(compiled: CompiledRoute): RouteVariant {
   return variant;
 }
 
-/** The unit's WGSL: the compiler's module and the glue. */
-export function routeUnitWgsl(compiled: CompiledRoute): string {
+/** The unit's WGSL: the compiler's module (`positions`: without its Jacobian) and the glue. */
+export function routeUnitWgsl(
+  compiled: CompiledRoute,
+  positions = false,
+): string {
   const uniformRows = compiled.uniformsLayout.floats / 4;
   const centreRows = compiled.perDrawLayout.floats / 4;
   const { eyeHi, eyeLo } = compiled.uniformsLayout.fields;
@@ -83,7 +92,7 @@ export function routeUnitWgsl(compiled: CompiledRoute): string {
         `  ${target}.v${i} = routeRow(${row}${i === 0 ? "" : ` + ${i}u`});`,
     );
   return [
-    compiled.wgsl,
+    positions ? compiled.positionWgsl : compiled.wgsl,
     `fn tgLoadUniforms(row: u32) -> RouteUniforms {`,
     `  var u: RouteUniforms;`,
     ...loads("u", uniformRows, "row"),

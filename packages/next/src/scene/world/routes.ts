@@ -725,7 +725,15 @@ export class WorldRoutes {
       if (draws.length === 0) {
         continue;
       }
-      this.#gpu!.dispatch(pass, anchor, draws);
+      if (!this.#gpu!.dispatch(pass, anchor, draws)) {
+        // The pipeline is being made: the CPU writes these records meanwhile.
+        for (const d of draws) {
+          d.recordVersion = -1;
+          this.#queue.add(d.index);
+        }
+        this.world.ctx.wake();
+        continue;
+      }
       for (const d of draws) {
         d.recordVersion = anchor.version;
         d.gpu = true;
@@ -741,15 +749,17 @@ export class WorldRoutes {
  */
 class GpuCentres {
   readonly #pipelines = new Map<string, GPUComputePipeline>();
+  readonly #making = new Set<string>();
   #layout: GPUBindGroupLayout | undefined;
 
   constructor(private readonly world: World) {}
 
+  /** Encodes the dispatch; false while the route's compute pipeline is made (nothing is encoded). */
   dispatch(
     pass: GPUComputePassEncoder,
     anchor: RoutedAnchor,
     draws: readonly RoutedDraw[],
-  ): void {
+  ): boolean {
     const { device } = this.world.ctx;
     const compiled = anchor.compiled;
     const compute = GPUShaderStage.COMPUTE;
@@ -770,20 +780,10 @@ class GpuCentres {
         },
       ],
     }));
-    let pipeline = this.#pipelines.get(compiled.key);
+    const pipeline = this.#pipelines.get(compiled.key);
     if (!pipeline) {
-      pipeline = device.createComputePipeline({
-        label: `route.centres ${anchor.variant.label}`,
-        layout: device.createPipelineLayout({ bindGroupLayouts: [layout] }),
-        compute: {
-          module: device.createShaderModule({
-            label: `route.centres ${anchor.variant.label}`,
-            code: compiled.centreConstantsWgsl!,
-          }),
-          entryPoint: "centreConstants",
-        },
-      });
-      this.#pipelines.set(compiled.key, pipeline);
+      this.#make(anchor, layout);
+      return false;
     }
     const centres = draws.map((d) => {
       const at = new Float64Array(3);
@@ -829,6 +829,41 @@ class GpuCentres {
         buffer.destroy();
       }
     });
+    return true;
+  }
+
+  /**
+   * Starts the route's compute pipeline, once: the module compiles off the
+   * main thread (`createComputePipelineAsync`), and until it is made the
+   * records are the CPU's. A pipeline that fails stays so.
+   */
+  #make(anchor: RoutedAnchor, layout: GPUBindGroupLayout): void {
+    const { device } = this.world.ctx;
+    const key = anchor.compiled.key;
+    if (this.#making.has(key)) {
+      return;
+    }
+    this.#making.add(key);
+    const label = `route.centres ${anchor.variant.label}`;
+    device
+      .createComputePipelineAsync({
+        label,
+        layout: device.createPipelineLayout({ bindGroupLayouts: [layout] }),
+        compute: {
+          module: device.createShaderModule({
+            label,
+            code: anchor.compiled.centreConstantsWgsl!,
+          }),
+          entryPoint: "centreConstants",
+        },
+      })
+      .then(
+        (pipeline) => {
+          this.#pipelines.set(key, pipeline);
+          this.world.ctx.wake();
+        },
+        () => {},
+      );
   }
 
   #upload(

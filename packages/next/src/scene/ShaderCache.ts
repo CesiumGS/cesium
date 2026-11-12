@@ -5,6 +5,16 @@ import type { RouteVariant } from "./routeVariant.ts";
 
 type Factory = (key: PipelineKey) => Promise<GPURenderPipeline>;
 
+/**
+ * Pipelines made over compiled routes at once. A route's vertex stage is
+ * thousands of lines and its pipelines compile for seconds on the GPU
+ * process's threads; made together they compete with the main thread's
+ * frames, and the twins that differ only in cull mode (`opaque`,
+ * `opaqueDoubleSided`) each compile in full, where one made after the other
+ * is found in the driver's cache.
+ */
+const MAX_ROUTED_IN_FLIGHT = 1;
+
 /** What a cache entry is made for: a custom shader (by its code), and a compiled route over it or over the engine's stages. */
 const entryKey = (
   shader: CustomShader | undefined,
@@ -18,6 +28,8 @@ interface Entry {
   factory?: Factory;
   failed: boolean;
   pipelines: Partial<Record<PipelineKey, GPURenderPipeline>>;
+  /** Made over a compiled route: its pipelines are made one at a time (`MAX_ROUTED_IN_FLIGHT`). */
+  routed: boolean;
   /** Pipelines being made. */
   making: Map<PipelineKey, Promise<GPURenderPipeline>>;
   /** Called once when a pipeline asked for is ready (worlds record again). */
@@ -37,6 +49,8 @@ interface Entry {
  */
 export class ShaderCache {
   private readonly entries = new Map<string, Entry>();
+  private inFlight = 0;
+  private readonly waitingToStart: Array<() => void> = [];
 
   constructor(
     private readonly build: (
@@ -102,7 +116,9 @@ export class ShaderCache {
   }
 
   private make(entry: Entry, key: PipelineKey): Promise<GPURenderPipeline> {
-    const making = entry.factory!(key);
+    const making = entry.routed
+      ? this.queued(() => entry.factory!(key))
+      : entry.factory!(key);
     entry.making.set(key, making);
     making.then(
       (pipeline) => {
@@ -128,6 +144,29 @@ export class ShaderCache {
     return making;
   }
 
+  /** Runs `start` once fewer than `MAX_ROUTED_IN_FLIGHT` routed pipelines are being made. */
+  private queued(
+    start: () => Promise<GPURenderPipeline>,
+  ): Promise<GPURenderPipeline> {
+    return new Promise((resolve, reject) => {
+      const run = () => {
+        this.inFlight++;
+        Promise.resolve()
+          .then(start)
+          .then(resolve, reject)
+          .finally(() => {
+            this.inFlight--;
+            this.waitingToStart.shift()?.();
+          });
+      };
+      if (this.inFlight < MAX_ROUTED_IN_FLIGHT) {
+        run();
+      } else {
+        this.waitingToStart.push(run);
+      }
+    });
+  }
+
   private report(kind: "shader" | "pipeline", message: string): void {
     if (this.errors) {
       this.errors.report(kind, message);
@@ -149,6 +188,7 @@ export class ShaderCache {
     const created: Entry = {
       validated,
       failed: false,
+      routed: route !== undefined,
       pipelines: {},
       making: new Map(),
       waiting: new Set(),

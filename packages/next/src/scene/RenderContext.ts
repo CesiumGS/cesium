@@ -1105,6 +1105,14 @@ async function createPipelines(
   // With the depth drawn first, triangles shade where their depth is the
   // pass's (surfaceVertex.wgsl's positions are invariant); lines draw as before.
   const depthPrepass = overrides.opaque === undefined;
+  // A compiled route's module with its Jacobian (`opaque`: the shading's
+  // normals and tangents) and its twin without (`route.positionUnit`): the
+  // passes that draw positions only use the twin, whose vertex stages are a
+  // fraction of the code and of the pipelines' compile time (an exact
+  // Jacobian is several times its positions').
+  const positionModules = new WeakMap<GPUShaderModule, GPUShaderModule>();
+  const positionsOf = (shaders: GPUShaderModule) =>
+    positionModules.get(shaders) ?? shaders;
   // The surface variants' pipelines. A clipped one (`clipped` in its label,
   // `surfaceBuilder`) is the same stages with the clip test switched on in the
   // module (surface.slang `clipsOn`, pipeline constant 1), made only when a
@@ -1138,7 +1146,7 @@ async function createPipelines(
       label,
       layout,
       vertex: {
-        module: shaders,
+        module: topology === "line-list" ? positionsOf(shaders) : shaders,
         // Point sets: six vertices per listed point, the batch's one item.
         // Patch draws: a chunk of cells an instance.
         entryPoint: patches
@@ -1151,7 +1159,7 @@ async function createPipelines(
         buffers: instanceBuffers(patches),
       },
       fragment: {
-        module: shaders,
+        module: topology === "line-list" ? positionsOf(shaders) : shaders,
         // Point sets: their symbols' coverage as the sample mask. Trimmed
         // patch faces: the trim test (surface.slang `fsTrimmed`).
         entryPoint: points ? "fsPoints" : trimmed ? "fsTrimmed" : "fs",
@@ -1194,12 +1202,12 @@ async function createPipelines(
       label,
       layout,
       vertex: {
-        module: shaders,
+        module: positionsOf(shaders),
         entryPoint: patches ? "vsPatchDepth" : "vsDepth",
         buffers: instanceBuffers(patches),
       },
       fragment: {
-        module: shaders,
+        module: positionsOf(shaders),
         entryPoint: masked
           ? "depthCoverageFs"
           : trimmed
@@ -1242,7 +1250,7 @@ async function createPipelines(
       label,
       layout,
       vertex: {
-        module: shaders,
+        module: positionsOf(shaders),
         entryPoint: patches ? "vsPatchDepth" : "vsDepth",
         buffers: instanceBuffers(patches),
       },
@@ -1252,7 +1260,7 @@ async function createPipelines(
       // face's adds its trim. Height captures (no bias) keep translucent
       // terrain as ground (`heightFs`).
       fragment: {
-        module: shaders,
+        module: positionsOf(shaders),
         entryPoint: masked
           ? bias
             ? "shadowFs"
@@ -1291,12 +1299,12 @@ async function createPipelines(
       label,
       layout,
       vertex: {
-        module: shaders,
+        module: positionsOf(shaders),
         entryPoint: patches ? "vsPatchPick" : "vsPick",
         buffers: instanceBuffers(patches),
       },
       fragment: {
-        module: shaders,
+        module: positionsOf(shaders),
         entryPoint: trimmed ? "pickTrimmedFs" : "pickFs",
         targets: PICK_FORMATS.map((format) => ({ format })),
       },
@@ -1897,13 +1905,35 @@ async function createPipelines(
       route?.unit,
     );
     // Its errors are reported below, once, not as an uncaptured error too.
+    // With the engine's stages, a compiled route's twin without its Jacobian
+    // draws the passes that only place vertices (`positionsOf`).
+    const leanLinked =
+      route && !shader
+        ? surfaceLink(
+            `${label} positions`,
+            [engineStages],
+            [],
+            route.positionUnit,
+          )
+        : undefined;
     device.pushErrorScope("validation");
     const opaque = linkedModule(linked);
+    const lean = leanLinked && linkedModule(leanLinked);
     void device.popErrorScope();
     const info = await opaque.getCompilationInfo();
     const failure = compileFailure(linked, info.messages);
     if (failure !== undefined) {
       throw new Error(failure);
+    }
+    if (lean && leanLinked) {
+      const leanFailure = compileFailure(
+        leanLinked,
+        (await lean.getCompilationInfo()).messages,
+      );
+      if (leanFailure !== undefined) {
+        throw new Error(leanFailure);
+      }
+      positionModules.set(opaque, lean);
     }
     const set = shader && setLayout(shader);
     const layouts = set && {
