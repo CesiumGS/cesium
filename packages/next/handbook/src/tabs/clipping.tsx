@@ -30,20 +30,20 @@ const SPACES = [
   },
   {
     scene:
-      "A presentation warp, such as ×10 exaggeration, with the rig on its reference frame",
+      "A deformer over the content, such as ×10 exaggeration, with the camera outside it",
     named: "ITRF, or any frame on the content's side",
     tested: "The true point",
-    why: "The set's route to the content's true side is rigid, and location 4 is the true position when every warp crossed is a presentation warp.",
+    why: "The set's route to the content's true side is rigid, and location 4 carries the true camera-relative position.",
   },
   {
     scene: "The same scene",
-    named: "The warp's own reference frame, or any frame drawn with it",
+    named: "A frame drawn with the deformer (its parent, where the camera is)",
     tested: "The drawn point, rebuilt per fragment",
-    why: "The route to the content's true side crosses the warp, but the route to the render root is rigid.",
+    why: "The route to the content's true side crosses the smooth node, but the route to the render root is rigid.",
   },
   {
     scene:
-      "A reprojection (a coordinate operation) between the content and the render root",
+      "A reprojection node (a coordinate operation) between the content and the render root",
     named: "A frame on the render root's side",
     tested: "The drawn point, which here is the true one",
     why: "An operation moves where content is, so the drawn point is where it truly is. Location 4 isn't the true position across one.",
@@ -143,6 +143,134 @@ const COMBINING = [
   },
 ];
 
+const EFFECTS = [
+  {
+    effect: "`discard` (the default)",
+    removed:
+      "Cut out of every pass: colour, depth, shadows, ambient occlusion and picks.",
+    cost: "A compare in the fragment test. Nothing else.",
+  },
+  {
+    effect: '`translucent`, `method: "blend"` (the default of a ghost)',
+    removed:
+      "Cut out of the opaque passes (no depth, shadow, ambient occlusion or pick), and drawn blended at `alpha` (0.25 by default) in the translucent passes, over what lies behind. B-rep patch draws ghost too, with their trims.",
+    cost: "The view's ghost batches: every opaque triangle batch is drawn again in the translucent passes, with the clip test. A pick passes through it, and it casts no shadow.",
+  },
+  {
+    effect: '`translucent`, `method: "stipple"`',
+    removed:
+      "A screen-door dither in the opaque pass, at `alpha`'s share of pixels. It writes depth and casts shadows where it keeps a pixel, and a pick stops on the kept pixels.",
+    cost: "Next to nothing: no extra pass and no extra draw.",
+  },
+  {
+    effect: "`shade`",
+    removed: "Nothing. The set only tells a custom shader which side it is on.",
+    cost: "The same rows as the others, and the shader's own work.",
+  },
+];
+
+const SHADER_INPUTS = [
+  {
+    input: "`clipDistance`",
+    value:
+      "Metres to the nearest cut among the sets that report, positive on the side the set removes and negative on the side it keeps. 3.4e38 where no set reports.",
+  },
+  {
+    input: "`clipFlags`",
+    value:
+      "Bit 0: that set removes this fragment (a ghost, or a shade set's removed side). Bit 1: it is a ghost.",
+  },
+  {
+    input: "`clipId`",
+    value:
+      "The set's number in the view's list, or 0xffffffff where none reports.",
+  },
+  {
+    input: "`clipParams`",
+    value:
+      "The effect's four `params`, to pick a style: hatch and fade, a glowing edge, whatever the shader reads.",
+  },
+];
+
+const TERRAIN_COMPARE = [
+  {
+    what: "Cut a hole",
+    world: "`discard`, any shape, any frame, per view.",
+    region:
+      "`terrain.addRegion` with opacity 0: a polygon in geodetic degrees, for the whole globe.",
+  },
+  {
+    what: "Show the ground through glass",
+    world: "A ghost: blended (every opaque batch again) or stippled.",
+    region:
+      "`opacity` between 0 and 1: the region's tiles move to the blended passes and swap only their material.",
+  },
+  {
+    what: "What else it reaches",
+    world:
+      "Every draw not exempt: tilesets, models and b-reps, with the terrain.",
+    region: "The terrain only.",
+  },
+  {
+    what: "A custom shader reads it",
+    world: "`clipDistance`, `clipFlags`, `clipId` and `clipParams`.",
+    region: "No effect to read.",
+  },
+  {
+    what: "Heights, picks and ground",
+    world:
+      "Cuts the draws it removes; rays go past a removed hit (`RayQuery.clips`).",
+    region:
+      "Keeps `ground` (heights and clamping still see the ground under a hole), `pickThrough`, and `sampleHeight` semantics.",
+  },
+  {
+    what: "Limits",
+    world: "32 clips in a world, 8 sets in a view.",
+    region:
+      "32 slots, one edge budget, shared by all regions; a per-fragment grid of edges.",
+  },
+];
+
+/** GPU ms added over terrain and OSM Buildings (Manhattan), fastest of 5 rounds on an RTX 3000 Ada laptop (spikes/clipEffectsBench.ts). */
+const TERRAIN_TIMINGS = [
+  {
+    what: "World plane ×1 / ×4 / ×16",
+    k4: "+0.5 / +0.9 / +4.1",
+    hd: "≈0 / ≈0 / +0.2",
+  },
+  {
+    what: "World box ×1 / ×4 / ×16",
+    k4: "+0.6 / +1.9 / +8.8",
+    hd: "≈0 / +0.1 / +1.2",
+  },
+  {
+    what: "World octagon ×1 / ×4 / ×16",
+    k4: "+2.5 / +10.1 / +38.5",
+    hd: "+0.2 / +1.9 / +9.8",
+  },
+  {
+    what: "Terrain regions ×1 / ×4 / ×16, cut",
+    k4: "+0.6 / −0.1 / −0.1",
+    hd: "≈0",
+  },
+  { what: "Ghost, blended, with buildings ×1", k4: "+12.5", hd: "+2.9" },
+  { what: "Ghost, stippled, with buildings ×1", k4: "+1.1", hd: "+0.1" },
+];
+
+function TerrainTimings() {
+  return (
+    <DataTable
+      label="What clips cost (GPU ms added; baseline 4.37 ms at 4K, 1.57 ms at 1080p)"
+      columns={[
+        { head: "", cell: (r) => <strong>{r.what}</strong> },
+        { head: "4K", cell: (r) => r.k4 },
+        { head: "1080p", cell: (r) => r.hd },
+      ]}
+      rows={TERRAIN_TIMINGS}
+    />
+  );
+}
+
 const PIPELINES = [
   {
     pass: "Colour (opaque and translucent), depth, shadow casters, ambient occlusion's prepass",
@@ -153,6 +281,16 @@ const PIPELINES = [
     pass: "Picks",
     state:
       'The pick variant has its clipped form too (`clippedBundle("pick")`), so a pick discards what the drawn image does.',
+  },
+  {
+    pass: "A view with a blended ghost",
+    state:
+      "Draws the ghost batches in the translucent passes: every opaque triangle batch again, with the clip test, keeping only what a ghost removes. A view with no ghost has none of them.",
+  },
+  {
+    pass: "A view with `clipCaps`",
+    state:
+      "Adds a parity pass and a cap triangle to the opaque pass, only while its clips make a cap face (below). The caps' pipelines are made when first asked for.",
   },
   {
     pass: "A view that hasn't opted in, in the same world",
@@ -231,8 +369,9 @@ const NUMBERS = [
   },
   {
     what: "Mesh cap bias",
-    value: "1e-6 m",
-    note: "The same idea, with a size that isn't known for a set of tiles.",
+    value:
+      "2e-5 of the tiles' diagonal, rounded up to a power of two so growing content doesn't change it at every tile, at least 1e-6 m",
+    note: "The same idea as the b-rep's, with the size read from the tiles loaded. The clip test and the cap's vertices are float32, so a micrometre inside the plane is speckle at tens of metres.",
   },
   {
     what: "Nudge",
@@ -263,7 +402,7 @@ const NUMBERS = [
   {
     what: "Scheduler",
     value: "At least 100 ms between rebuilds of one cap; 4 ms a tick",
-    note: "A drag rebuilds a few times a second, and the last position always lands. A rebuild that has started may run past 4 ms, as one section isn't split.",
+    note: "A drag rebuilds a few times a second, and the last position always lands. A b-rep section is stepped one face at a time within the budget, or runs in a section worker, so a part of hundreds of faces costs a few milliseconds a frame. The caps already drawn stay until the new set is whole. A mesh's cut of one tile isn't split.",
   },
 ];
 
@@ -326,10 +465,10 @@ const SPACE_STEPS = [
     title: "True point",
     body: (
       <p>
-        The set&apos;s route to the view&apos;s body anchor (where the
-        content&apos;s true coordinates are) is rigid, and the content reaches
-        the render root across presentation warps only. The set is tested on
-        fragment location 4, the draw&apos;s transform of the design position.
+        The set&apos;s route to the content&apos;s own node (where its true
+        coordinates are) is rigid, and the content reaches the render root up
+        through smooth nodes. The set is tested on fragment location 4, the
+        draw&apos;s true camera-relative position.
       </p>
     ),
     aside:
@@ -383,14 +522,14 @@ const NOT_BUILT = [
       "A draw already at 3 warp terms with no lattice has nowhere to put the field and is left uncut, and the engine says so once.",
   },
   {
-    what: "Exemptions",
+    what: "Exemption by element data",
     state:
-      "Content that a clip leaves alone, such as terrain left whole, is the styling language's: run-time data by element ID. The table's set rows keep a reserved word for it (`CLIP_SET_EXEMPT`). There is no list per clip, and no per-draw switch.",
+      "A draw can opt out of every clip (`clipExempt`). Exempting some elements of a draw, such as terrain left whole, is the styling language's: run-time data by element ID. The table's set rows keep a reserved word for it (`CLIP_SET_EXEMPT`). There is no list per clip.",
   },
   {
     what: "Terrain regions as clip shapes",
     state:
-      "`TerrainClips` (a globe's `terrain.addRegion`) still has its own mechanism, in the shader's `clipBoxes` beside this table. Folding it into `ClipShape` isn't done: it carries translucency, holes, pick stops and `sampleHeight` semantics that a clip shape doesn't.",
+      "`TerrainClips` (a globe's `terrain.addRegion`) still has its own mechanism, in the shader's `clipBoxes` beside this table. A world clip now covers its cut, its ghost and its shader (above), but folding it into `ClipShape` isn't done: regions carry holes, pick stops and `sampleHeight` semantics that a clip shape doesn't.",
   },
   {
     what: "A compute section pass for meshes",
@@ -398,19 +537,19 @@ const NOT_BUILT = [
       "Mesh caps are cut on the CPU, one pass per tile. A compute pass would need each tile's buffers and a readback of the segments, and the join across tiles is CPU anyway. It can go behind the same `TileSection`.",
   },
   {
-    what: "Caps for polygons and for several shapes",
+    what: "GPU caps for every clip",
     state:
-      "`capPlanes` handles a set of planes, or one box. A set with a polygon, or with several boxes, has boundaries that plane-by-plane caps can't say, so it makes no cap and the report says why.",
+      "`View.clipCaps` makes caps for sets of planes or one box, tested in true space, with a discard effect, over draws marked `solid`. A polygon, several boxes, a drawn-space set, a ghost or shade set and a curved set make none, and the view says why (`View.capNote`). A GPU cap isn't pickable or measurable.",
   },
   {
-    what: "Caps tied to clips and tilesets",
+    what: "Exact caps tied to clips and tilesets",
     state:
       "`BrepCaps` and `MeshCaps` are made by the application, which gives each the clip set and, for a mesh, each tile (`setTile`). Nothing yet makes them when `world.addClip` is called or when a tileset loads a tile.",
   },
   {
-    what: "Hatching and element styling of caps",
+    what: "Element styling of caps",
     state:
-      "The styling language's planar fill (plan section 13.27). A cap has a flat colour and a feature ID per element, and `style` is the hook.",
+      "Hatching is built for GPU caps. Hatching or a colour per material or element is the styling language's planar fill (plan section 13.27). An exact cap has a flat colour and a feature ID per element, and `style` is the hook.",
   },
   {
     what: "A section view from a plane, and printing to scale",
@@ -448,6 +587,18 @@ const SPIKES = [
     detail:
       "A wavy plane across a 24 m plate, fitted to 4.6 cm, about half a pixel; a box window whose kinks fit to 1.49 m; the ×10 plate cut on its true surface.",
   },
+  {
+    check: "Section caps on the GPU against float64 (spikes/sectionCaps.ts)",
+    result: "8 of 8",
+    detail:
+      "A closed box cut by a level plane; the same box not marked solid, which gets no cap pixel; an open floor behind the cut that doesn't flip the count; a hollow box whose cap is a ring with the bore open; a moving plane, with the cap where the plane is in each of nine frames; a clip box, whose cap is the face the camera is outside of; a view without caps; and no GPU validation error.",
+  },
+  {
+    check: "Clip effects on the GPU (spikes/clipEffects.ts)",
+    result: "9 of 9",
+    detail:
+      "A discard box over a buried pipe; a blended ghost at alpha 0.4 over the exempt pipe at the right mix, on meshes and on a b-rep ground; a stippled ghost at about half the pixels; the same ghost on a pipe that isn't exempt; a custom shader reading `clipDistance` on a shade set, which matches float64's side at every pixel; a discarding set that reports; a view that doesn't use the clips; and no GPU validation error.",
+  },
 ];
 
 const TESTS = [
@@ -459,12 +610,27 @@ const TESTS = [
   {
     file: "test/clips.test.ts",
     covers:
-      "Shapes, validation, combining and keeping; the table against float64 far from the origin; which space a set is tested in, for no warp, a presentation warp and a reprojection; the view's mask and a view without clips; and the queries, with ray, closest point and segment distance passing over what is removed, and points routed into each set's reference frame.",
+      "Shapes, validation, combining and keeping; the table against float64 far from the origin; which space a set is tested in, for no warp, a deformer over the content and a reprojection; the view's mask and a view without clips; and the queries, with ray, closest point and segment distance passing over what is removed, and points routed into each set's reference frame.",
   },
   {
     file: "test/queryClips.test.ts",
     covers:
       "The ray queries with clips: the default for a query with and without a view, a view's sets, a set of its own and none, and `\"view\"` refused without a view; the terrain's first kept hit, and no block and no hit (an unknown verdict, as for terrain-region holes) when the clips remove every hit; the draw cast re-casting from behind each removed hit, only the rays still searching, and refusing a ray through endless removed surfaces; a tileset's geometry; the distance field's ray; and a view's clip changes counted in the query's revision.",
+  },
+  {
+    file: "test/clipEffects.test.ts",
+    covers:
+      "An effect's validation; a world keeping it frozen with its defaults; which sets want the translucent passes (a blended ghost only, not a stipple); the table's effect rows as the shader reads them; a curved set discarding; and the verdict of the opaque and translucent passes: a discard removes in every pass, a blended ghost is cut from the opaque passes and kept ghosted by the translucent ones, ghosts multiply their alphas, a discard beats a ghost.",
+  },
+  {
+    file: "test/capFaces.test.ts",
+    covers:
+      "The GPU caps' rows: a plane's face with the camera on its negative side and none when it is inside what is kept; the face of a box a ray enters; a face for each plane of a union, and the other cut when a set keeps the outside; none for a curved set, an effect or a polygon, saying why; at most the targets' eight; and a table with no room left alone.",
+  },
+  {
+    file: "test/capsOffThread.test.ts",
+    covers:
+      "`SectionJob` doing `sectionBrep`'s work in steps; `BrepCaps` rebuilding within a budget and keeping the old caps until the new ones are whole; naming its draws for picks; a runner that sections off the thread, a clip that moves or goes while it runs, a failure thrown once; and the section worker's transfer.",
   },
   {
     file: "test/caps.test.ts",
@@ -496,19 +662,25 @@ export function Clipping() {
       lede={
         <>
           A section through a site cuts everything in it: terrain, a mesh
-          tileset, a b-rep. A clip is a world object named in a reference frame,
-          and each view chooses which clips to cut with. Each clip is tested per
-          fragment on the point where its reference frame is exact, so a cut
-          named in true coordinates stays at its true height when the scene is
-          drawn with its heights exaggerated. Caps close the cut.
+          tileset, a b-rep. A clip is a world object named in a reference frame
+          or a transform-graph node, and each view chooses which clips to cut
+          with. Each clip is tested per fragment on the point where its
+          reference frame is exact, so a cut named in true coordinates stays at
+          its true height when the scene is drawn with its heights exaggerated.
+          What a clip does with what it removes is the clip&apos;s choice: cut
+          it, ghost it or only tell a shader. Caps close the cut, on the GPU in
+          the same frame, or as exact geometry for picks and measurement.
         </>
       }
     >
       <Note title="How much of this is built">
         <p>
-          Increment 8a (world clips), 8b (caps) and 8c (curved clips, cut along
-          a fitted signed distance) are built. The last section lists what is
-          missing.
+          Increments 8a (world clips), 8b (caps) and 8c (curved clips, cut along
+          a fitted signed distance) are built, and since then clip effects
+          (discard, ghost, shade, with the inputs a custom shader reads),
+          per-draw exemption, GPU section caps (<C>View.clipCaps</C>), b-rep
+          caps that build in steps or in a worker, and clips placed at
+          transform-graph nodes. The last section lists what is missing.
         </p>
       </Note>
 
@@ -530,13 +702,27 @@ export function Clipping() {
         </p>
         <p>
           A clip per item, which 1.x has, can be added later if a need appears.
-          The owner decided this on 2026-11-10.
+          The owner decided this on 2026-11-10. Exemption is per draw instead (
+          <C>DrawOptions.clipExempt</C>, <C>World.setClipExempt</C>, and{" "}
+          <C>clipExempt</C> on a tileset or model), so buried pipes stay whole
+          under a clip that removes or ghosts the ground over them. There is
+          still no list per clip, and exempting by element data is the styling
+          language&apos;s (plan section 13.26, decision 10).
+        </p>
+        <p>
+          A set&apos;s <C>frame</C> may also be a node of a transform graph (a{" "}
+          <C>TransformNode</C> is a frame key). A node resolver wraps the
+          world&apos;s frame resolver: a route between the set&apos;s node and
+          the content&apos;s that is rigid gives a matrix, as any frame does,
+          and one that crosses a smooth edge makes the set curved, cut along a
+          fitted signed distance as below. The route is the graph&apos;s, in
+          float64.
         </p>
         <CodeBlock language="ts" code={snippetText("clip.next.ts")} />
         <p>That snippet compiles against the real types.</p>
         <Written
-          from="the overall plan, section 13.26, and src/scene/world/clips.ts"
-          on="2026-11-11"
+          from="the overall plan, section 13.26, src/scene/world/clips.ts and nodeResolver.ts"
+          on="2026-11-12"
         />
       </Section>
 
@@ -636,6 +822,89 @@ export function Clipping() {
         <Written
           from="src/scene/world/clips.ts and test/clips.test.ts"
           on="2026-11-11"
+        />
+      </Section>
+
+      <Section title="What a clip does with what it removes">
+        <p>
+          A set&apos;s <C>effect</C> says what happens to the fragments it
+          doesn&apos;t keep. The default cuts them out. A ghost keeps them,
+          faint, so what lies under a cut ground shows through it at its true
+          depth, and a shade set removes nothing and leaves the look to a custom
+          shader. The effect rides in three table rows after the set&apos;s
+          shapes, so changing it recompiles nothing.
+        </p>
+        <DataTable
+          label="Clip effects"
+          columns={[
+            { head: "`effect`", cell: (r) => <Ticks text={r.effect} /> },
+            { head: "What happens", cell: (r) => <Ticks text={r.removed} /> },
+            { head: "Cost", cell: (r) => <Ticks text={r.cost} /> },
+          ]}
+          rows={EFFECTS}
+        />
+        <p>
+          A ghost takes <C>alpha</C> (0 to 1, exclusive), and optionally a{" "}
+          <C>tint</C> and <C>tintStrength</C>. Where ghosts overlap their alphas
+          multiply, and a discarding set beats a ghost. A curved set always
+          discards: effects are for sets tested on the true or the drawn point.
+        </p>
+        <p>
+          <strong>Inputs for a custom shader.</strong> Any set can report, with
+          its <C>params</C>, to a custom shader&apos;s fragment stage. The
+          nearest set that reports wins:
+        </p>
+        <DataTable
+          label="What a fragment stage reads of the view's clips"
+          columns={[
+            { head: "`FragmentInput`", cell: (r) => <Ticks text={r.input} /> },
+            { head: "Means", cell: (r) => <Ticks text={r.value} /> },
+          ]}
+          rows={SHADER_INPUTS}
+        />
+        <p>
+          The clip-effects example uses them on the terrain: the excavation is a
+          hole, a blended ghost or a stippled one, and a section plane hatches
+          and fades the ground by its distance from the plane (
+          <C>fsInput.clipDistance</C>), with a glowing edge on the kept side.
+        </p>
+        <p>
+          <strong>Exempt draws.</strong> A draw with <C>clipExempt</C> is left
+          alone by every effect and every set, and is not counted in the caps
+          below. The example&apos;s buried pipes are exempt: the excavation box
+          is around them, and would remove them too.
+        </p>
+        <Written
+          from="src/scene/world/clips.ts (ClipEffect), src/shaders/surface.slang, src/shaders/cesium.slang, test/clipEffects.test.ts and spikes/clipEffects.ts"
+          on="2026-11-12"
+        />
+      </Section>
+
+      <Section title="Terrain: world clips against terrain regions">
+        <p>
+          The owner asked on 2026-11-11 whether box clips could replace terrain
+          clipping, and show the terrain inside a clip volume translucent or
+          shaded by a custom shader. For the cut, the ghost and the shader they
+          can, and a world clip reaches the buildings and b-reps in the same
+          volume too. Terrain regions stay for what a clip shape doesn&apos;t
+          carry, so <C>TerrainClips</C> isn&apos;t folded in.
+        </p>
+        <DataTable
+          label="World clips against terrain regions"
+          columns={[
+            { head: "", cell: (r) => <strong>{r.what}</strong> },
+            { head: "World clip", cell: (r) => <Ticks text={r.world} /> },
+            {
+              head: "Terrain region (`terrain.addRegion`)",
+              cell: (r) => <Ticks text={r.region} />,
+            },
+          ]}
+          rows={TERRAIN_COMPARE}
+        />
+        <TerrainTimings />
+        <Written
+          from="spikes/clipEffectsBench.ts, src/globe/Globe.ts and the overall plan, section 13.26"
+          on="2026-11-12"
         />
       </Section>
 
@@ -762,7 +1031,10 @@ export function Clipping() {
           side nor the render root rigidly is curved: in the content&apos;s own
           coordinates its surface bends with the warp. A plane named in a design
           frame cuts the true surface of an exaggerated tile, wherever that is
-          drawn.
+          drawn. A set placed at a transform-graph node is curved the same way
+          when the graph&apos;s route from the node to the content crosses a
+          smooth edge. The clipping example hasn&apos;t moved to node-placed
+          clips yet.
         </p>
         <ul>
           <li>
@@ -800,8 +1072,56 @@ export function Clipping() {
       <Section title="Caps">
         <p>
           A clip removes content fragment by fragment, so a solid cut open looks
-          hollow. A cap is the surface that closes the cut. What a cap is made
-          from depends on what the content is.
+          hollow. A cap is the surface that closes the cut. There are two kinds,
+          for two jobs. The GPU draws a flat cap in the frame the clip moves in,
+          which is what a view wants. Exact caps are geometry, built on the CPU
+          or in a worker, which is what a pick, a measurement or an export
+          wants. What an exact cap is made from depends on what the content is.
+        </p>
+        <h3>On the GPU: View.clipCaps</h3>
+        <p>
+          Set <C>view.clipCaps</C> (a colour, and optionally a hatch) and the
+          view closes the cut of every draw marked <C>solid</C> (
+          <C>DrawOptions.solid</C>, <C>World.setSolid</C>), wherever its clips
+          pass through the inside. Nothing is built as the clip moves, so a
+          dragged plane never leaves a frame without its cap.
+        </p>
+        <ol>
+          <li>
+            <strong>Cap faces.</strong> Each set of planes, or of one box, that
+            the view tests in true space makes faces: the planes its kept region
+            is bounded by, as rows after the sets&apos; in the view&apos;s
+            table. A face is written only if the camera is on its outward side.
+            There are at most 8 (four to each parity target).
+          </li>
+          <li>
+            <strong>Parity pass.</strong> For each face, the solids&apos;
+            surfaces behind it are counted into two single-sampled targets by a
+            blend that toggles a bit a face. An odd count means the cut passes
+            through the inside of a solid there.
+          </li>
+          <li>
+            <strong>Cap triangle.</strong> After the content, the opaque pass
+            draws one triangle over the view that fills the pixels with an odd
+            count in the cap colour. A hatch is lines in the cut&apos;s plane,
+            anchored to it: spacing, angle, width and strength.
+          </li>
+        </ol>
+        <p>
+          The count is right only if each solid is closed, so an open surface
+          (terrain, a ground plane, a sheet) is left unmarked: its surfaces
+          would flip the count behind it. A hollow solid, with a bore, gets a
+          ring, and the bore stays open. No cap is made for a curved set (its
+          field is fitted per draw, so no pixel knows it, and the other sets'
+          caps are left off with it), for a set tested on the drawn point, or
+          for a set with a ghost or shade effect. The cap is not pickable: ask
+          the geometry for that.
+        </p>
+        <h3>Exact caps, as geometry</h3>
+        <p>
+          <C>BrepCaps</C> and <C>MeshCaps</C> are made by the application, which
+          gives each the clip set and, for a mesh, each tile. They build real
+          faces, so they are the caps to pick, measure and snap to.
         </p>
         <h3>B-reps: exact</h3>
         <p>
@@ -843,21 +1163,24 @@ export function Clipping() {
         />
         <Note title="The bias, and what the owner decided">
           <p>
-            A cap lies on the clip&apos;s own plane, so a per-fragment test of
-            that plane would drop half of it to rounding. The owner&apos;s call
-            was to leave the cap out of its own clip. That needs a per-draw
-            exemption, and exemptions are the styling language&apos;s, which
-            isn&apos;t built. So each cap lies a hair inside the kept side
-            instead, and the clip that made it doesn&apos;t remove it. The cap
-            sits at most the bias inside the cut. When exemptions land, the bias
-            can go.
+            An exact cap lies on the clip&apos;s own plane, so a per-fragment
+            test of that plane would drop half of it to rounding. The
+            owner&apos;s call was to leave the cap out of its own clip. A
+            per-draw exemption now exists (<C>clipExempt</C>), but it exempts a
+            draw from every clip, not from the one that made it, and the
+            exemption by element data is still the styling language&apos;s. So
+            each exact cap lies a hair inside the kept side instead, and the
+            clip that made it doesn&apos;t remove it. It sits at most the bias
+            inside the cut. The GPU caps have no bias: they are drawn from the
+            cut itself, in the opaque pass.
           </p>
         </Note>
         <h3>Meshes: geometry from the triangles</h3>
         <p>
           Content may be open meshes with no solid behind them, so a mesh cap is
           built from the triangles. Its accuracy is the mesh&apos;s: as good as
-          its geometric error.
+          its geometric error. A model needs <C>retainGeometry</C> for it, so
+          the engine keeps its triangles.
         </p>
         <Flow label="How a mesh cap is made" steps={MESH_STEPS} />
         <p>
@@ -886,26 +1209,40 @@ export function Clipping() {
         </p>
         <h3>Rebuilding</h3>
         <p>
-          <C>CapScheduler</C> rebuilds caps within a budget. A cap is rebuilt
-          when its clip changes, no more than once in 100 ms for one cap, so a
-          dragged plane leaves its cap a few times a second and the last
-          position always lands. The new draws are in place before the old are
-          removed, so no tick is without a cap. Mesh caps cut tiles within the
-          budget, and draw when every tile has its cut.
+          <C>CapScheduler</C> rebuilds caps within a budget, and wakes a resting
+          engine when a clip or tile changes (or work in a worker finishes), so
+          it needs no tick of its own. A cap is rebuilt when its clip changes,
+          no more than once in 100 ms for one cap, so a dragged plane leaves its
+          cap a few times a second and the last position always lands. A
+          b-rep&apos;s section runs in steps of one face within the budget, or
+          off this thread in the section worker (<C>runner</C>), and the caps
+          already drawn stay until the new set is whole, so no tick is without a
+          cap. Mesh caps cut tiles within the budget, and draw when every tile
+          has its cut.
+        </p>
+        <h3>Picks and measurement on caps</h3>
+        <p>
+          The cap draws are named (<C>BREP_CAP_NAME</C>, <C>MESH_CAP_NAME</C>),
+          so a pick on one says what it hit. <C>MeshCaps.surfaces</C> gives each
+          plane&apos;s cap as polygons, and <C>MeshCaps.rayHit</C> an exact hit
+          on them, on the plane a bias inside the clip&apos;s, dropping what the
+          caller&apos;s clips remove. That is what the clipping example picks
+          and measures on.
         </p>
         <h3>Styling</h3>
         <p>
-          Cap styling is the styling language&apos;s, by planar fill (plan
-          section 13.27). Today a cap has a default flat colour (a warm grey,
-          linear RGBA 0.78, 0.74, 0.68), a section line is orange, a mesh cap
-          carries a feature ID per element, and <C>style</C> is the hook: a
-          function from the cap&apos;s kind and feature to a colour, called
-          where the language will say how a cap looks. Without a result the
-          default stands.
+          A GPU cap has a flat colour (a warm grey by default, linear RGBA 0.78,
+          0.74, 0.68) and optional hatching: lines in the cut&apos;s plane,
+          anchored to it. Styling by element is the styling language&apos;s, by
+          planar fill (plan section 13.27). An exact cap has the same default
+          colour, a section line is orange, a mesh cap carries a feature ID per
+          element, and <C>style</C> is the hook: a function from the cap&apos;s
+          kind and feature to a colour, called where the language will say how a
+          cap looks. Without a result the default stands.
         </p>
         <Written
-          from="src/brep/section*.ts, src/scene/world/caps.ts, meshCaps.ts and clips.ts (capPlanes), with the tests below"
-          on="2026-11-11"
+          from="src/brep/section*.ts, src/scene/world/caps.ts, capFaces.ts, meshCaps.ts and clips.ts (capPlanes), src/render/view/capPasses.ts and src/shaders/sectionCap.slang, with the tests below"
+          on="2026-11-12"
         />
       </Section>
 

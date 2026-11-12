@@ -1,0 +1,5 @@
+// A setting of the whole scene.
+viewer.scene.verticalExaggeration = 3.0;
+
+// The height that stays where it is.
+viewer.scene.verticalExaggerationRelativeHeight = 0.0;

@@ -18,7 +18,7 @@ A static site, outside Dyno, on Dyno's stack: React and StrataKit (`Root`,
 `unstable_NavigationList`, `Tabs`, MUI's tables, fields and icon buttons, all
 themed). It builds to one self-contained HTML file, so it opens from disk and
 can be attached or hosted with nothing beside it. It has no router: the hash is
-the tab (`#/frames`), so a link goes straight to a tab. Dyno's own data store
+the tab (`#/transform-graph`), so a link goes straight to a tab. Dyno's own data store
 and shell aren't reused, as they bring far more than a document needs.
 
 ## Handing it out

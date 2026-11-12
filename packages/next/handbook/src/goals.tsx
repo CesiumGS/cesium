@@ -254,8 +254,8 @@ const goals = (): readonly Goal[] => [
         "Other planets as impostors. The spec gives one to any body with an appearance, but only the Moon's is planned.",
       ],
     ],
-    tab: "frames",
-    tabLabel: "Frame tree",
+    tab: "transform-graph",
+    tabLabel: "Transform graph",
   },
   {
     id: "modular",

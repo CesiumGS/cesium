@@ -37,8 +37,15 @@ const SEAMS = [
   },
   {
     seam: "Coordinate service",
-    fills: "Design CRS to geodetic, grid factors, the recorded operation",
+    fills: "A content CRS to geodetic, grid factors, the recorded operation",
     default: "PROJ, through projCoordinateService",
+  },
+  {
+    seam: "Smooth transforms",
+    fills:
+      "A deformation or a projection the engine doesn't ship, as a node of the transform graph",
+    default:
+      "Built-ins in Slang with a TypeScript mirror, or your own function as restricted JavaScript, which the engine parses and never evaluates",
   },
   {
     seam: "Snap service",
@@ -62,6 +69,33 @@ const SEAMS = [
   },
 ];
 
+const GRAPH_MODULES = [
+  {
+    module: "transform",
+    holds:
+      "The graph (affine, smooth and switch nodes), routes, the IR with its parser, autodiff, intervals and WGSL, the compiler, accuracy along a route, and point and measurement queries in any node",
+    rule: "No geo knowledge, and it imports none of the modules below",
+  },
+  {
+    module: "transforms",
+    holds:
+      "Generic built-in smooth transforms: bend, twist, taper, lattice, scale-about, bump, radial distortion, corridor unroll, velocity model",
+    rule: "Imports only the transform core, math and closed forms",
+  },
+  {
+    module: "georeference",
+    holds:
+      "The geo transforms on an ellipsoid (vertical exaggeration, height offset, flatten), reprojection nodes (UTM, transverse Mercator, Lambert, web Mercator, geocentric), and Georeference, which places a design model on a body",
+    rule: "Same rule as transforms",
+  },
+  {
+    module: "frames",
+    holds:
+      "The catalogue of reference frames, Earth orientation and ephemerides: data feeding the graph, with smoothFrame and switchFrame putting nodes in it",
+    rule: "Its own entry point, @cesium/next/frames",
+  },
+];
+
 export function Architecture() {
   const { globeOnly, library } = data.bundles;
   const lazyChunks = [
@@ -77,7 +111,8 @@ export function Architecture() {
           One package, where only the core is required. Time, reference frames,
           coordinates and measurement are optional modules on top of it, so an
           app pays only for what it imports, and a host application can replace
-          any of them.
+          any of them. The transform graph, which places, reprojects and deforms
+          content, is part of the core.
         </>
       }
     >
@@ -250,14 +285,47 @@ export function Architecture() {
           rows={SEAMS}
         />
         <p>
-          A <C>hosted</C> placement mode is specified in plan 5 for content the
-          host reprojected itself: it is placed as delivered, and design
-          coordinates come only from the host's coordinate service.
+          There are no placement modes. A tileset's declared CRS says how it
+          reaches the body: a geocentric CRS is the identity route, so content a
+          host reprojected itself is drawn as delivered, with design coordinates
+          from the host's coordinate service. A projected or geographic CRS is a
+          coordinate operation, a smooth edge fitted per tile. A local CRS with
+          a site transform is a rigid edge. The mode field is still in the code,
+          and goes with the API review (plan 5i).
         </p>
         <Written
-          from="the plan 5 spec, sections 7.2, 7.7, 7.9 and 7.10"
-          on="2026-11-08"
+          from="the plan 5 spec, sections 7.2, 7.7, 7.9 and 7.10, and the overall plan, section 13.26"
+          on="2026-11-12"
         />
+      </Section>
+
+      <Section title="Inside the core: the transform graph">
+        <p>
+          Where content sits decides how it is drawn. A tree of nodes joins it
+          to the camera, each edge either affine (a matrix, cheap to recompute
+          every frame) or smooth (a differentiable function with parameters,
+          such as vertical exaggeration or a projection). The core compiles each
+          route into one GPU function, and the same route answers picks,
+          measurements, accuracy and clips on the CPU, in float64. It is built,
+          and the <a href="#/transform-graph">Transform graph tab</a> tours it.
+        </p>
+        <DataTable
+          label="Modules of the transform graph"
+          columns={[
+            { head: "Module", cell: (r) => <C>{r.module}</C> },
+            { head: "What it holds", cell: (r) => r.holds },
+            { head: "Rule", cell: (r) => r.rule },
+          ]}
+          rows={GRAPH_MODULES}
+        />
+        <p>
+          These are folders of the core except <C>frames</C>, so one import
+          reaches them. The boundary test fails when the transform core imports
+          a built-in, or a built-in reaches past the transform core. Warps are
+          gone as a separate idea: a deformer is a smooth node over the content
+          it deforms, and a Moon beside it is not under that node, so it isn't
+          warped.
+        </p>
       </Section>
 
       <Section title="Seams for later WebGPU features">
@@ -268,6 +336,38 @@ export function Architecture() {
           meant to be a backend swap, not a refactor. The Spec extensions tab
           lists those features and where they stand.
         </p>
+      </Section>
+
+      <Section title="Splitting the core later">
+        <p>
+          The plan's current answer (section 13.36, notes for later) is to keep
+          one package until a second consumer needs a part left out: for example
+          a b-rep viewer with no tilesets. What lets the split happen cheaply is
+          already built, and tested:
+        </p>
+        <ul>
+          <li>
+            Streaming reads the engine only through <C>TilesetHost</C> and{" "}
+            <C>DrawSink</C>, so content never holds the world or the renderer.
+          </li>
+          <li>
+            The core's files are in tiers (<C>gpu</C>, <C>renderer</C>,{" "}
+            <C>scene</C>, <C>content</C>), and the boundary test fails on an
+            import across them that isn't a named, explained exception.
+          </li>
+          <li>
+            Draw records, a <C>BrepForm</C>, a compiled style and a query and
+            its answer are plain data, so a module can move to a worker or be
+            replaced.
+          </li>
+        </ul>
+        <p>
+          Next would come a <C>tiles</C> entry point, then moving the styling
+          compiler apart from its 3D Tiles binding, and a package only if the
+          bundle check shows tilesets cost an app that doesn't use them. None of
+          that is started.
+        </p>
+        <Written from="the overall plan, section 13.36" on="2026-11-12" />
       </Section>
     </Page>
   );

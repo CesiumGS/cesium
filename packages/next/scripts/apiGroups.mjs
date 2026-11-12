@@ -21,7 +21,7 @@ export const ENTRIES = [
     title: "Core",
     import: "@cesium/next",
     blurb:
-      "The engine: the device, worlds, views, cameras, streaming and the globe. It imports none of the other entry points.",
+      "The engine: the device, worlds, views, cameras, the transform graph, streaming and the globe. It imports none of the other entry points.",
   },
   {
     id: "widgets",
@@ -34,7 +34,7 @@ export const ENTRIES = [
     title: "Frames",
     import: "@cesium/next/frames",
     blurb:
-      "The reference-frame tree, coordinates, accuracy, ephemerides and trajectories.",
+      "The reference-frame tree, smooth and switch frames, coordinates, accuracy, ephemerides and trajectories.",
   },
   {
     id: "time",
@@ -71,6 +71,34 @@ export const GROUPS = [
     title: "Worlds & scene items",
     blurb:
       "A world and what goes in it: meshes, models, lights, and where they are placed.",
+  },
+  {
+    id: "core.transform",
+    entry: ".",
+    title: "Transform graph & routes",
+    blurb:
+      "Nodes, routes, queries in any node (points, measurements, accuracy along a route) and the warp types a smooth edge takes.",
+  },
+  {
+    id: "core.transforms",
+    entry: ".",
+    title: "Built-in transforms",
+    blurb:
+      "Bend, twist, taper, lattice, scale-about, bump, radial distortion, corridor unroll, a velocity model, and live edges for a slider.",
+  },
+  {
+    id: "core.georeference",
+    entry: ".",
+    title: "Georeference & geo transforms",
+    blurb:
+      "Vertical exaggeration, height offset and flattening on an ellipsoid; UTM, transverse Mercator, Lambert and web Mercator nodes; geocentric conversions; Georeference.",
+  },
+  {
+    id: "core.clipping",
+    entry: ".",
+    title: "Clipping & section caps",
+    blurb:
+      "World clip sets and their effects, and the caps that close a cut: exact for a b-rep, from the triangles for a mesh.",
   },
   {
     id: "core.camera",
@@ -153,6 +181,13 @@ export const GROUPS = [
     entry: "frames",
     title: "Frame tree & routes",
     blurb: "Frames, the catalog, routes between frames, and derived frames.",
+  },
+  {
+    id: "frames.graph",
+    entry: "frames",
+    title: "Smooth & switch frames",
+    blurb:
+      "Frames whose edge is a smooth function or a per-view switch, routes through them, and what is drawn through a warp.",
   },
   {
     id: "frames.coordinates",
@@ -243,15 +278,23 @@ export const RULES = [
 
   { entry: ".", from: "src/scene/World.ts", group: "core.world" },
   { entry: ".", from: "src/scene/SceneItem.ts", group: "core.world" },
+  // The transform graph and clipping live in files of their own, ahead of the
+  // directories they sit in.
+  { entry: ".", from: "src/scene/world/warps.ts", group: "core.transform" },
+  { entry: ".", from: "src/camera/route.ts", group: "core.transform" },
+  { entry: ".", from: "src/transform/", group: "core.transform" },
+  { entry: ".", from: "src/transforms/", group: "core.transforms" },
+  { entry: ".", from: "src/georeference/", group: "core.georeference" },
+  { entry: ".", from: "src/scene/world/clips.ts", group: "core.clipping" },
+  { entry: ".", from: "src/scene/world/caps.ts", group: "core.clipping" },
+  { entry: ".", from: "src/scene/world/capFaces.ts", group: "core.clipping" },
+  { entry: ".", from: "src/scene/world/meshCaps.ts", group: "core.clipping" },
   { entry: ".", from: "src/scene/world/", group: "core.world" },
   { entry: ".", from: "src/scene/meshes.ts", group: "core.world" },
   { entry: ".", from: "src/scene/gltfModel.ts", group: "core.world" },
   { entry: ".", from: "src/scene/lights.ts", group: "core.world" },
   { entry: ".", from: "src/scene/placement.ts", group: "core.world" },
   { entry: ".", from: "src/scene/HeightClamping.ts", group: "core.world" },
-  { entry: ".", from: "src/georeference/", group: "core.world" },
-  { entry: ".", from: "src/transforms/", group: "core.world" },
-  { entry: ".", from: "src/transform/", group: "core.world" },
 
   { entry: ".", from: "src/scene/Camera.ts", group: "core.camera" },
   { entry: ".", from: "src/camera/", group: "core.camera" },
@@ -349,6 +392,14 @@ export const RULES = [
   { entry: "frames", from: "src/time/", group: "frames.sky" },
   { entry: "frames", from: "src/ephemeris/", group: "frames.ephemeris" },
   { entry: "frames", from: "src/trajectory/", group: "frames.ephemeris" },
+  { entry: "frames", from: "src/frames/smoothFrame.ts", group: "frames.graph" },
+  { entry: "frames", from: "src/frames/warpMaps.ts", group: "frames.graph" },
+  {
+    entry: "frames",
+    from: "src/frames/graphOfFrames.ts",
+    group: "frames.graph",
+  },
+  { entry: "frames", from: "src/frames/drawn.ts", group: "frames.graph" },
   { entry: "frames", from: "src/frames/", group: "frames.tree" },
 
   // Time.

@@ -3,6 +3,7 @@ declare const world: import("@cesium/next").World;
 declare const view: import("@cesium/next").View;
 declare const form: import("@cesium/next").BrepForm;
 declare const queries: import("@cesium/next").GeometryQueries;
+declare const pipe: import("@cesium/next").DrawHandle;
 // ---
 import {
   BrepCaps,
@@ -46,9 +47,26 @@ world.setClip(clip, {
   keep: "outside",
 });
 
-// The cut's cap, exact for a b-rep. It follows the clip: set the clip again
-// when it moves, and tick the scheduler once a tick, which rebuilds within
-// a budget and no more than a few times a second while the clip is dragged.
+// The cut's cap, on the GPU: drawn every frame from the clips as they are, for
+// each draw marked solid, so a dragged clip never leaves a frame without one.
+view.clipCaps = { color: [0.78, 0.74, 0.68, 1], hatch: { spacing: 0.5 } };
+
+// What a clip does with what it removes: here the ground over a pipe is a
+// ghost at 30% instead of a hole, and the pipe, which the clip would also cut,
+// is exempt.
+world.setClip(clip, {
+  frame: itrf,
+  shapes: [
+    { kind: "box", center: [6_378_337, 0, 0], halfExtents: [20, 20, 5] },
+  ],
+  effect: { kind: "translucent", alpha: 0.3 },
+});
+world.setClipExempt(pipe, true);
+
+// An exact cap, for picks and measurement: geometry, drawn as a b-rep. It
+// follows the clip: set the clip again when it moves, and tick the scheduler
+// once a tick, which rebuilds within a budget (or in a worker) and no more than
+// a few times a second while the clip is dragged.
 const earth = world.bodyAnchor(EARTH);
 const caps = new BrepCaps(world, { form, draw: { parent: earth } });
 const scheduler = new CapScheduler();

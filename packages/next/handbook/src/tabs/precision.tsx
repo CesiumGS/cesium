@@ -497,8 +497,8 @@ export function Precision() {
             fitted operation's <C>secondDerivativeBound</C> bounds how far its
             curve departs from the flat triangles between vertices. For a draw
             under a warped anchor, bounds move with the warp and pad by the
-            residual instead: see the <a href="#/warps">Warps and routes tab</a>
-            .
+            residual instead: see the{" "}
+            <a href="#/transform-graph">Transform graph tab</a>.
           </li>
           <li>
             <strong>What's refused:</strong> a non-finite parameter,

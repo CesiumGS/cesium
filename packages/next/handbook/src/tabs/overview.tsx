@@ -36,12 +36,32 @@ const MILESTONES = [
   {
     work: "Plan 5a",
     what: "Render space, anchors, the camera chain, the entry points and their dependency rule",
-    state: "In progress",
+    state: "Built; its review items go to the API review",
   },
   {
-    work: "Plans 5b to 5i",
-    what: "The frames library, a second body, controllers, the physical sky per body, design space, the Artemis II replay, the API review",
+    work: "The transform graph",
+    what: "One tree of frames whose edges are affine or smooth: vertical exaggeration, projections, bends and lenses as nodes that content sits under. A route compiles to one GPU function with df64 centre constants; picks, measurements, accuracy and clips go through it; views take their own parameters or routes",
+    state: "Built (tasks 1 to 8), with a gallery example; follow-ups open",
+  },
+  {
+    work: "B-reps, GPU tessellation and CSG",
+    what: "Exact b-rep geometry behind a query interface, every face diced and trimmed per pixel on the GPU at degrees 1 to 7, kernels in workers, and a CSG workspace on SMLib or Open CASCADE",
+    state: "Built, provisional API",
+  },
+  {
+    work: "Clipping and sections",
+    what: "World clips of planes, boxes and polygon prisms in any frame, GPU section caps, exact b-rep caps, clip effects (discard, ghost, shade), curved clips across a warp",
+    state: "Built",
+  },
+  {
+    work: "Plans 5b to 5i, rebased",
+    what: "The frames library, a second body, controllers and animation (5c and 5d rewritten against the transform graph), the physical sky per body, design space, the Artemis II replay, and the API review, which also removes placement modes and renames the declared extensions to 3D Tiles 2.0's",
     state: "Planned",
+  },
+  {
+    work: "A shared IR and styling",
+    what: "One IR under transform functions, 3D Tiles styling and vector styling; restricted JavaScript as a front end (plan 13.38, a brainstorm)",
+    state: "Open: nothing decided",
   },
   {
     work: "M5, M6",
@@ -69,9 +89,11 @@ export function Overview() {
           <C>packages/next</C> is a clean-slate, WebGPU-only engine. It is built
           as an embeddable rendering core: small at its center, with time,
           reference frames, coordinates and measurement as optional modules, and
-          seams where a host application can supply its own services. It is a
-          proof of concept today (version {data.meta.version}), and its public
-          API is still open to change.
+          seams where a host application can supply its own services. Where
+          content sits in a tree of transforms decides how it is placed,
+          reprojected or deformed, and the core compiles that tree for the GPU.
+          It is a proof of concept today (version {data.meta.version}), and its
+          public API is still open to change.
         </>
       }
     >
@@ -226,7 +248,10 @@ export function Overview() {
           ]}
           rows={MILESTONES}
         />
-        <Written from="the overall plan and the plan 5 spec" on="2026-11-08" />
+        <Written
+          from="the overall plan (sections 13.26, 13.33, 13.37 and 13.38), the transform graph plan and git"
+          on="2026-11-12"
+        />
       </Section>
 
       <Section title="What the numbers say so far">
@@ -242,8 +267,9 @@ export function Overview() {
             hold 60 fps at 13.1 ms of GPU.
           </li>
           <li>
-            These were measured before plan 5a. New baselines on the RTX machine
-            will replace them; the Benchmarks tab has their place.
+            These were measured before plan 5a and the transform graph. New
+            baselines on the RTX machine will replace them; the Benchmarks tab
+            has their place.
           </li>
         </ul>
       </Section>
@@ -255,7 +281,11 @@ export function Overview() {
           <strong>If you work on 1.x:</strong> Differences from 1.x, then Public
           API, then the deep dive nearest your area.{" "}
           <strong>If you might embed the engine:</strong> System architecture,
-          which lists the seams a host can fill.
+          which lists the seams a host can fill.{" "}
+          <strong>
+            If you care about deformation, reprojection or exaggeration:
+          </strong>{" "}
+          One core, many uses, then the Transform graph tab.
         </p>
         <p>
           Each tab says how far it goes: accurate today, a sketch, or a stub.

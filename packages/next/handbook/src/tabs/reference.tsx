@@ -84,9 +84,10 @@ export function ApiReference() {
         <>
           Every symbol the package exports, read from its TypeScript
           declarations and doc comments. They are grouped by the import that
-          reaches them, then by area, so the surface reads a part at a time.
-          Each page has the signature, parameters, class hierarchy, members and
-          where it is defined.
+          reaches them, then by area, so the surface reads a part at a time: the
+          transform graph, its built-in and geo transforms, and clipping each
+          have groups of their own in the core. Each page has the signature,
+          parameters, class hierarchy, members and where it is defined.
         </>
       }
     >

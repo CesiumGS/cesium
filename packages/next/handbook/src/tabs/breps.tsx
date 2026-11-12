@@ -545,10 +545,12 @@ export function Breps() {
           How the engine holds, draws and queries exact CAD geometry: one render
           form for B-reps, kernels that stay outside the engine and hand it that
           form, and one query interface over meshes, distance fields and B-reps.
-          The form, the converters for two kernels, STEP import, drawing and the
-          B-rep query adapter, with accuracy as composed terms, are built. A
-          pick on a drawn B-rep face carries (face, u, v) from the GPU and
-          refines to an exact point.
+          The form, the converters for two kernels, STEP import, GPU drawing
+          (tessellation to degree 7, per-pixel trims, translucency, live
+          wireframe and iso lines), kernel updates that redo only what an edit
+          touched, a CSG workspace on top, and the B-rep query adapter, with
+          accuracy as composed terms, are built. A pick on a drawn B-rep face
+          carries (face, u, v) from the GPU and refines to an exact point.
         </>
       }
     >
@@ -556,14 +558,15 @@ export function Breps() {
         <p>
           Built: the render form and its glTF extension (a draft), SMLib and
           Open CASCADE converting into it, STEP import and export, kernels in
-          workers (provisional), and GPU drawing of every face. Drafted: the
-          query interface, with mesh, B-rep and distance-field adapters. The
-          mesh adapter is used, for tileset rays and snap occlusion. No drawn
-          B-rep goes through the B-rep adapter yet: it answers from a form
-          handed to it, and <C>World.addBrep</C> wires in only its pick
-          refinement. Planned: a kernel or a server as more routes, and
-          everything that crosses representations or reference frames. The table
-          at the end of this page has each piece.
+          workers (provisional) with caches so an edit redoes only what it
+          touched, GPU drawing of every face, the CSG workspace, and picks that
+          carry (face, u, v). Drafted: the query interface, with mesh, B-rep and
+          distance-field adapters. The mesh adapter is used, for tileset rays
+          and snap occlusion. No drawn B-rep goes through the B-rep adapter yet:
+          it answers from a form handed to it, and <C>World.addBrep</C> wires in
+          only its pick refinement. Planned: a kernel or a server as more
+          routes, and everything that crosses representations or reference
+          frames. The table at the end of this page has each piece.
         </p>
       </Note>
 
@@ -782,9 +785,10 @@ export function Breps() {
         <p>The build's bindings have gaps, which the converter works around:</p>
         <ul>
           <li>
-            An indexed map of shapes can't be made, and shapes have no hash, so
-            finding a sub-shape is a linear scan. It is quadratic: fine for a
-            sample, not for a big import.
+            An indexed map of shapes can't be made, so the converter keeps its
+            own: buckets keyed by the build&apos;s <C>ReplicadShapeHasher</C>,
+            with <C>IsSame</C> within a bucket. Without that hasher a build
+            falls back to a linear scan, which is quadratic over a shape.
           </li>
           <li>
             <C>BRep_Tool.CurveOnSurface</C> fails for a face, so pcurves come
@@ -908,14 +912,73 @@ export function Breps() {
             interrupted, so a cancel waits for the call that is running.
           </li>
         </ul>
+        <h3>Updates redo only what changed</h3>
+        <p>
+          A CSG edit changes one leaf, and a full re-evaluation redid every
+          boolean, every face&apos;s extraction and every patch&apos;s
+          preparation. Three caches stop that, and an edit of a parameter is now
+          several times faster, with the answer unchanged.
+        </p>
+        <ul>
+          <li>
+            <strong>Solids.</strong> The Open CASCADE worker keeps each
+            leaf&apos;s solid and each partial fold of the tree, so it redoes
+            the edited leaf and the booleans above it, and nothing below.
+          </li>
+          <li>
+            <strong>Faces and edges.</strong> Extraction reuses the faces and
+            edges of the last form that are unchanged, found by a 64-bit digest
+            of what preparation and bounds read of a face (<C>faceDigest</C>:
+            its surface, pcurves, and its edges&apos; tolerances and curves).
+          </li>
+          <li>
+            <strong>Patches and bounds.</strong> <C>prepareGpuPatches</C> and{" "}
+            <C>formBounds</C> skip faces whose digest is unchanged. Between
+            stages the worker yields through a <C>MessageChannel</C> instead of{" "}
+            <C>setTimeout(0)</C>.
+          </li>
+        </ul>
+        <DataTable
+          label="A parameter edit in the CSG sample, Open CASCADE, per update"
+          columns={[
+            { head: "Tree", cell: (r) => r.tree },
+            { head: "Before", cell: (r) => r.before, numeric: true },
+            { head: "After", cell: (r) => r.after, numeric: true },
+          ]}
+          rows={[
+            {
+              tree: "The default bracket (eight booleans)",
+              before: "244 ms",
+              after: "34 ms",
+            },
+            {
+              tree: "NIST FTC-06 minus a cylinder",
+              before: "641 ms",
+              after: "59 ms",
+            },
+          ]}
+        />
+        <p>
+          <C>scripts/benchCsgUpdate.mjs</C> and <C>spikes/csgUpdate.html</C> run
+          the recipes, and <C>test/data/csgUpdateCaches.test.ts</C> checks that
+          a cached update gives the form an uncached one does.
+        </p>
+        <h3>No kernel on the GPU</h3>
+        <p>
+          The kernel research found no open-source CAD kernel that runs on the
+          GPU. So the split holds: the kernels stay on the CPU, in workers, and
+          the GPU draws what they make. The lever on an edit&apos;s cost is to
+          rebuild incrementally, as above.
+        </p>
         <Written
           from={
             <>
               the overall plan, section 13.33 (the CSG spike), the code named
-              above, and timings run for this page
+              above, <C>src/brep/faceDigest.ts</C>, the commit that added the
+              caches (<C>e397488591</C>), and timings run for this page
             </>
           }
-          on="2026-11-11"
+          on="2026-11-12"
         />
       </Section>
 
@@ -1144,7 +1207,8 @@ export function Breps() {
           <C>segmentDistance</C>, and the frames layer's transform accuracy
           feeding the terms. Apart from the B-rep adapter, none of that exists,
           and the adapter has no drawn B-rep behind it yet. It is the example to
-          write once one does. The <a href="#/frames">Frame tree</a> and{" "}
+          write once one does. The{" "}
+          <a href="#/transform-graph">Transform graph</a> and{" "}
           <a href="#/precision">Precision and accuracy</a> tabs have the frames
           side.
         </p>
@@ -1226,24 +1290,66 @@ export function Breps() {
           (<C>World.addBrep</C>). Each face becomes span records, one for each
           Bézier patch or angular piece of an analytic surface. They are diced
           for each view to an error in pixels, evaluated in the vertex stage
-          from the surface's own formulas or de Casteljau, and a trimmed face is
-          tested per pixel against its pcurves. Patches of degree 1 to 7 take
-          the same path; a face with nothing to draw is the only one reported as{" "}
-          <C>unsupported</C>, and nothing in drawing is a CPU mesh unless{" "}
-          <C>cpuFaces: &quot;trimmed&quot;</C> asks for one as a diagnostic. The
-          CPU tessellator remains for mesh queries, the fallback mesh beside a
-          b-rep in a glTF file, the example&apos;s overlays and tests. The{" "}
-          <a href="#/tessellation">Tessellation tab</a> has the pipeline, the
-          bounds, the trim test and what was measured.
+          from the surface&apos;s own formulas or de Casteljau, and a trimmed
+          face is tested per pixel against its pcurves. Patches of degree 1 to 7
+          take the same path; a face with nothing to draw is the only one
+          reported as <C>unsupported</C>, and nothing in drawing is a CPU mesh
+          unless <C>cpuFaces: &quot;trimmed&quot;</C> asks for one as a
+          diagnostic. The CPU tessellator remains for mesh queries, the fallback
+          mesh beside a b-rep in a glTF file, the example&apos;s edge lines and
+          tests. The <a href="#/tessellation">Tessellation tab</a> has the
+          pipeline, the bounds, the trim test and what was measured.
         </p>
+        <ul>
+          <li>
+            <strong>Translucent.</strong> A patch draw with a blended material
+            draws in both translucency methods and in clip-effect ghosts, with
+            its per-pixel trims, reading the view&apos;s diced chunks. It leaves
+            the opaque, depth, prepass, shadow and pick bundles, so it casts no
+            shadow and a pick passes through it. The brepTrims spike checks
+            alpha 0.4 over red to within 0.4 of an 8-bit level, with exact
+            holes.
+          </li>
+          <li>
+            <strong>Display modes, live.</strong>{" "}
+            <C>World.setPatchDisplay(draw, display)</C> (provisional) shows what
+            the GPU tessellation did, per view, from the fragment stage: the
+            dice grid&apos;s cell edges and diagonals (<C>wire</C>), iso lines
+            in (u, v) (<C>iso</C>, 8 divisions of each face&apos;s rectangle by
+            default, up to 255), flat shading by each triangle&apos;s normal (
+            <C>flat</C>), or only the lines (<C>linesOnly</C>). They follow
+            every view&apos;s dice as the camera moves, a trim still cuts them,
+            and picks aren&apos;t affected. This replaced a wireframe made on
+            the CPU.
+          </li>
+          <li>
+            <strong>Edges.</strong> The first-look example draws a solid&apos;s
+            edges as the polylines on the faces&apos; boundaries themselves,
+            with no lift along the normals that once pushed a line diagonally
+            off a box&apos;s corner. The line pipeline pulls every line toward
+            the camera in depth alone (<C>vsLines</C>), so an edge wins the
+            depth test without moving on screen.
+          </li>
+          <li>
+            <strong>Readiness.</strong>{" "}
+            <C>engine.whenReady(view, {"{ draws, signal, timeoutMs }"})</C>{" "}
+            resolves after a frame in which no draw used a stand-in pipeline or
+            texture and every patch draw was diced. A page adds a solid hidden,
+            waits on it, then shows it as it removes the old one, so a custom
+            shader&apos;s compile never shows as a pop, and a starting spinner
+            stays until the first correct frame. The CSG sample swaps solids
+            this way.
+          </li>
+        </ul>
         <Written
           from={
             <>
-              the overall plan, section 13.33, and{" "}
-              <C>src/scene/world/brep.ts</C>
+              the overall plan, section 13.33, <C>src/scene/world/brep.ts</C>,{" "}
+              <C>patches.ts</C>, <C>src/scene/engineReady.ts</C> and{" "}
+              <C>test/engineReady.test.ts</C>
             </>
           }
-          on="2026-11-11"
+          on="2026-11-12"
         />
       </Section>
 

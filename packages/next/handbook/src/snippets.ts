@@ -95,6 +95,24 @@ export const TASKS: readonly Task[] = [
     note: "GLSL becomes WGSL or Slang, so 1.x shader text must be rewritten. A shader that fails falls back to the engine's.",
   },
   {
+    id: "exaggeration",
+    title: "Exaggerate heights",
+    group: "scene",
+    note: "Exaggeration is a node placed over the content it exaggerates, not a scene setting. The Moon and the camera aren't under it, and picks and measurements still return true heights. A view can hold its own value.",
+  },
+  {
+    id: "clipping",
+    title: "Clip content with a plane",
+    group: "tiles",
+    note: "A clip belongs to the world, not to a tileset, and is named in a reference frame. Views opt in, and a set can leave what it cuts as a translucent ghost.",
+  },
+  {
+    id: "ready",
+    title: "Wait until everything has loaded",
+    group: "events",
+    note: "One promise for a view, where 1.x has an event per tileset. It is provisional.",
+  },
+  {
     id: "time",
     title: "Set and start the clock",
     group: "time",

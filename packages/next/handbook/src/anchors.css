@@ -1,0 +1,23 @@
+.on-page {
+  margin-block-start: var(--stratakit-space-500);
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-shape-corner-radius-md, 8px);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.on-page p {
+  margin: 0 0 var(--stratakit-space-100);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.on-page ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-100) var(--stratakit-space-400);
+}
+.section[id^="sec-"] {
+  scroll-margin-block-start: var(--stratakit-space-400);
+}

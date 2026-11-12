@@ -392,8 +392,9 @@ export function Compare() {
           Code written against CesiumJS {data.oneX.version} won't run on 2.0
           without changes. {count(breaking)} of the {count(API_ROWS.length)}{" "}
           areas below break it, and the overall shape changes: picks and queries
-          are asynchronous, math is typed arrays, and Entities and DataSources
-          aren't built.
+          are asynchronous, math is typed arrays, exaggeration and clipping are
+          nodes and world objects rather than scene or tileset settings, and
+          Entities and DataSources aren't built.
         </>
       }
     >
@@ -537,7 +538,7 @@ export function Compare() {
               the plans each row cites
             </>
           }
-          on="2026-11-08"
+          on="2026-11-12"
         />
       </Section>
 

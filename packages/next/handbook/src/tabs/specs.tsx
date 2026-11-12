@@ -41,7 +41,7 @@ const DECLARATIONS = [
     name: "BENTLEY_engineering_frame",
     what: "Declares a tileset's engineering frame: its design CRS, placement mode and site transform. It composes with ESRI_crs, the 3D Tiles 2.0 draft's EXT_geospatial_crs and EXT_georeference, and 3DTILES_ellipsoid rather than replacing them.",
     state:
-      "In use by the design globe. If the owner accepts the plan's proposal of no placement modes (section 13.26), the mode field goes. 5f may add a declared chord tolerance.",
+      "In use by the design globe. The owner decided on no placement modes (plan section 13.26, 2026-11-11), so the mode field goes with the API review (5i), and the declaration may shrink to what the 2.0 draft's extensions can't say, such as a site transform for a whole tileset. 5f may add a declared chord tolerance.",
   },
   {
     name: "BENTLEY_alignments",
@@ -132,7 +132,7 @@ const WEBGPU: {
       </>
     ),
     engine:
-      "A seam for reprojected models and B-reps, in plan 5, section 8. Built for B-reps, provisional and internal; a reprojected model isn't subdivided yet. See the Tessellation tab.",
+      "A seam for reprojected models and B-reps, in plan 5, section 8. Built for B-reps: every face is diced on the GPU each view, at degrees 1 to 7, with per-pixel trims, behind a provisional API. A reprojected model isn't subdivided: tessellation through a route is a spike. See the Tessellation tab.",
   },
   {
     feature: "Subgroups",
@@ -184,9 +184,13 @@ export function Specs() {
           vendor folder on the CesiumGS/glTF branch <C>3d-tiles-2.0</C>. The
           CRS&apos;s type (geographic, geocentric, projected, compound or local)
           already says how content reaches the Earth, so the earlier idea of a
-          placement mode on the CRS is proposed for removal (plan, section
-          13.26). The declaration composes with those, and only what is new is
-          worth proposing:
+          placement mode on the CRS is dropped: the owner decided against it
+          (plan, section 13.26, 2026-11-11). The type selects the route: a
+          geocentric CRS is the identity, a geographic, projected or compound
+          one is a coordinate operation, and a local one with{" "}
+          <C>EXT_georeference</C> or a site transform is a rigid edge. The
+          declaration composes with those, and only what is new is worth
+          proposing:
         </p>
         <DataTable
           label="Proposals for 3D Tiles and glTF"
@@ -210,11 +214,30 @@ export function Specs() {
           13.26).
         </p>
         <p>
+          <strong>Brainstorm, nothing decided:</strong> a next-generation
+          styling language. The 3D Tiles 1.x language is already a small subset
+          of JavaScript. The plan&apos;s recommendation (section 13.38) is that
+          the spec define the language and an IR with a JSON form, with
+          JavaScript or TypeScript as one front end onto it, not the definition,
+          and that the same IR serve transform functions and vector styling.
+        </p>
+        <p>
           <strong>Proposed, not built:</strong> an explicit colour space in the
           styling language, using CSS Color 4 syntax (
           <C>color(srgb-linear 1 0.5 0)</C>, <C>color(display-p3 ...)</C>)
           passed through the existing <C>color('...')</C> string (the overall
           plan, section 13.18).
+        </p>
+        <p>
+          <strong>What the engine reads today:</strong> a tileset's CRS from{" "}
+          <C>ESRI_crs</C>, or from <C>EXT_geospatial_crs_source</C>, and its own{" "}
+          <C>BENTLEY_engineering_frame</C>. The glTF-level{" "}
+          <C>EXT_geospatial_crs</C> (with its <C>wkid</C> and <C>wkt2</C>{" "}
+          formats) and <C>EXT_georeference</C> aren&apos;t read yet. Reading
+          them is a small step, planned with the API review (5i), where{" "}
+          <C>georeferenceTileset</C> picks the route from the CRS&apos;s type.
+          The reprojection nodes that routes use (UTM, transverse Mercator,
+          Lambert conformal conic, web Mercator) are built.
         </p>
         <h3>What the engine declares today</h3>
         <DataTable
@@ -227,8 +250,8 @@ export function Specs() {
           rows={DECLARATIONS}
         />
         <Written
-          from="the overall plan, sections 13.14 and 13.26, and the plan 5 spec, section 15.3"
-          on="2026-11-11"
+          from="the overall plan, sections 13.14, 13.26 and 13.37, and the plan 5 spec, section 15.3"
+          on="2026-11-12"
         />
       </Section>
 

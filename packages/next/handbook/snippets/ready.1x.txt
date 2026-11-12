@@ -1,0 +1,3 @@
+tileset.allTilesLoaded.addEventListener(() => {
+  console.log("Everything in view has loaded");
+});

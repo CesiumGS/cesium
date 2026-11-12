@@ -34,11 +34,12 @@ const ENTRY_PATH: Record<string, string> = {
 const KINDS = ["class", "function", "const", "interface", "type"];
 
 const PRINCIPLES = [
-  "Creation is asynchronous, and nothing has a ready flag.",
+  "Creation is asynchronous, and nothing has a ready flag: engine.whenReady(view) is the one promise for the first correct frame.",
   "No update(frameState) contract: objects register with the world, and changes mark them dirty.",
   "Ownership is explicit: dispose(), and using where the language has it.",
   "Engine, World and View are separate, with any number of views per engine.",
   "Content is apart from being in the scene: engine.loadTileset gives the content, and world.add draws it, as often as asked.",
+  "Where content sits in the transform graph decides how it is placed, reprojected and deformed. There are no modes and no regions.",
   "The core touches no DOM. A smoke test runs it in a worker with an OffscreenCanvas.",
   "Math works on typed arrays, with required out parameters.",
   "Shaders extend through a versioned WGSL-level contract, with Slang as the first-class authoring language.",
@@ -154,13 +155,58 @@ export function Api() {
         <Written from={<C>src/globe/Globe.ts</C>} on="2026-11-08" />
       </Section>
 
+      <Section title="Placing and deforming content">
+        <p>
+          Where content sits in a tree of frames decides how it is drawn. A
+          deformer is a node over the content it deforms: vertical exaggeration,
+          a projection, a bend, a lens. The built-ins come from the core (
+          <C>verticalExaggeration</C>, <C>utm</C>, <C>bend</C> and the rest),{" "}
+          <C>smoothFrame</C> and <C>switchFrame</C> in{" "}
+          <C>@cesium/next/frames</C> put them in the tree, and your own is a
+          restricted-JavaScript function the engine parses, never evaluates. The{" "}
+          <a href="#/transform-graph">Transform graph tab</a> explains it.
+        </p>
+        <CodeBlock language="ts" code={snippetText("exaggeration.next.ts")} />
+        <ul>
+          <li>
+            <C>pickIn</C> reads a pick, and <C>pointIn</C> and <C>measureIn</C>{" "}
+            a point or a distance, in any node, in float64. <C>accuracyAlong</C>{" "}
+            gives the accuracy along a route, from the Jacobian of each smooth
+            node and its own stated figure.
+          </li>
+          <li>
+            A slider is a <C>PlacementParameter</C>, one float. A view can hold
+            its own value with <C>view.setParameter</C>, and a switch node takes
+            a different route in each view.
+          </li>
+          <li>
+            <C>Georeference</C> replaces <C>DesignPlacement</C>. Placement modes
+            are decided against, and the <C>mode</C> field goes with the API
+            review.
+          </li>
+        </ul>
+        <Written
+          from={
+            <>
+              <C>src/transform</C>, <C>src/transforms</C>,{" "}
+              <C>src/georeference</C>, <C>src/frames/smoothFrame.ts</C> and the
+              overall plan, section 13.37
+            </>
+          }
+          on="2026-11-12"
+        />
+      </Section>
+
       <Section title="The principles behind it">
         <ul>
           {PRINCIPLES.map((p) => (
             <li key={p}>{p}</li>
           ))}
         </ul>
-        <Written from="the overall plan, section 3.10" on="2026-11-08" />
+        <Written
+          from="the overall plan, sections 3.10 and 13.37"
+          on="2026-11-12"
+        />
       </Section>
 
       <Section title="The surface, by entry point">

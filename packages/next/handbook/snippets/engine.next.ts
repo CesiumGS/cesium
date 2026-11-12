@@ -13,6 +13,9 @@ const view = engine.addView({ target: new CanvasTarget(canvas), world });
 // Content arrives asynchronously and registers with its world.
 await engine.addTileset(world, url);
 
+// Waiting is explicit: this resolves after the first frame with no stand-ins.
+await engine.whenReady(view);
+
 // Picks read back from the GPU, so the answer is a promise.
 const hit = await view.pick(x, y);
 // --- end

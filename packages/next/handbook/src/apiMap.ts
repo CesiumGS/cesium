@@ -165,6 +165,19 @@ export const API_ROWS: readonly ApiRow[] = [
   },
   {
     group: "scene",
+    old: [
+      "Scene.verticalExaggeration",
+      "Scene.verticalExaggerationRelativeHeight",
+    ],
+    next: ["verticalExaggeration", "frames:smoothFrame"],
+    supporting: ["VerticalExaggeration", "VerticalExaggerationOptions"],
+    status: "changed",
+    note: "Exaggeration isn't a scene setting. `verticalExaggeration({ factor, baseHeight, ceiling })` is a smooth node placed over the content it exaggerates, so terrain, tilesets and models under it are drawn exaggerated, what isn't under it (the Moon, the camera) isn't, and picks and measurements still return true heights. `baseHeight` is 1.x's relative height; a `ceiling` shifts the sky instead of stretching it. A slider is one float, and a view may hold its own value.",
+    source: "Overall plan, section 13.37",
+    snippet: "exaggeration",
+  },
+  {
+    group: "scene",
     old: ["Scene.requestRender", "Scene.requestRenderMode"],
     nextLabel: "`Engine.renderMode` and `engine.requestRender()`",
     status: "changed",
@@ -355,7 +368,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "MAX_CLIP_FRAGMENT_EDGES",
     ],
     status: "changed",
-    note: "`globe.terrain.addRegion(shape)` cuts terrain to a rectangle or polygon, up to 32 regions; it applies to terrain, not to tilesets.",
+    note: "`globe.terrain.addRegion(shape)` cuts terrain to a rectangle or polygon, up to 32 regions; it applies to terrain, not to tilesets. To cut tilesets and models with a polygon, use a world clip's extruded `polygon` shape: `keep: 'outside'` cuts the polygon out as 1.x does by default, and `keep: 'inside'` is its `inverse`.",
   },
   {
     group: "globe",
@@ -714,7 +727,8 @@ export const API_ROWS: readonly ApiRow[] = [
       "triangulateRegion",
     ],
     status: "changed",
-    note: "Clips are world objects, not per tileset or model: `world.addClip(set)` with planes, boxes and extruded polygons in any frame, combined by union or intersection, keeping inside or outside, and views opt in by mask. Each set is tested per fragment on the true point or the drawn one, whichever its frame reaches rigidly, so a cut named in ITRF stays at its true height under exaggeration. Picks and the view's queries respect them; world questions take a clip set explicitly. Caps close a cut: instantly on the GPU for the views that ask (`View.clipCaps`: the solid draws, `DrawOptions.solid`, are counted behind each cut face per pixel and the cap is drawn where the count is odd, so a moving clip never has a frame without it); exact for a b-rep (`BrepCaps`, `sectionBrep`, in steps within a frame's budget or in a worker through a `SectionRunner`), cut from the triangles for a mesh (`MeshCaps`, with its polygons exposed for exact picks). A `CapScheduler` given the engine rebuilds them and wakes it. Curved clips have no GPU cap. Exemptions come later. Plan §13.26, increment 8.",
+    note: "Clips are world objects, not per tileset or model: `world.addClip(set)` with planes, boxes and extruded polygons in any frame, combined by union or intersection, keeping inside or outside, and views opt in by mask. 1.x's `edgeWidth` highlight has no direct equivalent: a set's `effect` can instead give a custom shader the distance to the cut to glow or fade, draw what was cut as a translucent ghost, or only report. Each set is tested per fragment on the true point or the drawn one, whichever its frame reaches rigidly, so a cut named in ITRF stays at its true height under exaggeration, and across a deformed route it is cut along a fitted distance. Picks and the view's queries respect them; world questions take a clip set explicitly. Caps close a cut: instantly on the GPU for the views that ask (`View.clipCaps`: the solid draws, `DrawOptions.solid`, are counted behind each cut face per pixel and the cap is drawn where the count is odd, so a moving clip never has a frame without it); exact for a b-rep (`BrepCaps`, `sectionBrep`, in steps within a frame's budget or in a worker through a `SectionRunner`), cut from the triangles for a mesh (`MeshCaps`, with its polygons exposed for exact picks). A `CapScheduler` given the engine rebuilds them and wakes it. Curved clips have no GPU cap. A draw can exempt itself from clips (`DrawOptions.clipExempt`); a per-feature exemption comes with the styling language's run-time data. Plan §13.26, increment 8.",
+    snippet: "clipping",
   },
   {
     group: "tiles",
@@ -832,7 +846,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "TextureSource",
     ],
     status: "changed",
-    note: "The name stays, but shaders are WGSL or Slang, not GLSL, so 1.x's shader text must be rewritten. A shader that fails falls back to the engine's.",
+    note: "The name stays, but shaders are WGSL or Slang, not GLSL, so 1.x's shader text must be rewritten. A shader that fails falls back to the engine's. A `vertexMain` that moved vertices to exaggerate or reproject should become a transform-graph node instead: picks, bounds, normals and clips then follow it, and `displacement` is left for small effects, where it pads the culling bounds. A clipped fragment's `clipDistance` reaches the shader through a clip's `effect`.",
     snippet: "shader",
   },
   {
@@ -1621,7 +1635,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "MAX_ANCHORS",
     ],
     status: "new",
-    note: "An optional tree of reference frames answers where one thing is in another at a given time, with its accuracy.",
+    note: "An optional tree of reference frames answers where one thing is in another at a given time, with its accuracy. `smoothFrame` and `switchFrame` put deformers, and per-view choices of one, in the same tree.",
   },
   {
     group: "frames",
@@ -1818,7 +1832,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "proj:wkt2Problem",
     ],
     status: "new",
-    note: "An optional module for engineering coordinates: PROJ with its grids, placing and georeferencing models, and alignments with stations.",
+    note: "An optional module for engineering coordinates: PROJ with its grids, placing and georeferencing models (`Georeference`, once `DesignPlacement`), and alignments with stations. Placement modes (`placeRigid`, `placeReprojected`, `placeHosted`) are decided against: the declared CRS will choose the route, and the API review removes the `mode` field.",
   },
   {
     group: "frames",
@@ -1830,11 +1844,11 @@ export const API_ROWS: readonly ApiRow[] = [
   {
     group: "frames",
     old: ["GeographicProjection", "WebMercatorProjection", "MapProjection"],
-    nextLabel: "Planned differently, in 5f: the project's CRS",
-    status: "absent",
-    gap: "later",
-    note: "In 1.x these fixed projections serve 2D and Columbus view. Plan 5f's design view, not built, lays content flat in the project's own CRS instead. A whole-world flat map, as with Web Mercator, isn't in the spec and is an open point: it may follow from the same mechanism with a world-spanning CRS, but that's not decided, and it would need tiles and wrapping across the antimeridian.",
-    source: "Plan 5 spec, section 13.2",
+    next: ["webMercator", "utm", "transverseMercator", "lambertConformalConic"],
+    nextLabel: "Projections as nodes of the transform graph",
+    status: "covered",
+    note: "The map math is a smooth node with an inverse (`webMercator`, `utm`, `transverseMercator`, `lambertConformalConic`, and the `...ToGeographic` ones for content authored in a projected CRS), not a projection object you call. What 1.x used these for, 2D and Columbus view, is planned in 5f's design view and isn't built. A whole-world flat map, as with Web Mercator, isn't in the spec and is an open point.",
+    source: "Overall plan, section 13.37; plan 5 spec, section 13.2",
   },
 
   // -------------------------------------------------------------------- Math
@@ -2105,6 +2119,17 @@ export const API_ROWS: readonly ApiRow[] = [
     status: "changed",
     note: "`events.on` replaces `addEventListener`, and errors come through `engine.onError`. Tilesets report a request starting, and have no event for a tile loading or failing yet.",
     snippet: "events",
+  },
+  {
+    group: "events",
+    old: [
+      "Cesium3DTileset.allTilesLoaded",
+      "Cesium3DTileset.initialTilesLoaded",
+    ],
+    nextLabel: "`engine.whenReady(view)`, a promise",
+    status: "changed",
+    note: "A promise instead of events, and it asks the view, not a tileset: it resolves after the first frame in which no draw used a stand-in, with an optional `signal` and `timeoutMs`. It is provisional.",
+    snippet: "ready",
   },
   {
     group: "events",

@@ -27,7 +27,7 @@ import { Compatibility } from "./tabs/compatibility.tsx";
 import { Compare } from "./tabs/compare.tsx";
 import { Differences } from "./tabs/differences.tsx";
 import { Dyno } from "./tabs/dyno.tsx";
-import { Frames } from "./tabs/frames.tsx";
+import { Georeferencing } from "./tabs/georeference.tsx";
 import { Ion } from "./tabs/ion.tsx";
 import { Mobile } from "./tabs/mobile.tsx";
 import { Overview } from "./tabs/overview.tsx";
@@ -41,7 +41,6 @@ import { Tessellation } from "./tabs/tessellation.tsx";
 import { Shading } from "./tabs/shading.tsx";
 import { Specs } from "./tabs/specs.tsx";
 import { Vector } from "./tabs/vector.tsx";
-import { Warps } from "./tabs/warps.tsx";
 import { TransformGraph } from "./tabs/transformGraph.tsx";
 
 interface Tab {
@@ -59,8 +58,48 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
       { id: "unified", label: "One core, many uses", view: Unified },
       { id: "api", label: "Public API", view: Api },
       { id: "reference", label: "API reference", view: ApiReference },
+    ],
+  },
+  {
+    title: "Coming from 1.x",
+    tabs: [
       { id: "differences", label: "Differences from 1.x", view: Differences },
       { id: "compare", label: "1.x to 2.0 API", view: Compare },
+    ],
+  },
+  {
+    title: "Placement and coordinates",
+    tabs: [
+      { id: "transform-graph", label: "Transform graph", view: TransformGraph },
+      { id: "georeferencing", label: "Georeferencing", view: Georeferencing },
+      { id: "precision", label: "Precision and accuracy", view: Precision },
+      { id: "clipping", label: "Clipping", view: Clipping },
+    ],
+  },
+  {
+    title: "Geometry",
+    tabs: [
+      { id: "scene", label: "Scene representation", view: Scene },
+      { id: "breps", label: "B-reps and geometry queries", view: Breps },
+      { id: "tessellation", label: "GPU tessellation", view: Tessellation },
+      { id: "vector", label: "Vector rendering", view: Vector },
+    ],
+  },
+  {
+    title: "Rendering",
+    tabs: [
+      { id: "rendering", label: "Rendering", view: Rendering },
+      { id: "shading", label: "Shading and linker", view: Shading },
+      { id: "shadows", label: "Shadows", view: Shadows },
+      { id: "cameras", label: "Cameras", view: Cameras },
+      { id: "mobile", label: "Mobile", view: Mobile },
+    ],
+  },
+  {
+    title: "Streaming",
+    tabs: [
+      { id: "selection", label: "Tile selection", view: Selection },
+      { id: "ion", label: "Cesium ion", view: Ion },
     ],
   },
   {
@@ -70,35 +109,6 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
       { id: "dyno", label: "Dyno", view: Dyno },
       { id: "browsers", label: "Browser compatibility", view: Compatibility },
       { id: "specs", label: "Spec extensions", view: Specs },
-    ],
-  },
-  {
-    title: "Deep dives",
-    tabs: [
-      { id: "scene", label: "Scene representation", view: Scene },
-      { id: "frames", label: "Frame tree", view: Frames },
-      { id: "warps", label: "Warps and routes", view: Warps },
-      {
-        id: "transform-graph",
-        label: "Transform graph (draft)",
-        view: TransformGraph,
-      },
-      { id: "clipping", label: "Clipping", view: Clipping },
-      { id: "cameras", label: "Cameras", view: Cameras },
-      { id: "rendering", label: "Rendering", view: Rendering },
-      { id: "shadows", label: "Shadows", view: Shadows },
-      { id: "selection", label: "Tile selection", view: Selection },
-      { id: "precision", label: "Precision and accuracy", view: Precision },
-      { id: "shading", label: "Shading and linker", view: Shading },
-      { id: "vector", label: "Vector rendering", view: Vector },
-      { id: "breps", label: "B-reps and geometry queries", view: Breps },
-      {
-        id: "tessellation",
-        label: "Tessellation",
-        view: Tessellation,
-      },
-      { id: "mobile", label: "Mobile", view: Mobile },
-      { id: "ion", label: "Cesium ion", view: Ion },
     ],
   },
 ];

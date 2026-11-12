@@ -15,7 +15,7 @@ const CONCEPTS = [
   {
     topic: "Several views",
     old: "Separate viewers, each with its own copy of the scene. SharedContext, marked private, lets scenes share a WebGL context.",
-    next: "Any number of views of one world, on one device and tile cache, with links between them (ViewLink).",
+    next: "Any number of views of one world, on one device and tile cache, with links between them (ViewLink). A view can hold its own transform parameters, such as its own exaggeration, or take its own route through a switch node.",
   },
   {
     topic: "Content and what's drawn",
@@ -50,7 +50,7 @@ const CONCEPTS = [
   {
     topic: "Flat views",
     old: "2D and Columbus view on a fixed map projection, with a scene morph to 3D, for the whole world",
-    next: "Planned in 5f, not built: a design view, flat in the project's own CRS by a per-tile fit with a stated error bound, with a morph to the globe. An orthographic camera (5d) gives the 2D look. It's regional, within the CRS's area of use. Whole-world flat maps are an open point.",
+    next: "Planned in 5f, not built: a design view, flat in the project's own CRS, with a morph to the globe. The projections it needs exist as transform-graph nodes. An orthographic camera (5d) gives the 2D look. It's regional, within the CRS's area of use. Whole-world flat maps are an open point.",
   },
   {
     topic: "Streaming",
@@ -60,7 +60,27 @@ const CONCEPTS = [
   {
     topic: "Custom shaders",
     old: "GLSL in CustomShader",
-    next: "CustomShader in WGSL or Slang, against a versioned contract, joined by a linker. A shader that fails falls back to the engine's, with the error reported.",
+    next: "CustomShader in WGSL or Slang, against a versioned contract, joined by a linker. A shader that fails falls back to the engine's, with the error reported. A vertex stage that moved vertices to exaggerate or reproject is better as a transform-graph node: picks, bounds, normals and clips then follow it.",
+  },
+  {
+    topic: "Vertical exaggeration",
+    old: "scene.verticalExaggeration and a relative height: one setting for the whole scene",
+    next: "A node of the transform graph over the content it exaggerates, from verticalExaggeration and smoothFrame. What isn't under it (the Moon, the camera) isn't exaggerated, picks and measurements keep true heights, and a ceiling shifts the sky instead of stretching it. A slider is one float, and each view can hold its own value.",
+  },
+  {
+    topic: "Placing and reprojecting content",
+    old: "A tileset's transform and modelMatrix, with 3D Tiles' ECEF coordinates. Content authored in a projected CRS isn't reprojected",
+    next: "A tree of frames whose edges are affine or smooth. A tileset's declared CRS picks its route to the body: the identity for a geocentric one, a fitted coordinate operation for a projected one, a rigid site transform for a local one. There are no placement modes. The tree is compiled to one GPU function per route.",
+  },
+  {
+    topic: "Clipping",
+    old: "ClippingPlaneCollection and ClippingPolygonCollection set on a tileset, a model or the globe, with an edge highlight and no caps",
+    next: "Clips are world objects in any frame: planes, boxes and polygon prisms, joined by union or intersection, that views opt into. They cut every representation, picks and queries included. Cut faces are capped (on the GPU, exact for a b-rep), and an effect can leave what's cut as a translucent ghost.",
+  },
+  {
+    topic: "Knowing it has loaded",
+    old: "Events on each tileset (initialTilesLoaded, allTilesLoaded)",
+    next: "await engine.whenReady(view): one promise for everything a view draws, resolved after the first frame with no stand-ins. It is provisional.",
   },
   {
     topic: "3D Tiles styling",
@@ -85,7 +105,7 @@ const CONCEPTS = [
   {
     topic: "Time and reference frames",
     old: "JulianDate, Transforms, the camera in one Earth-fixed space",
-    next: "Instant and a frame tree in optional modules; a view's render space follows its camera rig.",
+    next: "Instant and a frame tree in optional modules; a view's render space follows its camera rig, and a tileset sits under a node of the transform graph.",
   },
   {
     topic: "Assets",
@@ -134,11 +154,15 @@ const CHOICES = [
 const EXTENSIONS = [
   {
     state: "Supported",
-    what: "KHR_materials_unlit, KHR_mesh_quantization, Draco, meshopt, KHR_texture_basisu, EXT_mesh_features, EXT_structural_metadata, EXT_mesh_gpu_instancing, EXT_instance_features, CESIUM_RTC, 3DTILES_batch_table_hierarchy",
+    what: "KHR_materials_unlit, KHR_mesh_quantization, Draco, meshopt (EXT_ and KHR_), KHR_texture_basisu, EXT_mesh_features, EXT_structural_metadata, EXT_mesh_gpu_instancing, EXT_instance_features, KHR_lights_punctual (point and spot), CESIUM_RTC, 3DTILES_batch_table_hierarchy",
+  },
+  {
+    state: "Read, with limits",
+    what: "3DTILES_multiple_contents (only the first content is drawn, with a warning), KHR_texture_transform (ignored, with a warning), CESIUM_primitive_outline (tolerated, not drawn), BENTLEY_brep (drawn through World.addBrep, not by the model path)",
   },
   {
     state: "Planned",
-    what: "Implicit tiling, multiple contents, more bounding volumes, point clouds, Gaussian splats, vector content, classification",
+    what: "Implicit tiling (subtree files aren't read), more bounding volumes, point clouds, Gaussian splats, vector content, classification, and the 3D Tiles 2.0 draft's EXT_geospatial_crs and EXT_georeference, with the API review",
   },
   {
     state: "Later or undecided",
@@ -194,8 +218,8 @@ export function Differences() {
           rows={CONCEPTS}
         />
         <Written
-          from="the overall plan, sections 2, 3 and 8, and the source"
-          on="2026-11-08"
+          from="the overall plan, sections 2, 3, 8 and 13.37, and the source"
+          on="2026-11-12"
         />
       </Section>
 
@@ -233,9 +257,9 @@ export function Differences() {
           rows={EXTENSIONS}
         />
         <p className="provenance">
-          Summarized from the overall plan, section 4.1, whose table dates from
-          revision r33. It needs a refresh against M4's work before anyone
-          relies on the details.
+          Read from the loaders' supported lists in the code on 2026-11-12. The
+          overall plan's section 4.1 table, from revision r33, says more is
+          planned than this lists.
         </p>
       </Section>
 
