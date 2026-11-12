@@ -67,7 +67,7 @@ const MODULES: Record<string, () => ModuleWords> = {
     optional: true,
     path: "@cesium/next/proj",
     forWhat:
-      "Engineering coordinates, tileset placement, snapping and alignments, for models in their own coordinate systems.",
+      "PROJ for any coordinate operation the core's built-in reprojections don't cover (datum grids, the EPSG catalogue), plus snapping and alignments with stations.",
     loads: <>With the page, if you import it. {entrySize("proj")}.</>,
     downloads: (
       <>
@@ -82,7 +82,7 @@ const MODULES: Record<string, () => ModuleWords> = {
     optional: true,
     path: "@cesium/next/frames",
     forWhat:
-      "The tree of reference frames, its catalog and trajectories, answering where one is in another at a given time.",
+      "The catalogue of reference frames (ICRF, ITRF, the bodies), Earth orientation, ephemerides and trajectories: data feeding the transform graph, answering where one frame is in another at a given time. smoothFrame and switchFrame put the graph's smooth and per-view nodes in it.",
     loads: <>With the page, if you import it. {entrySize("frames")}.</>,
     onDemand: (
       <>
@@ -106,7 +106,7 @@ const MODULES: Record<string, () => ModuleWords> = {
     optional: true,
     path: "@cesium/next/time",
     forWhat:
-      "Instant, time scales, leap seconds and the scene clock. An app with a timeline needs it, without the frame tree.",
+      "Instant, time scales, leap seconds and the scene clock. An app with a timeline needs it, without the frames catalogue.",
     loads: <>With the page, if you import it. {entrySize("time")}.</>,
     downloads:
       "Nothing it must have: a leap-second table is built in, and a newer one is used only if it's supplied.",
@@ -116,7 +116,7 @@ const MODULES: Record<string, () => ModuleWords> = {
     optional: false,
     path: "@cesium/next",
     forWhat:
-      "Engine, World, View and Camera, with tilesets, the globe, vector layers and the camera layer. Everything that draws.",
+      "Engine, World, View and Camera, with tilesets, the globe, vector layers, b-reps and the camera layer, and the transform graph that places, reprojects and deforms all of it. Everything that draws.",
     loads: <>Always, with the page. {entrySize("core")}.</>,
     onDemand: (
       <>
@@ -218,10 +218,27 @@ export function ModuleStack() {
         ))}
       </div>
       <ModuleBlock id="core" wide>
+        <div
+          className="stack-inner"
+          aria-label="The transform graph inside the core"
+        >
+          <p className="stack-rule">
+            <strong>Inside the core, the transform graph:</strong>{" "}
+            <C>transform</C> (the graph, routes, the restricted-JS parser, IR,
+            autodiff and the route compiler) ← <C>transforms</C> (generic smooth
+            transforms: bend, twist, taper, lattice, lens, corridor, velocity
+            model) and <C>georeference</C> (exaggeration, height offset,
+            flatten, the built-in reprojections, <C>Georeference</C>). The
+            built-ins use only the transform core; the transform core uses none
+            of them. Details on the{" "}
+            <a href="#/transform-graph">Transform graph</a> and{" "}
+            <a href="#/georeferencing">Georeferencing</a> tabs.
+          </p>
+        </div>
         <p className="stack-rule">
           Optional modules may use the core. The core never uses them: it
           reaches them only through its frame resolver and clock interfaces, so
-          an app that doesn't import them doesn't load them.
+          an app that doesn&apos;t import them doesn&apos;t load them.
         </p>
       </ModuleBlock>
       <ModuleBlock id="utilities" wide />
