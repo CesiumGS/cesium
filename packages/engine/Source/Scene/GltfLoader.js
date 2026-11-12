@@ -1,24 +1,33 @@
+import {
+  AttributeType,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Check,
+  ComponentDatatype,
+  Frozen,
+  InterpolationType,
+  Matrix4,
+  PrimitiveType,
+  Quaternion,
+  RuntimeError,
+  addAllToArray,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
+import {
+  getAccessorByteStride,
+  getComponentReader,
+  numberOfComponentsForType,
+} from "@cesium/gltf";
 import ArticulationStageType from "../Core/ArticulationStageType.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Check from "../Core/Check.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import InterpolationType from "../Core/InterpolationType.js";
-import Matrix4 from "../Core/Matrix4.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-import Quaternion from "../Core/Quaternion.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Sampler from "../Renderer/Sampler.js";
-import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
-import getComponentReader from "./GltfPipeline/getComponentReader.js";
-import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
+import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
+import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
-import AttributeType from "./AttributeType.js";
+import { isSpzSemantic } from "./GltfSpzLoader.js";
 import Axis from "./Axis.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import hasExtension from "./hasExtension.js";
@@ -31,8 +40,6 @@ import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import GltfGpmLoader from "./Model/Extensions/Gpm/GltfGpmLoader.js";
 import GltfMeshPrimitiveGpmLoader from "./Model/Extensions/Gpm/GltfMeshPrimitiveGpmLoader.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
-import addAllToArray from "../Core/addAllToArray.js";
 import getMeshPrimitives from "./getMeshPrimitives.js";
 
 const {
@@ -61,7 +68,11 @@ const {
   Specular,
   Anisotropy,
   Clearcoat,
+  PlanarFill,
+  LineStyle,
   Material,
+  Vector,
+  Polygon,
 } = ModelComponents;
 
 /**
@@ -173,30 +184,28 @@ const GltfLoaderState = {
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF. This is often the path of the .gltf or .glb file, but may also be the path of the .b3dm, .i3dm, or .cmpt file containing the embedded glb. .cmpt resources should have a URI fragment indicating the index of the inner content to which the glb belongs in order to individually identify the glb in the cache, e.g. http://example.com/tile.cmpt#index=2.
- * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents, e.g. from a .b3dm, .i3dm, or .cmpt file.
- * @param {object} [options.gltfJson] A parsed glTF JSON file instead of passing it in as a typed array.
- * @param {boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
- * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
- * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
- * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
- * @param {boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
- * @param {boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
- * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
- * @param {boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
- * @param {boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
- * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
- * @param {boolean} [options.renameBatchIdSemantic=false] If <code>true</code>, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
  * @private
  */
 class GltfLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF. This is often the path of the .gltf or .glb file, but may also be the path of the .b3dm, .i3dm, or .cmpt file containing the embedded glb. .cmpt resources should have a URI fragment indicating the index of the inner content to which the glb belongs in order to individually identify the glb in the cache, e.g. http://example.com/tile.cmpt#index=2.
+   * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents, e.g. from a .b3dm, .i3dm, or .cmpt file.
+   * @param {object} [options.gltfJson] A parsed glTF JSON file instead of passing it in as a typed array.
+   * @param {boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+   * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+   * @param {boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
+   * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
+   * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
+   * @param {boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
+   * @param {boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
+   * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
+   * @param {boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
+   * @param {boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
+   * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
+   * @param {boolean} [options.renameBatchIdSemantic=false] If <code>true</code>, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
+   */
   constructor(options) {
     super();
 
@@ -287,7 +296,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -300,7 +308,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * The loaded components.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {ModelComponents.Components}
    * @readonly
@@ -313,7 +320,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * The loaded glTF json.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {object}
    * @readonly
@@ -329,7 +335,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * Returns true if textures are loaded separately from the other glTF resources.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {boolean}
    * @readonly
@@ -342,7 +347,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * true if textures are loaded, useful when incrementallyLoadTextures is true
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {boolean}
    * @readonly
@@ -538,6 +542,7 @@ class GltfLoader extends ResourceLoader {
 
 /**
  * Loads the gltf object
+ * @ignore
  */
 async function loadGltfJson(loader) {
   loader._state = GltfLoaderState.LOADING;
@@ -807,13 +812,7 @@ function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
   byteOffset = bufferViewTypedArray.byteOffset + byteOffset;
 
   for (let i = 0; i < count; ++i) {
-    componentReader(
-      dataView,
-      byteOffset,
-      componentCount,
-      componentByteLength,
-      components,
-    );
+    componentReader(dataView, byteOffset, componentCount, components);
     for (let j = 0; j < componentCount; ++j) {
       accessorTypedArray[i * componentCount + j] = components[j];
     }
@@ -902,6 +901,38 @@ function loadAccessor(loader, accessor, useQuaternion) {
   }
 
   return loadDefaultAccessorValues(accessor, values);
+}
+
+function loadAccessorTypedArray(loader, accessor) {
+  const values = ComponentDatatype.createTypedArray(
+    accessor.componentType,
+    accessor.count * AttributeType.getNumberOfComponents(accessor.type),
+  );
+
+  if (!defined(accessor.bufferView)) {
+    return values;
+  }
+
+  const bufferViewLoader = getBufferViewLoader(loader, accessor.bufferView);
+
+  // Save a link to the gltfJson, which is removed after bufferViewLoader.load()
+  const { gltfJson } = loader;
+
+  const promise = bufferViewLoader.load().then(() => {
+    if (loader.isDestroyed()) {
+      return;
+    }
+    const result = getPackedTypedArray(
+      gltfJson,
+      accessor,
+      bufferViewLoader.typedArray,
+    );
+    values.set(result);
+  });
+
+  loader._loaderPromises.push(promise);
+
+  return values;
 }
 
 function fromArray(MathType, values) {
@@ -1265,7 +1296,15 @@ function loadAttribute(
     setIndex,
   );
 
-  if (!defined(draco) && !defined(bufferViewId) && !defined(spz)) {
+  // SPZ decompression only handles a fixed set of Gaussian splat semantics.
+  // Non-SPZ attributes (e.g. _FEATURE_ID_0) whose accessors lack a
+  // bufferView must fall through to the zero-initialized default rather than
+  // being routed through the SPZ loader (which would leave them undefined).
+  // isSpzSemantic is the shared source of truth (see GltfSpzLoader).
+  const isSpzDecodable = defined(spz) && isSpzSemantic(gltfSemantic);
+  const effectiveSpz = isSpzDecodable ? spz : undefined;
+
+  if (!defined(draco) && !defined(bufferViewId) && !defined(effectiveSpz)) {
     return attribute;
   }
 
@@ -1275,7 +1314,7 @@ function loadAttribute(
     gltfSemantic,
     primitive,
     draco,
-    spz,
+    effectiveSpz,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1301,7 +1340,7 @@ function loadAttribute(
         loadBuffer,
         loadTypedArray,
       );
-    } else if (defined(spz)) {
+    } else if (defined(effectiveSpz)) {
       finalizeSpzAttribute(
         attribute,
         vertexBufferLoader,
@@ -1540,7 +1579,41 @@ function loadIndices(
   return indicesPlan;
 }
 
-function loadTexture(loader, textureInfo, frameState, samplerOverride) {
+/**
+ * Returns a copy of <code>sampler</code> with its minification and magnification
+ * filters replaced. Undefined filters keep the value already on the sampler, and
+ * every other property, in particular the wrap modes declared by the glTF, is
+ * carried over unchanged.
+ *
+ * @param {Sampler} sampler The sampler created from the glTF.
+ * @param {TextureMinificationFilter} [minificationFilter] The minification filter to apply instead of the one on <code>sampler</code>.
+ * @param {TextureMagnificationFilter} [magnificationFilter] The magnification filter to apply instead of the one on <code>sampler</code>.
+ * @returns {Sampler} A sampler using the given filters and the original wrap modes.
+ *
+ * @private
+ */
+function overrideSamplerFilters(
+  sampler,
+  minificationFilter,
+  magnificationFilter,
+) {
+  return new Sampler({
+    wrapR: sampler.wrapR,
+    wrapS: sampler.wrapS,
+    wrapT: sampler.wrapT,
+    minificationFilter: minificationFilter ?? sampler.minificationFilter,
+    magnificationFilter: magnificationFilter ?? sampler.magnificationFilter,
+    maximumAnisotropy: sampler.maximumAnisotropy,
+  });
+}
+
+function loadTexture(
+  loader,
+  textureInfo,
+  frameState,
+  minificationFilterOverride,
+  magnificationFilterOverride,
+) {
   const gltf = loader.gltfJson;
   const imageId = GltfLoaderUtil.getImageIdFromTexture({
     gltf: gltf,
@@ -1588,9 +1661,17 @@ function loadTexture(loader, textureInfo, frameState, samplerOverride) {
   // Save this finish callback by the loader index so it can be called
   // in process().
   loader._textureCallbacks[index] = () => {
-    textureReader.texture = textureLoader.texture;
-    if (defined(samplerOverride)) {
-      textureReader.texture.sampler = samplerOverride;
+    const texture = textureLoader.texture;
+    textureReader.texture = texture;
+    if (
+      defined(minificationFilterOverride) ||
+      defined(magnificationFilterOverride)
+    ) {
+      texture.sampler = overrideSamplerFilters(
+        texture.sampler,
+        minificationFilterOverride,
+        magnificationFilterOverride,
+      );
     }
   };
 
@@ -1759,6 +1840,51 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
 }
 
 /**
+ * Load properties for the BENTLEY_materials_planar_fill extension.
+ *
+ * Note: The wireframeFill property is loaded but is currently a NO-OP in the
+ * rendering pipeline. CesiumJS does not yet have a proper wireframe rendering
+ * mode, so this value is stored for completeness but has no effect on rendering.
+ * See https://github.com/CesiumGS/cesium/issues/13620 and
+ * MaterialPipelineStage.js for more details.
+ *
+ * @param {object} planarFillInfo The contents of the BENTLEY_materials_planar_fill extension in the parsed glTF JSON
+ * @returns {ModelComponents.PlanarFill}
+ * @private
+ */
+function loadPlanarFill(planarFillInfo) {
+  return new PlanarFill(planarFillInfo);
+}
+
+function loadLineStyle(lineStyleInfo) {
+  if (!defined(lineStyleInfo)) {
+    return undefined;
+  }
+
+  const lineStyle = new LineStyle();
+
+  if (defined(lineStyleInfo.width)) {
+    const width = lineStyleInfo.width;
+    if (width > 0 && Math.floor(width) === width) {
+      lineStyle.width = width;
+    }
+  }
+
+  if (defined(lineStyleInfo.pattern)) {
+    const pattern = lineStyleInfo.pattern;
+    if (pattern >= 0 && pattern <= 65535 && Math.floor(pattern) === pattern) {
+      lineStyle.pattern = pattern;
+    }
+  }
+
+  if (!defined(lineStyle.width) && !defined(lineStyle.pattern)) {
+    return undefined;
+  }
+
+  return lineStyle;
+}
+
+/**
  * Load textures and parse factors and flags for a glTF material
  *
  * @param {GltfLoader} loader
@@ -1776,6 +1902,8 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   const pbrAnisotropy = extensions.KHR_materials_anisotropy;
   const pbrClearcoat = extensions.KHR_materials_clearcoat;
   const pbrMetallicRoughness = gltfMaterial.pbrMetallicRoughness;
+  const planarFill = extensions.BENTLEY_materials_planar_fill;
+  const pbrEmissiveStrength = extensions.KHR_materials_emissive_strength;
 
   material.unlit = defined(extensions.KHR_materials_unlit);
 
@@ -1828,9 +1956,19 @@ function loadMaterial(loader, gltfMaterial, frameState) {
     );
   }
   material.emissiveFactor = fromArray(Cartesian3, gltfMaterial.emissiveFactor);
+
+  if (defined(pbrEmissiveStrength)) {
+    material.emissiveStrength = pbrEmissiveStrength;
+  }
+
   material.alphaMode = gltfMaterial.alphaMode;
   material.alphaCutoff = gltfMaterial.alphaCutoff;
   material.doubleSided = gltfMaterial.doubleSided;
+
+  // BENTLEY_materials_planar_fill extension
+  if (defined(planarFill)) {
+    material.planarFill = loadPlanarFill(planarFill);
+  }
 
   // BENTLEY_materials_point_style extension
   const pointStyleExtension = extensions.BENTLEY_materials_point_style;
@@ -1841,6 +1979,8 @@ function loadMaterial(loader, gltfMaterial, frameState) {
       material.pointDiameter = Math.floor(diameter);
     }
   }
+
+  material.lineStyle = loadLineStyle(extensions.BENTLEY_materials_line_style);
 
   return material;
 }
@@ -1930,7 +2070,10 @@ function loadFeatureIdTexture(
     loader,
     textureInfo,
     frameState,
-    Sampler.NEAREST, // Feature ID textures require nearest sampling
+    // Feature ID textures require nearest sampling. Only the filters are
+    // overridden so the wrap modes declared by the glTF are preserved.
+    TextureMinificationFilter.NEAREST,
+    TextureMagnificationFilter.NEAREST,
   );
 
   // Though the new channel index is more future-proof, this implementation
@@ -1965,7 +2108,10 @@ function loadFeatureIdTextureLegacy(
     loader,
     textureInfo,
     frameState,
-    Sampler.NEAREST, // Feature ID textures require nearest sampling
+    // Feature ID textures require nearest sampling. Only the filters are
+    // overridden so the wrap modes declared by the glTF are preserved.
+    TextureMinificationFilter.NEAREST,
+    TextureMagnificationFilter.NEAREST,
   );
 
   featureIdTexture.textureReader.channels = featureIds.channels;
@@ -2033,6 +2179,137 @@ function fetchSpzExtensionFrom(extensions) {
   return undefined;
 }
 
+function getEdgeVisibilityMaterialColor(loader, materialIndex) {
+  if (!defined(materialIndex)) {
+    return undefined;
+  }
+
+  const materials = loader.gltfJson.materials;
+  if (
+    !defined(materials) ||
+    materialIndex < 0 ||
+    materialIndex >= materials.length
+  ) {
+    return undefined;
+  }
+
+  const material = materials[materialIndex];
+  if (!defined(material)) {
+    return undefined;
+  }
+
+  const metallicRoughness =
+    material.pbrMetallicRoughness ?? Frozen.EMPTY_OBJECT;
+  const color = fromArray(Cartesian4, metallicRoughness.baseColorFactor);
+
+  if (defined(color)) {
+    return color;
+  }
+
+  return new Cartesian4(1.0, 1.0, 1.0, 1.0);
+}
+
+function getLineStringPrimitiveRestartValue(componentType) {
+  switch (componentType) {
+    case ComponentDatatype.UNSIGNED_BYTE:
+      return 255;
+    case ComponentDatatype.UNSIGNED_SHORT:
+      return 65535;
+    case ComponentDatatype.UNSIGNED_INT:
+      return 4294967295;
+    default:
+      throw new RuntimeError(
+        "EXT_mesh_primitive_edge_visibility line strings indices must use unsigned scalar component types.",
+      );
+  }
+}
+
+function loadEdgeVisibilityLineStrings(
+  loader,
+  lineStringDefinitions,
+  defaultMaterialIndex,
+) {
+  if (!defined(lineStringDefinitions) || lineStringDefinitions.length === 0) {
+    return undefined;
+  }
+
+  const result = new Array(lineStringDefinitions.length);
+  for (let i = 0; i < lineStringDefinitions.length; i++) {
+    const definition = lineStringDefinitions[i] ?? Frozen.EMPTY_OBJECT;
+    const accessorId = definition.indices;
+    const accessor = loader.gltfJson.accessors[accessorId];
+
+    if (!defined(accessor)) {
+      throw new RuntimeError("Edge visibility line string accessor not found!");
+    }
+
+    const indices = loadAccessorTypedArray(loader, accessor);
+    const restartIndex = getLineStringPrimitiveRestartValue(
+      accessor.componentType,
+    );
+    const materialIndex = defined(definition.material)
+      ? definition.material
+      : defaultMaterialIndex;
+
+    result[i] = {
+      indices: indices,
+      restartIndex: restartIndex,
+      componentType: accessor.componentType,
+      materialColor: getEdgeVisibilityMaterialColor(loader, materialIndex),
+    };
+  }
+
+  return result;
+}
+
+function loadEdgeVisibility(loader, edgeVisibilityExtension) {
+  if (!defined(edgeVisibilityExtension)) {
+    return undefined;
+  }
+
+  const edgeVisibility = {};
+
+  const visibilityAccessorId = edgeVisibilityExtension.visibility;
+  if (defined(visibilityAccessorId)) {
+    const visibilityAccessor = loader.gltfJson.accessors[visibilityAccessorId];
+    if (!defined(visibilityAccessor)) {
+      throw new RuntimeError("Edge visibility accessor not found!");
+    }
+    edgeVisibility.visibility = loadAccessorTypedArray(
+      loader,
+      visibilityAccessor,
+    );
+  }
+
+  edgeVisibility.materialColor = getEdgeVisibilityMaterialColor(
+    loader,
+    edgeVisibilityExtension.material,
+  );
+
+  if (defined(edgeVisibilityExtension.silhouetteNormals)) {
+    const silhouetteNormalsAccessor =
+      loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
+    if (defined(silhouetteNormalsAccessor)) {
+      // Packed typed array (x0,y0,z0, x1,y1,z1, ...), not an array of
+      // Cartesian3s. Avoids a large JS heap cost for edge-heavy tiles.
+      edgeVisibility.silhouetteNormals = loadAccessorTypedArray(
+        loader,
+        silhouetteNormalsAccessor,
+      );
+    }
+  }
+
+  if (defined(edgeVisibilityExtension.lineStrings)) {
+    edgeVisibility.lineStrings = loadEdgeVisibilityLineStrings(
+      loader,
+      edgeVisibilityExtension.lineStrings,
+      edgeVisibilityExtension.material,
+    );
+  }
+
+  return edgeVisibility;
+}
+
 /**
  * Load resources associated with a mesh primitive for a glTF node
  * @param {GltfLoader} loader
@@ -2058,6 +2335,21 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
 
   const extensions = gltfPrimitive.extensions ?? Frozen.EMPTY_OBJECT;
 
+  const polygonExtension = extensions.EXT_mesh_polygon;
+  if (defined(polygonExtension)) {
+    primitive.polygon = loadMeshPolygonExtension(
+      loader,
+      gltfPrimitive,
+      polygonExtension,
+    );
+  }
+
+  // @deprecated CESIUM_mesh_vector to be removed after v1.142 release.
+  const meshVectorExtension = extensions.CESIUM_mesh_vector;
+  if (defined(meshVectorExtension)) {
+    primitive.vector = loadMeshVectorExtension(loader, meshVectorExtension);
+  }
+
   let needsPostProcessing = false;
   const outlineExtension = extensions.CESIUM_primitive_outline;
   if (loader._loadPrimitiveOutline && defined(outlineExtension)) {
@@ -2070,40 +2362,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
-  // Edge Visibility
-  const edgeVisibilityExtension = extensions.EXT_mesh_primitive_edge_visibility;
-  const hasEdgeVisibility = defined(edgeVisibilityExtension);
-  if (hasEdgeVisibility) {
-    const visibilityAccessor =
-      loader.gltfJson.accessors[edgeVisibilityExtension.visibility];
-    if (!defined(visibilityAccessor)) {
-      throw new RuntimeError("Edge visibility accessor not found!");
-    }
-    const visibilityValues = loadAccessor(loader, visibilityAccessor);
-    primitive.edgeVisibility = {
-      visibility: visibilityValues,
-      material: edgeVisibilityExtension.material,
-    };
-
-    // Load silhouette normals
-    if (defined(edgeVisibilityExtension.silhouetteNormals)) {
-      const silhouetteNormalsAccessor =
-        loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
-      if (defined(silhouetteNormalsAccessor)) {
-        const silhouetteNormalsValues = loadAccessor(
-          loader,
-          silhouetteNormalsAccessor,
-        );
-        primitive.edgeVisibility.silhouetteNormals = silhouetteNormalsValues;
-      }
-    }
-
-    // Load line strings
-    if (defined(edgeVisibilityExtension.lineStrings)) {
-      primitivePlan.edgeVisibility.lineStrings =
-        edgeVisibilityExtension.lineStrings;
-    }
-  }
+  primitive.edgeVisibility = loadEdgeVisibility(
+    loader,
+    extensions.EXT_mesh_primitive_edge_visibility,
+  );
 
   //support the latest glTF spec and the legacy extension
   const spzExtension = fetchSpzExtensionFrom(extensions);
@@ -2197,6 +2459,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   const meshFeatures = extensions.EXT_mesh_features;
   const featureMetadataLegacy = extensions.EXT_feature_metadata;
   const hasFeatureMetadataLegacy = defined(featureMetadataLegacy);
+  const gpmLocal = extensions.NGA_gpm_local;
 
   // Load feature Ids
   if (defined(meshFeatures)) {
@@ -2217,6 +2480,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     loadPrimitiveMetadataLegacy(loader, primitive, featureMetadataLegacy);
   }
 
+  if (defined(gpmLocal)) {
+    loadGpmExtension(primitive, gpmLocal);
+  }
+
   const primitiveType = gltfPrimitive.mode;
   if (loadForClassification && primitiveType !== PrimitiveType.TRIANGLES) {
     throw new RuntimeError(
@@ -2233,6 +2500,115 @@ function loadPrimitiveOutline(loader, outlineExtension) {
   const accessor = loader.gltfJson.accessors[accessorId];
   const useQuaternion = false;
   return loadAccessor(loader, accessor, useQuaternion);
+}
+
+/**
+ * @typedef {object} EXTMeshPolygonExtension
+ * @property {number} count
+ * @property {number} indicesOffsets
+ * @property {number} [loopIndices]
+ * @property {number} [loopIndicesOffsets]
+ * @property {number} [triangleIndices]
+ * @property {number} [triangleIndicesOffsets]
+ */
+
+/**
+ * Load EXT_mesh_polygon.
+ * @param {GltfLoader} loader
+ * @param {object} gltfPrimitive
+ * @param {EXTMeshPolygonExtension} polygonExtension
+ * @returns {ModelComponents.Polygon}
+ * @ignore
+ */
+function loadMeshPolygonExtension(loader, gltfPrimitive, polygonExtension) {
+  const result = new Polygon();
+  const accessors = loader.gltfJson.accessors;
+
+  result.count = polygonExtension.count;
+
+  // See ModelComponents.Polygon definition.
+  if (gltfPrimitive.mode === PrimitiveType.LINE_LOOP) {
+    result.loopIndices = loadAccessorTypedArray(
+      loader,
+      accessors[gltfPrimitive.indices],
+    );
+    result.loopIndicesOffsets = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.indicesOffsets],
+    );
+    result.triangleIndices = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.triangleIndices],
+    );
+    result.triangleIndicesOffsets = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.triangleIndicesOffsets],
+    );
+  } else if (gltfPrimitive.mode === PrimitiveType.TRIANGLES) {
+    result.loopIndices = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.loopIndices],
+    );
+    result.loopIndicesOffsets = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.loopIndicesOffsets],
+    );
+    result.triangleIndices = loadAccessorTypedArray(
+      loader,
+      accessors[gltfPrimitive.indices],
+    );
+    result.triangleIndicesOffsets = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.indicesOffsets],
+    );
+  }
+
+  return result;
+}
+
+/**
+ * Load CESIUM_mesh_vector.
+ * @param {GltfLoader} loader
+ * @param {*} meshVectorExtension
+ * @returns {ModelComponents.Vector}
+ * @ignore
+ * @deprecated
+ */
+function loadMeshVectorExtension(loader, meshVectorExtension) {
+  if (!defined(meshVectorExtension)) {
+    return undefined;
+  }
+
+  const result = new Vector();
+  result.vector = meshVectorExtension.vector;
+  result.count = meshVectorExtension.count;
+
+  const accessors = loader.gltfJson.accessors;
+  function loadVectorAccessor(accessorId, name) {
+    if (!defined(accessorId)) {
+      return undefined;
+    }
+    return loadAccessor(loader, accessors[accessorId]);
+  }
+
+  result.polygonAttributeOffsets = loadVectorAccessor(
+    meshVectorExtension.polygonAttributeOffsets,
+    "polygonAttributeOffsets",
+  );
+  result.polygonHoleCounts = loadVectorAccessor(
+    meshVectorExtension.polygonHoleCounts,
+    "polygonHoleCounts",
+  );
+  result.polygonHoleOffsets = loadVectorAccessor(
+    meshVectorExtension.polygonHoleOffsets,
+    "polygonHoleOffsets",
+  );
+  result.polygonIndicesOffsets = loadVectorAccessor(
+    meshVectorExtension.polygonIndicesOffsets,
+    "polygonIndicesOffsets",
+  );
+
+  return result;
 }
 
 // For EXT_mesh_features
@@ -2377,6 +2753,13 @@ function loadPrimitiveMetadataLegacy(loader, primitive, metadataExtension) {
   }
 }
 
+function loadGpmExtension(primitive, gpmLocal) {
+  const ppeTextures = gpmLocal.ppeTextures ?? [];
+  for (let i = 0; i < ppeTextures.length; i++) {
+    primitive.propertyTextureIds.push(i);
+  }
+}
+
 function loadInstances(loader, nodeExtensions, frameState) {
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
 
@@ -2502,6 +2885,8 @@ function loadNode(loader, gltfNode, frameState) {
   const nodeExtensions = gltfNode.extensions ?? Frozen.EMPTY_OBJECT;
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
   const articulationsExtension = nodeExtensions.AGI_articulations;
+  const meshVectorExtension = nodeExtensions.CESIUM_mesh_vector;
+  const voxelsExtension = nodeExtensions.EXT_voxels;
 
   if (defined(instancingExtension)) {
     if (loader._loadForClassification) {
@@ -2514,6 +2899,19 @@ function loadNode(loader, gltfNode, frameState) {
 
   if (defined(articulationsExtension)) {
     node.articulationName = articulationsExtension.articulationName;
+  }
+
+  if (defined(meshVectorExtension)) {
+    node.meshVector = meshVectorExtension;
+  }
+
+  node.nodeVisibility = nodeExtensions.KHR_node_visibility;
+
+  // EXT_voxels defines its attributes and extensions the same way a primitive does.
+  if (defined(voxelsExtension)) {
+    node.primitives.push(
+      loadPrimitive(loader, voxelsExtension, false, frameState),
+    );
   }
 
   const meshId = gltfNode.mesh;

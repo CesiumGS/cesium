@@ -1,38 +1,40 @@
-import ArcType from "../Core/ArcType.js";
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import ClockRange from "../Core/ClockRange.js";
-import ClockStep from "../Core/ClockStep.js";
-import Color from "../Core/Color.js";
-import CornerType from "../Core/CornerType.js";
+import {
+  ArcType,
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  ClockRange,
+  ClockStep,
+  Color,
+  CornerType,
+  DeveloperError,
+  DistanceDisplayCondition,
+  Ellipsoid,
+  Event,
+  ExtrapolationType,
+  Frozen,
+  HermitePolynomialApproximation,
+  Iso8601,
+  JulianDate,
+  LagrangePolynomialApproximation,
+  LinearApproximation,
+  Math as CesiumMath,
+  NearFarScalar,
+  PolygonHierarchy,
+  Quaternion,
+  Rectangle,
+  ReferenceFrame,
+  RuntimeError,
+  Spherical,
+  TimeInterval,
+  TimeIntervalCollection,
+  createGuid,
+  defined,
+  getFilenameFromUri,
+} from "@cesium/core";
 import Credit from "../Core/Credit.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Event from "../Core/Event.js";
-import ExtrapolationType from "../Core/ExtrapolationType.js";
-import getFilenameFromUri from "../Core/getFilenameFromUri.js";
-import HermitePolynomialApproximation from "../Core/HermitePolynomialApproximation.js";
-import Iso8601 from "../Core/Iso8601.js";
-import JulianDate from "../Core/JulianDate.js";
-import LagrangePolynomialApproximation from "../Core/LagrangePolynomialApproximation.js";
-import LinearApproximation from "../Core/LinearApproximation.js";
-import CesiumMath from "../Core/Math.js";
-import NearFarScalar from "../Core/NearFarScalar.js";
-import PolygonHierarchy from "../Core/PolygonHierarchy.js";
-import Quaternion from "../Core/Quaternion.js";
-import Rectangle from "../Core/Rectangle.js";
-import ReferenceFrame from "../Core/ReferenceFrame.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import Spherical from "../Core/Spherical.js";
-import TimeInterval from "../Core/TimeInterval.js";
-import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
 import ClassificationType from "../Scene/ClassificationType.js";
 import ColorBlendMode from "../Scene/ColorBlendMode.js";
 import HeightReference from "../Scene/HeightReference.js";
@@ -65,6 +67,7 @@ import LabelGraphics from "./LabelGraphics.js";
 import ModelGraphics from "./ModelGraphics.js";
 import NodeTransformationProperty from "./NodeTransformationProperty.js";
 import PathGraphics from "./PathGraphics.js";
+import PathMode from "./PathMode.js";
 import PointGraphics from "./PointGraphics.js";
 import PolygonGraphics from "./PolygonGraphics.js";
 import PolylineArrowMaterialProperty from "./PolylineArrowMaterialProperty.js";
@@ -496,6 +499,8 @@ function getPropertyType(czmlInterval) {
     return Object;
   } else if (czmlInterval.hasOwnProperty("unitQuaternion")) {
     return Quaternion;
+  } else if (czmlInterval.hasOwnProperty("pathMode")) {
+    return PathMode;
   } else if (czmlInterval.hasOwnProperty("shadowMode")) {
     return ShadowMode;
   } else if (czmlInterval.hasOwnProperty("string")) {
@@ -562,6 +567,8 @@ function unwrapInterval(type, czmlInterval, sourceUri) {
       return czmlInterval.distanceDisplayCondition;
     case Object:
       return czmlInterval.object ?? czmlInterval.value ?? czmlInterval;
+    case PathMode:
+      return PathMode[czmlInterval.pathMode ?? czmlInterval];
     case Quaternion:
       return unwrapQuaternionInterval(czmlInterval);
     case Rotation:
@@ -3641,6 +3648,24 @@ function processPath(entity, packet, entityCollection, sourceUri) {
     path,
     "distanceDisplayCondition",
     pathData.distanceDisplayCondition,
+    interval,
+    sourceUri,
+    entityCollection,
+  );
+  processPacketData(
+    String,
+    path,
+    "relativeTo",
+    pathData.relativeTo,
+    interval,
+    sourceUri,
+    entityCollection,
+  );
+  processPacketData(
+    PathMode,
+    path,
+    "materialMode",
+    pathData.materialMode,
     interval,
     sourceUri,
     entityCollection,

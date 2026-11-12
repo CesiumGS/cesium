@@ -1,9 +1,6 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
+import { Check, Frozen, RuntimeError, defined } from "@cesium/core";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
 import loadKTX2 from "../Core/loadKTX2.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -13,21 +10,18 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfImageLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {object} options.gltf The glTF JSON.
- * @param {number} options.imageId The image ID.
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {string} [options.cacheKey] The cache key of the resource.
- *
  * @private
  */
 class GltfImageLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
+   * @param {object} options.gltf The glTF JSON.
+   * @param {number} options.imageId The image ID.
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   */
   constructor(options) {
     super();
 
@@ -68,7 +62,6 @@ class GltfImageLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfImageLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -81,7 +74,6 @@ class GltfImageLoader extends ResourceLoader {
   /**
    * The image.
    *
-   * @memberof GltfImageLoader.prototype
    *
    * @type {Image|ImageBitmap|CompressedTextureBuffer}
    * @readonly
@@ -94,7 +86,6 @@ class GltfImageLoader extends ResourceLoader {
   /**
    * The mip levels. Only defined for KTX2 files containing mip levels.
    *
-   * @memberof GltfImageLoader.prototype
    *
    * @type {Uint8Array[]}
    * @readonly

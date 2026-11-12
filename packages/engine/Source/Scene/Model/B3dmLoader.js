@@ -1,14 +1,16 @@
+import {
+  Cartesian3,
+  Check,
+  ComponentDatatype,
+  Frozen,
+  Matrix4,
+  defined,
+} from "@cesium/core";
 import Axis from "../Axis.js";
 import B3dmParser from "../B3dmParser.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
 import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
-import Check from "../../Core/Check.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
 import StructuralMetadata from "../StructuralMetadata.js";
 import GltfLoader from "../GltfLoader.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import MetadataClass from "../MetadataClass.js";
 import ModelComponents from "../ModelComponents.js";
 import ModelUtility from "./ModelUtility.js";
@@ -33,29 +35,27 @@ const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias B3dmLoader
- * @constructor
- * @augments ResourceLoader
  * @private
- *
- * @param {object} options Object with the following properties:
- * @param {Resource} options.b3dmResource The {@link Resource} containing the b3dm.
- * @param {ArrayBuffer} options.arrayBuffer The array buffer of the b3dm contents.
- * @param {number} [options.byteOffset] The byte offset to the beginning of the b3dm contents in the array buffer.
- * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
- * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
- * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
- * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
- * @param {boolean} [options.loadAttributesAsTypedArray=false] If <code>true</code>, load all attributes as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
- * @param {boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
- * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
- * @param {boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as a typed array. This is useful for creating wireframe indices in WebGL1.
- * @param {boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
- * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
- * */
+ */
 class B3dmLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {Resource} options.b3dmResource The {@link Resource} containing the b3dm.
+   * @param {ArrayBuffer} options.arrayBuffer The array buffer of the b3dm contents.
+   * @param {number} [options.byteOffset] The byte offset to the beginning of the b3dm contents in the array buffer.
+   * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+   * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+   * @param {boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
+   * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
+   * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
+   * @param {boolean} [options.loadAttributesAsTypedArray=false] If <code>true</code>, load all attributes as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
+   * @param {boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
+   * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
+   * @param {boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as a typed array. This is useful for creating wireframe indices in WebGL1.
+   * @param {boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
+   * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
+   */
   constructor(options) {
     super();
 
@@ -120,7 +120,6 @@ class B3dmLoader extends ResourceLoader {
   /**
    * true if textures are loaded, useful when incrementallyLoadTextures is true
    *
-   * @memberof B3dmLoader.prototype
    *
    * @type {boolean}
    * @readonly
@@ -133,7 +132,6 @@ class B3dmLoader extends ResourceLoader {
   /**
    * The cache key of the resource
    *
-   * @memberof B3dmLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -146,7 +144,6 @@ class B3dmLoader extends ResourceLoader {
   /**
    * The loaded components.
    *
-   * @memberof B3dmLoader.prototype
    *
    * @type {ModelComponents.Components}
    * @readonly
@@ -168,7 +165,6 @@ class B3dmLoader extends ResourceLoader {
 
     const b3dm = B3dmParser.parse(this._arrayBuffer, this._byteOffset);
 
-    let batchLength = b3dm.batchLength;
     const featureTableJson = b3dm.featureTableJson;
     const featureTableBinary = b3dm.featureTableBinary;
     const batchTableJson = b3dm.batchTableJson;
@@ -178,7 +174,7 @@ class B3dmLoader extends ResourceLoader {
       featureTableJson,
       featureTableBinary,
     );
-    batchLength = featureTable.getGlobalProperty("BATCH_LENGTH");
+    const batchLength = featureTable.getGlobalProperty("BATCH_LENGTH");
     // Set batch length.
     this._batchLength = batchLength;
     // Set the RTC Center transform, if present.

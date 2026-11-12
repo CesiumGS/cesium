@@ -1,15 +1,17 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  AttributeType,
+  Check,
+  DeveloperError,
+  Frozen,
+  Math as CesiumMath,
+  defined,
+} from "@cesium/core";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
-import AttributeType from "./AttributeType.js";
 import JobType from "./JobType.js";
 import ModelComponents from "./ModelComponents.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
-import CesiumMath from "../Core/Math.js";
 
 /**
  * Loads a vertex buffer from a glTF buffer view.
@@ -17,32 +19,30 @@ import CesiumMath from "../Core/Math.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfVertexBufferLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {object} options.gltf The glTF JSON.
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
- * @param {object} [options.primitive] The primitive containing the Draco extension.
- * @param {object} [options.draco] The Draco extension object.
- * @param {string} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
- * @param {number} [options.accessorId] The accessor id.
- * @param {string} [options.cacheKey] The cache key of the resource.
- * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
- * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
- *
- * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
- * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
- * @exception {DeveloperError} When options.draco is defined options.accessorId must also be defined.
- *
  * @private
  */
 class GltfVertexBufferLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
+   * @param {object} options.gltf The glTF JSON.
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
+   * @param {object} [options.primitive] The primitive containing the Draco extension.
+   * @param {object} [options.draco] The Draco extension object.
+   * @param {object} [options.spz] The SPZ extension object.
+   * @param {string} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
+   * @param {number} [options.accessorId] The accessor id.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+   * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
+   * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
+   *
+   * @exception {DeveloperError} Exactly one vertex buffer source must be effective: options.bufferViewId, options.spz, or options.draco for options.attributeSemantic.
+   * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
+   * @exception {DeveloperError} When options.draco is defined options.accessorId must also be defined.
+   */
   constructor(options) {
     super();
 
@@ -79,9 +79,11 @@ class GltfVertexBufferLoader extends ResourceLoader {
     const hasAttributeSemantic = defined(attributeSemantic);
     const hasAccessorId = defined(accessorId);
     const hasSpz = defined(spz);
-    if (hasBufferViewId === (hasDraco !== hasSpz)) {
+    const sourceCount =
+      Number(hasBufferViewId) + Number(hasDraco) + Number(hasSpz);
+    if (sourceCount !== 1) {
       throw new DeveloperError(
-        "One of options.bufferViewId, options.draco, or options.spz must be defined.",
+        "Exactly one vertex buffer source must be effective: options.bufferViewId, options.spz, or options.draco for options.attributeSemantic.",
       );
     }
 
@@ -138,7 +140,6 @@ class GltfVertexBufferLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfVertexBufferLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -151,7 +152,6 @@ class GltfVertexBufferLoader extends ResourceLoader {
   /**
    * The vertex buffer. This is only defined when <code>loadAsTypedArray</code> is false.
    *
-   * @memberof GltfVertexBufferLoader.prototype
    *
    * @type {Buffer}
    * @readonly
@@ -164,7 +164,6 @@ class GltfVertexBufferLoader extends ResourceLoader {
   /**
    * The typed array containing vertex buffer data. This is only defined when <code>loadAsTypedArray</code> is true.
    *
-   * @memberof GltfVertexBufferLoader.prototype
    *
    * @type {Uint8Array}
    * @readonly
@@ -177,7 +176,6 @@ class GltfVertexBufferLoader extends ResourceLoader {
   /**
    * Information about the quantized vertex attribute after Draco decode.
    *
-   * @memberof GltfVertexBufferLoader.prototype
    *
    * @type {ModelComponents.Quantization}
    * @readonly

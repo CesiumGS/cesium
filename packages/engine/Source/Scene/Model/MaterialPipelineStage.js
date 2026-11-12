@@ -1,18 +1,31 @@
-import defined from "../../Core/defined.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
-import Matrix3 from "../../Core/Matrix3.js";
+import {
+  Cartesian3,
+  Cartesian4,
+  FixedFrameTransforms,
+  Matrix3,
+  Matrix4,
+  PrimitiveType,
+  defined,
+} from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import Pass from "../../Renderer/Pass.js";
 import MaterialStageFS from "../../Shaders/Model/MaterialStageFS.js";
+import ConstantLodStageVS from "../../Shaders/Model/ConstantLodStageVS.js";
+import ConstantLodStageFS from "../../Shaders/Model/ConstantLodStageFS.js";
 import AlphaMode from "../AlphaMode.js";
 import ModelComponents from "../ModelComponents.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import LightingModel from "./LightingModel.js";
 import ModelUtility from "./ModelUtility.js";
 
-const { Material, MetallicRoughness, SpecularGlossiness, Specular, Clearcoat } =
-  ModelComponents;
+const {
+  Material,
+  MetallicRoughness,
+  SpecularGlossiness,
+  Specular,
+  Clearcoat,
+  EmissiveStrength,
+} = ModelComponents;
 
 /**
  * The material pipeline stage processes textures and other uniforms needed
@@ -60,6 +73,25 @@ MaterialPipelineStage.process = function (
   const material = primitive.material;
   const { model, uniformMap, shaderBuilder } = renderResources;
 
+  if (!defined(uniformMap.u_constantLodDistance)) {
+    uniformMap.u_constantLodDistance = function () {
+      const boundingSphere = model.boundingSphere;
+      const camera = frameState.camera;
+
+      if (defined(boundingSphere) && defined(camera)) {
+        const distance = Cartesian3.distance(
+          camera.positionWC,
+          boundingSphere.center,
+        );
+        // Clamp to a minimum small distance to avoid calling log2(0) in shader
+        return Math.max(distance, 0.1);
+      }
+
+      // Return a fallback distance before camera/bounding sphere are available
+      return 1.0;
+    };
+  }
+
   // Classification models only use position and feature ID attributes,
   // so textures should be disabled to avoid compile errors.
   const hasClassification = defined(model.classificationType);
@@ -77,6 +109,7 @@ MaterialPipelineStage.process = function (
     defaultNormalTexture,
     defaultEmissiveTexture,
     disableTextures,
+    renderResources,
   );
 
   if (defined(material.specularGlossiness)) {
@@ -86,6 +119,7 @@ MaterialPipelineStage.process = function (
       shaderBuilder,
       defaultTexture,
       disableTextures,
+      renderResources,
     );
   } else {
     if (
@@ -124,12 +158,23 @@ MaterialPipelineStage.process = function (
         disableTextures,
       );
     }
+    if (
+      defined(material.emissiveStrength) &&
+      ModelUtility.supportedExtensions.KHR_materials_emissive_strength
+    ) {
+      processEmissiveStrengthUniforms(
+        material.emissiveStrength,
+        uniformMap,
+        shaderBuilder,
+      );
+    }
     processMetallicRoughnessUniforms(
       material.metallicRoughness,
       uniformMap,
       shaderBuilder,
       defaultTexture,
       disableTextures,
+      renderResources,
     );
   }
 
@@ -143,13 +188,28 @@ MaterialPipelineStage.process = function (
   const disablePointCloudNormals =
     defined(model.pointCloudShading) && !model.pointCloudShading.normalShading;
 
+  if (defined(material.planarFill)) {
+    processPlanarFill(
+      material.planarFill,
+      primitive,
+      renderResources,
+      frameState,
+    );
+  }
+
+  // When backgroundFill is true (BENTLEY_materials_planar_fill), the primitive
+  // must be unlit so it matches the background color exactly.
+  const hasBackgroundFill =
+    defined(material.planarFill) && material.planarFill.backgroundFill;
+
   // Classification models will be rendered as unlit.
   const lightingOptions = renderResources.lightingOptions;
   if (
     material.unlit ||
     !hasNormals ||
     hasClassification ||
-    disablePointCloudNormals
+    disablePointCloudNormals ||
+    hasBackgroundFill
   ) {
     lightingOptions.lightingModel = LightingModel.UNLIT;
   } else {
@@ -172,7 +232,7 @@ MaterialPipelineStage.process = function (
     shaderBuilder.addDefine(
       "HAS_POINT_DIAMETER",
       undefined,
-      ShaderDestination.VERTEX,
+      ShaderDestination.BOTH,
     );
     shaderBuilder.addUniform(
       "float",
@@ -182,6 +242,16 @@ MaterialPipelineStage.process = function (
     uniformMap.u_pointDiameter = function () {
       return material.pointDiameter * frameState.pixelRatio;
     };
+  }
+
+  if (defined(material.lineStyle)) {
+    processLineStyleUniforms(
+      material.lineStyle,
+      primitive,
+      frameState,
+      uniformMap,
+      shaderBuilder,
+    );
   }
 
   shaderBuilder.addFragmentLines(MaterialStageFS);
@@ -194,6 +264,357 @@ MaterialPipelineStage.process = function (
     );
   }
 };
+
+/**
+ * Add uniforms and defines for the BENTLEY_materials_planar_fill extension.
+ *
+ * Per the BENTLEY_materials_planar_fill spec:
+ * <ul>
+ *   <li>ALL planar primitives must render in front of non-planar (Depth Ordering).</li>
+ *   <li><code>behind</code> fills must render behind coplanar geometry from the SAME
+ *   logical object only (same feature ID from EXT_mesh_features).</li>
+ * </ul>
+ *
+ * Instead of using fixed polygon offset units (which don't scale well with
+ * logarithmic depth), we use proportional depth scaling in the shader.
+ * This approach matches the edge visibility system and scales naturally
+ * at all viewing distances.
+ *
+ * @param {ModelComponents.PlanarFill} planarFill The planar fill properties of the material
+ * @param {ModelComponents.Primitive} primitive The primitive to be rendered
+ * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {FrameState} frameState The frame state.
+ * @private
+ */
+function processPlanarFill(planarFill, primitive, renderResources, frameState) {
+  const { uniformMap, shaderBuilder } = renderResources;
+
+  // Signal to Scene that the planar fill ID framebuffer is needed.
+  frameState.planarFillRequested = true;
+
+  // All planar fills get a proportional depth pull toward camera. Behind fills
+  // additionally sample the planar fill ID texture to test same-feature; if so,
+  // they apply a small proportional push to sit behind non-behind geometry.
+  shaderBuilder.addDefine(
+    "HAS_PLANAR_FILL_DEPTH",
+    undefined,
+    ShaderDestination.FRAGMENT,
+  );
+
+  // Configure background fill for BENTLEY_materials_planar_fill extension.
+  // When backgroundFill is true, the fill is rendered using the view's background color
+  // to create an invisible masking polygon. Lighting is forced to unlit in process().
+  //
+  // NOTE: The wireframeFill property from BENTLEY_materials_planar_fill is intentionally
+  // not handled here. CesiumJS does not yet have a proper wireframe rendering mode
+  // (debugWireframe is not a true wireframe mode), so wireframeFill is loaded as a NO-OP.
+  // When a proper wireframe mode is added to CesiumJS, wireframeFill support should be
+  // implemented here to control fill visibility in that mode. See
+  // https://github.com/CesiumGS/cesium/issues/13620.
+  if (planarFill.backgroundFill) {
+    shaderBuilder.addDefine(
+      "HAS_BACKGROUND_FILL",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+  }
+
+  const hasFeatureIds =
+    defined(primitive.featureIds) && primitive.featureIds.length > 0;
+  if (!hasFeatureIds) {
+    return;
+  }
+
+  // "Same logical object" is implementation-defined per the spec; this
+  // implementation uses the primitive's first feature ID set. Primitives
+  // without feature IDs (checked above) don't participate in the
+  // behind-fill same-object test.
+  const featureIdMember = primitive.featureIds[0].positionalLabel;
+  shaderBuilder.addDefine(
+    "PLANAR_FILL_FEATURE_ID",
+    featureIdMember,
+    ShaderDestination.FRAGMENT,
+  );
+
+  if (planarFill.behind) {
+    // Behind fills READ the planar fill ID texture to test whether the
+    // pixel they cover belongs to the same logical object.
+    shaderBuilder.addDefine(
+      "HAS_PLANAR_FILL_BEHIND",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+  } else {
+    // Non-behind fills WRITE their feature IDs to the planar fill ID
+    // texture in a pre-pass so behind fills can test same-object
+    // coplanarity. Mark this primitive for the pre-pass derived command.
+    renderResources.planarFillIdPass = true;
+
+    // Add a define so that during the pre-pass the shader outputs
+    // the feature ID instead of the normal color.
+    shaderBuilder.addDefine(
+      "HAS_PLANAR_FILL_ID_PASS",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+
+    // Runtime uniform to distinguish the pre-pass from the main pass
+    // (same shader program serves both commands). This default returns false
+    // for the main command; the derived pre-pass command overrides it to
+    // return true (see derivePlanarFillIdCommand in ModelDrawCommand.js).
+    shaderBuilder.addUniform(
+      "bool",
+      "u_isPlanarFillIdPass",
+      ShaderDestination.FRAGMENT,
+    );
+    uniformMap.u_isPlanarFillIdPass = function () {
+      return false;
+    };
+  }
+}
+
+/**
+ * Process constant LOD extension for a texture
+ *
+ * @param {ShaderBuilder} shaderBuilder The shader builder to modify
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
+ * @param {string} uniformName The name of the sampler uniform
+ * @param {string} defineName The name of the texture for use in the defines
+ * @param {PrimitiveRenderResources|undefined} renderResources The render resources
+ * @private
+ */
+function processConstantLod(
+  shaderBuilder,
+  uniformMap,
+  textureReader,
+  uniformName,
+  defineName,
+  renderResources,
+) {
+  const constantLod = textureReader.constantLod;
+
+  if (!defined(constantLod)) {
+    return;
+  }
+
+  // renderResources is required for constant LOD to transform from ECEF/world coordinates to ENU
+  if (!defined(renderResources)) {
+    return;
+  }
+
+  const constantLodDefine = `HAS_${defineName}_CONSTANT_LOD`;
+  shaderBuilder.addDefine(constantLodDefine, undefined, ShaderDestination.BOTH);
+
+  if (!defined(uniformMap.u_constantLodOffset)) {
+    shaderBuilder.addDefine(
+      "HAS_CONSTANT_LOD",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+
+    shaderBuilder.addVarying("vec3", "v_constantLodUvCustom");
+
+    shaderBuilder.addUniform(
+      "vec2",
+      "u_constantLodOffset",
+      ShaderDestination.VERTEX,
+    );
+
+    shaderBuilder.addUniform(
+      "float",
+      "u_constantLodDistance",
+      ShaderDestination.VERTEX,
+    );
+
+    shaderBuilder.addUniform(
+      "mat4",
+      "u_constantLodWorldToEnu",
+      ShaderDestination.VERTEX,
+    );
+
+    shaderBuilder.addFragmentLines(ConstantLodStageFS);
+
+    const constantLodLines = ConstantLodStageVS.split("\n").filter((line) => {
+      return !line.trim().startsWith("//") || line.includes("#");
+    });
+    shaderBuilder.addFunctionLines("setDynamicVaryingsVS", constantLodLines);
+  }
+
+  const paramsUniformName = `${uniformName}ConstantLodParams`;
+  shaderBuilder.addUniform(
+    "vec3",
+    paramsUniformName,
+    ShaderDestination.FRAGMENT,
+  );
+
+  uniformMap[paramsUniformName] = function () {
+    return new Cartesian3(
+      constantLod.minClampDistance,
+      constantLod.maxClampDistance,
+      constantLod.repetitions,
+    );
+  };
+
+  if (!defined(uniformMap.u_constantLodOffset)) {
+    uniformMap.u_constantLodOffset = function () {
+      return constantLod.offset;
+    };
+
+    const enuMatrixInverse = Matrix4.clone(Matrix4.IDENTITY);
+    let matrixComputed = false;
+
+    uniformMap.u_constantLodWorldToEnu = function () {
+      if (!matrixComputed) {
+        const boundingSphere = renderResources.model.boundingSphere;
+        if (defined(boundingSphere)) {
+          const modelCenter = boundingSphere.center;
+          const enuFrame =
+            FixedFrameTransforms.eastNorthUpToFixedFrame(modelCenter);
+          Matrix4.inverse(enuFrame, enuMatrixInverse);
+          matrixComputed = true;
+        }
+      }
+      return matrixComputed ? enuMatrixInverse : Matrix4.IDENTITY;
+    };
+  }
+}
+
+/**
+ * Add uniforms and defines for the BENTLEY_materials_line_style extension.
+ *
+ * @param {ModelComponents.LineStyle} lineStyle The line style properties.
+ * @param {ModelComponents.Primitive} primitive The primitive being processed.
+ * @param {FrameState} frameState The frame state.
+ * @param {object} uniformMap The uniform map for the primitive.
+ * @param {ShaderBuilder} shaderBuilder The shader builder to modify.
+ * @private
+ */
+function processLineStyleUniforms(
+  lineStyle,
+  primitive,
+  frameState,
+  uniformMap,
+  shaderBuilder,
+) {
+  const { width, pattern } = lineStyle;
+
+  if (defined(width)) {
+    shaderBuilder.addUniform("float", "u_lineWidth", ShaderDestination.VERTEX);
+    uniformMap.u_lineWidth = function () {
+      return width * frameState.pixelRatio;
+    };
+  }
+
+  if (defined(pattern)) {
+    shaderBuilder.addDefine(
+      "HAS_LINE_PATTERN",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+    shaderBuilder.addUniform(
+      "float",
+      "u_linePattern",
+      ShaderDestination.FRAGMENT,
+    );
+    shaderBuilder.addVarying("float", "v_lineCoord");
+    uniformMap.u_linePattern = function () {
+      return pattern;
+    };
+  }
+
+  const cumDistAttribute = ModelUtility.getAttributeBySemantic(
+    primitive,
+    VertexAttributeSemantic.CUMULATIVE_DISTANCE,
+  );
+  if (
+    defined(pattern) &&
+    defined(cumDistAttribute) &&
+    (primitive.primitiveType === PrimitiveType.LINES ||
+      primitive.primitiveType === PrimitiveType.TRIANGLE_STRIP)
+  ) {
+    shaderBuilder.addDefine(
+      "HAS_LINE_CUMULATIVE_DISTANCE",
+      undefined,
+      ShaderDestination.VERTEX,
+    );
+
+    if (cumDistAttribute.normalized) {
+      shaderBuilder.addDefine(
+        "LINE_CUM_DIST_NORMALIZED",
+        undefined,
+        ShaderDestination.VERTEX,
+      );
+    }
+
+    shaderBuilder.addUniform(
+      "float",
+      "u_cumulativeDistanceMax",
+      ShaderDestination.VERTEX,
+    );
+    shaderBuilder.addUniform(
+      "float",
+      "u_pixelsPerWorld",
+      ShaderDestination.VERTEX,
+    );
+
+    const cumDistMax = defined(cumDistAttribute.max)
+      ? cumDistAttribute.max
+      : 1.0;
+    uniformMap.u_cumulativeDistanceMax = function () {
+      return cumDistMax;
+    };
+    uniformMap.u_pixelsPerWorld = function () {
+      // Match iTwin behavior: stable pattern scaling in orthographic views.
+      const frustum = frameState.camera.frustum;
+      let pixelsPerWorld = 1.0;
+      let worldWidth;
+      if (defined(frustum.right) && defined(frustum.left)) {
+        worldWidth = frustum.right - frustum.left;
+      } else if (defined(frustum.width)) {
+        worldWidth = frustum.width;
+      }
+      if (defined(worldWidth) && worldWidth > 0) {
+        pixelsPerWorld = frameState.context.drawingBufferWidth / worldWidth;
+      }
+
+      return pixelsPerWorld;
+    };
+
+    const cumDistVar =
+      ModelUtility.getAttributeInfo(cumDistAttribute).variableName;
+    shaderBuilder.addVertexLines(`
+#ifdef HAS_LINE_CUMULATIVE_DISTANCE
+void lineStyleStageVS(in ProcessedAttributes attributes)
+{
+    float cumDist = attributes.${cumDistVar};
+#ifdef LINE_CUM_DIST_NORMALIZED
+    cumDist *= u_cumulativeDistanceMax;
+#endif
+    const float textureCoordinateBase = 8192.0;
+    v_lineCoord = textureCoordinateBase + cumDist * u_pixelsPerWorld;
+}
+#endif
+`);
+  } else if (defined(pattern)) {
+    shaderBuilder.addVertexLines(`
+#ifdef HAS_LINE_PATTERN
+void lineStyleStageVS(in ProcessedAttributes attributes)
+{
+    vec4 posClip = gl_Position;
+    vec2 screenPos = ((posClip.xy / posClip.w) * 0.5 + 0.5) * czm_viewport.zw;
+
+    const float textureCoordinateBase = 8192.0;
+    if (czm_viewport.z > czm_viewport.w) {
+        v_lineCoord = textureCoordinateBase + screenPos.x;
+    } else {
+        v_lineCoord = textureCoordinateBase + screenPos.y;
+    }
+}
+#endif
+`);
+  }
+}
 
 /**
  * Process a single texture transformation and add it to the shader and uniform map.
@@ -279,6 +700,8 @@ function processTextureScale(
  * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
  * @param {string} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
  * @param {string} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
+ * @param {Texture} defaultTexture The default texture to use as a fallback if the texture is not yet loaded
+ * @param {PrimitiveRenderResources|undefined} renderResources The render resources
  *
  * @private
  */
@@ -289,6 +712,7 @@ function processTexture(
   uniformName,
   defineName,
   defaultTexture,
+  renderResources,
 ) {
   // Add a uniform for the texture itself
   shaderBuilder.addUniform(
@@ -340,6 +764,16 @@ function processTexture(
       defineName,
     );
   }
+
+  // Process constant LOD extension if present
+  processConstantLod(
+    shaderBuilder,
+    uniformMap,
+    textureReader,
+    uniformName,
+    defineName,
+    renderResources,
+  );
 }
 
 function processMaterialUniforms(
@@ -350,6 +784,7 @@ function processMaterialUniforms(
   defaultNormalTexture,
   defaultEmissiveTexture,
   disableTextures,
+  renderResources,
 ) {
   const { emissiveFactor, emissiveTexture, normalTexture, occlusionTexture } =
     material;
@@ -384,14 +819,43 @@ function processMaterialUniforms(
     }
   }
 
+  // Extract base color constant LOD to apply to normal texture
+  let baseColorConstantLod;
+  if (
+    defined(material.metallicRoughness) &&
+    defined(material.metallicRoughness.baseColorTexture) &&
+    defined(material.metallicRoughness.baseColorTexture.constantLod)
+  ) {
+    baseColorConstantLod =
+      material.metallicRoughness.baseColorTexture.constantLod;
+  } else if (
+    defined(material.specularGlossiness) &&
+    defined(material.specularGlossiness.diffuseTexture) &&
+    defined(material.specularGlossiness.diffuseTexture.constantLod)
+  ) {
+    baseColorConstantLod =
+      material.specularGlossiness.diffuseTexture.constantLod;
+  }
+
   if (defined(normalTexture) && !disableTextures) {
+    // If normal texture AND base color have constant LOD, use base color's constant LOD properties to keep textures in sync
+    let normalTextureToProcess = normalTexture;
+    if (defined(normalTexture.constantLod) && defined(baseColorConstantLod)) {
+      normalTextureToProcess = Object.create(
+        Object.getPrototypeOf(normalTexture),
+      );
+      Object.assign(normalTextureToProcess, normalTexture);
+      normalTextureToProcess.constantLod = baseColorConstantLod;
+    }
+
     processTexture(
       shaderBuilder,
       uniformMap,
-      normalTexture,
+      normalTextureToProcess,
       "u_normalTexture",
       "NORMAL",
       defaultNormalTexture,
+      renderResources,
     );
   }
 
@@ -413,8 +877,9 @@ function processMaterialUniforms(
  * @param {ModelComponents.SpecularGlossiness} specularGlossiness
  * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ShaderBuilder} shaderBuilder
- * @param {Texture} defaultTexture
+ * @param {Texture} defaultTexture The default texture to use as a fallback if the texture is not yet loaded
  * @param {boolean} disableTextures
+ * @param {PrimitiveRenderResources|undefined} renderResources The render resources for the primitive
  * @private
  */
 function processSpecularGlossinessUniforms(
@@ -423,6 +888,7 @@ function processSpecularGlossinessUniforms(
   shaderBuilder,
   defaultTexture,
   disableTextures,
+  renderResources,
 ) {
   const {
     diffuseTexture,
@@ -446,6 +912,7 @@ function processSpecularGlossinessUniforms(
       "u_diffuseTexture",
       "DIFFUSE",
       defaultTexture,
+      renderResources,
     );
   }
 
@@ -773,13 +1240,49 @@ function processClearcoatUniforms(
 }
 
 /**
+ * Add uniforms and defines for the KHR_materials_emissive_strength extension
+ *
+ * @param {ModelComponents.EmissiveStrength} emissiveStrength
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ShaderBuilder} shaderBuilder
+ * @private
+ */
+function processEmissiveStrengthUniforms(
+  emissiveStrength,
+  uniformMap,
+  shaderBuilder,
+) {
+  const emissiveStrengthValue = emissiveStrength.emissiveStrength;
+
+  if (
+    defined(emissiveStrengthValue) &&
+    emissiveStrengthValue !== EmissiveStrength.DEFAULT_EMISSIVE_STRENGTH
+  ) {
+    shaderBuilder.addDefine(
+      "HAS_EMISSIVE_STRENGTH",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+    shaderBuilder.addUniform(
+      "float",
+      "u_emissiveStrength",
+      ShaderDestination.FRAGMENT,
+    );
+    uniformMap.u_emissiveStrength = function () {
+      return emissiveStrength.emissiveStrength;
+    };
+  }
+}
+
+/**
  * Add uniforms and defines for the PBR metallic roughness model
  *
  * @param {ModelComponents.MetallicRoughness} metallicRoughness
  * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ShaderBuilder} shaderBuilder
- * @param {Texture} defaultTexture
+ * @param {Texture} defaultTexture The default texture to use as a fallback if the texture is not yet loaded
  * @param {boolean} disableTextures
+ * @param {PrimitiveRenderResources|undefined} renderResources The render resources for the primitive
  * @private
  */
 function processMetallicRoughnessUniforms(
@@ -788,6 +1291,7 @@ function processMetallicRoughnessUniforms(
   shaderBuilder,
   defaultTexture,
   disableTextures,
+  renderResources,
 ) {
   shaderBuilder.addDefine(
     "USE_METALLIC_ROUGHNESS",
@@ -804,6 +1308,7 @@ function processMetallicRoughnessUniforms(
       "u_baseColorTexture",
       "BASE_COLOR",
       defaultTexture,
+      renderResources,
     );
   }
 

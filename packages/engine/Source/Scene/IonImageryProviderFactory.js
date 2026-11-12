@@ -174,7 +174,7 @@ export const AZURE_MAPS = async (url, endpoint, endpointResource) => {
  * Mapping of supported external imagery asset types returned from Cesium ion to their
  * corresponding ImageryProvider constructors.
  * @private
- * @type {object<string, IonImageryProviderFactoryCallback>}
+ * @type {Object<string, IonImageryProviderFactoryCallback>}
  */
 const IonImageryProviderFactory = {
   ARCGIS_MAPSERVER,

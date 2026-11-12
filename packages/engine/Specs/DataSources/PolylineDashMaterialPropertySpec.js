@@ -1,7 +1,5 @@
+import { Color, JulianDate, TimeInterval } from "@cesium/core";
 import {
-  Color,
-  JulianDate,
-  TimeInterval,
   ConstantProperty,
   PolylineDashMaterialProperty,
   TimeIntervalCollectionProperty,

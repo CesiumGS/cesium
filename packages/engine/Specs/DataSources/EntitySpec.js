@@ -1,13 +1,15 @@
 import {
   Cartesian3,
+  FixedFrameTransforms,
   JulianDate,
   Matrix3,
   Matrix4,
   Quaternion,
-  TrackingReferenceFrame,
   TimeInterval,
   TimeIntervalCollection,
-  Transforms,
+  TrackingReferenceFrame,
+} from "@cesium/core";
+import {
   BillboardGraphics,
   BoxGraphics,
   ConstantPositionProperty,
@@ -77,7 +79,9 @@ describe("DataSources/Entity", function () {
       label: {},
       model: {},
       orientation: new Quaternion(1, 2, 3, 4),
-      path: {},
+      path: {
+        relativeTo: "someEntityId",
+      },
       plane: {},
       point: {},
       polygon: {},
@@ -109,6 +113,7 @@ describe("DataSources/Entity", function () {
     expect(entity.model).toBeInstanceOf(ModelGraphics);
     expect(entity.orientation).toBeInstanceOf(ConstantProperty);
     expect(entity.path).toBeInstanceOf(PathGraphics);
+    expect(entity.path.relativeTo).toBeInstanceOf(ConstantProperty);
     expect(entity.plane).toBeInstanceOf(PlaneGraphics);
     expect(entity.point).toBeInstanceOf(PointGraphics);
     expect(entity.polygon).toBeInstanceOf(PolygonGraphics);
@@ -121,6 +126,7 @@ describe("DataSources/Entity", function () {
 
     expect(entity.entityCollection).toBeUndefined();
     expect(entity.trackingReferenceFrame).toBe(TrackingReferenceFrame.INERTIAL);
+    expect(entity.path.relativeTo.getValue()).toEqual(options.path.relativeTo);
   });
 
   it("isAvailable is always true if no availability defined.", function () {
@@ -316,7 +322,7 @@ describe("DataSources/Entity", function () {
     entity.position = new ConstantProperty(position);
 
     const modelMatrix = entity.computeModelMatrix(new JulianDate());
-    const expected = Transforms.eastNorthUpToFixedFrame(position);
+    const expected = FixedFrameTransforms.eastNorthUpToFixedFrame(position);
     expect(modelMatrix).toEqual(expected);
   });
 
@@ -327,7 +333,7 @@ describe("DataSources/Entity", function () {
 
     const result = new Matrix4();
     const modelMatrix = entity.computeModelMatrix(new JulianDate(), result);
-    const expected = Transforms.eastNorthUpToFixedFrame(position);
+    const expected = FixedFrameTransforms.eastNorthUpToFixedFrame(position);
     expect(modelMatrix).toBe(result);
     expect(modelMatrix).toEqual(expected);
   });

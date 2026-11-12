@@ -1,7 +1,5 @@
+import { AxisAlignedBoundingBox, Cartesian3, Matrix4 } from "@cesium/core";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import AxisAlignedBoundingBox from "../Core/AxisAlignedBoundingBox.js";
 
 const scratchAABBCornerMin = new Cartesian3();
 const scratchAABBCornerMax = new Cartesian3();
@@ -23,6 +21,7 @@ const TILE_AABB_MIN = new Cartesian3(-0.5, -0.5, -0.5);
  * to convert triangle positions to the tree's local space, and the parent node's triangle indices and positions.
  *
  * Returns an four arrays - one for each child node - containing the indices of the triangles that intersect each node.
+ * @ignore
  */
 function incrementallyBuildTerrainPicker(parameters, transferableObjects) {
   // Rehydrate worker inputs
@@ -87,6 +86,7 @@ function incrementallyBuildTerrainPicker(parameters, transferableObjects) {
  * @param {Matrix4} inverseTransform transform from world space to tree local space
  * @param {Cartesian3[]} trianglePoints array of 3 Cartesian3 points representing the triangle
  * @returns {AxisAlignedBoundingBox} the axis-aligned bounding box enclosing the triangle in tree local space
+ * @ignore
  */
 function createAABBFromTriangle(inverseTransform, trianglePoints) {
   Matrix4.multiplyByPoint(

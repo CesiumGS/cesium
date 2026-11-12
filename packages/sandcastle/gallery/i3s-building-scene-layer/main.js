@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 
 // Cesium World Terrain height system doesn't match to I3S datasets height system in some locations even with geoid conversion.
@@ -35,6 +37,7 @@ try {
     i3sOptions,
   );
 
+  // eslint-disable-next-line new-cap
   Cesium.I3SBuildingSceneLayerExplorer("toolbar", i3sProvider);
 
   // Add the i3s layer provider as a primitive data type

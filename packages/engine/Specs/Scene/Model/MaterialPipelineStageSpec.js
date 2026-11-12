@@ -1,13 +1,10 @@
+import { Cartesian3, Cartesian4, Matrix3, combine } from "@cesium/core";
 import {
   _shadersMaterialStageFS,
   AlphaMode,
-  Cartesian4,
-  Cartesian3,
   ClassificationType,
-  combine,
   GltfLoader,
   LightingModel,
-  Matrix3,
   MaterialPipelineStage,
   ModelAlphaOptions,
   ModelStatistics,
@@ -18,6 +15,7 @@ import {
   Resource,
   ResourceCache,
   ShaderBuilder,
+  ShaderDestination,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
@@ -43,6 +41,7 @@ describe(
         defaultNormalTexture: {},
         defaultEmissiveTexture: {},
       },
+      pixelRatio: 1.0,
     };
 
     afterEach(function () {
@@ -93,6 +92,10 @@ describe(
       "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
     const clearcoatTestData =
       "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
+    const pointStyleTestData =
+      "./Data/Models/glTF-2.0/StyledPoints/points-r5-g8-b14-y10.gltf";
+    const constantLodTestData =
+      "./Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_Checker.gltf";
 
     function expectUniformMap(uniformMap, expected) {
       for (const key in expected) {
@@ -287,6 +290,59 @@ describe(
         u_baseColorTexture: metallicRoughness.baseColorTexture.texture,
         u_metallicRoughnessTexture:
           metallicRoughness.metallicRoughnessTexture.texture,
+      };
+      expectUniformMap(uniformMap, expectedUniforms);
+    });
+
+    it("adds emissiveStrength uniforms when KHR_materials_emissive_strength is present", async function () {
+      const gltfLoader = await loadGltf(boomBox);
+      const primitive = gltfLoader.components.nodes[0].primitives[0];
+
+      const material = primitive.material;
+      material.emissiveStrength = {
+        emissiveStrength: 12,
+      };
+      const metallicRoughness = material.metallicRoughness;
+      const renderResources = mockRenderResources();
+      const { shaderBuilder, uniformMap } = renderResources;
+
+      MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform sampler2D u_baseColorTexture;",
+        "uniform sampler2D u_metallicRoughnessTexture;",
+        "uniform sampler2D u_normalTexture;",
+        "uniform sampler2D u_occlusionTexture;",
+        "uniform sampler2D u_emissiveTexture;",
+        "uniform vec3 u_emissiveFactor;",
+        "uniform float u_emissiveStrength;",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_BASE_COLOR_TEXTURE",
+        "HAS_EMISSIVE_FACTOR",
+        "HAS_EMISSIVE_TEXTURE",
+        "HAS_METALLIC_ROUGHNESS_TEXTURE",
+        "HAS_NORMAL_TEXTURE",
+        "HAS_OCCLUSION_TEXTURE",
+        "TEXCOORD_BASE_COLOR v_texCoord_0",
+        "TEXCOORD_METALLIC_ROUGHNESS v_texCoord_0",
+        "TEXCOORD_NORMAL v_texCoord_0",
+        "TEXCOORD_EMISSIVE v_texCoord_0",
+        "TEXCOORD_OCCLUSION v_texCoord_0",
+        "USE_METALLIC_ROUGHNESS",
+        "HAS_EMISSIVE_STRENGTH",
+      ]);
+
+      const expectedUniforms = {
+        u_normalTexture: material.normalTexture.texture,
+        u_occlusionTexture: material.occlusionTexture.texture,
+        u_baseColorTexture: metallicRoughness.baseColorTexture.texture,
+        u_metallicRoughnessTexture:
+          metallicRoughness.metallicRoughnessTexture.texture,
+        u_emissiveStrength: material.emissiveStrength.emissiveStrength,
       };
       expectUniformMap(uniformMap, expectedUniforms);
     });
@@ -905,6 +961,322 @@ describe(
       expectUniformMap(uniformMap, {
         u_testTexture: mockTexture,
       });
+    });
+
+    it("processes BENTLEY_materials_line_style with lineWidth", function () {
+      const renderResources = mockRenderResources();
+
+      const material = new ModelComponents.Material();
+      material.lineStyle = new ModelComponents.LineStyle();
+      material.lineStyle.width = 3.0;
+
+      const primitive = new ModelComponents.Primitive();
+      primitive.material = material;
+
+      const frameState = {
+        context: scene.context,
+        pixelRatio: 2.0,
+      };
+
+      MaterialPipelineStage.process(renderResources, primitive, frameState);
+
+      ShaderBuilderTester.expectHasFragmentDefines(
+        renderResources.shaderBuilder,
+        ["USE_METALLIC_ROUGHNESS"],
+      );
+      ShaderBuilderTester.expectHasVertexUniforms(
+        renderResources.shaderBuilder,
+        ["uniform float u_lineWidth;"],
+      );
+
+      expect(renderResources.uniformMap.u_lineWidth).toBeDefined();
+      expect(renderResources.uniformMap.u_lineWidth()).toBe(6.0); // 3.0 * 2.0 pixelRatio
+    });
+
+    it("processes BENTLEY_materials_line_style with linePattern", function () {
+      const renderResources = mockRenderResources();
+
+      const material = new ModelComponents.Material();
+      material.lineStyle = new ModelComponents.LineStyle();
+      material.lineStyle.pattern = 0xaaaa; // dotted pattern
+
+      const primitive = new ModelComponents.Primitive();
+      primitive.material = material;
+
+      const frameState = {
+        context: scene.context,
+        pixelRatio: 1.0,
+      };
+
+      MaterialPipelineStage.process(renderResources, primitive, frameState);
+
+      ShaderBuilderTester.expectHasFragmentDefines(
+        renderResources.shaderBuilder,
+        ["HAS_LINE_PATTERN", "USE_METALLIC_ROUGHNESS"],
+      );
+      ShaderBuilderTester.expectHasFragmentUniforms(
+        renderResources.shaderBuilder,
+        ["uniform float u_linePattern;"],
+      );
+
+      expect(renderResources.uniformMap.u_linePattern).toBeDefined();
+      expect(renderResources.uniformMap.u_linePattern()).toBe(0xaaaa);
+    });
+
+    it("processes BENTLEY_materials_line_style with both lineWidth and linePattern", function () {
+      const renderResources = mockRenderResources();
+
+      const material = new ModelComponents.Material();
+      material.lineStyle = new ModelComponents.LineStyle();
+      material.lineStyle.width = 2.5;
+      material.lineStyle.pattern = 0xf0f0; // dashed pattern
+
+      const primitive = new ModelComponents.Primitive();
+      primitive.material = material;
+
+      const frameState = {
+        context: scene.context,
+        pixelRatio: 1.5,
+      };
+
+      MaterialPipelineStage.process(renderResources, primitive, frameState);
+
+      ShaderBuilderTester.expectHasFragmentDefines(
+        renderResources.shaderBuilder,
+        ["HAS_LINE_PATTERN", "USE_METALLIC_ROUGHNESS"],
+      );
+
+      expect(renderResources.uniformMap.u_lineWidth).toBeDefined();
+      expect(renderResources.uniformMap.u_lineWidth()).toBe(3.75); // 2.5 * 1.5
+
+      expect(renderResources.uniformMap.u_linePattern).toBeDefined();
+      expect(renderResources.uniformMap.u_linePattern()).toBe(0xf0f0);
+    });
+
+    it("adds point diameter uniforms for BENTLEY_materials_point_style extension", async function () {
+      const gltfLoader = await loadGltf(pointStyleTestData);
+      const primitive = gltfLoader.components.nodes[0].primitives[0];
+      const renderResources = mockRenderResources();
+      const { shaderBuilder, uniformMap } = renderResources;
+
+      MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_POINT_DIAMETER",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_BASE_COLOR_FACTOR",
+        "HAS_METALLIC_FACTOR",
+        "HAS_POINT_DIAMETER",
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform float u_pointDiameter;",
+      ]);
+
+      // The first primitive has pointDiameter of 5, and mockFrameState.pixelRatio is 1.0
+      const expectedPointDiameter = 5 * mockFrameState.pixelRatio;
+      expectUniformMap(uniformMap, {
+        u_pointDiameter: expectedPointDiameter,
+      });
+    });
+
+    it("does not add point diameter uniforms when pointDiameter is undefined", async function () {
+      // Use triangle model which has no BENTLEY_materials_point_style extension
+      const gltfLoader = await loadGltf(triangle);
+      const primitive = gltfLoader.components.nodes[0].primitives[0];
+      const renderResources = mockRenderResources();
+      const { shaderBuilder, uniformMap } = renderResources;
+
+      MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+      expect(uniformMap.u_pointDiameter).toBeUndefined();
+    });
+
+    const planarFillTestData =
+      "./Data/Models/glTF-2.0/PlanarFill/glTF/planar-fill-polygons.gltf";
+
+    it("adds planar fill depth define for BENTLEY_materials_planar_fill extension", async function () {
+      const gltfLoader = await loadGltf(planarFillTestData);
+      // Node 0 has planarFill with behind: false
+      const primitive = gltfLoader.components.nodes[0].primitives[0];
+      const renderResources = mockRenderResources();
+      const { shaderBuilder } = renderResources;
+
+      const frameStateWithPlanarFill = Object.assign({}, mockFrameState);
+      MaterialPipelineStage.process(
+        renderResources,
+        primitive,
+        frameStateWithPlanarFill,
+      );
+
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_BASE_COLOR_FACTOR",
+        "HAS_METALLIC_FACTOR",
+        "HAS_PLANAR_FILL_DEPTH",
+        "HAS_PLANAR_FILL_ID_PASS",
+        "PLANAR_FILL_FEATURE_ID featureId_0",
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+
+      // Should signal that planar fill is requested
+      expect(frameStateWithPlanarFill.planarFillRequested).toBe(true);
+    });
+
+    it("adds planar fill behind defines for primitives with behind: true", async function () {
+      const gltfLoader = await loadGltf(planarFillTestData);
+      // Node 1 has planarFill with behind: true
+      const primitive = gltfLoader.components.nodes[1].primitives[0];
+      const renderResources = mockRenderResources();
+      const { shaderBuilder } = renderResources;
+
+      const frameStateWithPlanarFill = Object.assign({}, mockFrameState);
+      MaterialPipelineStage.process(
+        renderResources,
+        primitive,
+        frameStateWithPlanarFill,
+      );
+
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_BASE_COLOR_FACTOR",
+        "HAS_METALLIC_FACTOR",
+        "HAS_PLANAR_FILL_BEHIND",
+        "HAS_PLANAR_FILL_DEPTH",
+        "PLANAR_FILL_FEATURE_ID featureId_0",
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+    });
+
+    it("adds background fill define for primitives with backgroundFill: true", async function () {
+      const gltfLoader = await loadGltf(planarFillTestData);
+      // Node 2 has planarFill with backgroundFill: true but NO feature IDs
+      const primitive = gltfLoader.components.nodes[2].primitives[0];
+      const renderResources = mockRenderResources();
+      const { shaderBuilder, lightingOptions } = renderResources;
+
+      const frameStateWithPlanarFill = Object.assign({}, mockFrameState);
+      MaterialPipelineStage.process(
+        renderResources,
+        primitive,
+        frameStateWithPlanarFill,
+      );
+
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_BACKGROUND_FILL",
+        "HAS_BASE_COLOR_FACTOR",
+        "HAS_METALLIC_FACTOR",
+        "HAS_PLANAR_FILL_DEPTH",
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+
+      // Background fill should force unlit lighting
+      expect(lightingOptions.lightingModel).toBe(LightingModel.UNLIT);
+    });
+
+    it("sets planarFillIdPass on renderResources for non-behind primitives with feature IDs", async function () {
+      const gltfLoader = await loadGltf(planarFillTestData);
+      // Node 0 has planarFill with behind: false and has feature IDs
+      const primitive = gltfLoader.components.nodes[0].primitives[0];
+      const renderResources = mockRenderResources();
+      const { uniformMap } = renderResources;
+
+      const frameStateWithPlanarFill = Object.assign({}, mockFrameState);
+      MaterialPipelineStage.process(
+        renderResources,
+        primitive,
+        frameStateWithPlanarFill,
+      );
+
+      // Non-behind primitives with feature IDs should be marked for the ID pass
+      expect(renderResources.planarFillIdPass).toBe(true);
+
+      // Should have the uniform for the ID pass
+      expect(uniformMap.u_isPlanarFillIdPass).toBeDefined();
+      expect(uniformMap.u_isPlanarFillIdPass()).toBe(false);
+    });
+
+    it("does not add planar fill defines when extension is not present", async function () {
+      const gltfLoader = await loadGltf(triangle);
+      const primitive = gltfLoader.components.nodes[0].primitives[0];
+      const renderResources = mockRenderResources();
+      const { shaderBuilder } = renderResources;
+
+      const frameStateWithPlanarFill = Object.assign({}, mockFrameState);
+      MaterialPipelineStage.process(
+        renderResources,
+        primitive,
+        frameStateWithPlanarFill,
+      );
+
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+
+      // Should not signal planar fill requested
+      expect(frameStateWithPlanarFill.planarFillRequested).toBeUndefined();
+      expect(renderResources.planarFillIdPass).toBeUndefined();
+    });
+
+    it("processes EXT_textureInfo_constant_lod extension", async function () {
+      const gltfLoader = await loadGltf(constantLodTestData);
+
+      const primitive = gltfLoader.components.nodes[0].primitives[0];
+      const renderResources = mockRenderResources();
+      const { shaderBuilder, uniformMap } = renderResources;
+
+      // Add required function, outside a test this would already exist
+      shaderBuilder.addFunction(
+        "setDynamicVaryingsVS",
+        "void setDynamicVaryingsVS()\n{\n}",
+        ShaderDestination.VERTEX,
+      );
+      MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_CONSTANT_LOD",
+        "HAS_BASE_COLOR_CONSTANT_LOD",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_BASE_COLOR_TEXTURE",
+        "HAS_BASE_COLOR_CONSTANT_LOD",
+        "HAS_METALLIC_FACTOR",
+        "TEXCOORD_BASE_COLOR v_texCoord_0",
+        "HAS_CONSTANT_LOD",
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform vec2 u_constantLodOffset;",
+        "uniform float u_constantLodDistance;",
+        "uniform mat4 u_constantLodWorldToEnu;",
+      ]);
+
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform float u_metallicFactor;",
+        "uniform sampler2D u_baseColorTexture;",
+        "uniform vec3 u_baseColorTextureConstantLodParams;",
+      ]);
+
+      // Get the actual texture and constant LOD data from the loaded primitive
+      const baseColorTexture =
+        primitive.material.metallicRoughness.baseColorTexture.texture;
+      const constantLodData =
+        primitive.material.metallicRoughness.baseColorTexture.constantLod;
+
+      const expectedUniforms = {
+        u_baseColorTexture: baseColorTexture,
+        u_constantLodOffset: constantLodData.offset,
+        u_baseColorTextureConstantLodParams: new Cartesian3(
+          constantLodData.minClampDistance,
+          constantLodData.maxClampDistance,
+          constantLodData.repetitions,
+        ),
+      };
+      expectUniformMap(uniformMap, expectedUniforms);
     });
   },
   "WebGL",

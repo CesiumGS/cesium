@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * An enum of per-point error sources.
  *
@@ -72,4 +74,6 @@ const PpeSource = {
   SIGR: "VARZ",
 };
 
-export default Object.freeze(PpeSource);
+Object.freeze(PpeSource);
+
+export default PpeSource;

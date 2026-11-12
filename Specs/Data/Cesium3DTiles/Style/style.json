@@ -24,5 +24,6 @@
     "horizontalOrigin" : "0",
     "verticalOrigin" : "0",
     "labelHorizontalOrigin" : "0",
-    "labelVerticalOrigin" : "0"
+    "labelVerticalOrigin" : "0",
+    "lineWidth" : "10.0"
 }

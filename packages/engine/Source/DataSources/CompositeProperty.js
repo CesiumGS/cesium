@@ -1,8 +1,10 @@
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
-import EventHelper from "../Core/EventHelper.js";
-import JulianDate from "../Core/JulianDate.js";
-import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
+import {
+  Event,
+  EventHelper,
+  JulianDate,
+  TimeIntervalCollection,
+  defined,
+} from "@cesium/core";
 import Property from "./Property.js";
 
 function subscribeAll(property, eventHelper, definitionChanged, intervals) {

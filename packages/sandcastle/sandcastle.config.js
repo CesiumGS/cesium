@@ -22,6 +22,7 @@ const config = {
       development: false,
     },
     includeDevelopment: !process.env.PROD,
+    generateEmbeddings: !process.env.SANDCASTLE_NO_EMBEDDINGS,
   },
 };
 

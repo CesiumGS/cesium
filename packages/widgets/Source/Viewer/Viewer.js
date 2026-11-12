@@ -1,21 +1,25 @@
 import {
   BoundingSphere,
-  BoundingSphereState,
   Cartesian3,
-  CesiumWidget,
-  Cesium3DTileFeature,
   Clock,
-  ConstantPositionProperty,
-  Frozen,
-  defined,
-  destroyObject,
   DeveloperError,
-  Entity,
   Event,
   EventHelper,
-  getElement,
+  Frozen,
   JulianDate,
   Math as CesiumMath,
+  defined,
+  destroyObject,
+} from "@cesium/core";
+import {
+  BoundingSphereState,
+  CesiumWidget,
+  Cesium3DTileFeature,
+  Cesium3DTileVectorFeature,
+  Cesium3DTileset,
+  ConstantPositionProperty,
+  Entity,
+  getElement,
   Property,
   ScreenSpaceEventType,
   IonGeocoderService,
@@ -109,7 +113,10 @@ function pickEntity(viewer, e) {
       return id;
     }
 
-    if (picked instanceof Cesium3DTileFeature) {
+    if (
+      picked instanceof Cesium3DTileFeature ||
+      picked instanceof Cesium3DTileVectorFeature
+    ) {
       return new Entity({
         name: getCesium3DTileFeatureName(picked),
         description: getCesium3DTileFeatureDescription(picked),
@@ -119,9 +126,7 @@ function pickEntity(viewer, e) {
   }
 
   // No regular entity picked.  Try picking features from imagery layers.
-  if (defined(viewer.scene.globe)) {
-    return pickImageryLayerFeature(viewer, e.position);
-  }
+  return pickImageryLayerFeature(viewer, e.position);
 }
 
 const scratchStopTime = new JulianDate();
@@ -149,11 +154,39 @@ function linkTimelineToDataSourceClock(timeline, dataSource) {
 
 const cartesian3Scratch = new Cartesian3();
 
+function findFirstTileset(primitives) {
+  const length = primitives.length;
+  for (let i = 0; i < length; ++i) {
+    const primitive = primitives.get(i);
+    if (primitive instanceof Cesium3DTileset) {
+      return primitive;
+    }
+  }
+  return undefined;
+}
+
 function pickImageryLayerFeature(viewer, windowPosition) {
   const scene = viewer.scene;
   const pickRay = scene.camera.getPickRay(windowPosition);
-  const imageryLayerFeaturePromise =
-    scene.imageryLayers.pickImageryLayerFeatures(pickRay, scene);
+  if (!defined(pickRay)) {
+    return;
+  }
+
+  // When globe is disabled, scene.imageryLayers is undefined. Fall back to the
+  // first Cesium3DTileset's imagery layers (e.g. draped imagery on 3D Tiles).
+  let imageryLayers = scene.imageryLayers;
+  if (!defined(imageryLayers)) {
+    const tileset = findFirstTileset(scene.primitives);
+    if (!defined(tileset)) {
+      return;
+    }
+    imageryLayers = tileset.imageryLayers;
+  }
+
+  const imageryLayerFeaturePromise = imageryLayers.pickImageryLayerFeatures(
+    pickRay,
+    scene,
+  );
   if (!defined(imageryLayerFeaturePromise)) {
     return;
   }
@@ -1970,6 +2003,30 @@ Viewer.prototype._onDataSourceRemoved = function (
 };
 
 /**
+ * Adds a controller— an implementation of the {@link Controller} interface used to handle input events, camera animations, and other interactions— to the viewer's scene.
+ * @param {Controller} controller An implementation of the <code>Controller</code> interface.
+ * @example
+ * viewer.scene.screenSpaceCameraController.enableInputs = false;
+ * viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+ *
+ * const tiltOrbitController = new Cesium.ScreenSpaceTiltOrbitCameraController();
+ * viewer.addController(tiltOrbitController);
+ */
+Viewer.prototype.addController = function (controller) {
+  return this._cesiumWidget.addController(controller);
+};
+
+/**
+ * Removes a controller— an implementation of the {@link Controller} interface used to handle input events, camera animations, and other interactions— from the viewer's scene.
+ * @param {Controller} controller An implementation of the <code>Controller</code> interface.
+ * @example
+ * viewer.removeController(tiltOrbitController);
+ */
+Viewer.prototype.removeController = function (controller) {
+  return this._cesiumWidget.removeController(controller);
+};
+
+/**
  * Asynchronously sets the camera to view the provided entity, entities, or data source.
  * If the data source is still in the process of loading or the visualization is otherwise still loading,
  * this method waits for the data to be ready before performing the zoom.
@@ -1984,7 +2041,7 @@ Viewer.prototype._onDataSourceRemoved = function (
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
  *
- * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+ * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive|BufferPrimitiveCollection<BufferPrimitive>>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
  * @returns {Promise<boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
  */
@@ -2007,7 +2064,7 @@ Viewer.prototype.zoomTo = function (target, offset) {
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
  *
- * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+ * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive|BufferPrimitiveCollection<BufferPrimitive>>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {object} [options] Object with the following properties:
  * @param {number} [options.duration=3.0] The duration of the flight in seconds.
  * @param {number} [options.maximumHeight] The maximum height at the peak of the flight.

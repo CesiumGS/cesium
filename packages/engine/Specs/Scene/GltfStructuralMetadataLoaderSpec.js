@@ -1,12 +1,11 @@
+import { RuntimeError, clone } from "@cesium/core";
 import {
-  clone,
   GltfBufferViewLoader,
   GltfStructuralMetadataLoader,
   GltfTextureLoader,
   MetadataSchemaLoader,
   Resource,
   ResourceCache,
-  RuntimeError,
   SupportedImageFormats,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";

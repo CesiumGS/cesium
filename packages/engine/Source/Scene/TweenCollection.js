@@ -1,10 +1,12 @@
-import clone from "../Core/clone.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  DeveloperError,
+  Frozen,
+  TimeConstants,
+  clone,
+  defined,
+  getTimestamp,
+} from "@cesium/core";
 import EasingFunction from "../Core/EasingFunction.js";
-import getTimestamp from "../Core/getTimestamp.js";
-import TimeConstants from "../Core/TimeConstants.js";
 import { Tween as TweenJS } from "@tweenjs/tween.js";
 
 /**
@@ -562,6 +564,13 @@ TweenCollection.prototype.update = function (time) {
     } else if (tweenjs.update(time)) {
       i++;
     } else {
+      // there's a chance that the update callback has side effects that clear the list of tweens and/or adds new tweens
+      // if it's the case that the update callback 1) clears all tweens held in the scene, then 2) adds new tweens
+      // the splice operation below will not be operating on the original tween, but one of the unprocessed tweens added
+      // from the update callback
+      if (tweens[i]?.needsStart) {
+        continue;
+      }
       tweenjs.stop();
       tweens.splice(i, 1);
     }

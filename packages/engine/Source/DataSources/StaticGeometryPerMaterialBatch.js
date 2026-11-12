@@ -1,12 +1,14 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defined from "../Core/defined.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
+import {
+  AssociativeArray,
+  Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  DistanceDisplayCondition,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  ShowGeometryInstanceAttribute,
+  defined,
+} from "@cesium/core";
 import OffsetGeometryInstanceAttribute from "../Core/OffsetGeometryInstanceAttribute.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import Primitive from "../Scene/Primitive.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import ColorMaterialProperty from "./ColorMaterialProperty.js";
@@ -154,18 +156,23 @@ Batch.prototype.update = function (time) {
           this.depthFailMaterialProperty,
           this.depthFailMaterial,
         );
-        depthFailAppearance = new this.depthFailAppearanceType({
+
+        const DepthFailAppearanceType = this.depthFailAppearanceType;
+
+        depthFailAppearance = new DepthFailAppearanceType({
           material: this.depthFailMaterial,
           translucent: this.depthFailMaterial.isTranslucent(),
           closed: this.closed,
         });
       }
 
+      const AppearanceType = this.appearanceType;
+
       primitive = new Primitive({
         show: false,
         asynchronous: true,
         geometryInstances: geometries.slice(),
-        appearance: new this.appearanceType({
+        appearance: new AppearanceType({
           material: this.material,
           translucent: this.material.isTranslucent(),
           closed: this.closed,

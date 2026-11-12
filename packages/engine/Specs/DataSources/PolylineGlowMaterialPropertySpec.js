@@ -1,12 +1,9 @@
+import { Color, JulianDate, TimeInterval } from "@cesium/core";
 import {
-  Color,
-  JulianDate,
-  TimeInterval,
   ConstantProperty,
   PolylineGlowMaterialProperty,
   TimeIntervalCollectionProperty,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 
 describe("DataSources/PolylineGlowMaterialProperty", function () {

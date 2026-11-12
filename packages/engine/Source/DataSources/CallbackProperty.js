@@ -1,7 +1,4 @@
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
+import { DeveloperError, Event, JulianDate, defined } from "@cesium/core";
 
 /**
  * A {@link Property} whose value is lazily evaluated by a callback function.

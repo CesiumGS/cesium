@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * An enum describing the type of motion that is defined by an articulation stage
  * in the AGI_articulations extension.
@@ -20,4 +22,6 @@ const ArticulationStageType = {
   UNIFORMSCALE: "uniformScale",
 };
 
-export default Object.freeze(ArticulationStageType);
+Object.freeze(ArticulationStageType);
+
+export default ArticulationStageType;

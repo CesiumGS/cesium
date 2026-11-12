@@ -1,10 +1,14 @@
-import BoundingSphere from "../../Core/BoundingSphere.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Check from "../../Core/Check.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Transforms from "../../Core/Transforms.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Check,
+  FixedFrameTransforms,
+  Frozen,
+  Matrix4,
+  addAllToArray,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
 import TilesetPipelineStage from "./TilesetPipelineStage.js";
@@ -14,6 +18,7 @@ import ModelArticulation from "./ModelArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
 import ModelClippingPolygonsPipelineStage from "./ModelClippingPolygonsPipelineStage.js";
+import ModelVectorLookupPipelineStage from "./ModelVectorLookupPipelineStage.js";
 import ModelNode from "./ModelNode.js";
 import ModelRuntimeNode from "./ModelRuntimeNode.js";
 import ModelRuntimePrimitive from "./ModelRuntimePrimitive.js";
@@ -26,7 +31,6 @@ import ModelType from "./ModelType.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import ModelDrawCommands from "./ModelDrawCommands.js";
-import addAllToArray from "../../Core/addAllToArray.js";
 
 /**
  * An in memory representation of the scene graph for a {@link Model}
@@ -345,14 +349,14 @@ function computeModelMatrix2D(sceneGraph, frameState) {
   );
 
   if (!Cartesian3.equals(translation, Cartesian3.ZERO)) {
-    sceneGraph._computedModelMatrix2D = Transforms.basisTo2D(
+    sceneGraph._computedModelMatrix2D = FixedFrameTransforms.basisTo2D(
       frameState.mapProjection,
       computedModelMatrix,
       sceneGraph._computedModelMatrix2D,
     );
   } else {
     const center = sceneGraph.boundingSphere.center;
-    const to2D = Transforms.ellipsoidTo2DModelMatrix(
+    const to2D = FixedFrameTransforms.ellipsoidTo2DModelMatrix(
       frameState.mapProjection,
       center,
       sceneGraph._computedModelMatrix2D,
@@ -436,7 +440,13 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
   if (defined(name)) {
     const model = sceneGraph._model;
     const publicNode = new ModelNode(model, runtimeNode);
-    model._nodesByName[name] = publicNode;
+    if (model._nodesByName.has(name)) {
+      oneTimeWarning(
+        "gltf-node-names-duplicate",
+        `Duplicate node name ("${name}") found in glTF`,
+      );
+    }
+    model._nodesByName.set(name, publicNode);
   }
 
   return index;
@@ -735,8 +745,16 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
     modelPipelineStages.push(ModelClippingPlanesPipelineStage);
   }
 
-  if (model.isClippingPolygonsEnabled()) {
+  // Even if a model has a clipping polygon collection, the polygons may not overlap the model geometry,
+  // in which case the clipping polygon pipeline stage should not be added.
+  const hasClippingPolygonGeometry =
+    (model._clippingPolygonData?.polygonRings.length ?? 0) > 0;
+  if (model.isClippingPolygonsEnabled() && hasClippingPolygonGeometry) {
     modelPipelineStages.push(ModelClippingPolygonsPipelineStage);
+  }
+
+  if (model.hasDrapedVectors()) {
+    modelPipelineStages.push(ModelVectorLookupPipelineStage);
   }
 
   if (model.hasSilhouette(frameState)) {
@@ -986,6 +1004,7 @@ function updatePrimitiveShowBoundingVolume(runtimePrimitive, options) {
 
 const scratchSilhouetteCommands = [];
 const scratchEdgeCommands = [];
+const scratchPlanarFillIdCommands = [];
 const scratchPushDrawCommandOptions = {
   frameState: undefined,
   hasSilhouette: undefined,
@@ -1011,6 +1030,10 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
   const edgeCommands = scratchEdgeCommands;
   edgeCommands.length = 0;
 
+  // Gather planar fill feature-ID pre-pass commands
+  const planarFillIdCommands = scratchPlanarFillIdCommands;
+  planarFillIdCommands.length = 0;
+
   // Since this function is called each frame, the options object is
   // preallocated in a scratch variable
   const pushDrawCommandOptions = scratchPushDrawCommandOptions;
@@ -1026,6 +1049,7 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
 
   addAllToArray(frameState.commandList, silhouetteCommands);
   addAllToArray(frameState.commandList, edgeCommands);
+  addAllToArray(frameState.commandList, planarFillIdCommands);
 };
 
 // Callback is defined here to avoid allocating a closure in the render loop
@@ -1036,8 +1060,15 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
   const passes = frameState.passes;
   const silhouetteCommands = scratchSilhouetteCommands;
   const edgeCommands = scratchEdgeCommands;
+  const planarFillIdCommands = scratchPlanarFillIdCommands;
   const primitiveDrawCommand = runtimePrimitive.drawCommand;
   primitiveDrawCommand.pushCommands(frameState, frameState.commandList);
+
+  // Renew the per-frame planar fill request while this primitive renders.
+  const material = runtimePrimitive.primitive.material;
+  if (defined(material) && defined(material.planarFill)) {
+    frameState.planarFillRequested = true;
+  }
 
   // If a model has silhouettes, the commands that draw the silhouettes for
   // each primitive can only be invoked after the entire model has drawn.
@@ -1050,6 +1081,14 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
   // Add edge commands to the edge pass
   if (defined(primitiveDrawCommand.pushEdgeCommands)) {
     primitiveDrawCommand.pushEdgeCommands(frameState, edgeCommands);
+  }
+
+  // Add planar fill feature-ID pre-pass commands
+  if (defined(primitiveDrawCommand.pushPlanarFillIdCommands)) {
+    primitiveDrawCommand.pushPlanarFillIdCommands(
+      frameState,
+      planarFillIdCommands,
+    );
   }
 }
 

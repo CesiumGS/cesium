@@ -2,10 +2,12 @@ import {
   Cartesian3,
   Cartographic,
   Ellipsoid,
-  GeographicTilingScheme,
-  GoogleEarthEnterpriseTerrainData,
   Math as CesiumMath,
   Rectangle,
+} from "@cesium/core";
+import {
+  GeographicTilingScheme,
+  GoogleEarthEnterpriseTerrainData,
   TerrainData,
   TerrainMesh,
 } from "../../index.js";
@@ -44,7 +46,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
     const buf = new ArrayBuffer(totalSize);
     const dv = new DataView(buf);
 
-    let altitudeStart = 0;
+    let altitudeStart;
     let offset = 0;
     for (let i = 0; i < 4; ++i) {
       altitudeStart = 0;

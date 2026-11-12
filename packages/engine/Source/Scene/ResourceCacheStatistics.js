@@ -1,5 +1,4 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
+import { Check, defined } from "@cesium/core";
 
 /**
  * Statistics for the GPU and CPU memory used by the models loaded through the
@@ -8,7 +7,7 @@ import defined from "../Core/defined.js";
  * @alias ResourceCacheStatistics
  * @constructor
  *
- * @private
+ * @internal
  */
 function ResourceCacheStatistics() {
   /**

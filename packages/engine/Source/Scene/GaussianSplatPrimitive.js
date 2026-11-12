@@ -1,11 +1,27 @@
-import Frozen from "../Core/Frozen.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  AttributeType,
+  Cartesian3,
+  ComponentDatatype,
+  DeveloperError,
+  Event,
+  FixedFrameTransforms,
+  Frozen,
+  Geometry,
+  GeometryAttribute,
+  Matrix3,
+  Matrix4,
+  PixelDatatype,
+  PixelFormat,
+  PrimitiveType,
+  Quaternion,
+  clone,
+  defined,
+  destroyObject,
+  oneTimeWarning,
+} from "@cesium/core";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
 import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
-import PixelFormat from "../Core/PixelFormat.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 import GaussianSplatRenderResources from "./GaussianSplatRenderResources.js";
@@ -14,31 +30,32 @@ import Pass from "../Renderer/Pass.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
 import GaussianSplatVS from "../Shaders/PrimitiveGaussianSplatVS.js";
 import GaussianSplatFS from "../Shaders/PrimitiveGaussianSplatFS.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
-import Geometry from "../Core/Geometry.js";
-import GeometryAttribute from "../Core/GeometryAttribute.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import RenderState from "../Renderer/RenderState.js";
-import clone from "../Core/clone.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
-import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import Axis from "./Axis.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Quaternion from "../Core/Quaternion.js";
 import SplitDirection from "./SplitDirection.js";
-import destroyObject from "../Core/destroyObject.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
-import Transforms from "../Core/Transforms.js";
-
+import CustomShader from "./Model/CustomShader.js";
+import CustomShaderTranslucencyMode from "./Model/CustomShaderTranslucencyMode.js";
 const scratchMatrix4A = new Matrix4();
-const scratchMatrix4B = new Matrix4();
 const scratchMatrix4C = new Matrix4();
 const scratchMatrix4D = new Matrix4();
+const scratchMatrix3 = new Matrix3();
+const scratchTransformQuat = new Quaternion();
+const scratchTransformPosition = new Cartesian3();
+const scratchTransformRotation = new Quaternion();
+const scratchTransformScale = new Cartesian3();
+const TRANSFORM_CACHE_EPSILON = 1e-12;
+const RIGID_TRANSFORM_EPSILON = 1e-5;
+const UNIT_SCALE_FAST_PATH_EPSILON = 1e-7;
+// A single RGBA32UI texel stores up to 4 feature IDs (one per channel). The
+// feature ID texture and vertex shader currently address exactly one texel per
+// splat, so at most 4 feature ID sets are supported.
+const MAX_FEATURE_ID_SETS = 4;
 
 /**
  * Runtime state machine for steady-state re-sorting of an already committed snapshot.
@@ -93,6 +110,49 @@ const SnapshotState = {
   READY: "READY",
 };
 
+/**
+ * Aggregated Gaussian splat snapshot data that is built asynchronously and
+ * atomically committed once all required resources are ready.
+ *
+ * @typedef {object} GaussianSplatPrimitive.Snapshot
+ * @property {number} generation Monotonic data generation token.
+ * @property {Float32Array} positions Packed splat positions (xyz).
+ * @property {Float32Array} rotations Packed splat rotations (xyzw).
+ * @property {Float32Array} scales Packed splat scales (xyz).
+ * @property {Uint8Array} colors Packed splat colors (rgba).
+ * @property {Uint32Array|undefined} shData Packed spherical harmonics data.
+ * @property {number} sphericalHarmonicsDegree Spherical harmonics degree.
+ * @property {number} shCoefficientCount Coefficients per splat.
+ * @property {number} numSplats Total splat count in this snapshot.
+ * @property {Uint32Array|undefined} indexes Sorted index buffer when READY.
+ * @property {Texture|undefined} gaussianSplatTexture Packed splat attribute texture.
+ * @property {Texture|undefined} sphericalHarmonicsTexture Packed SH texture.
+ * @property {number} lastTextureWidth Last splat texture width.
+ * @property {number} lastTextureHeight Last splat texture height.
+ * @property {string} state Current snapshot lifecycle state from {@link SnapshotState}.
+ * @private
+ */
+
+/**
+ * Packed spherical harmonics texture payload.
+ *
+ * @typedef {object} GaussianSplatPrimitive.SphericalHarmonicsTextureData
+ * @property {number} width Texture width in texels.
+ * @property {number} height Texture height in texels.
+ * @property {ArrayBufferView} data Packed unsigned integer texture data.
+ * @private
+ */
+
+/**
+ * Packed Gaussian splat attribute texture payload.
+ *
+ * @typedef {object} GaussianSplatPrimitive.AttributeTextureData
+ * @property {number} width Texture width in texels.
+ * @property {number} height Texture height in texels.
+ * @property {ArrayBufferView} data Packed unsigned integer texture data.
+ * @private
+ */
+
 // Two stable frames avoids rebuilding during brief selected-tile jitter.
 const DEFAULT_STABLE_FRAMES = 2;
 // If selection keeps changing, force a rebuild after ~0.5s at 60fps to guarantee progress.
@@ -106,6 +166,23 @@ const DEFAULT_SORT_MIN_ANGLE_RADIANS = 0.008726646259971648;
 // Minimum camera movement in world units before triggering steady re-sort.
 const DEFAULT_SORT_MIN_POSITION_DELTA = 1.0;
 
+/**
+ * Determines whether the camera has moved or rotated enough since the last
+ * steady sort to justify scheduling a new one.
+ *
+ * Returns {@code true} when any of the following hold:
+ * - No previous steady sort has been recorded yet.
+ * - The camera position has moved by at least {@link DEFAULT_SORT_MIN_POSITION_DELTA} world units.
+ * - The camera direction has changed by at least {@link DEFAULT_SORT_MIN_ANGLE_RADIANS} radians.
+ *
+ * A minimum frame interval ({@link DEFAULT_SORT_MIN_FRAME_INTERVAL}) is
+ * enforced to prevent re-sorting every single frame.
+ *
+ * @param {GaussianSplatPrimitive} primitive The splat primitive to check.
+ * @param {FrameState} frameState The current frame state.
+ * @returns {boolean} Whether a new steady sort should begin.
+ * @private
+ */
 function shouldStartSteadySort(primitive, frameState) {
   const framesSinceLastSort =
     primitive._lastSteadySortFrameNumber >= 0
@@ -119,8 +196,10 @@ function shouldStartSteadySort(primitive, frameState) {
   }
 
   const camera = frameState.camera;
+  if (!defined(camera)) {
+    return false;
+  }
   if (
-    !defined(camera) ||
     !primitive._hasLastSteadySortCameraPosition ||
     !primitive._hasLastSteadySortCameraDirection
   ) {
@@ -142,6 +221,14 @@ function shouldStartSteadySort(primitive, frameState) {
   return angleDelta >= DEFAULT_SORT_MIN_ANGLE_RADIANS;
 }
 
+/**
+ * Records the frame number and camera pose at the start of a steady sort so
+ * that {@link shouldStartSteadySort} can later compute deltas.
+ *
+ * @param {GaussianSplatPrimitive} primitive The splat primitive to update.
+ * @param {FrameState} frameState The current frame state.
+ * @private
+ */
 function markSteadySortStart(primitive, frameState) {
   primitive._lastSteadySortFrameNumber = frameState.frameNumber;
   const camera = frameState.camera;
@@ -156,6 +243,7 @@ function markSteadySortStart(primitive, frameState) {
   );
   primitive._hasLastSteadySortCameraDirection = true;
 }
+
 function createSequentialIndexes(count) {
   const indexes = new Uint32Array(count);
   for (let i = 0; i < count; i++) {
@@ -163,6 +251,17 @@ function createSequentialIndexes(count) {
   }
   return indexes;
 }
+
+/**
+ * Checks whether the set of currently selected tiles differs from the set
+ * recorded on the primitive. This is used to detect LOD transitions that
+ * require a snapshot rebuild.
+ *
+ * @param {GaussianSplatPrimitive} primitive The splat primitive.
+ * @param {Cesium3DTile[]} selectedTiles The tiles selected this frame.
+ * @returns {boolean} {@code true} if the tile set has changed.
+ * @private
+ */
 function haveSelectedTilesChanged(primitive, selectedTiles) {
   const prevSet = primitive._selectedTileSet;
   if (!defined(prevSet) || prevSet.size !== selectedTiles.length) {
@@ -178,6 +277,15 @@ function haveSelectedTilesChanged(primitive, selectedTiles) {
   return false;
 }
 
+/**
+ * Returns whether the given sort result still matches the primitive's current
+ * sort request and data generation, i.e. it has not been superseded.
+ *
+ * @param {GaussianSplatPrimitive} primitive The splat primitive.
+ * @param {object} activeSort The sort result to validate.
+ * @returns {boolean} {@code true} if the sort result is still current.
+ * @private
+ */
 function isActiveSort(primitive, activeSort) {
   return (
     defined(activeSort) &&
@@ -186,6 +294,13 @@ function isActiveSort(primitive, activeSort) {
   );
 }
 
+/**
+ * Destroys the GPU textures owned by a snapshot, if any, and clears the
+ * references so they are not used after destruction.
+ *
+ * @param {GaussianSplatPrimitive.Snapshot|undefined} snapshot The snapshot whose textures should be destroyed.
+ * @private
+ */
 function destroySnapshotTextures(snapshot) {
   if (!defined(snapshot)) {
     return;
@@ -198,8 +313,22 @@ function destroySnapshotTextures(snapshot) {
     snapshot.sphericalHarmonicsTexture.destroy();
     snapshot.sphericalHarmonicsTexture = undefined;
   }
+  if (defined(snapshot.featureIdTexture)) {
+    snapshot.featureIdTexture.destroy();
+    snapshot.featureIdTexture = undefined;
+  }
 }
 
+/**
+ * Schedules a GPU texture for deferred destruction. The texture is kept alive
+ * for one additional frame so that any in-flight draw commands that reference
+ * it can finish before the underlying GPU resource is released.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {Texture|undefined} texture The texture to retire.
+ * @param {number} frameNumber The frame number at which the texture was retired.
+ * @private
+ */
 function retireTexture(primitive, texture, frameNumber) {
   if (!defined(texture)) {
     return;
@@ -211,6 +340,15 @@ function retireTexture(primitive, texture, frameNumber) {
   });
 }
 
+/**
+ * Destroys any retired textures whose grace period (one frame) has elapsed.
+ * Called once per frame to reclaim GPU memory from textures that were replaced
+ * by a newer snapshot.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {number} frameNumber The current frame number.
+ * @private
+ */
 function releaseRetiredTextures(primitive, frameNumber) {
   const retired = primitive._retiredTextures;
   if (!defined(retired) || retired.length === 0) {
@@ -228,52 +366,96 @@ function releaseRetiredTextures(primitive, frameNumber) {
   primitive._retiredTextures = next;
 }
 
+function getSnapshotArrayBuffer(snapshot, key) {
+  const value = snapshot?.[key];
+  return defined(value) ? value.buffer : undefined;
+}
+
+function acquireAggregateScratchBuffer(
+  primitive,
+  key,
+  componentDatatype,
+  requiredLength,
+) {
+  let pool = primitive._aggregateScratchBuffers[key];
+  if (!defined(pool)) {
+    pool = [];
+    primitive._aggregateScratchBuffers[key] = pool;
+  }
+
+  const activeBuffer = getSnapshotArrayBuffer(primitive._snapshot, key);
+  for (let i = 0; i < pool.length; i++) {
+    const candidate = pool[i];
+    if (
+      candidate.length >= requiredLength &&
+      candidate.buffer !== activeBuffer
+    ) {
+      return candidate;
+    }
+  }
+
+  const created = ComponentDatatype.createTypedArray(
+    componentDatatype,
+    requiredLength,
+  );
+  pool.push(created);
+  return created;
+}
+
+function trimAggregateScratchBuffer(buffer, length) {
+  if (buffer.length === length) {
+    return buffer;
+  }
+  return buffer.subarray(0, length);
+}
+
+/**
+ * Atomically promotes a fully-built snapshot to be the active splat data for
+ * the primitive. This includes swapping attribute arrays, GPU textures, and
+ * sorted indexes, as well as retiring any previously active textures so they
+ * can be safely destroyed after the current frame finishes.
+ *
+ * The snapshot <b>must</b> be in the {@link SnapshotState.READY} state;
+ * otherwise a {@link DeveloperError} is thrown.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {GaussianSplatPrimitive.Snapshot} snapshot The snapshot to commit.
+ * @param {FrameState} frameState The current frame state.
+ * @throws {DeveloperError} If the snapshot is not READY.
+ * @private
+ */
 function commitSnapshot(primitive, snapshot, frameState) {
   if (!defined(snapshot.indexes) || snapshot.state !== SnapshotState.READY) {
     throw new DeveloperError("Committing snapshot before it is READY.");
   }
 
-  const frameNumber = defined(frameState) ? frameState.frameNumber : 0;
+  const frameNumber = frameState.frameNumber;
   const currentSnapshot = primitive._snapshot;
-  if (defined(currentSnapshot)) {
-    if (
-      defined(currentSnapshot.gaussianSplatTexture) &&
-      currentSnapshot.gaussianSplatTexture !== snapshot.gaussianSplatTexture
-    ) {
-      retireTexture(
-        primitive,
-        currentSnapshot.gaussianSplatTexture,
-        frameNumber,
-      );
-    }
-    if (
-      defined(currentSnapshot.sphericalHarmonicsTexture) &&
-      currentSnapshot.sphericalHarmonicsTexture !==
-        snapshot.sphericalHarmonicsTexture
-    ) {
-      retireTexture(
-        primitive,
-        currentSnapshot.sphericalHarmonicsTexture,
-        frameNumber,
-      );
-    }
-  } else {
-    if (
-      defined(primitive.gaussianSplatTexture) &&
-      primitive.gaussianSplatTexture !== snapshot.gaussianSplatTexture
-    ) {
-      retireTexture(primitive, primitive.gaussianSplatTexture, frameNumber);
-    }
-    if (
-      defined(primitive.sphericalHarmonicsTexture) &&
-      primitive.sphericalHarmonicsTexture !== snapshot.sphericalHarmonicsTexture
-    ) {
-      retireTexture(
-        primitive,
-        primitive.sphericalHarmonicsTexture,
-        frameNumber,
-      );
-    }
+  const splatTexture = defined(currentSnapshot)
+    ? currentSnapshot.gaussianSplatTexture
+    : primitive.gaussianSplatTexture;
+  if (defined(splatTexture) && splatTexture !== snapshot.gaussianSplatTexture) {
+    retireTexture(primitive, splatTexture, frameNumber);
+  }
+
+  const sphericalHarmonicsTexture = defined(currentSnapshot)
+    ? currentSnapshot.sphericalHarmonicsTexture
+    : primitive.sphericalHarmonicsTexture;
+  if (
+    defined(sphericalHarmonicsTexture) &&
+    sphericalHarmonicsTexture !== snapshot.sphericalHarmonicsTexture
+  ) {
+    retireTexture(primitive, sphericalHarmonicsTexture, frameNumber);
+  }
+
+  const featureIdTexture = defined(currentSnapshot)
+    ? currentSnapshot.featureIdTexture
+    : primitive._splatFeatureIdTexture;
+  if (
+    defined(featureIdTexture) &&
+    featureIdTexture !== snapshot.featureIdTexture
+  ) {
+    retireTexture(primitive, featureIdTexture, frameNumber);
   }
 
   primitive._snapshot = snapshot;
@@ -281,6 +463,12 @@ function commitSnapshot(primitive, snapshot, frameState) {
   primitive._rotations = snapshot.rotations;
   primitive._scales = snapshot.scales;
   primitive._colors = snapshot.colors;
+  primitive._allFeatureIds = snapshot.allFeatureIds ?? [];
+  primitive._featureIdCount = snapshot.featureIdCount ?? 0;
+  primitive._hasFeatureIds =
+    defined(snapshot.allFeatureIds) && snapshot.allFeatureIds.length > 0;
+  primitive._splatFeatureIdTexture = snapshot.featureIdTexture;
+  primitive._shData = snapshot.shData;
   primitive._sphericalHarmonicsDegree = snapshot.sphericalHarmonicsDegree;
   primitive._numSplats = snapshot.numSplats;
   primitive._indexes = snapshot.indexes;
@@ -288,6 +476,13 @@ function commitSnapshot(primitive, snapshot, frameState) {
   primitive.sphericalHarmonicsTexture = snapshot.sphericalHarmonicsTexture;
   primitive._lastTextureWidth = snapshot.lastTextureWidth;
   primitive._lastTextureHeight = snapshot.lastTextureHeight;
+  // Commit row-addressing params alongside the texture; the shader must
+  // always see the mask/shift that matches the active texture layout.
+  primitive._splatRowMask = snapshot.splatRowMask;
+  primitive._splatRowShift = snapshot.splatRowShift;
+  // Above 1.0 when the previous snapshot hit the hard cap; used in
+  // _wrappedUpdate to inflate traversal SSE and reduce tile load.
+  primitive._splatBudgetSSEScale = snapshot.splatBudgetSSEScale ?? 1.0;
   primitive._hasGaussianSplatTexture = defined(snapshot.gaussianSplatTexture);
   primitive._needsGaussianSplatTexture = false;
   primitive._gaussianSplatTexturePending = false;
@@ -301,6 +496,313 @@ function commitSnapshot(primitive, snapshot, frameState) {
   primitive._dirty = false;
 }
 
+/**
+ * Finalizes async splat texture generation for a snapshot. The resolved data
+ * updates or recreates GPU textures, and the snapshot transitions to
+ * {@link SnapshotState.TEXTURE_READY} when complete.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {FrameState} frameState The current frame state.
+ * @param {GaussianSplatPrimitive.Snapshot} snapshot Snapshot being populated.
+ * @param {Promise<GaussianSplatPrimitive.AttributeTextureData>} promise Promise that resolves to packed splat texture data.
+ * @returns {Promise<void>}
+ * @private
+ */
+async function processGeneratedSplatTextureData(
+  primitive,
+  frameState,
+  snapshot,
+  promise,
+) {
+  try {
+    const splatTextureData = await promise;
+
+    // The pending snapshot may have been replaced (or the primitive destroyed)
+    // while texture generation was in flight. Its textures were already
+    // released, so bail out before allocating any new GPU resources.
+    if (primitive._pendingSnapshot !== snapshot) {
+      snapshot.state = SnapshotState.BUILDING;
+      return;
+    }
+
+    const maxTex = ContextLimits.maximumTextureSize;
+
+    // Use maximumTextureSize as the texture width; splatsPerRow = maxTex / 2
+    // (each splat occupies 2 side-by-side texels). The WASM buffer layout is
+    // width-independent, so the raw data is reused as-is.
+    const optimalWidth = maxTex;
+    let optimalHeight = Math.ceil(snapshot.numSplats / (maxTex / 2));
+    const splatRowShift = Math.log2(maxTex / 2);
+    const splatRowMask = maxTex / 2 - 1;
+
+    // Hard cap: >maxTex*(maxTex/2) splats cannot fit in any valid texture.
+    if (optimalHeight > maxTex) {
+      const originalCount = snapshot.numSplats;
+      optimalHeight = maxTex;
+      const splatsPerRow = optimalWidth / 2;
+      snapshot.numSplats = maxTex * splatsPerRow;
+      // Truncate CPU attribute arrays to match numSplats.
+      snapshot.positions = snapshot.positions.subarray(
+        0,
+        snapshot.numSplats * 3,
+      );
+      snapshot.rotations = snapshot.rotations.subarray(
+        0,
+        snapshot.numSplats * 4,
+      );
+      snapshot.scales = snapshot.scales.subarray(0, snapshot.numSplats * 3);
+      snapshot.colors = snapshot.colors.subarray(0, snapshot.numSplats * 4);
+      if (defined(snapshot.allFeatureIds)) {
+        snapshot.allFeatureIds = snapshot.allFeatureIds.map((fids) =>
+          fids.subarray(0, snapshot.numSplats),
+        );
+      }
+      // shData is allocated independently and must be truncated separately.
+      if (defined(snapshot.shData)) {
+        const shPerSplat = snapshot.shData.length / originalCount;
+        snapshot.shData = snapshot.shData.subarray(
+          0,
+          Math.floor(snapshot.numSplats * shPerSplat),
+        );
+      }
+      // Scale up SSE next frame so traversal selects fewer tiles.
+      snapshot.splatBudgetSSEScale = originalCount / snapshot.numSplats;
+      console.warn(
+        `[GaussianSplat][HARD CAP] ${originalCount} splats exceed the maximum texture capacity ` +
+          `(${maxTex}\u00d7${splatsPerRow} = ${snapshot.numSplats} splats at width=${optimalWidth}). ` +
+          `Rendering only the first ${snapshot.numSplats} splats to avoid a WebGL crash. ` +
+          `Increasing maximumScreenSpaceError by ${snapshot.splatBudgetSSEScale.toFixed(2)}x next frame.`,
+      );
+    } else {
+      // Within budget; clear any SSE inflation carried over from a previous cap.
+      snapshot.splatBudgetSSEScale = 1.0;
+    }
+
+    // Trim or zero-pad the raw WASM buffer to match the chosen dimensions.
+    const requiredLen = optimalWidth * optimalHeight * 4;
+    let effectiveData;
+    if (requiredLen <= splatTextureData.data.length) {
+      effectiveData = splatTextureData.data.subarray(0, requiredLen);
+    } else {
+      effectiveData = new Uint32Array(requiredLen);
+      effectiveData.set(splatTextureData.data);
+    }
+    const effectiveTextureData = {
+      width: optimalWidth,
+      height: optimalHeight,
+      data: effectiveData,
+    };
+
+    // Create a separate feature ID texture holding ALL feature ID sets so
+    // that custom shaders can reference featureId_0 through featureId_N.
+    const allFids = snapshot.allFeatureIds;
+    if (defined(allFids) && allFids.length > 0) {
+      const oldFidTex = snapshot.featureIdTexture;
+      snapshot.featureIdTexture = createFeatureIdTexture(
+        frameState.context,
+        allFids,
+        snapshot.numSplats,
+      );
+      if (defined(oldFidTex)) {
+        oldFidTex.destroy();
+      }
+    }
+
+    snapshot.splatRowMask = splatRowMask;
+    snapshot.splatRowShift = splatRowShift;
+
+    if (!defined(snapshot.gaussianSplatTexture)) {
+      snapshot.gaussianSplatTexture = createGaussianSplatTexture(
+        frameState.context,
+        effectiveTextureData,
+      );
+    } else if (
+      snapshot.lastTextureHeight !== effectiveTextureData.height ||
+      snapshot.lastTextureWidth !== effectiveTextureData.width
+    ) {
+      const oldTex = snapshot.gaussianSplatTexture;
+      snapshot.gaussianSplatTexture = createGaussianSplatTexture(
+        frameState.context,
+        effectiveTextureData,
+      );
+      oldTex.destroy();
+    } else {
+      snapshot.gaussianSplatTexture.copyFrom({
+        source: {
+          width: effectiveTextureData.width,
+          height: effectiveTextureData.height,
+          arrayBufferView: effectiveTextureData.data,
+        },
+      });
+    }
+    snapshot.lastTextureHeight = effectiveTextureData.height;
+    snapshot.lastTextureWidth = effectiveTextureData.width;
+
+    if (defined(snapshot.shData) && snapshot.sphericalHarmonicsDegree > 0) {
+      const oldTex = snapshot.sphericalHarmonicsTexture;
+      const width = ContextLimits.maximumTextureSize;
+      const dims = snapshot.shCoefficientCount / 3;
+      const splatsPerRow = Math.floor(width / dims);
+      const floatsPerRow = splatsPerRow * (dims * 2);
+
+      const shHeight = Math.ceil(snapshot.numSplats / splatsPerRow);
+
+      // SH texture width is already maxTex and cannot be widened further.
+      // When height would exceed the GPU limit, gracefully disable SH for this
+      // snapshot and fall back to base color rendering rather than crashing.
+      if (shHeight > width) {
+        console.warn(
+          `[GaussianSplat][SHTexture] ${snapshot.numSplats} splats require SH height ${shHeight} > maxTex ${width}. ` +
+            `Disabling spherical harmonics for this snapshot (color-only fallback).`,
+        );
+        snapshot.sphericalHarmonicsDegree = 0;
+        if (defined(oldTex)) {
+          oldTex.destroy();
+        }
+        snapshot.sphericalHarmonicsTexture = undefined;
+      } else {
+        const texBuf = new Uint32Array(width * shHeight * 2);
+
+        let dataIndex = 0;
+        for (let i = 0; dataIndex < snapshot.shData.length; i += width * 2) {
+          texBuf.set(
+            snapshot.shData.subarray(dataIndex, dataIndex + floatsPerRow),
+            i,
+          );
+          dataIndex += floatsPerRow;
+        }
+        snapshot.sphericalHarmonicsTexture = createSphericalHarmonicsTexture(
+          frameState.context,
+          {
+            data: texBuf,
+            width: width,
+            height: shHeight,
+          },
+        );
+        if (defined(oldTex)) {
+          oldTex.destroy();
+        }
+      }
+    }
+
+    snapshot.state = SnapshotState.TEXTURE_READY;
+  } catch (error) {
+    console.error("Error generating Gaussian splat texture:", error);
+    snapshot.state = SnapshotState.BUILDING;
+  }
+}
+
+/**
+ * Resolves an in-flight sort for a pending snapshot, validates that the result
+ * still matches the active generation/request, and commits the snapshot when
+ * valid.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {FrameState} frameState The current frame state.
+ * @param {object|undefined} pendingSort Pending sort metadata.
+ * @param {Promise<Uint32Array>} sortPromise Promise that resolves to sorted indexes.
+ * @returns {Promise<void>}
+ * @private
+ */
+async function resolvePendingSnapshotSort(
+  primitive,
+  frameState,
+  pendingSort,
+  sortPromise,
+) {
+  try {
+    const sortedData = await sortPromise;
+    if (
+      !defined(pendingSort) ||
+      pendingSort.snapshot !== primitive._pendingSnapshot
+    ) {
+      return;
+    }
+    const expectedCount = pendingSort.expectedCount;
+    const currentCount = expectedCount;
+    const sortedLen = sortedData?.length;
+    if (expectedCount !== currentCount || sortedLen !== expectedCount) {
+      primitive._pendingSortPromise = undefined;
+      primitive._pendingSort = undefined;
+      if (pendingSort.snapshot.state === SnapshotState.SORTING) {
+        pendingSort.snapshot.state = SnapshotState.TEXTURE_READY;
+      }
+      return;
+    }
+
+    const pending = pendingSort.snapshot;
+    pending.indexes = sortedData;
+    pending.state = SnapshotState.READY;
+    primitive._pendingSortPromise = undefined;
+    primitive._pendingSort = undefined;
+    commitSnapshot(primitive, pending, frameState);
+    primitive._pendingSnapshot = undefined;
+    GaussianSplatPrimitive.buildGSplatDrawCommand(primitive, frameState);
+  } catch (err) {
+    if (
+      !defined(pendingSort) ||
+      pendingSort.snapshot !== primitive._pendingSnapshot
+    ) {
+      return;
+    }
+    primitive._pendingSortPromise = undefined;
+    primitive._pendingSort = undefined;
+    if (pendingSort.snapshot.state === SnapshotState.SORTING) {
+      pendingSort.snapshot.state = SnapshotState.TEXTURE_READY;
+    }
+    primitive._sorterState = GaussianSplatSortingState.ERROR;
+    primitive._sorterError = err;
+  }
+}
+
+/**
+ * Resolves an in-flight steady-state sort for the current committed snapshot.
+ * Results are ignored when superseded; otherwise, they advance sorting state
+ * to {@link GaussianSplatSortingState.SORTED}.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {object|undefined} activeSort Active sort metadata.
+ * @param {Promise<Uint32Array>} sortPromise Promise that resolves to sorted indexes.
+ * @returns {Promise<void>}
+ * @private
+ */
+async function resolveSteadySort(primitive, activeSort, sortPromise) {
+  try {
+    const sortedData = await sortPromise;
+    const isActive = isActiveSort(primitive, activeSort);
+    const expectedCount = activeSort?.expectedCount;
+    const currentCount = expectedCount;
+    const sortedLen = sortedData?.length;
+    const isMismatch =
+      expectedCount !== currentCount || sortedLen !== expectedCount;
+    if (!isActive || isMismatch) {
+      if (isActive) {
+        primitive._sorterPromise = undefined;
+        primitive._sorterState = GaussianSplatSortingState.IDLE;
+      }
+      return;
+    }
+    primitive._indexes = sortedData;
+    primitive._sorterState = GaussianSplatSortingState.SORTED;
+  } catch (err) {
+    if (!isActiveSort(primitive, activeSort)) {
+      return;
+    }
+    primitive._sorterState = GaussianSplatSortingState.ERROR;
+    primitive._sorterError = err;
+  }
+}
+
+/**
+ * Creates a GPU texture that stores packed spherical harmonics coefficient
+ * data for all splats. The texture uses a two-channel unsigned-integer format
+ * ({@link PixelFormat.RG_INTEGER}) and nearest-neighbor sampling.
+ *
+ * @param {Context} context The WebGL context.
+ * @param {GaussianSplatPrimitive.SphericalHarmonicsTextureData} shData Packed SH texture payload.
+ * @returns {Texture} The created texture.
+ * @private
+ */
 function createSphericalHarmonicsTexture(context, shData) {
   const texture = new Texture({
     context: context,
@@ -320,6 +822,17 @@ function createSphericalHarmonicsTexture(context, shData) {
   return texture;
 }
 
+/**
+ * Creates a GPU texture that stores the packed Gaussian splat attributes
+ * (positions, scales, rotations, colors). The texture uses an RGBA
+ * unsigned-integer format ({@link PixelFormat.RGBA_INTEGER}) and
+ * nearest-neighbor sampling.
+ *
+ * @param {Context} context The WebGL context.
+ * @param {GaussianSplatPrimitive.AttributeTextureData} splatTextureData Packed splat texture payload.
+ * @returns {Texture} The created texture.
+ * @private
+ */
 function createGaussianSplatTexture(context, splatTextureData) {
   return new Texture({
     context: context,
@@ -327,6 +840,54 @@ function createGaussianSplatTexture(context, splatTextureData) {
       width: splatTextureData.width,
       height: splatTextureData.height,
       arrayBufferView: splatTextureData.data,
+    },
+    preMultiplyAlpha: false,
+    skipColorSpaceConversion: true,
+    pixelFormat: PixelFormat.RGBA_INTEGER,
+    pixelDatatype: PixelDatatype.UNSIGNED_INT,
+    flipY: false,
+    sampler: Sampler.NEAREST,
+  });
+}
+
+/**
+ * Creates a GPU texture that stores per-splat feature IDs.  The texture uses
+ * RGBA unsigned-integer format; each texel holds up to 4 feature IDs (one per
+ * channel).  Only a single texel per splat is used, so at most
+ * {@link MAX_FEATURE_ID_SETS} feature ID sets are supported. Callers must cap
+ * <code>allFeatureIds</code> to that length before calling this.
+ *
+ * @param {Context} context The WebGL context.
+ * @param {Array<Uint32Array>} allFeatureIds Array of feature ID sets (length <= {@link MAX_FEATURE_ID_SETS}).
+ * @param {number} numSplats Number of splats.
+ * @returns {Texture} The created texture.
+ * @private
+ */
+function createFeatureIdTexture(context, allFeatureIds, numSplats) {
+  const featureIdCount = allFeatureIds.length;
+  const maxTex = ContextLimits.maximumTextureSize;
+  // Use maximumTextureSize as width to match the splat attribute texture
+  // convention. The VS derives the width from the same row-addressing
+  // uniforms (u_splatRowMask + 1) << 1, and reads one texel per splat.
+  const width = maxTex;
+  const height = Math.ceil(numSplats / width);
+  const data = new Uint32Array(width * height * 4);
+
+  for (let i = 0; i < numSplats; i++) {
+    const col = i % width;
+    const row = Math.floor(i / width);
+    const base = (row * width + col) * 4;
+    for (let f = 0; f < featureIdCount; f++) {
+      data[base + f] = allFeatureIds[f][i];
+    }
+  }
+
+  return new Texture({
+    context: context,
+    source: {
+      width: width,
+      height: height,
+      arrayBufferView: data,
     },
     preMultiplyAlpha: false,
     skipColorSpaceConversion: true,
@@ -378,6 +939,32 @@ function GaussianSplatPrimitive(options) {
    */
   this._colors = undefined;
   /**
+   * All per-splat feature ID sets aggregated from selected tiles.
+   * Array of Uint32Arrays, one per feature ID set (featureId_0, featureId_1, ...).
+   * @type {Array<Uint32Array>}
+   * @private
+   */
+  this._allFeatureIds = [];
+  /**
+   * The number of feature ID sets available.
+   * @type {number}
+   * @private
+   */
+  this._featureIdCount = 0;
+  /**
+   * GPU texture storing per-splat feature IDs for all sets.
+   * RGBA32UI format, each texel holds up to 4 feature IDs.
+   * @type {undefined|Texture}
+   * @private
+   */
+  this._splatFeatureIdTexture = undefined;
+  /**
+   * Whether the current snapshot has per-splat feature IDs.
+   * @type {boolean}
+   * @private
+   */
+  this._hasFeatureIds = false;
+  /**
    * The indexes of the Gaussian splats in the primitive.
    * Used to index into the splat attribute texture in the vertex shader.
    * @type {undefined|Uint32Array}
@@ -401,6 +988,21 @@ function GaussianSplatPrimitive(options) {
   this._snapshot = undefined;
   this._pendingSnapshot = undefined;
   this._retiredTextures = [];
+  this._aggregateScratchBuffers = {
+    positions: [],
+    scales: [],
+    rotations: [],
+    colors: [],
+  };
+
+  /**
+   * Scratch buffer re-used across frames for aggregating packed spherical
+   * harmonics data so that a fresh typed-array allocation is avoided on
+   * every tile-selection change.
+   * @type {undefined|Uint32Array}
+   * @private
+   */
+  this._scratchAggregateShBuffer = undefined;
   this._selectedTilesStableFrames = 0;
   this._needsSnapshotRebuild = false;
   this._snapshotRebuildStallFrames = 0;
@@ -541,6 +1143,15 @@ function GaussianSplatPrimitive(options) {
   );
 
   /**
+   * Cached inverse rotation for SH evaluation, updated each snapshot rebuild.
+   * Converts a world-space view direction to the original GLB Y-up model space
+   * so that spherical harmonic coefficients are evaluated in the correct frame.
+   * @type {Matrix3}
+   * @private
+   */
+  this._shInverseRotation = new Matrix3();
+
+  /**
    * Indicates whether or not the primitive has been destroyed.
    * @type {boolean}
    * @private
@@ -579,6 +1190,45 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._sorterError = undefined;
+
+  // Splat texture row-addressing params; forwarded to the shader as uniforms.
+  // The texture width is always maximumTextureSize (varies by GPU), so these
+  // are computed per-snapshot and initialized here as safe placeholders.
+  this._splatRowMask = 0; // overwritten on first snapshot commit
+  this._splatRowShift = 0; // overwritten on first snapshot commit
+
+  /**
+   * Multiplier applied to maximumScreenSpaceError during tile traversal when
+   * the previous snapshot exceeded the splat texture budget. A value above 1.0
+   * biases traversal toward coarser LODs, lowering the total splat count.
+   * Resets to 1.0 once the splat count is within budget.
+   * @type {number}
+   * @private
+   */
+  this._splatBudgetSSEScale = 1.0;
+
+  /**
+   * Indicates whether the shader program needs to be rebuilt because the
+   * custom shader was changed at runtime.
+   * @type {boolean}
+   * @private
+   */
+  this._shaderDirty = false;
+
+  /**
+   * The active custom shader. It mirrors the owning tileset's customShader and
+   * is synced from tileset.customShader in {@link GaussianSplatPrimitive#update},
+   * so it is intentionally not a constructor option.
+   * @type {CustomShader}
+   * @private
+   */
+  this._customShader = GaussianSplatPrimitive.DefaultCustomShader;
+
+  /**
+   * @type {Event}
+   * @private
+   */
+  this._customShaderCompilationEvent = new Event();
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
@@ -591,6 +1241,23 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
   ready: {
     get: function () {
       return this._ready;
+    },
+  },
+
+  /**
+   * Indicates whether the primitive has completed loading and sorting.
+   * @memberof GaussianSplatPrimitive.prototype
+   * @type {boolean}
+   * @private
+   * @readonly
+   */
+  isStable: {
+    get: function () {
+      return (
+        !this._dirty &&
+        (!defined(this._pendingSnapshot) ||
+          this._pendingSnapshot.state === SnapshotState.READY)
+      );
     },
   },
 
@@ -611,17 +1278,95 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
       }
     },
   },
+
+  /**
+   * Gets or sets the custom shader. If undefined, {@link GaussianSplatPrimitive.DefaultCustomShader} is set.
+   *
+   * @memberof GaussianSplatPrimitive.prototype
+   * @type {CustomShader}
+   * @see {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide}
+   * @private
+   */
+  customShader: {
+    get: function () {
+      return this._customShader;
+    },
+    set: function (customShader) {
+      if (this._customShader !== customShader) {
+        // Delete old custom shader entries from the uniform map. The map is
+        // undefined until the first draw command is built (e.g. while tiles
+        // are still loading), in which case there is nothing to remove.
+        const uniformMap = this._uniformMap;
+        const oldCustomShader = this._customShader;
+        const oldCustomShaderUniformMap = oldCustomShader.uniformMap;
+        if (defined(uniformMap)) {
+          for (const uniformName in oldCustomShaderUniformMap) {
+            if (oldCustomShaderUniformMap.hasOwnProperty(uniformName)) {
+              // If the custom shader was set but the splat shader was never
+              // built, the custom shader uniforms wouldn't have been added to
+              // the uniform map. But it doesn't matter because the delete
+              // operator ignores if the key doesn't exist.
+              delete uniformMap[uniformName];
+            }
+          }
+        }
+
+        if (!defined(customShader)) {
+          this._customShader = GaussianSplatPrimitive.DefaultCustomShader;
+        } else {
+          this._customShader = customShader;
+        }
+        this._shaderDirty = true;
+      }
+    },
+  },
+
+  /**
+   * Gets an event that is raised whenever a custom shader is compiled.
+   *
+   * @memberof GaussianSplatPrimitive.prototype
+   * @type {Event}
+   * @readonly
+   * @private
+   */
+  customShaderCompilationEvent: {
+    get: function () {
+      return this._customShaderCompilationEvent;
+    },
+  },
 });
 
 /**
- * Since we aren't visible at the scene level, we need to wrap the tileset update
- * so we not only get called but ensure we update immediately after the tileset.
+ * The default custom shader used by the primitive.
+ *
+ * @type {CustomShader}
+ * @constant
+ * @readonly
+ *
+ * @private
+ */
+GaussianSplatPrimitive.DefaultCustomShader = new CustomShader({});
+
+/**
+ * Replaces the tileset's own update function so this primitive is updated
+ * immediately after the tileset traversal, within the same frame. When
+ * _splatBudgetSSEScale is above 1.0, maximumScreenSpaceError is inflated
+ * for the duration of the traversal to reduce the number of tiles selected.
  * @param {FrameState} frameState
  * @private
- *
  */
 GaussianSplatPrimitive.prototype._wrappedUpdate = function (frameState) {
-  this._baseTilesetUpdate.call(this._tileset, frameState);
+  const tileset = this._tileset;
+  if (this._splatBudgetSSEScale !== 1.0) {
+    // Inflate SSE for this traversal only; the original value is restored
+    // immediately so the user-visible tileset property is never permanently changed.
+    const originalSSE = tileset.maximumScreenSpaceError;
+    tileset.maximumScreenSpaceError *= this._splatBudgetSSEScale;
+    this._baseTilesetUpdate.call(tileset, frameState);
+    tileset.maximumScreenSpaceError = originalSSE;
+  } else {
+    this._baseTilesetUpdate.call(tileset, frameState);
+  }
   this.update(frameState);
 };
 
@@ -645,6 +1390,8 @@ GaussianSplatPrimitive.prototype.destroy = function () {
   this._retiredTextures = [];
   this._pendingSnapshot = undefined;
   this._snapshot = undefined;
+  this._aggregateScratchBuffers = undefined;
+  this._splatFeatureIdTexture = undefined;
   this.gaussianSplatTexture = undefined;
   this.sphericalHarmonicsTexture = undefined;
 
@@ -710,9 +1457,10 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   const gaussianSplatPrimitive = tile.tileset.gaussianSplatPrimitive;
 
   if (gaussianSplatPrimitive._rootTransform === undefined) {
-    gaussianSplatPrimitive._rootTransform = Transforms.eastNorthUpToFixedFrame(
-      tile.tileset.boundingSphere.center,
-    );
+    gaussianSplatPrimitive._rootTransform =
+      FixedFrameTransforms.eastNorthUpToFixedFrame(
+        tile.tileset.boundingSphere.center,
+      );
   }
   const rootTransform = gaussianSplatPrimitive._rootTransform;
 
@@ -728,20 +1476,95 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     computedModelMatrix,
   );
 
-  const toGlobal = Matrix4.multiply(
-    tile.tileset.modelMatrix,
-    rootTransform,
-    scratchMatrix4B,
-  );
-  const toLocal = Matrix4.inverse(toGlobal, scratchMatrix4C);
+  // toLocal is inverse(rootTransform) only. tileset.modelMatrix is already
+  // factored into computedModelMatrix via tile.computedTransform, so its effect
+  // is baked directly into the splat values rather than split into the draw
+  // command's modelMatrix. This keeps czm_view * modelMatrix numerically small,
+  // avoiding float32 precision loss at ECEF-scale translations.
+  const toLocal = Matrix4.inverse(rootTransform, scratchMatrix4C);
   const transform = Matrix4.multiplyTransformation(
     toLocal,
     computedModelMatrix,
     scratchMatrix4A,
   );
+  const cachedTransform = tile.content._lastSplatTransform;
+  if (
+    tile.content._transformed &&
+    defined(cachedTransform) &&
+    Matrix4.equalsEpsilon(transform, cachedTransform, TRANSFORM_CACHE_EPSILON)
+  ) {
+    return;
+  }
   const positions = tile.content.positions;
   const rotations = tile.content.rotations;
   const scales = tile.content.scales;
+
+  // Extract the rotation quaternion from transform once, before the per-splat
+  // loop. The columns of transform's upper-left 3x3 have magnitude ≈ 1 (rigid
+  // body placement), so normalizing is numerically stable. We cannot decompose
+  // the per-splat combined matrix (transform × TRS_i) instead, because each
+  // splat's scale can be very small, causing catastrophic cancellation when
+  // dividing to recover a pure rotation matrix.
+  const col0Len = Math.sqrt(
+    transform[0] * transform[0] +
+      transform[1] * transform[1] +
+      transform[2] * transform[2],
+  );
+  const col1Len = Math.sqrt(
+    transform[4] * transform[4] +
+      transform[5] * transform[5] +
+      transform[6] * transform[6],
+  );
+  const col2Len = Math.sqrt(
+    transform[8] * transform[8] +
+      transform[9] * transform[9] +
+      transform[10] * transform[10],
+  );
+  scratchMatrix3[0] = transform[0] / col0Len;
+  scratchMatrix3[1] = transform[1] / col0Len;
+  scratchMatrix3[2] = transform[2] / col0Len;
+  scratchMatrix3[3] = transform[4] / col1Len;
+  scratchMatrix3[4] = transform[5] / col1Len;
+  scratchMatrix3[5] = transform[6] / col1Len;
+  scratchMatrix3[6] = transform[8] / col2Len;
+  scratchMatrix3[7] = transform[9] / col2Len;
+  scratchMatrix3[8] = transform[10] / col2Len;
+  const dot01 =
+    scratchMatrix3[0] * scratchMatrix3[3] +
+    scratchMatrix3[1] * scratchMatrix3[4] +
+    scratchMatrix3[2] * scratchMatrix3[5];
+  const dot02 =
+    scratchMatrix3[0] * scratchMatrix3[6] +
+    scratchMatrix3[1] * scratchMatrix3[7] +
+    scratchMatrix3[2] * scratchMatrix3[8];
+  const dot12 =
+    scratchMatrix3[3] * scratchMatrix3[6] +
+    scratchMatrix3[4] * scratchMatrix3[7] +
+    scratchMatrix3[5] * scratchMatrix3[8];
+  const hasUnitScale =
+    Math.abs(col0Len - 1.0) <= UNIT_SCALE_FAST_PATH_EPSILON &&
+    Math.abs(col1Len - 1.0) <= UNIT_SCALE_FAST_PATH_EPSILON &&
+    Math.abs(col2Len - 1.0) <= UNIT_SCALE_FAST_PATH_EPSILON;
+  const isOrthogonal =
+    Math.abs(dot01) <= RIGID_TRANSFORM_EPSILON &&
+    Math.abs(dot02) <= RIGID_TRANSFORM_EPSILON &&
+    Math.abs(dot12) <= RIGID_TRANSFORM_EPSILON;
+  const determinant =
+    scratchMatrix3[0] *
+      (scratchMatrix3[4] * scratchMatrix3[8] -
+        scratchMatrix3[5] * scratchMatrix3[7]) -
+    scratchMatrix3[3] *
+      (scratchMatrix3[1] * scratchMatrix3[8] -
+        scratchMatrix3[2] * scratchMatrix3[7]) +
+    scratchMatrix3[6] *
+      (scratchMatrix3[1] * scratchMatrix3[5] -
+        scratchMatrix3[2] * scratchMatrix3[4]);
+  const useFastPath =
+    hasUnitScale &&
+    isOrthogonal &&
+    Math.abs(determinant - 1.0) <= RIGID_TRANSFORM_EPSILON;
+  Quaternion.fromRotationMatrix(scratchMatrix3, scratchTransformQuat);
+  Quaternion.normalize(scratchTransformQuat, scratchTransformQuat);
   const attributePositions = ModelUtility.getAttributeBySemantic(
     gltfPrimitive,
     VertexAttributeSemantic.POSITION,
@@ -757,9 +1580,9 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     VertexAttributeSemantic.SCALE,
   ).typedArray;
 
-  const position = new Cartesian3();
-  const rotation = new Quaternion();
-  const scale = new Cartesian3();
+  const position = scratchTransformPosition;
+  const rotation = scratchTransformRotation;
+  const scale = scratchTransformScale;
   for (let i = 0; i < attributePositions.length / 3; ++i) {
     position.x = attributePositions[i * 3];
     position.y = attributePositions[i * 3 + 1];
@@ -774,18 +1597,31 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     scale.y = attributeScales[i * 3 + 1];
     scale.z = attributeScales[i * 3 + 2];
 
-    Matrix4.fromTranslationQuaternionRotationScale(
-      position,
-      rotation,
-      scale,
-      scratchMatrix4C,
-    );
+    if (useFastPath) {
+      Matrix4.multiplyByPoint(transform, position, position);
+      Quaternion.multiply(scratchTransformQuat, rotation, rotation);
+      Quaternion.normalize(rotation, rotation);
+    } else {
+      Matrix4.fromTranslationQuaternionRotationScale(
+        position,
+        rotation,
+        scale,
+        scratchMatrix4D,
+      );
 
-    Matrix4.multiplyTransformation(transform, scratchMatrix4C, scratchMatrix4C);
+      Matrix4.multiplyTransformation(
+        transform,
+        scratchMatrix4D,
+        scratchMatrix4D,
+      );
 
-    Matrix4.getTranslation(scratchMatrix4C, position);
-    Matrix4.getRotation(scratchMatrix4C, rotation);
-    Matrix4.getScale(scratchMatrix4C, scale);
+      Matrix4.getTranslation(scratchMatrix4D, position);
+      Matrix4.getScale(scratchMatrix4D, scale);
+      // rotation still holds the original splat quaternion from attributeRotations.
+      // Apply the transform's rotation by left-multiplying the transform quaternion.
+      Quaternion.multiply(scratchTransformQuat, rotation, rotation);
+      Quaternion.normalize(rotation, rotation);
+    }
 
     positions[i * 3] = position.x;
     positions[i * 3 + 1] = position.y;
@@ -800,6 +1636,11 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     scales[i * 3 + 1] = scale.y;
     scales[i * 3 + 2] = scale.z;
   }
+  tile.content._lastSplatTransform = Matrix4.clone(
+    transform,
+    tile.content._lastSplatTransform,
+  );
+  tile.content._transformed = true;
 };
 
 /**
@@ -809,8 +1650,9 @@ GaussianSplatPrimitive.transformTile = function (tile) {
  *
  * @see {@link GaussianSplatTextureGenerator}
  *
- * @param {GaussianSplatPrimitive} primitive
- * @param {FrameState} frameState
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {FrameState} frameState The current frame state.
+ * @param {GaussianSplatPrimitive.Snapshot} snapshot Snapshot being populated.
  * @private
  */
 GaussianSplatPrimitive.generateSplatTexture = function (
@@ -835,76 +1677,12 @@ GaussianSplatPrimitive.generateSplatTexture = function (
     snapshot.state = SnapshotState.BUILDING;
     return;
   }
-  promise
-    .then((splatTextureData) => {
-      if (primitive._pendingSnapshot !== snapshot) {
-        snapshot.state = SnapshotState.BUILDING;
-        return;
-      }
-      if (!defined(snapshot.gaussianSplatTexture)) {
-        snapshot.gaussianSplatTexture = createGaussianSplatTexture(
-          frameState.context,
-          splatTextureData,
-        );
-      } else if (
-        snapshot.lastTextureHeight !== splatTextureData.height ||
-        snapshot.lastTextureWidth !== splatTextureData.width
-      ) {
-        const oldTex = snapshot.gaussianSplatTexture;
-        snapshot.gaussianSplatTexture = createGaussianSplatTexture(
-          frameState.context,
-          splatTextureData,
-        );
-        oldTex.destroy();
-      } else {
-        snapshot.gaussianSplatTexture.copyFrom({
-          source: {
-            width: splatTextureData.width,
-            height: splatTextureData.height,
-            arrayBufferView: splatTextureData.data,
-          },
-        });
-      }
-      snapshot.lastTextureHeight = splatTextureData.height;
-      snapshot.lastTextureWidth = splatTextureData.width;
-
-      if (defined(snapshot.shData) && snapshot.sphericalHarmonicsDegree > 0) {
-        const oldTex = snapshot.sphericalHarmonicsTexture;
-        const width = ContextLimits.maximumTextureSize;
-        const dims = snapshot.shCoefficientCount / 3;
-        const splatsPerRow = Math.floor(width / dims);
-        const floatsPerRow = splatsPerRow * (dims * 2);
-        const texBuf = new Uint32Array(
-          width * Math.ceil(snapshot.numSplats / splatsPerRow) * 2,
-        );
-
-        let dataIndex = 0;
-        for (let i = 0; dataIndex < snapshot.shData.length; i += width * 2) {
-          texBuf.set(
-            snapshot.shData.subarray(dataIndex, dataIndex + floatsPerRow),
-            i,
-          );
-          dataIndex += floatsPerRow;
-        }
-        snapshot.sphericalHarmonicsTexture = createSphericalHarmonicsTexture(
-          frameState.context,
-          {
-            data: texBuf,
-            width: width,
-            height: Math.ceil(snapshot.numSplats / splatsPerRow),
-          },
-        );
-        if (defined(oldTex)) {
-          oldTex.destroy();
-        }
-      }
-
-      snapshot.state = SnapshotState.TEXTURE_READY;
-    })
-    .catch((error) => {
-      console.error("Error generating Gaussian splat texture:", error);
-      snapshot.state = SnapshotState.BUILDING;
-    });
+  void processGeneratedSplatTextureData(
+    primitive,
+    frameState,
+    snapshot,
+    promise,
+  );
 };
 
 /**
@@ -928,13 +1706,23 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   const stochastic =
     defined(tileset) && tileset._gaussianSplatStochastic === true;
   primitive._lastStochasticMode = stochastic;
-  renderStateOptions.cull.enabled = false;
-  renderStateOptions.depthMask = stochastic;
-  renderStateOptions.depthTest.enabled = true;
-  renderStateOptions.blending = stochastic
-    ? { enabled: false }
-    : BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
-  renderResources.alphaOptions.pass = Pass.GAUSSIAN_SPLATS;
+  if (stochastic) {
+    renderStateOptions.depthMask = true;
+    renderStateOptions.blending = BlendingState.DISABLED;
+  }
+
+  // Splats are inherently translucent, so TRANSLUCENT (like INHERIT) keeps the
+  // dedicated GAUSSIAN_SPLATS pass. Routing them through Pass.TRANSLUCENT would
+  // darken them under OIT, which premultiplies the already-premultiplied color.
+  let drawPass = Pass.GAUSSIAN_SPLATS;
+  if (
+    primitive._customShader.translucencyMode ===
+    CustomShaderTranslucencyMode.OPAQUE
+  ) {
+    drawPass = Pass.CESIUM_3D_TILE;
+    renderStateOptions.blending = BlendingState.DISABLED;
+    renderStateOptions.depthMask = true;
+  }
 
   shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
   shaderBuilder.addAttribute("float", "a_splatIndex");
@@ -980,10 +1768,25 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   );
 
   const uniformMap = renderResources.uniformMap;
+  // GaussianSplatRenderResources builds the combined (base + custom shader)
+  // uniform map without mutating the primitive; store it back here in the
+  // caller so later custom shader changes can prune stale uniform entries.
+  primitive._uniformMap = uniformMap;
+
+  // Row-addressing uniforms: read from primitive each draw so they stay in sync
+  // with the texture width chosen for the current snapshot.
+  shaderBuilder.addUniform("int", "u_splatRowMask", ShaderDestination.VERTEX);
+  shaderBuilder.addUniform("int", "u_splatRowShift", ShaderDestination.VERTEX);
 
   const textureCache = primitive.gaussianSplatTexture;
   uniformMap.u_splatAttributeTexture = function () {
     return textureCache;
+  };
+  uniformMap.u_splatRowMask = function () {
+    return primitive._splatRowMask;
+  };
+  uniformMap.u_splatRowShift = function () {
+    return primitive._splatRowShift;
   };
   uniformMap.u_stochastic = function () {
     const tileset = primitive._tileset;
@@ -1022,22 +1825,48 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   };
 
   uniformMap.u_inverseModelRotation = function () {
-    const tileset = primitive._tileset;
-    const modelMatrix = Matrix4.multiply(
-      tileset.modelMatrix,
-      primitive._rootTransform,
-      scratchMatrix4A,
-    );
-    const inverseModelRotation = Matrix4.getRotation(
-      Matrix4.inverse(modelMatrix, scratchMatrix4C),
-      scratchMatrix4D,
-    );
-    return inverseModelRotation;
+    // SH coefficients are encoded in the GLB Y-up training space. To evaluate
+    // them the world-space view direction must be rotated by
+    //   inverse(computedTransform × axisCorrectionMatrix × worldTransform).
+    // This matrix is pre-computed each snapshot rebuild and stored on the
+    // primitive so the uniform closure just returns the cached value.
+    return primitive._shInverseRotation;
   };
 
   uniformMap.u_splitDirection = function () {
     return primitive.splitDirection;
   };
+
+  // Feature ID support: declare varyings, texture uniform, and defines for
+  // each feature ID set so custom shaders can reference featureId_0..N.
+  const featureIdCount = primitive._featureIdCount;
+  if (primitive._hasFeatureIds && featureIdCount > 0) {
+    shaderBuilder.addDefine(
+      "HAS_FEATURE_IDS",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+    shaderBuilder.addDefine(
+      "FEATURE_ID_COUNT",
+      `${featureIdCount}`,
+      ShaderDestination.BOTH,
+    );
+
+    // Declare one flat int varying per feature ID set.
+    for (let i = 0; i < featureIdCount; i++) {
+      shaderBuilder.addVarying("int", `v_featureId_${i}`, "flat");
+    }
+
+    // Feature ID texture uniform.
+    shaderBuilder.addUniform(
+      "highp usampler2D",
+      "u_featureIdTexture",
+      ShaderDestination.VERTEX,
+    );
+    uniformMap.u_featureIdTexture = function () {
+      return primitive._splatFeatureIdTexture;
+    };
+  }
 
   const instanceCount = defined(primitive._indexes)
     ? primitive._indexes.length
@@ -1047,7 +1876,20 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   renderResources.primitiveType = PrimitiveType.TRIANGLE_STRIP;
   shaderBuilder.addVertexLines(GaussianSplatVS);
   shaderBuilder.addFragmentLines(GaussianSplatFS);
-  const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
+  let shaderProgram;
+  try {
+    shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
+    // Shader programs are compiled lazily on first bind. Force compilation
+    // here so custom shader errors are reported through the compilation event.
+    shaderProgram._bind();
+  } catch (error) {
+    if (defined(shaderProgram)) {
+      shaderProgram.destroy();
+    }
+    primitive._customShaderCompilationEvent.raiseEvent(error);
+    throw error;
+  }
+  primitive._customShaderCompilationEvent.raiseEvent();
   let renderState = clone(
     RenderState.fromCache(renderResources.renderStateOptions),
     true,
@@ -1107,8 +1949,11 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   primitive._vertexArrayLen = primitive._indexes.length;
 
-  const modelMatrix = Matrix4.multiply(
-    tileset.modelMatrix,
+  // The draw command uses rootTransform as its modelMatrix. tileset.modelMatrix
+  // is baked into the splat positions by transformTile and must not appear here
+  // as well. This keeps czm_view * modelMatrix numerically small (ENU frame),
+  // avoiding float32 precision loss from ECEF-scale translations.
+  const modelMatrix = Matrix4.clone(
     primitive._rootTransform,
     primitive._drawCommandModelMatrix,
   );
@@ -1122,7 +1967,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     vertexArray: vertexArrayCache,
     shaderProgram: shaderProgram,
     cull: renderStateOptions.cull.enabled,
-    pass: Pass.GAUSSIAN_SPLATS,
+    pass: drawPass,
     count: renderResources.count,
     owner: primitive,
     instanceCount: renderResources.instanceCount,
@@ -1132,7 +1977,16 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     receiveShadows: false,
   });
 
+  // Release the previous draw command's shader program. Programs built by
+  // ShaderBuilder come from the ShaderCache, which defers the actual GL
+  // deletion, so a command already queued this frame can still render.
+  const previousCommand = primitive._drawCommand;
+  if (defined(previousCommand?.shaderProgram)) {
+    previousCommand.shaderProgram.destroy();
+  }
+
   primitive._drawCommand = command;
+  primitive._shaderDirty = false;
 };
 
 /**
@@ -1149,6 +2003,25 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
   const stochastic =
     defined(tileset) && tileset._gaussianSplatStochastic === true;
+
+  const targetCustomShader = defined(tileset.customShader)
+    ? tileset.customShader
+    : GaussianSplatPrimitive.DefaultCustomShader;
+  if (this._customShader !== targetCustomShader) {
+    this.customShader = tileset.customShader;
+  }
+
+  // Update the custom shader in case it has texture uniforms.
+  this._customShader.update(frameState);
+
+  if (
+    this._shaderDirty &&
+    defined(this._drawCommand) &&
+    defined(this._indexes) &&
+    defined(this.gaussianSplatTexture)
+  ) {
+    GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
+  }
 
   releaseRetiredTextures(this, frameState.frameNumber);
 
@@ -1172,6 +2045,10 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
   if (this.splitDirection !== tileset.splitDirection) {
     this.splitDirection = tileset.splitDirection;
+  }
+  const camera = frameState.camera;
+  if (!defined(camera)) {
+    return;
   }
 
   if (
@@ -1227,7 +2104,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       !defined(this._drawCommand);
     if (
       !hasPendingWork &&
-      Matrix4.equals(frameState.camera.viewMatrix, this._prevViewMatrix)
+      Matrix4.equals(camera.viewMatrix, this._prevViewMatrix)
     ) {
       return;
     }
@@ -1248,84 +2125,167 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       }
 
       const tiles = tileset._selectedTiles;
+
+      // Rebuild the ENU origin from the current tileset world center so that
+      // baked splat positions remain in a numerically small (meter-scale) local
+      // frame, regardless of the current tileset.modelMatrix value.
+      this._rootTransform = FixedFrameTransforms.eastNorthUpToFixedFrame(
+        tileset.boundingSphere.center,
+      );
+
+      // Compute the SH inverse rotation from the first tile's coordinate frame.
+      // SH coefficients are encoded in the GLB Y-up training space. To evaluate
+      // them correctly the view direction must be transformed by
+      //   inverse(computedTransform × axisCorrectionMatrix × worldTransform).
+      // All tiles in a typical GS tileset share the same root coordinate frame,
+      // so using the first tile is sufficient.
+      {
+        const ft = tiles[0];
+        const shFwd = Matrix4.multiplyTransformation(
+          ft.computedTransform,
+          this._axisCorrectionMatrix,
+          scratchMatrix4C,
+        );
+        Matrix4.multiplyTransformation(
+          shFwd,
+          ft.content.worldTransform ?? Matrix4.IDENTITY,
+          shFwd,
+        );
+        Matrix4.getRotation(
+          Matrix4.inverse(shFwd, shFwd),
+          this._shInverseRotation,
+        );
+      }
+
+      for (const tile of tiles) {
+        GaussianSplatPrimitive.transformTile(tile);
+      }
+
       const totalElements = tiles.reduce(
         (total, tile) => total + tile.content.pointsLength,
         0,
       );
       const aggregateAttributeValues = (
+        key,
         componentDatatype,
         getAttributeCallback,
         numberOfComponents,
       ) => {
         let aggregate;
         let offset = 0;
+        let requiredLength = 0;
         for (const tile of tiles) {
-          const content = tile.content;
-          const attribute = getAttributeCallback(content);
+          const attribute = getAttributeCallback(tile.content);
           const componentsPerAttribute = defined(numberOfComponents)
             ? numberOfComponents
             : AttributeType.getNumberOfComponents(attribute.type);
           const buffer = defined(attribute.typedArray)
             ? attribute.typedArray
             : attribute;
+          requiredLength += buffer.length;
           if (!defined(aggregate)) {
-            aggregate = ComponentDatatype.createTypedArray(
+            aggregate = acquireAggregateScratchBuffer(
+              this,
+              key,
               componentDatatype,
               totalElements * componentsPerAttribute,
             );
           }
+        }
+
+        if (!defined(aggregate)) {
+          return ComponentDatatype.createTypedArray(componentDatatype, 0);
+        }
+
+        for (const tile of tiles) {
+          const content = tile.content;
+          const attribute = getAttributeCallback(content);
+          const buffer = defined(attribute.typedArray)
+            ? attribute.typedArray
+            : attribute;
           aggregate.set(buffer, offset);
           offset += buffer.length;
         }
-        return aggregate;
+        return trimAggregateScratchBuffer(aggregate, requiredLength);
       };
 
       const aggregateShData = () => {
+        // Determine the SH degree from the first tile with SH data so we can
+        // pre-allocate the aggregate buffer once, outside the tile loop.
+        let coefs = 0;
+        for (const tile of tiles) {
+          if (tile.content.sphericalHarmonicsDegree > 0) {
+            switch (tile.content.sphericalHarmonicsDegree) {
+              case 1:
+                coefs = 9;
+                break;
+              case 2:
+                coefs = 24;
+                break;
+              case 3:
+                coefs = 45;
+                break;
+            }
+            break;
+          }
+        }
+
+        if (coefs === 0) {
+          return undefined;
+        }
+
+        const requiredLength = totalElements * (coefs * (2 / 3));
+
+        // Re-use the class-level scratch buffer when it is already large
+        // enough, avoiding a fresh allocation (and eventual GC) every frame.
+        if (
+          !defined(this._scratchAggregateShBuffer) ||
+          this._scratchAggregateShBuffer.length < requiredLength
+        ) {
+          this._scratchAggregateShBuffer = new Uint32Array(requiredLength);
+        }
+        const aggregate = this._scratchAggregateShBuffer;
+
         let offset = 0;
-        let aggregate;
         for (const tile of tiles) {
           const tileShData = tile.content.packedSphericalHarmonicsData;
           if (tile.content.sphericalHarmonicsDegree > 0) {
-            if (!defined(aggregate)) {
-              let coefs;
-              switch (tile.content.sphericalHarmonicsDegree) {
-                case 1:
-                  coefs = 9;
-                  break;
-                case 2:
-                  coefs = 24;
-                  break;
-                case 3:
-                  coefs = 45;
-              }
-              aggregate = new Uint32Array(totalElements * (coefs * (2 / 3)));
-            }
             aggregate.set(tileShData, offset);
             offset += tileShData.length;
           }
+        }
+
+        // Return a correctly-sized view so downstream consumers see the
+        // exact element count they expect.
+        if (offset < aggregate.length) {
+          return aggregate.subarray(0, offset);
         }
         return aggregate;
       };
 
       const positions = aggregateAttributeValues(
+        "positions",
         ComponentDatatype.FLOAT,
         (content) => content.positions,
         3,
       );
 
       const scales = aggregateAttributeValues(
+        "scales",
         ComponentDatatype.FLOAT,
         (content) => content.scales,
         3,
       );
 
       const rotations = aggregateAttributeValues(
+        "rotations",
         ComponentDatatype.FLOAT,
         (content) => content.rotations,
         4,
       );
 
       const colors = aggregateAttributeValues(
+        "colors",
         ComponentDatatype.UNSIGNED_BYTE,
         (content) =>
           ModelUtility.getAttributeBySemantic(
@@ -1333,6 +2293,46 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
             VertexAttributeSemantic.COLOR,
           ),
       );
+
+      // Aggregate feature ID sets from all tiles so custom shaders can
+      // reference featureId_0 through featureId_N. Only up to
+      // MAX_FEATURE_ID_SETS sets are supported because the feature ID texture
+      // and vertex shader address a single RGBA texel (4 IDs) per splat.
+      const availableFeatureIdCount = tiles.reduce(
+        (max, t) => Math.max(max, t.content.featureIdCount ?? 0),
+        0,
+      );
+      const maxFeatureIdCount = Math.min(
+        availableFeatureIdCount,
+        MAX_FEATURE_ID_SETS,
+      );
+      if (availableFeatureIdCount > MAX_FEATURE_ID_SETS) {
+        oneTimeWarning(
+          "GaussianSplatFeatureIdSetsExceeded",
+          `This tileset has ${availableFeatureIdCount} feature ID sets, but Gaussian splats currently support at most ${MAX_FEATURE_ID_SETS}. Only the first ${MAX_FEATURE_ID_SETS} sets (featureId_0..featureId_${MAX_FEATURE_ID_SETS - 1}) will be available in custom shaders.`,
+        );
+      }
+      let allFeatureIds;
+      if (maxFeatureIdCount > 0) {
+        allFeatureIds = [];
+        for (let setIdx = 0; setIdx < maxFeatureIdCount; setIdx++) {
+          const fids = new Uint32Array(totalElements);
+          let offset = 0;
+          for (const tile of tiles) {
+            const tileAllFids = tile.content.allFeatureIds;
+            const count = tile.content.pointsLength;
+            if (
+              defined(tileAllFids) &&
+              setIdx < tileAllFids.length &&
+              defined(tileAllFids[setIdx])
+            ) {
+              fids.set(tileAllFids[setIdx], offset);
+            }
+            offset += count;
+          }
+          allFeatureIds.push(fids);
+        }
+      }
 
       const sphericalHarmonicsDegree =
         tiles[0].content.sphericalHarmonicsDegree;
@@ -1348,6 +2348,9 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         rotations: rotations,
         scales: scales,
         colors: colors,
+        allFeatureIds: allFeatureIds,
+        featureIdCount: maxFeatureIdCount,
+        featureIdTexture: undefined,
         shData: shData,
         sphericalHarmonicsDegree: sphericalHarmonicsDegree,
         shCoefficientCount: shCoefficientCount,
@@ -1357,6 +2360,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         sphericalHarmonicsTexture: undefined,
         lastTextureWidth: 0,
         lastTextureHeight: 0,
+        splatRowMask: 0, // set by processGeneratedSplatTextureData
+        splatRowShift: 0, // set by processGeneratedSplatTextureData
         state: SnapshotState.BUILDING,
       };
 
@@ -1387,12 +2392,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         return;
       }
 
-      Matrix4.clone(frameState.camera.viewMatrix, this._prevViewMatrix);
-      Matrix4.multiply(
-        frameState.camera.viewMatrix,
-        this._rootTransform,
-        scratchMatrix4A,
-      );
+      Matrix4.clone(camera.viewMatrix, this._prevViewMatrix);
+      Matrix4.multiply(camera.viewMatrix, this._rootTransform, scratchMatrix4A);
 
       if (pending.state === SnapshotState.TEXTURE_READY && stochastic) {
         pending.indexes = createSequentialIndexes(pending.numSplats);
@@ -1433,6 +2434,14 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         }
         this._pendingSortPromise = sortPromise;
         pending.state = SnapshotState.SORTING;
+        const pendingSort = this._pendingSort;
+        void resolvePendingSnapshotSort(
+          this,
+          frameState,
+          pendingSort,
+          sortPromise,
+        );
+        return;
       }
 
       if (!defined(this._pendingSortPromise)) {
@@ -1441,50 +2450,6 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         }
         return;
       }
-
-      const pendingSort = this._pendingSort;
-      this._pendingSortPromise
-        .then((sortedData) => {
-          if (
-            !defined(pendingSort) ||
-            pendingSort.snapshot !== this._pendingSnapshot
-          ) {
-            return;
-          }
-          const expectedCount = pendingSort.expectedCount;
-          const currentCount = expectedCount;
-          const sortedLen = sortedData?.length;
-          if (expectedCount !== currentCount || sortedLen !== expectedCount) {
-            this._pendingSortPromise = undefined;
-            this._pendingSort = undefined;
-            if (pending.state === SnapshotState.SORTING) {
-              pending.state = SnapshotState.TEXTURE_READY;
-            }
-            return;
-          }
-          pending.indexes = sortedData;
-          pending.state = SnapshotState.READY;
-          this._pendingSortPromise = undefined;
-          this._pendingSort = undefined;
-          commitSnapshot(this, pending, frameState);
-          this._pendingSnapshot = undefined;
-          GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
-        })
-        .catch((err) => {
-          if (
-            !defined(pendingSort) ||
-            pendingSort.snapshot !== this._pendingSnapshot
-          ) {
-            return;
-          }
-          this._pendingSortPromise = undefined;
-          this._pendingSort = undefined;
-          if (pending.state === SnapshotState.SORTING) {
-            pending.state = SnapshotState.TEXTURE_READY;
-          }
-          this._sorterState = GaussianSplatSortingState.ERROR;
-          this._sorterError = err;
-        });
       return;
     }
 
@@ -1503,16 +2468,12 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       if (!defined(this._drawCommand)) {
         GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
       }
-      Matrix4.clone(frameState.camera.viewMatrix, this._prevViewMatrix);
+      Matrix4.clone(camera.viewMatrix, this._prevViewMatrix);
       return;
     }
 
-    Matrix4.clone(frameState.camera.viewMatrix, this._prevViewMatrix);
-    Matrix4.multiply(
-      frameState.camera.viewMatrix,
-      this._rootTransform,
-      scratchMatrix4A,
-    );
+    Matrix4.clone(camera.viewMatrix, this._prevViewMatrix);
+    Matrix4.multiply(camera.viewMatrix, this._rootTransform, scratchMatrix4A);
 
     if (!defined(this._sorterPromise)) {
       if (!shouldStartSteadySort(this, frameState)) {
@@ -1537,6 +2498,10 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._sorterPromise = rawPromise;
       if (defined(rawPromise)) {
         markSteadySortStart(this, frameState);
+        const activeSort = this._activeSort;
+        this._sorterState = GaussianSplatSortingState.SORTING;
+        void resolveSteadySort(this, activeSort, rawPromise);
+        return;
       }
     }
 
@@ -1544,32 +2509,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._sorterState = GaussianSplatSortingState.WAITING;
       return;
     }
-    const activeSort = this._activeSort;
-    this._sorterPromise
-      .then((sortedData) => {
-        const isActive = isActiveSort(this, activeSort);
-        const expectedCount = activeSort?.expectedCount;
-        const currentCount = expectedCount;
-        const sortedLen = sortedData?.length;
-        const isMismatch =
-          expectedCount !== currentCount || sortedLen !== expectedCount;
-        if (!isActive || isMismatch) {
-          if (isActive) {
-            this._sorterPromise = undefined;
-            this._sorterState = GaussianSplatSortingState.IDLE;
-          }
-          return;
-        }
-        this._indexes = sortedData;
-        this._sorterState = GaussianSplatSortingState.SORTED;
-      })
-      .catch((err) => {
-        if (!isActiveSort(this, activeSort)) {
-          return;
-        }
-        this._sorterState = GaussianSplatSortingState.ERROR;
-        this._sorterError = err;
-      });
+    this._sorterState = GaussianSplatSortingState.SORTING;
+    return;
   } else if (this._sorterState === GaussianSplatSortingState.WAITING) {
     if (!defined(this._sorterPromise)) {
       const requestId = ++this._sortRequestId;
@@ -1591,40 +2532,18 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._sorterPromise = rawPromise;
       if (defined(rawPromise)) {
         markSteadySortStart(this, frameState);
+        const activeSort = this._activeSort;
+        this._sorterState = GaussianSplatSortingState.SORTING;
+        void resolveSteadySort(this, activeSort, rawPromise);
+        return;
       }
     }
     if (!defined(this._sorterPromise)) {
       this._sorterState = GaussianSplatSortingState.WAITING;
       return;
     }
-    const activeSort = this._activeSort;
-    this._sorterPromise
-      .then((sortedData) => {
-        const isActive = isActiveSort(this, activeSort);
-        const expectedCount = activeSort?.expectedCount;
-        const currentCount = expectedCount;
-        const sortedLen = sortedData?.length;
-        const isMismatch =
-          expectedCount !== currentCount || sortedLen !== expectedCount;
-        if (!isActive || isMismatch) {
-          if (isActive) {
-            this._sorterPromise = undefined;
-            this._sorterState = GaussianSplatSortingState.IDLE;
-          }
-          return;
-        }
-        this._indexes = sortedData;
-        this._sorterState = GaussianSplatSortingState.SORTED;
-      })
-      .catch((err) => {
-        if (!isActiveSort(this, activeSort)) {
-          return;
-        }
-        this._sorterState = GaussianSplatSortingState.ERROR;
-        this._sorterError = err;
-      });
-
-    this._sorterState = GaussianSplatSortingState.SORTING; // set state to sorting
+    this._sorterState = GaussianSplatSortingState.SORTING;
+    return;
   } else if (this._sorterState === GaussianSplatSortingState.SORTING) {
     return; //still sorting, wait for next frame
   } else if (this._sorterState === GaussianSplatSortingState.SORTED) {

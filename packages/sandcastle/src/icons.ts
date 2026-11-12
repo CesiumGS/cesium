@@ -16,12 +16,18 @@ import windowPopout from "@stratakit/icons/window-popout.svg";
 import play from "@stratakit/icons/play.svg";
 import textAlignLeft from "@stratakit/icons/text-align-left.svg";
 import search from "@stratakit/icons/search.svg";
-import close from "@stratakit/icons/close.svg";
+import dismiss from "@stratakit/icons/dismiss.svg";
 import documentation from "@stratakit/icons/documentation.svg";
 import info from "@stratakit/icons/info.svg";
 import copy from "@stratakit/icons/copy.svg";
 import retry from "@stratakit/icons/retry.svg";
 import deleteIcon from "@stratakit/icons/delete.svg";
+import aiSparkle from "@stratakit/icons/ai-sparkle.svg";
+import key from "@stratakit/icons/key.svg";
+import send from "@stratakit/icons/send.svg";
+import stop from "@stratakit/icons/stop.svg";
+import chevronDown from "@stratakit/icons/chevron-down.svg";
+import chevronUp from "@stratakit/icons/chevron-up.svg";
 
 export {
   add,
@@ -42,10 +48,16 @@ export {
   play,
   textAlignLeft,
   search,
-  close,
+  dismiss,
+  deleteIcon,
   documentation,
   info,
   copy,
   retry,
-  deleteIcon,
+  aiSparkle,
+  key,
+  send,
+  stop,
+  chevronDown,
+  chevronUp,
 };

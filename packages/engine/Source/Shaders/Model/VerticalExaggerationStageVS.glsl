@@ -12,28 +12,27 @@ void verticalExaggerationStage(
   // Uses a circular approximation for the Earth curvature along the geodesic.
   vec3 vertexPositionEC = (czm_modelView * vec4(attributes.positionMC, 1.0)).xyz;
   vec3 centerToVertex = eyeToCenter * czm_eyeEllipsoidNormalEC + vertexPositionEC;
-  vec3 vertexNormal = normalize(centerToVertex);
+  vec3 vertexEllipsoidNormalEC = normalize(centerToVertex);
 
-  // Estimate the (sine of the) angle between the camera direction and the vertex normal
+  // Estimate the (sine of the) angle between the camera direction and the ellipsoid normal.
   float verticalDistance = dot(vertexPositionEC, czm_eyeEllipsoidNormalEC);
   float horizontalDistance = length(vertexPositionEC - verticalDistance * czm_eyeEllipsoidNormalEC);
   float sinTheta = horizontalDistance / (eyeToCenter + verticalDistance);
   bool isSmallAngle = clamp(sinTheta, 0.0, 0.05) == sinTheta;
 
   // Approximate the change in height above the ellipsoid, from camera to vertex position.
-  float exactVersine = 1.0 - dot(czm_eyeEllipsoidNormalEC, vertexNormal);
+  float exactVersine = 1.0 - dot(czm_eyeEllipsoidNormalEC, vertexEllipsoidNormalEC);
   float smallAngleVersine = 0.5 * sinTheta * sinTheta;
   float versine = isSmallAngle ? smallAngleVersine : exactVersine;
-  float dHeight = dot(vertexPositionEC, vertexNormal) - eyeToCenter * versine;
+  float dHeight = dot(vertexPositionEC, vertexEllipsoidNormalEC) - eyeToCenter * versine;
   float vertexHeight = czm_eyeHeight + dHeight;
 
-  // Transform the approximate vertex normal to model coordinates.
-  vec3 vertexNormalMC = (czm_inverseModelView * vec4(vertexNormal, 0.0)).xyz;
-  vertexNormalMC = normalize(vertexNormalMC);
+  // Transform the approximate ellipsoid normal to model coordinates.
+  vec3 exaggerationDirectionScaledMC = (czm_inverseModelView * vec4(vertexEllipsoidNormalEC, 0.0)).xyz;
 
-  // Compute the exaggeration and apply it along the approximate vertex normal.
+  // Compute the exaggeration and apply it along the exaggeration direction in model coordinates.
   float stretch = u_verticalExaggerationAndRelativeHeight.x;
   float shift = u_verticalExaggerationAndRelativeHeight.y;
   float exaggeration = (vertexHeight - shift) * (stretch - 1.0);
-  attributes.positionMC += exaggeration * vertexNormalMC;
+  attributes.positionMC += exaggeration * exaggerationDirectionScaledMC;
 }

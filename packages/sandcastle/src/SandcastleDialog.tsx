@@ -9,7 +9,7 @@ import { ReactNode } from "react";
 import "./SandcastleDialog.css";
 import { Text } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
-import { close } from "./icons";
+import { dismiss } from "./icons";
 
 export function SandcastleDialogHeading({ children }: { children: ReactNode }) {
   return (
@@ -27,14 +27,16 @@ export function SandcastleDialog(
   props: {
     children: ReactNode;
     className?: string;
+    title?: string;
   } & DialogProps,
 ) {
-  const { children, className, ...rest } = props;
+  const { children, className, title, ...rest } = props;
   return (
     <Dialog {...rest} className={classNames("sc-dialog", className)}>
+      {title && <SandcastleDialogHeading>{title}</SandcastleDialogHeading>}
       {children}
       <DialogDismiss className="sc-dialog-close">
-        <Icon href={close} />
+        <Icon href={dismiss} />
       </DialogDismiss>
     </Dialog>
   );

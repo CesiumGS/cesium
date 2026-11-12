@@ -1,18 +1,20 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Clock from "../Core/Clock.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Event from "../Core/Event.js";
-import EventHelper from "../Core/EventHelper.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Clock,
+  DeveloperError,
+  Ellipsoid,
+  Event,
+  EventHelper,
+  Frozen,
+  HeadingPitchRange,
+  Matrix4,
+  defined,
+  destroyObject,
+  formatError,
+} from "@cesium/core";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import formatError from "../Core/formatError.js";
-import HeadingPitchRange from "../Core/HeadingPitchRange.js";
-import Matrix4 from "../Core/Matrix4.js";
 import BoundingSphereState from "../DataSources/BoundingSphereState.js";
 import DataSourceCollection from "../DataSources/DataSourceCollection.js";
 import DataSourceDisplay from "../DataSources/DataSourceDisplay.js";
@@ -33,6 +35,7 @@ import SkyBox from "../Scene/SkyBox.js";
 import Sun from "../Scene/Sun.js";
 import TimeDynamicPointCloud from "../Scene/TimeDynamicPointCloud.js";
 import VoxelPrimitive from "../Scene/VoxelPrimitive.js";
+import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js";
 
 function trackDataSourceClock(clock, dataSource) {
   if (defined(dataSource)) {
@@ -1227,6 +1230,36 @@ CesiumWidget.prototype._onDataSourceRemoved = function (
 };
 
 /**
+ * Adds a controller— an implementation of the {@link Controller} interface used to handle input events, camera animations, and other interactions— to the widget's scene.
+ * @param {Controller} controller An implementation of the <code>Controller</code> interface.
+ * @example
+ * widget.scene.screenSpaceCameraController.enableInputs = false;
+ * widget.scene.screenSpaceCameraController.enableCollisionDetection = false;
+ *
+ * const tiltOrbitController = new Cesium.ScreenSpaceTiltOrbitCameraController();
+ * widget.addController(tiltOrbitController);
+ */
+CesiumWidget.prototype.addController = function (controller) {
+  return this.scene.controllerHost.registerController(
+    controller,
+    this.container,
+  );
+};
+
+/**
+ * Removes a controller— an implementation of the {@link Controller}  interface used to handle input events, camera animations, and other interactions— from the widget's scene.
+ * @param {Controller} controller An implementation of the <code>Controller</code> interface.
+ * @example
+ * widget.removeController(tiltOrbitController);
+ */
+CesiumWidget.prototype.removeController = function (controller) {
+  return this.scene.controllerHost.unregisterController(
+    controller,
+    this.container,
+  );
+};
+
+/**
  * Asynchronously sets the camera to view the provided entity, entities, or data source.
  * If the data source is still in the process of loading or the visualization is otherwise still loading,
  * this method waits for the data to be ready before performing the zoom.
@@ -1241,7 +1274,7 @@ CesiumWidget.prototype._onDataSourceRemoved = function (
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
  *
- * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+ * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive|BufferPrimitiveCollection<BufferPrimitive>>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
  * @returns {Promise<boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
  */
@@ -1267,7 +1300,7 @@ CesiumWidget.prototype.zoomTo = function (target, offset) {
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
  *
- * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+ * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive|BufferPrimitiveCollection<BufferPrimitive>>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {object} [options] Object with the following properties:
  * @param {number} [options.duration=3.0] The duration of the flight in seconds.
  * @param {number} [options.maximumHeight] The maximum height at the peak of the flight.
@@ -1336,7 +1369,8 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
     if (
       zoomTarget instanceof Cesium3DTileset ||
       zoomTarget instanceof TimeDynamicPointCloud ||
-      zoomTarget instanceof VoxelPrimitive
+      zoomTarget instanceof VoxelPrimitive ||
+      zoomTarget instanceof BufferPrimitiveCollection
     ) {
       that._zoomTarget = zoomTarget;
       return;
@@ -1439,7 +1473,7 @@ function updateZoomTarget(widget) {
     };
 
     if (widget._zoomIsFlight) {
-      camera.flyToBoundingSphere(target.boundingSphere, options);
+      camera.flyToBoundingSphere(boundingSphere, options);
     } else {
       camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
       camera.lookAtTransform(Matrix4.IDENTITY);
@@ -1469,6 +1503,11 @@ function updateZoomTarget(widget) {
 
   if (target instanceof Cesium3DTileset || target instanceof VoxelPrimitive) {
     zoomToBoundingSphere(target.boundingSphere);
+    return;
+  }
+
+  if (target instanceof BufferPrimitiveCollection) {
+    zoomToBoundingSphere(target.boundingVolume);
     return;
   }
 

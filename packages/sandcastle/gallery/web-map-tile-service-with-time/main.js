@@ -30,10 +30,10 @@ const times = Cesium.TimeIntervalCollection.fromIso8601({
 // This comes from NASA's GIBS API.
 // See https://wiki.earthdata.nasa.gov/display/GIBS/GIBS+API+for+Developers#GIBSAPIforDevelopers-OGCWebMapService(WMS)
 const provider = new Cesium.WebMapTileServiceImageryProvider({
-  url: "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg",
+  url: "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg",
   layer: "MODIS_Terra_CorrectedReflectance_TrueColor",
   style: "default",
-  tileMatrixSetID: "250m",
+  tileMatrixSetID: "GoogleMapsCompatible_Level9",
   maximumLevel: 5,
   format: "image/jpeg",
   clock: viewer.clock,

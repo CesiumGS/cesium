@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 
 const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -81,6 +83,30 @@ const viewModel = {
       name: "PointCloudDraco",
       resource:
         "../../SampleData/Cesium3DTiles/PointCloud/PointCloudDraco/tileset.json",
+    },
+    {
+      name: "Vector - Sample Cities Spain",
+      resource: "../../SampleData/vector/sample-cities-spain-v02.tileset.json",
+    },
+    {
+      name: "Vector - Sample U.S. Outline",
+      resource: "../../SampleData/vector/sample-us-outline-v02.tileset.json",
+    },
+    {
+      name: "Vector - Sample U.S. States",
+      resource: "../../SampleData/vector/sample-us-states-v02.tileset.json",
+    },
+    {
+      name: "Vector (deprecated) - Sample Cities Spain",
+      resource: "../../SampleData/vector/sample-cities-spain.tileset.json",
+    },
+    {
+      name: "Vector (deprecated) - Sample U.S. Outline",
+      resource: "../../SampleData/vector/sample-us-outline.tileset.json",
+    },
+    {
+      name: "Vector (deprecated) - Sample U.S. States",
+      resource: "../../SampleData/vector/sample-us-states.tileset.json",
     },
   ],
   selectedTileset: undefined,

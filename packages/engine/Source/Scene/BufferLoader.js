@@ -1,6 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError, Frozen, defined } from "@cesium/core";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -10,20 +8,17 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias BufferLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents. Mutually exclusive with options.resource.
- * @param {Resource} [options.resource] The {@link Resource} pointing to the external buffer. Mutually exclusive with options.typedArray.
- * @param {string} [options.cacheKey] The cache key of the resource.
- *
- * @exception {DeveloperError} One of options.typedArray and options.resource must be defined.
- *
  * @private
  */
 class BufferLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents. Mutually exclusive with options.resource.
+   * @param {Resource} [options.resource] The {@link Resource} pointing to the external buffer. Mutually exclusive with options.typedArray.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   *
+   * @exception {DeveloperError} One of options.typedArray and options.resource must be defined.
+   */
   constructor(options) {
     super();
 
@@ -50,7 +45,6 @@ class BufferLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof BufferLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -63,7 +57,6 @@ class BufferLoader extends ResourceLoader {
   /**
    * The typed array containing the embedded buffer contents.
    *
-   * @memberof BufferLoader.prototype
    *
    * @type {Uint8Array}
    * @readonly

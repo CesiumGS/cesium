@@ -1,10 +1,12 @@
-import Check from "../Core/Check.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
+import {
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  Frozen,
+  IndexDatatype,
+  defined,
+  deprecationWarning,
+} from "@cesium/core";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import JobType from "./JobType.js";
@@ -17,25 +19,23 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfIndexBufferLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {object} options.gltf The glTF JSON.
- * @param {number} options.accessorId The accessor ID corresponding to the index buffer.
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {object} [options.primitive] The primitive containing the Draco extension.
- * @param {object} [options.draco] The Draco extension object.
- * @param {string} [options.cacheKey] The cache key of the resource.
- * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {boolean} [options.loadBuffer=false] Load the index buffer as a GPU index buffer.
- * @param {boolean} [options.loadTypedArray=false] Load the index buffer as a typed array.
  * @private
  */
 class GltfIndexBufferLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
+   * @param {object} options.gltf The glTF JSON.
+   * @param {number} options.accessorId The accessor ID corresponding to the index buffer.
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {object} [options.primitive] The primitive containing the Draco extension.
+   * @param {object} [options.draco] The Draco extension object.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+   * @param {boolean} [options.loadBuffer=false] Load the index buffer as a GPU index buffer.
+   * @param {boolean} [options.loadTypedArray=false] Load the index buffer as a typed array.
+   */
   constructor(options) {
     super();
 
@@ -90,7 +90,6 @@ class GltfIndexBufferLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfIndexBufferLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -103,7 +102,6 @@ class GltfIndexBufferLoader extends ResourceLoader {
   /**
    * The index buffer. This is only defined when <code>loadBuffer</code> is true.
    *
-   * @memberof GltfIndexBufferLoader.prototype
    *
    * @type {Buffer}
    * @readonly
@@ -116,7 +114,6 @@ class GltfIndexBufferLoader extends ResourceLoader {
   /**
    * The typed array containing indices. This is only defined when <code>loadTypedArray</code> is true.
    *
-   * @memberof GltfIndexBufferLoader.prototype
    *
    * @type {Uint8Array|Uint16Array|Uint32Array}
    * @readonly
@@ -129,7 +126,6 @@ class GltfIndexBufferLoader extends ResourceLoader {
   /**
    * The index datatype after decode.
    *
-   * @memberof GltfIndexBufferLoader.prototype
    *
    * @type {IndexDatatype}
    * @readonly

@@ -1,8 +1,10 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import clone from "../Core/clone.js";
-import defined from "../Core/defined.js";
-import Matrix3 from "../Core/Matrix3.js";
-import srgbToLinear from "../Core/srgbToLinear.js";
+import {
+  Cartesian3,
+  Matrix3,
+  clone,
+  defined,
+  srgbToLinear,
+} from "@cesium/core";
 
 /**
  * This class implements an I3S Geometry. Each I3SGeometry

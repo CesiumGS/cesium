@@ -1,9 +1,11 @@
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
+import {
+  Math as CesiumMath,
+  PixelDatatype,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import getImageFromTypedArray from "../../Core/getImageFromTypedArray.js";
-import CesiumMath from "../../Core/Math.js";
 import resizeImageToNextPowerOfTwo from "../../Core/resizeImageToNextPowerOfTwo.js";
-import PixelDatatype from "../../Renderer/PixelDatatype.js";
 import Texture from "../../Renderer/Texture.js";
 import TextureMinificationFilter from "../../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../../Renderer/TextureWrap.js";

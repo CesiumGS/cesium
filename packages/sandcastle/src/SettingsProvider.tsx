@@ -1,4 +1,4 @@
-import { ReactNode, useCallback } from "react";
+import { ReactNode, useCallback, useMemo } from "react";
 import {
   availableFonts,
   initialSettings,
@@ -21,6 +21,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           fontSize: value.fontSize ?? initialSettings.fontSize,
           fontLigatures: value.fontLigatures ?? initialSettings.fontLigatures,
           defaultPanel: value.defaultPanel ?? initialSettings.defaultPanel,
+          embeddingSearch:
+            value.embeddingSearch ?? initialSettings.embeddingSearch,
         });
       },
       deserializer: (value) => {
@@ -46,6 +48,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             parsedValue.fontLigatures ?? initialSettings.fontLigatures,
           defaultPanel:
             parsedValue.defaultPanel ?? initialSettings.defaultPanel,
+          embeddingSearch:
+            parsedValue.embeddingSearch ?? initialSettings.embeddingSearch,
         };
       },
     },
@@ -64,14 +68,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     [updateSettings, settings],
   );
 
-  return (
-    <SettingsContext
-      value={{
-        settings: settings ?? initialSettings,
-        updateSettings: mergeSettings,
-      }}
-    >
-      {children}
-    </SettingsContext>
+  const contextValue = useMemo(
+    () => ({
+      settings: settings ?? initialSettings,
+      updateSettings: mergeSettings,
+    }),
+    [settings, mergeSettings],
   );
+
+  return <SettingsContext value={contextValue}>{children}</SettingsContext>;
 }

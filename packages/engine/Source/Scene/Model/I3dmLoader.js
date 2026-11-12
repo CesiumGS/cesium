@@ -1,21 +1,23 @@
-import AttributeCompression from "../../Core/AttributeCompression.js";
-import BoundingSphere from "../../Core/BoundingSphere.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Check from "../../Core/Check.js";
-import clone from "../../Core/clone.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import Ellipsoid from "../../Core/Ellipsoid.js";
-import getStringFromTypedArray from "../../Core/getStringFromTypedArray.js";
-import Matrix3 from "../../Core/Matrix3.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Quaternion from "../../Core/Quaternion.js";
-import RuntimeError from "../../Core/RuntimeError.js";
-import Transforms from "../../Core/Transforms.js";
+import {
+  AttributeCompression,
+  AttributeType,
+  BoundingSphere,
+  Cartesian3,
+  Check,
+  ComponentDatatype,
+  Ellipsoid,
+  FixedFrameTransforms,
+  Frozen,
+  Matrix3,
+  Matrix4,
+  Quaternion,
+  RuntimeError,
+  clone,
+  defined,
+  getStringFromTypedArray,
+} from "@cesium/core";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
-import AttributeType from "../AttributeType.js";
 import Axis from "../Axis.js";
 import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import GltfLoader from "../GltfLoader.js";
@@ -48,27 +50,25 @@ const Instances = ModelComponents.Instances;
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias I3dmLoader
- * @constructor
- * @augments ResourceLoader
  * @private
- *
- * @param {object} options Object with the following properties:
- * @param {Resource} options.i3dmResource The {@link Resource} containing the i3dm.
- * @param {ArrayBuffer} options.arrayBuffer The array buffer of the i3dm contents.
- * @param {number} [options.byteOffset=0] The byte offset to the beginning of the i3dm contents in the array buffer.
- * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
- * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
- * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
- * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
- * @param {boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
- * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
- * @param {boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array so wireframe indices can be created for WebGL1.
- * @param {boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  */
 class I3dmLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {Resource} options.i3dmResource The {@link Resource} containing the i3dm.
+   * @param {ArrayBuffer} options.arrayBuffer The array buffer of the i3dm contents.
+   * @param {number} [options.byteOffset=0] The byte offset to the beginning of the i3dm contents in the array buffer.
+   * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+   * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+   * @param {boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
+   * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
+   * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
+   * @param {boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
+   * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
+   * @param {boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array so wireframe indices can be created for WebGL1.
+   * @param {boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
+   */
   constructor(options) {
     super();
 
@@ -131,7 +131,6 @@ class I3dmLoader extends ResourceLoader {
   /**
    * true if textures are loaded, useful when incrementallyLoadTextures is true
    *
-   * @memberof  I3dmLoader.prototype
    *
    * @type {boolean}
    * @readonly
@@ -144,7 +143,6 @@ class I3dmLoader extends ResourceLoader {
   /**
    * The cache key of the resource
    *
-   * @memberof I3dmLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -157,7 +155,6 @@ class I3dmLoader extends ResourceLoader {
   /**
    * The loaded components.
    *
-   * @memberof I3dmLoader.prototype
    *
    * @type {ModelComponents.Components}
    * @default {@link Matrix4.IDENTITY}
@@ -412,7 +409,7 @@ function createInstances(loader, components, frameState) {
   const featureIdArray = new Float32Array(instancesLength);
 
   const instancePositions = Cartesian3.unpackArray(translationTypedArray);
-  let instancePosition = new Cartesian3();
+  let instancePosition;
 
   const instanceNormalRight = new Cartesian3();
   const instanceNormalUp = new Cartesian3();
@@ -803,7 +800,7 @@ function processRotation(
       );
       hasCustomOrientation = true;
     } else if (eastNorthUp) {
-      Transforms.eastNorthUpToFixedFrame(
+      FixedFrameTransforms.eastNorthUpToFixedFrame(
         instancePosition,
         Ellipsoid.WGS84,
         instanceTransform,

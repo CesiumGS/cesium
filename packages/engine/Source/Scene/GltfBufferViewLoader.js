@@ -1,7 +1,5 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import hasExtension from "./hasExtension.js";
+import { Check, Frozen, defined } from "@cesium/core";
+import findMeshoptExtension from "./findMeshoptExtension.js";
 import { MeshoptDecoder } from "meshoptimizer";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
@@ -12,21 +10,18 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfBufferViewLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {object} options.gltf The glTF JSON.
- * @param {number} options.bufferViewId The buffer view ID.
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {string} [options.cacheKey] The cache key of the resource.
- *
  * @private
  */
 class GltfBufferViewLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
+   * @param {object} options.gltf The glTF JSON.
+   * @param {number} options.bufferViewId The buffer view ID.
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   */
   constructor(options) {
     super();
 
@@ -57,8 +52,8 @@ class GltfBufferViewLoader extends ResourceLoader {
     let meshoptMode;
     let meshoptFilter;
 
-    if (hasExtension(bufferView, "EXT_meshopt_compression")) {
-      const meshopt = bufferView.extensions.EXT_meshopt_compression;
+    const meshopt = findMeshoptExtension(bufferView);
+    if (defined(meshopt)) {
       bufferId = meshopt.buffer;
       byteOffset = meshopt.byteOffset ?? 0;
       byteLength = meshopt.byteLength;
@@ -95,7 +90,6 @@ class GltfBufferViewLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfBufferViewLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -108,7 +102,6 @@ class GltfBufferViewLoader extends ResourceLoader {
   /**
    * The typed array containing buffer view data.
    *
-   * @memberof GltfBufferViewLoader.prototype
    *
    * @type {Uint8Array}
    * @readonly

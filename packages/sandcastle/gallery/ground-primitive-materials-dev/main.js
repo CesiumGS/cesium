@@ -267,6 +267,7 @@ function createButtons(scene) {
   Sandcastle.addToolbarMenu([
     {
       text: "Common materials",
+      onselect: () => {},
     },
     {
       text: "Color",
@@ -297,6 +298,7 @@ function createButtons(scene) {
   Sandcastle.addToolbarMenu([
     {
       text: "Procedural textures",
+      onselect: () => {},
     },
     {
       text: "Checkerboard",
@@ -317,7 +319,7 @@ function createButtons(scene) {
     {
       text: "Grid",
       onselect: function () {
-        toggleRectangleVisibility(rectangle, worldRectangle);
+        toggleRectangleVisibility();
         applyGridMaterial(rectangle, scene);
         Sandcastle.highlight(applyGridMaterial);
       },
@@ -335,6 +337,7 @@ function createButtons(scene) {
   Sandcastle.addToolbarMenu([
     {
       text: "Base materials",
+      onselect: () => {},
     },
     {
       text: "Alpha Map",
@@ -389,6 +392,7 @@ function createButtons(scene) {
   Sandcastle.addToolbarMenu([
     {
       text: "Misc materials",
+      onselect: () => {},
     },
     {
       text: "Rim Lighting",
@@ -411,6 +415,7 @@ function createButtons(scene) {
   Sandcastle.addToolbarMenu([
     {
       text: "Example composite materials",
+      onselect: () => {},
     },
     {
       text: "Composite Example",
@@ -486,7 +491,7 @@ function createPrimitives(scene) {
     0.8071380277370774,
     5743.394497982162,
   );
-  const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+  const initialOrientation = Cesium.HeadingPitchRoll.fromDegrees(
     112.99596671210358,
     -21.34390550872461,
     0.0716951918898415,

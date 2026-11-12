@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * @private
  */
@@ -11,4 +13,7 @@ const ImageryState = {
   INVALID: 6,
   PLACEHOLDER: 7,
 };
-export default Object.freeze(ImageryState);
+
+Object.freeze(ImageryState);
+
+export default ImageryState;

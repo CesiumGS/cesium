@@ -1,0 +1,1159 @@
+// @ts-check
+
+import {
+  AttributeCompression,
+  AttributeType,
+  BoundingSphere,
+  Cartesian3,
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  Frozen,
+  Matrix4,
+  assert,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
+import SceneMode from "./SceneMode.js";
+import BlendOption from "../Scene/BlendOption.js";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
+import PickId from "../Renderer/PickId.js";
+
+/** @import { Destroyable } from "../Core/globalTypes.js"; */
+/** @import { TypedArray } from "@cesium/core"; */
+/** @import Context from "../Renderer/Context.js"; */
+/** @import FrameState from "./FrameState.js"; */
+/** @import BufferPrimitive from "./BufferPrimitive.js"; */
+/** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
+
+/**
+ * @typedef {object} BufferPrimitiveOptions
+ * @property {Matrix4} [modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
+ * @property {boolean} [show=true]
+ * @property {BufferPrimitiveMaterial} [material]
+ * @property {number} [featureId]
+ * @property {object} [pickObject]
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+
+/**
+ * @typedef {object} BufferPrimitiveCollectionOptions
+ * @property {Matrix4} [modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
+ * @property {number} [primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of primitives.
+ * @property {number} [vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of vertices.
+ * @property {boolean} [show=true]
+ * @property {ComponentDatatype} [positionDatatype=ComponentDatatype.DOUBLE] The component datatype used to store position values.
+ * @property {boolean} [positionNormalized=false] When <code>true</code>, integer position values are treated as normalized,
+ *   where the full integer range maps to [-1, 1] (signed) or [0, 1] (unsigned). Only relevant for integer position datatypes
+ *   (BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT).
+ * @property {boolean} [allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
+ * @property {BoundingSphere} [boundingVolume] Bounding volume, in world space, for the collection. When
+ *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
+ *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
+ *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
+ * @property {boolean} [debugShowBoundingVolume=false]
+ * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+ * @property {HeightReference} [options.heightReference=HeightReference.NONE] When set to a clamping value, the
+ *   collection is draped onto the surfaces selected by the value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes
+ *   onto the globe, {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles, and
+ *   {@link HeightReference.CLAMP_TO_GROUND} drapes onto both. Only {@link BufferPolylineCollection} and
+ *   {@link BufferPolygonCollection} support draping, and only once the collection has been added to
+ *   {@link Scene#primitives}. A draped collection is not also drawn as geometry of its own.
+ */
+
+/**
+ * Collection of primitives held in ArrayBuffer storage for performance and memory optimization.
+ *
+ * <p>To get the full performance benefit of using a BufferPrimitiveCollection containing "N" primitives,
+ * be careful to avoid allocating "N" instances of any related JavaScript object. {@link BufferPrimitive},
+ * {@link Color}, {@link Cartesian3}, and other objects can all be reused when working with large collections,
+ * using the {@link https://en.wikipedia.org/wiki/Flyweight_pattern|flyweight pattern}.</p>
+ *
+ * @abstract
+ * @template T extends BufferPrimitive
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @see BufferPrimitive
+ * @see BufferPrimitiveMaterial
+ * @see BufferPointCollection
+ * @see BufferPolylineCollection
+ * @see BufferPolygonCollection
+ */
+class BufferPrimitiveCollection {
+  /** @ignore */
+  static Error = {
+    ERR_RESIZE: "BufferPrimitive range cannot be resized after initialization.",
+    ERR_CAPACITY: "BufferPrimitiveCollection capacity exceeded.",
+    ERR_MULTIPLE_OF_FOUR:
+      "BufferPrimitive byte length must be a multiple of 4.",
+    ERR_OUT_OF_RANGE: "BufferPrimitive buffer access out of range.",
+  };
+
+  /** @ignore */
+  static DirtyFlags = {
+    NONE: 0b00,
+    GEOMETRY: 0b01,
+    PROPERTIES: 0b10,
+    ALL: 0b11,
+  };
+
+  /**
+   * Resources managed by the collection's renderer. Collections may have multiple renderer
+   * implementations, so the collection should be ignorant of the renderer's implementation
+   * and context data. A collection only has one renderer active at a time.
+   *
+   * @type {Destroyable|null}
+   * @ignore
+   */
+  _renderContext = null;
+
+  /**
+   * @param {BufferPrimitiveCollectionOptions} [options]
+   */
+  constructor(options = Frozen.EMPTY_OBJECT) {
+    /**
+     * Determines if primitives in this collection will be shown.
+     * @type {boolean}
+     * @default true
+     */
+    this.show = options.show ?? true;
+
+    /**
+     * @type {HeightReference}
+     * @readonly
+     * @protected
+     */
+    this._heightReference = options.heightReference ?? HeightReference.NONE;
+
+    /**
+     * Collection blend option; must be OPAQUE or TRANSLUCENT.
+     * @type {BlendOption}
+     * @ignore
+     */
+    this._blendOption = options.blendOption ?? BlendOption.TRANSLUCENT;
+
+    /**
+     * Transforms geometry from model to world coordinates.
+     * @type {Matrix4}
+     * @default Matrix4.IDENTITY
+     * @readonly
+     * @protected
+     */
+    this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
+
+    /**
+     * @type {BoundingSphere}
+     * @readonly
+     * @protected
+     */
+    this._boundingVolume = BoundingSphere.clone(
+      options.boundingVolume ?? new BoundingSphere(),
+      new BoundingSphere(),
+    );
+
+    /**
+     * @type {boolean}
+     * @readonly
+     * @protected
+     */
+    this._boundingVolumeAutoUpdate = !defined(options.boundingVolume);
+
+    /**
+     * When <code>true</code>, primitives are pickable with {@link Scene#pick}.
+     * When <code>false</code>, memory and initialization cost are lower.
+     * @type {boolean}
+     * @readonly
+     * @ignore
+     * @default false
+     */
+    this._allowPicking = options.allowPicking ?? false;
+
+    /**
+     * @type {Map<Context, PickId[]>}
+     * @readonly
+     * @ignore
+     */
+    this._pickIds = new Map();
+
+    /**
+     * User-defined pick objects. Primitives without custom pick objects will have default
+     * pick objects assigned instead.
+     *
+     * @type {object[]}
+     * @readonly
+     * @ignore
+     */
+    this._customPickObjects = [];
+
+    /**
+     * This property is for debugging only; it is not for production use nor is it optimized.
+     * <p>
+     * Draws the bounding sphere for each draw command in the primitive.
+     * </p>
+     *
+     * @type {boolean}
+     * @default false
+     */
+    this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
+
+    /**
+     * @type {number}
+     * @protected
+     * @ignore
+     */
+    this._primitiveCount = 0;
+
+    /**
+     * @type {number}
+     * @protected
+     * @ignore
+     */
+    this._primitiveCountMax =
+      options.primitiveCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
+
+    /**
+     * @type {DataView<ArrayBuffer>}
+     * @ignore
+     */
+    this._primitiveView = null;
+
+    /**
+     * @type {number}
+     * @ignore
+     */
+    this._positionCount = 0;
+
+    /**
+     * @type {number}
+     * @ignore
+     */
+    this._positionCountMax =
+      options.vertexCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
+
+    /**
+     * @type {TypedArray}
+     * @ignore
+     */
+    this._positionView = null;
+
+    /**
+     * @type {ComponentDatatype}
+     * @ignore
+     */
+    this._positionDatatype =
+      options.positionDatatype ?? ComponentDatatype.DOUBLE;
+
+    /**
+     * When <code>true</code>, integer position values represent normalized floats
+     * in [-1, 1] (signed) or [0, 1] (unsigned). Only applicable to integer datatypes.
+     * @type {boolean}
+     * @ignore
+     */
+    this._positionNormalized = options.positionNormalized ?? false;
+
+    /**
+     * @type {DataView<ArrayBuffer>}
+     * @ignore
+     */
+    this._materialView = null;
+
+    // Potentially-dirty primitives are tracked as a contiguous range, with
+    // 'clean' primitives potentially within the range. Individual primitive
+    // 'dirty' flags are source-of-truth.
+
+    /**
+     * Offset to the first primitive in the 'dirty' range. Dirty primitives
+     * are tracked as a contiguous range, which may contain some clean primitives.
+     *
+     * @type {number}
+     * @ignore
+     */
+    this._dirtyOffset = 0;
+
+    /**
+     * Number of primitives in the dirty range, beginning from `_dirtyOffset`.
+     * Dirty primitives are tracked as a contiguous range, which may contain
+     * some clean primitives.
+     *
+     * @type {number}
+     * @ignore
+     */
+    this._dirtyCount = 0;
+
+    /**
+     * Flags indicating whether the dirty range contains changes to geometry,
+     * properties, both, or neither.
+     *
+     * @type {number}
+     * @ignore
+     */
+    this._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.NONE;
+
+    /**
+     * @type {boolean}
+     * @ignore
+     */
+    this._dirtyBoundingVolume = false;
+
+    /**
+     * Monotonically increasing counter, bumped each time collection is marked "clean".
+     * @type {number}
+     * @ignore
+     */
+    this._version = 0;
+
+    this._allocatePrimitiveBuffer();
+    this._allocatePositionBuffer();
+    this._allocateMaterialBuffer();
+  }
+
+  /**
+   * Accessing `this.constructor` can cause JSDoc builds to fail, so use this
+   * protected getter function instead.
+   * @protected
+   * @return {*}
+   * @ignore
+   */
+  _getCollectionClass() {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * @protected
+   * @return {*}
+   * @ignore
+   */
+  _getPrimitiveClass() {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * @return {*}
+   * @ignore
+   */
+  _getMaterialClass() {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // COLLECTION LIFECYCLE
+
+  /**
+   * @private
+   * @ignore
+   */
+  _allocatePrimitiveBuffer() {
+    const layout = this._getPrimitiveClass().Layout;
+
+    //>>includeStart('debug', pragmas.debug);
+    const { ERR_MULTIPLE_OF_FOUR } = BufferPrimitiveCollection.Error;
+    assert(layout.__BYTE_LENGTH % 4 === 0, ERR_MULTIPLE_OF_FOUR);
+    //>>includeEnd('debug');
+
+    this._primitiveView = new DataView(
+      new ArrayBuffer(this._primitiveCountMax * layout.__BYTE_LENGTH),
+    );
+  }
+
+  /**
+   * @private
+   * @ignore
+   */
+  _allocatePositionBuffer() {
+    // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
+    this._positionView = ComponentDatatype.createTypedArray(
+      this._positionDatatype,
+      this._positionCountMax * 3,
+    );
+  }
+
+  /**
+   * @private
+   * @ignore
+   */
+  _allocateMaterialBuffer() {
+    const MaterialClass = this._getMaterialClass();
+    this._materialView = new DataView(
+      new ArrayBuffer(this._primitiveCountMax * MaterialClass.packedLength),
+    );
+  }
+
+  /**
+   * Returns true if this object was destroyed; otherwise, false.
+   *
+   * @returns {boolean} True if this object was destroyed; otherwise, false.
+   */
+  isDestroyed() {
+    return false;
+  }
+
+  /** Destroys collection and its GPU resources. */
+  destroy() {
+    this._customPickObjects.length = 0;
+
+    for (const contextPickIds of this._pickIds.values()) {
+      for (const pickId of contextPickIds) {
+        pickId.destroy();
+      }
+    }
+
+    if (defined(this._renderContext)) {
+      this._renderContext.destroy();
+      this._renderContext = undefined;
+      this._dirtyOffset = 0;
+      this._dirtyCount = this.primitiveCount;
+      this._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.ALL;
+    }
+  }
+
+  /**
+   * Sorts primitives of the collection.
+   *
+   * Because sorting changes the indices (but not the feature IDs) of primitives
+   * in the collection, the function also returns an array mapping from previous
+   * index to new index. When sorting repeatedly, the array can be reused and
+   * passed as the 'result' argument for each call.
+   *
+   * @param {Function} sortFn
+   * @param {Uint32Array} result
+   * @returns {Uint32Array} Mapping from previous index to new index.
+   */
+  sort(sortFn, result = new Uint32Array(this.primitiveCount)) {
+    const PrimitiveClass = this._getPrimitiveClass();
+    const CollectionClass = this._getCollectionClass();
+
+    const { primitiveCount } = this;
+
+    const a = new PrimitiveClass();
+    const b = new PrimitiveClass();
+
+    // Mapping from NEW index to PREVIOUS index.
+    const dstSrcMap = new Uint32Array(primitiveCount);
+    for (let i = 0; i < primitiveCount; i++) {
+      dstSrcMap[i] = i;
+    }
+    dstSrcMap.sort((indexA, indexB) =>
+      sortFn(this.get(indexA, a), this.get(indexB, b)),
+    );
+
+    // Mapping from PREVIOUS index to NEW index.
+    for (let i = 0; i < primitiveCount; i++) {
+      result[dstSrcMap[i]] = i;
+    }
+
+    // Copy primitives to temporary collection, in sort order.
+    const tmp = this._cloneEmpty();
+    for (let i = 0; i < primitiveCount; i++) {
+      const src = this.get(dstSrcMap[i], a);
+      const dst = tmp.add({}, b);
+      PrimitiveClass.clone(src, dst);
+    }
+
+    // Assign buffers from temporary collection onto this one.
+    CollectionClass._replaceBuffers(tmp, this);
+    this._dirtyOffset = 0;
+    this._dirtyCount = primitiveCount;
+    this._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.ALL;
+
+    return result;
+  }
+
+  /**
+   * Duplicates the contents of this collection into the result collection.
+   * Result collection is not resized, and must contain enough space for all
+   * primitives in the source collection. Existing primitives in the result
+   * collection will be overwritten.
+   *
+   * <p>Useful when allocating more space for a collection that has reached its
+   * capacity, and efficiently transferring features to the new collection.</p>
+   *
+   * @example
+   * const result = new BufferPrimitiveCollection({ ... }); // allocate larger 'result' collection
+   * BufferPrimitiveCollection.clone(collection, result);   // copy primitives from 'collection' into 'result'
+   *
+   * @param {BufferPrimitiveCollection<T>} collection
+   * @param {BufferPrimitiveCollection<T>} result
+   * @param {function(BufferPrimitive, number): boolean} [predicate] When provided, only primitives for which this returns <code>true</code> are copied. Surviving primitives are compacted into contiguous indices.
+   * @template T extends BufferPrimitive
+   */
+  static clone(collection, result, predicate) {
+    if (defined(predicate)) {
+      return this._cloneFiltered(collection, result, predicate);
+    }
+
+    //>>includeStart('debug', pragmas.debug);
+    const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
+    assert(collection.primitiveCount <= result.primitiveCountMax, ERR_CAPACITY);
+    assert(collection.vertexCount <= result.vertexCountMax, ERR_CAPACITY);
+    //>>includeEnd('debug');
+
+    const layout = collection._getPrimitiveClass().Layout;
+    const MaterialClass = collection._getMaterialClass();
+    const PrimitiveClass = collection._getPrimitiveClass();
+
+    this._copySubDataView(
+      collection._primitiveView,
+      result._primitiveView,
+      collection.primitiveCount * layout.__BYTE_LENGTH,
+    );
+
+    this._copySubArray(
+      collection._positionView,
+      result._positionView,
+      collection.vertexCount * 3,
+    );
+
+    this._copySubDataView(
+      collection._materialView,
+      result._materialView,
+      collection.primitiveCount * MaterialClass.packedLength,
+    );
+
+    // Collection-level display flags (show, debugShowBoundingVolume) are carried
+    // by the constructor, so they are intentionally not copied here.
+    result._primitiveCount = collection._primitiveCount;
+    result._positionCount = collection._positionCount;
+
+    // Copy per-primitive pick objects and unset each GPU PickId.
+    // PickIds are regenerated for the result collection on next render.
+    const srcPickObjects = collection._customPickObjects;
+    const dstPickObjects = result._customPickObjects;
+    dstPickObjects.length = 0;
+    const primitive = new PrimitiveClass();
+    for (let i = 0, il = result.primitiveCount; i < il; i++) {
+      dstPickObjects[i] = srcPickObjects[i];
+      result.get(i, primitive)._pickId = PickId.NULL_PICK_ID;
+    }
+
+    result._dirtyOffset = 0;
+    result._dirtyCount = result.primitiveCount;
+    result._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.ALL;
+
+    collection.boundingVolume.clone(result.boundingVolume);
+
+    return result;
+  }
+
+  /**
+   * Filtered variant of {@link BufferPrimitiveCollection.clone}. Copies
+   * primitive-by-primitive via {@link BufferPrimitive.clone}, so it handles
+   * subclass data generically and needs no per-subclass override.
+   *
+   * @param {BufferPrimitiveCollection<T>} collection
+   * @param {BufferPrimitiveCollection<T>} result
+   * @param {function(BufferPrimitive, number): boolean} predicate
+   * @template T extends BufferPrimitive
+   * @protected
+   * @ignore
+   */
+  static _cloneFiltered(collection, result, predicate) {
+    const PrimitiveClass = collection._getPrimitiveClass();
+    const src = new PrimitiveClass();
+    const dst = new PrimitiveClass();
+
+    const srcPickObjects = collection._customPickObjects;
+    const dstPickObjects = result._customPickObjects;
+    dstPickObjects.length = 0;
+
+    for (let i = 0, il = collection._primitiveCount; i < il; i++) {
+      collection.get(i, src);
+      if (!predicate(src, i)) {
+        continue;
+      }
+
+      const dstIndex = result._primitiveCount;
+      PrimitiveClass.clone(src, result.add({}, dst));
+
+      if (defined(srcPickObjects[i])) {
+        dstPickObjects[dstIndex] = srcPickObjects[i];
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Returns a copy of the given collection, overriding any constructor options
+   * provided. Omitted options are inherited from the source collection. Any
+   * resized buffers must be large enough to hold every primitive.
+   *
+   * <p>Collection-level state (model matrix, blend option, picking, bounding-volume
+   * mode, etc.) is carried over, but GPU resources are not: the source collection
+   * retains ownership of its renderer resources, so the caller is responsible for
+   * calling {@link BufferPrimitiveCollection#destroy} on the source once it is no
+   * longer needed.</p>
+   *
+   * @example
+   * const grown = BufferPrimitiveCollection.fromCollection(collection, {
+   *   primitiveCountMax: collection.primitiveCountMax * 2,
+   *   vertexCountMax: collection.vertexCountMax * 2,
+   * });
+   * collection.destroy(); // release the source collection's GPU resources
+   *
+   * @example
+   * // Grow while dropping hidden primitives.
+   * const compacted = BufferPrimitiveCollection.fromCollection(
+   *   collection,
+   *   { primitiveCountMax: collection.primitiveCountMax * 2 },
+   *   (primitive) => primitive.show,
+   * );
+   *
+   * @param {BufferPrimitiveCollection<T>} collection Source collection to copy.
+   * @param {BufferPrimitiveCollectionOptions} [options] Constructor options to override. Omitted options are inherited from the source collection.
+   * @param {function(BufferPrimitive, number): boolean} [predicate] When provided, only primitives for which this returns <code>true</code> are copied. Surviving primitives are compacted into contiguous indices.
+   * @returns {BufferPrimitiveCollection<T>}
+   * @template T extends BufferPrimitive
+   */
+  static fromCollection(collection, options = Frozen.EMPTY_OBJECT, predicate) {
+    const result = collection._cloneEmpty(options);
+    collection._getCollectionClass().clone(collection, result, predicate);
+    return result;
+  }
+
+  /**
+   * Base constructor arguments that carry over collection-level state to an
+   * empty copy created by {@link BufferPrimitiveCollection.fromCollection}.
+   * Subclasses should spread the result into their constructor arguments,
+   * adding any type-specific options. Provided options override inherited
+   * state; omitted options are inherited from this collection.
+   *
+   * @param {BufferPrimitiveCollectionOptions} options
+   * @returns {object}
+   * @protected
+   * @ignore
+   */
+  _cloneEmptyBaseArgs(options) {
+    return {
+      primitiveCountMax: this.primitiveCountMax,
+      vertexCountMax: this.vertexCountMax,
+      positionDatatype: this.positionDatatype,
+      positionNormalized: this.positionNormalized,
+      modelMatrix: this._modelMatrix,
+      show: this.show,
+      debugShowBoundingVolume: this.debugShowBoundingVolume,
+      blendOption: this._blendOption,
+      allowPicking: this._allowPicking,
+      boundingVolume: this._boundingVolumeAutoUpdate
+        ? undefined
+        : this._boundingVolume,
+      ...options,
+    };
+  }
+
+  /**
+   * Returns an empty collection with the same structure as this one, overriding
+   * any constructor options provided. Omitted options are inherited from this
+   * collection.
+   *
+   * @param {BufferPrimitiveCollectionOptions} [options]
+   * @returns {BufferPrimitiveCollection<T>}
+   * @protected
+   * @abstract
+   * @ignore
+   */
+  _cloneEmpty(options) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Assigns buffers from source collection to target collection, without
+   * validation or side effects. Callers must handle any validation, dirty
+   * flag updates, etc.
+   *
+   * @param {BufferPrimitiveCollection<T>} src
+   * @param {BufferPrimitiveCollection<T>} dst
+   * @template T extends BufferPrimitive
+   * @protected
+   * @ignore
+   */
+  static _replaceBuffers(src, dst) {
+    dst._primitiveView = src._primitiveView;
+    dst._positionView = src._positionView;
+    dst._materialView = src._materialView;
+  }
+
+  /**
+   * Rebuilds collection bounding volume.
+   * @protected
+   * @ignore
+   */
+  _updateBoundingVolume() {
+    // Exclude unused space in the position buffer.
+    let vertices = this._positionView.subarray(0, this._positionCount * 3);
+
+    if (this._positionNormalized) {
+      vertices = AttributeCompression.dequantize(
+        /** @type {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array} */ (
+          vertices
+        ),
+        this._positionDatatype,
+        AttributeType.VEC3,
+        this._positionCount,
+      );
+    }
+
+    BoundingSphere.fromVertices(
+      vertices,
+      Cartesian3.ZERO,
+      3,
+      this._boundingVolume,
+    );
+    BoundingSphere.transform(
+      this._boundingVolume,
+      this._modelMatrix,
+      this._boundingVolume,
+    );
+
+    this._dirtyBoundingVolume = false;
+  }
+
+  /**
+   * Updates PickIds for the given context.
+   * @param {Context} context
+   * @protected
+   * @ignore
+   */
+  _updatePickIds(context) {
+    let pickIds = this._pickIds.get(context);
+    if (pickIds && pickIds.length === this._primitiveCount) {
+      return;
+    }
+
+    if (!pickIds) {
+      pickIds = [];
+      this._pickIds.set(context, pickIds);
+    }
+
+    const collection = this;
+    const PrimitiveClass = this._getPrimitiveClass();
+    const primitive = new PrimitiveClass();
+
+    // Fill in missing PickIDs for recently-added primitives.
+    for (let i = pickIds.length, il = this._primitiveCount; i < il; i++) {
+      this.get(i, primitive);
+
+      const pickObject = this._customPickObjects[i] || {
+        collection: this,
+        index: i,
+        get primitive() {
+          // Cannot reuse primitives; scene.drillPick() appends to a list.
+          return collection.get(i, new PrimitiveClass());
+        },
+      };
+
+      const pickId = context.createPickId(pickObject);
+      primitive._pickId = pickId.key;
+      pickIds.push(pickId);
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // PRIMITIVE LIFECYCLE
+
+  /**
+   * Makes the given {@link BufferPrimitive} a view onto this collection's
+   * primitive at the given index, for use when reading/writing primitive
+   * properties. When iterating over a large collection, prefer to reuse
+   * the same BufferPrimitive instance throughout the loop — rebinding
+   * an existing instance to a different primitive is cheap, and avoids
+   * allocating in-memory objects for every object.
+   *
+   * @example
+   * const primitive = new BufferPrimitive();
+   * for (let i = 0; i < collection.primitiveCount; i++) {
+   *   collection.get(i, primitive);
+   *   primitive.setColor(Color.RED);
+   * }
+   *
+   * @param {number} index
+   * @param {BufferPrimitive} result
+   * @returns {BufferPrimitive} The BufferPrimitive instance passed as the
+   * 'result' argument, now bound to the specified primitive index.
+   */
+  get(index, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.greaterThanOrEquals("index", index, 0);
+    Check.typeOf.number.lessThan("index", index, this._primitiveCount);
+    //>>includeEnd('debug');
+
+    result._collection = this;
+    result._index = index;
+    result._byteOffset = index * this._getPrimitiveClass().Layout.__BYTE_LENGTH;
+    return result;
+  }
+
+  /**
+   * Adds a new primitive to the collection, with the specified options. A
+   * {@link BufferPrimitive} instance is linked to the new primitive, using
+   * the 'result' argument if given, or a new instance if not. For repeated
+   * calls, prefer to reuse a single BufferPrimitive instance rather than
+   * allocating a new instance on each call.
+   *
+   * @param {BufferPrimitiveOptions} options
+   * @param {BufferPrimitive} result
+   * @returns {BufferPrimitive}
+   */
+  add(options = Frozen.EMPTY_OBJECT, result) {
+    //>>includeStart('debug', pragmas.debug);
+    const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
+    assert(this.primitiveCount < this.primitiveCountMax, ERR_CAPACITY);
+    //>>includeEnd('debug');
+
+    const MaterialClass = this._getMaterialClass();
+    const index = this._primitiveCount++;
+
+    result = this.get(index, result);
+    result.featureId = options.featureId ?? index;
+    result.show = options.show ?? true;
+    result.setMaterial(options.material ?? MaterialClass.DEFAULT_MATERIAL);
+    result._pickId = PickId.NULL_PICK_ID;
+
+    this._makeDirty(BufferPrimitiveCollection.DirtyFlags.ALL, index);
+
+    if (defined(options.pickObject)) {
+      this._customPickObjects[index] = options.pickObject;
+    }
+
+    return result;
+  }
+
+  /**
+   * Marks primitives in range [offset, offset + count) as 'dirty', to be
+   * updated on next render.
+   *
+   * @param {number} flags
+   * @param {number} offset
+   * @param {number} [count=1]
+   * @ignore
+   */
+  _makeDirty(flags, offset, count = 1) {
+    let start = offset;
+    let end = offset + count;
+
+    if (this._dirtyCount > 0) {
+      start = Math.min(start, this._dirtyOffset);
+      end = Math.max(end, this._dirtyOffset + this._dirtyCount);
+    }
+
+    this._dirtyOffset = start;
+    this._dirtyCount = end - start;
+    this._dirtyFlags |= flags;
+
+    // Write to primitive view directly: performance-critical path.
+    const Layout = this._getPrimitiveClass().Layout;
+    for (let i = offset, il = offset + count; i < il; i++) {
+      const byteOffset = i * Layout.__BYTE_LENGTH;
+      this._primitiveView.setUint8(byteOffset + Layout.DIRTY_U8, 1);
+    }
+  }
+
+  /**
+   * Marks all primitives 'clean', and updates version counter.
+   * @ignore
+   */
+  _makeClean() {
+    if (this._dirtyCount > 0) {
+      // Write to primitive view directly: performance-critical path.
+      const Layout = this._getPrimitiveClass().Layout;
+      const dirtyEnd = this._dirtyOffset + this._dirtyCount;
+      for (let i = this._dirtyOffset; i < dirtyEnd; i++) {
+        const byteOffset = i * Layout.__BYTE_LENGTH;
+        this._primitiveView.setUint8(byteOffset + Layout.DIRTY_U8, 0);
+      }
+
+      this._dirtyCount = 0;
+      this._dirtyOffset = 0;
+      this._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.NONE;
+      this._version++;
+    }
+  }
+
+  /**
+   * Marks collection bounding volume as 'dirty', to be updated on next render,
+   * if automatic bounding volume updates are enabled.
+   * @ignore
+   */
+  _makeDirtyBoundingVolume() {
+    if (this._boundingVolumeAutoUpdate) {
+      this._dirtyBoundingVolume = true;
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // RENDER
+
+  /** @param {object} frameState */
+  update(frameState) {
+    if (/** @type {FrameState} */ (frameState).mode !== SceneMode.SCENE3D) {
+      oneTimeWarning(
+        "bufferprim-scenemode",
+        "BufferPrimitiveCollection requires SceneMode.SCENE3D.",
+      );
+    }
+
+    if (this._dirtyBoundingVolume) {
+      this._updateBoundingVolume();
+    }
+    // Not gated on the dirty count: a draped collection is packed by a surface,
+    // which may read the ids and mark the collection clean before this runs.
+    if (this._allowPicking) {
+      this._updatePickIds(/** @type {FrameState} */ (frameState).context);
+    }
+  }
+
+  /**
+   * Whether the collection draws itself this frame. A draped collection is
+   * rendered by the surface it is draped onto.
+   *
+   * @param {FrameState} frameState
+   * @returns {boolean}
+   * @protected
+   * @ignore
+   */
+  _isRendered(frameState) {
+    const passes = frameState.passes;
+    return (
+      this.show &&
+      !isHeightReferenceClamp(this._heightReference) &&
+      (passes.render || passes.pick)
+    );
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // ACCESSORS
+
+  /**
+   * Number of primitives in collection. Must be <= {@link primitiveCountMax}.
+   *
+   * @type {number}
+   * @readonly
+   */
+  get primitiveCount() {
+    return this._primitiveCount;
+  }
+
+  /**
+   * Maximum number of primitives this collection can contain. Must be >=
+   * {@link primitiveCount}.
+   *
+   * @type {number}
+   * @readonly
+   * @default {@link BufferPrimitiveCollection.DEFAULT_CAPACITY}
+   */
+  get primitiveCountMax() {
+    return this._primitiveCountMax;
+  }
+
+  /**
+   * Total byte length of buffers owned by this collection. Includes any unused
+   * space allocated by {@link primitiveCountMax}, even if no primitives have
+   * yet been added in that space.
+   *
+   * @type {number}
+   * @readonly
+   */
+  get byteLength() {
+    return (
+      this._primitiveView.byteLength +
+      this._positionView.byteLength +
+      this._materialView.byteLength
+    );
+  }
+
+  /**
+   * Number of vertices in collection. Must be <= {@link vertexCountMax}.
+   *
+   * @type {number}
+   * @readonly
+   */
+  get vertexCount() {
+    return this._positionCount;
+  }
+
+  /**
+   * Maximum number of vertices this collection can contain. Must be >=
+   * {@link vertexCount}.
+   *
+   * @type {number}
+   * @readonly
+   * @default {@link BufferPrimitiveCollection.DEFAULT_CAPACITY}
+   */
+  get vertexCountMax() {
+    return this._positionCountMax;
+  }
+
+  /**
+   * Transforms geometry from model to world coordinates.
+   * @type {Matrix4}
+   * @default Matrix4.IDENTITY
+   * @readonly
+   */
+  get modelMatrix() {
+    return this._modelMatrix;
+  }
+
+  /**
+   * World-space bounding volume for all primitives in the collection, including both
+   * shown and hidden primitives.
+   * @type {BoundingSphere}
+   * @readonly
+   */
+  get boundingVolume() {
+    if (this._dirtyBoundingVolume) {
+      this._updateBoundingVolume();
+    }
+    return this._boundingVolume;
+  }
+
+  /**
+   * The component datatype used to store position values.
+   * @type {ComponentDatatype}
+   * @readonly
+   */
+  get positionDatatype() {
+    return this._positionDatatype;
+  }
+
+  /**
+   * When <code>true</code>, integer position values are treated as normalized
+   * values, where the full integer range maps to [-1, 1] (signed) or [0, 1]
+   * (unsigned).
+   * @type {boolean}
+   * @readonly
+   */
+  get positionNormalized() {
+    return this._positionNormalized;
+  }
+
+  /**
+   * Determines which surfaces the collection is draped onto, in addition to
+   * being drawn as standalone geometry. Draping requires that the collection
+   * has been added to {@link Scene#primitives}.
+   *
+   * @type {HeightReference}
+   * @readonly
+   * @default HeightReference.NONE
+   */
+  get heightReference() {
+    return this._heightReference;
+  }
+
+  /**
+   * Determines how primitives in the collection are blended with the scene.
+   * Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT};
+   * {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+   *
+   * <p>{@link BlendOption.OPAQUE} disables blending and writes depth, so primitives
+   * occlude each other and the geometry behind them. {@link BlendOption.TRANSLUCENT}
+   * alpha blends primitives and does not write depth, so they are resolved by
+   * order-independent translucency instead.</p>
+   *
+   * @type {BlendOption}
+   * @default BlendOption.TRANSLUCENT
+   */
+  get blendOption() {
+    return this._blendOption;
+  }
+
+  set blendOption(value) {
+    //>>includeStart('debug', pragmas.debug);
+    if (value !== BlendOption.OPAQUE && value !== BlendOption.TRANSLUCENT) {
+      throw new DeveloperError(
+        "blendOption must be BlendOption.OPAQUE or BlendOption.TRANSLUCENT.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    this._blendOption = value;
+  }
+
+  /**
+   * Updates vertex positions over the specified range of primitives. For
+   * position-only updates to many primitives, `setPositions()` is more
+   * efficient than updating each primitive individually.
+   *
+   * Argument `positions` must contain the same total number of vertices as the
+   * target primitive range; vertices cannot be added/removed by this method.
+   *
+   * @param {TypedArray} positions
+   * @param {number} primitiveOffset
+   * @param {number} primitiveCount
+   * @abstract
+   */
+  setPositions(positions, primitiveOffset, primitiveCount) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // UTILS
+
+  /**
+   * @param {TypedArray} src
+   * @param {TypedArray} dst
+   * @param {number} count
+   * @protected
+   * @ignore
+   */
+  static _copySubArray(src, dst, count) {
+    for (let i = 0; i < count; i++) {
+      dst[i] = src[i];
+    }
+  }
+
+  /**
+   * @param {DataView} src
+   * @param {DataView} dst
+   * @param {number} byteLength
+   * @protected
+   * @ignore
+   */
+  static _copySubDataView(src, dst, byteLength) {
+    // No need to match the original array type, just copy in 4-byte chunks.
+    this._copySubArray(
+      new Uint32Array(src.buffer, src.byteOffset, src.byteLength / 4),
+      new Uint32Array(dst.buffer, dst.byteOffset, dst.byteLength / 4),
+      byteLength / 4,
+    );
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // DEBUG
+
+  /**
+   * Returns a JSON-serializable array representing the collection. This encoding
+   * is not memory-efficient, and should generally be used for debugging and
+   * testing.
+   *
+   * @example
+   * console.table(collection.toJSON());
+   *
+   * @returns {Array<object>} List of JSON-serializable objects, one for each
+   * primitive in the collection.
+   */
+  toJSON() {
+    const PrimitiveClass = this._getPrimitiveClass();
+    const primitive = new PrimitiveClass();
+
+    const results = [];
+    for (let i = 0, il = this.primitiveCount; i < il; i++) {
+      results.push(this.get(i, primitive).toJSON());
+    }
+
+    return results;
+  }
+}
+
+/**
+ * Default capacity of buffers on new collections. A quantity of elements:
+ * number of vertices in the vertex buffer, primitives in the primitive
+ * buffer, etc. This value is arbitrary, and collections cannot be resized,
+ * so specific per-buffer capacities should be provided in the collection
+ * constructor when available.
+ *
+ * @type {number}
+ * @static
+ * @constant
+ */
+BufferPrimitiveCollection.DEFAULT_CAPACITY = 1024;
+
+export default BufferPrimitiveCollection;

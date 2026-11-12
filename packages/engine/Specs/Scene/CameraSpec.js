@@ -5,6 +5,7 @@ import {
   Cartesian4,
   Cartographic,
   Ellipsoid,
+  FixedFrameTransforms,
   GeographicProjection,
   HeadingPitchRange,
   Math as CesiumMath,
@@ -14,8 +15,9 @@ import {
   OrthographicOffCenterFrustum,
   PerspectiveFrustum,
   Rectangle,
-  Transforms,
   WebMercatorProjection,
+} from "@cesium/core";
+import {
   Camera,
   CameraFlightPath,
   MapMode2D,
@@ -263,7 +265,7 @@ describe("Scene/Camera", function () {
     camera._mode = SceneMode.SCENE3D;
 
     const ellipsoid = Ellipsoid.WGS84;
-    const toFixedFrame = Transforms.eastNorthUpToFixedFrame(
+    const toFixedFrame = FixedFrameTransforms.eastNorthUpToFixedFrame(
       camera.position,
       ellipsoid,
     );
@@ -593,7 +595,7 @@ describe("Scene/Camera", function () {
       new Cartesian3(),
     );
 
-    const toFixedFrame = Transforms.eastNorthUpToFixedFrame(
+    const toFixedFrame = FixedFrameTransforms.eastNorthUpToFixedFrame(
       camera.position,
       ellipsoid,
     );
@@ -2193,10 +2195,127 @@ describe("Scene/Camera", function () {
     }).toThrowDeveloperError();
   });
 
+  it("lookAtWorldPosition", function () {
+    const tempCamera = Camera.clone(camera);
+    const target = Cartesian3.fromDegrees(-75.0, 40.0, 0.0);
+
+    tempCamera.lookAtWorldPosition(target);
+
+    const expectedDirection = new Cartesian3(
+      0.19881574,
+      -0.74199046,
+      0.64025187,
+    );
+    const expectedRight = new Cartesian3(-0.96592583, -0.25881905, 0.0);
+    const expectedUp = new Cartesian3(-0.16570938, 0.61843582, 0.76816505);
+
+    expect(tempCamera.directionWC).toEqualEpsilon(
+      expectedDirection,
+      CesiumMath.EPSILON8,
+    );
+    expect(tempCamera.rightWC).toEqualEpsilon(
+      expectedRight,
+      CesiumMath.EPSILON8,
+    );
+    expect(tempCamera.upWC).toEqualEpsilon(expectedUp, CesiumMath.EPSILON8);
+  });
+
+  it("lookAtWorldPosition uses Ellipsoid.default when ellipsoid is omitted", function () {
+    const originalDefaultEllipsoid = Ellipsoid.default;
+    Ellipsoid.default = Ellipsoid.UNIT_SPHERE;
+
+    try {
+      const target = new Cartesian3(0.0, 1.0, 0.0);
+      const cameraWithDefault = Camera.clone(camera);
+      const cameraWithExplicit = Camera.clone(camera);
+
+      cameraWithDefault.lookAtWorldPosition(target);
+      cameraWithExplicit.lookAtWorldPosition(target, Ellipsoid.UNIT_SPHERE);
+
+      expect(cameraWithDefault.directionWC).toEqualEpsilon(
+        cameraWithExplicit.directionWC,
+        CesiumMath.EPSILON12,
+      );
+      expect(cameraWithDefault.rightWC).toEqualEpsilon(
+        cameraWithExplicit.rightWC,
+        CesiumMath.EPSILON12,
+      );
+      expect(cameraWithDefault.upWC).toEqualEpsilon(
+        cameraWithExplicit.upWC,
+        CesiumMath.EPSILON12,
+      );
+    } finally {
+      Ellipsoid.default = originalDefaultEllipsoid;
+    }
+  });
+
+  it("lookAtWorldPosition when target equals camera position", function () {
+    const tempCamera = Camera.clone(camera);
+    const target = Cartesian3.clone(tempCamera.positionWC, new Cartesian3());
+    const directionBefore = Cartesian3.clone(
+      tempCamera.directionWC,
+      new Cartesian3(),
+    );
+
+    tempCamera.lookAtWorldPosition(target);
+
+    expect(tempCamera.directionWC).toEqualEpsilon(
+      directionBefore,
+      CesiumMath.EPSILON12,
+    );
+    expect(Cartesian3.magnitude(tempCamera.directionWC)).toEqualEpsilon(
+      1.0,
+      CesiumMath.EPSILON12,
+    );
+    expect(Cartesian3.magnitude(tempCamera.upWC)).toEqualEpsilon(
+      1.0,
+      CesiumMath.EPSILON12,
+    );
+    expect(Cartesian3.magnitude(tempCamera.rightWC)).toEqualEpsilon(
+      1.0,
+      CesiumMath.EPSILON12,
+    );
+  });
+
+  it("lookAtWorldPosition with non-identity transform", function () {
+    const tempCamera = Camera.clone(camera);
+    const ellipsoid = Ellipsoid.WGS84;
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
+      Cartesian3.fromDegrees(-75.0, 40.0, 0.0),
+      ellipsoid,
+    );
+    tempCamera._setTransform(transform);
+
+    const target = Cartesian3.fromDegrees(-75.1, 40.0, 150.0);
+    tempCamera.lookAtWorldPosition(target, ellipsoid);
+
+    const expectedDirectionWC = new Cartesian3(
+      0.19752041,
+      -0.74233628,
+      0.64025193,
+    );
+    expect(tempCamera.directionWC).toEqualEpsilon(
+      expectedDirectionWC,
+      CesiumMath.EPSILON8,
+    );
+  });
+
+  it("lookAtWorldPosition throws with no target parameter", function () {
+    expect(function () {
+      camera.lookAtWorldPosition(undefined, Ellipsoid.WGS84);
+    }).toThrowDeveloperError();
+  });
+
+  it("lookAtWorldPosition throws with no ellipsoid parameter", function () {
+    expect(function () {
+      camera.lookAtWorldPosition(Cartesian3.ZERO, undefined);
+    }).toThrowDeveloperError();
+  });
+
   it("lookAtTransform", function () {
     const target = new Cartesian3(-1.0, -1.0, 0.0);
     const offset = new Cartesian3(1.0, 1.0, 0.0);
-    const transform = Transforms.eastNorthUpToFixedFrame(
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
       target,
       Ellipsoid.UNIT_SPHERE,
     );
@@ -2244,7 +2363,7 @@ describe("Scene/Camera", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const cartOrigin = Cartographic.fromDegrees(-75.59777, 40.03883);
     const origin = ellipsoid.cartographicToCartesian(cartOrigin);
-    const transform = Transforms.eastNorthUpToFixedFrame(origin);
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(origin);
 
     const height = 1000.0;
     cartOrigin.height = height;
@@ -2282,7 +2401,7 @@ describe("Scene/Camera", function () {
     const heading = CesiumMath.toRadians(45.0);
     const pitch = CesiumMath.toRadians(-45.0);
     const range = 2.0;
-    const transform = Transforms.eastNorthUpToFixedFrame(target);
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(target);
 
     const tempCamera = Camera.clone(camera);
     tempCamera.lookAtTransform(
@@ -2329,7 +2448,7 @@ describe("Scene/Camera", function () {
     tempCamera.frustum = frustum;
     tempCamera.update(SceneMode.SCENE2D);
 
-    const transform = Transforms.eastNorthUpToFixedFrame(
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
       Cartesian3.fromDegrees(0.0, 0.0),
     );
     const offset = new Cartesian3(10000.0, 10000.0, 30000.0);
@@ -2375,7 +2494,7 @@ describe("Scene/Camera", function () {
     const heading = CesiumMath.toRadians(90.0);
     const pitch = CesiumMath.toRadians(-45.0);
     const range = 2.0;
-    const transform = Transforms.eastNorthUpToFixedFrame(target);
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(target);
 
     tempCamera.lookAtTransform(
       transform,
@@ -2396,7 +2515,7 @@ describe("Scene/Camera", function () {
   it("lookAtTransform in 3D with orthographic projection", function () {
     const target = new Cartesian3(-1.0, -1.0, 0.0);
     const offset = new Cartesian3(1.0, 1.0, 0.0);
-    const transform = Transforms.eastNorthUpToFixedFrame(
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
       target,
       Ellipsoid.UNIT_SPHERE,
     );
@@ -2826,12 +2945,11 @@ describe("Scene/Camera", function () {
       -0.1,
       CesiumMath.PI_OVER_TWO,
     );
-    let position = new Cartesian3();
     const direction = Cartesian3.clone(camera.direction);
     const up = Cartesian3.clone(camera.up);
     const right = Cartesian3.clone(camera.right);
     camera._mode = SceneMode.SCENE3D;
-    position = camera.getRectangleCameraCoordinates(rectangle);
+    const position = camera.getRectangleCameraCoordinates(rectangle);
     expect(position).toEqualEpsilon(
       new Cartesian3(-14680290.639204923, 0.0, 0.0),
       CesiumMath.EPSILON6,

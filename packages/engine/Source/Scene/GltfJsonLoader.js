@@ -1,18 +1,22 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
-import getMagic from "../Core/getMagic.js";
+import {
+  Check,
+  Frozen,
+  RuntimeError,
+  defined,
+  getJsonFromTypedArray,
+  getMagic,
+} from "@cesium/core";
+import {
+  ForEach,
+  addDefaults,
+  addPipelineExtras,
+  parseGlb,
+  removePipelineExtras,
+  updateVersion,
+  usesExtension,
+} from "@cesium/gltf";
 import isDataUri from "../Core/isDataUri.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import addDefaults from "./GltfPipeline/addDefaults.js";
-import addPipelineExtras from "./GltfPipeline/addPipelineExtras.js";
-import ForEach from "./GltfPipeline/ForEach.js";
-import parseGlb from "./GltfPipeline/parseGlb.js";
-import removePipelineExtras from "./GltfPipeline/removePipelineExtras.js";
-import updateVersion from "./GltfPipeline/updateVersion.js";
-import usesExtension from "./GltfPipeline/usesExtension.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 import ModelUtility from "./Model/ModelUtility.js";
@@ -23,21 +27,18 @@ import ModelUtility from "./Model/ModelUtility.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfJsonLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
- * @param {object} [options.gltfJson] The parsed glTF JSON contents.
- * @param {string} [options.cacheKey] The cache key of the resource.
- *
  * @private
  */
 class GltfJsonLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
+   * @param {object} [options.gltfJson] The parsed glTF JSON contents.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   */
   constructor(options) {
     super();
 
@@ -70,7 +71,6 @@ class GltfJsonLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfJsonLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -83,7 +83,6 @@ class GltfJsonLoader extends ResourceLoader {
   /**
    * The glTF JSON.
    *
-   * @memberof GltfJsonLoader.prototype
    *
    * @type {object}
    * @readonly
@@ -176,7 +175,7 @@ function handleError(gltfJsonLoader, error) {
 async function upgradeVersion(gltfJsonLoader, gltf) {
   if (
     defined(gltf.asset) &&
-    gltf.asset.version === "2.0" &&
+    (gltf.asset.version === "2.1" || gltf.asset.version === "2.0") &&
     !usesExtension(gltf, "KHR_techniques_webgl") &&
     !usesExtension(gltf, "KHR_materials_common")
   ) {
@@ -265,7 +264,7 @@ async function processGltfJson(gltfJsonLoader, gltf) {
     removePipelineExtras(gltf);
 
     const version = gltf.asset.version;
-    if (version !== "1.0" && version !== "2.0") {
+    if (version !== "1.0" && version !== "2.0" && version !== "2.1") {
       throw new RuntimeError(`Unsupported glTF version: ${version}`);
     }
 

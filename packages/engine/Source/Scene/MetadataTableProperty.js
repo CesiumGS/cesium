@@ -1,16 +1,18 @@
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  Frozen,
+  addAllToArray,
+  clone,
+  defined,
+  getStringFromTypedArray,
+  oneTimeWarning,
+} from "@cesium/core";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataClassProperty from "./MetadataClassProperty.js";
 import MetadataType from "./MetadataType.js";
-import addAllToArray from "../Core/addAllToArray.js";
 
 /**
  * A binary property in a {@MetadataTable}
@@ -212,7 +214,7 @@ Object.defineProperties(MetadataTableProperty.prototype, {
    * True if offset/scale should be applied. If both offset/scale were
    * undefined, they default to identity so this property is set false
    *
-   * @memberof MetadataClassProperty.prototype
+   * @memberof MetadataTableProperty.prototype
    * @type {boolean}
    * @readonly
    * @private
@@ -226,7 +228,7 @@ Object.defineProperties(MetadataTableProperty.prototype, {
   /**
    * The offset to be added to property values as part of the value transform.
    *
-   * @memberof MetadataClassProperty.prototype
+   * @memberof MetadataTableProperty.prototype
    * @type {number|number[]|number[][]}
    * @readonly
    * @private
@@ -240,7 +242,7 @@ Object.defineProperties(MetadataTableProperty.prototype, {
   /**
    * The scale to be multiplied to property values as part of the value transform.
    *
-   * @memberof MetadataClassProperty.prototype
+   * @memberof MetadataTableProperty.prototype
    * @type {number|number[]|number[][]}
    * @readonly
    * @private
@@ -290,6 +292,20 @@ Object.defineProperties(MetadataTableProperty.prototype, {
   byteLength: {
     get: function () {
       return this._byteLength;
+    },
+  },
+
+  /**
+   * The class property that this table property corresponds to.
+   *
+   * @memberof MetadataTableProperty.prototype
+   * @type {MetadataClassProperty}
+   * @readonly
+   * @private
+   */
+  classProperty: {
+    get: function () {
+      return this._classProperty;
     },
   },
 });

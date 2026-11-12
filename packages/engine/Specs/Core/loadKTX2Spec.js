@@ -1,10 +1,5 @@
-import {
-  loadKTX2,
-  KTX2Transcoder,
-  PixelFormat,
-  Resource,
-  RuntimeError,
-} from "../../index.js";
+import { PixelFormat, RuntimeError } from "@cesium/core";
+import { loadKTX2, KTX2Transcoder, Resource } from "../../index.js";
 
 describe("Core/loadKTX2", function () {
   it("throws with no url", function () {
@@ -232,7 +227,6 @@ describe("Core/loadKTX2", function () {
 
   it("cannot parse invalid KTX2 buffer", function () {
     const invalidKTX = new Uint8Array([0, 1, 2, 3, 4, 5]);
-    let resolvedValue;
     let rejectedError;
     const promise = loadKTX2(invalidKTX.buffer);
     return promise
@@ -241,7 +235,6 @@ describe("Core/loadKTX2", function () {
       })
       .catch(function (error) {
         rejectedError = error;
-        expect(resolvedValue).toBeUndefined();
         expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual("Invalid KTX2 file.");
       });
@@ -254,7 +247,6 @@ describe("Core/loadKTX2", function () {
       const invalidKTX = new Uint32Array(buffer);
       invalidKTX[7] = 2; // Uint32 pixelDepth
 
-      let resolvedValue;
       let rejectedError;
       const promise = loadKTX2(invalidKTX.buffer);
       return promise
@@ -263,7 +255,6 @@ describe("Core/loadKTX2", function () {
         })
         .catch(function (error) {
           rejectedError = error;
-          expect(resolvedValue).toBeUndefined();
           expect(rejectedError).toBeInstanceOf(RuntimeError);
           expect(rejectedError.message).toEqual(
             "KTX2 3D textures are unsupported.",
@@ -279,7 +270,6 @@ describe("Core/loadKTX2", function () {
       const invalidKTX = new Uint32Array(buffer);
       invalidKTX[8] = 15; // Uint32 layerCount
 
-      let resolvedValue;
       let rejectedError;
       const promise = loadKTX2(invalidKTX.buffer);
       return promise
@@ -288,7 +278,6 @@ describe("Core/loadKTX2", function () {
         })
         .catch(function (error) {
           rejectedError = error;
-          expect(resolvedValue).toBeUndefined();
           expect(rejectedError).toBeInstanceOf(RuntimeError);
           expect(rejectedError.message).toEqual(
             "KTX2 texture arrays are not supported.",

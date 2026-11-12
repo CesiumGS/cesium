@@ -5,9 +5,16 @@ if (pos > 0 && pos < bucket.length - 1) {
   bucket = bucket.substring(pos + 1);
 }
 
+declare global {
+  interface Window {
+    // This is set by the bucket-client.js init() function
+    SANDCASTLE_OUTER_ORIGIN: string;
+  }
+}
+
 type SelectOption = {
   text: string;
-  value: string;
+  value?: string;
   onselect: () => void;
 };
 
@@ -71,14 +78,20 @@ const Sandcastle = {
       const lineNumber = registered.get(key) ?? registered.get(key.primitive);
       if (lineNumber !== undefined) {
         window.parent.postMessage(
-          { type: "highlight", highlight: lineNumber },
-          "*",
+          {
+            id: "sandcastle-bridge",
+            message: { type: "highlight", highlight: lineNumber },
+          },
+          window.SANDCASTLE_OUTER_ORIGIN,
         );
         return;
       }
     }
 
-    window.parent.postMessage({ type: "highlight", highlight: 0 }, "*");
+    window.parent.postMessage(
+      { id: "sandcastle-bridge", message: { type: "highlight", highlight: 0 } },
+      window.SANDCASTLE_OUTER_ORIGIN,
+    );
   },
 
   /**
@@ -236,7 +249,7 @@ const Sandcastle = {
     for (let i = 0, len = options.length; i < len; ++i) {
       const option = document.createElement("option");
       option.textContent = options[i].text;
-      option.value = options[i].value;
+      option.value = options[i].value ?? options[i].text;
       menu.appendChild(option);
     }
   },
