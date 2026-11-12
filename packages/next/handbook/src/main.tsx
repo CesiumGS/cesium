@@ -42,6 +42,7 @@ import { Shading } from "./tabs/shading.tsx";
 import { Specs } from "./tabs/specs.tsx";
 import { Vector } from "./tabs/vector.tsx";
 import { Warps } from "./tabs/warps.tsx";
+import { TransformGraph } from "./tabs/transformGraph.tsx";
 
 interface Tab {
   id: string;
@@ -77,6 +78,11 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
       { id: "scene", label: "Scene representation", view: Scene },
       { id: "frames", label: "Frame tree", view: Frames },
       { id: "warps", label: "Warps and routes", view: Warps },
+      {
+        id: "transform-graph",
+        label: "Transform graph (draft)",
+        view: TransformGraph,
+      },
       { id: "clipping", label: "Clipping", view: Clipping },
       { id: "cameras", label: "Cameras", view: Cameras },
       { id: "rendering", label: "Rendering", view: Rendering },

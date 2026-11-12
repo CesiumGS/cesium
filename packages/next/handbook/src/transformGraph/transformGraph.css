@@ -1,0 +1,372 @@
+/*
+ * The transform-graph explainer: a picture, the graph beside it, and the
+ * controls under it. Tokens only, so both themes come from one drawing. Purple
+ * is the warp: the non-linear edges and what J and H say about them.
+ */
+.tg {
+  --tg-warp: #a3238e;
+  --tg-blue: #1f6fd1;
+  --tg-amber: #a8650a;
+  --tg-green: #2a8a52;
+  --tg-red: #c0392b;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+[data-_sk-color-scheme="dark"] .tg {
+  --tg-warp: #e58bd6;
+  --tg-blue: #7db4ff;
+  --tg-amber: #f0b45c;
+  --tg-green: #6fd29a;
+  --tg-red: #ff8a7d;
+}
+
+.tg-scenes,
+.tg-pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-100) var(--stratakit-space-200);
+}
+.tg-pick > span {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.tg-scene,
+.tg-chipbtn {
+  padding: 2px var(--stratakit-space-300);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--stratakit-font-size-body-sm);
+  cursor: pointer;
+}
+.tg-scene:hover,
+.tg-chipbtn:hover {
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+}
+.tg-scene[aria-pressed="true"],
+.tg-chipbtn[aria-pressed="true"] {
+  background: var(--stratakit-color-bg-accent-muted);
+  border-color: var(--stratakit-color-border-accent-base);
+}
+.tg-scene:focus-visible,
+.tg-chipbtn:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 1px;
+}
+.section .tg-scene-title {
+  margin: var(--stratakit-space-200) 0 0;
+}
+
+.tg-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--stratakit-space-400);
+  align-items: start;
+}
+@media (max-width: 1180px) {
+  .tg-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.tg-stagecol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  min-inline-size: 0;
+}
+.tg-side h4 {
+  margin: 0 0 var(--stratakit-space-150, 6px);
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.tg-side h4:not(:first-child) {
+  margin-block-start: var(--stratakit-space-300);
+}
+.section .tg-cursor,
+.section .tg-stats,
+.section .tg-caption {
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-sm);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.section .tg-caption {
+  font-size: var(--stratakit-font-size-body-md);
+  color: inherit;
+}
+
+/* ------------------------------------------------------------ the picture */
+
+.tg-svg {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: 6px;
+  cursor: crosshair;
+}
+.tg-svg text {
+  font-family: inherit;
+}
+.tg-bg {
+  fill: var(--stratakit-color-bg-page-base);
+}
+.tg-inset {
+  fill: var(--stratakit-color-bg-neutral-base);
+}
+.tg-frame {
+  fill: none;
+  stroke: var(--stratakit-color-border-neutral-base);
+  stroke-width: 1.2;
+}
+.tg-title {
+  fill: var(--stratakit-color-text-neutral-secondary);
+  font-size: 12px;
+}
+.tg-label {
+  fill: var(--stratakit-color-text-neutral-secondary);
+  font-size: 13px;
+  paint-order: stroke;
+  stroke: var(--stratakit-color-bg-page-base);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.tg-label.tg-hot {
+  fill: var(--stratakit-color-text-neutral-primary);
+  font-weight: 600;
+}
+
+.tg-ink {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.tg-muted {
+  color: var(--stratakit-color-icon-neutral-secondary);
+}
+.tg-accent {
+  color: var(--tg-blue);
+}
+.tg-good {
+  color: var(--tg-green);
+}
+.tg-warm {
+  color: var(--tg-amber);
+}
+.tg-bad {
+  color: var(--tg-red);
+}
+.tg-i .tg-line {
+  fill: none;
+  stroke: currentcolor;
+  stroke-linejoin: round;
+}
+.tg-i .tg-area {
+  fill: currentcolor;
+  fill-opacity: 0.16;
+  stroke: currentcolor;
+  stroke-linejoin: round;
+}
+.tg-marker > * {
+  fill: currentcolor;
+  stroke: var(--stratakit-color-bg-page-base);
+  stroke-width: 1;
+}
+.tg-hot .tg-line,
+.tg-hot .tg-area {
+  stroke-width: 3px;
+}
+.tg-halo {
+  stroke: var(--stratakit-color-icon-accent-base);
+  stroke-opacity: 0.3;
+  stroke-width: 10px;
+  stroke-linejoin: round;
+}
+.tg-naive {
+  stroke: var(--tg-red);
+  stroke-width: 1.3px;
+  stroke-dasharray: 5 3;
+}
+.tg-sub {
+  fill: var(--stratakit-color-text-neutral-primary);
+  stroke: var(--stratakit-color-bg-page-base);
+  stroke-width: 1;
+}
+.tg-tissot circle:first-child {
+  fill: var(--tg-warp);
+  fill-opacity: 0.12;
+  stroke: var(--tg-warp);
+  stroke-width: 1.3;
+}
+.tg-tissot circle:last-child {
+  fill: var(--tg-warp);
+}
+.tg-sigma circle:first-child {
+  fill: var(--tg-amber);
+  fill-opacity: 0.3;
+  stroke: var(--tg-amber);
+  stroke-width: 2;
+}
+.tg-sigma circle:last-child {
+  fill: var(--stratakit-color-text-neutral-primary);
+}
+.tg-normal {
+  fill: none;
+  stroke: var(--tg-green);
+  stroke-width: 2;
+}
+.tg-normal-naive {
+  fill: none;
+  stroke: var(--tg-red);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2;
+}
+
+/* --------------------------------------------------------------- the tree */
+
+.tg-tree {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+.tg-tree text {
+  font-family: inherit;
+}
+.tg-node rect {
+  fill: var(--stratakit-color-bg-neutral-base);
+  stroke: var(--stratakit-color-border-neutral-base);
+}
+.tg-node-fn rect {
+  stroke: var(--tg-warp);
+  stroke-width: 1.6;
+}
+.tg-node-route rect {
+  fill: var(--stratakit-color-bg-accent-muted);
+  stroke: var(--stratakit-color-border-accent-base);
+}
+.tg-node-route.tg-node-fn rect {
+  stroke: var(--tg-warp);
+}
+.tg-n-title {
+  fill: var(--stratakit-color-text-neutral-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.tg-n-edge {
+  fill: var(--stratakit-color-text-neutral-secondary);
+  font-size: 11.5px;
+}
+.tg-node-fn .tg-n-edge {
+  fill: var(--tg-warp);
+  font-weight: 600;
+}
+.tg-n-held {
+  fill: var(--stratakit-color-text-neutral-secondary);
+  font-size: 11.5px;
+}
+.tg-n-cam {
+  fill: var(--stratakit-color-text-accent-strong);
+  font-size: 11px;
+}
+.tg-edge {
+  fill: none;
+}
+.tg-edge-affine {
+  stroke: var(--stratakit-color-icon-neutral-secondary);
+  stroke-width: 1.2;
+}
+.tg-edge-fn {
+  stroke: var(--tg-warp);
+  stroke-width: 4;
+}
+.tg-edge-affine.tg-edge-route {
+  stroke: var(--stratakit-color-icon-accent-base);
+  stroke-width: 2.4;
+}
+.tg-edge-fn.tg-edge-route {
+  stroke-width: 5.5;
+  filter: drop-shadow(0 0 3px var(--stratakit-color-icon-accent-base));
+}
+
+.tg-chips {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tg-chip {
+  position: relative;
+  padding: 3px var(--stratakit-space-200);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 6px;
+  font-size: var(--stratakit-font-size-caption-lg, 12px);
+  line-height: 1.3;
+}
+.tg-chip + .tg-chip::before {
+  content: "↓";
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-start: -16px;
+  transform: translateX(-50%);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.tg-chip b,
+.tg-chip span {
+  display: block;
+}
+.tg-chip span {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.tg-chip-fn {
+  border: 2px solid var(--tg-warp);
+}
+.tg-chip-fn b {
+  color: var(--tg-warp);
+}
+.tg-chip-end {
+  background: var(--stratakit-color-bg-accent-muted);
+  border-color: var(--stratakit-color-border-accent-base);
+}
+
+/* ---------------------------------------------------------- the controls */
+
+.tg-controls,
+.tg-overlays {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--stratakit-space-200) var(--stratakit-space-500);
+  align-items: center;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.tg-overlays {
+  grid-template-columns: repeat(auto-fit, minmax(150px, max-content));
+  gap: var(--stratakit-space-100) var(--stratakit-space-400);
+  padding-block-start: var(--stratakit-space-200);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.tg-slider {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0 var(--stratakit-space-300);
+}
+.tg-slider input {
+  grid-column: 1;
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+.tg-slider output {
+  grid-column: 2;
+  min-inline-size: 7ch;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.tg-check {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}
