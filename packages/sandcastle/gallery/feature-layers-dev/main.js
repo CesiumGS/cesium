@@ -141,15 +141,15 @@ async function loadGeoJson() {
   };
   const layers = [];
   for (const [name, file] of Object.entries(files)) {
-    const layer = await Cesium.GeoJsonFeatureLoader.fromUrl(
+    const provider = await Cesium.GeoJsonFeatureLayerProvider.fromUrl(
       geoJsonDirectory + file,
       { name: name },
     );
     // @ts-expect-error Private stand-in until a public API can draw feature layers.
-    const primitive = Cesium.GeoJsonPrimitive.fromFeatureLayer(layer);
+    const primitive = Cesium.GeoJsonPrimitive.fromProvider(provider);
     viewer.scene.primitives.add(primitive);
     geoJsonPrimitives.push(primitive);
-    layers.push(layer);
+    layers.push(provider.featureLayers.get(0));
   }
   addToggles(layers);
 

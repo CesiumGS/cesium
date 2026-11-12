@@ -28,6 +28,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 /** @import FrameState from "./FrameState.js"; */
 /** @import Scene from "./Scene.js"; */
 /** @import FeatureLayer from "./FeatureLayer.js"; */
+/** @import GeoJsonFeatureLayerProvider from "./GeoJsonFeatureLayerProvider.js"; */
 /** @import {GeoJson, GeoJsonFeature, GeoJsonGeometry, GeoJsonPosition} from "../Core/globalTypes.js"; */
 /** @import VectorProvider from "../Core/VectorProvider.js"; */
 
@@ -274,31 +275,28 @@ class GeoJsonPrimitive {
   }
 
   /**
-   * Creates a primitive that draws the features of a {@link FeatureLayer} created
-   * with {@link GeoJsonFeatureLoader}. Nothing is drawn while the layer is hidden.
+   * Creates a primitive that draws the features of a {@link GeoJsonFeatureLayerProvider}.
+   * Nothing is drawn while its layer is hidden.
    * Temporary, for development only, until a vector styling API can draw feature layers.
    *
-   * @param {FeatureLayer} featureLayer
+   * @param {GeoJsonFeatureLayerProvider} provider
    * @param {GeoJsonPrimitiveConstructorOptions} [options]
    * @returns {GeoJsonPrimitive}
    *
    * @private
    */
-  static fromFeatureLayer(featureLayer, options) {
+  static fromProvider(provider, options) {
     //>>includeStart('debug', pragmas.debug);
-    Check.defined("featureLayer", featureLayer);
-    if (!defined(featureLayer._geoJson)) {
+    Check.defined("provider", provider);
+    if (!defined(provider._geoJson)) {
       throw new DeveloperError(
-        "featureLayer must be created with GeoJsonFeatureLoader.",
+        "provider must be a GeoJsonFeatureLayerProvider.",
       );
     }
     //>>includeEnd('debug');
 
-    const primitive = GeoJsonPrimitive.fromGeoJson(
-      featureLayer._geoJson,
-      options,
-    );
-    primitive._featureLayer = featureLayer;
+    const primitive = GeoJsonPrimitive.fromGeoJson(provider._geoJson, options);
+    primitive._featureLayer = provider.featureLayers.get(0);
     return primitive;
   }
 

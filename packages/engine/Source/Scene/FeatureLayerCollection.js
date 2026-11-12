@@ -1,3 +1,5 @@
+// @ts-check
+
 import { Check, defined, Event } from "@cesium/core";
 import FeatureLayer from "./FeatureLayer.js";
 
@@ -5,10 +7,11 @@ import FeatureLayer from "./FeatureLayer.js";
 /** @import GroupMetadata from "./GroupMetadata.js"; */
 
 /**
- * The feature layers of a {@link Cesium3DTileset}. Currently created from 3D Tiles 1.1 groups.
- * Read-only: layers come from the tileset's data.
+ * The feature layers of a {@link Cesium3DTileset} or a {@link FeatureLayerProvider}.
+ * Read-only: layers come from the provider's data.
  * <p>
- * Layers from external tilesets are added as those tilesets load. Listen to
+ * A tileset's layers are currently created from 3D Tiles 1.1 groups. Layers from
+ * external tilesets are added as those tilesets load. Listen to
  * {@link FeatureLayerCollection#layerAdded} to configure them before
  * their tiles are requested.
  * </p>
@@ -28,13 +31,21 @@ import FeatureLayer from "./FeatureLayer.js";
  */
 class FeatureLayerCollection {
   constructor() {
+    /**
+     * @type {FeatureLayer[]}
+     * @private
+     */
     this._layers = [];
+    /**
+     * @type {Map<GroupMetadata, FeatureLayer>}
+     * @private
+     */
     this._layerByGroup = new Map();
 
     /**
      * Raised synchronously when a layer is added, before any of its tiles are requested.
      *
-     * @type {Event<function(FeatureLayer)>}
+     * @type {Event<function(FeatureLayer):void>}
      */
     this.layerAdded = new Event();
   }
@@ -92,16 +103,27 @@ class FeatureLayerCollection {
     if (!defined(metadataExtension)) {
       return;
     }
+    // @ts-expect-error Cesium3DTilesetMetadata defines groups with Object.defineProperties.
     const groups = metadataExtension.groups;
     for (let i = 0; i < groups.length; i++) {
       const layer = new FeatureLayer({
         metadata: groups[i],
         index: i,
       });
-      this._layers.push(layer);
       this._layerByGroup.set(groups[i], layer);
-      this.layerAdded.raiseEvent(layer);
+      this._add(layer);
     }
+  }
+
+  /**
+   * Adds a layer.
+   *
+   * @param {FeatureLayer} layer The layer to add.
+   * @ignore
+   */
+  _add(layer) {
+    this._layers.push(layer);
+    this.layerAdded.raiseEvent(layer);
   }
 
   /**
