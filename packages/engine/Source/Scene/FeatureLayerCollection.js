@@ -10,20 +10,14 @@ import FeatureLayer from "./FeatureLayer.js";
  * The feature layers of a {@link Cesium3DTileset} or a {@link FeatureLayerProvider}.
  * Read-only: layers come from the provider's data.
  * <p>
- * A tileset's layers are currently created from 3D Tiles 1.1 groups. Layers from
- * external tilesets are added as those tilesets load. Listen to
- * {@link FeatureLayerCollection#layerAdded} to configure them before
- * their tiles are requested.
+ * A tileset's layers are currently created from the root tileset JSON's 3D Tiles 1.1
+ * groups, and exist once {@link Cesium3DTileset.fromUrl} resolves. Groups in external
+ * tilesets are not yet supported.
  * </p>
  *
  * @example
  * const tileset = await Cesium.Cesium3DTileset.fromUrl(url);
- * // Layers from the root tileset exist once fromUrl resolves.
  * tileset.featureLayers.getByName("Roads")[0].show = false;
- * // Layers from external tilesets are added as they load.
- * tileset.featureLayers.layerAdded.addEventListener((layer) => {
- *   layer.show = layer.name !== "Vegetation";
- * });
  *
  * @internalConstructor
  *
@@ -44,6 +38,8 @@ class FeatureLayerCollection {
 
     /**
      * Raised synchronously when a layer is added, before any of its tiles are requested.
+     * Layers available when a provider is created, such as a tileset's root groups,
+     * are added before listeners can be attached.
      *
      * @type {Event<function(FeatureLayer):void>}
      */
