@@ -409,7 +409,12 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
   const { root } = tilesetJson;
   const voxelExtension = root.content.extensions["3DTILES_content_voxels"];
   const className = voxelExtension.class;
-  validateMetadataSchema(metadataSchema, className);
+  try {
+    validateMetadataSchema(metadataSchema, className);
+  } catch (error) {
+    ResourceCache.unload(schemaLoader);
+    throw error;
+  }
 
   const metadataJson = hasExtension(tilesetJson, "3DTILES_metadata")
     ? tilesetJson.extensions["3DTILES_metadata"]
