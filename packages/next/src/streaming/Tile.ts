@@ -140,8 +140,10 @@ export class Tile {
   fillFromParent = false;
   /** Horizon-occlusion point of `volume` (`aboveHorizon`). */
   occludee?: Occludee & { volume: TileVolume };
-  /** Where its draws put `volume` under a warped anchor (`drawnTile`). */
+  /** Where its draws put `volume` under a warped anchor (`drawnCache`'s map: the one last asked for). */
   drawnCache?: DrawnCache;
+  /** The same for the other maps the tile was asked for (views that reach the anchor by routes of different shape), until it is asked for them again. */
+  drawnOthers?: DrawnCache[];
   /** Terrain tiles: quadtree address and 1.x globe selection state. */
   globe?: GlobeTile;
 

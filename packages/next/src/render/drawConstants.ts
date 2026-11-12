@@ -232,6 +232,41 @@ export class DrawConstants {
     return this.setWord(index, LIGHTS_SLICE_WORD, packed);
   }
 
+  /**
+   * A record that draws what another does, in other views and by another
+   * route (`World.twinDraw`, per-view variants): every word follows the
+   * source's but the `owned` ones, and of the flags the bits in `keepFlags`.
+   * True when the record changed.
+   */
+  mirror(
+    index: number,
+    source: number,
+    owned: ReadonlySet<number>,
+    keepFlags: number,
+  ): boolean {
+    const u32 = this.table.u32;
+    const to = index * RECORD_WORDS;
+    const from = source * RECORD_WORDS;
+    let changed = false;
+    for (let w = 0; w < RECORD_WORDS; w++) {
+      if (owned.has(w)) {
+        continue;
+      }
+      const value =
+        w === FLAGS_WORD
+          ? ((u32[from + w]! & ~keepFlags) | (u32[to + w]! & keepFlags)) >>> 0
+          : u32[from + w]!;
+      if (u32[to + w] !== value) {
+        u32[to + w] = value;
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.table.mark(index);
+    }
+    return changed;
+  }
+
   private setWord(index: number, word: number, value: number): boolean {
     const at = index * RECORD_WORDS + word;
     if (this.table.u32[at] === value >>> 0) {

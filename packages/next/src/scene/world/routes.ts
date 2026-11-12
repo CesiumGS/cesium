@@ -214,13 +214,15 @@ export class WorldRoutes {
   /**
    * Brings the slot's compiled route to the camera routes as they are now
    * (their rigid matrices, their warps' parameters, a slider), making it when
-   * there is none or its shape changed. `views` are the views that place the
-   * anchor across a warp, the first one the route is made from: a later view
-   * whose route has the same shape and the same data in a draw's record
-   * (`centreSignature`) is drawn by the same program with uniforms of its
-   * own (its root, a parameter set for it), and one that doesn't is
-   * reported once and drawn as the first is. Returns the route, or undefined
-   * when it can't be compiled (`refusal` says why; said once).
+   * there is none or its shape changed. `views` are the views that draw the
+   * anchor by routes of one shape (`WorldVariants` groups them; a route of
+   * another shape has an anchor key and draws of its own), the first one the
+   * route is made from: a later view whose route has the same shape and the
+   * same data in a draw's record (`centreSignature`) is drawn by the same
+   * program with uniforms of its own (its root, a parameter set for it), and
+   * one that doesn't is reported once and drawn as the first is. Returns the
+   * route, or undefined when it can't be compiled (`refusal` says why; said
+   * once).
    */
   sync(
     slot: number,
@@ -576,7 +578,7 @@ export class WorldRoutes {
       if (typeof made === "string") {
         this.#say(
           `view:${anchor.slot}:${id}:${made}`,
-          `warp: view ${id}'s route for ${camera.frame.name} to ${camera.base.name} ${made}; it shows view ${anchor.primaryView}'s route (a draw has one program and one record: only a root and a parameter that is a uniform may differ between views).`,
+          `warp: view ${id}'s route for ${camera.frame.name} to ${camera.base.name} ${made}; it shows view ${anchor.primaryView}'s route (views whose routes have the same shape share a draw: only a root and a parameter that is a uniform may differ between them).`,
           report,
         );
         continue;

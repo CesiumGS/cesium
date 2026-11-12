@@ -223,11 +223,15 @@ export function update(
   }
   // Under an anchor placed across a warp, selection runs on drawn volumes:
   // a globe's too (its tiles are fitted like any tile's, scene/world/warps.ts).
-  const warp = tileset.world.tileWarp?.(tileset.anchor);
+  // Each view on its own route's: views of one anchor may reach it by routes
+  // of different shape (a switch frame).
   const views = tileset.show
     ? allViews
         .filter((view) => ((wanted >>> view.id) & 1) !== 0)
-        .map((view) => (warp ? { ...view, warp } : view))
+        .map((view) => {
+          const warp = tileset.world.tileWarp?.(tileset.anchor, view.id);
+          return warp ? { ...view, warp } : view;
+        })
     : [];
   if (allViews.length === 0) {
     // No view yet (e.g. its world isn't shown yet): stay active, so the

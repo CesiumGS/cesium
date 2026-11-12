@@ -25,6 +25,7 @@ import {
   RADIUS_WORD,
   RECORD_WORDS,
   RecordFlags,
+  VIEW_MASK_WORD,
 } from "../src/render/layout.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
@@ -987,9 +988,9 @@ describe("the render root", () => {
     ]);
   });
 
-  it("says once when another view reaches its root through other smooth edges", () => {
+  it("draws a view that crosses no smooth edge by a twin draw, unwarped, with no word", () => {
     const s = setup();
-    addQuad(s);
+    const draw = addQuad(s);
     // The second view's root is the deformer itself: no smooth edge for the anchor.
     const other = engine.addView({
       target: new OffscreenTarget(32, 24),
@@ -1004,11 +1005,20 @@ describe("the render root", () => {
     other.camera.version++;
     engine.renderFrame();
     engine.renderFrame();
-    const warnings = engine.errors.filter((e) =>
-      /does not cross a smooth edge/.test(e.message),
+    expect(engine.errors.filter((e) => /warp:/.test(e.message))).toHaveLength(
+      0,
     );
-    expect(warnings).toHaveLength(1);
-    expect(warnings[0]!.count).toBe(1);
+    const first = 1 << engine.scene.viewIds.get(s.view)!;
+    const second = 1 << engine.scene.viewIds.get(other)!;
+    const twin = s.world.drawForRoute(draw, other.anchorRoute(s.earth));
+    expect(twin.index).not.toBe(draw.index);
+    const maskOf = (d: DrawHandle) =>
+      s.world.raster.recordsU32[d.index * RECORD_WORDS + VIEW_MASK_WORD]!;
+    expect(maskOf(draw)).toBe(first >>> 0);
+    expect(maskOf(twin)).toBe(second >>> 0);
+    // The twin is drawn as it is, with no term; the source keeps its route's.
+    expect(drawTerms(s.world, twin)).toBeUndefined();
+    expect(drawTerms(s.world, draw)).toBeDefined();
   });
 });
 

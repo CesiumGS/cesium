@@ -15,6 +15,7 @@ import {
 import { treeFromJson, type Tile } from "../src/streaming/Tile.ts";
 import {
   drawnRequestVolume,
+  drawnTile,
   type TileWarp,
 } from "../src/streaming/tileWarp.ts";
 
@@ -384,5 +385,42 @@ describe("the dynamic screen-space error on drawn volumes", () => {
     const off = new StepwiseSelection({ dynamicScreenSpaceError: false });
     off.select(rootAt(3000), 100, viewAt(5000, horizontal, warp));
     expect((off as unknown as { density: number }).density).toBe(0);
+  });
+});
+
+describe("views that reach one anchor by different maps", () => {
+  const counted = (warp: TileWarp) => {
+    const calls = { count: 0 };
+    const bounds = warp.bounds.bind(warp);
+    return {
+      calls,
+      warp: {
+        ...warp,
+        bounds(points: ArrayLike<number>, spacing?: number) {
+          calls.count++;
+          return bounds(points, spacing);
+        },
+      } satisfies TileWarp,
+    };
+  };
+
+  it("keeps a tile's drawn volumes for each map, so two views asking in turn make them once", () => {
+    const root = tile({
+      geometricError: 100,
+      boundingVolume: { box: boxAt(3000, 0, 0, 10) },
+    });
+    const up = counted(shiftWarp(() => [2e4, 0, 0]));
+    const down = counted(shiftWarp(() => [-1e3, 0, 0]));
+    const first = drawnTile(root, up.warp).volume;
+    const second = drawnTile(root, down.warp).volume;
+    expect(first).not.toBe(second);
+    const made = [up.calls.count, down.calls.count];
+    expect(made.every((n) => n > 0)).toBe(true);
+    // A later tick, each view asking again: nothing is made again, and each gets its own.
+    for (let tick = 0; tick < 3; tick++) {
+      expect(drawnTile(root, up.warp).volume).toBe(first);
+      expect(drawnTile(root, down.warp).volume).toBe(second);
+    }
+    expect([up.calls.count, down.calls.count]).toEqual(made);
   });
 });

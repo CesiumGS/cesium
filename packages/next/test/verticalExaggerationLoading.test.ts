@@ -30,6 +30,7 @@ function state(
       exact: over.exact ?? 0,
       routed: 0,
     },
+    variants: { groups: 0, draws: 0 },
   };
   return { stats, buildings };
 }

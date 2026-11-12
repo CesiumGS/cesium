@@ -34,9 +34,11 @@
 // route of the first view that places it across a smooth edge, and the
 // compiled path draws each view by its own route to its own root (a program
 // and its draws' records are shared, the uniforms are per view: routes.ts).
-// What a fit can't do is differ between views in structure: a view that
-// reaches its root through other smooth edges than the first view's is said
-// once, and shows the first's.
+// What one draw can't do is differ between views in structure (a switch frame
+// with an exaggeration for one view, the identity or a strip for another): the
+// views are grouped by the shape of their route, and each group but the first
+// is drawn by twins of the anchor's draws, restricted to its views by their
+// view masks and warped as an anchor of their own (variants.ts).
 //
 // A route term is evaluated at the undeformed position. Combined with a
 // morph (a dual position) this is first-order: the two displacements add,
@@ -108,6 +110,7 @@ import { setPlacement } from "./placements.ts";
 import { WorldRoutes, type RoutedAnchor } from "./routes.ts";
 import { drawMatrix } from "./transforms.ts";
 import type { DrawHandle, TransformHandle } from "./types.ts";
+import { IDENTITY_SLOT, partitionViews, WorldVariants } from "./variants.ts";
 
 /** What a world's warps read of one view: the routes of its anchors placed across a smooth edge, to its own render root. */
 export interface WarpView {
@@ -117,26 +120,12 @@ export interface WarpView {
   readonly routes: ReadonlyArray<Route | undefined>;
 }
 
-/** What a draw's route is made of apart from its rigid steps: the smooth edges it crosses, in order and direction. */
-const structures = new WeakMap<Route, string>();
-function structureOf(route: Route | undefined): string {
-  if (!route) {
-    return "";
-  }
-  let key = structures.get(route);
-  if (key === undefined) {
-    key = route.steps
-      .flatMap((s) =>
-        s.kind === "warp"
-          ? [
-              `${s.inverse ? "i" : "f"}${s.warp.smooth?.source ?? s.warp.description ?? "?"}`,
-            ]
-          : [],
-      )
-      .join(",");
-    structures.set(route, key);
-  }
-  return key;
+/** What `WorldWarps.mirror` last carried from a draw to its twin (`WorldVariants`), to carry only what changed. */
+export interface MirrorMemo {
+  hidden?: boolean;
+  user?: Placement | WarpTerms;
+  choice?: object;
+  height?: object;
 }
 
 /** What a frame's fits may cost by default, ms (`Engine.warpBudgetMs`). */
@@ -151,6 +140,10 @@ const GEOMETRIC_ERROR_SHARE = 1 / 64;
 /** One warped anchor: its route, and what its draws' fits were made for. */
 interface AnchorWarp {
   route: Route;
+  /** The real slot of the anchor: this warp's own key, or for a per-view variant of it (`variants.ts`) the slot its draws are under. */
+  readonly source: number;
+  /** The views that draw the anchor by this route (all that cross a smooth edge, or those of one shape of route): the first is the one its route is made from. */
+  views: readonly WarpView[];
   /**
    * Names the fits this route's draws need: it changes when the warps'
    * revisions or the scales a fit follows do, and comes back when they do. The
@@ -283,6 +276,12 @@ export interface WarpStats {
     /** Drawn by a compiled route: counted in its fitted, stale or pending state too. */
     readonly routed: number;
   };
+  /**
+   * Where the views of one anchor reach it by routes of different shape
+   * (a switch frame): the groups of views by shape, and the twin draws that
+   * show the others' views their own route (zero without such a split).
+   */
+  readonly variants: { readonly groups: number; readonly draws: number };
 }
 
 /** The height a terrain tile's `h·n̂` was made on, and the most it holds (`World.setDrawHeightNormal`). */
@@ -396,8 +395,10 @@ class AnchorTileWarp implements TileWarp {
   }
 
   fitError(draws: readonly DrawHandle[]): number {
-    return this.warps.fitError(draws);
+    return this.warps.fitError(draws, this.#route);
   }
+
+  #route: Route | undefined;
 
   /**
    * Remakes the maps when the anchor's route changed or a scaled warp
@@ -408,6 +409,7 @@ class AnchorTileWarp implements TileWarp {
    * says the bucket moved.
    */
   refresh(route: Route, stamp: number): void {
+    this.#route = route;
     const parts: string[] = [`${stamp}`];
     const buckets = new Map<Warp, { key: string; low: number; high: number }>();
     for (const s of route.steps) {
@@ -530,6 +532,8 @@ export class WorldWarps {
   readonly routes: WorldRoutes;
   /** Routed draws waiting for their block and pipelines. */
   readonly #routedWaiting = new Set<number>();
+  /** Per-view variants of draws where views reach an anchor by routes of different shape (variants.ts). */
+  readonly variants: WorldVariants;
 
   constructor(private readonly world: World) {
     this.curved = new WorldCurvedClips(
@@ -537,6 +541,7 @@ export class WorldWarps {
       (index) => this.#errors.get(index) ?? 0,
     );
     this.routes = new WorldRoutes(world);
+    this.variants = new WorldVariants(world, this);
   }
 
   /** Fits queued and not yet run. */
@@ -664,6 +669,63 @@ export class WorldWarps {
     return this.#anchors.get(slot)?.height;
   }
 
+  /** @internal Says `message` once (to the last frame's report), whatever the draws that make it say it. */
+  say(key: string, message: string): void {
+    this.#say(key, message);
+  }
+
+  /**
+   * @internal Carries what the warps hold of a draw to its twin (variants.ts),
+   * as far as it changed since `memo`: its visibility as the application set
+   * it, its own placement, where its route is evaluated, and terrain's
+   * `h·n̂`.
+   */
+  mirror(source: DrawHandle, twin: DrawHandle, memo: MirrorMemo): void {
+    const d = this.#state(source);
+    const own = this.world.scene.drawPlacements[source.index];
+    const hidden = d
+      ? d.userHidden
+      : (this.world.raster.recordsU32[
+          source.index * RECORD_WORDS + FLAGS_WORD
+        ]! &
+          RecordFlags.hidden) !==
+        0;
+    if (memo.hidden !== hidden) {
+      memo.hidden = hidden;
+      this.world.setVisible(twin, !hidden);
+    }
+    const choice = this.#choices.get(source.index);
+    if (memo.choice !== choice) {
+      memo.choice = choice;
+      this.setWarpAt(
+        twin,
+        choice?.generation === source.generation ? choice.at : "vertex",
+        choice?.origin,
+      );
+    }
+    const height = this.#heightNormals.get(source.index);
+    if (height && memo.height !== height) {
+      memo.height = height;
+      if (height.generation === source.generation) {
+        this.setHeightNormal(twin, height.info);
+      }
+    }
+    const user = d ? d.user : (own?.placement ?? own?.terms);
+    if (memo.user !== user) {
+      memo.user = user;
+      try {
+        if (!this.setUser(twin, user)) {
+          setPlacement(this.world, twin, user);
+        }
+      } catch (error) {
+        this.#say(
+          `variants:placement:${twin.index}`,
+          `warp: a draw's own placement could not be carried to its variant for another view's route: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+  }
+
   /**
    * @internal The point set is a `PointSource`'s: its frame kernel carries
    * the points through the route, so the draws of the set are not placed.
@@ -730,30 +792,37 @@ export class WorldWarps {
   }
 
   /**
-   * What selection reads of the anchor in `slot` (0: the world's root), when
-   * its route crosses a warp: the drawn bounds of volumes and the stretch of
-   * errors. Undefined for an anchor placed rigidly. Reflects the last
-   * `frame`.
+   * What selection reads of the anchor in `slot` (0: the world's root) for
+   * the view `viewId` (any view's when absent), when its route crosses a
+   * warp: the drawn bounds of volumes and the stretch of errors. Undefined
+   * for an anchor placed rigidly. Where the world's views reach the anchor by
+   * routes of different shape (variants.ts), each view's selection runs on its
+   * own route's map. Reflects the last `frame`.
    */
-  tileWarp(slot: number): TileWarp | undefined {
-    const anchor = this.#anchors.get(slot);
-    if (!anchor) {
-      this.#tileWarps.delete(slot);
+  tileWarp(slot: number, viewId?: number): TileWarp | undefined {
+    const key =
+      viewId === undefined ? slot : this.variants.keyFor(slot, viewId);
+    const anchor = key === undefined ? undefined : this.#anchors.get(key);
+    if (key === undefined || !anchor) {
+      if (key !== undefined) {
+        this.#tileWarps.delete(key);
+      }
       return undefined;
     }
-    let warp = this.#tileWarps.get(slot);
+    let warp = this.#tileWarps.get(key);
     if (!warp) {
       warp = new AnchorTileWarp(this);
-      this.#tileWarps.set(slot, warp);
+      this.#tileWarps.set(key, warp);
     }
     warp.refresh(anchor.route, anchor.stamp);
     return warp;
   }
 
   /** The worst error (m) of the fits now drawn for `draws` against their route, and of their curved clips' fields; 0 where none is drawn. */
-  fitError(draws: readonly DrawHandle[]): number {
+  fitError(draws: readonly DrawHandle[], route?: Route): number {
     let worst = 0;
-    for (const handle of draws) {
+    for (const source of draws) {
+      const handle = route ? this.variants.drawFor(source, route) : source;
       const applied = this.#state(handle)?.applied;
       // A failed fit is drawn as no warp: its bound is a sentinel.
       if (applied && applied.errorBound < Number.MAX_VALUE) {
@@ -824,6 +893,7 @@ export class WorldWarps {
       ...this.#counts,
       pending: this.cache.pending,
       draws,
+      variants: this.variants.stats,
     };
   }
 
@@ -850,10 +920,12 @@ export class WorldWarps {
       return;
     }
     this.#register(handle.index, handle.generation);
+    this.variants.drawAdded(handle);
   }
 
   /** A draw is being removed: its fit is forgotten. */
   drawRemoved(handle: DrawHandle): void {
+    this.variants.drawRemoved(handle);
     this.curved.drawRemoved(handle);
     this.#errors.delete(handle.index);
     this.#choices.delete(handle.index);
@@ -967,11 +1039,12 @@ export class WorldWarps {
     if (this.#anchors.size === 0 && this.#draws.size === 0) {
       return false;
     }
-    for (const [slot, anchor] of this.#anchors) {
+    this.variants.frame();
+    for (const [key, anchor] of this.#anchors) {
       anchor.routed = this.routes.sync(
-        slot,
-        views.flatMap((view) => {
-          const camera = view.routes[slot];
+        key,
+        anchor.views.flatMap((view) => {
+          const camera = view.routes[anchor.source];
           return camera ? [{ id: view.id, camera }] : [];
         }),
         report,
@@ -1055,6 +1128,7 @@ export class WorldWarps {
 
   /** The world is gone: nothing is kept. */
   clear(): void {
+    this.variants.clear();
     this.curved.clear();
     this.routes.clear();
     this.cache.clear();
@@ -1156,47 +1230,62 @@ export class WorldWarps {
       return; // nothing is warped: the common frame costs this
     }
     const fresh: number[] = [];
+    const live = new Set<number>();
+    const seen = new Set<number>();
     for (let slot = 0; slot < longest; slot++) {
-      const placed = views.filter((view) => view.routes[slot] !== undefined);
-      const route = placed[0]?.routes[slot];
-      const held = this.#anchors.get(slot);
-      if (!route) {
-        if (held) {
-          this.#anchors.delete(slot);
-          this.#releaseSlot(slot);
-        }
+      const parts = partitionViews(slot, views);
+      if (!parts) {
         continue;
       }
-      if (views.length > 1) {
-        this.#compareViews(slot, route, placed, views);
-      }
-      let now = held;
-      if (!held) {
-        now = this.#anchorWarp(route);
-        this.#anchors.set(slot, now);
-        fresh.push(slot);
-      } else if (held.route !== route) {
-        const signature = signatureOf(route);
-        if (same(signature, held.signature)) {
-          // The same warps, with the same rigid steps before the last, at
-          // the same revisions, placed again (as another root's route
-          // is): what follows the last warp is not in a fit (it cancels),
-          // so the fits stay and nothing is redone; `affine` stays the
-          // one they were made with.
-          held.route = route;
+      seen.add(slot);
+      // The anchors this slot is warped as: one, or when its views reach it
+      // by routes of different shape, one per shape that crosses a smooth edge
+      // (the first the slot's own; the others are virtual, variants.ts).
+      const groups = this.variants.sync(slot, parts);
+      const keyed: Array<{
+        key: number;
+        views: readonly WarpView[];
+      }> = groups
+        ? groups.flatMap((g) =>
+            g.slot === IDENTITY_SLOT ? [] : [{ key: g.slot, views: g.views }],
+          )
+        : [{ key: slot, views: parts[0]!.views }];
+      for (const { key, views: group } of keyed) {
+        live.add(key);
+        const route = group[0]!.routes[slot]!;
+        const held = this.#anchors.get(key);
+        let now = held;
+        if (!held) {
+          now = this.#anchorWarp(route, slot, group);
+          this.#anchors.set(key, now);
+          fresh.push(key);
         } else {
-          now = this.#anchorWarp(route, signature);
-          this.#anchors.set(slot, now);
+          held.views = group;
+          if (held.route !== route) {
+            const signature = signatureOf(route);
+            if (same(signature, held.signature)) {
+              // The same warps, with the same rigid steps before the last, at
+              // the same revisions, placed again (as another root's route
+              // is): what follows the last warp is not in a fit (it cancels),
+              // so the fits stay and nothing is redone; `affine` stays the
+              // one they were made with.
+              held.route = route;
+            } else {
+              now = this.#anchorWarp(route, slot, group, signature);
+              this.#anchors.set(key, now);
+            }
+          }
+        }
+        if (now!.scales.length > 0) {
+          this.#followScales(now!);
         }
       }
-      if (now!.scales.length > 0) {
-        this.#followScales(now!);
-      }
     }
-    for (const slot of [...this.#anchors.keys()]) {
-      if (slot >= longest) {
-        this.#anchors.delete(slot);
-        this.#releaseSlot(slot);
+    this.variants.prune(seen);
+    for (const key of [...this.#anchors.keys()]) {
+      if (!live.has(key)) {
+        this.#anchors.delete(key);
+        this.#releaseSlot(key);
       }
     }
     if (fresh.length > 0) {
@@ -1204,33 +1293,13 @@ export class WorldWarps {
     }
   }
 
-  /**
-   * Says once when a view's route for an anchor differs in structure from
-   * the one the anchor is warped by (another view's, drawn with a program
-   * and a fit that have one): a view that doesn't warp the anchor at all, or
-   * warps it through other maps.
-   */
-  #compareViews(
-    slot: number,
-    route: Route,
-    placed: readonly WarpView[],
-    views: readonly WarpView[],
-  ): void {
-    const wanted = structureOf(route);
-    for (const view of views) {
-      const other = view.routes[slot];
-      if (other === route || structureOf(other) === wanted) {
-        continue;
-      }
-      this.#say(
-        `structure:${slot}:${view.id}`,
-        `warp: view ${view.id} ${other ? "reaches" : "does not cross a smooth edge to"} its root ${other ? `through other edges than view ${placed[0]!.id}'s route to its own` : `for ${route.frame.name}, where view ${placed[0]!.id}'s route does`}; its content is drawn as view ${placed[0]!.id} draws it (a draw has one route: per-view structure needs a draw per view, which isn't built yet).`,
-      );
-    }
-  }
-
   /** A route's warp state: its fit route, and whether one unit fit serves every scale. */
-  #anchorWarp(route: Route, signature = signatureOf(route)): AnchorWarp {
+  #anchorWarp(
+    route: Route,
+    source: number,
+    views: readonly WarpView[],
+    signature = signatureOf(route),
+  ): AnchorWarp {
     const linear = this.#linearScale(route);
     const scaled = route.steps.flatMap((s) =>
       s.kind === "warp" && s.warp.scale ? [warpScaleOf(s.warp)] : [],
@@ -1238,6 +1307,8 @@ export class WorldWarps {
     const shape = this.#name(`s${shapeOf(signature)}`);
     const anchor: AnchorWarp = {
       route,
+      source,
+      views,
       stamp: 0,
       shape,
       signature,
@@ -1349,11 +1420,20 @@ export class WorldWarps {
       if (raster.drawBatches[index] === undefined || this.#draws.has(index)) {
         continue;
       }
-      const t = raster.recordsU32[index * RECORD_WORDS + TRANSFORM_WORD]!;
-      if (slots.has(this.world.scene.transformAnchor[t]!)) {
+      if (slots.has(this.#slotOf(index))) {
         this.#register(index, raster.drawGeneration[index]!);
       }
     }
+  }
+
+  /** The key of the anchor a draw is warped as: its transform's slot, or for a twin of a per-view variant (variants.ts) its group's. */
+  #slotOf(index: number): number {
+    return (
+      this.variants.slotOf(index) ??
+      this.world.scene.transformAnchor[
+        this.world.raster.recordsU32[index * RECORD_WORDS + TRANSFORM_WORD]!
+      ]!
+    );
   }
 
   /** Holds the draw hidden and notes it, when its anchor is warped and it can be. */
@@ -1363,8 +1443,7 @@ export class WorldWarps {
       return;
     }
     const o = index * RECORD_WORDS;
-    const slot =
-      this.world.scene.transformAnchor[raster.recordsU32[o + TRANSFORM_WORD]!]!;
+    const slot = this.#slotOf(index);
     if (!this.#anchors.has(slot)) {
       return;
     }

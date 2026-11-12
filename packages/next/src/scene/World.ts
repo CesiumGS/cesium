@@ -134,6 +134,7 @@ import {
   type WarpStats,
 } from "./world/warps.ts";
 import type { WarpAt } from "./warpAnchor.ts";
+import type { Route } from "../camera/route.ts";
 import {
   releasePlacementParameter,
   createPlacementParameter,
@@ -1117,10 +1118,20 @@ export class World {
    * @internal The map from an anchor's coordinates to where its content is
    * drawn, when the anchor's route to the view's root crosses a warp:
    * selection runs on drawn volumes (streaming/tileWarp.ts). Undefined for
-   * an anchor placed rigidly.
+   * an anchor placed rigidly. With a `viewId`, the map of that view's own
+   * route (views of one anchor may reach it by routes of different shape).
    */
-  tileWarp(anchor: AnchorHandle): TileWarp | undefined {
-    return this.warps.tileWarp(anchor.slot);
+  tileWarp(anchor: AnchorHandle, viewId?: number): TileWarp | undefined {
+    return this.warps.tileWarp(anchor.slot, viewId);
+  }
+
+  /**
+   * @internal The draw that shows `draw`'s content in the views whose route
+   * to its anchor is `route` (a view's `anchorRoute`): the draw itself, or its
+   * twin when views reach the anchor by routes of different shape.
+   */
+  drawForRoute(draw: DrawHandle, route: Route | undefined): DrawHandle {
+    return this.warps.variants.drawFor(draw, route);
   }
 
   /**
@@ -1486,6 +1497,9 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
+    // Under an anchor whose views reach it by routes of different shape the
+    // draw shows in its own group's views only (scene/world/variants.ts).
+    mask = this.warps.variants.viewMask(handle, mask);
     const old =
       this.raster.recordsU32[handle.index * RECORD_WORDS + VIEW_MASK_WORD]!;
     if (old !== mask >>> 0) {
@@ -1515,6 +1529,7 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
+    mask = this.warps.variants.casterMask(handle, mask);
     const old =
       this.raster.recordsU32[handle.index * RECORD_WORDS + CASTER_MASK_WORD]!;
     if (this.raster.drawConstants.setCasterMask(handle.index, mask)) {

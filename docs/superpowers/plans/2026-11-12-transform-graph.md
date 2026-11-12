@@ -14,6 +14,7 @@
 - **Task 5 left two things open:** tessellation is a spike only, and Taylor bounds aren't used for selection on geodetic routes.
 - **Tasks 6–8 unblocked (owner, 2026-11-12):** the tree with per-view switch nodes and the names (`affine`/`smooth`; modules `transform`, `frames`, `georeference`, `transforms`) are confirmed. After task 8, a handbook revamp for the new model (owner).
 - **The exaggeration example's remaining ~1 s long task** is warped tile bounds in selection (`drawnTile` → `scaledImage`), not shader compilation.
+- **Per-view route structure (task 6's known limit) is closed, not yet committed:** views that reach an anchor by routes of different shape are drawn by one twin of each mesh draw per shape (`src/scene/world/variants.ts`; CESIUM2_WEBGPU_PLAN.md §13.37, "Per-view route structure"). Billboards, instanced draws and patch draws have no twin.
 
 > **For agentic workers:** execute task by task, with a fresh implementer per task. Verification is lean, as the owner asked on 2026-11-11:
 >

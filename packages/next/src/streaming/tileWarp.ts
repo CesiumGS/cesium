@@ -11,6 +11,9 @@ import type { DrawHandle } from "../scene/world/types.ts";
 import type { Tile } from "./Tile.ts";
 import { volumeObb, type TileVolume } from "./volumes.ts";
 
+/** How many maps (views reaching an anchor by routes of different shape) a tile keeps drawn volumes for besides the one last asked. */
+const MAPS_PER_TILE = 3;
+
 /** What a map did to some points: their images' bounding sphere and the Jacobian's singular values there. */
 export interface WarpedPoints {
   readonly center: Vec3;
@@ -221,12 +224,18 @@ export function drawnTile(tile: Tile, warp: TileWarp): DrawnTile {
   const basis = tile.volume;
   const scaleVersion = warp.scaleVersion ?? 0;
   let cache = tile.drawnCache;
-  if (
-    !cache ||
-    cache.warp !== warp ||
-    cache.version !== warp.version ||
-    cache.basis !== basis
-  ) {
+  if (cache && cache.warp !== warp) {
+    // Another view's map: its cache comes forward, and this one is kept.
+    const others = (tile.drawnOthers ??= []);
+    const at = others.findIndex((c) => c.warp === warp);
+    others.push(cache);
+    cache = at >= 0 ? others.splice(at, 1)[0] : undefined;
+    if (others.length > MAPS_PER_TILE) {
+      others.shift();
+    }
+    tile.drawnCache = cache;
+  }
+  if (!cache || cache.version !== warp.version || cache.basis !== basis) {
     const { volume, sigmaMax, remake } = carried(basis, warp);
     cache = {
       warp,

@@ -68,10 +68,12 @@ export interface DrawSink {
   ): void;
   /**
    * The map from an anchor's coordinates to where its content is drawn,
-   * when its route to the view's root crosses a warp: selection then runs
-   * on drawn volumes (`TileWarp`). Optional: a sink with no warps has none.
+   * when its route to the view's root crosses a warp: selection then runs on
+   * drawn volumes (`TileWarp`). `viewId` names the view whose selection
+   * asks: views of one anchor may reach it by different routes. Optional: a
+   * sink with no warps has none.
    */
-  tileWarp?(anchor: AnchorHandle): TileWarp | undefined;
+  tileWarp?(anchor: AnchorHandle, viewId?: number): TileWarp | undefined;
   drawMatrix<T extends Float64Array = Float64Array<ArrayBuffer>>(
     handle: DrawHandle,
     out?: T,

@@ -347,9 +347,9 @@ const TESTS = [
 
 const NOT_BUILT = [
   {
-    what: "Per-view terms",
+    what: "Per-view terms for non-mesh draws",
     state:
-      "One warp context per world, fitted for the root of the world's first view. Another view with a different root shows the first view's draws, and the engine warns once.",
+      "Views that reach an anchor by routes of different structure (a switch frame: exaggerated in one view, the identity or another smooth edge in another) are drawn by one twin of each mesh draw per shape of route, restricted to its views by the view masks. Billboards, instanced draws and patch draws have no twin: they are drawn by the first crossing view's route, and the engine says so once.",
   },
   {
     what: "Point sets with no owner",

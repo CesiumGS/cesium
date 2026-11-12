@@ -113,8 +113,12 @@ export function placementOf(
     ? (resolver.binding(anchor)?.name ?? anchor.name)
     : world.root.name;
   const transform = `the draw's transform from ${content} to the render root, ${root.name}`;
-  const through = routeOf(view.anchorRoute(anchor), world.warps.status(draw));
-  const placed = world.scene.drawPlacements[draw.index];
+  const route = view.anchorRoute(anchor);
+  // Views of one anchor may reach it by routes of different shape: the draw
+  // that shows this view is the draw itself or its twin for the view's shape.
+  const drawn = world.drawForRoute(draw, route);
+  const through = routeOf(route, world.warps.status(drawn));
+  const placed = world.scene.drawPlacements[drawn.index];
   if (!placed) {
     return {
       kind: "affine",
