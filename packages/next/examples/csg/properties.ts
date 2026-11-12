@@ -23,9 +23,11 @@ import { el, scrub, segmented, type Phase, type Scrub } from "./ui.ts";
  * toolbar; nothing selected has the shortcuts.
  */
 export interface FaceSection {
+  /** "Face 9": the crumbs' first entry, the current selection. */
+  label: string;
   /** "Face 9: plane, made by Upright". */
   text: string;
-  /** The nodes from the one that made it up to the root, to select. */
+  /** The nodes from the one that made it up to the root: each a click that steps up the selection, as SolidWorks' breadcrumb does. */
   crumbs: TreeNode[];
   /** What push-pull would change, or why nothing. */
   pushPull: string;
@@ -54,7 +56,7 @@ export interface Properties {
 const SHORTCUTS: ReadonlyArray<[readonly string[], string]> = [
   [["1", "…", "5"], "Add a box, cylinder, sphere, cone or torus"],
   [["U", "D", "I"], "Union, subtract (difference) or intersect the selection"],
-  [["V", "P"], "Move and rotate gizmo, or push-pull a face"],
+  [["P", "V", "B"], "Pick faces (push-pull arrow), parts (gizmo) or the body"],
   [["G", "E", "W"], "Snap to grid, show edges, wireframe"],
   [["F", "⇧F", "⇧T", "⇧R", "⇧I"], "Fit, front, top, right, isometric"],
   [["Ctrl Z", "Ctrl Y"], "Undo, redo"],
@@ -88,7 +90,7 @@ export function createProperties(host: PropertiesHost): Properties {
         el(
           "p",
           { className: "csg-hint" },
-          "Nothing selected. Click a node in the feature tree or a face of the solid. Select two or more nodes and a boolean in the toolbar combines them, the first selected being the base.",
+          "Nothing selected. Click a face of the solid (the Pick buttons in the toolbar choose faces, parts or the body) or a node in the feature tree. Select two or more nodes and a boolean in the toolbar combines them, the first selected being the base.",
         ),
         el("h4", {}, "Shortcuts"),
         el(
@@ -235,18 +237,23 @@ export function createProperties(host: PropertiesHost): Properties {
           el(
             "div",
             { className: "csg-crumbs", ariaLabel: "Path to the root" },
-            ...face.crumbs.flatMap((node, i) => [
-              ...(i > 0 ? ["‹"] : []),
-              el(
-                "button",
-                {
-                  type: "button",
-                  title: `Select ${node.name}: its faces light up`,
-                  onclick: () => host.select(node.id, "replace"),
-                },
-                node.name,
+            ...[
+              el("span", { className: "csg-crumb-face" }, face.label),
+              ...face.crumbs.map((node, i) =>
+                el(
+                  "button",
+                  {
+                    type: "button",
+                    title:
+                      i === 0
+                        ? `Select the part ${node.name}: its gizmo moves it`
+                        : `Select ${node.name}`,
+                    onclick: () => host.select(node.id, "replace"),
+                  },
+                  node.name,
+                ),
               ),
-            ]),
+            ].flatMap((part, i) => [...(i > 0 ? ["‹"] : []), part]),
           ),
           el("span", { className: "csg-note" }, face.pushPull),
         ),

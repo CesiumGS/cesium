@@ -15,7 +15,6 @@ export const CSS = `
 .csg-view:focus-visible { outline: 2px solid var(--cesium-ui-focus, Highlight); outline-offset: -2px; }
 .csg-view canvas { transition: opacity 160ms; }
 .csg-view[data-loading] canvas { opacity: 0.5; }
-.csg-view[data-tool="pushpull"] canvas { cursor: crosshair; }
 .csg-view[data-cursor="grab"] canvas { cursor: grab; }
 .csg-view[data-cursor="grabbing"] canvas { cursor: grabbing; }
 .csg-view[data-cursor="pointer"] canvas { cursor: pointer; }
@@ -187,6 +186,8 @@ export const CSS = `
 .csg-face b { font-weight: 600; }
 .csg-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 .csg-crumbs button { padding: 0 5px; border: 0; border-radius: 3px; background: transparent; cursor: pointer; text-decoration: underline; }
+.csg-crumbs button:hover { background: var(--csg-hover); }
+.csg-crumb-face { padding: 0 5px; font-weight: 600; }
 .csg-note { margin: 0; color: var(--csg-muted); }
 .csg-button { padding: 4px 10px; border: 1px solid var(--csg-line); border-radius: 5px; background: var(--csg-field); cursor: pointer; }
 .csg-button:hover { background: var(--csg-hover); }
@@ -224,6 +225,9 @@ export const CSS = `
 }
 .csg-statusbar [data-bad] { color: var(--stratakit-color-text-critical-base, #cf222e); font-weight: 600; }
 .csg-message { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.csg-mode { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--csg-muted); }
+.csg-mode b { font-weight: 500; }
+.csg-mode b[data-active] { font-weight: 700; color: var(--csg-fg); }
 .csg-statusbar .csg-button { padding: 1px 8px; }
 .csg-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: #8c959f; }
 .csg-dot[data-state="busy"] { background: #d4a72c; }
@@ -246,6 +250,8 @@ export const CSS = `
   animation: csg-spin 0.8s linear infinite;
 }
 @keyframes csg-spin { to { transform: rotate(360deg); } }
+.csg-spinner.csg-mini { width: 11px; height: 11px; border-width: 2px; }
+.csg-spinner[hidden] { display: none; }
 
 /* The view cube: the camera's orientation, and a click turns to a standard view. */
 .csg-cube { grid-area: 2 / 2; justify-self: end; align-self: start; position: relative; margin: 12px 12px 0 0; width: 56px; height: 56px; perspective: 240px; z-index: 2; }

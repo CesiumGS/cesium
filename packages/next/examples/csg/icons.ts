@@ -43,6 +43,12 @@ const PATHS = {
   light:
     '<circle cx="8" cy="8" r="2.8"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M12.6 3.4l-1.4 1.4M4.8 11.2l-1.4 1.4"/>',
   move: '<path d="M8 1.5v13M1.5 8h13M8 1.5 6.2 3.4M8 1.5l1.8 1.9M8 14.5l-1.8-1.9M8 14.5l1.8-1.9M1.5 8l1.9-1.8M1.5 8l1.9 1.8M14.5 8l-1.9-1.8M14.5 8l-1.9 1.8"/>',
+  pickFace:
+    '<path d="M2.5 5 8 2.5 13.5 5 8 7.5z" fill="currentColor" fill-opacity=".45"/><path d="M2.5 5v6L8 13.5l5.5-2.5V5M8 7.5v6"/>',
+  pickPart:
+    '<path d="M2.5 5 8 2.5 13.5 5v6L8 13.5 2.5 11z" fill="currentColor" fill-opacity=".45"/><path d="M2.5 5 8 7.5 13.5 5M8 7.5v6"/>',
+  pickBody:
+    '<rect x="1.5" y="1.5" width="13" height="13" rx="1.5" stroke-dasharray="2 1.5"/><path d="M4.5 6 8 4.5 11.5 6v4L8 11.5 4.5 10z"/><path d="M4.5 6 8 7.5 11.5 6M8 7.5v4"/>',
   pushPull: '<path d="M2.5 13.5h11v-3h-11zM8 9V2M5.5 4.5 8 2l2.5 2.5"/>',
   select: '<path d="M3.5 2.5 12 8l-4.2 1 2.2 4.5-1.8.9L6 9.8 3.5 12.5z"/>',
   chevronRight: '<path d="M6 3.5 10.5 8 6 12.5"/>',

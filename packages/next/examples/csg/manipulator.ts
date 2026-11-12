@@ -36,6 +36,7 @@ import {
  * leaf's placement or parameters through the host, which previews and
  * re-evaluates as for any other edit and records one undo step on release.
  */
+/** Which handle the host wants: the leaf's gizmo, or the picked face's arrow, never both (the host says which by what is selected). */
 export type Tool = "move" | "pushpull";
 
 /** A picked face, as a push-pull handle: where it was picked, the solid's normal there, and what dragging it changes. */

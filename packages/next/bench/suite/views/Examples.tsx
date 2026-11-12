@@ -293,7 +293,7 @@ export function ExamplePage() {
             the canvas, not the stage (which the side layout's panel shares). */}
         <div className="examples-view-area">
           <div ref={host} className="examples-view" />
-          {running && !error && (
+          {(running || !engine) && !error && (
             <div className="examples-loading" role="status">
               <CircularProgress size={20} />
               <Typography variant="body-sm">Starting…</Typography>

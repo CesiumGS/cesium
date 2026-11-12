@@ -47,7 +47,15 @@ import {
   leafColour,
   leafSwatch,
 } from "./look.ts";
-import { Manipulator, type FaceHandle, type Tool } from "./manipulator.ts";
+import { Manipulator, type FaceHandle } from "./manipulator.ts";
+import {
+  PICK_MODES,
+  pickFlag,
+  pickModeForKey,
+  pickModeOf,
+  selectionFor,
+  type PickMode,
+} from "./pickMode.ts";
 import { outlineOf } from "./preview.ts";
 import { createProperties, type FaceSection } from "./properties.ts";
 import { pushPullFor } from "./pushPull.ts";
@@ -115,6 +123,11 @@ import { mad, makeRig, type Rig, type V3 } from "./viewMath.ts";
  *   grouping, dragging a row to reorder or reparent it, renaming, a
  *   parameter, a gizmo or push-pull drag. Undo and redo restore the tree and
  *   the selection and re-evaluate.
+ * - What a click selects is a filter in the toolbar (`pickMode.ts`), as in
+ *   SolidWorks or Fusion: Face (the default) picks a face and shows only its
+ *   push-pull arrow, Part picks the leaf that made the face and shows the
+ *   gizmo, Body picks the whole model. A click on a tree row, or on a
+ *   breadcrumb of the picked face, selects that node and shows its gizmo.
  * - Direct manipulation (`manipulator.ts`, `gizmo.ts`, `pushPull.ts`):
  *   a translate and rotate gizmo on the selected leaf (arrows, plane
  *   squares, rings) and a push-pull arrow on a picked face, drawn over the
@@ -165,6 +178,37 @@ export async function run({
   view.clearColor = [0.78, 0.82, 0.88];
   view.lighting.environment = "procedural";
 
+  // The loading card first, before anything that takes time: the kernel's
+  // worker and module, the first evaluation, the first shaders.
+  const view_ = viewer.container;
+  const style = el("style", { textContent: CSS });
+  view_.classList.add("csg-view");
+  const previousTabIndex = view_.getAttribute("tabindex");
+  if (previousTabIndex === null) {
+    view_.tabIndex = 0;
+  }
+  const loadingText = el("span");
+  const loading = el(
+    "div",
+    { className: "csg-loading", role: "status" },
+    el(
+      "div",
+      {},
+      el("span", { className: "csg-spinner", ariaHidden: "true" }),
+      loadingText,
+    ),
+  );
+  view_.append(style, loading);
+  const setLoading = (text: string | undefined) => {
+    loading.hidden = text === undefined;
+    view_.toggleAttribute("data-loading", text !== undefined);
+    if (text !== undefined) {
+      loadingText.textContent = text;
+    }
+  };
+  /** The first right frame has been shown: the card stays up until then. */
+  let firstFrame = false;
+
   const session = new KernelSession();
   const scheduler = new EvaluationScheduler({
     run: (final) => void evaluate(final),
@@ -177,8 +221,13 @@ export async function run({
     byLeaf: !uiFlags.has("nocolour"),
     wire: uiFlags.has("wire"),
     snap: !uiFlags.has("nosnap"),
-    tool: (uiFlags.has("pushpull") ? "pushpull" : "move") as Tool,
+    pick: pickModeOf(uiFlags),
   };
+  setLoading(
+    settings.kernel === "occt"
+      ? "Loading Open CASCADE… (about 23 MB the first time)"
+      : "Loading SMLib…",
+  );
   const persistUi = () =>
     setParams({
       ui:
@@ -187,7 +236,7 @@ export async function run({
           ...(settings.byLeaf ? [] : ["nocolour"]),
           ...(settings.wire ? ["wire"] : []),
           ...(settings.snap ? [] : ["nosnap"]),
-          ...(settings.tool === "pushpull" ? ["pushpull"] : []),
+          ...pickFlag(settings.pick),
         ].join(",") || undefined,
     });
   /** The sun, shadows, occlusion, sky and exposure (`lighting.ts`), from the link's `light`. */
@@ -379,6 +428,10 @@ export async function run({
   const buffer = new DoubleBuffer<Shown>({
     reveal: (next, previous) => {
       shown = next;
+      if (!firstFrame) {
+        firstFrame = true;
+        setLoading(undefined);
+      }
       setSolidVisible(next, true);
       if (previous) {
         removeSolid(previous);
@@ -424,12 +477,22 @@ export async function run({
       Math.max(1, Math.ceil(faces / PALETTE_WIDTH)),
     );
     const chosen = selectedLeafIds();
+    const hoveredTag =
+      hoverFace === undefined ? undefined : result.faceTags[hoverFace];
+    const hovering = (face: number, tag: number) =>
+      hoverFace === undefined
+        ? false
+        : settings.pick === "face"
+          ? face === hoverFace
+          : settings.pick === "part"
+            ? tag === hoveredTag
+            : true;
     for (let face = 0; face < faces; face++) {
       const tag = result.faceTags[face]!;
       const colour =
         face === picked?.face
           ? PICK
-          : face === hoverFace
+          : hovering(face, tag)
             ? HOVER
             : chosen.has(tag)
               ? SELECT
@@ -664,25 +727,7 @@ export async function run({
   };
 
   // ------------------------------------------------------ the workspace
-  const view_ = viewer.container;
-  const style = el("style", { textContent: CSS });
-  view_.classList.add("csg-view");
-  const previousTabIndex = view_.getAttribute("tabindex");
-  if (previousTabIndex === null) {
-    view_.tabIndex = 0;
-  }
-  view_.dataset.tool = settings.tool;
-  const loadingText = el("span");
-  const loading = el(
-    "div",
-    { className: "csg-loading", role: "status", hidden: true },
-    el(
-      "div",
-      {},
-      el("span", { className: "csg-spinner", ariaHidden: "true" }),
-      loadingText,
-    ),
-  );
+  view_.dataset.pick = settings.pick;
   const toolbar = el("div", {
     className: "csg-toolbar",
     role: "toolbar",
@@ -692,7 +737,7 @@ export async function run({
   const propsHead = el("div", { className: "csg-panel-head" });
   const statusbar = el("div", { className: "csg-statusbar" });
   const app = el("div", { className: "csg-app" });
-  view_.append(style, loading, app);
+  view_.append(app);
 
   // ------------------------------------------------------ messages
   const dot = el("span", { className: "csg-dot", ariaHidden: "true" });
@@ -702,6 +747,18 @@ export async function run({
   const timeText = el("span", {
     title: "The kernel's time for the last evaluation",
   });
+  /** The selection filter and what a drag does in each mode, the current one in bold. */
+  const modeText = el("span", { className: "csg-mode" });
+  const refreshMode = () => {
+    modeText.replaceChildren(
+      ...PICK_MODES.flatMap((info, i) => {
+        const name = el("b", {}, info.label);
+        name.toggleAttribute("data-active", info.mode === settings.pick);
+        return [...(i > 0 ? [" · "] : []), name, `: ${info.hint}`];
+      }),
+    );
+  };
+  refreshMode();
   let sequence = 0;
   let busyTimer: ReturnType<typeof setTimeout> | undefined;
   let messageTimer: ReturnType<typeof setTimeout> | undefined;
@@ -714,26 +771,27 @@ export async function run({
       messageTimer = setTimeout(() => (messageText.textContent = ""), forMs);
     }
   };
+  /** A small spinner in the status bar while the kernel works, for the edits the card doesn't cover. */
+  const busySpinner = el("span", {
+    className: "csg-spinner csg-mini",
+    ariaHidden: "true",
+    hidden: true,
+    title: "The kernel is evaluating",
+  });
   /** What the kernel is doing, shown only if it takes longer than a blink. */
   const busy = (text: string | undefined) => {
     clearTimeout(busyTimer);
     if (text === undefined) {
       dot.dataset.state = failure ? "bad" : "ok";
+      busySpinner.hidden = true;
       return;
     }
     busyTimer = setTimeout(() => {
       dot.dataset.state = "busy";
+      busySpinner.hidden = false;
       say(text, false, 0);
     }, 200);
   };
-  const setLoading = (text: string | undefined) => {
-    loading.hidden = text === undefined;
-    view_.toggleAttribute("data-loading", text !== undefined);
-    if (text !== undefined) {
-      loadingText.textContent = text;
-    }
-  };
-
   // ------------------------------------------------------ evaluation
   const evaluate = async (final: boolean) => {
     const mine = ++sequence;
@@ -742,6 +800,7 @@ export async function run({
       removeShown();
       failure = undefined;
       busy(undefined);
+      firstFrame = true;
       setLoading(undefined);
       say("Nothing to build: no node is enabled.", false, 0);
       refreshResult();
@@ -766,6 +825,13 @@ export async function run({
             );
           } else {
             busy(stage);
+            if (!firstFrame) {
+              setLoading(
+                stage.startsWith(`${KERNEL_NAMES[kernel]}:`)
+                  ? "Building the solid…"
+                  : stage,
+              );
+            }
           }
         },
       });
@@ -773,6 +839,9 @@ export async function run({
         return;
       }
       failure = undefined;
+      if (!firstFrame) {
+        setLoading("Compiling shaders…");
+      }
       show(result);
       console.info(
         `csg: ${KERNEL_NAMES[kernel]}${final ? "" : " (preview)"}: kernel ${result.timings.kernelMs.toFixed(1)} ms (${result.booleans} booleans), convert ${result.timings.convertMs.toFixed(1)} ms, prepare ${ms(result.timings.prepareMs)}, ${result.form.faceSurface.length} faces`,
@@ -786,7 +855,11 @@ export async function run({
     }
     if (mine === sequence) {
       clearTimeout(busyTimer);
-      setLoading(undefined);
+      busySpinner.hidden = true;
+      // The card stays until the first solid has drawn right (the buffer's reveal), unless there will be none.
+      if (firstFrame || failure) {
+        setLoading(undefined);
+      }
       if (failure) {
         dot.dataset.state = "bad";
         say(
@@ -965,15 +1038,18 @@ export async function run({
       return;
     }
     const leaf = leavesOf(tree.current.root).find((l) => l.id === hit.tag);
+    const next = selectionFor(
+      settings.pick,
+      { leaf: leaf?.id, root: tree.current.root.id },
+      selection,
+      additive,
+    );
+    if (settings.pick !== "face") {
+      // A part or the body: the gizmo (or nothing) follows the selection, no face is picked.
+      select(next);
+      return;
+    }
     const face: Picked = { face: hit.face, tag: hit.tag };
-    const next =
-      leaf === undefined
-        ? []
-        : additive
-          ? selection.includes(leaf.id)
-            ? selection.filter((id) => id !== leaf.id)
-            : [...selection, leaf.id]
-          : [leaf.id];
     picked = face;
     select(next, true);
     const point = await pointAt(x, y);
@@ -1399,12 +1475,13 @@ export async function run({
       const leaf = path[path.length - 1];
       const handle = faceHandle();
       return {
+        label: `Face ${picked.face}`,
         text: `Face ${picked.face}: ${identity.toLowerCase()}${drawn}${leaf ? `, made by ${leaf.name}` : ", from no leaf of the tree (the kernel gave it no tag)"}`,
         crumbs: [...path].reverse(),
         pushPull: handle
-          ? `Push-pull changes ${handle.leaf.name}'s ${handle.target.label.toLowerCase()} (${handle.target.value.toFixed(3)} m).${settings.tool === "pushpull" ? " Drag the arrow." : " Choose Push/Pull (P), then drag the arrow."}`
+          ? `Drag the arrow in the view to push or pull: it changes ${handle.leaf.name}'s ${handle.target.label.toLowerCase()} (${handle.target.value.toFixed(3)} m). Click ${leaf?.name ?? "the part"} above to select the whole part and move it.`
           : leaf && isStepLeaf(leaf as LeafNode)
-            ? "A STEP part has no parameters: move it with the gizmo."
+            ? "A STEP part has no parameters: click its name above to select it, then move it with the gizmo."
             : leaf
               ? picked.point
                 ? "No single parameter makes this face: it comes from where nodes meet. (OCCT local edits would change it as a feature node.)"
@@ -1470,7 +1547,7 @@ export async function run({
   const manipulator: Manipulator = new Manipulator(
     {
       rig,
-      tool: () => settings.tool,
+      tool: () => (picked ? "pushpull" : "move"),
       gizmoLeaf: () => {
         const node = selectedNode();
         return node?.type === "leaf" && node.enabled ? node : undefined;
@@ -1507,7 +1584,8 @@ export async function run({
     },
     view_,
     viewer.canvas,
-    () => `${view.camera.version}|${selection.join(",")}|${settings.tool}`,
+    () =>
+      `${view.camera.version}|${selection.join(",")}|${settings.pick}|${picked ? "face" : ""}`,
   );
 
   // ----------------------------------------------------------- the toolbar
@@ -1528,13 +1606,23 @@ export async function run({
     shortcut: "Ctrl+Y",
     onClick: redo,
   });
-  const setTool = (tool: Tool) => {
-    settings.tool = tool;
-    view_.dataset.tool = tool;
+  /** The selection filter: what a click in the view picks. */
+  const setPick = (mode: PickMode) => {
+    if (mode === settings.pick) {
+      return;
+    }
+    settings.pick = mode;
+    view_.dataset.pick = mode;
+    if (mode !== "face") {
+      // Without faces to pick, a picked one would hide the gizmo of its part.
+      picked = undefined;
+    }
+    hoverFace = undefined;
     persistUi();
-    refreshToolbar();
-    refreshProperties();
-    manipulator?.invalidate();
+    refreshAll();
+    refreshMode();
+    const info = PICK_MODES.find((m) => m.mode === mode)!;
+    say(`${info.label}: ${info.title}.`);
   };
   const toggle = (key: "edges" | "wire" | "byLeaf" | "snap", on: boolean) => {
     settings[key] = on;
@@ -1624,18 +1712,16 @@ export async function run({
 
   toolbar.append(
     ...group(
-      add("move", {
-        icon: "move",
-        label: "Move and rotate gizmo",
-        shortcut: "V",
-        onClick: () => setTool("move"),
-      }),
-      add("pushpull", {
-        icon: "pushPull",
-        label: "Push-pull a face",
-        shortcut: "P",
-        onClick: () => setTool("pushpull"),
-      }),
+      el("span", { className: "csg-group-title" }, "Pick"),
+      ...PICK_MODES.map((info) =>
+        add(`pick-${info.mode}`, {
+          icon: info.icon,
+          label: info.title,
+          shortcut: info.key,
+          text: info.label,
+          onClick: () => setPick(info.mode),
+        }),
+      ),
     ),
     divider(),
     ...PRIMITIVE_KINDS.map((kind, i) =>
@@ -1758,8 +1844,9 @@ export async function run({
   buttons.step!.element.setAttribute("aria-haspopup", "dialog");
 
   const refreshToolbar = () => {
-    buttons.move!.setPressed(settings.tool === "move");
-    buttons.pushpull!.setPressed(settings.tool === "pushpull");
+    for (const info of PICK_MODES) {
+      buttons[`pick-${info.mode}`]!.setPressed(settings.pick === info.mode);
+    }
     buttons.edges!.setPressed(settings.edges);
     buttons.wire!.setPressed(settings.wire);
     buttons.colour!.setPressed(settings.byLeaf);
@@ -1951,7 +2038,9 @@ export async function run({
   );
   statusbar.append(
     el("span", {}, dot, kernelText),
+    busySpinner,
     validText,
+    modeText,
     messageText,
     timeText,
     detailsButton,
@@ -2148,10 +2237,8 @@ export async function run({
       applyBoolean("difference");
     } else if (key === "i") {
       applyBoolean("intersection");
-    } else if (key === "v") {
-      setTool("move");
-    } else if (key === "p") {
-      setTool("pushpull");
+    } else if (pickModeForKey(key)) {
+      setPick(pickModeForKey(key)!);
     } else if (key === "e") {
       toggle("edges", !settings.edges);
     } else if (key === "w") {
@@ -2202,7 +2289,7 @@ export async function run({
       view_.removeAttribute("tabindex");
     }
     delete view_.dataset.loading;
-    delete view_.dataset.tool;
+    delete view_.dataset.pick;
     delete view_.dataset.cursor;
     style.remove();
     loading.remove();
