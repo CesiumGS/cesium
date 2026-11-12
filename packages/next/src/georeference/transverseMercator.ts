@@ -186,6 +186,94 @@ export function transverseMercatorDescriptor(
 }
 
 /**
+ * The unprojection as restricted-JS text: the β series, then Newton on τ (five
+ * steps, unrolled: from the spherical start each gains about two orders of
+ * magnitude, and the fifth is at float64's rounding).
+ */
+function inverseSourceOf(e: number, aOver: number, a: number, beta: number[]) {
+  const e2m = 1 - e * e;
+  const lines = [
+    "(p, params) => {",
+    `  const ka = params.scaleFactor * ${a * aOver};`,
+    "  const xi = (p[1] - params.falseNorthing) / ka;",
+    "  const eta = (p[0] - params.falseEasting) / ka;",
+    "  let xip = xi;",
+    "  let etap = eta;",
+  ];
+  beta.forEach((coefficient, i) => {
+    const j2 = 2 * (i + 1);
+    lines.push(
+      `  xip = xip - ${coefficient} * Math.sin(${j2} * xi) * Math.cosh(${j2} * eta);`,
+      `  etap = etap - ${coefficient} * Math.cos(${j2} * xi) * Math.sinh(${j2} * eta);`,
+    );
+  });
+  lines.push(
+    "  const sh = Math.sinh(etap);",
+    "  const target = Math.sin(xip) / Math.sqrt(sh * sh + Math.cos(xip) * Math.cos(xip));",
+    `  let tau = target / ${e2m};`,
+  );
+  for (let k = 0; k < 5; k++) {
+    lines.push(
+      `  const es${k} = ${e} * tau / Math.sqrt(1 + tau * tau);`,
+      `  const sg${k} = Math.sinh(${e} * 0.5 * Math.log((1 + es${k}) / (1 - es${k})));`,
+      `  const tp${k} = tau * Math.sqrt(1 + sg${k} * sg${k}) - sg${k} * Math.sqrt(1 + tau * tau);`,
+      `  tau = tau + ((target - tp${k}) * (1 + ${e2m} * tau * tau)) / (${e2m} * Math.sqrt(1 + tau * tau) * Math.sqrt(1 + tp${k} * tp${k}));`,
+    );
+  }
+  lines.push(
+    `  return [params.centralMeridian + Math.atan2(sh, Math.cos(xip)) * ${180 / Math.PI}, Math.atan(tau) * ${180 / Math.PI}, p[2]];`,
+    "}",
+  );
+  return lines.join("\n");
+}
+
+/**
+ * Transverse Mercator the other way: a node authored in (easting, northing,
+ * height) of the projected CRS, its parent's points longitude and latitude
+ * (degrees) and the same height. The function is the unprojection (the β
+ * series and Newton on τ, with its restricted-JS source for the compiler); the
+ * inverse is the projection. The parameters are the projection's, and the
+ * output is not affine in any of them.
+ */
+export function transverseMercatorToGeographicDescriptor(
+  radii: Radii = WGS84_RADII,
+): TransformDescriptor {
+  const projection = transverseMercatorDescriptor(radii);
+  const { a, b, e2 } = revolution(radii, "transverseMercatorToGeographic");
+  const f = 1 - b / a;
+  const n = f / (2 - f);
+  const series = transverseMercatorSeries(n);
+  return {
+    id: "transverseMercatorToGeographic",
+    params: projection.params,
+    forward: (q, params, out) => projection.inverse!(q, params, out),
+    inverse: (p, params, out) => projection.forward(p, params, out),
+    separable: [],
+    source: inverseSourceOf(Math.sqrt(e2), series.a, a, betaSeries(n)),
+  };
+}
+
+/** The unprojection of `transverseMercator`: projected (easting, northing, height) to longitude, latitude (degrees) and height. Takes the same options. */
+export function transverseMercatorToGeographic(
+  options: Parameters<typeof transverseMercator>[0],
+): SmoothEdge {
+  return edgeOf(
+    transverseMercatorToGeographicDescriptor(options.radii),
+    transverseMercator(options).spec.params,
+  );
+}
+
+/** The unprojection of `utm`: UTM zone 1 to 60, north or south, (easting, northing, height) to longitude, latitude (degrees) and height. */
+export function utmToGeographic(
+  options: Parameters<typeof utm>[0],
+): SmoothEdge {
+  return edgeOf(
+    transverseMercatorToGeographicDescriptor(options.radii),
+    utm(options).spec.params,
+  );
+}
+
+/**
  * Transverse Mercator about `centralMeridian` degrees (UTM's scale and false
  * easting by default); `latitudeOfOrigin` (degrees, default 0) puts the
  * false northing there instead of at the equator.

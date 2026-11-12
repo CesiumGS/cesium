@@ -1,22 +1,23 @@
-import type { AnchorHandle, CorePick, View } from "@cesium/next";
-import type { Frame, FrameCatalog } from "@cesium/next/frames";
-import {
-  graphOfFrames,
-  type FrameGraph,
-} from "../../src/frames/graphOfFrames.ts";
-import {
-  pickIn,
-  type PickedIn,
-  type PickInOptions,
-  type PickTarget,
-} from "../../src/frames/pickIn.ts";
 import {
   measureIn,
   pointIn,
+  type AnchorHandle,
+  type CorePick,
   type MeasureIn,
   type PointIn,
   type SigmaIn,
-} from "../../src/transform/index.ts";
+  type View,
+} from "@cesium/next";
+import {
+  graphOfFrames,
+  pickIn,
+  type Frame,
+  type FrameCatalog,
+  type FrameGraph,
+  type PickedIn,
+  type PickInOptions,
+  type PickTarget,
+} from "@cesium/next/frames";
 
 /** A point of a frame's own coordinates, m. */
 export interface FramePoint {

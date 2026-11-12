@@ -251,6 +251,7 @@ export const RULES = [
   { entry: ".", from: "src/scene/HeightClamping.ts", group: "core.world" },
   { entry: ".", from: "src/georeference/", group: "core.world" },
   { entry: ".", from: "src/transforms/", group: "core.world" },
+  { entry: ".", from: "src/transform/", group: "core.world" },
 
   { entry: ".", from: "src/scene/Camera.ts", group: "core.camera" },
   { entry: ".", from: "src/camera/", group: "core.camera" },
@@ -330,6 +331,11 @@ export const RULES = [
   {
     entry: "frames",
     from: "src/frames/pickInterpreter.ts",
+    group: "frames.coordinates",
+  },
+  {
+    entry: "frames",
+    from: "src/frames/pickIn.ts",
     group: "frames.coordinates",
   },
   {

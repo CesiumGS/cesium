@@ -1,9 +1,16 @@
-import { Ellipsoid, fromDegrees, type View, vec3 } from "@cesium/next";
-import { Frame, smoothFrame } from "@cesium/next/frames";
 import {
+  Ellipsoid,
+  fromDegrees,
   geographicToGeocentric,
+  liveEdge,
   utm,
-} from "../../../src/georeference/index.ts";
+  utmToGeographic,
+  vec3,
+  type AnchorHandle,
+  type Tileset3D,
+  type View,
+} from "@cesium/next";
+import { Frame, smoothFrame } from "@cesium/next/frames";
 import {
   addMeshDraw,
   addOsmBuildings,
@@ -13,8 +20,6 @@ import {
   geodeticOf,
 } from "../content.ts";
 import { hex, MeshBuilder, polylines, type Rgba } from "../geometry.ts";
-import { liveEdge } from "../liveEdge.ts";
-import { utmToGeographic } from "../utmInverse.ts";
 import { whenDrawn } from "../loading.ts";
 import { createMarker } from "../markers.ts";
 import type { Scene, SceneHost, ScenePick } from "../scene.ts";
@@ -24,6 +29,29 @@ const deg = Math.PI / 180;
 const MAX = 10;
 /** Tanjung Priok, Jakarta's port: where the site's grid origin is. */
 const ORIGIN = { longitude: 106.889, latitude: -6.103 };
+/** The design-globe's generated Jakarta tileset (`npm run setup`), in the dev server's frames store. */
+const JAKARTA_URL =
+  "/frames-data/design-globe-dual/portfolio-jakarta/tileset.json";
+/**
+ * The tileset's heights are EGM96 geoid heights (its generator reads the CRS's
+ * vertical datum that way): the geoid's height at the port, m, which lifts
+ * them to the ellipsoid. It is what the generator's own rigid placement adds
+ * to the 3 m datum at the site's anchor.
+ */
+const GEOID_HEIGHT = 18.32;
+
+/** Whether the frames store serves the Jakarta tileset (a dev server answers a missing file with its own page). */
+async function storeHasJakarta(signal: AbortSignal): Promise<boolean> {
+  try {
+    const response = await fetch(JAKARTA_URL, { method: "HEAD", signal });
+    return (
+      response.ok &&
+      (response.headers.get("Content-Type") ?? "").includes("json")
+    );
+  } catch {
+    return false;
+  }
+}
 
 /** A port site authored in grid metres (x east, y north, z up from its datum): a quay, sheds, container stacks and cranes. */
 function siteMesh() {
@@ -113,9 +141,9 @@ export const bimSite: Scene = {
   sources: [
     {
       what: "The port site",
-      who: "Synthetic buildings, cranes and container stacks generated for this page, authored in UTM 48S grid metres at Tanjung Priok",
+      who: "The design-globe's generated Jakarta container port (EPSG:9488, SRGI2013 / UTM 48S), when `npm run setup` has made it; else synthetic buildings, cranes and container stacks generated for this page, authored in UTM 48S grid metres at Tanjung Priok",
       terms:
-        "No data. The design-globe's generated Jakarta tileset (EPSG:9488) could not be placed under a node: see the report.",
+        "No outside data. The generated tileset is drawn in its own CRS, through the UTM node, not at its rigid placement.",
     },
     {
       what: "Cesium World Terrain, Bing Maps Aerial, Cesium OSM Buildings",
@@ -158,34 +186,76 @@ export const bimSite: Scene = {
       liveEdge(utmToGeographic({ zone: 48, hemisphere: "south" }), {
         description:
           "transverse Mercator, central meridian 105°E, scale 0.9996, run from the grid to geographic",
-        differences: 0.5,
       }),
     );
     host.catalog.add(utmFrame);
-    const grid = Frame.constant(
-      "Site grid",
-      utmFrame,
-      [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, corner[0]!, corner[1]!, 3, 1],
-      {
-        accuracy: {
-          byDefinition: true,
-          note: "the site's own datum, defined as a grid offset",
+
+    // The site: the design-globe's generated Jakarta tileset when the frames store has it, drawn in the CRS the data was
+    // written in (its root transform, a rigid placement at one point, left out: the nodes are the projection); else a
+    // synthetic port in the same CRS.
+    let grid!: Frame;
+    let anchor!: AnchorHandle;
+    let jakarta: Tileset3D | undefined;
+    if (await storeHasJakarta(host.signal)) {
+      grid = Frame.constant(
+        "Jakarta design CRS (EPSG:9488)",
+        utmFrame,
+        // prettier-ignore
+        [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, GEOID_HEIGHT, 1],
+        {
+          accuracy: {
+            byDefinition: true,
+            note: "the design heights are EGM96 geoid heights: the frame lifts them to the ellipsoid by the geoid height at the port",
+          },
         },
-      },
-    );
-    host.catalog.add(grid);
-    const anchor = anchorIn(host, "Port site", grid);
-    addMeshDraw(host, anchor, siteMesh(), {
-      origin: new Float64Array(3),
-      name: "Port site",
-      doubleSided: true,
-    });
-    addMeshDraw(host, anchor, gridLines(), {
-      origin: new Float64Array(3),
-      name: "Site grid",
-      unlit: true,
-      ground: false,
-    });
+      );
+      host.catalog.add(grid);
+      anchor = anchorIn(host, "Jakarta port", grid);
+      jakarta = await viewer
+        .addTileset(JAKARTA_URL, { anchor, rootTransform: "none" })
+        .then((added) => {
+          if (host.signal.aborted) {
+            viewer.remove(added);
+            return undefined;
+          }
+          host.scope.defer(() => viewer.remove(added));
+          return added;
+        })
+        .catch((error: unknown) => {
+          host.note(
+            `The Jakarta tileset didn't load: ${host.scrub(error)}; a synthetic port is drawn instead.`,
+          );
+          return undefined;
+        });
+    }
+    if (jakarta === undefined) {
+      grid = Frame.constant(
+        "Site grid",
+        utmFrame,
+        [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, corner[0]!, corner[1]!, 3, 1],
+        {
+          accuracy: {
+            byDefinition: true,
+            note: "the site's own datum, defined as a grid offset",
+          },
+        },
+      );
+      host.catalog.add(grid);
+      anchor = anchorIn(host, "Port site", grid);
+      addMeshDraw(host, anchor, siteMesh(), {
+        origin: new Float64Array(3),
+        name: "Port site",
+        doubleSided: true,
+      });
+      addMeshDraw(host, anchor, gridLines(), {
+        origin: new Float64Array(3),
+        name: "Site grid",
+        unlit: true,
+        ground: false,
+      });
+    }
+    const site = grid;
+    const siteAnchor = anchor;
 
     host.describe({
       placements: [
@@ -195,8 +265,11 @@ export const bimSite: Scene = {
           kind: "content",
         },
         {
-          label: "Port site (buildings, cranes, grid lines)",
-          frame: grid,
+          label:
+            jakarta !== undefined
+              ? "Jakarta port (design-globe tileset, EPSG:9488)"
+              : "Port site (buildings, cranes, grid lines)",
+          frame: site,
           kind: "content",
         },
         {
@@ -208,8 +281,10 @@ export const bimSite: Scene = {
       detail: (f) =>
         f === deformer.frame
           ? `heights × ${deformer.factor.toFixed(1)}`
-          : f === grid
-            ? `the grid's offset: E ${corner[0]!.toFixed(0)}, N ${corner[1]!.toFixed(0)}`
+          : f === site
+            ? jakarta !== undefined
+              ? `heights lifted ${GEOID_HEIGHT} m, EGM96 to the ellipsoid`
+              : `the grid's offset: E ${corner[0]!.toFixed(0)}, N ${corner[1]!.toFixed(0)}`
             : undefined,
     });
 
@@ -219,7 +294,12 @@ export const bimSite: Scene = {
       vec3.vec3(),
     );
     const shot = () => {
-      view.camera.lookAt(deformer.drawn(centre), 200 * deg, -26 * deg, 1_150);
+      view.camera.lookAt(
+        deformer.drawn(centre),
+        200 * deg,
+        -26 * deg,
+        jakarta !== undefined ? 2_200 : 1_150,
+      );
       engine.requestRender();
     };
     shot();
@@ -231,7 +311,9 @@ export const bimSite: Scene = {
     const note = el(
       "p",
       { className: "tgx-small" },
-      "Click a building, a crane, the quay or the ground.",
+      jakarta !== undefined
+        ? "Click a building, a crane stack, the quay or the ground."
+        : "Click a building, a crane, the quay or the ground.",
     );
     const lengths = {
       grid: el("dd", {}, "–"),
@@ -242,7 +324,13 @@ export const bimSite: Scene = {
     const readout = el(
       "dl",
       {},
-      el("dt", {}, "Site grid (x, y, z), the content's own"),
+      el(
+        "dt",
+        {},
+        jakarta !== undefined
+          ? "EPSG:9488 (E, N, EGM96 height), the content's own"
+          : "Site grid (x, y, z), the content's own",
+      ),
       gridText,
       el("dt", {}, "UTM 48S easting, northing"),
       lonlatText,
@@ -276,7 +364,7 @@ export const bimSite: Scene = {
         return;
       }
       const at = (e: End, frame: Frame) =>
-        host.queries.pointIn({ frame: grid, position: e.grid }, frame, e.view)
+        host.queries.pointIn({ frame: site, position: e.grid }, frame, e.view)
           .position;
       const ua = at(a, utmFrame);
       const ub = at(b, utmFrame);
@@ -294,18 +382,18 @@ export const bimSite: Scene = {
       lengths.factor.textContent = `${(gridDistance / ground).toFixed(6)} (UTM's 0.9996 at the central meridian, 1.0004 at the zone's edge)`;
     };
     const stopPicks = host.onPick(({ pick, view: v, frame }: ScenePick) => {
-      if (frame !== grid) {
+      if (frame !== site) {
         note.textContent = `On “${frame?.name ?? "no node"}”: pick the site to read its grid.`;
         return;
       }
       const truth = host.queries.pickIn(pick, "true");
       const inUtm = host.queries.pointIn(
-        { frame: grid, position: truth.position },
+        { frame: site, position: truth.position },
         utmFrame,
         v,
       );
       const trueGeo = host.queries.pointIn(
-        { frame: grid, position: truth.position },
+        { frame: site, position: truth.position },
         deformer.frame,
         v,
       );
@@ -343,7 +431,11 @@ export const bimSite: Scene = {
     const setEnd = (i: 0 | 1) => () => {
       if (last) {
         ends[i] = last;
-        markers[i]!.set({ position: last.grid, anchor, view: last.view });
+        markers[i]!.set({
+          position: last.grid,
+          anchor: siteAnchor,
+          view: last.view,
+        });
         fillMeasure();
       }
     };
@@ -366,7 +458,12 @@ export const bimSite: Scene = {
         longitude: ORIGIN.longitude * deg,
         latitude: ORIGIN.latitude * deg,
       },
-      tilesets: [{ name: "Cesium OSM Buildings", tileset: buildings }],
+      tilesets: [
+        { name: "Cesium OSM Buildings", tileset: buildings },
+        ...(jakarta !== undefined
+          ? [{ name: "the Jakarta port", tileset: jakarta }]
+          : []),
+      ],
     });
   },
 };

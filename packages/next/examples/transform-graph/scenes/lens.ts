@@ -2,14 +2,14 @@ import {
   Ellipsoid,
   eastNorthUpToFixedFrame,
   fromDegrees,
+  liveEdge,
   mat4,
+  radialDistortion,
   vec3,
 } from "@cesium/next";
 import { Frame, smoothFrame } from "@cesium/next/frames";
-import { radialDistortion } from "../../../src/transforms/index.ts";
 import { addMeshDraw, anchorIn, stage } from "../content.ts";
 import { hex, MeshBuilder, polylines } from "../geometry.ts";
-import { liveEdge } from "../liveEdge.ts";
 import { createMarker } from "../markers.ts";
 import type { Scene, SceneHost, ScenePick } from "../scene.ts";
 import { button, el, slider, trueDrawnTable } from "../ui.ts";

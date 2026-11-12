@@ -27,12 +27,29 @@ import {
 type K = "factor" | "ceiling" | "baseHeight" | "band";
 
 /** g(h) and dg/dh. */
-function profile(h: number, v: Named<K>): [number, number] {
+export function liftProfile(h: number, v: Named<K>): [number, number] {
   const a = v.ceiling - v.band;
   const u = Math.min(Math.max(h - a, 0), v.band);
   const g = Math.min(h, a) - v.baseHeight + u - (u * u) / (2 * v.band);
   const dg = h < a ? 1 : h < v.ceiling ? 1 - (h - a) / v.band : 0;
   return [g, dg];
+}
+
+/** The height whose lifted height is `h2`: the profile's exact inverse, branch by branch. */
+export function unliftProfile(h2: number, v: Named<K>): number {
+  const k = v.factor;
+  const a = v.ceiling - v.band;
+  const top = v.ceiling - v.baseHeight - v.band / 2;
+  const hLow = k * a - (k - 1) * v.baseHeight;
+  const hHigh = v.ceiling + (k - 1) * top;
+  if (h2 <= hLow) {
+    return (h2 + (k - 1) * v.baseHeight) / k;
+  }
+  if (h2 >= hHigh) {
+    return h2 - (k - 1) * top;
+  }
+  const r = h2 - (a + (k - 1) * (a - v.baseHeight));
+  return a + (2 * r) / (k + Math.sqrt(k * k - (2 * (k - 1) * r) / v.band));
 }
 
 function sourceOf(radii: Radii): string {
@@ -83,7 +100,7 @@ export function verticalExaggerationDescriptor(
       const y = p[1]!;
       const z = p[2]!;
       locate(radii, p, frame, jacobian !== undefined);
-      const [g, dg] = profile(frame.h, v);
+      const [g, dg] = liftProfile(frame.h, v);
       const d = (v.factor - 1) * g;
       out[0] = x + d * frame.n[0]!;
       out[1] = y + d * frame.n[1]!;
@@ -98,21 +115,8 @@ export function verticalExaggerationDescriptor(
       const y = q[1]!;
       const z = q[2]!;
       locate(radii, q, frame, false);
-      const k = v.factor;
       const h2 = frame.h;
-      const a = v.ceiling - v.band;
-      const top = v.ceiling - v.baseHeight - v.band / 2;
-      const hLow = k * a - (k - 1) * v.baseHeight;
-      const hHigh = v.ceiling + (k - 1) * top;
-      let h: number;
-      if (h2 <= hLow) {
-        h = (h2 + (k - 1) * v.baseHeight) / k;
-      } else if (h2 >= hHigh) {
-        h = h2 - (k - 1) * top;
-      } else {
-        const r = h2 - (a + (k - 1) * (a - v.baseHeight));
-        h = a + (2 * r) / (k + Math.sqrt(k * k - (2 * (k - 1) * r) / v.band));
-      }
+      const h = unliftProfile(h2, v);
       out[0] = x + (h - h2) * frame.n[0]!;
       out[1] = y + (h - h2) * frame.n[1]!;
       out[2] = z + (h - h2) * frame.n[2]!;

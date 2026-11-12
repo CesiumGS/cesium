@@ -1,6 +1,11 @@
-import { Ellipsoid, fromDegrees, vec3 } from "@cesium/next";
+import {
+  Ellipsoid,
+  fromDegrees,
+  liveEdge,
+  vec3,
+  velocityModel,
+} from "@cesium/next";
 import { Frame, eastNorthUpFrame, smoothFrame } from "@cesium/next/frames";
-import { velocityModel } from "../../../src/transforms/index.ts";
 import {
   addMeshDraw,
   anchorIn,
@@ -10,7 +15,6 @@ import {
 } from "../content.ts";
 import { F3_URL, loadF3, synthetic, type Section } from "../data/seismic.ts";
 import { hex, MeshBuilder, polylines, type Rgba } from "../geometry.ts";
-import { liveEdge } from "../liveEdge.ts";
 import { createMarker } from "../markers.ts";
 import type { Scene, SceneHost, ScenePick } from "../scene.ts";
 import { el, length, slider } from "../ui.ts";

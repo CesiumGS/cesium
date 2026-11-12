@@ -20,7 +20,11 @@ import type { HeightScale, WarpScale } from "../camera/route.ts";
 import type { SmoothSpec } from "../transform/graph.ts";
 import { LiveWarp, type ChangeableWarp } from "../transforms/liveWarp.ts";
 import { heightOffsetEdge } from "./heightOffset.ts";
-import { verticalExaggerationEdge } from "./verticalExaggeration.ts";
+import {
+  liftProfile,
+  unliftProfile,
+  verticalExaggerationEdge,
+} from "./verticalExaggeration.ts";
 
 /** A vertical exaggeration scales heights wherever content is: the built-in's ceiling, m, above any of it. */
 const UNBOUNDED_CEILING = 1e9;
@@ -393,6 +397,16 @@ export interface VerticalExaggerationOptions {
   /** The height that stays where it is, m above the reference: 0 by default. Heights below it are scaled the same way. */
   readonly baseHeight?: number;
   /**
+   * The height, m above the reference, above which heights are lifted by a
+   * constant instead of scaled (the sky is shifted, not stretched): by
+   * default there is none, and heights are scaled at any height. Below it the
+   * lift blends into the constant over `band`, so the map is smooth. Must be
+   * above `baseHeight`.
+   */
+  readonly ceiling?: number;
+  /** The width below `ceiling` over which the lift is blended, m: a fifth of the way from `baseHeight` to `ceiling` by default. */
+  readonly band?: number;
+  /**
    * A live number for a slider (a world's `PlacementParameter`, range
    * [0, 1]): at scale `s` heights are multiplied by `1 + s·(factor − 1)`.
    * The engine fits the warp's displacement once and scales it, so moving
@@ -407,6 +421,10 @@ export interface VerticalExaggeration extends ChangeableWarp {
   factor: number;
   /** The height that stays put, m: setting it calls `changed()`. */
   baseHeight: number;
+  /** The height above which the lift is constant, m (undefined: heights are scaled at any height): setting it calls `changed()`. */
+  ceiling: number | undefined;
+  /** The blend's width below the ceiling, m (undefined: a fifth of the way from the base to the ceiling): setting it calls `changed()`. */
+  band: number | undefined;
 }
 
 function checkFactor(factor: number): number {
@@ -431,6 +449,8 @@ class VerticalExaggerationImpl
 {
   private k: number;
   private base: number;
+  private top: number | undefined;
+  private width: number | undefined;
   private smoothRevision = -1;
   private smoothSpec: SmoothSpec | undefined;
 
@@ -438,24 +458,58 @@ class VerticalExaggerationImpl
     super(surfaceOf(options.reference ?? "ellipsoid"), options.scale);
     this.k = checkFactor(options.factor);
     this.base = checkMetres("baseHeight", options.baseHeight ?? 0);
+    this.top = options.ceiling;
+    this.width = options.band;
+    this.checkCeiling();
+  }
+
+  private checkCeiling(): void {
+    if (this.top !== undefined) {
+      checkMetres("ceiling", this.top);
+      if (!(this.top > this.base)) {
+        throw new RangeError(
+          "verticalExaggeration: the ceiling must be above the base height",
+        );
+      }
+    }
+    if (this.width !== undefined && !(this.width > 0)) {
+      throw new RangeError(
+        `verticalExaggeration: band must be a positive number of metres, got ${this.width}`,
+      );
+    }
+  }
+
+  /** The profile's parameters when there is a ceiling. */
+  private get profile():
+    | Readonly<Record<"factor" | "ceiling" | "baseHeight" | "band", number>>
+    | undefined {
+    if (this.top === undefined) {
+      return undefined;
+    }
+    return {
+      factor: this.k,
+      ceiling: this.top,
+      baseHeight: this.base,
+      band: this.width ?? 0.2 * (this.top - this.base),
+    };
   }
 
   get factor(): number {
     return this.k;
   }
 
-  /** Declares the warp a height scale on an ellipsoid or sphere reference (`HeightScale`): the engine exaggerates terrain exactly. */
+  /** Declares the warp a height scale on an ellipsoid or sphere reference (`HeightScale`): the engine exaggerates terrain exactly. With a ceiling it is not a scale of heights, and the warp is fitted. */
   get heightScale(): HeightScale | undefined {
     const radii = this.surfaceRadii;
-    return radii
+    return radii && this.top === undefined
       ? { kind: "heightScale", radii, factor: this.k, baseHeight: this.base }
       : undefined;
   }
 
   /**
    * The georeference built-in over the same ellipsoid, for the compiled
-   * route: a ceiling so high that heights are scaled everywhere content is
-   * (this warp has none). A plane reference has no built-in: fitted.
+   * route: with this warp's ceiling, or one so high that heights are scaled
+   * everywhere content is. A plane reference has no built-in: fitted.
    */
   get smooth(): SmoothSpec | undefined {
     const radii = this.surfaceRadii;
@@ -467,8 +521,9 @@ class VerticalExaggerationImpl
       this.smoothSpec = verticalExaggerationEdge({
         radii,
         factor: this.k,
-        ceiling: UNBOUNDED_CEILING,
+        ceiling: this.top ?? UNBOUNDED_CEILING,
         baseHeight: this.base,
+        ...(this.width !== undefined && { band: this.width }),
       }).spec;
     }
     return this.smoothSpec;
@@ -484,24 +539,72 @@ class VerticalExaggerationImpl
   }
 
   set baseHeight(value: number) {
+    const previous = this.base;
     this.base = checkMetres("baseHeight", value);
+    try {
+      this.checkCeiling();
+    } catch (error) {
+      this.base = previous;
+      throw error;
+    }
+    this.changed();
+  }
+
+  get ceiling(): number | undefined {
+    return this.top;
+  }
+
+  set ceiling(value: number | undefined) {
+    const previous = this.top;
+    this.top = value;
+    try {
+      this.checkCeiling();
+    } catch (error) {
+      this.top = previous;
+      throw error;
+    }
+    this.changed();
+  }
+
+  get band(): number | undefined {
+    return this.width;
+  }
+
+  set band(value: number | undefined) {
+    const previous = this.width;
+    this.width = value;
+    try {
+      this.checkCeiling();
+    } catch (error) {
+      this.width = previous;
+      throw error;
+    }
     this.changed();
   }
 
   get description(): string {
-    return `vertical exaggeration × ${this.k} of height above ${this.surfaceName}${this.base !== 0 ? `, about ${this.base} m` : ""}`;
+    const ceiling =
+      this.top !== undefined
+        ? `, lifted by a constant above ${this.top} m`
+        : "";
+    return `vertical exaggeration × ${this.k} of height above ${this.surfaceName}${this.base !== 0 ? `, about ${this.base} m` : ""}${ceiling}`;
   }
 
   protected lift(h: number): number {
-    return (this.k - 1) * (h - this.base);
+    const v = this.profile;
+    return v
+      ? (this.k - 1) * liftProfile(h, v)[0]
+      : (this.k - 1) * (h - this.base);
   }
 
-  protected slope(): number {
-    return this.k;
+  protected slope(h: number): number {
+    const v = this.profile;
+    return v ? 1 + (this.k - 1) * liftProfile(h, v)[1] : this.k;
   }
 
   protected unlift(h2: number): number {
-    return this.base + (h2 - this.base) / this.k;
+    const v = this.profile;
+    return v ? unliftProfile(h2, v) : this.base + (h2 - this.base) / this.k;
   }
 }
 

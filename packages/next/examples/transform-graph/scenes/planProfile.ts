@@ -1,7 +1,10 @@
 import {
   Ellipsoid,
   cartographic,
+  corridorUnroll,
   fromFunction,
+  liveEdge,
+  scaleAlongAxes,
   type MeshHandle,
   type DrawHandle,
   type View,
@@ -12,14 +15,9 @@ import {
   switchFrame,
   type SwitchChoice,
 } from "@cesium/next/frames";
-import {
-  corridorUnroll,
-  scaleAlongAxes,
-} from "../../../src/transforms/index.ts";
 import { ROAD, ROAD_CREDIT } from "../data/road.ts";
 import { anchorIn } from "../content.ts";
 import { hex, MeshBuilder, polylines, type Rgba } from "../geometry.ts";
-import { liveEdge } from "../liveEdge.ts";
 import { whenDrawn } from "../loading.ts";
 import { createMarker, createPointLabel } from "../markers.ts";
 import type { Scene, SceneHost, ScenePick } from "../scene.ts";

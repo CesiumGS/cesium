@@ -812,6 +812,7 @@ export class Tileset3D implements TileTree {
       undefined,
       { warnings },
       options.modelMatrix,
+      options.rootTransform === "none",
     );
     const tileset = new Tileset3D(
       engine,

@@ -158,6 +158,89 @@ export function lambertConformalConicDescriptor(
   };
 }
 
+/** The unprojection as restricted-JS text: the constants as in `sourceOf`, then the latitude by eight unrolled fixed-point steps (each gains a factor of about e²). */
+function inverseSourceOf(a: number, e2: number): string {
+  const e = Math.sqrt(e2);
+  const t = (name: string, phi: string) => [
+    `  const s${name} = Math.sin(${phi});`,
+    `  const t${name} = Math.tan(${Math.PI / 4} - ${phi} / 2) / Math.pow((1 - ${e} * s${name}) / (1 + ${e} * s${name}), ${e / 2});`,
+  ];
+  const lines = [
+    "(p, params) => {",
+    `  const phi1 = params.lat1 * ${RAD};`,
+    `  const phi2 = params.lat2 * ${RAD};`,
+    `  const phiF = params.lat0 * ${RAD};`,
+    ...t("1", "phi1"),
+    ...t("2", "phi2"),
+    ...t("F", "phiF"),
+    `  const m1 = Math.cos(phi1) / Math.sqrt(1 - ${e2} * s1 * s1);`,
+    `  const m2 = Math.cos(phi2) / Math.sqrt(1 - ${e2} * s2 * s2);`,
+    "  const den = Math.log(t1) - Math.log(t2);",
+    "  const same = Math.abs(den) < 1e-14;",
+    "  const n = same ? s1 : (Math.log(m1) - Math.log(m2)) / (same ? 1 : den);",
+    `  const aF = ${a} * m1 / (n * Math.pow(t1, n));`,
+    "  const rF = aF * Math.pow(tF, n);",
+    "  const side = Math.sign(n);",
+    "  const x = p[0] - params.falseEasting;",
+    "  const y = rF - (p[1] - params.falseNorthing);",
+    "  const r = side * Math.hypot(x, y);",
+    "  const theta = Math.atan2(side * x, side * y);",
+    "  const tp = Math.pow(r / aF, 1 / n);",
+    `  const phi0 = ${Math.PI / 2} - 2 * Math.atan(tp);`,
+  ];
+  for (let k = 0; k < 8; k++) {
+    lines.push(
+      `  const es${k} = ${e} * Math.sin(phi${k});`,
+      `  const phi${k + 1} = ${Math.PI / 2} - 2 * Math.atan(tp * Math.pow((1 - es${k}) / (1 + es${k}), ${e / 2}));`,
+    );
+  }
+  lines.push(
+    `  return [params.lon0 + theta / n * ${1 / RAD}, phi8 * ${1 / RAD}, p[2]];`,
+    "}",
+  );
+  return lines.join("\n");
+}
+
+/**
+ * Lambert conformal conic the other way: a node authored in (easting,
+ * northing, height) of the projected CRS, its parent's points longitude and
+ * latitude (degrees) and the same height. The function is the unprojection
+ * (`lambertConformalConicDescriptor`'s inverse, with its restricted-JS
+ * source); the inverse is the projection.
+ */
+export function lambertConformalConicToGeographicDescriptor(
+  radii: Radii = WGS84_RADII,
+): TransformDescriptor {
+  const projection = lambertConformalConicDescriptor(radii);
+  const { a, e2 } = revolution(radii, "lambertConformalConicToGeographic");
+  return {
+    id: "lambertConformalConicToGeographic",
+    params: projection.params,
+    forward: (q, params, out) => projection.inverse!(q, params, out),
+    inverse: (p, params, out) => projection.forward(p, params, out),
+    separable: [],
+    source: inverseSourceOf(a, e2),
+  };
+}
+
+/** The unprojection of `lambertConformalConic`: projected (easting, northing, height) to longitude, latitude (degrees) and height. Takes the same options. */
+export function lambertConformalConicToGeographic(
+  options: Parameters<typeof lambertConformalConic>[0],
+): SmoothEdge {
+  return edgeOf(lambertConformalConicToGeographicDescriptor(options.radii), {
+    lon0: options.lon0,
+    lat0: options.lat0,
+    lat1: options.lat1,
+    lat2: options.lat2,
+    ...(options.falseEasting !== undefined && {
+      falseEasting: options.falseEasting,
+    }),
+    ...(options.falseNorthing !== undefined && {
+      falseNorthing: options.falseNorthing,
+    }),
+  });
+}
+
 /** Lambert conformal conic (2SP) with parallels `lat1` and `lat2` and origin (`lon0`, `lat0`), degrees. */
 export function lambertConformalConic(options: {
   lon0: number;

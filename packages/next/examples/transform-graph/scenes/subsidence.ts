@@ -1,8 +1,6 @@
-import { Ellipsoid, fromDegrees, vec3 } from "@cesium/next";
+import { Ellipsoid, bump, fromDegrees, liveEdge, vec3 } from "@cesium/next";
 import { smoothFrame } from "@cesium/next/frames";
-import { bump, bumpDescriptor } from "../../../src/transforms/index.ts";
 import { addOsmBuildings, bindEarth, geodeticOf } from "../content.ts";
-import { liveEdge } from "../liveEdge.ts";
 import { whenDrawn } from "../loading.ts";
 import { createMarker } from "../markers.ts";
 import type { Scene, SceneHost, ScenePick } from "../scene.ts";
@@ -55,19 +53,17 @@ export const subsidence: Scene = {
     )!;
     // The one float of the node: time over the longest time, times the exaggeration over its largest.
     const scale = world.createPlacementParameter(0, { range: [0, 1] });
-    const edge = liveEdge(
-      bump({
-        center: centre,
-        direction: up,
-        amplitude: -RATE * YEARS * MAX,
-        sigma: SIGMA,
-      }),
-      {
-        description: "a Gaussian bowl along up, its depth moving with time",
-        scale,
-        identity: { amplitude: 0 },
-      },
-    );
+    const bowl = bump({
+      center: centre,
+      direction: up,
+      amplitude: -RATE * YEARS * MAX,
+      sigma: SIGMA,
+    });
+    const edge = liveEdge(bowl, {
+      description: "a Gaussian bowl along up, its depth moving with time",
+      scale,
+      identity: { amplitude: 0 },
+    });
     const frame = smoothFrame("Earth content (subsiding)", host.itrf, edge);
     host.catalog.add(frame);
     const earth = bindEarth(host, frame);
@@ -122,11 +118,7 @@ export const subsidence: Scene = {
     const marker = createMarker(host);
     const subsidenceAt = (p: ArrayLike<number>, years: number): number => {
       const q = new Float64Array(3);
-      bumpDescriptor.forward(
-        p,
-        { ...edge.params, amplitude: -RATE * years },
-        q,
-      );
+      bowl.spec.forward(p, { ...edge.params, amplitude: -RATE * years }, q);
       return (
         (q[0]! - p[0]!) * up[0]! +
         (q[1]! - p[1]!) * up[1]! +

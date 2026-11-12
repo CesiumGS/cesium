@@ -18,6 +18,7 @@ export {
   type ScaleAboutOptions,
 } from "./scaleAbout.ts";
 export { LiveWarp, liveWarp, type ChangeableWarp } from "./liveWarp.ts";
+export { LiveEdge, liveEdge, type LiveEdgeOptions } from "./liveEdge.ts";
 export { blend, type BlendedWarp } from "./blend.ts";
 export {
   fromFunction,

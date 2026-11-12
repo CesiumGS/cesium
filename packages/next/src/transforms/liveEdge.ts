@@ -1,10 +1,11 @@
-import type { SmoothFrameSpec, WarpScale } from "../../src/camera/route.ts";
-import type {
-  Params,
-  SmoothEdge,
-  SmoothSpec,
-} from "../../src/transform/graph.ts";
-import { LiveWarp } from "../../src/transforms/liveWarp.ts";
+// A built-in smooth edge as the live spec a smooth frame takes (plan §13.37).
+// The built-ins (`twist`, `bend`, `utm`, `radialDistortion`, …) return graph
+// edges, which are values: this puts one over content in the frames
+// (`smoothFrame(name, parent, liveEdge(edge, …))`), with its parameters
+// changeable and one float a slider moves.
+import type { SmoothFrameSpec, WarpScale } from "../camera/route.ts";
+import type { Params, SmoothEdge, SmoothSpec } from "../transform/graph.ts";
+import { LiveWarp } from "./liveWarp.ts";
 
 /** What `liveEdge` takes besides the edge. */
 export interface LiveEdgeOptions {
@@ -16,7 +17,7 @@ export interface LiveEdgeOptions {
   readonly identity?: Params;
   /** 1σ of what the edge models, m. */
   readonly sigma?: number;
-  /** The edge writes no Jacobian: take it by central differences with this step (in the node's units). */
+  /** The edge writes no Jacobian: take it by central differences with this step (in the node's units; by default a millionth of the coordinate, at least a millionth). */
   readonly differences?: number;
   /** Where the edge is defined, in the node's own coordinates: a centre and a radius. */
   readonly domain?: {
@@ -25,13 +26,7 @@ export interface LiveEdgeOptions {
   };
 }
 
-/**
- * A built-in smooth edge (`src/transforms`, `src/georeference`) as the spec
- * `smoothFrame` takes: its function and inverse with the parameters it has
- * now, the same edge as a graph step for the compiler, and a slider that moves
- * one float. The built-ins return graph edges; this is the application's glue
- * to put one over content in the engine, until the engine takes edges itself.
- */
+/** A built-in edge as a changeable `SmoothFrameSpec`: its function and inverse with the parameters it has now, and the same edge as a graph step for the compiler. */
 export class LiveEdge extends LiveWarp implements SmoothFrameSpec {
   readonly description: string;
   readonly scale: WarpScale | undefined;
@@ -96,31 +91,45 @@ export class LiveEdge extends LiveWarp implements SmoothFrameSpec {
     out: Float64Array,
     jacobian?: Float64Array,
   ): Float64Array {
-    const h = this.step;
-    if (jacobian === undefined || h === undefined) {
-      this.spec.forward(p, this.values, out, jacobian);
+    if (jacobian === undefined) {
+      this.spec.forward(p, this.values, out);
       return out;
     }
-    this.spec.forward(p, this.values, out);
+    const h = this.step;
+    if (h === undefined) {
+      // An edge that writes no Jacobian leaves it untouched: take it by differences.
+      jacobian.fill(Number.NaN);
+      this.spec.forward(p, this.values, out, jacobian);
+      if (!jacobian.some(Number.isNaN)) {
+        return out;
+      }
+    } else {
+      this.spec.forward(p, this.values, out);
+    }
     const plus = new Float64Array(3);
     const minus = new Float64Array(3);
     const at = [p[0]!, p[1]!, p[2]!];
     for (let c = 0; c < 3; c++) {
+      const step = h ?? 1e-6 * Math.max(1, Math.abs(at[c]!));
       const a = at.slice();
       const b = at.slice();
-      a[c] = a[c]! + h;
-      b[c] = b[c]! - h;
+      a[c] = a[c]! + step;
+      b[c] = b[c]! - step;
       this.spec.forward(a, this.values, plus);
       this.spec.forward(b, this.values, minus);
       for (let r = 0; r < 3; r++) {
-        jacobian[c * 3 + r] = (plus[r]! - minus[r]!) / (2 * h);
+        jacobian[c * 3 + r] = (plus[r]! - minus[r]!) / (2 * step);
       }
     }
     return out;
   }
 }
 
-/** `edge` as a spec for `smoothFrame`. */
+/**
+ * `edge` (a built-in's `smooth` edge) as a spec for `smoothFrame`: put it
+ * over the content it acts on, and move its parameters with `setParams` or
+ * one float with `scale`.
+ */
 export function liveEdge(edge: SmoothEdge, options: LiveEdgeOptions): LiveEdge {
   return new LiveEdge(edge, options);
 }

@@ -21,14 +21,11 @@ A loading card names what the view waits for. Scenes with no globe get a plain s
 | --- | ------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | 1   | Exaggeration over Earth content | ITRF > exaggeration with a ceiling (smooth); satellite and Moon at other nodes                    | Cesium World Terrain, OSM Buildings; synthetic satellite and Moon     |
 | 2   | Split view                      | the same node, a value per view (`View.setParameter`)                                             | as 1                                                                  |
-| 3   | BIM site in UTM                 | exaggeration > geographic to geocentric > UTM 48S (grid to geographic) > site grid                | synthetic port at Tanjung Priok                                       |
+| 3   | BIM site in UTM                 | exaggeration > geographic to geocentric > UTM 48S (grid to geographic) > site grid                | design-globe Jakarta tileset (EPSG:9488); synthetic port as fallback  |
 | 4   | Plan and profile                | site (ENU) > switch (corridor unroll, or a translation, by view) > vertical ×k (a value per view) | swissTLM3D road, baked to 40 vertices; terrain heights from the globe |
 | 5   | Seismic time to depth           | exaggeration > survey > depth > time (velocity model)                                             | F3 Netherlands inline by Range request (CC BY-SA); synthetic fallback |
 | 6   | Exploded assembly               | assembly > one affine node per part                                                               | AS1 STEP at run time; NIST parts as the fallback                      |
 | 7   | Lens on the camera              | camera pose > lens (Brown–Conrady) > world in camera space                                        | synthetic city; approximate Phantom 4 Pro coefficients                |
 | 8   | Time-varying subsidence         | ITRF > bump with a time-driven amplitude                                                          | synthetic bowl, Jakarta                                               |
 
-**Glue the example carries** (each is something the engine could take):
-
-- `liveEdge.ts`: a built-in graph edge as the spec `smoothFrame` takes, with a slider float and a Jacobian by differences where the edge writes none;
-- `utmInverse.ts`: the unprojection (UTM grid to geographic) with its restricted-JS source, since the built-in runs the other way.
+**Glue the example carries:** none. Everything it builds on is public: the built-in transforms and `liveEdge` (a built-in edge as the spec `smoothFrame` takes, with a slider float), `verticalExaggeration` with its ceiling, the `…ToGeographic` unprojections for a node over projected content, `pickIn`, `pointIn`, `measureIn`, `accuracyAlong` and `graphOfFrames`. A tileset is placed under a node by binding its anchor to the node's frame (`TilesetOptions.anchor`); one authored in a projected CRS also leaves out its rigid root transform (`rootTransform: "none"`), so the nodes are its projection.

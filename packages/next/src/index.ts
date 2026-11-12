@@ -258,9 +258,22 @@ export type {
 // The live helpers for a smooth frame (plan §13.37; `smoothFrame` is in
 // `@cesium/next/frames`): geo transforms (`georeference`) and generic ones
 // (`transforms`). Each returns a spec to place over the content it deforms.
+// The built-ins below return a graph edge (`SmoothEdge`); `liveEdge` makes the
+// spec for `smoothFrame` of one, with its parameters changeable and a slider.
 export {
   verticalExaggeration,
   heightOffset,
+  flatten,
+  geographicToGeocentric,
+  geocentricToGeographic,
+  transverseMercator,
+  transverseMercatorToGeographic,
+  utm,
+  utmToGeographic,
+  lambertConformalConic,
+  lambertConformalConicToGeographic,
+  webMercator,
+  webMercatorToGeographic,
   type HeightOffset,
   type HeightOffsetOptions,
   type ReferenceSurface,
@@ -269,16 +282,52 @@ export {
 } from "./georeference/index.ts";
 export {
   scaleAbout,
+  scaleAboutEdge,
   blend,
   fromFunction,
+  scaleAlongAxes,
+  bump,
+  bend,
+  twist,
+  taper,
+  lattice,
+  radialDistortion,
+  corridorUnroll,
+  velocityModel,
+  liveEdge,
+  LiveEdge,
   type BlendedWarp,
   type ChangeableWarp,
+  type CorridorElement,
+  type CorridorOptions,
+  type Degree,
   type FromFunctionOptions,
   type FunctionWarp,
+  type LiveEdgeOptions,
   type PointFunction,
   type ScaleAbout,
   type ScaleAboutOptions,
 } from "./transforms/index.ts";
+// Queries on the transform graph's routes: a point in another node, the
+// metric between two, and the accuracy along a route (`pickIn` and
+// `graphOfFrames` are in `@cesium/next/frames`, over its frames).
+export {
+  accuracyAlong,
+  measureIn,
+  pointIn,
+  type AccuracyOptions,
+  type AccuracyPart,
+  type MeasureIn,
+  type MeasureInOptions,
+  type NodePoint,
+  type Params,
+  type PointIn,
+  type PointInOptions,
+  type RouteAccuracy,
+  type SigmaIn,
+  type SmoothEdge,
+  type TransformNode,
+} from "./transform/index.ts";
 export type { SmoothFrameSpec, Warp, WarpScale } from "./camera/route.ts";
 export {
   StepwiseSelection,

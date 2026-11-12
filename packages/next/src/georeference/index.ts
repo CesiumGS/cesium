@@ -6,7 +6,10 @@
 // `heightOffsetEdge`, `flatten`, …); `verticalExaggeration` and
 // `heightOffset` are the live helpers for a smooth frame (`smoothFrame`),
 // and `Georeference` (placing a design model on a body) lives with the
-// tiles it places.
+// tiles it places. The projections run geographic to projected (`utm`,
+// `transverseMercator`, `lambertConformalConic`, `webMercator`); the
+// `…ToGeographic` constructors run the other way, for a node authored in
+// the projected CRS, each with the unprojection's own IR source.
 export {
   verticalExaggerationEdge,
   verticalExaggerationDescriptor,
@@ -25,13 +28,23 @@ export { flatten, flattenDescriptor } from "./flatten.ts";
 export {
   transverseMercator,
   transverseMercatorDescriptor,
+  transverseMercatorToGeographic,
+  transverseMercatorToGeographicDescriptor,
   utm,
+  utmToGeographic,
 } from "./transverseMercator.ts";
 export {
   lambertConformalConic,
   lambertConformalConicDescriptor,
+  lambertConformalConicToGeographic,
+  lambertConformalConicToGeographicDescriptor,
 } from "./lambertConformalConic.ts";
-export { webMercator, webMercatorDescriptor } from "./webMercator.ts";
+export {
+  webMercator,
+  webMercatorDescriptor,
+  webMercatorToGeographic,
+  webMercatorToGeographicDescriptor,
+} from "./webMercator.ts";
 export {
   geocentricToGeographic,
   geocentricToGeographicDescriptor,

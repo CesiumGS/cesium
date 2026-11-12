@@ -137,8 +137,30 @@ export interface TilesetOptions extends BudgetedOptions {
    * `World.bodyAnchor`; default the Earth's, so tile transforms are
    * Earth-fixed as tileset.json writes them). Selection reads each view's
    * camera in this anchor (`View.anchorCamera`). Fixed at load.
+   *
+   * To place a tileset in a reference frame, give an anchor bound to that
+   * frame (`FramesResolver.bindAnchor`): tiles are then in the frame's own
+   * coordinates, and drawn through its route to the camera, warps included.
+   * A tileset whose root `transform` carries body-fixed (ECEF) metres, as
+   * most do, belongs in a frame whose local coordinates are body-fixed (an
+   * exaggeration over ITRF, say). A tileset authored in a projected CRS
+   * belongs in the frame of that CRS, with `rootTransform: "none"`.
    */
   anchor?: AnchorHandle;
+  /**
+   * What the root tile's `transform` means: `"declared"` (default) applies it,
+   * as 3D Tiles says. `"none"` leaves it out, for a tileset authored in the
+   * coordinates of a projected CRS whose root transform is only the rigid
+   * placement of its design coordinates at an anchor
+   * (`BENTLEY_engineering_frame`): its tiles are then in design
+   * coordinates, to be placed by a frame bound to `anchor` (the CRS's
+   * node, whose route to the camera is the projection itself, exact at any
+   * distance, where the rigid placement sags). `modelMatrix` still applies;
+   * the tileset's declared `placement` (`Tileset3D.placement`) describes the
+   * rigid transform it declares, not this drawing, and the frame's route is
+   * the way back to design coordinates (`pickIn`). 3D Tiles only.
+   */
+  rootTransform?: "declared" | "none";
 }
 
 export interface TilesetStats {

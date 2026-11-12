@@ -99,6 +99,14 @@ export {
   type SwitchChoice,
   type SwitchFrameOptions,
 } from "./smoothFrame.ts";
+// The frame graph for a panel or a report, and a pick read in any node of it.
+export { graphOfFrames, type FrameGraph } from "./graphOfFrames.ts";
+export {
+  pickIn,
+  type PickedIn,
+  type PickInOptions,
+  type PickTarget,
+} from "./pickIn.ts";
 export {
   framePoint,
   convertPoint,

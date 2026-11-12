@@ -18,12 +18,15 @@ import {
   heightOffsetDescriptor,
   lambertConformalConic,
   lambertConformalConicDescriptor,
+  lambertConformalConicToGeographicDescriptor,
   transverseMercator,
   transverseMercatorDescriptor,
+  transverseMercatorToGeographicDescriptor,
   utm,
   verticalExaggerationEdge,
   verticalExaggerationDescriptor,
   webMercatorDescriptor,
+  webMercatorToGeographicDescriptor,
 } from "../src/georeference/index.ts";
 import {
   jacobian as irJacobian,
@@ -108,6 +111,54 @@ const near = (a: number, b: number, tolerance: number, scale = 1): boolean =>
   Math.abs(a - b) <= tolerance * Math.max(scale, Math.abs(a), Math.abs(b));
 
 const lensParams = { k1: -0.2, k2: 0.05, k3: -0.01, p1: 0.001, p2: -0.002 };
+
+const utmParams = {
+  centralMeridian: 9,
+  scaleFactor: 0.9996,
+  falseEasting: 500000,
+  falseNorthing: 0,
+};
+const utm48sParams = {
+  centralMeridian: 105,
+  scaleFactor: 0.9996,
+  falseEasting: 500000,
+  falseNorthing: 1e7,
+};
+const lccParams = {
+  lon0: -96,
+  lat0: 23,
+  lat1: 33,
+  lat2: 45,
+  falseEasting: 1e6,
+  falseNorthing: -2e6,
+};
+const lccSouthParams = {
+  lon0: 20,
+  lat0: -30,
+  lat1: -35,
+  lat2: -35,
+  falseEasting: 0,
+  falseNorthing: 0,
+};
+
+/** Projected (easting, northing, height) of geographic points: the input a node over projected content takes. */
+const projectedAt =
+  (
+    projection: TransformDescriptor,
+    params: Params,
+    lon: [number, number],
+    lat: [number, number],
+    h: [number, number],
+  ): Sampler =>
+  (r) => {
+    const out = new Float64Array(3);
+    projection.forward(
+      [between(r, ...lon), between(r, ...lat), between(r, ...h)],
+      { ...defaultParams(projection), ...params },
+      out,
+    );
+    return [out[0]!, out[1]!, out[2]!];
+  };
 
 /** An alignment: line, left arc, line, right arc, line. */
 const alignment: CorridorOptions = {
@@ -401,6 +452,69 @@ cases.push(
     name: "geocentricToGeographic",
     descriptor: geocentricToGeographicDescriptor(WGS84),
     sample: geodetic([-179, 179], [-89, 89], [-500, 20000]),
+  },
+  {
+    name: "transverseMercatorToGeographic, UTM 32",
+    descriptor: transverseMercatorToGeographicDescriptor(WGS84),
+    params: utmParams,
+    sample: projectedAt(
+      transverseMercatorDescriptor(WGS84),
+      utmParams,
+      [4, 14],
+      [30, 60],
+      [-100, 1000],
+    ),
+    numericJacobian: true,
+  },
+  {
+    name: "transverseMercatorToGeographic, UTM 48S",
+    descriptor: transverseMercatorToGeographicDescriptor(WGS84),
+    params: utm48sParams,
+    sample: projectedAt(
+      transverseMercatorDescriptor(WGS84),
+      utm48sParams,
+      [102, 108],
+      [-12, -1],
+      [-100, 1000],
+    ),
+    numericJacobian: true,
+  },
+  {
+    name: "lambertConformalConicToGeographic, two parallels",
+    descriptor: lambertConformalConicToGeographicDescriptor(WGS84),
+    params: lccParams,
+    sample: projectedAt(
+      lambertConformalConicDescriptor(WGS84),
+      lccParams,
+      [-120, -75],
+      [25, 50],
+      [-100, 1000],
+    ),
+    numericJacobian: true,
+  },
+  {
+    name: "lambertConformalConicToGeographic, one parallel, southern",
+    descriptor: lambertConformalConicToGeographicDescriptor(WGS84),
+    params: lccSouthParams,
+    sample: projectedAt(
+      lambertConformalConicDescriptor(WGS84),
+      lccSouthParams,
+      [5, 35],
+      [-50, -20],
+      [-100, 1000],
+    ),
+    numericJacobian: true,
+  },
+  {
+    name: "webMercatorToGeographic",
+    descriptor: webMercatorToGeographicDescriptor(WGS84),
+    sample: projectedAt(
+      webMercatorDescriptor(WGS84),
+      {},
+      [-180, 180],
+      [-80, 80],
+      [-100, 1000],
+    ),
   },
 );
 

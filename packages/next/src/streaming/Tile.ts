@@ -640,9 +640,20 @@ export async function loadTilesetJson(
   parent: Tile | undefined,
   tree: TileTree,
   rootTransform?: Mat4,
+  ignoreRootTransform = false,
 ): Promise<{ root: Tile; geometricError: number; json: TileJson }> {
   const json = await fetchTilesetJson(url, headers);
-  return { ...treeFromJson(json, url, parent, tree, rootTransform), json };
+  return {
+    ...treeFromJson(
+      json,
+      url,
+      parent,
+      tree,
+      rootTransform,
+      ignoreRootTransform,
+    ),
+    json,
+  };
 }
 
 /** A tileset JSON, fetched and parsed. */
@@ -674,7 +685,8 @@ const READ_TILESET_EXTENSIONS = new Set([
 /**
  * The tile tree of a parsed tileset JSON, under `parent` (an external
  * tileset) or as a root, placed by `rootTransform` (a tileset's
- * `modelMatrix`). Costs milliseconds for large files, so streaming builds
+ * `modelMatrix`); `ignoreRootTransform` leaves out the root tile's own
+ * `transform` (`TilesetOptions.rootTransform: "none"`). Costs milliseconds for large files, so streaming builds
  * them within a per-frame budget.
  */
 export function treeFromJson(
@@ -683,6 +695,7 @@ export function treeFromJson(
   parent: Tile | undefined,
   tree: TileTree,
   rootTransform?: Mat4,
+  ignoreRootTransform = false,
 ): { root: Tile; geometricError: number } {
   const up = json.asset?.gltfUpAxis;
   if (up && !["X", "Y", "Z"].includes(up.toUpperCase())) {
@@ -694,9 +707,12 @@ export function treeFromJson(
       tree.warnings.add(`required extension ${name} is not supported`);
     }
   }
+  const { transform: declared, ...withoutTransform } = json.root;
+  const rootJson =
+    ignoreRootTransform && !parent && declared ? withoutTransform : json.root;
   const root = new Tile(
     parent,
-    json.root,
+    rootJson,
     url,
     parent ? parent.transform : (rootTransform ?? m4.mat4()),
     parent ? parent.refine : "REPLACE",

@@ -2,12 +2,14 @@ import {
   EARTH,
   Ellipsoid,
   cartographic,
+  verticalExaggeration,
   type AnchorHandle,
   type DrawHandle,
   type DrawOptions,
   type MeshData,
   type PlacementParameter,
   type Tileset3D,
+  type VerticalExaggeration,
   type View,
 } from "@cesium/next";
 import {
@@ -17,9 +19,7 @@ import {
   type Frame,
   type SmoothFrame,
 } from "@cesium/next/frames";
-import { verticalExaggerationEdge } from "../../src/georeference/index.ts";
 import type { SceneHost } from "./scene.ts";
-import { liveEdge, type LiveEdge } from "./liveEdge.ts";
 
 /** The name of the application's reference frame over the Earth's content. */
 export const EXAGGERATED = "Earth content (exaggerated)";
@@ -68,7 +68,7 @@ export interface DeformerOptions {
  */
 export interface Deformer {
   readonly frame: SmoothFrame;
-  readonly edge: LiveEdge;
+  readonly edge: VerticalExaggeration;
   readonly scale: PlacementParameter;
   readonly max: number;
   readonly ceiling: number;
@@ -93,17 +93,12 @@ export function createDeformer(
   const scale = world.createPlacementParameter(scaleOf(options.start), {
     range: [0, 1],
   });
-  const edge = liveEdge(
-    verticalExaggerationEdge({
-      factor: options.max,
-      ceiling: options.ceiling,
-      band: options.band ?? 0.2 * options.ceiling,
-    }),
-    {
-      description: `vertical exaggeration of height above the ellipsoid, lifted by a constant above ${Math.round(options.ceiling / 1000)} km`,
-      scale,
-    },
-  );
+  const edge = verticalExaggeration({
+    factor: options.max,
+    ceiling: options.ceiling,
+    band: options.band ?? 0.2 * options.ceiling,
+    scale,
+  });
   const frame = smoothFrame(
     options.name ?? EXAGGERATED,
     options.parent ?? host.itrf,
