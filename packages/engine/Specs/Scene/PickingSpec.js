@@ -418,10 +418,8 @@ describe(
           };
         }
 
-        async function addSingleTilePrimitive(options) {
-          const primitive = new VoxelPrimitive({
-            provider: createSingleTileProvider(options),
-          });
+        async function addVoxelPrimitive(provider) {
+          const primitive = new VoxelPrimitive({ provider });
           primitive.nearestSampling = true;
           scene.primitives.add(primitive);
           await pollToPromise(function () {
@@ -454,22 +452,14 @@ describe(
           });
         }
 
-        // The pick pass output for a given pick id, most significant byte first
-        function pickIdToBytes(pickId) {
-          return new Uint8Array([
-            pickId >>> 24,
-            (pickId >>> 16) & 0xff,
-            (pickId >>> 8) & 0xff,
-            pickId & 0xff,
-          ]);
-        }
-
         it("picks samples whose pick ids do not fit in 16 bits", async function () {
           if (!scene.context.webgl2) {
             return;
           }
           const dimensions = new Cartesian3(256, 256, 1);
-          const primitive = await addSingleTilePrimitive({ dimensions });
+          const primitive = await addVoxelPrimitive(
+            createSingleTileProvider({ dimensions }),
+          );
           const cells = [
             [0, 0],
             [255, 254], // 65279
@@ -497,10 +487,12 @@ describe(
           }
           // The last sample has index 2^24 - 1, so its pick id is 2^24
           const dimensions = new Cartesian3(256, 256, 256);
-          await addSingleTilePrimitive({
-            dimensions,
-            componentType: MetadataComponentType.UINT8,
-          });
+          await addVoxelPrimitive(
+            createSingleTileProvider({
+              dimensions,
+              componentType: MetadataComponentType.UINT8,
+            }),
+          );
           const topLayer = 255 * dimensions.x * dimensions.y;
           for (const [x, y] of [
             [0, 0],
@@ -522,11 +514,13 @@ describe(
           // No padding after along y, so the last row of cells has sample
           // indices of at least 65280
           const dimensions = new Cartesian3(254, 255, 1);
-          await addSingleTilePrimitive({
-            dimensions,
-            paddingBefore: new Cartesian3(1, 1, 0),
-            paddingAfter: new Cartesian3(1, 0, 0),
-          });
+          await addVoxelPrimitive(
+            createSingleTileProvider({
+              dimensions,
+              paddingBefore: new Cartesian3(1, 1, 0),
+              paddingAfter: new Cartesian3(1, 0, 0),
+            }),
+          );
           for (const [x, y] of [
             [0, 0],
             [0, 254], // 65281
@@ -549,22 +543,23 @@ describe(
           if (!scene.context.webgl2) {
             return;
           }
-          const dimensions = new Cartesian3(256, 256, 1);
-          const primitive = await addSingleTilePrimitive({ dimensions });
+          const primitive = await addVoxelPrimitive(
+            await Cesium3DTilesVoxelProvider.fromUrl(voxelTilesetUrl),
+          );
           const traversal = primitive._traversal;
           const keyframeNode = traversal.findKeyframeNode(0);
           const findKeyframeNode = spyOn(
             traversal,
             "findKeyframeNode",
           ).and.returnValue(keyframeNode);
-          // Tile 300 would not fit in this megatexture, but the decoding does
-          // not depend on it, and the pick id is above 2^24.
-          const tileIndex = 300;
-          const sampleIndex = 65535;
-          const pickId = tileIndex * 65536 + sampleIndex + 1;
+          // The tileset has a single 2 x 2 x 2 tile. Tile 2^21 does not exist,
+          // but the decoding does not depend on it, and the pick id,
+          // 2^21 * 8 + 7 + 1 = 2^24 + 8, is above 2^24.
+          const tileIndex = 2097152;
+          const sampleIndex = 7;
           spyOn(scene, "pick").and.returnValue({ primitive });
           spyOn(scene._picking, "pickVoxelCoordinate").and.returnValue(
-            pickIdToBytes(pickId),
+            new Uint8Array([1, 0, 0, 8]),
           );
 
           const voxelCell = scene.pickVoxel(canvasCenter);
@@ -577,9 +572,9 @@ describe(
           if (!scene.context.webgl2) {
             return;
           }
-          const primitive = await addSingleTilePrimitive({
-            dimensions: new Cartesian3(256, 256, 1),
-          });
+          const primitive = await addVoxelPrimitive(
+            await Cesium3DTilesVoxelProvider.fromUrl(voxelTilesetUrl),
+          );
           const findKeyframeNode = spyOn(
             primitive._traversal,
             "findKeyframeNode",
