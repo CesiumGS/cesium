@@ -334,6 +334,46 @@ it("proj and measure follow their rules", () => {
   expect(violations("proj")).toEqual([]);
   expect(violations("measure")).toEqual([]);
 });
+// The built-in transforms (plan section 13.37) are core modules with no geo
+// or engine knowledge beyond the transform graph and the spike's closed forms
+// (`scene/warpForms.ts`, which imports nothing): they stay loadable on a
+// worker and by the compiler, which imports them.
+it("the built-in transforms import only the transform core, math and the closed forms", () => {
+  const ownFiles = files.filter(
+    (f) => f.startsWith("src/transforms/") || f.startsWith("src/georeference/"),
+  );
+  expect(ownFiles.length).toBeGreaterThan(10);
+  const found = ownFiles.flatMap((file) =>
+    edgesOf(file)
+      .filter(
+        (edge) =>
+          !(
+            edge.to.startsWith("src/transform/") ||
+            edge.to.startsWith("src/transforms/") ||
+            edge.to.startsWith("src/georeference/") ||
+            edge.to.startsWith("src/math/") ||
+            edge.to === "src/scene/warpForms.ts"
+          ),
+      )
+      .map((edge) => `${file} → ${edge.to}`),
+  );
+  expect(found).toEqual([]);
+  expect(edgesOf("src/scene/warpForms.ts")).toEqual([]);
+});
+it("the transform core imports none of the built-ins", () => {
+  const found = files
+    .filter((f) => f.startsWith("src/transform/"))
+    .flatMap((file) =>
+      edgesOf(file)
+        .filter(
+          (edge) =>
+            edge.to.startsWith("src/transforms/") ||
+            edge.to.startsWith("src/georeference/"),
+        )
+        .map((edge) => `${file} → ${edge.to}`),
+    );
+  expect(found).toEqual([]);
+});
 it("the time controls reach time without frames", () =>
   expect(
     closure("widgets/timeControls.ts").filter((f) => layerOf(f) === "frames"),

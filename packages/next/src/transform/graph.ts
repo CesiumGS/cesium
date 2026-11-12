@@ -41,6 +41,13 @@ export interface SmoothSpec {
   id?: string;
   /** 1σ in metres, kept for accuracy propagation (a later task). */
   accuracy?: number;
+  /**
+   * The function as restricted-JS text, for the compiler's IR (`parseTransform`),
+   * where `forward` is not itself parseable (a built-in with a closed-form Jacobian).
+   */
+  source?: string;
+  /** The parameters the output is affine in (displacement ∝ parameter): uniforms in a GPU residual, with no per-frame work. */
+  separable?: readonly string[];
 }
 
 /** An edge placed by a constant matrix, or by one that depends on time. */
