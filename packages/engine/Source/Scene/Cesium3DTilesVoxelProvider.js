@@ -367,11 +367,14 @@ Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
  * @param {Resource|string} url The URL to a tileset JSON file
  * @returns {Promise<Cesium3DTilesVoxelProvider>} The created provider
  *
- * @exception {RuntimeException} Root must have content
- * @exception {RuntimeException} Root tile content must have 3DTILES_content_voxels extension
- * @exception {RuntimeException} Root tile must have implicit tiling
- * @exception {RuntimeException} Tileset must have a metadata schema
- * @exception {RuntimeException} Only box, region and 3DTILES_bounding_volume_cylinder are supported in Cesium3DTilesVoxelProvider
+ * @exception {RuntimeError} Root must have content
+ * @exception {RuntimeError} Root tile content must have 3DTILES_content_voxels extension
+ * @exception {RuntimeError} Root tile must have implicit tiling
+ * @exception {RuntimeError} Tileset must have a metadata schema
+ * @exception {RuntimeError} Tileset does not contain any voxel metadata properties.
+ * @exception {RuntimeError} Unsupported voxel metadata type
+ * @exception {RuntimeError} Unsupported voxel metadata component type
+ * @exception {RuntimeError} Only box, region and 3DTILES_bounding_volume_cylinder are supported in Cesium3DTilesVoxelProvider
  *
  * @example
  * try {
