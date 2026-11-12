@@ -207,6 +207,113 @@ function stackOrder() {
     );
 }
 
+/** The transform graph's folders, marked in the scene tier. */
+const GRAPH_FOLDERS = new Set(["transform", "transforms", "georeference"]);
+
+/** What each tier is, and what it may reach (the boundary test's rules). */
+const TIER_WORDS: Record<string, { title: string; is: string; rule: string }> =
+  {
+    content: {
+      title: "Content",
+      is: "Streaming, tiles, the globe's terrain and imagery, and the content worker's I/O: what loads and decodes data.",
+      rule: "Reaches the scene through DrawSink and TilesetHost and its types; never the renderer, the GPU layer, or a World, Engine or RenderContext, but for named exceptions.",
+    },
+    scene: {
+      title: "Scene",
+      is: "Engine, World and View, draw records, the transform graph (marked), b-reps, geometry queries, vectors, cameras and the public API.",
+      rule: "The middle: it holds the whole classes, drives content and records what the renderer draws.",
+    },
+    renderer: {
+      title: "Renderer",
+      is: "Passes, bundles, culling, the shaders and their linker, the atmosphere and lighting.",
+      rule: "Reaches content only where named (city lights, a globe's pick rays).",
+    },
+    gpu: {
+      title: "GPU",
+      is: "The device, buffers, textures and the environment's prefiltering.",
+      rule: "Imports nothing above it, but for the environment kernel's generated WGSL.",
+    },
+  };
+
+const TIER_ORDER = ["content", "scene", "renderer", "gpu"];
+
+/** The core's tiers, top to bottom, with the imports between neighbours. */
+export function CoreTiers({ deeper = true }: { deeper?: boolean } = {}) {
+  const core = data.layers.core;
+  const tiers = TIER_ORDER.map((id) => core.tiers.find((t) => t.id === id));
+  const between = (from: string, to: string) => {
+    const e = core.edges.find((x) => x.from === from && x.to === to);
+    return e ? e.value + e.typeOnly : 0;
+  };
+  return (
+    <div className="core-tiers" aria-label="Tiers inside the core">
+      {tiers.map((t, i) => {
+        if (!t) {
+          return null;
+        }
+        const words = TIER_WORDS[t.id];
+        const next = TIER_ORDER[i + 1];
+        return (
+          <div key={t.id} style={{ display: "contents" }}>
+            <section className="core-tier">
+              <div>
+                <h4>{words?.title ?? t.id}</h4>
+                <span className="tier-size">
+                  {count(t.lines)} lines, {t.files} files
+                </span>
+              </div>
+              <div>
+                <div className="tier-folders">
+                  {t.folders.map((f) => (
+                    <span
+                      key={f.folder}
+                      className={`tier-folder${GRAPH_FOLDERS.has(f.folder) ? " in-graph" : ""}`}
+                      title={`${f.files} files`}
+                    >
+                      <C>{f.folder}</C>
+                      <small>{count(f.lines)}</small>
+                    </span>
+                  ))}
+                </div>
+                {words ? (
+                  <p>
+                    {words.is} {words.rule}
+                  </p>
+                ) : null}
+              </div>
+            </section>
+            {next ? (
+              <span className="tier-arrow">
+                ↓ {between(t.id, next)} imports down, ↑ {between(next, t.id)} up
+              </span>
+            ) : null}
+          </div>
+        );
+      })}
+      <p className="stack-rule">
+        The boundary test assigns every core file a tier and fails on an import
+        a tier&apos;s rule refuses, but for {core.exceptions} named, explained
+        exceptions. The whole classes (
+        {core.wholes.map((w, i) => (
+          <span key={w}>
+            {i > 0 ? ", " : ""}
+            <C>{w.replace(/^src\/scene\//, "")}</C>
+          </span>
+        ))}
+        ) hold both sides, so content may not import them. The marked folders
+        are the transform graph
+        {deeper ? (
+          <>
+            ; the <a href="#/core">Inside the core</a> tab goes deeper.
+          </>
+        ) : (
+          "."
+        )}
+      </p>
+    </div>
+  );
+}
+
 /** The modules as a stack. */
 export function ModuleStack() {
   return (
@@ -218,23 +325,7 @@ export function ModuleStack() {
         ))}
       </div>
       <ModuleBlock id="core" wide>
-        <div
-          className="stack-inner"
-          aria-label="The transform graph inside the core"
-        >
-          <p className="stack-rule">
-            <strong>Inside the core, the transform graph:</strong>{" "}
-            <C>transform</C> (the graph, routes, the restricted-JS parser, IR,
-            autodiff and the route compiler) ← <C>transforms</C> (generic smooth
-            transforms: bend, twist, taper, lattice, lens, corridor, velocity
-            model) and <C>georeference</C> (exaggeration, height offset,
-            flatten, the built-in reprojections, <C>Georeference</C>). The
-            built-ins use only the transform core; the transform core uses none
-            of them. Details on the{" "}
-            <a href="#/transform-graph">Transform graph</a> and{" "}
-            <a href="#/georeferencing">Georeferencing</a> tabs.
-          </p>
-        </div>
+        <CoreTiers />
         <p className="stack-rule">
           Optional modules may use the core. The core never uses them: it
           reaches them only through its frame resolver and clock interfaces, so

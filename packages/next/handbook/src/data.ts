@@ -79,6 +79,17 @@ export interface HandbookData {
     framesCoreValues: string[];
     edges: LayerEdge[];
     dynamicImports: { from: string; to: string }[];
+    core: {
+      tiers: {
+        id: string;
+        files: number;
+        lines: number;
+        folders: { folder: string; files: number; lines: number }[];
+      }[];
+      edges: { from: string; to: string; value: number; typeOnly: number }[];
+      wholes: string[];
+      exceptions: number;
+    };
   };
   bundles: {
     globeOnly: {

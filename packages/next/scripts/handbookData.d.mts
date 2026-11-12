@@ -26,7 +26,19 @@ export function readLayers(root?: string): {
     fromLayer: string;
     toLayer: string;
   }[];
+  core: CoreTiers;
 };
+export interface CoreTiers {
+  tiers: {
+    id: string;
+    files: number;
+    lines: number;
+    folders: { folder: string; files: number; lines: number }[];
+  }[];
+  edges: { from: string; to: string; value: number; typeOnly: number }[];
+  wholes: string[];
+  exceptions: number;
+}
 export function parseCheckBundle(stdout: string): {
   main: { kb: number; gzipKb: number };
   eager: { name: string; kb: number }[];

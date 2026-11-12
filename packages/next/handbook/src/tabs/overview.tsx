@@ -285,7 +285,7 @@ export function Overview() {
           <strong>
             If you care about deformation, reprojection or exaggeration:
           </strong>{" "}
-          One core, many uses, then the Transform graph tab.
+          Inside the core, then the Transform graph tab.
         </p>
         <p>
           Each tab says how far it goes: accurate today, a sketch, or a stub.

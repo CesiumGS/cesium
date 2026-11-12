@@ -852,6 +852,59 @@ pre {
   margin: 0;
 }
 
+/* The core's tiers, inside the core block. */
+.core-tiers {
+  display: grid;
+  gap: var(--stratakit-space-100);
+  margin-block-start: var(--stratakit-space-300);
+}
+.core-tier {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: var(--stratakit-space-300);
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 6px;
+  background: var(--stratakit-color-bg-page-base, transparent);
+}
+.core-tier h4 {
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-md);
+}
+.core-tier .tier-size {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.section .core-tier p {
+  margin: var(--stratakit-space-100) 0 0;
+  max-inline-size: none;
+}
+.tier-folders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.tier-folder {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--stratakit-color-bg-neutral-base);
+  white-space: nowrap;
+}
+.tier-folder.in-graph {
+  background: var(--stratakit-color-bg-accent-muted);
+  outline: 1px solid var(--stratakit-color-border-accent-base);
+}
+.tier-folder small {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.tier-arrow {
+  justify-self: center;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+
 /* What an app loads. */
 .stories {
   display: grid;
@@ -2136,7 +2189,7 @@ span.api-source {
   }
 }
 
-/* One core, many uses: the vision as a stack of layers, and its matrix. */
+/* Inside the core, the vision: its mechanisms as a stack of layers, and its matrix. */
 .vision {
   display: grid;
   gap: var(--stratakit-space-200);

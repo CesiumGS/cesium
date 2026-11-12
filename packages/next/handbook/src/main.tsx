@@ -55,7 +55,7 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
     tabs: [
       { id: "overview", label: "Overview", view: Overview },
       { id: "architecture", label: "System architecture", view: Architecture },
-      { id: "unified", label: "One core, many uses", view: Unified },
+      { id: "core", label: "Inside the core", view: Unified },
       { id: "api", label: "Public API", view: Api },
       { id: "reference", label: "API reference", view: ApiReference },
     ],

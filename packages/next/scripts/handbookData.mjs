@@ -217,6 +217,9 @@ const TEST_DECLARATIONS = [
   "ALLOWED",
   "listTs",
   "edgesOfText",
+  "WHOLES",
+  "tierOf",
+  "TIER_EXCEPTIONS",
 ];
 
 /**
@@ -265,7 +268,7 @@ export function readBoundaryRules(root = packageRoot) {
     relative,
   };
   return runInNewContext(
-    `${outputText}\n({ layerOf, ALLOWED, FRAMES_CORE_VALUES: [...FRAMES_CORE_VALUES], listTs, edgesOfText })`,
+    `${outputText}\n({ layerOf, ALLOWED, FRAMES_CORE_VALUES: [...FRAMES_CORE_VALUES], listTs, edgesOfText, tierOf, WHOLES: [...WHOLES], TIER_EXCEPTIONS })`,
     scope,
   );
 }
@@ -319,6 +322,68 @@ export function readLayers(root = packageRoot) {
     framesCoreValues: rules.FRAMES_CORE_VALUES,
     edges: [...edges.values()],
     dynamicImports,
+    core: readCoreTiers(rules, files, root),
+  };
+}
+
+/**
+ * The core's tiers (the boundary test's `tierOf`): each with its folders,
+ * sizes, the imports between tiers today, the whole classes and the named
+ * exceptions.
+ */
+function readCoreTiers(rules, files, root) {
+  const tiers = new Map();
+  const edges = new Map();
+  const folderOf = (file) => {
+    const parts = file.split("/");
+    // src/scene/world/x.ts → scene/world; src/transform/x.ts → transform.
+    return parts.length > 3 && parts[1] === "scene"
+      ? `${parts[1]}/${parts[2]}`
+      : parts[1];
+  };
+  for (const file of files) {
+    const tier = rules.tierOf(file);
+    if (tier === undefined) {
+      continue;
+    }
+    const lines = readFileSync(join(root, file), "utf8").split("\n").length;
+    if (!tiers.has(tier)) {
+      tiers.set(tier, { id: tier, files: 0, lines: 0, folders: new Map() });
+    }
+    const t = tiers.get(tier);
+    t.files++;
+    t.lines += lines;
+    const folder = folderOf(file);
+    const f = t.folders.get(folder) ?? { folder, files: 0, lines: 0 };
+    f.files++;
+    f.lines += lines;
+    t.folders.set(folder, f);
+    for (const edge of rules.edgesOfText(
+      file,
+      readFileSync(join(root, file), "utf8"),
+    )) {
+      const to = rules.tierOf(edge.to);
+      if (to === undefined || to === tier) {
+        continue;
+      }
+      const key = `${tier}>${to}`;
+      const e = edges.get(key) ?? { from: tier, to, value: 0, typeOnly: 0 };
+      if (edge.typeOnly) {
+        e.typeOnly++;
+      } else {
+        e.value++;
+      }
+      edges.set(key, e);
+    }
+  }
+  return {
+    tiers: [...tiers.values()].map((t) => ({
+      ...t,
+      folders: [...t.folders.values()].sort((a, b) => b.lines - a.lines),
+    })),
+    edges: [...edges.values()],
+    wholes: rules.WHOLES,
+    exceptions: Object.keys(rules.TIER_EXCEPTIONS).length,
   };
 }
 
