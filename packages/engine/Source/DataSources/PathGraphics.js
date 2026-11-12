@@ -1,7 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import { DeveloperError, Event, Frozen, defined } from "@cesium/core";
 import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
@@ -126,7 +123,6 @@ Object.defineProperties(PathGraphics.prototype, {
    * Gets or sets the frame in which to visualize the path. Use another entity's id to visualize the path relative to that entity, or use the string values "FIXED" or "INERTIAL" to visualize the path in those reference frames.
    * @memberof PathGraphics.prototype
    * @type {Property|undefined}
-   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
    */
   relativeTo: createPropertyDescriptor("relativeTo"),
   materialMode: createPropertyDescriptor("materialMode"),

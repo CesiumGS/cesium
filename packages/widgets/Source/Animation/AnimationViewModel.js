@@ -1,13 +1,12 @@
 import {
-  addAllToArray,
-  binarySearch,
   ClockRange,
   ClockStep,
-  defined,
   DeveloperError,
   JulianDate,
-} from "@cesium/engine";
-
+  addAllToArray,
+  binarySearch,
+  defined,
+} from "@cesium/core";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
 import ToggleButtonViewModel from "../ToggleButtonViewModel.js";
@@ -248,7 +247,7 @@ function AnimationViewModel(clockViewModel) {
     const currentTime = clockViewModel.currentTime;
     const startTime = clockViewModel.startTime;
 
-    let result = false;
+    let result;
     if (clockRange === ClockRange.LOOP_STOP) {
       result =
         JulianDate.greaterThan(currentTime, startTime) ||

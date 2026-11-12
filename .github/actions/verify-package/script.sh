@@ -15,6 +15,8 @@ cp cesium*.tgz ../test
 cp Specs/test.*js ../test
 cd ../test
 
+npm install cesium-core*.tgz
+npm install cesium-gltf*.tgz
 npm install cesium-engine*.tgz
 npm install cesium-widgets*.tgz
 npm install cesium-1.*.tgz

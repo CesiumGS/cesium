@@ -1,9 +1,9 @@
 // @ts-check
 
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import { defined, destroyObject } from "@cesium/core";
 import TerrainQuantization from "../Core/TerrainQuantization.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
+import VectorCommon from "../Shaders/VectorCommon.js";
 import getClippingFunction from "./getClippingFunction.js";
 import SceneMode from "./SceneMode.js";
 
@@ -81,7 +81,9 @@ class GlobeSurfaceShader {
  * @property {boolean} [hasExaggeration]
  * @property {boolean} [showUndergroundColor]
  * @property {boolean} [translucent]
- * @ignore
+ * @property {boolean} [vectorAntialias]
+ * @property {boolean} [applyVectors] Whether to composite the tile's draped vectors in this pass.
+ * @private
  */
 
 /**
@@ -138,6 +140,14 @@ class GlobeSurfaceShaderSet {
     const hasExaggeration = options.hasExaggeration;
     const showUndergroundColor = options.showUndergroundColor;
     const translucent = options.translucent;
+    const vectorData = surfaceTile.vectorData;
+    const hasVectorLayer = options.applyVectors && vectorData?.show;
+    const hasVectorPolylines = hasVectorLayer && vectorData.hasPolylines;
+    const hasVectorPolygons = hasVectorLayer && vectorData.hasPolygons;
+    const vectorAntialias = hasVectorLayer && options.vectorAntialias;
+    const vectorWidthInMeters = hasVectorPolylines && vectorData.hasMeterWidths;
+    const vectorMixedWidthUnits =
+      vectorWidthInMeters && vectorData.hasPixelWidths;
 
     let quantization = 0;
     let quantizationDefine = "";
@@ -201,7 +211,13 @@ class GlobeSurfaceShaderSet {
         (+showUndergroundColor << 30) |
         (+translucent << 31)) >>>
         0) +
-      (applyDayNightAlpha ? 0x100000000 : 0);
+      (applyDayNightAlpha ? 0x100000000 : 0) +
+      (hasVectorLayer ? 0x200000000 : 0) +
+      (hasVectorPolylines ? 0x400000000 : 0) +
+      (hasVectorPolygons ? 0x800000000 : 0) +
+      (vectorAntialias ? 0x1000000000 : 0) +
+      (vectorWidthInMeters ? 0x2000000000 : 0) +
+      (vectorMixedWidthUnits ? 0x4000000000 : 0);
 
     let currentClippingShaderState = 0;
     // @ts-expect-error Missing types.
@@ -257,12 +273,6 @@ class GlobeSurfaceShaderSet {
         fs.sources.unshift(
           getClippingFunction(clippingPlanes, frameState.context),
         );
-      }
-
-      // Need to go before GlobeFS
-      if (currentClippingPolygonsShaderState !== 0) {
-        fs.sources.unshift(getPolygonClippingFunction(frameState.context));
-        vs.sources.unshift(getUnpackClippingFunction(frameState.context));
       }
 
       vs.defines.push(quantizationDefine);
@@ -360,20 +370,10 @@ class GlobeSurfaceShaderSet {
 
       if (enableClippingPolygons) {
         fs.defines.push("ENABLE_CLIPPING_POLYGONS");
-        vs.defines.push("ENABLE_CLIPPING_POLYGONS");
 
         if (clippingPolygons.inverse) {
           fs.defines.push("CLIPPING_INVERSE");
         }
-
-        fs.defines.push(
-          // @ts-expect-error Missing types.
-          `CLIPPING_POLYGON_REGIONS_LENGTH ${clippingPolygons.extentsCount}`,
-        );
-        vs.defines.push(
-          // @ts-expect-error Missing types.
-          `CLIPPING_POLYGON_REGIONS_LENGTH ${clippingPolygons.extentsCount}`,
-        );
       }
 
       if (colorCorrect) {
@@ -390,6 +390,30 @@ class GlobeSurfaceShaderSet {
 
       if (hasExaggeration) {
         vs.defines.push("EXAGGERATION");
+      }
+
+      if (hasVectorLayer) {
+        fs.defines.push("HAS_VECTOR_LAYER");
+        if (hasVectorPolylines) {
+          fs.defines.push("HAS_VECTOR_POLYLINES");
+        }
+        if (hasVectorPolygons) {
+          fs.defines.push("HAS_VECTOR_POLYGONS");
+        }
+        if (vectorAntialias) {
+          fs.defines.push("VECTOR_ANTIALIAS");
+        }
+        if (vectorWidthInMeters) {
+          fs.defines.push("VECTOR_WIDTH_IN_METERS");
+        }
+        if (vectorMixedWidthUnits) {
+          fs.defines.push("VECTOR_WIDTH_MIXED_UNITS");
+        }
+      }
+
+      // Polygon clipping builds on top of the same machinery vector rendering uses
+      if (hasVectorLayer || enableClippingPolygons) {
+        fs.sources.unshift(VectorCommon);
       }
 
       let computeDayColor =
@@ -526,41 +550,6 @@ function getPositionMode(sceneMode) {
   }
 
   return positionMode;
-}
-
-/**
- * @param {Context} context
- * @ignore
- */
-function getPolygonClippingFunction(context) {
-  // return a noop for webgl1
-  // @ts-expect-error Missing types.
-  if (!context.webgl2) {
-    return `void clipPolygons(highp sampler2D clippingDistance, int regionsLength, vec2 clippingPosition, int regionIndex) {
-    }`;
-  }
-
-  return `void clipPolygons(highp sampler2D clippingDistance, int regionsLength, vec2 clippingPosition, int regionIndex) {
-    czm_clipPolygons(clippingDistance, regionsLength, clippingPosition, regionIndex);
-  }`;
-}
-
-/**
- * @param {Context} context
- * @ignore
- */
-function getUnpackClippingFunction(context) {
-  // return a noop for webgl1
-  // @ts-expect-error Missing types.
-  if (!context.webgl2) {
-    return `vec4 unpackClippingExtents(highp sampler2D extentsTexture, int index) {
-      return vec4();
-    }`;
-  }
-
-  return `vec4 unpackClippingExtents(highp sampler2D extentsTexture, int index) {
-    return czm_unpackClippingExtents(extentsTexture, index);
-  }`;
 }
 
 /**

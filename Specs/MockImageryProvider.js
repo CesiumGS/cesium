@@ -1,11 +1,7 @@
+import { Event, RuntimeError } from "@cesium/core";
 import createTileKey from "./createTileKey.js";
 import runLater from "./runLater.js";
-import {
-  Event,
-  GeographicTilingScheme,
-  Resource,
-  RuntimeError,
-} from "@cesium/engine";
+import { GeographicTilingScheme, Resource } from "@cesium/engine";
 
 function MockImageryProvider() {
   this.tilingScheme = new GeographicTilingScheme();

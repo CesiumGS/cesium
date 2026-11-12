@@ -1,14 +1,20 @@
 // @ts-check
 
-import defined from "../Core/defined.js";
+import { assert, DeveloperError, Frozen, defined } from "@cesium/core";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
 import renderPolylines from "./renderBufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 
-/** @import { TypedArray } from "../Core/globalTypes.js"; */
-/** @import Matrix4 from "../Core/Matrix4.js"; */
+/** @import { BoundingSphere, ComponentDatatype, Matrix4, TypedArray } from "@cesium/core"; */
+/** @import BlendOption from "./BlendOption.js"; */
+/** @import HeightReference from "./HeightReference.js"; */
 /** @import FrameState from "./FrameState.js" */
+/** @import { BufferPrimitiveCollectionOptions } from "./BufferPrimitiveCollection.js"; */
+
+const { DirtyFlags } = BufferPrimitiveCollection;
+
+const polylineScratch = new BufferPolyline();
 
 /**
  * @typedef {object} BufferPolylineOptions
@@ -57,6 +63,56 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class BufferPolylineCollection extends BufferPrimitiveCollection {
+  /**
+   * @param {object} [options]
+   * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
+   * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
+   * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
+   * @param {boolean} [options.show=true]
+   * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
+   * @param {boolean} [options.positionNormalized=false]
+   * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
+   * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection.
+   * @param {boolean} [options.debugShowBoundingVolume=false]
+   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+   * @param {HeightReference} [options.heightReference=HeightReference.NONE]
+   * @param {"pixels"|"meters"} [options.widthUnits="pixels"] Unit of polyline widths in this collection:
+   *   <code>"pixels"</code> on the screen, or <code>"meters"</code> in world space. A clamped
+   *   {@link HeightReference} measures those meters on the ellipsoid surface, so elevation and terrain
+   *   slope stretch the drawn width. Widths in meters have an upper limit to reduce discontinuities
+   *   across tile seams.
+   */
+  constructor(options = Frozen.EMPTY_OBJECT) {
+    super(options);
+
+    const widthUnits = options.widthUnits ?? "pixels";
+
+    //>>includeStart('debug', pragmas.debug);
+    if (widthUnits !== "pixels" && widthUnits !== "meters") {
+      throw new DeveloperError(
+        'options.widthUnits must be "pixels" or "meters".',
+      );
+    }
+    //>>includeEnd('debug');
+
+    /**
+     * @type {"pixels"|"meters"}
+     * @private
+     */
+    this._widthUnits = widthUnits;
+  }
+
+  /**
+   * Unit of polyline widths in this collection: <code>"pixels"</code> on the screen, or
+   * <code>"meters"</code> in world space, measured on the ellipsoid surface when clamped.
+   *
+   * @type {"pixels"|"meters"}
+   * @readonly
+   */
+  get widthUnits() {
+    return this._widthUnits;
+  }
+
   _getCollectionClass() {
     return BufferPolylineCollection;
   }
@@ -73,17 +129,15 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
   // COLLECTION LIFECYCLE
 
   /**
-   * @param {BufferPolylineCollection} collection
+   * @param {BufferPrimitiveCollectionOptions} [options]
    * @returns {BufferPolylineCollection}
    * @override
    * @ignore
    */
-  static _cloneEmpty(collection) {
+  _cloneEmpty(options = Frozen.EMPTY_OBJECT) {
     return new BufferPolylineCollection({
-      primitiveCountMax: collection.primitiveCountMax,
-      vertexCountMax: collection.vertexCountMax,
-      positionDatatype: collection.positionDatatype,
-      positionNormalized: collection.positionNormalized,
+      widthUnits: this._widthUnits,
+      ...this._cloneEmptyBaseArgs(options),
     });
   }
 
@@ -126,14 +180,55 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
   update(frameState) {
     super.update(frameState);
 
-    const passes = frameState.passes;
-    if (this.show && (passes.render || passes.pick)) {
+    if (this._isRendered(frameState)) {
       this._renderContext = renderPolylines(
         this,
         frameState,
         this._renderContext,
       );
     }
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // ACCESSORS
+
+  /**
+   * Updates vertex positions over the specified range of primitives. For
+   * position-only updates to many primitives, `setPositions()` is more
+   * efficient than updating each primitive individually.
+   *
+   * Argument `positions` must contain the same total number of vertices as the
+   * target primitive range; vertices cannot be added/removed by this method.
+   *
+   * @param {TypedArray} positions
+   * @param {number} primitiveOffset
+   * @param {number} primitiveCount
+   */
+  setPositions(positions, primitiveOffset, primitiveCount) {
+    const polyline = polylineScratch;
+
+    this.get(primitiveOffset, polyline);
+    const vertexOffset = polyline.vertexOffset;
+
+    this.get(primitiveOffset + primitiveCount - 1, polyline);
+    const vertexCount =
+      polyline.vertexOffset + polyline.vertexCount - vertexOffset;
+
+    //>>includeStart('debug', pragmas.debug);
+    const srcConstructor = positions.constructor;
+    const dstConstructor = this._positionView.constructor;
+    assert(dstConstructor === srcConstructor, "Invalid array type");
+    assert(vertexCount * 3 === positions.length, "Invalid array length");
+    assert(
+      primitiveOffset + primitiveCount <= this._primitiveCount,
+      "Invalid primitive range",
+    );
+    //>>includeEnd('debug');
+
+    this._positionView.set(positions, vertexOffset * 3);
+
+    this._makeDirty(DirtyFlags.GEOMETRY, primitiveOffset, primitiveCount);
+    this._makeDirtyBoundingVolume();
   }
 }
 

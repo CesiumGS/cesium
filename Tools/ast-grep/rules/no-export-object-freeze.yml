@@ -7,7 +7,7 @@ message: >
 severity: error
 language: JavaScript
 files:
-  - packages/engine/Source/**/*.js
+  - packages/*/Source/**/*.js
 rule:
   pattern:
     selector: export_statement

@@ -1,6 +1,4 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
+import { Cartesian3, Check, defined } from "@cesium/core";
 
 /**
  * A Plane in Hessian Normal form to be used with {@link ClippingPlaneCollection}.

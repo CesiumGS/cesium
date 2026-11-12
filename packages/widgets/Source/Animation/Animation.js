@@ -1,10 +1,5 @@
-import {
-  Color,
-  defined,
-  destroyObject,
-  DeveloperError,
-  getElement,
-} from "@cesium/engine";
+import { Color, DeveloperError, defined, destroyObject } from "@cesium/core";
+import { getElement } from "@cesium/engine";
 import subscribeAndEvaluate from "../subscribeAndEvaluate.js";
 
 const svgNS = "http://www.w3.org/2000/svg";

@@ -1,4 +1,4 @@
-import { defined, DeveloperError } from "@cesium/engine";
+import { DeveloperError, defined } from "@cesium/core";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
 
@@ -70,7 +70,6 @@ Object.defineProperties(ProviderViewModel.prototype, {
   /**
    * Gets the Command that creates one or more providers which will be added to
    * the globe when this item is selected.
-   * @memberof ProviderViewModel.prototype
    * @memberof ProviderViewModel.prototype
    * @type {Command}
    * @readonly

@@ -1,7 +1,4 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import { Check, Frozen, RuntimeError, defined } from "@cesium/core";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 import { loadSpz } from "@spz-loader/core";
@@ -22,6 +19,41 @@ const BASE_FLOATS_PER_SPLAT = 14;
 // because spz-loader copies every decoded C++ vector into a JavaScript
 // TypedArray. 1.6 GB is used as a conservative pre-flight threshold.
 const WASM_MEMORY_LIMIT_BYTES = 1.6 * 1024 * 1024 * 1024;
+
+// glTF attribute semantics whose values are produced by SPZ decompression.
+// This must stay in sync with the SPZ routing in GltfVertexBufferLoader. Opacity
+// is not listed separately: it is carried in COLOR_0's alpha channel. Spherical
+// harmonics attributes use the SH_DEGREE_* naming and are matched in
+// isSpzSemantic below.
+const spzProvidedSemantics = new Set([
+  "POSITION",
+  "KHR_gaussian_splatting:SCALE",
+  "_SCALE",
+  "KHR_gaussian_splatting:ROTATION",
+  "_ROTATION",
+  "COLOR_0",
+]);
+
+/**
+ * Returns whether the given glTF attribute semantic is one whose values are
+ * provided by SPZ decompression (see the SPZ routing in
+ * {@link GltfVertexBufferLoader}). This is the single source of truth for the
+ * SPZ-provided semantic set so the loader gate and the vertex buffer routing
+ * cannot drift.
+ *
+ * @param {string} gltfSemantic The glTF attribute semantic, e.g. "POSITION".
+ * @returns {boolean} <code>true</code> if SPZ decoding provides this semantic.
+ * @private
+ */
+function isSpzSemantic(gltfSemantic) {
+  if (!defined(gltfSemantic)) {
+    return false;
+  }
+  return (
+    spzProvidedSemantics.has(gltfSemantic) ||
+    gltfSemantic.includes("SH_DEGREE_")
+  );
+}
 
 /**
  * Derives the point count and maximum spherical harmonics degree for an SPZ
@@ -267,7 +299,7 @@ async function loadResources(loader) {
   try {
     const bufferViewLoader = resourceCache.getBufferViewLoader({
       gltf: loader._gltf,
-      bufferViewId: 0,
+      bufferViewId: loader._spz.bufferView,
       gltfResource: loader._gltfResource,
       baseResource: loader._baseResource,
     });
@@ -320,5 +352,5 @@ async function processDecode(loader, decodePromise) {
   }
 }
 
-export { estimateSpzMemoryBytes, getSpzInfoFromGltf };
+export { estimateSpzMemoryBytes, getSpzInfoFromGltf, isSpzSemantic };
 export default GltfSpzLoader;

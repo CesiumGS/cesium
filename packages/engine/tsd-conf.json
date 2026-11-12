@@ -8,13 +8,15 @@
     ],
     "exclude": [
       "packages/engine/Source/ThirdParty",
-      "packages/engine/Source/Workers"
+      "packages/engine/Source/Workers",
+      "packages/engine/Source/Core/Deprecated"
     ],
     "includePattern": ".+\\.js(doc)?$",
     "excludePattern": "(^|\\/|\\\\)_"
   },
   "plugins": [
     "./Tools/jsdoc/cesiumTags",
+    "./Tools/jsdoc/ignoreLocalDoclets",
     "tsd-jsdoc/dist/plugin"
   ],
   "templates": {

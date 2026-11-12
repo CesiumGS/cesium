@@ -1,8 +1,5 @@
+import { Check, Color, defined, destroyObject } from "@cesium/core";
 import {
-  Check,
-  Color,
-  defined,
-  destroyObject,
   Cesium3DTileColorBlendMode,
   Cesium3DTileFeature,
   Cesium3DTilePass,

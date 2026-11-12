@@ -1,16 +1,18 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
-import CesiumMath from "../../Core/Math.js";
+import {
+  Cartesian3,
+  Cartesian4,
+  Math as CesiumMath,
+  Matrix4,
+  OrthographicFrustum,
+  RuntimeError,
+  clone,
+  defined,
+} from "@cesium/core";
 import Cesium3DTileRefine from "../Cesium3DTileRefine.js";
-import clone from "../../Core/clone.js";
-import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";
-import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
 import Pass from "../../Renderer/Pass.js";
 import PointCloudStylingStageVS from "../../Shaders/Model/PointCloudStylingStageVS.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 import SceneMode from "../SceneMode.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
@@ -79,6 +81,7 @@ PointCloudStylingPipelineStage.process = function (
 
   const hasBatchTable = !defined(propertyAttributes) && hasFeatureTable;
 
+  let hasShowStyle = false;
   if (defined(style) && !hasBatchTable) {
     const variableSubstitutionMap =
       getVariableSubstitutionMap(propertyAttributes);
@@ -87,6 +90,7 @@ PointCloudStylingPipelineStage.process = function (
       variableSubstitutionMap,
     );
     addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo);
+    hasShowStyle = defined(shaderFunctionInfo.showStyleFunction);
 
     const propertyNames = getPropertyNames(shaderFunctionInfo);
 
@@ -128,8 +132,13 @@ PointCloudStylingPipelineStage.process = function (
     shaderBuilder.addDefine(
       "HAS_POINT_CLOUD_BACK_FACE_CULLING",
       undefined,
-      ShaderDestination.VERTEX,
+      ShaderDestination.BOTH,
     );
+  }
+
+  // Hidden points are discarded in the fragment shader. See ModelVS.glsl
+  if (hasShowStyle || pointCloudShading.backFaceCulling) {
+    shaderBuilder.addVarying("float", "v_pointCloudShow");
   }
 
   let content;
@@ -332,7 +341,6 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
       ShaderDestination.BOTH,
     );
     shaderBuilder.addVertexLines(showStyleFunction);
-    shaderBuilder.addVarying("float", "v_pointCloudShow");
   }
 
   const pointSizeStyleFunction = shaderFunctionInfo.pointSizeStyleFunction;

@@ -12,10 +12,18 @@ import type {
 import {
   initializeToolRegistry,
   setToolRegistry,
-  toolRegistry,
+  ToolRegistry,
 } from "../ai/tools/toolRegistry";
 import { AIClientFactory } from "../ai/clients/AIClientFactory";
 import { buildGeminiFunctionCallPart } from "../ai/clients/geminiShared";
+import { trackEvent } from "../../analytics";
+
+export interface ApplyTrackingContext {
+  model: string;
+  provider: string;
+  /** Whether the active request is a machine-generated auto-fix retry */
+  autoFix: boolean;
+}
 
 type ContentBlock =
   | { type: "text"; text: string }
@@ -32,6 +40,12 @@ interface UseToolChainExecutionParams {
   codeContext: CodeContext;
   onApplyCode: (javascript?: string, html?: string, autoRun?: boolean) => void;
   onClearConsole?: () => void;
+  /**
+   * Returns the model/provider context of the request that produced the
+   * current tool chain, for analytics on applied code. Applies only happen
+   * while a request is active, so the caller sets this before each send.
+   */
+  getApplyTracking?: () => ApplyTrackingContext | null;
   addMessage: (msg: ChatMessageType) => void;
   updateMessage: (id: string, data: Partial<ChatMessageType>) => void;
   appendToolCallToMessage: (
@@ -49,6 +63,7 @@ export function useToolChainExecution({
   codeContext,
   onApplyCode,
   onClearConsole,
+  getApplyTracking,
   addMessage,
   updateMessage,
   appendToolCallToMessage,
@@ -66,20 +81,25 @@ export function useToolChainExecution({
     workingCodeRef.current = codeContext;
   }, [codeContext]);
 
-  const registryInitializedRef = useRef(false);
+  // One registry per hook instance: its getSourceCode closure must read THIS
+  // instance's workingCodeRef. Reusing a registry created by a previous mount
+  // (the old module-singleton guard) left apply_diff matching against the
+  // unmounted instance's frozen code snapshot after the panel was closed,
+  // edited, and reopened - so no search block the model wrote could ever match.
+  const registryRef = useRef<ToolRegistry | null>(null);
   useEffect(() => {
-    if (!registryInitializedRef.current && !toolRegistry) {
-      registryInitializedRef.current = true;
-      const registry = initializeToolRegistry((file: "javascript" | "html") => {
-        const ctx = workingCodeRef.current;
-        return file === "javascript" ? ctx.javascript : ctx.html;
-      });
-      setToolRegistry(registry);
-    }
+    const registry = initializeToolRegistry((file: "javascript" | "html") => {
+      const ctx = workingCodeRef.current;
+      return file === "javascript" ? ctx.javascript : ctx.html;
+    });
+    registryRef.current = registry;
+    // Keep the module-level binding pointed at the live registry for any
+    // external consumers.
+    setToolRegistry(registry);
   }, []);
 
   const getTools = useCallback((): ToolDefinition[] | undefined => {
-    return toolRegistry ? toolRegistry.getAllTools() : undefined;
+    return registryRef.current ? registryRef.current.getAllTools() : undefined;
   }, []);
 
   const getWorkingCode = useCallback((): CodeContext => {
@@ -88,7 +108,8 @@ export function useToolChainExecution({
 
   const executeToolCall = useCallback(
     async (toolCall: ToolCall): Promise<ToolResult> => {
-      if (toolCall.name !== "apply_diff" || !toolRegistry) {
+      const registry = registryRef.current;
+      if (toolCall.name !== "apply_diff" || !registry) {
         return {
           tool_call_id: toolCall.id,
           status: "error",
@@ -96,7 +117,7 @@ export function useToolChainExecution({
         };
       }
 
-      const result = await toolRegistry.executeTool(toolCall);
+      const result = await registry.executeTool(toolCall);
 
       // Update workingCodeRef so subsequent chained calls see the modified code.
       if (result.status === "success" && result.output) {
@@ -113,6 +134,16 @@ export function useToolChainExecution({
             } else {
               onApplyCode(undefined, modifiedCode, false);
             }
+            // A multi-step tool chain fires once per applied edit. Funnels
+            // comparing against "Copilot Message Sent" (which excludes
+            // auto-fix retries) should filter to source = chat.
+            const tracking = getApplyTracking?.() ?? null;
+            trackEvent("Copilot Code Applied", {
+              ...(tracking
+                ? { model: tracking.model, provider: tracking.provider }
+                : {}),
+              source: tracking?.autoFix ? "auto_fix" : "chat",
+            });
             onClearConsole?.();
           }
         } catch (e) {
@@ -132,7 +163,7 @@ export function useToolChainExecution({
 
       return result;
     },
-    [onApplyCode, onClearConsole],
+    [onApplyCode, onClearConsole, getApplyTracking],
   );
 
   const continueToolChain = useCallback(

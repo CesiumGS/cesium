@@ -1,4 +1,4 @@
-import CesiumMath from "../Core/Math.js";
+import { Math as CesiumMath } from "@cesium/core";
 
 /**
  * Defines different modes for blending between a target color and a primitive's source color.
@@ -18,6 +18,12 @@ const ColorBlendMode = {
 };
 
 /**
+ * Get the color blend value for a color blend mode, where 0 is a highlight and 1 is a full replacement.
+ *
+ * @param {ColorBlendMode} colorBlendMode The color blend mode.
+ * @param {number} colorBlendAmount The color blend amount, used when the mode is <code>MIX</code>.
+ * @returns {number} The color blend value.
+ *
  * @private
  */
 ColorBlendMode.getColorBlend = function (colorBlendMode, colorBlendAmount) {

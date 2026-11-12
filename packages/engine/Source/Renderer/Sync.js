@@ -1,9 +1,11 @@
-import Check from "../Core/Check.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Frozen from "../Core/Frozen.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  RuntimeError,
+  WebGLConstants,
+  destroyObject,
+} from "@cesium/core";
 
 /**
  * The WebGLSync interface is part of the WebGL 2 API and is used to synchronize activities between the GPU and the application.

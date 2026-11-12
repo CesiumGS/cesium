@@ -1,13 +1,10 @@
 // @ts-check
 
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-
+import { Frozen, PrimitiveType, defined } from "@cesium/core";
 /** @import Context from "./Context.js"; */
 /** @import Framebuffer from "./Framebuffer.js"; */
-/** @import Matrix4 from "../Core/Matrix4.js"; */
-/** @import OrientedBoundingBox from "../Core/OrientedBoundingBox.js"; */
+/** @import { Matrix4 } from "@cesium/core"; */
+/** @import { OrientedBoundingBox } from "@cesium/core"; */
 /** @import Pass from "./Pass.js"; */
 /** @import PassState from "./PassState.js"; */
 /** @import PickedMetadataInfo from "../Scene/PickedMetadataInfo.js"; */
@@ -47,6 +44,7 @@ const Flags = {
  * @property {Pass} [pass]
  * @property {object} [owner]
  * @property {string} [pickId]
+ * @property {string} [snapId]
  * @property {boolean} [pickMetadataAllowed=false]
  * @property {boolean} [cull=true]
  * @property {boolean} [occlude=true]
@@ -102,6 +100,7 @@ class DrawCommand {
     this._debugOverlappingFrustums = 0;
     /** @private */
     this._pickId = options.pickId;
+    this._snapId = options.snapId;
     /** @private */
     this._pickMetadataAllowed = options.pickMetadataAllowed === true;
     /**
@@ -533,6 +532,25 @@ class DrawCommand {
   }
 
   /**
+   * A GLSL string that will evaluate to the float snap payload written during
+   * a snapping pass (see {@link Scene#snap}). When <code>undefined</code>, the
+   * command does not render during a snapping pass.
+   *
+   * @type {string|undefined}
+   * @default undefined
+   */
+  get snapId() {
+    return this._snapId;
+  }
+
+  set snapId(value) {
+    if (this._snapId !== value) {
+      this._snapId = value;
+      this.dirty = true;
+    }
+  }
+
+  /**
    * Whether metadata picking is allowed.
    *
    * This is essentially only set to `true` for draw commands that are
@@ -628,6 +646,7 @@ class DrawCommand {
     result._owner = command._owner;
     result._debugOverlappingFrustums = command._debugOverlappingFrustums;
     result._pickId = command._pickId;
+    result._snapId = command._snapId;
     result._pickMetadataAllowed = command._pickMetadataAllowed;
     result._pickedMetadataInfo = command._pickedMetadataInfo;
     result._flags = command._flags;

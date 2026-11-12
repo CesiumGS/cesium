@@ -5,22 +5,24 @@ import {
   Color,
   ColorGeometryInstanceAttribute,
   ComponentDatatype,
-  defined,
-  EllipsoidTerrainProvider,
+  FixedFrameTransforms,
   GeometryInstance,
   HeadingPitchRange,
   HeadingPitchRoll,
-  HeightmapTerrainData,
   JulianDate,
   Math as CesiumMath,
   Matrix4,
   OrthographicOffCenterFrustum,
+  PixelDatatype,
   PixelFormat,
-  Transforms,
   WebGLConstants,
+  defined,
+} from "@cesium/core";
+import {
+  EllipsoidTerrainProvider,
+  HeightmapTerrainData,
   Context,
   Framebuffer,
-  PixelDatatype,
   Texture,
   Camera,
   DirectionalLight,
@@ -31,7 +33,6 @@ import {
   ShadowMap,
   ShadowMode,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -82,7 +83,7 @@ describe(
       sunShadowMap = scene.shadowMap;
 
       const boxOrigin = Cartesian3.fromRadians(longitude, latitude, boxHeight);
-      const boxTransform = Transforms.headingPitchRollToFixedFrame(
+      const boxTransform = FixedFrameTransforms.headingPitchRollToFixedFrame(
         boxOrigin,
         new HeadingPitchRoll(),
       );
@@ -97,13 +98,13 @@ describe(
         latitude,
         floorHeight,
       );
-      const floorTransform = Transforms.headingPitchRollToFixedFrame(
+      const floorTransform = FixedFrameTransforms.headingPitchRollToFixedFrame(
         floorOrigin,
         new HeadingPitchRoll(),
       );
 
       const roomOrigin = Cartesian3.fromRadians(longitude, latitude, height);
-      const roomTransform = Transforms.headingPitchRollToFixedFrame(
+      const roomTransform = FixedFrameTransforms.headingPitchRollToFixedFrame(
         roomOrigin,
         new HeadingPitchRoll(),
       );
@@ -900,10 +901,11 @@ describe(
       ];
 
       for (let i = 0; i < 6; ++i) {
-        boxPointLights.modelMatrix = Transforms.headingPitchRollToFixedFrame(
-          origins[i],
-          new HeadingPitchRoll(),
-        );
+        boxPointLights.modelMatrix =
+          FixedFrameTransforms.headingPitchRollToFixedFrame(
+            origins[i],
+            new HeadingPitchRoll(),
+          );
         scene.render(); // Model is pre-loaded, render one frame to update the model matrix
 
         scene.camera.lookAt(origins[i], offsets[i]);

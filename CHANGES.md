@@ -1,12 +1,189 @@
 # Change Log
 
-## 1.144 - 2026-08-03
+## 1.148 - 2026-12-01
 
-### @cesium/engine
+### cesium
+
+#### Breaking Changes :mega:
+
+- CesiumJS builds now target ES2022 instead of ES2020. Class fields are no longer rewritten into helper functions, so browsers must support ES2022 syntax such as public and private class fields. [#14023](https://github.com/CesiumGS/cesium/pull/14023)
+
+### @cesium/core
 
 #### Fixes :wrench:
 
+- Fixed `HermitePolynomialApproximation.interpolate` returning zero instead of the sample value for constant samples with zero derivatives. [#13934](https://github.com/CesiumGS/cesium/pull/13934)
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)
+- Added support for Custom Shaders in Gaussian Splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
+
+#### Fixes :wrench:
+
+- Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
+- Fixed the globe failing to render when clamped vector data is combined with many imagery layers. [#13922](https://github.com/CesiumGS/cesium/pull/13922)
+- Fixed the TypeScript types of `Camera.frustum`, which now accepts an `OrthographicOffCenterFrustum`, and of `TextureUniform`'s `typedArray`, which now accepts any typed array. [#14030](https://github.com/CesiumGS/cesium/pull/14030)
+- Fixed `WebGL: INVALID_VALUE: uniform3fv: no array` errors on drivers that list a uniform array as active but return no location for its elements. [#13980](https://github.com/CesiumGS/cesium/issues/13980)
+- `metadataClass` and `metadataStatistics` values are now only added to a model's shader for the properties a `CustomShader` reads through `fsInput.metadataClass` / `fsInput.metadataStatistics` (or the `vsInput` equivalents). Since these values are baked into the GLSL, tilesets whose tiles embed different class definitions or statistics previously compiled a separate shader program for each variant. [#14008](https://github.com/CesiumGS/cesium/pull/14008)
+- Fixed `Heap.insert` keeping a reference to the element it removes once the heap is full. Through `RequestScheduler`, a destroyed `Cesium3DTileset` could stay in memory with its whole tile tree. [#13894](https://github.com/CesiumGS/cesium/issues/13894)
+- Fixed the page hanging, or polylines being drawn with the wrong translucency, when the color of polylines with different depth fail materials changed between opaque and translucent. [#13952](https://github.com/CesiumGS/cesium/issues/13952)
+- Fixed slow loading of models and tilesets using the `CESIUM_primitive_outline` extension, and reduced the size of their outline vertex buffers. [#12084](https://github.com/CesiumGS/cesium/pull/12084)
+- Fixed `Scene.pickVoxel` returning the wrong cell for tiles with more than 65,280 samples, and returning a cell when no voxel sample was rendered at the pick position. [#13950](https://github.com/CesiumGS/cesium/issues/13950)
 - Improved error reporting for problems with the metadata schema in a voxel tileset. [#13559](https://github.com/CesiumGS/cesium/issues/13559)
+
+## 1.147 - 2026-11-02
+
+### @cesium/core
+
+#### Fixes :wrench:
+
+- Fixed undeclared dependencies `earcut`, `mersenne-twister`, and `urijs`. [#13955](https://github.com/CesiumGS/cesium/issues/13955)
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added support for glTF models with the [KHR_materials_emissive_strength extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength). [#13961](https://github.com/CesiumGS/cesium/pull/13961)
+- Added experimental `IonAssetElementService` for querying, filtering, aggregating, and navigating element metadata for Cesium ion assets backed by BIM/CAD databases, along with the extensible `ElementService` base class. [#13995](https://github.com/CesiumGS/cesium/pull/13995)
+
+#### Fixes :wrench:
+
+- Fixed `czm_passOverlay` and `czm_passCesium3DTileEdgesDirect` GLSL constants not matching `czm_pass` during their respective passes. Removed the unused `czm_passClassification` constant. [#13657](https://github.com/CesiumGS/cesium/issues/13657)
+- Fixed dynamic environment lighting on models and tilesets near or below the ellipsoid surface. [#13988](https://github.com/CesiumGS/cesium/pull/13988)
+- Fixed `pointCloudShading.backFaceCulling` not hiding back-facing points on some platforms. [#13989](https://github.com/CesiumGS/cesium/pull/13989)
+- Fixed `Cesium3DTileset` repeatedly loading and unloading the same tiles when they don't fit within `cacheBytes` plus `maximumCacheOverflowBytes`. [#13999](https://github.com/CesiumGS/cesium/pull/13999)
+
+### Announcements :loudspeaker:
+
+- The private glTF processing utilities previously located in `@cesium/engine/Source/Scene/GltfPipeline/` have moved to a new internal package, `@cesium/gltf`, which is now a dependency of `@cesium/engine`. These utilities were not, and are not part of the public API. Nonetheless, code that previously imported these files directly from `@cesium/engine` will need to be updated. [#13896](https://github.com/CesiumGS/cesium/pull/13896)
+
+## 1.146 - 2026-10-01
+
+### Major Announcements :loudspeaker:
+
+- CesiumJS now publishes a new package, `@cesium/core`, containing the math, geometry, time, and utility classes that were previously part of `@cesium/engine`. [#13805](https://github.com/CesiumGS/cesium/pull/13805)
+  - Code that imports from `cesium` does not need to change.
+  - Code that imports these classes from `@cesium/engine` should import them from `@cesium/core` instead, and add `@cesium/core` to its `package.json` dependencies. The `@cesium/engine` exports are deprecated and will be removed in 1.150. Example:
+
+```js
+// Before
+import { Cartesian3, Color } from "@cesium/engine";
+
+// After
+import { Cartesian3, Color } from "@cesium/core";
+```
+
+### @cesium/core
+
+#### Additions :tada:
+
+- Added the `@cesium/core` package. [#13805](https://github.com/CesiumGS/cesium/pull/13805)
+- Promoted `AttributeCompression`, `EllipsoidalOccluder`, `GeometryOffsetAttribute`, `InterpolationType`, `AttributeType`, `TimeConstants`, `VerticalExaggeration`, `PolygonPipeline`, and `PolylinePipeline` to the public API. [#13805](https://github.com/CesiumGS/cesium/pull/13805)
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added `vectorBlendOption` to `Cesium3DTileset`, for selecting opaque or translucent modes. `blendOption` can now also be changed after construction on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13764](https://github.com/CesiumGS/cesium/issues/13764)
+- Added `.pickObject` getter/setter to BufferPrimitive. [#13811](https://github.com/CesiumGS/cesium/pull/13811)
+- Added batch `.setPositions` method to BufferPrimitiveCollection, improving performance when animating vertex positions on a range of many point, line, or polygon primitives. [#13590](https://github.com/CesiumGS/cesium/issues/13590)
+
+#### Fixes :wrench:
+
+- Reduced load time and memory usage for implicitly-tiled tilesets. [#13808](https://github.com/CesiumGS/cesium/pull/13808)
+- Reduced load time, memory usage, and rendering overhead for models and 3D Tiles using `EXT_mesh_primitive_edge_visibility` in `EdgeDisplayMode.SURFACES_ONLY` by deferring edge geometry construction until edges are displayed or needed for snapping.
+- Fixed a GPU memory leak where the edge vertex array created for `EXT_mesh_primitive_edge_visibility` rendering was never destroyed when draw commands were rebuilt or the model was destroyed. [#13721](https://github.com/CesiumGS/cesium/pull/13721)
+- Fixed `Cesium3DTileset` never enabling the scene edge framebuffer in `EdgeDisplayMode.SURFACES_AND_EDGES`, which rendered interior edges as fainter than intended. [#13765](https://github.com/CesiumGS/cesium/issues/13765)
+- Changed the typing of `PrimitiveCollection.add` to return the added primitive as the same type instead of `any`. [#13742](https://github.com/CesiumGS/cesium/issues/13742)
+- Fixed typescript error when importing `knockout` from `cesium`. [#12423](https://github.com/CesiumGS/cesium/issues/12423)
+- Fixed draped polylines rendering at the wrong width at large widths, in both `"pixels"` and `"meters"` width units. [#13737](https://github.com/CesiumGS/cesium/pull/13737)
+- Fixed geometry clipped by a `ClippingPolygonCollection` still casting shadows. The clipping uv origin is now read from the eye of the pass being rendered, so it matches the delta computed in the vertex shader during shadow casts. [#13768](https://github.com/CesiumGS/cesium/issues/13768)
+- Fixed terrain-clamped billboards and labels being mispositioned and not properly rendering in 2D/Columbus view. [#5042](https://github.com/CesiumGS/cesium/issues/5042) [#12531](https://github.com/CesiumGS/cesium/issues/12531)
+
+#### Deprecated :hourglass_flowing_sand:
+
+- `Matrix4.fromCamera` has been deprecated and will be removed in 1.151. Use `Camera.prototype.viewMatrix` or `Matrix4.computeView` instead.
+- The math, geometry, time, and utility classes, enums, and functions listed below have moved from `@cesium/engine` to `@cesium/core`. Importing them from `@cesium/engine` is deprecated and will be removed in 1.150. Using a deprecated name logs a one-time console warning. [#13805](https://github.com/CesiumGS/cesium/pull/13805)
+
+  <details>
+  <summary>Moved to @cesium/core</summary>
+
+  `ArcType`, `AssociativeArray`, `AxisAlignedBoundingBox`, `BoundingRectangle`, `BoundingSphere`, `BoxGeometry`, `BoxOutlineGeometry`, `Cartesian2`, `Cartesian3`, `Cartesian4`, `Cartographic`, `CatmullRomSpline`, `Check`, `CircleGeometry`, `CircleOutlineGeometry`, `Clock`, `ClockRange`, `ClockStep`, `Color`, `ColorGeometryInstanceAttribute`, `ComponentDatatype`, `ConstantSpline`, `CoplanarPolygonGeometry`, `CoplanarPolygonOutlineGeometry`, `CornerType`, `CorridorGeometry`, `CorridorOutlineGeometry`, `CubicRealPolynomial`, `CullingVolume`, `CylinderGeometry`, `CylinderOutlineGeometry`, `DeveloperError`, `DistanceDisplayCondition`, `DistanceDisplayConditionGeometryInstanceAttribute`, `EllipseGeometry`, `EllipseOutlineGeometry`, `Ellipsoid`, `EllipsoidGeodesic`, `EllipsoidGeometry`, `EllipsoidOutlineGeometry`, `EllipsoidRhumbLine`, `EllipsoidTangentPlane`, `Event`, `EventHelper`, `ExtrapolationType`, `Frozen`, `GeographicProjection`, `Geometry`, `GeometryAttribute`, `GeometryAttributes`, `GeometryFactory`, `GeometryInstance`, `GeometryInstanceAttribute`, `GeometryPipeline`, `GregorianDate`, `HeadingPitchRange`, `HeadingPitchRoll`, `HermitePolynomialApproximation`, `HermiteSpline`, `IndexDatatype`, `Intersect`, `IntersectionTests`, `Intersections2D`, `Interval`, `Iso8601`, `JulianDate`, `LagrangePolynomialApproximation`, `LeapSecond`, `LinearApproximation`, `LinearSpline`, `MapProjection`, `Math`, `Matrix2`, `Matrix3`, `Matrix4`, `MorphWeightSpline`, `NearFarScalar`, `Occluder`, `OrientedBoundingBox`, `OrthographicFrustum`, `OrthographicOffCenterFrustum`, `Packable`, `PackableForInterpolation`, `PerspectiveFrustum`, `PerspectiveOffCenterFrustum`, `PixelDatatype`, `PixelFormat`, `Plane`, `PlaneGeometry`, `PlaneOutlineGeometry`, `PolygonGeometry`, `PolygonHierarchy`, `PolygonOutlineGeometry`, `PolylineGeometry`, `PolylineVolumeGeometry`, `PolylineVolumeOutlineGeometry`, `PrimitiveType`, `QuadraticRealPolynomial`, `QuarticRealPolynomial`, `Quaternion`, `QuaternionSpline`, `Queue`, `Ray`, `Rectangle`, `RectangleGeometry`, `RectangleOutlineGeometry`, `ReferenceFrame`, `RuntimeError`, `ShowGeometryInstanceAttribute`, `SimplePolylineGeometry`, `SphereGeometry`, `SphereOutlineGeometry`, `Spherical`, `Spline`, `SteppedSpline`, `Stereographic`, `TimeInterval`, `TimeIntervalCollection`, `TimeStandard`, `TrackingReferenceFrame`, `TranslationRotationScale`, `TridiagonalSystemSolver`, `VertexFormat`, `Visibility`, `WallGeometry`, `WallOutlineGeometry`, `WebGLConstants`, `WebMercatorProjection`, `WindingOrder`, `barycentricCoordinates`, `binarySearch`, `clone`, `combine`, `createGuid`, `defined`, `destroyObject`, `formatError`, `getAbsoluteUri`, `getBaseUri`, `getExtensionFromUri`, `getFilenameFromUri`, `getTimestamp`, `isLeapYear`, `mergeSort`, `objectToQuery`, `pointInsideTriangle`, `queryToObject`, `srgbToLinear`, `subdivideArray`
+
+  </details>
+
+## 1.145 - 2026-09-02
+
+### @cesium/engine
+
+#### Breaking Changes :mega:
+
+- The positions of `ClippingPolygons` in a `ClippingPolygonCollection` are now considered immutable (via `Object.freeze`) and will throw if changed. Instead of changing positions directly, remove and re-add a new polygon. This breaking change allows us to remove per-frame, per-polygon-vertex checks that ultimately offer vast performance improvements. [#13665](https://github.com/CesiumGS/cesium/pull/13665)
+
+#### Additions :tada:
+
+- Added support for draping clamped vector tile polygons and polylines onto 3D Tiles, with a new `heightReference` option and matching read-only property on `BufferPrimitiveCollection`, inherited by `BufferPolygonCollection` and `BufferPolylineCollection`. [#13653](https://github.com/CesiumGS/cesium/pull/13653)
+- `ClippingPolygons` now use an algorithm, based on the techniques used for vector tiles, that vastly improves quality across distance scales. Warm-up cost is also modestly decreased. [#13654](https://github.com/CesiumGS/cesium/pull/13654)
+- `ClippingPolygons` now have support for specifying holes (aka islands) within each polygon. This works in inverse clipping workflows as well. [#13660](https://github.com/CesiumGS/cesium/pull/13660)
+- Added a `heightReference` option to `MVTDataProvider.fromUrl`, draping Mapbox Vector Tiles content onto terrain, 3D Tiles, or both. [#13727](https://github.com/CesiumGS/cesium/pull/13727)
+- Added a `heightReference` option to GeoJsonPrimitive constructor, draping GeoJSON content onto terrain, 3D Tiles, or both. [#13711](https://github.com/CesiumGS/cesium/pull/13711)
+- Added `surfacePosition` to the result of the experimental `Scene.snap` API: the nearest on-surface point of the snapped object, useful as a seed for server-side snap refinement of edge snaps. [#13699](https://github.com/CesiumGS/cesium/pull/13699)
+- Added experimental `IonSnapService` for server-side snap-to-geometry against Cesium ion assets backed by a BIM/CAD Database model, and the `SnapService` interface it implements. [#13682](https://github.com/CesiumGS/cesium/pull/13682)
+- Added `BufferPolylineCollection` option `widthUnits`, so a draped polyline's width can be measured in meters on the ground instead of screen pixels. [#13703](https://github.com/CesiumGS/cesium/pull/13703)
+- Added two sandcastles: a 3D native vector data showcase and a large river dataset with semantic-based LODs.
+
+#### Fixes :wrench:
+
+- Fixed vertical exaggeration for models and tilesets with existing scale factors, so they now exaggerate proportionally to the rest of the scene. [#13518](https://github.com/CesiumGS/cesium/pull/13518)
+- Changed 3D tileset traversal to have more robust replacement refinement behavior for vector data tilesets. [#13686](https://github.com/CesiumGS/cesium/issues/13686)
+- Fixed draped vector polylines rendering at twice their specified width, and antialiased their edges. Antialiasing can be turned off with `scene.vectorProvider.antialias` if you prefer the extra performance. [#13675](https://github.com/CesiumGS/cesium/pull/13675)
+- Updated the minimum version of `dompurify` dependency to `3.4.5`, addressing security vulnerability tracked in [CVE-2026-49458](https://github.com/advisories/GHSA-hpcv-96wg-7vj8). [#13646](https://github.com/CesiumGS/cesium/issues/13646)
+- Fixed the "Data attribution" credit link and the credit lightbox not being usable with a keyboard. Both the link and the lightbox close button are now focusable and can be activated with `Enter` or `Space`, the lightbox is exposed as a modal dialog and can be dismissed with `Escape`, and focus is moved into the lightbox when it opens and restored when it closes. [#13670](https://github.com/CesiumGS/cesium/issues/13670)
+- Fixed feature ID textures ignoring the wrap mode declared by the glTF sampler. Forcing nearest filtering no longer replaces `wrapS` and `wrapT` with `CLAMP_TO_EDGE`. [#11574](https://github.com/CesiumGS/cesium/issues/11574)
+
+#### Deprecated :hourglass_flowing_sand:
+
+- Deprecates the recently added `quality` field on `ClippingPolygonCollection`. The new implementation of `ClippingPolygons` offers the highest possibly quality by default. The `debugShowDistanceTexture` field is also deprecated, as the new implementation no longer uses a distance texture. The `destroy` and `isDestroyed` methods have been deprecated, since the class no longer owns its own resources which require release or destruction. `ClippingPolygon.computeRectangle` has been deprecated in favor of a class-level `rectangle` property.
+
+### @cesium/sandcastle
+
+#### Fixes :wrench:
+
+- Updated the minimum version of `dompurify` dependency to `3.4.5`, addressing security vulnerability tracked in [CVE-2026-49458](https://github.com/advisories/GHSA-hpcv-96wg-7vj8). [#13646](https://github.com/CesiumGS/cesium/issues/13646)
+
+## 1.144 - 2026-08-01
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added support for draping clamped vector tile polygons and polylines onto terrain, with screen-space-constant line width and per-feature styling via `Cesium3DTileStyle`. [#13577](https://github.com/CesiumGS/cesium/pull/13577) [#13627](https://github.com/CesiumGS/cesium/pull/13627)
+- Added support for the [`BENTLEY_materials_planar_fill`](https://github.com/CesiumGS/glTF/tree/vendor-extensions/extensions/2.0/Vendor/BENTLEY_materials_planar_fill) glTF extension, enabling CAD-style planar polygon fill rendering with proper depth sorting and configurable fill behavior including background color masking and coplanar geometry ordering. Note: The `wireframeFill` property is currently a no-op. [#13178](https://github.com/CesiumGS/cesium/pull/13178)
+- Added a minimal set of alternative camera controllers scoped for an asset inspection use case: `HybridScreenSpacePanCameraController`, `ScreenSpaceElevatorCameraController`, `ScreenSpaceMapCameraController` and `ScreenSpaceTiltOrbitCameraController`. [Try the controllers in Sandcastle](https://sandcastle.cesium.com/?id=camera-controllers). [#13604](https://github.com/CesiumGS/cesium/pull/13604).
+- Added a composable `Controller` framework, which can be added to a scene with either `Viewer.addController` or `Scene.controllerHost`. [#13604](https://github.com/CesiumGS/cesium/pull/13604).
+- Enabled picking of metadata from a `WebMapTileServiceImageryProvider` when draped on 3D Tiles [#13575](https://github.com/CesiumGS/cesium/pull/13575)
+- Added `Scene.snap`, an experimental snap-to-geometry picking API. It returns the best hit in a screen-space region around a window position (preferring edges (see [`EXT_mesh_primitive_edge_visibility`](https://github.com/KhronosGroup/glTF/pull/2479)) over surfaces) along with its world-space position. [#13531](https://github.com/CesiumGS/cesium/pull/13531)
+- Added support for the [`KHR_mesh_primitive_restart`](https://github.com/KhronosGroup/glTF/pull/2569) glTF extension. [#13634](https://github.com/CesiumGS/cesium/pull/13634)
+- Added `Texture.defaultColor` static property to allow customizing the default placeholder texture color, to avoid white flashes when a new Material is constructed. [#13597](https://github.com/CesiumGS/cesium/pull/13597)
+
+#### Fixes :wrench:
+
+- Significantly reduced JavaScript heap usage when loading models and tilesets using the `EXT_mesh_primitive_edge_visibility` glTF extension. Edge visibility accessor data is now loaded as typed arrays instead of plain JavaScript arrays. [#13643](https://github.com/CesiumGS/cesium/pull/13643)
+- Fixed geometry clipped by `ClippingPlaneCollection` or `ClippingPolygonCollection` still casting shadows. [#6261](https://github.com/CesiumGS/cesium/issues/6261)
+- Fixed a one-frame black flash caused by `Framebuffer` construction leaving the context's framebuffer binding cache stale, making subsequent draws render to the wrong framebuffer for the remainder of the frame. [#13662](https://github.com/CesiumGS/cesium/pull/13662)
+- Fixed a shader bug causing a `PolylineGlowMaterial` rendering issue on Ubuntu. [#13632](https://github.com/CesiumGS/cesium/issues/13632)
+- Fixed a bug in clipping polygons on terrain causing a crash when all polygons are removed from a collection. [#12414](https://github.com/CesiumGS/cesium/issues/12414)
+- Fixed SPZ-compressed Gaussian splat loading to read the compressed payload from the buffer view declared by `KHR_gaussian_splatting_compression_spz_2`, preventing incorrect cache reuse for assets with SPZ payloads in different buffer views. [#12847](https://github.com/CesiumGS/cesium/issues/12847)
+- Fixed a fatal error when a post-process stage selects more features than the maximum texture size supports. The selected-feature texture is now clamped to the maximum supported width and a one-time warning is logged. [#13656](https://github.com/CesiumGS/cesium/pull/13656)
+- Fixed `CzmlDataSource` not inferring the `PathMode` type for custom properties defined with a `pathMode` value. [#13607](https://github.com/CesiumGS/cesium/pull/13607)
+- Auto-normalize non-unit `alignedAxis` in `BillboardCollection` instead of silently ignoring it. [#6596](https://github.com/CesiumGS/cesium/issues/6596)
+- Fixed a bug in `Transforms.computeMoonFixedToIcrfMatrix` which caused the `result` parameter to not be used. [#13463](https://github.com/CesiumGS/cesium/pull/13463)
+- Fixed a bug in `GeocoderViewModel` where a duplicate `destroy` method silently overwrote the first, preventing `_suggestionSubscription` from being disposed on destroy. [#13580](https://github.com/CesiumGS/cesium/pull/13580)
+- Fixed incorrect JSDoc description for `offCenterFrustum` in `OrthographicFrustum` and `PerspectiveFrustum`, which was copied from `projectionMatrix` and incorrectly described the property as returning a projection matrix. [#13570](https://github.com/CesiumGS/cesium/pull/13570)
+- Fixed inconsistent typescript types between `InterpolationAlgorithm` and its implementations. [#13644](https://github.com/CesiumGS/cesium/issues/13644)
 
 ## 1.143 - 2026-07-01
 
@@ -19,10 +196,11 @@
 
 #### Fixes :wrench:
 
-- Fixed a bug that caused crashes when using billboards in environments that replace `Promise` with custom promise implementations. [#13475](https://github.com/CesiumGS/cesium/pull/13475)
-- Fixed a bug where callbacks registered with `Scene.updateHeight` would sometimes receive positions computed for other tiles, causing clamped entities to show incorrect heights. [#12602](https://github.com/CesiumGS/cesium/issues/12602)
-- Invalid glTF sampler wrap modes now fall back to `TextureWrap.REPEAT` instead of thowing a `DeveloperError` in development builds. [#13562](https://github.com/CesiumGS/cesium/pull/13562)
-- Fixed a bug in `BufferPointCollection` where `outlineColor` was bleeding into the visible area when set to `0px`. [#13543](https://github.com/CesiumGS/cesium/pull/13543)
+- Fixed invalid glTF sampler wrap modes causing a `DeveloperError` to be thrown instead of falling back to `TextureWrap.REPEAT`. [#13562](https://github.com/CesiumGS/cesium/pull/13562)
+- Fixed missing `InterpolationAlgorithm` documentation page that was returning a 404. [#13550](https://github.com/CesiumGS/cesium/issues/13550)
+- Fixed `EdgeVisibilityRendering` release test failures. [#13545](https://github.com/CesiumGS/cesium/pull/13545)
+- Fix for `BufferPointCollection` preventing outlineColor from bleeding slightly into the visible area when outlineWidth=0px. [#13543](https://github.com/CesiumGS/cesium/pull/13543)
+- Fixed a bug where callbacks registered with `Scene.updateHeight` could receive positions computed for other tiles, causing clamped entities to show incorrect heights. [#12602](https://github.com/CesiumGS/cesium/issues/12602)
 
 ## 1.142 - 2026-06-01
 

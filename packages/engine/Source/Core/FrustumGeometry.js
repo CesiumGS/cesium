@@ -1,19 +1,21 @@
-import BoundingSphere from "./BoundingSphere.js";
-import Cartesian3 from "./Cartesian3.js";
-import Cartesian4 from "./Cartesian4.js";
-import Check from "./Check.js";
-import ComponentDatatype from "./ComponentDatatype.js";
-import defined from "./defined.js";
-import Geometry from "./Geometry.js";
-import GeometryAttribute from "./GeometryAttribute.js";
-import GeometryAttributes from "./GeometryAttributes.js";
-import Matrix3 from "./Matrix3.js";
-import Matrix4 from "./Matrix4.js";
-import OrthographicFrustum from "./OrthographicFrustum.js";
-import PerspectiveFrustum from "./PerspectiveFrustum.js";
-import PrimitiveType from "./PrimitiveType.js";
-import Quaternion from "./Quaternion.js";
-import VertexFormat from "./VertexFormat.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartesian4,
+  Check,
+  ComponentDatatype,
+  Geometry,
+  GeometryAttribute,
+  GeometryAttributes,
+  Matrix3,
+  Matrix4,
+  OrthographicFrustum,
+  PerspectiveFrustum,
+  PrimitiveType,
+  Quaternion,
+  VertexFormat,
+  defined,
+} from "@cesium/core";
 
 const PERSPECTIVE = 0;
 const ORTHOGRAPHIC = 1;

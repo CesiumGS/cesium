@@ -1,12 +1,14 @@
-import AttributeCompression from "./AttributeCompression.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
-import ComponentDatatype from "./ComponentDatatype.js";
-import defined from "./defined.js";
-import CesiumMath from "./Math.js";
-import Matrix4 from "./Matrix4.js";
-import VerticalExaggeration from "./VerticalExaggeration.js";
+import {
+  AttributeCompression,
+  Cartesian2,
+  Cartesian3,
+  Check,
+  ComponentDatatype,
+  Math as CesiumMath,
+  Matrix4,
+  VerticalExaggeration,
+  defined,
+} from "@cesium/core";
 import TerrainQuantization from "./TerrainQuantization.js";
 
 const cartesian3Scratch = new Cartesian3();
@@ -422,7 +424,7 @@ TerrainEncoding.prototype.decodePosition = function (buffer, index, result) {
 /**
  * Decode a position from the vertex buffer and apply vertical exaggeration.
  *
- * @param {Float32Array} buffer
+ * @param {Float32Array|Float64Array} buffer
  * @param {number} index
  * @param {Cartesian3} [result]
  * @returns {Cartesian3} The exaggerated position.
@@ -587,7 +589,7 @@ TerrainEncoding.prototype.decodeNormal = function (buffer, index, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  const bufferIndex = (index = index * this.stride + this._offsetVertexNormal);
+  const bufferIndex = index * this.stride + this._offsetVertexNormal;
   return AttributeCompression.octDecodeFloat(buffer[bufferIndex], result);
 };
 

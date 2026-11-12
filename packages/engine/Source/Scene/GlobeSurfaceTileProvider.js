@@ -1,33 +1,36 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import BoxOutlineGeometry from "../Core/BoxOutlineGeometry.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Cartographic from "../Core/Cartographic.js";
-import clone from "../Core/clone.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import combine from "../Core/combine.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import GeometryPipeline from "../Core/GeometryPipeline.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import Intersect from "../Core/Intersect.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import NearFarScalar from "../Core/NearFarScalar.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-import Rectangle from "../Core/Rectangle.js";
-import SphereOutlineGeometry from "../Core/SphereOutlineGeometry.js";
-import VerticalExaggeration from "../Core/VerticalExaggeration.js";
+import {
+  BoundingSphere,
+  BoxOutlineGeometry,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Cartographic,
+  Color,
+  ColorGeometryInstanceAttribute,
+  DeveloperError,
+  Event,
+  GeometryInstance,
+  GeometryPipeline,
+  IndexDatatype,
+  Intersect,
+  Math as CesiumMath,
+  Matrix4,
+  NearFarScalar,
+  OrientedBoundingBox,
+  OrthographicFrustum,
+  PrimitiveType,
+  Rectangle,
+  SphereOutlineGeometry,
+  VerticalExaggeration,
+  Visibility,
+  WebMercatorProjection,
+  clone,
+  combine,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import TerrainQuantization from "../Core/TerrainQuantization.js";
-import Visibility from "../Core/Visibility.js";
-import WebMercatorProjection from "../Core/WebMercatorProjection.js";
+import VectorProvider from "../Core/VectorProvider.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
@@ -40,6 +43,7 @@ import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "./ClippingPolygonCollection.js";
 import DepthFunction from "./DepthFunction.js";
 import GlobeSurfaceTile from "./GlobeSurfaceTile.js";
+import HeightReference from "./HeightReference.js";
 import ImageryLayer from "./ImageryLayer.js";
 import ImageryState from "./ImageryState.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
@@ -53,7 +57,7 @@ import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileSelectionResult from "./TileSelectionResult.js";
 
 /** @import Context from "../Renderer/Context.js"; */
-/** @import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js"; */
+/** @import { EllipsoidalOccluder } from "@cesium/core"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import GlobeSurfaceShaderSet from "./GlobeSurfaceShaderSet.js"; */
 /** @import ImageryLayerCollection from "./ImageryLayerCollection.js"; */
@@ -63,6 +67,7 @@ import TileSelectionResult from "./TileSelectionResult.js";
 /** @import TerrainMesh from "../Core/TerrainMesh.js"; */
 /** @import TerrainProvider from "../Core/TerrainProvider.js"; */
 /** @import TilingScheme from "../Core/TilingScheme.js"; */
+/** @import { VectorTileData } from "../Core/VectorProvider.js"; */
 /** @import { GlobeSurfaceShaderSetOptions } from "./GlobeSurfaceShaderSet.js"; */
 
 /**
@@ -77,6 +82,7 @@ class GlobeSurfaceTileProvider {
    * @param {TerrainProvider} options.terrainProvider The terrain provider that describes the surface geometry.
    * @param {ImageryLayerCollection} options.imageryLayers The collection of imagery layers describing the shading of the surface.
    * @param {GlobeSurfaceShaderSet} options.surfaceShaderSet The set of shaders used to render the surface.
+   * @param {VectorProvider} options.vectorProvider
    */
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
@@ -89,6 +95,8 @@ class GlobeSurfaceTileProvider {
       throw new DeveloperError("options.imageryLayers is required.");
     } else if (!defined(options.surfaceShaderSet)) {
       throw new DeveloperError("options.surfaceShaderSet is required.");
+    } else if (!defined(options.vectorProvider)) {
+      throw new DeveloperError("options.vectorProvider is required.");
     }
     //>>includeEnd('debug');
 
@@ -131,6 +139,7 @@ class GlobeSurfaceTileProvider {
 
     this._quadtree = undefined;
     this._terrainProvider = options.terrainProvider;
+    this._vectorProvider = options.vectorProvider;
     this._imageryLayers = options.imageryLayers;
     this._surfaceShaderSet = options.surfaceShaderSet;
 
@@ -203,6 +212,12 @@ class GlobeSurfaceTileProvider {
      * @ignore
      */
     this._clippingPolygons = undefined;
+
+    this._clippingPolygonsDirty = false;
+
+    this._removeClippingPolygonAdded = undefined;
+
+    this._removeClippingPolygonRemoved = undefined;
 
     /**
      * A property specifying a {@link Rectangle} used to selectively limit terrain and imagery rendering.
@@ -311,6 +326,11 @@ class GlobeSurfaceTileProvider {
     }
   }
 
+  /** @type {VectorProvider} */
+  get vectorProvider() {
+    return this._vectorProvider;
+  }
+
   /**
    * The {@link ClippingPlaneCollection} used to selectively disable rendering.
    *
@@ -338,7 +358,33 @@ class GlobeSurfaceTileProvider {
   }
 
   set clippingPolygons(value) {
+    if (value === this._clippingPolygons) {
+      return;
+    }
+
     ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
+
+    // First, remove the previous listeners if they exist
+    this._removeClippingPolygonAdded =
+      this._removeClippingPolygonAdded && this._removeClippingPolygonAdded();
+    this._removeClippingPolygonRemoved =
+      this._removeClippingPolygonRemoved &&
+      this._removeClippingPolygonRemoved();
+
+    this._clippingPolygonsDirty = true;
+
+    if (!defined(value)) {
+      return;
+    }
+
+    const markDirty = () => {
+      this._clippingPolygonsDirty = true;
+    };
+
+    this._removeClippingPolygonAdded =
+      value.polygonAdded.addEventListener(markDirty);
+    this._removeClippingPolygonRemoved =
+      value.polygonRemoved.addEventListener(markDirty);
   }
 
   /**
@@ -370,6 +416,42 @@ class GlobeSurfaceTileProvider {
         },
       );
     }
+
+    // Record regions dirtied by changed collections, re-bake overlapping
+    // tiles, and build vector data for new surface tiles.
+    const vectorProvider = this._vectorProvider;
+    vectorProvider.minimumTileScreenPixels = minimumTileScreenPixels(this);
+    vectorProvider.update(frameState.frameNumber);
+    this._quadtree.forEachLoadedTile(
+      /** @param {QuadtreeTile} tile */
+      (tile) => {
+        const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+
+        if (
+          defined(surfaceTile.vectorData) &&
+          vectorProvider.isTileDirty(tile.x, tile.y, tile.level)
+        ) {
+          vectorProvider.releaseTileData(surfaceTile.vectorData);
+          surfaceTile.vectorData = undefined;
+        }
+      },
+    );
+    this._quadtree.forEachRenderedTile(
+      /** @param {QuadtreeTile} tile */
+      (tile) => {
+        const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+        if (!defined(surfaceTile.vectorData)) {
+          surfaceTile.vectorData = vectorProvider.requestTileData(
+            tile.x,
+            tile.y,
+            tile.level,
+            frameState.context,
+            HeightReference.CLAMP_TO_TERRAIN,
+          );
+        }
+      },
+    );
+    vectorProvider.makeClean();
 
     // Add credits for terrain and imagery providers.
     updateCredits(this, frameState);
@@ -408,8 +490,6 @@ class GlobeSurfaceTileProvider {
     if (defined(clippingPolygons) && clippingPolygons.enabled) {
       // @ts-expect-error Missing types.
       clippingPolygons.update(frameState);
-      // @ts-expect-error Missing types.
-      clippingPolygons.queueCommands(frameState);
     }
 
     this._usedDrawCommands = 0;
@@ -516,6 +596,10 @@ class GlobeSurfaceTileProvider {
       );
     }
 
+    if (this._clippingPolygonsDirty) {
+      releaseClippingPolygonData(this);
+    }
+
     // Add the tile render commands to the command list, sorted by texture count.
     const tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
     for (
@@ -536,6 +620,7 @@ class GlobeSurfaceTileProvider {
       ) {
         const tile = tilesToRender[tileIndex];
         const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+        updateTileClippingPolygonData(this, tile, surfaceTile, frameState);
         const tileBoundingRegion = surfaceTile.tileBoundingRegion;
         addDrawCommandsForTile(this, tile, frameState);
         frameState.minimumTerrainHeight = Math.min(
@@ -555,7 +640,16 @@ class GlobeSurfaceTileProvider {
     // Add the tile pick commands from the tiles drawn last frame.
     const drawCommands = this._drawCommands;
     for (let i = 0, length = this._usedDrawCommands; i < length; ++i) {
-      pushCommand(drawCommands[i], frameState);
+      const command = drawCommands[i];
+      // Pooled commands move between tiles, so a cached pick command may still
+      // hold the vertex array of a tile that has since been released.
+      command.dirty = true;
+      command.derivedCommands.picking = undefined;
+      const logDepthCommand = command.derivedCommands.logDepth?.command;
+      if (defined(logDepthCommand)) {
+        logDepthCommand.derivedCommands.picking = undefined;
+      }
+      pushCommand(command, frameState);
     }
   }
 
@@ -609,6 +703,7 @@ class GlobeSurfaceTileProvider {
       tile,
       frameState,
       this.terrainProvider,
+      this.vectorProvider,
       this._imageryLayers,
       this.quadtree,
       this._vertexArraysToDestroy,
@@ -635,6 +730,7 @@ class GlobeSurfaceTileProvider {
           tile,
           frameState,
           this.terrainProvider,
+          this.vectorProvider,
           this._imageryLayers,
           this.quadtree,
           this._vertexArraysToDestroy,
@@ -1120,8 +1216,7 @@ class GlobeSurfaceTileProvider {
     this._tileProvider = this._tileProvider && this._tileProvider.destroy();
     this._clippingPlanes =
       this._clippingPlanes && this._clippingPlanes.destroy();
-    this._clippingPolygons =
-      this._clippingPolygons && this._clippingPolygons.destroy();
+    this._clippingPolygons = undefined;
     this._removeLayerAddedListener =
       this._removeLayerAddedListener && this._removeLayerAddedListener();
     this._removeLayerRemovedListener =
@@ -1130,6 +1225,11 @@ class GlobeSurfaceTileProvider {
       this._removeLayerMovedListener && this._removeLayerMovedListener();
     this._removeLayerShownListener =
       this._removeLayerShownListener && this._removeLayerShownListener();
+    this._removeClippingPolygonAdded =
+      this._removeClippingPolygonAdded && this._removeClippingPolygonAdded();
+    this._removeClippingPolygonRemoved =
+      this._removeClippingPolygonRemoved &&
+      this._removeClippingPolygonRemoved();
 
     return destroyObject(this);
   }
@@ -1284,6 +1384,40 @@ class GlobeSurfaceTileProvider {
   }
 }
 
+const scratchLevelZeroRectangle = new Rectangle();
+
+/**
+ * Estimates the smallest screen size, in pixels, a rendered tile can have. Screen-space error is
+ * the tile's geometric error projected to the screen, so the tile projects to that error scaled by
+ * their ratio in meters, and refinement holds the error above half the maximum.
+ *
+ * @param {GlobeSurfaceTileProvider} tileProvider
+ * @returns {number}
+ * @private
+ */
+function minimumTileScreenPixels(tileProvider) {
+  const geometricError = tileProvider.getLevelMaximumGeometricError(0);
+  if (geometricError <= 0.0) {
+    // No terrain provider yet.
+    return tileProvider._vectorProvider.minimumTileScreenPixels;
+  }
+
+  const tilingScheme = tileProvider.tilingScheme;
+  const rectangle = tilingScheme.tileXYToRectangle(
+    0,
+    0,
+    0,
+    scratchLevelZeroRectangle,
+  );
+  const tileWidth = rectangle.width * tilingScheme.ellipsoid.maximumRadius;
+
+  return (
+    ((tileWidth / geometricError) *
+      tileProvider._quadtree.maximumScreenSpaceError) /
+    2.0
+  );
+}
+
 function sortTileImageryByLayerIndex(a, b) {
   let aImagery = a.loadingImagery;
   if (!defined(aImagery)) {
@@ -1296,6 +1430,81 @@ function sortTileImageryByLayerIndex(a, b) {
   }
 
   return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
+}
+
+/**
+ * Releases cached clipping polygon data on all loaded tiles so it is rebuilt
+ * against the current collection, and clears the dirty flag.
+ * @param {GlobeSurfaceTileProvider} tileProvider
+ * @ignore
+ */
+function releaseClippingPolygonData(tileProvider) {
+  tileProvider._quadtree.forEachLoadedTile(
+    /** @param {QuadtreeTile} tile */
+    function (tile) {
+      const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+      if (!defined(surfaceTile?.clippingPolygonData)) {
+        return;
+      }
+
+      ClippingPolygonCollection.releaseRectangleData(
+        surfaceTile.clippingPolygonData,
+      );
+      surfaceTile.clippingPolygonData = undefined;
+    },
+  );
+  tileProvider._clippingPolygonsDirty = false;
+}
+
+/**
+ * Builds clipping polygon data for a tile about to be rendered, unless it is
+ * unclipped or its data was already built this frame.
+ * @param {GlobeSurfaceTileProvider} tileProvider
+ * @param {QuadtreeTile} tile
+ * @param {GlobeSurfaceTile} surfaceTile
+ * @param {FrameState} frameState
+ * @ignore
+ */
+function updateTileClippingPolygonData(
+  tileProvider,
+  tile,
+  surfaceTile,
+  frameState,
+) {
+  const clippingPolygons = tileProvider._clippingPolygons;
+  if (
+    !defined(clippingPolygons) ||
+    !clippingPolygons.enabled ||
+    !tile.isClipped ||
+    defined(surfaceTile.clippingPolygonData)
+  ) {
+    return;
+  }
+
+  surfaceTile.clippingPolygonData = clippingPolygons.requestRectangleData(
+    tile.rectangle,
+    frameState.context,
+  );
+}
+
+/**
+ * Determines whether a tile is wholly clipped away by inverse clipping. In
+ * inverse mode a clipped tile with no polygon geometry lies entirely outside
+ * every polygon, so all of it is clipped and it should not be drawn.
+ * @param {GlobeSurfaceTileProvider} tileProvider
+ * @param {GlobeSurfaceTile} surfaceTile
+ * @returns {boolean}
+ * @ignore
+ */
+function isTileClippedAwayByInversePolygons(tileProvider, surfaceTile) {
+  const clippingPolygons = tileProvider._clippingPolygons;
+  return (
+    defined(clippingPolygons) &&
+    clippingPolygons.enabled &&
+    clippingPolygons.length > 0 &&
+    clippingPolygons.inverse &&
+    (surfaceTile.clippingPolygonData?.polygonRings.length ?? 0) === 0
+  );
 }
 
 /**
@@ -1869,22 +2078,6 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       style.alpha = this.properties.clippingPlanesEdgeWidth;
       return style;
     },
-    u_clippingDistance: function () {
-      const texture =
-        globeSurfaceTileProvider._clippingPolygons.clippingTexture;
-      if (defined(texture)) {
-        return texture;
-      }
-      return frameState.context.defaultTexture;
-    },
-    u_clippingExtents: function () {
-      // @ts-expect-error Missing types.
-      const texture = globeSurfaceTileProvider._clippingPolygons.extentsTexture;
-      if (defined(texture)) {
-        return texture;
-      }
-      return frameState.context.defaultTexture;
-    },
     u_minimumBrightness: function () {
       return frameState.fog.minimumBrightness;
     },
@@ -1914,6 +2107,78 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     },
     u_vertexShadowDarkness: function () {
       return this.properties.vertexShadowDarkness;
+    },
+    u_vectorSegmentTexture: function () {
+      return (
+        this.properties.vectorSegmentTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorWidthTexture: function () {
+      return (
+        this.properties.vectorWidthTexture ?? frameState.context.defaultTexture
+      );
+    },
+    u_vectorColorTexture: function () {
+      return (
+        this.properties.vectorColorTexture ?? frameState.context.defaultTexture
+      );
+    },
+    u_vectorPickColorTexture: function () {
+      return (
+        this.properties.vectorPickColorTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorSegmentPrimitiveIndicesTexture: function () {
+      return (
+        this.properties.vectorSegmentPrimitiveIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorGridCellIndicesTexture: function () {
+      return (
+        this.properties.vectorGridCellIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorPolygonEdgeTexture: function () {
+      return (
+        this.properties.vectorPolygonEdgeTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorPolygonEdgePrimitiveIndicesTexture: function () {
+      return (
+        this.properties.vectorPolygonEdgePrimitiveIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorPolygonGridCellIndicesTexture: function () {
+      return (
+        this.properties.vectorPolygonGridCellIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorMetersPerUv: function () {
+      return this.properties.vectorMetersPerUv;
+    },
+    u_clippingEdgeTexture: function () {
+      return (
+        this.properties.clippingEdgeTexture ?? frameState.context.defaultTexture
+      );
+    },
+    u_clippingEdgePrimitiveIndicesTexture: function () {
+      return (
+        this.properties.clippingEdgePrimitiveIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_clippingGridCellIndicesTexture: function () {
+      return (
+        this.properties.clippingGridCellIndicesTexture ??
+        frameState.context.defaultTexture
+      );
     },
 
     // make a separate object so that changes to the properties are seen on
@@ -1977,6 +2242,21 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       undergroundColorAlphaByDistance: new Cartesian4(),
       lambertDiffuseMultiplier: 0.0,
       vertexShadowDarkness: 0.0,
+
+      vectorSegmentTexture: undefined,
+      vectorWidthTexture: undefined,
+      vectorColorTexture: undefined,
+      vectorPickColorTexture: undefined,
+      vectorSegmentPrimitiveIndicesTexture: undefined,
+      vectorGridCellIndicesTexture: undefined,
+      vectorPolygonEdgeTexture: undefined,
+      vectorPolygonEdgePrimitiveIndicesTexture: undefined,
+      vectorPolygonGridCellIndicesTexture: undefined,
+      vectorMetersPerUv: new Cartesian2(),
+
+      clippingEdgeTexture: undefined,
+      clippingEdgePrimitiveIndicesTexture: undefined,
+      clippingGridCellIndicesTexture: undefined,
     },
   };
 
@@ -2216,6 +2496,7 @@ const surfaceShaderSetOptionsScratch = {
   colorToAlpha: undefined,
   hasGeodeticSurfaceNormals: undefined,
   hasExaggeration: undefined,
+  vectorAntialias: undefined,
 };
 
 const defaultUndergroundColor = Color.TRANSPARENT;
@@ -2229,6 +2510,10 @@ const defaultUndergroundColorAlphaByDistance = new NearFarScalar();
  */
 function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+
+  if (isTileClippedAwayByInversePolygons(tileProvider, surfaceTile)) {
+    return;
+  }
 
   if (!defined(surfaceTile.vertexArray)) {
     if (surfaceTile.fill === undefined) {
@@ -2349,11 +2634,15 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     defined(tileProvider.clippingPolygons) &&
     tileProvider.clippingPolygons.enabled
   ) {
-    --maxTextures;
-    --maxTextures;
+    // Vector polygon clipping samples three textures: edges, per-edge
+    // primitive indices, and the grid cell index header.
+    maxTextures -= 3;
   }
 
+  maxTextures -= VectorProvider.getTextureCount(surfaceTile.vectorData);
   maxTextures -= globeTranslucencyState.numberOfTextureUniforms;
+
+  maxTextures = Math.max(maxTextures, 1);
 
   const mesh = surfaceTile.renderedMesh;
   let rtc = mesh.center;
@@ -2469,6 +2758,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   surfaceShaderSetOptions.clippedByBoundaries = surfaceTile.clippedByBoundaries;
   surfaceShaderSetOptions.hasGeodeticSurfaceNormals = hasGeodeticSurfaceNormals;
   surfaceShaderSetOptions.hasExaggeration = hasExaggeration;
+  surfaceShaderSetOptions.vectorAntialias =
+    tileProvider.vectorProvider.antialias;
 
   const tileImageryCollection = surfaceTile.imagery;
   let imageryIndex = 0;
@@ -2894,6 +3185,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     // trim texture array to the used length so we don't end up using old textures
     // which might get destroyed eventually
     uniformMapProperties.dayTextures.length = numberOfDayTextures;
+    // Vectors draw over all imagery, so only the final blended pass applies them.
+    const applyVectors =
+      imageryIndex >= imageryLen && surfaceTile.vectorData?.show === true;
     uniformMapProperties.waterMask = waterMaskTexture;
     Cartesian4.clone(
       waterMaskTranslationAndScale,
@@ -2916,10 +3210,50 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
     }
 
+    // update vector collections clamped to terrain
+    const vectorData = surfaceTile.vectorData;
+    if (defined(vectorData)) {
+      uniformMapProperties.vectorSegmentTexture =
+        vectorData.polylineSegmentTexture;
+      uniformMapProperties.vectorWidthTexture = vectorData.widthTexture;
+      uniformMapProperties.vectorColorTexture = vectorData.colorTexture;
+      uniformMapProperties.vectorPickColorTexture = vectorData.pickColorTexture;
+      uniformMapProperties.vectorSegmentPrimitiveIndicesTexture =
+        vectorData.polylineSegmentPrimitiveIndicesTexture;
+      uniformMapProperties.vectorGridCellIndicesTexture =
+        vectorData.polylineGridCellIndicesTexture;
+      uniformMapProperties.vectorPolygonEdgeTexture =
+        vectorData.polygonEdgeTexture;
+      uniformMapProperties.vectorPolygonEdgePrimitiveIndicesTexture =
+        vectorData.polygonEdgePrimitiveIndicesTexture;
+      uniformMapProperties.vectorPolygonGridCellIndicesTexture =
+        vectorData.polygonGridCellIndicesTexture;
+      Cartesian2.clone(
+        vectorData.metersPerUv,
+        uniformMapProperties.vectorMetersPerUv,
+      );
+    }
+
+    const clippingPolygonData = surfaceTile.clippingPolygonData;
+    if (defined(clippingPolygonData)) {
+      uniformMapProperties.clippingEdgeTexture =
+        clippingPolygonData.polygonEdgeTexture;
+      uniformMapProperties.clippingEdgePrimitiveIndicesTexture =
+        clippingPolygonData.polygonEdgePrimitiveIndicesTexture;
+      uniformMapProperties.clippingGridCellIndicesTexture =
+        clippingPolygonData.polygonGridCellIndicesTexture;
+    }
+
     // update clipping polygons
     const clippingPolygons = tileProvider._clippingPolygons;
+    const hasClippingPolygonGeometry =
+      (clippingPolygonData?.polygonRings.length ?? 0) > 0;
     const clippingPolygonsEnabled =
-      defined(clippingPolygons) && clippingPolygons.enabled && tile.isClipped;
+      defined(clippingPolygons) &&
+      clippingPolygons.enabled &&
+      clippingPolygons.length > 0 &&
+      tile.isClipped &&
+      hasClippingPolygonGeometry;
 
     surfaceShaderSetOptions.numberOfDayTextures = numberOfDayTextures;
     surfaceShaderSetOptions.applyBrightness = applyBrightness;
@@ -2941,6 +3275,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
     surfaceShaderSetOptions.showUndergroundColor = showUndergroundColor;
     surfaceShaderSetOptions.translucent = translucent;
+    surfaceShaderSetOptions.applyVectors = applyVectors;
 
     let count = surfaceTile.renderedMesh.indices.length;
     if (!showSkirts) {
@@ -2950,6 +3285,10 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(
       surfaceShaderSetOptions,
     );
+    // Draped vectors are picked through the surface; zero elsewhere keeps the globe unpickable.
+    command.pickId = applyVectors
+      ? "vectorPickColorOver(vec4(0.0))"
+      : undefined;
     command.castShadows = castShadows;
     command.receiveShadows = receiveShadows;
     command.renderState = renderState;
@@ -2969,7 +3308,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       }
     }
 
-    let boundingVolume = command.boundingVolume;
+    const boundingVolume = command.boundingVolume;
     const orientedBoundingBox = command.orientedBoundingBox;
 
     if (frameState.mode !== SceneMode.SCENE3D) {
@@ -2988,7 +3327,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       );
 
       if (frameState.mode === SceneMode.MORPHING) {
-        boundingVolume = BoundingSphere.union(
+        BoundingSphere.union(
           // @ts-expect-error Missing types.
           tileBoundingRegion.boundingSphere,
           boundingVolume,

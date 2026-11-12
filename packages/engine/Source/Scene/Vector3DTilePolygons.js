@@ -1,11 +1,13 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  Cartesian3,
+  Color,
+  Ellipsoid,
+  IndexDatatype,
+  OrientedBoundingBox,
+  Rectangle,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import ClassificationType from "./ClassificationType.js";
 import Vector3DTileBatch from "./Vector3DTileBatch.js";

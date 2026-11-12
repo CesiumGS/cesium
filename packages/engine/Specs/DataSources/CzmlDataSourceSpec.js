@@ -7,10 +7,11 @@ import {
   ClockStep,
   Color,
   CornerType,
-  Credit,
   DistanceDisplayCondition,
+  Ellipsoid,
   Event,
   ExtrapolationType,
+  FixedFrameTransforms,
   Iso8601,
   JulianDate,
   Math as CesiumMath,
@@ -19,12 +20,15 @@ import {
   Quaternion,
   Rectangle,
   ReferenceFrame,
-  Resource,
   RuntimeError,
   Spherical,
   TimeInterval,
-  Transforms,
   TranslationRotationScale,
+} from "@cesium/core";
+import {
+  Credit,
+  PathMode,
+  Resource,
   CompositeEntityCollection,
   CompositeMaterialProperty,
   CompositePositionProperty,
@@ -46,7 +50,6 @@ import {
   LabelStyle,
   ShadowMode,
   VerticalOrigin,
-  Ellipsoid,
 } from "../../index.js";
 
 describe("DataSources/CzmlDataSource", function () {
@@ -2242,10 +2245,11 @@ describe("DataSources/CzmlDataSource", function () {
         );
 
         const expectedPosition = new Cartesian3(1, 2, 3);
-        const expectedRotation = Transforms.rotationMatrixFromPositionVelocity(
-          expectedPosition,
-          expectedVelocityDirection,
-        );
+        const expectedRotation =
+          FixedFrameTransforms.rotationMatrixFromPositionVelocity(
+            expectedPosition,
+            expectedVelocityDirection,
+          );
         const expectedOrientation =
           Quaternion.fromRotationMatrix(expectedRotation);
 
@@ -7293,6 +7297,7 @@ describe("DataSources/CzmlDataSource", function () {
       expect(e.path.width.getValue(date)).toEqual(56040.0);
       expect(e.path.resolution.getValue(date)).toEqual(31563.0);
       expect(e.path.material.color.getValue(date)).toEqual(Color.fromBytes(10, 78, 168, 13));
+      expect(e.path.materialMode.getValue(date)).toEqual(PathMode.PORTIONS);
       expect(e.path.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(11646, 32422));
       expect(e.path.relativeTo.getValue(date)).toEqual('string50312');
       expect(e.point.show.getValue(date)).toEqual(true);
@@ -8172,6 +8177,7 @@ describe("DataSources/CzmlDataSource", function () {
       expect(e.properties.custom_number.getValue(date)).toEqual(31507.0);
       expect(e.properties.custom_nearFarScalar.getValue(date)).toEqual(new NearFarScalar(14621, 24121, 16734, 56129));
       expect(e.properties.custom_unitQuaternion.getValue(date)).toEqualEpsilon(new Quaternion(0.742737937277143, 0.267679401430615, 0.507905263014791, 0.344558178514049), 1e-14);
+      expect(e.properties.custom_pathMode.getValue(date)).toEqual(PathMode.PORTIONS);
       expect(e.properties.custom_shadowMode.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
       expect(e.properties.custom_string.getValue(date)).toEqual('string41758');
       expect(e.properties.custom_stripeOrientation.getValue(date)).toEqual(StripeOrientation.VERTICAL);
@@ -8342,6 +8348,7 @@ describe("DataSources/CzmlDataSource", function () {
       expect(e.path.width.getValue(date)).toEqual(constant.path.width.getValue(date));
       expect(e.path.resolution.getValue(date)).toEqual(constant.path.resolution.getValue(date));
       expect(e.path.material.color.getValue(date)).toEqual(constant.path.material.color.getValue(date));
+      expect(e.path.materialMode.getValue(date)).toEqual(constant.path.materialMode.getValue(date));
       expect(e.path.distanceDisplayCondition.getValue(date)).toEqual(constant.path.distanceDisplayCondition.getValue(date));
       expect(e.path.relativeTo.getValue(date)).toEqual(constant.path.relativeTo.getValue(date));
       expect(e.point.show.getValue(date)).toEqual(constant.point.show.getValue(date));

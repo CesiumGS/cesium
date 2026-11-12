@@ -1,10 +1,9 @@
+import { Cartesian3, FixedFrameTransforms } from "@cesium/core";
 import {
   _shadersAtmosphereStageFS,
   _shadersAtmosphereStageVS,
-  Cartesian3,
   AtmospherePipelineStage,
   ModelRenderResources,
-  Transforms,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
@@ -25,7 +24,7 @@ describe(
       model = await loadAndZoomToModelAsync(
         {
           url: boxTexturedGlbUrl,
-          modelMatrix: Transforms.eastNorthUpToFixedFrame(center),
+          modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(center),
         },
         scene,
       );

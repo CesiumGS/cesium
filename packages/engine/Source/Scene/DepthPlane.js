@@ -1,12 +1,15 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  ComponentDatatype,
+  Ellipsoid,
+  Geometry,
+  GeometryAttribute,
+  OrthographicFrustum,
+  PrimitiveType,
+  defined,
+} from "@cesium/core";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import Geometry from "../Core/Geometry.js";
-import GeometryAttribute from "../Core/GeometryAttribute.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
@@ -17,7 +20,6 @@ import VertexArray from "../Renderer/VertexArray.js";
 import DepthPlaneFS from "../Shaders/DepthPlaneFS.js";
 import DepthPlaneVS from "../Shaders/DepthPlaneVS.js";
 import SceneMode from "./SceneMode.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
 
 /**
  * @private

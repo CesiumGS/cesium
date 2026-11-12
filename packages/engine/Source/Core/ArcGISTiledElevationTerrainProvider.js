@@ -1,19 +1,21 @@
-import Cartesian2 from "./Cartesian2.js";
-import Check from "./Check.js";
+import {
+  Cartesian2,
+  Check,
+  Ellipsoid,
+  Event,
+  Frozen,
+  Rectangle,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import Credit from "./Credit.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import Ellipsoid from "./Ellipsoid.js";
-import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import HeightmapEncoding from "./HeightmapEncoding.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
-import Rectangle from "./Rectangle.js";
 import Request from "./Request.js";
 import RequestState from "./RequestState.js";
 import RequestType from "./RequestType.js";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
 import TileAvailability from "./TileAvailability.js";
 import TileProviderError from "./TileProviderError.js";
@@ -223,8 +225,6 @@ async function requestMetadata(
  * @alias ArcGISTiledElevationTerrainProvider
  * @constructor
  *
- * @param {CesiumTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options
- *
  * @example
  * const terrainProvider = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl("https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer", {
  *   token: "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
@@ -233,9 +233,7 @@ async function requestMetadata(
  *
  * @see TerrainProvider
  */
-function ArcGISTiledElevationTerrainProvider(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-
+function ArcGISTiledElevationTerrainProvider() {
   this._resource = undefined;
   this._credit = undefined;
   this._tilingScheme = undefined;

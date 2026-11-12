@@ -1,74 +1,52 @@
+// @ts-check
+
+import { mkdirSync } from "fs";
 import { join } from "path";
 import { finished } from "stream/promises";
 
 import gulp from "gulp";
 import yargs from "yargs";
 import { buildSandcastleApp } from "./scripts/buildSandcastle.js";
-import { mkdirp } from "mkdirp";
-import { bundleWorkers, defaultESBuildOptions } from "./scripts/build.js";
+import {
+  bundleWorkers,
+  defaultESBuildOptions,
+  handleBuildWarnings,
+} from "./scripts/build-utilities.js";
 import { build as esbuild } from "esbuild";
 
 const isProduction = process.env.PROD === "true";
-
-// Print an esbuild warning
-function printBuildWarning({ location, text }) {
-  const { column, file, line, lineText, suggestion } = location;
-
-  let message = `\n
-  > ${file}:${line}:${column}: warning: ${text}
-  ${lineText}
-  `;
-
-  if (suggestion && suggestion !== "") {
-    message += `\n${suggestion}`;
-  }
-
-  console.log(message);
-}
-
-// Ignore `eval` warnings in third-party code we don't have control over
-function handleBuildWarnings(result) {
-  for (const warning of result.warnings) {
-    if (
-      !warning.location.file.includes("protobufjs.js") &&
-      !warning.location.file.includes("Build/Cesium")
-    ) {
-      printBuildWarning(warning);
-    }
-  }
-}
 
 export async function buildCesiumViewer() {
   const cesiumViewerOutputDirectory = isProduction
     ? "Build/CesiumViewer"
     : "Build/Apps/CesiumViewer";
-  mkdirp.sync(cesiumViewerOutputDirectory);
+  mkdirSync(cesiumViewerOutputDirectory, { recursive: true });
 
-  const config = defaultESBuildOptions();
-  config.entryPoints = [
-    "Apps/CesiumViewer/CesiumViewer.js",
-    "Apps/CesiumViewer/CesiumViewer.css",
-  ];
-  config.bundle = true; // Tree-shaking is enabled automatically
-  config.minify = true;
-  config.loader = {
-    ".gif": "text",
-    ".png": "text",
-  };
-  config.format = "iife";
-  // Configure Cesium base path to use built
-  config.define = { CESIUM_BASE_URL: `"."` };
-  config.outdir = cesiumViewerOutputDirectory;
-  config.outbase = "Apps/CesiumViewer";
-  config.logLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones
-  const result = await esbuild(config);
+  const result = await esbuild({
+    ...defaultESBuildOptions(),
+    entryPoints: [
+      "Apps/CesiumViewer/CesiumViewer.js",
+      "Apps/CesiumViewer/CesiumViewer.css",
+    ],
+    minify: true,
+    loader: {
+      ".gif": "text",
+      ".png": "text",
+    },
+    format: "iife",
+    // Configure Cesium base path to use built
+    define: { CESIUM_BASE_URL: `"."` },
+    outdir: cesiumViewerOutputDirectory,
+    outbase: "Apps/CesiumViewer",
+    logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
+  });
 
   handleBuildWarnings(result);
 
   await esbuild({
+    ...defaultESBuildOptions(),
     entryPoints: ["packages/widgets/Source/InfoBox/InfoBoxDescription.css"],
     minify: true,
-    bundle: true,
     loader: {
       ".gif": "text",
       ".png": "text",
@@ -106,7 +84,6 @@ export async function buildCesiumViewer() {
         ],
         {
           base: "Build/Cesium",
-          nodir: true,
           encoding: false,
         },
       ),

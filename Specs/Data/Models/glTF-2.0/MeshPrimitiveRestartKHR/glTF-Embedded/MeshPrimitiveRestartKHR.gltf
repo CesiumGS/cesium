@@ -1,0 +1,106 @@
+{
+  "asset": {
+    "version": "2.0"
+  },
+  "extensionsUsed": [
+    "KHR_mesh_primitive_restart",
+    "BENTLEY_materials_line_style"
+  ],
+  "extensionsRequired": [
+    "KHR_mesh_primitive_restart"
+  ],
+  "accessors": [
+    {
+      "name": "Positions",
+      "bufferView": 0,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 7,
+      "type": "VEC3",
+      "min": [0.0, 0.0, 0.0],
+      "max": [2.0, 5.0, 0.0]
+    },
+    {
+      "name": "Cumulative distances",
+      "bufferView": 1,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 7,
+      "type": "SCALAR"
+    },
+    {
+      "name": "Indices with inline restart values",
+      "bufferView": 2,
+      "byteOffset": 0,
+      "componentType": 5123,
+      "count": 9,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 84,
+      "byteStride": 12,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 84,
+      "byteLength": 28,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 112,
+      "byteLength": 18,
+      "target": 34963
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 130,
+      "uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAgD8AAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAACAPwAAQEAAAAAAAAAAAAAAgEAAAAAAAACAPwAAoEAAAAAAAAAAAPMEtT/zBDVAAAAAAPMEtT8AAAAA8wS1PwAAAQACAP//AwAEAP//BQAGAA=="
+    }
+  ],
+  "materials": [
+    {
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [1.0, 0.0, 0.0, 1.0]
+      },
+      "extensions": {
+        "BENTLEY_materials_line_style": {
+          "width": 3,
+          "pattern": 61680
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "BENTLEY_materials_line_style:CUMULATIVE_DISTANCE": 1
+          },
+          "indices": 2,
+          "mode": 3,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [0]
+    }
+  ],
+  "scene": 0
+}

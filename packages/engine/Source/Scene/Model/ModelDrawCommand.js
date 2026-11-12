@@ -1,12 +1,14 @@
-import BoundingSphere from "../../Core/BoundingSphere.js";
-import Cartesian2 from "../../Core/Cartesian2.js";
-import CesiumMath from "../../Core/Math.js";
-import Check from "../../Core/Check.js";
-import clone from "../../Core/clone.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import WebGLConstants from "../../Core/WebGLConstants.js";
+import {
+  BoundingSphere,
+  Cartesian2,
+  Check,
+  Frozen,
+  Math as CesiumMath,
+  Matrix4,
+  WebGLConstants,
+  clone,
+  defined,
+} from "@cesium/core";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";
@@ -103,6 +105,9 @@ function ModelDrawCommand(options) {
   this._needsSkipLevelOfDetailCommands = needsSkipLevelOfDetailCommands;
   this._needsSilhouetteCommands = needsSilhouetteCommands;
   this._needsEdgeCommands = needsEdgeCommands;
+  // Non-behind planar fill primitives write their feature IDs in a pre-pass
+  // so that behind fills can test same-object coplanarity.
+  this._needsPlanarFillIdCommand = renderResources.planarFillIdPass;
 
   // Derived commands
   this._originalCommand = undefined;
@@ -112,6 +117,10 @@ function ModelDrawCommand(options) {
   this._silhouetteModelCommand = undefined;
   this._silhouetteColorCommand = undefined;
   this._edgeCommand = undefined;
+  // Snap-pass variant of the edge command, pinned at 1 px width.
+  // See deriveEdgeCommand.
+  this._edgeSnapCommand = undefined;
+  this._planarFillIdCommand = undefined;
 
   // All derived commands (including 2D commands)
   this._derivedCommands = [];
@@ -226,8 +235,27 @@ function initialize(drawCommand) {
 
   if (drawCommand._needsEdgeCommands) {
     const renderResources = drawCommand._primitiveRenderResources;
+    const edgeGeometry = renderResources.edgeGeometry;
+    const colorLineWidth = defined(edgeGeometry.lineWidth)
+      ? edgeGeometry.lineWidth
+      : 1.0;
+    // Snap-pass edge width is held at 1 px independent of the color width.
+    // A wider snap band results in snap wiggle: as the cursor moves
+    // perpendicular to an edge inside the band, the "edge pixel nearest
+    // the cursor" shifts, so Snapping.snap returns a slightly different
+    // point each frame.
+    const snapLineWidth = 1.0;
+
     drawCommand._edgeCommand = new ModelDerivedCommand({
-      command: deriveEdgeCommand(command, renderResources, model),
+      command: deriveEdgeCommand(command, renderResources, colorLineWidth),
+      updateShadows: false,
+      updateBackFaceCulling: false,
+      updateCullFace: false,
+      updateDebugShowBoundingVolume: false,
+    });
+
+    drawCommand._edgeSnapCommand = new ModelDerivedCommand({
+      command: deriveEdgeCommand(command, renderResources, snapLineWidth),
       updateShadows: false,
       updateBackFaceCulling: false,
       updateCullFace: false,
@@ -235,6 +263,19 @@ function initialize(drawCommand) {
     });
 
     derivedCommands.push(drawCommand._edgeCommand);
+    derivedCommands.push(drawCommand._edgeSnapCommand);
+  }
+
+  if (drawCommand._needsPlanarFillIdCommand) {
+    drawCommand._planarFillIdCommand = new ModelDerivedCommand({
+      command: derivePlanarFillIdCommand(command),
+      updateShadows: false,
+      updateBackFaceCulling: false,
+      updateCullFace: false,
+      updateDebugShowBoundingVolume: false,
+    });
+
+    derivedCommands.push(drawCommand._planarFillIdCommand);
   }
 }
 
@@ -584,14 +625,6 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
 
   pushCommand(result, this._originalCommand, use2D);
 
-  // Push edge commands after the original command
-  if (
-    this._needsEdgeCommands &&
-    this._model.edgeDisplayMode !== EdgeDisplayMode.SURFACES_ONLY
-  ) {
-    pushCommand(result, this._edgeCommand, use2D);
-  }
-
   return result;
 };
 
@@ -636,25 +669,88 @@ ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
     return result;
   }
 
-  // SURFACES_ONLY mode suppresses all edge rendering
-  if (this._model.edgeDisplayMode === EdgeDisplayMode.SURFACES_ONLY) {
+  const mode = this._model.edgeDisplayMode;
+  const passes = frameState.passes;
+  const use2D = shouldUse2DCommands(this, frameState);
+
+  if (passes.snap) {
+    // Snapping pass: route the 1 px snap variant directly into the bound
+    // snap framebuffer, regardless of display mode -- snapping works even
+    // when edges are visually suppressed (SURFACES_ONLY).
+    const edgeCommand = this._edgeSnapCommand;
+    edgeCommand.command.pass = Pass.CESIUM_3D_TILE_EDGES_DIRECT;
+    if (defined(edgeCommand.derivedCommand2D)) {
+      edgeCommand.derivedCommand2D.command.pass =
+        Pass.CESIUM_3D_TILE_EDGES_DIRECT;
+    }
+    pushCommand(result, edgeCommand, use2D);
     return result;
   }
 
-  // Use direct pass (renders to main framebuffer) when EDGES_ONLY mode is enabled,
-  // otherwise use MRT pass (renders to edge framebuffer for compositing)
+  if (passes.pick) {
+    // Plain pick pass: edges contribute nothing to the RGBA8 pick
+    // framebuffer except in EDGES_ONLY mode, where they are the only
+    // pickable geometry (pushCommands skips the surface command).
+    if (mode !== EdgeDisplayMode.EDGES_ONLY) {
+      return result;
+    }
+    const edgeCommand = this._edgeCommand;
+    edgeCommand.command.pass = Pass.CESIUM_3D_TILE_EDGES_DIRECT;
+    if (defined(edgeCommand.derivedCommand2D)) {
+      edgeCommand.derivedCommand2D.command.pass =
+        Pass.CESIUM_3D_TILE_EDGES_DIRECT;
+    }
+    pushCommand(result, edgeCommand, use2D);
+    return result;
+  }
+
+  // Color pass. SURFACES_ONLY mode suppresses all edge rendering.
+  if (mode === EdgeDisplayMode.SURFACES_ONLY) {
+    return result;
+  }
+
+  // Use direct pass (renders to currently bound framebuffer) when EDGES_ONLY
+  // mode is enabled, otherwise use MRT pass (renders to edge framebuffer for
+  // compositing).
   const edgePass =
-    this._model.edgeDisplayMode === EdgeDisplayMode.EDGES_ONLY
+    mode === EdgeDisplayMode.EDGES_ONLY
       ? Pass.CESIUM_3D_TILE_EDGES_DIRECT
       : Pass.CESIUM_3D_TILE_EDGES;
+
+  if (edgePass === Pass.CESIUM_3D_TILE_EDGES) {
+    // Renewed per frame; Scene resets this flag before primitives update.
+    frameState.edgeVisibilityRequested = true;
+  }
 
   this._edgeCommand.command.pass = edgePass;
   if (defined(this._edgeCommand.derivedCommand2D)) {
     this._edgeCommand.derivedCommand2D.command.pass = edgePass;
   }
 
-  const use2D = shouldUse2DCommands(this, frameState);
   pushCommand(result, this._edgeCommand, use2D);
+
+  return result;
+};
+
+/**
+ * Push the planar fill feature-ID pre-pass command (if any).
+ *
+ * @param {FrameState} frameState The frame state.
+ * @param {DrawCommand[]} result The draw commands to push to.
+ * @returns {DrawCommand[]} The modified command list.
+ *
+ * @private
+ */
+ModelDrawCommand.prototype.pushPlanarFillIdCommands = function (
+  frameState,
+  result,
+) {
+  if (!defined(this._planarFillIdCommand)) {
+    return result;
+  }
+
+  const use2D = shouldUse2DCommands(this, frameState);
+  pushCommand(result, this._planarFillIdCommand, use2D);
 
   return result;
 };
@@ -718,6 +814,8 @@ function derive2DCommands(drawCommand) {
   derive2DCommand(drawCommand, drawCommand._silhouetteModelCommand);
   derive2DCommand(drawCommand, drawCommand._silhouetteColorCommand);
   derive2DCommand(drawCommand, drawCommand._edgeCommand);
+  derive2DCommand(drawCommand, drawCommand._edgeSnapCommand);
+  derive2DCommand(drawCommand, drawCommand._planarFillIdCommand);
 }
 
 function deriveTranslucentCommand(command) {
@@ -826,7 +924,13 @@ function deriveSilhouetteColorCommand(command, model) {
   return silhouetteColorCommand;
 }
 
-function deriveEdgeCommand(command, renderResources) {
+// Builds an edge draw command at the given screen-space line width.
+//
+// Two variants are derived per primitive (one for the color pass and one
+// for the snapping pass). Therefore, the visual line width and the snap-pass line
+// width can be set independently. The snap variant is pinned at 1 px to
+// avoid snap wiggle (see initialize). In practice both default to 1 px.
+function deriveEdgeCommand(command, renderResources, lineWidth) {
   const edgeGeometry = renderResources.edgeGeometry;
   const edgeCommand = DrawCommand.shallowClone(command);
 
@@ -848,11 +952,58 @@ function deriveEdgeCommand(command, renderResources) {
   uniformMap.u_isEdgePass = function () {
     return true; // This is the edge pass
   };
+
+  // Set line width uniform for quad-based edge rendering
+  uniformMap.u_lineWidth = function () {
+    return lineWidth;
+  };
+
   edgeCommand.uniformMap = uniformMap;
   edgeCommand.castShadows = false;
   edgeCommand.receiveShadows = false;
 
   return edgeCommand;
+}
+
+/**
+ * Derive a command for the planar fill feature-ID pre-pass.
+ *
+ * This command uses the same geometry as the original but writes only a
+ * feature-ID value to the color attachment (no lighting, no material).
+ * The fragment shader outputs <code>vec4(featureId, 0, 0, 1)</code>
+ * via the <code>PLANAR_FILL_ID_PASS</code> define.
+ *
+ * No polygon offset is applied: the pre-pass uses the natural depth of the
+ * non-behind planar fill geometry (same program as the main command minus
+ * the POLYGON_OFFSET path that would shift it).
+ *
+ * Like the other derived commands (translucent, silhouette, edge, etc.),
+ * this is called once per draw command from <code>initialize</code> when the
+ * ModelDrawCommand is constructed — not per frame.
+ *
+ * @param {DrawCommand} command The original draw command.
+ * @returns {DrawCommand} The derived command for the feature-ID pass.
+ * @private
+ */
+function derivePlanarFillIdCommand(command) {
+  const derived = DrawCommand.shallowClone(command);
+  derived.pass = Pass.CESIUM_3D_TILE_PLANAR_FILL_ID;
+  derived.castShadows = false;
+  derived.receiveShadows = false;
+
+  // Use the same render state but disable blending.
+  const rs = clone(command.renderState, true);
+  rs.blending.enabled = false;
+  derived.renderState = RenderState.fromCache(rs);
+
+  // Override uniformMap to set u_isPlanarFillIdPass to true for the pre-pass
+  const uniformMap = clone(command.uniformMap);
+  uniformMap.u_isPlanarFillIdPass = function () {
+    return true;
+  };
+  derived.uniformMap = uniformMap;
+
+  return derived;
 }
 
 function updateSkipLodStencilCommand(drawCommand, tile, use2D) {

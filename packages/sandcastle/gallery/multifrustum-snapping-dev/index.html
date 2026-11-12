@@ -1,0 +1,22 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  #snapInfo {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(42, 42, 42, 0.85);
+    color: #eee;
+    font-family: monospace;
+    font-size: 12px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    white-space: pre;
+    pointer-events: none;
+    z-index: 10;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<div id="snapInfo">snap: (move mouse)</div>

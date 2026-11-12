@@ -1,24 +1,26 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Check from "../Core/Check.js";
+import {
+  Cartesian2,
+  Cartesian4,
+  Check,
+  DeveloperError,
+  Event,
+  Frozen,
+  GeographicProjection,
+  IndexDatatype,
+  Math as CesiumMath,
+  PixelFormat,
+  Rectangle,
+  WebMercatorProjection,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import createWorldImageryAsync from "../Scene/createWorldImageryAsync.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import GeographicProjection from "../Core/GeographicProjection.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import CesiumMath from "../Core/Math.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import Rectangle from "../Core/Rectangle.js";
 import Request from "../Core/Request.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import TerrainProvider from "../Core/TerrainProvider.js";
 import TileProviderError from "../Core/TileProviderError.js";
-import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";

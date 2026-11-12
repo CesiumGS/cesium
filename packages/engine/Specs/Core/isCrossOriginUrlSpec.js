@@ -1,5 +1,6 @@
+import { getAbsoluteUri } from "@cesium/core";
 import Uri from "urijs";
-import { getAbsoluteUri, isCrossOriginUrl } from "../../index.js";
+import { isCrossOriginUrl } from "../../index.js";
 
 describe("Core/isCrossOriginUrl", function () {
   it("returns false for relative urls", function () {
