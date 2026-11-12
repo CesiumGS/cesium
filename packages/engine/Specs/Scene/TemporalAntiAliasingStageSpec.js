@@ -1,5 +1,5 @@
+import { Cartesian3 } from "@cesium/core";
 import {
-  Cartesian3,
   PostProcessStageLibrary,
   TemporalAntiAliasingStage,
 } from "../../index.js";
