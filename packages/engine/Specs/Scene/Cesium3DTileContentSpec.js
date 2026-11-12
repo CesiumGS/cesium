@@ -151,6 +151,9 @@ describe(
     describe("generates draw commands only when content.show !== false", () => {
       testCases.forEach((testCase) => {
         it(`for ${testCase.description}`, async () => {
+          if (!scene.context.webgl2) {
+            return;
+          }
           // Load the tileset, fly to its bounding sphere, and wait
           // until all tiles are loaded
           const tileset = await Cesium3DTilesTester.loadTileset(
