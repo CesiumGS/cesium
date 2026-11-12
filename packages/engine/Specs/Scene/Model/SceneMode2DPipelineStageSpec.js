@@ -160,11 +160,12 @@ describe(
         VertexAttributeSemantic.POSITION,
       );
 
-      // Two vertices stored as normalized UNSIGNED_SHORT VEC3 with a stride of 4 elements.
-      const quantized = new Uint16Array([65535, 0, 32768, 0, 0, 65535, 0, 0]);
+      // Two vertices stored as normalized UNSIGNED_SHORT VEC3, tightly packed as
+      // delivered by the loader.
+      const quantized = new Uint16Array([65535, 0, 32768, 0, 65535, 0]);
       positionAttribute.typedArray = quantized;
       positionAttribute.byteOffset = 0;
-      positionAttribute.byteStride = 8;
+      positionAttribute.byteStride = 8; // GPU layout; must be ignored
       positionAttribute.normalized = true;
       positionAttribute.count = 2;
 
@@ -186,7 +187,7 @@ describe(
       // Each vertex must be projected from its dequantized position, not
       // from the raw integer values.
       for (let i = 0; i < 2; i++) {
-        const raw = quantized.subarray(i * 4, i * 4 + 3);
+        const raw = quantized.subarray(i * 3, i * 3 + 3);
         const dequantized = new Cartesian3(
           raw[0] / 65535,
           raw[1] / 65535,

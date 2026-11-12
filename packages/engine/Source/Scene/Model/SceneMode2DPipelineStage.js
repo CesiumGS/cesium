@@ -225,19 +225,15 @@ function packPositionsTypedArray(attribute) {
   // Positions stored with an integer component type (KHR_mesh_quantization)
   // cannot hold projected coordinates. Convert them to tightly packed floats.
   const typedArray = attribute.typedArray;
-  const bytesPerElement = typedArray.BYTES_PER_ELEMENT;
-  const startIndex = (attribute.byteOffset ?? 0) / bytesPerElement;
-  const stride = defined(attribute.byteStride)
-    ? attribute.byteStride / bytesPerElement
-    : 3;
   const normalized = attribute.normalized === true;
 
   const count = attribute.count;
   const packed = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) {
-    const index = startIndex + i * stride;
     for (let j = 0; j < 3; j++) {
-      const value = typedArray[index + j];
+      // The loader already delivers a tightly packed array, so the GPU
+      // byteOffset/byteStride must not be applied again.
+      const value = typedArray[i * 3 + j];
       packed[i * 3 + j] = normalized
         ? normalizeIntegerValue(value, typedArray)
         : value;
