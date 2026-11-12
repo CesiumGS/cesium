@@ -119,7 +119,7 @@ describe("the surface boundary", () => {
     const fields = [...surface.code.matchAll(/struct (pixelInput_\d+)/g)].map(
       (m) => m[1]!,
     );
-    expect(fields.length, "every fragment entry point's inputs").toBe(21);
+    expect(fields.length, "every fragment entry point's inputs").toBe(25);
     // The pick variant's vertex entries put out the same, and the triangle
     // number (flat) one location past them.
     expect(pickOut).toEqual(new Map([...out, ["triangle", out.size]]));

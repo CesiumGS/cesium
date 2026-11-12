@@ -361,6 +361,8 @@ const TOOLBAR_CSS = `
 const LIFT = 0.0025;
 /** In GPU mode, the CPU mesh of the overlays, and of the modes that need triangles: its chordal tolerance, m in the scene. */
 const OVERLAY_TOLERANCE = 0.001;
+/** The X-ray's face opacity. */
+const XRAY_ALPHA = 0.3;
 /** The GPU's iso lines: divisions of each face's (u, v) rect, as many lines each way less one. */
 const ISO_DIVISIONS = 8;
 /** How long a scene may take to show right before it shows anyway, ms (a pipeline or palette that never arrives). */
@@ -572,6 +574,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     byKind: false,
     iso: false,
     normals: false,
+    /** Faces blended at `XRAY_ALPHA` (translucent b-rep draws), the edges on top. */
+    xray: false,
   };
   const kindColors = KIND_COLORS.map(linearOf);
 
@@ -760,6 +764,13 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     baseColor: [1, 1, 1, 1],
     roughness: 0.7,
   });
+  // The X-ray's faces: blended, drawn by the translucent passes (GPU-diced faces too).
+  const xrayMaterial = world.addMaterial({
+    baseColor: [1, 1, 1, XRAY_ALPHA],
+    roughness: 0.7,
+    flags: MaterialFlags.alphaBlend | MaterialFlags.blendedOnly,
+  });
+  const faceMaterial = () => (settings.xray ? xrayMaterial : facesMaterial);
   const groundMaterial = world.addMaterial({
     baseColor: [1, 1, 1, 1],
     roughness: 0.95,
@@ -1146,7 +1157,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
             mat4.fromScale(mat4.mat4(), shape.scale, shape.scale, shape.scale),
           ),
         ),
-        material: facesMaterial,
+        material: faceMaterial(),
         color: [1, 1, 1, 1],
         doubleSided: shape.doubleSided,
         name: `${shape.name}: face`,
@@ -1214,10 +1225,11 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     // shading and iso lines are drawn by the fragment stage from each view's
     // dice (`applyDisplay`). The CPU mode builds triangles and lines of its own.
     const gpuFaces = settings.gpu;
-    if (!gpuFaces || brepsFor !== String(settings.byKind)) {
+    const facesKey = `${settings.byKind}|${settings.xray}`;
+    if (!gpuFaces || brepsFor !== facesKey) {
       releaseBreps();
     }
-    brepsFor = gpuFaces ? String(settings.byKind) : "";
+    brepsFor = gpuFaces ? facesKey : "";
     shapes.forEach((shape, s) => {
       if (
         settings.gpu &&
@@ -1286,7 +1298,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           mesh: world.addMesh(data),
           origin,
           model,
-          material: facesMaterial,
+          material: faceMaterial(),
           color: [1, 1, 1, 1],
           doubleSided: shape.doubleSided,
           name: `${shape.name}: face`,
@@ -1864,7 +1876,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   };
   const toggle = (
     label: string,
-    key: "byKind" | "iso" | "normals",
+    key: "byKind" | "iso" | "normals" | "xray",
     title: string,
   ): HTMLLabelElement =>
     check(
@@ -1877,8 +1889,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           build();
           showStats();
         };
-        // New colours are new draws, with palettes to load: behind the overlay.
-        if (key === "byKind" && settings.gpu) {
+        // New colours or blending are new draws, with palettes to load: behind the overlay.
+        if ((key === "byKind" || key === "xray") && settings.gpu) {
           void settle("Colouring the faces…", change);
         } else {
           change();
@@ -2426,6 +2438,11 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           showStats();
         },
         "The exact edges, drawn over the faces.",
+      ),
+      toggle(
+        "X-ray",
+        "xray",
+        "The faces drawn at 30% opacity, through the translucent passes (GPU-diced faces too, trims included), the exact edges on top.",
       ),
       toggle(
         "Colour by kind",

@@ -2729,6 +2729,17 @@ static const float EMISSION_NODE = 2.0;
 // its own opaque self, the same color.
 static const float TRANSLUCENT_ALPHA = 0.9995;
 
+// A blended patch draw's faces have no opaque part: the opaque passes leave
+// the draw out (`recordBundle`), so an alpha at `TRANSLUCENT_ALPHA` or over
+// stays here, just under it. Other draws are as they are.
+float translucentAlpha(SurfaceVaryings in, float alpha) {
+  DrawRecord r = drawRecord(in.ids.x);
+  if ((r.flags & 128u) != 0u && (materials[r.materialIndex].flags & 8u) != 0u) {
+    return min(alpha, TRANSLUCENT_ALPHA - 1.0e-4);
+  }
+  return alpha;
+}
+
 // WebGPU's standard 4× sample positions, from the pixel's center.
 static const float2 SAMPLE_OFFSETS[4] = {
   float2(-0.125, -0.375), float2(0.375, -0.125), float2(-0.375, 0.125), float2(0.125, 0.375)
@@ -2800,10 +2811,11 @@ void listNode(SurfaceVaryings in, float3 color, float alpha, uint visible) {
 // list order, newest first, so the emission is seen through the layers in
 // front of it and not through its own layer.
 void appendNode(SurfaceVaryings in, float2 slope, Surface s, uint mask) {
-  if (s.alpha >= TRANSLUCENT_ALPHA) {
+  float shown = translucentAlpha(in, s.alpha);
+  if (shown >= TRANSLUCENT_ALPHA) {
     return; // drawn opaque (`cutOut`)
   }
-  float alpha = clamp(s.alpha, 0.0, 1.0);
+  float alpha = clamp(shown, 0.0, 1.0);
   uint visible = visibleSamples(in.position, slope, mask);
   if (alpha <= 0.0 || visible == 0u) {
     return;
@@ -2844,6 +2856,36 @@ void fsListSamples(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace, uint m
   }
 }
 
+// The patch draws' (`fsList`, `fsListSamples`): a fragment outside the face's
+// trim is left out, the test first for its derivatives, the discard after the
+// shading's (a trim's coverage needs uniform control flow).
+[shader("fragment")]
+void fsPatchList(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace, uint mask : SV_Coverage) {
+  bool covered = trimCovered(in);
+  float2 slope = depthSlope(in.position);
+  Surface s = shadeSurface(in, frontFacing, true);
+  if (!covered) {
+    discard;
+  }
+  appendNode(in, slope, s, mask);
+}
+
+[shader("fragment")]
+void fsPatchListSamples(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace, uint mask : SV_Coverage,
+                        uint sample : SV_SampleIndex) {
+  bool covered = trimCovered(in);
+  float2 slope = depthSlope(in.position);
+  bool writes = sample == firstbitlow(mask);
+  surfaceLight = writes;
+  Surface s = shadeSurface(in, frontFacing, true);
+  if (!covered) {
+    discard;
+  }
+  if (writes) {
+    appendNode(in, slope, s, mask);
+  }
+}
+
 // Distance from the camera warped to [-1, 1] (logarithmic, as the paper
 // recommends: layers far apart in depth stay apart in the moments).
 float momentDepth(float3 relPosition) {
@@ -2862,7 +2904,7 @@ float blendedAlpha(SurfaceVaryings in) {
   if (clippedOut(r, in.relPosition)) {
     discard;
   }
-  return clamp(alpha, 0.0, 1.0);
+  return clamp(translucentAlpha(in, alpha), 0.0, 1.0);
 }
 
 struct MomentsOut {
@@ -2870,8 +2912,7 @@ struct MomentsOut {
   float4 higher : SV_Target1; // its first four moments in depth
 };
 
-[shader("fragment")]
-MomentsOut fsMoments(SurfaceVaryings in) {
+MomentsOut momentsOf(SurfaceVaryings in) {
   float2 slope = depthSlope(in.position);
   float blended = blendedAlpha(in);
   float alpha = blended * uncovered(in.position, slope);
@@ -2884,6 +2925,25 @@ MomentsOut fsMoments(SurfaceVaryings in) {
   MomentsOut out;
   out.zero = absorbance;
   out.higher = float4(z, z2, z2 * z, z2 * z2) * absorbance;
+  return out;
+}
+
+[shader("fragment")]
+MomentsOut fsMoments(SurfaceVaryings in) {
+  return momentsOf(in);
+}
+
+// A patch draw's (`fsMoments`) with its trim test, and a lines-only draw's
+// lines (the color pass has them through `shadeSurface`); the derivatives
+// first, in uniform control flow.
+[shader("fragment")]
+MomentsOut fsPatchMoments(SurfaceVaryings in) {
+  bool covered = trimCovered(in);
+  bool off = offLines(in, drawRecord(in.ids.x));
+  MomentsOut out = momentsOf(in);
+  if (!covered || off) {
+    discard;
+  }
   return out;
 }
 
@@ -2951,12 +3011,12 @@ struct AccumulatedOut {
   float4 unlit : SV_Target1;
 };
 
-[shader("fragment")]
-AccumulatedOut fsMomentColor(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) {
+AccumulatedOut momentColorOf(SurfaceVaryings in, bool frontFacing) {
   float2 slope = depthSlope(in.position);
   Surface s = shadeSurface(in, frontFacing, true);
-  float alpha = clamp(s.alpha, 0.0, 1.0) * uncovered(in.position, slope);
-  if (alpha <= 0.0 || s.alpha >= TRANSLUCENT_ALPHA) {
+  float shown = translucentAlpha(in, s.alpha);
+  float alpha = clamp(shown, 0.0, 1.0) * uncovered(in.position, slope);
+  if (alpha <= 0.0 || shown >= TRANSLUCENT_ALPHA) {
     discard;
   }
   uint2 p = uint2(in.position.xy);
@@ -2969,5 +3029,22 @@ AccumulatedOut fsMomentColor(SurfaceVaryings in, bool frontFacing : SV_IsFrontFa
   out.lit = float4(s.unlit ? float3(0.0) : weighted, w);
   float sceneLuminance = dot(weighted, float3(0.2126, 0.7152, 0.0722)) * s.sceneShare;
   out.unlit = s.unlit ? float4(weighted, 0.0) : float4(float3(0.0), sceneLuminance);
+  return out;
+}
+
+[shader("fragment")]
+AccumulatedOut fsMomentColor(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) {
+  return momentColorOf(in, frontFacing);
+}
+
+// A patch draw's (`fsMomentColor`) with its trim test, taken first and
+// acted on last (`fsPatchList`).
+[shader("fragment")]
+AccumulatedOut fsPatchMomentColor(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) {
+  bool covered = trimCovered(in);
+  AccumulatedOut out = momentColorOf(in, frontFacing);
+  if (!covered) {
+    discard;
+  }
   return out;
 }

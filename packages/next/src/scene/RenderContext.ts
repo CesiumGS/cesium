@@ -145,6 +145,17 @@ export interface SurfacePipelines {
   translucentColor: GPURenderPipeline;
   translucentColorDoubleSided: GPURenderPipeline;
   /**
+   * The same for patch draws (`vsPatch`, with the trim test of every face:
+   * there is no depth attachment, so no early depth to keep for the
+   * untrimmed ones; an untrimmed face carries no trim and is covered).
+   */
+  translucentListPatch: GPURenderPipeline;
+  translucentListPatchDoubleSided: GPURenderPipeline;
+  translucentMomentsPatch: GPURenderPipeline;
+  translucentMomentsPatchDoubleSided: GPURenderPipeline;
+  translucentColorPatch: GPURenderPipeline;
+  translucentColorPatchDoubleSided: GPURenderPipeline;
+  /**
    * Patch draws (`World.addPatchMesh`), one- and double-sided: the pass's
    * vertex stage is `vsPatch` (`vsPatchDepth` in the depth-only passes),
    * one instance a chunk of cells from the draw's own list. In the
@@ -232,6 +243,12 @@ export const SURFACE_KEYS: readonly SurfaceKey[] = [
   "translucentMomentsDoubleSided",
   "translucentColor",
   "translucentColorDoubleSided",
+  "translucentListPatch",
+  "translucentListPatchDoubleSided",
+  "translucentMomentsPatch",
+  "translucentMomentsPatchDoubleSided",
+  "translucentColorPatch",
+  "translucentColorPatchDoubleSided",
   "opaquePatch",
   "opaquePatchDoubleSided",
   "depthPatch",
@@ -1295,6 +1312,7 @@ async function createPipelines(
     targets: GPUColorTargetState[],
     sampleCount = 1,
     layout: GPUPipelineLayout = translucentPipelineLayout,
+    patches = false,
   ) =>
     surfacePipeline({
       label,
@@ -1302,14 +1320,8 @@ async function createPipelines(
       multisample: { count: sampleCount },
       vertex: {
         module: shaders,
-        entryPoint: "vs",
-        buffers: [
-          {
-            arrayStride: 4,
-            stepMode: "instance",
-            attributes: [{ shaderLocation: 0, offset: 0, format: "uint32" }],
-          },
-        ],
+        entryPoint: patches ? "vsPatch" : "vs",
+        buffers: instanceBuffers(patches),
       },
       fragment: { module: shaders, entryPoint, targets },
       primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },
@@ -1560,6 +1572,74 @@ async function createPipelines(
           colorTargets,
           1,
           t,
+        ),
+      // Patch draws in the translucent passes: the chunk vertex stage and
+      // the entries with the trim test (`fsPatchList` and the others).
+      translucentListPatch: async () =>
+        translucentPipeline(
+          translucent(),
+          name("translucent.list.patch"),
+          "back",
+          (await perSample) ? "fsPatchListSamples" : "fsPatchList",
+          listTargets,
+          SCENE_TARGETS.sampleCount,
+          t,
+          true,
+        ),
+      translucentListPatchDoubleSided: async () =>
+        translucentPipeline(
+          translucent(),
+          name("translucent.list.patch.doubleSided"),
+          "none",
+          (await perSample) ? "fsPatchListSamples" : "fsPatchList",
+          listTargets,
+          SCENE_TARGETS.sampleCount,
+          t,
+          true,
+        ),
+      translucentMomentsPatch: () =>
+        translucentPipeline(
+          translucent(),
+          name("translucent.moments.patch"),
+          "back",
+          "fsPatchMoments",
+          momentTargets,
+          1,
+          t,
+          true,
+        ),
+      translucentMomentsPatchDoubleSided: () =>
+        translucentPipeline(
+          translucent(),
+          name("translucent.moments.patch.doubleSided"),
+          "none",
+          "fsPatchMoments",
+          momentTargets,
+          1,
+          t,
+          true,
+        ),
+      translucentColorPatch: () =>
+        translucentPipeline(
+          translucent(),
+          name("translucent.color.patch"),
+          "back",
+          "fsPatchMomentColor",
+          colorTargets,
+          1,
+          t,
+          true,
+        ),
+      translucentColorPatchDoubleSided: () =>
+        translucentPipeline(
+          translucent(),
+          name("translucent.color.patch.doubleSided"),
+          "none",
+          "fsPatchMomentColor",
+          colorTargets,
+          1,
+          t,
+          true,
         ),
       // Patch draws: `caster`'s stages (a whole-shader override has `vs` and
       // `fs` only, as for points); opaque ones shade at the depth's equal.

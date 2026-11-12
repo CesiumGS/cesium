@@ -556,7 +556,8 @@ export function recordBundle(
       (MaterialFlags.alphaMask | MaterialFlags.alphaBlend)) !==
     0;
   // Patch draws: their own pipelines, with the chunk vertex stage; their
-  // materials are opaque (cut-outs and blending are not drawn through them).
+  // materials are opaque here (cut-outs are not drawn through them, and
+  // blended ones draw in the translucent passes alone).
   // A draw of faces with a trim has its own (`...Trimmed`: the fragment stage
   // tests the trim), so the rest keep early depth.
   const patchKey = (batch: Batch): SurfaceKey => {
@@ -630,11 +631,13 @@ export function recordBundle(
       (batch) =>
         (batch.shown > 0 || (kind === "shadow" && batch.casters > 0)) &&
         // Only the translucent passes draw it (`encodeTranslucent`); lines
-        // can't blend, and stay here.
+        // can't blend, and stay here. A patch draw's blended faces have no
+        // opaque part here either (the passes' patch stages don't cut by alpha).
         (batch.mesh.topology === "line-list" ||
-          (world.raster.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
+          ((world.raster.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
             MaterialFlags.blendedOnly) ===
-            0),
+            0 &&
+            !(batch.patches && translucent(world, batch)))),
     )
     .sort(
       (a, b) =>
@@ -926,7 +929,7 @@ export function translucentRange(
 export function encodeTranslucent(
   world: BundleWorld,
   pass: GPURenderPassEncoder,
-  keyOf: (doubleSided: boolean) => SurfaceKey,
+  keyOf: (doubleSided: boolean, patches: boolean) => SurfaceKey,
   group: GPUBindGroup,
   clipped = false,
   ghosts = false,
@@ -940,10 +943,10 @@ export function encodeTranslucent(
   for (const batch of world.raster.batchList) {
     // `ghosts`: the view's clips ghost what they remove, which the
     // translucent passes draw from every opaque triangle batch too (the
-    // fragment stage keeps only what is ghosted, surface.slang).
+    // fragment stage keeps only what is ghosted, surface.slang). A patch
+    // draw's chunks are its view's dice (the same the opaque pass draws).
     if (
       batch.shown === 0 ||
-      batch.patches ||
       (!ghosts && !translucent(world, batch)) ||
       (ghosts && batch.mesh.topology !== "triangle-list") ||
       world.raster.brokenTextureSets.has(batch.textureSet)
@@ -954,7 +957,7 @@ export function encodeTranslucent(
       slab = batch.mesh.slab;
       bindSlab(world, pass, slab);
     }
-    const key = keyOf(batch.doubleSided);
+    const key = keyOf(batch.doubleSided, batch.patches);
     const { pipeline: wanted, custom } = batchPipeline(
       world,
       batch,
@@ -970,6 +973,9 @@ export function encodeTranslucent(
       bound = wantedGroup;
       pass.setBindGroup(2, bound);
     }
-    world.raster.drawArguments.drawBatch(pass, batch, direct);
+    // A patch draw's index buffer replaced the slab's: the next draw binds it again.
+    if (world.raster.drawArguments.drawBatch(pass, batch, direct)) {
+      slab = -1;
+    }
   }
 }

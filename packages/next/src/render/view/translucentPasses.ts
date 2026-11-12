@@ -11,6 +11,7 @@ import { type ViewFrame, type PassBody, LIST_HEADER } from "./viewFrameData.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
 import type { EngineRaster } from "./engineRaster.ts";
+import type { SurfaceKey } from "../../scene/RenderContext.ts";
 
 /** Rasterizer side: translucent and composite pass bodies. */
 export interface TranslucentPassEngine extends Pick<
@@ -28,6 +29,15 @@ export interface TranslucentPassEngine extends Pick<
     | "translucentDummies"
     | "viewFrames"
   >;
+}
+
+/** A translucent pass's pipeline for a mesh or patch draw, one- or double-sided. */
+function translucentKey(
+  pass: "translucentList" | "translucentMoments" | "translucentColor",
+  doubleSided: boolean,
+  patches: boolean,
+): SurfaceKey {
+  return `${pass}${patches ? "Patch" : ""}${doubleSided ? "DoubleSided" : ""}`;
 }
 
 export function translucentPass(
@@ -92,8 +102,8 @@ export function translucentPass(
       const pass = enc.beginRenderPass(listPass);
       world.encodeTranslucent(
         pass,
-        (doubleSided) =>
-          doubleSided ? "translucentListDoubleSided" : "translucentList",
+        (doubleSided, patches) =>
+          translucentKey("translucentList", doubleSided, patches),
         translucentGroup(engine, frame, 0, [
           lists,
           dummies.zero,
@@ -151,8 +161,8 @@ export function translucentPass(
     const first = enc.beginRenderPass(momentPass);
     world.encodeTranslucent(
       first,
-      (doubleSided) =>
-        doubleSided ? "translucentMomentsDoubleSided" : "translucentMoments",
+      (doubleSided, patches) =>
+        translucentKey("translucentMoments", doubleSided, patches),
       translucentGroup(engine, frame, 1, [
         dummies.buffer,
         dummies.zero,
@@ -169,8 +179,8 @@ export function translucentPass(
     const second = enc.beginRenderPass(colorPass);
     world.encodeTranslucent(
       second,
-      (doubleSided) =>
-        doubleSided ? "translucentColorDoubleSided" : "translucentColor",
+      (doubleSided, patches) =>
+        translucentKey("translucentColor", doubleSided, patches),
       translucentGroup(engine, frame, 2, [dummies.buffer, zero, higher]),
       frame.clipBytes > 0,
       frame.clipGhost !== undefined,

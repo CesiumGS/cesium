@@ -12,6 +12,7 @@
 //   2. a blended ghost (`translucent`, alpha 0.4): the ground inside the box
 //      is drawn translucent over the pipe, which stays whole, at the right
 //      mix; outside the box nothing changed;
+//   2b. the same ghost on a b-rep ground (a GPU-diced plane face);
 //   3. a stippled ghost (alpha 0.5): the same without the translucent passes,
 //      at about half the pixels;
 //   4. the same ghost on a pipe that is not exempt: the clip ghosts the pipe
@@ -25,6 +26,7 @@
 //      draws everything whole, and clearing the mask restores it.
 import "../lab/harness.css";
 import type { Harness } from "../lab/harness.ts";
+import { BrepBuilder } from "../src/brep/index.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
@@ -33,6 +35,7 @@ import {
   CustomShader,
   EARTH,
   Engine,
+  MaterialFlags,
   OffscreenTarget,
   UNITLESS_EXPOSURE,
   type ClipSet,
@@ -519,6 +522,75 @@ async function runClipEffects(): Promise<ClipEffectsResult> {
         },
         "outside unchanged; each channel of the ghost within 12 of α · ground + (1 − α) · behind, in linear light",
         near(outside[0]!, whole.outside[0]!, 6) &&
+          expectedGhost.every((v, k) => near(ghost[k]!, v, 12)) &&
+          expectedOver.every((v, k) => near(over[k]!, v, 12)) &&
+          gpuErrors.length === 0,
+      );
+      s.dispose();
+    }
+
+    // --- 2b. the same ghost on a b-rep ground (GPU-diced faces) ------------------
+    for (const method of ["moments", "exact"] as const) {
+      const s = scene(engine, lost, { translucencyMethod: method });
+      const [slab] = excavation(s, true);
+      s.world.removeDraw(slab!);
+      const b = new BrepBuilder();
+      const v = b.vertex([0, 0, 0]);
+      const e = b.edge(v, v, { tolerance: 1e-5 });
+      const corners = [
+        [0, 0],
+        [160, 0],
+        [160, 160],
+        [0, 160],
+      ] as const;
+      b.face(b.plane([-80, -80, 0], [1, 0, 0], [0, 1, 0]), [
+        corners.map((a, i) => ({
+          edge: e,
+          pcurve: [a, corners[(i + 1) % 4]!] as const,
+        })),
+      ]);
+      const ground = s.world.addBrep(b.build(), {
+        parent: s.earth,
+        origin: Float64Array.from([0, 0, R]),
+        material: s.world.addMaterial({
+          baseColor: RED,
+          flags: MaterialFlags.unlit,
+        }),
+        doubleSided: true,
+      });
+      view_clips(s, {
+        ...pit({ kind: "translucent", alpha: ALPHA }),
+        frame: s.itrf,
+      });
+      await s.ready();
+      await s.frames(6);
+      const pixels = await s.capture();
+      show(`2b. b-rep ground, translucent ghost (${method})`, pixels);
+      const p = probe(s);
+      const outside = mean(pixels, p.outside.x, p.outside.y);
+      const ghost = mean(pixels, p.pit.x, p.pit.y);
+      const over = mean(pixels, p.pipe.x, p.pipe.y);
+      const groundLinear = [1, 0.1, 0.1];
+      const pipeLinear = [0.1, 0.3, 1];
+      const expectedGhost = groundLinear.map((v) => encode(ALPHA * v));
+      const expectedOver = groundLinear.map((v, k) =>
+        encode(ALPHA * v + (1 - ALPHA) * pipeLinear[k]!),
+      );
+      add(
+        `a blended ghost of a b-rep ground (${method} translucency): the faces inside the box are translucent over the pipe`,
+        {
+          "patch draw (1) or none (0)": ground.patches ? 1 : 0,
+          "outside (rgb)": rgb(outside),
+          "ghost over nothing (rgb)": rgb(ghost),
+          expected: rgb(expectedGhost as Rgb),
+          "ghost over the pipe (rgb)": rgb(over),
+          "expected over the pipe": rgb(expectedOver as Rgb),
+          "GPU errors": gpuErrors.length,
+        },
+        "the ground is a patch draw; outside it is whole; inside the box each channel is within 12 of α · ground + (1 − α) · behind, in linear light",
+        ground.patches !== undefined &&
+          outside[0]! > 200 &&
+          outside[2]! < 100 &&
           expectedGhost.every((v, k) => near(ghost[k]!, v, 12)) &&
           expectedOver.every((v, k) => near(over[k]!, v, 12)) &&
           gpuErrors.length === 0,

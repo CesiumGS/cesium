@@ -1994,13 +1994,13 @@ export class World {
 
   /**
    * Encodes this world's blended surfaces into a translucent pass (after
-   * the view's cull): the pass's pipeline (`keyOf`, one- or double-sided)
-   * from each batch's shader, and its group 3. Encoded directly, not
+   * the view's cull): the pass's pipeline (`keyOf`, one- or double-sided,
+   * mesh or patch draw) from each batch's shader, and its group 3. Encoded directly, not
    * bundled: group 3 is per view.
    */
   encodeTranslucent(
     pass: GPURenderPassEncoder,
-    keyOf: (doubleSided: boolean) => SurfaceKey,
+    keyOf: (doubleSided: boolean, patches: boolean) => SurfaceKey,
     group: GPUBindGroup,
     clipped = false,
     ghosts = false,

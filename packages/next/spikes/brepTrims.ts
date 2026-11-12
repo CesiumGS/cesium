@@ -20,6 +20,9 @@
 //   c. shadows, ambient occlusion (the depth and normal prepass) and picks on
 //      a trimmed face: no GPU errors, a pick through a hole finds the face
 //      behind it, a pick on the material the face;
+//   c2. translucent faces (alpha 0.4, in "exact" and "moments"): an untrimmed
+//      and a trimmed face blend as alpha * face + (1 - alpha) * background,
+//      and a hole in the trimmed one shows the background alone;
 //   d. the CPU time to prepare spans and trims, the GPU passes, and the same
 //      for `tessellateBrep` at a comparable error, for CTC-05's 208 faces
 //      (200 drilled plates without it); and the GPU against the old split
@@ -42,6 +45,7 @@ import { OcctKernel } from "../src/brep/occt.ts";
 import {
   CustomShader,
   Engine,
+  MaterialFlags,
   OffscreenTarget,
   UNITLESS_EXPOSURE,
   type View,
@@ -631,6 +635,8 @@ function environment(
     ambientOcclusion?: boolean;
     vertexBytes?: number;
     indexBytes?: number;
+    clearColor?: [number, number, number];
+    translucencyMethod?: View["translucencyMethod"];
   } = {},
 ): Environment {
   const world = engine.createWorld({
@@ -652,6 +658,20 @@ function environment(
 function pixelsPerMetre(view: View, depth: number): number {
   const fovy = view.camera.fovy(WIDTH / HEIGHT);
   return HEIGHT / 2 / (Math.tan(fovy / 2) * depth);
+}
+
+/** The bytes of the pixel at `at` in a read frame. */
+function pixelOf(pixels: Uint8ClampedArray, at: Pair): number[] {
+  const i = (Math.round(at[1]) * WIDTH + Math.round(at[0])) * 4;
+  return [pixels[i]!, pixels[i + 1]!, pixels[i + 2]!];
+}
+
+/** An sRGB level (0 to 255) from a linear value. */
+function encodeLevel(linear: number): number {
+  return (
+    255 *
+    (linear <= 0.0031308 ? 12.92 * linear : 1.055 * linear ** (1 / 2.4) - 0.055)
+  );
 }
 
 // a. the classification.
@@ -1109,6 +1129,130 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
       engine.removeView(env.view);
       env.world.removeBrep(brep);
       env.world.destroy();
+    }
+
+    // c2. blended b-rep faces, in both translucency methods.
+    progress("c2. translucent faces");
+    {
+      const alpha = 0.4;
+      const square = new BrepBuilder();
+      const squareEdge = oneEdge(square);
+      square.face(square.plane([-3, -0.5, 0], [1, 0, 0], [0, 1, 0]), [
+        polygon(squareEdge, [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+        ]),
+      ]);
+      const forms = [plateScene().form, square.build()];
+      for (const method of ["exact", "moments"] as const) {
+        const env = environment(engine, shader, target, lost, {
+          clearColor: [1, 0, 0],
+          translucencyMethod: method,
+        });
+        placeCamera(env.view, [0, 0, 0], 6);
+        const ppm = pixelsPerMetre(env.view, 6);
+        const at = (u: number, v: number): Pair => [
+          WIDTH / 2 + u * ppm,
+          HEIGHT / 2 - v * ppm,
+        ];
+        // The trimmed plate's material, the untrimmed square, the plate's round and rectangular holes.
+        const solid = [at(-1.2, -0.8), at(-2.5, 0)];
+        const holes = [at(-0.6, 0), at(0.75, -0.1)];
+        const frame = async (
+          baseColor: [number, number, number, number],
+          flags: number,
+        ) => {
+          const material = env.world.addMaterial({ baseColor, flags });
+          const handles = forms.map((form) =>
+            env.world.addBrep(form, {
+              origin: ORIGIN_VECTOR,
+              material,
+              doubleSided: true,
+            }),
+          );
+          const give = Date.now() + 30_000;
+          let pixels: Uint8ClampedArray;
+          for (;;) {
+            env.engine.renderFrame();
+            lost();
+            pixels = await within("c2. reading the frame", 30, target.read());
+            const first = pixelOf(pixels, solid[0]!);
+            const clear = pixelOf(pixels, holes[0]!);
+            // The pipelines compile in the background: until then the faces are missing.
+            if (first.some((c, k) => c !== clear[k]) || Date.now() > give) {
+              break;
+            }
+            await sleep(50);
+          }
+          // A few more, for the lists' and the moments' passes to settle.
+          for (let k = 0; k < 3; k++) {
+            env.engine.renderFrame();
+            pixels = await within("c2. reading the frame", 30, target.read());
+          }
+          for (const handle of handles) {
+            env.world.removeBrep(handle);
+          }
+          return pixels;
+        };
+        const opaque = await frame([0, 0, 1, 1], MaterialFlags.unlit);
+        const blended = await frame(
+          [0, 0, 1, alpha],
+          MaterialFlags.unlit |
+            MaterialFlags.alphaBlend |
+            MaterialFlags.blendedOnly,
+        );
+        const background = pixelOf(opaque, holes[0]!);
+        // The scene's red is the clear color's, 1 in light, which the exposure and the tone map show as 241.
+        const face = [0, 0, 1];
+        const red = [1, 0, 0];
+        let worstSolid = 0;
+        let worstHole = 0;
+        let leastShown = 255;
+        for (const point of solid) {
+          const seen = pixelOf(blended, point);
+          for (let k = 0; k < 3; k++) {
+            const wanted = encodeLevel(
+              alpha * face[k]! + (1 - alpha) * red[k]!,
+            );
+            worstSolid = Math.max(worstSolid, Math.abs(seen[k]! - wanted));
+          }
+          // Blue is the face's alone: its share is the alpha's, not the face's or the background's.
+          leastShown = Math.min(leastShown, seen[2]!);
+        }
+        for (const point of holes) {
+          const seen = pixelOf(blended, point);
+          for (let k = 0; k < 3; k++) {
+            worstHole = Math.max(
+              worstHole,
+              Math.abs(seen[k]! - background[k]!),
+            );
+          }
+        }
+        checks.push({
+          id: id++,
+          name: `translucent trimmed and untrimmed faces (alpha ${alpha}), "${method}"`,
+          measured: {
+            "worst level off alpha * face + (1 - alpha) * red, on the faces":
+              worstSolid,
+            "worst level off red, in the holes": worstHole,
+            "blue on the faces (0 would be red alone)": leastShown,
+            "red on the plate": pixelOf(blended, solid[0]!)[0]!,
+            "red in a hole": background[0]!,
+            "GPU errors": gpuErrors.length,
+          },
+          limit:
+            "the faces blend as alpha * face + (1 - alpha) * background within 8 levels; a trimmed face's holes show the background alone (within 1 level); no GPU errors",
+          pass:
+            worstSolid <= 8 &&
+            worstHole <= 1 &&
+            leastShown > 40 &&
+            gpuErrors.length === 0,
+        });
+        engine.removeView(env.view);
+        env.world.destroy();
+      }
     }
 
     // d. times.
