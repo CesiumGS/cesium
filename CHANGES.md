@@ -34,6 +34,7 @@
 - Fixed slow loading of models and tilesets using the `CESIUM_primitive_outline` extension, and reduced the size of their outline vertex buffers. [#12084](https://github.com/CesiumGS/cesium/pull/12084)
 - Fixed `Scene.pickVoxel` returning the wrong cell for tiles with more than 65,280 samples, and returning a cell when no voxel sample was rendered at the pick position. [#13950](https://github.com/CesiumGS/cesium/issues/13950)
 - Fixed a crash in `ImageryLayer` when computing tile imagery skeletons for rectangles that do not intersect the imagery provider's bounds. [#13964](https://github.com/CesiumGS/cesium/pull/13694)
+- Fixed GPX loading failing when descriptive fields contain URLs by using the current Autolinker replacement callback signature. [#13944](https://github.com/CesiumGS/cesium/pull/13944)
 
 ## 1.147 - 2026-11-02
 
@@ -93,8 +94,6 @@ import { Cartesian3, Color } from "@cesium/core";
 - Added batch `.setPositions` method to BufferPrimitiveCollection, improving performance when animating vertex positions on a range of many point, line, or polygon primitives. [#13590](https://github.com/CesiumGS/cesium/issues/13590)
 
 #### Fixes :wrench:
-
-- Fixed GPX loading failing when descriptive fields contain URLs by using the current Autolinker replacement callback signature.
 
 - Reduced load time and memory usage for implicitly-tiled tilesets. [#13808](https://github.com/CesiumGS/cesium/pull/13808)
 - Reduced load time, memory usage, and rendering overhead for models and 3D Tiles using `EXT_mesh_primitive_edge_visibility` in `EdgeDisplayMode.SURFACES_ONLY` by deferring edge geometry construction until edges are displayed or needed for snapping.
