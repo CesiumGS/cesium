@@ -56,6 +56,7 @@ import {
 } from "../../camera/route.ts";
 import { HEIGHT_NORMAL_ATTRIBUTE } from "../../globe/heightNormal.ts";
 import { invertAffine, mat4, multiply } from "../../math/mat4.ts";
+import type { Vec3 } from "../../math/vec3.ts";
 import {
   CENTER_WORD,
   FLAGS_WORD,
@@ -87,6 +88,7 @@ import {
   type DrawnMap,
   type ScaledImage,
 } from "../warpBounds.ts";
+import { composeSphere } from "../routeBounds.ts";
 import { affinePart, fitLatticeSteps, routeDisplacement } from "../warpFit.ts";
 import {
   WarpFitCache,
@@ -387,6 +389,26 @@ class AnchorTileWarp implements TileWarp {
     }
   }
 
+  sphere(
+    center: ArrayLike<number>,
+    radius: number,
+  ): { center: Vec3; radius: number; sigmaMax: number } | undefined {
+    const route = this.#route;
+    if (!route) {
+      return undefined;
+    }
+    if (this.#afterRoute !== route) {
+      this.#afterRoute = route;
+      this.#after = invertAffine(mat4(), affinePart(route));
+    }
+    try {
+      return composeSphere(route, this.#after, this.#spans, center, radius);
+    } catch {
+      // A step undefined at the centre: sampled, as ever.
+      return undefined;
+    }
+  }
+
   rebound(image: object): WarpedPoints {
     return {
       ...scaledBounds(image as ScaledImage, this.#low, this.#high),
@@ -399,6 +421,10 @@ class AnchorTileWarp implements TileWarp {
   }
 
   #route: Route | undefined;
+  #afterRoute: Route | undefined;
+  #after: Float64Array | undefined;
+  /** Each scaled warp's bucket now: the span its scale holds over. */
+  #spans = new Map<Warp, { low: number; high: number }>();
 
   /**
    * Remakes the maps when the anchor's route changed or a scaled warp
@@ -419,6 +445,7 @@ class AnchorTileWarp implements TileWarp {
         buckets.set(s.warp, bucket);
       }
     }
+    this.#spans = buckets;
     const only = route.steps.find((s) => s.kind === "warp" && s.warp.scale);
     const affine =
       buckets.size === 1 &&

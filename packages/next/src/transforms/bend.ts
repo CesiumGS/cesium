@@ -86,6 +86,21 @@ export const bendDescriptor: TransformDescriptor = {
     out[1] = y;
     out[2] = oz + radius - side * Math.hypot(X, W);
   },
+  bound: (region, ranges) => {
+    // The columns are orthogonal, of norm |1 - κ dz| along x, 1 along z and
+    // along y; dz is the height above the neutral line.
+    const dz: [number, number] = [
+      region.center[2]! - region.radius - Math.max(...ranges.oz!),
+      region.center[2]! + region.radius - Math.min(...ranges.oz!),
+    ];
+    let worst = 1;
+    for (const k of ranges.curvature!) {
+      for (const d of dz) {
+        worst = Math.max(worst, Math.abs(1 - k * d));
+      }
+    }
+    return { lipschitz: worst };
+  },
   separable: [],
   source,
   slang: "bendParity",

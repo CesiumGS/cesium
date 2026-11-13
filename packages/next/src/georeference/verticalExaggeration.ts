@@ -23,6 +23,7 @@ import {
   WGS84_RADII,
   type Radii,
 } from "./ellipsoid.ts";
+import { curvatureRadii } from "./regionBounds.ts";
 
 type K = "factor" | "ceiling" | "baseHeight" | "band";
 
@@ -50,6 +51,72 @@ export function unliftProfile(h2: number, v: Named<K>): number {
   }
   const r = h2 - (a + (k - 1) * (a - v.baseHeight));
   return a + (2 * r) / (k + Math.sqrt(k * k - (2 * (k - 1) * r) / v.band));
+}
+
+/**
+ * σ_max of the lift's Jacobian over a sphere (the declared bound). With
+ * S the shape operator, J = I + (k - 1)(g S (I + hS)⁻¹ + g' n nᵀ) is
+ * symmetric with n and the two principal directions as axes, so its
+ * singular values are |1 + (k - 1) g'| along the normal and
+ * |1 + (k - 1) g / (ρ + h)| along each principal direction, ρ the radius of
+ * curvature. Heights within the sphere are within its radius of the
+ * centre's (the height is 1-Lipschitz), g is non-decreasing and g' falls
+ * from 1 to 0, so each factor's range follows from g and g' at the ends of
+ * that interval, over the parameters' ranges (their corners: the profile is
+ * monotone in the ceiling and base height).
+ */
+function liftBound(radii: Radii) {
+  const { min: rhoMin, max: rhoMax } = curvatureRadii(radii);
+  const at = heightFrame();
+  return (
+    region: { readonly center: ArrayLike<number>; readonly radius: number },
+    ranges: Readonly<Record<string, readonly [number, number]>>,
+  ): { lipschitz: number } => {
+    try {
+      locate(radii, region.center, at, false);
+    } catch {
+      return { lipschitz: Infinity };
+    }
+    const r = region.radius;
+    const hLow = at.h - r;
+    const hHigh = at.h + r;
+    if (!(rhoMin + hLow > 0)) {
+      return { lipschitz: Infinity };
+    }
+    const k = ranges.factor!;
+    let gLow = Infinity;
+    let gHigh = -Infinity;
+    let dgLow = Infinity;
+    let dgHigh = -Infinity;
+    for (const ceiling of ranges.ceiling!) {
+      for (const baseHeight of ranges.baseHeight!) {
+        for (const band of ranges.band!) {
+          const v = { factor: 1, ceiling, baseHeight, band };
+          const [g0, dg0] = liftProfile(hLow, v);
+          const [g1, dg1] = liftProfile(hHigh, v);
+          gLow = Math.min(gLow, g0);
+          gHigh = Math.max(gHigh, g1);
+          dgLow = Math.min(dgLow, dg1);
+          dgHigh = Math.max(dgHigh, dg0);
+        }
+      }
+    }
+    // g / (ρ + h) over the heights and radii: the largest and smallest.
+    const tHigh =
+      gHigh > 0 ? gHigh / (rhoMin + hLow) : gHigh / (rhoMax + hHigh);
+    const tLow = gLow < 0 ? gLow / (rhoMin + hLow) : gLow / (rhoMax + hHigh);
+    let worst = 0;
+    for (const f of [k[0] - 1, k[1] - 1]) {
+      worst = Math.max(
+        worst,
+        Math.abs(1 + f * dgLow),
+        Math.abs(1 + f * dgHigh),
+        Math.abs(1 + f * tLow),
+        Math.abs(1 + f * tHigh),
+      );
+    }
+    return { lipschitz: worst };
+  };
 }
 
 function sourceOf(radii: Radii): string {
@@ -121,6 +188,7 @@ export function verticalExaggerationDescriptor(
       out[1] = y + (h - h2) * frame.n[1]!;
       out[2] = z + (h - h2) * frame.n[2]!;
     },
+    bound: liftBound(radii),
     separable: ["factor"],
     identity: { factor: 1 },
     source: sourceOf(radii),

@@ -7,6 +7,7 @@
 import type { SmoothEdge } from "../transform/graph.ts";
 import { edgeOf, type TransformDescriptor } from "../transforms/descriptor.ts";
 import { checkRadii, WGS84_RADII, type Radii } from "./ellipsoid.ts";
+import { localMetric } from "./regionBounds.ts";
 
 const RAD = Math.PI / 180;
 
@@ -36,6 +37,23 @@ export function webMercatorDescriptor(
       out[0] = q[0]! / a / RAD;
       out[1] = Math.atan(Math.sinh(q[1]! / a)) / RAD;
       out[2] = q[2]!;
+    },
+    bound(region) {
+      // Per east, north and up metre at the centre: a / (distance from the
+      // axis), a / (cos φ · (M + h)) with φ the highest latitude in reach, 1.
+      const c = region.center;
+      const r = region.radius;
+      const [x, y, z] = radii;
+      if (Math.abs(x - y) > 1e-6 * x) {
+        return { lipschitz: Infinity };
+      }
+      const m = localMetric(x, 1 - (z * z) / (x * x), c[1]!, c[2]!, r);
+      const phi = Math.min(Math.PI / 2, Math.abs(c[1]!) * RAD + m.dphi);
+      const cos = Math.cos(phi);
+      if (!(m.east > 0 && cos > 0)) {
+        return { lipschitz: Infinity };
+      }
+      return { lipschitz: Math.max(a / m.east, a / (cos * m.north), 1) };
     },
     separable: [],
     source: `(p, params) => {

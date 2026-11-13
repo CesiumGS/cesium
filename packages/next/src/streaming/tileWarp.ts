@@ -51,6 +51,17 @@ export interface TileWarp {
    * the samples only.
    */
   bounds(points: ArrayLike<number>, spacing?: number): WarpedPoints;
+  /**
+   * The sphere (`center`, `radius`, in the tileset's coordinates) carried
+   * through the map by declared bounds, with no map sampled: its image's
+   * bounding sphere, which is sound where the bounds are, and the largest
+   * stretch. Undefined where the map has a step with no declared bound; the
+   * volume is then carried by `bounds`' samples.
+   */
+  sphere?(
+    center: ArrayLike<number>,
+    radius: number,
+  ): { center: Vec3; radius: number; sigmaMax: number } | undefined;
   /** What `bounds` gave, for the scale as it is now: the `image` it came with, taken again. */
   rebound?(image: object): WarpedPoints;
   /** The worst error (m) of the fits drawing these draws against the route; 0 where there is none yet. */
@@ -179,7 +190,45 @@ function carriedAgain(volume: TileVolume, remake: () => Carried): Carried {
     : { volume, sigmaMax: 1 };
 }
 
+/** The sphere holding a volume: itself, or a box's corners about its centre. */
+function holding(volume: TileVolume): {
+  center: ArrayLike<number>;
+  radius: number;
+} {
+  const box = volumeObb(volume);
+  if (!box) {
+    return volume.kind === "sphere"
+      ? volume.sphere
+      : { center: [0, 0, 0], radius: NaN };
+  }
+  const h = box.halfAxes;
+  let radius2 = 0;
+  for (let i = -1; i <= 1; i += 2) {
+    for (let j = -1; j <= 1; j += 2) {
+      for (let k = -1; k <= 1; k += 2) {
+        radius2 = Math.max(
+          radius2,
+          (i * h[0]! + j * h[3]! + k * h[6]!) ** 2 +
+            (i * h[1]! + j * h[4]! + k * h[7]!) ** 2 +
+            (i * h[2]! + j * h[5]! + k * h[8]!) ** 2,
+        );
+      }
+    }
+  }
+  return { center: box.center, radius: Math.sqrt(radius2) };
+}
+
 function carry(volume: TileVolume, warp: TileWarp): Carried {
+  if (warp.sphere) {
+    const around = holding(volume);
+    const made = warp.sphere(around.center, around.radius);
+    if (made) {
+      return {
+        volume: sphereVolume(made.center, made.radius),
+        sigmaMax: made.sigmaMax,
+      };
+    }
+  }
   if (volume.kind === "sphere") {
     const c = volume.sphere.center;
     const r = volume.sphere.radius;

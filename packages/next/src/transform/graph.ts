@@ -56,6 +56,16 @@ export interface SmoothSpec {
    * scaled that way.
    */
   identity?: Params;
+  /**
+   * A closed-form bound on σ_max of the Jacobian over a sphere of the input
+   * coordinates (`Region` in transforms/descriptor.ts), for every value of
+   * the parameters in `ranges`; Infinity where there is none. Absent for a
+   * function without one: a route through it is sampled.
+   */
+  bound?: (
+    region: { readonly center: ArrayLike<number>; readonly radius: number },
+    ranges: Readonly<Record<string, readonly [number, number]>>,
+  ) => { readonly lipschitz: number };
 }
 
 /** An edge placed by a constant matrix, or by one that depends on time. */

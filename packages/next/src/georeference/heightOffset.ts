@@ -15,6 +15,7 @@ import {
   WGS84_RADII,
   type Radii,
 } from "./ellipsoid.ts";
+import { curvatureRadii } from "./regionBounds.ts";
 
 const frame = heightFrame();
 
@@ -51,6 +52,28 @@ export function heightOffsetDescriptor(
       out[0] = x - offset * frame.n[0]!;
       out[1] = y - offset * frame.n[1]!;
       out[2] = z - offset * frame.n[2]!;
+    },
+    bound(region, ranges) {
+      // J = I + offset · S (I + hS)⁻¹: the normal's factor is 1, a principal
+      // direction's 1 + offset / (ρ + h), ρ the radius of curvature there.
+      const { min, max } = curvatureRadii(radii);
+      try {
+        locate(radii, region.center, frame, false);
+      } catch {
+        return { lipschitz: Infinity };
+      }
+      const low = frame.h - region.radius;
+      if (!(min + low > 0)) {
+        return { lipschitz: Infinity };
+      }
+      const t = [1 / (max + frame.h + region.radius), 1 / (min + low)];
+      let worst = 1;
+      for (const o of ranges.offset!) {
+        for (const v of t) {
+          worst = Math.max(worst, Math.abs(1 + o * v));
+        }
+      }
+      return { lipschitz: worst };
     },
     separable: ["offset"],
     identity: { offset: 0 },

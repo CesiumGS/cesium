@@ -54,6 +54,14 @@ export const scaleAboutDescriptor: TransformDescriptor = {
     out[1] = cy + (y - cy) / sy;
     out[2] = cz + (z - cz) / sz;
   },
+  bound: (_region, ranges) => ({
+    // J is diagonal and constant: its singular values are |sx|, |sy|, |sz|.
+    lipschitz: Math.max(
+      ...(["sx", "sy", "sz"] as const).flatMap((k) =>
+        ranges[k]!.map((v) => Math.abs(v)),
+      ),
+    ),
+  }),
   separable: ["cx", "cy", "cz", "sx", "sy", "sz"],
   identity: { sx: 1, sy: 1, sz: 1 },
   source,

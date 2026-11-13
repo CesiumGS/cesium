@@ -18,6 +18,7 @@ import {
   WGS84_RADII,
   type Radii,
 } from "./ellipsoid.ts";
+import { curvatureRadii, localMetric, RAD as DEG } from "./regionBounds.ts";
 
 const RAD = Math.PI / 180;
 
@@ -76,6 +77,20 @@ export function geographicToGeocentricDescriptor(
       out[1] = Math.atan2(n[2]!, Math.hypot(n[0]!, n[1]!)) / RAD;
       out[2] = frame.h;
     },
+    bound(region) {
+      // The columns for east, north and up at the centre are orthogonal: the
+      // distance from the axis over the centre's, the meridian radius and
+      // height over the centre's, and 1.
+      const c = region.center;
+      const r = region.radius;
+      const m = localMetric(a, e2, c[1]!, c[2]!, r);
+      if (!(m.east > 0)) {
+        return { lipschitz: Infinity };
+      }
+      const east = 1 + (r + curvatureRadii(radii).max * m.dphi) / m.east;
+      const north = (m.meridianMax + c[2]! + r) / m.north;
+      return { lipschitz: Math.max(east, north, 1) };
+    },
     separable: [],
     source: `(p, params) => {
   const lam = p[0] * ${RAD};
@@ -121,6 +136,29 @@ export function geocentricToGeographicDescriptor(
     },
     inverse(q, _params, out) {
       toGeocentric(a, e2, q[0]!, q[1]!, q[2]!, out);
+    },
+    bound(region) {
+      // Longitude, latitude and height in the metric at the output's centre:
+      // the rows of J are orthogonal, of norm (distance from the axis at the
+      // centre) / (at the point), (M + h at the centre) / (at the point),
+      // and 1.
+      const x = region.center[0]!;
+      const y = region.center[1]!;
+      const r = region.radius;
+      try {
+        locate(radii, region.center, frame, false);
+      } catch {
+        return { lipschitz: Infinity };
+      }
+      const { n, h } = frame;
+      const lat = Math.atan2(n[2]!, Math.hypot(n[0]!, n[1]!)) / DEG;
+      const m = localMetric(a, e2, lat, h, r);
+      const axis = Math.hypot(x, y);
+      const lowest = curvatureRadii(radii).min + h - r;
+      if (!(axis > r && lowest > 0)) {
+        return { lipschitz: Infinity };
+      }
+      return { lipschitz: Math.max(axis / (axis - r), m.north / lowest, 1) };
     },
     separable: [],
     source: [

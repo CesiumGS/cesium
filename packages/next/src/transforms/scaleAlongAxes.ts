@@ -96,6 +96,14 @@ export const scaleAlongAxesDescriptor: TransformDescriptor = {
   inverse(q, params, out) {
     apply(params as Named<K>, true, q, out);
   },
+  bound: (_region, ranges) => ({
+    // J = Σ s_k e_k e_kᵀ on an orthonormal basis: singular values |s_k|.
+    lipschitz: Math.max(
+      ...(["sa", "sb", "sc"] as const).flatMap((k) =>
+        ranges[k]!.map((v) => Math.abs(v)),
+      ),
+    ),
+  }),
   separable: ["sa", "sb", "sc"],
   identity: { sa: 1, sb: 1, sc: 1 },
   source,
