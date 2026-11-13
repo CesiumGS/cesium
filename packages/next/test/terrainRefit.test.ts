@@ -28,7 +28,13 @@ type Surface = (lon: number, lat: number) => number;
 async function source(
   surface: Surface,
   levels: number,
-  options: { predictive?: boolean } = {},
+  options: {
+    predictive?: boolean;
+    /** Measure the deviation in the loader, as the worker does. */
+    inLoader?: boolean;
+    budget?: number;
+    requests?: { hasParent: boolean }[];
+  } = {},
 ): Promise<TerrainSource> {
   const available = Array.from({ length: levels + 1 }, (_, l) => [
     { startX: 0, startY: 0, endX: 2 ** (l + 1) - 1, endY: 2 ** l - 1 },
@@ -46,6 +52,16 @@ async function source(
   );
   const loader: TerrainLoader = async (request) => {
     const tile = gridTile(request.rect, 9, surface);
+    options.requests?.push({ hasParent: request.refit !== undefined });
+    const deviation =
+      options.inLoader && request.refit
+        ? deviationFromParent(
+            tile.heights,
+            request.refit.heights,
+            request.refit.qx,
+            request.refit.qy,
+          )
+        : undefined;
     return {
       asset: EMPTY_ASSET,
       info: {
@@ -59,6 +75,7 @@ async function source(
           [0, 0],
         ],
         heights: tile.heights,
+        ...(deviation !== undefined ? { deviation } : {}),
       },
     };
   };
@@ -69,6 +86,8 @@ async function source(
     { warnings: new Set() },
   );
   terrain.predictiveErrors = options.predictive === true;
+  // Measured as loaded, whatever the machine's speed (the budget has its own test).
+  terrain.refitBudgetMs = options.budget ?? Infinity;
   return terrain;
 }
 
@@ -278,6 +297,49 @@ describe("a tile's error refitted from its children", () => {
       triangles: new Uint32Array([0, 0, 0, ...good.triangles]),
     };
     expect(Number.isFinite(deviationFromParent(good, flat, 0, 0))).toBe(true);
+  });
+
+  it("takes the deviation a loader measured: the same errors as measuring here", async () => {
+    const surface: Surface = (lon, lat) =>
+      800 * Math.sin(lon * 3e3) * Math.cos(lat * 2e3) + 3000 * lon;
+    const requests: { hasParent: boolean }[] = [];
+    const here = await source(surface, 10);
+    const there = await source(surface, 10, { inLoader: true, requests });
+    const a = await loadPath(here, DEPTH, LON, LAT);
+    const b = await loadPath(there, DEPTH, LON, LAT);
+    // Every tile below the first level asked for its parent's surface.
+    expect(requests.filter((r) => r.hasParent).length).toBeGreaterThan(DEPTH);
+    for (let level = 0; level <= DEPTH; level++) {
+      expect(b[level]!.geometricError).toBe(a[level]!.geometricError);
+      expect(b[level]!.globe!.refit.deviation).toBe(
+        a[level]!.globe!.refit.deviation,
+      );
+    }
+  });
+
+  it("spends a bounded time on the page, queueing the rest", async () => {
+    vi.useFakeTimers();
+    try {
+      const terrain = await source((lon, lat) => 400 + 3000 * lon + lat, 10, {
+        budget: 2,
+      });
+      // Every tile's first measure "takes" the whole budget.
+      let now = 0;
+      const clock = vi.spyOn(performance, "now").mockImplementation(() => {
+        now += 5;
+        return now;
+      });
+      const path = await loadPath(terrain, 3, LON, LAT);
+      const measured = () =>
+        path.filter((t) => t.globe!.refit.deviation !== undefined).length;
+      const first = measured();
+      expect(first).toBeLessThan(path.length - 1);
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(measured()).toBeGreaterThan(first);
+      clock.mockRestore();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("predicts a smooth tile's error low, and only when asked", async () => {

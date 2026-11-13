@@ -85,6 +85,23 @@ export interface TerrainTileInfo {
   heights?: TerrainHeights;
   /** The tile carries `HEIGHT_MORPH_ATTRIBUTE`: it can morph in from its parent's surface. */
   morphs?: true;
+  /**
+   * The tile's deviation from its parent's mesh (`deviationFromParent`),
+   * measured where it decoded when the request carried the parent
+   * (`TerrainRefitParent`). Infinity where it is unmeasurable.
+   */
+  deviation?: number;
+}
+
+/**
+ * A data tile's parent surface and the child's quadrant in it (`qx`, `qy` in
+ * {0, 1}, from the south-west), for measuring the child's deviation from it
+ * where the child decodes.
+ */
+export interface TerrainRefitParent {
+  heights: TerrainHeights;
+  qx: number;
+  qy: number;
 }
 
 /**
