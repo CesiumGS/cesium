@@ -56,6 +56,20 @@ describe("Scene/findContentMetadata", function () {
     expect(findContentMetadata._oneTimeWarning).toHaveBeenCalled();
   });
 
+  it("logs a warning and returns undefined if the class is missing from the schema", function () {
+    const contentHeader = {
+      metadata: {
+        class: "missingClass",
+        properties: {},
+      },
+    };
+
+    spyOn(findContentMetadata, "_oneTimeWarning");
+    const metadata = findContentMetadata(mockTileset, contentHeader);
+    expect(metadata).not.toBeDefined();
+    expect(findContentMetadata._oneTimeWarning).toHaveBeenCalled();
+  });
+
   it("returns metadata if there is metadata", function () {
     const contentHeader = {
       uri: "https://example.com/model.b3dm",
