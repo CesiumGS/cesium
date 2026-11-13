@@ -1,3 +1,4 @@
+import type { OcclusionSwitch } from "./occlusionFeedback.ts";
 import type { EngineError, EngineErrorKind } from "../gpu/EngineErrors.ts";
 import { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import { GpuDevice, type GpuDeviceOptions } from "../gpu/GpuDevice.ts";
@@ -1268,10 +1269,11 @@ export class Engine {
    * Tile selection (`Budgeted`, the globe's too) reads what each view's own
    * drawn depth hides: a tile whose box has been hidden for two results in a
    * row stops refining and requesting children, and stays drawn. On by
-   * default; off for parity runs. The benchmarks record its version
+   * default ("on"); "off" for parity runs. A view can override it
+   * (`View.occlusionFeedback`); room is left for an "auto" value. The benchmarks record its version
    * (`OCCLUSION_FEEDBACK_VERSION`).
    */
-  occlusionFeedback = true;
+  occlusionFeedback: OcclusionSwitch = "on";
 
   /**
    * Asks for a frame in on-demand mode, for changes the engine can't see:

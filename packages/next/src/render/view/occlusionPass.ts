@@ -18,6 +18,7 @@ import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
 import {
   LISTS_PER_VIEW,
+  occlusionOn,
   MAX_QUERIES,
   QUERY_FLOATS,
   type OcclusionQueries,
@@ -283,9 +284,16 @@ export function occlusionPass(
 ): (enc: GPUCommandEncoder, get: (h: TextureHandle) => GPUTextureView) => void {
   const { device, pipelines } = engine.ctx;
   return (enc, get) => {
-    const feedback = view.occlusionFeedback;
+    const feedback = view.occlusionState;
     const list = feedback.current;
-    if (!engine.occlusionFeedback || !list || list.count === 0) {
+    // Off, nothing asked, or splats drawn: their depth is written for any
+    // covered pixel, translucent symbols included, so it isn't an occluder.
+    if (
+      !occlusionOn(engine, view) ||
+      !list ||
+      list.count === 0 ||
+      frame.splatted
+    ) {
       return;
     }
     const camera = engine.bodyCamera(view);
@@ -352,9 +360,9 @@ export function readOcclusion(
           read.readback.getMappedRange(0, read.words * 4).slice(0),
         );
         read.readback.unmap();
-        read.view.occlusionFeedback.apply(read.list, bits, read.viewId);
+        read.view.occlusionState.apply(read.list, bits, read.viewId);
       },
-      () => read.view.occlusionFeedback.release(read.list),
+      () => read.view.occlusionState.release(read.list),
     );
   }
 }

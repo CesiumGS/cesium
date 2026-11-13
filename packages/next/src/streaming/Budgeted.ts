@@ -277,7 +277,8 @@ export class BudgetedSelection extends StepwiseSelection {
 
   /**
    * Whether the view's depth has hidden the tile's box for long enough that
-   * it needn't refine. Only a tile with content of its own, which then stays
+   * it needn't refine (REPLACE) and its load waits after the visible ones.
+   * Only a tile with content of its own, which then stays
    * drawn (an empty tile has nothing to draw in place of what is below it),
    * and not where nothing is loaded or requested above it yet (`levels` is
    * NONE): a region with nothing drawn waits for what it has.
@@ -599,7 +600,11 @@ export class BudgetedSelection extends StepwiseSelection {
       forced ||
       (tile.children.length > 0 &&
         state.sse > this.memoryAdjustedScreenSpaceError);
-    const refine = forced || (wanted && !occluded);
+    // Only where the parent stays drawn in place of its children (REPLACE):
+    // an ADD tile's children add to it, so they are walked, selected and
+    // requested as ever, hidden ones after every visible request.
+    const refine =
+      forced || (wanted && !(occluded && tile.refine === "REPLACE"));
     if (wanted && !refine) {
       // Its children's loads in flight go on.
       for (const child of tile.children) {
@@ -693,7 +698,12 @@ export class BudgetedSelection extends StepwiseSelection {
       if (own) {
         parts.push(...own);
       } else if (childLevels !== 1) {
-        this.request(tile, FRONTIER + group, state.distance * 1e-3, result);
+        this.request(
+          tile,
+          (occluded ? OCCLUDED : FRONTIER) + group,
+          state.distance * 1e-3,
+          result,
+        );
       }
       for (const child of tile.children) {
         if (!isVisible(child.viewState(view.id))) {

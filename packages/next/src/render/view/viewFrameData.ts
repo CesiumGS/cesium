@@ -124,6 +124,8 @@ export interface ViewFrame {
    * across ticks.
    */
   occlusion: FrameOcclusion | undefined;
+  /** Point splats were drawn into its depth this tick: no occluder (`occlusionPass`). */
+  splatted: boolean;
   /**
    * The view's clip table (scene/world/clips.ts): its buffer, made when the
    * view first has clips and kept (a pick of an idle view reads it), and the

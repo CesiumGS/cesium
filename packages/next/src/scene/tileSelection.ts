@@ -16,6 +16,7 @@ import type { SelectionView } from "../streaming/Stepwise.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { EngineRaster } from "../render/view/engineRaster.ts";
 import type { EngineScene } from "./engineScene.ts";
+import { occlusionOn } from "./occlusionFeedback.ts";
 import { uploadCpuMs, uploadScale } from "./uploadPacing.ts";
 
 /** @internal Scene side, reading the rasterizer's view targets: what tilesets select for, and the tick's upload budget. */
@@ -221,8 +222,8 @@ function selectionViews(
       }) ?? { longitude: 0, latitude: 0, height: 0 },
       planes,
       ...(casters ? { casterPlanes: casters } : {}),
-      ...(engine.occlusionFeedback
-        ? { occlusion: view.occlusionFeedback.forCamera(camera) }
+      ...(occlusionOn(engine, view)
+        ? { occlusion: view.occlusionState.forCamera(camera) }
         : {}),
       ...(ahead && motion
         ? {
@@ -372,11 +373,8 @@ function cameraAhead(
  * tilesets then ask.
  */
 function beginOcclusion(engine: SelectionEngine): void {
-  if (!engine.occlusionFeedback) {
-    return;
-  }
   for (const view of engine.views) {
-    if (!view.enabled) {
+    if (!view.enabled || !occlusionOn(engine, view)) {
       continue;
     }
     const camera = engine.bodyCamera(view);
@@ -385,7 +383,7 @@ function beginOcclusion(engine: SelectionEngine): void {
         camera.position,
         scratchCartographic,
       )?.height ?? 0;
-    view.occlusionFeedback.begin(camera.position, camera.direction, height);
+    view.occlusionState.begin(camera.position, camera.direction, height);
   }
 }
 

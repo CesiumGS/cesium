@@ -800,7 +800,7 @@ export class NextAdapter implements Adapter {
   }
 
   occlusionFeedback(): number | undefined {
-    return this.engine.occlusionFeedback
+    return this.engine.occlusionFeedback === "on"
       ? OCCLUSION_FEEDBACK_VERSION
       : undefined;
   }

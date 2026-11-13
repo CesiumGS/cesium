@@ -114,12 +114,13 @@ export function writePointParams(
 export function drawSplats(
   world: PointWorld,
   pass: GPURenderPassEncoder,
-): void {
+): boolean {
   if (![...world.raster.pointDraws.values()].some((d) => d.tiny > 0)) {
-    return;
+    return false;
   }
   pass.setPipeline(world.ctx.pipelines.splatResolve);
   pass.setBindGroup(0, world.ctx.currentViewBindGroup);
   pass.setBindGroup(1, world.raster.splats.group);
   pass.draw(3);
+  return true;
 }

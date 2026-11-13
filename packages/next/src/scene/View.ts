@@ -38,7 +38,10 @@ import {
   observerReadout,
 } from "./observer.ts";
 import { type PostStage, checkStageList } from "./postStage.ts";
-import { OcclusionFeedback } from "./occlusionFeedback.ts";
+import {
+  OcclusionFeedback,
+  type OcclusionSwitch,
+} from "./occlusionFeedback.ts";
 import {
   checkInRange,
   checkParameterValue,
@@ -544,7 +547,13 @@ export class View {
    * @internal What its drawn depth says of the tile boxes selection asks
    * about (`OcclusionFeedback`).
    */
-  readonly occlusionFeedback = new OcclusionFeedback();
+  readonly occlusionState = new OcclusionFeedback();
+  /**
+   * Whether selection reads what this view's own drawn depth hides
+   * (`Engine.occlusionFeedback`): undefined takes the engine's. "off" builds
+   * no pyramid and runs no queries for the view.
+   */
+  occlusionFeedback: OcclusionSwitch | undefined;
   /** @internal The glare tier at the last render, and why (`readout`). */
   glareResolved?: { tier: GlareTier; reason: string };
   /** @internal Waiting for the view's next render (`readHdr`). */

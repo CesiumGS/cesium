@@ -1,7 +1,7 @@
 // Occlusion feedback to selection (plan Task 12, fix 7), on the CPU: the depth
 // pyramid and the box test as the kernels are written, the queries and what
 // their results do to a tile, and what `Budgeted` does with it. No GPU.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import { Camera } from "../src/scene/Camera.ts";
 import {
@@ -489,8 +489,10 @@ const boxJson = (
   error: number,
   uri?: string,
   children?: unknown[],
+  refine?: "ADD" | "REPLACE",
 ) => ({
   geometricError: error,
+  ...(refine ? { refine } : {}),
   boundingVolume: { box: [R + 30, y, z, 30, 0, 0, 0, half, 0, 0, 0, half] },
   ...(uri ? { content: { uri } } : {}),
   ...(children ? { children } : {}),
@@ -501,15 +503,26 @@ const boxJson = (
  * never counts as occluded), then 4 finer ones, seen from 4 km up: the middle's
  * error is well over the threshold, the finer ones' none.
  */
-function pyramidTree(middleUri: string | null = "mid.glb") {
+function pyramidTree(
+  middleUri: string | null = "mid.glb",
+  refine?: "ADD" | "REPLACE",
+) {
   return build(
     boxJson(0, 0, 4000, 800, "top.glb", [
-      boxJson(0, 0, 2000, 200, middleUri ?? undefined, [
-        boxJson(-1000, -1000, 1000, 0, "a.glb"),
-        boxJson(1000, -1000, 1000, 0, "b.glb"),
-        boxJson(-1000, 1000, 1000, 0, "c.glb"),
-        boxJson(1000, 1000, 1000, 0, "d.glb"),
-      ]),
+      boxJson(
+        0,
+        0,
+        2000,
+        200,
+        middleUri ?? undefined,
+        [
+          boxJson(-1000, -1000, 1000, 0, "a.glb"),
+          boxJson(1000, -1000, 1000, 0, "b.glb"),
+          boxJson(-1000, 1000, 1000, 0, "c.glb"),
+          boxJson(1000, 1000, 1000, 0, "d.glb"),
+        ],
+        refine,
+      ),
     ]),
   );
 }
@@ -627,6 +640,39 @@ describe("selection with occlusion feedback", () => {
     expect(plain.priority!.get(c)!).toBeLessThan(priority.get(c)!);
   });
 
+  it("never stops ADD content: hidden children are requested, after the visible ones", () => {
+    const top = pyramidTree("mid.glb", "ADD");
+    top.state = "ready";
+    const mid = top.children[0]!;
+    mid.state = "ready";
+    const [a, b, c, d] = mid.children as [Tile, Tile, Tile, Tile];
+    for (const t of [a, b, c, d]) {
+      t.state = "unloaded";
+    }
+    // Even with the tile itself hidden, its additive children are walked.
+    const result = policy().select(top, 1600, view(occlusionOf([mid, c])));
+    expect(new Set(result.requested)).toEqual(new Set([a, b, c, d]));
+    const priority = result.priority!;
+    const slowest = Math.max(
+      priority.get(a)!,
+      priority.get(b)!,
+      priority.get(d)!,
+    );
+    expect(priority.get(c)!).toBeGreaterThan(slowest);
+    expect(result.selected).toContain(mid);
+    // A hidden REPLACE tile's children, by contrast, aren't requested at all.
+    const replace = pyramidTree("mid.glb", "REPLACE");
+    replace.state = "ready";
+    const kept = replace.children[0]!;
+    kept.state = "ready";
+    kept.children.forEach((t) => {
+      t.state = "unloaded";
+    });
+    expect(
+      policy().select(replace, 1600, view(occlusionOf([kept]))).requested,
+    ).toEqual([]);
+  });
+
   it("does not gate an empty tile: it has nothing to draw in place of what is below", () => {
     const top = pyramidTree(null);
     ready(top);
@@ -661,5 +707,93 @@ describe("selection with occlusion feedback", () => {
     expect(withFeedback.selected.length).toBe(without.selected.length);
     expect(withFeedback.selected.length).toBeGreaterThan(0);
     expect(asked).toEqual([]);
+  });
+});
+
+describe("what may block", () => {
+  // The pass, with a view whose selection asked about one box.
+  async function run(opts: {
+    view?: "on" | "off";
+    engine?: "on" | "off";
+    splatted?: boolean;
+  }) {
+    const { occlusionPass } =
+      await import("../src/render/view/occlusionPass.ts");
+    const feedback = new OcclusionFeedback();
+    feedback.begin(Float64Array.of(R, 0, 0), Float64Array.of(0, 1, 0), 1000);
+    const tile = build({
+      geometricError: 0,
+      boundingVolume: { sphere: [R, 0, 0, 1] },
+      content: { uri: "a.glb" },
+    });
+    feedback.current!.add(tile, sphereOf(R, 10, 0, 1), {
+      position: Float64Array.of(R, 0, 0),
+      direction: Float64Array.of(0, 1, 0),
+      up: Float64Array.of(1, 0, 0),
+      right: Float64Array.of(0, 0, -1),
+    });
+    let built = false;
+    vi.stubGlobal("GPUTextureUsage", {
+      STORAGE_BINDING: 8,
+      TEXTURE_BINDING: 4,
+      COPY_SRC: 1,
+    });
+    const view = { occlusionState: feedback, occlusionFeedback: opts.view };
+    const frame = { splatted: opts.splatted ?? false, width: 64, height: 48 };
+    const camera = {
+      position: Float64Array.of(R, 0, 0),
+      direction: Float64Array.of(0, 1, 0),
+      near: 1,
+      fovy: () => 1,
+    };
+    const engine = {
+      occlusionFeedback: opts.engine ?? "on",
+      bodyCamera: () => camera,
+      ctx: {
+        device: {
+          createTexture: () => {
+            built = true;
+            throw new Error("stand-in");
+          },
+        },
+        pipelines: {},
+      },
+      raster: { occlusionReads: [], timer: { passWrites: () => undefined } },
+      scene: { viewIds: new Map() },
+    };
+    const body = occlusionPass(engine as never, view as never, frame as never, {
+      depth: 0 as never,
+    });
+    try {
+      body({} as never, (() => ({})) as never);
+    } catch {
+      // Reached the GPU calls, which the stand-in doesn't have.
+    }
+    return !built; // true: the pass left it alone
+  }
+
+  it("builds nothing for a view that switches it off, whatever the engine says", async () => {
+    expect(await run({ view: "off" })).toBe(true);
+    expect(await run({ engine: "off" })).toBe(true);
+    // The view's own switch wins over the engine's.
+    expect(await run({ engine: "off", view: "on" })).toBe(false);
+    expect(await run({ engine: "on" })).toBe(false);
+  });
+
+  it("builds no pyramid from a depth that point splats wrote into", async () => {
+    // Their depth is written for any pixel they cover, translucent symbols
+    // included: that tick asks nothing, and every tile stays unknown (visible).
+    expect(await run({ splatted: true })).toBe(true);
+  });
+
+  it("leaves translucent draws out of the opaque depth", async () => {
+    const { readFileSync } = await import("node:fs");
+    const surface = readFileSync("src/shaders/surface.slang", "utf8");
+    // The opaque pass drops a blended material's translucent fragments...
+    expect(surface).toMatch(/flags & 8u\) != 0u \? OPAQUE_ALPHA/);
+    // ...and a draw blended whole (an opacity under 1, a clip ghost, translucent
+    // terrain) is left out of its bundle altogether.
+    const bundles = readFileSync("src/render/world/bundles.ts", "utf8");
+    expect(bundles).toMatch(/MaterialFlags\.blendedOnly\) ===/);
   });
 });

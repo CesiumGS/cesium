@@ -865,8 +865,8 @@ export class World {
    * The view's point splats over its opaque draws (splat.slang), in its
    * opaque pass after them; nothing when no draw splats.
    */
-  drawSplats(pass: GPURenderPassEncoder): void {
-    drawSplats(this, pass);
+  drawSplats(pass: GPURenderPassEncoder): boolean {
+    return drawSplats(this, pass);
   }
 
   /**

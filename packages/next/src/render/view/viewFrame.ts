@@ -295,6 +295,7 @@ function buildViewFrame(
     sky: engine.raster.sky.createView(),
     shadowed: false,
     occlusion: undefined,
+    splatted: false,
     clipBuffer: undefined,
     clipBytes: 0,
     capFaces: 0,

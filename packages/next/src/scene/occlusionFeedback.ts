@@ -20,6 +20,23 @@ import type { Vec3 } from "../math/vec3.ts";
 
 export { MAX_QUERIES, QUERY_FLOATS };
 
+/**
+ * Whether occlusion feedback runs: "on" builds the pyramid and asks about
+ * boxes, "off" does neither (no cost). An "auto" that runs it on some ticks
+ * only would fit here: results carry the tick they were measured on
+ * (`OcclusionQueries.tick`), and a tile's count of results in a row doesn't
+ * depend on how many ticks lie between them.
+ */
+export type OcclusionSwitch = "on" | "off";
+
+/** The switch in force for a view: its own, else the engine's. */
+export function occlusionOn(
+  engine: { occlusionFeedback: OcclusionSwitch },
+  view: { occlusionFeedback: OcclusionSwitch | undefined },
+): boolean {
+  return (view.occlusionFeedback ?? engine.occlusionFeedback) === "on";
+}
+
 /** Lists in the pool: one being built, others awaiting their readbacks. */
 export const LISTS_PER_VIEW = 3;
 
