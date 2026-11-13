@@ -69,6 +69,9 @@ export function inspectEngine(
   options: EngineInspectOptions,
 ): Inspectable {
   const record = import.meta.env.DEV ? recordable(engine, options) : undefined;
+  if (import.meta.env.DEV) {
+    debugHandle(engine, options);
+  }
   return {
     name: options.name,
     ...(options.color ? { color: options.color } : {}),
@@ -76,6 +79,46 @@ export function inspectEngine(
     ...(record ? { record } : {}),
   };
 }
+
+/** The dev handle's entry for one engine (`globalThis.__cesium`). */
+interface DebugEntry {
+  engine: Engine | undefined;
+  tilesets: readonly Tileset3D[];
+}
+
+/**
+ * Development only: `globalThis.__cesium` reaches the page's engines from a
+ * console or a coding agent's script, for reading numbers the inspector
+ * doesn't show. `__cesium.engine` and `__cesium.tilesets` are the latest
+ * engine inspected; `__cesium.engines[name]` each by its inspector name.
+ * Held weakly, so a page that drops an engine lets it go. Not in builds.
+ */
+function debugHandle(engine: Engine, options: EngineInspectOptions): void {
+  const ref = new WeakRef(engine);
+  const entry: DebugEntry = {
+    get engine() {
+      return ref.deref();
+    },
+    get tilesets() {
+      return ref.deref() ? options.tilesets() : [];
+    },
+  };
+  const g = globalThis as {
+    __cesium?: DebugEntry & { engines: Record<string, DebugEntry> };
+  };
+  const handle = (g.__cesium ??= {
+    engines: {} as Record<string, DebugEntry>,
+    get engine() {
+      return latest?.engine;
+    },
+    get tilesets() {
+      return latest?.tilesets ?? [];
+    },
+  });
+  handle.engines[options.name] = entry;
+  latest = entry;
+}
+let latest: DebugEntry | undefined;
 
 /** One recorder per engine, made on first use so a page that never records loads none of it. */
 const recordables = new WeakMap<Engine, Recordable>();
