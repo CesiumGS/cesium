@@ -1484,6 +1484,18 @@ describe("Scene/TextureAtlas", function () {
         const promise = atlas.addImage(greenGuid, greenImage);
 
         atlas.update(scene.frameState.context);
+        const index = await promise;
+
+        expect(index).toEqual(0);
+        atlas = undefined;
+      });
+
+      it("destroys successfully while image promise is queued", async function () {
+        atlas = new TextureAtlas();
+
+        const promise = atlas.addImage(greenGuid, Promise.resolve(greenImage));
+
+        atlas.update(scene.frameState.context);
         const texture = atlas.texture;
 
         // Allow the image to resolve before we destroy
