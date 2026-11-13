@@ -339,7 +339,7 @@ CesiumMath.lerp = function (p, q, time) {
   return (1.0 - time) * p + time * q;
 };
 
-/** @typedef {Object} SmoothDampResult
+/** @typedef {object} SmoothDampResult
  * @property {number} value The new value after applying the smooth damp.
  * @property {number} velocity The updated current velocity.
  */

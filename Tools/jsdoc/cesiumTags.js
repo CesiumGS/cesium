@@ -77,6 +77,10 @@ exports.defineTags = function (dictionary) {
     mustHaveValue: true,
     canHaveType: false,
     canHaveName: false,
+    onTagged: function (doclet) {
+      // See: https://github.com/CesiumGS/cesium/issues/13866
+      doclet.ignore = true;
+    },
   });
 
   // Marks a symbol that must be a real, public export of its own package (it's

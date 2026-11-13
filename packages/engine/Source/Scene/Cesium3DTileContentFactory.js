@@ -86,6 +86,18 @@ const Cesium3DTileContentFactory = {
   subtreeJson: function (tileset, tile, resource, json) {
     return Implicit3DTileContent.fromSubtreeJson(tileset, tile, resource, json);
   },
+  subtreeGltf: function (tileset, tile, resource, gltf) {
+    return Implicit3DTileContent.fromSubtreeGltf(tileset, tile, resource, gltf);
+  },
+  subtreeGlb: function (tileset, tile, resource, arrayBuffer, byteOffset) {
+    return Implicit3DTileContent.fromSubtreeGlb(
+      tileset,
+      tile,
+      resource,
+      arrayBuffer,
+      byteOffset,
+    );
+  },
   glb: function (tileset, tile, resource, arrayBuffer, byteOffset) {
     const arrayBufferByteLength = arrayBuffer.byteLength;
     if (arrayBufferByteLength < 12) {
@@ -129,6 +141,9 @@ const Cesium3DTileContentFactory = {
     return Model3DTileContent.fromGltf(tileset, tile, resource, json);
   },
   geoJson: function (tileset, tile, resource, json) {
+    if (tileset.vectorGeoJson) {
+      return VectorGltf3DTileContent.fromGeoJson(tileset, tile, resource, json);
+    }
     return Model3DTileContent.fromGeoJson(tileset, tile, resource, json);
   },
 };

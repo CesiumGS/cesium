@@ -27,7 +27,7 @@ const { DirtyFlags } = BufferPrimitiveCollection;
  */
 class BufferPrimitive {
   /**
-   * Collecton containing the primitive(s) for which this instance currently
+   * Collection containing the primitive(s) for which this instance currently
    * provides a view.
    *
    * @type {BufferPrimitiveCollection<BufferPrimitive>}
@@ -336,7 +336,7 @@ class BufferPrimitive {
    * is not memory-efficient, and should generally be used for debugging and
    * testing.
    *
-   * @returns {Object} JSON-serializable object.
+   * @returns {object} JSON-serializable object.
    */
   toJSON() {
     const collection = this._collection;

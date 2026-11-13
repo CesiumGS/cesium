@@ -1,5 +1,7 @@
+// @ts-check
+
 import assert from "node:assert";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, globSync, readFileSync, rmSync, statSync } from "node:fs";
 import { EOL } from "node:os";
 import path from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
@@ -7,11 +9,9 @@ import { finished } from "node:stream/promises";
 
 import esbuild from "esbuild";
 import { fileURLToPath } from "node:url";
-import { globby } from "globby";
 // @ts-expect-error Types unavailable.
 import glslStripComments from "glsl-strip-comments";
 import gulp from "gulp";
-import { rimraf } from "rimraf";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
@@ -74,7 +74,7 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
   /** @type {Record<string, boolean>} */
   const leftOverJsFiles = {};
 
-  const files = await globby([
+  const files = globSync([
     `packages/${workspace}/Source/Shaders/**/*.js`,
     `packages/${workspace}/Source/ThirdParty/Shaders/*.js`,
   ]);
@@ -89,7 +89,7 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
   /** @type {string[]} */
   const builtinStructs = [];
 
-  const glslFiles = await globby(shaderFiles);
+  const glslFiles = globSync(shaderFiles);
   await Promise.all(
     glslFiles.map(async function (glslFile) {
       glslFile = path.normalize(glslFile);
@@ -164,7 +164,7 @@ export default "${contents}";\n`;
 
   // delete any left over JS files from old shaders
   Object.keys(leftOverJsFiles).forEach(function (filepath) {
-    rimraf.sync(filepath);
+    rmSync(filepath, { recursive: true, force: true });
   });
 
   /**
@@ -222,7 +222,13 @@ export function filePathToModuleId(moduleId) {
   return moduleId.substring(0, moduleId.lastIndexOf(".")).replace(/\\/g, "/");
 }
 
-/** @typedef {'core'|'engine'|'widgets'} Workspace */
+/** @typedef {'core'|'gltf'|'engine'|'widgets'} Workspace */
+
+/**
+ * @typedef {object} FileGlobs
+ * @property {string[]} patterns Glob patterns, relative to the workspace directory.
+ * @property {string[]} [exclude] Glob patterns to leave out of the matches.
+ */
 
 /**
  * Creates a filter matching a workspace's Source files, for use with coverage instrumentation.
@@ -242,7 +248,10 @@ export const defaultESBuildOptions = () => {
     color: true,
     legalComments: `inline`,
     logLimit: 0,
-    target: `es2020`,
+    logOverride: {
+      "empty-import-meta": "silent",
+    },
+    target: `es2022`,
   };
 };
 
@@ -258,7 +267,7 @@ export async function getCopyrightHeader() {
  * Creates the index.js for a package.
  *
  * @param {Workspace} workspace The workspace to create the index.js for.
- * @param {string[]} sourceGlobs The globs to use to find source files for the workspace.
+ * @param {FileGlobs} sourceGlobs The globs to use to find source files for the workspace.
  * @returns {Promise<string>}
  */
 export async function createIndexJs(workspace, sourceGlobs) {
@@ -266,10 +275,11 @@ export async function createIndexJs(workspace, sourceGlobs) {
   let contents = `globalThis.CESIUM_VERSION = "${version}";\n`;
 
   // Iterate over all provided source files for the workspace and export the assignment based on file name.
-  const files = await globby(sourceGlobs);
+  const files = globSync(sourceGlobs.patterns, {
+    cwd: `packages/${workspace}`,
+    exclude: sourceGlobs.exclude,
+  });
   files.forEach(function (file) {
-    file = path.relative(`packages/${workspace}`, file);
-
     let moduleId = file;
     moduleId = filePathToModuleId(moduleId);
 
@@ -451,32 +461,36 @@ export const inlineWorkerPath = "Build/InlineWorkers.js";
  */
 export async function bundleWorkers(options) {
   // Copy ThirdParty workers
-  const thirdPartyWorkers = await globby([
-    "packages/engine/Source/ThirdParty/Workers/**.js",
-    "!packages/engine/Source/ThirdParty/Workers/basis_transcoder.js",
-  ]);
+  const thirdPartyWorkers = globSync(
+    "packages/engine/Source/ThirdParty/Workers/*.js",
+    {
+      exclude: [
+        "packages/engine/Source/ThirdParty/Workers/basis_transcoder.js",
+      ],
+    },
+  );
 
-  const thirdPartyWorkerConfig = defaultESBuildOptions();
-  thirdPartyWorkerConfig.bundle = false;
-  thirdPartyWorkerConfig.entryPoints = thirdPartyWorkers;
-  thirdPartyWorkerConfig.outdir = options.path;
-  thirdPartyWorkerConfig.minify = options.minify;
-  thirdPartyWorkerConfig.outbase = "packages/engine/Source";
-  await esbuild.build(thirdPartyWorkerConfig);
+  await esbuild.build({
+    ...defaultESBuildOptions(),
+    bundle: false,
+    entryPoints: thirdPartyWorkers,
+    outdir: options.path,
+    minify: options.minify,
+    outbase: "packages/engine/Source",
+  });
 
   // Bundle Cesium workers
-  const workers = await globby(["packages/engine/Source/Workers/**"]);
+  const workers = globSync("packages/engine/Source/Workers/*.js");
   const workerConfig = defaultESBuildOptions();
   workerConfig.bundle = true;
-  workerConfig.external = ["fs", "path"];
+  workerConfig.external = ["fs", "path", "node:fs", "node:path"];
 
   if (options.iife) {
     let contents = ``;
-    const files = await globby(workers);
-    const declarations = files.map((file) => {
+    const declarations = workers.map((file) => {
       let assignmentName = path.basename(file, path.extname(file));
       assignmentName = assignmentName.replace(/(\.|-)/g, "_");
-      return `export const ${assignmentName} = () => { import('./${file}'); };`;
+      return `export const ${assignmentName} = () => { import('./${file.replaceAll(path.sep, "/")}'); };`;
     });
     contents += declarations.join(`${EOL}`);
     contents += "\n";
@@ -489,9 +503,6 @@ export async function bundleWorkers(options) {
     };
     workerConfig.minify = options.minify;
     workerConfig.write = false;
-    workerConfig.logOverride = {
-      "empty-import-meta": "silent",
-    };
     workerConfig.plugins = options.removePragmas
       ? [stripPragmaPlugin]
       : undefined;
@@ -547,18 +558,15 @@ export async function bundleWorkers(options) {
 
 /**
  * Creates a single entry point file by importing all individual spec files.
- * @param {string[]} files The individual spec files.
- * @param {Workspace} workspace The workspace.
+ * @param {string[]} files The individual spec files, relative to the workspace directory.
  * @param {string} outputPath The path the file is written to.
  * @returns {Promise<string>}
  */
-export async function createSpecListForWorkspace(files, workspace, outputPath) {
+export async function createSpecListForWorkspace(files, outputPath) {
   let contents = "";
-  files.forEach(function (file) {
-    contents += `import './${filePathToModuleId(file).replace(
-      `packages/${workspace}/Specs/`,
-      "",
-    )}.js';\n`;
+  const moduleIds = files.map(filePathToModuleId).sort();
+  moduleIds.forEach(function (moduleId) {
+    contents += `import './${moduleId.replace(/^Specs\//, "")}.js';\n`;
   });
 
   await writeFile(outputPath, contents, {
@@ -587,11 +595,10 @@ export async function bundleSpecs(options) {
 
   /** @type {esbuild.BuildOptions} */
   const buildOptions = {
-    bundle: true,
+    ...defaultESBuildOptions(),
     format: "esm",
     outdir: options.outdir,
     sourcemap: true,
-    target: "es2020",
     write: write,
   };
 

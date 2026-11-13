@@ -9,7 +9,7 @@ message: >
 severity: error
 language: JavaScript
 files:
-  - packages/engine/Source/**/*.js
+  - packages/*/Source/**/*.js
 rule:
   kind: field_definition
   pattern: $PROP

@@ -796,6 +796,7 @@ function Scene(options) {
 /**
  * Use this to set the default value for {@link Scene#logarithmicDepthBuffer} in newly constructed Scenes
  * This property relies on fragmentDepth being supported.
+ * @type {boolean}
  */
 Scene.defaultLogDepthBuffer = true;
 
@@ -4834,7 +4835,7 @@ Scene.prototype.snap = function (windowPosition, options) {
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {Promise<Object | undefined>} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
+ * @returns {Promise<object | undefined>} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
  *
  * @see Scene#pick
  */
@@ -4883,8 +4884,21 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
     width,
     height,
   );
+  // The pick pass writes tileIndex * samplesPerTile + sampleIndex + 1,
+  // most significant byte first. 0 means no voxel sample was rendered there.
+  const pickId =
+    voxelCoordinate[0] * 16777216 +
+    voxelCoordinate[1] * 65536 +
+    voxelCoordinate[2] * 256 +
+    voxelCoordinate[3];
+  if (pickId === 0) {
+    return;
+  }
+  const { inputDimensions } = voxelPrimitive;
+  const samplesPerTile =
+    inputDimensions.x * inputDimensions.y * inputDimensions.z;
   // Look up the keyframeNode containing this picked cell
-  const tileIndex = 255 * voxelCoordinate[0] + voxelCoordinate[1];
+  const tileIndex = Math.floor((pickId - 1) / samplesPerTile);
   const keyframeNode = voxelPrimitive._traversal.findKeyframeNode(tileIndex);
   if (!defined(keyframeNode)) {
     // The tile rendered at the pick position has since been discarded by
@@ -4892,7 +4906,7 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
     return;
   }
   // Look up the metadata for the picked cell
-  const sampleIndex = 255 * voxelCoordinate[2] + voxelCoordinate[3];
+  const sampleIndex = (pickId - 1) % samplesPerTile;
   return VoxelCell.fromKeyframeNode(
     voxelPrimitive,
     tileIndex,
@@ -5199,7 +5213,7 @@ Scene.prototype.pickFromRayMostDetailed = function (
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
  * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Promise<Object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
+ * @returns {Promise<object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  */
