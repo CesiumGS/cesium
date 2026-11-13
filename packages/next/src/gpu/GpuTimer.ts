@@ -35,6 +35,15 @@ export class GpuTimer {
   private static readonly groupStride = 256;
   private static readonly groupOffset = 1024;
   /**
+   * Frame markers: two empty compute passes, one first and one last in the
+   * frame's encoder, whose timestamps bound it. Four queries after the
+   * passes' and groups'; resolved at `markerOffset`, read back after them.
+   */
+  private static readonly markerBase = GpuTimer.maxPasses * 2;
+  private static readonly markerOffset =
+    GpuTimer.groupOffset + GpuTimer.groupSlots * GpuTimer.groupStride;
+  private static readonly markerBytes = 32;
+  /**
    * Smoothed GPU frame time in milliseconds, or NaN when unsupported: the
    * time any measured pass ran, passes that overlap counted once
    * (`passTimes`).
@@ -53,6 +62,19 @@ export class GpuTimer {
    * frame costs. NaN until one arrives.
    */
   wallMilliseconds = Number.NaN;
+  /**
+   * Smoothed time inside the frame's encoder (first marker to last) that no
+   * timed pass covered, ms: copies, clears, the implementation's own work
+   * between passes. NaN until a marked frame arrives.
+   */
+  inFrameUntimedMilliseconds = Number.NaN;
+  /**
+   * Smoothed gap from the previous frame's last marker to this one's first,
+   * ms, less timed passes in it (a group's), counted when the previous
+   * frame was still unfinished at this one's submit. It can't tell the GPU
+   * waiting for the next submit from untimed work in other submits.
+   */
+  betweenFramesMilliseconds = Number.NaN;
   /**
    * Smoothed GPU frame interval while the GPU is busy, ms: the time between
    * two frames' `onSubmittedWorkDone` resolutions, counted only when the
@@ -101,6 +123,9 @@ export class GpuTimer {
       wall: number;
       /** Busy interval (`intervalMilliseconds`), ms; NaN if the GPU idled. */
       interval: number;
+      /** Submit order of the frame (`submitSeq`), and whether it has markers. */
+      seq: number;
+      markers: boolean;
       mapped: () => void;
       failed: () => void;
     }
@@ -141,6 +166,12 @@ export class GpuTimer {
     wallMs: number;
     /** Busy interval, ms; NaN when the GPU idled before this frame. */
     intervalMs: number;
+    /** Inside the frame's markers, not covered by a timed pass, ms (NaN: no markers). */
+    inFrameUntimedMs: number;
+    /** Since the previous frame's last marker, ms; NaN when the GPU idled. */
+    betweenFramesMs: number;
+    /** The two markers' span, ms (NaN: no markers). */
+    markerSpanMs: number;
     passes: Record<string, number>;
   } = {
     tag: 0,
@@ -148,6 +179,9 @@ export class GpuTimer {
     spanMs: Number.NaN,
     wallMs: Number.NaN,
     intervalMs: Number.NaN,
+    inFrameUntimedMs: Number.NaN,
+    betweenFramesMs: Number.NaN,
+    markerSpanMs: Number.NaN,
     passes: {},
   };
   samples = 0;
@@ -158,14 +192,17 @@ export class GpuTimer {
     }
     GpuTimer.timers.set(device, this);
     const count = GpuTimer.maxPasses * 2;
-    this.querySet = device.createQuerySet({ type: "timestamp", count });
+    this.querySet = device.createQuerySet({
+      type: "timestamp",
+      count: count + 4,
+    });
     this.resolveBuffer = device.createBuffer({
-      size: GpuTimer.groupOffset + GpuTimer.groupSlots * GpuTimer.groupStride,
+      size: GpuTimer.markerOffset + GpuTimer.markerBytes,
       usage: GPUBufferUsage.QUERY_RESOLVE | GPUBufferUsage.COPY_SRC,
     });
     for (let i = 0; i < 3; i++) {
       const buffer = device.createBuffer({
-        size: count * 8,
+        size: count * 8 + GpuTimer.markerBytes,
         usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
       });
       this.readbacks.push(buffer);
@@ -176,6 +213,8 @@ export class GpuTimer {
         labels: new Uint8Array(GpuTimer.maxPasses),
         wall: Number.NaN,
         interval: Number.NaN,
+        seq: 0,
+        markers: false,
         mapped: () => this.onMapped(buffer),
         failed: () => this.idle.push(buffer),
       });
@@ -221,6 +260,55 @@ export class GpuTimer {
     this.nextIndex = 0;
     this.pending = this.idle.pop();
     return this.pending !== undefined;
+  }
+
+  /**
+   * Writes the frame's first marker (an empty pass) into `encoder`: call
+   * right after `beginFrame`, before any other pass or copy. Does nothing
+   * when the frame isn't measured.
+   */
+  startMarker(encoder: GPUCommandEncoder): void {
+    if (!this.querySet || !this.pending) {
+      return;
+    }
+    this.markerStarted = true;
+    this.markerPass(encoder, "frame.start", 0);
+  }
+
+  private markerStarted = false;
+
+  /**
+   * An empty pass gets no timestamps from the driver (both read 0), so a
+   * marker dispatches one workgroup of a kernel that does nothing.
+   */
+  private markerPipeline?: GPUComputePipeline;
+
+  private markerPass(
+    encoder: GPUCommandEncoder,
+    label: string,
+    slot: number,
+  ): void {
+    this.markerPipeline ??= this.device.createComputePipeline({
+      label: "frame.marker",
+      layout: "auto",
+      compute: {
+        module: this.device.createShaderModule({
+          code: "@compute @workgroup_size(1) fn main() {}",
+        }),
+        entryPoint: "main",
+      },
+    });
+    const pass = encoder.beginComputePass({
+      label,
+      timestampWrites: {
+        querySet: this.querySet!,
+        beginningOfPassWriteIndex: GpuTimer.markerBase + slot * 2,
+        endOfPassWriteIndex: GpuTimer.markerBase + slot * 2 + 1,
+      },
+    });
+    pass.setPipeline(this.markerPipeline);
+    pass.dispatchWorkgroups(1);
+    pass.end();
   }
 
   /**
@@ -299,17 +387,15 @@ export class GpuTimer {
       }
     }
     const groups = this.frameGroupCount;
-    if (
-      !this.querySet ||
-      !this.resolveBuffer ||
-      !this.pending ||
-      (this.nextIndex === 0 && groups === 0)
-    ) {
+    if (!this.querySet || !this.resolveBuffer || !this.pending) {
       if (this.pending) {
         this.idle.push(this.pending);
         this.pending = undefined;
       }
       return;
+    }
+    if (this.markerStarted) {
+      this.markerPass(encoder, "frame.end", 1);
     }
     // The readback holds the groups' intervals first, then the passes'.
     // Each group resolves alone: only the queries written are resolved.
@@ -347,6 +433,22 @@ export class GpuTimer {
         this.nextIndex * 8,
       );
     }
+    if (this.markerStarted) {
+      encoder.resolveQuerySet(
+        this.querySet,
+        GpuTimer.markerBase,
+        4,
+        this.resolveBuffer,
+        GpuTimer.markerOffset,
+      );
+      encoder.copyBufferToBuffer(
+        this.resolveBuffer,
+        GpuTimer.markerOffset,
+        this.pending,
+        (groups * 2 + this.nextIndex) * 8,
+        GpuTimer.markerBytes,
+      );
+    }
   }
 
   /**
@@ -362,6 +464,9 @@ export class GpuTimer {
     this.frameGroupCount = 0;
     const slots = this.frameGroups.slice(0, groups);
     this.groupDirty.fill(false);
+    const markers = this.markerStarted;
+    this.markerStarted = false;
+    const seq = ++this.submitSeq;
     // Every submitted frame is watched, measured or not: the next one needs
     // to know whether this one was still running when it was submitted.
     const handler = buffer ? this.handlers.get(buffer) : undefined;
@@ -371,7 +476,7 @@ export class GpuTimer {
     if (!buffer) {
       return;
     }
-    if (count === 0 || !handler) {
+    if (!handler || (count === 0 && !markers)) {
       this.idle.push(buffer);
       return;
     }
@@ -379,6 +484,8 @@ export class GpuTimer {
     handler.tag = this.tag;
     handler.wall = Number.NaN;
     handler.interval = Number.NaN;
+    handler.seq = seq;
+    handler.markers = markers;
     for (let k = 0; k < groups; k++) {
       handler.labels[k] = this.groupLabels[slots[k]!]!;
     }
@@ -387,7 +494,11 @@ export class GpuTimer {
       groups,
     );
     void buffer
-      .mapAsync(GPUMapMode.READ, 0, count * 8)
+      .mapAsync(
+        GPUMapMode.READ,
+        0,
+        count * 8 + (markers ? GpuTimer.markerBytes : 0),
+      )
       .then(() => done)
       .then(handler.mapped, handler.failed);
   }
@@ -425,9 +536,24 @@ export class GpuTimer {
     });
   }
 
+  /** Frames submitted so far; a measured frame's place among them. */
+  private submitSeq = 0;
+  /** The last frame's closing marker (ns) and its `submitSeq`. */
+  private lastMarkerEnd = Number.NaN;
+  private lastMarkerSeq = -1;
+  private readonly clippedBegin = new Float64Array(GpuTimer.maxPasses);
+  private readonly clippedEnd = new Float64Array(GpuTimer.maxPasses);
+  private readonly clippedOwn = new Float64Array(GpuTimer.maxPasses);
+
   private onMapped(buffer: GPUBuffer): void {
-    const { count, labels, tag, wall, interval } = this.handlers.get(buffer)!;
-    const words = new Uint32Array(buffer.getMappedRange(0, count * 8));
+    const { count, labels, tag, wall, interval, seq, markers } =
+      this.handlers.get(buffer)!;
+    const words = new Uint32Array(
+      count > 0 ? buffer.getMappedRange(0, count * 8) : new ArrayBuffer(0),
+    );
+    const marks = markers
+      ? new Uint32Array(buffer.getMappedRange(count * 8, GpuTimer.markerBytes))
+      : undefined;
     const order: number[] = [];
     for (let i = 0; i < count / 2; i++) {
       if (!order.includes(labels[i]!)) {
@@ -435,6 +561,57 @@ export class GpuTimer {
       }
     }
     const times = frameTimes(words, count / 2, labels, this.scratch);
+    let inFrame = Number.NaN;
+    let between = Number.NaN;
+    if (marks) {
+      // The span between the markers, less what timed passes ran inside it
+      // (clipped: a group's passes ran before the frame's encoder).
+      const from = timestamp(marks, 1);
+      const to = timestamp(marks, 2);
+      const n = count / 2;
+      for (let i = 0; i < n; i++) {
+        this.clippedBegin[i] = Math.min(
+          Math.max(this.scratch.begins[i]!, from),
+          to,
+        );
+        this.clippedEnd[i] = Math.min(
+          Math.max(this.scratch.ends[i]!, from),
+          to,
+        );
+      }
+      const covered = passTimes(
+        this.clippedBegin,
+        this.clippedEnd,
+        n,
+        this.clippedOwn,
+      );
+      inFrame = Math.max(0, to - from - covered) / 1e6;
+      if (!Number.isNaN(interval) && this.lastMarkerSeq === seq - 1) {
+        // The gap between the frames, less the timed passes in it (a
+        // group's: imagery, environment, run in their own submits).
+        const gapFrom = this.lastMarkerEnd;
+        const gapTo = timestamp(marks, 0);
+        for (let i = 0; i < n; i++) {
+          this.clippedBegin[i] = Math.min(
+            Math.max(this.scratch.begins[i]!, gapFrom),
+            gapTo,
+          );
+          this.clippedEnd[i] = Math.min(
+            Math.max(this.scratch.ends[i]!, gapFrom),
+            gapTo,
+          );
+        }
+        const inGap = passTimes(
+          this.clippedBegin,
+          this.clippedEnd,
+          n,
+          this.clippedOwn,
+        );
+        between = Math.max(0, gapTo - gapFrom - inGap) / 1e6;
+      }
+      this.lastMarkerEnd = timestamp(marks, 3);
+      this.lastMarkerSeq = seq;
+    }
     buffer.unmap();
     this.idle.push(buffer);
     this.order = mergeOrder(this.order, order);
@@ -444,6 +621,20 @@ export class GpuTimer {
     sample.spanMs = times.span / 1e6;
     sample.wallMs = wall;
     sample.intervalMs = interval;
+    sample.inFrameUntimedMs = inFrame;
+    sample.markerSpanMs = marks
+      ? (timestamp(marks, 2) - timestamp(marks, 1)) / 1e6
+      : Number.NaN;
+    sample.betweenFramesMs = between;
+    if (marks) {
+      this.inFrameUntimedMilliseconds = smooth(
+        this.inFrameUntimedMilliseconds,
+        inFrame,
+      );
+      this.betweenFramesMilliseconds = Number.isNaN(between)
+        ? Number.NaN
+        : smooth(this.betweenFramesMilliseconds, between);
+    }
     sample.passes = {};
     const names = [...this.labelIndex.keys()];
     for (const i of order) {
@@ -531,10 +722,15 @@ export function frameTimes(
   for (let i = 0; i < passes; i++) {
     const begin = timestamp(words, i * 2);
     const end = timestamp(words, i * 2 + 1);
-    out.begins[i] = begin;
-    out.ends[i] = end;
-    first = begin < first ? begin : first;
-    last = end > last ? end : last;
+    // A query never written reads 0 (a group's pass whose command buffer
+    // was submitted after the frame's): the pass counts for nothing.
+    const written = begin > 0 && end > 0;
+    out.begins[i] = written ? begin : 0;
+    out.ends[i] = written ? end : 0;
+    if (written) {
+      first = begin < first ? begin : first;
+      last = end > last ? end : last;
+    }
   }
   // Passes overlap on a tiler (an Apple GPU starts a pass's vertex stage
   // while the last one's fragments run): each pass counts only its time

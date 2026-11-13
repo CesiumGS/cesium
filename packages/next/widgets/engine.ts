@@ -72,7 +72,11 @@ export function inspectEngine(
   return {
     name: options.name,
     ...(options.color ? { color: options.color } : {}),
-    snapshot: () => engineSnapshot(engine, options),
+    snapshot: () => {
+      // The inspector is on: count the GPU work between frames (once).
+      engine.trackGpuWork();
+      return engineSnapshot(engine, options);
+    },
     ...(record ? { record } : {}),
   };
 }
@@ -192,12 +196,19 @@ export function engineSnapshot(
         ...k,
       })),
       raysCast: s.raysCast,
+      ...(s.work ? { work: s.work } : {}),
       ...(Number.isNaN(s.gpuMs)
         ? {}
         : {
             gpuMs: s.gpuMs,
             ...(Number.isNaN(s.gpuSpanMs) ? {} : { gpuSpanMs: s.gpuSpanMs }),
             ...(Number.isNaN(s.gpuWallMs) ? {} : { gpuWallMs: s.gpuWallMs }),
+            ...(Number.isNaN(s.gpuInFrameUntimedMs)
+              ? {}
+              : { gpuInFrameUntimedMs: s.gpuInFrameUntimedMs }),
+            ...(Number.isNaN(s.gpuBetweenFramesMs)
+              ? {}
+              : { gpuBetweenFramesMs: s.gpuBetweenFramesMs }),
             ...(Number.isNaN(s.gpuIntervalMs)
               ? {}
               : { gpuIntervalMs: s.gpuIntervalMs }),
