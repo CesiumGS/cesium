@@ -826,11 +826,10 @@ export class BudgetedSelection extends StepwiseSelection {
   }
 
   private mixes(tile: Tile): boolean {
-    // A placeholder's clip boxes test drawn positions, and don't move with
-    // such a placement: such a tileset swaps whole regions.
-    if (tile.tileset.movesVertices === true) {
-      return false;
-    }
+    // Under a placement or a warp too: a placeholder's clip boxes are in the
+    // content's true frame (`clipBox`, tile.ownVolume), and the fragment stage
+    // tests them at the true point (`relPosition`, surface.slang), which
+    // doesn't move with the draw.
     return (
       this.mixedLod === "always" ||
       (this.mixedLod === "auto" && tile.childrenPartition)

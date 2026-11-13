@@ -509,7 +509,7 @@ describe("scene items", () => {
     s.remove();
   });
 
-  it("a second position makes tiles swap whole, never as clipped placeholders", async () => {
+  it("a second position keeps mixed LOD: placeholders clip in true coordinates", async () => {
     const plain = await scene();
     expect(plain.tileset.movesVertices).toBe(false);
     plain.remove();

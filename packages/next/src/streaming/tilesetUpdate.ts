@@ -144,9 +144,11 @@ function sameTiles(a?: Set<Tile>, b?: Set<Tile>): boolean {
  * A hole's bounding box as a clip box, grown vertically by `margin`: the
  * placeholder's geometric error bounds how far its surface may lie above or
  * below the finer content's box. Sideways it stays tight, so it doesn't
- * spill over finer neighbors.
+ * spill over finer neighbors. In the content's true frame (its own volume, as
+ * written): the fragment stage tests it at the true point, so it holds under
+ * any placement or warp.
  */
-function clipBox(tile: Tile, margin: number): ClipBox {
+export function clipBox(tile: Tile, margin: number): ClipBox {
   const box = volumeObb(tile.ownVolume);
   const sphere = tile.ownVolume.sphere;
   const center = box ? box.center : sphere.center;
