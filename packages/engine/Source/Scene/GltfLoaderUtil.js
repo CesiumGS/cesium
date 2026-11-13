@@ -1,8 +1,4 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import Matrix3 from "../Core/Matrix3.js";
+import { Cartesian2, Check, Frozen, Matrix3, defined } from "@cesium/core";
 import Sampler from "../Renderer/Sampler.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
@@ -111,6 +107,22 @@ GltfLoaderUtil.createSampler = function (options) {
     }
   }
 
+  if (!TextureWrap.validate(wrapS)) {
+    wrapS = TextureWrap.REPEAT;
+  }
+
+  if (!TextureWrap.validate(wrapT)) {
+    wrapT = TextureWrap.REPEAT;
+  }
+
+  if (!TextureMinificationFilter.validate(minFilter)) {
+    minFilter = TextureMinificationFilter.LINEAR;
+  }
+
+  if (!TextureMagnificationFilter.validate(magFilter)) {
+    magFilter = TextureMagnificationFilter.LINEAR;
+  }
+
   return new Sampler({
     wrapS: wrapS,
     wrapT: wrapT,
@@ -164,10 +176,10 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
 
     // prettier-ignore
     transform = new Matrix3(
-        Math.cos(rotation) * scale.x, -Math.sin(rotation) * scale.y, offset.x,
-        Math.sin(rotation) * scale.x, Math.cos(rotation) * scale.y, offset.y,
-        0.0, 0.0, 1.0
-      );
+      Math.cos(rotation) * scale.x, -Math.sin(rotation) * scale.y, offset.x,
+      Math.sin(rotation) * scale.x, Math.cos(rotation) * scale.y, offset.y,
+      0.0, 0.0, 1.0
+    );
   }
 
   const modelTextureReader = new ModelComponents.TextureReader();

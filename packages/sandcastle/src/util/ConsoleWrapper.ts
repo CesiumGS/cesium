@@ -257,6 +257,29 @@ function setupWindowErrorHandler(iframeBridge: BridgeToApp) {
     originalError.apply(console, [errorMsg]);
     return false;
   });
+
+  // Cesium's async paths (tile/terrain loading, tileset ready) surface as
+  // unhandled promise rejections, which the "error" event above misses.
+  window.addEventListener("unhandledrejection", (event) => {
+    const reason = event.reason;
+    let errorMsg;
+    if (reason instanceof Error) {
+      errorMsg = `${reason.name}: ${reason.message}`;
+    } else if (typeof reason === "string") {
+      errorMsg = reason;
+    } else {
+      try {
+        errorMsg = JSON.stringify(reason);
+      } catch {
+        errorMsg = String(reason);
+      }
+    }
+    iframeBridge.sendMessage({
+      type: "consoleError",
+      error: errorMsg,
+    });
+    originalError.apply(console, [errorMsg]);
+  });
 }
 
 export type ConsoleMessage =

@@ -1,5 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import VertexFormat from "../Core/VertexFormat.js";
+import { Frozen, VertexFormat } from "@cesium/core";
 import PerInstanceColorAppearanceFS from "../Shaders/Appearances/PerInstanceColorAppearanceFS.js";
 import PerInstanceColorAppearanceVS from "../Shaders/Appearances/PerInstanceColorAppearanceVS.js";
 import PerInstanceFlatColorAppearanceFS from "../Shaders/Appearances/PerInstanceFlatColorAppearanceFS.js";

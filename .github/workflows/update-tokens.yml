@@ -18,14 +18,10 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v6
-      - name: install node 22
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/install-dependencies
         with:
-          node-version: "22"
-      - name: npm install
-        working-directory: ./.github/actions/update-tokens
-        run: npm install
+          working-directory: ./.github/actions/update-tokens
       - name: run script
         env:
           ITWIN_SERVICE_APP_CLIENT_ID: ${{ secrets.ITWIN_SERVICE_APP_CLIENT_ID }}

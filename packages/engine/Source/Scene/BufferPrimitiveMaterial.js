@@ -1,9 +1,7 @@
 // @ts-check
 
-import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-
-/** @import Packable from "../Core/Packable.js"; */
+import { Color, Frozen } from "@cesium/core";
+/** @import { Packable } from "@cesium/core"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 
 /**
@@ -126,7 +124,7 @@ class BufferPrimitiveMaterial {
    * is not memory-efficient, and should generally be used for debugging and
    * testing.
    *
-   * @returns {Object} JSON-serializable object.
+   * @returns {object} JSON-serializable object.
    */
   toJSON() {
     return {

@@ -1,9 +1,4 @@
 import {
-  Model,
-  ModelComponents,
-  ModelUtility,
-  ResourceCache,
-  Math as CesiumMath,
   AttributeCompression,
   AttributeType,
   Cartesian2,
@@ -12,12 +7,18 @@ import {
   Ellipsoid,
   GeographicProjection,
   IndexDatatype,
+  Math as CesiumMath,
   Matrix4,
-  ModelReader,
   Quaternion,
   TranslationRotationScale,
+} from "@cesium/core";
+import {
+  Model,
+  ModelComponents,
+  ModelUtility,
+  ResourceCache,
+  ModelReader,
 } from "../../../index.js";
-
 import createScene from "../../../../../Specs/createScene.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
 
@@ -312,6 +313,19 @@ describe(
           `Expected ${actualName} to contain the same geometry as ${expectedName}`,
         )
         .toBeTrue();
+    });
+
+    it("reads KHR_meshopt_compression data", async function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
+      const url =
+        "./Data/Models/glTF-2.0/MeshoptCubeTest/glTF-Meshopt/MeshoptCubeTest.gltf";
+      const model = await loadAsModel(scene, url);
+
+      expect(model.ready).toBe(true);
+      expect(model.sceneGraph.components.nodes.length).toBeGreaterThan(0);
     });
 
     it("reads quantized_interleaved data", async function () {

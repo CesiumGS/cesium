@@ -1,10 +1,30 @@
 import {
-  Axis,
-  Camera,
   Cartesian2,
   Cartesian3,
   Cartesian4,
   Cartographic,
+  Color,
+  CullingVolume,
+  Ellipsoid,
+  FixedFrameTransforms,
+  HeadingPitchRange,
+  HeadingPitchRoll,
+  Intersect,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix4,
+  PerspectiveFrustum,
+  PrimitiveType,
+  Ray,
+  RuntimeError,
+  defined,
+  getAbsoluteUri,
+  getJsonFromTypedArray,
+} from "@cesium/core";
+import {
+  Axis,
+  BlendOption,
+  Camera,
   Cesium3DTile,
   Cesium3DTileColorBlendMode,
   Cesium3DTileContentState,
@@ -18,40 +38,26 @@ import {
   ClippingPlaneCollection,
   ClippingPolygon,
   ClippingPolygonCollection,
-  Color,
   ContextLimits,
   Credit,
   CullFace,
-  CullingVolume,
   defer,
-  defined,
   findTileMetadata,
   findContentMetadata,
-  getAbsoluteUri,
-  getJsonFromTypedArray,
-  HeadingPitchRange,
-  HeadingPitchRoll,
+  HeightReference,
   ImageBasedLighting,
-  Intersect,
-  JulianDate,
-  Math as CesiumMath,
-  Matrix4,
-  PerspectiveFrustum,
-  PrimitiveType,
-  Ray,
   RequestScheduler,
   Resource,
   ResourceCache,
-  RuntimeError,
   TileBoundingRegion,
   TileOrientedBoundingBox,
-  Transforms,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
-import Ellipsoid from "../../Source/Core/Ellipsoid.js";
+
+const JASMINE_DEFAULT_TIMEOUT = jasmine.DEFAULT_TIMEOUT_INTERVAL;
 
 describe(
   "Scene/Cesium3DTileset",
@@ -82,6 +88,11 @@ describe(
       "Data/Cesium3DTiles/Tilesets/TilesetReplacement2/tileset.json";
     const tilesetReplacement3Url =
       "Data/Cesium3DTiles/Tilesets/TilesetReplacement3/tileset.json";
+
+    // Content root with one content child and one child pointing to an external
+    // tileset whose root is empty (an empty region reached through a placeholder).
+    const tilesetEmptyExternalUrl =
+      "Data/Cesium3DTiles/Tilesets/TilesetEmptyExternal/tileset.json";
 
     // 3 level tree with mix of additive and replacement refinement
     const tilesetRefinementMix =
@@ -204,6 +215,7 @@ describe(
     });
 
     beforeEach(function () {
+      jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
       RequestScheduler.clearForSpecs();
       scene.morphTo3D(0.0);
 
@@ -221,6 +233,7 @@ describe(
     });
 
     afterEach(function () {
+      jasmine.DEFAULT_TIMEOUT_INTERVAL = JASMINE_DEFAULT_TIMEOUT;
       scene.verticalExaggeration = 1.0;
       scene.primitives.removeAll();
       ResourceCache.clearForSpecs();
@@ -259,6 +272,16 @@ describe(
       scene.camera.moveDown(200.0);
     }
 
+    // Looks at the center of the tileset from slightly south, so the two southern child tiles
+    // are closer to the camera than the two northern child tiles.
+    function viewFromSouth() {
+      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      scene.camera.lookAt(
+        center,
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-82.0), 21.0),
+      );
+    }
+
     function viewInstances() {
       setZoom(30.0);
     }
@@ -294,6 +317,24 @@ describe(
       ).toBeRejectedWithDeveloperError(
         "url is required, actual value was undefined",
       );
+    });
+
+    it("throws with a clamping heightReference and no scene", function () {
+      expect(function () {
+        return new Cesium3DTileset({
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("vectorBlendOption", function () {
+      expect(new Cesium3DTileset().vectorBlendOption).toBe(
+        BlendOption.TRANSLUCENT,
+      );
+      expect(
+        new Cesium3DTileset({ vectorBlendOption: BlendOption.OPAQUE })
+          .vectorBlendOption,
+      ).toBe(BlendOption.OPAQUE);
     });
 
     it("fromUrl throws with unsupported version", async function () {
@@ -662,7 +703,7 @@ describe(
       // convention. Apply a model matrix and configure the tileset to interpret
       // the glTF data as +z up.
       const tilesetOptions = {
-        modelMatrix: Transforms.eastNorthUpToFixedFrame(center),
+        modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(center),
         modelUpAxis: Axis.Z,
         modelForwardAxis: Axis.X,
       };
@@ -1443,6 +1484,55 @@ describe(
       expect(statistics.numberOfCommands).toEqual(3);
     });
 
+    it("replacement refinement - refines past an empty tile reached through a placeholder", async function () {
+      // A vector tileset (opts in via 3DTILES_content_gltf_vector) with a content parent,
+      // one content child, and one child pointing to an external tileset whose root is
+      // empty (content only deeper). The empty region is reached through a placeholder
+      // tile (hasRenderableContent === false, hasEmptyContent === false), which the
+      // empty-content short-circuit does not cover. The empty branch must not block the
+      // content sibling from refining.
+      //
+      //            C (parent.b3dm)
+      //        C       T (external tileset ref)
+      //     (ll.b3dm)  E (empty external root)
+      //                C (ur.b3dm, deeper, not needed at this view)
+      //
+      // Viewed from far enough that the empty external root is at its resolved LOD (its
+      // deeper content is not needed), while the parent still needs to refine.
+      viewRootOnly();
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetEmptyExternalUrl,
+      );
+      tileset.skipLevelOfDetail = false;
+      const root = tileset.root;
+
+      // Wait for the external tileset json to load, so its child becomes a placeholder
+      // (hasRenderableContent === false), then for the content sibling to finish loading
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return root.children.some((child) => !child.hasRenderableContent);
+      });
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      scene.renderForSpecs();
+
+      const statistics = tileset._statistics;
+      const contentChild = root.children.find(
+        (child) => child.hasRenderableContent,
+      );
+      const externalChild = root.children.find(
+        (child) => !child.hasRenderableContent,
+      );
+
+      // The parent refined instead of being held back by the empty external branch
+      expect(isSelected(tileset, root)).toBe(false);
+      // The content sibling renders
+      expect(isSelected(tileset, contentChild)).toBe(true);
+      // The empty branch stays empty - its deeper content is not over-refined
+      expect(isSelected(tileset, externalChild)).toBe(false);
+      expect(statistics.numberOfCommands).toEqual(1);
+    });
+
     it("replacement and additive refinement", async function () {
       //          A
       //      A       R (not rendered)
@@ -1774,10 +1864,7 @@ describe(
       viewRootOnly();
       scene.renderForSpecs();
 
-      await pollToPromise(() => {
-        scene.renderForSpecs();
-        return tileset.tilesLoaded;
-      });
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       //Make sure tileset2.json was requested with query parameters and does not use parent tilesetVersion
       expectedUrl = getAbsoluteUri(
         `Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?v=1.2.3&${queryParams}`,
@@ -3394,15 +3481,81 @@ describe(
       expect(statistics.numberOfCommands).toEqual(1);
       expect(statistics.numberOfTilesWithContentReady).toEqual(3);
 
-      // Zoom back in and attempt to render all tiles
-      viewAllTiles();
+      // Zoom back in so all four children are needed, but only two fit in memory
+      viewFromSouth();
 
       await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       // Only 3 tiles should have been actually loaded
       expect(statistics.numberOfCommands).toEqual(3);
       expect(statistics.numberOfTilesWithContentReady).toEqual(3); // Three loaded tiles
       // SSE should have been adjusted higher
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+      expect(screenSpaceError).toBeGreaterThan(16);
+
+      // The raised SSE should not be lowered again in the same view
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toEqual(screenSpaceError);
+    });
+
+    // Loads a tileset where the tiles needed for the view don't all fit in memory,
+    // so its memoryAdjustedScreenSpaceError is raised.
+    async function loadTilesetOverMemoryLimit() {
+      viewFromSouth();
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        cacheBytes: 0.025 * 1024 * 1024,
+        maximumCacheOverflowBytes: 0,
+      });
       expect(tileset.memoryAdjustedScreenSpaceError).toBeGreaterThan(16);
+      return tileset;
+    }
+
+    it("lowers the memory-adjusted SSE again when the camera moves", async function () {
+      const tileset = await loadTilesetOverMemoryLimit();
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+
+      scene.camera.moveRight(0.1);
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toBeLessThan(
+        screenSpaceError,
+      );
+    });
+
+    it("lowers the memory-adjusted SSE again when the model matrix changes", async function () {
+      const tileset = await loadTilesetOverMemoryLimit();
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+
+      tileset.modelMatrix = Matrix4.fromTranslation(
+        new Cartesian3(0.1, 0.0, 0.0),
+      );
+      // Model matrix changes are detected after tiles are processed, so the hold is
+      // released on the frame after the change.
+      scene.renderForSpecs();
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toBeLessThan(
+        screenSpaceError,
+      );
+    });
+
+    it("lowers the memory-adjusted SSE again when cacheBytes changes", async function () {
+      const tileset = await loadTilesetOverMemoryLimit();
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+
+      tileset.cacheBytes = 2 * tileset.cacheBytes;
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toBeLessThan(
+        screenSpaceError,
+      );
+    });
+
+    it("lowers the memory-adjusted SSE again when maximumCacheOverflowBytes changes", async function () {
+      const tileset = await loadTilesetOverMemoryLimit();
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+
+      tileset.maximumCacheOverflowBytes = 1024 * 1024;
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toBeLessThan(
+        screenSpaceError,
+      );
     });
 
     it("Unloads cached tiles outside of the view frustum using cacheBytes", async function () {
@@ -4127,10 +4280,7 @@ describe(
       // After update the tile is expired
       scene.renderForSpecs();
 
-      await pollToPromise(() => {
-        scene.renderForSpecs();
-        return tileset.tilesLoaded;
-      });
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
 
       expect(failedSpy).toHaveBeenCalledWith(
         jasmine.objectContaining({
@@ -4160,11 +4310,7 @@ describe(
 
       expect(tile.contentExpired).toBe(true);
 
-      await pollToPromise(function () {
-        scene.renderForSpecs();
-        return tile.contentReady;
-      });
-      scene.renderForSpecs();
+      await Cesium3DTilesTester.waitForTileContentReady(scene, tile);
       expect(tile._expiredContent).toBeUndefined();
       expect(tile.expireDate).toBeUndefined();
     });
@@ -4394,9 +4540,10 @@ describe(
         tileset.clippingPlanesOriginMatrix,
         new Matrix4(),
       );
-      let boundingSphereEastNorthUp = Transforms.eastNorthUpToFixedFrame(
-        tileset.root.boundingSphere.center,
-      );
+      let boundingSphereEastNorthUp =
+        FixedFrameTransforms.eastNorthUpToFixedFrame(
+          tileset.root.boundingSphere.center,
+        );
       expect(Matrix4.equals(offsetMatrix, boundingSphereEastNorthUp)).toBe(
         true,
       );
@@ -4408,7 +4555,7 @@ describe(
         Matrix4.equals(offsetMatrix, tileset.clippingPlanesOriginMatrix),
       ).toBe(false);
 
-      boundingSphereEastNorthUp = Transforms.eastNorthUpToFixedFrame(
+      boundingSphereEastNorthUp = FixedFrameTransforms.eastNorthUpToFixedFrame(
         tileset.root.boundingSphere.center,
       );
       offsetMatrix = tileset.clippingPlanesOriginMatrix;
@@ -4457,7 +4604,7 @@ describe(
         polygon = new ClippingPolygon({ positions });
       });
 
-      it("destroys attached ClippingPolygonCollections and ClippingPolygonCollections that have been detached", async function () {
+      it("detaches ClippingPolygonCollections without destroying them", async function () {
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           tilesetUrl,
@@ -4468,15 +4615,20 @@ describe(
         expect(collectionA.owner).not.toBeDefined();
 
         tileset.clippingPolygons = collectionA;
+        expect(collectionA.owner).toBe(tileset);
+
         const collectionB = new ClippingPolygonCollection({
           polygons: [polygon],
         });
 
+        // Attaching a new collection detaches the previous one; it is not destroyed.
         tileset.clippingPolygons = collectionB;
-        expect(collectionA.isDestroyed()).toBe(true);
+        expect(tileset.clippingPolygons).toBe(collectionB);
+        expect(collectionA.length).toBe(1);
 
+        // Removing the tileset detaches its collection without destroying it.
         scene.primitives.remove(tileset);
-        expect(collectionB.isDestroyed()).toBe(true);
+        expect(collectionB.length).toBe(1);
       });
 
       it("throws a DeveloperError when given a ClippingPolygonCollection attached to another tileset", async function () {
@@ -4528,6 +4680,40 @@ describe(
         visibility = tileset.root.contentVisibility(scene.frameState);
 
         expect(visibility).toBe(Intersect.OUTSIDE);
+      });
+
+      it("marks loaded tiles dirty when clipping polygons are added or removed", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUrl,
+        );
+        const collection = new ClippingPolygonCollection();
+        tileset.clippingPolygons = collection;
+        scene.renderForSpecs();
+
+        // Collect the tiles currently loaded in the cache.
+        const tiles = [];
+        tileset._cache.forEachLoadedTile((tile) => tiles.push(tile));
+        expect(tiles.length).toBeGreaterThan(0);
+
+        // Adding a polygon flags the tileset via the polygonAdded event...
+        collection.add(polygon);
+        expect(tileset._clippingPolygonsNeedRebake).toBe(true);
+
+        // ...and the next pass propagates that to every loaded tile.
+        tileset.prePassesUpdate(scene.frameState);
+        expect(tileset._clippingPolygonsNeedRebake).toBe(false);
+        expect(tiles.every((tile) => tile.clippingPolygonsNeedRebake)).toBe(
+          true,
+        );
+
+        // Removing a polygon flags the tileset via the polygonRemoved event.
+        collection.remove(polygon);
+        expect(tileset._clippingPolygonsNeedRebake).toBe(true);
       });
     });
 
@@ -4610,7 +4796,7 @@ describe(
         });
       await pollToPromise(function () {
         // Scene requires manual updates in the tests to move along the promise
-        scene.render();
+        scene.renderForSpecs();
         return completed;
       });
       return result;
@@ -4627,7 +4813,7 @@ describe(
         });
       await pollToPromise(function () {
         // Scene requires manual updates in the tests to move along the promise
-        scene.render();
+        scene.renderForSpecs();
         return completed;
       });
       return result;

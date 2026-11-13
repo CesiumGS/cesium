@@ -1,6 +1,6 @@
+import { Math } from "@cesium/core";
 import {
   TileMetadata,
-  Math,
   MetadataClass,
   BoundingVolumeSemantics,
 } from "../../index.js";

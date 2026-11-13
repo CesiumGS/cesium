@@ -3,9 +3,8 @@ import {
   JulianDate,
   TimeInterval,
   TimeIntervalCollection,
-  Entity,
-  EntityCollection,
-} from "../../index.js";
+} from "@cesium/core";
+import { Entity, EntityCollection } from "../../index.js";
 
 describe("DataSources/EntityCollection", function () {
   function CollectionListener() {

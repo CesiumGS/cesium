@@ -1,7 +1,6 @@
 // @ts-check
 
-import WebGLConstants from "../Core/WebGLConstants.js";
-
+import { WebGLConstants } from "@cesium/core";
 /**
  * Determines the function used to compare stencil values for the stencil test.
  *

@@ -17,12 +17,16 @@ import {
   vectorSearch,
   type VectorSearchResult,
   onEmbeddingModelLoaded,
+  onEmbeddingSearchUnavailable,
   initializeEmbeddingSearch,
 } from "./EmbeddingSearch.ts";
 import { SettingsContext } from "../SettingsContext.ts";
 
 const galleryListPath = `gallery/list.json`;
 const pagefindUrl = `gallery/pagefind/pagefind.js`;
+
+// Hide preamble @ts-check/@ts-nocheck annotations in gallery/*/main.js.
+const TS_ANNOTATION_REGEX = /^\/\/ @ts-(no)?check\s+/;
 
 export type GalleryItem = {
   url: string;
@@ -42,7 +46,7 @@ export type HighlightedGalleryItem = ReturnType<typeof applyHighlightToItem>;
 export type GalleryFilter = Record<string, string | string[]> | null;
 export type GalleryFilters = PagefindFilterCounts | null;
 
-export function useGalleryItemStore() {
+export function useGalleryItemStore({ withoutSearch = false } = {}) {
   const { settings } = useContext(SettingsContext);
   const embeddingSearchEnabled = settings.embeddingSearch;
 
@@ -78,17 +82,21 @@ export function useGalleryItemStore() {
   >(null);
   const [isSearchPending, startSearch] = useTransition();
   const [embeddingModelLoaded, setEmbeddingModelLoaded] = useState(false);
+  const [embeddingsAvailable, setEmbeddingsAvailable] = useState(true);
   const searchAbortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     onEmbeddingModelLoaded(() => {
       setEmbeddingModelLoaded(true);
     });
+    onEmbeddingSearchUnavailable(() => {
+      setEmbeddingsAvailable(false);
+    });
   }, []);
 
   useEffect(() => {
     const pagefind = getPagefind();
-    if (!pagefind) {
+    if (!pagefind || withoutSearch) {
       return;
     }
 
@@ -147,7 +155,13 @@ export function useGalleryItemStore() {
     return () => {
       abortController.abort();
     };
-  }, [searchTerm, searchFilter, embeddingModelLoaded, embeddingSearchEnabled]);
+  }, [
+    withoutSearch,
+    searchTerm,
+    searchFilter,
+    embeddingModelLoaded,
+    embeddingSearchEnabled,
+  ]);
 
   const memoizedSearchResults = useMemo(() => {
     if (!searchResults) {
@@ -200,6 +214,9 @@ export function useGalleryItemStore() {
   // Pagefind search configuration is loaded with the rest of the gallery options.
   // Once we've loaded those options, load and intiate pagefind.
   useEffect(() => {
+    if (withoutSearch) {
+      return;
+    }
     const fetchPagefindAction = async () => {
       let pagefind = getPagefind();
       if (!pagefind) {
@@ -233,7 +250,7 @@ export function useGalleryItemStore() {
     if (searchOptions) {
       startTransition(fetchPagefindAction);
     }
-  }, [searchOptions, defaultSearchFilter]);
+  }, [withoutSearch, searchOptions, defaultSearchFilter]);
 
   // Kick off initial gallery fetch
   useEffect(() => {
@@ -254,7 +271,8 @@ export function useGalleryItemStore() {
         const getJsCode = async () => {
           const url = new URL("main.js", galleryBaseUrl);
           const req = await fetch(url.href);
-          return await req.text();
+          const code = await req.text();
+          return code.replace(TS_ANNOTATION_REGEX, "");
         };
 
         const getHtmlCode = async () => {
@@ -287,13 +305,14 @@ export function useGalleryItemStore() {
 
   useEffect(() => {
     if (
+      !withoutSearch &&
       embeddingSearchEnabled &&
       !embeddingModelLoaded &&
       entriesRef.current.length > 0
     ) {
       initializeEmbeddingSearch(entriesRef.current);
     }
-  }, [embeddingSearchEnabled, embeddingModelLoaded, legacyIds]);
+  }, [withoutSearch, embeddingSearchEnabled, embeddingModelLoaded, legacyIds]);
 
   const useLoadFromUrl = useCallback(() => {
     const isGalleryLoaded = items.length > 0;
@@ -331,6 +350,7 @@ export function useGalleryItemStore() {
     setSearchTerm: setSearchTermWrapper,
     setSearchFilter,
     searchResults: memoizedSearchResults,
+    embeddingsAvailable,
 
     useLoadFromUrl,
   };

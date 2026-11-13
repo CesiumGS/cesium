@@ -1,6 +1,4 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Check, DeveloperError, defined } from "@cesium/core";
 
 /**
  * An enum describing the built-in vertex attribute semantics.
@@ -316,4 +314,6 @@ VertexAttributeSemantic.getVariableName = function (semantic, setIndex) {
   return variableName;
 };
 
-export default Object.freeze(VertexAttributeSemantic);
+Object.freeze(VertexAttributeSemantic);
+
+export default VertexAttributeSemantic;

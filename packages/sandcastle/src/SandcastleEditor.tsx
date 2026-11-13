@@ -6,7 +6,6 @@ import {
   useEffect,
   useImperativeHandle,
   useRef,
-  useState,
 } from "react";
 import * as prettier from "prettier";
 import * as babelPlugin from "prettier/plugins/babel";
@@ -65,6 +64,8 @@ function SandcastleEditor({
   onRun: onRunSandcastle,
   setJs,
   readOnly,
+  activeTab,
+  onActiveTabChange,
 }: {
   ref?: RefObject<SandcastleEditorRef | null>;
   darkTheme: boolean;
@@ -72,11 +73,12 @@ function SandcastleEditor({
   html: string;
   onJsChange: OnChange;
   onHtmlChange: OnChange;
-  onRun: () => void;
+  onRun: (trigger: "button" | "keyboard") => void;
   setJs: (newCode: string) => void;
   readOnly: boolean;
+  activeTab: "js" | "html";
+  onActiveTabChange: (tab: "js" | "html") => void;
 }) {
-  const [activeTab, setActiveTab] = useState<"js" | "html">("js");
   const internalEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
 
   const {
@@ -137,7 +139,7 @@ function SandcastleEditor({
     monaco.editor.addCommand({
       id: "run-sandcastle",
       run: () => {
-        onRunSandcastle();
+        onRunSandcastle("keyboard");
       },
     });
 
@@ -323,10 +325,10 @@ Sandcastle.addToolbarMenu(${variableName});`);
       <div className="header">
         <Tabs.Provider>
           <Tabs.TabList tone="accent">
-            <Tabs.Tab id="js" onClick={() => setActiveTab("js")}>
+            <Tabs.Tab id="js" onClick={() => onActiveTabChange("js")}>
               Javascript
             </Tabs.Tab>
-            <Tabs.Tab id="html" onClick={() => setActiveTab("html")}>
+            <Tabs.Tab id="html" onClick={() => onActiveTabChange("html")}>
               HTML/CSS
             </Tabs.Tab>
           </Tabs.TabList>
@@ -353,7 +355,7 @@ Sandcastle.addToolbarMenu(${variableName});`);
             </DropdownMenu.Content>
           </DropdownMenu.Provider>
           <Tooltip content="Run Sandcastle" placement="bottom">
-            <Button tone="accent" onClick={() => onRunSandcastle()}>
+            <Button tone="accent" onClick={() => onRunSandcastle("button")}>
               <Icon href={play} /> Run <Kbd variant="solid">F8</Kbd>
             </Button>
           </Tooltip>

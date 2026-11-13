@@ -1,14 +1,16 @@
 import {
-  ApproximateTerrainHeights,
   BoundingSphere,
   Cartesian3,
   Color,
-  defined,
   DistanceDisplayCondition,
   JulianDate,
   Math as CesiumMath,
   TimeInterval,
   TimeIntervalCollection,
+  defined,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
   BoundingSphereState,
   ColorMaterialProperty,
   ConstantProperty,
@@ -21,7 +23,6 @@ import {
   ClassificationType,
   GroundPolylinePrimitive,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

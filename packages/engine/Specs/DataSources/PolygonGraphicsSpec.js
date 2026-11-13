@@ -4,13 +4,14 @@ import {
   Color,
   DistanceDisplayCondition,
   PolygonHierarchy,
+} from "@cesium/core";
+import {
   ColorMaterialProperty,
   ConstantProperty,
   PolygonGraphics,
   ClassificationType,
   ShadowMode,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 import testMaterialDefinitionChanged from "../../../../Specs/testMaterialDefinitionChanged.js";
 

@@ -1,5 +1,5 @@
+import { Cartesian2 } from "@cesium/core";
 import {
-  Cartesian2,
   ShaderBuilder,
   StencilConstants,
   TilesetPipelineStage,

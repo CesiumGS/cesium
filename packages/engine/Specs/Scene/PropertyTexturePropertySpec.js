@@ -1,9 +1,7 @@
+import { Matrix3, PixelDatatype, PixelFormat } from "@cesium/core";
 import {
   PropertyTextureProperty,
-  Matrix3,
   MetadataClassProperty,
-  PixelDatatype,
-  PixelFormat,
   Texture,
 } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";

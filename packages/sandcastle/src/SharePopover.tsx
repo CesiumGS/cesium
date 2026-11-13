@@ -8,6 +8,7 @@ import { getBaseUrl } from "./util/getBaseUrl";
 import { PopoverDescription } from "@ariakit/react";
 import "./SharePopover.css";
 import { sleep } from "./util/sleep";
+import { shareIdForPayload, trackEvent } from "./analytics";
 
 export function SharePopover({ code, html }: { code: string; html: string }) {
   const latestCode = useRef("");
@@ -67,6 +68,25 @@ export function SharePopover({ code, html }: { code: string; html: string }) {
     <SandcastlePopover
       className="share-popover"
       title="Share"
+      onOpenChange={(open) => {
+        // The disclosure button also fires generateShareUrl on the click
+        // that closes the popover; only the open transition is a share
+        if (open) {
+          const demoId = new URLSearchParams(window.location.search).get("id");
+          // Recompute the payload from the refs rather than reading the
+          // shareUrl state, which may not have re-rendered yet on this click
+          const shareId = shareIdForPayload(
+            makeCompressedBase64String({
+              code: latestCode.current,
+              html: latestHtml.current,
+            }),
+          );
+          trackEvent("Sandcastle Shared", {
+            share_id: shareId,
+            ...(demoId ? { demo_id: demoId } : {}),
+          });
+        }
+      }}
       disclosure={
         <Button tone="accent" onClick={generateShareUrl}>
           <Icon href={shareIcon} /> Share

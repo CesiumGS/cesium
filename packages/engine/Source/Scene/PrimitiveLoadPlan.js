@@ -1,10 +1,12 @@
-import Check from "../Core/Check.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
+import {
+  AttributeType,
+  Check,
+  ComponentDatatype,
+  IndexDatatype,
+  defined,
+} from "@cesium/core";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
-import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
 
@@ -206,6 +208,14 @@ function generateOutlines(loadPlan) {
   indices.typedArray = generator.updatedTriangleIndices;
   indices.indexDatatype = IndexDatatype.fromTypedArray(indices.typedArray);
 
+  // Some vertices may be copied due to the addition of the new attribute
+  // which may have multiple values at a vertex depending on the face
+  const { attributePlans } = loadPlan;
+  for (let i = 0; i < attributePlans.length; i++) {
+    const { attribute } = attributePlans[i];
+    attribute.typedArray = generator.updateAttribute(attribute.typedArray);
+  }
+
   // The outline generator creates a new attribute for the outline coordinates
   // that are used with a lookup texture.
   const outlineCoordinates = makeOutlineCoordinatesAttribute(
@@ -216,15 +226,6 @@ function generateOutlines(loadPlan) {
   outlineCoordinatesPlan.loadTypedArray = false;
   loadPlan.attributePlans.push(outlineCoordinatesPlan);
   primitive.outlineCoordinates = outlineCoordinatesPlan.attribute;
-
-  // Some vertices may be copied due to the addition of the new attribute
-  // which may have multiple values at a vertex depending on the face
-  const attributePlans = loadPlan.attributePlans;
-  const attributesLength = loadPlan.attributePlans.length;
-  for (let i = 0; i < attributesLength; i++) {
-    const attribute = attributePlans[i].attribute;
-    attribute.typedArray = generator.updateAttribute(attribute.typedArray);
-  }
 }
 
 function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
@@ -240,9 +241,8 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
 }
 
 function setupGaussianSplatBuffers(loadPlan, context) {
-  const attributePlans = loadPlan.attributePlans;
-  const attrLen = attributePlans.length;
-  for (let i = 0; i < attrLen; i++) {
+  const { attributePlans } = loadPlan;
+  for (let i = 0; i < attributePlans.length; i++) {
     const attributePlan = attributePlans[i];
     attributePlan.loadBuffer = false;
     attributePlan.loadTypedArray = true;
@@ -258,15 +258,11 @@ function generateBuffers(loadPlan, context) {
 }
 
 function generateAttributeBuffers(attributePlans, context) {
-  const attributesLength = attributePlans.length;
-  for (let i = 0; i < attributesLength; i++) {
-    const attributePlan = attributePlans[i];
-    const attribute = attributePlan.attribute;
-    const typedArray = attribute.typedArray;
-
-    if (attributePlan.loadBuffer) {
+  for (let i = 0; i < attributePlans.length; i++) {
+    const { attribute, loadBuffer, loadTypedArray } = attributePlans[i];
+    if (loadBuffer) {
       const buffer = Buffer.createVertexBuffer({
-        typedArray: typedArray,
+        typedArray: attribute.typedArray,
         context: context,
         usage: BufferUsage.STATIC_DRAW,
       });
@@ -274,7 +270,7 @@ function generateAttributeBuffers(attributePlans, context) {
       attribute.buffer = buffer;
     }
 
-    if (!attributePlan.loadTypedArray) {
+    if (!loadTypedArray) {
       attribute.typedArray = undefined;
     }
   }

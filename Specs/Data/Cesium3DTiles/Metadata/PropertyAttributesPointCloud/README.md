@@ -17,7 +17,7 @@ The glTF assets are simple point clouds, with [property attributes](https://gith
 
 ## Defining statistics for the metadata values
 
-The 3D Tiles tileset contains [metadata statistics](https://github.com/CesiumGS/3d-tiles/tree/main/specification#metadata-statistics) for the metadata from the glTF assets. These statistics contain, for example, the minimum and maximum `intensity` value, and the number of occurences for each `classification` value.
+The 3D Tiles tileset contains [metadata statistics](https://github.com/CesiumGS/3d-tiles/tree/main/specification#metadata-statistics) for the metadata from the glTF assets. These statistics contain, for example, the minimum and maximum `intensity` value, and the number of occurrences for each `classification` value.
 
 ## More information
 

@@ -1,14 +1,16 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import combine from "../Core/combine.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
-import HilbertOrder from "../Core/HilbertOrder.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  Cartesian3,
+  Check,
+  DeveloperError,
+  HilbertOrder,
+  Math as CesiumMath,
+  Matrix3,
+  Rectangle,
+  clone,
+  combine,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import S2Cell from "../Core/S2Cell.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import hasExtension from "./hasExtension.js";
@@ -25,213 +27,318 @@ import BoundingVolumeSemantics from "./BoundingVolumeSemantics.js";
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
- * This object is normally not instantiated directly, use {@link Implicit3DTileContent.fromSubtreeJson}.
+ * This object is normally not instantiated directly, use {@link Implicit3DTileContent.fromSubtreeJson},
+ * {@link Implicit3DTileContent.fromSubtreeGltf}, or {@link Implicit3DTileContent.fromSubtreeGlb}.
  *
- * @alias Implicit3DTileContent
- * @constructor
- *
- * @param {Cesium3DTileset} tileset The tileset this content belongs to
- * @param {Cesium3DTile} tile The tile this content belongs to.
- * @param {Resource} resource The resource for the tileset
- * @param {object} [json] The JSON object containing the subtree. Mutually exclusive with arrayBuffer.
- * @param {ArrayBuffer} [arrayBuffer] The array buffer that stores the content payload. Mutually exclusive with json.
- * @param {number} [byteOffset=0] The offset into the array buffer, if one was provided
- *
- * @exception {DeveloperError} One of json and arrayBuffer must be defined.
- *
+ * @implements Cesium3DTileContent
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function Implicit3DTileContent(tileset, tile, resource) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("tile.implicitTileset", tile.implicitTileset);
-  Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
-  //>>includeEnd('debug');
+class Implicit3DTileContent {
+  /**
+   * @param {Cesium3DTileset} tileset The tileset this content belongs to
+   * @param {Cesium3DTile} tile The tile this content belongs to.
+   * @param {Resource} resource The resource for the tileset
+   * @param {object} [json] The JSON object containing the subtree. Mutually exclusive with arrayBuffer.
+   * @param {ArrayBuffer} [arrayBuffer] The array buffer that stores the content payload. Mutually exclusive with json.
+   * @param {number} [byteOffset=0] The offset into the array buffer, if one was provided
+   *
+   * @exception {DeveloperError} One of json and arrayBuffer must be defined.
+   */
+  constructor(tileset, tile, resource) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("tile.implicitTileset", tile.implicitTileset);
+    Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
+    //>>includeEnd('debug');
 
-  const implicitTileset = tile.implicitTileset;
-  const implicitCoordinates = tile.implicitCoordinates;
+    const implicitTileset = tile.implicitTileset;
+    const implicitCoordinates = tile.implicitCoordinates;
 
-  this._implicitTileset = implicitTileset;
-  this._implicitCoordinates = implicitCoordinates;
-  this._implicitSubtree = undefined;
-  this._tileset = tileset;
-  this._tile = tile;
-  this._resource = resource;
+    this._implicitTileset = implicitTileset;
+    this._implicitCoordinates = implicitCoordinates;
+    this._implicitSubtree = undefined;
+    this._tileset = tileset;
+    this._tile = tile;
+    this._resource = resource;
+    this._show = true;
 
-  this._metadata = undefined;
+    this._metadata = undefined;
 
-  this.featurePropertiesDirty = false;
-  this._group = undefined;
+    this.featurePropertiesDirty = false;
+    this._group = undefined;
 
-  const templateValues = implicitCoordinates.getTemplateValues();
-  const subtreeResource = implicitTileset.subtreeUriTemplate.getDerivedResource(
-    {
-      templateValues: templateValues,
-    },
-  );
-  this._url = subtreeResource.getUrlComponent(true);
+    /**
+     * Creates the children of any tile in this subtree.
+     *
+     * @type {Cesium3DTile.ImplicitChildrenCallback|undefined}
+     * @private
+     */
+    this._implicitChildrenCallback = undefined;
 
-  this._ready = false;
-}
+    const templateValues = implicitCoordinates.getTemplateValues();
+    const subtreeResource =
+      implicitTileset.subtreeUriTemplate.getDerivedResource({
+        templateValues: templateValues,
+      });
+    this._url = subtreeResource.getUrlComponent(true);
 
-Object.defineProperties(Implicit3DTileContent.prototype, {
-  featuresLength: {
-    get: function () {
-      return 0;
-    },
-  },
+    this._ready = false;
+  }
 
-  pointsLength: {
-    get: function () {
-      return 0;
-    },
-  },
+  get featuresLength() {
+    return 0;
+  }
 
-  trianglesLength: {
-    get: function () {
-      return 0;
-    },
-  },
+  get pointsLength() {
+    return 0;
+  }
 
-  geometryByteLength: {
-    get: function () {
-      return 0;
-    },
-  },
+  get trianglesLength() {
+    return 0;
+  }
 
-  texturesByteLength: {
-    get: function () {
-      return 0;
-    },
-  },
+  get geometryByteLength() {
+    return 0;
+  }
 
-  batchTableByteLength: {
-    get: function () {
-      return 0;
-    },
-  },
+  get texturesByteLength() {
+    return 0;
+  }
 
-  innerContents: {
-    get: function () {
-      return undefined;
-    },
-  },
+  get batchTableByteLength() {
+    return 0;
+  }
+
+  get innerContents() {
+    return undefined;
+  }
 
   /**
    * Returns true when the tile's content is ready to render; otherwise false
    *
-   * @memberof Implicit3DTileContent.prototype
    *
    * @type {boolean}
    * @readonly
    * @private
    */
-  ready: {
-    get: function () {
-      return this._ready;
-    },
-  },
+  get ready() {
+    return this._ready;
+  }
 
-  tileset: {
-    get: function () {
-      return this._tileset;
-    },
-  },
+  get tileset() {
+    return this._tileset;
+  }
 
-  tile: {
-    get: function () {
-      return this._tile;
-    },
-  },
+  get tile() {
+    return this._tile;
+  }
 
-  url: {
-    get: function () {
-      return this._url;
-    },
-  },
+  get url() {
+    return this._url;
+  }
 
   /**
    * Part of the {@link Cesium3DTileContent} interface. <code>Implicit3DTileContent</code>
    * always returns <code>undefined</code>. Only transcoded tiles have content metadata.
-   * @memberof Implicit3DTileContent.prototype
    * @private
    */
-  metadata: {
-    get: function () {
-      return undefined;
-    },
-    set: function () {
-      //>>includeStart('debug', pragmas.debug);
-      throw new DeveloperError("Implicit3DTileContent cannot have metadata");
-      //>>includeEnd('debug');
-    },
-  },
+  get metadata() {
+    return undefined;
+  }
 
-  batchTable: {
-    get: function () {
-      return undefined;
-    },
-  },
+  set metadata(_) {
+    //>>includeStart('debug', pragmas.debug);
+    throw new DeveloperError("Implicit3DTileContent cannot have metadata");
+    //>>includeEnd('debug');
+  }
 
-  group: {
-    get: function () {
-      return this._group;
-    },
-    set: function (value) {
-      this._group = value;
-    },
-  },
-});
+  get batchTable() {
+    return undefined;
+  }
+
+  get group() {
+    return this._group;
+  }
+
+  set group(value) {
+    this._group = value;
+  }
+
+  /** @inheritdoc */
+  get show() {
+    return this._show;
+  }
+
+  set show(value) {
+    this._show = value;
+  }
+
+  /**
+   * Initialize the implicit content by parsing the subtree resource and setting
+   * up a promise chain to expand the immediate subtree.
+   *
+   * @param {Cesium3DTileset} tileset The tileset this content belongs to
+   * @param {Cesium3DTile} tile The tile this content belongs to.
+   * @param {Resource} resource The resource for the tileset
+   * @param {object} [json] The JSON containing the subtree. Mutually exclusive with arrayBuffer.
+   * @param {ArrayBuffer} [arrayBuffer] The ArrayBuffer containing a subtree binary. Mutually exclusive with json.
+   * @param {number} [byteOffset=0] The byte offset into the arrayBuffer
+   * @return {Promise<Implicit3DTileContent>}
+   *
+   * @exception {DeveloperError} One of json and arrayBuffer must be defined.
+   *
+   * @private
+   */
+  static async fromSubtreeJson(
+    tileset,
+    tile,
+    resource,
+    json,
+    arrayBuffer,
+    byteOffset,
+  ) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("tile.implicitTileset", tile.implicitTileset);
+    Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
+    if (defined(json) === defined(arrayBuffer)) {
+      throw new DeveloperError("One of json and arrayBuffer must be defined.");
+    }
+    //>>includeEnd('debug');
+
+    byteOffset = byteOffset ?? 0;
+    let uint8Array;
+    if (defined(arrayBuffer)) {
+      uint8Array = new Uint8Array(arrayBuffer, byteOffset);
+    }
+
+    const implicitTileset = tile.implicitTileset;
+    const implicitCoordinates = tile.implicitCoordinates;
+
+    const subtree = await ImplicitSubtree.fromSubtreeJson(
+      resource,
+      json,
+      uint8Array,
+      implicitTileset,
+      implicitCoordinates,
+    );
+
+    return createContentFromSubtree(tileset, tile, resource, subtree);
+  }
+
+  /**
+   * Initialize the implicit content from a subtree stored as glTF JSON with the
+   * <code>3DTILES_subtree</code> extension.
+   *
+   * @param {Cesium3DTileset} tileset The tileset this content belongs to
+   * @param {Cesium3DTile} tile The tile this content belongs to.
+   * @param {Resource} resource The resource for the tileset
+   * @param {object} gltf The glTF JSON containing the subtree. All of its buffers must have a <code>uri</code>.
+   * @return {Promise<Implicit3DTileContent>}
+   *
+   * @private
+   */
+  static async fromSubtreeGltf(tileset, tile, resource, gltf) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("tile.implicitTileset", tile.implicitTileset);
+    Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
+    Check.typeOf.object("gltf", gltf);
+    //>>includeEnd('debug');
+
+    const subtree = await ImplicitSubtree.fromSubtreeGltf(
+      resource,
+      gltf,
+      tile.implicitTileset,
+      tile.implicitCoordinates,
+    );
+
+    return createContentFromSubtree(tileset, tile, resource, subtree);
+  }
+
+  /**
+   * Initialize the implicit content from a subtree stored as a binary glTF (glb)
+   * with the <code>3DTILES_subtree</code> extension.
+   *
+   * @param {Cesium3DTileset} tileset The tileset this content belongs to
+   * @param {Cesium3DTile} tile The tile this content belongs to.
+   * @param {Resource} resource The resource for the tileset
+   * @param {ArrayBuffer} arrayBuffer The ArrayBuffer containing the glb
+   * @param {number} [byteOffset=0] The byte offset into the arrayBuffer
+   * @return {Promise<Implicit3DTileContent>}
+   *
+   * @private
+   */
+  static async fromSubtreeGlb(
+    tileset,
+    tile,
+    resource,
+    arrayBuffer,
+    byteOffset,
+  ) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("tile.implicitTileset", tile.implicitTileset);
+    Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
+    Check.typeOf.object("arrayBuffer", arrayBuffer);
+    //>>includeEnd('debug');
+
+    const glbView = new Uint8Array(arrayBuffer, byteOffset ?? 0);
+    const subtree = await ImplicitSubtree.fromSubtreeGlb(
+      resource,
+      glbView,
+      tile.implicitTileset,
+      tile.implicitCoordinates,
+    );
+
+    return createContentFromSubtree(tileset, tile, resource, subtree);
+  }
+
+  /**
+   * Part of the {@link Cesium3DTileContent} interface.  <code>Implicit3DTileContent</code>
+   * always returns <code>false</code> since a tile of this type does not have any features.
+   * @private
+   */
+  hasProperty(batchId, name) {
+    return false;
+  }
+
+  /**
+   * Part of the {@link Cesium3DTileContent} interface.  <code>Implicit3DTileContent</code>
+   * always returns <code>undefined</code> since a tile of this type does not have any features.
+   * @private
+   */
+  getFeature(batchId) {
+    return undefined;
+  }
+
+  applyDebugSettings(enabled, color) {}
+  applyStyle(style) {}
+  update(tileset, frameState) {}
+
+  pick(ray, frameState, result) {
+    return undefined;
+  }
+
+  isDestroyed() {
+    return false;
+  }
+
+  destroy() {
+    this._implicitSubtree =
+      this._implicitSubtree && this._implicitSubtree.destroy();
+    return destroyObject(this);
+  }
+}
 
 /**
- * Initialize the implicit content by parsing the subtree resource and setting
- * up a promise chain to expand the immediate subtree.
+ * Create the content for a parsed subtree and expand the subtree into tiles.
  *
  * @param {Cesium3DTileset} tileset The tileset this content belongs to
  * @param {Cesium3DTile} tile The tile this content belongs to.
  * @param {Resource} resource The resource for the tileset
- * @param {object} [json] The JSON containing the subtree. Mutually exclusive with arrayBuffer.
- * @param {ArrayBuffer} [arrayBuffer] The ArrayBuffer containing a subtree binary. Mutually exclusive with json.
- * @param {number} [byteOffset=0] The byte offset into the arrayBuffer
- * @return {Promise<Implicit3DTileContent>}
- *
- * @exception {DeveloperError} One of json and arrayBuffer must be defined.
- *
+ * @param {ImplicitSubtree} subtree The parsed subtree
+ * @return {Implicit3DTileContent}
  * @private
  */
-Implicit3DTileContent.fromSubtreeJson = async function (
-  tileset,
-  tile,
-  resource,
-  json,
-  arrayBuffer,
-  byteOffset,
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("tile.implicitTileset", tile.implicitTileset);
-  Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
-  if (defined(json) === defined(arrayBuffer)) {
-    throw new DeveloperError("One of json and arrayBuffer must be defined.");
-  }
-  //>>includeEnd('debug');
-
-  byteOffset = byteOffset ?? 0;
-  let uint8Array;
-  if (defined(arrayBuffer)) {
-    uint8Array = new Uint8Array(arrayBuffer, byteOffset);
-  }
-
-  const implicitTileset = tile.implicitTileset;
-  const implicitCoordinates = tile.implicitCoordinates;
-
-  const subtree = await ImplicitSubtree.fromSubtreeJson(
-    resource,
-    json,
-    uint8Array,
-    implicitTileset,
-    implicitCoordinates,
-  );
-
+function createContentFromSubtree(tileset, tile, resource, subtree) {
   const content = new Implicit3DTileContent(tileset, tile, resource);
 
   content._implicitSubtree = subtree;
@@ -239,13 +346,13 @@ Implicit3DTileContent.fromSubtreeJson = async function (
   content._ready = true;
 
   return content;
-};
+}
 
 /**
- * Expand a single subtree placeholder tile. This transcodes the subtree into
- * a tree of {@link Cesium3DTile}. The root of this tree is stored in
- * the placeholder tile's children array. This method also creates placeholder
- * tiles for the child subtrees to be lazily expanded as needed.
+ * Expand a single subtree placeholder tile. This derives the root
+ * {@link Cesium3DTile} of the subtree and stores it in the placeholder tile's
+ * children array. The rest of the subtree is derived on demand, as the
+ * traversal asks each tile for its children.
  *
  * @param {Implicit3DTileContent} content The content
  * @param {ImplicitSubtree} subtree The parsed subtree
@@ -253,160 +360,76 @@ Implicit3DTileContent.fromSubtreeJson = async function (
  */
 function expandSubtree(content, subtree) {
   const placeholderTile = content._tile;
+  content._implicitChildrenCallback = (tile) =>
+    deriveImplicitChildren(content, tile);
 
-  // Parse the tiles inside this immediate subtree
-  const childIndex = content._implicitCoordinates.childIndex;
-  const results = transcodeSubtreeTiles(
-    content,
-    subtree,
-    placeholderTile,
-    childIndex,
-  );
-
-  const statistics = content._tileset.statistics;
-
-  // Link the new subtree to the existing placeholder tile.
-  placeholderTile.children.push(results.rootTile);
-  statistics.numberOfTilesTotal++;
-
-  // for each child subtree, make new placeholder tiles
-  const childSubtrees = listChildSubtrees(content, subtree, results.bottomRow);
-  for (let i = 0; i < childSubtrees.length; i++) {
-    const subtreeLocator = childSubtrees[i];
-    const leafTile = subtreeLocator.tile;
-    const implicitChildTile = makePlaceholderChildSubtree(
-      content,
-      leafTile,
-      subtreeLocator.childIndex,
-    );
-    leafTile.children.push(implicitChildTile);
-    statistics.numberOfTilesTotal++;
-  }
-}
-
-/**
- * A pair of (tile, childIndex) used for finding child subtrees.
- *
- * @typedef {object} ChildSubtreeLocator
- * @property {Cesium3DTile} tile One of the tiles in the bottommost row of the subtree.
- * @property {number} childIndex The morton index of the child tile relative to its parent
- * @private
- */
-
-/**
- * Determine what child subtrees exist and return a list of information
- *
- * @param {Implicit3DTileContent} content The implicit content
- * @param {ImplicitSubtree} subtree The subtree for looking up availability
- * @param {Array<Cesium3DTile|undefined>} bottomRow The bottom row of tiles in a transcoded subtree
- * @returns {ChildSubtreeLocator[]} A list of identifiers for the child subtrees.
- * @private
- */
-function listChildSubtrees(content, subtree, bottomRow) {
-  const results = [];
-  const branchingFactor = content._implicitTileset.branchingFactor;
-  for (let i = 0; i < bottomRow.length; i++) {
-    const leafTile = bottomRow[i];
-    if (!defined(leafTile)) {
-      continue;
-    }
-
-    for (let j = 0; j < branchingFactor; j++) {
-      const index = i * branchingFactor + j;
-      if (subtree.childSubtreeIsAvailableAtIndex(index)) {
-        results.push({
-          tile: leafTile,
-          childIndex: j,
-        });
-      }
-    }
-  }
-  return results;
-}
-
-/**
- * Results of transcodeSubtreeTiles, containing the root tile of the
- * subtree and the bottom row of nodes for further processing.
- *
- * @typedef {object} TranscodedSubtree
- * @property {Cesium3DTile} rootTile The transcoded root tile of the subtree
- * @property {Array<Cesium3DTile|undefined>} bottomRow The bottom row of transcoded tiles. This is helpful for processing child subtrees
- * @private
- */
-
-/**
- * Transcode the implicitly-defined tiles within this subtree and generate
- * explicit {@link Cesium3DTile} objects. This function only transcode tiles,
- * child subtrees are handled separately.
- *
- * @param {Implicit3DTileContent} content The implicit content
- * @param {ImplicitSubtree} subtree The subtree to get availability information
- * @param {Cesium3DTile} placeholderTile The placeholder tile, used for constructing the subtree root tile
- * @param {number} childIndex The Morton index of the root tile relative to parentOfRootTile
- * @returns {TranscodedSubtree} The newly created subtree of tiles
- * @private
- */
-function transcodeSubtreeTiles(content, subtree, placeholderTile, childIndex) {
-  const rootBitIndex = 0;
   const rootParentIsPlaceholder = true;
   const rootTile = deriveChildTile(
     content,
     subtree,
     placeholderTile,
-    childIndex,
-    rootBitIndex,
+    content._implicitCoordinates.childIndex,
+    placeholderTile.implicitCoordinates,
     rootParentIsPlaceholder,
   );
 
-  const statistics = content._tileset.statistics;
+  placeholderTile.children.push(rootTile);
+  content._tileset.statistics.numberOfTilesTotal++;
+}
 
-  // Sliding window over the levels of the tree.
-  // Each row is branchingFactor * length of previous row
-  // Tiles within a row are ordered by Morton index.
-  let parentRow = [rootTile];
-  let currentRow = [];
-
-  const implicitTileset = content._implicitTileset;
-  for (let level = 1; level < implicitTileset.subtreeLevels; level++) {
-    const levelOffset = subtree.getLevelOffset(level);
-    const numberOfChildren = implicitTileset.branchingFactor * parentRow.length;
-    for (
-      let childMortonIndex = 0;
-      childMortonIndex < numberOfChildren;
-      childMortonIndex++
-    ) {
-      const childBitIndex = levelOffset + childMortonIndex;
-
-      if (!subtree.tileIsAvailableAtIndex(childBitIndex)) {
-        currentRow.push(undefined);
-        continue;
-      }
-
-      const parentMortonIndex = subtree.getParentMortonIndex(childMortonIndex);
-      const parentTile = parentRow[parentMortonIndex];
-      const childChildIndex =
-        childMortonIndex % implicitTileset.branchingFactor;
-      const childTile = deriveChildTile(
-        content,
-        subtree,
-        parentTile,
-        childChildIndex,
-        childBitIndex,
-      );
-      parentTile.children.push(childTile);
-      statistics.numberOfTilesTotal++;
-      currentRow.push(childTile);
-    }
-
-    parentRow = currentRow;
-    currentRow = [];
+/**
+ * Derive the available children of a tile within a subtree. Tiles at the
+ * bottom of a subtree get placeholder tiles for their child subtrees instead.
+ *
+ * @param {Implicit3DTileContent} content The implicit content that owns the subtree
+ * @param {Cesium3DTile} tile The tile to derive children for
+ * @private
+ */
+function deriveImplicitChildren(content, tile) {
+  const subtree = content._implicitSubtree;
+  if (!defined(subtree)) {
+    return;
   }
 
-  return {
-    rootTile: rootTile,
-    // At the end of the last loop, bottomRow was moved to parentRow
-    bottomRow: parentRow,
-  };
+  const implicitTileset = content._implicitTileset;
+  const statistics = content._tileset.statistics;
+  const coordinates = tile.implicitCoordinates;
+  const atBottomOfSubtree = coordinates.isBottomOfSubtree();
+
+  for (
+    let childIndex = 0;
+    childIndex < implicitTileset.branchingFactor;
+    childIndex++
+  ) {
+    const childCoordinates = coordinates.getChildCoordinates(childIndex);
+
+    let childTile;
+    if (atBottomOfSubtree) {
+      if (!subtree.childSubtreeIsAvailableAtCoordinates(childCoordinates)) {
+        continue;
+      }
+      childTile = makePlaceholderChildSubtree(
+        content,
+        tile,
+        childIndex,
+        childCoordinates,
+      );
+    } else {
+      if (!subtree.tileIsAvailableAtCoordinates(childCoordinates)) {
+        continue;
+      }
+      childTile = deriveChildTile(
+        content,
+        subtree,
+        tile,
+        childIndex,
+        childCoordinates,
+      );
+    }
+
+    tile.children.push(childTile);
+    statistics.numberOfTilesTotal++;
+  }
 }
 
 function getGeometricError(tileMetadata, implicitTileset, implicitCoordinates) {
@@ -433,7 +456,7 @@ function getGeometricError(tileMetadata, implicitTileset, implicitCoordinates) {
  * @param {ImplicitSubtree} subtree The subtree the child tile belongs to
  * @param {Cesium3DTile} parentTile The parent of the new child tile
  * @param {number} childIndex The morton index of the child tile relative to its parent
- * @param {number} childBitIndex The index of the child tile within the tile's availability information.
+ * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of the child tile
  * @param {boolean} [parentIsPlaceholderTile=false] True if parentTile is a placeholder tile. This is true for the root of each subtree.
  * @returns {Cesium3DTile} The new child tile.
  * @private
@@ -443,17 +466,10 @@ function deriveChildTile(
   subtree,
   parentTile,
   childIndex,
-  childBitIndex,
+  implicitCoordinates,
   parentIsPlaceholderTile,
 ) {
   const implicitTileset = implicitContent._implicitTileset;
-  let implicitCoordinates;
-  if (parentIsPlaceholderTile ?? false) {
-    implicitCoordinates = parentTile.implicitCoordinates;
-  } else {
-    implicitCoordinates =
-      parentTile.implicitCoordinates.getChildCoordinates(childIndex);
-  }
 
   // Parse metadata and bounding volume semantics at the beginning
   // as the bounding volumes are needed below.
@@ -490,7 +506,7 @@ function deriveChildTile(
 
   const contentJsons = [];
   for (let i = 0; i < implicitTileset.contentCount; i++) {
-    if (!subtree.contentIsAvailableAtIndex(childBitIndex, i)) {
+    if (!subtree.contentIsAvailableAtCoordinates(implicitCoordinates, i)) {
       continue;
     }
     const childContentTemplate = implicitTileset.contentUriTemplates[i];
@@ -574,6 +590,8 @@ function deriveChildTile(
   childTile.implicitSubtree = subtree;
   childTile.metadata = tileMetadata;
   childTile.hasImplicitContentMetadata = hasImplicitContentMetadata;
+  childTile._implicitChildrenCallback =
+    implicitContent._implicitChildrenCallback;
 
   return childTile;
 }
@@ -1089,13 +1107,17 @@ function deriveBoundingRegion(rootRegion, level, x, y, z) {
  * @param {Implicit3DTileContent} content The content object.
  * @param {Cesium3DTile} parentTile The parent of the new child subtree.
  * @param {number} childIndex The morton index of the child tile relative to its parent
+ * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of the child subtree's root tile
  * @returns {Cesium3DTile} The new placeholder tile
  * @private
  */
-function makePlaceholderChildSubtree(content, parentTile, childIndex) {
+function makePlaceholderChildSubtree(
+  content,
+  parentTile,
+  childIndex,
+  implicitCoordinates,
+) {
   const implicitTileset = content._implicitTileset;
-  const implicitCoordinates =
-    parentTile.implicitCoordinates.getChildCoordinates(childIndex);
 
   const childBoundingVolume = deriveBoundingVolume(
     implicitTileset,
@@ -1156,47 +1178,6 @@ function makeTile(content, baseResource, tileJson, parentTile) {
   const Cesium3DTile = content._tile.constructor;
   return new Cesium3DTile(content._tileset, baseResource, tileJson, parentTile);
 }
-
-/**
- * Part of the {@link Cesium3DTileContent} interface.  <code>Implicit3DTileContent</code>
- * always returns <code>false</code> since a tile of this type does not have any features.
- * @private
- */
-Implicit3DTileContent.prototype.hasProperty = function (batchId, name) {
-  return false;
-};
-
-/**
- * Part of the {@link Cesium3DTileContent} interface.  <code>Implicit3DTileContent</code>
- * always returns <code>undefined</code> since a tile of this type does not have any features.
- * @private
- */
-Implicit3DTileContent.prototype.getFeature = function (batchId) {
-  return undefined;
-};
-
-Implicit3DTileContent.prototype.applyDebugSettings = function (
-  enabled,
-  color,
-) {};
-
-Implicit3DTileContent.prototype.applyStyle = function (style) {};
-
-Implicit3DTileContent.prototype.update = function (tileset, frameState) {};
-
-Implicit3DTileContent.prototype.pick = function (ray, frameState, result) {
-  return undefined;
-};
-
-Implicit3DTileContent.prototype.isDestroyed = function () {
-  return false;
-};
-
-Implicit3DTileContent.prototype.destroy = function () {
-  this._implicitSubtree =
-    this._implicitSubtree && this._implicitSubtree.destroy();
-  return destroyObject(this);
-};
 
 // Exposed for testing
 Implicit3DTileContent._deriveBoundingBox = deriveBoundingBox;

@@ -1,10 +1,8 @@
+import { Cartesian2, Cartesian3, NearFarScalar } from "@cesium/core";
 import {
-  Cartesian2,
-  Cartesian3,
   HorizontalOrigin,
   Label,
   LabelStyle,
-  NearFarScalar,
   VerticalOrigin,
 } from "../../index.js";
 

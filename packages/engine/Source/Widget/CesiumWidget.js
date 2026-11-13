@@ -1,18 +1,20 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Clock from "../Core/Clock.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Event from "../Core/Event.js";
-import EventHelper from "../Core/EventHelper.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Clock,
+  DeveloperError,
+  Ellipsoid,
+  Event,
+  EventHelper,
+  Frozen,
+  HeadingPitchRange,
+  Matrix4,
+  defined,
+  destroyObject,
+  formatError,
+} from "@cesium/core";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import formatError from "../Core/formatError.js";
-import HeadingPitchRange from "../Core/HeadingPitchRange.js";
-import Matrix4 from "../Core/Matrix4.js";
 import BoundingSphereState from "../DataSources/BoundingSphereState.js";
 import DataSourceCollection from "../DataSources/DataSourceCollection.js";
 import DataSourceDisplay from "../DataSources/DataSourceDisplay.js";
@@ -1225,6 +1227,36 @@ CesiumWidget.prototype._onDataSourceRemoved = function (
       this.clockTrackedDataSource = undefined;
     }
   }
+};
+
+/**
+ * Adds a controller— an implementation of the {@link Controller} interface used to handle input events, camera animations, and other interactions— to the widget's scene.
+ * @param {Controller} controller An implementation of the <code>Controller</code> interface.
+ * @example
+ * widget.scene.screenSpaceCameraController.enableInputs = false;
+ * widget.scene.screenSpaceCameraController.enableCollisionDetection = false;
+ *
+ * const tiltOrbitController = new Cesium.ScreenSpaceTiltOrbitCameraController();
+ * widget.addController(tiltOrbitController);
+ */
+CesiumWidget.prototype.addController = function (controller) {
+  return this.scene.controllerHost.registerController(
+    controller,
+    this.container,
+  );
+};
+
+/**
+ * Removes a controller— an implementation of the {@link Controller}  interface used to handle input events, camera animations, and other interactions— from the widget's scene.
+ * @param {Controller} controller An implementation of the <code>Controller</code> interface.
+ * @example
+ * widget.removeController(tiltOrbitController);
+ */
+CesiumWidget.prototype.removeController = function (controller) {
+  return this.scene.controllerHost.unregisterController(
+    controller,
+    this.container,
+  );
 };
 
 /**

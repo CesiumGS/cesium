@@ -1,39 +1,42 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import BoxGeometry from "../Core/BoxGeometry.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import createGuid from "../Core/createGuid.js";
-import CullingVolume from "../Core/CullingVolume.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
-import Event from "../Core/Event.js";
-import GeographicProjection from "../Core/GeographicProjection.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import GeometryPipeline from "../Core/GeometryPipeline.js";
-import HeightReference from "./HeightReference.js";
-import Intersect from "../Core/Intersect.js";
-import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import mergeSort from "../Core/mergeSort.js";
-import Occluder from "../Core/Occluder.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
-import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
-import PerspectiveOffCenterFrustum from "../Core/PerspectiveOffCenterFrustum.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  BoundingRectangle,
+  BoundingSphere,
+  BoxGeometry,
+  Cartesian3,
+  Cartographic,
+  Check,
+  Color,
+  ColorGeometryInstanceAttribute,
+  CullingVolume,
+  DeveloperError,
+  Ellipsoid,
+  EllipsoidGeometry,
+  Event,
+  FixedFrameTransforms,
+  Frozen,
+  GeographicProjection,
+  GeometryInstance,
+  GeometryPipeline,
+  Intersect,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix4,
+  Occluder,
+  OrthographicFrustum,
+  OrthographicOffCenterFrustum,
+  PerspectiveFrustum,
+  PerspectiveOffCenterFrustum,
+  Rectangle,
+  clone,
+  createGuid,
+  defined,
+  destroyObject,
+  mergeSort,
+} from "@cesium/core";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
-import Transforms from "../Core/Transforms.js";
+import VectorProvider from "../Core/VectorProvider.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import ComputeEngine from "../Renderer/ComputeEngine.js";
 import Context from "../Renderer/Context.js";
@@ -45,6 +48,7 @@ import BrdfLutGenerator from "./BrdfLutGenerator.js";
 import Camera from "./Camera.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTilePassState from "./Cesium3DTilePassState.js";
+import ControllerHost from "./Controllers/ControllerHost.js";
 import CreditDisplay from "./CreditDisplay.js";
 import DebugCameraPrimitive from "./DebugCameraPrimitive.js";
 import DepthPlane from "./DepthPlane.js";
@@ -69,6 +73,7 @@ import SceneTransitioner from "./SceneTransitioner.js";
 import ScreenSpaceCameraController from "./ScreenSpaceCameraController.js";
 import ShadowMap from "./ShadowMap.js";
 import SharedContext from "../Renderer/SharedContext.js";
+import Snapping from "./Snapping.js";
 import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
 import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
@@ -82,6 +87,7 @@ import getMetadataClassProperty from "./getMetadataClassProperty.js";
 import PickedMetadataInfo from "./PickedMetadataInfo.js";
 import getMetadataProperty from "./getMetadataProperty.js";
 
+/** @ignore */
 const requestRenderAfterFrame = function (scene) {
   return function () {
     scene.frameState.afterRender.push(function () {
@@ -240,6 +246,8 @@ function Scene(options) {
   this._renderError = new Event();
   this._preRender = new Event();
   this._postRender = new Event();
+
+  this._controllerHost = new ControllerHost();
 
   this._minimumDisableDepthTestDistance = 0.0;
   this._debugInspector = new DebugInspector();
@@ -770,6 +778,15 @@ function Scene(options) {
    */
   this._enableEdgeVisibility = false;
 
+  /**
+   * Whether or not to enable the planar fill feature-ID pre-pass.
+   * Updated each frame from FrameState.planarFillRequested.
+   * @type {boolean}
+   * @default false
+   * @private
+   */
+  this._enablePlanarFillId = false;
+
   // Give frameState, camera, and screen space camera controller initial state before rendering
   updateFrameNumber(this, 0.0, JulianDate.now());
   this.updateFrameState();
@@ -779,6 +796,7 @@ function Scene(options) {
 /**
  * Use this to set the default value for {@link Scene#logarithmicDepthBuffer} in newly constructed Scenes
  * This property relies on fragmentDepth being supported.
+ * @type {boolean}
  */
 Scene.defaultLogDepthBuffer = true;
 
@@ -1080,6 +1098,25 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
+   * Collects an array of <code>Controller</code> objects that can be registered with the scene to handle input events, camera animations, and other interactions.
+   * @see {@link Controller}
+   * @type {ControllerHost}
+   * @memberof Scene.prototype
+   * @readonly
+   * @example
+   * scene.screenSpaceCameraController.enableInputs = false;
+   * scene.screenSpaceCameraController.enableCollisionDetection = false;
+   *
+   * const tiltOrbitController = new Cesium.ScreenSpaceTiltOrbitCameraController();
+   * scene.controllerHost.registerController(tiltOrbitController, scene.canvas.parentNode);
+   */
+  controllerHost: {
+    get: function () {
+      return this._controllerHost;
+    },
+  },
+
+  /**
    * Gets the controller for camera input handling.
    * @memberof Scene.prototype
    *
@@ -1224,6 +1261,17 @@ Object.defineProperties(Scene.prototype, {
       }
 
       return this.globe.terrainProviderChanged;
+    },
+  },
+
+  /**
+   * @memberof Scene.prototype
+   * @type {VectorProvider}
+   * @ignore
+   */
+  vectorProvider: {
+    get: function () {
+      return this.globe?.vectorProvider;
     },
   },
 
@@ -1770,6 +1818,16 @@ function updateDerivedCommands(scene, command, shadowsDirty) {
       derivedCommands.picking,
     );
   }
+  // Snap derived commands are only created on demand, during a snapping pass,
+  // so applications that never call Scene.snap pay no shader-derivation cost.
+  if (defined(command.snapId) && frameState.passes.snap) {
+    derivedCommands.snapping = DerivedCommand.createSnapDerivedCommand(
+      scene,
+      command,
+      context,
+      derivedCommands.snapping,
+    );
+  }
   if (frameState.pickingMetadata && command.pickMetadataAllowed) {
     command.pickedMetadataInfo = frameState.pickedMetadataInfo;
     if (defined(command.pickedMetadataInfo)) {
@@ -1867,12 +1925,17 @@ Scene.prototype.updateDerivedCommands = function (command) {
   const needsUpdateForMetadataPicking =
     frameState.pickingMetadata &&
     pickedMetadataInfoChanged(command, frameState);
+  const needsUpdateForSnap =
+    frameState.passes.snap &&
+    defined(command.snapId) &&
+    !defined(derivedCommands.snapping);
   command.dirty =
     command.dirty ||
     needsLogDepthDerivedCommands ||
     needsHdrCommands ||
     needsDerivedCommands ||
-    needsUpdateForMetadataPicking;
+    needsUpdateForMetadataPicking ||
+    needsUpdateForSnap;
 
   if (!command.dirty) {
     return;
@@ -1960,6 +2023,7 @@ Scene.prototype.clearPasses = function (passes) {
   passes.render = false;
   passes.pick = false;
   passes.pickVoxel = false;
+  passes.snap = false;
   passes.depth = false;
   passes.postProcess = false;
   passes.offscreen = false;
@@ -2245,6 +2309,21 @@ function executeCommand(command, scene, passState, debugFramebuffer) {
 
   if (passes.pick || passes.depth) {
     if (passes.pick && !passes.depth) {
+      if (frameState.passes.snap) {
+        // Snapping pass: only commands with a snap variant write the float
+        // snap payload. Commands without one (no snapId, e.g. globe/terrain)
+        // execute depth-only so they still occlude snappable geometry behind
+        // them without polluting the RGBA32F snap framebuffer with RGBA8
+        // pick colors.
+        if (defined(command.derivedCommands.snapping)) {
+          command = command.derivedCommands.snapping.snapCommand;
+          command.execute(context, passState);
+        } else if (defined(command.derivedCommands.depth)) {
+          command = command.derivedCommands.depth.depthOnlyCommand;
+          command.execute(context, passState);
+        }
+        return;
+      }
       if (
         frameState.pickingMetadata &&
         defined(command.derivedCommands.pickingMetadata)
@@ -2466,6 +2545,7 @@ function createWorkingFrustum(camera) {
  *
  * @param {Scene} scene The scene.
  * @returns {Function} A function to execute translucent commands.
+ * @ignore
  */
 function obtainTranslucentCommandExecutionFunction(scene) {
   if (scene._environmentState.useOIT) {
@@ -2619,6 +2699,77 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
 }
 
 /**
+ * Execute the planar fill feature-ID pre-pass.
+ *
+ * Non-behind planar fill geometry writes its per-fragment feature ID into the
+ * planar fill ID framebuffer. This allows behind fills in the main 3D tile
+ * pass to check whether the existing pixel belongs to the same logical object.
+ *
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {FrustumCommands} frustumCommands
+ * @private
+ */
+function performPlanarFillIdPass(scene, passState, frustumCommands) {
+  const { context } = scene;
+  const { uniformState } = context;
+
+  uniformState.updatePass(Pass.CESIUM_3D_TILE_PLANAR_FILL_ID);
+
+  // Default to a blank texture so shaders always have something to sample.
+  uniformState.planarFillIdTexture = context.defaultTexture;
+
+  const view = scene._view;
+  const fb = view && view.planarFillIdFramebuffer;
+
+  const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_PLANAR_FILL_ID];
+  const commandCount =
+    frustumCommands.indices[Pass.CESIUM_3D_TILE_PLANAR_FILL_ID];
+
+  if (commandCount === 0) {
+    return;
+  }
+
+  if (scene._enablePlanarFillId && defined(fb) && defined(fb.framebuffer)) {
+    const originalFramebuffer = passState.framebuffer;
+    passState.framebuffer = fb.framebuffer;
+
+    // Clear to (0,0,0,0) — feature ID 0 means "no planar fill here".
+    const clearCommand = fb.getClearCommand(new Color(0.0, 0.0, 0.0, 0.0));
+    clearCommand.execute(context, passState);
+
+    for (let j = 0; j < commandCount; ++j) {
+      executeCommand(commands[j], scene, passState);
+    }
+
+    passState.framebuffer = originalFramebuffer;
+  }
+}
+
+/**
+ * Execute edge commands that should render directly to the main framebuffer
+ * (EDGES_ONLY mode). These edges bypass the MRT edge framebuffer and render
+ * on top of surface geometry.
+ *
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {FrustumCommands} frustumCommands
+ *
+ * @private
+ */
+function performCesium3DTileEdgesDirectPass(scene, passState, frustumCommands) {
+  scene.context.uniformState.updatePass(Pass.CESIUM_3D_TILE_EDGES_DIRECT);
+
+  const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_EDGES_DIRECT];
+  const commandCount =
+    frustumCommands.indices[Pass.CESIUM_3D_TILE_EDGES_DIRECT];
+
+  for (let j = 0; j < commandCount; ++j) {
+    executeCommand(commands[j], scene, passState);
+  }
+}
+
+/**
  * Execute the draw commands for all the render passes.
  *
  * @param {Scene} scene
@@ -2631,6 +2782,10 @@ function executeCommands(scene, passState) {
   const { uniformState } = context;
 
   uniformState.updateCamera(camera);
+
+  // Ensure planar fill ID texture is always available (even during edge pass)
+  // so that shaders referencing czm_planarFillIdTexture never see undefined.
+  uniformState.planarFillIdTexture = context.defaultTexture;
 
   const frustum = createWorkingFrustum(camera);
   frustum.near = camera.frustum.near;
@@ -2802,6 +2957,23 @@ function executeCommands(scene, passState) {
         scene.context.defaultTexture;
     }
 
+    // Planar fill feature-ID pre-pass: write feature IDs from non-behind
+    // planar fill geometry so that behind fills can test same-object.
+    performPlanarFillIdPass(scene, passState, frustumCommands);
+
+    if (
+      scene._enablePlanarFillId &&
+      defined(scene._view) &&
+      defined(scene._view.planarFillIdFramebuffer)
+    ) {
+      const pfIdTexture = scene._view.planarFillIdFramebuffer.idTexture;
+      uniformState.planarFillIdTexture = defined(pfIdTexture)
+        ? pfIdTexture
+        : context.defaultTexture;
+    } else {
+      uniformState.planarFillIdTexture = context.defaultTexture;
+    }
+
     if (!useInvertClassification || picking || renderTranslucentDepthForPick) {
       // Common/fastest path. Draw 3D Tiles and classification normally.
 
@@ -2865,7 +3037,7 @@ function executeCommands(scene, passState) {
       passState.framebuffer = scene._invertClassification._fbo.framebuffer;
 
       // Draw normally
-      commandCount = performPass(frustumCommands, Pass.CESIUM_3D_TILE);
+      performPass(frustumCommands, Pass.CESIUM_3D_TILE);
 
       if (useGlobeDepthFramebuffer) {
         scene._invertClassification.prepareTextures(context);
@@ -2910,6 +3082,9 @@ function executeCommands(scene, passState) {
     performVoxelsPass(scene, passState, frustumCommands);
 
     performPass(frustumCommands, Pass.OPAQUE);
+
+    // Draw direct edges (EDGES_ONLY mode) after opaque surfaces
+    performCesium3DTileEdgesDirectPass(scene, passState, frustumCommands);
 
     performGaussianSplatPass(scene, passState, frustumCommands);
 
@@ -3333,7 +3508,7 @@ function execute2DViewportCommands(scene, passState) {
     -camera.positionWC.x,
     scratch2DViewportEyePoint,
   );
-  const windowCoordinates = Transforms.pointToGLWindowCoordinates(
+  const windowCoordinates = FixedFrameTransforms.pointToGLWindowCoordinates(
     projectionMatrix,
     viewportTransformation,
     eyePoint,
@@ -3490,6 +3665,56 @@ function executeCommandsInViewport(firstViewport, scene, passState) {
 const scratchCullingVolume = new CullingVolume();
 
 /**
+ * Marks every drapeable collection in the subtree so the vector provider bakes it this frame
+ *
+ * @param {PrimitiveCollection} collection
+ * @param {VectorProvider} vectorProvider
+ * @param {number} frameNumber
+ * @private
+ */
+function markVectorCollections(collection, vectorProvider, frameNumber) {
+  if (!collection.show) {
+    return;
+  }
+
+  const length = collection.length;
+  for (let i = 0; i < length; ++i) {
+    const primitive = collection.get(i);
+    if (primitive instanceof PrimitiveCollection) {
+      markVectorCollections(primitive, vectorProvider, frameNumber);
+      continue;
+    }
+
+    if (
+      primitive.show &&
+      VectorProvider.isSupported(primitive) &&
+      isHeightReferenceClamp(primitive.heightReference)
+    ) {
+      vectorProvider.markForFrame(
+        primitive,
+        frameNumber,
+        primitive.heightReference,
+      );
+    }
+  }
+}
+
+/**
+ * @param {Scene} scene
+ * @param {FrameState} frameState
+ * @private
+ */
+function updateVectorProvider(scene, frameState) {
+  const vectorProvider = scene.vectorProvider;
+  if (!defined(vectorProvider)) {
+    return;
+  }
+
+  const frameNumber = frameState.frameNumber;
+  markVectorCollections(scene._primitives, vectorProvider, frameNumber);
+}
+
+/**
  * @private
  */
 Scene.prototype.updateEnvironment = function () {
@@ -3609,10 +3834,11 @@ Scene.prototype.updateEnvironment = function () {
   );
 
   const envMaps = this.specularEnvironmentMaps;
-  let specularEnvironmentCubeMap = this._specularEnvironmentCubeMap;
+  const specularEnvironmentCubeMap = this._specularEnvironmentCubeMap;
   if (defined(envMaps) && specularEnvironmentCubeMap?.url !== envMaps) {
-    specularEnvironmentCubeMap =
-      specularEnvironmentCubeMap && specularEnvironmentCubeMap.destroy();
+    if (defined(specularEnvironmentCubeMap)) {
+      specularEnvironmentCubeMap.destroy();
+    }
     this._specularEnvironmentCubeMap = new SpecularEnvironmentCubeMap(envMaps);
   } else if (!defined(envMaps) && defined(specularEnvironmentCubeMap)) {
     specularEnvironmentCubeMap.destroy();
@@ -3622,6 +3848,8 @@ Scene.prototype.updateEnvironment = function () {
   if (defined(this._specularEnvironmentCubeMap)) {
     this._specularEnvironmentCubeMap.update(frameState);
   }
+
+  updateVectorProvider(this, frameState);
 };
 
 function updateDebugFrustumPlanes(scene) {
@@ -3702,6 +3930,7 @@ function updateAndRenderPrimitives(scene) {
 
   // Reset per-frame edge visibility request flag before primitives update
   frameState.edgeVisibilityRequested = false;
+  frameState.planarFillRequested = false;
 
   scene._groundPrimitives.update(frameState);
   scene._primitives.update(frameState);
@@ -3712,7 +3941,17 @@ function updateAndRenderPrimitives(scene) {
     scene._enableEdgeVisibility === false
   ) {
     scene._enableEdgeVisibility = true;
+    // Framebuffer setup already ran before primitive updates this frame.
+    scene._view.edgeFramebuffer.update(
+      scene._context,
+      scene._view.viewport,
+      scene._hdr,
+    );
   }
+
+  // True only while at least one planar fill primitive is rendering;
+  // the request flag is renewed each frame by ModelSceneGraph.
+  scene._enablePlanarFillId = frameState.planarFillRequested;
 
   updateDebugFrustumPlanes(scene);
   updateShadowMaps(scene);
@@ -3732,6 +3971,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   const picking = passes.pick || passes.pickVoxel;
   if (defined(view.globeDepth)) {
     view.globeDepth.picking = picking;
+    view.globeDepth.snapping = passes.snap;
   }
   const useWebVR = environmentState.useWebVR;
 
@@ -3835,6 +4075,15 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   const useEdgeFramebuffer = !picking && scene._enableEdgeVisibility;
   if (useEdgeFramebuffer) {
     view.edgeFramebuffer.update(context, view.viewport, scene._hdr);
+  }
+
+  // Update planar fill ID framebuffer
+  const usePlanarFillIdFramebuffer = !picking && scene._enablePlanarFillId;
+  if (usePlanarFillIdFramebuffer) {
+    view.planarFillIdFramebuffer.update(context, view.viewport, scene._hdr);
+  } else if (!picking) {
+    // Release GPU resources while unused; recreated on demand by update().
+    view.planarFillIdFramebuffer.releaseResources();
   }
 
   if (useInvertClassification) {
@@ -4393,6 +4642,8 @@ Scene.prototype.render = function (time) {
     time = JulianDate.now();
   }
 
+  this._controllerHost.update(this, time);
+
   const cameraChanged = this._view.checkForCameraUpdates(this);
   if (cameraChanged) {
     this._globeHeightDirty = true;
@@ -4531,6 +4782,43 @@ Scene.prototype.pick = function (windowPosition, width, height) {
 };
 
 /**
+ * The result of a snap operation. See {@link Scene#snap}.
+ *
+ * @typedef {object} SceneSnapResult
+ * @property {object} object The snapped primitive or feature.
+ * @property {Cartesian3} position The world-space position of the snap point, un-projected from the snap framebuffer's eye-space depth.
+ * @property {Cartesian3|undefined} surfacePosition The world-space position of the same object's surface fragment nearest the snap point. For a surface snap this equals <code>position</code>; for an edge snap it is a point on a face of the object rather than on its silhouette, or <code>undefined</code> if no surface fragment of the object is visible in the search region.
+ * @property {Cartesian2} screenPosition The window coordinates of the snap point.
+ * @property {boolean} isEdge <code>true</code> if the snap point lies on an edge; <code>false</code> if it lies on a surface.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+
+/**
+ * Returns the best snap target in a screen-space region around <code>windowPosition</code>.
+ * Edges are preferred over surfaces; among hits of the same kind the one
+ * nearest the cursor wins. Returns <code>undefined</code> if the region contains
+ * no snappable geometry.
+ * <p>
+ * Only primitives rendered through the Model pipeline (e.g. 3D Tiles and glTF
+ * models) are snappable. Snapping requires float color attachments
+ * (WebGL2 with <code>EXT_color_buffer_float</code>); if unsupported, this
+ * function returns <code>undefined</code>.
+ * </p>
+ *
+ * @param {Cartesian2} windowPosition Window coordinates at the center of the search region.
+ * @param {object} [options] Object with the following properties:
+ * @param {number} [options.width=25] Width of the search region in pixels.
+ * @param {number} [options.height=options.width] Height of the search region in pixels.
+ * @returns {SceneSnapResult | undefined} The best snap target in the region, or <code>undefined</code> if there is none.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+Scene.prototype.snap = function (windowPosition, options) {
+  return Snapping.snap(this, windowPosition, options);
+};
+
+/**
  * Performs the same operation as Scene.pick but asynchonosly without blocking the main render thread.
  * Requires WebGL2 else using fallback.
  *
@@ -4547,7 +4835,7 @@ Scene.prototype.pick = function (windowPosition, width, height) {
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {Promise<Object | undefined>} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
+ * @returns {Promise<object | undefined>} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
  *
  * @see Scene#pick
  */
@@ -4596,8 +4884,21 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
     width,
     height,
   );
+  // The pick pass writes tileIndex * samplesPerTile + sampleIndex + 1,
+  // most significant byte first. 0 means no voxel sample was rendered there.
+  const pickId =
+    voxelCoordinate[0] * 16777216 +
+    voxelCoordinate[1] * 65536 +
+    voxelCoordinate[2] * 256 +
+    voxelCoordinate[3];
+  if (pickId === 0) {
+    return;
+  }
+  const { inputDimensions } = voxelPrimitive;
+  const samplesPerTile =
+    inputDimensions.x * inputDimensions.y * inputDimensions.z;
   // Look up the keyframeNode containing this picked cell
-  const tileIndex = 255 * voxelCoordinate[0] + voxelCoordinate[1];
+  const tileIndex = Math.floor((pickId - 1) / samplesPerTile);
   const keyframeNode = voxelPrimitive._traversal.findKeyframeNode(tileIndex);
   if (!defined(keyframeNode)) {
     // The tile rendered at the pick position has since been discarded by
@@ -4605,7 +4906,7 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
     return;
   }
   // Look up the metadata for the picked cell
-  const sampleIndex = 255 * voxelCoordinate[2] + voxelCoordinate[3];
+  const sampleIndex = (pickId - 1) % samplesPerTile;
   return VoxelCell.fromKeyframeNode(
     voxelPrimitive,
     tileIndex,
@@ -4912,7 +5213,7 @@ Scene.prototype.pickFromRayMostDetailed = function (
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
  * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Promise<Object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
+ * @returns {Promise<object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  */

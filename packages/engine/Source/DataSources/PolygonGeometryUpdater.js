@@ -1,24 +1,26 @@
+import {
+  ArcType,
+  Cartesian2,
+  Cartesian3,
+  Check,
+  Color,
+  ColorGeometryInstanceAttribute,
+  CoplanarPolygonGeometry,
+  CoplanarPolygonOutlineGeometry,
+  DeveloperError,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  EllipsoidTangentPlane,
+  GeometryInstance,
+  Iso8601,
+  PolygonGeometry,
+  PolygonOutlineGeometry,
+  Rectangle,
+  ShowGeometryInstanceAttribute,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
-import ArcType from "../Core/ArcType.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import CoplanarPolygonGeometry from "../Core/CoplanarPolygonGeometry.js";
-import CoplanarPolygonOutlineGeometry from "../Core/CoplanarPolygonOutlineGeometry.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
-import EllipsoidTangentPlane from "../Core/EllipsoidTangentPlane.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import Iso8601 from "../Core/Iso8601.js";
 import OffsetGeometryInstanceAttribute from "../Core/OffsetGeometryInstanceAttribute.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
-import PolygonGeometry from "../Core/PolygonGeometry.js";
-import PolygonOutlineGeometry from "../Core/PolygonOutlineGeometry.js";
-import Rectangle from "../Core/Rectangle.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import HeightReference from "../Scene/HeightReference.js";
 import MaterialAppearance from "../Scene/MaterialAppearance.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";

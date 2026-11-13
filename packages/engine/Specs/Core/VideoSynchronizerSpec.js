@@ -1,11 +1,5 @@
-import {
-  Clock,
-  Iso8601,
-  JulianDate,
-  Math as CesiumMath,
-  VideoSynchronizer,
-} from "../../index.js";
-
+import { Clock, Iso8601, JulianDate, Math as CesiumMath } from "@cesium/core";
+import { VideoSynchronizer } from "../../index.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Core/VideoSynchronizer", function () {

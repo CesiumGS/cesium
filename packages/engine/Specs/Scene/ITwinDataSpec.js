@@ -1,6 +1,6 @@
+import { RuntimeError } from "@cesium/core";
 import {
   ITwinPlatform,
-  RuntimeError,
   Cesium3DTileset,
   ITwinData,
   GeoJsonDataSource,

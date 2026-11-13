@@ -1,13 +1,15 @@
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  Check,
+  DeveloperError,
+  addAllToArray,
+  clone,
+  defined,
+} from "@cesium/core";
 import ShaderDestination from "./ShaderDestination.js";
 import ShaderProgram from "./ShaderProgram.js";
 import ShaderSource from "./ShaderSource.js";
 import ShaderStruct from "./ShaderStruct.js";
 import ShaderFunction from "./ShaderFunction.js";
-import addAllToArray from "../Core/addAllToArray.js";
 
 /**
  * An object that makes it easier to build the text of a {@link ShaderProgram}. This tracks GLSL code for both the vertex shader and the fragment shader.
@@ -424,7 +426,7 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
 /**
  * Appends lines of GLSL code to the fragment shader
  *
- * @param {string[]} lines The lines to add to the end of the fragment shader source
+ * @param {string|string[]} lines One or more lines to add to the end of the fragment shader source
  *
  * @example
  * shaderBuilder.addFragmentLines([

@@ -1,14 +1,12 @@
+import { Cartesian3, Color, Matrix4 } from "@cesium/core";
 import {
+  BlendOption,
   BufferPoint,
   BufferPointCollection,
   BufferPointMaterial,
   Camera,
-  Cartesian3,
-  Color,
-  Matrix4,
   SceneMode,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -27,19 +25,21 @@ describe(
     });
 
     beforeEach(function () {
-      collection = new BufferPointCollection();
       scene.mode = SceneMode.SCENE3D;
       scene.camera = new Camera(scene);
     });
 
     afterEach(function () {
       scene.primitives.removeAll();
-      if (!collection.isDestroyed()) {
-        collection.destroy();
-      }
+      collection?.destroy();
+      collection = undefined;
     });
 
     it("renders points", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const point = new BufferPoint();
       collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
 
@@ -49,7 +49,37 @@ describe(
       expect(scene).toRender([255, 255, 255, 255]);
     });
 
+    it("renders points after blendOption changes", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.OPAQUE,
+      });
+
+      const point = new BufferPoint();
+      const material = new BufferPointMaterial({
+        color: Color.RED.withAlpha(0.5),
+        size: 8,
+      });
+      collection.add(
+        { position: new Cartesian3(0, -1000, 0), material },
+        point,
+      );
+      scene.primitives.add(collection);
+
+      // Blending is disabled in the opaque pass, so alpha has no effect.
+      expect(scene).toRender([255, 0, 0, 255]);
+
+      collection.blendOption = BlendOption.TRANSLUCENT;
+      expect(scene).toRender([128, 0, 0, 255]);
+
+      collection.blendOption = BlendOption.OPAQUE;
+      expect(scene).toRender([255, 0, 0, 255]);
+    });
+
     it("renders points with color", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.TRANSLUCENT,
+      });
+
       const point = new BufferPoint();
       const material = new BufferPointMaterial({ color: Color.RED, size: 8 });
 
@@ -64,20 +94,42 @@ describe(
       Color.clone(Color.GREEN, material.color);
       point.setMaterial(material);
       expect(scene).toRender([0, 128, 0, 255]);
+
+      material.color.alpha = 0.5;
+      point.setMaterial(material);
+      expect(scene).toRender([0, 64, 0, 255]);
     });
 
     it("renders points with updated positions", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const point = new BufferPoint();
-      collection.add({ position: new Cartesian3(0, 0, 0) }, point);
+      const material = new BufferPointMaterial({ size: 8 });
+      const position = new Cartesian3(0, -1000, 0);
+
+      Color.fromBytes(255, 0, 0, 255, material.color);
+      collection.add({ position, material }, point);
+
+      // Use extra primitive to keep bounding volume in view, and require
+      // that geometry (not just bounding volume) is updated.
+      Color.fromBytes(0, 0, 255, 255, material.color);
+      collection.add({ position, material }, point);
 
       scene.primitives.add(collection);
-      expect(scene).toRender([0, 0, 0, 255]);
+      expect(scene).toRender([255, 0, 0, 255]);
 
-      point.setPosition(new Cartesian3(0, -1000, 0));
-      expect(scene).toRender([255, 255, 255, 255]);
+      collection.get(0, point);
+      point.setPosition(new Cartesian3(1e6, 1e6, 1e6));
+      expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it("renders points with sort order", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const point = new BufferPoint();
 
       collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
@@ -96,6 +148,10 @@ describe(
     });
 
     it("renders points with updated modelMatrix", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const point = new BufferPoint();
       collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
 
@@ -107,6 +163,10 @@ describe(
     });
 
     it("does not render if empty", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.OPAQUE,
+      });
+
       expect(scene).toRender([0, 0, 0, 255]);
 
       scene.primitives.add(collection);
@@ -114,6 +174,10 @@ describe(
     });
 
     it("does not render if collection.show = false", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const point = new BufferPoint();
       collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
 
@@ -125,6 +189,10 @@ describe(
     });
 
     it("does not render if point.show = false", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const point = new BufferPoint();
       collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
 

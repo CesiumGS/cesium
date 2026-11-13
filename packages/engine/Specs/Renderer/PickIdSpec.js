@@ -1,5 +1,5 @@
+import { Color } from "@cesium/core";
 import { PickId } from "../../index.js";
-import Color from "../../Source/Core/Color.js";
 
 describe("Renderer/PickId", function () {
   let pickObjects;

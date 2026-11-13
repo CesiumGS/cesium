@@ -1,12 +1,10 @@
 import {
   BoundingRectangle,
   Cartesian2,
-  createGuid,
   PixelFormat,
-  Resource,
-  TextureAtlas,
-} from "../../index.js";
-
+  createGuid,
+} from "@cesium/core";
+import { Resource, TextureAtlas } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollWhilePromise from "../../../../Specs/pollWhilePromise.js";
 

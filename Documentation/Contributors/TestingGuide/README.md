@@ -332,7 +332,7 @@ const screenshotPath = "Specs/e2e/webgl-report.spec.js-snapshots";
 
 /**
  * This is used to check how WebGL is running in the testing environment to spot things like
- * not using the correct gpu that may affect performace and run time of the tests themselves
+ * not using the correct gpu that may affect performance and run time of the tests themselves
  * Based off of https://www.createit.com/blog/headless-chrome-testing-webgl-using-playwright/
  */
 test.describe("WebGL verification", () => {
@@ -387,7 +387,7 @@ test.describe("WebGL verification", () => {
 
 Note that Playwright has a [very specific list](https://playwright.dev/docs/intro#system-requirements) of OS versions that it supports. Please check that first and if you're using something not listed you may have to dig into setup and debugging yourself.
 
-- _Linux Chrome_ - There may be some platform specific issues using Playwright based on browser type and which GPUs it can access. On Chrome on Linux we have found that it may be necessary to use `args: ["--use-angle=vulkan"],` in place of `args: ["--use-angle=gl"],` under `Desktop Chrome` in the `chromium` section of the projects list of `playwright.config.js` to properly enable hardware accelleration.
+- _Linux Chrome_ - There may be some platform specific issues using Playwright based on browser type and which GPUs it can access. On Chrome on Linux we have found that it may be necessary to use `args: ["--use-angle=vulkan"],` in place of `args: ["--use-angle=gl"],` under `Desktop Chrome` in the `chromium` section of the projects list of `playwright.config.js` to properly enable hardware acceleration.
 
 ## `testfailure` Label for Issues
 
@@ -467,7 +467,7 @@ it("angleBetween works for acute angles", function () {
 });
 ```
 
-`toEqualEpsilon` is a custom Jasmine matcher that the CesiumJS tests add. See [Specs/addDefaultMatchers.js](https://github.com/CesiumGS/cesium/blob/main/Specs/addDefaultMatchers.js) for all the custom matchers. In general, all test utility functions are in files in the `Specs` root directory.
+`toEqualEpsilon` is a custom Jasmine matcher that the CesiumJS tests add. See [Specs/createBaseMatchers.js](https://github.com/CesiumGS/cesium/blob/main/Specs/createBaseMatchers.js) [Specs/createAsyncMatchers.js](https://github.com/CesiumGS/cesium/blob/main/Specs/createAsyncMatchers.js), and [Specs/createRendererMatchers.js](https://github.com/CesiumGS/cesium/blob/main/Specs/createRendererMatchers.js) for all the custom matchers. In general, all test utility functions are in files in the `Specs` root directory.
 
 For more on comparing floating-point numbers, see [Comparing Floating Point Numbers, 2012 Edition](https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/).
 

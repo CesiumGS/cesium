@@ -30,4 +30,6 @@ CloudType.validate = function (cloudType) {
   return cloudType === CloudType.CUMULUS;
 };
 
-export default Object.freeze(CloudType);
+Object.freeze(CloudType);
+
+export default CloudType;

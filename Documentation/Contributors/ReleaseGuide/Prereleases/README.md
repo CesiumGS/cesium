@@ -1,6 +1,6 @@
 # Prereleases
 
-Occasionally, we need to release incremental, opt-in versions of CesiumJS to npm prior to our typical [monthly train releases](../README.md) for early testing or internal use. When this is necessary, we publish a tagged **prerelease**[^1]. Prereleases are not guaranteed as stable and may not be compatable with official numbered releases.
+Occasionally, we need to release incremental, opt-in versions of CesiumJS to npm prior to our typical [monthly train releases](../README.md) for early testing or internal use. When this is necessary, we publish a tagged **prerelease**[^1]. Prereleases are not guaranteed as stable and may not be compatible with official numbered releases.
 
 [^1]: See ["Adding dist-tags to packages" on docs.npmjs.com](https://docs.npmjs.com/adding-dist-tags-to-packages)
 
@@ -10,6 +10,7 @@ Use a prerelease tag—e.g. `ion`—to install a published prerelease.
 
 ```sh
 npm install cesium@<tag>
+npm install @cesium/core@<tag>
 npm install @cesium/engine@<tag>
 npm install @cesium/widgets@<tag>
 ```

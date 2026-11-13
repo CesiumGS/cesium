@@ -1,14 +1,16 @@
+import {
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  FixedFrameTransforms,
+  Math as CesiumMath,
+  Matrix4,
+  OrientedBoundingBox,
+  VerticalExaggeration,
+  defined,
+} from "@cesium/core";
 import SceneMode from "../Scene/SceneMode.js";
-import Cartesian3 from "./Cartesian3.js";
-import Cartographic from "./Cartographic.js";
-import defined from "./defined.js";
-import Ellipsoid from "./Ellipsoid.js";
-import CesiumMath from "./Math.js";
-import Matrix4 from "./Matrix4.js";
-import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import TerrainPicker from "./TerrainPicker.js";
-import Transforms from "./Transforms.js";
-import VerticalExaggeration from "./VerticalExaggeration.js";
 
 /**
  * A mesh plus related metadata for a single tile of terrain.  Instances of this type are
@@ -316,7 +318,11 @@ function computeTransform2D(mesh, projection, result) {
 
   Matrix4.fromTranslation(center, result);
   Matrix4.setScale(result, scale, result);
-  Matrix4.multiply(Transforms.SWIZZLE_3D_TO_2D_MATRIX, result, result);
+  Matrix4.multiply(
+    FixedFrameTransforms.SWIZZLE_3D_TO_2D_MATRIX,
+    result,
+    result,
+  );
 
   return result;
 }
@@ -328,7 +334,7 @@ function computeTransform2D(mesh, projection, result) {
  * @param {SceneMode} mode The scene mode (3D, 2D, or Columbus View).
  * @param {MapProjection} projection The map projection.
  * @returns {Cartesian3} The point on the mesh where the ray intersects, or undefined if there is no intersection.
- * @private
+ * @ignore
  */
 TerrainMesh.prototype.pick = function (ray, cullBackFaces, mode, projection) {
   const intersection = this._terrainPicker.rayIntersect(
@@ -345,9 +351,9 @@ TerrainMesh.prototype.pick = function (ray, cullBackFaces, mode, projection) {
 
 /**
  * Updates the terrain mesh to account for changes in vertical exaggeration.
- * @param {Number} exaggeration A scalar used to exaggerate terrain.
- * @param {Number} exaggerationRelativeHeight The relative height from which terrain is exaggerated.
- * @private
+ * @param {number} exaggeration A scalar used to exaggerate terrain.
+ * @param {number} exaggerationRelativeHeight The relative height from which terrain is exaggerated.
+ * @ignore
  */
 TerrainMesh.prototype.updateExaggeration = function (
   exaggeration,
@@ -363,7 +369,7 @@ TerrainMesh.prototype.updateExaggeration = function (
 /**
  * Updates the terrain mesh to account for changes in scene mode.
  * @param {SceneMode} mode The scene mode (3D, 2D, or Columbus View).
- * @private
+ * @ignore
  */
 TerrainMesh.prototype.updateSceneMode = function (mode) {
   this._terrainPicker.needsRebuild = true;

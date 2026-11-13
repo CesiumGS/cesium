@@ -1,7 +1,4 @@
-import Color from "./Color.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { Color, DeveloperError, Frozen, defined } from "@cesium/core";
 
 /**
  * Computes dimensions for text, based on current canvas state.
@@ -9,6 +6,7 @@ import DeveloperError from "./DeveloperError.js";
  * Rounds metrics, excluding width, to whole pixels. This is purely to minimize
  * rendering differences with migration to in-browser measureText(), and may be
  * revised in the future. See: github.com/CesiumGS/cesium/pull/13081
+ * @ignore
  */
 function measureText(context2D, textString) {
   const metrics = context2D.measureText(textString);

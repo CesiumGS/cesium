@@ -1,12 +1,14 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Check,
+  Color,
+  DeveloperError,
+  Math as CesiumMath,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import jsep from "jsep";
 import ExpressionNodeType from "./ExpressionNodeType.js";
 
@@ -1341,14 +1343,12 @@ Node.prototype._evaluateNegative = function (feature) {
 Node.prototype._evaluatePositive = function (feature) {
   const left = this._left.evaluate(feature);
 
-  if (
-    !(
-      left instanceof Cartesian2 ||
-      left instanceof Cartesian3 ||
-      left instanceof Cartesian4 ||
-      typeof left === "number"
-    )
-  ) {
+  if (!(
+    left instanceof Cartesian2 ||
+    left instanceof Cartesian3 ||
+    left instanceof Cartesian4 ||
+    typeof left === "number"
+  )) {
     throw new RuntimeError(
       `Operator "+" requires a vector or number argument. Argument is ${left}.`,
     );

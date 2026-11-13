@@ -28,9 +28,11 @@ import { Input } from "@stratakit/bricks/TextBox";
 export function SettingsModal({
   open,
   setOpen,
+  embeddingsAvailable,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
+  embeddingsAvailable: boolean;
 }) {
   const { settings, updateSettings } = useContext(SettingsContext);
 
@@ -165,13 +167,22 @@ export function SettingsModal({
           <Field.Control
             render={
               <Switch
-                checked={settings.embeddingSearch}
+                checked={settings.embeddingSearch && embeddingsAvailable}
+                disabled={!embeddingsAvailable}
                 onChange={(e) => {
                   updateSettings({ embeddingSearch: e.target.checked });
                 }}
               />
             }
           />
+          {!embeddingsAvailable && (
+            <Field.Label>
+              <InfoBadge
+                content="Semantic search not available"
+                placement="bottom"
+              />
+            </Field.Label>
+          )}
         </Field.Root>
       </div>
       <SandcastleDialogFooter>

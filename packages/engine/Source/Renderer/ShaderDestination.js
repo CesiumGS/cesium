@@ -1,10 +1,10 @@
-import Check from "../Core/Check.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Check, DeveloperError } from "@cesium/core";
 
 /**
  * A bit flag describing whether a variable should be added to the
  * vertex shader, the fragment shader, or both (or none).
  *
+ * @enum {number}
  * @private
  */
 const ShaderDestination = {
@@ -89,4 +89,6 @@ ShaderDestination.intersection = function (...destinations) {
   return result;
 };
 
-export default Object.freeze(ShaderDestination);
+Object.freeze(ShaderDestination);
+
+export default ShaderDestination;

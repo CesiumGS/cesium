@@ -37,4 +37,6 @@ CustomShaderMode.getDefineName = function (customShaderMode) {
   return `CUSTOM_SHADER_${customShaderMode}`;
 };
 
-export default Object.freeze(CustomShaderMode);
+Object.freeze(CustomShaderMode);
+
+export default CustomShaderMode;
