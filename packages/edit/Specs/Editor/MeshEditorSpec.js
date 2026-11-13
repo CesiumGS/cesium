@@ -989,7 +989,7 @@ describe(
         expect(scene).toPickAndCall((result) => {
           expect(result.primitive).toBe(mesh);
           expect(result.componentType).toBe(ComponentType.Face);
-          expect(result.index).toEqual(jasmine.any(Number));
+          expect(typeof result.componentKey).toBe("bigint");
         }, getWindowPosition(facePosition));
       });
 
