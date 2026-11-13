@@ -327,16 +327,18 @@ describe("TerrainSource picks the ancestor a tile morphs from", () => {
     });
   });
 
-  it("falls back to the nearest ancestor with heights when none was drawn, else none", () => {
+  it("rises from the ellipsoid when no ancestor was drawn; none when a drawn one has no usable heights", () => {
     const l3 = node(undefined, 3, 2, 1, { heights: "l3" });
     const l4 = node(l3, 4, 5, 3, { heights: "l4" });
     const l5 = node(l4, 5, 10, 7);
-    expect(request(l5).morph).toMatchObject({
-      heights: heightsOf("l4"),
-      scale: 2,
-    });
-    const bare = node(node(undefined, 1, 0, 0), 2, 0, 0);
-    expect(request(bare).morph).toBeUndefined();
+    expect(request(l5).morph).toEqual({ ellipsoid: true });
+    expect(l5.globe!.morphsFromEllipsoid).toBe(true);
+    const root = node(undefined, 0, 0, 0);
+    expect(request(root).morph).toEqual({ ellipsoid: true });
+    // Terrain was on screen, but its heights are gone: no morph.
+    const gone = node(node(undefined, 1, 0, 0, { drawn: true }), 2, 0, 0);
+    expect(request(gone).morph).toBeUndefined();
+    expect(gone.globe!.morphsFromEllipsoid).toBe(false);
     expect(request(l5, true).morph).toBeUndefined();
   });
 });
@@ -395,6 +397,27 @@ describe("the morph's clock", () => {
     // Drawn again, it doesn't begin again.
     startMorphs(set, [morphing], [child], 2600);
     expect(written).toHaveLength(2);
+  });
+
+  it("rises from the ellipsoid only while no terrain above it has been drawn", () => {
+    const { set, written } = host();
+    const root = tile(undefined);
+    (root.globe as { morphsFromEllipsoid?: boolean }).morphsFromEllipsoid =
+      true;
+    startMorphs(set, [morphing], [root], 2000);
+    expect(written).toEqual([
+      [1, 1],
+      [2, 1],
+    ]);
+    // Asked for from the ellipsoid, but its parent drew before it did:
+    // rising from flat over terrain would be wrong, so it pops.
+    const parent = tile(undefined);
+    startMorphs(set, [morphing], [parent], 2000);
+    const late = tile(parent);
+    (late.globe as { morphsFromEllipsoid?: boolean }).morphsFromEllipsoid =
+      true;
+    startMorphs(set, [morphing], [late], 2100);
+    expect(set.state.morphs.has(late)).toBe(false);
   });
 
   it("counts a grandparent's surface too, and skips a tile with no parent heights", () => {

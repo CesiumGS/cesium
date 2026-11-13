@@ -138,6 +138,12 @@ export interface GlobeTile extends Address {
   /** Its mesh carries its parent's height per vertex (`HEIGHT_MORPH_ATTRIBUTE`): it can morph in. */
   morphs?: boolean;
   /**
+   * What it morphs from is the bare ellipsoid (`MorphSource`): no terrain
+   * above it had been drawn when it was requested. It morphs only if none
+   * has been by its first draw either (`tileMorph.ts startMorphs`).
+   */
+  morphsFromEllipsoid?: boolean;
+  /**
    * A quadrant without data that 1.x would have upsampled by now: it was
    * queued for loading (culled quadrants never are). Globe `Stepwise`.
    */
@@ -623,21 +629,26 @@ export class TerrainSource {
    * The surface the tile morphs from, when wanted: the nearest ancestor that
    * has been drawn and has resident, non-upsampled `heights`. Selection can
    * skip levels, and a level never drawn was never on screen, so the
-   * parent's surface would ease nothing. With no such ancestor, the nearest
-   * one with such heights (the parent, when it has them). One ancestor's
-   * heights go to the worker.
+   * parent's surface would ease nothing. Where no ancestor was drawn yet,
+   * the bare ellipsoid was showing: the tile rises from height 0
+   * (`GlobeTile.morphsFromEllipsoid`). A drawn ancestor with no usable
+   * heights: no morph. One ancestor's heights go to the worker.
    */
   private morphRequest(
     tile: Tile,
     a: GlobeTile,
     upsampled: boolean,
   ): { morph?: MorphSource } {
+    a.morphsFromEllipsoid = false;
     if (upsampled || this.flat || !this.wantsMorph?.()) {
       return {};
     }
-    let fallback: GlobeTile | undefined;
-    let source: GlobeTile | undefined;
+    let anyDrawn = false;
     for (let up = tile.parent; up; up = up.parent) {
+      if (!up.drawnOnce) {
+        continue;
+      }
+      anyDrawn = true;
       const g = up.globe;
       if (
         !g?.heights ||
@@ -646,25 +657,21 @@ export class TerrainSource {
       ) {
         continue;
       }
-      fallback ??= g;
-      if (up.drawnOnce) {
-        source = g;
-        break;
-      }
+      const scale = 2 ** (a.level - g.level);
+      return {
+        morph: {
+          heights: g.heights,
+          scale,
+          qx: a.x - scale * g.x,
+          qy: a.y - scale * g.y,
+        },
+      };
     }
-    source ??= fallback;
-    if (!source) {
+    if (anyDrawn) {
       return {};
     }
-    const scale = 2 ** (a.level - source.level);
-    return {
-      morph: {
-        heights: source.heights!,
-        scale,
-        qx: a.x - scale * source.x,
-        qy: a.y - scale * source.y,
-      },
-    };
+    a.morphsFromEllipsoid = true;
+    return { morph: { ellipsoid: true } };
   }
 
   private loaded(tile: Tile, g: GlobeTile, info: TerrainTileInfo): void {

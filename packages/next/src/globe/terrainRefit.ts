@@ -218,6 +218,9 @@ export function parentSurfaceHeights(
   v: ArrayLike<number>,
   morph: MorphSource,
 ): Float64Array {
+  if ("ellipsoid" in morph) {
+    return new Float64Array(u.length); // the ellipsoid: height 0 everywhere
+  }
   const out = new Float64Array(u.length).fill(Number.NaN);
   const { heights, scale, qx, qy } = morph;
   const cell = (q: number) => Number.isInteger(q) && q >= 0 && q < scale;
