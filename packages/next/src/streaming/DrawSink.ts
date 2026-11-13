@@ -89,6 +89,11 @@ export interface DrawSink {
    * draws no debug views ignores it.
    */
   setDrawDebug?(handle: DrawHandle, word: number): void;
+  /**
+   * A tile draw's geomorph start, seconds on the views' clock (`View.time`;
+   * 0: none). Optional: a sink that doesn't morph ignores it.
+   */
+  setDrawMorph?(handle: DrawHandle, seconds: number): void;
   setCollision(handle: DrawHandle, collision: boolean): void;
   setGround(handle: DrawHandle, ground: boolean): void;
   setTerrainClip(handle: DrawHandle, mask: number): void;
@@ -103,7 +108,7 @@ export interface TilesetHost {
   readonly requests: RequestScheduler;
   readonly tilesets: readonly Tileset3D[];
   readonly uploadBytesPerFrame: number;
-  readonly scene: Pick<EngineScene, "uploadBudget">;
+  readonly scene: Pick<EngineScene, "uploadBudget" | "startTime">;
   loadGltf(
     url: string | URL,
     options?: { headers?: Record<string, string>; signal?: AbortSignal },

@@ -1034,6 +1034,46 @@ export function Selection() {
         />
       </Section>
 
+      <Section title="Terrain geomorphing: no pop when a tile refines">
+        <p>
+          A terrain tile replacing a coarser one used to jump to its own
+          surface. Under a vertical exaggeration the jump is magnified, and
+          while loading coarse stand-ins sit beside finer neighbours. Each
+          terrain tile now carries, per vertex, its parent's surface height at
+          the same (u, v): the parent mesh's height interpolated on its
+          triangles, the lookup the error refit already makes. Over 0.3 seconds
+          from the tile's first drawn tick, the vertex stage moves each vertex
+          from that height to its own, with a smoothstep, before any warp: a
+          height profile lifts the height it is at now.
+        </p>
+        <ul>
+          <li>
+            <C>View.lodTransitions</C> is <C>"morph"</C> (the default) or{" "}
+            <C>"pop"</C>. Pop is the old behaviour: no per-vertex data is read,
+            and a draw costs one record word compared with zero.
+          </li>
+          <li>
+            A tile morphs only if a coarser ancestor was drawn before it, and
+            its parent was resident when it decoded. The first tiles of a scene
+            don't morph from nothing.
+          </li>
+          <li>
+            Coarsening pops: the children leave at once. Morphing out would keep
+            them alive after the selection drops them, and isn't built. Normals
+            keep the mesh's own. 3D Tiles content pops too; a dithered
+            cross-fade is a later increment.
+          </li>
+          <li>
+            The loop keeps ticking while a tile morphs (the wake reason{" "}
+            <C>"morph"</C>) and sleeps once all are done.
+          </li>
+        </ul>
+        <Written
+          from="the transform-graph plan, task 12, fix 8, and test/geomorph.test.ts"
+          on="2026-11-13"
+        />
+      </Section>
+
       <Section title="Still to write">
         <ul>
           <li>How selection behaves with several tilesets on one origin.</li>

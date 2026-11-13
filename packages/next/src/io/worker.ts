@@ -49,6 +49,8 @@ self.onmessage = async (
     skirtHeight: number | readonly number[];
     /** A terrain tile also carries `h·n̂` per vertex, or `(n̂, h)` for `"profile"` (`TerrainLoader`). */
     heightNormal?: true | "profile";
+    /** A terrain tile also carries its parent's height per vertex, for geomorphing (`TerrainLoader`). */
+    morph?: { heights: TerrainHeights; qx: number; qy: number };
     /** A terrain tile below the last level with data (`TerrainLoader`). */
     upsample?: { rect: Rectangle; heights?: TerrainHeights; url?: string };
     /** "stars": the star map's six faces. */
@@ -66,9 +68,12 @@ self.onmessage = async (
   const controller = new AbortController();
   controllers.set(id, controller);
   try {
-    const decodeOptions = event.data.heightNormal
-      ? { heightNormal: event.data.heightNormal }
-      : {};
+    const decodeOptions = {
+      ...(event.data.heightNormal
+        ? { heightNormal: event.data.heightNormal }
+        : {}),
+      ...(event.data.morph ? { morph: event.data.morph } : {}),
+    };
     if (type === "terrain" && event.data.url.startsWith("ellipsoid:")) {
       // The ellipsoid without terrain data: a flat tile, built here.
       const { asset, info, transfer } = flatTerrainTile(

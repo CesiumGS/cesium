@@ -565,10 +565,21 @@
                                 ]
                             },
                             "binding": {"kind": "uniform", "offset": 156, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "morph",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 160, "size": 4, "elementStride": 0}
                         }
                     ],
                     "sizes": [
-                        {"kind": "uniform", "value": 160, "alignment": 16}
+                        {"kind": "uniform", "value": 176, "alignment": 16}
                     ]
                 },
                 "sizes": [
@@ -1519,10 +1530,21 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 156, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "morph",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 160, "size": 4, "elementStride": 0}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 160, "alignment": 16}
+                            {"kind": "uniform", "value": 176, "alignment": 16}
                         ]
                     },
                     "sizes": [

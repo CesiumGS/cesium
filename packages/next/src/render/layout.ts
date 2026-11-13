@@ -268,7 +268,7 @@ export function writeAnchorEye(
   }
 }
 
-/** `struct DrawRecord` — 160 bytes (156 used, padded to WGSL's 16-byte alignment). */
+/** `struct DrawRecord` — 176 bytes (164 used, padded to WGSL's 16-byte alignment). */
 export const RECORD_SIZE = DrawRecordLayout.size;
 export const RECORD_WORDS = R.size;
 /** Word offsets of `DrawRecord` fields written after creation. */
@@ -352,6 +352,8 @@ export const INSTANCE_FIRST_WORD = R.instanceFirst;
 export const INSTANCE_COUNT_WORD = R.instanceCount;
 /** Word offset of `DrawRecord.debug`: a tile's debug-view data (streaming/debugViews.ts `packTileDebug`). */
 export const DEBUG_WORD = R.debug;
+/** Word offset of `DrawRecord.morph`: a globe tile's geomorph start, seconds on `View.time`'s clock (f32); 0: none. */
+export const MORPH_WORD = R.morph;
 /** Word offset of a record's instance streams' stride (words). */
 export const INSTANCE_STRIDE_WORD = R.instanceStride;
 /**
@@ -648,6 +650,7 @@ export function writeDrawRecord(
   u32[o + R.skirtStart] = r.skirtStart ?? NO_SKIRT;
   u32[o + R.casterMask] = 0;
   u32[o + R.debug] = 0;
+  u32[o + R.morph] = 0;
 }
 
 /** Bits of `Transform.flags` that hold its anchor slot (8 to 15). */

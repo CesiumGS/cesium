@@ -20,6 +20,7 @@ import {
   writeTileDebug,
 } from "./tilesetDebug.ts";
 import { cancelLoad, request } from "./tilesetLoad.ts";
+import { endMorphs, startMorphs } from "./tileMorph.ts";
 import { serveQueries } from "./tilesetQueries.ts";
 import { upload } from "./tilesetUpload.ts";
 import { volumeObb } from "./volumes.ts";
@@ -92,6 +93,7 @@ export interface TilesetUpdate extends Pick<
     | "loaded"
     | "loading"
     | "masked"
+    | "morphs"
     | "options"
     | "order"
     | "origin"
@@ -418,6 +420,9 @@ export function update(
     }
   }
   tileset.state.masked = nowMasked;
+  // Terrain tiles drawn for the first time over a coarser one morph in.
+  startMorphs(tileset, views, nowMasked, now);
+  endMorphs(tileset, now);
   // Off-screen casters: as for view masks, and the tint's callback sees
   // them too (it may hide a tile, and a hidden draw doesn't cast).
   for (const tile of new Set([...tileset.state.casters, ...nowCasters])) {

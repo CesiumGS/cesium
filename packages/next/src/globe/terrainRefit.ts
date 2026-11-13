@@ -183,6 +183,48 @@ function heightAt(t: TerrainHeights, u: number, v: number): number | undefined {
 }
 
 /**
+ * The parent mesh's height (metres) over the point at quantized (`u`, `v`) of
+ * its child's quadrant (`qx`, `qy` in {0, 1}, from the south-west); undefined
+ * where the parent has no triangle (or is unmeasurable).
+ */
+function parentHeightAt(
+  parent: TerrainHeights,
+  qx: number,
+  qy: number,
+  u: number,
+  v: number,
+): number | undefined {
+  return heightAt(
+    parent,
+    (qx + u / QUANT) * 0.5 * QUANT,
+    (qy + v / QUANT) * 0.5 * QUANT,
+  );
+}
+
+/**
+ * The parent surface's height (metres) at each vertex of a child mesh, the
+ * same lookup the deviation measures (geomorphing starts a vertex there).
+ * `u` and `v` are the child's quantized vertex coordinates. NaN where the
+ * parent has no triangle under the vertex, or is unmeasurable.
+ */
+export function parentSurfaceHeights(
+  u: ArrayLike<number>,
+  v: ArrayLike<number>,
+  parent: TerrainHeights,
+  qx: number,
+  qy: number,
+): Float64Array {
+  const out = new Float64Array(u.length).fill(Number.NaN);
+  if (gridOf(parent) === null) {
+    return out;
+  }
+  for (let i = 0; i < out.length; i++) {
+    out[i] = parentHeightAt(parent, qx, qy, u[i]!, v[i]!) ?? Number.NaN;
+  }
+  return out;
+}
+
+/**
  * The largest height difference (metres) between a child's mesh and its
  * parent's, over the child's quadrant (`qx`, `qy` in {0, 1}, from the
  * south-west). Measured at the child's vertices against the parent's
@@ -204,11 +246,7 @@ export function deviationFromParent(
   const childRange = child.maximumHeight - child.minimumHeight;
   for (let i = 0; i < child.u.length; i++) {
     const hc = child.minimumHeight + (child.h[i]! / QUANT) * childRange;
-    const hp = heightAt(
-      parent,
-      (qx + child.u[i]! / QUANT) * 0.5 * QUANT,
-      (qy + child.v[i]! / QUANT) * 0.5 * QUANT,
-    );
+    const hp = parentHeightAt(parent, qx, qy, child.u[i]!, child.v[i]!);
     if (hp === undefined) {
       return Infinity;
     }

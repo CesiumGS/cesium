@@ -90,6 +90,9 @@ export interface PickResult {
   item?: SceneItem;
 }
 
+/** How a terrain tile replaces a coarser one (`View.lodTransitions`). */
+export type LodTransitions = "morph" | "pop";
+
 export interface ViewOptions {
   target: RenderTarget;
   world: World;
@@ -147,6 +150,8 @@ export interface ViewOptions {
   cityLights?: boolean;
   /** A debug view (`View.debug`). Default "off". */
   debug?: DebugView;
+  /** How a terrain tile replaces a coarser one (`View.lodTransitions`). Default "morph". */
+  lodTransitions?: LodTransitions;
   /** Background color as displayed (already exposed), with "color". */
   clearColor?: readonly [number, number, number];
   /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
@@ -305,6 +310,7 @@ export class View {
     enabled: boolean;
     lighting: ViewLighting;
     debug: DebugView;
+    lodTransitions: LodTransitions;
   };
   private readonly changed = () => this.wake?.();
   private readonly observerChanged = () => {
@@ -575,6 +581,26 @@ export class View {
   debugLegend(): DebugLegend {
     return debugLegend(this.state.debug);
   }
+  /**
+   * How terrain refines on screen: "morph" (the default) eases each new
+   * tile's surface from its parent's over 0.3 seconds, so a tile replacing a
+   * coarser one doesn't jump (geomorphing; most visible when a warp such as
+   * vertical exaggeration magnifies the difference). "pop" swaps at once,
+   * as before, and costs nothing per vertex.
+   *
+   * Only terrain morphs, and only when it refines: tiles that coarsen leave
+   * at once, and 3D Tiles content pops. A tile drawn in several views
+   * morphs if any of them says "morph". Tiles carry the data (their parent's
+   * height per vertex) from when they load: a view that turns morph on later
+   * morphs the tiles that load after.
+   */
+  get lodTransitions(): LodTransitions {
+    return this.state.lodTransitions;
+  }
+  set lodTransitions(value: LodTransitions) {
+    this.state.lodTransitions = value;
+    this.wake?.();
+  }
   /** Disabled views are skipped (e.g. an offscreen view between captures). */
   get enabled(): boolean {
     return this.state.enabled;
@@ -635,6 +661,7 @@ export class View {
     this.fxaa = options.fxaa ?? false;
     this.cityLights = options.cityLights ?? true;
     this.state.debug = options.debug ?? "off";
+    this.state.lodTransitions = options.lodTransitions ?? "morph";
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.enabled = true;
