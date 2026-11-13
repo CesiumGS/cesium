@@ -237,6 +237,31 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
 
 **Fix 6 (candidates, owner to choose): refinement under a smooth node.** The error policy and occlusion culling remain; horizon culling folds into occlusion culling.
 
+**Fix 8: level of detail through a warp (design, 2026-11-12; owner asked for it).** This covers the error policy, transitions that hide pops, and the general rule for terrain and 3D Tiles under any smooth node.
+
+- **What was measured:** at ×10, the exaggeration scene settles at 3,360 tiles to ×1's 144, and the GPU frame is about 250 ms on an M2. That is real demand under today's rule, not a leak: requests stop and the cache holds about 250 MB of its 512 MB. Under a warp that moves vertices, `Budgeted.mixes()` turns mixed LOD off, so tiles swap whole regions at once, and each swap is a large pop at ×10.
+- **The general rule.** A tile's error is a vector in its own (true) frame, of size ε. Its drawn size is |J·ê|·ε, with ê the error's direction and J the route's Jacobian. Its screen size is that over the distance, projected.
+  - **Heightfields (terrain, and 3D Tiles that declare it):** ê is the local up. The bound on |J·ê| comes from fix 2's entrywise bounds as the norm of |J|'s up column over the tile's box. This replaces fix 6's special case, g′max · sin θ, with one rule for every bounded warp: lifts, projections, bends.
+  - **Meshes with no declared direction (most 3D Tiles):** isotropic, σ_max · ε, as today, or per axis from the same bounds.
+  - **Chord error:** a warp that curves straight edges adds the edge's chord error, M₂ L² / 8 (task 5's `curvatureOver`), to the drawn error. Large flat triangles under a strong bend then refine, or are tessellated once task 5's subdivision is wired.
+- **The error policy.** Each smooth node carries `lodExponent` α in [0, 1], and a view may override it. Selection uses s^α in place of the stretch s (the |J·ê| or σ_max above).
+  - α = 1 is exact in the drawn frame (today). α = 0 measures error in the true frame, as 1.x does, so drawn pops grow by s. α = 0.5 is between.
+  - **Proposed defaults:** the vertical exaggeration declares 0.5, because it's a visualization and at ×10 its error factor drops from 10 to about 3.2. Every other node declares 1. Projections are near s = 1 anyway. The owner decides.
+  - **The settings live on the node,** because the node knows what it's for. The view override lets one view of a split compare.
+- **Transitions, so a coarser level is acceptable:**
+  - **Mixed LOD under warps:** test a placeholder's clip boxes against the content's true point (the vertex stage already carries it as a varying, `814f561970`), not the drawn one. The boxes then move with any warp, and `mixes()` no longer needs to turn mixed LOD off for tilesets that move vertices. This removes the whole-region swaps.
+  - **Terrain geomorphing:**
+    - Each child vertex carries its parent's surface height at its (u, v). The refit already computes it (`terrainRefit.ts`), so it becomes one more component of the profile attribute.
+    - After a tile appears, the vertex stage blends h from the parent height to its own over about 300 ms, before the lift: g(mix(h_parent, h, t)). When coarsening, the children stay until they have morphed back.
+    - This works under every height profile, and for any warp, morphing in the true frame before the route.
+  - **Meshes without correspondence (3D Tiles replacement):** a dithered cross-fade of about 300 ms between a parent and its children, both drawn opaque with a blue-noise discard. Only the kept pixels write depth, so occlusion stays correct. The pair costs about twice as much for the fade's duration.
+- **Increments:**
+  1. `lodExponent` per node and per view, plus the general |J·ê| factor for heightfields.
+  2. Mixed LOD under warps through true-point clip tests.
+  3. Terrain geomorphing.
+  4. Measure: tiles, GPU, time to settle and pops, at ×1, ×5 and ×10, with α at 1, 0.5 and 0. A pop is measured as the largest screen displacement when tiles swap.
+  5. Dithered cross-fade for 3D Tiles, if the measurements ask for it.
+
 **Fix 7: occlusion feedback to selection (design, 2026-11-12).** This is the first step of the overall plan's two-phase occlusion culling (M5), and it can't leave holes.
 
 - **The idea:**
@@ -279,6 +304,10 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
   - **Gaussian splats** are blended, so they block nothing as drawn, and their tiles are tested like any other.
     - Splats behind splats aren't caught. A later option writes a solid depth where accumulated opacity passes a threshold, for example 0.95, in its own target.
     - Splat tiles refine by replacement, so the occlusion gate applies to them.
+- **Oscillation found and fixed (2026-11-12):**
+  - **Measured:** at ×10 with occlusion on, loading stopped but the drawn set flipped between about 2,626 and 3,219 tiles, and the loop never went idle. With it off, the scene settled at 3,360 tiles and idled.
+  - **Cause:** a refined tile that read hidden was coarsened back to its parent. That changed the depth, so its children read visible again.
+  - **Fix** (`1f4fb9c463`): hiding only blocks new refinement. A refined tile keeps its children, and a result asks for a render only when a verdict changed.
 - **Increment 5 (after measuring): an `"auto"` mode.**
   - Per view, run the pyramid and queries every tick while the occluded share is worth it. When it stays low (for example, under 5% for a couple of seconds), drop to one tick in N, and come back on a large camera move or a rising share.
   - The application or the camera controller can still force `"on"` or `"off"`, for example off during a fast flight, or on for a walk-through.
