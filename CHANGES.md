@@ -60,6 +60,10 @@
 
 - The private glTF processing utilities previously located in `@cesium/engine/Source/Scene/GltfPipeline/` have moved to a new internal package, `@cesium/gltf`, which is now a dependency of `@cesium/engine`. These utilities were not, and are not part of the public API. Nonetheless, code that previously imported these files directly from `@cesium/engine` will need to be updated. [#13896](https://github.com/CesiumGS/cesium/pull/13896)
 
+#### Fixes :wrench:
+
+- Fixed camera flights re-enabling `enableInputs` even when it was `false` before the flight started. `Camera.flyTo` and `Camera.flyToBoundingSphere` now restore the previous value instead of unconditionally setting `true`. [#13771](https://github.com/CesiumGS/cesium/pull/13771)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
