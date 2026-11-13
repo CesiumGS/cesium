@@ -537,3 +537,22 @@ export function lodExponentOf(view: {
   const a = view.warp?.lodExponent ?? view.lodExponent ?? 1;
   return Math.min(1, Math.max(0, a));
 }
+
+/**
+ * Whether refining `tile` can still reduce its geometric (vertical) error:
+ * false for a globe tile upsampled from a data ancestor (`globe.upsampledFrom`,
+ * `fillFromParent`), and for one whose children all are (no data below it).
+ * Anything else, including tiles whose children aren't known yet, can.
+ */
+export function geometryRefines(tile: Tile): boolean {
+  const g = tile.globe;
+  if (!g) {
+    return true;
+  }
+  if (tile.fillFromParent || g.upsampledFrom !== undefined) {
+    return false;
+  }
+  return !(
+    tile.children.length > 0 && tile.children.every((c) => c.fillFromParent)
+  );
+}

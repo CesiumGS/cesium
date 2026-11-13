@@ -15,6 +15,7 @@ import type { World } from "../src/scene/World.ts";
 import { selectionViews } from "../src/scene/tileSelection.ts";
 import {
   drawnTile,
+  geometryRefines,
   lodExponentOf,
   terrainDrawnError,
   type DrawnTile,
@@ -183,5 +184,32 @@ describe("the view's exponent reaches selection", () => {
     expect(sel()?.lodExponent).toBe(0.4);
     view.lodExponent = 7;
     expect(view.lodExponent).toBe(1);
+  });
+});
+
+describe("upsampled tiles carry no stretch", () => {
+  const mk = (extra: object, children: object[] = []) =>
+    ({ geometricError: 100, globe: {}, children, ...extra }) as unknown as Tile;
+  it("geometryRefines is false for upsampled tiles and for tiles whose children all are", () => {
+    expect(geometryRefines(mk({}))).toBe(true);
+    expect(geometryRefines(mk({}, [{ fillFromParent: true }, {}]))).toBe(true);
+    expect(geometryRefines(mk({ fillFromParent: true }))).toBe(false);
+    expect(geometryRefines(mk({ globe: { upsampledFrom: {} } }))).toBe(false);
+    expect(
+      geometryRefines(
+        mk({}, [{ fillFromParent: true }, { fillFromParent: true }]),
+      ),
+    ).toBe(false);
+    expect(geometryRefines({ globe: undefined } as unknown as Tile)).toBe(true);
+  });
+  it("an upsampled tile's error under ×10 is its unwarped error; a data tile keeps the stretch", () => {
+    const d = drawn({ slopeMax: 10 });
+    const up = mk({ fillFromParent: true });
+    const alpha = geometryRefines(up) ? 1 : 0;
+    expect(terrainDrawnError(up, d, beside, 100, alpha)).toBe(100 + 2);
+    const data = mk({});
+    expect(
+      terrainDrawnError(data, d, beside, 100, geometryRefines(data) ? 1 : 0),
+    ).toBeGreaterThan(900);
   });
 });

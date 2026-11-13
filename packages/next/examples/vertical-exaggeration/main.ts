@@ -136,7 +136,8 @@ export async function run({
     );
     engine.requestRender();
   };
-  frameCamera();
+  // `&view=valley` or `&view=zermatt-close` starts at that preset.
+  frameCamera(params.view === "zermatt-close" ? CLOSE_UP : CAMERA);
   // Low sun from the north-east, raking the faces the camera looks at: the
   // clock's own sun may leave them in shade.
   viewer.setSun(70, 30);
@@ -644,12 +645,24 @@ export async function run({
       { className: "buttons" },
       el(
         "button",
-        { type: "button", onclick: () => frameCamera(CAMERA) },
+        {
+          type: "button",
+          onclick: () => {
+            frameCamera(CAMERA);
+            setParams({ view: "valley" });
+          },
+        },
         "The valley",
       ),
       el(
         "button",
-        { type: "button", onclick: () => frameCamera(CLOSE_UP) },
+        {
+          type: "button",
+          onclick: () => {
+            frameCamera(CLOSE_UP);
+            setParams({ view: "zermatt-close" });
+          },
+        },
         "Zermatt, close",
       ),
     ),

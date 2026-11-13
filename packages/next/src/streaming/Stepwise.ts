@@ -26,6 +26,7 @@ import {
   drawnContentVolume,
   drawnRequestVolume,
   drawnTile,
+  geometryRefines,
   lodExponentOf,
   terrainDrawnError,
   type TileWarp,
@@ -620,7 +621,11 @@ export class StepwiseSelection implements TileSelection {
       // stretches it by at most σ_max over the volume (an estimate), and its
       // fit adds its own error.
       const drawn = drawnTile(source, view.warp);
-      const alpha = lodExponentOf(view);
+      // The stretched part counts only where refining can reduce it: a tile
+      // upsampled from its data ancestor, or one whose children are known to
+      // have no data, gains nothing but imagery (which the warp doesn't
+      // stretch), so its error is measured as if unwarped (s^0).
+      const alpha = geometryRefines(source) ? lodExponentOf(view) : 0;
       error =
         source.globe && drawn.slopeMax !== undefined
           ? terrainDrawnError(source, drawn, view.position, error, alpha)
