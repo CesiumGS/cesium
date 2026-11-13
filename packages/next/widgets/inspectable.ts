@@ -63,11 +63,25 @@ export interface InspectorSnapshot {
     /** `triangles` over the drawn views' pixels. */
     trianglesPerPixel?: number;
     /**
-     * Submit to done, ms: counts work no timestamp covers (uploads,
-     * copies, presenting) and any wait behind the previous frame, so it
-     * is an upper bound on the GPU time.
+     * What the frame submitted by kind, before GPU culling: draw items,
+     * whole triangles, points and line segments. Kinds in a stable order.
      */
+    geometry?: Array<{
+      kind: string;
+      draws: number;
+      triangles: number;
+      points: number;
+      segments: number;
+    }>;
+    /** Rays cast since the frame before (height queries, clamping, queries). */
+    raysCast?: number;
+    /** Submit to done, ms: latency, including waits behind earlier frames. */
     gpuWallMs?: number;
+    /**
+     * Time between frames finishing while the GPU was busy back to back,
+     * ms; absent when it idled. What a frame costs, untimed work included.
+     */
+    gpuIntervalMs?: number;
     /** Where `gpuMs` goes: GPU time per pass, ms, in the frame's order. */
     gpuPasses?: Array<[string, number]>;
     /** Time between frames, ms. */

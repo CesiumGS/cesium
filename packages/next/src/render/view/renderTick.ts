@@ -12,7 +12,12 @@ import type {
   TargetFrame,
   WorldFrame,
 } from "./viewFrameData.ts";
-import type { Batch } from "../../scene/world/types.ts";
+import {
+  addGeometry,
+  resetGeometry,
+  geometryTotals,
+  worldGeometry,
+} from "./geometryStats.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
 import type { World } from "../../scene/World.ts";
@@ -145,21 +150,8 @@ export interface RenderTickEngine extends Pick<
   >;
 }
 
-/**
- * Triangles in a world's shown batches: index count / 3 for each draw item
- * (an instance counts each time). Patch and point batches have no fixed
- * index count and count none.
- */
-function countTriangles(batches: readonly Batch[]): number {
-  let triangles = 0;
-  for (let i = 0; i < batches.length; i++) {
-    const batch = batches[i]!;
-    if (batch.shown !== 0 && !batch.points && !batch.patches) {
-      triangles += (batch.mesh.indexCount / 3) * batch.items;
-    }
-  }
-  return triangles;
-}
+/** Rays cast, in total, when the last frame was counted (`stats.raysCast`). */
+const raysBefore = new WeakMap<object, number>();
 
 const FRAME_ENCODER: GPUCommandEncoderDescriptor = { label: "frame" };
 
@@ -255,7 +247,8 @@ export function render(
   // Assign each drawn view a slot (the first view drawn into a target
   // clears it) and prepare each world once.
   let slots = 0;
-  let triangles = 0;
+  const geometry = engine.stats.geometry;
+  resetGeometry(geometry);
   let pixels = 0;
   for (let i = 0; i < views.length; i++) {
     const view = views[i]!;
@@ -268,7 +261,7 @@ export function render(
     const rect = image ? image.rect : view.pixelRect();
     const frame = viewFrameFor(engine, view, rect);
     frame.slot = slots;
-    triangles += countTriangles(view.world.raster.batchList);
+    addGeometry(geometry, worldGeometry(view.world));
     pixels += rect.width * rect.height;
     // Every frame takes the view's exposure as it is now: only the
     // on-demand check computed it, so `renderFrame()` and the continuous
@@ -448,6 +441,7 @@ export function render(
   engine.stats.gpuMs = engine.raster.timer.milliseconds;
   engine.stats.gpuSpanMs = engine.raster.timer.spanMilliseconds;
   engine.stats.gpuWallMs = engine.raster.timer.wallMilliseconds;
+  engine.stats.gpuIntervalMs = engine.raster.timer.intervalMilliseconds;
   engine.stats.views = slots;
   for (let i = 0; i < engine.worlds.length; i++) {
     engine.worlds[i]!.changedViews = 0;
@@ -460,7 +454,14 @@ export function render(
   }
   engine.stats.draws = draws;
   engine.stats.batches = batches;
+  const triangles = geometryTotals(geometry).triangles;
   engine.stats.triangles = triangles;
+  let rays = 0;
+  for (let i = 0; i < engine.worlds.length; i++) {
+    rays += engine.worlds[i]!.raysCast;
+  }
+  engine.stats.raysCast = rays - (raysBefore.get(engine) ?? rays);
+  raysBefore.set(engine, rays);
   engine.stats.trianglesPerPixel = pixels > 0 ? triangles / pixels : 0;
 }
 

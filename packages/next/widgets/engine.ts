@@ -182,12 +182,20 @@ export function engineSnapshot(
       cpuMs: s.cpuMs,
       triangles: s.triangles,
       trianglesPerPixel: s.trianglesPerPixel,
+      geometry: Object.entries(s.geometry).map(([kind, k]) => ({
+        kind,
+        ...k,
+      })),
+      raysCast: s.raysCast,
       ...(Number.isNaN(s.gpuMs)
         ? {}
         : {
             gpuMs: s.gpuMs,
             ...(Number.isNaN(s.gpuSpanMs) ? {} : { gpuSpanMs: s.gpuSpanMs }),
             ...(Number.isNaN(s.gpuWallMs) ? {} : { gpuWallMs: s.gpuWallMs }),
+            ...(Number.isNaN(s.gpuIntervalMs)
+              ? {}
+              : { gpuIntervalMs: s.gpuIntervalMs }),
             // Passes that stopped running fade to 0: not shown.
             gpuPasses: Object.entries(engine.gpuPasses).filter(
               ([, ms]) => ms >= 0.005,

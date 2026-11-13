@@ -164,6 +164,8 @@ export function createRecorder(
       cpuMs: s.lastCpuMs,
       views: s.views,
       triangles: s.triangles,
+      draws: totals(s.geometry, "draws"),
+      points: totals(s.geometry, "points"),
       occQueries: queries - occQueries,
       occHidden: hidden,
       occFlips: flips - occFlips,
@@ -197,7 +199,15 @@ export function createRecorder(
     if (gpu.samples !== gpuSamples) {
       gpuSamples = gpu.samples;
       buffer.push(
-        gpuRow(now - t0, gpu.tick, gpu.ms, gpu.passes, gpu.spanMs, gpu.wallMs),
+        gpuRow(
+          now - t0,
+          gpu.tick,
+          gpu.ms,
+          gpu.passes,
+          gpu.spanMs,
+          gpu.wallMs,
+          gpu.intervalMs,
+        ),
       );
       status.rows++;
     }
@@ -231,4 +241,12 @@ export function createRecorder(
     },
     status: () => ({ ...status }),
   };
+}
+
+/** A field summed over the kinds of `FrameStats.geometry`. */
+function totals(
+  geometry: Record<string, { draws: number; points: number }>,
+  field: "draws" | "points",
+): number {
+  return Object.values(geometry).reduce((sum, k) => sum + k[field], 0);
 }

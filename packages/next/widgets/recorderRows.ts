@@ -22,8 +22,9 @@ export const RECORD_COLUMNS = [
   "cpu_ms", // tick: main-thread time of its render, unsmoothed
   "gpu_ms", // gpu: the render's GPU time, passes overlapping counted once
   "gpu_span_ms", // gpu: first timed pass's start to last one's end
-  "gpu_wall_ms", // gpu: submit to done, CPU clock; counts untimed work and queueing
-  "gpu_untimed_ms", // gpu: wall less gpu_ms, an upper bound on untimed work
+  "gpu_wall_ms", // gpu: latency, submit to done on the CPU clock (waits behind earlier frames included)
+  "gpu_interval_ms", // gpu: since the previous frame finished, only when the GPU was busy back to back
+  "gpu_untimed_ms", // gpu: gpu_interval_ms less gpu_ms: work no timestamp covers
   "views", // views drawn
   "drawn", // tiles drawn
   "known", // tiles the engine knows of
@@ -39,7 +40,9 @@ export const RECORD_COLUMNS = [
   "occ_hidden", // boxes the latest occlusion result found hidden
   "occ_flips", // occlusion verdicts changed since the last row
   "passes", // gpu: each pass's ms, as "name=ms name=ms"
-  "triangles", // tick: triangles submitted by the render, before GPU culling
+  "triangles", // tick: whole triangles submitted by the render, before GPU culling
+  "draws", // tick: draw items submitted (instances counted each)
+  "points", // tick: points submitted (point sets: their capacity)
   "frame", // tick: 1 when the view's image was saved as frame-<tick>.png
 ] as const;
 
@@ -79,6 +82,8 @@ export interface TickSample {
   occHidden?: number;
   occFlips?: number;
   triangles?: number;
+  draws?: number;
+  points?: number;
   /** The tick's image was saved. */
   frame?: boolean;
 }
@@ -130,6 +135,8 @@ export function tickRow(s: TickSample): string {
     occ_hidden: formatNumber(s.occHidden),
     occ_flips: formatNumber(s.occFlips),
     triangles: formatNumber(s.rendering ? s.triangles : undefined),
+    draws: formatNumber(s.rendering ? s.draws : undefined),
+    points: formatNumber(s.rendering ? s.points : undefined),
     frame: s.frame ? "1" : "",
   });
 }
@@ -146,6 +153,7 @@ export function gpuRow(
   passes: Readonly<Record<string, number>>,
   spanMs: number = Number.NaN,
   wallMs: number = Number.NaN,
+  intervalMs: number = Number.NaN,
 ): string {
   return line({
     kind: "gpu",
@@ -154,7 +162,8 @@ export function gpuRow(
     gpu_ms: formatNumber(ms),
     gpu_span_ms: formatNumber(spanMs),
     gpu_wall_ms: formatNumber(wallMs),
-    gpu_untimed_ms: formatNumber(untimedMs(wallMs, ms)),
+    gpu_interval_ms: formatNumber(intervalMs),
+    gpu_untimed_ms: formatNumber(untimedMs(intervalMs, ms)),
     passes: Object.entries(passes)
       .map(([name, v]) => `${safeText(name)}=${formatNumber(v)}`)
       .join(" "),

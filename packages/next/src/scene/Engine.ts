@@ -102,6 +102,10 @@ import {
 } from "./heightCaptures.ts";
 import { EngineScene } from "./engineScene.ts";
 import { EngineRaster } from "../render/view/engineRaster.ts";
+import {
+  emptyGeometry,
+  type GeometryStats,
+} from "../render/view/geometryStats.ts";
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
@@ -129,12 +133,17 @@ export interface FrameStats {
   /** Smoothed GPU span from first pass start to last pass end, ms. */
   gpuSpanMs: number;
   /**
-   * Smoothed wall time of a measured frame's submit, ms (NaN until one
-   * arrives): the work GPU timestamps can't cover (uploads, copies,
-   * presenting) is in it, and so is any wait behind the previous frame, so
-   * it is an upper bound on the frame's GPU time.
+   * Smoothed latency of a measured frame, ms (NaN until one arrives):
+   * submit to done on the CPU clock, waiting behind earlier frames
+   * included. How late the image is, not what the frame costs.
    */
   gpuWallMs: number;
+  /**
+   * Smoothed time between consecutive frames finishing, ms, while the GPU
+   * was busy back to back (NaN when it idled before the latest measured
+   * frame): what a frame costs the GPU, untimed work included.
+   */
+  gpuIntervalMs: number;
   views: number;
   draws: number;
   /** Indirect draw calls per view (one per batch). */
@@ -148,6 +157,15 @@ export interface FrameStats {
   triangles: number;
   /** `triangles` over the drawn views' pixels (their drawing buffers). */
   trianglesPerPixel: number;
+  /**
+   * What the latest rendered frame submitted, by kind (`GEOMETRY_KINDS`),
+   * counted on the CPU from the worlds' batches and recounted only when a
+   * world's draw list changes. Before the GPU's culling; patch draws count
+   * as draws only.
+   */
+  geometry: GeometryStats;
+  /** Rays cast (`World.castRays`: height queries and clamping, queries) since the frame before. */
+  raysCast: number;
   /** Frames rendered since start (on demand: only frames something changed). */
   framesRendered: number;
   /** Frames the GPU rejected (validation): each drew nothing. */
@@ -392,11 +410,14 @@ export class Engine {
     gpuMs: Number.NaN,
     gpuSpanMs: Number.NaN,
     gpuWallMs: Number.NaN,
+    gpuIntervalMs: Number.NaN,
     views: 0,
     draws: 0,
     batches: 0,
     triangles: 0,
     trianglesPerPixel: 0,
+    geometry: emptyGeometry(),
+    raysCast: 0,
     framesRendered: 0,
     rejectedFrames: 0,
     idle: false,
@@ -433,9 +454,10 @@ export class Engine {
    * the `FrameStats.tick` it belongs to (a result arrives a few ticks late),
    * and how many results have arrived: a recorder's. `ms` is the time any
    * timed pass ran; `spanMs` runs from the first pass's start to the last
-   * one's end; `wallMs` is the submit's wall time (NaN if it hadn't
-   * arrived), which also counts what can't be timed, so `wallMs - ms` is
-   * the untimed share, an upper bound.
+   * one's end; `wallMs` is the submit's latency (NaN if it hadn't arrived);
+   * `intervalMs` is the time since the previous frame finished, set only
+   * when the GPU was busy back to back (else NaN), so `intervalMs - ms` is
+   * the untimed share.
    */
   get gpuSample(): {
     samples: number;
@@ -443,6 +465,7 @@ export class Engine {
     ms: number;
     spanMs: number;
     wallMs: number;
+    intervalMs: number;
     passes: Readonly<Record<string, number>>;
   } {
     const t = this.raster.timer;
@@ -452,6 +475,7 @@ export class Engine {
       ms: t.lastSample.ms,
       spanMs: t.lastSample.spanMs,
       wallMs: t.lastSample.wallMs,
+      intervalMs: t.lastSample.intervalMs,
       passes: t.lastSample.passes,
     };
   }
