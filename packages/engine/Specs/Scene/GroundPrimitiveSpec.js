@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  Cartographic,
   Color,
   ColorGeometryInstanceAttribute,
   DistanceDisplayConditionGeometryInstanceAttribute,
@@ -537,6 +538,119 @@ describe(
       verifyGroundPrimitiveRender(primitive, rectColor);
     });
 
+    // Renders a large rectangle whose material is red south of the rectangle's
+    // middle latitude and green north of it, or red west of its middle longitude
+    // and green east of it, over depth at the given height around depthCenter.
+    // Returns a function that checks the color at an offset in meters north, or east, of depthCenter.
+    // Offsets use the ellipsoid's maximum radius, so they are approximate on flattened ellipsoids.
+    function createSplitScene(targetScene, options) {
+      const targetEllipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
+      const textureRectangle = options.textureRectangle;
+      const depthCenter = options.depthCenter;
+      const height = options.height;
+      const splitEastWest = options.splitEastWest ?? false;
+
+      // About 6 km on each side. Near the poles, this covers all longitudes.
+      const longitudeHalfWidth = Math.min(
+        0.001 / Math.cos(depthCenter.latitude),
+        CesiumMath.PI,
+      );
+      const depthRectangle = new Rectangle(
+        Math.max(depthCenter.longitude - longitudeHalfWidth, -CesiumMath.PI),
+        Math.max(depthCenter.latitude - 0.001, -CesiumMath.PI_OVER_TWO),
+        Math.min(depthCenter.longitude + longitudeHalfWidth, CesiumMath.PI),
+        Math.min(depthCenter.latitude + 0.001, CesiumMath.PI_OVER_TWO),
+      );
+      const depthPrimitive = new Primitive({
+        geometryInstances: new GeometryInstance({
+          geometry: new RectangleGeometry({
+            ellipsoid: targetEllipsoid,
+            rectangle: depthRectangle,
+            height: height,
+          }),
+          attributes: {
+            color: ColorGeometryInstanceAttribute.fromColor(Color.BLUE),
+          },
+        }),
+        appearance: new PerInstanceColorAppearance({
+          translucent: false,
+          flat: true,
+        }),
+        asynchronous: false,
+      });
+      const mockDepthPrimitive = new MockPrimitive(depthPrimitive, Pass.GLOBE);
+      mockDepthPrimitive.destroy = function () {
+        this._primitive.destroy();
+        return destroyObject(this);
+      };
+      targetScene.primitives.add(mockDepthPrimitive);
+
+      const splitCoordinate = splitEastWest
+        ? "materialInput.st.s"
+        : "materialInput.st.t";
+      const material = new Material({
+        fabric: {
+          source:
+            "czm_material czm_getMaterial(czm_materialInput materialInput) {\n" +
+            "    czm_material material = czm_getDefaultMaterial(materialInput);\n" +
+            `    material.diffuse = mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), step(0.5, ${splitCoordinate}));\n` +
+            "    return material;\n" +
+            "}\n",
+        },
+      });
+      targetScene.groundPrimitives.add(
+        new GroundPrimitive({
+          geometryInstances: new GeometryInstance({
+            geometry: new RectangleGeometry({
+              ellipsoid: targetEllipsoid,
+              rectangle: textureRectangle,
+            }),
+            id: "split rectangle",
+          }),
+          appearance: new EllipsoidSurfaceAppearance({
+            aboveGround: false,
+            flat: true,
+            material: material,
+          }),
+          asynchronous: false,
+        }),
+      );
+      targetScene.postProcessStages.fxaa.enabled = false;
+
+      return function (meters, expectedColor) {
+        let longitude = depthCenter.longitude;
+        let latitude = depthCenter.latitude;
+        if (splitEastWest) {
+          longitude +=
+            meters / (targetEllipsoid.maximumRadius * Math.cos(latitude));
+        } else {
+          latitude += meters / targetEllipsoid.maximumRadius;
+        }
+        // Look straight down from 5 meters above the depth, so all
+        // pixels are within 1.5 meters of the camera's position.
+        targetScene.camera.setView({
+          destination: Cartesian3.fromRadians(
+            longitude,
+            latitude,
+            height + 5.0,
+            targetEllipsoid,
+          ),
+        });
+        expect(targetScene).toRenderAndCall(function (rgba) {
+          // All four pixels
+          for (let i = 0; i < rgba.length; i += 4) {
+            expect(rgba.slice(i, i + 4)).toEqual(expectedColor);
+          }
+        });
+      };
+    }
+
+    function expectPick(targetScene, id) {
+      expect(targetScene).toPickAndCall(function (result) {
+        expect(result.id).toEqual(id);
+      });
+    }
+
     describe("larger scene", function () {
       // Screen space techniques may produce unexpected results with 1x1 canvasses
       let largeScene;
@@ -790,91 +904,6 @@ describe(
         );
       });
 
-      // Renders a large rectangle whose material is red south of the rectangle's
-      // middle latitude and green north of it, over depth at the given height.
-      // Returns a function that checks the color at an offset in meters north of the middle.
-      function createLatitudeSplitScene(textureRectangle, height) {
-        const center = Rectangle.center(textureRectangle);
-        const depthRectangle = new Rectangle(
-          center.longitude - 0.001,
-          center.latitude - 0.001,
-          center.longitude + 0.001,
-          center.latitude + 0.001,
-        );
-        const depthPrimitive = new Primitive({
-          geometryInstances: new GeometryInstance({
-            geometry: new RectangleGeometry({
-              ellipsoid: ellipsoid,
-              rectangle: depthRectangle,
-              height: height,
-            }),
-            attributes: {
-              color: ColorGeometryInstanceAttribute.fromColor(Color.BLUE),
-            },
-          }),
-          appearance: new PerInstanceColorAppearance({
-            translucent: false,
-            flat: true,
-          }),
-          asynchronous: false,
-        });
-        const mockDepthPrimitive = new MockPrimitive(
-          depthPrimitive,
-          Pass.GLOBE,
-        );
-        mockDepthPrimitive.destroy = function () {
-          this._primitive.destroy();
-          return destroyObject(this);
-        };
-        largeScene.primitives.add(mockDepthPrimitive);
-
-        const material = new Material({
-          fabric: {
-            source:
-              "czm_material czm_getMaterial(czm_materialInput materialInput) {\n" +
-              "    czm_material material = czm_getDefaultMaterial(materialInput);\n" +
-              "    material.diffuse = mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), step(0.5, materialInput.st.t));\n" +
-              "    return material;\n" +
-              "}\n",
-          },
-        });
-        largeScene.groundPrimitives.add(
-          new GroundPrimitive({
-            geometryInstances: new GeometryInstance({
-              geometry: new RectangleGeometry({
-                ellipsoid: ellipsoid,
-                rectangle: textureRectangle,
-              }),
-            }),
-            appearance: new EllipsoidSurfaceAppearance({
-              aboveGround: false,
-              flat: true,
-              material: material,
-            }),
-            asynchronous: false,
-          }),
-        );
-        largeScene.postProcessStages.fxaa.enabled = false;
-
-        return function (metersNorth, expectedColor) {
-          // Look straight down from 5 meters above the depth, so both rows of
-          // pixels are within 1.5 meters of the camera's latitude.
-          largeScene.camera.setView({
-            destination: Cartesian3.fromRadians(
-              center.longitude,
-              center.latitude + metersNorth / ellipsoid.maximumRadius,
-              height + 5.0,
-            ),
-          });
-          expect(largeScene).toRenderAndCall(function (rgba) {
-            // All four pixels
-            for (let i = 0; i < rgba.length; i += 4) {
-              expect(rgba.slice(i, i + 4)).toEqual(expectedColor);
-            }
-          });
-        };
-      }
-
       it("aligns textures on large GeometryInstances with geodetic latitude", function () {
         if (
           !GroundPrimitive.isSupported(scene) ||
@@ -884,10 +913,17 @@ describe(
         }
 
         // The rectangle from https://github.com/CesiumGS/cesium/issues/12943
-        const expectColor = createLatitudeSplitScene(
-          Rectangle.fromDegrees(-86.6, 23.7, -70.2, 46.2),
-          0.0,
+        const textureRectangle = Rectangle.fromDegrees(
+          -86.6,
+          23.7,
+          -70.2,
+          46.2,
         );
+        const expectColor = createSplitScene(largeScene, {
+          textureRectangle: textureRectangle,
+          depthCenter: Rectangle.center(textureRectangle),
+          height: 0.0,
+        });
         expectColor(-100.0, [255, 0, 0, 255]);
         expectColor(100.0, [0, 255, 0, 255]);
       });
@@ -901,12 +937,193 @@ describe(
         }
 
         // Without accounting for height, the texture is about 15 meters too far south here.
-        const expectColor = createLatitudeSplitScene(
-          Rectangle.fromDegrees(80.0, 25.0, 95.0, 40.0),
-          5000.0,
-        );
+        const textureRectangle = Rectangle.fromDegrees(80.0, 25.0, 95.0, 40.0);
+        const expectColor = createSplitScene(largeScene, {
+          textureRectangle: textureRectangle,
+          depthCenter: Rectangle.center(textureRectangle),
+          height: 5000.0,
+        });
         expectColor(-7.5, [255, 0, 0, 255]);
         expectColor(7.5, [0, 255, 0, 255]);
+      });
+
+      it("renders and picks textures on large GeometryInstances on the 90 degree meridians", function () {
+        if (
+          !GroundPrimitive.isSupported(scene) ||
+          !GroundPrimitive.supportsMaterials(scene)
+        ) {
+          return;
+        }
+
+        // On these meridians the x component of the surface normal is 0.
+        // Both rectangles are over the ocean, so depth at height 0 is inside the shadow volume.
+        const eastRectangle = Rectangle.fromDegrees(82.5, -35.0, 97.5, -20.0);
+        const expectEastColor = createSplitScene(largeScene, {
+          textureRectangle: eastRectangle,
+          depthCenter: Rectangle.center(eastRectangle),
+          height: 0.0,
+          splitEastWest: true,
+        });
+        expectEastColor(-7.5, [255, 0, 0, 255]);
+        expectEastColor(7.5, [0, 255, 0, 255]);
+        expectPick(largeScene, "split rectangle");
+
+        largeScene.primitives.removeAll();
+        largeScene.groundPrimitives.removeAll();
+
+        const westRectangle = Rectangle.fromDegrees(-97.5, -35.0, -82.5, -20.0);
+        const expectWestColor = createSplitScene(largeScene, {
+          textureRectangle: westRectangle,
+          depthCenter: Rectangle.center(westRectangle),
+          height: 0.0,
+          splitEastWest: true,
+        });
+        expectWestColor(-7.5, [255, 0, 0, 255]);
+        expectWestColor(7.5, [0, 255, 0, 255]);
+        expectPick(largeScene, "split rectangle");
+      });
+
+      it("renders and picks textures on large GeometryInstances at the poles", function () {
+        if (
+          !GroundPrimitive.isSupported(scene) ||
+          !GroundPrimitive.supportsMaterials(scene)
+        ) {
+          return;
+        }
+
+        // At the poles the x and y components of the surface normal are 0.
+        // The north half of the texture is green and the south half is red.
+        // The camera is 1 meter from the pole, so the pole is in view.
+        const poleOffset = 1.0 / Ellipsoid.WGS84.maximumRadius;
+        const northRectangle = new Rectangle(
+          -CesiumMath.PI,
+          CesiumMath.toRadians(75.0),
+          CesiumMath.PI,
+          CesiumMath.PI_OVER_TWO,
+        );
+        const expectNorthColor = createSplitScene(largeScene, {
+          textureRectangle: northRectangle,
+          depthCenter: new Cartographic(
+            0.0,
+            CesiumMath.PI_OVER_TWO - poleOffset,
+          ),
+          height: 0.0,
+        });
+        expectNorthColor(0.0, [0, 255, 0, 255]);
+        expectPick(largeScene, "split rectangle");
+
+        largeScene.primitives.removeAll();
+        largeScene.groundPrimitives.removeAll();
+
+        const southRectangle = new Rectangle(
+          -CesiumMath.PI,
+          -CesiumMath.PI_OVER_TWO,
+          CesiumMath.PI,
+          CesiumMath.toRadians(-75.0),
+        );
+        const expectSouthColor = createSplitScene(largeScene, {
+          textureRectangle: southRectangle,
+          depthCenter: new Cartographic(
+            0.0,
+            -CesiumMath.PI_OVER_TWO + poleOffset,
+          ),
+          height: 0.0,
+        });
+        expectSouthColor(0.0, [255, 0, 0, 255]);
+        expectPick(largeScene, "split rectangle");
+      });
+    });
+
+    describe("flattened ellipsoid", function () {
+      // Three quarters of the equatorial radius, so latitude errors that depend on flattening are large.
+      // Cesium's camera does not support ellipsoids flatter than about 0.7.
+      const flattenedEllipsoid = new Ellipsoid(
+        6378137.0,
+        6378137.0,
+        4783602.75,
+      );
+      let flattenedScene;
+      beforeAll(function () {
+        flattenedScene = createScene({
+          canvas: createCanvas(2, 2),
+          ellipsoid: flattenedEllipsoid,
+        });
+      });
+      afterAll(function () {
+        flattenedScene.destroyForSpecs();
+      });
+      afterEach(function () {
+        flattenedScene.primitives.removeAll();
+        flattenedScene.groundPrimitives.removeAll();
+        flattenedScene.verticalExaggeration = 1.0;
+      });
+
+      it("aligns textures on large GeometryInstances with geodetic latitude on high terrain", function () {
+        if (
+          !GroundPrimitive.isSupported(scene) ||
+          !GroundPrimitive.supportsMaterials(scene)
+        ) {
+          return;
+        }
+
+        // Using the radial height instead of the geodetic height puts the texture about 55 meters too far south here.
+        const textureRectangle = Rectangle.fromDegrees(-10.0, 35.0, 10.0, 55.0);
+        const expectColor = createSplitScene(flattenedScene, {
+          ellipsoid: flattenedEllipsoid,
+          textureRectangle: textureRectangle,
+          depthCenter: Rectangle.center(textureRectangle),
+          height: 5000.0,
+        });
+        expectColor(-7.5, [255, 0, 0, 255]);
+        expectColor(7.5, [0, 255, 0, 255]);
+      });
+
+      it("does not cull the edges of large GeometryInstances with exaggerated terrain", function () {
+        if (
+          !GroundPrimitive.isSupported(scene) ||
+          !GroundPrimitive.supportsMaterials(scene)
+        ) {
+          return;
+        }
+
+        flattenedScene.verticalExaggeration = 4.0;
+        const height = 20000.0;
+        const textureRectangle = Rectangle.fromDegrees(80.0, 30.0, 95.0, 45.0);
+        // At the center longitude, the shadow volume reaches the south edge. At some other
+        // longitudes on this ellipsoid, its triangulated edge stops up to 300 meters short,
+        // which hides fragments whatever the shader computes.
+        const longitude = Rectangle.center(textureRectangle).longitude;
+        // About 33 meters inside the rectangle. Using the radial height instead of the geodetic
+        // height puts the south edge's texture coordinates about 115 meters too far south here,
+        // past the EPSILON5 extent padding (about 42 meters), so those fragments were culled.
+        const inset = 50.0 / flattenedEllipsoid.maximumRadius;
+
+        const expectSouthColor = createSplitScene(flattenedScene, {
+          ellipsoid: flattenedEllipsoid,
+          textureRectangle: textureRectangle,
+          depthCenter: new Cartographic(
+            longitude,
+            textureRectangle.south + inset,
+          ),
+          height: height,
+        });
+        expectSouthColor(0.0, [255, 0, 0, 255]);
+        expectPick(flattenedScene, "split rectangle");
+
+        flattenedScene.primitives.removeAll();
+        flattenedScene.groundPrimitives.removeAll();
+
+        const expectNorthColor = createSplitScene(flattenedScene, {
+          ellipsoid: flattenedEllipsoid,
+          textureRectangle: textureRectangle,
+          depthCenter: new Cartographic(
+            longitude,
+            textureRectangle.north - inset,
+          ),
+          height: height,
+        });
+        expectNorthColor(0.0, [0, 255, 0, 255]);
+        expectPick(flattenedScene, "split rectangle");
       });
     });
 

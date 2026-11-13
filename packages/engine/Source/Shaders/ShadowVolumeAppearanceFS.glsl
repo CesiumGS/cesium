@@ -53,13 +53,29 @@ void main(void)
     vec2 uv;
 #ifdef SPHERICAL
     // Geodetic latitude and longitude from the (unnormalized) ellipsoid surface normal.
-    // position * inverseRadii^2 is only the normal for positions on the ellipsoid, and terrain height
-    // tilts it by about 4 meters of latitude per kilometer. So first move the position down to the surface.
+    // position * inverseRadii^2 is only the normal for positions on the ellipsoid, so first project the
+    // position onto the ellipsoid along the surface normal, as Ellipsoid.scaleToGeodeticSurface does.
+    // Three Newton iterations, starting from the radial projection, keep the latitude error under 3e-6
+    // radians for heights up to 50 km on ellipsoids up to 6:1 polar flattening, below the EPSILON5 extent padding.
+    vec3 inverseRadiiSquared = czm_ellipsoidInverseRadii * czm_ellipsoidInverseRadii;
     vec3 scaledPosition = worldCoordinate * czm_ellipsoidInverseRadii;
-    vec3 geodeticNormal = normalize(scaledPosition * czm_ellipsoidInverseRadii);
-    float approximateHeight = length(worldCoordinate) * (1.0 - 1.0 / length(scaledPosition));
-    geodeticNormal = (worldCoordinate - approximateHeight * geodeticNormal) * czm_ellipsoidInverseRadii * czm_ellipsoidInverseRadii;
-    vec2 sphericalLatLong = vec2(atan(geodeticNormal.z, length(geodeticNormal.xy)), atan(geodeticNormal.y, geodeticNormal.x));
+    vec3 scaledPositionSquared = scaledPosition * scaledPosition;
+    float radialRatio = inversesqrt(scaledPositionSquared.x + scaledPositionSquared.y + scaledPositionSquared.z);
+    float lambda = (1.0 - radialRatio) * length(worldCoordinate) / length(worldCoordinate * radialRatio * inverseRadiiSquared);
+    for (int i = 0; i < 3; ++i) {
+        vec3 multiplier = 1.0 / (1.0 + lambda * inverseRadiiSquared);
+        vec3 multiplierSquared = multiplier * multiplier;
+        float func = dot(scaledPositionSquared, multiplierSquared) - 1.0;
+        float derivative = -2.0 * dot(scaledPositionSquared * multiplierSquared * multiplier, inverseRadiiSquared);
+        lambda -= func / derivative;
+    }
+    vec3 geodeticNormal = worldCoordinate * inverseRadiiSquared / (1.0 + lambda * inverseRadiiSquared);
+
+    // atan(y, x) is undefined when x is 0, which happens on the poles and on the +/-90 degree meridians.
+    float horizontalLength = length(geodeticNormal.xy);
+    float latitude = horizontalLength == 0.0 ? sign(geodeticNormal.z) * czm_piOverTwo : atan(geodeticNormal.z, horizontalLength);
+    float longitude = geodeticNormal.x == 0.0 ? sign(geodeticNormal.y) * czm_piOverTwo : atan(geodeticNormal.y, geodeticNormal.x);
+    vec2 sphericalLatLong = vec2(latitude, longitude);
     sphericalLatLong.y += v_uvMinAndSphericalLongitudeRotation.z;
     sphericalLatLong.y = czm_branchFreeTernary(sphericalLatLong.y < czm_pi, sphericalLatLong.y, sphericalLatLong.y - czm_twoPi);
     uv.x = (sphericalLatLong.y - v_sphericalExtents.y) * v_sphericalExtents.w;
