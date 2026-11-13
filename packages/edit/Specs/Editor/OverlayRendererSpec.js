@@ -152,27 +152,28 @@ function createSelection(count, selected = []) {
   return selection;
 }
 
-// Distinct bases, so no two default IDs collide across component types.
-const defaultIdBases = { verts: 100n, edges: 200n, faces: 300n };
+// Distinct bases, so no two default keys collide across component types.
+const defaultKeyBases = { verts: 100n, edges: 200n, faces: 300n };
 
 /**
  * @param {"verts" | "edges" | "faces"} componentName
  * @param {number} index
  * @returns {bigint}
  */
-function defaultId(componentName, index) {
-  return defaultIdBases[componentName] + BigInt(index);
+function defaultKey(componentName, index) {
+  return defaultKeyBases[componentName] + BigInt(index);
 }
 
 /**
  * @param {"verts" | "edges" | "faces"} componentName
  * @param {number} count
- * @param {bigint[]} [ids] Overrides the default IDs.
+ * @param {bigint[]} [componentKeys] Overrides the default keys.
  * @returns {BigUint64Array}
  */
-function createIds(componentName, count, ids) {
+function createKeys(componentName, count, componentKeys) {
   return BigUint64Array.from(
-    ids ?? Array.from({ length: count }, (_, i) => defaultId(componentName, i)),
+    componentKeys ??
+      Array.from({ length: count }, (_, i) => defaultKey(componentName, i)),
   );
 }
 
@@ -181,7 +182,7 @@ function createIds(componentName, count, ids) {
  * overlay views do.
  *
  * @param {{ buffer: ArrayBuffer }} memory Gets a new buffer, as when wasm memory grows.
- * @param {object} overlay positions ([x, y, z] per vertex), edges ([a, b] per edge), triangles ([a, b, c, face] per triangle), faceCount, and optionally selected: { verts, edges, faces } index arrays and ids: { verts, edges, faces } bigint arrays.
+ * @param {object} overlay positions ([x, y, z] per vertex), edges ([a, b] per edge), triangles ([a, b, c, face] per triangle), faceCount, and optionally selected: { verts, edges, faces } index arrays and componentKeys: { verts, edges, faces } bigint arrays.
  * @param {object} [options]
  * @param {boolean} [options.fullRefresh=true] Whether every buffer changed.
  * @param {object} [options.dirtyRanges] Changed element ranges when not a full refresh, shaped like the views: { positions, edges, triangles, selection: { verts, edges, faces } }.
@@ -190,7 +191,7 @@ function createIds(componentName, count, ids) {
 function createOverlayViews(memory, overlay, options = {}) {
   const { fullRefresh = true, dirtyRanges = {} } = options;
   const selected = overlay.selected ?? {};
-  const ids = overlay.ids ?? {};
+  const componentKeys = overlay.componentKeys ?? {};
   const vertexCount = overlay.positions.length;
   const edgeCount = overlay.edges.length;
 
@@ -201,13 +202,13 @@ function createOverlayViews(memory, overlay, options = {}) {
     createSelection(vertexCount, selected.verts),
     createSelection(edgeCount, selected.edges),
     createSelection(overlay.faceCount, selected.faces),
-    createIds("verts", vertexCount, ids.verts),
-    createIds("edges", edgeCount, ids.edges),
-    createIds("faces", overlay.faceCount, ids.faces),
+    createKeys("verts", vertexCount, componentKeys.verts),
+    createKeys("edges", edgeCount, componentKeys.edges),
+    createKeys("faces", overlay.faceCount, componentKeys.faces),
   ];
 
   // Starts each buffer at a multiple of 8 bytes, so every typed array view,
-  // including the IDs' BigUint64Arrays, is aligned.
+  // including the keys' BigUint64Arrays, is aligned.
   let byteLength = 0;
   const addresses = arrays.map((array) => {
     const address = byteLength;
@@ -229,7 +230,7 @@ function createOverlayViews(memory, overlay, options = {}) {
     layout,
   });
 
-  const createIdView = (i) => ({
+  const createKeyView = (i) => ({
     address: addresses[i],
     elementCount: arrays[i].length,
   });
@@ -245,10 +246,10 @@ function createOverlayViews(memory, overlay, options = {}) {
       edges: createView(4, layouts.selection, selectionRanges.edges),
       faces: createView(5, layouts.selection, selectionRanges.faces),
     },
-    ids: {
-      verts: createIdView(6),
-      edges: createIdView(7),
-      faces: createIdView(8),
+    componentKeys: {
+      verts: createKeyView(6),
+      edges: createKeyView(7),
+      faces: createKeyView(8),
     },
   };
 }
@@ -884,7 +885,7 @@ describe(
         expectPick(overlay, [1.0, 1.0, 0.0], {
           primitive: overlay.mesh,
           componentType: ComponentType.Vertex,
-          id: defaultId("verts", 2),
+          componentKey: defaultKey("verts", 2),
         });
       });
 
@@ -895,7 +896,7 @@ describe(
         expectPick(overlay, [0.0, -1.0, 0.0], {
           primitive: overlay.mesh,
           componentType: ComponentType.Edge,
-          id: defaultId("edges", 0),
+          componentKey: defaultKey("edges", 0),
         });
       });
 
@@ -905,16 +906,16 @@ describe(
         expectPick(overlay, [0.5, -0.5, 0.0], {
           primitive: overlay.mesh,
           componentType: ComponentType.Face,
-          id: defaultId("faces", 0),
+          componentKey: defaultKey("faces", 0),
         });
         expectPick(overlay, [-0.5, 0.5, 0.0], {
           primitive: overlay.mesh,
           componentType: ComponentType.Face,
-          id: defaultId("faces", 1),
+          componentKey: defaultKey("faces", 1),
         });
       });
 
-      it("picks a face by its face ID, not its triangle's", function () {
+      it("picks a face by its face key, not its triangle's", function () {
         const overlay = new OverlayTestPrimitive(shaders);
         overlay.setOverlay(quad);
         scene.primitives.add(overlay);
@@ -922,7 +923,7 @@ describe(
         const faceZero = {
           primitive: overlay.mesh,
           componentType: ComponentType.Face,
-          id: defaultId("faces", 0),
+          componentKey: defaultKey("faces", 0),
         };
 
         // Inside each of the quad's two triangles.
@@ -940,7 +941,7 @@ describe(
         expectPick(overlay, nearEdge, {
           primitive: overlay.mesh,
           componentType: ComponentType.Edge,
-          id: defaultId("edges", 0),
+          componentKey: defaultKey("edges", 0),
         });
 
         overlay.renderer.setPickableComponents(1 << ComponentType.Face);
@@ -948,7 +949,7 @@ describe(
         expectPick(overlay, nearEdge, {
           primitive: overlay.mesh,
           componentType: ComponentType.Face,
-          id: defaultId("faces", 0),
+          componentKey: defaultKey("faces", 0),
         });
       });
 
@@ -969,44 +970,44 @@ describe(
         );
       });
 
-      it("picks components by their new IDs after a full refresh", function () {
+      it("picks components by their new keys after a full refresh", function () {
         const overlay = addSquare();
         expectPick(overlay, [0.5, -0.5, 0.0], {
           primitive: overlay.mesh,
           componentType: ComponentType.Face,
-          id: defaultId("faces", 0),
+          componentKey: defaultKey("faces", 0),
         });
 
         // The same slots now hold other faces, as after a topology edit.
-        overlay.setOverlay({ ...square, ids: { faces: [7n, 8n] } });
+        overlay.setOverlay({ ...square, componentKeys: { faces: [7n, 8n] } });
 
         expectPick(overlay, [0.5, -0.5, 0.0], {
           primitive: overlay.mesh,
           componentType: ComponentType.Face,
-          id: 7n,
+          componentKey: 7n,
         });
         expectPick(overlay, [-0.5, 0.5, 0.0], {
           primitive: overlay.mesh,
           componentType: ComponentType.Face,
-          id: 8n,
+          componentKey: 8n,
         });
       });
 
-      it("keeps IDs across partial updates", function () {
+      it("keeps keys across partial updates", function () {
         const overlay = addSquare();
         scene.renderForSpecs();
 
         // Only a full refresh changes which component is in a slot, so these
-        // IDs are ignored.
+        // keys are ignored.
         overlay.setOverlay(
-          { ...square, ids: { faces: [7n, 8n] } },
+          { ...square, componentKeys: { faces: [7n, 8n] } },
           { fullRefresh: false },
         );
 
         expectPick(overlay, [0.5, -0.5, 0.0], {
           primitive: overlay.mesh,
           componentType: ComponentType.Face,
-          id: defaultId("faces", 0),
+          componentKey: defaultKey("faces", 0),
         });
       });
     });

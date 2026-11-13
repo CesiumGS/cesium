@@ -45,7 +45,7 @@ import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
  * @typedef {object} OverlayPickObject
  * @property {object} primitive The renderer's mesh.
  * @property {ComponentType} componentType The component's type.
- * @property {bigint | undefined} id The component's stable ID in its mesh.
+ * @property {bigint | undefined} componentKey The component's stable key in its mesh.
  * @private
  */
 
@@ -89,7 +89,7 @@ import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
  * @property {object} renderStateOptions The options of the component type's render state.
  * @property {RenderState} renderState The component type's render state, from the render state cache.
  * @property {"edges" | "triangles" | undefined} topologyViewName The overlay view with the component type's edges or triangles. Undefined for points.
- * @property {"verts" | "edges" | "faces"} componentName The name of a view into the overlay's selection and id arrays.
+ * @property {"verts" | "edges" | "faces"} componentName The name of a view into the overlay's selection and component key arrays.
  * @property {boolean} shown Whether to draw the component type.
  * @property {boolean} pickable Whether to draw the component type in the pick pass, if shown.
  * @property {BufferTexture | undefined} topologyTexture The edges or triangles. Undefined for points.
@@ -711,7 +711,7 @@ class OverlayRenderer {
    * @param {Object<string, function(): *> | undefined} options.outlineUniforms The style uniforms to override to draw the outline. Undefined for faces.
    * @param {object} options.renderStateOptions The options of the component type's render state.
    * @param {"edges" | "triangles" | undefined} options.topologyViewName The overlay view with the component type's edges or triangles. Undefined for points.
-   * @param {"verts" | "edges" | "faces"} options.componentName The name of a view into the overlay's selection and id arrays.
+   * @param {"verts" | "edges" | "faces"} options.componentName The name of a view into the overlay's selection and component key arrays.
    * @returns {ComponentOverlay}
    * @ignore
    */
@@ -876,26 +876,26 @@ class OverlayRenderer {
    *
    * @param {Context} context The context that owns the pick IDs.
    * @param {ComponentOverlay} componentOverlay The component type's overlay.
-   * @param {OverlayKeyView} idView The component type's stable IDs.
+   * @param {OverlayKeyView} keyView The component type's stable keys.
    * @ignore
    */
-  #updatePickIds(context, componentOverlay, idView) {
-    const ids = new BigUint64Array(
+  #updatePickIds(context, componentOverlay, keyView) {
+    const componentKeys = new BigUint64Array(
       this.#module.memory.buffer,
-      idView.address,
-      idView.elementCount,
+      keyView.address,
+      keyView.elementCount,
     );
 
-    const count = ids.length;
+    const count = componentKeys.length;
     const oldCount = componentOverlay.pickIds.length;
 
-    // Pick IDs past the count aren't drawn, so their outdated IDs can't be picked.
+    // Pick IDs past the count aren't drawn, so their outdated keys can't be picked.
     for (let index = 0; index < Math.min(oldCount, count); index++) {
       const pickObject = /** @type {OverlayPickObject} */ (
         componentOverlay.pickIds[index].object
       );
 
-      pickObject.id = ids[index];
+      pickObject.componentKey = componentKeys[index];
     }
 
     if (count <= oldCount) {
@@ -914,7 +914,7 @@ class OverlayRenderer {
       const pickObject = {
         primitive: this.#mesh,
         componentType,
-        id: ids[index],
+        componentKey: componentKeys[index],
       };
 
       const pickId = context.createPickId(pickObject);
