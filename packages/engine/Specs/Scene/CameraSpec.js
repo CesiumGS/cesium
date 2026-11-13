@@ -5,6 +5,7 @@ import {
   Cartesian4,
   Cartographic,
   Ellipsoid,
+  FixedFrameTransforms,
   GeographicProjection,
   HeadingPitchRange,
   Math as CesiumMath,
@@ -14,8 +15,9 @@ import {
   OrthographicOffCenterFrustum,
   PerspectiveFrustum,
   Rectangle,
-  FixedFrameTransforms,
   WebMercatorProjection,
+} from "@cesium/core";
+import {
   Camera,
   CameraFlightPath,
   MapMode2D,

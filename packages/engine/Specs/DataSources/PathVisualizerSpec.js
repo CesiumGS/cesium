@@ -1,10 +1,9 @@
 import {
   Cartesian3,
   Color,
-  CallbackProperty,
-  CzmlDataSource,
   DistanceDisplayCondition,
   JulianDate,
+  LinearSpline,
   Math as CesiumMath,
   Matrix3,
   Matrix4,
@@ -12,6 +11,10 @@ import {
   ReferenceFrame,
   TimeInterval,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
+  CallbackProperty,
+  CzmlDataSource,
   CompositePositionProperty,
   CompositeMaterialProperty,
   ConstantPositionProperty,
@@ -28,13 +31,11 @@ import {
   SampledProperty,
   SampledPositionProperty,
   CallbackPositionProperty,
-  LinearSpline,
   ScaledPositionProperty,
   CelestialFrameTransforms,
   TimeIntervalCollectionPositionProperty,
   SceneMode,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

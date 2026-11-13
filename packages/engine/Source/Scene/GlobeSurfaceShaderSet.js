@@ -1,7 +1,6 @@
 // @ts-check
 
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import { defined, destroyObject } from "@cesium/core";
 import TerrainQuantization from "../Core/TerrainQuantization.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import VectorCommon from "../Shaders/VectorCommon.js";
@@ -83,6 +82,7 @@ class GlobeSurfaceShader {
  * @property {boolean} [showUndergroundColor]
  * @property {boolean} [translucent]
  * @property {boolean} [vectorAntialias]
+ * @property {boolean} [applyVectors] Whether to composite the tile's draped vectors in this pass.
  * @private
  */
 
@@ -141,7 +141,7 @@ class GlobeSurfaceShaderSet {
     const showUndergroundColor = options.showUndergroundColor;
     const translucent = options.translucent;
     const vectorData = surfaceTile.vectorData;
-    const hasVectorLayer = vectorData?.show;
+    const hasVectorLayer = options.applyVectors && vectorData?.show;
     const hasVectorPolylines = hasVectorLayer && vectorData.hasPolylines;
     const hasVectorPolygons = hasVectorLayer && vectorData.hasPolygons;
     const vectorAntialias = hasVectorLayer && options.vectorAntialias;

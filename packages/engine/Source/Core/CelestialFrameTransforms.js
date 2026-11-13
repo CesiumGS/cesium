@@ -1,14 +1,16 @@
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import {
+  DeveloperError,
+  HeadingPitchRoll,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix3,
+  TimeConstants,
+  defined,
+} from "@cesium/core";
 import EarthOrientationParameters from "./EarthOrientationParameters.js";
 import EarthOrientationParametersSample from "./EarthOrientationParametersSample.js";
-import HeadingPitchRoll from "./HeadingPitchRoll.js";
 import Iau2006XysData from "./Iau2006XysData.js";
 import Iau2006XysSample from "./Iau2006XysSample.js";
-import JulianDate from "./JulianDate.js";
-import CesiumMath from "./Math.js";
-import Matrix3 from "./Matrix3.js";
-import TimeConstants from "./TimeConstants.js";
 
 /**
  * Contains functions for transforming positions to various reference frames.

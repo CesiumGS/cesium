@@ -1,7 +1,6 @@
+import { Cartesian3, Color } from "@cesium/core";
 import {
-  Cartesian3,
   Cesium3DTileVectorFeature,
-  Color,
   BufferPointCollection,
   BufferPointMaterial,
 } from "../../index.js";

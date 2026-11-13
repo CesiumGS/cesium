@@ -1,12 +1,10 @@
+import { Math as CesiumMath, Matrix4, RuntimeError } from "@cesium/core";
 import {
   I3dmLoader,
   I3dmParser,
   InstanceAttributeSemantic,
-  Math as CesiumMath,
-  Matrix4,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../../index.js";
 import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../../Specs/createScene.js";

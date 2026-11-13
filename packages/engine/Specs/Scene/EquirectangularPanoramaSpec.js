@@ -1,7 +1,6 @@
+import { Cartesian2, Matrix4 } from "@cesium/core";
 import EquirectangularPanorama from "../../Source/Scene/EquirectangularPanorama.js";
 import Credit from "../../Source/Core/Credit.js";
-import Matrix4 from "../../Source/Core/Matrix4.js";
-import Cartesian2 from "../../Source/Core/Cartesian2.js";
 import Panorama from "../../Source/Scene/Panorama.js";
 
 describe("Scene/EquirectangularPanorama", function () {

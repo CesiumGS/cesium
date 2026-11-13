@@ -1,26 +1,30 @@
 // @ts-check
 
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Frozen from "../Core/Frozen.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Check,
+  DeveloperError,
+  Ellipsoid,
+  Frozen,
+  PolygonPipeline,
+  RuntimeError,
+  assert,
+  defined,
+  destroyObject,
+  oneTimeWarning,
+} from "@cesium/core";
 import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
-import PolygonPipeline from "../Core/PolygonPipeline.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import BufferPoint from "./BufferPoint.js";
 import BufferPointCollection from "./BufferPointCollection.js";
 import BufferPolygon from "./BufferPolygon.js";
 import BufferPolygonCollection from "./BufferPolygonCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
-import assert from "../Core/assert.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
+import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
+/** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import Scene from "./Scene.js"; */
 /** @import {GeoJson, GeoJsonFeature, GeoJsonGeometry, GeoJsonPosition} from "../Core/globalTypes.js"; */
@@ -92,27 +96,11 @@ class GeoJsonPrimitive {
     Check.defined("geoJson", options.geoJson);
     //>>includeEnd('debug');
 
-    const parseResult = parseGeoJson(/** @type {GeoJson} */ (options.geoJson));
     const allowPicking = options.allowPicking ?? true;
-    const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
-    let packedPositionsScratch = new Float64Array(0);
-    /** @param {number} requiredLength */
-    function getPackedPositionScratch(requiredLength) {
-      if (packedPositionsScratch.length < requiredLength) {
-        packedPositionsScratch = new Float64Array(requiredLength);
-      }
-      return packedPositionsScratch;
-    }
 
     this.show = options.show ?? true;
     this._url = options.url;
-    this._ids = parseResult.ids;
-    this._properties = parseResult.properties;
-    this._featureCount = parseResult.ids.length;
     this._pickObjectFactory = options.pickObjectFactory;
-    this._points = undefined;
-    this._polylines = undefined;
-    this._polygons = undefined;
 
     /**
      * @type {HeightReference}
@@ -136,114 +124,30 @@ class GeoJsonPrimitive {
     );
     //>>includeEnd('debug');
 
-    if (parseResult.pointCount > 0) {
-      //>>includeStart('debug', pragmas.debug);
-      if (isHeightReferenceClamp(heightReference)) {
-        oneTimeWarning(
-          "geojson-heightref",
-          "Clamped HeightReference unsupported on BufferPointCollection.",
-        );
-      }
-      //>>includeEnd('debug');
-
-      this._points = new BufferPointCollection({
-        primitiveCountMax: parseResult.pointCount,
-        allowPicking: allowPicking,
-      });
-    }
-
-    if (parseResult.polylineCount > 0) {
-      this._polylines = new BufferPolylineCollection({
-        primitiveCountMax: parseResult.polylineCount,
-        vertexCountMax: parseResult.polylineVertexCount,
-        allowPicking: allowPicking,
-        heightReference,
-      });
-    }
-
-    if (parseResult.polygonCount > 0) {
-      this._polygons = new BufferPolygonCollection({
-        primitiveCountMax: parseResult.polygonCount,
-        vertexCountMax: parseResult.polygonVertexCount,
-        holeCountMax: parseResult.polygonHoleCount,
-        triangleCountMax: parseResult.polygonTriangleCount,
-        allowPicking: allowPicking,
-        heightReference,
-      });
-    }
-
-    const scratch = new Cartesian3();
-    let pointIndex = 0;
-    let polylineIndex = 0;
-    let polygonIndex = 0;
-
-    for (let i = 0; i < parseResult.features.length; i++) {
-      const feature = parseResult.features[i];
-      const featureId = feature.featureId;
-      const sourceProperties = this._properties[featureId];
-
-      for (let j = 0; j < feature.points.length; j++) {
-        const idx = pointIndex++;
-        this._points.add({
-          featureId: featureId,
-          position: toCartesian(feature.points[j], ellipsoid, scratch),
-          pickObject: allowPicking
-            ? createPickObject(
+    const result = createGeoJsonCollections(
+      /** @type {GeoJson} */ (options.geoJson),
+      {
+        ellipsoid: options.ellipsoid ?? Ellipsoid.default,
+        heightReference: heightReference,
+        createPickObject: allowPicking
+          ? (featureId, index, collection, PrimitiveClass, properties) =>
+              createPickObject(
                 this,
-                idx,
-                this._points,
-                BufferPoint,
-                sourceProperties,
+                index,
+                collection,
+                PrimitiveClass,
+                properties,
               )
-            : undefined,
-        });
-      }
+          : undefined,
+      },
+    );
 
-      for (let j = 0; j < feature.polylines.length; j++) {
-        const idx = polylineIndex++;
-        this._polylines.add({
-          featureId: featureId,
-          positions: packPositionsToScratch(
-            feature.polylines[j],
-            ellipsoid,
-            getPackedPositionScratch,
-          ),
-          pickObject: allowPicking
-            ? createPickObject(
-                this,
-                idx,
-                this._polylines,
-                BufferPolyline,
-                sourceProperties,
-              )
-            : undefined,
-        });
-      }
-
-      for (let j = 0; j < feature.polygons.length; j++) {
-        const polygon = feature.polygons[j];
-        const idx = polygonIndex++;
-        this._polygons.add({
-          featureId: featureId,
-          positions: packPositionsToScratch(
-            polygon.positions,
-            ellipsoid,
-            getPackedPositionScratch,
-          ),
-          holes: polygon.holes,
-          triangles: polygon.triangles,
-          pickObject: allowPicking
-            ? createPickObject(
-                this,
-                idx,
-                this._polygons,
-                BufferPolygon,
-                sourceProperties,
-              )
-            : undefined,
-        });
-      }
-    }
+    this._ids = result.ids;
+    this._properties = result.properties;
+    this._featureCount = result.ids.length;
+    this._points = result.points;
+    this._polylines = result.polylines;
+    this._polygons = result.polygons;
   }
 
   /**
@@ -410,6 +314,8 @@ class GeoJsonPrimitive {
 
     if (defined(polylines)) {
       if (defined(vectorProvider)) {
+        // Updates pick IDs and bounds without drawing the collection in 3D.
+        BufferPrimitiveCollection.prototype.update.call(polylines, frameState);
         vectorProvider.markForFrame(polylines, frameNumber, heightReference);
       } else {
         polylines.update(frameState);
@@ -418,6 +324,7 @@ class GeoJsonPrimitive {
 
     if (defined(polygons)) {
       if (defined(vectorProvider)) {
+        BufferPrimitiveCollection.prototype.update.call(polygons, frameState);
         vectorProvider.markForFrame(polygons, frameNumber, heightReference);
       } else {
         polygons.update(frameState);
@@ -458,6 +365,165 @@ class GeoJsonPrimitive {
   isDestroyed() {
     return false;
   }
+}
+
+/**
+ * @typedef {object} GeoJsonCollections
+ * @property {BufferPointCollection|undefined} points
+ * @property {BufferPolylineCollection|undefined} polylines
+ * @property {BufferPolygonCollection|undefined} polygons
+ * @property {Array<string|number|undefined>} ids Source feature IDs, indexed by generated integer ID.
+ * @property {Array<Record<string, unknown>>} properties Source feature properties, indexed by generated integer ID.
+ * @ignore
+ */
+
+/**
+ * Parses GeoJSON into point, polyline, and polygon collections, with positions
+ * in the ellipsoid's fixed frame.
+ *
+ * @param {GeoJson} geoJson
+ * @param {object} options
+ * @param {Ellipsoid} options.ellipsoid
+ * @param {HeightReference} options.heightReference
+ * @param {function(number, number, BufferPrimitiveCollection<BufferPrimitive>, function(new: object), Record<string, unknown>): object} [options.createPickObject]
+ *  Called with the generated feature ID, primitive index, collection, primitive
+ *  class, and feature properties. Picking is disabled if undefined.
+ * @returns {GeoJsonCollections}
+ * @ignore
+ */
+export function createGeoJsonCollections(geoJson, options) {
+  const parseResult = parseGeoJson(geoJson);
+  const { ellipsoid, heightReference, createPickObject } = options;
+  const allowPicking = defined(createPickObject);
+  let packedPositionsScratch = new Float64Array(0);
+  /** @param {number} requiredLength */
+  function getPackedPositionScratch(requiredLength) {
+    if (packedPositionsScratch.length < requiredLength) {
+      packedPositionsScratch = new Float64Array(requiredLength);
+    }
+    return packedPositionsScratch;
+  }
+
+  /** @type {GeoJsonCollections} */
+  const result = {
+    points: undefined,
+    polylines: undefined,
+    polygons: undefined,
+    ids: parseResult.ids,
+    properties: parseResult.properties,
+  };
+
+  if (parseResult.pointCount > 0) {
+    //>>includeStart('debug', pragmas.debug);
+    if (isHeightReferenceClamp(heightReference)) {
+      oneTimeWarning(
+        "geojson-heightref",
+        "Clamped HeightReference unsupported on BufferPointCollection.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    result.points = new BufferPointCollection({
+      primitiveCountMax: parseResult.pointCount,
+      allowPicking: allowPicking,
+    });
+  }
+
+  if (parseResult.polylineCount > 0) {
+    result.polylines = new BufferPolylineCollection({
+      primitiveCountMax: parseResult.polylineCount,
+      vertexCountMax: parseResult.polylineVertexCount,
+      allowPicking: allowPicking,
+      heightReference,
+    });
+  }
+
+  if (parseResult.polygonCount > 0) {
+    result.polygons = new BufferPolygonCollection({
+      primitiveCountMax: parseResult.polygonCount,
+      vertexCountMax: parseResult.polygonVertexCount,
+      holeCountMax: parseResult.polygonHoleCount,
+      triangleCountMax: parseResult.polygonTriangleCount,
+      allowPicking: allowPicking,
+      heightReference,
+    });
+  }
+
+  const { points, polylines, polygons } = result;
+  const scratch = new Cartesian3();
+  let pointIndex = 0;
+  let polylineIndex = 0;
+  let polygonIndex = 0;
+
+  for (let i = 0; i < parseResult.features.length; i++) {
+    const feature = parseResult.features[i];
+    const featureId = feature.featureId;
+    const sourceProperties = parseResult.properties[featureId];
+
+    for (let j = 0; j < feature.points.length; j++) {
+      const idx = pointIndex++;
+      points.add({
+        featureId: featureId,
+        position: toCartesian(feature.points[j], ellipsoid, scratch),
+        pickObject: allowPicking
+          ? createPickObject(
+              featureId,
+              idx,
+              points,
+              BufferPoint,
+              sourceProperties,
+            )
+          : undefined,
+      });
+    }
+
+    for (let j = 0; j < feature.polylines.length; j++) {
+      const idx = polylineIndex++;
+      polylines.add({
+        featureId: featureId,
+        positions: packPositionsToScratch(
+          feature.polylines[j],
+          ellipsoid,
+          getPackedPositionScratch,
+        ),
+        pickObject: allowPicking
+          ? createPickObject(
+              featureId,
+              idx,
+              polylines,
+              BufferPolyline,
+              sourceProperties,
+            )
+          : undefined,
+      });
+    }
+
+    for (let j = 0; j < feature.polygons.length; j++) {
+      const polygon = feature.polygons[j];
+      const idx = polygonIndex++;
+      polygons.add({
+        featureId: featureId,
+        positions: packPositionsToScratch(
+          polygon.positions,
+          ellipsoid,
+          getPackedPositionScratch,
+        ),
+        holes: polygon.holes,
+        triangles: polygon.triangles,
+        pickObject: allowPicking
+          ? createPickObject(
+              featureId,
+              idx,
+              polygons,
+              BufferPolygon,
+              sourceProperties,
+            )
+          : undefined,
+      });
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -535,7 +601,6 @@ function parseGeoJson(geoJson) {
     const featureId = ids.length;
     ids.push(featureInput.id);
     properties.push(
-      // @ts-expect-error Casting changes .d.ts output, a suspected bug in tsd-jsdoc.
       isPlainObject(featureInput.properties)
         ? featureInput.properties
         : Frozen.EMPTY_OBJECT,

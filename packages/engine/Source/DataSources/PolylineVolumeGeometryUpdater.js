@@ -1,14 +1,16 @@
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import Iso8601 from "../Core/Iso8601.js";
-import PolylineVolumeGeometry from "../Core/PolylineVolumeGeometry.js";
-import PolylineVolumeOutlineGeometry from "../Core/PolylineVolumeOutlineGeometry.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
+import {
+  Check,
+  Color,
+  ColorGeometryInstanceAttribute,
+  DeveloperError,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  GeometryInstance,
+  Iso8601,
+  PolylineVolumeGeometry,
+  PolylineVolumeOutlineGeometry,
+  ShowGeometryInstanceAttribute,
+  defined,
+} from "@cesium/core";
 import MaterialAppearance from "../Scene/MaterialAppearance.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";
 import ColorMaterialProperty from "./ColorMaterialProperty.js";

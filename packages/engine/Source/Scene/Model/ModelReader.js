@@ -1,17 +1,19 @@
-import Check from "../../Core/Check.js";
-import defined from "../../Core/defined.js";
-import Cartesian2 from "../../Core/Cartesian2.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import AttributeCompression from "../../Core/AttributeCompression.js";
-import IndexDatatype from "../../Core/IndexDatatype.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Quaternion from "../../Core/Quaternion.js";
-import FixedFrameTransforms from "../../Core/FixedFrameTransforms.js";
-import AttributeType from "../AttributeType.js";
+import {
+  AttributeCompression,
+  AttributeType,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  FixedFrameTransforms,
+  IndexDatatype,
+  Matrix4,
+  PrimitiveType,
+  Quaternion,
+  defined,
+} from "@cesium/core";
 import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelUtility from "./ModelUtility.js";
@@ -57,7 +59,7 @@ class ModelReader {
    *
    * The result will be THE actual attribute data.
    *
-   * @param {Attribute} attribute The attribute
+   * @param {ModelComponents.Attribute} attribute The attribute
    * @returns {TypedArray} The attribute data
    */
   static readAttributeAsTypedArray(attribute) {
@@ -584,7 +586,7 @@ class ModelReader {
    * @callback ComponentReaderCallback
    * @param {DataView} dataView Typed data view into a binary buffer
    * @param {number} byteOffset The offset, in bytes, from the start of the view to read the data from
-   * @returns {number|BigInt} The value read from the dataView
+   * @returns {number|bigint} The value read from the dataView
    */
 
   /**
@@ -671,7 +673,7 @@ class ModelReader {
    * each vertex. If <code>repeat</code> is undefined, all values are set to
    * <code>offset</code>.
    *
-   * @param {FeatureIdImplicitRange} featureIdSet The implicit range feature ID set.
+   * @param {ModelComponents.FeatureIdImplicitRange} featureIdSet The implicit range feature ID set.
    * @param {object} attributeOwner An object with an <code>attributes</code> array
    *   (a primitive or an instances object)
    * @returns {Float32Array} The generated feature ID values.

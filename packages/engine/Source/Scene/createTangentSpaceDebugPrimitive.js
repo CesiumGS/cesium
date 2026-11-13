@@ -1,10 +1,12 @@
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import GeometryPipeline from "../Core/GeometryPipeline.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  ColorGeometryInstanceAttribute,
+  DeveloperError,
+  Frozen,
+  GeometryInstance,
+  GeometryPipeline,
+  Matrix4,
+  defined,
+} from "@cesium/core";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
 

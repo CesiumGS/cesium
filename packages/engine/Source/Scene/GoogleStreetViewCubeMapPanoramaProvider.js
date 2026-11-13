@@ -1,14 +1,16 @@
-import DeveloperError from "../Core/DeveloperError.js";
-import defined from "../Core/defined.js";
+import {
+  Cartesian3,
+  Cartographic,
+  DeveloperError,
+  Ellipsoid,
+  FixedFrameTransforms,
+  Frozen,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  defined,
+} from "@cesium/core";
 import Resource from "../Core/Resource.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import CesiumMath from "../Core/Math.js";
-import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
-import Frozen from "../Core/Frozen.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
 import CubeMapPanorama from "./CubeMapPanorama.js";
 
@@ -181,7 +183,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
  * @param {Cartographic} position The position to search for the nearest panoId.
  * @param {number} [radius=50] The radius in meters to search for the nearest panoId.
  * 
- * @returns {Object} an object containing a panoId, latitude, and longitude of the closest panorama
+ * @returns {object} an object containing a panoId, latitude, and longitude of the closest panorama
  * 
  * @example
  * 

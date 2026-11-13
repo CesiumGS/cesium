@@ -3,14 +3,16 @@ import {
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
-  destroyObject,
   Ellipsoid,
+  FixedFrameTransforms,
   GeometryInstance,
   PolygonGeometry,
   Rectangle,
   RectangleGeometry,
   ShowGeometryInstanceAttribute,
-  FixedFrameTransforms,
+  destroyObject,
+} from "@cesium/core";
+import {
   Pass,
   RenderState,
   ClassificationPrimitive,
@@ -21,7 +23,6 @@ import {
   Primitive,
   StencilConstants,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

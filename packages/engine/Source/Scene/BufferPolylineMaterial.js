@@ -1,9 +1,9 @@
 // @ts-check
 
-import Frozen from "../Core/Frozen.js";
+import { Frozen } from "@cesium/core";
 import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js";
 
-/** @import Color from "../Core/Color.js"; */
+/** @import { Color } from "@cesium/core"; */
 /** @import BufferPolyline from "./BufferPolyline.js"; */
 
 /**
@@ -84,7 +84,7 @@ class BufferPolylineMaterial extends BufferPrimitiveMaterial {
    * is not memory-efficient, and should generally be used for debugging and
    * testing.
    *
-   * @returns {Object} JSON-serializable object.
+   * @returns {object} JSON-serializable object.
    */
   toJSON() {
     return { ...super.toJSON(), width: this.width };

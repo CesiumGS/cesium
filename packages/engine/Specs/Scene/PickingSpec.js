@@ -2,9 +2,9 @@ import {
   Cartesian2,
   Cartesian3,
   Cartographic,
-  Cesium3DTilesVoxelProvider,
   Color,
   Ellipsoid,
+  FixedFrameTransforms,
   GeometryInstance,
   Math as CesiumMath,
   Matrix4,
@@ -14,18 +14,23 @@ import {
   Rectangle,
   RectangleGeometry,
   ShowGeometryInstanceAttribute,
-  FixedFrameTransforms,
+  WebGLConstants,
+} from "@cesium/core";
+import {
+  Cesium3DTilesVoxelProvider,
   Cesium3DTileStyle,
   EllipsoidSurfaceAppearance,
   Globe,
+  MetadataComponentType,
+  MetadataType,
   PointPrimitiveCollection,
   Primitive,
   SceneMode,
+  VoxelContent,
   VoxelPrimitive,
+  VoxelShapeType,
   Sync,
-  WebGLConstants,
 } from "../../index.js";
-
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -168,7 +173,7 @@ describe(
         scene.globe = globe;
         globe.depthTestAgainstTerrain = true;
         return pollToPromise(function () {
-          scene.render();
+          scene.renderForSpecs();
           return globe.tilesLoaded;
         });
       }
@@ -354,12 +359,233 @@ describe(
           expect(scene).toPickAndCall(function (result) {
             expect(result.primitive).toBe(primitive);
           });
-          expect(scene).toPickVoxelAndCall(function (voxelCell) {
-            expect(voxelCell.tileIndex).toBe(0);
-            expect(voxelCell.sampleIndex).toBe(0);
-            expect(voxelCell.hasProperty("a")).toBe(true);
-            expect(voxelCell.getProperty("a")).toEqual(new Float32Array(1));
+          // Sample 3 of the 2 x 2 x 2 tile is rendered at the canvas center
+          expect(scene).toPickVoxelAndCall(
+            function (voxelCell) {
+              expect(voxelCell.tileIndex).toBe(0);
+              expect(voxelCell.sampleIndex).toBe(3);
+              expect(voxelCell.hasProperty("a")).toBe(true);
+              expect(voxelCell.getProperty("a")).toEqual(new Float32Array(1));
+            },
+            new Cartesian2(5, 5),
+          );
+        });
+
+        // A single tile of procedural data in a 2 km x 2 km x 20 m box. Each
+        // sample stores its own sample index.
+        const voxelTransform = Matrix4.multiplyByScale(
+          FixedFrameTransforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(0.0, 0.0),
+          ),
+          new Cartesian3(1000.0, 1000.0, 10.0),
+          new Matrix4(),
+        );
+        const canvasCenter = new Cartesian2(5, 5);
+
+        function createSingleTileProvider(options) {
+          const {
+            dimensions,
+            paddingBefore = Cartesian3.ZERO,
+            paddingAfter = Cartesian3.ZERO,
+            componentType = MetadataComponentType.FLOAT32,
+          } = options;
+          const { x, y, z } = Cartesian3.add(
+            Cartesian3.add(dimensions, paddingBefore, new Cartesian3()),
+            paddingAfter,
+            new Cartesian3(),
+          );
+          return {
+            shape: VoxelShapeType.BOX,
+            dimensions,
+            paddingBefore,
+            paddingAfter,
+            names: ["index"],
+            types: [MetadataType.SCALAR],
+            componentTypes: [componentType],
+            globalTransform: voxelTransform,
+            maximumTileCount: 1,
+            requestData: function () {
+              const sampleCount = x * y * z;
+              const data =
+                componentType === MetadataComponentType.UINT8
+                  ? new Uint8Array(sampleCount)
+                  : new Float32Array(sampleCount);
+              for (let i = 0; i < sampleCount; i++) {
+                data[i] = i;
+              }
+              return Promise.resolve(VoxelContent.fromMetadataArray([data]));
+            },
+          };
+        }
+
+        async function addVoxelPrimitive(provider) {
+          const primitive = new VoxelPrimitive({ provider });
+          primitive.nearestSampling = true;
+          scene.primitives.add(primitive);
+          await pollToPromise(function () {
+            scene.renderForSpecs();
+            const traversal = primitive._traversal;
+            return traversal.isRenderable(traversal.rootNode);
           });
+          return primitive;
+        }
+
+        // Looks straight down at the top face of a cell from 2 m above it, so
+        // the cell fills the whole canvas.
+        function lookAtCell(dimensions, x, y) {
+          const local = new Cartesian3(
+            (2.0 * (x + 0.5)) / dimensions.x - 1.0,
+            (2.0 * (y + 0.5)) / dimensions.y - 1.0,
+            1.2,
+          );
+          camera.setView({
+            destination: Matrix4.multiplyByPoint(
+              voxelTransform,
+              local,
+              new Cartesian3(),
+            ),
+            orientation: {
+              heading: 0.0,
+              pitch: -CesiumMath.PI_OVER_TWO,
+              roll: 0.0,
+            },
+          });
+        }
+
+        it("picks samples whose pick ids do not fit in 16 bits", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          const dimensions = new Cartesian3(256, 256, 1);
+          const primitive = await addVoxelPrimitive(
+            createSingleTileProvider({ dimensions }),
+          );
+          const cells = [
+            [0, 0],
+            [255, 254], // 65279
+            [0, 255], // 65280
+            [255, 255], // 65535, pick id 2^16
+          ];
+          for (const [x, y] of cells) {
+            const sampleIndex = x + y * dimensions.x;
+            lookAtCell(dimensions, x, y);
+            expect(scene).toPickVoxelAndCall(function (voxelCell) {
+              expect(voxelCell).toBeDefined();
+              expect(voxelCell.primitive).toBe(primitive);
+              expect(voxelCell.tileIndex).toBe(0);
+              expect(voxelCell.sampleIndex).toBe(sampleIndex);
+              expect(voxelCell.getProperty("index")).toEqual(
+                new Float32Array([sampleIndex]),
+              );
+            }, canvasCenter);
+          }
+        });
+
+        it("picks samples whose pick ids do not fit in 24 bits", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          // The last sample has index 2^24 - 1, so its pick id is 2^24
+          const dimensions = new Cartesian3(256, 256, 256);
+          await addVoxelPrimitive(
+            createSingleTileProvider({
+              dimensions,
+              componentType: MetadataComponentType.UINT8,
+            }),
+          );
+          const topLayer = 255 * dimensions.x * dimensions.y;
+          for (const [x, y] of [
+            [0, 0],
+            [255, 255],
+          ]) {
+            const sampleIndex = topLayer + x + y * dimensions.x;
+            lookAtCell(dimensions, x, y);
+            expect(scene).toPickVoxelAndCall(function (voxelCell) {
+              expect(voxelCell).toBeDefined();
+              expect(voxelCell.sampleIndex).toBe(sampleIndex);
+            }, canvasCenter);
+          }
+        });
+
+        it("picks sample indices in padded tiles", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          // No padding after along y, so the last row of cells has sample
+          // indices of at least 65280
+          const dimensions = new Cartesian3(254, 255, 1);
+          await addVoxelPrimitive(
+            createSingleTileProvider({
+              dimensions,
+              paddingBefore: new Cartesian3(1, 1, 0),
+              paddingAfter: new Cartesian3(1, 0, 0),
+            }),
+          );
+          for (const [x, y] of [
+            [0, 0],
+            [0, 254], // 65281
+            [253, 254], // 65534
+          ]) {
+            // Sample indices count the padding: the tile is 256 x 256 x 1
+            const sampleIndex = x + 1 + (y + 1) * 256;
+            lookAtCell(dimensions, x, y);
+            expect(scene).toPickVoxelAndCall(function (voxelCell) {
+              expect(voxelCell).toBeDefined();
+              expect(voxelCell.sampleIndex).toBe(sampleIndex);
+              expect(voxelCell.getProperty("index")).toEqual(
+                new Float32Array([sampleIndex]),
+              );
+            }, canvasCenter);
+          }
+        });
+
+        it("decodes the tile index from the pick", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          const primitive = await addVoxelPrimitive(
+            await Cesium3DTilesVoxelProvider.fromUrl(voxelTilesetUrl),
+          );
+          const traversal = primitive._traversal;
+          const keyframeNode = traversal.findKeyframeNode(0);
+          const findKeyframeNode = spyOn(
+            traversal,
+            "findKeyframeNode",
+          ).and.returnValue(keyframeNode);
+          // The tileset has a single 2 x 2 x 2 tile. Tile 2^21 does not exist,
+          // but the decoding does not depend on it, and the pick id,
+          // 2^21 * 8 + 7 + 1 = 2^24 + 8, is above 2^24.
+          const tileIndex = 2097152;
+          const sampleIndex = 7;
+          spyOn(scene, "pick").and.returnValue({ primitive });
+          spyOn(scene._picking, "pickVoxelCoordinate").and.returnValue(
+            new Uint8Array([1, 0, 0, 8]),
+          );
+
+          const voxelCell = scene.pickVoxel(canvasCenter);
+          expect(findKeyframeNode).toHaveBeenCalledWith(tileIndex);
+          expect(voxelCell.tileIndex).toBe(tileIndex);
+          expect(voxelCell.sampleIndex).toBe(sampleIndex);
+        });
+
+        it("returns undefined when no voxel sample is rendered at the pick position", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          const primitive = await addVoxelPrimitive(
+            await Cesium3DTilesVoxelProvider.fromUrl(voxelTilesetUrl),
+          );
+          const findKeyframeNode = spyOn(
+            primitive._traversal,
+            "findKeyframeNode",
+          ).and.callThrough();
+          spyOn(scene, "pick").and.returnValue({ primitive });
+          spyOn(scene._picking, "pickVoxelCoordinate").and.returnValue(
+            new Uint8Array(4),
+          );
+
+          expect(scene.pickVoxel(canvasCenter)).toBeUndefined();
+          expect(findKeyframeNode).not.toHaveBeenCalled();
         });
       });
 
@@ -562,6 +788,19 @@ describe(
             expect(pickedObjects[1].primitive).toEqual(rectangle3);
             expect(pickedObjects[2].primitive).toEqual(rectangle2);
           }, 3);
+        });
+
+        it("stops drill picking when a picked object cannot be hidden", function () {
+          const rectangle = createLargeRectangle(0.0);
+          Object.defineProperty(rectangle, "show", {
+            get: () => true,
+            set: () => {},
+          });
+
+          expect(scene).toDrillPickAndCall(function (pickedObjects) {
+            expect(pickedObjects.length).toEqual(1);
+            expect(pickedObjects[0].primitive).toEqual(rectangle);
+          });
         });
       });
 
@@ -1444,7 +1683,7 @@ describe(
           });
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed;
         }).then(function () {
           return result;
@@ -1467,7 +1706,7 @@ describe(
           });
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed;
         }).then(function () {
           return result;
@@ -1489,7 +1728,7 @@ describe(
           });
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed;
         }).then(function () {
           return result;
@@ -1507,7 +1746,7 @@ describe(
           });
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed;
         }).then(function () {
           return result;
@@ -2653,7 +2892,7 @@ describe(
 
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed === 2;
         }).then(function () {
           expect(results[0][0]).toBeDefined();

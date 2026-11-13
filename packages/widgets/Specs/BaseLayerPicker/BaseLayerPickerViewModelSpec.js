@@ -1,10 +1,9 @@
+import { Event } from "@cesium/core";
 import {
   EllipsoidTerrainProvider,
-  Event,
   GeographicTilingScheme,
   ImageryLayerCollection,
 } from "@cesium/engine";
-
 import { BaseLayerPickerViewModel, ProviderViewModel } from "../../index.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

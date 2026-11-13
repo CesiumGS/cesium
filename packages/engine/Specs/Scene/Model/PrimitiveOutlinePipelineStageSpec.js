@@ -1,7 +1,5 @@
+import { Color, ComponentDatatype, combine } from "@cesium/core";
 import {
-  Color,
-  combine,
-  ComponentDatatype,
   GltfLoader,
   PrimitiveOutlinePipelineStage,
   ShaderBuilder,

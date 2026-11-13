@@ -1,13 +1,9 @@
+import { Cartesian3, JulianDate, Quaternion, TimeInterval } from "@cesium/core";
 import {
-  Cartesian3,
-  JulianDate,
-  Quaternion,
-  TimeInterval,
   ConstantProperty,
   NodeTransformationProperty,
   TimeIntervalCollectionProperty,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 
 describe("DataSources/NodeTransformationProperty", function () {

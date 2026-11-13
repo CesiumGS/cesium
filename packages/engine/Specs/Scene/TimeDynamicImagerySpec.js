@@ -2,10 +2,12 @@ import {
   Clock,
   ClockStep,
   JulianDate,
+  TimeIntervalCollection,
+} from "@cesium/core";
+import {
   Request,
   RequestScheduler,
   RequestType,
-  TimeIntervalCollection,
   TimeDynamicImagery,
 } from "../../index.js";
 

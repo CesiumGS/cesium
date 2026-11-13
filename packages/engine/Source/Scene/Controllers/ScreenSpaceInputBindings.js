@@ -1,5 +1,4 @@
-import Check from "../../Core/Check.js";
-import defined from "../../Core/defined.js";
+import { Check, defined } from "@cesium/core";
 import ScreenSpaceEventType from "../../Core/ScreenSpaceEventType.js";
 import MouseButton from "./MouseButton.js";
 

@@ -1,12 +1,14 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defined from "../Core/defined.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
+import {
+  AssociativeArray,
+  Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  DistanceDisplayCondition,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  ShowGeometryInstanceAttribute,
+  defined,
+} from "@cesium/core";
 import OffsetGeometryInstanceAttribute from "../Core/OffsetGeometryInstanceAttribute.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import Primitive from "../Scene/Primitive.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import ColorMaterialProperty from "./ColorMaterialProperty.js";
@@ -482,8 +484,8 @@ function moveItems(batch, items, time) {
     const itemsToRemove = item.itemsToRemove;
     const itemsToMoveLength = itemsToRemove.length;
     if (itemsToMoveLength > 0) {
-      for (i = 0; i < itemsToMoveLength; i++) {
-        const updater = itemsToRemove[i];
+      for (let j = 0; j < itemsToMoveLength; j++) {
+        const updater = itemsToRemove[j];
         item.remove(updater);
         batch.add(time, updater);
         itemsMoved = true;

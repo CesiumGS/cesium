@@ -1,21 +1,23 @@
-import AttributeCompression from "../Core/AttributeCompression.js";
-import binarySearch from "../Core/binarySearch.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Cartographic from "../Core/Cartographic.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  AttributeCompression,
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Cartographic,
+  DeveloperError,
+  Math as CesiumMath,
+  OrientedBoundingBox,
+  Queue,
+  Rectangle,
+  WebMercatorProjection,
+  binarySearch,
+  defined,
+} from "@cesium/core";
 import HeightmapTerrainData from "../Core/HeightmapTerrainData.js";
-import CesiumMath from "../Core/Math.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import Queue from "../Core/Queue.js";
-import Rectangle from "../Core/Rectangle.js";
 import TerrainEncoding from "../Core/TerrainEncoding.js";
 import TerrainMesh from "../Core/TerrainMesh.js";
 import TileEdge from "../Core/TileEdge.js";
-import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import GlobeSurfaceTile from "./GlobeSurfaceTile.js";
 import TileSelectionResult from "./TileSelectionResult.js";
 

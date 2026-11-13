@@ -8,12 +8,13 @@ import {
   Math as CesiumMath,
   NearFarScalar,
   Rectangle,
+} from "@cesium/core";
+import {
   BlendOption,
   PointPrimitive,
   PointPrimitiveCollection,
   SplitDirection,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

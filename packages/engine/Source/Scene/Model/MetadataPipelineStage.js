@@ -1,7 +1,4 @@
-import Matrix3 from "../../Core/Matrix3.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
-import defined from "../../Core/defined.js";
-import oneTimeWarning from "../../Core/oneTimeWarning.js";
+import { Matrix3, PrimitiveType, defined, oneTimeWarning } from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import MetadataStageFS from "../../Shaders/Model/MetadataStageFS.js";
 import MetadataStageVS from "../../Shaders/Model/MetadataStageVS.js";
@@ -124,15 +121,29 @@ MetadataPipelineStage.process = function (
 
   for (let i = 0; i < propertyAttributesInfo.length; i++) {
     const info = propertyAttributesInfo[i];
-    processPropertyAttributeProperty(renderResources, info);
+    processPropertyAttributeProperty(
+      renderResources,
+      info,
+      usedMetadataProperties,
+    );
   }
   for (let i = 0; i < propertyTexturesInfo.length; i++) {
     const info = propertyTexturesInfo[i];
-    processPropertyTextureProperty(renderResources, info, webgl2);
+    processPropertyTextureProperty(
+      renderResources,
+      info,
+      webgl2,
+      usedMetadataProperties,
+    );
   }
   for (let i = 0; i < propertyTablesInfo.length; i++) {
     const info = propertyTablesInfo[i];
-    processPropertyTableProperty(renderResources, info, webgl2);
+    processPropertyTableProperty(
+      renderResources,
+      info,
+      webgl2,
+      usedMetadataProperties,
+    );
   }
 };
 
@@ -312,7 +323,7 @@ function getPropertyTableInfo(
   // during a texelFetch.
   let propertyInfoIndex = 0;
 
-  // See note in {@link parseStructuralMetadata.collectGpuCompatiblePropertyBufferViews} about
+  // See note in {@link parseStructuralMetadata.collectGpuCompatiblePropertyInfo} about
   // why we iterate over the class definition properties rather than the property table properties.
   for (const [propertyId, classProperty] of Object.entries(classProperties)) {
     if (!classProperty.isGpuCompatible(NUM_CHANNELS)) {
@@ -548,10 +559,17 @@ function declareStructsAndFunctions(shaderBuilder) {
  * @param {object} propertyInfo Info about the PropertyAttributeProperty
  * @private
  */
-function processPropertyAttributeProperty(renderResources, propertyInfo) {
+function processPropertyAttributeProperty(
+  renderResources,
+  propertyInfo,
+  usedMetadataProperties,
+) {
   addPropertyAttributePropertyMetadata(renderResources, propertyInfo);
-  addPropertyMetadataClass(renderResources.shaderBuilder, propertyInfo);
-  addPropertyMetadataStatistics(renderResources.shaderBuilder, propertyInfo);
+  addPropertyMetadataClassAndStatistics(
+    renderResources.shaderBuilder,
+    propertyInfo,
+    usedMetadataProperties,
+  );
 }
 
 /**
@@ -605,10 +623,18 @@ function addPropertyAttributePropertyMetadata(renderResources, propertyInfo) {
  * @param {boolean} webgl2 True if the context is WebGL2
  * @private
  */
-function processPropertyTextureProperty(renderResources, propertyInfo, webgl2) {
+function processPropertyTextureProperty(
+  renderResources,
+  propertyInfo,
+  webgl2,
+  usedMetadataProperties,
+) {
   addPropertyTexturePropertyMetadata(renderResources, propertyInfo, webgl2);
-  addPropertyMetadataClass(renderResources.shaderBuilder, propertyInfo);
-  addPropertyMetadataStatistics(renderResources.shaderBuilder, propertyInfo);
+  addPropertyMetadataClassAndStatistics(
+    renderResources.shaderBuilder,
+    propertyInfo,
+    usedMetadataProperties,
+  );
 }
 
 /**
@@ -802,10 +828,42 @@ function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
   );
 }
 
-function processPropertyTableProperty(renderResources, propertyInfo, webgl2) {
+function processPropertyTableProperty(
+  renderResources,
+  propertyInfo,
+  webgl2,
+  usedMetadataProperties,
+) {
   addPropertyTablePropertyMetadata(renderResources, propertyInfo, webgl2);
-  addPropertyMetadataClass(renderResources.shaderBuilder, propertyInfo);
-  addPropertyMetadataStatistics(renderResources.shaderBuilder, propertyInfo);
+  addPropertyMetadataClassAndStatistics(
+    renderResources.shaderBuilder,
+    propertyInfo,
+    usedMetadataProperties,
+  );
+}
+
+/**
+ * Adds the metadataClass and metadataStatistics entries of a property, but only
+ * when a custom shader reads them: their values are baked into the GLSL, so
+ * emitting them for every property would give each distinct class definition
+ * or set of statistics its own shader program, even when nothing reads them.
+ * @param {ShaderBuilder} shaderBuilder The shader builder for the primitive
+ * @param {object} propertyInfo Info about the property
+ * @param {object} usedMetadataProperties Metadata properties used in the primitive's shader by other stages
+ * @private
+ */
+function addPropertyMetadataClassAndStatistics(
+  shaderBuilder,
+  propertyInfo,
+  usedMetadataProperties,
+) {
+  const propertyId = propertyInfo.metadataVariable;
+  if (usedMetadataProperties.usedClass.has(propertyId)) {
+    addPropertyMetadataClass(shaderBuilder, propertyInfo);
+  }
+  if (usedMetadataProperties.usedStatistics.has(propertyId)) {
+    addPropertyMetadataStatistics(shaderBuilder, propertyInfo);
+  }
 }
 
 function addPropertyTablePropertyMetadata(
@@ -869,8 +927,13 @@ function addPropertyTablePropertyMetadata(
     );
   }
 
-  const featureIdExpression = `featureIds.${featureIdVariableName}`;
-  const texCoordExpression = `ivec2(${featureIdExpression}, ${propertyInfoIndex})`;
+  const textureWidthName = `${metadataVariable}_textureWidth`;
+  const linearIndexName = `${metadataVariable}_linearIndex`;
+  initializationLines.push(
+    `int ${textureWidthName} = textureSize(${textureUniformName}, 0).x;`,
+    `int ${linearIndexName} = ${propertyInfoIndex * propertyTable.count} + int(featureIds.${featureIdVariableName});`,
+  );
+  const texCoordExpression = `ivec2(${linearIndexName} % ${textureWidthName}, ${linearIndexName} / ${textureWidthName})`;
   const textureSampleExpression = `texelFetch(${textureUniformName}, ${texCoordExpression}, 0)`;
   const classProperty = propertyInfo.classProperty;
 
@@ -976,8 +1039,16 @@ function addValueTransformUniforms(options) {
 function collectMetadataUsedByOtherStages(model, primitive) {
   const usedInVertex = new Set();
   const usedInFragment = new Set();
+  const usedClass = new Set();
+  const usedStatistics = new Set();
 
-  collectMetadataUsedInCustomShader(model, usedInVertex, usedInFragment);
+  collectMetadataUsedInCustomShader(
+    model,
+    usedInVertex,
+    usedInFragment,
+    usedClass,
+    usedStatistics,
+  );
   collectMetadataUsedInPointCloudStyling(
     model,
     primitive,
@@ -988,33 +1059,40 @@ function collectMetadataUsedByOtherStages(model, primitive) {
   return {
     usedInVertex,
     usedInFragment,
+    usedClass,
+    usedStatistics,
   };
+}
+
+function addKeys(set, dictionary) {
+  for (const propertyId in dictionary) {
+    if (dictionary.hasOwnProperty(propertyId)) {
+      set.add(propertyId);
+    }
+  }
 }
 
 function collectMetadataUsedInCustomShader(
   model,
   usedInVertex,
   usedInFragment,
+  usedClass,
+  usedStatistics,
 ) {
   const customShader = model.customShader;
   if (!defined(customShader)) {
     return;
   }
 
-  const fragmentMetadataSet =
-    customShader.usedVariablesFragment?.metadataSet ?? {};
-  for (const propertyId in fragmentMetadataSet) {
-    if (fragmentMetadataSet.hasOwnProperty(propertyId)) {
-      usedInFragment.add(propertyId);
-    }
-  }
+  const fragmentSets = customShader.usedVariablesFragment ?? {};
+  addKeys(usedInFragment, fragmentSets.metadataSet ?? {});
+  addKeys(usedClass, fragmentSets.metadataClassSet ?? {});
+  addKeys(usedStatistics, fragmentSets.metadataStatisticsSet ?? {});
 
-  const vertexMetadataSet = customShader.usedVariablesVertex?.metadataSet ?? {};
-  for (const propertyId in vertexMetadataSet) {
-    if (vertexMetadataSet.hasOwnProperty(propertyId)) {
-      usedInVertex.add(propertyId);
-    }
-  }
+  const vertexSets = customShader.usedVariablesVertex ?? {};
+  addKeys(usedInVertex, vertexSets.metadataSet ?? {});
+  addKeys(usedClass, vertexSets.metadataClassSet ?? {});
+  addKeys(usedStatistics, vertexSets.metadataStatisticsSet ?? {});
 }
 
 function collectMetadataUsedInPointCloudStyling(

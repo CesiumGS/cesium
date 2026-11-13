@@ -1,8 +1,10 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import getMagic from "../Core/getMagic.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  Cartesian3,
+  RuntimeError,
+  defined,
+  destroyObject,
+  getMagic,
+} from "@cesium/core";
 
 /**
  * Represents the contents of a
@@ -170,6 +172,25 @@ class Composite3DTileContent {
     const length = contents.length;
     for (let i = 0; i < length; ++i) {
       contents[i].group = value;
+    }
+  }
+
+  /** @inheritdoc */
+  get show() {
+    let result = true;
+    const contents = this._contents;
+    const length = contents.length;
+    for (let i = 0; i < length; ++i) {
+      result = result & contents[i].show;
+    }
+    return result;
+  }
+
+  set show(value) {
+    const contents = this._contents;
+    const length = contents.length;
+    for (let i = 0; i < length; ++i) {
+      contents[i].show = value;
     }
   }
 

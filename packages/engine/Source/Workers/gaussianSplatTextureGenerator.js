@@ -1,6 +1,5 @@
+import { defined } from "@cesium/core";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
-import defined from "../Core/defined.js";
-
 import { initSync, generate_splat_texture } from "@cesium/wasm-splats";
 
 //load built wasm modules for sorting. Ensure we can load webassembly and we support SIMD.

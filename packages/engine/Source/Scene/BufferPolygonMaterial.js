@@ -1,9 +1,9 @@
 // @ts-check
 
-import Frozen from "../Core/Frozen.js";
+import { Frozen } from "@cesium/core";
 import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js";
 
-/** @import Color from "../Core/Color.js"; */
+/** @import { Color } from "@cesium/core"; */
 /** @import BufferPolygon from "./BufferPolygon.js"; */
 
 /**

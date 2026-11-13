@@ -1,7 +1,9 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  Cartesian3,
+  DeveloperError,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Request from "../Core/Request.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
@@ -269,6 +271,25 @@ class Multiple3DTileContent {
       "Multiple3DTileContent cannot have group metadata",
     );
     //>>includeEnd('debug');
+  }
+
+  /** @inheritdoc */
+  get show() {
+    let result = true;
+    const contents = this._contents;
+    const length = contents.length;
+    for (let i = 0; i < length; ++i) {
+      result = result & contents[i].show;
+    }
+    return result;
+  }
+
+  set show(value) {
+    const contents = this._contents;
+    const length = contents.length;
+    for (let i = 0; i < length; ++i) {
+      contents[i].show = value;
+    }
   }
 
   /**

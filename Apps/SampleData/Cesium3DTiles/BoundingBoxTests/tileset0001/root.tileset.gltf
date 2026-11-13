@@ -1,0 +1,79 @@
+{
+  "extensions" : {
+    "3DTILES_tileset" : {
+      "geometricError" : 1048576.0
+    }
+  },
+  "extensionsUsed" : [ "3DTILES_tileset" ],
+  "extensionsRequired" : [ "3DTILES_tileset" ],
+  "asset" : {
+    "generator" : "JglTF from https://github.com/javagl/JglTF",
+    "version" : "2.1"
+  },
+  "externalAssets" : [ {
+    "file" : 0
+  }, {
+    "file" : 1
+  } ],
+  "files" : [ {
+    "mimeType" : "model/gltf-binary",
+    "uri" : "contentA.glb"
+  }, {
+    "mimeType" : "model/gltf-binary",
+    "uri" : "contentB.glb"
+  } ],
+  "nodes" : [ {
+    "extensions" : {
+      "3DTILES_tileset" : {
+        "geometricError" : 1048576.0,
+        "refine" : "ADD"
+      }
+    },
+    "boundingVolume" : {
+      "shape" : 1,
+      "translation" : [ 0.5, 0.5, 0.5 ]
+    },
+    "children" : [ 1, 2 ]
+  }, {
+    "extensions" : {
+      "3DTILES_tileset" : {
+        "geometricError" : 0.0,
+        "refine" : "ADD"
+      }
+    },
+    "boundingVolume" : {
+      "shape" : 0,
+      "translation" : [ 0.5, 0.5, 0.5 ]
+    },
+    "externalAsset" : 0,
+    "translation" : [ -1.0, 0.0, 0.0 ]
+  }, {
+    "extensions" : {
+      "3DTILES_tileset" : {
+        "geometricError" : 0.0,
+        "refine" : "ADD"
+      }
+    },
+    "boundingVolume" : {
+      "shape" : 0,
+      "translation" : [ 0.5, 0.5, 0.5 ]
+    },
+    "externalAsset" : 1,
+    "translation" : [ 1.0, 0.0, 0.0 ]
+  } ],
+  "scene" : 0,
+  "scenes" : [ {
+    "nodes" : [ 0 ]
+  } ],
+  "shapes" : [ {
+    "type" : "box",
+    "box" : {
+      "size" : [ 1.0, 1.0, 1.0 ]
+    }
+  }, {
+    "type" : "box",
+    "box" : {
+      "size" : [ 3.0, 1.0, 1.0 ]
+    }
+  } ]
+}

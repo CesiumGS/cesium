@@ -1,26 +1,29 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import CullingVolume from "../Core/CullingVolume.js";
-import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
-import destroyObject from "../Core/destroyObject.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Intersect from "../Core/Intersect.js";
-import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  CullingVolume,
+  Ellipsoid,
+  Intersect,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  OrientedBoundingBox,
+  OrthographicFrustum,
+  Rectangle,
+  RuntimeError,
+  VerticalExaggeration,
+  defined,
+  deprecationWarning,
+  destroyObject,
+} from "@cesium/core";
 import Request from "../Core/Request.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DContentGroup from "./Cesium3DContentGroup.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
@@ -42,7 +45,6 @@ import TileBoundingS2Cell from "./TileBoundingS2Cell.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Pass from "../Renderer/Pass.js";
-import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 
 /**
  * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
@@ -75,31 +77,29 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   this._contentHeader = contentHeader;
 
+  const hasTransform = defined(header.transform);
+
   /**
    * The local transform of this tile.
    * @type {Matrix4}
    */
-  this.transform = defined(header.transform)
+  this.transform = hasTransform
     ? Matrix4.unpack(header.transform)
     : Matrix4.clone(Matrix4.IDENTITY);
 
   const parentTransform = defined(parent)
     ? parent.computedTransform
     : tileset.modelMatrix;
-  const computedTransform = Matrix4.multiply(
-    parentTransform,
-    this.transform,
-    new Matrix4(),
-  );
+  const computedTransform = hasTransform
+    ? Matrix4.multiply(parentTransform, this.transform, new Matrix4())
+    : Matrix4.clone(parentTransform);
 
   const parentInitialTransform = defined(parent)
     ? parent._initialTransform
     : Matrix4.IDENTITY;
-  this._initialTransform = Matrix4.multiply(
-    parentInitialTransform,
-    this.transform,
-    new Matrix4(),
-  );
+  this._initialTransform = hasTransform
+    ? Matrix4.multiply(parentInitialTransform, this.transform, new Matrix4())
+    : Matrix4.clone(parentInitialTransform);
 
   /**
    * The final computed transform of this tile.
@@ -209,12 +209,30 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.refine = refine;
 
   /**
-   * Gets the tile's children.
+   * Backs the <code>children</code> property.
    *
    * @type {Cesium3DTile[]}
    * @readonly
+   * @private
    */
-  this.children = [];
+  this._children = [];
+
+  /**
+   * Creates this tile's implicit children when they are requested, or
+   * <code>undefined</code> if this tile is not part of an implicit tileset.
+   *
+   * @type {Cesium3DTile.ImplicitChildrenCallback|undefined}
+   * @private
+   */
+  this._implicitChildrenCallback = undefined;
+
+  /**
+   * Whether <code>_children</code> holds the implicit children.
+   *
+   * @type {boolean}
+   * @private
+   */
+  this._implicitChildrenCreated = false;
 
   /**
    * This tile's parent or <code>undefined</code> if this tile is the root.
@@ -560,6 +578,33 @@ Object.defineProperties(Cesium3DTile.prototype, {
   tileset: {
     get: function () {
       return this._tileset;
+    },
+  },
+
+  /**
+   * Gets the tile's children. Tiles of an implicit tileset are derived the first
+   * time this property is accessed.
+   *
+   * @memberof Cesium3DTile.prototype
+   *
+   * @type {Cesium3DTile[]}
+   * @readonly
+   */
+  children: {
+    get: function () {
+      if (
+        !this._implicitChildrenCreated &&
+        defined(this._implicitChildrenCallback)
+      ) {
+        this._implicitChildrenCreated = true;
+        this._implicitChildrenCallback(this);
+      }
+      return this._children;
+    },
+    set: function (value) {
+      this._implicitChildrenCallback = undefined;
+      this._implicitChildrenCreated = false;
+      this._children = value;
     },
   },
 
@@ -1400,10 +1445,7 @@ async function makeContent(tile, arrayBuffer) {
     preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
     preprocessed.contentType === Cesium3DTileContentType.VECTOR;
 
-  if (
-    preprocessed.contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE ||
-    preprocessed.contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE_JSON
-  ) {
+  if (Cesium3DTileContentType.isSubtree(preprocessed.contentType)) {
     tile.hasImplicitContent = true;
     tile.hasRenderableContent = false;
   }
@@ -2521,6 +2563,8 @@ Cesium3DTile.prototype.isDestroyed = function () {
  * @private
  */
 Cesium3DTile.prototype.destroy = function () {
+  this._implicitChildrenCallback = undefined;
+  this._implicitChildrenCreated = false;
   // For the interval between new content being requested and downloaded, expiredContent === content, so don't destroy twice
   this._content = this._content && this._content.destroy();
   this._expiredContent =
@@ -2536,5 +2580,13 @@ Cesium3DTile.prototype.destroy = function () {
     this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
   return destroyObject(this);
 };
+
+/**
+ * Populates the <code>children</code> array of a tile in an implicit tileset.
+ *
+ * @callback Cesium3DTile.ImplicitChildrenCallback
+ * @param {Cesium3DTile} tile The tile to create children for.
+ * @private
+ */
 
 export default Cesium3DTile;

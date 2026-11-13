@@ -2,16 +2,19 @@ import {
   BoundingSphere,
   Cartesian2,
   Cartesian3,
+  Cartographic,
   Color,
-  defined,
   DistanceDisplayCondition,
-  HeightReference,
+  FixedFrameTransforms,
   JulianDate,
   Math as CesiumMath,
   Matrix4,
   Quaternion,
+  defined,
+} from "@cesium/core";
+import {
+  HeightReference,
   Resource,
-  FixedFrameTransforms,
   BoundingSphereState,
   Cesium3DTileset,
   ConstantPositionProperty,
@@ -24,7 +27,6 @@ import {
   ClippingPlaneCollection,
   CustomShader,
   Globe,
-  Cartographic,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

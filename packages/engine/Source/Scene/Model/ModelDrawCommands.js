@@ -1,7 +1,10 @@
-import BoundingSphere from "../../Core/BoundingSphere.js";
-import clone from "../../Core/clone.js";
-import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
+import {
+  BoundingSphere,
+  DeveloperError,
+  Matrix4,
+  clone,
+  defined,
+} from "@cesium/core";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import RenderState from "../../Renderer/RenderState.js";
 import SceneMode from "../SceneMode.js";
@@ -12,7 +15,6 @@ import VertexArray from "../../Renderer/VertexArray.js";
 import ModelVS from "../../Shaders/Model/ModelVS.js";
 import ModelFS from "../../Shaders/Model/ModelFS.js";
 import ModelUtility from "./ModelUtility.js";
-import DeveloperError from "../../Core/DeveloperError.js";
 
 /**
  * Internal functions to build draw commands for models.

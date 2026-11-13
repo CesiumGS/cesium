@@ -1,23 +1,24 @@
 import {
-  clone,
   Cartesian3,
-  Empty3DTileContent,
+  FixedFrameTransforms,
   HeadingPitchRoll,
+  Math as CesiumMath,
   Matrix3,
   Matrix4,
   Rectangle,
-  FixedFrameTransforms,
+  RuntimeError,
+  clone,
+} from "@cesium/core";
+import {
+  Empty3DTileContent,
   Cesium3DTile,
   Cesium3DTilePass,
   Cesium3DTileRefine,
   Cesium3DTilesetHeatmap,
-  Math as CesiumMath,
   MetadataSchema,
-  RuntimeError,
   TileBoundingRegion,
   TileOrientedBoundingBox,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

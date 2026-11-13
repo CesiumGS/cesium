@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core";
 
 /**
  * Returns the meshopt compression extension object, KHR_meshopt_compression or

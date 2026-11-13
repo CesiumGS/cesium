@@ -5,9 +5,9 @@ import {
   ColorGeometryInstanceAttribute,
   ComponentDatatype,
   CylinderGeometry,
-  defined,
   DistanceDisplayConditionGeometryInstanceAttribute,
   Ellipsoid,
+  FixedFrameTransforms,
   Geometry,
   GeometryAttribute,
   GeometryInstance,
@@ -21,14 +21,15 @@ import {
   Rectangle,
   RectangleGeometry,
   ShowGeometryInstanceAttribute,
-  FixedFrameTransforms,
+  defined,
+} from "@cesium/core";
+import {
   Camera,
   MaterialAppearance,
   PerInstanceColorAppearance,
   Primitive,
   SceneMode,
 } from "../../index.js";
-
 import BadGeometry from "../../../../Specs/BadGeometry.js";
 import createContext from "../../../../Specs/createContext.js";
 import createFrameState from "../../../../Specs/createFrameState.js";

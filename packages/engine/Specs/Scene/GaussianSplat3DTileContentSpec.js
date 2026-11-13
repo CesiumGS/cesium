@@ -1,14 +1,15 @@
 import {
-  PerspectiveFrustum,
+  HeadingPitchRange,
   Math as CesiumMath,
+  PerspectiveFrustum,
+} from "@cesium/core";
+import {
   ResourceCache,
   RequestScheduler,
-  HeadingPitchRange,
   GaussianSplat3DTileContent,
   ModelUtility,
   VertexAttributeSemantic,
 } from "../../index.js";
-
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

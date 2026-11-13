@@ -1,10 +1,12 @@
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import Event from "../Core/Event.js";
+import {
+  Event,
+  PixelDatatype,
+  PixelFormat,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import loadKTX2 from "../Core/loadKTX2.js";
-import PixelFormat from "../Core/PixelFormat.js";
 import CubeMap from "../Renderer/CubeMap.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 

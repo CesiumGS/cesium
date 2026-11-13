@@ -1,4 +1,5 @@
-import { Color, BufferPolylineMaterial } from "../../index.js";
+import { Color } from "@cesium/core";
+import { BufferPolylineMaterial } from "../../index.js";
 
 describe("Scene/BufferPolylineMaterial", () => {
   it("constructor", () => {

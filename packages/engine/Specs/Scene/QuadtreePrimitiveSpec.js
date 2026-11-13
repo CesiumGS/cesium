@@ -1,15 +1,17 @@
 import {
   Cartesian3,
   Cartographic,
-  defined,
   Ellipsoid,
   EventHelper,
   GeographicProjection,
-  GeographicTilingScheme,
   Intersect,
   Math as CesiumMath,
   Rectangle,
   Visibility,
+  defined,
+} from "@cesium/core";
+import {
+  GeographicTilingScheme,
   Camera,
   GlobeSurfaceTileProvider,
   GlobeTranslucencyState,
@@ -22,7 +24,6 @@ import {
 } from "../../index.js";
 import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
 import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

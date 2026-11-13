@@ -1,7 +1,7 @@
 // @ts-check
 
+import { FixedFrameTransforms } from "@cesium/core";
 import CelestialFrameTransforms from "./CelestialFrameTransforms.js";
-import FixedFrameTransforms from "./FixedFrameTransforms.js";
 
 /**
  * Contains functions for transforming positions to various reference frames.

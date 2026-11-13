@@ -1,13 +1,15 @@
-import Cartesian4 from "../Core/Cartesian4.js";
-import CesiumMath from "../Core/Math.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import mergeSort from "../Core/mergeSort.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
+import {
+  Cartesian4,
+  Check,
+  Color,
+  DeveloperError,
+  Frozen,
+  Math as CesiumMath,
+  PixelDatatype,
+  PixelFormat,
+  defined,
+  mergeSort,
+} from "@cesium/core";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";

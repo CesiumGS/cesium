@@ -1,16 +1,18 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import getTimestamp from "../Core/getTimestamp.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
-import Ray from "../Core/Ray.js";
-import Rectangle from "../Core/Rectangle.js";
-import Visibility from "../Core/Visibility.js";
+import {
+  Cartesian3,
+  Cartographic,
+  DeveloperError,
+  Event,
+  Math as CesiumMath,
+  Matrix4,
+  OrthographicFrustum,
+  OrthographicOffCenterFrustum,
+  Ray,
+  Rectangle,
+  Visibility,
+  defined,
+  getTimestamp,
+} from "@cesium/core";
 import QuadtreeOccluders from "./QuadtreeOccluders.js";
 import QuadtreeTile from "./QuadtreeTile.js";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";

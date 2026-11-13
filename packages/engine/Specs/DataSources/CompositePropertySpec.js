@@ -3,9 +3,8 @@ import {
   JulianDate,
   TimeInterval,
   TimeIntervalCollection,
-  CompositeProperty,
-  ConstantProperty,
-} from "../../index.js";
+} from "@cesium/core";
+import { CompositeProperty, ConstantProperty } from "../../index.js";
 
 describe("DataSources/CompositeProperty", function () {
   it("default constructor has expected values", function () {

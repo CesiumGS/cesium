@@ -1,21 +1,23 @@
-import AttributeCompression from "../../Core/AttributeCompression.js";
-import BoundingSphere from "../../Core/BoundingSphere.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Check from "../../Core/Check.js";
-import clone from "../../Core/clone.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import Ellipsoid from "../../Core/Ellipsoid.js";
-import getStringFromTypedArray from "../../Core/getStringFromTypedArray.js";
-import Matrix3 from "../../Core/Matrix3.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Quaternion from "../../Core/Quaternion.js";
-import RuntimeError from "../../Core/RuntimeError.js";
-import FixedFrameTransforms from "../../Core/FixedFrameTransforms.js";
+import {
+  AttributeCompression,
+  AttributeType,
+  BoundingSphere,
+  Cartesian3,
+  Check,
+  ComponentDatatype,
+  Ellipsoid,
+  FixedFrameTransforms,
+  Frozen,
+  Matrix3,
+  Matrix4,
+  Quaternion,
+  RuntimeError,
+  clone,
+  defined,
+  getStringFromTypedArray,
+} from "@cesium/core";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
-import AttributeType from "../AttributeType.js";
 import Axis from "../Axis.js";
 import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import GltfLoader from "../GltfLoader.js";

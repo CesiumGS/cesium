@@ -1,20 +1,22 @@
-import addAllToArray from "../../Core/addAllToArray.js";
-import AttributeCompression from "../../Core/AttributeCompression.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import clone from "../../Core/clone.js";
-import combine from "../../Core/combine.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Quaternion from "../../Core/Quaternion.js";
-import FixedFrameTransforms from "../../Core/FixedFrameTransforms.js";
+import {
+  AttributeCompression,
+  AttributeType,
+  Cartesian3,
+  ComponentDatatype,
+  FixedFrameTransforms,
+  Matrix4,
+  Quaternion,
+  addAllToArray,
+  clone,
+  combine,
+  defined,
+} from "@cesium/core";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import InstancingStageCommon from "../../Shaders/Model/InstancingStageCommon.js";
 import InstancingStageVS from "../../Shaders/Model/InstancingStageVS.js";
 import LegacyInstancingStageVS from "../../Shaders/Model/LegacyInstancingStageVS.js";
-import AttributeType from "../AttributeType.js";
 import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import SceneMode from "../SceneMode.js";
 import SceneTransforms from "../SceneTransforms.js";

@@ -3,22 +3,24 @@ import {
   Cartesian3,
   Cartographic,
   Color,
-  DirectionalLight,
-  DynamicAtmosphereLightingType,
   Ellipsoid,
-  Fog,
   GeographicProjection,
   Matrix4,
   OrthographicFrustum,
   OrthographicOffCenterFrustum,
+} from "@cesium/core";
+import {
+  DirectionalLight,
+  DynamicAtmosphereLightingType,
+  Fog,
   Pass,
   Texture,
   SceneMode,
 } from "../../index.js";
-
 import createCamera from "../../../../Specs/createCamera.js";
 import createContext from "../../../../Specs/createContext.js";
 import createFrameState from "../../../../Specs/createFrameState.js";
+import CzmBuiltins from "../../Source/Shaders/Builtin/CzmBuiltins.js";
 
 describe(
   "Renderer/AutomaticUniforms",
@@ -1983,116 +1985,46 @@ describe(
       }).contextToRender();
     });
 
-    it("has czm_pass and czm_passEnvironment", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.ENVIRONMENT);
+    // Converts a Pass name to its GLSL constant, e.g. CESIUM_3D_TILE_EDGES to czm_passCesium3DTileEdges
+    function getPassConstantName(passName) {
+      const words = passName.split("_").map(function (word) {
+        // Keep words starting with a digit, like 3D, as-is
+        if (/^\d/.test(word)) {
+          return word;
+        }
+        return word.charAt(0) + word.slice(1).toLowerCase();
+      });
+      return `czm_pass${words.join("")}`;
+    }
 
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passEnvironment);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
+    const passNames = Object.keys(Pass).filter(function (passName) {
+      return passName !== "NUMBER_OF_PASSES";
     });
 
-    it("has czm_pass and czm_passCompute", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.COMPUTE);
+    passNames.forEach(function (passName) {
+      const constantName = getPassConstantName(passName);
+      it(`has czm_pass and ${constantName}`, function () {
+        context.uniformState.updatePass(Pass[passName]);
 
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passCompute);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
+        const fs = `
+          void main() {
+            out_FragColor = vec4(czm_pass == ${constantName});
+          }
+        `;
+        expect({
+          context: context,
+          fragmentShader: fs,
+        }).contextToRender();
+      });
     });
 
-    it("has czm_pass and czm_passGlobe", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.GLOBE);
-
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passGlobe);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
-    });
-
-    it("has czm_pass and czm_passTerrainClassification", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.TERRAIN_CLASSIFICATION);
-
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passTerrainClassification);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
-    });
-
-    it("has czm_pass and czm_passCesium3DTileClassification", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
-
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passCesium3DTileClassification);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
-    });
-
-    it("has czm_pass and czm_passOpaque", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.OPAQUE);
-
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passOpaque);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
-    });
-
-    it("has czm_pass and czm_passTranslucent", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.TRANSLUCENT);
-
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passTranslucent);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
-    });
-
-    it("has czm_pass and czm_passOverlay", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.OVERLAY);
-
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passOverlay);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
+    it("has a Pass for every czm_pass constant", function () {
+      const passConstantNames = passNames.map(getPassConstantName);
+      for (const builtinName of Object.keys(CzmBuiltins)) {
+        if (builtinName.startsWith("czm_pass")) {
+          expect(passConstantNames).toContain(builtinName);
+        }
+      }
     });
 
     it("has czm_sceneMode", function () {

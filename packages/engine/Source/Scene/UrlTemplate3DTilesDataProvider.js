@@ -1,16 +1,18 @@
 // @ts-check
 
-import Cartographic from "../Core/Cartographic.js";
+import {
+  Cartographic,
+  DeveloperError,
+  Ellipsoid,
+  Math as CesiumMath,
+  Rectangle,
+  defined,
+  destroyObject,
+  getAbsoluteUri,
+} from "@cesium/core";
 import Cesium3DTileset from "./Cesium3DTileset.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
-import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import CesiumMath from "../Core/Math.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import HeightReference from "./HeightReference.js"; */

@@ -4,16 +4,18 @@ import {
   Cartesian2,
   Cartesian3,
   Cartographic,
-  CesiumTerrainProvider,
   Color,
-  createGuid,
   DistanceDisplayCondition,
-  Globe,
   Math as CesiumMath,
   NearFarScalar,
   OrthographicOffCenterFrustum,
   PerspectiveFrustum,
   Rectangle,
+  createGuid,
+} from "@cesium/core";
+import {
+  CesiumTerrainProvider,
+  Globe,
   Resource,
   Billboard,
   BillboardCollection,
@@ -25,7 +27,6 @@ import {
   VerticalOrigin,
   SplitDirection,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

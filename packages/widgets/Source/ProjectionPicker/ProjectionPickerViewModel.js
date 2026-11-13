@@ -1,11 +1,11 @@
 import {
-  defined,
-  destroyObject,
   DeveloperError,
   EventHelper,
   OrthographicFrustum,
-  SceneMode,
-} from "@cesium/engine";
+  defined,
+  destroyObject,
+} from "@cesium/core";
+import { SceneMode } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
 

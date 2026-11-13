@@ -2,7 +2,7 @@
 
 import { dirname, join } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
-import { getVersion } from "./build.js";
+import { getVersion } from "./build-utilities.js";
 import {
   buildStatic,
   createSandcastleConfig,
@@ -77,6 +77,14 @@ export async function buildSandcastleApp({
           path: "/js/Cesium.js",
           typesPath: "/js/Cesium.d.ts",
         },
+        "@cesium/core": {
+          path: "/js/core/index.js",
+          typesPath: "/js/core/index.d.ts",
+        },
+        "@cesium/gltf": {
+          path: "/js/gltf/index.js",
+          typesPath: "/js/gltf/index.d.ts",
+        },
         "@cesium/engine": {
           path: "/js/engine/index.js",
           typesPath: "/js/engine/index.d.ts",
@@ -101,6 +109,26 @@ export async function buildSandcastleApp({
         {
           src: join(__dirname, "../Source/Cesium.(d.ts|js)"),
           dest: "js",
+          rename: { stripBase: true },
+        },
+        {
+          src: join(__dirname, "../packages/core/index.d.ts"),
+          dest: "js/core",
+          rename: { stripBase: true },
+        },
+        {
+          src: join(__dirname, "../packages/core/Build/Unminified/index.js"),
+          dest: "js/core",
+          rename: { stripBase: true },
+        },
+        {
+          src: join(__dirname, "../packages/gltf/index.d.ts"),
+          dest: "js/gltf",
+          rename: { stripBase: true },
+        },
+        {
+          src: join(__dirname, "../packages/gltf/Build/Unminified/index.js"),
+          dest: "js/gltf",
           rename: { stripBase: true },
         },
         {
@@ -141,6 +169,14 @@ export async function buildSandcastleApp({
         cesium: {
           path: "../../../Source/Cesium.js",
           typesPath: "../../Source/Cesium.d.ts",
+        },
+        "@cesium/core": {
+          path: "../../../packages/core/Build/Unminified/index.js",
+          typesPath: "../../packages/core/index.d.ts",
+        },
+        "@cesium/gltf": {
+          path: "../../../packages/gltf/Build/Unminified/index.js",
+          typesPath: "../../packages/gltf/index.d.ts",
         },
         "@cesium/engine": {
           path: "../../../packages/engine/Build/Unminified/index.js",

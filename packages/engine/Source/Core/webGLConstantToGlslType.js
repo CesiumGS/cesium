@@ -1,4 +1,4 @@
-import WebGLConstants from "./WebGLConstants.js";
+import { WebGLConstants } from "@cesium/core";
 
 function webGLConstantToGlslType(webGLValue) {
   switch (webGLValue) {

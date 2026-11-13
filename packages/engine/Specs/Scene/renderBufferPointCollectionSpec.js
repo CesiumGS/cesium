@@ -1,15 +1,12 @@
+import { Cartesian3, Color, Matrix4 } from "@cesium/core";
 import {
   BlendOption,
   BufferPoint,
   BufferPointCollection,
   BufferPointMaterial,
   Camera,
-  Cartesian3,
-  Color,
-  Matrix4,
   SceneMode,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

@@ -1,18 +1,20 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import combine from "../Core/combine.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  BoundingRectangle,
+  Check,
+  Color,
+  DeveloperError,
+  Frozen,
+  PixelDatatype,
+  PixelFormat,
+  combine,
+  createGuid,
+  defined,
+  destroyObject,
+  oneTimeWarning,
+} from "@cesium/core";
 import Resource from "../Core/Resource.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import PassState from "../Renderer/PassState.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import Sampler from "../Renderer/Sampler.js";
 import ShaderSource from "../Renderer/ShaderSource.js";

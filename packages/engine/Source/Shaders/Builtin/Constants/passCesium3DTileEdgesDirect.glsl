@@ -6,4 +6,4 @@
  *
  * @see czm_pass
  */
-const float czm_passCesium3DTileEdgesDirect = 12.0;
+const float czm_passCesium3DTileEdgesDirect = 13.0;

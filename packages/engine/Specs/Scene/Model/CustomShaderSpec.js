@@ -1,7 +1,5 @@
+import { Cartesian2, Cartesian3, Matrix2 } from "@cesium/core";
 import {
-  Cartesian2,
-  Cartesian3,
-  Matrix2,
   CustomShader,
   CustomShaderMode,
   CustomShaderTranslucencyMode,
@@ -202,6 +200,8 @@ describe("Scene/Model/CustomShader", function () {
       metadataSet: {
         temperature: true,
       },
+      metadataClassSet: {},
+      metadataStatisticsSet: {},
     };
     const expectedFragmentVariables = {
       attributeSet: {
@@ -221,6 +221,8 @@ describe("Scene/Model/CustomShader", function () {
       metadataSet: {
         pressure: true,
       },
+      metadataClassSet: {},
+      metadataStatisticsSet: {},
     };
 
     expect(customShader.usedVariablesVertex).toEqual(expectedVertexVariables);
@@ -247,6 +249,12 @@ describe("Scene/Model/CustomShader", function () {
       metadataSet: {
         temperature: true,
         testProperty: true,
+        testStatistic: true,
+      },
+      metadataClassSet: {
+        testProperty: true,
+      },
+      metadataStatisticsSet: {
         testStatistic: true,
       },
     };

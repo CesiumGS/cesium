@@ -1,4 +1,4 @@
-import { PixelDatatype, WebGLConstants } from "../../index.js";
+import { PixelDatatype, WebGLConstants } from "@cesium/core";
 
 describe("Core/PixelDatatype", function () {
   it("toWebGLConstant returns the expected WebGL constant", function () {
