@@ -311,6 +311,7 @@ describe("a view's chain", () => {
     "stars",
     "section-caps",
     "opaque",
+    "occlusion",
     "translucent",
     "meter",
     "composite",

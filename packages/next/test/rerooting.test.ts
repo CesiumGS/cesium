@@ -313,7 +313,8 @@ async function side(name: "GCRF" | "ITRF"): Promise<Side> {
     vi.spyOn(t, "update").mockImplementation((views) => {
       s.selected.set(
         t,
-        views.map((v) => structuredClone(v)),
+        // The occlusion hook is a function, not an input to compare.
+        views.map(({ occlusion: _occlusion, ...v }) => structuredClone(v)),
       );
     });
   }

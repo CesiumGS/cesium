@@ -46,6 +46,7 @@ describe("upload pacing by elapsed time", () => {
     let queue = 0;
     const engine = {
       scene,
+      views: [],
       tilesets: [
         {
           state: {
