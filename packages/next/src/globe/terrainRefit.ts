@@ -37,30 +37,81 @@ interface TriangleGrid {
   entries: Uint32Array;
 }
 
-const grids = new WeakMap<TerrainHeights, TriangleGrid>();
+/**
+ * What a tile may hold for a refit to look at it. Quantized-mesh indices are
+ * 16 bits, so no real tile has more vertices than this; a tile past either
+ * limit is treated as unmeasurable (the level estimate stays, which is always
+ * sound), so a crafted tile cannot make the refit's time or memory grow with
+ * more than these.
+ */
+export const MAX_REFIT_VERTICES = 65536;
+export const MAX_REFIT_TRIANGLES = 65536;
+/** Cell entries a mesh's index may hold: up to sixteen per triangle, and a floor for meshes of a few large triangles. */
+const entryBudget = (triangles: number) =>
+  Math.max(16 * triangles, 8 * GRID * GRID);
 
-function gridOf(t: TerrainHeights): TriangleGrid {
-  let g = grids.get(t);
-  if (g) {
-    return g;
+/** Null where the mesh is not worth measuring: see `MAX_REFIT_VERTICES`. */
+const grids = new WeakMap<TerrainHeights, TriangleGrid | null>();
+
+function gridOf(t: TerrainHeights): TriangleGrid | null {
+  const known = grids.get(t);
+  if (known !== undefined) {
+    return known;
   }
-  const { u, v, triangles } = t;
+  const g = buildGrid(t);
+  grids.set(t, g);
+  return g;
+}
+
+function buildGrid(t: TerrainHeights): TriangleGrid | null {
+  const { u, v, h, triangles } = t;
+  const vertices = u.length;
   const count = Math.floor(triangles.length / 3);
+  if (
+    v.length !== vertices ||
+    h.length !== vertices ||
+    vertices > MAX_REFIT_VERTICES ||
+    count > MAX_REFIT_TRIANGLES ||
+    !Number.isFinite(t.minimumHeight + t.maximumHeight)
+  ) {
+    return null;
+  }
   const cell = (q: number) =>
     Math.min(GRID - 1, Math.max(0, Math.floor((q / QUANT) * GRID)));
-  const counts = new Uint32Array(GRID * GRID);
+  // Pass one: each usable triangle's cell range, and the entries they need.
   const ranges = new Uint8Array(count * 4);
+  const usable = new Uint8Array(count);
+  let total = 0;
   for (let k = 0; k < count; k++) {
     const a = triangles[k * 3]!;
     const b = triangles[k * 3 + 1]!;
     const c = triangles[k * 3 + 2]!;
+    if (a >= vertices || b >= vertices || c >= vertices) {
+      return null;
+    }
+    const det =
+      (v[b]! - v[c]!) * (u[a]! - u[c]!) + (u[c]! - u[b]!) * (v[a]! - v[c]!);
+    if (!Number.isFinite(det) || det === 0) {
+      continue; // degenerate: it contains no point worth interpolating
+    }
     const x0 = cell(Math.min(u[a]!, u[b]!, u[c]!));
     const x1 = cell(Math.max(u[a]!, u[b]!, u[c]!));
     const y0 = cell(Math.min(v[a]!, v[b]!, v[c]!));
     const y1 = cell(Math.max(v[a]!, v[b]!, v[c]!));
     ranges.set([x0, x1, y0, y1], k * 4);
-    for (let y = y0; y <= y1; y++) {
-      for (let x = x0; x <= x1; x++) {
+    usable[k] = 1;
+    total += (x1 - x0 + 1) * (y1 - y0 + 1);
+    if (total > entryBudget(count)) {
+      return null;
+    }
+  }
+  const counts = new Uint32Array(GRID * GRID);
+  for (let k = 0; k < count; k++) {
+    if (!usable[k]) {
+      continue;
+    }
+    for (let y = ranges[k * 4 + 2]!; y <= ranges[k * 4 + 3]!; y++) {
+      for (let x = ranges[k * 4]!; x <= ranges[k * 4 + 1]!; x++) {
         counts[y * GRID + x]!++;
       }
     }
@@ -72,21 +123,16 @@ function gridOf(t: TerrainHeights): TriangleGrid {
   const fill = start.slice(0, GRID * GRID);
   const entries = new Uint32Array(start[GRID * GRID]!);
   for (let k = 0; k < count; k++) {
-    const [x0, x1, y0, y1] = [
-      ranges[k * 4]!,
-      ranges[k * 4 + 1]!,
-      ranges[k * 4 + 2]!,
-      ranges[k * 4 + 3]!,
-    ];
-    for (let y = y0; y <= y1; y++) {
-      for (let x = x0; x <= x1; x++) {
+    if (!usable[k]) {
+      continue;
+    }
+    for (let y = ranges[k * 4 + 2]!; y <= ranges[k * 4 + 3]!; y++) {
+      for (let x = ranges[k * 4]!; x <= ranges[k * 4 + 1]!; x++) {
         entries[fill[y * GRID + x]!++] = k;
       }
     }
   }
-  g = { start, entries };
-  grids.set(t, g);
-  return g;
+  return { start, entries };
 }
 
 /**
@@ -95,6 +141,9 @@ function gridOf(t: TerrainHeights): TriangleGrid {
  */
 function heightAt(t: TerrainHeights, u: number, v: number): number | undefined {
   const g = gridOf(t);
+  if (g === null) {
+    return undefined;
+  }
   const cx = Math.min(GRID - 1, Math.max(0, Math.floor((u / QUANT) * GRID)));
   const cy = Math.min(GRID - 1, Math.max(0, Math.floor((v / QUANT) * GRID)));
   const cell = cy * GRID + cx;
@@ -142,6 +191,10 @@ export function deviationFromParent(
   qx: number,
   qy: number,
 ): number {
+  // An unmeasurable mesh (`MAX_REFIT_VERTICES`): no refit.
+  if (gridOf(child) === null || gridOf(parent) === null) {
+    return Infinity;
+  }
   let dev = 0;
   const childRange = child.maximumHeight - child.minimumHeight;
   for (let i = 0; i < child.u.length; i++) {

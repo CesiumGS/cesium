@@ -216,6 +216,43 @@ describe("a tile's error refitted from its children", () => {
     expect(bound).toBeLessThan(actual * 3);
   });
 
+  it("gives up on a hostile mesh, quickly, keeping the level estimate", () => {
+    const good = gridTile(
+      { west: 0.3, south: 0.2, east: 0.304, north: 0.204 },
+      9,
+      () => 5,
+    ).heights;
+    const n = 60000;
+    // Every triangle spans the whole tile: a uniform grid would bin each into
+    // every cell.
+    const hostile = {
+      u: new Uint16Array([0, 32767, 0, 32767]),
+      v: new Uint16Array([0, 0, 32767, 32767]),
+      h: new Uint16Array(4),
+      triangles: new Uint32Array(n * 3).map((_, i) => [0, 1, 3][i % 3]!),
+      minimumHeight: 0,
+      maximumHeight: 1,
+    } satisfies TerrainHeights;
+    const t0 = performance.now();
+    expect(deviationFromParent(hostile, good, 0, 0)).toBe(Infinity);
+    expect(deviationFromParent(good, hostile, 0, 0)).toBe(Infinity);
+    expect(performance.now() - t0).toBeLessThan(200);
+    // An index past the vertices, and arrays of different lengths.
+    const wild = {
+      ...good,
+      triangles: new Uint32Array([0, 1, 99999]),
+    };
+    expect(deviationFromParent(wild, good, 0, 0)).toBe(Infinity);
+    const ragged = { ...good, h: good.h.slice(1) };
+    expect(deviationFromParent(ragged, good, 0, 0)).toBe(Infinity);
+    // Degenerate triangles are skipped, not divided by.
+    const flat = {
+      ...good,
+      triangles: new Uint32Array([0, 0, 0, ...good.triangles]),
+    };
+    expect(Number.isFinite(deviationFromParent(good, flat, 0, 0))).toBe(true);
+  });
+
   it("predicts a smooth tile's error low, and only when asked", async () => {
     const plane: Surface = (lon, lat) => 400 + 3000 * lon + 2000 * lat;
     const off = await source(plane, 10);
