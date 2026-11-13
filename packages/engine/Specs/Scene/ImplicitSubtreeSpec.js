@@ -1,13 +1,11 @@
+import { Cartesian3, RuntimeError, clone } from "@cesium/core";
 import {
-  Cartesian3,
-  clone,
   ImplicitSubtree,
   ImplicitTileCoordinates,
   ImplicitTileset,
   MetadataSchema,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../index.js";
 import ImplicitTilingTester from "../../../../Specs/ImplicitTilingTester.js";
 import MetadataTester from "../../../../Specs/MetadataTester.js";
@@ -105,7 +103,7 @@ describe("Scene/ImplicitSubtree", function () {
 
   let tilesetResource;
   let subtreeResource;
-  let metadataSchema; // intentionally left undefined
+  const metadataSchema = undefined; // intentionally left undefined
 
   const subtreeConstantJson = {
     tileAvailability: {
@@ -2850,6 +2848,477 @@ describe("Scene/ImplicitSubtree", function () {
           stringArrayValues[i],
         );
       }
+    });
+  });
+
+  describe("3DTILES_subtree", function () {
+    const constantDescription = {
+      tileAvailability: {
+        descriptor: 1,
+        lengthBits: 5,
+        isInternal: true,
+      },
+      contentAvailability: [
+        {
+          descriptor: 0,
+          lengthBits: 5,
+          isInternal: true,
+        },
+      ],
+      childSubtreeAvailability: {
+        descriptor: 0,
+        lengthBits: 16,
+        isInternal: true,
+      },
+    };
+
+    const schemaJson = {
+      classes: {
+        tile: {
+          properties: {
+            highlightColor: {
+              type: "VEC3",
+              componentType: "UINT8",
+            },
+            buildingCount: {
+              type: "SCALAR",
+              componentType: "UINT16",
+            },
+          },
+        },
+        building: {
+          properties: {
+            height: {
+              type: "SCALAR",
+              componentType: "UINT16",
+            },
+            buildingType: {
+              type: "STRING",
+            },
+          },
+        },
+      },
+    };
+
+    const highlightColors = [
+      [255, 0, 0],
+      [0, 255, 0],
+      [0, 0, 255],
+      [255, 255, 0],
+      [255, 0, 255],
+    ];
+    const buildingCounts = [100, 800, 500, 350, 200];
+    const buildingHeights = [20, 30, 10];
+    const buildingTypes = ["Residential", "Commercial", "Other"];
+
+    const tileTableDescription = {
+      class: "tile",
+      properties: {
+        highlightColor: highlightColors,
+        buildingCount: buildingCounts,
+      },
+    };
+
+    const buildingTableDescription = {
+      class: "building",
+      properties: {
+        height: buildingHeights,
+        buildingType: buildingTypes,
+      },
+    };
+
+    function makeMetadataDescription(isInternal) {
+      return {
+        tileAvailability: {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: isInternal,
+          includeAvailableCount: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: "10110",
+            lengthBits: 5,
+            isInternal: isInternal,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: isInternal,
+        },
+        metadata: {
+          isInternal: isInternal,
+          propertyTables: {
+            schema: schemaJson,
+            propertyTables: [tileTableDescription, buildingTableDescription],
+          },
+        },
+      };
+    }
+
+    function expectMetadata(subtree) {
+      const tileMetadataTable = subtree.tileMetadataTable;
+      expect(tileMetadataTable).toBeDefined();
+      expect(tileMetadataTable.count).toBe(5);
+      for (let i = 0; i < buildingCounts.length; i++) {
+        expect(tileMetadataTable.getProperty(i, "highlightColor")).toEqual(
+          Cartesian3.unpack(highlightColors[i]),
+        );
+        expect(tileMetadataTable.getProperty(i, "buildingCount")).toBe(
+          buildingCounts[i],
+        );
+      }
+
+      const contentMetadataTables = subtree.contentMetadataTables;
+      expect(contentMetadataTables.length).toBe(1);
+      const contentMetadataTable = contentMetadataTables[0];
+      expect(contentMetadataTable.count).toBe(3);
+      for (let i = 0; i < buildingHeights.length; i++) {
+        expect(contentMetadataTable.getProperty(i, "height")).toBe(
+          buildingHeights[i],
+        );
+        expect(contentMetadataTable.getProperty(i, "buildingType")).toBe(
+          buildingTypes[i],
+        );
+      }
+    }
+
+    // Only external buffers are mocked so that inline schemas are loaded normally.
+    function spyOnExternalBuffers(externalBuffer) {
+      return spyOn(ResourceCache, "getExternalBufferLoader").and.callFake(
+        fakeResourceLoader(externalBuffer),
+      );
+    }
+
+    describe("fromSubtreeGltf", function () {
+      it("throws without gltf", async function () {
+        await expectAsync(
+          ImplicitSubtree.fromSubtreeGltf(
+            subtreeResource,
+            undefined,
+            implicitQuadtree,
+            quadtreeCoordinates,
+          ),
+        ).toBeRejectedWithDeveloperError();
+      });
+
+      it("gets availability from constants", async function () {
+        const constantOnly = true;
+        const results = ImplicitTilingTester.generateSubtreeGltf(
+          constantDescription,
+          constantOnly,
+        );
+        const subtree = await ImplicitSubtree.fromSubtreeGltf(
+          subtreeResource,
+          results.gltf,
+          implicitQuadtree,
+          quadtreeCoordinates,
+        );
+
+        expectTileAvailability(subtree, constantDescription.tileAvailability);
+        expectContentAvailability(
+          subtree,
+          constantDescription.contentAvailability,
+        );
+        expectChildSubtreeAvailability(
+          subtree,
+          constantDescription.childSubtreeAvailability,
+        );
+      });
+
+      it("gets availability from external buffers", async function () {
+        const subtreeDescription = {
+          tileAvailability: {
+            descriptor: "11010",
+            lengthBits: 5,
+            isInternal: false,
+          },
+          contentAvailability: [
+            {
+              descriptor: "11000",
+              lengthBits: 5,
+              isInternal: false,
+            },
+          ],
+          childSubtreeAvailability: {
+            descriptor: "1111000010100000",
+            lengthBits: 16,
+            isInternal: false,
+          },
+        };
+        const results =
+          ImplicitTilingTester.generateSubtreeGltf(subtreeDescription);
+        const fetchExternal = spyOnExternalBuffers(results.externalBuffer);
+
+        const subtree = await ImplicitSubtree.fromSubtreeGltf(
+          subtreeResource,
+          results.gltf,
+          implicitQuadtree,
+          quadtreeCoordinates,
+        );
+
+        expect(fetchExternal).toHaveBeenCalled();
+        expectTileAvailability(subtree, subtreeDescription.tileAvailability);
+        expectContentAvailability(
+          subtree,
+          subtreeDescription.contentAvailability,
+        );
+        expectChildSubtreeAvailability(
+          subtree,
+          subtreeDescription.childSubtreeAvailability,
+        );
+      });
+
+      it("gets tile and content metadata", async function () {
+        const results = ImplicitTilingTester.generateSubtreeGltf(
+          makeMetadataDescription(false),
+        );
+        const fetchExternal = spyOnExternalBuffers(results.externalBuffer);
+
+        const subtree = await ImplicitSubtree.fromSubtreeGltf(
+          subtreeResource,
+          results.gltf,
+          implicitQuadtree,
+          quadtreeCoordinates,
+        );
+
+        expect(fetchExternal).toHaveBeenCalled();
+        expectMetadata(subtree);
+      });
+    });
+
+    describe("fromSubtreeGlb", function () {
+      it("throws without glbView", async function () {
+        await expectAsync(
+          ImplicitSubtree.fromSubtreeGlb(
+            subtreeResource,
+            undefined,
+            implicitQuadtree,
+            quadtreeCoordinates,
+          ),
+        ).toBeRejectedWithDeveloperError();
+      });
+
+      it("gets availability from constants", async function () {
+        const constantOnly = true;
+        const results = ImplicitTilingTester.generateSubtreeGltf(
+          constantDescription,
+          constantOnly,
+        );
+        const subtree = await ImplicitSubtree.fromSubtreeGlb(
+          subtreeResource,
+          results.glb,
+          implicitQuadtree,
+          quadtreeCoordinates,
+        );
+
+        expectTileAvailability(subtree, constantDescription.tileAvailability);
+        expectContentAvailability(
+          subtree,
+          constantDescription.contentAvailability,
+        );
+        expectChildSubtreeAvailability(
+          subtree,
+          constantDescription.childSubtreeAvailability,
+        );
+      });
+
+      it("gets availability from the embedded buffer", async function () {
+        const results = ImplicitTilingTester.generateSubtreeGltf(
+          internalQuadtreeDescription,
+        );
+        const fetchExternal = spyOnExternalBuffers(results.externalBuffer);
+
+        const subtree = await ImplicitSubtree.fromSubtreeGlb(
+          subtreeResource,
+          results.glb,
+          implicitQuadtree,
+          quadtreeCoordinates,
+        );
+
+        expect(fetchExternal).not.toHaveBeenCalled();
+        expectTileAvailability(
+          subtree,
+          internalQuadtreeDescription.tileAvailability,
+        );
+        expectContentAvailability(
+          subtree,
+          internalQuadtreeDescription.contentAvailability,
+        );
+        expectChildSubtreeAvailability(
+          subtree,
+          internalQuadtreeDescription.childSubtreeAvailability,
+        );
+      });
+
+      it("gets availability from an external buffer", async function () {
+        const subtreeDescription = {
+          tileAvailability: {
+            descriptor: "11010",
+            lengthBits: 5,
+            isInternal: false,
+          },
+          contentAvailability: [
+            {
+              descriptor: "11000",
+              lengthBits: 5,
+              isInternal: false,
+            },
+          ],
+          childSubtreeAvailability: {
+            descriptor: "1111000010100000",
+            lengthBits: 16,
+            isInternal: false,
+          },
+        };
+        const results =
+          ImplicitTilingTester.generateSubtreeGltf(subtreeDescription);
+        const fetchExternal = spyOnExternalBuffers(results.externalBuffer);
+
+        const subtree = await ImplicitSubtree.fromSubtreeGlb(
+          subtreeResource,
+          results.glb,
+          implicitQuadtree,
+          quadtreeCoordinates,
+        );
+
+        expect(fetchExternal).toHaveBeenCalled();
+        expectTileAvailability(subtree, subtreeDescription.tileAvailability);
+        expectContentAvailability(
+          subtree,
+          subtreeDescription.contentAvailability,
+        );
+        expectChildSubtreeAvailability(
+          subtree,
+          subtreeDescription.childSubtreeAvailability,
+        );
+      });
+
+      it("gets tile and content metadata", async function () {
+        const results = ImplicitTilingTester.generateSubtreeGltf(
+          makeMetadataDescription(true),
+        );
+        const fetchExternal = spyOnExternalBuffers(results.externalBuffer);
+
+        const subtree = await ImplicitSubtree.fromSubtreeGlb(
+          subtreeResource,
+          results.glb,
+          implicitQuadtree,
+          quadtreeCoordinates,
+        );
+
+        expect(fetchExternal).not.toHaveBeenCalled();
+        expectMetadata(subtree);
+      });
+    });
+
+    it("doesn't throw up for bufferView.byteOffset being undefined", async function () {
+      const subtreeGltf = {
+        extensions: {
+          "3DTILES_subtree": {
+            tileAvailability: {
+              bitstream: 0,
+              availableCount: 5,
+            },
+            contentAvailability: {
+              constant: 0,
+            },
+            childSubtreeAvailability: {
+              constant: 0,
+            },
+          },
+        },
+        extensionsUsed: ["3DTILES_subtree"],
+        extensionsRequired: ["3DTILES_subtree"],
+        asset: {
+          version: "2.1",
+        },
+        buffers: [
+          {
+            uri: "data:application/octet-stream;base64,Hw==",
+            byteLength: 1,
+          },
+        ],
+        bufferViews: [
+          {
+            buffer: 0,
+            //byteOffset: 0, // This is what this spec is about...
+            byteLength: 1,
+          },
+        ],
+      };
+
+      const implicitQuadtreeJsonLocal = {
+        geometricError: 500,
+        refine: "ADD",
+        boundingVolume: {
+          region: [0, 0, Math.PI / 24, Math.PI / 24, 0, 1000.0],
+        },
+        content: {
+          uri: "https://example.com/{level}/{x}/{y}.b3dm",
+        },
+        implicitTiling: {
+          subdivisionScheme: "QUADTREE",
+          subtreeLevels: 2,
+          availableLevels: 2,
+          subtrees: {
+            uri: "https://example.com/{level}/{x}/{y}.subtree",
+          },
+        },
+      };
+
+      const internalQuadtreeDescriptionLocal = {
+        tileAvailability: {
+          descriptor: "11111",
+          lengthBits: 5,
+          isInternal: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: "0",
+            lengthBits: 1,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: "0",
+          lengthBits: 1,
+          isInternal: true,
+        },
+      };
+
+      const implicitQuadtreeLocal = new ImplicitTileset(
+        tilesetResource,
+        implicitQuadtreeJsonLocal,
+        metadataSchema,
+      );
+      const quadtreeCoordinatesLocal = new ImplicitTileCoordinates({
+        subdivisionScheme: implicitQuadtreeLocal.subdivisionScheme,
+        subtreeLevels: implicitQuadtreeLocal.subtreeLevels,
+        level: 0,
+        x: 0,
+        y: 0,
+      });
+      const subtree = await ImplicitSubtree.fromSubtreeGltf(
+        subtreeResource,
+        subtreeGltf,
+        implicitQuadtreeLocal,
+        quadtreeCoordinatesLocal,
+      );
+
+      expectTileAvailability(
+        subtree,
+        internalQuadtreeDescriptionLocal.tileAvailability,
+      );
+      expectContentAvailability(
+        subtree,
+        internalQuadtreeDescriptionLocal.contentAvailability,
+      );
+      expectChildSubtreeAvailability(
+        subtree,
+        internalQuadtreeDescriptionLocal.childSubtreeAvailability,
+      );
     });
   });
 });

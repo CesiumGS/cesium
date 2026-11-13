@@ -1,14 +1,16 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Matrix2 from "../Core/Matrix2.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Check,
+  DeveloperError,
+  Frozen,
+  Matrix2,
+  Matrix3,
+  Matrix4,
+  clone,
+  defined,
+} from "@cesium/core";
 import MetadataType from "./MetadataType.js";
 import MetadataComponentType, {
   ScalarCategories,
@@ -1226,7 +1228,7 @@ function bytesPerElement(classProperty, valueType) {
  * Determines whether this property can be stored in a texture, given the property's datatype and the number of
  * texture channels dedicated property value.
  *
- * @param {Number} channelsLength The number of texture channels to pack each property value into
+ * @param {number} channelsLength The number of texture channels to pack each property value into
  * @returns {boolean} true if the property can be stored in a texture with the given number of channels, false otherwise
  *
  * @private

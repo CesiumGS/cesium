@@ -1,6 +1,6 @@
+import { Matrix4 } from "@cesium/core";
 import CubeMapPanorama from "../../Source/Scene/CubeMapPanorama.js";
 import SceneMode from "../../Source/Scene/SceneMode.js";
-import Matrix4 from "../../Source/Core/Matrix4.js";
 import Credit from "../../Source/Core/Credit.js";
 import Panorama from "../../Source/Scene/Panorama.js";
 

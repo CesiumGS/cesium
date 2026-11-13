@@ -1,21 +1,25 @@
 import {
   BoundingSphere,
-  BoundingSphereState,
   Cartesian3,
-  CesiumWidget,
-  Cesium3DTileFeature,
   Clock,
-  ConstantPositionProperty,
-  Frozen,
-  defined,
-  destroyObject,
   DeveloperError,
-  Entity,
   Event,
   EventHelper,
-  getElement,
+  Frozen,
   JulianDate,
   Math as CesiumMath,
+  defined,
+  destroyObject,
+} from "@cesium/core";
+import {
+  BoundingSphereState,
+  CesiumWidget,
+  Cesium3DTileFeature,
+  Cesium3DTileVectorFeature,
+  Cesium3DTileset,
+  ConstantPositionProperty,
+  Entity,
+  getElement,
   Property,
   ScreenSpaceEventType,
   IonGeocoderService,
@@ -109,7 +113,10 @@ function pickEntity(viewer, e) {
       return id;
     }
 
-    if (picked instanceof Cesium3DTileFeature) {
+    if (
+      picked instanceof Cesium3DTileFeature ||
+      picked instanceof Cesium3DTileVectorFeature
+    ) {
       return new Entity({
         name: getCesium3DTileFeatureName(picked),
         description: getCesium3DTileFeatureDescription(picked),
@@ -119,9 +126,7 @@ function pickEntity(viewer, e) {
   }
 
   // No regular entity picked.  Try picking features from imagery layers.
-  if (defined(viewer.scene.globe)) {
-    return pickImageryLayerFeature(viewer, e.position);
-  }
+  return pickImageryLayerFeature(viewer, e.position);
 }
 
 const scratchStopTime = new JulianDate();
@@ -149,11 +154,39 @@ function linkTimelineToDataSourceClock(timeline, dataSource) {
 
 const cartesian3Scratch = new Cartesian3();
 
+function findFirstTileset(primitives) {
+  const length = primitives.length;
+  for (let i = 0; i < length; ++i) {
+    const primitive = primitives.get(i);
+    if (primitive instanceof Cesium3DTileset) {
+      return primitive;
+    }
+  }
+  return undefined;
+}
+
 function pickImageryLayerFeature(viewer, windowPosition) {
   const scene = viewer.scene;
   const pickRay = scene.camera.getPickRay(windowPosition);
-  const imageryLayerFeaturePromise =
-    scene.imageryLayers.pickImageryLayerFeatures(pickRay, scene);
+  if (!defined(pickRay)) {
+    return;
+  }
+
+  // When globe is disabled, scene.imageryLayers is undefined. Fall back to the
+  // first Cesium3DTileset's imagery layers (e.g. draped imagery on 3D Tiles).
+  let imageryLayers = scene.imageryLayers;
+  if (!defined(imageryLayers)) {
+    const tileset = findFirstTileset(scene.primitives);
+    if (!defined(tileset)) {
+      return;
+    }
+    imageryLayers = tileset.imageryLayers;
+  }
+
+  const imageryLayerFeaturePromise = imageryLayers.pickImageryLayerFeatures(
+    pickRay,
+    scene,
+  );
   if (!defined(imageryLayerFeaturePromise)) {
     return;
   }
@@ -1967,6 +2000,30 @@ Viewer.prototype._onDataSourceRemoved = function (
   const id = dataSource.entities.id;
   this._dataSourceChangedListeners[id]();
   this._dataSourceChangedListeners[id] = undefined;
+};
+
+/**
+ * Adds a controller— an implementation of the {@link Controller} interface used to handle input events, camera animations, and other interactions— to the viewer's scene.
+ * @param {Controller} controller An implementation of the <code>Controller</code> interface.
+ * @example
+ * viewer.scene.screenSpaceCameraController.enableInputs = false;
+ * viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+ *
+ * const tiltOrbitController = new Cesium.ScreenSpaceTiltOrbitCameraController();
+ * viewer.addController(tiltOrbitController);
+ */
+Viewer.prototype.addController = function (controller) {
+  return this._cesiumWidget.addController(controller);
+};
+
+/**
+ * Removes a controller— an implementation of the {@link Controller} interface used to handle input events, camera animations, and other interactions— from the viewer's scene.
+ * @param {Controller} controller An implementation of the <code>Controller</code> interface.
+ * @example
+ * viewer.removeController(tiltOrbitController);
+ */
+Viewer.prototype.removeController = function (controller) {
+  return this._cesiumWidget.removeController(controller);
 };
 
 /**

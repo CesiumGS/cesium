@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * The state of a {@link QuadtreeTile} in the tile load pipeline.
  * @enum {number}
@@ -36,4 +38,7 @@ const QuadtreeTileLoadState = {
    */
   FAILED: 3,
 };
-export default Object.freeze(QuadtreeTileLoadState);
+
+Object.freeze(QuadtreeTileLoadState);
+
+export default QuadtreeTileLoadState;

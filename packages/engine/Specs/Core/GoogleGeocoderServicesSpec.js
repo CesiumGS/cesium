@@ -1,9 +1,8 @@
+import { Rectangle, createGuid } from "@cesium/core";
 import {
-  createGuid,
   GeocoderService,
   GoogleGeocoderService,
   Resource,
-  Rectangle,
 } from "../../index.js";
 
 describe("Core/GoogleGeocoderService", function () {

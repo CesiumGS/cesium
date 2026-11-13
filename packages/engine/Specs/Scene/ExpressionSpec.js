@@ -3,11 +3,10 @@ import {
   Cartesian3,
   Cartesian4,
   Color,
-  Expression,
-  ExpressionNodeType,
   Math as CesiumMath,
   RuntimeError,
-} from "../../index.js";
+} from "@cesium/core";
+import { Expression, ExpressionNodeType } from "../../index.js";
 
 describe("Scene/Expression", function () {
   function MockFeature() {

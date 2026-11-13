@@ -1,4 +1,4 @@
-import formatError from "../Core/formatError.js";
+import { formatError } from "@cesium/core";
 
 /**
  * Creates an adapter function to allow a calculation function to operate as a Web Worker,

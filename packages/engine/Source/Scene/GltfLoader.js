@@ -1,24 +1,33 @@
+import {
+  AttributeType,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Check,
+  ComponentDatatype,
+  Frozen,
+  InterpolationType,
+  Matrix4,
+  PrimitiveType,
+  Quaternion,
+  RuntimeError,
+  addAllToArray,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
+import {
+  getAccessorByteStride,
+  getComponentReader,
+  numberOfComponentsForType,
+} from "@cesium/gltf";
 import ArticulationStageType from "../Core/ArticulationStageType.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Check from "../Core/Check.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import InterpolationType from "../Core/InterpolationType.js";
-import Matrix4 from "../Core/Matrix4.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-import Quaternion from "../Core/Quaternion.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Sampler from "../Renderer/Sampler.js";
-import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
-import getComponentReader from "./GltfPipeline/getComponentReader.js";
-import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
+import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
+import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
-import AttributeType from "./AttributeType.js";
+import { isSpzSemantic } from "./GltfSpzLoader.js";
 import Axis from "./Axis.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import hasExtension from "./hasExtension.js";
@@ -31,8 +40,6 @@ import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import GltfGpmLoader from "./Model/Extensions/Gpm/GltfGpmLoader.js";
 import GltfMeshPrimitiveGpmLoader from "./Model/Extensions/Gpm/GltfMeshPrimitiveGpmLoader.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
-import addAllToArray from "../Core/addAllToArray.js";
 import getMeshPrimitives from "./getMeshPrimitives.js";
 
 const {
@@ -61,9 +68,11 @@ const {
   Specular,
   Anisotropy,
   Clearcoat,
+  PlanarFill,
   LineStyle,
   Material,
   Vector,
+  Polygon,
 } = ModelComponents;
 
 /**
@@ -533,6 +542,7 @@ class GltfLoader extends ResourceLoader {
 
 /**
  * Loads the gltf object
+ * @ignore
  */
 async function loadGltfJson(loader) {
   loader._state = GltfLoaderState.LOADING;
@@ -802,13 +812,7 @@ function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
   byteOffset = bufferViewTypedArray.byteOffset + byteOffset;
 
   for (let i = 0; i < count; ++i) {
-    componentReader(
-      dataView,
-      byteOffset,
-      componentCount,
-      componentByteLength,
-      components,
-    );
+    componentReader(dataView, byteOffset, componentCount, components);
     for (let j = 0; j < componentCount; ++j) {
       accessorTypedArray[i * componentCount + j] = components[j];
     }
@@ -897,6 +901,38 @@ function loadAccessor(loader, accessor, useQuaternion) {
   }
 
   return loadDefaultAccessorValues(accessor, values);
+}
+
+function loadAccessorTypedArray(loader, accessor) {
+  const values = ComponentDatatype.createTypedArray(
+    accessor.componentType,
+    accessor.count * AttributeType.getNumberOfComponents(accessor.type),
+  );
+
+  if (!defined(accessor.bufferView)) {
+    return values;
+  }
+
+  const bufferViewLoader = getBufferViewLoader(loader, accessor.bufferView);
+
+  // Save a link to the gltfJson, which is removed after bufferViewLoader.load()
+  const { gltfJson } = loader;
+
+  const promise = bufferViewLoader.load().then(() => {
+    if (loader.isDestroyed()) {
+      return;
+    }
+    const result = getPackedTypedArray(
+      gltfJson,
+      accessor,
+      bufferViewLoader.typedArray,
+    );
+    values.set(result);
+  });
+
+  loader._loaderPromises.push(promise);
+
+  return values;
 }
 
 function fromArray(MathType, values) {
@@ -1260,7 +1296,15 @@ function loadAttribute(
     setIndex,
   );
 
-  if (!defined(draco) && !defined(bufferViewId) && !defined(spz)) {
+  // SPZ decompression only handles a fixed set of Gaussian splat semantics.
+  // Non-SPZ attributes (e.g. _FEATURE_ID_0) whose accessors lack a
+  // bufferView must fall through to the zero-initialized default rather than
+  // being routed through the SPZ loader (which would leave them undefined).
+  // isSpzSemantic is the shared source of truth (see GltfSpzLoader).
+  const isSpzDecodable = defined(spz) && isSpzSemantic(gltfSemantic);
+  const effectiveSpz = isSpzDecodable ? spz : undefined;
+
+  if (!defined(draco) && !defined(bufferViewId) && !defined(effectiveSpz)) {
     return attribute;
   }
 
@@ -1270,7 +1314,7 @@ function loadAttribute(
     gltfSemantic,
     primitive,
     draco,
-    spz,
+    effectiveSpz,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1296,7 +1340,7 @@ function loadAttribute(
         loadBuffer,
         loadTypedArray,
       );
-    } else if (defined(spz)) {
+    } else if (defined(effectiveSpz)) {
       finalizeSpzAttribute(
         attribute,
         vertexBufferLoader,
@@ -1535,7 +1579,41 @@ function loadIndices(
   return indicesPlan;
 }
 
-function loadTexture(loader, textureInfo, frameState, samplerOverride) {
+/**
+ * Returns a copy of <code>sampler</code> with its minification and magnification
+ * filters replaced. Undefined filters keep the value already on the sampler, and
+ * every other property, in particular the wrap modes declared by the glTF, is
+ * carried over unchanged.
+ *
+ * @param {Sampler} sampler The sampler created from the glTF.
+ * @param {TextureMinificationFilter} [minificationFilter] The minification filter to apply instead of the one on <code>sampler</code>.
+ * @param {TextureMagnificationFilter} [magnificationFilter] The magnification filter to apply instead of the one on <code>sampler</code>.
+ * @returns {Sampler} A sampler using the given filters and the original wrap modes.
+ *
+ * @private
+ */
+function overrideSamplerFilters(
+  sampler,
+  minificationFilter,
+  magnificationFilter,
+) {
+  return new Sampler({
+    wrapR: sampler.wrapR,
+    wrapS: sampler.wrapS,
+    wrapT: sampler.wrapT,
+    minificationFilter: minificationFilter ?? sampler.minificationFilter,
+    magnificationFilter: magnificationFilter ?? sampler.magnificationFilter,
+    maximumAnisotropy: sampler.maximumAnisotropy,
+  });
+}
+
+function loadTexture(
+  loader,
+  textureInfo,
+  frameState,
+  minificationFilterOverride,
+  magnificationFilterOverride,
+) {
   const gltf = loader.gltfJson;
   const imageId = GltfLoaderUtil.getImageIdFromTexture({
     gltf: gltf,
@@ -1583,9 +1661,17 @@ function loadTexture(loader, textureInfo, frameState, samplerOverride) {
   // Save this finish callback by the loader index so it can be called
   // in process().
   loader._textureCallbacks[index] = () => {
-    textureReader.texture = textureLoader.texture;
-    if (defined(samplerOverride)) {
-      textureReader.texture.sampler = samplerOverride;
+    const texture = textureLoader.texture;
+    textureReader.texture = texture;
+    if (
+      defined(minificationFilterOverride) ||
+      defined(magnificationFilterOverride)
+    ) {
+      texture.sampler = overrideSamplerFilters(
+        texture.sampler,
+        minificationFilterOverride,
+        magnificationFilterOverride,
+      );
     }
   };
 
@@ -1753,6 +1839,23 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
   return clearcoat;
 }
 
+/**
+ * Load properties for the BENTLEY_materials_planar_fill extension.
+ *
+ * Note: The wireframeFill property is loaded but is currently a NO-OP in the
+ * rendering pipeline. CesiumJS does not yet have a proper wireframe rendering
+ * mode, so this value is stored for completeness but has no effect on rendering.
+ * See https://github.com/CesiumGS/cesium/issues/13620 and
+ * MaterialPipelineStage.js for more details.
+ *
+ * @param {object} planarFillInfo The contents of the BENTLEY_materials_planar_fill extension in the parsed glTF JSON
+ * @returns {ModelComponents.PlanarFill}
+ * @private
+ */
+function loadPlanarFill(planarFillInfo) {
+  return new PlanarFill(planarFillInfo);
+}
+
 function loadLineStyle(lineStyleInfo) {
   if (!defined(lineStyleInfo)) {
     return undefined;
@@ -1799,6 +1902,8 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   const pbrAnisotropy = extensions.KHR_materials_anisotropy;
   const pbrClearcoat = extensions.KHR_materials_clearcoat;
   const pbrMetallicRoughness = gltfMaterial.pbrMetallicRoughness;
+  const planarFill = extensions.BENTLEY_materials_planar_fill;
+  const pbrEmissiveStrength = extensions.KHR_materials_emissive_strength;
 
   material.unlit = defined(extensions.KHR_materials_unlit);
 
@@ -1851,9 +1956,19 @@ function loadMaterial(loader, gltfMaterial, frameState) {
     );
   }
   material.emissiveFactor = fromArray(Cartesian3, gltfMaterial.emissiveFactor);
+
+  if (defined(pbrEmissiveStrength)) {
+    material.emissiveStrength = pbrEmissiveStrength;
+  }
+
   material.alphaMode = gltfMaterial.alphaMode;
   material.alphaCutoff = gltfMaterial.alphaCutoff;
   material.doubleSided = gltfMaterial.doubleSided;
+
+  // BENTLEY_materials_planar_fill extension
+  if (defined(planarFill)) {
+    material.planarFill = loadPlanarFill(planarFill);
+  }
 
   // BENTLEY_materials_point_style extension
   const pointStyleExtension = extensions.BENTLEY_materials_point_style;
@@ -1955,7 +2070,10 @@ function loadFeatureIdTexture(
     loader,
     textureInfo,
     frameState,
-    Sampler.NEAREST, // Feature ID textures require nearest sampling
+    // Feature ID textures require nearest sampling. Only the filters are
+    // overridden so the wrap modes declared by the glTF are preserved.
+    TextureMinificationFilter.NEAREST,
+    TextureMagnificationFilter.NEAREST,
   );
 
   // Though the new channel index is more future-proof, this implementation
@@ -1990,7 +2108,10 @@ function loadFeatureIdTextureLegacy(
     loader,
     textureInfo,
     frameState,
-    Sampler.NEAREST, // Feature ID textures require nearest sampling
+    // Feature ID textures require nearest sampling. Only the filters are
+    // overridden so the wrap modes declared by the glTF are preserved.
+    TextureMinificationFilter.NEAREST,
+    TextureMagnificationFilter.NEAREST,
   );
 
   featureIdTexture.textureReader.channels = featureIds.channels;
@@ -2122,7 +2243,7 @@ function loadEdgeVisibilityLineStrings(
       throw new RuntimeError("Edge visibility line string accessor not found!");
     }
 
-    const indices = loadAccessor(loader, accessor);
+    const indices = loadAccessorTypedArray(loader, accessor);
     const restartIndex = getLineStringPrimitiveRestartValue(
       accessor.componentType,
     );
@@ -2154,7 +2275,10 @@ function loadEdgeVisibility(loader, edgeVisibilityExtension) {
     if (!defined(visibilityAccessor)) {
       throw new RuntimeError("Edge visibility accessor not found!");
     }
-    edgeVisibility.visibility = loadAccessor(loader, visibilityAccessor);
+    edgeVisibility.visibility = loadAccessorTypedArray(
+      loader,
+      visibilityAccessor,
+    );
   }
 
   edgeVisibility.materialColor = getEdgeVisibilityMaterialColor(
@@ -2166,7 +2290,9 @@ function loadEdgeVisibility(loader, edgeVisibilityExtension) {
     const silhouetteNormalsAccessor =
       loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
     if (defined(silhouetteNormalsAccessor)) {
-      edgeVisibility.silhouetteNormals = loadAccessor(
+      // Packed typed array (x0,y0,z0, x1,y1,z1, ...), not an array of
+      // Cartesian3s. Avoids a large JS heap cost for edge-heavy tiles.
+      edgeVisibility.silhouetteNormals = loadAccessorTypedArray(
         loader,
         silhouetteNormalsAccessor,
       );
@@ -2208,6 +2334,17 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   }
 
   const extensions = gltfPrimitive.extensions ?? Frozen.EMPTY_OBJECT;
+
+  const polygonExtension = extensions.EXT_mesh_polygon;
+  if (defined(polygonExtension)) {
+    primitive.polygon = loadMeshPolygonExtension(
+      loader,
+      gltfPrimitive,
+      polygonExtension,
+    );
+  }
+
+  // @deprecated CESIUM_mesh_vector to be removed after v1.142 release.
   const meshVectorExtension = extensions.CESIUM_mesh_vector;
   if (defined(meshVectorExtension)) {
     primitive.vector = loadMeshVectorExtension(loader, meshVectorExtension);
@@ -2366,11 +2503,76 @@ function loadPrimitiveOutline(loader, outlineExtension) {
 }
 
 /**
+ * @typedef {object} EXTMeshPolygonExtension
+ * @property {number} count
+ * @property {number} indicesOffsets
+ * @property {number} [loopIndices]
+ * @property {number} [loopIndicesOffsets]
+ * @property {number} [triangleIndices]
+ * @property {number} [triangleIndicesOffsets]
+ */
+
+/**
+ * Load EXT_mesh_polygon.
+ * @param {GltfLoader} loader
+ * @param {object} gltfPrimitive
+ * @param {EXTMeshPolygonExtension} polygonExtension
+ * @returns {ModelComponents.Polygon}
+ * @ignore
+ */
+function loadMeshPolygonExtension(loader, gltfPrimitive, polygonExtension) {
+  const result = new Polygon();
+  const accessors = loader.gltfJson.accessors;
+
+  result.count = polygonExtension.count;
+
+  // See ModelComponents.Polygon definition.
+  if (gltfPrimitive.mode === PrimitiveType.LINE_LOOP) {
+    result.loopIndices = loadAccessorTypedArray(
+      loader,
+      accessors[gltfPrimitive.indices],
+    );
+    result.loopIndicesOffsets = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.indicesOffsets],
+    );
+    result.triangleIndices = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.triangleIndices],
+    );
+    result.triangleIndicesOffsets = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.triangleIndicesOffsets],
+    );
+  } else if (gltfPrimitive.mode === PrimitiveType.TRIANGLES) {
+    result.loopIndices = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.loopIndices],
+    );
+    result.loopIndicesOffsets = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.loopIndicesOffsets],
+    );
+    result.triangleIndices = loadAccessorTypedArray(
+      loader,
+      accessors[gltfPrimitive.indices],
+    );
+    result.triangleIndicesOffsets = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.indicesOffsets],
+    );
+  }
+
+  return result;
+}
+
+/**
  * Load CESIUM_mesh_vector.
  * @param {GltfLoader} loader
  * @param {*} meshVectorExtension
  * @returns {ModelComponents.Vector}
  * @ignore
+ * @deprecated
  */
 function loadMeshVectorExtension(loader, meshVectorExtension) {
   if (!defined(meshVectorExtension)) {
@@ -2684,6 +2886,7 @@ function loadNode(loader, gltfNode, frameState) {
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
   const articulationsExtension = nodeExtensions.AGI_articulations;
   const meshVectorExtension = nodeExtensions.CESIUM_mesh_vector;
+  const voxelsExtension = nodeExtensions.EXT_voxels;
 
   if (defined(instancingExtension)) {
     if (loader._loadForClassification) {
@@ -2700,6 +2903,15 @@ function loadNode(loader, gltfNode, frameState) {
 
   if (defined(meshVectorExtension)) {
     node.meshVector = meshVectorExtension;
+  }
+
+  node.nodeVisibility = nodeExtensions.KHR_node_visibility;
+
+  // EXT_voxels defines its attributes and extensions the same way a primitive does.
+  if (defined(voxelsExtension)) {
+    node.primitives.push(
+      loadPrimitive(loader, voxelsExtension, false, frameState),
+    );
   }
 
   const meshId = gltfNode.mesh;

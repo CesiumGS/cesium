@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * An enum of the basic GLSL uniform types. These can be used with
  * {@link CustomShader} to declare user-defined uniforms.
@@ -121,4 +123,6 @@ const UniformType = {
   SAMPLER_CUBE: "samplerCube",
 };
 
-export default Object.freeze(UniformType);
+Object.freeze(UniformType);
+
+export default UniformType;

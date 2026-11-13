@@ -1,11 +1,13 @@
-import AttributeCompression from "../Core/AttributeCompression.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import combine from "../Core/combine.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import CesiumMath from "../Core/Math.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  AttributeCompression,
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  IndexDatatype,
+  Math as CesiumMath,
+  Rectangle,
+  combine,
+} from "@cesium/core";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 const MAX_SHORT = 32767;

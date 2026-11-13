@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core";
 import VoxelBoxShape from "./VoxelBoxShape.js";
 import VoxelCylinderShape from "./VoxelCylinderShape.js";
 import VoxelEllipsoidShape from "./VoxelEllipsoidShape.js";
@@ -102,4 +102,6 @@ VoxelShapeType.getShapeConstructor = function (shapeType) {
   }
 };
 
-export default Object.freeze(VoxelShapeType);
+Object.freeze(VoxelShapeType);
+
+export default VoxelShapeType;

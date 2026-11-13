@@ -2,9 +2,11 @@ import {
   Cartesian2,
   Cartesian3,
   GeographicProjection,
-  HeightmapTerrainData,
   Intersect,
   Math as CesiumMath,
+} from "@cesium/core";
+import {
+  HeightmapTerrainData,
   Camera,
   GlobeSurfaceTileProvider,
   ImageryLayerCollection,
@@ -13,6 +15,7 @@ import {
   TerrainFillMesh,
   TileBoundingRegion,
   TileSelectionResult,
+  VectorProvider,
 } from "../../index.js";
 import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
 import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
@@ -82,6 +85,9 @@ describe("Scene/TerrainFillMesh", function () {
       terrainProvider: mockTerrain,
       imageryLayers: imageryLayerCollection,
       surfaceShaderSet: surfaceShaderSet,
+      vectorProvider: new VectorProvider({
+        tilingScheme: mockTerrain.tilingScheme,
+      }),
     });
     quadtree = new QuadtreePrimitive({
       tileProvider: tileProvider,

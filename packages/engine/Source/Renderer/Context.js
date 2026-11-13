@@ -1,20 +1,23 @@
+import {
+  Check,
+  Color,
+  ComponentDatatype,
+  DeveloperError,
+  Frozen,
+  Geometry,
+  GeometryAttribute,
+  Matrix4,
+  PixelDatatype,
+  PixelFormat,
+  PrimitiveType,
+  RuntimeError,
+  WebGLConstants,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Buffer from "./Buffer.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Geometry from "../Core/Geometry.js";
-import GeometryAttribute from "../Core/GeometryAttribute.js";
 import loadKTX2 from "../Core/loadKTX2.js";
-import Matrix4 from "../Core/Matrix4.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
 import ViewportQuadVS from "../Shaders/ViewportQuadVS.js";
 import BufferUsage from "./BufferUsage.js";
 import ClearCommand from "./ClearCommand.js";
@@ -23,7 +26,6 @@ import CubeMap from "./CubeMap.js";
 import DrawCommand from "./DrawCommand.js";
 import PassState from "./PassState.js";
 import PickId from "./PickId.js";
-import PixelDatatype from "./PixelDatatype.js";
 import RenderState from "./RenderState.js";
 import ShaderCache from "./ShaderCache.js";
 import ShaderProgram from "./ShaderProgram.js";
@@ -1010,20 +1012,26 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * A 1x1 RGBA texture initialized to [255, 255, 255, 255].  This can
-   * be used as a placeholder texture while other textures are downloaded.
+   * A 1x1 RGBA texture initialized to the color defined by {@link Texture.defaultColor}.
+   * This can be used as a placeholder texture while other textures are downloaded.
    * @memberof Context.prototype
    * @type {Texture}
    */
   defaultTexture: {
     get: function () {
       if (this._defaultTexture === undefined) {
+        const color = Texture.defaultColor;
         this._defaultTexture = new Texture({
           context: this,
           source: {
             width: 1,
             height: 1,
-            arrayBufferView: new Uint8Array([255, 255, 255, 255]),
+            arrayBufferView: new Uint8Array([
+              color.red * 255,
+              color.green * 255,
+              color.blue * 255,
+              color.alpha * 255,
+            ]),
           },
           flipY: false,
         });
@@ -1514,7 +1522,7 @@ Context.prototype.readPixelsToPBO = function (readState) {
     width,
     height,
     pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, this),
+    PixelDatatype.toWebGLConstant(pixelDatatype, this._webgl2),
     0,
   );
   pixels._unBind();
@@ -1566,7 +1574,7 @@ Context.prototype.readPixels = function (readState) {
     width,
     height,
     PixelFormat.RGBA,
-    PixelDatatype.toWebGLConstant(pixelDatatype, this),
+    PixelDatatype.toWebGLConstant(pixelDatatype, this._webgl2),
     pixels,
   );
 
@@ -1686,7 +1694,7 @@ Context.prototype.createPickId = function (object) {
   // actually detect overflow in the Uint32 value
   ++this._nextPickColor[0];
   const key = this._nextPickColor[0];
-  if (key === 0) {
+  if (key === PickId.NULL_PICK_ID) {
     // In case of overflow
     throw new RuntimeError("Out of unique Pick IDs.");
   }

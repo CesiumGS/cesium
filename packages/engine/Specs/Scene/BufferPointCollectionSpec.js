@@ -1,10 +1,16 @@
 import {
+  BoundingSphere,
   Cartesian3,
   Color,
   ComponentDatatype,
+  Matrix4,
+} from "@cesium/core";
+import {
   BufferPoint,
   BufferPointCollection,
   BufferPointMaterial,
+  HeightReference,
+  SceneMode,
 } from "../../index.js";
 
 describe("Scene/BufferPointCollection", () => {
@@ -43,6 +49,38 @@ describe("Scene/BufferPointCollection", () => {
 
     collection.get(2, point);
     expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_Z);
+  });
+
+  it("setPositions", () => {
+    const collection = new BufferPointCollection();
+    const point = new BufferPoint();
+
+    collection.add({ position: Cartesian3.UNIT_X }, point);
+    collection.add({ position: Cartesian3.UNIT_Y }, point);
+    collection.add({ position: Cartesian3.UNIT_Z }, point);
+
+    expect(collection._dirtyFlags).toBe(BufferPointCollection.DirtyFlags.ALL);
+
+    collection._makeClean();
+
+    // prettier-ignore
+    collection.setPositions(new Float64Array([
+      101, 101, 101,
+      102, 102, 102
+    ]), 1, 2);
+
+    collection.get(0, point);
+    expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_X);
+
+    collection.get(1, point);
+    expect(point.getPosition(position)).toEqual(new Cartesian3(101, 101, 101));
+
+    collection.get(2, point);
+    expect(point.getPosition(position)).toEqual(new Cartesian3(102, 102, 102));
+
+    expect(collection._dirtyFlags).toBe(
+      BufferPointCollection.DirtyFlags.GEOMETRY,
+    );
   });
 
   it("show", () => {
@@ -149,7 +187,7 @@ describe("Scene/BufferPointCollection", () => {
     );
   });
 
-  it("boundingVolume", () => {
+  it("boundingVolume - dynamic", () => {
     const center = new Cartesian3(1000, 0, 0);
 
     const positions = [
@@ -170,10 +208,31 @@ describe("Scene/BufferPointCollection", () => {
     collection.add({ position: positions[3] }, point);
     collection.add({ position: positions[4] }, point);
     collection.add({ position: positions[5] }, point);
-    collection._updateBoundingVolume();
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
 
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("boundingVolume - static", () => {
+    // When bounding volume is specified in the constructor, it should not be
+    // updated or otherwise managed by the collection.
+
+    const collection = new BufferPointCollection({
+      primitiveCountMax: 3,
+      boundingVolume: new BoundingSphere(Cartesian3.UNIT_Y, 128),
+    });
+    const point = new BufferPoint();
+
+    collection.add({ position: Cartesian3.UNIT_X }, point);
+    collection.add({ position: Cartesian3.UNIT_Y }, point);
+    collection.add({ position: Cartesian3.UNIT_Z }, point);
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
+    expect(collection.boundingVolume.center).toEqual(Cartesian3.UNIT_Y);
+    expect(collection.boundingVolume.radius).toEqual(128);
   });
 
   it("positionDatatype", () => {
@@ -200,8 +259,71 @@ describe("Scene/BufferPointCollection", () => {
     collection.get(1, point);
     expect(point.getPosition()).toEqual(new Cartesian3(999, 0, 0));
 
-    collection._updateBoundingVolume();
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("positionNormalized", () => {
+    // Normalized int16 values: 32767 represents 1.0 in local space.
+    // modelMatrix scales local space by 1000 along each axis.
+    const scale = 1000;
+    const modelMatrix = Matrix4.fromScale(
+      new Cartesian3(scale, scale, scale),
+      new Matrix4(),
+    );
+
+    // Raw int16 position values representing normalized coordinates.
+    // Value 16384 ≈ 0.5 in local space → 500 in world space.
+    const rawPosition = new Cartesian3(16384, 0, 0);
+
+    const collection = new BufferPointCollection({
+      primitiveCountMax: 1,
+      positionDatatype: ComponentDatatype.SHORT,
+      positionNormalized: true,
+      modelMatrix,
+    });
+
+    expect(collection.positionNormalized).toBe(true);
+    expect(collection.positionDatatype).toBe(ComponentDatatype.SHORT);
+
+    const point = new BufferPoint();
+    collection.add({ position: rawPosition }, point);
+
+    // getPosition() returns the raw buffer value unchanged.
+    collection.get(0, point);
+    expect(point.getPosition().x).toBe(16384);
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
+    // Bounding volume is computed from de-normalized local positions,
+    // then transformed by modelMatrix.
+    const expectedWorldX = (16384 / 32767) * scale;
+    expect(collection.boundingVolume.center.x).toBeCloseTo(expectedWorldX, 0);
+  });
+
+  it("pickObject", () => {
+    const collection = new BufferPointCollection();
+    const point = new BufferPoint();
+
+    collection.add({ position: Cartesian3.UNIT_X }, point);
+    collection.add({ position: Cartesian3.UNIT_Y, pickObject: 1 }, point);
+
+    collection.get(0, point);
+    expect(point.pickObject).toBe(undefined);
+    point.pickObject = 2;
+    expect(point.pickObject).toBe(2);
+
+    collection.get(1, point);
+    expect(point.pickObject).toBe(1);
+    point.pickObject = 3;
+    expect(point.pickObject).toBe(3);
+  });
+
+  it("heightReference defaults to NONE", () => {
+    expect(new BufferPointCollection().heightReference).toBe(
+      HeightReference.NONE,
+    );
   });
 });

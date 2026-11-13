@@ -1,10 +1,12 @@
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
+import {
+  Check,
+  Event,
+  Frozen,
+  RuntimeError,
+  clone,
+  defined,
+} from "@cesium/core";
 import IonResource from "../Core/IonResource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import IonImageryProviderFactory from "./IonImageryProviderFactory.js";
 
 /**
@@ -26,17 +28,13 @@ import IonImageryProviderFactory from "./IonImageryProviderFactory.js";
  * @alias IonImageryProvider
  * @constructor
  *
- * @param {IonImageryProvider.ConstructorOptions} [options] Object describing initialization options
- *
  * @example
  * const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));
  * viewer.imageryLayers.add(imageryLayer);
  *
  * @see IonImageryProvider.fromAssetId
  */
-function IonImageryProvider(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-
+function IonImageryProvider() {
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
   this._defaultDayAlpha = undefined;

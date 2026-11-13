@@ -1,5 +1,4 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
+import { Check, defined } from "@cesium/core";
 import BillboardLoadState from "./BillboardLoadState.js";
 
 /**
@@ -199,9 +198,11 @@ BillboardTexture.prototype.loadImage = async function (
   let index;
   const atlas = this._billboardCollection.textureAtlas;
   try {
-    index = atlas.addImage(id, image, width, height);
-    if (index instanceof Promise) {
-      index = await index;
+    const indexOrPromise = atlas.addImage(id, image, width, height);
+    if (typeof indexOrPromise === "number") {
+      index = indexOrPromise;
+    } else {
+      index = await indexOrPromise;
     }
   } catch (error) {
     // There was an error loading the image

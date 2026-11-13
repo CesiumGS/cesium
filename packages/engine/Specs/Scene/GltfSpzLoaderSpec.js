@@ -1,4 +1,4 @@
-import {
+import GltfSpzLoader, {
   estimateSpzMemoryBytes,
   getSpzInfoFromGltf,
 } from "../../Source/Scene/GltfSpzLoader.js";
@@ -41,5 +41,42 @@ describe("Scene/GltfSpzLoader", function () {
 
   it("estimates SPZ decode memory usage", function () {
     expect(estimateSpzMemoryBytes(4913000, 3)).toBe(2318936000);
+  });
+
+  it("loads the bufferView specified by the SPZ extension", async function () {
+    const gltf = {};
+    const primitive = {};
+    const spz = {
+      bufferView: 1,
+    };
+    const gltfResource = {};
+    const baseResource = {};
+    const bufferViewLoader = {
+      typedArray: new Uint8Array([1, 2, 3, 4]),
+      load: jasmine.createSpy("load").and.returnValue(Promise.resolve()),
+    };
+    const resourceCache = function () {};
+    resourceCache.getBufferViewLoader = jasmine
+      .createSpy("getBufferViewLoader")
+      .and.returnValue(bufferViewLoader);
+    resourceCache.unload = jasmine.createSpy("unload");
+
+    const loader = new GltfSpzLoader({
+      resourceCache: resourceCache,
+      gltf: gltf,
+      primitive: primitive,
+      spz: spz,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+    });
+
+    await loader.load();
+
+    expect(resourceCache.getBufferViewLoader).toHaveBeenCalledWith({
+      gltf: gltf,
+      bufferViewId: 1,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+    });
   });
 });

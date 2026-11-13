@@ -3,11 +3,13 @@ import {
   InterpolationType,
   JulianDate,
   Matrix4,
+  Quaternion,
+} from "@cesium/core";
+import {
   ModelAnimationLoop,
   ModelComponents,
   ModelAnimation,
   ModelRuntimeNode,
-  Quaternion,
 } from "../../../index.js";
 
 describe("Scene/Model/ModelAnimation", function () {

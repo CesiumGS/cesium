@@ -2,16 +2,18 @@ import {
   Cartesian2,
   Cartographic,
   GeographicProjection,
-  GeographicTilingScheme,
-  getAbsoluteUri,
   Math as CesiumMath,
   Rectangle,
+  RuntimeError,
+  WebMercatorProjection,
+  getAbsoluteUri,
+} from "@cesium/core";
+import {
+  GeographicTilingScheme,
   Request,
   RequestErrorEvent,
   RequestScheduler,
   Resource,
-  RuntimeError,
-  WebMercatorProjection,
   WebMercatorTilingScheme,
   TileMapServiceImageryProvider,
   Imagery,
@@ -19,7 +21,6 @@ import {
   ImageryState,
   UrlTemplateImageryProvider,
 } from "../../index.js";
-
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/TileMapServiceImageryProvider", function () {

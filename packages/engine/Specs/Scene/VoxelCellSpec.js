@@ -1,13 +1,14 @@
 import {
   Cartesian3,
-  Cesium3DTilesVoxelProvider,
   Math as CesiumMath,
   Matrix3,
   OrientedBoundingBox,
+} from "@cesium/core";
+import {
+  Cesium3DTilesVoxelProvider,
   VoxelPrimitive,
   VoxelCell,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

@@ -1,8 +1,10 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import {
+  AssociativeArray,
+  BoundingSphere,
+  Check,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ClassificationType from "../Scene/ClassificationType.js";
 import MaterialAppearance from "../Scene/MaterialAppearance.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";
@@ -336,7 +338,7 @@ GeometryVisualizer.prototype.getBoundingSphere = function (entity, result) {
   const tmp = getBoundingSphereBoundingSphereScratch;
 
   let count = 0;
-  let state = BoundingSphereState.DONE;
+  let state;
   const batches = this._batches;
   const batchesLength = batches.length;
 

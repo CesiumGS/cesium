@@ -1,18 +1,14 @@
+import { Cartesian3, Ellipsoid, GeographicProjection, Ray } from "@cesium/core";
 import createScene from "../../../../Specs/createScene.js";
 import {
-  Cartesian3,
   createWorldTerrainAsync,
-  Ellipsoid,
   EllipsoidTerrainProvider,
   ImageryLayerCollection,
   QuadtreeTile,
   GeographicTilingScheme,
-  Ray,
 } from "../../index.js";
-
 import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
 import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
-import GeographicProjection from "../../Source/Core/GeographicProjection.js";
 import { SceneMode } from "@cesium/engine";
 
 describe(

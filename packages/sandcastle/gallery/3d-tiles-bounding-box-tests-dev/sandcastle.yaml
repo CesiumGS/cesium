@@ -1,0 +1,6 @@
+title: 3D Tiles Bounding Box Tests - Dev
+description: View simple glTF models embedded as external assets in 3D Tiles 2.0 tilesets, with the tileset bounding volumes shown.
+labels:
+  - Development
+  - 3D Tiles 2.0
+development: true

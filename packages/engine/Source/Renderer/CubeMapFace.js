@@ -1,8 +1,10 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PixelDatatype from "./PixelDatatype.js";
+import {
+  Check,
+  DeveloperError,
+  PixelDatatype,
+  PixelFormat,
+  defined,
+} from "@cesium/core";
 
 /**
  * @private
@@ -190,7 +192,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
       size,
       0,
       pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
+      PixelDatatype.toWebGLConstant(pixelDatatype, this._context.webgl2),
       pixels,
     );
     this._initialized = true;
@@ -218,7 +220,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
         width,
         height,
         pixelFormat,
-        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
+        PixelDatatype.toWebGLConstant(pixelDatatype, this._context.webgl2),
         arrayBufferView,
       );
     } else {
@@ -233,7 +235,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
         xOffset,
         yOffset,
         pixelFormat,
-        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
+        PixelDatatype.toWebGLConstant(pixelDatatype, this._context.webgl2),
         source,
       );
     }

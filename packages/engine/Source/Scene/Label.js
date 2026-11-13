@@ -1,12 +1,14 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import NearFarScalar from "../Core/NearFarScalar.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Color,
+  DeveloperError,
+  DistanceDisplayCondition,
+  Frozen,
+  NearFarScalar,
+  defined,
+} from "@cesium/core";
 import Billboard from "./Billboard.js";
 import HeightReference from "./HeightReference.js";
 import HorizontalOrigin from "./HorizontalOrigin.js";
@@ -1282,10 +1284,10 @@ Label.getScreenSpaceBoundingBox = function (
   screenSpacePosition,
   result,
 ) {
-  let x = 0;
-  let y = 0;
-  let width = 0;
-  let height = 0;
+  let x;
+  let y;
+  let width;
+  let height;
   const scale = label.totalScale;
 
   const backgroundBillboard = label._backgroundBillboard;

@@ -5,11 +5,13 @@ import {
   Cartesian3,
   Cartographic,
   Color,
-  defined,
   DistanceDisplayCondition,
   Math as CesiumMath,
   NearFarScalar,
   Rectangle,
+  defined,
+} from "@cesium/core";
+import {
   BlendOption,
   Globe,
   HeightReference,
@@ -19,7 +21,6 @@ import {
   LabelStyle,
   VerticalOrigin,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -1692,7 +1693,7 @@ describe("Scene/LabelCollection", function () {
           });
 
           it("translucencyByDistance to undefined", function () {
-            let newValue;
+            const newValue = undefined;
             expect(label.translucencyByDistance).not.toEqual(newValue);
             label.translucencyByDistance = newValue;
             scene.renderForSpecs();
@@ -1705,7 +1706,7 @@ describe("Scene/LabelCollection", function () {
           });
 
           it("pixelOffsetScaleByDistance to undefined", function () {
-            let newValue;
+            const newValue = undefined;
             expect(label.pixelOffsetScaleByDistance).not.toEqual(newValue);
             label.pixelOffsetScaleByDistance = newValue;
             scene.renderForSpecs();
@@ -1718,7 +1719,7 @@ describe("Scene/LabelCollection", function () {
           });
 
           it("scaleByDistance to undefined", function () {
-            let newValue;
+            const newValue = undefined;
             expect(label.scaleByDistance).not.toEqual(newValue);
             label.scaleByDistance = newValue;
             scene.renderForSpecs();

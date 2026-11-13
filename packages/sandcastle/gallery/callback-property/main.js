@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 
 // This example illustrates a Callback Property, a property whose

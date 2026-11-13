@@ -23,7 +23,7 @@ import {
 } from "../util/useCodeState";
 
 function AppStandalone() {
-  const galleryItemStore = useGalleryItemStore();
+  const galleryItemStore = useGalleryItemStore({ withoutSearch: true });
   const loadFromUrl = galleryItemStore.useLoadFromUrl();
   const [initialized, setInitialized] = useState(false);
   const [isLoadPending, startLoadPending] = useTransition();
@@ -72,7 +72,8 @@ function AppStandalone() {
   );
 
   useEffect(() => {
-    const load = () =>
+    const load = () => {
+      setInitialized(true);
       startLoadPending(async () => {
         try {
           if (isLoadPending || !loadFromUrl) {
@@ -102,9 +103,9 @@ function AppStandalone() {
           console.error(message);
         }
       });
+    };
 
     if (!initialized && loadFromUrl) {
-      setInitialized(true);
       load();
     }
 

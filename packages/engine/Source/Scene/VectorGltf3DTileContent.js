@@ -1,5 +1,13 @@
 // @ts-check
 
+import {
+  DeveloperError,
+  Ellipsoid,
+  Matrix4,
+  clone,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import BufferPoint from "./BufferPoint.js";
 import BufferPointCollection from "./BufferPointCollection.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
@@ -9,27 +17,28 @@ import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
-import Color from "../Core/Color.js";
-import Matrix4 from "../Core/Matrix4.js";
+import Cesium3DTileVectorFeature from "./Cesium3DTileVectorFeature.js";
+import { createGeoJsonCollections } from "./GeoJsonPrimitive.js";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 import Model from "./Model/Model.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import Pass from "../Renderer/Pass.js";
+import VectorProvider from "../Core/VectorProvider.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
-/** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
-/** @import Cartesian3 from "../Core/Cartesian3.js"; */
+/** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
+/** @import { Cartesian3 } from "@cesium/core"; */
 /** @import Cesium3DContentGroup from "./Cesium3DContentGroup.js"; */
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
-/** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
-/** @import Cesium3DTileFeature from "./Cesium3DTileFeature.js"; */
+/** @import { GeoJson } from "../Core/globalTypes.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
+/** @import { Color } from "@cesium/core"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
-/** @import Ray from "../Core/Ray.js"; */
+/** @import { Ray } from "@cesium/core"; */
 /** @import Resource from "../Core/Resource.js"; */
 
 /** @ignore */
@@ -50,8 +59,8 @@ const polygonMaterial = new BufferPolygonMaterial();
 const scratchTileModelMatrix = new Matrix4();
 
 /**
- * Vector glTF tile content. This path decodes glTF primitives into vector
- * buffers, then renders with dedicated vector primitives.
+ * Vector tile content. This path decodes glTF primitives or GeoJSON features
+ * into vector buffers, then renders with dedicated vector primitives.
  *
  * @ignore
  */
@@ -70,18 +79,52 @@ class VectorGltf3DTileContent {
     this._resource = resource;
 
     /** @type {Model} */
-    this._decodeModel = undefined;
+    this._model = undefined;
 
-    /** @type {Array<BufferPrimitiveCollection<BufferPrimitive>>} */
+    /**
+     * List of all vector primitive collections.
+     * @type {Array<BufferPrimitiveCollection<BufferPrimitive>>}
+     */
     this._collections = [];
 
-    /** @type {Array<Matrix4>} */
+    /**
+     * List of transform matrices for each collection; order matches 'collections'.
+     * @type {Array<Matrix4>}
+     */
     this._collectionLocalMatrices = [];
+
+    /**
+     * Maps vector primitive collection -> propertyTableId.
+     * @type {Map<BufferPrimitiveCollection<BufferPrimitive>, number>}
+     */
+    this._collectionFeatureTableIds = new Map();
+
+    /**
+     * Maps propertyTableId -> featureId -> feature. Note that Feature IDs are
+     * unique within their assigned property table, but not globally unique.
+     * @type {Map<number, Map<number, Cesium3DTileVectorFeature>>}
+     */
+    this._featuresByTableId = new Map();
+
+    /**
+     * Batch tables of GeoJSON content. Content loaded from glTF uses the
+     * model's feature tables instead.
+     * @type {GeoJsonBatchTable[]}
+     */
+    this._batchTables = [];
 
     /** @type {ImplicitMetadataView} */
     this._metadata = undefined;
     /** @type {Cesium3DContentGroup} */
     this._group = undefined;
+
+    /**
+     * Whether this content (and all collections that it contains) is
+     * currently shown.
+     *
+     * @type {boolean}
+     */
+    this._show = true;
 
     /** @type {boolean} */
     this.featurePropertiesDirty = false;
@@ -94,25 +137,27 @@ class VectorGltf3DTileContent {
   }
 
   get featuresLength() {
-    return this._collections.reduce((totalCount, collection) => {
-      return totalCount + collection.primitiveCount;
-    }, 0);
+    return this.batchTables.reduce(
+      (acc, batchTable) => acc + batchTable.featuresLength,
+      0,
+    );
   }
 
   get pointsLength() {
     return this._collections
       .filter((collection) => collection instanceof BufferPointCollection)
-      .reduce((totalPoints, collection) => {
-        return totalPoints + collection.primitiveCount;
-      }, 0);
+      .reduce((acc, collection) => acc + collection.primitiveCount, 0);
   }
 
   get trianglesLength() {
-    return this._collections
-      .filter((collection) => collection instanceof BufferPolygonCollection)
-      .reduce((totalPoints, collection) => {
-        return totalPoints + collection.triangleCount;
-      }, 0);
+    return this._collections.reduce((acc, collection) => {
+      if (collection instanceof BufferPolygonCollection) {
+        return acc + collection.triangleCount;
+      } else if (collection instanceof BufferPolylineCollection) {
+        return acc + (collection.vertexCount - collection.primitiveCount) * 2;
+      }
+      return acc;
+    }, 0);
   }
 
   get geometryByteLength() {
@@ -126,7 +171,11 @@ class VectorGltf3DTileContent {
   }
 
   get batchTableByteLength() {
-    return 0;
+    return this.batchTables.reduce(
+      // @ts-expect-error Missing types.
+      (acc, batchTable) => acc + batchTable.batchTableByteLength,
+      0,
+    );
   }
 
   /** @returns {undefined} */
@@ -150,9 +199,21 @@ class VectorGltf3DTileContent {
     return this._resource.getUrlComponent(true);
   }
 
-  /** @type {Cesium3DTileBatchTable} */
+  /** @type {Cesium3DTileBatchTable[]} */
+  get batchTables() {
+    if (defined(this._model)) {
+      return this._model._featureTables;
+    }
+    // GeoJsonBatchTable implements the batch table methods that features read.
+    return /** @type {*} */ (this._batchTables);
+  }
+
+  /**
+   * @type {Cesium3DTileBatchTable}
+   * @deprecated See {@link batchTables}.
+   */
   get batchTable() {
-    return undefined;
+    throw new DeveloperError("Deprecated: Use `content.batchTables`.");
   }
 
   /** @type {ImplicitMetadataView} */
@@ -173,21 +234,43 @@ class VectorGltf3DTileContent {
     this._group = value;
   }
 
+  /** @inheritdoc */
+  get show() {
+    return this._show;
+  }
+  set show(value) {
+    this._show = value;
+    this.applyShow(this.show);
+  }
   /**
-   * @param {number} _featureId
-   * @returns {Cesium3DTileFeature}
+   * Apply the given 'show' flag to all collections
+   *
+   * @param {boolean} show The flag
    */
-  getFeature(_featureId) {
-    return undefined;
+  applyShow(show) {
+    for (const collection of this._collections) {
+      collection.show = show;
+    }
   }
 
   /**
-   * @param {number} _featureId
-   * @param {string} _name
+   * @param {number} featureId
+   * @param {number} [featureTableId]
+   * @returns {Cesium3DTileVectorFeature}
+   */
+  getFeature(featureId, featureTableId) {
+    return this._featuresByTableId.get(featureTableId)?.get(featureId);
+  }
+
+  /**
+   * @param {number} featureId
+   * @param {string} name
+   * @param {number} [featureTableId]
    * @returns {boolean}
    */
-  hasProperty(_featureId, _name) {
-    return false;
+  hasProperty(featureId, name, featureTableId) {
+    const feature = this.getFeature(featureId, featureTableId);
+    return feature ? feature.hasProperty(name) : false;
   }
 
   /**
@@ -195,17 +278,16 @@ class VectorGltf3DTileContent {
    * @param {Color} color
    */
   applyDebugSettings(enabled, color) {
-    color = enabled ? color : Color.WHITE;
-    this.applyStyle(new Cesium3DTileStyle({ color }));
+    const colorString = enabled
+      ? `color("${color.toCssHexString()}", 1.0)`
+      : 'color("white", 1.0)';
+    this.applyStyle(new Cesium3DTileStyle({ color: colorString }));
   }
 
   /**
    * @param {*} style
    */
   applyStyle(style) {
-    const show = style.show?.evaluate(null) ?? true;
-    const color = style.color?.evaluate(null, new Color());
-
     const isPointCollection = /** @param {unknown} c */ (c) =>
       c instanceof BufferPointCollection;
     const isPolylineCollection = /** @param {unknown} c */ (c) =>
@@ -213,36 +295,70 @@ class VectorGltf3DTileContent {
     const isPolygonCollection = /** @param {unknown} c */ (c) =>
       c instanceof BufferPolygonCollection;
 
-    Color.clone(color, pointMaterial.color);
-    pointMaterial.size = style.pointSize?.evaluate(null);
-    pointMaterial.outlineWidth = style.pointOutlineWidth?.evaluate(null);
-    style.pointOutlineColor?.evaluate(null, pointMaterial.outlineColor);
     for (const collection of this._collections.filter(isPointCollection)) {
+      const featureTableId = this._collectionFeatureTableIds.get(collection);
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, point);
-        point.show = show;
+        const feature = this.getFeature(point.featureId, featureTableId);
+
+        if (defined(style.show)) {
+          point.show = style.show.evaluate(feature);
+        }
+        if (defined(style.color)) {
+          style.color.evaluate(feature, pointMaterial.color);
+        }
+        if (defined(style.pointSize)) {
+          pointMaterial.size = style.pointSize.evaluate(feature);
+        }
+        if (defined(style.pointOutlineWidth)) {
+          pointMaterial.outlineWidth =
+            style.pointOutlineWidth.evaluate(feature);
+        }
+        if (defined(style.pointOutlineColor)) {
+          style.pointOutlineColor.evaluate(feature, pointMaterial.outlineColor);
+        }
+
         point.setMaterial(pointMaterial);
       }
     }
 
-    Color.clone(color, polylineMaterial.color);
-    polylineMaterial.width = style.lineWidth?.evaluate(null) ?? 1;
     for (const collection of this._collections.filter(isPolylineCollection)) {
+      const featureTableId = this._collectionFeatureTableIds.get(collection);
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polyline);
-        polyline.show = show;
+        const feature = this.getFeature(polyline.featureId, featureTableId);
+
+        if (defined(style.show)) {
+          polyline.show = style.show.evaluate(feature);
+        }
+        if (defined(style.color)) {
+          style.color.evaluate(feature, polylineMaterial.color);
+        }
+        if (defined(style.lineWidth)) {
+          polylineMaterial.width = style.lineWidth.evaluate(feature);
+        }
+
         polyline.setMaterial(polylineMaterial);
       }
     }
 
-    Color.clone(color, polygonMaterial.color);
     for (const collection of this._collections.filter(isPolygonCollection)) {
+      const featureTableId = this._collectionFeatureTableIds.get(collection);
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polygon);
-        polygon.show = show;
+        const feature = this.getFeature(polygon.featureId, featureTableId);
+
+        if (defined(style.show)) {
+          polygon.show = style.show.evaluate(feature);
+        }
+        if (defined(style.color)) {
+          style.color.evaluate(feature, polygonMaterial.color);
+        }
+
         polygon.setMaterial(polygonMaterial);
       }
     }
+    this.applyShow(this.show);
   }
 
   /**
@@ -250,18 +366,17 @@ class VectorGltf3DTileContent {
    * @param {FrameState} frameState
    */
   update(_tileset, frameState) {
-    if (defined(this._decodeModel) && !this._ready) {
-      const model = this._decodeModel;
+    const tileset = this._tileset;
+    const vectorProvider = tileset._scene?.vectorProvider;
+
+    if (defined(this._model) && !this._ready) {
+      const model = this._model;
       model.modelMatrix = this._tile.computedTransform;
       model.update(frameState);
 
       // @ts-expect-error Requires Model conversion to ES6 class.
       if (model.ready) {
         initializeVectorPrimitives(this);
-        if (this._decodeModel) {
-          this._decodeModel.destroy();
-          this._decodeModel = undefined;
-        }
         this._ready = true;
       }
     }
@@ -272,13 +387,34 @@ class VectorGltf3DTileContent {
       scratchTileModelMatrix,
     );
 
+    // Only bake collections selected to render this frame (avoids duplicates).
+    const isSelected =
+      defined(vectorProvider) &&
+      this._tile._selectedFrame === frameState.frameNumber;
+
     for (let i = 0; i < this._collections.length; i++) {
+      const collection = this._collections[i];
+      collection.blendOption = tileset._vectorBlendOption;
       Matrix4.multiplyTransformation(
         scratchTileModelMatrix,
         this._collectionLocalMatrices[i],
-        this._collections[i].modelMatrix,
+        collection.modelMatrix,
       );
-      this._collections[i].update(frameState);
+
+      if (
+        !isHeightReferenceClamp(tileset._heightReference) ||
+        !VectorProvider.isSupported(collection)
+      ) {
+        collection.update(frameState);
+      } else if (isSelected) {
+        // Updates pick IDs and bounds without drawing the collection in 3D.
+        BufferPrimitiveCollection.prototype.update.call(collection, frameState);
+        vectorProvider.markForFrame(
+          collection,
+          frameState.frameNumber,
+          tileset._heightReference,
+        );
+      }
     }
   }
 
@@ -297,9 +433,14 @@ class VectorGltf3DTileContent {
   }
 
   destroy() {
-    this._decodeModel?.destroy();
-    this._decodeModel = undefined;
-    this._collections.forEach((collection) => collection.destroy());
+    const vectorProvider = this._tileset._scene?.vectorProvider;
+
+    this._model?.destroy();
+    this._model = undefined;
+    for (const collection of this._collections) {
+      vectorProvider?.remove(collection);
+      collection.destroy();
+    }
     this._collections.length = 0;
     return destroyObject(this);
   }
@@ -308,17 +449,154 @@ class VectorGltf3DTileContent {
    * @param {Cesium3DTileset} tileset
    * @param {Cesium3DTile} tile
    * @param {Resource} resource
-   * @param {unknown} gltf
+   * @param {Uint8Array} glb GLB binary produced by buildVectorGltfFromMVT
    * @returns {Promise<VectorGltf3DTileContent>}
    */
-  static async fromGltf(tileset, tile, resource, gltf) {
+  static async fromGltf(tileset, tile, resource, glb) {
     const content = new VectorGltf3DTileContent(tileset, tile, resource);
-    const modelOptions = makeDecodeModelOptions(tileset, tile, content, gltf);
-    const decodeModel = await Model.fromGltfAsync(modelOptions);
+    const modelOptions = makeModelOptions(tileset, tile, content, glb);
+    const model = await Model.fromGltfAsync(modelOptions);
     // @ts-expect-error Requires Model conversion to ES6 class.
-    decodeModel.show = false;
-    content._decodeModel = decodeModel;
+    model.show = false;
+    content._model = model;
     return content;
+  }
+
+  /**
+   * @param {Cesium3DTileset} tileset
+   * @param {Cesium3DTile} tile
+   * @param {Resource} resource
+   * @param {GeoJson} geoJson
+   * @returns {VectorGltf3DTileContent}
+   */
+  static fromGeoJson(tileset, tile, resource, geoJson) {
+    const content = new VectorGltf3DTileContent(tileset, tile, resource);
+
+    /** @type {Map<number, Cesium3DTileVectorFeature>} */
+    const features = new Map();
+    /** @type {Map<BufferPrimitiveCollection<BufferPrimitive>, number>} */
+    const collectionIndices = new Map();
+
+    const { properties } = createGeoJsonCollections(geoJson, {
+      ellipsoid: Ellipsoid.WGS84,
+      heightReference: HeightReference.NONE,
+      createPickObject: (featureId, index, collection) => {
+        let collectionIndex = collectionIndices.get(collection);
+        if (!defined(collectionIndex)) {
+          collectionIndex = content._collections.length;
+          collectionIndices.set(collection, collectionIndex);
+          content._collections.push(collection);
+          content._collectionLocalMatrices.push(Matrix4.IDENTITY);
+          content._collectionFeatureTableIds.set(collection, 0);
+        }
+
+        let feature = features.get(featureId);
+        if (!defined(feature)) {
+          feature = new Cesium3DTileVectorFeature(content, featureId);
+          features.set(featureId, feature);
+        }
+        feature.addPrimitiveByCollection(collectionIndex, index);
+        return feature;
+      },
+    });
+
+    content._featuresByTableId.set(0, features);
+    content._batchTables.push(new GeoJsonBatchTable(properties));
+    content._ready = true;
+    return content;
+  }
+}
+
+/**
+ * Read-only batch table over GeoJSON feature properties. Names are only read as
+ * own keys, so no property name is treated as a batch table header field.
+ *
+ * @ignore
+ */
+class GeoJsonBatchTable {
+  /**
+   * @param {Array<Record<string, unknown>>} properties Properties, indexed by feature ID.
+   */
+  constructor(properties) {
+    this._properties = properties;
+
+    /** @type {Set<string>} */
+    this._propertyIds = new Set();
+    for (const featureProperties of properties) {
+      for (const name of Object.keys(featureProperties)) {
+        this._propertyIds.add(name);
+      }
+    }
+  }
+
+  get featuresLength() {
+    return this._properties.length;
+  }
+
+  get batchTableByteLength() {
+    return 0;
+  }
+
+  /**
+   * @param {number} batchId
+   * @param {string} name
+   * @returns {boolean}
+   */
+  hasProperty(batchId, name) {
+    return this._propertyIds.has(name);
+  }
+
+  /**
+   * @param {number} batchId
+   * @param {string[]} [results]
+   * @returns {string[]}
+   */
+  getPropertyIds(batchId, results) {
+    results = results ?? [];
+    results.length = 0;
+    results.push(...this._propertyIds);
+    return results;
+  }
+
+  /**
+   * Missing and null values read as empty strings, as in the Model path for
+   * GeoJSON content.
+   *
+   * @param {number} batchId
+   * @param {string} name
+   * @returns {*}
+   */
+  getProperty(batchId, name) {
+    if (!this._propertyIds.has(name)) {
+      return undefined;
+    }
+    const featureProperties = this._properties[batchId];
+    const value = Object.hasOwn(featureProperties, name)
+      ? featureProperties[name]
+      : undefined;
+    return clone(value ?? "", true);
+  }
+
+  hasPropertyBySemantic() {
+    return false;
+  }
+
+  /** @returns {undefined} */
+  getPropertyBySemantic() {
+    return undefined;
+  }
+
+  isClass() {
+    return false;
+  }
+
+  isExactClass() {
+    return false;
+  }
+
+  /** @returns {undefined} */
+  getExactClassName() {
+    return undefined;
   }
 }
 
@@ -326,13 +604,13 @@ class VectorGltf3DTileContent {
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
  * @param {VectorGltf3DTileContent} content
- * @param {unknown} gltf
+ * @param {Uint8Array} glb
  * @returns {*}
  * @ignore
  */
-function makeDecodeModelOptions(tileset, tile, content, gltf) {
+function makeModelOptions(tileset, tile, content, glb) {
   return {
-    gltf: gltf,
+    gltf: glb,
     basePath: content._resource,
     cull: false,
     releaseGltfJson: true,
@@ -359,7 +637,7 @@ function makeDecodeModelOptions(tileset, tile, content, gltf) {
  */
 function initializeVectorPrimitives(content) {
   // @ts-expect-error Requires Model conversion to ES6 class.
-  const components = content._decodeModel.sceneGraph.components;
+  const components = content._model.sceneGraph.components;
 
   const axisCorrection = ModelUtility.getAxisCorrectionMatrix(
     components.upAxis,
@@ -373,10 +651,15 @@ function initializeVectorPrimitives(content) {
     content._modelMatrix,
   );
 
-  const result = createVectorTileBuffersFromModelComponents(this, components);
+  const result = createVectorTileBuffersFromModelComponents(
+    content,
+    components,
+  );
 
   content._collections = result.collections;
   content._collectionLocalMatrices = result.collectionLocalMatrices;
+  content._collectionFeatureTableIds = result.collectionFeatureTableIds;
+  content._featuresByTableId = result.featuresByTableId;
 }
 
 export default VectorGltf3DTileContent;
