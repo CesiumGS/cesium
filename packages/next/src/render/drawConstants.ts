@@ -6,6 +6,7 @@ import {
   CENTER_WORD,
   CLIP_BLOCK_WORD,
   COLOR_WORD,
+  DEBUG_WORD,
   FLAGS_WORD,
   IMAGERY_SLICE_WORD,
   INSTANCE_COUNT_WORD,
@@ -108,6 +109,14 @@ export class DrawConstants {
       this.table.f32[o + i] = color[i] ?? 1;
     }
     this.table.mark(index);
+  }
+
+  /**
+   * The draw's debug-view data (`packTileDebug`; 0: none); true when it
+   * changed. A tile's draws carry it for `View.debug`.
+   */
+  setDebug(index: number, word: number): boolean {
+    return this.setWord(index, DEBUG_WORD, word);
   }
 
   /** `RecordFlags`; true when they changed. */

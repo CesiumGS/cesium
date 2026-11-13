@@ -231,6 +231,7 @@ function selectionViews(
             motion,
           }
         : {}),
+      ...(view.debug !== "off" ? { debug: view.debug } : {}),
       sseDenominator: 2 * Math.tan(camera.fovy(aspect) / 2),
       height: rect.height / pixelRatio,
       pixelRatio,

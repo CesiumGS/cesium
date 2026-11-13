@@ -2601,6 +2601,78 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   return s;
 }
 
+// --- debug views (`View.debug`, streaming/debugViews.ts) --------------------------
+// A flat colour in place of lighting, from the tile's `DrawRecord.debug` and
+// the view's mode (`View.time.w`: 1 level, 2 tiles, 3 error, 4 state,
+// 5 stretch). The colours are sRGB bytes, the same numbers as debugViews.ts
+// (test/debugViews.test.ts holds the two to each other); ramps are
+// interpolated as bytes, as the legend's samples are.
+
+static const float3 DEBUG_LEVEL_COLORS[8] = {
+  float3(230.0, 159.0, 0.0), float3(86.0, 180.0, 233.0), float3(0.0, 158.0, 115.0),
+  float3(240.0, 228.0, 66.0), float3(0.0, 114.0, 178.0), float3(213.0, 94.0, 0.0),
+  float3(204.0, 121.0, 167.0), float3(153.0, 153.0, 153.0)};
+static const float3 DEBUG_ERROR_RAMP[5] = {
+  float3(68.0, 1.0, 84.0), float3(59.0, 82.0, 139.0), float3(33.0, 145.0, 140.0),
+  float3(94.0, 201.0, 98.0), float3(253.0, 231.0, 37.0)};
+static const float3 DEBUG_STRETCH_RAMP[5] = {
+  float3(0.0, 34.0, 78.0), float3(68.0, 89.0, 109.0), float3(124.0, 123.0, 120.0),
+  float3(188.0, 175.0, 111.0), float3(253.0, 231.0, 55.0)};
+static const float3 DEBUG_STATE_COLORS[4] = {
+  float3(0.0, 158.0, 115.0), float3(230.0, 159.0, 0.0), float3(213.0, 94.0, 0.0),
+  float3(86.0, 180.0, 233.0)};
+static const float3 DEBUG_NO_DATA = float3(90.0, 90.0, 90.0);
+
+// A byte of the debug word (1 to 255, 0 is none) as 0 to 1 along a scale.
+float debugScale(uint byteValue) {
+  return float(max(byteValue, 1u) - 1u) / 254.0;
+}
+
+float3 debugErrorColor(float t) {
+  float x = clamp(t, 0.0, 1.0) * 4.0;
+  uint i = min(uint(x), 3u);
+  return lerp(DEBUG_ERROR_RAMP[i], DEBUG_ERROR_RAMP[i + 1u], x - float(i));
+}
+
+float3 debugStretchColor(float t) {
+  float x = clamp(t, 0.0, 1.0) * 4.0;
+  uint i = min(uint(x), 3u);
+  return lerp(DEBUG_STRETCH_RAMP[i], DEBUG_STRETCH_RAMP[i + 1u], x - float(i));
+}
+
+// The display colour (linear) of a fragment in debug mode `mode` (1 to 5).
+// Derivatives: call it in uniform control flow.
+float3 debugShade(SurfaceVaryings in, DrawRecord r, uint mode) {
+  float2 edgeRate = fwidth(in.uv);
+  uint word = r.debug;
+  uint errorByte = (word >> 16u) & 255u;
+  float3 bytes = DEBUG_NO_DATA;
+  if (errorByte != 0u) {
+    uint level = word & 255u;
+    uint state = (word >> 8u) & 7u;
+    uint hash = (word >> 11u) & 31u;
+    if (mode == 1u) {
+      bytes = DEBUG_LEVEL_COLORS[level & 7u];
+    } else if (mode == 2u) {
+      bytes = DEBUG_LEVEL_COLORS[hash & 7u] * (0.65 + 0.35 * float(hash >> 3u) / 3.0);
+    } else if (mode == 3u) {
+      bytes = debugErrorColor(debugScale(errorByte));
+    } else if (mode == 4u) {
+      bytes = DEBUG_STATE_COLORS[min(state, 3u)];
+    } else {
+      bytes = debugStretchColor(debugScale(word >> 24u));
+    }
+  }
+  float3 color = srgbToLinear(bytes / 255.0);
+  if (mode == 2u && (r.imagerySlice != 0u || r.skirtStart != 0xffffffffu)) {
+    // A globe tile's boundary: its own coordinates run 0 to 1 across it, so
+    // the pixels to the nearest edge are the distance over the rate they change.
+    float2 edge = min(in.uv, 1.0 - in.uv) / max(edgeRate, float2(1e-6));
+    color *= lerp(0.15, 1.0, smoothstep(0.75, 2.0, min(edge.x, edge.y)));
+  }
+  return color;
+}
+
 struct FsOut {
   float4 color : SV_Target0;
   uint2 featureId : SV_Target1; // (lo16, hi16): rg16uint target
@@ -2620,7 +2692,12 @@ FsOut shadeOpaque(SurfaceVaryings in, bool frontFacing) {
   // A patch draw's lines (`shadeSurface`), mixed in by their coverage: the
   // display target carries them premultiplied, the scene's light the rest.
   float lined = patchLine.w;
-  if (s.unlit) {
+  uint debugMode = uint(view.time.w);
+  if (debugMode != 0u) {
+    // A debug view: a flat display-referred colour, the depth as drawn.
+    out.color = float4(0.0);
+    out.display = float4(debugShade(in, drawRecord(in.ids.x), debugMode), 1.0);
+  } else if (s.unlit) {
     // Unlit color is display-referred (photographs: globe imagery,
     // photogrammetry such as Google's tiles): it goes to the display target,
     // which the present pass shows as is, as glTF's KHR_materials_unlit and

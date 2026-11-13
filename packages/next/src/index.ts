@@ -147,6 +147,11 @@ export {
   type ClampOptions,
 } from "./scene/HeightClamping.ts";
 export {
+  type DebugLegend,
+  type DebugLegendEntry,
+  type DebugView,
+} from "./streaming/debugViews.ts";
+export {
   View,
   type HdrImage,
   type OutputEncoding,

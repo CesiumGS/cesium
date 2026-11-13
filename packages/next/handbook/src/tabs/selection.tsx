@@ -994,6 +994,46 @@ export function Selection() {
         />
       </Section>
 
+      <Section title="Seeing the selection: debug views">
+        <p>
+          <C>View.debug</C> turns the opaque pass into a diagnostic: flat
+          colours in place of lighting, with depth kept, for terrain and 3D
+          Tiles alike. Off costs one uniform read a fragment.
+        </p>
+        <ul>
+          <li>
+            <C>"level"</C>: each tile by its level in its tree, in eight
+            colour-blind-safe colours that repeat.
+          </li>
+          <li>
+            <C>"tiles"</C>: each tile its own colour, with terrain tiles' edges
+            darkened.
+          </li>
+          <li>
+            <C>"error"</C>: each tile's screen-space error as a multiple of the
+            threshold. Over 1 is detail the view still wants.
+          </li>
+          <li>
+            <C>"state"</C>: drawn, mixed-level placeholder, stand-in for finer
+            tiles still loading, or held back by occlusion.
+          </li>
+          <li>
+            <C>"stretch"</C>: how much the warp under a tile stretches its
+            error, the factor selection used.
+          </li>
+        </ul>
+        <p>
+          <C>View.debugLegend()</C> returns what the colours mean, for an
+          application to draw. The numbers are the first debug view's selection.
+          Translucent content, points and lines keep their colours. There is no
+          wireframe mode: only b-reps have one.
+        </p>
+        <Written
+          from="the transform-graph plan, task 12, fix 8"
+          on="2026-11-13"
+        />
+      </Section>
+
       <Section title="Still to write">
         <ul>
           <li>How selection behaves with several tilesets on one origin.</li>

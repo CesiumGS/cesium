@@ -14,7 +14,11 @@ import {
   COLD_WAKE_MIN_MS,
   isCaster,
 } from "./tilesetCasters.ts";
-import { updateDebug, applyDebugColor } from "./tilesetDebug.ts";
+import {
+  updateDebug,
+  applyDebugColor,
+  writeTileDebug,
+} from "./tilesetDebug.ts";
 import { cancelLoad, request } from "./tilesetLoad.ts";
 import { serveQueries } from "./tilesetQueries.ts";
 import { upload } from "./tilesetUpload.ts";
@@ -466,6 +470,11 @@ export function update(
   }
   tileset.state.placeholders = nowPlaceholders;
   tileset.state.standIns = nowStandIns;
+  writeTileDebug(
+    tileset,
+    views,
+    new Set([...nowMasked, ...nowPlaceholders, ...nowStandIns]),
+  );
   updateDebug(tileset);
   tileset.stats.placeholders = nowPlaceholders.size;
 

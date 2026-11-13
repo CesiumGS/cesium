@@ -69,6 +69,7 @@ export const DrawRecordLayout = {
   placement: 144,
   skirtStart: 148,
   casterMask: 152,
+  debug: 156,
 } as const;
 
 /** `Transform` as `transforms` holds it: byte offsets. */

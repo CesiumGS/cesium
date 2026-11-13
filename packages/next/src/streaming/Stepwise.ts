@@ -9,6 +9,7 @@
  * Cesium3DTile.js (updateVisibility, getScreenSpaceError), and
  * Cesium3DTileset.js (dynamic screen-space error).
  */
+import type { DebugView } from "./debugViews.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
@@ -70,6 +71,11 @@ export interface SelectionView {
   height: number;
   /** 1.x `frameState.pixelRatio` (the globe divides its fog term by it). */
   pixelRatio?: number;
+  /**
+   * The view's debug mode (`View.debug`), when it isn't "off": the tiles
+   * it draws carry the numbers the mode shows (`writeTileDebug`).
+   */
+  debug?: DebugView;
   /**
    * Set when the tileset hangs under an anchor placed across a warp: its
    * tiles are selected on their drawn volumes (`drawnTile`), with the
