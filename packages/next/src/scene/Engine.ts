@@ -128,10 +128,26 @@ export interface FrameStats {
   gpuMs: number;
   /** Smoothed GPU span from first pass start to last pass end, ms. */
   gpuSpanMs: number;
+  /**
+   * Smoothed wall time of a measured frame's submit, ms (NaN until one
+   * arrives): the work GPU timestamps can't cover (uploads, copies,
+   * presenting) is in it, and so is any wait behind the previous frame, so
+   * it is an upper bound on the frame's GPU time.
+   */
+  gpuWallMs: number;
   views: number;
   draws: number;
   /** Indirect draw calls per view (one per batch). */
   batches: number;
+  /**
+   * Triangles submitted by the latest rendered frame: for each view drawn,
+   * its world's shown batches' index counts / 3, times their draw items
+   * (instances count each). Counted on the CPU, before the GPU's culling
+   * trims it, so an upper bound; patch and point draws aren't counted.
+   */
+  triangles: number;
+  /** `triangles` over the drawn views' pixels (their drawing buffers). */
+  trianglesPerPixel: number;
   /** Frames rendered since start (on demand: only frames something changed). */
   framesRendered: number;
   /** Frames the GPU rejected (validation): each drew nothing. */
@@ -375,9 +391,12 @@ export class Engine {
     cpuMs: 0,
     gpuMs: Number.NaN,
     gpuSpanMs: Number.NaN,
+    gpuWallMs: Number.NaN,
     views: 0,
     draws: 0,
     batches: 0,
+    triangles: 0,
+    trianglesPerPixel: 0,
     framesRendered: 0,
     rejectedFrames: 0,
     idle: false,
@@ -412,12 +431,18 @@ export class Engine {
   /**
    * The latest measured render's GPU time and its passes' (ms, unsmoothed),
    * the `FrameStats.tick` it belongs to (a result arrives a few ticks late),
-   * and how many results have arrived: a recorder's.
+   * and how many results have arrived: a recorder's. `ms` is the time any
+   * timed pass ran; `spanMs` runs from the first pass's start to the last
+   * one's end; `wallMs` is the submit's wall time (NaN if it hadn't
+   * arrived), which also counts what can't be timed, so `wallMs - ms` is
+   * the untimed share, an upper bound.
    */
   get gpuSample(): {
     samples: number;
     tick: number;
     ms: number;
+    spanMs: number;
+    wallMs: number;
     passes: Readonly<Record<string, number>>;
   } {
     const t = this.raster.timer;
@@ -425,6 +450,8 @@ export class Engine {
       samples: t.samples,
       tick: t.lastSample.tag,
       ms: t.lastSample.ms,
+      spanMs: t.lastSample.spanMs,
+      wallMs: t.lastSample.wallMs,
       passes: t.lastSample.passes,
     };
   }

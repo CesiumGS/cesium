@@ -14,6 +14,7 @@ import type {
   PointMesh,
 } from "../scene/world/types.ts";
 import { contentAnchor } from "../scene/earthAnchor.ts";
+import { GpuTimer } from "../gpu/GpuTimer.ts";
 
 /**
  * A property's type: a number (f32), an integer (u32), a vector, or one of
@@ -486,7 +487,10 @@ export class PointSource {
       samples.byteLength,
     );
     const encoder = device.createCommandEncoder({ label: "points.update" });
-    const pass = encoder.beginComputePass({ label: "points.apply" });
+    const pass = encoder.beginComputePass({
+      label: "points.apply",
+      timestampWrites: GpuTimer.groupWrites(device, "points"),
+    });
     pass.setPipeline(this.kernels.apply);
     pass.setBindGroup(0, this.currentGroup());
     pass.setBindGroup(1, this.incomingGroup!);

@@ -34,6 +34,7 @@ export interface PickEngine extends Pick<
     | "pickReadback"
     | "pickResult"
     | "picks"
+    | "timer"
     | "viewFrames"
     | "viewStaging"
   >;
@@ -179,7 +180,10 @@ export function encodePick(
       { binding: 3, resource: frame.depthView },
     ],
   });
-  const pass = enc.beginComputePass(PICK_PASS);
+  const pass = enc.beginComputePass({
+    ...PICK_PASS,
+    timestampWrites: engine.raster.timer.passWrites("pick"),
+  });
   pass.setPipeline(pipelines.pick);
   pass.setBindGroup(0, group);
   pass.dispatchWorkgroups(1);

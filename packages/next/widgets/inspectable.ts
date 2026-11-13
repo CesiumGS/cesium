@@ -56,6 +56,18 @@ export interface InspectorSnapshot {
     cpuMs?: number;
     /** GPU time per frame, ms; undefined where the engine can't measure it. */
     gpuMs?: number;
+    /** First timed pass's start to the last one's end, ms. */
+    gpuSpanMs?: number;
+    /** Triangles submitted by the latest frame (before GPU culling). */
+    triangles?: number;
+    /** `triangles` over the drawn views' pixels. */
+    trianglesPerPixel?: number;
+    /**
+     * Submit to done, ms: counts work no timestamp covers (uploads,
+     * copies, presenting) and any wait behind the previous frame, so it
+     * is an upper bound on the GPU time.
+     */
+    gpuWallMs?: number;
     /** Where `gpuMs` goes: GPU time per pass, ms, in the frame's order. */
     gpuPasses?: Array<[string, number]>;
     /** Time between frames, ms. */

@@ -14,6 +14,7 @@
  * multiples for history. Text stays in text colors; marks carry the data
  * colors.
  */
+import { GPU_GROUPS, groupPasses, untimedMs } from "./gpuGroups.ts";
 import type {
   ContentMix,
   Inspectable,
@@ -56,7 +57,7 @@ const HISTORY = 120;
 const SECTIONS = [
   ["problems", "Problems"],
   ["frame", "Frame"],
-  ["passes", "GPU passes"],
+  ["passes", "GPU time by group"],
   ["streaming", "Streaming"],
   ["pipeline", "Content pipeline"],
   ["memory", "Memory"],
@@ -227,6 +228,10 @@ export function attachInspector(
    * end; a new pass goes after the one it followed.
    */
   const passOrder: string[] = [];
+  /** What no timestamp covers, per refresh (`untimedMs`). */
+  const untimedHistory: number[] = [];
+  /** Groups the user opened (they survive the redraw). */
+  const openGroups = new Set<string>();
   const pushPasses = (
     passes: Array<[string, number]> | undefined,
     drawing: boolean,
@@ -317,6 +322,21 @@ export function attachInspector(
     tip.hidden = true;
     renderHistory();
   };
+  bodies.get("passes")!.addEventListener(
+    "toggle",
+    (e) => {
+      const el = e.target as HTMLDetailsElement;
+      const name = el.dataset.group;
+      if (name !== undefined) {
+        if (el.open) {
+          openGroups.add(name);
+        } else {
+          openGroups.delete(name);
+        }
+      }
+    },
+    true,
+  );
   for (const key of ["history", "passes"] as const) {
     const el = bodies.get(key)!;
     el.addEventListener("pointermove", (e) => hoverAt(el, e));
@@ -350,7 +370,13 @@ export function attachInspector(
       set(
         "passes",
         passHistory.size
-          ? passesHtml(passHistory, passOrder, hover)
+          ? passesHtml(
+              passHistory,
+              passOrder,
+              untimedHistory,
+              openGroups,
+              hover,
+            )
           : undefined,
       );
     }
@@ -402,6 +428,16 @@ export function attachInspector(
     push("cpu", drawing ? (snap.frame?.cpuMs ?? 0) : 0);
     push("gpu", drawing ? (snap.frame?.gpuMs ?? 0) : 0);
     pushPasses(snap.frame?.gpuPasses, drawing);
+    untimedHistory.push(
+      drawing
+        ? finite(
+            untimedMs(snap.frame?.gpuWallMs, snap.frame?.gpuMs ?? Number.NaN),
+          )
+        : 0,
+    );
+    if (untimedHistory.length > HISTORY) {
+      untimedHistory.shift();
+    }
 
     // The last move: from when the camera stopped until streaming settled,
     // with the requests and bytes it cost where the engine counts them (an
@@ -535,6 +571,19 @@ function frameHtml(s: InspectorSnapshot, framesPerSecond?: number): string {
     ["CPU / frame", f.cpuMs !== undefined ? ms(f.cpuMs) : "—"],
     ["GPU / frame", f.gpuMs !== undefined ? ms(f.gpuMs) : "not exposed"],
   ];
+  if (f.gpuMs !== undefined && f.gpuSpanMs !== undefined) {
+    rows.push(["GPU span", ms(f.gpuSpanMs)]);
+  }
+  if (f.gpuMs !== undefined && f.gpuWallMs !== undefined) {
+    rows.push(["GPU wall", ms(f.gpuWallMs)]);
+    rows.push(["Untimed (at most)", ms(untimedMs(f.gpuWallMs, f.gpuMs))]);
+  }
+  if (f.triangles !== undefined && f.trianglesPerPixel !== undefined) {
+    rows.push([
+      "Triangles",
+      `${Math.round(f.triangles).toLocaleString("en-US")} · ${f.trianglesPerPixel.toFixed(2)} per pixel`,
+    ]);
+  }
   if (f.intervalMs !== undefined) {
     rows.push(["Frame interval", ms(f.intervalMs)]);
   }
@@ -861,27 +910,80 @@ function historyHtml(
 }
 
 /**
- * Each GPU pass's time over the last 30 s, one row a pass, in a stable run
- * order (`passOrder`: rows don't move when a frame skips a pass).
+ * The GPU time over the last 30 s, condensed: the passes folded into groups
+ * (`groupPasses`) with the untimed share, as one stacked bar of the frame
+ * shown (the newest, or the hovered one) and a legend of group totals; each
+ * group opens to its passes, one sparkline a pass. Passes list in a stable
+ * run order, so rows don't move when a frame skips one.
  */
 function passesHtml(
   passes: Map<string, number[]>,
   order: readonly string[],
+  untimed: number[],
+  open: ReadonlySet<string>,
   hover: number | undefined,
 ): string {
+  const valueAt = (values: number[]) =>
+    (hover !== undefined
+      ? values[values.length - HISTORY + hover]
+      : values.at(-1)) ?? 0;
   const rank = new Map(order.map((pass, k) => [pass, k]));
   const at = (pass: string) => rank.get(pass) ?? order.length;
-  return sparklines(
-    [...passes]
-      .sort(([a], [b]) => at(a) - at(b))
-      .map(([pass, series]) => ({
-        name: escape(pass),
-        series,
-        format: ms,
-      })),
-    hover,
+  const sorted = [...passes].sort(([a], [b]) => at(a) - at(b));
+  const groups = groupPasses(
+    sorted.map(([name, series]) => [name, valueAt(series)] as const),
   );
+  const rest = valueAt(untimed);
+  const color = (name: string) => `s${GPU_GROUPS.indexOf(name as never) + 1}`;
+  const parts = [
+    ...groups.map((g) => ({
+      label: g.name,
+      value: g.ms,
+      color: color(g.name),
+    })),
+    { label: "Untimed", value: rest, color: "su" },
+  ];
+  const total = parts.reduce((sum, p) => sum + p.value, 0) || 1;
+  const bar = `<div class="ci-stack">${parts
+    .map((p) =>
+      p.value > 0
+        ? `<span class="${p.color}" style="flex-grow:${p.value / total}" title="${escape(p.label)}: ${ms(p.value)}"></span>`
+        : "",
+    )
+    .join("")}</div>`;
+  const sections = groups.map((g) => {
+    const members = new Set(g.passes.map(([name]) => name));
+    const rows = sorted
+      .filter(([name]) => members.has(name))
+      .map(([name, series]) => ({ name: escape(name), series, format: ms }));
+    return (
+      `<details class="ci-group"${open.has(g.name) ? " open" : ""} data-group="${escape(g.name)}">` +
+      `<summary><span class="ci-key ${color(g.name)}"></span><span>${escape(g.name)}</span><span class="ci-num">${ms(g.ms)}</span></summary>${sparklines(
+        rows,
+        hover,
+        false,
+      )}</details>`
+    );
+  });
+  sections.push(
+    `<div class="ci-group-flat"><span class="ci-key su"></span><span>Untimed (at most)</span><span class="ci-num">${ms(rest)}</span></div>${
+      untimed.some((v) => v > 0)
+        ? sparklines(
+            [{ name: "Untimed", series: untimed, format: ms }],
+            hover,
+            false,
+          )
+        : ""
+    }`,
+  );
+  return `${bar}${sections.join("")}<div class="ci-note">${
+    hover !== undefined
+      ? `${((HISTORY - 1 - hover) / 4).toFixed(1)} s ago`
+      : "Newest at the right; hover for the values at a moment."
+  } Untimed is wall time less timed passes: an upper bound.</div>`;
 }
+
+const finite = (v: number) => (Number.isFinite(v) ? v : 0);
 
 /** Small multiples, one series per row, each on its own scale. */
 function sparklines(
@@ -892,6 +994,7 @@ function sparklines(
     limit?: number[];
   }>,
   hover: number | undefined,
+  note = true,
 ): string {
   const w = 240;
   const rowH = 20;
@@ -937,11 +1040,15 @@ function sparklines(
       }</svg></div>`
     );
   });
-  return `${html.join("")}<div class="ci-note">${
-    hover !== undefined
-      ? `${((HISTORY - 1 - hover) / 4).toFixed(1)} s ago`
-      : "Newest at the right; hover for the values at a moment."
-  }</div>`;
+  return `${html.join("")}${
+    note
+      ? `<div class="ci-note">${
+          hover !== undefined
+            ? `${((HISTORY - 1 - hover) / 4).toFixed(1)} s ago`
+            : "Newest at the right; hover for the values at a moment."
+        }</div>`
+      : ""
+  }`;
 }
 
 function problemsHtml(p: { errors: string[]; warnings: string[] }): string {
@@ -1205,6 +1312,7 @@ const CSS = `
 .cesium-inspector .s4 { background: var(--ci-series-4); }
 .cesium-inspector .s5 { background: var(--ci-series-5); }
 .cesium-inspector .s6 { background: var(--ci-series-6); }
+.cesium-inspector .su { background: var(--ci-muted); }
 .cesium-inspector .ci-legend { display: grid; grid-template-columns: 10px 1fr auto; gap: 1px 6px; align-items: center; margin-bottom: 8px; }
 .cesium-inspector .ci-legend .ci-num { text-align: right; }
 .cesium-inspector .ci-key { inline-size: 8px; block-size: 8px; border-radius: 2px; }
@@ -1217,6 +1325,10 @@ const CSS = `
 .cesium-inspector .ci-meter { margin-bottom: 4px; }
 .cesium-inspector .ci-meter-head { display: flex; justify-content: space-between; gap: 8px; }
 .cesium-inspector .ci-history-row { margin-bottom: 2px; }
+.cesium-inspector .ci-group > summary, .cesium-inspector .ci-group-flat { display: grid; grid-template-columns: 10px 1fr auto; gap: 6px; align-items: center; cursor: pointer; margin: 2px 0; }
+.cesium-inspector .ci-group-flat { cursor: default; }
+.cesium-inspector .ci-group > summary .ci-num, .cesium-inspector .ci-group-flat .ci-num { text-align: right; }
+.cesium-inspector .ci-group > :not(summary) { margin-inline-start: 16px; }
 .cesium-inspector .ci-history-head { display: flex; justify-content: space-between; color: var(--ci-muted); font-size: 11px; }
 .cesium-inspector .ci-history-row svg { display: block; inline-size: 100%; block-size: 20px; }
 .cesium-inspector .ci-line { fill: none; stroke: var(--ci-series-1); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }

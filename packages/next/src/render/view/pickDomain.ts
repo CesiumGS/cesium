@@ -227,6 +227,7 @@ export function encodeDomainPick(
   }
   const pass = enc.beginRenderPass({
     label: "pick.domain",
+    timestampWrites: engine.raster.timer.passWrites("pick"),
     colorAttachments: [
       {
         view: resources.ids,
@@ -270,7 +271,10 @@ export function encodeDomainPick(
     }),
   );
   device.queue.writeBuffer(owned, 0, owners);
-  const compute = enc.beginComputePass({ label: "pick.domain.read" });
+  const compute = enc.beginComputePass({
+    label: "pick.domain.read",
+    timestampWrites: engine.raster.timer.passWrites("pick"),
+  });
   compute.setPipeline(pipelines.pickGather);
   compute.setBindGroup(0, resources.gather);
   compute.dispatchWorkgroups(1);

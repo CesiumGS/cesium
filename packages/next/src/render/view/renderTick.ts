@@ -12,6 +12,7 @@ import type {
   TargetFrame,
   WorldFrame,
 } from "./viewFrameData.ts";
+import type { Batch } from "../../scene/world/types.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
 import type { World } from "../../scene/World.ts";
@@ -144,6 +145,22 @@ export interface RenderTickEngine extends Pick<
   >;
 }
 
+/**
+ * Triangles in a world's shown batches: index count / 3 for each draw item
+ * (an instance counts each time). Patch and point batches have no fixed
+ * index count and count none.
+ */
+function countTriangles(batches: readonly Batch[]): number {
+  let triangles = 0;
+  for (let i = 0; i < batches.length; i++) {
+    const batch = batches[i]!;
+    if (batch.shown !== 0 && !batch.points && !batch.patches) {
+      triangles += (batch.mesh.indexCount / 3) * batch.items;
+    }
+  }
+  return triangles;
+}
+
 const FRAME_ENCODER: GPUCommandEncoderDescriptor = { label: "frame" };
 
 /**
@@ -238,6 +255,8 @@ export function render(
   // Assign each drawn view a slot (the first view drawn into a target
   // clears it) and prepare each world once.
   let slots = 0;
+  let triangles = 0;
+  let pixels = 0;
   for (let i = 0; i < views.length; i++) {
     const view = views[i]!;
     if (!drawn.has(view)) {
@@ -249,6 +268,8 @@ export function render(
     const rect = image ? image.rect : view.pixelRect();
     const frame = viewFrameFor(engine, view, rect);
     frame.slot = slots;
+    triangles += countTriangles(view.world.raster.batchList);
+    pixels += rect.width * rect.height;
     // Every frame takes the view's exposure as it is now: only the
     // on-demand check computed it, so `renderFrame()` and the continuous
     // loop drew with a stale scale (a fixed exposure set later never
@@ -426,6 +447,7 @@ export function render(
   engine.stats.lastCpuMs = elapsed;
   engine.stats.gpuMs = engine.raster.timer.milliseconds;
   engine.stats.gpuSpanMs = engine.raster.timer.spanMilliseconds;
+  engine.stats.gpuWallMs = engine.raster.timer.wallMilliseconds;
   engine.stats.views = slots;
   for (let i = 0; i < engine.worlds.length; i++) {
     engine.worlds[i]!.changedViews = 0;
@@ -438,6 +460,8 @@ export function render(
   }
   engine.stats.draws = draws;
   engine.stats.batches = batches;
+  engine.stats.triangles = triangles;
+  engine.stats.trianglesPerPixel = pixels > 0 ? triangles / pixels : 0;
 }
 
 /** A view's persistent image at its current size (recreated on resize). */

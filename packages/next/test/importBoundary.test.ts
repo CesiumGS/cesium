@@ -500,6 +500,8 @@ const TIER_EXCEPTIONS: Readonly<Record<string, string>> = {
   // Imagery composites on the GPU: rasterizer code that lives with content.
   "src/globe/GlobeImagery.ts → src/scene/RenderContext.ts":
     "composites on the GPU",
+  "src/globe/GlobeImagery.ts → src/gpu/GpuTimer.ts":
+    "times its composite passes as one group",
   "src/globe/GlobeImagery.ts → src/shaders/generated/imagery.wgsl":
     "composites on the GPU",
 };

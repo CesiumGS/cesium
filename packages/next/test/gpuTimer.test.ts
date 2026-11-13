@@ -139,6 +139,7 @@ describe("GPU frame times", () => {
       features: new Set(["timestamp-query"]),
       createQuerySet: () => ({ destroy: () => {} }),
       createBuffer: buffer,
+      queue: { onSubmittedWorkDone: () => Promise.resolve() },
     } as unknown as GPUDevice;
     installGpuGlobals();
     const timer = new GpuTimer(device);
@@ -169,6 +170,61 @@ describe("GPU frame times", () => {
     expect(passes["translucent-composite"]).toBeCloseTo(0.3, 6);
     expect(timer.spanMilliseconds).toBeCloseTo(11.1, 6);
     expect(GpuTimer.version).toBe(2);
+  });
+});
+
+describe("GPU timer groups", () => {
+  it("puts a group's interval first, with the wall time of the submit", async () => {
+    // Imagery (a group, run before the frame: 0-2 ms), then opaque
+    // (2.5-6.5 ms).
+    const frame = words([0, 2_000_000, 2_500_000, 6_500_000]);
+    const buffer = () => ({
+      mapAsync: () => Promise.resolve(),
+      getMappedRange: (offset = 0, size = frame.byteLength) =>
+        frame.buffer.slice(offset, offset + size),
+      unmap: () => {},
+      destroy: () => {},
+    });
+    const device = {
+      features: new Set(["timestamp-query"]),
+      createQuerySet: () => ({ destroy: () => {} }),
+      createBuffer: buffer,
+      queue: { onSubmittedWorkDone: () => Promise.resolve() },
+    } as unknown as GPUDevice;
+    installGpuGlobals();
+    const timer = new GpuTimer(device);
+    // The first pass of a group writes both ends, the rest only the end.
+    const first = GpuTimer.groupWrites(device, "imagery")!;
+    const next = GpuTimer.groupWrites(device, "imagery")!;
+    expect(first.beginningOfPassWriteIndex).toBeDefined();
+    expect(next.beginningOfPassWriteIndex).toBeUndefined();
+    expect(next.endOfPassWriteIndex).toBe(first.endOfPassWriteIndex);
+    timer.beginFrame();
+    timer.passWrites("opaque");
+    const copies: number[] = [];
+    timer.endFrame({
+      resolveQuerySet: () => {},
+      copyBufferToBuffer: (...a: unknown[]) => copies.push(a[3] as number),
+    } as unknown as GPUCommandEncoder);
+    // The group's 16 bytes, then the frame's passes after them.
+    expect(copies).toEqual([0, 16]);
+    timer.afterSubmit();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(Object.keys(timer.passes)).toEqual(["imagery", "opaque"]);
+    expect(timer.passes.imagery).toBeCloseTo(2, 6);
+    expect(timer.milliseconds).toBeCloseTo(6, 6);
+    expect(timer.lastSample.spanMs).toBeCloseTo(6.5, 6);
+    expect(timer.lastSample.wallMs).toBeGreaterThanOrEqual(0);
+    // The group is spent: the next frame carries none.
+    timer.beginFrame();
+    timer.passWrites("opaque");
+    copies.length = 0;
+    timer.endFrame({
+      resolveQuerySet: () => {},
+      copyBufferToBuffer: (...a: unknown[]) => copies.push(a[3] as number),
+    } as unknown as GPUCommandEncoder);
+    expect(copies).toEqual([0]);
+    timer.destroy();
   });
 });
 

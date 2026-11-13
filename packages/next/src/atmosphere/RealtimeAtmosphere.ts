@@ -1,4 +1,5 @@
 import atmosphereWgsl from "../shaders/generated/atmosphere.wgsl?raw";
+import { GpuTimer } from "../gpu/GpuTimer.ts";
 import {
   EARTH,
   coefficients,
@@ -212,7 +213,10 @@ export class RealtimeAtmosphere {
     workgroups: [number, number],
   ): void {
     const pipeline = this.pipelines[name];
-    const pass = encoder.beginComputePass({ label: `atmosphere.${name}` });
+    const pass = encoder.beginComputePass({
+      label: `atmosphere.${name}`,
+      timestampWrites: GpuTimer.groupWrites(this.device, "atmosphere"),
+    });
     pass.setPipeline(pipeline);
     pass.setBindGroup(
       0,

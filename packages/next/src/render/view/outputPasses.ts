@@ -42,6 +42,7 @@ export interface OutputPassEngine extends Pick<
     | "viewStaging"
     | "picks"
     | "presentData"
+    | "timer"
     | "translucentData"
     | "translucentDummies"
     | "viewFrames"
@@ -172,7 +173,10 @@ export function meterPass(
       size: 16,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
-    const pass = enc.beginComputePass({ label: "meter" });
+    const pass = enc.beginComputePass({
+      label: "meter",
+      timestampWrites: engine.raster.timer.passWrites("exposure"),
+    });
     pass.setPipeline(pipelines.meter);
     pass.setBindGroup(
       0,
@@ -237,7 +241,10 @@ export function depthRangePass(
       size: 8,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
-    const pass = enc.beginComputePass({ label: "depth-range" });
+    const pass = enc.beginComputePass({
+      label: "depth-range",
+      timestampWrites: engine.raster.timer.passWrites("exposure"),
+    });
     pass.setPipeline(pipelines.depthRange);
     pass.setBindGroup(
       0,
@@ -373,7 +380,10 @@ export function adaptationPass(
         { binding: 4, resource: get(adaptation) },
       ],
     });
-    const pass = enc.beginComputePass({ label: "adaptation" });
+    const pass = enc.beginComputePass({
+      label: "adaptation",
+      timestampWrites: engine.raster.timer.passWrites("exposure"),
+    });
     const groups = [
       Math.ceil(adaptSize.width / 8),
       Math.ceil(adaptSize.height / 8),
@@ -465,6 +475,7 @@ export function presentPasses(
   ) => {
     presentColor.view = get(output);
     presentColor.loadOp = frame.clearTarget ? "clear" : "load";
+    presentPass.timestampWrites = engine.raster.timer.passWrites("output");
     const pass = enc.beginRenderPass(presentPass);
     pass.setViewport(x, y, width, height, 0, 1);
     pass.setScissorRect(x, y, width, height);
@@ -536,6 +547,7 @@ export function presentPasses(
         });
       }
       responseColor.view = get(response);
+      responsePass.timestampWrites = engine.raster.timer.passWrites("output");
       const pass = enc.beginRenderPass(responsePass);
       pass.setPipeline(chain.pipelines!.response);
       pass.setBindGroup(0, chain.responseGroup!);
@@ -603,6 +615,7 @@ export function presentPasses(
       if (encoded) {
         const image = get(ldr);
         ldrColor.view = image;
+        ldrPass.timestampWrites = engine.raster.timer.passWrites("output");
         const first = enc.beginRenderPass(ldrPass);
         first.setPipeline(
           split ? chain.pipelines!.toneLdr : pipelines.presentLdr,

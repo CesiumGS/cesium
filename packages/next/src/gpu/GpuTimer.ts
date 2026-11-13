@@ -18,7 +18,22 @@ export class GpuTimer {
    * with translucency on).
    */
   static readonly version = 2;
+  /** Timed intervals in one measured frame: its own passes plus groups. */
   private static readonly maxPasses = 48;
+  /**
+   * Groups (`groupWrites`) a frame can carry: work encoded outside the
+   * frame's encoder (the imagery compositor's, the environment's), one
+   * interval each, however many passes it ran.
+   */
+  private static readonly groupSlots = 8;
+  /** Passes (`passWrites`) a measured frame can time itself. */
+  private static readonly framePasses =
+    GpuTimer.maxPasses - GpuTimer.groupSlots;
+  /** Where the groups' queries start in the query set. */
+  private static readonly groupBase = GpuTimer.framePasses * 2;
+  /** A resolved group's place in the resolve buffer (256-aligned). */
+  private static readonly groupStride = 256;
+  private static readonly groupOffset = 1024;
   /**
    * Smoothed GPU frame time in milliseconds, or NaN when unsupported: the
    * time any measured pass ran, passes that overlap counted once
@@ -31,6 +46,14 @@ export class GpuTimer {
    * between passes (e.g. indirect-draw validation) and idle gaps.
    */
   spanMilliseconds = Number.NaN;
+  /**
+   * Smoothed wall time of a measured frame, ms: the CPU clock from its
+   * `queue.submit` to `onSubmittedWorkDone`. It counts everything the GPU
+   * did for the submit (uploads, copies, presenting, which take no
+   * timestamps) but also any wait behind the previous frame's work, so it
+   * is an upper bound on the frame's GPU time. NaN until one arrives.
+   */
+  wallMilliseconds = Number.NaN;
   /**
    * Smoothed GPU time per pass label (`passWrites`), ms; passes sharing a
    * label (the shadow cascades) add up. For benchmarks: where the time goes.
@@ -66,6 +89,8 @@ export class GpuTimer {
       tag: number;
       /** Each pass's label index, as of `afterSubmit`. */
       labels: Uint8Array;
+      /** Wall time of this frame's submit, ms (NaN if unknown). */
+      wall: number;
       mapped: () => void;
       failed: () => void;
     }
@@ -79,6 +104,16 @@ export class GpuTimer {
   private readonly frameLabels = new Uint8Array(GpuTimer.maxPasses);
   /** Per-pass timestamp-write descriptors, created once. */
   private readonly writes: GPUComputePassTimestampWrites[] = [];
+  /** Group slot to label index (`groupWrites`). */
+  private readonly groupLabels: number[] = [];
+  /** Group slots written since the last measured submit. */
+  private readonly groupDirty: boolean[] = [];
+  /** Per group slot: first pass of a run (begin and end), later ones (end). */
+  private readonly groupFirst: GPUComputePassTimestampWrites[] = [];
+  private readonly groupRest: GPUComputePassTimestampWrites[] = [];
+  /** The dirty groups this frame carries, as slots (`endFrame`). */
+  private readonly frameGroups = new Uint8Array(GpuTimer.groupSlots);
+  private frameGroupCount = 0;
   private pending?: GPUBuffer;
   private nextIndex = 0;
   /**
@@ -90,18 +125,29 @@ export class GpuTimer {
   readonly lastSample: {
     tag: number;
     ms: number;
+    /** First pass start to last pass end, ms. */
+    spanMs: number;
+    /** Submit to `onSubmittedWorkDone`, ms (NaN if it hadn't arrived). */
+    wallMs: number;
     passes: Record<string, number>;
-  } = { tag: 0, ms: Number.NaN, passes: {} };
+  } = {
+    tag: 0,
+    ms: Number.NaN,
+    spanMs: Number.NaN,
+    wallMs: Number.NaN,
+    passes: {},
+  };
   samples = 0;
 
   constructor(private readonly device: GPUDevice) {
     if (!device.features.has("timestamp-query")) {
       return;
     }
+    GpuTimer.timers.set(device, this);
     const count = GpuTimer.maxPasses * 2;
     this.querySet = device.createQuerySet({ type: "timestamp", count });
     this.resolveBuffer = device.createBuffer({
-      size: count * 8,
+      size: GpuTimer.groupOffset + GpuTimer.groupSlots * GpuTimer.groupStride,
       usage: GPUBufferUsage.QUERY_RESOLVE | GPUBufferUsage.COPY_SRC,
     });
     for (let i = 0; i < 3; i++) {
@@ -115,18 +161,46 @@ export class GpuTimer {
         count: 0,
         tag: 0,
         labels: new Uint8Array(GpuTimer.maxPasses),
+        wall: Number.NaN,
         mapped: () => this.onMapped(buffer),
         failed: () => this.idle.push(buffer),
       });
     }
-    for (let i = 0; i < GpuTimer.maxPasses; i++) {
+    for (let i = 0; i < GpuTimer.framePasses; i++) {
       this.writes.push({
         querySet: this.querySet,
         beginningOfPassWriteIndex: i * 2,
         endOfPassWriteIndex: i * 2 + 1,
       });
     }
+    for (let i = 0; i < GpuTimer.groupSlots; i++) {
+      const begin = GpuTimer.groupBase + i * 2;
+      this.groupFirst.push({
+        querySet: this.querySet,
+        beginningOfPassWriteIndex: begin,
+        endOfPassWriteIndex: begin + 1,
+      });
+      this.groupRest.push({
+        querySet: this.querySet,
+        endOfPassWriteIndex: begin + 1,
+      });
+      this.groupDirty.push(false);
+    }
   }
+
+  /**
+   * Timestamp writes for a pass of group `label` on `device`'s timer
+   * (`groupWrites`), for code that has the device but not the engine. A
+   * pass run before the frame's own submit, any time the same tick.
+   */
+  static groupWrites(
+    device: GPUDevice,
+    label: string,
+  ): GPUComputePassTimestampWrites | undefined {
+    return GpuTimer.timers.get(device)?.groupWrites(label);
+  }
+
+  private static readonly timers = new WeakMap<GPUDevice, GpuTimer>();
 
   /** Starts a frame. Returns false when this frame won't be measured. */
   beginFrame(): boolean {
@@ -143,10 +217,53 @@ export class GpuTimer {
     if (
       !this.querySet ||
       !this.pending ||
-      this.nextIndex >= GpuTimer.maxPasses * 2
+      this.nextIndex >= GpuTimer.framePasses * 2
     ) {
       return undefined;
     }
+    const index = this.intern(label);
+    if (index === undefined) {
+      return undefined;
+    }
+    this.frameLabels[this.nextIndex / 2] = index;
+    const writes = this.writes[this.nextIndex / 2];
+    this.nextIndex += 2;
+    return writes;
+  }
+
+  /**
+   * Timestamp writes for one pass of a group: work that runs outside the
+   * frame's encoder (the imagery compositor, environment maps), in as many
+   * passes as it takes. All of a group's passes since the last measured
+   * frame add up to one interval, from the first pass's start to the last
+   * pass's end (gaps between them included), reported under `label`. Call
+   * it for every pass of the group, in the order they run. Undefined
+   * without `timestamp-query`, or when the groups are full. The passes
+   * must be submitted before the frame's (`endFrame`).
+   */
+  groupWrites(label: string): GPUComputePassTimestampWrites | undefined {
+    if (!this.querySet) {
+      return undefined;
+    }
+    const index = this.intern(label);
+    if (index === undefined) {
+      return undefined;
+    }
+    let slot = this.groupLabels.indexOf(index);
+    if (slot < 0) {
+      if (this.groupLabels.length >= GpuTimer.groupSlots) {
+        return undefined;
+      }
+      slot = this.groupLabels.length;
+      this.groupLabels.push(index);
+    }
+    const first = !this.groupDirty[slot];
+    this.groupDirty[slot] = true;
+    return first ? this.groupFirst[slot] : this.groupRest[slot];
+  }
+
+  /** The label's index (new ones interned), or undefined when full. */
+  private intern(label: string): number | undefined {
     let index = this.labelIndex.get(label);
     if (index === undefined) {
       if (this.labelIndex.size >= GpuTimer.maxPasses) {
@@ -156,19 +273,23 @@ export class GpuTimer {
       this.labelIndex.set(label, index);
       this.labelMs[index] = Number.NaN;
     }
-    this.frameLabels[this.nextIndex / 2] = index;
-    const writes = this.writes[this.nextIndex / 2];
-    this.nextIndex += 2;
-    return writes;
+    return index;
   }
 
   /** Resolves this frame's queries; call before `encoder.finish()`. */
   endFrame(encoder: GPUCommandEncoder): void {
+    this.frameGroupCount = 0;
+    for (let slot = 0; slot < this.groupLabels.length; slot++) {
+      if (this.groupDirty[slot]) {
+        this.frameGroups[this.frameGroupCount++] = slot;
+      }
+    }
+    const groups = this.frameGroupCount;
     if (
       !this.querySet ||
       !this.resolveBuffer ||
       !this.pending ||
-      this.nextIndex === 0
+      (this.nextIndex === 0 && groups === 0)
     ) {
       if (this.pending) {
         this.idle.push(this.pending);
@@ -176,27 +297,57 @@ export class GpuTimer {
       }
       return;
     }
-    encoder.resolveQuerySet(
-      this.querySet,
-      0,
-      this.nextIndex,
-      this.resolveBuffer,
-      0,
-    );
-    encoder.copyBufferToBuffer(
-      this.resolveBuffer,
-      0,
-      this.pending,
-      0,
-      this.nextIndex * 8,
-    );
+    // The readback holds the groups' intervals first, then the passes'.
+    // Each group resolves alone: only the queries written are resolved.
+    for (let k = 0; k < groups; k++) {
+      const slot = this.frameGroups[k]!;
+      const at = GpuTimer.groupOffset + k * GpuTimer.groupStride;
+      encoder.resolveQuerySet(
+        this.querySet,
+        GpuTimer.groupBase + slot * 2,
+        2,
+        this.resolveBuffer,
+        at,
+      );
+      encoder.copyBufferToBuffer(
+        this.resolveBuffer,
+        at,
+        this.pending,
+        k * 16,
+        16,
+      );
+    }
+    if (this.nextIndex > 0) {
+      encoder.resolveQuerySet(
+        this.querySet,
+        0,
+        this.nextIndex,
+        this.resolveBuffer,
+        0,
+      );
+      encoder.copyBufferToBuffer(
+        this.resolveBuffer,
+        0,
+        this.pending,
+        groups * 16,
+        this.nextIndex * 8,
+      );
+    }
   }
 
-  /** Starts the async readback; call after `queue.submit`. */
+  /**
+   * Starts the async readback and the wall-time measure of this frame's
+   * submit; call after `queue.submit`, every frame (it ends the frame's
+   * groups).
+   */
   afterSubmit(): void {
     const buffer = this.pending;
-    const count = this.nextIndex;
+    const groups = this.frameGroupCount;
+    const count = groups * 2 + this.nextIndex;
     this.pending = undefined;
+    this.frameGroupCount = 0;
+    const slots = this.frameGroups.slice(0, groups);
+    this.groupDirty.fill(false);
     if (!buffer) {
       return;
     }
@@ -207,14 +358,32 @@ export class GpuTimer {
     const handler = this.handlers.get(buffer)!;
     handler.count = count;
     handler.tag = this.tag;
-    handler.labels.set(this.frameLabels);
+    handler.wall = Number.NaN;
+    for (let k = 0; k < groups; k++) {
+      handler.labels[k] = this.groupLabels[slots[k]!]!;
+    }
+    handler.labels.set(
+      this.frameLabels.subarray(0, this.nextIndex / 2),
+      groups,
+    );
+    // Only measured frames wait on the queue; the wait (and the readback,
+    // which can't finish before it) costs no await on the others.
+    const start = performance.now();
+    const queue = this.device.queue;
+    const done = queue.onSubmittedWorkDone().then(
+      () => {
+        handler.wall = performance.now() - start;
+      },
+      () => undefined,
+    );
     void buffer
       .mapAsync(GPUMapMode.READ, 0, count * 8)
+      .then(() => done)
       .then(handler.mapped, handler.failed);
   }
 
   private onMapped(buffer: GPUBuffer): void {
-    const { count, labels, tag } = this.handlers.get(buffer)!;
+    const { count, labels, tag, wall } = this.handlers.get(buffer)!;
     const words = new Uint32Array(buffer.getMappedRange(0, count * 8));
     const order: number[] = [];
     for (let i = 0; i < count / 2; i++) {
@@ -229,6 +398,8 @@ export class GpuTimer {
     const sample = this.lastSample;
     sample.tag = tag;
     sample.ms = times.total / 1e6;
+    sample.spanMs = times.span / 1e6;
+    sample.wallMs = wall;
     sample.passes = {};
     const names = [...this.labelIndex.keys()];
     for (const i of order) {
@@ -242,9 +413,15 @@ export class GpuTimer {
     if (times.span > 0) {
       this.spanMilliseconds = smooth(this.spanMilliseconds, times.span / 1e6);
     }
+    if (!Number.isNaN(wall)) {
+      this.wallMilliseconds = smooth(this.wallMilliseconds, wall);
+    }
   }
 
   destroy(): void {
+    if (GpuTimer.timers.get(this.device) === this) {
+      GpuTimer.timers.delete(this.device);
+    }
     this.querySet?.destroy();
     this.resolveBuffer?.destroy();
     for (const buffer of this.readbacks) {
