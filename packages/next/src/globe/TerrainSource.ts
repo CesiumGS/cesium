@@ -35,6 +35,7 @@ import {
   containingTriangle,
   flatTerrainHeights,
   interpolateHeight,
+  type MorphSource,
   type Rectangle,
   type TerrainHeights,
   type TerrainTileInfo,
@@ -58,6 +59,9 @@ import type {
 } from "./terrainRay.ts";
 
 /** The ellipsoid's drawn tiles' vertices and triangles (shared, read-only). */
+/** The most levels a tile morphs across: past it the ancestor's surface says little about the tile. */
+const MAX_MORPH_LEVELS = 16;
+
 let flatHeights: TerrainHeights | undefined;
 
 /** A load request's `heightNormal`, from what `TerrainSource.wantsHeightNormal` said. */
@@ -82,11 +86,11 @@ export type TerrainLoader = (
      */
     heightNormal?: HeightNormalMode;
     /**
-     * The tile also carries its parent's surface height at each vertex
-     * (`HEIGHT_MORPH_ATTRIBUTE`), from the parent's `heights` over this
-     * tile's quadrant (`qx`, `qy` from the south-west): geomorphing.
+     * The tile also carries its nearest drawn ancestor's surface height at
+     * each vertex (`HEIGHT_MORPH_ATTRIBUTE`), from that ancestor's `heights`
+     * over this tile's place in it (`MorphSource`): geomorphing.
      */
-    morph?: { heights: TerrainHeights; qx: number; qy: number };
+    morph?: MorphSource;
     /**
      * A tile below the last level with data: clipped from the nearest tile
      * with data, over `rect`, from its `heights`, or, once they have left
@@ -615,27 +619,50 @@ export class TerrainSource {
     return asset;
   }
 
-  /** The parent's surface for the tile's geomorphing, when wanted and resident. */
+  /**
+   * The surface the tile morphs from, when wanted: the nearest ancestor that
+   * has been drawn and has resident, non-upsampled `heights`. Selection can
+   * skip levels, and a level never drawn was never on screen, so the
+   * parent's surface would ease nothing. With no such ancestor, the nearest
+   * one with such heights (the parent, when it has them). One ancestor's
+   * heights go to the worker.
+   */
   private morphRequest(
     tile: Tile,
     a: GlobeTile,
     upsampled: boolean,
-  ): { morph?: { heights: TerrainHeights; qx: number; qy: number } } {
-    const parent = tile.parent?.globe;
-    if (
-      upsampled ||
-      this.flat ||
-      !parent?.heights ||
-      parent.upsampledFrom ||
-      !this.wantsMorph?.()
-    ) {
+  ): { morph?: MorphSource } {
+    if (upsampled || this.flat || !this.wantsMorph?.()) {
       return {};
     }
+    let fallback: GlobeTile | undefined;
+    let source: GlobeTile | undefined;
+    for (let up = tile.parent; up; up = up.parent) {
+      const g = up.globe;
+      if (
+        !g?.heights ||
+        g.upsampledFrom ||
+        a.level - g.level > MAX_MORPH_LEVELS
+      ) {
+        continue;
+      }
+      fallback ??= g;
+      if (up.drawnOnce) {
+        source = g;
+        break;
+      }
+    }
+    source ??= fallback;
+    if (!source) {
+      return {};
+    }
+    const scale = 2 ** (a.level - source.level);
     return {
       morph: {
-        heights: parent.heights,
-        qx: a.x - 2 * parent.x,
-        qy: a.y - 2 * parent.y,
+        heights: source.heights!,
+        scale,
+        qx: a.x - scale * source.x,
+        qy: a.y - scale * source.y,
       },
     };
   }
