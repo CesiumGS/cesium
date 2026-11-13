@@ -10345,6 +10345,64 @@ Whatever the surface, the pipeline (§1) and the runtime contract (§3) are the 
 - **(c) One style over points, lines and b-rep faces.**
 - **(d) Two kinds of operator:** a moving operator as a smooth node (parallel offsets) and a generating one as a compute pass (items along a line).
 
+### 13.41 Investigations and design-review questions (owner, 2026-11-13)
+
+Recorded to explore, nothing decided. Each item gives the question and a first take.
+
+**A design principle for the API review: the surface leaves room to innovate underneath.**
+
+- Every public type should say what it promises and what it leaves to the engine, and the docs should say so plainly.
+- The test case is swapping the renderer. Could a ray-traced renderer, a WebGL 2 renderer, a future API, or a browser- or hardware-specific feature (an extension exposed to WebGPU) sit behind the same `Engine`, `World` and `View`, with fewer features where it must?
+- First take: the existing engine profile (the shading and compatibility tiers) might grow into a renderer profile: capabilities a view asks for and a backend reports, with the engine choosing per view. Do a prior-art search first: Unreal's RHI and feature levels, Filament's backends, bgfx, wgpu's downlevel flags, Hydra render delegates in USD (the closest match: one scene, swappable renderers, each declaring what it supports), and OSPRay and Embree's split.
+
+**Hybrid rendering and ray tracing.**
+
+- Is it better to composite separate renderers (a path tracer beside the WebGPU rasterizer, joined by depth and IDs), or to have one renderer with ray queries in raster shaders, as RenderMan and DXR inline ray tracing do?
+- First take:
+  - Compositing is cheap to build, but it splits lighting (no shared shadows or reflections) and doubles memory.
+  - Inline ray queries are the better fit for hybrid effects.
+  - A path tracer as a separate renderer is a good test of the swap above.
+  - A public ray-query abstraction (§13.10, §13.16 already have one on the CPU and GPU) could let a path tracer live in the application.
+- Owner's lead, from OptiX: compile a renderer from kernels. The IR (§13.37, §13.38) and the raster pipeline's stages could be extended so raster and ray stages are composed and specialized together: programs per hit kind, linked and specialized at build or run time.
+
+**GPU culling and rasterization.**
+
+- **Meshlet and cluster culling with a depth pyramid:** frustum, cone (backface) and occlusion tests per cluster of about 64–128 triangles in compute, ideally with subgroup operations. These apply to dense design models and photogrammetry. They need clusters built at load or in the tiler (meshoptimizer), and they build on fix 7's pyramid (the transform-graph plan's Task 12).
+  - The risk is subgroup availability: Safari and Firefox have about none (§7.2). Keep a portable path.
+- **Software rasterization in compute** for small triangles and vector marks, as Nanite does for clusters whose triangles are about a pixel. Vector rendering already does some of this. The question is how one compute rasterizer serves meshes, vectors and points, writing visibility through 64-bit atomics (depth and ID packed).
+- **64-bit atomics:** WebGPU has no 64-bit atomics today, and there's a proposal to track. Without them, the packed depth-and-ID trick needs two passes or 32-bit packing. List what else they would help: order-independent transparency lists, splat sorting keys, ray-query hit merging, and histograms.
+
+**Shader toolchain and IR: think the combinations through before building more (owner's questions).**
+
+- **Material languages:**
+  - OSL: probably offline-only, but its closures as a material model are worth learning from.
+  - MaterialX: its node graphs as an interchange we read. It already targets GLSL, MSL and others, so we could take its generated code or translate its graph into our IR.
+  - Other open standards to consider: OpenPBR and glTF's material extensions.
+- **The IR:**
+  - Naga's IR is portable and has a WASM build. It's wgpu's, so it isn't the browser's compiler.
+  - Tint has an internal IR, not a stable public one.
+  - WGSL itself is the only thing portable across every WebGPU implementation, so whatever the internal IR is, the engine's output to the browser is WGSL.
+  - Question: should the engine's own small IR (`src/transform/ir.ts`) stay as the place for autodiff and intervals and emit WGSL, with naga only for validation and the GLSL fallback?
+- **Slang for everything?**
+  - Styling and vector stages as Slang interfaces and generics: operator and generator stages as implementations, linked and specialized when each module is linked.
+  - The 3D Tiles 1.x styling language compiled to a Slang module at runtime.
+  - The internal linker on Slang at build time, and Slang's GLSL target for a WebGL 2 backend.
+  - The cost is the Slang WASM binary in the core, which could be lazy-loaded when styling or custom shaders are used, as custom shaders are today.
+- **WESL** for the internal shader linker instead of our own, with naga only for the GLSL path.
+- **Inputs:** many styling inputs (GML, the 3D Tiles styling language, a new styling spec, SVG). What does the engine's API take: a language, an IR, or both, so new languages can be added without core changes?
+- **Needs:** a deep comparison of the combinations (Slang only; Slang plus our IR; WESL plus naga; our IR to WGSL plus naga), covering bundle size, compile latency, portability, autodiff, specialization and a WebGL 2 path. Run it as a research session before §13.40's spikes.
+
+**Targeting wgpu instead of WebGPU directly.**
+
+- Gains: wgpu brings native builds and a WebGL 2 fallback (its downlevel tiers) behind one API.
+- Costs: shipping a WASM wgpu in the browser (size, a second validation layer, and losing the browser's own WebGPU optimizations), and Rust in the build.
+- First take: the browser path stays on native WebGPU. wgpu becomes interesting for a native or headless engine (M6's "headless via Dawn" is the alternative), or as the WebGL 2 backend behind the renderer-profile seam above.
+
+**Modularization (§13.36).**
+
+- File formats as their own modules: GeoJSON, KML, CZML, glTF, USD and more, each a loader behind one content interface, loaded on demand.
+- The Slang interface as its own module too, if the API's shader input becomes an IR.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each

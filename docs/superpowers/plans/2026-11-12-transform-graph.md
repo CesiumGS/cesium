@@ -264,6 +264,18 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
     - Transitions morph (terrain) or fade (meshes).
     - The measurements report the largest transition error on screen during loading as well as at rest.
   - **Affine scales:** check that selection multiplies geometric error by an affine node's largest scale, as 1.x does for a tileset's transform. If not, that's the same bug in its simplest form.
+- **Owner, 2026-11-13:**
+  - **Geomorphing has a switch:** `View.lodTransitions: "morph" | "pop"`, and per content where it makes sense.
+  - **The exponent's default is found empirically,** not chosen. Increment 4 sweeps α over 0, 0.25, 0.5, 0.75 and 1 at several factors and views, and reports tiles, GPU time and the largest transition error. The owner picks from the curves.
+  - **More than 1,000 tiles for this view is suspect.** Before tuning anything, find out why with debug views (below), tile by tile: which level each tile is, why it was refined, and what it shows as.
+  - **Debug views, built into the engine as public, documented API, so application developers can debug their own scenes:** `View.debug` (or one family of debug shaders) with the following views:
+    - colour by tile level;
+    - tile boundaries;
+    - screen-space error as a heat map, against the threshold;
+    - each tile's state (drawn, a placeholder, a stand-in, held, hidden by occlusion);
+    - the stretch s and α in use;
+    - wireframe.
+    - It's a debug shading mode in the opaque pass with a legend, not an example's private code. The prior art is 1.x's `debugColorizeTiles` and `debugShowBoundingVolume`, and Unreal's view modes.
 - **Feedback must converge, not be damped:** occlusion feedback is now monotone under a still camera. A hidden verdict only blocks new refinement and never coarsens, so refinement can only grow and must reach a fixed point. Any remaining tick-to-tick flipping is a verdict changing near the threshold. The fix is hysteresis both ways (a depth margin to enter hidden, two ticks to leave), and a render is requested only when a verdict change would change the selection. A stronger damper isn't the answer.
 - **Increments:**
   1. `lodExponent` per node and per view, plus the general |J·ê| factor for heightfields.
