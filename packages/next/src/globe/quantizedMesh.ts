@@ -93,19 +93,12 @@ export interface TerrainTileInfo {
  * rectangle, counted from the south-west: `scale` is 2 to the number of
  * levels between them (2 for a parent), and `qx`, `qy` are in [0, `scale`).
  */
-export interface MorphFromTile {
+export interface MorphSource {
   heights: TerrainHeights;
   scale: number;
   qx: number;
   qy: number;
 }
-
-/**
- * The surface a tile morphs in from: an ancestor's (`MorphFromTile`), or
- * the bare ellipsoid (height 0) where no terrain was drawn yet, so the
- * first terrain rises instead of appearing at once.
- */
-export type MorphSource = MorphFromTile | { ellipsoid: true };
 
 /** A terrain tile's surface for height queries. */
 export interface TerrainHeights {
