@@ -58,10 +58,10 @@ import type {
   TerrainRayTile,
 } from "./terrainRay.ts";
 
-/** The ellipsoid's drawn tiles' vertices and triangles (shared, read-only). */
 /** The most levels a tile morphs across: past it the ancestor's surface says little about the tile. */
 const MAX_MORPH_LEVELS = 16;
 
+/** The ellipsoid's drawn tiles' vertices and triangles (shared, read-only). */
 let flatHeights: TerrainHeights | undefined;
 
 /** A load request's `heightNormal`, from what `TerrainSource.wantsHeightNormal` said. */
