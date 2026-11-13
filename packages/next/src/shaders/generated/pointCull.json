@@ -1605,6 +1605,28 @@
                                 ]
                             },
                             "binding": {"kind": "uniform", "offset": 160, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "imageryFrom",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 164, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "imageryFade",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 168, "size": 4, "elementStride": 0}
                         }
                     ],
                     "sizes": [
@@ -3741,6 +3763,28 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 160, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "imageryFrom",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 164, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "imageryFade",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 168, "size": 4, "elementStride": 0}
                             }
                         ],
                         "sizes": [

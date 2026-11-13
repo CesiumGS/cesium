@@ -268,7 +268,7 @@ export function writeAnchorEye(
   }
 }
 
-/** `struct DrawRecord` — 176 bytes (164 used, padded to WGSL's 16-byte alignment). */
+/** `struct DrawRecord` — 176 bytes (172 used, padded to WGSL's 16-byte alignment). */
 export const RECORD_SIZE = DrawRecordLayout.size;
 export const RECORD_WORDS = R.size;
 /** Word offsets of `DrawRecord` fields written after creation. */
@@ -354,6 +354,10 @@ export const INSTANCE_COUNT_WORD = R.instanceCount;
 export const DEBUG_WORD = R.debug;
 /** Word offset of `DrawRecord.morph`: a globe tile's geomorph start, seconds on `View.time`'s clock (f32); 0: none. */
 export const MORPH_WORD = R.morph;
+/** Word offset of `DrawRecord.imageryFrom`: the packed imagery (`packImagery`) a cross-fade leaves. */
+export const IMAGERY_FROM_WORD = R.imageryFrom;
+/** Word offset of `DrawRecord.imageryFade`: a globe tile's imagery cross-fade start, seconds on `View.time`'s clock (f32); 0: none. */
+export const IMAGERY_FADE_WORD = R.imageryFade;
 /** Word offset of a record's instance streams' stride (words). */
 export const INSTANCE_STRIDE_WORD = R.instanceStride;
 /**
@@ -651,6 +655,8 @@ export function writeDrawRecord(
   u32[o + R.casterMask] = 0;
   u32[o + R.debug] = 0;
   u32[o + R.morph] = 0;
+  u32[o + R.imageryFrom] = 0;
+  u32[o + R.imageryFade] = 0;
 }
 
 /** Bits of `Transform.flags` that hold its anchor slot (8 to 15). */

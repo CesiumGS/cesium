@@ -589,6 +589,10 @@ export class View {
    * vertical exaggeration magnifies the difference). "pop" swaps at once,
    * as before, and costs nothing per vertex.
    *
+   * Globe imagery cross-fades over the same 0.3 seconds when a drawn tile's
+   * imagery changes on refinement (its own slice replacing an ancestor's);
+   * night lights still pop.
+   *
    * Only terrain morphs, and only when it refines: tiles that coarsen leave
    * at once, and 3D Tiles content pops. A tile drawn in several views
    * morphs if any of them says "morph". Tiles carry the data (their nearest drawn

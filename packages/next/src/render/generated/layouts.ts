@@ -71,6 +71,8 @@ export const DrawRecordLayout = {
   casterMask: 152,
   debug: 156,
   morph: 160,
+  imageryFrom: 164,
+  imageryFade: 168,
 } as const;
 
 /** `Transform` as `transforms` holds it: byte offsets. */

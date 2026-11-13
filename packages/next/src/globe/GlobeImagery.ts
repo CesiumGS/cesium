@@ -29,11 +29,14 @@ import type { ImageryProvider } from "./ImageryProvider.ts";
 import imageryWgsl from "../shaders/generated/imagery.wgsl?raw";
 import { SlicePool, type SliceUser, type SliceWorld } from "./SlicePool.ts";
 import { GpuTimer } from "../gpu/GpuTimer.ts";
+import { MORPH_SECONDS } from "../streaming/tileMorph.ts";
 
 /** What a layer asks of the world it composites for. */
 export interface GlobeImageryWorld extends SliceWorld {
   setImagery(handle: DrawHandle, packed: number, unlit?: boolean): void;
   setLights(handle: DrawHandle, packed: number): void;
+  /** Cross-fades a draw's imagery from `from` since `seconds` (0: ends it); a world that doesn't fade omits it. */
+  setImageryFade?(handle: DrawHandle, from: number, seconds: number): void;
 }
 
 const WGS84_RADIUS = 6378137;
@@ -163,6 +166,20 @@ export class GlobeImagery implements SliceUser {
   private applied = new WeakMap<ModelPlacement, number>();
   /** The tiles the last update pointed, re-pointed on relocation. */
   private drawn: Tile[] = [];
+  /**
+   * Imagery cross-fades under way (`View.lodTransitions` "morph"): per tile,
+   * the packed imagery it fades from and when the fade is done
+   * (`performance.now()` ms). The slice a fade leaves is pinned until then.
+   */
+  private readonly fades = new Map<Tile, { from: number; end: number }>();
+  /**
+   * The start of a cross-fade begun at `nowMs`, in seconds on the views'
+   * clock; 0 when no view cross-fades (`View.lodTransitions` "pop"), which
+   * is the default. The engine sets it.
+   */
+  fadeStart?: (nowMs: number) => number;
+  /** The update's time, `performance.now()` ms. */
+  private now = 0;
   /**
    * Slices this frame's tiles need (`update`): the distinct slices they
    * draw with (their own, or an ancestor's while theirs composites), and
@@ -316,6 +333,11 @@ export class GlobeImagery implements SliceUser {
     return undefined;
   }
 
+  /** Some tile's imagery is cross-fading: the loop keeps ticking (`Tileset3D.morphing`). */
+  get fading(): boolean {
+    return this.fades.size > 0;
+  }
+
   /** Loading or compositing: the terrain tileset stays active. */
   get busy(): boolean {
     return this.loading > 0 || this.jobs.size > 0 || !this.pipelines;
@@ -324,10 +346,14 @@ export class GlobeImagery implements SliceUser {
   /**
    * One frame: `wanted` are the terrain tiles drawn in any view, with their
    * priority (lower first). Requests and composites their slices, and
-   * points each tile's draws at its slice or its nearest ancestor's.
+   * points each tile's draws at its slice or its nearest ancestor's. A tile
+   * already pointed at imagery that changes cross-fades to the new
+   * (`fadeStart`); `nowMs` is the tick's `performance.now()`.
    */
-  update(wanted: Map<Tile, number>): void {
+  update(wanted: Map<Tile, number>, nowMs: number = performance.now()): void {
     const frame = ++this.frame;
+    this.now = nowMs;
+    this.endFades(nowMs);
     const order = [...wanted.entries()].sort((a, b) => a[1] - b[1]);
     const inUse = new Set<number>();
     for (const [tile] of order) {
@@ -451,6 +477,7 @@ export class GlobeImagery implements SliceUser {
     this.sources.clear();
     this.pool.give([...this.slices.values()].map((s) => s.slice));
     this.slices.clear();
+    this.fades.clear();
     this.drawn = [];
     this.needed = 0;
     this.pool.release(this);
@@ -481,6 +508,8 @@ export class GlobeImagery implements SliceUser {
       }
     }
     this.applied = new WeakMap();
+    // A fade's old slice may have moved or gone: the fades end.
+    this.endFades(Infinity);
     for (const tile of this.drawn) {
       this.apply(tile);
     }
@@ -508,9 +537,13 @@ export class GlobeImagery implements SliceUser {
     // A drawn tile left without its slice draws its ancestor's, and asks
     // again next update.
     let drawn = 0;
+    const pinned = this.pinned();
     for (const [tile, s] of victims) {
       if (over <= 0) {
         break;
+      }
+      if (pinned.has(s.slice)) {
+        continue;
       }
       if (s.used === frame && ++drawn > HANDOVER_PER_UPDATE) {
         break;
@@ -856,8 +889,9 @@ export class GlobeImagery implements SliceUser {
   private recycle(frame: number): number | undefined {
     let oldest: Tile | undefined;
     let used = frame;
+    const pinned = this.pinned();
     for (const [tile, s] of this.slices) {
-      if (s.used < used) {
+      if (s.used < used && !pinned.has(s.slice)) {
         used = s.used;
         oldest = tile;
       }
@@ -897,15 +931,60 @@ export class GlobeImagery implements SliceUser {
         break;
       }
     }
-    if (this.applied.get(placement) !== packed) {
+    const before = this.applied.get(placement);
+    if (before !== packed) {
+      // Imagery replacing imagery on a drawn tile cross-fades; the first
+      // imagery (or none before) pops in.
+      const fade =
+        this.role === "surface" &&
+        before !== undefined &&
+        before !== 0 &&
+        packed !== 0
+          ? (this.fadeStart?.(this.now) ?? 0)
+          : 0;
       for (const draw of placement.draws) {
         if (this.role === "lights") {
           this.world.setLights(draw, packed);
         } else {
           this.world.setImagery(draw, packed, !this.lit);
+          if (fade > 0 || this.fades.has(tile)) {
+            this.world.setImageryFade?.(draw, before ?? 0, fade);
+          }
         }
       }
+      if (fade > 0) {
+        this.fades.set(tile, {
+          from: before!,
+          end: this.now + MORPH_SECONDS * 1000,
+        });
+      } else {
+        this.fades.delete(tile);
+      }
       this.applied.set(placement, packed);
+    }
+  }
+
+  /** The slices active fades leave: not recycled until the fades end. */
+  private pinned(): Set<number> {
+    const slices = new Set<number>();
+    for (const { from } of this.fades.values()) {
+      slices.add((from & 4095) - 1);
+    }
+    return slices;
+  }
+
+  /**
+   * Ends the fades done by `nowMs` (or whose tile left): the draws' words go
+   * back to none, and their slices may be recycled.
+   */
+  private endFades(nowMs: number): void {
+    for (const [tile, fade] of this.fades) {
+      if (fade.end <= nowMs || !tile.placement) {
+        this.fades.delete(tile);
+        for (const draw of tile.placement?.draws ?? []) {
+          this.world.setImageryFade?.(draw, 0, 0);
+        }
+      }
     }
   }
 }

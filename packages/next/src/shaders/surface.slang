@@ -792,6 +792,13 @@ PatchVertex patchVertex(DrawRecord r, uint vertexIndex) {
 static const uint MORPH_HASH = 2431764312u;
 static const float MORPH_SECONDS = 0.3;
 
+// Imagery cross-fade (View.lodTransitions "morph"): a tile whose imagery
+// changed (a finer slice composited over its ancestor's) shows the old imagery
+// (`DrawRecord.imageryFrom`) easing into the new over the same MORPH_SECONDS,
+// from the time `DrawRecord.imageryFade` says. IMAGERY_FADE_SECONDS is
+// streaming/tileMorph.ts `MORPH_SECONDS`; test/imageryFade.test.ts holds them equal.
+static const float IMAGERY_FADE_SECONDS = 0.3;
+
 float4 morphOf(DrawRecord r, uint vertexIndex) {
   float4 m = readNamed(r.attributes, MORPH_HASH, vertexIndex, 0u);
   float t = clamp((view.time.x - r.morph) / MORPH_SECONDS, 0.0, 1.0);
@@ -2371,17 +2378,28 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   float4 metallicRoughnessSample = materialTexture(material, TEXTURE_METALLIC_ROUGHNESS, in.uv);
   float3 normalSample = materialTexture(material, TEXTURE_NORMAL, in.uv).xyz;
   float occlusionSample = materialTexture(material, TEXTURE_OCCLUSION, in.uv).r;
+  float2 dUVdx = ddx(in.uv);
+  float2 dUVdy = ddy(in.uv);
   uint imageryPacked = r.imagerySlice;
   float4 imagerySample = imagery.Sample(
       imagerySampler, float3(imageryUv(imageryPacked, in.uv), float(max(imageryPacked & 4095u, 1u) - 1u)));
+  if (r.imageryFade > 0.0 && imageryPacked != 0u) {
+    // Cross-fading: the imagery before, sampled with explicit gradients (this
+    // branch is per draw, not uniform), eased into the new.
+    uint fromPacked = r.imageryFrom;
+    float fromScale = 1.0 / float(1u << ((fromPacked >> 12u) & 15u));
+    float4 fromSample = imagery.SampleGrad(
+        imagerySampler, float3(imageryUv(fromPacked, in.uv), float(max(fromPacked & 4095u, 1u) - 1u)),
+        dUVdx * float2(fromScale, -fromScale), dUVdy * float2(fromScale, -fromScale));
+    float t = clamp((view.time.x - r.imageryFade) / IMAGERY_FADE_SECONDS, 0.0, 1.0);
+    imagerySample = lerp(fromSample, imagerySample, t * t * (3.0 - 2.0 * t));
+  }
   uint lightsPacked = r.lightsSlice;
   float3 lightsSample = imagery.Sample(
       imagerySampler, float3(imageryUv(lightsPacked, in.uv), float(max(lightsPacked & 4095u, 1u) - 1u))).rgb;
   float3 drawn = drawnPosition(in, r);
   float3 dPdx = ddx(drawn);
   float3 dPdy = ddy(drawn);
-  float2 dUVdx = ddx(in.uv);
-  float2 dUVdy = ddy(in.uv);
   uint display = patchDisplay(r);
   PatchWidths widths = patchWidths(in);
 

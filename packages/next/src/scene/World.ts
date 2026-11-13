@@ -1493,6 +1493,20 @@ export class World {
     }
   }
 
+  /**
+   * Cross-fades a globe tile draw's imagery from `from` (`packImagery`) to
+   * what `setImagery` set, from `seconds` on the views' clock (`View.time`);
+   * 0 ends it.
+   */
+  setImageryFade(handle: DrawHandle, from: number, seconds: number): void {
+    if (
+      this.hasDraw(handle) &&
+      this.raster.drawConstants.setImageryFade(handle.index, from, seconds)
+    ) {
+      this.markDirty(handle.index);
+    }
+  }
+
   setViewMask(handle: DrawHandle, mask: number): void {
     if (!this.hasDraw(handle)) {
       return;
