@@ -135,6 +135,7 @@ export interface RenderTickEngine extends Pick<
     | "startTime"
     | "tilesetRotation"
     | "uploadBudget"
+    | "uploadsWaiting"
     | "viewIds"
     | "viewMotion"
   >;

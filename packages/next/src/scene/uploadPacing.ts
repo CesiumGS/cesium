@@ -1,3 +1,11 @@
+/**
+ * Which pacing a benchmark result was measured with
+ * (`RunMetrics.uploadPacing`): absent, 1, per tick; 2, by elapsed time.
+ * Requests, bytes and the tick count shift with it on a slow GPU, so
+ * results of the two aren't compared blindly.
+ */
+export const UPLOAD_PACING_VERSION = 2;
+
 /** One 60 Hz tick, ms: what the per-tick upload limits are written for. */
 export const REFERENCE_TICK_MS = 1000 / 60;
 /** The most a slow tick scales the upload limits by. */

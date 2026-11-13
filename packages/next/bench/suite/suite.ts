@@ -17,6 +17,7 @@ import {
 } from "../../src/index.ts";
 import { volumeFromJson } from "../../src/streaming/volumes.ts";
 import { GpuTimer } from "../../src/gpu/GpuTimer.ts";
+import { UPLOAD_PACING_VERSION } from "../../src/scene/uploadPacing.ts";
 import {
   type CreditSource,
   engineSnapshot,
@@ -417,6 +418,8 @@ export interface Adapter {
   gpuMs(): number | undefined;
   /** The version of the timer behind `gpuMs` (`RunMetrics.gpuTimer`). */
   gpuTimer?(): number;
+  /** The upload pacing version (`RunMetrics.uploadPacing`). */
+  uploadPacing?(): number;
   /** Nothing loading for the current view. */
   settled(): boolean;
   /** Some content (tiles or models) is drawn. */
@@ -787,6 +790,10 @@ export class NextAdapter implements Adapter {
 
   gpuTimer(): number {
     return GpuTimer.version;
+  }
+
+  uploadPacing(): number {
+    return UPLOAD_PACING_VERSION;
   }
 
   settled(): boolean {
@@ -1808,6 +1815,9 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
       metrics.cpuP50 = quantile(cpu, 0.5);
       metrics.cpuP95 = quantile(cpu, 0.95);
       metrics.gpuP50 = quantile(gpu, 0.5);
+      if (adapter.uploadPacing) {
+        metrics.uploadPacing = adapter.uploadPacing();
+      }
       if (gpu.length && adapter.gpuTimer) {
         metrics.gpuTimer = adapter.gpuTimer();
       }

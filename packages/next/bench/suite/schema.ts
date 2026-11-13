@@ -300,6 +300,12 @@ export interface RunMetrics {
    * gpuTimer.mjs): absent, 1 (passes summed); 2, overlap counted once.
    */
   gpuTimer?: number;
+  /**
+   * How uploads were paced (src/scene/uploadPacing.ts
+   * `UPLOAD_PACING_VERSION`): absent, 1, per tick; 2, by elapsed time.
+   * Only recorded: nothing keeps the versions apart yet.
+   */
+  uploadPacing?: number;
   /** `gpuP50` of an older timer, kept apart at reading (gpuTimer.mjs). */
   gpuSummedP50?: number;
   /** Long animation frames (over 50 ms) and the worst blocking time, ms. */
