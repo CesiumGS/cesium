@@ -107,8 +107,11 @@ function recordable(
     }
     pendingFrame = false;
   };
+  // No location outside a page (Node tests): no URL switches.
   const params = new URLSearchParams(
-    `${location.search.slice(1)}&${location.hash.split("?")[1] ?? ""}`,
+    typeof location === "undefined"
+      ? ""
+      : `${location.search.slice(1)}&${location.hash.split("?")[1] ?? ""}`,
   );
   const r: Recordable = {
     get active() {
