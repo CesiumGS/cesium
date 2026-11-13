@@ -218,7 +218,20 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
 3. **Per-route-shape pipeline compiles.** Generated WGSL of up to about 280 KB takes 2.3–4.3 s per pipeline in the GPU process, compiled one at a time. A routed draw stays hidden until its pipelines exist, so content appears late on first load.
 4. **Terrain loses its exact path under a ceiling.** `verticalExaggeration` with a `ceiling` drops `heightScale` (src/georeference/heightWarps.ts), so the globe's exact `h·n̂` path turns off. Terrain then pays costs 1–3, as in the gallery's scene 1.
 
-**Status (2026-11-12): fixes 1 and 2 built** (`d66510f3cd`, `bbde3070d8`); 3 to 5 not started.
+**Status (2026-11-12): fixes 1 and 2 built** (`d66510f3cd`, `bbde3070d8`); 3 and 5 not started; **4 (the interpreter pipeline) deferred by the owner** as more than is needed now. Keep it as written below, to revisit if compile latency still shows once the rest lands.
+
+**Measured after fixes 1 and 2** (the exaggeration scene, in the app's browser pane on Apple Metal; `scripts/profilePage.mjs` for the CPU):
+
+- The main thread is busy 5.2 s of 25 s, with no fits and a longest task of 562 ms, so CPU is no longer the limit there.
+- Tiles drawn grow with the factor: ×1 gives 184 tiles at 29 ms GPU (settled), ×5 gives 949 at 77 ms (still loading), and ×10 gives 1,795 at 106 ms (still loading, 1,236 waiting to upload).
+- The cause is selection's `geometricError × σ_max`. Under a lift, σ_max ≈ k, so keeping the same pixel error takes about k times the tiles. That is correct for the drawn surface, but it costs about k×. Fixes 3 and 5 don't change it, and terrain no longer pays them in this scene.
+
+**Fix 6 (candidates, owner to choose): refinement under a smooth node.**
+
+- **An error policy:** measure error in the true frame (as 1.x does, so the drawn error is k× coarser), in the drawn frame (today), or in between (for example, σ_max^½).
+- **Anisotropic error:** terrain's error is vertical. Project k·ε along the drawn up axis at the tile and the view direction, as view-dependent terrain LOD does (Lindstrom et al. 1996), rather than taking an isotropic σ_max · ε. This is exact and gains in steep or top-down views, but little in this example's oblique one.
+- **Horizon culling under a lift:** it is off under any smooth route today. A lift with a ceiling keeps the ellipsoid, shrunk by the lowest drawn height, as a valid occluder, and tile boxes from fix 2 give the culling points in closed form.
+- **Occlusion culling:** a hierarchical-Z test of tile boxes against the previous tick's depth, treating the tile tree as the bounding volume hierarchy, so ridges hide valleys from both drawing and refinement. This is the largest of the four, and it helps every scene with relief, exaggerated or not.
 
 - **Fix 1:** `HeightScale` gains an optional `profile` (ceiling, band). Under it, terrain carries (n̂, signed h) in a 4-component attribute, and the vertex stage draws (k − 1)·G(h)·n̂, with G written once in `heightProfile.slang` and mirrored in `camera/heightProfile.ts`. A region's image is the region over [g(hMin), g(hMax)]. Limits: a view that sets the factor itself still takes the compiled route for terrain, and a tile loaded in the other mode keeps it until it reloads.
 - **Fix 2:** descriptors declare `bound(box, ranges)` as an entrywise bound on |J| in chosen bases, and `composeBox` (`scene/routeBounds.ts`) carries a tile's box along the route by the mean value theorem, as an upper Riemann sum over 4 scaled boxes. Bounded: exaggeration, heightOffset, geographic↔geocentric, TM/UTM and Web Mercator forward, scaleAbout, scaleAlongAxes, bend; the rest sample as before.
