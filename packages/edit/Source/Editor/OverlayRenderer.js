@@ -45,7 +45,7 @@ import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
  * @typedef {object} OverlayPickObject
  * @property {object} primitive The renderer's mesh.
  * @property {ComponentType} componentType The component's type.
- * @property {bigint | undefined} componentKey The component's stable key in its mesh.
+ * @property {bigint} componentKey The component's stable key in its mesh.
  * @private
  */
 
