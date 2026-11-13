@@ -1,6 +1,6 @@
 // @ts-check
 
-/** @import JulianDate from "./JulianDate"; */
+/** @import JulianDate from "./JulianDate.js"; */
 
 /**
  * Describes a single leap second, which is constructed from a {@link JulianDate} and a
