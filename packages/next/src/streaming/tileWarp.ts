@@ -78,11 +78,13 @@ export interface TileWarp {
    * the same longitudes and latitudes: the drawn heights of heights in
    * [`min`, `max`] (closed form, for the scale's bucket) and the most the map
    * stretches there (σ_max), so a region's drawn volume needs no samples.
+   * `slopeMax` is the profile's largest dh′/dh over those heights: how much it
+   * stretches a vertical length, which is all a terrain tile's error is.
    */
   heightRange?(
     min: number,
     max: number,
-  ): { min: number; max: number; sigmaMax: number };
+  ): { min: number; max: number; sigmaMax: number; slopeMax: number };
 }
 
 /** A tile's volume where its draws put it. */
@@ -91,6 +93,12 @@ export interface DrawnTile {
   readonly volume: TileVolume;
   /** The largest singular value of the map's Jacobian over the volume, estimated at its centre and corners: how much the map stretches a geometric error. */
   readonly sigmaMax: number;
+  /**
+   * Under a height profile only: the largest dh′/dh over the tile's heights
+   * (`TileWarp.heightRange`), the stretch of a vertical length, with the
+   * horizontal stretch taken as 1 (`terrainDrawnError`).
+   */
+  readonly slopeMax?: number;
   /** The fit's error (m), added to the stretched geometric error. */
   fit: number;
 }
@@ -99,6 +107,7 @@ export interface DrawnTile {
 interface Carried {
   readonly volume: TileVolume;
   readonly sigmaMax: number;
+  readonly slopeMax?: number;
   readonly remake?: () => Carried;
 }
 
@@ -240,6 +249,7 @@ function carry(volume: TileVolume, warp: TileWarp): Carried {
     return {
       volume: { kind: "sphere", sphere: sphereFromObb(drawn.obb) },
       sigmaMax: image.sigmaMax,
+      slopeMax: image.slopeMax,
     };
   }
   if (warp.box) {
@@ -309,22 +319,32 @@ export function drawnTile(tile: Tile, warp: TileWarp): DrawnTile {
     tile.drawnCache = cache;
   }
   if (!cache || cache.version !== warp.version || cache.basis !== basis) {
-    const { volume, sigmaMax, remake } = carried(basis, warp);
+    const { volume, sigmaMax, slopeMax, remake } = carried(basis, warp);
     cache = {
       warp,
       version: warp.version,
       scaleVersion,
       basis,
-      drawn: { volume, sigmaMax, fit: 0 },
+      drawn: {
+        volume,
+        sigmaMax,
+        ...(slopeMax !== undefined && { slopeMax }),
+        fit: 0,
+      },
       ...(remake && { remake }),
       fitVersion: -1,
     };
     tile.drawnCache = cache;
   } else if (cache.scaleVersion !== scaleVersion) {
     cache.scaleVersion = scaleVersion;
-    const { volume, sigmaMax, remake } =
+    const { volume, sigmaMax, slopeMax, remake } =
       cache.remake?.() ?? carried(basis, warp);
-    cache.drawn = { volume, sigmaMax, fit: cache.drawn.fit };
+    cache.drawn = {
+      volume,
+      sigmaMax,
+      ...(slopeMax !== undefined && { slopeMax }),
+      fit: cache.drawn.fit,
+    };
     cache.remake = remake;
     for (const key of ["content", "request"] as const) {
       const kept = cache[key];
@@ -388,4 +408,107 @@ export function drawnRequestVolume(
     cache.request = { basis, volume, ...(remake && { remake }) };
   }
   return cache.request.volume;
+}
+
+/** The angle (radians) between two unit vectors. */
+function angleBetween(a: Vec3, b: Vec3): number {
+  return Math.acos(
+    Math.min(1, Math.max(-1, a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!)),
+  );
+}
+
+/** The geodetic up at (longitude, latitude) radians: a unit vector. */
+function up(longitude: number, latitude: number): Vec3 {
+  const c = Math.cos(latitude);
+  return [
+    c * Math.cos(longitude),
+    c * Math.sin(longitude),
+    Math.sin(latitude),
+  ] as unknown as Vec3;
+}
+
+/** How far the tile's up differs across it: the largest angle from its centre's to a corner's or an edge midpoint's (cached on the tile's globe data). */
+const spreads = new WeakMap<object, { up: Vec3; spread: number }>();
+
+function upSpread(
+  rectangle: {
+    west: number;
+    south: number;
+    east: number;
+    north: number;
+  },
+  key: object,
+): { up: Vec3; spread: number } {
+  let known = spreads.get(key);
+  if (!known) {
+    const lon = (rectangle.west + rectangle.east) / 2;
+    const lat = (rectangle.south + rectangle.north) / 2;
+    const centre = up(lon, lat);
+    let spread = 0;
+    for (const l of [rectangle.west, lon, rectangle.east]) {
+      for (const t of [rectangle.south, lat, rectangle.north]) {
+        spread = Math.max(spread, angleBetween(centre, up(l, t)));
+      }
+    }
+    known = { up: centre, spread };
+    spreads.set(key, known);
+  }
+  return known;
+}
+
+/**
+ * The largest sin θ over a terrain tile, θ the angle between the line from
+ * the viewer to a point of the tile and the local up there. A vertical
+ * length L at distance d seen at θ covers about L·sin θ / d of the view, so
+ * this is how much of a vertical error shows. Conservative: the line to any
+ * point of the tile lies within the angle the tile's bounding sphere
+ * subtends of the line to its centre, and its up within the tile's angular
+ * spread of its centre's, so θ lies within their sum of the centre's;
+ * 1 where the viewer is inside the sphere (or that sum reaches a right
+ * angle).
+ */
+export function sinThetaMax(
+  position: ArrayLike<number>,
+  sphere: { center: ArrayLike<number>; radius: number },
+  rectangle: { west: number; south: number; east: number; north: number },
+  key: object,
+): number {
+  const dx = sphere.center[0]! - position[0]!;
+  const dy = sphere.center[1]! - position[1]!;
+  const dz = sphere.center[2]! - position[2]!;
+  const d = Math.hypot(dx, dy, dz);
+  if (!(d > sphere.radius)) {
+    return 1;
+  }
+  const { up: n, spread } = upSpread(rectangle, key);
+  const cos = (dx * n[0]! + dy * n[1]! + dz * n[2]!) / d;
+  const theta = Math.acos(Math.min(1, Math.max(-1, cos)));
+  const s = Math.asin(sphere.radius / d) + spread;
+  // sin is largest at the end of [θ − s, θ + s] nearest a right angle.
+  if (theta - s <= Math.PI / 2 && theta + s >= Math.PI / 2) {
+    return 1;
+  }
+  return Math.sin(theta + s < Math.PI / 2 ? theta + s : theta - s);
+}
+
+/**
+ * A terrain tile's geometric error as it is drawn, plus its fit's. Under a
+ * height profile (`drawn.slopeMax`) the error is vertical: stretched by the
+ * profile's largest dh′/dh with the horizontal stretch taken as 1, and seen
+ * at most by sin θ (`sinThetaMax`). Under any other warp, the isotropic
+ * σ_max, as for any content.
+ */
+export function terrainDrawnError(
+  tile: Tile,
+  drawn: DrawnTile,
+  position: ArrayLike<number>,
+  error = tile.geometricError,
+): number {
+  const rectangle = tile.globe?.rectangle;
+  const sphere = drawn.volume.sphere;
+  if (drawn.slopeMax === undefined || !rectangle || !sphere) {
+    return error * drawn.sigmaMax + drawn.fit;
+  }
+  const sin = sinThetaMax(position, sphere, rectangle, tile.globe!);
+  return error * drawn.slopeMax * sin + drawn.fit;
 }

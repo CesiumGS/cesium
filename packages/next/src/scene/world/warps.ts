@@ -58,6 +58,7 @@ import {
   type WarpScale,
 } from "../../camera/route.ts";
 import {
+  drawnHeight,
   drawnHeightRange,
   drawnSlopeBound,
 } from "../../camera/heightProfile.ts";
@@ -432,6 +433,11 @@ class AnchorTileWarp implements TileWarp {
         min: lo,
         max: hi,
         sigmaMax: Math.max(horizontal, drawnSlopeBound(low, high)),
+        slopeMax: Math.max(
+          ...[low, high].flatMap((k) =>
+            [min, max].map((h) => drawnHeight(h, k, base, ceiling, band)[1]),
+          ),
+        ),
       };
     };
   }
