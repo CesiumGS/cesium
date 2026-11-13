@@ -226,7 +226,16 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
 - Tiles drawn grow with the factor: ×1 gives 184 tiles at 29 ms GPU (settled), ×5 gives 949 at 77 ms (still loading), and ×10 gives 1,795 at 106 ms (still loading, 1,236 waiting to upload).
 - The cause is selection's `geometricError × σ_max`. Under a lift, σ_max ≈ k, so keeping the same pixel error takes about k times the tiles. That is correct for the drawn surface, but it costs about k×. Fixes 3 and 5 don't change it, and terrain no longer pays them in this scene.
 
-**Fix 6 (candidates, owner to choose): refinement under a smooth node.**
+**Built after measuring (2026-11-12):**
+
+- **The GPU, per pass, at ×10:** 92 ms a tick (opaque 67 ms, depth prepass 13 ms, shadows 11 ms) against about 40 ms at ×1. Tiles waited 19.6 s (p50) to upload while an upload takes 0.1 ms, because uploads were paced per rendered tick at 8 ticks a second.
+- **Upload pacing by time** (`b970854262`, `d292e23e21`, `21ee66bdc2`): while uploads wait, a tick's allowance scales with its length over 16.7 ms, up to 8×. An idle gap counts as 1×. Requests, admission and the cache budget are unchanged. Benchmark runs record `uploadPacing: 2`.
+- **Per-tile terrain error, refitted** (merged in `3b891e09a7`): when a child's mesh arrives, the largest vertical gap between it and its parent's mesh is measured at both meshes' vertices and at their edges' crossings. A parent's error becomes min(the level estimate, the largest of gap + child error) over its four children. The work per tile is capped against crafted data, falling back to the level estimate.
+  - It applies to all terrain, warped or not (owner, 2026-11-12). The `globe` suite keeps 1.x's selection in five of six views; San Francisco coast selects 24 tiles to 1.x's 27 (overlap 0.82), because smooth ground stops refining earlier.
+  - A predictive estimate for tiles whose children aren't loaded exists behind `predictiveErrors`, off. On synthetic fractal terrain it underestimated the true error on 72–100% of tiles at ratio 0.5.
+- **Direction-aware vertical error** (same merge): under a height profile, a globe tile's error is g′max · ε · sin θmax, with θ between the view ray and the local up, instead of σ_max · ε. Top-down views at 200 km get over 20 times less. With no warp, nothing changes.
+
+**Fix 6 (candidates, owner to choose): refinement under a smooth node.** The error policy and occlusion culling remain; horizon culling folds into occlusion culling.
 
 - **An error policy:** measure error in the true frame (as 1.x does, so the drawn error is k× coarser), in the drawn frame (today), or in between (for example, σ_max^½).
 - **Anisotropic error:** terrain's error is vertical. Project k·ε along the drawn up axis at the tile and the view direction, as view-dependent terrain LOD does (Lindstrom et al. 1996), rather than taking an isotropic σ_max · ε. This is exact and gains in steep or top-down views, but little in this example's oblique one.
