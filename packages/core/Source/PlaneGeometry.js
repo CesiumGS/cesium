@@ -1,3 +1,5 @@
+// @ts-check
+
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";

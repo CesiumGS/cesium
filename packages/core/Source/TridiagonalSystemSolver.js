@@ -1,3 +1,5 @@
+// @ts-check
+
 import Cartesian3 from "./Cartesian3.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";

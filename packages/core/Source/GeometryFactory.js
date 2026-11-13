@@ -1,4 +1,8 @@
+// @ts-check
+
 import DeveloperError from "./DeveloperError.js";
+
+/** @import Geometry from "./Geometry.js"; */
 
 /**
  * Base class for all geometry creation utility classes that can be passed to {@link GeometryInstance}
