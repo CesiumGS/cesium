@@ -13,6 +13,7 @@ import knockout from "./ThirdParty/knockout.js";
  *
  * @param {Function} func The function to execute.
  * @param {boolean} [canExecute=true] A boolean indicating whether the function can currently be executed.
+ * @returns {Command} The command that executes the function.
  */
 function createCommand(func, canExecute) {
   //>>includeStart('debug', pragmas.debug);
