@@ -59,9 +59,10 @@ describe("Scene/BufferPointCollection", () => {
     collection.add({ position: Cartesian3.UNIT_Y }, point);
     collection.add({ position: Cartesian3.UNIT_Z }, point);
 
-    expect(collection._dirtyFlags).toBe(BufferPointCollection.DirtyFlags.ALL);
+    const tracker = collection._addChangeTracker();
+    expect(tracker.flags).toBe(BufferPointCollection.DirtyFlags.ALL);
 
-    collection._makeClean();
+    collection._makeClean(tracker);
 
     // prettier-ignore
     collection.setPositions(new Float64Array([
@@ -78,9 +79,96 @@ describe("Scene/BufferPointCollection", () => {
     collection.get(2, point);
     expect(point.getPosition(position)).toEqual(new Cartesian3(102, 102, 102));
 
-    expect(collection._dirtyFlags).toBe(
-      BufferPointCollection.DirtyFlags.GEOMETRY,
-    );
+    expect(tracker.flags).toBe(BufferPointCollection.DirtyFlags.GEOMETRY);
+    expect(tracker.offset).toBe(1);
+    expect(tracker.count).toBe(2);
+  });
+
+  it("change trackers each observe changes", () => {
+    const collection = new BufferPointCollection();
+    const point = new BufferPoint();
+
+    collection.add({ position: Cartesian3.UNIT_X }, point);
+    collection.add({ position: Cartesian3.UNIT_Y }, point);
+    collection.add({ position: Cartesian3.UNIT_Z }, point);
+
+    const trackerA = collection._addChangeTracker();
+    const trackerB = collection._addChangeTracker();
+    collection._makeClean(trackerA);
+    collection._makeClean(trackerB);
+
+    collection.get(1, point).setPosition(Cartesian3.ZERO);
+
+    for (const tracker of [trackerA, trackerB]) {
+      expect(tracker.offset).toBe(1);
+      expect(tracker.count).toBe(1);
+      expect(tracker.flags).toBe(BufferPointCollection.DirtyFlags.GEOMETRY);
+      expect(tracker.full).toBe(false);
+    }
+
+    collection._makeClean(trackerA);
+    expect(trackerA.count).toBe(0);
+    expect(trackerB.count).toBe(1);
+    expect(collection.get(1, point)._dirty).toBe(true);
+
+    collection._removeChangeTracker(trackerB);
+    expect(collection.get(1, point)._dirty).toBe(false);
+  });
+
+  it("new change trackers read every primitive", () => {
+    const collection = new BufferPointCollection();
+    const point = new BufferPoint();
+
+    collection.add({ position: Cartesian3.UNIT_X }, point);
+    collection.add({ position: Cartesian3.UNIT_Y }, point);
+    collection.add({ position: Cartesian3.UNIT_Z }, point);
+
+    const trackerA = collection._addChangeTracker();
+    collection._makeClean(trackerA);
+
+    const trackerB = collection._addChangeTracker();
+    expect(trackerB).toEqual({
+      offset: 0,
+      count: 3,
+      flags: BufferPointCollection.DirtyFlags.ALL,
+      full: true,
+    });
+    expect(trackerA.count).toBe(0);
+  });
+
+  it("sort marks change trackers to read every primitive", () => {
+    const collection = new BufferPointCollection();
+    const point = new BufferPoint();
+
+    collection.add({ position: Cartesian3.UNIT_X }, point);
+    collection.add({ position: Cartesian3.UNIT_Y }, point);
+    collection.add({ position: Cartesian3.UNIT_Z }, point);
+
+    const tracker = collection._addChangeTracker();
+    collection._makeClean(tracker);
+
+    collection.sort((a, b) => b.featureId - a.featureId);
+
+    expect(tracker).toEqual({
+      offset: 0,
+      count: 3,
+      flags: BufferPointCollection.DirtyFlags.ALL,
+      full: true,
+    });
+  });
+
+  it("changes without change trackers only update the version", () => {
+    const collection = new BufferPointCollection();
+    const point = new BufferPoint();
+
+    const version0 = collection._version;
+    collection.add({ position: Cartesian3.UNIT_X }, point);
+    expect(collection._version).toBeGreaterThan(version0);
+
+    const version1 = collection._version;
+    point.show = false;
+    expect(collection._version).toBeGreaterThan(version1);
+    expect(point._dirty).toBe(false);
   });
 
   it("show", () => {
