@@ -583,15 +583,16 @@ export class View {
   }
   /**
    * How terrain refines on screen: "morph" (the default) eases each new
-   * tile's surface from its parent's over 0.3 seconds, so a tile replacing a
-   * coarser one doesn't jump (geomorphing; most visible when a warp such as
+   * tile's surface from the nearest ancestor that was drawn, over 0.3 seconds
+   * (selection can skip levels, so that is not always the parent), so a tile
+   * replacing a coarser one doesn't jump (geomorphing; most visible when a warp such as
    * vertical exaggeration magnifies the difference). "pop" swaps at once,
    * as before, and costs nothing per vertex.
    *
    * Only terrain morphs, and only when it refines: tiles that coarsen leave
    * at once, and 3D Tiles content pops. A tile drawn in several views
-   * morphs if any of them says "morph". Tiles carry the data (their parent's
-   * height per vertex) from when they load: a view that turns morph on later
+   * morphs if any of them says "morph". Tiles carry the data (their nearest drawn
+   * ancestor's height per vertex) from when they load: a view that turns morph on later
    * morphs the tiles that load after.
    */
   get lodTransitions(): LodTransitions {

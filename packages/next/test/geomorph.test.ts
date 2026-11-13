@@ -1,5 +1,5 @@
-// Terrain geomorphing (`View.lodTransitions`): a tile carries its parent's
-// surface height at each vertex, begins to morph in when first drawn over a
+// Terrain geomorphing (`View.lodTransitions`): a tile carries its nearest drawn
+// ancestor's surface height at each vertex, begins to morph in when first drawn over a
 // coarser tile, and the loop ticks only while one morphs.
 import { readFileSync } from "node:fs";
 import { fakeEngine } from "./fakeGpu.ts";
@@ -10,6 +10,7 @@ import {
   type TerrainHeights,
 } from "../src/globe/quantizedMesh.ts";
 import { HEIGHT_MORPH_ATTRIBUTE } from "../src/globe/heightNormal.ts";
+import { TerrainSource } from "../src/globe/TerrainSource.ts";
 import { parentSurfaceHeights } from "../src/globe/terrainRefit.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
@@ -116,7 +117,12 @@ describe("a terrain tile's parent heights", () => {
   const child = gridTile(rect, 7, ridge, 11).heights;
 
   it("match a CPU interpolation of the parent over the child's quadrant", () => {
-    const heights = parentSurfaceHeights(child.u, child.v, parent, 1, 0);
+    const heights = parentSurfaceHeights(child.u, child.v, {
+      heights: parent,
+      scale: 2,
+      qx: 1,
+      qy: 0,
+    });
     for (let i = 0; i < child.u.length; i++) {
       const lon = rect.west + (child.u[i]! / 32767) * (rect.east - rect.west);
       const lat =
@@ -137,7 +143,7 @@ describe("a terrain tile's parent heights", () => {
     }
     const { buffer, renumber } = encode(child, edges);
     const asked = decodeQuantizedMesh(buffer, rect, 25, {
-      morph: { heights: parent, qx: 1, qy: 0 },
+      morph: { heights: parent, scale: 2, qx: 1, qy: 0 },
     });
     const plain = decodeQuantizedMesh(buffer, rect, 25);
     expect(asked.info.morphs).toBe(true);
@@ -149,7 +155,12 @@ describe("a terrain tile's parent heights", () => {
     const data = attribute.data;
     const total = mesh.positions.length / 3;
     expect(data.length).toBe(total * 4);
-    const heights = parentSurfaceHeights(child.u, child.v, parent, 1, 0);
+    const heights = parentSurfaceHeights(child.u, child.v, {
+      heights: parent,
+      scale: 2,
+      qx: 1,
+      qy: 0,
+    });
     const range = child.maximumHeight - child.minimumHeight;
     // Vertex k of the decoded mesh is the child's vertex `old` with renumber.get(old) === k.
     for (const [old, k] of renumber) {
@@ -177,6 +188,156 @@ describe("a terrain tile's parent heights", () => {
       }
     });
     expect(skirt).toBe(total);
+  });
+});
+
+describe("a tile's heights from a drawn ancestor several levels up", () => {
+  const ancestor = gridTile(PARENT, 9, plane, 10).heights;
+  const cellOf = (scale: number, qx: number, qy: number): Rectangle => {
+    const w = (PARENT.east - PARENT.west) / scale;
+    const h = (PARENT.north - PARENT.south) / scale;
+    return {
+      west: PARENT.west + qx * w,
+      east: PARENT.west + (qx + 1) * w,
+      south: PARENT.south + qy * h,
+      north: PARENT.south + (qy + 1) * h,
+    };
+  };
+
+  it.each([
+    [4, 2, 1], // two levels below
+    [8, 5, 6], // three levels below
+    [8, 0, 7],
+  ])(
+    "at scale %i, cell (%i, %i), equal the ancestor's surface at the vertices",
+    (scale, qx, qy) => {
+      const rect = cellOf(scale, qx, qy);
+      const child = gridTile(rect, 5, plane, 12).heights;
+      const heights = parentSurfaceHeights(child.u, child.v, {
+        heights: ancestor,
+        scale,
+        qx,
+        qy,
+      });
+      for (let i = 0; i < child.u.length; i++) {
+        const lon = rect.west + (child.u[i]! / 32767) * (rect.east - rect.west);
+        const lat =
+          rect.south + (child.v[i]! / 32767) * (rect.north - rect.south);
+        expect(heights[i]).toBeCloseTo(plane(lon, lat), 1);
+      }
+    },
+  );
+
+  it("are NaN for a placement outside the ancestor", () => {
+    const u = new Uint16Array([100, 20000]);
+    const v = new Uint16Array([100, 20000]);
+    for (const [scale, qx, qy] of [
+      [4, 4, 0],
+      [4, 0, -1],
+      [3.5, 0, 0],
+      [1, 0, 0],
+      [4, 0.5, 0],
+    ] as const) {
+      const out = parentSurfaceHeights(u, v, {
+        heights: ancestor,
+        scale,
+        qx,
+        qy,
+      });
+      expect(Array.from(out).every(Number.isNaN)).toBe(true);
+    }
+  });
+});
+
+describe("TerrainSource picks the ancestor a tile morphs from", () => {
+  const heightsOf = (name: string) => ({ name }) as unknown as TerrainHeights;
+  const node = (
+    parent: Tile | undefined,
+    level: number,
+    x: number,
+    y: number,
+    options: {
+      heights?: string;
+      drawn?: boolean;
+      upsampled?: boolean;
+    } = {},
+  ): Tile =>
+    ({
+      parent,
+      drawnOnce: options.drawn,
+      globe: {
+        level,
+        x,
+        y,
+        heights: options.heights ? heightsOf(options.heights) : undefined,
+        upsampledFrom: options.upsampled ? {} : undefined,
+      },
+    }) as unknown as Tile;
+  const request = (tile: Tile, upsampled = false) => {
+    const source = Object.create(TerrainSource.prototype) as {
+      flat: boolean;
+      wantsMorph: () => boolean;
+      morphRequest: (
+        t: Tile,
+        a: unknown,
+        u: boolean,
+      ) => {
+        morph?: {
+          heights: { name: string };
+          scale: number;
+          qx: number;
+          qy: number;
+        };
+      };
+    };
+    source.flat = false;
+    source.wantsMorph = () => true;
+    return source.morphRequest(tile, tile.globe, upsampled);
+  };
+
+  it("takes the nearest drawn ancestor, skipping undrawn levels, with the tile's place in it", () => {
+    const l3 = node(undefined, 3, 2, 1, { heights: "l3", drawn: true });
+    const l4 = node(l3, 4, 5, 3, { heights: "l4" });
+    const l5 = node(l4, 5, 10, 7, { heights: "l5" });
+    const l6 = node(l5, 6, 21, 15, { heights: "l6" });
+    const l7 = node(l6, 7, 43, 30);
+    expect(request(l7).morph).toEqual({
+      heights: heightsOf("l3"),
+      scale: 16,
+      qx: 43 - 16 * 2,
+      qy: 30 - 16 * 1,
+    });
+    // Drawn parent: a plain quadrant.
+    l6.drawnOnce = true;
+    expect(request(l7).morph).toMatchObject({ scale: 2, qx: 1, qy: 0 });
+  });
+
+  it("passes over a drawn ancestor that has no heights or is upsampled", () => {
+    const l2 = node(undefined, 2, 1, 1, { heights: "l2", drawn: true });
+    const l3 = node(l2, 3, 3, 2, { drawn: true }); // heights gone
+    const l4 = node(l3, 4, 6, 4, {
+      heights: "l4",
+      drawn: true,
+      upsampled: true,
+    });
+    const l5 = node(l4, 5, 12, 9);
+    expect(request(l5).morph).toMatchObject({
+      heights: heightsOf("l2"),
+      scale: 8,
+    });
+  });
+
+  it("falls back to the nearest ancestor with heights when none was drawn, else none", () => {
+    const l3 = node(undefined, 3, 2, 1, { heights: "l3" });
+    const l4 = node(l3, 4, 5, 3, { heights: "l4" });
+    const l5 = node(l4, 5, 10, 7);
+    expect(request(l5).morph).toMatchObject({
+      heights: heightsOf("l4"),
+      scale: 2,
+    });
+    const bare = node(node(undefined, 1, 0, 0), 2, 0, 0);
+    expect(request(bare).morph).toBeUndefined();
+    expect(request(l5, true).morph).toBeUndefined();
   });
 });
 

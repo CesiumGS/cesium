@@ -26,7 +26,7 @@
  * - A child's "own error" is its level estimate until its children refit it:
  *   the level estimate is the data's nominal error, not a measurement.
  */
-import type { TerrainHeights } from "./quantizedMesh.ts";
+import type { MorphSource, TerrainHeights } from "./quantizedMesh.ts";
 
 /** Cells per side of a mesh's triangle index. */
 const GRID = 16;
@@ -185,7 +185,9 @@ function heightAt(t: TerrainHeights, u: number, v: number): number | undefined {
 /**
  * The parent mesh's height (metres) over the point at quantized (`u`, `v`) of
  * its child's quadrant (`qx`, `qy` in {0, 1}, from the south-west); undefined
- * where the parent has no triangle (or is unmeasurable).
+ * where the parent has no triangle (or is unmeasurable). `scale` (default 2)
+ * generalizes the quadrant to cell (`qx`, `qy`) of a `scale` by `scale` grid
+ * over the mesh's rectangle, for an ancestor more than one level up.
  */
 function parentHeightAt(
   parent: TerrainHeights,
@@ -193,33 +195,43 @@ function parentHeightAt(
   qy: number,
   u: number,
   v: number,
+  scale = 2,
 ): number | undefined {
   return heightAt(
     parent,
-    (qx + u / QUANT) * 0.5 * QUANT,
-    (qy + v / QUANT) * 0.5 * QUANT,
+    ((qx + u / QUANT) / scale) * QUANT,
+    ((qy + v / QUANT) / scale) * QUANT,
   );
 }
 
 /**
- * The parent surface's height (metres) at each vertex of a child mesh, the
- * same lookup the deviation measures (geomorphing starts a vertex there).
- * `u` and `v` are the child's quantized vertex coordinates. NaN where the
- * parent has no triangle under the vertex, or is unmeasurable.
+ * An ancestor surface's height (metres) at each vertex of a descendant mesh,
+ * the same lookup the deviation measures (geomorphing starts a vertex
+ * there). `u` and `v` are the descendant's quantized vertex coordinates;
+ * `morph` places it in the ancestor (`MorphSource`). NaN where the ancestor
+ * has no triangle under the vertex, is unmeasurable, or `morph` is not a
+ * valid placement (`scale` a whole number from 2, `qx` and `qy` whole
+ * numbers below it).
  */
 export function parentSurfaceHeights(
   u: ArrayLike<number>,
   v: ArrayLike<number>,
-  parent: TerrainHeights,
-  qx: number,
-  qy: number,
+  morph: MorphSource,
 ): Float64Array {
   const out = new Float64Array(u.length).fill(Number.NaN);
-  if (gridOf(parent) === null) {
+  const { heights, scale, qx, qy } = morph;
+  const cell = (q: number) => Number.isInteger(q) && q >= 0 && q < scale;
+  if (
+    !Number.isInteger(scale) ||
+    scale < 2 ||
+    !cell(qx) ||
+    !cell(qy) ||
+    gridOf(heights) === null
+  ) {
     return out;
   }
   for (let i = 0; i < out.length; i++) {
-    out[i] = parentHeightAt(parent, qx, qy, u[i]!, v[i]!) ?? Number.NaN;
+    out[i] = parentHeightAt(heights, qx, qy, u[i]!, v[i]!, scale) ?? Number.NaN;
   }
   return out;
 }

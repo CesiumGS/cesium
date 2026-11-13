@@ -5,6 +5,7 @@ import {
   flatTerrainTile,
   upsampleTerrainTile,
   type Rectangle,
+  type MorphSource,
   type TerrainHeights,
 } from "../globe/quantizedMesh.ts";
 
@@ -49,8 +50,8 @@ self.onmessage = async (
     skirtHeight: number | readonly number[];
     /** A terrain tile also carries `h·n̂` per vertex, or `(n̂, h)` for `"profile"` (`TerrainLoader`). */
     heightNormal?: true | "profile";
-    /** A terrain tile also carries its parent's height per vertex, for geomorphing (`TerrainLoader`). */
-    morph?: { heights: TerrainHeights; qx: number; qy: number };
+    /** A terrain tile also carries its nearest drawn ancestor's height per vertex, for geomorphing (`TerrainLoader`). */
+    morph?: MorphSource;
     /** A terrain tile below the last level with data (`TerrainLoader`). */
     upsample?: { rect: Rectangle; heights?: TerrainHeights; url?: string };
     /** "stars": the star map's six faces. */

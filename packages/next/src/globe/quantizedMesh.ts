@@ -30,11 +30,11 @@ export interface TerrainDecodeOptions {
   /** Also write each vertex's `h·n̂` (`HEIGHT_NORMAL_ATTRIBUTE`), or `(n̂, h)` for `"profile"` (`HEIGHT_PROFILE_ATTRIBUTE`). */
   heightNormal?: HeightNormalMode;
   /**
-   * The tile's parent's surface and the tile's quadrant of it (`qx`, `qy`
-   * from the south-west): each vertex then also carries the parent's height
+   * The surface of the nearest drawn ancestor and where the tile sits in it
+   * (`MorphSource`): each vertex then also carries that surface's height
    * there (`HEIGHT_MORPH_ATTRIBUTE`), for geomorphing.
    */
-  morph?: { heights: TerrainHeights; qx: number; qy: number };
+  morph?: MorphSource;
 }
 
 /** A tile's extent in radians. */
@@ -85,6 +85,19 @@ export interface TerrainTileInfo {
   heights?: TerrainHeights;
   /** The tile carries `HEIGHT_MORPH_ATTRIBUTE`: it can morph in from its parent's surface. */
   morphs?: true;
+}
+
+/**
+ * An ancestor's surface and a tile's place in it, for geomorphing. The tile
+ * is cell (`qx`, `qy`) of a `scale` by `scale` grid over the ancestor's
+ * rectangle, counted from the south-west: `scale` is 2 to the number of
+ * levels between them (2 for a parent), and `qx`, `qy` are in [0, `scale`).
+ */
+export interface MorphSource {
+  heights: TerrainHeights;
+  scale: number;
+  qx: number;
+  qy: number;
 }
 
 /** A terrain tile's surface for height queries. */
@@ -451,8 +464,8 @@ interface TerrainTileData {
   keepHeights?: boolean;
   /** Write `HEIGHT_NORMAL_ATTRIBUTE` (or `HEIGHT_PROFILE_ATTRIBUTE`) for each vertex. */
   heightNormal?: HeightNormalMode;
-  /** Write `HEIGHT_MORPH_ATTRIBUTE` against this parent surface. */
-  morph?: { heights: TerrainHeights; qx: number; qy: number };
+  /** Write `HEIGHT_MORPH_ATTRIBUTE` against this ancestor surface. */
+  morph?: MorphSource;
 }
 
 /**
@@ -834,7 +847,7 @@ function buildTerrainTile(d: TerrainTileData): {
   // The parent's surface height at each vertex, less its own (`HEIGHT_MORPH_ATTRIBUTE`).
   const range = maximumHeight - minimumHeight;
   const parentHeights = d.morph
-    ? parentSurfaceHeights(u, v, d.morph.heights, d.morph.qx, d.morph.qy)
+    ? parentSurfaceHeights(u, v, d.morph)
     : undefined;
   const morphs = parentHeights ? new Float32Array(total * 4) : undefined;
   const up = new Float64Array(3);

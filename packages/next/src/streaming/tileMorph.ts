@@ -1,7 +1,8 @@
 // Terrain geomorphing's clock (`View.lodTransitions` "morph"): when a tile
 // first drawn over a coarser one begins to morph in, and when it is done.
 //
-// A terrain tile carries its parent's surface height at each vertex
+// A terrain tile carries the surface height of its nearest drawn ancestor
+// (the parent, unless selection skipped levels) at each vertex
 // (`HEIGHT_MORPH_ATTRIBUTE`). From the time its draw record says (the draw
 // constants' `morph` word, set here through `DrawSink.setDrawMorph`), the
 // vertex stage moves each vertex from that height to its own over
@@ -35,7 +36,7 @@ export function morphEase(t: number): number {
 }
 
 /**
- * How far a tile has morphed at `nowMs` (0: still its parent's surface, 1:
+ * How far a tile has morphed at `nowMs` (0: still its ancestor's surface, 1:
  * its own), as the vertex stage computes it from the record's word.
  */
 export function morphFactor(startSeconds: number, nowSeconds: number): number {
@@ -54,8 +55,8 @@ function ancestorDrawn(tile: Tile): boolean {
 
 /**
  * Begins the morph of each tile of `drawn` that has its first drawn tick in
- * a view that morphs (`SelectionView.morph`) and carries its parent's
- * heights (`GlobeTile.morphs`), when a coarser ancestor was drawn before it:
+ * a view that morphs (`SelectionView.morph`) and carries its nearest drawn
+ * ancestor's heights (`GlobeTile.morphs`), when a coarser ancestor was drawn before it:
  * nothing popped in, if nothing stood there. Every drawn tile is noted as
  * drawn after, for its children's.
  */
