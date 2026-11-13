@@ -1,7 +1,8 @@
 // Profiles a page headless in Edge on this machine's GPU: a CPU profile over
 // the first seconds after load, the main thread's long tasks and the JS heap,
 // with self time summed by function and by file. `node scripts/profilePage.mjs
-// <url> [seconds = 20]` with the dev server running.
+// <url> [seconds = 20]` with the dev server running. PROFILE_WIDTH and
+// PROFILE_HEIGHT set the window (CSS px), PROFILE_SCALE its pixel ratio.
 import { chromium } from "playwright";
 
 const [url, secondsArg] = process.argv.slice(2);
@@ -21,7 +22,12 @@ const browser = await chromium.launch({
 });
 try {
   const page = await browser.newPage({
-    viewport: { width: 1600, height: 1000 },
+    viewport: {
+      width: Number(process.env.PROFILE_WIDTH ?? 1600),
+      height: Number(process.env.PROFILE_HEIGHT ?? 1000),
+    },
+    // Below 1 renders fewer pixels for the same CSS layout and selection.
+    deviceScaleFactor: Number(process.env.PROFILE_SCALE ?? 1),
   });
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));
