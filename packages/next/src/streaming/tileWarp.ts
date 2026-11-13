@@ -9,7 +9,12 @@
 import type { Vec3 } from "../math/vec3.ts";
 import type { DrawHandle } from "../scene/world/types.ts";
 import type { Tile } from "./Tile.ts";
-import { volumeObb, type TileVolume } from "./volumes.ts";
+import {
+  regionFromJson,
+  sphereFromObb,
+  volumeObb,
+  type TileVolume,
+} from "./volumes.ts";
 
 /** How many maps (views reaching an anchor by routes of different shape) a tile keeps drawn volumes for besides the one last asked. */
 const MAPS_PER_TILE = 3;
@@ -55,6 +60,17 @@ export interface TileWarp {
   rebound?(image: object): WarpedPoints;
   /** The worst error (m) of the fits drawing these draws against the route; 0 where there is none yet. */
   fitError(draws: readonly DrawHandle[]): number;
+  /**
+   * Present where the map is a height profile on the ellipsoid
+   * (`HeightScale.profile`), which carries a geodetic region to a region of
+   * the same longitudes and latitudes: the drawn heights of heights in
+   * [`min`, `max`] (closed form, for the scale's bucket) and the most the map
+   * stretches there (σ_max), so a region's drawn volume needs no samples.
+   */
+  heightRange?(
+    min: number,
+    max: number,
+  ): { min: number; max: number; sigmaMax: number };
 }
 
 /** A tile's volume where its draws put it. */
@@ -180,6 +196,24 @@ function carriedAgain(volume: TileVolume, remake: () => Carried): Carried {
 }
 
 function carry(volume: TileVolume, warp: TileWarp): Carried {
+  if (volume.kind === "region" && warp.heightRange) {
+    // A region's image under a height profile is the region over the drawn
+    // heights: exact in height, nothing sampled.
+    const r = volume.region;
+    const image = warp.heightRange(r.minimumHeight, r.maximumHeight);
+    const drawn = regionFromJson([
+      r.west,
+      r.south,
+      r.east,
+      r.north,
+      image.min,
+      image.max,
+    ]);
+    return {
+      volume: { kind: "sphere", sphere: sphereFromObb(drawn.obb) },
+      sigmaMax: image.sigmaMax,
+    };
+  }
   if (volume.kind === "sphere") {
     const c = volume.sphere.center;
     const r = volume.sphere.radius;

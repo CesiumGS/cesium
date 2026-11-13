@@ -5,6 +5,7 @@
 // operations, and scene/placementTable.ts the layout between them.
 // `termsOf` converts today's `Placement` kinds, which stay as input until
 // the API review (5i).
+import { liftedPart } from "../camera/heightProfile.ts";
 import {
   PLACEMENT_MONOMIALS,
   PLACEMENT_TERMS,
@@ -186,6 +187,22 @@ export function placeWithTerms(
     const w = weightOf(weight);
     if (term.kind === "cubic") {
       latticeDisplacement(term, position, d);
+    } else if (term.profile) {
+      const a = attribute?.(term.semantic);
+      if (!a || a.length < 4) {
+        throw new RangeError(
+          `placeWithTerms: a profile term needs the vertex's ${term.semantic} (4 components: the normal and the height).`,
+        );
+      }
+      const [g] = liftedPart(
+        a[3]!,
+        term.profile.base,
+        term.profile.ceiling,
+        term.profile.band,
+      );
+      d[0] = g * a[0]!;
+      d[1] = g * a[1]!;
+      d[2] = g * a[2]!;
     } else {
       const a = attribute?.(term.semantic);
       if (!a || a.length < 3) {
@@ -432,6 +449,16 @@ export function checkTerms(caller: string, terms: WarpTerms): void {
         throw new RangeError(`${caller}: ${prefix}semantic is empty.`);
       }
       finite32(caller, `${prefix}maxDistance`, term.maxDistance);
+      if (term.profile) {
+        finite32(caller, `${prefix}profile.base`, term.profile.base);
+        finite32(caller, `${prefix}profile.ceiling`, term.profile.ceiling);
+        finite32(caller, `${prefix}profile.band`, term.profile.band);
+        if (!(term.profile.band > 0)) {
+          throw new RangeError(
+            `${caller}: ${prefix}profile.band is ${term.profile.band}; a band is positive.`,
+          );
+        }
+      }
       if (term.maxDistance < 0) {
         throw new RangeError(
           `${caller}: ${prefix}maxDistance is ${term.maxDistance}; a distance is not negative.`,

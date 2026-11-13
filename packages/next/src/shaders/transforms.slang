@@ -16,6 +16,8 @@
 // keep the ellipsoid's radii small enough for it (the parity harness uses a
 // body of radius 1e3).
 
+import heightProfile;
+
 [[vk::binding(0, 0)]] StructuredBuffer<float4> points;     // xyz; w unused
 [[vk::binding(1, 0)]] RWStructuredBuffer<float4> results;  // value, then the Jacobian's columns
 
@@ -299,9 +301,7 @@ float3 exaggerationF(float3 p, ExaggerationParams q)
     float gl = length(g);
     float3 n = g / gl;
     float h = lam * gl;
-    float a0 = q.ceiling - q.band;
-    float u = min(max(h - a0, 0.0), q.band);
-    float lift = min(h, a0) - q.baseHeight + u - u * u / (2.0 * q.band);
+    float lift = exaggerationLift(h, q.baseHeight, q.ceiling, q.band);
     return p + (q.factor - 1.0) * lift * n;
 }
 PARITY_ENTRY(exaggerationParity, exaggerationF, exaggerationP)

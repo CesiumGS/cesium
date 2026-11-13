@@ -463,11 +463,14 @@ describe("tiles across a switch frame", () => {
 
 describe("terrain's exact height term, per view", () => {
   /** A tile of terrain over (0.3, 0.2) as the worker would decode it for a warped globe. */
-  function terrain(): { asset: GltfAsset; mesh: MeshData } {
+  function terrain(mode: true | "profile" = true): {
+    asset: GltfAsset;
+    mesh: MeshData;
+  } {
     const rect = { west: 0.3, south: 0.2, east: 0.3004, north: 0.2004 };
     const { heights } = gridTile(rect, 9, () => 1500);
     const { asset } = upsampleTerrainTile(heights, rect, rect, 50, {
-      heightNormal: true,
+      heightNormal: mode,
     });
     const m = asset.meshes[0]!;
     return {
@@ -483,9 +486,13 @@ describe("terrain's exact height term, per view", () => {
     };
   }
 
-  async function withTile(a: SwitchChoice, b: SwitchChoice) {
+  async function withTile(
+    a: SwitchChoice,
+    b: SwitchChoice,
+    mode: true | "profile" = true,
+  ) {
     const s = await setup(a, b, { draw: false });
-    const { asset, mesh } = terrain();
+    const { asset, mesh } = terrain(mode);
     const centre = asset.draws[0]!.matrix;
     const tile = s.world.addDraw({
       mesh: s.world.addMesh(mesh),
@@ -518,6 +525,23 @@ describe("terrain's exact height term, per view", () => {
     expect(twin.index).not.toBe(tile.index);
     expect(s.world.warps.status(tile)).toMatchObject({ exact: true });
     expect(s.world.warps.status(twin)).toMatchObject({ exact: true });
+    const weight = (d: DrawHandle) =>
+      weightOf(drawTerms(s.world, d)!.at(-1)!.weight);
+    expect(weight(tile)).toBeCloseTo(9, 9);
+    expect(weight(twin)).toBeCloseTo(2, 9);
+  });
+
+  it("is exaggerated by two different factors under a ceiling, each view's own, with no compiled route", async () => {
+    const { s, tile, twin } = await withTile(
+      verticalExaggeration({ factor: 10, ceiling: 9000 }),
+      verticalExaggeration({ factor: 3, ceiling: 9000 }),
+      "profile",
+    );
+    expect(twin.index).not.toBe(tile.index);
+    expect(s.world.warps.status(tile)).toMatchObject({ exact: true });
+    expect(s.world.warps.status(twin)).toMatchObject({ exact: true });
+    expect(s.world.warps.routes.has(tile.index)).toBe(false);
+    expect(s.world.warps.routes.has(twin.index)).toBe(false);
     const weight = (d: DrawHandle) =>
       weightOf(drawTerms(s.world, d)!.at(-1)!.weight);
     expect(weight(tile)).toBeCloseTo(9, 9);

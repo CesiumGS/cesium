@@ -9,6 +9,7 @@
 //   g = min(h, a) - base + u - u² / (2 band).
 // The inverse is exact, branch by branch (the profile is monotone for k > 0).
 // Output is affine in `factor`, the one parameter a slider moves.
+import { liftedPart } from "../camera/heightProfile.ts";
 import type { SmoothEdge } from "../transform/graph.ts";
 import {
   edgeOf,
@@ -28,11 +29,7 @@ type K = "factor" | "ceiling" | "baseHeight" | "band";
 
 /** g(h) and dg/dh. */
 export function liftProfile(h: number, v: Named<K>): [number, number] {
-  const a = v.ceiling - v.band;
-  const u = Math.min(Math.max(h - a, 0), v.band);
-  const g = Math.min(h, a) - v.baseHeight + u - (u * u) / (2 * v.band);
-  const dg = h < a ? 1 : h < v.ceiling ? 1 - (h - a) / v.band : 0;
-  return [g, dg];
+  return liftedPart(h, v.baseHeight, v.ceiling, v.band);
 }
 
 /** The height whose lifted height is `h2`: the profile's exact inverse, branch by branch. */

@@ -40,6 +40,7 @@ import {
   type TerrainTileInfo,
   type TileRange,
 } from "./quantizedMesh.ts";
+import type { HeightNormalMode } from "./heightNormal.ts";
 import { GlobeStepwiseSelection } from "./GlobeStepwise.ts";
 import { GlobeBudgetedSelection } from "./GlobeBudgeted.ts";
 import { TerrainClips } from "./terrainClip.ts";
@@ -52,6 +53,13 @@ import type {
 /** The ellipsoid's drawn tiles' vertices and triangles (shared, read-only). */
 let flatHeights: TerrainHeights | undefined;
 
+/** A load request's `heightNormal`, from what `TerrainSource.wantsHeightNormal` said. */
+function heightNormalRequest(wants: boolean | "profile" | undefined): {
+  heightNormal?: HeightNormalMode;
+} {
+  return wants ? { heightNormal: wants } : {};
+}
+
 /** Decodes one tile in a worker: fetch, quantized-mesh decode, skirts. */
 export type TerrainLoader = (
   request: {
@@ -62,9 +70,10 @@ export type TerrainLoader = (
     skirtHeight: number | readonly number[];
     /**
      * The tile also carries `h·n̂` per vertex (`HEIGHT_NORMAL_ATTRIBUTE`),
-     * for a globe drawn under a height-scale warp.
+     * for a globe drawn under a height-scale warp; `"profile"`, `(n̂, h)`
+     * (`HEIGHT_PROFILE_ATTRIBUTE`) where that warp has a ceiling.
      */
-    heightNormal?: boolean;
+    heightNormal?: HeightNormalMode;
     /**
      * A tile below the last level with data: clipped from the nearest tile
      * with data, over `rect`, from its `heights`, or, once they have left
@@ -144,11 +153,12 @@ export class TerrainSource {
   readonly flat: boolean;
   private readonly levelZeroError: number;
   /**
-   * Whether tiles loaded now carry `h·n̂` (`HEIGHT_NORMAL_ATTRIBUTE`): set by
-   * the globe drawn from this source, which asks its world whether its
-   * anchor's route is a height-scale warp (scene/world/warps.ts).
+   * Whether tiles loaded now carry `h·n̂` (`HEIGHT_NORMAL_ATTRIBUTE`), or
+   * `(n̂, h)` for `"profile"` (`HEIGHT_PROFILE_ATTRIBUTE`): set by the globe
+   * drawn from this source, which asks its world whether its anchor's route
+   * is a height-scale warp (scene/world/warps.ts).
    */
-  wantsHeightNormal?: () => boolean;
+  wantsHeightNormal?: () => boolean | "profile";
 
   private constructor(
     readonly url: string,
@@ -545,7 +555,7 @@ export class TerrainSource {
         ...(this.headers ? { headers: this.headers } : {}),
         rect: rectangle(a),
         skirtHeight,
-        ...(this.wantsHeightNormal?.() ? { heightNormal: true } : {}),
+        ...heightNormalRequest(this.wantsHeightNormal?.()),
         ...(data
           ? {
               upsample: {

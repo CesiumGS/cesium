@@ -17,12 +17,13 @@
 // tangent by J and its normal by J's cofactor matrix (`turnNormal`), so
 // shading follows the surface as drawn, however steep a warp makes it. A
 // lattice's Jacobian is the cubic's analytic derivative; an attribute
-// term's is zero (data has no derivative in space), so under one the
+// (or profile) term's is zero (data has no derivative in space), so under one the
 // normal stays as the mesh stores it. A record without a placement
 // (`NO_PLACEMENT`) gets its position back unchanged and the identity.
 module placement;
 
 import exactSum;
+import heightProfile;
 
 // The placements: parameters (one float each) and each placed draw's
 // block, float4 rows (scene/placementTable.ts). Vertex stage only.
@@ -41,6 +42,13 @@ static const uint WARP_ATTRIBUTE = 2u;
 // [WARP_ROUTE, 0, body row, the route's uniform rows], and the vertex stage
 // here leaves the position as it is.
 static const uint WARP_ROUTE = 3u;
+// A terrain tile under a height profile (`HeightScale.profile`): the vertex's
+// `(n, h)` attribute (4 components: the ellipsoid's unit normal and the signed
+// height) gives the displacement G(h)·n, G `exaggerationLift`. The term row
+// is [WARP_PROFILE | factors << 8, weight scale, the attribute's name hash,
+// its body's row from the block's header]; the body's one row is
+// [base, ceiling, band, 0].
+static const uint WARP_PROFILE = 4u;
 static const uint TERM_ROWS = 3u;
 // Rows before a lattice body's cells: the center and 1 / scale, then the
 // lattice's constant displacement (its value at the center) as hi and lo.
@@ -169,6 +177,11 @@ float3 termDisplacement(uint4 head, uint block, float3 p, uint vertexIndex, uint
   clip = 0.0;
   if ((head.x & 255u) == WARP_ROUTE) {
     return float3(0.0);
+  }
+  if ((head.x & 255u) == WARP_PROFILE) {
+    float4 up = placementAttribute(directory, head.z, vertexIndex, feature);
+    float4 profile = placementRow(block + head.w);
+    return exaggerationLift(up.w, profile.x, profile.y, profile.z) * up.xyz;
   }
   float3 other = placementAttribute(directory, head.z, vertexIndex, feature).xyz;
   return head.w != 0u ? other - p : other;

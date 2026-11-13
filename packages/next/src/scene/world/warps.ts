@@ -11,7 +11,10 @@
 //   draw's bounding sphere (a lattice term of weight 1, scene/warpFit.ts).
 //   A globe's terrain tile under a height-scale warp (`Warp.heightScale`)
 //   is exact instead, with no fit: its vertices carry `h·n̂` and the route's
-//   term is that attribute times (k − 1).
+//   term is that attribute times (k − 1). Under a ceiling (`HeightScale.profile`)
+//   they carry `(n̂, h)` and the term is G(h)·n̂ times (k − 1), G the lift
+//   profile (shaders/heightProfile.slang); a tile's drawn volume is then its
+//   region over the drawn heights, in closed form (`TileWarp.heightRange`).
 // - "anchor": once, at the draw's origin. The draw moves rigidly by the
 //   route there, with the rotation of its Jacobian and no scale. An
 //   anchored draw's term is an exact one-cell lattice, so it costs the
@@ -54,7 +57,14 @@ import {
   type Warp,
   type WarpScale,
 } from "../../camera/route.ts";
-import { HEIGHT_NORMAL_ATTRIBUTE } from "../../globe/heightNormal.ts";
+import {
+  drawnHeightRange,
+  drawnSlopeBound,
+} from "../../camera/heightProfile.ts";
+import {
+  HEIGHT_NORMAL_ATTRIBUTE,
+  HEIGHT_PROFILE_ATTRIBUTE,
+} from "../../globe/heightNormal.ts";
 import { invertAffine, mat4, multiply } from "../../math/mat4.ts";
 import {
   CENTER_WORD,
@@ -287,7 +297,10 @@ export interface WarpStats {
 /** The height a terrain tile's `h·n̂` was made on, and the most it holds (`World.setDrawHeightNormal`). */
 export interface HeightNormalInfo {
   readonly radii: readonly [number, number, number];
+  /** The longest `h·n̂`, or with `profile` the largest |h|, m. */
   readonly maxDistance: number;
+  /** The tile carries `(n̂, h)` (`HEIGHT_PROFILE_ATTRIBUTE`), for a height profile (`HeightScale.profile`), not `h·n̂`. */
+  readonly profile?: true;
 }
 
 /** Instances moved per check of the clock, and at least per frame. */
@@ -358,6 +371,8 @@ class AnchorTileWarp implements TileWarp {
   /** The scale values the drawn volumes hold for (the bucket the value is in). */
   #low = 0;
   #high = 1;
+  /** The route's height profile and the multipliers it holds for (the bucket's ends), when the route is one (`heightRange`). */
+  #profile: { height: HeightScale; low: number; high: number } | undefined;
 
   constructor(private readonly warps: WorldWarps) {}
 
@@ -387,6 +402,38 @@ class AnchorTileWarp implements TileWarp {
     }
   }
 
+  /** Present while the route is a height profile: drawn heights in closed form (`TileWarp.heightRange`). */
+  get heightRange(): TileWarp["heightRange"] {
+    const profile = this.#profile;
+    if (!profile) {
+      return undefined;
+    }
+    return (min, max) => {
+      const { height, low, high } = profile;
+      const { ceiling, band } = height.profile!;
+      const base = height.baseHeight ?? 0;
+      const [lo, hi] = drawnHeightRange(
+        min,
+        max,
+        low,
+        high,
+        base,
+        ceiling,
+        band,
+      );
+      const r = height.radii;
+      // (R + h′) / (R + h) along the surface; dh′/dh along the normal.
+      const horizontal =
+        (Math.max(...r) + Math.max(hi, max)) /
+        (Math.min(...r) + Math.min(min, lo));
+      return {
+        min: lo,
+        max: hi,
+        sigmaMax: Math.max(horizontal, drawnSlopeBound(low, high)),
+      };
+    };
+  }
+
   rebound(image: object): WarpedPoints {
     return {
       ...scaledBounds(image as ScaledImage, this.#low, this.#high),
@@ -399,6 +446,28 @@ class AnchorTileWarp implements TileWarp {
   }
 
   #route: Route | undefined;
+
+  /** Whether the route is one height-scale warp with a profile then rigid steps, and the multipliers its bucket holds. */
+  #setProfile(
+    route: Route,
+    buckets: ReadonlyMap<Warp, { low: number; high: number }>,
+  ): void {
+    const height = heightScaleOf(route);
+    if (!height?.profile) {
+      this.#profile = undefined;
+      return;
+    }
+    const warp = (route.steps[0] as { warp: Warp }).warp;
+    const bucket = buckets.get(warp);
+    const k = (s: number) => 1 + s * (height.factor - 1);
+    const a = k(bucket ? bucket.low : 1);
+    const b = k(bucket ? bucket.high : 1);
+    this.#profile = {
+      height,
+      low: Math.min(a, b),
+      high: Math.max(a, b),
+    };
+  }
 
   /**
    * Remakes the maps when the anchor's route changed or a scaled warp
@@ -431,6 +500,7 @@ class AnchorTileWarp implements TileWarp {
       return;
     }
     this.#key = key;
+    this.#setProfile(route, buckets);
     if (affine) {
       const bucket = buckets.get(only.warp)!;
       this.#low = bucket.low;
@@ -1178,10 +1248,13 @@ export class WorldWarps {
       return false;
     }
     const held = this.#heightNormals.get(d.index);
+    // A tile made for the other kind of term (`h·n̂`, or `(n̂, h)` under a
+    // profile) has no exact term here: the compiled route draws it.
     return !(
       held &&
       held.generation === d.generation &&
       anchor.height &&
+      (held.info.profile === true) === (anchor.height.profile !== undefined) &&
       !this.#overridden(anchor)
     );
   }
@@ -1786,8 +1859,10 @@ export class WorldWarps {
    * Terrain's exact term: the draw's `h·n̂` attribute times the factor's
    * weight, when the route is a height-scale warp on the ellipsoid the
    * attribute was made on and the draw's model is a translation (so the
-   * attribute's metres are the model's). Undefined otherwise: the draw is
-   * fitted like any.
+   * attribute's metres are the model's). Under a profile (a ceiling) the
+   * attribute is `(n̂, h)` and the term is G(h)·n̂ (shaders/heightProfile.slang),
+   * with the base, ceiling and band in the term, the factor still the weight.
+   * Undefined otherwise: the draw is fitted like any.
    */
   #exactTerm(
     index: number,
@@ -1806,9 +1881,13 @@ export class WorldWarps {
       return undefined;
     }
     const { radii, maxDistance } = held.info;
+    const profile = height.profile;
+    const base = height.baseHeight ?? 0;
+    // A profile carries its base in the term; a plain scale is exact about 0.
     if (
       !sameRadii(radii, height.radii) ||
-      (height.baseHeight ?? 0) !== 0 ||
+      (profile === undefined && base !== 0) ||
+      (held.info.profile === true) !== (profile !== undefined) ||
       !isTranslation(matrix)
     ) {
       return undefined;
@@ -1816,8 +1895,10 @@ export class WorldWarps {
     const mesh = this.world.raster.drawBatches[index]!.mesh;
     const components = this.world.scene.meshRanges
       .get(mesh.id)
-      ?.named?.get(HEIGHT_NORMAL_ATTRIBUTE);
-    if (components === undefined || components < 3) {
+      ?.named?.get(
+        profile ? HEIGHT_PROFILE_ATTRIBUTE : HEIGHT_NORMAL_ATTRIBUTE,
+      );
+    if (components === undefined || components < (profile ? 4 : 3)) {
       return undefined;
     }
     // (factor − 1) times the scale in force: a world's parameter is read by
@@ -1835,12 +1916,22 @@ export class WorldWarps {
       weight = constantWeight(k * s);
     }
     return {
-      term: {
-        kind: "attribute",
-        semantic: HEIGHT_NORMAL_ATTRIBUTE,
-        absolute: false,
-        maxDistance,
-      },
+      term: profile
+        ? {
+            kind: "attribute",
+            semantic: HEIGHT_PROFILE_ATTRIBUTE,
+            absolute: false,
+            // |G(h)| ≤ |h| + |base|: G is h − base below the blend and
+            // nowhere farther from 0 than that.
+            maxDistance: maxDistance + Math.abs(base),
+            profile: { base, ceiling: profile.ceiling, band: profile.band },
+          }
+        : {
+            kind: "attribute",
+            semantic: HEIGHT_NORMAL_ATTRIBUTE,
+            absolute: false,
+            maxDistance,
+          },
       weight,
     };
   }

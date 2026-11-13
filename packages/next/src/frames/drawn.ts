@@ -70,7 +70,8 @@ export function drawnThrough(
     }
     const w = step.warp;
     const scale = warpScaleOf(w);
-    const k = w.heightScale?.factor;
+    // With a profile (a ceiling) heights are not multiplied by one number: the description says it.
+    const k = w.heightScale?.profile ? undefined : w.heightScale?.factor;
     warps.push({
       description:
         w.description ?? `a warp from ${w.from.name} to ${w.to.name}`,

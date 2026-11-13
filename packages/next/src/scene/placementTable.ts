@@ -22,7 +22,10 @@ import type { WarpTerms } from "./warpTerms.ts";
  *   (f32), a, b]`, with `kind` a `WARP_KIND`: a lattice has `a` the row of
  *   its body from `at` and `b` its cells per axis; an attribute has `a` the
  *   name's hash (`attributeHash`) and `b` 1 if it is absolute (it holds a
- *   position: the displacement is it minus the point's), else 0;
+ *   position: the displacement is it minus the point's), else 0. A profile
+ *   term (`WARP_KIND.profile`, an attribute with a `profile`) has `b` the
+ *   row of its body from `at`, one row `[base, ceiling, band, 0]` (f32),
+ *   after the lattices' bodies' places in term order;
  * - the two rows after it, the weight's factors, `[parameter's word,
  *   offset (f32), slope (f32), 0]`, the factor's value `offset + slope ·
  *   parameter`: only `factors` of them are read, the others are zero. The
@@ -248,9 +251,13 @@ export class PlacementTable {
     let body = 1 + TERM_ROWS * terms.length;
     terms.forEach(({ term, weight }, i) => {
       const t = (at + 1 + TERM_ROWS * i) * 4;
-      u32[t] =
-        (term.kind === "cubic" ? WARP_KIND.lattice : WARP_KIND.attribute) |
-        (weight.factors.length << 8);
+      const kind =
+        term.kind === "cubic"
+          ? WARP_KIND.lattice
+          : term.profile
+            ? WARP_KIND.profile
+            : WARP_KIND.attribute;
+      u32[t] = kind | (weight.factors.length << 8);
       f32[t + 1] = weight.scale;
       weight.factors.forEach((factor, j) => {
         const r = t + 4 + 4 * j;
@@ -260,7 +267,16 @@ export class PlacementTable {
       });
       if (term.kind === "attribute") {
         u32[t + 2] = attributeHash(term.semantic);
-        u32[t + 3] = term.absolute ? 1 : 0;
+        if (term.profile) {
+          u32[t + 3] = body;
+          const o = (at + body) * 4;
+          f32[o] = term.profile.base;
+          f32[o + 1] = term.profile.ceiling;
+          f32[o + 2] = term.profile.band;
+          body += PROFILE_ROWS;
+        } else {
+          u32[t + 3] = term.absolute ? 1 : 0;
+        }
         return;
       }
       u32[t + 2] = body;
@@ -299,13 +315,21 @@ export class PlacementTable {
 }
 
 /** Term kinds in a term's row (shaders/placement.slang `WARP_LATTICE`…; `route` is a compiled route's, scene/routeVariant.ts). */
-export const WARP_KIND = { lattice: 1, attribute: 2, route: 3 } as const;
+export const WARP_KIND = {
+  lattice: 1,
+  attribute: 2,
+  route: 3,
+  profile: 4,
+} as const;
 
 /** Rows of a term: its row and its two factors'. */
 export const TERM_ROWS = 3;
 
 /** Rows of a lattice's body before its cells: the center and 1 / scale, then its value at the center as hi and lo. */
 export const LATTICE_HEAD_ROWS = 3;
+
+/** Rows of a profile term's body: `[base, ceiling, band, 0]`. */
+export const PROFILE_ROWS = 1;
 
 /** Rows of a lattice's body: its head, then a row per cell and term. */
 export function latticeRows(cells: number): number {
@@ -318,6 +342,8 @@ export function blockRows(terms: WarpTerms): number {
   for (const { term } of terms) {
     if (term.kind === "cubic") {
       rows += latticeRows(term.cells);
+    } else if (term.profile) {
+      rows += PROFILE_ROWS;
     }
   }
   return rows;

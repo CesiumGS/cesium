@@ -55,6 +55,8 @@ export interface DrawSink {
     info: {
       readonly radii: readonly [number, number, number];
       readonly maxDistance: number;
+      /** `(n̂, h)` instead (`HEIGHT_PROFILE_ATTRIBUTE`), for a height profile. */
+      readonly profile?: true;
     },
   ): void;
   /**

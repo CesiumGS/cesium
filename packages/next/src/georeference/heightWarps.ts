@@ -498,12 +498,20 @@ class VerticalExaggerationImpl
     return this.k;
   }
 
-  /** Declares the warp a height scale on an ellipsoid or sphere reference (`HeightScale`): the engine exaggerates terrain exactly. With a ceiling it is not a scale of heights, and the warp is fitted. */
+  /** Declares the warp a height scale on an ellipsoid or sphere reference (`HeightScale`): the engine exaggerates terrain exactly. With a ceiling it carries the profile (ceiling and band), which the engine evaluates in height, and nothing is fitted. */
   get heightScale(): HeightScale | undefined {
     const radii = this.surfaceRadii;
-    return radii && this.top === undefined
-      ? { kind: "heightScale", radii, factor: this.k, baseHeight: this.base }
-      : undefined;
+    if (!radii) {
+      return undefined;
+    }
+    const v = this.profile;
+    return {
+      kind: "heightScale",
+      radii,
+      factor: this.k,
+      baseHeight: this.base,
+      ...(v && { profile: { ceiling: v.ceiling, band: v.band } }),
+    };
   }
 
   /**

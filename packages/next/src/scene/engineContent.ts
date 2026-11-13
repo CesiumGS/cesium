@@ -165,15 +165,18 @@ function addGlobeSource(
   }
   // Tiles carry `h·n̂` while the globe's anchor is warped by a height scale
   // on the same ellipsoid: exaggerating terrain is then exact in height,
-  // with no fit.
+  // with no fit. Under a profile (a ceiling) they carry `(n̂, h)` instead.
   source.wantsHeightNormal = () => {
     const scale = world.warps.heightScaleAt(tileset.anchor.slot);
-    return (
-      scale !== undefined &&
-      scale.radii.every(
+    if (
+      scale === undefined ||
+      !scale.radii.every(
         (r, i) => Math.abs(r - Ellipsoid.WGS84.radii[i]!) <= 1e-3,
       )
-    );
+    ) {
+      return false;
+    }
+    return scale.profile ? "profile" : true;
   };
   const drape = (provider: ImageryProvider) =>
     new GlobeImagery(

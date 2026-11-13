@@ -256,9 +256,9 @@ describe("verticalExaggeration with a ceiling", () => {
     }
   });
 
-  it("lifts above the ceiling by a constant, and has no height scale to declare", () => {
+  it("lifts above the ceiling by a constant, and declares its profile as the height scale", () => {
     const warp = verticalExaggeration(options);
-    expect(warp.heightScale).toBeUndefined();
+    expect(warp.heightScale?.profile).toEqual({ ceiling: 5000, band: 1000 });
     expect(verticalExaggeration({ factor: 4 }).heightScale).toBeDefined();
     const lift = (h: number) => {
       const p = ecef(10, 40, h);

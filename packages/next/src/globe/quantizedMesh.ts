@@ -17,12 +17,16 @@
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { horizonCullingPoint } from "../math/horizon.ts";
 import type { GltfAsset, GltfMesh } from "../io/gltfTypes.ts";
-import { HEIGHT_NORMAL_ATTRIBUTE } from "./heightNormal.ts";
+import {
+  HEIGHT_NORMAL_ATTRIBUTE,
+  HEIGHT_PROFILE_ATTRIBUTE,
+  type HeightNormalMode,
+} from "./heightNormal.ts";
 
 /** What a decode may be asked besides the tile (`TerrainLoader`'s request). */
 export interface TerrainDecodeOptions {
-  /** Also write each vertex's `h·n̂` (`HEIGHT_NORMAL_ATTRIBUTE`). */
-  heightNormal?: boolean;
+  /** Also write each vertex's `h·n̂` (`HEIGHT_NORMAL_ATTRIBUTE`), or `(n̂, h)` for `"profile"` (`HEIGHT_PROFILE_ATTRIBUTE`). */
+  heightNormal?: HeightNormalMode;
 }
 
 /** A tile's extent in radians. */
@@ -406,7 +410,7 @@ export function decodeQuantizedMesh(
     octNormals,
     available,
     keepHeights: true,
-    ...(options.heightNormal ? { heightNormal: true } : {}),
+    ...(options.heightNormal ? { heightNormal: options.heightNormal } : {}),
   });
 }
 
@@ -434,8 +438,8 @@ interface TerrainTileData {
   available?: TileRange[][] | undefined;
   /** Keep the vertices and triangles for height queries (data tiles). */
   keepHeights?: boolean;
-  /** Write `HEIGHT_NORMAL_ATTRIBUTE` for each vertex. */
-  heightNormal?: boolean;
+  /** Write `HEIGHT_NORMAL_ATTRIBUTE` (or `HEIGHT_PROFILE_ATTRIBUTE`) for each vertex. */
+  heightNormal?: HeightNormalMode;
 }
 
 /**
@@ -533,7 +537,7 @@ export function flatTerrainTile(
     h,
     triangles,
     edges: [column(0), row(0), column(n - 1), row(n - 1)],
-    ...(options.heightNormal ? { heightNormal: true } : {}),
+    ...(options.heightNormal ? { heightNormal: options.heightNormal } : {}),
   });
 }
 
@@ -775,7 +779,7 @@ export function upsampleTerrainTile(
     edges: [west, south, east, north].map((e) => Uint32Array.from(e)),
     vertexNormals: parent.normals ? Float32Array.from(normals) : undefined,
     keepHeights: true,
-    ...(options.heightNormal ? { heightNormal: true } : {}),
+    ...(options.heightNormal ? { heightNormal: options.heightNormal } : {}),
   });
 }
 
@@ -810,8 +814,9 @@ function buildTerrainTile(d: TerrainTileData): {
   const normals = new Float32Array(total * 3);
   const uvs = new Float32Array(total * 2);
   // `h·n̂` per vertex, when asked (`HEIGHT_NORMAL_ATTRIBUTE`).
+  const profile = d.heightNormal === "profile";
   const heightNormals = d.heightNormal
-    ? new Float32Array(total * 3)
+    ? new Float32Array(total * (profile ? 4 : 3))
     : undefined;
   const up = new Float64Array(3);
   const ellipsoid = Ellipsoid.WGS84;
@@ -838,9 +843,16 @@ function buildTerrainTile(d: TerrainTileData): {
     uvs[dst * 2 + 1] = vv;
     if (heightNormals) {
       ellipsoid.geodeticSurfaceNormalCartographic(carto, up);
-      heightNormals[dst * 3] = carto.height * up[0]!;
-      heightNormals[dst * 3 + 1] = carto.height * up[1]!;
-      heightNormals[dst * 3 + 2] = carto.height * up[2]!;
+      if (profile) {
+        heightNormals[dst * 4] = up[0]!;
+        heightNormals[dst * 4 + 1] = up[1]!;
+        heightNormals[dst * 4 + 2] = up[2]!;
+        heightNormals[dst * 4 + 3] = carto.height;
+      } else {
+        heightNormals[dst * 3] = carto.height * up[0]!;
+        heightNormals[dst * 3 + 1] = carto.height * up[1]!;
+        heightNormals[dst * 3 + 2] = carto.height * up[2]!;
+      }
     }
     if (octNormals) {
       octDecode(octNormals[i * 2]!, octNormals[i * 2 + 1]!, normals, dst * 3);
@@ -913,7 +925,10 @@ function buildTerrainTile(d: TerrainTileData): {
     ...(heightNormals
       ? {
           attributes: {
-            [HEIGHT_NORMAL_ATTRIBUTE]: { data: heightNormals, components: 3 },
+            [profile ? HEIGHT_PROFILE_ATTRIBUTE : HEIGHT_NORMAL_ATTRIBUTE]: {
+              data: heightNormals,
+              components: profile ? 4 : 3,
+            },
           },
         }
       : {}),

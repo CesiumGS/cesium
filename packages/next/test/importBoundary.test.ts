@@ -339,7 +339,8 @@ it("proj and measure follow their rules", () => {
 });
 // The built-in transforms (plan section 13.37) are core modules with no geo
 // or engine knowledge beyond the transform graph, the route and warp
-// contract (`camera/route.ts`, which the live helpers implement) and the
+// contract (`camera/route.ts`, which the live helpers implement), the
+// exaggeration's height profile (`camera/heightProfile.ts`, a leaf) and the
 // spike's closed forms (`scene/warpForms.ts`, which imports nothing): they
 // stay loadable on a worker and by the compiler, which imports them.
 it("the built-in transforms import only the transform core, math and the closed forms", () => {
@@ -357,6 +358,7 @@ it("the built-in transforms import only the transform core, math and the closed 
             edge.to.startsWith("src/georeference/") ||
             edge.to.startsWith("src/math/") ||
             edge.to === "src/camera/route.ts" ||
+            edge.to === "src/camera/heightProfile.ts" ||
             edge.to === "src/scene/warpForms.ts"
           ),
       )
@@ -364,6 +366,8 @@ it("the built-in transforms import only the transform core, math and the closed 
   );
   expect(found).toEqual([]);
   expect(edgesOf("src/scene/warpForms.ts")).toEqual([]);
+  // The exaggeration's height profile is a leaf both sides share.
+  expect(edgesOf("src/camera/heightProfile.ts")).toEqual([]);
 });
 it("the transform core imports none of the built-ins", () => {
   const found = files

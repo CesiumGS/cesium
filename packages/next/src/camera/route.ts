@@ -26,6 +26,14 @@ export interface WarpScale {
  * `1 + s·(factor − 1)`. Terrain, whose vertices are (u, v, h) on that
  * ellipsoid, is exaggerated exactly from it: a vertex attribute `h·n̂`
  * times a weight, with no fit.
+ *
+ * With a `profile` (a ceiling) it is a height profile instead of a scale: a
+ * point at height h goes to h + (factor − 1)·G(h), G the part of the height
+ * that is lifted (src/camera/heightProfile.ts): h − baseHeight below the
+ * blend, a constant above the ceiling. The displacement along n̂ is
+ * D(h) = (factor − 1)·G(h), dh'/dh replaces `factor` where a derivative is
+ * meant, and terrain carries (n̂, h) instead of `h·n̂`
+ * (`HEIGHT_PROFILE_ATTRIBUTE`). Without one, behaviour is as above.
  */
 export interface HeightScale {
   readonly kind: "heightScale";
@@ -33,8 +41,15 @@ export interface HeightScale {
   readonly radii: readonly [number, number, number];
   /** What `forward` multiplies heights by (at warp scale 1). */
   readonly factor: number;
-  /** The height that stays put, m above the ellipsoid (default 0): terrain is exact only for 0. */
+  /** The height that stays put, m above the ellipsoid (default 0): terrain is exact only for 0, without a `profile`. */
   readonly baseHeight?: number;
+  /**
+   * The ceiling, m above the ellipsoid, above which the lift is constant,
+   * and the width `band` below it over which it blends into the constant
+   * (the georeference built-in's, `verticalExaggerationEdge`). Absent: heights
+   * are scaled at any height.
+   */
+  readonly profile?: { readonly ceiling: number; readonly band: number };
 }
 
 /**

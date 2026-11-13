@@ -79,6 +79,18 @@ export interface AttributeTerm {
   readonly absolute: boolean;
   /** The largest displacement it holds, model units: stated by whoever made it. */
   readonly maxDistance: number;
+  /**
+   * The attribute holds `(n̂, h)` (4 components: a unit normal and a signed
+   * height, `HEIGHT_PROFILE_ATTRIBUTE`) and the displacement is `G(h)·n̂`,
+   * G the lift profile of `base`, `ceiling` and `band` (metres;
+   * camera/heightProfile.ts), not the attribute itself. `absolute` is false.
+   * `maxDistance` then bounds |G(h)|.
+   */
+  readonly profile?: {
+    readonly base: number;
+    readonly ceiling: number;
+    readonly band: number;
+  };
 }
 
 export type WarpTerm = CubicLattice | AttributeTerm;
