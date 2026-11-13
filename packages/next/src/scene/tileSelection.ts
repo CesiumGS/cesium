@@ -150,7 +150,7 @@ function selectionFor(
  * coordinates (Earth-fixed for the Earth's). In the view's body anchor
  * it is the body camera, as drawn.
  */
-function selectionViews(
+export function selectionViews(
   engine: SelectionEngine,
   world: World,
   anchor: AnchorHandle,
@@ -233,6 +233,7 @@ function selectionViews(
         : {}),
       ...(view.debug !== "off" ? { debug: view.debug } : {}),
       ...(view.lodTransitions === "morph" ? { morph: true } : {}),
+      ...(view.lodExponent !== 1 ? { lodExponent: view.lodExponent } : {}),
       sseDenominator: 2 * Math.tan(camera.fovy(aspect) / 2),
       height: rect.height / pixelRatio,
       pixelRatio,

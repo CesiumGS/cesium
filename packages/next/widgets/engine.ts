@@ -3,6 +3,7 @@
  * timing, the tilesets' streaming and content pipeline, and the world's GPU
  * pools.
  */
+import { parseAlpha } from "./urlAlpha.ts";
 import {
   SlicePool,
   modelUsage,
@@ -188,6 +189,13 @@ function recordable(
   if (lod === "pop" || lod === "morph") {
     for (const view of engine.views) {
       view.lodTransitions = lod;
+    }
+  }
+  // `&alpha=<0..1>` sets the error exponent (`View.lodExponent`).
+  const alpha = parseAlpha(params.get("alpha"));
+  if (alpha !== undefined) {
+    for (const view of engine.views) {
+      view.lodExponent = alpha;
     }
   }
   const debug = params.get("debug");

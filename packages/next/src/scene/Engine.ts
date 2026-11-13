@@ -226,7 +226,7 @@ const REASON_LOADING = bit("loading");
 const REASON_MORPH = bit("morph");
 
 /** Values in one view's on-demand fingerprint (see `viewChanged`). */
-const VIEW_KEY_LENGTH = 32;
+const VIEW_KEY_LENGTH = 33;
 
 /** Options for a globe surface: terrain or the ellipsoid. */
 export interface GlobeOptions extends TilesetOptions {
@@ -2011,6 +2011,7 @@ export class Engine {
     s[n++] = view.world.id;
     s[n++] = view.debugMode;
     s[n++] = view.lodTransitions === "morph" ? 1 : 0;
+    s[n++] = view.lodExponent;
     // The placements, and the body anchor (the body camera's).
     s[n++] = view.anchorRevision;
     s[n++] = view.bodyAnchor?.slot ?? -1;

@@ -67,6 +67,16 @@ export interface Warp {
    * of fitting it. Absent for any other warp.
    */
   readonly heightScale?: HeightScale;
+  /**
+   * The error policy for content drawn through this warp, in [0, 1]: terrain
+   * and tile selection use the warp's stretch s as s^α. 1 (the default where
+   * no node or view says) is exact in the drawn frame: a tile is refined
+   * until its error is small as drawn. 0 measures the error in the content's
+   * own frame, as if unwarped, so a warp that stretches draws coarser tiles
+   * and its transitions show s times larger. A view's `lodExponent` is used
+   * where no warp on the route sets this; the warp's value wins where set.
+   */
+  readonly lodExponent?: number;
   readonly from: FrameKey;
   readonly to: FrameKey;
   /** Goes up whenever `forward` changes; the fits of every route through it are redone. */

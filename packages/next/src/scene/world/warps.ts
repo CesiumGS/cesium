@@ -405,6 +405,17 @@ class AnchorTileWarp implements TileWarp {
     }
   }
 
+  /** The route's own error exponent: the smallest `Warp.lodExponent` any of its warps sets (the most permissive node wins); undefined where none does. */
+  get lodExponent(): number | undefined {
+    let out: number | undefined;
+    for (const step of this.#route?.steps ?? []) {
+      if (step.kind === "warp" && step.warp.lodExponent !== undefined) {
+        out = Math.min(out ?? 1, step.warp.lodExponent);
+      }
+    }
+    return out;
+  }
+
   /** Present while the route is a height profile: drawn heights in closed form (`TileWarp.heightRange`). */
   get heightRange(): TileWarp["heightRange"] {
     const profile = this.#profile;
@@ -413,7 +424,11 @@ class AnchorTileWarp implements TileWarp {
     }
     return (min, max) => {
       const { height, low, high } = profile;
-      const { ceiling, band } = height.profile!;
+      // A plain height scale is the profile with no ceiling: h' = base + k (h − base).
+      const { ceiling, band } = height.profile ?? {
+        ceiling: Infinity,
+        band: 1,
+      };
       const base = height.baseHeight ?? 0;
       const [lo, hi] = drawnHeightRange(
         min,
@@ -479,13 +494,13 @@ class AnchorTileWarp implements TileWarp {
   /** Each scaled warp's bucket now: the span its scale holds over. */
   #spans = new Map<Warp, { low: number; high: number }>();
 
-  /** Whether the route is one height-scale warp with a profile then rigid steps, and the multipliers its bucket holds. */
+  /** Whether the route is one height-scale warp (with a profile or not) then rigid steps, and the multipliers its bucket holds. */
   #setProfile(
     route: Route,
     buckets: ReadonlyMap<Warp, { low: number; high: number }>,
   ): void {
     const height = heightScaleOf(route);
-    if (!height?.profile) {
+    if (!height) {
       this.#profile = undefined;
       return;
     }
