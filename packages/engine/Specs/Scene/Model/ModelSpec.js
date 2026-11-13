@@ -1,8 +1,25 @@
 import {
-  Atmosphere,
-  Axis,
   Cartesian2,
   Cartesian3,
+  Color,
+  DistanceDisplayCondition,
+  Ellipsoid,
+  FixedFrameTransforms,
+  Frozen,
+  HeadingPitchRange,
+  HeadingPitchRoll,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  PrimitiveType,
+  Rectangle,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
+import {
+  Atmosphere,
+  Axis,
   Cesium3DTileStyle,
   CesiumTerrainProvider,
   ClassificationType,
@@ -10,45 +27,31 @@ import {
   ClippingPlaneCollection,
   ClippingPolygon,
   ClippingPolygonCollection,
-  Color,
   ColorBlendMode,
   Credit,
   CustomShader,
-  Frozen,
-  defined,
   DirectionalLight,
-  DistanceDisplayCondition,
   DynamicAtmosphereLightingType,
   DracoLoader,
-  Ellipsoid,
-  FeatureDetection,
+  EdgeDisplayMode,
   Globe,
   Fog,
-  HeadingPitchRange,
-  HeadingPitchRoll,
   HeightReference,
   ImageBasedLighting,
   JobScheduler,
-  JulianDate,
-  Math as CesiumMath,
-  Matrix3,
-  Matrix4,
   Model,
   ModelFeature,
   ModelSceneGraph,
   ModelUtility,
   Pass,
-  PrimitiveType,
   Resource,
   ResourceCache,
-  RuntimeError,
   ShaderProgram,
   ShadowMode,
   SpecularEnvironmentCubeMap,
   SplitDirection,
   StyleCommandsNeeded,
   SunLight,
-  Transforms,
   WireframeIndexGenerator,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
@@ -125,12 +128,10 @@ describe(
     const featureIdTextureWithTextureTransformUrl =
       "./Data/Models/glTF-2.0/FeatureIdTextureWithTextureTransform/glTF/FeatureIdTextureWithTextureTransform.gltf";
 
-    const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
-      "north",
-      "west",
-    );
+    const fixedFrameTransform =
+      FixedFrameTransforms.localFrameToFixedFrameGenerator("north", "west");
 
-    const modelMatrix = Transforms.headingPitchRollToFixedFrame(
+    const modelMatrix = FixedFrameTransforms.headingPitchRollToFixedFrame(
       Cartesian3.fromDegrees(-123.0744619, 44.0503706, 0),
       new HeadingPitchRoll(0, 0, 0),
       Ellipsoid.WGS84,
@@ -560,7 +561,7 @@ describe(
         {
           gltf: gltf,
           basePath: triangleWithoutIndicesUrl,
-          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+          modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
             Cartesian3.fromDegrees(0.0, 0.0, 100.0),
           ),
         },
@@ -623,7 +624,7 @@ describe(
         {
           gltf: gltf,
           basePath: twoSidedPlaneUrl,
-          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+          modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
             Cartesian3.fromDegrees(0.0, 0.0, 100.0),
           ),
         },
@@ -1098,7 +1099,7 @@ describe(
       const model = await loadAndZoomToModelAsync(
         {
           gltf: boxTexturedGlbUrl,
-          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+          modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
             Cartesian3.fromDegrees(180.0, 0.0),
           ),
         },
@@ -1110,7 +1111,7 @@ describe(
         scene: scene2D,
       });
 
-      model.modelMatrix = Transforms.eastNorthUpToFixedFrame(
+      model.modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(
         Cartesian3.fromDegrees(-180.0, 0.0),
       );
       verifyRender(model, true, {
@@ -1676,6 +1677,34 @@ describe(
       }
     });
 
+    describe("edgeDisplayMode", function () {
+      it("defaults to SURFACES_ONLY", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        expect(model.edgeDisplayMode).toBe(EdgeDisplayMode.SURFACES_ONLY);
+      });
+
+      it("can be set to SURFACES_AND_EDGES", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+        expect(model.edgeDisplayMode).toBe(EdgeDisplayMode.SURFACES_AND_EDGES);
+      });
+
+      it("can be set to EDGES_ONLY", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        model.edgeDisplayMode = EdgeDisplayMode.EDGES_ONLY;
+        expect(model.edgeDisplayMode).toBe(EdgeDisplayMode.EDGES_ONLY);
+      });
+    });
+
     describe("boundingSphere", function () {
       it("boundingSphere throws if model is not ready", async function () {
         const model = await Model.fromGltfAsync({
@@ -1751,6 +1780,53 @@ describe(
           2.0 * expectedRadius,
           CesiumMath.EPSILON8,
         );
+      });
+    });
+
+    describe("rectangle", function () {
+      it("getRectangle throws if model is not ready", async function () {
+        const model = await Model.fromGltfAsync({
+          url: boxTexturedGlbUrl,
+        });
+        expect(function () {
+          return model.getRectangle();
+        }).toThrowDeveloperError();
+      });
+
+      it("getRectangle is derived from the bounding sphere for standalone models", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        const expected = Rectangle.fromBoundingSphere(
+          model.boundingSphere,
+          scene.ellipsoid,
+        );
+        expect(model.getRectangle()).toEqual(expected);
+      });
+
+      it("getRectangle uses the tile content bounding volume rectangle for 3D tile content", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        const tileRectangle = Rectangle.fromDegrees(-1.0, -2.0, 3.0, 4.0);
+        model._content = {
+          tile: { contentBoundingVolume: { rectangle: tileRectangle } },
+        };
+        expect(model.getRectangle()).toBe(tileRectangle);
+      });
+
+      it("getRectangle projects the bounding sphere with the given ellipsoid", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        const expected = Rectangle.fromBoundingSphere(
+          model.boundingSphere,
+          Ellipsoid.UNIT_SPHERE,
+        );
+        expect(model.getRectangle(Ellipsoid.UNIT_SPHERE)).toEqual(expected);
       });
     });
 
@@ -1845,11 +1921,6 @@ describe(
       });
 
       it("picks box textured", async function () {
-        if (FeatureDetection.isInternetExplorer()) {
-          // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-          return;
-        }
-
         // This model gets clipped if log depth is disabled, so zoom out
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
@@ -1868,11 +1939,6 @@ describe(
       });
 
       it("picks box textured with id", async function () {
-        if (FeatureDetection.isInternetExplorer()) {
-          // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-          return;
-        }
-
         // This model gets clipped if log depth is disabled, so zoom out
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
@@ -1893,11 +1959,6 @@ describe(
       });
 
       it("picks box textured with a new id", async function () {
-        if (FeatureDetection.isInternetExplorer()) {
-          // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-          return;
-        }
-
         // This model gets clipped if log depth is disabled, so zoom out
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
@@ -1925,11 +1986,6 @@ describe(
       });
 
       it("doesn't pick when allowPicking is false", async function () {
-        if (FeatureDetection.isInternetExplorer()) {
-          // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-          return;
-        }
-
         // This model gets clipped if log depth is disabled, so zoom out
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
@@ -1948,11 +2004,6 @@ describe(
       });
 
       it("doesn't pick when model is hidden", async function () {
-        if (FeatureDetection.isInternetExplorer()) {
-          // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-          return;
-        }
-
         // This model gets clipped if log depth is disabled, so zoom out
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
@@ -2223,7 +2274,7 @@ describe(
           {
             gltf: boxTexturedGltfUrl,
             heightReference: HeightReference.CLAMP_TO_GROUND,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(position),
             scene: scene,
           },
           scene,
@@ -2239,7 +2290,7 @@ describe(
           {
             gltf: boxTexturedGltfUrl,
             heightReference: HeightReference.NONE,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(position),
             scene: scene,
           },
           scene,
@@ -2262,7 +2313,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(position),
             heightReference: HeightReference.CLAMP_TO_GROUND,
             scene: scene,
           },
@@ -2285,7 +2336,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(position),
             heightReference: HeightReference.NONE,
             scene: scene,
           },
@@ -2311,7 +2362,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(position),
             heightReference: HeightReference.CLAMP_TO_GROUND,
             scene: scene,
           },
@@ -2333,7 +2384,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(position),
             heightReference: HeightReference.CLAMP_TO_GROUND,
             scene: scene,
           },
@@ -2361,7 +2412,8 @@ describe(
         spyOn(scene, "updateHeight").and.returnValue(removeCallback);
 
         let position = Cartesian3.fromDegrees(-72.0, 40.0);
-        const modelMatrix = Transforms.eastNorthUpToFixedFrame(position);
+        const modelMatrix =
+          FixedFrameTransforms.eastNorthUpToFixedFrame(position);
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
@@ -2397,7 +2449,8 @@ describe(
         spyOn(scene, "updateHeight").and.returnValue(removeCallback);
 
         let position = Cartesian3.fromDegrees(-72.0, 40.0);
-        const modelMatrix = Transforms.eastNorthUpToFixedFrame(position);
+        const modelMatrix =
+          FixedFrameTransforms.eastNorthUpToFixedFrame(position);
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
@@ -2442,7 +2495,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(-72.0, 40.0),
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -2463,7 +2516,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(-72.0, 40.0),
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -2471,6 +2524,10 @@ describe(
           },
           scene,
         );
+        await pollToPromise(function () {
+          scene.renderForSpecs();
+          return model._heightDirty === false;
+        });
         expect(model._heightDirty).toBe(false);
         const terrainProvider = await CesiumTerrainProvider.fromUrl(
           "Data/CesiumTerrainTileJson/QuantizedMeshWithVertexNormals",
@@ -2489,7 +2546,7 @@ describe(
           loadAndZoomToModelAsync(
             {
               gltf: boxTexturedGltfUrl,
-              modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
                 Cartesian3.fromDegrees(-72.0, 40.0),
               ),
               heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -2506,7 +2563,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(-72.0, 40.0),
             ),
             heightReference: HeightReference.NONE,
@@ -2525,7 +2582,7 @@ describe(
           loadAndZoomToModelAsync(
             {
               gltf: boxTexturedGltfUrl,
-              modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
                 Cartesian3.fromDegrees(-72.0, 40.0),
               ),
               heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -2543,7 +2600,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(-72.0, 40.0),
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -4367,7 +4424,7 @@ describe(
         verifyRender(model, true);
       });
 
-      it("destroys attached ClippingPolygonCollections", async function () {
+      it("detaches its ClippingPolygonCollection when the model is destroyed", async function () {
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
@@ -4380,14 +4437,15 @@ describe(
 
         model.clippingPolygons = collection;
         expect(model.isDestroyed()).toEqual(false);
-        expect(collection.isDestroyed()).toEqual(false);
+        expect(collection.length).toBe(1);
 
         scene.primitives.remove(model);
         expect(model.isDestroyed()).toEqual(true);
-        expect(collection.isDestroyed()).toEqual(true);
+        // Destroying the model detaches the collection without destroying it.
+        expect(collection.length).toBe(1);
       });
 
-      it("destroys ClippingPolygonCollections that are detached", async function () {
+      it("detaches ClippingPolygonCollections without destroying them", async function () {
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
@@ -4398,10 +4456,10 @@ describe(
           polygons: [polygon],
         });
         model.clippingPolygons = collection;
-        expect(collection.isDestroyed()).toBe(false);
+        expect(collection.length).toBe(1);
 
         model.clippingPolygons = undefined;
-        expect(collection.isDestroyed()).toBe(true);
+        expect(collection.length).toBe(1);
       });
     });
 
@@ -4644,7 +4702,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             url: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
@@ -4692,7 +4750,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             url: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
@@ -4760,7 +4818,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             url: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
@@ -4824,7 +4882,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             url: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
@@ -4878,7 +4936,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             url: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
@@ -4951,7 +5009,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             url: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
@@ -5002,7 +5060,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             url: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },

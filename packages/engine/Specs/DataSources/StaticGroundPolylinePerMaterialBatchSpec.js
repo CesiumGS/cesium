@@ -1,14 +1,16 @@
 import {
-  ApproximateTerrainHeights,
   BoundingSphere,
   Cartesian3,
   Color,
-  defined,
   DistanceDisplayCondition,
   JulianDate,
   Math as CesiumMath,
   TimeInterval,
   TimeIntervalCollection,
+  defined,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
   BoundingSphereState,
   ColorMaterialProperty,
   ConstantProperty,
@@ -21,7 +23,6 @@ import {
   ClassificationType,
   GroundPolylinePrimitive,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -533,6 +534,58 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
 
       batch.removeAllPrimitives();
     });
+  });
+
+  it("does not crash when removing an entity with a pending show update", function () {
+    if (!GroundPolylinePrimitive.isSupported(scene)) {
+      // Don't fail if GroundPolylinePrimitive is not supported
+      return;
+    }
+    batch = new StaticGroundPolylinePerMaterialBatch(
+      scene.groundPrimitives,
+      ClassificationType.BOTH,
+      false,
+    );
+
+    const polyline = createGroundPolyline();
+    polyline.material = new PolylineOutlineMaterialProperty({
+      color: Color.ORANGE,
+      outlineWidth: 2,
+      outlineColor: Color.BLACK,
+    });
+
+    const entity = new Entity({
+      polyline: polyline,
+    });
+
+    const updater = new PolylineGeometryUpdater(entity, scene);
+    batch.add(time, updater);
+
+    function renderScene() {
+      scene.initializeFrame();
+      const isUpdated = batch.update(time);
+      scene.render(time);
+      return isUpdated;
+    }
+
+    return pollToPromise(renderScene)
+      .then(function () {
+        expect(scene.groundPrimitives.length).toEqual(1);
+
+        // Trigger a show change, which queues the updater in showsUpdated
+        entity.show = false;
+        updater._onEntityPropertyChanged(entity, "isShowing");
+
+        // Remove the entity before the show update is processed
+        batch.remove(updater);
+
+        // This should not crash with "Cannot read properties of undefined (reading 'id')"
+        return pollToPromise(renderScene);
+      })
+      .then(function () {
+        expect(scene.groundPrimitives.length).toEqual(0);
+        batch.removeAllPrimitives();
+      });
   });
 
   it("has correct show attribute after rebuilding primitive", function () {

@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Defines how per-feature colors set from the Cesium API or declarative styling blend with the source colors from
  * the original feature, e.g. glTF material or per-point color in the tile.
@@ -49,4 +51,7 @@ const Cesium3DTileColorBlendMode = {
    */
   MIX: 2,
 };
-export default Object.freeze(Cesium3DTileColorBlendMode);
+
+Object.freeze(Cesium3DTileColorBlendMode);
+
+export default Cesium3DTileColorBlendMode;

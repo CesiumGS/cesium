@@ -1,0 +1,27 @@
+id: require-jsdoc-memberof
+valid:
+  - >
+    Object.defineProperties(MyClass, {
+      myProp: { get: () => 1 }
+    });
+    - >
+    Object.defineProperties(MyClass, {
+      /** @ignore */
+      myProp: { get: () => 1 }
+    });
+    - >
+    Object.defineProperties(MyClass, {
+      /** @private */
+      myProp: { get: () => 1 }
+    });
+  - >
+    Object.defineProperties(MyClass, {
+      /** @memberof MyClass.prototype */
+      myProp: { get: () => 1 }
+    });
+invalid:
+  - >
+    Object.defineProperties(MyClass, {
+      /** Public instance member. */
+      myProp: { get: () => 1 }
+    });

@@ -1,12 +1,10 @@
+import { Cartesian3, Matrix4, RuntimeError } from "@cesium/core";
 import {
   B3dmLoader,
   B3dmParser,
-  Cartesian3,
   GltfLoader,
-  Matrix4,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../../index.js";
 import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../../Specs/createScene.js";

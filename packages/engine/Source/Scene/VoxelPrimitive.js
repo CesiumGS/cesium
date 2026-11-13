@@ -1,29 +1,32 @@
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Cartographic,
+  Check,
+  Color,
+  Ellipsoid,
+  Event,
+  Frozen,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  VerticalExaggeration,
+  clone,
+  defined,
+  destroyObject,
+  oneTimeWarning,
+} from "@cesium/core";
+import buildVoxelCustomShader from "./buildVoxelCustomShader.js";
 import buildVoxelDrawCommands from "./buildVoxelDrawCommands.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Cartographic from "../Core/Cartographic.js";
 import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
-import CesiumMath from "../Core/Math.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
-import clone from "../Core/clone.js";
 import CustomShader from "./Model/CustomShader.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
 import Material from "./Material.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 import PolylineCollection from "./PolylineCollection.js";
-import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 import VoxelContent from "./VoxelContent.js";
 import VoxelShapeType from "./VoxelShapeType.js";
 import VoxelTraversal from "./VoxelTraversal.js";
@@ -51,6 +54,13 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  */
 function VoxelPrimitive(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
+  const {
+    provider = VoxelPrimitive.DefaultProvider,
+    modelMatrix = Matrix4.IDENTITY,
+    customShader = buildVoxelCustomShader(provider),
+    clock,
+    calculateStatistics = false,
+  } = options;
 
   /**
    * @type {boolean}
@@ -62,10 +72,10 @@ function VoxelPrimitive(options) {
    * @type {VoxelProvider}
    * @private
    */
-  this._provider = options.provider ?? VoxelPrimitive.DefaultProvider;
+  this._provider = provider;
 
   /**
-   * This member is not created until the provider and shape are ready.
+   * This member is not created until the first update loop.
    *
    * @type {VoxelTraversal}
    * @private
@@ -82,73 +92,64 @@ function VoxelPrimitive(options) {
    * @type {boolean}
    * @private
    */
-  this._calculateStatistics = options.calculateStatistics ?? false;
+  this._calculateStatistics = calculateStatistics;
+
+  const {
+    shape: shapeType,
+    minBounds = VoxelShapeType.getMinBounds(shapeType),
+    maxBounds = VoxelShapeType.getMaxBounds(shapeType),
+    dimensions,
+    paddingBefore = Cartesian3.ZERO,
+    paddingAfter = Cartesian3.ZERO,
+    metadataOrder,
+    availableLevels = 1,
+  } = provider;
 
   /**
-   * This member is not created until the provider is ready.
-   *
-   * @type {VoxelShape}
+   * @type {Cartesian3}
+   * @readonly
+   * @constant
    * @private
    */
-  this._shape = undefined;
+  this._dimensions = Cartesian3.clone(dimensions);
 
   /**
-   * @type {boolean}
-   * @private
-   */
-  this._shapeVisible = false;
-
-  /**
-   * This member is not created until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
-  this._dimensions = new Cartesian3();
+  this._paddingBefore = Cartesian3.clone(paddingBefore);
 
   /**
-   * This member is not created until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
-  this._inputDimensions = new Cartesian3();
+  this._paddingAfter = Cartesian3.clone(paddingAfter);
 
   /**
-   * This member is not created until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
-  this._paddingBefore = new Cartesian3();
+  this._inputDimensions = computeInputDimensions(
+    dimensions,
+    paddingBefore,
+    paddingAfter,
+    metadataOrder,
+  );
 
   /**
-   * This member is not created until the provider is ready.
-   *
-   * @type {Cartesian3}
-   * @private
-   */
-  this._paddingAfter = new Cartesian3();
-
-  /**
-   * This member is not known until the provider is ready.
-   *
    * @type {number}
    * @private
    */
-  this._availableLevels = 1;
+  this._availableLevels = availableLevels;
 
   /**
-   * This member is not known until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
-  this._minBounds = new Cartesian3();
+  this._minBounds = minBounds.clone();
 
   /**
    * Used to detect if the shape is dirty.
-   * This member is not known until the provider is ready.
    *
    * @type {Cartesian3}
    * @private
@@ -156,16 +157,13 @@ function VoxelPrimitive(options) {
   this._minBoundsOld = new Cartesian3();
 
   /**
-   * This member is not known until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
-  this._maxBounds = new Cartesian3();
+  this._maxBounds = maxBounds.clone();
 
   /**
    * Used to detect if the shape is dirty.
-   * This member is not known until the provider is ready.
    *
    * @type {Cartesian3}
    * @private
@@ -173,16 +171,13 @@ function VoxelPrimitive(options) {
   this._maxBoundsOld = new Cartesian3();
 
   /**
-   * This member is not known until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
-  this._minClippingBounds = new Cartesian3();
+  this._minClippingBounds = minBounds.clone();
 
   /**
    * Used to detect if the clipping is dirty.
-   * This member is not known until the provider is ready.
    *
    * @type {Cartesian3}
    * @private
@@ -190,16 +185,13 @@ function VoxelPrimitive(options) {
   this._minClippingBoundsOld = new Cartesian3();
 
   /**
-   * This member is not known until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
-  this._maxClippingBounds = new Cartesian3();
+  this._maxClippingBounds = maxBounds.clone();
 
   /**
    * Used to detect if the clipping is dirty.
-   * This member is not known until the provider is ready.
    *
    * @type {Cartesian3}
    * @private
@@ -252,7 +244,7 @@ function VoxelPrimitive(options) {
    * @type {Matrix4}
    * @private
    */
-  this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
+  this._modelMatrix = Matrix4.clone(modelMatrix);
 
   /**
    * Used to detect if the model matrix is dirty.
@@ -266,8 +258,7 @@ function VoxelPrimitive(options) {
    * @type {CustomShader}
    * @private
    */
-  this._customShader =
-    options.customShader ?? VoxelPrimitive.DefaultCustomShader;
+  this._customShader = customShader ?? VoxelPrimitive.DefaultCustomShader;
 
   /**
    * @type {Event}
@@ -303,7 +294,7 @@ function VoxelPrimitive(options) {
    * @type {Clock}
    * @private
    */
-  this._clock = options.clock;
+  this._clock = clock;
 
   // Transforms and other values that are computed when the shape changes
   /**
@@ -393,6 +384,22 @@ function VoxelPrimitive(options) {
    */
   this._disableUpdate = false;
 
+  const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
+
+  /**
+   * @type {VoxelShape}
+   * @private
+   */
+  this._shape = new ShapeConstructor();
+
+  checkTransformAndBounds(this);
+
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this._shapeVisible = updateShapeAndTransforms(this);
+
   /**
    * @type {Object<string, any>}
    * @private
@@ -405,15 +412,11 @@ function VoxelPrimitive(options) {
     octreeLeafNodeTilesPerRow: 0,
     octreeLeafNodeTexelSizeUv: new Cartesian2(),
     megatextureTextures: [],
-    megatextureSliceDimensions: new Cartesian2(),
-    megatextureTileDimensions: new Cartesian2(),
-    megatextureVoxelSizeUv: new Cartesian2(),
-    megatextureSliceSizeUv: new Cartesian2(),
-    megatextureTileSizeUv: new Cartesian2(),
-    dimensions: new Cartesian3(),
-    inputDimensions: new Cartesian3(),
-    paddingBefore: new Cartesian3(),
-    paddingAfter: new Cartesian3(),
+    megatextureTileCounts: new Cartesian3(),
+    dimensions: this._dimensions,
+    inputDimensions: this._inputDimensions,
+    paddingBefore: this._paddingBefore,
+    paddingAfter: this._paddingAfter,
     transformPositionViewToLocal: new Matrix4(),
     transformDirectionViewToLocal: new Matrix3(),
     cameraPositionLocal: new Cartesian3(),
@@ -424,7 +427,7 @@ function VoxelPrimitive(options) {
     clippingPlanesTexture: undefined,
     clippingPlanesMatrix: new Matrix4(),
     renderBoundPlanesTexture: undefined,
-    stepSize: 0,
+    stepSize: this._stepSizeMultiplier,
     pickColor: new Color(),
   };
 
@@ -452,6 +455,8 @@ function VoxelPrimitive(options) {
       };
     }
   }
+
+  setupShapeUniformsAndDefines(this, this._shape);
 
   /**
    * The event fired to indicate that a tile's content was loaded.
@@ -569,31 +574,68 @@ function VoxelPrimitive(options) {
    * @see Cesium3DTileset#allTilesLoaded
    */
   this.initialTilesLoaded = new Event();
-
-  // If the provider fails to initialize the primitive will fail too.
-  const provider = this._provider;
-  initialize(this, provider);
 }
 
-function initialize(primitive, provider) {
-  // Set the bounds
-  const {
-    shape: shapeType,
-    minBounds = VoxelShapeType.getMinBounds(shapeType),
-    maxBounds = VoxelShapeType.getMaxBounds(shapeType),
-  } = provider;
+/**
+ * Computes the dimensions of the input voxel data, including padding and in the input orientation.
+ *
+ * @param {Cartesian3} dimensions The dimensions of the voxel data, not including padding, in z-up orientation.
+ * @param {Cartesian3} paddingBefore The padding before the voxel data.
+ * @param {Cartesian3} paddingAfter The padding after the voxel data.
+ * @param {VoxelMetadataOrder} metadataOrder The ordering of the input metadata dimensions.
+ *
+ * @private
+ */
+function computeInputDimensions(
+  dimensions,
+  paddingBefore,
+  paddingAfter,
+  metadataOrder,
+) {
+  const inputDimensions = Cartesian3.add(
+    dimensions,
+    paddingBefore,
+    new Cartesian3(),
+  );
+  Cartesian3.add(inputDimensions, paddingAfter, inputDimensions);
+  if (metadataOrder === VoxelMetadataOrder.Y_UP) {
+    const inputDimensionsY = inputDimensions.y;
+    inputDimensions.y = inputDimensions.z;
+    inputDimensions.z = inputDimensionsY;
+  }
+  return inputDimensions;
+}
 
-  primitive.minBounds = minBounds;
-  primitive.maxBounds = maxBounds;
-  primitive.minClippingBounds = minBounds.clone();
-  primitive.maxClippingBounds = maxBounds.clone();
+/**
+ * Combine uniforms from the shape with the primitive uniform map, and
+ * setup change tracking for shape defines to know when to rebuild the shader.
+ *
+ * @param {VoxelPrimitive} primitive The primitive with which the shape uniforms are associated.
+ * @param {VoxelShape} shape The shape from which to pull the shader uniforms and defines.
+ *
+ * @private
+ */
+function setupShapeUniformsAndDefines(primitive, shape) {
+  const uniformMap = primitive._uniformMap;
+  const { shaderUniforms, shaderDefines } = shape;
+  for (const uniformName in shaderUniforms) {
+    if (shaderUniforms.hasOwnProperty(uniformName)) {
+      const name = `u_${uniformName}`;
 
-  checkTransformAndBounds(primitive);
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(uniformMap[name])) {
+        oneTimeWarning(
+          `VoxelPrimitive: Uniform name "${name}" is already defined`,
+        );
+      }
+      //>>includeEnd('debug');
 
-  // Create the shape object, and update it so it is valid for VoxelTraversal
-  const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
-  primitive._shape = new ShapeConstructor();
-  primitive._shapeVisible = updateShapeAndTransforms(primitive);
+      uniformMap[name] = function () {
+        return shaderUniforms[uniformName];
+      };
+    }
+  }
+  primitive._shapeDefinesOld = clone(shaderDefines, true);
 }
 
 Object.defineProperties(VoxelPrimitive.prototype, {
@@ -689,6 +731,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
    * @readonly
+   * @constant
    */
   dimensions: {
     get: function () {
@@ -702,6 +745,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
    * @readonly
+   * @constant
    */
   inputDimensions: {
     get: function () {
@@ -715,6 +759,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
    * @readonly
+   * @constant
    */
   paddingBefore: {
     get: function () {
@@ -728,6 +773,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
    * @readonly
+   * @constant
    */
   paddingAfter: {
     get: function () {
@@ -741,6 +787,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {number[][]}
    * @readonly
+   * @constant
    */
   minimumValues: {
     get: function () {
@@ -754,6 +801,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {number[][]}
    * @readonly
+   * @constant
    */
   maximumValues: {
     get: function () {
@@ -855,10 +903,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       Check.typeOf.bool("nearestSampling", nearestSampling);
       //>>includeEnd('debug');
 
-      if (this._nearestSampling !== nearestSampling) {
-        this._nearestSampling = nearestSampling;
-        this._shaderDirty = true;
-      }
+      this._nearestSampling = nearestSampling;
     },
   },
 
@@ -1030,7 +1075,8 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
-   * Gets or sets the custom shader. If undefined, {@link VoxelPrimitive.DefaultCustomShader} is set.
+   * Gets or sets the custom shader. If undefined, attempt to build a default custom shader
+   * appropriate to the metadata type. If that fails, use {@link VoxelPrimitive.DefaultCustomShader}.
    *
    * @memberof VoxelPrimitive.prototype
    * @type {CustomShader}
@@ -1041,28 +1087,28 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._customShader;
     },
     set: function (customShader) {
-      if (this._customShader !== customShader) {
-        // Delete old custom shader entries from the uniform map
-        const uniformMap = this._uniformMap;
-        const oldCustomShader = this._customShader;
-        const oldCustomShaderUniformMap = oldCustomShader.uniformMap;
-        for (const uniformName in oldCustomShaderUniformMap) {
-          if (oldCustomShaderUniformMap.hasOwnProperty(uniformName)) {
-            // If the custom shader was set but the voxel shader was never
-            // built, the custom shader uniforms wouldn't have been added to
-            // the uniform map. But it doesn't matter because the delete
-            // operator ignores if the key doesn't exist.
-            delete uniformMap[uniformName];
-          }
-        }
-
-        if (!defined(customShader)) {
-          this._customShader = VoxelPrimitive.DefaultCustomShader;
-        } else {
-          this._customShader = customShader;
-        }
-        this._shaderDirty = true;
+      if (customShader === this._customShader) {
+        return;
       }
+      // Delete old custom shader entries from the uniform map
+      // (they were added in VoxelRenderResources when the shader was built)
+      const uniformMap = this._uniformMap;
+      const oldCustomShader = this._customShader;
+      const oldCustomShaderUniformMap = oldCustomShader.uniformMap;
+      for (const uniformName in oldCustomShaderUniformMap) {
+        if (oldCustomShaderUniformMap.hasOwnProperty(uniformName)) {
+          delete uniformMap[uniformName];
+        }
+      }
+
+      if (!defined(customShader)) {
+        const defaultShader = buildVoxelCustomShader(this._provider);
+        this._customShader =
+          defaultShader ?? VoxelPrimitive.DefaultCustomShader;
+      } else {
+        this._customShader = customShader;
+      }
+      this._shaderDirty = true;
     },
   },
 
@@ -1080,8 +1126,8 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
-   *  Loading and rendering information for requested content
-   * To use `visited` and `numberOfTilesWithContentReady` statistics, set options._calculateStatistics` to `true` in the constructor.
+   * Loading and rendering information for requested content.
+   * To use `visited` and `numberOfTilesWithContentReady` statistics, set options.calculateStatistics` to `true` in the constructor.
    * @type {Cesium3DTilesetStatistics}
    * @readonly
    * @private
@@ -1113,12 +1159,13 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // Update the custom shader in case it has texture uniforms.
   this._customShader.update(frameState);
 
-  // Initialize from the ready provider. This only happens once.
+  // Initialize from the provider. This only happens once.
   const context = frameState.context;
   if (!this._ready) {
-    initFromProvider(this, provider, context);
-    // Set the primitive as ready after the first frame render since the user might set up events subscribed to
-    // the post render event, and the primitive may not be ready for those past the first frame.
+    initializeFromContext(this, provider, context);
+    // Set the primitive as ready after the first frame render since
+    // the user might set up events subscribed to the post render event,
+    // and the primitive may not be ready for those past the first frame.
     frameState.afterRender.push(() => {
       this._ready = true;
       return true;
@@ -1282,6 +1329,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
   );
   uniforms.stepSize = this._stepSizeMultiplier;
 
+  updateNearestSampling(this);
   updateRenderBoundPlanes(this, frameState);
 
   // Render the primitive
@@ -1293,6 +1341,13 @@ VoxelPrimitive.prototype.update = function (frameState) {
   command.boundingVolume = this._shape.boundingSphere;
   frameState.commandList.push(command);
 };
+
+function updateNearestSampling(primitive) {
+  const { megatextures } = primitive._traversal;
+  for (let i = 0; i < megatextures.length; ++i) {
+    megatextures[i].nearestSampling = primitive._nearestSampling;
+  }
+}
 
 function updateRenderBoundPlanes(primitive, frameState) {
   const uniforms = primitive._uniforms;
@@ -1367,81 +1422,11 @@ function updateVerticalExaggeration(primitive, frameState) {
  * @param {Context} context
  * @private
  */
-function initFromProvider(primitive, provider, context) {
+function initializeFromContext(primitive, provider, context) {
   const uniforms = primitive._uniforms;
 
   primitive._pickId = context.createPickId({ primitive });
   uniforms.pickColor = Color.clone(primitive._pickId.color, uniforms.pickColor);
-
-  const { shaderDefines, shaderUniforms: shapeUniforms } = primitive._shape;
-  primitive._shapeDefinesOld = clone(shaderDefines, true);
-
-  // Add shape uniforms to the uniform map
-  const uniformMap = primitive._uniformMap;
-  for (const key in shapeUniforms) {
-    if (shapeUniforms.hasOwnProperty(key)) {
-      const name = `u_${key}`;
-
-      //>>includeStart('debug', pragmas.debug);
-      if (defined(uniformMap[name])) {
-        oneTimeWarning(
-          `VoxelPrimitive: Uniform name "${name}" is already defined`,
-        );
-      }
-      //>>includeEnd('debug');
-
-      uniformMap[name] = function () {
-        return shapeUniforms[key];
-      };
-    }
-  }
-
-  // Set uniforms that come from the provider.
-  // Note that minBounds and maxBounds can be set dynamically, so their uniforms aren't set here.
-  primitive._dimensions = Cartesian3.clone(
-    provider.dimensions,
-    primitive._dimensions,
-  );
-  uniforms.dimensions = Cartesian3.clone(
-    primitive._dimensions,
-    uniforms.dimensions,
-  );
-  primitive._paddingBefore = Cartesian3.clone(
-    provider.paddingBefore ?? Cartesian3.ZERO,
-    primitive._paddingBefore,
-  );
-  uniforms.paddingBefore = Cartesian3.clone(
-    primitive._paddingBefore,
-    uniforms.paddingBefore,
-  );
-  primitive._paddingAfter = Cartesian3.clone(
-    provider.paddingAfter ?? Cartesian3.ZERO,
-    primitive._paddingAfter,
-  );
-  uniforms.paddingAfter = Cartesian3.clone(
-    primitive._paddingAfter,
-    uniforms.paddingAfter,
-  );
-  primitive._inputDimensions = Cartesian3.add(
-    primitive._dimensions,
-    primitive._paddingBefore,
-    primitive._inputDimensions,
-  );
-  primitive._inputDimensions = Cartesian3.add(
-    primitive._inputDimensions,
-    primitive._paddingAfter,
-    primitive._inputDimensions,
-  );
-  if (provider.metadataOrder === VoxelMetadataOrder.Y_UP) {
-    const inputDimensionsY = primitive._inputDimensions.y;
-    primitive._inputDimensions.y = primitive._inputDimensions.z;
-    primitive._inputDimensions.z = inputDimensionsY;
-  }
-  uniforms.inputDimensions = Cartesian3.clone(
-    primitive._inputDimensions,
-    uniforms.inputDimensions,
-  );
-  primitive._availableLevels = provider.availableLevels ?? 1;
 
   // Create the VoxelTraversal, and set related uniforms
   const keyframeCount = provider.keyframeCount ?? 1;
@@ -1689,33 +1674,15 @@ function setTraversalUniforms(traversal, uniforms) {
   );
   uniforms.octreeInternalNodeTilesPerRow = traversal.internalNodeTilesPerRow;
 
-  const megatextures = traversal.megatextures;
+  const { megatextures } = traversal;
   const megatexture = megatextures[0];
-  const megatextureLength = megatextures.length;
-  uniforms.megatextureTextures = new Array(megatextureLength);
-  for (let i = 0; i < megatextureLength; i++) {
+  uniforms.megatextureTextures = new Array(megatextures.length);
+  for (let i = 0; i < megatextures.length; i++) {
     uniforms.megatextureTextures[i] = megatextures[i].texture;
   }
-
-  uniforms.megatextureSliceDimensions = Cartesian2.clone(
-    megatexture.sliceCountPerRegion,
-    uniforms.megatextureSliceDimensions,
-  );
-  uniforms.megatextureTileDimensions = Cartesian2.clone(
-    megatexture.regionCountPerMegatexture,
-    uniforms.megatextureTileDimensions,
-  );
-  uniforms.megatextureVoxelSizeUv = Cartesian2.clone(
-    megatexture.voxelSizeUv,
-    uniforms.megatextureVoxelSizeUv,
-  );
-  uniforms.megatextureSliceSizeUv = Cartesian2.clone(
-    megatexture.sliceSizeUv,
-    uniforms.megatextureSliceSizeUv,
-  );
-  uniforms.megatextureTileSizeUv = Cartesian2.clone(
-    megatexture.regionSizeUv,
-    uniforms.megatextureTileSizeUv,
+  uniforms.megatextureTileCounts = Cartesian3.clone(
+    megatexture.tileCounts,
+    uniforms.megatextureTileCounts,
   );
 }
 
@@ -2139,13 +2106,15 @@ function debugDraw(that, frameState) {
 VoxelPrimitive.DefaultCustomShader = new CustomShader({
   fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
 {
-    material.diffuse = vec3(1.0);
+    vec3 voxelNormal = fsInput.attributes.normalEC;
+    float diffuse = max(0.0, dot(voxelNormal, czm_lightDirectionEC));
+    float lighting = 0.5 + 0.5 * diffuse;
+    material.diffuse = vec3(lighting);
     material.alpha = 1.0;
 }`,
 });
 
 function DefaultVoxelProvider() {
-  this.ready = true;
   this.shape = VoxelShapeType.BOX;
   this.dimensions = new Cartesian3(1, 1, 1);
   this.names = ["data"];

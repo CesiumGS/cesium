@@ -3,7 +3,6 @@ import Sandcastle from "Sandcastle";
 
 Cesium.Ellipsoid.default = Cesium.Ellipsoid.MARS;
 const viewer = new Cesium.Viewer("cesiumContainer", {
-  terrainProvider: false,
   baseLayer: false,
   baseLayerPicker: false,
   geocoder: false,
@@ -74,7 +73,7 @@ try {
       Cesium.JulianDate.now(),
     );
     clock.multiplier = 604800;
-    clock.currentTime = new Cesium.JulianDate.fromIso8601(roverAnimStartIso);
+    clock.currentTime = Cesium.JulianDate.fromIso8601(roverAnimStartIso);
     viewer.timeline.zoomTo(rover.availability.start, rover.availability.stop);
 
     const boundingSphere = new Cesium.BoundingSphere(
@@ -83,7 +82,7 @@ try {
     );
 
     scene.camera.flyToBoundingSphere(boundingSphere, {
-      offset: new Cesium.HeadingPitchRoll(4.9791, -0.5294, 0.0),
+      offset: new Cesium.HeadingPitchRange(4.9791, -0.5294, 0.0),
       easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
       maximumHeight: 5e6,
       pitchAdjustHeight: 2.5e6,
@@ -201,9 +200,6 @@ try {
       scaleByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.5),
       translucencyByDistance: new Cesium.NearFarScalar(2.5e7, 1.0, 4.0e7, 0.0),
       heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-      disableDepthTestDistance: new Cesium.CallbackProperty(() => {
-        return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
-      }, false),
     });
 
     entity.point = new Cesium.PointGraphics({
@@ -213,15 +209,12 @@ try {
       outlineWidth: 2,
       scaleByDistance: new Cesium.NearFarScalar(1.5e3, 1.0, 4.0e7, 0.1),
       heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-      disableDepthTestDistance: new Cesium.CallbackProperty(() => {
-        return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
-      }, false),
     });
 
     entity.name = entity.properties.text.getValue();
     entity.description = createPickedFeatureDescription(entity);
 
-    const flyToDestination = new Cesium.Cartesian3.fromArray(
+    const flyToDestination = Cesium.Cartesian3.fromArray(
       entity.properties.destination.getValue(),
     );
     const orientationArray = entity.properties.orientation.getValue();
@@ -395,14 +388,24 @@ function addRoverInstructionsToNavMenu() {
   );
   const table = div.querySelector("table");
 
-  const instructions1 = document.getElementById("roverHelpRowTemplate1");
-  const instructions1Clone = instructions1.content.cloneNode(true);
-  const img = instructions1Clone.querySelector("img[data-src]");
+  const instructions1 = /** @type {HTMLTemplateElement} */ (
+    document.getElementById("roverHelpRowTemplate1")
+  );
+  const instructions1Clone = /** @type {HTMLTemplateElement} */ (
+    instructions1.content.cloneNode(true)
+  );
+  const img = /** @type {HTMLImageElement} */ (
+    instructions1Clone.querySelector("img[data-src]")
+  );
   img.src = Cesium.buildModuleUrl(img.dataset.src);
   table.tBodies[0].appendChild(instructions1Clone);
 
-  const instructions2 = document.getElementById("roverHelpRowTemplate2");
-  const instructions2Clone = instructions2.content.cloneNode(true);
+  const instructions2 = /** @type {HTMLTemplateElement} */ (
+    document.getElementById("roverHelpRowTemplate2")
+  );
+  const instructions2Clone = /** @type {HTMLTemplateElement} */ (
+    instructions2.content.cloneNode(true)
+  );
   table.tBodies[0].appendChild(instructions2Clone);
 }
 addRoverInstructionsToNavMenu();

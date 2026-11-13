@@ -1,16 +1,18 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import clone from "../Core/clone.js";
-import Color from "../Core/Color.js";
-import combine from "../Core/combine.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  Cartesian2,
+  Color,
+  DeveloperError,
+  Frozen,
+  Matrix2,
+  Matrix3,
+  Matrix4,
+  clone,
+  combine,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import loadKTX2 from "../Core/loadKTX2.js";
-import Matrix2 from "../Core/Matrix2.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import CubeMap from "../Renderer/CubeMap.js";
 import Texture from "../Renderer/Texture.js";
@@ -250,7 +252,7 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  * @exception {DeveloperError} strict: shader source does not use material.
  *
  * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=materials|Cesium Sandcastle Materials Demo}
  *
  * @example
  * // Create a color material with fromType:
@@ -354,6 +356,7 @@ function Material(options) {
 
     /**
      * The {@link TextureMinificationFilter} to apply to this material's textures.
+     * @memberof Material.prototype
      * @type {TextureMinificationFilter}
      * @default TextureMinificationFilter.LINEAR
      */
@@ -368,6 +371,7 @@ function Material(options) {
 
     /**
      * The {@link TextureMagnificationFilter} to apply to this material's textures.
+     * @memberof Material.prototype
      * @type {TextureMagnificationFilter}
      * @default TextureMagnificationFilter.LINEAR
      */
@@ -1097,6 +1101,7 @@ function createCubeMapUpdateFunction(uniformId) {
  * @param {Material} material The material to load the cubemap images for.
  * @param {string} uniformId The ID of the uniform that corresponds to the cubemap images.
  * @returns A promise that resolves when the images are loaded, or a resolved promise if image loading is not necessary.
+ * @ignore
  */
 function loadCubeMapImagesForUniform(material, uniformId) {
   const uniforms = material.uniforms;

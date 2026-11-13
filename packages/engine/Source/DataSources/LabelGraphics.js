@@ -1,7 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import { DeveloperError, Event, Frozen, defined } from "@cesium/core";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
@@ -46,7 +43,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @param {LabelGraphics.ConstructorOptions} [options] Object describing initialization options
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=labels|Cesium Sandcastle Labels Demo}
  */
 function LabelGraphics(options) {
   this._definitionChanged = new Event();

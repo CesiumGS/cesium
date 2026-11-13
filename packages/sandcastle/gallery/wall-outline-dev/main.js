@@ -6,14 +6,12 @@ const scene = viewer.scene;
 
 // Create the instance of the wall geometry outline.
 const instance = new Cesium.GeometryInstance({
-  geometry: new Cesium.WallOutlineGeometry.fromConstantHeights({
+  geometry: Cesium.WallOutlineGeometry.fromConstantHeights({
     positions: Cesium.Cartesian3.fromDegreesArray([-120.0, 60.0, -90.0, 60.0]),
     maximumHeight: 500000,
   }),
   attributes: {
-    color: new Cesium.ColorGeometryInstanceAttribute.fromColor(
-      Cesium.Color.WHITE,
-    ),
+    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
   },
 });
 

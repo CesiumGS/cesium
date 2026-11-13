@@ -1,17 +1,19 @@
-import ArcType from "../Core/ArcType.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import createGuid from "../Core/createGuid.js";
+import {
+  ArcType,
+  Cartesian3,
+  Color,
+  DeveloperError,
+  Event,
+  Frozen,
+  PolygonHierarchy,
+  RuntimeError,
+  createGuid,
+  defined,
+  getFilenameFromUri,
+} from "@cesium/core";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import getFilenameFromUri from "../Core/getFilenameFromUri.js";
 import PinBuilder from "../Core/PinBuilder.js";
-import PolygonHierarchy from "../Core/PolygonHierarchy.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import HeightReference from "../Scene/HeightReference.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
 import * as topojson from "topojson-client";
@@ -149,7 +151,6 @@ function createObject(geoJson, entityCollection, describe) {
           const lowerKey = key.toLowerCase();
 
           if (namePropertyPrecedence > 1 && lowerKey === "title") {
-            namePropertyPrecedence = 1;
             nameProperty = key;
             break;
           } else if (namePropertyPrecedence > 2 && lowerKey === "name") {
@@ -578,8 +579,8 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
  * @param {string} [name] The name of this data source.  If undefined, a name will be taken from
  *                        the name of the GeoJSON file.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?src=GeoJSON%20simplestyle.html|Cesium Sandcastle GeoJSON simplestyle Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=geojson-and-topojson|Cesium Sandcastle GeoJSON and TopoJSON Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=geojson-simplestyle|Cesium Sandcastle GeoJSON simplestyle Demo}
  *
  * @example
  * const viewer = new Cesium.Viewer('cesiumContainer');

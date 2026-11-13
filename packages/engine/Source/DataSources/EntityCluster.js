@@ -1,11 +1,13 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
-import Event from "../Core/Event.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  EllipsoidalOccluder,
+  Event,
+  Frozen,
+  Matrix4,
+  defined,
+} from "@cesium/core";
 import Billboard from "../Scene/Billboard.js";
 import BillboardCollection from "../Scene/BillboardCollection.js";
 import Label from "../Scene/Label.js";
@@ -30,7 +32,7 @@ import KDBush from "kdbush";
  * @alias EntityCluster
  * @constructor
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=clustering|Cesium Sandcastle Clustering Demo}
  */
 function EntityCluster(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -330,7 +332,7 @@ function createDeclutterCallback(entityCluster) {
     let collectionIndex;
 
     if (points.length > 0) {
-      const index = new KDBush(points.length, 64, Uint32Array);
+      const index = new KDBush(points.length, 64, Float64Array);
       for (let p = 0; p < points.length; ++p) {
         index.add(points[p].coord.x, points[p].coord.y);
       }

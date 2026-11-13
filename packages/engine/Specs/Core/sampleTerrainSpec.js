@@ -1,9 +1,8 @@
+import { Cartographic, defined } from "@cesium/core";
 import {
   ArcGISTiledElevationTerrainProvider,
-  Cartographic,
   CesiumTerrainProvider,
   createWorldTerrainAsync,
-  defined,
   RequestScheduler,
   Resource,
   sampleTerrain,

@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.135.0",
+  "version": "1.147.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
@@ -51,31 +51,37 @@
     "./Specs/**/*"
   ],
   "dependencies": {
-    "@cesium/engine": "^22.0.0",
-    "@cesium/widgets": "^14.0.0"
+    "@cesium/core": "^0.1.1",
+    "@cesium/engine": "^26.5.0",
+    "@cesium/gltf": "^0.1.1",
+    "@cesium/widgets": "^16.3.1",
+    "protobufjs": "^8.8.0"
   },
   "devDependencies": {
-    "@cesium/eslint-config": "^12.0.0",
-    "@playwright/test": "^1.41.1",
-    "chokidar": "^4.0.1",
+    "@ast-grep/cli": "^0.51.1",
+    "@cesium/eslint-config": "^14.0.0",
+    "@playwright/test": "^1.62.1",
+    "@types/express": "^5.0.6",
+    "@types/gulp": "^4.0.18",
+    "@types/istanbul-lib-instrument": "^1.7.8",
+    "@types/karma": "^6.3.9",
+    "@types/yargs": "^17.0.35",
+    "@types/yazl": "^3.3.1",
+    "chokidar": "^5.0.0",
     "cloc": "^2.6.0-cloc",
     "compression": "^1.7.4",
-    "esbuild": "^0.25.8",
-    "eslint": "^9.32.0",
-    "eslint-plugin-html": "^8.1.1",
-    "eslint-plugin-react-hooks": "^7.0.0",
-    "eslint-plugin-react-refresh": "^0.4.19",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.14.0",
+    "eslint-plugin-html": "^8.2.0",
+    "eslint-plugin-jsdoc": "^65.2.1",
+    "eslint-plugin-n": "^17.24.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.5",
+    "eslint-seatbelt": "^0.1.3",
     "express": "^5.1.0",
-    "globals": "^16.0.0",
-    "globby": "^15.0.0",
+    "globals": "^17.11.0",
     "glsl-strip-comments": "^1.0.0",
     "gulp": "^5.0.0",
-    "gulp-clean-css": "^4.3.0",
-    "gulp-insert": "^0.5.0",
-    "gulp-rename": "^2.0.0",
-    "gulp-replace": "^1.1.3",
-    "gulp-tap": "^2.0.0",
-    "gulp-zip": "^6.0.0",
     "husky": "^9.0.7",
     "istanbul-lib-instrument": "^6.0.0",
     "jasmine-core": "^5.9.0",
@@ -91,19 +97,17 @@
     "karma-longest-reporter": "^1.1.0",
     "karma-safari-launcher": "^1.0.0",
     "karma-sourcemap-loader": "^0.4.0",
-    "karma-spec-reporter": "^0.0.36",
-    "markdownlint-cli": "^0.45.0",
-    "merge-stream": "^2.0.0",
-    "mkdirp": "^3.0.1",
-    "node-fetch": "^3.2.10",
-    "open": "^10.0.2",
-    "prettier": "3.6.2",
+    "karma-spec-reporter": "^0.0.37",
+    "lebab": "^3.2.8",
+    "markdownlint-cli": "^0.50.0",
+    "open": "^11.0.2",
+    "prettier": "3.9.10",
     "prismjs": "^1.28.0",
-    "rimraf": "^6.0.1",
     "tsd-jsdoc": "^2.5.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.30.1",
-    "yargs": "^18.0.0"
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.68.0",
+    "yargs": "^18.1.0",
+    "yazl": "^3.3.1"
   },
   "scripts": {
     "prepare": "gulp prepare && husky && node scripts/isCI.js || playwright install --with-deps",
@@ -115,13 +119,18 @@
     "build-ts": "gulp buildTs",
     "build-third-party": "gulp buildThirdParty",
     "build-apps": "gulp -f gulpfile.apps.js buildApps",
+    "build-cesium-viewer": "gulp -f gulpfile.apps.js buildCesiumViewer",
     "build-sandcastle": "gulp -f gulpfile.apps.js buildSandcastle",
     "clean": "gulp clean",
     "cloc": "gulp cloc",
+    "update-ion-token": "node scripts/updateIonToken.js",
+    "create-demo": "npm run create-demo --workspace=packages/sandcastle",
     "coverage": "gulp coverage",
     "build-docs": "gulp buildDocs",
     "build-docs-watch": "gulp buildDocsWatch",
     "eslint": "eslint \"./**/*.*js\" \"./**/*.*ts*\" \"./**/*.html\" --cache --quiet",
+    "tsc": "gulp tsc",
+    "sg-scan": "ast-grep scan --context 3",
     "make-zip": "gulp -f gulpfile.makezip.js makeZip",
     "markdownlint": "markdownlint \"**/*.md\"",
     "release": "gulp release",
@@ -146,29 +155,43 @@
     "cspell": "npx cspell lint -c .vscode/cspell.json --unique --no-progress"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.0.0"
   },
-  "lint-staged": {
-    "*.{js,cjs,mjs,ts,tsx,css,html}": [
-      "eslint --cache --quiet",
-      "prettier --write"
-    ],
-    "*.md": [
-      "markdownlint",
-      "prettier --write"
-    ]
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=22.17.0"
+    },
+    "packageManager": {
+      "name": "npm",
+      "version": ">=11.16.0"
+    }
   },
   "workspaces": [
+    "packages/core",
+    "packages/gltf",
     "packages/engine",
     "packages/widgets",
     "packages/sandcastle"
   ],
   "overrides": {
+    "protobufjs": "^8.8.0",
+    "@huggingface/transformers": {
+      "onnxruntime-web": {
+        "protobufjs": "^7.6.4"
+      }
+    },
     "allotment": {
       "use-resize-observer": {
         "react": "^19.0.0",
         "react-dom": "^19.0.0"
       }
     }
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "onnxruntime-node@1.30.0": true,
+    "protobufjs@7.6.6": true,
+    "@ast-grep/cli@0.51.1": true
   }
 }

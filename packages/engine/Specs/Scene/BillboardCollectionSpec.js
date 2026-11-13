@@ -4,27 +4,29 @@ import {
   Cartesian2,
   Cartesian3,
   Cartographic,
-  CesiumTerrainProvider,
   Color,
-  createGuid,
   DistanceDisplayCondition,
-  Globe,
   Math as CesiumMath,
   NearFarScalar,
   OrthographicOffCenterFrustum,
   PerspectiveFrustum,
   Rectangle,
+  createGuid,
+} from "@cesium/core";
+import {
+  CesiumTerrainProvider,
+  Globe,
   Resource,
   Billboard,
   BillboardCollection,
   BlendOption,
   HeightReference,
   HorizontalOrigin,
+  SceneMode,
   TextureAtlas,
   VerticalOrigin,
   SplitDirection,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -658,18 +660,18 @@ describe("Scene/BillboardCollection", function () {
   });
 
   it("destroys texture atlas on destroy when destroyTextureAtlas is true", function () {
-    let b = new BillboardCollection();
+    const b = new BillboardCollection();
     expect(b.destroyTextureAtlas).toEqual(true);
 
     const atlas = b.textureAtlas;
     b.textureAtlas = atlas;
-    b = b.destroy();
+    b.destroy();
 
     expect(atlas.isDestroyed()).toEqual(true);
   });
 
   it("does not destroy texture atlas on destroy when destroyTextureAtlas ", function () {
-    let b = new BillboardCollection();
+    const b = new BillboardCollection();
     b.destroyTextureAtlas = false;
 
     let atlas = b.textureAtlas;
@@ -679,7 +681,7 @@ describe("Scene/BillboardCollection", function () {
     atlas.destroy();
 
     atlas = b.textureAtlas;
-    b = b.destroy();
+    b.destroy();
 
     expect(atlas.isDestroyed()).toEqual(false);
     atlas.destroy();
@@ -1803,45 +1805,13 @@ describe("Scene/BillboardCollection", function () {
         expect(scene).notToRender([0, 0, 0, 255]);
       });
 
-      it("renders billboards when instancing is disabled", async function () {
-        // disable extension
-        const instancedArrays = context._instancedArrays;
-        context._instancedArrays = undefined;
-
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        const greenBillboard = billboards.add({
-          position: Cartesian3.ZERO,
-          image: greenImage,
-        });
-
-        await pollToPromise(() => {
-          scene.renderForSpecs();
-          return greenBillboard.ready;
-        });
-
-        expect(scene).toRender([0, 255, 0, 255]);
-
-        const blueBillboard = billboards.add({
-          position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-          image: largeBlueImage,
-        });
-        scene.renderForSpecs();
-
-        await pollToPromise(() => {
-          scene.renderForSpecs();
-          return blueBillboard.ready;
-        });
-
-        expect(scene).toRender([0, 0, 255, 255]);
-
-        billboards.remove(blueBillboard);
-        expect(scene).toRender([0, 255, 0, 255]);
-
-        billboards.remove(greenBillboard);
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        context._instancedArrays = instancedArrays;
+      it("throws developer error when instancing is unsupported", async function () {
+        expect(() =>
+          billboards.update({
+            ...scene.frameState,
+            context: { ...context, instancedArrays: undefined },
+          }),
+        ).toThrowDeveloperError(/ANGLE_instanced_arrays/);
       });
 
       it("renders with a different texture atlas", async function () {
@@ -2568,6 +2538,15 @@ describe("Scene/BillboardCollection", function () {
         expect(narrowBillboardColor).toEqual(wideBillboardColor);
       });
 
+      it("accepts and retains a non-unit alignedAxis", function () {
+        const b = billboards.add({
+          image: greenImage,
+          alignedAxis: new Cartesian3(0.0, 0.0, 2.0),
+        });
+        scene.renderForSpecs();
+        expect(b.alignedAxis).toEqual(new Cartesian3(0.0, 0.0, 2.0));
+      });
+
       describe("height referenced billboards", function () {
         let billboardsWithHeight;
         beforeEach(function () {
@@ -2726,6 +2705,99 @@ describe("Scene/BillboardCollection", function () {
           //Setting position to zero should clear the clamped position.
           b.position = Cartesian3.ZERO;
           expect(b._clampedPosition).toBeUndefined();
+        });
+
+        it("uses a projected position (not the ECEF clamped position) in 2D", function () {
+          // Regression: in 2D a clamped billboard kept its Earth-centered
+          // _clampedPosition as the render-frame position and was drawn off the
+          // map. In 2D/CV the render frame is the projected map position.
+          spyOn(scene, "updateHeight");
+
+          const position = Cartesian3.fromDegrees(-72.0, 40.0);
+          const b = billboardsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            position: position,
+          });
+
+          // In 3D the render-frame position is the ECEF clamped position itself.
+          scene.renderForSpecs();
+          expect(b._clampedPosition).toBeDefined();
+          expect(b._getActualPosition()).toEqual(b._clampedPosition);
+
+          scene.morphTo2D(0.0);
+          scene.camera.setView({ destination: Rectangle.MAX_VALUE });
+          return pollToPromise(function () {
+            scene.renderForSpecs();
+            return scene.mode === SceneMode.SCENE2D;
+          }).then(function () {
+            const projection = scene.mapProjection;
+            const carto = projection.ellipsoid.cartesianToCartographic(
+              b._clampedPosition,
+            );
+            const projected = projection.project(carto);
+            // 2D flattens the height to the map datum: (0, easting, northing).
+            const expected = new Cartesian3(0.0, projected.x, projected.y);
+
+            const actual = b._getActualPosition();
+            expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+            // And crucially NOT the raw ECEF clamped position.
+            expect(
+              Cartesian3.equalsEpsilon(
+                actual,
+                b._clampedPosition,
+                CesiumMath.EPSILON3,
+              ),
+            ).toBe(false);
+          });
+        });
+
+        it("uses a projected position (not the ECEF clamped position) in Columbus View", function () {
+          // Columbus View keeps the real height, unlike 2D which flattens it,
+          // so the render-frame position is (height, easting, northing). It must
+          // still be the projected map position, not the raw ECEF clamped one.
+          spyOn(scene, "updateHeight");
+          spyOn(scene, "getHeight").and.returnValue(500.0);
+
+          const position = Cartesian3.fromDegrees(-72.0, 40.0);
+          const b = billboardsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            position: position,
+          });
+
+          scene.renderForSpecs();
+          expect(b._clampedPosition).toBeDefined();
+
+          scene.morphToColumbusView(0.0);
+          scene.camera.setView({ destination: Rectangle.MAX_VALUE });
+          return pollToPromise(function () {
+            scene.renderForSpecs();
+            return scene.mode === SceneMode.COLUMBUS_VIEW;
+          }).then(function () {
+            const projection = scene.mapProjection;
+            const carto = projection.ellipsoid.cartesianToCartographic(
+              b._clampedPosition,
+            );
+            const projected = projection.project(carto);
+            // Columbus View preserves the height: (height, easting, northing).
+            const expected = new Cartesian3(
+              projected.z,
+              projected.x,
+              projected.y,
+            );
+
+            const actual = b._getActualPosition();
+            expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+            // The height must be preserved (not flattened to 0 like 2D).
+            expect(actual.x).toBeGreaterThan(0.0);
+            // And crucially NOT the raw ECEF clamped position.
+            expect(
+              Cartesian3.equalsEpsilon(
+                actual,
+                b._clampedPosition,
+                CesiumMath.EPSILON3,
+              ),
+            ).toBe(false);
+          });
         });
 
         it("removes callback after disableDepthTest", function () {

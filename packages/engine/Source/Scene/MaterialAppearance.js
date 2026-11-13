@@ -1,6 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import VertexFormat from "../Core/VertexFormat.js";
+import { Frozen, VertexFormat, defined } from "@cesium/core";
 import AllMaterialAppearanceFS from "../Shaders/Appearances/AllMaterialAppearanceFS.js";
 import AllMaterialAppearanceVS from "../Shaders/Appearances/AllMaterialAppearanceVS.js";
 import BasicMaterialAppearanceFS from "../Shaders/Appearances/BasicMaterialAppearanceFS.js";
@@ -29,7 +27,7 @@ import Material from "./Material.js";
      * @param {object} [options.renderState] Optional render state to override the default render state.
      *
      * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
-     * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?id=materials|Cesium Sandcastle Material Appearance Demo}
      *
      * @example
      * const primitive = new Cesium.Primitive({

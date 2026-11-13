@@ -1,0 +1,31 @@
+id: no-public-static-fields
+valid:
+  - >
+    class MyClass {
+      static PROP = 1;
+    }
+  - >
+    class MyClass {
+      // Not a JSDoc comment.
+      static PROP = 1;
+    }
+  - >
+    class MyClass {
+      /** @ignore */
+      static PROP = 1;
+    }
+  - >
+    class MyClass {
+      /** @private */
+      static PROP = 1;
+    }
+  - >
+    class MyClass {}
+    /** Public static property. */
+    MyClass.PROP = 1;
+invalid:
+  - >
+    class MyClass {
+      /** Public static property. */
+      static PROP = 1;
+    }

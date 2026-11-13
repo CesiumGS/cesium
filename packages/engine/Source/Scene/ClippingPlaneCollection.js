@@ -1,20 +1,22 @@
-import AttributeCompression from "../Core/AttributeCompression.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import Intersect from "../Core/Intersect.js";
-import Matrix4 from "../Core/Matrix4.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import Plane from "../Core/Plane.js";
+import {
+  AttributeCompression,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Check,
+  Color,
+  DeveloperError,
+  Event,
+  Frozen,
+  Intersect,
+  Matrix4,
+  PixelDatatype,
+  PixelFormat,
+  Plane,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ContextLimits from "../Renderer/ContextLimits.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 import ClippingPlane from "./ClippingPlane.js";
@@ -41,8 +43,8 @@ import ClippingPlane from "./ClippingPlane.js";
  * @param {Color} [options.edgeColor=Color.WHITE] The color applied to highlight the edge along which an object is clipped.
  * @param {number} [options.edgeWidth=0.0] The width, in pixels, of the highlight applied to the edge along which an object is clipped.
  *
- * @demo {@link https://sandcastle.cesium.com/?src=3D%20Tiles%20Clipping%20Planes.html|Clipping 3D Tiles and glTF models.}
- * @demo {@link https://sandcastle.cesium.com/?src=Terrain%20Clipping%20Planes.html|Clipping the Globe.}
+ * @demo {@link https://sandcastle.cesium.com/?id=3d-tiles-clipping-planes|Clipping 3D Tiles and glTF models.}
+ * @demo {@link https://sandcastle.cesium.com/?id=terrain-clipping-planes|Clipping the Globe.}
  *
  * @example
  * // This clipping plane's distance is positive, which means its normal
@@ -545,8 +547,8 @@ ClippingPlaneCollection.prototype.update = function (frameState) {
   }
   if (!this._multipleDirtyPlanes) {
     // partial updates possible
-    let offsetX = 0;
-    let offsetY = 0;
+    let offsetX;
+    let offsetY;
     if (useFloatTexture) {
       offsetY = Math.floor(dirtyIndex / clippingPlanesTexture.width);
       offsetX = Math.floor(dirtyIndex - offsetY * clippingPlanesTexture.width);
@@ -605,7 +607,7 @@ const scratchMatrix = new Matrix4();
 const scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
 /**
  * Determines the type intersection with the planes of this ClippingPlaneCollection instance and the specified {@link TileBoundingVolume}.
- * @private
+ * @ignore
  *
  * @param {object} tileBoundingVolume The volume to determine the intersection with the planes.
  * @param {Matrix4} [transform] An optional, additional matrix to transform the plane to world coordinates.
@@ -656,7 +658,7 @@ ClippingPlaneCollection.prototype.computeIntersectionWithBoundingVolume =
  * @param {ClippingPlaneCollection} [clippingPlaneCollection] A ClippingPlaneCollection (or undefined) being attached to an object
  * @param {object} owner An Object that should receive the new ClippingPlaneCollection
  * @param {string} key The Key for the Object to reference the ClippingPlaneCollection
- * @private
+ * @ignore
  */
 ClippingPlaneCollection.setOwner = function (
   clippingPlaneCollection,

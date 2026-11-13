@@ -1,26 +1,28 @@
+import {
+  AttributeCompression,
+  AxisAlignedBoundingBox,
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Check,
+  ComponentDatatype,
+  Ellipsoid,
+  EllipsoidalOccluder,
+  FixedFrameTransforms,
+  Frozen,
+  Math as CesiumMath,
+  Matrix4,
+  OrientedBoundingBox,
+  Rectangle,
+  WebMercatorProjection,
+  binarySearch,
+} from "@cesium/core";
 import { MeshoptDecoder } from "meshoptimizer";
-import AttributeCompression from "./AttributeCompression.js";
 import Axis from "../Scene/Axis.js";
-import AxisAlignedBoundingBox from "./AxisAlignedBoundingBox.js";
-import binarySearch from "./binarySearch.js";
-import BoundingSphere from "./BoundingSphere.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
-import Cartographic from "./Cartographic.js";
-import CesiumMath from "./Math.js";
-import Check from "./Check.js";
-import ComponentDatatype from "./ComponentDatatype.js";
-import Ellipsoid from "./Ellipsoid.js";
-import EllipsoidalOccluder from "./EllipsoidalOccluder.js";
-import Frozen from "./Frozen.js";
-import Matrix4 from "./Matrix4.js";
-import OrientedBoundingBox from "./OrientedBoundingBox.js";
-import Rectangle from "./Rectangle.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 import TerrainProvider from "./TerrainProvider.js";
-import Transforms from "./Transforms.js";
-import WebMercatorProjection from "./WebMercatorProjection.js";
 
 /**
  * Contains functions to create a mesh from 3D Tiles terrain data.
@@ -187,7 +189,7 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = async function (options) {
     scratchCenterCartesian,
   );
 
-  const enuToEcef = Transforms.eastNorthUpToFixedFrame(
+  const enuToEcef = FixedFrameTransforms.eastNorthUpToFixedFrame(
     approximateCenterPosition,
     ellipsoid,
     scratchEnuToEcef,
@@ -889,7 +891,7 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   );
   let upsampledVertexBufferOffset = 0;
 
-  const enuToEcef = Transforms.eastNorthUpToFixedFrame(
+  const enuToEcef = FixedFrameTransforms.eastNorthUpToFixedFrame(
     approximateCenterPosition,
     ellipsoid,
     scratchEnuToEcefUpsample,
@@ -1170,7 +1172,7 @@ function addSkirtsToMesh(
   const maximumHeight = mesh.maximumHeight;
   const minimumHeightWithSkirts = mesh.minimumHeight - skirtHeight;
   for (let skirtId = 0; skirtId < skirtVertexCount; skirtId++) {
-    let side = 0;
+    let side;
     for (side = 0; side < 3; side++) {
       if (skirtId < edgeIndexOffset[side + 1]) {
         break;
@@ -1489,7 +1491,7 @@ function clipTriangleAgainstBoxEdgeRange(
   p2,
   result,
 ) {
-  let inputLength = 0;
+  let inputLength;
   let inputPoints = scratchInPoints;
   let inputBarys = scratchInBarys;
 
@@ -1521,7 +1523,7 @@ function clipTriangleAgainstBoxEdgeRange(
     outputLength = 0;
 
     // Check each polygon edge against each clip window edge
-    let prevIdx = inputLength - 1;
+    const prevIdx = inputLength - 1;
     let prevPoint = inputPoints[prevIdx];
     let prevBary = inputBarys[prevIdx];
     let prevInside = inside(boxMinimum, boxMaximum, edgeId, prevPoint);
@@ -1562,7 +1564,6 @@ function clipTriangleAgainstBoxEdgeRange(
         outputLength++;
       }
 
-      prevIdx = currIdx;
       prevPoint = currPoint;
       prevBary = currBary;
       prevInside = currInside;

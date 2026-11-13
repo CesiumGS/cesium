@@ -142,7 +142,14 @@ highp vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
 void main() {
     uint texIdx = uint(a_splatIndex);
-    ivec2 posCoord = ivec2((texIdx & 0x3ffu) << 1, texIdx >> 10);
+    // u_splatRowMask and u_splatRowShift encode the row width of the splat
+    // attribute texture. The texture width is always maximumTextureSize, which
+    // varies by GPU, so these are passed as uniforms rather than constants.
+    //   rowMask  = maximumTextureSize/2 - 1
+    //   rowShift = log2(maximumTextureSize/2)
+    uint rowMask = uint(u_splatRowMask);
+    uint rowShift = uint(u_splatRowShift);
+    ivec2 posCoord = ivec2(int((texIdx & rowMask) << 1), int(texIdx >> rowShift));
     vec4 splatPosition = vec4( uintBitsToFloat(uvec4(texelFetch(u_splatAttributeTexture, posCoord, 0))) );
 
     vec4 splatViewPos = czm_modelView * vec4(splatPosition.xyz, 1.0);
@@ -155,7 +162,7 @@ void main() {
         return;
     }
 
-    ivec2 covCoord = ivec2(((texIdx & 0x3ffu) << 1) | 1u, texIdx >> 10);
+    ivec2 covCoord = ivec2(int(((texIdx & rowMask) << 1) | 1u), int(texIdx >> rowShift));
     uvec4 covariance = uvec4(texelFetch(u_splatAttributeTexture, covCoord, 0));
 
     gl_Position = clipPosition;
@@ -186,4 +193,24 @@ void main() {
     v_splatColor.rgb += evaluateSH(texIdx, viewDirModel).rgb;
 #endif
     v_splitDirection = u_splitDirection;
+
+#if defined(HAS_FEATURE_IDS)
+    // Read feature IDs from the dedicated feature ID texture.
+    // The texture width equals maximumTextureSize (= 2 * (splatRowMask + 1)),
+    // so the row address is derived from the existing splat row uniforms.
+    // NOTE: Currently supports up to 4 feature ID sets per splat (one texel).
+    uint fidWidth = uint((u_splatRowMask + 1) << 1);
+    ivec2 fidCoord = ivec2(int(texIdx % fidWidth), int(texIdx / fidWidth));
+    uvec4 fidTexel = texelFetch(u_featureIdTexture, fidCoord, 0);
+    v_featureId_0 = int(fidTexel.r);
+#if FEATURE_ID_COUNT > 1
+    v_featureId_1 = int(fidTexel.g);
+#endif
+#if FEATURE_ID_COUNT > 2
+    v_featureId_2 = int(fidTexel.b);
+#endif
+#if FEATURE_ID_COUNT > 3
+    v_featureId_3 = int(fidTexel.a);
+#endif
+#endif
 }

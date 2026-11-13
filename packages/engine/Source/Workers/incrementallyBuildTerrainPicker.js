@@ -1,7 +1,5 @@
+import { AxisAlignedBoundingBox, Cartesian3, Matrix4 } from "@cesium/core";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import AxisAlignedBoundingBox from "../Core/AxisAlignedBoundingBox.js";
 
 const scratchAABBCornerMin = new Cartesian3();
 const scratchAABBCornerMax = new Cartesian3();
@@ -12,6 +10,9 @@ const scratchTrianglePoints = [
 ];
 const scratchTriangleAABB = new AxisAlignedBoundingBox();
 
+const TILE_AABB_MAX = new Cartesian3(0.5, 0.5, 0.5);
+const TILE_AABB_MIN = new Cartesian3(-0.5, -0.5, -0.5);
+
 /**
  * Builds the next layer of the terrain picker's quadtree by determining which triangles intersect
  * each of the four child nodes. (Essentially distributing the parent's triangles to its children.)
@@ -20,6 +21,7 @@ const scratchTriangleAABB = new AxisAlignedBoundingBox();
  * to convert triangle positions to the tree's local space, and the parent node's triangle indices and positions.
  *
  * Returns an four arrays - one for each child node - containing the indices of the triangles that intersect each node.
+ * @ignore
  */
 function incrementallyBuildTerrainPicker(parameters, transferableObjects) {
   // Rehydrate worker inputs
@@ -42,7 +44,7 @@ function incrementallyBuildTerrainPicker(parameters, transferableObjects) {
   );
 
   const triangleIndices = new Uint32Array(parameters.triangleIndices);
-  const trianglePositions = new Float32Array(parameters.trianglePositions);
+  const trianglePositions = new Float64Array(parameters.trianglePositions);
   const intersectingTrianglesArrays = Array.from({ length: 4 }, () => []);
 
   for (let j = 0; j < triangleIndices.length; j++) {
@@ -84,6 +86,7 @@ function incrementallyBuildTerrainPicker(parameters, transferableObjects) {
  * @param {Matrix4} inverseTransform transform from world space to tree local space
  * @param {Cartesian3[]} trianglePoints array of 3 Cartesian3 points representing the triangle
  * @returns {AxisAlignedBoundingBox} the axis-aligned bounding box enclosing the triangle in tree local space
+ * @ignore
  */
 function createAABBFromTriangle(inverseTransform, trianglePoints) {
   Matrix4.multiplyByPoint(
@@ -102,7 +105,18 @@ function createAABBFromTriangle(inverseTransform, trianglePoints) {
     trianglePoints[2],
   );
 
-  return AxisAlignedBoundingBox.fromPoints(trianglePoints, scratchTriangleAABB);
+  const aabb = AxisAlignedBoundingBox.fromPoints(
+    trianglePoints,
+    scratchTriangleAABB,
+  );
+
+  // In 2D mode, sometimes the height-scale of a tile is 0. See {@link TerrainMesh#computeTransform2D}.
+  // This makes the inverseTransform degenerate, so we set the height-scale to 1 to be prevent that. However, this is artificial and
+  // can lead to the triangle's AABB extending beyond the (height) bounds of the tile's AABB.
+  // Thus, we clamp the triangle's AABB to the tile's local-space AABB.
+  Cartesian3.clamp(aabb.minimum, TILE_AABB_MIN, TILE_AABB_MAX, aabb.minimum);
+  Cartesian3.clamp(aabb.maximum, TILE_AABB_MIN, TILE_AABB_MAX, aabb.maximum);
+  return aabb;
 }
 
 export default createTaskProcessorWorker(incrementallyBuildTerrainPicker);

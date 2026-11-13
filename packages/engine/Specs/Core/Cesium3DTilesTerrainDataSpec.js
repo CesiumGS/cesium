@@ -1,21 +1,23 @@
 import {
-  Axis,
   BoundingSphere,
   Cartesian3,
   Cartographic,
-  Cesium3DTilesTerrainData,
-  defined,
-  GeographicTilingScheme,
+  EllipsoidalOccluder,
+  FixedFrameTransforms,
   Math as CesiumMath,
   Matrix4,
+  OrientedBoundingBox,
   Rectangle,
+  defined,
+} from "@cesium/core";
+import { parseGlb } from "@cesium/gltf";
+import {
+  Axis,
+  Cesium3DTilesTerrainData,
+  GeographicTilingScheme,
   TerrainData,
   TerrainMesh,
   TerrainProvider,
-  Transforms,
-  OrientedBoundingBox,
-  parseGlb,
-  EllipsoidalOccluder,
 } from "../../index.js";
 
 /**
@@ -69,7 +71,7 @@ function createTerrainDataFromScratch(options) {
   const centerCartographic = Rectangle.center(rectangle);
   centerCartographic.height = 0.5 * (minimumHeight + maximumHeight);
   const centerCartesian = ellipsoid.cartographicToCartesian(centerCartographic);
-  const enuToFf = Transforms.eastNorthUpToFixedFrame(
+  const enuToFf = FixedFrameTransforms.eastNorthUpToFixedFrame(
     centerCartesian,
     ellipsoid,
   );
@@ -372,7 +374,6 @@ function createTerrainDataFromScratch(options) {
 
   // Write Binary Chunk
   glbBytes.set(binBuffer, glbByteOffset);
-  glbByteOffset += binBuffer.byteLength;
 
   const updatedGltf = parseGlb(new Uint8Array(glbBytes));
 
@@ -1607,7 +1608,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
     });
 
     it("returns true for all children when child mask is not explicitly specified", function () {
-      let childTileMask;
+      const childTileMask = undefined;
       const data = createSampleTerrainData(childTileMask);
       expect(data.isChildAvailable(x, y, x * 2 + 0, y * 2 + 0)).toBe(true);
       expect(data.isChildAvailable(x, y, x * 2 + 1, y * 2 + 0)).toBe(true);

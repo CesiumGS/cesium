@@ -6,6 +6,8 @@ import {
   PrimitiveType,
   WebGLConstants,
   WindingOrder,
+} from "@cesium/core";
+import {
   Buffer,
   BufferUsage,
   ClearCommand,
@@ -16,7 +18,6 @@ import {
   VertexArray,
   BlendingState,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe(

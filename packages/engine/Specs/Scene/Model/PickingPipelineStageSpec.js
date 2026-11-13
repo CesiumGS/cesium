@@ -1,5 +1,5 @@
+import { combine, defined } from "@cesium/core";
 import {
-  combine,
   GltfLoader,
   ModelStatistics,
   ModelType,
@@ -7,7 +7,6 @@ import {
   ShaderBuilder,
   Resource,
   ResourceCache,
-  defined,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
@@ -77,6 +76,7 @@ describe(
           _pickIds: [],
           statistics: new ModelStatistics(),
           type: ModelType.GLTF,
+          hasDrapedVectors: () => false,
         },
         runtimePrimitive: {
           primitive: {},
@@ -295,8 +295,12 @@ describe(
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
           "in vec4 a_pickColor;",
         ]);
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "vec4 v_pickColor;",
+
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+          "out vec4 v_pickColor;",
+        ]);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+          "in vec4 v_pickColor;",
         ]);
 
         let i = 0;

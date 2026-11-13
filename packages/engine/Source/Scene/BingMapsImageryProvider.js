@@ -1,13 +1,15 @@
+import {
+  Check,
+  Event,
+  Frozen,
+  Math as CesiumMath,
+  Rectangle,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
-import CesiumMath from "../Core/Math.js";
-import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import BingMapsStyle from "./BingMapsStyle.js";

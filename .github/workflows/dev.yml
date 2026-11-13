@@ -1,9 +1,10 @@
 name: dev
-on: 
+on:
   push:
-    branches: 
+    branches:
       - main
   pull_request:
+  merge_group:
 concurrency:
   group: dev-${{ github.ref }}
   cancel-in-progress: true
@@ -11,19 +12,25 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - name: install node 22
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-      - name: npm install
-        run: npm install
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/install-dependencies
       - name: lint *.js
         run: npm run eslint
       - name: lint *.md
         run: npm run markdownlint
       - name: format code
         run: npm run prettier-check
+      - name: build types
+        run: |
+          npm run build
+          npm run build-sandcastle
+          npm run build-ts
+      - name: lint types
+        run: npm run tsc
+      - name: lint jsdoc
+        run: |
+          npm exec --package=@ast-grep/cli --offline -- ast-grep test
+          npm exec --package=@ast-grep/cli --offline -- ast-grep scan --context 3
   coverage:
     runs-on: ubuntu-latest
     env:
@@ -32,13 +39,8 @@ jobs:
       AWS_REGION: us-east-1
       BRANCH: ${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@v5
-      - name: install node 22
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-      - name: npm install
-        run: npm install
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/install-dependencies
       - name: build
         run: npm run build
       - name: coverage (firefox)
@@ -49,29 +51,24 @@ jobs:
   release-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - name: install node 22
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-      - name: npm install
-        run: npm install
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/install-dependencies
       - name: release build
         run: npm run make-zip
       - name: release tests (chrome)
         run: npm run test -- --browsers ChromeHeadless --failTaskOnError --webgl-stub --release --suppressPassed
       - name: cloc
         run: npm run cloc
-  node-20:
+  node-smoke-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [22, 24, 26]
     steps:
-      - uses: actions/checkout@v5
-      - name: install node 20
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/install-dependencies
         with:
-          node-version: '20'
-      - name: npm install
-        run: npm install
+          node-version: ${{ matrix.version }}
       - name: release build
         run: npm run build-release
       - name: package cesium module

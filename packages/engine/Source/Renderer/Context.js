@@ -1,20 +1,23 @@
+import {
+  Check,
+  Color,
+  ComponentDatatype,
+  DeveloperError,
+  Frozen,
+  Geometry,
+  GeometryAttribute,
+  Matrix4,
+  PixelDatatype,
+  PixelFormat,
+  PrimitiveType,
+  RuntimeError,
+  WebGLConstants,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Buffer from "./Buffer.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Geometry from "../Core/Geometry.js";
-import GeometryAttribute from "../Core/GeometryAttribute.js";
 import loadKTX2 from "../Core/loadKTX2.js";
-import Matrix4 from "../Core/Matrix4.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
 import ViewportQuadVS from "../Shaders/ViewportQuadVS.js";
 import BufferUsage from "./BufferUsage.js";
 import ClearCommand from "./ClearCommand.js";
@@ -22,7 +25,7 @@ import ContextLimits from "./ContextLimits.js";
 import CubeMap from "./CubeMap.js";
 import DrawCommand from "./DrawCommand.js";
 import PassState from "./PassState.js";
-import PixelDatatype from "./PixelDatatype.js";
+import PickId from "./PickId.js";
 import RenderState from "./RenderState.js";
 import ShaderCache from "./ShaderCache.js";
 import ShaderProgram from "./ShaderProgram.js";
@@ -86,32 +89,33 @@ function Context(canvas, options) {
 
   ContextLimits._maximumCombinedTextureImageUnits = gl.getParameter(
     gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS,
-  ); // min: 8
+  );
   ContextLimits._maximumCubeMapSize = gl.getParameter(
     gl.MAX_CUBE_MAP_TEXTURE_SIZE,
-  ); // min: 16
+  );
   ContextLimits._maximumFragmentUniformVectors = gl.getParameter(
     gl.MAX_FRAGMENT_UNIFORM_VECTORS,
-  ); // min: 16
+  );
   ContextLimits._maximumTextureImageUnits = gl.getParameter(
     gl.MAX_TEXTURE_IMAGE_UNITS,
-  ); // min: 8
+  );
   ContextLimits._maximumRenderbufferSize = gl.getParameter(
     gl.MAX_RENDERBUFFER_SIZE,
-  ); // min: 1
-  ContextLimits._maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE); // min: 64
+  );
+  ContextLimits._maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+  ContextLimits._maximum3DTextureSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
   ContextLimits._maximumVaryingVectors = gl.getParameter(
     gl.MAX_VARYING_VECTORS,
-  ); // min: 8
+  );
   ContextLimits._maximumVertexAttributes = gl.getParameter(
     gl.MAX_VERTEX_ATTRIBS,
-  ); // min: 8
+  );
   ContextLimits._maximumVertexTextureImageUnits = gl.getParameter(
     gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS,
-  ); // min: 0
+  );
   ContextLimits._maximumVertexUniformVectors = gl.getParameter(
     gl.MAX_VERTEX_UNIFORM_VECTORS,
-  ); // min: 128
+  );
 
   ContextLimits._maximumSamples = this._webgl2
     ? gl.getParameter(gl.MAX_SAMPLES)
@@ -1008,20 +1012,26 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * A 1x1 RGBA texture initialized to [255, 255, 255, 255].  This can
-   * be used as a placeholder texture while other textures are downloaded.
+   * A 1x1 RGBA texture initialized to the color defined by {@link Texture.defaultColor}.
+   * This can be used as a placeholder texture while other textures are downloaded.
    * @memberof Context.prototype
    * @type {Texture}
    */
   defaultTexture: {
     get: function () {
       if (this._defaultTexture === undefined) {
+        const color = Texture.defaultColor;
         this._defaultTexture = new Texture({
           context: this,
           source: {
             width: 1,
             height: 1,
-            arrayBufferView: new Uint8Array([255, 255, 255, 255]),
+            arrayBufferView: new Uint8Array([
+              color.red * 255,
+              color.green * 255,
+              color.blue * 255,
+              color.alpha * 255,
+            ]),
           },
           flipY: false,
         });
@@ -1512,7 +1522,7 @@ Context.prototype.readPixelsToPBO = function (readState) {
     width,
     height,
     pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, this),
+    PixelDatatype.toWebGLConstant(pixelDatatype, this._webgl2),
     0,
   );
   pixels._unBind();
@@ -1564,7 +1574,7 @@ Context.prototype.readPixels = function (readState) {
     width,
     height,
     PixelFormat.RGBA,
-    PixelDatatype.toWebGLConstant(pixelDatatype, this),
+    PixelDatatype.toWebGLConstant(pixelDatatype, this._webgl2),
     pixels,
   );
 
@@ -1657,40 +1667,12 @@ Context.prototype.getObjectByPickColor = function (pickColor) {
 };
 
 /**
- *
- * @param {Map<number, object>} pickObjects
- * @param {number} key
- * @param {Color} color
- */
-function PickId(pickObjects, key, color) {
-  this._pickObjects = pickObjects;
-  this.key = key;
-  this.color = color;
-}
-
-Object.defineProperties(PickId.prototype, {
-  object: {
-    get: function () {
-      return this._pickObjects.get(this.key);
-    },
-    set: function (value) {
-      this._pickObjects.set(this.key, value);
-    },
-  },
-});
-
-PickId.prototype.destroy = function () {
-  this._pickObjects.delete(this.key);
-  return undefined;
-};
-
-/**
  * Creates a unique ID associated with the input object for use with color-buffer picking.
  * The ID has an RGBA color value unique to this context.  You must call destroy()
  * on the pick ID when destroying the input object.
  *
  * @param {object} object The object to associate with the pick ID.
- * @returns {object} A PickId object with a <code>color</code> property.
+ * @returns {PickId} A PickId object with a <code>color</code> property.
  *
  * @exception {RuntimeError} Out of unique Pick IDs.
  *
@@ -1712,7 +1694,7 @@ Context.prototype.createPickId = function (object) {
   // actually detect overflow in the Uint32 value
   ++this._nextPickColor[0];
   const key = this._nextPickColor[0];
-  if (key === 0) {
+  if (key === PickId.NULL_PICK_ID) {
     // In case of overflow
     throw new RuntimeError("Out of unique Pick IDs.");
   }

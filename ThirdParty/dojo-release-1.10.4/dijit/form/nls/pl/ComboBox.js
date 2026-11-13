@@ -1,6 +1,0 @@
-define(
-({
-		previousMessage: "Poprzednie wybory",
-		nextMessage: "Więcej wyborów"
-})
-);

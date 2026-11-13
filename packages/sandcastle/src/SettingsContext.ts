@@ -1,10 +1,7 @@
 import { createContext } from "react";
 
 export type AvailableFontId =
-  | "droid-sans"
-  | "fira-code"
-  | "cascadia-code"
-  | "jetbrains-mono";
+  "droid-sans" | "fira-code" | "cascadia-code" | "jetbrains-mono";
 type FontDefinition = {
   readableName: string;
   cssValue: string;
@@ -41,6 +38,7 @@ export type Settings = {
   fontSize: number;
   fontLigatures: boolean;
   defaultPanel: LeftPanel;
+  embeddingSearch: boolean;
 };
 
 export const initialSettings: Settings = {
@@ -49,6 +47,7 @@ export const initialSettings: Settings = {
   fontSize: 14,
   fontLigatures: false,
   defaultPanel: "gallery",
+  embeddingSearch: true,
 };
 
 export const SettingsContext = createContext<{

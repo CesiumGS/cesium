@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 
 const assetId = 3830184;
@@ -44,7 +46,7 @@ viewer.imageryLayers.add(overlay);
 
 viewer.scene.camera.flyTo({
   duration: 0,
-  destination: new Cesium.Rectangle.fromDegrees(
+  destination: Cesium.Rectangle.fromDegrees(
     //Philly
     -75.280266,
     39.867004,

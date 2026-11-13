@@ -1,4 +1,5 @@
-import { Cartesian4, Color, ConditionsExpression } from "../../index.js";
+import { Cartesian4, Color } from "@cesium/core";
+import { ConditionsExpression } from "../../index.js";
 
 describe("Scene/ConditionsExpression", function () {
   function MockFeature(value) {

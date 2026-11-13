@@ -5,6 +5,7 @@ import { DropdownMenu, Chip } from "@stratakit/structures";
 import { filter } from "../icons.ts";
 
 import { useGalleryItemContext } from "./GalleryItemStore.ts";
+import { trackEvent } from "../analytics";
 
 export default function GalleryItemSearchFilter() {
   const store = useGalleryItemContext();
@@ -44,14 +45,20 @@ export default function GalleryItemSearchFilter() {
         return () => {};
       }
 
-      return () =>
+      return () => {
+        const selecting = !deferredCheck(type, label);
+        if (selecting) {
+          // Only selections count; unchecking a label is not a filter action
+          trackEvent("Filter Label Clicked", { label });
+        }
         setSearchFilter(
-          deferredCheck(type, label)
-            ? null
-            : {
+          selecting
+            ? {
                 [type]: label,
-              },
+              }
+            : null,
         );
+      };
     },
     [setSearchFilter, deferredCheck],
   );
@@ -97,7 +104,7 @@ export default function GalleryItemSearchFilter() {
       const options = [...defaults, ...labels];
 
       return (
-        <DropdownMenu.Root key={type}>
+        <DropdownMenu.Provider key={type}>
           <DropdownMenu.Button
             id={type}
             className="filter-menu-button"
@@ -110,7 +117,7 @@ export default function GalleryItemSearchFilter() {
             <Divider />
             {options.map(renderOption)}
           </DropdownMenu.Content>
-        </DropdownMenu.Root>
+        </DropdownMenu.Provider>
       );
     },
     [

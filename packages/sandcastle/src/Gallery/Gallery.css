@@ -2,7 +2,7 @@
   overflow: hidden;
   border-radius: var(--stratakit-ext-radius-md);
   border: 1px solid var(--stratakit-color-border-neutral-base);
-  box-shadow: var(--stratakit-shadow-dropdown-base);
+  box-shadow: var(--stratakit-shadow-control-dropdown-base);
 }
 
 .filter-menu {
@@ -173,51 +173,56 @@
     transition: all 150ms ease-out;
     background: var(--button-background-color);
     box-shadow:
-      var(--stratakit-shadow-button-base-inset),
+      var(--stratakit-shadow-control-button-base-inset),
       0px 0px 0px 1px var(--button-border-color) inset,
-      var(--stratakit-shadow-button-base-drop);
+      var(--stratakit-shadow-control-button-base-drop);
 
     &:hover,
     &:focus {
       background: var(--button-background-color-hover);
       box-shadow:
-        var(--stratakit-shadow-button-base-inset),
+        var(--stratakit-shadow-control-button-base-inset),
         0px 0px 0px 1px var(--button-border-color-hover) inset,
-        var(--stratakit-shadow-button-base-drop);
+        var(--stratakit-shadow-control-button-base-drop);
     }
 
     &:active {
       background: var(--button-background-color-pressed);
       box-shadow:
-        var(--stratakit-shadow-button-base-inset),
+        var(--stratakit-shadow-control-button-base-inset),
         0px 0px 0px 1px var(--button-border-color-pressed) inset;
     }
 
     .gallery-card-thumbnail {
-      max-width: 220px;
+      max-width: 225px;
       width: 38.2%;
-      height: fit-content;
+      height: 150px;
       position: relative;
       flex-shrink: 0;
-    }
+      background-color: var(--stratakit-color-bg-elevation-overlay);
+      border-radius: var(--stratakit-ext-radius-sm);
 
-    .gallery-card-thumbnail > span {
-      position: absolute;
-      bottom: var(--stratakit-space-x1);
-      right: var(--stratakit-space-x1);
-      background: var(--stratakit-color-bg-elevation-overlay);
-      color: var(--stratakit-color-text-neutral-primary);
-      opacity: 0.84;
-      padding: var(--stratakit-space-x1);
-      font-size: var(--stratakit-font-size-10);
-      line-height: 1;
-      border-radius: 2px;
-    }
+      & > span {
+        position: absolute;
+        bottom: var(--stratakit-space-x1);
+        right: var(--stratakit-space-x1);
+        background: var(--stratakit-color-bg-elevation-overlay);
+        color: var(--stratakit-color-text-neutral-primary);
+        opacity: 0.84;
+        padding: var(--stratakit-space-x1);
+        font-size: var(--stratakit-font-size-10);
+        line-height: 1;
+        border-radius: 2px;
+      }
 
-    img {
-      border-radius: 4px;
-      border: 1px solid var(--stratakit-color-border-neutral-base);
-      outline: 1px solid var(--stratakit-color-border-elevation-base);
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: var(--stratakit-ext-radius-sm);
+        border: 1px solid var(--stratakit-color-border-neutral-base);
+        outline: 1px solid var(--stratakit-color-border-elevation-base);
+      }
     }
 
     section {
@@ -285,7 +290,7 @@
 
     &:before {
       border-color: var(--stratakit-color-border-glow-strong-default);
-      box-shadow: var(--stratakit-shadow-button-base-drop);
+      box-shadow: var(--stratakit-shadow-control-button-base-drop);
     }
   }
 
@@ -293,7 +298,7 @@
     background: var(--stratakit-color-bg-glow-on-surface-neutral-pressed);
 
     &:before {
-      box-shadow: var(--stratakit-shadow-button-base-inset);
+      box-shadow: var(--stratakit-shadow-control-button-base-inset);
     }
   }
 

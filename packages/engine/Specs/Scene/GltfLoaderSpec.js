@@ -1,41 +1,42 @@
 import {
-  ArticulationStageType,
   AttributeType,
-  Axis,
   Cartesian2,
   Cartesian3,
   Cartesian4,
-  combine,
   ComponentDatatype,
   Frozen,
+  IndexDatatype,
+  InterpolationType,
+  Math as CesiumMath,
+  Matrix2,
+  Matrix4,
+  PrimitiveType,
+  Quaternion,
+  RuntimeError,
+  combine,
+} from "@cesium/core";
+import {
+  ArticulationStageType,
+  Axis,
   GltfStructuralMetadataLoader,
   GltfIndexBufferLoader,
   GltfJsonLoader,
   GltfLoader,
   GltfTextureLoader,
   GltfVertexBufferLoader,
-  IndexDatatype,
   InstanceAttributeSemantic,
-  InterpolationType,
   JobScheduler,
-  PrimitiveType,
-  Matrix2,
-  Matrix4,
-  Math as CesiumMath,
   MetadataComponentType,
   MetadataType,
   ModelComponents,
   Resource,
   ResourceCache,
   ResourceLoaderState,
-  RuntimeError,
-  Sampler,
   Texture,
   TextureMagnificationFilter,
   TextureMinificationFilter,
   TextureWrap,
   VertexAttributeSemantic,
-  Quaternion,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
@@ -108,6 +109,8 @@ describe(
       "./Data/Models/glTF-2.0/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const largeFeatureIdTexture =
       "./Data/Models/glTF-2.0/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
+    const featureIdTextureWithTextureTransform =
+      "./Data/Models/glTF-2.0/FeatureIdTextureWithTextureTransform/glTF/FeatureIdTextureWithTextureTransform.gltf";
     const boxArticulations =
       "./Data/Models/glTF-2.0/BoxArticulations/glTF/BoxArticulations.gltf";
     const boxWithPrimitiveOutline =
@@ -128,10 +131,22 @@ describe(
       "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
     const clearcoatTestData =
       "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
+    const planarFillTestData =
+      "./Data/Models/glTF-2.0/PlanarFill/glTF/planar-fill-polygons.gltf";
+    const pointStyleTestData =
+      "./Data/Models/glTF-2.0/StyledPoints/points-r5-g8-b14-y10.gltf";
     const meshPrimitiveRestartTestData =
       "./Data/Models/glTF-2.0/MeshPrimitiveRestart/glTF/MeshPrimitiveRestart.gltf";
+    const meshPrimitiveRestartKhrTestData =
+      "./Data/Models/glTF-2.0/MeshPrimitiveRestartKHR/glTF-Embedded/MeshPrimitiveRestartKHR.gltf";
     const edgeVisibilityTestData =
       "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibility.glb";
+    const edgeVisibilityMaterialTestData =
+      "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibilityMaterial.glb";
+    const edgeVisibilityLineStringTestData =
+      "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibilityLineString.glb";
+    const styledLines =
+      "./Data/Models/glTF-2.0/StyledLines/BENTLEY_materials_line_style.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -227,14 +242,16 @@ describe(
     }
 
     async function loadModifiedGltfAndTest(gltfPath, options, modifyFunction) {
-      let gltf = await Resource.fetchJson({
+      const arrayBuffer = await Resource.fetchArrayBuffer({
         url: gltfPath,
       });
 
-      gltf = modifyFunction(gltf);
+      const gltfData = parseGlb(arrayBuffer);
+      const modifiedGltf = modifyFunction(gltfData.gltf) ?? gltfData.gltf;
+      const rebuiltGlb = createGlbBuffer(modifiedGltf, gltfData.binaryChunk);
 
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
-        Promise.resolve(generateJsonBuffer(gltf).buffer),
+        Promise.resolve(rebuiltGlb),
       );
 
       const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
@@ -244,6 +261,147 @@ describe(
       await waitForLoaderProcess(gltfLoader, scene);
 
       return gltfLoader;
+    }
+
+    async function loadModifiedGlbAndTest(gltfPath, options, modifyFunction) {
+      const arrayBuffer = await Resource.fetchArrayBuffer({
+        url: gltfPath,
+      });
+
+      const gltfData = parseGlb(arrayBuffer);
+      const modifiedGltf = modifyFunction(gltfData.gltf) ?? gltfData.gltf;
+      const rebuiltGlb = createGlbBuffer(modifiedGltf, gltfData.binaryChunk);
+
+      spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
+        Promise.resolve(rebuiltGlb),
+      );
+
+      const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
+      gltfLoaders.push(gltfLoader);
+
+      await gltfLoader.load();
+      await waitForLoaderProcess(gltfLoader, scene);
+
+      return gltfLoader;
+    }
+
+    function parseGlb(arrayBuffer) {
+      const dataView = new DataView(arrayBuffer);
+      if (dataView.byteLength < 12) {
+        const jsonText = new TextDecoder().decode(new Uint8Array(arrayBuffer));
+        return { gltf: JSON.parse(jsonText), binaryChunk: undefined };
+      }
+
+      const magic = dataView.getUint32(0, true);
+      if (magic !== 0x46546c67) {
+        const jsonText = new TextDecoder().decode(new Uint8Array(arrayBuffer));
+        return { gltf: JSON.parse(jsonText), binaryChunk: undefined };
+      }
+
+      let offset = 12;
+      let jsonObject;
+      let binaryChunk;
+      const textDecoder = new TextDecoder();
+
+      while (offset < arrayBuffer.byteLength) {
+        const chunkLength = dataView.getUint32(offset, true);
+        offset += 4;
+        const chunkType = dataView.getUint32(offset, true);
+        offset += 4;
+
+        const chunkData = new Uint8Array(arrayBuffer, offset, chunkLength);
+        if (chunkType === 0x4e4f534a) {
+          jsonObject = JSON.parse(textDecoder.decode(chunkData));
+        } else if (chunkType === 0x004e4942) {
+          binaryChunk = chunkData.slice();
+        }
+
+        offset += chunkLength;
+      }
+
+      if (!jsonObject) {
+        throw new RuntimeError("GLB JSON chunk not found.");
+      }
+
+      if (binaryChunk && jsonObject.buffers && jsonObject.buffers.length > 0) {
+        jsonObject.buffers[0].byteLength = binaryChunk.length;
+        delete jsonObject.buffers[0].uri;
+      }
+
+      return { gltf: jsonObject, binaryChunk: binaryChunk };
+    }
+
+    function createGlbBuffer(gltf, binaryChunk) {
+      const textEncoder = new TextEncoder();
+      const jsonBuffer = textEncoder.encode(JSON.stringify(gltf));
+      const jsonPadding = (4 - (jsonBuffer.byteLength % 4)) % 4;
+      const paddedJson = new Uint8Array(jsonBuffer.byteLength + jsonPadding);
+      paddedJson.set(jsonBuffer);
+      if (jsonPadding > 0) {
+        paddedJson.fill(0x20, jsonBuffer.byteLength);
+      }
+
+      let paddedBinary;
+      if (binaryChunk && binaryChunk.length > 0) {
+        const binPadding = (4 - (binaryChunk.length % 4)) % 4;
+        paddedBinary = new Uint8Array(binaryChunk.length + binPadding);
+        paddedBinary.set(binaryChunk);
+        if (binPadding > 0) {
+          paddedBinary.fill(0, binaryChunk.length);
+        }
+      }
+
+      const hasBinaryChunk = !!paddedBinary;
+      const totalLength =
+        12 +
+        8 +
+        paddedJson.byteLength +
+        (hasBinaryChunk ? 8 + paddedBinary.byteLength : 0);
+
+      const glbBuffer = new ArrayBuffer(totalLength);
+      const dataView = new DataView(glbBuffer);
+      let offset = 0;
+
+      dataView.setUint32(offset, 0x46546c67, true);
+      offset += 4;
+      dataView.setUint32(offset, 2, true);
+      offset += 4;
+      dataView.setUint32(offset, totalLength, true);
+      offset += 4;
+
+      dataView.setUint32(offset, paddedJson.byteLength, true);
+      offset += 4;
+      dataView.setUint32(offset, 0x4e4f534a, true);
+      offset += 4;
+      new Uint8Array(glbBuffer, offset, paddedJson.byteLength).set(paddedJson);
+      offset += paddedJson.byteLength;
+
+      if (hasBinaryChunk) {
+        dataView.setUint32(offset, paddedBinary.byteLength, true);
+        offset += 4;
+        dataView.setUint32(offset, 0x004e4942, true);
+        offset += 4;
+        new Uint8Array(glbBuffer, offset, paddedBinary.byteLength).set(
+          paddedBinary,
+        );
+      }
+
+      return glbBuffer;
+    }
+
+    // Feature ID textures are always sampled with nearest filtering, but they
+    // keep the wrap modes declared by the glTF. When a glTF omits the sampler,
+    // or omits wrapS/wrapT, the glTF default of REPEAT applies.
+    function expectNearestSamplerWithWrap(texture, wrapS, wrapT) {
+      const sampler = texture.sampler;
+      expect(sampler.wrapS).toBe(wrapS);
+      expect(sampler.wrapT).toBe(wrapT);
+      expect(sampler.minificationFilter).toBe(
+        TextureMinificationFilter.NEAREST,
+      );
+      expect(sampler.magnificationFilter).toBe(
+        TextureMagnificationFilter.NEAREST,
+      );
     }
 
     function getAttribute(attributes, semantic, setIndex) {
@@ -1142,6 +1300,37 @@ describe(
       });
     });
 
+    it("does not override the wrap mode of feature ID textures", function () {
+      return loadGltf(microcosm).then(function (gltfLoader) {
+        const primitive = gltfLoader.components.scene.nodes[0].primitives[0];
+        const { texture } = primitive.featureIds[0].textureReader;
+
+        // microcosm.gltf declares no sampler at all, so the glTF default of
+        // REPEAT applies. Forcing nearest filtering must not clamp the texture.
+        expectNearestSamplerWithWrap(
+          texture,
+          TextureWrap.REPEAT,
+          TextureWrap.REPEAT,
+        );
+      });
+    });
+
+    it("keeps the wrap mode a feature ID texture declares explicitly", function () {
+      return loadGltf(featureIdTextureWithTextureTransform).then(
+        function (gltfLoader) {
+          const primitive = gltfLoader.components.scene.nodes[0].primitives[0];
+          const { texture } = primitive.featureIds[0].textureReader;
+
+          // This glTF asks for CLAMP_TO_EDGE, which must be honored as-is.
+          expectNearestSamplerWithWrap(
+            texture,
+            TextureWrap.CLAMP_TO_EDGE,
+            TextureWrap.CLAMP_TO_EDGE,
+          );
+        },
+      );
+    });
+
     it("loads Microcosm", function () {
       return loadGltf(microcosm).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -1169,8 +1358,10 @@ describe(
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
         expect(featureIdTexture.textureReader.texture.width).toBe(256);
         expect(featureIdTexture.textureReader.texture.height).toBe(256);
-        expect(featureIdTexture.textureReader.texture.sampler).toBe(
-          Sampler.NEAREST,
+        expectNearestSamplerWithWrap(
+          featureIdTexture.textureReader.texture,
+          TextureWrap.REPEAT,
+          TextureWrap.REPEAT,
         );
 
         const classDefinition = structuralMetadata.schema.classes.landCover;
@@ -1234,8 +1425,10 @@ describe(
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
         expect(featureIdTexture.textureReader.texture.width).toBe(256);
         expect(featureIdTexture.textureReader.texture.height).toBe(256);
-        expect(featureIdTexture.textureReader.texture.sampler).toBe(
-          Sampler.NEAREST,
+        expectNearestSamplerWithWrap(
+          featureIdTexture.textureReader.texture,
+          TextureWrap.REPEAT,
+          TextureWrap.REPEAT,
         );
 
         const classDefinition = structuralMetadata.schema.classes.landCover;
@@ -1298,7 +1491,11 @@ describe(
         const texture = featureIdTexture.textureReader.texture;
         expect(texture.width).toBe(1024);
         expect(texture.height).toBe(1024);
-        expect(texture.sampler).toBe(Sampler.NEAREST);
+        expectNearestSamplerWithWrap(
+          texture,
+          TextureWrap.REPEAT,
+          TextureWrap.REPEAT,
+        );
 
         featureIdTexture = primitive.featureIds[1];
         expect(featureIdTexture).toBeInstanceOf(
@@ -4176,6 +4373,196 @@ describe(
       expect(clearcoatNormalTexture.texture.width).toBe(256);
     });
 
+    it("loads model with BENTLEY_materials_planar_fill extension", async function () {
+      const gltfLoader = await loadGltf(planarFillTestData);
+
+      const nodes = gltfLoader.components.nodes;
+      expect(nodes.length).toBe(42);
+
+      // Node 0: Material 0 - wireframeFill: 0, backgroundFill: false, behind: false
+      const material0 = nodes[0].primitives[0].material;
+      expect(material0.planarFill).toBeDefined();
+      expect(material0.planarFill.wireframeFill).toBe(0);
+      expect(material0.planarFill.backgroundFill).toBe(false);
+      expect(material0.planarFill.behind).toBe(false);
+
+      // Node 1: Material 1 - wireframeFill: 0, backgroundFill: false, behind: true
+      const material1 = nodes[1].primitives[0].material;
+      expect(material1.planarFill).toBeDefined();
+      expect(material1.planarFill.wireframeFill).toBe(0);
+      expect(material1.planarFill.backgroundFill).toBe(false);
+      expect(material1.planarFill.behind).toBe(true);
+
+      // Node 2: Material 2 - wireframeFill: 0, backgroundFill: true, behind: false
+      const material2 = nodes[2].primitives[0].material;
+      expect(material2.planarFill).toBeDefined();
+      expect(material2.planarFill.wireframeFill).toBe(0);
+      expect(material2.planarFill.backgroundFill).toBe(true);
+      expect(material2.planarFill.behind).toBe(false);
+
+      // Node 4: Material 4 - wireframeFill: 1, backgroundFill: false, behind: false
+      const material4 = nodes[4].primitives[0].material;
+      expect(material4.planarFill).toBeDefined();
+      expect(material4.planarFill.wireframeFill).toBe(1);
+      expect(material4.planarFill.backgroundFill).toBe(false);
+      expect(material4.planarFill.behind).toBe(false);
+
+      // Node 8: Material 8 - wireframeFill: 2, backgroundFill: false, behind: false
+      const material8 = nodes[8].primitives[0].material;
+      expect(material8.planarFill).toBeDefined();
+      expect(material8.planarFill.wireframeFill).toBe(2);
+      expect(material8.planarFill.backgroundFill).toBe(false);
+      expect(material8.planarFill.behind).toBe(false);
+
+      // Node 12: Material 12 (NoExtension) - no extension
+      const material12 = nodes[12].primitives[0].material;
+      expect(material12.planarFill).toBeUndefined();
+
+      // Node 13: Material 13 (Backdrop) - only behind: false specified, defaults for rest
+      const material13 = nodes[13].primitives[0].material;
+      expect(material13.planarFill).toBeDefined();
+      expect(material13.planarFill.wireframeFill).toBe(0);
+      expect(material13.planarFill.backgroundFill).toBe(false);
+      expect(material13.planarFill.behind).toBe(false);
+    });
+
+    it("loads model with BENTLEY_materials_planar_fill extension with defaults", async function () {
+      function modifyGltf(gltf) {
+        // Set extension with empty object to test defaults
+        gltf.materials[0].extensions.BENTLEY_materials_planar_fill = {};
+        return gltf;
+      }
+
+      const gltfLoader = await loadModifiedGltfAndTest(
+        planarFillTestData,
+        undefined,
+        modifyGltf,
+      );
+
+      const material = gltfLoader.components.nodes[0].primitives[0].material;
+      expect(material.planarFill).toBeDefined();
+      expect(material.planarFill.wireframeFill).toBe(0);
+      expect(material.planarFill.backgroundFill).toBe(false);
+      expect(material.planarFill.behind).toBe(false);
+    });
+
+    it("loads model with EXT_textureInfo_constant_lod extension on base color texture", async function () {
+      const constantLodChecker =
+        "./Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_Checker.gltf";
+      const gltfLoader = await loadGltf(constantLodChecker);
+
+      const { material } = gltfLoader.components.nodes[0].primitives[0];
+      const { baseColorTexture } = material.metallicRoughness;
+
+      expect(baseColorTexture).toBeDefined();
+      expect(baseColorTexture.texture.width).toBe(512);
+      expect(baseColorTexture.constantLod).toBeDefined();
+      expect(baseColorTexture.constantLod.repetitions).toBe(3.0);
+      expect(baseColorTexture.constantLod.offset).toEqual(
+        new Cartesian2(0.5, 0.5),
+      );
+      expect(baseColorTexture.constantLod.minClampDistance).toBe(0.0);
+      expect(baseColorTexture.constantLod.maxClampDistance).toBe(100.0);
+    });
+
+    it("loads model with EXT_textureInfo_constant_lod extension on normal texture", async function () {
+      const constantLodNormalMap =
+        "./Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_NormalMap.gltf";
+      const gltfLoader = await loadGltf(constantLodNormalMap);
+
+      const { material } = gltfLoader.components.nodes[0].primitives[0];
+      const { baseColorTexture } = material.metallicRoughness;
+      const { normalTexture } = material;
+
+      expect(baseColorTexture).toBeDefined();
+      expect(baseColorTexture.constantLod).toBeDefined();
+      expect(baseColorTexture.constantLod.repetitions).toBe(3.0);
+      expect(baseColorTexture.constantLod.offset).toEqual(
+        new Cartesian2(0.5, 0.5),
+      );
+      expect(baseColorTexture.constantLod.minClampDistance).toBe(0.0);
+      expect(baseColorTexture.constantLod.maxClampDistance).toBe(100.0);
+
+      // Normal texture also has the extension and uses base color's properties
+      expect(normalTexture).toBeDefined();
+      expect(normalTexture.texture.width).toBe(256);
+      expect(normalTexture.constantLod).toBeDefined();
+      expect(normalTexture.constantLod.repetitions).toBe(3.0);
+      expect(normalTexture.constantLod.offset).toEqual(
+        new Cartesian2(0.5, 0.5),
+      );
+      expect(normalTexture.constantLod.minClampDistance).toBe(0.0);
+      expect(normalTexture.constantLod.maxClampDistance).toBe(100.0);
+    });
+
+    it("loads model with EXT_textureInfo_constant_lod extension on unsupported textures without crashing", async function () {
+      const constantLodEmissiveOcclusion =
+        "./Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_EmissiveOcclusion.gltf";
+      const gltfLoader = await loadGltf(constantLodEmissiveOcclusion);
+
+      const { material } = gltfLoader.components.nodes[0].primitives[0];
+
+      expect(material).toBeDefined();
+      expect(material.emissiveTexture).toBeDefined();
+      expect(material.occlusionTexture).toBeDefined();
+
+      expect(material.emissiveTexture.constantLod).toBeDefined();
+      expect(material.emissiveTexture.constantLod.repetitions).toBe(2.0);
+      expect(material.occlusionTexture.constantLod).toBeDefined();
+      expect(material.occlusionTexture.constantLod.repetitions).toBe(3.0);
+    });
+
+    it("loads model with BENTLEY_materials_point_style extension", async function () {
+      const gltfLoader = await loadGltf(pointStyleTestData);
+
+      // The test model has 4 primitives with different materials. Let's verify they all exist.
+      const primitives = gltfLoader.components.nodes[0].primitives;
+      expect(primitives.length).toBe(4);
+
+      // Check that pointDiameter was loaded correctly for each material. Each primitive has a different diameter.
+      expect(primitives[0].material.pointDiameter).toBe(5);
+      expect(primitives[1].material.pointDiameter).toBe(8);
+      expect(primitives[2].material.pointDiameter).toBe(14);
+      expect(primitives[3].material.pointDiameter).toBe(10);
+    });
+
+    it("ignores BENTLEY_materials_point_style with invalid negative diameter", async function () {
+      function modifyGltf(gltf) {
+        // Set an invalid negative diameter (diameters must be >0).
+        gltf.materials[0].extensions.BENTLEY_materials_point_style.diameter =
+          -5;
+        return gltf;
+      }
+
+      const gltfLoader = await loadModifiedGltfAndTest(
+        pointStyleTestData,
+        undefined,
+        modifyGltf,
+      );
+
+      // The invalid negative diameter should be ignored; property should be undefined once the glTF is loaded.
+      const material = gltfLoader.components.nodes[0].primitives[0].material;
+      expect(material.pointDiameter).toBeUndefined();
+    });
+
+    it("floors BENTLEY_materials_point_style with non-integer diameter", async function () {
+      function modifyGltf(gltf) {
+        // Set a non-integer diameter (spec requires integers, but we floor as a best effort).
+        gltf.materials[0].extensions.BENTLEY_materials_point_style.diameter = 5.5;
+        return gltf;
+      }
+
+      const gltfLoader = await loadModifiedGltfAndTest(
+        pointStyleTestData,
+        undefined,
+        modifyGltf,
+      );
+
+      // Non-integer diameter should be floored to the nearest integer.
+      const material = gltfLoader.components.nodes[0].primitives[0].material;
+      expect(material.pointDiameter).toBe(5);
+    });
+
     it("loads model with EXT_mesh_primitive_restart extension", async function () {
       const gltf = await Resource.fetchJson({
         url: meshPrimitiveRestartTestData,
@@ -4261,6 +4648,47 @@ describe(
       const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
 
       expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("loads model with KHR_mesh_primitive_restart extension", async function () {
+      const gltfLoader = await loadGltf(meshPrimitiveRestartKhrTestData, {
+        loadAttributesAsTypedArray: true,
+      });
+      const components = gltfLoader.components;
+      const primitives = components.nodes[0].primitives;
+
+      // Three line strips batched into a single LINE_STRIP primitive.
+      expect(primitives.length).toBe(1);
+      const primitive = primitives[0];
+      expect(primitive.primitiveType).toBe(PrimitiveType.LINE_STRIP);
+
+      // The inline 0xFFFF restart values must survive loading untouched.
+      const indices = primitive.indices;
+      expect(indices.count).toBe(9);
+      expect(indices.indexDatatype).toBe(IndexDatatype.UNSIGNED_SHORT);
+      expect(Array.from(indices.typedArray)).toEqual([
+        0, 1, 2, 0xffff, 3, 4, 0xffff, 5, 6,
+      ]);
+    });
+
+    it("loads model with KHR_mesh_primitive_restart extension and line styling", async function () {
+      const gltfLoader = await loadGltf(meshPrimitiveRestartKhrTestData);
+      const components = gltfLoader.components;
+      const primitive = components.nodes[0].primitives[0];
+
+      // Restart values reference no vertex, so they coexist with per-vertex
+      // line styling attributes such as CUMULATIVE_DISTANCE.
+      const cumulativeDistanceAttribute = getAttribute(
+        primitive.attributes,
+        VertexAttributeSemantic.CUMULATIVE_DISTANCE,
+      );
+      expect(cumulativeDistanceAttribute).toBeDefined();
+      expect(cumulativeDistanceAttribute.count).toBe(7);
+
+      const material = primitive.material;
+      expect(material.lineStyle).toBeDefined();
+      expect(material.lineStyle.width).toBe(3);
+      expect(material.lineStyle.pattern).toBe(61680); // 0xF0F0
     });
 
     it("loads model with EXT_mesh_primitive_edge_visibility extension", async function () {
@@ -4356,22 +4784,86 @@ describe(
       expect(edgeVisibility).toBeDefined();
       expect(edgeVisibility.silhouetteNormals).toBeDefined();
 
-      const silhouetteNormals = edgeVisibility.silhouetteNormals;
-      expect(silhouetteNormals.length).toBeGreaterThan(0);
+      // Loading these accessors as plain JS number arrays caused
+      // a large heap cost for edge-heavy tilesets. They must stay typed arrays.
+      expect(edgeVisibility.visibility instanceof Uint8Array).toBe(true);
 
-      for (let i = 0; i < silhouetteNormals.length; i++) {
-        const normal = silhouetteNormals[i];
-        expect(normal).toBeDefined();
-        expect(normal.x).toBeDefined();
-        expect(normal.y).toBeDefined();
-        expect(normal.z).toBeDefined();
-        expect(typeof normal.x).toBe("number");
-        expect(typeof normal.y).toBe("number");
-        expect(typeof normal.z).toBe("number");
-        expect(isNaN(normal.x)).toBe(false);
-        expect(isNaN(normal.y)).toBe(false);
-        expect(isNaN(normal.z)).toBe(false);
-      }
+      // Packed VEC3s, 3 components per normal
+      const silhouetteNormals = edgeVisibility.silhouetteNormals;
+      expect(silhouetteNormals instanceof Int8Array).toBe(true);
+      expect(silhouetteNormals.length).toBeGreaterThan(0);
+      expect(silhouetteNormals.length % 3).toBe(0);
+    });
+
+    it("loads edge visibility material color override", async function () {
+      const gltfLoader = await loadModifiedGlbAndTest(
+        edgeVisibilityMaterialTestData,
+        undefined,
+        function (gltf) {
+          const primitive = gltf.meshes[0].primitives[0];
+          const extension =
+            primitive.extensions.EXT_mesh_primitive_edge_visibility;
+          extension.material = 0;
+
+          const material = gltf.materials[0];
+          const pbr =
+            material.pbrMetallicRoughness ??
+            (material.pbrMetallicRoughness = {});
+          pbr.baseColorFactor = [0.2, 0.4, 0.6, 0.8];
+
+          return gltf;
+        },
+      );
+
+      const primitive = gltfLoader.components.scene.nodes[0].primitives[0];
+      const edgeVisibility = primitive.edgeVisibility;
+      expect(edgeVisibility).toBeDefined();
+      expect(edgeVisibility.materialColor).toEqualEpsilon(
+        new Cartesian4(0.2, 0.4, 0.6, 0.8),
+        CesiumMath.EPSILON7,
+      );
+    });
+
+    it("loads edge visibility line strings", async function () {
+      const gltfLoader = await loadModifiedGlbAndTest(
+        edgeVisibilityLineStringTestData,
+        undefined,
+        function (gltf) {
+          const primitive = gltf.meshes[0].primitives[0];
+          primitive.extensions = primitive.extensions ?? Object.create(null);
+          primitive.extensions.EXT_mesh_primitive_edge_visibility = {
+            lineStrings: [
+              {
+                indices: gltf.meshes[0].primitives[1].indices,
+                material: 0,
+              },
+            ],
+          };
+
+          const material = gltf.materials[0];
+          const pbr =
+            material.pbrMetallicRoughness ??
+            (material.pbrMetallicRoughness = {});
+          pbr.baseColorFactor = [1.0, 0.5, 0.0, 1.0];
+
+          return gltf;
+        },
+      );
+
+      const primitive = gltfLoader.components.scene.nodes[0].primitives[0];
+      const edgeVisibility = primitive.edgeVisibility;
+      expect(edgeVisibility).toBeDefined();
+      expect(edgeVisibility.lineStrings).toBeDefined();
+
+      const lineStrings = edgeVisibility.lineStrings;
+      expect(lineStrings.length).toBe(1);
+      expect(ArrayBuffer.isView(lineStrings[0].indices)).toBe(true);
+      expect(lineStrings[0].indices.length).toBeGreaterThan(0);
+      expect(lineStrings[0].restartIndex).toBeDefined();
+      expect(lineStrings[0].materialColor).toEqualEpsilon(
+        new Cartesian4(1.0, 0.5, 0.0, 1.0),
+        CesiumMath.EPSILON7,
+      );
     });
 
     it("validates edge visibility data loading", async function () {
@@ -4387,6 +4879,37 @@ describe(
           primitive.edgeVisibility.silhouetteNormals.length,
         ).toBeGreaterThanOrEqual(0);
       }
+    });
+
+    it("loads BENTLEY_materials_line_style extension", async function () {
+      const gltfLoader = await loadGltf(styledLines);
+      const components = gltfLoader.components;
+      const node = components.scene.nodes[0];
+      const primitive = node.primitives[0];
+      const material = primitive.material;
+
+      expect(material).toBeDefined();
+      expect(material.lineStyle).toBeDefined();
+      expect(material.lineStyle.width).toBe(5);
+      expect(material.lineStyle.pattern).toBe(61680); // 0xF0F0
+    });
+
+    it("loads BENTLEY_materials_line_style with edge visibility", async function () {
+      const gltfLoader = await loadGltf(styledLines);
+      const components = gltfLoader.components;
+      const node = components.scene.nodes[0];
+      const primitive = node.primitives[0];
+
+      // Verify edge visibility data is present
+      expect(primitive.edgeVisibility).toBeDefined();
+      expect(primitive.edgeVisibility.visibility).toBeDefined();
+      expect(primitive.edgeVisibility.silhouetteNormals).toBeDefined();
+
+      // Verify material line style properties
+      const material = primitive.material;
+      expect(material.lineStyle).toBeDefined();
+      expect(material.lineStyle.width).toBe(5);
+      expect(material.lineStyle.pattern).toBe(61680); // 0xF0F0
     });
 
     it("parses copyright field", function () {

@@ -1,11 +1,13 @@
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
+import {
+  AttributeType,
+  ComponentDatatype,
+  DeveloperError,
+  PrimitiveType,
+  defined,
+} from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import GeometryStageFS from "../../Shaders/Model/GeometryStageFS.js";
 import GeometryStageVS from "../../Shaders/Model/GeometryStageVS.js";
-import AttributeType from "../AttributeType.js";
 import SceneMode from "../SceneMode.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";
@@ -174,6 +176,14 @@ GeometryPipelineStage.process = function (
       index = renderResources.attributeIndex++;
     }
 
+    // Use flat interpolation for point primitive vertex attributes (only supported in WebGL 2)
+    const interpolationQualifier =
+      !isPositionAttribute &&
+      primitive.primitiveType === PrimitiveType.POINTS &&
+      frameState.context.webgl2
+        ? "flat"
+        : undefined;
+
     processAttribute(
       renderResources,
       attribute,
@@ -181,6 +191,7 @@ GeometryPipelineStage.process = function (
       attributeLocationCount,
       use2D,
       instanced,
+      interpolationQualifier,
     );
   }
 
@@ -201,6 +212,7 @@ function processAttribute(
   attributeLocationCount,
   use2D,
   instanced,
+  interpolationQualifier,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const attributeInfo = ModelUtility.getAttributeInfo(attribute);
@@ -227,7 +239,7 @@ function processAttribute(
   }
 
   addAttributeDeclaration(shaderBuilder, attributeInfo, modifyFor2D);
-  addVaryingDeclaration(shaderBuilder, attributeInfo);
+  addVaryingDeclaration(shaderBuilder, attributeInfo, interpolationQualifier);
 
   // For common attributes like normals and tangents, the code is
   // already in GeometryStageVS, we just need to enable it.
@@ -363,7 +375,11 @@ function addMatrixAttributeToRenderResources(
   }
 }
 
-function addVaryingDeclaration(shaderBuilder, attributeInfo) {
+function addVaryingDeclaration(
+  shaderBuilder,
+  attributeInfo,
+  interpolationQualifier,
+) {
   const variableName = attributeInfo.variableName;
   let varyingName = `v_${variableName}`;
 
@@ -383,7 +399,7 @@ function addVaryingDeclaration(shaderBuilder, attributeInfo) {
     glslType = attributeInfo.glslType;
   }
 
-  shaderBuilder.addVarying(glslType, varyingName);
+  shaderBuilder.addVarying(glslType, varyingName, interpolationQualifier);
 }
 
 function addAttributeDeclaration(shaderBuilder, attributeInfo, modifyFor2D) {

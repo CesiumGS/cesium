@@ -1,14 +1,16 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Check from "../Core/Check.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import CesiumMath from "../Core/Math.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Check,
+  Frozen,
+  Math as CesiumMath,
+  PixelFormat,
+  RuntimeError,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import TexturePacker from "../Core/TexturePacker.js";
 import Framebuffer from "./Framebuffer.js";
 import Texture from "./Texture.js";
@@ -364,26 +366,17 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
     toPack.push(queue[i]);
   }
 
-  // At minimum, the texture will need to scale to accommodate the largest width and height
-  width = Math.max(maxWidth, width);
-  height = Math.max(maxHeight, height);
+  // At minimum, atlas must fit its largest input images. Texture coordinates are
+  // compressed to 0–1 with 12-bit precision, so use power-of-two size to align pixels.
+  width = CesiumMath.nextPowerOfTwo(Math.max(maxWidth, width));
+  height = CesiumMath.nextPowerOfTwo(Math.max(maxHeight, height));
 
-  if (!context.webgl2) {
-    width = CesiumMath.nextPowerOfTwo(width);
-    height = CesiumMath.nextPowerOfTwo(height);
-  }
-
-  // Determine by what factor the texture need to be scaled by at minimum
-  const areaDifference = areaQueued;
-  let scalingFactor = 1.0;
-  while (areaDifference / width / height >= 1.0) {
-    scalingFactor *= 2.0;
-
-    // Resize by one dimension
+  // Iteratively double the smallest dimension until atlas area is (approximately) sufficient.
+  while (areaQueued >= width * height) {
     if (width > height) {
-      height *= scalingFactor;
+      height *= 2;
     } else {
-      width *= scalingFactor;
+      width *= 2;
     }
   }
 
@@ -657,7 +650,7 @@ function getImage(image, id) {
  *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
  * @param {number} width A number specifying the width of the texture. If undefined, the image width will be used.
  * @param {number} height A number specifying the height of the texture. If undefined, the image height will be used.
- * @returns {Promise<number>} A Promise that resolves to the image region index, or -1 if resources are in the process of being destroyed.
+ * @returns {Promise<number> | number} The image region index or a promise that resolves to it. -1 is returned if resources are in the process of being destroyed.
  */
 TextureAtlas.prototype.addImage = function (id, image, width, height) {
   //>>includeStart('debug', pragmas.debug);
@@ -673,7 +666,7 @@ TextureAtlas.prototype.addImage = function (id, image, width, height) {
   }
   if (defined(index)) {
     // This image has already been added and resolved
-    return Promise.resolve(index);
+    return index;
   }
 
   index = this._nextIndex++;

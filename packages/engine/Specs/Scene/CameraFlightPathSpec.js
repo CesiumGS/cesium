@@ -3,13 +3,10 @@ import {
   Cartographic,
   Ellipsoid,
   GeographicProjection,
-  Globe,
   Math as CesiumMath,
   OrthographicOffCenterFrustum,
-  CameraFlightPath,
-  SceneMode,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { Globe, CameraFlightPath, SceneMode } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

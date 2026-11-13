@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 
 // ImprovedNoise from Three.js
@@ -293,9 +295,6 @@ const vertexShader = /* glsl */ `
       }`;
 
 const fragmentShader = /* glsl */ `
-      precision highp float;
-      precision highp sampler3D;
-
       in vec3 vOrigin;
       in vec3 vDirection;
 

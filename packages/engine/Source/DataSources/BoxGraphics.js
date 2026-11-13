@@ -1,7 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import { DeveloperError, Event, Frozen, defined } from "@cesium/core";
 import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
@@ -31,7 +28,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @param {BoxGraphics.ConstructorOptions} [options] Object describing initialization options
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Box.html|Cesium Sandcastle Box Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=box|Cesium Sandcastle Box Demo}
  */
 function BoxGraphics(options) {
   this._definitionChanged = new Event();

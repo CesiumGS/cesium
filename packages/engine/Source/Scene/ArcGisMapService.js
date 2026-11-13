@@ -1,10 +1,10 @@
+import { defined } from "@cesium/core";
 import Credit from "../Core/Credit.js";
-import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
 
 let defaultTokenCredit;
 const defaultAccessToken =
-  "AAPTxy8BH1VEsoebNVZXo8HurEOF051kAEKlhkOhBEc9BmTlKbWoQXtdb-m2VclxMHo8eEPu_iyh95DPKVzeyNrKkb2zc_ICfJxY7tPEl4aVdWCyU_P18q9k6D26yO7pAVtbr3I-gxRJb412PB_FydyuNKYsVRiVLqJGaYOCYhJeY3Tv8USWG4TQVu6i2mMZ8CBE68HAd3DByIRkBcjQRnker5_UyWjO86QZxpbnykaqDtY.AT1_zMTIWhVd";
+  "AAPTaoA7NiSvx84aoJcprWzHHmw..xIe_hcNkysDZUTfjNd9pp5iQxR9iRRn8Lft4KJdstDjimT07VrmT7uYXlMcczLTIkR5DfMP7arSNR2zvpthW8IwvHV2n6qksONukoZztRqk3MXFC2wZmcRAiEAMBCaNBLAKtkAgDqjRpgrGJaQ6jESIkNECgrFFynaiaoikNidyVw6SXJ1mkbbf0ndwJqoh0RRCg82QicoGupO6h6CTX0RLcwfwdxwwPLFNKBL5EoZvfsQzm0HmYziVaAT1_s3VB5Xnn";
 /**
  * Default options for accessing the ArcGIS image tile service.
  *

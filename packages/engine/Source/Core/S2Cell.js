@@ -1,11 +1,12 @@
-import Cartesian3 from "./Cartesian3.js";
-import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import Ellipsoid from "./Ellipsoid.js";
-import FeatureDetection from "./FeatureDetection.js";
-import RuntimeError from "./RuntimeError.js";
+import {
+  Cartesian3,
+  Cartographic,
+  Check,
+  DeveloperError,
+  Ellipsoid,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 
 /**
  * S2
@@ -156,8 +157,8 @@ const S2_POSITION_TO_ORIENTATION_MASK = [
  * @private
  */
 function S2Cell(cellId) {
-  if (!FeatureDetection.supportsBigInt()) {
-    throw new RuntimeError("S2 required BigInt support");
+  if (typeof BigInt === "undefined") {
+    throw new RuntimeError("S2 requires BigInt support");
   }
   //>>includeStart('debug', pragmas.debug);
   if (!defined(cellId)) {
@@ -376,7 +377,7 @@ S2Cell.prototype.getCenter = function (ellipsoid) {
   let center = getS2Center(this._cellId, this._level);
   // Normalize XYZ.
   center = Cartesian3.normalize(center, center);
-  const cartographic = new Cartographic.fromCartesian(
+  const cartographic = Cartographic.fromCartesian(
     center,
     Ellipsoid.UNIT_SPHERE,
   );
@@ -405,7 +406,7 @@ S2Cell.prototype.getVertex = function (index, ellipsoid) {
   let vertex = getS2Vertex(this._cellId, this._level, index);
   // Normalize XYZ.
   vertex = Cartesian3.normalize(vertex, vertex);
-  const cartographic = new Cartographic.fromCartesian(
+  const cartographic = Cartographic.fromCartesian(
     vertex,
     Ellipsoid.UNIT_SPHERE,
   );

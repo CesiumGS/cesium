@@ -5,22 +5,24 @@ import {
   Color,
   ColorGeometryInstanceAttribute,
   ComponentDatatype,
-  defined,
-  EllipsoidTerrainProvider,
+  FixedFrameTransforms,
   GeometryInstance,
   HeadingPitchRange,
   HeadingPitchRoll,
-  HeightmapTerrainData,
   JulianDate,
   Math as CesiumMath,
   Matrix4,
   OrthographicOffCenterFrustum,
+  PixelDatatype,
   PixelFormat,
-  Transforms,
   WebGLConstants,
+  defined,
+} from "@cesium/core";
+import {
+  EllipsoidTerrainProvider,
+  HeightmapTerrainData,
   Context,
   Framebuffer,
-  PixelDatatype,
   Texture,
   Camera,
   DirectionalLight,
@@ -31,7 +33,6 @@ import {
   ShadowMap,
   ShadowMode,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -81,12 +82,8 @@ describe(
 
       sunShadowMap = scene.shadowMap;
 
-      const boxOrigin = new Cartesian3.fromRadians(
-        longitude,
-        latitude,
-        boxHeight,
-      );
-      const boxTransform = Transforms.headingPitchRollToFixedFrame(
+      const boxOrigin = Cartesian3.fromRadians(longitude, latitude, boxHeight);
+      const boxTransform = FixedFrameTransforms.headingPitchRollToFixedFrame(
         boxOrigin,
         new HeadingPitchRoll(),
       );
@@ -96,22 +93,18 @@ describe(
       const boxTransformNoNormals = new Matrix4();
       Matrix4.setScale(boxTransform, boxScaleCartesian, boxTransformNoNormals);
 
-      const floorOrigin = new Cartesian3.fromRadians(
+      const floorOrigin = Cartesian3.fromRadians(
         longitude,
         latitude,
         floorHeight,
       );
-      const floorTransform = Transforms.headingPitchRollToFixedFrame(
+      const floorTransform = FixedFrameTransforms.headingPitchRollToFixedFrame(
         floorOrigin,
         new HeadingPitchRoll(),
       );
 
-      const roomOrigin = new Cartesian3.fromRadians(
-        longitude,
-        latitude,
-        height,
-      );
-      const roomTransform = Transforms.headingPitchRollToFixedFrame(
+      const roomOrigin = Cartesian3.fromRadians(longitude, latitude, height);
+      const roomTransform = FixedFrameTransforms.headingPitchRollToFixedFrame(
         roomOrigin,
         new HeadingPitchRoll(),
       );
@@ -332,7 +325,7 @@ describe(
     });
 
     function createCascadedShadowMap() {
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -349,7 +342,7 @@ describe(
     }
 
     function createSingleCascadeShadowMap() {
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -367,7 +360,7 @@ describe(
     }
 
     function createShadowMapForDirectionalLight() {
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -394,7 +387,7 @@ describe(
     }
 
     function createShadowMapForSpotLight() {
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -415,7 +408,7 @@ describe(
     }
 
     function createShadowMapForPointLight() {
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -629,7 +622,7 @@ describe(
       scene.globe = new Globe();
       scene.camera.frustum._sseDenominator = 0.01;
 
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -693,7 +686,7 @@ describe(
       box.show = true;
       floor.show = true;
 
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -730,7 +723,7 @@ describe(
       const startTime = new JulianDate(2457561.211806); // Sun pointing straight above
       const endTime = new JulianDate(2457561.276389); // Sun at an angle
 
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-90.0), 2.0),
@@ -798,7 +791,7 @@ describe(
         -0.3976628636840613,
       ); // Light at an angle
 
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-90.0), 2.0),
@@ -908,10 +901,11 @@ describe(
       ];
 
       for (let i = 0; i < 6; ++i) {
-        boxPointLights.modelMatrix = Transforms.headingPitchRollToFixedFrame(
-          origins[i],
-          new HeadingPitchRoll(),
-        );
+        boxPointLights.modelMatrix =
+          FixedFrameTransforms.headingPitchRollToFixedFrame(
+            origins[i],
+            new HeadingPitchRoll(),
+          );
         scene.render(); // Model is pre-loaded, render one frame to update the model matrix
 
         scene.camera.lookAt(origins[i], offsets[i]);
@@ -1030,7 +1024,7 @@ describe(
       box.show = true;
       floor.show = true;
 
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -1148,7 +1142,7 @@ describe(
         expect(scene.shadowMap.outOfView).toBe(false);
       });
 
-      const center = new Cartesian3.fromRadians(longitude, latitude, 200000);
+      const center = Cartesian3.fromRadians(longitude, latitude, 200000);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -1163,7 +1157,7 @@ describe(
       box.show = true;
       floor.show = true;
 
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -1285,7 +1279,6 @@ describe(
 
       // Render with shadows
       scene.shadowMap.enabled = true;
-      let shadowedColor;
       renderAndCall(function (rgba) {
         expect(rgba).not.toEqual(backgroundColor);
         expect(rgba).not.toEqual(unshadowedColor);
@@ -1296,7 +1289,6 @@ describe(
       renderAndCall(function (rgba) {
         expect(rgba).not.toEqual(backgroundColor);
         expect(rgba).not.toEqual(unshadowedColor);
-        expect(rgba).not.toEqual(shadowedColor);
       });
 
       // Set a maximimum distance where the shadows are not visible

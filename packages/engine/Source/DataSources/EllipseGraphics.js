@@ -1,7 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import { DeveloperError, Event, Frozen, defined } from "@cesium/core";
 import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
@@ -43,7 +40,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @param {EllipseGraphics.ConstructorOptions} [options] Object describing initialization options
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=circles-and-ellipses|Cesium Sandcastle Circles and Ellipses Demo}
  */
 function EllipseGraphics(options) {
   this._definitionChanged = new Event();

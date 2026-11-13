@@ -1,18 +1,21 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Color,
+  DeveloperError,
+  Ellipsoid,
+  Event,
+  IntersectionTests,
+  Math as CesiumMath,
+  NearFarScalar,
+  Ray,
+  Rectangle,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidTerrainProvider from "../Core/EllipsoidTerrainProvider.js";
-import Event from "../Core/Event.js";
-import IntersectionTests from "../Core/IntersectionTests.js";
-import NearFarScalar from "../Core/NearFarScalar.js";
-import Ray from "../Core/Ray.js";
-import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import Texture from "../Renderer/Texture.js";
@@ -27,7 +30,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
 import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
-import CesiumMath from "../Core/Math.js";
+import VectorProvider from "../Core/VectorProvider.js";
 
 /**
  * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
@@ -45,6 +48,9 @@ function Globe(ellipsoid) {
     ellipsoid: ellipsoid,
   });
   const imageryLayerCollection = new ImageryLayerCollection();
+  const vectorProvider = new VectorProvider({
+    tilingScheme: terrainProvider.tilingScheme,
+  });
 
   this._ellipsoid = ellipsoid;
   this._imageryLayerCollection = imageryLayerCollection;
@@ -57,11 +63,14 @@ function Globe(ellipsoid) {
       terrainProvider: terrainProvider,
       imageryLayers: imageryLayerCollection,
       surfaceShaderSet: this._surfaceShaderSet,
+      vectorProvider,
     }),
   });
 
   this._terrainProvider = terrainProvider;
   this._terrainProviderChanged = new Event();
+
+  this._vectorProvider = vectorProvider;
 
   this._undergroundColor = Color.clone(Color.BLACK);
   this._undergroundColorAlphaByDistance = new NearFarScalar(
@@ -515,6 +524,9 @@ Object.defineProperties(Globe.prototype, {
     set: function (value) {
       if (value !== this._terrainProvider) {
         this._terrainProvider = value;
+        if (defined(value)) {
+          this._vectorProvider.tilingScheme = value.tilingScheme;
+        }
         this._terrainProviderChanged.raiseEvent(value);
         if (defined(this._material)) {
           makeShadersDirty(this);
@@ -532,6 +544,16 @@ Object.defineProperties(Globe.prototype, {
   terrainProviderChanged: {
     get: function () {
       return this._terrainProviderChanged;
+    },
+  },
+  /**
+   * @memberof Globe.prototype
+   * @type {VectorProvider}
+   * @ignore
+   */
+  vectorProvider: {
+    get: function () {
+      return this._vectorProvider;
     },
   },
   /**
@@ -723,14 +745,7 @@ Globe.prototype.pickWorldCoordinates = function (
   const sphereIntersections = scratchArray;
   sphereIntersections.length = 0;
 
-  const tilesToRender = this._surface._tilesToRender;
-  let length = tilesToRender.length;
-
-  let tile;
-  let i;
-
-  for (i = 0; i < length; ++i) {
-    tile = tilesToRender[i];
+  for (const tile of this._surface._tilesRenderedThisFrame) {
     const surfaceTile = tile.data;
 
     if (!defined(surfaceTile)) {
@@ -776,8 +791,8 @@ Globe.prototype.pickWorldCoordinates = function (
   sphereIntersections.sort(createComparePickTileFunction(ray.origin));
 
   let intersection;
-  length = sphereIntersections.length;
-  for (i = 0; i < length; ++i) {
+  const length = sphereIntersections.length;
+  for (let i = 0; i < length; ++i) {
     intersection = sphereIntersections[i].pick(
       ray,
       scene.mode,

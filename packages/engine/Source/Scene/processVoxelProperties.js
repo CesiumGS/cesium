@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core";
 import MetadataType from "./MetadataType.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
 
@@ -294,7 +294,7 @@ function processVoxelProperties(renderResources, primitive) {
     const functionId = "getPropertiesFromMegatextureAtUv";
     shaderBuilder.addFunction(
       functionId,
-      `${propertiesStructName} getPropertiesFromMegatextureAtUv(vec2 texcoord)`,
+      `${propertiesStructName} getPropertiesFromMegatextureAtUv(vec3 texcoord)`,
       ShaderDestination.FRAGMENT,
     );
     shaderBuilder.addFunctionLines(functionId, [

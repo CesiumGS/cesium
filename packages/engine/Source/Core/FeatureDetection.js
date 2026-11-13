@@ -1,6 +1,4 @@
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { Check, DeveloperError, defined } from "@cesium/core";
 import Fullscreen from "./Fullscreen.js";
 
 let theNavigator;
@@ -86,36 +84,6 @@ function isWebkit() {
 
 function webkitVersion() {
   return isWebkit() && webkitVersionResult;
-}
-
-let isInternetExplorerResult;
-let internetExplorerVersionResult;
-function isInternetExplorer() {
-  if (!defined(isInternetExplorerResult)) {
-    isInternetExplorerResult = false;
-
-    let fields;
-    if (theNavigator.appName === "Microsoft Internet Explorer") {
-      fields = /MSIE ([0-9]{1,}[\.0-9]{0,})/.exec(theNavigator.userAgent);
-      if (fields !== null) {
-        isInternetExplorerResult = true;
-        internetExplorerVersionResult = extractVersion(fields[1]);
-      }
-    } else if (theNavigator.appName === "Netscape") {
-      fields = /Trident\/.*rv:([0-9]{1,}[\.0-9]{0,})/.exec(
-        theNavigator.userAgent,
-      );
-      if (fields !== null) {
-        isInternetExplorerResult = true;
-        internetExplorerVersionResult = extractVersion(fields[1]);
-      }
-    }
-  }
-  return isInternetExplorerResult;
-}
-
-function internetExplorerVersion() {
-  return isInternetExplorer() && internetExplorerVersionResult;
 }
 
 let isEdgeResult;
@@ -303,8 +271,7 @@ const FeatureDetection = {
   safariVersion: safariVersion,
   isWebkit: isWebkit,
   webkitVersion: webkitVersion,
-  isInternetExplorer: isInternetExplorer,
-  internetExplorerVersion: internetExplorerVersion,
+
   isEdge: isEdge,
   edgeVersion: edgeVersion,
   isFirefox: isFirefox,

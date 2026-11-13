@@ -1,6 +1,4 @@
-import AttributeType from "../AttributeType.js";
-import combine from "../../Core/combine.js";
-import defined from "../../Core/defined.js";
+import { AttributeType, combine, defined } from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import MorphTargetsStageVS from "../../Shaders/Model/MorphTargetsStageVS.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";

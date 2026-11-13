@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * A tonemapping algorithm when rendering with high dynamic range.
  *
@@ -61,4 +63,6 @@ export function validateTonemapper(tonemapper) {
   );
 }
 
-export default Object.freeze(Tonemapper);
+Object.freeze(Tonemapper);
+
+export default Tonemapper;

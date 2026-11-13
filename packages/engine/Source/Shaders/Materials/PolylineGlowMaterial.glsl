@@ -15,7 +15,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 
     vec4 fragColor;
     fragColor.rgb = max(vec3(glow - 1.0 + color.rgb), color.rgb);
-    fragColor.a = clamp(0.0, 1.0, glow) * color.a;
+    fragColor.a = clamp(glow, 0.0, 1.0) * color.a;
     fragColor = czm_gammaCorrect(fragColor);
 
     material.emission = fragColor.rgb;

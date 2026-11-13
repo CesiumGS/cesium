@@ -1,9 +1,11 @@
 import {
   Cartesian3,
-  Cesium3DTilesVoxelProvider,
   Ellipsoid,
   Math as CesiumMath,
   Matrix4,
+} from "@cesium/core";
+import {
+  Cesium3DTilesVoxelProvider,
   MetadataComponentType,
   MetadataType,
   ResourceCache,

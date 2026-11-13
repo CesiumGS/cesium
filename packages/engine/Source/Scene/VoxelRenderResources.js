@@ -1,6 +1,4 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import combine from "../Core/combine.js";
-import defined from "../Core/defined.js";
+import { Cartesian3, combine, defined } from "@cesium/core";
 import ShaderBuilder from "../Renderer/ShaderBuilder.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
 import VoxelUtils from "../Shaders/Voxels/VoxelUtils.js";
@@ -62,7 +60,7 @@ function VoxelRenderResources(primitive) {
   // The reason this uniform is added by shader builder is because some of the
   // dynamically generated shader code reads from it.
   shaderBuilder.addUniform(
-    "sampler2D",
+    "sampler3D",
     "u_megatextureTextures[METADATA_COUNT]",
     ShaderDestination.FRAGMENT,
   );
@@ -237,13 +235,6 @@ function VoxelRenderResources(primitive) {
   if (primitive._useLogDepth) {
     shaderBuilder.addDefine(
       "LOG_DEPTH_READ_ONLY",
-      undefined,
-      ShaderDestination.FRAGMENT,
-    );
-  }
-  if (primitive._nearestSampling) {
-    shaderBuilder.addDefine(
-      "NEAREST_SAMPLING",
       undefined,
       ShaderDestination.FRAGMENT,
     );

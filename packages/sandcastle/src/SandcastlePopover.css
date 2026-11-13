@@ -7,7 +7,7 @@
   border-radius: var(--stratakit-ext-radius-lg);
   --popover-background-color: var(--stratakit-color-bg-elevation-base);
   --popover-border-color: var(--stratakit-color-border-neutral-base);
-  /* This should match the --stratakit-shadow-dropdown-base value but with the inset part
+  /* This should match the --stratakit-shadow-control-dropdown-base value but with the inset part
   * removed to avoid a border over the arrow. A border color is added instead */
   --popover-shadow:
     0px 1px 0px 0px oklch(0% none none/.08),

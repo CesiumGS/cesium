@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 import Sandcastle from "Sandcastle";
 
@@ -400,7 +402,7 @@ Sandcastle.addToolbarMenu([
         -2.9438010410026854e-9,
         0.9999999999165953,
       );
-      camera.right = new Cesium.Cartesian3.cross(
+      camera.right = Cesium.Cartesian3.cross(
         camera.direction,
         camera.up,
         camera.right,
@@ -452,7 +454,7 @@ Sandcastle.addToolbarMenu([
         -2.9438010410026854e-9,
         0.9999999999165953,
       );
-      camera.right = new Cesium.Cartesian3.cross(
+      camera.right = Cesium.Cartesian3.cross(
         camera.direction,
         camera.up,
         camera.right,

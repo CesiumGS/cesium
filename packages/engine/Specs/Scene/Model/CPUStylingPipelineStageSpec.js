@@ -1,6 +1,5 @@
+import { Color, clone } from "@cesium/core";
 import {
-  clone,
-  Color,
   ColorBlendMode,
   CPUStylingPipelineStage,
   ModelAlphaOptions,

@@ -1,17 +1,19 @@
 import {
-  CesiumTerrainProvider,
-  defined,
   Ellipsoid,
-  GeographicTilingScheme,
+  Math as CesiumMath,
+  RuntimeError,
+  defined,
   getAbsoluteUri,
+} from "@cesium/core";
+import {
+  CesiumTerrainProvider,
+  GeographicTilingScheme,
   HeightmapTerrainData,
   IonResource,
-  Math as CesiumMath,
   QuantizedMeshTerrainData,
   Request,
   RequestScheduler,
   Resource,
-  RuntimeError,
   TerrainProvider,
 } from "../../index.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -161,7 +163,7 @@ describe("Core/CesiumTerrainProvider", function () {
     expect(provider.hasVertexNormals).toBe(false);
   });
 
-  it("requests parent layer.json", async function () {
+  it("requests parent layer json", async function () {
     const provider = await CesiumTerrainProvider.fromUrl(
       "Data/CesiumTerrainTileJson/QuantizedMeshWithParentUrl/ChildTileset",
       {
@@ -252,7 +254,7 @@ describe("Core/CesiumTerrainProvider", function () {
     );
   });
 
-  it("fromUrl uses attribution specified in layer.json", async function () {
+  it("fromUrl uses attribution specified in layer json", async function () {
     const provider = await CesiumTerrainProvider.fromUrl(
       "Data/CesiumTerrainTileJson/HeightmapWithAttribution",
     );
@@ -360,7 +362,7 @@ describe("Core/CesiumTerrainProvider", function () {
       }
     }
 
-    it("uses multiple urls specified in layer.json", async function () {
+    it("uses multiple urls specified in layer json", async function () {
       const layerJsonResource = new Resource({
         url: "Data/CesiumTerrainTileJson/MultipleUrls",
       });

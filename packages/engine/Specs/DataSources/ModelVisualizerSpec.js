@@ -2,16 +2,19 @@ import {
   BoundingSphere,
   Cartesian2,
   Cartesian3,
+  Cartographic,
   Color,
-  defined,
   DistanceDisplayCondition,
-  HeightReference,
+  FixedFrameTransforms,
   JulianDate,
   Math as CesiumMath,
   Matrix4,
   Quaternion,
+  defined,
+} from "@cesium/core";
+import {
+  HeightReference,
   Resource,
-  Transforms,
   BoundingSphereState,
   Cesium3DTileset,
   ConstantPositionProperty,
@@ -24,7 +27,6 @@ import {
   ClippingPlaneCollection,
   CustomShader,
   Globe,
-  Cartographic,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -167,7 +169,7 @@ describe(
       expect(primitive.scale).toEqual(2);
       expect(primitive.minimumPixelSize).toEqual(24.0);
       expect(primitive.modelMatrix).toEqual(
-        Transforms.eastNorthUpToFixedFrame(
+        FixedFrameTransforms.eastNorthUpToFixedFrame(
           Cartesian3.fromDegrees(1, 2, 3),
           scene.globe.ellipsoid,
         ),

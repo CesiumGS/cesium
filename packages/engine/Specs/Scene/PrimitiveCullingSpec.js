@@ -2,13 +2,15 @@ import {
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
+  FixedFrameTransforms,
   GeometryInstance,
   Math as CesiumMath,
   PerspectiveFrustum,
   Rectangle,
   RectangleGeometry,
+} from "@cesium/core";
+import {
   Resource,
-  Transforms,
   BillboardCollection,
   Globe,
   HorizontalOrigin,
@@ -20,7 +22,6 @@ import {
   SceneMode,
   VerticalOrigin,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -164,7 +165,7 @@ describe(
       height = height ?? 0;
       const labels = new LabelCollection();
       const center = Cartesian3.fromDegrees(-96.5, 33.5, height);
-      labels.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+      labels.modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(center);
       labels.add({
         position: Cartesian3.ZERO,
         text: "X",

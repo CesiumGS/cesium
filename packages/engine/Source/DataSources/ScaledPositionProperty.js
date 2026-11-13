@@ -1,9 +1,11 @@
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
-import ReferenceFrame from "../Core/ReferenceFrame.js";
+import {
+  DeveloperError,
+  Ellipsoid,
+  Event,
+  JulianDate,
+  ReferenceFrame,
+  defined,
+} from "@cesium/core";
 import Property from "./Property.js";
 
 /**

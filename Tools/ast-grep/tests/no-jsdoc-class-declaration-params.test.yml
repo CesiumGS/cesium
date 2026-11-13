@@ -1,0 +1,32 @@
+id: no-jsdoc-class-declaration-params
+valid:
+  - >
+    /**
+     * Constructor description.
+     * @param {string} a
+     * @param {string} b
+     */
+    function MyClass (a, b) {}
+  - >
+    /**
+     * Class description.
+     */
+    class MyClass () {
+      /**
+       * Constructor description.
+       * @param {string} a
+       * @param {string} b
+       */
+      constructor(a, b) {}
+    }
+invalid:
+  - >
+    /**
+     * Class description.
+     * @param {string} a
+     * @param {string} b
+     */
+    class MyClass () {
+      /** Constructor description. */
+      constructor(a, b) {}
+    }

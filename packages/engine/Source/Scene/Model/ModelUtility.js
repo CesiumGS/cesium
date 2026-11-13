@@ -1,14 +1,18 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
-import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Quaternion from "../../Core/Quaternion.js";
-import RuntimeError from "../../Core/RuntimeError.js";
+import {
+  AttributeType,
+  Cartesian3,
+  Matrix3,
+  Matrix4,
+  PrimitiveType,
+  Quaternion,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import Axis from "../Axis.js";
-import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import CullFace from "../CullFace.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
-import Matrix3 from "../../Core/Matrix3.js";
+
+/** @import {Attribute} from "../ModelComponents.js"; */
 
 /**
  * Utility functions for {@link Model}.
@@ -69,7 +73,7 @@ ModelUtility.getNodeTransform = function (node) {
  * @param {ModelComponents.Primitive|ModelComponents.Instances} object The primitive components or instances object
  * @param {VertexAttributeSemantic|InstanceAttributeSemantic} semantic The semantic to search for
  * @param {number} [setIndex] The set index of the semantic. May be undefined for some semantics (POSITION, NORMAL, TRANSLATION, ROTATION, for example)
- * @return {ModelComponents.Attribute} The selected attribute, or undefined if not found.
+ * @return {Attribute} The selected attribute, or undefined if not found.
  *
  * @private
  */
@@ -341,8 +345,10 @@ ModelUtility.sanitizeGlslIdentifier = function (identifier) {
   return sanitizedIdentifier;
 };
 
+// Keep the list of supported extensions in the Model.js class docstring in sync with this object.
 ModelUtility.supportedExtensions = {
   AGI_articulations: true,
+  CESIUM_mesh_vector: true,
   CESIUM_primitive_outline: true,
   CESIUM_RTC: true,
   EXT_feature_metadata: true,
@@ -351,10 +357,13 @@ ModelUtility.supportedExtensions = {
   EXT_instance_features: true,
   EXT_mesh_features: true,
   EXT_mesh_gpu_instancing: true,
+  EXT_mesh_polygon: true,
+  EXT_mesh_primitive_edge_visibility: true,
   EXT_meshopt_compression: true,
   EXT_primitive_voxels: true,
   EXT_structural_metadata: true,
   EXT_texture_webp: true,
+  EXT_voxels: true,
   KHR_blend: true,
   KHR_draco_mesh_compression: true,
   KHR_implicit_shapes: true,
@@ -363,8 +372,11 @@ ModelUtility.supportedExtensions = {
   KHR_materials_specular: true,
   KHR_materials_anisotropy: true,
   KHR_materials_clearcoat: true,
+  KHR_materials_emissive_strength: true,
   KHR_materials_unlit: true,
   KHR_mesh_quantization: true,
+  KHR_mesh_primitive_restart: true,
+  KHR_meshopt_compression: true,
   KHR_techniques_webgl: true,
   KHR_texture_basisu: true,
   KHR_texture_transform: true,

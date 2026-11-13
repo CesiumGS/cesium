@@ -1,6 +1,4 @@
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import Frozen from "../Core/Frozen.js";
+import { Check, Frozen, clone } from "@cesium/core";
 import MetadataEnumValue from "./MetadataEnumValue.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 

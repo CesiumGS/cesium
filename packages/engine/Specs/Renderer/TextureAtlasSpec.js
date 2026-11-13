@@ -1,12 +1,10 @@
 import {
   BoundingRectangle,
   Cartesian2,
-  createGuid,
   PixelFormat,
-  Resource,
-  TextureAtlas,
-} from "../../index.js";
-
+  createGuid,
+} from "@cesium/core";
+import { Resource, TextureAtlas } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollWhilePromise from "../../../../Specs/pollWhilePromise.js";
 
@@ -704,56 +702,16 @@ describe("Scene/TextureAtlas", function () {
         expect(index2).toEqual(2);
         expect(index3).toEqual(3);
 
-        // Webgl1 textures should only be powers of 2
-        const isWebGL2 = scene.frameState.context.webgl2;
-        const textureWidth = isWebGL2 ? 20 : 32;
-        const textureHeight = isWebGL2 ? 32 : 16;
+        const textureWidth = 32;
+        const textureHeight = 16;
 
         const texture = atlas.texture;
         expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
         expect(texture.width).toEqual(textureWidth);
         expect(texture.height).toEqual(textureHeight);
 
-        if (isWebGL2) {
-          expect(drawAtlas(atlas, [index0, index1, index2, index3])).toBe(
-            `
-....................
-....................
-....................
-....................
-....................
-....................
-2222222222..........
-2222222222..........
-2222222222..........
-2222222222..........
-2222222222..........
-2222222222..........
-2222222222..........
-2222222222..........
-2222222222..........
-2222222222..........
-3333333333333333....
-3333333333333333....
-3333333333333333....
-3333333333333333....
-3333333333333333....
-3333333333333333....
-3333333333333333....
-3333333333333333....
-3333333333333333....
-3333333333333333....
-3333333333333333....
-3333333333333333....
-33333333333333330...
-33333333333333330...
-33333333333333330...
-333333333333333301..
-          `.trim(),
-          );
-        } else {
-          expect(drawAtlas(atlas, [index0, index1, index2, index3])).toBe(
-            `
+        expect(drawAtlas(atlas, [index0, index1, index2, index3])).toBe(
+          `
 3333333333333333................
 3333333333333333................
 3333333333333333................
@@ -771,8 +729,7 @@ describe("Scene/TextureAtlas", function () {
 333333333333333322222222220.....
 3333333333333333222222222201....
           `.trim(),
-          );
-        }
+        );
 
         let textureCoordinates = atlas.computeTextureCoordinates(index0);
         expect(
@@ -1456,7 +1413,72 @@ describe("Scene/TextureAtlas", function () {
         expect(guid1).not.toEqual(guid2);
       });
 
-      it("Syncronous texture resolves immediately", async function () {
+      it("allocates appropriate space on resize", async function () {
+        const imageWidth = 128;
+        const imageHeight = 64;
+
+        await addImages(25);
+        let inputPixels = 25 * imageWidth * imageHeight;
+        let atlasWidth = atlas.texture.width;
+        let atlasHeight = atlas.texture.height;
+
+        // Allocate enough space, but not >>2x more. Aspect ratio should be 1:1, 1:2, or 2:1.
+        expect(atlasWidth * atlasHeight).toBeGreaterThan(inputPixels);
+        expect(atlasWidth * atlasHeight).toBeLessThanOrEqual(inputPixels * 3);
+        expect(atlasWidth / atlasHeight).toBeGreaterThanOrEqual(0.5);
+        expect(atlasWidth / atlasHeight).toBeLessThanOrEqual(2.0);
+
+        await addImages(75);
+        inputPixels = 75 * imageWidth * imageHeight;
+        atlasWidth = atlas.texture.width;
+        atlasHeight = atlas.texture.height;
+
+        expect(atlasWidth * atlasHeight).toBeGreaterThan(inputPixels);
+        expect(atlasWidth * atlasHeight).toBeLessThanOrEqual(inputPixels * 3);
+        expect(atlasWidth / atlasHeight).toBeGreaterThanOrEqual(0.5);
+        expect(atlasWidth / atlasHeight).toBeLessThanOrEqual(2.0);
+
+        await addImages(256);
+        inputPixels = 256 * imageWidth * imageHeight;
+        atlasWidth = atlas.texture.width;
+        atlasHeight = atlas.texture.height;
+
+        expect(atlasWidth * atlasHeight).toBeGreaterThan(inputPixels);
+        expect(atlasWidth * atlasHeight).toBeLessThanOrEqual(inputPixels * 3);
+        expect(atlasWidth / atlasHeight).toBeGreaterThanOrEqual(0.5);
+        expect(atlasWidth / atlasHeight).toBeLessThanOrEqual(2.0);
+
+        async function addImages(count) {
+          atlas = new TextureAtlas();
+
+          const imageUrl = createImageDataURL(imageWidth, imageHeight);
+
+          const promises = [];
+          for (let i = 0; i < count; i++) {
+            promises.push(atlas.addImage(i.toString(), imageUrl));
+          }
+
+          await pollWhilePromise(Promise.all(promises), () => {
+            atlas.update(scene.frameState.context);
+          });
+
+          return count * imageWidth * imageHeight;
+        }
+
+        function createImageDataURL(width, height) {
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "green";
+          ctx.fillRect(0, 0, width, height);
+
+          return canvas.toDataURL();
+        }
+      });
+
+      it("destroys successfully while image is queued", async function () {
         atlas = new TextureAtlas();
 
         const promise = atlas.addImage(greenGuid, greenImage);

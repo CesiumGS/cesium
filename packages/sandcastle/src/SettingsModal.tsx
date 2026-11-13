@@ -28,9 +28,11 @@ import { Input } from "@stratakit/bricks/TextBox";
 export function SettingsModal({
   open,
   setOpen,
+  embeddingsAvailable,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
+  embeddingsAvailable: boolean;
 }) {
   const { settings, updateSettings } = useContext(SettingsContext);
 
@@ -152,6 +154,36 @@ export function SettingsModal({
             <option value="editor">Editor</option>
           </Select.HtmlSelect>
         </Select.Root>
+      </div>
+      <div className="settings-row">
+        <div>
+          Semantic search
+          <Text variant="caption-lg" className="caption">
+            The semantic embedding model runs locally in your browser and does
+            not send data externally.
+          </Text>
+        </div>
+        <Field.Root>
+          <Field.Control
+            render={
+              <Switch
+                checked={settings.embeddingSearch && embeddingsAvailable}
+                disabled={!embeddingsAvailable}
+                onChange={(e) => {
+                  updateSettings({ embeddingSearch: e.target.checked });
+                }}
+              />
+            }
+          />
+          {!embeddingsAvailable && (
+            <Field.Label>
+              <InfoBadge
+                content="Semantic search not available"
+                placement="bottom"
+              />
+            </Field.Label>
+          )}
+        </Field.Root>
       </div>
       <SandcastleDialogFooter>
         <DialogDismiss render={<Button>Done</Button>}></DialogDismiss>

@@ -1,7 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import { DeveloperError, Event, Frozen, defined } from "@cesium/core";
 import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
@@ -35,7 +32,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @param {PolylineGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @see Entity
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=polyline|Cesium Sandcastle Polyline Demo}
  */
 function PolylineGraphics(options) {
   this._definitionChanged = new Event();
