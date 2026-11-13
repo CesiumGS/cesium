@@ -277,17 +277,22 @@ export const assembly: Scene = {
       new Float64Array(3),
     )!;
     const target = Float64Array.from(origin, (o, i) => o + up[i]! * 0.2);
+    // Orbit about the assembly: the globe controls zoom toward the hidden
+    // Earth's surface over the background, kilometers away at this scale.
     const shot = () => {
-      view.camera.lookAt(
+      viewer.setControls("orbit", {
         target,
-        30 * (Math.PI / 180),
-        -22 * (Math.PI / 180),
-        3.4,
-      );
+        heading: 30 * (Math.PI / 180),
+        pitch: -22 * (Math.PI / 180),
+        range: 3.4,
+        minRange: 0.3,
+        maxRange: 40,
+      });
       view.camera.near = 0.05;
       engine.requestRender();
     };
     shot();
+    host.scope.defer(() => viewer.setControls("globe"));
 
     // ------------------------------------------------------- readouts
     const where = el("dd", {}, "–");

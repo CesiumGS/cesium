@@ -242,6 +242,12 @@ It depends on nothing else in tasks 9–11, but item 2's interval fallback uses 
 
 ### Task 13: the gallery example's camera in object-scale scenes (owner, 2026-11-12)
 
+**Status (2026-11-12): built.** The cause is confirmed: the assembly sits 1,800 m above a hidden globe, so over the background the wheel's target was the ellipsoid kilometers away, and one notch out took the camera from 3.4 m to 536 m.
+
+- **Controller:** over the background, `GlobeController` takes a zoom's scale from the last drawn point any pick found, when it is in view and at least 4 times nearer than the stand-in target (`nearContent`). The target is the point on the cursor's ray at that distance, so nothing jumps sideways. This covers the wheel, right-drag and two-finger zoom. It needs one earlier pick of content; ray queries and visible bounds weren't needed for the example.
+- **Example:** the assembly and the seismic section orbit about their content (`viewer.setControls("orbit")` with range limits) and go back to the globe controls when the scene is left. The lens scene already turns the controller off.
+- **Check:** `test/globeControllerZoom.test.ts`: with the cursor over the background below and above the horizon, each notch changes the distance to the content by at most a notch's factor (it fails without the fix).
+
 **What the owner saw:** in the "Transform graph" example's exploded-assembly scene (scene 6), the scroll wheel sometimes zooms out to a very distant position.
 
 **The likely cause** (read from the code, not reproduced yet): the scene uses the Viewer's `GlobeController`.

@@ -64,7 +64,7 @@ export const seismic: Scene = {
   globe: false,
   async start(host: SceneHost) {
     const { viewer } = host;
-    const { engine, view } = viewer;
+    const { engine } = viewer;
     stage(host);
     viewer.setSun(100, 45);
 
@@ -237,15 +237,21 @@ export const seismic: Scene = {
         new Float64Array(3),
       )!;
       const target = Float64Array.from(origin, (o, i) => o - up[i]! * midDepth);
-      view.camera.lookAt(
-        deformer.drawn(target),
-        (section.azimuth - 90) * deg,
-        -6 * deg,
-        Math.max(4_500, width * 0.95),
-      );
+      // Orbit about the section: with no globe drawn, the globe controls
+      // zoom toward the Earth's surface over the background instead.
+      const range = Math.max(4_500, width * 0.95);
+      viewer.setControls("orbit", {
+        target: deformer.drawn(target),
+        heading: (section.azimuth - 90) * deg,
+        pitch: -6 * deg,
+        range,
+        minRange: range / 50,
+        maxRange: range * 8,
+      });
       engine.requestRender();
     };
     look();
+    host.scope.defer(() => viewer.setControls("globe"));
 
     // ------------------------------------------------------- readouts
     const out = {

@@ -135,4 +135,126 @@ describe("GlobeController wheel zoom", () => {
       engine.removeWorld(world);
     }
   });
+
+  /**
+   * The transform graph example's assembly: parts a meter across, 1,800 m
+   * above a globe that isn't drawn, seen from 3.4 m. With the cursor moved
+   * off the parts, the wheel's target was the ellipsoid kilometers away,
+   * and one notch out moved the camera hundreds of meters. Returns the
+   * distance to the content after each of `notches` wheel notches out.
+   */
+  async function zoomOverBackground(
+    x: number,
+    y: number,
+    notches: number,
+  ): Promise<number[]> {
+    world = engine.createWorld();
+    view = engine.addView({
+      target: new OffscreenTarget(WIDTH, HEIGHT),
+      world,
+    });
+    const ellipsoid = Ellipsoid.WGS84;
+    const centre = ellipsoid.cartographicToCartesian(
+      { longitude: 0.2, latitude: 0.8, height: 1_800 },
+      v3.vec3(),
+    );
+    const radius = 0.5;
+    const camera = view.camera;
+    camera.lookAt(centre, 0.5, -0.38, 3.4);
+    const ticks: ((now: number) => boolean)[] = [];
+    const element = new EventTarget() as EventTarget & Record<string, unknown>;
+    element.getBoundingClientRect = () => ({
+      left: 0,
+      top: 0,
+      width: WIDTH,
+      height: HEIGHT,
+    });
+    const controller = new GlobeController(
+      view,
+      element as unknown as HTMLElement,
+      {
+        onTick(listener) {
+          ticks.push(listener);
+          return () => ticks.splice(ticks.indexOf(listener), 1);
+        },
+      },
+    );
+    // Only the content is drawn: a ball at the centre, no globe.
+    vi.spyOn(view, "pickPosition").mockImplementation((px, py) => {
+      const d = camera.rayDirection(
+        ((Math.floor(px) + 0.5) / WIDTH) * 2 - 1,
+        1 - ((Math.floor(py) + 0.5) / HEIGHT) * 2,
+        WIDTH / HEIGHT,
+        v3.vec3(),
+      );
+      const o = v3.sub(v3.vec3(), camera.position, centre);
+      const b = v3.dot(o, d);
+      const disc = b * b - (v3.dot(o, o) - radius * radius);
+      const t = -b - Math.sqrt(Math.max(disc, 0));
+      return Promise.resolve(
+        disc >= 0 && t > 0
+          ? v3.scaleAndAdd(v3.vec3(), camera.position, d, t)
+          : undefined,
+      );
+    });
+    const pointer = (px: number, py: number) =>
+      element.dispatchEvent(
+        Object.assign(new Event("pointermove"), {
+          clientX: px,
+          clientY: py,
+          pointerType: "mouse",
+        }),
+      );
+    const settle = async () => {
+      for (let i = 0; i < 4; i++) {
+        await Promise.resolve();
+      }
+    };
+    // The cursor crosses the parts, then rests on the background.
+    pointer(WIDTH / 2, HEIGHT / 2);
+    await settle();
+    pointer(x, y);
+    await settle();
+    let now = performance.now();
+    const distances: number[] = [];
+    for (let n = 0; n < notches; n++) {
+      element.dispatchEvent(
+        Object.assign(new Event("wheel", { cancelable: true }), {
+          clientX: x,
+          clientY: y,
+          deltaY: 100,
+          deltaMode: 0,
+        }),
+      );
+      for (let i = 0; i < 60; i++) {
+        now += 1000 / 60;
+        for (const t of [...ticks]) {
+          t(now);
+        }
+        await settle();
+      }
+      distances.push(v3.distance(camera.position, centre));
+    }
+    controller.dispose();
+    return distances;
+  }
+
+  it("zooms at the content's scale over the background with no globe", async () => {
+    // One notch of 100 px is a factor of e^0.15 = 1.16 in distance.
+    const notch = Math.exp(100 * 0.0015);
+    // Below the horizon (the hidden ellipsoid under the cursor), and above
+    // it (sky).
+    for (const [x, y] of [
+      [60, 330],
+      [600, 30],
+    ] as const) {
+      const distances = await zoomOverBackground(x, y, 4);
+      let previous = 3.4;
+      for (const d of distances) {
+        expect(d / previous).toBeLessThan(notch * 1.1);
+        previous = d;
+      }
+      engine.removeWorld(world);
+    }
+  });
 });

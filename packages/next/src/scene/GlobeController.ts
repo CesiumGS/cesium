@@ -123,6 +123,12 @@ export class GlobeController {
   private readonly hover = v3.vec3();
   private hoverPixel: [number, number] | undefined;
   private hoverPending = false;
+  /**
+   * The last point any pick found drawn (hover, zoom or anchor), for the
+   * scale of a zoom over the background (`nearContent`).
+   */
+  private readonly content = v3.vec3();
+  private hasContent = false;
   /** Momentum: rotation about the Earth's center, and zoom per frame. */
   private readonly spinAxis = v3.vec3();
   private spinRate = 0;
@@ -184,6 +190,7 @@ export class GlobeController {
     this.pitch = pitch;
     this.range = range;
     this.stop();
+    this.hasContent = false;
     this.view.camera.lookAt(target, heading, pitch, range, this.ellipsoid);
     // Level where the camera is, not at the target (the target stays at
     // the screen's center).
@@ -242,6 +249,7 @@ export class GlobeController {
         this.zoomPixel = undefined;
         this.ground(this.anchor);
       }
+      this.nearContent(x, y, this.anchor);
     } else {
       this.anchorAt(x, y);
       // Off the globe nothing turns, unless the pick finds something drawn
@@ -372,6 +380,7 @@ export class GlobeController {
         if (!this.hasAnchor) {
           this.ground(this.anchor);
         }
+        this.nearContent(x, y, this.anchor);
       },
       twoBegin: (mode) => {
         if (mode === "tilt") {
@@ -448,6 +457,9 @@ export class GlobeController {
       this.ground(below);
       const height = Math.max(v3.distance(this.view.camera.position, below), 1);
       v3.scaleAndAdd(target, this.view.camera.position, this.ray(x, y), height);
+    }
+    if (!near) {
+      this.nearContent(x, y, target);
     }
     const pixels = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
     // 1.x zooms by a share of the distance; momentum carries it on.
@@ -670,6 +682,46 @@ export class GlobeController {
     this.ground(below);
     const height = Math.max(v3.distance(camera, below), 1);
     return v3.distance(camera, out) <= 20 * height ? out : undefined;
+  }
+
+  /**
+   * Over the background, a zoom's stand-in target (the ellipsoid, or a
+   * point at the camera's height above it) can be far beyond what is drawn:
+   * an assembly a few meters across, 1,800 m above a hidden globe, moved
+   * hundreds of meters a notch. When the last drawn point found is in view
+   * and much nearer than the stand-in, the target becomes the point on the
+   * cursor's ray at that point's distance, so a notch moves the camera at
+   * the content's scale.
+   */
+  private nearContent(x: number, y: number, target: Vec3): void {
+    if (!this.hasContent) {
+      return;
+    }
+    const camera = this.view.camera;
+    const offset = v3.sub(v3.vec3(), this.content, camera.position);
+    const distance = v3.length(offset);
+    if (
+      distance < 1e-6 ||
+      distance * CONTENT_NEARER > v3.distance(camera.position, target)
+    ) {
+      return;
+    }
+    // In view: in front, within the cone through the view's corners.
+    const r = this.view.pixelRect();
+    const aspect = r.width / r.height;
+    const halfHeight = Math.tan(camera.fovy(aspect) / 2);
+    const halfDiagonal = Math.atan(Math.hypot(halfHeight, halfHeight * aspect));
+    const cos = v3.dot(offset, camera.direction) / distance;
+    if (cos < Math.cos(halfDiagonal)) {
+      return;
+    }
+    v3.scaleAndAdd(target, camera.position, this.ray(x, y), distance);
+  }
+
+  /** A pick found `p` drawn: the latest content point (`nearContent`). */
+  private sawContent(p: Vec3): void {
+    v3.copy(this.content, p);
+    this.hasContent = true;
   }
 
   /**
@@ -956,6 +1008,9 @@ export class GlobeController {
     const anchoring = ++this.anchoring;
     const r = this.view.pixelRect();
     void this.view.pickPosition(x - r.x, y - r.y).then((p) => {
+      if (p) {
+        this.sawContent(p);
+      }
       if (p && anchoring === this.anchoring && this.mode !== "none") {
         v3.copy(this.anchor, p);
         this.hasAnchor = true;
@@ -984,6 +1039,9 @@ export class GlobeController {
     const r = this.view.pixelRect();
     void this.view.pickPosition(pixel[0] - r.x, pixel[1] - r.y).then((p) => {
       this.zoomPickPending = false;
+      if (p) {
+        this.sawContent(p);
+      }
       const zooming =
         Math.abs(this.pendingZoom) > 1e-4 || Math.abs(this.zoomRate) > 1e-3;
       if (p && zooming && this.zoomPixel === pixel) {
@@ -1009,6 +1067,7 @@ export class GlobeController {
     void this.view.pickPosition(x - r.x, y - r.y).then((p) => {
       this.hoverPending = false;
       if (p) {
+        this.sawContent(p);
         v3.copy(this.hover, p);
         this.hoverPixel = this.pickedPixel(x, y);
       } else {
@@ -1116,6 +1175,13 @@ function rodrigues(v: Vec3, k: Vec3, angle: number): void {
  * horizon (the sine of 3°): steeper, it keeps the camera's own heading.
  */
 const STEEP = 0.05;
+
+/**
+ * How many times nearer than a zoom's stand-in target the last drawn point
+ * must be to set the zoom's scale instead (`nearContent`): over a drawn
+ * globe the ground below is usually the nearer, and nothing changes.
+ */
+const CONTENT_NEARER = 4;
 
 /** Nearest intersection of a ray with a sphere about the Earth's center. */
 function raySphere(
