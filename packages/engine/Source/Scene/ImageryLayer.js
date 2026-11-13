@@ -737,6 +737,11 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     this._rectangle,
     imageryBoundsScratch,
   );
+
+  if (!defined(imageryBounds)) {
+    return false;
+  }
+
   let rectangle = Rectangle.intersection(
     tile.rectangle,
     imageryBounds,
@@ -904,10 +909,12 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
       imageryRectangle,
       imageryRectangle,
     );
-    imageryTilingScheme.rectangleToNativeRectangle(
-      clippedImageryRectangle,
-      clippedImageryRectangle,
-    );
+    if (defined(clippedImageryRectangle)) {
+      imageryTilingScheme.rectangleToNativeRectangle(
+        clippedImageryRectangle,
+        clippedImageryRectangle,
+      );
+    }
     imageryTilingScheme.rectangleToNativeRectangle(
       imageryBounds,
       imageryBounds,
@@ -932,6 +939,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   // Calculate where it does start.
   if (
     !this.isBaseLayer() &&
+    defined(clippedImageryRectangle) &&
     Math.abs(clippedImageryRectangle.west - terrainRectangle.west) >= veryCloseX
   ) {
     maxU = Math.min(
@@ -943,6 +951,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
 
   if (
     !this.isBaseLayer() &&
+    defined(clippedImageryRectangle) &&
     Math.abs(clippedImageryRectangle.north - terrainRectangle.north) >=
       veryCloseY
   ) {

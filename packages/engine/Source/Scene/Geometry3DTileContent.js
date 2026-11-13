@@ -24,6 +24,7 @@ class Geometry3DTileContent {
     this._tile = tile;
     this._resource = resource;
     this._geometries = undefined;
+    this._show = true;
 
     this._metadata = undefined;
 
@@ -121,6 +122,15 @@ class Geometry3DTileContent {
     this._group = value;
   }
 
+  /** @inheritdoc */
+  get show() {
+    return this._show;
+  }
+
+  set show(value) {
+    this._show = value;
+  }
+
   hasProperty(batchId, name) {
     return this._batchTable.hasProperty(batchId, name);
   }
@@ -158,7 +168,9 @@ class Geometry3DTileContent {
     if (defined(this._geometries)) {
       this._geometries.classificationType = this._tileset.classificationType;
       this._geometries.debugWireframe = this._tileset.debugWireframe;
-      this._geometries.update(frameState);
+      if ((this._geometries.ready && this._show) || !this._geometries.ready) {
+        this._geometries.update(frameState);
+      }
     }
 
     if (defined(this._batchTable) && this._geometries.ready) {
