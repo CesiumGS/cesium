@@ -41,6 +41,7 @@ struct View_std140_0
     @align(16) bodyRadii_0 : vec4<f32>,
     @align(16) moonLight_0 : vec4<f32>,
     @align(16) time_0 : vec4<f32>,
+    @align(16) transition_0 : vec4<f32>,
     @align(16) anchors_0 : _Array_std140_AnchorEye32_0,
 };
 

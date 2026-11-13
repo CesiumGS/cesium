@@ -17,6 +17,7 @@ import { ViewLayout } from "../src/render/generated/layouts.ts";
 import {
   ANCHOR_EYE_WORDS,
   VIEW_ANCHORS_WORD,
+  VIEW_TRANSITION_WORD,
   VIEW_BIT_WORD,
   VIEW_STRIDE,
 } from "../src/render/layout.ts";
@@ -548,6 +549,10 @@ describe("a rig on GCRF draws what a rig on ITRF draws (plan 5a, Task 14)", () =
       }
     }
     for (let w = 0; w < before.length; w++) {
+      // The transitions' duration follows the render cadence, not the rig.
+      if (w === VIEW_TRANSITION_WORD) {
+        continue;
+      }
       if (!covered.has(w)) {
         expect(before[w], `padding word ${w}`).toBe(after[w]);
       }

@@ -11,7 +11,10 @@ import {
   RECORD_SIZE,
   RECORD_WORDS,
 } from "../src/render/layout.ts";
-import { DrawRecordLayout } from "../src/render/generated/layouts.ts";
+import {
+  DrawRecordLayout,
+  ViewLayout,
+} from "../src/render/generated/layouts.ts";
 import { packImagery } from "../src/scene/contentLimits.ts";
 import type { World } from "../src/scene/World.ts";
 import { MORPH_SECONDS } from "../src/streaming/tileMorph.ts";
@@ -85,6 +88,23 @@ describe("imagery cross-fade bookkeeping", () => {
     internals.slices.set(lone, { slice: 9, used: 0 });
     imagery.update(new Map([[lone, 1]]), 2100);
     expect(fades).toEqual([]);
+    imagery.destroy();
+  });
+
+  it("a fade lasts the engine's transition duration", () => {
+    const { imagery, internals, fades } = setup(clock);
+    imagery.fadeSeconds = () => 0.8;
+    const parent = drawn(3, 4, 2);
+    const child = drawn(4, 8, 4, parent);
+    internals.slices.set(parent, { slice: 7, used: 0 });
+    imagery.update(new Map([[child, 1]]), 2000);
+    internals.slices.set(child, { slice: 9, used: 0 });
+    imagery.update(new Map([[child, 1]]), 2100);
+    imagery.update(new Map([[child, 1]]), 2100 + 799);
+    expect(imagery.fading).toBe(true);
+    imagery.update(new Map([[child, 1]]), 2100 + 800);
+    expect(imagery.fading).toBe(false);
+    expect(fades.at(-1)).toEqual([1, 0, 0]);
     imagery.destroy();
   });
 
@@ -169,14 +189,12 @@ describe("imagery cross-fade record and shader", () => {
     expect(IMAGERY_FADE_WORD).toBe(42);
   });
 
-  it("the shader's duration is MORPH_SECONDS", () => {
+  it("the shader reads the view block's duration and the writer fills it", () => {
     const slang = readFileSync(
       new URL("../src/shaders/surface.slang", import.meta.url),
       "utf8",
     );
-    const match = /static const float IMAGERY_FADE_SECONDS = ([\d.]+);/.exec(
-      slang,
-    );
-    expect(Number(match?.[1])).toBe(MORPH_SECONDS);
+    expect(slang).toContain("/ max(view.transition.x");
+    expect(ViewLayout.transition % 16).toBe(0);
   });
 });

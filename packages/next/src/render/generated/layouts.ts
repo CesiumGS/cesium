@@ -4,7 +4,7 @@
 
 /** `View` as `view` holds it: byte offsets. */
 export const ViewLayout = {
-  size: 2976,
+  size: 2992,
   align: 16,
   viewProj: 0,
   viewRotation: 64,
@@ -28,7 +28,8 @@ export const ViewLayout = {
   bodyRadii: 368,
   moonLight: 384,
   time: 400,
-  anchors: 416,
+  transition: 416,
+  anchors: 432,
 } as const;
 
 /** `DrawRecord` as `records` holds it: byte offsets. */

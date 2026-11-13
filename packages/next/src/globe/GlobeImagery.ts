@@ -178,6 +178,8 @@ export class GlobeImagery implements SliceUser {
    * is the default. The engine sets it.
    */
   fadeStart?: (nowMs: number) => number;
+  /** How long a fade takes, seconds (`transitionSeconds`); the engine sets it. Default `MORPH_SECONDS`. */
+  fadeSeconds: () => number = () => MORPH_SECONDS;
   /** The update's time, `performance.now()` ms. */
   private now = 0;
   /**
@@ -955,7 +957,7 @@ export class GlobeImagery implements SliceUser {
       if (fade > 0) {
         this.fades.set(tile, {
           from: before!,
-          end: this.now + MORPH_SECONDS * 1000,
+          end: this.now + this.fadeSeconds() * 1000,
         });
       } else {
         this.fades.delete(tile);

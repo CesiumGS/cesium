@@ -589,7 +589,13 @@ export class View {
    * vertical exaggeration magnifies the difference). "pop" swaps at once,
    * as before, and costs nothing per vertex.
    *
-   * Globe imagery cross-fades over the same 0.3 seconds when a drawn tile's
+   * The transitions take 0.3 seconds, or 8 rendered frames when that is
+   * longer (a slow GPU), at most 1 second: the engine works the duration out
+   * once per render from the smoothed interval between renders
+   * (`transitionSeconds`). A transition already running when the duration
+   * changes may jump slightly.
+   *
+   * Globe imagery cross-fades over the same duration when a drawn tile's
    * imagery changes on refinement (its own slice replacing an ancestor's);
    * night lights still pop.
    *

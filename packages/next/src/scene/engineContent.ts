@@ -196,6 +196,7 @@ function addGlobeSource(
       engine.views.some((view) => view.lodTransitions === "morph")
         ? Math.max((nowMs - engine.scene.startTime) / 1000, 1e-3)
         : 0;
+    imagery.fadeSeconds = () => engine.scene.transitionSeconds;
     return imagery;
   };
   if (options.lights) {

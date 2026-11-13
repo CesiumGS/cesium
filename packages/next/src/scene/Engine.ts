@@ -1,4 +1,5 @@
 import type { OcclusionSwitch } from "./occlusionFeedback.ts";
+import { MORPH_SECONDS } from "../streaming/tileMorph.ts";
 import type { EngineError, EngineErrorKind } from "../gpu/EngineErrors.ts";
 import { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import { GpuDevice, type GpuDeviceOptions } from "../gpu/GpuDevice.ts";
@@ -706,6 +707,7 @@ export class Engine {
       moonAir: 0,
       cityLights: true,
       time: 0,
+      transitionSeconds: MORPH_SECONDS,
     };
     this.raster.pickParams = device.createBuffer({
       size: 16,

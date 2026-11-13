@@ -70,7 +70,7 @@ export interface ViewBlockEngine extends Pick<
     | "viewFrames"
     | "viewStaging"
   >;
-  readonly scene: Pick<EngineScene, "anchorEyes" | "startTime">;
+  readonly scene: Pick<EngineScene, "anchorEyes" | "startTime" | "transitionSeconds">;
 }
 
 export const scratchView = m4.mat4();
@@ -212,6 +212,7 @@ export function writeView(
   block.cityLights = view.cityLights;
   block.debug = view.debugMode;
   block.time = (performance.now() - engine.scene.startTime) / 1000;
+  block.transitionSeconds = engine.scene.transitionSeconds;
   engine.raster.viewCityLight = cityLightAt(engine, view);
   block.aerial = undefined;
   // The Moon's light: its full disk gives the albedo's share of the sun's

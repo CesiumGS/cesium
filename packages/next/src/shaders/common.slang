@@ -69,6 +69,9 @@ public struct View {
   // also draws its view's casters (cull `drawable`); w: the view's debug
   // mode (`View.debug`, streaming/debugViews.ts `debugModeId`), 0: off.
   public float4 time;
+  // How long a geomorph or an imagery cross-fade takes, seconds (x); the engine
+  // writes it each render (streaming/tileMorph.ts `transitionSeconds`).
+  public float4 transition;
   // Per anchor slot (Transform.flags bits 8 to 15): the eye in the
   // anchor's coordinates and its axes into the shading axes (cullTables
   // `relativeMatrix`). The body anchor's eye is `cameraHi`/`cameraLo`'s.

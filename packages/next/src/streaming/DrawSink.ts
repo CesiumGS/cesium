@@ -108,7 +108,7 @@ export interface TilesetHost {
   readonly requests: RequestScheduler;
   readonly tilesets: readonly Tileset3D[];
   readonly uploadBytesPerFrame: number;
-  readonly scene: Pick<EngineScene, "uploadBudget" | "startTime">;
+  readonly scene: Pick<EngineScene, "uploadBudget" | "startTime" | "transitionSeconds">;
   loadGltf(
     url: string | URL,
     options?: { headers?: Record<string, string>; signal?: AbortSignal },

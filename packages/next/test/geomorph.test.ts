@@ -27,6 +27,9 @@ import type { Tile } from "../src/streaming/Tile.ts";
 import {
   endMorphs,
   MORPH_SECONDS,
+  MORPH_FRAMES,
+  MORPH_MAX_SECONDS,
+  transitionSeconds,
   morphFactor,
   startMorphs,
   type MorphHost,
@@ -445,12 +448,29 @@ describe("the shader's twins", () => {
     new URL("../src/shaders/surface.slang", import.meta.url),
     "utf8",
   );
-  it("MORPH_HASH and MORPH_SECONDS are the TypeScript constants", () => {
+  it("MORPH_HASH is the TypeScript constant, and the duration comes from the view block", () => {
     expect(slang).toContain(
       `static const uint MORPH_HASH = ${attributeHash(HEIGHT_MORPH_ATTRIBUTE)}u;`,
     );
-    const seconds = /static const float MORPH_SECONDS = ([0-9.]+);/.exec(slang);
-    expect(Number(seconds![1])).toBe(MORPH_SECONDS);
+    // No duration constant of its own: it reads `view.transition.x`.
+    expect(slang).not.toMatch(
+      /static const float (MORPH|IMAGERY_FADE)_SECONDS/,
+    );
+    expect(slang).toContain("(view.time.x - r.morph) / max(view.transition.x");
+    expect(slang).toContain(
+      "(view.time.x - r.imageryFade) / max(view.transition.x",
+    );
+  });
+
+  it("transitionSeconds: 0.3 s, or 8 frames if longer, at most 1 s", () => {
+    expect(transitionSeconds(0)).toBe(MORPH_SECONDS);
+    expect(transitionSeconds(Number.NaN)).toBe(MORPH_SECONDS);
+    expect(transitionSeconds(16)).toBe(MORPH_SECONDS); // 8 × 16 ms = 0.128 s
+    expect(transitionSeconds(100)).toBeCloseTo(0.8, 9);
+    expect(transitionSeconds(150)).toBe(MORPH_MAX_SECONDS);
+    expect(MORPH_FRAMES).toBe(8);
+    // A morph lasts its duration: half way at half of it.
+    expect(morphFactor(2, 2.4, 0.8)).toBeCloseTo(0.5, 6);
   });
 });
 

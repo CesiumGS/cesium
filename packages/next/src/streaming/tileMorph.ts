@@ -16,13 +16,41 @@ import type { DrawSink } from "./DrawSink.ts";
 import type { SelectionView } from "./Stepwise.ts";
 import type { Tile } from "./Tile.ts";
 
-/** How long a tile takes to morph in, seconds. The same number as `MORPH_SECONDS` in shaders/surface.slang. */
+/**
+ * How long a transition (a geomorph, an imagery cross-fade) takes at least,
+ * seconds. The one place these three numbers live: the shaders read the
+ * duration from the view block (`View.transition.x`), which the engine
+ * writes each tick from `transitionSeconds`.
+ */
 export const MORPH_SECONDS = 0.3;
+/** A transition spans at least this many rendered frames (when slower than `MORPH_SECONDS` allows). */
+export const MORPH_FRAMES = 8;
+/** The longest a transition is stretched to, seconds. */
+export const MORPH_MAX_SECONDS = 1.0;
+
+/**
+ * The duration of a transition given the smoothed interval between rendered
+ * frames, ms (0 or NaN: unknown): `MORPH_SECONDS`, or `MORPH_FRAMES` frames
+ * when that is longer, up to `MORPH_MAX_SECONDS`. So a slow GPU still shows
+ * the transition over a few frames instead of as a pop.
+ */
+export function transitionSeconds(frameIntervalMs: number): number {
+  const frames = Number.isFinite(frameIntervalMs)
+    ? (MORPH_FRAMES * Math.max(frameIntervalMs, 0)) / 1000
+    : 0;
+  return Math.min(Math.max(MORPH_SECONDS, frames), MORPH_MAX_SECONDS);
+}
 
 /** The tileset's side of morphing: what `startMorphs` and `endMorphs` read and write. */
 export interface MorphHost {
   readonly world: Pick<DrawSink, "setDrawMorph">;
-  readonly engine: { readonly scene: { readonly startTime: number } };
+  readonly engine: {
+    readonly scene: {
+      readonly startTime: number;
+      /** This tick's transition duration (`transitionSeconds`); absent: `MORPH_SECONDS`. */
+      readonly transitionSeconds?: number;
+    };
+  };
   readonly state: {
     /** Tiles morphing in, with the time each is done (`performance.now()` ms). */
     readonly morphs: Map<Tile, number>;
@@ -39,8 +67,12 @@ export function morphEase(t: number): number {
  * How far a tile has morphed at `nowMs` (0: still its ancestor's surface, 1:
  * its own), as the vertex stage computes it from the record's word.
  */
-export function morphFactor(startSeconds: number, nowSeconds: number): number {
-  return morphEase((nowSeconds - startSeconds) / MORPH_SECONDS);
+export function morphFactor(
+  startSeconds: number,
+  nowSeconds: number,
+  duration: number = MORPH_SECONDS,
+): number {
+  return morphEase((nowSeconds - startSeconds) / duration);
 }
 
 /** Some ancestor of `tile` has been drawn: there is a coarser surface to morph from. */
@@ -91,7 +123,11 @@ export function startMorphs(
       ancestorDrawn(tile)
     ) {
       tile.morphStart = nowMs;
-      tileset.state.morphs.set(tile, nowMs + MORPH_SECONDS * 1000);
+      tileset.state.morphs.set(
+        tile,
+        nowMs +
+          (tileset.engine.scene.transitionSeconds ?? MORPH_SECONDS) * 1000,
+      );
       for (const draw of tile.placement.draws) {
         tileset.world.setDrawMorph?.(draw, seconds);
       }
@@ -105,7 +141,9 @@ export function startMorphs(
 /**
  * Ends the morphs finished by `nowMs`: the draw's word goes back to 0, and
  * the vertex stage reads nothing more. True while some tile is still
- * morphing.
+ * morphing. A morph's end was fixed when it began; if the duration has
+ * changed since, the shader and the end disagree and the tile may jump a
+ * little.
  */
 export function endMorphs(tileset: MorphHost, nowMs: number): boolean {
   for (const [tile, end] of tileset.state.morphs) {
