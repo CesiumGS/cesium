@@ -1264,6 +1264,14 @@ export class Engine {
   maximumUploadBytesPerFrame = 32 * 1024 * 1024;
   /** Main-thread time per frame for building tile trees, all tilesets. */
   treeBuildMsPerFrame = 4;
+  /**
+   * Tile selection (`Budgeted`, the globe's too) reads what each view's own
+   * drawn depth hides: a tile whose box has been hidden for two results in a
+   * row stops refining and requesting children, and stays drawn. On by
+   * default; off for parity runs. The benchmarks record its version
+   * (`OCCLUSION_FEEDBACK_VERSION`).
+   */
+  occlusionFeedback = true;
 
   /**
    * Asks for a frame in on-demand mode, for changes the engine can't see:

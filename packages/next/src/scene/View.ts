@@ -38,6 +38,7 @@ import {
   observerReadout,
 } from "./observer.ts";
 import { type PostStage, checkStageList } from "./postStage.ts";
+import { OcclusionFeedback } from "./occlusionFeedback.ts";
 import {
   checkInRange,
   checkParameterValue,
@@ -539,6 +540,11 @@ export class View {
     resolvePosition?: (p: Float64Array | undefined) => void;
     resolvePoint?: (p: CorePick | undefined) => void;
   }> = [];
+  /**
+   * @internal What its drawn depth says of the tile boxes selection asks
+   * about (`OcclusionFeedback`).
+   */
+  readonly occlusionFeedback = new OcclusionFeedback();
   /** @internal The glare tier at the last render, and why (`readout`). */
   glareResolved?: { tier: GlareTier; reason: string };
   /** @internal Waiting for the view's next render (`readHdr`). */

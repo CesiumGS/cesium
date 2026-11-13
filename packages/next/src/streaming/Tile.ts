@@ -82,6 +82,15 @@ export interface TileViewState {
   centerZDepth: number;
   sse: number;
   refines: boolean;
+  /**
+   * Results in a row that found the tile's box hidden by what the view
+   * draws (`OcclusionFeedback.apply`); cleared when one finds it seen. Counts
+   * only while `occlusionEpoch` is the feedback's (a camera cut starts over)
+   * and `occludedAt`, the feedback tick of the latest result, is recent.
+   */
+  occludedTicks: number;
+  occludedAt: number;
+  occlusionEpoch: number;
 }
 
 /** A scheme or a protocol-relative URI: not relative to its base's origin. */
@@ -532,6 +541,9 @@ export class Tile {
         centerZDepth: 0,
         sse: 0,
         refines: false,
+        occludedTicks: 0,
+        occludedAt: 0,
+        occlusionEpoch: 0,
       };
       this.views[viewId] = s;
     }

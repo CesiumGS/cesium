@@ -22,6 +22,7 @@ import {
 } from "./scenePasses.ts";
 import { translucentPass, compositePassBody } from "./translucentPasses.ts";
 import { sectionCapsPass } from "./capPasses.ts";
+import { occlusionPass } from "./occlusionPass.ts";
 import {
   meterPass,
   depthRangePass,
@@ -53,6 +54,7 @@ export interface ViewFrameEngine extends Pick<
   | "cameras"
   | "ctx"
   | "gpu"
+  | "occlusionFeedback"
   | "requestRender"
   | "stats"
   | "sunDirection"
@@ -80,6 +82,7 @@ export interface ViewFrameEngine extends Pick<
     | "listNodes"
     | "lists"
     | "meters"
+    | "occlusionReads"
     | "overlayColor"
     | "overlayResources"
     | "pickDomain"
@@ -291,6 +294,7 @@ function buildViewFrame(
     fxaaImage: undefined,
     sky: engine.raster.sky.createView(),
     shadowed: false,
+    occlusion: undefined,
     clipBuffer: undefined,
     clipBytes: 0,
     capFaces: 0,
@@ -446,6 +450,15 @@ function buildViewFrame(
       capLow,
       capHigh,
     }),
+  );
+
+  // The view's own drawn depth as a pyramid, and the tile boxes selection asked
+  // about tested against it (occlusionPass.ts): before translucency, whose
+  // blended surfaces block nothing.
+  graph.addPass(
+    "occlusion",
+    { reads: [depth], sideEffect: true },
+    occlusionPass(engine, view, frame, { depth }),
   );
 
   // Translucency (translucent.wgsl): blended surfaces into per-pixel
