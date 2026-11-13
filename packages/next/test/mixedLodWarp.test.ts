@@ -38,9 +38,9 @@ describe("mixed LOD under warps", () => {
       },
     } as unknown as Tile;
     const a = clipBox(hole, 5);
-    expect([...a.center]).toEqual([R, 0, 0]);
+    expect(Array.from(a.center)).toEqual([R, 0, 0]);
     // Whatever moves the draw, the box doesn't: same inputs, same box.
     const b = clipBox(hole, 5);
-    expect([...b.rows]).toEqual([...a.rows]);
+    expect(Array.from(b.rows)).toEqual(Array.from(a.rows));
   });
 });
