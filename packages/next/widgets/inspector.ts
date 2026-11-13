@@ -268,6 +268,9 @@ export function attachInspector(
   let last: InspectorSnapshot | undefined;
   let lastAt = performance.now();
   let framesPerSecond: number | undefined;
+  /** When a frame last rendered, and the smoothed time between frames, ms. */
+  let lastFrameAt = 0;
+  let frameIntervalMs = 0;
   let cameraKey = "";
   let move:
     { stoppedAt: number; requests?: number; bytes?: number } | undefined;
@@ -412,6 +415,15 @@ export function attachInspector(
     ) {
       framesPerSecond =
         (snap.frame.framesRendered - last.frame.framesRendered) / seconds;
+      const rendered = snap.frame.framesRendered - last.frame.framesRendered;
+      if (rendered > 0) {
+        const interval = (now - lastAt) / rendered;
+        frameIntervalMs =
+          frameIntervalMs > 0
+            ? frameIntervalMs * 0.7 + interval * 0.3
+            : interval;
+        lastFrameAt = now;
+      }
     }
     const received = snap.tiles?.received?.bytes;
     const lastReceived = last?.tiles?.received?.bytes;
@@ -443,8 +455,13 @@ export function attachInspector(
     push("uploadQueue", snap.tiles?.window?.uploadQueue ?? 0);
     push("decode", snap.pipeline?.stages.decode?.p50 ?? 0);
     push("frames", framesPerSecond ?? 0);
-    // While idle no frame time is spent: the lines drop to zero.
-    const drawing = framesPerSecond === undefined || framesPerSecond > 0;
+    // While idle no frame time is spent: the lines drop to zero. Idle is no
+    // frame for longer than the recent frames took (a sample with no frame
+    // finished in it, as at a few frames a second, is not idle).
+    const drawing =
+      framesPerSecond === undefined ||
+      framesPerSecond > 0 ||
+      now - lastFrameAt < Math.max(500, 2.5 * frameIntervalMs);
     push("cpu", drawing ? (snap.frame?.cpuMs ?? 0) : 0);
     push("gpu", drawing ? (snap.frame?.gpuMs ?? 0) : 0);
     pushPasses(snap.frame?.gpuPasses, drawing);
