@@ -265,7 +265,14 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
   - A tile occluded for 2 or more ticks running doesn't refine, and its children's requests drop below every visible request. A request already in flight is kept.
   - With no result yet for a tile, or after a camera cut, it is treated as visible.
   - An engine option, `occlusionFeedback`, is on by default and can be turned off for parity runs. Benchmarks record its version.
+- **The switch (owner, 2026-11-12):** `occlusionFeedback: "on" | "off"` per view as well as engine-wide; off costs nothing (no pyramid, no queries). An `"auto"` mode is decided after increment 4 (below); the code keeps the tick each result was measured on so passes can run on some ticks only.
+- **Translucency:** only fully opaque draws feed the pyramid. Alpha-cutout draws count; translucent, x-ray or ghosted draws, overlays drawn without a depth test, and translucent globe or terrain don't. Translucent tiles are still tested as occludees.
 - **Increment 4: measure.**
+  - **The cost where little is hidden:** big open expanses seen from high up (the `globe` suite's Front Range at 300 km and Everest regional, a whole-Earth view), as pyramid GPU time, query GPU time, CPU per tick to build the queries, and the occluded share. The win where much is hidden: the exaggeration scene, a craggy valley, and dense design models (a building with interiors, an industrial plant) with additive refinement.
+  - **Additive refinement:** an occluded tile's added children aren't loaded at all. When they come into view, they appear after their load time, not just a refinement step later. Measure how long that is in a walk-through.
+- **Increment 5 (after measuring): an `"auto"` mode.**
+  - Per view, run the pyramid and queries every tick while the occluded share is worth it. When it stays low (for example, under 5% for a couple of seconds), drop to one tick in N, and come back on a large camera move or a rising share.
+  - The application or the camera controller can still force `"on"` or `"off"`, for example off during a fast flight, or on for a walk-through.
   - The exaggeration scene at ×1, ×5 and ×10 (tiles drawn, requests, bytes, GPU per tick, time to settle), the `globe` suite's six views (1.x parity must hold), and a camera flight for pops.
   - Report the occluded share of the drawn tiles and the candidates.
 - **Risks:**
