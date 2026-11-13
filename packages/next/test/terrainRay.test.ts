@@ -10,6 +10,7 @@ import {
 import { GlobeBudgetedSelection } from "../src/globe/GlobeBudgeted.ts";
 import { GlobeStepwiseSelection } from "../src/globe/GlobeStepwise.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
+import { expectExactPlaceholders } from "./placeholderInvariant.ts";
 import type { SelectionView } from "../src/streaming/Stepwise.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import {
@@ -728,6 +729,7 @@ describe("globe selections mark stand-ins", () => {
         source.geometricError,
         view(),
       );
+      expectExactPlaceholders(result);
       expect(result.selected).toContain(level0);
       expect(result.standIns).toContain(level0);
       for (const tile of result.standIns!) {
@@ -754,6 +756,7 @@ describe("globe selections mark stand-ins", () => {
         source.geometricError,
         view(),
       );
+      expectExactPlaceholders(result);
       expect(result.selected).toContain(level0);
       expect(result.standIns).toContain(level0);
       // As the tileset marks it: the ray target calls it not refined.
