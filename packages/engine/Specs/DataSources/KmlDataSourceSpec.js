@@ -2185,6 +2185,26 @@ describe("DataSources/KmlDataSource", function () {
     });
   });
 
+  it("IconStyle: resolves relative images against a Resource sourceUri", async function () {
+    const kml = parser.parseFromString(
+      `<Placemark>
+        <Style><IconStyle><Icon><href>image.png</href></Icon></IconStyle></Style>
+      </Placemark>`,
+      "text/xml",
+    );
+    const sourceUri = new Resource({
+      url: "https://example.invalid/data/doc.kml",
+      headers: { "X-Test": "source-resource" },
+    });
+
+    const dataSource = await KmlDataSource.load(kml, { sourceUri: sourceUri });
+    const image = dataSource.entities.values[0].billboard.image.getValue();
+    expect(image).toBeInstanceOf(Resource);
+    expect(image.url).toEqual("https://example.invalid/data/image.png");
+    expect(image.headers["X-Test"]).toEqual("source-resource");
+    expect(sourceUri.url).toEqual("https://example.invalid/data/doc.kml");
+  });
+
   it("IconStyle: Sets billboard image inside KMZ", function () {
     return KmlDataSource.load("Data/KML/simple.kmz", options).then(
       function (dataSource) {
