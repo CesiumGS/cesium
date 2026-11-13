@@ -1,5 +1,6 @@
 import iblWgsl from "../shaders/generated/ibl.wgsl?raw";
 import { MipGenerator } from "./MipGenerator.ts";
+import { GpuTimer } from "./GpuTimer.ts";
 
 export interface SkyOptions {
   /**
@@ -422,7 +423,10 @@ export class Environment {
     groups: Groups,
   ): void {
     const pipeline = this.pipeline(entry);
-    const pass = encoder.beginComputePass({ label: `ibl.${entry}` });
+    const pass = encoder.beginComputePass({
+      label: `ibl.${entry}`,
+      timestampWrites: GpuTimer.groupWrites(this.device, "environment"),
+    });
     pass.setPipeline(pipeline);
     if (params) {
       pass.setBindGroup(

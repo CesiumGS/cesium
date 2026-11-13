@@ -163,6 +163,7 @@ export function createRecorder(
       why: TICK_REASONS.filter((_, i) => (s.tickReasons & (1 << i)) !== 0),
       cpuMs: s.lastCpuMs,
       views: s.views,
+      triangles: s.triangles,
       occQueries: queries - occQueries,
       occHidden: hidden,
       occFlips: flips - occFlips,
@@ -195,7 +196,9 @@ export function createRecorder(
     const gpu = engine.gpuSample;
     if (gpu.samples !== gpuSamples) {
       gpuSamples = gpu.samples;
-      buffer.push(gpuRow(now - t0, gpu.tick, gpu.ms, gpu.passes));
+      buffer.push(
+        gpuRow(now - t0, gpu.tick, gpu.ms, gpu.passes, gpu.spanMs, gpu.wallMs),
+      );
       status.rows++;
     }
   };

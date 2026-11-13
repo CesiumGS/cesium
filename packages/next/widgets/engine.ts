@@ -180,10 +180,14 @@ export function engineSnapshot(
         : "loading",
     frame: options.frame?.() ?? {
       cpuMs: s.cpuMs,
+      triangles: s.triangles,
+      trianglesPerPixel: s.trianglesPerPixel,
       ...(Number.isNaN(s.gpuMs)
         ? {}
         : {
             gpuMs: s.gpuMs,
+            ...(Number.isNaN(s.gpuSpanMs) ? {} : { gpuSpanMs: s.gpuSpanMs }),
+            ...(Number.isNaN(s.gpuWallMs) ? {} : { gpuWallMs: s.gpuWallMs }),
             // Passes that stopped running fade to 0: not shown.
             gpuPasses: Object.entries(engine.gpuPasses).filter(
               ([, ms]) => ms >= 0.005,

@@ -10,6 +10,8 @@
  * belongs to, not the tick it arrived in. Cells that don't apply stay empty.
  */
 
+import { untimedMs } from "./gpuGroups.ts";
+
 /** The columns, in order. */
 export const RECORD_COLUMNS = [
   "kind", // "tick" or "gpu"
@@ -19,6 +21,9 @@ export const RECORD_COLUMNS = [
   "why", // tick: the reasons it ran, joined by "+" (TICK_REASONS)
   "cpu_ms", // tick: main-thread time of its render, unsmoothed
   "gpu_ms", // gpu: the render's GPU time, passes overlapping counted once
+  "gpu_span_ms", // gpu: first timed pass's start to last one's end
+  "gpu_wall_ms", // gpu: submit to done, CPU clock; counts untimed work and queueing
+  "gpu_untimed_ms", // gpu: wall less gpu_ms, an upper bound on untimed work
   "views", // views drawn
   "drawn", // tiles drawn
   "known", // tiles the engine knows of
@@ -34,6 +39,7 @@ export const RECORD_COLUMNS = [
   "occ_hidden", // boxes the latest occlusion result found hidden
   "occ_flips", // occlusion verdicts changed since the last row
   "passes", // gpu: each pass's ms, as "name=ms name=ms"
+  "triangles", // tick: triangles submitted by the render, before GPU culling
   "frame", // tick: 1 when the view's image was saved as frame-<tick>.png
 ] as const;
 
@@ -72,6 +78,7 @@ export interface TickSample {
   occQueries?: number;
   occHidden?: number;
   occFlips?: number;
+  triangles?: number;
   /** The tick's image was saved. */
   frame?: boolean;
 }
@@ -122,6 +129,7 @@ export function tickRow(s: TickSample): string {
     occ_queries: formatNumber(s.occQueries),
     occ_hidden: formatNumber(s.occHidden),
     occ_flips: formatNumber(s.occFlips),
+    triangles: formatNumber(s.rendering ? s.triangles : undefined),
     frame: s.frame ? "1" : "",
   });
 }
@@ -136,12 +144,17 @@ export function gpuRow(
   tick: number,
   ms: number,
   passes: Readonly<Record<string, number>>,
+  spanMs: number = Number.NaN,
+  wallMs: number = Number.NaN,
 ): string {
   return line({
     kind: "gpu",
     t_ms: formatNumber(t),
     tick: formatNumber(tick),
     gpu_ms: formatNumber(ms),
+    gpu_span_ms: formatNumber(spanMs),
+    gpu_wall_ms: formatNumber(wallMs),
+    gpu_untimed_ms: formatNumber(untimedMs(wallMs, ms)),
     passes: Object.entries(passes)
       .map(([name, v]) => `${safeText(name)}=${formatNumber(v)}`)
       .join(" "),

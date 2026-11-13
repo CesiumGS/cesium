@@ -8,6 +8,7 @@ import type { TextureHandle } from "../FrameGraph.ts";
 import type { View } from "../../scene/View.ts";
 import type { ViewFrame, PassBody } from "./viewFrameData.ts";
 import type { ScenePassEngine } from "./scenePasses.ts";
+import type { GpuTimer } from "../../gpu/GpuTimer.ts";
 
 /** The view has caps to draw this frame. */
 export const drawsCaps = (frame: ViewFrame): boolean =>
@@ -17,6 +18,7 @@ export function sectionCapsPass(
   view: View,
   frame: ViewFrame,
   { capLow, capHigh }: { capLow: TextureHandle; capHigh: TextureHandle },
+  timer: Pick<GpuTimer, "passWrites">,
 ): PassBody {
   const attachment = (): GPURenderPassColorAttachment => ({
     view: undefined as never,
@@ -36,6 +38,7 @@ export function sectionCapsPass(
     }
     low.view = get(capLow);
     high.view = get(capHigh);
+    descriptor.timestampWrites = timer.passWrites("caps");
     const pass = enc.beginRenderPass(descriptor);
     const bundle = view.world.clippedBundle("caps");
     if (bundle) {

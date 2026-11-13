@@ -3,6 +3,8 @@
  * passes. Render passes rather than compute because sRGB formats (used for
  * base color and emissive textures) cannot be bound as storage textures.
  */
+import { GpuTimer } from "./GpuTimer.ts";
+
 const SHADER = /* wgsl */ `
 @group(0) @binding(0) var source: texture_2d<f32>;
 @group(0) @binding(1) var linearSampler: sampler;
@@ -75,6 +77,7 @@ export class MipGenerator {
           ],
         });
         const pass = encoder.beginRenderPass({
+          timestampWrites: GpuTimer.groupWrites(this.device, "mips"),
           colorAttachments: [
             { view: view(level, layer), loadOp: "clear", storeOp: "store" },
           ],

@@ -431,7 +431,7 @@ function buildViewFrame(
   graph.addPass(
     "section-caps",
     { writes: [capLow, capHigh] },
-    sectionCapsPass(view, frame, { capLow, capHigh }),
+    sectionCapsPass(view, frame, { capLow, capHigh }, engine.raster.timer),
   );
 
   graph.addPass(

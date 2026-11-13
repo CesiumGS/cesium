@@ -28,6 +28,7 @@ import type { DrawHandle } from "../scene/world/types.ts";
 import type { ImageryProvider } from "./ImageryProvider.ts";
 import imageryWgsl from "../shaders/generated/imagery.wgsl?raw";
 import { SlicePool, type SliceUser, type SliceWorld } from "./SlicePool.ts";
+import { GpuTimer } from "../gpu/GpuTimer.ts";
 
 /** What a layer asks of the world it composites for. */
 export interface GlobeImageryWorld extends SliceWorld {
@@ -796,7 +797,9 @@ export class GlobeImagery implements SliceUser {
     group: GPUBindGroup,
     offset: number,
   ): void {
-    const pass = encoder.beginComputePass();
+    const pass = encoder.beginComputePass({
+      timestampWrites: GpuTimer.groupWrites(this.ctx.device, "imagery"),
+    });
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, group, [offset]);
     const groups = Math.ceil(this.size / 8);

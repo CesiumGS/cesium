@@ -23,6 +23,7 @@ import {
 } from "./warpForms.ts";
 import { PLACEMENT_TERMS } from "./placement.ts";
 import { fitSolveOperator } from "./warpFit.ts";
+import { GpuTimer } from "../gpu/GpuTimer.ts";
 
 /** Rows of a lattice body before its cells (scene/placementTable.ts `LATTICE_HEAD_ROWS`). */
 const HEAD_ROWS = 3;
@@ -312,9 +313,9 @@ export class GpuWarpFitter {
     const y = Math.ceil(batch.cellCount / GROUP_ROW);
     const pass = encoder.beginComputePass({
       label: "warpFit.fit",
-      ...(options.timestampWrites && {
-        timestampWrites: options.timestampWrites,
-      }),
+      timestampWrites:
+        options.timestampWrites ??
+        GpuTimer.groupWrites(this.#device, "warp-fit"),
     });
     pass.setBindGroup(0, group);
     pass.setPipeline(this.#fit);
@@ -322,7 +323,10 @@ export class GpuWarpFitter {
     if (options.check) {
       pass.end();
       encoder.clearBuffer(batch.errors);
-      const checking = encoder.beginComputePass({ label: "warpFit.check" });
+      const checking = encoder.beginComputePass({
+        label: "warpFit.check",
+        timestampWrites: GpuTimer.groupWrites(this.#device, "warp-fit"),
+      });
       checking.setBindGroup(0, group);
       checking.setPipeline(this.#check);
       checking.dispatchWorkgroups(x, y);
@@ -350,7 +354,8 @@ export class GpuWarpFitter {
     const group = this.#bind(batch, this.#spare[2]!, points, evaluated);
     const pass = encoder.beginComputePass({
       label: "warpFit.direct",
-      ...(timestampWrites && { timestampWrites }),
+      timestampWrites:
+        timestampWrites ?? GpuTimer.groupWrites(this.#device, "warp-fit"),
     });
     pass.setPipeline(this.#direct);
     pass.setBindGroup(0, group);
