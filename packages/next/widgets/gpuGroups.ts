@@ -93,3 +93,105 @@ export function groupPasses(
   }
   return GPU_GROUPS.filter((g) => by.has(g)).map((g) => by.get(g)!);
 }
+
+/** A pass's history, aligned to the window, with its summary. */
+export interface PassSeries {
+  name: string;
+  /** One value a sample, oldest first, `length` long; 0 before it appeared. */
+  series: number[];
+  /** Its mean over the window, ms. */
+  mean: number;
+  /** Its largest sample, ms. */
+  max: number;
+}
+
+/** A group's passes over the window, and their sum. */
+export interface GroupSeries {
+  name: GpuGroup;
+  series: number[];
+  mean: number;
+  max: number;
+  /** Its passes, in run order, every one (zero or not). */
+  passes: PassSeries[];
+}
+
+/** The window's GPU time, grouped and aligned, for the inspector's charts. */
+export interface GpuWindow {
+  groups: GroupSeries[];
+  untimed: PassSeries;
+  /** Groups plus untimed, a sample: the stack's height. */
+  total: number[];
+  /** The mean of `total`, ms: the base of every share. */
+  totalMean: number;
+}
+
+const summarize = (name: string, series: number[]): PassSeries => {
+  let sum = 0;
+  let max = 0;
+  for (const v of series) {
+    sum += v;
+    max = Math.max(max, v);
+  }
+  return { name, series, mean: series.length ? sum / series.length : 0, max };
+};
+
+/**
+ * Right-aligns `values` (newest last) to `length` samples, 0 before the first
+ * and for NaN or negative samples (a frame that skipped the pass, or an idle
+ * GPU's untimed share).
+ */
+export function align(values: readonly number[], length: number): number[] {
+  const out = new Array<number>(length).fill(0);
+  const from = Math.max(0, values.length - length);
+  for (let i = from; i < values.length; i++) {
+    const v = values[i]!;
+    out[length - (values.length - i)] = Number.isFinite(v) && v > 0 ? v : 0;
+  }
+  return out;
+}
+
+/**
+ * The passes' histories folded into groups over a window of `length`
+ * samples: each group's sum a sample, the passes in `order` (run order;
+ * others after), and the stack total with the untimed share on top.
+ */
+export function gpuWindow(
+  passes: ReadonlyMap<string, readonly number[]>,
+  order: readonly string[],
+  untimed: readonly number[],
+  length: number,
+): GpuWindow {
+  const rank = new Map(order.map((pass, k) => [pass, k]));
+  const at = (pass: string) => rank.get(pass) ?? order.length;
+  const names = [...passes.keys()].sort((a, b) => at(a) - at(b));
+  const by = new Map<GpuGroup, PassSeries[]>();
+  for (const name of names) {
+    const group = groupOf(name);
+    const list = by.get(group) ?? [];
+    list.push(summarize(name, align(passes.get(name)!, length)));
+    by.set(group, list);
+  }
+  const total = new Array<number>(length).fill(0);
+  const groups = GPU_GROUPS.filter((g) => by.has(g)).map((name) => {
+    const members = by.get(name)!;
+    const sum = new Array<number>(length).fill(0);
+    for (const p of members) {
+      for (let i = 0; i < length; i++) {
+        sum[i]! += p.series[i]!;
+      }
+    }
+    for (let i = 0; i < length; i++) {
+      total[i]! += sum[i]!;
+    }
+    return {
+      ...summarize(name, sum),
+      name,
+      passes: members,
+    };
+  });
+  const rest = summarize("Untimed", align(untimed, length));
+  for (let i = 0; i < length; i++) {
+    total[i]! += rest.series[i]!;
+  }
+  return { groups, untimed: rest, total, totalMean: summarize("", total).mean };
+}

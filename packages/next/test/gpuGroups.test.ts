@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { groupOf, groupPasses, untimedMs } from "../widgets/gpuGroups.ts";
+import {
+  align,
+  gpuWindow,
+  groupOf,
+  groupPasses,
+  untimedMs,
+} from "../widgets/gpuGroups.ts";
 import { gpuRow, RECORD_COLUMNS } from "../widgets/recorderRows.ts";
 import { GpuTimer } from "../src/gpu/GpuTimer.ts";
 
@@ -58,5 +64,38 @@ describe("GPU recorder row", () => {
 describe("GpuTimer groups", () => {
   it("is a no-op without a timer for the device", () => {
     expect(GpuTimer.groupWrites({} as GPUDevice, "imagery")).toBeUndefined();
+  });
+});
+
+describe("the GPU window the inspector charts", () => {
+  it("right-aligns a short history, zero before it and for NaN or negative samples", () => {
+    expect(align([1, Number.NaN, -2, 3], 6)).toEqual([0, 0, 1, 0, 0, 3]);
+    expect(align([1, 2, 3, 4], 2)).toEqual([3, 4]);
+  });
+
+  it("sums passes into groups in run order, keeps idle ones, and stacks untimed on top", () => {
+    const passes = new Map<string, number[]>([
+      ["opaque", [10, 20]],
+      ["shadows", [5, 5]],
+      ["star-cull", [0.01, 0.02]],
+      ["imagery", [2]],
+    ]);
+    const win = gpuWindow(passes, ["shadows", "opaque"], [1, 3], 2);
+    expect(win.groups.map((g) => g.name)).toEqual([
+      "Scene",
+      "Lighting & sky",
+      "Imagery",
+    ]);
+    const scene = win.groups[0]!;
+    expect(scene.passes.map((p) => p.name)).toEqual(["shadows", "opaque"]);
+    expect(scene.series).toEqual([15, 25]);
+    expect(scene.mean).toBe(20);
+    const sky = win.groups[1]!;
+    expect(sky.passes.map((p) => p.name)).toEqual(["star-cull"]);
+    // Imagery arrived in the newest sample only.
+    expect(win.groups[2]!.series).toEqual([0, 2]);
+    expect(win.total[0]).toBeCloseTo(15 + 0.01 + 0 + 1);
+    expect(win.total[1]).toBeCloseTo(25 + 0.02 + 2 + 3);
+    expect(win.totalMean).toBeCloseTo((win.total[0]! + win.total[1]!) / 2);
   });
 });

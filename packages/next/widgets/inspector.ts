@@ -14,7 +14,7 @@
  * multiples for history. Text stays in text colors; marks carry the data
  * colors.
  */
-import { GPU_GROUPS, groupPasses, untimedMs } from "./gpuGroups.ts";
+import { GPU_GROUPS, gpuWindow, untimedMs } from "./gpuGroups.ts";
 import type {
   ContentMix,
   Inspectable,
@@ -57,7 +57,7 @@ const HISTORY = 120;
 const SECTIONS = [
   ["problems", "Problems"],
   ["frame", "Frame"],
-  ["passes", "GPU time by group"],
+  ["passes", "GPU time"],
   ["streaming", "Streaming"],
   ["pipeline", "Content pipeline"],
   ["memory", "Memory"],
@@ -231,7 +231,10 @@ export function attachInspector(
   /** What no timestamp covers, per refresh (`untimedMs`). */
   const untimedHistory: number[] = [];
   /** Groups the user opened (they survive the redraw). */
-  const openGroups = new Set<string>();
+  /** GPU groups the viewer folded away (all open by default). */
+  const closedGroups = new Set<string>();
+  /** The GPU chart as shares of the frame rather than milliseconds. */
+  let gpuShare = read(`${storageKey}.gpuShare`, false);
   const pushPasses = (
     passes: Array<[string, number]> | undefined,
     drawing: boolean,
@@ -281,7 +284,11 @@ export function attachInspector(
   tip.hidden = true;
   root.append(tip);
   const hoverAt = (el: HTMLElement, e: PointerEvent) => {
-    const plot = el.querySelector("svg");
+    // The chart under the pointer (the GPU table's rows have their own),
+    // else the section's first.
+    const plot =
+      (e.target as Element | null)?.closest?.("svg[data-plot]") ??
+      el.querySelector("svg");
     if (!plot) {
       return;
     }
@@ -299,14 +306,18 @@ export function attachInspector(
     when.textContent = `${((HISTORY - 1 - hover) / 4).toFixed(1)} s ago`;
     tip.append(when);
     // The rows' heads show their values at the hovered moment.
-    for (const head of el.querySelectorAll(".ci-history-head")) {
+    // The rows' heads show their values at the hovered moment; the GPU
+    // section's legend carries its own (`data-tip`).
+    for (const head of el.querySelectorAll<HTMLElement>(
+      ".ci-history-head, [data-tip]",
+    )) {
       const [name, value] = head.querySelectorAll("span");
       const row = document.createElement("div");
       row.className = "ci-tip-row";
       const v = document.createElement("strong");
-      v.textContent = value?.textContent ?? "—";
+      v.textContent = head.dataset.tipValue ?? value?.textContent ?? "—";
       const n = document.createElement("span");
-      n.textContent = name?.textContent ?? "";
+      n.textContent = head.dataset.tip ?? name?.textContent ?? "";
       row.append(v, n);
       tip.append(row);
     }
@@ -329,14 +340,22 @@ export function attachInspector(
       const name = el.dataset.group;
       if (name !== undefined) {
         if (el.open) {
-          openGroups.add(name);
+          closedGroups.delete(name);
         } else {
-          openGroups.delete(name);
+          closedGroups.add(name);
         }
       }
     },
     true,
   );
+  bodies.get("passes")!.addEventListener("click", (e) => {
+    const button = (e.target as Element | null)?.closest?.("[data-gpu-scale]");
+    if (button instanceof HTMLElement) {
+      gpuShare = button.dataset.gpuScale === "share";
+      write(`${storageKey}.gpuShare`, gpuShare);
+      renderHistory();
+    }
+  });
   for (const key of ["history", "passes"] as const) {
     const el = bodies.get(key)!;
     el.addEventListener("pointermove", (e) => hoverAt(el, e));
@@ -374,8 +393,9 @@ export function attachInspector(
               passHistory,
               passOrder,
               untimedHistory,
-              openGroups,
+              closedGroups,
               hover,
+              gpuShare,
             )
           : undefined,
       );
@@ -962,78 +982,227 @@ function historyHtml(
   return sparklines(rows, hover);
 }
 
+/** A group's colour token, and a shade of it for its `k`th pass. */
+const groupColor = (name: string) =>
+  `var(--ci-series-${GPU_GROUPS.indexOf(name as never) + 1})`;
+const PASS_SHADES = [1, 0.72, 0.5, 0.34];
+const shade = (k: number) => PASS_SHADES[k % PASS_SHADES.length]!;
+
+/** A compact millisecond figure for the table (its header says ms). */
+const msShort = (v: number) =>
+  v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2);
+
 /**
- * The GPU time over the last 30 s, condensed: the passes folded into groups
- * (`groupPasses`) with the untimed share, as one stacked bar of the frame
- * shown (the newest, or the hovered one) and a legend of group totals; each
- * group opens to its passes, one sparkline a pass. Passes list in a stable
- * run order, so rows don't move when a frame skips one.
+ * Bands stacked bottom up, as SVG polygons over `w` × `h`: each band's
+ * values a sample, scaled so `top` is the full height. `share` divides each
+ * sample by its column's sum (a 100% stack). A 1px gap in the panel's
+ * colour separates the bands.
+ */
+function stackSvg(
+  bands: ReadonlyArray<{
+    series: number[];
+    fill: string;
+    opacity?: number;
+    hatch?: boolean;
+  }>,
+  w: number,
+  h: number,
+  top: number,
+  share: boolean,
+  hover: number | undefined,
+  extra = "",
+): string {
+  const n = bands[0]?.series.length ?? 0;
+  if (n < 2) {
+    return `<svg data-plot viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"></svg>`;
+  }
+  const x = (i: number) => ((i / (n - 1)) * w).toFixed(1);
+  const sums = new Array<number>(n).fill(0);
+  for (const b of bands) {
+    b.series.forEach((v, i) => (sums[i]! += v));
+  }
+  const scale = (i: number) =>
+    share ? (sums[i]! > 0 ? 1 / sums[i]! : 0) : top > 0 ? 1 / top : 0;
+  const y = (v: number) => (h - Math.min(1, v) * (h - 1)).toFixed(1);
+  const lower = new Array<number>(n).fill(0);
+  const polygons = bands.map((b) => {
+    const upper = b.series.map((v, i) => lower[i]! + v * scale(i));
+    const pts = [
+      ...upper.map((v, i) => `${x(i)},${y(v)}`),
+      ...lower.map((v, i) => `${x(i)},${y(v)}`).reverse(),
+    ].join(" ");
+    lower.splice(0, n, ...upper);
+    const fill = b.hatch ? "url(#ci-hatch)" : b.fill;
+    return `<polygon class="ci-band" points="${pts}" style="fill:${fill};fill-opacity:${b.opacity ?? 1}" />`;
+  });
+  const cross =
+    hover !== undefined
+      ? `<line class="ci-cross" x1="${((hover / (HISTORY - 1)) * w).toFixed(1)}" y1="0" x2="${((hover / (HISTORY - 1)) * w).toFixed(1)}" y2="${h}" />`
+      : "";
+  return (
+    `<svg data-plot viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">` +
+    `<defs><pattern id="ci-hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">` +
+    `<rect width="4" height="4" fill="var(--ci-grid)" /><line x1="0" y1="0" x2="0" y2="4" stroke="var(--ci-muted)" stroke-width="1.5" /></pattern></defs>` +
+    `<line class="ci-base" x1="0" y1="${h - 0.5}" x2="${w}" y2="${h - 0.5}" />${polygons.join("")}${extra}${cross}</svg>`
+  );
+}
+
+/** One series as a line on its own scale, in `color`. */
+function lineSvg(
+  series: number[],
+  color: string,
+  w: number,
+  h: number,
+  hover: number | undefined,
+): string {
+  const n = series.length;
+  const max = Math.max(1e-6, ...series);
+  const x = (i: number) => ((i / Math.max(1, n - 1)) * w).toFixed(1);
+  const y = (v: number) => (h - 1 - (v / max) * (h - 3)).toFixed(1);
+  const pts = series.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+  const cross =
+    hover !== undefined
+      ? `<line class="ci-cross" x1="${((hover / (HISTORY - 1)) * w).toFixed(1)}" y1="0" x2="${((hover / (HISTORY - 1)) * w).toFixed(1)}" y2="${h}" />`
+      : "";
+  return (
+    `<svg data-plot viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">` +
+    `<line class="ci-base" x1="0" y1="${h - 0.5}" x2="${w}" y2="${h - 0.5}" />` +
+    `<polygon class="ci-area" style="fill:${color}" points="${pts} ${w},${h - 1} 0,${h - 1}" />` +
+    `<polyline class="ci-line" style="stroke:${color}" points="${pts}" />${cross}</svg>`
+  );
+}
+
+/** A round number at or above `v`, for the chart's scale. */
+function niceCeil(v: number): number {
+  if (!(v > 0)) {
+    return 1;
+  }
+  const p = 10 ** Math.floor(Math.log10(v));
+  return ([1, 2, 2.5, 5, 10].find((m) => m * p >= v) ?? 10) * p;
+}
+
+/**
+ * The GPU time over the last 30 s. On top, the groups stacked over time on
+ * one millisecond scale (or as shares of the frame: `share`), with the
+ * untimed remainder hatched on top and the 60 and 30 fps frame times as
+ * reference lines; its legend gives each group's time at the moment shown.
+ * Below, a table: a row a group (its passes stacked, in shades of its
+ * colour, so their mix shows over time) and a row a pass (its own line, on
+ * its own scale, for shape), each with its time now, its mean over the
+ * window, and a bar of its share of the frame on one common scale. Every
+ * pass has its row, idle ones too. Groups open by default;
+ * `closed` remembers the ones folded away.
  */
 function passesHtml(
   passes: Map<string, number[]>,
   order: readonly string[],
   untimed: number[],
-  open: ReadonlySet<string>,
+  closed: ReadonlySet<string>,
   hover: number | undefined,
+  share: boolean,
 ): string {
-  const valueAt = (values: number[]) =>
-    (hover !== undefined
-      ? values[values.length - HISTORY + hover]
-      : values.at(-1)) ?? 0;
-  const rank = new Map(order.map((pass, k) => [pass, k]));
-  const at = (pass: string) => rank.get(pass) ?? order.length;
-  const sorted = [...passes].sort(([a], [b]) => at(a) - at(b));
-  const groups = groupPasses(
-    sorted.map(([name, series]) => [name, valueAt(series)] as const),
-  );
-  const rest = valueAt(untimed);
-  const color = (name: string) => `s${GPU_GROUPS.indexOf(name as never) + 1}`;
-  const parts = [
-    ...groups.map((g) => ({
-      label: g.name,
-      value: g.ms,
-      color: color(g.name),
-    })),
-    { label: "Untimed", value: rest, color: "su" },
+  const win = gpuWindow(passes, order, untimed, HISTORY);
+  const at = (series: number[]) =>
+    (hover !== undefined ? series[hover] : series.at(-1)) ?? 0;
+  const total = at(win.total);
+  const top = niceCeil(Math.max(...win.total));
+  const bands = [
+    ...win.groups.map((g) => ({ series: g.series, fill: groupColor(g.name) })),
+    { series: win.untimed.series, fill: "var(--ci-muted)", hatch: true },
   ];
-  const total = parts.reduce((sum, p) => sum + p.value, 0) || 1;
-  const bar = `<div class="ci-stack">${parts
-    .map((p) =>
-      p.value > 0
-        ? `<span class="${p.color}" style="flex-grow:${p.value / total}" title="${escape(p.label)}: ${ms(p.value)}"></span>`
-        : "",
-    )
-    .join("")}</div>`;
-  const sections = groups.map((g) => {
-    const members = new Set(g.passes.map(([name]) => name));
-    const rows = sorted
-      .filter(([name]) => members.has(name))
-      .map(([name, series]) => ({ name: escape(name), series, format: ms }));
-    return (
-      `<details class="ci-group"${open.has(g.name) ? " open" : ""} data-group="${escape(g.name)}">` +
-      `<summary><span class="ci-key ${color(g.name)}"></span><span>${escape(g.name)}</span><span class="ci-num">${ms(g.ms)}</span></summary>${sparklines(
-        rows,
-        hover,
-        false,
-      )}</details>`
+  const W = 300;
+  const H = 64;
+  const budget = share
+    ? ""
+    : [16.7, 33.3]
+        .filter((v) => v < top)
+        .map((v) => {
+          const y = (H - (v / top) * (H - 1)).toFixed(1);
+          return `<line class="ci-budget" x1="0" y1="${y}" x2="${W}" y2="${y}" />`;
+        })
+        .join("");
+  const chart =
+    `<div class="ci-gpu-head"><span>GPU frame <strong class="ci-num">${msShort(total)} ms</strong></span>` +
+    `<span class="ci-seg" role="group" aria-label="Scale">` +
+    `<button type="button" data-gpu-scale="ms" aria-pressed="${!share}">ms</button>` +
+    `<button type="button" data-gpu-scale="share" aria-pressed="${share}">share</button></span>` +
+    `<span class="ci-muted">${share ? "0–100%" : `0–${top} ms`}</span></div>` +
+    `<div class="ci-gpu-chart">${stackSvg(bands, W, H, top, share, hover, budget)}</div>`;
+  const legend = `<div class="ci-legend">${[
+    ...win.groups.map(
+      (g) =>
+        `<span data-tip="${escape(g.name)}" data-tip-value="${msShort(at(g.series))} ms"><i class="ci-key" style="background:${groupColor(g.name)}"></i>${escape(g.name)} <b class="ci-num">${msShort(at(g.series))}</b></span>`,
+    ),
+    `<span data-tip="Untimed" data-tip-value="${msShort(at(win.untimed.series))} ms"><i class="ci-key ci-key-hatch"></i>Untimed <b class="ci-num">${msShort(at(win.untimed.series))}</b></span>`,
+  ].join("")}</div>`;
+
+  const base = win.totalMean || 1;
+  const bar = (mean: number, color: string, opacity = 1) =>
+    `<span class="ci-share" title="${((mean / base) * 100).toFixed(1)}% of the frame on average"><span style="inline-size:${Math.min(100, (mean / base) * 100).toFixed(1)}%;background:${color};opacity:${opacity}"></span></span>`;
+  const SW = 64;
+  const SH = 14;
+  const row = (
+    cls: string,
+    key: string,
+    name: string,
+    plot: string,
+    now: number,
+    mean: number,
+    shareBar: string,
+  ) =>
+    `<div class="ci-prow ${cls}">${key}<span class="ci-pname" title="${escape(name)}">${escape(name)}</span>${plot}` +
+    `<span class="ci-num">${msShort(now)}</span><span class="ci-num ci-mean">${msShort(mean)}</span>${shareBar}</div>`;
+  const header = `<div class="ci-prow ci-phead"><span></span><span>Pass</span><span>30 s</span><span>now</span><span>mean</span><span>share</span></div>`;
+  const groups = win.groups.map((g) => {
+    const color = groupColor(g.name);
+    const stacked = stackSvg(
+      g.passes.map((p, k) => ({
+        series: p.series,
+        fill: color,
+        opacity: shade(k),
+      })),
+      SW,
+      SH,
+      g.max,
+      false,
+      hover,
     );
+    const summary = row(
+      "ci-pgroup",
+      `<i class="ci-key" style="background:${color}"></i>`,
+      g.name,
+      stacked,
+      at(g.series),
+      g.mean,
+      bar(g.mean, color),
+    );
+    const passRows = g.passes.map((p, k) =>
+      row(
+        "",
+        `<i class="ci-key" style="background:${color};opacity:${shade(k)}"></i>`,
+        p.name,
+        lineSvg(p.series, color, SW, SH, hover),
+        at(p.series),
+        p.mean,
+        bar(p.mean, color, shade(k)),
+      ),
+    );
+    return `<details class="ci-group"${closed.has(g.name) ? "" : " open"} data-group="${escape(g.name)}"><summary>${summary}</summary>${passRows.join("")}</details>`;
   });
-  sections.push(
-    `<div class="ci-group-flat"><span class="ci-key su"></span><span>Untimed</span><span class="ci-num">${ms(rest)}</span></div>${
-      untimed.some((v) => v > 0)
-        ? sparklines(
-            [{ name: "Untimed", series: untimed, format: ms }],
-            hover,
-            false,
-          )
-        : ""
-    }`,
+  const untimedRow = row(
+    "ci-pgroup ci-pflat",
+    `<i class="ci-key ci-key-hatch"></i>`,
+    "Untimed",
+    lineSvg(win.untimed.series, "var(--ci-muted)", SW, SH, hover),
+    at(win.untimed.series),
+    win.untimed.mean,
+    bar(win.untimed.mean, "var(--ci-muted)"),
   );
-  return `${bar}${sections.join("")}<div class="ci-note">${
+  return `${chart}${legend}<div class="ci-ptable">${header}${groups.join("")}${untimedRow}</div><div class="ci-note">${
     hover !== undefined
       ? `${((HISTORY - 1 - hover) / 4).toFixed(1)} s ago`
-      : "Newest at the right; hover for the values at a moment."
-  } Untimed is the frame interval less timed passes; none while the GPU idles.</div>`;
+      : "Newest at the right; hover for a moment's values."
+  } Dashed lines: 16.7 and 33.3 ms (60 and 30 fps). Untimed is the GPU frame less timed passes, while the GPU is busy back to back. Share: of the frame, averaged over 30 s.</div>`;
 }
 
 const finite = (v: number) => (Number.isFinite(v) ? v : 0);
@@ -1381,10 +1550,49 @@ const CSS = `
 .cesium-inspector .ci-geometry { inline-size: 100%; border-collapse: collapse; margin-top: 6px; }
 .cesium-inspector .ci-geometry th { text-align: start; font-weight: 400; color: var(--ci-muted); font-size: 11px; padding: 0 0 2px; }
 .cesium-inspector .ci-geometry th:not(:first-child), .cesium-inspector .ci-geometry td.ci-num { text-align: right; padding-inline-start: 8px; }
-.cesium-inspector .ci-group > summary, .cesium-inspector .ci-group-flat { display: grid; grid-template-columns: 10px 1fr auto; gap: 6px; align-items: center; cursor: pointer; margin: 2px 0; }
-.cesium-inspector .ci-group-flat { cursor: default; }
-.cesium-inspector .ci-group > summary .ci-num, .cesium-inspector .ci-group-flat .ci-num { text-align: right; }
-.cesium-inspector .ci-group > :not(summary) { margin-inline-start: 16px; }
+.cesium-inspector .ci-gpu-head { display: flex; align-items: center; gap: 8px; margin: 2px 0 4px; color: var(--ci-muted); font-size: 11px; }
+.cesium-inspector .ci-gpu-head > span:first-child { color: var(--ci-text); }
+.cesium-inspector .ci-gpu-head > .ci-muted { margin-inline-start: auto; }
+.cesium-inspector .ci-seg { display: inline-flex; border: 1px solid var(--ci-border); border-radius: 4px; overflow: hidden; }
+.cesium-inspector .ci-seg button {
+  font: inherit; font-size: 10px; color: var(--ci-muted); background: transparent;
+  border: 0; padding: 1px 6px; cursor: pointer;
+}
+.cesium-inspector .ci-seg button + button { border-inline-start: 1px solid var(--ci-border); }
+.cesium-inspector .ci-seg button[aria-pressed="true"] { color: var(--ci-strong); background: var(--ci-grid); }
+.cesium-inspector .ci-seg button:focus-visible { outline: 2px solid var(--ci-series-1); outline-offset: -2px; }
+.cesium-inspector .ci-gpu-chart svg { display: block; inline-size: 100%; block-size: 64px; }
+.cesium-inspector .ci-band { stroke: #0d0d0d; stroke-width: 1; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.cesium-inspector .ci-budget { stroke: var(--ci-muted); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.6; vector-effect: non-scaling-stroke; }
+.cesium-inspector .ci-legend { display: flex; flex-wrap: wrap; gap: 2px 10px; margin: 5px 0 8px; font-size: 11px; color: var(--ci-text); }
+.cesium-inspector .ci-legend > span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.cesium-inspector .ci-legend b { font-weight: 500; }
+.cesium-inspector i.ci-key { display: inline-block; flex: none; }
+.cesium-inspector .ci-key-hatch { background: repeating-linear-gradient(45deg, var(--ci-muted) 0 1.5px, var(--ci-grid) 1.5px 3px); }
+.cesium-inspector .ci-ptable { font-size: 11px; }
+.cesium-inspector .ci-prow {
+  display: grid; grid-template-columns: 10px minmax(0, 1fr) 64px 38px 38px 42px;
+  gap: 6px; align-items: center; min-block-size: 18px;
+}
+.cesium-inspector .ci-prow svg { display: block; inline-size: 64px; block-size: 14px; }
+.cesium-inspector .ci-prow > .ci-num { text-align: right; }
+.cesium-inspector .ci-prow .ci-mean { color: var(--ci-muted); }
+.cesium-inspector .ci-pname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ci-text); }
+.cesium-inspector .ci-phead { color: var(--ci-muted); font-size: 10px; min-block-size: 14px; border-bottom: 1px solid var(--ci-border); margin-bottom: 2px; }
+.cesium-inspector .ci-phead > span:nth-child(n + 4) { text-align: right; }
+.cesium-inspector .ci-pgroup .ci-pname { color: var(--ci-strong); font-weight: 600; }
+.cesium-inspector .ci-group > summary { list-style: none; cursor: pointer; }
+.cesium-inspector .ci-group > summary::-webkit-details-marker { display: none; }
+.cesium-inspector .ci-group > summary .ci-pname::before {
+  content: ""; display: inline-block; inline-size: 4px; block-size: 4px; margin: 0 6px 2px 1px;
+  border-right: 1.5px solid var(--ci-muted); border-bottom: 1.5px solid var(--ci-muted); transform: rotate(-45deg);
+}
+.cesium-inspector .ci-group[open] > summary .ci-pname::before { transform: rotate(45deg); }
+.cesium-inspector .ci-group > summary:focus-visible { outline: 2px solid var(--ci-series-1); outline-offset: 1px; border-radius: 2px; }
+.cesium-inspector .ci-group > .ci-prow .ci-pname { padding-inline-start: 13px; }
+.cesium-inspector .ci-group + .ci-group, .cesium-inspector .ci-group + .ci-pflat { border-top: 1px solid var(--ci-grid); }
+.cesium-inspector .ci-share { position: relative; block-size: 6px; background: var(--ci-grid); border-radius: 2px; overflow: hidden; }
+.cesium-inspector .ci-share > span { position: absolute; inset: 0 auto 0 0; border-radius: 2px; }
 .cesium-inspector .ci-history-head { display: flex; justify-content: space-between; color: var(--ci-muted); font-size: 11px; }
 .cesium-inspector .ci-history-row svg { display: block; inline-size: 100%; block-size: 20px; }
 .cesium-inspector .ci-line { fill: none; stroke: var(--ci-series-1); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
