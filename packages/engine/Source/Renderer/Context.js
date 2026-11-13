@@ -1719,7 +1719,6 @@ Context.prototype.destroy = function () {
     }
   }
 
-  this._gl.getExtension("WEBGL_lose_context")?.loseContext();
   this._shaderCache = this._shaderCache.destroy();
   this._textureCache = this._textureCache.destroy();
   this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
@@ -1728,6 +1727,7 @@ Context.prototype.destroy = function () {
   this._defaultNormalTexture =
     this._defaultNormalTexture && this._defaultNormalTexture.destroy();
   this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
+  this._gl.getExtension("WEBGL_lose_context")?.loseContext();
 
   return destroyObject(this);
 };
