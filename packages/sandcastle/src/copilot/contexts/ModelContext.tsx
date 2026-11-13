@@ -8,14 +8,14 @@ import {
   useEffect,
 } from "react";
 import { AIClientFactory } from "../ai/clients/AIClientFactory";
-import type { AIModel, AIRoute, ModelSelection } from "../ai/types";
+import type { AIModel, AIProvider, AIRoute, ModelSelection } from "../ai/types";
 
 export interface ModelInfo {
   id: AIModel;
   route: AIRoute;
   displayName: string;
   displaySuffix?: string;
-  provider: "gemini" | "anthropic";
+  provider: AIProvider;
   isAvailable: boolean;
 }
 
