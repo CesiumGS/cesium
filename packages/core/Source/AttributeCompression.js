@@ -26,8 +26,8 @@ const AttributeCompression = {};
  * Cigolle et al 2014: {@link http://jcgt.org/published/0003/02/01/}
  *
  * @param {Cartesian3} vector The normalized vector to be compressed into 2 component 'oct' encoding.
- * @param {Cartesian2} result The 2 component oct-encoded unit length vector.
  * @param {number} rangeMax The maximum value of the SNORM range. The encoded vector is stored in log2(rangeMax+1) bits.
+ * @param {Cartesian2} result The 2 component oct-encoded unit length vector.
  * @returns {Cartesian2} The 2 component oct-encoded unit length vector.
  *
  * @exception {DeveloperError} vector must be normalized.
