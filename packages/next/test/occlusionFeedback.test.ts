@@ -797,3 +797,84 @@ describe("what may block", () => {
     expect(bundles).toMatch(/MaterialFlags\.blendedOnly\) ===/);
   });
 });
+
+describe("a still camera reaches a fixed point", () => {
+  /** Runs selection tick after tick against a pyramid that always hides `hidden`. */
+  function settle(
+    top: Tile,
+    hidden: Tile[],
+    ticks: number,
+    seed?: (f: OcclusionFeedback) => void,
+  ) {
+    const feedback = new OcclusionFeedback();
+    seed?.(feedback);
+    const eye = {
+      position: Float64Array.of(R + 4000, 0, 0),
+      direction: Float64Array.of(-1, 0, 0),
+      up: Float64Array.of(0, 0, 1),
+      right: Float64Array.of(0, 1, 0),
+    };
+    const selection = policy();
+    const drawn: Tile[][] = [];
+    const flips: number[] = [];
+    for (let t = 0; t < ticks; t++) {
+      feedback.begin(eye.position, eye.direction, 4000);
+      const sv = viewAt(4000, -85, feedback.forCamera(eye));
+      const result = selection.select(top, 1600, sv);
+      drawn.push(result.selected);
+      const list = feedback.take()!;
+      const bits = new Uint32Array(MAX_QUERIES / 32);
+      for (let i = 0; i < list.count; i++) {
+        if (hidden.includes(list.tiles[i]!)) {
+          bits[i >> 5] = (bits[i >> 5]! | (1 << (i & 31))) >>> 0;
+        }
+      }
+      flips.push(feedback.apply(list, bits, 0));
+    }
+    return { drawn, flips };
+  }
+  const ready = (top: Tile) =>
+    allTiles(top).forEach((t) => {
+      t.state = "ready";
+    });
+
+  it("keeps the refinement a hidden tile already has, and stops changing", () => {
+    const top = pyramidTree();
+    ready(top);
+    const mid = top.children[0]!;
+    const { drawn, flips } = settle(top, [mid], 30);
+    // Drawn finely from the first tick, and never coarsened by the verdict.
+    for (const set of drawn) {
+      expect(set).toHaveLength(4);
+      expect(set).not.toContain(mid);
+    }
+    // The verdict itself settles: no change after the third tick, so no more renders.
+    expect(flips.slice(3).every((n) => n === 0)).toBe(true);
+  });
+
+  it("keeps a hidden tile unrefined when it hadn't refined", () => {
+    const top = pyramidTree();
+    ready(top);
+    const mid = top.children[0]!;
+    const { drawn, flips } = settle(top, [mid], 30, (f) => {
+      // Two results already in: hidden before the camera stopped.
+      f.tick = 1;
+      const state = mid.viewState(0);
+      state.occludedTicks = 2;
+      state.occludedAt = 1;
+    });
+    for (const set of drawn) {
+      expect(set).toEqual([mid]);
+    }
+    expect(flips.slice(3).every((n) => n === 0)).toBe(true);
+  });
+
+  it("with nothing hidden, selects the same every tick", () => {
+    const top = pyramidTree();
+    ready(top);
+    const { drawn } = settle(top, [], 10);
+    expect(
+      new Set(drawn.map((s) => s.map((t) => allTiles(top).indexOf(t)).join())),
+    ).toHaveProperty("size", 1);
+  });
+});

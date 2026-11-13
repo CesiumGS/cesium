@@ -352,6 +352,8 @@ export function readOcclusion(
     readback: GPUBuffer;
     words: number;
   }>,
+  /** Asks for a tick: selection runs again when a result changed what it sees. */
+  requestRender: () => void,
 ): void {
   for (const read of reads.splice(0)) {
     void read.readback.mapAsync(GPUMapMode.READ, 0, read.words * 4).then(
@@ -360,7 +362,14 @@ export function readOcclusion(
           read.readback.getMappedRange(0, read.words * 4).slice(0),
         );
         read.readback.unmap();
-        read.view.occlusionState.apply(read.list, bits, read.viewId);
+        const flipped = read.view.occlusionState.apply(
+          read.list,
+          bits,
+          read.viewId,
+        );
+        if (flipped > 0) {
+          requestRender();
+        }
       },
       () => read.view.occlusionState.release(read.list),
     );

@@ -380,7 +380,7 @@ export function render(
         far! > 0 && near! <= far! ? { near: near!, far: far! } : undefined;
     });
   }
-  readOcclusion(engine.raster.occlusionReads);
+  readOcclusion(engine.raster.occlusionReads, () => engine.requestRender());
   for (const readback of engine.raster.listCounts.splice(0)) {
     whenMapped(readback, () => {
       const needed = new Uint32Array(readback.getMappedRange())[0]!;

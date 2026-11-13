@@ -217,9 +217,11 @@ export class OcclusionFeedback {
   /**
    * A list's results arrived: `bits` has one bit a query, set where the box
    * was hidden, for the view with this id. A result from before a camera cut
-   * is dropped.
+   * is dropped. Returns how many tiles it changed the answer for: only then
+   * does selection have anything new to do.
    */
-  apply(list: OcclusionQueries, bits: Uint32Array, id: number): void {
+  apply(list: OcclusionQueries, bits: Uint32Array, id: number): number {
+    let flipped = 0;
     if (list.epoch === this.epoch) {
       for (let i = 0; i < list.count; i++) {
         const tile = list.tiles[i];
@@ -227,6 +229,7 @@ export class OcclusionFeedback {
           continue;
         }
         const state = tile.viewState(id);
+        const before = this.occluded(state);
         if (state.occlusionEpoch !== this.epoch) {
           state.occlusionEpoch = this.epoch;
           state.occludedTicks = 0;
@@ -234,10 +237,14 @@ export class OcclusionFeedback {
         state.occludedAt = Math.max(state.occludedAt, list.tick);
         const hidden = ((bits[i >> 5]! >>> (i & 31)) & 1) === 1;
         state.occludedTicks = hidden ? state.occludedTicks + 1 : 0;
+        if (this.occluded(state) !== before) {
+          flipped++;
+        }
       }
     }
     list.clear();
     list.inFlight = false;
+    return flipped;
   }
 
   /** The tick's list goes to the GPU: it isn't reused until `apply` or `release`. */

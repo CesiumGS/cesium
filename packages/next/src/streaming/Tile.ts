@@ -91,6 +91,8 @@ export interface TileViewState {
   occludedTicks: number;
   occludedAt: number;
   occlusionEpoch: number;
+  /** `Budgeted` refined the tile in its last walk: occlusion doesn't coarsen it. */
+  heldRefined: boolean;
 }
 
 /** A scheme or a protocol-relative URI: not relative to its base's origin. */
@@ -544,6 +546,7 @@ export class Tile {
         occludedTicks: 0,
         occludedAt: 0,
         occlusionEpoch: 0,
+        heldRefined: false,
       };
       this.views[viewId] = s;
     }

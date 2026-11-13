@@ -603,8 +603,15 @@ export class BudgetedSelection extends StepwiseSelection {
     // Only where the parent stays drawn in place of its children (REPLACE):
     // an ADD tile's children add to it, so they are walked, selected and
     // requested as ever, hidden ones after every visible request.
+    // A tile already refined keeps what it has: hiding only blocks new
+    // refinement (coarsening it would change the depth, and the hidden
+    // children could show again). It un-refines only as its error says, or
+    // by eviction.
     const refine =
-      forced || (wanted && !(occluded && tile.refine === "REPLACE"));
+      forced ||
+      (wanted &&
+        !(occluded && tile.refine === "REPLACE" && !state.heldRefined));
+    state.heldRefined = refine;
     if (wanted && !refine) {
       // Its children's loads in flight go on.
       for (const child of tile.children) {
