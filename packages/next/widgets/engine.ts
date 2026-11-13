@@ -7,6 +7,7 @@ import {
   SlicePool,
   modelUsage,
   type ContentSummary,
+  type DebugView,
   type Engine,
   type RequestPurpose,
   type Tileset3D,
@@ -134,8 +135,25 @@ function recordable(
   if (params.has("record") && params.get("record") !== "0") {
     r.start();
   }
+  // `&debug=level` (or tiles, error, state, stretch) turns a debug view on
+  // in every view the engine has now, for diagnosis without a UI.
+  const debug = params.get("debug");
+  if (debug && URL_DEBUG_VIEWS.has(debug)) {
+    for (const view of engine.views) {
+      view.debug = debug as DebugView;
+    }
+  }
   return r;
 }
+
+/** The debug views `&debug=` may name (`View.debug`). */
+const URL_DEBUG_VIEWS: ReadonlySet<string> = new Set<DebugView>([
+  "level",
+  "tiles",
+  "error",
+  "state",
+  "stretch",
+]);
 
 /** One snapshot of a 2.0 engine (for hosts that build their own `Inspectable`). */
 export function engineSnapshot(
