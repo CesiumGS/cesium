@@ -16,7 +16,8 @@ import { verticalExaggerationEdge } from "../src/georeference/verticalExaggerati
 import { webMercator } from "../src/georeference/webMercator.ts";
 import { treeFromJson } from "../src/streaming/Tile.ts";
 import { drawnTile, type TileWarp } from "../src/streaming/tileWarp.ts";
-import { composeSphere } from "../src/scene/routeBounds.ts";
+import { writeFileSync } from "node:fs";
+import { composeBox } from "../src/scene/routeBounds.ts";
 import { scaleAboutEdge } from "../src/transforms/scaleAbout.ts";
 import { bend } from "../src/transforms/bend.ts";
 import { smooth, type SmoothEdge } from "../src/transform/graph.ts";
@@ -59,67 +60,139 @@ function ecef(lon: number, lat: number, h: number): number[] {
   return [...out];
 }
 
-/** A sample of the sphere: a 9 × 9 × 9 grid inside it, the same directions on its surface, and its 8 cube corners' directions. */
-function sample(c: ArrayLike<number>, r: number): number[][] {
-  const points: number[][] = [];
+/** East, north and up (columns) at a longitude and latitude in degrees. */
+function enu(lon: number, lat: number): number[] {
+  const l = (lon * Math.PI) / 180;
+  const p = (lat * Math.PI) / 180;
+  const up = [
+    Math.cos(p) * Math.cos(l),
+    Math.cos(p) * Math.sin(l),
+    Math.sin(p),
+  ];
+  const east = [-Math.sin(l), Math.cos(l), 0];
+  const north = [
+    up[1]! * east[2]! - up[2]! * east[1]!,
+    up[2]! * east[0]! - up[0]! * east[2]!,
+    up[0]! * east[1]! - up[1]! * east[0]!,
+  ];
+  return [...east, ...north, ...up];
+}
+
+/** Half axes of a box with half extents `h` along east, north and up at (lon, lat). */
+function boxAxes(lon: number, lat: number, h: number[]): number[] {
+  const b = enu(lon, lat);
+  return [0, 1, 2].flatMap((k) => [0, 1, 2].map((r) => b[k * 3 + r]! * h[k]!));
+}
+
+const sphereAxes = (r: number) => [r, 0, 0, 0, r, 0, 0, 0, r];
+
+const lines: string[] = [];
+
+/**
+ * The composed box against a dense sample of the image of the region: a
+ * 9 × 9 × 9 grid of it with its faces' grid. `outside` is how far a sampled
+ * image lies past the box along its axes (m), `ratios` the box's half
+ * lengths over the sampled extents along them.
+ */
+function measure(route: Route, c: number[], axes: number[]) {
+  const composed = composeBox(route, undefined, new Map(), c, axes);
+  expect(composed).toBeDefined();
+  const box = composed!;
+  const unit = [0, 1, 2].map((i) => {
+    const len = Math.hypot(
+      box.axes[i * 3]!,
+      box.axes[i * 3 + 1]!,
+      box.axes[i * 3 + 2]!,
+    );
+    return { len, u: [0, 1, 2].map((r) => box.axes[i * 3 + r]! / len) };
+  });
+  const extent = [0, 0, 0];
+  const image = new Float64Array(3);
   for (let i = -4; i <= 4; i++) {
     for (let j = -4; j <= 4; j++) {
       for (let k = -4; k <= 4; k++) {
-        const d = [i / 4, j / 4, k / 4];
-        const len = Math.hypot(d[0]!, d[1]!, d[2]!);
-        if (len === 0) {
-          continue;
-        }
-        for (const s of len <= 1 ? [1, 1 / len] : [1 / len]) {
-          points.push([0, 1, 2].map((a) => c[a]! + d[a]! * s * r));
+        const t = [i / 4, j / 4, k / 4];
+        const p = [0, 1, 2].map(
+          (r) =>
+            c[r]! +
+            axes[r]! * t[0]! +
+            axes[3 + r]! * t[1]! +
+            axes[6 + r]! * t[2]!,
+        );
+        routeForward(route, p, image);
+        for (let a = 0; a < 3; a++) {
+          const d = [0, 1, 2].reduce(
+            (sum, r) => sum + (image[r]! - box.center[r]!) * unit[a]!.u[r]!,
+            0,
+          );
+          extent[a] = Math.max(extent[a]!, Math.abs(d));
         }
       }
     }
   }
-  return points;
+  const outside = Math.max(...unit.map((u, a) => extent[a]! - u.len));
+  const ratios = unit.map((u, a) => u.len / extent[a]!);
+  return { box, outside, ratios };
 }
 
-/** Sphere radius in metres and, in a geographic node's input, in the node's local metric (the caller makes the centre). */
-function measure(route: Route, c: number[], r: number) {
-  const composed = composeSphere(route, undefined, new Map(), c, r);
-  expect(composed).toBeDefined();
-  const image = new Float64Array(3);
-  routeForward(route, c, image);
-  let sampled = 0;
-  let outside = 0;
-  for (const p of sample(c, r)) {
-    const q = routeForward(route, p, new Float64Array(3));
-    const d = Math.hypot(
-      q[0]! - composed!.center[0]!,
-      q[1]! - composed!.center[1]!,
-      q[2]! - composed!.center[2]!,
-    );
-    sampled = Math.max(sampled, d);
-    outside = Math.max(outside, d - composed!.radius);
-  }
-  return { composed: composed!, sampled, outside };
+function check(
+  name: string,
+  route: Route,
+  c: number[],
+  axes: number[],
+  most: number,
+): void {
+  const { outside, ratios } = measure(route, c, axes);
+  lines.push(`${name}: ${ratios.map((r) => r.toFixed(3)).join(" ")}`);
+  expect(outside, name).toBeLessThan(1e-6 * Math.max(1, ...axes.map(Math.abs)));
+  expect(Math.max(...ratios), name).toBeLessThanOrEqual(most);
 }
 
-describe("composed spheres", () => {
-  // Measured ratios (composed radius over sampled): 1.0 to 1.07 for UTM,
-  // 1.0 to 1.22 for the exaggeration except where a sphere straddles the top
-  // of the blend band (k 5 to 10 at the ceiling, r = 1 km: up to 1.72), where
+describe("composed boxes", () => {
+  // Measured ratios (the box's half length over the sampled extent, per
+  // axis): 1.0 to 1.2 for the exaggeration up to 10 km regions (a flat
+  // 100 x 100 x 1 km tile at 5 km under x10 with a 9 km ceiling: 1.00, 1.00,
+  // 1.34); a 200 km flat region at the ceiling reaches 4.4 vertically, where
   // the largest slope in reach overstates a displacement that falls to 0.
-  it("hold the exaggeration's image, within 2 times the sampled radius", () => {
+  // UTM: up to 1.5.
+  it("hold the exaggeration's image of spheres and flat boxes", () => {
     for (const ceiling of [9000, 1e9]) {
       for (const factor of [1, 2, 5, 10]) {
         const route = routeOf(verticalExaggerationEdge({ factor, ceiling }));
         for (const r of [100, 1000, 10_000, 100_000]) {
           for (const h of [0, 3000, 6000, 9000]) {
             const c = ecef(-105, 40, h);
-            const { composed, sampled, outside } = measure(route, c, r);
-            const ratio = composed.radius / sampled;
-            expect(outside).toBeLessThan(1e-6 * Math.max(1, r));
-            expect(ratio).toBeLessThanOrEqual(2);
+            check(
+              `ex c=${ceiling} k=${factor} sphere r=${r} h=${h}`,
+              route,
+              c,
+              sphereAxes(r),
+              r > 10_000 ? 4.5 : 1.6,
+            );
+            check(
+              `ex c=${ceiling} k=${factor} flat r=${r} h=${h}`,
+              route,
+              c,
+              boxAxes(-105, 40, [r, r, Math.max(1, r / 100)]),
+              r > 10_000 ? 4.5 : 1.6,
+            );
           }
         }
       }
     }
+  });
+
+  it("hold the flat tile at 5 km under a x10 exaggeration with a 9 km ceiling", () => {
+    const route = routeOf(
+      verticalExaggerationEdge({ factor: 10, ceiling: 9000 }),
+    );
+    check(
+      "flat 100x100x1 km",
+      route,
+      ecef(-105, 40, 5000),
+      boxAxes(-105, 40, [50_000, 50_000, 500]),
+      1.5,
+    );
   });
 
   it("hold a UTM route's image (geocentric to geographic, then UTM zone 13)", () => {
@@ -136,10 +209,20 @@ describe("composed spheres", () => {
       for (const r of [100, 1000, 10_000, 100_000]) {
         for (const h of [0, 4500, 9000]) {
           const c = ecef(lon, lat, h);
-          const { sampled, outside, composed } = measure(route, c, r);
-          const ratio = composed.radius / sampled;
-          expect(outside).toBeLessThan(1e-6 * Math.max(1, r));
-          expect(ratio).toBeLessThanOrEqual(1.5);
+          check(
+            `utm ${lon},${lat} sphere r=${r} h=${h}`,
+            route,
+            c,
+            sphereAxes(r),
+            1.6,
+          );
+          check(
+            `utm ${lon},${lat} flat r=${r} h=${h}`,
+            route,
+            c,
+            boxAxes(lon, lat, [r, r, Math.max(1, r / 100)]),
+            1.6,
+          );
         }
       }
     }
@@ -162,6 +245,20 @@ describe("composed spheres", () => {
         routeOf(geocentricToGeographic(), geographicToGeocentric()),
         ecef(10, 50, 1000),
       ],
+    ];
+    for (const [name, route, c] of cases) {
+      for (const r of [10, 100, 1000]) {
+        check(`${name} sphere r=${r}`, route, c, sphereAxes(r), 1.6);
+        check(
+          `${name} flat r=${r}`,
+          route,
+          c,
+          boxAxes(10, 50, [r, r, r / 50]),
+          1.6,
+        );
+      }
+    }
+    const plain: [string, Route, number[]][] = [
       [
         "scaleAbout",
         routeOf(scaleAboutEdge({ center: [1, 2, 3], factors: [2, 3, 0.5] })),
@@ -169,14 +266,9 @@ describe("composed spheres", () => {
       ],
       ["bend", routeOf(bend({ curvature: 0.002 })), [100, 20, 30]],
     ];
-    for (const [name, route, c] of cases) {
+    for (const [name, route, c] of plain) {
       for (const r of [10, 100, 300]) {
-        const { sampled, outside, composed } = measure(route, c, r);
-        expect(outside).toBeLessThan(1e-6 * Math.max(1, r));
-        // scaleAbout's stretch is 3 in one direction and 0.5 in another.
-        expect(composed.radius / sampled, `${name} r=${r}`).toBeLessThanOrEqual(
-          name === "scaleAbout" ? 3.1 : 2.5,
-        );
+        check(`${name} sphere r=${r}`, route, c, sphereAxes(r), 1.6);
       }
     }
   });
@@ -194,7 +286,7 @@ describe("composed spheres", () => {
       }),
     );
     expect(
-      composeSphere(route, undefined, new Map(), ecef(0, 0, 0), 100),
+      composeBox(route, undefined, new Map(), ecef(0, 0, 0), sphereAxes(100)),
     ).toBeUndefined();
   });
 
@@ -237,23 +329,26 @@ describe("composed spheres", () => {
     };
     const composed: TileWarp = {
       ...base,
-      sphere: (c, r) => ({
+      box: (c, axes) => ({
         center: Float64Array.of(c[0]!, c[1]!, c[2]!),
-        radius: 3 * r,
+        axes: Float64Array.from(axes, (v) => 3 * v),
         sigmaMax: 3,
       }),
     };
-    const none: TileWarp = { ...base, sphere: () => undefined };
+    const none: TileWarp = { ...base, box: () => undefined };
     const a = drawnTile(make(), composed);
     expect(sampled).toBe(0);
     expect(a.sigmaMax).toBe(3);
-    // The box's corners are 10·√3 from its centre.
-    expect(a.volume.kind === "sphere" && a.volume.sphere.radius).toBeCloseTo(
-      30 * Math.sqrt(3),
-      9,
-    );
+    // The box's half axes are 10, tripled.
+    expect(a.volume.kind === "box" && a.volume.obb.halfAxes[0]).toBe(30);
     const b = drawnTile(make(), none);
     expect(sampled).toBe(1);
     expect(b.sigmaMax).toBe(2);
+  });
+
+  it("writes the ratios", () => {
+    if (process.env.SHOW_RATIOS) {
+      writeFileSync(process.env.SHOW_RATIOS, lines.join("\n"));
+    }
   });
 });

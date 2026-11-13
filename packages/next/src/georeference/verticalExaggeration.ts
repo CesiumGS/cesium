@@ -9,7 +9,11 @@
 //   g = min(h, a) - base + u - u² / (2 band).
 // The inverse is exact, branch by branch (the profile is monotone for k > 0).
 // Output is affine in `factor`, the one parameter a slider moves.
-import type { SmoothEdge } from "../transform/graph.ts";
+import type {
+  BoundRegion,
+  DeclaredBound,
+  SmoothEdge,
+} from "../transform/graph.ts";
 import {
   edgeOf,
   type Named,
@@ -23,7 +27,14 @@ import {
   WGS84_RADII,
   type Radii,
 } from "./ellipsoid.ts";
-import { curvatureRadii } from "./regionBounds.ts";
+import {
+  curvatureRadii,
+  enuAtNormal,
+  halfExtents,
+  hull,
+  liftBound,
+  UNBOUNDED,
+} from "./regionBounds.ts";
 
 type K = "factor" | "ceiling" | "baseHeight" | "band";
 
@@ -54,35 +65,41 @@ export function unliftProfile(h2: number, v: Named<K>): number {
 }
 
 /**
- * σ_max of the lift's Jacobian over a sphere (the declared bound). With
+ * The lift's Jacobian over a box, in east, north and up at its centre. With
  * S the shape operator, J = I + (k - 1)(g S (I + hS)⁻¹ + g' n nᵀ) is
- * symmetric with n and the two principal directions as axes, so its
- * singular values are |1 + (k - 1) g'| along the normal and
- * |1 + (k - 1) g / (ρ + h)| along each principal direction, ρ the radius of
- * curvature. Heights within the sphere are within its radius of the
- * centre's (the height is 1-Lipschitz), g is non-decreasing and g' falls
- * from 1 to 0, so each factor's range follows from g and g' at the ends of
- * that interval, over the parameters' ranges (their corners: the profile is
- * monotone in the ceiling and base height).
+ * symmetric: along the normal 1 + (k - 1) g', and on the surface a 2 × 2
+ * block with eigenvalues 1 + (k - 1) g / (ρ + h), ρ a radius of curvature.
+ * Heights over the box: the height is convex above the surface with a unit
+ * gradient n and a Hessian of at most 1 / (ρ_min + h), so it is within the
+ * box's vertical half extent below the centre's and that plus the sag
+ * ½ (e² + n²) / (ρ_min + h) above. g is non-decreasing and g' falls from 1 to
+ * 0, so their ranges follow from those heights, over the parameters'
+ * (their corners: the profile is monotone in the ceiling and base height).
+ * The frame at a point of the box is tilted from the centre's by at most
+ * the normal's turn over the box, and turned about the vertical by at most
+ * the longitude's.
  */
-function liftBound(radii: Radii) {
+function exaggerationBound(radii: Radii) {
   const { min: rhoMin, max: rhoMax } = curvatureRadii(radii);
   const at = heightFrame();
   return (
-    region: { readonly center: ArrayLike<number>; readonly radius: number },
+    region: BoundRegion,
     ranges: Readonly<Record<string, readonly [number, number]>>,
-  ): { lipschitz: number } => {
+  ): DeclaredBound => {
     try {
       locate(radii, region.center, at, false);
     } catch {
-      return { lipschitz: Infinity };
+      return UNBOUNDED;
     }
-    const r = region.radius;
-    const hLow = at.h - r;
-    const hHigh = at.h + r;
-    if (!(rhoMin + hLow > 0)) {
-      return { lipschitz: Infinity };
+    const basis = enuAtNormal(at.n);
+    const w = halfExtents(basis, region.axes);
+    const reach = Math.hypot(w[0], w[1], w[2]);
+    if (!(rhoMin + at.h - reach > 0)) {
+      return UNBOUNDED;
     }
+    const lam = 1 / (rhoMin + at.h - reach);
+    const hLow = at.h - w[2];
+    const hHigh = at.h + w[2] + 0.5 * lam * (w[0] * w[0] + w[1] * w[1]);
     const k = ranges.factor!;
     let gLow = Infinity;
     let gHigh = -Infinity;
@@ -105,17 +122,22 @@ function liftBound(radii: Radii) {
     const tHigh =
       gHigh > 0 ? gHigh / (rhoMin + hLow) : gHigh / (rhoMax + hHigh);
     const tLow = gLow < 0 ? gLow / (rhoMin + hLow) : gLow / (rhoMax + hHigh);
-    let worst = 0;
-    for (const f of [k[0] - 1, k[1] - 1]) {
-      worst = Math.max(
-        worst,
-        Math.abs(1 + f * dgLow),
-        Math.abs(1 + f * dgHigh),
-        Math.abs(1 + f * tLow),
-        Math.abs(1 + f * tHigh),
-      );
-    }
-    return { lipschitz: worst };
+    const f = [k[0] - 1, k[1] - 1];
+    const dT = hull(f.flatMap((x) => [x * tLow, x * tHigh]));
+    const dU = hull(f.flatMap((x) => [x * dgLow, x * dgHigh]));
+    const tilt = lam * reach;
+    const axis = Math.hypot(region.center[0]!, region.center[1]!);
+    const twist = axis > reach ? reach / (axis - reach) + tilt : Math.PI;
+    return {
+      basisIn: basis,
+      basisOut: basis,
+      absJ: liftBound(
+        dT,
+        dU,
+        Math.min(Math.PI, tilt),
+        Math.min(Math.PI, twist),
+      ),
+    };
   };
 }
 
@@ -188,7 +210,7 @@ export function verticalExaggerationDescriptor(
       out[1] = y + (h - h2) * frame.n[1]!;
       out[2] = z + (h - h2) * frame.n[2]!;
     },
-    bound: liftBound(radii),
+    bound: exaggerationBound(radii),
     separable: ["factor"],
     identity: { factor: 1 },
     source: sourceOf(radii),

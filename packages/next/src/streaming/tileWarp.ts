@@ -9,7 +9,7 @@
 import type { Vec3 } from "../math/vec3.ts";
 import type { DrawHandle } from "../scene/world/types.ts";
 import type { Tile } from "./Tile.ts";
-import { volumeObb, type TileVolume } from "./volumes.ts";
+import { obb, sphereFromObb, volumeObb, type TileVolume } from "./volumes.ts";
 
 /** How many maps (views reaching an anchor by routes of different shape) a tile keeps drawn volumes for besides the one last asked. */
 const MAPS_PER_TILE = 3;
@@ -52,16 +52,16 @@ export interface TileWarp {
    */
   bounds(points: ArrayLike<number>, spacing?: number): WarpedPoints;
   /**
-   * The sphere (`center`, `radius`, in the tileset's coordinates) carried
-   * through the map by declared bounds, with no map sampled: its image's
-   * bounding sphere, which is sound where the bounds are, and the largest
-   * stretch. Undefined where the map has a step with no declared bound; the
-   * volume is then carried by `bounds`' samples.
+   * The box (`center`, half `axes` as columns, column-major 3×3, in the
+   * tileset's coordinates) carried through the map by declared bounds, with
+   * no map sampled: a box holding its image, sound where the bounds are, and
+   * the largest stretch. Undefined where the map has a step with no declared
+   * bound; the volume is then carried by `bounds`' samples.
    */
-  sphere?(
+  box?(
     center: ArrayLike<number>,
-    radius: number,
-  ): { center: Vec3; radius: number; sigmaMax: number } | undefined;
+    axes: ArrayLike<number>,
+  ): { center: Vec3; axes: Float64Array; sigmaMax: number } | undefined;
   /** What `bounds` gave, for the scale as it is now: the `image` it came with, taken again. */
   rebound?(image: object): WarpedPoints;
   /** The worst error (m) of the fits drawing these draws against the route; 0 where there is none yet. */
@@ -159,7 +159,7 @@ function sphereVolume(center: Vec3, radius: number): TileVolume {
 /** The volume carried through `warp`: a box or region by its image's bounding sphere, a sphere by its centre's image and σ_max · radius. A map that fails on a sample (not finite) leaves the volume where it is. */
 function carried(volume: TileVolume, warp: TileWarp): Carried {
   const made = carry(volume, warp);
-  const c = made.volume.kind === "sphere" ? made.volume.sphere : undefined;
+  const c = made.volume.sphere;
   if (
     c &&
     Number.isFinite(c.radius) &&
@@ -176,7 +176,7 @@ function carried(volume: TileVolume, warp: TileWarp): Carried {
 /** `remake`'s volume, with `carried`'s check that it is finite. */
 function carriedAgain(volume: TileVolume, remake: () => Carried): Carried {
   const made = remake();
-  const c = made.volume.kind === "sphere" ? made.volume.sphere : undefined;
+  const c = made.volume.sphere;
   return c &&
     Number.isFinite(c.radius) &&
     Number.isFinite(c.center[0]! + c.center[1]! + c.center[2]!) &&
@@ -190,41 +190,30 @@ function carriedAgain(volume: TileVolume, remake: () => Carried): Carried {
     : { volume, sigmaMax: 1 };
 }
 
-/** The sphere holding a volume: itself, or a box's corners about its centre. */
+/** A volume as a box: its own, or a sphere's cube. */
 function holding(volume: TileVolume): {
   center: ArrayLike<number>;
-  radius: number;
+  axes: ArrayLike<number>;
 } {
   const box = volumeObb(volume);
-  if (!box) {
-    return volume.kind === "sphere"
-      ? volume.sphere
-      : { center: [0, 0, 0], radius: NaN };
+  if (box) {
+    return { center: box.center, axes: box.halfAxes };
   }
-  const h = box.halfAxes;
-  let radius2 = 0;
-  for (let i = -1; i <= 1; i += 2) {
-    for (let j = -1; j <= 1; j += 2) {
-      for (let k = -1; k <= 1; k += 2) {
-        radius2 = Math.max(
-          radius2,
-          (i * h[0]! + j * h[3]! + k * h[6]!) ** 2 +
-            (i * h[1]! + j * h[4]! + k * h[7]!) ** 2 +
-            (i * h[2]! + j * h[5]! + k * h[8]!) ** 2,
-        );
-      }
-    }
-  }
-  return { center: box.center, radius: Math.sqrt(radius2) };
+  const r = volume.kind === "sphere" ? volume.sphere.radius : NaN;
+  return {
+    center: volume.sphere.center,
+    axes: [r, 0, 0, 0, r, 0, 0, 0, r],
+  };
 }
 
 function carry(volume: TileVolume, warp: TileWarp): Carried {
-  if (warp.sphere) {
+  if (warp.box) {
     const around = holding(volume);
-    const made = warp.sphere(around.center, around.radius);
+    const made = warp.box(around.center, around.axes);
     if (made) {
+      const box = obb(made.center, made.axes);
       return {
-        volume: sphereVolume(made.center, made.radius),
+        volume: { kind: "box", obb: box, sphere: sphereFromObb(box) },
         sigmaMax: made.sigmaMax,
       };
     }

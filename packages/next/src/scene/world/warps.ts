@@ -88,7 +88,7 @@ import {
   type DrawnMap,
   type ScaledImage,
 } from "../warpBounds.ts";
-import { composeSphere } from "../routeBounds.ts";
+import { composeBox } from "../routeBounds.ts";
 import { affinePart, fitLatticeSteps, routeDisplacement } from "../warpFit.ts";
 import {
   WarpFitCache,
@@ -389,10 +389,10 @@ class AnchorTileWarp implements TileWarp {
     }
   }
 
-  sphere(
+  box(
     center: ArrayLike<number>,
-    radius: number,
-  ): { center: Vec3; radius: number; sigmaMax: number } | undefined {
+    axes: ArrayLike<number>,
+  ): { center: Vec3; axes: Float64Array; sigmaMax: number } | undefined {
     const route = this.#route;
     if (!route) {
       return undefined;
@@ -402,7 +402,7 @@ class AnchorTileWarp implements TileWarp {
       this.#after = invertAffine(mat4(), affinePart(route));
     }
     try {
-      return composeSphere(route, this.#after, this.#spans, center, radius);
+      return composeBox(route, this.#after, this.#spans, center, axes);
     } catch {
       // A step undefined at the centre: sampled, as ever.
       return undefined;

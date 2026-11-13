@@ -6,6 +6,8 @@
 // `smooth` edge the graph takes.
 import {
   smooth,
+  type BoundRegion,
+  type DeclaredBound,
   type Params,
   type SmoothEdge,
   type SmoothForward,
@@ -24,27 +26,10 @@ export interface ParamSpec {
   readonly expected?: readonly [number, number];
 }
 
-/**
- * A region of a node's input coordinates, a sphere. Where the coordinates
- * are geographic (longitude and latitude in degrees, height in metres) its
- * radius is in local metres: the east, north and up distances at its centre
- * (an east metre is RAD · (N + h) · cos φ degrees' worth of arc, a north
- * metre RAD · (M + h)), so a ball of 1 km is 1 km whichever the axis. The
- * output a declared bound gives is a sphere in the output's coordinates,
- * metres likewise.
- */
-export interface Region {
-  readonly center: ArrayLike<number>;
-  readonly radius: number;
-}
+export type { BoundRegion, DeclaredBound } from "../transform/graph.ts";
 
 /** The values each parameter takes, by name: [lowest, highest]. */
 export type ParamRanges = Readonly<Record<string, readonly [number, number]>>;
-
-/** A declared bound over a region: an upper bound on σ_max of the Jacobian over it, for every parameter value in range. Infinity where there is none (a singularity in reach). */
-export interface DeclaredBound {
-  readonly lipschitz: number;
-}
 
 export interface TransformDescriptor {
   /** What the transform is, in a route's `shapeKey`. */
@@ -60,13 +45,15 @@ export interface TransformDescriptor {
   /** The separable parameters' values at which the function is the identity (`SmoothSpec.identity`). */
   readonly identity?: Readonly<Record<string, number>>;
   /**
-   * A closed-form bound on σ_max of the Jacobian over `region`, for every
-   * parameter value in `ranges` (the parameters' `expected` ranges are
-   * already in them). Sound, not tight: selection composes these along a
+   * A closed-form bound on the Jacobian over a parallelepiped (`BoundRegion`),
+   * for every parameter value in `ranges` (the parameters' `expected` ranges
+   * are already in them). Sound, not tight: selection composes these along a
    * route in place of sampling it (`scene/routeBounds.ts`). Left out, a
    * route through the transform is sampled.
    */
-  readonly bound?: (region: Region, ranges: ParamRanges) => DeclaredBound;
+  readonly bound?: (region: BoundRegion, ranges: ParamRanges) => DeclaredBound;
+  /** Which sides are geographic coordinates (`SmoothSpec.geographic`). */
+  readonly geographic?: { readonly in?: boolean; readonly out?: boolean };
   /** `forward` as restricted-JS text: it parses with `parseTransform` to the same function. */
   readonly source: string;
   /** The entry point in `shaders/transforms.slang` that evaluates it with `fwd_diff`, when there is one. */
@@ -125,6 +112,9 @@ export function edgeOf(
     source: descriptor.source,
     separable: descriptor.separable,
     ...(descriptor.identity !== undefined && { identity: descriptor.identity }),
+    ...(descriptor.geographic !== undefined && {
+      geographic: descriptor.geographic,
+    }),
     ...(descriptor.bound !== undefined && {
       bound: (region, ranges) =>
         descriptor.bound!(region, withExpected(descriptor, ranges)),

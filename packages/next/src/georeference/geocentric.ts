@@ -18,7 +18,17 @@ import {
   WGS84_RADII,
   type Radii,
 } from "./ellipsoid.ts";
-import { curvatureRadii, localMetric, RAD as DEG } from "./regionBounds.ts";
+import {
+  curvatureRadii,
+  enuAt,
+  enuAtNormal,
+  halfExtents,
+  IDENTITY,
+  localMetric,
+  RAD as DEG,
+  scaledRotation,
+  UNBOUNDED,
+} from "./regionBounds.ts";
 
 const RAD = Math.PI / 180;
 
@@ -77,19 +87,38 @@ export function geographicToGeocentricDescriptor(
       out[1] = Math.atan2(n[2]!, Math.hypot(n[0]!, n[1]!)) / RAD;
       out[2] = frame.h;
     },
+    geographic: { in: true },
     bound(region) {
-      // The columns for east, north and up at the centre are orthogonal: the
-      // distance from the axis over the centre's, the meridian radius and
-      // height over the centre's, and 1.
+      // Per east, north and up metre at the centre the columns of J are the
+      // axes of the frame at the point, scaled by (distance from the axis)
+      // over the centre's, (M + h) over the centre's, and 1: a rotation
+      // from the frame at the centre's image, scaled by column.
       const c = region.center;
-      const r = region.radius;
-      const m = localMetric(a, e2, c[1]!, c[2]!, r);
+      const w = halfExtents(IDENTITY, region.axes);
+      const { max, min } = curvatureRadii(radii);
+      const m = localMetric(a, e2, c[1]!, c[2]!, w[1]);
       if (!(m.east > 0)) {
-        return { lipschitz: Infinity };
+        return UNBOUNDED;
       }
-      const east = 1 + (r + curvatureRadii(radii).max * m.dphi) / m.east;
-      const north = (m.meridianMax + c[2]! + r) / m.north;
-      return { lipschitz: Math.max(east, north, 1) };
+      const dlam = w[0] / m.east;
+      const delta = (w[2] + max * m.dphi) / m.east;
+      const hLow = c[2]! - w[2];
+      const s: [[number, number], [number, number], [number, number]] = [
+        [1 - delta, 1 + delta],
+        [(min + hLow) / m.north, (max + c[2]! + w[2]) / m.north],
+        [1, 1],
+      ];
+      const tilt = Math.hypot(m.dphi, dlam * Math.cos(c[1]! * DEG));
+      return {
+        basisIn: IDENTITY,
+        basisOut: enuAt(c[0]!, c[1]!),
+        absJ: scaledRotation(
+          s,
+          Math.min(Math.PI, tilt),
+          Math.min(Math.PI, dlam + tilt),
+          "columns",
+        ),
+      };
     },
     separable: [],
     source: `(p, params) => {
@@ -137,28 +166,50 @@ export function geocentricToGeographicDescriptor(
     inverse(q, _params, out) {
       toGeocentric(a, e2, q[0]!, q[1]!, q[2]!, out);
     },
+    geographic: { out: true },
     bound(region) {
-      // Longitude, latitude and height in the metric at the output's centre:
-      // the rows of J are orthogonal, of norm (distance from the axis at the
-      // centre) / (at the point), (M + h at the centre) / (at the point),
-      // and 1.
+      // The rows of J, per east, north and up metre at the output's centre
+      // (`BoundRegion`), are the axes of the frame at the point scaled by
+      // (distance from the axis at the centre) over (at the point),
+      // (M + h at the centre) over (at the point), and 1.
       const x = region.center[0]!;
       const y = region.center[1]!;
-      const r = region.radius;
       try {
         locate(radii, region.center, frame, false);
       } catch {
-        return { lipschitz: Infinity };
+        return UNBOUNDED;
       }
-      const { n, h } = frame;
-      const lat = Math.atan2(n[2]!, Math.hypot(n[0]!, n[1]!)) / DEG;
-      const m = localMetric(a, e2, lat, h, r);
+      const basis = enuAtNormal(frame.n);
+      const w = halfExtents(basis, region.axes);
+      const reach = Math.hypot(w[0], w[1], w[2]);
+      const lat =
+        Math.atan2(frame.n[2]!, Math.hypot(frame.n[0]!, frame.n[1]!)) / DEG;
+      const m = localMetric(a, e2, lat, frame.h, reach);
+      const { min, max } = curvatureRadii(radii);
       const axis = Math.hypot(x, y);
-      const lowest = curvatureRadii(radii).min + h - r;
-      if (!(axis > r && lowest > 0)) {
-        return { lipschitz: Infinity };
+      const hLow = frame.h - w[2];
+      if (!(axis > reach && min + frame.h - reach > 0)) {
+        return UNBOUNDED;
       }
-      return { lipschitz: Math.max(axis / (axis - r), m.north / lowest, 1) };
+      const s: [[number, number], [number, number], [number, number]] = [
+        [axis / (axis + reach), axis / (axis - reach)],
+        [
+          m.north / (max + frame.h + reach),
+          m.north / (min + Math.min(hLow, frame.h - reach)),
+        ],
+        [1, 1],
+      ];
+      const tilt = reach / (min + frame.h - reach);
+      return {
+        basisIn: basis,
+        basisOut: IDENTITY,
+        absJ: scaledRotation(
+          s,
+          Math.min(Math.PI, tilt),
+          Math.min(Math.PI, reach / (axis - reach) + tilt),
+          "rows",
+        ),
+      };
     },
     separable: [],
     source: [

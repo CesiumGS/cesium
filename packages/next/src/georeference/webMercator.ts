@@ -7,7 +7,12 @@
 import type { SmoothEdge } from "../transform/graph.ts";
 import { edgeOf, type TransformDescriptor } from "../transforms/descriptor.ts";
 import { checkRadii, WGS84_RADII, type Radii } from "./ellipsoid.ts";
-import { localMetric } from "./regionBounds.ts";
+import {
+  halfExtents,
+  IDENTITY,
+  localMetric,
+  UNBOUNDED,
+} from "./regionBounds.ts";
 
 const RAD = Math.PI / 180;
 
@@ -38,22 +43,38 @@ export function webMercatorDescriptor(
       out[1] = Math.atan(Math.sinh(q[1]! / a)) / RAD;
       out[2] = q[2]!;
     },
+    geographic: { in: true },
     bound(region) {
-      // Per east, north and up metre at the centre: a / (distance from the
-      // axis), a / (cos φ · (M + h)) with φ the highest latitude in reach, 1.
+      // Per east, north and up metre at the centre: J is diagonal, a / (the
+      // distance from the axis), a / (cos φ · (M + h)) with φ the highest
+      // latitude in reach, and 1.
       const c = region.center;
-      const r = region.radius;
+      const w = halfExtents(IDENTITY, region.axes);
       const [x, y, z] = radii;
       if (Math.abs(x - y) > 1e-6 * x) {
-        return { lipschitz: Infinity };
+        return UNBOUNDED;
       }
-      const m = localMetric(x, 1 - (z * z) / (x * x), c[1]!, c[2]!, r);
+      const m = localMetric(x, 1 - (z * z) / (x * x), c[1]!, c[2]!, w[1]);
       const phi = Math.min(Math.PI / 2, Math.abs(c[1]!) * RAD + m.dphi);
       const cos = Math.cos(phi);
       if (!(m.east > 0 && cos > 0)) {
-        return { lipschitz: Infinity };
+        return UNBOUNDED;
       }
-      return { lipschitz: Math.max(a / m.east, a / (cos * m.north), 1) };
+      return {
+        basisIn: IDENTITY,
+        basisOut: IDENTITY,
+        absJ: Float64Array.of(
+          a / m.east,
+          0,
+          0,
+          0,
+          a / (cos * m.north),
+          0,
+          0,
+          0,
+          1,
+        ),
+      };
     },
     separable: [],
     source: `(p, params) => {
