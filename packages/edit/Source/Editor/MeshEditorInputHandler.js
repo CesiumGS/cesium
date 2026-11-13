@@ -242,7 +242,7 @@ class MeshEditorInputHandler {
     return {
       mesh: mesh._key,
       componentType: picked.componentType,
-      index: picked.index,
+      componentKey: picked.componentKey,
     };
   }
 
