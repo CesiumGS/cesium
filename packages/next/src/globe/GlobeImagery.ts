@@ -109,7 +109,12 @@ export function imageryLevel(p: ImageryProvider, tile: Tile): number {
     (p.tileSize * levelZeroTiles);
   return Math.min(
     Math.max(
-      Math.round(Math.log2(levelZeroSpacing / tile.geometricError)),
+      Math.round(
+        Math.log2(
+          levelZeroSpacing /
+            (tile.globe!.refit?.levelError ?? tile.geometricError),
+        ),
+      ),
       p.minimumLevel,
     ),
     p.maximumLevel,

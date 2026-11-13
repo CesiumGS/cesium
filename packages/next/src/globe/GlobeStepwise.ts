@@ -29,7 +29,7 @@ import {
   volumeIntersectPlane,
   type Region,
 } from "../streaming/volumes.ts";
-import { drawnTile } from "../streaming/tileWarp.ts";
+import { drawnTile, terrainDrawnError } from "../streaming/tileWarp.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { CLIP_BOXES } from "../scene/contentLimits.ts";
 import type { Vec3 } from "../math/vec3.ts";
@@ -471,7 +471,7 @@ export class GlobeStepwiseSelection implements TileSelection {
     // stretches it by at most σ_max over the tile, and its fit adds its own.
     const drawn = P.view.warp ? drawnTile(tile, P.view.warp) : undefined;
     const geometricError = drawn
-      ? tile.geometricError * drawn.sigmaMax + drawn.fit
+      ? terrainDrawnError(tile, drawn, P.view.position)
       : tile.geometricError;
     // view.height is already divided by the pixel ratio.
     let error =

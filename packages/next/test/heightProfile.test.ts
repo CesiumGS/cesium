@@ -426,5 +426,9 @@ describe("terrain under a ceiling", () => {
       9,
     );
     expect(drawn.sigmaMax).toBeGreaterThanOrEqual(1);
+    // The vertical stretch is the profile's own dh'/dh, never past k.
+    expect(range.slopeMax).toBeGreaterThanOrEqual(1);
+    expect(range.slopeMax).toBeLessThanOrEqual(K + 1e-9);
+    expect(drawn.slopeMax).toBe(range.slopeMax);
   });
 });

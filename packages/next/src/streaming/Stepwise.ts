@@ -25,6 +25,7 @@ import {
   drawnContentVolume,
   drawnRequestVolume,
   drawnTile,
+  terrainDrawnError,
   type TileWarp,
 } from "./tileWarp.ts";
 
@@ -596,7 +597,10 @@ export class StepwiseSelection implements TileSelection {
       // stretches it by at most σ_max over the volume (an estimate), and its
       // fit adds its own error.
       const drawn = drawnTile(source, view.warp);
-      error = error * drawn.sigmaMax + drawn.fit;
+      error =
+        source.globe && drawn.slopeMax !== undefined
+          ? terrainDrawnError(source, drawn, view.position, error)
+          : error * drawn.sigmaMax + drawn.fit;
     }
     if (error === 0) {
       return 0;
