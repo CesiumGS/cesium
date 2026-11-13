@@ -36,6 +36,7 @@ import {
   flatTerrainHeights,
   interpolateHeight,
   type MorphSource,
+  type TerrainRefitParent,
   type Rectangle,
   type TerrainHeights,
   type TerrainTileInfo,
@@ -60,6 +61,10 @@ import type {
 
 /** The most levels a tile morphs across: past it the ancestor's surface says little about the tile. */
 const MAX_MORPH_LEVELS = 16;
+
+/** Main-thread time one window may spend on deviations the worker did not measure. */
+const REFIT_BUDGET_MS = 2;
+const REFIT_WINDOW_MS = 16;
 
 /** The ellipsoid's drawn tiles' vertices and triangles (shared, read-only). */
 let flatHeights: TerrainHeights | undefined;
@@ -91,6 +96,12 @@ export type TerrainLoader = (
      * over this tile's place in it (`MorphSource`): geomorphing.
      */
     morph?: MorphSource;
+    /**
+     * The tile's parent's surface and the tile's quadrant in it: the loader
+     * measures the tile's deviation from it as it decodes, and returns it as
+     * `info.deviation` (`TerrainRefitParent`).
+     */
+    refit?: TerrainRefitParent;
     /**
      * A tile below the last level with data: clipped from the nearest tile
      * with data, over `rect`, from its `heights`, or, once they have left
@@ -183,6 +194,11 @@ export class TerrainSource {
    * where the surface is smooth. On by default.
    */
   refitErrors = true;
+  /**
+   * Main-thread milliseconds per 16 ms the page may spend measuring deviations
+   * the worker did not (`measure`): the rest queue. Infinity: no limit.
+   */
+  refitBudgetMs = REFIT_BUDGET_MS;
   /**
    * An estimate, not a bound, for tiles whose children are not loaded: a
    * tile's error is taken as `PREDICTED_ERROR_RATIO` times its deviation
@@ -602,6 +618,7 @@ export class TerrainSource {
         skirtHeight,
         ...heightNormalRequest(this.wantsHeightNormal?.()),
         ...this.morphRequest(tile, a, data !== undefined),
+        ...this.refitRequest(tile, a, data !== undefined),
         ...(data
           ? {
               upsample: {
@@ -667,6 +684,28 @@ export class TerrainSource {
     };
   }
 
+  /**
+   * The parent's surface, when it is resident and a data tile's, so the
+   * worker measures this tile's deviation from it (the same heights object
+   * as a parent morph source: one copy goes over).
+   */
+  private refitRequest(
+    tile: Tile,
+    a: GlobeTile,
+    upsampled: boolean,
+  ): { refit?: TerrainRefitParent } {
+    const p = tile.parent?.globe;
+    if (upsampled || this.flat || !this.refitErrors || !p?.heights) {
+      return {};
+    }
+    if (p.upsampledFrom || a.level !== p.level + 1) {
+      return {};
+    }
+    return {
+      refit: { heights: p.heights, qx: a.x - 2 * p.x, qy: a.y - 2 * p.y },
+    };
+  }
+
   private loaded(tile: Tile, g: GlobeTile, info: TerrainTileInfo): void {
     g.morphs = info.morphs === true;
     if (info.available) {
@@ -684,6 +723,9 @@ export class TerrainSource {
       }
     }
     if (info.heights && !g.upsampledFrom && !this.flat && this.refitErrors) {
+      if (info.deviation !== undefined && g.refit.deviation === undefined) {
+        g.refit.deviation = info.deviation;
+      }
       this.refitFrom(tile);
     }
     g.own = {
@@ -726,30 +768,11 @@ export class TerrainSource {
    * either mesh (a 16 by 16 index per mesh, built on first use).
    */
   private refitFrom(tile: Tile): void {
-    const measure = (child: Tile, parent: Tile): void => {
-      const c = child.globe!;
-      const p = parent.globe!;
-      if (
-        c.refit.deviation !== undefined ||
-        !c.heights ||
-        !p.heights ||
-        c.upsampledFrom ||
-        p.upsampledFrom
-      ) {
-        return;
-      }
-      c.refit.deviation = deviationFromParent(
-        c.heights,
-        p.heights,
-        c.x - 2 * p.x,
-        c.y - 2 * p.y,
-      );
-    };
     if (tile.parent?.globe) {
-      measure(tile, tile.parent);
+      this.measure(tile, tile.parent);
     }
     for (const child of tile.children) {
-      measure(child, tile);
+      this.measure(child, tile);
     }
     this.refitError(tile);
     // A new deviation changes the parent's bound; a lowered bound changes
@@ -758,6 +781,94 @@ export class TerrainSource {
     while (up?.globe && this.refitError(up)) {
       up = up.parent;
     }
+  }
+
+  /**
+   * Measures a child's deviation from its parent on this thread, within a
+   * time budget (`REFIT_BUDGET_MS` per `REFIT_WINDOW_MS`): what the worker
+   * did not (the parent was not resident at the request), or a child that
+   * decoded before its parent. Over the budget, the pair waits in a queue
+   * and the errors keep their level estimates (sound) until it is drained.
+   */
+  private measure(child: Tile, parent: Tile): void {
+    const c = child.globe!;
+    const p = parent.globe!;
+    if (
+      c.refit.deviation !== undefined ||
+      !c.heights ||
+      !p.heights ||
+      c.upsampledFrom ||
+      p.upsampledFrom
+    ) {
+      return;
+    }
+    const now = performance.now();
+    if (now - this.refitWindowStart >= REFIT_WINDOW_MS) {
+      this.refitWindowStart = now;
+      this.refitSpent = 0;
+    }
+    if (this.refitSpent >= this.refitBudgetMs || this.refitQueue.length > 0) {
+      if (!this.refitQueue.some((j) => j.child === child)) {
+        this.refitQueue.push({ child, parent });
+      }
+      this.scheduleDrain();
+      return;
+    }
+    c.refit.deviation = deviationFromParent(
+      c.heights,
+      p.heights,
+      c.x - 2 * p.x,
+      c.y - 2 * p.y,
+    );
+    this.refitSpent += performance.now() - now;
+  }
+
+  private readonly refitQueue: { child: Tile; parent: Tile }[] = [];
+  private refitWindowStart = 0;
+  private refitSpent = 0;
+  private refitTimer: ReturnType<typeof setTimeout> | undefined;
+
+  private scheduleDrain(): void {
+    if (this.refitTimer === undefined && this.refitQueue.length > 0) {
+      this.refitTimer = setTimeout(() => {
+        this.refitTimer = undefined;
+        this.drainRefits();
+      }, REFIT_WINDOW_MS);
+    }
+  }
+
+  /** Measures queued pairs until the budget is spent; the rest wait for the next window. */
+  private drainRefits(): void {
+    const start = performance.now();
+    this.refitWindowStart = start;
+    this.refitSpent = 0;
+    while (this.refitQueue.length > 0) {
+      const job = this.refitQueue.shift()!;
+      const c = job.child.globe;
+      const p = job.parent.globe;
+      if (
+        !c?.heights ||
+        !p?.heights ||
+        c.refit.deviation !== undefined ||
+        p.upsampledFrom
+      ) {
+        continue;
+      }
+      c.refit.deviation = deviationFromParent(
+        c.heights,
+        p.heights,
+        c.x - 2 * p.x,
+        c.y - 2 * p.y,
+      );
+      let up: Tile | undefined = job.parent;
+      while (up?.globe && this.refitError(up)) {
+        up = up.parent;
+      }
+      if (performance.now() - start >= this.refitBudgetMs) {
+        break;
+      }
+    }
+    this.scheduleDrain();
   }
 
   /**
