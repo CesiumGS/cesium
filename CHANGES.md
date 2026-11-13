@@ -23,6 +23,7 @@
 - Fixed `WebGL: INVALID_VALUE: uniform3fv: no array` errors on drivers that list a uniform array as active but return no location for its elements. [#13980](https://github.com/CesiumGS/cesium/issues/13980)
 - `metadataClass` and `metadataStatistics` values are now only added to a model's shader for the properties a `CustomShader` reads through `fsInput.metadataClass` / `fsInput.metadataStatistics` (or the `vsInput` equivalents). Since these values are baked into the GLSL, tilesets whose tiles embed different class definitions or statistics previously compiled a separate shader program for each variant. [#14008](https://github.com/CesiumGS/cesium/pull/14008)
 - Fixed `Heap.insert` keeping a reference to the element it removes once the heap is full. Through `RequestScheduler`, a destroyed `Cesium3DTileset` could stay in memory with its whole tile tree. [#13894](https://github.com/CesiumGS/cesium/issues/13894)
+- Fixed KML loading option types to accept a Resource as sourceUri, matching existing runtime support. [#13945](https://github.com/CesiumGS/cesium/pull/13945)
 
 ## 1.147 - 2026-11-02
 
@@ -82,8 +83,6 @@ import { Cartesian3, Color } from "@cesium/core";
 - Added batch `.setPositions` method to BufferPrimitiveCollection, improving performance when animating vertex positions on a range of many point, line, or polygon primitives. [#13590](https://github.com/CesiumGS/cesium/issues/13590)
 
 #### Fixes :wrench:
-
-- Fixed KML loading option types to accept a Resource as sourceUri, matching existing runtime support.
 
 - Reduced load time and memory usage for implicitly-tiled tilesets. [#13808](https://github.com/CesiumGS/cesium/pull/13808)
 - Reduced load time, memory usage, and rendering overhead for models and 3D Tiles using `EXT_mesh_primitive_edge_visibility` in `EdgeDisplayMode.SURFACES_ONLY` by deferring edge geometry construction until edges are displayed or needed for snapping.
