@@ -1,3 +1,5 @@
+// @ts-check
+
 import JulianDate from "./JulianDate.js";
 import TimeInterval from "./TimeInterval.js";
 

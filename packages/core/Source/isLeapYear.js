@@ -1,3 +1,5 @@
+// @ts-check
+
 import DeveloperError from "./DeveloperError.js";
 
 /**

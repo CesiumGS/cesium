@@ -1,3 +1,5 @@
+// @ts-check
+
 import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Check from "./Check.js";
