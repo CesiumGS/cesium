@@ -1,13 +1,14 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
-import GeometryPipeline from "../Core/GeometryPipeline.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import VertexFormat from "../Core/VertexFormat.js";
+import {
+  Cartesian3,
+  Ellipsoid,
+  EllipsoidGeometry,
+  GeometryPipeline,
+  Math as CesiumMath,
+  Matrix4,
+  VertexFormat,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import RenderState from "../Renderer/RenderState.js";
@@ -41,7 +42,7 @@ import SceneMode from "./SceneMode.js";
  * @see Scene.skyAtmosphere
  */
 function SkyAtmosphere(ellipsoid) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = ellipsoid ?? Ellipsoid.WGS84;
 
   /**
    * Determines if the atmosphere is shown.
@@ -66,7 +67,7 @@ function SkyAtmosphere(ellipsoid) {
   const scaleVector = Cartesian3.multiplyByScalar(
     ellipsoid.radii,
     outerEllipsoidScale,
-    new Cartesian3()
+    new Cartesian3(),
   );
   this._scaleMatrix = Matrix4.fromScale(scaleVector);
   this._modelMatrix = new Matrix4();
@@ -251,17 +252,17 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
   const rotationMatrix = Matrix4.fromRotationTranslation(
     frameState.context.uniformState.inverseViewRotation,
     Cartesian3.ZERO,
-    scratchModelMatrix
+    scratchModelMatrix,
   );
   const rotationOffsetMatrix = Matrix4.multiplyTransformation(
     rotationMatrix,
     Axis.Y_UP_TO_Z_UP,
-    scratchModelMatrix
+    scratchModelMatrix,
   );
   const modelMatrix = Matrix4.multiply(
     this._scaleMatrix,
     rotationOffsetMatrix,
-    scratchModelMatrix
+    scratchModelMatrix,
   );
   Matrix4.clone(modelMatrix, this._modelMatrix);
 
@@ -281,7 +282,7 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
         slicePartitions: 256,
         stackPartitions: 256,
         vertexFormat: VertexFormat.POSITION_ONLY,
-      })
+      }),
     );
     command.vertexArray = VertexArray.fromGeometry({
       context: context,
@@ -346,17 +347,17 @@ function hasColorCorrection(skyAtmosphere) {
     CesiumMath.equalsEpsilon(
       skyAtmosphere.hueShift,
       0.0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     ) &&
     CesiumMath.equalsEpsilon(
       skyAtmosphere.saturationShift,
       0.0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     ) &&
     CesiumMath.equalsEpsilon(
       skyAtmosphere.brightnessShift,
       0.0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     )
   );
 }

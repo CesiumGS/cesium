@@ -1,4 +1,7 @@
+// @ts-check
+
 /**
+ * @enum {number}
  * @private
  */
 const ModelAnimationState = {
@@ -6,4 +9,6 @@ const ModelAnimationState = {
   ANIMATING: 1,
 };
 
-export default Object.freeze(ModelAnimationState);
+Object.freeze(ModelAnimationState);
+
+export default ModelAnimationState;

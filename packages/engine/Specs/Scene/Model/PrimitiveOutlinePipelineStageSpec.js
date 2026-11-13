@@ -1,7 +1,5 @@
+import { Color, ComponentDatatype, combine } from "@cesium/core";
 import {
-  Color,
-  combine,
-  ComponentDatatype,
   GltfLoader,
   PrimitiveOutlinePipelineStage,
   ShaderBuilder,
@@ -91,7 +89,7 @@ describe(
         PrimitiveOutlinePipelineStage.process(
           renderResources,
           primitive,
-          frameState
+          frameState,
         );
 
         const context = frameState.context;
@@ -113,8 +111,11 @@ describe(
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
           "in vec3 a_outlineCoordinates;",
         ]);
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "vec3 v_outlineCoordinates;",
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+          "out vec3 v_outlineCoordinates;",
+        ]);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+          "in vec3 v_outlineCoordinates;",
         ]);
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
         ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
@@ -135,11 +136,11 @@ describe(
 
         expect(outlineCoordinates.index).toBe(1);
         expect(outlineCoordinates.vertexBuffer).toBe(
-          primitive.outlineCoordinates.buffer
+          primitive.outlineCoordinates.buffer,
         );
         expect(outlineCoordinates.componentsPerAttribute).toBe(3);
         expect(outlineCoordinates.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
+          ComponentDatatype.FLOAT,
         );
         expect(outlineCoordinates.offsetInBytes).toBe(0);
         expect(outlineCoordinates.strideInBytes).not.toBeDefined();
@@ -147,5 +148,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

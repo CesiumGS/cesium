@@ -1,6 +1,9 @@
+// @ts-check
+
 /**
  * The {@link ResourceLoader} state.
  *
+ * @enum {number}
  * @private
  */
 const ResourceLoaderState = {
@@ -31,7 +34,7 @@ const ResourceLoaderState = {
   /**
    * The resource is processing. GPU resources are allocated in this state as needed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    * @private
    */
@@ -53,4 +56,7 @@ const ResourceLoaderState = {
    */
   FAILED: 5,
 };
-export default Object.freeze(ResourceLoaderState);
+
+Object.freeze(ResourceLoaderState);
+
+export default ResourceLoaderState;

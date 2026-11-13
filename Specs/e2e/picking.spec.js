@@ -26,15 +26,15 @@ test("Shows cartographic position on mouse over", async ({ cesiumPage }) => {
     handler.setInputAction(function (movement) {
       const cartesian = viewer.camera.pickEllipsoid(
         movement.endPosition,
-        scene.globe.ellipsoid
+        scene.globe.ellipsoid,
       );
       if (cartesian) {
         const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
         const longitudeString = Cesium.Math.toDegrees(
-          cartographic.longitude
+          cartographic.longitude,
         ).toFixed(2);
         const latitudeString = Cesium.Math.toDegrees(
-          cartographic.latitude
+          cartographic.latitude,
         ).toFixed(2);
 
         entity.position = cartesian;
@@ -48,13 +48,13 @@ test("Shows cartographic position on mouse over", async ({ cesiumPage }) => {
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
   });
 
-  await cesiumPage.tick();
+  await cesiumPage.page.clock.runFor(1000);
   await cesiumPage.page.waitForLoadState("networkidle");
 
   const { width, height } = cesiumPage.page.viewportSize();
   await cesiumPage.page.mouse.move(width / 2, height / 2);
 
-  await cesiumPage.tick();
+  await cesiumPage.page.clock.runFor(1000);
 
   await expect(cesiumPage.page).toHaveScreenshot();
 });

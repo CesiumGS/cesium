@@ -1,7 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import { DeveloperError, Event, Frozen, defined } from "@cesium/core";
 import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
@@ -30,7 +27,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @param {PlaneGraphics.ConstructorOptions} [options] Object describing initialization options
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Plane.html|Cesium Sandcastle Plane Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=plane|Cesium Sandcastle Plane Demo}
  */
 function PlaneGraphics(options) {
   this._definitionChanged = new Event();
@@ -55,7 +52,7 @@ function PlaneGraphics(options) {
   this._distanceDisplayCondition = undefined;
   this._distanceDisplayConditionSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(PlaneGraphics.prototype, {
@@ -153,7 +150,7 @@ Object.defineProperties(PlaneGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 });
 
@@ -193,18 +190,16 @@ PlaneGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.plane = defaultValue(this.plane, source.plane);
-  this.dimensions = defaultValue(this.dimensions, source.dimensions);
-  this.fill = defaultValue(this.fill, source.fill);
-  this.material = defaultValue(this.material, source.material);
-  this.outline = defaultValue(this.outline, source.outline);
-  this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
-  this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
-  this.shadows = defaultValue(this.shadows, source.shadows);
-  this.distanceDisplayCondition = defaultValue(
-    this.distanceDisplayCondition,
-    source.distanceDisplayCondition
-  );
+  this.show = this.show ?? source.show;
+  this.plane = this.plane ?? source.plane;
+  this.dimensions = this.dimensions ?? source.dimensions;
+  this.fill = this.fill ?? source.fill;
+  this.material = this.material ?? source.material;
+  this.outline = this.outline ?? source.outline;
+  this.outlineColor = this.outlineColor ?? source.outlineColor;
+  this.outlineWidth = this.outlineWidth ?? source.outlineWidth;
+  this.shadows = this.shadows ?? source.shadows;
+  this.distanceDisplayCondition =
+    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
 };
 export default PlaneGraphics;

@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core";
 
 /**
  * <p>
@@ -19,7 +19,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 function ParticleEmitter(options) {
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "This type should not be instantiated directly.  Instead, use BoxEmitter, CircleEmitter, ConeEmitter or SphereEmitter."
+    "This type should not be instantiated directly.  Instead, use BoxEmitter, CircleEmitter, ConeEmitter or SphereEmitter.",
   );
   //>>includeEnd('debug');
 }

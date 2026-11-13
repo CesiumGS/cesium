@@ -10,7 +10,7 @@ describe("Scene/KeyframeNode", function () {
     expect(keyframeNode.spatialNode).toBe(dummySpatialNode);
     expect(keyframeNode.keyframe).toBe(keyframe);
     expect(keyframeNode.state).toBe(KeyframeNode.LoadState.UNLOADED);
-    expect(keyframeNode.metadata).toEqual([]);
+    expect(keyframeNode.content).toEqual(undefined);
     expect(keyframeNode.megatextureIndex).toBe(-1);
     expect(keyframeNode.priority).toBe(-Number.MAX_VALUE);
     expect(keyframeNode.highPriorityFrameNumber).toBe(-1);
@@ -25,7 +25,7 @@ describe("Scene/KeyframeNode", function () {
     keyframeNode2.priority = 2;
     const comparison = KeyframeNode.priorityComparator(
       keyframeNode1,
-      keyframeNode2
+      keyframeNode2,
     );
     expect(comparison).toBe(-1);
   });
@@ -37,7 +37,7 @@ describe("Scene/KeyframeNode", function () {
     const keyframeNode2 = new KeyframeNode(dummySpatialNode, keyframe2);
     const comparison = KeyframeNode.searchComparator(
       keyframeNode1,
-      keyframeNode2
+      keyframeNode2,
     );
     expect(comparison).toBe(6);
   });

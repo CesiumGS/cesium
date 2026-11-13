@@ -1,9 +1,5 @@
-import {
-  ComponentDatatype,
-  BufferUsage,
-  VertexArrayFacade,
-} from "../../index.js";
-
+import { ComponentDatatype } from "@cesium/core";
+import { BufferUsage, VertexArrayFacade } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
 
 describe(
@@ -31,7 +27,7 @@ describe(
             usage: BufferUsage.STATIC_DRAW,
           },
         ],
-        1
+        1,
       );
 
       const writer = vaf.writers[positionIndex];
@@ -42,14 +38,14 @@ describe(
 
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer).toBeDefined();
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(
-        1 * 3 * 4
+        1 * 3 * 4,
       );
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer.usage).toEqual(
-        BufferUsage.STATIC_DRAW
+        BufferUsage.STATIC_DRAW,
       );
       expect(vaf.va[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
       expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqual(
-        ComponentDatatype.FLOAT
+        ComponentDatatype.FLOAT,
       );
       expect(vaf.va[0].va.getAttribute(0).offsetInBytes).toEqual(0);
       expect(vaf.va[0].va.getAttribute(0).strideInBytes).toEqual(3 * 4);
@@ -67,7 +63,7 @@ describe(
             usage: BufferUsage.STATIC_DRAW,
           },
         ],
-        1
+        1,
       );
 
       const writer = vaf.writers[positionIndex];
@@ -81,14 +77,14 @@ describe(
 
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer).toBeDefined();
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(
-        2 * 3 * 4
+        2 * 3 * 4,
       );
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer.usage).toEqual(
-        BufferUsage.STATIC_DRAW
+        BufferUsage.STATIC_DRAW,
       );
       expect(vaf.va[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
       expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqual(
-        ComponentDatatype.FLOAT
+        ComponentDatatype.FLOAT,
       );
       expect(vaf.va[0].va.getAttribute(0).offsetInBytes).toEqual(0);
       expect(vaf.va[0].va.getAttribute(0).strideInBytes).toEqual(3 * 4);
@@ -113,7 +109,7 @@ describe(
             usage: BufferUsage.STATIC_DRAW,
           },
         ],
-        1
+        1,
       );
 
       const positionWriter = vaf.writers[positionIndex];
@@ -129,29 +125,29 @@ describe(
       // Position attribute
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer).toBeDefined();
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(
-        1 * (3 * 4 + 4 * 1)
+        1 * (3 * 4 + 4 * 1),
       );
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer.usage).toEqual(
-        BufferUsage.STATIC_DRAW
+        BufferUsage.STATIC_DRAW,
       );
       expect(vaf.va[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
       expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqual(
-        ComponentDatatype.FLOAT
+        ComponentDatatype.FLOAT,
       );
       expect(vaf.va[0].va.getAttribute(0).offsetInBytes).toEqual(0);
       expect(vaf.va[0].va.getAttribute(0).strideInBytes).toEqual(3 * 4 + 4 * 1);
 
       // Color attribute
       expect(vaf.va[0].va.getAttribute(1).vertexBuffer).toEqual(
-        vaf.va[0].va.getAttribute(0).vertexBuffer
+        vaf.va[0].va.getAttribute(0).vertexBuffer,
       );
       expect(vaf.va[0].va.getAttribute(1).componentsPerAttribute).toEqual(4);
       expect(vaf.va[0].va.getAttribute(1).componentDatatype).toEqual(
-        ComponentDatatype.UNSIGNED_BYTE
+        ComponentDatatype.UNSIGNED_BYTE,
       );
       expect(vaf.va[0].va.getAttribute(1).offsetInBytes).toEqual(3 * 4);
       expect(vaf.va[0].va.getAttribute(1).strideInBytes).toEqual(
-        vaf.va[0].va.getAttribute(0).strideInBytes
+        vaf.va[0].va.getAttribute(0).strideInBytes,
       );
     });
 
@@ -175,7 +171,7 @@ describe(
             normalize: true,
           },
         ],
-        1
+        1,
       );
 
       const positionWriter = vaf.writers[positionIndex];
@@ -191,14 +187,14 @@ describe(
       // Position attribute
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer).toBeDefined();
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(
-        1 * (3 * 4)
+        1 * (3 * 4),
       );
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer.usage).toEqual(
-        BufferUsage.STATIC_DRAW
+        BufferUsage.STATIC_DRAW,
       );
       expect(vaf.va[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
       expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqual(
-        ComponentDatatype.FLOAT
+        ComponentDatatype.FLOAT,
       );
       expect(vaf.va[0].va.getAttribute(0).offsetInBytes).toEqual(0);
       expect(vaf.va[0].va.getAttribute(0).strideInBytes).toEqual(3 * 4);
@@ -206,14 +202,14 @@ describe(
       // Texture coordinate attribute
       expect(vaf.va[0].va.getAttribute(1).vertexBuffer).toBeDefined();
       expect(vaf.va[0].va.getAttribute(1).vertexBuffer.sizeInBytes).toEqual(
-        1 * (2 * 2)
+        1 * (2 * 2),
       );
       expect(vaf.va[0].va.getAttribute(1).vertexBuffer.usage).toEqual(
-        BufferUsage.DYNAMIC_DRAW
+        BufferUsage.DYNAMIC_DRAW,
       );
       expect(vaf.va[0].va.getAttribute(1).componentsPerAttribute).toEqual(2);
       expect(vaf.va[0].va.getAttribute(1).componentDatatype).toEqual(
-        ComponentDatatype.UNSIGNED_SHORT
+        ComponentDatatype.UNSIGNED_SHORT,
       );
       expect(vaf.va[0].va.getAttribute(1).offsetInBytes).toEqual(0);
       expect(vaf.va[0].va.getAttribute(1).strideInBytes).toEqual(2 * 2);
@@ -238,7 +234,7 @@ describe(
             usage: BufferUsage.STREAM_DRAW,
           },
         ],
-        2
+        2,
       );
 
       const positionWriter = vaf.writers[positionIndex];
@@ -268,14 +264,14 @@ describe(
       // Position attribute
       expect(vaf.va[0].va.getAttribute(1).vertexBuffer).toBeDefined();
       expect(vaf.va[0].va.getAttribute(1).vertexBuffer.sizeInBytes).toEqual(
-        2 * (3 * 4)
+        2 * (3 * 4),
       );
       expect(vaf.va[0].va.getAttribute(1).vertexBuffer.usage).toEqual(
-        BufferUsage.STATIC_DRAW
+        BufferUsage.STATIC_DRAW,
       );
       expect(vaf.va[0].va.getAttribute(1).componentsPerAttribute).toEqual(3);
       expect(vaf.va[0].va.getAttribute(1).componentDatatype).toEqual(
-        ComponentDatatype.FLOAT
+        ComponentDatatype.FLOAT,
       );
       expect(vaf.va[0].va.getAttribute(1).offsetInBytes).toEqual(0);
       expect(vaf.va[0].va.getAttribute(1).strideInBytes).toEqual(3 * 4);
@@ -283,14 +279,14 @@ describe(
       // Temperature attribute
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer).toBeDefined();
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(
-        2 * 4
+        2 * 4,
       );
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer.usage).toEqual(
-        BufferUsage.STREAM_DRAW
+        BufferUsage.STREAM_DRAW,
       );
       expect(vaf.va[0].va.getAttribute(0).componentsPerAttribute).toEqual(1);
       expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqual(
-        ComponentDatatype.FLOAT
+        ComponentDatatype.FLOAT,
       );
       expect(vaf.va[0].va.getAttribute(0).offsetInBytes).toEqual(0);
       expect(vaf.va[0].va.getAttribute(0).strideInBytes).toEqual(1 * 4);
@@ -308,7 +304,7 @@ describe(
             usage: BufferUsage.STATIC_DRAW,
           },
         ],
-        1
+        1,
       );
 
       const writer = vaf.writers[positionIndex];
@@ -326,7 +322,7 @@ describe(
 
       expect(vbBeforeResize.isDestroyed()).toBe(true);
       expect(vaf.va[0].va.getAttribute(0).vertexBuffer).not.toBe(
-        vbBeforeResize
+        vbBeforeResize,
       );
     });
 
@@ -342,7 +338,7 @@ describe(
             usage: BufferUsage.STATIC_DRAW,
           },
         ],
-        1
+        1,
       );
       expect(vaf.isDestroyed()).toBe(false);
     });
@@ -420,7 +416,7 @@ describe(
             usage: BufferUsage.STATIC_DRAW,
           },
         ],
-        10
+        10,
       );
 
       expect(function () {
@@ -436,5 +432,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -1,5 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core";
 import ConstantProperty from "./ConstantProperty.js";
 
 function createProperty(
@@ -7,7 +6,7 @@ function createProperty(
   privateName,
   subscriptionName,
   configurable,
-  createPropertyCallback
+  createPropertyCallback,
 ) {
   return {
     configurable: configurable,
@@ -41,7 +40,7 @@ function createProperty(
           function () {
             this._definitionChanged.raiseEvent(this, name, value, value);
           },
-          this
+          this,
         );
       }
     },
@@ -56,6 +55,12 @@ function createConstantProperty(value) {
  * Used to consistently define all DataSources graphics objects.
  * This is broken into two functions because the Chrome profiler does a better
  * job of optimizing lookups if it notices that the string is constant throughout the function.
+ *
+ * @param {string|symbol} name The name of the property.
+ * @param {boolean} [configurable=false] Whether the property descriptor is configurable.
+ * @param {function(*): *} [createPropertyCallback] Creates a property from a value that isn't already a property. Defaults to creating a {@link ConstantProperty}.
+ * @returns {PropertyDescriptor} The property descriptor.
+ *
  * @private
  */
 function createPropertyDescriptor(name, configurable, createPropertyCallback) {
@@ -65,8 +70,8 @@ function createPropertyDescriptor(name, configurable, createPropertyCallback) {
     name,
     `_${name.toString()}`,
     `_${name.toString()}Subscription`,
-    defaultValue(configurable, false),
-    defaultValue(createPropertyCallback, createConstantProperty)
+    configurable ?? false,
+    createPropertyCallback ?? createConstantProperty,
   );
 }
 export default createPropertyDescriptor;

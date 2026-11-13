@@ -1,4 +1,4 @@
-import Check from "../../Core/Check.js";
+import { Check } from "@cesium/core";
 import ModelAlphaOptions from "./ModelAlphaOptions.js";
 import RenderState from "../../Renderer/RenderState.js";
 import ShaderBuilder from "../../Renderer/ShaderBuilder.js";
@@ -25,7 +25,7 @@ function ModelRenderResources(model) {
    * @type {ShaderBuilder}
    * @readonly
    *
-   * @private
+   * @ignore
    */
   this.shaderBuilder = new ShaderBuilder();
 
@@ -44,9 +44,8 @@ function ModelRenderResources(model) {
    * values.
    *
    * @type {Object<string, Function>}
-   * @readonly
    *
-   * @private
+   * @ignore
    */
   this.uniformMap = {};
 
@@ -76,7 +75,7 @@ function ModelRenderResources(model) {
         enabled: true,
         func: DepthFunction.LESS_OR_EQUAL,
       },
-    })
+    }),
   );
 
   /**
@@ -101,6 +100,19 @@ function ModelRenderResources(model) {
    * @private
    */
   this.hasSkipLevelOfDetail = false;
+
+  /**
+   * The NodeRenderResources for the nodes of the scene graph.
+   *
+   * Note that elements of this array may be <code>undefined</code> when
+   * there was no runtime node for a certain node.
+   *
+   * @type {NodeRenderResources[]}
+   * @default []
+   *
+   * @private
+   */
+  this.nodeRenderResources = [];
 }
 
 export default ModelRenderResources;

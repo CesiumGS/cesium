@@ -1,0 +1,6 @@
+legacyId: LocalToFixedFrame.html
+title: LocalToFixedFrame
+description: Use localFrameToFixedFrameGenerator for adequate rotation.
+labels:
+  - Transformations
+thumbnail: thumbnail.jpg

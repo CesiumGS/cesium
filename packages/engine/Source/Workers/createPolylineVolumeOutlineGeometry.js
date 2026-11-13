@@ -1,22 +1,24 @@
-import defined from "../Core/defined.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import PolylineVolumeOutlineGeometry from "../Core/PolylineVolumeOutlineGeometry.js";
+import {
+  Ellipsoid,
+  PolylineVolumeOutlineGeometry,
+  defined,
+} from "@cesium/core";
 
 function createPolylineVolumeOutlineGeometry(
   polylineVolumeOutlineGeometry,
-  offset
+  offset,
 ) {
   if (defined(offset)) {
     polylineVolumeOutlineGeometry = PolylineVolumeOutlineGeometry.unpack(
       polylineVolumeOutlineGeometry,
-      offset
+      offset,
     );
   }
   polylineVolumeOutlineGeometry._ellipsoid = Ellipsoid.clone(
-    polylineVolumeOutlineGeometry._ellipsoid
+    polylineVolumeOutlineGeometry._ellipsoid,
   );
   return PolylineVolumeOutlineGeometry.createGeometry(
-    polylineVolumeOutlineGeometry
+    polylineVolumeOutlineGeometry,
   );
 }
 export default createPolylineVolumeOutlineGeometry;

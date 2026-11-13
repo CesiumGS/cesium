@@ -1,17 +1,11 @@
-import defaultValue from "../Core/defaultValue.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
-import VertexFormat from "../Core/VertexFormat.js";
+import { Frozen, VertexFormat } from "@cesium/core";
 import PerInstanceFlatColorAppearanceFS from "../Shaders/Appearances/PerInstanceFlatColorAppearanceFS.js";
 import PolylineColorAppearanceVS from "../Shaders/Appearances/PolylineColorAppearanceVS.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import Appearance from "./Appearance.js";
 
-let defaultVertexShaderSource = `${PolylineCommon}\n${PolylineColorAppearanceVS}`;
+const defaultVertexShaderSource = `#define CLIP_POLYLINE \n${PolylineCommon}\n${PolylineColorAppearanceVS}`;
 const defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
-
-if (!FeatureDetection.isInternetExplorer()) {
-  defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
-}
 
 /**
  * An appearance for {@link GeometryInstance} instances with color attributes and
@@ -50,9 +44,9 @@ if (!FeatureDetection.isInternetExplorer()) {
  * });
  */
 function PolylineColorAppearance(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  const translucent = defaultValue(options.translucent, true);
+  const translucent = options.translucent ?? true;
   const closed = false;
   const vertexFormat = PolylineColorAppearance.VERTEX_FORMAT;
 
@@ -76,18 +70,14 @@ function PolylineColorAppearance(options) {
    */
   this.translucent = translucent;
 
-  this._vertexShaderSource = defaultValue(
-    options.vertexShaderSource,
-    defaultVertexShaderSource
-  );
-  this._fragmentShaderSource = defaultValue(
-    options.fragmentShaderSource,
-    defaultFragmentShaderSource
-  );
+  this._vertexShaderSource =
+    options.vertexShaderSource ?? defaultVertexShaderSource;
+  this._fragmentShaderSource =
+    options.fragmentShaderSource ?? defaultFragmentShaderSource;
   this._renderState = Appearance.getDefaultRenderState(
     translucent,
     closed,
-    options.renderState
+    options.renderState,
   );
   this._closed = closed;
 

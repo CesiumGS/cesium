@@ -1,12 +1,10 @@
+import { Math as CesiumMath, Matrix4, RuntimeError } from "@cesium/core";
 import {
   I3dmLoader,
   I3dmParser,
   InstanceAttributeSemantic,
-  Math as CesiumMath,
-  Matrix4,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../../index.js";
 import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../../Specs/createScene.js";
@@ -88,7 +86,7 @@ describe(
 
     async function expectLoadError(arrayBuffer) {
       const resource = Resource.createIfNeeded(
-        "http://example.com/content.i3dm"
+        "http://example.com/content.i3dm",
       );
       const loader = new I3dmLoader({
         i3dmResource: resource,
@@ -99,7 +97,7 @@ describe(
         (async () => {
           await loader.load();
           await waitForLoaderProcess(loader, scene);
-        })()
+        })(),
       ).toBeRejectedWithError(RuntimeError);
     }
 
@@ -127,7 +125,7 @@ describe(
           for (let j = 0; j < attributesLength; j++) {
             const attribute = node.instances.attributes[j];
             expect(expectedSemantics.indexOf(attribute.semantic) > -1).toEqual(
-              true
+              true,
             );
             expect(attribute.count).toEqual(instancesLength);
 
@@ -174,7 +172,7 @@ describe(
             InstanceAttributeSemantic.ROTATION,
             InstanceAttributeSemantic.FEATURE_ID,
           ],
-          25
+          25,
         );
       });
     });
@@ -188,7 +186,7 @@ describe(
             InstanceAttributeSemantic.ROTATION,
             InstanceAttributeSemantic.FEATURE_ID,
           ],
-          25
+          25,
         );
       });
     });
@@ -202,7 +200,7 @@ describe(
             InstanceAttributeSemantic.ROTATION,
             InstanceAttributeSemantic.FEATURE_ID,
           ],
-          25
+          25,
         );
       });
     });
@@ -216,7 +214,7 @@ describe(
             InstanceAttributeSemantic.ROTATION,
             InstanceAttributeSemantic.FEATURE_ID,
           ],
-          25
+          25,
         );
       });
     });
@@ -230,7 +228,7 @@ describe(
             InstanceAttributeSemantic.ROTATION,
             InstanceAttributeSemantic.FEATURE_ID,
           ],
-          25
+          25,
         );
       });
     });
@@ -244,7 +242,7 @@ describe(
             InstanceAttributeSemantic.ROTATION,
             InstanceAttributeSemantic.FEATURE_ID,
           ],
-          25
+          25,
         );
       });
     });
@@ -259,7 +257,7 @@ describe(
             InstanceAttributeSemantic.SCALE,
             InstanceAttributeSemantic.FEATURE_ID,
           ],
-          25
+          25,
         );
       });
     });
@@ -274,7 +272,7 @@ describe(
             InstanceAttributeSemantic.SCALE,
             InstanceAttributeSemantic.FEATURE_ID,
           ],
-          25
+          25,
         );
       });
     });
@@ -288,7 +286,7 @@ describe(
             InstanceAttributeSemantic.ROTATION,
             InstanceAttributeSemantic.FEATURE_ID,
           ],
-          25
+          25,
         );
 
         const transform = loader.components.transform;
@@ -311,7 +309,7 @@ describe(
             InstanceAttributeSemantic.ROTATION,
             InstanceAttributeSemantic.FEATURE_ID,
           ],
-          25
+          25,
         );
 
         const transform = loader.components.transform;
@@ -334,7 +332,7 @@ describe(
             InstanceAttributeSemantic.ROTATION,
             InstanceAttributeSemantic.FEATURE_ID,
           ],
-          25
+          25,
         );
 
         const transform = loader.components.transform;
@@ -350,19 +348,19 @@ describe(
     });
 
     it("loads InstancedQuantizedOct32POrientationUrl", function () {
-      return loadI3dm(instancedQuantizedOct32POrientationUrl).then(function (
-        loader
-      ) {
-        verifyInstances(
-          loader,
-          [
-            InstanceAttributeSemantic.TRANSLATION,
-            InstanceAttributeSemantic.ROTATION,
-            InstanceAttributeSemantic.FEATURE_ID,
-          ],
-          25
-        );
-      });
+      return loadI3dm(instancedQuantizedOct32POrientationUrl).then(
+        function (loader) {
+          verifyInstances(
+            loader,
+            [
+              InstanceAttributeSemantic.TRANSLATION,
+              InstanceAttributeSemantic.ROTATION,
+              InstanceAttributeSemantic.FEATURE_ID,
+            ],
+            25,
+          );
+        },
+      );
     });
 
     it("loads InstancedWithTransformUrl", function () {
@@ -373,7 +371,7 @@ describe(
             InstanceAttributeSemantic.TRANSLATION,
             InstanceAttributeSemantic.FEATURE_ID,
           ],
-          25
+          25,
         );
       });
     });
@@ -387,7 +385,7 @@ describe(
             InstanceAttributeSemantic.ROTATION,
             InstanceAttributeSemantic.FEATURE_ID,
           ],
-          25
+          25,
         );
       });
     });
@@ -401,7 +399,7 @@ describe(
             InstanceAttributeSemantic.ROTATION,
             InstanceAttributeSemantic.FEATURE_ID,
           ],
-          25
+          25,
         );
       });
     });
@@ -433,5 +431,5 @@ describe(
       await expectLoadError(arrayBuffer);
     });
   },
-  "WebGL"
+  "WebGL",
 );

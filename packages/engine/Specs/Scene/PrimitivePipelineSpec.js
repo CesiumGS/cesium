@@ -7,8 +7,8 @@ import {
   GeometryAttribute,
   GeometryAttributes,
   PrimitiveType,
-  PrimitivePipeline,
-} from "../../index.js";
+} from "@cesium/core";
+import { PrimitivePipeline } from "../../index.js";
 
 describe(
   "Scene/PrimitivePipeline",
@@ -17,24 +17,23 @@ describe(
       const boxGeometry = BoxGeometry.createGeometry(
         BoxGeometry.fromDimensions({
           dimensions: new Cartesian3(1, 2, 3),
-        })
+        }),
       );
 
       const boxGeometry2 = BoxGeometry.createGeometry(
         BoxGeometry.fromDimensions({
           dimensions: new Cartesian3(3, 4, 7),
-        })
+        }),
       );
 
       const geometryToPack = [boxGeometry, boxGeometry2];
       const transferableObjects = [];
       const results = PrimitivePipeline.packCreateGeometryResults(
         geometryToPack,
-        transferableObjects
+        transferableObjects,
       );
-      const unpackedGeometry = PrimitivePipeline.unpackCreateGeometryResults(
-        results
-      );
+      const unpackedGeometry =
+        PrimitivePipeline.unpackCreateGeometryResults(results);
 
       expect(transferableObjects.length).toBe(1);
       expect(geometryToPack).toEqual(unpackedGeometry);
@@ -59,15 +58,14 @@ describe(
       const transferableObjects = [];
       const results = PrimitivePipeline.packCreateGeometryResults(
         geometryToPack,
-        transferableObjects
+        transferableObjects,
       );
-      const unpackedGeometry = PrimitivePipeline.unpackCreateGeometryResults(
-        results
-      );
+      const unpackedGeometry =
+        PrimitivePipeline.unpackCreateGeometryResults(results);
 
       expect(transferableObjects.length).toBe(1);
       expect(geometryToPack).toEqual(unpackedGeometry);
     });
   },
-  "WebGL"
+  "WebGL",
 );

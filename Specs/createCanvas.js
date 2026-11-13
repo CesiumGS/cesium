@@ -1,10 +1,8 @@
-import { defaultValue } from "@cesium/engine";
-
 let canvasCount = 0;
 
 function createCanvas(width, height) {
-  width = defaultValue(width, 1);
-  height = defaultValue(height, 1);
+  width = width ?? 1;
+  height = height ?? 1;
 
   const canvas = document.createElement("canvas");
   canvas.id = `canvas${canvasCount++}`;

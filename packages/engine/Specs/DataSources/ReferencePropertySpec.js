@@ -1,8 +1,5 @@
+import { Cartesian3, Color, JulianDate, ReferenceFrame } from "@cesium/core";
 import {
-  Cartesian3,
-  Color,
-  JulianDate,
-  ReferenceFrame,
   BillboardGraphics,
   ColorMaterialProperty,
   ConstantPositionProperty,
@@ -33,7 +30,7 @@ describe("DataSources/ReferenceProperty", function () {
 
     const property = ReferenceProperty.fromString(
       collection,
-      "testId#foo.bar.baz"
+      "testId#foo.bar.baz",
     );
 
     expect(property.targetCollection).toBe(collection);
@@ -47,7 +44,7 @@ describe("DataSources/ReferenceProperty", function () {
     const propertyNames = ["propertyName", ".abc\\", "def"];
     const property = ReferenceProperty.fromString(
       collection,
-      "\\#identif\\\\\\#ier\\.#propertyName.\\.abc\\\\.def"
+      "\\#identif\\\\\\#ier\\.#propertyName.\\.abc\\\\.def",
     );
 
     expect(property.targetCollection).toBe(collection);
@@ -68,7 +65,7 @@ describe("DataSources/ReferenceProperty", function () {
     // Basic property resolution
     const property = ReferenceProperty.fromString(
       collection,
-      "testId#billboard.scale"
+      "testId#billboard.scale",
     );
     expect(property.referenceFrame).toBeUndefined();
     expect(property.isConstant).toEqual(true);
@@ -138,7 +135,7 @@ describe("DataSources/ReferenceProperty", function () {
     });
     testObject.position = new ConstantPositionProperty(
       new Cartesian3(1, 2, 3),
-      ReferenceFrame.FIXED
+      ReferenceFrame.FIXED,
     );
 
     const collection = new EntityCollection();
@@ -150,12 +147,12 @@ describe("DataSources/ReferenceProperty", function () {
     expect(property.referenceFrame).toEqual(ReferenceFrame.FIXED);
     expect(property.getValue(time)).toEqual(testObject.position.getValue(time));
     expect(
-      property.getValueInReferenceFrame(time, ReferenceFrame.INERTIAL)
+      property.getValueInReferenceFrame(time, ReferenceFrame.INERTIAL),
     ).toEqual(
       testObject.position.getValueInReferenceFrame(
         time,
-        ReferenceFrame.INERTIAL
-      )
+        ReferenceFrame.INERTIAL,
+      ),
     );
 
     property = ReferenceProperty.fromString(collection, "nonExistent#position");
@@ -163,7 +160,7 @@ describe("DataSources/ReferenceProperty", function () {
     expect(property.referenceFrame).toBeUndefined();
     expect(property.getValue(time)).toBeUndefined();
     expect(
-      property.getValueInReferenceFrame(time, ReferenceFrame.INERTIAL)
+      property.getValueInReferenceFrame(time, ReferenceFrame.INERTIAL),
     ).toBeUndefined();
   });
 
@@ -180,19 +177,19 @@ describe("DataSources/ReferenceProperty", function () {
     // Basic property resolution
     let property = ReferenceProperty.fromString(
       collection,
-      "testId#testMaterial"
+      "testId#testMaterial",
     );
     expect(property.isConstant).toEqual(true);
     expect(property.getType(time)).toEqual(
-      testObject.testMaterial.getType(time)
+      testObject.testMaterial.getType(time),
     );
     expect(property.getValue(time)).toEqual(
-      testObject.testMaterial.getValue(time)
+      testObject.testMaterial.getValue(time),
     );
 
     property = ReferenceProperty.fromString(
       collection,
-      "nonExistent#testMaterial"
+      "nonExistent#testMaterial",
     );
     expect(property.isConstant).toEqual(true);
     expect(property.referenceFrame).toBeUndefined();
@@ -205,25 +202,25 @@ describe("DataSources/ReferenceProperty", function () {
 
     const left = ReferenceProperty.fromString(
       entityCollection,
-      "objectId#foo.bar"
+      "objectId#foo.bar",
     );
     let right = ReferenceProperty.fromString(
       entityCollection,
-      "objectId#foo.bar"
+      "objectId#foo.bar",
     );
     expect(left.equals(right)).toEqual(true);
 
     // collection differs
     right = ReferenceProperty.fromString(
       new EntityCollection(),
-      "objectId#foo.bar"
+      "objectId#foo.bar",
     );
     expect(left.equals(right)).toEqual(false);
 
     // target id differs
     right = ReferenceProperty.fromString(
       entityCollection,
-      "otherObjectId#foo.bar"
+      "otherObjectId#foo.bar",
     );
     expect(left.equals(right)).toEqual(false);
 
@@ -253,7 +250,7 @@ describe("DataSources/ReferenceProperty", function () {
 
     const property = ReferenceProperty.fromString(
       collection,
-      "testId#billboard.scale"
+      "testId#billboard.scale",
     );
     expect(property.resolvedProperty).toBe(testObject.billboard.scale);
 
@@ -271,7 +268,7 @@ describe("DataSources/ReferenceProperty", function () {
 
     const property = ReferenceProperty.fromString(
       collection,
-      "testId#billboard.scale"
+      "testId#billboard.scale",
     );
     expect(property.resolvedProperty).toBeUndefined();
 
@@ -316,7 +313,7 @@ describe("DataSources/ReferenceProperty", function () {
       return new ReferenceProperty(
         new EntityCollection(),
         "objectId",
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -375,7 +372,7 @@ describe("DataSources/ReferenceProperty", function () {
 
     const property = ReferenceProperty.fromString(
       collection,
-      "testId#billboard"
+      "testId#billboard",
     );
     expect(property.getValue(time)).toBeUndefined();
   });
@@ -391,7 +388,7 @@ describe("DataSources/ReferenceProperty", function () {
 
     const property = ReferenceProperty.fromString(
       collection,
-      "testId#billboard.foo"
+      "testId#billboard.foo",
     );
     expect(property.getValue(time)).toBeUndefined();
   });

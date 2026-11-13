@@ -6,6 +6,8 @@ import {
   JulianDate,
   ShowGeometryInstanceAttribute,
   TimeInterval,
+} from "@cesium/core";
+import {
   ColorMaterialProperty,
   ConstantProperty,
   EllipsoidGeometryUpdater,
@@ -20,7 +22,7 @@ function createGeometryUpdaterSpecs(
   Updater,
   geometryPropertyName,
   createEntity,
-  getScene
+  getScene,
 ) {
   const time = JulianDate.now();
 
@@ -40,7 +42,7 @@ function createGeometryUpdaterSpecs(
     expect(updater.outlineWidth).toBe(1.0);
     expect(updater.shadowsProperty.getValue()).toBe(ShadowMode.DISABLED);
     expect(updater.distanceDisplayConditionProperty.getValue()).toEqual(
-      new DistanceDisplayCondition()
+      new DistanceDisplayCondition(),
     );
     expect(updater.isDynamic).toBe(false);
     expect(updater.onTerrain).toBe(false);
@@ -77,7 +79,7 @@ function createGeometryUpdaterSpecs(
     expect(updater.isClosed).toBe(updater._getIsClosed(updater._options));
     expect(updater.fillEnabled).toBe(true);
     expect(updater.fillMaterialProperty).toEqual(
-      new ColorMaterialProperty(Color.WHITE)
+      new ColorMaterialProperty(Color.WHITE),
     );
     expect(updater.outlineEnabled).toBe(false);
     expect(updater.hasConstantFill).toBe(true);
@@ -85,10 +87,10 @@ function createGeometryUpdaterSpecs(
     expect(updater.outlineColorProperty).toBe(undefined);
     expect(updater.outlineWidth).toBe(1.0);
     expect(updater.shadowsProperty).toEqual(
-      new ConstantProperty(ShadowMode.DISABLED)
+      new ConstantProperty(ShadowMode.DISABLED),
     );
     expect(updater.distanceDisplayConditionProperty).toEqual(
-      new ConstantProperty(new DistanceDisplayCondition())
+      new ConstantProperty(new DistanceDisplayCondition()),
     );
     expect(updater.isDynamic).toBe(false);
   });
@@ -96,12 +98,12 @@ function createGeometryUpdaterSpecs(
   it("material is correctly exposed.", function () {
     const entity = createEntity();
     entity[geometryPropertyName].material = new GridMaterialProperty(
-      Color.BLUE
+      Color.BLUE,
     );
     const updater = new Updater(entity, getScene());
 
     expect(updater.fillMaterialProperty).toBe(
-      entity[geometryPropertyName].material
+      entity[geometryPropertyName].material,
     );
   });
 
@@ -133,7 +135,7 @@ function createGeometryUpdaterSpecs(
         start: time1,
         stop: time2,
         data: false,
-      })
+      }),
     );
     fill.intervals.addInterval(
       new TimeInterval({
@@ -141,7 +143,7 @@ function createGeometryUpdaterSpecs(
         stop: time3,
         isStartIncluded: false,
         data: true,
-      })
+      }),
     );
 
     const colorMaterial = new ColorMaterialProperty();
@@ -156,7 +158,7 @@ function createGeometryUpdaterSpecs(
         start: time1,
         stop: time2,
         data: false,
-      })
+      }),
     );
     outline.intervals.addInterval(
       new TimeInterval({
@@ -164,7 +166,7 @@ function createGeometryUpdaterSpecs(
         stop: time3,
         isStartIncluded: false,
         data: true,
-      })
+      }),
     );
 
     const outlineColor = new SampledProperty(Color);
@@ -184,20 +186,20 @@ function createGeometryUpdaterSpecs(
     let attributes = instance.attributes;
     expect(attributes.color.value).toEqual(
       ColorGeometryInstanceAttribute.toValue(
-        colorMaterial.color.getValue(time2)
-      )
+        colorMaterial.color.getValue(time2),
+      ),
     );
     expect(attributes.show.value).toEqual(
-      ShowGeometryInstanceAttribute.toValue(fill.getValue(time2))
+      ShowGeometryInstanceAttribute.toValue(fill.getValue(time2)),
     );
 
     instance = updater.createOutlineGeometryInstance(time2);
     attributes = instance.attributes;
     expect(attributes.color.value).toEqual(
-      ColorGeometryInstanceAttribute.toValue(outlineColor.getValue(time2))
+      ColorGeometryInstanceAttribute.toValue(outlineColor.getValue(time2)),
     );
     expect(attributes.show.value).toEqual(
-      ShowGeometryInstanceAttribute.toValue(outline.getValue(time2))
+      ShowGeometryInstanceAttribute.toValue(outline.getValue(time2)),
     );
   });
 
@@ -209,7 +211,7 @@ function createGeometryUpdaterSpecs(
     const instance = updater.createFillGeometryInstance(new JulianDate());
     const attributes = instance.attributes;
     expect(attributes.show.value).toEqual(
-      ShowGeometryInstanceAttribute.toValue(false)
+      ShowGeometryInstanceAttribute.toValue(false),
     );
   });
 
@@ -221,7 +223,7 @@ function createGeometryUpdaterSpecs(
     const instance = updater.createFillGeometryInstance(new JulianDate());
     const attributes = instance.attributes;
     expect(attributes.show.value).toEqual(
-      ShowGeometryInstanceAttribute.toValue(false)
+      ShowGeometryInstanceAttribute.toValue(false),
     );
   });
 
@@ -288,36 +290,36 @@ function createGeometryUpdaterSpecs(
     if (options.material instanceof ColorMaterialProperty) {
       expect(attributes.color.value).toEqual(
         ColorGeometryInstanceAttribute.toValue(
-          options.material.color.getValue(time)
-        )
+          options.material.color.getValue(time),
+        ),
       );
     } else {
       expect(attributes.color).toBeUndefined();
     }
     expect(attributes.show.value).toEqual(
-      ShowGeometryInstanceAttribute.toValue(true)
+      ShowGeometryInstanceAttribute.toValue(true),
     );
     if (options.distanceDisplayCondition) {
       expect(attributes.distanceDisplayCondition.value).toEqual(
         DistanceDisplayConditionGeometryInstanceAttribute.toValue(
-          options.distanceDisplayCondition
-        )
+          options.distanceDisplayCondition,
+        ),
       );
     }
 
     instance = updater.createOutlineGeometryInstance(time);
     attributes = instance.attributes;
     expect(attributes.color.value).toEqual(
-      ColorGeometryInstanceAttribute.toValue(options.outlineColor)
+      ColorGeometryInstanceAttribute.toValue(options.outlineColor),
     );
     expect(attributes.show.value).toEqual(
-      ShowGeometryInstanceAttribute.toValue(true)
+      ShowGeometryInstanceAttribute.toValue(true),
     );
     if (options.distanceDisplayCondition) {
       expect(attributes.distanceDisplayCondition.value).toEqual(
         DistanceDisplayConditionGeometryInstanceAttribute.toValue(
-          options.distanceDisplayCondition
-        )
+          options.distanceDisplayCondition,
+        ),
       );
     }
   }
@@ -355,7 +357,7 @@ function createGeometryUpdaterSpecs(
         start: time1,
         stop: time2,
         data: false,
-      })
+      }),
     );
     fill.intervals.addInterval(
       new TimeInterval({
@@ -363,7 +365,7 @@ function createGeometryUpdaterSpecs(
         stop: time3,
         isStartIncluded: false,
         data: true,
-      })
+      }),
     );
 
     const colorMaterial = new ColorMaterialProperty();
@@ -378,7 +380,7 @@ function createGeometryUpdaterSpecs(
         start: time1,
         stop: time2,
         data: false,
-      })
+      }),
     );
     outline.intervals.addInterval(
       new TimeInterval({
@@ -386,7 +388,7 @@ function createGeometryUpdaterSpecs(
         stop: time3,
         isStartIncluded: false,
         data: true,
-      })
+      }),
     );
 
     const outlineColor = new SampledProperty(Color);
@@ -407,20 +409,20 @@ function createGeometryUpdaterSpecs(
     let attributes = instance.attributes;
     expect(attributes.color.value).toEqual(
       ColorGeometryInstanceAttribute.toValue(
-        colorMaterial.color.getValue(time2)
-      )
+        colorMaterial.color.getValue(time2),
+      ),
     );
     expect(attributes.show.value).toEqual(
-      ShowGeometryInstanceAttribute.toValue(fill.getValue(time2))
+      ShowGeometryInstanceAttribute.toValue(fill.getValue(time2)),
     );
 
     instance = updater.createOutlineGeometryInstance(time2);
     attributes = instance.attributes;
     expect(attributes.color.value).toEqual(
-      ColorGeometryInstanceAttribute.toValue(outlineColor.getValue(time2))
+      ColorGeometryInstanceAttribute.toValue(outlineColor.getValue(time2)),
     );
     expect(attributes.show.value).toEqual(
-      ShowGeometryInstanceAttribute.toValue(outline.getValue(time2))
+      ShowGeometryInstanceAttribute.toValue(outline.getValue(time2)),
     );
   });
 
@@ -439,7 +441,7 @@ function createGeometryUpdaterSpecs(
         start: time1,
         stop: time2,
         data: Color.BLUE,
-      })
+      }),
     );
     color.intervals.addInterval(
       new TimeInterval({
@@ -447,7 +449,7 @@ function createGeometryUpdaterSpecs(
         stop: time4,
         isStartIncluded: false,
         data: Color.YELLOW,
-      })
+      }),
     );
     colorMaterial.color = color;
 
@@ -457,7 +459,7 @@ function createGeometryUpdaterSpecs(
         start: time1,
         stop: time2,
         data: Color.RED,
-      })
+      }),
     );
     outlineColor.intervals.addInterval(
       new TimeInterval({
@@ -465,7 +467,7 @@ function createGeometryUpdaterSpecs(
         stop: time4,
         isStartIncluded: false,
         data: Color.GREEN,
-      })
+      }),
     );
 
     const entity = createEntity();
@@ -480,13 +482,13 @@ function createGeometryUpdaterSpecs(
     let instance = updater.createFillGeometryInstance(missingTime);
     let attributes = instance.attributes;
     expect(attributes.color.value).toEqual(
-      ColorGeometryInstanceAttribute.toValue(Color.WHITE)
+      ColorGeometryInstanceAttribute.toValue(Color.WHITE),
     );
 
     instance = updater.createOutlineGeometryInstance(missingTime);
     attributes = instance.attributes;
     expect(attributes.color.value).toEqual(
-      ColorGeometryInstanceAttribute.toValue(Color.BLACK)
+      ColorGeometryInstanceAttribute.toValue(Color.BLACK),
     );
   });
 }

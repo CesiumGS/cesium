@@ -1,8 +1,10 @@
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import defined from "../Core/defined.js";
-import defaultValue from "../Core/defaultValue.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  Check,
+  DeveloperError,
+  addAllToArray,
+  clone,
+  defined,
+} from "@cesium/core";
 import ShaderDestination from "./ShaderDestination.js";
 import ShaderProgram from "./ShaderProgram.js";
 import ShaderSource from "./ShaderSource.js";
@@ -122,7 +124,7 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
   Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
 
-  destination = defaultValue(destination, ShaderDestination.BOTH);
+  destination = destination ?? ShaderDestination.BOTH;
 
   // The ShaderSource created in build() will add the #define part
   let line = identifier;
@@ -155,7 +157,7 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
 ShaderBuilder.prototype.addStruct = function (
   structId,
   structName,
-  destination
+  destination,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("structId", structId);
@@ -213,7 +215,7 @@ ShaderBuilder.prototype.addStructField = function (structId, type, identifier) {
 ShaderBuilder.prototype.addFunction = function (
   functionName,
   signature,
-  destination
+  destination,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("functionName", functionName);
@@ -254,7 +256,7 @@ ShaderBuilder.prototype.addFunctionLines = function (functionName, lines) {
   Check.typeOf.string("functionName", functionName);
   if (typeof lines !== "string" && !Array.isArray(lines)) {
     throw new DeveloperError(
-      `Expected lines to be a string or an array of strings, actual value was ${lines}`
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`,
     );
   }
   //>>includeEnd('debug');
@@ -281,7 +283,7 @@ ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
   Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
 
-  destination = defaultValue(destination, ShaderDestination.BOTH);
+  destination = destination ?? ShaderDestination.BOTH;
   const line = `uniform ${type} ${identifier};`;
 
   if (ShaderDestination.includesVertexShader(destination)) {
@@ -317,7 +319,7 @@ ShaderBuilder.prototype.setPositionAttribute = function (type, identifier) {
 
   if (defined(this._positionAttributeLine)) {
     throw new DeveloperError(
-      "setPositionAttribute() must be called exactly once for the attribute used for gl_Position. For other attributes, use addAttribute()"
+      "setPositionAttribute() must be called exactly once for the attribute used for gl_Position. For other attributes, use addAttribute()",
     );
   }
   //>>includeEnd('debug');
@@ -407,14 +409,14 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
   //>>includeStart('debug', pragmas.debug);
   if (typeof lines !== "string" && !Array.isArray(lines)) {
     throw new DeveloperError(
-      `Expected lines to be a string or an array of strings, actual value was ${lines}`
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`,
     );
   }
   //>>includeEnd('debug');
 
   const vertexLines = this._vertexShaderParts.shaderLines;
   if (Array.isArray(lines)) {
-    vertexLines.push.apply(vertexLines, lines);
+    addAllToArray(vertexLines, lines);
   } else {
     // Single string case
     vertexLines.push(lines);
@@ -424,7 +426,7 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
 /**
  * Appends lines of GLSL code to the fragment shader
  *
- * @param {string[]} lines The lines to add to the end of the fragment shader source
+ * @param {string|string[]} lines One or more lines to add to the end of the fragment shader source
  *
  * @example
  * shaderBuilder.addFragmentLines([
@@ -442,14 +444,14 @@ ShaderBuilder.prototype.addFragmentLines = function (lines) {
   //>>includeStart('debug', pragmas.debug);
   if (typeof lines !== "string" && !Array.isArray(lines)) {
     throw new DeveloperError(
-      `Expected lines to be a string or an array of strings, actual value was ${lines}`
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`,
     );
   }
   //>>includeEnd('debug');
 
   const fragmentLines = this._fragmentShaderParts.shaderLines;
   if (Array.isArray(lines)) {
-    fragmentLines.push.apply(fragmentLines, lines);
+    addAllToArray(fragmentLines, lines);
   } else {
     // Single string case
     fragmentLines.push(lines);
@@ -488,7 +490,7 @@ ShaderBuilder.prototype.buildShaderProgram = function (context) {
       this._vertexShaderParts.varyingLines,
       structLines.vertexLines,
       functionLines.vertexLines,
-      this._vertexShaderParts.shaderLines
+      this._vertexShaderParts.shaderLines,
     )
     .join("\n");
   const vertexShaderSource = new ShaderSource({
@@ -501,7 +503,7 @@ ShaderBuilder.prototype.buildShaderProgram = function (context) {
       this._fragmentShaderParts.varyingLines,
       structLines.fragmentLines,
       functionLines.fragmentLines,
-      this._fragmentShaderParts.shaderLines
+      this._fragmentShaderParts.shaderLines,
     )
     .join("\n");
   const fragmentShaderSource = new ShaderSource({
@@ -534,7 +536,7 @@ function generateStructLines(shaderBuilder) {
     structId = structIds[i];
     struct = shaderBuilder._structs[structId];
     structLines = struct.generateGlslLines();
-    vertexLines.push.apply(vertexLines, structLines);
+    addAllToArray(vertexLines, structLines);
   }
 
   structIds = shaderBuilder._fragmentShaderParts.structIds;
@@ -542,7 +544,7 @@ function generateStructLines(shaderBuilder) {
     structId = structIds[i];
     struct = shaderBuilder._structs[structId];
     structLines = struct.generateGlslLines();
-    fragmentLines.push.apply(fragmentLines, structLines);
+    addAllToArray(fragmentLines, structLines);
   }
 
   return {
@@ -577,7 +579,7 @@ function generateFunctionLines(shaderBuilder) {
     functionId = functionIds[i];
     func = shaderBuilder._functions[functionId];
     functionLines = func.generateGlslLines();
-    vertexLines.push.apply(vertexLines, functionLines);
+    addAllToArray(vertexLines, functionLines);
   }
 
   functionIds = shaderBuilder._fragmentShaderParts.functionIds;
@@ -585,7 +587,7 @@ function generateFunctionLines(shaderBuilder) {
     functionId = functionIds[i];
     func = shaderBuilder._functions[functionId];
     functionLines = func.generateGlslLines();
-    fragmentLines.push.apply(fragmentLines, functionLines);
+    addAllToArray(fragmentLines, functionLines);
   }
 
   return {

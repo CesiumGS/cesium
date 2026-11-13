@@ -1,8 +1,5 @@
+import { Cartesian2, Color, JulianDate, TimeInterval } from "@cesium/core";
 import {
-  Cartesian2,
-  Color,
-  JulianDate,
-  TimeInterval,
   ConstantProperty,
   ImageMaterialProperty,
   TimeIntervalCollectionProperty,
@@ -61,14 +58,14 @@ describe("DataSources/ImageMaterialProperty", function () {
         start: start,
         stop: stop,
         data: "http://test.invalid/image.png",
-      })
+      }),
     );
     property.repeat.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: new Cartesian2(2, 3),
-      })
+      }),
     );
 
     const result = property.getValue(start);
@@ -121,7 +118,7 @@ describe("DataSources/ImageMaterialProperty", function () {
       property,
       "image",
       property.image,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -130,7 +127,7 @@ describe("DataSources/ImageMaterialProperty", function () {
       property,
       "image",
       property.image,
-      property.image
+      property.image,
     );
     listener.calls.reset();
 
@@ -144,7 +141,7 @@ describe("DataSources/ImageMaterialProperty", function () {
       property,
       "repeat",
       property.repeat,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -153,7 +150,7 @@ describe("DataSources/ImageMaterialProperty", function () {
       property,
       "repeat",
       property.repeat,
-      property.repeat
+      property.repeat,
     );
     listener.calls.reset();
 
@@ -177,7 +174,7 @@ describe("DataSources/ImageMaterialProperty", function () {
         start: start,
         stop: stop,
         data: "http://test.invalid/image.png",
-      })
+      }),
     );
     expect(property.isConstant).toBe(false);
 
@@ -189,7 +186,7 @@ describe("DataSources/ImageMaterialProperty", function () {
         start: start,
         stop: stop,
         data: new Cartesian2(2, 3),
-      })
+      }),
     );
     expect(property.isConstant).toBe(false);
   });

@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core";
 
 /**
  * Describes a rasterized feature, such as a point, polygon, polyline, etc., in an imagery layer.
@@ -50,7 +50,7 @@ function ImageryLayerFeatureInfo() {
  * @param {object} properties An object literal containing the properties of the feature.
  */
 ImageryLayerFeatureInfo.prototype.configureNameFromProperties = function (
-  properties
+  properties,
 ) {
   let namePropertyPrecedence = 10;
   let nameProperty;
@@ -85,28 +85,27 @@ ImageryLayerFeatureInfo.prototype.configureNameFromProperties = function (
  *
  * @param {object} properties An object literal containing the properties of the feature.
  */
-ImageryLayerFeatureInfo.prototype.configureDescriptionFromProperties = function (
-  properties
-) {
-  function describe(properties) {
-    let html = '<table class="cesium-infoBox-defaultTable">';
-    for (const key in properties) {
-      if (properties.hasOwnProperty(key)) {
-        const value = properties[key];
-        if (defined(value)) {
-          if (typeof value === "object") {
-            html += `<tr><td>${key}</td><td>${describe(value)}</td></tr>`;
-          } else {
-            html += `<tr><td>${key}</td><td>${value}</td></tr>`;
+ImageryLayerFeatureInfo.prototype.configureDescriptionFromProperties =
+  function (properties) {
+    function describe(properties) {
+      let html = '<table class="cesium-infoBox-defaultTable">';
+      for (const key in properties) {
+        if (properties.hasOwnProperty(key)) {
+          const value = properties[key];
+          if (defined(value)) {
+            if (typeof value === "object") {
+              html += `<tr><td>${key}</td><td>${describe(value)}</td></tr>`;
+            } else {
+              html += `<tr><td>${key}</td><td>${value}</td></tr>`;
+            }
           }
         }
       }
+      html += "</table>";
+
+      return html;
     }
-    html += "</table>";
 
-    return html;
-  }
-
-  this.description = describe(properties);
-};
+    this.description = describe(properties);
+  };
 export default ImageryLayerFeatureInfo;

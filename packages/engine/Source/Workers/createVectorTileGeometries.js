@@ -1,12 +1,14 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import BoxGeometry from "../Core/BoxGeometry.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import CylinderGeometry from "../Core/CylinderGeometry.js";
-import defined from "../Core/defined.js";
-import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  BoundingSphere,
+  BoxGeometry,
+  Cartesian3,
+  Color,
+  CylinderGeometry,
+  EllipsoidGeometry,
+  IndexDatatype,
+  Matrix4,
+  defined,
+} from "@cesium/core";
 import Vector3DTileBatch from "../Scene/Vector3DTileBatch.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
@@ -31,7 +33,7 @@ function boxModelMatrixAndBoundingVolume(boxes, index) {
   const boxModelMatrix = Matrix4.unpack(
     boxes,
     boxIndex,
-    scratchModelMatrixAndBV.modelMatrix
+    scratchModelMatrixAndBV.modelMatrix,
   );
   Matrix4.multiplyByScale(boxModelMatrix, dimensions, boxModelMatrix);
 
@@ -51,13 +53,13 @@ function cylinderModelMatrixAndBoundingVolume(cylinders, index) {
     cylinderRadius,
     cylinderRadius,
     length,
-    scratchCartesian
+    scratchCartesian,
   );
 
   const cylinderModelMatrix = Matrix4.unpack(
     cylinders,
     cylinderIndex,
-    scratchModelMatrixAndBV.modelMatrix
+    scratchModelMatrixAndBV.modelMatrix,
   );
   Matrix4.multiplyByScale(cylinderModelMatrix, scale, cylinderModelMatrix);
 
@@ -77,7 +79,7 @@ function ellipsoidModelMatrixAndBoundingVolume(ellipsoids, index) {
   const ellipsoidModelMatrix = Matrix4.unpack(
     ellipsoids,
     ellipsoidIndex,
-    scratchModelMatrixAndBV.modelMatrix
+    scratchModelMatrixAndBV.modelMatrix,
   );
   Matrix4.multiplyByScale(ellipsoidModelMatrix, radii, ellipsoidModelMatrix);
 
@@ -96,16 +98,16 @@ function sphereModelMatrixAndBoundingVolume(spheres, index) {
   const sphereTranslation = Cartesian3.unpack(
     spheres,
     sphereIndex,
-    scratchCartesian
+    scratchCartesian,
   );
   const sphereModelMatrix = Matrix4.fromTranslation(
     sphereTranslation,
-    scratchModelMatrixAndBV.modelMatrix
+    scratchModelMatrixAndBV.modelMatrix,
   );
   Matrix4.multiplyByUniformScale(
     sphereModelMatrix,
     sphereRadius,
-    sphereModelMatrix
+    sphereModelMatrix,
   );
 
   const boundingVolume = scratchModelMatrixAndBV.boundingVolume;
@@ -122,7 +124,7 @@ function createPrimitive(
   primitive,
   primitiveBatchIds,
   geometry,
-  getModelMatrixAndBoundingVolume
+  getModelMatrixAndBoundingVolume,
 ) {
   if (!defined(primitive)) {
     return;
@@ -154,7 +156,7 @@ function createPrimitive(
   for (let i = 0; i < numberOfPrimitives; ++i) {
     const primitiveModelMatrixAndBV = getModelMatrixAndBoundingVolume(
       primitive,
-      i
+      i,
     );
     const primitiveModelMatrix = primitiveModelMatrixAndBV.modelMatrix;
     Matrix4.multiply(modelMatrix, primitiveModelMatrix, primitiveModelMatrix);
@@ -188,7 +190,7 @@ function createPrimitive(
     indexCounts[offset] = indicesLength;
     boundingVolumes[offset] = BoundingSphere.transform(
       primitiveModelMatrixAndBV.boundingVolume,
-      primitiveModelMatrix
+      primitiveModelMatrix,
     );
 
     positionOffset += positionsLength / 3;
@@ -324,7 +326,7 @@ function createVectorTileGeometries(parameters, transferableObjects) {
   const vertexBatchIds = new Uint16Array(numberOfPositions / 3);
   const indices = IndexDatatype.createTypedArray(
     numberOfPositions / 3,
-    numberOfIndices
+    numberOfIndices,
   );
 
   const numberOfGeometries =
@@ -360,44 +362,44 @@ function createVectorTileGeometries(parameters, transferableObjects) {
     boxes,
     boxBatchIds,
     boxGeometry,
-    boxModelMatrixAndBoundingVolume
+    boxModelMatrixAndBoundingVolume,
   );
   createPrimitive(
     options,
     cylinders,
     cylinderBatchIds,
     cylinderGeometry,
-    cylinderModelMatrixAndBoundingVolume
+    cylinderModelMatrixAndBoundingVolume,
   );
   createPrimitive(
     options,
     ellipsoids,
     ellipsoidBatchIds,
     ellipsoidGeometry,
-    ellipsoidModelMatrixAndBoundingVolume
+    ellipsoidModelMatrixAndBoundingVolume,
   );
   createPrimitive(
     options,
     spheres,
     sphereBatchIds,
     ellipsoidGeometry,
-    sphereModelMatrixAndBoundingVolume
+    sphereModelMatrixAndBoundingVolume,
   );
 
   const packedBuffer = packBuffer(
     indices.BYTES_PER_ELEMENT,
     batchedIndices,
-    boundingVolumes
+    boundingVolumes,
   );
   transferableObjects.push(
     positions.buffer,
     vertexBatchIds.buffer,
-    indices.buffer
+    indices.buffer,
   );
   transferableObjects.push(
     batchIds.buffer,
     indexOffsets.buffer,
-    indexCounts.buffer
+    indexCounts.buffer,
   );
   transferableObjects.push(packedBuffer.buffer);
 

@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Enum containing Vulkan Constant values by name.
  *
@@ -283,4 +285,7 @@ const VulkanConstants = {
   VK_FORMAT_G16_B16R16_2PLANE_422_UNORM_KHR: 1000156032,
   VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM_KHR: 1000156033,
 };
-export default Object.freeze(VulkanConstants);
+
+Object.freeze(VulkanConstants);
+
+export default VulkanConstants;

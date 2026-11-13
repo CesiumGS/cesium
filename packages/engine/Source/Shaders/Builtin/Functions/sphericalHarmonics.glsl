@@ -29,7 +29,7 @@ vec3 czm_sphericalHarmonics(vec3 normal, vec3 coefficients[9])
     float y = normal.y;
     float z = normal.z;
 
-    return
+    vec3 L =
           L00
         + L1_1 * y
         + L10 * z
@@ -39,4 +39,6 @@ vec3 czm_sphericalHarmonics(vec3 normal, vec3 coefficients[9])
         + L20 * (3.0 * z * z - 1.0)
         + L21 * (z * x)
         + L22 * (x * x - y * y);
+        
+    return max(L, vec3(0.0));
 }

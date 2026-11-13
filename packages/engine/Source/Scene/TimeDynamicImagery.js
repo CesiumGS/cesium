@@ -1,8 +1,10 @@
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import JulianDate from "../Core/JulianDate.js";
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  JulianDate,
+  defined,
+} from "@cesium/core";
 import Request from "../Core/Request.js";
 import RequestType from "../Core/RequestType.js";
 
@@ -19,14 +21,14 @@ import RequestType from "../Core/RequestType.js";
  * @param {Function} options.reloadFunction A function that will be called when all imagery tiles need to be reloaded.
  */
 function TimeDynamicImagery(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.clock", options.clock);
   Check.typeOf.object("options.times", options.times);
   Check.typeOf.func(
     "options.requestImageFunction",
-    options.requestImageFunction
+    options.requestImageFunction,
   );
   Check.typeOf.func("options.reloadFunction", options.reloadFunction);
   //>>includeEnd('debug');
@@ -144,7 +146,7 @@ TimeDynamicImagery.prototype.checkApproachingInterval = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const key = getKey(x, y, level);
   const tilesRequestedForInterval = this._tilesRequestedForInterval;
@@ -292,7 +294,7 @@ function addToCache(that, tile, interval) {
     keyElements.y,
     keyElements.level,
     request,
-    interval
+    interval,
   );
   if (!defined(promise)) {
     return false;

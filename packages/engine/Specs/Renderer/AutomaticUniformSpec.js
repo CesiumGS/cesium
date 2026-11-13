@@ -3,23 +3,24 @@ import {
   Cartesian3,
   Cartographic,
   Color,
-  defaultValue,
-  DirectionalLight,
-  DynamicAtmosphereLightingType,
   Ellipsoid,
-  Fog,
   GeographicProjection,
   Matrix4,
   OrthographicFrustum,
   OrthographicOffCenterFrustum,
+} from "@cesium/core";
+import {
+  DirectionalLight,
+  DynamicAtmosphereLightingType,
+  Fog,
   Pass,
   Texture,
   SceneMode,
 } from "../../index.js";
-
 import createCamera from "../../../../Specs/createCamera.js";
 import createContext from "../../../../Specs/createContext.js";
 import createFrameState from "../../../../Specs/createFrameState.js";
+import CzmBuiltins from "../../Source/Shaders/Builtin/CzmBuiltins.js";
 
 describe(
   "Renderer/AutomaticUniforms",
@@ -41,13 +42,13 @@ describe(
       position,
       direction,
       right,
-      up
+      up,
     ) {
       return {
-        viewMatrix: defaultValue(view, Matrix4.clone(Matrix4.IDENTITY)),
+        viewMatrix: view ?? Matrix4.clone(Matrix4.IDENTITY),
         inverseViewMatrix: Matrix4.inverseTransformation(
-          defaultValue(view, Matrix4.clone(Matrix4.IDENTITY)),
-          new Matrix4()
+          view ?? Matrix4.clone(Matrix4.IDENTITY),
+          new Matrix4(),
         ),
         frustum: {
           near: 1.0,
@@ -56,14 +57,9 @@ describe(
           bottom: -2.0,
           left: -1.0,
           right: 1.0,
-          projectionMatrix: defaultValue(
-            projection,
-            Matrix4.clone(Matrix4.IDENTITY)
-          ),
-          infiniteProjectionMatrix: defaultValue(
-            infiniteProjection,
-            Matrix4.clone(Matrix4.IDENTITY)
-          ),
+          projectionMatrix: projection ?? Matrix4.clone(Matrix4.IDENTITY),
+          infiniteProjectionMatrix:
+            infiniteProjection ?? Matrix4.clone(Matrix4.IDENTITY),
           computeCullingVolume: function () {
             return undefined;
           },
@@ -71,14 +67,11 @@ describe(
             return new Cartesian2(1.0, 0.1);
           },
         },
-        position: defaultValue(position, Cartesian3.clone(Cartesian3.ZERO)),
-        positionWC: defaultValue(position, Cartesian3.clone(Cartesian3.ZERO)),
-        directionWC: defaultValue(
-          direction,
-          Cartesian3.clone(Cartesian3.UNIT_Z)
-        ),
-        rightWC: defaultValue(right, Cartesian3.clone(Cartesian3.UNIT_X)),
-        upWC: defaultValue(up, Cartesian3.clone(Cartesian3.UNIT_Y)),
+        position: position ?? Cartesian3.clone(Cartesian3.ZERO),
+        positionWC: position ?? Cartesian3.clone(Cartesian3.ZERO),
+        directionWC: direction ?? Cartesian3.clone(Cartesian3.UNIT_Z),
+        rightWC: right ?? Cartesian3.clone(Cartesian3.UNIT_X),
+        upWC: up ?? Cartesian3.clone(Cartesian3.UNIT_Y),
         positionCartographic: new Cartographic(0.0, 0.0, 10.0),
       };
     }
@@ -179,7 +172,7 @@ describe(
         13.0,
         14.0,
         15.0,
-        16.0
+        16.0,
       );
       expect({
         context: context,
@@ -213,7 +206,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -244,10 +237,10 @@ describe(
               13.0,
               14.0,
               15.0,
-              16.0
-            )
-          )
-        )
+              16.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -286,10 +279,10 @@ describe(
               13.0,
               14.0,
               15.0,
-              16.0
-            )
-          )
-        )
+              16.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -328,10 +321,10 @@ describe(
               13.0,
               14.0,
               15.0,
-              16.0
-            )
-          )
-        )
+              16.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -369,10 +362,10 @@ describe(
               13.0,
               14.0,
               15.0,
-              16.0
-            )
-          )
-        )
+              16.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -410,10 +403,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -452,10 +445,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -494,10 +487,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -536,10 +529,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -579,10 +572,10 @@ describe(
               13.0,
               14.0,
               15.0,
-              16.0
-            )
-          )
-        )
+              16.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -622,10 +615,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -663,9 +656,9 @@ describe(
             0.0,
             0.0,
             0.0,
-            1.0
-          )
-        )
+            1.0,
+          ),
+        ),
       );
       frameState.mode = SceneMode.SCENE2D;
 
@@ -707,9 +700,9 @@ describe(
             0.0,
             0.0,
             0.0,
-            1.0
-          )
-        )
+            1.0,
+          ),
+        ),
       );
       const frustum = new OrthographicFrustum();
       frustum.aspectRatio = 1.0;
@@ -757,10 +750,10 @@ describe(
               13.0,
               14.0,
               15.0,
-              16.0
-            )
-          )
-        )
+              16.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -799,10 +792,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -829,7 +822,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -860,10 +853,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -890,7 +883,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -921,10 +914,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -951,7 +944,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -965,8 +958,8 @@ describe(
       us.update(
         createFrameState(
           context,
-          createMockCamera(Matrix4.clone(Matrix4.IDENTITY))
-        )
+          createMockCamera(Matrix4.clone(Matrix4.IDENTITY)),
+        ),
       );
 
       const fs =
@@ -993,7 +986,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1007,8 +1000,8 @@ describe(
       us.update(
         createFrameState(
           context,
-          createMockCamera(Matrix4.clone(Matrix4.IDENTITY))
-        )
+          createMockCamera(Matrix4.clone(Matrix4.IDENTITY)),
+        ),
       );
 
       const fs =
@@ -1035,7 +1028,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1066,7 +1059,7 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
+              1.0,
             ),
             new Matrix4(
               1.0,
@@ -1084,10 +1077,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -1127,7 +1120,7 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
+              1.0,
             ),
             new Matrix4(
               1.0,
@@ -1145,10 +1138,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -1188,7 +1181,7 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
+              1.0,
             ),
             new Matrix4(
               1.0,
@@ -1206,10 +1199,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -1237,7 +1230,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1268,7 +1261,7 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
+              1.0,
             ),
             new Matrix4(
               1.0,
@@ -1286,10 +1279,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -1317,7 +1310,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1348,7 +1341,7 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
+              1.0,
             ),
             new Matrix4(
               1.0,
@@ -1366,10 +1359,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -1397,7 +1390,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1428,7 +1421,7 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
+              1.0,
             ),
             undefined,
             new Matrix4(
@@ -1447,10 +1440,10 @@ describe(
               0.0,
               0.0,
               0.0,
-              1.0
-            )
-          )
-        )
+              1.0,
+            ),
+          ),
+        ),
       );
 
       const fs =
@@ -1478,7 +1471,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1512,7 +1505,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1546,7 +1539,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1580,7 +1573,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1614,7 +1607,7 @@ describe(
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
       expect({
         context: context,
@@ -1632,9 +1625,9 @@ describe(
             undefined,
             undefined,
             undefined,
-            new Cartesian3(-1000.0, 0.0, 100000.0)
-          )
-        )
+            new Cartesian3(-1000.0, 0.0, 100000.0),
+          ),
+        ),
       );
 
       const fs =
@@ -1795,8 +1788,8 @@ describe(
           // Provide position and direction because the default position of (0, 0, 0)
           // will lead to a divide by zero when updating fog below.
           new Cartesian3(1.0, 0.0, 0.0),
-          new Cartesian3(0.0, 1.0, 0.0)
-        )
+          new Cartesian3(0.0, 1.0, 0.0),
+        ),
       );
       const fog = new Fog();
       fog.density = 0.1;
@@ -1825,8 +1818,8 @@ describe(
           // Provide position and direction because the default position of (0, 0, 0)
           // will lead to a divide by zero when updating fog below
           new Cartesian3(1.0, 0.0, 0.0),
-          new Cartesian3(0.0, 1.0, 0.0)
-        )
+          new Cartesian3(0.0, 1.0, 0.0),
+        ),
       );
       const fog = new Fog();
       fog.minimumBrightness = 0.25;
@@ -1992,116 +1985,46 @@ describe(
       }).contextToRender();
     });
 
-    it("has czm_pass and czm_passEnvironment", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.ENVIRONMENT);
+    // Converts a Pass name to its GLSL constant, e.g. CESIUM_3D_TILE_EDGES to czm_passCesium3DTileEdges
+    function getPassConstantName(passName) {
+      const words = passName.split("_").map(function (word) {
+        // Keep words starting with a digit, like 3D, as-is
+        if (/^\d/.test(word)) {
+          return word;
+        }
+        return word.charAt(0) + word.slice(1).toLowerCase();
+      });
+      return `czm_pass${words.join("")}`;
+    }
 
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passEnvironment);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
+    const passNames = Object.keys(Pass).filter(function (passName) {
+      return passName !== "NUMBER_OF_PASSES";
     });
 
-    it("has czm_pass and czm_passCompute", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.COMPUTE);
+    passNames.forEach(function (passName) {
+      const constantName = getPassConstantName(passName);
+      it(`has czm_pass and ${constantName}`, function () {
+        context.uniformState.updatePass(Pass[passName]);
 
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passCompute);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
+        const fs = `
+          void main() {
+            out_FragColor = vec4(czm_pass == ${constantName});
+          }
+        `;
+        expect({
+          context: context,
+          fragmentShader: fs,
+        }).contextToRender();
+      });
     });
 
-    it("has czm_pass and czm_passGlobe", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.GLOBE);
-
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passGlobe);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
-    });
-
-    it("has czm_pass and czm_passTerrainClassification", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.TERRAIN_CLASSIFICATION);
-
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passTerrainClassification);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
-    });
-
-    it("has czm_pass and czm_passCesium3DTileClassification", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
-
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passCesium3DTileClassification);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
-    });
-
-    it("has czm_pass and czm_passOpaque", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.OPAQUE);
-
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passOpaque);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
-    });
-
-    it("has czm_pass and czm_passTranslucent", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.TRANSLUCENT);
-
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passTranslucent);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
-    });
-
-    it("has czm_pass and czm_passOverlay", function () {
-      const us = context.uniformState;
-      us.updatePass(Pass.OVERLAY);
-
-      const fs =
-        "void main() { " +
-        "  out_FragColor = vec4(czm_pass == czm_passOverlay);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
+    it("has a Pass for every czm_pass constant", function () {
+      const passConstantNames = passNames.map(getPassConstantName);
+      for (const builtinName of Object.keys(CzmBuiltins)) {
+        if (builtinName.startsWith("czm_pass")) {
+          expect(passConstantNames).toContain(builtinName);
+        }
+      }
     });
 
     it("has czm_sceneMode", function () {
@@ -2383,6 +2306,29 @@ describe(
       expect({ context, fragmentShader }).contextToRender();
     });
 
+    it("has czm_eyeCartographic", function () {
+      const { uniformState } = context;
+      const frameState = createFrameState(context, createMockCamera());
+      uniformState.update(frameState);
+      // The mock camera reports a cartographic position of (0, 0, 10).
+      const fragmentShader = `void main() {
+        out_FragColor = vec4(czm_eyeCartographic == vec3(0.0, 0.0, 10.0));
+      }`;
+      expect({ context, fragmentShader }).contextToRender();
+    });
+
+    it("has czm_eyeToEnu", function () {
+      const { uniformState } = context;
+      const frameState = createFrameState(context, createMockCamera());
+      const ellipsoid = new Ellipsoid(1.0, 1.0, 1.0);
+      frameState.mapProjection = new GeographicProjection(ellipsoid);
+      uniformState.update(frameState);
+      const fragmentShader = `void main() {
+        out_FragColor = vec4(czm_eyeToEnu != mat3(0.0));
+      }`;
+      expect({ context, fragmentShader }).contextToRender();
+    });
+
     it("has czm_modelToEnu", function () {
       const { uniformState } = context;
       const frameState = createFrameState(context, createMockCamera());
@@ -2446,5 +2392,5 @@ describe(
       }).contextToRender();
     });
   },
-  "WebGL"
+  "WebGL",
 );

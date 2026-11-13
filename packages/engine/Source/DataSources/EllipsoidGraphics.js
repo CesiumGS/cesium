@@ -1,7 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import { DeveloperError, Event, Frozen, defined } from "@cesium/core";
 import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
@@ -19,7 +16,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @property {Property | number} [maximumCone=PI] A Property specifying the maximum cone angle of the ellipsoid.
  * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height from the entity position is relative to.
  * @property {Property | boolean} [fill=true] A boolean Property specifying whether the ellipsoid is filled with the provided material.
- * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to fill the ellipsoid.
+ * @property {MaterialProperty | Color | HTMLVideoElement} [material=Color.WHITE] A Property specifying the material used to fill the ellipsoid.
  * @property {Property | boolean} [outline=false] A boolean Property specifying whether the ellipsoid is outlined.
  * @property {Property | Color} [outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
  * @property {Property | number} [outlineWidth=1.0] A numeric Property specifying the width of the outline.
@@ -38,7 +35,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @param {EllipsoidGraphics.ConstructorOptions} [options] Object describing initialization options
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=spheres-and-ellipsoids|Cesium Sandcastle Spheres and Ellipsoids Demo}
  */
 function EllipsoidGraphics(options) {
   this._definitionChanged = new Event();
@@ -79,7 +76,7 @@ function EllipsoidGraphics(options) {
   this._distanceDisplayCondition = undefined;
   this._distanceDisplayConditionSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(EllipsoidGraphics.prototype, {
@@ -241,7 +238,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 });
 
@@ -289,35 +286,24 @@ EllipsoidGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.radii = defaultValue(this.radii, source.radii);
-  this.innerRadii = defaultValue(this.innerRadii, source.innerRadii);
-  this.minimumClock = defaultValue(this.minimumClock, source.minimumClock);
-  this.maximumClock = defaultValue(this.maximumClock, source.maximumClock);
-  this.minimumCone = defaultValue(this.minimumCone, source.minimumCone);
-  this.maximumCone = defaultValue(this.maximumCone, source.maximumCone);
-  this.heightReference = defaultValue(
-    this.heightReference,
-    source.heightReference
-  );
-  this.fill = defaultValue(this.fill, source.fill);
-  this.material = defaultValue(this.material, source.material);
-  this.outline = defaultValue(this.outline, source.outline);
-  this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
-  this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
-  this.stackPartitions = defaultValue(
-    this.stackPartitions,
-    source.stackPartitions
-  );
-  this.slicePartitions = defaultValue(
-    this.slicePartitions,
-    source.slicePartitions
-  );
-  this.subdivisions = defaultValue(this.subdivisions, source.subdivisions);
-  this.shadows = defaultValue(this.shadows, source.shadows);
-  this.distanceDisplayCondition = defaultValue(
-    this.distanceDisplayCondition,
-    source.distanceDisplayCondition
-  );
+  this.show = this.show ?? source.show;
+  this.radii = this.radii ?? source.radii;
+  this.innerRadii = this.innerRadii ?? source.innerRadii;
+  this.minimumClock = this.minimumClock ?? source.minimumClock;
+  this.maximumClock = this.maximumClock ?? source.maximumClock;
+  this.minimumCone = this.minimumCone ?? source.minimumCone;
+  this.maximumCone = this.maximumCone ?? source.maximumCone;
+  this.heightReference = this.heightReference ?? source.heightReference;
+  this.fill = this.fill ?? source.fill;
+  this.material = this.material ?? source.material;
+  this.outline = this.outline ?? source.outline;
+  this.outlineColor = this.outlineColor ?? source.outlineColor;
+  this.outlineWidth = this.outlineWidth ?? source.outlineWidth;
+  this.stackPartitions = this.stackPartitions ?? source.stackPartitions;
+  this.slicePartitions = this.slicePartitions ?? source.slicePartitions;
+  this.subdivisions = this.subdivisions ?? source.subdivisions;
+  this.shadows = this.shadows ?? source.shadows;
+  this.distanceDisplayCondition =
+    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
 };
 export default EllipsoidGraphics;

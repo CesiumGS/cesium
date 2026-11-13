@@ -1,7 +1,4 @@
-import clone from "../Core/clone.js";
-import combine from "../Core/combine.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
+import { Frozen, clone, combine, defined } from "@cesium/core";
 import BlendingState from "./BlendingState.js";
 import CullFace from "./CullFace.js";
 
@@ -28,10 +25,10 @@ import CullFace from "./CullFace.js";
  * @see PolylineColorAppearance
  * @see PolylineMaterialAppearance
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=geometry-and-appearances|Geometry and Appearances Demo}
  */
 function Appearance(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The material used to determine the fragment color.  Unlike other {@link Appearance}
@@ -50,12 +47,12 @@ function Appearance(options) {
    *
    * @default true
    */
-  this.translucent = defaultValue(options.translucent, true);
+  this.translucent = options.translucent ?? true;
 
   this._vertexShaderSource = options.vertexShaderSource;
   this._fragmentShaderSource = options.fragmentShaderSource;
   this._renderState = options.renderState;
-  this._closed = defaultValue(options.closed, false);
+  this._closed = options.closed ?? false;
 }
 
 Object.defineProperties(Appearance.prototype, {

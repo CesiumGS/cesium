@@ -1,12 +1,14 @@
-import ArcType from "../Core/ArcType.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import Matrix4 from "../Core/Matrix4.js";
-import PolylineGeometry from "../Core/PolylineGeometry.js";
+import {
+  ArcType,
+  Cartesian3,
+  Color,
+  Frozen,
+  GeometryInstance,
+  Matrix4,
+  PolylineGeometry,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import PolylineColorAppearance from "./PolylineColorAppearance.js";
 import Primitive from "./Primitive.js";
 
@@ -39,7 +41,7 @@ import Primitive from "./Primitive.js";
  * }));
  */
 function DebugModelMatrixPrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * The length of the axes in meters.
@@ -47,7 +49,7 @@ function DebugModelMatrixPrimitive(options) {
    * @type {number}
    * @default 10000000.0
    */
-  this.length = defaultValue(options.length, 10000000.0);
+  this.length = options.length ?? 10000000.0;
   this._length = undefined;
 
   /**
@@ -56,7 +58,7 @@ function DebugModelMatrixPrimitive(options) {
    * @type {number}
    * @default 2.0
    */
-  this.width = defaultValue(options.width, 2.0);
+  this.width = options.width ?? 2.0;
   this._width = undefined;
 
   /**
@@ -65,7 +67,7 @@ function DebugModelMatrixPrimitive(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * The 4x4 matrix that defines the reference frame, i.e., origin plus axes, to visualize.
@@ -73,9 +75,7 @@ function DebugModelMatrixPrimitive(options) {
    * @type {Matrix4}
    * @default {@link Matrix4.IDENTITY}
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._modelMatrix = new Matrix4();
 
   /**
@@ -136,7 +136,7 @@ DebugModelMatrixPrimitive.prototype.update = function (frameState) {
       modelMatrix: Matrix4.multiplyByUniformScale(
         this.modelMatrix,
         this.length,
-        new Matrix4()
+        new Matrix4(),
       ),
       id: this.id,
       pickPrimitive: this,
@@ -152,7 +152,7 @@ DebugModelMatrixPrimitive.prototype.update = function (frameState) {
       modelMatrix: Matrix4.multiplyByUniformScale(
         this.modelMatrix,
         this.length,
-        new Matrix4()
+        new Matrix4(),
       ),
       id: this.id,
       pickPrimitive: this,
@@ -168,7 +168,7 @@ DebugModelMatrixPrimitive.prototype.update = function (frameState) {
       modelMatrix: Matrix4.multiplyByUniformScale(
         this.modelMatrix,
         this.length,
-        new Matrix4()
+        new Matrix4(),
       ),
       id: this.id,
       pickPrimitive: this,

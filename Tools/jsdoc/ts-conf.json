@@ -4,6 +4,8 @@
     },
     "source": {
         "include": [
+            "packages/core/Source",
+            "packages/gltf/Source",
             "packages/engine/Source",
             "packages/widgets/Source"
         ],
@@ -17,6 +19,7 @@
     },
     "plugins": [
         "./Tools/jsdoc/cesiumTags",
+        "./Tools/jsdoc/ignoreLocalDoclets",
         "tsd-jsdoc/dist/plugin"
     ],
     "templates": {

@@ -1,5 +1,4 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import defined from "../Core/defined.js";
+import { AssociativeArray, defined } from "@cesium/core";
 import BoundingSphereState from "./BoundingSphereState.js";
 
 /**
@@ -16,8 +15,8 @@ DynamicGeometryBatch.prototype.add = function (time, updater) {
     updater.id,
     updater.createDynamicUpdater(
       this._primitives,
-      this._orderedGroundPrimitives
-    )
+      this._orderedGroundPrimitives,
+    ),
   );
 };
 

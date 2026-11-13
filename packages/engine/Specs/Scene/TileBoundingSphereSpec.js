@@ -4,15 +4,14 @@ import {
   Intersect,
   Math as CesiumMath,
   Plane,
-  TileBoundingSphere,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { TileBoundingSphere } from "../../index.js";
 import createFrameState from "../../../../Specs/createFrameState.js";
 
 describe("Scene/TileBoundingSphere", function () {
   const tileBoundingSphere = new TileBoundingSphere(
     new Cartesian3(0.0, 0.0, 0.0),
-    1.0
+    1.0,
   );
   const frameState = createFrameState();
 
@@ -64,7 +63,7 @@ describe("Scene/TileBoundingSphere", function () {
     const normal = new Cartesian3(0.0, 0.0, 1.0);
     const plane = new Plane(normal, CesiumMath.EPSILON6);
     expect(tileBoundingSphere.intersectPlane(plane)).toEqual(
-      Intersect.INTERSECTING
+      Intersect.INTERSECTING,
     );
   });
 });

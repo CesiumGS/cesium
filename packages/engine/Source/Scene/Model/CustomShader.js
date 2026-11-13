@@ -1,8 +1,10 @@
-import Check from "../../Core/Check.js";
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import CustomShaderMode from "./CustomShaderMode.js";
 import UniformType from "./UniformType.js";
 import TextureManager from "./TextureManager.js";
@@ -38,7 +40,9 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  * @typedef {object} VertexVariableSets
  * @property {VariableSet} attributeSet A set of all unique attributes used in the vertex shader via the <code>vsInput.attributes</code> struct.
  * @property {VariableSet} featureIdSet A set of all unique feature ID sets used in the vertex shader via the <code>vsInput.featureIds</code> struct.
- * @property {VariableSet} metadataSet A set of all unique metadata properties used in the vertex shader via the <code>vsInput.metadata</code> struct.
+ * @property {VariableSet} metadataSet A set of all unique metadata properties used in the vertex shader via the <code>vsInput.metadata</code>, <code>vsInput.metadataClass</code> or <code>vsInput.metadataStatistics</code> structs.
+ * @property {VariableSet} metadataClassSet The subset of <code>metadataSet</code> read via <code>vsInput.metadataClass</code>.
+ * @property {VariableSet} metadataStatisticsSet The subset of <code>metadataSet</code> read via <code>vsInput.metadataStatistics</code>.
  * @private
  */
 
@@ -47,7 +51,9 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  * @typedef {object} FragmentVariableSets
  * @property {VariableSet} attributeSet A set of all unique attributes used in the fragment shader via the <code>fsInput.attributes</code> struct
  * @property {VariableSet} featureIdSet A set of all unique feature ID sets used in the fragment shader via the <code>fsInput.featureIds</code> struct.
- * @property {VariableSet} metadataSet A set of all unique metadata properties used in the fragment shader via the <code>fsInput.metadata</code> struct.
+ * @property {VariableSet} metadataSet A set of all unique metadata properties used in the fragment shader via the <code>fsInput.metadata</code>, <code>fsInput.metadataClass</code> or <code>fsInput.metadataStatistics</code> structs.
+ * @property {VariableSet} metadataClassSet The subset of <code>metadataSet</code> read via <code>fsInput.metadataClass</code>.
+ * @property {VariableSet} metadataStatisticsSet The subset of <code>metadataSet</code> read via <code>fsInput.metadataStatistics</code>.
  * @property {VariableSet} materialSet A set of all material variables such as diffuse, specular or alpha that are used in the fragment shader via the <code>material</code> struct.
  * @private
  */
@@ -120,7 +126,7 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  * });
  */
 function CustomShader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * A value determining how the custom shader interacts with the overall
@@ -129,7 +135,7 @@ function CustomShader(options) {
    * @type {CustomShaderMode}
    * @readonly
    */
-  this.mode = defaultValue(options.mode, CustomShaderMode.MODIFY_MATERIAL);
+  this.mode = options.mode ?? CustomShaderMode.MODIFY_MATERIAL;
   /**
    * The lighting model to use when using the custom shader.
    * This is used by {@link CustomShaderPipelineStage}
@@ -144,7 +150,7 @@ function CustomShader(options) {
    * @type {Object<string, UniformSpecifier>}
    * @readonly
    */
-  this.uniforms = defaultValue(options.uniforms, defaultValue.EMPTY_OBJECT);
+  this.uniforms = options.uniforms ?? Frozen.EMPTY_OBJECT;
   /**
    * Additional varyings as declared by the user.
    * This is used by {@link CustomShaderPipelineStage}
@@ -152,7 +158,7 @@ function CustomShader(options) {
    * @type {Object<string, VaryingType>}
    * @readonly
    */
-  this.varyings = defaultValue(options.varyings, defaultValue.EMPTY_OBJECT);
+  this.varyings = options.varyings ?? Frozen.EMPTY_OBJECT;
   /**
    * The user-defined GLSL code for the vertex shader
    *
@@ -178,10 +184,8 @@ function CustomShader(options) {
    * @default CustomShaderTranslucencyMode.INHERIT
    * @readonly
    */
-  this.translucencyMode = defaultValue(
-    options.translucencyMode,
-    CustomShaderTranslucencyMode.INHERIT
-  );
+  this.translucencyMode =
+    options.translucencyMode ?? CustomShaderTranslucencyMode.INHERIT;
 
   /**
    * texture uniforms require some asynchronous processing. This is delegated
@@ -221,6 +225,8 @@ function CustomShader(options) {
     attributeSet: {},
     featureIdSet: {},
     metadataSet: {},
+    metadataClassSet: {},
+    metadataStatisticsSet: {},
   };
   /**
    * A collection of variables used in <code>fragmentShaderText</code>. This
@@ -232,6 +238,8 @@ function CustomShader(options) {
     attributeSet: {},
     featureIdSet: {},
     metadataSet: {},
+    metadataClassSet: {},
+    metadataStatisticsSet: {},
     materialSet: {},
   };
 
@@ -249,7 +257,7 @@ function buildUniformMap(customShader) {
       //>>includeStart('debug', pragmas.debug);
       if (type === UniformType.SAMPLER_CUBE) {
         throw new DeveloperError(
-          "CustomShader does not support samplerCube uniforms"
+          "CustomShader does not support samplerCube uniforms",
         );
       }
       //>>includeEnd('debug');
@@ -258,12 +266,12 @@ function buildUniformMap(customShader) {
         customShader._textureManager.loadTexture2D(uniformName, uniform.value);
         uniformMap[uniformName] = createUniformTexture2DFunction(
           customShader,
-          uniformName
+          uniformName,
         );
       } else {
         uniformMap[uniformName] = createUniformFunction(
           customShader,
-          uniformName
+          uniformName,
         );
       }
     }
@@ -273,8 +281,8 @@ function buildUniformMap(customShader) {
 
 function createUniformTexture2DFunction(customShader, uniformName) {
   return function () {
-    return defaultValue(
-      customShader._textureManager.getTexture(uniformName),
+    return (
+      customShader._textureManager.getTexture(uniformName) ??
       customShader._defaultTexture
     );
   };
@@ -301,7 +309,17 @@ function getVariables(shaderText, regex, outputSet) {
 function findUsedVariables(customShader) {
   const attributeRegex = /[vf]sInput\.attributes\.(\w+)/g;
   const featureIdRegex = /[vf]sInput\.featureIds\.(\w+)/g;
-  const metadataRegex = /[vf]sInput\.metadata.(\w+)/g;
+  // Metadata is a little more complex. Match the first identifier after:
+  //  - vsInput.metadata.<property>
+  //  - vsInput.metadataClass.<property>
+  //  - vsInput.metadataStatistics.<property>
+  // metadataSet collects all three (any of them requires the property's
+  // value); the class and statistics structs are also tracked separately so
+  // their constants are only emitted when a shader reads them.
+  const metadataRegex =
+    /[vf]sInput\.(?:metadata|metadataClass|metadataStatistics)\.(\w+)/g;
+  const metadataClassRegex = /[vf]sInput\.metadataClass\.(\w+)/g;
+  const metadataStatisticsRegex = /[vf]sInput\.metadataStatistics\.(\w+)/g;
   let attributeSet;
 
   const vertexShaderText = customShader.vertexShaderText;
@@ -314,6 +332,12 @@ function findUsedVariables(customShader) {
 
     attributeSet = customShader.usedVariablesVertex.metadataSet;
     getVariables(vertexShaderText, metadataRegex, attributeSet);
+
+    attributeSet = customShader.usedVariablesVertex.metadataClassSet;
+    getVariables(vertexShaderText, metadataClassRegex, attributeSet);
+
+    attributeSet = customShader.usedVariablesVertex.metadataStatisticsSet;
+    getVariables(vertexShaderText, metadataStatisticsRegex, attributeSet);
   }
 
   const fragmentShaderText = customShader.fragmentShaderText;
@@ -326,6 +350,12 @@ function findUsedVariables(customShader) {
 
     attributeSet = customShader.usedVariablesFragment.metadataSet;
     getVariables(fragmentShaderText, metadataRegex, attributeSet);
+
+    attributeSet = customShader.usedVariablesFragment.metadataClassSet;
+    getVariables(fragmentShaderText, metadataClassRegex, attributeSet);
+
+    attributeSet = customShader.usedVariablesFragment.metadataStatisticsSet;
+    getVariables(fragmentShaderText, metadataStatisticsRegex, attributeSet);
 
     const materialRegex = /material\.(\w+)/g;
     const materialSet = customShader.usedVariablesFragment.materialSet;
@@ -357,13 +387,13 @@ function validateVariableUsage(
   variableSet,
   incorrectVariable,
   correctVariable,
-  vertexOrFragment
+  vertexOrFragment,
 ) {
   if (variableSet.hasOwnProperty(incorrectVariable)) {
     const message = `${expandCoordinateAbbreviations(
-      incorrectVariable
+      incorrectVariable,
     )} is not available in the ${vertexOrFragment} shader. Did you mean ${expandCoordinateAbbreviations(
-      correctVariable
+      correctVariable,
     )} instead?`;
     throw new DeveloperError(message);
   }
@@ -413,7 +443,7 @@ CustomShader.prototype.setUniform = function (uniformName, value) {
   Check.defined("value", value);
   if (!defined(this.uniforms[uniformName])) {
     throw new DeveloperError(
-      `Uniform ${uniformName} must be declared in the CustomShader constructor.`
+      `Uniform ${uniformName} must be declared in the CustomShader constructor.`,
     );
   }
   //>>includeEnd('debug');
@@ -443,7 +473,6 @@ CustomShader.prototype.update = function (frameState) {
  * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see CustomShader#destroy
- * @private
  */
 CustomShader.prototype.isDestroyed = function () {
   return false;
@@ -463,7 +492,6 @@ CustomShader.prototype.isDestroyed = function () {
  * customShader = customShader && customShader.destroy();
  *
  * @see CustomShader#isDestroyed
- * @private
  */
 CustomShader.prototype.destroy = function () {
   this._textureManager = this._textureManager && this._textureManager.destroy();

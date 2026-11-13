@@ -1,4 +1,5 @@
-import { PrimitiveType, WireframeIndexGenerator } from "../../index.js";
+import { PrimitiveType } from "@cesium/core";
+import { WireframeIndexGenerator } from "../../index.js";
 
 describe("Core/WireframeIndexGenerator", function () {
   const createWireframeIndices = WireframeIndexGenerator.createWireframeIndices;
@@ -62,7 +63,7 @@ describe("Core/WireframeIndexGenerator", function () {
     const result = createWireframeIndices(
       PrimitiveType.TRIANGLE_STRIP,
       6,
-      indices
+      indices,
     );
     expect(result).toEqual(expected);
   });
@@ -91,7 +92,7 @@ describe("Core/WireframeIndexGenerator", function () {
     const result = createWireframeIndices(
       PrimitiveType.TRIANGLE_FAN,
       6,
-      indices
+      indices,
     );
     expect(result).toEqual(expected);
   });
@@ -115,19 +116,19 @@ describe("Core/WireframeIndexGenerator", function () {
     const originalCount = 6;
     let result = getWireframeIndicesCount(
       PrimitiveType.TRIANGLES,
-      originalCount
+      originalCount,
     );
     expect(result).toEqual(12);
 
     result = getWireframeIndicesCount(
       PrimitiveType.TRIANGLE_STRIP,
-      originalCount
+      originalCount,
     );
     expect(result).toEqual(18);
 
     result = getWireframeIndicesCount(
       PrimitiveType.TRIANGLE_FAN,
-      originalCount
+      originalCount,
     );
     expect(result).toEqual(18);
   });

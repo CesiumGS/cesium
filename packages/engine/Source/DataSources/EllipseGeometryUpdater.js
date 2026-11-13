@@ -1,18 +1,20 @@
+import {
+  Cartesian3,
+  Check,
+  Color,
+  ColorGeometryInstanceAttribute,
+  DeveloperError,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  EllipseGeometry,
+  EllipseOutlineGeometry,
+  GeometryInstance,
+  Iso8601,
+  Rectangle,
+  ShowGeometryInstanceAttribute,
+  defined,
+} from "@cesium/core";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
-import EllipseGeometry from "../Core/EllipseGeometry.js";
-import EllipseOutlineGeometry from "../Core/EllipseOutlineGeometry.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import Iso8601 from "../Core/Iso8601.js";
 import OffsetGeometryInstanceAttribute from "../Core/OffsetGeometryInstanceAttribute.js";
-import Rectangle from "../Core/Rectangle.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import HeightReference from "../Scene/HeightReference.js";
 import MaterialAppearance from "../Scene/MaterialAppearance.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";
@@ -65,7 +67,7 @@ function EllipseGeometryUpdater(entity, scene) {
 
 if (defined(Object.create)) {
   EllipseGeometryUpdater.prototype = Object.create(
-    GroundGeometryUpdater.prototype
+    GroundGeometryUpdater.prototype,
   );
   EllipseGeometryUpdater.prototype.constructor = EllipseGeometryUpdater;
 }
@@ -84,7 +86,7 @@ EllipseGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 
   if (!this._fillEnabled) {
     throw new DeveloperError(
-      "This instance does not represent a filled geometry."
+      "This instance does not represent a filled geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -97,11 +99,12 @@ EllipseGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
       isAvailable &&
         entity.isShowing &&
         this._showProperty.getValue(time) &&
-        this._fillProperty.getValue(time)
+        this._fillProperty.getValue(time),
     ),
-    distanceDisplayCondition: DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-      this._distanceDisplayConditionProperty.getValue(time)
-    ),
+    distanceDisplayCondition:
+      DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+        this._distanceDisplayConditionProperty.getValue(time),
+      ),
     offset: undefined,
     color: undefined,
   };
@@ -126,8 +129,8 @@ EllipseGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
         this._terrainOffsetProperty,
         time,
         defaultOffset,
-        offsetScratch
-      )
+        offsetScratch,
+      ),
     );
   }
 
@@ -147,14 +150,14 @@ EllipseGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
  * @exception {DeveloperError} This instance does not represent an outlined geometry.
  */
 EllipseGeometryUpdater.prototype.createOutlineGeometryInstance = function (
-  time
+  time,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("time", time);
 
   if (!this._outlineEnabled) {
     throw new DeveloperError(
-      "This instance does not represent an outlined geometry."
+      "This instance does not represent an outlined geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -165,23 +168,23 @@ EllipseGeometryUpdater.prototype.createOutlineGeometryInstance = function (
     this._outlineColorProperty,
     time,
     Color.BLACK,
-    scratchColor
+    scratchColor,
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
 
   const attributes = {
     show: new ShowGeometryInstanceAttribute(
       isAvailable &&
         entity.isShowing &&
         this._showProperty.getValue(time) &&
-        this._showOutlineProperty.getValue(time)
+        this._showOutlineProperty.getValue(time),
     ),
     color: ColorGeometryInstanceAttribute.fromColor(outlineColor),
-    distanceDisplayCondition: DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-      distanceDisplayCondition
-    ),
+    distanceDisplayCondition:
+      DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+        distanceDisplayCondition,
+      ),
     offset: undefined,
   };
 
@@ -191,8 +194,8 @@ EllipseGeometryUpdater.prototype.createOutlineGeometryInstance = function (
         this._terrainOffsetProperty,
         time,
         defaultOffset,
-        offsetScratch
-      )
+        offsetScratch,
+      ),
     );
   }
 
@@ -239,25 +242,25 @@ EllipseGeometryUpdater.prototype._isDynamic = function (entity, ellipse) {
 
 EllipseGeometryUpdater.prototype._setStaticOptions = function (
   entity,
-  ellipse
+  ellipse,
 ) {
   let heightValue = Property.getValueOrUndefined(
     ellipse.height,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   const heightReferenceValue = Property.getValueOrDefault(
     ellipse.heightReference,
     Iso8601.MINIMUM_VALUE,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   let extrudedHeightValue = Property.getValueOrUndefined(
     ellipse.extrudedHeight,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   const extrudedHeightReferenceValue = Property.getValueOrDefault(
     ellipse.extrudedHeightReference,
     Iso8601.MINIMUM_VALUE,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   if (defined(extrudedHeightValue) && !defined(heightValue)) {
     heightValue = 0;
@@ -270,50 +273,51 @@ EllipseGeometryUpdater.prototype._setStaticOptions = function (
       : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
   options.center = entity.position.getValue(
     Iso8601.MINIMUM_VALUE,
-    options.center
+    options.center,
   );
   options.semiMajorAxis = ellipse.semiMajorAxis.getValue(
     Iso8601.MINIMUM_VALUE,
-    options.semiMajorAxis
+    options.semiMajorAxis,
   );
   options.semiMinorAxis = ellipse.semiMinorAxis.getValue(
     Iso8601.MINIMUM_VALUE,
-    options.semiMinorAxis
+    options.semiMinorAxis,
   );
   options.rotation = Property.getValueOrUndefined(
     ellipse.rotation,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   options.granularity = Property.getValueOrUndefined(
     ellipse.granularity,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   options.stRotation = Property.getValueOrUndefined(
     ellipse.stRotation,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   options.numberOfVerticalLines = Property.getValueOrUndefined(
     ellipse.numberOfVerticalLines,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
-  options.offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(
-    heightValue,
-    heightReferenceValue,
-    extrudedHeightValue,
-    extrudedHeightReferenceValue
-  );
+  options.offsetAttribute =
+    GroundGeometryUpdater.computeGeometryOffsetAttribute(
+      heightValue,
+      heightReferenceValue,
+      extrudedHeightValue,
+      extrudedHeightReferenceValue,
+    );
   options.height = GroundGeometryUpdater.getGeometryHeight(
     heightValue,
-    heightReferenceValue
+    heightReferenceValue,
   );
 
   extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(
     extrudedHeightValue,
-    extrudedHeightReferenceValue
+    extrudedHeightReferenceValue,
   );
   if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
     extrudedHeightValue = ApproximateTerrainHeights.getMinimumMaximumHeights(
-      EllipseGeometry.computeRectangle(options, scratchRectangle)
+      EllipseGeometry.computeRectangle(options, scratchRectangle),
     ).minimumTerrainHeight;
   }
 
@@ -328,27 +332,28 @@ EllipseGeometryUpdater.DynamicGeometryUpdater = DynamicEllipseGeometryUpdater;
 function DynamicEllipseGeometryUpdater(
   geometryUpdater,
   primitives,
-  groundPrimitives
+  groundPrimitives,
 ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
     primitives,
-    groundPrimitives
+    groundPrimitives,
   );
 }
 
 if (defined(Object.create)) {
   DynamicEllipseGeometryUpdater.prototype = Object.create(
-    DynamicGeometryUpdater.prototype
+    DynamicGeometryUpdater.prototype,
   );
-  DynamicEllipseGeometryUpdater.prototype.constructor = DynamicEllipseGeometryUpdater;
+  DynamicEllipseGeometryUpdater.prototype.constructor =
+    DynamicEllipseGeometryUpdater;
 }
 
 DynamicEllipseGeometryUpdater.prototype._isHidden = function (
   entity,
   ellipse,
-  time
+  time,
 ) {
   const options = this._options;
   return (
@@ -362,23 +367,23 @@ DynamicEllipseGeometryUpdater.prototype._isHidden = function (
 DynamicEllipseGeometryUpdater.prototype._setOptions = function (
   entity,
   ellipse,
-  time
+  time,
 ) {
   const options = this._options;
   let heightValue = Property.getValueOrUndefined(ellipse.height, time);
   const heightReferenceValue = Property.getValueOrDefault(
     ellipse.heightReference,
     time,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   let extrudedHeightValue = Property.getValueOrUndefined(
     ellipse.extrudedHeight,
-    time
+    time,
   );
   const extrudedHeightReferenceValue = Property.getValueOrDefault(
     ellipse.extrudedHeightReference,
     time,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   if (defined(extrudedHeightValue) && !defined(heightValue)) {
     heightValue = 0;
@@ -387,41 +392,42 @@ DynamicEllipseGeometryUpdater.prototype._setOptions = function (
   options.center = Property.getValueOrUndefined(
     entity.position,
     time,
-    options.center
+    options.center,
   );
   options.semiMajorAxis = Property.getValueOrUndefined(
     ellipse.semiMajorAxis,
-    time
+    time,
   );
   options.semiMinorAxis = Property.getValueOrUndefined(
     ellipse.semiMinorAxis,
-    time
+    time,
   );
   options.rotation = Property.getValueOrUndefined(ellipse.rotation, time);
   options.granularity = Property.getValueOrUndefined(ellipse.granularity, time);
   options.stRotation = Property.getValueOrUndefined(ellipse.stRotation, time);
   options.numberOfVerticalLines = Property.getValueOrUndefined(
     ellipse.numberOfVerticalLines,
-    time
+    time,
   );
-  options.offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(
-    heightValue,
-    heightReferenceValue,
-    extrudedHeightValue,
-    extrudedHeightReferenceValue
-  );
+  options.offsetAttribute =
+    GroundGeometryUpdater.computeGeometryOffsetAttribute(
+      heightValue,
+      heightReferenceValue,
+      extrudedHeightValue,
+      extrudedHeightReferenceValue,
+    );
   options.height = GroundGeometryUpdater.getGeometryHeight(
     heightValue,
-    heightReferenceValue
+    heightReferenceValue,
   );
 
   extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(
     extrudedHeightValue,
-    extrudedHeightReferenceValue
+    extrudedHeightReferenceValue,
   );
   if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
     extrudedHeightValue = ApproximateTerrainHeights.getMinimumMaximumHeights(
-      EllipseGeometry.computeRectangle(options, scratchRectangle)
+      EllipseGeometry.computeRectangle(options, scratchRectangle),
     ).minimumTerrainHeight;
   }
 

@@ -1,7 +1,5 @@
-import { Cartesian2, Cartesian3 } from "@cesium/engine";
-
+import { Cartesian2, Cartesian3 } from "@cesium/core";
 import { SelectionIndicatorViewModel } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -25,11 +23,11 @@ describe(
       const viewModel = new SelectionIndicatorViewModel(
         scene,
         selectionIndicatorElement,
-        container
+        container,
       );
       expect(viewModel.scene).toBe(scene);
       expect(viewModel.selectionIndicatorElement).toBe(
-        selectionIndicatorElement
+        selectionIndicatorElement,
       );
       expect(viewModel.container).toBe(container);
       expect(viewModel.computeScreenSpacePosition).toBeDefined();
@@ -51,7 +49,7 @@ describe(
       expect(function () {
         return new SelectionIndicatorViewModel(
           scene,
-          selectionIndicatorElement
+          selectionIndicatorElement,
         );
       }).toThrowDeveloperError();
     });
@@ -60,7 +58,7 @@ describe(
       const viewModel = new SelectionIndicatorViewModel(
         scene,
         selectionIndicatorElement,
-        container
+        container,
       );
       viewModel.animateAppear();
       viewModel.animateDepart();
@@ -71,7 +69,7 @@ describe(
       const viewModel = new SelectionIndicatorViewModel(
         scene,
         selectionIndicatorElement,
-        container
+        container,
       );
       viewModel.showSelection = true;
       viewModel.position = new Cartesian3(1.0, 2.0, 3.0);
@@ -89,7 +87,7 @@ describe(
       const viewModel = new SelectionIndicatorViewModel(
         scene,
         selectionIndicatorElement,
-        container
+        container,
       );
       expect(viewModel.isVisible).toBe(false);
       viewModel.showSelection = true;
@@ -105,7 +103,7 @@ describe(
       const viewModel = new SelectionIndicatorViewModel(
         scene,
         selectionIndicatorElement,
-        container
+        container,
       );
       viewModel.showSelection = true;
       viewModel.position = new Cartesian3(1.0, 2.0, 3.0);
@@ -119,5 +117,5 @@ describe(
       document.body.removeChild(container);
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -1,10 +1,9 @@
+import { defined } from "@cesium/core";
 import {
   buildModuleUrl,
-  defined,
   Iau2006XysData,
   Iau2006XysSample,
 } from "../../index.js";
-
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Core/Iau2006XysData", function () {
@@ -38,8 +37,8 @@ describe("Core/Iau2006XysData", function () {
         new Iau2006XysSample(
           -0.0024019733101066816,
           -0.000024843279494458311,
-          -0.000000016941747917421229
-        )
+          -0.000000016941747917421229,
+        ),
       );
     });
   });
@@ -57,7 +56,7 @@ describe("Core/Iau2006XysData", function () {
       // this should be the same location as the default, but specifying the value
       // takes the code through a different code path.
       xysFileUrlTemplate: buildModuleUrl(
-        "Assets/IAU2006_XYS/IAU2006_XYS_{0}.json"
+        "Assets/IAU2006_XYS/IAU2006_XYS_{0}.json",
       ),
     });
 

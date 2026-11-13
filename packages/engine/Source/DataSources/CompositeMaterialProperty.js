@@ -1,7 +1,4 @@
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
+import { DeveloperError, Event, JulianDate, defined } from "@cesium/core";
 import CompositeProperty from "./CompositeProperty.js";
 import Property from "./Property.js";
 
@@ -16,7 +13,7 @@ function CompositeMaterialProperty() {
   this._composite = new CompositeProperty();
   this._composite.definitionChanged.addEventListener(
     CompositeMaterialProperty.prototype._raiseDefinitionChanged,
-    this
+    this,
   );
 }
 
@@ -74,9 +71,8 @@ CompositeMaterialProperty.prototype.getType = function (time) {
   }
   //>>includeEnd('debug');
 
-  const innerProperty = this._composite._intervals.findDataForIntervalContainingDate(
-    time
-  );
+  const innerProperty =
+    this._composite._intervals.findDataForIntervalContainingDate(time);
   if (defined(innerProperty)) {
     return innerProperty.getType(time);
   }
@@ -97,9 +93,8 @@ CompositeMaterialProperty.prototype.getValue = function (time, result) {
     time = JulianDate.now(timeScratch);
   }
 
-  const innerProperty = this._composite._intervals.findDataForIntervalContainingDate(
-    time
-  );
+  const innerProperty =
+    this._composite._intervals.findDataForIntervalContainingDate(time);
   if (defined(innerProperty)) {
     return innerProperty.getValue(time, result);
   }

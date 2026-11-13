@@ -1,11 +1,13 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Check from "../../Core/Check.js";
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
-import Quaternion from "../../Core/Quaternion.js";
+import {
+  Cartesian3,
+  Check,
+  DeveloperError,
+  Frozen,
+  Matrix4,
+  Quaternion,
+  TranslationRotationScale,
+  defined,
+} from "@cesium/core";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";
 import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
 import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
@@ -26,7 +28,7 @@ import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
  * @private
  */
 function ModelRuntimeNode(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const node = options.node;
   const transform = options.transform;
@@ -63,17 +65,25 @@ function ModelRuntimeNode(options) {
   this._runtimeSkin = undefined;
   this._computedJointMatrices = [];
 
+  // Set the 'show' flag of the runtime node based on the 'visible'
+  // property of the KHR_node_visibility extension.
+  // The 'show' flag should only be set to 'false' when the 'visible'
+  // flag is set to 'false' EXPLICITLY. Everything else (particularly,
+  // 'undefined') should default to 'show=true'.
+  let doShow = true;
+  const nodeVisibility = node.nodeVisibility;
+  if (defined(nodeVisibility)) {
+    doShow = nodeVisibility.visible !== false;
+  }
+
   /**
    * Whether or not to show this node and its children. This can be toggled
    * by the user through {@link ModelNode}.
    *
    * @type {boolean}
-   *
-   * @default true
-   *
    * @private
    */
-  this.show = true;
+  this.show = doShow;
 
   /**
    * Whether or not this node is animated by the user. This is set by the
@@ -92,7 +102,7 @@ function ModelRuntimeNode(options) {
    * This is an array of classes, each with a static method called
    * <code>process()</code>.
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private
@@ -112,7 +122,7 @@ function ModelRuntimeNode(options) {
   /**
    * Update stages to apply to this node.
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private
@@ -328,7 +338,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (!defined(transformParameters)) {
         throw new DeveloperError(
-          "The translation of a node cannot be set if it was defined using a matrix in the model."
+          "The translation of a node cannot be set if it was defined using a matrix in the model.",
         );
       }
       //>>includeEnd('debug');
@@ -340,7 +350,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
 
       transformParameters.translation = Cartesian3.clone(
         value,
-        transformParameters.translation
+        transformParameters.translation,
       );
 
       updateTransformFromParameters(this, transformParameters);
@@ -372,7 +382,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (!defined(transformParameters)) {
         throw new DeveloperError(
-          "The rotation of a node cannot be set if it was defined using a matrix in the model."
+          "The rotation of a node cannot be set if it was defined using a matrix in the model.",
         );
       }
       //>>includeEnd('debug');
@@ -384,7 +394,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
 
       transformParameters.rotation = Quaternion.clone(
         value,
-        transformParameters.rotation
+        transformParameters.rotation,
       );
 
       updateTransformFromParameters(this, transformParameters);
@@ -415,7 +425,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (!defined(transformParameters)) {
         throw new DeveloperError(
-          "The scale of a node cannot be set if it was defined using a matrix in the model."
+          "The scale of a node cannot be set if it was defined using a matrix in the model.",
         );
       }
       //>>includeEnd('debug');
@@ -426,7 +436,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
 
       transformParameters.scale = Cartesian3.clone(
         value,
-        transformParameters.scale
+        transformParameters.scale,
       );
 
       updateTransformFromParameters(this, transformParameters);
@@ -451,7 +461,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (this._morphWeights.length !== valueLength) {
         throw new DeveloperError(
-          "value must have the same length as the original weights array."
+          "value must have the same length as the original weights array.",
         );
       }
       //>>includeEnd('debug');
@@ -499,7 +509,7 @@ function initialize(runtimeNode) {
   runtimeNode._computedTransform = Matrix4.multiply(
     transformToRoot,
     transform,
-    computedTransform
+    computedTransform,
   );
 
   const node = runtimeNode.node;
@@ -507,7 +517,7 @@ function initialize(runtimeNode) {
     runtimeNode._transformParameters = new TranslationRotationScale(
       node.translation,
       node.rotation,
-      node.scale
+      node.scale,
     );
   }
 
@@ -534,7 +544,7 @@ function updateTransformFromParameters(runtimeNode, transformParameters) {
 
   runtimeNode._transform = Matrix4.fromTranslationRotationScale(
     transformParameters,
-    runtimeNode._transform
+    runtimeNode._transform,
   );
 }
 
@@ -559,7 +569,7 @@ ModelRuntimeNode.prototype.getChild = function (index) {
   Check.typeOf.number("index", index);
   if (index < 0 || index >= this.children.length) {
     throw new DeveloperError(
-      "index must be greater than or equal to 0 and less than the number of children."
+      "index must be greater than or equal to 0 and less than the number of children.",
     );
   }
   //>>includeEnd('debug');
@@ -599,7 +609,7 @@ ModelRuntimeNode.prototype.updateComputedTransform = function () {
   this._computedTransform = Matrix4.multiply(
     this._transformToRoot,
     this._transform,
-    this._computedTransform
+    this._computedTransform,
   );
 };
 
@@ -629,18 +639,18 @@ ModelRuntimeNode.prototype.updateJointMatrices = function () {
     const nodeWorldTransform = Matrix4.multiplyTransformation(
       this.transformToRoot,
       this.transform,
-      computedJointMatrices[i]
+      computedJointMatrices[i],
     );
 
     const inverseNodeWorldTransform = Matrix4.inverseTransformation(
       nodeWorldTransform,
-      computedJointMatrices[i]
+      computedJointMatrices[i],
     );
 
     computedJointMatrices[i] = Matrix4.multiplyTransformation(
       inverseNodeWorldTransform,
       skinJointMatrices[i],
-      computedJointMatrices[i]
+      computedJointMatrices[i],
     );
   }
 };

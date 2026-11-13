@@ -1,10 +1,6 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
+import { AssociativeArray, Check, defined, destroyObject } from "@cesium/core";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
 import Uri from "urijs";
 
 const mobileWidth = 576;
@@ -23,7 +19,7 @@ const highlightColor = "#48b";
  */
 function CreditDisplayElement(credit, count) {
   this.credit = credit;
-  this.count = defaultValue(count, 1);
+  this.count = count ?? 1;
 }
 
 function contains(credits, credit) {
@@ -102,7 +98,7 @@ function displayCredits(container, credits, delimiter, elementWrapperTagName) {
             if (existingDelimiter.className !== delimiterClassName) {
               container.replaceChild(
                 createDelimiterElement(delimiter),
-                existingDelimiter
+                existingDelimiter,
               );
             }
           }
@@ -114,7 +110,7 @@ function displayCredits(container, credits, delimiter, elementWrapperTagName) {
       // check to see if the correct credit is in the right place
       if (childNodes.length <= domIndex) {
         container.appendChild(
-          createCreditElement(element, elementWrapperTagName)
+          createCreditElement(element, elementWrapperTagName),
         );
       } else {
         const existingElement = childNodes[domIndex];
@@ -122,7 +118,7 @@ function displayCredits(container, credits, delimiter, elementWrapperTagName) {
           // not the right credit, swap it in
           container.replaceChild(
             createCreditElement(element, elementWrapperTagName),
-            existingElement
+            existingElement,
           );
         }
       }
@@ -149,7 +145,7 @@ function styleLightboxContainer(that) {
       lightboxCredits.className =
         "cesium-credit-lightbox cesium-credit-lightbox-expanded";
       lightboxCredits.style.marginTop = `${Math.floor(
-        (height - lightboxCredits.clientHeight) * 0.5
+        (height - lightboxCredits.clientHeight) * 0.5,
       )}px`;
     }
     that._lastViewportWidth = width;
@@ -157,10 +153,33 @@ function styleLightboxContainer(that) {
 
   if (width >= mobileWidth && height !== that._lastViewportHeight) {
     lightboxCredits.style.marginTop = `${Math.floor(
-      (height - lightboxCredits.clientHeight) * 0.5
+      (height - lightboxCredits.clientHeight) * 0.5,
     )}px`;
     that._lastViewportHeight = height;
   }
+}
+
+/**
+ * Wraps a callback so that it also runs when a keyboard user activates an element
+ * with <code>Enter</code> or <code>Space</code>. Elements exposed as <code>role="button"</code>
+ * are expected to respond to both keys, which anchors without an <code>href</code> do not do natively.
+ *
+ * @param {Function} callback The function to invoke when the element is activated.
+ * @returns {Function} A <code>keydown</code> handler.
+ *
+ * @private
+ */
+function activateOnKeydown(callback) {
+  return function (event) {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+    // Prevent Space from scrolling the page and stop the event from also
+    // reaching the overlay, which would immediately close the lightbox again.
+    event.preventDefault();
+    event.stopPropagation();
+    callback();
+  };
 }
 
 function appendCss(container) {
@@ -195,7 +214,7 @@ function appendCss(container) {
 .cesium-credit-lightbox.cesium-credit-lightbox-expanded {
   border: 1px solid #444;
   border-radius: 5px;
-  max-width: 370px;
+  max-width: 470px;
 }
 .cesium-credit-lightbox.cesium-credit-lightbox-mobile {
   height: 100%;
@@ -238,6 +257,12 @@ function appendCss(container) {
   color: ${highlightColor};
 }
 
+.cesium-credit-expand-link:focus-visible,
+.cesium-credit-lightbox-close:focus-visible {
+  outline: 2px solid ${highlightColor};
+  outline-offset: 2px;
+}
+
 .cesium-credit-text {
   color: ${textColor};
 }
@@ -273,10 +298,7 @@ function appendCss(container) {
     return undefined;
   }
 
-  const shadowRootOrDocumentHead = defaultValue(
-    getShadowRoot(container),
-    document.head
-  );
+  const shadowRootOrDocumentHead = getShadowRoot(container) ?? document.head;
   const styleElem = document.createElement("style");
   styleElem.innerHTML = style;
   shadowRootOrDocumentHead.appendChild(styleElem);
@@ -308,7 +330,7 @@ function CreditDisplay(container, delimiter, viewport) {
   //>>includeEnd('debug');
   const that = this;
 
-  viewport = defaultValue(viewport, document.body);
+  viewport = viewport ?? document.body;
 
   const lightbox = document.createElement("div");
   lightbox.className = "cesium-credit-lightbox-overlay";
@@ -316,6 +338,9 @@ function CreditDisplay(container, delimiter, viewport) {
 
   const lightboxCredits = document.createElement("div");
   lightboxCredits.className = "cesium-credit-lightbox";
+  lightboxCredits.setAttribute("role", "dialog");
+  lightboxCredits.setAttribute("aria-modal", "true");
+  lightboxCredits.setAttribute("aria-label", "Data attribution");
   lightbox.appendChild(lightboxCredits);
 
   function hideLightbox(event) {
@@ -326,6 +351,14 @@ function CreditDisplay(container, delimiter, viewport) {
   }
   lightbox.addEventListener("click", hideLightbox, false);
 
+  function hideLightboxOnEscape(event) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      that.hideLightbox();
+    }
+  }
+  lightbox.addEventListener("keydown", hideLightboxOnEscape, false);
+
   const title = document.createElement("div");
   title.className = "cesium-credit-lightbox-title";
   title.textContent = "Data provided by:";
@@ -333,8 +366,12 @@ function CreditDisplay(container, delimiter, viewport) {
 
   const closeButton = document.createElement("a");
   closeButton.onclick = this.hideLightbox.bind(this);
+  closeButton.onkeydown = activateOnKeydown(this.hideLightbox.bind(this));
   closeButton.innerHTML = "&times;";
   closeButton.className = "cesium-credit-lightbox-close";
+  closeButton.setAttribute("role", "button");
+  closeButton.setAttribute("tabindex", "0");
+  closeButton.setAttribute("aria-label", "Close data attribution");
   lightboxCredits.appendChild(closeButton);
 
   const creditList = document.createElement("ul");
@@ -353,13 +390,18 @@ function CreditDisplay(container, delimiter, viewport) {
   const expandLink = document.createElement("a");
   expandLink.className = "cesium-credit-expand-link";
   expandLink.onclick = this.showLightbox.bind(this);
+  expandLink.onkeydown = activateOnKeydown(this.showLightbox.bind(this));
   expandLink.textContent = "Data attribution";
+  expandLink.setAttribute("role", "button");
+  expandLink.setAttribute("tabindex", "0");
+  expandLink.setAttribute("aria-haspopup", "dialog");
+  expandLink.setAttribute("aria-expanded", "false");
   container.appendChild(expandLink);
 
   appendCss(container);
   const cesiumCredit = Credit.clone(CreditDisplay.cesiumCredit);
 
-  this._delimiter = defaultValue(delimiter, "•");
+  this._delimiter = delimiter ?? "•";
   this._screenContainer = screenContainer;
   this._cesiumCreditContainer = cesiumCreditContainer;
   this._lastViewportHeight = undefined;
@@ -368,7 +410,9 @@ function CreditDisplay(container, delimiter, viewport) {
   this._creditList = creditList;
   this._lightbox = lightbox;
   this._hideLightbox = hideLightbox;
+  this._hideLightboxOnEscape = hideLightboxOnEscape;
   this._expandLink = expandLink;
+  this._closeButton = closeButton;
   this._expanded = false;
   this._staticCredits = [];
   this._cesiumCredit = cesiumCredit;
@@ -394,7 +438,7 @@ function CreditDisplay(container, delimiter, viewport) {
 }
 
 function setCredit(creditDisplay, credits, credit, count) {
-  count = defaultValue(count, 1);
+  count = count ?? 1;
   let creditDisplayElement = credits.get(credit.id);
   if (!defined(creditDisplayElement)) {
     const pool = creditDisplay._creditDisplayElementPool;
@@ -496,6 +540,9 @@ CreditDisplay.prototype.removeStaticCredit = function (credit) {
 CreditDisplay.prototype.showLightbox = function () {
   this._lightbox.style.display = "block";
   this._expanded = true;
+  this._expandLink.setAttribute("aria-expanded", "true");
+  // Move focus into the dialog so keyboard users can reach its contents.
+  this._closeButton.focus();
 };
 
 /**
@@ -504,6 +551,9 @@ CreditDisplay.prototype.showLightbox = function () {
 CreditDisplay.prototype.hideLightbox = function () {
   this._lightbox.style.display = "none";
   this._expanded = false;
+  this._expandLink.setAttribute("aria-expanded", "false");
+  // Restore focus to the element that opened the dialog.
+  this._expandLink.focus();
 };
 
 /**
@@ -562,7 +612,7 @@ CreditDisplay.prototype.endFrame = function () {
     this._screenContainer,
     screenCredits,
     this._delimiter,
-    undefined
+    undefined,
   );
 
   const lightboxCredits = this._currentFrameCredits.lightboxCredits.values;
@@ -585,6 +635,11 @@ CreditDisplay.prototype.endFrame = function () {
  */
 CreditDisplay.prototype.destroy = function () {
   this._lightbox.removeEventListener("click", this._hideLightbox, false);
+  this._lightbox.removeEventListener(
+    "keydown",
+    this._hideLightboxOnEscape,
+    false,
+  );
 
   this.container.removeChild(this._cesiumCreditContainer);
   this.container.removeChild(this._screenContainer);
@@ -625,7 +680,7 @@ function getDefaultCredit() {
 
     defaultCredit = new Credit(
       `<a href="https://cesium.com/" target="_blank"><img src="${logo}" style="vertical-align: -7px" title="Cesium ion"/></a>`,
-      true
+      true,
     );
   }
 

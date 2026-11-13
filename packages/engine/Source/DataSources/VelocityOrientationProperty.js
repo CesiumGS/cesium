@@ -1,12 +1,13 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Quaternion from "../Core/Quaternion.js";
-import Transforms from "../Core/Transforms.js";
+import {
+  Cartesian3,
+  Ellipsoid,
+  Event,
+  FixedFrameTransforms,
+  JulianDate,
+  Matrix3,
+  Quaternion,
+  defined,
+} from "@cesium/core";
 import Property from "./Property.js";
 import VelocityVectorProperty from "./VelocityVectorProperty.js";
 
@@ -35,7 +36,7 @@ function VelocityOrientationProperty(position, ellipsoid) {
   this._ellipsoid = undefined;
   this._definitionChanged = new Event();
 
-  this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  this.ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   const that = this;
   this._velocityVectorProperty.definitionChanged.addEventListener(function () {
@@ -121,18 +122,18 @@ VelocityOrientationProperty.prototype.getValue = function (time, result) {
   const velocity = this._velocityVectorProperty._getValue(
     time,
     velocityScratch,
-    positionScratch
+    positionScratch,
   );
 
   if (!defined(velocity)) {
     return undefined;
   }
 
-  Transforms.rotationMatrixFromPositionVelocity(
+  FixedFrameTransforms.rotationMatrixFromPositionVelocity(
     positionScratch,
     velocity,
     this._ellipsoid,
-    rotationScratch
+    rotationScratch,
   );
   return Quaternion.fromRotationMatrix(rotationScratch, result);
 };
@@ -150,7 +151,7 @@ VelocityOrientationProperty.prototype.equals = function (other) {
     (other instanceof VelocityOrientationProperty &&
       Property.equals(
         this._velocityVectorProperty,
-        other._velocityVectorProperty
+        other._velocityVectorProperty,
       ) &&
       (this._ellipsoid === other._ellipsoid ||
         this._ellipsoid.equals(other._ellipsoid)))

@@ -1,8 +1,10 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
-import TranslationRotationScale from "../Core/TranslationRotationScale.js";
+import {
+  Event,
+  Frozen,
+  JulianDate,
+  TranslationRotationScale,
+  defined,
+} from "@cesium/core";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
@@ -19,7 +21,7 @@ const defaultNodeTransformation = new TranslationRotationScale();
  * @param {Property|Cartesian3} [options.scale=new Cartesian3(1.0, 1.0, 1.0)] A {@link Cartesian3} Property specifying the (x, y, z) scaling to apply to the node.
  */
 function NodeTransformationProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._translation = undefined;
@@ -114,19 +116,19 @@ NodeTransformationProperty.prototype.getValue = function (time, result) {
     this._translation,
     time,
     defaultNodeTransformation.translation,
-    result.translation
+    result.translation,
   );
   result.rotation = Property.getValueOrClonedDefault(
     this._rotation,
     time,
     defaultNodeTransformation.rotation,
-    result.rotation
+    result.rotation,
   );
   result.scale = Property.getValueOrClonedDefault(
     this._scale,
     time,
     defaultNodeTransformation.scale,
-    result.scale
+    result.scale,
   );
   return result;
 };

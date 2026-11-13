@@ -10,7 +10,7 @@ describe("Scene/ImplicitSubdivisionScheme", function () {
 
     for (let i = 0; i < treeTypes.length; i++) {
       expect(ImplicitSubdivisionScheme.getBranchingFactor(treeTypes[i])).toBe(
-        branchingFactors[i]
+        branchingFactors[i],
       );
     }
   });

@@ -1,4 +1,4 @@
-import { Check } from "@cesium/engine";
+import { Check } from "@cesium/core";
 import Cesium3DTilesInspector from "../Cesium3DTilesInspector/Cesium3DTilesInspector.js";
 
 /**
@@ -23,7 +23,7 @@ function viewerCesium3DTilesInspectorMixin(viewer) {
   viewer.container.appendChild(container);
   const cesium3DTilesInspector = new Cesium3DTilesInspector(
     container,
-    viewer.scene
+    viewer.scene,
   );
 
   Object.defineProperties(viewer, {

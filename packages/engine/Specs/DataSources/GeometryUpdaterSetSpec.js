@@ -1,3 +1,4 @@
+import { Event } from "@cesium/core";
 import createScene from "../../../../Specs/createScene.js";
 import {
   BoxGeometryUpdater,
@@ -6,7 +7,6 @@ import {
   EllipseGeometryUpdater,
   EllipsoidGeometryUpdater,
   Entity,
-  Event,
   GeometryUpdaterSet,
   PlaneGeometryUpdater,
   PolygonGeometryUpdater,
@@ -37,7 +37,7 @@ describe("GeometryUpdaterSet", () => {
     expect(updaterSet.updaters[5]).toBeInstanceOf(PlaneGeometryUpdater);
     expect(updaterSet.updaters[6]).toBeInstanceOf(PolygonGeometryUpdater);
     expect(updaterSet.updaters[7]).toBeInstanceOf(
-      PolylineVolumeGeometryUpdater
+      PolylineVolumeGeometryUpdater,
     );
     expect(updaterSet.updaters[8]).toBeInstanceOf(RectangleGeometryUpdater);
     expect(updaterSet.updaters[9]).toBeInstanceOf(WallGeometryUpdater);

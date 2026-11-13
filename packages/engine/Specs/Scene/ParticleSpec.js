@@ -1,4 +1,5 @@
-import { Cartesian2, Cartesian3, Color, Particle } from "../../index.js";
+import { Cartesian2, Cartesian3, Color } from "@cesium/core";
+import { Particle } from "../../index.js";
 
 describe("Scene/Particle", function () {
   it("default constructor", function () {
@@ -45,7 +46,7 @@ describe("Scene/Particle", function () {
     const position = new Cartesian3(1.0, 2.0, 3.0);
     const velocity = Cartesian3.normalize(
       new Cartesian3(-1.0, 1.0, 1.0),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const p = new Particle({
       life: 15.0,
@@ -57,7 +58,7 @@ describe("Scene/Particle", function () {
     const expectedPosition = Cartesian3.add(
       p.position,
       Cartesian3.multiplyByScalar(p.velocity, dt, new Cartesian3()),
-      new Cartesian3()
+      new Cartesian3(),
     );
 
     expect(p.update(dt)).toEqual(true);
@@ -77,7 +78,7 @@ describe("Scene/Particle", function () {
     const position = new Cartesian3(1.0, 2.0, 3.0);
     const velocity = Cartesian3.normalize(
       new Cartesian3(-1.0, 1.0, 1.0),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const p = new Particle({
       life: 15.0,
@@ -90,7 +91,7 @@ describe("Scene/Particle", function () {
     const expectedPosition = Cartesian3.add(
       p.position,
       Cartesian3.multiplyByScalar(p.velocity, dt, new Cartesian3()),
-      new Cartesian3()
+      new Cartesian3(),
     );
 
     expect(p.update(dt, forces)).toEqual(true);

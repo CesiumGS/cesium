@@ -28,14 +28,19 @@
   transform: translate(0, -20%);
   visibility: hidden;
   opacity: 0;
-  transition: visibility 0s 0.2s, opacity 0.2s ease-in, transform 0.2s ease-in;
+  transition:
+    visibility 0s 0.2s,
+    opacity 0.2s ease-in,
+    transform 0.2s ease-in;
 }
 
 .cesium-baseLayerPicker-dropDown-visible {
   transform: translate(0, 0);
   visibility: visible;
   opacity: 1;
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.2s ease-out;
 }
 
 .cesium-baseLayerPicker-sectionTitle {
@@ -105,7 +110,9 @@
 
 .cesium-baseLayerPicker-item:hover .cesium-baseLayerPicker-itemIcon {
   border-color: #fff;
-  box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+  box-shadow:
+    0 0 8px #fff,
+    0 0 8px #fff;
 }
 
 .cesium-baseLayerPicker-selectedItem .cesium-baseLayerPicker-itemLabel {

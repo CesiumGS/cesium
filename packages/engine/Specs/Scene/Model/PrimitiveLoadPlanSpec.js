@@ -1,8 +1,5 @@
-import {
-  AttributeType,
-  PrimitiveLoadPlan,
-  ModelComponents,
-} from "../../../index.js";
+import { AttributeType } from "@cesium/core";
+import { PrimitiveLoadPlan, ModelComponents } from "../../../index.js";
 import createContext from "../../../../../Specs/createContext.js";
 
 describe(
@@ -44,11 +41,11 @@ describe(
       const loadPlan = new PrimitiveLoadPlan(primitive);
 
       loadPlan.indicesPlan = new PrimitiveLoadPlan.IndicesLoadPlan(
-        primitive.indices
+        primitive.indices,
       );
       const [positions] = primitive.attributes;
       loadPlan.attributePlans.push(
-        new PrimitiveLoadPlan.AttributeLoadPlan(positions)
+        new PrimitiveLoadPlan.AttributeLoadPlan(positions),
       );
 
       return loadPlan;
@@ -179,10 +176,8 @@ describe(
 
       // A new attribute is created for the outline coordinates
       expect(loadPlan.attributePlans.length).toBe(2);
-      const [
-        outputPositionPlan,
-        outlineCoordinatesPlan,
-      ] = loadPlan.attributePlans;
+      const [outputPositionPlan, outlineCoordinatesPlan] =
+        loadPlan.attributePlans;
       expect(outputPositionPlan).toBe(positionPlan);
       expectOutlineCoordinates(loadPlan.primitive, outlineCoordinatesPlan);
 
@@ -214,10 +209,8 @@ describe(
 
       // A new attribute is created for the outline coordinates
       expect(loadPlan.attributePlans.length).toBe(2);
-      const [
-        outputPositionPlan,
-        outlineCoordinatesPlan,
-      ] = loadPlan.attributePlans;
+      const [outputPositionPlan, outlineCoordinatesPlan] =
+        loadPlan.attributePlans;
       expect(outputPositionPlan).toBe(positionPlan);
       expectOutlineCoordinates(loadPlan.primitive, outlineCoordinatesPlan);
 
@@ -264,10 +257,8 @@ describe(
 
       // A new attribute is created for the outline coordinates
       expect(loadPlan.attributePlans.length).toBe(2);
-      const [
-        outputPositionPlan,
-        outlineCoordinatesPlan,
-      ] = loadPlan.attributePlans;
+      const [outputPositionPlan, outlineCoordinatesPlan] =
+        loadPlan.attributePlans;
       expect(outputPositionPlan).toBe(positionPlan);
       expectOutlineCoordinates(loadPlan.primitive, outlineCoordinatesPlan);
 
@@ -297,5 +288,5 @@ describe(
       expect(indices.typedArray).toEqual(expectedIndices);
     });
   },
-  "WebGL"
+  "WebGL",
 );

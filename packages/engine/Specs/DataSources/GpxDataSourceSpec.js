@@ -2,14 +2,16 @@ import {
   Cartesian3,
   Color,
   DeveloperError,
-  EntityCollection,
   Event,
-  GpxDataSource,
-  HeightReference,
   Iso8601,
   JulianDate,
-  RequestErrorEvent,
   RuntimeError,
+} from "@cesium/core";
+import {
+  EntityCollection,
+  GpxDataSource,
+  HeightReference,
+  RequestErrorEvent,
   VerticalOrigin,
 } from "../../index.js";
 
@@ -271,7 +273,7 @@ describe("DataSources/GpxDataSource", function () {
         expect(entity.name).toBe("Test");
         expect(entity.label).toBeDefined();
         expect(entity.label.text.getValue()).toBe("Test");
-      }
+      },
     );
   });
 
@@ -285,7 +287,7 @@ describe("DataSources/GpxDataSource", function () {
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).catch(
       function (e) {
         expect(e).toBeInstanceOf(DeveloperError);
-      }
+      },
     );
   });
 
@@ -299,7 +301,7 @@ describe("DataSources/GpxDataSource", function () {
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).catch(
       function (e) {
         expect(e).toBeInstanceOf(DeveloperError);
-      }
+      },
     );
   });
 
@@ -316,10 +318,10 @@ describe("DataSources/GpxDataSource", function () {
         const entities = dataSource.entities.values;
         expect(entities.length).toEqual(1);
         expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-          Cartesian3.fromDegrees(38.737125, -9.139242, undefined)
+          Cartesian3.fromDegrees(38.737125, -9.139242, undefined),
         );
         expect(entities[0].name).toEqual("Position 1");
-      }
+      },
     );
   });
 
@@ -338,10 +340,10 @@ describe("DataSources/GpxDataSource", function () {
         expect(entities[0].billboard.height.getValue()).toEqual(BILLBOARD_SIZE);
         expect(entities[0].billboard.width.getValue()).toEqual(BILLBOARD_SIZE);
         expect(entities[0].billboard.verticalOrigin.getValue()).toEqual(
-          VerticalOrigin.BOTTOM
+          VerticalOrigin.BOTTOM,
         );
         expect(entities[0].billboard.heightReference).toBeUndefined();
-      }
+      },
     );
   });
 
@@ -358,7 +360,7 @@ describe("DataSources/GpxDataSource", function () {
     }).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities[0].billboard.heightReference.getValue()).toEqual(
-        HeightReference.CLAMP_TO_GROUND
+        HeightReference.CLAMP_TO_GROUND,
       );
     });
   });
@@ -398,9 +400,9 @@ describe("DataSources/GpxDataSource", function () {
         const entities = dataSource.entities.values;
         expect(entities.length).toEqual(1);
         expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-          Cartesian3.fromDegrees(1, 2, 3)
+          Cartesian3.fromDegrees(1, 2, 3),
         );
-      }
+      },
     );
   });
 
@@ -423,15 +425,15 @@ describe("DataSources/GpxDataSource", function () {
         const entities = dataSource.entities.values;
         expect(entities.length).toEqual(3);
         expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-          Cartesian3.fromDegrees(1, 2, undefined)
+          Cartesian3.fromDegrees(1, 2, undefined),
         );
         expect(entities[1].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-          Cartesian3.fromDegrees(3, 4, undefined)
+          Cartesian3.fromDegrees(3, 4, undefined),
         );
         expect(entities[2].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-          Cartesian3.fromDegrees(5, 6, undefined)
+          Cartesian3.fromDegrees(5, 6, undefined),
         );
-      }
+      },
     );
   });
 
@@ -455,8 +457,48 @@ describe("DataSources/GpxDataSource", function () {
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
         expect(div.textContent).toEqual("Description: The Description");
-      }
+      },
     );
+  });
+
+  it("Description: creates links from explicit URLs", async function () {
+    const gpx = parser.parseFromString(
+      `<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1">
+        <wpt lon="1" lat="2">
+          <desc>https://example.invalid/track http://example.invalid/source</desc>
+        </wpt>
+      </gpx>`,
+      "text/xml",
+    );
+    const dataSource = await GpxDataSource.load(gpx);
+    const element = document.createElement("div");
+    element.innerHTML = dataSource.entities.values[0].description.getValue();
+
+    const links = element.querySelectorAll("a");
+    expect(links.length).toEqual(2);
+    expect(links[0].getAttribute("href")).toEqual(
+      "https://example.invalid/track",
+    );
+    expect(links[1].getAttribute("href")).toEqual(
+      "http://example.invalid/source",
+    );
+    expect(links[0].getAttribute("target")).toEqual("_blank");
+    expect(links[1].getAttribute("target")).toEqual("_blank");
+  });
+
+  it("Description: does not create links from non-explicit URLs", async function () {
+    const gpx = parser.parseFromString(
+      `<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1">
+        <wpt lon="1" lat="2"><desc>states.id example.com</desc></wpt>
+      </gpx>`,
+      "text/xml",
+    );
+    const dataSource = await GpxDataSource.load(gpx);
+    const element = document.createElement("div");
+    element.innerHTML = dataSource.entities.values[0].description.getValue();
+
+    expect(element.querySelectorAll("a").length).toEqual(0);
+    expect(element.textContent).toEqual("Description: states.id example.com");
   });
 
   it("Description: handles time", function () {
@@ -479,7 +521,7 @@ describe("DataSources/GpxDataSource", function () {
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
         expect(div.textContent).toEqual("Time: 2015-08-17T00:06Z");
-      }
+      },
     );
   });
 
@@ -503,7 +545,7 @@ describe("DataSources/GpxDataSource", function () {
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
         expect(div.textContent).toEqual("Comment: The comment");
-      }
+      },
     );
   });
 
@@ -527,7 +569,7 @@ describe("DataSources/GpxDataSource", function () {
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
         expect(div.textContent).toEqual("Source: The source");
-      }
+      },
     );
   });
 
@@ -551,7 +593,7 @@ describe("DataSources/GpxDataSource", function () {
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
         expect(div.textContent).toEqual("GPS track/route number: The number");
-      }
+      },
     );
   });
 
@@ -575,7 +617,7 @@ describe("DataSources/GpxDataSource", function () {
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
         expect(div.textContent).toEqual("Type: The type");
-      }
+      },
     );
   });
 
@@ -601,9 +643,9 @@ describe("DataSources/GpxDataSource", function () {
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
         expect(div.textContent).toEqual(
-          "Comment: The commentDescription: The descriptionType: The type"
+          "Comment: The commentDescription: The descriptionType: The type",
         );
-      }
+      },
     );
   });
 
@@ -645,9 +687,9 @@ describe("DataSources/GpxDataSource", function () {
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
         expect(div.textContent).toEqual(
-          "Comment: The commentDescription: The descriptionType: The type"
+          "Comment: The commentDescription: The descriptionType: The type",
         );
-      }
+      },
     );
   });
 
@@ -680,18 +722,18 @@ describe("DataSources/GpxDataSource", function () {
         const entities = dataSource.entities.values;
         expect(entities.length).toEqual(5); //1 for the route and 4 routepoints
         expect(entities[1].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-          Cartesian3.fromDegrees(1, 2, 1)
+          Cartesian3.fromDegrees(1, 2, 1),
         );
         expect(entities[2].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-          Cartesian3.fromDegrees(3, 4, 1)
+          Cartesian3.fromDegrees(3, 4, 1),
         );
         expect(entities[3].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-          Cartesian3.fromDegrees(5, 6, 1)
+          Cartesian3.fromDegrees(5, 6, 1),
         );
         expect(entities[4].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-          Cartesian3.fromDegrees(7, 8, 1)
+          Cartesian3.fromDegrees(7, 8, 1),
         );
-      }
+      },
     );
   });
 
@@ -723,13 +765,13 @@ describe("DataSources/GpxDataSource", function () {
         expect(entity.polyline).toBeDefined();
 
         const positions = entity.polyline.positions.getValue(
-          Iso8601.MINIMUM_VALUE
+          Iso8601.MINIMUM_VALUE,
         );
         expect(positions).toEqual([
           Cartesian3.fromDegrees(1, 2, 1),
           Cartesian3.fromDegrees(3, 4, 1),
         ]);
-      }
+      },
     );
   });
 
@@ -764,9 +806,9 @@ describe("DataSources/GpxDataSource", function () {
         expect(entity.polyline.material.color.getValue()).toEqual(Color.RED);
         expect(entity.polyline.material.outlineWidth.getValue()).toEqual(2);
         expect(entity.polyline.material.outlineColor.getValue()).toEqual(
-          Color.BLACK
+          Color.BLACK,
         );
-      }
+      },
     );
   });
 
@@ -894,19 +936,19 @@ describe("DataSources/GpxDataSource", function () {
 
         const entity = dataSource.entities.values[0];
         expect(entity.position.getValue(time1)).toEqual(
-          Cartesian3.fromDegrees(1, 2, 1)
+          Cartesian3.fromDegrees(1, 2, 1),
         );
         expect(entity.position.getValue(time2)).toEqual(
-          Cartesian3.fromDegrees(3, 4, 1)
+          Cartesian3.fromDegrees(3, 4, 1),
         );
         expect(entity.position.getValue(time3)).toEqual(
-          Cartesian3.fromDegrees(5, 6, 1)
+          Cartesian3.fromDegrees(5, 6, 1),
         );
         expect(entity.polyline).toBeDefined();
 
         expect(entity.availability.start).toEqual(time1);
         expect(entity.availability.stop).toEqual(time3);
-      }
+      },
     );
   });
 
@@ -947,9 +989,9 @@ describe("DataSources/GpxDataSource", function () {
         expect(entity.polyline.material.color.getValue()).toEqual(Color.RED);
         expect(entity.polyline.material.outlineWidth.getValue()).toEqual(2);
         expect(entity.polyline.material.outlineColor.getValue()).toEqual(
-          Color.BLACK
+          Color.BLACK,
         );
-      }
+      },
     );
   });
 

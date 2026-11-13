@@ -1,0 +1,27 @@
+{
+  "id": "voxel",
+  "classes": {
+    "voxel": {
+      "properties": {
+        "a": {
+          "type": "SCALAR",
+          "componentType": "FLOAT32",
+          "required": true,
+          "noData": -99999.0
+        },
+        "b": {
+          "type": "SCALAR",
+          "componentType": "FLOAT32",
+          "required": true,
+          "noData": -99999.0
+        },
+        "c": {
+          "type": "SCALAR",
+          "componentType": "FLOAT32",
+          "required": true,
+          "noData": -99999.0
+        }
+      }
+    }
+  }
+}

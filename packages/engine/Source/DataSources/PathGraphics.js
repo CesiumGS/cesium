@@ -1,7 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import { DeveloperError, Event, Frozen, defined } from "@cesium/core";
 import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
@@ -14,9 +11,11 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @property {Property | number} [leadTime] A Property specifying the number of seconds in front the object to show.
  * @property {Property | number} [trailTime] A Property specifying the number of seconds behind of the object to show.
  * @property {Property | number} [width=1.0] A numeric Property specifying the width in pixels.
- * @property {Property | number} [resolution=60] A numeric Property specifying the maximum number of seconds to step when sampling the position.
+ * @property {Property | number} [resolution=60] A numeric Property specifying the maximum number of seconds to step when sampling the position. Fractional positive values are allowed; in PORTIONS materialMode, non-positive values fall back to the default resolution of 60 seconds.
  * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to draw the path.
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this path will be displayed.
+ * @property {Property | string} [relativeTo] A Property specifying the frame in which to visualize the path. Use another entity's id to visualize the path relative to that entity, or use the string values "FIXED" or "INERTIAL" to visualize the path in those reference frames.
+ * @property {Property | PathMode} [materialMode] A Property specifying how material properties are applied along the path.
  */
 
 /**
@@ -43,8 +42,12 @@ function PathGraphics(options) {
   this._materialSubscription = undefined;
   this._distanceDisplayCondition = undefined;
   this._distanceDisplayConditionSubscription = undefined;
+  this._relativeTo = undefined;
+  this._relativeToSubscription = undefined;
+  this._materialMode = undefined;
+  this._materialModeSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(PathGraphics.prototype, {
@@ -92,6 +95,7 @@ Object.defineProperties(PathGraphics.prototype, {
 
   /**
    * Gets or sets the Property specifying the maximum number of seconds to step when sampling the position.
+   * Fractional positive values are allowed; in PORTIONS materialMode, non-positive values fall back to the default resolution of 60 seconds.
    * @memberof PathGraphics.prototype
    * @type {Property|undefined}
    * @default 60
@@ -112,8 +116,16 @@ Object.defineProperties(PathGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
+
+  /**
+   * Gets or sets the frame in which to visualize the path. Use another entity's id to visualize the path relative to that entity, or use the string values "FIXED" or "INERTIAL" to visualize the path in those reference frames.
+   * @memberof PathGraphics.prototype
+   * @type {Property|undefined}
+   */
+  relativeTo: createPropertyDescriptor("relativeTo"),
+  materialMode: createPropertyDescriptor("materialMode"),
 });
 
 /**
@@ -133,6 +145,8 @@ PathGraphics.prototype.clone = function (result) {
   result.resolution = this.resolution;
   result.material = this.material;
   result.distanceDisplayCondition = this.distanceDisplayCondition;
+  result.relativeTo = this.relativeTo;
+  result.materialMode = this.materialMode;
   return result;
 };
 
@@ -149,15 +163,15 @@ PathGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.leadTime = defaultValue(this.leadTime, source.leadTime);
-  this.trailTime = defaultValue(this.trailTime, source.trailTime);
-  this.width = defaultValue(this.width, source.width);
-  this.resolution = defaultValue(this.resolution, source.resolution);
-  this.material = defaultValue(this.material, source.material);
-  this.distanceDisplayCondition = defaultValue(
-    this.distanceDisplayCondition,
-    source.distanceDisplayCondition
-  );
+  this.show = this.show ?? source.show;
+  this.leadTime = this.leadTime ?? source.leadTime;
+  this.trailTime = this.trailTime ?? source.trailTime;
+  this.width = this.width ?? source.width;
+  this.resolution = this.resolution ?? source.resolution;
+  this.material = this.material ?? source.material;
+  this.distanceDisplayCondition =
+    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
+  this.relativeTo = this.relativeTo ?? source.relativeTo;
+  this.materialMode = this.materialMode ?? source.materialMode;
 };
 export default PathGraphics;

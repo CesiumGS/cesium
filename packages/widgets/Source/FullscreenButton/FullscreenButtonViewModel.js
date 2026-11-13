@@ -1,11 +1,5 @@
-import {
-  defaultValue,
-  defined,
-  destroyObject,
-  DeveloperError,
-  Fullscreen,
-  getElement,
-} from "@cesium/engine";
+import { DeveloperError, defined, destroyObject } from "@cesium/core";
+import { Fullscreen, getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
 
@@ -71,18 +65,18 @@ function FullscreenButtonViewModel(fullscreenElement, container) {
     return tmpIsFullscreen() ? "Exit full screen" : "Full screen";
   });
 
-  this._command = createCommand(function () {
-    if (Fullscreen.fullscreen) {
-      Fullscreen.exitFullscreen();
-    } else {
-      Fullscreen.requestFullscreen(that._fullscreenElement);
-    }
-  }, knockout.getObservable(this, "isFullscreenEnabled"));
-
-  this._fullscreenElement = defaultValue(
-    getElement(fullscreenElement),
-    ownerDocument.body
+  this._command = createCommand(
+    function () {
+      if (Fullscreen.fullscreen) {
+        Fullscreen.exitFullscreen();
+      } else {
+        Fullscreen.requestFullscreen(that._fullscreenElement);
+      }
+    },
+    knockout.getObservable(this, "isFullscreenEnabled"),
   );
+
+  this._fullscreenElement = getElement(fullscreenElement) ?? ownerDocument.body;
 
   this._callback = function () {
     tmpIsFullscreen(Fullscreen.fullscreen);

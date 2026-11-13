@@ -1,10 +1,5 @@
-import {
-  Cartesian3,
-  Color,
-  Camera,
-  DebugCameraPrimitive,
-} from "../../index.js";
-
+import { Cartesian3, Color } from "@cesium/core";
+import { Camera, DebugCameraPrimitive } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -21,7 +16,7 @@ describe(
       scene.camera.position = new Cartesian3(0.0, 0.0, 0.0);
       scene.camera.direction = Cartesian3.negate(
         Cartesian3.UNIT_X,
-        new Cartesian3()
+        new Cartesian3(),
       );
       scene.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
       scene.camera.frustum.near = 1.0;
@@ -73,7 +68,7 @@ describe(
       scene.primitives.add(
         new DebugCameraPrimitive({
           camera: camera,
-        })
+        }),
       );
       expect(scene).notToRender([0, 0, 0, 255]);
     });
@@ -83,7 +78,7 @@ describe(
         new DebugCameraPrimitive({
           camera: camera,
           show: false,
-        })
+        }),
       );
       expect(scene).toRender([0, 0, 0, 255]);
     });
@@ -92,7 +87,7 @@ describe(
       const p = scene.primitives.add(
         new DebugCameraPrimitive({
           camera: camera,
-        })
+        }),
       );
       scene.renderForSpecs();
       const primitive = p._outlinePrimitives[0];
@@ -105,7 +100,7 @@ describe(
         new DebugCameraPrimitive({
           camera: camera,
           updateOnChange: false,
-        })
+        }),
       );
       scene.renderForSpecs();
       const primitive = p._primitive;
@@ -118,7 +113,7 @@ describe(
         new DebugCameraPrimitive({
           camera: camera,
           id: "id",
-        })
+        }),
       );
 
       expect(scene).toPickAndCall(function (result) {
@@ -131,12 +126,12 @@ describe(
       const p = scene.primitives.add(
         new DebugCameraPrimitive({
           camera: camera,
-        })
+        }),
       );
       expect(p.isDestroyed()).toEqual(false);
       scene.primitives.remove(p);
       expect(p.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

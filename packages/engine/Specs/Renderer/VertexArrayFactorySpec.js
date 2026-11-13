@@ -5,14 +5,15 @@ import {
   GeometryPipeline,
   IndexDatatype,
   PrimitiveType,
+  RuntimeError,
+} from "@cesium/core";
+import {
   BufferUsage,
   ClearCommand,
   DrawCommand,
   ShaderProgram,
-  RuntimeError,
   VertexArray,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe(
@@ -82,16 +83,16 @@ describe(
       const position = geometry.attributes.position;
       expect(va.getAttribute(0).index).toEqual(0);
       expect(va.getAttribute(0).componentDatatype).toEqual(
-        position.componentDatatype
+        position.componentDatatype,
       );
       expect(va.getAttribute(0).componentsPerAttribute).toEqual(
-        position.componentsPerAttribute
+        position.componentsPerAttribute,
       );
       expect(va.getAttribute(0).offsetInBytes).toEqual(0);
       expect(va.getAttribute(0).strideInBytes).toEqual(0); // Tightly packed
 
       expect(va.getAttribute(0).vertexBuffer.usage).toEqual(
-        BufferUsage.DYNAMIC_DRAW
+        BufferUsage.DYNAMIC_DRAW,
       ); // Default
     });
 
@@ -121,19 +122,19 @@ describe(
       const position = geometry.attributes.position;
       expect(va.getAttribute(0).index).toEqual(0);
       expect(va.getAttribute(0).componentDatatype).toEqual(
-        position.componentDatatype
+        position.componentDatatype,
       );
       expect(va.getAttribute(0).componentsPerAttribute).toEqual(
-        position.componentsPerAttribute
+        position.componentsPerAttribute,
       );
       expect(va.getAttribute(0).offsetInBytes).toEqual(0);
       expect(va.getAttribute(0).strideInBytes).toEqual(
         ComponentDatatype.getSizeInBytes(position.componentDatatype) *
-          position.componentsPerAttribute
+          position.componentsPerAttribute,
       );
 
       expect(va.getAttribute(0).vertexBuffer.usage).toEqual(
-        BufferUsage.STATIC_DRAW
+        BufferUsage.STATIC_DRAW,
       );
     });
 
@@ -166,10 +167,10 @@ describe(
       const position = geometry.attributes.customPosition;
       expect(va.getAttribute(0).index).toEqual(0);
       expect(va.getAttribute(0).componentDatatype).toEqual(
-        position.componentDatatype
+        position.componentDatatype,
       );
       expect(va.getAttribute(0).componentsPerAttribute).toEqual(
-        position.componentsPerAttribute
+        position.componentsPerAttribute,
       );
       expect(va.getAttribute(0).offsetInBytes).toEqual(0);
       expect(va.getAttribute(0).strideInBytes).toEqual(0); // Tightly packed
@@ -177,16 +178,16 @@ describe(
       const normal = geometry.attributes.customNormal;
       expect(va.getAttribute(1).index).toEqual(1);
       expect(va.getAttribute(1).componentDatatype).toEqual(
-        normal.componentDatatype
+        normal.componentDatatype,
       );
       expect(va.getAttribute(1).componentsPerAttribute).toEqual(
-        normal.componentsPerAttribute
+        normal.componentsPerAttribute,
       );
       expect(va.getAttribute(1).offsetInBytes).toEqual(0);
       expect(va.getAttribute(1).strideInBytes).toEqual(0); // Tightly packed
 
       expect(va.getAttribute(0).vertexBuffer).not.toBe(
-        va.getAttribute(1).vertexBuffer
+        va.getAttribute(1).vertexBuffer,
       );
     });
 
@@ -227,29 +228,29 @@ describe(
 
       expect(va.getAttribute(0).index).toEqual(0);
       expect(va.getAttribute(0).componentDatatype).toEqual(
-        position.componentDatatype
+        position.componentDatatype,
       );
       expect(va.getAttribute(0).componentsPerAttribute).toEqual(
-        position.componentsPerAttribute
+        position.componentsPerAttribute,
       );
       expect(va.getAttribute(0).offsetInBytes).toEqual(0);
       expect(va.getAttribute(0).strideInBytes).toEqual(expectedStride);
 
       expect(va.getAttribute(1).index).toEqual(1);
       expect(va.getAttribute(1).componentDatatype).toEqual(
-        normal.componentDatatype
+        normal.componentDatatype,
       );
       expect(va.getAttribute(1).componentsPerAttribute).toEqual(
-        normal.componentsPerAttribute
+        normal.componentsPerAttribute,
       );
       expect(va.getAttribute(1).offsetInBytes).toEqual(
         ComponentDatatype.getSizeInBytes(position.componentDatatype) *
-          position.componentsPerAttribute
+          position.componentsPerAttribute,
       );
       expect(va.getAttribute(1).strideInBytes).toEqual(expectedStride);
 
       expect(va.getAttribute(0).vertexBuffer).toBe(
-        va.getAttribute(1).vertexBuffer
+        va.getAttribute(1).vertexBuffer,
       );
     });
 
@@ -290,29 +291,29 @@ describe(
 
       expect(va.getAttribute(0).index).toEqual(0);
       expect(va.getAttribute(0).componentDatatype).toEqual(
-        position.componentDatatype
+        position.componentDatatype,
       );
       expect(va.getAttribute(0).componentsPerAttribute).toEqual(
-        position.componentsPerAttribute
+        position.componentsPerAttribute,
       );
       expect(va.getAttribute(0).offsetInBytes).toEqual(0);
       expect(va.getAttribute(0).strideInBytes).toEqual(expectedStride);
 
       expect(va.getAttribute(1).index).toEqual(1);
       expect(va.getAttribute(1).componentDatatype).toEqual(
-        colors.componentDatatype
+        colors.componentDatatype,
       );
       expect(va.getAttribute(1).componentsPerAttribute).toEqual(
-        colors.componentsPerAttribute
+        colors.componentsPerAttribute,
       );
       expect(va.getAttribute(1).offsetInBytes).toEqual(
         ComponentDatatype.getSizeInBytes(position.componentDatatype) *
-          position.componentsPerAttribute
+          position.componentsPerAttribute,
       );
       expect(va.getAttribute(1).strideInBytes).toEqual(expectedStride);
 
       expect(va.getAttribute(0).vertexBuffer).toBe(
-        va.getAttribute(1).vertexBuffer
+        va.getAttribute(1).vertexBuffer,
       );
     });
 
@@ -338,9 +339,8 @@ describe(
         primitiveType: PrimitiveType.POINTS,
       });
 
-      const attributeLocations = GeometryPipeline.createAttributeLocations(
-        geometry
-      );
+      const attributeLocations =
+        GeometryPipeline.createAttributeLocations(geometry);
       const va = VertexArray.fromGeometry({
         context: context,
         geometry: geometry,
@@ -409,9 +409,8 @@ describe(
         primitiveType: PrimitiveType.POINTS,
       });
 
-      const attributeLocations = GeometryPipeline.createAttributeLocations(
-        geometry
-      );
+      const attributeLocations =
+        GeometryPipeline.createAttributeLocations(geometry);
       const va = VertexArray.fromGeometry({
         context: context,
         geometry: geometry,
@@ -494,9 +493,8 @@ describe(
         primitiveType: PrimitiveType.POINTS,
       });
 
-      const attributeLocations = GeometryPipeline.createAttributeLocations(
-        geometry
-      );
+      const attributeLocations =
+        GeometryPipeline.createAttributeLocations(geometry);
       const va = VertexArray.fromGeometry({
         context: context,
         geometry: geometry,
@@ -571,9 +569,8 @@ describe(
         primitiveType: PrimitiveType.POINTS,
       });
 
-      const attributeLocations = GeometryPipeline.createAttributeLocations(
-        geometry
-      );
+      const attributeLocations =
+        GeometryPipeline.createAttributeLocations(geometry);
       const va = VertexArray.fromGeometry({
         context: context,
         geometry: geometry,
@@ -676,7 +673,7 @@ describe(
       expect(va.indexBuffer).toBeDefined();
       expect(va.indexBuffer.usage).toEqual(BufferUsage.DYNAMIC_DRAW); // Default
       expect(va.indexBuffer.indexDatatype).toEqual(
-        IndexDatatype.UNSIGNED_SHORT
+        IndexDatatype.UNSIGNED_SHORT,
       );
       expect(va.indexBuffer.numberOfIndices).toEqual(geometry.indices.length);
     });
@@ -736,5 +733,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

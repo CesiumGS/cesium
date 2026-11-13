@@ -1,9 +1,11 @@
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
-import ReferenceFrame from "../Core/ReferenceFrame.js";
+import {
+  DeveloperError,
+  Ellipsoid,
+  Event,
+  JulianDate,
+  ReferenceFrame,
+  defined,
+} from "@cesium/core";
 import Property from "./Property.js";
 
 /**
@@ -59,7 +61,7 @@ ScaledPositionProperty.prototype.setValue = function (value) {
     if (defined(value)) {
       this._removeSubscription = value.definitionChanged.addEventListener(
         this._raiseDefinitionChanged,
-        this
+        this,
       );
     }
     this._definitionChanged.raiseEvent(this);
@@ -69,7 +71,7 @@ ScaledPositionProperty.prototype.setValue = function (value) {
 ScaledPositionProperty.prototype.getValueInReferenceFrame = function (
   time,
   referenceFrame,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {

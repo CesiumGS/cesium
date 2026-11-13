@@ -1,25 +1,6 @@
+import { destroyObject } from "@cesium/core";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import BoxGeometry from "../Core/BoxGeometry.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import GeometryPipeline from "../Core/GeometryPipeline.js";
-import Matrix4 from "../Core/Matrix4.js";
-import VertexFormat from "../Core/VertexFormat.js";
-import BufferUsage from "../Renderer/BufferUsage.js";
-import CubeMap from "../Renderer/CubeMap.js";
-import DrawCommand from "../Renderer/DrawCommand.js";
-import loadCubeMap from "../Renderer/loadCubeMap.js";
-import RenderState from "../Renderer/RenderState.js";
-import ShaderProgram from "../Renderer/ShaderProgram.js";
-import ShaderSource from "../Renderer/ShaderSource.js";
-import VertexArray from "../Renderer/VertexArray.js";
-import SkyBoxFS from "../Shaders/SkyBoxFS.js";
-import SkyBoxVS from "../Shaders/SkyBoxVS.js";
-import BlendingState from "./BlendingState.js";
+import CubeMapPanorama from "./CubeMapPanorama.js";
 import SceneMode from "./SceneMode.js";
 
 /**
@@ -53,35 +34,46 @@ import SceneMode from "./SceneMode.js";
  * @see Transforms.computeTemeToPseudoFixedMatrix
  */
 function SkyBox(options) {
+  this._sources = options.sources;
+  this._show = options.show ?? true;
+  this._panorama = new CubeMapPanorama({
+    sources: this._sources,
+    show: this._show,
+    returnCommand: true,
+  });
+}
+
+Object.defineProperties(SkyBox.prototype, {
   /**
-   * The sources used to create the cube map faces: an object
-   * with <code>positiveX</code>, <code>negativeX</code>, <code>positiveY</code>,
-   * <code>negativeY</code>, <code>positiveZ</code>, and <code>negativeZ</code> properties.
-   * These can be either URLs or <code>Image</code> objects.
-   *
+   * Gets or sets the the primitive object.
+   * @memberof SkyBox.prototype
    * @type {object}
-   * @default undefined
    */
-  this.sources = options.sources;
-  this._sources = undefined;
+  sources: {
+    get: function () {
+      return this._panorama.sources;
+    },
+    set: function (value) {
+      this._panorama.sources = value;
+    },
+  },
 
   /**
    * Determines if the sky box will be shown.
-   *
+   * @memberof SkyBox.prototype
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
 
-  this._command = new DrawCommand({
-    modelMatrix: Matrix4.clone(Matrix4.IDENTITY),
-    owner: this,
-  });
-  this._cubeMap = undefined;
-
-  this._attributeLocations = undefined;
-  this._useHdr = undefined;
-}
+  show: {
+    get: function () {
+      return this._panorama.show;
+    },
+    set: function (value) {
+      this._panorama.show = value;
+    },
+  },
+});
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -95,115 +87,18 @@ function SkyBox(options) {
  * @exception {DeveloperError} this.sources properties must all be the same type.
  */
 SkyBox.prototype.update = function (frameState, useHdr) {
-  const that = this;
-  const { mode, passes, context } = frameState;
-
-  if (!this.show) {
-    return undefined;
-  }
+  const { mode, passes } = frameState;
 
   if (mode !== SceneMode.SCENE3D && mode !== SceneMode.MORPHING) {
-    return undefined;
+    return;
   }
 
-  // The sky box is only rendered during the render pass; it is not pickable, it doesn't cast shadows, etc.
   if (!passes.render) {
-    return undefined;
+    return;
   }
 
-  if (this._sources !== this.sources) {
-    this._sources = this.sources;
-    const sources = this.sources;
-
-    //>>includeStart('debug', pragmas.debug);
-    Check.defined("this.sources", sources);
-    if (
-      Object.values(CubeMap.FaceName).some(
-        (faceName) => !defined(sources[faceName])
-      )
-    ) {
-      throw new DeveloperError(
-        "this.sources must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties."
-      );
-    }
-
-    const sourceType = typeof sources.positiveX;
-    if (
-      Object.values(CubeMap.FaceName).some(
-        (faceName) => typeof sources[faceName] !== sourceType
-      )
-    ) {
-      throw new DeveloperError(
-        "this.sources properties must all be the same type."
-      );
-    }
-    //>>includeEnd('debug');
-
-    if (typeof sources.positiveX === "string") {
-      // Given urls for cube-map images.  Load them.
-      loadCubeMap(context, this._sources).then(function (cubeMap) {
-        that._cubeMap = that._cubeMap && that._cubeMap.destroy();
-        that._cubeMap = cubeMap;
-      });
-    } else {
-      this._cubeMap = this._cubeMap && this._cubeMap.destroy();
-      this._cubeMap = new CubeMap({
-        context: context,
-        source: sources,
-      });
-    }
-  }
-
-  const command = this._command;
-
-  if (!defined(command.vertexArray)) {
-    command.uniformMap = {
-      u_cubeMap: function () {
-        return that._cubeMap;
-      },
-    };
-
-    const geometry = BoxGeometry.createGeometry(
-      BoxGeometry.fromDimensions({
-        dimensions: new Cartesian3(2.0, 2.0, 2.0),
-        vertexFormat: VertexFormat.POSITION_ONLY,
-      })
-    );
-    const attributeLocations = (this._attributeLocations = GeometryPipeline.createAttributeLocations(
-      geometry
-    ));
-
-    command.vertexArray = VertexArray.fromGeometry({
-      context: context,
-      geometry: geometry,
-      attributeLocations: attributeLocations,
-      bufferUsage: BufferUsage.STATIC_DRAW,
-    });
-
-    command.renderState = RenderState.fromCache({
-      blending: BlendingState.ALPHA_BLEND,
-    });
-  }
-
-  if (!defined(command.shaderProgram) || this._useHdr !== useHdr) {
-    const fs = new ShaderSource({
-      defines: [useHdr ? "HDR" : ""],
-      sources: [SkyBoxFS],
-    });
-    command.shaderProgram = ShaderProgram.fromCache({
-      context: context,
-      vertexShaderSource: SkyBoxVS,
-      fragmentShaderSource: fs,
-      attributeLocations: this._attributeLocations,
-    });
-    this._useHdr = useHdr;
-  }
-
-  if (!defined(this._cubeMap)) {
-    return undefined;
-  }
-
-  return command;
+  // Delegate completely
+  return this._panorama.update(frameState, useHdr);
 };
 
 /**
@@ -237,11 +132,7 @@ SkyBox.prototype.isDestroyed = function () {
  * @see SkyBox#isDestroyed
  */
 SkyBox.prototype.destroy = function () {
-  const command = this._command;
-  command.vertexArray = command.vertexArray && command.vertexArray.destroy();
-  command.shaderProgram =
-    command.shaderProgram && command.shaderProgram.destroy();
-  this._cubeMap = this._cubeMap && this._cubeMap.destroy();
+  this._panorama = this._panorama && this._panorama.destroy();
   return destroyObject(this);
 };
 

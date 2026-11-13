@@ -1,6 +1,5 @@
+import { ComponentDatatype, combine } from "@cesium/core";
 import {
-  combine,
-  ComponentDatatype,
   GltfLoader,
   ModelStatistics,
   ModelType,
@@ -63,7 +62,7 @@ describe(
       attribute,
       expectedIndex,
       expectedOffset,
-      expectedStride
+      expectedStride,
     ) {
       expect(attribute.index).toEqual(expectedIndex);
       expect(attribute.vertexBuffer).toBeDefined();
@@ -113,7 +112,7 @@ describe(
           positionAttribute,
           expectedIndex,
           expectedByteOffset,
-          expectedStride
+          expectedStride,
         );
 
         ShaderBuilderTester.expectHasVertexFunction(
@@ -124,7 +123,7 @@ describe(
             "    vec3 morphedPosition = position;",
             "    morphedPosition += u_morphWeights[0] * a_targetPosition_0;",
             "    return morphedPosition;",
-          ]
+          ],
         );
 
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -145,7 +144,7 @@ describe(
 
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap.u_morphWeights()).toBe(
-          renderResources.runtimeNode.morphWeights
+          renderResources.runtimeNode.morphWeights,
         );
       });
     });
@@ -186,7 +185,7 @@ describe(
             attribute,
             i + 1,
             expectedByteOffset,
-            expectedStride
+            expectedStride,
           );
         }
 
@@ -199,7 +198,7 @@ describe(
             "    morphedPosition += u_morphWeights[0] * a_targetPosition_0;",
             "    morphedPosition += u_morphWeights[1] * a_targetPosition_1;",
             "    return morphedPosition;",
-          ]
+          ],
         );
 
         ShaderBuilderTester.expectHasVertexFunction(
@@ -211,7 +210,7 @@ describe(
             "    morphedNormal += u_morphWeights[0] * a_targetNormal_0;",
             "    morphedNormal += u_morphWeights[1] * a_targetNormal_1;",
             "    return morphedNormal;",
-          ]
+          ],
         );
 
         ShaderBuilderTester.expectHasVertexFunction(
@@ -223,7 +222,7 @@ describe(
             "    morphedTangent += u_morphWeights[0] * a_targetTangent_0;",
             "    morphedTangent += u_morphWeights[1] * a_targetTangent_1;",
             "    return morphedTangent;",
-          ]
+          ],
         );
 
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -249,10 +248,10 @@ describe(
 
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap.u_morphWeights()).toBe(
-          renderResources.runtimeNode.morphWeights
+          renderResources.runtimeNode.morphWeights,
         );
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

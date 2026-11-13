@@ -1,15 +1,17 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Check from "../../Core/Check.js";
-import ConstantSpline from "../../Core/ConstantSpline.js";
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import HermiteSpline from "../../Core/HermiteSpline.js";
-import InterpolationType from "../../Core/InterpolationType.js";
-import LinearSpline from "../../Core/LinearSpline.js";
+import {
+  Cartesian3,
+  Check,
+  ConstantSpline,
+  Frozen,
+  HermiteSpline,
+  InterpolationType,
+  LinearSpline,
+  Quaternion,
+  QuaternionSpline,
+  SteppedSpline,
+  defined,
+} from "@cesium/core";
 import ModelComponents from "../ModelComponents.js";
-import SteppedSpline from "../../Core/SteppedSpline.js";
-import Quaternion from "../../Core/Quaternion.js";
-import QuaternionSpline from "../../Core/QuaternionSpline.js";
 
 const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
 
@@ -29,7 +31,7 @@ const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
  * @private
  */
 function ModelAnimationChannel(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const channel = options.channel;
   const runtimeAnimation = options.runtimeAnimation;
@@ -280,12 +282,12 @@ ModelAnimationChannel.prototype.animate = function (time) {
     ) {
       runtimeNode[path] = spline.evaluate(
         localAnimationTime,
-        scratchCartesian3
+        scratchCartesian3,
       );
     } else if (path === AnimatedPropertyType.ROTATION) {
       runtimeNode[path] = spline.evaluate(
         localAnimationTime,
-        scratchQuaternion
+        scratchQuaternion,
       );
     }
   }

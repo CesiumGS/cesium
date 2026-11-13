@@ -1,9 +1,10 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
-import ReferenceFrame from "../Core/ReferenceFrame.js";
+import {
+  DeveloperError,
+  Event,
+  JulianDate,
+  ReferenceFrame,
+  defined,
+} from "@cesium/core";
 import CompositeProperty from "./CompositeProperty.js";
 import Property from "./Property.js";
 
@@ -16,12 +17,12 @@ import Property from "./Property.js";
  * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
  */
 function CompositePositionProperty(referenceFrame) {
-  this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+  this._referenceFrame = referenceFrame ?? ReferenceFrame.FIXED;
   this._definitionChanged = new Event();
   this._composite = new CompositeProperty();
   this._composite.definitionChanged.addEventListener(
     CompositePositionProperty.prototype._raiseDefinitionChanged,
-    this
+    this,
   );
 }
 
@@ -110,7 +111,7 @@ CompositePositionProperty.prototype.getValue = function (time, result) {
 CompositePositionProperty.prototype.getValueInReferenceFrame = function (
   time,
   referenceFrame,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {
@@ -121,9 +122,8 @@ CompositePositionProperty.prototype.getValueInReferenceFrame = function (
   }
   //>>includeEnd('debug');
 
-  const innerProperty = this._composite._intervals.findDataForIntervalContainingDate(
-    time
-  );
+  const innerProperty =
+    this._composite._intervals.findDataForIntervalContainingDate(time);
   if (defined(innerProperty)) {
     return innerProperty.getValueInReferenceFrame(time, referenceFrame, result);
   }

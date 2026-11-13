@@ -1,11 +1,5 @@
-import {
-  Cartesian2,
-  defaultValue,
-  defined,
-  DeveloperError,
-  EasingFunction,
-  SceneTransforms,
-} from "@cesium/engine";
+import { Cartesian2, DeveloperError, defined } from "@cesium/core";
+import { EasingFunction, SceneTransforms } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 
 const screenSpacePos = new Cartesian2();
@@ -23,7 +17,7 @@ const offScreen = "-1000px";
 function SelectionIndicatorViewModel(
   scene,
   selectionIndicatorElement,
-  container
+  container,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(scene)) {
@@ -37,13 +31,13 @@ function SelectionIndicatorViewModel(
   if (!defined(container)) {
     throw new DeveloperError("container is required.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   this._scene = scene;
   this._screenPositionX = offScreen;
   this._screenPositionY = offScreen;
   this._tweens = scene.tweens;
-  this._container = defaultValue(container, document.body);
+  this._container = container ?? document.body;
   this._selectionIndicatorElement = selectionIndicatorElement;
   this._scale = 1;
 
@@ -110,7 +104,7 @@ SelectionIndicatorViewModel.prototype.update = function () {
   if (this.showSelection && defined(this.position)) {
     const screenPosition = this.computeScreenSpacePosition(
       this.position,
-      screenSpacePos
+      screenSpacePos,
     );
     if (!defined(screenPosition)) {
       this._screenPositionX = offScreen;
@@ -125,12 +119,12 @@ SelectionIndicatorViewModel.prototype.update = function () {
       screenPosition.x =
         Math.min(
           Math.max(screenPosition.x, -indicatorSize),
-          containerWidth + indicatorSize
+          containerWidth + indicatorSize,
         ) - halfSize;
       screenPosition.y =
         Math.min(
           Math.max(screenPosition.y, -indicatorSize),
-          containerHeight + indicatorSize
+          containerHeight + indicatorSize,
         ) - halfSize;
 
       this._screenPositionX = `${Math.floor(screenPosition.x + 0.25)}px`;

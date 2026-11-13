@@ -1,14 +1,16 @@
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import Iso8601 from "../Core/Iso8601.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
-import WallGeometry from "../Core/WallGeometry.js";
-import WallOutlineGeometry from "../Core/WallOutlineGeometry.js";
+import {
+  Check,
+  Color,
+  ColorGeometryInstanceAttribute,
+  DeveloperError,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  GeometryInstance,
+  Iso8601,
+  ShowGeometryInstanceAttribute,
+  WallGeometry,
+  WallOutlineGeometry,
+  defined,
+} from "@cesium/core";
 import MaterialAppearance from "../Scene/MaterialAppearance.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";
 import ColorMaterialProperty from "./ColorMaterialProperty.js";
@@ -67,7 +69,7 @@ WallGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 
   if (!this._fillEnabled) {
     throw new DeveloperError(
-      "This instance does not represent a filled geometry."
+      "This instance does not represent a filled geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -82,14 +84,14 @@ WallGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
     isAvailable &&
       entity.isShowing &&
       this._showProperty.getValue(time) &&
-      this._fillProperty.getValue(time)
+      this._fillProperty.getValue(time),
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
-  const distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-    distanceDisplayCondition
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
+  const distanceDisplayConditionAttribute =
+    DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+      distanceDisplayCondition,
+    );
   if (this._materialProperty instanceof ColorMaterialProperty) {
     let currentColor;
     if (
@@ -135,7 +137,7 @@ WallGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
 
   if (!this._outlineEnabled) {
     throw new DeveloperError(
-      "This instance does not represent an outlined geometry."
+      "This instance does not represent an outlined geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -146,11 +148,10 @@ WallGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
     this._outlineColorProperty,
     time,
     Color.BLACK,
-    scratchColor
+    scratchColor,
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
 
   return new GeometryInstance({
     id: entity,
@@ -160,12 +161,13 @@ WallGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
         isAvailable &&
           entity.isShowing &&
           this._showProperty.getValue(time) &&
-          this._showOutlineProperty.getValue(time)
+          this._showOutlineProperty.getValue(time),
       ),
       color: ColorGeometryInstanceAttribute.fromColor(outlineColor),
-      distanceDisplayCondition: DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-        distanceDisplayCondition
-      ),
+      distanceDisplayCondition:
+        DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+          distanceDisplayCondition,
+        ),
     },
   });
 };
@@ -204,7 +206,7 @@ WallGeometryUpdater.prototype._setStaticOptions = function (entity, wall) {
     : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
   options.positions = wall.positions.getValue(
     Iso8601.MINIMUM_VALUE,
-    options.positions
+    options.positions,
   );
   options.minimumHeights = defined(minimumHeights)
     ? minimumHeights.getValue(Iso8601.MINIMUM_VALUE, options.minimumHeights)
@@ -225,19 +227,19 @@ WallGeometryUpdater.DynamicGeometryUpdater = DynamicWallGeometryUpdater;
 function DynamicWallGeometryUpdater(
   geometryUpdater,
   primitives,
-  groundPrimitives
+  groundPrimitives,
 ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
     primitives,
-    groundPrimitives
+    groundPrimitives,
   );
 }
 
 if (defined(Object.create)) {
   DynamicWallGeometryUpdater.prototype = Object.create(
-    DynamicGeometryUpdater.prototype
+    DynamicGeometryUpdater.prototype,
   );
   DynamicWallGeometryUpdater.prototype.constructor = DynamicWallGeometryUpdater;
 }
@@ -252,23 +254,23 @@ DynamicWallGeometryUpdater.prototype._isHidden = function (entity, wall, time) {
 DynamicWallGeometryUpdater.prototype._setOptions = function (
   entity,
   wall,
-  time
+  time,
 ) {
   const options = this._options;
   options.positions = Property.getValueOrUndefined(
     wall.positions,
     time,
-    options.positions
+    options.positions,
   );
   options.minimumHeights = Property.getValueOrUndefined(
     wall.minimumHeights,
     time,
-    options.minimumHeights
+    options.minimumHeights,
   );
   options.maximumHeights = Property.getValueOrUndefined(
     wall.maximumHeights,
     time,
-    options.maximumHeights
+    options.maximumHeights,
   );
   options.granularity = Property.getValueOrUndefined(wall.granularity, time);
 };

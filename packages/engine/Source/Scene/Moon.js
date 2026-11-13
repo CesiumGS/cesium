@@ -1,14 +1,16 @@
+import {
+  Cartesian3,
+  Ellipsoid,
+  Frozen,
+  Matrix3,
+  Matrix4,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
 import IauOrientationAxes from "../Core/IauOrientationAxes.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Simon1994PlanetaryPositions from "../Core/Simon1994PlanetaryPositions.js";
-import Transforms from "../Core/Transforms.js";
+import CelestialFrameTransforms from "../Core/CelestialFrameTransforms.js";
 import EllipsoidPrimitive from "./EllipsoidPrimitive.js";
 import Material from "./Material.js";
 
@@ -30,7 +32,7 @@ import Material from "./Material.js";
  * @see Scene#moon
  */
 function Moon(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   let url = options.textureUrl;
   if (!defined(url)) {
@@ -43,7 +45,7 @@ function Moon(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * The moon texture.
@@ -52,14 +54,14 @@ function Moon(options) {
    */
   this.textureUrl = url;
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.MOON);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.MOON;
 
   /**
    * Use the sun as the only light source.
    * @type {boolean}
    * @default true
    */
-  this.onlySunLighting = defaultValue(options.onlySunLighting, true);
+  this.onlySunLighting = options.onlySunLighting ?? true;
 
   this._ellipsoidPrimitive = new EllipsoidPrimitive({
     radii: this.ellipsoid.radii,
@@ -108,24 +110,29 @@ Moon.prototype.update = function (frameState) {
   ellipsoidPrimitive.onlySunLighting = this.onlySunLighting;
 
   const date = frameState.time;
-  if (!defined(Transforms.computeIcrfToFixedMatrix(date, icrfToFixed))) {
-    Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
+  if (
+    !defined(
+      CelestialFrameTransforms.computeIcrfToFixedMatrix(date, icrfToFixed),
+    )
+  ) {
+    CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
   }
 
   const rotation = this._axes.evaluate(date, rotationScratch);
   Matrix3.transpose(rotation, rotation);
   Matrix3.multiply(icrfToFixed, rotation, rotation);
 
-  const translation = Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(
-    date,
-    translationScratch
-  );
+  const translation =
+    Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(
+      date,
+      translationScratch,
+    );
   Matrix3.multiplyByVector(icrfToFixed, translation, translation);
 
   Matrix4.fromRotationTranslation(
     rotation,
     translation,
-    ellipsoidPrimitive.modelMatrix
+    ellipsoidPrimitive.modelMatrix,
   );
 
   const savedCommandList = frameState.commandList;

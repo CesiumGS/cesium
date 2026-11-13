@@ -1,7 +1,11 @@
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import defined from "../Core/defined.js";
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  addAllToArray,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import JsonMetadataTable from "./JsonMetadataTable.js";
 
 /**
@@ -38,7 +42,7 @@ import JsonMetadataTable from "./JsonMetadataTable.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function PropertyTable(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("options.count", options.count);
@@ -52,6 +56,7 @@ function PropertyTable(options) {
   this._metadataTable = options.metadataTable;
   this._jsonMetadataTable = options.jsonMetadataTable;
   this._batchTableHierarchy = options.batchTableHierarchy;
+  this._texture = options.texture; // Property table buffer data packed into a GPU texture
 }
 
 Object.defineProperties(PropertyTable.prototype, {
@@ -113,6 +118,23 @@ Object.defineProperties(PropertyTable.prototype, {
   },
 
   /**
+   * The properties stored in this table.
+   *
+   * @memberof PropertyTable.prototype
+   * @type {Object<string, MetadataTableProperty>}
+   * @readonly
+   */
+  properties: {
+    get: function () {
+      if (defined(this._metadataTable)) {
+        return this._metadataTable.properties;
+      }
+
+      return undefined;
+    },
+  },
+
+  /**
    * Extra user-defined properties.
    *
    * @memberof PropertyTable.prototype
@@ -161,6 +183,20 @@ Object.defineProperties(PropertyTable.prototype, {
       }
 
       return totalByteLength;
+    },
+  },
+
+  /**
+   * The texture containing the property table data, if any.
+   *
+   * @memberof PropertyTable.prototype
+   * @type {Texture | undefined}
+   * @readonly
+   * @private
+   */
+  texture: {
+    get: function () {
+      return this._texture;
     },
   },
 });
@@ -296,24 +332,18 @@ PropertyTable.prototype.getPropertyIds = function (index, results) {
 
   if (defined(this._metadataTable)) {
     // concat in place to avoid unnecessary array allocation
-    results.push.apply(
-      results,
-      this._metadataTable.getPropertyIds(scratchResults)
-    );
+    const ids = this._metadataTable.getPropertyIds(scratchResults);
+    addAllToArray(results, ids);
   }
 
   if (defined(this._batchTableHierarchy)) {
-    results.push.apply(
-      results,
-      this._batchTableHierarchy.getPropertyIds(index, scratchResults)
-    );
+    const ids = this._batchTableHierarchy.getPropertyIds(index, scratchResults);
+    addAllToArray(results, ids);
   }
 
   if (defined(this._jsonMetadataTable)) {
-    results.push.apply(
-      results,
-      this._jsonMetadataTable.getPropertyIds(scratchResults)
-    );
+    const ids = this._jsonMetadataTable.getPropertyIds(scratchResults);
+    addAllToArray(results, ids);
   }
 
   return results;
@@ -434,7 +464,7 @@ PropertyTable.prototype.getPropertyBySemantic = function (index, semantic) {
 PropertyTable.prototype.setPropertyBySemantic = function (
   index,
   semantic,
-  value
+  value,
 ) {
   if (defined(this._metadataTable)) {
     return this._metadataTable.setPropertyBySemantic(index, semantic, value);
@@ -497,7 +527,7 @@ function checkFeatureId(featureId, featuresLength) {
   if (!defined(featureId) || featureId < 0 || featureId >= featuresLength) {
     throw new DeveloperError(
       `featureId is required and must be between zero and featuresLength - 1 (${featuresLength}` -
-        +")."
+        +").",
     );
   }
 }
@@ -536,6 +566,16 @@ PropertyTable.prototype.getExactClassName = function (featureId) {
   }
 
   return hierarchy.getClassName(featureId);
+};
+
+/**
+ * Destroys any resources that need cleaning up in the property table.
+ *
+ * @private
+ */
+PropertyTable.prototype.destroy = function () {
+  this._texture = this._texture && this._texture.destroy();
+  return destroyObject(this);
 };
 
 export default PropertyTable;

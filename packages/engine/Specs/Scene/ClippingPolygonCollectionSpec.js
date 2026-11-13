@@ -1,41 +1,31 @@
 import {
   BoundingSphere,
-  Cartesian2,
   Cartesian3,
-  Math as CesiumMath,
-  ContextLimits,
-  ClippingPolygon,
-  ClippingPolygonCollection,
   Intersect,
   OrientedBoundingBox,
   Rectangle,
+} from "@cesium/core";
+import {
+  ClippingPolygon,
+  ClippingPolygonCollection,
   TileBoundingRegion,
   TileBoundingSphere,
   TileOrientedBoundingBox,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/ClippingPolygonCollection", function () {
   const positions = Cartesian3.fromRadiansArray([
-    -1.3194369277314022,
-    0.6988062530900625,
-    -1.31941,
-    0.69879,
-    -1.3193955980204217,
-    0.6988091578771254,
-    -1.3193931220959367,
-    0.698743632490865,
-    -1.3194358224045408,
-    0.6987471965556998,
+    -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+    -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+    0.698743632490865, -1.3194358224045408, 0.6987471965556998,
   ]);
   const positionsB = Cartesian3.fromRadiansArray([
-    -1.3194369277314022,
-    0.6988062530900625,
-    -1.31941,
-    0.69879,
-    -1.3193931220959367,
-    0.698743632490865,
+    -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+    -1.3193931220959367, 0.698743632490865,
+  ]);
+  const holePositions = Cartesian3.fromRadiansArray([
+    -1.31942, 0.69879, -1.319405, 0.69879, -1.319412, 0.698763,
   ]);
 
   it("default constructor", function () {
@@ -43,7 +33,6 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(polygons.length).toEqual(0);
     expect(polygons.enabled).toBeTrue();
     expect(polygons.inverse).toBeFalse();
-    expect(polygons.totalPositions).toBe(0);
   });
 
   it("gets the length of the list of polygons", function () {
@@ -60,11 +49,67 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(polygons.length).toBe(1);
   });
 
+  it("clippingPolygonsState encodes enabled, presence, and inverse", function () {
+    const polygons = new ClippingPolygonCollection();
+    expect(polygons.clippingPolygonsState).toBe(0);
+
+    polygons.add(new ClippingPolygon({ positions }));
+    expect(polygons.clippingPolygonsState).toBe(1);
+
+    polygons.inverse = true;
+    expect(polygons.clippingPolygonsState).toBe(-1);
+
+    polygons.inverse = false;
+    polygons.enabled = false;
+    expect(polygons.clippingPolygonsState).toBe(0);
+  });
+
   it("add adds a polygon to the collection", function () {
     const polygons = new ClippingPolygonCollection();
     polygons.add(new ClippingPolygon({ positions }));
 
     expect(polygons.length).toBe(1);
+  });
+
+  it("packs holes from constructor options into the backing collection", function () {
+    const polygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions, holes: [holePositions] })],
+    });
+
+    const buffer = polygons._bufferPolygonCollection;
+    expect(buffer.holeCount).toBe(1);
+    expect(buffer.vertexCount).toBe(positions.length + holePositions.length);
+  });
+
+  it("packs holes when a polygon is added", function () {
+    const polygons = new ClippingPolygonCollection();
+    polygons.add(new ClippingPolygon({ positions, holes: [holePositions] }));
+
+    const buffer = polygons._bufferPolygonCollection;
+    expect(buffer.holeCount).toBe(1);
+    expect(buffer.vertexCount).toBe(positions.length + holePositions.length);
+  });
+
+  it("requestRectangleData packs textures for a polygon with a hole", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions, holes: [holePositions] })],
+    });
+
+    const data = polygons.requestRectangleData(
+      Rectangle.MAX_VALUE,
+      scene.context,
+    );
+
+    expect(data.polygonEdgeTexture).toBeDefined();
+
+    ClippingPolygonCollection.releaseRectangleData(data);
+    scene.destroyForSpecs();
   });
 
   it("fires the polygonAdded event when a polygon is added", function () {
@@ -176,33 +221,13 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(() => {
       polygons.update(scene.frameState);
     }).toThrowError(
-      "ClippingPolygonCollections are only supported for WebGL 2."
+      "ClippingPolygonCollections are only supported for WebGL 2.",
     );
 
     scene.destroyForSpecs();
   });
 
-  it("only creates textures and compute commands when polygons are added", function () {
-    const scene = createScene();
-    if (!scene.context.webgl2) {
-      scene.destroyForSpecs();
-      return;
-    }
-
-    const polygons = new ClippingPolygonCollection();
-
-    polygons.update(scene.frameState);
-
-    expect(polygons.extentsTexture).toBeUndefined();
-    expect(polygons.clippingTexture).toBeUndefined();
-    expect(polygons._polygonsTexture).toBeUndefined();
-    expect(polygons._signedDistanceComputeCommand).toBeUndefined();
-
-    polygons.destroy();
-    scene.destroyForSpecs();
-  });
-
-  it("creates textures and compute commands when polygons are added", function () {
+  it("does not repack polygon data if the polygons are unchanged", function () {
     const scene = createScene();
     if (!scene.context.webgl2) {
       scene.destroyForSpecs();
@@ -215,189 +240,11 @@ describe("Scene/ClippingPolygonCollection", function () {
     });
 
     polygons.update(scene.frameState);
-
-    expect(polygons.extentsTexture).toBeDefined();
-    expect(polygons.extentsTexture.width).toBeGreaterThan(0);
-    expect(polygons.extentsTexture.height).toBeGreaterThan(0);
-
-    expect(polygons.clippingTexture).toBeDefined();
-    expect(polygons.clippingTexture.width).toBeGreaterThan(0);
-    expect(polygons.clippingTexture.height).toBeGreaterThan(0);
-
-    expect(polygons._polygonsTexture).toBeDefined();
-    expect(polygons._polygonsTexture.width).toBeGreaterThan(0);
-    expect(polygons._polygonsTexture.height).toBeGreaterThan(0);
-
-    expect(polygons._signedDistanceComputeCommand).toBeDefined();
-
-    polygons.destroy();
-    scene.destroyForSpecs();
-  });
-
-  it("fills texture with packed polygon positions", function () {
-    const scene = createScene();
-    if (!scene.context.webgl2) {
-      scene.destroyForSpecs();
-      return;
-    }
-
-    const polygon = new ClippingPolygon({ positions });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygon],
-    });
-
-    const gl = scene.frameState.context._gl;
-    const spy = spyOn(gl, "texImage2D").and.callThrough();
+    const packedData = polygons._vectorCollectionData;
 
     polygons.update(scene.frameState);
+    expect(polygons._vectorCollectionData).toBe(packedData);
 
-    const args = spy.calls.argsFor(spy.calls.count() - 2);
-    const arrayBufferView = args[8];
-    expect(arrayBufferView).toBeDefined();
-    expect(arrayBufferView[0]).toBe(5); // number of positions
-    expect(arrayBufferView[1]).toBe(0); // extents index
-    expect(arrayBufferView[2]).toEqualEpsilon(
-      0.6969271302223206,
-      CesiumMath.EPSILON10
-    ); // first position in spherical coordinates
-    expect(arrayBufferView[3]).toEqualEpsilon(
-      -1.3191630840301514,
-      CesiumMath.EPSILON10
-    );
-    expect(arrayBufferView[10]).toEqualEpsilon(
-      0.6968677043914795,
-      CesiumMath.EPSILON10
-    ); // last position in spherical coordinates
-    expect(arrayBufferView[11]).toEqualEpsilon(
-      -1.3191620111465454,
-      CesiumMath.EPSILON10
-    );
-    expect(arrayBufferView[12]).toBe(0); // padding
-
-    polygons.destroy();
-    scene.destroyForSpecs();
-  });
-
-  it("fills texture with packed extents", function () {
-    const scene = createScene();
-    if (!scene.context.webgl2) {
-      scene.destroyForSpecs();
-      return;
-    }
-
-    const polygon = new ClippingPolygon({ positions });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygon],
-    });
-
-    const gl = scene.frameState.context._gl;
-    const spy = spyOn(gl, "texImage2D").and.callThrough();
-
-    polygons.update(scene.frameState);
-
-    const args = spy.calls.argsFor(spy.calls.count() - 3); // extents are packed after polygon positions
-    const arrayBufferView = args[8];
-    expect(arrayBufferView).toBeDefined();
-    expect(arrayBufferView[0]).toEqualEpsilon(
-      0.6958641409873962,
-      CesiumMath.EPSILON10
-    ); // south
-    expect(arrayBufferView[1]).toEqualEpsilon(
-      -1.3201631307601929,
-      CesiumMath.EPSILON10
-    ); // west
-    expect(arrayBufferView[2]).toEqualEpsilon(
-      484.0434265136719,
-      CesiumMath.EPSILON10
-    ); // 1 / (north - south)
-    expect(arrayBufferView[3]).toEqualEpsilon(
-      489.4261779785156,
-      CesiumMath.EPSILON10
-    ); // 1 / (east - west)
-    expect(arrayBufferView[4]).toBe(0); // padding
-    expect(arrayBufferView[5]).toBe(0); // padding
-    expect(arrayBufferView[6]).toBe(0); // padding
-    expect(arrayBufferView[7]).toBe(0); // padding
-
-    polygons.destroy();
-    scene.destroyForSpecs();
-  });
-
-  it("Combines overlapping extents", function () {
-    const scene = createScene();
-    if (!scene.context.webgl2) {
-      scene.destroyForSpecs();
-      return;
-    }
-
-    const polygonA = new ClippingPolygon({ positions });
-    const polygonB = new ClippingPolygon({ positions: positionsB });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygonA, polygonB],
-    });
-
-    const gl = scene.frameState.context._gl;
-    const spy = spyOn(gl, "texImage2D").and.callThrough();
-
-    polygons.update(scene.frameState);
-
-    let args = spy.calls.argsFor(spy.calls.count() - 2);
-    let arrayBufferView = args[8];
-    expect(arrayBufferView).toBeDefined();
-    expect(arrayBufferView[1]).toBe(0); // polygonA extents index
-    expect(arrayBufferView[13]).toBe(0); // polygonB extents index
-
-    args = spy.calls.argsFor(spy.calls.count() - 3); // extents are packed after polygon positions
-    arrayBufferView = args[8];
-    expect(arrayBufferView).toBeDefined();
-    expect(arrayBufferView[0]).toEqualEpsilon(
-      0.6958641409873962,
-      CesiumMath.EPSILON10
-    ); // south
-    expect(arrayBufferView[1]).toEqualEpsilon(
-      -1.3201631307601929,
-      CesiumMath.EPSILON10
-    ); // west
-    expect(arrayBufferView[2]).toEqualEpsilon(
-      484.0434265136719,
-      CesiumMath.EPSILON10
-    ); // north - south
-    expect(arrayBufferView[3]).toEqualEpsilon(
-      489.4261779785156,
-      CesiumMath.EPSILON10
-    ); // east - west
-    expect(arrayBufferView[4]).toBe(0); // padding
-    expect(arrayBufferView[5]).toBe(0); // padding
-    expect(arrayBufferView[6]).toBe(0); // padding
-    expect(arrayBufferView[7]).toBe(0); // padding
-
-    polygons.destroy();
-    scene.destroyForSpecs();
-  });
-
-  it("does not perform texture updates if the polygons are unchanged", function () {
-    const scene = createScene();
-    if (!scene.context.webgl2) {
-      scene.destroyForSpecs();
-      return;
-    }
-
-    const polygon = new ClippingPolygon({ positions });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygon],
-    });
-
-    const gl = scene.frameState.context._gl;
-    const spy = spyOn(gl, "texImage2D").and.callThrough();
-
-    polygons.update(scene.frameState);
-
-    const currentCount = spy.calls.count();
-
-    polygons.update(scene.frameState);
-    expect(spy.calls.count()).toEqual(currentCount);
-
-    polygons.destroy();
     scene.destroyForSpecs();
   });
 
@@ -424,58 +271,19 @@ describe("Scene/ClippingPolygonCollection", function () {
       enabled: false,
     });
 
-    // Expect detached clipping polygons to be destroyed
+    // Attaching a new collection detaches the previous one from the owner.
     ClippingPolygonCollection.setOwner(polygons2, clippedObject1, "polygons");
-    expect(polygons1.isDestroyed()).toBe(true);
+    expect(clippedObject1.polygons).toBe(polygons2);
+    expect(polygons2._owner).toBe(clippedObject1);
 
-    // Expect setting the same ClippingPolygonCollection again to not destroy the ClippingPolygonCollection
+    // Setting the same ClippingPolygonCollection again is a no-op.
     ClippingPolygonCollection.setOwner(polygons2, clippedObject1, "polygons");
-    expect(polygons2.isDestroyed()).toBe(false);
+    expect(clippedObject1.polygons).toBe(polygons2);
 
     // Expect failure when attaching one ClippingPolygonCollection to two objects
     expect(function () {
       ClippingPolygonCollection.setOwner(polygons2, clippedObject2, "polygons");
     }).toThrowDeveloperError();
-  });
-
-  it("getClippingDistanceTextureResolution works before textures are created", function () {
-    const polygon = new ClippingPolygon({ positions });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygon],
-    });
-    const scene = createScene();
-    // Set this to the minimum possible value so texture sizes can be consistently tested
-    ContextLimits._maximumTextureSize = 64;
-
-    const result = ClippingPolygonCollection.getClippingDistanceTextureResolution(
-      polygons,
-      new Cartesian2()
-    );
-    expect(result.x).toBe(64);
-    expect(result.y).toBe(64);
-
-    polygons.destroy();
-    scene.destroyForSpecs();
-  });
-
-  it("getClippingExtentsTextureResolution works before textures are created", function () {
-    const polygon = new ClippingPolygon({ positions });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygon],
-    });
-    const scene = createScene();
-    // Set this to the minimum possible value so texture sizes can be consistently tested
-    ContextLimits._maximumTextureSize = 64;
-
-    const result = ClippingPolygonCollection.getClippingExtentsTextureResolution(
-      polygons,
-      new Cartesian2()
-    );
-    expect(result.x).toBe(1);
-    expect(result.y).toBe(2);
-
-    polygons.destroy();
-    scene.destroyForSpecs();
   });
 
   it("computes intersections with bounding volumes", function () {
@@ -484,9 +292,8 @@ describe("Scene/ClippingPolygonCollection", function () {
       rectangle: Rectangle.fromCartesianArray(positions),
     });
 
-    let intersect = polygons.computeIntersectionWithBoundingVolume(
-      boundingVolume
-    );
+    let intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.OUTSIDE);
 
     polygons.add(new ClippingPolygon({ positions }));
@@ -496,7 +303,7 @@ describe("Scene/ClippingPolygonCollection", function () {
     const boundingSphere = BoundingSphere.fromPoints(positions);
     boundingVolume = new TileBoundingSphere(
       boundingSphere.center,
-      boundingSphere.radius
+      boundingSphere.radius,
     );
     intersect = polygons.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INTERSECTING);
@@ -515,9 +322,8 @@ describe("Scene/ClippingPolygonCollection", function () {
       rectangle: Rectangle.fromCartesianArray(positions),
     });
 
-    let intersect = polygons.computeIntersectionWithBoundingVolume(
-      boundingVolume
-    );
+    let intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INSIDE);
 
     polygons.add(new ClippingPolygon({ positions }));
@@ -527,7 +333,7 @@ describe("Scene/ClippingPolygonCollection", function () {
     const boundingSphere = BoundingSphere.fromPoints(positions);
     boundingVolume = new TileBoundingSphere(
       boundingSphere.center,
-      boundingSphere.radius
+      boundingSphere.radius,
     );
     intersect = polygons.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INTERSECTING);
@@ -536,5 +342,279 @@ describe("Scene/ClippingPolygonCollection", function () {
     boundingVolume = new TileOrientedBoundingBox(box.center, box.halfAxes);
     intersect = polygons.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INTERSECTING);
+  });
+
+  it("returns OUTSIDE when no polygons intersect the bounding volume", function () {
+    // Create positions far away from the original polygons
+    const farPositions = Cartesian3.fromRadiansArray([
+      -1.0, 0.5, -1.001, 0.5, -1.001, 0.501,
+    ]);
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [
+        new ClippingPolygon({ positions }),
+        new ClippingPolygon({ positions: positionsB }),
+      ],
+    });
+
+    const boundingVolume = new TileBoundingRegion({
+      rectangle: Rectangle.fromCartesianArray(farPositions),
+    });
+
+    const intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
+    expect(intersect).toEqual(Intersect.OUTSIDE);
+  });
+
+  it("returns INSIDE when inverse is true and no polygons intersect the bounding volume", function () {
+    const farPositions = Cartesian3.fromRadiansArray([
+      -1.0, 0.5, -1.001, 0.5, -1.001, 0.501,
+    ]);
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [
+        new ClippingPolygon({ positions }),
+        new ClippingPolygon({ positions: positionsB }),
+      ],
+      inverse: true,
+    });
+
+    const boundingVolume = new TileBoundingRegion({
+      rectangle: Rectangle.fromCartesianArray(farPositions),
+    });
+
+    const intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
+    expect(intersect).toEqual(Intersect.INSIDE);
+  });
+
+  it("returns INTERSECTING immediately when the first polygon intersects", function () {
+    const polygonA = new ClippingPolygon({ positions });
+    const polygonB = new ClippingPolygon({ positions: positionsB });
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [polygonA, polygonB],
+    });
+
+    const boundingVolume = new TileBoundingRegion({
+      rectangle: Rectangle.fromCartesianArray(positions),
+    });
+
+    // Spy on the rectangle getter to verify early return behavior. The
+    // property is a non-configurable prototype getter, so shadow it with a
+    // configurable own getter that can be spied on.
+    const spyB = jasmine
+      .createSpy("rectangle")
+      .and.returnValue(polygonB.rectangle);
+    Object.defineProperty(polygonB, "rectangle", {
+      configurable: true,
+      get: spyB,
+    });
+
+    const intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
+    expect(intersect).toEqual(Intersect.INTERSECTING);
+
+    // Because the first polygon intersects, the second polygon's
+    // rectangle should never be accessed (early return optimization)
+    expect(spyB).not.toHaveBeenCalled();
+  });
+
+  it("returns INTERSECTING when only a later polygon intersects", function () {
+    // Create a polygon far away that won't intersect
+    const farPositions = Cartesian3.fromRadiansArray([
+      -1.0, 0.5, -1.001, 0.5, -1.001, 0.501,
+    ]);
+    const nonIntersectingPolygon = new ClippingPolygon({
+      positions: farPositions,
+    });
+    const intersectingPolygon = new ClippingPolygon({ positions });
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [nonIntersectingPolygon, intersectingPolygon],
+    });
+
+    const boundingVolume = new TileBoundingRegion({
+      rectangle: Rectangle.fromCartesianArray(positions),
+    });
+
+    const intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
+    expect(intersect).toEqual(Intersect.INTERSECTING);
+  });
+
+  it("computes tile bounding rectangle once for multiple polygons using TileBoundingSphere", function () {
+    const polygons = new ClippingPolygonCollection({
+      polygons: [
+        new ClippingPolygon({ positions }),
+        new ClippingPolygon({ positions: positionsB }),
+      ],
+    });
+
+    const boundingSphere = BoundingSphere.fromPoints(positions);
+    const boundingVolume = new TileBoundingSphere(
+      boundingSphere.center,
+      boundingSphere.radius,
+    );
+
+    const spy = spyOn(Rectangle, "fromBoundingSphere").and.callThrough();
+
+    const intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
+    expect(intersect).toEqual(Intersect.INTERSECTING);
+
+    // The tile bounding rectangle should be computed only once,
+    // not once per polygon
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("computes tile bounding rectangle once for multiple polygons using TileOrientedBoundingBox", function () {
+    const polygons = new ClippingPolygonCollection({
+      polygons: [
+        new ClippingPolygon({ positions }),
+        new ClippingPolygon({ positions: positionsB }),
+      ],
+    });
+
+    const box = OrientedBoundingBox.fromPoints(positions);
+    const boundingVolume = new TileOrientedBoundingBox(
+      box.center,
+      box.halfAxes,
+    );
+
+    const spy = spyOn(Rectangle, "fromCartesianArray").and.callThrough();
+
+    const intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
+    expect(intersect).toEqual(Intersect.INTERSECTING);
+
+    // The oriented bounding box corners should be converted to a rectangle only once
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("default constructor sets quality to 1.0", function () {
+    const polygons = new ClippingPolygonCollection();
+    expect(polygons.quality).toBe(1.0);
+  });
+
+  it("constructor accepts a quality option", function () {
+    const polygons = new ClippingPolygonCollection({ quality: 0.5 });
+    expect(polygons.quality).toBe(0.5);
+  });
+
+  it("requestRectangleData throws without a rectangle", function () {
+    const polygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions })],
+    });
+    const scene = createScene();
+
+    expect(() => {
+      polygons.requestRectangleData(undefined, scene.context);
+    }).toThrowDeveloperError();
+
+    scene.destroyForSpecs();
+  });
+
+  it("requestRectangleData throws without a context", function () {
+    const polygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions })],
+    });
+
+    expect(() => {
+      polygons.requestRectangleData(Rectangle.MAX_VALUE, undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("requestRectangleData packs textures for an overlapping rectangle", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions })],
+    });
+
+    const data = polygons.requestRectangleData(
+      Rectangle.MAX_VALUE,
+      scene.context,
+    );
+
+    expect(data.polygonEdgeTexture).toBeDefined();
+    expect(data.polygonEdgeTexture.width).toBeGreaterThan(0);
+    expect(data.polygonEdgeTexture.height).toBeGreaterThan(0);
+    expect(data.polygonEdgePrimitiveIndicesTexture).toBeDefined();
+    expect(data.polygonGridCellIndicesTexture).toBeDefined();
+    expect(data.rectangle).toEqual(Rectangle.MAX_VALUE);
+
+    ClippingPolygonCollection.releaseRectangleData(data);
+    scene.destroyForSpecs();
+  });
+
+  it("requestRectangleData returns empty data for a non-overlapping rectangle", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions })],
+    });
+
+    // A rectangle (radians) on the far side of the globe from `positions`.
+    const farRectangle = new Rectangle(2.0, -1.0, 2.5, -0.5);
+    const data = polygons.requestRectangleData(farRectangle, scene.context);
+
+    expect(data.polygonEdgeTexture).toBeUndefined();
+    expect(data.rectangle).toEqual(farRectangle);
+
+    scene.destroyForSpecs();
+  });
+
+  it("requestRectangleData returns empty data when there are no polygons", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    const polygons = new ClippingPolygonCollection();
+
+    const data = polygons.requestRectangleData(
+      Rectangle.MAX_VALUE,
+      scene.context,
+    );
+
+    expect(data.polygonEdgeTexture).toBeUndefined();
+
+    scene.destroyForSpecs();
+  });
+
+  it("releaseRectangleData destroys the packed textures", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions })],
+    });
+
+    const data = polygons.requestRectangleData(
+      Rectangle.MAX_VALUE,
+      scene.context,
+    );
+    const edgeTexture = data.polygonEdgeTexture;
+    const gridCellIndicesTexture = data.polygonGridCellIndicesTexture;
+
+    ClippingPolygonCollection.releaseRectangleData(data);
+
+    expect(edgeTexture.isDestroyed()).toBe(true);
+    expect(gridCellIndicesTexture.isDestroyed()).toBe(true);
+
+    scene.destroyForSpecs();
   });
 });

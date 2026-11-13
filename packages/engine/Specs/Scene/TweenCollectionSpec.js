@@ -1,4 +1,5 @@
-import { Color, EasingFunction, TweenCollection } from "../../index.js";
+import { Color } from "@cesium/core";
+import { EasingFunction, TweenCollection } from "../../index.js";
 
 describe(
   "Scene/TweenCollection",
@@ -401,5 +402,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -1,5 +1,4 @@
 import {
-  ApproximateTerrainHeights,
   ArcType,
   Cartesian2,
   Cartesian3,
@@ -13,6 +12,9 @@ import {
   PolygonHierarchy,
   PolygonOutlineGeometry,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
   ConstantProperty,
   Entity,
   PolygonGeometryUpdater,
@@ -24,7 +26,6 @@ import {
   HeightReference,
   PrimitiveCollection,
 } from "../../index.js";
-
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createGeometryUpdaterGroundGeometrySpecs from "../../../../Specs/createGeometryUpdaterGroundGeometrySpecs.js";
@@ -56,8 +57,8 @@ describe(
       const polygon = new PolygonGraphics();
       polygon.hierarchy = new ConstantProperty(
         new PolygonHierarchy(
-          Cartesian3.fromRadiansArray([-1, -1, 1, -1, 1, 1, -1, 1])
-        )
+          Cartesian3.fromRadiansArray([-1, -1, 1, -1, 1, 1, -1, 1]),
+        ),
       );
       polygon.height = new ConstantProperty(0);
       const entity = new Entity();
@@ -70,17 +71,9 @@ describe(
       polygon.hierarchy = new ConstantProperty(
         new PolygonHierarchy(
           Cartesian3.fromDegreesArrayHeights([
-            -1.0,
-            1.0,
-            0.0,
-            -2.0,
-            1.0,
-            0.0,
-            -2.0,
-            1.0,
-            0.0,
-          ])
-        )
+            -1.0, 1.0, 0.0, -2.0, 1.0, 0.0, -2.0, 1.0, 0.0,
+          ]),
+        ),
       );
       polygon.perPositionHeight = true;
       const entity = new Entity();
@@ -98,8 +91,8 @@ describe(
       const polygon = new PolygonGraphics();
       polygon.hierarchy = new ConstantProperty(
         new PolygonHierarchy(
-          Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1])
-        )
+          Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1]),
+        ),
       );
       const entity = new Entity();
       entity.polygon = polygon;
@@ -239,7 +232,7 @@ describe(
       const polygon = entity.polygon;
       polygon.outline = true;
       polygon.perPositionHeight = new ConstantProperty(
-        options.perPositionHeight
+        options.perPositionHeight,
       );
       polygon.closeTop = new ConstantProperty(options.closeTop);
       polygon.closeBottom = new ConstantProperty(options.closeBottom);
@@ -249,7 +242,7 @@ describe(
       polygon.granularity = new ConstantProperty(options.granularity);
       polygon.arcType = new ConstantProperty(options.arcType);
       polygon.textureCoordinates = new ConstantProperty(
-        options.textureCoordinates
+        options.textureCoordinates,
       );
 
       const updater = new PolygonGeometryUpdater(entity, scene);
@@ -342,10 +335,10 @@ describe(
       let instance;
 
       graphics.heightReference = new ConstantProperty(
-        HeightReference.RELATIVE_TO_GROUND
+        HeightReference.RELATIVE_TO_GROUND,
       );
       graphics.extrudedHeightReference = new ConstantProperty(
-        HeightReference.RELATIVE_TO_GROUND
+        HeightReference.RELATIVE_TO_GROUND,
       );
       updater._onEntityPropertyChanged(entity, "polygon");
       instance = updater.createFillGeometryInstance(time);
@@ -358,8 +351,8 @@ describe(
       const polygon = new PolygonGraphics();
       polygon.hierarchy = createDynamicProperty(
         new PolygonHierarchy(
-          Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1])
-        )
+          Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1]),
+        ),
       );
       polygon.height = createDynamicProperty(3);
       polygon.extrudedHeight = createDynamicProperty(2);
@@ -384,7 +377,7 @@ describe(
       const updater = new PolygonGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         new PrimitiveCollection(),
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
       dynamicUpdater.update(time);
 
@@ -394,12 +387,12 @@ describe(
       expect(options.height).toEqual(polygon.height.getValue());
       expect(options.extrudedHeight).toEqual(polygon.extrudedHeight.getValue());
       expect(options.perPositionHeight).toEqual(
-        polygon.perPositionHeight.getValue()
+        polygon.perPositionHeight.getValue(),
       );
       expect(options.granularity).toEqual(polygon.granularity.getValue());
       expect(options.stRotation).toEqual(polygon.stRotation.getValue());
       expect(options.textureCoordinates).toEqual(
-        polygon.textureCoordinates.getValue()
+        polygon.textureCoordinates.getValue(),
       );
       expect(options.closeTop).toEqual(polygon.closeTop.getValue());
       expect(options.closeBottom).toEqual(polygon.closeBottom.getValue());
@@ -454,7 +447,7 @@ describe(
       result = Ellipsoid.WGS84.scaleToGeodeticSurface(result, result);
       expect(result).toEqualEpsilon(
         Cartesian3.fromDegrees(0.0, 0.0),
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
     });
 
@@ -466,14 +459,14 @@ describe(
       PolygonGeometryUpdater,
       "polygon",
       createBasicPolygon,
-      getScene
+      getScene,
     );
 
     createDynamicGeometryUpdaterSpecs(
       PolygonGeometryUpdater,
       "polygon",
       createDynamicPolygon,
-      getScene
+      getScene,
     );
 
     createGeometryUpdaterGroundGeometrySpecs(
@@ -481,8 +474,8 @@ describe(
       "polygon",
       createBasicPolygonWithoutHeight,
       createDynamicPolygonWithoutHeight,
-      getScene
+      getScene,
     );
   },
-  "WebGL"
+  "WebGL",
 );

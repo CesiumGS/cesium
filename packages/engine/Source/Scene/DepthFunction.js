@@ -1,5 +1,6 @@
-import WebGLConstants from "../Core/WebGLConstants.js";
+// @ts-check
 
+import { WebGLConstants } from "@cesium/core";
 /**
  * Determines the function used to compare two depths for the depth test.
  *
@@ -70,4 +71,7 @@ const DepthFunction = {
    */
   ALWAYS: WebGLConstants.ALWAYS,
 };
-export default Object.freeze(DepthFunction);
+
+Object.freeze(DepthFunction);
+
+export default DepthFunction;

@@ -1,9 +1,11 @@
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
+import {
+  Math as CesiumMath,
+  PixelDatatype,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import getImageFromTypedArray from "../../Core/getImageFromTypedArray.js";
-import CesiumMath from "../../Core/Math.js";
 import resizeImageToNextPowerOfTwo from "../../Core/resizeImageToNextPowerOfTwo.js";
-import PixelDatatype from "../../Renderer/PixelDatatype.js";
 import Texture from "../../Renderer/Texture.js";
 import TextureMinificationFilter from "../../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../../Renderer/TextureWrap.js";
@@ -138,11 +140,11 @@ function getWebGL1Texture(textureUniform, image, context) {
   // typedArray is non-power-of-two but can't be resized. Warn and return raw texture (no mipmaps)
   if (needMipmap) {
     console.warn(
-      "Texture requires resizing for mipmaps but pixelDataType cannot be resized. The texture may be rendered incorrectly."
+      "Texture requires resizing for mipmaps but pixelDataType cannot be resized. The texture may be rendered incorrectly.",
     );
   } else if (samplerRepeats) {
     console.warn(
-      "Texture requires resizing for wrapping but pixelDataType cannot be resized. The texture may be rendered incorrectly."
+      "Texture requires resizing for wrapping but pixelDataType cannot be resized. The texture may be rendered incorrectly.",
     );
   }
   return getTextureFromTypedArray(textureUniform, context);

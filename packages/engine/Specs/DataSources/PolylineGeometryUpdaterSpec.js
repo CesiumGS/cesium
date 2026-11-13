@@ -1,19 +1,21 @@
 import {
-  ApproximateTerrainHeights,
   ArcType,
   BoundingSphere,
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
-  defined,
   DistanceDisplayCondition,
   DistanceDisplayConditionGeometryInstanceAttribute,
-  GroundPolylineGeometry,
   JulianDate,
   PolylinePipeline,
   ShowGeometryInstanceAttribute,
   TimeInterval,
   TimeIntervalCollection,
+  defined,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
+  GroundPolylineGeometry,
   BoundingSphereState,
   CallbackProperty,
   ColorMaterialProperty,
@@ -30,7 +32,6 @@ import {
   GroundPolylinePrimitive,
   ShadowMode,
 } from "../../index.js";
-
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -58,14 +59,7 @@ describe(
     const time = JulianDate.now();
 
     const basicPositions = Cartesian3.fromRadiansArray([
-      0,
-      0,
-      1,
-      0,
-      1,
-      1,
-      0,
-      1,
+      0, 0, 1, 0, 1, 1, 0, 1,
     ]);
     function createBasicPolyline() {
       const polyline = new PolylineGraphics();
@@ -129,7 +123,7 @@ describe(
       expect(updater.isClosed).toBe(false);
       expect(updater.fillEnabled).toBe(true);
       expect(updater.fillMaterialProperty).toEqual(
-        new ColorMaterialProperty(Color.WHITE)
+        new ColorMaterialProperty(Color.WHITE),
       );
       expect(updater.depthFailMaterialProperty).toBe(undefined);
       expect(updater.outlineEnabled).toBe(false);
@@ -137,10 +131,10 @@ describe(
       expect(updater.hasConstantOutline).toBe(true);
       expect(updater.outlineColorProperty).toBe(undefined);
       expect(updater.shadowsProperty).toEqual(
-        new ConstantProperty(ShadowMode.DISABLED)
+        new ConstantProperty(ShadowMode.DISABLED),
       );
       expect(updater.distanceDisplayConditionProperty).toEqual(
-        new ConstantProperty(new DistanceDisplayCondition())
+        new ConstantProperty(new DistanceDisplayCondition()),
       );
       expect(updater.isDynamic).toBe(false);
       expect(updater.clampToGround).toBe(false);
@@ -160,7 +154,7 @@ describe(
       const updater = new PolylineGeometryUpdater(entity, scene);
       entity.polyline.depthFailMaterial = new ColorMaterialProperty();
       expect(updater.depthFailMaterialProperty).toBe(
-        entity.polyline.depthFailMaterial
+        entity.polyline.depthFailMaterial,
       );
     });
 
@@ -194,7 +188,7 @@ describe(
           start: new JulianDate(0, 0),
           stop: new JulianDate(10, 0),
           data: ArcType.NONE,
-        })
+        }),
       );
 
       const entity = createBasicPolyline();
@@ -271,8 +265,8 @@ describe(
         ) {
           expect(attributes.depthFailColor.value).toEqual(
             ColorGeometryInstanceAttribute.toValue(
-              options.depthFailMaterial.color.getValue(time)
-            )
+              options.depthFailMaterial.color.getValue(time),
+            ),
           );
         } else {
           expect(attributes.depthFailColor).toBeUndefined();
@@ -282,20 +276,20 @@ describe(
       if (options.material instanceof ColorMaterialProperty) {
         expect(attributes.color.value).toEqual(
           ColorGeometryInstanceAttribute.toValue(
-            options.material.color.getValue(time)
-          )
+            options.material.color.getValue(time),
+          ),
         );
       } else {
         expect(attributes.color).toBeUndefined();
       }
       expect(attributes.show.value).toEqual(
-        ShowGeometryInstanceAttribute.toValue(options.show)
+        ShowGeometryInstanceAttribute.toValue(options.show),
       );
       if (options.distanceDisplayCondition) {
         expect(attributes.distanceDisplayCondition.value).toEqual(
           DistanceDisplayConditionGeometryInstanceAttribute.toValue(
-            options.distanceDisplayCondition
-          )
+            options.distanceDisplayCondition,
+          ),
         );
       }
     }
@@ -432,7 +426,7 @@ describe(
           start: time1,
           stop: time2,
           data: false,
-        })
+        }),
       );
       show.intervals.addInterval(
         new TimeInterval({
@@ -440,7 +434,7 @@ describe(
           stop: time3,
           isStartIncluded: false,
           data: true,
-        })
+        }),
       );
 
       const colorMaterial = new ColorMaterialProperty();
@@ -459,11 +453,11 @@ describe(
       const attributes = instance.attributes;
       expect(attributes.color.value).toEqual(
         ColorGeometryInstanceAttribute.toValue(
-          colorMaterial.color.getValue(time2)
-        )
+          colorMaterial.color.getValue(time2),
+        ),
       );
       expect(attributes.show.value).toEqual(
-        ShowGeometryInstanceAttribute.toValue(show.getValue(time2))
+        ShowGeometryInstanceAttribute.toValue(show.getValue(time2)),
       );
     });
 
@@ -475,7 +469,7 @@ describe(
       const instance = updater.createFillGeometryInstance(new JulianDate());
       const attributes = instance.attributes;
       expect(attributes.show.value).toEqual(
-        ShowGeometryInstanceAttribute.toValue(false)
+        ShowGeometryInstanceAttribute.toValue(false),
       );
     });
 
@@ -510,7 +504,7 @@ describe(
 
       const dynamicUpdater = updater.createDynamicUpdater(
         primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
       expect(dynamicUpdater.isDestroyed()).toBe(false);
 
@@ -571,7 +565,7 @@ describe(
 
       const dynamicUpdater = updater.createDynamicUpdater(
         scene.primitives,
-        groundPrimitives
+        groundPrimitives,
       );
       expect(dynamicUpdater.isDestroyed()).toBe(false);
       expect(groundPrimitives.length).toBe(0);
@@ -624,7 +618,7 @@ describe(
 
       const dynamicUpdater = updater.createDynamicUpdater(
         primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
       expect(dynamicUpdater.isDestroyed()).toBe(false);
       expect(primitives.length).toBe(0);
@@ -643,7 +637,7 @@ describe(
       dynamicUpdater.update(time);
 
       expect(polylineObject.positions.length).not.toEqual(
-        geodesicPolylinePositionsLength
+        geodesicPolylinePositionsLength,
       );
 
       dynamicUpdater.destroy();
@@ -661,7 +655,7 @@ describe(
       updater.geometryChanged.addEventListener(listener);
 
       entity.polyline.positions = new ConstantProperty(
-        Cartesian3.fromRadiansArray([0, 0, 1, 0])
+        Cartesian3.fromRadiansArray([0, 0, 1, 0]),
       );
       expect(listener.calls.count()).toEqual(1);
 
@@ -712,7 +706,7 @@ describe(
       expect(function () {
         return updater.createDynamicUpdater(
           scene.primitives,
-          scene.groundPrimitives
+          scene.groundPrimitives,
         );
       }).toThrowDeveloperError();
       updater.destroy();
@@ -749,7 +743,7 @@ describe(
       const updater = new PolylineGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
       expect(function () {
         dynamicUpdater.update(undefined);
@@ -778,7 +772,7 @@ describe(
       const updater = new PolylineGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
       dynamicUpdater.update(time);
 
@@ -809,7 +803,7 @@ describe(
       const updater = new PolylineGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
       dynamicUpdater.update(time);
 
@@ -842,7 +836,7 @@ describe(
       const updater = new PolylineGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       const result = new BoundingSphere();
@@ -862,7 +856,7 @@ describe(
       const updater = new PolylineGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
 
       expect(function () {
@@ -884,7 +878,7 @@ describe(
       const updater = new PolylineGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
       spyOn(PolylinePipeline, "generateCartesianRhumbArc").and.callThrough();
       dynamicUpdater.update(time);
@@ -907,7 +901,7 @@ describe(
       const updater = new PolylineGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         scene.primitives,
-        scene.groundPrimitives
+        scene.groundPrimitives,
       );
       spyOn(PolylinePipeline, "generateCartesianArc").and.callThrough();
       dynamicUpdater.update(time);
@@ -941,5 +935,5 @@ describe(
       updater.destroy();
     });
   },
-  "WebGL"
+  "WebGL",
 );

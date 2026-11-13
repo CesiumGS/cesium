@@ -1,8 +1,7 @@
+import { PixelDatatype, PixelFormat } from "@cesium/core";
 import {
   MetadataSchema,
   parseFeatureMetadataLegacy,
-  PixelDatatype,
-  PixelFormat,
   Texture,
 } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
@@ -298,5 +297,5 @@ describe(
       expect(metadata.extensions).toBe(extensions);
     });
   },
-  "WebGL"
+  "WebGL",
 );

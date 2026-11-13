@@ -1,7 +1,5 @@
-import Cartesian2 from "../../Core/Cartesian2.js";
+import { Cartesian2, Color, Matrix4, combine } from "@cesium/core";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
-import combine from "../../Core/combine.js";
-import Color from "../../Core/Color.js";
 import ModelClippingPlanesStageFS from "../../Shaders/Model/ModelClippingPlanesStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
@@ -17,6 +15,9 @@ const ModelClippingPlanesPipelineStage = {
 };
 
 const textureResolutionScratch = new Cartesian2();
+const scratchClippingPlanesMatrix = new Matrix4();
+const scratchClippingPlanesMatrix2 = new Matrix4();
+
 /**
  * Process a model. This modifies the following parts of the render resources:
  *
@@ -36,7 +37,7 @@ const textureResolutionScratch = new Cartesian2();
 ModelClippingPlanesPipelineStage.process = function (
   renderResources,
   model,
-  frameState
+  frameState,
 ) {
   const clippingPlanes = model.clippingPlanes;
   const context = frameState.context;
@@ -45,20 +46,20 @@ ModelClippingPlanesPipelineStage.process = function (
   shaderBuilder.addDefine(
     "HAS_CLIPPING_PLANES",
     undefined,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   shaderBuilder.addDefine(
     "CLIPPING_PLANES_LENGTH",
     clippingPlanes.length,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   if (clippingPlanes.unionClippingRegions) {
     shaderBuilder.addDefine(
       "UNION_CLIPPING_REGIONS",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 
@@ -66,42 +67,42 @@ ModelClippingPlanesPipelineStage.process = function (
     shaderBuilder.addDefine(
       "USE_CLIPPING_PLANES_FLOAT_TEXTURE",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 
   const textureResolution = ClippingPlaneCollection.getTextureResolution(
     clippingPlanes,
     context,
-    textureResolutionScratch
+    textureResolutionScratch,
   );
 
   shaderBuilder.addDefine(
     "CLIPPING_PLANES_TEXTURE_WIDTH",
     textureResolution.x,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   shaderBuilder.addDefine(
     "CLIPPING_PLANES_TEXTURE_HEIGHT",
     textureResolution.y,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   shaderBuilder.addUniform(
     "sampler2D",
     "model_clippingPlanes",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   shaderBuilder.addUniform(
     "vec4",
     "model_clippingPlanesEdgeStyle",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   shaderBuilder.addUniform(
     "mat4",
     "model_clippingPlanesMatrix",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   shaderBuilder.addFragmentLines(ModelClippingPlanesStageFS);
@@ -116,7 +117,30 @@ ModelClippingPlanesPipelineStage.process = function (
       return style;
     },
     model_clippingPlanesMatrix: function () {
-      return model._clippingPlanesMatrix;
+      // The clipping planes matrix is factored into a view-dependent and a
+      // view-independent part:
+      //   inverseTranspose(view3D * reference * clipping)
+      //     = transpose(inverseView3D) * inverseTranspose(reference * clipping).
+      //
+      // The view-dependent part, transpose(inverseView3D), reuses inverseView3D
+      // already maintained on UniformState. Since it uses the active view, this is
+      // also correct in the shadow cast pass, where inverseView3D is the light's
+      // view rather than the camera's. Only a transpose is needed here, no inverse.
+      const inverseViewTranspose = Matrix4.transpose(
+        context.uniformState.inverseView3D,
+        scratchClippingPlanesMatrix,
+      );
+      // The view-independent part, inverseTranspose(reference * clipping), is
+      // computed once per frame in Model.updateReferenceMatrices.
+      //
+      // This recomputes the same product for every primitive of a model within
+      // a pass. If it ever shows up in profiling, see the discussion of
+      // alternatives in https://github.com/CesiumGS/cesium/pull/13388.
+      return Matrix4.multiply(
+        inverseViewTranspose,
+        model._clippingPlanesMatrix,
+        scratchClippingPlanesMatrix2,
+      );
     },
   };
 

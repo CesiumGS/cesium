@@ -1,7 +1,9 @@
-import createGuid from "../Core/createGuid.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
+import {
+  DeveloperError,
+  Math as CesiumMath,
+  createGuid,
+  defined,
+} from "@cesium/core";
 import Entity from "./Entity.js";
 import EntityCollection from "./EntityCollection.js";
 
@@ -23,12 +25,11 @@ function clean(entity) {
 function subscribeToEntity(that, eventHash, collectionId, entity) {
   entityIdScratch[0] = collectionId;
   entityIdScratch[1] = entity.id;
-  eventHash[
-    JSON.stringify(entityIdScratch)
-  ] = entity.definitionChanged.addEventListener(
-    CompositeEntityCollection.prototype._onDefinitionChanged,
-    that
-  );
+  eventHash[JSON.stringify(entityIdScratch)] =
+    entity.definitionChanged.addEventListener(
+      CompositeEntityCollection.prototype._onDefinitionChanged,
+      that,
+    );
 }
 
 function unsubscribeFromEntity(that, eventHash, collectionId, entity) {
@@ -65,7 +66,7 @@ function recomposite(that) {
     collection = collectionsCopy[i];
     collection.collectionChanged.removeEventListener(
       CompositeEntityCollection.prototype._onCollectionChanged,
-      that
+      that,
     );
     entities = collection.values;
     collectionId = collection.id;
@@ -79,7 +80,7 @@ function recomposite(that) {
     collection = collections[i];
     collection.collectionChanged.addEventListener(
       CompositeEntityCollection.prototype._onCollectionChanged,
-      that
+      that,
     );
 
     //Merge all of the existing entities.
@@ -200,7 +201,7 @@ Object.defineProperties(CompositeEntityCollection.prototype, {
  */
 CompositeEntityCollection.prototype.addCollection = function (
   collection,
-  index
+  index,
 ) {
   const hasIndex = defined(index);
   //>>includeStart('debug', pragmas.debug);
@@ -212,14 +213,13 @@ CompositeEntityCollection.prototype.addCollection = function (
       throw new DeveloperError("index must be greater than or equal to zero.");
     } else if (index > this._collections.length) {
       throw new DeveloperError(
-        "index must be less than or equal to the number of collections."
+        "index must be less than or equal to the number of collections.",
       );
     }
   }
   //>>includeEnd('debug');
 
   if (!hasIndex) {
-    index = this._collections.length;
     this._collections.push(collection);
   } else {
     this._collections.splice(index, 0, collection);
@@ -371,7 +371,7 @@ CompositeEntityCollection.prototype.lowerCollection = function (collection) {
  * @exception {DeveloperError} collection is not in this composite.
  */
 CompositeEntityCollection.prototype.raiseCollectionToTop = function (
-  collection
+  collection,
 ) {
   const index = getCollectionIndex(this._collections, collection);
   if (index === this._collections.length - 1) {
@@ -391,7 +391,7 @@ CompositeEntityCollection.prototype.raiseCollectionToTop = function (
  * @exception {DeveloperError} collection is not in this composite.
  */
 CompositeEntityCollection.prototype.lowerCollectionToBottom = function (
-  collection
+  collection,
 ) {
   const index = getCollectionIndex(this._collections, collection);
   if (index === 0) {
@@ -432,7 +432,7 @@ CompositeEntityCollection.prototype.resumeEvents = function () {
   //>>includeStart('debug', pragmas.debug);
   if (this._suspendCount === 0) {
     throw new DeveloperError(
-      "resumeEvents can not be called before suspendEvents."
+      "resumeEvents can not be called before suspendEvents.",
     );
   }
   //>>includeEnd('debug');
@@ -472,7 +472,7 @@ CompositeEntityCollection.prototype.getById = function (id) {
 CompositeEntityCollection.prototype._onCollectionChanged = function (
   collection,
   added,
-  removed
+  removed,
 ) {
   const collections = this._collectionsCopy;
   const collectionsLength = collections.length;
@@ -546,7 +546,7 @@ CompositeEntityCollection.prototype._onDefinitionChanged = function (
   entity,
   propertyName,
   newValue,
-  oldValue
+  oldValue,
 ) {
   const collections = this._collections;
   const composite = this._composite;

@@ -1,12 +1,14 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defined from "../Core/defined.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
+import {
+  AssociativeArray,
+  Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  DistanceDisplayCondition,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  ShowGeometryInstanceAttribute,
+  defined,
+} from "@cesium/core";
 import OffsetGeometryInstanceAttribute from "../Core/OffsetGeometryInstanceAttribute.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import Primitive from "../Scene/Primitive.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import ColorMaterialProperty from "./ColorMaterialProperty.js";
@@ -26,7 +28,7 @@ function Batch(
   depthFailAppearanceType,
   depthFailMaterialProperty,
   closed,
-  shadows
+  shadows,
 ) {
   this.translucent = translucent;
   this.appearanceType = appearanceType;
@@ -51,10 +53,11 @@ function Batch(
 
   let removeMaterialSubscription;
   if (defined(depthFailMaterialProperty)) {
-    removeMaterialSubscription = depthFailMaterialProperty.definitionChanged.addEventListener(
-      Batch.prototype.onMaterialChanged,
-      this
-    );
+    removeMaterialSubscription =
+      depthFailMaterialProperty.definitionChanged.addEventListener(
+        Batch.prototype.onMaterialChanged,
+        this,
+      );
   }
   this.removeMaterialSubscription = removeMaterialSubscription;
 }
@@ -91,16 +94,13 @@ Batch.prototype.add = function (updater, instance) {
     const that = this;
     this.subscriptions.set(
       id,
-      updater.entity.definitionChanged.addEventListener(function (
-        entity,
-        propertyName,
-        newValue,
-        oldValue
-      ) {
-        if (propertyName === "isShowing") {
-          that.showsUpdated.set(updater.id, updater);
-        }
-      })
+      updater.entity.definitionChanged.addEventListener(
+        function (entity, propertyName, newValue, oldValue) {
+          if (propertyName === "isShowing") {
+            that.showsUpdated.set(updater.id, updater);
+          }
+        },
+      ),
     );
   }
 };
@@ -146,21 +146,26 @@ Batch.prototype.update = function (time) {
           this.depthFailMaterial = MaterialProperty.getValue(
             time,
             this.depthFailMaterialProperty,
-            this.depthFailMaterial
+            this.depthFailMaterial,
           );
         }
-        depthFailAppearance = new this.depthFailAppearanceType({
+
+        const DepthFailAppearanceType = this.depthFailAppearanceType;
+
+        depthFailAppearance = new DepthFailAppearanceType({
           material: this.depthFailMaterial,
           translucent: this.translucent,
           closed: this.closed,
         });
       }
 
+      const AppearanceType = this.appearanceType;
+
       primitive = new Primitive({
         show: false,
         asynchronous: true,
         geometryInstances: geometries.slice(),
-        appearance: new this.appearanceType({
+        appearance: new AppearanceType({
           translucent: this.translucent,
           closed: this.closed,
         }),
@@ -199,7 +204,7 @@ Batch.prototype.update = function (time) {
       this.depthFailMaterial = MaterialProperty.getValue(
         time,
         this.depthFailMaterialProperty,
-        this.depthFailMaterial
+        this.depthFailMaterial,
       );
       this.primitive.depthFailAppearance.material = this.depthFailMaterial;
     }
@@ -223,16 +228,16 @@ Batch.prototype.update = function (time) {
           colorProperty,
           time,
           Color.WHITE,
-          colorScratch
+          colorScratch,
         );
         if (!Color.equals(attributes._lastColor, resultColor)) {
           attributes._lastColor = Color.clone(
             resultColor,
-            attributes._lastColor
+            attributes._lastColor,
           );
           attributes.color = ColorGeometryInstanceAttribute.toValue(
             resultColor,
-            attributes.color
+            attributes.color,
           );
           if (
             (this.translucent && attributes.color[3] === 255) ||
@@ -253,16 +258,16 @@ Batch.prototype.update = function (time) {
           depthFailColorProperty,
           time,
           Color.WHITE,
-          colorScratch
+          colorScratch,
         );
         if (!Color.equals(attributes._lastDepthFailColor, depthColor)) {
           attributes._lastDepthFailColor = Color.clone(
             depthColor,
-            attributes._lastDepthFailColor
+            attributes._lastDepthFailColor,
           );
           attributes.depthFailColor = ColorGeometryInstanceAttribute.toValue(
             depthColor,
-            attributes.depthFailColor
+            attributes.depthFailColor,
           );
         }
       }
@@ -274,7 +279,7 @@ Batch.prototype.update = function (time) {
       if (show !== currentShow) {
         attributes.show = ShowGeometryInstanceAttribute.toValue(
           show,
-          attributes.show
+          attributes.show,
         );
       }
 
@@ -285,22 +290,24 @@ Batch.prototype.update = function (time) {
           distanceDisplayConditionProperty,
           time,
           defaultDistanceDisplayCondition,
-          distanceDisplayConditionScratch
+          distanceDisplayConditionScratch,
         );
         if (
           !DistanceDisplayCondition.equals(
             distanceDisplayCondition,
-            attributes._lastDistanceDisplayCondition
+            attributes._lastDistanceDisplayCondition,
           )
         ) {
-          attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(
-            distanceDisplayCondition,
-            attributes._lastDistanceDisplayCondition
-          );
-          attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(
-            distanceDisplayCondition,
-            attributes.distanceDisplayCondition
-          );
+          attributes._lastDistanceDisplayCondition =
+            DistanceDisplayCondition.clone(
+              distanceDisplayCondition,
+              attributes._lastDistanceDisplayCondition,
+            );
+          attributes.distanceDisplayCondition =
+            DistanceDisplayConditionGeometryInstanceAttribute.toValue(
+              distanceDisplayCondition,
+              attributes.distanceDisplayCondition,
+            );
         }
       }
 
@@ -310,16 +317,16 @@ Batch.prototype.update = function (time) {
           offsetProperty,
           time,
           defaultOffset,
-          offsetScratch
+          offsetScratch,
         );
         if (!Cartesian3.equals(offset, attributes._lastOffset)) {
           attributes._lastOffset = Cartesian3.clone(
             offset,
-            attributes._lastOffset
+            attributes._lastOffset,
           );
           attributes.offset = OffsetGeometryInstanceAttribute.toValue(
             offset,
-            attributes.offset
+            attributes.offset,
           );
         }
       }
@@ -352,7 +359,7 @@ Batch.prototype.updateShows = function (primitive) {
     if (show !== currentShow) {
       attributes.show = ShowGeometryInstanceAttribute.toValue(
         show,
-        attributes.show
+        attributes.show,
       );
       instance.attributes.show.value[0] = attributes.show[0];
     }
@@ -404,7 +411,7 @@ function StaticGeometryColorBatch(
   appearanceType,
   depthFailAppearanceType,
   closed,
-  shadows
+  shadows,
 ) {
   this._solidItems = [];
   this._translucentItems = [];
@@ -442,7 +449,7 @@ StaticGeometryColorBatch.prototype.add = function (time, updater) {
     this._depthFailAppearanceType,
     updater.depthFailMaterialProperty,
     this._closed,
-    this._shadows
+    this._shadows,
   );
   batch.add(updater, instance);
   items.push(batch);
@@ -477,8 +484,8 @@ function moveItems(batch, items, time) {
     const itemsToRemove = item.itemsToRemove;
     const itemsToMoveLength = itemsToRemove.length;
     if (itemsToMoveLength > 0) {
-      for (i = 0; i < itemsToMoveLength; i++) {
-        const updater = itemsToRemove[i];
+      for (let j = 0; j < itemsToMoveLength; j++) {
+        const updater = itemsToRemove[j];
         item.remove(updater);
         batch.add(time, updater);
         itemsMoved = true;
@@ -546,7 +553,7 @@ function getBoundingSphere(items, updater, result) {
 
 StaticGeometryColorBatch.prototype.getBoundingSphere = function (
   updater,
-  result
+  result,
 ) {
   const boundingSphere = getBoundingSphere(this._solidItems, updater, result);
   if (boundingSphere === BoundingSphereState.FAILED) {

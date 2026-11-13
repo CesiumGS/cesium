@@ -1,5 +1,6 @@
-import WebGLConstants from "../Core/WebGLConstants.js";
+// @ts-check
 
+import { WebGLConstants } from "@cesium/core";
 /**
  * Determines the action taken based on the result of the stencil test.
  *
@@ -70,4 +71,7 @@ const StencilOperation = {
    */
   DECREMENT_WRAP: WebGLConstants.DECR_WRAP,
 };
-export default Object.freeze(StencilOperation);
+
+Object.freeze(StencilOperation);
+
+export default StencilOperation;

@@ -1,7 +1,5 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core";
 import {
-  defaultValue,
-  defined,
-  DeveloperError,
   EllipsoidTerrainProvider,
   ImageryLayer,
   Terrain,
@@ -25,17 +23,13 @@ import createCommand from "../createCommand.js";
  * @exception {DeveloperError} terrainProviderViewModels must be an array.
  */
 function BaseLayerPickerViewModel(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const globe = options.globe;
-  const imageryProviderViewModels = defaultValue(
-    options.imageryProviderViewModels,
-    []
-  );
-  const terrainProviderViewModels = defaultValue(
-    options.terrainProviderViewModels,
-    []
-  );
+  const imageryProviderViewModels =
+    options.imageryProviderViewModels ?? Frozen.EMPTY_ARRAY;
+  const terrainProviderViewModels =
+    options.terrainProviderViewModels ?? Frozen.EMPTY_ARRAY;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(globe)) {
@@ -74,7 +68,7 @@ function BaseLayerPickerViewModel(options) {
 
   const imageryObservable = knockout.getObservable(
     this,
-    "imageryProviderViewModels"
+    "imageryProviderViewModels",
   );
   const imageryProviders = knockout.pureComputed(function () {
     const providers = imageryObservable();
@@ -105,7 +99,7 @@ function BaseLayerPickerViewModel(options) {
 
   const terrainObservable = knockout.getObservable(
     this,
-    "terrainProviderViewModels"
+    "terrainProviderViewModels",
   );
   const terrainProviders = knockout.pureComputed(function () {
     const providers = terrainObservable();
@@ -269,12 +263,11 @@ function BaseLayerPickerViewModel(options) {
         this._globe.terrainProvider = newProvider;
       } else if (defined(newProvider)) {
         let cancelUpdate = false;
-        const removeCancelListener = this._globe.terrainProviderChanged.addEventListener(
-          () => {
+        const removeCancelListener =
+          this._globe.terrainProviderChanged.addEventListener(() => {
             cancelUpdate = true;
             removeCancelListener();
-          }
-        );
+          });
 
         const terrain = new Terrain(newProvider);
         const removeEventListener = terrain.readyEvent.addEventListener(
@@ -289,7 +282,7 @@ function BaseLayerPickerViewModel(options) {
             );
             this._globe.terrainProvider = terrainProvider;
             removeEventListener();
-          }
+          },
         );
       }
 
@@ -303,10 +296,8 @@ function BaseLayerPickerViewModel(options) {
     that.dropDownVisible = !that.dropDownVisible;
   });
 
-  this.selectedImagery = defaultValue(
-    options.selectedImageryProviderViewModel,
-    imageryProviderViewModels[0]
-  );
+  this.selectedImagery =
+    options.selectedImageryProviderViewModel ?? imageryProviderViewModels[0];
   this.selectedTerrain = options.selectedTerrainProviderViewModel;
 }
 

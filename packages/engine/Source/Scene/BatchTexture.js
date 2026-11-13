@@ -1,14 +1,16 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import createGuid from "../Core/createGuid.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  Cartesian2,
+  Cartesian4,
+  Check,
+  Color,
+  DeveloperError,
+  PixelDatatype,
+  PixelFormat,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ContextLimits from "../Renderer/ContextLimits.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 
@@ -220,7 +222,7 @@ function checkBatchId(batchId, featuresLength) {
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
     throw new DeveloperError(
       `batchId is required and between zero and featuresLength - 1 (${featuresLength}` -
-        +")."
+        +").",
     );
   }
 }
@@ -413,7 +415,7 @@ BatchTexture.prototype.getColor = function (batchId, result) {
     batchValues[offset + 1],
     batchValues[offset + 2],
     showAlphaProperties[propertyOffset + 1],
-    result
+    result,
   );
 };
 

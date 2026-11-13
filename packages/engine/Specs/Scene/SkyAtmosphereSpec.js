@@ -1,12 +1,9 @@
+import { Cartesian3, Ellipsoid, Math as CesiumMath } from "@cesium/core";
 import {
-  Cartesian3,
   DynamicAtmosphereLightingType,
-  Ellipsoid,
-  Math as CesiumMath,
   SceneMode,
   SkyAtmosphere,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -172,5 +169,5 @@ describe(
       expect(s.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

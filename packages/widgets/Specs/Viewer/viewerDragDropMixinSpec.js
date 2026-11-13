@@ -1,7 +1,5 @@
-import { defined, TimeInterval } from "@cesium/engine";
-
+import { TimeInterval, defined } from "@cesium/core";
 import { viewerDragDropMixin } from "../../index.js";
-
 import createViewer from "../createViewer.js";
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -285,7 +283,7 @@ describe(
         expect(spyListener).toHaveBeenCalledWith(
           viewer,
           "czml1.czml",
-          jasmine.any(SyntaxError)
+          jasmine.any(SyntaxError),
         );
 
         viewer.dropError.removeEventListener(spyListener);
@@ -320,7 +318,7 @@ describe(
         expect(spyListener).toHaveBeenCalledWith(
           viewer,
           mockEvent.dataTransfer.files[0].name,
-          mockEvent.dataTransfer.files[0].errorMessage
+          mockEvent.dataTransfer.files[0].errorMessage,
         );
 
         viewer.dropError.removeEventListener(spyListener);
@@ -471,5 +469,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

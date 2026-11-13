@@ -1,13 +1,15 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import BoxOutlineGeometry from "../Core/BoxOutlineGeometry.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import CesiumMath from "../Core/Math.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
+import {
+  BoundingSphere,
+  BoxOutlineGeometry,
+  Cartesian3,
+  Check,
+  ColorGeometryInstanceAttribute,
+  GeometryInstance,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  OrientedBoundingBox,
+} from "@cesium/core";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
 
@@ -22,7 +24,7 @@ function computeMissingVector(a, b, result) {
   return Cartesian3.multiplyByScalar(
     result,
     CesiumMath.EPSILON7 / magnitude,
-    result
+    result,
   );
 }
 
@@ -31,7 +33,7 @@ function findOrthogonalVector(a, result) {
   const b = Cartesian3.equalsEpsilon(
     temp,
     Cartesian3.UNIT_X,
-    CesiumMath.EPSILON6
+    CesiumMath.EPSILON6,
   )
     ? Cartesian3.UNIT_Y
     : Cartesian3.UNIT_X;
@@ -96,7 +98,7 @@ function TileOrientedBoundingBox(center, halfAxes) {
   halfAxes = checkHalfAxes(halfAxes);
   this._orientedBoundingBox = new OrientedBoundingBox(center, halfAxes);
   this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(
-    this._orientedBoundingBox
+    this._orientedBoundingBox,
   );
 }
 
@@ -140,7 +142,7 @@ TileOrientedBoundingBox.prototype.distanceToCamera = function (frameState) {
   Check.defined("frameState", frameState);
   //>>includeEnd('debug');
   return Math.sqrt(
-    this._orientedBoundingBox.distanceSquaredTo(frameState.camera.positionWC)
+    this._orientedBoundingBox.distanceSquaredTo(frameState.camera.positionWC),
   );
 };
 
@@ -174,7 +176,7 @@ TileOrientedBoundingBox.prototype.update = function (center, halfAxes) {
   Matrix3.clone(halfAxes, this._orientedBoundingBox.halfAxes);
   BoundingSphere.fromOrientedBoundingBox(
     this._orientedBoundingBox,
-    this._boundingSphere
+    this._boundingSphere,
   );
 };
 
@@ -196,7 +198,7 @@ TileOrientedBoundingBox.prototype.createDebugVolume = function (color) {
   });
   const modelMatrix = Matrix4.fromRotationTranslation(
     this.boundingVolume.halfAxes,
-    this.boundingVolume.center
+    this.boundingVolume.center,
   );
   const instance = new GeometryInstance({
     geometry: geometry,

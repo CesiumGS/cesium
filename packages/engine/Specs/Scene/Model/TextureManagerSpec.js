@@ -71,7 +71,7 @@ describe(
         id,
         new TextureUniform({
           url: blueUrl,
-        })
+        }),
       );
 
       return waitForTextureLoad(textureManager, id).then(function (texture) {
@@ -91,7 +91,7 @@ describe(
           typedArray: new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255]),
           width: 1,
           height: 2,
-        })
+        }),
       );
 
       return waitForTextureLoad(textureManager, id).then(function (texture) {
@@ -110,14 +110,14 @@ describe(
         new TextureUniform({
           url: redUrl,
           minificationFilter: TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
-        })
+        }),
       );
 
-      return waitForTextureLoad(textureManager, id, false).then(function (
-        texture
-      ) {
-        expect(texture._hasMipmap).toBe(true);
-      });
+      return waitForTextureLoad(textureManager, id, false).then(
+        function (texture) {
+          expect(texture._hasMipmap).toBe(true);
+        },
+      );
     });
 
     it("resizes image to power-of-two dimensions if needed", function () {
@@ -130,16 +130,16 @@ describe(
         new TextureUniform({
           url: blue10x10Url,
           minificationFilter: TextureMinificationFilter.LINEAR_MIPMAP_NEAREST,
-        })
+        }),
       );
 
-      return waitForTextureLoad(textureManager, id, false).then(function (
-        texture
-      ) {
-        expect(texture.width).toBe(16);
-        expect(texture.height).toBe(16);
-        expect(texture._hasMipmap).toBe(true);
-      });
+      return waitForTextureLoad(textureManager, id, false).then(
+        function (texture) {
+          expect(texture.width).toBe(16);
+          expect(texture.height).toBe(16);
+          expect(texture._hasMipmap).toBe(true);
+        },
+      );
     });
 
     it("can resize a texture supplied as a Uint8Array", function () {
@@ -180,18 +180,18 @@ describe(
         new TextureUniform({
           url: blue10x10Url,
           minificationFilter: TextureMinificationFilter.NEAREST_MIPMAP_NEAREST,
-        })
+        }),
       );
 
       const webgl2 = true;
 
-      return waitForTextureLoad(textureManager, id, webgl2).then(function (
-        texture
-      ) {
-        expect(texture.width).toBe(10);
-        expect(texture.height).toBe(10);
-        expect(texture._hasMipmap).toBe(true);
-      });
+      return waitForTextureLoad(textureManager, id, webgl2).then(
+        function (texture) {
+          expect(texture.width).toBe(10);
+          expect(texture.height).toBe(10);
+          expect(texture._hasMipmap).toBe(true);
+        },
+      );
     });
 
     it("destroys old texture before adding a new one", function () {
@@ -203,31 +203,31 @@ describe(
         id,
         new TextureUniform({
           url: blueUrl,
-        })
+        }),
       );
 
-      return waitForTextureLoad(textureManager, id).then(function (
-        blueTexture
-      ) {
-        expect(blueTexture.width).toBe(2);
-        expect(blueTexture.height).toBe(2);
-        expect(blueTexture.isDestroyed()).toBe(false);
+      return waitForTextureLoad(textureManager, id).then(
+        function (blueTexture) {
+          expect(blueTexture.width).toBe(2);
+          expect(blueTexture.height).toBe(2);
+          expect(blueTexture.isDestroyed()).toBe(false);
 
-        textureManager.loadTexture2D(
-          id,
-          new TextureUniform({
-            url: greenUrl,
-          })
-        );
-        return waitForTextureLoad(textureManager, id).then(function (
-          greenTexture
-        ) {
-          expect(blueTexture.isDestroyed()).toBe(true);
-          expect(greenTexture.width).toBe(1);
-          expect(greenTexture.height).toBe(4);
-          expect(greenTexture.isDestroyed()).toBe(false);
-        });
-      });
+          textureManager.loadTexture2D(
+            id,
+            new TextureUniform({
+              url: greenUrl,
+            }),
+          );
+          return waitForTextureLoad(textureManager, id).then(
+            function (greenTexture) {
+              expect(blueTexture.isDestroyed()).toBe(true);
+              expect(greenTexture.width).toBe(1);
+              expect(greenTexture.height).toBe(4);
+              expect(greenTexture.isDestroyed()).toBe(false);
+            },
+          );
+        },
+      );
     });
 
     it("getTexture returns undefined for unknown texture", function () {
@@ -252,7 +252,7 @@ describe(
         id,
         new TextureUniform({
           url: "https://example.com/not-a-texture.jpg",
-        })
+        }),
       );
       return waitForTextureLoad(textureManager, id)
         .then(function (texture) {
@@ -272,7 +272,7 @@ describe(
         id,
         new TextureUniform({
           url: blueUrl,
-        })
+        }),
       );
 
       return waitForTextureLoad(textureManager, id).then(function (texture) {
@@ -285,5 +285,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

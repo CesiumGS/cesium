@@ -1,10 +1,12 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import {
+  BoundingRectangle,
+  Color,
+  PixelDatatype,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import PassThroughDepth from "../Shaders/PostProcessStages/PassThroughDepth.js";
 
@@ -81,7 +83,7 @@ function updateResources(globeTranslucency, context, width, height, hdr) {
     width,
     height,
     1,
-    pixelDatatype
+    pixelDatatype,
   );
   globeTranslucency._packedDepthFramebuffer.update(context, width, height);
 }
@@ -92,7 +94,7 @@ function updateCommands(globeTranslucency, context, width, height, passState) {
 
   const useScissorTest = !BoundingRectangle.equals(
     globeTranslucency._viewport,
-    passState.viewport
+    passState.viewport,
   );
   let updateScissor = useScissorTest !== globeTranslucency._useScissorTest;
   globeTranslucency._useScissorTest = useScissorTest;
@@ -100,12 +102,12 @@ function updateCommands(globeTranslucency, context, width, height, passState) {
   if (
     !BoundingRectangle.equals(
       globeTranslucency._scissorRectangle,
-      passState.viewport
+      passState.viewport,
     )
   ) {
     globeTranslucency._scissorRectangle = BoundingRectangle.clone(
       passState.viewport,
-      globeTranslucency._scissorRectangle
+      globeTranslucency._scissorRectangle,
     );
     updateScissor = true;
   }
@@ -114,7 +116,7 @@ function updateCommands(globeTranslucency, context, width, height, passState) {
     !defined(globeTranslucency._renderState) ||
     !BoundingRectangle.equals(
       globeTranslucency._viewport,
-      globeTranslucency._renderState.viewport
+      globeTranslucency._renderState.viewport,
     ) ||
     updateScissor
   ) {
@@ -137,7 +139,7 @@ function updateCommands(globeTranslucency, context, width, height, passState) {
           },
         },
         owner: globeTranslucency,
-      }
+      },
     );
   }
 
@@ -163,7 +165,7 @@ GlobeTranslucencyFramebuffer.prototype.updateAndClear = function (
   hdr,
   viewport,
   context,
-  passState
+  passState,
 ) {
   const width = viewport.width;
   const height = viewport.height;
@@ -176,14 +178,14 @@ GlobeTranslucencyFramebuffer.prototype.updateAndClear = function (
 
 GlobeTranslucencyFramebuffer.prototype.clearClassification = function (
   context,
-  passState
+  passState,
 ) {
   this._clearCommand.execute(context, passState);
 };
 
 GlobeTranslucencyFramebuffer.prototype.packDepth = function (
   context,
-  passState
+  passState,
 ) {
   this._packedDepthCommand.execute(context, passState);
   return this.packedDepthTexture;

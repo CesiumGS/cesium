@@ -48,11 +48,11 @@ describe("Widgets/I3SBuildingSceneLayerExplorer/I3SBuildingSceneLayerExplorer", 
     expect(container.children[0].childElementCount).toEqual(3);
     expect(container.children[0].children[0].localName).toEqual("h3");
     expect(container.children[0].children[0].textContent).toEqual(
-      "Building explorer"
+      "Building explorer",
     );
     expect(container.children[0].children[1].localName).toEqual("select");
     expect(container.children[0].children[1].textContent).toEqual(
-      "Building layers not found"
+      "Building layers not found",
     );
     expect(container.children[0].children[2].localName).toEqual("div");
     expect(container.children[0].children[2].id).toEqual("bsl-wrapper");
@@ -85,14 +85,13 @@ describe("Widgets/I3SBuildingSceneLayerExplorer/I3SBuildingSceneLayerExplorer", 
     i3sProvider.filterByAttributes = jasmine.createSpy();
     const widget = new I3SBuildingSceneLayerExplorer(
       "testContainer",
-      i3sProvider
+      i3sProvider,
     );
     expect(widget).toBeInstanceOf(I3SBuildingSceneLayerExplorer);
 
     const expander = document.querySelector(".expandItem");
-    const nestedList = expander.parentElement.parentElement.querySelector(
-      "#Cat1-expander"
-    );
+    const nestedList =
+      expander.parentElement.parentElement.querySelector("#Cat1-expander");
     expect(expander.textContent).toEqual("+");
     expect(nestedList.className).toEqual("nested");
     DomEventSimulator.fireClick(expander);

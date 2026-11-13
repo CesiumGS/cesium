@@ -1,11 +1,9 @@
+import { Cartesian3, JulianDate } from "@cesium/core";
 import {
-  Cartesian3,
-  JulianDate,
   CallbackProperty,
   ConstantProperty,
   TerrainOffsetProperty,
 } from "../../index.js";
-
 import createGlobe from "../../../../Specs/createGlobe.js";
 import createScene from "../../../../Specs/createScene.js";
 
@@ -29,7 +27,7 @@ describe("DataSources/TerrainOffsetProperty", function () {
       scene,
       position,
       height,
-      extrudedHeight
+      extrudedHeight,
     );
     expect(property.isConstant).toBe(false);
     expect(property.getValue(time)).toEqual(Cartesian3.ZERO);
@@ -46,7 +44,7 @@ describe("DataSources/TerrainOffsetProperty", function () {
         undefined,
         position,
         height,
-        extrudedHeight
+        extrudedHeight,
       );
     }).toThrowDeveloperError();
   });
@@ -59,7 +57,7 @@ describe("DataSources/TerrainOffsetProperty", function () {
         scene,
         undefined,
         height,
-        extrudedHeight
+        extrudedHeight,
       );
     }).toThrowDeveloperError();
   });

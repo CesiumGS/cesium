@@ -1,11 +1,12 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
-import Matrix4 from "../Core/Matrix4.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  Cartesian3,
+  DeveloperError,
+  Matrix4,
+  RuntimeError,
+  defined,
+  destroyObject,
+  getJsonFromTypedArray,
+} from "@cesium/core";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Vector3DTileGeometry from "./Vector3DTileGeometry.js";
 
@@ -14,147 +15,184 @@ import Vector3DTileGeometry from "./Vector3DTileGeometry.js";
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
  *
- * @alias Geometry3DTileContent
- * @constructor
- *
+ * @implements Cesium3DTileContent
  * @private
  */
-function Geometry3DTileContent(
-  tileset,
-  tile,
-  resource,
-  arrayBuffer,
-  byteOffset
-) {
-  this._tileset = tileset;
-  this._tile = tile;
-  this._resource = resource;
-  this._geometries = undefined;
+class Geometry3DTileContent {
+  constructor(tileset, tile, resource, arrayBuffer, byteOffset) {
+    this._tileset = tileset;
+    this._tile = tile;
+    this._resource = resource;
+    this._geometries = undefined;
+    this._show = true;
 
-  this._metadata = undefined;
+    this._metadata = undefined;
 
-  this._batchTable = undefined;
-  this._features = undefined;
+    this._batchTable = undefined;
+    this._features = undefined;
 
-  /**
-   * Part of the {@link Cesium3DTileContent} interface.
-   */
-  this.featurePropertiesDirty = false;
-  this._group = undefined;
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
+    this.featurePropertiesDirty = false;
+    this._group = undefined;
 
-  this._ready = false;
+    this._ready = false;
 
-  initialize(this, arrayBuffer, byteOffset);
-}
+    initialize(this, arrayBuffer, byteOffset);
+  }
 
-Object.defineProperties(Geometry3DTileContent.prototype, {
-  featuresLength: {
-    get: function () {
-      return defined(this._batchTable) ? this._batchTable.featuresLength : 0;
-    },
-  },
+  get featuresLength() {
+    return defined(this._batchTable) ? this._batchTable.featuresLength : 0;
+  }
 
-  pointsLength: {
-    get: function () {
-      return 0;
-    },
-  },
+  get pointsLength() {
+    return 0;
+  }
 
-  trianglesLength: {
-    get: function () {
-      if (defined(this._geometries)) {
-        return this._geometries.trianglesLength;
-      }
-      return 0;
-    },
-  },
+  get trianglesLength() {
+    if (defined(this._geometries)) {
+      return this._geometries.trianglesLength;
+    }
+    return 0;
+  }
 
-  geometryByteLength: {
-    get: function () {
-      if (defined(this._geometries)) {
-        return this._geometries.geometryByteLength;
-      }
-      return 0;
-    },
-  },
+  get geometryByteLength() {
+    if (defined(this._geometries)) {
+      return this._geometries.geometryByteLength;
+    }
+    return 0;
+  }
 
-  texturesByteLength: {
-    get: function () {
-      return 0;
-    },
-  },
+  get texturesByteLength() {
+    return 0;
+  }
 
-  batchTableByteLength: {
-    get: function () {
-      return defined(this._batchTable)
-        ? this._batchTable.batchTableByteLength
-        : 0;
-    },
-  },
+  get batchTableByteLength() {
+    return defined(this._batchTable)
+      ? this._batchTable.batchTableByteLength
+      : 0;
+  }
 
-  innerContents: {
-    get: function () {
-      return undefined;
-    },
-  },
+  get innerContents() {
+    return undefined;
+  }
 
   /**
    * Returns true when the tile's content is ready to render; otherwise false
    *
-   * @memberof Geometry3DTileContent.prototype
    *
    * @type {boolean}
    * @readonly
    * @private
    */
-  ready: {
-    get: function () {
-      return this._ready;
-    },
-  },
+  get ready() {
+    return this._ready;
+  }
 
-  tileset: {
-    get: function () {
-      return this._tileset;
-    },
-  },
+  get tileset() {
+    return this._tileset;
+  }
 
-  tile: {
-    get: function () {
-      return this._tile;
-    },
-  },
+  get tile() {
+    return this._tile;
+  }
 
-  url: {
-    get: function () {
-      return this._resource.getUrlComponent(true);
-    },
-  },
+  get url() {
+    return this._resource.getUrlComponent(true);
+  }
 
-  metadata: {
-    get: function () {
-      return this._metadata;
-    },
-    set: function (value) {
-      this._metadata = value;
-    },
-  },
+  get metadata() {
+    return this._metadata;
+  }
 
-  batchTable: {
-    get: function () {
-      return this._batchTable;
-    },
-  },
+  set metadata(value) {
+    this._metadata = value;
+  }
 
-  group: {
-    get: function () {
-      return this._group;
-    },
-    set: function (value) {
-      this._group = value;
-    },
-  },
-});
+  get batchTable() {
+    return this._batchTable;
+  }
+
+  get group() {
+    return this._group;
+  }
+
+  set group(value) {
+    this._group = value;
+  }
+
+  /** @inheritdoc */
+  get show() {
+    return this._show;
+  }
+
+  set show(value) {
+    this._show = value;
+  }
+
+  hasProperty(batchId, name) {
+    return this._batchTable.hasProperty(batchId, name);
+  }
+
+  getFeature(batchId) {
+    //>>includeStart('debug', pragmas.debug);
+    const featuresLength = this.featuresLength;
+    if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
+      throw new DeveloperError(
+        `batchId is required and between zero and featuresLength - 1 (${
+          featuresLength - 1
+        }).`,
+      );
+    }
+    //>>includeEnd('debug');
+
+    createFeatures(this);
+    return this._features[batchId];
+  }
+
+  applyDebugSettings(enabled, color) {
+    if (defined(this._geometries)) {
+      this._geometries.applyDebugSettings(enabled, color);
+    }
+  }
+
+  applyStyle(style) {
+    createFeatures(this);
+    if (defined(this._geometries)) {
+      this._geometries.applyStyle(style, this._features);
+    }
+  }
+
+  update(tileset, frameState) {
+    if (defined(this._geometries)) {
+      this._geometries.classificationType = this._tileset.classificationType;
+      this._geometries.debugWireframe = this._tileset.debugWireframe;
+      if ((this._geometries.ready && this._show) || !this._geometries.ready) {
+        this._geometries.update(frameState);
+      }
+    }
+
+    if (defined(this._batchTable) && this._geometries.ready) {
+      this._batchTable.update(tileset, frameState);
+      this._ready = true;
+    }
+  }
+
+  pick(ray, frameState, result) {
+    return undefined;
+  }
+
+  isDestroyed() {
+    return false;
+  }
+
+  destroy() {
+    this._geometries = this._geometries && this._geometries.destroy();
+    this._batchTable = this._batchTable && this._batchTable.destroy();
+    return destroyObject(this);
+  }
+}
 
 function createColorChangedCallback(content) {
   return function (batchId, color) {
@@ -171,13 +209,10 @@ function getBatchIds(featureTableJson, featureTableBinary) {
   let sphereBatchIds;
   let i;
 
-  const numberOfBoxes = defaultValue(featureTableJson.BOXES_LENGTH, 0);
-  const numberOfCylinders = defaultValue(featureTableJson.CYLINDERS_LENGTH, 0);
-  const numberOfEllipsoids = defaultValue(
-    featureTableJson.ELLIPSOIDS_LENGTH,
-    0
-  );
-  const numberOfSpheres = defaultValue(featureTableJson.SPHERES_LENGTH, 0);
+  const numberOfBoxes = featureTableJson.BOXES_LENGTH ?? 0;
+  const numberOfCylinders = featureTableJson.CYLINDERS_LENGTH ?? 0;
+  const numberOfEllipsoids = featureTableJson.ELLIPSOIDS_LENGTH ?? 0;
+  const numberOfSpheres = featureTableJson.SPHERES_LENGTH ?? 0;
 
   if (numberOfBoxes > 0 && defined(featureTableJson.BOX_BATCH_IDS)) {
     const boxBatchIdsByteOffset =
@@ -185,7 +220,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
     boxBatchIds = new Uint16Array(
       featureTableBinary.buffer,
       boxBatchIdsByteOffset,
-      numberOfBoxes
+      numberOfBoxes,
     );
   }
 
@@ -196,7 +231,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
     cylinderBatchIds = new Uint16Array(
       featureTableBinary.buffer,
       cylinderBatchIdsByteOffset,
-      numberOfCylinders
+      numberOfCylinders,
     );
   }
 
@@ -207,7 +242,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
     ellipsoidBatchIds = new Uint16Array(
       featureTableBinary.buffer,
       ellipsoidBatchIdsByteOffset,
-      numberOfEllipsoids
+      numberOfEllipsoids,
     );
   }
 
@@ -218,7 +253,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
     sphereBatchIds = new Uint16Array(
       featureTableBinary.buffer,
       sphereBatchIdsByteOffset,
-      numberOfSpheres
+      numberOfSpheres,
     );
   }
 
@@ -235,7 +270,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
 
   if (atLeastOneDefined && atLeastOneUndefined) {
     throw new RuntimeError(
-      "If one group of batch ids is defined, then all batch ids must be defined"
+      "If one group of batch ids is defined, then all batch ids must be defined",
     );
   }
 
@@ -283,7 +318,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
 const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
 function initialize(content, arrayBuffer, byteOffset) {
-  byteOffset = defaultValue(byteOffset, 0);
+  byteOffset = byteOffset ?? 0;
 
   const uint8Array = new Uint8Array(arrayBuffer);
   const view = new DataView(arrayBuffer);
@@ -292,7 +327,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      `Only Geometry tile version 1 is supported.  Version ${version} is not.`
+      `Only Geometry tile version 1 is supported.  Version ${version} is not.`,
     );
   }
   byteOffset += sizeOfUint32;
@@ -310,7 +345,7 @@ function initialize(content, arrayBuffer, byteOffset) {
 
   if (featureTableJSONByteLength === 0) {
     throw new RuntimeError(
-      "Feature table must have a byte length greater than zero"
+      "Feature table must have a byte length greater than zero",
     );
   }
 
@@ -324,14 +359,14 @@ function initialize(content, arrayBuffer, byteOffset) {
   const featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
-    featureTableJSONByteLength
+    featureTableJSONByteLength,
   );
   byteOffset += featureTableJSONByteLength;
 
   const featureTableBinary = new Uint8Array(
     arrayBuffer,
     byteOffset,
-    featureTableBinaryByteLength
+    featureTableBinaryByteLength,
   );
   byteOffset += featureTableBinaryByteLength;
 
@@ -346,7 +381,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
-      batchTableJSONByteLength
+      batchTableJSONByteLength,
     );
     byteOffset += batchTableJSONByteLength;
 
@@ -355,20 +390,17 @@ function initialize(content, arrayBuffer, byteOffset) {
       batchTableBinary = new Uint8Array(
         arrayBuffer,
         byteOffset,
-        batchTableBinaryByteLength
+        batchTableBinaryByteLength,
       );
       // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
       batchTableBinary = new Uint8Array(batchTableBinary);
     }
   }
 
-  const numberOfBoxes = defaultValue(featureTableJson.BOXES_LENGTH, 0);
-  const numberOfCylinders = defaultValue(featureTableJson.CYLINDERS_LENGTH, 0);
-  const numberOfEllipsoids = defaultValue(
-    featureTableJson.ELLIPSOIDS_LENGTH,
-    0
-  );
-  const numberOfSpheres = defaultValue(featureTableJson.SPHERES_LENGTH, 0);
+  const numberOfBoxes = featureTableJson.BOXES_LENGTH ?? 0;
+  const numberOfCylinders = featureTableJson.CYLINDERS_LENGTH ?? 0;
+  const numberOfEllipsoids = featureTableJson.ELLIPSOIDS_LENGTH ?? 0;
+  const numberOfSpheres = featureTableJson.SPHERES_LENGTH ?? 0;
 
   const totalPrimitives =
     numberOfBoxes + numberOfCylinders + numberOfEllipsoids + numberOfSpheres;
@@ -378,7 +410,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     totalPrimitives,
     batchTableJson,
     batchTableBinary,
-    createColorChangedCallback(content)
+    createColorChangedCallback(content),
   );
   content._batchTable = batchTable;
 
@@ -413,7 +445,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       boxes = new Float32Array(
         featureTableBinary.buffer,
         boxesByteOffset,
-        Vector3DTileGeometry.packedBoxLength * numberOfBoxes
+        Vector3DTileGeometry.packedBoxLength * numberOfBoxes,
       );
     }
 
@@ -423,7 +455,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       cylinders = new Float32Array(
         featureTableBinary.buffer,
         cylindersByteOffset,
-        Vector3DTileGeometry.packedCylinderLength * numberOfCylinders
+        Vector3DTileGeometry.packedCylinderLength * numberOfCylinders,
       );
     }
 
@@ -433,7 +465,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       ellipsoids = new Float32Array(
         featureTableBinary.buffer,
         ellipsoidsByteOffset,
-        Vector3DTileGeometry.packedEllipsoidLength * numberOfEllipsoids
+        Vector3DTileGeometry.packedEllipsoidLength * numberOfEllipsoids,
       );
     }
 
@@ -443,7 +475,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       spheres = new Float32Array(
         featureTableBinary.buffer,
         spheresByteOffset,
-        Vector3DTileGeometry.packedSphereLength * numberOfSpheres
+        Vector3DTileGeometry.packedSphereLength * numberOfSpheres,
       );
     }
 
@@ -479,63 +511,4 @@ function createFeatures(content) {
   }
 }
 
-Geometry3DTileContent.prototype.hasProperty = function (batchId, name) {
-  return this._batchTable.hasProperty(batchId, name);
-};
-
-Geometry3DTileContent.prototype.getFeature = function (batchId) {
-  //>>includeStart('debug', pragmas.debug);
-  const featuresLength = this.featuresLength;
-  if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
-    throw new DeveloperError(
-      `batchId is required and between zero and featuresLength - 1 (${
-        featuresLength - 1
-      }).`
-    );
-  }
-  //>>includeEnd('debug');
-
-  createFeatures(this);
-  return this._features[batchId];
-};
-
-Geometry3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
-  if (defined(this._geometries)) {
-    this._geometries.applyDebugSettings(enabled, color);
-  }
-};
-
-Geometry3DTileContent.prototype.applyStyle = function (style) {
-  createFeatures(this);
-  if (defined(this._geometries)) {
-    this._geometries.applyStyle(style, this._features);
-  }
-};
-
-Geometry3DTileContent.prototype.update = function (tileset, frameState) {
-  if (defined(this._geometries)) {
-    this._geometries.classificationType = this._tileset.classificationType;
-    this._geometries.debugWireframe = this._tileset.debugWireframe;
-    this._geometries.update(frameState);
-  }
-
-  if (defined(this._batchTable) && this._geometries.ready) {
-    this._batchTable.update(tileset, frameState);
-    this._ready = true;
-  }
-};
-
-Geometry3DTileContent.prototype.pick = function (ray, frameState, result) {
-  return undefined;
-};
-
-Geometry3DTileContent.prototype.isDestroyed = function () {
-  return false;
-};
-
-Geometry3DTileContent.prototype.destroy = function () {
-  this._geometries = this._geometries && this._geometries.destroy();
-  this._batchTable = this._batchTable && this._batchTable.destroy();
-  return destroyObject(this);
-};
 export default Geometry3DTileContent;

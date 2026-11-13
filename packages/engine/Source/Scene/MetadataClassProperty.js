@@ -1,16 +1,20 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Matrix2 from "../Core/Matrix2.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Check,
+  DeveloperError,
+  Frozen,
+  Matrix2,
+  Matrix3,
+  Matrix4,
+  clone,
+  defined,
+} from "@cesium/core";
 import MetadataType from "./MetadataType.js";
-import MetadataComponentType from "./MetadataComponentType.js";
+import MetadataComponentType, {
+  ScalarCategories,
+} from "./MetadataComponentType.js";
 
 /**
  * A metadata property, as part of a {@link MetadataClass}.
@@ -31,8 +35,8 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * @param {number|number[]|number[][]} [options.max] A number or an array of numbers storing the maximum allowable value of this property. Only defined when type is a numeric type.
  * @param {number|number[]|number[][]} [options.offset] The offset to be added to property values as part of the value transform.
  * @param {number|number[]|number[][]} [options.scale] The scale to be multiplied to property values as part of the value transform.
- * @param {boolean|number|string|Array} [options.noData] The no-data sentinel value that represents null values.
- * @param {boolean|number|string|Array} [options.default] A default value to use when an entity's property value is not defined.
+ * @param {number|string|Array} [options.noData] The no-data sentinel value that represents null values.
+ * @param {number|string|Array} [options.default] A default value to use when an entity's property value is not defined.
  * @param {boolean} [options.required=false] Whether the property is required.
  * @param {string} [options.name] The name of the property.
  * @param {string} [options.description] The description of the property.
@@ -45,7 +49,7 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataClassProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const id = options.id;
   const type = options.type;
 
@@ -59,8 +63,8 @@ function MetadataClassProperty(options) {
 
   const normalized =
     defined(componentType) &&
-    MetadataComponentType.isIntegerType(componentType) &&
-    defaultValue(options.normalized, false);
+    (options.normalized ?? false) &&
+    MetadataComponentType.isIntegerType(componentType);
 
   // Basic information about this property
   this._id = id;
@@ -78,11 +82,8 @@ function MetadataClassProperty(options) {
   this._valueType = defined(enumType) ? enumType.valueType : componentType;
 
   // Details about arrays
-  this._isArray = defaultValue(options.isArray, false);
-  this._isVariableLengthArray = defaultValue(
-    options.isVariableLengthArray,
-    false
-  );
+  this._isArray = options.isArray ?? false;
+  this._isVariableLengthArray = options.isVariableLengthArray ?? false;
   this._arrayLength = options.arrayLength;
 
   // min and max allowed values
@@ -115,7 +116,7 @@ function MetadataClassProperty(options) {
   // For vector and array types, this is stored as an array of values.
   this._default = clone(options.default, true);
 
-  this._required = defaultValue(options.required, true);
+  this._required = options.required ?? true;
 
   // extras and extensions
   this._extras = clone(options.extras, true);
@@ -136,7 +137,7 @@ function MetadataClassProperty(options) {
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataClassProperty.fromJson = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const id = options.id;
   const property = options.property;
 
@@ -164,7 +165,7 @@ MetadataClassProperty.fromJson = function (options) {
   } else if (isLegacyExtension) {
     required = defined(property.optional) ? !property.optional : true;
   } else {
-    required = defaultValue(property.required, false);
+    required = property.required ?? false;
   }
 
   return new MetadataClassProperty({
@@ -372,7 +373,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * The no-data sentinel value that represents null values
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {boolean|number|string|Array}
+   * @type {number|string|Array}
    * @readonly
    */
   noData: {
@@ -385,7 +386,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * A default value to use when an entity's property value is not defined.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {boolean|number|string|Array}
+   * @type {number|string|Array}
    * @readonly
    */
   default: {
@@ -438,6 +439,10 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   /**
    * The offset to be added to property values as part of the value transform.
    *
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the class property JSON itself did not define it, then it will be
+   * initialized to the default value.
+   *
    * @memberof MetadataClassProperty.prototype
    * @type {number|number[]|number[][]}
    * @readonly
@@ -450,6 +455,10 @@ Object.defineProperties(MetadataClassProperty.prototype, {
 
   /**
    * The scale to be multiplied to property values as part of the value transform.
+   *
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the class property JSON itself did not define it, then it will be
+   * initialized to the default value.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {number|number[]|number[][]}
@@ -668,7 +677,7 @@ function parseType(property, enums) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    `unknown metadata type {type: ${type}, componentType: ${componentType})`
+    `unknown metadata type {type: ${type}, componentType: ${componentType})`,
   );
   //>>includeEnd('debug');
 }
@@ -702,7 +711,7 @@ MetadataClassProperty.prototype.normalize = function (value) {
   return normalizeInPlace(
     value,
     this._valueType,
-    MetadataComponentType.normalize
+    MetadataComponentType.normalize,
   );
 };
 
@@ -735,7 +744,7 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
   return normalizeInPlace(
     value,
     this._valueType,
-    MetadataComponentType.unnormalize
+    MetadataComponentType.unnormalize,
   );
 };
 
@@ -753,7 +762,7 @@ MetadataClassProperty.prototype.applyValueTransform = function (value) {
     value,
     this._offset,
     this._scale,
-    MetadataComponentType.applyValueTransform
+    MetadataComponentType.applyValueTransform,
   );
 };
 
@@ -771,7 +780,7 @@ MetadataClassProperty.prototype.unapplyValueTransform = function (value) {
     value,
     this._offset,
     this._scale,
-    MetadataComponentType.unapplyValueTransform
+    MetadataComponentType.unapplyValueTransform,
   );
 };
 
@@ -780,9 +789,9 @@ MetadataClassProperty.prototype.unapplyValueTransform = function (value) {
  */
 MetadataClassProperty.prototype.expandConstant = function (
   constant,
-  enableNestedArrays
+  enableNestedArrays,
 ) {
-  enableNestedArrays = defaultValue(enableNestedArrays, false);
+  enableNestedArrays = enableNestedArrays ?? false;
   const isArray = this._isArray;
   const arrayLength = this._arrayLength;
   const componentCount = MetadataType.getComponentCount(this._type);
@@ -871,9 +880,9 @@ function arrayEquals(left, right) {
  */
 MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (
   value,
-  enableNestedArrays
+  enableNestedArrays,
 ) {
-  enableNestedArrays = defaultValue(enableNestedArrays, false);
+  enableNestedArrays = enableNestedArrays ?? false;
   const MathType = MetadataType.getMathType(this._type);
   const isArray = this._isArray;
   const componentCount = MetadataType.getComponentCount(this._type);
@@ -910,9 +919,9 @@ MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (
  */
 MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (
   value,
-  enableNestedArrays
+  enableNestedArrays,
 ) {
-  enableNestedArrays = defaultValue(enableNestedArrays, false);
+  enableNestedArrays = enableNestedArrays ?? false;
   const MathType = MetadataType.getMathType(this._type);
   const isArray = this._isArray;
   const componentCount = MetadataType.getComponentCount(this._type);
@@ -1139,13 +1148,31 @@ function normalizeInPlace(values, valueType, normalizeFunction) {
 }
 
 /**
+ * Applies the value transform that is defined with the given offsets
+ * and scales to the given values.
+ *
+ * If the given values are not an array, then the given transformation
+ * function will be applied directly.
+ *
+ * If the values are an array, then this function will be called recursively
+ * with the array elements, boiling down to a component-wise application
+ * of the transformation function to the innermost array elements.
+ *
+ * @param {number|number[]|number[][]} values The input values
+ * @param {number|number[]|number[][]} offsets The offsets
+ * @param {number|number[]|number[][]} scales The scales
+ * @param {Function} transformationFunction The function with the signature
+ * `(value:number, offset:number, scale:number) : number` that will be
+ * applied to the innermost elements
+ * @returns The input values (or the result of applying the transformation
+ * function to a single value if the values have not been an array).
  * @private
  */
 MetadataClassProperty.valueTransformInPlace = function (
   values,
   offsets,
   scales,
-  transformationFunction
+  transformationFunction,
 ) {
   if (!Array.isArray(values)) {
     // transform a single value
@@ -1158,11 +1185,228 @@ MetadataClassProperty.valueTransformInPlace = function (
       values[i],
       offsets[i],
       scales[i],
-      transformationFunction
+      transformationFunction,
     );
   }
 
   return values;
+};
+
+/**
+ * Determines the byte size of a single property element, stored on the CPU.
+ * For example, if the metadata type is VEC3 and the component type is FLOAT32, this would return 12 bytes.
+ *
+ * @returns {number} The byte size of a single property element.
+ *
+ * @private
+ */
+MetadataClassProperty.prototype.cpuBytesPerElement = function () {
+  return bytesPerElement(this, this.valueType);
+};
+
+/**
+ * Determines the byte size of a single property element, stored on the GPU.
+ * This differs from the CPU byte size if the element type is a 64-bit type that can be
+ * downcast to a 32-bit type for texture packing (only relevant for textures created from property tables).
+ *
+ * @returns {number} The byte size of a single property element on the GPU.
+ */
+MetadataClassProperty.prototype.gpuBytesPerElement = function () {
+  const packedType = MetadataComponentType.gpuComponentType(this.valueType);
+  return bytesPerElement(this, packedType);
+};
+
+function bytesPerElement(classProperty, valueType) {
+  const type = classProperty.type;
+  const componentCount = MetadataType.getComponentCount(type);
+  const arrayLength = classProperty.isArray ? classProperty.arrayLength : 1;
+  const bytesPerComponent = MetadataComponentType.getSizeInBytes(valueType);
+  return componentCount * arrayLength * bytesPerComponent;
+}
+
+/**
+ * Determines whether this property can be stored in a texture, given the property's datatype and the number of
+ * texture channels dedicated property value.
+ *
+ * @param {number} channelsLength The number of texture channels to pack each property value into
+ * @returns {boolean} true if the property can be stored in a texture with the given number of channels, false otherwise
+ *
+ * @private
+ */
+MetadataClassProperty.prototype.isGpuCompatible = function (channelsLength) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(channelsLength) || channelsLength <= 0) {
+    throw new DeveloperError("channelsLength must be a positive number.");
+  }
+  //>>includeEnd('debug');
+
+  const type = this.type;
+
+  if (this.isVariableLengthArray) {
+    return false;
+  }
+
+  if (type === MetadataType.STRING) {
+    return false;
+  }
+
+  // For the time being, boolean properties are not considered GPU compatible, because they are
+  // packed as bitstreams and the texture-unpacking logic does not currently support this.
+  if (type === MetadataType.BOOLEAN) {
+    return false;
+  }
+
+  // For all other properties, make sure the components fit in the sampled channels.
+  // (64-bit types can be downcast to 32-bit types for texture packing. In the future, support for full 64-bit types may be added)
+  if (this.gpuBytesPerElement() > channelsLength) {
+    return false;
+  }
+
+  return true;
+};
+
+const floatTypesByComponentCount = [undefined, "float", "vec2", "vec3", "vec4"];
+
+const integerTypesByComponentCount = [
+  undefined,
+  "int",
+  "ivec2",
+  "ivec3",
+  "ivec4",
+];
+
+const unsignedIntegerTypesByComponentCount = [
+  undefined,
+  "uint",
+  "uvec2",
+  "uvec3",
+  "uvec4",
+];
+
+// Map from scalar component type to the GLSL function used to reinterpret from uint bits to the scalar type
+const uintBitsToScalarType = {
+  [ScalarCategories.FLOAT]: "uintBitsToFloat",
+  [ScalarCategories.INTEGER]: "int",
+  [ScalarCategories.UNSIGNED_INTEGER]: "",
+};
+
+MetadataClassProperty.prototype.getGlslTypeWebGL1 = function () {
+  let componentCount = MetadataType.getComponentCount(this.type);
+  if (this.isArray) {
+    // fixed-sized arrays of length 2-4 UINT8s are represented as vectors as the
+    // shader since those are more useful in GLSL.
+    componentCount = this.arrayLength;
+  }
+
+  // Normalized UINT8 properties are float types in the shader
+  if (this.normalized) {
+    return floatTypesByComponentCount[componentCount];
+  }
+
+  // other UINT8-based properties are represented as integer types.
+  return integerTypesByComponentCount[componentCount];
+};
+
+MetadataClassProperty.prototype.getGlslType = function () {
+  const valueType = this.valueType;
+
+  let componentCount = MetadataType.getComponentCount(this.type);
+  const arrayLength = this.isArray ? this.arrayLength : 1;
+  componentCount *= arrayLength;
+
+  // Normalized fields are integers represented as float types ([0, 1] or [-1, 1] depending if signed)
+  if (!MetadataComponentType.isIntegerType(valueType) || this.normalized) {
+    return floatTypesByComponentCount[componentCount];
+  }
+
+  if (MetadataComponentType.isUnsignedIntegerType(valueType)) {
+    return unsignedIntegerTypesByComponentCount[componentCount];
+  }
+
+  return integerTypesByComponentCount[componentCount];
+};
+
+MetadataClassProperty.prototype.unpackTextureInShader = function (
+  sampledTextureExpression,
+  channelsString,
+  metadataVariableName,
+  shaderLines,
+) {
+  const glslType = this.getGlslType();
+  const valueType = MetadataComponentType.gpuComponentType(this.valueType);
+  const numChannels = channelsString.length;
+  const type = this.type;
+
+  // Calculate total number of components
+  // (e.g. a length-2 fixed-sized array of VEC2 has 4 components - isGpuCompatible checks this fits in the channels)
+  const componentCount =
+    MetadataType.getComponentCount(type) *
+    (this.isArray ? this.arrayLength : 1);
+  const channelsPerComponent = Math.floor(numChannels / componentCount);
+
+  const rawChannelsName = `${metadataVariableName}_rawChannels`;
+  const rawBitsName = `${metadataVariableName}_rawBits`;
+  const unpackedValueName = `${metadataVariableName}_unpackedValue`;
+
+  const declareUnpackedValueLine = `${glslType} ${unpackedValueName};`;
+  const declareRawBitsLine = `uint ${rawBitsName};`;
+  shaderLines.push(declareUnpackedValueLine);
+  shaderLines.push(declareRawBitsLine);
+
+  // Sample all (specified) channels of the texture
+  const assignRawValuesLine = `${floatTypesByComponentCount[numChannels]} ${rawChannelsName} = ${sampledTextureExpression};`;
+  shaderLines.push(assignRawValuesLine);
+
+  const castFunction =
+    uintBitsToScalarType[MetadataComponentType.category(valueType)];
+  const hasMultipleComponents = componentCount > 1;
+
+  // Unpack each component of the output property from the raw channel values
+  // E.g. if the output type is a vec2, and 4 channels are given, unpack x from `rg` and y from `ba`
+  for (let i = 0; i < componentCount; i++) {
+    const channelSlice = "rgba".slice(
+      i * channelsPerComponent,
+      (i + 1) * channelsPerComponent,
+    );
+    const subChannels = numChannels > 1 ? `.${channelSlice}` : "";
+    const assignRawBitsLine = `${rawBitsName} = czm_unpackTexture(${rawChannelsName}${subChannels});`;
+
+    let indexExpression = "";
+    if (hasMultipleComponents) {
+      indexExpression = `[${i}]`;
+    }
+
+    let normalize = "";
+    let toFloatIfNormalize = "";
+    if (this.normalized) {
+      const maxValue = MetadataComponentType.getMaximum(valueType);
+      normalize = ` * ${1.0 / Number(maxValue)}`;
+      toFloatIfNormalize = "float";
+    }
+
+    const assignUnpackedValueLine = `${unpackedValueName}${indexExpression} = ${toFloatIfNormalize}(${castFunction}(${rawBitsName}))${normalize};`;
+
+    shaderLines.push(assignRawBitsLine);
+    shaderLines.push(assignUnpackedValueLine);
+  }
+
+  return unpackedValueName;
+};
+
+// In WebGL 1, we limit property texture support to UINT8 properties.
+MetadataClassProperty.prototype.unpackTextureInShaderWebGL1 = function (
+  sampledTextureExpression,
+) {
+  // no unpacking needed if for normalized types
+  if (this.normalized) {
+    return sampledTextureExpression;
+  }
+
+  // integer types are read from the texture as normalized float values.
+  // these need to be rescaled to [0, 255] and cast to the appropriate integer
+  // type.
+  const glslType = this.getGlslTypeWebGL1();
+  return `${glslType}(255.0 * ${sampledTextureExpression})`;
 };
 
 export default MetadataClassProperty;

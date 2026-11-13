@@ -1,20 +1,22 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
+import {
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  ComponentDatatype,
+  IndexDatatype,
+  Math as CesiumMath,
+  Matrix4,
+  PixelDatatype,
+  PixelFormat,
+  PrimitiveType,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import Texture from "../Renderer/Texture.js";
@@ -270,11 +272,15 @@ Sun.prototype.update = function (frameState, passState, useHdr) {
   const position = SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     sunPosition,
-    scratchCartesian4
+    scratchCartesian4,
   );
 
   const dist = Cartesian3.magnitude(
-    Cartesian3.subtract(position, frameState.camera.position, scratchCartesian4)
+    Cartesian3.subtract(
+      position,
+      frameState.camera.position,
+      scratchCartesian4,
+    ),
   );
   const projMatrix = context.uniformState.projection;
 
@@ -287,28 +293,28 @@ Sun.prototype.update = function (frameState, passState, useHdr) {
   const positionCC = Matrix4.multiplyByVector(
     projMatrix,
     positionEC,
-    scratchCartesian4
+    scratchCartesian4,
   );
   const positionWC = SceneTransforms.clipToGLWindowCoordinates(
     passState.viewport,
     positionCC,
-    scratchPositionWC
+    scratchPositionWC,
   );
 
   positionEC.x = CesiumMath.SOLAR_RADIUS;
   const limbCC = Matrix4.multiplyByVector(
     projMatrix,
     positionEC,
-    scratchCartesian4
+    scratchCartesian4,
   );
   const limbWC = SceneTransforms.clipToGLWindowCoordinates(
     passState.viewport,
     limbCC,
-    scratchLimbWC
+    scratchLimbWC,
   );
 
   this._size = Cartesian2.magnitude(
-    Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)
+    Cartesian2.subtract(limbWC, positionWC, scratchCartesian4),
   );
   this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);
   this._size = Math.ceil(this._size);

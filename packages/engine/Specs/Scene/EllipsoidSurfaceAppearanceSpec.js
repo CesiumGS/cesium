@@ -3,12 +3,13 @@ import {
   GeometryInstance,
   Rectangle,
   RectangleGeometry,
+} from "@cesium/core";
+import {
   Appearance,
   EllipsoidSurfaceAppearance,
   Material,
   Primitive,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -47,7 +48,7 @@ describe(
       expect(a.vertexShaderSource).toBeDefined();
       expect(a.fragmentShaderSource).toBeDefined();
       expect(a.renderState).toEqual(
-        Appearance.getDefaultRenderState(true, true)
+        Appearance.getDefaultRenderState(true, true),
       );
       expect(a.vertexFormat).toEqual(EllipsoidSurfaceAppearance.VERTEX_FORMAT);
       expect(a.flat).toEqual(false);
@@ -78,5 +79,5 @@ describe(
       expect(scene).notToRender([0, 0, 0, 255]);
     });
   },
-  "WebGL"
+  "WebGL",
 );

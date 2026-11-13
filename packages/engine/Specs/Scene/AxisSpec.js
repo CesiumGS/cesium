@@ -1,11 +1,12 @@
-import { Cartesian4, Math as CesiumMath, Matrix4, Axis } from "../../index.js";
+import { Cartesian4, Math as CesiumMath, Matrix4 } from "@cesium/core";
+import { Axis } from "../../index.js";
 
 describe("Scene/Axis", function () {
   function convertUpAxis(upAxis, transformation, expected) {
     const transformed = Matrix4.multiplyByVector(
       transformation,
       upAxis,
-      new Cartesian4()
+      new Cartesian4(),
     );
     Cartesian4.normalize(transformed, transformed);
     expect(transformed).toEqualEpsilon(expected, CesiumMath.EPSILON1);

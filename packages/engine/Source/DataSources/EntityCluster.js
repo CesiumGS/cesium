@@ -1,11 +1,13 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
-import Event from "../Core/Event.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  EllipsoidalOccluder,
+  Event,
+  Frozen,
+  Matrix4,
+  defined,
+} from "@cesium/core";
 import Billboard from "../Scene/Billboard.js";
 import BillboardCollection from "../Scene/BillboardCollection.js";
 import Label from "../Scene/Label.js";
@@ -30,17 +32,17 @@ import KDBush from "kdbush";
  * @alias EntityCluster
  * @constructor
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=clustering|Cesium Sandcastle Clustering Demo}
  */
 function EntityCluster(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  this._enabled = defaultValue(options.enabled, false);
-  this._pixelRange = defaultValue(options.pixelRange, 80);
-  this._minimumClusterSize = defaultValue(options.minimumClusterSize, 2);
-  this._clusterBillboards = defaultValue(options.clusterBillboards, true);
-  this._clusterLabels = defaultValue(options.clusterLabels, true);
-  this._clusterPoints = defaultValue(options.clusterPoints, true);
+  this._enabled = options.enabled ?? false;
+  this._pixelRange = options.pixelRange ?? 80;
+  this._minimumClusterSize = options.minimumClusterSize ?? 2;
+  this._clusterBillboards = options.clusterBillboards ?? true;
+  this._clusterLabels = options.clusterLabels ?? true;
+  this._clusterPoints = options.clusterPoints ?? true;
 
   this._labelCollection = undefined;
   this._billboardCollection = undefined;
@@ -73,7 +75,7 @@ function EntityCluster(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 }
 
 function expandBoundingBox(bbox, pixelRange) {
@@ -115,7 +117,7 @@ function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
     const labelBBox = Label.getScreenSpaceBoundingBox(
       label,
       coord,
-      labelBoundingBoxScratch
+      labelBoundingBoxScratch,
     );
     expandBoundingBox(labelBBox, pixelRange);
     result = BoundingRectangle.union(result, labelBBox, result);
@@ -152,7 +154,10 @@ function addCluster(position, numPoints, ids, entityCluster) {
   cluster.label.show = true;
   cluster.label.text = numPoints.toLocaleString();
   cluster.label.id = ids;
-  cluster.billboard.position = cluster.label.position = cluster.point.position = position;
+  cluster.billboard.position =
+    cluster.label.position =
+    cluster.point.position =
+      position;
 
   entityCluster._clusterEvent.raiseEvent(ids, cluster);
 }
@@ -170,7 +175,7 @@ function getScreenSpacePositions(
   points,
   scene,
   occluder,
-  entityCluster
+  entityCluster,
 ) {
   if (!defined(collection)) {
     return;
@@ -248,27 +253,26 @@ function createDeclutterCallback(entityCluster) {
     if (defined(clusteredLabelCollection)) {
       clusteredLabelCollection.removeAll();
     } else {
-      clusteredLabelCollection = entityCluster._clusterLabelCollection = new LabelCollection(
-        {
+      clusteredLabelCollection = entityCluster._clusterLabelCollection =
+        new LabelCollection({
           scene: scene,
-        }
-      );
+        });
     }
 
     if (defined(clusteredBillboardCollection)) {
       clusteredBillboardCollection.removeAll();
     } else {
-      clusteredBillboardCollection = entityCluster._clusterBillboardCollection = new BillboardCollection(
-        {
+      clusteredBillboardCollection = entityCluster._clusterBillboardCollection =
+        new BillboardCollection({
           scene: scene,
-        }
-      );
+        });
     }
 
     if (defined(clusteredPointCollection)) {
       clusteredPointCollection.removeAll();
     } else {
-      clusteredPointCollection = entityCluster._clusterPointCollection = new PointPrimitiveCollection();
+      clusteredPointCollection = entityCluster._clusterPointCollection =
+        new PointPrimitiveCollection();
     }
 
     const pixelRange = entityCluster._pixelRange;
@@ -291,7 +295,7 @@ function createDeclutterCallback(entityCluster) {
         points,
         scene,
         occluder,
-        entityCluster
+        entityCluster,
       );
     }
     if (entityCluster._clusterBillboards) {
@@ -300,7 +304,7 @@ function createDeclutterCallback(entityCluster) {
         points,
         scene,
         occluder,
-        entityCluster
+        entityCluster,
       );
     }
     if (entityCluster._clusterPoints) {
@@ -309,7 +313,7 @@ function createDeclutterCallback(entityCluster) {
         points,
         scene,
         occluder,
-        entityCluster
+        entityCluster,
       );
     }
 
@@ -328,7 +332,7 @@ function createDeclutterCallback(entityCluster) {
     let collectionIndex;
 
     if (points.length > 0) {
-      const index = new KDBush(points.length, 64, Uint32Array);
+      const index = new KDBush(points.length, 64, Float64Array);
       for (let p = 0; p < points.length; ++p) {
         index.add(points[p].coord.x, points[p].coord.y);
       }
@@ -348,7 +352,7 @@ function createDeclutterCallback(entityCluster) {
             cluster.position,
             Cartesian3.ZERO,
             Cartesian2.ZERO,
-            scene
+            scene,
           );
           if (!defined(coord)) {
             continue;
@@ -412,18 +416,18 @@ function createDeclutterCallback(entityCluster) {
           point.coord,
           pixelRange,
           entityCluster,
-          pointBoundinRectangleScratch
+          pointBoundinRectangleScratch,
         );
         const totalBBox = BoundingRectangle.clone(
           bbox,
-          totalBoundingRectangleScratch
+          totalBoundingRectangleScratch,
         );
 
         neighbors = index.range(
           bbox.x,
           bbox.y,
           bbox.x + bbox.width,
-          bbox.y + bbox.height
+          bbox.y + bbox.height,
         );
         neighborLength = neighbors.length;
 
@@ -436,20 +440,20 @@ function createDeclutterCallback(entityCluster) {
           neighborPoint = points[neighborIndex];
           if (!neighborPoint.clustered) {
             const neighborItem = neighborPoint.collection.get(
-              neighborPoint.index
+              neighborPoint.index,
             );
             const neighborBBox = getBoundingBox(
               neighborItem,
               neighborPoint.coord,
               pixelRange,
               entityCluster,
-              neighborBoundingRectangleScratch
+              neighborBoundingRectangleScratch,
             );
 
             Cartesian3.add(
               neighborItem.position,
               clusterPosition,
-              clusterPosition
+              clusterPosition,
             );
 
             BoundingRectangle.union(totalBBox, neighborBBox, totalBBox);
@@ -463,7 +467,7 @@ function createDeclutterCallback(entityCluster) {
           const position = Cartesian3.multiplyByScalar(
             clusterPosition,
             1.0 / numPoints,
-            clusterPosition
+            clusterPosition,
           );
           addCluster(position, numPoints, ids, entityCluster);
           newClusters.push({
@@ -608,13 +612,32 @@ Object.defineProperties(EntityCluster.prototype, {
       this._clusterPoints = value;
     },
   },
+
+  /**
+   * Returns true when all clustered data has been rendered.
+   * @memberof EntityCluster.prototype
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  ready: {
+    get: function () {
+      return (
+        !this._enabledDirty &&
+        !this._clusterDirty &&
+        (!defined(this._billboardCollection) ||
+          this._billboardCollection.ready) &&
+        (!defined(this._labelCollection) || this._labelCollection.ready)
+      );
+    },
+  },
 });
 
 function createGetEntity(
   collectionProperty,
   CollectionConstructor,
   unusedIndicesProperty,
-  entityIndexProperty
+  entityIndexProperty,
 ) {
   return function (entity) {
     let collection = this[collectionProperty];
@@ -689,7 +712,7 @@ EntityCluster.prototype.getLabel = createGetEntity(
   "_labelCollection",
   LabelCollection,
   "_unusedLabelIndices",
-  "labelIndex"
+  "labelIndex",
 );
 
 /**
@@ -735,7 +758,7 @@ EntityCluster.prototype.getBillboard = createGetEntity(
   "_billboardCollection",
   BillboardCollection,
   "_unusedBillboardIndices",
-  "billboardIndex"
+  "billboardIndex",
 );
 
 /**
@@ -781,7 +804,7 @@ EntityCluster.prototype.getPoint = createGetEntity(
   "_pointCollection",
   PointPrimitiveCollection,
   "_unusedPointIndices",
-  "pointIndex"
+  "pointIndex",
 );
 
 /**
@@ -864,28 +887,30 @@ EntityCluster.prototype.update = function (frameState) {
   // the glyphs haven't been created so the screen space bounding boxes
   // are incorrect.
   let commandList;
+  const labelCollection = this._labelCollection;
   if (
-    defined(this._labelCollection) &&
-    this._labelCollection.length > 0 &&
-    this._labelCollection.get(0)._glyphs.length === 0
+    defined(labelCollection) &&
+    labelCollection.length > 0 &&
+    !labelCollection.ready
   ) {
     commandList = frameState.commandList;
     frameState.commandList = [];
-    this._labelCollection.update(frameState);
+    labelCollection.update(frameState);
     frameState.commandList = commandList;
   }
 
-  // If clustering is enabled before the billboard collection is updated,
+  // If clustering is enabled before the billboard collections are updated,
   // the images haven't been added to the image atlas so the screen space bounding boxes
   // are incorrect.
+  const billboardCollection = this._billboardCollection;
   if (
-    defined(this._billboardCollection) &&
-    this._billboardCollection.length > 0 &&
-    !defined(this._billboardCollection.get(0).width)
+    defined(billboardCollection) &&
+    billboardCollection.length > 0 &&
+    !billboardCollection.ready
   ) {
     commandList = frameState.commandList;
     frameState.commandList = [];
-    this._billboardCollection.update(frameState);
+    billboardCollection.update(frameState);
     frameState.commandList = commandList;
   }
 
@@ -896,8 +921,12 @@ EntityCluster.prototype.update = function (frameState) {
   }
 
   if (this._clusterDirty) {
-    this._clusterDirty = false;
     this._cluster();
+
+    // Unless all existing billboards and labels were clustered, clustering will need to execute again next frame
+    this._clusterDirty =
+      (defined(labelCollection) && !labelCollection.ready) ||
+      (defined(billboardCollection) && !billboardCollection.ready);
   }
 
   if (defined(this._clusterLabelCollection)) {
@@ -910,11 +939,11 @@ EntityCluster.prototype.update = function (frameState) {
     this._clusterPointCollection.update(frameState);
   }
 
-  if (defined(this._labelCollection)) {
-    this._labelCollection.update(frameState);
+  if (defined(labelCollection)) {
+    labelCollection.update(frameState);
   }
-  if (defined(this._billboardCollection)) {
-    this._billboardCollection.update(frameState);
+  if (defined(billboardCollection)) {
+    billboardCollection.update(frameState);
   }
   if (defined(this._pointCollection)) {
     this._pointCollection.update(frameState);
@@ -930,6 +959,11 @@ EntityCluster.prototype.update = function (frameState) {
  * </p>
  */
 EntityCluster.prototype.destroy = function () {
+  if (defined(this._removeEventListener)) {
+    this._removeEventListener();
+    this._removeEventListener = undefined;
+  }
+
   this._labelCollection =
     this._labelCollection && this._labelCollection.destroy();
   this._billboardCollection =
@@ -944,11 +978,6 @@ EntityCluster.prototype.destroy = function () {
     this._clusterBillboardCollection.destroy();
   this._clusterPointCollection =
     this._clusterPointCollection && this._clusterPointCollection.destroy();
-
-  if (defined(this._removeEventListener)) {
-    this._removeEventListener();
-    this._removeEventListener = undefined;
-  }
 
   this._labelCollection = undefined;
   this._billboardCollection = undefined;

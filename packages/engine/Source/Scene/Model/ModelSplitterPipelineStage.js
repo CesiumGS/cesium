@@ -1,4 +1,4 @@
-import combine from "../../Core/combine.js";
+import { combine } from "@cesium/core";
 import ModelSplitterStageFS from "../../Shaders/Model/ModelSplitterStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
@@ -33,14 +33,14 @@ const ModelSplitterPipelineStage = {
 ModelSplitterPipelineStage.process = function (
   renderResources,
   model,
-  frameState
+  frameState,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
 
   shaderBuilder.addDefine(
     "HAS_MODEL_SPLITTER",
     undefined,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   shaderBuilder.addFragmentLines(ModelSplitterStageFS);
 
@@ -49,17 +49,16 @@ ModelSplitterPipelineStage.process = function (
   shaderBuilder.addUniform(
     "float",
     ModelSplitterPipelineStage.SPLIT_DIRECTION_UNIFORM_NAME,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
-  stageUniforms[
-    ModelSplitterPipelineStage.SPLIT_DIRECTION_UNIFORM_NAME
-  ] = function () {
-    return model.splitDirection;
-  };
+  stageUniforms[ModelSplitterPipelineStage.SPLIT_DIRECTION_UNIFORM_NAME] =
+    function () {
+      return model.splitDirection;
+    };
 
   renderResources.uniformMap = combine(
     stageUniforms,
-    renderResources.uniformMap
+    renderResources.uniformMap,
   );
 };
 

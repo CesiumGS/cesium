@@ -1,31 +1,33 @@
-import Check from "../Core/Check.js";
-import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  IndexDatatype,
+  WebGLConstants,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import BufferUsage from "./BufferUsage.js";
 
 /**
  * @private
  */
 function Buffer(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
 
   if (!defined(options.typedArray) && !defined(options.sizeInBytes)) {
     throw new DeveloperError(
-      "Either options.sizeInBytes or options.typedArray is required."
+      "Either options.sizeInBytes or options.typedArray is required.",
     );
   }
 
   if (defined(options.typedArray) && defined(options.sizeInBytes)) {
     throw new DeveloperError(
-      "Cannot pass in both options.sizeInBytes and options.typedArray."
+      "Cannot pass in both options.sizeInBytes and options.typedArray.",
     );
   }
 
@@ -33,7 +35,7 @@ function Buffer(options) {
     Check.typeOf.object("options.typedArray", options.typedArray);
     Check.typeOf.number(
       "options.typedArray.byteLength",
-      options.typedArray.byteLength
+      options.typedArray.byteLength,
     );
   }
 
@@ -72,6 +74,26 @@ function Buffer(options) {
   this.vertexArrayDestroyable = true;
 }
 
+Buffer.createPixelBuffer = function (options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.context", options.context);
+  //>>includeEnd('debug');
+
+  if (!options.context._webgl2) {
+    throw new DeveloperError(
+      "A WebGL 2 context is required to create PixelBuffers.",
+    );
+  }
+
+  return new Buffer({
+    context: options.context,
+    bufferTarget: WebGLConstants.PIXEL_PACK_BUFFER,
+    typedArray: options.typedArray,
+    sizeInBytes: options.sizeInBytes,
+    usage: options.usage,
+  });
+};
+
 /**
  * Creates a vertex buffer, which contains untyped vertex data in GPU-controlled memory.
  * <br /><br />
@@ -83,7 +105,7 @@ function Buffer(options) {
  * @param {ArrayBufferView} [options.typedArray] A typed array containing the data to copy to the buffer.
  * @param {number} [options.sizeInBytes] A <code>Number</code> defining the size of the buffer in bytes. Required if options.typedArray is not given.
  * @param {BufferUsage} options.usage Specifies the expected usage pattern of the buffer. On some GL implementations, this can significantly affect performance. See {@link BufferUsage}.
- * @returns {VertexBuffer} The vertex buffer, ready to be attached to a vertex array.
+ * @returns {Buffer} The vertex buffer, ready to be attached to a vertex array.
  *
  * @exception {DeveloperError} Must specify either <options.typedArray> or <options.sizeInBytes>, but not both.
  * @exception {DeveloperError} The buffer size must be greater than zero.
@@ -139,7 +161,7 @@ Buffer.createVertexBuffer = function (options) {
  * @param {number} [options.sizeInBytes] A <code>Number</code> defining the size of the buffer in bytes. Required if options.typedArray is not given.
  * @param {BufferUsage} options.usage Specifies the expected usage pattern of the buffer. On some GL implementations, this can significantly affect performance. See {@link BufferUsage}.
  * @param {IndexDatatype} options.indexDatatype The datatype of indices in the buffer.
- * @returns {IndexBuffer} The index buffer, ready to be attached to a vertex array.
+ * @returns {Buffer} The index buffer, ready to be attached to a vertex array.
  *
  * @exception {DeveloperError} Must specify either <options.typedArray> or <options.sizeInBytes>, but not both.
  * @exception {DeveloperError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system. Check context.elementIndexUint.
@@ -184,7 +206,7 @@ Buffer.createIndexBuffer = function (options) {
     !options.context.elementIndexUint
   ) {
     throw new DeveloperError(
-      "IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.  Check context.elementIndexUint."
+      "IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.  Check context.elementIndexUint.",
     );
   }
   //>>includeEnd('debug');
@@ -242,15 +264,27 @@ Buffer.prototype._getBuffer = function () {
   return this._buffer;
 };
 
+Buffer.prototype._bind = function () {
+  const gl = this._gl;
+  const target = this._bufferTarget;
+  gl.bindBuffer(target, this._buffer);
+};
+
+Buffer.prototype._unBind = function () {
+  const gl = this._gl;
+  const target = this._bufferTarget;
+  gl.bindBuffer(target, null);
+};
+
 Buffer.prototype.copyFromArrayView = function (arrayView, offsetInBytes) {
-  offsetInBytes = defaultValue(offsetInBytes, 0);
+  offsetInBytes = offsetInBytes ?? 0;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("arrayView", arrayView);
   Check.typeOf.number.lessThanOrEquals(
     "offsetInBytes + arrayView.byteLength",
     offsetInBytes + arrayView.byteLength,
-    this._sizeInBytes
+    this._sizeInBytes,
   );
   //>>includeEnd('debug');
 
@@ -265,7 +299,7 @@ Buffer.prototype.copyFromBuffer = function (
   readBuffer,
   readOffset,
   writeOffset,
-  sizeInBytes
+  sizeInBytes,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!this._webgl2) {
@@ -276,7 +310,7 @@ Buffer.prototype.copyFromBuffer = function (
   }
   if (!defined(sizeInBytes) || sizeInBytes <= 0) {
     throw new DeveloperError(
-      "sizeInBytes must be defined and be greater than zero."
+      "sizeInBytes must be defined and be greater than zero.",
     );
   }
   if (
@@ -285,7 +319,7 @@ Buffer.prototype.copyFromBuffer = function (
     readOffset + sizeInBytes > readBuffer._sizeInBytes
   ) {
     throw new DeveloperError(
-      "readOffset must be greater than or equal to zero and readOffset + sizeInBytes must be less than of equal to readBuffer.sizeInBytes."
+      "readOffset must be greater than or equal to zero and readOffset + sizeInBytes must be less than of equal to readBuffer.sizeInBytes.",
     );
   }
   if (
@@ -294,7 +328,7 @@ Buffer.prototype.copyFromBuffer = function (
     writeOffset + sizeInBytes > this._sizeInBytes
   ) {
     throw new DeveloperError(
-      "writeOffset must be greater than or equal to zero and writeOffset + sizeInBytes must be less than of equal to this.sizeInBytes."
+      "writeOffset must be greater than or equal to zero and writeOffset + sizeInBytes must be less than of equal to this.sizeInBytes.",
     );
   }
   if (
@@ -303,7 +337,7 @@ Buffer.prototype.copyFromBuffer = function (
       (readOffset > writeOffset && readOffset < writeOffset + sizeInBytes))
   ) {
     throw new DeveloperError(
-      "When readBuffer is equal to this, the ranges [readOffset + sizeInBytes) and [writeOffset, writeOffset + sizeInBytes) must not overlap."
+      "When readBuffer is equal to this, the ranges [readOffset + sizeInBytes) and [writeOffset, writeOffset + sizeInBytes) must not overlap.",
     );
   }
   if (
@@ -313,7 +347,7 @@ Buffer.prototype.copyFromBuffer = function (
       readBuffer._bufferTarget === WebGLConstants.ELEMENT_ARRAY_BUFFER)
   ) {
     throw new DeveloperError(
-      "Can not copy an index buffer into another buffer type."
+      "Can not copy an index buffer into another buffer type.",
     );
   }
   //>>includeEnd('debug');
@@ -329,7 +363,7 @@ Buffer.prototype.copyFromBuffer = function (
     writeTarget,
     readOffset,
     writeOffset,
-    sizeInBytes
+    sizeInBytes,
   );
   gl.bindBuffer(writeTarget, null);
   gl.bindBuffer(readTarget, null);
@@ -339,10 +373,10 @@ Buffer.prototype.getBufferData = function (
   arrayView,
   sourceOffset,
   destinationOffset,
-  length
+  length,
 ) {
-  sourceOffset = defaultValue(sourceOffset, 0);
-  destinationOffset = defaultValue(destinationOffset, 0);
+  sourceOffset = sourceOffset ?? 0;
+  destinationOffset = destinationOffset ?? 0;
 
   //>>includeStart('debug', pragmas.debug);
   if (!this._webgl2) {
@@ -376,22 +410,22 @@ Buffer.prototype.getBufferData = function (
 
   if (destinationOffset < 0 || destinationOffset > arrayLength) {
     throw new DeveloperError(
-      "destinationOffset must be greater than zero and less than the arrayView length."
+      "destinationOffset must be greater than zero and less than the arrayView length.",
     );
   }
   if (destinationOffset + copyLength > arrayLength) {
     throw new DeveloperError(
-      "destinationOffset + length must be less than or equal to the arrayViewLength."
+      "destinationOffset + length must be less than or equal to the arrayViewLength.",
     );
   }
   if (sourceOffset < 0 || sourceOffset > this._sizeInBytes) {
     throw new DeveloperError(
-      "sourceOffset must be greater than zero and less than the buffers size."
+      "sourceOffset must be greater than zero and less than the buffers size.",
     );
   }
   if (sourceOffset + copyLength * elementSize > this._sizeInBytes) {
     throw new DeveloperError(
-      "sourceOffset + length must be less than the buffers size."
+      "sourceOffset + length must be less than the buffers size.",
     );
   }
   //>>includeEnd('debug');
@@ -404,7 +438,7 @@ Buffer.prototype.getBufferData = function (
     sourceOffset,
     arrayView,
     destinationOffset,
-    length
+    length,
   );
   gl.bindBuffer(target, null);
 };

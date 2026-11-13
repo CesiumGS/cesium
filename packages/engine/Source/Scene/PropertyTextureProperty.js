@@ -1,9 +1,5 @@
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
+import { Check, Frozen, defined } from "@cesium/core";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
-import MetadataType from "./MetadataType.js";
-import MetadataComponentType from "./MetadataComponentType.js";
 
 /**
  * A property in a property texture.
@@ -25,7 +21,7 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function PropertyTextureProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const property = options.property;
   const classProperty = options.classProperty;
   const textures = options.textures;
@@ -59,8 +55,8 @@ function PropertyTextureProperty(options) {
   // the class property. The class property handles setting the default of
   // identity: (offset 0, scale 1) with the same scalar/vector/matrix types.
   // array types are disallowed by the spec.
-  offset = defaultValue(offset, classProperty.offset);
-  scale = defaultValue(scale, classProperty.scale);
+  offset = offset ?? classProperty.offset;
+  scale = scale ?? classProperty.scale;
 
   // offset and scale are applied on the GPU, so unpack the values
   // as math types we can use in uniform callbacks.
@@ -110,6 +106,12 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
   /**
    * The offset to be added to property values as part of the value transform.
    *
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the property JSON itself did not define it, then it will inherit the
+   * value from the `MetadataClassProperty`. There, it also is always
+   * defined, and initialized to the default value if it was not contained
+   * in the class property JSON.
+   *
    * @memberof PropertyTextureProperty.prototype
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @readonly
@@ -123,6 +125,12 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
 
   /**
    * The scale to be multiplied to property values as part of the value transform.
+   *
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the property JSON itself did not define it, then it will inherit the
+   * value from the `MetadataClassProperty`. There, it also is always
+   * defined, and initialized to the default value if it was not contained
+   * in the class property JSON.
    *
    * @memberof PropertyTextureProperty.prototype
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
@@ -177,72 +185,6 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
     },
   },
 });
-
-PropertyTextureProperty.prototype.isGpuCompatible = function () {
-  const classProperty = this._classProperty;
-  const type = classProperty.type;
-  const componentType = classProperty.componentType;
-
-  if (classProperty.isArray) {
-    // only support arrays of 1-4 UINT8 scalars (normalized or unnormalized)
-    return (
-      !classProperty.isVariableLengthArray &&
-      classProperty.arrayLength <= 4 &&
-      type === MetadataType.SCALAR &&
-      componentType === MetadataComponentType.UINT8
-    );
-  }
-
-  if (MetadataType.isVectorType(type) || type === MetadataType.SCALAR) {
-    return componentType === MetadataComponentType.UINT8;
-  }
-
-  // For this initial implementation, only UINT8-based properties
-  // are supported.
-  return false;
-};
-
-const floatTypesByComponentCount = [undefined, "float", "vec2", "vec3", "vec4"];
-const integerTypesByComponentCount = [
-  undefined,
-  "int",
-  "ivec2",
-  "ivec3",
-  "ivec4",
-];
-PropertyTextureProperty.prototype.getGlslType = function () {
-  const classProperty = this._classProperty;
-
-  let componentCount = MetadataType.getComponentCount(classProperty.type);
-  if (classProperty.isArray) {
-    // fixed-sized arrays of length 2-4 UINT8s are represented as vectors as the
-    // shader since those are more useful in GLSL.
-    componentCount = classProperty.arrayLength;
-  }
-
-  // Normalized UINT8 properties are float types in the shader
-  if (classProperty.normalized) {
-    return floatTypesByComponentCount[componentCount];
-  }
-
-  // other UINT8-based properties are represented as integer types.
-  return integerTypesByComponentCount[componentCount];
-};
-
-PropertyTextureProperty.prototype.unpackInShader = function (packedValueGlsl) {
-  const classProperty = this._classProperty;
-
-  // no unpacking needed if for normalized types
-  if (classProperty.normalized) {
-    return packedValueGlsl;
-  }
-
-  // integer types are read from the texture as normalized float values.
-  // these need to be rescaled to [0, 255] and cast to the appropriate integer
-  // type.
-  const glslType = this.getGlslType();
-  return `${glslType}(255.0 * ${packedValueGlsl})`;
-};
 
 /**
  * Reformat from an array of channel indices like <code>[0, 1]</code> to a

@@ -1,20 +1,26 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import CesiumMath from "../Core/Math.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  Cartesian2,
+  Cartographic,
+  DeveloperError,
+  Event,
+  GeographicProjection,
+  Math as CesiumMath,
+  Rectangle,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ImageryLayer from "./ImageryLayer.js";
+import ImageryState from "./ImageryState.js";
 
 /**
- * An ordered collection of imagery layers.
+ * An ordered collection of imagery layers for rendering raster imagery on a {@link Globe} or {@link Cesium3DTileset}.
  *
  * @alias ImageryLayerCollection
  * @constructor
- *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Adjustment.html|Cesium Sandcastle Imagery Adjustment Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+ * @see {@link Scene#imageryLayers} for manipulating imagery layers on the globe.
+ * @see {@link Cesium3DTileset#imageryLayers} for manipulating imagery layers on a 3D tileset.
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=imagery-adjustment|Cesium Sandcastle Imagery Adjustment Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=imagery-layers-manipulation|Cesium Sandcastle Imagery Manipulation Demo}
  */
 function ImageryLayerCollection() {
   this._layers = [];
@@ -97,7 +103,7 @@ ImageryLayerCollection.prototype.add = function (layer, index) {
       throw new DeveloperError("index must be greater than or equal to zero.");
     } else if (index > this._layers.length) {
       throw new DeveloperError(
-        "index must be less than or equal to the number of layers."
+        "index must be less than or equal to the number of layers.",
       );
     }
   }
@@ -136,7 +142,7 @@ ImageryLayerCollection.prototype.add = function (layer, index) {
  */
 ImageryLayerCollection.prototype.addImageryProvider = function (
   imageryProvider,
-  index
+  index,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(imageryProvider)) {
@@ -158,7 +164,7 @@ ImageryLayerCollection.prototype.addImageryProvider = function (
  *                    false if the layer was not in the collection.
  */
 ImageryLayerCollection.prototype.remove = function (layer, destroy) {
-  destroy = defaultValue(destroy, true);
+  destroy = destroy ?? true;
 
   const index = this._layers.indexOf(layer);
   if (index !== -1) {
@@ -184,7 +190,7 @@ ImageryLayerCollection.prototype.remove = function (layer, destroy) {
  * @param {boolean} [destroy=true] whether to destroy the layers in addition to removing them.
  */
 ImageryLayerCollection.prototype.removeAll = function (destroy) {
-  destroy = defaultValue(destroy, true);
+  destroy = destroy ?? true;
 
   const layers = this._layers;
   for (let i = 0, len = layers.length; i < len; i++) {
@@ -393,22 +399,22 @@ function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
     applicableRectangle.west = CesiumMath.lerp(
       pickedTile.rectangle.west,
       pickedTile.rectangle.east,
-      terrainImagery.textureCoordinateRectangle.x - epsilon
+      terrainImagery.textureCoordinateRectangle.x - epsilon,
     );
     applicableRectangle.east = CesiumMath.lerp(
       pickedTile.rectangle.west,
       pickedTile.rectangle.east,
-      terrainImagery.textureCoordinateRectangle.z + epsilon
+      terrainImagery.textureCoordinateRectangle.z + epsilon,
     );
     applicableRectangle.south = CesiumMath.lerp(
       pickedTile.rectangle.south,
       pickedTile.rectangle.north,
-      terrainImagery.textureCoordinateRectangle.y - epsilon
+      terrainImagery.textureCoordinateRectangle.y - epsilon,
     );
     applicableRectangle.north = CesiumMath.lerp(
       pickedTile.rectangle.south,
       pickedTile.rectangle.north,
-      terrainImagery.textureCoordinateRectangle.w + epsilon
+      terrainImagery.textureCoordinateRectangle.w + epsilon,
     );
     if (!Rectangle.contains(applicableRectangle, pickedLocation)) {
       continue;
@@ -436,9 +442,8 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
     return;
   }
 
-  const pickedLocation = scene.ellipsoid.cartesianToCartographic(
-    pickedPosition
-  );
+  const pickedLocation =
+    scene.ellipsoid.cartesianToCartographic(pickedPosition);
 
   const imageryLayers = [];
 
@@ -452,6 +457,152 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
 
   return imageryLayers;
 };
+
+const nativeBoundingRectangleScratch = new Rectangle();
+const nativeApplicableRectangleScratch = new Rectangle();
+const southwestNativeScratch = new Cartesian2();
+const northeastNativeScratch = new Cartesian2();
+const southwestCartographicScratch = new Cartographic();
+const northeastCartographicScratch = new Cartographic();
+
+/**
+ * Maps a texture coordinate rectangle (UV space on the primitive) back to a
+ * geographic rectangle, using the primitive cartographic bounds and the
+ * imagery tiling scheme's native coordinates.
+ *
+ * @private
+ */
+
+function computeApplicableGeographicRectangle(
+  cartographicBoundingRectangle,
+  textureCoordinateRectangle,
+  imageryLayer,
+  result,
+) {
+  const tilingScheme = imageryLayer.imageryProvider.tilingScheme;
+  const nativeBoundingRectangle = tilingScheme.rectangleToNativeRectangle(
+    cartographicBoundingRectangle,
+    nativeBoundingRectangleScratch,
+  );
+
+  const epsilon = 1 / 1024; // 1/4 of a pixel in a typical 256x256 tile.
+  const applicableNative = nativeApplicableRectangleScratch;
+  applicableNative.west = CesiumMath.lerp(
+    nativeBoundingRectangle.west,
+    nativeBoundingRectangle.east,
+    textureCoordinateRectangle.minX - epsilon,
+  );
+  applicableNative.east = CesiumMath.lerp(
+    nativeBoundingRectangle.west,
+    nativeBoundingRectangle.east,
+    textureCoordinateRectangle.maxX + epsilon,
+  );
+  applicableNative.south = CesiumMath.lerp(
+    nativeBoundingRectangle.south,
+    nativeBoundingRectangle.north,
+    textureCoordinateRectangle.minY - epsilon,
+  );
+  applicableNative.north = CesiumMath.lerp(
+    nativeBoundingRectangle.south,
+    nativeBoundingRectangle.north,
+    textureCoordinateRectangle.maxY + epsilon,
+  );
+
+  if (!defined(result)) {
+    result = new Rectangle();
+  }
+
+  const projection = tilingScheme.projection;
+  if (projection instanceof GeographicProjection) {
+    result.west = CesiumMath.toRadians(applicableNative.west);
+    result.south = CesiumMath.toRadians(applicableNative.south);
+    result.east = CesiumMath.toRadians(applicableNative.east);
+    result.north = CesiumMath.toRadians(applicableNative.north);
+    return result;
+  }
+
+  southwestNativeScratch.x = applicableNative.west;
+  southwestNativeScratch.y = applicableNative.south;
+  northeastNativeScratch.x = applicableNative.east;
+  northeastNativeScratch.y = applicableNative.north;
+
+  const southwest = projection.unproject(
+    southwestNativeScratch,
+    southwestCartographicScratch,
+  );
+  const northeast = projection.unproject(
+    northeastNativeScratch,
+    northeastCartographicScratch,
+  );
+  result.west = southwest.longitude;
+  result.south = southwest.latitude;
+  result.east = northeast.longitude;
+  result.north = northeast.latitude;
+  return result;
+}
+
+function pickModelFeatures(model, pickedLocation, callback) {
+  const modelImagery = model._modelImagery;
+
+  if (!defined(modelImagery)) {
+    return;
+  }
+
+  const modelPrimitiveImageries = modelImagery._modelPrimitiveImageries;
+
+  if (!defined(modelPrimitiveImageries)) {
+    return;
+  }
+
+  for (let j = 0; j < modelPrimitiveImageries.length; j++) {
+    const modelPrimitiveImagery = modelPrimitiveImageries[j];
+    const coveragesPerLayer = modelPrimitiveImagery._coveragesPerLayer;
+    if (!defined(coveragesPerLayer)) {
+      continue;
+    }
+
+    for (let k = coveragesPerLayer.length - 1; k >= 0; --k) {
+      const coverages = coveragesPerLayer[k];
+
+      for (let l = 0; l < coverages.length; l++) {
+        const coverage = coverages[l];
+        const imagery = coverage.imagery;
+        const imageryLayer = imagery.imageryLayer;
+        const provider = imageryLayer.imageryProvider;
+
+        if (!defined(provider.pickFeatures)) {
+          continue;
+        }
+
+        if (!defined(imagery) || imagery.state !== ImageryState.READY) {
+          continue;
+        }
+
+        if (!Rectangle.contains(imagery.rectangle, pickedLocation)) {
+          continue;
+        }
+
+        const mappedPositions =
+          modelPrimitiveImagery.mappedPositionsForImageryLayer(imageryLayer);
+        const cartographicBoundingRectangle =
+          mappedPositions.cartographicBoundingRectangle;
+
+        const applicableRectangle = computeApplicableGeographicRectangle(
+          cartographicBoundingRectangle,
+          coverage.textureCoordinateRectangle,
+          imageryLayer,
+          applicableRectangleScratch,
+        );
+
+        if (!Rectangle.contains(applicableRectangle, pickedLocation)) {
+          continue;
+        }
+
+        callback(imagery);
+      }
+    }
+  }
+}
 
 /**
  * Asynchronously determines the imagery layer features that are intersected by a pick ray.  The intersected imagery
@@ -483,22 +634,42 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
  */
 ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
   ray,
-  scene
+  scene,
 ) {
   // Find the picked location on the globe.
-  const pickedPosition = scene.globe.pick(ray, scene);
-  if (!defined(pickedPosition)) {
-    return;
+  let pickedPosition;
+
+  if (defined(scene.globe)) {
+    pickedPosition = scene.globe.pick(ray, scene);
   }
 
-  const pickedLocation = scene.ellipsoid.cartesianToCartographic(
-    pickedPosition
-  );
+  let pickedModel;
+
+  if (!defined(pickedPosition)) {
+    const result = scene.pickFromRay(ray);
+
+    if (!defined(result)) {
+      return undefined;
+    }
+
+    pickedPosition = result.position;
+
+    if (!defined(pickedPosition)) {
+      return undefined;
+    }
+
+    if (defined(result.object) && defined(result.object.detail)) {
+      pickedModel = result.object.detail.model;
+    }
+  }
+
+  const pickedLocation =
+    scene.ellipsoid.cartesianToCartographic(pickedPosition);
 
   const promises = [];
   const imageryLayers = [];
 
-  pickImageryHelper(scene, pickedLocation, true, function (imagery) {
+  function queuePickFeatures(imagery) {
     if (!imagery.imageryLayer.ready) {
       return undefined;
     }
@@ -508,17 +679,30 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
       imagery.y,
       imagery.level,
       pickedLocation.longitude,
-      pickedLocation.latitude
+      pickedLocation.latitude,
     );
     if (defined(promise)) {
       promises.push(promise);
       imageryLayers.push(imagery.imageryLayer);
     }
-  });
+  }
+
+  if (defined(scene.globe)) {
+    pickImageryHelper(scene, pickedLocation, true, function (imagery) {
+      queuePickFeatures(imagery);
+    });
+  }
+
+  if (defined(pickedModel)) {
+    pickModelFeatures(pickedModel, pickedLocation, function (imagery) {
+      queuePickFeatures(imagery);
+    });
+  }
 
   if (promises.length === 0) {
     return undefined;
   }
+
   return Promise.all(promises).then(function (results) {
     const features = [];
     for (let resultIndex = 0; resultIndex < results.length; ++resultIndex) {
@@ -547,12 +731,12 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
 /**
  * Updates frame state to execute any queued texture re-projections.
  *
- * @private
+ * @ignore
  *
  * @param {FrameState} frameState The frameState.
  */
 ImageryLayerCollection.prototype.queueReprojectionCommands = function (
-  frameState
+  frameState,
 ) {
   const layers = this._layers;
   for (let i = 0, len = layers.length; i < len; ++i) {
@@ -563,7 +747,7 @@ ImageryLayerCollection.prototype.queueReprojectionCommands = function (
 /**
  * Cancels re-projection commands queued for the next frame.
  *
- * @private
+ * @ignore
  */
 ImageryLayerCollection.prototype.cancelReprojections = function () {
   const layers = this._layers;

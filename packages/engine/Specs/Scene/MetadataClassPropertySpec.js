@@ -2,10 +2,12 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
-  clone,
   Matrix2,
   Matrix3,
   Matrix4,
+  clone,
+} from "@cesium/core";
+import {
   FeatureDetection,
   MetadataClassProperty,
   MetadataComponentType,
@@ -460,15 +462,7 @@ describe("Scene/MetadataClassProperty", function () {
 
       const isNested = false;
       expect(property.expandConstant(1, isNested)).toEqual([
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1,
       ]);
 
       property = MetadataClassProperty.fromJson({
@@ -482,24 +476,7 @@ describe("Scene/MetadataClassProperty", function () {
       });
 
       expect(property.expandConstant(1, isNested)).toEqual([
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
       ]);
     });
 
@@ -610,14 +587,14 @@ describe("Scene/MetadataClassProperty", function () {
         propertyInt32: [-2147483647, 0, 2147483647],
         propertyUint32: [0, 858993459, 4294967295],
         propertyInt64: [
-          BigInt("-9223372036854775807"), // eslint-disable-line
-          BigInt(0), // eslint-disable-line
-          BigInt("9223372036854775807"), // eslint-disable-line
+          BigInt("-9223372036854775807"),
+          BigInt(0),
+          BigInt("9223372036854775807"),
         ],
         propertyUint64: [
-          BigInt(0), // eslint-disable-line
-          BigInt("3689348814741910528"), // eslint-disable-line
-          BigInt("18446744073709551615"), // eslint-disable-line
+          BigInt(0),
+          BigInt("3689348814741910528"),
+          BigInt("18446744073709551615"),
         ],
       };
 
@@ -854,7 +831,7 @@ describe("Scene/MetadataClassProperty", function () {
             const value = scalarValues[propertyId][i];
             const normalizedValue = property.normalize(value);
             expect(normalizedValue).toEqual(
-              normalizedScalarValues[propertyId][i]
+              normalizedScalarValues[propertyId][i],
             );
           }
         }
@@ -894,7 +871,7 @@ describe("Scene/MetadataClassProperty", function () {
             const value = arrayValues[propertyId][i];
             const normalizedValue = property.normalize(clone(value, true));
             expect(normalizedValue).toEqual(
-              normalizedArrayValues[propertyId][i]
+              normalizedArrayValues[propertyId][i],
             );
           }
         }
@@ -930,7 +907,7 @@ describe("Scene/MetadataClassProperty", function () {
             const value = vectorValues[propertyId][i];
             const normalizedValue = property.normalize(clone(value, true));
             expect(normalizedValue).toEqual(
-              normalizedVectorValues[propertyId][i]
+              normalizedVectorValues[propertyId][i],
             );
           }
         }
@@ -966,7 +943,7 @@ describe("Scene/MetadataClassProperty", function () {
             const value = arrayOfVectorValues[propertyId][i];
             const normalizedValue = property.normalize(clone(value, true));
             expect(normalizedValue).toEqual(
-              normalizedArrayOfVectorValues[propertyId][i]
+              normalizedArrayOfVectorValues[propertyId][i],
             );
           }
         }
@@ -1438,7 +1415,7 @@ describe("Scene/MetadataClassProperty", function () {
             const value = scalarValues[propertyId][i];
             const transformedValue = property.applyValueTransform(value);
             expect(transformedValue).toEqual(
-              transformedScalarValues[propertyId][i]
+              transformedScalarValues[propertyId][i],
             );
           }
         }
@@ -1483,7 +1460,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("value transformations are no-ops for identity transformations", function () {
       const valueTransformInPlace = spyOn(
         MetadataClassProperty,
-        "valueTransformInPlace"
+        "valueTransformInPlace",
       );
       const property = MetadataClassProperty.fromJson({
         id: "identityTransform",
@@ -1509,10 +1486,10 @@ describe("Scene/MetadataClassProperty", function () {
           for (let i = 0; i < length; ++i) {
             const value = arrayValues[propertyId][i];
             const transformedValue = property.applyValueTransform(
-              clone(value, true)
+              clone(value, true),
             );
             expect(transformedValue).toEqual(
-              transformedArrayValues[propertyId][i]
+              transformedArrayValues[propertyId][i],
             );
           }
         }
@@ -1530,7 +1507,7 @@ describe("Scene/MetadataClassProperty", function () {
           for (let i = 0; i < length; ++i) {
             const transformedValue = transformedArrayValues[propertyId][i];
             const value = property.unapplyValueTransform(
-              clone(transformedValue, true)
+              clone(transformedValue, true),
             );
             expect(value).toEqual(arrayValues[propertyId][i]);
           }
@@ -1541,7 +1518,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("value transforms do not transform variable length arrays", function () {
       const valueTransformInPlace = spyOn(
         MetadataClassProperty,
-        "valueTransformInPlace"
+        "valueTransformInPlace",
       );
 
       const property = MetadataClassProperty.fromJson({
@@ -1559,7 +1536,7 @@ describe("Scene/MetadataClassProperty", function () {
       const values = [-1.0, 0.0, 5.0, 4.0];
       expect(property.applyValueTransform(clone(values, true))).toEqual(values);
       expect(property.unapplyValueTransform(clone(values, true))).toEqual(
-        values
+        values,
       );
 
       expect(valueTransformInPlace).not.toHaveBeenCalled();
@@ -1576,10 +1553,10 @@ describe("Scene/MetadataClassProperty", function () {
           for (let i = 0; i < length; ++i) {
             const value = vectorValues[propertyId][i];
             const transformedValue = property.applyValueTransform(
-              clone(value, true)
+              clone(value, true),
             );
             expect(transformedValue).toEqual(
-              transformedVectorValues[propertyId][i]
+              transformedVectorValues[propertyId][i],
             );
           }
         }
@@ -1597,7 +1574,7 @@ describe("Scene/MetadataClassProperty", function () {
           for (let i = 0; i < length; ++i) {
             const transformedValue = transformedVectorValues[propertyId][i];
             const value = property.unapplyValueTransform(
-              clone(transformedValue, true)
+              clone(transformedValue, true),
             );
             expect(value).toEqual(vectorValues[propertyId][i]);
           }
@@ -1616,10 +1593,10 @@ describe("Scene/MetadataClassProperty", function () {
           for (let i = 0; i < length; ++i) {
             const value = arrayOfVectorValues[propertyId][i];
             const transformedValue = property.applyValueTransform(
-              clone(value, true)
+              clone(value, true),
             );
             expect(transformedValue).toEqual(
-              transformedArrayOfVectorValues[propertyId][i]
+              transformedArrayOfVectorValues[propertyId][i],
             );
           }
         }
@@ -1638,7 +1615,7 @@ describe("Scene/MetadataClassProperty", function () {
             const transformedValue =
               transformedArrayOfVectorValues[propertyId][i];
             const value = property.unapplyValueTransform(
-              clone(transformedValue, true)
+              clone(transformedValue, true),
             );
             expect(value).toEqual(arrayOfVectorValues[propertyId][i]);
           }
@@ -2160,9 +2137,9 @@ describe("Scene/MetadataClassProperty", function () {
         [1, 4, 9, 16, 25],
       ],
       propertyBigIntArray: [
-        [BigInt(0), BigInt(0)], // eslint-disable-line
-        [BigInt(1), BigInt(3)], // eslint-disable-line
-        [BigInt(45), BigInt(32)], // eslint-disable-line
+        [BigInt(0), BigInt(0)],
+        [BigInt(1), BigInt(3)],
+        [BigInt(45), BigInt(32)],
       ],
     };
 
@@ -2572,9 +2549,9 @@ describe("Scene/MetadataClassProperty", function () {
         [1, 4, 9, 16, 25],
       ],
       propertyBigIntArray: [
-        [BigInt(0), BigInt(0)], // eslint-disable-line
-        [BigInt(1), BigInt(3)], // eslint-disable-line
-        [BigInt(45), BigInt(32)], // eslint-disable-line
+        [BigInt(0), BigInt(0)],
+        [BigInt(1), BigInt(3)],
+        [BigInt(45), BigInt(32)],
       ],
     };
 
@@ -2622,7 +2599,7 @@ describe("Scene/MetadataClassProperty", function () {
         new Cartesian3(1.0, 2.0, 3.0),
         new Cartesian3(4.0, 5.0, 6.0),
         new Cartesian3(7.0, 8.0, 9.0),
-      ])
+      ]),
     ).toBeUndefined();
   });
 
@@ -2642,7 +2619,7 @@ describe("Scene/MetadataClassProperty", function () {
         new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1),
         new Matrix3(2, 0, 0, 0, 2, 0, 0, 0, 2),
         new Matrix3(3, 0, 0, 0, 3, 0, 0, 0, 3),
-      ])
+      ]),
     ).toBeUndefined();
   });
 
@@ -2657,7 +2634,7 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     expect(property.validate(undefined)).toBe(
-      "required property must have a value"
+      "required property must have a value",
     );
   });
 
@@ -2689,17 +2666,17 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.validate(8.0)).toBe("value 8 must be an array");
   });
 
-  it("validate returns error message if type is a vector and the component type is not vector-compatibile", function () {
+  it("validate returns error message if type is a vector and the component type is not vector-compatible", function () {
     const property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "VEC2",
-        componentType: "STRING",
+        componentType: "INT64",
       },
     });
 
     expect(property.validate(8.0)).toBe(
-      "componentType STRING is incompatible with vector type VEC2"
+      "componentType INT64 is incompatible with vector type VEC2",
     );
   });
 
@@ -2713,7 +2690,7 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     expect(property.validate(8.0)).toBe(
-      "componentType INT64 is incompatible with matrix type MAT3"
+      "componentType INT64 is incompatible with matrix type MAT3",
     );
   });
 
@@ -2793,7 +2770,7 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     expect(property.validate([1.0, 2.0])).toBe(
-      "Array length does not match property.arrayLength"
+      "Array length does not match property.arrayLength",
     );
   });
 
@@ -2830,10 +2807,10 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     expect(property.validate("INVALID")).toBe(
-      "value INVALID is not a valid enum name for myEnum"
+      "value INVALID is not a valid enum name for myEnum",
     );
     expect(property.validate(0)).toBe(
-      "value 0 is not a valid enum name for myEnum"
+      "value 0 is not a valid enum name for myEnum",
     );
   });
 
@@ -2860,7 +2837,7 @@ describe("Scene/MetadataClassProperty", function () {
         },
       });
       expect(property.validate({})).toBe(
-        `value [object Object] does not match type ${types[i]}`
+        `value [object Object] does not match type ${types[i]}`,
       );
     }
   });
@@ -2873,7 +2850,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     });
     expect(property.validate({})).toBe(
-      `value [object Object] does not match type BOOLEAN`
+      `value [object Object] does not match type BOOLEAN`,
     );
   });
 
@@ -2885,7 +2862,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     });
     expect(property.validate({})).toBe(
-      `value [object Object] does not match type STRING`
+      `value [object Object] does not match type STRING`,
     );
   });
 
@@ -2901,14 +2878,8 @@ describe("Scene/MetadataClassProperty", function () {
       UINT16: [-1, 65536],
       INT32: [-2147483649, 2147483648],
       UINT32: [-1, 4294967296],
-      INT64: [
-        BigInt("-9223372036854775809"), // eslint-disable-line
-        BigInt("9223372036854775808"), // eslint-disable-line
-      ],
-      UINT64: [
-        BigInt(-1), // eslint-disable-line
-        BigInt("18446744073709551616"), // eslint-disable-line
-      ],
+      INT64: [BigInt("-9223372036854775809"), BigInt("9223372036854775808")],
+      UINT64: [BigInt(-1), BigInt("18446744073709551616")],
       FLOAT32: [-Number.MAX_VALUE, Number.MAX_VALUE],
     };
 
@@ -2924,7 +2895,7 @@ describe("Scene/MetadataClassProperty", function () {
         });
         for (let i = 0; i < values.length; ++i) {
           expect(property.validate(values[i])).toBe(
-            `value ${values[i]} is out of range for type ${type}`
+            `value ${values[i]} is out of range for type ${type}`,
           );
         }
       }
@@ -2965,7 +2936,7 @@ describe("Scene/MetadataClassProperty", function () {
       });
       for (let i = 0; i < nonFiniteValues.length; ++i) {
         expect(property.validate(nonFiniteValues[i])).toBe(
-          `value ${nonFiniteValues[i]} of type ${type} must be finite`
+          `value ${nonFiniteValues[i]} of type ${type} must be finite`,
         );
       }
     }
@@ -2983,14 +2954,8 @@ describe("Scene/MetadataClassProperty", function () {
       UINT16: [-1, 65536],
       INT32: [-2147483649, 2147483648],
       UINT32: [-1, 4294967296],
-      INT64: [
-        BigInt("-9223372036854775809"), // eslint-disable-line
-        BigInt("9223372036854775808"), // eslint-disable-line
-      ],
-      UINT64: [
-        BigInt(-1), // eslint-disable-line
-        BigInt("18446744073709551616"), // eslint-disable-line
-      ],
+      INT64: [BigInt("-9223372036854775809"), BigInt("9223372036854775808")],
+      UINT64: [BigInt(-1), BigInt("18446744073709551616")],
       FLOAT32: [-Number.MAX_VALUE, Number.MAX_VALUE],
     };
 
@@ -3007,7 +2972,7 @@ describe("Scene/MetadataClassProperty", function () {
         });
         for (let i = 0; i < values.length; ++i) {
           expect(property.validate(values)).toBe(
-            `value ${values[0]} is out of range for type ${componentType}`
+            `value ${values[0]} is out of range for type ${componentType}`,
           );
         }
       }
@@ -3034,16 +2999,16 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     expect(propertyInt8.validate(-1.1)).toBe(
-      "value -1.1 is out of range for type INT8 (normalized)"
+      "value -1.1 is out of range for type INT8 (normalized)",
     );
     expect(propertyInt8.validate(1.1)).toBe(
-      "value 1.1 is out of range for type INT8 (normalized)"
+      "value 1.1 is out of range for type INT8 (normalized)",
     );
     expect(propertyUint8.validate(-0.1)).toBe(
-      "value -0.1 is out of range for type UINT8 (normalized)"
+      "value -0.1 is out of range for type UINT8 (normalized)",
     );
     expect(propertyUint8.validate(1.1)).toBe(
-      "value 1.1 is out of range for type UINT8 (normalized)"
+      "value 1.1 is out of range for type UINT8 (normalized)",
     );
   });
 
@@ -3056,7 +3021,7 @@ describe("Scene/MetadataClassProperty", function () {
         value,
         offset,
         scale,
-        MetadataComponentType.applyValueTransform
+        MetadataComponentType.applyValueTransform,
       );
 
       expect(result).toBe(3);
@@ -3070,7 +3035,7 @@ describe("Scene/MetadataClassProperty", function () {
         value,
         offset,
         scale,
-        MetadataComponentType.applyValueTransform
+        MetadataComponentType.applyValueTransform,
       );
       expect(result).toEqual([3, 4, 5]);
     });
@@ -3095,13 +3060,285 @@ describe("Scene/MetadataClassProperty", function () {
         values,
         offset,
         scale,
-        MetadataComponentType.applyValueTransform
+        MetadataComponentType.applyValueTransform,
       );
       expect(result).toEqual([
         [3, 4, 5],
         [3, 4, 5],
         [3, 4, 5],
       ]);
+    });
+  });
+
+  describe("isGpuCompatible", function () {
+    it("isGpuCompatible returns false for variable-length arrays and string types", function () {
+      const cases = [
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "STRING",
+            },
+          }),
+        },
+      ];
+
+      for (let i = 0; i < cases.length; i++) {
+        const numChannels = cases[i].channels.length;
+        expect(cases[i].property.isGpuCompatible(numChannels)).toBe(false);
+      }
+    });
+
+    it("isGpuCompatible returns false for properties that can't fit in 4 channels", function () {
+      const cases = [
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC4",
+              componentType: "FLOAT32",
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "UINT8",
+              array: true,
+              count: 5,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "FLOAT32",
+            },
+          }),
+        },
+      ];
+
+      for (let i = 0; i < cases.length; i++) {
+        const numChannels = cases[i].channels.length;
+        expect(cases[i].property.isGpuCompatible(numChannels)).toBe(false);
+      }
+    });
+
+    it("isGpuCompatible returns true for other types", function () {
+      const cases = [
+        {
+          channels: [0],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+        {
+          channels: [0, 1],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC2",
+              componentType: "UINT8",
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              count: 4,
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+        {
+          channels: [0],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "INT8",
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC2",
+              componentType: "UINT8",
+              array: true,
+              count: 2,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              count: 4,
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: false,
+              count: 1,
+              type: "SCALAR",
+              componentType: "FLOAT32",
+              normalized: false,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: false,
+              count: 1,
+              type: "SCALAR",
+              componentType: "FLOAT64", // Gets downcast to 32-bit
+              normalized: false,
+            },
+          }),
+        },
+      ];
+
+      for (let i = 0; i < cases.length; i++) {
+        const numChannels = cases[i].channels.length;
+        expect(cases[i].property.isGpuCompatible(numChannels)).toBe(true);
+      }
+    });
+  });
+
+  describe("getGlslType", function () {
+    it("getGlslType returns floating point types for normalized UINT8 properties", function () {
+      const cases = [
+        {
+          channels: [0],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+        {
+          channels: [0, 1],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC2",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              count: 3,
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+      ];
+
+      const expectedTypes = ["float", "vec2", "vec3"];
+
+      for (let i = 0; i < cases.length; i++) {
+        expect(cases[i].property.getGlslType()).toBe(expectedTypes[i]);
+      }
+    });
+
+    it("getGlslType returns unsigned integer types for non-normalized UINT8 properties", function () {
+      const cases = [
+        {
+          channels: [0],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "UINT8",
+            },
+          }),
+        },
+        {
+          channels: [0, 1],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC2",
+              componentType: "UINT8",
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              count: 3,
+              type: "SCALAR",
+              componentType: "UINT8",
+            },
+          }),
+        },
+      ];
+
+      const expectedTypes = ["uint", "uvec2", "uvec3"];
+
+      for (let i = 0; i < cases.length; i++) {
+        expect(cases[i].property.getGlslType()).toBe(expectedTypes[i]);
+      }
     });
   });
 });

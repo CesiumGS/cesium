@@ -1,10 +1,11 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
-import ReferenceFrame from "../Core/ReferenceFrame.js";
+import {
+  Cartesian3,
+  DeveloperError,
+  Event,
+  JulianDate,
+  ReferenceFrame,
+  defined,
+} from "@cesium/core";
 import PositionProperty from "./PositionProperty.js";
 
 /**
@@ -20,7 +21,7 @@ import PositionProperty from "./PositionProperty.js";
 function ConstantPositionProperty(value, referenceFrame) {
   this._definitionChanged = new Event();
   this._value = Cartesian3.clone(value);
-  this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+  this._referenceFrame = referenceFrame ?? ReferenceFrame.FIXED;
 }
 
 Object.defineProperties(ConstantPositionProperty.prototype, {
@@ -114,7 +115,7 @@ ConstantPositionProperty.prototype.setValue = function (value, referenceFrame) {
 ConstantPositionProperty.prototype.getValueInReferenceFrame = function (
   time,
   referenceFrame,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {
@@ -130,7 +131,7 @@ ConstantPositionProperty.prototype.getValueInReferenceFrame = function (
     this._value,
     this._referenceFrame,
     referenceFrame,
-    result
+    result,
   );
 };
 

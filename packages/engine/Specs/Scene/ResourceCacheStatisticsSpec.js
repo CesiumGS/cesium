@@ -1,4 +1,5 @@
-import { combine, ResourceCacheStatistics } from "../../index.js";
+import { combine } from "@cesium/core";
+import { ResourceCacheStatistics } from "../../index.js";
 
 describe("Scene/ResourceCacheStatistics", function () {
   it("constructs", function () {

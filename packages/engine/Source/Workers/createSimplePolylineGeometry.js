@@ -1,16 +1,14 @@
-import defined from "../Core/defined.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import SimplePolylineGeometry from "../Core/SimplePolylineGeometry.js";
+import { Ellipsoid, SimplePolylineGeometry, defined } from "@cesium/core";
 
 function createSimplePolylineGeometry(simplePolylineGeometry, offset) {
   if (defined(offset)) {
     simplePolylineGeometry = SimplePolylineGeometry.unpack(
       simplePolylineGeometry,
-      offset
+      offset,
     );
   }
   simplePolylineGeometry._ellipsoid = Ellipsoid.clone(
-    simplePolylineGeometry._ellipsoid
+    simplePolylineGeometry._ellipsoid,
   );
   return SimplePolylineGeometry.createGeometry(simplePolylineGeometry);
 }

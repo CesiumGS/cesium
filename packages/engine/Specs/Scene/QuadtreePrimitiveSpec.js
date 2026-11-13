@@ -1,27 +1,43 @@
 import {
   Cartesian3,
   Cartographic,
-  defined,
   Ellipsoid,
   EventHelper,
   GeographicProjection,
-  GeographicTilingScheme,
   Intersect,
+  Math as CesiumMath,
   Rectangle,
   Visibility,
+  defined,
+} from "@cesium/core";
+import {
+  GeographicTilingScheme,
   Camera,
   GlobeSurfaceTileProvider,
   GlobeTranslucencyState,
   ImageryLayerCollection,
   QuadtreePrimitive,
+  QuadtreeTile,
   QuadtreeTileLoadState,
   SceneMode,
+  VectorProvider,
 } from "../../index.js";
 import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
 import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+
+function expectCartographicToEqualEpsilon(actual, expected, epsilon) {
+  expect(
+    CesiumMath.equalsEpsilon(actual.longitude, expected.longitude, epsilon),
+  ).toBe(true);
+  expect(
+    CesiumMath.equalsEpsilon(actual.latitude, expected.latitude, epsilon),
+  ).toBe(true);
+  expect(
+    CesiumMath.equalsEpsilon(actual.height, expected.height, epsilon),
+  ).toBe(true);
+}
 
 describe("Scene/QuadtreePrimitive", function () {
   describe("selectTilesForRendering", function () {
@@ -73,7 +89,7 @@ describe("Scene/QuadtreePrimitive", function () {
       };
 
       frameState.cullingVolume.computeVisibility.and.returnValue(
-        Intersect.INTERSECTING
+        Intersect.INTERSECTING,
       );
 
       imageryLayerCollection = new ImageryLayerCollection();
@@ -85,6 +101,9 @@ describe("Scene/QuadtreePrimitive", function () {
         terrainProvider: mockTerrain,
         imageryLayers: imageryLayerCollection,
         surfaceShaderSet: surfaceShaderSet,
+        vectorProvider: new VectorProvider({
+          tilingScheme: mockTerrain.tilingScheme,
+        }),
       });
       quadtree = new QuadtreePrimitive({
         tileProvider: tileProvider,
@@ -93,7 +112,7 @@ describe("Scene/QuadtreePrimitive", function () {
       processor = new TerrainTileProcessor(
         frameState,
         mockTerrain,
-        imageryLayerCollection
+        imageryLayerCollection,
       );
 
       quadtree.render(frameState);
@@ -152,7 +171,7 @@ describe("Scene/QuadtreePrimitive", function () {
         expect(
           quadtree._tilesToRender.filter(function (tile) {
             return tile.level === 0;
-          }).length
+          }).length,
         ).toBe(quadtree._tilesToRender.length);
       });
     });
@@ -181,7 +200,7 @@ describe("Scene/QuadtreePrimitive", function () {
           expect(
             quadtree._tilesToRender.filter(function (tile) {
               return tile.level === 0;
-            }).length
+            }).length,
           ).toBe(quadtree._tilesToRender.length);
 
           // Allow the child tiles to load.
@@ -192,16 +211,16 @@ describe("Scene/QuadtreePrimitive", function () {
 
           // Now child tiles should be rendered too.
           expect(quadtree._tilesToRender).toContain(
-            rootTiles[0].southwestChild
+            rootTiles[0].southwestChild,
           );
           expect(quadtree._tilesToRender).toContain(
-            rootTiles[0].southeastChild
+            rootTiles[0].southeastChild,
           );
           expect(quadtree._tilesToRender).toContain(
-            rootTiles[0].northwestChild
+            rootTiles[0].northwestChild,
           );
           expect(quadtree._tilesToRender).toContain(
-            rootTiles[0].northeastChild
+            rootTiles[0].northeastChild,
           );
         });
     });
@@ -240,7 +259,7 @@ describe("Scene/QuadtreePrimitive", function () {
         quadtree,
         frameState,
         Rectangle.center(lookAtTile.rectangle),
-        lookAtTile.level
+        lookAtTile.level,
       );
 
       spyOn(mockTerrain, "requestTileGeometry").and.callThrough();
@@ -306,7 +325,7 @@ describe("Scene/QuadtreePrimitive", function () {
         quadtree,
         frameState,
         Rectangle.center(lookAtTile.rectangle),
-        lookAtTile.level
+        lookAtTile.level,
       );
 
       spyOn(mockTerrain, "requestTileGeometry").and.callThrough();
@@ -335,7 +354,7 @@ describe("Scene/QuadtreePrimitive", function () {
               call[1] === parent.y &&
               call[2] === parent.level
             );
-          })[0]
+          })[0],
         );
         const lookAtArgsIndex = allArgs.indexOf(
           allArgs.filter(function (call) {
@@ -344,7 +363,7 @@ describe("Scene/QuadtreePrimitive", function () {
               call[1] === lookAtTile.y &&
               call[2] === lookAtTile.level
             );
-          })[0]
+          })[0],
         );
         expect(parentArgsIndex).toBeLessThan(lookAtArgsIndex);
       });
@@ -385,7 +404,7 @@ describe("Scene/QuadtreePrimitive", function () {
         quadtree,
         frameState,
         Rectangle.center(lookAtTile.rectangle),
-        lookAtTile.level
+        lookAtTile.level,
       );
 
       spyOn(mockTerrain, "requestTileGeometry").and.callThrough();
@@ -453,7 +472,7 @@ describe("Scene/QuadtreePrimitive", function () {
         quadtree,
         frameState,
         Rectangle.center(lookAtTile.rectangle),
-        lookAtTile.level
+        lookAtTile.level,
       );
 
       spyOn(mockTerrain, "requestTileGeometry").and.callThrough();
@@ -473,7 +492,7 @@ describe("Scene/QuadtreePrimitive", function () {
             quadtree,
             frameState,
             Rectangle.center(lookAtTile.rectangle),
-            lookAtTile.parent.level
+            lookAtTile.parent.level,
           );
 
           // Select new tiles
@@ -530,32 +549,33 @@ describe("Scene/QuadtreePrimitive", function () {
       const visibleTile = rootTiles[0].southwestChild.northeastChild;
       const notVisibleTile = rootTiles[0].southwestChild.northwestChild;
 
-      frameState.cullingVolume.computeVisibility.and.callFake(function (
-        boundingVolume
-      ) {
-        if (!defined(visibleTile.data)) {
-          return Intersect.INTERSECTING;
-        }
+      frameState.cullingVolume.computeVisibility.and.callFake(
+        function (boundingVolume) {
+          if (!defined(visibleTile.data)) {
+            return Intersect.INTERSECTING;
+          }
 
-        if (
-          boundingVolume === visibleTile.data.tileBoundingRegion.boundingVolume
-        ) {
+          if (
+            boundingVolume ===
+            visibleTile.data.tileBoundingRegion.boundingVolume
+          ) {
+            return Intersect.INTERSECTING;
+          } else if (
+            boundingVolume ===
+            notVisibleTile.data.tileBoundingRegion.boundingVolume
+          ) {
+            return Intersect.OUTSIDE;
+          }
           return Intersect.INTERSECTING;
-        } else if (
-          boundingVolume ===
-          notVisibleTile.data.tileBoundingRegion.boundingVolume
-        ) {
-          return Intersect.OUTSIDE;
-        }
-        return Intersect.INTERSECTING;
-      });
+        },
+      );
 
       // Look down at the center of the visible tile.
       setCameraPosition(
         quadtree,
         frameState,
         Rectangle.center(visibleTile.rectangle),
-        visibleTile.level
+        visibleTile.level,
       );
 
       spyOn(mockTerrain, "requestTileGeometry").and.callThrough();
@@ -571,7 +591,7 @@ describe("Scene/QuadtreePrimitive", function () {
 
         // Now treat the not-visible-tile as visible.
         frameState.cullingVolume.computeVisibility.and.returnValue(
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
 
         // Select new tiles
@@ -866,7 +886,7 @@ describe("Scene/QuadtreePrimitive", function () {
 
         const removeFunc = quadtree.updateHeight(
           Cartographic.fromDegrees(-72.0, 40.0),
-          function (position) {}
+          function (position) {},
         );
 
         // determine what tiles to load
@@ -885,7 +905,7 @@ describe("Scene/QuadtreePrimitive", function () {
 
         let addedCallback = false;
         quadtree.forEachLoadedTile(function (tile) {
-          addedCallback = addedCallback || tile.customData.length > 0;
+          addedCallback = addedCallback || tile.customData.size > 0;
         });
 
         expect(addedCallback).toEqual(true);
@@ -901,7 +921,7 @@ describe("Scene/QuadtreePrimitive", function () {
 
         let removedCallback = true;
         quadtree.forEachLoadedTile(function (tile) {
-          removedCallback = removedCallback && tile.customData.length === 0;
+          removedCallback = removedCallback && tile.customData.size === 0;
         });
 
         expect(removedCallback).toEqual(true);
@@ -919,9 +939,15 @@ describe("Scene/QuadtreePrimitive", function () {
           },
         };
 
-        const position = Cartesian3.clone(Cartesian3.ZERO);
-        const updatedPosition = Cartesian3.clone(Cartesian3.UNIT_X);
+        const positionCarto = Cartographic.fromDegrees(-72.0, 40.0, 0);
+        const updatedPositionCarto = Cartographic.fromDegrees(-72.0, 40.0, 100);
+        const position = Cartographic.toCartesian(positionCarto);
+        const updatedPosition = Cartographic.toCartesian(updatedPositionCarto);
+        // variables for results
+        const positionRes = new Cartographic();
+        const updatedPositionRes = new Cartographic();
         let currentPosition = position;
+        let currentPositionRes = positionRes;
 
         // Load the root tiles.
         tileProvider.loadTile.and.callFake(function (frameState, tile) {
@@ -939,11 +965,13 @@ describe("Scene/QuadtreePrimitive", function () {
           tileProvider: tileProvider,
         });
 
-        quadtree.updateHeight(Cartographic.fromDegrees(-72.0, 40.0), function (
-          p
-        ) {
-          Cartesian3.clone(p, position);
-        });
+        quadtree.updateHeight(
+          Cartographic.fromDegrees(-72.0, 40.0),
+          function (p) {
+            // p is a Cartographic position
+            Cartographic.clone(p, currentPositionRes);
+          },
+        );
 
         // determine what tiles to load
         quadtree.update(scene.frameState);
@@ -957,16 +985,295 @@ describe("Scene/QuadtreePrimitive", function () {
         quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
-        expect(position).toEqual(Cartesian3.ZERO);
+        expectCartographicToEqualEpsilon(
+          positionRes,
+          positionCarto,
+          CesiumMath.EPSILON10,
+        );
 
         currentPosition = updatedPosition;
+        currentPositionRes = updatedPositionRes;
 
         quadtree.update(scene.frameState);
         quadtree.beginFrame(scene.frameState);
         quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
-        expect(position).toEqual(updatedPosition);
+        expectCartographicToEqualEpsilon(
+          updatedPositionRes,
+          updatedPositionCarto,
+          CesiumMath.EPSILON10,
+        );
+      });
+
+      it("uses tiles position caching in update heights", function () {
+        const tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+
+        tileProvider.terrainProvider = {
+          getTileDataAvailable: function () {
+            return true;
+          },
+        };
+
+        // Dummy positions
+        const computedPosition = new Cartesian3(1000, 2000, 3000);
+        const currentPosition = computedPosition;
+
+        // Create a Map to count how many times the tile's pick function is called for each tile level.
+        const pickCounters = new Map();
+
+        // Load the root tiles.
+        tileProvider.loadTile.and.callFake(function (frameState, tile) {
+          tile.state = QuadtreeTileLoadState.DONE;
+          tile.renderable = true;
+          tile.data = {
+            // The pick function simulates computing a clamped position.
+            // Each call increments the counter.
+            pick: function () {
+              // Initialize the counter for this tile's level if not already set.
+              if (!pickCounters.has(tile.level)) {
+                pickCounters.set(tile.level, 0);
+              }
+              const count = pickCounters.get(tile.level);
+              const pickPosition = currentPosition;
+              pickCounters.set(tile.level, count + 1);
+              return pickPosition;
+            },
+            mesh: {},
+          };
+        });
+
+        const quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
+        });
+
+        // Create two nearly identical cartographic positions (in degrees)
+        const carto1 = Cartographic.fromDegrees(-72.0, 40.0);
+        // Slightly offset cartographic coordinates (within the rounding tolerance)
+        const carto2 = Cartographic.fromDegrees(
+          -72.0 + 0.000001,
+          40.0 + 0.000001,
+        );
+
+        // Variables to store results from the callbacks
+        const position1 = new Cartographic();
+        const position2 = new Cartographic();
+
+        // Install two height update callbacks with near-identical positions.
+        quadtree.updateHeight(carto1, function (p) {
+          Cartographic.clone(p, position1);
+        });
+        quadtree.updateHeight(carto2, function (p) {
+          Cartographic.clone(p, position2);
+        });
+
+        // Process a few render cycles to trigger height updates and cache usage.
+        for (let i = 0; i < 3; ++i) {
+          quadtree.update(scene.frameState);
+          quadtree.beginFrame(scene.frameState);
+          quadtree.render(scene.frameState);
+          quadtree.endFrame(scene.frameState);
+        }
+
+        // Verify that for each tile level recorded in pickCounters, the pick function was called only once.
+        pickCounters.forEach((count, level) => {
+          expect(count).toEqual(1);
+        });
+
+        // Verify that both callbacks produced the same computed position (indicating a cache hit).
+        expect(position1).toEqual(position2);
+      });
+
+      it("position cache stores a distinct cartographic per entry to prevent unintended mutation", function () {
+        // Previously, every pick() inside `updateHeights` passed the same module-level `scratchPosition`,
+        // so every cached entry ended up aliasing a single shared object.
+        // The next pick() mutated every prior entry across every tile.
+        // Observable symptom is clamped billboards jumping to heights from neighbouring tiles
+        // (CesiumGS/cesium#12602).
+
+        // The pick result is converted to a mode-independent cartographic before caching.
+        // We drive two `updateHeight` registrations whose picks return different positions,
+        // then assert that every cached cartographic is a distinct object
+        // AND that none of them were mutated to match the last pick after the fact.
+        // Prior to fix, all cache entries would reference the same object, i.e. the final pick.
+
+        const tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+
+        tileProvider.terrainProvider = {
+          getTileDataAvailable: function () {
+            return true;
+          },
+        };
+
+        // Realistic surface ECEF positions so `cartesianToCartographic` succeeds.
+        const positionA = Cartesian3.fromDegrees(-72.0, 40.0, 100.0);
+        const positionB = Cartesian3.fromDegrees(10.0, -20.0, 250.0);
+        const ellipsoid = Ellipsoid.WGS84;
+        const cartoA = ellipsoid.cartesianToCartographic(positionA);
+        const cartoB = ellipsoid.cartesianToCartographic(positionB);
+        let pickCount = 0;
+
+        tileProvider.loadTile.and.callFake(function (frameState, tile) {
+          tile.state = QuadtreeTileLoadState.DONE;
+          tile.renderable = true;
+          tile.data = {
+            // Match GlobeSurfaceTile.pick: write into the caller's scratch and return the scratch.
+            // Alternate which cartesian is written so successive picks produce distinct results.
+            pick: function (ray, mode, projection, cullBackFaces, result) {
+              pickCount += 1;
+              const src = pickCount % 2 === 1 ? positionA : positionB;
+              return Cartesian3.clone(src, result);
+            },
+            mesh: {},
+          };
+        });
+
+        const quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
+        });
+
+        // Capture every value passed to setPositionCacheEntry.
+        const setPositionSpy = spyOn(
+          QuadtreeTile.prototype,
+          "setPositionCacheEntry",
+        ).and.callThrough();
+
+        // Install two height update callbacks at clearly-different locations
+        // so the tile picks land in different cache entries.
+        quadtree.updateHeight(
+          Cartographic.fromDegrees(-72.0, 40.0),
+          function () {},
+        );
+        quadtree.updateHeight(
+          Cartographic.fromDegrees(10.0, -20.0),
+          function () {},
+        );
+
+        // Process a few render cycles to trigger height updates and cache usage.
+        for (let i = 0; i < 3; ++i) {
+          // Advance the frame so tile selection reruns; selection keys off
+          // `frameState.frameNumber` via `_lastSelectionFrameNumber` /
+          // `_lastSelectionResultFrame` and short-circuits on the same frame.
+          ++scene.frameState.frameNumber;
+          quadtree.update(scene.frameState);
+          quadtree.beginFrame(scene.frameState);
+          quadtree.render(scene.frameState);
+          quadtree.endFrame(scene.frameState);
+        }
+
+        const storedValues = setPositionSpy.calls
+          .allArgs()
+          .map((args) => args[2]);
+
+        // The test only makes sense if both picks ran and at least two distinct positions were cached.
+        expect(pickCount).toBeGreaterThanOrEqual(2);
+        expect(storedValues.length).toBeGreaterThanOrEqual(2);
+
+        // Every stored value must be a distinct object instance.
+        // With the alias bug, two stored entries would reference the same scratch.
+        const uniqueRefs = new Set(storedValues);
+        expect(uniqueRefs.size).toBe(storedValues.length);
+
+        // The stored cartographics must equal the values pick() produced at the time they
+        // were cached. With the bug, every entry would now equal whichever was cached last.
+        const hasPositionA = storedValues.some((v) =>
+          Cartographic.equalsEpsilon(v, cartoA, CesiumMath.EPSILON10),
+        );
+        const hasPositionB = storedValues.some((v) =>
+          Cartographic.equalsEpsilon(v, cartoB, CesiumMath.EPSILON10),
+        );
+        expect(hasPositionA).toBe(true);
+        expect(hasPositionB).toBe(true);
+      });
+
+      it("unprojects the pick result to a cartographic in 2D and Columbus View", function () {
+        // In 2D and Columbus View, GlobeSurfaceTile.pick returns the hit in the
+        // projected map frame (swizzled to (height, easting, northing)), not
+        // ECEF. updateHeights must un-swizzle and unproject that back into a
+        // cartographic for the callback; running cartesianToCartographic on the
+        // projected point (as the code once did) would yield a garbage position.
+        const projection = scene.mapProjection;
+        const originalMode = scene.frameState.mode;
+
+        [SceneMode.SCENE2D, SceneMode.COLUMBUS_VIEW].forEach(function (mode) {
+          const tileProvider = createSpyTileProvider();
+          tileProvider.getReady.and.returnValue(true);
+          tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+          tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+          tileProvider.terrainProvider = {
+            getTileDataAvailable: function () {
+              return true;
+            },
+          };
+
+          // The terrain point the pick "finds" at the registered location.
+          const expected = Cartographic.fromDegrees(-72.0, 40.0, 123.0);
+
+          // Reproduce a GlobeSurfaceTile.pick result in the current mode's frame:
+          // project to (easting, northing, height), then swizzle to (height, easting, northing).
+          const projected = projection.project(expected);
+          const pickInModeFrame = new Cartesian3(
+            projected.z,
+            projected.x,
+            projected.y,
+          );
+
+          tileProvider.loadTile.and.callFake(function (frameState, tile) {
+            tile.state = QuadtreeTileLoadState.DONE;
+            tile.renderable = true;
+            tile.data = {
+              pick: function (
+                ray,
+                pickMode,
+                pickProjection,
+                cullBackFaces,
+                result,
+              ) {
+                return Cartesian3.clone(pickInModeFrame, result);
+              },
+              mesh: {},
+            };
+          });
+
+          const quadtree = new QuadtreePrimitive({
+            tileProvider: tileProvider,
+          });
+
+          let received;
+          quadtree.updateHeight(
+            Cartographic.fromDegrees(-72.0, 40.0),
+            function (carto) {
+              received = Cartographic.clone(carto, received);
+            },
+          );
+
+          scene.frameState.mode = mode;
+          try {
+            for (let i = 0; i < 3; ++i) {
+              // Advance the frame so tile selection reruns each cycle.
+              ++scene.frameState.frameNumber;
+              quadtree.update(scene.frameState);
+              quadtree.beginFrame(scene.frameState);
+              quadtree.render(scene.frameState);
+              quadtree.endFrame(scene.frameState);
+            }
+          } finally {
+            scene.frameState.mode = originalMode;
+          }
+
+          // The callback must receive the true cartographic (mode-independent),
+          // not cartesianToCartographic of the projected point.
+          expect(received).toBeDefined();
+          expect(
+            Cartographic.equalsEpsilon(received, expected, CesiumMath.EPSILON7),
+          ).toBe(true);
+        });
       });
 
       it("gives correct priority to tile loads", function () {
@@ -986,10 +1293,10 @@ describe("Scene/QuadtreePrimitive", function () {
         // The root tiles should be in the high priority load queue
         expect(quadtree._tileLoadQueueHigh.length).toBe(2);
         expect(quadtree._tileLoadQueueHigh).toContain(
-          quadtree._levelZeroTiles[0]
+          quadtree._levelZeroTiles[0],
         );
         expect(quadtree._tileLoadQueueHigh).toContain(
-          quadtree._levelZeroTiles[1]
+          quadtree._levelZeroTiles[1],
         );
         expect(quadtree._tileLoadQueueMedium.length).toBe(0);
         expect(quadtree._tileLoadQueueLow.length).toBe(0);
@@ -1005,24 +1312,24 @@ describe("Scene/QuadtreePrimitive", function () {
         // That root tile should now load with low priority while its children should load with high.
         expect(quadtree._tileLoadQueueHigh.length).toBe(5);
         expect(quadtree._tileLoadQueueHigh).toContain(
-          quadtree._levelZeroTiles[1]
+          quadtree._levelZeroTiles[1],
         );
         expect(quadtree._tileLoadQueueHigh).toContain(
-          quadtree._levelZeroTiles[0].children[0]
+          quadtree._levelZeroTiles[0].children[0],
         );
         expect(quadtree._tileLoadQueueHigh).toContain(
-          quadtree._levelZeroTiles[0].children[1]
+          quadtree._levelZeroTiles[0].children[1],
         );
         expect(quadtree._tileLoadQueueHigh).toContain(
-          quadtree._levelZeroTiles[0].children[2]
+          quadtree._levelZeroTiles[0].children[2],
         );
         expect(quadtree._tileLoadQueueHigh).toContain(
-          quadtree._levelZeroTiles[0].children[3]
+          quadtree._levelZeroTiles[0].children[3],
         );
         expect(quadtree._tileLoadQueueMedium.length).toBe(0);
         expect(quadtree._tileLoadQueueLow.length).toBe(1);
         expect(quadtree._tileLoadQueueLow).toContain(
-          quadtree._levelZeroTiles[0]
+          quadtree._levelZeroTiles[0],
         );
 
         // Mark the children of that root tile renderable too, so we can refine it
@@ -1038,36 +1345,36 @@ describe("Scene/QuadtreePrimitive", function () {
 
         expect(quadtree._tileLoadQueueHigh.length).toBe(17); // levelZeroTiles[1] plus levelZeroTiles[0]'s 16 grandchildren
         expect(quadtree._tileLoadQueueHigh).toContain(
-          quadtree._levelZeroTiles[1]
+          quadtree._levelZeroTiles[1],
         );
         expect(quadtree._tileLoadQueueHigh).toContain(
-          quadtree._levelZeroTiles[0].children[0].children[0]
+          quadtree._levelZeroTiles[0].children[0].children[0],
         );
         expect(quadtree._tileLoadQueueHigh).toContain(
-          quadtree._levelZeroTiles[0].children[0].children[1]
+          quadtree._levelZeroTiles[0].children[0].children[1],
         );
         expect(quadtree._tileLoadQueueHigh).toContain(
-          quadtree._levelZeroTiles[0].children[0].children[2]
+          quadtree._levelZeroTiles[0].children[0].children[2],
         );
         expect(quadtree._tileLoadQueueHigh).toContain(
-          quadtree._levelZeroTiles[0].children[0].children[3]
+          quadtree._levelZeroTiles[0].children[0].children[3],
         );
         expect(quadtree._tileLoadQueueMedium.length).toBe(0);
         expect(quadtree._tileLoadQueueLow.length).toBe(5);
         expect(quadtree._tileLoadQueueLow).toContain(
-          quadtree._levelZeroTiles[0]
+          quadtree._levelZeroTiles[0],
         );
         expect(quadtree._tileLoadQueueLow).toContain(
-          quadtree._levelZeroTiles[0].children[0]
+          quadtree._levelZeroTiles[0].children[0],
         );
         expect(quadtree._tileLoadQueueLow).toContain(
-          quadtree._levelZeroTiles[0].children[1]
+          quadtree._levelZeroTiles[0].children[1],
         );
         expect(quadtree._tileLoadQueueLow).toContain(
-          quadtree._levelZeroTiles[0].children[2]
+          quadtree._levelZeroTiles[0].children[2],
         );
         expect(quadtree._tileLoadQueueLow).toContain(
-          quadtree._levelZeroTiles[0].children[3]
+          quadtree._levelZeroTiles[0].children[3],
         );
 
         // Mark the children of levelZeroTiles[0] upsampled
@@ -1084,11 +1391,11 @@ describe("Scene/QuadtreePrimitive", function () {
         // levelZeroTiles[0] should move to medium priority.
         expect(quadtree._tileLoadQueueHigh.length).toBe(1);
         expect(quadtree._tileLoadQueueHigh).toContain(
-          quadtree._levelZeroTiles[1]
+          quadtree._levelZeroTiles[1],
         );
         expect(quadtree._tileLoadQueueMedium.length).toBe(1);
         expect(quadtree._tileLoadQueueMedium).toContain(
-          quadtree._levelZeroTiles[0]
+          quadtree._levelZeroTiles[0],
         );
         expect(quadtree._tileLoadQueueLow.length).toBe(0);
       });
@@ -1148,27 +1455,92 @@ describe("Scene/QuadtreePrimitive", function () {
           expect(quadtree._tilesToRender[0]).toBe(east.northwestChild);
           expect(
             quadtree._tilesToRender[1] === east.southwestChild ||
-              quadtree._tilesToRender[1] === east.northeastChild
+              quadtree._tilesToRender[1] === east.northeastChild,
           ).toBe(true);
           expect(
             quadtree._tilesToRender[2] === east.southwestChild ||
-              quadtree._tilesToRender[2] === east.northeastChild
+              quadtree._tilesToRender[2] === east.northeastChild,
           ).toBe(true);
           expect(quadtree._tilesToRender[3]).toBe(east.southeastChild);
           expect(quadtree._tilesToRender[4]).toBe(west.northeastChild);
           expect(
             quadtree._tilesToRender[5] === west.northwestChild ||
-              quadtree._tilesToRender[5] === west.southeastChild
+              quadtree._tilesToRender[5] === west.southeastChild,
           ).toBe(true);
           expect(
             quadtree._tilesToRender[6] === west.northwestChild ||
-              quadtree._tilesToRender[6] === west.southeastChild
+              quadtree._tilesToRender[6] === west.southeastChild,
           ).toBe(true);
           expect(quadtree._tilesToRender[7]).toBe(west.southwestChild);
         });
       });
+
+      it("accumulates rendered tiles across multiple render calls in one frame", function () {
+        const tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+
+        // Load the root tiles.
+        tileProvider.loadTile.and.callFake(function (frameState, tile) {
+          tile.state = QuadtreeTileLoadState.DONE;
+          tile.renderable = true;
+          tile.data = {
+            pick: function () {
+              return undefined;
+            },
+          };
+        });
+
+        // Prevent refinement for the first render so only root tiles are selected.
+        tileProvider.canRefine.and.returnValue(false);
+
+        const quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
+        });
+
+        // Perform the normal two-phase updates so root tiles are actually loaded.
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        // Now start a single frame and call render() twice before ending the frame.
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+
+        const firstCount = quadtree._tilesRenderedThisFrame.size;
+        expect(firstCount).toBeGreaterThan(0);
+
+        // Allow refinement and make the children of the first root tile renderable so the second render call will select additional, unique tiles.
+        tileProvider.canRefine.and.callFake(function (tile) {
+          return tile.renderable;
+        });
+        const firstRoot = quadtree._levelZeroTiles[0];
+        firstRoot.children.forEach(function (child) {
+          child.state = QuadtreeTileLoadState.DONE;
+          child.renderable = true;
+          child.data = {
+            pick: function () {
+              return undefined;
+            },
+          };
+        });
+
+        // Second render call in the same frame (should add unique tiles)
+        quadtree.render(scene.frameState);
+        const secondCount = quadtree._tilesRenderedThisFrame.size;
+
+        expect(secondCount).toBeGreaterThan(firstCount);
+        quadtree.endFrame(scene.frameState);
+      });
     },
-    "WebGL"
+    "WebGL",
   );
 
   // Sets the camera to look at a given cartographic position from a distance
@@ -1176,9 +1548,8 @@ describe("Scene/QuadtreePrimitive", function () {
   // a given tile level and no further.
   function setCameraPosition(quadtree, frameState, position, level) {
     const camera = frameState.camera;
-    const geometricError = quadtree.tileProvider.getLevelMaximumGeometricError(
-      level
-    );
+    const geometricError =
+      quadtree.tileProvider.getLevelMaximumGeometricError(level);
     const sse = quadtree.maximumScreenSpaceError * 0.8;
     const sseDenominator = camera.frustum.sseDenominator;
     const height = frameState.context.drawingBufferHeight;

@@ -1,9 +1,6 @@
+import { Cartesian3, Math as CesiumMath, Matrix3, Matrix4 } from "@cesium/core";
 import {
   ArticulationStageType,
-  Cartesian3,
-  Math as CesiumMath,
-  Matrix3,
-  Matrix4,
   ModelArticulationStage,
 } from "../../../index.js";
 
@@ -157,11 +154,11 @@ describe("Scene/Model/ModelArticulationStage", function () {
       50.0,
       0.0,
       0.0,
-      scratchCartesian3
+      scratchCartesian3,
     );
     const expectedMatrix = Matrix4.fromTranslation(
       expectedTranslation,
-      scratchExpectedMatrix
+      scratchExpectedMatrix,
     );
 
     let resultMatrix = Matrix4.clone(Matrix4.IDENTITY, scratchResultMatrix);
@@ -191,11 +188,11 @@ describe("Scene/Model/ModelArticulationStage", function () {
       0.0,
       50.0,
       0.0,
-      scratchCartesian3
+      scratchCartesian3,
     );
     const expectedMatrix = Matrix4.fromTranslation(
       expectedTranslation,
-      scratchExpectedMatrix
+      scratchExpectedMatrix,
     );
 
     let resultMatrix = Matrix4.clone(Matrix4.IDENTITY, scratchResultMatrix);
@@ -225,11 +222,11 @@ describe("Scene/Model/ModelArticulationStage", function () {
       0.0,
       0.0,
       50.0,
-      scratchCartesian3
+      scratchCartesian3,
     );
     const expectedMatrix = Matrix4.fromTranslation(
       expectedTranslation,
-      scratchExpectedMatrix
+      scratchExpectedMatrix,
     );
 
     let resultMatrix = Matrix4.clone(Matrix4.IDENTITY, scratchResultMatrix);
@@ -258,7 +255,7 @@ describe("Scene/Model/ModelArticulationStage", function () {
     const expectedRotation = Matrix3.fromRotationX(value, scratchMatrix3);
     const expectedMatrix = Matrix4.fromRotation(
       expectedRotation,
-      scratchExpectedMatrix
+      scratchExpectedMatrix,
     );
 
     let resultMatrix = Matrix4.clone(Matrix4.IDENTITY, scratchResultMatrix);
@@ -288,7 +285,7 @@ describe("Scene/Model/ModelArticulationStage", function () {
     const expectedRotation = Matrix3.fromRotationY(value, scratchMatrix3);
     const expectedMatrix = Matrix4.fromRotation(
       expectedRotation,
-      scratchExpectedMatrix
+      scratchExpectedMatrix,
     );
 
     let resultMatrix = Matrix4.clone(Matrix4.IDENTITY, scratchResultMatrix);
@@ -318,7 +315,7 @@ describe("Scene/Model/ModelArticulationStage", function () {
     const expectedRotation = Matrix3.fromRotationZ(value, scratchMatrix3);
     const expectedMatrix = Matrix4.fromRotation(
       expectedRotation,
-      scratchExpectedMatrix
+      scratchExpectedMatrix,
     );
 
     let resultMatrix = Matrix4.clone(Matrix4.IDENTITY, scratchResultMatrix);
@@ -348,11 +345,11 @@ describe("Scene/Model/ModelArticulationStage", function () {
       0.5,
       1.0,
       1.0,
-      scratchCartesian3
+      scratchCartesian3,
     );
     const expectedMatrix = Matrix4.fromScale(
       expectedScale,
-      scratchExpectedMatrix
+      scratchExpectedMatrix,
     );
 
     let resultMatrix = Matrix4.clone(Matrix4.IDENTITY, scratchResultMatrix);
@@ -382,11 +379,11 @@ describe("Scene/Model/ModelArticulationStage", function () {
       1.0,
       0.5,
       1.0,
-      scratchCartesian3
+      scratchCartesian3,
     );
     const expectedMatrix = Matrix4.fromScale(
       expectedScale,
-      scratchExpectedMatrix
+      scratchExpectedMatrix,
     );
 
     let resultMatrix = Matrix4.clone(Matrix4.IDENTITY, scratchResultMatrix);
@@ -416,11 +413,11 @@ describe("Scene/Model/ModelArticulationStage", function () {
       1.0,
       1.0,
       0.5,
-      scratchCartesian3
+      scratchCartesian3,
     );
     const expectedMatrix = Matrix4.fromScale(
       expectedScale,
-      scratchExpectedMatrix
+      scratchExpectedMatrix,
     );
 
     let resultMatrix = Matrix4.clone(Matrix4.IDENTITY, scratchResultMatrix);

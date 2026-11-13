@@ -1,10 +1,7 @@
+import { Cartesian3, Color, Event, HeadingPitchRange } from "@cesium/core";
 import {
-  Cartesian3,
   Cesium3DContentGroup,
   Cesium3DTileset,
-  Color,
-  Event,
-  HeadingPitchRange,
   Multiple3DTileContent,
   MetadataClass,
   GroupMetadata,
@@ -62,6 +59,19 @@ describe(
         },
       };
       return generateJsonBuffer(gltf).buffer;
+    }
+
+    function createMockTileset() {
+      return {
+        statistics: {
+          numberOfPendingRequests: 0,
+          numberOfAttemptedRequests: 0,
+        },
+        tileFailed: new Event(),
+        isGltfExtensionUsed: function () {
+          return false;
+        },
+      };
     }
 
     let originalRequestsPerServer;
@@ -149,7 +159,7 @@ describe(
         tileset,
         tile,
         tilesetResource,
-        contentsJson
+        contentsJson,
       );
 
       expect(content.innerContentUrls).toEqual([
@@ -166,7 +176,7 @@ describe(
         tileset,
         tile,
         tilesetResource,
-        contentJson
+        contentJson,
       );
 
       expect(content.innerContentUrls).toEqual([
@@ -177,18 +187,13 @@ describe(
     });
 
     it("requestInnerContents returns promise that resolves to content if successful", async function () {
-      const mockTileset = {
-        statistics: {
-          numberOfPendingRequests: 0,
-          numberOfAttemptedRequests: 0,
-        },
-      };
+      const mockTileset = createMockTileset();
       const tile = {};
       const content = new Multiple3DTileContent(
         mockTileset,
         tile,
         tilesetResource,
-        contentsJson
+        contentsJson,
       );
 
       spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
@@ -205,18 +210,13 @@ describe(
     });
 
     it("requestInnerContents returns undefined and updates statistics if all requests cannot be scheduled", function () {
-      const mockTileset = {
-        statistics: {
-          numberOfPendingRequests: 0,
-          numberOfAttemptedRequests: 0,
-        },
-      };
+      const mockTileset = createMockTileset();
       const tile = {};
       const content = new Multiple3DTileContent(
         mockTileset,
         tile,
         tilesetResource,
-        contentsJson
+        contentsJson,
       );
 
       RequestScheduler.maximumRequestsPerServer = 2;
@@ -226,19 +226,13 @@ describe(
     });
 
     it("requestInnerContents handles inner content failures", async function () {
-      const mockTileset = {
-        statistics: {
-          numberOfPendingRequests: 0,
-          numberOfAttemptedRequests: 0,
-        },
-        tileFailed: new Event(),
-      };
+      const mockTileset = createMockTileset();
       const tile = {};
       const content = new Multiple3DTileContent(
         mockTileset,
         tile,
         tilesetResource,
-        contentsJson
+        contentsJson,
       );
 
       spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
@@ -258,23 +252,18 @@ describe(
       expect(failureSpy).toHaveBeenCalledWith(
         jasmine.objectContaining({
           message: "my error",
-        })
+        }),
       );
     });
 
     it("requestInnerContents handles cancelled requests", async function () {
-      const mockTileset = {
-        statistics: {
-          numberOfPendingRequests: 0,
-          numberOfAttemptedRequests: 0,
-        },
-      };
+      const mockTileset = createMockTileset();
       const tile = {};
       const content = new Multiple3DTileContent(
         mockTileset,
         tile,
         tilesetResource,
-        contentsJson
+        contentsJson,
       );
 
       spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
@@ -295,7 +284,7 @@ describe(
     it("becomes ready", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        multipleContentsUrl
+        multipleContentsUrl,
       );
       expect(tileset.root.contentReady).toBeTrue();
       expect(tileset.root.content).toBeDefined();
@@ -303,21 +292,21 @@ describe(
 
     it("renders multiple contents", function () {
       return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
-        expectRenderMultipleContents
+        expectRenderMultipleContents,
       );
     });
 
     it("renders multiple contents (legacy)", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
-        multipleContentsLegacyUrl
+        multipleContentsLegacyUrl,
       ).then(expectRenderMultipleContents);
     });
 
     it("renders multiple contents (legacy with 'content')", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
-        multipleContentsLegacyWithContentUrl
+        multipleContentsLegacyWithContentUrl,
       ).then(expectRenderMultipleContents);
     });
 
@@ -335,7 +324,7 @@ describe(
         });
       });
       return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
-        expectRenderMultipleContents
+        expectRenderMultipleContents,
       );
     });
 
@@ -355,7 +344,7 @@ describe(
       });
       return Cesium3DTilesTester.loadTileset(
         scene,
-        multipleContentsLegacyUrl
+        multipleContentsLegacyUrl,
       ).then(expectRenderMultipleContents);
     });
 
@@ -373,9 +362,9 @@ describe(
             function () {
               // the content should be canceled once in total
               expect(multipleContents._cancelCount).toBe(1);
-            }
+            },
           );
-        }
+        },
       );
     });
 
@@ -394,8 +383,6 @@ describe(
         "./Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset_1.0.json";
       const withImplicitContentMetadataUrl =
         "./Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.1.json";
-      const withImplicitContentMetadataLegacyUrl =
-        "./Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.0.json";
 
       let metadataClass;
       let groupMetadata;
@@ -433,7 +420,7 @@ describe(
           function (tileset) {
             const content = tileset.root.content;
             expect(content.group).not.toBeDefined();
-          }
+          },
         );
       });
 
@@ -446,14 +433,14 @@ describe(
                 metadata: groupMetadata,
               });
             }).toThrowDeveloperError();
-          }
+          },
         );
       });
 
       it("initializes group metadata for inner contents", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          withGroupMetadataUrl
+          withGroupMetadataUrl,
         ).then(function (tileset) {
           const multipleContents = tileset.root.content;
           const innerContents = multipleContents.innerContents;
@@ -462,7 +449,7 @@ describe(
           let groupMetadata = buildingsContent.group.metadata;
           expect(groupMetadata).toBeDefined();
           expect(groupMetadata.getProperty("color")).toEqual(
-            new Cartesian3(255, 127, 0)
+            new Cartesian3(255, 127, 0),
           );
           expect(groupMetadata.getProperty("priority")).toBe(10);
           expect(groupMetadata.getProperty("isInstanced")).toBe(false);
@@ -471,7 +458,7 @@ describe(
           groupMetadata = cubesContent.group.metadata;
           expect(groupMetadata).toBeDefined();
           expect(groupMetadata.getProperty("color")).toEqual(
-            new Cartesian3(0, 255, 127)
+            new Cartesian3(0, 255, 127),
           );
           expect(groupMetadata.getProperty("priority")).toBe(5);
           expect(groupMetadata.getProperty("isInstanced")).toBe(true);
@@ -481,7 +468,7 @@ describe(
       it("initializes group metadata for inner contents (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          withGroupMetadataLegacyUrl
+          withGroupMetadataLegacyUrl,
         ).then(function (tileset) {
           const multipleContents = tileset.root.content;
           const innerContents = multipleContents.innerContents;
@@ -490,7 +477,7 @@ describe(
           let groupMetadata = buildingsContent.group.metadata;
           expect(groupMetadata).toBeDefined();
           expect(groupMetadata.getProperty("color")).toEqual(
-            new Cartesian3(255, 127, 0)
+            new Cartesian3(255, 127, 0),
           );
           expect(groupMetadata.getProperty("priority")).toBe(10);
           expect(groupMetadata.getProperty("isInstanced")).toBe(false);
@@ -499,7 +486,7 @@ describe(
           groupMetadata = cubesContent.group.metadata;
           expect(groupMetadata).toBeDefined();
           expect(groupMetadata.getProperty("color")).toEqual(
-            new Cartesian3(0, 255, 127)
+            new Cartesian3(0, 255, 127),
           );
           expect(groupMetadata.getProperty("priority")).toBe(5);
           expect(groupMetadata.getProperty("isInstanced")).toBe(true);
@@ -511,7 +498,7 @@ describe(
           function (tileset) {
             const content = tileset.root.content;
             expect(content.metadata).not.toBeDefined();
-          }
+          },
         );
       });
 
@@ -522,14 +509,14 @@ describe(
               const content = tileset.root.content;
               content.metadata = {};
             }).toThrowDeveloperError();
-          }
+          },
         );
       });
 
       it("initializes explicit content metadata for inner contents", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          withExplicitContentMetadataUrl
+          withExplicitContentMetadataUrl,
         ).then(function (tileset) {
           const multipleContents = tileset.root.content;
           const innerContents = multipleContents.innerContents;
@@ -538,7 +525,7 @@ describe(
           const batchedMetadata = batchedContent.metadata;
           expect(batchedMetadata).toBeDefined();
           expect(batchedMetadata.getProperty("highlightColor")).toEqual(
-            new Cartesian3(0, 0, 255)
+            new Cartesian3(0, 0, 255),
           );
           expect(batchedMetadata.getProperty("author")).toEqual("Cesium");
 
@@ -546,10 +533,10 @@ describe(
           const instancedMetadata = instancedContent.metadata;
           expect(instancedMetadata).toBeDefined();
           expect(instancedMetadata.getProperty("numberOfInstances")).toEqual(
-            50
+            50,
           );
           expect(instancedMetadata.getProperty("author")).toEqual(
-            "Sample Author"
+            "Sample Author",
           );
         });
       });
@@ -557,7 +544,7 @@ describe(
       it("initializes explicit content metadata for inner contents (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          withExplicitContentMetadataLegacyUrl
+          withExplicitContentMetadataLegacyUrl,
         ).then(function (tileset) {
           const multipleContents = tileset.root.content;
           const innerContents = multipleContents.innerContents;
@@ -566,7 +553,7 @@ describe(
           const batchedMetadata = batchedContent.metadata;
           expect(batchedMetadata).toBeDefined();
           expect(batchedMetadata.getProperty("highlightColor")).toEqual(
-            new Cartesian3(0, 0, 255)
+            new Cartesian3(0, 0, 255),
           );
           expect(batchedMetadata.getProperty("author")).toEqual("Cesium");
 
@@ -574,10 +561,10 @@ describe(
           const instancedMetadata = instancedContent.metadata;
           expect(instancedMetadata).toBeDefined();
           expect(instancedMetadata.getProperty("numberOfInstances")).toEqual(
-            50
+            50,
           );
           expect(instancedMetadata.getProperty("author")).toEqual(
-            "Sample Author"
+            "Sample Author",
           );
         });
       });
@@ -585,7 +572,7 @@ describe(
       it("initializes implicit content metadata for inner contents", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          withImplicitContentMetadataUrl
+          withImplicitContentMetadataUrl,
         ).then(function (tileset) {
           const placeholderTile = tileset.root;
           const subtreeRootTile = placeholderTile.children[0];
@@ -601,36 +588,7 @@ describe(
           expect(buildingMetadata).toBeDefined();
           expect(buildingMetadata.getProperty("height")).toEqual(50);
           expect(buildingMetadata.getProperty("color")).toEqual(
-            new Cartesian3(0, 0, 255)
-          );
-
-          const treeContent = innerContents[1];
-          const treeMetadata = treeContent.metadata;
-          expect(treeMetadata).toBeDefined();
-          expect(treeMetadata.getProperty("age")).toEqual(16);
-        });
-      });
-
-      it("initializes implicit content metadata for inner contents (legacy)", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          withImplicitContentMetadataLegacyUrl
-        ).then(function (tileset) {
-          const placeholderTile = tileset.root;
-          const subtreeRootTile = placeholderTile.children[0];
-
-          // This retrieves the tile at (1, 1, 1)
-          const subtreeChildTile = subtreeRootTile.children[0];
-
-          const multipleContents = subtreeChildTile.content;
-          const innerContents = multipleContents.innerContents;
-
-          const buildingContent = innerContents[0];
-          const buildingMetadata = buildingContent.metadata;
-          expect(buildingMetadata).toBeDefined();
-          expect(buildingMetadata.getProperty("height")).toEqual(50);
-          expect(buildingMetadata.getProperty("color")).toEqual(
-            new Cartesian3(0, 0, 255)
+            new Cartesian3(0, 0, 255),
           );
 
           const treeContent = innerContents[1];
@@ -641,5 +599,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

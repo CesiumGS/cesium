@@ -1,8 +1,7 @@
-import Color from "../Core/Color.js";
+import { Color, defined } from "@cesium/core";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
-import defined from "../Core/defined.js";
 
 /**
  * @private
@@ -126,7 +125,7 @@ const scratchShowFrustumCommand = new DrawCommand();
 DebugInspector.prototype.executeDebugShowFrustumsCommand = function (
   scene,
   command,
-  passState
+  passState,
 ) {
   // create debug command
   const shaderProgramId = command.shaderProgram.id;
@@ -134,7 +133,7 @@ DebugInspector.prototype.executeDebugShowFrustumsCommand = function (
   if (!defined(debugShaderProgram)) {
     debugShaderProgram = createDebugShowFrustumsShaderProgram(
       scene,
-      command.shaderProgram
+      command.shaderProgram,
     );
 
     this._cachedShowFrustumsShaders[shaderProgramId] = debugShaderProgram;
@@ -142,7 +141,7 @@ DebugInspector.prototype.executeDebugShowFrustumsCommand = function (
 
   const debugCommand = DrawCommand.shallowClone(
     command,
-    scratchShowFrustumCommand
+    scratchShowFrustumCommand,
   );
   debugCommand.shaderProgram = debugShaderProgram;
   debugCommand.uniformMap = createDebugShowFrustumsUniformMap(scene, command);

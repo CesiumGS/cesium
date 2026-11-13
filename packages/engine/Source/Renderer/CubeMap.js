@@ -1,17 +1,26 @@
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  BoxGeometry,
+  Cartesian3,
+  Check,
+  DeveloperError,
+  Frozen,
+  GeometryPipeline,
+  Math as CesiumMath,
+  PixelDatatype,
+  PixelFormat,
+  VertexFormat,
+  defined,
+  destroyObject,
+} from "@cesium/core";
+import BufferUsage from "./BufferUsage.js";
 import ContextLimits from "./ContextLimits.js";
 import CubeMapFace from "./CubeMapFace.js";
+import Framebuffer from "./Framebuffer.js";
 import MipmapHint from "./MipmapHint.js";
-import PixelDatatype from "./PixelDatatype.js";
 import Sampler from "./Sampler.js";
 import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";
+import VertexArray from "./VertexArray.js";
 
 /**
  * @typedef CubeMap.BufferSource
@@ -62,7 +71,7 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @private
  */
 function CubeMap(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -91,13 +100,13 @@ function CubeMap(options) {
     //>>includeStart('debug', pragmas.debug);
     if (
       !Object.values(CubeMap.FaceName).every((faceName) =>
-        defined(source[faceName])
+        defined(source[faceName]),
       )
     ) {
       throw new DeveloperError(
         `options.source requires faces ${Object.values(CubeMap.FaceName).join(
-          ", "
-        )}.`
+          ", ",
+        )}.`,
       );
     }
     //>>includeEnd('debug');
@@ -105,11 +114,11 @@ function CubeMap(options) {
     ({ width, height } = source.positiveX);
 
     //>>includeStart('debug', pragmas.debug);
-    for (const faceName of CubeMap.getFaceNames()) {
+    for (const faceName of CubeMap.faceNames()) {
       const face = source[faceName];
       if (Number(face.width) !== width || Number(face.height) !== height) {
         throw new DeveloperError(
-          "Each face in options.source must have the same width and height."
+          "Each face in options.source must have the same width and height.",
         );
       }
     }
@@ -121,7 +130,7 @@ function CubeMap(options) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(width) || !defined(height)) {
     throw new DeveloperError(
-      "options requires a source field to create an initialized cube map or width and height fields to create a blank cube map."
+      "options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.",
     );
   }
 
@@ -135,7 +144,7 @@ function CubeMap(options) {
 
   if (size > ContextLimits.maximumCubeMapSize) {
     throw new DeveloperError(
-      `Width and height must be less than or equal to the maximum cube map size (${ContextLimits.maximumCubeMapSize}). Check maximumCubeMapSize.`
+      `Width and height must be less than or equal to the maximum cube map size (${ContextLimits.maximumCubeMapSize}). Check maximumCubeMapSize.`,
     );
   }
 
@@ -145,7 +154,7 @@ function CubeMap(options) {
 
   if (PixelFormat.isDepthFormat(pixelFormat)) {
     throw new DeveloperError(
-      "options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL."
+      "options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.",
     );
   }
 
@@ -155,7 +164,7 @@ function CubeMap(options) {
 
   if (pixelDatatype === PixelDatatype.FLOAT && !context.floatingPointTexture) {
     throw new DeveloperError(
-      "When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension."
+      "When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.",
     );
   }
 
@@ -164,7 +173,7 @@ function CubeMap(options) {
     !context.halfFloatingPointTexture
   ) {
     throw new DeveloperError(
-      "When options.pixelDatatype is HALF_FLOAT, this WebGL implementation must support the OES_texture_half_float extension."
+      "When options.pixelDatatype is HALF_FLOAT, this WebGL implementation must support the OES_texture_half_float extension.",
     );
   }
   //>>includeEnd('debug');
@@ -174,7 +183,7 @@ function CubeMap(options) {
   const internalFormat = PixelFormat.toInternalFormat(
     pixelFormat,
     pixelDatatype,
-    context
+    context.webgl2,
   );
 
   const gl = context._gl;
@@ -206,7 +215,7 @@ function CubeMap(options) {
       size,
       preMultiplyAlpha,
       flipY,
-      initialized
+      initialized,
     );
   }
   this._positiveX = constructFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X);
@@ -227,11 +236,11 @@ function CubeMap(options) {
   } else {
     gl.pixelStorei(
       gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
-      gl.BROWSER_DEFAULT_WEBGL
+      gl.BROWSER_DEFAULT_WEBGL,
     );
   }
 
-  for (const faceName of CubeMap.getFaceNames()) {
+  for (const faceName of CubeMap.faceNames()) {
     loadFace(this[faceName], source?.[faceName], 0);
   }
 
@@ -239,11 +248,37 @@ function CubeMap(options) {
 }
 
 /**
+ * Copy an existing texture to a cubemap face.
+ * @param {FrameState} frameState The current rendering frameState
+ * @param {Texture} texture Texture being copied
+ * @param {CubeMap.FaceName} face The face to which to copy
+ * @param {number} [mipLevel=0] The mip level at which to copy
+ */
+CubeMap.prototype.copyFace = function (frameState, texture, face, mipLevel) {
+  const context = frameState.context;
+  const framebuffer = new Framebuffer({
+    context: context,
+    colorTextures: [texture],
+    destroyAttachments: false,
+  });
+
+  framebuffer._bind();
+
+  this[face].copyMipmapFromFramebuffer(
+    0,
+    0,
+    texture.width,
+    texture.height,
+    mipLevel ?? 0,
+  );
+  framebuffer._unBind();
+  framebuffer.destroy();
+};
+
+/**
  * An enum defining the names of the faces of a cube map.
- *
  * @alias {CubeMap.FaceName}
  * @enum {string}
- *
  * @private
  */
 CubeMap.FaceName = Object.freeze({
@@ -255,7 +290,7 @@ CubeMap.FaceName = Object.freeze({
   NEGATIVEZ: "negativeZ",
 });
 
-function* makeFacesIterator() {
+function* makeFaceNamesIterator() {
   yield CubeMap.FaceName.POSITIVEX;
   yield CubeMap.FaceName.NEGATIVEX;
   yield CubeMap.FaceName.POSITIVEY;
@@ -266,26 +301,22 @@ function* makeFacesIterator() {
 
 /**
  * Creates an iterator for looping over the cubemap faces.
- *
  * @type {Iterable<CubeMap.FaceName>}
- *
  * @private
  */
-CubeMap.getFaceNames = function () {
-  return makeFacesIterator();
+CubeMap.faceNames = function () {
+  return makeFaceNamesIterator();
 };
 
 /**
  * Load texel data into one face of a cube map.
- *
  * @param {CubeMapFace} cubeMapFace The face to which texel values will be loaded.
  * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|CubeMap.BufferSource} [source] The source for texel values to be loaded into the texture.
  * @param {number} [mipLevel=0] The mip level to which the texel values will be loaded.
- *
  * @private
  */
 function loadFace(cubeMapFace, source, mipLevel) {
-  mipLevel = defaultValue(mipLevel, 0);
+  mipLevel = mipLevel ?? 0;
   const targetFace = cubeMapFace._targetFace;
   const size = Math.max(Math.floor(cubeMapFace._size / 2 ** mipLevel), 1);
   const pixelFormat = cubeMapFace._pixelFormat;
@@ -305,8 +336,8 @@ function loadFace(cubeMapFace, source, mipLevel) {
       size,
       0,
       pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      null
+      PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
+      null,
     );
     return;
   }
@@ -318,7 +349,7 @@ function loadFace(cubeMapFace, source, mipLevel) {
     unpackAlignment = PixelFormat.alignmentInBytes(
       pixelFormat,
       pixelDatatype,
-      size
+      size,
     );
   }
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
@@ -332,7 +363,7 @@ function loadFace(cubeMapFace, source, mipLevel) {
         pixelFormat,
         pixelDatatype,
         size,
-        size
+        size,
       );
     }
     gl.texImage2D(
@@ -343,8 +374,8 @@ function loadFace(cubeMapFace, source, mipLevel) {
       size,
       0,
       pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      arrayBufferView
+      PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
+      arrayBufferView,
     );
   } else {
     // Only valid for DOM-Element uploads
@@ -355,11 +386,13 @@ function loadFace(cubeMapFace, source, mipLevel) {
       mipLevel,
       internalFormat,
       pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      source
+      PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
+      source,
     );
   }
 }
+
+CubeMap.loadFace = loadFace;
 
 Object.defineProperties(CubeMap.prototype, {
   positiveX: {
@@ -448,6 +481,29 @@ Object.defineProperties(CubeMap.prototype, {
 });
 
 /**
+ * Get a vector representing the cubemap face direction
+ * @param {CubeMap.FaceName} face The relevant face
+ * @param {Cartesian3} [result] The object onto which to store the result.
+ * @returns {Cartesian3} The vector representing the cubemap face direction
+ */
+CubeMap.getDirection = function (face, result) {
+  switch (face) {
+    case CubeMap.FaceName.POSITIVEX:
+      return Cartesian3.clone(Cartesian3.UNIT_X, result);
+    case CubeMap.FaceName.NEGATIVEX:
+      return Cartesian3.negate(Cartesian3.UNIT_X, result);
+    case CubeMap.FaceName.POSITIVEY:
+      return Cartesian3.clone(Cartesian3.UNIT_Y, result);
+    case CubeMap.FaceName.NEGATIVEY:
+      return Cartesian3.negate(Cartesian3.UNIT_Y, result);
+    case CubeMap.FaceName.POSITIVEZ:
+      return Cartesian3.clone(Cartesian3.UNIT_Z, result);
+    case CubeMap.FaceName.NEGATIVEZ:
+      return Cartesian3.negate(Cartesian3.UNIT_Z, result);
+  }
+};
+
+/**
  * Set up a sampler for use with a cube map.
  * @param {CubeMap} cubeMap The cube map containing the texture to be sampled by this sampler.
  * @param {Sampler} sampler Information about how to sample the cubemap texture.
@@ -492,7 +548,7 @@ function setupSampler(cubeMap, sampler) {
     gl.texParameteri(
       target,
       cubeMap._textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT,
-      sampler.maximumAnisotropy
+      sampler.maximumAnisotropy,
     );
   }
   gl.bindTexture(target, null);
@@ -518,7 +574,7 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
   }
   //>>includeEnd('debug');
 
-  skipColorSpaceConversion = defaultValue(skipColorSpaceConversion, false);
+  skipColorSpaceConversion = skipColorSpaceConversion ?? false;
   const gl = this._context._gl;
   const texture = this._texture;
   const textureTarget = this._textureTarget;
@@ -531,7 +587,7 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
   } else {
     gl.pixelStorei(
       gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
-      gl.BROWSER_DEFAULT_WEBGL
+      gl.BROWSER_DEFAULT_WEBGL,
     );
   }
 
@@ -539,7 +595,7 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
     const mipSource = source[i];
     // mipLevel 0 was the base layer, already loaded when the CubeMap was constructed.
     const mipLevel = i + 1;
-    for (const faceName of CubeMap.getFaceNames()) {
+    for (const faceName of CubeMap.faceNames()) {
       loadFace(this[faceName], mipSource[faceName], mipLevel);
     }
   }
@@ -568,12 +624,12 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
  * });
  */
 CubeMap.prototype.generateMipmap = function (hint) {
-  hint = defaultValue(hint, MipmapHint.DONT_CARE);
+  hint = hint ?? MipmapHint.DONT_CARE;
 
   //>>includeStart('debug', pragmas.debug);
   if (this._size > 1 && !CesiumMath.isPowerOfTwo(this._size)) {
     throw new DeveloperError(
-      "width and height must be a power of two to call generateMipmap()."
+      "width and height must be a power of two to call generateMipmap().",
     );
   }
   if (!MipmapHint.validate(hint)) {
@@ -590,6 +646,29 @@ CubeMap.prototype.generateMipmap = function (hint) {
   gl.bindTexture(target, this._texture);
   gl.generateMipmap(target);
   gl.bindTexture(target, null);
+};
+
+/**
+ * Create a vertex array that can be used for cubemap shaders.
+ * @param {Context} context The rendering context
+ * @returns {VertexArray} The created vertex array
+ */
+CubeMap.createVertexArray = function (context) {
+  const geometry = BoxGeometry.createGeometry(
+    BoxGeometry.fromDimensions({
+      dimensions: new Cartesian3(2.0, 2.0, 2.0),
+      vertexFormat: VertexFormat.POSITION_ONLY,
+    }),
+  );
+  const attributeLocations = (this._attributeLocations =
+    GeometryPipeline.createAttributeLocations(geometry));
+
+  return VertexArray.fromGeometry({
+    context: context,
+    geometry: geometry,
+    attributeLocations: attributeLocations,
+    bufferUsage: BufferUsage.STATIC_DRAW,
+  });
 };
 
 CubeMap.prototype.isDestroyed = function () {

@@ -1,7 +1,4 @@
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Check, DeveloperError, clone, defined } from "@cesium/core";
 
 /**
  * An entity containing metadata.
@@ -135,7 +132,7 @@ MetadataEntity.prototype.setPropertyBySemantic = function (semantic, value) {
 MetadataEntity.hasProperty = function (
   propertyId,
   properties,
-  classDefinition
+  classDefinition,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("propertyId", propertyId);
@@ -173,7 +170,7 @@ MetadataEntity.hasProperty = function (
 MetadataEntity.hasPropertyBySemantic = function (
   semantic,
   properties,
-  classDefinition
+  classDefinition,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("semantic", semantic);
@@ -203,7 +200,7 @@ MetadataEntity.hasPropertyBySemantic = function (
 MetadataEntity.getPropertyIds = function (
   properties,
   classDefinition,
-  results
+  results,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("properties", properties);
@@ -256,7 +253,7 @@ MetadataEntity.getPropertyIds = function (
 MetadataEntity.getProperty = function (
   propertyId,
   properties,
-  classDefinition
+  classDefinition,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("propertyId", propertyId);
@@ -313,7 +310,7 @@ MetadataEntity.setProperty = function (
   propertyId,
   value,
   properties,
-  classDefinition
+  classDefinition,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("propertyId", propertyId);
@@ -361,7 +358,7 @@ MetadataEntity.setProperty = function (
 MetadataEntity.getPropertyBySemantic = function (
   semantic,
   properties,
-  classDefinition
+  classDefinition,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("semantic", semantic);
@@ -395,7 +392,7 @@ MetadataEntity.setPropertyBySemantic = function (
   semantic,
   value,
   properties,
-  classDefinition
+  classDefinition,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("semantic", semantic);
@@ -415,7 +412,7 @@ MetadataEntity.setPropertyBySemantic = function (
       property.id,
       value,
       properties,
-      classDefinition
+      classDefinition,
     );
   }
 

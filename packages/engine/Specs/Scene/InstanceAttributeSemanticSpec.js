@@ -24,8 +24,8 @@ describe("Scene/InstanceAttributeSemantic", function () {
       expect(
         InstanceAttributeSemantic.fromGltfSemantic(
           gltfSemantics[i],
-          expectedSemantics[i]
-        )
+          expectedSemantics[i],
+        ),
       ).toBe(expectedSemantics[i]);
     }
   });

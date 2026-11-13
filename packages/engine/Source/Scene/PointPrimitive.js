@@ -1,14 +1,16 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import Matrix4 from "../Core/Matrix4.js";
-import NearFarScalar from "../Core/NearFarScalar.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Color,
+  DeveloperError,
+  DistanceDisplayCondition,
+  Frozen,
+  Matrix4,
+  NearFarScalar,
+  defined,
+} from "@cesium/core";
 import SceneMode from "./SceneMode.js";
 import SceneTransforms from "./SceneTransforms.js";
 import SplitDirection from "./SplitDirection.js";
@@ -39,10 +41,10 @@ import SplitDirection from "./SplitDirection.js";
  * @internalConstructor
  * @class
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Points.html|Cesium Sandcastle Points Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=points|Cesium Sandcastle Points Demo}
  */
 function PointPrimitive(options, pointPrimitiveCollection) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (
@@ -50,7 +52,7 @@ function PointPrimitive(options, pointPrimitiveCollection) {
     options.disableDepthTestDistance < 0.0
   ) {
     throw new DeveloperError(
-      "disableDepthTestDistance must be greater than or equal to 0.0."
+      "disableDepthTestDistance must be greater than or equal to 0.0.",
     );
   }
   //>>includeEnd('debug');
@@ -62,7 +64,7 @@ function PointPrimitive(options, pointPrimitiveCollection) {
     //>>includeStart('debug', pragmas.debug);
     if (translucencyByDistance.far <= translucencyByDistance.near) {
       throw new DeveloperError(
-        "translucencyByDistance.far must be greater than translucencyByDistance.near."
+        "translucencyByDistance.far must be greater than translucencyByDistance.near.",
       );
     }
     //>>includeEnd('debug');
@@ -72,7 +74,7 @@ function PointPrimitive(options, pointPrimitiveCollection) {
     //>>includeStart('debug', pragmas.debug);
     if (scaleByDistance.far <= scaleByDistance.near) {
       throw new DeveloperError(
-        "scaleByDistance.far must be greater than scaleByDistance.near."
+        "scaleByDistance.far must be greater than scaleByDistance.near.",
       );
     }
     //>>includeEnd('debug');
@@ -82,35 +84,28 @@ function PointPrimitive(options, pointPrimitiveCollection) {
     //>>includeStart('debug', pragmas.debug);
     if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
       throw new DeveloperError(
-        "distanceDisplayCondition.far must be greater than distanceDisplayCondition.near."
+        "distanceDisplayCondition.far must be greater than distanceDisplayCondition.near.",
       );
     }
     //>>includeEnd('debug');
     distanceDisplayCondition = DistanceDisplayCondition.clone(
-      distanceDisplayCondition
+      distanceDisplayCondition,
     );
   }
 
-  this._show = defaultValue(options.show, true);
-  this._position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO)
-  );
+  this._show = options.show ?? true;
+  this._position = Cartesian3.clone(options.position ?? Cartesian3.ZERO);
   this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
-  this._color = Color.clone(defaultValue(options.color, Color.WHITE));
-  this._outlineColor = Color.clone(
-    defaultValue(options.outlineColor, Color.TRANSPARENT)
-  );
-  this._outlineWidth = defaultValue(options.outlineWidth, 0.0);
-  this._pixelSize = defaultValue(options.pixelSize, 10.0);
+  this._color = Color.clone(options.color ?? Color.WHITE);
+  this._outlineColor = Color.clone(options.outlineColor ?? Color.TRANSPARENT);
+  this._outlineWidth = options.outlineWidth ?? 0.0;
+  this._pixelSize = options.pixelSize ?? 10.0;
   this._scaleByDistance = scaleByDistance;
   this._translucencyByDistance = translucencyByDistance;
   this._distanceDisplayCondition = distanceDisplayCondition;
-  this._disableDepthTestDistance = defaultValue(
-    options.disableDepthTestDistance,
-    0.0
-  );
+  this._disableDepthTestDistance = options.disableDepthTestDistance ?? 0.0;
   this._id = options.id;
-  this._collection = defaultValue(options.collection, pointPrimitiveCollection);
+  this._collection = options.collection ?? pointPrimitiveCollection;
 
   this._clusterShow = true;
 
@@ -119,10 +114,7 @@ function PointPrimitive(options, pointPrimitiveCollection) {
   this._dirty = false;
   this._index = -1; //Used only by PointPrimitiveCollection
 
-  this._splitDirection = defaultValue(
-    options.splitDirection,
-    SplitDirection.NONE
-  );
+  this._splitDirection = options.splitDirection ?? SplitDirection.NONE;
 }
 
 const SHOW_INDEX = (PointPrimitive.SHOW_INDEX = 0);
@@ -132,9 +124,12 @@ const OUTLINE_COLOR_INDEX = (PointPrimitive.OUTLINE_COLOR_INDEX = 3);
 const OUTLINE_WIDTH_INDEX = (PointPrimitive.OUTLINE_WIDTH_INDEX = 4);
 const PIXEL_SIZE_INDEX = (PointPrimitive.PIXEL_SIZE_INDEX = 5);
 const SCALE_BY_DISTANCE_INDEX = (PointPrimitive.SCALE_BY_DISTANCE_INDEX = 6);
-const TRANSLUCENCY_BY_DISTANCE_INDEX = (PointPrimitive.TRANSLUCENCY_BY_DISTANCE_INDEX = 7);
-const DISTANCE_DISPLAY_CONDITION_INDEX = (PointPrimitive.DISTANCE_DISPLAY_CONDITION_INDEX = 8);
-const DISABLE_DEPTH_DISTANCE_INDEX = (PointPrimitive.DISABLE_DEPTH_DISTANCE_INDEX = 9);
+const TRANSLUCENCY_BY_DISTANCE_INDEX =
+  (PointPrimitive.TRANSLUCENCY_BY_DISTANCE_INDEX = 7);
+const DISTANCE_DISPLAY_CONDITION_INDEX =
+  (PointPrimitive.DISTANCE_DISPLAY_CONDITION_INDEX = 8);
+const DISABLE_DEPTH_DISTANCE_INDEX =
+  (PointPrimitive.DISABLE_DEPTH_DISTANCE_INDEX = 9);
 const SPLIT_DIRECTION_INDEX = (PointPrimitive.SPLIT_DIRECTION_INDEX = 10);
 PointPrimitive.NUMBER_OF_PROPERTIES = 11;
 
@@ -143,7 +138,7 @@ function makeDirty(pointPrimitive, propertyChanged) {
   if (defined(pointPrimitiveCollection)) {
     pointPrimitiveCollection._updatePointPrimitive(
       pointPrimitive,
-      propertyChanged
+      propertyChanged,
     );
     pointPrimitive._dirty = true;
   }
@@ -231,7 +226,7 @@ Object.defineProperties(PointPrimitive.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (defined(value) && value.far <= value.near) {
         throw new DeveloperError(
-          "far distance must be greater than near distance."
+          "far distance must be greater than near distance.",
         );
       }
       //>>includeEnd('debug');
@@ -274,7 +269,7 @@ Object.defineProperties(PointPrimitive.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (defined(value) && value.far <= value.near) {
         throw new DeveloperError(
-          "far distance must be greater than near distance."
+          "far distance must be greater than near distance.",
         );
       }
       //>>includeEnd('debug');
@@ -283,7 +278,7 @@ Object.defineProperties(PointPrimitive.prototype, {
       if (!NearFarScalar.equals(translucencyByDistance, value)) {
         this._translucencyByDistance = NearFarScalar.clone(
           value,
-          translucencyByDistance
+          translucencyByDistance,
         );
         makeDirty(this, TRANSLUCENCY_BY_DISTANCE_INDEX);
       }
@@ -417,7 +412,7 @@ Object.defineProperties(PointPrimitive.prototype, {
       ) {
         this._distanceDisplayCondition = DistanceDisplayCondition.clone(
           value,
-          this._distanceDisplayCondition
+          this._distanceDisplayCondition,
         );
         makeDirty(this, DISTANCE_DISPLAY_CONDITION_INDEX);
       }
@@ -440,7 +435,7 @@ Object.defineProperties(PointPrimitive.prototype, {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(value) || value < 0.0) {
           throw new DeveloperError(
-            "disableDepthTestDistance must be greater than or equal to 0.0."
+            "disableDepthTestDistance must be greater than or equal to 0.0.",
           );
         }
         //>>includeEnd('debug');
@@ -538,7 +533,7 @@ const tempCartesian3 = new Cartesian4();
 PointPrimitive._computeActualPosition = function (
   position,
   frameState,
-  modelMatrix
+  modelMatrix,
 ) {
   if (frameState.mode === SceneMode.SCENE3D) {
     return position;
@@ -547,7 +542,7 @@ PointPrimitive._computeActualPosition = function (
   Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian3);
   return SceneTransforms.computeActualEllipsoidPosition(
     frameState,
-    tempCartesian3
+    tempCartesian3,
   );
 };
 
@@ -558,7 +553,7 @@ PointPrimitive._computeScreenSpacePosition = function (
   modelMatrix,
   position,
   scene,
-  result
+  result,
 ) {
   // Model to world coordinates
   const positionWorld = Matrix4.multiplyByVector(
@@ -568,14 +563,14 @@ PointPrimitive._computeScreenSpacePosition = function (
       position.y,
       position.z,
       1,
-      scratchCartesian4
+      scratchCartesian4,
     ),
-    scratchCartesian4
+    scratchCartesian4,
   );
   const positionWC = SceneTransforms.worldToWindowCoordinates(
     scene,
     positionWorld,
-    result
+    result,
   );
   return positionWC;
 };
@@ -614,7 +609,7 @@ PointPrimitive.prototype.computeScreenSpacePosition = function (scene, result) {
     modelMatrix,
     this._actualPosition,
     scene,
-    result
+    result,
   );
   if (!defined(windowCoordinates)) {
     return undefined;
@@ -636,7 +631,7 @@ PointPrimitive.prototype.computeScreenSpacePosition = function (scene, result) {
 PointPrimitive.getScreenSpaceBoundingBox = function (
   point,
   screenSpacePosition,
-  result
+  result,
 ) {
   const size = point.pixelSize;
   const halfSize = size * 0.5;
@@ -662,7 +657,7 @@ PointPrimitive.getScreenSpaceBoundingBox = function (
  * Determines if this point equals another point.  Points are equal if all their properties
  * are equal.  Points in different collections can be equal.
  *
- * @param {PointPrimitive} other The point to compare for equality.
+ * @param {PointPrimitive} [other] The point to compare for equality.
  * @returns {boolean} <code>true</code> if the points are equal; otherwise, <code>false</code>.
  */
 PointPrimitive.prototype.equals = function (other) {
@@ -679,11 +674,11 @@ PointPrimitive.prototype.equals = function (other) {
       NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
       NearFarScalar.equals(
         this._translucencyByDistance,
-        other._translucencyByDistance
+        other._translucencyByDistance,
       ) &&
       DistanceDisplayCondition.equals(
         this._distanceDisplayCondition,
-        other._distanceDisplayCondition
+        other._distanceDisplayCondition,
       ) &&
       this._disableDepthTestDistance === other._disableDepthTestDistance &&
       this._splitDirection === other._splitDirection)

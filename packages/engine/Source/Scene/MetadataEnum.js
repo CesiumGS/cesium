@@ -1,6 +1,4 @@
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import defaultValue from "../Core/defaultValue.js";
+import { Check, Frozen, clone } from "@cesium/core";
 import MetadataEnumValue from "./MetadataEnumValue.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 
@@ -24,7 +22,7 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataEnum(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const id = options.id;
   const values = options.values;
 
@@ -43,10 +41,7 @@ function MetadataEnum(options) {
     valuesByName[value.name] = value.value;
   }
 
-  const valueType = defaultValue(
-    options.valueType,
-    MetadataComponentType.UINT16
-  );
+  const valueType = options.valueType ?? MetadataComponentType.UINT16;
 
   this._values = values;
   this._namesByValue = namesByValue;
@@ -72,7 +67,7 @@ function MetadataEnum(options) {
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataEnum.fromJson = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const id = options.id;
   const enumDefinition = options.enum;
 

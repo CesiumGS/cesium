@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core";
 import DoublyLinkedList from "../Core/DoublyLinkedList.js";
 
 /**
@@ -34,10 +34,25 @@ Cesium3DTilesetCache.prototype.add = function (tile) {
   }
 };
 
+/**
+ * Invokes the callback for each tile with loaded content in the cache.
+ *
+ * @param {Function} callback A function that takes a {@link Cesium3DTile}.
+ * @private
+ */
+Cesium3DTilesetCache.prototype.forEachLoadedTile = function (callback) {
+  for (let node = this._list.head; defined(node); node = node.next) {
+    // The sentinel node has no item.
+    if (defined(node.item)) {
+      callback(node.item);
+    }
+  }
+};
+
 Cesium3DTilesetCache.prototype.unloadTile = function (
   tileset,
   tile,
-  unloadCallback
+  unloadCallback,
 ) {
   const node = tile.cacheNode;
   if (!defined(node)) {
@@ -51,7 +66,7 @@ Cesium3DTilesetCache.prototype.unloadTile = function (
 
 Cesium3DTilesetCache.prototype.unloadTiles = function (
   tileset,
-  unloadCallback
+  unloadCallback,
 ) {
   const trimTiles = this._trimTiles;
   this._trimTiles = false;

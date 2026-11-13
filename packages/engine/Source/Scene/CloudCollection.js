@@ -1,27 +1,30 @@
+import {
+  Cartesian3,
+  Check,
+  Color,
+  ComponentDatatype,
+  DeveloperError,
+  EncodedCartesian3,
+  Frozen,
+  IndexDatatype,
+  PixelDatatype,
+  PixelFormat,
+  WebGLConstants,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import BlendingState from "./BlendingState.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import CloudType from "./CloudType.js";
 import CloudCollectionFS from "../Shaders/CloudCollectionFS.js";
 import CloudCollectionVS from "../Shaders/CloudCollectionVS.js";
 import CloudNoiseFS from "../Shaders/CloudNoiseFS.js";
 import CloudNoiseVS from "../Shaders/CloudNoiseVS.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 import CumulusCloud from "./CumulusCloud.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
-import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
 import Pass from "../Renderer/Pass.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
-import PixelFormat from "../Core/PixelFormat.js";
 import RenderState from "../Renderer/RenderState.js";
 import Sampler from "../Renderer/Sampler.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
@@ -32,7 +35,6 @@ import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js"
 import TextureWrap from "../Renderer/TextureWrap.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import VertexArrayFacade from "../Renderer/VertexArrayFacade.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
 
 let attributeLocations;
 const scratchTextureDimensions = new Cartesian3();
@@ -79,15 +81,15 @@ const COLOR_INDEX = CumulusCloud.COLOR_INDEX;
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.show=true] Whether to display the clouds.
  * @param {number} [options.noiseDetail=16.0] Desired amount of detail in the noise texture.
- * @param {number} [options.noiseOffset=Cartesian3.ZERO] Desired translation of data in noise texture.
+ * @param {Cartesian3} [options.noiseOffset=Cartesian3.ZERO] Desired translation of data in noise texture.
  * @param {boolean} [options.debugBillboards=false] For debugging only. Determines if the billboards are rendered with an opaque color.
  * @param {boolean} [options.debugEllipsoids=false] For debugging only. Determines if the clouds will be rendered as opaque ellipsoids.
  * @see CloudCollection#add
  * @see CloudCollection#remove
  * @see CumulusCloud
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Clouds.html|Cesium Sandcastle Clouds Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Cloud%20Parameters.html|Cesium Sandcastle Cloud Parameters Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=clouds|Cesium Sandcastle Clouds Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=cloud-parameters|Cesium Sandcastle Cloud Parameters Demo}
  *
  * @example
  * // Create a cloud collection with two cumulus clouds
@@ -104,7 +106,7 @@ const COLOR_INDEX = CumulusCloud.COLOR_INDEX;
  *
  */
 function CloudCollection(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._clouds = [];
   this._cloudsToUpdate = [];
@@ -143,7 +145,7 @@ function CloudCollection(options) {
    *
    * @default 16.0
    */
-  this.noiseDetail = defaultValue(options.noiseDetail, 16.0);
+  this.noiseDetail = options.noiseDetail ?? 16.0;
 
   /**
    * <p>
@@ -167,9 +169,7 @@ function CloudCollection(options) {
    *
    * @default Cartesian3.ZERO
    */
-  this.noiseOffset = Cartesian3.clone(
-    defaultValue(options.noiseOffset, Cartesian3.ZERO)
-  );
+  this.noiseOffset = Cartesian3.clone(options.noiseOffset ?? Cartesian3.ZERO);
 
   this._loading = false;
   this._ready = false;
@@ -198,7 +198,7 @@ function CloudCollection(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   this._colorCommands = [];
 
@@ -212,7 +212,7 @@ function CloudCollection(options) {
    *
    * @default false
    */
-  this.debugBillboards = defaultValue(options.debugBillboards, false);
+  this.debugBillboards = options.debugBillboards ?? false;
   this._compiledDebugBillboards = false;
 
   /**
@@ -226,7 +226,7 @@ function CloudCollection(options) {
    *
    * @default false
    */
-  this.debugEllipsoids = defaultValue(options.debugEllipsoids, false);
+  this.debugEllipsoids = options.debugEllipsoids ?? false;
   this._compiledDebugEllipsoids = false;
 }
 
@@ -298,8 +298,8 @@ function destroyClouds(clouds) {
  * @see CloudCollection#removeAll
  */
 CloudCollection.prototype.add = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const cloudType = defaultValue(options.cloudType, CloudType.CUMULUS);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const cloudType = options.cloudType ?? CloudType.CUMULUS;
   //>>includeStart('debug', pragmas.debug);
   if (!CloudType.validate(cloudType)) {
     throw new DeveloperError("invalid cloud type");
@@ -447,14 +447,7 @@ CloudCollection.prototype.get = function (index) {
 };
 
 const texturePositions = new Float32Array([
-  -1.0,
-  -1.0,
-  1.0,
-  -1.0,
-  1.0,
-  1.0,
-  -1.0,
-  1.0,
+  -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0,
 ]);
 
 const textureIndices = new Uint16Array([0, 1, 2, 0, 2, 3]);
@@ -713,7 +706,7 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
     textureSliceWidth % noiseTextureRows !== 0
   ) {
     throw new DeveloperError(
-      "noiseTextureRows must evenly divide textureSliceWidth"
+      "noiseTextureRows must evenly divide textureSliceWidth",
     );
   }
   //>>includeEnd('debug');

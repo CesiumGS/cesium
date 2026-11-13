@@ -1,5 +1,6 @@
+import { getAbsoluteUri } from "@cesium/core";
 import Uri from "urijs";
-import { getAbsoluteUri, isCrossOriginUrl } from "../../index.js";
+import { isCrossOriginUrl } from "../../index.js";
 
 describe("Core/isCrossOriginUrl", function () {
   it("returns false for relative urls", function () {
@@ -17,7 +18,7 @@ describe("Core/isCrossOriginUrl", function () {
 
   it("returns true for absolute urls that are cross-origin", function () {
     expect(isCrossOriginUrl("http://example.invalid/some/url.jpg")).toEqual(
-      true
+      true,
     );
 
     // a different scheme counts as cross-origin

@@ -1,10 +1,12 @@
+import {
+  Cartesian3,
+  Check,
+  Frozen,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+} from "@cesium/core";
 import ArticulationStageType from "../../Core/ArticulationStageType.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import CesiumMath from "../../Core/Math.js";
-import Check from "../../Core/Check.js";
-import defaultValue from "../../Core/defaultValue.js";
-import Matrix3 from "../../Core/Matrix3.js";
-import Matrix4 from "../../Core/Matrix4.js";
 
 const articulationEpsilon = CesiumMath.EPSILON16;
 
@@ -22,7 +24,7 @@ const articulationEpsilon = CesiumMath.EPSILON16;
  * @private
  */
 function ModelArticulationStage(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const stage = options.stage;
   const runtimeArticulation = options.runtimeArticulation;
@@ -155,7 +157,7 @@ Object.defineProperties(ModelArticulationStage.prototype, {
         !CesiumMath.equalsEpsilon(
           this._currentValue,
           value,
-          articulationEpsilon
+          articulationEpsilon,
         )
       ) {
         this._currentValue = value;
@@ -194,21 +196,21 @@ ModelArticulationStage.prototype.applyStageToMatrix = function (result) {
     case ArticulationStageType.XROTATE:
       rotation = Matrix3.fromRotationX(
         CesiumMath.toRadians(value),
-        scratchArticulationRotation
+        scratchArticulationRotation,
       );
       result = Matrix4.multiplyByMatrix3(result, rotation, result);
       break;
     case ArticulationStageType.YROTATE:
       rotation = Matrix3.fromRotationY(
         CesiumMath.toRadians(value),
-        scratchArticulationRotation
+        scratchArticulationRotation,
       );
       result = Matrix4.multiplyByMatrix3(result, rotation, result);
       break;
     case ArticulationStageType.ZROTATE:
       rotation = Matrix3.fromRotationZ(
         CesiumMath.toRadians(value),
-        scratchArticulationRotation
+        scratchArticulationRotation,
       );
       result = Matrix4.multiplyByMatrix3(result, rotation, result);
       break;

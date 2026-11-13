@@ -1,17 +1,19 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import CylinderGeometry from "../Core/CylinderGeometry.js";
-import CylinderOutlineGeometry from "../Core/CylinderOutlineGeometry.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import GeometryOffsetAttribute from "../Core/GeometryOffsetAttribute.js";
-import Iso8601 from "../Core/Iso8601.js";
+import {
+  Cartesian3,
+  Check,
+  Color,
+  ColorGeometryInstanceAttribute,
+  CylinderGeometry,
+  CylinderOutlineGeometry,
+  DeveloperError,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  GeometryInstance,
+  GeometryOffsetAttribute,
+  Iso8601,
+  ShowGeometryInstanceAttribute,
+  defined,
+} from "@cesium/core";
 import OffsetGeometryInstanceAttribute from "../Core/OffsetGeometryInstanceAttribute.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import HeightReference from "../Scene/HeightReference.js";
 import MaterialAppearance from "../Scene/MaterialAppearance.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";
@@ -98,7 +100,7 @@ CylinderGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 
   if (!this._fillEnabled) {
     throw new DeveloperError(
-      "This instance does not represent a filled geometry."
+      "This instance does not represent a filled geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -110,14 +112,14 @@ CylinderGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
     isAvailable &&
       entity.isShowing &&
       this._showProperty.getValue(time) &&
-      this._fillProperty.getValue(time)
+      this._fillProperty.getValue(time),
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
-  const distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-    distanceDisplayCondition
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
+  const distanceDisplayConditionAttribute =
+    DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+      distanceDisplayCondition,
+    );
 
   const attributes = {
     show: show,
@@ -145,8 +147,8 @@ CylinderGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
         this._terrainOffsetProperty,
         time,
         defaultOffset,
-        offsetScratch
-      )
+        offsetScratch,
+      ),
     );
   }
 
@@ -157,7 +159,7 @@ CylinderGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
       time,
       entity.cylinder.heightReference,
       this._options.length * 0.5,
-      this._scene.ellipsoid
+      this._scene.ellipsoid,
     ),
     attributes: attributes,
   });
@@ -172,14 +174,14 @@ CylinderGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
  * @exception {DeveloperError} This instance does not represent an outlined geometry.
  */
 CylinderGeometryUpdater.prototype.createOutlineGeometryInstance = function (
-  time
+  time,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("time", time);
 
   if (!this._outlineEnabled) {
     throw new DeveloperError(
-      "This instance does not represent an outlined geometry."
+      "This instance does not represent an outlined geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -190,23 +192,23 @@ CylinderGeometryUpdater.prototype.createOutlineGeometryInstance = function (
     this._outlineColorProperty,
     time,
     Color.BLACK,
-    scratchColor
+    scratchColor,
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
 
   const attributes = {
     show: new ShowGeometryInstanceAttribute(
       isAvailable &&
         entity.isShowing &&
         this._showProperty.getValue(time) &&
-        this._showOutlineProperty.getValue(time)
+        this._showOutlineProperty.getValue(time),
     ),
     color: ColorGeometryInstanceAttribute.fromColor(outlineColor),
-    distanceDisplayCondition: DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-      distanceDisplayCondition
-    ),
+    distanceDisplayCondition:
+      DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+        distanceDisplayCondition,
+      ),
     offset: undefined,
   };
   if (defined(this._options.offsetAttribute)) {
@@ -215,8 +217,8 @@ CylinderGeometryUpdater.prototype.createOutlineGeometryInstance = function (
         this._terrainOffsetProperty,
         time,
         defaultOffset,
-        offsetScratch
-      )
+        offsetScratch,
+      ),
     );
   }
 
@@ -227,7 +229,7 @@ CylinderGeometryUpdater.prototype.createOutlineGeometryInstance = function (
       time,
       entity.cylinder.heightReference,
       this._options.length * 0.5,
-      this._scene.ellipsoid
+      this._scene.ellipsoid,
     ),
     attributes: attributes,
   });
@@ -262,12 +264,12 @@ CylinderGeometryUpdater.prototype._isDynamic = function (entity, cylinder) {
 
 CylinderGeometryUpdater.prototype._setStaticOptions = function (
   entity,
-  cylinder
+  cylinder,
 ) {
   const heightReference = Property.getValueOrDefault(
     cylinder.heightReference,
     Iso8601.MINIMUM_VALUE,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   const options = this._options;
   options.vertexFormat =
@@ -279,11 +281,11 @@ CylinderGeometryUpdater.prototype._setStaticOptions = function (
   options.bottomRadius = cylinder.bottomRadius.getValue(Iso8601.MINIMUM_VALUE);
   options.slices = Property.getValueOrUndefined(
     cylinder.slices,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   options.numberOfVerticalLines = Property.getValueOrUndefined(
     cylinder.numberOfVerticalLines,
-    Iso8601.MINIMUM_VALUE
+    Iso8601.MINIMUM_VALUE,
   );
   options.offsetAttribute =
     heightReference !== HeightReference.NONE
@@ -291,7 +293,8 @@ CylinderGeometryUpdater.prototype._setStaticOptions = function (
       : undefined;
 };
 
-CylinderGeometryUpdater.prototype._onEntityPropertyChanged = heightReferenceOnEntityPropertyChanged;
+CylinderGeometryUpdater.prototype._onEntityPropertyChanged =
+  heightReferenceOnEntityPropertyChanged;
 
 CylinderGeometryUpdater.DynamicGeometryUpdater = DynamicCylinderGeometryUpdater;
 
@@ -301,33 +304,34 @@ CylinderGeometryUpdater.DynamicGeometryUpdater = DynamicCylinderGeometryUpdater;
 function DynamicCylinderGeometryUpdater(
   geometryUpdater,
   primitives,
-  groundPrimitives
+  groundPrimitives,
 ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
     primitives,
-    groundPrimitives
+    groundPrimitives,
   );
 }
 
 if (defined(Object.create)) {
   DynamicCylinderGeometryUpdater.prototype = Object.create(
-    DynamicGeometryUpdater.prototype
+    DynamicGeometryUpdater.prototype,
   );
-  DynamicCylinderGeometryUpdater.prototype.constructor = DynamicCylinderGeometryUpdater;
+  DynamicCylinderGeometryUpdater.prototype.constructor =
+    DynamicCylinderGeometryUpdater;
 }
 
 DynamicCylinderGeometryUpdater.prototype._isHidden = function (
   entity,
   cylinder,
-  time
+  time,
 ) {
   const options = this._options;
   const position = Property.getValueOrUndefined(
     entity.position,
     time,
-    positionScratch
+    positionScratch,
   );
   return (
     !defined(position) ||
@@ -338,7 +342,7 @@ DynamicCylinderGeometryUpdater.prototype._isHidden = function (
       this,
       entity,
       cylinder,
-      time
+      time,
     )
   );
 };
@@ -346,24 +350,24 @@ DynamicCylinderGeometryUpdater.prototype._isHidden = function (
 DynamicCylinderGeometryUpdater.prototype._setOptions = function (
   entity,
   cylinder,
-  time
+  time,
 ) {
   const heightReference = Property.getValueOrDefault(
     cylinder.heightReference,
     time,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   const options = this._options;
   options.length = Property.getValueOrUndefined(cylinder.length, time);
   options.topRadius = Property.getValueOrUndefined(cylinder.topRadius, time);
   options.bottomRadius = Property.getValueOrUndefined(
     cylinder.bottomRadius,
-    time
+    time,
   );
   options.slices = Property.getValueOrUndefined(cylinder.slices, time);
   options.numberOfVerticalLines = Property.getValueOrUndefined(
     cylinder.numberOfVerticalLines,
-    time
+    time,
   );
   options.offsetAttribute =
     heightReference !== HeightReference.NONE

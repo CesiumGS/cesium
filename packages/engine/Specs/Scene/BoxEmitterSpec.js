@@ -1,4 +1,5 @@
-import { BoxEmitter, Cartesian3, Particle } from "../../index.js";
+import { Cartesian3 } from "@cesium/core";
+import { BoxEmitter, Particle } from "../../index.js";
 
 describe("Scene/BoxEmitter", function () {
   let emitter;
@@ -59,7 +60,7 @@ describe("Scene/BoxEmitter", function () {
       expect(particle.position.y).toBeLessThanOrEqual(emitter.dimensions.y);
       expect(particle.position.z).toBeLessThanOrEqual(emitter.dimensions.z);
       expect(particle.velocity).toEqual(
-        Cartesian3.normalize(particle.position, new Cartesian3())
+        Cartesian3.normalize(particle.position, new Cartesian3()),
       );
     }
   });

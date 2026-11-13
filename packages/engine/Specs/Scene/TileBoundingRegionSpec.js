@@ -4,15 +4,16 @@ import {
   Cartographic,
   Color,
   Ellipsoid,
-  GeographicTilingScheme,
   Intersect,
   Math as CesiumMath,
   Plane,
   Rectangle,
+} from "@cesium/core";
+import {
+  GeographicTilingScheme,
   SceneMode,
   TileBoundingRegion,
 } from "../../index.js";
-
 import createFrameState from "../../../../Specs/createFrameState.js";
 
 describe("Scene/TileBoundingRegion", function () {
@@ -22,7 +23,7 @@ describe("Scene/TileBoundingRegion", function () {
     regionBox[0],
     regionBox[1],
     regionBox[2],
-    regionBox[3]
+    regionBox[3],
   );
   const tileBoundingRegion = new TileBoundingRegion({
     maximumHeight: boundingVolumeRegion[5],
@@ -92,7 +93,7 @@ describe("Scene/TileBoundingRegion", function () {
     camera.position = Cartesian3.fromRadians(
       regionBox[0] + CesiumMath.EPSILON6,
       regionBox[1],
-      0
+      0,
     );
     expect(tileBoundingRegion.distanceToCamera(frameState)).toEqual(0.0);
   });
@@ -101,7 +102,7 @@ describe("Scene/TileBoundingRegion", function () {
     camera.position = Cartesian3.fromRadians(regionBox[0], regionBox[1], 2.0);
     expect(tileBoundingRegion.distanceToCamera(frameState)).toEqualEpsilon(
       1.0,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -122,7 +123,7 @@ describe("Scene/TileBoundingRegion", function () {
     camera.position = Cartesian3.fromRadians(0.0, 0.0, 20.0);
     expect(tile.distanceToCamera(frameState)).toEqualEpsilon(
       10.0,
-      CesiumMath.EPSILON3
+      CesiumMath.EPSILON3,
     );
 
     // Inside rectangle, below height
@@ -133,29 +134,29 @@ describe("Scene/TileBoundingRegion", function () {
     camera.position = Cartesian3.fromRadians(
       west - offset,
       south - offset,
-      0.0
+      0.0,
     );
     const southwestPosition = Cartesian3.fromRadians(west, south);
     let expectedDistance = Cartesian3.distance(
       camera.position,
-      southwestPosition
+      southwestPosition,
     );
     expect(tile.distanceToCamera(frameState)).toEqualEpsilon(
       expectedDistance,
-      CesiumMath.EPSILON1
+      CesiumMath.EPSILON1,
     );
 
     // From northeast
     camera.position = Cartesian3.fromRadians(
       east + offset,
       north + offset,
-      0.0
+      0.0,
     );
     const northeastPosition = Cartesian3.fromRadians(east, north);
     expectedDistance = Cartesian3.distance(camera.position, northeastPosition);
     expect(tile.distanceToCamera(frameState)).toEqualEpsilon(
       expectedDistance,
-      CesiumMath.EPSILON1
+      CesiumMath.EPSILON1,
     );
   });
 
@@ -168,7 +169,7 @@ describe("Scene/TileBoundingRegion", function () {
     const cameraPositionCartographic = new Cartographic(
       (rectangle.west + rectangle.east) * 0.5,
       rectangle.south,
-      0.0
+      0.0,
     );
 
     cameraPositionCartographic.south -= CesiumMath.EPSILON8;
@@ -181,10 +182,10 @@ describe("Scene/TileBoundingRegion", function () {
 
     camera.position = ellipsoid.cartographicToCartesian(
       cameraPositionCartographic,
-      new Cartesian3()
+      new Cartesian3(),
     );
     expect(tile.distanceToCamera(frameState)).toBeLessThan(
-      CesiumMath.EPSILON8 * ellipsoid.maximumRadius
+      CesiumMath.EPSILON8 * ellipsoid.maximumRadius,
     );
   });
 
@@ -197,7 +198,7 @@ describe("Scene/TileBoundingRegion", function () {
     const cameraPositionCartographic = new Cartographic(
       (rectangle.west + rectangle.east) * 0.5,
       rectangle.north,
-      0.0
+      0.0,
     );
 
     cameraPositionCartographic.north += CesiumMath.EPSILON8;
@@ -210,10 +211,10 @@ describe("Scene/TileBoundingRegion", function () {
 
     camera.position = ellipsoid.cartographicToCartesian(
       cameraPositionCartographic,
-      new Cartesian3()
+      new Cartesian3(),
     );
     expect(tile.distanceToCamera(frameState)).toBeLessThan(
-      CesiumMath.EPSILON8 * ellipsoid.maximumRadius
+      CesiumMath.EPSILON8 * ellipsoid.maximumRadius,
     );
   });
 
@@ -244,16 +245,16 @@ describe("Scene/TileBoundingRegion", function () {
     const distance2D = Cartesian2.distance(southwest2D, position2D);
     const height = Ellipsoid.WGS84.radii.x;
     const expectedDistance = Math.sqrt(
-      distance2D * distance2D + height * height
+      distance2D * distance2D + height * height,
     );
 
     camera.position = Cartesian3.fromRadians(
       position3D.longitude,
-      position3D.latitude
+      position3D.latitude,
     );
     expect(tile.distanceToCamera(frameState)).toEqualEpsilon(
       expectedDistance,
-      10.0
+      10.0,
     );
   });
 
@@ -279,11 +280,11 @@ describe("Scene/TileBoundingRegion", function () {
     Cartesian3.normalize(Cartesian3.fromRadians(0.0, 0.0, 1.0), normal);
     const distanceFromCenter = Cartesian3.distance(
       new Cartesian3(0.0, 0.0, 0.0),
-      Cartesian3.fromRadians(0.0, 0.0, 0.0)
+      Cartesian3.fromRadians(0.0, 0.0, 0.0),
     );
     const plane = new Plane(normal, -distanceFromCenter);
     expect(tileBoundingRegion.intersectPlane(plane)).toEqual(
-      Intersect.INTERSECTING
+      Intersect.INTERSECTING,
     );
   });
 });

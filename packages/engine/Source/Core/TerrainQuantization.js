@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * This enumerated type is used to determine how the vertices of the terrain mesh are compressed.
  *
@@ -22,4 +24,7 @@ const TerrainQuantization = {
    */
   BITS12: 1,
 };
-export default Object.freeze(TerrainQuantization);
+
+Object.freeze(TerrainQuantization);
+
+export default TerrainQuantization;

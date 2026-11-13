@@ -1,10 +1,4 @@
-import {
-  clone,
-  defaultValue,
-  defined,
-  DeveloperError,
-  WebGLConstants,
-} from "@cesium/engine";
+import { DeveloperError, WebGLConstants, clone, defined } from "@cesium/core";
 
 function getWebGLStub(canvas, options) {
   const stub = clone(WebGLConstants);
@@ -118,6 +112,9 @@ function getWebGLStub(canvas, options) {
   stub.texParameteri = noop;
   stub.texImage2D = noop;
   stub.texSubImage2D = noop;
+  stub.texStorage3D = noop;
+  stub.texImage3D = noop;
+  stub.texSubImage3D = noop;
   stub.uniform1f = noop;
   stub.uniform1fv = noop;
   stub.uniform1i = noop;
@@ -160,6 +157,11 @@ const instancedArraysStub = {
   vertexAttribDivisorANGLE: noop,
 };
 
+// WEBGL_draw_buffers
+const drawBuffersStub = {
+  drawBuffersWEBGL: noop,
+};
+
 function noop() {}
 
 function createStub() {
@@ -173,7 +175,7 @@ function getStub() {
 function getStubWarning() {
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "A stub for this get/is function is not defined.  Can it use getStub() or does it need a new one?"
+    "A stub for this get/is function is not defined.  Can it use getStub() or does it need a new one?",
   );
   //>>includeEnd('debug');
 }
@@ -184,17 +186,14 @@ function checkFramebufferStatusStub(target) {
 
 function getContextAttributesStub(options) {
   const contextAttributes = {
-    alpha: defaultValue(options.alpha, true),
-    depth: defaultValue(options.depth, true),
-    stencil: defaultValue(options.stencil, false),
-    antialias: defaultValue(options.antialias, true),
-    premultipliedAlpha: defaultValue(options.premultipliedAlpha, true),
-    preserveDrawingBuffer: defaultValue(options.preserveDrawingBuffer, false),
-    powerPreference: defaultValue(options.powerPreference, false),
-    failIfMajorPerformanceCaveat: defaultValue(
-      options.failIfMajorPerformanceCaveat,
-      false
-    ),
+    alpha: options.alpha ?? true,
+    depth: options.depth ?? true,
+    stencil: options.stencil ?? false,
+    antialias: options.antialias ?? true,
+    premultipliedAlpha: options.premultipliedAlpha ?? true,
+    preserveDrawingBuffer: options.preserveDrawingBuffer ?? false,
+    powerPreference: options.powerPreference ?? false,
+    failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat ?? false,
   };
 
   return function () {
@@ -217,6 +216,11 @@ function getExtensionStub(name) {
     return {};
   }
 
+  // EdgeFramebuffer and other MRT features require draw buffers
+  if (name === "WEBGL_draw_buffers") {
+    return drawBuffersStub;
+  }
+
   // No other extensions are stubbed.
   return null;
 }
@@ -231,6 +235,7 @@ function getParameterStub(options) {
   parameterStubValues[WebGLConstants.MAX_TEXTURE_IMAGE_UNITS] = 16;
   parameterStubValues[WebGLConstants.MAX_RENDERBUFFER_SIZE] = 16384;
   parameterStubValues[WebGLConstants.MAX_TEXTURE_SIZE] = 16384;
+  parameterStubValues[WebGLConstants.MAX_3D_TEXTURE_SIZE] = 2048;
   parameterStubValues[WebGLConstants.MAX_VARYING_VECTORS] = 30;
   parameterStubValues[WebGLConstants.MAX_VERTEX_ATTRIBS] = 16;
   parameterStubValues[WebGLConstants.MAX_VERTEX_TEXTURE_IMAGE_UNITS] = 16;
@@ -249,7 +254,7 @@ function getParameterStub(options) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(value)) {
       throw new DeveloperError(
-        `A WebGL parameter stub for ${pname} is not defined. Add it.`
+        `A WebGL parameter stub for ${pname} is not defined. Add it.`,
       );
     }
     //>>includeEnd('debug');
@@ -275,7 +280,7 @@ function getProgramParameterStub(program, pname) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    `A WebGL parameter stub for ${pname} is not defined. Add it.`
+    `A WebGL parameter stub for ${pname} is not defined. Add it.`,
   );
   //>>includeEnd('debug');
 }
@@ -284,7 +289,7 @@ function getShaderParameterStub(shader, pname) {
   //>>includeStart('debug', pragmas.debug);
   if (pname !== WebGLConstants.COMPILE_STATUS) {
     throw new DeveloperError(
-      `A WebGL parameter stub for ${pname} is not defined. Add it.`
+      `A WebGL parameter stub for ${pname} is not defined. Add it.`,
     );
   }
   //>>includeEnd('debug');
@@ -296,7 +301,7 @@ function getShaderPrecisionStub(shadertype, precisiontype) {
   //>>includeStart('debug', pragmas.debug);
   if (shadertype !== WebGLConstants.FRAGMENT_SHADER) {
     throw new DeveloperError(
-      "getShaderPrecision only has a stub for FRAGMENT_SHADER. Update it."
+      "getShaderPrecision only has a stub for FRAGMENT_SHADER. Update it.",
     );
   }
 
@@ -305,7 +310,7 @@ function getShaderPrecisionStub(shadertype, precisiontype) {
     precisiontype !== WebGLConstants.HIGH_INT
   ) {
     throw new DeveloperError(
-      "getShaderPrecision only has a stub for HIGH_FLOAT and HIGH_INT. Update it."
+      "getShaderPrecision only has a stub for HIGH_FLOAT and HIGH_INT. Update it.",
     );
   }
   //>>includeEnd('debug');

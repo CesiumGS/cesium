@@ -1,14 +1,11 @@
+import { Color, DistanceDisplayCondition, Rectangle } from "@cesium/core";
 import {
-  Color,
-  DistanceDisplayCondition,
-  Rectangle,
   ColorMaterialProperty,
   ConstantProperty,
   RectangleGraphics,
   ClassificationType,
   ShadowMode,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 import testMaterialDefinitionChanged from "../../../../Specs/testMaterialDefinitionChanged.js";
 
@@ -65,10 +62,10 @@ describe("DataSources/RectangleGraphics", function () {
     expect(rectangle.outlineWidth.getValue()).toEqual(options.outlineWidth);
     expect(rectangle.shadows.getValue()).toEqual(options.shadows);
     expect(rectangle.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
     expect(rectangle.classificationType.getValue()).toEqual(
-      options.classificationType
+      options.classificationType,
     );
     expect(rectangle.zIndex.getValue()).toEqual(options.zIndex);
   });
@@ -109,7 +106,7 @@ describe("DataSources/RectangleGraphics", function () {
     expect(target.outlineWidth).toBe(source.outlineWidth);
     expect(target.shadows).toBe(source.shadows);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(target.classificationType).toBe(source.classificationType);
     expect(target.zIndex).toBe(source.zIndex);
@@ -207,7 +204,7 @@ describe("DataSources/RectangleGraphics", function () {
     expect(result.outlineWidth).toBe(source.outlineWidth);
     expect(result.shadows).toBe(source.shadows);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(result.classificationType).toBe(source.classificationType);
     expect(result.zIndex).toBe(source.zIndex);
@@ -228,7 +225,7 @@ describe("DataSources/RectangleGraphics", function () {
       property,
       "coordinates",
       new Rectangle(0, 0, 0.1, 0.1),
-      new Rectangle(0, 0, 1, 1)
+      new Rectangle(0, 0, 1, 1),
     );
     testDefinitionChanged(property, "height", 2, 5);
     testDefinitionChanged(property, "extrudedHeight", 3, 4);
@@ -243,19 +240,19 @@ describe("DataSources/RectangleGraphics", function () {
       property,
       "shadows",
       ShadowMode.ENABLED,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
     testDefinitionChanged(
       property,
       "distanceDisplayCondition",
       new DistanceDisplayCondition(),
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     testDefinitionChanged(
       property,
       "classificationType",
       ClassificationType.TERRAIN,
-      ClassificationType.BOTH
+      ClassificationType.BOTH,
     );
     testDefinitionChanged(property, "zIndex", 20, 5);
   });

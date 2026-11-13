@@ -1,8 +1,7 @@
+import { Rectangle, RuntimeError, defined } from "@cesium/core";
 import Uri from "urijs";
 import {
   decodeGoogleEarthEnterpriseData,
-  defaultValue,
-  defined,
   DiscardMissingTileImagePolicy,
   GeographicTilingScheme,
   GoogleEarthEnterpriseImageryProvider,
@@ -12,13 +11,10 @@ import {
   ImageryLayer,
   ImageryProvider,
   ImageryState,
-  Rectangle,
   Request,
   RequestScheduler,
   Resource,
-  RuntimeError,
 } from "../../index.js";
-
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
@@ -49,39 +45,39 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
 
   it("conforms to ImageryProvider interface", function () {
     expect(GoogleEarthEnterpriseImageryProvider).toConformToInterface(
-      ImageryProvider
+      ImageryProvider,
     );
   });
 
   function installMockGetQuadTreePacket() {
     spyOn(
       GoogleEarthEnterpriseMetadata.prototype,
-      "getQuadTreePacket"
+      "getQuadTreePacket",
     ).and.callFake(function (quadKey, version) {
-      quadKey = defaultValue(quadKey, "");
+      quadKey = quadKey ?? "";
       this._tileInfo[`${quadKey}0`] = new GoogleEarthEnterpriseTileInformation(
         0xff,
         1,
         1,
-        1
+        1,
       );
       this._tileInfo[`${quadKey}1`] = new GoogleEarthEnterpriseTileInformation(
         0xff,
         1,
         1,
-        1
+        1,
       );
       this._tileInfo[`${quadKey}2`] = new GoogleEarthEnterpriseTileInformation(
         0xff,
         1,
         1,
-        1
+        1,
       );
       this._tileInfo[`${quadKey}3`] = new GoogleEarthEnterpriseTileInformation(
         0xff,
         1,
         1,
-        1
+        1,
       );
 
       return Promise.resolve();
@@ -92,7 +88,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
-      deferred
+      deferred,
     ) {
       let url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
@@ -103,7 +99,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
           deferred,
           true,
           false,
-          true
+          true,
         );
       } else {
         if (proxy) {
@@ -117,7 +113,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       }
     };
@@ -129,7 +125,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       if (defined(expectedUrl) && !/^blob:/.test(url)) {
         if (proxy) {
@@ -147,15 +143,15 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
         method,
         data,
         headers,
-        deferred
+        deferred,
       );
     };
   }
 
   it("fromMetadata throws without metadata", function () {
     expect(() =>
-      GoogleEarthEnterpriseImageryProvider.fromMetadata()
-    ).toThrowDeveloperError("");
+      GoogleEarthEnterpriseImageryProvider.fromMetadata(),
+    ).toThrowDeveloperError(/metadata is required/);
   });
 
   it("fromMetadata throws if there isn't imagery", async function () {
@@ -168,10 +164,10 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     metadata.imageryPresent = false;
 
     expect(() =>
-      GoogleEarthEnterpriseImageryProvider.fromMetadata(metadata)
+      GoogleEarthEnterpriseImageryProvider.fromMetadata(metadata),
     ).toThrowError(
       RuntimeError,
-      "The server made/up/url/ doesn't have imagery"
+      "The server made/up/url/ doesn't have imagery",
     );
   });
 
@@ -180,12 +176,11 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     const url = "http://fake.fake.invalid";
 
     const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(url);
-    imageryProvider = GoogleEarthEnterpriseImageryProvider.fromMetadata(
-      metadata
-    );
+    imageryProvider =
+      GoogleEarthEnterpriseImageryProvider.fromMetadata(metadata);
 
     expect(imageryProvider).toBeInstanceOf(
-      GoogleEarthEnterpriseImageryProvider
+      GoogleEarthEnterpriseImageryProvider,
     );
   });
 
@@ -194,9 +189,8 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     const url = "http://fake.fake.invalid";
 
     const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(url);
-    imageryProvider = GoogleEarthEnterpriseImageryProvider.fromMetadata(
-      metadata
-    );
+    imageryProvider =
+      GoogleEarthEnterpriseImageryProvider.fromMetadata(metadata);
 
     expect(typeof imageryProvider.hasAlphaChannel).toBe("boolean");
     expect(imageryProvider.hasAlphaChannel).toBe(false);
@@ -207,9 +201,8 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     const url = "http://fake.fake.invalid/";
 
     const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(url);
-    imageryProvider = GoogleEarthEnterpriseImageryProvider.fromMetadata(
-      metadata
-    );
+    imageryProvider =
+      GoogleEarthEnterpriseImageryProvider.fromMetadata(metadata);
 
     expect(imageryProvider.url).toEqual(url);
 
@@ -219,10 +212,10 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     expect(imageryProvider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
     // Defaults to custom tile policy
     expect(imageryProvider.tileDiscardPolicy).not.toBeInstanceOf(
-      DiscardMissingTileImagePolicy
+      DiscardMissingTileImagePolicy,
     );
     expect(imageryProvider.rectangle).toEqual(
-      new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI)
+      new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI),
     );
     expect(imageryProvider.credit).toBeUndefined();
 
@@ -237,9 +230,8 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     const url = "http://foo.bar.invalid";
 
     const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(url);
-    imageryProvider = GoogleEarthEnterpriseImageryProvider.fromMetadata(
-      metadata
-    );
+    imageryProvider =
+      GoogleEarthEnterpriseImageryProvider.fromMetadata(metadata);
     const layer = new ImageryLayer(imageryProvider);
 
     let tries = 0;
@@ -261,7 +253,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       if (tries === 2) {
         // Succeed after 2 tries
@@ -271,7 +263,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
           method,
           data,
           headers,
-          deferred
+          deferred,
         );
       } else {
         // fail

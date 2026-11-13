@@ -1,6 +1,6 @@
-import { Ellipsoid, Globe } from "@cesium/engine";
+import { Ellipsoid } from "@cesium/core";
+import { Globe } from "@cesium/engine";
 import { HomeButtonViewModel } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -59,5 +59,5 @@ describe(
       viewModel.command();
     });
   },
-  "WebGL"
+  "WebGL",
 );

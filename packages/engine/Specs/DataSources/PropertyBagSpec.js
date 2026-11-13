@@ -1,9 +1,5 @@
-import {
-  JulianDate,
-  ConstantProperty,
-  PropertyBag,
-  SampledProperty,
-} from "../../index.js";
+import { JulianDate } from "@cesium/core";
+import { ConstantProperty, PropertyBag, SampledProperty } from "../../index.js";
 
 describe("DataSources/PropertyBag", function () {
   const time = JulianDate.now();
@@ -103,7 +99,7 @@ describe("DataSources/PropertyBag", function () {
         a: 1,
         b: 2,
       },
-      createFakeProperty
+      createFakeProperty,
     );
 
     expect(property.propertyNames).toContain("a");

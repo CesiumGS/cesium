@@ -1,9 +1,11 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Check,
+  Color,
+  Frozen,
+  defined,
+} from "@cesium/core";
 
 /**
  * <div class="notice">
@@ -31,37 +33,31 @@ import defined from "../Core/defined.js";
  * @internalConstructor
  * @class
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Cloud%20Parameters.html|Cesium Sandcastle Cloud Parameters Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=cloud-parameters|Cesium Sandcastle Cloud Parameters Demo}
  */
 function CumulusCloud(options, cloudCollection) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  this._show = defaultValue(options.show, true);
+  options = options ?? Frozen.EMPTY_OBJECT;
+  this._show = options.show ?? true;
 
-  this._position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO)
-  );
+  this._position = Cartesian3.clone(options.position ?? Cartesian3.ZERO);
 
   if (!defined(options.scale) && defined(options.maximumSize)) {
     this._maximumSize = Cartesian3.clone(options.maximumSize);
     this._scale = new Cartesian2(this._maximumSize.x, this._maximumSize.y);
   } else {
-    this._scale = Cartesian2.clone(
-      defaultValue(options.scale, new Cartesian2(20.0, 12.0))
-    );
+    this._scale = Cartesian2.clone(options.scale ?? new Cartesian2(20.0, 12.0));
 
     const defaultMaxSize = new Cartesian3(
       this._scale.x,
       this._scale.y,
-      Math.min(this._scale.x, this._scale.y) / 1.5
+      Math.min(this._scale.x, this._scale.y) / 1.5,
     );
-    this._maximumSize = Cartesian3.clone(
-      defaultValue(options.maximumSize, defaultMaxSize)
-    );
+    this._maximumSize = Cartesian3.clone(options.maximumSize ?? defaultMaxSize);
   }
 
-  this._slice = defaultValue(options.slice, -1.0);
-  this._color = Color.clone(defaultValue(options.color, Color.WHITE));
-  this._brightness = defaultValue(options.brightness, 1.0);
+  this._slice = options.slice ?? -1.0;
+  this._color = Color.clone(options.color ?? Color.WHITE);
+  this._brightness = options.brightness ?? 1.0;
   this._cloudCollection = cloudCollection;
   this._index = -1; // Used by CloudCollection
 }

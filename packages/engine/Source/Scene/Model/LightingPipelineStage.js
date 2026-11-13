@@ -1,4 +1,4 @@
-import defined from "../../Core/defined.js";
+import { defined } from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import LightingStageFS from "../../Shaders/Model/LightingStageFS.js";
 import LightingModel from "./LightingModel.js";
@@ -34,13 +34,13 @@ LightingPipelineStage.process = function (renderResources, primitive) {
     shaderBuilder.addDefine(
       "USE_CUSTOM_LIGHT_COLOR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
 
     shaderBuilder.addUniform(
       "vec3",
       "model_lightColorHdr",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
 
     const uniformMap = renderResources.uniformMap;
@@ -57,13 +57,13 @@ LightingPipelineStage.process = function (renderResources, primitive) {
     shaderBuilder.addDefine(
       "LIGHTING_PBR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   } else {
     shaderBuilder.addDefine(
       "LIGHTING_UNLIT",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 

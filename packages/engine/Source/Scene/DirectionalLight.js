@@ -1,8 +1,4 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Cartesian3, Check, Color, DeveloperError } from "@cesium/core";
 
 /**
  * A light that gets emitted in a single direction from infinitely far away.
@@ -37,14 +33,14 @@ function DirectionalLight(options) {
    * @type {Color}
    * @default Color.WHITE
    */
-  this.color = Color.clone(defaultValue(options.color, Color.WHITE));
+  this.color = Color.clone(options.color ?? Color.WHITE);
 
   /**
    * The intensity of the light.
    * @type {number}
    * @default 1.0
    */
-  this.intensity = defaultValue(options.intensity, 1.0);
+  this.intensity = options.intensity ?? 1.0;
 }
 
 export default DirectionalLight;

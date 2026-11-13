@@ -1,7 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import { DeveloperError, Event, Frozen, defined } from "@cesium/core";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
@@ -55,7 +52,7 @@ function PointGraphics(options) {
   this._splitDirection = undefined;
   this._splitDirectionSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(PointGraphics.prototype, {
@@ -145,7 +142,7 @@ Object.defineProperties(PointGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 
   /**
@@ -155,7 +152,7 @@ Object.defineProperties(PointGraphics.prototype, {
    * @type {Property|undefined}
    */
   disableDepthTestDistance: createPropertyDescriptor(
-    "disableDepthTestDistance"
+    "disableDepthTestDistance",
   ),
 
   /**
@@ -204,35 +201,20 @@ PointGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.pixelSize = defaultValue(this.pixelSize, source.pixelSize);
-  this.heightReference = defaultValue(
-    this.heightReference,
-    source.heightReference
-  );
-  this.color = defaultValue(this.color, source.color);
-  this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
-  this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
-  this.scaleByDistance = defaultValue(
-    this.scaleByDistance,
-    source.scaleByDistance
-  );
-  this.translucencyByDistance = defaultValue(
-    this._translucencyByDistance,
-    source.translucencyByDistance
-  );
-  this.distanceDisplayCondition = defaultValue(
-    this.distanceDisplayCondition,
-    source.distanceDisplayCondition
-  );
-  this.disableDepthTestDistance = defaultValue(
-    this.disableDepthTestDistance,
-    source.disableDepthTestDistance
-  );
+  this.show = this.show ?? source.show;
+  this.pixelSize = this.pixelSize ?? source.pixelSize;
+  this.heightReference = this.heightReference ?? source.heightReference;
+  this.color = this.color ?? source.color;
+  this.outlineColor = this.outlineColor ?? source.outlineColor;
+  this.outlineWidth = this.outlineWidth ?? source.outlineWidth;
+  this.scaleByDistance = this.scaleByDistance ?? source.scaleByDistance;
+  this.translucencyByDistance =
+    this._translucencyByDistance ?? source.translucencyByDistance;
+  this.distanceDisplayCondition =
+    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
+  this.disableDepthTestDistance =
+    this.disableDepthTestDistance ?? source.disableDepthTestDistance;
 
-  this.splitDirection = defaultValue(
-    this.splitDirection,
-    source.splitDirection
-  );
+  this.splitDirection = this.splitDirection ?? source.splitDirection;
 };
 export default PointGraphics;

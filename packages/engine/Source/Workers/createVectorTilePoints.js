@@ -1,9 +1,11 @@
-import AttributeCompression from "../Core/AttributeCompression.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import CesiumMath from "../Core/Math.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  AttributeCompression,
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  Math as CesiumMath,
+  Rectangle,
+} from "@cesium/core";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 const maxShort = 32767;
@@ -45,7 +47,7 @@ function createVectorTilePoints(parameters, transferableObjects) {
   const vBuffer = positions.subarray(positionsLength, 2 * positionsLength);
   const heightBuffer = positions.subarray(
     2 * positionsLength,
-    3 * positionsLength
+    3 * positionsLength,
   );
   AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
 
@@ -63,11 +65,11 @@ function createVectorTilePoints(parameters, transferableObjects) {
       lon,
       lat,
       alt,
-      scratchBVCartographic
+      scratchBVCartographic,
     );
     const decodedPosition = ellipsoid.cartographicToCartesian(
       cartographic,
-      scratchEncodedPosition
+      scratchEncodedPosition,
     );
     Cartesian3.pack(decodedPosition, decoded, i * 3);
   }

@@ -1,12 +1,13 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  Cartesian3,
+  Color,
+  Ellipsoid,
+  IndexDatatype,
+  OrientedBoundingBox,
+  Rectangle,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import ClassificationType from "./ClassificationType.js";
 import Vector3DTileBatch from "./Vector3DTileBatch.js";
@@ -58,12 +59,12 @@ function Vector3DTilePolygons(options) {
   this._transferrableBatchIds = undefined;
   this._vertexBatchIds = undefined;
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
   this._minimumHeight = options.minimumHeight;
   this._maximumHeight = options.maximumHeight;
   this._polygonMinimumHeights = options.polygonMinimumHeights;
   this._polygonMaximumHeights = options.polygonMaximumHeights;
-  this._center = defaultValue(options.center, Cartesian3.ZERO);
+  this._center = options.center ?? Cartesian3.ZERO;
   this._rectangle = options.rectangle;
 
   this._center = undefined;
@@ -156,7 +157,7 @@ function packBuffer(polygons) {
     3 +
       Cartesian3.packedLength +
       Ellipsoid.packedLength +
-      Rectangle.packedLength
+      Rectangle.packedLength,
   );
 
   let offset = 0;
@@ -215,7 +216,7 @@ function unpackBuffer(polygons, packedBuffer) {
 
 const createVerticesTaskProcessor = new TaskProcessor(
   "createVectorTilePolygons",
-  5
+  5,
 );
 const scratchColor = new Color();
 
@@ -242,14 +243,14 @@ function createPrimitive(polygons) {
     indices = polygons._indices = polygons._indices.slice();
 
     polygons._center = polygons._ellipsoid.cartographicToCartesian(
-      Rectangle.center(polygons._rectangle)
+      Rectangle.center(polygons._rectangle),
     );
 
     batchIds = polygons._transferrableBatchIds = new Uint32Array(
-      polygons._batchIds
+      polygons._batchIds,
     );
     batchTableColors = polygons._batchTableColors = new Uint32Array(
-      batchIds.length
+      batchIds.length,
     );
     const batchTable = polygons._batchTable;
 
@@ -294,7 +295,7 @@ function createPrimitive(polygons) {
 
   const verticesPromise = createVerticesTaskProcessor.scheduleTask(
     parameters,
-    transferrableObjects
+    transferrableObjects,
   );
   if (!defined(verticesPromise)) {
     // Postponed

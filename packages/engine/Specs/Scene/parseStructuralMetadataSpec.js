@@ -1,9 +1,12 @@
+import { PixelDatatype, PixelFormat, defined } from "@cesium/core";
 import {
   MetadataSchema,
   parseStructuralMetadata,
-  PixelDatatype,
-  PixelFormat,
   Texture,
+  TextureWrap,
+  TextureMagnificationFilter,
+  TextureMinificationFilter,
+  ContextLimits,
 } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
 import MetadataTester from "../../../../Specs/MetadataTester.js";
@@ -120,6 +123,7 @@ describe(
         return;
       }
 
+      const context = createContext();
       const propertyTableResults = MetadataTester.createPropertyTables({
         schema: propertyTablesSchema,
         propertyTables: [
@@ -150,6 +154,7 @@ describe(
         extension: extension,
         schema: MetadataSchema.fromJson(propertyTablesSchema),
         bufferViews: propertyTableResults.bufferViews,
+        context: context,
       });
 
       const buildingClass = metadata.schema.classes.building;
@@ -180,6 +185,9 @@ describe(
       expect(treesTable.getPropertyIds().length).toBe(1);
       expect(treesTable.getProperty(0, "species")).toBe("Oak");
       expect(treesTable.getProperty(1, "species")).toBe("Pine");
+
+      metadata.destroy();
+      context.destroyForSpecs();
     });
 
     it("parses extension with property textures", function () {
@@ -306,10 +314,10 @@ describe(
       expect(propertyAttribute.class).toBe(pointsClass);
       expect(propertyAttribute.getProperty("color").attribute).toBe("_COLOR");
       expect(propertyAttribute.getProperty("intensity").attribute).toBe(
-        "_INTENSITY"
+        "_INTENSITY",
       );
       expect(propertyAttribute.getProperty("pointSize").attribute).toBe(
-        "_POINT_SIZE"
+        "_POINT_SIZE",
       );
     });
 
@@ -365,6 +373,620 @@ describe(
 
       expect(metadata.extensions).toBe(extensions);
     });
+
+    describe("Property Table Textures", function () {
+      if (!MetadataTester.isSupported()) {
+        return;
+      }
+
+      let context;
+      let structuralMetadata;
+      const maximumTextureSize = ContextLimits.maximumTextureSize;
+
+      beforeEach(function () {
+        context = createContext();
+      });
+
+      afterEach(function () {
+        if (defined(structuralMetadata)) {
+          structuralMetadata.destroy();
+          structuralMetadata = undefined;
+        }
+
+        if (context && !context.isDestroyed()) {
+          context.destroyForSpecs();
+        }
+        context = undefined;
+        ContextLimits._maximumTextureSize = maximumTextureSize;
+      });
+
+      it("creates a texture for a well-formed property table", function () {
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                a: {
+                  type: "SCALAR",
+                  componentType: "INT32",
+                },
+                b: {
+                  type: "SCALAR",
+                  componentType: "INT32",
+                },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "Features",
+              class: "feature",
+              count: 3,
+              properties: {
+                a: { values: 0 },
+                b: { values: 1 },
+              },
+            },
+          ],
+        };
+
+        const bufferViews = {
+          // INT32 values [1,2,3] => 12 bytes little-endian
+          0: new Uint8Array([1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0]),
+          // INT32 values [4,5,6] => 12 bytes little-endian
+          1: new Uint8Array([4, 0, 0, 0, 5, 0, 0, 0, 6, 0, 0, 0]),
+        };
+
+        structuralMetadata = parseStructuralMetadata({
+          extension: extension,
+          schema: MetadataSchema.fromJson(schemaJson),
+          bufferViews: bufferViews,
+          context: context,
+        });
+
+        const table = structuralMetadata.getPropertyTable(0);
+        expect(table).toBeDefined();
+
+        const texture = table.texture;
+        expect(texture).toBeDefined();
+        expect(texture.pixelFormat).toBe(PixelFormat.RGBA);
+        expect(texture.pixelDatatype).toBe(PixelDatatype.UNSIGNED_BYTE);
+        // width = numFeatures, height = numGpuCompatibleProperties
+        expect(texture.width).toBe(3);
+        expect(texture.height).toBe(2);
+
+        const sampler = texture.sampler;
+        expect(sampler.wrapS).toBe(TextureWrap.CLAMP_TO_EDGE);
+        expect(sampler.wrapT).toBe(TextureWrap.CLAMP_TO_EDGE);
+        expect(sampler.minificationFilter).toBe(
+          TextureMinificationFilter.NEAREST,
+        );
+        expect(sampler.magnificationFilter).toBe(
+          TextureMagnificationFilter.NEAREST,
+        );
+      });
+
+      it("creates a texture correctly when property data needs padding ", function () {
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                a: {
+                  type: "SCALAR",
+                  componentType: "UINT8",
+                },
+                b: {
+                  type: "SCALAR",
+                  componentType: "UINT16",
+                },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "Features",
+              class: "feature",
+              count: 3,
+              properties: {
+                a: { values: 0 },
+                b: { values: 1 },
+              },
+            },
+          ],
+        };
+
+        // Since UINT8 and UINT16 do not align to 4-byte boundaries, padding will be required in the texture.
+        const bufferViews = {
+          0: new Uint8Array([1, 2, 3]), // UINT8
+          1: new Uint8Array([0x02, 0x01, 0x04, 0x03, 0x06, 0x05]), // UINT16, little-endian
+        };
+
+        let createdTextureOptions;
+        spyOn(Texture, "create").and.callFake(function (options) {
+          createdTextureOptions = options;
+          return new Texture(options);
+        });
+
+        structuralMetadata = parseStructuralMetadata({
+          extension: extension,
+          schema: MetadataSchema.fromJson(schemaJson),
+          bufferViews: bufferViews,
+          context: context,
+        });
+
+        const texture = structuralMetadata.getPropertyTable(0).texture;
+        expect(texture).toBeDefined();
+
+        expect(createdTextureOptions).toBeDefined();
+        expect(createdTextureOptions.source).toBeDefined();
+        const packed = createdTextureOptions.source.arrayBufferView;
+        expect(packed).toBeDefined();
+
+        const expected = [
+          // Row 0 (a: UINT8):  [1,0,0,0, 2,0,0,0, 3,0,0,0]
+          1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0,
+          // Row 1 (b: UINT16): [02,01,0,0, 04,03,0,0, 06,05,0,0]
+          0x02, 0x01, 0, 0, 0x04, 0x03, 0, 0, 0x06, 0x05, 0, 0,
+        ];
+
+        expect(Array.from(packed)).toEqual(expected);
+      });
+
+      it("creates an undefined texture if property table has no gpu-compatible properties", function () {
+        const schemaJson = {
+          classes: {
+            building: {
+              properties: {
+                // STRING is not GPU compatible
+                name: { type: "STRING" },
+                // BOOLEAN is not GPU compatible (currently)
+                boolProperty: { type: "BOOLEAN" },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "Buildings",
+              class: "building",
+              count: 2,
+              properties: {
+                name: { stringOffsets: 0, values: 1 },
+                boolProperty: { values: 2 },
+              },
+            },
+          ],
+        };
+
+        // Minimal well-formed buffers (just good enough for testing)
+        // name.stringOffsets: 3 * UINT32 for count=2 => [0, 1, 2]
+        const nameStringOffsets = new Uint8Array([
+          0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0,
+        ]);
+        // name.values: UTF-8 bytes for "A" + "B"
+        const nameValues = new Uint8Array([65, 66]);
+        const boolValues = new Uint8Array([0, 1]);
+
+        const bufferViews = {
+          0: nameStringOffsets,
+          1: nameValues,
+          2: boolValues,
+        };
+
+        const metadata = parseStructuralMetadata({
+          extension: extension,
+          schema: MetadataSchema.fromJson(schemaJson),
+          bufferViews: bufferViews,
+          context: context,
+        });
+
+        const table = metadata.getPropertyTable(0);
+        expect(table).toBeDefined();
+        expect(table.texture).toBeUndefined();
+      });
+
+      it("warns and returns an undefined texture if the number of properties or features exceeds the maximum texture size", function () {
+        spyOn(console, "warn");
+        ContextLimits._maximumTextureSize = 1;
+
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                a: { type: "SCALAR", componentType: "UINT8" },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "TooBig_ForTest_1",
+              class: "feature",
+              count: 2, // exceeds maxTextureSize=1
+              properties: {
+                a: { values: 0 },
+              },
+            },
+          ],
+        };
+
+        const bufferViews = {
+          0: new Uint8Array([1, 2]),
+        };
+
+        const metadata = parseStructuralMetadata({
+          extension: extension,
+          schema: MetadataSchema.fromJson(schemaJson),
+          bufferViews: bufferViews,
+          context: context,
+        });
+
+        const table = metadata.getPropertyTable(0);
+        expect(table).toBeDefined();
+        expect(table.texture).toBeUndefined();
+        expect(console.warn).toHaveBeenCalled();
+      });
+
+      it("throws an error if a property's buffer length does not match the number of features", function () {
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                a: { type: "SCALAR", componentType: "UINT8" },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "BadLengths",
+              class: "feature",
+              count: 2, // expects 2 elements
+              properties: {
+                a: { values: 0 },
+              },
+            },
+          ],
+        };
+
+        const bufferViews = {
+          0: new Uint8Array([7]), // only 1 element -> should throw
+        };
+
+        expect(function () {
+          parseStructuralMetadata({
+            extension: extension,
+            schema: MetadataSchema.fromJson(schemaJson),
+            bufferViews: bufferViews,
+            context: context,
+          });
+        }).toThrowError();
+      });
+
+      it("downcasts 64-bit scalar properties when packing a property table texture", function () {
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                signed64: {
+                  type: "SCALAR",
+                  componentType: "INT64",
+                },
+                double64: {
+                  type: "SCALAR",
+                  componentType: "FLOAT64",
+                },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "Features",
+              class: "feature",
+              count: 3,
+              properties: {
+                signed64: { values: 0 },
+                double64: { values: 1 },
+              },
+            },
+          ],
+        };
+
+        const signed64Buffer = new ArrayBuffer(3 * 8);
+        const signed64View = new DataView(signed64Buffer);
+        signed64View.setBigInt64(0, BigInt("-2147483649"), true); // clamp to INT32 min
+        signed64View.setBigInt64(8, BigInt(123), true); // stays 123
+        signed64View.setBigInt64(16, BigInt("2147483648"), true); // clamp to INT32 max
+
+        const double64Buffer = new ArrayBuffer(3 * 8);
+        const double64View = new DataView(double64Buffer);
+        double64View.setFloat64(0, 1.5, true);
+        double64View.setFloat64(8, 1.0 / 3.0, true);
+        double64View.setFloat64(16, -2.25, true);
+
+        const bufferViews = {
+          0: new Uint8Array(signed64Buffer),
+          1: new Uint8Array(double64Buffer),
+        };
+
+        let createdTextureOptions;
+        spyOn(Texture, "create").and.callFake(function (options) {
+          createdTextureOptions = options;
+          return new Texture(options);
+        });
+
+        structuralMetadata = parseStructuralMetadata({
+          extension: extension,
+          schema: MetadataSchema.fromJson(schemaJson),
+          bufferViews: bufferViews,
+          context: context,
+        });
+
+        const texture = structuralMetadata.getPropertyTable(0).texture;
+        expect(texture).toBeDefined();
+
+        const packed = createdTextureOptions.source.arrayBufferView;
+        expect(packed).toBeDefined();
+
+        const expectedFloat32Bytes = Array.from(
+          new Uint8Array(new Float32Array([1.5, 1.0 / 3.0, -2.25]).buffer),
+        );
+
+        expect(Array.from(packed)).toEqual([
+          // Row 0: INT64 -> INT32, little-endian
+          0x00,
+          0x00,
+          0x00,
+          0x80, // -2147483648
+          0x7b,
+          0x00,
+          0x00,
+          0x00, // 123
+          0xff,
+          0xff,
+          0xff,
+          0x7f, // 2147483647
+
+          // Row 1: FLOAT64 -> FLOAT32, little-endian
+          ...expectedFloat32Bytes,
+        ]);
+      });
+
+      it("throws a DeveloperError when property table count is 0", function () {
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                a: { type: "SCALAR", componentType: "UINT8" },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "Empty",
+              class: "feature",
+              count: 0,
+              properties: {
+                a: { values: 0 },
+              },
+            },
+          ],
+        };
+
+        const bufferViews = {
+          0: new Uint8Array([]),
+        };
+
+        // MetadataTable enforces count > 0 as a DeveloperError.
+        expect(function () {
+          parseStructuralMetadata({
+            extension: extension,
+            schema: MetadataSchema.fromJson(schemaJson),
+            bufferViews: bufferViews,
+            context: context,
+          });
+        }).toThrowDeveloperError();
+      });
+
+      it("packs multiple properties linearly across texture rows when numFeatures exceeds maxTextureSize", function () {
+        // Cap maxTextureSize to 4: 8 features → textureWidth=4, 2 props → totalTexels=16,
+        // textureHeight=ceil(16/4)=4 which equals maxTextureSize so it fits.
+        ContextLimits._maximumTextureSize = 4;
+
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                a: { type: "SCALAR", componentType: "UINT8" },
+                b: { type: "SCALAR", componentType: "UINT8" },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "Features",
+              class: "feature",
+              count: 8,
+              properties: {
+                a: { values: 0 },
+                b: { values: 1 },
+              },
+            },
+          ],
+        };
+
+        const bufferViews = {
+          0: new Uint8Array([10, 20, 30, 40, 50, 60, 70, 80]), // property a values
+          1: new Uint8Array([11, 22, 33, 44, 55, 66, 77, 88]), // property b values
+        };
+
+        let createdTextureOptions;
+        spyOn(Texture, "create").and.callFake(function (options) {
+          createdTextureOptions = options;
+          return new Texture(options);
+        });
+
+        structuralMetadata = parseStructuralMetadata({
+          extension: extension,
+          schema: MetadataSchema.fromJson(schemaJson),
+          bufferViews: bufferViews,
+          context: context,
+        });
+
+        const texture = structuralMetadata.getPropertyTable(0).texture;
+        expect(texture).toBeDefined();
+
+        // textureWidth = min(8, 4) = 4
+        // totalTexels  = 2 properties × 8 features = 16
+        // textureHeight = ceil(16 / 4) = 4  (fits within maxTextureSize=4)
+        expect(texture.width).toBe(4);
+        expect(texture.height).toBe(4);
+
+        const packed = createdTextureOptions.source.arrayBufferView;
+        expect(packed).toBeDefined();
+
+        // Linear order: a[0..7] then b[0..7], each UINT8 texel padded to 4 bytes.
+        // Row 0 (texels 0-3):  a[0],a[1],a[2],a[3]
+        // Row 1 (texels 4-7):  a[4],a[5],a[6],a[7]
+        // Row 2 (texels 8-11): b[0],b[1],b[2],b[3]
+        // Row 3 (texels 12-15):b[4],b[5],b[6],b[7]
+        const expected = [
+          10,
+          0,
+          0,
+          0, // a[0]
+          20,
+          0,
+          0,
+          0, // a[1]
+          30,
+          0,
+          0,
+          0, // a[2]
+          40,
+          0,
+          0,
+          0, // a[3]
+          50,
+          0,
+          0,
+          0, // a[4]
+          60,
+          0,
+          0,
+          0, // a[5]
+          70,
+          0,
+          0,
+          0, // a[6]
+          80,
+          0,
+          0,
+          0, // a[7]
+          11,
+          0,
+          0,
+          0, // b[0]
+          22,
+          0,
+          0,
+          0, // b[1]
+          33,
+          0,
+          0,
+          0, // b[2]
+          44,
+          0,
+          0,
+          0, // b[3]
+          55,
+          0,
+          0,
+          0, // b[4]
+          66,
+          0,
+          0,
+          0, // b[5]
+          77,
+          0,
+          0,
+          0, // b[6]
+          88,
+          0,
+          0,
+          0, // b[7]
+        ];
+        expect(Array.from(packed)).toEqual(expected);
+      });
+
+      it("does not create a texture when a buffer view contains extra bytes beyond numFeatures", function () {
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                a: { type: "SCALAR", componentType: "UINT8" },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "PaddedFeatures",
+              class: "feature",
+              count: 3,
+              properties: {
+                a: { values: 0 },
+              },
+            },
+          ],
+        };
+
+        const bufferViews = {
+          // Four values for a property table with only three features.
+          0: new Uint8Array([7, 8, 9, 0]),
+        };
+
+        spyOn(Texture, "create");
+        spyOn(console, "warn");
+
+        expect(function () {
+          structuralMetadata = parseStructuralMetadata({
+            extension: extension,
+            schema: MetadataSchema.fromJson(schemaJson),
+            bufferViews: bufferViews,
+            context: context,
+          });
+        }).not.toThrow();
+
+        expect(structuralMetadata.getPropertyTable(0).texture).toBeUndefined();
+        expect(Texture.create).not.toHaveBeenCalled();
+        expect(console.warn).toHaveBeenCalledWith(
+          'Failed to create texture for property table "PaddedFeatures": Property with ID: "a" has (4), which does not match number of features in the property table: (3).',
+        );
+      });
+    });
   },
-  "WebGL"
+  "WebGL",
 );

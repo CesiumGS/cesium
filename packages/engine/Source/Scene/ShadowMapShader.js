@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core";
 import ShaderSource from "../Renderer/ShaderSource.js";
 
 /**
@@ -6,19 +6,54 @@ import ShaderSource from "../Renderer/ShaderSource.js";
  */
 function ShadowMapShader() {}
 
+const clippingDefines = {
+  HAS_CLIPPING_PLANES: true,
+  ENABLE_CLIPPING_POLYGONS: true,
+};
+
+/**
+ * Returns true if the fragment shader clips fragments via a
+ * ClippingPlaneCollection or ClippingPolygonCollection, in which case the
+ * shadow cast pass must run the original main so that clipped fragments
+ * are discarded and do not cast shadows.
+ *
+ * @param {ShaderSource} fragmentShaderSource
+ * @returns {boolean}
+ */
+ShadowMapShader.hasClippingForShadowCast = function (fragmentShaderSource) {
+  const defines = fragmentShaderSource.defines;
+  return (
+    defined(defines) &&
+    defines.some(function (define) {
+      return clippingDefines[define] === true;
+    })
+  );
+};
+
+/**
+ * @param {boolean} isPointLight
+ * @param {boolean} isTerrain
+ * @param {boolean} usesDepthTexture
+ * @param {boolean} isOpaque
+ * @param {boolean} hasClipping True if the fragment shader discards clipped
+ *   fragments. Differentiates cached shader variants so that a shader that
+ *   must call czm_shadow_cast_main() is never reused for one that does not.
+ * @returns {string}
+ */
 ShadowMapShader.getShadowCastShaderKeyword = function (
   isPointLight,
   isTerrain,
   usesDepthTexture,
-  isOpaque
+  isOpaque,
+  hasClipping,
 ) {
-  return `castShadow ${isPointLight} ${isTerrain} ${usesDepthTexture} ${isOpaque}`;
+  return `castShadow ${isPointLight} ${isTerrain} ${usesDepthTexture} ${isOpaque} ${hasClipping}`;
 };
 
 ShadowMapShader.createShadowCastVertexShader = function (
   vs,
   isPointLight,
-  isTerrain
+  isTerrain,
 ) {
   const defines = vs.defines.slice(0);
   const sources = vs.sources.slice(0);
@@ -54,11 +89,22 @@ ShadowMapShader.createShadowCastVertexShader = function (
   });
 };
 
+/**
+ * @param {ShaderSource} fs
+ * @param {boolean} isPointLight
+ * @param {boolean} usesDepthTexture
+ * @param {boolean} opaque
+ * @param {boolean} hasClipping True if the fragment shader discards clipped
+ *   fragments. When true, czm_shadow_cast_main() (the renamed original main)
+ *   is called first so that clipping discards execute during the shadow cast pass.
+ * @returns {ShaderSource}
+ */
 ShadowMapShader.createShadowCastFragmentShader = function (
   fs,
   isPointLight,
   usesDepthTexture,
-  opaque
+  opaque,
+  hasClipping,
 ) {
   const defines = fs.defines.slice(0);
   const sources = fs.sources.slice(0);
@@ -85,7 +131,9 @@ ShadowMapShader.createShadowCastFragmentShader = function (
     fsSource += "uniform vec4 shadowMap_lightPositionEC; \n";
   }
 
-  if (opaque) {
+  if (opaque && hasClipping) {
+    fsSource += "void main() \n" + "{ \n" + "    czm_shadow_cast_main(); \n";
+  } else if (opaque) {
     fsSource += "void main() \n" + "{ \n";
   } else {
     fsSource +=
@@ -127,7 +175,7 @@ ShadowMapShader.getShadowReceiveShaderKeyword = function (
   shadowMap,
   castShadows,
   isTerrain,
-  hasTerrainNormal
+  hasTerrainNormal,
 ) {
   const usesDepthTexture = shadowMap._usesDepthTexture;
   const polygonOffsetSupported = shadowMap._polygonOffsetSupported;
@@ -143,7 +191,7 @@ ShadowMapShader.getShadowReceiveShaderKeyword = function (
 ShadowMapShader.createShadowReceiveVertexShader = function (
   vs,
   isTerrain,
-  hasTerrainNormal
+  hasTerrainNormal,
 ) {
   const defines = vs.defines.slice(0);
   const sources = vs.sources.slice(0);
@@ -169,7 +217,7 @@ ShadowMapShader.createShadowReceiveFragmentShader = function (
   shadowMap,
   castShadows,
   isTerrain,
-  hasTerrainNormal
+  hasTerrainNormal,
 ) {
   const normalVaryingName = ShaderSource.findNormalVarying(fs);
   const hasNormalVarying =
@@ -189,8 +237,8 @@ ShadowMapShader.createShadowReceiveFragmentShader = function (
   const bias = isPointLight
     ? shadowMap._pointBias
     : isTerrain
-    ? shadowMap._terrainBias
-    : shadowMap._primitiveBias;
+      ? shadowMap._terrainBias
+      : shadowMap._primitiveBias;
 
   const defines = fs.defines.slice(0);
   const sources = fs.sources.slice(0);
@@ -199,7 +247,7 @@ ShadowMapShader.createShadowReceiveFragmentShader = function (
   for (let i = 0; i < length; ++i) {
     sources[i] = ShaderSource.replaceMain(
       sources[i],
-      "czm_shadow_receive_main"
+      "czm_shadow_receive_main",
     );
   }
 

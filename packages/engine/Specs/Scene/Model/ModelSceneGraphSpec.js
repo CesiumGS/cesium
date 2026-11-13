@@ -1,13 +1,11 @@
+import { Color, Math as CesiumMath, Matrix4 } from "@cesium/core";
 import {
   Axis,
   Cesium3DTileStyle,
-  Color,
   CustomShader,
   CustomShaderPipelineStage,
   Fog,
   AtmospherePipelineStage,
-  Math as CesiumMath,
-  Matrix4,
   ModelColorPipelineStage,
   ModelSceneGraph,
   ModelUtility,
@@ -50,7 +48,7 @@ describe(
     it("creates runtime nodes and runtime primitives from a model", async function () {
       const model = await loadAndZoomToModelAsync(
         { gltf: vertexColorGltfUrl },
-        scene
+        scene,
       );
       const sceneGraph = model._sceneGraph;
       const components = sceneGraph._components;
@@ -75,7 +73,7 @@ describe(
         {
           gltf: buildingsMetadata,
         },
-        scene
+        scene,
       );
       model.style = style;
 
@@ -101,7 +99,7 @@ describe(
         {
           gltf: buildingsMetadata,
         },
-        scene
+        scene,
       );
       model.style = style;
 
@@ -131,7 +129,7 @@ describe(
         {
           gltf: buildingsMetadata,
         },
-        scene
+        scene,
       );
       model.style = style;
 
@@ -153,7 +151,7 @@ describe(
       spyOn(ModelSceneGraph.prototype, "pushDrawCommands").and.callThrough();
       const model = await loadAndZoomToModelAsync(
         { gltf: parentGltfUrl },
-        scene
+        scene,
       );
 
       const sceneGraph = model._sceneGraph;
@@ -183,7 +181,7 @@ describe(
     it("stores runtime nodes correctly", async function () {
       const model = await loadAndZoomToModelAsync(
         { gltf: parentGltfUrl },
-        scene
+        scene,
       );
 
       const sceneGraph = model._sceneGraph;
@@ -204,7 +202,7 @@ describe(
           upAxis: Axis.Z,
           forwardAxis: Axis.X,
         },
-        scene
+        scene,
       );
       const sceneGraph = model._sceneGraph;
       const components = sceneGraph._components;
@@ -214,7 +212,7 @@ describe(
       expect(components.forwardAxis).toEqual(Axis.X);
 
       const parentTransform = ModelUtility.getNodeTransform(
-        components.nodes[0]
+        components.nodes[0],
       );
       const childTransform = ModelUtility.getNodeTransform(components.nodes[1]);
       expect(runtimeNodes[0].transform).toEqual(parentTransform);
@@ -226,7 +224,7 @@ describe(
     it("creates runtime skin from model", async function () {
       const model = await loadAndZoomToModelAsync(
         { gltf: simpleSkinGltfUrl },
-        scene
+        scene,
       );
 
       const sceneGraph = model._sceneGraph;
@@ -258,7 +256,7 @@ describe(
     it("creates articulation from model", async function () {
       const model = await loadAndZoomToModelAsync(
         { gltf: boxArticulationsUrl },
-        scene
+        scene,
       );
 
       const sceneGraph = model._sceneGraph;
@@ -283,7 +281,7 @@ describe(
         {
           gltf: boxArticulationsUrl,
         },
-        scene
+        scene,
       );
       const sceneGraph = model._sceneGraph;
       const runtimeNodes = sceneGraph._runtimeNodes;
@@ -325,7 +323,7 @@ describe(
           color: Color.RED,
           gltf: parentGltfUrl,
         },
-        scene
+        scene,
       );
       expect(ModelColorPipelineStage.process).toHaveBeenCalled();
     });
@@ -336,7 +334,7 @@ describe(
         {
           gltf: buildingsMetadata,
         },
-        scene
+        scene,
       );
       model.customShader = new CustomShader();
       model.update(scene.frameState);
@@ -351,7 +349,7 @@ describe(
         {
           gltf: buildingsMetadata,
         },
-        scene
+        scene,
       );
       model.customShader = new CustomShader();
       model.update(scene.frameState);
@@ -366,7 +364,7 @@ describe(
         {
           gltf: buildingsMetadata,
         },
-        scene
+        scene,
       );
       model.customShader = new CustomShader();
       model.update(scene.frameState);
@@ -381,7 +379,7 @@ describe(
         {
           gltf: buildingsMetadata,
         },
-        scene
+        scene,
       );
       model.customShader = new CustomShader();
       model.update(scene.frameState);
@@ -393,7 +391,7 @@ describe(
         {
           gltf: duckUrl,
         },
-        scene
+        scene,
       );
       const frameState = scene.frameState;
       const commandList = frameState.commandList;
@@ -442,5 +440,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

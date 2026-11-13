@@ -1,10 +1,11 @@
-import Cartesian4 from "../Core/Cartesian4.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import { Cartesian4, defined, destroyObject } from "@cesium/core";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import RenderState from "../Renderer/RenderState.js";
 
 /**
+ * @alias PickDepth
+ * @constructor
+ *
  * @private
  */
 function PickDepth() {
@@ -23,8 +24,7 @@ Object.defineProperties(PickDepth.prototype, {
 });
 
 function updateFramebuffers(pickDepth, context, depthTexture) {
-  const width = depthTexture.width;
-  const height = depthTexture.height;
+  const { width, height } = depthTexture;
   pickDepth._framebuffer.update(context, width, height);
 }
 
@@ -52,7 +52,7 @@ void main()
           },
         },
         owner: pickDepth,
-      }
+      },
     );
   }
 
@@ -70,9 +70,19 @@ const packedDepthScale = new Cartesian4(
   1.0,
   1.0 / 255.0,
   1.0 / 65025.0,
-  1.0 / 16581375.0
+  1.0 / 16581375.0,
 );
 
+/**
+ * Read the depth from the framebuffer at the given coordinate.
+ *
+ * @param {Context} context
+ * @param {number} x The x-coordinate at which to read the depth.
+ * @param {number} y The y-coordinate at which to read the depth.
+ * @returns {number} The depth read from the framebuffer.
+ *
+ * @private
+ */
 PickDepth.prototype.getDepth = function (context, x, y) {
   // If this function is called before the framebuffer is created, the depth is undefined.
   if (!defined(this.framebuffer)) {

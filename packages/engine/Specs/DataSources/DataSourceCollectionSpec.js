@@ -154,14 +154,13 @@ describe("DataSources/DataSourceCollection", function () {
     const collection = new DataSourceCollection();
 
     let removeCalled = 0;
-    collection.dataSourceRemoved.addEventListener(function (
-      sender,
-      dataSource
-    ) {
-      expect(sender).toBe(collection);
-      expect(sources.indexOf(dataSource)).not.toEqual(-1);
-      removeCalled++;
-    });
+    collection.dataSourceRemoved.addEventListener(
+      function (sender, dataSource) {
+        expect(sender).toBe(collection);
+        expect(sources.indexOf(dataSource)).not.toEqual(-1);
+        removeCalled++;
+      },
+    );
 
     return Promise.all([
       collection.add(sources[0]),
@@ -184,14 +183,13 @@ describe("DataSources/DataSourceCollection", function () {
     const collection = new DataSourceCollection();
 
     let removeCalled = 0;
-    collection.dataSourceRemoved.addEventListener(function (
-      sender,
-      dataSource
-    ) {
-      expect(sender).toBe(collection);
-      expect(sources.indexOf(dataSource)).not.toEqual(-1);
-      removeCalled++;
-    });
+    collection.dataSourceRemoved.addEventListener(
+      function (sender, dataSource) {
+        expect(sender).toBe(collection);
+        expect(sources.indexOf(dataSource)).not.toEqual(-1);
+        removeCalled++;
+      },
+    );
 
     return Promise.all([
       collection.add(sources[0]),

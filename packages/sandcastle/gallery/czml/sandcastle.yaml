@@ -1,0 +1,7 @@
+legacyId: CZML.html
+title: CZML
+description: A simple CZML example showing four satellites in orbit around the Earth, and some ground objects.
+labels:
+  - DataSources
+  - Entities
+thumbnail: thumbnail.jpg

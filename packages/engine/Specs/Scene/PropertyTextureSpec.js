@@ -1,10 +1,5 @@
-import {
-  PropertyTexture,
-  MetadataClass,
-  PixelDatatype,
-  PixelFormat,
-  Texture,
-} from "../../index.js";
+import { PixelDatatype, PixelFormat } from "@cesium/core";
+import { PropertyTexture, MetadataClass, Texture } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
 
 describe(
@@ -160,5 +155,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

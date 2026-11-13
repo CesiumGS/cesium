@@ -1,7 +1,7 @@
+import { RuntimeError } from "@cesium/core";
 import decodeGoogleEarthEnterpriseData from "../Core/decodeGoogleEarthEnterpriseData.js";
 import GoogleEarthEnterpriseTileInformation from "../Core/GoogleEarthEnterpriseTileInformation.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import pako from "pako/lib/inflate.js";
+import { inflate } from "pako/browser/inflate";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 // Datatype sizes
@@ -69,7 +69,7 @@ function processMetadata(buffer, totalSize, quadKey) {
   offset += sizeOfUint32;
   if (quadVersion !== 2) {
     throw new RuntimeError(
-      "Invalid QuadTreePacket version. Only version 2 is supported."
+      "Invalid QuadTreePacket version. Only version 2 is supported.",
     );
   }
 
@@ -143,8 +143,8 @@ function processMetadata(buffer, totalSize, quadKey) {
         imageVersion,
         terrainVersion,
         imageProvider,
-        terrainProvider
-      )
+        terrainProvider,
+      ),
     );
   }
 
@@ -201,7 +201,7 @@ function processMetadata(buffer, totalSize, quadKey) {
 const numMeshesPerPacket = 5;
 const numSubMeshesPerMesh = 4;
 
-// Each terrain packet will have 5 meshes - each containg 4 sub-meshes:
+// Each terrain packet will have 5 meshes - each contain 4 sub-meshes:
 //    1 even level mesh and its 4 odd level children.
 // Any remaining bytes after the 20 sub-meshes contains water surface meshes,
 // which are ignored.
@@ -257,7 +257,7 @@ function uncompressPacket(data) {
   offset += sizeOfUint32;
 
   const compressedPacket = new Uint8Array(data, offset);
-  const uncompressedPacket = pako.inflate(compressedPacket);
+  const uncompressedPacket = inflate(compressedPacket);
 
   if (uncompressedPacket.length !== size) {
     throw new RuntimeError("Size of packet doesn't match header");

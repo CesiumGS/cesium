@@ -1,9 +1,6 @@
+import { Color, ComponentDatatype, defined } from "@cesium/core";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
-import Color from "../../Core/Color.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";
@@ -17,6 +14,32 @@ import ModelUtility from "./ModelUtility.js";
 const PickingPipelineStage = {
   name: "PickingPipelineStage", // Helps with debugging
 };
+
+/**
+ * Builds the GLSL expression for the float snap payload written during a
+ * snapping pass (see {@link Scene#snap}), from the expression that evaluates
+ * to the primitive's RGBA8-normalized pick color.
+ *
+ * Channel layout (RGBA32F snap framebuffer):
+ * <ul>
+ *   <li>R: pick ID, repacked from the RGBA8 pick color to a uint32 via
+ *       <code>rgba8UnormToUint32</code> (injected by DerivedCommand.createSnapDerivedCommand).
+ *       Implicitly cast to float32, which represents far more pick IDs than occur in practice.</li>
+ *   <li>G: isEdge flag (0.0/1.0). <code>isEdge</code> is a ModelFS.glsl global, set by
+ *       edge-pass fragments under <code>u_isEdgePass</code>.</li>
+ *   <li>B: linear eye-space depth (<code>-v_positionEC.z</code>, meters). Eye space is
+ *       global across multifrustum and independent of log-depth encoding.</li>
+ *   <li>A: unused</li>
+ * </ul>
+ *
+ * @param {string} pickId The GLSL expression for the RGBA8 pick color.
+ * @returns {string} The GLSL expression for the snap payload.
+ *
+ * @private
+ */
+function snapIdFromPickId(pickId) {
+  return `vec4(rgba8UnormToUint32(${pickId}), isEdge ? 1.0 : 0.0, -v_positionEC.z, 0.0)`;
+}
 
 /**
  * Process a primitive. This modifies the following parts of the render resources:
@@ -33,7 +56,7 @@ const PickingPipelineStage = {
 PickingPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const context = frameState.context;
   const runtimeNode = renderResources.runtimeNode;
@@ -57,7 +80,7 @@ PickingPipelineStage.process = function (
     shaderBuilder.addUniform(
       "vec4",
       "czm_pickColor",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
 
     const uniformMap = renderResources.uniformMap;
@@ -66,6 +89,11 @@ PickingPipelineStage.process = function (
     };
 
     renderResources.pickId = "czm_pickColor";
+    renderResources.snapId = snapIdFromPickId(renderResources.pickId);
+  }
+
+  if (!defined(model.classificationType) && model.hasDrapedVectors()) {
+    renderResources.pickId = `vectorPickColorOver(${renderResources.pickId})`;
   }
 };
 
@@ -129,14 +157,14 @@ function processPickTexture(renderResources, primitive, instances) {
     // Extract the Feature Table ID from the instanced Feature ID attributes.
     featureIdAttribute = ModelUtility.getFeatureIdsByLabel(
       instances.featureIds,
-      instanceFeatureIdLabel
+      instanceFeatureIdLabel,
     );
     featureTableId = featureIdAttribute.propertyTableId;
   } else {
     // Extract the Feature Table ID from the primitive Feature ID attributes.
     featureIdAttribute = ModelUtility.getFeatureIdsByLabel(
       primitive.featureIds,
-      featureIdLabel
+      featureIdLabel,
     );
     featureTableId = featureIdAttribute.propertyTableId;
   }
@@ -147,17 +175,18 @@ function processPickTexture(renderResources, primitive, instances) {
   shaderBuilder.addUniform(
     "sampler2D",
     "model_pickTexture",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   const batchTexture = featureTable.batchTexture;
   renderResources.uniformMap.model_pickTexture = function () {
-    return defaultValue(batchTexture.pickTexture, batchTexture.defaultTexture);
+    return batchTexture.pickTexture ?? batchTexture.defaultTexture;
   };
 
   // The feature ID is ignored if it is greater than the number of features.
   renderResources.pickId =
     "((selectedFeature.id < int(model_featuresLength)) ? texture(model_pickTexture, selectedFeature.st) : vec4(0.0))";
+  renderResources.snapId = snapIdFromPickId(renderResources.pickId);
 }
 
 function processInstancedPickIds(renderResources, context) {
@@ -214,6 +243,7 @@ function processInstancedPickIds(renderResources, context) {
   shaderBuilder.addAttribute("vec4", "a_pickColor");
   shaderBuilder.addVarying("vec4", "v_pickColor");
   renderResources.pickId = "v_pickColor";
+  renderResources.snapId = snapIdFromPickId(renderResources.pickId);
 }
 
 export default PickingPipelineStage;

@@ -1,8 +1,5 @@
+import { Cartesian2, Color, JulianDate, TimeInterval } from "@cesium/core";
 import {
-  Cartesian2,
-  Color,
-  JulianDate,
-  TimeInterval,
   ConstantProperty,
   GridMaterialProperty,
   SampledProperty,
@@ -82,35 +79,35 @@ describe("DataSources/GridMaterialProperty", function () {
         start: start,
         stop: stop,
         data: Color.BLUE,
-      })
+      }),
     );
     property.cellAlpha.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: 1.0,
-      })
+      }),
     );
     property.lineCount.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: new Cartesian2(3.4, 5.0),
-      })
+      }),
     );
     property.lineThickness.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: new Cartesian2(2, 3),
-      })
+      }),
     );
     property.lineOffset.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: new Cartesian2(0.7, 0.8),
-      })
+      }),
     );
 
     const result = property.getValue(start);
@@ -190,7 +187,7 @@ describe("DataSources/GridMaterialProperty", function () {
       property,
       "color",
       property.color,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -199,7 +196,7 @@ describe("DataSources/GridMaterialProperty", function () {
       property,
       "color",
       property.color,
-      property.color
+      property.color,
     );
     listener.calls.reset();
 
@@ -213,7 +210,7 @@ describe("DataSources/GridMaterialProperty", function () {
       property,
       "cellAlpha",
       property.cellAlpha,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -222,7 +219,7 @@ describe("DataSources/GridMaterialProperty", function () {
       property,
       "cellAlpha",
       property.cellAlpha,
-      property.cellAlpha
+      property.cellAlpha,
     );
     listener.calls.reset();
 
@@ -236,7 +233,7 @@ describe("DataSources/GridMaterialProperty", function () {
       property,
       "lineCount",
       property.lineCount,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -245,7 +242,7 @@ describe("DataSources/GridMaterialProperty", function () {
       property,
       "lineCount",
       property.lineCount,
-      property.lineCount
+      property.lineCount,
     );
     listener.calls.reset();
 
@@ -259,7 +256,7 @@ describe("DataSources/GridMaterialProperty", function () {
       property,
       "lineThickness",
       property.lineThickness,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -268,7 +265,7 @@ describe("DataSources/GridMaterialProperty", function () {
       property,
       "lineThickness",
       property.lineThickness,
-      property.lineThickness
+      property.lineThickness,
     );
     listener.calls.reset();
 
@@ -278,7 +275,7 @@ describe("DataSources/GridMaterialProperty", function () {
       property,
       "lineOffset",
       property.lineOffset,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -287,7 +284,7 @@ describe("DataSources/GridMaterialProperty", function () {
       property,
       "lineOffset",
       property.lineOffset,
-      property.lineOffset
+      property.lineOffset,
     );
     listener.calls.reset();
 

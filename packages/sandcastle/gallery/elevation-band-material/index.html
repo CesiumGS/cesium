@@ -1,0 +1,89 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td>Background Transparency</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            data-bind="value: backgroundTransparency, valueUpdate: 'input'"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Band Transparency</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            data-bind="value: bandTransparency, valueUpdate: 'input'"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Band Thickness</td>
+        <td>
+          <input
+            type="range"
+            min="10"
+            max="1000"
+            step="1"
+            data-bind="value: bandThickness, valueUpdate: 'input'"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Band 1 Position</td>
+        <td>
+          <input
+            type="range"
+            min="4000"
+            max="8848"
+            step="1"
+            data-bind="value: band1Position, valueUpdate: 'input'"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Band 2 Position</td>
+        <td>
+          <input
+            type="range"
+            min="4000"
+            max="8848"
+            step="1"
+            data-bind="value: band2Position, valueUpdate: 'input'"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Band 3 Position</td>
+        <td>
+          <input
+            type="range"
+            min="4000"
+            max="8848"
+            step="1"
+            data-bind="value: band3Position, valueUpdate: 'input'"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Gradient</td>
+        <td>
+          <input type="checkbox" data-bind="checked: gradient" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

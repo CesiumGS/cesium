@@ -15,8 +15,8 @@ All new code should have 100% code coverage and should pass all tests. Always ru
       - [Run Only WebGL Tests](#run-only-webgl-tests)
       - [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
       - [Run All Tests Against the Minified Release Version of CesiumJS](#run-all-tests-against-the-minified-release-version-of-cesiumjs)
-      - [Run a Single Test or Suite](#run-a-single-test-or-suite)
-      - [Using Browser Debugging Tools](#using-browser-debugging-tools)
+      - [Filter and Run Specific Tests or Suites](#filter-and-run-specific-tests-or-suites)
+      - [Debugging Tests in the Browser or IDE](#debugging-tests-in-the-browser-or-ide)
     - [Running the Tests in the Browser](#running-the-tests-in-the-browser)
       - [Run All Tests](#run-all-tests)
       - [Run with WebGL validation](#run-with-webgl-validation)
@@ -114,21 +114,37 @@ However, many users build apps using the built Cesium.js in `Build/Cesium` (whic
 
 `npm run test-release`
 
-#### Run a Single Test or Suite
+#### Filter and Run Specific Tests or Suites
 
-Often when developing, it is useful to run only one suite to save time, instead of all the tests, and then run all the tests before opening a pull request. To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak. Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
+Before submitting code for a pull requests, its recommended to run the entire test suite. But often during iterative development, it is quicker to run only a subset of specs instead of the entire test suite.
 
-Alternatively, test suites can be run from the command line with the `includeName` flag. The argument value should be a substring of one or more test suite names, which are found in the `describe` function of the spec file. For example, the `Cartesian2` tests can be run with:
+##### Focus a single test or suite
 
-`npm run test -- --includeName Cartesian2`
+In the spec file, change the `it` function call for the desired test to `fit` (the `f` stands for `focused` in Jasmine speak). Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
 
-#### Using Browser Debugging Tools
+##### Filter Tests or suites by pattern
 
-If it is helpful to step through a unit test in a browser debugger, run the tests with the `debug` flag:
+On the command line, filter and run specific tests or suites based on their descriptions with either the `includeName` or `grep` flag. The argument value should be a pattern to match against one or more descriptions—i.e., the strings provided as the first argument to `describe` or `it` functions in the spec files.
+
+For example, the `Cartesian2` tests can be run with:
+
+```sh
+npm run test -- --includeName Cartesian2
+```
+
+or equivalently:
+
+```sh
+npm run test -- --grep Cartesian2
+```
+
+#### Debugging Tests in the Browser or IDE
+
+If it is helpful to step through a unit test in a browser debugger or your IDE, run the tests with the `debug` flag:
 
 `npm run test -- --debug`
 
-The `--debug` flag will prevent the Karma browser from closing after running the tests, and clicking the "Debug" button will open a new tab that can be used for placing breakpoints and stepping through the code.
+The `--debug` flag will prevent the Karma browser from closing after running the tests, and clicking the "Debug" button will open a new tab that can be used for placing breakpoints and stepping through the code. Alternatively, run the "Launch Test Suite and Debug in VSCode" launch configuration (which opens chrome, attaches VSCode, and prepares the test suite of the current file), set breakpoints directly in the Spec file, and then click "Debug" in Chrome to run the tests. Similar behavior may be possible in other IDEs by attaching to port 9333 (Karma's configured remote debugging port) after running the npm test command above.
 
 ![Karma](8.jpg)
 
@@ -271,6 +287,7 @@ For further info and options, see the [Playwright documentation on running tests
 - `--project="webkit"` - Test only webkit. Can also use `chromium` or `firefox` to test against those browsers.
 - `-g <grep>` or `--grep <grep>` - Run only tests that match a regular expression.
 - `--grep-invert <grep>` - Run only tests that don't match a regular expression.
+- `--ui` - Launch a test browser to view and run specific tests. Note it's not perfect with dynamic canvases but it's still helpful
 
 For example:
 
@@ -303,54 +320,74 @@ The first step to checking for WebGL related issues should be to add an extra te
 <details><summary>WebGL check example</summary>
 
 ```js
-// tests/example1.test.js
-import { test } from "./test.js";
+// Specs/e2e/webgl-report.spec.js
+
+import { test, expect } from "./test.js";
 
 function waitFor(delay) {
   return new Promise((resolve) => setTimeout(resolve, delay));
 }
 
-const screenshotPath = "Specs/e2e/webgl-check";
-
-const chromeGpu = "chrome://gpu/"; // only works for chrome not firefox
-const webGlReport1 = "https://webglreport.com/?v=1";
-const webGlReport2 = "https://webglreport.com/?v=2";
+const screenshotPath = "Specs/e2e/webgl-report.spec.js-snapshots";
 
 /**
  * This is used to check how WebGL is running in the testing environment to spot things like
- * not using the correct gpu that may affect performace and run time of the tests themselves
+ * not using the correct gpu that may affect performance and run time of the tests themselves
  * Based off of https://www.createit.com/blog/headless-chrome-testing-webgl-using-playwright/
  */
 test.describe("WebGL verification", () => {
   // Check if hardware acceleration is enabled. Without it, our tests will be much slower.
-  test("GPU hardware acceleration", async ({ page }) => {
-    await page.goto(chromeGpu);
+  test("Hardware acceleration check - Chrome", async ({ page }, testInfo) => {
+    if (testInfo.project.name !== "chromium") {
+      testInfo.skip();
+      return;
+    }
+
+    // A similar test could be made for firefox navigating to `about:support` and checking the Compositor
+    await page.goto("chrome://gpu");
+
     await waitFor(2000);
     await page.screenshot({
-      path: `${screenshotPath}/screenshot_hardware.png`,
+      path: `${screenshotPath}/screenshot_hardware-chromium.png`,
       fullPage: true,
     });
   });
-  test("webgl report v1", async ({ page }) => {
-    await page.goto(webGlReport1);
+
+  test("webgl report v1", async ({ page }, testInfo) => {
+    await page.goto("https://webglreport.com/?v=1");
     await waitFor(2000);
     await page.screenshot({
-      path: `${screenshotPath}/screenshot_webgl1.png`,
+      path: `${screenshotPath}/screenshot_webgl1-${testInfo.project.name}.png`,
       fullPage: true,
     });
+    const selector =
+      "#output > div.report > table > tbody > tr:nth-child(9) > td";
+    const renderer = page.locator(selector);
+    await expect(renderer).toContainText("NVIDIA", { timeout: 100 });
   });
-  test("webgl report v2", async ({ page }) => {
-    await page.goto(webGlReport2);
+
+  test("webgl report v2", async ({ page }, testInfo) => {
+    await page.goto("https://webglreport.com/?v=2");
     await waitFor(2000);
     await page.screenshot({
-      path: `${screenshotPath}/screenshot_webgl2.png`,
+      path: `${screenshotPath}/screenshot_webgl2-${testInfo.project.name}.png`,
       fullPage: true,
     });
+    const selector =
+      "#output > div.report > table > tbody > tr:nth-child(9) > td";
+    const renderer = page.locator(selector);
+    await expect(renderer).toContainText("NVIDIA", { timeout: 100 });
   });
 });
 ```
 
 </details>
+
+#### End to End test platform issues
+
+Note that Playwright has a [very specific list](https://playwright.dev/docs/intro#system-requirements) of OS versions that it supports. Please check that first and if you're using something not listed you may have to dig into setup and debugging yourself.
+
+- _Linux Chrome_ - There may be some platform specific issues using Playwright based on browser type and which GPUs it can access. On Chrome on Linux we have found that it may be necessary to use `args: ["--use-angle=vulkan"],` in place of `args: ["--use-angle=gl"],` under `Desktop Chrome` in the `chromium` section of the projects list of `playwright.config.js` to properly enable hardware acceleration.
 
 ## `testfailure` Label for Issues
 
@@ -421,16 +458,16 @@ it("angleBetween works for acute angles", function () {
   const y = new Cartesian3(1.0, 1.0, 0.0);
   expect(Cartesian3.angleBetween(x, y)).toEqualEpsilon(
     CesiumMath.PI_OVER_FOUR,
-    CesiumMath.EPSILON14
+    CesiumMath.EPSILON14,
   );
   expect(Cartesian3.angleBetween(y, x)).toEqualEpsilon(
     CesiumMath.PI_OVER_FOUR,
-    CesiumMath.EPSILON14
+    CesiumMath.EPSILON14,
   );
 });
 ```
 
-`toEqualEpsilon` is a custom Jasmine matcher that the CesiumJS tests add. See [Specs/addDefaultMatchers.js](https://github.com/CesiumGS/cesium/blob/main/Specs/addDefaultMatchers.js) for all the custom matchers. In general, all test utility functions are in files in the `Specs` root directory.
+`toEqualEpsilon` is a custom Jasmine matcher that the CesiumJS tests add. See [Specs/createBaseMatchers.js](https://github.com/CesiumGS/cesium/blob/main/Specs/createBaseMatchers.js) [Specs/createAsyncMatchers.js](https://github.com/CesiumGS/cesium/blob/main/Specs/createAsyncMatchers.js), and [Specs/createRendererMatchers.js](https://github.com/CesiumGS/cesium/blob/main/Specs/createRendererMatchers.js) for all the custom matchers. In general, all test utility functions are in files in the `Specs` root directory.
 
 For more on comparing floating-point numbers, see [Comparing Floating Point Numbers, 2012 Edition](https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/).
 
@@ -441,14 +478,26 @@ In addition to testing success cases, we also test all failure cases. The custom
 ```javascript
 it("fromDegrees throws with no latitude", function () {
   expect(function () {
-    Cartesian3.fromDegrees(0.0);
-  }).toThrowDeveloperError();
+    Cartesian3.fromDegrees(0.0, undefined);
+  }).toThrowDeveloperError(
+    "Expected latitude to be typeof number, actual typeof was undefined",
+  );
 });
 ```
 
 Above, `Cartesian3.fromDegrees` is expected to throw a `DeveloperError` because it expects longitude and latitude arguments, and only longitude is provided.
 
-Tips:
+#### Tips
+
+- When testing for exceptions it is recommended to test for the expected error message to verify that the test is triggering the correct error. This can be achieved either with the full error message, like above, or with a regular expression that will match the error message like this:
+
+```javascript
+it("fromDegrees throws with no latitude", function () {
+  expect(function () {
+    Cartesian3.fromDegrees(0.0, undefined);
+  }).toThrowDeveloperError(/Expected latitude to be/);
+});
+```
 
 - When testing for exceptions, put only code that is expected to trigger the exception inside the function passed to `expect()`, in case setup code unintentionally throws an exception.
 - To verify the right exception is thrown, it is often useful to comment out the `expect` call when first running the test, for example:
@@ -456,7 +505,7 @@ Tips:
 ```javascript
 it("fromDegrees throws with no latitude", function () {
   //    expect(function() {
-  Cartesian3.fromDegrees(0.0);
+  Cartesian3.fromDegrees(0.0, undefined);
   //    }).toThrowDeveloperError();
 });
 ```
@@ -533,7 +582,7 @@ it("does not render when show is false", function () {
   scene.primitives.add(
     new DebugModelMatrixPrimitive({
       show: false,
-    })
+    }),
   );
   expect(scene).toRender([0, 0, 0, 255]);
 });
@@ -777,13 +826,13 @@ it("Zooms to longitude, latitude, height", function () {
   viewModel.search();
   expect(Camera.prototype.flyTo).toHaveBeenCalled();
   expect(Camera.prototype.flyTo.calls.mostRecent().args[0].destination).toEqual(
-    Cartesian3.fromDegrees(1.0, 2.0, 3.0)
+    Cartesian3.fromDegrees(1.0, 2.0, 3.0),
   );
 
   viewModel.searchText = "1.0   2.0   3.0";
   viewModel.search();
   expect(Camera.prototype.flyTo.calls.mostRecent().args[0].destination).toEqual(
-    Cartesian3.fromDegrees(1.0, 2.0, 3.0)
+    Cartesian3.fromDegrees(1.0, 2.0, 3.0),
   );
 });
 ```
@@ -895,7 +944,7 @@ it("fromUrl throws if the SRS is not supported", async function () {
   metadata.spatialReference.latestWkid = 1234;
 
   await expectAsync(
-    ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl)
+    ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl),
   ).toBeRejectedWithError(RuntimeError, "Invalid spatial reference");
 });
 ```
@@ -905,7 +954,7 @@ Since developer errors are removed for release builds, CesiumJS's `toBeRejectedW
 ```javascript
 it("fromUrl throws without url", async function () {
   await expectAsync(Cesium3DTileset.fromUrl()).toBeRejectedWithDeveloperError(
-    "url is required, actual value was undefined"
+    "url is required, actual value was undefined",
   );
 });
 ```
@@ -967,7 +1016,7 @@ describe(
 
     // ...
   },
-  "WebGL"
+  "WebGL",
 );
 ```
 

@@ -1,8 +1,4 @@
-import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
+import { Color, Event, Frozen, JulianDate, defined } from "@cesium/core";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
@@ -21,7 +17,7 @@ const defaultOutlineWidth = 1.0;
  * @param {Property|number} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline, in pixels.
  */
 function PolylineOutlineMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._color = undefined;
@@ -123,18 +119,18 @@ PolylineOutlineMaterialProperty.prototype.getValue = function (time, result) {
     this._color,
     time,
     defaultColor,
-    result.color
+    result.color,
   );
   result.outlineColor = Property.getValueOrClonedDefault(
     this._outlineColor,
     time,
     defaultOutlineColor,
-    result.outlineColor
+    result.outlineColor,
   );
   result.outlineWidth = Property.getValueOrDefault(
     this._outlineWidth,
     time,
-    defaultOutlineWidth
+    defaultOutlineWidth,
   );
   return result;
 };

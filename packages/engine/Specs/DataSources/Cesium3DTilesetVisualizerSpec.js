@@ -1,9 +1,11 @@
 import {
   BoundingSphere,
   Cartesian3,
-  defined,
   JulianDate,
   Matrix4,
+  defined,
+} from "@cesium/core";
+import {
   Resource,
   BoundingSphereState,
   Cesium3DTileset,
@@ -14,7 +16,6 @@ import {
   Cesium3DTilesetVisualizer,
   Globe,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -80,7 +81,7 @@ describe(
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       visualizer.update(JulianDate.now());
       expect(scene.primitives.length).toEqual(0);
@@ -116,7 +117,7 @@ describe(
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(1, 2, 3)
+        Cartesian3.fromDegrees(1, 2, 3),
       );
       testObject.tileset = tileset;
 
@@ -145,12 +146,12 @@ describe(
       tileset.uri = new ConstantProperty(
         new Resource({
           url: tilesetUrl,
-        })
+        }),
       );
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(1, 2, 3)
+        Cartesian3.fromDegrees(1, 2, 3),
       );
       testObject.tileset = tileset;
 
@@ -174,7 +175,7 @@ describe(
       const time = JulianDate.now();
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
-        new Cartesian3(5678, 1234, 1101112)
+        new Cartesian3(5678, 1234, 1101112),
       );
       testObject.tileset = tileset;
       visualizer.update(time);
@@ -198,7 +199,7 @@ describe(
       testObject.tileset = tileset;
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(5678, 1234, 1101112)
+        new Cartesian3(5678, 1234, 1101112),
       );
       tileset.uri = new ConstantProperty(tilesetUrl);
       visualizer.update(time);
@@ -221,12 +222,12 @@ describe(
       tileset.uri = new ConstantProperty(
         new Resource({
           url: tilesetUrl,
-        })
+        }),
       );
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(1, 2, 3)
+        Cartesian3.fromDegrees(1, 2, 3),
       );
       testObject.tileset = tileset;
 
@@ -261,12 +262,12 @@ describe(
       tileset.uri = new ConstantProperty(
         new Resource({
           url: tilesetUrl,
-        })
+        }),
       );
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(1, 2, 3)
+        Cartesian3.fromDegrees(1, 2, 3),
       );
       testObject.tileset = tileset;
 
@@ -288,7 +289,7 @@ describe(
       testObject.tileset = tileset;
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(5678, 1234, 1101112)
+        new Cartesian3(5678, 1234, 1101112),
       );
       tileset.uri = new ConstantProperty(tilesetUrl);
       visualizer.update(time);
@@ -317,7 +318,7 @@ describe(
       testObject.tileset = tileset;
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(5678, 1234, 1101112)
+        new Cartesian3(5678, 1234, 1101112),
       );
       tileset.uri = new ConstantProperty(tilesetUrl);
       visualizer.update(time);
@@ -356,7 +357,7 @@ describe(
       testObject.tileset = tileset;
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(5678, 1234, 1101112)
+        new Cartesian3(5678, 1234, 1101112),
       );
       tileset.uri = new ConstantProperty("/path/to/incorrect/file");
       visualizer.update(time);
@@ -392,5 +393,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

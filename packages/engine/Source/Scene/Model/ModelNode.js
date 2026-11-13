@@ -1,5 +1,4 @@
-import Check from "../../Core/Check.js";
-import defined from "../../Core/defined.js";
+import { Check, defined } from "@cesium/core";
 
 /**
  * <div class="notice">
@@ -26,7 +25,7 @@ function ModelNode(model, runtimeNode) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("model", model);
   Check.typeOf.object("runtimeNode", runtimeNode);
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   this._model = model;
   this._runtimeNode = runtimeNode;

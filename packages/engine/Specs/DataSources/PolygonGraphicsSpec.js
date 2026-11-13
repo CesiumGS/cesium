@@ -4,13 +4,14 @@ import {
   Color,
   DistanceDisplayCondition,
   PolygonHierarchy,
+} from "@cesium/core";
+import {
   ColorMaterialProperty,
   ConstantProperty,
   PolygonGraphics,
   ClassificationType,
   ShadowMode,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 import testMaterialDefinitionChanged from "../../../../Specs/testMaterialDefinitionChanged.js";
 
@@ -69,7 +70,7 @@ describe("DataSources/PolygonGraphics", function () {
     expect(polygon.granularity.getValue()).toEqual(options.granularity);
     expect(polygon.stRotation.getValue()).toEqual(options.stRotation);
     expect(polygon.perPositionHeight.getValue()).toEqual(
-      options.perPositionHeight
+      options.perPositionHeight,
     );
     expect(polygon.fill.getValue()).toEqual(options.fill);
     expect(polygon.outline.getValue()).toEqual(options.outline);
@@ -79,15 +80,15 @@ describe("DataSources/PolygonGraphics", function () {
     expect(polygon.closeBottom.getValue()).toEqual(options.closeBottom);
     expect(polygon.shadows.getValue()).toEqual(options.shadows);
     expect(polygon.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
     expect(polygon.classificationType.getValue()).toEqual(
-      options.classificationType
+      options.classificationType,
     );
     expect(polygon.arcType.getValue()).toEqual(options.arcType);
     expect(polygon.zIndex.getValue()).toEqual(22);
     expect(polygon.textureCoordinates.getValue()).toEqual(
-      options.textureCoordinates
+      options.textureCoordinates,
     );
   });
 
@@ -109,10 +110,10 @@ describe("DataSources/PolygonGraphics", function () {
     source.closeBottom = new ConstantProperty();
     source.shadows = new ConstantProperty(ShadowMode.ENABLED);
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition()
+      new DistanceDisplayCondition(),
     );
     source.classificationType = new ConstantProperty(
-      ClassificationType.TERRAIN
+      ClassificationType.TERRAIN,
     );
     source.arcType = new ConstantProperty(ArcType.RHUMB);
     source.zIndex = new ConstantProperty(30);
@@ -137,7 +138,7 @@ describe("DataSources/PolygonGraphics", function () {
     expect(target.closeBottom).toBe(source.closeBottom);
     expect(target.shadows).toBe(source.shadows);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(target.classificationType).toBe(source.classificationType);
     expect(target.arcType).toBe(source.arcType);
@@ -255,7 +256,7 @@ describe("DataSources/PolygonGraphics", function () {
     expect(result.closeBottom).toBe(source.closeBottom);
     expect(result.shadows).toBe(source.shadows);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(result.classificationType).toBe(source.classificationType);
     expect(result.arcType).toBe(source.arcType);
@@ -290,19 +291,19 @@ describe("DataSources/PolygonGraphics", function () {
       property,
       "shadows",
       ShadowMode.ENABLED,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
     testDefinitionChanged(
       property,
       "distanceDisplayCondition",
       new DistanceDisplayCondition(),
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     testDefinitionChanged(
       property,
       "classificationType",
       ClassificationType.TERRAIN,
-      ClassificationType.BOTH
+      ClassificationType.BOTH,
     );
     testDefinitionChanged(property, "arcType", ArcType.GEODESIC, ArcType.RHUMB);
     testDefinitionChanged(property, "zIndex", 54, 3);

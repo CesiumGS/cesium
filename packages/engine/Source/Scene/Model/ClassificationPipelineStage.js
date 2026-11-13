@@ -1,5 +1,4 @@
-import defined from "../../Core/defined.js";
-import RuntimeError from "../../Core/RuntimeError.js";
+import { RuntimeError, defined } from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelUtility from "./ModelUtility.js";
@@ -37,14 +36,14 @@ const ClassificationPipelineStage = {
 ClassificationPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
 
   shaderBuilder.addDefine(
     "HAS_CLASSIFICATION",
     undefined,
-    ShaderDestination.BOTH
+    ShaderDestination.BOTH,
   );
 
   const runtimePrimitive = renderResources.runtimePrimitive;
@@ -57,12 +56,12 @@ ClassificationPipelineStage.process = function (
 function createClassificationBatches(primitive, runtimePrimitive) {
   const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
-    VertexAttributeSemantic.POSITION
+    VertexAttributeSemantic.POSITION,
   );
 
   if (!defined(positionAttribute)) {
     throw new RuntimeError(
-      "Primitives must have a position attribute to be used for classification."
+      "Primitives must have a position attribute to be used for classification.",
     );
   }
 
@@ -80,7 +79,7 @@ function createClassificationBatches(primitive, runtimePrimitive) {
   const featureIdAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.FEATURE_ID,
-    0
+    0,
   );
 
   // If there are no feature IDs, render the primitive in a single batch.

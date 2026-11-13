@@ -1,5 +1,4 @@
-import defined from "../Core/defined.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import { RuntimeError, defined } from "@cesium/core";
 
 /**
  * This class implements an I3S Field which is custom data attached
@@ -234,7 +233,7 @@ I3SField.prototype._parseBody = function (dataView, offset) {
           const parsedValue = this._parseValue(
             dataView,
             desc.valueType,
-            offset
+            offset,
           );
           this._values[item].push(parsedValue.value);
           offset = parsedValue.offset;
@@ -245,7 +244,7 @@ I3SField.prototype._parseBody = function (dataView, offset) {
             const curParsedValue = this._parseValue(
               dataView,
               desc.valueType,
-              offset
+              offset,
             );
             if (curParsedValue.value.charCodeAt(0) !== 0) {
               stringContent += curParsedValue.value;
@@ -292,7 +291,7 @@ I3SField.prototype._validateHeader = function (dataView) {
   }
   if (dataView.byteLength < headerSize) {
     throw new RuntimeError(
-      `Invalid attribute buffer size (field: ${this.name}, header: ${headerSize}, actual: ${dataView.byteLength})`
+      `Invalid attribute buffer size (field: ${this.name}, header: ${headerSize}, actual: ${dataView.byteLength})`,
     );
   }
 };
@@ -303,7 +302,7 @@ I3SField.prototype._validateHeader = function (dataView) {
 I3SField.prototype._validateBody = function (dataView, offset) {
   if (!defined(this._header.count)) {
     throw new RuntimeError(
-      `Invalid attribute buffer (field: ${this.name}, count is missing)`
+      `Invalid attribute buffer (field: ${this.name}, count is missing)`,
     );
   }
   let attributeByteCountsOffset;
@@ -327,7 +326,7 @@ I3SField.prototype._validateBody = function (dataView, offset) {
       } else {
         if (!defined(attributeByteCountsOffset)) {
           throw new RuntimeError(
-            `Invalid attribute buffer (field: ${this.name}, attributeByteCounts is missing)`
+            `Invalid attribute buffer (field: ${this.name}, attributeByteCounts is missing)`,
           );
         }
         for (
@@ -338,7 +337,7 @@ I3SField.prototype._validateBody = function (dataView, offset) {
           const parsedValue = this._parseValue(
             dataView,
             this._storageInfo.attributeByteCounts.valueType,
-            attributeByteCountsOffset
+            attributeByteCountsOffset,
           );
           offset += parsedValue.value;
           attributeByteCountsOffset = parsedValue.offset;
@@ -346,13 +345,13 @@ I3SField.prototype._validateBody = function (dataView, offset) {
       }
     } else {
       throw new RuntimeError(
-        `Invalid attribute buffer (field: ${this.name}, ${item} is missing)`
+        `Invalid attribute buffer (field: ${this.name}, ${item} is missing)`,
       );
     }
   }
   if (dataView.byteLength < offset) {
     throw new RuntimeError(
-      `Invalid attribute buffer size (field: ${this.name}, expected: ${offset}, actual: ${dataView.byteLength})`
+      `Invalid attribute buffer size (field: ${this.name}, expected: ${offset}, actual: ${dataView.byteLength})`,
     );
   }
 };

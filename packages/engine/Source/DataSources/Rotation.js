@@ -1,7 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
+import { DeveloperError, Math as CesiumMath, defined } from "@cesium/core";
 
 /**
  * Represents a {@link Packable} number that always interpolates values
@@ -56,7 +53,7 @@ const Rotation = {
     }
     //>>includeEnd('debug');
 
-    startingIndex = defaultValue(startingIndex, 0);
+    startingIndex = startingIndex ?? 0;
     array[startingIndex] = value;
 
     return array;
@@ -77,7 +74,7 @@ const Rotation = {
     }
     //>>includeEnd('debug');
 
-    startingIndex = defaultValue(startingIndex, 0);
+    startingIndex = startingIndex ?? 0;
     return array[startingIndex];
   },
 
@@ -93,7 +90,7 @@ const Rotation = {
     packedArray,
     startingIndex,
     lastIndex,
-    result
+    result,
   ) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(packedArray)) {
@@ -105,8 +102,8 @@ const Rotation = {
       result = [];
     }
 
-    startingIndex = defaultValue(startingIndex, 0);
-    lastIndex = defaultValue(lastIndex, packedArray.length);
+    startingIndex = startingIndex ?? 0;
+    lastIndex = lastIndex ?? packedArray.length;
 
     let previousValue;
     for (let i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
@@ -135,7 +132,7 @@ const Rotation = {
     sourceArray,
     firstIndex,
     lastIndex,
-    result
+    result,
   ) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(array)) {

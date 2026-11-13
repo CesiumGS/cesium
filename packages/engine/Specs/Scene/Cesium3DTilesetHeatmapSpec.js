@@ -1,12 +1,9 @@
+import { Color, JulianDate, Matrix4 } from "@cesium/core";
 import {
-  Color,
-  JulianDate,
-  Matrix4,
   Cesium3DTile,
   Cesium3DTileContentState,
   Cesium3DTilesetHeatmap,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/Cesium3DTilesetHeatmap", function () {
@@ -40,7 +37,7 @@ describe("Scene/Cesium3DTilesetHeatmap", function () {
     const diff = new Color(
       Math.abs(expectedColor.red - tileColor.red),
       Math.abs(expectedColor.green - tileColor.green),
-      Math.abs(expectedColor.blue - tileColor.blue)
+      Math.abs(expectedColor.blue - tileColor.blue),
     );
 
     const threshold = 0.11;
@@ -71,13 +68,13 @@ describe("Scene/Cesium3DTilesetHeatmap", function () {
     JulianDate.addSeconds(
       referenceMinimumJulianDate,
       10,
-      referenceMaximumJulianDate
+      referenceMaximumJulianDate,
     );
 
     heatmap.setReferenceMinimumMaximum(
       referenceMinimumJulianDate,
       referenceMaximumJulianDate,
-      tilePropertyName
+      tilePropertyName,
     ); // User wants to colorize to a fixed reference.
     const referenceMinimum = heatmap._referenceMinimum[tilePropertyName];
     const referenceMaximum = heatmap._referenceMaximum[tilePropertyName];
@@ -99,10 +96,10 @@ describe("Scene/Cesium3DTilesetHeatmap", function () {
       mockTileset,
       "/some_url",
       tileWithBoundingSphere,
-      undefined
+      undefined,
     );
     tile._contentState = Cesium3DTileContentState.READY;
-    tile.hasEmptyContent = false;
+    tile.hasRenderableContent = true; // Mock the tile having content
     const frameState = scene.frameState;
     tile._selectedFrame = frameState.frameNumber;
     const originalColor = tile._debugColor;

@@ -1,22 +1,21 @@
+import { Event, RuntimeError, defined } from "@cesium/core";
 import createTileKey from "./createTileKey.js";
 import runLater from "./runLater.js";
 import {
-  defined,
-  Event,
   GeographicTilingScheme,
   HeightmapTerrainData,
-  RuntimeError,
   TerrainProvider,
 } from "@cesium/engine";
 
 function MockTerrainProvider() {
   this.tilingScheme = new GeographicTilingScheme();
   this.heightmapWidth = 65;
-  this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
-    this.tilingScheme.ellipsoid,
-    this.heightmapWidth,
-    this.tilingScheme.getNumberOfXTilesAtLevel(0)
-  );
+  this.levelZeroMaximumGeometricError =
+    TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+      this.tilingScheme.ellipsoid,
+      this.heightmapWidth,
+      this.tilingScheme.getNumberOfXTilesAtLevel(0),
+    );
   this.hasWaterMask = true;
   this.errorEvent = new Event();
 
@@ -32,11 +31,10 @@ MockTerrainProvider.prototype.requestTileGeometry = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
-  const willSucceed = this._requestTileGeometryWillSucceed[
-    createTileKey(x, y, level)
-  ];
+  const willSucceed =
+    this._requestTileGeometryWillSucceed[createTileKey(x, y, level)];
   if (willSucceed === undefined) {
     return undefined; // defer by default
   }
@@ -58,7 +56,7 @@ MockTerrainProvider.prototype.requestTileGeometry = function (
 MockTerrainProvider.prototype.getTileDataAvailable = function (
   xOrTile,
   y,
-  level
+  level,
 ) {
   return this._tileDataAvailable[createTileKey(xOrTile, y, level)];
 };
@@ -70,7 +68,7 @@ MockTerrainProvider.prototype.getLevelMaximumGeometricError = function (level) {
 MockTerrainProvider.prototype.requestTileGeometryWillSucceed = function (
   xOrTile,
   y,
-  level
+  level,
 ) {
   this._requestTileGeometryWillSucceed[createTileKey(xOrTile, y, level)] = true;
   return this;
@@ -80,34 +78,31 @@ MockTerrainProvider.prototype.requestTileGeometryWillSucceedWith = function (
   terrainData,
   xOrTile,
   y,
-  level
+  level,
 ) {
   this._requestTileGeometryWillSucceed[createTileKey(xOrTile, y, level)] = true;
-  this._requestTileGeometryWillSucceedWith[
-    createTileKey(xOrTile, y, level)
-  ] = terrainData;
+  this._requestTileGeometryWillSucceedWith[createTileKey(xOrTile, y, level)] =
+    terrainData;
   return this;
 };
 
 MockTerrainProvider.prototype.requestTileGeometryWillFail = function (
   xOrTile,
   y,
-  level
+  level,
 ) {
-  this._requestTileGeometryWillSucceed[
-    createTileKey(xOrTile, y, level)
-  ] = false;
+  this._requestTileGeometryWillSucceed[createTileKey(xOrTile, y, level)] =
+    false;
   return this;
 };
 
 MockTerrainProvider.prototype.requestTileGeometryWillDefer = function (
   xOrTile,
   y,
-  level
+  level,
 ) {
-  this._requestTileGeometryWillSucceed[
-    createTileKey(xOrTile, y, level)
-  ] = undefined;
+  this._requestTileGeometryWillSucceed[createTileKey(xOrTile, y, level)] =
+    undefined;
   return this;
 };
 
@@ -115,11 +110,10 @@ MockTerrainProvider.prototype.requestTileGeometryWillWaitOn = function (
   promise,
   xOrTile,
   y,
-  level
+  level,
 ) {
-  this._requestTileGeometryWillSucceed[
-    createTileKey(xOrTile, y, level)
-  ] = promise;
+  this._requestTileGeometryWillSucceed[createTileKey(xOrTile, y, level)] =
+    promise;
   return this;
 };
 
@@ -128,7 +122,7 @@ MockTerrainProvider.prototype.willHaveWaterMask = function (
   includeWater,
   xOrTile,
   y,
-  level
+  level,
 ) {
   this._willHaveWaterMask[createTileKey(xOrTile, y, level)] =
     includeLand || includeWater
@@ -143,7 +137,7 @@ MockTerrainProvider.prototype.willHaveWaterMask = function (
 MockTerrainProvider.prototype.createMeshWillSucceed = function (
   xOrTile,
   y,
-  level
+  level,
 ) {
   this._createMeshWillSucceed[createTileKey(xOrTile, y, level)] = true;
   return this;
@@ -152,7 +146,7 @@ MockTerrainProvider.prototype.createMeshWillSucceed = function (
 MockTerrainProvider.prototype.createMeshWillFail = function (
   xOrTile,
   y,
-  level
+  level,
 ) {
   this._createMeshWillSucceed[createTileKey(xOrTile, y, level)] = false;
   return this;
@@ -161,7 +155,7 @@ MockTerrainProvider.prototype.createMeshWillFail = function (
 MockTerrainProvider.prototype.createMeshWillDefer = function (
   xOrTile,
   y,
-  level
+  level,
 ) {
   this._createMeshWillSucceed[createTileKey(xOrTile, y, level)] = undefined;
   return this;
@@ -171,7 +165,7 @@ MockTerrainProvider.prototype.createMeshWillWaitOn = function (
   promise,
   xOrTile,
   y,
-  level
+  level,
 ) {
   this._createMeshWillSucceed[createTileKey(xOrTile, y, level)] = promise;
   return this;
@@ -180,7 +174,7 @@ MockTerrainProvider.prototype.createMeshWillWaitOn = function (
 MockTerrainProvider.prototype.upsampleWillSucceed = function (
   xOrTile,
   y,
-  level
+  level,
 ) {
   this._upsampleWillSucceed[createTileKey(xOrTile, y, level)] = true;
   return this;
@@ -209,7 +203,7 @@ MockTerrainProvider.prototype.willBeUnavailable = function (xOrTile, y, level) {
 MockTerrainProvider.prototype.willBeUnknownAvailability = function (
   xOrTile,
   y,
-  level
+  level,
 ) {
   this._tileDataAvailable[createTileKey(xOrTile, y, level)] = undefined;
   return this;
@@ -257,7 +251,7 @@ function createTerrainData(terrainProvider, x, y, level, upsampled) {
     thisY,
     thisLevel,
     descendantX,
-    descendantY
+    descendantY,
   ) {
     const willSucceed =
       terrainProvider._upsampleWillSucceed[

@@ -1,0 +1,5 @@
+title: Timeline Demo
+description: Demonstrates using the Timeline and Animation components to visualize and interact with the CesiumJS Clock.
+labels:
+  - Widgets
+thumbnail: thumbnail.jpg

@@ -1,7 +1,4 @@
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
+import { Color, JulianDate, Math as CesiumMath, defined } from "@cesium/core";
 
 /**
  * A heatmap colorizer in a {@link Cesium3DTileset}. A tileset can colorize its visible tiles in a heatmap style.
@@ -57,15 +54,15 @@ function getHeatmapValue(tileValue, tilePropertyName) {
 Cesium3DTilesetHeatmap.prototype.setReferenceMinimumMaximum = function (
   minimum,
   maximum,
-  tilePropertyName
+  tilePropertyName,
 ) {
   this._referenceMinimum[tilePropertyName] = getHeatmapValue(
     minimum,
-    tilePropertyName
+    tilePropertyName,
   );
   this._referenceMaximum[tilePropertyName] = getHeatmapValue(
     maximum,
-    tilePropertyName
+    tilePropertyName,
   );
 };
 
@@ -74,7 +71,7 @@ function getHeatmapValueAndUpdateMinimumMaximum(heatmap, tile) {
   if (defined(tilePropertyName)) {
     const heatmapValue = getHeatmapValue(
       tile[tilePropertyName],
-      tilePropertyName
+      tilePropertyName,
     );
     if (!defined(heatmapValue)) {
       heatmap.tilePropertyName = undefined;
@@ -123,7 +120,7 @@ Cesium3DTilesetHeatmap.prototype.colorize = function (tile, frameState) {
   const shiftedValue = CesiumMath.clamp(
     heatmapValue - minimum,
     0.0,
-    shiftedMax
+    shiftedMax,
   );
 
   // Get position between minimum and maximum and convert that to a position in the color array

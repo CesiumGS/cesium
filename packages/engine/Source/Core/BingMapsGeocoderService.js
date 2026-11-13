@@ -1,15 +1,19 @@
-import Check from "./Check.js";
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  Rectangle,
+  defined,
+} from "@cesium/core";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
-import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 
 const url = "https://dev.virtualearth.net/REST/v1/Locations";
 
 /**
  * Provides geocoding through Bing Maps.
+ *
+ * @see {@link https://www.microsoft.com/en-us/maps/bing-maps/product|Microsoft Bing Maps Platform APIs Terms Of Use}
  * @alias BingMapsGeocoderService
  * @constructor
  *
@@ -18,7 +22,7 @@ const url = "https://dev.virtualearth.net/REST/v1/Locations";
  * @param {string} [options.culture] A Bing Maps {@link https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes|Culture Code} to return results in a specific culture and language.
  */
 function BingMapsGeocoderService(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const key = options.key;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(key)) {
@@ -43,7 +47,7 @@ function BingMapsGeocoderService(options) {
 
   this._credit = new Credit(
     `<img src="http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png"\/>`,
-    false
+    false,
   );
 }
 

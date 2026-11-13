@@ -1,4 +1,5 @@
-import { Cartesian3, Particle, SphereEmitter } from "../../index.js";
+import { Cartesian3 } from "@cesium/core";
+import { Particle, SphereEmitter } from "../../index.js";
 
 describe("Scene/SphereEmitter", function () {
   let emitter;
@@ -48,10 +49,10 @@ describe("Scene/SphereEmitter", function () {
     for (let i = 0; i < 1000; ++i) {
       emitter.emit(particle);
       expect(Cartesian3.magnitude(particle.position)).toBeLessThanOrEqual(
-        emitter.radius
+        emitter.radius,
       );
       expect(particle.velocity).toEqual(
-        Cartesian3.normalize(particle.position, new Cartesian3())
+        Cartesian3.normalize(particle.position, new Cartesian3()),
       );
     }
   });

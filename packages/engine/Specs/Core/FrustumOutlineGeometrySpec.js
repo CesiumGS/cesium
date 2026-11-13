@@ -1,12 +1,11 @@
 import {
   Cartesian3,
-  FrustumOutlineGeometry,
   Math as CesiumMath,
   PerspectiveFrustum,
   Quaternion,
   VertexFormat,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { FrustumOutlineGeometry } from "../../index.js";
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/FrustumOutlineGeometry", function () {
@@ -55,7 +54,7 @@ describe("Core/FrustumOutlineGeometry", function () {
         frustum: frustum,
         origin: Cartesian3.ZERO,
         orientation: Quaternion.IDENTITY,
-      })
+      }),
     );
 
     const numVertices = 8;
@@ -82,6 +81,6 @@ describe("Core/FrustumOutlineGeometry", function () {
       orientation: Quaternion.IDENTITY,
       vertexFormat: VertexFormat.POSITION_ONLY,
     }),
-    [0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0]
+    [0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0],
   );
 });

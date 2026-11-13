@@ -1,7 +1,5 @@
+import { Cartesian3, JulianDate, ReferenceFrame } from "@cesium/core";
 import {
-  Cartesian3,
-  JulianDate,
-  ReferenceFrame,
   ConstantPositionProperty,
   PositionPropertyArray,
   SampledPositionProperty,
@@ -69,7 +67,7 @@ describe("DataSources/PositionPropertyArray", function () {
     const property = new PositionPropertyArray(value);
     const result = property.getValueInReferenceFrame(
       time,
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
     expect(result).toEqual(expected);
   });

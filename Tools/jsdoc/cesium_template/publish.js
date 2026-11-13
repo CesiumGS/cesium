@@ -204,6 +204,7 @@ function attachModuleSymbols(doclets, modules) {
  * @param {array<object>} members.mixins
  * @param {array<object>} members.modules
  * @param {array<object>} members.namespaces
+ * @param {array<object>} members.interfaces
  * @param {array<object>} members.tutorials
  * @param {array<object>} members.events
  * @return {string} The HTML for the navigation sidebar.
@@ -219,6 +220,7 @@ function buildNav(members) {
     .concat(members.classes)
     .concat(members.globals)
     .concat(members.namespaces)
+    .concat(members.interfaces)
     .sort(function (a, b) {
       return a.longname.toLowerCase().localeCompare(b.longname.toLowerCase());
     });
@@ -241,9 +243,15 @@ function buildNav(members) {
 
   if (process.env.CESIUM_PACKAGES) {
     process.env.CESIUM_PACKAGES.split(",").forEach((package) => {
+      const packageItems = items.filter(
+        (item) => item.meta.package === package,
+      );
+      if (packageItems.length === 0) {
+        return;
+      }
       nav += `<h5>${package}</h5>`;
       nav += "<ul>";
-      addItems(items.filter((item) => item.meta.package === package));
+      addItems(packageItems);
       nav += "</ul>";
     });
   } else {
@@ -304,7 +312,7 @@ exports.publish = function (taffyData, opts, tutorials) {
 
         if (
           example.match(
-            /^\s*<caption>([\s\S]+?)<\/caption>(\s*[\n\r])([\s\S]+)$/i
+            /^\s*<caption>([\s\S]+?)<\/caption>(\s*[\n\r])([\s\S]+)$/i,
           )
         ) {
           caption = RegExp.$1;
@@ -373,7 +381,7 @@ exports.publish = function (taffyData, opts, tutorials) {
           .replace("{filename}", docletPath);
         if (process.env.CESIUM_PACKAGES) {
           doclet.meta.package = process.env.CESIUM_PACKAGES.split(",").find(
-            (package) => doclet.meta.sourceUrl.indexOf(package) > -1
+            (package) => doclet.meta.sourceUrl.indexOf(package) > -1,
           );
         }
       }
@@ -425,7 +433,7 @@ exports.publish = function (taffyData, opts, tutorials) {
   view.nav = buildNav(members);
   attachModuleSymbols(
     find({ kind: ["class", "function"], longname: { left: "module:" } }),
-    members.modules
+    members.modules,
   );
 
   if (members.globals.length) {
@@ -449,7 +457,7 @@ exports.publish = function (taffyData, opts, tutorials) {
         },
       ])
       .concat(files),
-    indexUrl
+    indexUrl,
   );
   view.layout = origLayout;
 
@@ -458,6 +466,7 @@ exports.publish = function (taffyData, opts, tutorials) {
   var modules = taffy(members.modules);
   var namespaces = taffy(members.namespaces);
   var globals = taffy(members.globals);
+  var interfaces = taffy(members.interfaces);
 
   var typesJson = {};
 
@@ -474,6 +483,10 @@ exports.publish = function (taffyData, opts, tutorials) {
 
     if (!items.length) {
       items = helper.find(globals, { longname: longname });
+    }
+
+    if (!items.length) {
+      items = helper.find(interfaces, { longname: longname });
     }
 
     if (items.length) {

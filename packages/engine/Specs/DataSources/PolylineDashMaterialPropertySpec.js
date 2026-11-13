@@ -1,7 +1,5 @@
+import { Color, JulianDate, TimeInterval } from "@cesium/core";
 import {
-  Color,
-  JulianDate,
-  TimeInterval,
   ConstantProperty,
   PolylineDashMaterialProperty,
   TimeIntervalCollectionProperty,
@@ -67,28 +65,28 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
         start: start,
         stop: stop,
         data: Color.BLUE,
-      })
+      }),
     );
     property.gapColor.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: Color.YELLOW,
-      })
+      }),
     );
     property.dashLength.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: 10.0,
-      })
+      }),
     );
     property.dashPattern.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: 11.0,
-      })
+      }),
     );
 
     const result = property.getValue(start);
@@ -152,7 +150,7 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
       property,
       "color",
       property.color,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -161,7 +159,7 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
       property,
       "color",
       property.color,
-      property.color
+      property.color,
     );
     listener.calls.reset();
 
@@ -175,7 +173,7 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
       property,
       "gapColor",
       property.gapColor,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -184,7 +182,7 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
       property,
       "gapColor",
       property.gapColor,
-      property.gapColor
+      property.gapColor,
     );
     listener.calls.reset();
 
@@ -198,7 +196,7 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
       property,
       "dashLength",
       property.dashLength,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -207,7 +205,7 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
       property,
       "dashLength",
       property.dashLength,
-      property.dashLength
+      property.dashLength,
     );
     listener.calls.reset();
 
@@ -220,7 +218,7 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
       property,
       "dashPattern",
       property.dashPattern,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -229,7 +227,7 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
       property,
       "dashPattern",
       property.dashPattern,
-      property.dashPattern
+      property.dashPattern,
     );
     listener.calls.reset();
 
@@ -255,7 +253,7 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
         start: start,
         stop: stop,
         data: Color.RED,
-      })
+      }),
     );
     expect(property.isConstant).toBe(false);
 
@@ -268,7 +266,7 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
         start: start,
         stop: stop,
         data: Color.RED,
-      })
+      }),
     );
     expect(property.isConstant).toBe(false);
     property.gapColor = undefined;
@@ -280,7 +278,7 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
         start: start,
         stop: stop,
         data: 3.0,
-      })
+      }),
     );
     expect(property.isConstant).toBe(false);
 
@@ -292,7 +290,7 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
         start: start,
         stop: stop,
         data: 3.0,
-      })
+      }),
     );
     expect(property.isConstant).toBe(false);
   });

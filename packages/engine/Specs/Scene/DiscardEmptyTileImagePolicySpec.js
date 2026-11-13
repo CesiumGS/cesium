@@ -3,13 +3,6 @@ import { Resource, DiscardEmptyTileImagePolicy } from "../../index.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/DiscardEmptyTileImagePolicy", function () {
-  afterEach(function () {
-    Resource._Implementations.createImage =
-      Resource._DefaultImplementations.createImage;
-    Resource._Implementations.loadWithXhr =
-      Resource._DefaultImplementations.loadWithXhr;
-  });
-
   describe("shouldDiscardImage", function () {
     it("does not discard a non-empty image", function () {
       const promises = [];
@@ -20,7 +13,7 @@ describe("Scene/DiscardEmptyTileImagePolicy", function () {
       promises.push(
         pollToPromise(function () {
           return policy.isReady();
-        })
+        }),
       );
 
       return Promise.all(promises, function (results) {
@@ -39,7 +32,7 @@ describe("Scene/DiscardEmptyTileImagePolicy", function () {
       promises.push(
         pollToPromise(function () {
           return policy.isReady();
-        })
+        }),
       );
 
       return Promise.all(promises, function (results) {

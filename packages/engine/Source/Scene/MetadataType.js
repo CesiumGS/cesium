@@ -1,11 +1,33 @@
-import Check from "../Core/Check.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Matrix2 from "../Core/Matrix2.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Check,
+  DeveloperError,
+  Matrix2,
+  Matrix3,
+  Matrix4,
+} from "@cesium/core";
+
+/**
+ * An instance of a metadata value.<br>
+ * <br>
+ * This can be one of the following types:
+ * <ul>
+ *   <li><code>number</code> for type <code>SCALAR</code> and numeric component types except for <code>INT64</code> or <code>UINT64</code></li>
+ *   <li><code>bigint</code> for type <code>SCALAR</code> and component type <code>INT64</code> or <code>UINT64</code></li>
+ *   <li><code>string</code> for type <code>STRING</code> or <code>ENUM</code></li>
+ *   <li><code>boolean</code> for type <code>BOOLEAN</code></li>
+ *   <li><code>Cartesian2</code> for type <code>VEC2</code></li>
+ *   <li><code>Cartesian3</code> for type <code>VEC3</code></li>
+ *   <li><code>Cartesian4</code> for type <code>VEC4</code></li>
+ *   <li><code>Matrix2</code> for type <code>MAT2</code></li>
+ *   <li><code>Matrix3</code> for type <code>MAT3</code></li>
+ *   <li><code>Matrix4</code> for type <code>MAT4</code></li>
+ *   <li>Arrays of these types when the metadata value is an array</li>
+ * </ul>
+ * @typedef {(number|bigint|string|boolean|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4|number[]|bigint[]|string[]|boolean[]|Cartesian2[]|Cartesian3[]|Cartesian4[]|Matrix2[]|Matrix3[]|Matrix4[])} MetadataValue
+ */
 
 /**
  * An enum of metadata types. These metadata types are containers containing
@@ -197,4 +219,6 @@ MetadataType.getMathType = function (type) {
   }
 };
 
-export default Object.freeze(MetadataType);
+Object.freeze(MetadataType);
+
+export default MetadataType;

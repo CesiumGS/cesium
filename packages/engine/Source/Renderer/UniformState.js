@@ -1,19 +1,21 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Cartographic from "../Core/Cartographic.js";
-import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Cartographic,
+  Color,
+  Ellipsoid,
+  EncodedCartesian3,
+  FixedFrameTransforms,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  OrthographicFrustum,
+  defined,
+} from "@cesium/core";
 import Simon1994PlanetaryPositions from "../Core/Simon1994PlanetaryPositions.js";
-import Transforms from "../Core/Transforms.js";
+import CelestialFrameTransforms from "../Core/CelestialFrameTransforms.js";
 import SceneMode from "../Scene/SceneMode.js";
 import SunLight from "../Scene/SunLight.js";
 
@@ -26,6 +28,25 @@ function UniformState() {
    * @type {Texture}
    */
   this.globeDepthTexture = undefined;
+  /**
+   * @type {Texture}
+   */
+  this.edgeIdTexture = undefined;
+  /**
+   * @type {Texture}
+   */
+  this.edgeColorTexture = undefined;
+  /**
+   * @type {Texture}
+   */
+  this.edgeDepthTexture = undefined; // packed depth color attachment from edge pass
+  /**
+   * Texture written by the planar fill feature-ID pre-pass.
+   * Contains per-pixel feature IDs for non-behind planar fill geometry.
+   * Sampled by behind fills to test same-object coplanarity.
+   * @type {Texture}
+   */
+  this.planarFillIdTexture = undefined;
   /**
    * @type {number}
    */
@@ -144,8 +165,10 @@ function UniformState() {
   this._frustum2DWidth = 0.0;
   this._eyeHeight = 0.0;
   this._eyeHeight2D = new Cartesian2();
+  this._eyeCartographic = new Cartesian3();
   this._eyeEllipsoidNormalEC = new Cartesian3();
   this._eyeEllipsoidCurvature = new Cartesian2();
+  this._eyeToEnu = new Matrix3();
   this._modelToEnu = new Matrix4();
   this._enuToModel = new Matrix4();
   this._pixelRatio = 1.0;
@@ -160,6 +183,7 @@ function UniformState() {
   this._specularEnvironmentMapsMaximumLOD = undefined;
 
   this._fogDensity = undefined;
+  this._fogVisualDensityScalar = undefined;
   this._fogMinimumBrightness = undefined;
 
   this._atmosphereHsbShift = undefined;
@@ -697,6 +721,19 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
+   * The geodetic longitude (<code>x</code>), latitude (<code>y</code>) in radians and
+   * height (<code>z</code>) in meters of the eye (camera).
+   * This is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  eyeCartographic: {
+    get: function () {
+      return this._eyeCartographic;
+    },
+  },
+
+  /**
    * The height (<code>x</code>) and the height squared (<code>y</code>)
    * in meters of the eye (camera) above the 2D world plane. This uniform is only valid
    * when the {@link SceneMode} is <code>SCENE2D</code>.
@@ -733,8 +770,21 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
+   * A 3x3 rotation from eye coordinates to an east-north-up coordinate system
+   * centered at the position on the ellipsoid below the camera.
+   * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   * @memberof UniformState.prototype
+   * @type {Matrix3}
+   */
+  eyeToEnu: {
+    get: function () {
+      return this._eyeToEnu;
+    },
+  },
+
+  /**
    * A transform from model coordinates to an east-north-up coordinate system
-   * centered at the position on the ellipsoid below the camera
+   * centered at the position on the ellipsoid nearest to the camera.
    * @memberof UniformState.prototype
    * @type {Matrix4}
    */
@@ -921,6 +971,17 @@ Object.defineProperties(UniformState.prototype, {
   fogDensity: {
     get: function () {
       return this._fogDensity;
+    },
+  },
+
+  /**
+   * A scalar used to mix a color with the fog color based on the distance to the camera.
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  fogVisualDensityScalar: {
+    get: function () {
+      return this._fogVisualDensityScalar;
     },
   },
 
@@ -1161,7 +1222,7 @@ Object.defineProperties(UniformState.prototype, {
    */
   ellipsoid: {
     get: function () {
-      return defaultValue(this._ellipsoid, Ellipsoid.default);
+      return this._ellipsoid ?? Ellipsoid.default;
     },
   },
 });
@@ -1211,6 +1272,7 @@ function setInfiniteProjection(uniformState, matrix) {
 
 const surfacePositionScratch = new Cartesian3();
 const enuTransformScratch = new Matrix4();
+const enuRotationScratch = new Matrix3();
 
 function setCamera(uniformState, camera) {
   Cartesian3.clone(camera.positionWC, uniformState._cameraPosition);
@@ -1227,25 +1289,32 @@ function setCamera(uniformState, camera) {
     if (Cartesian3.magnitude(camera.positionWC) > 0.0) {
       uniformState._eyeEllipsoidNormalEC = Cartesian3.normalize(
         camera.positionWC,
-        uniformState._eyeEllipsoidNormalEC
+        uniformState._eyeEllipsoidNormalEC,
       );
     }
     surfacePosition = ellipsoid.scaleToGeodeticSurface(
       camera.positionWC,
-      surfacePositionScratch
+      surfacePositionScratch,
     );
   } else {
     uniformState._eyeHeight = positionCartographic.height;
-    uniformState._eyeEllipsoidNormalEC = ellipsoid.geodeticSurfaceNormalCartographic(
-      positionCartographic,
-      uniformState._eyeEllipsoidNormalEC
+    uniformState._eyeCartographic = Cartesian3.fromElements(
+      positionCartographic.longitude,
+      positionCartographic.latitude,
+      positionCartographic.height,
+      uniformState._eyeCartographic,
     );
+    uniformState._eyeEllipsoidNormalEC =
+      ellipsoid.geodeticSurfaceNormalCartographic(
+        positionCartographic,
+        uniformState._eyeEllipsoidNormalEC,
+      );
     surfacePosition = Cartesian3.fromRadians(
       positionCartographic.longitude,
       positionCartographic.latitude,
       0.0,
       ellipsoid,
-      surfacePositionScratch
+      surfacePositionScratch,
     );
   }
 
@@ -1258,29 +1327,40 @@ function setCamera(uniformState, camera) {
   uniformState._eyeEllipsoidNormalEC = Matrix3.multiplyByVector(
     uniformState._viewRotation,
     uniformState._eyeEllipsoidNormalEC,
-    uniformState._eyeEllipsoidNormalEC
+    uniformState._eyeEllipsoidNormalEC,
   );
 
-  const enuToWorld = Transforms.eastNorthUpToFixedFrame(
+  const enuToWorld = FixedFrameTransforms.eastNorthUpToFixedFrame(
     surfacePosition,
     ellipsoid,
-    enuTransformScratch
+    enuTransformScratch,
   );
   uniformState._enuToModel = Matrix4.multiplyTransformation(
     uniformState.inverseModel,
     enuToWorld,
-    uniformState._enuToModel
+    uniformState._enuToModel,
   );
   uniformState._modelToEnu = Matrix4.inverseTransformation(
     uniformState._enuToModel,
-    uniformState._modelToEnu
+    uniformState._modelToEnu,
   );
+
+  const enuToWorldRotation = Matrix4.getRotation(
+    enuToWorld,
+    enuRotationScratch,
+  );
+  const enuToView = Matrix3.multiply(
+    uniformState._viewRotation,
+    enuToWorldRotation,
+    enuRotationScratch,
+  );
+  uniformState._eyeToEnu = Matrix3.transpose(enuToView, uniformState._eyeToEnu);
 
   if (
     !CesiumMath.equalsEpsilon(
       ellipsoid._radii.x,
       ellipsoid._radii.y,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     )
   ) {
     // Ellipsoid curvature calculations assume radii.x === radii.y as is true for WGS84
@@ -1289,22 +1369,23 @@ function setCamera(uniformState, camera) {
 
   uniformState._eyeEllipsoidCurvature = ellipsoid.getLocalCurvature(
     surfacePosition,
-    uniformState._eyeEllipsoidCurvature
+    uniformState._eyeEllipsoidCurvature,
   );
 }
 
 const transformMatrix = new Matrix3();
 const sunCartographicScratch = new Cartographic();
 function setSunAndMoonDirections(uniformState, frameState) {
-  Transforms.computeIcrfToCentralBodyFixedMatrix(
+  CelestialFrameTransforms.computeIcrfToCentralBodyFixedMatrix(
     frameState.time,
-    transformMatrix
+    transformMatrix,
   );
 
-  let position = Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame(
-    frameState.time,
-    uniformState._sunPositionWC
-  );
+  let position =
+    Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame(
+      frameState.time,
+      uniformState._sunPositionWC,
+    );
   Matrix3.multiplyByVector(transformMatrix, position, position);
 
   Cartesian3.normalize(position, uniformState._sunDirectionWC);
@@ -1312,14 +1393,15 @@ function setSunAndMoonDirections(uniformState, frameState) {
   position = Matrix3.multiplyByVector(
     uniformState.viewRotation3D,
     position,
-    uniformState._sunDirectionEC
+    uniformState._sunDirectionEC,
   );
   Cartesian3.normalize(position, position);
 
-  position = Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(
-    frameState.time,
-    uniformState._moonDirectionEC
-  );
+  position =
+    Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(
+      frameState.time,
+      uniformState._moonDirectionEC,
+    );
   Matrix3.multiplyByVector(transformMatrix, position, position);
   Matrix3.multiplyByVector(uniformState.viewRotation3D, position, position);
   Cartesian3.normalize(position, position);
@@ -1328,7 +1410,7 @@ function setSunAndMoonDirections(uniformState, frameState) {
   const ellipsoid = projection.ellipsoid;
   const sunCartographic = ellipsoid.cartesianToCartographic(
     uniformState._sunPositionWC,
-    sunCartographicScratch
+    sunCartographicScratch,
   );
   projection.project(sunCartographic, uniformState._sunPositionColumbusView);
 }
@@ -1362,7 +1444,10 @@ UniformState.prototype.updateCamera = function (camera) {
  * @param {object} frustum The frustum to synchronize with.
  */
 UniformState.prototype.updateFrustum = function (frustum) {
+  // If any frustum parameters have changed, calling the frustum.projectionMatrix
+  // getter will recompute the projection before it is copied.
   setProjection(this, frustum.projectionMatrix);
+
   if (defined(frustum.infiniteProjectionMatrix)) {
     setInfiniteProjection(this, frustum.infiniteProjectionMatrix);
   }
@@ -1371,7 +1456,7 @@ UniformState.prototype.updateFrustum = function (frustum) {
 
   this._farDepthFromNearPlusOne = frustum.far - frustum.near + 1.0;
   this._log2FarDepthFromNearPlusOne = CesiumMath.log2(
-    this._farDepthFromNearPlusOne
+    this._farDepthFromNearPlusOne,
   );
   this._oneOverLog2FarDepthFromNearPlusOne =
     1.0 / this._log2FarDepthFromNearPlusOne;
@@ -1422,25 +1507,25 @@ UniformState.prototype.update = function (frameState) {
 
   setSunAndMoonDirections(this, frameState);
 
-  const light = defaultValue(frameState.light, defaultLight);
+  const light = frameState.light ?? defaultLight;
   if (light instanceof SunLight) {
     this._lightDirectionWC = Cartesian3.clone(
       this._sunDirectionWC,
-      this._lightDirectionWC
+      this._lightDirectionWC,
     );
     this._lightDirectionEC = Cartesian3.clone(
       this._sunDirectionEC,
-      this._lightDirectionEC
+      this._lightDirectionEC,
     );
   } else {
     this._lightDirectionWC = Cartesian3.normalize(
       Cartesian3.negate(light.direction, this._lightDirectionWC),
-      this._lightDirectionWC
+      this._lightDirectionWC,
     );
     this._lightDirectionEC = Matrix3.multiplyByVector(
       this.viewRotation3D,
       this._lightDirectionWC,
-      this._lightDirectionEC
+      this._lightDirectionEC,
     );
   }
 
@@ -1449,19 +1534,19 @@ UniformState.prototype.update = function (frameState) {
     lightColor.red,
     lightColor.green,
     lightColor.blue,
-    this._lightColorHdr
+    this._lightColorHdr,
   );
   lightColorHdr = Cartesian3.multiplyByScalar(
     lightColorHdr,
     light.intensity,
-    lightColorHdr
+    lightColorHdr,
   );
   const maximumComponent = Cartesian3.maximumComponent(lightColorHdr);
   if (maximumComponent > 1.0) {
     Cartesian3.divideByScalar(
       lightColorHdr,
       maximumComponent,
-      this._lightColor
+      this._lightColor,
     );
   } else {
     Cartesian3.clone(lightColorHdr, this._lightColor);
@@ -1473,22 +1558,19 @@ UniformState.prototype.update = function (frameState) {
     : undefined;
   this._brdfLut = brdfLut;
 
-  this._environmentMap = defaultValue(
-    frameState.environmentMap,
-    frameState.context.defaultCubeMap
-  );
+  this._environmentMap =
+    frameState.environmentMap ?? frameState.context.defaultCubeMap;
 
   // IE 11 doesn't optimize out uniforms that are #ifdef'd out. So undefined values for the spherical harmonic
   // coefficients cause a crash.
-  this._sphericalHarmonicCoefficients = defaultValue(
-    frameState.sphericalHarmonicCoefficients,
-    EMPTY_ARRAY
-  );
+  this._sphericalHarmonicCoefficients =
+    frameState.sphericalHarmonicCoefficients ?? EMPTY_ARRAY;
   this._specularEnvironmentMaps = frameState.specularEnvironmentMaps;
   this._specularEnvironmentMapsMaximumLOD =
     frameState.specularEnvironmentMapsMaximumLOD;
 
   this._fogDensity = frameState.fog.density;
+  this._fogVisualDensityScalar = frameState.fog.visualDensityScalar;
   this._fogMinimumBrightness = frameState.fog.minimumBrightness;
 
   const atmosphere = frameState.atmosphere;
@@ -1497,17 +1579,17 @@ UniformState.prototype.update = function (frameState) {
       atmosphere.hueShift,
       atmosphere.saturationShift,
       atmosphere.brightnessShift,
-      this._atmosphereHsbShift
+      this._atmosphereHsbShift,
     );
     this._atmosphereLightIntensity = atmosphere.lightIntensity;
     this._atmosphereRayleighCoefficient = Cartesian3.clone(
       atmosphere.rayleighCoefficient,
-      this._atmosphereRayleighCoefficient
+      this._atmosphereRayleighCoefficient,
     );
     this._atmosphereRayleighScaleHeight = atmosphere.rayleighScaleHeight;
     this._atmosphereMieCoefficient = Cartesian3.clone(
       atmosphere.mieCoefficient,
-      this._atmosphereMieCoefficient
+      this._atmosphereMieCoefficient,
     );
     this._atmosphereMieScaleHeight = atmosphere.mieScaleHeight;
     this._atmosphereMieAnisotropy = atmosphere.mieAnisotropy;
@@ -1517,10 +1599,11 @@ UniformState.prototype.update = function (frameState) {
   this._invertClassificationColor = frameState.invertClassificationColor;
 
   this._frameState = frameState;
-  this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(
-    frameState.time,
-    this._temeToPseudoFixed
-  );
+  this._temeToPseudoFixed =
+    CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
+      frameState.time,
+      this._temeToPseudoFixed,
+    );
 
   // Convert the relative splitPosition to absolute pixel coordinates
   this._splitPosition =
@@ -1544,7 +1627,8 @@ UniformState.prototype.update = function (frameState) {
 
   this._minimumDisableDepthTestDistance =
     frameState.minimumDisableDepthTestDistance;
-  this._minimumDisableDepthTestDistance *= this._minimumDisableDepthTestDistance;
+  this._minimumDisableDepthTestDistance *=
+    this._minimumDisableDepthTestDistance;
   if (this._minimumDisableDepthTestDistance === Number.POSITIVE_INFINITY) {
     this._minimumDisableDepthTestDistance = -1.0;
   }
@@ -1560,13 +1644,13 @@ function cleanViewport(uniformState) {
       v.y + v.height,
       0.0,
       1.0,
-      uniformState._viewportOrthographicMatrix
+      uniformState._viewportOrthographicMatrix,
     );
     Matrix4.computeViewportTransformation(
       v,
       0.0,
       1.0,
-      uniformState._viewportTransformation
+      uniformState._viewportTransformation,
     );
     uniformState._viewportDirty = false;
   }
@@ -1583,7 +1667,7 @@ function cleanInverseProjection(uniformState) {
     ) {
       Matrix4.inverse(
         uniformState._projection,
-        uniformState._inverseProjection
+        uniformState._inverseProjection,
       );
     } else {
       Matrix4.clone(Matrix4.ZERO, uniformState._inverseProjection);
@@ -1599,7 +1683,7 @@ function cleanModelView(uniformState) {
     Matrix4.multiplyTransformation(
       uniformState._view,
       uniformState._model,
-      uniformState._modelView
+      uniformState._modelView,
     );
   }
 }
@@ -1611,7 +1695,7 @@ function cleanModelView3D(uniformState) {
     Matrix4.multiplyTransformation(
       uniformState.view3D,
       uniformState._model,
-      uniformState._modelView3D
+      uniformState._modelView3D,
     );
   }
 }
@@ -1639,7 +1723,7 @@ function cleanViewProjection(uniformState) {
     Matrix4.multiply(
       uniformState._projection,
       uniformState._view,
-      uniformState._viewProjection
+      uniformState._viewProjection,
     );
   }
 }
@@ -1650,7 +1734,7 @@ function cleanInverseViewProjection(uniformState) {
 
     Matrix4.inverse(
       uniformState.viewProjection,
-      uniformState._inverseViewProjection
+      uniformState._inverseViewProjection,
     );
   }
 }
@@ -1662,7 +1746,7 @@ function cleanModelViewProjection(uniformState) {
     Matrix4.multiply(
       uniformState._projection,
       uniformState.modelView,
-      uniformState._modelViewProjection
+      uniformState._modelViewProjection,
     );
   }
 }
@@ -1698,7 +1782,7 @@ function cleanInverseModelViewProjection(uniformState) {
 
     Matrix4.inverse(
       uniformState.modelViewProjection,
-      uniformState._inverseModelViewProjection
+      uniformState._inverseModelViewProjection,
     );
   }
 }
@@ -1710,7 +1794,7 @@ function cleanModelViewProjectionRelativeToEye(uniformState) {
     Matrix4.multiply(
       uniformState._projection,
       uniformState.modelViewRelativeToEye,
-      uniformState._modelViewProjectionRelativeToEye
+      uniformState._modelViewProjectionRelativeToEye,
     );
   }
 }
@@ -1722,7 +1806,7 @@ function cleanModelViewInfiniteProjection(uniformState) {
     Matrix4.multiply(
       uniformState._infiniteProjection,
       uniformState.modelView,
-      uniformState._modelViewInfiniteProjection
+      uniformState._modelViewInfiniteProjection,
     );
   }
 }
@@ -1776,11 +1860,11 @@ function cleanEncodedCameraPositionMC(uniformState) {
     Matrix4.multiplyByPoint(
       uniformState.inverseModel,
       uniformState._cameraPosition,
-      cameraPositionMC
+      cameraPositionMC,
     );
     EncodedCartesian3.fromCartesian(
       cameraPositionMC,
-      uniformState._encodedCameraPositionMC
+      uniformState._encodedCameraPositionMC,
     );
   }
 }
@@ -1801,7 +1885,7 @@ function view2Dto3D(
   frustum2DWidth,
   mode,
   projection,
-  result
+  result,
 ) {
   // The camera position and directions are expressed in the 2D coordinate system where the Y axis is to the East,
   // the Z axis is to the North, and the X axis is out of the map.  Express them instead in the ENU axes where
@@ -1840,24 +1924,24 @@ function view2Dto3D(
   cartographic.longitude = CesiumMath.clamp(
     cartographic.longitude,
     -Math.PI,
-    Math.PI
+    Math.PI,
   );
   cartographic.latitude = CesiumMath.clamp(
     cartographic.latitude,
     -CesiumMath.PI_OVER_TWO,
-    CesiumMath.PI_OVER_TWO
+    CesiumMath.PI_OVER_TWO,
   );
   const ellipsoid = projection.ellipsoid;
   const position3D = ellipsoid.cartographicToCartesian(
     cartographic,
-    view2Dto3DCartesian3Scratch
+    view2Dto3DCartesian3Scratch,
   );
 
   // Compute the rotation from the local ENU at the real world camera position to the fixed axes.
-  const enuToFixed = Transforms.eastNorthUpToFixedFrame(
+  const enuToFixed = FixedFrameTransforms.eastNorthUpToFixedFrame(
     position3D,
     ellipsoid,
-    view2Dto3DMatrix4Scratch
+    view2Dto3DMatrix4Scratch,
   );
 
   // Transform each camera direction to the fixed axes.
@@ -1903,7 +1987,7 @@ function updateView3D(that) {
         that._frustum2DWidth,
         that._mode,
         that._mapProjection,
-        that._view3D
+        that._view3D,
       );
     }
     Matrix4.getMatrix3(that._view3D, that._viewRotation3D);

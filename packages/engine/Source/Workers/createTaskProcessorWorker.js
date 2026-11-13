@@ -1,4 +1,4 @@
-import formatError from "../Core/formatError.js";
+import { formatError } from "@cesium/core";
 
 /**
  * Creates an adapter function to allow a calculation function to operate as a Web Worker,
@@ -62,7 +62,7 @@ function createTaskProcessorWorker(workerFunction) {
       // error that we can be sure will be cloneable
       responseMessage.result = undefined;
       responseMessage.error = `postMessage failed with error: ${formatError(
-        error
+        error,
       )}\n  with responseMessage: ${JSON.stringify(responseMessage)}`;
       postMessage(responseMessage);
     }

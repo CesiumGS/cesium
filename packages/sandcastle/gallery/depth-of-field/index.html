@@ -1,0 +1,80 @@
+﻿<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+/>
+<meta name="description" content="Depth of field." />
+<meta name="cesium-sandcastle-labels" content="Showcases, Post Processing" />
+<title>Cesium Demo</title>
+<script type="text/javascript" src="../Sandcastle-header.js"></script>
+<script
+  type="text/javascript"
+  src="../../../Build/CesiumUnminified/Cesium.js"
+  nomodule=""
+></script>
+<script type="module" src="../load-cesium-es6.js"></script>
+
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td>Depth Of Field</td>
+        <td><input type="checkbox" data-bind="checked: show" /></td>
+      </tr>
+      <tr>
+        <td>Focal Distance</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="500.0"
+            step="1"
+            data-bind="value: focalDistance, valueUpdate: 'input'"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Delta</td>
+        <td>
+          <input
+            type="range"
+            min="0.1"
+            max="2"
+            step="0.01"
+            data-bind="value: delta, valueUpdate: 'input'"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Sigma</td>
+        <td>
+          <input
+            type="range"
+            min="0.5"
+            max="5"
+            step="0.01"
+            data-bind="value: sigma, valueUpdate: 'input'"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Step Size</td>
+        <td>
+          <input
+            type="range"
+            min="0"
+            max="7"
+            step="0.01"
+            data-bind="value: stepSize, valueUpdate: 'input'"
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

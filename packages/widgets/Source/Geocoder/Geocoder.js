@@ -1,10 +1,5 @@
-import {
-  defined,
-  destroyObject,
-  DeveloperError,
-  FeatureDetection,
-  getElement,
-} from "@cesium/engine";
+import { DeveloperError, defined, destroyObject } from "@cesium/core";
+import { FeatureDetection, getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import GeocoderViewModel from "./GeocoderViewModel.js";
 
@@ -58,7 +53,7 @@ textInput: searchText,\
 disable: isSearchInProgress,\
 event: { keyup: handleKeyUp, keydown: handleKeyDown, mouseover: deselectSuggestion },\
 css: { "cesium-geocoder-input-wide" : keepExpanded || searchText.length > 0 },\
-hasFocus: _focusTextbox'
+hasFocus: _focusTextbox',
   );
 
   this._onTextBoxFocus = function () {
@@ -79,7 +74,7 @@ hasFocus: _focusTextbox'
     "data-bind",
     "\
 click: search,\
-cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, width: 32, height: 32 }"
+cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, width: 32, height: 32 }",
   );
   form.appendChild(searchButton);
 
@@ -89,7 +84,7 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
   searchSuggestionsContainer.className = "search-results";
   searchSuggestionsContainer.setAttribute(
     "data-bind",
-    "visible: _suggestionsVisible"
+    "visible: _suggestionsVisible",
   );
 
   const suggestionsList = document.createElement("ul");
@@ -101,7 +96,7 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
     "text: $data.displayName, \
 click: $parent.activateSuggestion, \
 event: { mouseover: $parent.handleMouseover}, \
-css: { active: $data === $parent._selectedSuggestion }"
+css: { active: $data === $parent._selectedSuggestion }",
   );
 
   searchSuggestionsContainer.appendChild(suggestionsList);

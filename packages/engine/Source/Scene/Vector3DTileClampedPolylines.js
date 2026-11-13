@@ -1,17 +1,17 @@
+import {
+  Cartesian2,
+  Cartesian3,
+  Color,
+  ComponentDatatype,
+  Ellipsoid,
+  IndexDatatype,
+  Matrix4,
+  OrientedBoundingBox,
+  Rectangle,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Rectangle from "../Core/Rectangle.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
@@ -62,7 +62,7 @@ function Vector3DTileClampedPolylines(options) {
   this._counts = options.counts;
   this._batchIds = options.batchIds;
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
   this._minimumHeight = options.minimumHeight;
   this._maximumHeight = options.maximumHeight;
   this._center = options.center;
@@ -80,13 +80,13 @@ function Vector3DTileClampedPolylines(options) {
   this._packedBuffer = undefined;
   this._minimumMaximumVectorHeights = new Cartesian2(
     ApproximateTerrainHeights._defaultMinTerrainHeight,
-    ApproximateTerrainHeights._defaultMaxTerrainHeight
+    ApproximateTerrainHeights._defaultMaxTerrainHeight,
   );
   this._boundingVolume = OrientedBoundingBox.fromRectangle(
     options.rectangle,
     ApproximateTerrainHeights._defaultMinTerrainHeight,
     ApproximateTerrainHeights._defaultMaxTerrainHeight,
-    this._ellipsoid
+    this._ellipsoid,
   );
   this._classificationType = options.classificationType;
 
@@ -161,7 +161,7 @@ Object.defineProperties(Vector3DTileClampedPolylines.prototype, {
 function updateMinimumMaximumHeights(polylines, rectangle, ellipsoid) {
   const result = ApproximateTerrainHeights.getMinimumMaximumHeights(
     rectangle,
-    ellipsoid
+    ellipsoid,
   );
   const min = result.minimumTerrainHeight;
   const max = result.maximumTerrainHeight;
@@ -204,7 +204,7 @@ function packBuffer(polylines) {
 }
 
 const createVerticesTaskProcessor = new TaskProcessor(
-  "createVectorTileClampedPolylines"
+  "createVectorTileClampedPolylines",
 );
 const attributeLocations = {
   startEllipsoidNormal: 0,
@@ -257,7 +257,7 @@ function createVertexArray(polylines, context) {
 
   const verticesPromise = createVerticesTaskProcessor.scheduleTask(
     parameters,
-    transferrableObjects
+    transferrableObjects,
   );
   if (!defined(verticesPromise)) {
     // Postponed
@@ -273,27 +273,27 @@ function createVertexArray(polylines, context) {
       if (polylines._keepDecodedPositions) {
         polylines._decodedPositions = new Float64Array(result.decodedPositions);
         polylines._decodedPositionOffsets = new Uint32Array(
-          result.decodedPositionOffsets
+          result.decodedPositionOffsets,
         );
       }
 
       polylines._startEllipsoidNormals = new Float32Array(
-        result.startEllipsoidNormals
+        result.startEllipsoidNormals,
       );
       polylines._endEllipsoidNormals = new Float32Array(
-        result.endEllipsoidNormals
+        result.endEllipsoidNormals,
       );
       polylines._startPositionAndHeights = new Float32Array(
-        result.startPositionAndHeights
+        result.startPositionAndHeights,
       );
       polylines._startFaceNormalAndVertexCornerIds = new Float32Array(
-        result.startFaceNormalAndVertexCornerIds
+        result.startFaceNormalAndVertexCornerIds,
       );
       polylines._endPositionAndHeights = new Float32Array(
-        result.endPositionAndHeights
+        result.endPositionAndHeights,
       );
       polylines._endFaceNormalAndHalfWidths = new Float32Array(
-        result.endFaceNormalAndHalfWidths
+        result.endFaceNormalAndHalfWidths,
       );
       polylines._vertexBatchIds = new Uint16Array(result.vertexBatchIds);
 
@@ -477,12 +477,12 @@ function createUniformMap(primitive, context) {
       Matrix4.multiplyByPoint(
         modifiedModelViewScratch,
         primitive._center,
-        rtcScratch
+        rtcScratch,
       );
       Matrix4.setTranslation(
         modifiedModelViewScratch,
         rtcScratch,
-        modifiedModelViewScratch
+        modifiedModelViewScratch,
       );
       return modifiedModelViewScratch;
     },
@@ -549,19 +549,16 @@ function createShaders(primitive, context) {
   const vsSource = batchTable.getVertexShaderCallback(
     false,
     "a_batchId",
-    undefined
+    undefined,
   )(Vector3DTileClampedPolylinesVS);
   const fsSource = batchTable.getFragmentShaderCallback(
     false,
     undefined,
-    true
+    true,
   )(Vector3DTileClampedPolylinesFS);
 
   const vs = new ShaderSource({
-    defines: [
-      "VECTOR_TILE",
-      !FeatureDetection.isInternetExplorer() ? "CLIP_POLYLINE" : "",
-    ],
+    defines: ["VECTOR_TILE", "CLIP_POLYLINE"],
     sources: [PolylineCommon, vsSource],
   });
   const fs = new ShaderSource({
@@ -581,7 +578,7 @@ function queueCommands(primitive, frameState) {
   let command = primitive._command;
   if (!defined(primitive._command)) {
     const uniformMap = primitive._batchTable.getUniformMapCallback()(
-      primitive._uniformMap
+      primitive._uniformMap,
     );
     command = primitive._command = new DrawCommand({
       owner: primitive,
@@ -596,7 +593,7 @@ function queueCommands(primitive, frameState) {
 
     const derivedTilesetCommand = DrawCommand.shallowClone(
       command,
-      command.derivedCommands.tileset
+      command.derivedCommands.tileset,
     );
     derivedTilesetCommand.renderState = primitive._rs3DTiles;
     derivedTilesetCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
@@ -635,7 +632,7 @@ Vector3DTileClampedPolylines.prototype.getPositions = function (batchId) {
  */
 Vector3DTileClampedPolylines.prototype.createFeatures = function (
   content,
-  features
+  features,
 ) {
   const batchIds = this._batchIds;
   const length = batchIds.length;
@@ -653,7 +650,7 @@ Vector3DTileClampedPolylines.prototype.createFeatures = function (
  */
 Vector3DTileClampedPolylines.prototype.applyDebugSettings = function (
   enabled,
-  color
+  color,
 ) {
   this._highlightColor = enabled ? color : this._constantColor;
 };
@@ -708,7 +705,7 @@ function initialize(polylines) {
       updateMinimumMaximumHeights(
         polylines,
         polylines._rectangle,
-        polylines._ellipsoid
+        polylines._ellipsoid,
       );
     })
     .catch((error) => {

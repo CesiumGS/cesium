@@ -22,8 +22,8 @@ This example shows how to configure CesiumJS to avoid use of online data sources
 const viewer = new Cesium.Viewer("cesiumContainer", {
   baseLayer: Cesium.ImageryLayer.fromProviderAsync(
     Cesium.TileMapServiceImageryProvider.fromUrl(
-      Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII")
-    )
+      Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+    ),
   ),
   baseLayerPicker: false,
   geocoder: false,
@@ -59,7 +59,7 @@ Most other files loaded in CesiumJS, such as 3D Tiles or glTF, are static assets
    ```js
    try {
      const tileset = await Cesium.Cesium3DTileset.fromUrl(
-       "http://localhost:8003/example/tileset.json"
+       "http://localhost:8003/example/tileset.json",
      );
      viewer.scene.primitives.add(tileset);
    } catch (error) {

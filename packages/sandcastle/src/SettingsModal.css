@@ -1,0 +1,29 @@
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--stratakit-space-x3);
+
+  & :nth-child(1) {
+    flex-grow: 1;
+  }
+
+  & :nth-child(2) {
+    flex-shrink: 0;
+  }
+
+  .caption {
+    color: var(--stratakit-color-text-neutral-tertiary);
+    max-width: 80%;
+  }
+
+  .multi-option {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stratakit-space-x2);
+
+    &.horizontal {
+      flex-direction: row;
+    }
+  }
+}

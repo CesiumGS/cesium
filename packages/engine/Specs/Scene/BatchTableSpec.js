@@ -3,10 +3,8 @@ import {
   ComponentDatatype,
   Math as CesiumMath,
   PixelDatatype,
-  Texture,
-  BatchTable,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { Texture, BatchTable } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -141,7 +139,7 @@ describe(
         1.23456e12,
         -2.34567e30,
         3.45678e-6,
-        -4.56789e-10
+        -4.56789e-10,
       );
 
       for (i = 0; i < batchTable.numberOfInstances; ++i) {
@@ -161,7 +159,7 @@ describe(
         0,
         Number.MAX_VALUE,
         Number.POSITIVE_INFINITY,
-        Number.NEGATIVE_INFINITY
+        Number.NEGATIVE_INFINITY,
       );
       batchTable.setBatchedAttribute(3, 0, 0);
       batchTable.setBatchedAttribute(3, 1, color);
@@ -241,7 +239,7 @@ describe(
       expect(uniforms.batchTexture).toBeDefined();
       expect(uniforms.batchTexture()).toBeInstanceOf(Texture);
       expect(uniforms.batchTexture().pixelDatatype).toEqual(
-        PixelDatatype.UNSIGNED_BYTE
+        PixelDatatype.UNSIGNED_BYTE,
       );
       expect(uniforms.batchTextureDimensions).toBeDefined();
       expect(uniforms.batchTextureDimensions().x).toBeGreaterThan(0);
@@ -265,7 +263,7 @@ describe(
       expect(uniforms.batchTexture).toBeDefined();
       expect(uniforms.batchTexture()).toBeInstanceOf(Texture);
       expect(uniforms.batchTexture().pixelDatatype).toEqual(
-        PixelDatatype.FLOAT
+        PixelDatatype.FLOAT,
       );
       expect(uniforms.batchTextureDimensions).toBeDefined();
       expect(uniforms.batchTextureDimensions().x).toBeGreaterThan(0);
@@ -278,11 +276,11 @@ describe(
 
       if (scene.context.floatingPointTexture) {
         expect(uniforms.batchTexture().pixelDatatype).toEqual(
-          PixelDatatype.FLOAT
+          PixelDatatype.FLOAT,
         );
       } else {
         expect(uniforms.batchTexture().pixelDatatype).toEqual(
-          PixelDatatype.UNSIGNED_BYTE
+          PixelDatatype.UNSIGNED_BYTE,
         );
       }
     });
@@ -293,10 +291,10 @@ describe(
       const shader = "void main() { gl_Position = vec4(0.0); }";
       const modifiedShader = batchTable.getVertexShaderCallback()(shader);
       expect(
-        modifiedShader.indexOf(batchTable.attributes[0].functionName)
+        modifiedShader.indexOf(batchTable.attributes[0].functionName),
       ).not.toEqual(-1);
       expect(
-        modifiedShader.indexOf(batchTable.attributes[1].functionName)
+        modifiedShader.indexOf(batchTable.attributes[1].functionName),
       ).not.toEqual(-1);
     });
 
@@ -307,5 +305,5 @@ describe(
       expect(batchTable.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

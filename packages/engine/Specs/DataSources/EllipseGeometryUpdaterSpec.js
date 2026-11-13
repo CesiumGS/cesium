@@ -1,8 +1,6 @@
+import { Cartesian3, JulianDate, TimeIntervalCollection } from "@cesium/core";
 import {
   ApproximateTerrainHeights,
-  Cartesian3,
-  JulianDate,
-  TimeIntervalCollection,
   ConstantPositionProperty,
   ConstantProperty,
   EllipseGeometryUpdater,
@@ -12,7 +10,6 @@ import {
   SampledProperty,
   PrimitiveCollection,
 } from "../../index.js";
-
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createGeometryUpdaterGroundGeometrySpecs from "../../../../Specs/createGeometryUpdaterGroundGeometrySpecs.js";
@@ -47,7 +44,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(0, 0, 0)
+        Cartesian3.fromDegrees(0, 0, 0),
       );
       entity.ellipse = ellipse;
       return entity;
@@ -66,7 +63,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(0, 0, 0)
+        Cartesian3.fromDegrees(0, 0, 0),
       );
       entity.ellipse = ellipse;
       return entity;
@@ -208,7 +205,7 @@ describe(
       const ellipse = new EllipseGraphics();
       ellipse.outline = true;
       ellipse.numberOfVerticalLines = new ConstantProperty(
-        options.numberOfVerticalLines
+        options.numberOfVerticalLines,
       );
       ellipse.semiMajorAxis = new ConstantProperty(options.semiMajorAxis);
       ellipse.semiMinorAxis = new ConstantProperty(options.semiMinorAxis);
@@ -245,7 +242,7 @@ describe(
       expect(geometry._granularity).toEqual(options.granularity);
       expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
       expect(geometry._numberOfVerticalLines).toEqual(
-        options.numberOfVerticalLines
+        options.numberOfVerticalLines,
       );
       expect(geometry._offsetAttribute).toBeUndefined();
     });
@@ -263,7 +260,7 @@ describe(
       const updater = new EllipseGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         new PrimitiveCollection(),
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
       dynamicUpdater.update(JulianDate.now());
 
@@ -316,7 +313,7 @@ describe(
       const updater = new EllipseGeometryUpdater(entity, scene);
 
       expect(updater._computeCenter(time)).toEqual(
-        entity.position.getValue(time)
+        entity.position.getValue(time),
       );
     });
 
@@ -328,14 +325,14 @@ describe(
       EllipseGeometryUpdater,
       "ellipse",
       createBasicEllipse,
-      getScene
+      getScene,
     );
 
     createDynamicGeometryUpdaterSpecs(
       EllipseGeometryUpdater,
       "ellipse",
       createDynamicEllipse,
-      getScene
+      getScene,
     );
 
     createGeometryUpdaterGroundGeometrySpecs(
@@ -343,8 +340,8 @@ describe(
       "ellipse",
       createBasicEllipseWithoutHeight,
       createDynamicEllipseWithoutHeight,
-      getScene
+      getScene,
     );
   },
-  "WebGL"
+  "WebGL",
 );

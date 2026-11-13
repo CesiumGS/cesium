@@ -1,9 +1,5 @@
-import {
-  defined,
-  destroyObject,
-  DeveloperError,
-  getElement,
-} from "@cesium/engine";
+import { DeveloperError, defined, destroyObject } from "@cesium/core";
+import { getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import FullscreenButtonViewModel from "./FullscreenButtonViewModel.js";
 
@@ -48,7 +44,7 @@ function FullscreenButton(container, fullscreenElement) {
 attr: { title: tooltip },\
 click: command,\
 enable: isFullscreenEnabled,\
-cesiumSvgPath: { path: isFullscreen ? _exitFullScreenPath : _enterFullScreenPath, width: 128, height: 128 }"
+cesiumSvgPath: { path: isFullscreen ? _exitFullScreenPath : _enterFullScreenPath, width: 128, height: 128 }",
   );
 
   container.appendChild(element);

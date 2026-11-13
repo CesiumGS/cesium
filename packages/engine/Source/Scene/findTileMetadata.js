@@ -1,8 +1,6 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
+import { Frozen, defined, oneTimeWarning } from "@cesium/core";
 import hasExtension from "./hasExtension.js";
 import TileMetadata from "./TileMetadata.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * Check if a tile has metadata, either defined in its metadata field (3D Tiles 1.1)
@@ -31,15 +29,12 @@ function findTileMetadata(tileset, tileHeader) {
   if (!defined(tileset.schema)) {
     findTileMetadata._oneTimeWarning(
       "findTileMetadata-missing-root-schema",
-      "Could not find a metadata schema for tile metadata. For tilesets that contain external tilesets, make sure the schema is added to the root tileset.json."
+      "Could not find a metadata schema for tile metadata. For tilesets that contain external tilesets, make sure the schema is added to the root tileset.json.",
     );
     return undefined;
   }
 
-  const classes = defaultValue(
-    tileset.schema.classes,
-    defaultValue.EMPTY_OBJECT
-  );
+  const classes = tileset.schema.classes ?? Frozen.EMPTY_OBJECT;
   if (defined(metadataJson.class)) {
     const tileClass = classes[metadataJson.class];
     return new TileMetadata({

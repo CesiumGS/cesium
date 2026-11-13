@@ -1,7 +1,4 @@
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core";
 import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";
 import TextureWrap from "./TextureWrap.js";
@@ -10,9 +7,10 @@ import TextureWrap from "./TextureWrap.js";
  * @private
  */
 function Sampler(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const {
+    wrapR = TextureWrap.CLAMP_TO_EDGE,
     wrapS = TextureWrap.CLAMP_TO_EDGE,
     wrapT = TextureWrap.CLAMP_TO_EDGE,
     minificationFilter = TextureMinificationFilter.LINEAR,
@@ -21,6 +19,10 @@ function Sampler(options) {
   } = options;
 
   //>>includeStart('debug', pragmas.debug);
+  if (!TextureWrap.validate(wrapR)) {
+    throw new DeveloperError("Invalid sampler.wrapR.");
+  }
+
   if (!TextureWrap.validate(wrapS)) {
     throw new DeveloperError("Invalid sampler.wrapS.");
   }
@@ -40,10 +42,11 @@ function Sampler(options) {
   Check.typeOf.number.greaterThanOrEquals(
     "maximumAnisotropy",
     maximumAnisotropy,
-    1.0
+    1.0,
   );
   //>>includeEnd('debug');
 
+  this._wrapR = wrapR;
   this._wrapS = wrapS;
   this._wrapT = wrapT;
   this._minificationFilter = minificationFilter;
@@ -52,6 +55,11 @@ function Sampler(options) {
 }
 
 Object.defineProperties(Sampler.prototype, {
+  wrapR: {
+    get: function () {
+      return this._wrapR;
+    },
+  },
   wrapS: {
     get: function () {
       return this._wrapS;
@@ -84,6 +92,7 @@ Sampler.equals = function (left, right) {
     left === right ||
     (defined(left) &&
       defined(right) &&
+      left._wrapR === right._wrapR &&
       left._wrapS === right._wrapS &&
       left._wrapT === right._wrapT &&
       left._minificationFilter === right._minificationFilter &&
@@ -94,10 +103,11 @@ Sampler.equals = function (left, right) {
 
 Sampler.NEAREST = Object.freeze(
   new Sampler({
+    wrapR: TextureWrap.CLAMP_TO_EDGE,
     wrapS: TextureWrap.CLAMP_TO_EDGE,
     wrapT: TextureWrap.CLAMP_TO_EDGE,
     minificationFilter: TextureMinificationFilter.NEAREST,
     magnificationFilter: TextureMagnificationFilter.NEAREST,
-  })
+  }),
 );
 export default Sampler;

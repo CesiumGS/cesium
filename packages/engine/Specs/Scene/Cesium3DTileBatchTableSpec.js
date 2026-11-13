@@ -7,10 +7,12 @@ import {
   Matrix2,
   Matrix3,
   Matrix4,
+  RuntimeError,
+} from "@cesium/core";
+import {
   ContextLimits,
   Cesium3DTileBatchTable,
   Cesium3DTileStyle,
-  RuntimeError,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -240,7 +242,7 @@ xdescribe(
       const batchTable = new Cesium3DTileBatchTable(
         mockTileset,
         1,
-        batchTableJson
+        batchTableJson,
       );
       expect(batchTable.hasProperty(0, "height")).toEqual(true);
       expect(batchTable.hasProperty(0, "id")).toEqual(false);
@@ -279,7 +281,7 @@ xdescribe(
       const batchTable = new Cesium3DTileBatchTable(
         mockTileset,
         1,
-        batchTableJson
+        batchTableJson,
       );
       const results = [];
       const names = batchTable.getPropertyIds(0, results);
@@ -357,7 +359,7 @@ xdescribe(
       const batchTable = new Cesium3DTileBatchTable(
         mockTileset,
         2,
-        batchTableJson
+        batchTableJson,
       );
       batchTable.setProperty(0, "height", 3.0);
 
@@ -375,7 +377,7 @@ xdescribe(
       const batchTable = new Cesium3DTileBatchTable(
         mockTileset,
         2,
-        batchTableJson
+        batchTableJson,
       );
       batchTable.setProperty(0, "info", { name: "building0_new", year: 2002 });
 
@@ -399,7 +401,7 @@ xdescribe(
       const batchTable = new Cesium3DTileBatchTable(
         mockTileset,
         2,
-        batchTableJson
+        batchTableJson,
       );
       batchTable.setProperty(0, "rooms", ["room1_new", "room2"]);
 
@@ -423,7 +425,7 @@ xdescribe(
           mockTileset,
           2,
           batchTableJson,
-          batchTableBinary
+          batchTableBinary,
         );
       }).toThrowError(RuntimeError);
     });
@@ -441,7 +443,7 @@ xdescribe(
           mockTileset,
           2,
           batchTableJson,
-          batchTableBinary
+          batchTableBinary,
         );
       }).toThrowError(RuntimeError);
     });
@@ -464,78 +466,17 @@ xdescribe(
       const propertyVec2Binary = new Float32Array([2, 3, 4, 5]);
       const propertyVec3Binary = new Int32Array([6, 7, 8, 9, 10, 11]);
       const propertyVec4Binary = new Uint32Array([
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
+        12, 13, 14, 15, 16, 17, 18, 19,
       ]);
       const propertyMat2Binary = new Int16Array([
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
+        20, 21, 22, 23, 24, 25, 26, 27,
       ]);
       const propertyMat3Binary = new Uint16Array([
-        28,
-        29,
-        30,
-        31,
-        32,
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
+        28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
       ]);
       const propertyMat4Binary = new Uint8Array([
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        55,
-        56,
-        57,
-        58,
-        59,
-        60,
-        61,
-        62,
-        63,
-        64,
-        65,
-        66,
-        67,
-        68,
-        69,
-        70,
-        71,
-        72,
-        73,
-        74,
-        75,
-        76,
-        77,
+        46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+        64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77,
       ]);
 
       const buffers = [
@@ -590,24 +531,24 @@ xdescribe(
         mockTileset,
         2,
         batchTableJson,
-        batchTableBinary
+        batchTableBinary,
       );
 
       expect(batchTable.getProperty(1, "propertyScalar")).toEqual(1);
       expect(batchTable.getProperty(1, "propertyVec2")).toEqual(
-        new Cartesian2(4, 5)
+        new Cartesian2(4, 5),
       );
       expect(batchTable.getProperty(1, "propertyVec3")).toEqual(
-        new Cartesian3(9, 10, 11)
+        new Cartesian3(9, 10, 11),
       );
       expect(batchTable.getProperty(1, "propertyVec4")).toEqual(
-        new Cartesian4(16, 17, 18, 19)
+        new Cartesian4(16, 17, 18, 19),
       );
       expect(batchTable.getProperty(1, "propertyMat2")).toEqual(
-        new Matrix2(24, 26, 25, 27)
+        new Matrix2(24, 26, 25, 27),
       ); // Constructor is row-major, data is column major
       expect(batchTable.getProperty(1, "propertyMat3")).toEqual(
-        new Matrix3(37, 40, 43, 38, 41, 44, 39, 42, 45)
+        new Matrix3(37, 40, 43, 38, 41, 44, 39, 42, 45),
       ); // Constructor is row-major, data is column major
       expect(batchTable.getProperty(1, "propertyMat4")).toEqual(
         new Matrix4(
@@ -626,8 +567,8 @@ xdescribe(
           65,
           69,
           73,
-          77
-        )
+          77,
+        ),
       ); // Constructor is row-major, data is column major
 
       batchTable.setProperty(1, "propertyScalar", 2);
@@ -638,7 +579,7 @@ xdescribe(
       batchTable.setProperty(
         1,
         "propertyMat3",
-        new Matrix3(38, 41, 44, 39, 42, 45, 40, 43, 46)
+        new Matrix3(38, 41, 44, 39, 42, 45, 40, 43, 46),
       );
       batchTable.setProperty(
         1,
@@ -659,25 +600,25 @@ xdescribe(
           66,
           70,
           74,
-          78
-        )
+          78,
+        ),
       );
 
       expect(batchTable.getProperty(1, "propertyScalar")).toEqual(2);
       expect(batchTable.getProperty(1, "propertyVec2")).toEqual(
-        new Cartesian2(5, 6)
+        new Cartesian2(5, 6),
       );
       expect(batchTable.getProperty(1, "propertyVec3")).toEqual(
-        new Cartesian3(10, 11, 12)
+        new Cartesian3(10, 11, 12),
       );
       expect(batchTable.getProperty(1, "propertyVec4")).toEqual(
-        new Cartesian4(17, 18, 19, 20)
+        new Cartesian4(17, 18, 19, 20),
       );
       expect(batchTable.getProperty(1, "propertyMat2")).toEqual(
-        new Matrix2(25, 27, 26, 28)
+        new Matrix2(25, 27, 26, 28),
       );
       expect(batchTable.getProperty(1, "propertyMat3")).toEqual(
-        new Matrix3(38, 41, 44, 39, 42, 45, 40, 43, 46)
+        new Matrix3(38, 41, 44, 39, 42, 45, 40, 43, 46),
       );
       expect(batchTable.getProperty(1, "propertyMat4")).toEqual(
         new Matrix4(
@@ -696,8 +637,8 @@ xdescribe(
           66,
           70,
           74,
-          78
-        )
+          78,
+        ),
       );
     });
 
@@ -724,7 +665,7 @@ xdescribe(
           });
 
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        }
+        },
       );
     });
 
@@ -736,7 +677,7 @@ xdescribe(
           expect(content.getFeature(2).getProperty("id")).toBeUndefined();
 
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        }
+        },
       );
     });
 
@@ -751,8 +692,9 @@ xdescribe(
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
           // Re-enable VTF
-          ContextLimits._maximumVertexTextureImageUnits = maximumVertexTextureImageUnits;
-        }
+          ContextLimits._maximumVertexTextureImageUnits =
+            maximumVertexTextureImageUnits;
+        },
       );
     });
 
@@ -765,13 +707,13 @@ xdescribe(
         function (tileset) {
           const content = tileset.root.content;
           expect(content.featuresLength).toBeGreaterThan(
-            ContextLimits._maximumTextureSize
+            ContextLimits._maximumTextureSize,
           );
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
           // Reset maximum texture size
           ContextLimits._maximumTextureSize = maximumTextureSize;
-        }
+        },
       );
     });
 
@@ -784,7 +726,7 @@ xdescribe(
             expect(result).toBeDefined();
             expect(result.primitive).toBe(tileset);
           });
-        }
+        },
       );
     });
 
@@ -822,7 +764,7 @@ xdescribe(
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
           expectRenderTranslucent(tileset);
-        }
+        },
       );
     });
 
@@ -835,8 +777,9 @@ xdescribe(
         function (tileset) {
           expectRenderTranslucent(tileset);
           // Re-enable VTF
-          ContextLimits._maximumVertexTextureImageUnits = maximumVertexTextureImageUnits;
-        }
+          ContextLimits._maximumVertexTextureImageUnits =
+            maximumVertexTextureImageUnits;
+        },
       );
     });
 
@@ -1113,21 +1056,21 @@ xdescribe(
     }
 
     function checkBatchTableHierarchy(url, multipleParents) {
-      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
-        tileset
-      ) {
-        checkHierarchyStyling(tileset);
-        checkHierarchyProperties(tileset, multipleParents);
-      });
+      return Cesium3DTilesTester.loadTileset(scene, url).then(
+        function (tileset) {
+          checkHierarchyStyling(tileset);
+          checkHierarchyProperties(tileset, multipleParents);
+        },
+      );
     }
 
     function checkBatchTableHierarchyNoParents(url) {
-      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
-        tileset
-      ) {
-        checkHierarchyStylingNoParents(tileset);
-        checkHierarchyPropertiesNoParents(tileset);
-      });
+      return Cesium3DTilesTester.loadTileset(scene, url).then(
+        function (tileset) {
+          checkHierarchyStylingNoParents(tileset);
+          checkHierarchyPropertiesNoParents(tileset);
+        },
+      );
     }
 
     it("renders tileset with batch table hierarchy extension", function () {
@@ -1141,7 +1084,7 @@ xdescribe(
     it("renders tileset with batch table hierarchy with multiple parent classes", function () {
       return checkBatchTableHierarchy(
         batchTableHierarchyMultipleParentsUrl,
-        true
+        true,
       );
     });
 
@@ -1157,7 +1100,7 @@ xdescribe(
       return checkBatchTableHierarchy(batchTableHierarchyLegacyUrl, false).then(
         function (tileset) {
           expect(Cesium3DTileBatchTable._deprecationWarning).toHaveBeenCalled();
-        }
+        },
       );
     });
 
@@ -1172,7 +1115,7 @@ xdescribe(
           scene.pickForSpecs();
           const batchTextureSize = batchTable._batchTexture.byteLength;
           expect(batchTable.batchTableByteLength).toBe(batchTextureSize);
-        }
+        },
       );
     });
 
@@ -1187,28 +1130,28 @@ xdescribe(
           scene.pickForSpecs();
           const batchTextureSize = batchTable._batchTexture.byteLength;
           expect(batchTable.batchTableByteLength).toBe(batchTextureSize);
-        }
+        },
       );
     });
 
     it("computes batchTableByteLength for binary batch table", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
-        withBatchTableBinaryUrl
+        withBatchTableBinaryUrl,
       ).then(function (tileset) {
         const content = tileset.root.content;
         const batchTable = content.batchTable;
         const binaryPropertiesByteLength =
           batchTable._binaryPropertiesByteLength;
         expect(batchTable.batchTableByteLength).toBe(
-          binaryPropertiesByteLength
+          binaryPropertiesByteLength,
         );
 
         // The batch texture isn't created until the first pick pass
         scene.pickForSpecs();
         const batchTextureSize = batchTable._batchTexture.byteLength;
         expect(batchTable.batchTableByteLength).toBe(
-          binaryPropertiesByteLength + batchTextureSize
+          binaryPropertiesByteLength + batchTextureSize,
         );
       });
     });
@@ -1216,7 +1159,7 @@ xdescribe(
     it("computes batchTableByteLength with a batch table hierarchy", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
-        batchTableHierarchyUrl
+        batchTableHierarchyUrl,
       ).then(function (tileset) {
         const content = tileset.root.content;
         const batchTable = content.batchTable;
@@ -1227,7 +1170,7 @@ xdescribe(
         scene.pickForSpecs();
         const batchTextureSize = batchTable._batchTexture.byteLength;
         expect(batchTable.batchTableByteLength).toBe(
-          hierarchySize + batchTextureSize
+          hierarchySize + batchTextureSize,
         );
       });
     });
@@ -1240,9 +1183,9 @@ xdescribe(
           expect(batchTable.isDestroyed()).toEqual(false);
           scene.primitives.remove(tileset);
           expect(batchTable.isDestroyed()).toEqual(true);
-        }
+        },
       );
     });
   },
-  "WebGL"
+  "WebGL",
 );

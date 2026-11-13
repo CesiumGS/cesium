@@ -1,10 +1,12 @@
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import getAbsoluteUri from "../Core/getAbsoluteUri.js";
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  defined,
+  getAbsoluteUri,
+} from "@cesium/core";
+import findMeshoptExtension from "./findMeshoptExtension.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
-import hasExtension from "./hasExtension.js";
 
 /**
  * Compute cache keys for resources in {@link ResourceCache}.
@@ -22,9 +24,9 @@ function getExternalResourceCacheKey(resource) {
 function getBufferViewCacheKey(bufferView) {
   let { byteOffset, byteLength } = bufferView;
 
-  if (hasExtension(bufferView, "EXT_meshopt_compression")) {
-    const meshopt = bufferView.extensions.EXT_meshopt_compression;
-    byteOffset = defaultValue(meshopt.byteOffset, 0);
+  const meshopt = findMeshoptExtension(bufferView);
+  if (defined(meshopt)) {
+    byteOffset = meshopt.byteOffset ?? 0;
     byteLength = meshopt.byteLength;
   }
 
@@ -63,7 +65,25 @@ function getDracoCacheKey(gltf, draco, gltfResource, baseResource) {
     buffer,
     bufferId,
     gltfResource,
-    baseResource
+    baseResource,
+  );
+
+  const bufferViewCacheKey = getBufferViewCacheKey(bufferView);
+
+  return `${bufferCacheKey}-range-${bufferViewCacheKey}`;
+}
+
+function getSpzCacheKey(gltf, spz, gltfResource, baseResource) {
+  const bufferViewId = spz.bufferView;
+  const bufferView = gltf.bufferViews[bufferViewId];
+  const bufferId = bufferView.buffer;
+  const buffer = gltf.buffers[bufferId];
+
+  const bufferCacheKey = getBufferCacheKey(
+    buffer,
+    bufferId,
+    gltfResource,
+    baseResource,
   );
 
   const bufferViewCacheKey = getBufferViewCacheKey(bufferView);
@@ -91,7 +111,7 @@ function getImageCacheKey(gltf, imageId, gltfResource, baseResource) {
     buffer,
     bufferId,
     gltfResource,
-    baseResource
+    baseResource,
   );
 
   const bufferViewCacheKey = getBufferViewCacheKey(bufferView);
@@ -126,7 +146,7 @@ ResourceCacheKey.getSchemaCacheKey = function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (defined(schema) === defined(resource)) {
     throw new DeveloperError(
-      "One of options.schema and options.resource must be defined."
+      "One of options.schema and options.resource must be defined.",
     );
   }
   //>>includeEnd('debug');
@@ -148,7 +168,7 @@ ResourceCacheKey.getSchemaCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getExternalBufferCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { resource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -169,7 +189,7 @@ ResourceCacheKey.getExternalBufferCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { parentResource, bufferId } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -179,7 +199,7 @@ ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
 
   return `embedded-buffer:${getEmbeddedBufferCacheKey(
     parentResource,
-    bufferId
+    bufferId,
   )}`;
 };
 
@@ -193,7 +213,7 @@ ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getGltfCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltfResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -216,7 +236,7 @@ ResourceCacheKey.getGltfCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getBufferViewCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, bufferViewId, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -229,8 +249,8 @@ ResourceCacheKey.getBufferViewCacheKey = function (options) {
   const bufferView = gltf.bufferViews[bufferViewId];
   let bufferId = bufferView.buffer;
   const buffer = gltf.buffers[bufferId];
-  if (hasExtension(bufferView, "EXT_meshopt_compression")) {
-    const meshopt = bufferView.extensions.EXT_meshopt_compression;
+  const meshopt = findMeshoptExtension(bufferView);
+  if (defined(meshopt)) {
     bufferId = meshopt.buffer;
   }
 
@@ -238,7 +258,7 @@ ResourceCacheKey.getBufferViewCacheKey = function (options) {
     buffer,
     bufferId,
     gltfResource,
-    baseResource
+    baseResource,
   );
 
   const bufferViewCacheKey = getBufferViewCacheKey(bufferView);
@@ -259,7 +279,7 @@ ResourceCacheKey.getBufferViewCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getDracoCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, draco, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -272,6 +292,19 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
   return `draco:${getDracoCacheKey(gltf, draco, gltfResource, baseResource)}`;
 };
 
+ResourceCacheKey.getSpzCacheKey = function (options) {
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const { gltf, spz, gltfResource, baseResource } = options;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.spz", spz);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  //>>includeEnd('debug');
+
+  return `spz:${getSpzCacheKey(gltf, spz, gltfResource, baseResource)}`;
+};
 /**
  * Gets the vertex buffer cache key.
  *
@@ -282,18 +315,19 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
  * @param {FrameState} options.frameState The frame state.
  * @param {number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
  * @param {object} [options.draco] The Draco extension object.
+ * @param {object} [options.spz] The SPZ extension object.
  * @param {string} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
  * @param {boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
  * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
  * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
- * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
+ * @exception {DeveloperError} Exactly one vertex buffer source must be effective: options.bufferViewId, options.spz, or options.draco for options.attributeSemantic.
  * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
  *
  * @returns {string} The vertex buffer cache key.
  * @private
  */
 ResourceCacheKey.getVertexBufferCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const {
     gltf,
     gltfResource,
@@ -301,6 +335,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
     frameState,
     bufferViewId,
     draco,
+    spz,
     attributeSemantic,
     dequantize = false,
     loadBuffer = false,
@@ -316,16 +351,19 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   const hasBufferViewId = defined(bufferViewId);
   const hasDraco = hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
+  const hasSpz = defined(spz);
 
-  if (hasBufferViewId === hasDraco) {
+  const sourceCount =
+    Number(hasBufferViewId) + Number(hasDraco) + Number(hasSpz);
+  if (sourceCount !== 1) {
     throw new DeveloperError(
-      "One of options.bufferViewId and options.draco must be defined."
+      "Exactly one vertex buffer source must be effective: options.bufferViewId, options.spz, or options.draco for options.attributeSemantic.",
     );
   }
 
   if (hasDraco && !hasAttributeSemantic) {
     throw new DeveloperError(
-      "When options.draco is defined options.attributeSemantic must also be defined."
+      "When options.draco is defined options.attributeSemantic must also be defined.",
     );
   }
 
@@ -336,7 +374,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
 
   if (!loadBuffer && !loadTypedArray) {
     throw new DeveloperError(
-      "At least one of loadBuffer and loadTypedArray must be true."
+      "At least one of loadBuffer and loadTypedArray must be true.",
     );
   }
   //>>includeEnd('debug');
@@ -355,12 +393,17 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
     cacheKeySuffix += "-typed-array";
   }
 
+  if (defined(spz)) {
+    const spzCacheKey = getSpzCacheKey(gltf, spz, gltfResource, baseResource);
+    return `vertex-buffer:${spzCacheKey}-spz-${attributeSemantic}${cacheKeySuffix}`;
+  }
+
   if (defined(draco)) {
     const dracoCacheKey = getDracoCacheKey(
       gltf,
       draco,
       gltfResource,
-      baseResource
+      baseResource,
     );
     return `vertex-buffer:${dracoCacheKey}-draco-${attributeSemantic}${cacheKeySuffix}`;
   }
@@ -373,7 +416,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
     buffer,
     bufferId,
     gltfResource,
-    baseResource
+    baseResource,
   );
 
   const bufferViewCacheKey = getBufferViewCacheKey(bufferView);
@@ -406,7 +449,7 @@ function hasDracoCompression(draco, semantic) {
  * @private
  */
 ResourceCacheKey.getIndexBufferCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const {
     gltf,
     accessorId,
@@ -427,7 +470,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
 
   if (!loadBuffer && !loadTypedArray) {
     throw new DeveloperError(
-      "At least one of loadBuffer and loadTypedArray must be true."
+      "At least one of loadBuffer and loadTypedArray must be true.",
     );
   }
   //>>includeEnd('debug');
@@ -447,7 +490,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
       gltf,
       draco,
       gltfResource,
-      baseResource
+      baseResource,
     );
     return `index-buffer:${dracoCacheKey}-draco${cacheKeySuffix}`;
   }
@@ -462,7 +505,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
     buffer,
     bufferId,
     gltfResource,
-    baseResource
+    baseResource,
   );
 
   const accessorCacheKey = getAccessorCacheKey(accessor, bufferView);
@@ -483,7 +526,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getImageCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, imageId, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -497,7 +540,7 @@ ResourceCacheKey.getImageCacheKey = function (options) {
     gltf,
     imageId,
     gltfResource,
-    baseResource
+    baseResource,
   );
 
   return `image:${imageCacheKey}`;
@@ -518,7 +561,7 @@ ResourceCacheKey.getImageCacheKey = function (options) {
  * @private
  */
 ResourceCacheKey.getTextureCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const {
     gltf,
     textureInfo,
@@ -549,7 +592,7 @@ ResourceCacheKey.getTextureCacheKey = function (options) {
     gltf,
     imageId,
     gltfResource,
-    baseResource
+    baseResource,
   );
 
   // Include the sampler cache key in the texture cache key since textures and

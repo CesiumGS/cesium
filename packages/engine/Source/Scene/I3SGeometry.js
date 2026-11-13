@@ -1,8 +1,10 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import clone from "../Core/clone.js";
-import defined from "../Core/defined.js";
-import Matrix3 from "../Core/Matrix3.js";
-import srgbToLinear from "../Core/srgbToLinear.js";
+import {
+  Cartesian3,
+  Matrix3,
+  clone,
+  defined,
+  srgbToLinear,
+} from "@cesium/core";
 
 /**
  * This class implements an I3S Geometry. Each I3SGeometry
@@ -98,12 +100,12 @@ function sameSide(p1, p2, a, b) {
   const cp1 = Cartesian3.cross(
     ab,
     Cartesian3.subtract(p1, a, scratchAp1),
-    scratchCp1
+    scratchCp1,
   );
   const cp2 = Cartesian3.cross(
     ab,
     Cartesian3.subtract(p2, a, scratchAp2),
-    scratchCp2
+    scratchCp2,
   );
   return Cartesian3.dot(cp1, cp2) >= 0;
 }
@@ -146,7 +148,7 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
     Matrix3.multiplyByVector(
       this._customAttributes.parentRotation,
       position,
-      position
+      position,
     );
 
     let bestTriDist = Number.MAX_VALUE;
@@ -183,19 +185,19 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
         positions[i0 * 3],
         positions[i0 * 3 + 1],
         positions[i0 * 3 + 2],
-        scratchV0
+        scratchV0,
       );
       const v1 = Cartesian3.fromElements(
         positions[i1 * 3],
         positions[i1 * 3 + 1],
         positions[i1 * 3 + 2],
-        scratchV1
+        scratchV1,
       );
       const v2 = new Cartesian3(
         positions[i2 * 3],
         positions[i2 * 3 + 1],
         positions[i2 * 3 + 2],
-        scratchV2
+        scratchV2,
       );
 
       // Check how the point is positioned relative to the triangle.
@@ -226,13 +228,13 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
 
         // Found a triangle, return the index of the closest point
         const d0 = Cartesian3.magnitudeSquared(
-          Cartesian3.subtract(position, v0, v0p)
+          Cartesian3.subtract(position, v0, v0p),
         );
         const d1 = Cartesian3.magnitudeSquared(
-          Cartesian3.subtract(position, v1, scratchV1p)
+          Cartesian3.subtract(position, v1, scratchV1p),
         );
         const d2 = Cartesian3.magnitudeSquared(
-          Cartesian3.subtract(position, v2, scratchV2p)
+          Cartesian3.subtract(position, v2, scratchV2p),
         );
         if (d0 < d1 && d0 < d2) {
           bestIndex = i0;
@@ -293,7 +295,7 @@ I3SGeometry.prototype._generateGltf = function (
   bufferViews,
   accessors,
   extensions,
-  extensionsUsed
+  extensionsUsed,
 ) {
   // Get the material definition
   let gltfMaterial = {
@@ -336,8 +338,8 @@ I3SGeometry.prototype._generateGltf = function (
             defIndex < this._layer._data.textureSetDefinitions.length;
             defIndex++
           ) {
-            const textureSetDefinition = this._layer._data
-              .textureSetDefinitions[defIndex];
+            const textureSetDefinition =
+              this._layer._data.textureSetDefinitions[defIndex];
             for (
               let formatIndex = 0;
               formatIndex < textureSetDefinition.formats.length;
@@ -368,12 +370,12 @@ I3SGeometry.prototype._generateGltf = function (
         defined(gltfMaterial.pbrMetallicRoughness.baseColorFactor)
       ) {
         gltfMaterial.pbrMetallicRoughness.baseColorFactor = convertColorFactor(
-          gltfMaterial.pbrMetallicRoughness.baseColorFactor
+          gltfMaterial.pbrMetallicRoughness.baseColorFactor,
         );
       }
       if (defined(gltfMaterial.emissiveFactor)) {
         gltfMaterial.emissiveFactor = convertColorFactor(
-          gltfMaterial.emissiveFactor
+          gltfMaterial.emissiveFactor,
         );
       }
     }

@@ -1,6 +1,5 @@
+import { Color, clone } from "@cesium/core";
 import {
-  clone,
-  Color,
   ColorBlendMode,
   CPUStylingPipelineStage,
   ModelAlphaOptions,
@@ -51,7 +50,7 @@ describe("Scene/Model/CPUStylingPipelineStage", function () {
     renderResources.model.colorBlendMode = ColorBlendMode.MIX;
     const colorBlend = ColorBlendMode.getColorBlend(
       renderResources.model.colorBlendMode,
-      renderResources.model.colorBlendAmount
+      renderResources.model.colorBlendAmount,
     );
 
     CPUStylingPipelineStage.process(renderResources);

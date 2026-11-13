@@ -1,11 +1,9 @@
+import { Cartesian3, defined } from "@cesium/core";
 import {
-  Cartesian3,
-  defined,
   ComputeEngine,
   Pass,
   SpecularEnvironmentCubeMap,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 import createFrameState from "../../../../Specs/createFrameState.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -178,11 +176,14 @@ describe(
             const direction = directions[key];
             const expectedColor = directionalColors[mipLevel][key];
 
-            sampleCubeMap(cubeMap, direction, mipLevel, function (
-              cubeMapColor
-            ) {
-              expect(cubeMapColor).toEqualEpsilon(expectedColor, 1);
-            });
+            sampleCubeMap(
+              cubeMap,
+              direction,
+              mipLevel,
+              function (cubeMapColor) {
+                expect(cubeMapColor).toEqualEpsilon(expectedColor, 1);
+              },
+            );
           }
         }
       }
@@ -212,7 +213,7 @@ describe(
         });
     });
 
-    it("raises error event when environment map fails to load.", async function () {
+    it("raises error event when environment map fails to load.", function () {
       if (!SpecularEnvironmentCubeMap.isSupported(context)) {
         return;
       }
@@ -221,23 +222,20 @@ describe(
       const frameState = createFrameState(context);
       let error;
 
-      const promise = new Promise((resolve, reject) => {
-        const removeListener = cubeMap.errorEvent.addEventListener((e) => {
-          error = e;
-          expect(error).toBeDefined();
-          expect(cubeMap.ready).toEqual(false);
-          removeListener();
-          resolve();
-        });
+      const removeListener = cubeMap.errorEvent.addEventListener((e) => {
+        error = e;
+        expect(cubeMap.ready).toEqual(false);
+        removeListener();
       });
 
-      await pollToPromise(function () {
-        cubeMap.update(frameState);
-        return defined(error);
-      });
-
-      return promise;
+      return pollToPromise(
+        function () {
+          cubeMap.update(frameState);
+          return defined(error);
+        },
+        { timeout: 10000 },
+      );
     });
   },
-  "WebGL"
+  "WebGL",
 );

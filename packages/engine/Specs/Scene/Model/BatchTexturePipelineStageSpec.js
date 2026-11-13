@@ -72,7 +72,7 @@ describe("Scene/Model/BatchTexturePipelineStage", function () {
     verifyBatchTextureShaders(renderResources.shaderBuilder);
     verifyBatchTextureUniforms(
       renderResources.model.featureTables[0],
-      renderResources.uniformMap
+      renderResources.uniformMap,
     );
   });
 });

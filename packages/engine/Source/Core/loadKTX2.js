@@ -1,4 +1,4 @@
-import Check from "./Check.js";
+import { Check } from "@cesium/core";
 import Resource from "./Resource.js";
 import KTX2Transcoder from "./KTX2Transcoder.js";
 
@@ -21,7 +21,7 @@ loadKTX2.setKTX2SupportedFormats = function (
   astc,
   etc,
   etc1,
-  bc7
+  bc7,
 ) {
   supportedTranscoderFormats = {
     s3tc: s3tc,

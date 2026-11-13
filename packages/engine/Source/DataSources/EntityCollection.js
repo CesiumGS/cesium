@@ -1,11 +1,13 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import createGuid from "../Core/createGuid.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import Iso8601 from "../Core/Iso8601.js";
-import JulianDate from "../Core/JulianDate.js";
-import TimeInterval from "../Core/TimeInterval.js";
+import {
+  AssociativeArray,
+  DeveloperError,
+  Event,
+  Iso8601,
+  JulianDate,
+  TimeInterval,
+  createGuid,
+  defined,
+} from "@cesium/core";
 import Entity from "./Entity.js";
 
 const entityOptionsScratch = {
@@ -37,7 +39,7 @@ function fireChangedEvent(collection) {
           collection,
           addedArray,
           removedArray,
-          changedArray
+          changedArray,
         );
       } while (collection._refire);
       collection._firing = false;
@@ -91,7 +93,7 @@ EntityCollection.prototype.resumeEvents = function () {
   //>>includeStart('debug', pragmas.debug);
   if (this._suspendCount === 0) {
     throw new DeveloperError(
-      "resumeEvents can not be called before suspendEvents."
+      "resumeEvents can not be called before suspendEvents.",
     );
   }
   //>>includeEnd('debug');
@@ -193,7 +195,7 @@ Object.defineProperties(EntityCollection.prototype, {
             entity,
             "isShowing",
             entity.isShowing,
-            oldShow
+            oldShow,
           );
         }
       }
@@ -281,7 +283,7 @@ EntityCollection.prototype.add = function (entity) {
   const entities = this._entities;
   if (entities.contains(id)) {
     throw new DeveloperError(
-      `An entity with id ${id} already exists in this collection.`
+      `An entity with id ${id} already exists in this collection.`,
     );
   }
 
@@ -293,7 +295,7 @@ EntityCollection.prototype.add = function (entity) {
   }
   entity.definitionChanged.addEventListener(
     EntityCollection.prototype._onEntityDefinitionChanged,
-    this
+    this,
   );
 
   fireChangedEvent(this);
@@ -352,7 +354,7 @@ EntityCollection.prototype.removeById = function (id) {
   this._entities.remove(id);
   entity.definitionChanged.removeEventListener(
     EntityCollection.prototype._onEntityDefinitionChanged,
-    this
+    this,
   );
   fireChangedEvent(this);
 
@@ -379,7 +381,7 @@ EntityCollection.prototype.removeAll = function () {
     if (!defined(addedItem)) {
       existingItem.definitionChanged.removeEventListener(
         EntityCollection.prototype._onEntityDefinitionChanged,
-        this
+        this,
       );
       removed.set(existingItemId, existingItem);
     }

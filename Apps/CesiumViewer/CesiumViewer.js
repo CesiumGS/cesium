@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-undef
 window.CESIUM_BASE_URL = window.CESIUM_BASE_URL
   ? window.CESIUM_BASE_URL
   : "../../Build/CesiumUnminified/";
@@ -47,7 +46,7 @@ async function main() {
   let baseLayer;
   if (defined(endUserOptions.tmsImageryUrl)) {
     baseLayer = ImageryLayer.fromProviderAsync(
-      TileMapServiceImageryProvider.fromUrl(endUserOptions.tmsImageryUrl)
+      TileMapServiceImageryProvider.fromUrl(endUserOptions.tmsImageryUrl),
     );
   }
 
@@ -125,7 +124,7 @@ async function main() {
         sourceType = "geojson";
       } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
         sourceType = "kml";
-      } else if (/\.gpx$/i.test(source) || /\.gpx$/i.test(source)) {
+      } else if (/\.gpx$/i.test(source)) {
         sourceType = "gpx";
       }
     }
@@ -222,11 +221,11 @@ async function main() {
     let hpr = "";
     if (defined(camera.heading)) {
       hpr = `,${CesiumMath.toDegrees(camera.heading)},${CesiumMath.toDegrees(
-        camera.pitch
+        camera.pitch,
       )},${CesiumMath.toDegrees(camera.roll)}`;
     }
     endUserOptions.view = `${CesiumMath.toDegrees(
-      position.longitude
+      position.longitude,
     )},${CesiumMath.toDegrees(position.latitude)},${position.height}${hpr}`;
     history.replaceState(undefined, "", `?${objectToQuery(endUserOptions)}`);
   }

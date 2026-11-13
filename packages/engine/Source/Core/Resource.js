@@ -1,28 +1,30 @@
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  Math as CesiumMath,
+  RuntimeError,
+  clone,
+  combine,
+  defined,
+  getAbsoluteUri,
+  getBaseUri,
+  getExtensionFromUri,
+  objectToQuery,
+  queryToObject,
+} from "@cesium/core";
 import Uri from "urijs";
 import appendForwardSlash from "./appendForwardSlash.js";
-import Check from "./Check.js";
-import clone from "./clone.js";
-import combine from "./combine.js";
-import defaultValue from "./defaultValue.js";
 import defer from "./defer.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import getAbsoluteUri from "./getAbsoluteUri.js";
-import getBaseUri from "./getBaseUri.js";
-import getExtensionFromUri from "./getExtensionFromUri.js";
 import getImagePixels from "./getImagePixels.js";
 import isBlobUri from "./isBlobUri.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import isDataUri from "./isDataUri.js";
 import loadAndExecuteScript from "./loadAndExecuteScript.js";
-import CesiumMath from "./Math.js";
-import objectToQuery from "./objectToQuery.js";
-import queryToObject from "./queryToObject.js";
 import Request from "./Request.js";
 import RequestErrorEvent from "./RequestErrorEvent.js";
 import RequestScheduler from "./RequestScheduler.js";
 import RequestState from "./RequestState.js";
-import RuntimeError from "./RuntimeError.js";
 import TrustedServers from "./TrustedServers.js";
 
 const xhrBlobSupported = (function () {
@@ -91,7 +93,7 @@ const xhrBlobSupported = (function () {
  * });
  */
 function Resource(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   if (typeof options === "string") {
     options = {
       url: options,
@@ -118,7 +120,7 @@ function Resource(options) {
    *
    * @type {Request}
    */
-  this.request = defaultValue(options.request, new Request());
+  this.request = options.request ?? new Request();
 
   /**
    * A proxy to be used when loading the resource.
@@ -139,10 +141,10 @@ function Resource(options) {
    *
    * @type {number}
    */
-  this.retryAttempts = defaultValue(options.retryAttempts, 0);
+  this.retryAttempts = options.retryAttempts ?? 0;
   this._retryCount = 0;
 
-  const parseUrl = defaultValue(options.parseUrl, true);
+  const parseUrl = options.parseUrl ?? true;
   if (parseUrl) {
     this.parseUrl(options.url, true, true);
   } else {
@@ -173,7 +175,7 @@ function defaultClone(value, defaultValue) {
  *
  * @returns {Resource} If resource is a String, a Resource constructed with the url and options. Otherwise the resource parameter is returned.
  *
- * @private
+ * @ignore
  */
 Resource.createIfNeeded = function (resource) {
   if (resource instanceof Resource) {
@@ -231,7 +233,9 @@ Resource.supportsImageBitmapOptions = function () {
   })
     .then(function (blob) {
       const imageBitmapOptions = {
-        imageOrientation: "flipY", // default is "none"
+        // 'from-image' is deprecated, new option is 'none'. However, we still need to support older browsers,
+        // and there's no good way to detect support for these options. For now, continue to use 'from-image'. See: https://github.com/CesiumGS/cesium/issues/12846
+        imageOrientation: "flipY", // default is "from-image"
         premultiplyAlpha: "none", // default is "default"
         colorSpaceConversion: "none", // default is "default"
       };
@@ -603,13 +607,13 @@ Resource.prototype.setQueryParameters = function (params, useAsDefault) {
     this._queryParameters = combineQueryParameters(
       this._queryParameters,
       params,
-      false
+      false,
     );
   } else {
     this._queryParameters = combineQueryParameters(
       params,
       this._queryParameters,
-      false
+      false,
     );
   }
 };
@@ -624,7 +628,7 @@ Resource.prototype.appendQueryParameters = function (params) {
   this._queryParameters = combineQueryParameters(
     params,
     this._queryParameters,
-    true
+    true,
   );
 };
 
@@ -664,20 +668,20 @@ Resource.prototype.getDerivedResource = function (options) {
   resource._retryCount = 0;
 
   if (defined(options.url)) {
-    const preserveQuery = defaultValue(options.preserveQueryParameters, false);
+    const preserveQuery = options.preserveQueryParameters ?? false;
     resource.parseUrl(options.url, true, preserveQuery, this._url);
   }
 
   if (defined(options.queryParameters)) {
     resource._queryParameters = combine(
       options.queryParameters,
-      resource.queryParameters
+      resource.queryParameters,
     );
   }
   if (defined(options.templateValues)) {
     resource._templateValues = combine(
       options.templateValues,
-      resource.templateValues
+      resource.templateValues,
     );
   }
   if (defined(options.headers)) {
@@ -897,14 +901,11 @@ Resource.fetchBlob = function (options) {
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
  */
 Resource.prototype.fetchImage = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const preferImageBitmap = defaultValue(options.preferImageBitmap, false);
-  const preferBlob = defaultValue(options.preferBlob, false);
-  const flipY = defaultValue(options.flipY, false);
-  const skipColorSpaceConversion = defaultValue(
-    options.skipColorSpaceConversion,
-    false
-  );
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const preferImageBitmap = options.preferImageBitmap ?? false;
+  const preferBlob = options.preferBlob ?? false;
+  const flipY = options.flipY ?? false;
+  const skipColorSpaceConversion = options.skipColorSpaceConversion ?? false;
 
   checkAndResetRequest(this.request);
   // We try to load the image normally if
@@ -918,7 +919,7 @@ Resource.prototype.fetchImage = function (options) {
     this.isBlobUri ||
     (!this.hasHeaders && !preferBlob)
   ) {
-    return fetchImage({
+    return this._fetchImage({
       resource: this,
       flipY: flipY,
       skipColorSpaceConversion: skipColorSpaceConversion,
@@ -958,8 +959,7 @@ Resource.prototype.fetchImage = function (options) {
         url: blobUrl,
       });
 
-      return fetchImage({
-        resource: generatedBlobResource,
+      return generatedBlobResource._fetchImage({
         flipY: flipY,
         skipColorSpaceConversion: skipColorSpaceConversion,
         preferImageBitmap: false,
@@ -998,16 +998,15 @@ Resource.prototype.fetchImage = function (options) {
 
 /**
  * Fetches an image and returns a promise to it.
- *
  * @param {object} [options] An object with the following properties.
- * @param {Resource} [options.resource] Resource object that points to an image to fetch.
  * @param {boolean} [options.preferImageBitmap] If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
  * @param {boolean} [options.flipY] If true, image will be vertically flipped during decode. Only applies if the browser supports <code>createImageBitmap</code>.
  * @param {boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the image will be ignored. Only applies if the browser supports <code>createImageBitmap</code>.
+ * @returns {Promise<ImageBitmap|HTMLImageElement>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if the request has been throttled and cannot be made at this time.
  * @private
  */
-function fetchImage(options) {
-  const resource = options.resource;
+Resource.prototype._fetchImage = function (options) {
+  const resource = this;
   const flipY = options.flipY;
   const skipColorSpaceConversion = options.skipColorSpaceConversion;
   const preferImageBitmap = options.preferImageBitmap;
@@ -1029,7 +1028,7 @@ function fetchImage(options) {
       deferred,
       flipY,
       skipColorSpaceConversion,
-      preferImageBitmap
+      preferImageBitmap,
     );
 
     return deferred.promise;
@@ -1051,8 +1050,7 @@ function fetchImage(options) {
         request.state = RequestState.UNISSUED;
         request.deferred = undefined;
 
-        return fetchImage({
-          resource: resource,
+        return resource._fetchImage({
           flipY: flipY,
           skipColorSpaceConversion: skipColorSpaceConversion,
           preferImageBitmap: preferImageBitmap,
@@ -1061,7 +1059,7 @@ function fetchImage(options) {
       return Promise.reject(e);
     });
   });
-}
+};
 
 /**
  * Creates a Resource and calls fetchImage() on it.
@@ -1270,7 +1268,7 @@ Resource.fetchXML = function (options) {
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
  */
 Resource.prototype.fetchJsonp = function (callbackParameterName) {
-  callbackParameterName = defaultValue(callbackParameterName, "callback");
+  callbackParameterName = callbackParameterName ?? "callback";
 
   checkAndResetRequest(this.request);
 
@@ -1380,7 +1378,7 @@ Resource.prototype._makeRequest = function (options) {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     );
     if (defined(xhr) && defined(xhr.abort)) {
       request.cancelFunction = function () {
@@ -1461,7 +1459,7 @@ function decodeDataUriArrayBuffer(isBase64, data) {
 }
 
 function decodeDataUri(dataUriRegexResult, responseType) {
-  responseType = defaultValue(responseType, "");
+  responseType = responseType ?? "";
   const mimeType = dataUriRegexResult[1];
   const isBase64 = !!dataUriRegexResult[2];
   const data = dataUriRegexResult[3];
@@ -1483,7 +1481,7 @@ function decodeDataUri(dataUriRegexResult, responseType) {
       parser = new DOMParser();
       return parser.parseFromString(
         decodeDataUriText(isBase64, data),
-        mimeType
+        mimeType,
       );
     case "json":
       return JSON.parse(decodeDataUriText(isBase64, data));
@@ -1915,7 +1913,7 @@ Resource._Implementations = {};
 Resource._Implementations.loadImageElement = function (
   url,
   crossOrigin,
-  deferred
+  deferred,
 ) {
   const image = new Image();
 
@@ -1962,7 +1960,8 @@ Resource._Implementations.createImage = function (
   deferred,
   flipY,
   skipColorSpaceConversion,
-  preferImageBitmap
+  preferImageBitmap,
+  headers,
 ) {
   const url = request.url;
   // Passing an Image to createImageBitmap will force it to run on the main thread
@@ -1986,11 +1985,11 @@ Resource._Implementations.createImage = function (
         responseType,
         method,
         undefined,
-        undefined,
+        headers,
         xhrDeferred,
         undefined,
         undefined,
-        undefined
+        undefined,
       );
 
       if (defined(xhr) && defined(xhr.abort)) {
@@ -2003,8 +2002,8 @@ Resource._Implementations.createImage = function (
           if (!defined(blob)) {
             deferred.reject(
               new RuntimeError(
-                `Successfully retrieved ${url} but it contained no content.`
-              )
+                `Successfully retrieved ${url} but it contained no content.`,
+              ),
             );
             return;
           }
@@ -2028,6 +2027,12 @@ Resource._Implementations.createImage = function (
  * Wrapper for createImageBitmap
  *
  * @private
+ * @param {Blob} blob The image blob.
+ * @param {object} options An object containing the following properties:
+ * @param {boolean} options.flipY Whether to flip the image Y axis.
+ * @param {boolean} options.premultiplyAlpha Whether to premultiply the alpha channel.
+ * @param {boolean} options.skipColorSpaceConversion Whether to skip color space conversion.
+ * @returns {Promise<ImageBitmap>} A promise that resolves to the created image bitmap.
  */
 Resource.createImageBitmapFromBlob = function (blob, options) {
   Check.defined("options", options);
@@ -2035,10 +2040,12 @@ Resource.createImageBitmapFromBlob = function (blob, options) {
   Check.typeOf.bool("options.premultiplyAlpha", options.premultiplyAlpha);
   Check.typeOf.bool(
     "options.skipColorSpaceConversion",
-    options.skipColorSpaceConversion
+    options.skipColorSpaceConversion,
   );
 
   return createImageBitmap(blob, {
+    // 'from-image' is deprecated, new option is 'none'. However, we still need to support older browsers,
+    // and there's no good way to detect support for these options. For now, continue to use 'from-image'. See: https://github.com/CesiumGS/cesium/issues/12846
     imageOrientation: options.flipY ? "flipY" : "none",
     premultiplyAlpha: options.premultiplyAlpha ? "premultiply" : "none",
     colorSpaceConversion: options.skipColorSpaceConversion ? "none" : "default",
@@ -2052,7 +2059,7 @@ function loadWithHttpRequest(
   data,
   headers,
   deferred,
-  overrideMimeType
+  overrideMimeType,
 ) {
   // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
   fetch(url, {
@@ -2066,7 +2073,7 @@ function loadWithHttpRequest(
           responseHeaders[key] = value;
         });
         deferred.reject(
-          new RequestErrorEvent(response.status, response, responseHeaders)
+          new RequestErrorEvent(response.status, response, responseHeaders),
         );
         return;
       }
@@ -2096,7 +2103,7 @@ Resource._Implementations.loadWithXhr = function (
   data,
   headers,
   deferred,
-  overrideMimeType
+  overrideMimeType,
 ) {
   const dataUriRegexResult = dataUriRegex.exec(url);
   if (dataUriRegexResult !== null) {
@@ -2112,7 +2119,7 @@ Resource._Implementations.loadWithXhr = function (
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     );
     return;
   }
@@ -2158,8 +2165,8 @@ Resource._Implementations.loadWithXhr = function (
         new RequestErrorEvent(
           xhr.status,
           xhr.response,
-          xhr.getAllResponseHeaders()
-        )
+          xhr.getAllResponseHeaders(),
+        ),
       );
       return;
     }
@@ -2212,7 +2219,7 @@ Resource._Implementations.loadWithXhr = function (
       deferred.resolve(xhr.responseText);
     } else {
       deferred.reject(
-        new RuntimeError("Invalid XMLHttpRequest response type.")
+        new RuntimeError("Invalid XMLHttpRequest response type."),
       );
     }
   };
@@ -2229,7 +2236,7 @@ Resource._Implementations.loadWithXhr = function (
 Resource._Implementations.loadAndExecuteScript = function (
   url,
   functionName,
-  deferred
+  deferred,
 ) {
   return loadAndExecuteScript(url, functionName).catch(function (e) {
     deferred.reject(e);
@@ -2261,7 +2268,7 @@ Resource.DEFAULT = Object.freeze(
       typeof document === "undefined"
         ? ""
         : document.location.href.split("?")[0],
-  })
+  }),
 );
 
 /**

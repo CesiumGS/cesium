@@ -1,11 +1,5 @@
-import {
-  JulianDate,
-  ModelAnimationLoop,
-  Model,
-  ResourceCache,
-  Math as CesiumMath,
-} from "../../../index.js";
-
+import { JulianDate, Math as CesiumMath } from "@cesium/core";
+import { ModelAnimationLoop, Model, ResourceCache } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
@@ -19,7 +13,7 @@ describe(
       "./Data/Models/glTF-2.0/InterpolationTest/glTF-Binary/InterpolationTest.glb";
 
     const defaultDate = JulianDate.fromDate(
-      new Date("January 1, 2014 12:00:00 UTC")
+      new Date("January 1, 2014 12:00:00 UTC"),
     );
     const scratchJulianDate = new JulianDate();
     let scene;
@@ -42,7 +36,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const animationCollection = model.activeAnimations;
         expect(animationCollection).toBeDefined();
@@ -68,7 +62,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         expect(function () {
           model.activeAnimations.add({});
@@ -81,7 +75,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         expect(function () {
           model.activeAnimations.add({
@@ -96,7 +90,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         expect(function () {
           model.activeAnimations.add({
@@ -111,7 +105,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         expect(function () {
           model.activeAnimations.add({
@@ -127,7 +121,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const runtimeAnimation = model.activeAnimations.add({
           name: "Sample Animation",
@@ -137,7 +131,7 @@ describe(
         expect(animationCollection.length).toBe(1);
 
         expect(runtimeAnimation).toBe(
-          animationCollection._runtimeAnimations[0]
+          animationCollection._runtimeAnimations[0],
         );
         expect(runtimeAnimation.startTime).toBeUndefined();
         expect(runtimeAnimation.delay).toBe(0.0);
@@ -154,7 +148,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const runtimeAnimation = model.activeAnimations.add({
           index: 0,
@@ -164,7 +158,7 @@ describe(
         expect(animationCollection.length).toBe(1);
 
         expect(runtimeAnimation).toBe(
-          animationCollection._runtimeAnimations[0]
+          animationCollection._runtimeAnimations[0],
         );
         expect(runtimeAnimation.startTime).toBeUndefined();
         expect(runtimeAnimation.delay).toBe(0.0);
@@ -181,16 +175,16 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const options = {
           index: 0,
           startTime: JulianDate.fromDate(
-            new Date("January 1, 2014 12:00:00 UTC")
+            new Date("January 1, 2014 12:00:00 UTC"),
           ),
           delay: 5.0,
           stopTime: JulianDate.fromDate(
-            new Date("January 1, 2014 12:01:30 UTC")
+            new Date("January 1, 2014 12:01:30 UTC"),
           ),
           multiplier: 0.5,
           reverse: true,
@@ -203,7 +197,7 @@ describe(
         expect(animationCollection.length).toBe(1);
 
         expect(runtimeAnimation).toBe(
-          animationCollection._runtimeAnimations[0]
+          animationCollection._runtimeAnimations[0],
         );
         expect(runtimeAnimation.startTime).toEqual(options.startTime);
         expect(runtimeAnimation.delay).toBe(5.0);
@@ -230,7 +224,7 @@ describe(
         {
           gltf: interpolationTestUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         expect(function () {
           model.activeAnimations.addAll({
@@ -245,7 +239,7 @@ describe(
         {
           gltf: interpolationTestUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const runtimeAnimations = model.activeAnimations.addAll();
 
@@ -256,7 +250,7 @@ describe(
         for (let i = 0; i < length; i++) {
           const runtimeAnimation = runtimeAnimations[i];
           expect(runtimeAnimation).toBe(
-            animationCollection._runtimeAnimations[i]
+            animationCollection._runtimeAnimations[i],
           );
           expect(runtimeAnimation.startTime).toBeUndefined();
           expect(runtimeAnimation.delay).toBe(0.0);
@@ -274,15 +268,15 @@ describe(
         {
           gltf: interpolationTestUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const options = {
           startTime: JulianDate.fromDate(
-            new Date("January 1, 2014 12:00:00 UTC")
+            new Date("January 1, 2014 12:00:00 UTC"),
           ),
           delay: 5.0,
           stopTime: JulianDate.fromDate(
-            new Date("January 1, 2014 12:01:30 UTC")
+            new Date("January 1, 2014 12:01:30 UTC"),
           ),
           multiplier: 0.5,
           reverse: true,
@@ -298,7 +292,7 @@ describe(
         for (let i = 0; i < length; i++) {
           const runtimeAnimation = runtimeAnimations[i];
           expect(runtimeAnimation).toBe(
-            animationCollection._runtimeAnimations[i]
+            animationCollection._runtimeAnimations[i],
           );
           expect(runtimeAnimation.startTime).toEqual(options.startTime);
           expect(runtimeAnimation.delay).toBe(5.0);
@@ -316,7 +310,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const animationCollection = model.activeAnimations;
         animationCollection.add({ index: 0 });
@@ -329,13 +323,13 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (firstModel) {
         return loadAndZoomToModelAsync(
           {
             gltf: animatedTriangleUrl,
           },
-          scene
+          scene,
         ).then(function (secondModel) {
           const firstCollection = firstModel.activeAnimations;
           const animation = firstCollection.add({ index: 0 });
@@ -350,7 +344,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const animationCollection = model.activeAnimations;
         const animation = animationCollection.add({ index: 0 });
@@ -363,7 +357,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const animationCollection = model.activeAnimations;
         animationCollection.add({ index: 0 });
@@ -378,7 +372,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const animationCollection = model.activeAnimations;
         animationCollection.add({ index: 0 });
@@ -393,7 +387,7 @@ describe(
         {
           gltf: interpolationTestUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const animationCollection = model.activeAnimations;
         const animation = animationCollection.add({ index: 3 });
@@ -406,7 +400,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const animationCollection = model.activeAnimations;
         animationCollection.add({ index: 0 });
@@ -419,13 +413,13 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (firstModel) {
         return loadAndZoomToModelAsync(
           {
             gltf: animatedTriangleUrl,
           },
-          scene
+          scene,
         ).then(function (secondModel) {
           const firstCollection = firstModel.activeAnimations;
           const animation = firstCollection.add({ index: 0 });
@@ -440,7 +434,7 @@ describe(
         {
           gltf: interpolationTestUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const animationCollection = model.activeAnimations;
         const animationToRemove = animationCollection.add({ index: 0 });
@@ -460,7 +454,7 @@ describe(
         {
           gltf: interpolationTestUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const animationCollection = model.activeAnimations;
         animationCollection.addAll();
@@ -475,7 +469,7 @@ describe(
         {
           gltf: interpolationTestUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const animationCollection = model.activeAnimations;
         expect(animationCollection.length).toBe(0);
@@ -488,7 +482,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         let time = defaultDate;
         const animations = model.activeAnimations;
@@ -516,7 +510,7 @@ describe(
             time = JulianDate.addSeconds(time, 1.0, scratchJulianDate);
             return stopped;
           },
-          { timeout: 10000 }
+          { timeout: 10000 },
         ).then(function () {
           expect(spyStart).toHaveBeenCalledWith(model, animation);
 
@@ -540,7 +534,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const time = defaultDate;
         const animationCollection = model.activeAnimations;
@@ -553,10 +547,10 @@ describe(
 
         scene.renderForSpecs(time);
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 1.0, scratchJulianDate)
+          JulianDate.addSeconds(time, 1.0, scratchJulianDate),
         );
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 2.0, scratchJulianDate)
+          JulianDate.addSeconds(time, 2.0, scratchJulianDate),
         );
 
         expect(spyUpdate.calls.count()).toEqual(3);
@@ -572,7 +566,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const time = defaultDate;
         const animationCollection = model.activeAnimations;
@@ -587,7 +581,7 @@ describe(
 
         scene.renderForSpecs(time); // Does not fire start event
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 1.0, scratchJulianDate)
+          JulianDate.addSeconds(time, 1.0, scratchJulianDate),
         );
 
         expect(spyStart.calls.count()).toEqual(1);
@@ -599,7 +593,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const time = defaultDate;
         const animationCollection = model.activeAnimations;
@@ -612,10 +606,10 @@ describe(
         animation.update.addEventListener(spyUpdate);
 
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, -2.0, scratchJulianDate)
+          JulianDate.addSeconds(time, -2.0, scratchJulianDate),
         );
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, -1.0, scratchJulianDate)
+          JulianDate.addSeconds(time, -1.0, scratchJulianDate),
         );
         scene.renderForSpecs(time);
 
@@ -629,10 +623,10 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const time = JulianDate.fromDate(
-          new Date("January 1, 2014 12:00:00 UTC")
+          new Date("January 1, 2014 12:00:00 UTC"),
         );
         const endDate = new Date("January 1, 2014 12:00:00 UTC");
         endDate.setMilliseconds(500);
@@ -650,10 +644,10 @@ describe(
 
         scene.renderForSpecs(time);
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 0.5, scratchJulianDate)
+          JulianDate.addSeconds(time, 0.5, scratchJulianDate),
         );
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 1.0, scratchJulianDate)
+          JulianDate.addSeconds(time, 1.0, scratchJulianDate),
         );
 
         expect(spyUpdate.calls.count()).toEqual(3);
@@ -668,7 +662,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const time = defaultDate;
         const animationCollection = model.activeAnimations;
@@ -686,34 +680,34 @@ describe(
         scene.renderForSpecs(time);
         animationTime = 0.1;
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 1.0, scratchJulianDate)
+          JulianDate.addSeconds(time, 1.0, scratchJulianDate),
         );
         // no update because animationTime didn't change
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 2.0, scratchJulianDate)
+          JulianDate.addSeconds(time, 2.0, scratchJulianDate),
         );
         animationTime = 0.2;
         // no update because scene time didn't change
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 2.0, scratchJulianDate)
+          JulianDate.addSeconds(time, 2.0, scratchJulianDate),
         );
         animationTime = 0.3;
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 3.0, scratchJulianDate)
+          JulianDate.addSeconds(time, 3.0, scratchJulianDate),
         );
 
         expect(spyUpdate.calls.count()).toEqual(3);
         expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
           0.0,
-          CesiumMath.EPSILON14
+          CesiumMath.EPSILON14,
         );
         expect(spyUpdate.calls.argsFor(1)[2]).toEqualEpsilon(
           0.1,
-          CesiumMath.EPSILON14
+          CesiumMath.EPSILON14,
         );
         expect(spyUpdate.calls.argsFor(2)[2]).toEqualEpsilon(
           0.3,
-          CesiumMath.EPSILON14
+          CesiumMath.EPSILON14,
         );
       });
     });
@@ -723,7 +717,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const time = defaultDate;
         const animationCollection = model.activeAnimations;
@@ -750,15 +744,15 @@ describe(
         expect(spyUpdate.calls.count()).toEqual(3);
         expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
           0.0,
-          CesiumMath.EPSILON14
+          CesiumMath.EPSILON14,
         );
         expect(spyUpdate.calls.argsFor(1)[2]).toEqualEpsilon(
           0.1,
-          CesiumMath.EPSILON14
+          CesiumMath.EPSILON14,
         );
         expect(spyUpdate.calls.argsFor(2)[2]).toEqualEpsilon(
           0.3,
-          CesiumMath.EPSILON14
+          CesiumMath.EPSILON14,
         );
       });
     });
@@ -768,7 +762,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const time = defaultDate;
         const animationCollection = model.activeAnimations;
@@ -783,10 +777,10 @@ describe(
 
         scene.renderForSpecs(time);
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 1.0, scratchJulianDate)
+          JulianDate.addSeconds(time, 1.0, scratchJulianDate),
         );
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 2.0, scratchJulianDate)
+          JulianDate.addSeconds(time, 2.0, scratchJulianDate),
         );
 
         expect(spyUpdate.calls.count()).toEqual(3);
@@ -801,7 +795,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const time = defaultDate;
         const animationCollection = model.activeAnimations;
@@ -816,10 +810,10 @@ describe(
 
         scene.renderForSpecs(time);
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 0.5, scratchJulianDate)
+          JulianDate.addSeconds(time, 0.5, scratchJulianDate),
         );
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 1.0, scratchJulianDate)
+          JulianDate.addSeconds(time, 1.0, scratchJulianDate),
         );
 
         expect(spyUpdate.calls.count()).toEqual(3);
@@ -834,7 +828,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const time = defaultDate;
         const animationCollection = model.activeAnimations;
@@ -849,13 +843,13 @@ describe(
 
         scene.renderForSpecs(time);
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 0.5, scratchJulianDate)
+          JulianDate.addSeconds(time, 0.5, scratchJulianDate),
         );
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 1.0, scratchJulianDate)
+          JulianDate.addSeconds(time, 1.0, scratchJulianDate),
         );
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 1.5, scratchJulianDate)
+          JulianDate.addSeconds(time, 1.5, scratchJulianDate),
         );
 
         expect(spyUpdate.calls.count()).toEqual(4);
@@ -871,7 +865,7 @@ describe(
         {
           gltf: animatedTriangleUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const time = defaultDate;
         const animationCollection = model.activeAnimations;
@@ -886,16 +880,16 @@ describe(
 
         scene.renderForSpecs(time);
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 0.5, scratchJulianDate)
+          JulianDate.addSeconds(time, 0.5, scratchJulianDate),
         );
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 1.0, scratchJulianDate)
+          JulianDate.addSeconds(time, 1.0, scratchJulianDate),
         );
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 1.5, scratchJulianDate)
+          JulianDate.addSeconds(time, 1.5, scratchJulianDate),
         );
         scene.renderForSpecs(
-          JulianDate.addSeconds(time, 2.0, scratchJulianDate)
+          JulianDate.addSeconds(time, 2.0, scratchJulianDate),
         );
 
         expect(spyUpdate.calls.count()).toEqual(5);
@@ -906,6 +900,42 @@ describe(
         expect(spyUpdate.calls.argsFor(4)[2]).toEqual(0.0);
       });
     });
+
+    it("does not animate when model.show is false", async function () {
+      const model = await loadAndZoomToModelAsync(
+        {
+          gltf: animatedTriangleUrl,
+        },
+        scene,
+      );
+      const time = defaultDate;
+      const animationCollection = model.activeAnimations;
+      const animation = animationCollection.add({
+        index: 0,
+        startTime: time,
+      });
+
+      const spyUpdate = jasmine.createSpy("listener");
+      animation.update.addEventListener(spyUpdate);
+
+      // Render with model shown - animation should update
+      scene.renderForSpecs(time);
+      expect(spyUpdate.calls.count()).toEqual(1);
+
+      // Hide the model
+      model.show = false;
+
+      // Render with model hidden - animation should NOT update
+      scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, scratchJulianDate));
+      expect(spyUpdate.calls.count()).toEqual(1); // Still 1, no new updates
+
+      // Show the model again
+      model.show = true;
+
+      // Render with model shown again - animation should update
+      scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, scratchJulianDate));
+      expect(spyUpdate.calls.count()).toEqual(2); // Now 2, animation updated
+    });
   },
-  "WebGL"
+  "WebGL",
 );

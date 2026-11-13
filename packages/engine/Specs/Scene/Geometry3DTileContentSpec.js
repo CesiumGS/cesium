@@ -1,23 +1,25 @@
 import {
   Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  Ellipsoid,
+  GeometryInstance,
+  Rectangle,
+  RectangleGeometry,
+  RuntimeError,
+  destroyObject,
+} from "@cesium/core";
+import {
   Cesium3DContentGroup,
   Cesium3DTileStyle,
   ClassificationType,
-  Color,
-  ColorGeometryInstanceAttribute,
   ContentMetadata,
-  destroyObject,
-  Ellipsoid,
-  GeometryInstance,
   MetadataClass,
   GroupMetadata,
   Pass,
   PerInstanceColorAppearance,
   Primitive,
-  Rectangle,
-  RectangleGeometry,
   RenderState,
-  RuntimeError,
   StencilConstants,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
@@ -106,7 +108,7 @@ describe(
         });
       }
       const depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(1.0, 0.0, 0.0, 1.0)
+        new Color(1.0, 0.0, 0.0, 1.0),
       );
       depthColor = depthColorAttribute.value;
       return new Primitive({
@@ -165,7 +167,7 @@ describe(
       reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
       reusableTilesetPrimitive = createPrimitive(
         rectangle,
-        Pass.CESIUM_3D_TILE
+        Pass.CESIUM_3D_TILE,
       );
     });
 
@@ -180,11 +182,11 @@ describe(
       globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
       tilesetPrimitive = new MockPrimitive(
         reusableTilesetPrimitive,
-        Pass.CESIUM_3D_TILE
+        Pass.CESIUM_3D_TILE,
       );
       scene.camera.lookAt(
         ellipsoid.cartographicToCartesian(Rectangle.center(tilesetRectangle)),
-        new Cartesian3(0.0, 0.0, 0.01)
+        new Cartesian3(0.0, 0.0, 0.01),
       );
     });
 
@@ -233,45 +235,45 @@ describe(
         tilesetRectangle.west,
         center.latitude,
         center.longitude,
-        tilesetRectangle.north
+        tilesetRectangle.north,
       );
       const urRect = new Rectangle(
         center.longitude,
         center.longitude,
         tilesetRectangle.east,
-        tilesetRectangle.north
+        tilesetRectangle.north,
       );
       const llRect = new Rectangle(
         tilesetRectangle.west,
         tilesetRectangle.south,
         center.longitude,
-        center.latitude
+        center.latitude,
       );
       const lrRect = new Rectangle(
         center.longitude,
         tilesetRectangle.south,
         tilesetRectangle.east,
-        center.latitude
+        center.latitude,
       );
 
       scene.camera.lookAt(
         ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
+        new Cartesian3(0.0, 0.0, 5.0),
       );
       expectPick(scene);
       scene.camera.lookAt(
         ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
+        new Cartesian3(0.0, 0.0, 5.0),
       );
       expectPick(scene);
       scene.camera.lookAt(
         ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
+        new Cartesian3(0.0, 0.0, 5.0),
       );
       expectPick(scene);
       scene.camera.lookAt(
         ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
+        new Cartesian3(0.0, 0.0, 5.0),
       );
       expectPick(scene);
     }
@@ -282,45 +284,45 @@ describe(
         tilesetRectangle.west,
         center.latitude,
         center.longitude,
-        tilesetRectangle.north
+        tilesetRectangle.north,
       );
       const urRect = new Rectangle(
         center.longitude,
         center.longitude,
         tilesetRectangle.east,
-        tilesetRectangle.north
+        tilesetRectangle.north,
       );
       const llRect = new Rectangle(
         tilesetRectangle.west,
         tilesetRectangle.south,
         center.longitude,
-        center.latitude
+        center.latitude,
       );
       const lrRect = new Rectangle(
         center.longitude,
         tilesetRectangle.south,
         tilesetRectangle.east,
-        center.latitude
+        center.latitude,
       );
 
       scene.camera.lookAt(
         ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
+        new Cartesian3(0.0, 0.0, 5.0),
       );
       expect(scene).toRender(color);
       scene.camera.lookAt(
         ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
+        new Cartesian3(0.0, 0.0, 5.0),
       );
       expect(scene).toRender(color);
       scene.camera.lookAt(
         ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
+        new Cartesian3(0.0, 0.0, 5.0),
       );
       expect(scene).toRender(color);
       scene.camera.lookAt(
         ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-        new Cartesian3(0.0, 0.0, 5.0)
+        new Cartesian3(0.0, 0.0, 5.0),
       );
       expect(scene).toRender(color);
     }
@@ -429,7 +431,7 @@ describe(
       scene.primitives.add(globePrimitive);
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometryBoxesBatchedChildren
+        geometryBoxesBatchedChildren,
       )
         .then(function (tileset) {
           return verifyRender(tileset, scene);
@@ -454,7 +456,7 @@ describe(
       scene.primitives.add(globePrimitive);
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometryBoxesBatchedChildrenWithBatchTable
+        geometryBoxesBatchedChildrenWithBatchTable,
       )
         .then(function (tileset) {
           return verifyRender(tileset, scene);
@@ -490,7 +492,7 @@ describe(
       scene.primitives.add(globePrimitive);
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometryCylindersBatchedChildren
+        geometryCylindersBatchedChildren,
       )
         .then(function (tileset) {
           return verifyRender(tileset, scene);
@@ -504,7 +506,7 @@ describe(
       scene.primitives.add(globePrimitive);
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometryCylindersWithBatchTable
+        geometryCylindersWithBatchTable,
       )
         .then(function (tileset) {
           return verifyRender(tileset, scene);
@@ -518,7 +520,7 @@ describe(
       scene.primitives.add(globePrimitive);
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometryCylindersBatchedChildrenWithBatchTable
+        geometryCylindersBatchedChildrenWithBatchTable,
       )
         .then(function (tileset) {
           return verifyRender(tileset, scene);
@@ -532,7 +534,7 @@ describe(
       scene.primitives.add(globePrimitive);
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometryCylindersWithBatchIds
+        geometryCylindersWithBatchIds,
       )
         .then(function (tileset) {
           return verifyRender(tileset, scene);
@@ -557,7 +559,7 @@ describe(
       scene.primitives.add(globePrimitive);
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometryEllipsoidsBatchedChildren
+        geometryEllipsoidsBatchedChildren,
       )
         .then(function (tileset) {
           return verifyRender(tileset, scene);
@@ -571,7 +573,7 @@ describe(
       scene.primitives.add(globePrimitive);
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometryEllipsoidsWithBatchTable
+        geometryEllipsoidsWithBatchTable,
       )
         .then(function (tileset) {
           return verifyRender(tileset, scene);
@@ -585,7 +587,7 @@ describe(
       scene.primitives.add(globePrimitive);
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometryEllipsoidsBatchedChildrenWithBatchTable
+        geometryEllipsoidsBatchedChildrenWithBatchTable,
       )
         .then(function (tileset) {
           return verifyRender(tileset, scene);
@@ -599,7 +601,7 @@ describe(
       scene.primitives.add(globePrimitive);
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometryEllipsoidsWithBatchIds
+        geometryEllipsoidsWithBatchIds,
       )
         .then(function (tileset) {
           return verifyRender(tileset, scene);
@@ -624,7 +626,7 @@ describe(
       scene.primitives.add(globePrimitive);
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometrySpheresBatchedChildren
+        geometrySpheresBatchedChildren,
       )
         .then(function (tileset) {
           return verifyRender(tileset, scene);
@@ -638,7 +640,7 @@ describe(
       scene.primitives.add(globePrimitive);
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometrySpheresWithBatchTable
+        geometrySpheresWithBatchTable,
       )
         .then(function (tileset) {
           return verifyRender(tileset, scene);
@@ -652,7 +654,7 @@ describe(
       scene.primitives.add(globePrimitive);
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometrySpheresBatchedChildrenWithBatchTable
+        geometrySpheresBatchedChildrenWithBatchTable,
       )
         .then(function (tileset) {
           return verifyRender(tileset, scene);
@@ -710,7 +712,7 @@ describe(
       scene.primitives.add(globePrimitive);
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometryAllBatchedChildrenWithBatchTable
+        geometryAllBatchedChildrenWithBatchTable,
       )
         .then(function (tileset) {
           return verifyRender(tileset, scene);
@@ -741,30 +743,30 @@ describe(
           tilesetRectangle.west,
           center.latitude,
           center.longitude,
-          tilesetRectangle.north
+          tilesetRectangle.north,
         );
         const urRect = new Rectangle(
           center.longitude,
           center.longitude,
           tilesetRectangle.east,
-          tilesetRectangle.north
+          tilesetRectangle.north,
         );
         const llRect = new Rectangle(
           tilesetRectangle.west,
           tilesetRectangle.south,
           center.longitude,
-          center.latitude
+          center.latitude,
         );
         const lrRect = new Rectangle(
           center.longitude,
           tilesetRectangle.south,
           tilesetRectangle.east,
-          center.latitude
+          center.latitude,
         );
 
         scene.camera.lookAt(
           ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+          new Cartesian3(0.0, 0.0, 5.0),
         );
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual([0, 0, 0, 255]);
@@ -772,7 +774,7 @@ describe(
         });
         scene.camera.lookAt(
           ellipsoid.cartographicToCartesian(Rectangle.center(urRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+          new Cartesian3(0.0, 0.0, 5.0),
         );
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual([0, 0, 0, 255]);
@@ -780,7 +782,7 @@ describe(
         });
         scene.camera.lookAt(
           ellipsoid.cartographicToCartesian(Rectangle.center(llRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+          new Cartesian3(0.0, 0.0, 5.0),
         );
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual([0, 0, 0, 255]);
@@ -788,7 +790,7 @@ describe(
         });
         scene.camera.lookAt(
           ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)),
-          new Cartesian3(0.0, 0.0, 5.0)
+          new Cartesian3(0.0, 0.0, 5.0),
         );
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual([0, 0, 0, 255]);
@@ -800,7 +802,7 @@ describe(
     it("can get features and properties", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometryBoxesWithBatchTable
+        geometryBoxesWithBatchTable,
       ).then(function (tileset) {
         const content = tileset.root.content;
         expect(content.featuresLength).toBe(1);
@@ -813,7 +815,7 @@ describe(
     it("throws when calling getFeature with invalid index", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometryBoxesWithBatchTable
+        geometryBoxesWithBatchTable,
       ).then(function (tileset) {
         const content = tileset.root.content;
         expect(function () {
@@ -833,10 +835,10 @@ describe(
         version: 2,
       });
       await expectAsync(
-        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "geom")
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "geom"),
       ).toBeRejectedWithError(
         RuntimeError,
-        "Only Geometry tile version 1 is supported.  Version 2 is not."
+        "Only Geometry tile version 1 is supported.  Version 2 is not.",
       );
     });
 
@@ -845,10 +847,10 @@ describe(
         defineFeatureTable: false,
       });
       await expectAsync(
-        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "geom")
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "geom"),
       ).toBeRejectedWithError(
         RuntimeError,
-        "Feature table must have a byte length greater than zero"
+        "Feature table must have a byte length greater than zero",
       );
     });
 
@@ -863,17 +865,17 @@ describe(
         ellipsoidBatchIds: [2],
       });
       await expectAsync(
-        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "geom")
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "geom"),
       ).toBeRejectedWithError(
         RuntimeError,
-        "If one group of batch ids is defined, then all batch ids must be defined"
+        "If one group of batch ids is defined, then all batch ids must be defined",
       );
     });
 
     it("destroys", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
-        geometryBoxesWithBatchTable
+        geometryBoxesWithBatchTable,
       ).then(function (tileset) {
         expect(tileset.isDestroyed()).toEqual(false);
         scene.primitives.remove(tileset);
@@ -948,7 +950,7 @@ describe(
               metadata: groupMetadata,
             });
             expect(content.group.metadata).toBe(groupMetadata);
-          }
+          },
         );
       });
 
@@ -958,10 +960,10 @@ describe(
             const content = tileset.root.content;
             content.metadata = contentMetadata;
             expect(content.metadata).toBe(contentMetadata);
-          }
+          },
         );
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

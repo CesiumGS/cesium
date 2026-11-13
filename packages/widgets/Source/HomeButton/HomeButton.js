@@ -1,9 +1,5 @@
-import {
-  defined,
-  destroyObject,
-  DeveloperError,
-  getElement,
-} from "@cesium/engine";
+import { DeveloperError, defined, destroyObject } from "@cesium/core";
+import { getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import HomeButtonViewModel from "./HomeButtonViewModel.js";
 
@@ -39,7 +35,7 @@ function HomeButton(container, scene, duration) {
     "\
 attr: { title: tooltip },\
 click: command,\
-cesiumSvgPath: { path: _svgPath, width: 28, height: 28 }"
+cesiumSvgPath: { path: _svgPath, width: 28, height: 28 }",
   );
 
   container.appendChild(element);

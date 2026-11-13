@@ -1,9 +1,5 @@
-import {
-  defined,
-  destroyObject,
-  DeveloperError,
-  getElement,
-} from "@cesium/engine";
+import { DeveloperError, defined, destroyObject } from "@cesium/core";
+import { getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import SelectionIndicatorViewModel from "./SelectionIndicatorViewModel.js";
 
@@ -23,7 +19,7 @@ function SelectionIndicator(container, scene) {
   if (!defined(container)) {
     throw new DeveloperError("container is required.");
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   container = getElement(container);
 
@@ -35,7 +31,7 @@ function SelectionIndicator(container, scene) {
     "data-bind",
     '\
 style: { "top" : _screenPositionY, "left" : _screenPositionX },\
-css: { "cesium-selection-wrapper-visible" : isVisible }'
+css: { "cesium-selection-wrapper-visible" : isVisible }',
   );
   container.appendChild(el);
   this._element = el;
@@ -63,7 +59,7 @@ css: { "cesium-selection-wrapper-visible" : isVisible }'
   const viewModel = new SelectionIndicatorViewModel(
     scene,
     this._element,
-    this._container
+    this._container,
   );
   this._viewModel = viewModel;
 

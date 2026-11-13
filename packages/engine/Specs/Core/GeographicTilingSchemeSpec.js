@@ -2,11 +2,10 @@ import {
   Cartesian2,
   Cartographic,
   GeographicProjection,
-  GeographicTilingScheme,
   Math as CesiumMath,
   Rectangle,
-  TilingScheme,
-} from "../../index.js";
+} from "@cesium/core";
+import { GeographicTilingScheme, TilingScheme } from "../../index.js";
 
 describe("Core/GeographicTilingScheme", function () {
   it("conforms to TilingScheme interface.", function () {
@@ -23,19 +22,19 @@ describe("Core/GeographicTilingScheme", function () {
       const rectangle = tilingScheme.tileXYToRectangle(0, 0, 0);
       expect(rectangle.west).toEqualEpsilon(
         tilingSchemeRectangle.west,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(rectangle.south).toEqualEpsilon(
         tilingSchemeRectangle.south,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(rectangle.east).toEqualEpsilon(
         tilingSchemeRectangle.east,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(rectangle.north).toEqualEpsilon(
         tilingSchemeRectangle.north,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
     });
 
@@ -50,19 +49,19 @@ describe("Core/GeographicTilingScheme", function () {
       expect(result).toEqual(rectangle);
       expect(rectangle.west).toEqualEpsilon(
         tilingSchemeRectangle.west,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(rectangle.south).toEqualEpsilon(
         tilingSchemeRectangle.south,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(rectangle.east).toEqualEpsilon(
         tilingSchemeRectangle.east,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
       expect(rectangle.north).toEqualEpsilon(
         tilingSchemeRectangle.north,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       );
     });
 
@@ -109,20 +108,20 @@ describe("Core/GeographicTilingScheme", function () {
 
       expect(northeast.south).toEqualEpsilon(
         southeast.north,
-        CesiumMath.EPSILON15
+        CesiumMath.EPSILON15,
       );
       expect(northwest.south).toEqualEpsilon(
         southwest.north,
-        CesiumMath.EPSILON15
+        CesiumMath.EPSILON15,
       );
 
       expect(northeast.west).toEqualEpsilon(
         northwest.east,
-        CesiumMath.EPSILON15
+        CesiumMath.EPSILON15,
       );
       expect(southeast.west).toEqualEpsilon(
         southwest.east,
-        CesiumMath.EPSILON15
+        CesiumMath.EPSILON15,
       );
     });
   });
@@ -136,24 +135,23 @@ describe("Core/GeographicTilingScheme", function () {
     it("converts radians to degrees", function () {
       const tilingScheme = new GeographicTilingScheme();
       const rectangleInRadians = new Rectangle(0.1, 0.2, 0.3, 0.4);
-      const nativeRectangle = tilingScheme.rectangleToNativeRectangle(
-        rectangleInRadians
-      );
+      const nativeRectangle =
+        tilingScheme.rectangleToNativeRectangle(rectangleInRadians);
       expect(nativeRectangle.west).toEqualEpsilon(
         (rectangleInRadians.west * 180) / Math.PI,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
       expect(nativeRectangle.south).toEqualEpsilon(
         (rectangleInRadians.south * 180) / Math.PI,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
       expect(nativeRectangle.east).toEqualEpsilon(
         (rectangleInRadians.east * 180) / Math.PI,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
       expect(nativeRectangle.north).toEqualEpsilon(
         (rectangleInRadians.north * 180) / Math.PI,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
     });
 
@@ -163,24 +161,24 @@ describe("Core/GeographicTilingScheme", function () {
       const resultRectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
       const outputRectangle = tilingScheme.rectangleToNativeRectangle(
         rectangleInRadians,
-        resultRectangle
+        resultRectangle,
       );
       expect(outputRectangle).toEqual(resultRectangle);
       expect(resultRectangle.west).toEqualEpsilon(
         (rectangleInRadians.west * 180) / Math.PI,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
       expect(resultRectangle.south).toEqualEpsilon(
         (rectangleInRadians.south * 180) / Math.PI,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
       expect(resultRectangle.east).toEqualEpsilon(
         (rectangleInRadians.east * 180) / Math.PI,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
       expect(resultRectangle.north).toEqualEpsilon(
         (rectangleInRadians.north * 180) / Math.PI,
-        CesiumMath.EPSILON13
+        CesiumMath.EPSILON13,
       );
     });
   });
@@ -206,18 +204,18 @@ describe("Core/GeographicTilingScheme", function () {
 
       const centerOfWesternRootTile = new Cartographic(-Math.PI / 2.0, 0.0);
       expect(tilingScheme.positionToTileXY(centerOfWesternRootTile, 0)).toEqual(
-        new Cartesian2(0, 0)
+        new Cartesian2(0, 0),
       );
 
       const centerOfNortheastChildOfEasternRootTile = new Cartographic(
         (3.0 * Math.PI) / 4.0,
-        Math.PI / 2.0
+        Math.PI / 2.0,
       );
       expect(
         tilingScheme.positionToTileXY(
           centerOfNortheastChildOfEasternRootTile,
-          1
-        )
+          1,
+        ),
       ).toEqual(new Cartesian2(3, 0));
     });
 
@@ -226,7 +224,7 @@ describe("Core/GeographicTilingScheme", function () {
 
       const centerOfMap = new Cartographic(0.0, 0.0);
       expect(tilingScheme.positionToTileXY(centerOfMap, 1)).toEqual(
-        new Cartesian2(2, 1)
+        new Cartesian2(2, 1),
       );
     });
 
@@ -235,7 +233,7 @@ describe("Core/GeographicTilingScheme", function () {
 
       const southeastCorner = new Cartographic(Math.PI, -Math.PI / 2.0);
       expect(tilingScheme.positionToTileXY(southeastCorner, 0)).toEqual(
-        new Cartesian2(1, 0)
+        new Cartesian2(1, 0),
       );
     });
 
@@ -244,13 +242,13 @@ describe("Core/GeographicTilingScheme", function () {
 
       const centerOfNortheastChildOfEasternRootTile = new Cartographic(
         (3.0 * Math.PI) / 4.0,
-        Math.PI / 2.0
+        Math.PI / 2.0,
       );
       const resultParameter = new Cartesian2(0, 0);
       const returnedResult = tilingScheme.positionToTileXY(
         centerOfNortheastChildOfEasternRootTile,
         1,
-        resultParameter
+        resultParameter,
       );
       expect(resultParameter).toEqual(returnedResult);
       expect(resultParameter).toEqual(new Cartesian2(3, 0));

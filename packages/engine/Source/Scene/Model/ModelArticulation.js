@@ -1,7 +1,4 @@
-import Check from "../../Core/Check.js";
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
+import { Check, Frozen, Matrix4, defined } from "@cesium/core";
 import ModelArticulationStage from "./ModelArticulationStage.js";
 
 /**
@@ -19,7 +16,7 @@ import ModelArticulationStage from "./ModelArticulationStage.js";
  * @private
  */
 function ModelArticulation(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const articulation = options.articulation;
   const sceneGraph = options.sceneGraph;
@@ -184,7 +181,7 @@ ModelArticulation.prototype.apply = function () {
 
   let articulationMatrix = Matrix4.clone(
     Matrix4.IDENTITY,
-    scratchArticulationMatrix
+    scratchArticulationMatrix,
   );
 
   let i;
@@ -205,7 +202,7 @@ ModelArticulation.prototype.apply = function () {
     const transform = Matrix4.multiplyTransformation(
       node.originalTransform,
       articulationMatrix,
-      scratchNodeMatrix
+      scratchNodeMatrix,
     );
     node.transform = transform;
   }

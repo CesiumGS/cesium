@@ -1,12 +1,14 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defined from "../Core/defined.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
+import {
+  AssociativeArray,
+  Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  DistanceDisplayCondition,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  ShowGeometryInstanceAttribute,
+  defined,
+} from "@cesium/core";
 import OffsetGeometryInstanceAttribute from "../Core/OffsetGeometryInstanceAttribute.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";
 import Primitive from "../Scene/Primitive.js";
 import BoundingSphereState from "./BoundingSphereState.js";
@@ -51,16 +53,13 @@ Batch.prototype.add = function (updater, instance) {
     const that = this;
     this.subscriptions.set(
       id,
-      updater.entity.definitionChanged.addEventListener(function (
-        entity,
-        propertyName,
-        newValue,
-        oldValue
-      ) {
-        if (propertyName === "isShowing") {
-          that.showsUpdated.set(updater.id, updater);
-        }
-      })
+      updater.entity.definitionChanged.addEventListener(
+        function (entity, propertyName, newValue, oldValue) {
+          if (propertyName === "isShowing") {
+            that.showsUpdated.set(updater.id, updater);
+          }
+        },
+      ),
     );
   }
 };
@@ -158,16 +157,16 @@ Batch.prototype.update = function (time) {
           outlineColorProperty,
           time,
           Color.WHITE,
-          colorScratch
+          colorScratch,
         );
         if (!Color.equals(attributes._lastColor, outlineColor)) {
           attributes._lastColor = Color.clone(
             outlineColor,
-            attributes._lastColor
+            attributes._lastColor,
           );
           attributes.color = ColorGeometryInstanceAttribute.toValue(
             outlineColor,
-            attributes.color
+            attributes.color,
           );
           if (
             (this.translucent && attributes.color[3] === 255) ||
@@ -185,7 +184,7 @@ Batch.prototype.update = function (time) {
       if (show !== currentShow) {
         attributes.show = ShowGeometryInstanceAttribute.toValue(
           show,
-          attributes.show
+          attributes.show,
         );
       }
 
@@ -196,22 +195,24 @@ Batch.prototype.update = function (time) {
           distanceDisplayConditionProperty,
           time,
           defaultDistanceDisplayCondition,
-          distanceDisplayConditionScratch
+          distanceDisplayConditionScratch,
         );
         if (
           !DistanceDisplayCondition.equals(
             distanceDisplayCondition,
-            attributes._lastDistanceDisplayCondition
+            attributes._lastDistanceDisplayCondition,
           )
         ) {
-          attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(
-            distanceDisplayCondition,
-            attributes._lastDistanceDisplayCondition
-          );
-          attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(
-            distanceDisplayCondition,
-            attributes.distanceDisplayCondition
-          );
+          attributes._lastDistanceDisplayCondition =
+            DistanceDisplayCondition.clone(
+              distanceDisplayCondition,
+              attributes._lastDistanceDisplayCondition,
+            );
+          attributes.distanceDisplayCondition =
+            DistanceDisplayConditionGeometryInstanceAttribute.toValue(
+              distanceDisplayCondition,
+              attributes.distanceDisplayCondition,
+            );
         }
       }
 
@@ -221,16 +222,16 @@ Batch.prototype.update = function (time) {
           offsetProperty,
           time,
           defaultOffset,
-          offsetScratch
+          offsetScratch,
         );
         if (!Cartesian3.equals(offset, attributes._lastOffset)) {
           attributes._lastOffset = Cartesian3.clone(
             offset,
-            attributes._lastOffset
+            attributes._lastOffset,
           );
           attributes.offset = OffsetGeometryInstanceAttribute.toValue(
             offset,
-            attributes.offset
+            attributes.offset,
           );
         }
       }
@@ -264,7 +265,7 @@ Batch.prototype.updateShows = function (primitive) {
     if (show !== currentShow) {
       attributes.show = ShowGeometryInstanceAttribute.toValue(
         show,
-        attributes.show
+        attributes.show,
       );
       instance.attributes.show.value[0] = attributes.show[0];
     }
@@ -376,7 +377,7 @@ StaticOutlineGeometryBatch.prototype.update = function (time) {
   const translucentBatchesLength = translucentBatches.length;
   let itemsToRemove;
   let isUpdated = true;
-  let needUpdate = false;
+  let needUpdate;
 
   do {
     needUpdate = false;
@@ -423,7 +424,7 @@ StaticOutlineGeometryBatch.prototype.update = function (time) {
 
 StaticOutlineGeometryBatch.prototype.getBoundingSphere = function (
   updater,
-  result
+  result,
 ) {
   let i;
 

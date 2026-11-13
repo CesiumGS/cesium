@@ -1,4 +1,4 @@
-import { Color, defined, JulianDate } from "@cesium/engine";
+import { Color, JulianDate, defined } from "@cesium/core";
 
 /**
  * @private
@@ -18,7 +18,7 @@ TimelineTrack.prototype.render = function (context, renderState) {
   const spanStop = JulianDate.addSeconds(
     renderState.startJulian,
     renderState.duration,
-    new JulianDate()
+    new JulianDate(),
   );
 
   if (
@@ -39,7 +39,7 @@ TimelineTrack.prototype.render = function (context, renderState) {
       const currentTime = JulianDate.addSeconds(
         renderState.startJulian,
         (x / renderState.timeBarWidth) * renderState.duration,
-        new JulianDate()
+        new JulianDate(),
       );
       if (
         !defined(start) &&
@@ -66,7 +66,7 @@ TimelineTrack.prototype.render = function (context, renderState) {
         start,
         renderState.y,
         Math.max(stop - start, 1),
-        this.height
+        this.height,
       );
     }
   }

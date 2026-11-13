@@ -1,5 +1,4 @@
-import Check from "./Check.js";
-import defined from "./defined.js";
+import { Check, defined } from "@cesium/core";
 
 /**
  * Initiates a terrain height query for an array of {@link Cartographic} positions by
@@ -47,7 +46,7 @@ async function sampleTerrain(
   terrainProvider,
   level,
   positions,
-  rejectOnTileFail
+  rejectOnTileFail,
 ) {
   if (!defined(rejectOnTileFail)) {
     rejectOnTileFail = false;
@@ -76,7 +75,7 @@ function attemptConsumeNextQueueItem(tileRequests, results, rejectOnTileFail) {
   const requestPromise = tileRequest.terrainProvider.requestTileGeometry(
     tileRequest.x,
     tileRequest.y,
-    tileRequest.level
+    tileRequest.level,
   );
 
   if (!requestPromise) {
@@ -136,7 +135,7 @@ function drainTileRequestQueue(tileRequests, results, rejectOnTileFail) {
   const success = attemptConsumeNextQueueItem(
     tileRequests,
     results,
-    rejectOnTileFail
+    rejectOnTileFail,
   );
   if (success) {
     return drainTileRequestQueue(tileRequests, results, rejectOnTileFail);
@@ -187,7 +186,7 @@ function doSampling(terrainProvider, level, positions, rejectOnTileFail) {
   return drainTileRequestQueue(
     tileRequests,
     tilePromises,
-    rejectOnTileFail
+    rejectOnTileFail,
   ).then(function () {
     // now all the required requests have been started
     //  we just wait for them all to finish
@@ -212,7 +211,7 @@ function interpolateAndAssignHeight(position, terrainData, rectangle) {
   const height = terrainData.interpolateHeight(
     rectangle,
     position.longitude,
-    position.latitude
+    position.latitude,
   );
   if (height === undefined) {
     // if height comes back as undefined, it may implicitly mean the terrain data
@@ -229,7 +228,7 @@ function createInterpolateFunction(tileRequest) {
   const rectangle = tileRequest.tilingScheme.tileXYToRectangle(
     tileRequest.x,
     tileRequest.y,
-    tileRequest.level
+    tileRequest.level,
   );
   return function (terrainData) {
     let isMeshRequired = false;
@@ -238,7 +237,7 @@ function createInterpolateFunction(tileRequest) {
       const isHeightAssigned = interpolateAndAssignHeight(
         position,
         terrainData,
-        rectangle
+        rectangle,
       );
       // we've found a position which returned undefined - hinting to us
       //  that we probably need to create a mesh for this terrain data.

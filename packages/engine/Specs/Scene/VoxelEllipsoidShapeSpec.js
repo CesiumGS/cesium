@@ -2,14 +2,12 @@ import {
   BoundingSphere,
   Cartesian3,
   Math as CesiumMath,
-  OrientedBoundingBox,
   Matrix3,
   Matrix4,
+  OrientedBoundingBox,
   Quaternion,
-  SpatialNode,
-  VoxelShape,
-  VoxelEllipsoidShape,
-} from "../../index.js";
+} from "@cesium/core";
+import { SpatialNode, VoxelShape, VoxelEllipsoidShape } from "../../index.js";
 
 describe("Scene/VoxelEllipsoidShape", function () {
   it("conforms to VoxelShape interface", function () {
@@ -31,18 +29,18 @@ describe("Scene/VoxelEllipsoidShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
 
     const minBounds = new Cartesian3(
       -CesiumMath.PI,
       -CesiumMath.PI_OVER_TWO,
-      0.0
+      0.0,
     );
     const maxBounds = new Cartesian3(
       +CesiumMath.PI,
       +CesiumMath.PI_OVER_TWO,
-      100000
+      100000,
     );
     const maxHeight = maxBounds.z;
 
@@ -58,49 +56,49 @@ describe("Scene/VoxelEllipsoidShape", function () {
         (scale.x + maxHeight) * Math.sin(angle),
         (scale.y + maxHeight) * Math.cos(angle),
         0.0,
-      ])
+      ]),
     );
 
     const expectedBoundingSphere = BoundingSphere.fromOrientedBoundingBox(
       expectedOrientedBoundingBox,
-      new BoundingSphere()
+      new BoundingSphere(),
     );
 
     const visible = shape.update(modelMatrix, minBounds, maxBounds);
 
     expect(shape.orientedBoundingBox.center).toEqual(
-      expectedOrientedBoundingBox.center
+      expectedOrientedBoundingBox.center,
     );
     expect(shape.orientedBoundingBox.halfAxes).toEqualEpsilon(
       expectedOrientedBoundingBox.halfAxes,
-      CesiumMath.EPSILON9
+      CesiumMath.EPSILON9,
     );
     expect(shape.boundingSphere).toEqual(expectedBoundingSphere);
 
     expect(
-      Matrix4.getTranslation(shape.boundTransform, new Cartesian3())
+      Matrix4.getTranslation(shape.boundTransform, new Cartesian3()),
     ).toEqualEpsilon(expectedOrientedBoundingBox.center, CesiumMath.EPSILON12);
 
     expect(
-      Matrix4.getMatrix3(shape.boundTransform, new Matrix3())
+      Matrix4.getMatrix3(shape.boundTransform, new Matrix3()),
     ).toEqualEpsilon(expectedOrientedBoundingBox.halfAxes, CesiumMath.EPSILON9);
 
     expect(
-      Matrix4.getTranslation(shape.shapeTransform, new Cartesian3())
+      Matrix4.getTranslation(shape.shapeTransform, new Cartesian3()),
     ).toEqualEpsilon(expectedOrientedBoundingBox.center, CesiumMath.EPSILON12);
 
     const expectedShapeTransform = Matrix4.fromRowMajorArray([
-      (scale.x + maxHeight) * Math.cos(angle),
-      -(scale.x + maxHeight) * Math.sin(angle),
+      Math.cos(angle),
+      -Math.sin(angle),
       0.0,
       expectedOrientedBoundingBox.center.x,
-      (scale.y + maxHeight) * Math.sin(angle),
-      (scale.y + maxHeight) * Math.cos(angle),
+      Math.sin(angle),
+      Math.cos(angle),
       0.0,
       expectedOrientedBoundingBox.center.y,
       0.0,
       0.0,
-      scale.z + maxHeight,
+      1.0,
       expectedOrientedBoundingBox.center.z,
       0.0,
       0.0,
@@ -109,7 +107,7 @@ describe("Scene/VoxelEllipsoidShape", function () {
     ]);
     expect(shape.shapeTransform).toEqualEpsilon(
       expectedShapeTransform,
-      CesiumMath.EPSILON9
+      CesiumMath.EPSILON9,
     );
     expect(visible).toBeTrue();
   });
@@ -122,18 +120,18 @@ describe("Scene/VoxelEllipsoidShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
 
     const minBounds = new Cartesian3(
       -CesiumMath.PI,
       -CesiumMath.PI_OVER_TWO,
-      -0.5
+      -0.5,
     );
     const maxBounds = new Cartesian3(
       CesiumMath.PI,
       CesiumMath.PI_OVER_TWO,
-      0.0
+      0.0,
     );
     shape.update(modelMatrix, minBounds, maxBounds);
     let result = new OrientedBoundingBox();
@@ -143,7 +141,7 @@ describe("Scene/VoxelEllipsoidShape", function () {
     const expectedHalfAxes = new Matrix3(0, 0, 1, 1, 0, 0, 0, 1, 0);
     expect(result.halfAxes).toEqualEpsilon(
       expectedHalfAxes,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -155,7 +153,7 @@ describe("Scene/VoxelEllipsoidShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = VoxelEllipsoidShape.DefaultMinBounds;
     const maxBounds = VoxelEllipsoidShape.DefaultMaxBounds;
@@ -187,17 +185,17 @@ describe("Scene/VoxelEllipsoidShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = new Cartesian3(
       -CesiumMath.PI,
       -CesiumMath.PI_OVER_TWO,
-      -1.0
+      -1.0,
     );
     const maxBounds = new Cartesian3(
       CesiumMath.PI,
       CesiumMath.PI_OVER_TWO,
-      0.0
+      0.0,
     );
     shape.update(modelMatrix, minBounds, maxBounds);
 
@@ -214,7 +212,7 @@ describe("Scene/VoxelEllipsoidShape", function () {
       tileZ,
       undefined,
       shape,
-      paddedDimensions
+      paddedDimensions,
     );
 
     const tileUv = new Cartesian3(0.5, 0.5, 0.5);
@@ -222,7 +220,7 @@ describe("Scene/VoxelEllipsoidShape", function () {
       spatialNode,
       tileDimensions,
       tileUv,
-      new OrientedBoundingBox()
+      new OrientedBoundingBox(),
     );
 
     const centerLongitude = Math.PI / 16.0;
@@ -231,11 +229,11 @@ describe("Scene/VoxelEllipsoidShape", function () {
     const expectedCenter = new Cartesian3(
       centerRadius * Math.cos(centerLongitude) * Math.cos(centerLatitude),
       centerRadius * Math.sin(centerLongitude) * Math.cos(centerLatitude),
-      centerRadius * Math.sin(centerLatitude)
+      centerRadius * Math.sin(centerLatitude),
     );
     expect(sampleBoundingBox.center).toEqualEpsilon(
       expectedCenter,
-      CesiumMath.EPSILON2
+      CesiumMath.EPSILON2,
     );
   });
 
@@ -247,17 +245,17 @@ describe("Scene/VoxelEllipsoidShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = new Cartesian3(
       -CesiumMath.PI,
       -CesiumMath.PI_OVER_TWO,
-      -1.0
+      -1.0,
     );
     const maxBounds = new Cartesian3(
       CesiumMath.PI,
       CesiumMath.PI_OVER_TWO,
-      0.0
+      0.0,
     );
     shape.update(modelMatrix, minBounds, maxBounds);
 
@@ -274,7 +272,7 @@ describe("Scene/VoxelEllipsoidShape", function () {
       tileZ,
       undefined,
       shape,
-      paddedDimensions
+      paddedDimensions,
     );
     const tileUv = new Cartesian3(0.5, 0.5, 0.5);
 
@@ -284,7 +282,7 @@ describe("Scene/VoxelEllipsoidShape", function () {
         undefined,
         tileDimensions,
         tileUv,
-        result
+        result,
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -292,7 +290,7 @@ describe("Scene/VoxelEllipsoidShape", function () {
         spatialNode,
         undefined,
         tileUv,
-        result
+        result,
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -300,7 +298,7 @@ describe("Scene/VoxelEllipsoidShape", function () {
         spatialNode,
         tileDimensions,
         undefined,
-        result
+        result,
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -308,7 +306,7 @@ describe("Scene/VoxelEllipsoidShape", function () {
         spatialNode,
         tileDimensions,
         tileUv,
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });

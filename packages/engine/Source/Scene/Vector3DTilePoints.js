@@ -1,12 +1,14 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import NearFarScalar from "../Core/NearFarScalar.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Color,
+  DistanceDisplayCondition,
+  Ellipsoid,
+  NearFarScalar,
+  Rectangle,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import BillboardCollection from "./BillboardCollection.js";
 import Cesium3DTilePointFeature from "./Cesium3DTilePointFeature.js";
@@ -15,6 +17,7 @@ import LabelCollection from "./LabelCollection.js";
 import LabelStyle from "./LabelStyle.js";
 import PolylineCollection from "./PolylineCollection.js";
 import VerticalOrigin from "./VerticalOrigin.js";
+import HeightReference from "./HeightReference.js";
 
 /**
  * Creates a batch of points or billboards and labels.
@@ -27,8 +30,10 @@ import VerticalOrigin from "./VerticalOrigin.js";
  * @param {number} options.minimumHeight The minimum height of the terrain covered by the tile.
  * @param {number} options.maximumHeight The maximum height of the terrain covered by the tile.
  * @param {Rectangle} options.rectangle The rectangle containing the tile.
+ * @param {HeightReference} options.heightReference Determines how billboard and label features are positioned relative to terrain or 3d tiles.
  * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polygons.
  * @param {Uint16Array} options.batchIds The batch ids for each polygon.
+ * @param {Scene} options.scene  The Cesium Viewer {@link Scene}. This is required for clamping billboards and labels with {@link HeightReference}
  *
  * @private
  */
@@ -42,12 +47,15 @@ function Vector3DTilePoints(options) {
   this._rectangle = options.rectangle;
   this._minHeight = options.minimumHeight;
   this._maxHeight = options.maximumHeight;
+  this._heightReference = options.heightReference;
 
   this._billboardCollection = new BillboardCollection({
     batchTable: options.batchTable,
+    scene: options.scene,
   });
   this._labelCollection = new LabelCollection({
     batchTable: options.batchTable,
+    scene: options.scene,
   });
   this._polylineCollection = new PolylineCollection();
   this._polylineCollection._useHighlightColor = true;
@@ -101,9 +109,8 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
    */
   texturesByteLength: {
     get: function () {
-      const billboardSize = this._billboardCollection.textureAtlas.texture
-        .sizeInBytes;
-      const labelSize = this._labelCollection._textureAtlas.texture.sizeInBytes;
+      const billboardSize = this._billboardCollection.sizeInBytes;
+      const labelSize = this._labelCollection.sizeInBytes;
       return billboardSize + labelSize;
     },
   },
@@ -131,7 +138,7 @@ function packBuffer(points, ellipsoid) {
 
 const createVerticesTaskProcessor = new TaskProcessor(
   "createVectorTilePoints",
-  5
+  5,
 );
 const scratchPosition = new Cartesian3();
 
@@ -155,7 +162,7 @@ function createPoints(points, ellipsoid) {
 
   const verticesPromise = createVerticesTaskProcessor.scheduleTask(
     parameters,
-    transferrableObjects
+    transferrableObjects,
   );
   if (!defined(verticesPromise)) {
     // Postponed
@@ -176,6 +183,8 @@ function createPoints(points, ellipsoid) {
       const batchIds = points._batchIds;
       const numberOfPoints = positions.length / 3;
 
+      const heightReference = points._heightReference ?? HeightReference.NONE;
+
       for (let i = 0; i < numberOfPoints; ++i) {
         const id = batchIds[i];
 
@@ -184,11 +193,13 @@ function createPoints(points, ellipsoid) {
         const b = billboardCollection.add();
         b.position = position;
         b._batchIndex = id;
+        b.heightReference = heightReference;
 
         const l = labelCollection.add();
         l.text = " ";
         l.position = position;
         l._batchIndex = id;
+        l.heightReference = heightReference;
 
         const p = polylineCollection.add();
         p.positions = [Cartesian3.clone(position), Cartesian3.clone(position)];
@@ -233,7 +244,7 @@ Vector3DTilePoints.prototype.createFeatures = function (content, features) {
       batchId,
       billboard,
       label,
-      polyline
+      polyline,
     );
   }
 };
@@ -337,7 +348,7 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     if (defined(style.pointOutlineColor)) {
       feature.pointOutlineColor = style.pointOutlineColor.evaluateColor(
         feature,
-        scratchColor2
+        scratchColor2,
       );
     }
 
@@ -348,14 +359,14 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     if (defined(style.labelColor)) {
       feature.labelColor = style.labelColor.evaluateColor(
         feature,
-        scratchColor3
+        scratchColor3,
       );
     }
 
     if (defined(style.labelOutlineColor)) {
       feature.labelOutlineColor = style.labelOutlineColor.evaluateColor(
         feature,
-        scratchColor4
+        scratchColor4,
       );
     }
 
@@ -380,7 +391,7 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     if (defined(style.backgroundColor)) {
       feature.backgroundColor = style.backgroundColor.evaluateColor(
         feature,
-        scratchColor5
+        scratchColor5,
       );
     }
 
@@ -408,9 +419,8 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     }
 
     if (defined(style.translucencyByDistance)) {
-      const translucencyByDistanceCart4 = style.translucencyByDistance.evaluate(
-        feature
-      );
+      const translucencyByDistanceCart4 =
+        style.translucencyByDistance.evaluate(feature);
       if (defined(translucencyByDistanceCart4)) {
         scratchTranslucencyByDistance.near = translucencyByDistanceCart4.x;
         scratchTranslucencyByDistance.nearValue = translucencyByDistanceCart4.y;
@@ -425,9 +435,8 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     }
 
     if (defined(style.distanceDisplayCondition)) {
-      const distanceDisplayConditionCart2 = style.distanceDisplayCondition.evaluate(
-        feature
-      );
+      const distanceDisplayConditionCart2 =
+        style.distanceDisplayCondition.evaluate(feature);
       if (defined(distanceDisplayConditionCart2)) {
         scratchDistanceDisplayCondition.near = distanceDisplayConditionCart2.x;
         scratchDistanceDisplayCondition.far = distanceDisplayConditionCart2.y;
@@ -450,7 +459,7 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     if (defined(style.anchorLineColor)) {
       feature.anchorLineColor = style.anchorLineColor.evaluateColor(
         feature,
-        scratchColor6
+        scratchColor6,
       );
     }
 
@@ -461,9 +470,8 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     }
 
     if (defined(style.disableDepthTestDistance)) {
-      feature.disableDepthTestDistance = style.disableDepthTestDistance.evaluate(
-        feature
-      );
+      feature.disableDepthTestDistance =
+        style.disableDepthTestDistance.evaluate(feature);
     }
 
     if (defined(style.horizontalOrigin)) {
@@ -475,9 +483,8 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     }
 
     if (defined(style.labelHorizontalOrigin)) {
-      feature.labelHorizontalOrigin = style.labelHorizontalOrigin.evaluate(
-        feature
-      );
+      feature.labelHorizontalOrigin =
+        style.labelHorizontalOrigin.evaluate(feature);
     }
 
     if (defined(style.labelVerticalOrigin)) {
@@ -500,8 +507,6 @@ Vector3DTilePoints.prototype.update = function (frameState) {
       this._error = undefined;
       throw error;
     }
-
-    return;
   }
 
   this._polylineCollection.update(frameState);

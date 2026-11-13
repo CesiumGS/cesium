@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * An enum for the GLSL varying types. These can be used for declaring varyings
  * in {@link CustomShader}
@@ -48,9 +50,9 @@ const VaryingType = {
    * @type {string}
    * @constant
    */
-  MAT3: "mat2",
+  MAT3: "mat3",
   /**
-   * A 3x3 matrix of floating point values.
+   * A 4x4 matrix of floating point values.
    *
    * @type {string}
    * @constant
@@ -58,4 +60,6 @@ const VaryingType = {
   MAT4: "mat4",
 };
 
-export default Object.freeze(VaryingType);
+Object.freeze(VaryingType);
+
+export default VaryingType;

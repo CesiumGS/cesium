@@ -1,9 +1,5 @@
-import {
-  B3dmParser,
-  Cartesian3,
-  HeadingPitchRange,
-  RuntimeError,
-} from "../../index.js";
+import { Cartesian3, HeadingPitchRange, RuntimeError } from "@cesium/core";
+import { B3dmParser } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 
@@ -74,7 +70,7 @@ describe(
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
           const batchTable = tileset.root.content.batchTable;
           expect(batchTable.featuresLength).toBe(10);
-        }
+        },
       );
     });
 
@@ -85,7 +81,7 @@ describe(
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
           const batchTable = tileset.root.content.batchTable;
           expect(batchTable.featuresLength).toBe(10);
-        }
+        },
       );
     });
 
@@ -94,9 +90,9 @@ describe(
         function (tileset) {
           expect(B3dmParser._deprecationWarning).toHaveBeenCalled();
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        }
+        },
       );
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -1,6 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError, Frozen, defined } from "@cesium/core";
 import CzmBuiltins from "../Shaders/Builtin/CzmBuiltins.js";
 import AutomaticUniforms from "./AutomaticUniforms.js";
 import demodernizeShader from "./demodernizeShader.js";
@@ -72,7 +70,7 @@ function generateDependencies(currentNode, dependencyNodes) {
         const referencedNode = getDependencyNode(
           element,
           ShaderSource._czmBuiltinsAndUniforms[element],
-          dependencyNodes
+          dependencyNodes,
         );
         currentNode.dependsOn.push(referencedNode);
         referencedNode.requiredBy.push(currentNode);
@@ -153,14 +151,11 @@ function getBuiltinsAndAutomaticUniforms(shaderSource) {
 }
 
 function combineShader(shaderSource, isFragmentShader, context) {
-  let i;
-  let length;
-
   // Combine shader sources, generally for pseudo-polymorphism, e.g., czm_getMaterial.
   let combinedSources = "";
   const sources = shaderSource.sources;
   if (defined(sources)) {
-    for (i = 0, length = sources.length; i < length; ++i) {
+    for (let i = 0; i < sources.length; ++i) {
       // #line needs to be on its own line.
       combinedSources += `\n#line 0\n${sources[i]}`;
     }
@@ -170,45 +165,46 @@ function combineShader(shaderSource, isFragmentShader, context) {
 
   // Extract existing shader version from sources
   let version;
-  combinedSources = combinedSources.replace(/#version\s+(.*?)\n/gm, function (
-    match,
-    group1
-  ) {
-    //>>includeStart('debug', pragmas.debug);
-    if (defined(version) && version !== group1) {
-      throw new DeveloperError(
-        `inconsistent versions found: ${version} and ${group1}`
-      );
-    }
-    //>>includeEnd('debug');
+  combinedSources = combinedSources.replace(
+    /#version\s+(.*?)\n/gm,
+    function (match, group1) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(version) && version !== group1) {
+        throw new DeveloperError(
+          `inconsistent versions found: ${version} and ${group1}`,
+        );
+      }
+      //>>includeEnd('debug');
 
-    // Extract #version to put at the top
-    version = group1;
+      // Extract #version to put at the top
+      version = group1;
 
-    // Replace original #version directive with a new line so the line numbers
-    // are not off by one.  There can be only one #version directive
-    // and it must appear at the top of the source, only preceded by
-    // whitespace and comments.
-    return "\n";
-  });
+      // Replace original #version directive with a new line so the line numbers
+      // are not off by one.  There can be only one #version directive
+      // and it must appear at the top of the source, only preceded by
+      // whitespace and comments.
+      return "\n";
+    },
+  );
 
   // Extract shader extensions from sources
   const extensions = [];
-  combinedSources = combinedSources.replace(/#extension.*\n/gm, function (
-    match
-  ) {
-    // Extract extension to put at the top
-    extensions.push(match);
+  combinedSources = combinedSources.replace(
+    /#extension.*\n/gm,
+    function (match) {
+      // Extract extension to put at the top
+      extensions.push(match);
 
-    // Replace original #extension directive with a new line so the line numbers
-    // are not off by one.
-    return "\n";
-  });
+      // Replace original #extension directive with a new line so the line numbers
+      // are not off by one.
+      return "\n";
+    },
+  );
 
   // Remove precision qualifier
   combinedSources = combinedSources.replace(
     /precision\s(lowp|mediump|highp)\s(float|int);/,
-    ""
+    "",
   );
 
   // Replace main() for picked if desired.
@@ -216,7 +212,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
   if (defined(pickColorQualifier)) {
     combinedSources = ShaderSource.createPickFragmentShaderSource(
       combinedSources,
-      pickColorQualifier
+      pickColorQualifier,
     );
   }
 
@@ -224,30 +220,34 @@ function combineShader(shaderSource, isFragmentShader, context) {
   let result = "";
 
   const extensionsLength = extensions.length;
-  for (i = 0; i < extensionsLength; i++) {
+  for (let i = 0; i < extensionsLength; i++) {
     result += extensions[i];
   }
 
   if (isFragmentShader) {
-    // If high precision isn't support replace occurrences of highp with mediump
-    // The highp keyword is not always available on older mobile devices
+    // If high precision isn't supported, replace occurrences of highp with mediump.
+    // The highp keyword is not always available on older mobile devices.
     // See https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#In_WebGL_1_highp_float_support_is_optional_in_fragment_shaders
-    result +=
-      "\
-#ifdef GL_FRAGMENT_PRECISION_HIGH\n\
-    precision highp float;\n\
-    precision highp int;\n\
-#else\n\
-    precision mediump float;\n\
-    precision mediump int;\n\
-    #define highp mediump\n\
-#endif\n\n";
+    result += `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+    precision highp int;
+#else
+    precision mediump float;
+    precision mediump int;
+    #define highp mediump
+#endif
+`;
+  }
+
+  if (context.webgl2) {
+    result += `precision highp sampler3D;\n\n`;
   }
 
   // Prepend #defines for uber-shaders
   const defines = shaderSource.defines;
   if (defined(defines)) {
-    for (i = 0, length = defines.length; i < length; ++i) {
+    for (let i = 0, length = defines.length; i < length; ++i) {
       const define = defines[i];
       if (define.length !== 0) {
         result += `#define ${define}\n`;
@@ -280,7 +280,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
     context.webgl2 &&
     isFragmentShader &&
     !/layout\s*\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g.test(
-      combinedShader
+      combinedShader,
     ) &&
     !/czm_out_FragColor/g.test(combinedShader) &&
     /out_FragColor/g.test(combinedShader)
@@ -328,7 +328,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
  * @private
  */
 function ShaderSource(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const pickColorQualifier = options.pickColorQualifier;
 
   //>>includeStart('debug', pragmas.debug);
@@ -338,7 +338,7 @@ function ShaderSource(options) {
     pickColorQualifier !== "in"
   ) {
     throw new DeveloperError(
-      "options.pickColorQualifier must be 'uniform' or 'in'."
+      "options.pickColorQualifier must be 'uniform' or 'in'.",
     );
   }
   //>>includeEnd('debug');
@@ -346,7 +346,7 @@ function ShaderSource(options) {
   this.defines = defined(options.defines) ? options.defines.slice(0) : [];
   this.sources = defined(options.sources) ? options.sources.slice(0) : [];
   this.pickColorQualifier = pickColorQualifier;
-  this.includeBuiltIns = defaultValue(options.includeBuiltIns, true);
+  this.includeBuiltIns = options.includeBuiltIns ?? true;
 }
 
 ShaderSource.prototype.clone = function () {
@@ -422,9 +422,8 @@ for (const uniformName in AutomaticUniforms) {
   if (AutomaticUniforms.hasOwnProperty(uniformName)) {
     const uniform = AutomaticUniforms[uniformName];
     if (typeof uniform.getDeclaration === "function") {
-      ShaderSource._czmBuiltinsAndUniforms[
-        uniformName
-      ] = uniform.getDeclaration(uniformName);
+      ShaderSource._czmBuiltinsAndUniforms[uniformName] =
+        uniform.getDeclaration(uniformName);
     }
   }
 }
@@ -432,7 +431,7 @@ for (const uniformName in AutomaticUniforms) {
 ShaderSource.createPickVertexShaderSource = function (vertexShaderSource) {
   const renamedVS = ShaderSource.replaceMain(
     vertexShaderSource,
-    "czm_old_main"
+    "czm_old_main",
   );
   const pickMain =
     "in vec4 pickColor; \n" +
@@ -448,11 +447,11 @@ ShaderSource.createPickVertexShaderSource = function (vertexShaderSource) {
 
 ShaderSource.createPickFragmentShaderSource = function (
   fragmentShaderSource,
-  pickColorQualifier
+  pickColorQualifier,
 ) {
   const renamedFS = ShaderSource.replaceMain(
     fragmentShaderSource,
-    "czm_old_main"
+    "czm_old_main",
   );
   const pickMain =
     `${pickColorQualifier} vec4 czm_pickColor; \n` +

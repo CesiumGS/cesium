@@ -1,11 +1,13 @@
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
+import {
+  Cartographic,
+  Check,
+  Ellipsoid,
+  Math as CesiumMath,
+  Matrix3,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 
 /**
@@ -18,12 +20,12 @@ function I3SDecoder() {}
 // Maximum concurrency to use when decoding draco models
 I3SDecoder._maxDecodingConcurrency = Math.max(
   FeatureDetection.hardwareConcurrency - 1,
-  1
+  1,
 );
 
 I3SDecoder._decodeTaskProcessor = new TaskProcessor(
   "decodeI3S",
-  I3SDecoder._maxDecodingConcurrency
+  I3SDecoder._maxDecodingConcurrency,
 );
 
 I3SDecoder._promise = undefined;
@@ -41,11 +43,11 @@ async function initializeDecoder() {
 
 /**
  * Transcodes I3S to glTF in a web worker
- * @param {String} url custom attributes source URL
- * @param {Object} defaultGeometrySchema Schema to use during decoding
+ * @param {string} url custom attributes source URL
+ * @param {object} defaultGeometrySchema Schema to use during decoding
  * @param {I3SGeometry} geometryData The draco encoded geometry data
  * @param {Array} [featureData] The draco encoded feature data
- * @param {Object} [symbologyData] The rendering symbology to apply
+ * @param {object} [symbologyData] The rendering symbology to apply
  * @returns Promise<undefined|object> Returns a promise which resolves to the glTF result, or undefined if the task cannot be scheduled this frame.
  *
  * @exception {RuntimeError} I3S decoder could not be initialized.
@@ -55,7 +57,7 @@ I3SDecoder.decode = async function (
   defaultGeometrySchema,
   geometryData,
   featureData,
-  symbologyData
+  symbologyData,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("url", url);
@@ -93,18 +95,17 @@ I3SDecoder.decode = async function (
     Matrix3.multiply(
       axisFlipRotation,
       parentRotationInverseMatrix,
-      parentRotation
+      parentRotation,
     );
 
     const cartographicCenter = Cartographic.fromDegrees(
       longitude,
       latitude,
-      height
+      height,
     );
 
-    const cartesianCenter = Ellipsoid.WGS84.cartographicToCartesian(
-      cartographicCenter
-    );
+    const cartesianCenter =
+      Ellipsoid.WGS84.cartographicToCartesian(cartographicCenter);
 
     const payload = {
       binaryData: geometryData._data,

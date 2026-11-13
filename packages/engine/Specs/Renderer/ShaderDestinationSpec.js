@@ -9,13 +9,13 @@ describe("Renderer/ShaderDestination", function () {
 
   it("includesVertexShader works", function () {
     expect(
-      ShaderDestination.includesVertexShader(ShaderDestination.VERTEX)
+      ShaderDestination.includesVertexShader(ShaderDestination.VERTEX),
     ).toBe(true);
     expect(
-      ShaderDestination.includesVertexShader(ShaderDestination.FRAGMENT)
+      ShaderDestination.includesVertexShader(ShaderDestination.FRAGMENT),
     ).toBe(false);
     expect(ShaderDestination.includesVertexShader(ShaderDestination.BOTH)).toBe(
-      true
+      true,
     );
   });
 
@@ -27,13 +27,13 @@ describe("Renderer/ShaderDestination", function () {
 
   it("includesFragmentShader works", function () {
     expect(
-      ShaderDestination.includesFragmentShader(ShaderDestination.VERTEX)
+      ShaderDestination.includesFragmentShader(ShaderDestination.VERTEX),
     ).toBe(false);
     expect(
-      ShaderDestination.includesFragmentShader(ShaderDestination.FRAGMENT)
+      ShaderDestination.includesFragmentShader(ShaderDestination.FRAGMENT),
     ).toBe(true);
     expect(
-      ShaderDestination.includesFragmentShader(ShaderDestination.BOTH)
+      ShaderDestination.includesFragmentShader(ShaderDestination.BOTH),
     ).toBe(true);
   });
 });

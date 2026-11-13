@@ -1,20 +1,8 @@
-import {
-  Clock,
-  FeatureDetection,
-  Iso8601,
-  JulianDate,
-  Math as CesiumMath,
-  VideoSynchronizer,
-} from "../../index.js";
-
+import { Clock, Iso8601, JulianDate, Math as CesiumMath } from "@cesium/core";
+import { VideoSynchronizer } from "../../index.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Core/VideoSynchronizer", function () {
-  //Video textures do not work on Internet Explorer
-  if (FeatureDetection.isInternetExplorer()) {
-    return;
-  }
-
   function loadVideo() {
     const element = document.createElement("video");
     let source = document.createElement("source");
@@ -102,7 +90,7 @@ describe("Core/VideoSynchronizer", function () {
           return CesiumMath.equalsEpsilon(
             element.currentTime,
             60 - element.duration,
-            CesiumMath.EPSILON3
+            CesiumMath.EPSILON3,
           );
         });
       })
@@ -113,7 +101,7 @@ describe("Core/VideoSynchronizer", function () {
           return CesiumMath.equalsEpsilon(
             element.currentTime,
             element.duration - 1,
-            CesiumMath.EPSILON1
+            CesiumMath.EPSILON1,
           );
         });
       })
@@ -154,7 +142,7 @@ describe("Core/VideoSynchronizer", function () {
           return CesiumMath.equalsEpsilon(
             element.currentTime,
             element.duration,
-            CesiumMath.EPSILON3
+            CesiumMath.EPSILON3,
           );
         });
       })

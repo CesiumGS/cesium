@@ -1,13 +1,11 @@
 import {
-  defaultValue,
-  defined,
-  destroyObject,
   DeveloperError,
   EventHelper,
-  Fullscreen,
-  getElement,
   OrthographicFrustum,
-} from "@cesium/engine";
+  defined,
+  destroyObject,
+} from "@cesium/core";
+import { Fullscreen, getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import NoSleep from "nosleep.js";
 import createCommand from "../createCommand.js";
@@ -149,11 +147,14 @@ function VRButtonViewModel(scene, vrElement) {
   this._locked = false;
   this._noSleep = new NoSleep();
 
-  this._command = createCommand(function () {
-    toggleVR(that, scene, isVRMode, isOrthographic);
-  }, knockout.getObservable(this, "isVREnabled"));
+  this._command = createCommand(
+    function () {
+      toggleVR(that, scene, isVRMode, isOrthographic);
+    },
+    knockout.getObservable(this, "isVREnabled"),
+  );
 
-  this._vrElement = defaultValue(getElement(vrElement), document.body);
+  this._vrElement = getElement(vrElement) ?? document.body;
 
   this._callback = function () {
     if (!Fullscreen.fullscreen && isVRMode()) {

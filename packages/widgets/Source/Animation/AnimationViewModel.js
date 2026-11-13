@@ -1,12 +1,12 @@
 import {
-  binarySearch,
   ClockRange,
   ClockStep,
-  defined,
   DeveloperError,
   JulianDate,
-} from "@cesium/engine";
-
+  addAllToArray,
+  binarySearch,
+  defined,
+} from "@cesium/core";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
 import ToggleButtonViewModel from "../ToggleButtonViewModel.js";
@@ -192,13 +192,13 @@ function AnimationViewModel(clockViewModel) {
       return multiplierToAngle(
         clockViewModel.multiplier,
         that._allShuttleRingTicks,
-        clockViewModel
+        clockViewModel,
       );
     },
     set: function (angle) {
       angle = Math.max(
         Math.min(angle, maxShuttleRingAngle),
-        -maxShuttleRingAngle
+        -maxShuttleRingAngle,
       );
       const ticks = that._allShuttleRingTicks;
 
@@ -247,7 +247,7 @@ function AnimationViewModel(clockViewModel) {
     const currentTime = clockViewModel.currentTime;
     const startTime = clockViewModel.startTime;
 
-    let result = false;
+    let result;
     if (clockRange === ClockRange.LOOP_STOP) {
       result =
         JulianDate.greaterThan(currentTime, startTime) ||
@@ -342,9 +342,12 @@ function AnimationViewModel(clockViewModel) {
     tooltip: "Play Forward",
   });
 
-  const playRealtimeCommand = createCommand(function () {
-    that._clockViewModel.clockStep = ClockStep.SYSTEM_CLOCK;
-  }, knockout.getObservable(this, "_isSystemTimeAvailable"));
+  const playRealtimeCommand = createCommand(
+    function () {
+      that._clockViewModel.clockStep = ClockStep.SYSTEM_CLOCK;
+    },
+    knockout.getObservable(this, "_isSystemTimeAvailable"),
+  );
 
   this._playRealtimeViewModel = new ToggleButtonViewModel(playRealtimeCommand, {
     toggled: knockout.computed(function () {
@@ -503,7 +506,7 @@ AnimationViewModel.prototype.setShuttleRingTicks = function (positiveTicks) {
       allTicks.push(-tick);
     }
   }
-  Array.prototype.push.apply(allTicks, sortedFilteredPositiveTicks);
+  addAllToArray(allTicks, sortedFilteredPositiveTicks);
 
   this._allShuttleRingTicks = allTicks;
 };

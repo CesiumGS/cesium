@@ -1,7 +1,7 @@
+import { defined } from "@cesium/core";
 import ColorBlendMode from "../ColorBlendMode.js";
 import CPUStylingStageVS from "../../Shaders/Model/CPUStylingStageVS.js";
 import CPUStylingStageFS from "../../Shaders/Model/CPUStylingStageFS.js";
-import defined from "../../Core/defined.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import Pass from "../../Renderer/Pass.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
@@ -35,7 +35,7 @@ const CPUStylingPipelineStage = {
 CPUStylingPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const model = renderResources.model;
   const shaderBuilder = renderResources.shaderBuilder;
@@ -50,14 +50,14 @@ CPUStylingPipelineStage.process = function (
     shaderBuilder.addUniform(
       "float",
       ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     renderResources.uniformMap[
       ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME
     ] = function () {
       return ColorBlendMode.getColorBlend(
         model.colorBlendMode,
-        model.colorBlendAmount
+        model.colorBlendAmount,
       );
     };
   }
@@ -65,7 +65,7 @@ CPUStylingPipelineStage.process = function (
   shaderBuilder.addUniform(
     "bool",
     "model_commandTranslucent",
-    ShaderDestination.BOTH
+    ShaderDestination.BOTH,
   );
   renderResources.uniformMap.model_commandTranslucent = function () {
     // Always check the current value, because custom shaders may

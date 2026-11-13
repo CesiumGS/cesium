@@ -1,13 +1,9 @@
+import { Cartesian2, Color, JulianDate, TimeInterval } from "@cesium/core";
 import {
-  Cartesian2,
-  Color,
-  JulianDate,
-  TimeInterval,
   CheckerboardMaterialProperty,
   ConstantProperty,
   TimeIntervalCollectionProperty,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 
 describe("DataSources/CheckerboardMaterialProperty", function () {
@@ -67,21 +63,21 @@ describe("DataSources/CheckerboardMaterialProperty", function () {
         start: start,
         stop: stop,
         data: Color.RED,
-      })
+      }),
     );
     property.oddColor.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: Color.BLUE,
-      })
+      }),
     );
     property.repeat.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: new Cartesian2(5, 5),
-      })
+      }),
     );
 
     expect(property.isConstant).toBe(false);
@@ -146,7 +142,7 @@ describe("DataSources/CheckerboardMaterialProperty", function () {
       property,
       "repeat",
       new Cartesian2(5, 5),
-      new Cartesian2(7, 7)
+      new Cartesian2(7, 7),
     );
   });
 });

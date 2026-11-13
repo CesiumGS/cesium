@@ -1,7 +1,6 @@
-import { Ellipsoid, Globe, SceneMode } from "@cesium/engine";
-
+import { Ellipsoid } from "@cesium/core";
+import { Globe, SceneMode } from "@cesium/engine";
 import { SceneModePickerViewModel } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -101,5 +100,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -1,7 +1,5 @@
+import { Color, JulianDate, TimeInterval } from "@cesium/core";
 import {
-  Color,
-  JulianDate,
-  TimeInterval,
   ColorMaterialProperty,
   ConstantProperty,
   TimeIntervalCollectionProperty,
@@ -45,7 +43,7 @@ describe("DataSources/ColorMaterialProperty", function () {
         start: start,
         stop: stop,
         data: Color.BLUE,
-      })
+      }),
     );
 
     expect(property.isConstant).toBe(false);
@@ -90,7 +88,7 @@ describe("DataSources/ColorMaterialProperty", function () {
       property,
       "color",
       property.color,
-      oldValue
+      oldValue,
     );
     listener.calls.reset();
 
@@ -99,7 +97,7 @@ describe("DataSources/ColorMaterialProperty", function () {
       property,
       "color",
       property.color,
-      property.color
+      property.color,
     );
     listener.calls.reset();
 

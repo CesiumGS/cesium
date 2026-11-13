@@ -1,7 +1,4 @@
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
+import { DeveloperError, Event, JulianDate, defined } from "@cesium/core";
 import Property from "./Property.js";
 
 function resolve(that) {
@@ -22,7 +19,7 @@ function resolve(that) {
       // target entity was found. listen for changes to entity definition
       targetEntity.definitionChanged.addEventListener(
         ReferenceProperty.prototype._onTargetEntityDefinitionChanged,
-        that
+        that,
       );
       that._targetEntity = targetEntity;
     }
@@ -115,7 +112,7 @@ function ReferenceProperty(targetCollection, targetId, targetPropertyNames) {
 
   targetCollection.collectionChanged.addEventListener(
     ReferenceProperty.prototype._onCollectionChanged,
-    this
+    this,
   );
 }
 
@@ -284,7 +281,7 @@ ReferenceProperty.prototype.getValue = function (time, result) {
 ReferenceProperty.prototype.getValueInReferenceFrame = function (
   time,
   referenceFrame,
-  result
+  result,
 ) {
   const target = resolve(this);
   return defined(target)
@@ -341,7 +338,7 @@ ReferenceProperty.prototype._onTargetEntityDefinitionChanged = function (
   targetEntity,
   name,
   value,
-  oldValue
+  oldValue,
 ) {
   if (defined(this._targetProperty) && this._targetPropertyNames[0] === name) {
     this._targetProperty = undefined;
@@ -352,13 +349,13 @@ ReferenceProperty.prototype._onTargetEntityDefinitionChanged = function (
 ReferenceProperty.prototype._onCollectionChanged = function (
   collection,
   added,
-  removed
+  removed,
 ) {
   let targetEntity = this._targetEntity;
   if (defined(targetEntity) && removed.indexOf(targetEntity) !== -1) {
     targetEntity.definitionChanged.removeEventListener(
       ReferenceProperty.prototype._onTargetEntityDefinitionChanged,
-      this
+      this,
     );
     this._targetEntity = this._targetProperty = undefined;
   } else if (!defined(targetEntity)) {

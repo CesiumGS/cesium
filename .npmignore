@@ -1,4 +1,3 @@
-/.concierge
 /.eslintcache
 /.externalToolBuilders
 /.gitattributes
@@ -24,6 +23,8 @@
 /scripts/
 /favicon.ico
 /gulpfile.js
+/gulpfile.apps.js
+/gulpfile.makezip.js
 /index.html
 /index.release.html
 /launches
@@ -31,7 +32,6 @@
 /server.js
 /Source/copyrightHeader.js
 /Specs
-/ThirdParty
 /Tools
 /web.config
 

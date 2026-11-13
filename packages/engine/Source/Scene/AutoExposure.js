@@ -1,10 +1,12 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import {
+  Cartesian2,
+  Color,
+  PixelDatatype,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 
 /**
  * A post process stage that will get the luminance value at each pixel and
@@ -149,7 +151,7 @@ function createFramebuffers(autoexposure, context) {
     lastTexture.width,
     lastTexture.height,
     1,
-    pixelDatatype
+    pixelDatatype,
   );
   autoexposure._framebuffers = framebuffers;
 }
@@ -267,7 +269,7 @@ function createCommands(autoexposure, context) {
       {
         framebuffer: framebuffers[i].framebuffer,
         uniformMap: createUniformMap(autoexposure, i),
-      }
+      },
     );
   }
   autoexposure._commands = commands;
@@ -325,9 +327,8 @@ AutoExposure.prototype.update = function (context) {
   const framebuffers = this._framebuffers;
   const temp = framebuffers[framebuffers.length - 1];
   framebuffers[framebuffers.length - 1] = this._previousLuminance;
-  this._commands[
-    this._commands.length - 1
-  ].framebuffer = this._previousLuminance.framebuffer;
+  this._commands[this._commands.length - 1].framebuffer =
+    this._previousLuminance.framebuffer;
   this._previousLuminance = temp;
 };
 

@@ -1,6 +1,5 @@
+import { BoundingRectangle, PixelFormat } from "@cesium/core";
 import {
-  BoundingRectangle,
-  PixelFormat,
   Buffer,
   BufferUsage,
   ComputeCommand,
@@ -10,7 +9,6 @@ import {
   Material,
   ViewportQuad,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -158,5 +156,5 @@ describe(
       expect(scene).notToRender([0, 0, 0, 255]);
     });
   },
-  "WebGL"
+  "WebGL",
 );

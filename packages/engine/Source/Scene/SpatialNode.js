@@ -1,11 +1,13 @@
-import binarySearch from "../Core/binarySearch.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import CesiumMath from "../Core/Math.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  Cartesian3,
+  DeveloperError,
+  Math as CesiumMath,
+  Matrix3,
+  OrientedBoundingBox,
+  binarySearch,
+  defined,
+} from "@cesium/core";
 import KeyframeNode from "./KeyframeNode.js";
-import Matrix3 from "../Core/Matrix3.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 
 /**
  * @alias SpatialNode
@@ -75,12 +77,12 @@ SpatialNode.prototype.computeBoundingVolumes = function (shape) {
     this.x,
     this.y,
     this.z,
-    this.orientedBoundingBox
+    this.orientedBoundingBox,
   );
 
   const halfScale = Matrix3.getScale(
     this.orientedBoundingBox.halfAxes,
-    scratchObbHalfScale
+    scratchObbHalfScale,
   );
   const maximumScale = 2.0 * Cartesian3.maximumComponent(halfScale);
   this.approximateVoxelSize =
@@ -134,7 +136,7 @@ SpatialNode.prototype.visibility = function (frameState, visibilityPlaneMask) {
  */
 SpatialNode.prototype.computeScreenSpaceError = function (
   cameraPosition,
-  screenSpaceErrorMultiplier
+  screenSpaceErrorMultiplier,
 ) {
   const obb = this.orientedBoundingBox;
 
@@ -164,7 +166,7 @@ function findKeyframeIndex(keyframe, keyframeNodes) {
   return binarySearch(
     keyframeNodes,
     scratchBinarySearchKeyframeNode,
-    KeyframeNode.searchComparator
+    KeyframeNode.searchComparator,
   );
 }
 
@@ -174,7 +176,7 @@ function findKeyframeIndex(keyframe, keyframeNodes) {
  * @param {number} keyframeLocation
  */
 SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
-  keyframeLocation
+  keyframeLocation,
 ) {
   let spatialNode = this;
   const startLevel = spatialNode.level;
@@ -193,7 +195,7 @@ SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
     if (renderableKeyframeNodes.length >= 1) {
       const indexPrev = getKeyframeIndexPrev(
         targetKeyframePrev,
-        renderableKeyframeNodes
+        renderableKeyframeNodes,
       );
       const keyframeNodePrev = renderableKeyframeNodes[indexPrev];
 
@@ -207,7 +209,7 @@ SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
       const distancePrev = targetKeyframePrev - keyframeNodePrev.keyframe;
       const weightedDistancePrev = getWeightedKeyframeDistance(
         startLevel - spatialNode.level,
-        distancePrev
+        distancePrev,
       );
       if (weightedDistancePrev < minimumDistancePrev) {
         minimumDistancePrev = weightedDistancePrev;
@@ -217,7 +219,7 @@ SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
       const distanceNext = keyframeNodeNext.keyframe - targetKeyframeNext;
       const weightedDistanceNext = getWeightedKeyframeDistance(
         startLevel - spatialNode.level,
-        distanceNext
+        distanceNext,
       );
       if (weightedDistanceNext < minimumDistanceNext) {
         minimumDistanceNext = weightedDistanceNext;
@@ -249,7 +251,7 @@ SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
           (keyframeLocation - bestKeyframePrev) /
             (bestKeyframeNext - bestKeyframePrev),
           0.0,
-          1.0
+          1.0,
         );
 };
 
@@ -294,7 +296,7 @@ SpatialNode.prototype.createKeyframeNode = function (keyframe) {
  */
 SpatialNode.prototype.destroyKeyframeNode = function (
   keyframeNode,
-  megatextures
+  megatextures,
 ) {
   const keyframe = keyframeNode.keyframe;
   const keyframeIndex = findKeyframeIndex(keyframe, this.keyframeNodes);
@@ -311,7 +313,7 @@ SpatialNode.prototype.destroyKeyframeNode = function (
 
     const renderableKeyframeNodeIndex = findKeyframeIndex(
       keyframe,
-      this.renderableKeyframeNodes
+      this.renderableKeyframeNodes,
     );
     if (renderableKeyframeNodeIndex < 0) {
       throw new DeveloperError("Renderable keyframe node does not exist.");
@@ -320,12 +322,7 @@ SpatialNode.prototype.destroyKeyframeNode = function (
     this.renderableKeyframeNodes.splice(renderableKeyframeNodeIndex, 1);
   }
 
-  keyframeNode.spatialNode = undefined;
-  keyframeNode.state = KeyframeNode.LoadState.UNLOADED;
-  keyframeNode.metadata = {};
-  keyframeNode.megatextureIndex = -1;
-  keyframeNode.priority = -Number.MAX_VALUE;
-  keyframeNode.highPriorityFrameNumber = -1;
+  keyframeNode.unload();
 };
 
 /**
@@ -334,27 +331,25 @@ SpatialNode.prototype.destroyKeyframeNode = function (
  */
 SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
   keyframeNode,
-  megatextures
+  megatextures,
 ) {
   if (
-    keyframeNode.state !== KeyframeNode.LoadState.RECEIVED ||
     keyframeNode.megatextureIndex !== -1 ||
-    keyframeNode.metadata.length !== megatextures.length
+    keyframeNode.content.metadata.length !== megatextures.length
   ) {
     throw new DeveloperError("Keyframe node cannot be added to megatexture");
   }
 
+  const { metadata } = keyframeNode.content;
   for (let i = 0; i < megatextures.length; i++) {
     const megatexture = megatextures[i];
-    keyframeNode.megatextureIndex = megatexture.add(keyframeNode.metadata[i]);
+    keyframeNode.megatextureIndex = megatexture.add(metadata[i]);
   }
-
-  keyframeNode.state = KeyframeNode.LoadState.LOADED;
 
   const renderableKeyframeNodes = this.renderableKeyframeNodes;
   let renderableKeyframeNodeIndex = findKeyframeIndex(
     keyframeNode.keyframe,
-    renderableKeyframeNodes
+    renderableKeyframeNodes,
   );
   if (renderableKeyframeNodeIndex >= 0) {
     throw new DeveloperError("Keyframe already renderable");

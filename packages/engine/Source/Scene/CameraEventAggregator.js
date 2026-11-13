@@ -1,38 +1,57 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  Cartesian2,
+  DeveloperError,
+  Math as CesiumMath,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import KeyboardEventModifier from "../Core/KeyboardEventModifier.js";
-import CesiumMath from "../Core/Math.js";
 import ScreenSpaceEventHandler from "../Core/ScreenSpaceEventHandler.js";
 import ScreenSpaceEventType from "../Core/ScreenSpaceEventType.js";
 import CameraEventType from "./CameraEventType.js";
 
-function getKey(type, modifier) {
-  let key = type;
-  if (defined(modifier)) {
-    key += `+${modifier}`;
+const keyboardModifierCombinations = [
+  KeyboardEventModifier.SHIFT,
+  KeyboardEventModifier.CTRL,
+  KeyboardEventModifier.ALT,
+  [KeyboardEventModifier.SHIFT, KeyboardEventModifier.CTRL],
+  [KeyboardEventModifier.SHIFT, KeyboardEventModifier.ALT],
+  [KeyboardEventModifier.CTRL, KeyboardEventModifier.ALT],
+  [
+    KeyboardEventModifier.SHIFT,
+    KeyboardEventModifier.CTRL,
+    KeyboardEventModifier.ALT,
+  ],
+];
+
+function getKey(type, modifiers) {
+  if (!defined(modifiers)) {
+    return `${type}`;
   }
-  return key;
+
+  const modifierList = Array.isArray(modifiers)
+    ? modifiers.toSorted()
+    : [modifiers];
+  return `${type}+${modifierList.join("+")}`;
 }
 
 function clonePinchMovement(pinchMovement, result) {
   Cartesian2.clone(
     pinchMovement.distance.startPosition,
-    result.distance.startPosition
+    result.distance.startPosition,
   );
   Cartesian2.clone(
     pinchMovement.distance.endPosition,
-    result.distance.endPosition
+    result.distance.endPosition,
   );
 
   Cartesian2.clone(
     pinchMovement.angleAndHeight.startPosition,
-    result.angleAndHeight.startPosition
+    result.angleAndHeight.startPosition,
   );
   Cartesian2.clone(
     pinchMovement.angleAndHeight.endPosition,
-    result.angleAndHeight.endPosition
+    result.angleAndHeight.endPosition,
   );
 }
 
@@ -74,11 +93,11 @@ function listenToPinch(aggregator, modifier, canvas) {
         event.position1,
         event.position2,
         0.5,
-        eventStartPosition[key]
+        eventStartPosition[key],
       );
     },
     ScreenSpaceEventType.PINCH_START,
-    modifier
+    modifier,
   );
 
   aggregator._eventHandler.setInputAction(
@@ -88,7 +107,7 @@ function listenToPinch(aggregator, modifier, canvas) {
       releaseTime[key] = new Date();
     },
     ScreenSpaceEventType.PINCH_END,
-    modifier
+    modifier,
   );
 
   aggregator._eventHandler.setInputAction(
@@ -98,11 +117,11 @@ function listenToPinch(aggregator, modifier, canvas) {
         if (!update[key]) {
           Cartesian2.clone(
             mouseMovement.distance.endPosition,
-            movement.distance.endPosition
+            movement.distance.endPosition,
           );
           Cartesian2.clone(
             mouseMovement.angleAndHeight.endPosition,
-            movement.angleAndHeight.endPosition
+            movement.angleAndHeight.endPosition,
           );
         } else {
           clonePinchMovement(mouseMovement, movement);
@@ -126,7 +145,7 @@ function listenToPinch(aggregator, modifier, canvas) {
       }
     },
     ScreenSpaceEventType.PINCH_MOVE,
-    modifier
+    modifier,
   );
 }
 
@@ -168,7 +187,7 @@ function listenToWheel(aggregator, modifier) {
       update[key] = false;
     },
     ScreenSpaceEventType.WHEEL,
-    modifier
+    modifier,
   );
 }
 
@@ -178,7 +197,6 @@ function listenMouseButtonDownUp(aggregator, modifier, type) {
   const isDown = aggregator._isDown;
   const eventStartPosition = aggregator._eventStartPosition;
   const pressTime = aggregator._pressTime;
-  const releaseTime = aggregator._releaseTime;
 
   isDown[key] = false;
   eventStartPosition[key] = new Cartesian2();
@@ -214,23 +232,67 @@ function listenMouseButtonDownUp(aggregator, modifier, type) {
       Cartesian2.clone(event.position, eventStartPosition[key]);
     },
     down,
-    modifier
+    modifier,
   );
 
   aggregator._eventHandler.setInputAction(
     function () {
-      aggregator._buttonsDown = Math.max(aggregator._buttonsDown - 1, 0);
-      isDown[key] = false;
-      releaseTime[key] = new Date();
+      cancelMouseDownAction(getKey(type, undefined), aggregator);
+      for (const modifier of keyboardModifierCombinations) {
+        const cancelKey = getKey(type, modifier);
+        cancelMouseDownAction(cancelKey, aggregator);
+      }
     },
     up,
-    modifier
+    modifier,
   );
+}
+
+function cancelMouseDownAction(cancelKey, aggregator) {
+  const releaseTime = aggregator._releaseTime;
+  const isDown = aggregator._isDown;
+  if (isDown[cancelKey]) {
+    aggregator._buttonsDown = Math.max(aggregator._buttonsDown - 1, 0);
+  }
+  isDown[cancelKey] = false;
+  releaseTime[cancelKey] = new Date();
 }
 
 function cloneMouseMovement(mouseMovement, result) {
   Cartesian2.clone(mouseMovement.startPosition, result.startPosition);
   Cartesian2.clone(mouseMovement.endPosition, result.endPosition);
+}
+
+function refreshMouseDownStatus(type, modifier, aggregator) {
+  // first: Judge if the mouse is pressed
+  const isDown = aggregator._isDown;
+  let anyButtonIsDown = false;
+  const currentKey = getKey(type, modifier);
+  for (const [downKey, downValue] of Object.entries(isDown)) {
+    if (downKey.startsWith(type) && downValue && downKey !== currentKey) {
+      anyButtonIsDown = true;
+      cancelMouseDownAction(downKey, aggregator);
+    }
+  }
+
+  if (!anyButtonIsDown) {
+    return;
+  }
+
+  // second: If it is pressed, it will be transferred to the current modifier.
+  const pressTime = aggregator._pressTime;
+  let lastMovement = aggregator._lastMovement[currentKey];
+  if (!defined(lastMovement)) {
+    lastMovement = aggregator._lastMovement[currentKey] = {
+      startPosition: new Cartesian2(),
+      endPosition: new Cartesian2(),
+      valid: false,
+    };
+  }
+  aggregator._buttonsDown++;
+  lastMovement.valid = false;
+  isDown[currentKey] = true;
+  pressTime[currentKey] = new Date();
 }
 
 function listenMouseMove(aggregator, modifier) {
@@ -271,11 +333,12 @@ function listenMouseMove(aggregator, modifier) {
           const type = CameraEventType[typeName];
           if (defined(type)) {
             const key = getKey(type, modifier);
+            refreshMouseDownStatus(type, modifier, aggregator);
             if (isDown[key]) {
               if (!update[key]) {
                 Cartesian2.clone(
                   mouseMovement.endPosition,
-                  movement[key].endPosition
+                  movement[key].endPosition,
                 );
               } else {
                 cloneMouseMovement(movement[key], lastMovement[key]);
@@ -290,11 +353,11 @@ function listenMouseMove(aggregator, modifier) {
 
       Cartesian2.clone(
         mouseMovement.endPosition,
-        aggregator._currentMousePosition
+        aggregator._currentMousePosition,
       );
     },
     ScreenSpaceEventType.MOUSE_MOVE,
-    modifier
+    modifier,
   );
 }
 
@@ -338,18 +401,13 @@ function CameraEventAggregator(canvas) {
   listenMouseButtonDownUp(this, undefined, CameraEventType.MIDDLE_DRAG);
   listenMouseMove(this, undefined);
 
-  for (const modifierName in KeyboardEventModifier) {
-    if (KeyboardEventModifier.hasOwnProperty(modifierName)) {
-      const modifier = KeyboardEventModifier[modifierName];
-      if (defined(modifier)) {
-        listenToWheel(this, modifier);
-        listenToPinch(this, modifier, canvas);
-        listenMouseButtonDownUp(this, modifier, CameraEventType.LEFT_DRAG);
-        listenMouseButtonDownUp(this, modifier, CameraEventType.RIGHT_DRAG);
-        listenMouseButtonDownUp(this, modifier, CameraEventType.MIDDLE_DRAG);
-        listenMouseMove(this, modifier);
-      }
-    }
+  for (const modifiers of keyboardModifierCombinations) {
+    listenToWheel(this, modifiers);
+    listenToPinch(this, modifiers, canvas);
+    listenMouseButtonDownUp(this, modifiers, CameraEventType.LEFT_DRAG);
+    listenMouseButtonDownUp(this, modifiers, CameraEventType.RIGHT_DRAG);
+    listenMouseButtonDownUp(this, modifiers, CameraEventType.MIDDLE_DRAG);
+    listenMouseMove(this, modifiers);
   }
 }
 
@@ -473,7 +531,7 @@ CameraEventAggregator.prototype.isButtonDown = function (type, modifier) {
  */
 CameraEventAggregator.prototype.getStartMousePosition = function (
   type,
-  modifier
+  modifier,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(type)) {
@@ -516,7 +574,7 @@ CameraEventAggregator.prototype.getButtonPressTime = function (type, modifier) {
  */
 CameraEventAggregator.prototype.getButtonReleaseTime = function (
   type,
-  modifier
+  modifier,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(type)) {

@@ -1,19 +1,12 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
-import VertexFormat from "../Core/VertexFormat.js";
+import { Frozen, VertexFormat, defined } from "@cesium/core";
 import PolylineMaterialAppearanceVS from "../Shaders/Appearances/PolylineMaterialAppearanceVS.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import PolylineFS from "../Shaders/PolylineFS.js";
 import Appearance from "./Appearance.js";
 import Material from "./Material.js";
 
-let defaultVertexShaderSource = `${PolylineCommon}\n${PolylineMaterialAppearanceVS}`;
+const defaultVertexShaderSource = `#define CLIP_POLYLINE \n${PolylineCommon}\n${PolylineMaterialAppearanceVS}`;
 const defaultFragmentShaderSource = PolylineFS;
-
-if (!FeatureDetection.isInternetExplorer()) {
-  defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
-}
 
 /**
  * An appearance for {@link PolylineGeometry} that supports shading with materials.
@@ -48,9 +41,9 @@ if (!FeatureDetection.isInternetExplorer()) {
  * });
  */
 function PolylineMaterialAppearance(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  const translucent = defaultValue(options.translucent, true);
+  const translucent = options.translucent ?? true;
   const closed = false;
   const vertexFormat = PolylineMaterialAppearance.VERTEX_FORMAT;
 
@@ -78,18 +71,14 @@ function PolylineMaterialAppearance(options) {
    */
   this.translucent = translucent;
 
-  this._vertexShaderSource = defaultValue(
-    options.vertexShaderSource,
-    defaultVertexShaderSource
-  );
-  this._fragmentShaderSource = defaultValue(
-    options.fragmentShaderSource,
-    defaultFragmentShaderSource
-  );
+  this._vertexShaderSource =
+    options.vertexShaderSource ?? defaultVertexShaderSource;
+  this._fragmentShaderSource =
+    options.fragmentShaderSource ?? defaultFragmentShaderSource;
   this._renderState = Appearance.getDefaultRenderState(
     translucent,
     closed,
-    options.renderState
+    options.renderState,
   );
   this._closed = closed;
 

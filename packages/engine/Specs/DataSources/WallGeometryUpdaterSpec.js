@@ -4,6 +4,8 @@ import {
   JulianDate,
   TimeInterval,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
   ConstantProperty,
   Entity,
   PropertyArray,
@@ -14,7 +16,6 @@ import {
   WallGraphics,
   PrimitiveCollection,
 } from "../../index.js";
-
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createGeometryUpdaterSpecs from "../../../../Specs/createGeometryUpdaterSpecs.js";
@@ -40,7 +41,9 @@ describe(
     function createBasicWall() {
       const wall = new WallGraphics();
       wall.positions = new ConstantProperty(
-        Cartesian3.fromRadiansArrayHeights([0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1])
+        Cartesian3.fromRadiansArrayHeights([
+          0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1,
+        ]),
       );
       const entity = new Entity();
       entity.wall = wall;
@@ -79,7 +82,7 @@ describe(
           start: time,
           stop: time2,
           data: [],
-        })
+        }),
       );
       updater._onEntityPropertyChanged(entity, "wall");
 
@@ -95,7 +98,7 @@ describe(
           start: time,
           stop: time2,
           data: [],
-        })
+        }),
       );
       updater._onEntityPropertyChanged(entity, "wall");
 
@@ -147,7 +150,7 @@ describe(
     it("dynamic updater sets properties", function () {
       const wall = new WallGraphics();
       wall.positions = createDynamicProperty(
-        Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1])
+        Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1]),
       );
       wall.show = createDynamicProperty(true);
       wall.minimumHeights = createDynamicProperty([1, 2, 3, 4]);
@@ -163,7 +166,7 @@ describe(
       const updater = new WallGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         new PrimitiveCollection(),
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
       dynamicUpdater.update(time);
 
@@ -215,15 +218,15 @@ describe(
       WallGeometryUpdater,
       "wall",
       createBasicWall,
-      getScene
+      getScene,
     );
 
     createDynamicGeometryUpdaterSpecs(
       WallGeometryUpdater,
       "wall",
       createDynamicWall,
-      getScene
+      getScene,
     );
   },
-  "WebGL"
+  "WebGL",
 );

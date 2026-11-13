@@ -1,6 +1,4 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
+import { Cartesian3, Matrix4, WebGLConstants } from "@cesium/core";
 
 const viewerPositionWCScratch = new Cartesian3();
 
@@ -158,6 +156,90 @@ const AutomaticUniforms = {
     datatype: WebGLConstants.SAMPLER_2D,
     getValue: function (uniformState) {
       return uniformState.globeDepthTexture;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform representing a texture containing edge IDs
+   * from the 3D Tiles edge rendering pass. Used for edge detection and
+   * avoiding z-fighting between edges and surfaces.
+   *
+   * @example
+   * // GLSL declaration
+   * uniform sampler2D czm_edgeIdTexture;
+   *
+   * // Get the edge ID at the current fragment
+   * vec2 coords = gl_FragCoord.xy / czm_viewport.zw;
+   * vec4 edgeId = texture(czm_edgeIdTexture, coords);
+   */
+  czm_edgeIdTexture: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.SAMPLER_2D,
+    getValue: function (uniformState) {
+      return uniformState.edgeIdTexture;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform containing the edge color texture.
+   * This texture contains the edge content rendered during the CESIUM_3D_TILE_EDGES pass.
+   *
+   * @example
+   * // GLSL declaration
+   * uniform sampler2D czm_edgeColorTexture;
+   *
+   * // Sample the edge color at the current fragment
+   * vec2 coords = gl_FragCoord.xy / czm_viewport.zw;
+   * vec4 edgeColor = texture(czm_edgeColorTexture, coords);
+   */
+  czm_edgeColorTexture: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.SAMPLER_2D,
+    getValue: function (uniformState) {
+      return uniformState.edgeColorTexture;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform containing the packed depth texture produced by the
+   * edge visibility pass. The depth is packed via czm_packDepth and should be
+   * unpacked with czm_unpackDepth.
+   *
+   * @example
+   * // GLSL declaration
+   * uniform sampler2D czm_edgeDepthTexture;
+   *
+   * vec2 coords = gl_FragCoord.xy / czm_viewport.zw;
+   * float d = czm_unpackDepth(texture(czm_edgeDepthTexture, coords));
+   */
+  czm_edgeDepthTexture: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.SAMPLER_2D,
+    getValue: function (uniformState) {
+      return uniformState.edgeDepthTexture;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform containing the feature-ID texture produced by
+   * the planar fill pre-pass (BENTLEY_materials_planar_fill). Non-behind
+   * planar fill geometry writes its per-fragment feature ID here so that
+   * behind fills can test whether the existing pixel belongs to the same
+   * logical object.
+   *
+   * @example
+   * // GLSL declaration
+   * uniform sampler2D czm_planarFillIdTexture;
+   *
+   * // Sample
+   * vec2 coords = gl_FragCoord.xy / czm_viewport.zw;
+   * float existingFeatureId = texture(czm_planarFillIdTexture, coords).r;
+   */
+  czm_planarFillIdTexture: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.SAMPLER_2D,
+    getValue: function (uniformState) {
+      return uniformState.planarFillIdTexture;
     },
   }),
 
@@ -925,6 +1007,27 @@ const AutomaticUniforms = {
   }),
 
   /**
+   * An automatic GLSL uniform containing the geodetic longitude (<code>x</code>),
+   * latitude (<code>y</code>) in radians and height (<code>z</code>) in meters of the
+   * eye (camera). The <code>z</code> component matches {@link czm_eyeHeight}.
+   * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   *
+   * @example
+   * // GLSL declaration
+   * uniform vec3 czm_eyeCartographic;
+   *
+   * // Example
+   * float cameraLatitude = czm_eyeCartographic.y;
+   */
+  czm_eyeCartographic: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_VEC3,
+    getValue: function (uniformState) {
+      return uniformState.eyeCartographic;
+    },
+  }),
+
+  /**
    * An automatic GLSL uniform containing height (<code>x</code>) and height squared (<code>y</code>)
    * in meters of the eye (camera) above the 2D world plane. This uniform is only valid
    * when the {@link SceneMode} is <code>SCENE2D</code>.
@@ -967,9 +1070,30 @@ const AutomaticUniforms = {
   }),
 
   /**
+   * An automatic GLSL uniform containing a 3x3 rotation from eye coordinates to an
+   * east-north-up coordinate system centered at the position on the ellipsoid below
+   * the camera.
+   * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   *
+   * @example
+   * // GLSL declaration
+   * uniform mat3 czm_eyeToEnu;
+   *
+   * // Example
+   * vec3 enu = czm_eyeToEnu * positionEC;
+   */
+  czm_eyeToEnu: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_MAT3,
+    getValue: function (uniformState) {
+      return uniformState.eyeToEnu;
+    },
+  }),
+
+  /**
    * An automatic GLSL uniform containing the transform from model coordinates
    * to an east-north-up coordinate system centered at the position on the
-   * ellipsoid below the camera.
+   * ellipsoid nearest to the camera.
    * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
    */
   czm_modelToEnu: new AutomaticUniform({
@@ -981,7 +1105,7 @@ const AutomaticUniforms = {
   }),
 
   /**
-   * An automatic GLSL uniform containing the the inverse of
+   * An automatic GLSL uniform containing the inverse of
    * {@link AutomaticUniforms.czm_modelToEnu}.
    * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
    */
@@ -1330,7 +1454,7 @@ const AutomaticUniforms = {
     getValue: function (uniformState) {
       return Matrix4.getTranslation(
         uniformState.inverseView,
-        viewerPositionWCScratch
+        viewerPositionWCScratch,
       );
     },
   }),
@@ -1488,11 +1612,11 @@ const AutomaticUniforms = {
    *
    * @example
    * // GLSL declaration
-   * uniform sampler2D czm_specularEnvironmentMaps;
+   * uniform samplerCube czm_specularEnvironmentMaps;
    */
   czm_specularEnvironmentMaps: new AutomaticUniform({
     size: 1,
-    datatype: WebGLConstants.SAMPLER_2D,
+    datatype: WebGLConstants.SAMPLER_CUBE,
     getValue: function (uniformState) {
       return uniformState.specularEnvironmentMaps;
     },
@@ -1574,6 +1698,19 @@ const AutomaticUniforms = {
     datatype: WebGLConstants.FLOAT,
     getValue: function (uniformState) {
       return uniformState.fogDensity;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform scalar used to mix a color with the fog color based on the distance to the camera.
+   *
+   * @see czm_fog
+   */
+  czm_fogVisualDensityScalar: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.fogVisualDensityScalar;
     },
   }),
 

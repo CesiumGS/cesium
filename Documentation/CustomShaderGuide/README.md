@@ -60,8 +60,8 @@ const customShader = new Cesium.CustomShader({
 
 ## Applying A Custom Shader
 
-Custom shaders can be applied to either 3D Tiles or a `Model` as
-follows:
+Custom shaders can be applied to either 3D Tiles, a `Model`, or
+a `VoxelPrimitive` as follows:
 
 ```js
 const customShader = new Cesium.CustomShader(/* ... */);
@@ -69,16 +69,27 @@ const customShader = new Cesium.CustomShader(/* ... */);
 // Applying to all tiles in a tileset.
 const tileset = await Cesium.Cesium3DTileset.fromUrl(
   "http://example.com/tileset.json", {
-    customShader: customShader
+    customShader: customShader,
 });
 viewer.scene.primitives.add(tileset);
 
 // Applying to a model directly
 const model = await Cesium.Model.fromGltfAsync({,
   url: "http://example.com/model.gltf",
-  customShader: customShader
+  customShader: customShader,
+});
+
+// Applying to a VoxelPrimitive
+const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
+  "http://example.com/tileset.json",
+);
+const voxelPrimitive = new Cesium.VoxelPrimitive({
+  provider: provider,
+  customShader: customShader,
 });
 ```
+
+Voxels and Gaussian Splats only support subsets of custom shader functionality. See [Using custom shaders for voxel rendering](#using-custom-shaders-for-voxel-rendering) and [Using custom shaders for Gaussian splat rendering](#using-custom-shaders-for-gaussian-splat-rendering).
 
 ## Uniforms
 
@@ -229,7 +240,7 @@ struct FragmentInput {
 };
 ```
 
-## Attributes Struct
+## `Attributes` Struct
 
 The `Attributes` struct is dynamically generated given the variables used in
 the custom shader and the attributes available in the primitive to render.
@@ -574,8 +585,17 @@ glTF extension (or the older
 The following types of metadata are currently supported:
 
 - property attributes from the `EXT_structural_metadata` glTF extension.
-- property textures from the `EXT_structural_metadata` glTF extension. Only
-  types with `componentType: UINT8` are currently supported.
+- property textures from the `EXT_structural_metadata` glTF extension.
+- property tables from the `EXT_structural_metadata` glTF extension.
+
+Not all data types are currently supported. In WebGL 1, only `UINT8` is supported. In
+WebGL 2, most basic types are supported (e.g. floating point numbers and signed and unsigned integers
+of various precisions), with the following limitations:
+
+- No support for boolean-type metadata.
+- No support for strings or variable-length arrays.
+- No support for matrix-type metadata.
+- No support for data types exceeding 4 bytes (e.g. larger fixed-size arrays, vectors of large component types. Note: single-component 64-bit numeric types _are_ supported, but downcast to 32-bit types).
 
 Regardless of the source of metadata, the properties are collected into a single
 struct by property ID. Consider the following metadata class:
@@ -871,3 +891,67 @@ even when `lightingModel` is `LightingModel.UNLIT`.
 
 When `scene.highDynamicRange` is `false`, the final computed color
 (after custom shaders and lighting) is converted to `sRGB`.
+
+## Using custom shaders for voxel rendering
+
+Voxel rendering uses a subset of custom shader functionality.
+
+The supplied shader is executed in the fragment shader _only_. (If a `vertexShaderText` is supplied, it will be ignored.)
+The supplied fragment shader is executed at each step of the raymarching through the voxel.
+The final rendered color at a given pixel will be an alpha-blended composition of the shader executions at all steps along the ray.
+
+The `FragmentInput` struct in a voxel shader has some differences with other custom shaders:
+
+- `Attributes`: Only `positionEC` and `normalEC` properties are supported.
+- `FeatureIds` is not present in voxel shaders.
+- `Metadata` is fully supported.
+- `MetadataClass` is not present.
+- `MetadataStatistics`: The only supported statistics are `min` and `max`.
+
+## Using custom shaders for Gaussian splat rendering
+
+Gaussian splat tilesets (using the `KHR_gaussian_splatting` glTF extension) support a subset of custom shader functionality. The custom shader is set on the tileset, as with other 3D Tiles:
+
+```js
+tileset.customShader = new Cesium.CustomShader({
+  uniforms: {
+    u_tint: {
+      type: Cesium.UniformType.VEC3,
+      value: new Cesium.Cartesian3(1.0, 0.5, 0.5),
+    },
+  },
+  fragmentShaderText: `
+    void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+      material.diffuse *= u_tint;
+      // Hide the splats of the feature with ID 0
+      if (fsInput.attributes.featureId_0 == 0) {
+        material.alpha = 0.0;
+      }
+    }
+  `,
+});
+```
+
+The supplied shader is executed in the fragment shader _only_. If a `vertexShaderText` is supplied, it will be ignored. Splat positions, scales and rotations are decoded and projected by a built-in vertex shader, and each splat is drawn as a camera-facing quad. The fragment shader is then executed for every fragment of that quad that lies within the Gaussian footprint of the splat.
+
+Since there is no custom vertex shader, `varyings` are not supported. Uniforms, including texture uniforms, are supported.
+
+The `FragmentInput` struct for Gaussian splats only contains an `Attributes` struct, with the following properties:
+
+| Attribute                     | Type   | Description                                                                                                                                                                                                           |
+| ----------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `positionEC`                  | `vec3` | Position of the fragment in eye coordinates, reconstructed from the depth of the splat quad. All fragments of a splat lie on a plane facing the camera, at the depth of the splat center.                             |
+| `positionWC`                  | `vec3` | Same position in world coordinates (ECEF).                                                                                                                                                                            |
+| `normalEC`                    | `vec3` | Always `vec3(0.0, 0.0, 1.0)`: splats have no surface normal, so the quad is treated as facing the camera.                                                                                                             |
+| `color_0`                     | `vec4` | Color of the splat at this fragment, not premultiplied. `rgb` includes the view-dependent spherical harmonics contribution, if present. `a` is the splat opacity multiplied by the Gaussian falloff at this fragment. |
+| `featureId_0`...`featureId_3` | `int`  | Per-splat feature IDs from `EXT_mesh_features`, one field per feature ID set. At most 4 sets are supported; additional sets are ignored. `featureId_0` is `0` when the tileset has no feature IDs.                    |
+
+`FeatureIds`, `Metadata`, `MetadataClass` and `MetadataStatistics` are not present in Gaussian splat shaders. Feature IDs are accessed through `fsInput.attributes.featureId_N` rather than `fsInput.featureIds`.
+
+The `material` passed to `fragmentMain` is initialized with the splat color: `material.diffuse` is `color_0.rgb` and `material.alpha` is `color_0.a`. No lighting is applied to Gaussian splats, so only `material.diffuse` and `material.alpha` affect the final color. Other material properties, as well as `mode` and `lightingModel`, are ignored.
+
+The `translucencyMode` option controls how splats are blended:
+
+- `CustomShaderTranslucencyMode.INHERIT` (default): splats are sorted and blended in the Gaussian splat pass, as without a custom shader.
+- `CustomShaderTranslucencyMode.OPAQUE`: splats are rendered in the 3D Tiles pass with blending disabled and depth writes enabled.
+- `CustomShaderTranslucencyMode.TRANSLUCENT`: splats are rendered in the translucent pass with pre-multiplied alpha blending.

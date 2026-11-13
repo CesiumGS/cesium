@@ -1,8 +1,7 @@
+import { Cartesian3, Matrix4 } from "@cesium/core";
 import {
   Axis,
-  Cartesian3,
   DepthFunction,
-  Matrix4,
   ModelRuntimeNode,
   ModelRenderResources,
   NodeRenderResources,
@@ -48,7 +47,7 @@ describe(
       const modelResources = new ModelRenderResources(mockModel);
       const nodeResources = new NodeRenderResources(
         modelResources,
-        runtimeNode
+        runtimeNode,
       );
 
       const defaultRenderState = RenderState.getState(
@@ -57,7 +56,7 @@ describe(
             enabled: true,
             func: DepthFunction.LESS_OR_EQUAL,
           },
-        })
+        }),
       );
 
       expect(nodeResources.runtimeNode).toBe(runtimeNode);
@@ -78,7 +77,7 @@ describe(
 
       const nodeResources = new NodeRenderResources(
         modelResources,
-        runtimeNode
+        runtimeNode,
       );
       nodeResources.shaderBuilder.addDefine("NODE");
 
@@ -86,7 +85,7 @@ describe(
 
       // The node's render resources should be a clone of the model's.
       expect(nodeResources.renderStateOptions).not.toBe(
-        modelResources.renderStateOptions
+        modelResources.renderStateOptions,
       );
       expect(nodeResources.renderStateOptions.cull).toEqual({
         enabled: true,
@@ -97,21 +96,21 @@ describe(
 
       // The node's shader builder should be a clone of the model's
       expect(nodeResources.shaderBuilder).not.toBe(
-        modelResources.shaderBuilder
+        modelResources.shaderBuilder,
       );
 
       // The model shader must not be modified by the node...
       ShaderBuilderTester.expectHasFragmentDefines(
         modelResources.shaderBuilder,
-        ["MODEL"]
+        ["MODEL"],
       );
 
       // ...but the node shader will be updated.
       ShaderBuilderTester.expectHasFragmentDefines(
         nodeResources.shaderBuilder,
-        ["MODEL", "NODE"]
+        ["MODEL", "NODE"],
       );
     });
   },
-  "WebGL"
+  "WebGL",
 );

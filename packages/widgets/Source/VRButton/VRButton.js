@@ -1,9 +1,5 @@
-import {
-  defined,
-  destroyObject,
-  DeveloperError,
-  getElement,
-} from "@cesium/engine";
+import { DeveloperError, defined, destroyObject } from "@cesium/core";
+import { getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import VRButtonViewModel from "./VRButtonViewModel.js";
 
@@ -51,7 +47,7 @@ css: { "cesium-button-disabled" : _isOrthographic }, \
 attr: { title: tooltip },\
 click: command,\
 enable: isVREnabled,\
-cesiumSvgPath: { path: isVRMode ? _exitVRPath : _enterVRPath, width: 32, height: 32 }'
+cesiumSvgPath: { path: isVRMode ? _exitVRPath : _enterVRPath, width: 32, height: 32 }',
   );
 
   container.appendChild(element);

@@ -1,11 +1,10 @@
+import { ComponentDatatype, RuntimeError } from "@cesium/core";
 import {
-  ComponentDatatype,
   DracoLoader,
   GltfBufferViewLoader,
   GltfDracoLoader,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import loaderProcess from "../../../../Specs/loaderProcess.js";
@@ -122,8 +121,8 @@ describe(
       ],
     };
 
-    const dracoExtension =
-      gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
+    const primitive = gltfDraco.meshes[0].primitives[0];
+    const dracoExtension = primitive.extensions.KHR_draco_mesh_compression;
 
     let scene;
 
@@ -144,6 +143,7 @@ describe(
         return new GltfDracoLoader({
           resourceCache: undefined,
           gltf: gltfDraco,
+          primitive: primitive,
           draco: dracoExtension,
           gltfResource: gltfResource,
           baseResource: gltfResource,
@@ -156,6 +156,20 @@ describe(
         return new GltfDracoLoader({
           resourceCache: ResourceCache,
           gltf: undefined,
+          primitive: primitive,
+          draco: dracoExtension,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if primitive is undefined", function () {
+      expect(function () {
+        return new GltfDracoLoader({
+          resourceCache: ResourceCache,
+          gltf: gltfDraco,
+          primitive: undefined,
           draco: dracoExtension,
           gltfResource: gltfResource,
           baseResource: gltfResource,
@@ -168,6 +182,7 @@ describe(
         return new GltfDracoLoader({
           resourceCache: ResourceCache,
           gltf: gltfDraco,
+          primitive: primitive,
           draco: undefined,
           gltfResource: gltfResource,
           baseResource: gltfResource,
@@ -180,6 +195,7 @@ describe(
         return new GltfDracoLoader({
           resourceCache: ResourceCache,
           gltf: gltfDraco,
+          primitive: primitive,
           draco: dracoExtension,
           gltfResource: undefined,
           baseResource: gltfResource,
@@ -192,6 +208,7 @@ describe(
         return new GltfDracoLoader({
           resourceCache: ResourceCache,
           gltf: gltfDraco,
+          primitive: primitive,
           draco: dracoExtension,
           gltfResource: gltfResource,
           baseResource: undefined,
@@ -208,6 +225,7 @@ describe(
       const dracoLoader = new GltfDracoLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -215,13 +233,13 @@ describe(
 
       await expectAsync(dracoLoader.load()).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load Draco\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+        "Failed to load Draco\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found",
       );
     });
 
     it("process throws if draco decoding fails", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer),
       );
 
       spyOn(DracoLoader, "decodeBufferView").and.callFake(function () {
@@ -232,6 +250,7 @@ describe(
       const dracoLoader = new GltfDracoLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -240,17 +259,17 @@ describe(
       await dracoLoader.load();
 
       await expectAsync(
-        waitForLoaderProcess(dracoLoader, scene)
+        waitForLoaderProcess(dracoLoader, scene),
       ).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load Draco\nDraco decode failed"
+        "Failed to load Draco\nDraco decode failed",
       );
       expect(() => loaderProcess(dracoLoader, scene)).not.toThrowError();
     });
 
     it("loads draco", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer),
       );
 
       // Simulate decodeBufferView not being ready for a few frames
@@ -266,6 +285,7 @@ describe(
       const dracoLoader = new GltfDracoLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -276,30 +296,31 @@ describe(
 
       expect(() => loaderProcess(dracoLoader, scene)).not.toThrowError();
       expect(dracoLoader.decodedData.indices).toBe(
-        decodeDracoResults.indexArray
+        decodeDracoResults.indexArray,
       );
       expect(dracoLoader.decodedData.vertexAttributes).toBe(
-        decodeDracoResults.attributeData
+        decodeDracoResults.attributeData,
       );
     });
 
     it("destroys draco loader", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer),
       );
 
       spyOn(DracoLoader, "decodeBufferView").and.returnValue(
-        Promise.resolve(decodeDracoResults)
+        Promise.resolve(decodeDracoResults),
       );
 
       const unloadBufferView = spyOn(
         GltfBufferViewLoader.prototype,
-        "unload"
+        "unload",
       ).and.callThrough();
 
       const dracoLoader = new GltfDracoLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -328,12 +349,13 @@ describe(
       });
 
       spyOn(DracoLoader, "decodeBufferView").and.returnValue(
-        Promise.resolve(decodeDracoResults)
+        Promise.resolve(decodeDracoResults),
       );
 
       const dracoLoader = new GltfDracoLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -362,6 +384,7 @@ describe(
       const dracoLoader = new GltfDracoLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
+        primitive: primitive,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -377,7 +400,7 @@ describe(
 
       const decodeBufferView = spyOn(
         DracoLoader,
-        "decodeBufferView"
+        "decodeBufferView",
       ).and.callFake(function () {
         return new Promise(function (resolve, reject) {
           if (rejectPromise) {
@@ -406,5 +429,5 @@ describe(
       return resolveDracoAfterDestroy(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

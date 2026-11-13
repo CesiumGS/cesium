@@ -1,7 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import { DeveloperError, Event, Frozen, defined } from "@cesium/core";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
@@ -46,7 +43,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @param {LabelGraphics.ConstructorOptions} [options] Object describing initialization options
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=labels|Cesium Sandcastle Labels Demo}
  */
 function LabelGraphics(options) {
   this._definitionChanged = new Event();
@@ -93,7 +90,7 @@ function LabelGraphics(options) {
   this._disableDepthTestDistance = undefined;
   this._disableDepthTestDistanceSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(LabelGraphics.prototype, {
@@ -290,7 +287,7 @@ Object.defineProperties(LabelGraphics.prototype, {
    * @type {Property|undefined}
    */
   pixelOffsetScaleByDistance: createPropertyDescriptor(
-    "pixelOffsetScaleByDistance"
+    "pixelOffsetScaleByDistance",
   ),
 
   /**
@@ -311,7 +308,7 @@ Object.defineProperties(LabelGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 
   /**
@@ -321,7 +318,7 @@ Object.defineProperties(LabelGraphics.prototype, {
    * @type {Property|undefined}
    */
   disableDepthTestDistance: createPropertyDescriptor(
-    "disableDepthTestDistance"
+    "disableDepthTestDistance",
   ),
 });
 
@@ -372,59 +369,30 @@ LabelGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.text = defaultValue(this.text, source.text);
-  this.font = defaultValue(this.font, source.font);
-  this.style = defaultValue(this.style, source.style);
-  this.scale = defaultValue(this.scale, source.scale);
-  this.showBackground = defaultValue(
-    this.showBackground,
-    source.showBackground
-  );
-  this.backgroundColor = defaultValue(
-    this.backgroundColor,
-    source.backgroundColor
-  );
-  this.backgroundPadding = defaultValue(
-    this.backgroundPadding,
-    source.backgroundPadding
-  );
-  this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
-  this.eyeOffset = defaultValue(this.eyeOffset, source.eyeOffset);
-  this.horizontalOrigin = defaultValue(
-    this.horizontalOrigin,
-    source.horizontalOrigin
-  );
-  this.verticalOrigin = defaultValue(
-    this.verticalOrigin,
-    source.verticalOrigin
-  );
-  this.heightReference = defaultValue(
-    this.heightReference,
-    source.heightReference
-  );
-  this.fillColor = defaultValue(this.fillColor, source.fillColor);
-  this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
-  this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
-  this.translucencyByDistance = defaultValue(
-    this.translucencyByDistance,
-    source.translucencyByDistance
-  );
-  this.pixelOffsetScaleByDistance = defaultValue(
-    this.pixelOffsetScaleByDistance,
-    source.pixelOffsetScaleByDistance
-  );
-  this.scaleByDistance = defaultValue(
-    this.scaleByDistance,
-    source.scaleByDistance
-  );
-  this.distanceDisplayCondition = defaultValue(
-    this.distanceDisplayCondition,
-    source.distanceDisplayCondition
-  );
-  this.disableDepthTestDistance = defaultValue(
-    this.disableDepthTestDistance,
-    source.disableDepthTestDistance
-  );
+  this.show = this.show ?? source.show;
+  this.text = this.text ?? source.text;
+  this.font = this.font ?? source.font;
+  this.style = this.style ?? source.style;
+  this.scale = this.scale ?? source.scale;
+  this.showBackground = this.showBackground ?? source.showBackground;
+  this.backgroundColor = this.backgroundColor ?? source.backgroundColor;
+  this.backgroundPadding = this.backgroundPadding ?? source.backgroundPadding;
+  this.pixelOffset = this.pixelOffset ?? source.pixelOffset;
+  this.eyeOffset = this.eyeOffset ?? source.eyeOffset;
+  this.horizontalOrigin = this.horizontalOrigin ?? source.horizontalOrigin;
+  this.verticalOrigin = this.verticalOrigin ?? source.verticalOrigin;
+  this.heightReference = this.heightReference ?? source.heightReference;
+  this.fillColor = this.fillColor ?? source.fillColor;
+  this.outlineColor = this.outlineColor ?? source.outlineColor;
+  this.outlineWidth = this.outlineWidth ?? source.outlineWidth;
+  this.translucencyByDistance =
+    this.translucencyByDistance ?? source.translucencyByDistance;
+  this.pixelOffsetScaleByDistance =
+    this.pixelOffsetScaleByDistance ?? source.pixelOffsetScaleByDistance;
+  this.scaleByDistance = this.scaleByDistance ?? source.scaleByDistance;
+  this.distanceDisplayCondition =
+    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
+  this.disableDepthTestDistance =
+    this.disableDepthTestDistance ?? source.disableDepthTestDistance;
 };
 export default LabelGraphics;

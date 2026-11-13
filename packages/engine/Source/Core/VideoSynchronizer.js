@@ -1,8 +1,10 @@
-import defaultValue from "./defaultValue.js";
-import defined from "./defined.js";
-import destroyObject from "./destroyObject.js";
-import Iso8601 from "./Iso8601.js";
-import JulianDate from "./JulianDate.js";
+import {
+  Frozen,
+  Iso8601,
+  JulianDate,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 
 /**
  * Synchronizes a video element with a simulation clock.
@@ -16,10 +18,10 @@ import JulianDate from "./JulianDate.js";
  * @param {JulianDate} [options.epoch=Iso8601.MINIMUM_VALUE] The simulation time that marks the start of the video.
  * @param {number} [options.tolerance=1.0] The maximum amount of time, in seconds, that the clock and video can diverge.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Video.html|Video Material Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=video|Video Material Demo}
  */
 function VideoSynchronizer(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._clock = undefined;
   this._element = undefined;
@@ -35,7 +37,7 @@ function VideoSynchronizer(options) {
    * @type {JulianDate}
    * @default Iso8601.MINIMUM_VALUE
    */
-  this.epoch = defaultValue(options.epoch, Iso8601.MINIMUM_VALUE);
+  this.epoch = options.epoch ?? Iso8601.MINIMUM_VALUE;
 
   /**
    * Gets or sets the amount of time in seconds the video's currentTime
@@ -46,7 +48,7 @@ function VideoSynchronizer(options) {
    * @type {number}
    * @default 1.0
    */
-  this.tolerance = defaultValue(options.tolerance, 1.0);
+  this.tolerance = options.tolerance ?? 1.0;
 
   this._seeking = false;
   this._seekFunction = undefined;
@@ -79,7 +81,7 @@ Object.defineProperties(VideoSynchronizer.prototype, {
       if (defined(value)) {
         this._clockSubscription = value.onTick.addEventListener(
           VideoSynchronizer.prototype._onTick,
-          this
+          this,
         );
       }
 
@@ -184,7 +186,7 @@ VideoSynchronizer.prototype._onTick = function (clock) {
   this._trySetPlaybackRate(clock);
 
   const clockTime = clock.currentTime;
-  const epoch = defaultValue(this.epoch, Iso8601.MINIMUM_VALUE);
+  const epoch = this.epoch ?? Iso8601.MINIMUM_VALUE;
   let videoTime = JulianDate.secondsDifference(clockTime, epoch);
 
   const duration = element.duration;
@@ -206,7 +208,7 @@ VideoSynchronizer.prototype._onTick = function (clock) {
 
   //If the playing video's time and the scene's clock time
   //ever drift too far apart, we want to set the video to match
-  const tolerance = shouldAnimate ? defaultValue(this.tolerance, 1.0) : 0.001;
+  const tolerance = shouldAnimate ? (this.tolerance ?? 1.0) : 0.001;
   if (Math.abs(desiredTime - currentTime) > tolerance) {
     this._seeking = true;
     element.currentTime = desiredTime;

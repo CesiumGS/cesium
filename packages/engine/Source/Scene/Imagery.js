@@ -1,5 +1,4 @@
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import { defined, destroyObject } from "@cesium/core";
 import ImageryState from "./ImageryState.js";
 
 /**
@@ -22,7 +21,7 @@ function Imagery(imageryLayer, x, y, level, rectangle) {
     this.parent = imageryLayer.getImageryFromCache(
       parentX,
       parentY,
-      parentLevel
+      parentLevel,
     );
   }
 
@@ -88,7 +87,7 @@ Imagery.prototype.releaseReference = function () {
 Imagery.prototype.processStateMachine = function (
   frameState,
   needGeographicProjection,
-  skipLoading
+  skipLoading,
 ) {
   if (this.state === ImageryState.UNLOADED && !skipLoading) {
     this.state = ImageryState.TRANSITIONING;
@@ -113,7 +112,7 @@ Imagery.prototype.processStateMachine = function (
     this.imageryLayer._reprojectTexture(
       frameState,
       this,
-      needGeographicProjection
+      needGeographicProjection,
     );
   }
 };

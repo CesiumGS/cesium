@@ -1,8 +1,4 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import Matrix3 from "../Core/Matrix3.js";
+import { Cartesian2, Check, Frozen, Matrix3, defined } from "@cesium/core";
 import Sampler from "../Renderer/Sampler.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
@@ -34,7 +30,7 @@ const GltfLoaderUtil = {};
  * @private
  */
 GltfLoaderUtil.getImageIdFromTexture = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, textureId, supportedImageFormats } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -70,7 +66,7 @@ GltfLoaderUtil.getImageIdFromTexture = function (options) {
  * @private
  */
 GltfLoaderUtil.createSampler = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, textureInfo, compressedTextureNoMipmap = false } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -90,10 +86,10 @@ GltfLoaderUtil.createSampler = function (options) {
 
   if (defined(samplerId)) {
     const sampler = gltf.samplers[samplerId];
-    wrapS = defaultValue(sampler.wrapS, wrapS);
-    wrapT = defaultValue(sampler.wrapT, wrapT);
-    minFilter = defaultValue(sampler.minFilter, minFilter);
-    magFilter = defaultValue(sampler.magFilter, magFilter);
+    wrapS = sampler.wrapS ?? wrapS;
+    wrapT = sampler.wrapT ?? wrapT;
+    minFilter = sampler.minFilter ?? minFilter;
+    magFilter = sampler.magFilter ?? magFilter;
   }
 
   if (
@@ -109,6 +105,22 @@ GltfLoaderUtil.createSampler = function (options) {
     } else {
       minFilter = TextureMinificationFilter.LINEAR;
     }
+  }
+
+  if (!TextureWrap.validate(wrapS)) {
+    wrapS = TextureWrap.REPEAT;
+  }
+
+  if (!TextureWrap.validate(wrapT)) {
+    wrapT = TextureWrap.REPEAT;
+  }
+
+  if (!TextureMinificationFilter.validate(minFilter)) {
+    minFilter = TextureMinificationFilter.LINEAR;
+  }
+
+  if (!TextureMagnificationFilter.validate(magFilter)) {
+    magFilter = TextureMagnificationFilter.LINEAR;
   }
 
   return new Sampler({
@@ -132,25 +144,25 @@ const defaultScale = new Cartesian2(1.0, 1.0);
  * @returns {ModelComponents.TextureReader} The texture reader for this model.
  */
 GltfLoaderUtil.createModelTextureReader = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const { textureInfo, channels, texture } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.textureInfo", textureInfo);
   //>>includeEnd('debug');
 
-  let texCoord = defaultValue(textureInfo.texCoord, 0);
+  let texCoord = textureInfo.texCoord ?? 0;
   let transform;
 
   const textureTransform = textureInfo.extensions?.KHR_texture_transform;
 
   if (defined(textureTransform)) {
-    texCoord = defaultValue(textureTransform.texCoord, texCoord);
+    texCoord = textureTransform.texCoord ?? texCoord;
 
     const offset = defined(textureTransform.offset)
       ? Cartesian2.unpack(textureTransform.offset)
       : Cartesian2.ZERO;
-    let rotation = defaultValue(textureTransform.rotation, 0.0);
+    let rotation = textureTransform.rotation ?? 0.0;
     const scale = defined(textureTransform.scale)
       ? Cartesian2.unpack(textureTransform.scale)
       : defaultScale;
@@ -164,10 +176,10 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
 
     // prettier-ignore
     transform = new Matrix3(
-        Math.cos(rotation) * scale.x, -Math.sin(rotation) * scale.y, offset.x,
-        Math.sin(rotation) * scale.x, Math.cos(rotation) * scale.y, offset.y,
-        0.0, 0.0, 1.0
-      );
+      Math.cos(rotation) * scale.x, -Math.sin(rotation) * scale.y, offset.x,
+      Math.sin(rotation) * scale.x, Math.cos(rotation) * scale.y, offset.y,
+      0.0, 0.0, 1.0
+    );
   }
 
   const modelTextureReader = new ModelComponents.TextureReader();
@@ -177,6 +189,20 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
   modelTextureReader.scale = textureInfo.scale;
   modelTextureReader.transform = transform;
   modelTextureReader.channels = channels;
+
+  // EXT_textureInfo_constant_lod extension
+  const constantLodExtension =
+    textureInfo.extensions?.EXT_textureInfo_constant_lod;
+  if (defined(constantLodExtension)) {
+    modelTextureReader.constantLod = {
+      repetitions: constantLodExtension.repetitions ?? 1.0,
+      offset: defined(constantLodExtension.offset)
+        ? Cartesian2.unpack(constantLodExtension.offset)
+        : Cartesian2.ZERO,
+      minClampDistance: constantLodExtension.minClampDistance ?? 1.0,
+      maxClampDistance: constantLodExtension.maxClampDistance ?? 4294967296.0,
+    };
+  }
 
   return modelTextureReader;
 };

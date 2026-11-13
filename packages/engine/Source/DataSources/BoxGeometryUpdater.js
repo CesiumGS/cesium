@@ -1,17 +1,19 @@
-import BoxGeometry from "../Core/BoxGeometry.js";
-import BoxOutlineGeometry from "../Core/BoxOutlineGeometry.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import GeometryOffsetAttribute from "../Core/GeometryOffsetAttribute.js";
-import Iso8601 from "../Core/Iso8601.js";
+import {
+  BoxGeometry,
+  BoxOutlineGeometry,
+  Cartesian3,
+  Check,
+  Color,
+  ColorGeometryInstanceAttribute,
+  DeveloperError,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  GeometryInstance,
+  GeometryOffsetAttribute,
+  Iso8601,
+  ShowGeometryInstanceAttribute,
+  defined,
+} from "@cesium/core";
 import OffsetGeometryInstanceAttribute from "../Core/OffsetGeometryInstanceAttribute.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import HeightReference from "../Scene/HeightReference.js";
 import MaterialAppearance from "../Scene/MaterialAppearance.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";
@@ -89,7 +91,7 @@ BoxGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 
   if (!this._fillEnabled) {
     throw new DeveloperError(
-      "This instance does not represent a filled geometry."
+      "This instance does not represent a filled geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -101,14 +103,14 @@ BoxGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
     isAvailable &&
       entity.isShowing &&
       this._showProperty.getValue(time) &&
-      this._fillProperty.getValue(time)
+      this._fillProperty.getValue(time),
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
-  const distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-    distanceDisplayCondition
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
+  const distanceDisplayConditionAttribute =
+    DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+      distanceDisplayCondition,
+    );
 
   const attributes = {
     show: show,
@@ -135,8 +137,8 @@ BoxGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
         this._terrainOffsetProperty,
         time,
         defaultOffset,
-        offsetScratch
-      )
+        offsetScratch,
+      ),
     );
   }
 
@@ -147,7 +149,7 @@ BoxGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
       time,
       entity.box.heightReference,
       this._options.dimensions.z * 0.5,
-      this._scene.ellipsoid
+      this._scene.ellipsoid,
     ),
     attributes: attributes,
   });
@@ -167,7 +169,7 @@ BoxGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
 
   if (!this._outlineEnabled) {
     throw new DeveloperError(
-      "This instance does not represent an outlined geometry."
+      "This instance does not represent an outlined geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -178,23 +180,23 @@ BoxGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
     this._outlineColorProperty,
     time,
     Color.BLACK,
-    scratchColor
+    scratchColor,
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
 
   const attributes = {
     show: new ShowGeometryInstanceAttribute(
       isAvailable &&
         entity.isShowing &&
         this._showProperty.getValue(time) &&
-        this._showOutlineProperty.getValue(time)
+        this._showOutlineProperty.getValue(time),
     ),
     color: ColorGeometryInstanceAttribute.fromColor(outlineColor),
-    distanceDisplayCondition: DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-      distanceDisplayCondition
-    ),
+    distanceDisplayCondition:
+      DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+        distanceDisplayCondition,
+      ),
     offset: undefined,
   };
   if (defined(this._options.offsetAttribute)) {
@@ -203,8 +205,8 @@ BoxGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
         this._terrainOffsetProperty,
         time,
         defaultOffset,
-        offsetScratch
-      )
+        offsetScratch,
+      ),
     );
   }
 
@@ -215,7 +217,7 @@ BoxGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
       time,
       entity.box.heightReference,
       this._options.dimensions.z * 0.5,
-      this._scene.ellipsoid
+      this._scene.ellipsoid,
     ),
     attributes: attributes,
   });
@@ -246,7 +248,7 @@ BoxGeometryUpdater.prototype._setStaticOptions = function (entity, box) {
   const heightReference = Property.getValueOrDefault(
     box.heightReference,
     Iso8601.MINIMUM_VALUE,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
 
   const options = this._options;
@@ -256,7 +258,7 @@ BoxGeometryUpdater.prototype._setStaticOptions = function (entity, box) {
       : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
   options.dimensions = box.dimensions.getValue(
     Iso8601.MINIMUM_VALUE,
-    options.dimensions
+    options.dimensions,
   );
   options.offsetAttribute =
     heightReference !== HeightReference.NONE
@@ -264,7 +266,8 @@ BoxGeometryUpdater.prototype._setStaticOptions = function (entity, box) {
       : undefined;
 };
 
-BoxGeometryUpdater.prototype._onEntityPropertyChanged = heightReferenceOnEntityPropertyChanged;
+BoxGeometryUpdater.prototype._onEntityPropertyChanged =
+  heightReferenceOnEntityPropertyChanged;
 
 BoxGeometryUpdater.DynamicGeometryUpdater = DynamicBoxGeometryUpdater;
 
@@ -274,19 +277,19 @@ BoxGeometryUpdater.DynamicGeometryUpdater = DynamicBoxGeometryUpdater;
 function DynamicBoxGeometryUpdater(
   geometryUpdater,
   primitives,
-  groundPrimitives
+  groundPrimitives,
 ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
     primitives,
-    groundPrimitives
+    groundPrimitives,
   );
 }
 
 if (defined(Object.create)) {
   DynamicBoxGeometryUpdater.prototype = Object.create(
-    DynamicGeometryUpdater.prototype
+    DynamicGeometryUpdater.prototype,
   );
   DynamicBoxGeometryUpdater.prototype.constructor = DynamicBoxGeometryUpdater;
 }
@@ -295,7 +298,7 @@ DynamicBoxGeometryUpdater.prototype._isHidden = function (entity, box, time) {
   const position = Property.getValueOrUndefined(
     entity.position,
     time,
-    positionScratch
+    positionScratch,
   );
   const dimensions = this._options.dimensions;
   return (
@@ -309,13 +312,13 @@ DynamicBoxGeometryUpdater.prototype._setOptions = function (entity, box, time) {
   const heightReference = Property.getValueOrDefault(
     box.heightReference,
     time,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   const options = this._options;
   options.dimensions = Property.getValueOrUndefined(
     box.dimensions,
     time,
-    options.dimensions
+    options.dimensions,
   );
   options.offsetAttribute =
     heightReference !== HeightReference.NONE

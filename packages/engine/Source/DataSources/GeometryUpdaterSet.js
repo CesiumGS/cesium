@@ -1,6 +1,4 @@
-import destroyObject from "../Core/destroyObject.js";
-import Event from "../Core/Event.js";
-import EventHelper from "../Core/EventHelper.js";
+import { Event, EventHelper, destroyObject } from "@cesium/core";
 import BoxGeometryUpdater from "./BoxGeometryUpdater.js";
 import CorridorGeometryUpdater from "./CorridorGeometryUpdater.js";
 import CylinderGeometryUpdater from "./CylinderGeometryUpdater.js";
@@ -12,7 +10,10 @@ import PolylineVolumeGeometryUpdater from "./PolylineVolumeGeometryUpdater.js";
 import RectangleGeometryUpdater from "./RectangleGeometryUpdater.js";
 import WallGeometryUpdater from "./WallGeometryUpdater.js";
 
-/** @type {GeometryUpdater[]} */
+/**
+ * @type {GeometryUpdater[]}
+ * @ignore
+ */
 const geometryUpdaters = [
   BoxGeometryUpdater,
   CylinderGeometryUpdater,
@@ -52,7 +53,7 @@ function GeometryUpdaterSet(entity, scene) {
 
   this._removeEntitySubscription = entity.definitionChanged.addEventListener(
     GeometryUpdaterSet.prototype._onEntityPropertyChanged,
-    this
+    this,
   );
 }
 
@@ -60,7 +61,7 @@ GeometryUpdaterSet.prototype._onEntityPropertyChanged = function (
   entity,
   propertyName,
   newValue,
-  oldValue
+  oldValue,
 ) {
   const updaters = this.updaters;
   for (let i = 0; i < updaters.length; i++) {
@@ -68,7 +69,7 @@ GeometryUpdaterSet.prototype._onEntityPropertyChanged = function (
       entity,
       propertyName,
       newValue,
-      oldValue
+      oldValue,
     );
   }
 };

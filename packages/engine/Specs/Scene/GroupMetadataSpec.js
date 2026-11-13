@@ -1,4 +1,5 @@
-import { Cartesian3, MetadataClass, GroupMetadata } from "../../index.js";
+import { Cartesian3 } from "@cesium/core";
+import { MetadataClass, GroupMetadata } from "../../index.js";
 
 describe("Scene/GroupMetadata", function () {
   const buildingClassWithNoProperties = MetadataClass.fromJson({
@@ -58,7 +59,7 @@ describe("Scene/GroupMetadata", function () {
     expect(groupMetadata.extras).toBe(extras);
     expect(groupMetadata.extensions).toBe(extensions);
     expect(groupMetadata.getProperty("position")).toEqual(
-      Cartesian3.unpack(properties.position)
+      Cartesian3.unpack(properties.position),
     );
   });
 

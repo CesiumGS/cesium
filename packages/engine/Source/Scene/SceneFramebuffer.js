@@ -1,8 +1,6 @@
-import Color from "../Core/Color.js";
-import destroyObject from "../Core/destroyObject.js";
+import { Color, PixelDatatype, destroyObject } from "@cesium/core";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 
 /**
  * @private
@@ -54,7 +52,7 @@ SceneFramebuffer.prototype.update = function (
   context,
   viewport,
   hdr,
-  numSamples
+  numSamples,
 ) {
   const width = viewport.width;
   const height = viewport.height;
@@ -69,7 +67,7 @@ SceneFramebuffer.prototype.update = function (
     width,
     height,
     numSamples,
-    pixelDatatype
+    pixelDatatype,
   );
   this._idFramebuffer.update(context, width, height);
 };

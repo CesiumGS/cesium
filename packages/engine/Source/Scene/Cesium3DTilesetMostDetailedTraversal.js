@@ -1,4 +1,4 @@
-import Intersect from "../Core/Intersect.js";
+import { Intersect } from "@cesium/core";
 import ManagedArray from "../Core/ManagedArray.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Cesium3DTilesetTraversal from "./Cesium3DTilesetTraversal.js";
@@ -29,7 +29,7 @@ const traversal = {
  */
 Cesium3DTilesetMostDetailedTraversal.selectTiles = function (
   tileset,
-  frameState
+  frameState,
 ) {
   tileset._selectedTiles.length = 0;
   tileset._requestedTiles.length = 0;
@@ -52,7 +52,7 @@ Cesium3DTilesetMostDetailedTraversal.selectTiles = function (
   while (stack.length > 0) {
     traversal.stackMaximumLength = Math.max(
       traversal.stackMaximumLength,
-      stack.length
+      stack.length,
     );
 
     const tile = stack.pop();

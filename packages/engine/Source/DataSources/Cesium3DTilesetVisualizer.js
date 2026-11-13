@@ -1,9 +1,11 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  AssociativeArray,
+  BoundingSphere,
+  DeveloperError,
+  Matrix4,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Resource from "../Core/Resource.js";
 import Cesium3DTileset from "../Scene/Cesium3DTileset.js";
 import BoundingSphereState from "./BoundingSphereState.js";
@@ -31,7 +33,7 @@ function Cesium3DTilesetVisualizer(scene, entityCollection) {
 
   entityCollection.collectionChanged.addEventListener(
     Cesium3DTilesetVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
 
   this._scene = scene;
@@ -75,7 +77,7 @@ Cesium3DTilesetVisualizer.prototype.update = function (time) {
     if (show) {
       modelMatrix = entity.computeModelMatrix(time, modelMatrixScratch);
       resource = Resource.createIfNeeded(
-        Property.getValueOrUndefined(tilesetGraphics._uri, time)
+        Property.getValueOrUndefined(tilesetGraphics._uri, time),
       );
     }
 
@@ -111,7 +113,7 @@ Cesium3DTilesetVisualizer.prototype.update = function (time) {
     tileset.maximumScreenSpaceError = Property.getValueOrDefault(
       tilesetGraphics.maximumScreenSpaceError,
       time,
-      tileset.maximumScreenSpaceError
+      tileset.maximumScreenSpaceError,
     );
   }
 
@@ -133,7 +135,7 @@ Cesium3DTilesetVisualizer.prototype.isDestroyed = function () {
 Cesium3DTilesetVisualizer.prototype.destroy = function () {
   this._entityCollection.collectionChanged.removeEventListener(
     Cesium3DTilesetVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
   const entities = this._entitiesToVisualize.values;
   const tilesetHash = this._tilesetHash;
@@ -157,7 +159,7 @@ Cesium3DTilesetVisualizer.prototype.destroy = function () {
  */
 Cesium3DTilesetVisualizer.prototype.getBoundingSphere = function (
   entity,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(entity)) {
@@ -194,7 +196,7 @@ Cesium3DTilesetVisualizer.prototype._onCollectionChanged = function (
   entityCollection,
   added,
   removed,
-  changed
+  changed,
 ) {
   let i;
   let entity;

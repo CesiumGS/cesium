@@ -16,7 +16,7 @@ const StyleCommandsNeeded = {
  */
 StyleCommandsNeeded.getStyleCommandsNeeded = function (
   featuresLength,
-  translucentFeaturesLength
+  translucentFeaturesLength,
 ) {
   if (translucentFeaturesLength === 0) {
     return StyleCommandsNeeded.ALL_OPAQUE;
@@ -26,4 +26,6 @@ StyleCommandsNeeded.getStyleCommandsNeeded = function (
   return StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT;
 };
 
-export default Object.freeze(StyleCommandsNeeded);
+Object.freeze(StyleCommandsNeeded);
+
+export default StyleCommandsNeeded;

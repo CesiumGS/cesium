@@ -1,4 +1,5 @@
-import { Cartesian3, MetadataClass, TilesetMetadata } from "../../index.js";
+import { Cartesian3 } from "@cesium/core";
+import { MetadataClass, TilesetMetadata } from "../../index.js";
 
 describe("Scene/TilesetMetadata", function () {
   it("creates tileset metadata with default values", function () {
@@ -48,7 +49,7 @@ describe("Scene/TilesetMetadata", function () {
     expect(tilesetMetadata.extras).toBe(extras);
     expect(tilesetMetadata.extensions).toBe(extensions);
     expect(tilesetMetadata.getProperty("neighborhoods")).toEqual(
-      properties.neighborhoods
+      properties.neighborhoods,
     );
   });
 

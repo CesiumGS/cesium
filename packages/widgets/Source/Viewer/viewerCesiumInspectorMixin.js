@@ -1,4 +1,4 @@
-import { defined, DeveloperError } from "@cesium/engine";
+import { DeveloperError, defined } from "@cesium/core";
 import CesiumInspector from "../CesiumInspector/CesiumInspector.js";
 
 /**
@@ -11,7 +11,7 @@ import CesiumInspector from "../CesiumInspector/CesiumInspector.js";
  *
  * @exception {DeveloperError} viewer is required.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=cesium-inspector|Cesium Sandcastle Cesium Inspector Demo}
  *
  * @example
  * const viewer = new Cesium.Viewer('cesiumContainer');
@@ -29,7 +29,7 @@ function viewerCesiumInspectorMixin(viewer) {
   viewer.container.appendChild(cesiumInspectorContainer);
   const cesiumInspector = new CesiumInspector(
     cesiumInspectorContainer,
-    viewer.scene
+    viewer.scene,
   );
 
   Object.defineProperties(viewer, {

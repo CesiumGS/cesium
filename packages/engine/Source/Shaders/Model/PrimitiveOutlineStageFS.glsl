@@ -13,4 +13,3 @@ void primitiveOutlineStage(inout czm_modelMaterial material) {
 
     material.diffuse = mix(material.diffuse, model_outlineColor.rgb, model_outlineColor.a * outlineness);
 }
-

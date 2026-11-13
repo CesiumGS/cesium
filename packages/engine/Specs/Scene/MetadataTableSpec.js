@@ -1,4 +1,5 @@
-import { Cartesian3, MetadataTable } from "../../index.js";
+import { Cartesian3 } from "@cesium/core";
+import { MetadataTable } from "../../index.js";
 import MetadataTester from "../../../../Specs/MetadataTester.js";
 
 describe("Scene/MetadataTable", function () {
@@ -59,10 +60,10 @@ describe("Scene/MetadataTable", function () {
 
     expect(metadataTable.count).toBe(2);
     expect(metadataTable.getPropertyIds().sort()).toEqual(
-      expectedPropertyNames
+      expectedPropertyNames,
     );
     expect(Object.keys(metadataTable.class.properties).sort()).toEqual(
-      expectedPropertyNames
+      expectedPropertyNames,
     );
 
     const heightSize = 2 * 4; // two floats
@@ -523,13 +524,13 @@ describe("Scene/MetadataTable", function () {
     const length = valuesToSet.length;
     for (let i = 0; i < length; ++i) {
       expect(metadataTable.setProperty(i, "propertyInt8", valuesToSet[i])).toBe(
-        true
+        true,
       );
       let value = metadataTable.getProperty(i, "propertyInt8");
       expect(value).toEqual(valuesToSet[i]);
       // Test setting / getting again
       expect(metadataTable.setProperty(i, "propertyInt8", valuesToSet[i])).toBe(
-        true
+        true,
       );
       value = metadataTable.getProperty(i, "propertyInt8");
       expect(value).toEqual(valuesToSet[i]);
@@ -914,7 +915,7 @@ describe("Scene/MetadataTable", function () {
     const expectedTypedArray = new Float32Array([1.0, 2.0]);
 
     expect(metadataTable.getPropertyTypedArray("height")).toEqual(
-      expectedTypedArray
+      expectedTypedArray,
     );
   });
 
@@ -968,7 +969,7 @@ describe("Scene/MetadataTable", function () {
     const expectedTypedArray = new Float32Array([1.0, 2.0]);
 
     expect(metadataTable.getPropertyTypedArrayBySemantic("HEIGHT")).toEqual(
-      expectedTypedArray
+      expectedTypedArray,
     );
   });
 
@@ -989,7 +990,7 @@ describe("Scene/MetadataTable", function () {
     });
 
     expect(
-      metadataTable.getPropertyTypedArrayBySemantic("HEIGHT")
+      metadataTable.getPropertyTypedArrayBySemantic("HEIGHT"),
     ).toBeUndefined();
   });
 

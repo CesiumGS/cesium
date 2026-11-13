@@ -1,15 +1,13 @@
 import {
   Cartesian2,
   Cartesian3,
+  Cartographic,
   Ellipsoid,
   Math as CesiumMath,
   OrthographicFrustum,
   Rectangle,
-  Camera,
-  SceneMode,
-  SceneTransforms,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { Camera, SceneMode, SceneTransforms } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -40,20 +38,20 @@ describe(
     it("throws an exception without scene", function () {
       const position = Cartesian3.fromDegrees(0.0, 0.0);
       expect(function () {
-        SceneTransforms.wgs84ToWindowCoordinates(undefined, position);
+        SceneTransforms.worldToWindowCoordinates(undefined, position);
       }).toThrowDeveloperError();
     });
 
     it("throws an exception without position", function () {
       expect(function () {
-        SceneTransforms.wgs84ToWindowCoordinates(scene);
+        SceneTransforms.worldToWindowCoordinates(scene);
       }).toThrowDeveloperError();
     });
 
     it("returns correct window position in 3D", function () {
       const ellipsoid = Ellipsoid.WGS84;
       const positionCartographic = ellipsoid.cartesianToCartographic(
-        scene.camera.position
+        scene.camera.position,
       );
       positionCartographic.height = 0.0;
       const position = ellipsoid.cartographicToCartesian(positionCartographic);
@@ -61,9 +59,9 @@ describe(
       // Update scene state
       scene.renderForSpecs();
 
-      const windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(
+      const windowCoordinates = SceneTransforms.worldToWindowCoordinates(
         scene,
-        position
+        position,
       );
       expect(windowCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
       expect(windowCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
@@ -72,7 +70,7 @@ describe(
     it("returns correct drawing buffer position in 3D", function () {
       const ellipsoid = Ellipsoid.WGS84;
       const positionCartographic = ellipsoid.cartesianToCartographic(
-        scene.camera.position
+        scene.camera.position,
       );
       positionCartographic.height = 0.0;
       const position = ellipsoid.cartographicToCartesian(positionCartographic);
@@ -80,24 +78,22 @@ describe(
       // Update scene state
       scene.renderForSpecs();
 
-      const drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(
-        scene,
-        position
-      );
+      const drawingBufferCoordinates =
+        SceneTransforms.worldToDrawingBufferCoordinates(scene, position);
       expect(drawingBufferCoordinates.x).toEqualEpsilon(
         0.5,
-        CesiumMath.EPSILON2
+        CesiumMath.EPSILON2,
       );
       expect(drawingBufferCoordinates.y).toEqualEpsilon(
         0.5,
-        CesiumMath.EPSILON2
+        CesiumMath.EPSILON2,
       );
     });
 
     it("returns undefined for window position behind camera in 3D", function () {
       const ellipsoid = Ellipsoid.WGS84;
       const positionCartographic = ellipsoid.cartesianToCartographic(
-        scene.camera.position
+        scene.camera.position,
       );
       positionCartographic.height *= 1.1;
       const position = ellipsoid.cartographicToCartesian(positionCartographic);
@@ -105,9 +101,9 @@ describe(
       // Update scene state
       scene.renderForSpecs();
 
-      const windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(
+      const windowCoordinates = SceneTransforms.worldToWindowCoordinates(
         scene,
-        position
+        position,
       );
       expect(windowCoordinates).not.toBeDefined();
     });
@@ -115,7 +111,7 @@ describe(
     it("returns undefined for drawing buffer position behind camera in 3D", function () {
       const ellipsoid = Ellipsoid.WGS84;
       const positionCartographic = ellipsoid.cartesianToCartographic(
-        scene.camera.position
+        scene.camera.position,
       );
       positionCartographic.height *= 1.1;
       const position = ellipsoid.cartographicToCartesian(positionCartographic);
@@ -123,10 +119,8 @@ describe(
       // Update scene state
       scene.renderForSpecs();
 
-      const drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(
-        scene,
-        position
-      );
+      const drawingBufferCoordinates =
+        SceneTransforms.worldToDrawingBufferCoordinates(scene, position);
       expect(drawingBufferCoordinates).not.toBeDefined();
     });
 
@@ -138,13 +132,13 @@ describe(
       const actualWindowCoordinates = new Cartesian2(0.5, 0.5);
       const position = scene.camera.pickEllipsoid(actualWindowCoordinates);
 
-      const windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(
+      const windowCoordinates = SceneTransforms.worldToWindowCoordinates(
         scene,
-        position
+        position,
       );
       expect(windowCoordinates).toEqualEpsilon(
         actualWindowCoordinates,
-        CesiumMath.EPSILON2
+        CesiumMath.EPSILON2,
       );
     });
 
@@ -155,16 +149,14 @@ describe(
 
       const actualDrawingBufferCoordinates = new Cartesian2(0.5, 0.5);
       const position = scene.camera.pickEllipsoid(
-        actualDrawingBufferCoordinates
+        actualDrawingBufferCoordinates,
       );
 
-      const drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(
-        scene,
-        position
-      );
+      const drawingBufferCoordinates =
+        SceneTransforms.worldToDrawingBufferCoordinates(scene, position);
       expect(drawingBufferCoordinates).toEqualEpsilon(
         actualDrawingBufferCoordinates,
-        CesiumMath.EPSILON2
+        CesiumMath.EPSILON2,
       );
     });
 
@@ -179,12 +171,12 @@ describe(
       Cartesian3.multiplyByScalar(
         scene.camera.direction,
         -1,
-        scene.camera.direction
+        scene.camera.direction,
       );
 
-      const windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(
+      const windowCoordinates = SceneTransforms.worldToWindowCoordinates(
         scene,
-        position
+        position,
       );
       expect(windowCoordinates).not.toBeDefined();
     });
@@ -200,13 +192,11 @@ describe(
       Cartesian3.multiplyByScalar(
         scene.camera.direction,
         -1,
-        scene.camera.direction
+        scene.camera.direction,
       );
 
-      const drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(
-        scene,
-        position
-      );
+      const drawingBufferCoordinates =
+        SceneTransforms.worldToDrawingBufferCoordinates(scene, position);
       expect(drawingBufferCoordinates).not.toBeDefined();
     });
 
@@ -216,7 +206,7 @@ describe(
           -0.000001,
           -0.000001,
           0.000001,
-          0.000001
+          0.000001,
         ),
       });
 
@@ -225,9 +215,9 @@ describe(
       scene.renderForSpecs();
 
       const position = Cartesian3.fromDegrees(0, 0);
-      const windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(
+      const windowCoordinates = SceneTransforms.worldToWindowCoordinates(
         scene,
-        position
+        position,
       );
 
       expect(windowCoordinates.x).toBeGreaterThan(0.0);
@@ -251,14 +241,14 @@ describe(
           -0.000001,
           -0.000001,
           0.000001,
-          0.000001
+          0.000001,
         ),
       });
 
       const position = Cartesian3.fromDegrees(0, 0);
-      const windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(
+      const windowCoordinates = SceneTransforms.worldToWindowCoordinates(
         scene,
-        position
+        position,
       );
 
       expect(windowCoordinates.x).toBeGreaterThan(0.0);
@@ -274,7 +264,7 @@ describe(
           -0.000001,
           -0.000001,
           0.000001,
-          0.000001
+          0.000001,
         ),
       });
 
@@ -283,10 +273,8 @@ describe(
       scene.renderForSpecs();
 
       const position = Cartesian3.fromDegrees(0, 0);
-      const drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(
-        scene,
-        position
-      );
+      const drawingBufferCoordinates =
+        SceneTransforms.worldToDrawingBufferCoordinates(scene, position);
 
       expect(drawingBufferCoordinates.x).toBeGreaterThan(0.0);
       expect(drawingBufferCoordinates.y).toBeGreaterThan(0.0);
@@ -306,13 +294,66 @@ describe(
       scene.renderForSpecs();
 
       const position = Cartesian3.fromDegrees(-80, 25);
-      const windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(
+      const windowCoordinates = SceneTransforms.worldToWindowCoordinates(
         scene,
-        position
+        position,
       );
       expect(windowCoordinates).toBeDefined();
       scene.destroyForSpecs();
     });
+
+    it("actualEllipsoidPositionToCartographic converts an ECEF position in 3D", function () {
+      const cartographic = Cartographic.fromDegrees(-75.0, 40.0, 100.0);
+      const position = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+
+      scene.renderForSpecs();
+
+      const result = SceneTransforms.actualEllipsoidPositionToCartographic(
+        scene.frameState,
+        position,
+      );
+      expect(result.longitude).toEqualEpsilon(
+        cartographic.longitude,
+        CesiumMath.EPSILON8,
+      );
+      expect(result.latitude).toEqualEpsilon(
+        cartographic.latitude,
+        CesiumMath.EPSILON8,
+      );
+      expect(result.height).toEqualEpsilon(
+        cartographic.height,
+        CesiumMath.EPSILON4,
+      );
+    });
+
+    it("actualEllipsoidPositionToCartographic unprojects a swizzled map position in Columbus View", function () {
+      scene.morphToColumbusView(0);
+      scene.renderForSpecs();
+
+      const projection = scene.frameState.mapProjection;
+      const cartographic = Cartographic.fromDegrees(-75.0, 40.0, 100.0);
+      const projected = projection.project(cartographic);
+
+      // The pick result in 2D/CV is laid out as (height, easting, northing).
+      const position = new Cartesian3(projected.z, projected.x, projected.y);
+
+      const result = SceneTransforms.actualEllipsoidPositionToCartographic(
+        scene.frameState,
+        position,
+      );
+      expect(result.longitude).toEqualEpsilon(
+        cartographic.longitude,
+        CesiumMath.EPSILON8,
+      );
+      expect(result.latitude).toEqualEpsilon(
+        cartographic.latitude,
+        CesiumMath.EPSILON8,
+      );
+      expect(result.height).toEqualEpsilon(
+        cartographic.height,
+        CesiumMath.EPSILON4,
+      );
+    });
   },
-  "WebGL"
+  "WebGL",
 );

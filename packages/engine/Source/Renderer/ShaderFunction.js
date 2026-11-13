@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core";
 
 /**
  * A utility for dynamically-generating a GLSL function
@@ -37,7 +37,7 @@ ShaderFunction.prototype.addLines = function (lines) {
   //>>includeStart('debug', pragmas.debug);
   if (typeof lines !== "string" && !Array.isArray(lines)) {
     throw new DeveloperError(
-      `Expected lines to be a string or an array of strings, actual value was ${lines}`
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`,
     );
   }
   //>>includeEnd('debug');

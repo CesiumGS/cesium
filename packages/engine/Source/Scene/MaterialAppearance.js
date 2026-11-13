@@ -1,6 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import VertexFormat from "../Core/VertexFormat.js";
+import { Frozen, VertexFormat, defined } from "@cesium/core";
 import AllMaterialAppearanceFS from "../Shaders/Appearances/AllMaterialAppearanceFS.js";
 import AllMaterialAppearanceVS from "../Shaders/Appearances/AllMaterialAppearanceVS.js";
 import BasicMaterialAppearanceFS from "../Shaders/Appearances/BasicMaterialAppearanceFS.js";
@@ -29,7 +27,7 @@ import Material from "./Material.js";
      * @param {object} [options.renderState] Optional render state to override the default render state.
      *
      * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
-     * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?id=materials|Cesium Sandcastle Material Appearance Demo}
      *
      * @example
      * const primitive = new Cesium.Primitive({
@@ -47,14 +45,12 @@ import Material from "./Material.js";
      * });
      */
 function MaterialAppearance(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  const translucent = defaultValue(options.translucent, true);
-  const closed = defaultValue(options.closed, false);
-  const materialSupport = defaultValue(
-    options.materialSupport,
-    MaterialAppearance.MaterialSupport.TEXTURED
-  );
+  const translucent = options.translucent ?? true;
+  const closed = options.closed ?? false;
+  const materialSupport =
+    options.materialSupport ?? MaterialAppearance.MaterialSupport.TEXTURED;
 
   /**
    * The material used to determine the fragment color.  Unlike other {@link MaterialAppearance}
@@ -79,18 +75,14 @@ function MaterialAppearance(options) {
    */
   this.translucent = translucent;
 
-  this._vertexShaderSource = defaultValue(
-    options.vertexShaderSource,
-    materialSupport.vertexShaderSource
-  );
-  this._fragmentShaderSource = defaultValue(
-    options.fragmentShaderSource,
-    materialSupport.fragmentShaderSource
-  );
+  this._vertexShaderSource =
+    options.vertexShaderSource ?? materialSupport.vertexShaderSource;
+  this._fragmentShaderSource =
+    options.fragmentShaderSource ?? materialSupport.fragmentShaderSource;
   this._renderState = Appearance.getDefaultRenderState(
     translucent,
     closed,
-    options.renderState
+    options.renderState,
   );
   this._closed = closed;
 
@@ -98,8 +90,8 @@ function MaterialAppearance(options) {
 
   this._materialSupport = materialSupport;
   this._vertexFormat = materialSupport.vertexFormat;
-  this._flat = defaultValue(options.flat, false);
-  this._faceForward = defaultValue(options.faceForward, !closed);
+  this._flat = options.flat ?? false;
+  this._faceForward = options.faceForward ?? !closed;
 }
 
 Object.defineProperties(MaterialAppearance.prototype, {

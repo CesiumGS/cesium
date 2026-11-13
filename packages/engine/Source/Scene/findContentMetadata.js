@@ -1,8 +1,6 @@
+import { Frozen, defined, oneTimeWarning } from "@cesium/core";
 import ContentMetadata from "./ContentMetadata.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
 import hasExtension from "./hasExtension.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * Check if a content has metadata, either defined in its metadata field (3D Tiles 1.1) or in
@@ -29,15 +27,12 @@ function findContentMetadata(tileset, contentHeader) {
   if (!defined(tileset.schema)) {
     findContentMetadata._oneTimeWarning(
       "findContentMetadata-missing-root-schema",
-      "Could not find a metadata schema for content metadata. For tilesets that contain external tilesets, make sure the schema is added to the root tileset.json."
+      "Could not find a metadata schema for content metadata. For tilesets that contain external tilesets, make sure the schema is added to the root tileset.json.",
     );
     return undefined;
   }
 
-  const classes = defaultValue(
-    tileset.schema.classes,
-    defaultValue.EMPTY_OBJECT
-  );
+  const classes = tileset.schema.classes ?? Frozen.EMPTY_OBJECT;
   if (defined(metadataJson.class)) {
     const contentClass = classes[metadataJson.class];
     return new ContentMetadata({

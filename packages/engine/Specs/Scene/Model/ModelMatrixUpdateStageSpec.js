@@ -1,14 +1,16 @@
 import {
   BoundingSphere,
   Cartesian3,
-  clone,
-  CullFace,
-  Matrix4,
   Math as CesiumMath,
+  Matrix4,
+  Quaternion,
+  clone,
+} from "@cesium/core";
+import {
+  CullFace,
   ModelDrawCommand,
   ModelRuntimePrimitive,
   ResourceCache,
-  Quaternion,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
@@ -37,12 +39,12 @@ describe(
 
     const rotation = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_Y,
-      CesiumMath.toRadians(180)
+      CesiumMath.toRadians(180),
     );
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       new Cartesian3(10, 0, 0),
       rotation,
-      new Cartesian3(1, 1, 1)
+      new Cartesian3(1, 1, 1),
     );
 
     let scene;
@@ -138,12 +140,12 @@ describe(
       node.transform = Matrix4.multiplyTransformation(
         node.transform,
         transform,
-        new Matrix4()
+        new Matrix4(),
       );
       expect(node._transformDirty).toEqual(true);
 
       expect(
-        Matrix4.equals(node.originalTransform, expectedOriginalTransform)
+        Matrix4.equals(node.originalTransform, expectedOriginalTransform),
       ).toBe(true);
     }
 
@@ -152,7 +154,7 @@ describe(
         {
           gltf: simpleSkin,
         },
-        scene
+        scene,
       );
       scene.renderForSpecs();
 
@@ -168,19 +170,19 @@ describe(
       const expectedComputedTransform = Matrix4.multiplyTransformation(
         sceneGraph.computedModelMatrix,
         node.transform,
-        new Matrix4()
+        new Matrix4(),
       );
 
       const expectedModelMatrix = Matrix4.multiplyTransformation(
         drawCommand.modelMatrix,
         transform,
-        new Matrix4()
+        new Matrix4(),
       );
 
       const expectedBoundingSphere = BoundingSphere.transform(
         primitive.boundingSphere,
         expectedComputedTransform,
-        new BoundingSphere()
+        new BoundingSphere(),
       );
 
       scene.renderForSpecs();
@@ -190,14 +192,14 @@ describe(
         Matrix4.equalsEpsilon(
           drawCommand.modelMatrix,
           expectedModelMatrix,
-          CesiumMath.EPSILON15
-        )
+          CesiumMath.EPSILON15,
+        ),
       ).toBe(true);
       expect(
         BoundingSphere.equals(
           drawCommand.boundingVolume,
-          expectedBoundingSphere
-        )
+          expectedBoundingSphere,
+        ),
       ).toBe(true);
     });
 
@@ -206,7 +208,7 @@ describe(
         {
           gltf: simpleSkin,
         },
-        scene
+        scene,
       );
 
       modifyModel(model);
@@ -221,23 +223,23 @@ describe(
       let transformedDrawCommand = getDrawCommand(transformedLeafNode);
 
       const childTransformation = Matrix4.fromTranslation(
-        new Cartesian3(0, 5, 0)
+        new Cartesian3(0, 5, 0),
       );
       applyTransform(transformedLeafNode, childTransformation);
 
       const rootTransformation = Matrix4.fromTranslation(
-        new Cartesian3(12, 5, 0)
+        new Cartesian3(12, 5, 0),
       );
       applyTransform(rootNode, rootTransformation);
 
       const expectedRootModelMatrix = Matrix4.multiplyTransformation(
         rootTransformation,
         rootDrawCommand.modelMatrix,
-        new Matrix4()
+        new Matrix4(),
       );
       const expectedStaticLeafModelMatrix = Matrix4.clone(
         staticDrawCommand.modelMatrix,
-        new Matrix4()
+        new Matrix4(),
       );
 
       const finalTransform = new Matrix4();
@@ -245,7 +247,7 @@ describe(
       const expectedTransformedLeafModelMatrix = Matrix4.multiplyTransformation(
         finalTransform,
         transformedDrawCommand.modelMatrix,
-        new Matrix4()
+        new Matrix4(),
       );
 
       scene.renderForSpecs();
@@ -255,10 +257,10 @@ describe(
 
       expect(rootDrawCommand.modelMatrix).toEqual(expectedRootModelMatrix);
       expect(staticDrawCommand.modelMatrix).toEqual(
-        expectedStaticLeafModelMatrix
+        expectedStaticLeafModelMatrix,
       );
       expect(transformedDrawCommand.modelMatrix).toEqual(
-        expectedTransformedLeafModelMatrix
+        expectedTransformedLeafModelMatrix,
       );
     });
 
@@ -267,7 +269,7 @@ describe(
         {
           gltf: simpleSkin,
         },
-        scene
+        scene,
       );
 
       modifyModel(model);
@@ -284,17 +286,17 @@ describe(
       const expectedRootModelMatrix = Matrix4.multiplyTransformation(
         modelMatrix,
         rootDrawCommand.modelMatrix,
-        new Matrix4()
+        new Matrix4(),
       );
       const expectedStaticLeafModelMatrix = Matrix4.multiplyTransformation(
         modelMatrix,
         staticDrawCommand.modelMatrix,
-        new Matrix4()
+        new Matrix4(),
       );
       const expectedTransformedLeafModelMatrix = Matrix4.multiplyTransformation(
         modelMatrix,
         transformedDrawCommand.modelMatrix,
-        new Matrix4()
+        new Matrix4(),
       );
 
       model.modelMatrix = modelMatrix;
@@ -306,10 +308,10 @@ describe(
 
       expect(rootDrawCommand.modelMatrix).toEqual(expectedRootModelMatrix);
       expect(staticDrawCommand.modelMatrix).toEqual(
-        expectedStaticLeafModelMatrix
+        expectedStaticLeafModelMatrix,
       );
       expect(transformedDrawCommand.modelMatrix).toEqual(
-        expectedTransformedLeafModelMatrix
+        expectedTransformedLeafModelMatrix,
       );
     });
 
@@ -318,7 +320,7 @@ describe(
         {
           gltf: simpleSkin,
         },
-        scene
+        scene,
       );
 
       modifyModel(model);
@@ -328,7 +330,7 @@ describe(
       const scaledModelMatrix = Matrix4.multiplyByUniformScale(
         modelMatrix,
         modelScale,
-        new Matrix4()
+        new Matrix4(),
       );
 
       const rootNode = getParentRootNode(model);
@@ -342,17 +344,17 @@ describe(
       const expectedRootModelMatrix = Matrix4.multiplyTransformation(
         scaledModelMatrix,
         rootDrawCommand.modelMatrix,
-        new Matrix4()
+        new Matrix4(),
       );
       const expectedStaticLeafModelMatrix = Matrix4.multiplyTransformation(
         scaledModelMatrix,
         staticDrawCommand.modelMatrix,
-        new Matrix4()
+        new Matrix4(),
       );
       const expectedTransformedLeafModelMatrix = Matrix4.multiplyTransformation(
         scaledModelMatrix,
         transformedDrawCommand.modelMatrix,
-        new Matrix4()
+        new Matrix4(),
       );
 
       model.modelMatrix = modelMatrix;
@@ -364,10 +366,10 @@ describe(
 
       expect(rootDrawCommand.modelMatrix).toEqual(expectedRootModelMatrix);
       expect(staticDrawCommand.modelMatrix).toEqual(
-        expectedStaticLeafModelMatrix
+        expectedStaticLeafModelMatrix,
       );
       expect(transformedDrawCommand.modelMatrix).toEqual(
-        expectedTransformedLeafModelMatrix
+        expectedTransformedLeafModelMatrix,
       );
     });
 
@@ -376,7 +378,7 @@ describe(
         {
           gltf: simpleSkin,
         },
-        scene
+        scene,
       );
       modifyModel(model);
 
@@ -401,5 +403,5 @@ describe(
       expect(childDrawCommand.cullFace).toBe(CullFace.FRONT);
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -1,9 +1,10 @@
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PixelDatatype from "./PixelDatatype.js";
+import {
+  Check,
+  DeveloperError,
+  PixelDatatype,
+  PixelFormat,
+  defined,
+} from "@cesium/core";
 
 /**
  * @private
@@ -19,7 +20,7 @@ function CubeMapFace(
   size,
   preMultiplyAlpha,
   flipY,
-  initialized
+  initialized,
 ) {
   this._context = context;
   this._texture = texture;
@@ -99,12 +100,12 @@ CubeMapFace.prototype.copyFrom = function (options) {
   Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
   if (xOffset + source.width > this._size) {
     throw new DeveloperError(
-      "xOffset + options.source.width must be less than or equal to width."
+      "xOffset + options.source.width must be less than or equal to width.",
     );
   }
   if (yOffset + source.height > this._size) {
     throw new DeveloperError(
-      "yOffset + options.source.height must be less than or equal to height."
+      "yOffset + options.source.height must be less than or equal to height.",
     );
   }
   //>>includeEnd('debug');
@@ -133,7 +134,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
     unpackAlignment = PixelFormat.alignmentInBytes(
       pixelFormat,
       pixelDatatype,
-      width
+      width,
     );
   }
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
@@ -143,7 +144,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
   } else {
     gl.pixelStorei(
       gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
-      gl.BROWSER_DEFAULT_WEBGL
+      gl.BROWSER_DEFAULT_WEBGL,
     );
   }
 
@@ -161,7 +162,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
             pixelFormat,
             pixelDatatype,
             size,
-            size
+            size,
           );
         }
         pixels = arrayBufferView;
@@ -180,7 +181,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
         pixelFormat,
         pixelDatatype,
         size,
-        size
+        size,
       );
     }
     gl.texImage2D(
@@ -191,8 +192,8 @@ CubeMapFace.prototype.copyFrom = function (options) {
       size,
       0,
       pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
-      pixels
+      PixelDatatype.toWebGLConstant(pixelDatatype, this._context.webgl2),
+      pixels,
     );
     this._initialized = true;
   }
@@ -208,7 +209,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
           pixelFormat,
           pixelDatatype,
           width,
-          height
+          height,
         );
       }
       gl.texSubImage2D(
@@ -219,8 +220,8 @@ CubeMapFace.prototype.copyFrom = function (options) {
         width,
         height,
         pixelFormat,
-        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
-        arrayBufferView
+        PixelDatatype.toWebGLConstant(pixelDatatype, this._context.webgl2),
+        arrayBufferView,
       );
     } else {
       // Only valid for DOM-Element uploads
@@ -234,8 +235,8 @@ CubeMapFace.prototype.copyFrom = function (options) {
         xOffset,
         yOffset,
         pixelFormat,
-        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
-        source
+        PixelDatatype.toWebGLConstant(pixelDatatype, this._context.webgl2),
+        source,
       );
     }
   }
@@ -245,25 +246,22 @@ CubeMapFace.prototype.copyFrom = function (options) {
 
 /**
  * Copies texels from the framebuffer to the cubemap's face.
- *
  * @param {number} [xOffset=0] An offset in the x direction in the cubemap where copying begins.
  * @param {number} [yOffset=0] An offset in the y direction in the cubemap where copying begins.
  * @param {number} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
  * @param {number} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
  * @param {number} [width=CubeMap's width] The width of the subimage to copy.
  * @param {number} [height=CubeMap's height] The height of the subimage to copy.
- *
- * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
- * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
- * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
- * @exception {DeveloperError} xOffset must be greater than or equal to zero.
- * @exception {DeveloperError} yOffset must be greater than or equal to zero.
- * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
- * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
- * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
- * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
- * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
+ * @throws {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
+ * @throws {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} xOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} yOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} framebufferXOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} framebufferYOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} xOffset + source.width must be less than or equal to width.
+ * @throws {DeveloperError} yOffset + source.height must be less than or equal to height.
+ * @throws {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
  * @example
  * // Copy the framebuffer contents to the +x cube map face.
  * cubeMap.positiveX.copyFromFramebuffer();
@@ -274,14 +272,14 @@ CubeMapFace.prototype.copyFromFramebuffer = function (
   framebufferXOffset,
   framebufferYOffset,
   width,
-  height
+  height,
 ) {
-  xOffset = defaultValue(xOffset, 0);
-  yOffset = defaultValue(yOffset, 0);
-  framebufferXOffset = defaultValue(framebufferXOffset, 0);
-  framebufferYOffset = defaultValue(framebufferYOffset, 0);
-  width = defaultValue(width, this._size);
-  height = defaultValue(height, this._size);
+  xOffset = xOffset ?? 0;
+  yOffset = yOffset ?? 0;
+  framebufferXOffset = framebufferXOffset ?? 0;
+  framebufferYOffset = framebufferYOffset ?? 0;
+  width = width ?? this._size;
+  height = height ?? this._size;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
@@ -289,31 +287,31 @@ CubeMapFace.prototype.copyFromFramebuffer = function (
   Check.typeOf.number.greaterThanOrEquals(
     "framebufferXOffset",
     framebufferXOffset,
-    0
+    0,
   );
   Check.typeOf.number.greaterThanOrEquals(
     "framebufferYOffset",
     framebufferYOffset,
-    0
+    0,
   );
   if (xOffset + width > this._size) {
     throw new DeveloperError(
-      "xOffset + source.width must be less than or equal to width."
+      "xOffset + source.width must be less than or equal to width.",
     );
   }
   if (yOffset + height > this._size) {
     throw new DeveloperError(
-      "yOffset + source.height must be less than or equal to height."
+      "yOffset + source.height must be less than or equal to height.",
     );
   }
   if (this._pixelDatatype === PixelDatatype.FLOAT) {
     throw new DeveloperError(
-      "Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT."
+      "Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.",
     );
   }
   if (this._pixelDatatype === PixelDatatype.HALF_FLOAT) {
     throw new DeveloperError(
-      "Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT."
+      "Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.",
     );
   }
   //>>includeEnd('debug');
@@ -331,7 +329,87 @@ CubeMapFace.prototype.copyFromFramebuffer = function (
     framebufferXOffset,
     framebufferYOffset,
     width,
-    height
+    height,
+  );
+  gl.bindTexture(target, null);
+  this._initialized = true;
+};
+
+/**
+ * Copies texels from the framebuffer to the cubemap's face mipmap.
+ * @param {number} [xOffset=0] An offset in the x direction in the framebuffer where copying begins from.
+ * @param {number} [yOffset=0] An offset in the y direction in the framebuffer where copying begins from.
+ * @param {number} [width=CubeMap's width] The width of the subimage to copy.
+ * @param {number} [height=CubeMap's height] The height of the subimage to copy.
+ * @param {number} [level=0] The level of detail. Level 0 is the base image level and level n is the n-th mipmap reduction level.
+ * @throws {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
+ * @throws {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
+ * @throws {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} xOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} yOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} framebufferXOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} framebufferYOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} xOffset + source.width must be less than or equal to width.
+ * @throws {DeveloperError} yOffset + source.height must be less than or equal to height.
+ * @throws {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
+ *
+ * @example
+ * // Copy the framebuffer contents to the +x cube map face.
+ * cubeMap.positiveX.copyFromFramebuffer();
+ */
+CubeMapFace.prototype.copyMipmapFromFramebuffer = function (
+  xOffset,
+  yOffset,
+  width,
+  height,
+  level,
+) {
+  xOffset = xOffset ?? 0;
+  yOffset = yOffset ?? 0;
+  width = width ?? this._size;
+  height = height ?? this._size;
+  level = level ?? 0;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
+  Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
+
+  if (xOffset + width > this._size) {
+    throw new DeveloperError(
+      "xOffset + source.width must be less than or equal to width.",
+    );
+  }
+  if (yOffset + height > this._size) {
+    throw new DeveloperError(
+      "yOffset + source.height must be less than or equal to height.",
+    );
+  }
+  if (this._pixelDatatype === PixelDatatype.FLOAT) {
+    throw new DeveloperError(
+      "Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.",
+    );
+  }
+  if (this._pixelDatatype === PixelDatatype.HALF_FLOAT) {
+    throw new DeveloperError(
+      "Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.",
+    );
+  }
+  //>>includeEnd('debug');
+
+  const gl = this._context._gl;
+  const target = this._textureTarget;
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(target, this._texture);
+  gl.copyTexImage2D(
+    this._targetFace,
+    level,
+    this._internalFormat,
+    xOffset,
+    yOffset,
+    width,
+    height,
+    0,
   );
   gl.bindTexture(target, null);
   this._initialized = true;

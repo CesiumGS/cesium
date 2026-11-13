@@ -1,4 +1,5 @@
-import { ComponentDatatype, Cesium3DTileFeatureTable } from "../../index.js";
+import { ComponentDatatype } from "@cesium/core";
+import { Cesium3DTileFeatureTable } from "../../index.js";
 
 describe("Scene/Cesium3DTileFeatureTable", function () {
   it("loads from JSON", function () {
@@ -11,7 +12,7 @@ describe("Scene/Cesium3DTileFeatureTable", function () {
 
     const all = featureTable.getGlobalProperty(
       "TEST",
-      ComponentDatatype.UNSIGNED_BYTE
+      ComponentDatatype.UNSIGNED_BYTE,
     );
     expect(all).toEqual([0, 1, 2, 3, 4, 5]);
     const feature = featureTable.getProperty(
@@ -19,13 +20,13 @@ describe("Scene/Cesium3DTileFeatureTable", function () {
       ComponentDatatype.UNSIGNED_BYTE,
       2,
       1,
-      new Array(2)
+      new Array(2),
     );
     expect(feature).toEqual([2, 3]);
     const properties = featureTable.getPropertyArray(
       "TEST",
       ComponentDatatype.UNSIGNED_BYTE,
-      2
+      2,
     );
     expect(properties).toEqual([0, 1, 2, 3, 4, 5]);
   });
@@ -37,7 +38,7 @@ describe("Scene/Cesium3DTileFeatureTable", function () {
           byteOffset: 4,
         },
       },
-      new Uint8Array([0, 0, 0, 0, 0, 1, 2, 3, 4, 5])
+      new Uint8Array([0, 0, 0, 0, 0, 1, 2, 3, 4, 5]),
     );
     featureTable.featuresLength = 3;
 
@@ -46,7 +47,7 @@ describe("Scene/Cesium3DTileFeatureTable", function () {
     const all = featureTable.getGlobalProperty(
       "TEST",
       ComponentDatatype.UNSIGNED_BYTE,
-      6
+      6,
     );
     expect(all).toEqual([0, 1, 2, 3, 4, 5]);
     const feature = featureTable.getProperty(
@@ -54,13 +55,13 @@ describe("Scene/Cesium3DTileFeatureTable", function () {
       ComponentDatatype.UNSIGNED_BYTE,
       2,
       1,
-      new Array(2)
+      new Array(2),
     );
     expect(feature).toEqual([2, 3]);
     const properties = featureTable.getPropertyArray(
       "TEST",
       ComponentDatatype.UNSIGNED_BYTE,
-      2
+      2,
     );
     expect(properties).toEqual([0, 1, 2, 3, 4, 5]);
   });

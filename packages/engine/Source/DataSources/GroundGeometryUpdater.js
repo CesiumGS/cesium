@@ -1,9 +1,10 @@
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import GeometryOffsetAttribute from "../Core/GeometryOffsetAttribute.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
+import {
+  Check,
+  DeveloperError,
+  GeometryOffsetAttribute,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import GroundPrimitive from "../Scene/GroundPrimitive.js";
 import HeightReference, {
   isHeightReferenceClamp,
@@ -87,14 +88,14 @@ GroundGeometryUpdater.prototype._onEntityPropertyChanged = function (
   entity,
   propertyName,
   newValue,
-  oldValue
+  oldValue,
 ) {
   GeometryUpdater.prototype._onEntityPropertyChanged.call(
     this,
     entity,
     propertyName,
     newValue,
-    oldValue
+    oldValue,
   );
   if (this._observedPropertyNames.indexOf(propertyName) === -1) {
     return;
@@ -111,7 +112,7 @@ GroundGeometryUpdater.prototype._onEntityPropertyChanged = function (
     oneTimeWarning(oneTimeWarning.geometryZIndex);
   }
 
-  this._zIndex = defaultValue(geometry.zIndex, defaultZIndex);
+  this._zIndex = geometry.zIndex ?? defaultZIndex;
 
   if (defined(this._terrainOffsetProperty)) {
     this._terrainOffsetProperty.destroy();
@@ -127,13 +128,13 @@ GroundGeometryUpdater.prototype._onEntityPropertyChanged = function (
   ) {
     const centerPosition = new CallbackProperty(
       this._computeCenter.bind(this),
-      !this._dynamic
+      !this._dynamic,
     );
     this._terrainOffsetProperty = new TerrainOffsetProperty(
       this._scene,
       centerPosition,
       heightReferenceProperty,
-      extrudedHeightReferenceProperty
+      extrudedHeightReferenceProperty,
     );
   }
 };
@@ -178,7 +179,7 @@ GroundGeometryUpdater.getGeometryHeight = function (height, heightReference) {
  */
 GroundGeometryUpdater.getGeometryExtrudedHeight = function (
   extrudedHeight,
-  extrudedHeightReference
+  extrudedHeightReference,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("extrudedHeightReference", extrudedHeightReference);
@@ -208,7 +209,7 @@ GroundGeometryUpdater.computeGeometryOffsetAttribute = function (
   height,
   heightReference,
   extrudedHeight,
-  extrudedHeightReference
+  extrudedHeightReference,
 ) {
   if (!defined(height) || !defined(heightReference)) {
     heightReference = HeightReference.NONE;

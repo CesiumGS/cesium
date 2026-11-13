@@ -1,10 +1,9 @@
+import { Event } from "@cesium/core";
 import {
   EllipsoidTerrainProvider,
-  Event,
   GeographicTilingScheme,
   ImageryLayerCollection,
 } from "@cesium/engine";
-
 import { BaseLayerPickerViewModel, ProviderViewModel } from "../../index.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -211,7 +210,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     viewModel.selectedTerrain = testProviderViewModel3;
     await testProviderViewModel.creationCommand();
     expect(viewModel.buttonTooltip).toEqual(
-      `${testProviderViewModel.name}\n${testProviderViewModel3.name}`
+      `${testProviderViewModel.name}\n${testProviderViewModel3.name}`,
     );
 
     viewModel.selectedImagery = undefined;

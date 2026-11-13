@@ -1,10 +1,12 @@
-import Cartesian4 from "../Core/Cartesian4.js";
-import clone from "../Core/clone.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  Cartesian4,
+  Color,
+  Rectangle,
+  RuntimeError,
+  clone,
+  defined,
+} from "@cesium/core";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import I3SNode from "./I3SNode.js";
 import I3SSymbology from "./I3SSymbology.js";
@@ -31,7 +33,7 @@ function I3SLayer(dataProvider, layerData, parent) {
 
   const parentUrl = this._parent.resource.getUrlComponent();
 
-  let tilesetUrl = "";
+  let tilesetUrl;
   if (parentUrl.match(/layers\/\d/)) {
     tilesetUrl = `${parentUrl}`.replace(/\/+$/, "");
   } else {
@@ -48,7 +50,7 @@ function I3SLayer(dataProvider, layerData, parent) {
 
   this._resource = new Resource({ url: tilesetUrl });
   this._resource.setQueryParameters(
-    this._dataProvider.resource.queryParameters
+    this._dataProvider.resource.queryParameters,
   );
   this._resource.appendForwardSlash();
   this._data = layerData;
@@ -179,7 +181,7 @@ Object.defineProperties(I3SLayer.prototype, {
 I3SLayer.prototype.load = async function (cesium3dTilesetOptions) {
   if (this._data.spatialReference.wkid !== 4326) {
     throw new RuntimeError(
-      `Unsupported spatial reference: ${this._data.spatialReference.wkid}`
+      `Unsupported spatial reference: ${this._data.spatialReference.wkid}`,
     );
   }
 
@@ -214,8 +216,8 @@ I3SLayer.prototype._computeGeometryDefinitions = function (useCompression) {
       defIndex++
     ) {
       const geometryBuffersInfo = [];
-      const geometryBuffers = this._data.geometryDefinitions[defIndex]
-        .geometryBuffers;
+      const geometryBuffers =
+        this._data.geometryDefinitions[defIndex].geometryBuffers;
 
       for (let bufIndex = 0; bufIndex < geometryBuffers.length; bufIndex++) {
         const geometryBuffer = geometryBuffers[bufIndex];
@@ -264,7 +266,7 @@ I3SLayer.prototype._computeGeometryDefinitions = function (useCompression) {
  */
 I3SLayer.prototype._findBestGeometryBuffers = function (
   definition,
-  attributes
+  attributes,
 ) {
   // find the most appropriate geometry definition
   // based on the required attributes, and by favouring
@@ -291,9 +293,15 @@ I3SLayer.prototype._findBestGeometryBuffers = function (
         };
       }
     }
+    // If no match found return first geometryBuffer
+    if (defined(geometryDefinition[0])) {
+      return {
+        bufferIndex: 0,
+        definition: geometryDefinition,
+        geometryBufferInfo: geometryDefinition[0],
+      };
+    }
   }
-
-  return 0;
 };
 
 /**
@@ -342,16 +350,16 @@ I3SLayer.prototype._loadNodePage = function (page) {
     const nodePageResource = this.resource.getDerivedResource({
       url: `nodepages/${page}/`,
     });
-    const fetchPromise = I3SLayer._fetchJson(nodePageResource).then(function (
-      data
-    ) {
-      if (defined(data.error) && data.error.code !== 200) {
-        return Promise.reject(data.error);
-      }
+    const fetchPromise = I3SLayer._fetchJson(nodePageResource).then(
+      function (data) {
+        if (defined(data.error) && data.error.code !== 200) {
+          return Promise.reject(data.error);
+        }
 
-      that._nodePages[page] = data.nodes;
-      return data;
-    });
+        that._nodePages[page] = data.nodes;
+        return data;
+      },
+    );
 
     this._nodePageFetches[page] = fetchPromise;
   }
@@ -368,14 +376,14 @@ I3SLayer.prototype._computeExtent = function () {
       this._data.fullExtent.xmin,
       this._data.fullExtent.ymin,
       this._data.fullExtent.xmax,
-      this._data.fullExtent.ymax
+      this._data.fullExtent.ymax,
     );
   } else if (defined(this._data.store.extent)) {
     this._extent = Rectangle.fromDegrees(
       this._data.store.extent[0],
       this._data.store.extent[1],
       this._data.store.extent[2],
-      this._data.store.extent[3]
+      this._data.store.extent[3],
     );
   }
 };
@@ -403,12 +411,12 @@ I3SLayer.prototype._create3DTileset = async function (cesium3dTilesetOptions) {
       ? clone(cesium3dTilesetOptions)
       : {};
     cesium3dTilesetOptions.outlineColor = Color.fromCartesian4(
-      Cartesian4.fromArray(outlineColor)
+      Cartesian4.fromArray(outlineColor),
     );
   }
   this._tileset = await Cesium3DTileset.fromUrl(
     tilesetUrl,
-    cesium3dTilesetOptions
+    cesium3dTilesetOptions,
   );
   this._tileset.show = this._parent.show;
   this._tileset._isI3STileSet = true;

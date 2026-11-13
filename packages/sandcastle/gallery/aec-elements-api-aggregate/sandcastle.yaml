@@ -1,0 +1,7 @@
+title: Design Model – Element Aggregation
+description: Compute aggregate statistics (count, min, max, average, and sum) for numeric element properties across a structural design model with the Cesium ion Asset Elements API using Cesium.IonAssetElementService.
+labels:
+  - Showcases
+  - 3D Tiles
+  - Metadata
+thumbnail: thumbnail.jpg

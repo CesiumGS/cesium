@@ -5,6 +5,8 @@ import {
   JulianDate,
   TimeInterval,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
   ConstantProperty,
   Entity,
   PolylineVolumeGeometryUpdater,
@@ -12,7 +14,6 @@ import {
   TimeIntervalCollectionProperty,
   PrimitiveCollection,
 } from "../../index.js";
-
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createGeometryUpdaterSpecs from "../../../../Specs/createGeometryUpdaterSpecs.js";
@@ -43,7 +44,7 @@ describe(
     function createBasicPolylineVolume() {
       const polylineVolume = new PolylineVolumeGraphics();
       polylineVolume.positions = new ConstantProperty(
-        Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1])
+        Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1]),
       );
       polylineVolume.shape = new ConstantProperty(shape);
       const entity = new Entity();
@@ -61,7 +62,7 @@ describe(
       const entity = createBasicPolylineVolume();
       const updater = new PolylineVolumeGeometryUpdater(entity, scene);
       entity.polylineVolume.positions = createDynamicProperty(
-        Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1])
+        Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1]),
       );
       updater._onEntityPropertyChanged(entity, "polylineVolume");
 
@@ -95,7 +96,7 @@ describe(
           start: JulianDate.now(),
           stop: JulianDate.now(),
           data: CornerType.ROUNDED,
-        })
+        }),
       );
       updater._onEntityPropertyChanged(entity, "polylineVolume");
 
@@ -136,7 +137,7 @@ describe(
     it("dynamic updater sets properties", function () {
       const polylineVolume = new PolylineVolumeGraphics();
       polylineVolume.positions = createDynamicProperty(
-        Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1])
+        Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1]),
       );
       polylineVolume.show = createDynamicProperty(true);
       polylineVolume.shape = createDynamicProperty(shape);
@@ -151,18 +152,18 @@ describe(
       const updater = new PolylineVolumeGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         new PrimitiveCollection(),
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
       dynamicUpdater.update(time);
 
       const options = dynamicUpdater._options;
       expect(options.id).toEqual(entity);
       expect(options.polylinePositions).toEqual(
-        polylineVolume.positions.getValue()
+        polylineVolume.positions.getValue(),
       );
       expect(options.shapePositions).toEqual(polylineVolume.shape.getValue());
       expect(options.granularity).toEqual(
-        polylineVolume.granularity.getValue()
+        polylineVolume.granularity.getValue(),
       );
       expect(options.cornerType).toEqual(polylineVolume.cornerType.getValue());
     });
@@ -207,15 +208,15 @@ describe(
       PolylineVolumeGeometryUpdater,
       "polylineVolume",
       createBasicPolylineVolume,
-      getScene
+      getScene,
     );
 
     createDynamicGeometryUpdaterSpecs(
       PolylineVolumeGeometryUpdater,
       "polylineVolume",
       createDynamicPolylineVolume,
-      getScene
+      getScene,
     );
   },
-  "WebGL"
+  "WebGL",
 );

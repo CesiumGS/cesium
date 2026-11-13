@@ -1,5 +1,4 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
-import CesiumMath from "../../Core/Math.js";
+import { Cartesian3, Math as CesiumMath } from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import AtmosphereStageFS from "../../Shaders/Model/AtmosphereStageFS.js";
 import AtmosphereStageVS from "../../Shaders/Model/AtmosphereStageVS.js";
@@ -16,18 +15,23 @@ const AtmospherePipelineStage = {
   name: "AtmospherePipelineStage", // Helps with debugging
 };
 
+/**
+ * @param {ModelRenderResources} modelRenderResources
+ * @param {Model} model
+ * @param {FrameState} frameState
+ */
 AtmospherePipelineStage.process = function (
-  renderResources,
+  modelRenderResources,
   model,
-  frameState
+  frameState,
 ) {
-  const shaderBuilder = renderResources.shaderBuilder;
+  const shaderBuilder = modelRenderResources.shaderBuilder;
 
   shaderBuilder.addDefine("HAS_ATMOSPHERE", undefined, ShaderDestination.BOTH);
   shaderBuilder.addDefine(
     "COMPUTE_POSITION_WC_ATMOSPHERE",
     undefined,
-    ShaderDestination.BOTH
+    ShaderDestination.BOTH,
   );
 
   shaderBuilder.addVarying("vec3", "v_atmosphereRayleighColor");
@@ -37,17 +41,17 @@ AtmospherePipelineStage.process = function (
   shaderBuilder.addVertexLines([AtmosphereStageVS]);
   shaderBuilder.addFragmentLines([AtmosphereStageFS]);
 
-  // Add a uniform so fog is only calculated when the efcfect would
-  // be non-negligible For example when the camera is in space, fog density decreases
+  // Add a uniform so fog is only calculated when the effect would
+  // be non-negligible. For example when the camera is in space, fog density decreases
   // to 0 so fog shouldn't be rendered. Since this state may change rapidly if
   // the camera is moving, this is implemented as a uniform, not a define.
   shaderBuilder.addUniform("bool", "u_isInFog", ShaderDestination.FRAGMENT);
-  renderResources.uniformMap.u_isInFog = function () {
+  modelRenderResources.uniformMap.u_isInFog = function () {
     // We only need a rough measure of distance to the model, so measure
     // from the camera to the bounding sphere center.
     const distance = Cartesian3.distance(
       frameState.camera.positionWC,
-      model.boundingSphere.center
+      model.boundingSphere.center,
     );
 
     return (

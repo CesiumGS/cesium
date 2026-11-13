@@ -1,0 +1,230 @@
+import * as Cesium from "cesium";
+import Sandcastle from "Sandcastle";
+
+const viewer = new Cesium.Viewer("cesiumContainer");
+const scene = viewer.scene;
+
+function addPointPrimitive() {
+  Sandcastle.declare(addPointPrimitive);
+
+  const pointPrimitives = scene.primitives.add(
+    new Cesium.PointPrimitiveCollection(),
+  );
+  pointPrimitives.add({
+    color: Cesium.Color.YELLOW,
+    position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+  });
+}
+
+function setPointPrimitiveProperties() {
+  Sandcastle.declare(setPointPrimitiveProperties);
+
+  const pointPrimitives = scene.primitives.add(
+    new Cesium.PointPrimitiveCollection(),
+  );
+  pointPrimitives.add({
+    position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+    show: true, // default
+    color: Cesium.Color.SKYBLUE, // default: WHITE
+    pixelSize: 10, // default: 1
+    outlineColor: Cesium.Color.YELLOW, // default: TRANSPARENT
+    outlineWidth: 3, // default: 0
+  });
+}
+
+function changePointPrimitiveProperties() {
+  Sandcastle.declare(changePointPrimitiveProperties);
+
+  const pointPrimitives = scene.primitives.add(
+    new Cesium.PointPrimitiveCollection(),
+  );
+
+  // add() returns a PointPrimitive object containing functions to change
+  // the pointPrimitive's position and appearance.
+  const p = pointPrimitives.add({
+    pixelSize: 2,
+  });
+
+  p.position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 300000.0);
+  p.pixelSize = 20.0;
+  p.color = new Cesium.Color(1.0, 1.0, 1.0, 0.25);
+}
+
+function addMultiplePointPrimitives() {
+  Sandcastle.declare(addMultiplePointPrimitives);
+
+  const pointPrimitives = scene.primitives.add(
+    new Cesium.PointPrimitiveCollection(),
+  );
+  pointPrimitives.add({
+    position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+    color: Cesium.Color.RED,
+    pixelSize: 5,
+  });
+  pointPrimitives.add({
+    position: Cesium.Cartesian3.fromDegrees(-80.5, 35.14),
+    color: Cesium.Color.BLUE,
+    pixelSize: 10,
+  });
+  pointPrimitives.add({
+    position: Cesium.Cartesian3.fromDegrees(-80.12, 25.46),
+    color: Cesium.Color.LIME,
+    pixelSize: 20,
+  });
+}
+
+function scaleByDistance() {
+  Sandcastle.declare(scaleByDistance);
+
+  const pointPrimitives = scene.primitives.add(
+    new Cesium.PointPrimitiveCollection(),
+  );
+  pointPrimitives.add({
+    position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+    // pixelSize will multiply by the scale factor, so in this
+    // example the size will range from 20px (near) to 5px (far).
+    pixelSize: 10,
+    scaleByDistance: new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5),
+  });
+}
+
+function fadeByDistance() {
+  Sandcastle.declare(fadeByDistance);
+
+  const pointPrimitives = scene.primitives.add(
+    new Cesium.PointPrimitiveCollection(),
+  );
+  pointPrimitives.add({
+    position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+    pixelSize: 20,
+    translucencyByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.2),
+  });
+}
+
+function inReferenceFrame() {
+  Sandcastle.declare(inReferenceFrame);
+
+  const pointPrimitives = scene.primitives.add(
+    new Cesium.PointPrimitiveCollection(),
+  );
+  const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+  pointPrimitives.modelMatrix =
+    Cesium.Transforms.eastNorthUpToFixedFrame(center);
+
+  // center
+  pointPrimitives.add({
+    pixelSize: 20,
+    color: Cesium.Color.WHITE,
+    position: new Cesium.Cartesian3(0.0, 0.0, 0.0),
+  });
+  // east
+  pointPrimitives.add({
+    pixelSize: 10,
+    color: Cesium.Color.RED,
+    position: new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
+  });
+  // north
+  pointPrimitives.add({
+    pixelSize: 10,
+    color: Cesium.Color.LIME,
+    position: new Cesium.Cartesian3(0.0, 1000000.0, 0.0),
+  });
+  // up
+  pointPrimitives.add({
+    pixelSize: 10,
+    color: Cesium.Color.BLUE,
+    position: new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
+  });
+}
+
+function add100kPoints() {
+  Sandcastle.declare(add100kPoints);
+
+  const numPoints = 100000;
+
+  const pointPrimitives = scene.primitives.add(
+    new Cesium.PointPrimitiveCollection(),
+  );
+  const base = scene.globe.ellipsoid.radii.x;
+  const color = Cesium.Color.LIGHTSKYBLUE;
+  const outlineColor = Cesium.Color.BLACK;
+
+  for (let j = 0; j < numPoints; ++j) {
+    const position = new Cesium.Cartesian3(
+      16000000 * Math.random() - 8000000,
+      -((4000000 * j) / numPoints + base),
+      2000000 * Math.random() - 1000000,
+    );
+
+    pointPrimitives.add({
+      pixelSize: 5,
+      color: color,
+      outlineColor: outlineColor,
+      outlineWidth: 0,
+      position: position,
+    });
+  }
+}
+
+Sandcastle.addToolbarMenu([
+  {
+    text: "Add point",
+    onselect: function () {
+      addPointPrimitive();
+      Sandcastle.highlight(addPointPrimitive);
+    },
+  },
+  {
+    text: "Set point properties at creation",
+    onselect: function () {
+      setPointPrimitiveProperties();
+      Sandcastle.highlight(setPointPrimitiveProperties);
+    },
+  },
+  {
+    text: "Change point properties",
+    onselect: function () {
+      changePointPrimitiveProperties();
+      Sandcastle.highlight(changePointPrimitiveProperties);
+    },
+  },
+  {
+    text: "Add multiple points",
+    onselect: function () {
+      addMultiplePointPrimitives();
+      Sandcastle.highlight(addMultiplePointPrimitives);
+    },
+  },
+  {
+    text: "Scale by viewer distance",
+    onselect: function () {
+      scaleByDistance();
+      Sandcastle.highlight(scaleByDistance);
+    },
+  },
+  {
+    text: "Fade by viewer distance",
+    onselect: function () {
+      fadeByDistance();
+      Sandcastle.highlight(fadeByDistance);
+    },
+  },
+  {
+    text: "Add points in reference frame",
+    onselect: function () {
+      inReferenceFrame();
+      Sandcastle.highlight(inReferenceFrame);
+    },
+  },
+  {
+    text: "Add 100k points",
+    onselect: function () {
+      add100kPoints();
+      Sandcastle.highlight(add100kPoints);
+    },
+  },
+]);
+
+Sandcastle.reset = function () {
+  scene.primitives.removeAll();
+};

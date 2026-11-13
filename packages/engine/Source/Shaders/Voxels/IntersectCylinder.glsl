@@ -19,32 +19,30 @@
 
 // Cylinder uniforms
 uniform vec2 u_cylinderRenderRadiusMinMax;
-uniform vec2 u_cylinderRenderHeightMinMax;
 #if defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE)
     uniform vec2 u_cylinderRenderAngleMinMax;
 #endif
 
-/**
- * Find the intersection of a ray with the volume defined by two planes of constant z
- */
-RayShapeIntersection intersectHeightBounds(in Ray ray, in vec2 minMaxHeight, in bool convex)
-{
-    float zPosition = ray.pos.z;
-    float zDirection = ray.dir.z;
+uniform sampler2D u_renderBoundPlanesTexture;
 
-    float tmin = (minMaxHeight.x - zPosition) / zDirection;
-    float tmax = (minMaxHeight.y - zPosition) / zDirection;
+RayShapeIntersection intersectBoundPlanes(in Ray ray) {
+    vec4 lastEntry = vec4(ray.dir, -INF_HIT);
+    vec4 firstExit = vec4(-ray.dir, +INF_HIT);
+    for (int i = 0; i < 2; i++) {
+        vec4 boundPlane = getBoundPlane(u_renderBoundPlanesTexture, i);
+        vec4 intersection = intersectPlane(ray, boundPlane);
+        if (dot(ray.dir, boundPlane.xyz) < 0.0) {
+            lastEntry = intersection.w > lastEntry.w ? intersection : lastEntry;
+        } else {
+            firstExit = intersection.w < firstExit.w ? intersection: firstExit;
+        }
+    }
 
-    // Normals point outside the volume
-    float signFlip = convex ? 1.0 : -1.0;
-    vec4 intersectMin = vec4(0.0, 0.0, -1.0 * signFlip, tmin);
-    vec4 intersectMax = vec4(0.0, 0.0, 1.0 * signFlip, tmax);
-
-    bool topEntry = zDirection < 0.0;
-    vec4 entry = topEntry ? intersectMax : intersectMin;
-    vec4 exit = topEntry ? intersectMin : intersectMax;
-
-    return RayShapeIntersection(entry, exit);
+    if (lastEntry.w < firstExit.w) {
+        return RayShapeIntersection(lastEntry, firstExit);
+    } else {
+        return RayShapeIntersection(vec4(-ray.dir, NO_HIT), vec4(ray.dir, NO_HIT));
+    }
 }
 
 /**
@@ -70,8 +68,11 @@ RayShapeIntersection intersectCylinder(in Ray ray, in float radius, in bool conv
     float t1 = (-b - determinant) / a;
     float t2 = (-b + determinant) / a;
     float signFlip = convex ? 1.0 : -1.0;
-    vec4 intersect1 = vec4(normalize(position + t1 * direction) * signFlip, 0.0, t1);
-    vec4 intersect2 = vec4(normalize(position + t2 * direction) * signFlip, 0.0, t2);
+    vec3 normal1 = vec3((position + t1 * direction) * signFlip, 0.0);
+    vec3 normal2 = vec3((position + t2 * direction) * signFlip, 0.0);
+    // Return normals in eye coordinates
+    vec4 intersect1 = vec4(normalize(czm_normal * normal1), t1);
+    vec4 intersect2 = vec4(normalize(czm_normal * normal2), t2);
 
     return RayShapeIntersection(intersect1, intersect2);
 }
@@ -80,21 +81,16 @@ RayShapeIntersection intersectCylinder(in Ray ray, in float radius, in bool conv
  * Find the intersection of a ray with a right cylindrical solid of given
  * radius and height bounds. NOTE: The shape is assumed to be convex.
  */
-RayShapeIntersection intersectBoundedCylinder(in Ray ray, in float radius, in vec2 minMaxHeight)
+RayShapeIntersection intersectBoundedCylinder(in Ray ray, in Ray rayEC, in float radius)
 {
     RayShapeIntersection cylinderIntersection = intersectCylinder(ray, radius, true);
-    RayShapeIntersection heightBoundsIntersection = intersectHeightBounds(ray, minMaxHeight, true);
+    RayShapeIntersection heightBoundsIntersection = intersectBoundPlanes(rayEC);
     return intersectIntersections(ray, cylinderIntersection, heightBoundsIntersection);
 }
 
-void intersectShape(Ray ray, inout Intersections ix)
+void intersectShape(in Ray ray, in Ray rayEC, inout Intersections ix)
 {
-    // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
-    // Direction is scaled as well to be in sync with position.
-    ray.pos = ray.pos * 2.0 - 1.0;
-    ray.dir *= 2.0;
-
-    RayShapeIntersection outerIntersect = intersectBoundedCylinder(ray, u_cylinderRenderRadiusMinMax.y, u_cylinderRenderHeightMinMax);
+    RayShapeIntersection outerIntersect = intersectBoundedCylinder(ray, rayEC, u_cylinderRenderRadiusMinMax.y);
 
     setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_RADIUS_MAX, outerIntersect);
 

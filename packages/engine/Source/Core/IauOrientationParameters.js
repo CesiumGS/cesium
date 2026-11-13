@@ -8,20 +8,20 @@
  *
  * @namespace IauOrientationParameters
  *
- * @private
+ * @ignore
  */
 function IauOrientationParameters(
   rightAscension,
   declination,
   rotation,
-  rotationRate
+  rotationRate,
 ) {
   /**
    * The right ascension of the north pole of the body with respect to
    * the International Celestial Reference Frame, in radians.
    * @type {number}
    *
-   * @private
+   * @ignore
    */
   this.rightAscension = rightAscension;
 
@@ -30,7 +30,7 @@ function IauOrientationParameters(
    * the International Celestial Reference Frame, in radians.
    * @type {number}
    *
-   * @private
+   * @ignore
    */
   this.declination = declination;
 
@@ -39,7 +39,7 @@ function IauOrientationParameters(
    * the meridian defined by the IAU report, in radians.
    * @type {number}
    *
-   * @private
+   * @ignore
    */
   this.rotation = rotation;
 
@@ -47,7 +47,7 @@ function IauOrientationParameters(
    * The instantaneous rotation rate about the north pole, in radians per second.
    * @type {number}
    *
-   * @private
+   * @ignore
    */
   this.rotationRate = rotationRate;
 }

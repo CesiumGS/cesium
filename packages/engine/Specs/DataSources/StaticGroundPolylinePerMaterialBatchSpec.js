@@ -1,14 +1,16 @@
 import {
-  ApproximateTerrainHeights,
   BoundingSphere,
   Cartesian3,
   Color,
-  defined,
   DistanceDisplayCondition,
   JulianDate,
   Math as CesiumMath,
   TimeInterval,
   TimeIntervalCollection,
+  defined,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
   BoundingSphereState,
   ColorMaterialProperty,
   ConstantProperty,
@@ -21,7 +23,6 @@ import {
   ClassificationType,
   GroundPolylinePrimitive,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -56,7 +57,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     const polyline = new PolylineGraphics();
     polyline.clampToGround = new ConstantProperty(true);
     polyline.positions = new ConstantProperty(
-      Cartesian3.fromDegreesArray([0, 0, 0.1, 0, 0.1, 0.1, 0, 0.1])
+      Cartesian3.fromDegreesArray([0, 0, 0.1, 0, 0.1, 0.1, 0, 0.1]),
     );
     return polyline;
   }
@@ -70,7 +71,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     const polyline1 = createGroundPolyline();
@@ -125,7 +126,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: Color.RED,
-      })
+      }),
     );
     const polyline = createGroundPolyline();
     polyline.material = new ColorMaterialProperty(color);
@@ -141,7 +142,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     const updater = new PolylineGeometryUpdater(entity, scene);
@@ -181,7 +182,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: new DistanceDisplayCondition(1.0, 2.0),
-      })
+      }),
     );
 
     const polyline = createGroundPolyline();
@@ -198,7 +199,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     const updater = new PolylineGeometryUpdater(entity, scene);
@@ -215,7 +216,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
       let attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.distanceDisplayCondition).toEqualEpsilon(
         [1.0, 2.0],
-        CesiumMath.EPSILON6
+        CesiumMath.EPSILON6,
       );
 
       batch.update(outOfRangeTime);
@@ -242,7 +243,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: true,
-      })
+      }),
     );
     const polyline = createGroundPolyline();
     polyline.show = show;
@@ -257,7 +258,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
 
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
-      false
+      false,
     );
 
     const updater = new PolylineGeometryUpdater(entity, scene);
@@ -294,7 +295,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     function buildEntity() {
@@ -367,7 +368,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
     const polyline1 = createGroundPolyline();
     polyline1.material = Color.RED;
@@ -407,7 +408,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     const polyline1 = createGroundPolyline();
@@ -452,7 +453,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     const polyline1 = createGroundPolyline();
@@ -499,7 +500,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     const polyline1 = createGroundPolyline();
@@ -535,6 +536,58 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     });
   });
 
+  it("does not crash when removing an entity with a pending show update", function () {
+    if (!GroundPolylinePrimitive.isSupported(scene)) {
+      // Don't fail if GroundPolylinePrimitive is not supported
+      return;
+    }
+    batch = new StaticGroundPolylinePerMaterialBatch(
+      scene.groundPrimitives,
+      ClassificationType.BOTH,
+      false,
+    );
+
+    const polyline = createGroundPolyline();
+    polyline.material = new PolylineOutlineMaterialProperty({
+      color: Color.ORANGE,
+      outlineWidth: 2,
+      outlineColor: Color.BLACK,
+    });
+
+    const entity = new Entity({
+      polyline: polyline,
+    });
+
+    const updater = new PolylineGeometryUpdater(entity, scene);
+    batch.add(time, updater);
+
+    function renderScene() {
+      scene.initializeFrame();
+      const isUpdated = batch.update(time);
+      scene.render(time);
+      return isUpdated;
+    }
+
+    return pollToPromise(renderScene)
+      .then(function () {
+        expect(scene.groundPrimitives.length).toEqual(1);
+
+        // Trigger a show change, which queues the updater in showsUpdated
+        entity.show = false;
+        updater._onEntityPropertyChanged(entity, "isShowing");
+
+        // Remove the entity before the show update is processed
+        batch.remove(updater);
+
+        // This should not crash with "Cannot read properties of undefined (reading 'id')"
+        return pollToPromise(renderScene);
+      })
+      .then(function () {
+        expect(scene.groundPrimitives.length).toEqual(0);
+        batch.removeAllPrimitives();
+      });
+  });
+
   it("has correct show attribute after rebuilding primitive", function () {
     if (!GroundPolylinePrimitive.isSupported(scene)) {
       // Don't fail if GroundPolylinePrimitive is not supported
@@ -543,7 +596,7 @@ describe("DataSources/StaticGroundPolylinePerMaterialBatch", function () {
     batch = new StaticGroundPolylinePerMaterialBatch(
       scene.groundPrimitives,
       ClassificationType.BOTH,
-      false
+      false,
     );
 
     function buildEntity() {

@@ -1,7 +1,5 @@
-import Check from "./Check.js";
+import { Check, RuntimeError, defined } from "@cesium/core";
 import CompressedTextureBuffer from "./CompressedTextureBuffer.js";
-import defined from "./defined.js";
-import RuntimeError from "./RuntimeError.js";
 import TaskProcessor from "./TaskProcessor.js";
 
 /**
@@ -13,7 +11,7 @@ function KTX2Transcoder() {}
 
 KTX2Transcoder._transcodeTaskProcessor = new TaskProcessor(
   "transcodeKTX2",
-  Number.POSITIVE_INFINITY // KTX2 transcoding is used in place of Resource.fetchImage, so it can't reject as "just soooo busy right now"
+  Number.POSITIVE_INFINITY, // KTX2 transcoding is used in place of Resource.fetchImage, so it can't reject as "just soooo busy right now"
 );
 
 KTX2Transcoder._readyPromise = undefined;
@@ -67,7 +65,7 @@ KTX2Transcoder.transcode = function (ktx2Buffer, supportedTargetFormats) {
             face.datatype,
             face.width,
             face.height,
-            face.levelBuffer
+            face.levelBuffer,
           );
         }
       }

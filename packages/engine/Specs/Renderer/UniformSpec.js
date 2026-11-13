@@ -6,8 +6,7 @@ import {
   Matrix2,
   Matrix3,
   Matrix4,
-} from "../../index.js";
-
+} from "@cesium/core";
 import createContext from "../../../../Specs/createContext.js";
 
 describe(
@@ -369,7 +368,7 @@ describe(
             13.0,
             14.0,
             15.0,
-            16.0
+            16.0,
           );
         },
       };
@@ -798,7 +797,7 @@ describe(
               13.0,
               14.0,
               15.0,
-              16.0
+              16.0,
             ),
             new Matrix4(
               11.0,
@@ -816,7 +815,7 @@ describe(
               113.0,
               114.0,
               115.0,
-              116.0
+              116.0,
             ),
           ];
         },
@@ -843,6 +842,38 @@ describe(
         uniformMap: uniformMap,
       }).contextToRender();
     });
+
+    it("does not set a uniform array whose elements have no location", function () {
+      // Some drivers list a uniform array as active, but return a null
+      // location for every element.
+      const gl = context._gl;
+      const getUniformLocation = gl.getUniformLocation;
+      spyOn(gl, "getUniformLocation").and.callFake(function (program, name) {
+        return name.startsWith("u[")
+          ? null
+          : getUniformLocation.call(gl, program, name);
+      });
+      spyOn(gl, "uniform3fv").and.callThrough();
+
+      const uniformMap = {
+        u: function () {
+          return [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0)];
+        },
+      };
+
+      const fs =
+        "uniform vec3 u[2];" +
+        "void main() { " +
+        "  out_FragColor = vec4(u[0].x - u[0].x + 1.0); " +
+        "}";
+
+      expect({
+        context: context,
+        fragmentShader: fs,
+        uniformMap: uniformMap,
+      }).contextToRender();
+      expect(gl.uniform3fv).not.toHaveBeenCalled();
+    });
   },
-  "WebGL"
+  "WebGL",
 );

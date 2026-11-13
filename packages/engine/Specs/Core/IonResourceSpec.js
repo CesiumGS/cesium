@@ -1,11 +1,5 @@
-import {
-  defer,
-  Ion,
-  IonResource,
-  RequestErrorEvent,
-  Resource,
-  RuntimeError,
-} from "../../index.js";
+import { RuntimeError } from "@cesium/core";
+import { Ion, IonResource, RequestErrorEvent, Resource } from "../../index.js";
 
 describe("Core/IonResource", function () {
   const assetId = 123890213;
@@ -64,80 +58,85 @@ describe("Core/IonResource", function () {
     const options = {};
     const resourceEndpoint = IonResource._createEndpointResource(
       tilesAssetId,
-      options
+      options,
     );
     spyOn(IonResource, "_createEndpointResource").and.returnValue(
-      resourceEndpoint
+      resourceEndpoint,
     );
     spyOn(resourceEndpoint, "fetchJson").and.returnValue(
-      Promise.resolve(tilesEndpoint)
+      Promise.resolve(tilesEndpoint),
     );
 
-    return IonResource.fromAssetId(tilesAssetId, options).then(function (
-      resource
-    ) {
-      expect(IonResource._createEndpointResource).toHaveBeenCalledWith(
-        tilesAssetId,
-        options
-      );
-      expect(resourceEndpoint.fetchJson).toHaveBeenCalled();
-      expect(resource._ionEndpointResource).toEqual(resourceEndpoint);
-      expect(resource._ionEndpoint).toEqual(tilesEndpoint);
-    });
+    return IonResource.fromAssetId(tilesAssetId, options).then(
+      function (resource) {
+        expect(IonResource._createEndpointResource).toHaveBeenCalledWith(
+          tilesAssetId,
+          options,
+        );
+        expect(resourceEndpoint.fetchJson).toHaveBeenCalled();
+        expect(resource._ionEndpointResource).toEqual(resourceEndpoint);
+        expect(resource._ionEndpoint).toEqual(tilesEndpoint);
+      },
+    );
   });
 
   function testNonImageryExternalResource(externalEndpoint) {
-    const resourceEndpoint = IonResource._createEndpointResource(123890213);
-    spyOn(IonResource, "_createEndpointResource").and.returnValue(
-      resourceEndpoint
-    );
-    spyOn(resourceEndpoint, "fetchJson").and.returnValue(
-      Promise.resolve(externalEndpoint)
-    );
+    it(`fromAssetId returns basic Resource for external type "${externalEndpoint.externalType}"`, async function () {
+      const resourceEndpoint = IonResource._createEndpointResource(123890213);
+      spyOn(IonResource, "_createEndpointResource").and.returnValue(
+        resourceEndpoint,
+      );
+      spyOn(resourceEndpoint, "fetchJson").and.returnValue(
+        Promise.resolve(externalEndpoint),
+      );
 
-    return IonResource.fromAssetId(123890213).then(function (resource) {
+      const resource = await IonResource.fromAssetId(123890213);
       expect(resource.url).toEqual(externalEndpoint.options.url);
       expect(resource.headers.Authorization).toBeUndefined();
       expect(resource.retryCallback).toBeUndefined();
     });
   }
 
-  it("fromAssetId returns basic Resource for external 3D tilesets", function () {
-    return testNonImageryExternalResource({
-      type: "3DTILES",
-      externalType: "3DTILES",
-      options: { url: "http://test.invalid/tileset.json" },
-      attributions: [],
-    });
+  testNonImageryExternalResource({
+    type: "3DTILES",
+    externalType: "3DTILES",
+    options: { url: "http://test.invalid/tileset.json" },
+    attributions: [],
   });
 
-  it("fromAssetId returns basic Resource for external 3D tilesets", function () {
-    return testNonImageryExternalResource({
-      type: "TERRAIN",
-      externalType: "STK_TERRAIN_SERVER",
-      options: { url: "http://test.invalid/world" },
-      attributions: [],
-    });
+  testNonImageryExternalResource({
+    type: "TERRAIN",
+    externalType: "STK_TERRAIN_SERVER",
+    options: { url: "http://test.invalid/world" },
+    attributions: [],
   });
 
-  it("fromAssetId rejects for external imagery", function () {
-    return testNonImageryExternalResource({
+  it("fromAssetId rejects for external imagery", async function () {
+    const externalEndpoint = {
       type: "IMAGERY",
       externalType: "URL_TEMPLATE",
       url: "http://test.invalid/world",
       attributions: [],
-    })
-      .then(fail)
-      .catch(function (e) {
-        expect(e).toBeInstanceOf(RuntimeError);
-      });
+    };
+
+    const resourceEndpoint = IonResource._createEndpointResource(123890213);
+    spyOn(IonResource, "_createEndpointResource").and.returnValue(
+      resourceEndpoint,
+    );
+    spyOn(resourceEndpoint, "fetchJson").and.returnValue(
+      Promise.resolve(externalEndpoint),
+    );
+
+    await expectAsync(IonResource.fromAssetId(123890213)).toBeRejectedWithError(
+      RuntimeError,
+    );
   });
 
   it("createEndpointResource creates expected values with default parameters", function () {
     const assetId = 2348234;
     const resource = IonResource._createEndpointResource(assetId);
     expect(resource.url).toBe(
-      `${Ion.defaultServer.url}v1/assets/${assetId}/endpoint?access_token=${Ion.defaultAccessToken}`
+      `${Ion.defaultServer.url}v1/assets/${assetId}/endpoint?access_token=${Ion.defaultAccessToken}`,
     );
   });
 
@@ -151,7 +150,7 @@ describe("Core/IonResource", function () {
       accessToken: accessToken,
     });
     expect(resource.url).toBe(
-      `${serverUrl}v1/assets/${assetId}/endpoint?access_token=${accessToken}`
+      `${serverUrl}v1/assets/${assetId}/endpoint?access_token=${accessToken}`,
     );
   });
 
@@ -165,7 +164,7 @@ describe("Core/IonResource", function () {
     const assetId = 2348234;
     const resource = IonResource._createEndpointResource(assetId);
     expect(resource.url).toBe(
-      `${Ion.defaultServer.url}v1/assets/${assetId}/endpoint?access_token=${Ion.defaultAccessToken}`
+      `${Ion.defaultServer.url}v1/assets/${assetId}/endpoint?access_token=${Ion.defaultAccessToken}`,
     );
 
     Ion.defaultServer = defaultServer;
@@ -278,7 +277,7 @@ describe("Core/IonResource", function () {
 
   describe("retryCallback", function () {
     let endpointResource;
-    let resource;
+    let originalResource;
     let retryCallback;
 
     beforeEach(function () {
@@ -286,76 +285,111 @@ describe("Core/IonResource", function () {
         url: "https://api.test.invalid",
         access_token: "not_the_token",
       });
-      resource = new IonResource(endpoint, endpointResource);
-      retryCallback = resource.retryCallback;
+      originalResource = new IonResource(endpoint, endpointResource);
+      retryCallback = originalResource.retryCallback;
     });
 
     it("returns false when error is undefined", function () {
-      return retryCallback(resource, undefined).then(function (result) {
+      return retryCallback(originalResource, undefined).then(function (result) {
         expect(result).toBe(false);
       });
     });
 
     it("returns false when error is non-401", function () {
       const error = new RequestErrorEvent(404);
-      return retryCallback(resource, error).then(function (result) {
+      return retryCallback(originalResource, error).then(function (result) {
         expect(result).toBe(false);
       });
     });
 
     it("returns false when error is event with non-Image target", function () {
       const event = { target: {} };
-      return retryCallback(resource, event).then(function (result) {
+      return retryCallback(originalResource, event).then(function (result) {
         expect(result).toBe(false);
       });
     });
 
-    function testCallback(resource, event) {
-      const deferred = defer();
-      spyOn(endpointResource, "fetchJson").and.returnValue(deferred.promise);
+    function testCallback(eventName, resourceCallback, eventCallback) {
+      it(`works with ${eventName}`, async function () {
+        const resource = resourceCallback();
+        const newEndpoint = {
+          type: "3DTILES",
+          url: `https://assets.cesium.com/${assetId}`,
+          accessToken: "not_not_really_a_refresh_token",
+        };
 
-      const newEndpoint = {
-        type: "3DTILES",
-        url: `https://assets.cesium.com/${assetId}`,
-        accessToken: "not_not_really_a_refresh_token",
-      };
+        spyOn(endpointResource, "fetchJson").and.returnValue(
+          Promise.resolve(newEndpoint),
+        );
 
-      const promise = retryCallback(resource, event);
-      const resultPromise = promise.then(function (result) {
+        const promise = retryCallback(resource, eventCallback());
+
+        // A concurrent second retry should re-use the same pending promise
+        const promise2 = retryCallback(resource, eventCallback());
+        expect(promise._pendingPromise).toBe(promise2._pendingPromise);
+
+        const result = await promise;
         expect(result).toBe(true);
         expect(resource._ionEndpoint).toBe(newEndpoint);
+
+        // Updates root endpoint
+        expect(originalResource._ionEndpoint).toBe(resource._ionEndpoint);
+        expect(originalResource.headers.Authorization).toEqual(
+          resource.headers.Authorization,
+        );
+
+        expect(endpointResource.fetchJson).toHaveBeenCalled();
+        await expectAsync(promise2).not.toBePending();
       });
 
-      expect(endpointResource.fetchJson).toHaveBeenCalledWith();
+      it(`works with refresh callback and ${eventName}`, async function () {
+        const resource = resourceCallback();
+        const newEndpoint = {
+          type: "3DTILES",
+          url: `https://assets.cesium.com/${assetId}`,
+          accessToken: "not_not_really_a_refresh_token",
+        };
 
-      //A second retry should re-use the same pending promise
-      const promise2 = retryCallback(resource, event);
-      expect(promise._pendingPromise).toBe(promise2._pendingPromise);
+        const refreshCallbackSpy = jasmine.createSpy("refreshCallback");
+        resource.refreshCallback = (ionRoot, endpoint) => {
+          refreshCallbackSpy();
+          expect(ionRoot).toBe(originalResource);
+          expect(endpoint).toEqual(newEndpoint);
+        };
 
-      deferred.resolve(newEndpoint);
+        spyOn(endpointResource, "fetchJson").and.returnValue(
+          Promise.resolve(newEndpoint),
+        );
 
-      return resultPromise;
+        const promise = retryCallback(resource, eventCallback());
+
+        const result = await promise;
+        expect(result).toBe(true);
+        expect(resource._ionEndpoint).toBe(newEndpoint);
+
+        expect(endpointResource.fetchJson).toHaveBeenCalled();
+        expect(refreshCallbackSpy).toHaveBeenCalled();
+      });
     }
 
-    it("works when error is a 401", function () {
-      const error = new RequestErrorEvent(401);
-      return testCallback(resource, error);
-    });
+    testCallback(
+      "401 response",
+      () => originalResource,
+      () => new RequestErrorEvent(401),
+    );
 
-    it("works when error is event with Image target", function () {
-      const event = { target: new Image() };
-      return testCallback(resource, event);
-    });
+    testCallback(
+      "Image target event",
+      () => originalResource,
+      () => ({
+        target: new Image(),
+      }),
+    );
 
-    it("works with derived resource and sets root access_token", function () {
-      const derived = resource.getDerivedResource("1");
-      const error = new RequestErrorEvent(401);
-      return testCallback(derived, error).then(function () {
-        expect(derived._ionEndpoint).toBe(resource._ionEndpoint);
-        expect(derived.headers.Authorization).toEqual(
-          resource.headers.Authorization
-        );
-      });
-    });
+    testCallback(
+      "derrived resource",
+      () => originalResource.getDerivedResource("1"),
+      () => new RequestErrorEvent(401),
+    );
   });
 });

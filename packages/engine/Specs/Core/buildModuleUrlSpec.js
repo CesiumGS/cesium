@@ -22,10 +22,10 @@ describe("Core/buildModuleUrl", function () {
     expect(r.exec("assets/foo/Cesium.js")[1]).toEqual("assets/foo/");
     expect(r.exec("assets/foo/Cesium.js?v=1.7")[1]).toEqual("assets/foo/");
     expect(
-      r.exec("http://example.invalid/Cesium/assets/foo/Cesium.js")[1]
+      r.exec("http://example.invalid/Cesium/assets/foo/Cesium.js")[1],
     ).toEqual("http://example.invalid/Cesium/assets/foo/");
     expect(
-      r.exec("http://example.invalid/Cesium/assets/foo/Cesium.js?v=1.7")[1]
+      r.exec("http://example.invalid/Cesium/assets/foo/Cesium.js?v=1.7")[1],
     ).toEqual("http://example.invalid/Cesium/assets/foo/");
 
     expect(r.exec("cesium.js")).toBeNull();

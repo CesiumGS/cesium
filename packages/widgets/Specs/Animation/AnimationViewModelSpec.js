@@ -1,5 +1,4 @@
-import { ClockRange, ClockStep, JulianDate } from "@cesium/engine";
-
+import { ClockRange, ClockStep, JulianDate } from "@cesium/core";
 import { AnimationViewModel, ClockViewModel } from "../../index.js";
 
 describe("Widgets/Animation/AnimationViewModel", function () {
@@ -35,7 +34,7 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     expect(viewModel.playForwardViewModel.toggled).toEqual(false);
     expect(viewModel.playRealtimeViewModel.toggled).toEqual(true);
     expect(viewModel.shuttleRingAngle).toEqual(
-      AnimationViewModel._realtimeShuttleRingAngle
+      AnimationViewModel._realtimeShuttleRingAngle,
     );
   }
 
@@ -387,7 +386,6 @@ describe("Widgets/Animation/AnimationViewModel", function () {
   it("slower and faster cycle through defined multipliers", function () {
     const viewModel = new AnimationViewModel(clockViewModel);
 
-    let i = 0;
     const multipliers = viewModel.getShuttleRingTicks();
     const length = multipliers.length;
 
@@ -395,7 +393,7 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     clockViewModel.multiplier = multipliers[0];
 
     //Cycle through them all with faster
-    for (i = 1; i < length; i++) {
+    for (let i = 1; i < length; i++) {
       viewModel.faster();
       expect(clockViewModel.multiplier).toEqual(multipliers[i]);
     }
@@ -404,7 +402,7 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     expect(clockViewModel.multiplier).toEqual(multipliers[length - 1]);
 
     //Cycle through them all with slower
-    for (i = length - 2; i >= 0; i--) {
+    for (let i = length - 2; i >= 0; i--) {
       viewModel.slower();
       expect(clockViewModel.multiplier).toEqual(multipliers[i]);
     }
@@ -422,16 +420,16 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     clockViewModel.startTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -60,
-      new JulianDate()
+      new JulianDate(),
     );
     clockViewModel.stopTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -30,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(true);
     expect(viewModel.playRealtimeViewModel.tooltip).toEqual(
-      "Today (real-time)"
+      "Today (real-time)",
     );
 
     //CLAMPED but unavailable when start/stop time does not include realtime
@@ -439,16 +437,16 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     clockViewModel.startTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -60,
-      new JulianDate()
+      new JulianDate(),
     );
     clockViewModel.stopTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -30,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(false);
     expect(viewModel.playRealtimeViewModel.tooltip).toEqual(
-      "Current time not in range"
+      "Current time not in range",
     );
 
     //CLAMPED but available when start/stop time includes realtime
@@ -456,16 +454,16 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     clockViewModel.startTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -60,
-      new JulianDate()
+      new JulianDate(),
     );
     clockViewModel.stopTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       60,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(true);
     expect(viewModel.playRealtimeViewModel.tooltip).toEqual(
-      "Today (real-time)"
+      "Today (real-time)",
     );
 
     //LOOP_STOP but unavailable when start/stop time does not include realtime
@@ -473,16 +471,16 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     clockViewModel.startTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -60,
-      new JulianDate()
+      new JulianDate(),
     );
     clockViewModel.stopTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -30,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(false);
     expect(viewModel.playRealtimeViewModel.tooltip).toEqual(
-      "Current time not in range"
+      "Current time not in range",
     );
 
     //LOOP_STOP but available when start/stop time includes realtime
@@ -490,16 +488,16 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     clockViewModel.startTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -60,
-      new JulianDate()
+      new JulianDate(),
     );
     clockViewModel.stopTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       60,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(true);
     expect(viewModel.playRealtimeViewModel.tooltip).toEqual(
-      "Today (real-time)"
+      "Today (real-time)",
     );
   });
 
@@ -619,7 +617,7 @@ describe("Widgets/Animation/AnimationViewModel", function () {
 
     viewModel.shuttleRingAngle = 0.0;
     expect(clockViewModel.multiplier).toEqual(
-      AnimationViewModel.defaultTicks[0]
+      AnimationViewModel.defaultTicks[0],
     );
   });
 
@@ -667,10 +665,7 @@ describe("Widgets/Animation/AnimationViewModel", function () {
 
     animationViewModel.setShuttleRingTicks(ticks);
     expect(animationViewModel.getShuttleRingTicks()).toEqual([
-      0.0,
-      2.0,
-      4.0,
-      8.0,
+      0.0, 2.0, 4.0, 8.0,
     ]);
   });
 });

@@ -1,24 +1,211 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import JulianDate from "../Core/JulianDate.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import ReferenceFrame from "../Core/ReferenceFrame.js";
-import TimeInterval from "../Core/TimeInterval.js";
-import Transforms from "../Core/Transforms.js";
+import {
+  AssociativeArray,
+  Cartesian3,
+  DeveloperError,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  Quaternion,
+  ReferenceFrame,
+  TimeInterval,
+  arrayRemoveDuplicates,
+  defined,
+  destroyObject,
+} from "@cesium/core";
+import Entity from "./Entity.js";
+import CelestialFrameTransforms from "../Core/CelestialFrameTransforms.js";
 import PolylineCollection from "../Scene/PolylineCollection.js";
 import SceneMode from "../Scene/SceneMode.js";
+import CallbackPositionProperty from "./CallbackPositionProperty.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import ConstantPositionProperty from "./ConstantPositionProperty.js";
 import MaterialProperty from "./MaterialProperty.js";
+import PathMode from "./PathMode.js";
 import Property from "./Property.js";
 import ReferenceProperty from "./ReferenceProperty.js";
 import SampledPositionProperty from "./SampledPositionProperty.js";
 import ScaledPositionProperty from "./ScaledPositionProperty.js";
 import TimeIntervalCollectionPositionProperty from "./TimeIntervalCollectionPositionProperty.js";
+
+const update3DMatrix3Scratch1 = new Matrix3();
+const update3DMatrix3Scratch2 = new Matrix3();
+const update3DMatrix3Scratch3 = new Matrix3();
+const update3DCartesian3Scratch0 = new Cartesian3();
+const update3DCartesian3Scratch1 = new Cartesian3();
+const update3DCartesian3Scratch2 = new Cartesian3();
+const update3DCartesian3Scratch3 = new Cartesian3();
+
+const transformOrientationScratch = new Quaternion();
+const transformVvlhScratch = new Matrix4();
+const transformRotationScratch = new Matrix3();
+
+/**
+ * Transforms a path entity's position into the local frame of the reference entity.
+ * If the reference entity has an orientation, uses that orientation to define the local frame.
+ * Otherwise, falls back to a VVLH (Vehicle Velocity Local Horizontal) frame derived from the reference entity's velocity.
+ *
+ * @param {JulianDate} time The time at which to evaluate the orientation or VVLH frame.
+ * @param {Cartesian3} pathEntityPos The position of the path entity in the FIXED reference frame.
+ * @param {Cartesian3} refEntityPos The position of the reference entity in the FIXED reference frame.
+ * @param {Entity} refEntity The reference entity whose frame to transform into.
+ * @param {Cartesian3} result The object onto which to store the result.
+ * @returns {Cartesian3 | undefined} The transformed position in the reference entity's local frame, or undefined if either input position is undefined.
+ * @ignore
+ */
+function transformToEntityFrame(
+  time,
+  pathEntityPos,
+  refEntityPos,
+  refEntity,
+  result,
+) {
+  if (!defined(pathEntityPos) || !defined(refEntityPos)) {
+    return undefined;
+  }
+
+  Cartesian3.subtract(pathEntityPos, refEntityPos, result);
+  if (defined(refEntity.orientation)) {
+    if (refEntity.orientation.getValue(time, transformOrientationScratch)) {
+      Quaternion.conjugate(
+        transformOrientationScratch,
+        transformOrientationScratch,
+      );
+      Matrix3.fromQuaternion(
+        transformOrientationScratch,
+        transformRotationScratch,
+      );
+      Matrix3.multiplyByVector(transformRotationScratch, result, result);
+    }
+  } else if (
+    defined(
+      computeVvlhTransform(time, refEntity.position, transformVvlhScratch),
+    )
+  ) {
+    Matrix4.inverse(transformVvlhScratch, transformVvlhScratch);
+    Matrix4.getRotation(transformVvlhScratch, transformRotationScratch);
+    Matrix3.multiplyByVector(transformRotationScratch, result, result);
+  } else {
+    // If neither ref entity's orientation nor VVLH are defined, return undefined
+    // This could happen if, for a given position of the entity we are drawing the path for,
+    // the ref entity doesn't have a position defined
+    return undefined;
+  }
+
+  return result;
+}
+
+/**
+ * Compute the vehicle velocity, local horizontal (VVLH) transform for a position property at a given time.
+ * The VVLH axes is defined based on the motion of the provided position point as follows:
+ * - The X axis is directed toward the point's velocity vector, in the direction of motion.
+ * - The Y axis is along the angular momentum vector.
+ * - The Z axis is along the position vector.
+ *
+ * @param {JulianDate} time The time at which to compute the VVLH transform.
+ * @param {PositionProperty} positionProperty The position to compute the VVLH frame for.
+ * @param {Matrix4} result The object onto which to store the result.
+ * @returns {Matrix4} The VVLH transform.
+ * @ignore
+ */
+function computeVvlhTransform(time, positionProperty, result) {
+  const cartesian = positionProperty.getValue(time, update3DCartesian3Scratch0);
+  if (defined(cartesian)) {
+    // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
+    // Slower moving vehicles will most likely default to east-north-up, while faster ones will be LVLH.
+    const deltaTime = JulianDate.addSeconds(time, 0.01, new JulianDate());
+    const deltaCartesian = positionProperty.getValue(
+      deltaTime,
+      update3DCartesian3Scratch1,
+    );
+    if (
+      defined(deltaCartesian) &&
+      !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON16)
+    ) {
+      let toInertial = CelestialFrameTransforms.computeFixedToIcrfMatrix(
+        time,
+        update3DMatrix3Scratch1,
+      );
+      let toInertialDelta = CelestialFrameTransforms.computeFixedToIcrfMatrix(
+        deltaTime,
+        update3DMatrix3Scratch2,
+      );
+      let toFixed;
+
+      if (!defined(toInertial) || !defined(toInertialDelta)) {
+        toFixed = CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
+          time,
+          update3DMatrix3Scratch3,
+        );
+        toInertial = Matrix3.transpose(toFixed, update3DMatrix3Scratch1);
+        toInertialDelta =
+          CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
+            deltaTime,
+            update3DMatrix3Scratch2,
+          );
+        Matrix3.transpose(toInertialDelta, toInertialDelta);
+      } else {
+        toFixed = Matrix3.transpose(toInertial, update3DMatrix3Scratch3);
+      }
+
+      // Z along the position
+      const zBasis = update3DCartesian3Scratch2;
+      Cartesian3.normalize(cartesian, zBasis);
+      Cartesian3.normalize(deltaCartesian, deltaCartesian);
+
+      Matrix3.multiplyByVector(toInertial, zBasis, zBasis);
+      Matrix3.multiplyByVector(toInertialDelta, deltaCartesian, deltaCartesian);
+
+      // Y is along the angular momentum vector (e.g. "orbit normal")
+      const yBasis = Cartesian3.cross(
+        zBasis,
+        deltaCartesian,
+        update3DCartesian3Scratch3,
+      );
+      if (
+        !Cartesian3.equalsEpsilon(yBasis, Cartesian3.ZERO, CesiumMath.EPSILON16)
+      ) {
+        // X is along the cross of y and z (right handed basis / in the direction of motion)
+        const xBasis = Cartesian3.cross(
+          yBasis,
+          zBasis,
+          update3DCartesian3Scratch1,
+        );
+
+        Matrix3.multiplyByVector(toFixed, xBasis, xBasis);
+        Matrix3.multiplyByVector(toFixed, yBasis, yBasis);
+        Matrix3.multiplyByVector(toFixed, zBasis, zBasis);
+
+        Cartesian3.normalize(xBasis, xBasis);
+        Cartesian3.normalize(yBasis, yBasis);
+        Cartesian3.normalize(zBasis, zBasis);
+
+        if (!defined(result)) {
+          result = new Matrix4();
+        }
+
+        result[0] = xBasis.x;
+        result[1] = xBasis.y;
+        result[2] = xBasis.z;
+        result[3] = 0.0;
+        result[4] = yBasis.x;
+        result[5] = yBasis.y;
+        result[6] = yBasis.z;
+        result[7] = 0.0;
+        result[8] = zBasis.x;
+        result[9] = zBasis.y;
+        result[10] = zBasis.z;
+        result[11] = 0.0;
+        result[12] = cartesian.x;
+        result[13] = cartesian.y;
+        result[14] = cartesian.z;
+        result[15] = 1.0;
+        return result;
+      }
+    }
+  }
+  return undefined;
+}
 
 const defaultResolution = 60.0;
 const defaultWidth = 1.0;
@@ -30,10 +217,12 @@ const subSampleIntervalPropertyScratch = new TimeInterval();
 function EntityData(entity) {
   this.entity = entity;
   this.polyline = undefined;
+  this.segmentPolylines = [];
   this.index = undefined;
   this.updater = undefined;
 }
 
+const sampleScratch = new Cartesian3();
 function subSampleSampledProperty(
   property,
   start,
@@ -43,14 +232,40 @@ function subSampleSampledProperty(
   referenceFrame,
   maximumStep,
   startingIndex,
-  result
+  result,
 ) {
+  let refEntity;
+  let refPosition;
+
+  let entityFrame = false;
+  if (referenceFrame instanceof Entity) {
+    refEntity = referenceFrame;
+    refPosition = refEntity.position;
+    referenceFrame = ReferenceFrame.FIXED;
+    entityFrame = true;
+  }
+
   let r = startingIndex;
   //Always step exactly on start (but only use it if it exists.)
   let tmp;
+  let tmp2;
   tmp = property.getValueInReferenceFrame(start, referenceFrame, result[r]);
-  if (defined(tmp)) {
-    result[r++] = tmp;
+  if (!entityFrame) {
+    if (defined(tmp)) {
+      result[r++] = tmp;
+    }
+  } else {
+    tmp2 = refPosition.getValueInReferenceFrame(
+      start,
+      referenceFrame,
+      sampleScratch,
+    );
+
+    // Transform to frame of reference - either reference entity's orientation, or VVLH
+    tmp = transformToEntityFrame(start, tmp, tmp2, refEntity, tmp);
+    if (defined(tmp)) {
+      result[r++] = tmp;
+    }
   }
 
   let steppedOnNow =
@@ -75,10 +290,24 @@ function subSampleSampledProperty(
       tmp = property.getValueInReferenceFrame(
         updateTime,
         referenceFrame,
-        result[r]
+        result[r],
       );
-      if (defined(tmp)) {
-        result[r++] = tmp;
+      if (!entityFrame) {
+        if (defined(tmp)) {
+          result[r++] = tmp;
+        }
+      } else {
+        tmp2 = refPosition.getValueInReferenceFrame(
+          updateTime,
+          referenceFrame,
+          sampleScratch,
+        );
+        if (defined(tmp) && defined(tmp2)) {
+          tmp = transformToEntityFrame(updateTime, tmp, tmp2, refEntity, tmp);
+          if (defined(tmp)) {
+            result[r++] = tmp;
+          }
+        }
       }
       steppedOnNow = true;
     }
@@ -90,10 +319,24 @@ function subSampleSampledProperty(
       tmp = property.getValueInReferenceFrame(
         current,
         referenceFrame,
-        result[r]
+        result[r],
       );
-      if (defined(tmp)) {
-        result[r++] = tmp;
+      if (!entityFrame) {
+        if (defined(tmp)) {
+          result[r++] = tmp;
+        }
+      } else {
+        tmp2 = refPosition.getValueInReferenceFrame(
+          current,
+          referenceFrame,
+          sampleScratch,
+        );
+        if (defined(tmp) && defined(tmp2)) {
+          tmp = transformToEntityFrame(current, tmp, tmp2, refEntity, tmp);
+          if (defined(tmp)) {
+            result[r++] = tmp;
+          }
+        }
       }
     }
 
@@ -115,7 +358,7 @@ function subSampleSampledProperty(
         current = JulianDate.addSeconds(
           current,
           sampleStepSize,
-          new JulianDate()
+          new JulianDate(),
         );
         sampleStepsTaken++;
         continue;
@@ -128,11 +371,77 @@ function subSampleSampledProperty(
 
   //Always step exactly on stop (but only use it if it exists.)
   tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[r]);
-  if (defined(tmp)) {
-    result[r++] = tmp;
+  if (!entityFrame) {
+    if (defined(tmp)) {
+      result[r++] = tmp;
+    }
+  } else {
+    tmp2 = refPosition.getValueInReferenceFrame(
+      stop,
+      referenceFrame,
+      sampleScratch,
+    );
+    if (defined(tmp) && defined(tmp2)) {
+      tmp = transformToEntityFrame(stop, tmp, tmp2, refEntity, tmp);
+      if (defined(tmp)) {
+        result[r++] = tmp;
+      }
+    }
   }
 
   return r;
+}
+
+function subSampleCallbackPositionProperty(
+  property,
+  start,
+  stop,
+  updateTime,
+  referenceFrame,
+  maximumStep,
+  startingIndex,
+  result,
+) {
+  let tmp;
+  let i = 0;
+  let index = startingIndex;
+  let time = start;
+  let steppedOnNow =
+    !defined(updateTime) ||
+    JulianDate.lessThanOrEquals(updateTime, start) ||
+    JulianDate.greaterThanOrEquals(updateTime, stop);
+  while (JulianDate.lessThan(time, stop)) {
+    if (!steppedOnNow && JulianDate.greaterThanOrEquals(time, updateTime)) {
+      steppedOnNow = true;
+      tmp = property.getValueInReferenceFrame(
+        updateTime,
+        referenceFrame,
+        result[index],
+      );
+      if (defined(tmp)) {
+        result[index] = tmp;
+        index++;
+      }
+    }
+    tmp = property.getValueInReferenceFrame(
+      time,
+      referenceFrame,
+      result[index],
+    );
+    if (defined(tmp)) {
+      result[index] = tmp;
+      index++;
+    }
+    i++;
+    time = JulianDate.addSeconds(start, maximumStep * i, new JulianDate());
+  }
+  //Always sample stop.
+  tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
+  if (defined(tmp)) {
+    result[index] = tmp;
+    index++;
+  }
+  return index;
 }
 
 function subSampleGenericProperty(
@@ -143,7 +452,7 @@ function subSampleGenericProperty(
   referenceFrame,
   maximumStep,
   startingIndex,
-  result
+  result,
 ) {
   let tmp;
   let i = 0;
@@ -160,7 +469,7 @@ function subSampleGenericProperty(
       tmp = property.getValueInReferenceFrame(
         updateTime,
         referenceFrame,
-        result[index]
+        result[index],
       );
       if (defined(tmp)) {
         result[index] = tmp;
@@ -170,7 +479,7 @@ function subSampleGenericProperty(
     tmp = property.getValueInReferenceFrame(
       time,
       referenceFrame,
-      result[index]
+      result[index],
     );
     if (defined(tmp)) {
       result[index] = tmp;
@@ -196,7 +505,7 @@ function subSampleIntervalProperty(
   referenceFrame,
   maximumStep,
   startingIndex,
-  result
+  result,
 ) {
   subSampleIntervalPropertyScratch.start = start;
   subSampleIntervalPropertyScratch.stop = stop;
@@ -209,7 +518,7 @@ function subSampleIntervalProperty(
       !TimeInterval.intersect(
         interval,
         subSampleIntervalPropertyScratch,
-        scratchTimeInterval
+        scratchTimeInterval,
       ).isEmpty
     ) {
       let time = interval.start;
@@ -220,14 +529,14 @@ function subSampleIntervalProperty(
           time = JulianDate.addSeconds(
             interval.start,
             JulianDate.secondsDifference(interval.stop, interval.start) / 2,
-            new JulianDate()
+            new JulianDate(),
           );
         }
       }
       const tmp = property.getValueInReferenceFrame(
         time,
         referenceFrame,
-        result[index]
+        result[index],
       );
       if (defined(tmp)) {
         result[index] = tmp;
@@ -246,12 +555,12 @@ function subSampleConstantProperty(
   referenceFrame,
   maximumStep,
   startingIndex,
-  result
+  result,
 ) {
   const tmp = property.getValueInReferenceFrame(
     start,
     referenceFrame,
-    result[startingIndex]
+    result[startingIndex],
   );
   if (defined(tmp)) {
     result[startingIndex++] = tmp;
@@ -267,7 +576,7 @@ function subSampleCompositeProperty(
   referenceFrame,
   maximumStep,
   startingIndex,
-  result
+  result,
 ) {
   subSampleCompositePropertyScratch.start = start;
   subSampleCompositePropertyScratch.stop = stop;
@@ -280,7 +589,7 @@ function subSampleCompositeProperty(
       !TimeInterval.intersect(
         interval,
         subSampleCompositePropertyScratch,
-        scratchTimeInterval
+        scratchTimeInterval,
       ).isEmpty
     ) {
       const intervalStart = interval.start;
@@ -304,7 +613,7 @@ function subSampleCompositeProperty(
         referenceFrame,
         maximumStep,
         index,
-        result
+        result,
       );
     }
   }
@@ -319,7 +628,7 @@ function reallySubSample(
   referenceFrame,
   maximumStep,
   index,
-  result
+  result,
 ) {
   //Unwrap any references until we have the actual property.
   while (property instanceof ReferenceProperty) {
@@ -337,7 +646,18 @@ function reallySubSample(
       referenceFrame,
       maximumStep,
       index,
-      result
+      result,
+    );
+  } else if (property instanceof CallbackPositionProperty) {
+    index = subSampleCallbackPositionProperty(
+      property,
+      start,
+      stop,
+      updateTime,
+      referenceFrame,
+      maximumStep,
+      index,
+      result,
     );
   } else if (property instanceof CompositePositionProperty) {
     index = subSampleCompositeProperty(
@@ -348,7 +668,7 @@ function reallySubSample(
       referenceFrame,
       maximumStep,
       index,
-      result
+      result,
     );
   } else if (property instanceof TimeIntervalCollectionPositionProperty) {
     index = subSampleIntervalProperty(
@@ -359,7 +679,7 @@ function reallySubSample(
       referenceFrame,
       maximumStep,
       index,
-      result
+      result,
     );
   } else if (
     property instanceof ConstantPositionProperty ||
@@ -374,7 +694,7 @@ function reallySubSample(
       referenceFrame,
       maximumStep,
       index,
-      result
+      result,
     );
   } else {
     //Fallback to generic sampling.
@@ -386,7 +706,7 @@ function reallySubSample(
       referenceFrame,
       maximumStep,
       index,
-      result
+      result,
     );
   }
   return index;
@@ -399,7 +719,7 @@ function subSample(
   updateTime,
   referenceFrame,
   maximumStep,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = [];
@@ -413,13 +733,120 @@ function subSample(
     referenceFrame,
     maximumStep,
     0,
-    result
+    result,
   );
   result.length = length;
   return result;
 }
 
 const toFixedScratch = new Matrix3();
+const updateOrientationScratch = new Quaternion();
+const updateRotationScratch = new Matrix3();
+const portionsVisibleIntervalScratch = new TimeInterval();
+const portionsSegmentIntervalScratch = new TimeInterval();
+const portionsDynamicIntervalScratch = new TimeInterval();
+
+function getDynamicMaterialProperties(materialData) {
+  const dynamic = [];
+  if (!defined(materialData)) {
+    return dynamic;
+  }
+
+  for (const key in materialData) {
+    // Material properties store uniforms as underscored backing fields.
+    // Ignore event and subscription bookkeeping fields.
+    if (
+      key[0] !== "_" ||
+      key === "_definitionChanged" ||
+      key.endsWith("Subscription")
+    ) {
+      continue;
+    }
+
+    const prop = materialData[key];
+    if (
+      defined(prop) &&
+      typeof prop.getValue === "function" &&
+      !Property.isConstant(prop)
+    ) {
+      dynamic.push(prop);
+    }
+  }
+
+  return dynamic;
+}
+
+function emitSegmentsForSplitTimes(
+  splitTimes,
+  positionProperty,
+  time,
+  pathGraphics,
+  entity,
+  item,
+  polylineCollection,
+  resolution,
+  referenceFrame,
+  materialProp,
+  startingSegIndex,
+) {
+  // Sort and dedupe
+  splitTimes.sort(JulianDate.compare);
+  splitTimes = arrayRemoveDuplicates(splitTimes, JulianDate.equalsEpsilon);
+
+  let segIndex = startingSegIndex;
+  for (let j = 0; j < splitTimes.length - 1; j++) {
+    const splitStart = splitTimes[j];
+    const splitStop = splitTimes[j + 1];
+    if (!JulianDate.lessThan(splitStart, splitStop)) {
+      continue;
+    }
+
+    // Get segment midpoint
+    const splitMidTime = JulianDate.addSeconds(
+      splitStart,
+      JulianDate.secondsDifference(splitStop, splitStart) / 2,
+      new JulianDate(),
+    );
+
+    // Subsample positions
+    const subPositions = subSample(
+      positionProperty,
+      splitStart,
+      splitStop,
+      time,
+      referenceFrame,
+      resolution,
+      [],
+    );
+    if (subPositions.length < 2) {
+      continue;
+    }
+
+    // Get or create a polyline for this segment
+    let segPolyline = item.segmentPolylines[segIndex];
+    if (!defined(segPolyline)) {
+      segPolyline = polylineCollection.add();
+      segPolyline.id = entity;
+      item.segmentPolylines[segIndex] = segPolyline;
+    }
+    segPolyline.show = true;
+    segPolyline.positions = subPositions;
+    segPolyline.material = MaterialProperty.getValue(
+      splitMidTime,
+      materialProp,
+      segPolyline.material,
+    );
+    segPolyline.width = Property.getValueOrDefault(
+      pathGraphics._width,
+      time,
+      defaultWidth,
+    );
+
+    segIndex++;
+  }
+  return segIndex;
+}
+
 function PolylineUpdater(scene, referenceFrame) {
   this._unusedIndexes = [];
   this._polylineCollection = new PolylineCollection();
@@ -429,16 +856,44 @@ function PolylineUpdater(scene, referenceFrame) {
 }
 
 PolylineUpdater.prototype.update = function (time) {
-  if (this._referenceFrame === ReferenceFrame.INERTIAL) {
-    const toFixed = Transforms.computeIcrfToCentralBodyFixedMatrix(
+  const frame = this._referenceFrame;
+  if (frame === ReferenceFrame.INERTIAL) {
+    let toFixed = CelestialFrameTransforms.computeIcrfToFixedMatrix(
       time,
-      toFixedScratch
+      toFixedScratch,
     );
+    if (!defined(toFixed)) {
+      toFixed = CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
+        time,
+        toFixedScratch,
+      );
+    }
     Matrix4.fromRotationTranslation(
       toFixed,
       Cartesian3.ZERO,
-      this._polylineCollection.modelMatrix
+      this._polylineCollection.modelMatrix,
     );
+  } else if (frame instanceof Entity) {
+    const position = frame.position.getValue(time);
+
+    // Use the reference frame entity's orientation if it has one
+    if (defined(frame.orientation)) {
+      if (defined(frame.orientation.getValue(time, updateOrientationScratch))) {
+        // Calculate the model matrix that places the body-frame path points into the world
+        Matrix3.fromQuaternion(updateOrientationScratch, updateRotationScratch);
+        Matrix4.fromRotationTranslation(
+          updateRotationScratch,
+          position,
+          this._polylineCollection.modelMatrix,
+        );
+      }
+    } else {
+      computeVvlhTransform(
+        time,
+        frame.position,
+        this._polylineCollection.modelMatrix,
+      );
+    }
   }
 };
 
@@ -463,7 +918,7 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     const leadTime = Property.getValueOrUndefined(pathGraphics._leadTime, time);
     const trailTime = Property.getValueOrUndefined(
       pathGraphics._trailTime,
-      time
+      time,
     );
     const availability = entity._availability;
     const hasAvailability = defined(availability);
@@ -509,6 +964,9 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
       polyline.show = false;
       item.index = undefined;
     }
+    for (let j = 0; j < item.segmentPolylines.length; j++) {
+      item.segmentPolylines[j].show = false;
+    }
     return;
   }
 
@@ -530,33 +988,224 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
   const resolution = Property.getValueOrDefault(
     pathGraphics._resolution,
     time,
-    defaultResolution
+    defaultResolution,
   );
 
-  polyline.show = true;
-  polyline.positions = subSample(
+  const positions = subSample(
     positionProperty,
     sampleStart,
     sampleStop,
     time,
     this._referenceFrame,
     resolution,
-    polyline.positions.slice()
+    polyline.positions.slice(),
   );
+
+  // If the path only has one point, don't show it
+  // This can happen if the position is sampled at a time when it is only defined at a single point
+  if (positions.length < 2) {
+    polyline.show = false;
+    for (let j = 0; j < item.segmentPolylines.length; j++) {
+      item.segmentPolylines[j].show = false;
+    }
+    return;
+  }
+
+  polyline.show = true;
+  polyline.positions = positions;
+
   polyline.material = MaterialProperty.getValue(
     time,
-    pathGraphics._material,
-    polyline.material
+    pathGraphics.material,
+    polyline.material,
   );
+
+  const materialMode = Property.getValueOrUndefined(
+    pathGraphics.materialMode,
+    time,
+  );
+  const materialProp = pathGraphics.material;
+  if (materialMode === PathMode.PORTIONS && !materialProp.isConstant) {
+    // Hide the single polyline if it exists
+    if (defined(polyline)) {
+      polyline.show = false;
+    }
+
+    // Prevent non-positive split steps from creating non-terminating loops.
+    // Positive fractional resolutions are valid; only values <= 0 fall back to the default.
+    const splitResolution = resolution > 0 ? resolution : defaultResolution;
+
+    const intervals = materialProp.intervals;
+    let nextSegIndex = 0;
+
+    if (!defined(intervals)) {
+      // Sampled/interpolated root material - generate synthetic times at resolution intervals
+      const splitTimes = [
+        JulianDate.clone(sampleStart),
+        JulianDate.clone(sampleStop),
+      ];
+      let splitTime = JulianDate.addSeconds(
+        sampleStart,
+        splitResolution,
+        new JulianDate(),
+      );
+      while (JulianDate.lessThan(splitTime, sampleStop)) {
+        splitTimes.push(JulianDate.clone(splitTime));
+        splitTime = JulianDate.addSeconds(
+          splitTime,
+          splitResolution,
+          new JulianDate(),
+        );
+      }
+      nextSegIndex = emitSegmentsForSplitTimes(
+        splitTimes,
+        positionProperty,
+        time,
+        pathGraphics,
+        entity,
+        item,
+        this._polylineCollection,
+        splitResolution,
+        this._referenceFrame,
+        pathGraphics.material,
+        nextSegIndex,
+      );
+    } else {
+      portionsVisibleIntervalScratch.start = sampleStart;
+      portionsVisibleIntervalScratch.stop = sampleStop;
+      portionsVisibleIntervalScratch.isStartIncluded = true;
+      portionsVisibleIntervalScratch.isStopIncluded = true;
+
+      // Interval-based material - process each interval separately
+      for (let i = 0; i < intervals.length; i++) {
+        const interval = intervals.get(i);
+
+        if (
+          !TimeInterval.intersect(
+            interval,
+            portionsVisibleIntervalScratch,
+            portionsSegmentIntervalScratch,
+          )
+        ) {
+          continue;
+        }
+
+        const segStart = portionsSegmentIntervalScratch.start;
+        const segStop = portionsSegmentIntervalScratch.stop;
+
+        if (JulianDate.greaterThanOrEquals(segStart, segStop)) {
+          continue;
+        }
+
+        // Detect dynamic properties and collect their split times
+        const dynamic = getDynamicMaterialProperties(interval.data);
+        const splitTimes = [
+          JulianDate.clone(segStart),
+          JulianDate.clone(segStop),
+        ];
+
+        for (let j = 0; j < dynamic.length; j++) {
+          const prop = dynamic[j];
+          const timeDynamicIntervals = prop.intervals;
+
+          if (defined(timeDynamicIntervals)) {
+            // Interval-based property: collect interval boundaries
+            for (let k = 0; k < timeDynamicIntervals.length; k++) {
+              const timeDynamicInterval = timeDynamicIntervals.get(k);
+
+              if (
+                !TimeInterval.intersect(
+                  timeDynamicInterval,
+                  portionsSegmentIntervalScratch,
+                  portionsDynamicIntervalScratch,
+                )
+              ) {
+                continue;
+              }
+
+              if (
+                JulianDate.greaterThan(
+                  portionsDynamicIntervalScratch.start,
+                  segStart,
+                ) &&
+                JulianDate.lessThan(
+                  portionsDynamicIntervalScratch.start,
+                  segStop,
+                )
+              ) {
+                splitTimes.push(
+                  JulianDate.clone(portionsDynamicIntervalScratch.start),
+                );
+              }
+
+              if (
+                JulianDate.greaterThan(
+                  portionsDynamicIntervalScratch.stop,
+                  segStart,
+                ) &&
+                JulianDate.lessThan(
+                  portionsDynamicIntervalScratch.stop,
+                  segStop,
+                )
+              ) {
+                splitTimes.push(
+                  JulianDate.clone(portionsDynamicIntervalScratch.stop),
+                );
+              }
+            }
+          } else if (!Property.isConstant(prop)) {
+            // Sampled/interpolated property: add resolution-based split times
+            let sampledTime = JulianDate.clone(segStart);
+            while (JulianDate.lessThan(sampledTime, segStop)) {
+              splitTimes.push(JulianDate.clone(sampledTime));
+              sampledTime = JulianDate.addSeconds(
+                sampledTime,
+                splitResolution,
+                new JulianDate(),
+              );
+            }
+          }
+        }
+
+        // Emit segments for this interval's split times
+        nextSegIndex = emitSegmentsForSplitTimes(
+          splitTimes,
+          positionProperty,
+          time,
+          pathGraphics,
+          entity,
+          item,
+          this._polylineCollection,
+          splitResolution,
+          this._referenceFrame,
+          interval.data,
+          nextSegIndex,
+        );
+      }
+    }
+
+    // Hide any excess segment polylines from previous frames.
+    for (let j = nextSegIndex; j < item.segmentPolylines.length; j++) {
+      if (defined(item.segmentPolylines[j])) {
+        item.segmentPolylines[j].show = false;
+      }
+    }
+  } else {
+    // Not in PORTIONS mode, hide all segment polylines from previous frames
+    for (let j = 0; j < item.segmentPolylines.length; j++) {
+      item.segmentPolylines[j].show = false;
+    }
+  }
+
   polyline.width = Property.getValueOrDefault(
     pathGraphics._width,
     time,
-    defaultWidth
+    defaultWidth,
   );
   polyline.distanceDisplayCondition = Property.getValueOrUndefined(
     pathGraphics._distanceDisplayCondition,
     time,
-    polyline.distanceDisplayCondition
+    polyline.distanceDisplayCondition,
   );
 };
 
@@ -569,6 +1218,10 @@ PolylineUpdater.prototype.removeObject = function (item) {
     polyline.id = undefined;
     item.index = undefined;
   }
+  for (let i = 0; i < item.segmentPolylines.length; i++) {
+    item.segmentPolylines[i].show = false;
+  }
+  item.segmentPolylines.length = 0;
 };
 
 PolylineUpdater.prototype.destroy = function () {
@@ -596,7 +1249,7 @@ function PathVisualizer(scene, entityCollection) {
 
   entityCollection.collectionChanged.addEventListener(
     PathVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
 
   this._scene = scene;
@@ -646,15 +1299,40 @@ PathVisualizer.prototype.update = function (time) {
     const item = items[i];
     const entity = item.entity;
     const positionProperty = entity._position;
+    const pathGraphics = entity._path;
 
     const lastUpdater = item.updater;
 
+    let isRelative = false;
+
     let frameToVisualize = ReferenceFrame.FIXED;
+    let frameToVisualizeKey = frameToVisualize.toString();
     if (this._scene.mode === SceneMode.SCENE3D) {
-      frameToVisualize = positionProperty.referenceFrame;
+      const relativeTo = Property.getValueOrUndefined(
+        pathGraphics.relativeTo,
+        time,
+      );
+      if (defined(relativeTo)) {
+        if (relativeTo === "FIXED") {
+          frameToVisualize = ReferenceFrame.FIXED;
+          frameToVisualizeKey = frameToVisualize.toString();
+        } else if (relativeTo === "INERTIAL") {
+          frameToVisualize = ReferenceFrame.INERTIAL;
+          frameToVisualizeKey = frameToVisualize.toString();
+        } else {
+          // Path should be relative to entity
+          // Current implementation uses VVLH, ignores entity orientation
+          isRelative = true;
+          frameToVisualize = this._entityCollection.getById(relativeTo);
+          frameToVisualizeKey = relativeTo;
+        }
+      } else {
+        frameToVisualize = positionProperty.referenceFrame;
+        frameToVisualizeKey = frameToVisualize.toString();
+      }
     }
 
-    let currentUpdater = this._updaters[frameToVisualize];
+    let currentUpdater = this._updaters[frameToVisualizeKey];
 
     if (lastUpdater === currentUpdater && defined(currentUpdater)) {
       currentUpdater.updateObject(time, item);
@@ -665,10 +1343,14 @@ PathVisualizer.prototype.update = function (time) {
       lastUpdater.removeObject(item);
     }
 
+    if (isRelative && !defined(frameToVisualize)) {
+      continue;
+    }
+
     if (!defined(currentUpdater)) {
       currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
       currentUpdater.update(time);
-      this._updaters[frameToVisualize] = currentUpdater;
+      this._updaters[frameToVisualizeKey] = currentUpdater;
     }
 
     item.updater = currentUpdater;
@@ -694,7 +1376,7 @@ PathVisualizer.prototype.isDestroyed = function () {
 PathVisualizer.prototype.destroy = function () {
   this._entityCollection.collectionChanged.removeEventListener(
     PathVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
 
   const updaters = this._updaters;
@@ -711,7 +1393,7 @@ PathVisualizer.prototype._onCollectionChanged = function (
   entityCollection,
   added,
   removed,
-  changed
+  changed,
 ) {
   let i;
   let entity;
@@ -756,4 +1438,6 @@ PathVisualizer.prototype._onCollectionChanged = function (
 
 //for testing
 PathVisualizer._subSample = subSample;
+PathVisualizer._computeVvlhTransform = computeVvlhTransform;
+PathVisualizer._transformToEntityFrame = transformToEntityFrame;
 export default PathVisualizer;

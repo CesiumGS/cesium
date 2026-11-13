@@ -1,11 +1,5 @@
-import {
-  buildModuleUrl,
-  Check,
-  Color,
-  defined,
-  destroyObject,
-  getElement,
-} from "@cesium/engine";
+import { Check, Color, defined, destroyObject } from "@cesium/core";
+import { buildModuleUrl, getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import subscribeAndEvaluate from "../subscribeAndEvaluate.js";
 import InfoBoxViewModel from "./InfoBoxViewModel.js";
@@ -23,7 +17,7 @@ import InfoBoxViewModel from "./InfoBoxViewModel.js";
 function InfoBox(container) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("container", container);
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   container = getElement(container);
 
@@ -32,7 +26,7 @@ function InfoBox(container) {
   infoElement.setAttribute(
     "data-bind",
     '\
-css: { "cesium-infoBox-visible" : showInfo, "cesium-infoBox-bodyless" : _bodyless }'
+css: { "cesium-infoBox-visible" : showInfo, "cesium-infoBox-bodyless" : _bodyless }',
   );
   container.appendChild(infoElement);
 
@@ -50,7 +44,7 @@ css: { "cesium-infoBox-visible" : showInfo, "cesium-infoBox-bodyless" : _bodyles
 attr: { title: "Focus camera on object" },\
 click: function () { cameraClicked.raiseEvent(this); },\
 enable: enableCamera,\
-cesiumSvgPath: { path: cameraIconPath, width: 32, height: 32 }'
+cesiumSvgPath: { path: cameraIconPath, width: 32, height: 32 }',
   );
   infoElement.appendChild(cameraElement);
 
@@ -60,7 +54,7 @@ cesiumSvgPath: { path: cameraIconPath, width: 32, height: 32 }'
   closeElement.setAttribute(
     "data-bind",
     "\
-click: function () { closeClicked.raiseEvent(this); }"
+click: function () { closeClicked.raiseEvent(this); }",
   );
   closeElement.innerHTML = "&times;";
   infoElement.appendChild(closeElement);
@@ -70,7 +64,7 @@ click: function () { closeClicked.raiseEvent(this); }"
   frame.setAttribute("sandbox", "allow-same-origin allow-popups allow-forms"); //allow-pointer-lock allow-scripts allow-top-navigation
   frame.setAttribute(
     "data-bind",
-    "style : { maxHeight : maxHeightOffset(40) }"
+    "style : { maxHeight : maxHeightOffset(40) }",
   );
   frame.setAttribute("allowfullscreen", true);
   infoElement.appendChild(frame);
@@ -138,7 +132,7 @@ click: function () { closeClicked.raiseEvent(this); }"
         // Measure and set the new custom height, based on text wrapped above.
         const height = frameContent.getBoundingClientRect().height;
         frame.style.height = `${height}px`;
-      }
+      },
     );
   });
 

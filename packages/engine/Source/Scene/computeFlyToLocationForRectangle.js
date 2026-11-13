@@ -1,5 +1,4 @@
-import defined from "../Core/defined.js";
-import Rectangle from "../Core/Rectangle.js";
+import { Rectangle, defined } from "@cesium/core";
 import sampleTerrainMostDetailed from "../Core/sampleTerrainMostDetailed.js";
 import SceneMode from "./SceneMode.js";
 
@@ -45,10 +44,11 @@ async function computeFlyToLocationForRectangle(rectangle, scene) {
     Rectangle.northwest(rectangle),
   ];
 
-  const positionsOnTerrain = await computeFlyToLocationForRectangle._sampleTerrainMostDetailed(
-    terrainProvider,
-    cartographics
-  );
+  const positionsOnTerrain =
+    await computeFlyToLocationForRectangle._sampleTerrainMostDetailed(
+      terrainProvider,
+      cartographics,
+    );
 
   let heightFound = false;
   const maxHeight = positionsOnTerrain.reduce(function (currentMax, item) {
@@ -68,5 +68,6 @@ async function computeFlyToLocationForRectangle(rectangle, scene) {
 }
 
 //Exposed for testing.
-computeFlyToLocationForRectangle._sampleTerrainMostDetailed = sampleTerrainMostDetailed;
+computeFlyToLocationForRectangle._sampleTerrainMostDetailed =
+  sampleTerrainMostDetailed;
 export default computeFlyToLocationForRectangle;

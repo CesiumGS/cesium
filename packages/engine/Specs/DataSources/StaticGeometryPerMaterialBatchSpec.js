@@ -7,6 +7,8 @@ import {
   Math as CesiumMath,
   TimeInterval,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
   BoxGeometryUpdater,
   CheckerboardMaterialProperty,
   ColorMaterialProperty,
@@ -27,7 +29,6 @@ import {
   PolylineMaterialAppearance,
   ShadowMode,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -48,7 +49,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       MaterialAppearance,
       undefined,
       false,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
 
     const ellipse = new EllipseGraphics();
@@ -58,7 +59,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
 
     const entity = new Entity();
     entity.position = new ConstantPositionProperty(
-      new Cartesian3(1234, 5678, 9101112)
+      new Cartesian3(1234, 5678, 9101112),
     );
     entity.ellipse = ellipse;
 
@@ -69,7 +70,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
 
     const entity2 = new Entity();
     entity2.position = new ConstantPositionProperty(
-      new Cartesian3(1234, 5678, 9101112)
+      new Cartesian3(1234, 5678, 9101112),
     );
     entity2.ellipse = ellipse2;
 
@@ -107,7 +108,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: new DistanceDisplayCondition(1.0, 2.0),
-      })
+      }),
     );
     const entity = new Entity({
       availability: new TimeIntervalCollection([
@@ -130,7 +131,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       MaterialAppearance,
       undefined,
       false,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
 
     const updater = new EllipseGeometryUpdater(entity, scene);
@@ -147,7 +148,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       let attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.distanceDisplayCondition).toEqualEpsilon(
         [1.0, 2.0],
-        CesiumMath.EPSILON6
+        CesiumMath.EPSILON6,
       );
 
       batch.update(outOfRangeTime);
@@ -169,7 +170,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: true,
-      })
+      }),
     );
     const entity = new Entity({
       availability: new TimeIntervalCollection([
@@ -192,7 +193,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       MaterialAppearance,
       undefined,
       false,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
 
     const updater = new EllipseGeometryUpdater(entity, scene);
@@ -226,7 +227,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       PolylineMaterialAppearance,
       undefined,
       false,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
 
     const polyline = new PolylineGraphics();
@@ -282,7 +283,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: Color.RED,
-      })
+      }),
     );
     const entity = new Entity({
       availability: new TimeIntervalCollection([
@@ -305,7 +306,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       PolylineMaterialAppearance,
       PolylineColorAppearance,
       false,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
 
     const updater = new PolylineGeometryUpdater(entity, scene);
@@ -339,7 +340,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       MaterialAppearance,
       undefined,
       false,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
 
     function buildEntity() {
@@ -415,7 +416,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       MaterialAppearance,
       undefined,
       false,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
 
     function buildEntity(MaterialProperty) {
@@ -481,7 +482,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       MaterialAppearance,
       undefined,
       false,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
 
     function buildEntity() {

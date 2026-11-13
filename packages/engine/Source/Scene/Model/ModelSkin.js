@@ -1,6 +1,4 @@
-import Matrix4 from "../../Core/Matrix4.js";
-import Check from "../../Core/Check.js";
-import defaultValue from "../../Core/defaultValue.js";
+import { Check, Frozen, Matrix4 } from "@cesium/core";
 
 /**
  * An in-memory representation of a skin that affects nodes in the {@link ModelSceneGraph}.
@@ -17,7 +15,7 @@ import defaultValue from "../../Core/defaultValue.js";
  * @private
  */
 function ModelSkin(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.skin", options.skin);
   Check.typeOf.object("options.sceneGraph", options.sceneGraph);
@@ -136,7 +134,7 @@ function initialize(runtimeSkin) {
     const jointMatrix = computeJointMatrix(
       runtimeNode,
       inverseBindMatrix,
-      new Matrix4()
+      new Matrix4(),
     );
     runtimeJointMatrices.push(jointMatrix);
   }
@@ -146,13 +144,13 @@ function computeJointMatrix(joint, inverseBindMatrix, result) {
   const jointWorldTransform = Matrix4.multiplyTransformation(
     joint.transformToRoot,
     joint.transform,
-    result
+    result,
   );
 
   result = Matrix4.multiplyTransformation(
     jointWorldTransform,
     inverseBindMatrix,
-    result
+    result,
   );
 
   return result;
@@ -172,7 +170,7 @@ ModelSkin.prototype.updateJointMatrices = function () {
     jointMatrices[i] = computeJointMatrix(
       joint,
       inverseBindMatrix,
-      jointMatrices[i]
+      jointMatrices[i],
     );
   }
 };

@@ -29,6 +29,13 @@ function FrameState(context, creditDisplay, jobScheduler) {
   this.commandList = [];
 
   /**
+   * An array of panorama rendering commands.
+   *
+   * @type {DrawCommand[]}
+   */
+  this.panoramaCommandList = [];
+
+  /**
    * An array of shadow maps.
    * @type {ShadowMap[]}
    */
@@ -183,6 +190,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * @property {boolean} render <code>true</code> if the primitive should update for a render pass, <code>false</code> otherwise.
    * @property {boolean} pick <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
    * @property {boolean} pickVoxel <code>true</code> if the primitive should update for a voxel picking pass, <code>false</code> otherwise.
+   * @property {boolean} snap <code>true</code> if the current picking pass is a snapping pass (see {@link Scene#snap}), <code>false</code> otherwise. Only ever <code>true</code> while <code>pick</code> is also <code>true</code>.
    * @property {boolean} depth <code>true</code> if the primitive should update for a depth only pass, <code>false</code> otherwise.
    * @property {boolean} postProcess <code>true</code> if the primitive should update for a per-feature post-process pass, <code>false</code> otherwise.
    * @property {boolean} offscreen <code>true</code> if the primitive should update for an offscreen pass, <code>false</code> otherwise.
@@ -204,6 +212,10 @@ function FrameState(context, creditDisplay, jobScheduler) {
      * @default false
      */
     pickVoxel: false,
+    /**
+     * @default false
+     */
+    snap: false,
     /**
      * @default false
      */
@@ -261,9 +273,10 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * @type {object}
    * @property {boolean} enabled <code>true</code> if fog is enabled, <code>false</code> otherwise. This affects both fog culling and rendering.
    * @property {boolean} renderable <code>true</code> if fog should be rendered, <code>false</code> if not. This flag should be checked in combination with fog.enabled.
-   * @property {number} density A positive number used to mix the color and fog color based on camera distance.
-   * @property {number} sse A scalar used to modify the screen space error of geometry partially in fog.
-   * @property {number} minimumBrightness The minimum brightness of terrain with fog applied.
+   * @property {number | undefined} density A positive number used to mix the color and fog color based on camera distance.
+   * @property {number | undefined} visualDensityScalar A positive number to modify how impactful the fog is based off the density
+   * @property {number | undefined} sse A scalar used to modify the screen space error of geometry partially in fog.
+   * @property {number | undefined} minimumBrightness The minimum brightness of terrain with fog applied.
    */
 
   /**
@@ -277,6 +290,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
     enabled: false,
     renderable: false,
     density: undefined,
+    visualDensityScalar: undefined,
     sse: undefined,
     minimumBrightness: undefined,
   };
@@ -421,6 +435,61 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * @default 0.0
    */
   this.minimumTerrainHeight = 0.0;
+
+  /**
+   * Whether metadata picking is currently in progress.
+   *
+   * This is set to `true` in the `Picking.pickMetadata` function,
+   * immediately before updating and executing the draw commands,
+   * and set back to `false` immediately afterwards. It will be
+   * used to determine whether the metadata picking draw commands
+   * should be executed, in the `Scene.executeCommand` function.
+   *
+   * @type {boolean}
+   * @default false
+   */
+  this.pickingMetadata = false;
+
+  /**
+   * Metadata picking information.
+   *
+   * This describes the metadata property that is supposed to be picked
+   * in a `Picking.pickMetadata` call.
+   *
+   * This is stored in the frame state and in the metadata picking draw
+   * commands. In the `Scene.updateDerivedCommands` call, it will be
+   * checked whether the instance that is stored in the frame state
+   * is different from the one in the draw command, and if necessary,
+   * the derived commands for metadata picking will be updated based
+   * on this information.
+   *
+   * @type {PickedMetadataInfo|undefined}
+   */
+  this.pickedMetadataInfo = undefined;
+
+  /**
+   * Internal toggle indicating that at least one primitive for this frame requested
+   * edge visibility rendering (EXT_mesh_primitive_edge_visibility). This allows
+   * lazy allocation/activation of the edge MRT without storing a Scene reference
+   * on the frame state (avoids passing entire Scene through internal APIs).
+   * Renewed per frame by ModelDrawCommand while an MRT edge command renders.
+   * Consumed by Scene to flip its _enableEdgeVisibility flag.
+   * @type {boolean}
+   * @private
+   */
+  this.edgeVisibilityRequested = false;
+
+  /**
+   * Internal toggle indicating that at least one primitive for this frame has
+   * the BENTLEY_materials_planar_fill extension present. This allows lazy
+   * allocation of the planar fill feature-ID framebuffer.
+   * Set by MaterialPipelineStage at draw command build time and renewed
+   * per frame by ModelSceneGraph while planar fill primitives render.
+   * Consumed by Scene to update its _enablePlanarFillId flag.
+   * @type {boolean}
+   * @private
+   */
+  this.planarFillRequested = false;
 }
 
 /**

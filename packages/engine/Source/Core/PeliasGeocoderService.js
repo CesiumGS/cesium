@@ -1,8 +1,5 @@
-import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
+import { Cartesian3, Check, Rectangle, defined } from "@cesium/core";
 import GeocodeType from "./GeocodeType.js";
-import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
 
 /**
@@ -87,7 +84,7 @@ PeliasGeocoderService.prototype.geocode = async function (query, type) {
           bboxDegrees[0],
           bboxDegrees[1],
           bboxDegrees[2],
-          bboxDegrees[3]
+          bboxDegrees[3],
         );
       } else {
         const lon = resultObject.geometry.coordinates[0];

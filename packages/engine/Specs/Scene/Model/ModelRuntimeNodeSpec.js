@@ -1,14 +1,10 @@
+import { Cartesian3, Matrix3, Matrix4, Quaternion } from "@cesium/core";
 import {
   Axis,
-  Cartesian3,
-  defaultValue,
   InstancingPipelineStage,
-  Matrix3,
-  Matrix4,
   ModelRuntimeNode,
   ModelMatrixUpdateStage,
   NodeStatisticsPipelineStage,
-  Quaternion,
 } from "../../../index.js";
 
 describe("Scene/Model/ModelRuntimeNode", function () {
@@ -40,9 +36,9 @@ describe("Scene/Model/ModelRuntimeNode", function () {
     transform,
     transformToRoot,
     runtimeNode,
-    originalTransform
+    originalTransform,
   ) {
-    originalTransform = defaultValue(originalTransform, transform);
+    originalTransform = originalTransform ?? transform;
 
     expect(runtimeNode.transform).toEqual(transform);
     expect(runtimeNode.originalTransform).toEqual(originalTransform);
@@ -51,7 +47,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
     const computedTransform = Matrix4.multiplyTransformation(
       transformToRoot,
       transform,
-      scratchMatrix
+      scratchMatrix,
     );
 
     expect(runtimeNode.computedTransform).toEqual(computedTransform);
@@ -111,7 +107,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
         node: mockNode,
         transform: transform,
         sceneGraph: mockSceneGraph,
-        trasnformToRoot: transformToRoot,
+        transformToRoot: transformToRoot,
         children: undefined,
       });
     }).toThrowDeveloperError();
@@ -275,7 +271,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
 
     const translationMatrix = Matrix4.fromTranslation(
       translation,
-      scratchTransform
+      scratchTransform,
     );
 
     expect(node.translation).toEqual(translation);
@@ -305,7 +301,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
     const rotationMatrix3 = Matrix3.fromQuaternion(rotation, new Matrix3());
     const rotationMatrix = Matrix4.fromRotation(
       rotationMatrix3,
-      scratchTransform
+      scratchTransform,
     );
 
     expect(node.rotation).toEqual(rotation);
@@ -461,7 +457,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
     const newTransform = Matrix4.multiplyByTranslation(
       Matrix4.IDENTITY,
       new Cartesian3(10, 0, 0),
-      new Matrix4()
+      new Matrix4(),
     );
 
     node.transform = newTransform;
@@ -485,7 +481,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
     const newTransform = Matrix4.multiplyByTranslation(
       Matrix4.IDENTITY,
       new Cartesian3(10, 0, 0),
-      new Matrix4()
+      new Matrix4(),
     );
 
     node.transform = newTransform;
@@ -493,5 +489,74 @@ describe("Scene/Model/ModelRuntimeNode", function () {
 
     const originalTransform = transform;
     verifyTransforms(newTransform, transformToRoot, node, originalTransform);
+  });
+
+  it("sets the 'show' property to 'true' by default", function () {
+    const node = new ModelRuntimeNode({
+      node: mockNode,
+      transform: transform,
+      transformToRoot: transformToRoot,
+      sceneGraph: mockSceneGraph,
+      children: [],
+    });
+    expect(node.show).toBe(true);
+  });
+
+  it("sets the 'show' property to 'true' when the KHR_node_visibility 'visible' flag is undefined", function () {
+    // The 'nodeVisibility' property of the 'ModelComponents.Node' is set to be
+    // the  node.extensions.KHR_node_visibility object of the actual glTF node
+    // in GltfLoader::loadNode
+    const mockModelComponentsNodeWithExtension = {
+      matrix: Matrix4.IDENTITY,
+      nodeVisibility: {},
+    };
+    const node = new ModelRuntimeNode({
+      node: mockModelComponentsNodeWithExtension,
+      transform: transform,
+      transformToRoot: transformToRoot,
+      sceneGraph: mockSceneGraph,
+      children: [],
+    });
+    expect(node.show).toBe(true);
+  });
+
+  it("sets the 'show' property to 'true' when the KHR_node_visibility 'visible' flag is not 'false'", function () {
+    // The 'nodeVisibility' property of the 'ModelComponents.Node' is set to be
+    // the  node.extensions.KHR_node_visibility object of the actual glTF node
+    // in GltfLoader::loadNode
+    const mockModelComponentsNodeWithExtension = {
+      matrix: Matrix4.IDENTITY,
+      nodeVisibility: {
+        visible: "DUMMY_VALUE_FOR_SPEC",
+      },
+    };
+    const node = new ModelRuntimeNode({
+      node: mockModelComponentsNodeWithExtension,
+      transform: transform,
+      transformToRoot: transformToRoot,
+      sceneGraph: mockSceneGraph,
+      children: [],
+    });
+    expect(node.show).toBe(true);
+  });
+
+  it("sets the 'show' property to 'false' only when the KHR_node_visibility 'visible' flag is 'false'", function () {
+    // The 'nodeVisibility' property of the 'ModelComponents.Node' is set to be
+    // the  node.extensions.KHR_node_visibility object of the actual glTF node
+    // in GltfLoader::loadNode
+    const mockModelComponentsNodeWithExtension = {
+      matrix: Matrix4.IDENTITY,
+      nodeVisibility: {
+        visible: false,
+      },
+    };
+    const node = new ModelRuntimeNode({
+      node: mockModelComponentsNodeWithExtension,
+      transform: transform,
+      transformToRoot: transformToRoot,
+      sceneGraph: mockSceneGraph,
+      children: [],
+    });
+    expect(node.show).toBe(false);
   });
 });

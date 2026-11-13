@@ -1,7 +1,6 @@
+import { PrimitiveType, RuntimeError, addAllToArray } from "@cesium/core";
 import {
   ClassificationPipelineStage,
-  PrimitiveType,
-  RuntimeError,
   ShaderBuilder,
   VertexAttributeSemantic,
 } from "../../../index.js";
@@ -19,7 +18,7 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
       const batchLength = batchLengths[id];
       const batch = new Array(batchLength);
       batch.fill(id);
-      featureIds.push.apply(featureIds, batch);
+      addAllToArray(featureIds, batch);
     }
 
     return featureIds;
@@ -73,7 +72,7 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
       ClassificationPipelineStage.process(
         renderResources,
         primitive,
-        mockFrameState
+        mockFrameState,
       );
     }).toThrowError(RuntimeError);
   });
@@ -87,7 +86,7 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
     ClassificationPipelineStage.process(
       renderResources,
       primitive,
-      mockFrameState
+      mockFrameState,
     );
 
     const shaderBuilder = renderResources.shaderBuilder;
@@ -109,7 +108,7 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
     ClassificationPipelineStage.process(
       renderResources,
       primitive,
-      mockFrameState
+      mockFrameState,
     );
 
     const runtimePrimitive = renderResources.runtimePrimitive;
@@ -129,7 +128,7 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
     ClassificationPipelineStage.process(
       renderResources,
       primitive,
-      mockFrameState
+      mockFrameState,
     );
 
     const runtimePrimitive = renderResources.runtimePrimitive;
@@ -149,7 +148,7 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
     ClassificationPipelineStage.process(
       renderResources,
       primitive,
-      mockFrameState
+      mockFrameState,
     );
 
     const runtimePrimitive = renderResources.runtimePrimitive;
@@ -180,7 +179,7 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
     ClassificationPipelineStage.process(
       renderResources,
       primitive,
-      mockFrameState
+      mockFrameState,
     );
 
     const runtimePrimitive = renderResources.runtimePrimitive;
@@ -204,7 +203,7 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
     ClassificationPipelineStage.process(
       renderResources,
       primitive,
-      mockFrameState
+      mockFrameState,
     );
 
     const batchLengths = runtimePrimitive.batchLengths;

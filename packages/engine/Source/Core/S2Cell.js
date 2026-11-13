@@ -1,13 +1,12 @@
-/* eslint-disable new-cap */
-import Cartesian3 from "./Cartesian3.js";
-import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import Ellipsoid from "./Ellipsoid.js";
-import FeatureDetection from "./FeatureDetection.js";
-import RuntimeError from "./RuntimeError.js";
+import {
+  Cartesian3,
+  Cartographic,
+  Check,
+  DeveloperError,
+  Ellipsoid,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 
 /**
  * S2
@@ -158,8 +157,8 @@ const S2_POSITION_TO_ORIENTATION_MASK = [
  * @private
  */
 function S2Cell(cellId) {
-  if (!FeatureDetection.supportsBigInt()) {
-    throw new RuntimeError("S2 required BigInt support");
+  if (typeof BigInt === "undefined") {
+    throw new RuntimeError("S2 requires BigInt support");
   }
   //>>includeStart('debug', pragmas.debug);
   if (!defined(cellId)) {
@@ -210,15 +209,12 @@ S2Cell.isValidId = function (cellId) {
   }
 
   // Check if face bits indicate a valid value, in range [0-5].
-  // eslint-disable-next-line
   if (cellId >> BigInt(S2_POSITION_BITS) > 5) {
     return false;
   }
 
   // Check trailing 1 bit is in one of the even bit positions allowed for the 30 levels, using a bitmask.
-  // eslint-disable-next-line no-undef
   const lowestSetBit = cellId & (~cellId + BigInt(1));
-  // eslint-disable-next-line
   if (!(lowestSetBit & BigInt("0x1555555555555555"))) {
     return false;
   }
@@ -276,7 +272,7 @@ S2Cell.getTokenFromId = function (cellId) {
   const hexString = cellId.toString(16).replace(/0*$/, "");
 
   const zeroString = Array(17 - trailingZeroHexChars - hexString.length).join(
-    "0"
+    "0",
   );
   return zeroString + hexString;
 };
@@ -297,14 +293,12 @@ S2Cell.getLevel = function (cellId) {
   //>>includeEnd('debug');
 
   let lsbPosition = 0;
-  // eslint-disable-next-line
   while (cellId !== BigInt(0)) {
-    // eslint-disable-next-line
     if (cellId & BigInt(1)) {
       break;
     }
     lsbPosition++;
-    cellId = cellId >> BigInt(1); // eslint-disable-line
+    cellId = cellId >> BigInt(1);
   }
 
   // We use (>> 1) because there are 2 bits per level.
@@ -330,10 +324,8 @@ S2Cell.prototype.getChild = function (index) {
   //>>includeEnd('debug');
 
   // Shift sentinel bit 2 positions to the right.
-  // eslint-disable-next-line no-undef
   const newLsb = lsb(this._cellId) >> BigInt(2);
   // Insert child index before the sentinel bit.
-  // eslint-disable-next-line no-undef
   const childCellId = this._cellId + BigInt(2 * index + 1 - 4) * newLsb;
   return new S2Cell(childCellId);
 };
@@ -351,10 +343,8 @@ S2Cell.prototype.getParent = function () {
   }
   //>>includeEnd('debug');
   // Shift the sentinel bit 2 positions to the left.
-  // eslint-disable-next-line no-undef
   const newLsb = lsb(this._cellId) << BigInt(2);
   // Erase the left over bits to the right of the sentinel bit.
-  // eslint-disable-next-line no-undef
   return new S2Cell((this._cellId & (~newLsb + BigInt(1))) | newLsb);
 };
 
@@ -382,14 +372,14 @@ S2Cell.prototype.getParentAtLevel = function (level) {
  * @private
  */
 S2Cell.prototype.getCenter = function (ellipsoid) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = ellipsoid ?? Ellipsoid.WGS84;
 
   let center = getS2Center(this._cellId, this._level);
   // Normalize XYZ.
   center = Cartesian3.normalize(center, center);
-  const cartographic = new Cartographic.fromCartesian(
+  const cartographic = Cartographic.fromCartesian(
     center,
-    Ellipsoid.UNIT_SPHERE
+    Ellipsoid.UNIT_SPHERE,
   );
   // Interpret as geodetic coordinates on the ellipsoid.
   return Cartographic.toCartesian(cartographic, ellipsoid, new Cartesian3());
@@ -411,14 +401,14 @@ S2Cell.prototype.getVertex = function (index, ellipsoid) {
   }
   //>>includeEnd('debug');
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = ellipsoid ?? Ellipsoid.WGS84;
 
   let vertex = getS2Vertex(this._cellId, this._level, index);
   // Normalize XYZ.
   vertex = Cartesian3.normalize(vertex, vertex);
-  const cartographic = new Cartographic.fromCartesian(
+  const cartographic = Cartographic.fromCartesian(
     vertex,
-    Ellipsoid.UNIT_SPHERE
+    Ellipsoid.UNIT_SPHERE,
   );
   // Interpret as geodetic coordinates on the ellipsoid.
   return Cartographic.toCartesian(cartographic, ellipsoid, new Cartesian3());
@@ -452,16 +442,15 @@ S2Cell.fromFacePositionLevel = function (face, position, level) {
     (face < 4 ? "0" : "") + (face < 2 ? "0" : "") + face.toString(2);
   const positionBitString = position.toString(2);
   const positionPrefixPadding = Array(
-    2 * level - positionBitString.length + 1
+    2 * level - positionBitString.length + 1,
   ).join("0");
   const positionSuffixPadding = Array(S2_POSITION_BITS - 2 * level).join("0");
 
-  // eslint-disable-next-line no-undef
   const cellId = BigInt(
     `0b${faceBitString}${positionPrefixPadding}${positionBitString}1${
       // Adding the sentinel bit that always follows the position bits.
       positionSuffixPadding
-    }`
+    }`,
   );
   return new S2Cell(cellId);
 };
@@ -501,7 +490,7 @@ function convertCellIdToFaceSiTi(cellId, level) {
   // that represent the parent cell center.
   const isLeaf = level === 30;
   const shouldCorrect =
-    !isLeaf && (BigInt(i) ^ (cellId >> BigInt(2))) & BigInt(1); // eslint-disable-line
+    !isLeaf && (BigInt(i) ^ (cellId >> BigInt(2))) & BigInt(1);
   const correction = isLeaf ? 1 : shouldCorrect ? 2 : 0;
   const si = (i << 1) + correction;
   const ti = (j << 1) + correction;
@@ -516,7 +505,6 @@ function convertCellIdToFaceIJ(cellId) {
     generateLookupTable();
   }
 
-  // eslint-disable-next-line no-undef
   const face = Number(cellId >> BigInt(S2_POSITION_BITS));
   let bits = face & S2_SWAP_MASK;
   const lookupMask = (1 << S2_LOOKUP_BITS) - 1;
@@ -530,7 +518,7 @@ function convertCellIdToFaceIJ(cellId) {
     const extractMask = (1 << (2 * numberOfBits)) - 1;
     bits +=
       Number(
-        (cellId >> BigInt(k * 2 * S2_LOOKUP_BITS + 1)) & BigInt(extractMask) // eslint-disable-line
+        (cellId >> BigInt(k * 2 * S2_LOOKUP_BITS + 1)) & BigInt(extractMask),
       ) << 2;
 
     bits = S2_LOOKUP_IJ[bits];
@@ -645,7 +633,7 @@ function generateLookupCell(
   j,
   originalOrientation,
   position,
-  orientation
+  orientation,
 ) {
   if (level === S2_LOOKUP_BITS) {
     const ij = (i << S2_LOOKUP_BITS) + j;
@@ -665,7 +653,7 @@ function generateLookupCell(
       j + (r[0] & 1),
       originalOrientation,
       position,
-      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[0]
+      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[0],
     );
     generateLookupCell(
       level,
@@ -673,7 +661,7 @@ function generateLookupCell(
       j + (r[1] & 1),
       originalOrientation,
       position + 1,
-      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[1]
+      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[1],
     );
     generateLookupCell(
       level,
@@ -681,7 +669,7 @@ function generateLookupCell(
       j + (r[2] & 1),
       originalOrientation,
       position + 2,
-      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[2]
+      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[2],
     );
     generateLookupCell(
       level,
@@ -689,7 +677,7 @@ function generateLookupCell(
       j + (r[3] & 1),
       originalOrientation,
       position + 3,
-      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[3]
+      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[3],
     );
   }
 }
@@ -707,7 +695,7 @@ function generateLookupTable() {
     0,
     S2_SWAP_MASK | S2_INVERT_MASK,
     0,
-    S2_SWAP_MASK | S2_INVERT_MASK
+    S2_SWAP_MASK | S2_INVERT_MASK,
   );
 }
 
@@ -716,7 +704,7 @@ function generateLookupTable() {
  * @private
  */
 function lsb(cellId) {
-  return cellId & (~cellId + BigInt(1)); // eslint-disable-line
+  return cellId & (~cellId + BigInt(1));
 }
 
 /**
@@ -724,80 +712,16 @@ function lsb(cellId) {
  * @private
  */
 function lsbForLevel(level) {
-  return BigInt(1) << BigInt(2 * (S2_MAX_LEVEL - level)); // eslint-disable-line
+  return BigInt(1) << BigInt(2 * (S2_MAX_LEVEL - level));
 }
 
 // Lookup table for getting trailing zero bits.
 // https://graphics.stanford.edu/~seander/bithacks.html
 const Mod67BitPosition = [
-  64,
-  0,
-  1,
-  39,
-  2,
-  15,
-  40,
-  23,
-  3,
-  12,
-  16,
-  59,
-  41,
-  19,
-  24,
-  54,
-  4,
-  64,
-  13,
-  10,
-  17,
-  62,
-  60,
-  28,
-  42,
-  30,
-  20,
-  51,
-  25,
-  44,
-  55,
-  47,
-  5,
-  32,
-  65,
-  38,
-  14,
-  22,
-  11,
-  58,
-  18,
-  53,
-  63,
-  9,
-  61,
-  27,
-  29,
-  50,
-  43,
-  46,
-  31,
-  37,
-  21,
-  57,
-  52,
-  8,
-  26,
-  49,
-  45,
-  36,
-  56,
-  7,
-  48,
-  35,
-  6,
-  34,
-  33,
-  0,
+  64, 0, 1, 39, 2, 15, 40, 23, 3, 12, 16, 59, 41, 19, 24, 54, 4, 64, 13, 10, 17,
+  62, 60, 28, 42, 30, 20, 51, 25, 44, 55, 47, 5, 32, 65, 38, 14, 22, 11, 58, 18,
+  53, 63, 9, 61, 27, 29, 50, 43, 46, 31, 37, 21, 57, 52, 8, 26, 49, 45, 36, 56,
+  7, 48, 35, 6, 34, 33, 0,
 ];
 
 /**
@@ -805,7 +729,7 @@ const Mod67BitPosition = [
  * @private
  */
 function countTrailingZeroBits(x) {
-  return Mod67BitPosition[(-x & x) % BigInt(67)]; // eslint-disable-line
+  return Mod67BitPosition[(-x & x) % BigInt(67)];
 }
 
 export default S2Cell;

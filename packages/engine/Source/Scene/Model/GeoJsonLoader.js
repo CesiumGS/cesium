@@ -1,15 +1,18 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Check from "../../Core/Check.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import Ellipsoid from "../../Core/Ellipsoid.js";
-import IndexDatatype from "../../Core/IndexDatatype.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
-import RuntimeError from "../../Core/RuntimeError.js";
-import Transforms from "../../Core/Transforms.js";
-import AttributeType from "../AttributeType.js";
+import {
+  AttributeType,
+  Cartesian3,
+  Check,
+  ComponentDatatype,
+  Ellipsoid,
+  FixedFrameTransforms,
+  Frozen,
+  IndexDatatype,
+  Matrix4,
+  PrimitiveType,
+  RuntimeError,
+  addAllToArray,
+  defined,
+} from "@cesium/core";
 import JsonMetadataTable from "../JsonMetadataTable.js";
 import MetadataSchema from "../MetadataSchema.js";
 import ModelComponents from "../ModelComponents.js";
@@ -32,89 +35,87 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GeoJsonLoader
- * @constructor
- * @augments ResourceLoader
  * @private
- *
- * @param {object} options Object with the following properties:
- * @param {object} options.geoJson The GeoJson object.
  */
-function GeoJsonLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+class GeoJsonLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {object} options.geoJson The GeoJson object.
+   */
+  constructor(options) {
+    super();
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.geoJson", options.geoJson);
-  //>>includeEnd('debug');
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  this._geoJson = options.geoJson;
-  this._components = undefined;
-}
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("options.geoJson", options.geoJson);
+    //>>includeEnd('debug');
 
-if (defined(Object.create)) {
-  GeoJsonLoader.prototype = Object.create(ResourceLoader.prototype);
-  GeoJsonLoader.prototype.constructor = GeoJsonLoader;
-}
+    this._geoJson = options.geoJson;
+    this._components = undefined;
+  }
 
-Object.defineProperties(GeoJsonLoader.prototype, {
   /**
    * The cache key of the resource.
    *
-   * @memberof GeoJsonLoader.prototype
    *
    * @type {string}
    * @readonly
    * @private
    */
-  cacheKey: {
-    get: function () {
-      return undefined;
-    },
-  },
+  get cacheKey() {
+    return undefined;
+  }
+
   /**
    * The loaded components.
    *
-   * @memberof GeoJsonLoader.prototype
    *
    * @type {ModelComponents.Components}
    * @readonly
    * @private
    */
-  components: {
-    get: function () {
-      return this._components;
-    },
-  },
-});
+  get components() {
+    return this._components;
+  }
 
-/**
- * Loads the resource.
- * @returns {Promise<GeoJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @private
- */
-GeoJsonLoader.prototype.load = function () {
-  return Promise.resolve(this);
-};
+  /**
+   * Loads the resource.
+   * @returns {Promise<GeoJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
+   * @private
+   */
+  load() {
+    return Promise.resolve(this);
+  }
 
-/**
- * Processes the resource until it becomes ready.
- *
- * @param {FrameState} frameState The frame state.
- * @private
- */
-GeoJsonLoader.prototype.process = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("frameState", frameState);
-  //>>includeEnd('debug');
+  /**
+   * Processes the resource until it becomes ready.
+   *
+   * @param {FrameState} frameState The frame state.
+   * @private
+   */
+  process(frameState) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("frameState", frameState);
+    //>>includeEnd('debug');
 
-  if (defined(this._components)) {
+    if (defined(this._components)) {
+      return true;
+    }
+
+    this._components = parse(this._geoJson, frameState);
+    this._geoJson = undefined;
     return true;
   }
 
-  this._components = parse(this._geoJson, frameState);
-  this._geoJson = undefined;
-  return true;
-};
+  /**
+   * Unloads the resource.
+   * @private
+   */
+  unload() {
+    this._components = undefined;
+  }
+}
 
 function ParsedFeature() {
   this.lines = undefined;
@@ -129,7 +130,7 @@ function ParseResult() {
 function parsePosition(position) {
   const x = position[0];
   const y = position[1];
-  const z = defaultValue(position[2], 0.0);
+  const z = position[2] ?? 0.0;
   return new Cartesian3(x, y, z);
 }
 
@@ -166,7 +167,8 @@ function parseMultiPolygon(coordinates) {
   const polygonsLength = coordinates.length;
   const lines = [];
   for (let i = 0; i < polygonsLength; i++) {
-    Array.prototype.push.apply(lines, parsePolygon(coordinates[i]));
+    const polygon = parsePolygon(coordinates[i]);
+    addAllToArray(lines, polygon);
   }
   return lines;
 }
@@ -272,7 +274,7 @@ function createLinesPrimitive(features, toLocal, frameState) {
   const featureIdsTypedArray = new Float32Array(vertexCount);
   const indicesTypedArray = IndexDatatype.createTypedArray(
     vertexCount,
-    indexCount
+    indexCount,
   );
   const indexDatatype = IndexDatatype.fromTypedArray(indicesTypedArray);
 
@@ -280,13 +282,13 @@ function createLinesPrimitive(features, toLocal, frameState) {
   const localMin = new Cartesian3(
     Number.POSITIVE_INFINITY,
     Number.POSITIVE_INFINITY,
-    Number.POSITIVE_INFINITY
+    Number.POSITIVE_INFINITY,
   );
 
   const localMax = new Cartesian3(
     Number.NEGATIVE_INFINITY,
     Number.NEGATIVE_INFINITY,
-    Number.NEGATIVE_INFINITY
+    Number.NEGATIVE_INFINITY,
   );
 
   let vertexCounter = 0;
@@ -310,12 +312,12 @@ function createLinesPrimitive(features, toLocal, frameState) {
           cartographic.y,
           cartographic.z,
           Ellipsoid.WGS84,
-          scratchCartesian
+          scratchCartesian,
         );
         const localCartesian = Matrix4.multiplyByPoint(
           toLocal,
           globalCartesian,
-          scratchCartesian
+          scratchCartesian,
         );
 
         Cartesian3.minimumByComponent(localMin, localCartesian, localMin);
@@ -426,13 +428,13 @@ function createPointsPrimitive(features, toLocal, frameState) {
   const localMin = new Cartesian3(
     Number.POSITIVE_INFINITY,
     Number.POSITIVE_INFINITY,
-    Number.POSITIVE_INFINITY
+    Number.POSITIVE_INFINITY,
   );
 
   const localMax = new Cartesian3(
     Number.NEGATIVE_INFINITY,
     Number.NEGATIVE_INFINITY,
-    Number.NEGATIVE_INFINITY
+    Number.NEGATIVE_INFINITY,
   );
 
   let vertexCounter = 0;
@@ -452,12 +454,12 @@ function createPointsPrimitive(features, toLocal, frameState) {
         cartographic.y,
         cartographic.z,
         Ellipsoid.WGS84,
-        scratchCartesian
+        scratchCartesian,
       );
       const localCartesian = Matrix4.multiplyByPoint(
         toLocal,
         globalCartesian,
-        scratchCartesian
+        scratchCartesian,
       );
 
       Cartesian3.minimumByComponent(localMin, localCartesian, localMin);
@@ -546,10 +548,7 @@ function parse(geoJson, frameState) {
   const properties = {};
   for (let i = 0; i < featureCount; i++) {
     const feature = features[i];
-    const featureProperties = defaultValue(
-      feature.properties,
-      defaultValue.EMPTY_OBJECT
-    );
+    const featureProperties = feature.properties ?? Frozen.EMPTY_OBJECT;
     for (const propertyId in featureProperties) {
       if (featureProperties.hasOwnProperty(propertyId)) {
         if (!defined(properties[propertyId])) {
@@ -564,7 +563,7 @@ function parse(geoJson, frameState) {
     const feature = features[i];
     for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        const value = defaultValue(feature.properties[propertyId], "");
+        const value = feature.properties[propertyId] ?? "";
         properties[propertyId][i] = value;
       }
     }
@@ -593,13 +592,13 @@ function parse(geoJson, frameState) {
   const cartographicMin = new Cartesian3(
     Number.POSITIVE_INFINITY,
     Number.POSITIVE_INFINITY,
-    Number.POSITIVE_INFINITY
+    Number.POSITIVE_INFINITY,
   );
 
   const cartographicMax = new Cartesian3(
     Number.NEGATIVE_INFINITY,
     Number.NEGATIVE_INFINITY,
-    Number.NEGATIVE_INFINITY
+    Number.NEGATIVE_INFINITY,
   );
 
   let hasLines = false;
@@ -617,12 +616,12 @@ function parse(geoJson, frameState) {
           Cartesian3.minimumByComponent(
             cartographicMin,
             line[k],
-            cartographicMin
+            cartographicMin,
           );
           Cartesian3.maximumByComponent(
             cartographicMax,
             line[k],
-            cartographicMax
+            cartographicMax,
           );
         }
       }
@@ -643,19 +642,19 @@ function parse(geoJson, frameState) {
   const cartographicCenter = Cartesian3.midpoint(
     cartographicMin,
     cartographicMax,
-    new Cartesian3()
+    new Cartesian3(),
   );
   const ecefCenter = Cartesian3.fromDegrees(
     cartographicCenter.x,
     cartographicCenter.y,
     cartographicCenter.z,
     Ellipsoid.WGS84,
-    new Cartesian3()
+    new Cartesian3(),
   );
-  const toGlobal = Transforms.eastNorthUpToFixedFrame(
+  const toGlobal = FixedFrameTransforms.eastNorthUpToFixedFrame(
     ecefCenter,
     Ellipsoid.WGS84,
-    new Matrix4()
+    new Matrix4(),
   );
   const toLocal = Matrix4.inverseTransformation(toGlobal, new Matrix4());
 
@@ -686,13 +685,5 @@ function parse(geoJson, frameState) {
 
   return components;
 }
-
-/**
- * Unloads the resource.
- * @private
- */
-GeoJsonLoader.prototype.unload = function () {
-  this._components = undefined;
-};
 
 export default GeoJsonLoader;

@@ -1,13 +1,10 @@
+import { Color, PixelDatatype, PixelFormat, PrimitiveType } from "@cesium/core";
 import {
   ClearCommand,
-  Color,
-  PrimitiveType,
   Buffer,
   BufferUsage,
   DrawCommand,
   MultisampleFramebuffer,
-  PixelDatatype,
-  PixelFormat,
   Texture,
   Renderbuffer,
   RenderbufferFormat,
@@ -15,7 +12,6 @@ import {
   ShaderProgram,
   VertexArray,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe(
@@ -264,7 +260,7 @@ describe(
         "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
       const fs2 =
         "uniform sampler2D u_texture; void main() { out_FragColor = texture(u_texture, vec2(0.0)).rrrr; }";
-      let sp2 = ShaderProgram.fromCache({
+      const sp2 = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs2,
         fragmentShaderSource: fs2,
@@ -286,7 +282,7 @@ describe(
       });
       command.execute(context);
 
-      sp2 = sp2.destroy();
+      sp2.destroy();
 
       return context.readPixels();
     }
@@ -332,7 +328,7 @@ describe(
 
       expect(renderAndBlitDepthAttachment(framebuffer)).toEqualEpsilon(
         [128, 128, 128, 255],
-        1
+        1,
       );
     });
 
@@ -381,5 +377,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

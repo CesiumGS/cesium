@@ -3,14 +3,16 @@ import {
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
-  destroyObject,
   Ellipsoid,
+  FixedFrameTransforms,
   GeometryInstance,
   PolygonGeometry,
   Rectangle,
   RectangleGeometry,
   ShowGeometryInstanceAttribute,
-  Transforms,
+  destroyObject,
+} from "@cesium/core";
+import {
   Pass,
   RenderState,
   ClassificationPrimitive,
@@ -21,7 +23,6 @@ import {
   Primitive,
   StencilConstants,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -55,7 +56,7 @@ describe(
         });
       }
       const depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(0.0, 0.0, 1.0, 1.0)
+        new Color(0.0, 0.0, 1.0, 1.0),
       );
       depthColor = depthColorAttribute.value;
       return new Primitive({
@@ -117,7 +118,7 @@ describe(
       reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
       reusableTilesetPrimitive = createPrimitive(
         rectangle,
-        Pass.CESIUM_3D_TILE
+        Pass.CESIUM_3D_TILE,
       );
     });
 
@@ -134,17 +135,17 @@ describe(
       globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
       tilesetPrimitive = new MockPrimitive(
         reusableTilesetPrimitive,
-        Pass.CESIUM_3D_TILE
+        Pass.CESIUM_3D_TILE,
       );
 
       const center = Rectangle.center(rectangle);
       const origin = ellipsoid.cartographicToCartesian(center);
-      const modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+      const modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin);
 
       const dimensions = new Cartesian3(1000000.0, 1000000.0, 1000000.0);
 
       const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(1.0, 1.0, 0.0, 1.0)
+        new Color(1.0, 1.0, 0.0, 1.0),
       );
       boxColor = boxColorAttribute.value;
       boxInstance = new GeometryInstance({
@@ -291,7 +292,7 @@ describe(
       primitive = scene.primitives.add(
         new ClassificationPrimitive({
           geometryInstances: boxInstance,
-        })
+        }),
       );
       primitive.show = false;
 
@@ -433,12 +434,12 @@ describe(
       const origin = ellipsoid.cartographicToCartesian(center);
 
       const origin1 = Cartesian3.add(origin, direction, new Cartesian3());
-      let modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+      let modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin1);
 
       const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 
       const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(0.0, 1.0, 1.0, 1.0)
+        new Color(0.0, 1.0, 1.0, 1.0),
       );
       const boxInstance1 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
@@ -453,7 +454,7 @@ describe(
 
       Cartesian3.negate(direction, direction);
       const origin2 = Cartesian3.add(origin, direction, new Cartesian3());
-      modelMatrix = Transforms.eastNorthUpToFixedFrame(origin2);
+      modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin2);
 
       const boxInstance2 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
@@ -492,13 +493,14 @@ describe(
 
       const invertedColor = new Array(4);
       invertedColor[0] = Color.floatToByte(
-        Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red
+        Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red,
       );
       invertedColor[1] = Color.floatToByte(
-        Color.byteToFloat(depthColor[1]) * scene.invertClassificationColor.green
+        Color.byteToFloat(depthColor[1]) *
+          scene.invertClassificationColor.green,
       );
       invertedColor[2] = Color.floatToByte(
-        Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue
+        Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue,
       );
       invertedColor[3] = 255;
 
@@ -539,17 +541,17 @@ describe(
       invertedColor[0] = Color.floatToByte(
         Color.byteToFloat(depthColor[0]) *
           scene.invertClassificationColor.red *
-          scene.invertClassificationColor.alpha
+          scene.invertClassificationColor.alpha,
       );
       invertedColor[1] = Color.floatToByte(
         Color.byteToFloat(depthColor[1]) *
           scene.invertClassificationColor.green *
-          scene.invertClassificationColor.alpha
+          scene.invertClassificationColor.alpha,
       );
       invertedColor[2] = Color.floatToByte(
         Color.byteToFloat(depthColor[2]) *
           scene.invertClassificationColor.blue *
-          scene.invertClassificationColor.alpha
+          scene.invertClassificationColor.alpha,
       );
       invertedColor[3] = 255;
 
@@ -840,12 +842,12 @@ describe(
       const origin = ellipsoid.cartographicToCartesian(center);
 
       const origin1 = Cartesian3.add(origin, direction, new Cartesian3());
-      let modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+      let modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin1);
 
       const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 
       const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(0.0, 1.0, 1.0, 1.0)
+        new Color(0.0, 1.0, 1.0, 1.0),
       );
       const boxInstance1 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
@@ -855,14 +857,14 @@ describe(
         id: "box1",
         attributes: {
           color: ColorGeometryInstanceAttribute.fromColor(
-            new Color(0.0, 1.0, 1.0, 1.0)
+            new Color(0.0, 1.0, 1.0, 1.0),
           ),
         },
       });
 
       Cartesian3.negate(direction, direction);
       const origin2 = Cartesian3.add(origin, direction, new Cartesian3());
-      modelMatrix = Transforms.eastNorthUpToFixedFrame(origin2);
+      modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin2);
 
       const boxInstance2 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
@@ -872,7 +874,7 @@ describe(
         id: "box2",
         attributes: {
           color: ColorGeometryInstanceAttribute.fromColor(
-            new Color(1.0, 0.0, 1.0, 1.0)
+            new Color(1.0, 0.0, 1.0, 1.0),
           ),
         },
       });
@@ -907,12 +909,12 @@ describe(
       const origin = ellipsoid.cartographicToCartesian(center);
 
       const origin1 = Cartesian3.add(origin, direction, new Cartesian3());
-      let modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+      let modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin1);
 
       const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 
       const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(0.0, 1.0, 1.0, 1.0)
+        new Color(0.0, 1.0, 1.0, 1.0),
       );
       const boxInstance1 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
@@ -922,14 +924,14 @@ describe(
         id: "box1",
         attributes: {
           color: ColorGeometryInstanceAttribute.fromColor(
-            new Color(0.0, 1.0, 1.0, 1.0)
+            new Color(0.0, 1.0, 1.0, 1.0),
           ),
         },
       });
 
       Cartesian3.negate(direction, direction);
       const origin2 = Cartesian3.add(origin, direction, new Cartesian3());
-      modelMatrix = Transforms.eastNorthUpToFixedFrame(origin2);
+      modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin2);
 
       const boxInstance2 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
@@ -969,7 +971,7 @@ describe(
       const origin = ellipsoid.cartographicToCartesian(center);
 
       const origin1 = Cartesian3.add(origin, direction, new Cartesian3());
-      const modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+      const modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin1);
 
       const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 
@@ -988,7 +990,7 @@ describe(
       });
 
       const boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-        new Color(0.0, 1.0, 1.0, 1.0)
+        new Color(0.0, 1.0, 1.0, 1.0),
       );
 
       expect(function () {
@@ -1125,7 +1127,7 @@ describe(
       verifyClassificationPrimitiveRender(primitive, boxColor);
 
       expect(
-        primitive.getGeometryInstanceAttributes("unknown")
+        primitive.getGeometryInstanceAttributes("unknown"),
       ).not.toBeDefined();
     });
 
@@ -1181,5 +1183,5 @@ describe(
       scene.primitives.destroyPrimitives = true;
     });
   },
-  "WebGL"
+  "WebGL",
 );

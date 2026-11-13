@@ -1,11 +1,13 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import SphereOutlineGeometry from "../Core/SphereOutlineGeometry.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Check,
+  ColorGeometryInstanceAttribute,
+  GeometryInstance,
+  Math as CesiumMath,
+  Matrix4,
+  SphereOutlineGeometry,
+} from "@cesium/core";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
 
@@ -98,7 +100,7 @@ TileBoundingSphere.prototype.distanceToCamera = function (frameState) {
   return Math.max(
     0.0,
     Cartesian3.distance(boundingSphere.center, frameState.camera.positionWC) -
-      boundingSphere.radius
+      boundingSphere.radius,
   );
 };
 
@@ -144,7 +146,7 @@ TileBoundingSphere.prototype.createDebugVolume = function (color) {
   });
   const modelMatrix = Matrix4.fromTranslation(
     this.center,
-    new Matrix4.clone(Matrix4.IDENTITY)
+    Matrix4.clone(Matrix4.IDENTITY),
   );
   const instance = new GeometryInstance({
     geometry: geometry,

@@ -1,0 +1,112 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  /* Styles for indicating to the user to press the play button */
+  .cesium-animation-rectButton.highlight-animation
+    .cesium-animation-buttonGlow {
+    display: block;
+    fill: #fff;
+    /* keep the built-in blur and add extra glow layers */
+    filter: url(#animation_blurred) drop-shadow(0 0 3px #aef)
+      drop-shadow(0 0 3px #fff);
+    animation: highlight-animation-button 1.2s ease-in-out infinite;
+  }
+  .cesium-animation-rectButton.highlight-animation
+    .cesium-animation-buttonMain {
+    stroke: #fff;
+    stroke-width: 3;
+  }
+  .cesium-animation-rectButton.highlight-animation
+    .cesium-animation-buttonPath {
+    fill: #fff;
+  }
+
+  .cesium-animation-shuttleRingG.highlight-animation
+    .cesium-animation-shuttleRingBack {
+    stroke: #fff;
+    stroke-width: 6;
+    filter: drop-shadow(0 0 3px #aef)
+      drop-shadow(0 0 3px rgba(174, 238, 255, 0.95));
+    animation: highlight-animation-ring 1.2s ease-in-out infinite;
+  }
+  .cesium-animation-shuttleRingG.highlight-animation
+    .cesium-animation-shuttleRingSwoosh
+    line {
+    stroke: #fff;
+    stroke-opacity: 0.8;
+  }
+
+  @keyframes highlight-animation-button {
+    0% {
+      opacity: 0.3;
+      stroke-width: 0;
+    }
+    50% {
+      opacity: 1;
+      stroke-width: 4;
+    }
+    100% {
+      opacity: 0.3;
+      stroke-width: 0;
+    }
+  }
+  @keyframes highlight-animation-ring {
+    0% {
+      stroke-opacity: 0.25;
+      stroke: #333;
+    }
+    50% {
+      stroke-opacity: 1;
+      stroke: #fff;
+    }
+    100% {
+      stroke-opacity: 0.25;
+      stroke: #333;
+    }
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<template id="roverHelpRowTemplate1">
+  <tr>
+    <td>
+      <img
+        data-src="Widgets/Images/NavigationHelp/MouseLeft.svg"
+        style="height: 48px; width: 48px"
+        alt="Left mouse button"
+      />
+    </td>
+    <td>
+      <div class="cesium-navigation-help-pan">Track Rover</div>
+      <div class="cesium-navigation-help-detail">
+        Double click on a rover to track it
+      </div>
+    </td>
+  </tr>
+</template>
+<template id="roverHelpRowTemplate2">
+  <tr>
+    <td>
+      <svg
+        width="48"
+        height="48"
+        viewBox="0 0 32 32"
+        aria-label="Play"
+        role="img"
+      >
+        <path
+          transform="translate(32,32) scale(0.85) translate(-32,-32)"
+          d="M6.684,25.682L24.316,15.5L6.684,5.318V25.682z"
+          fill="#ffffff"
+        ></path>
+      </svg>
+    </td>
+    <td>
+      <div class="cesium-navigation-help-zoom">Play Animation</div>
+      <div class="cesium-navigation-help-detail">
+        Press play on the timeline to watch the rover move
+      </div>
+    </td>
+  </tr>
+</template>

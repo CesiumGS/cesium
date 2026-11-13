@@ -4,6 +4,8 @@ import {
   JulianDate,
   Plane,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
   ConstantPositionProperty,
   ConstantProperty,
   Entity,
@@ -11,7 +13,6 @@ import {
   PlaneGraphics,
   PrimitiveCollection,
 } from "../../index.js";
-
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createGeometryUpdaterSpecs from "../../../../Specs/createGeometryUpdaterSpecs.js";
@@ -33,12 +34,12 @@ describe(
     function createBasicPlane() {
       const planeGraphics = new PlaneGraphics();
       planeGraphics.plane = new ConstantProperty(
-        new Plane(Cartesian3.UNIT_X, 0.0)
+        new Plane(Cartesian3.UNIT_X, 0.0),
       );
       planeGraphics.dimensions = new ConstantProperty(new Cartesian2(1.0, 2.0));
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(0, 0, 0)
+        Cartesian3.fromDegrees(0, 0, 0),
       );
       entity.plane = planeGraphics;
       return entity;
@@ -47,7 +48,7 @@ describe(
     function createDynamicPlane() {
       const entity = createBasicPlane();
       entity.plane.plane = createDynamicProperty(
-        new Plane(Cartesian3.UNIT_X, 0.0)
+        new Plane(Cartesian3.UNIT_X, 0.0),
       );
       entity.plane.dimensions = createDynamicProperty(new Cartesian2(1.0, 2.0));
       return entity;
@@ -77,7 +78,7 @@ describe(
       const updater = new PlaneGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         new PrimitiveCollection(),
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
       dynamicUpdater.update(JulianDate.now());
 
@@ -121,15 +122,15 @@ describe(
       PlaneGeometryUpdater,
       "plane",
       createBasicPlane,
-      getScene
+      getScene,
     );
 
     createDynamicGeometryUpdaterSpecs(
       PlaneGeometryUpdater,
       "plane",
       createDynamicPlane,
-      getScene
+      getScene,
     );
   },
-  "WebGL"
+  "WebGL",
 );

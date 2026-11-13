@@ -1,11 +1,9 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Check, DeveloperError, defined } from "@cesium/core";
 import loadKTX2 from "../Core/loadKTX2.js";
 import Resource from "../Core/Resource.js";
 
 /**
- * @typedef {HTMLImageElement|HTMLCanvasElement|ImageBitmap} ImageryTypes
+ * @typedef {HTMLImageElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas} ImageryTypes
  *
  * The format in which {@link ImageryProvider} methods return an image may
  * vary by provider, configuration, or server settings.  Most common are
@@ -39,8 +37,8 @@ import Resource from "../Core/Resource.js";
  * @see WebMapServiceImageryProvider
  * @see WebMapTileServiceImageryProvider
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=imagery-layers|Cesium Sandcastle Imagery Layers Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=imagery-layers-manipulation|Cesium Sandcastle Imagery Manipulation Demo}
  */
 function ImageryProvider() {
   DeveloperError.throwInstantiationError();
@@ -220,7 +218,7 @@ ImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   DeveloperError.throwInstantiationError();
 };

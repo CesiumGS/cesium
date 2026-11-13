@@ -1,19 +1,23 @@
+import { clone } from "@cesium/core";
 import {
-  clone,
   ImageryLayer,
   GlobeSurfaceTile,
   TerrainState,
   Texture,
+  VectorProvider,
 } from "@cesium/engine";
 
 function TerrainTileProcessor(
   frameState,
   terrainProvider,
-  imageryLayerCollection
+  imageryLayerCollection,
 ) {
   this.frameState = frameState;
   this.terrainProvider = terrainProvider;
   this.imageryLayerCollection = imageryLayerCollection;
+  this.vectorProvider = new VectorProvider({
+    tilingScheme: terrainProvider.tilingScheme,
+  });
 }
 
 // Processes the given list of tiles until all terrain and imagery states stop changing.
@@ -70,7 +74,8 @@ TerrainTileProcessor.prototype.process = function (tiles, maxIterations) {
           tile,
           that.frameState,
           that.terrainProvider,
-          that.imageryLayerCollection
+          that.vectorProvider,
+          that.imageryLayerCollection,
         );
         const afterState = getState(tile);
         changed =
@@ -99,18 +104,17 @@ TerrainTileProcessor.prototype.mockWebGL = function () {
         "isDestroyed",
       ]);
       return vertexArray;
-    }
+    },
   );
 
-  spyOn(ImageryLayer.prototype, "_createTextureWebGL").and.callFake(function (
-    context,
-    imagery
-  ) {
-    const texture = jasmine.createSpyObj("Texture", ["destroy"]);
-    texture.width = imagery.image.width;
-    texture.height = imagery.image.height;
-    return texture;
-  });
+  spyOn(ImageryLayer.prototype, "_createTextureWebGL").and.callFake(
+    function (context, imagery) {
+      const texture = jasmine.createSpyObj("Texture", ["destroy"]);
+      texture.width = imagery.image.width;
+      texture.height = imagery.image.height;
+      return texture;
+    },
+  );
 
   spyOn(ImageryLayer.prototype, "_finalizeReprojectTexture");
 

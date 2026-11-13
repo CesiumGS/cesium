@@ -1,14 +1,11 @@
+import { ArcType, Color, DistanceDisplayCondition } from "@cesium/core";
 import {
-  ArcType,
-  Color,
-  DistanceDisplayCondition,
   ColorMaterialProperty,
   ConstantProperty,
   PolylineGraphics,
   ClassificationType,
   ShadowMode,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 import testMaterialDefinitionChanged from "../../../../Specs/testMaterialDefinitionChanged.js";
 
@@ -45,7 +42,7 @@ describe("DataSources/PolylineGraphics", function () {
 
     expect(polyline.material.color.getValue()).toEqual(options.material);
     expect(polyline.depthFailMaterial.color.getValue()).toEqual(
-      options.depthFailMaterial
+      options.depthFailMaterial,
     );
     expect(polyline.positions.getValue()).toEqual(options.positions);
     expect(polyline.show.getValue()).toEqual(options.show);
@@ -54,10 +51,10 @@ describe("DataSources/PolylineGraphics", function () {
     expect(polyline.granularity.getValue()).toEqual(options.granularity);
     expect(polyline.shadows.getValue()).toEqual(options.shadows);
     expect(polyline.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
     expect(polyline.classificationType.getValue()).toEqual(
-      options.classificationType
+      options.classificationType,
     );
     expect(polyline.arcType.getValue()).toEqual(options.arcType);
     expect(polyline.zIndex.getValue()).toEqual(options.zIndex);
@@ -74,10 +71,10 @@ describe("DataSources/PolylineGraphics", function () {
     source.granularity = new ConstantProperty();
     source.shadows = new ConstantProperty(ShadowMode.ENABLED);
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition()
+      new DistanceDisplayCondition(),
     );
     source.classificationType = new ConstantProperty(
-      ClassificationType.TERRAIN
+      ClassificationType.TERRAIN,
     );
     source.arcType = new ConstantProperty(ArcType.GEODESIC);
     source.zIndex = new ConstantProperty();
@@ -93,7 +90,7 @@ describe("DataSources/PolylineGraphics", function () {
     expect(target.granularity).toBe(source.granularity);
     expect(target.shadows).toBe(source.shadows);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(target.classificationType).toBe(source.classificationType);
     expect(target.arcType).toBe(source.arcType);
@@ -182,7 +179,7 @@ describe("DataSources/PolylineGraphics", function () {
     expect(result.granularity).toBe(source.granularity);
     expect(result.shadows).toBe(source.shadows);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(result.classificationType).toBe(source.classificationType);
     expect(result.arcType).toBe(source.arcType);
@@ -203,7 +200,7 @@ describe("DataSources/PolylineGraphics", function () {
       property,
       "depthFailMaterial",
       Color.RED,
-      Color.BLUE
+      Color.BLUE,
     );
     testDefinitionChanged(property, "show", true, false);
     testDefinitionChanged(property, "positions", [], []);
@@ -214,18 +211,18 @@ describe("DataSources/PolylineGraphics", function () {
       property,
       "shadows",
       ShadowMode.ENABLED,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
     testDefinitionChanged(
       property,
       "distanceDisplayCondition",
       new DistanceDisplayCondition(),
-      new DistanceDisplayCondition(10.0, 20.0)
+      new DistanceDisplayCondition(10.0, 20.0),
     );
     testDefinitionChanged(
       property,
       "classificationType",
-      ClassificationType.TERRAIN
+      ClassificationType.TERRAIN,
     );
     testDefinitionChanged(property, "arcType", ArcType.GEODESIC, ArcType.RHUMB);
     testDefinitionChanged(property, "zIndex", 20, 5);

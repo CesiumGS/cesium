@@ -1,7 +1,11 @@
-import { JulianDate, CallbackProperty } from "../../index.js";
+import { JulianDate } from "@cesium/core";
+import { CallbackProperty } from "../../index.js";
 
 describe("DataSources/CallbackProperty", function () {
-  const time = JulianDate.now();
+  let time;
+  beforeEach(function () {
+    time = JulianDate.now();
+  });
 
   it("callback received proper parameters", function () {
     const result = {};

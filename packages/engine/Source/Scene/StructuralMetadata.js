@@ -1,6 +1,4 @@
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
+import { Check, Frozen, defined, destroyObject } from "@cesium/core";
 
 /**
  * An object containing structural metadata.
@@ -25,7 +23,7 @@ import defined from "../Core/defined.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function StructuralMetadata(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.schema", options.schema);
   //>>includeEnd('debug');
@@ -35,9 +33,9 @@ function StructuralMetadata(options) {
   this._propertyTableCount = defined(propertyTables)
     ? propertyTables.length
     : 0;
-  this._propertyTables = propertyTables;
-  this._propertyTextures = options.propertyTextures;
-  this._propertyAttributes = options.propertyAttributes;
+  this._propertyTables = propertyTables ?? [];
+  this._propertyTextures = options.propertyTextures ?? [];
+  this._propertyAttributes = options.propertyAttributes ?? [];
   this._statistics = options.statistics;
   this._extras = options.extras;
   this._extensions = options.extensions;
@@ -231,13 +229,27 @@ StructuralMetadata.prototype.getPropertyTexture = function (propertyTextureId) {
  * @private
  */
 StructuralMetadata.prototype.getPropertyAttribute = function (
-  propertyAttributeId
+  propertyAttributeId,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("propertyAttributeId", propertyAttributeId);
   //>>includeEnd('debug');
 
   return this._propertyAttributes[propertyAttributeId];
+};
+
+/**
+ * Destroys any resources that need cleaning up in the structural metadata.
+ *
+ * @private
+ */
+StructuralMetadata.prototype.destroy = function () {
+  const propertyTables = this._propertyTables;
+  for (let i = 0; i < propertyTables.length; i++) {
+    propertyTables[i] = propertyTables[i] && propertyTables[i].destroy();
+  }
+
+  return destroyObject(this);
 };
 
 export default StructuralMetadata;

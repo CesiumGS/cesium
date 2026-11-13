@@ -1,11 +1,10 @@
 import {
-  defaultValue,
-  defined,
-  destroyObject,
   DeveloperError,
   EventHelper,
-  SceneMode,
-} from "@cesium/engine";
+  defined,
+  destroyObject,
+} from "@cesium/core";
+import { SceneMode } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
 
@@ -36,7 +35,7 @@ function SceneModePickerViewModel(scene, duration) {
   this._eventHelper = new EventHelper();
   this._eventHelper.add(scene.morphStart, morphStart);
 
-  this._duration = defaultValue(duration, 2.0);
+  this._duration = duration ?? 2.0;
 
   /**
    * Gets or sets the current SceneMode.  This property is observable.

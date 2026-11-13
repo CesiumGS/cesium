@@ -1,7 +1,5 @@
+import { BoundingRectangle, Color, defined } from "@cesium/core";
 import {
-  BoundingRectangle,
-  Color,
-  defined,
   ClearCommand,
   Pass,
   CreditDisplay,
@@ -31,9 +29,9 @@ function pick(frameState, primitives, x, y) {
     new CreditDisplay(
       document.createElement("div"),
       undefined,
-      document.createElement("div")
+      document.createElement("div"),
     ),
-    new JobScheduler()
+    new JobScheduler(),
   ).passes;
   frameState.passes.pick = true;
 

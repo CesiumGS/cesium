@@ -1,8 +1,10 @@
+import { Cartesian3, Matrix4, clone } from "@cesium/core";
 import {
-  Cartesian3,
   Cesium3DTilesVoxelProvider,
   CustomShader,
-  Matrix4,
+  VoxelBoxShape,
+  VoxelCylinderShape,
+  VoxelEllipsoidShape,
   VoxelPrimitive,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -22,7 +24,7 @@ describe(
       camera.direction = Cartesian3.fromElements(1, 1, 1);
 
       provider = await Cesium3DTilesVoxelProvider.fromUrl(
-        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
       );
       return provider;
     });
@@ -58,6 +60,99 @@ describe(
       expect(primitive.maximumValues).toBe(provider.maximumValues);
     });
 
+    it("loads tiles from a minimal procedural provider", async function () {
+      const spyUpdate = jasmine.createSpy("listener");
+      const primitive = new VoxelPrimitive();
+      primitive.initialTilesLoaded.addEventListener(spyUpdate);
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(spyUpdate.calls.count()).toEqual(1);
+    });
+
+    it("initial tiles loaded and all tiles loaded events are raised", async function () {
+      const spyUpdate1 = jasmine.createSpy("listener");
+      const spyUpdate2 = jasmine.createSpy("listener");
+      const primitive = new VoxelPrimitive({ provider });
+      primitive.allTilesLoaded.addEventListener(spyUpdate1);
+      primitive.initialTilesLoaded.addEventListener(spyUpdate2);
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(spyUpdate1.calls.count()).toEqual(1);
+      expect(spyUpdate2.calls.count()).toEqual(1);
+    });
+
+    it("statistics are updated when event listeners are assigned", async function () {
+      const spyUpdate1 = jasmine.createSpy("listener");
+      const spyUpdate2 = jasmine.createSpy("listener");
+      const primitive = new VoxelPrimitive({ provider });
+      scene.primitives.add(primitive);
+      primitive.allTilesLoaded.addEventListener(spyUpdate1);
+      primitive.initialTilesLoaded.addEventListener(spyUpdate2);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(primitive.statistics.numberOfTilesWithContentReady).toEqual(1);
+      expect(primitive.statistics.visited).toEqual(1);
+      expect(primitive.statistics.texturesByteLength).toEqual(32);
+    });
+
+    it("statistics are updated when constructor option is true", async function () {
+      const primitive = new VoxelPrimitive({
+        provider,
+        calculateStatistics: true,
+      });
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
+      });
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(primitive.statistics.numberOfTilesWithContentReady).toEqual(1);
+      expect(primitive.statistics.visited).toEqual(1);
+    });
+
+    it("statistics are not updated when constructor option is false", async function () {
+      const primitive = new VoxelPrimitive({ provider });
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
+      });
+      for (let i = 0; i < 10; i++) {
+        scene.renderForSpecs();
+      }
+      expect(primitive.statistics.numberOfTilesWithContentReady).toEqual(0);
+      expect(primitive.statistics.visited).toEqual(0);
+    });
+
+    it("tile load, load progress and tile visible events are raised", async function () {
+      const spyUpdate1 = jasmine.createSpy("listener");
+      const spyUpdate2 = jasmine.createSpy("listener");
+      const spyUpdate3 = jasmine.createSpy("listener");
+      const primitive = new VoxelPrimitive({ provider });
+      primitive.tileLoad.addEventListener(spyUpdate1);
+      primitive.loadProgress.addEventListener(spyUpdate2);
+      primitive.tileVisible.addEventListener(spyUpdate3);
+      scene.primitives.add(primitive);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive._traversal._initialTilesLoaded;
+      });
+      expect(spyUpdate1.calls.count()).toEqual(1);
+      expect(spyUpdate2.calls.count()).toBeGreaterThan(0);
+      expect(spyUpdate3.calls.count()).toEqual(1);
+    });
+
     it("toggles render options that require shader rebuilds", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
@@ -78,8 +173,6 @@ describe(
       });
 
       toggleOption("depthTest", true, false);
-      toggleOption("jitter", false, true);
-      toggleOption("nearestSampling", false, true);
     });
 
     it("sets render parameters", async function () {
@@ -124,50 +217,169 @@ describe(
       scene.primitives.add(primitive);
       scene.renderForSpecs();
 
-      const { minBounds, maxBounds } = primitive;
-      expect(primitive._exaggeratedMinBounds).toEqual(minBounds);
-      expect(primitive._exaggeratedMaxBounds).toEqual(maxBounds);
+      const { minBounds, maxBounds, minClippingBounds, maxClippingBounds } =
+        primitive;
 
       const exaggerationFactor = 2.0;
-      scene.verticalExaggeration = exaggerationFactor;
-      scene.renderForSpecs();
+
+      const shapeTransform = provider.shapeTransform ?? Matrix4.IDENTITY;
+      const globalTransform = provider.globalTransform ?? Matrix4.IDENTITY;
+      const expectedCompoundMatrix = Matrix4.multiplyTransformation(
+        globalTransform,
+        primitive.modelMatrix,
+        new Matrix4(),
+      );
+      Matrix4.multiplyTransformation(
+        expectedCompoundMatrix,
+        shapeTransform,
+        expectedCompoundMatrix,
+      );
+
       const expectedMinBounds = minBounds.clone();
       expectedMinBounds.z *= exaggerationFactor;
       const expectedMaxBounds = maxBounds.clone();
       expectedMaxBounds.z *= exaggerationFactor;
-      expect(primitive._exaggeratedMinBounds).toEqual(expectedMinBounds);
-      expect(primitive._exaggeratedMaxBounds).toEqual(expectedMaxBounds);
+      const expectedMinClippingBounds = minClippingBounds.clone();
+      expectedMinClippingBounds.z *= exaggerationFactor;
+      const expectedMaxClippingBounds = maxClippingBounds.clone();
+      expectedMaxClippingBounds.z *= exaggerationFactor;
+
+      scene.verticalExaggeration = exaggerationFactor;
+      spyOn(VoxelEllipsoidShape.prototype, "update").and.callFake(
+        function (
+          modelMatrix,
+          minBounds,
+          maxBounds,
+          minClippingBounds,
+          maxClippingBounds,
+        ) {
+          expect(modelMatrix).toEqual(expectedCompoundMatrix);
+          expect(minBounds).toEqual(expectedMinBounds);
+          expect(maxBounds).toEqual(expectedMaxBounds);
+          expect(minClippingBounds).toEqual(expectedMinClippingBounds);
+          expect(maxClippingBounds).toEqual(expectedMaxClippingBounds);
+        },
+      );
+
+      scene.renderForSpecs();
     });
 
     it("applies vertical exaggeration to box-shaped voxels by scaling the model matrix", async function () {
       const boxProvider = await Cesium3DTilesVoxelProvider.fromUrl(
-        "./Data/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json"
+        "./Data/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json",
       );
       const primitive = new VoxelPrimitive({ provider: boxProvider });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
 
-      const modelMatrix = primitive.modelMatrix.clone();
-      expect(primitive._exaggeratedModelMatrix).toEqual(modelMatrix);
+      const { minBounds, maxBounds, minClippingBounds, maxClippingBounds } =
+        primitive;
 
       const exaggerationFactor = 2.0;
-      scene.verticalExaggeration = exaggerationFactor;
-      scene.renderForSpecs();
+
+      const expectedMinBounds = minBounds.clone();
+      const expectedMaxBounds = maxBounds.clone();
+      const expectedMinClippingBounds = minClippingBounds.clone();
+      const expectedMaxClippingBounds = maxClippingBounds.clone();
+
       const scalar = Cartesian3.fromElements(1.0, 1.0, exaggerationFactor);
-      const expectedModelMatrix = Matrix4.multiplyByScale(
-        modelMatrix,
+      const exaggeratedModelMatrix = Matrix4.multiplyByScale(
+        primitive.modelMatrix,
         scalar,
-        new Matrix4()
+        new Matrix4(),
       );
-      expect(primitive._exaggeratedModelMatrix).toEqual(expectedModelMatrix);
+      const shapeTransform = boxProvider.shapeTransform ?? Matrix4.IDENTITY;
+      const globalTransform = boxProvider.globalTransform ?? Matrix4.IDENTITY;
+      const expectedCompoundMatrix = Matrix4.multiplyTransformation(
+        globalTransform,
+        exaggeratedModelMatrix,
+        new Matrix4(),
+      );
+      Matrix4.multiplyTransformation(
+        expectedCompoundMatrix,
+        shapeTransform,
+        expectedCompoundMatrix,
+      );
+
+      scene.verticalExaggeration = exaggerationFactor;
+
+      spyOn(VoxelBoxShape.prototype, "update").and.callFake(
+        function (
+          modelMatrix,
+          minBounds,
+          maxBounds,
+          minClippingBounds,
+          maxClippingBounds,
+        ) {
+          expect(modelMatrix).toEqual(expectedCompoundMatrix);
+          expect(minBounds).toEqual(expectedMinBounds);
+          expect(maxBounds).toEqual(expectedMaxBounds);
+          expect(minClippingBounds).toEqual(expectedMinClippingBounds);
+          expect(maxClippingBounds).toEqual(expectedMaxClippingBounds);
+        },
+      );
+
+      scene.renderForSpecs();
     });
 
-    it("uses default style", function () {
-      const primitive = new VoxelPrimitive({ provider });
+    it("applies vertical exaggeration to cylinder-shaped voxels by scaling the model matrix", async function () {
+      const cylinderProvider = await Cesium3DTilesVoxelProvider.fromUrl(
+        "./Data/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
+      );
+      const primitive = new VoxelPrimitive({ provider: cylinderProvider });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
-      primitive.style = undefined;
-      expect(primitive.style).toBe(VoxelPrimitive.DefaultStyle);
+
+      const { minBounds, maxBounds, minClippingBounds, maxClippingBounds } =
+        primitive;
+
+      const exaggerationFactor = 2.0;
+
+      const expectedMinBounds = minBounds.clone();
+      const expectedMaxBounds = maxBounds.clone();
+      const expectedMinClippingBounds = minClippingBounds.clone();
+      const expectedMaxClippingBounds = maxClippingBounds.clone();
+
+      const scalar = Cartesian3.fromElements(1.0, 1.0, exaggerationFactor);
+      const exaggeratedModelMatrix = Matrix4.multiplyByScale(
+        primitive.modelMatrix,
+        scalar,
+        new Matrix4(),
+      );
+      const shapeTransform =
+        cylinderProvider.shapeTransform ?? Matrix4.IDENTITY;
+      const globalTransform =
+        cylinderProvider.globalTransform ?? Matrix4.IDENTITY;
+      const expectedCompoundMatrix = Matrix4.multiplyTransformation(
+        globalTransform,
+        exaggeratedModelMatrix,
+        new Matrix4(),
+      );
+      Matrix4.multiplyTransformation(
+        expectedCompoundMatrix,
+        shapeTransform,
+        expectedCompoundMatrix,
+      );
+
+      scene.verticalExaggeration = exaggerationFactor;
+
+      spyOn(VoxelCylinderShape.prototype, "update").and.callFake(
+        function (
+          modelMatrix,
+          minBounds,
+          maxBounds,
+          minClippingBounds,
+          maxClippingBounds,
+        ) {
+          expect(modelMatrix).toEqual(expectedCompoundMatrix);
+          expect(minBounds).toEqual(expectedMinBounds);
+          expect(maxBounds).toEqual(expectedMaxBounds);
+          expect(minClippingBounds).toEqual(expectedMinClippingBounds);
+          expect(maxClippingBounds).toEqual(expectedMaxClippingBounds);
+        },
+      );
+
+      scene.renderForSpecs();
     });
 
     it("accepts a new Custom Shader", async function () {
@@ -180,13 +392,14 @@ describe(
         return primitive.ready;
       });
 
-      expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
+      const defaultShader = clone(primitive.customShader);
 
-      // If new shader is undefined, we should get DefaultCustomShader again
+      // If new shader is undefined, we should get the default shader again
       primitive.customShader = undefined;
       scene.renderForSpecs();
-      expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
-
+      expect(primitive.customShader.fragmentShaderText).toBe(
+        defaultShader.fragmentShaderText,
+      );
       const modifiedShader = new CustomShader({
         fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
 {
@@ -219,7 +432,8 @@ describe(
       expect(primitive.isDestroyed()).toBe(true);
       expect(primitive._pickId).toBeUndefined();
       expect(primitive._traversal).toBeUndefined();
+      expect(primitive.statistics).toBeDefined();
     });
   },
-  "WebGL"
+  "WebGL",
 );

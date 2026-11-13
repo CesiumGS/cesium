@@ -1,6 +1,4 @@
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import getAbsoluteUri from "./getAbsoluteUri.js";
+import { DeveloperError, defined, getAbsoluteUri } from "@cesium/core";
 import Resource from "./Resource.js";
 
 /*global CESIUM_BASE_URL,define,require*/
@@ -53,7 +51,7 @@ function getCesiumBaseUrl() {
     // RequireJS
     baseUrlString = getAbsoluteUri(
       "..",
-      buildModuleUrl("Core/buildModuleUrl.js")
+      buildModuleUrl("Core/buildModuleUrl.js"),
     );
   } else {
     // IIFE
@@ -63,7 +61,7 @@ function getCesiumBaseUrl() {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(baseUrlString)) {
     throw new DeveloperError(
-      "Unable to determine Cesium base URL automatically, try defining a global variable called CESIUM_BASE_URL."
+      "Unable to determine Cesium base URL automatically, try defining a global variable called CESIUM_BASE_URL.",
     );
   }
   //>>includeEnd('debug');

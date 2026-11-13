@@ -1,5 +1,4 @@
-import combine from "../../Core/combine.js";
-import defined from "../../Core/defined.js";
+import { combine, defined } from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelSilhouetteStageFS from "../../Shaders/Model/ModelSilhouetteStageFS.js";
 import ModelSilhouetteStageVS from "../../Shaders/Model/ModelSilhouetteStageVS.js";
@@ -51,7 +50,7 @@ ModelSilhouettePipelineStage.silhouettesLength = 0;
 ModelSilhouettePipelineStage.process = function (
   renderResources,
   model,
-  frameState
+  frameState,
 ) {
   if (!defined(model._silhouetteId)) {
     model._silhouetteId = ++ModelSilhouettePipelineStage.silhouettesLength;
@@ -66,13 +65,13 @@ ModelSilhouettePipelineStage.process = function (
   shaderBuilder.addUniform(
     "vec4",
     "model_silhouetteColor",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   shaderBuilder.addUniform(
     "float",
     "model_silhouetteSize",
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
 
   // Rendering silhouettes requires two draw commands:
@@ -86,7 +85,7 @@ ModelSilhouettePipelineStage.process = function (
   shaderBuilder.addUniform(
     "bool",
     "model_silhouettePass",
-    ShaderDestination.BOTH
+    ShaderDestination.BOTH,
   );
 
   const uniformMap = {

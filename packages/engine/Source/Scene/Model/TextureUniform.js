@@ -1,9 +1,11 @@
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
+import {
+  DeveloperError,
+  Frozen,
+  PixelDatatype,
+  PixelFormat,
+  defined,
+} from "@cesium/core";
 import Resource from "../../Core/Resource.js";
-import PixelFormat from "../../Core/PixelFormat.js";
-import PixelDatatype from "../../Renderer/PixelDatatype.js";
 import Sampler from "../../Renderer/Sampler.js";
 import TextureWrap from "../../Renderer/TextureWrap.js";
 
@@ -12,7 +14,7 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
  * uniform. This is used with {@link CustomShader} and {@link TextureManager}
  *
  * @param {object} options An object with the following properties:
- * @param {Uint8Array} [options.typedArray] A typed array storing the contents of a texture. Values are stored in row-major order. Since WebGL uses a y-up convention for textures, rows are listed from bottom to top.
+ * @param {TypedArray} [options.typedArray] A typed array storing the contents of a texture, its type matching options.pixelDatatype. Values are stored in row-major order. Since WebGL uses a y-up convention for textures, rows are listed from bottom to top.
  * @param {number} [options.width] The width of the image. Required when options.typedArray is present
  * @param {number} [options.height] The height of the image. Required when options.typedArray is present.
  * @param {string|Resource} [options.url] A URL string or resource pointing to a texture image.
@@ -29,18 +31,18 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function TextureUniform(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   const hasTypedArray = defined(options.typedArray);
   const hasUrl = defined(options.url);
   if (hasTypedArray === hasUrl) {
     throw new DeveloperError(
-      "exactly one of options.typedArray, options.url must be defined"
+      "exactly one of options.typedArray, options.url must be defined",
     );
   }
   if (hasTypedArray && (!defined(options.width) || !defined(options.height))) {
     throw new DeveloperError(
-      "options.width and options.height are required when options.typedArray is defined"
+      "options.width and options.height are required when options.typedArray is defined",
     );
   }
   //>>includeEnd('debug');
@@ -48,11 +50,8 @@ function TextureUniform(options) {
   this.typedArray = options.typedArray;
   this.width = options.width;
   this.height = options.height;
-  this.pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
-  this.pixelDatatype = defaultValue(
-    options.pixelDatatype,
-    PixelDatatype.UNSIGNED_BYTE
-  );
+  this.pixelFormat = options.pixelFormat ?? PixelFormat.RGBA;
+  this.pixelDatatype = options.pixelDatatype ?? PixelDatatype.UNSIGNED_BYTE;
 
   let resource = options.url;
   if (typeof resource === "string") {
@@ -60,7 +59,7 @@ function TextureUniform(options) {
   }
   this.resource = resource;
 
-  const repeat = defaultValue(options.repeat, true);
+  const repeat = options.repeat ?? true;
   const wrap = repeat ? TextureWrap.REPEAT : TextureWrap.CLAMP_TO_EDGE;
   this.sampler = new Sampler({
     wrapS: wrap,

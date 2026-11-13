@@ -1,0 +1,17 @@
+{
+  "asset" : {
+    "version" : "1.1"
+  },
+  "geometricError" : 4096.0,
+  "root" : {
+    "boundingVolume" : {
+      "box" : [ 0.5, -0.5, 0.5, 0.5, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5 ]
+    },
+    "geometricError" : 2048.0,
+    "refine" : "ADD",
+    "transform" : [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0 ],
+    "content" : {
+      "uri" : "contentB.glb"
+    }
+  }
+}

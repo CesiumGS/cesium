@@ -1,7 +1,4 @@
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import Event from "../../Core/Event.js";
-import JulianDate from "../../Core/JulianDate.js";
+import { Event, JulianDate, defined } from "@cesium/core";
 import ModelAnimationLoop from "../ModelAnimationLoop.js";
 import ModelAnimationState from "../ModelAnimationState.js";
 import ModelAnimationChannel from "./ModelAnimationChannel.js";
@@ -29,7 +26,7 @@ function ModelAnimation(model, animation, options) {
   this._runtimeChannels = undefined;
 
   this._startTime = JulianDate.clone(options.startTime);
-  this._delay = defaultValue(options.delay, 0.0); // in seconds
+  this._delay = options.delay ?? 0.0; // in seconds
   this._stopTime = JulianDate.clone(options.stopTime);
 
   /**
@@ -40,10 +37,10 @@ function ModelAnimation(model, animation, options) {
    * @type {boolean}
    * @default false
    */
-  this.removeOnStop = defaultValue(options.removeOnStop, false);
-  this._multiplier = defaultValue(options.multiplier, 1.0);
-  this._reverse = defaultValue(options.reverse, false);
-  this._loop = defaultValue(options.loop, ModelAnimationLoop.NONE);
+  this.removeOnStop = options.removeOnStop ?? false;
+  this._multiplier = options.multiplier ?? 1.0;
+  this._reverse = options.reverse ?? false;
+  this._loop = options.loop ?? ModelAnimationLoop.NONE;
   this._animationTime = options.animationTime;
   this._prevAnimationDelta = undefined;
 

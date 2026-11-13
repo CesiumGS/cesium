@@ -1,9 +1,5 @@
-import Check from "./Check.js";
+import { Check, Ellipsoid, Event, Frozen, defined } from "@cesium/core";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
-import defined from "./defined.js";
-import Ellipsoid from "./Ellipsoid.js";
-import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
 import TerrainProvider from "./TerrainProvider.js";
@@ -54,7 +50,7 @@ import TerrainProvider from "./TerrainProvider.js";
  * @see TerrainProvider
  */
 function CustomHeightmapTerrainProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.callback", options.callback);
@@ -67,7 +63,7 @@ function CustomHeightmapTerrainProvider(options) {
   this._tilingScheme = options.tilingScheme;
   if (!defined(this._tilingScheme)) {
     this._tilingScheme = new GeographicTilingScheme({
-      ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.default),
+      ellipsoid: options.ellipsoid ?? Ellipsoid.default,
     });
   }
 
@@ -75,11 +71,12 @@ function CustomHeightmapTerrainProvider(options) {
   this._height = options.height;
   const maxTileDimensions = Math.max(this._width, this._height);
 
-  this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
-    this._tilingScheme.ellipsoid,
-    maxTileDimensions,
-    this._tilingScheme.getNumberOfXTilesAtLevel(0)
-  );
+  this._levelZeroMaximumGeometricError =
+    TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+      this._tilingScheme.ellipsoid,
+      maxTileDimensions,
+      this._tilingScheme.getNumberOfXTilesAtLevel(0),
+    );
 
   this._errorEvent = new Event();
 
@@ -216,7 +213,7 @@ CustomHeightmapTerrainProvider.prototype.requestTileGeometry = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const promise = this._callback(x, y, level);
   if (!defined(promise)) {
@@ -247,11 +244,10 @@ CustomHeightmapTerrainProvider.prototype.requestTileGeometry = function (
  * @param {number} level The tile level for which to get the maximum geometric error.
  * @returns {number} The maximum geometric error.
  */
-CustomHeightmapTerrainProvider.prototype.getLevelMaximumGeometricError = function (
-  level
-) {
-  return this._levelZeroMaximumGeometricError / (1 << level);
-};
+CustomHeightmapTerrainProvider.prototype.getLevelMaximumGeometricError =
+  function (level) {
+    return this._levelZeroMaximumGeometricError / (1 << level);
+  };
 
 /**
  * Determines whether data for a tile is available to be loaded.
@@ -264,7 +260,7 @@ CustomHeightmapTerrainProvider.prototype.getLevelMaximumGeometricError = functio
 CustomHeightmapTerrainProvider.prototype.getTileDataAvailable = function (
   x,
   y,
-  level
+  level,
 ) {
   return undefined;
 };
@@ -280,7 +276,7 @@ CustomHeightmapTerrainProvider.prototype.getTileDataAvailable = function (
 CustomHeightmapTerrainProvider.prototype.loadTileDataAvailability = function (
   x,
   y,
-  level
+  level,
 ) {
   return undefined;
 };

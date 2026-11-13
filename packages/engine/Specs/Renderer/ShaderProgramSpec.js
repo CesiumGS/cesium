@@ -1,10 +1,5 @@
-import {
-  ContextLimits,
-  ShaderProgram,
-  ShaderSource,
-  RuntimeError,
-} from "../../index.js";
-
+import { RuntimeError } from "@cesium/core";
+import { ContextLimits, ShaderProgram, ShaderSource } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
 
 describe(
@@ -566,5 +561,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

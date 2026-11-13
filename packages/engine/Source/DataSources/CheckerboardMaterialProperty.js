@@ -1,9 +1,11 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
+import {
+  Cartesian2,
+  Color,
+  Event,
+  Frozen,
+  JulianDate,
+  defined,
+} from "@cesium/core";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
@@ -22,7 +24,7 @@ const defaultRepeat = new Cartesian2(2.0, 2.0);
  * @param {Property|Cartesian2} [options.repeat=new Cartesian2(2.0, 2.0)] A {@link Cartesian2} Property specifying how many times the tiles repeat in each direction.
  */
 function CheckerboardMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._evenColor = undefined;
@@ -126,13 +128,13 @@ CheckerboardMaterialProperty.prototype.getValue = function (time, result) {
     this._evenColor,
     time,
     defaultEvenColor,
-    result.lightColor
+    result.lightColor,
   );
   result.darkColor = Property.getValueOrClonedDefault(
     this._oddColor,
     time,
     defaultOddColor,
-    result.darkColor
+    result.darkColor,
   );
   result.repeat = Property.getValueOrDefault(this._repeat, time, defaultRepeat);
   return result;

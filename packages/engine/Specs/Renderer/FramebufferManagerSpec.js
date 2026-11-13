@@ -1,16 +1,12 @@
+import { Color, PixelDatatype, PixelFormat, defined } from "@cesium/core";
 import {
-  defined,
-  Color,
   ClearCommand,
   Framebuffer,
   FramebufferManager,
-  PixelDatatype,
-  PixelFormat,
   Renderbuffer,
   RenderbufferFormat,
   Texture,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe(
@@ -256,7 +252,7 @@ describe(
         expect(renderbuffer.width).toEqual(1);
         expect(renderbuffer.height).toEqual(1);
         expect(renderbuffer.format).toEqual(
-          RenderbufferFormat.DEPTH_COMPONENT16
+          RenderbufferFormat.DEPTH_COMPONENT16,
         );
       }
     });
@@ -521,5 +517,5 @@ describe(
       expect(fbm.status).toEqual(fbm.framebuffer.status);
     });
   },
-  "WebGL"
+  "WebGL",
 );

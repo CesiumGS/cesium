@@ -1,7 +1,6 @@
+import { Matrix4, combine } from "@cesium/core";
 import {
-  combine,
   GltfLoader,
-  Matrix4,
   ModelType,
   Resource,
   ResourceCache,
@@ -103,7 +102,7 @@ describe(
             "    skinnedMatrix += a_weights_0.z * u_jointMatrices[int(a_joints_0.z)];",
             "    skinnedMatrix += a_weights_0.w * u_jointMatrices[int(a_joints_0.w)];",
             "    return skinnedMatrix;",
-          ]
+          ],
         );
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersSkinningStageVS,
@@ -116,7 +115,7 @@ describe(
         const runtimeNode = renderResources.runtimeNode;
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap.u_jointMatrices()).toBe(
-          runtimeNode.computedJointMatrices
+          runtimeNode.computedJointMatrices,
         );
       });
     });
@@ -160,7 +159,7 @@ describe(
             "    skinnedMatrix += a_weights_0.z * u_jointMatrices[int(a_joints_0.z)];",
             "    skinnedMatrix += a_weights_0.w * u_jointMatrices[int(a_joints_0.w)];",
             "    return skinnedMatrix;",
-          ]
+          ],
         );
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersSkinningStageVS,
@@ -173,10 +172,10 @@ describe(
         const runtimeNode = renderResources.runtimeNode;
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap.u_jointMatrices()).toBe(
-          runtimeNode.computedJointMatrices
+          runtimeNode.computedJointMatrices,
         );
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

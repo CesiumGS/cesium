@@ -1,5 +1,5 @@
-import { Credit, defined, CreditDisplay } from "../../index.js";
-
+import { defined } from "@cesium/core";
+import { Credit, CreditDisplay } from "../../index.js";
 import absolutize from "../../../../Specs/absolutize.js";
 
 describe("Scene/CreditDisplay", function () {
@@ -87,6 +87,24 @@ describe("Scene/CreditDisplay", function () {
       creditDisplay.beginFrame();
     }
 
+    function keydownEvent(key) {
+      return new KeyboardEvent("keydown", {
+        key: key,
+        bubbles: true,
+        cancelable: true,
+      });
+    }
+
+    // document.activeElement only reports the shadow host, so descend into any
+    // shadow roots to find the element that actually holds focus.
+    function deepActiveElement() {
+      let element = document.activeElement;
+      while (defined(element?.shadowRoot?.activeElement)) {
+        element = element.shadowRoot.activeElement;
+      }
+      return element;
+    }
+
     it("addCreditToNextFrame throws when credit is undefined", function () {
       expect(function () {
         creditDisplay = new CreditDisplay(container);
@@ -112,7 +130,7 @@ describe("Scene/CreditDisplay", function () {
       creditDisplay = new CreditDisplay(container);
       const credit = new Credit(
         '<a href="http://cesiumjs.org">CesiumJS.org</a>',
-        true
+        true,
       );
       beginFrame(creditDisplay);
       creditDisplay.addCreditToNextFrame(credit);
@@ -429,7 +447,7 @@ describe("Scene/CreditDisplay", function () {
       creditDisplay.endFrame();
       creditDisplay.update();
 
-      let innerHTML = creditList.innerHTML;
+      const innerHTML = creditList.innerHTML;
       expect(creditList.childNodes.length).toEqual(1);
       expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
 
@@ -439,7 +457,6 @@ describe("Scene/CreditDisplay", function () {
       creditDisplay.update();
 
       expect(creditList.innerHTML).not.toEqual(innerHTML);
-      innerHTML = creditList.innerHTML;
       expect(creditList.childNodes.length).toEqual(2);
       expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
       expect(creditList.childNodes[1].childNodes[0]).toEqual(credit2.element);
@@ -512,10 +529,10 @@ describe("Scene/CreditDisplay", function () {
       const lightboxCreditList = creditDisplay._creditList;
       expect(lightboxCreditList.childNodes.length).toEqual(2);
       expect(lightboxCreditList.childNodes[0].childNodes[0]).toEqual(
-        credit1.element
+        credit1.element,
       );
       expect(lightboxCreditList.childNodes[1].childNodes[0]).toEqual(
-        credit2.element
+        credit2.element,
       );
 
       // Show credits on screen again
@@ -607,10 +624,121 @@ describe("Scene/CreditDisplay", function () {
       const container2 = document.createElement("div");
       const creditDisplay2 = new CreditDisplay(container2);
       expect(creditDisplay._currentCesiumCredit).toEqual(
-        creditDisplay2._currentCesiumCredit
+        creditDisplay2._currentCesiumCredit,
       );
       expect(creditDisplay._currentCesiumCredit).not.toBe(
-        creditDisplay2._currentCesiumCredit
+        creditDisplay2._currentCesiumCredit,
+      );
+    });
+
+    it("exposes the expand link as a focusable button", function () {
+      creditDisplay = new CreditDisplay(container);
+      const expandLink = creditDisplay._expandLink;
+
+      expect(expandLink.getAttribute("role")).toEqual("button");
+      expect(expandLink.getAttribute("tabindex")).toEqual("0");
+      expect(expandLink.getAttribute("aria-haspopup")).toEqual("dialog");
+      expect(expandLink.getAttribute("aria-expanded")).toEqual("false");
+    });
+
+    it("exposes the lightbox as a labelled modal dialog", function () {
+      creditDisplay = new CreditDisplay(container);
+      const lightboxCredits = creditDisplay._lightboxCredits;
+
+      expect(lightboxCredits.getAttribute("role")).toEqual("dialog");
+      expect(lightboxCredits.getAttribute("aria-modal")).toEqual("true");
+      expect(lightboxCredits.getAttribute("aria-label")).toBeDefined();
+    });
+
+    it("exposes the close button as a focusable button", function () {
+      creditDisplay = new CreditDisplay(container);
+      const closeButton = creditDisplay._closeButton;
+
+      expect(closeButton.getAttribute("role")).toEqual("button");
+      expect(closeButton.getAttribute("tabindex")).toEqual("0");
+      expect(closeButton.getAttribute("aria-label")).toBeDefined();
+    });
+
+    it("opens the lightbox when the expand link is activated with the keyboard", function () {
+      creditDisplay = new CreditDisplay(container);
+      const expandLink = creditDisplay._expandLink;
+
+      ["Enter", " "].forEach(function (key) {
+        creditDisplay.hideLightbox();
+        expect(creditDisplay._expanded).toBe(false);
+
+        expandLink.dispatchEvent(keydownEvent(key));
+
+        expect(creditDisplay._expanded).toBe(true);
+        expect(expandLink.getAttribute("aria-expanded")).toEqual("true");
+      });
+
+      creditDisplay.hideLightbox();
+    });
+
+    it("closes the lightbox when the close button is activated with the keyboard", function () {
+      creditDisplay = new CreditDisplay(container);
+      const closeButton = creditDisplay._closeButton;
+
+      ["Enter", " "].forEach(function (key) {
+        creditDisplay.showLightbox();
+        expect(creditDisplay._expanded).toBe(true);
+
+        closeButton.dispatchEvent(keydownEvent(key));
+
+        expect(creditDisplay._expanded).toBe(false);
+        expect(creditDisplay._expandLink.getAttribute("aria-expanded")).toEqual(
+          "false",
+        );
+      });
+    });
+
+    it("closes the lightbox when Escape is pressed", function () {
+      creditDisplay = new CreditDisplay(container);
+      creditDisplay.showLightbox();
+      expect(creditDisplay._expanded).toBe(true);
+
+      creditDisplay._closeButton.dispatchEvent(keydownEvent("Escape"));
+
+      expect(creditDisplay._expanded).toBe(false);
+    });
+
+    it("does not close the lightbox for unrelated keys", function () {
+      creditDisplay = new CreditDisplay(container);
+      creditDisplay.showLightbox();
+
+      creditDisplay._closeButton.dispatchEvent(keydownEvent("a"));
+
+      expect(creditDisplay._expanded).toBe(true);
+
+      creditDisplay.hideLightbox();
+    });
+
+    it("moves focus into the lightbox and restores it when closed", function () {
+      creditDisplay = new CreditDisplay(container);
+
+      creditDisplay._expandLink.focus();
+      expect(deepActiveElement()).toBe(creditDisplay._expandLink);
+
+      creditDisplay.showLightbox();
+      expect(deepActiveElement()).toBe(creditDisplay._closeButton);
+
+      creditDisplay.hideLightbox();
+      expect(deepActiveElement()).toBe(creditDisplay._expandLink);
+    });
+
+    it("removes the escape key listener when destroyed", function () {
+      creditDisplay = new CreditDisplay(container);
+      const lightbox = creditDisplay._lightbox;
+      spyOn(lightbox, "removeEventListener").and.callThrough();
+
+      creditDisplay.destroy();
+      creditDisplay = undefined;
+
+      expect(lightbox.removeEventListener).toHaveBeenCalledWith(
+        "keydown",
+        jasmine.any(Function),
+        false,
       );
     });
   }

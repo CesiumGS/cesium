@@ -1,11 +1,13 @@
 import {
-  ApproximateTerrainHeights,
   BoundingSphere,
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
   JulianDate,
   ShowGeometryInstanceAttribute,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
   BoundingSphereState,
   CallbackProperty,
   ColorMaterialProperty,
@@ -21,7 +23,6 @@ import {
   PolylineMaterialAppearance,
   ShadowMode,
 } from "../../index.js";
-
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -95,10 +96,10 @@ describe(
         const attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(
-          ShowGeometryInstanceAttribute.toValue(true)
+          ShowGeometryInstanceAttribute.toValue(true),
         );
         expect(attributes.color).toEqual(
-          ColorGeometryInstanceAttribute.toValue(Color.WHITE)
+          ColorGeometryInstanceAttribute.toValue(Color.WHITE),
         );
         expect(primitive.appearance).toBeInstanceOf(PolylineColorAppearance);
         expect(primitive.appearance.closed).toBe(false);
@@ -131,7 +132,7 @@ describe(
         const attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(
-          ShowGeometryInstanceAttribute.toValue(true)
+          ShowGeometryInstanceAttribute.toValue(true),
         );
         expect(attributes.color).toBeUndefined();
         expect(primitive.appearance).toBeInstanceOf(PolylineMaterialAppearance);
@@ -170,10 +171,10 @@ describe(
         const attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(
-          ShowGeometryInstanceAttribute.toValue(true)
+          ShowGeometryInstanceAttribute.toValue(true),
         );
         expect(attributes.color).toEqual(
-          ColorGeometryInstanceAttribute.toValue(Color.WHITE)
+          ColorGeometryInstanceAttribute.toValue(Color.WHITE),
         );
         expect(primitive.appearance).toBeInstanceOf(PolylineColorAppearance);
         expect(primitive.appearance.closed).toBe(false);
@@ -244,7 +245,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       entity.polyline = polyline;
       objects.add(entity);
@@ -254,17 +255,17 @@ describe(
         const attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(
-          ShowGeometryInstanceAttribute.toValue(true)
+          ShowGeometryInstanceAttribute.toValue(true),
         );
         expect(attributes.color).toEqual(
-          ColorGeometryInstanceAttribute.toValue(Color.WHITE)
+          ColorGeometryInstanceAttribute.toValue(Color.WHITE),
         );
         expect(attributes.depthFailColor).toEqual(
-          ColorGeometryInstanceAttribute.toValue(Color.WHITE)
+          ColorGeometryInstanceAttribute.toValue(Color.WHITE),
         );
         expect(primitive.appearance).toBeInstanceOf(PolylineColorAppearance);
         expect(primitive.depthFailAppearance).toBeInstanceOf(
-          PolylineColorAppearance
+          PolylineColorAppearance,
         );
 
         objects.remove(entity);
@@ -289,7 +290,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       entity.polyline = polyline;
       objects.add(entity);
@@ -299,15 +300,15 @@ describe(
         const attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(
-          ShowGeometryInstanceAttribute.toValue(true)
+          ShowGeometryInstanceAttribute.toValue(true),
         );
         expect(attributes.color).toEqual(
-          ColorGeometryInstanceAttribute.toValue(Color.WHITE)
+          ColorGeometryInstanceAttribute.toValue(Color.WHITE),
         );
         expect(attributes.depthFailColor).toBeUndefined();
         expect(primitive.appearance).toBeInstanceOf(PolylineColorAppearance);
         expect(primitive.depthFailAppearance).toBeInstanceOf(
-          PolylineMaterialAppearance
+          PolylineMaterialAppearance,
         );
 
         objects.remove(entity);
@@ -332,7 +333,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       entity.polyline = polyline;
       objects.add(entity);
@@ -342,13 +343,13 @@ describe(
         const attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(
-          ShowGeometryInstanceAttribute.toValue(true)
+          ShowGeometryInstanceAttribute.toValue(true),
         );
         expect(attributes.color).toBeUndefined();
         expect(attributes.depthFailColor).toBeUndefined();
         expect(primitive.appearance).toBeInstanceOf(PolylineMaterialAppearance);
         expect(primitive.depthFailAppearance).toBeInstanceOf(
-          PolylineMaterialAppearance
+          PolylineMaterialAppearance,
         );
 
         objects.remove(entity);
@@ -373,7 +374,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       entity.polyline = polyline;
       objects.add(entity);
@@ -383,15 +384,15 @@ describe(
         const attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(
-          ShowGeometryInstanceAttribute.toValue(true)
+          ShowGeometryInstanceAttribute.toValue(true),
         );
         expect(attributes.color).toBeUndefined();
         expect(attributes.depthFailColor).toEqual(
-          ColorGeometryInstanceAttribute.toValue(Color.WHITE)
+          ColorGeometryInstanceAttribute.toValue(Color.WHITE),
         );
         expect(primitive.appearance).toBeInstanceOf(PolylineMaterialAppearance);
         expect(primitive.depthFailAppearance).toBeInstanceOf(
-          PolylineColorAppearance
+          PolylineColorAppearance,
         );
 
         objects.remove(entity);
@@ -437,19 +438,19 @@ describe(
 
     it("Creates and removes geometry classifying terrain", function () {
       return createAndRemoveGeometryWithClassificationType(
-        ClassificationType.TERRAIN
+        ClassificationType.TERRAIN,
       );
     });
 
     it("Creates and removes geometry classifying 3D Tiles", function () {
       return createAndRemoveGeometryWithClassificationType(
-        ClassificationType.CESIUM_3D_TILE
+        ClassificationType.CESIUM_3D_TILE,
       );
     });
 
     it("Creates and removes geometry classifying both terrain and 3D Tiles", function () {
       return createAndRemoveGeometryWithClassificationType(
-        ClassificationType.BOTH
+        ClassificationType.BOTH,
       );
     });
 
@@ -473,10 +474,10 @@ describe(
         let attributes = primitive.getGeometryInstanceAttributes(entity);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(
-          ShowGeometryInstanceAttribute.toValue(true)
+          ShowGeometryInstanceAttribute.toValue(true),
         );
         expect(attributes.color).toEqual(
-          ColorGeometryInstanceAttribute.toValue(Color.WHITE)
+          ColorGeometryInstanceAttribute.toValue(Color.WHITE),
         );
         expect(primitive.appearance).toBeInstanceOf(PolylineColorAppearance);
 
@@ -487,11 +488,11 @@ describe(
           attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(true)
+            ShowGeometryInstanceAttribute.toValue(true),
           );
           expect(attributes.color).toBeUndefined();
           expect(primitive.appearance).toBeInstanceOf(
-            PolylineMaterialAppearance
+            PolylineMaterialAppearance,
           );
 
           objects.remove(entity);
@@ -589,8 +590,8 @@ describe(
           BoundingSphere.transform(
             attributes.boundingSphere,
             primitive.modelMatrix,
-            new BoundingSphere()
-          )
+            new BoundingSphere(),
+          ),
         );
 
         visualizer.destroy();
@@ -659,10 +660,10 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity2);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(true)
+            ShowGeometryInstanceAttribute.toValue(true),
           );
           expect(attributes.color).toEqual(
-            ColorGeometryInstanceAttribute.toValue(Color.BLUE)
+            ColorGeometryInstanceAttribute.toValue(Color.BLUE),
           );
           expect(primitive.appearance).toBeInstanceOf(PolylineColorAppearance);
 
@@ -686,7 +687,7 @@ describe(
             Cartesian3.fromDegrees(0.0, 0.000001),
           ],
           material: new ColorMaterialProperty(
-            createDynamicProperty(Color.BLUE)
+            createDynamicProperty(Color.BLUE),
           ),
         },
       });
@@ -697,7 +698,7 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(true)
+            ShowGeometryInstanceAttribute.toValue(true),
           );
 
           entity.show = false;
@@ -709,7 +710,7 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(false)
+            ShowGeometryInstanceAttribute.toValue(false),
           );
 
           entities.remove(entity);
@@ -729,7 +730,7 @@ describe(
             Cartesian3.fromDegrees(0.0, 0.000001),
           ],
           material: new PolylineArrowMaterialProperty(
-            createDynamicProperty(Color.BLUE)
+            createDynamicProperty(Color.BLUE),
           ),
         },
       });
@@ -740,7 +741,7 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(true)
+            ShowGeometryInstanceAttribute.toValue(true),
           );
 
           entity.show = false;
@@ -752,7 +753,7 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(false)
+            ShowGeometryInstanceAttribute.toValue(false),
           );
 
           entities.remove(entity);
@@ -786,10 +787,10 @@ describe(
           const attributes = primitive.getGeometryInstanceAttributes(entity);
           expect(attributes).toBeDefined();
           expect(attributes.show).toEqual(
-            ShowGeometryInstanceAttribute.toValue(true)
+            ShowGeometryInstanceAttribute.toValue(true),
           );
           expect(attributes.color).toEqual(
-            ColorGeometryInstanceAttribute.toValue(Color.WHITE)
+            ColorGeometryInstanceAttribute.toValue(Color.WHITE),
           );
           expect(primitive.appearance).toBeInstanceOf(PolylineColorAppearance);
           expect(primitive.appearance.closed).toBe(false);
@@ -894,5 +895,5 @@ describe(
         });
     });
   },
-  "WebGL"
+  "WebGL",
 );

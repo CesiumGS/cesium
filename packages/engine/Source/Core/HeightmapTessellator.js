@@ -1,19 +1,20 @@
-import AxisAlignedBoundingBox from "./AxisAlignedBoundingBox.js";
-import BoundingSphere from "./BoundingSphere.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
-import defaultValue from "./defaultValue.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import Ellipsoid from "./Ellipsoid.js";
-import EllipsoidalOccluder from "./EllipsoidalOccluder.js";
-import CesiumMath from "./Math.js";
-import Matrix4 from "./Matrix4.js";
-import OrientedBoundingBox from "./OrientedBoundingBox.js";
-import Rectangle from "./Rectangle.js";
+import {
+  AxisAlignedBoundingBox,
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  DeveloperError,
+  Ellipsoid,
+  EllipsoidalOccluder,
+  FixedFrameTransforms,
+  Math as CesiumMath,
+  Matrix4,
+  OrientedBoundingBox,
+  Rectangle,
+  WebMercatorProjection,
+  defined,
+} from "@cesium/core";
 import TerrainEncoding from "./TerrainEncoding.js";
-import Transforms from "./Transforms.js";
-import WebMercatorProjection from "./WebMercatorProjection.js";
 
 /**
  * Contains functions to create a mesh from a heightmap image.
@@ -148,8 +149,8 @@ HeightmapTessellator.computeVertices = function (options) {
   const skirtHeight = options.skirtHeight;
   const hasSkirts = skirtHeight > 0.0;
 
-  const isGeographic = defaultValue(options.isGeographic, true);
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  const isGeographic = options.isGeographic ?? true;
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
 
   const oneOverGlobeSemimajorAxis = 1.0 / ellipsoid.maximumRadius;
 
@@ -187,44 +188,29 @@ HeightmapTessellator.computeVertices = function (options) {
   let relativeToCenter = options.relativeToCenter;
   const hasRelativeToCenter = defined(relativeToCenter);
   relativeToCenter = hasRelativeToCenter ? relativeToCenter : Cartesian3.ZERO;
-  const includeWebMercatorT = defaultValue(options.includeWebMercatorT, false);
+  const includeWebMercatorT = options.includeWebMercatorT ?? false;
 
-  const exaggeration = defaultValue(options.exaggeration, 1.0);
-  const exaggerationRelativeHeight = defaultValue(
-    options.exaggerationRelativeHeight,
-    0.0
-  );
+  const exaggeration = options.exaggeration ?? 1.0;
+  const exaggerationRelativeHeight = options.exaggerationRelativeHeight ?? 0.0;
   const hasExaggeration = exaggeration !== 1.0;
   const includeGeodeticSurfaceNormals = hasExaggeration;
 
-  const structure = defaultValue(
-    options.structure,
-    HeightmapTessellator.DEFAULT_STRUCTURE
-  );
-  const heightScale = defaultValue(
-    structure.heightScale,
-    HeightmapTessellator.DEFAULT_STRUCTURE.heightScale
-  );
-  const heightOffset = defaultValue(
-    structure.heightOffset,
-    HeightmapTessellator.DEFAULT_STRUCTURE.heightOffset
-  );
-  const elementsPerHeight = defaultValue(
-    structure.elementsPerHeight,
-    HeightmapTessellator.DEFAULT_STRUCTURE.elementsPerHeight
-  );
-  const stride = defaultValue(
-    structure.stride,
-    HeightmapTessellator.DEFAULT_STRUCTURE.stride
-  );
-  const elementMultiplier = defaultValue(
-    structure.elementMultiplier,
-    HeightmapTessellator.DEFAULT_STRUCTURE.elementMultiplier
-  );
-  const isBigEndian = defaultValue(
-    structure.isBigEndian,
-    HeightmapTessellator.DEFAULT_STRUCTURE.isBigEndian
-  );
+  const structure = options.structure ?? HeightmapTessellator.DEFAULT_STRUCTURE;
+  const heightScale =
+    structure.heightScale ?? HeightmapTessellator.DEFAULT_STRUCTURE.heightScale;
+  const heightOffset =
+    structure.heightOffset ??
+    HeightmapTessellator.DEFAULT_STRUCTURE.heightOffset;
+  const elementsPerHeight =
+    structure.elementsPerHeight ??
+    HeightmapTessellator.DEFAULT_STRUCTURE.elementsPerHeight;
+  const stride =
+    structure.stride ?? HeightmapTessellator.DEFAULT_STRUCTURE.stride;
+  const elementMultiplier =
+    structure.elementMultiplier ??
+    HeightmapTessellator.DEFAULT_STRUCTURE.elementMultiplier;
+  const isBigEndian =
+    structure.isBigEndian ?? HeightmapTessellator.DEFAULT_STRUCTURE.isBigEndian;
 
   let rectangleWidth = Rectangle.computeWidth(nativeRectangle);
   let rectangleHeight = Rectangle.computeHeight(nativeRectangle);
@@ -245,18 +231,17 @@ HeightmapTessellator.computeVertices = function (options) {
   let minimumHeight = 65536.0;
   let maximumHeight = -65536.0;
 
-  const fromENU = Transforms.eastNorthUpToFixedFrame(
+  const fromENU = FixedFrameTransforms.eastNorthUpToFixedFrame(
     relativeToCenter,
-    ellipsoid
+    ellipsoid,
   );
   const toENU = Matrix4.inverseTransformation(fromENU, matrix4Scratch);
 
   let southMercatorY;
   let oneOverMercatorHeight;
   if (includeWebMercatorT) {
-    southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-      geographicSouth
-    );
+    southMercatorY =
+      WebMercatorProjection.geodeticLatitudeToMercatorAngle(geographicSouth);
     oneOverMercatorHeight =
       1.0 /
       (WebMercatorProjection.geodeticLatitudeToMercatorAngle(geographicNorth) -
@@ -465,9 +450,8 @@ HeightmapTessellator.computeVertices = function (options) {
       }
 
       if (includeGeodeticSurfaceNormals) {
-        geodeticSurfaceNormals[index] = ellipsoid.geodeticSurfaceNormal(
-          position
-        );
+        geodeticSurfaceNormals[index] =
+          ellipsoid.geodeticSurfaceNormal(position);
       }
     }
   }
@@ -479,18 +463,19 @@ HeightmapTessellator.computeVertices = function (options) {
       rectangle,
       minimumHeight,
       maximumHeight,
-      ellipsoid
+      ellipsoid,
     );
   }
 
   let occludeePointInScaledSpace;
   if (hasRelativeToCenter) {
     const occluder = new EllipsoidalOccluder(ellipsoid);
-    occludeePointInScaledSpace = occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(
-      relativeToCenter,
-      positions,
-      minimumHeight
-    );
+    occludeePointInScaledSpace =
+      occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(
+        relativeToCenter,
+        positions,
+        minimumHeight,
+      );
   }
 
   const aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
@@ -504,7 +489,7 @@ HeightmapTessellator.computeVertices = function (options) {
     includeWebMercatorT,
     includeGeodeticSurfaceNormals,
     exaggeration,
-    exaggerationRelativeHeight
+    exaggerationRelativeHeight,
   );
   const vertices = new Float32Array(vertexCount * encoding.stride);
 
@@ -518,7 +503,7 @@ HeightmapTessellator.computeVertices = function (options) {
       heights[j],
       undefined,
       webMercatorTs[j],
-      geodeticSurfaceNormals[j]
+      geodeticSurfaceNormals[j],
     );
   }
 

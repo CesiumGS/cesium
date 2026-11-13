@@ -8,15 +8,16 @@ import {
   Intersect,
   Math as CesiumMath,
   Matrix4,
+  PixelDatatype,
   PixelFormat,
   Plane,
-  PixelDatatype,
+} from "@cesium/core";
+import {
   TextureMinificationFilter,
   TextureWrap,
   ClippingPlane,
   ClippingPlaneCollection,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/ClippingPlaneCollection", function () {
@@ -26,14 +27,14 @@ describe("Scene/ClippingPlaneCollection", function () {
     new ClippingPlane(Cartesian3.UNIT_Y, 2.0),
   ];
 
-  const transform = new Matrix4.fromTranslation(new Cartesian3(1.0, 3.0, 2.0));
+  const transform = Matrix4.fromTranslation(new Cartesian3(1.0, 3.0, 2.0));
   const boundingVolume = new BoundingSphere(Cartesian3.ZERO, 1.0);
 
   function decodeUint8Plane(pixel1, pixel2) {
     // expect pixel1 to be the normal
     const normal = AttributeCompression.octDecodeFromCartesian4(
       pixel1,
-      new Cartesian3()
+      new Cartesian3(),
     );
 
     // expect pixel2 to be the distance
@@ -110,10 +111,10 @@ describe("Scene/ClippingPlaneCollection", function () {
 
     expect(clippingPlanes.contains(planes[0])).toBe(true);
     expect(
-      clippingPlanes.contains(new ClippingPlane(Cartesian3.UNIT_Y, 2.0))
+      clippingPlanes.contains(new ClippingPlane(Cartesian3.UNIT_Y, 2.0)),
     ).toBe(true);
     expect(
-      clippingPlanes.contains(new ClippingPlane(Cartesian3.UNIT_Z, 3.0))
+      clippingPlanes.contains(new ClippingPlane(Cartesian3.UNIT_Z, 3.0)),
     ).toBe(false);
   });
 
@@ -202,10 +203,10 @@ describe("Scene/ClippingPlaneCollection", function () {
       expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.minificationFilter).toEqual(
-        TextureMinificationFilter.NEAREST
+        TextureMinificationFilter.NEAREST,
       );
       expect(sampler.magnificationFilter).toEqual(
-        TextureMinificationFilter.NEAREST
+        TextureMinificationFilter.NEAREST,
       );
 
       clippingPlanes.destroy();
@@ -241,19 +242,21 @@ describe("Scene/ClippingPlaneCollection", function () {
 
       let rgba;
       const gl = scene.frameState.context._gl;
-      spyOn(gl, "texImage2D").and.callFake(function (
-        target,
-        level,
-        xoffset,
-        yoffset,
-        width,
-        height,
-        format,
-        type,
-        arrayBufferView
-      ) {
-        rgba = arrayBufferView;
-      });
+      spyOn(gl, "texImage2D").and.callFake(
+        function (
+          target,
+          level,
+          xoffset,
+          yoffset,
+          width,
+          height,
+          format,
+          type,
+          arrayBufferView,
+        ) {
+          rgba = arrayBufferView;
+        },
+      );
 
       clippingPlanes.update(scene.frameState);
       expect(rgba).toBeDefined();
@@ -275,29 +278,29 @@ describe("Scene/ClippingPlaneCollection", function () {
         Cartesian3.equalsEpsilon(
           plane1.normal,
           planes[0].normal,
-          CesiumMath.EPSILON3
-        )
+          CesiumMath.EPSILON3,
+        ),
       ).toEqual(true);
       expect(
         Cartesian3.equalsEpsilon(
           plane2.normal,
           planes[1].normal,
-          CesiumMath.EPSILON3
-        )
+          CesiumMath.EPSILON3,
+        ),
       ).toEqual(true);
       expect(
         CesiumMath.equalsEpsilon(
           plane1.distance,
           planes[0].distance,
-          CesiumMath.EPSILON3
-        )
+          CesiumMath.EPSILON3,
+        ),
       ).toEqual(true);
       expect(
         CesiumMath.equalsEpsilon(
           plane2.distance,
           planes[1].distance,
-          CesiumMath.EPSILON3
-        )
+          CesiumMath.EPSILON3,
+        ),
       ).toEqual(true);
 
       clippingPlanes.destroy();
@@ -361,20 +364,22 @@ describe("Scene/ClippingPlaneCollection", function () {
       const gl = scene.frameState.context._gl;
       let copyWidth;
       let copyHeight;
-      spyOn(gl, "texSubImage2D").and.callFake(function (
-        target,
-        level,
-        xoffset,
-        yoffset,
-        width,
-        height,
-        format,
-        type,
-        arrayBufferView
-      ) {
-        copyWidth = width;
-        copyHeight = height;
-      });
+      spyOn(gl, "texSubImage2D").and.callFake(
+        function (
+          target,
+          level,
+          xoffset,
+          yoffset,
+          width,
+          height,
+          format,
+          type,
+          arrayBufferView,
+        ) {
+          copyWidth = width;
+          copyHeight = height;
+        },
+      );
 
       clippingPlanes = new ClippingPlaneCollection({
         planes: planes,
@@ -447,10 +452,10 @@ describe("Scene/ClippingPlaneCollection", function () {
       expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.minificationFilter).toEqual(
-        TextureMinificationFilter.NEAREST
+        TextureMinificationFilter.NEAREST,
       );
       expect(sampler.magnificationFilter).toEqual(
-        TextureMinificationFilter.NEAREST
+        TextureMinificationFilter.NEAREST,
       );
 
       clippingPlanes.destroy();
@@ -499,19 +504,21 @@ describe("Scene/ClippingPlaneCollection", function () {
 
       let rgba;
       const gl = scene.frameState.context._gl;
-      spyOn(gl, "texImage2D").and.callFake(function (
-        target,
-        level,
-        xoffset,
-        yoffset,
-        width,
-        height,
-        format,
-        type,
-        arrayBufferView
-      ) {
-        rgba = arrayBufferView;
-      });
+      spyOn(gl, "texImage2D").and.callFake(
+        function (
+          target,
+          level,
+          xoffset,
+          yoffset,
+          width,
+          height,
+          format,
+          type,
+          arrayBufferView,
+        ) {
+          rgba = arrayBufferView;
+        },
+      );
 
       clippingPlanes.update(scene.frameState);
       expect(rgba).toBeDefined();
@@ -528,29 +535,29 @@ describe("Scene/ClippingPlaneCollection", function () {
         Cartesian3.equalsEpsilon(
           plane1.normal,
           planes[0].normal,
-          CesiumMath.EPSILON3
-        )
+          CesiumMath.EPSILON3,
+        ),
       ).toEqual(true);
       expect(
         Cartesian3.equalsEpsilon(
           plane2.normal,
           planes[1].normal,
-          CesiumMath.EPSILON3
-        )
+          CesiumMath.EPSILON3,
+        ),
       ).toEqual(true);
       expect(
         CesiumMath.equalsEpsilon(
           plane1.distance,
           planes[0].distance,
-          CesiumMath.EPSILON3
-        )
+          CesiumMath.EPSILON3,
+        ),
       ).toEqual(true);
       expect(
         CesiumMath.equalsEpsilon(
           plane2.distance,
           planes[1].distance,
-          CesiumMath.EPSILON3
-        )
+          CesiumMath.EPSILON3,
+        ),
       ).toEqual(true);
 
       clippingPlanes.destroy();
@@ -627,20 +634,22 @@ describe("Scene/ClippingPlaneCollection", function () {
       const gl = scene.frameState.context._gl;
       let copyWidth;
       let copyHeight;
-      spyOn(gl, "texSubImage2D").and.callFake(function (
-        target,
-        level,
-        xoffset,
-        yoffset,
-        width,
-        height,
-        format,
-        type,
-        arrayBufferView
-      ) {
-        copyWidth = width;
-        copyHeight = height;
-      });
+      spyOn(gl, "texSubImage2D").and.callFake(
+        function (
+          target,
+          level,
+          xoffset,
+          yoffset,
+          width,
+          height,
+          format,
+          type,
+          arrayBufferView,
+        ) {
+          copyWidth = width;
+          copyHeight = height;
+        },
+      );
 
       clippingPlanes = new ClippingPlaneCollection({
         planes: planes,
@@ -725,7 +734,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     ClippingPlaneCollection.setOwner(
       clippingPlanes1,
       clippedObject1,
-      "clippingPlanes"
+      "clippingPlanes",
     );
     expect(clippedObject1.clippingPlanes).toBe(clippingPlanes1);
     expect(clippingPlanes1._owner).toBe(clippedObject1);
@@ -741,7 +750,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     ClippingPlaneCollection.setOwner(
       clippingPlanes2,
       clippedObject1,
-      "clippingPlanes"
+      "clippingPlanes",
     );
     expect(clippingPlanes1.isDestroyed()).toBe(true);
 
@@ -749,7 +758,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     ClippingPlaneCollection.setOwner(
       clippingPlanes2,
       clippedObject1,
-      "clippingPlanes"
+      "clippingPlanes",
     );
     expect(clippingPlanes2.isDestroyed()).toBe(false);
 
@@ -758,7 +767,7 @@ describe("Scene/ClippingPlaneCollection", function () {
       ClippingPlaneCollection.setOwner(
         clippingPlanes2,
         clippedObject2,
-        "clippingPlanes"
+        "clippingPlanes",
       );
     }).toThrowDeveloperError();
   });
@@ -772,40 +781,35 @@ describe("Scene/ClippingPlaneCollection", function () {
     clippingPlanes.unionClippingRegions = true;
 
     expect(clippingPlanes._testIntersection).not.toBe(
-      originalIntersectFunction
+      originalIntersectFunction,
     );
   });
 
   it("computes intersections with bounding volumes when clipping regions are combined with an intersect operation", function () {
     clippingPlanes = new ClippingPlaneCollection();
 
-    let intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
-      boundingVolume
-    );
+    let intersect =
+      clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INSIDE);
 
     clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, -2.0));
-    intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
-      boundingVolume
-    );
+    intersect =
+      clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.OUTSIDE);
 
     clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_Y, 0.0));
-    intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
-      boundingVolume
-    );
+    intersect =
+      clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INTERSECTING);
 
     clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_Z, 1.0));
-    intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
-      boundingVolume
-    );
+    intersect =
+      clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INSIDE);
 
     clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_Z, 0.0));
-    intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
-      boundingVolume
-    );
+    intersect =
+      clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INSIDE);
   });
 
@@ -814,34 +818,29 @@ describe("Scene/ClippingPlaneCollection", function () {
       unionClippingRegions: true,
     });
 
-    let intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
-      boundingVolume
-    );
+    let intersect =
+      clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INSIDE);
 
     clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_Z, 1.0));
-    intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
-      boundingVolume
-    );
+    intersect =
+      clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INSIDE);
 
     const temp = new ClippingPlane(Cartesian3.UNIT_Y, -2.0);
     clippingPlanes.add(temp);
-    intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
-      boundingVolume
-    );
+    intersect =
+      clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.OUTSIDE);
 
     clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 0.0));
-    intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
-      boundingVolume
-    );
+    intersect =
+      clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.OUTSIDE);
 
     clippingPlanes.remove(temp);
-    intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
-      boundingVolume
-    );
+    intersect =
+      clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INTERSECTING);
   });
 
@@ -850,14 +849,14 @@ describe("Scene/ClippingPlaneCollection", function () {
 
     let intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
       boundingVolume,
-      transform
+      transform,
     );
     expect(intersect).toEqual(Intersect.INSIDE);
 
     clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, -1.0));
     intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
       boundingVolume,
-      transform
+      transform,
     );
     expect(intersect).not.toEqual(Intersect.INSIDE);
   });
@@ -894,7 +893,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     const predictedResolution = ClippingPlaneCollection.getTextureResolution(
       clippingPlanes,
       scene.frameState.context,
-      new Cartesian2()
+      new Cartesian2(),
     );
 
     expect(predictedResolution.x).toEqual(4);
@@ -904,7 +903,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     const actualResolution = ClippingPlaneCollection.getTextureResolution(
       clippingPlanes,
       scene.frameState.context,
-      new Cartesian2()
+      new Cartesian2(),
     );
 
     expect(predictedResolution.x).toEqual(actualResolution.x);

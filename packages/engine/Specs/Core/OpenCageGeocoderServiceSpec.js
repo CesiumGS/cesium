@@ -1,3 +1,4 @@
+import { Cartesian3 } from "@cesium/core";
 import {
   Credit,
   GeocoderService,
@@ -51,7 +52,7 @@ describe("Core/OpenCageGeocoderService", function () {
       ],
     };
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(data)
+      Promise.resolve(data),
     );
 
     const results = await service.geocode(query);
@@ -60,13 +61,38 @@ describe("Core/OpenCageGeocoderService", function () {
     expect(results[0].destination).toBeDefined();
   });
 
+  it("returns geocoder result as a Cartesian3 if no bounds are provided", async function () {
+    const service = new OpenCageGeocoderService(endpoint, apiKey);
+    const query = "-22.6792,+14.5272";
+    const data = {
+      results: [
+        {
+          formatted: "Beryl's Restaurant, Woermann St, Swakopmund, Namibia",
+          geometry: {
+            lat: -22.6795394,
+            lng: 14.5276006,
+          },
+        },
+      ],
+    };
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(data),
+    );
+
+    const results = await service.geocode(query);
+    expect(results.length).toEqual(1);
+    expect(results[0].displayName).toEqual(data.results[0].formatted);
+    const expectedDestination = Cartesian3.fromDegrees(14.5276006, -22.6795394);
+    expect(results[0].destination).toEqual(expectedDestination);
+  });
+
   it("returns no geocoder results if OpenCage has no results", async function () {
     const service = new OpenCageGeocoderService(endpoint, apiKey);
 
     const query = "";
     const data = { results: [] };
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(data)
+      Promise.resolve(data),
     );
 
     const results = await service.geocode(query);
@@ -78,7 +104,7 @@ describe("Core/OpenCageGeocoderService", function () {
 
     expect(service.credit).toBeInstanceOf(Credit);
     expect(service.credit.html).toEqual(
-      `Geodata copyright <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors`
+      `Geodata copyright <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors`,
     );
     expect(service.credit.showOnScreen).toBe(false);
   });

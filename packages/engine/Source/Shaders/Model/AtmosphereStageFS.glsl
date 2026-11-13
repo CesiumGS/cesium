@@ -52,14 +52,11 @@ void applyFog(inout vec4 color, vec4 groundAtmosphereColor, vec3 lightDirection,
 
     // Tonemap if HDR rendering is disabled
     #ifndef HDR
-        fogColor.rgb = czm_acesTonemapping(fogColor.rgb);
+        fogColor.rgb = czm_pbrNeutralTonemapping(fogColor.rgb);
         fogColor.rgb = czm_inverseGamma(fogColor.rgb);
     #endif
 
-    // Matches the constant in GlobeFS.glsl. This makes the fog falloff
-    // more gradual.
-    const float fogModifier = 0.15;
-    vec3 withFog = czm_fog(distanceToCamera, color.rgb, fogColor, fogModifier);
+    vec3 withFog = czm_fog(distanceToCamera, color.rgb, fogColor, czm_fogVisualDensityScalar);
     color = vec4(withFog, color.a);
 }
 

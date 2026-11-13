@@ -1,4 +1,4 @@
-import Check from "../Core/Check.js";
+import { Check } from "@cesium/core";
 
 /**
  * An enum describing the built-in instance attribute semantics.
@@ -44,6 +44,7 @@ const InstanceAttributeSemantic = {
 /**
  * Gets the instance attribute semantic matching the glTF attribute semantic.
  *
+ * @param {string} gltfSemantic The glTF attribute semantic.
  * @returns {InstanceAttributeSemantic} The instance attribute semantic, or undefined if there is no match.
  *
  * @private
@@ -51,7 +52,7 @@ const InstanceAttributeSemantic = {
 InstanceAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("gltfSemantic", gltfSemantic);
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   let semantic = gltfSemantic;
 
@@ -76,4 +77,6 @@ InstanceAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
   return undefined;
 };
 
-export default Object.freeze(InstanceAttributeSemantic);
+Object.freeze(InstanceAttributeSemantic);
+
+export default InstanceAttributeSemantic;

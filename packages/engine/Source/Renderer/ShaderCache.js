@@ -1,5 +1,4 @@
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import { defined, destroyObject } from "@cesium/core";
 import ShaderProgram from "./ShaderProgram.js";
 import ShaderSource from "./ShaderSource.js";
 
@@ -112,12 +111,10 @@ ShaderCache.prototype.getShaderProgram = function (options) {
   } else {
     const context = this._context;
 
-    const vertexShaderText = vertexShaderSource.createCombinedVertexShader(
-      context
-    );
-    const fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader(
-      context
-    );
+    const vertexShaderText =
+      vertexShaderSource.createCombinedVertexShader(context);
+    const fragmentShaderText =
+      fragmentShaderSource.createCombinedFragmentShader(context);
 
     const shaderProgram = new ShaderProgram({
       gl: context._gl,
@@ -151,7 +148,7 @@ ShaderCache.prototype.getShaderProgram = function (options) {
 ShaderCache.prototype.replaceDerivedShaderProgram = function (
   shaderProgram,
   keyword,
-  options
+  options,
 ) {
   const cachedShader = shaderProgram._cachedShader;
   const derivedKeyword = keyword + cachedShader.keyword;
@@ -169,7 +166,7 @@ ShaderCache.prototype.replaceDerivedShaderProgram = function (
 
 ShaderCache.prototype.getDerivedShaderProgram = function (
   shaderProgram,
-  keyword
+  keyword,
 ) {
   const cachedShader = shaderProgram._cachedShader;
   const derivedKeyword = keyword + cachedShader.keyword;
@@ -184,7 +181,7 @@ ShaderCache.prototype.getDerivedShaderProgram = function (
 ShaderCache.prototype.createDerivedShaderProgram = function (
   shaderProgram,
   keyword,
-  options
+  options,
 ) {
   const cachedShader = shaderProgram._cachedShader;
   const derivedKeyword = keyword + cachedShader.keyword;
@@ -207,12 +204,10 @@ ShaderCache.prototype.createDerivedShaderProgram = function (
 
   const context = this._context;
 
-  const vertexShaderText = vertexShaderSource.createCombinedVertexShader(
-    context
-  );
-  const fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader(
-    context
-  );
+  const vertexShaderText =
+    vertexShaderSource.createCombinedVertexShader(context);
+  const fragmentShaderText =
+    fragmentShaderSource.createCombinedFragmentShader(context);
 
   const derivedShaderProgram = new ShaderProgram({
     gl: context._gl,

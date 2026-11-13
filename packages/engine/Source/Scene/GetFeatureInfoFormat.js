@@ -1,21 +1,23 @@
-import Cartographic from "../Core/Cartographic.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  Cartographic,
+  DeveloperError,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
 
 /**
- * Describes the format in which to request GetFeatureInfo from a Web Map Service (WMS) server.
+ * Describes the format in which to request GetFeatureInfo from a Web Map Service (WMS) or Web Map Tile Service (WMTS) server.
  *
  * @alias GetFeatureInfoFormat
  * @constructor
  *
  * @param {string} type The type of response to expect from a GetFeatureInfo request.  Valid
  *        values are 'json', 'xml', 'html', or 'text'.
- * @param {string} [format] The info format to request from the WMS server.  This is usually a
+ * @param {string} [format] The info format to request from the server.  This is usually a
  *        MIME type such as 'application/json' or text/xml'.  If this parameter is not specified, the provider will request 'json'
  *        using 'application/json', 'xml' using 'text/xml', 'html' using 'text/html', and 'text' using 'text/plain'.
- * @param {Function} [callback] A function to invoke with the GetFeatureInfo response from the WMS server
+ * @param {Function} [callback] A function to invoke with the GetFeatureInfo response from the server
  *        in order to produce an array of picked {@link ImageryLayerFeatureInfo} instances.  If this parameter is not specified,
  *        a default function for the type of response is used.
  */
@@ -41,7 +43,7 @@ function GetFeatureInfoFormat(type, format, callback) {
     //>>includeStart('debug', pragmas.debug);
     else {
       throw new DeveloperError(
-        'format is required when type is not "json", "xml", "html", or "text".'
+        'format is required when type is not "json", "xml", "html", or "text".',
       );
     }
     //>>includeEnd('debug');
@@ -62,7 +64,7 @@ function GetFeatureInfoFormat(type, format, callback) {
     //>>includeStart('debug', pragmas.debug);
     else {
       throw new DeveloperError(
-        'callback is required when type is not "json", "xml", "html", or "text".'
+        'callback is required when type is not "json", "xml", "html", or "text".',
       );
     }
     //>>includeEnd('debug');
@@ -125,7 +127,7 @@ function xmlToFeatureInfo(xml) {
   } else if (documentElement.localName === "ServiceExceptionReport") {
     // This looks like a WMS server error, so no features picked.
     throw new RuntimeError(
-      new XMLSerializer().serializeToString(documentElement)
+      new XMLSerializer().serializeToString(documentElement),
     );
   } else if (documentElement.localName === "msGMLOutput") {
     return msGmlToFeatureInfo(xml);
@@ -142,7 +144,7 @@ function mapInfoXmlToFeatureInfo(xml) {
 
   const features = multiFeatureCollection.getElementsByTagNameNS(
     mapInfoMxpNamespace,
-    "Feature"
+    "Feature",
   );
   for (let featureIndex = 0; featureIndex < features.length; ++featureIndex) {
     const feature = features[featureIndex];
@@ -151,7 +153,7 @@ function mapInfoXmlToFeatureInfo(xml) {
 
     const propertyElements = feature.getElementsByTagNameNS(
       mapInfoMxpNamespace,
-      "Val"
+      "Val",
     );
     for (
       let propertyIndex = 0;
@@ -201,14 +203,14 @@ function esriXmlToFeatureInfo(xml) {
       }
 
       result.push(
-        imageryLayerFeatureInfoFromDataAndProperties(feature, properties)
+        imageryLayerFeatureInfoFromDataAndProperties(feature, properties),
       );
     }
   } else {
     // Thredds format -- looks like esri, but instead of containing FIELDS, contains FeatureInfo element
     const featureInfoElements = featureInfoResponse.getElementsByTagNameNS(
       "*",
-      "FeatureInfo"
+      "FeatureInfo",
     );
     for (
       let featureInfoElementIndex = 0;
@@ -235,8 +237,8 @@ function esriXmlToFeatureInfo(xml) {
       result.push(
         imageryLayerFeatureInfoFromDataAndProperties(
           featureInfoElement,
-          properties
-        )
+          properties,
+        ),
       );
     }
   }
@@ -251,7 +253,7 @@ function gmlToFeatureInfo(xml) {
 
   const featureMembers = featureCollection.getElementsByTagNameNS(
     gmlNamespace,
-    "featureMember"
+    "featureMember",
   );
   for (
     let featureIndex = 0;
@@ -263,7 +265,7 @@ function gmlToFeatureInfo(xml) {
     const properties = {};
     getGmlPropertiesRecursively(featureMember, properties);
     result.push(
-      imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties)
+      imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties),
     );
   }
 
@@ -288,7 +290,7 @@ function msGmlToFeatureInfo(xml) {
   }
   if (!defined(layer)) {
     throw new RuntimeError(
-      "Unable to find first child of the feature info xml document"
+      "Unable to find first child of the feature info xml document",
     );
   }
   const featureMembers = layer.childNodes;
@@ -302,7 +304,7 @@ function msGmlToFeatureInfo(xml) {
       const properties = {};
       getGmlPropertiesRecursively(featureMember, properties);
       result.push(
-        imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties)
+        imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties),
       );
     }
   }
@@ -364,7 +366,8 @@ function unknownXmlToFeatureInfo(xml) {
 }
 
 const emptyBodyRegex = /<body>\s*<\/body>/im;
-const wmsServiceExceptionReportRegex = /<ServiceExceptionReport([\s\S]*)<\/ServiceExceptionReport>/im;
+const wmsServiceExceptionReportRegex =
+  /<ServiceExceptionReport([\s\S]*)<\/ServiceExceptionReport>/im;
 const titleRegex = /<title>([\s\S]*)<\/title>/im;
 
 function textToFeatureInfo(text) {

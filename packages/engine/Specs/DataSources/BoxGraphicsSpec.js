@@ -1,13 +1,10 @@
+import { Cartesian3, Color, DistanceDisplayCondition } from "@cesium/core";
 import {
-  Cartesian3,
-  Color,
-  DistanceDisplayCondition,
   BoxGraphics,
   ColorMaterialProperty,
   ConstantProperty,
   ShadowMode,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 import testMaterialDefinitionChanged from "../../../../Specs/testMaterialDefinitionChanged.js";
 
@@ -45,7 +42,7 @@ describe("DataSources/BoxGraphics", function () {
     expect(box.dimensions.getValue()).toEqual(options.dimensions);
     expect(box.shadows.getValue()).toEqual(options.shadows);
     expect(box.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
   });
 
@@ -60,7 +57,7 @@ describe("DataSources/BoxGraphics", function () {
     source.dimensions = new ConstantProperty();
     source.shadows = new ConstantProperty(ShadowMode.ENABLED);
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
 
     const target = new BoxGraphics();
@@ -75,7 +72,7 @@ describe("DataSources/BoxGraphics", function () {
     expect(target.dimensions).toBe(source.dimensions);
     expect(target.shadows).toBe(source.shadows);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
   });
 
@@ -138,7 +135,7 @@ describe("DataSources/BoxGraphics", function () {
     expect(result.dimensions).toBe(source.dimensions);
     expect(result.shadows).toBe(source.shadows);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
   });
 
@@ -161,19 +158,19 @@ describe("DataSources/BoxGraphics", function () {
       property,
       "dimensions",
       new Cartesian3(0, 0, 0),
-      new Cartesian3(1, 1, 1)
+      new Cartesian3(1, 1, 1),
     );
     testDefinitionChanged(
       property,
       "shadows",
       ShadowMode.ENABLED,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
     testDefinitionChanged(
       property,
       "distanceDisplayCondition",
       new DistanceDisplayCondition(),
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
   });
 });

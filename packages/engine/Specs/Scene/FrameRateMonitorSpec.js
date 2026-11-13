@@ -1,5 +1,5 @@
-import { defined, getTimestamp, FrameRateMonitor } from "../../index.js";
-
+import { defined, getTimestamp } from "@cesium/core";
+import { FrameRateMonitor } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -252,5 +252,5 @@ describe(
       expect(nominalListener).toHaveBeenCalled();
     });
   },
-  "WebGL"
+  "WebGL",
 );

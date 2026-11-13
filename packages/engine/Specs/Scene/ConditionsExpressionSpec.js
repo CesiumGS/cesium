@@ -1,4 +1,5 @@
-import { Cartesian4, Color, ConditionsExpression } from "../../index.js";
+import { Cartesian4, Color } from "@cesium/core";
+import { ConditionsExpression } from "../../index.js";
 
 describe("Scene/ConditionsExpression", function () {
   function MockFeature(value) {
@@ -62,7 +63,7 @@ describe("Scene/ConditionsExpression", function () {
     const expression = new ConditionsExpression(
       jsonExpWithDefines,
       defines,
-      result
+      result,
     );
     const value = expression.evaluate(new MockFeature(101), result);
     expect(value).toEqual(new Cartesian4(0.0, 0.0, 1.0, 1.0));
@@ -74,7 +75,7 @@ describe("Scene/ConditionsExpression", function () {
     const expression = new ConditionsExpression(
       jsonExpWithDefines,
       defines,
-      result
+      result,
     );
     const value = expression.evaluate(new MockFeature(101), result);
     expect(value).toEqual(Color.BLUE);
@@ -108,7 +109,7 @@ describe("Scene/ConditionsExpression", function () {
       "getColor()",
       variableSubstitutionMap,
       {},
-      "vec4"
+      "vec4",
     );
     const expected =
       "vec4 getColor()\n" +
@@ -136,7 +137,7 @@ describe("Scene/ConditionsExpression", function () {
       "getColor",
       {},
       {},
-      "vec4"
+      "vec4",
     );
     expect(shaderFunction).toBeUndefined();
   });

@@ -1,0 +1,143 @@
+import * as Cesium from "cesium";
+import Sandcastle from "Sandcastle";
+
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  orderIndependentTranslucency: false,
+  geocoder: Cesium.IonGeocodeProviderType.BING,
+});
+
+const scene = viewer.scene;
+const globe = scene.globe;
+const baseLayer = viewer.scene.imageryLayers.get(0);
+
+scene.screenSpaceCameraController.enableCollisionDetection = false;
+
+function reset() {
+  globe.showGroundAtmosphere = true;
+  globe.baseColor = Cesium.Color.BLUE;
+  globe.translucency.enabled = false;
+  globe.translucency.frontFaceAlpha = 1.0;
+  globe.undergroundColor = Cesium.Color.BLACK;
+  globe.translucency.rectangle = undefined;
+  baseLayer.colorToAlpha = undefined;
+}
+
+function useTranslucencyMask() {
+  globe.showGroundAtmosphere = false;
+  globe.baseColor = Cesium.Color.TRANSPARENT;
+  globe.translucency.enabled = true;
+  globe.undergroundColor = undefined;
+
+  // Set oceans on Bing base layer to transparent
+  baseLayer.colorToAlpha = new Cesium.Color(0.0, 0.016, 0.059);
+  baseLayer.colorToAlphaThreshold = 0.2;
+}
+
+function useTranslucencyRectangle() {
+  globe.translucency.enabled = true;
+  globe.undergroundColor = undefined;
+  globe.translucency.frontFaceAlpha = 0.25;
+  globe.translucency.rectangle = Cesium.Rectangle.fromDegrees(
+    -120.0,
+    0.0,
+    -30.0,
+    45.0,
+  );
+}
+
+Sandcastle.addToolbarMenu([
+  {
+    text: "Translucency mask",
+    onselect: function () {
+      reset();
+      useTranslucencyMask();
+    },
+  },
+  {
+    text: "Translucency rectangle",
+    onselect: function () {
+      reset();
+      useTranslucencyRectangle();
+    },
+  },
+]);
+
+const innerCoreRadius = 1250000;
+const outerCoreRadius = 3450000;
+const mantleRadius = 6300000.0;
+
+const innerCore = viewer.entities.add({
+  name: "Inner Core",
+  position: Cesium.Cartesian3.ZERO,
+  ellipsoid: {
+    radii: new Cesium.Cartesian3(
+      innerCoreRadius,
+      innerCoreRadius,
+      innerCoreRadius,
+    ),
+    material: Cesium.Color.YELLOW,
+  },
+});
+
+const outerCore = viewer.entities.add({
+  name: "Outer Core",
+  position: Cesium.Cartesian3.ZERO,
+  ellipsoid: {
+    radii: new Cesium.Cartesian3(
+      outerCoreRadius,
+      outerCoreRadius,
+      outerCoreRadius,
+    ),
+    material: Cesium.Color.ORANGE,
+  },
+});
+
+const mantle = viewer.entities.add({
+  name: "Mantle",
+  position: Cesium.Cartesian3.ZERO,
+  ellipsoid: {
+    radii: new Cesium.Cartesian3(mantleRadius, mantleRadius, mantleRadius),
+    material: Cesium.Color.RED,
+  },
+});
+
+innerCore.show = true;
+outerCore.show = false;
+mantle.show = false;
+
+const options = [
+  {
+    text: "Inner Core",
+    onselect: function () {
+      innerCore.show = true;
+      outerCore.show = false;
+      mantle.show = false;
+    },
+  },
+  {
+    text: "Outer Core",
+    onselect: function () {
+      innerCore.show = false;
+      outerCore.show = true;
+      mantle.show = false;
+    },
+  },
+  {
+    text: "Mantle",
+    onselect: function () {
+      innerCore.show = false;
+      outerCore.show = false;
+      mantle.show = true;
+    },
+  },
+  {
+    text: "None",
+    onselect: function () {
+      innerCore.show = false;
+      outerCore.show = false;
+      mantle.show = false;
+    },
+  },
+];
+
+Sandcastle.addToolbarMenu(options);

@@ -1,11 +1,5 @@
-import {
-  Cartesian3,
-  defined,
-  Matrix4,
-  EllipsoidPrimitive,
-  Material,
-} from "../../index.js";
-
+import { Cartesian3, Matrix4, defined } from "@cesium/core";
+import { EllipsoidPrimitive, Material } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -81,7 +75,7 @@ describe(
     it("renders with a custom modelMatrix", function () {
       ellipsoid.radii = new Cartesian3(0.1, 0.1, 0.1);
       ellipsoid.modelMatrix = Matrix4.fromScale(
-        new Cartesian3(10.0, 10.0, 10.0)
+        new Cartesian3(10.0, 10.0, 10.0),
       );
 
       expect(scene).toRender([0, 0, 0, 255]);
@@ -119,7 +113,7 @@ describe(
         new EllipsoidPrimitive({
           radii: new Cartesian3(1.0, 1.0, 1.0),
           debugShowBoundingVolume: true,
-        })
+        }),
       );
 
       const camera = scene.camera;
@@ -199,5 +193,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -77,7 +77,7 @@ describe("Core/Heap", function () {
     expect(heap.length).toBeLessThanOrEqual(heap.maximumLength);
     // allowed one extra slot for swapping
     expect(heap.internalArray.length).toBeLessThanOrEqual(
-      heap.maximumLength + 1
+      heap.maximumLength + 1,
     );
   });
 
@@ -124,6 +124,19 @@ describe("Core/Heap", function () {
     }
 
     heap.maximumLength = 5;
+    expectTrailingReferenceToBeRemoved(heap);
+  });
+
+  it("insert past maximum length removes trailing references", function () {
+    const heap = new Heap({
+      comparator: comparator,
+    });
+    heap.maximumLength = 5;
+
+    for (let i = 0; i < 6; ++i) {
+      heap.insert(Math.random());
+    }
+
     expectTrailingReferenceToBeRemoved(heap);
   });
 

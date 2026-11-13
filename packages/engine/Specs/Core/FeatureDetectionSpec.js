@@ -81,21 +81,7 @@ describe("Core/FeatureDetection", function () {
       console.log(
         `detected Webkit ${webkitVersion.join(".")}${
           webkitVersion.isNightly ? " (Nightly)" : ""
-        }`
-      );
-    }
-  });
-
-  it("detects Internet Explorer", function () {
-    const isInternetExplorer = FeatureDetection.isInternetExplorer();
-    expect(typeof isInternetExplorer).toEqual("boolean");
-
-    if (isInternetExplorer) {
-      const internetExplorerVersion = FeatureDetection.internetExplorerVersion();
-      checkVersionArray(internetExplorerVersion);
-
-      console.log(
-        `detected Internet Explorer ${internetExplorerVersion.join(".")}`
+        }`,
       );
     }
   });
@@ -131,7 +117,8 @@ describe("Core/FeatureDetection", function () {
   });
 
   it("detects imageRendering support", function () {
-    const supportsImageRenderingPixelated = FeatureDetection.supportsImageRenderingPixelated();
+    const supportsImageRenderingPixelated =
+      FeatureDetection.supportsImageRenderingPixelated();
     expect(typeof supportsImageRenderingPixelated).toEqual("boolean");
     if (supportsImageRenderingPixelated) {
       expect(FeatureDetection.imageRenderingValue()).toBeDefined();
@@ -163,7 +150,7 @@ describe("Core/FeatureDetection", function () {
   it("detects WebGL2 support", function () {
     const scene = createScene();
     expect(FeatureDetection.supportsWebgl2(scene)).toEqual(
-      scene.context.webgl2
+      scene.context.webgl2,
     );
     scene.destroyForSpecs();
   });

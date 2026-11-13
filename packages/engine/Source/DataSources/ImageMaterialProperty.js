@@ -1,9 +1,11 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
+import {
+  Cartesian2,
+  Color,
+  Event,
+  Frozen,
+  JulianDate,
+  defined,
+} from "@cesium/core";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
@@ -23,7 +25,7 @@ const defaultColor = Color.WHITE;
  * @param {Property|boolean} [options.transparent=false] Set to true when the image has transparency (for example, when a png has transparent sections)
  */
 function ImageMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._image = undefined;
@@ -138,13 +140,13 @@ ImageMaterialProperty.prototype.getValue = function (time, result) {
     this._repeat,
     time,
     defaultRepeat,
-    result.repeat
+    result.repeat,
   );
   result.color = Property.getValueOrClonedDefault(
     this._color,
     time,
     defaultColor,
-    result.color
+    result.color,
   );
   if (Property.getValueOrDefault(this._transparent, time, defaultTransparent)) {
     result.color.alpha = Math.min(0.99, result.color.alpha);

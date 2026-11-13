@@ -4,6 +4,8 @@ import {
   Color,
   DistanceDisplayCondition,
   NearFarScalar,
+} from "@cesium/core";
+import {
   ConstantProperty,
   LabelGraphics,
   HorizontalOrigin,
@@ -63,17 +65,17 @@ describe("DataSources/LabelGraphics", function () {
     expect(label.scale.getValue()).toEqual(options.scale);
     expect(label.show.getValue()).toEqual(options.show);
     expect(label.translucencyByDistance.getValue()).toEqual(
-      options.translucencyByDistance
+      options.translucencyByDistance,
     );
     expect(label.pixelOffsetScaleByDistance.getValue()).toEqual(
-      options.pixelOffsetScaleByDistance
+      options.pixelOffsetScaleByDistance,
     );
     expect(label.scaleByDistance.getValue()).toEqual(options.scaleByDistance);
     expect(label.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
     expect(label.disableDepthTestDistance.getValue()).toEqual(
-      options.disableDepthTestDistance
+      options.disableDepthTestDistance,
     );
   });
 
@@ -93,13 +95,13 @@ describe("DataSources/LabelGraphics", function () {
     source.show = new ConstantProperty(false);
     source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
     source.pixelOffsetScaleByDistance = new ConstantProperty(
-      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0)
+      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0),
     );
     source.scaleByDistance = new ConstantProperty(
-      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0)
+      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0),
     );
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
 
@@ -120,14 +122,14 @@ describe("DataSources/LabelGraphics", function () {
     expect(target.show).toBe(source.show);
     expect(target.translucencyByDistance).toBe(source.translucencyByDistance);
     expect(target.pixelOffsetScaleByDistance).toBe(
-      source.pixelOffsetScaleByDistance
+      source.pixelOffsetScaleByDistance,
     );
     expect(target.scaleByDistance).toBe(source.scaleByDistance);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(target.disableDepthTestDistance).toBe(
-      source.disableDepthTestDistance
+      source.disableDepthTestDistance,
     );
   });
 
@@ -147,13 +149,13 @@ describe("DataSources/LabelGraphics", function () {
     source.show = new ConstantProperty(false);
     source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
     source.pixelOffsetScaleByDistance = new ConstantProperty(
-      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0)
+      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0),
     );
     source.scaleByDistance = new ConstantProperty(
-      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0)
+      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0),
     );
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
 
@@ -171,11 +173,11 @@ describe("DataSources/LabelGraphics", function () {
     const show = new ConstantProperty(true);
     const translucencyByDistance = new ConstantProperty(new NearFarScalar());
     const pixelOffsetScaleByDistance = new ConstantProperty(
-      new NearFarScalar()
+      new NearFarScalar(),
     );
     const scaleByDistance = new ConstantProperty(new NearFarScalar());
     const distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition()
+      new DistanceDisplayCondition(),
     );
     const disableDepthTestDistance = new ConstantProperty(20.0);
 
@@ -235,13 +237,13 @@ describe("DataSources/LabelGraphics", function () {
     source.show = new ConstantProperty(false);
     source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
     source.pixelOffsetScaleByDistance = new ConstantProperty(
-      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0)
+      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0),
     );
     source.scaleByDistance = new ConstantProperty(
-      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0)
+      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0),
     );
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
 
@@ -260,14 +262,14 @@ describe("DataSources/LabelGraphics", function () {
     expect(result.show).toBe(source.show);
     expect(result.translucencyByDistance).toBe(source.translucencyByDistance);
     expect(result.pixelOffsetScaleByDistance).toBe(
-      source.pixelOffsetScaleByDistance
+      source.pixelOffsetScaleByDistance,
     );
     expect(result.scaleByDistance).toBe(source.scaleByDistance);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(result.disableDepthTestDistance).toBe(
-      source.disableDepthTestDistance
+      source.disableDepthTestDistance,
     );
   });
 

@@ -1,13 +1,15 @@
-import arrayRemoveDuplicates from "../Core/arrayRemoveDuplicates.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import Matrix4 from "../Core/Matrix4.js";
-import PolylinePipeline from "../Core/PolylinePipeline.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Color,
+  DeveloperError,
+  DistanceDisplayCondition,
+  Frozen,
+  Matrix4,
+  PolylinePipeline,
+  arrayRemoveDuplicates,
+  defined,
+} from "@cesium/core";
 import Material from "./Material.js";
 
 /**
@@ -35,11 +37,11 @@ import Material from "./Material.js";
  *
  */
 function Polyline(options, polylineCollection) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-  this._show = defaultValue(options.show, true);
-  this._width = defaultValue(options.width, 1.0);
-  this._loop = defaultValue(options.loop, false);
+  this._show = options.show ?? true;
+  this._width = options.width ?? 1.0;
+  this._loop = options.loop ?? false;
   this._distanceDisplayCondition = options.distanceDisplayCondition;
 
   this._material = options.material;
@@ -57,7 +59,7 @@ function Polyline(options, polylineCollection) {
   this._positions = positions;
   this._actualPositions = arrayRemoveDuplicates(
     positions,
-    Cartesian3.equalsEpsilon
+    Cartesian3.equalsEpsilon,
   );
 
   if (this._loop && this._actualPositions.length > 2) {
@@ -78,12 +80,11 @@ function Polyline(options, polylineCollection) {
   this._modelMatrix = modelMatrix;
   this._segments = PolylinePipeline.wrapLongitude(
     this._actualPositions,
-    modelMatrix
+    modelMatrix,
   );
 
   this._actualLength = undefined;
 
-  // eslint-disable-next-line no-use-before-define
   this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
   this._polylineCollection = polylineCollection;
   this._dirty = false;
@@ -91,7 +92,7 @@ function Polyline(options, polylineCollection) {
   this._boundingVolume = BoundingSphere.fromPoints(this._actualPositions);
   this._boundingVolumeWC = BoundingSphere.transform(
     this._boundingVolume,
-    this._modelMatrix
+    this._modelMatrix,
   );
   this._boundingVolume2D = new BoundingSphere(); // modified in PolylineCollection
 }
@@ -181,12 +182,12 @@ Object.defineProperties(Polyline.prototype, {
       this._length = positions.length;
       this._boundingVolume = BoundingSphere.fromPoints(
         this._actualPositions,
-        this._boundingVolume
+        this._boundingVolume,
       );
       this._boundingVolumeWC = BoundingSphere.transform(
         this._boundingVolume,
         this._modelMatrix,
-        this._boundingVolumeWC
+        this._boundingVolumeWC,
       );
       makeDirty(this, POSITION_INDEX);
 
@@ -340,7 +341,7 @@ Object.defineProperties(Polyline.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (defined(value) && value.far <= value.near) {
         throw new DeveloperError(
-          "far distance must be greater than near distance."
+          "far distance must be greater than near distance.",
         );
       }
       //>>includeEnd('debug');
@@ -349,7 +350,7 @@ Object.defineProperties(Polyline.prototype, {
       ) {
         this._distanceDisplayCondition = DistanceDisplayCondition.clone(
           value,
-          this._distanceDisplayCondition
+          this._distanceDisplayCondition,
         );
         makeDirty(this, DISTANCE_DISPLAY_CONDITION);
       }
@@ -375,12 +376,12 @@ Polyline.prototype.update = function () {
   if (!Matrix4.equals(modelMatrix, this._modelMatrix) || positionsChanged) {
     this._segments = PolylinePipeline.wrapLongitude(
       this._actualPositions,
-      modelMatrix
+      modelMatrix,
     );
     this._boundingVolumeWC = BoundingSphere.transform(
       this._boundingVolume,
       modelMatrix,
-      this._boundingVolumeWC
+      this._boundingVolumeWC,
     );
   }
 

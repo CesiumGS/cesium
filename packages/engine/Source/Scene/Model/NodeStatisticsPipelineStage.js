@@ -1,4 +1,4 @@
-import defined from "../../Core/defined.js";
+import { defined } from "@cesium/core";
 
 /**
  * The node statistics update stage updates memory usage statistics for a Model
@@ -23,7 +23,7 @@ const NodeStatisticsPipelineStage = {
 NodeStatisticsPipelineStage.process = function (
   renderResources,
   node,
-  frameState
+  frameState,
 ) {
   const statistics = renderResources.model.statistics;
   const instances = node.instances;

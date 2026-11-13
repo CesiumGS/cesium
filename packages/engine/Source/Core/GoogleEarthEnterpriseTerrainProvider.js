@@ -1,19 +1,21 @@
-import Check from "./Check.js";
+import {
+  Check,
+  Event,
+  Frozen,
+  JulianDate,
+  Math as CesiumMath,
+  Rectangle,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
-import defined from "./defined.js";
-import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import GoogleEarthEnterpriseMetadata from "./GoogleEarthEnterpriseMetadata.js";
 import GoogleEarthEnterpriseTerrainData from "./GoogleEarthEnterpriseTerrainData.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
-import JulianDate from "./JulianDate.js";
-import CesiumMath from "./Math.js";
-import Rectangle from "./Rectangle.js";
 import Request from "./Request.js";
 import RequestState from "./RequestState.js";
 import RequestType from "./RequestType.js";
-import RuntimeError from "./RuntimeError.js";
 import TaskProcessor from "./TaskProcessor.js";
 
 const TerrainState = {
@@ -65,7 +67,7 @@ TerrainCache.prototype.tidy = function () {
 };
 
 /**
- * @typedef {Object} GoogleEarthEnterpriseTerrainProvider.ConstructorOptions
+ * @typedef {object} GoogleEarthEnterpriseTerrainProvider.ConstructorOptions
  *
  * Initialization options for GoogleEarthEnterpriseTerrainProvider constructor
  *
@@ -97,7 +99,7 @@ TerrainCache.prototype.tidy = function () {
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function GoogleEarthEnterpriseTerrainProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._tilingScheme = new GeographicTilingScheme({
     numberOfLevelZeroTilesX: 2,
@@ -106,7 +108,7 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
       -CesiumMath.PI,
       -CesiumMath.PI,
       CesiumMath.PI,
-      CesiumMath.PI
+      CesiumMath.PI,
     ),
     ellipsoid: options.ellipsoid,
   });
@@ -222,7 +224,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
    * at points and in rectangles. This property may be undefined if availability
    * information is not available.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
-   * @type {TileAvailability}
+   * @type {TileAvailability|undefined}
    * @readonly
    */
   availability: {
@@ -249,7 +251,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
  */
 GoogleEarthEnterpriseTerrainProvider.fromMetadata = function (
   metadata,
-  options
+  options,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("metadata", metadata);
@@ -275,7 +277,7 @@ function computeChildMask(quadKey, info, metadata) {
     childMask = 0;
     for (let i = 0; i < 4; ++i) {
       const child = metadata.getTileInformationFromQuadKey(
-        quadKey + i.toString()
+        quadKey + i.toString(),
       );
       if (defined(child) && child.hasTerrain()) {
         childMask |= 1 << i;
@@ -302,7 +304,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
   const terrainCache = this._terrainCache;
@@ -331,7 +333,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
         credits: defined(credit) ? [credit] : undefined,
         negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
         negativeElevationThreshold: metadata.negativeAltitudeThreshold,
-      })
+      }),
     );
   }
 
@@ -346,7 +348,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
         buffer: new Uint8Array(16 * 16),
         width: 16,
         height: 16,
-      })
+      }),
     );
   } else if (terrainState === TerrainState.NONE) {
     // Already have info and there isn't any terrain here
@@ -400,7 +402,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
       this,
       q,
       terrainVersion,
-      sharedRequest
+      sharedRequest,
     ).fetchArrayBuffer();
 
     if (!defined(requestPromise)) {
@@ -416,7 +418,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
               type: "Terrain",
               key: metadata.key,
             },
-            [terrain]
+            [terrain],
           )
           .then(function (terrainTiles) {
             // Add requested tile and mark it as SELF
@@ -486,11 +488,10 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
  * @param {number} level The tile level for which to get the maximum geometric error.
  * @returns {number} The maximum geometric error.
  */
-GoogleEarthEnterpriseTerrainProvider.prototype.getLevelMaximumGeometricError = function (
-  level
-) {
-  return this._levelZeroMaximumGeometricError / (1 << level);
-};
+GoogleEarthEnterpriseTerrainProvider.prototype.getLevelMaximumGeometricError =
+  function (level) {
+    return this._levelZeroMaximumGeometricError / (1 << level);
+  };
 
 /**
  * Determines whether data for a tile is available to be loaded.
@@ -503,7 +504,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getLevelMaximumGeometricError = f
 GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
   x,
   y,
-  level
+  level,
 ) {
   const metadata = this._metadata;
   let quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
@@ -557,13 +558,10 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
  * @param {number} level The level of the tile for which to request geometry.
  * @returns {undefined}
  */
-GoogleEarthEnterpriseTerrainProvider.prototype.loadTileDataAvailability = function (
-  x,
-  y,
-  level
-) {
-  return undefined;
-};
+GoogleEarthEnterpriseTerrainProvider.prototype.loadTileDataAvailability =
+  function (x, y, level) {
+    return undefined;
+  };
 
 //
 // Functions to handle imagery packets

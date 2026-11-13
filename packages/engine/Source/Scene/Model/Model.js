@@ -1,24 +1,30 @@
-import BoundingSphere from "../../Core/BoundingSphere.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartographic from "../../Core/Cartographic.js";
-import Check from "../../Core/Check.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Check,
+  Color,
+  DeveloperError,
+  DistanceDisplayCondition,
+  Ellipsoid,
+  Event,
+  Frozen,
+  Matrix3,
+  Matrix4,
+  Rectangle,
+  RuntimeError,
+  defined,
+  destroyObject,
+  oneTimeWarning,
+} from "@cesium/core";
 import Credit from "../../Core/Credit.js";
-import Color from "../../Core/Color.js";
-import defined from "../../Core/defined.js";
-import defaultValue from "../../Core/defaultValue.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
-import Ellipsoid from "../../Core/Ellipsoid.js";
-import Event from "../../Core/Event.js";
-import Matrix3 from "../../Core/Matrix3.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import Resource from "../../Core/Resource.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 import Pass from "../../Renderer/Pass.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
+import DynamicEnvironmentMapManager from "../DynamicEnvironmentMapManager.js";
 import ColorBlendMode from "../ColorBlendMode.js";
+import EdgeDisplayMode from "../EdgeDisplayMode.js";
 import GltfLoader from "../GltfLoader.js";
 import HeightReference, {
   isHeightReferenceRelative,
@@ -38,10 +44,12 @@ import ModelSceneGraph from "./ModelSceneGraph.js";
 import ModelStatistics from "./ModelStatistics.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";
-import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
+import ModelImagery from "./ModelImagery.js";
+
+/** @import { VectorTileData } from "../../Core/VectorPipeline.js"; */
 
 /**
  * <div class="notice">
@@ -67,7 +75,14 @@ import pickModel from "./pickModel.js";
  *  {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features}
  *  </li>
  *  <li>
- *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing|EXT_mesh_gpu_instancing}
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing|EXT_mesh_gpu_instancing} *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_restart|EXT_mesh_primitive_restart}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility}
+ *  (edges are hidden by default; set {@link EdgeDisplayMode} via
+ *  {@link Model#edgeDisplayMode} or {@link Cesium3DTileset#edgeDisplayMode} to display them)
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_meshopt_compression|EXT_meshopt_compression}
@@ -79,10 +94,22 @@ import pickModel from "./pickModel.js";
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_texture_webp|EXT_texture_webp}
  *  </li>
  *  <li>
+ *  {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-2.0/extensions/2.1/Vendor/EXT_voxels|EXT_voxels} (experimental)
+ *  </li>
+ *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
  *  </li>
  *  <li>
+ *  {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting|KHR_gaussian_splatting} (experimental)
+ *  </li>
+ *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Archived/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_anisotropy|KHR_materials_anisotropy}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_clearcoat|KHR_materials_clearcoat}
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
@@ -91,10 +118,20 @@ import pickModel from "./pickModel.js";
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Archived/KHR_materials_pbrSpecularGlossiness|KHR_materials_pbrSpecularGlossiness}
  *  </li>
  *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_specular|KHR_materials_specular}
+ *  </li>
+ *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
  *  </li>
  *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/pull/2569|KHR_mesh_primitive_restart}
+ *  (requires a WebGL 2 context; behavior on WebGL 1 is undefined)
+ *  </li>
+ *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_mesh_quantization|KHR_mesh_quantization}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_meshopt_compression|KHR_meshopt_compression}
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu|KHR_texture_basisu}
@@ -104,6 +141,9 @@ import pickModel from "./pickModel.js";
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+ *  </li>
+ *  <li>
+ *  {@link https://nsgreg.nga.mil/csmwg.jsp|NGA_gpm_local (experimental)}
  *  </li>
  * </ul>
  * </p>
@@ -116,13 +156,14 @@ import pickModel from "./pickModel.js";
  * @alias Model
  * @internalConstructor
  *
+ * @privateParam {object} options Object with the following properties:
  * @privateParam {ResourceLoader} options.loader The loader used to load resources for this model.
  * @privateParam {ModelType} options.type Type of this model, to distinguish individual glTF files from 3D Tiles internally.
- * @privateParam {object} options Object with the following properties:
  * @privateParam {Resource} options.resource The Resource to the 3D model.
  * @privateParam {boolean} [options.show=true] Whether or not to render the model.
  * @privateParam {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @privateParam {number} [options.scale=1.0] A uniform scale applied to this model.
+ * @privateParam {boolean} [options.enableVerticalExaggeration=true] If <code>true</code>, the model is exaggerated along the ellipsoid normal when {@link Scene.verticalExaggeration} is set to a value other than <code>1.0</code>.
  * @privateParam {number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @privateParam {number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @privateParam {object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
@@ -142,6 +183,7 @@ import pickModel from "./pickModel.js";
  * @privateParam {Color} [options.color] A color that blends with the model's rendered color.
  * @privateParam {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @privateParam {number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+ * @privateParam {EdgeDisplayMode} [options.edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility} extension are rendered relative to surface geometry.
  * @privateParam {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @privateParam {number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @privateParam {boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
@@ -151,6 +193,7 @@ import pickModel from "./pickModel.js";
  * @privateParam {ClippingPolygonCollection} [options.clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the model.
  * @privateParam {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @privateParam {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
+ * @privateParam {DynamicEnvironmentMapManager.ConstructorOptions} [options.environmentMapOptions] The properties for managing dynamic environment maps on this model. Affects lighting.
  * @privateParam {boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @privateParam {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @privateParam {boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
@@ -161,14 +204,14 @@ import pickModel from "./pickModel.js";
  * @privateParam {string|number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @privateParam {object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @privateParam {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
-
+ *
  *
  * @see Model.fromGltfAsync
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=3d-models|Cesium Sandcastle Models Demo}
  */
 function Model(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.loader", options.loader);
   Check.typeOf.object("options.resource", options.resource);
@@ -192,7 +235,7 @@ function Model(options) {
    *
    * @private
    */
-  this.type = defaultValue(options.type, ModelType.GLTF);
+  this.type = options.type ?? ModelType.GLTF;
 
   /**
    * The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -208,13 +251,11 @@ function Model(options) {
    * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
-  this._scale = defaultValue(options.scale, 1.0);
+  this._scale = options.scale ?? 1.0;
 
-  this._minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
+  this._minimumPixelSize = options.minimumPixelSize ?? 0.0;
 
   this._maximumScale = options.maximumScale;
 
@@ -251,6 +292,7 @@ function Model(options) {
    */
   this.referenceMatrix = undefined;
   this._iblReferenceFrameMatrix = Matrix3.clone(Matrix3.IDENTITY); // Derived from reference matrix and the current view matrix
+  this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from the reference matrix and the clipping planes' own model matrix
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -263,7 +305,7 @@ function Model(options) {
   this._defaultTexture = undefined;
 
   this._activeAnimations = new ModelAnimationCollection(this);
-  this._clampAnimations = defaultValue(options.clampAnimations, true);
+  this._clampAnimations = options.clampAnimations ?? true;
 
   // This flag is true when the Cesium API, not a glTF animation, changes
   // the transform of a node in the model.
@@ -273,15 +315,12 @@ function Model(options) {
   this._idDirty = false;
 
   this._color = Color.clone(options.color);
-  this._colorBlendMode = defaultValue(
-    options.colorBlendMode,
-    ColorBlendMode.HIGHLIGHT
-  );
-  this._colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
+  this._colorBlendMode = options.colorBlendMode ?? ColorBlendMode.HIGHLIGHT;
+  this._colorBlendAmount = options.colorBlendAmount ?? 0.5;
 
-  const silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
+  const silhouetteColor = options.silhouetteColor ?? Color.RED;
   this._silhouetteColor = Color.clone(silhouetteColor);
-  this._silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
+  this._silhouetteSize = options.silhouetteSize ?? 0.0;
   this._silhouetteDirty = false;
 
   // If silhouettes are used for the model, this will be set to the number
@@ -289,25 +328,23 @@ function Model(options) {
   // by ModelSilhouettePipelineStage, not by Model itself.
   this._silhouetteId = undefined;
 
-  this._cull = defaultValue(options.cull, true);
-  this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
-  this._allowPicking = defaultValue(options.allowPicking, true);
-  this._show = defaultValue(options.show, true);
+  this._cull = options.cull ?? true;
+  this._opaquePass = options.opaquePass ?? Pass.OPAQUE;
+  this._allowPicking = options.allowPicking ?? true;
+  this._show = options.show ?? true;
 
   this._style = undefined;
   this._styleDirty = false;
   this._styleCommandsNeeded = undefined;
 
-  let featureIdLabel = defaultValue(options.featureIdLabel, "featureId_0");
+  let featureIdLabel = options.featureIdLabel ?? "featureId_0";
   if (typeof featureIdLabel === "number") {
     featureIdLabel = `featureId_${featureIdLabel}`;
   }
   this._featureIdLabel = featureIdLabel;
 
-  let instanceFeatureIdLabel = defaultValue(
-    options.instanceFeatureIdLabel,
-    "instanceFeatureId_0"
-  );
+  let instanceFeatureIdLabel =
+    options.instanceFeatureIdLabel ?? "instanceFeatureId_0";
   if (typeof instanceFeatureIdLabel === "number") {
     instanceFeatureIdLabel = `instanceFeatureId_${instanceFeatureIdLabel}`;
   }
@@ -333,24 +370,21 @@ function Model(options) {
   this._boundingSphere = new BoundingSphere();
   this._initialRadius = undefined;
 
-  this._heightReference = defaultValue(
-    options.heightReference,
-    HeightReference.NONE
-  );
+  this._heightReference = options.heightReference ?? HeightReference.NONE;
   this._heightDirty = this._heightReference !== HeightReference.NONE;
   this._removeUpdateHeightCallback = undefined;
 
-  this._verticalExaggerationOn = false;
+  this._enableVerticalExaggeration = options.enableVerticalExaggeration ?? true;
+  this._hasVerticalExaggeration = false;
 
   this._clampedModelMatrix = undefined; // For use with height reference
 
   const scene = options.scene;
   if (defined(scene) && defined(scene.terrainProviderChanged)) {
-    this._terrainProviderChangedCallback = scene.terrainProviderChanged.addEventListener(
-      () => {
+    this._terrainProviderChangedCallback =
+      scene.terrainProviderChanged.addEventListener(() => {
         this._heightDirty = true;
-      }
-    );
+      });
   }
   this._scene = scene;
 
@@ -370,7 +404,6 @@ function Model(options) {
     this._clippingPlanes = clippingPlanes;
   }
   this._clippingPlanesState = 0; // If this value changes, the shaders need to be regenerated.
-  this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from reference matrix and the current view matrix
 
   // If the given clipping polygons don't have an owner, make this model its owner.
   // Otherwise, the clipping polygons are passed down from a tileset.
@@ -379,12 +412,38 @@ function Model(options) {
     ClippingPolygonCollection.setOwner(
       clippingPolygons,
       this,
-      "_clippingPolygons"
+      "_clippingPolygons",
     );
   } else {
     this._clippingPolygons = clippingPolygons;
   }
   this._clippingPolygonsState = 0; // If this value changes, the shaders need to be regenerated.
+  this._clippingPolygonsNeedRebake = false; // If true, the clipping textures are rebaked.
+  this._removeClippingPolygonAdded = undefined;
+  this._removeClippingPolygonRemoved = undefined;
+  updateClippingPolygonListeners(this);
+
+  /**
+   * Vector lookup data baked for this model's bounding region by the scene's
+   * VectorProvider, draping vector data onto the model's surface.
+   * @type {VectorTileData|undefined}
+   * @ignore
+   */
+  this._vectorData = undefined;
+
+  this._vectorLookupFlags = 0; // If this value changes, the shaders need to be regenerated.
+
+  /*
+   * Textures and other intermediate data used in polygon clipping workflows.
+   * Clipping polygons build on top of the vector tile data system (both rely on the same rendering technique), thus the type.
+   * @type {VectorTileData | undefined}
+   * @private
+   */
+  this._clippingPolygonData = undefined;
+
+  this._rectangle = new Rectangle();
+
+  this._modelImagery = new ModelImagery(this);
 
   this._lightColor = Cartesian3.clone(options.lightColor);
 
@@ -393,24 +452,35 @@ function Model(options) {
     : new ImageBasedLighting();
   this._shouldDestroyImageBasedLighting = !defined(options.imageBasedLighting);
 
-  this._backFaceCulling = defaultValue(options.backFaceCulling, true);
+  this._environmentMapManager = undefined;
+  const environmentMapManager = new DynamicEnvironmentMapManager(
+    options.environmentMapOptions,
+  );
+  DynamicEnvironmentMapManager.setOwner(
+    environmentMapManager,
+    this,
+    "_environmentMapManager",
+  );
+
+  this._backFaceCulling = options.backFaceCulling ?? true;
   this._backFaceCullingDirty = false;
 
-  this._shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
+  this._shadows = options.shadows ?? ShadowMode.ENABLED;
   this._shadowsDirty = false;
 
   this._debugShowBoundingVolumeDirty = false;
-  this._debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false
-  );
+  this._debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
-  this._enableDebugWireframe = defaultValue(
-    options.enableDebugWireframe,
-    false
-  );
-  this._enableShowOutline = defaultValue(options.enableShowOutline, true);
-  this._debugWireframe = defaultValue(options.debugWireframe, false);
+  this._enableDebugWireframe = options.enableDebugWireframe ?? false;
+  this._enableShowOutline = options.enableShowOutline ?? true;
+  this._debugWireframe = options.debugWireframe ?? false;
+  this._edgeDisplayMode =
+    options.edgeDisplayMode ?? EdgeDisplayMode.SURFACES_ONLY;
+  // Edge geometry is built lazily; see updateEdgeGeometryNeeded.
+  this._edgeGeometryNeeded =
+    this._edgeDisplayMode !== EdgeDisplayMode.SURFACES_ONLY;
+  this._edgeGeometryNeededForSnapping = false;
+  this._hasEdgeVisibilityData = undefined;
 
   // Warning for improper setup of debug wireframe
   if (
@@ -420,7 +490,7 @@ function Model(options) {
   ) {
     oneTimeWarning(
       "model-debug-wireframe-ignored",
-      "enableDebugWireframe must be set to true in Model.fromGltf, otherwise debugWireframe will be ignored."
+      "enableDebugWireframe must be set to true in Model.fromGltf, otherwise debugWireframe will be ignored.",
     );
   }
 
@@ -439,15 +509,12 @@ function Model(options) {
   // Credits parsed from the glTF by GltfLoader.
   this._gltfCredits = [];
 
-  this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
+  this._showCreditsOnScreen = options.showCreditsOnScreen ?? false;
   this._showCreditsOnScreenDirty = true;
 
-  this._splitDirection = defaultValue(
-    options.splitDirection,
-    SplitDirection.NONE
-  );
+  this._splitDirection = options.splitDirection ?? SplitDirection.NONE;
 
-  this._enableShowOutline = defaultValue(options.enableShowOutline, true);
+  this._enableShowOutline = options.enableShowOutline ?? true;
 
   /**
    * Whether to display the outline for models using the
@@ -458,7 +525,7 @@ function Model(options) {
    *
    * @default true
    */
-  this.showOutline = defaultValue(options.showOutline, true);
+  this.showOutline = options.showOutline ?? true;
 
   /**
    * The color to use when rendering outlines.
@@ -467,27 +534,39 @@ function Model(options) {
    *
    * @default Color.BLACK
    */
-  this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
+  this.outlineColor = options.outlineColor ?? Color.BLACK;
 
   this._classificationType = options.classificationType;
 
   this._statistics = new ModelStatistics();
 
   this._sceneMode = undefined;
-  this._projectTo2D = defaultValue(options.projectTo2D, false);
-  this._enablePick = defaultValue(options.enablePick, false);
+  this._projectTo2D = options.projectTo2D ?? false;
+  this._enablePick = options.enablePick ?? false;
 
   this._fogRenderable = undefined;
 
   this._skipLevelOfDetail = false;
-  this._ignoreCommands = defaultValue(options.ignoreCommands, false);
+  this._ignoreCommands = options.ignoreCommands ?? false;
 
   this._errorEvent = new Event();
   this._readyEvent = new Event();
   this._texturesReadyEvent = new Event();
 
   this._sceneGraph = undefined;
-  this._nodesByName = {}; // Stores the nodes by their names in the glTF.
+
+  /**
+   * Stores the nodes by their names in the glTF.
+   *
+   * The glTF nodes that don't have their 'name' property set are not
+   * contained in this map. When there are duplicate names in the
+   * input, then the node that is stored here is unspecified, so...
+   * better make sure to not have duplicate names...
+   *
+   * @private
+   * @readonly
+   */
+  this._nodesByName = new Map();
 
   /**
    * Used for picking primitives that wrap a model.
@@ -539,7 +618,7 @@ function selectFeatureTableId(components, model) {
     if (defined(node.instances)) {
       featureIdAttribute = ModelUtility.getFeatureIdsByLabel(
         node.instances.featureIds,
-        instanceFeatureIdLabel
+        instanceFeatureIdLabel,
       );
       if (
         defined(featureIdAttribute) &&
@@ -558,7 +637,7 @@ function selectFeatureTableId(components, model) {
       const primitive = node.primitives[j];
       const featureIds = ModelUtility.getFeatureIdsByLabel(
         primitive.featureIds,
-        featureIdLabel
+        featureIdLabel,
       );
 
       if (defined(featureIds)) {
@@ -659,7 +738,7 @@ Object.defineProperties(Model.prototype, {
    */
   incrementallyLoadTextures: {
     get: function () {
-      return defaultValue(this._loader.incrementallyLoadTextures, false);
+      return this._loader.incrementallyLoadTextures ?? false;
     },
   },
 
@@ -887,7 +966,7 @@ Object.defineProperties(Model.prototype, {
       //>>includeEnd('debug');
       this._distanceDisplayCondition = DistanceDisplayCondition.clone(
         value,
-        this._distanceDisplayCondition
+        this._distanceDisplayCondition,
       );
     },
   },
@@ -1127,7 +1206,7 @@ Object.defineProperties(Model.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (!this._ready) {
         throw new DeveloperError(
-          "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
+          "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
         );
       }
       //>>includeEnd('debug');
@@ -1195,9 +1274,30 @@ Object.defineProperties(Model.prototype, {
       ) {
         oneTimeWarning(
           "model-debug-wireframe-ignored",
-          "enableDebugWireframe must be set to true in Model.fromGltfAsync, otherwise debugWireframe will be ignored."
+          "enableDebugWireframe must be set to true in Model.fromGltfAsync, otherwise debugWireframe will be ignored.",
         );
       }
+    },
+  },
+
+  /**
+   * Controls how edges from the
+   * {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility}
+   * glTF extension are rendered relative to surface geometry. Primitives that
+   * do not declare the extension are unaffected by this setting.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {EdgeDisplayMode}
+   *
+   * @default EdgeDisplayMode.SURFACES_ONLY
+   */
+  edgeDisplayMode: {
+    get: function () {
+      return this._edgeDisplayMode;
+    },
+    set: function (value) {
+      this._edgeDisplayMode = value;
     },
   },
 
@@ -1334,13 +1434,84 @@ Object.defineProperties(Model.prototype, {
       if (value !== this._clippingPolygons) {
         // Handle destroying old clipping polygons, new clipping polygons ownership
         ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
+        updateClippingPolygonListeners(this);
         this.resetDrawCommands();
+
+        this._clippingPolygonsState = 0;
+        this._clippingPolygonsNeedRebake = true;
+        if (defined(this._clippingPolygonData)) {
+          ClippingPolygonCollection.releaseRectangleData(
+            this._clippingPolygonData,
+          );
+          this._clippingPolygonData = undefined;
+        }
       }
     },
   },
 
   /**
-   * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+   * If <code>true</code>, the model is exaggerated along the ellipsoid normal when {@link Scene.verticalExaggeration} is set to a value other than <code>1.0</code>.
+   *
+   * @memberof Model.prototype
+   * @type {boolean}
+   * @default true
+   *
+   * @example
+   * // Exaggerate terrain by a factor of 2, but prevent model exaggeration
+   * scene.verticalExaggeration = 2.0;
+   * model.enableVerticalExaggeration = false;
+   */
+  enableVerticalExaggeration: {
+    get: function () {
+      return this._enableVerticalExaggeration;
+    },
+    set: function (value) {
+      if (value !== this._enableVerticalExaggeration) {
+        this.resetDrawCommands();
+      }
+      this._enableVerticalExaggeration = value;
+    },
+  },
+
+  /**
+   * If <code>true</code>, the model is vertically exaggerated along the ellipsoid normal.
+   *
+   * @memberof Model.prototype
+   * @type {boolean}
+   * @default true
+   * @readonly
+   * @private
+   */
+  hasVerticalExaggeration: {
+    get: function () {
+      return this._hasVerticalExaggeration;
+    },
+  },
+
+  /**
+   * If this model is part of a <code>Model3DTileContent</code> of a tileset,
+   * then this will return the <code>ImageryLayerCollection</code>
+   * of that tileset. Otherwise, <code>undefined</code> is returned.
+   *
+   * @memberof Model.prototype
+   * @type {ImageryLayerCollection|undefined}
+   * @readonly
+   * @private
+   */
+  imageryLayers: {
+    get: function () {
+      if (defined(this._content)) {
+        const tileset = this._content.tileset;
+        if (defined(tileset)) {
+          return tileset.imageryLayers;
+        }
+      }
+      return undefined;
+    },
+  },
+
+  /**
+   * The directional light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
    * Disabling additional light sources by setting
    * <code>model.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code>
@@ -1378,7 +1549,7 @@ Object.defineProperties(Model.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.object("imageBasedLighting", this._imageBasedLighting);
+      Check.typeOf.object("imageBasedLighting", value);
       //>>includeEnd('debug');
 
       if (value !== this._imageBasedLighting) {
@@ -1390,6 +1561,38 @@ Object.defineProperties(Model.prototype, {
         }
         this._imageBasedLighting = value;
         this._shouldDestroyImageBasedLighting = false;
+        this.resetDrawCommands();
+      }
+    },
+  },
+
+  /**
+   * The properties for managing dynamic environment maps on this model. Affects lighting.
+   * @memberof Model.prototype
+   * @readonly
+   *
+   * @example
+   * // Change the ground color used for a model's environment map to a forest green
+   * const environmentMapManager = model.environmentMapManager;
+   * environmentMapManager.groundColor = Cesium.Color.fromCssColorString("#203b34");
+   *
+   * @type {DynamicEnvironmentMapManager}
+   */
+  environmentMapManager: {
+    get: function () {
+      return this._environmentMapManager;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("environmentMapManager", value);
+      //>>includeEnd('debug');
+
+      if (value !== this.environmentMapManager) {
+        DynamicEnvironmentMapManager.setOwner(
+          value,
+          this,
+          "_environmentMapManager",
+        );
         this.resetDrawCommands();
       }
     },
@@ -1654,8 +1857,46 @@ Object.defineProperties(Model.prototype, {
 });
 
 /**
+ * A rectangle that bounds the model in geodetic coordinates. For 3D tile content with a
+ * region bounding volume this is the tile's rectangle. Otherwise the model's bounding sphere
+ * is projected onto the given ellipsoid.
+ *
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] Projects the bounding sphere (for models without a region bounding volume).
+ * @returns {Rectangle} The bounding rectangle.
+ *
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ *
+ * @private
+ */
+Model.prototype.getRectangle = function (ellipsoid) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+    );
+  }
+  //>>includeEnd('debug');
+
+  // A region bounding volume's rectangle is fixed in WGS84, so the ellipsoid argument does not apply.
+  const bv = this._content?.tile?.contentBoundingVolume;
+  if (defined(bv?.rectangle)) {
+    return bv.rectangle;
+  }
+
+  ellipsoid = ellipsoid ?? this._scene?.ellipsoid ?? Ellipsoid.default;
+  return Rectangle.fromBoundingSphere(
+    this.boundingSphere,
+    ellipsoid,
+    this._rectangle,
+  );
+};
+
+/**
  * Returns the node with the given <code>name</code> in the glTF. This is used to
  * modify a node's transform for user-defined animation.
+ *
+ * If there are multiple nodes with the same <code>name</code> in the glTF,
+ * then the returned node is unspecified.
  *
  * @param {string} name The name of the node in the glTF.
  * @returns {ModelNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
@@ -1671,13 +1912,13 @@ Model.prototype.getNode = function (name) {
   //>>includeStart('debug', pragmas.debug);
   if (!this._ready) {
     throw new DeveloperError(
-      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
     );
   }
   Check.typeOf.string("name", name);
   //>>includeEnd('debug');
 
-  return this._nodesByName[name];
+  return this._nodesByName.get(name);
 };
 
 /**
@@ -1701,7 +1942,7 @@ Model.prototype.setArticulationStage = function (articulationStageKey, value) {
   Check.typeOf.number("value", value);
   if (!this._ready) {
     throw new DeveloperError(
-      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
     );
   }
   //>>includeEnd('debug');
@@ -1720,12 +1961,39 @@ Model.prototype.applyArticulations = function () {
   //>>includeStart('debug', pragmas.debug);
   if (!this._ready) {
     throw new DeveloperError(
-      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
     );
   }
   //>>includeEnd('debug');
 
   this._sceneGraph.applyArticulations();
+};
+
+/**
+ * Returns the object that was created for the given extension.
+ *
+ * The given name may be the name of a glTF extension, like `"EXT_example_extension"`.
+ * If the specified extension was present in the root of the underlying glTF asset,
+ * and a loader for the specified extension has processed the extension data, then
+ * this will return the model representation of the extension.
+ *
+ * @param {string} extensionName The name of the extension
+ * @returns {object|undefined} The object, or `undefined`
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+Model.prototype.getExtension = function (extensionName) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("extensionName", extensionName);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+    );
+  }
+  //>>includeEnd('debug');
+  const components = this._loader.components;
+  return components.extensions[extensionName];
 };
 
 /**
@@ -1776,7 +2044,7 @@ Model.prototype.update = function (frameState) {
       const runtimeError = ModelUtility.getError(
         "model",
         this._resource,
-        error
+        error,
       );
       handleError(this, runtimeError);
     }
@@ -1784,6 +2052,9 @@ Model.prototype.update = function (frameState) {
 
   // A custom shader may have to load texture uniforms.
   updateCustomShader(this, frameState);
+
+  // Environment maps, specular maps, and spherical harmonics may need to be updated or regenerated
+  updateEnvironmentMap(this, frameState);
 
   // The image-based lighting may have to load texture uniforms
   // for specular maps.
@@ -1801,7 +2072,7 @@ Model.prototype.update = function (frameState) {
       const error = ModelUtility.getError(
         "model",
         this._resource,
-        new RuntimeError("Failed to load model.")
+        new RuntimeError("Failed to load model."),
       );
       handleError(error);
       this._rejectLoad = this._rejectLoad && this._rejectLoad(error);
@@ -1830,6 +2101,19 @@ Model.prototype.update = function (frameState) {
     return;
   }
 
+  const modelImagery = this._modelImagery;
+  modelImagery.update(frameState);
+  if (!modelImagery.ready) {
+    // If the imagery loading should not happen asynchronously,
+    // then do not let the model count as 'ready' until the
+    // modelImagery is 'ready'
+    const asynchronouslyLoadImagery =
+      this._content?.tileset?._asynchronouslyLoadImagery ?? false;
+    if (!asynchronouslyLoadImagery) {
+      return;
+    }
+  }
+
   updateFeatureTableId(this);
   updateStyle(this);
   updateFeatureTables(this, frameState);
@@ -1838,9 +2122,11 @@ Model.prototype.update = function (frameState) {
   updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
   updateClippingPolygons(this, frameState);
+  updateVectorLookup(this, frameState);
   updateSceneMode(this, frameState);
   updateFog(this, frameState);
   updateVerticalExaggeration(this, frameState);
+  updateEdgeGeometryNeeded(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
 
@@ -1909,6 +2195,23 @@ function updateCustomShader(model, frameState) {
   }
 }
 
+function updateEnvironmentMap(model, frameState) {
+  const environmentMapManager = model._environmentMapManager;
+  const picking = frameState.passes.pick || frameState.passes.pickVoxel;
+  if (model._ready && environmentMapManager.owner === model && !picking) {
+    environmentMapManager.position = model._boundingSphere.center;
+    environmentMapManager.shouldUpdate =
+      !defined(model._imageBasedLighting.sphericalHarmonicCoefficients) ||
+      !defined(model._imageBasedLighting.specularEnvironmentMaps);
+
+    environmentMapManager.update(frameState);
+
+    if (environmentMapManager.shouldRegenerateShaders) {
+      model.resetDrawCommands();
+    }
+  }
+}
+
 function updateImageBasedLighting(model, frameState) {
   model._imageBasedLighting.update(frameState);
   if (model._imageBasedLighting.shouldRegenerateShaders) {
@@ -1969,7 +2272,7 @@ function updateStyleCommandsNeeded(model) {
   const featureTable = model.featureTables[model.featureTableId];
   model._styleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
     featureTable.featuresLength,
-    featureTable.batchTexture.translucentFeaturesLength
+    featureTable.batchTexture.translucentFeaturesLength,
   );
 }
 
@@ -2024,21 +2327,139 @@ function updateClippingPlanes(model, frameState) {
   }
 }
 
+// Only the collection's owner subscribes to its add/remove events. Tileset-owned
+// collections are handled by the tileset, which marks its tiles dirty instead.
+function updateClippingPolygonListeners(model) {
+  model._removeClippingPolygonAdded =
+    model._removeClippingPolygonAdded && model._removeClippingPolygonAdded();
+  model._removeClippingPolygonRemoved =
+    model._removeClippingPolygonRemoved &&
+    model._removeClippingPolygonRemoved();
+
+  const clippingPolygons = model._clippingPolygons;
+  if (!defined(clippingPolygons) || clippingPolygons.owner !== model) {
+    return;
+  }
+
+  const markDirty = () => {
+    model._clippingPolygonsNeedRebake = true;
+  };
+  model._removeClippingPolygonAdded =
+    clippingPolygons.polygonAdded.addEventListener(markDirty);
+  model._removeClippingPolygonRemoved =
+    clippingPolygons.polygonRemoved.addEventListener(markDirty);
+}
+
 function updateClippingPolygons(model, frameState) {
-  // Update the clipping polygon collection / state for this model to detect any changes.
+  const clippingPolygons = model._clippingPolygons;
+  const enabled = model.isClippingPolygonsEnabled();
+
+  // Detect enabled/inverse changes, which require shader regeneration.
   let currentClippingPolygonsState = 0;
-  if (model.isClippingPolygonsEnabled()) {
-    if (model._clippingPolygons.owner === model) {
-      model._clippingPolygons.update(frameState);
-      model._clippingPolygons.queueCommands(frameState);
+  if (enabled) {
+    if (clippingPolygons.owner === model) {
+      clippingPolygons.update(frameState);
     }
-    currentClippingPolygonsState =
-      model._clippingPolygons.clippingPolygonsState;
+    currentClippingPolygonsState = clippingPolygons.clippingPolygonsState;
   }
 
   if (currentClippingPolygonsState !== model._clippingPolygonsState) {
     model.resetDrawCommands();
     model._clippingPolygonsState = currentClippingPolygonsState;
+  }
+
+  const wasClipped = (model._clippingPolygonData?.polygonRings.length ?? 0) > 0;
+
+  // A polygon add/remove or a model move only requires rebaking the clipping textures.
+  if (model._clippingPolygonsNeedRebake) {
+    model._clippingPolygonsNeedRebake = false;
+    if (defined(model._clippingPolygonData)) {
+      ClippingPolygonCollection.releaseRectangleData(
+        model._clippingPolygonData,
+      );
+      model._clippingPolygonData = undefined;
+    }
+  }
+
+  if (!enabled || !model._ready) {
+    return;
+  }
+
+  if (!defined(model._clippingPolygonData)) {
+    model._clippingPolygonData = clippingPolygons.requestRectangleData(
+      model.getRectangle(clippingPolygons.ellipsoid),
+      frameState.context,
+    );
+  }
+
+  const isClipped = (model._clippingPolygonData?.polygonRings.length ?? 0) > 0;
+  if (wasClipped !== isClipped) {
+    // Rerun the model pipeline to enable/disable clipping
+    model.resetDrawCommands();
+  }
+}
+
+const scratchVectorRectangle = new Rectangle();
+
+function releaseVectorData(model) {
+  if (!defined(model._vectorData)) {
+    return;
+  }
+
+  model._scene?.vectorProvider?.releaseTileData(model._vectorData);
+  model._vectorData = undefined;
+}
+
+// Each kind of geometry declares its own lookup textures, so the mix drives the shader.
+function vectorLookupFlags(vectorData) {
+  if (vectorData?.show !== true) {
+    return 0;
+  }
+
+  let flags = 1;
+  flags |= vectorData.hasPolylines ? 2 : 0;
+  flags |= vectorData.hasPolygons ? 4 : 0;
+  return flags;
+}
+
+function updateVectorLookup(model, frameState) {
+  const provider = model._scene?.vectorProvider;
+  // HeightReference.CLAMP_TO_3D_TILE covers tileset content only, not standalone glTF.
+  const active =
+    defined(provider) &&
+    defined(model._content) &&
+    model.ready &&
+    frameState.mode === SceneMode.SCENE3D;
+
+  if (active) {
+    // A tile's content region is far tighter than a rectangle circumscribing the bounding sphere.
+    const rectangle =
+      model._content?.tile?.contentBoundingVolume.rectangle ??
+      Rectangle.fromBoundingSphere(
+        model.boundingSphere,
+        provider.ellipsoid,
+        scratchVectorRectangle,
+      );
+    model._vectorData = defined(model._vectorData)
+      ? provider.updateDataForRectangle(
+          rectangle,
+          frameState.context,
+          model._vectorData,
+          HeightReference.CLAMP_TO_3D_TILE,
+        )
+      : provider.requestDataForRectangle(
+          rectangle,
+          frameState.context,
+          HeightReference.CLAMP_TO_3D_TILE,
+        );
+  } else {
+    releaseVectorData(model);
+  }
+
+  const flags = vectorLookupFlags(model._vectorData);
+  if (flags !== model._vectorLookupFlags) {
+    model.resetDrawCommands();
+    model._vectorLookupFlags = flags;
   }
 }
 
@@ -2062,11 +2483,44 @@ function updateFog(model, frameState) {
 }
 
 function updateVerticalExaggeration(model, frameState) {
-  const verticalExaggerationNeeded = frameState.verticalExaggeration !== 1.0;
-  if (model._verticalExaggerationOn !== verticalExaggerationNeeded) {
-    model.resetDrawCommands();
-    model._verticalExaggerationOn = verticalExaggerationNeeded;
+  if (model.enableVerticalExaggeration) {
+    const verticalExaggerationNeeded = frameState.verticalExaggeration !== 1.0;
+    if (model.hasVerticalExaggeration !== verticalExaggerationNeeded) {
+      model.resetDrawCommands();
+      model._hasVerticalExaggeration = verticalExaggerationNeeded;
+    }
+  } else if (model.hasVerticalExaggeration) {
+    model.resetDrawCommands(); //if verticalExaggeration was on, reset.
+    model._hasVerticalExaggeration = false;
   }
+}
+
+// Edge geometry is built only when edges are displayed, or once a snapping
+// pass has touched this model (snapping targets edges even in SURFACES_ONLY).
+function updateEdgeGeometryNeeded(model, frameState) {
+  if (frameState.passes.snap) {
+    model._edgeGeometryNeededForSnapping = true;
+  }
+
+  const needed =
+    model._edgeDisplayMode !== EdgeDisplayMode.SURFACES_ONLY ||
+    model._edgeGeometryNeededForSnapping;
+  if (needed !== model._edgeGeometryNeeded) {
+    model._edgeGeometryNeeded = needed;
+    if (hasEdgeVisibilityData(model)) {
+      model.resetDrawCommands();
+    }
+  }
+}
+
+function hasEdgeVisibilityData(model) {
+  if (!defined(model._hasEdgeVisibilityData)) {
+    model._hasEdgeVisibilityData = model._sceneGraph.components.nodes.some(
+      (node) =>
+        node.primitives.some((primitive) => defined(primitive.edgeVisibility)),
+    );
+  }
+  return model._hasEdgeVisibilityData;
 }
 
 function buildDrawCommands(model, frameState) {
@@ -2084,7 +2538,7 @@ function updateModelMatrix(model, frameState) {
     //>>includeStart('debug', pragmas.debug);
     if (frameState.mode !== SceneMode.SCENE3D && model._projectTo2D) {
       throw new DeveloperError(
-        "Model.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true."
+        "Model.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true.",
       );
     }
     //>>includeEnd('debug');
@@ -2115,7 +2569,7 @@ function updateClamping(model) {
     //>>includeStart('debug', pragmas.debug);
     if (model.heightReference !== HeightReference.NONE) {
       throw new DeveloperError(
-        "Height reference is not supported without a scene."
+        "Height reference is not supported without a scene.",
       );
     }
     //>>includeEnd('debug');
@@ -2123,7 +2577,7 @@ function updateClamping(model) {
     return;
   }
 
-  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+  const ellipsoid = scene.ellipsoid ?? Ellipsoid.default;
 
   // Compute cartographic position so we don't recompute every update
   const modelMatrix = model.modelMatrix;
@@ -2140,7 +2594,7 @@ function updateClamping(model) {
   model._removeUpdateHeightCallback = scene.updateHeight(
     cartoPosition,
     getUpdateHeightCallback(model, ellipsoid, cartoPosition),
-    model.heightReference
+    model.heightReference,
   );
 
   // Set the correct height now
@@ -2180,14 +2634,14 @@ function updateBoundingSphere(model, modelMatrix) {
   model._boundingSphere.center = Cartesian3.multiplyByScalar(
     model._sceneGraph.boundingSphere.center,
     model._clampedScale,
-    model._boundingSphere.center
+    model._boundingSphere.center,
   );
   model._boundingSphere.radius = model._initialRadius * model._clampedScale;
 
   model._boundingSphere = BoundingSphere.transform(
     model._boundingSphere,
     modelMatrix,
-    model._boundingSphere
+    model._boundingSphere,
   );
 }
 
@@ -2199,7 +2653,7 @@ function updateComputedScale(model, modelMatrix, frameState) {
     const context = frameState.context;
     const maxPixelSize = Math.max(
       context.drawingBufferWidth,
-      context.drawingBufferHeight
+      context.drawingBufferHeight,
     );
 
     Matrix4.getTranslation(modelMatrix, scratchPosition);
@@ -2208,7 +2662,7 @@ function updateComputedScale(model, modelMatrix, frameState) {
       SceneTransforms.computeActualEllipsoidPosition(
         frameState,
         scratchPosition,
-        scratchPosition
+        scratchPosition,
       );
     }
 
@@ -2219,7 +2673,7 @@ function updateComputedScale(model, modelMatrix, frameState) {
     const pixelsPerMeter = 1.0 / metersPerPixel;
     const diameterInPixels = Math.min(
       pixelsPerMeter * (2.0 * radius),
-      maxPixelSize
+      maxPixelSize,
     );
 
     // Maintain model's minimum pixel size
@@ -2257,49 +2711,40 @@ function updateReferenceMatrices(model, frameState) {
   const modelMatrix = defined(model._clampedModelMatrix)
     ? model._clampedModelMatrix
     : model.modelMatrix;
-  const referenceMatrix = defaultValue(model.referenceMatrix, modelMatrix);
+  const referenceMatrix = model.referenceMatrix ?? modelMatrix;
   const context = frameState.context;
 
-  const ibl = model._imageBasedLighting;
-  if (ibl.useSphericalHarmonicCoefficients || ibl.useSpecularEnvironmentMaps) {
-    let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
-    let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
+  let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
+  let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
 
-    iblReferenceFrameMatrix4 = Matrix4.multiply(
-      context.uniformState.view3D,
-      referenceMatrix,
-      iblReferenceFrameMatrix4
-    );
-    iblReferenceFrameMatrix3 = Matrix4.getRotation(
-      iblReferenceFrameMatrix4,
-      iblReferenceFrameMatrix3
-    );
-    iblReferenceFrameMatrix3 = Matrix3.transpose(
-      iblReferenceFrameMatrix3,
-      iblReferenceFrameMatrix3
-    );
-    model._iblReferenceFrameMatrix = Matrix3.multiply(
-      yUpToZUp,
-      iblReferenceFrameMatrix3,
-      model._iblReferenceFrameMatrix
-    );
-  }
+  iblReferenceFrameMatrix4 = Matrix4.multiply(
+    context.uniformState.view3D,
+    referenceMatrix,
+    iblReferenceFrameMatrix4,
+  );
+  iblReferenceFrameMatrix3 = Matrix4.getRotation(
+    iblReferenceFrameMatrix4,
+    iblReferenceFrameMatrix3,
+  );
+  iblReferenceFrameMatrix3 = Matrix3.transpose(
+    iblReferenceFrameMatrix3,
+    iblReferenceFrameMatrix3,
+  );
+  model._iblReferenceFrameMatrix = Matrix3.multiply(
+    yUpToZUp,
+    iblReferenceFrameMatrix3,
+    model._iblReferenceFrameMatrix,
+  );
 
   if (model.isClippingEnabled()) {
-    let clippingPlanesMatrix = scratchClippingPlanesMatrix;
-    clippingPlanesMatrix = Matrix4.multiply(
-      context.uniformState.view3D,
+    const clippingPlanesMatrix = Matrix4.multiply(
       referenceMatrix,
-      clippingPlanesMatrix
-    );
-    clippingPlanesMatrix = Matrix4.multiply(
-      clippingPlanesMatrix,
       model._clippingPlanes.modelMatrix,
-      clippingPlanesMatrix
+      scratchClippingPlanesMatrix,
     );
     model._clippingPlanesMatrix = Matrix4.inverseTranspose(
       clippingPlanesMatrix,
-      model._clippingPlanesMatrix
+      model._clippingPlanesMatrix,
     );
   }
 }
@@ -2311,6 +2756,10 @@ function updateSceneGraph(model, frameState) {
       ? model._clampedModelMatrix
       : model.modelMatrix;
     sceneGraph.updateModelMatrix(modelMatrix, frameState);
+    if (model._updateModelMatrix) {
+      // The model moved, so re-bake the clipping textures for its new rectangle.
+      model._clippingPolygonsNeedRebake = true;
+    }
     model._updateModelMatrix = false;
   }
 
@@ -2330,8 +2779,9 @@ function updateSceneGraph(model, frameState) {
   }
 
   let updateForAnimations = false;
-  // Animations are disabled for classification models.
-  if (!defined(model.classificationType)) {
+  // Animations are only applied to models that are shown,
+  // but always disabled for classification models.
+  if (model.show && !defined(model.classificationType)) {
     updateForAnimations =
       model._userAnimationDirty || model._activeAnimations.update(frameState);
   }
@@ -2370,6 +2820,22 @@ function updateShowCreditsOnScreen(model) {
   }
 }
 
+/**
+ * Determines whether a model is wholly clipped away by inverse clipping. In
+ * inverse mode a model with no polygon geometry lies entirely outside every
+ * polygon, so all of it is clipped and it should not be drawn.
+ * @param {Model} model
+ * @returns {boolean}
+ * @private
+ */
+function isModelClippedAwayByInversePolygons(model) {
+  return (
+    model.isClippingPolygonsEnabled() &&
+    model._clippingPolygons.inverse &&
+    (model._clippingPolygonData?.polygonRings.length ?? 0) === 0
+  );
+}
+
 function submitDrawCommands(model, frameState) {
   // Check that show is true after draw commands are built;
   // we want the user to be able to instantly see the model
@@ -2377,7 +2843,7 @@ function submitDrawCommands(model, frameState) {
 
   const displayConditionPassed = passesDistanceDisplayCondition(
     model,
-    frameState
+    frameState,
   );
 
   const invisible = model.isInvisible();
@@ -2390,7 +2856,8 @@ function submitDrawCommands(model, frameState) {
     model._show &&
     model._computedScale !== 0 &&
     displayConditionPassed &&
-    (!invisible || silhouette);
+    (!invisible || silhouette) &&
+    !isModelClippedAwayByInversePolygons(model);
 
   const passes = frameState.passes;
   const submitCommandsForPass =
@@ -2410,7 +2877,7 @@ function scaleInPixels(positionWC, radius, frameState) {
   return frameState.camera.getPixelSize(
     scratchBoundingSphere,
     frameState.context.drawingBufferWidth,
-    frameState.context.drawingBufferHeight
+    frameState.context.drawingBufferHeight,
   );
 }
 
@@ -2423,7 +2890,7 @@ function getUpdateHeightCallback(model, ellipsoid, originalPostition) {
 
     ellipsoid.cartographicToCartesian(
       clampedPosition,
-      scratchUpdateHeightCartesian
+      scratchUpdateHeightCartesian,
     );
 
     const clampedModelMatrix = model._clampedModelMatrix;
@@ -2459,7 +2926,7 @@ function passesDistanceDisplayCondition(model, frameState) {
     // Distance to center of primitive's reference frame
     const position = Matrix4.getTranslation(
       model.modelMatrix,
-      scratchDisplayConditionCartesian
+      scratchDisplayConditionCartesian,
     );
 
     // This will project the position if the scene is in Columbus View,
@@ -2467,12 +2934,12 @@ function passesDistanceDisplayCondition(model, frameState) {
     SceneTransforms.computeActualEllipsoidPosition(
       frameState,
       position,
-      position
+      position,
     );
 
     distanceSquared = Cartesian3.distanceSquared(
       position,
-      frameState.camera.positionWC
+      frameState.camera.positionWC,
     );
   }
 
@@ -2588,7 +3055,7 @@ Model.prototype.pick = function (
   frameState,
   verticalExaggeration,
   relativeHeight,
-  result
+  result,
 ) {
   return pickModel(
     this,
@@ -2596,7 +3063,7 @@ Model.prototype.pick = function (
     frameState,
     verticalExaggeration,
     relativeHeight,
-    result
+    result,
   );
 };
 
@@ -2613,6 +3080,16 @@ Model.prototype.isClippingPolygonsEnabled = function () {
     clippingPolygons.enabled &&
     clippingPolygons.length !== 0
   );
+};
+
+/**
+ * Gets whether draped vector data is baked and renderable for this model.
+ *
+ * @returns {boolean} <code>true</code> if the model drapes vector data.
+ * @private
+ */
+Model.prototype.hasDrapedVectors = function () {
+  return this._vectorData?.show === true;
 };
 
 /**
@@ -2662,6 +3139,8 @@ Model.prototype.destroy = function () {
   this.destroyPipelineResources();
   this.destroyModelResources();
 
+  releaseVectorData(this);
+
   // Remove callbacks for height reference behavior.
   if (defined(this._removeUpdateHeightCallback)) {
     this._removeUpdateHeightCallback();
@@ -2672,6 +3151,12 @@ Model.prototype.destroy = function () {
     this._terrainProviderChangedCallback();
     this._terrainProviderChangedCallback = undefined;
   }
+
+  // Remove clipping polygon event listeners if this model subscribed to them.
+  this._removeClippingPolygonAdded =
+    this._removeClippingPolygonAdded && this._removeClippingPolygonAdded();
+  this._removeClippingPolygonRemoved =
+    this._removeClippingPolygonRemoved && this._removeClippingPolygonRemoved();
 
   // Only destroy the ClippingPlaneCollection if this is the owner.
   const clippingPlaneCollection = this._clippingPlanes;
@@ -2684,15 +3169,11 @@ Model.prototype.destroy = function () {
   }
   this._clippingPlanes = undefined;
 
-  // Only destroy the ClippingPolygonCollection if this is the owner.
-  const clippingPolygonCollection = this._clippingPolygons;
-  if (
-    defined(clippingPolygonCollection) &&
-    !clippingPolygonCollection.isDestroyed() &&
-    clippingPolygonCollection.owner === this
-  ) {
-    clippingPolygonCollection.destroy();
+  if (defined(this._clippingPolygonData)) {
+    ClippingPolygonCollection.releaseRectangleData(this._clippingPolygonData);
   }
+  this._clippingPolygonData = undefined;
+
   this._clippingPolygons = undefined;
 
   // Only destroy the ImageBasedLighting if this is the owner.
@@ -2703,6 +3184,16 @@ Model.prototype.destroy = function () {
     this._imageBasedLighting.destroy();
   }
   this._imageBasedLighting = undefined;
+
+  // Only destroy the environment map manager if this is the owner.
+  const environmentMapManager = this._environmentMapManager;
+  if (
+    !environmentMapManager.isDestroyed() &&
+    environmentMapManager.owner === this
+  ) {
+    environmentMapManager.destroy();
+  }
+  this._environmentMapManager = undefined;
 
   destroyObject(this);
 };
@@ -2748,6 +3239,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {boolean} [options.show=true] Whether or not to render the model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {number} [options.scale=1.0] A uniform scale applied to this model.
+ * @param {boolean} [options.enableVerticalExaggeration=true] If <code>true</code>, the model is exaggerated along the ellipsoid normal when {@link Scene.verticalExaggeration} is set to a value other than <code>1.0</code>.
  * @param {number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
@@ -2772,6 +3264,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+ * @param {EdgeDisplayMode} [options.edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility} extension are rendered relative to surface geometry.
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time. When false, the showOutlines and outlineColor options are ignored.
@@ -2781,6 +3274,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {ClippingPolygonCollection} [options.clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the model.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
+ * @param {DynamicEnvironmentMapManager.ConstructorOptions} [options.environmentMapOptions] The properties for managing dynamic environment maps on this model.
  * @param {boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
@@ -2861,7 +3355,7 @@ Model.prototype.destroyModelResources = function () {
  * }
  */
 Model.fromGltfAsync = async function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.url) && !defined(options.gltf)) {
@@ -2872,7 +3366,7 @@ Model.fromGltfAsync = async function (options) {
   // options.gltf is used internally for 3D Tiles. It can be a Resource, a URL
   // to a glTF/glb file, a binary glTF buffer, or a JSON object containing the
   // glTF contents.
-  const gltf = defaultValue(options.url, options.gltf);
+  const gltf = options.url ?? options.gltf;
 
   const loaderOptions = {
     releaseGltfJson: options.releaseGltfJson,
@@ -2887,7 +3381,7 @@ Model.fromGltfAsync = async function (options) {
     loadForClassification: defined(options.classificationType),
   };
 
-  const basePath = defaultValue(options.basePath, "");
+  const basePath = options.basePath ?? "";
   const baseResource = Resource.createIfNeeded(basePath);
 
   if (defined(gltf.asset)) {
@@ -2911,6 +3405,7 @@ Model.fromGltfAsync = async function (options) {
 
   const modelOptions = makeModelOptions(loader, type, options);
   modelOptions.resource = resource;
+  modelOptions.environmentMapOptions = options.environmentMapOptions;
 
   try {
     // This load the gltf JSON and ensures the gltf is valid
@@ -3043,7 +3538,7 @@ Model.fromGeoJson = async function (options) {
   const modelOptions = makeModelOptions(
     loader,
     ModelType.TILE_GEOJSON,
-    options
+    options,
   );
   const model = new Model(modelOptions);
   return model;
@@ -3116,6 +3611,7 @@ function makeModelOptions(loader, modelType, options) {
     show: options.show,
     modelMatrix: options.modelMatrix,
     scale: options.scale,
+    enableVerticalExaggeration: options.enableVerticalExaggeration,
     minimumPixelSize: options.minimumPixelSize,
     maximumScale: options.maximumScale,
     id: options.id,
@@ -3135,6 +3631,7 @@ function makeModelOptions(loader, modelType, options) {
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
+    edgeDisplayMode: options.edgeDisplayMode,
     silhouetteColor: options.silhouetteColor,
     silhouetteSize: options.silhouetteSize,
     enableShowOutline: options.enableShowOutline,

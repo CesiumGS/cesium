@@ -1,9 +1,9 @@
+import { RuntimeError } from "@cesium/core";
 import {
   BufferLoader,
   GltfBufferViewLoader,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/GltfBufferViewLoader", function () {
@@ -38,7 +38,7 @@ describe("Scene/GltfBufferViewLoader", function () {
     ],
   };
 
-  const meshoptGltfEmbedded = {
+  const meshoptExtGltfEmbedded = {
     buffers: [{ byteLength: 29 }, { byteLength: 360 }],
     bufferViews: [
       {
@@ -77,6 +77,69 @@ describe("Scene/GltfBufferViewLoader", function () {
     ],
   };
 
+  const meshoptKhrGltfEmbedded = {
+    buffers: [{ byteLength: 29 }, { byteLength: 360 }],
+    bufferViews: [
+      {
+        buffer: 1,
+        byteOffset: 96,
+        byteLength: 192,
+        byteStride: 8,
+        target: 34962,
+        extensions: {
+          KHR_meshopt_compression: {
+            buffer: 0,
+            byteOffset: 0,
+            byteLength: 124,
+            byteStride: 8,
+            mode: "ATTRIBUTES",
+            count: 24,
+          },
+        },
+      },
+      {
+        buffer: 1,
+        byteOffset: 288,
+        byteLength: 72,
+        target: 34963,
+        extensions: {
+          KHR_meshopt_compression: {
+            buffer: 0,
+            byteOffset: 0,
+            byteLength: 29,
+            byteStride: 2,
+            mode: "TRIANGLES",
+            count: 36,
+          },
+        },
+      },
+    ],
+  };
+
+  const meshoptKhrColorGltfEmbedded = {
+    buffers: [{ byteLength: 74 }, { byteLength: 96 }],
+    bufferViews: [
+      {
+        buffer: 1,
+        byteOffset: 0,
+        byteLength: 96,
+        byteStride: 4,
+        target: 34962,
+        extensions: {
+          KHR_meshopt_compression: {
+            buffer: 0,
+            byteOffset: 0,
+            byteLength: 74,
+            byteStride: 4,
+            count: 24,
+            mode: "ATTRIBUTES",
+            filter: "COLOR",
+          },
+        },
+      },
+    ],
+  };
+
   function getBase64FromTypedArray(typedArray) {
     return btoa(String.fromCharCode.apply(null, typedArray));
   }
@@ -92,7 +155,14 @@ describe("Scene/GltfBufferViewLoader", function () {
   const meshoptPositionBufferBase64 =
     "oAUZJkCZgAQAAAU/P8D/fn1+fX59fn1+fX7ADAAAfX4FAAhISEgAAAAFAAzMzH1+fX59zAAAAH59BQhAmYBmZgAABQzA/8B9fn1+fX59//8AAH59fn1+fX59AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8//z8AAA==";
   const meshoptPositionTypedArray = getTypedArrayFromBase64(
-    meshoptPositionBufferBase64
+    meshoptPositionBufferBase64,
+  );
+  const fallbackColorBufferBase64 =
+    "/oGA//6BgP/+gYD//oGA//////////////////////+A/oD/gP6A/4D+gP+A/oD//////////////////////4GA//+BgP//gYD//4GA////////////////////////";
+  const meshoptColorBufferBase64 =
+    "oAUAwMDAvn+AwMAAAL2+BQDAAAB9wMAAAH1+BQDAwMA+fn3AwAAAP0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKA/4f8=";
+  const meshoptColorTypedArray = getTypedArrayFromBase64(
+    meshoptColorBufferBase64,
   );
 
   const bufferTypedArray = new Uint8Array([1, 3, 7, 15, 31, 63, 127, 255]);
@@ -169,7 +239,7 @@ describe("Scene/GltfBufferViewLoader", function () {
 
   it("load throws if buffer fails to load", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(() =>
-      Promise.reject(new Error("404 Not Found"))
+      Promise.reject(new Error("404 Not Found")),
     );
 
     const bufferViewLoader = new GltfBufferViewLoader({
@@ -182,7 +252,7 @@ describe("Scene/GltfBufferViewLoader", function () {
 
     await expectAsync(bufferViewLoader.load()).toBeRejectedWithError(
       RuntimeError,
-      "Failed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+      "Failed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found",
     );
   });
 
@@ -210,7 +280,7 @@ describe("Scene/GltfBufferViewLoader", function () {
 
   it("loads buffer view for external buffer", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      Promise.resolve(bufferArrayBuffer)
+      Promise.resolve(bufferArrayBuffer),
     );
 
     const bufferViewLoader = new GltfBufferViewLoader({
@@ -228,12 +298,12 @@ describe("Scene/GltfBufferViewLoader", function () {
 
   it("destroys buffer view", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      Promise.resolve(bufferArrayBuffer)
+      Promise.resolve(bufferArrayBuffer),
     );
 
     const unloadBuffer = spyOn(
       BufferLoader.prototype,
-      "unload"
+      "unload",
     ).and.callThrough();
 
     const bufferViewLoader = new GltfBufferViewLoader({
@@ -269,7 +339,7 @@ describe("Scene/GltfBufferViewLoader", function () {
 
     const bufferViewLoader = new GltfBufferViewLoader({
       resourceCache: ResourceCache,
-      gltf: meshoptGltfEmbedded,
+      gltf: meshoptExtGltfEmbedded,
       bufferViewId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -278,14 +348,62 @@ describe("Scene/GltfBufferViewLoader", function () {
     await bufferViewLoader.load();
 
     const decodedPositionBase64 = getBase64FromTypedArray(
-      bufferViewLoader.typedArray
+      bufferViewLoader.typedArray,
     );
     expect(decodedPositionBase64).toEqual(fallbackPositionBufferBase64);
   });
 
+  it("decodes positions with KHR_meshopt_compression", async function () {
+    const bufferLoader = ResourceCache.getEmbeddedBufferLoader({
+      parentResource: gltfResource,
+      bufferId: 0,
+      typedArray: meshoptPositionTypedArray,
+    });
+
+    await bufferLoader.load();
+
+    const bufferViewLoader = new GltfBufferViewLoader({
+      resourceCache: ResourceCache,
+      gltf: meshoptKhrGltfEmbedded,
+      bufferViewId: 0,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+
+    await bufferViewLoader.load();
+
+    const decodedPositionBase64 = getBase64FromTypedArray(
+      bufferViewLoader.typedArray,
+    );
+    expect(decodedPositionBase64).toEqual(fallbackPositionBufferBase64);
+  });
+
+  it("decodes colors with KHR_meshopt_compression and COLOR filter", async function () {
+    const bufferLoader = ResourceCache.getEmbeddedBufferLoader({
+      parentResource: gltfResource,
+      bufferId: 0,
+      typedArray: meshoptColorTypedArray,
+    });
+    await bufferLoader.load();
+
+    const bufferViewLoader = new GltfBufferViewLoader({
+      resourceCache: ResourceCache,
+      gltf: meshoptKhrColorGltfEmbedded,
+      bufferViewId: 0,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+    await bufferViewLoader.load();
+
+    const decodedColorBase64 = getBase64FromTypedArray(
+      bufferViewLoader.typedArray,
+    );
+    expect(decodedColorBase64).toEqual(fallbackColorBufferBase64);
+  });
+
   it("handles asynchronous load after destroy", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      Promise.resolve(bufferArrayBuffer)
+      Promise.resolve(bufferArrayBuffer),
     );
 
     const bufferViewLoader = new GltfBufferViewLoader({
@@ -308,7 +426,7 @@ describe("Scene/GltfBufferViewLoader", function () {
 
   it("handles asynchronous error after destroy", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(() =>
-      Promise.reject(new Error())
+      Promise.reject(new Error()),
     );
 
     const bufferViewLoader = new GltfBufferViewLoader({

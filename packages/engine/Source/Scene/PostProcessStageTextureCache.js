@@ -1,7 +1,9 @@
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import CesiumMath from "../Core/Math.js";
+import {
+  Color,
+  Math as CesiumMath,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 
@@ -38,7 +40,7 @@ function getStageDependencies(
   context,
   dependencies,
   stage,
-  previousName
+  previousName,
 ) {
   if (!stage.enabled || !stage._isSupported(context)) {
     return previousName;
@@ -72,7 +74,7 @@ function getCompositeDependencies(
   context,
   dependencies,
   composite,
-  previousName
+  previousName,
 ) {
   if (
     (defined(composite.enabled) && !composite.enabled) ||
@@ -96,7 +98,7 @@ function getCompositeDependencies(
         context,
         dependencies,
         stage,
-        previousName
+        previousName,
       );
     } else {
       currentName = getStageDependencies(
@@ -104,7 +106,7 @@ function getCompositeDependencies(
         context,
         dependencies,
         stage,
-        previousName
+        previousName,
       );
     }
     // Stages in a series only depend on the previous stage
@@ -153,28 +155,28 @@ function getDependencies(collection, context) {
       context,
       dependencies,
       ao,
-      undefined
+      undefined,
     );
     previousName = getCompositeDependencies(
       collection,
       context,
       dependencies,
       bloom,
-      previousName
+      previousName,
     );
     previousName = getStageDependencies(
       collection,
       context,
       dependencies,
       tonemapping,
-      previousName
+      previousName,
     );
     previousName = getCompositeDependencies(
       collection,
       context,
       dependencies,
       collection,
-      previousName
+      previousName,
     );
     getStageDependencies(collection, context, dependencies, fxaa, previousName);
   } else {
@@ -183,7 +185,7 @@ function getDependencies(collection, context) {
       context,
       dependencies,
       collection,
-      undefined
+      undefined,
     );
   }
 
@@ -262,7 +264,7 @@ function createFramebuffers(cache, context) {
       cache._stageNameToFramebuffer[stageName] = getFramebuffer(
         cache,
         stageName,
-        dependencies[stageName]
+        dependencies[stageName],
       );
     }
   }

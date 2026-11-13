@@ -1,6 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError, Frozen, defined } from "@cesium/core";
 import getImagePixels from "../Core/getImagePixels.js";
 import Resource from "../Core/Resource.js";
 
@@ -20,7 +18,7 @@ import Resource from "../Core/Resource.js";
  *                  discard check will proceed no matter the values of the pixelsToCheck.
  */
 function DiscardMissingTileImagePolicy(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.missingImageUrl)) {
@@ -113,7 +111,7 @@ DiscardMissingTileImagePolicy.prototype.shouldDiscardImage = function (image) {
   //>>includeStart('debug', pragmas.debug);
   if (!this._isReady) {
     throw new DeveloperError(
-      "shouldDiscardImage must not be called before the discard policy is ready."
+      "shouldDiscardImage must not be called before the discard policy is ready.",
     );
   }
   //>>includeEnd('debug');

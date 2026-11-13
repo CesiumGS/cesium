@@ -1,14 +1,16 @@
-import binarySearch from "./binarySearch.js";
-import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
-import defined from "./defined.js";
+import {
+  Check,
+  Frozen,
+  JulianDate,
+  LeapSecond,
+  RuntimeError,
+  TimeConstants,
+  TimeStandard,
+  binarySearch,
+  defined,
+} from "@cesium/core";
 import EarthOrientationParametersSample from "./EarthOrientationParametersSample.js";
-import JulianDate from "./JulianDate.js";
-import LeapSecond from "./LeapSecond.js";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
-import TimeConstants from "./TimeConstants.js";
-import TimeStandard from "./TimeStandard.js";
 
 /**
  * Specifies Earth polar motion coordinates and the difference between UT1 and UTC.
@@ -33,7 +35,7 @@ import TimeStandard from "./TimeStandard.js";
  * @private
  */
 function EarthOrientationParameters(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._dates = undefined;
   this._samples = undefined;
@@ -49,7 +51,7 @@ function EarthOrientationParameters(options) {
   this._columnCount = 0;
   this._lastIndex = -1;
 
-  this._addNewLeapSeconds = defaultValue(options.addNewLeapSeconds, true);
+  this._addNewLeapSeconds = options.addNewLeapSeconds ?? true;
 
   if (defined(options.data)) {
     // Use supplied EOP data.
@@ -107,7 +109,7 @@ EarthOrientationParameters.fromUrl = async function (url, options) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const resource = Resource.createIfNeeded(url);
 
@@ -117,7 +119,7 @@ EarthOrientationParameters.fromUrl = async function (url, options) {
     eopData = await resource.fetchJson();
   } catch (e) {
     throw new RuntimeError(
-      `An error occurred while retrieving the EOP data from the URL ${resource.url}.`
+      `An error occurred while retrieving the EOP data from the URL ${resource.url}.`,
     );
   }
 
@@ -182,14 +184,14 @@ EarthOrientationParameters.prototype.compute = function (date, result) {
   const dates = this._dates;
   const lastIndex = this._lastIndex;
 
-  let before = 0;
-  let after = 0;
+  let before;
+  let after;
   if (defined(lastIndex)) {
     const previousIndexDate = dates[lastIndex];
     const nextIndexDate = dates[lastIndex + 1];
     const isAfterPrevious = JulianDate.lessThanOrEquals(
       previousIndexDate,
-      date
+      date,
     );
     const isAfterLastSample = !defined(nextIndexDate);
     const isBeforeNext =
@@ -241,35 +243,31 @@ function compareLeapSecondDates(leapSecond, dateToFind) {
 function onDataReady(eop, eopData) {
   if (!defined(eopData.columnNames)) {
     throw new RuntimeError(
-      "Error in loaded EOP data: The columnNames property is required."
+      "Error in loaded EOP data: The columnNames property is required.",
     );
   }
 
   if (!defined(eopData.samples)) {
     throw new RuntimeError(
-      "Error in loaded EOP data: The samples property is required."
+      "Error in loaded EOP data: The samples property is required.",
     );
   }
 
   const dateColumn = eopData.columnNames.indexOf("modifiedJulianDateUtc");
-  const xPoleWanderRadiansColumn = eopData.columnNames.indexOf(
-    "xPoleWanderRadians"
-  );
-  const yPoleWanderRadiansColumn = eopData.columnNames.indexOf(
-    "yPoleWanderRadians"
-  );
-  const ut1MinusUtcSecondsColumn = eopData.columnNames.indexOf(
-    "ut1MinusUtcSeconds"
-  );
+  const xPoleWanderRadiansColumn =
+    eopData.columnNames.indexOf("xPoleWanderRadians");
+  const yPoleWanderRadiansColumn =
+    eopData.columnNames.indexOf("yPoleWanderRadians");
+  const ut1MinusUtcSecondsColumn =
+    eopData.columnNames.indexOf("ut1MinusUtcSeconds");
   const xCelestialPoleOffsetRadiansColumn = eopData.columnNames.indexOf(
-    "xCelestialPoleOffsetRadians"
+    "xCelestialPoleOffsetRadians",
   );
   const yCelestialPoleOffsetRadiansColumn = eopData.columnNames.indexOf(
-    "yCelestialPoleOffsetRadians"
+    "yCelestialPoleOffsetRadians",
   );
-  const taiMinusUtcSecondsColumn = eopData.columnNames.indexOf(
-    "taiMinusUtcSeconds"
-  );
+  const taiMinusUtcSecondsColumn =
+    eopData.columnNames.indexOf("taiMinusUtcSeconds");
 
   if (
     dateColumn < 0 ||
@@ -281,7 +279,7 @@ function onDataReady(eop, eopData) {
     taiMinusUtcSecondsColumn < 0
   ) {
     throw new RuntimeError(
-      "Error in loaded EOP data: The columnNames property must include modifiedJulianDateUtc, xPoleWanderRadians, yPoleWanderRadians, ut1MinusUtcSeconds, xCelestialPoleOffsetRadians, yCelestialPoleOffsetRadians, and taiMinusUtcSeconds columns"
+      "Error in loaded EOP data: The columnNames property must include modifiedJulianDateUtc, xPoleWanderRadians, yPoleWanderRadians, ut1MinusUtcSeconds, xCelestialPoleOffsetRadians, yCelestialPoleOffsetRadians, and taiMinusUtcSeconds columns",
     );
   }
 
@@ -319,7 +317,7 @@ function onDataReady(eop, eopData) {
         const leapSecondIndex = binarySearch(
           leapSeconds,
           date,
-          compareLeapSecondDates
+          compareLeapSecondDates,
         );
         if (leapSecondIndex < 0) {
           const leapSecond = new LeapSecond(date, taiMinusUtc);
@@ -407,27 +405,27 @@ function interpolate(eop, dates, samples, date, before, after, result) {
   result.xPoleWander = linearInterp(
     factor,
     samples[startBefore + eop._xPoleWanderRadiansColumn],
-    samples[startAfter + eop._xPoleWanderRadiansColumn]
+    samples[startAfter + eop._xPoleWanderRadiansColumn],
   );
   result.yPoleWander = linearInterp(
     factor,
     samples[startBefore + eop._yPoleWanderRadiansColumn],
-    samples[startAfter + eop._yPoleWanderRadiansColumn]
+    samples[startAfter + eop._yPoleWanderRadiansColumn],
   );
   result.xPoleOffset = linearInterp(
     factor,
     samples[startBefore + eop._xCelestialPoleOffsetRadiansColumn],
-    samples[startAfter + eop._xCelestialPoleOffsetRadiansColumn]
+    samples[startAfter + eop._xCelestialPoleOffsetRadiansColumn],
   );
   result.yPoleOffset = linearInterp(
     factor,
     samples[startBefore + eop._yCelestialPoleOffsetRadiansColumn],
-    samples[startAfter + eop._yCelestialPoleOffsetRadiansColumn]
+    samples[startAfter + eop._yCelestialPoleOffsetRadiansColumn],
   );
   result.ut1MinusUtc = linearInterp(
     factor,
     beforeUt1MinusUtc,
-    afterUt1MinusUtc
+    afterUt1MinusUtc,
   );
   return result;
 }

@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Represents the position relative to the terrain.
  *
@@ -12,7 +14,7 @@ const HeightReference = {
   NONE: 0,
 
   /**
-   * The position is clamped to the terrain and 3D Tiles.
+   * The position is clamped to the terrain and 3D Tiles. When clamping to 3D Tilesets such as photorealistic 3D Tiles, ensure the tileset has {@link Cesium3DTileset#enableCollision} set to <code>true</code>. Otherwise, the entity may not be correctly clamped to the tileset surface.
    * @type {number}
    * @constant
    */
@@ -26,7 +28,7 @@ const HeightReference = {
   RELATIVE_TO_GROUND: 2,
 
   /**
-   * The position is clamped to terain.
+   * The position is clamped to terrain.
    * @type {number}
    * @constant
    */
@@ -54,7 +56,9 @@ const HeightReference = {
   RELATIVE_TO_3D_TILE: 6,
 };
 
-export default Object.freeze(HeightReference);
+Object.freeze(HeightReference);
+
+export default HeightReference;
 
 /**
  * Returns true if the height should be clamped to the surface

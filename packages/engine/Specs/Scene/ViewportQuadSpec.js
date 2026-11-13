@@ -1,12 +1,5 @@
-import {
-  BoundingRectangle,
-  Color,
-  Resource,
-  Texture,
-  Material,
-  ViewportQuad,
-} from "../../index.js";
-
+import { BoundingRectangle, Color } from "@cesium/core";
+import { Resource, Texture, Material, ViewportQuad } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -18,11 +11,11 @@ describe(
 
     beforeAll(function () {
       scene = createScene();
-      return Resource.fetchImage("./Data/Images/Red16x16.png").then(function (
-        image
-      ) {
-        testImage = image;
-      });
+      return Resource.fetchImage("./Data/Images/Red16x16.png").then(
+        function (image) {
+          testImage = image;
+        },
+      );
     });
 
     afterAll(function () {
@@ -52,7 +45,7 @@ describe(
 
     it("gets the default color", function () {
       expect(viewportQuad.material.uniforms.color).toEqual(
-        new Color(1.0, 1.0, 1.0, 1.0)
+        new Color(1.0, 1.0, 1.0, 1.0),
       );
     });
 
@@ -110,7 +103,7 @@ describe(
       viewportQuad.rectangle = otherRectangle;
       scene.renderForSpecs();
       expect(scene.frameState.commandList[0].renderState.viewport).toEqual(
-        otherRectangle
+        otherRectangle,
       );
     });
 
@@ -123,5 +116,5 @@ describe(
       expect(vq.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

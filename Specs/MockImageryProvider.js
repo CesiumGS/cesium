@@ -1,11 +1,7 @@
+import { Event, RuntimeError } from "@cesium/core";
 import createTileKey from "./createTileKey.js";
 import runLater from "./runLater.js";
-import {
-  Event,
-  GeographicTilingScheme,
-  Resource,
-  RuntimeError,
-} from "@cesium/engine";
+import { GeographicTilingScheme, Resource } from "@cesium/engine";
 
 function MockImageryProvider() {
   this.tilingScheme = new GeographicTilingScheme();
@@ -38,7 +34,7 @@ MockImageryProvider.prototype.requestImage = function (x, y, level, request) {
 MockImageryProvider.prototype.requestImageWillSucceed = function (
   xOrTile,
   y,
-  level
+  level,
 ) {
   this._requestImageWillSucceed[createTileKey(xOrTile, y, level)] = true;
   return this;
@@ -47,7 +43,7 @@ MockImageryProvider.prototype.requestImageWillSucceed = function (
 MockImageryProvider.prototype.requestImageWillFail = function (
   xOrTile,
   y,
-  level
+  level,
 ) {
   this._requestImageWillSucceed[createTileKey(xOrTile, y, level)] = false;
   return this;
@@ -56,7 +52,7 @@ MockImageryProvider.prototype.requestImageWillFail = function (
 MockImageryProvider.prototype.requestImageWillDefer = function (
   xOrTile,
   y,
-  level
+  level,
 ) {
   this._requestImageWillSucceed[createTileKey(xOrTile, y, level)] = undefined;
   return this;
@@ -66,7 +62,7 @@ MockImageryProvider.prototype.requestImageWillWaitOn = function (
   promise,
   xOrTile,
   y,
-  level
+  level,
 ) {
   this._requestImageWillSucceed[createTileKey(xOrTile, y, level)] = promise;
   return this;

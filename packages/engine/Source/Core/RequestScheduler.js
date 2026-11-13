@@ -1,9 +1,6 @@
+import { Check, Event, RuntimeError, defined } from "@cesium/core";
 import Uri from "urijs";
-import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defer from "./defer.js";
-import defined from "./defined.js";
-import Event from "./Event.js";
 import Heap from "./Heap.js";
 import isBlobUri from "./isBlobUri.js";
 import isDataUri from "./isDataUri.js";
@@ -164,12 +161,11 @@ function updatePriority(request) {
  * @private
  */
 RequestScheduler.serverHasOpenSlots = function (serverKey, desiredRequests) {
-  desiredRequests = defaultValue(desiredRequests, 1);
+  desiredRequests = desiredRequests ?? 1;
 
-  const maxRequests = defaultValue(
-    RequestScheduler.requestsByServer[serverKey],
-    RequestScheduler.maximumRequestsPerServer
-  );
+  const maxRequests =
+    RequestScheduler.requestsByServer[serverKey] ??
+    RequestScheduler.maximumRequestsPerServer;
   const hasOpenSlotsServer =
     numberOfActiveRequestsByServer[serverKey] + desiredRequests <= maxRequests;
 
@@ -221,6 +217,7 @@ function getRequestReceivedFunction(request) {
 function getRequestFailedFunction(request) {
   return function (error) {
     if (request.state === RequestState.CANCELLED) {
+      // The error is handled in cancelRequest()
       // If the data request comes back but the request is cancelled, ignore it.
       return;
     }
@@ -251,12 +248,15 @@ function cancelRequest(request) {
   const active = request.state === RequestState.ACTIVE;
   request.state = RequestState.CANCELLED;
   ++statistics.numberOfCancelledRequests;
-  // check that deferred has not been cleared since cancelRequest can be called
-  // on a finished request, e.g. by clearForSpecs during tests
+  // If the request has resolved, request.deferred should now be undefined
+  // If it's in progress, fail the promise immediately and discard it, but ensure the failure is handled so the failure does not bubble up, e.g. by clearForSpecs during tests
   if (defined(request.deferred)) {
     const deferred = request.deferred;
+    deferred.promise.catch(() => {
+      // noop fallback handler
+    });
     request.deferred = undefined;
-    deferred.reject();
+    deferred.reject(new RuntimeError(`Request cancelled: "${request.url}"`));
   }
 
   if (active) {
@@ -311,7 +311,7 @@ RequestScheduler.update = function () {
   // Un-throttled requests are automatically added to activeRequests, so activeRequests.length may exceed maximumRequests
   const openSlots = Math.max(
     RequestScheduler.maximumRequests - activeRequests.length,
-    0
+    0,
   );
   let filledSlots = 0;
   while (filledSlots < openSlots && requestHeap.length > 0) {
@@ -446,28 +446,28 @@ function updateStatistics() {
   ) {
     if (statistics.numberOfAttemptedRequests > 0) {
       console.log(
-        `Number of attempted requests: ${statistics.numberOfAttemptedRequests}`
+        `Number of attempted requests: ${statistics.numberOfAttemptedRequests}`,
       );
       statistics.numberOfAttemptedRequests = 0;
     }
 
     if (statistics.numberOfCancelledRequests > 0) {
       console.log(
-        `Number of cancelled requests: ${statistics.numberOfCancelledRequests}`
+        `Number of cancelled requests: ${statistics.numberOfCancelledRequests}`,
       );
       statistics.numberOfCancelledRequests = 0;
     }
 
     if (statistics.numberOfCancelledActiveRequests > 0) {
       console.log(
-        `Number of cancelled active requests: ${statistics.numberOfCancelledActiveRequests}`
+        `Number of cancelled active requests: ${statistics.numberOfCancelledActiveRequests}`,
       );
       statistics.numberOfCancelledActiveRequests = 0;
     }
 
     if (statistics.numberOfFailedRequests > 0) {
       console.log(
-        `Number of failed requests: ${statistics.numberOfFailedRequests}`
+        `Number of failed requests: ${statistics.numberOfFailedRequests}`,
       );
       statistics.numberOfFailedRequests = 0;
     }

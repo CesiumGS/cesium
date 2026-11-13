@@ -1,6 +1,4 @@
-import defined from "./defined.js";
-import IndexDatatype from "./IndexDatatype.js";
-import PrimitiveType from "./PrimitiveType.js";
+import { IndexDatatype, PrimitiveType, defined } from "@cesium/core";
 
 /**
  * Functions for generating indices for model wireframes. The indices are
@@ -14,7 +12,7 @@ const WireframeIndexGenerator = {};
 function createWireframeFromTriangles(vertexCount) {
   const wireframeIndices = IndexDatatype.createTypedArray(
     vertexCount,
-    vertexCount * 2
+    vertexCount * 2,
   );
   const length = vertexCount;
   let index = 0;
@@ -34,7 +32,7 @@ function createWireframeFromTriangleIndices(vertexCount, originalIndices) {
   const originalIndicesCount = originalIndices.length;
   const wireframeIndices = IndexDatatype.createTypedArray(
     vertexCount,
-    originalIndicesCount * 2
+    originalIndicesCount * 2,
   );
   let index = 0;
   for (let i = 0; i < originalIndicesCount; i += 3) {
@@ -58,7 +56,7 @@ function createWireframeFromTriangleStrip(vertexCount) {
   const wireframeIndicesCount = 2 + numberOfTriangles * 4;
   const wireframeIndices = IndexDatatype.createTypedArray(
     vertexCount,
-    wireframeIndicesCount
+    wireframeIndicesCount,
   );
   let index = 0;
 
@@ -83,7 +81,7 @@ function createWireframeFromTriangleStripIndices(vertexCount, originalIndices) {
   const wireframeIndicesCount = 2 + numberOfTriangles * 4;
   const wireframeIndices = IndexDatatype.createTypedArray(
     vertexCount,
-    wireframeIndicesCount
+    wireframeIndicesCount,
   );
   let index = 0;
 
@@ -111,7 +109,7 @@ function createWireframeFromTriangleFan(vertexCount) {
   const wireframeIndicesCount = 2 + numberOfTriangles * 4;
   const wireframeIndices = IndexDatatype.createTypedArray(
     vertexCount,
-    wireframeIndicesCount
+    wireframeIndicesCount,
   );
   let index = 0;
 
@@ -136,7 +134,7 @@ function createWireframeFromTriangleFanIndices(vertexCount, originalIndices) {
   const wireframeIndicesCount = 2 + numberOfTriangles * 4;
   const wireframeIndices = IndexDatatype.createTypedArray(
     vertexCount,
-    wireframeIndicesCount
+    wireframeIndicesCount,
   );
   let index = 0;
 
@@ -174,7 +172,7 @@ function createWireframeFromTriangleFanIndices(vertexCount, originalIndices) {
 WireframeIndexGenerator.createWireframeIndices = function (
   primitiveType,
   vertexCount,
-  originalIndices
+  originalIndices,
 ) {
   const hasOriginalIndices = defined(originalIndices);
   if (primitiveType === PrimitiveType.TRIANGLES) {
@@ -209,7 +207,7 @@ WireframeIndexGenerator.createWireframeIndices = function (
  */
 WireframeIndexGenerator.getWireframeIndicesCount = function (
   primitiveType,
-  originalCount
+  originalCount,
 ) {
   // For TRIANGLES, the wireframe takes every triangle (i.e. three of the original
   // indices) and turns it into lines. Each triangle has three lines, and each line

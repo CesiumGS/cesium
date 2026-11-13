@@ -1,9 +1,11 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
+import {
+  Cartesian2,
+  Color,
+  Event,
+  Frozen,
+  JulianDate,
+  defined,
+} from "@cesium/core";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
@@ -27,7 +29,7 @@ const defaultLineThickness = new Cartesian2(1, 1);
  * @constructor
  */
 function GridMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._color = undefined;
@@ -155,30 +157,30 @@ GridMaterialProperty.prototype.getValue = function (time, result) {
     this._color,
     time,
     defaultColor,
-    result.color
+    result.color,
   );
   result.cellAlpha = Property.getValueOrDefault(
     this._cellAlpha,
     time,
-    defaultCellAlpha
+    defaultCellAlpha,
   );
   result.lineCount = Property.getValueOrClonedDefault(
     this._lineCount,
     time,
     defaultLineCount,
-    result.lineCount
+    result.lineCount,
   );
   result.lineThickness = Property.getValueOrClonedDefault(
     this._lineThickness,
     time,
     defaultLineThickness,
-    result.lineThickness
+    result.lineThickness,
   );
   result.lineOffset = Property.getValueOrClonedDefault(
     this._lineOffset,
     time,
     defaultLineOffset,
-    result.lineOffset
+    result.lineOffset,
   );
   return result;
 };

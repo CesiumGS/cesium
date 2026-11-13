@@ -1,6 +1,4 @@
-import CesiumMath from "./Math.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
+import { Check, Math as CesiumMath, defined } from "@cesium/core";
 
 /**
  * Array-backed min-max heap implementation of a double-ended priority queue.
@@ -22,7 +20,7 @@ function DoubleEndedPriorityQueue(options) {
     Check.typeOf.number.greaterThanOrEquals(
       "options.maximumLength",
       options.maximumLength,
-      0
+      0,
     );
   }
   //>>includeEnd('debug');
@@ -370,7 +368,7 @@ function pushDown(that, index) {
       const grandChildStart = 2 * leftChildIndex + 1;
       const grandChildCount = Math.max(
         Math.min(length - grandChildStart, 4),
-        0
+        0,
       );
       for (let i = 0; i < grandChildCount; i++) {
         const grandChildIndex = grandChildStart + i;

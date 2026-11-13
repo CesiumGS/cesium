@@ -1,4 +1,5 @@
-import { Cartesian3, Credit, Rectangle } from "@cesium/engine";
+import { Cartesian3, Rectangle } from "@cesium/core";
+import { Credit } from "@cesium/engine";
 import { GeocoderViewModel } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -141,7 +142,7 @@ describe(
       const promise = new Promise((resolve) => {
         destinationFoundCallback = function (viewModel, destination) {
           GeocoderViewModel.flyToDestination(viewModel, destination).then(
-            resolve
+            resolve,
           );
         };
       });
@@ -212,7 +213,7 @@ describe(
       expect(geocoderViewModel._searchText).toEqual("a");
       expect(destinationFoundCallback).toHaveBeenCalledWith(
         geocoderViewModel,
-        destination
+        destination,
       );
     });
 
@@ -227,11 +228,11 @@ describe(
 
       await geocoderViewModel.search();
       expect(geocoderViewModel._searchText).toEqual(
-        geocoderResults2[0].displayName
+        geocoderResults2[0].displayName,
       );
       expect(destinationFoundCallback).toHaveBeenCalledWith(
         geocoderViewModel,
-        mockDestination
+        mockDestination,
       );
     });
 
@@ -245,7 +246,7 @@ describe(
       geocoderViewModel._searchText = "sthsnth"; // an empty query will prevent geocoding
       await GeocoderViewModel._updateSearchSuggestions(geocoderViewModel);
       expect(geocoderViewModel._suggestions.length).toEqual(
-        geocoderResults1.length + geocoderResults2.length
+        geocoderResults1.length + geocoderResults2.length,
       );
       expect(destinationFoundCallback).not.toHaveBeenCalled();
     });
@@ -263,12 +264,12 @@ describe(
       await geocoderViewModel.search();
       // await promise;
       expect(geocoderViewModel._searchText).toEqual(
-        geocoderResults2[0].displayName
+        geocoderResults2[0].displayName,
       );
       expect(GeocoderViewModel.flyToDestination).not.toHaveBeenCalled();
       expect(destinationFoundCallback).toHaveBeenCalledWith(
         geocoderViewModel,
-        mockDestination
+        mockDestination,
       );
     });
 
@@ -286,26 +287,26 @@ describe(
           expect(geocoderViewModel._selectedSuggestion).toEqual(undefined);
           geocoderViewModel._handleArrowDown(geocoderViewModel);
           expect(geocoderViewModel._selectedSuggestion.displayName).toEqual(
-            "a"
+            "a",
           );
           geocoderViewModel._handleArrowDown(geocoderViewModel);
           geocoderViewModel._handleArrowDown(geocoderViewModel);
           expect(geocoderViewModel._selectedSuggestion.displayName).toEqual(
-            "c"
+            "c",
           );
           geocoderViewModel._handleArrowDown(geocoderViewModel);
           expect(geocoderViewModel._selectedSuggestion.displayName).toEqual(
-            "a"
+            "a",
           );
           geocoderViewModel._handleArrowDown(geocoderViewModel);
           geocoderViewModel._handleArrowUp(geocoderViewModel);
           expect(geocoderViewModel._selectedSuggestion.displayName).toEqual(
-            "a"
+            "a",
           );
           geocoderViewModel._handleArrowUp(geocoderViewModel);
           expect(geocoderViewModel._selectedSuggestion).toBeUndefined();
           expect(destinationFoundCallback).not.toHaveBeenCalled();
-        }
+        },
       );
     });
 
@@ -388,5 +389,5 @@ describe(
       expect(destinationFoundCallback).toHaveBeenCalled();
     });
   },
-  "WebGL"
+  "WebGL",
 );

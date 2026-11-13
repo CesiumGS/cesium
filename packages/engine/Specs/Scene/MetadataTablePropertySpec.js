@@ -1,10 +1,12 @@
 import {
-  defaultValue,
   Cartesian2,
   Cartesian3,
   Cartesian4,
+  Frozen,
   Matrix2,
   Matrix3,
+} from "@cesium/core";
+import {
   MetadataClassProperty,
   MetadataComponentType,
   MetadataTableProperty,
@@ -111,10 +113,10 @@ describe("Scene/MetadataTableProperty", function () {
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
     expect(property._stringOffsets._componentType).toBe(
-      MetadataComponentType.UINT16
+      MetadataComponentType.UINT16,
     );
     expect(property._arrayOffsets._componentType).toBe(
-      MetadataComponentType.UINT8
+      MetadataComponentType.UINT8,
     );
     expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
     expect(property.get(1)).toEqual(["dddd", "eeeee"]);
@@ -163,10 +165,10 @@ describe("Scene/MetadataTableProperty", function () {
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
     expect(property._stringOffsets._componentType).toBe(
-      MetadataComponentType.UINT16
+      MetadataComponentType.UINT16,
     );
     expect(property._arrayOffsets._componentType).toBe(
-      MetadataComponentType.UINT16
+      MetadataComponentType.UINT16,
     );
     expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
     expect(property.get(1)).toEqual(["dddd", "eeeee"]);
@@ -320,15 +322,15 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   function testGetUint64(options) {
-    options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+    options = options ?? Frozen.EMPTY_OBJECT;
     const disableBigIntSupport = options.disableBigIntSupport;
     const disableBigUint64ArraySupport = options.disableBigUint64ArraySupport;
 
     const originalValues = [
-      BigInt(0), // eslint-disable-line
-      BigInt(10), // eslint-disable-line
-      BigInt("4611686018427387833"), // eslint-disable-line
-      BigInt("18446744073709551615"), // eslint-disable-line
+      BigInt(0),
+      BigInt(10),
+      BigInt("4611686018427387833"),
+      BigInt("18446744073709551615"),
     ];
 
     let expectedValues = originalValues;
@@ -358,18 +360,18 @@ describe("Scene/MetadataTableProperty", function () {
   }
 
   function testGetInt64(options) {
-    options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+    options = options ?? Frozen.EMPTY_OBJECT;
     const disableBigIntSupport = options.disableBigIntSupport;
     const disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
 
     const originalValues = [
-      BigInt("-9223372036854775808"), // eslint-disable-line
-      BigInt("-4611686018427387833"), // eslint-disable-line
-      BigInt(-10), // eslint-disable-line
-      BigInt(0), // eslint-disable-line
-      BigInt(10), // eslint-disable-line
-      BigInt("4611686018427387833"), // eslint-disable-line
-      BigInt("9223372036854775807"), // eslint-disable-line
+      BigInt("-9223372036854775808"),
+      BigInt("-4611686018427387833"),
+      BigInt(-10),
+      BigInt(0),
+      BigInt(10),
+      BigInt("4611686018427387833"),
+      BigInt("9223372036854775807"),
     ];
 
     let expectedValues = originalValues;
@@ -377,13 +379,8 @@ describe("Scene/MetadataTableProperty", function () {
     if (disableBigInt64ArraySupport && disableBigIntSupport) {
       // Precision loss is expected if INT64 is converted to JS numbers
       expectedValues = [
-        -9223372036854776000,
-        -4611686018427388000,
-        -10,
-        0,
-        10,
-        4611686018427388000,
-        9223372036854776000,
+        -9223372036854776000, -4611686018427388000, -10, 0, 10,
+        4611686018427388000, 9223372036854776000,
       ];
     }
 
@@ -650,12 +647,12 @@ describe("Scene/MetadataTableProperty", function () {
 
     const propertyValues = {
       propertyInt64: [
-        [BigInt(-2), BigInt(-1), BigInt(0)], // eslint-disable-line
-        [BigInt(1), BigInt(2), BigInt(3)], // eslint-disable-line
+        [BigInt(-2), BigInt(-1), BigInt(0)],
+        [BigInt(1), BigInt(2), BigInt(3)],
       ],
       propertyUint64: [
-        [BigInt(0), BigInt(1), BigInt(2)], // eslint-disable-line
-        [BigInt(3), BigInt(4), BigInt(5)], // eslint-disable-line
+        [BigInt(0), BigInt(1), BigInt(2)],
+        [BigInt(3), BigInt(4), BigInt(5)],
       ],
       propertyBoolean: [
         [false, true, false],
@@ -773,15 +770,15 @@ describe("Scene/MetadataTableProperty", function () {
       propertyInt32: [[-2], [-1, 0], [1, 2, 3], []],
       propertyUint32: [[0], [1, 2], [3, 4, 5], []],
       propertyInt64: [
-        [BigInt(-2)], // eslint-disable-line
-        [BigInt(-1), BigInt(0)], // eslint-disable-line
-        [BigInt(1), BigInt(2), BigInt(3)], // eslint-disable-line
+        [BigInt(-2)],
+        [BigInt(-1), BigInt(0)],
+        [BigInt(1), BigInt(2), BigInt(3)],
         [],
       ],
       propertyUint64: [
-        [BigInt(0)], // eslint-disable-line
-        [BigInt(1), BigInt(2)], // eslint-disable-line
-        [BigInt(3), BigInt(4), BigInt(5)], // eslint-disable-line
+        [BigInt(0)],
+        [BigInt(1), BigInt(2)],
+        [BigInt(3), BigInt(4), BigInt(5)],
         [],
       ],
       propertyFloat32: [[-2.0], [-1.0, 0.0], [1.0, 2.0, 3.0], []],
@@ -1191,8 +1188,8 @@ describe("Scene/MetadataTableProperty", function () {
       propertyUint16: [0, 0, 0, 0, 0],
       propertyInt32: [0, 0, 0, 0, 0],
       propertyUint32: [0, 0, 0, 0, 0],
-      propertyInt64: [BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
-      propertyUint64: [BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
+      propertyInt64: [BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0)],
+      propertyUint64: [BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0)],
       propertyFloat32: [0.0, 0.0, 0.0, 0.0, 0.0],
       propertyFloat64: [0.0, 0.0, 0.0, 0.0, 0.0],
       propertyBoolean: [false, false, true, false, true],
@@ -1208,18 +1205,18 @@ describe("Scene/MetadataTableProperty", function () {
       propertyInt32: [-2147483648, -10, 0, 10, 2147483647],
       propertyUint32: [0, 10, 20, 30, 4294967295],
       propertyInt64: [
-        BigInt("-9223372036854775808"), // eslint-disable-line
-        BigInt("-4611686018427387833"), // eslint-disable-line
-        BigInt(0), // eslint-disable-line
-        BigInt("4611686018427387833"), // eslint-disable-line
-        BigInt("9223372036854775807"), // eslint-disable-line
+        BigInt("-9223372036854775808"),
+        BigInt("-4611686018427387833"),
+        BigInt(0),
+        BigInt("4611686018427387833"),
+        BigInt("9223372036854775807"),
       ],
       propertyUint64: [
-        BigInt(0), // eslint-disable-line
-        BigInt(10), // eslint-disable-line
-        BigInt(100), // eslint-disable-line
-        BigInt("4611686018427387833"), // eslint-disable-line
-        BigInt("18446744073709551615"), // eslint-disable-line
+        BigInt(0),
+        BigInt(10),
+        BigInt(100),
+        BigInt("4611686018427387833"),
+        BigInt("18446744073709551615"),
       ],
       propertyFloat32: [-2.5, -1.0, 0.0, 700.0, 38.0],
       propertyFloat64: [-234934.12, -1.0, 0.0, 700.0, Math.PI],
@@ -1407,12 +1404,12 @@ describe("Scene/MetadataTableProperty", function () {
 
     const propertyValues = {
       propertyInt64: [
-        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
-        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
+        [BigInt(0), BigInt(0), BigInt(0)],
+        [BigInt(0), BigInt(0), BigInt(0)],
       ],
       propertyUint64: [
-        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
-        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
+        [BigInt(0), BigInt(0), BigInt(0)],
+        [BigInt(0), BigInt(0), BigInt(0)],
       ],
       propertyBoolean: [
         [false, false, false],
@@ -1438,12 +1435,12 @@ describe("Scene/MetadataTableProperty", function () {
 
     const valuesToSet = {
       propertyInt64: [
-        [BigInt(-2), BigInt(-1), BigInt(0)], // eslint-disable-line
-        [BigInt(1), BigInt(2), BigInt(3)], // eslint-disable-line
+        [BigInt(-2), BigInt(-1), BigInt(0)],
+        [BigInt(1), BigInt(2), BigInt(3)],
       ],
       propertyUint64: [
-        [BigInt(0), BigInt(1), BigInt(2)], // eslint-disable-line
-        [BigInt(3), BigInt(4), BigInt(5)], // eslint-disable-line
+        [BigInt(0), BigInt(1), BigInt(2)],
+        [BigInt(3), BigInt(4), BigInt(5)],
       ],
       propertyBoolean: [
         [false, true, false],
@@ -1683,15 +1680,15 @@ describe("Scene/MetadataTableProperty", function () {
       propertyInt32: [[0], [0, 0], [0, 0, 0], []],
       propertyUint32: [[0], [0, 0], [0, 0, 0], []],
       propertyInt64: [
-        [BigInt(0)], // eslint-disable-line
-        [BigInt(0), BigInt(0)], // eslint-disable-line
-        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
+        [BigInt(0)],
+        [BigInt(0), BigInt(0)],
+        [BigInt(0), BigInt(0), BigInt(0)],
         [],
       ],
       propertyUint64: [
-        [BigInt(0)], // eslint-disable-line
-        [BigInt(0), BigInt(0)], // eslint-disable-line
-        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
+        [BigInt(0)],
+        [BigInt(0), BigInt(0)],
+        [BigInt(0), BigInt(0), BigInt(0)],
         [],
       ],
       propertyFloat32: [[0.0], [0.0, 0.0], [0.0, 0.0, 0.0], []],
@@ -1714,15 +1711,15 @@ describe("Scene/MetadataTableProperty", function () {
       propertyInt32: [[-2], [-1, 0], [1, 2, 3], []],
       propertyUint32: [[0], [1, 2], [3, 4, 5], []],
       propertyInt64: [
-        [BigInt(-2)], // eslint-disable-line
-        [BigInt(-1), BigInt(0)], // eslint-disable-line
-        [BigInt(1), BigInt(2), BigInt(3)], // eslint-disable-line
+        [BigInt(-2)],
+        [BigInt(-1), BigInt(0)],
+        [BigInt(1), BigInt(2), BigInt(3)],
         [],
       ],
       propertyUint64: [
-        [BigInt(0)], // eslint-disable-line
-        [BigInt(1), BigInt(2)], // eslint-disable-line
-        [BigInt(3), BigInt(4), BigInt(5)], // eslint-disable-line
+        [BigInt(0)],
+        [BigInt(1), BigInt(2)],
+        [BigInt(3), BigInt(4), BigInt(5)],
         [],
       ],
       propertyFloat32: [[-2.0], [-1.0, 0.0], [1.0, 2.0, 3.0], []],
@@ -1834,15 +1831,15 @@ describe("Scene/MetadataTableProperty", function () {
       propertyInt32: [[0], [0, 0], [0, 0, 0], []],
       propertyUint32: [[0], [0, 0], [0, 0, 0], []],
       propertyInt64: [
-        [BigInt(0)], // eslint-disable-line
-        [BigInt(0), BigInt(0)], // eslint-disable-line
-        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
+        [BigInt(0)],
+        [BigInt(0), BigInt(0)],
+        [BigInt(0), BigInt(0), BigInt(0)],
         [],
       ],
       propertyUint64: [
-        [BigInt(0)], // eslint-disable-line
-        [BigInt(0), BigInt(0)], // eslint-disable-line
-        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
+        [BigInt(0)],
+        [BigInt(0), BigInt(0)],
+        [BigInt(0), BigInt(0), BigInt(0)],
         [],
       ],
       propertyFloat32: [[0.0], [0.0, 0.0], [0.0, 0.0, 0.0], []],
@@ -1865,16 +1862,16 @@ describe("Scene/MetadataTableProperty", function () {
       propertyInt32: [[1, 2, 3], [], [-2], [-1, 0]],
       propertyUint32: [[0], [3, 4, 5], [1, 2], []],
       propertyInt64: [
-        [BigInt(-1), BigInt(0)], // eslint-disable-line
-        [BigInt(-2)], // eslint-disable-line
+        [BigInt(-1), BigInt(0)],
+        [BigInt(-2)],
         [],
-        [BigInt(1), BigInt(2), BigInt(3)], // eslint-disable-line
+        [BigInt(1), BigInt(2), BigInt(3)],
       ],
       propertyUint64: [
-        [BigInt(0)], // eslint-disable-line
+        [BigInt(0)],
         [],
-        [BigInt(1), BigInt(2)], // eslint-disable-line
-        [BigInt(3), BigInt(4), BigInt(5)], // eslint-disable-line
+        [BigInt(1), BigInt(2)],
+        [BigInt(3), BigInt(4), BigInt(5)],
       ],
       propertyFloat32: [[-1.0, 0.0], [1.0, 2.0, 3.0], [], [-2.0]],
       propertyFloat64: [[-2.0], [1.0, 2.0, 3.0], [-1.0, 0.0], []],

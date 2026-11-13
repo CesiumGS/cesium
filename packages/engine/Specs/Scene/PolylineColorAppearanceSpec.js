@@ -5,11 +5,8 @@ import {
   ColorGeometryInstanceAttribute,
   GeometryInstance,
   PolylineGeometry,
-  Appearance,
-  PolylineColorAppearance,
-  Primitive,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { Appearance, PolylineColorAppearance, Primitive } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -39,7 +36,7 @@ describe(
       expect(a.vertexShaderSource).toBeDefined();
       expect(a.fragmentShaderSource).toBeDefined();
       expect(a.renderState).toEqual(
-        Appearance.getDefaultRenderState(true, false)
+        Appearance.getDefaultRenderState(true, false),
       );
       expect(a.vertexFormat).toEqual(PolylineColorAppearance.VERTEX_FORMAT);
       expect(a.translucent).toEqual(true);
@@ -60,7 +57,7 @@ describe(
           }),
           attributes: {
             color: ColorGeometryInstanceAttribute.fromColor(
-              new Color(1.0, 1.0, 0.0, 1.0)
+              new Color(1.0, 1.0, 0.0, 1.0),
             ),
           },
         }),
@@ -76,5 +73,5 @@ describe(
       expect(scene).notToRender([0, 0, 0, 255]);
     });
   },
-  "WebGL"
+  "WebGL",
 );

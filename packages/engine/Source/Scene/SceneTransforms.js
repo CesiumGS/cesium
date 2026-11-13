@@ -1,16 +1,17 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Cartographic from "../Core/Cartographic.js";
-import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
-import Transforms from "../Core/Transforms.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Cartographic,
+  DeveloperError,
+  FixedFrameTransforms,
+  Math as CesiumMath,
+  Matrix4,
+  OrthographicFrustum,
+  OrthographicOffCenterFrustum,
+  defined,
+} from "@cesium/core";
 import SceneMode from "./SceneMode.js";
 
 /**
@@ -49,35 +50,8 @@ SceneTransforms.worldToWindowCoordinates = function (scene, position, result) {
     scene,
     position,
     Cartesian3.ZERO,
-    result
+    result,
   );
-};
-
-/**
- * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an
- * HTML element at the same screen position as an object in the scene.
- *
- * @param {Scene} scene The scene.
- * @param {Cartesian3} position The position in WGS84 (world) coordinates.
- * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
- * @returns {Cartesian2|undefined} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
- *
- * @example
- * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
- * const scene = widget.scene;
- * const ellipsoid = scene.ellipsoid;
- * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
- * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
- * handler.setInputAction(function(movement) {
- *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
- * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
- */
-SceneTransforms.wgs84ToWindowCoordinates = function (scene, position, result) {
-  deprecationWarning(
-    "SceneTransforms.wgs84ToWindowCoordinates",
-    "SceneTransforms.wgs84ToWindowCoordinates has been deprecated. It will be removed in 1.21. Use SceneTransforms.worldToWindowCoordinates instead."
-  );
-  return SceneTransforms.worldToWindowCoordinates(scene, position, result);
 };
 
 const scratchCartesian4 = new Cartesian4();
@@ -93,15 +67,15 @@ function worldToClip(position, eyeOffset, camera, result) {
       position.y,
       position.z,
       1,
-      scratchCartesian4
+      scratchCartesian4,
     ),
-    scratchCartesian4
+    scratchCartesian4,
   );
 
   const zEyeOffset = Cartesian3.multiplyComponents(
     eyeOffset,
     Cartesian3.normalize(positionEC, scratchEyeOffset),
-    scratchEyeOffset
+    scratchEyeOffset,
   );
   positionEC.x += eyeOffset.x + zEyeOffset.x;
   positionEC.y += eyeOffset.y + zEyeOffset.y;
@@ -110,13 +84,13 @@ function worldToClip(position, eyeOffset, camera, result) {
   return Matrix4.multiplyByVector(
     camera.frustum.projectionMatrix,
     positionEC,
-    result
+    result,
   );
 }
 
 const scratchMaxCartographic = new Cartographic(
   Math.PI,
-  CesiumMath.PI_OVER_TWO
+  CesiumMath.PI_OVER_TWO,
 );
 const scratchProjectedCartesian = new Cartesian3();
 const scratchCameraPosition = new Cartesian3();
@@ -128,7 +102,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
   scene,
   position,
   eyeOffset,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(scene)) {
@@ -144,7 +118,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
   const actualPosition = SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     position,
-    actualPositionScratch
+    actualPositionScratch,
   );
 
   if (!defined(actualPosition)) {
@@ -167,12 +141,12 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
     const maxCartographic = scratchMaxCartographic;
     const maxCoord = projection.project(
       maxCartographic,
-      scratchProjectedCartesian
+      scratchProjectedCartesian,
     );
 
     const cameraPosition = Cartesian3.clone(
       camera.position,
-      scratchCameraPosition
+      scratchCameraPosition,
     );
     const frustum = camera.frustum.clone();
 
@@ -180,7 +154,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
       viewport,
       0.0,
       1.0,
-      new Matrix4()
+      new Matrix4(),
     );
     const projectionMatrix = camera.frustum.projectionMatrix;
 
@@ -188,12 +162,12 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
     const eyePoint = Cartesian3.fromElements(
       CesiumMath.sign(x) * maxCoord.x - x,
       0.0,
-      -camera.positionWC.x
+      -camera.positionWC.x,
     );
-    const windowCoordinates = Transforms.pointToGLWindowCoordinates(
+    const windowCoordinates = FixedFrameTransforms.pointToGLWindowCoordinates(
       projectionMatrix,
       viewportTransformation,
-      eyePoint
+      eyePoint,
     );
 
     if (
@@ -212,7 +186,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
         SceneTransforms.clipToGLWindowCoordinates(
           viewport,
           positionCC,
-          scratchWindowCoord0
+          scratchWindowCoord0,
         );
 
         viewport.x += windowCoordinates.x;
@@ -227,7 +201,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
         SceneTransforms.clipToGLWindowCoordinates(
           viewport,
           positionCC,
-          scratchWindowCoord1
+          scratchWindowCoord1,
         );
       } else {
         viewport.x += windowCoordinates.x;
@@ -239,7 +213,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
         SceneTransforms.clipToGLWindowCoordinates(
           viewport,
           positionCC,
-          scratchWindowCoord0
+          scratchWindowCoord0,
         );
 
         viewport.x = viewport.x - viewport.width;
@@ -254,7 +228,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
         SceneTransforms.clipToGLWindowCoordinates(
           viewport,
           positionCC,
-          scratchWindowCoord1
+          scratchWindowCoord1,
         );
       }
 
@@ -282,7 +256,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
     result = SceneTransforms.clipToGLWindowCoordinates(
       viewport,
       positionCC,
-      result
+      result,
     );
   }
 
@@ -310,7 +284,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
 SceneTransforms.worldToDrawingBufferCoordinates = function (
   scene,
   position,
-  result
+  result,
 ) {
   result = SceneTransforms.worldToWindowCoordinates(scene, position, result);
   if (!defined(result)) {
@@ -320,50 +294,26 @@ SceneTransforms.worldToDrawingBufferCoordinates = function (
   return SceneTransforms.transformWindowToDrawingBuffer(scene, result, result);
 };
 
-/**
- * Transforms a position in world coordinates to drawing buffer coordinates.  This may produce different
- * results from SceneTransforms.wgs84ToWindowCoordinates when the browser zoom is not 100%, or on high-DPI displays.
- *
- * @param {Scene} scene The scene.
- * @param {Cartesian3} position The position in world (WGS84 or alternative ellipsoid) coordinates.
- * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
- * @returns {Cartesian2|undefined} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
- *
- * @example
- * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
- * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
- * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
- * handler.setInputAction(function(movement) {
- *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
- * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
- */
-SceneTransforms.wgs84ToDrawingBufferCoordinates = function (
-  scene,
-  position,
-  result
-) {
-  deprecationWarning(
-    "SceneTransforms.wgs84ToDrawingBufferCoordinates",
-    "SceneTransforms.wgs84ToDrawingBufferCoordinates has been deprecated. It will be removed in 1.21. Use SceneTransforms.worldToDrawingBufferCoordinates instead."
-  );
-
-  return SceneTransforms.worldToDrawingBufferCoordinates(
-    scene,
-    position,
-    result
-  );
-};
-
 const projectedPosition = new Cartesian3();
 const positionInCartographic = new Cartographic();
 
 /**
+ * Transforms a position in world coordinates to the coordinate frame used to render the current scene mode.
+ *
+ * In 3D this is the same as the input ECEF coordinate.
+ * In 2D and Columbus View this is the projected map frame laid out as (height, easting, northing).
+ * In 2D the height is flattened to 0.
+ *
+ * @param {FrameState} frameState
+ * @param {Cartesian3} position The world-space (ECEF) position.
+ * @param {Cartesian3} [result]
+ * @returns {Cartesian3|undefined}
  * @private
  */
 SceneTransforms.computeActualEllipsoidPosition = function (
   frameState,
   position,
-  result
+  result,
 ) {
   const mode = frameState.mode;
 
@@ -374,7 +324,7 @@ SceneTransforms.computeActualEllipsoidPosition = function (
   const projection = frameState.mapProjection;
   const cartographic = projection.ellipsoid.cartesianToCartographic(
     position,
-    positionInCartographic
+    positionInCartographic,
   );
   if (!defined(cartographic)) {
     return undefined;
@@ -387,7 +337,7 @@ SceneTransforms.computeActualEllipsoidPosition = function (
       projectedPosition.z,
       projectedPosition.x,
       projectedPosition.y,
-      result
+      result,
     );
   }
 
@@ -396,7 +346,7 @@ SceneTransforms.computeActualEllipsoidPosition = function (
       0.0,
       projectedPosition.x,
       projectedPosition.y,
-      result
+      result,
     );
   }
 
@@ -406,7 +356,7 @@ SceneTransforms.computeActualEllipsoidPosition = function (
     CesiumMath.lerp(projectedPosition.z, position.x, morphTime),
     CesiumMath.lerp(projectedPosition.x, position.y, morphTime),
     CesiumMath.lerp(projectedPosition.y, position.z, morphTime),
-    result
+    result,
   );
 };
 
@@ -420,7 +370,7 @@ const viewportTransform = new Matrix4();
 SceneTransforms.clipToGLWindowCoordinates = function (
   viewport,
   position,
-  result
+  result,
 ) {
   // Perspective divide to transform from clip coordinates to normalized device coordinates
   Cartesian3.divideByScalar(position, position.w, positionNDC);
@@ -438,7 +388,7 @@ SceneTransforms.clipToGLWindowCoordinates = function (
 SceneTransforms.transformWindowToDrawingBuffer = function (
   scene,
   windowPosition,
-  result
+  result,
 ) {
   const canvas = scene.canvas;
   const xScale = scene.drawingBufferWidth / canvas.clientWidth;
@@ -446,7 +396,7 @@ SceneTransforms.transformWindowToDrawingBuffer = function (
   return Cartesian2.fromElements(
     windowPosition.x * xScale,
     windowPosition.y * yScale,
-    result
+    result,
   );
 };
 
@@ -460,7 +410,7 @@ SceneTransforms.drawingBufferToWorldCoordinates = function (
   scene,
   drawingBufferPosition,
   depth,
-  result
+  result,
 ) {
   const context = scene.context;
   const uniformState = context.uniformState;
@@ -507,13 +457,13 @@ SceneTransforms.drawingBufferToWorldCoordinates = function (
     worldCoords = Matrix4.multiplyByVector(
       uniformState.inverseView,
       worldCoords,
-      worldCoords
+      worldCoords,
     );
   } else {
     worldCoords = Matrix4.multiplyByVector(
       uniformState.inverseViewProjection,
       ndc,
-      scratchWorldCoords
+      scratchWorldCoords,
     );
 
     // Reverse perspective divide
@@ -522,4 +472,53 @@ SceneTransforms.drawingBufferToWorldCoordinates = function (
   }
   return Cartesian3.fromCartesian4(worldCoords, result);
 };
+
+const scratchActualPosition = new Cartesian3();
+
+/**
+ * Converts a position sampled from the actual ellipsoid/terrain surface in the
+ * current scene mode's coordinate frame into a mode-independent {@link Cartographic}.
+ *
+ * In 3D the position is already in ECEF (world) coordinates and is converted directly.
+ * In 2D and Columbus View the position is in the projected map frame, laid out as
+ * (height, easting, northing); it is un-swizzled back to the projection's native
+ * (easting, northing, height) layout and unprojected to recover the true cartographic.
+ *
+ * @param {FrameState} frameState The frame state.
+ * @param {Cartesian3} position The position in the current scene mode's coordinate frame.
+ * @param {Cartographic} [result] An optional object to store the result.
+ * @returns {Cartographic|undefined} The modified result parameter or a new Cartographic instance if one was not provided. This may be <code>undefined</code> if the cartographic could not be computed.
+ *
+ * @private
+ */
+SceneTransforms.actualEllipsoidPositionToCartographic = function (
+  frameState,
+  position,
+  result,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(frameState)) {
+    throw new DeveloperError("frameState is required.");
+  }
+  if (!defined(position)) {
+    throw new DeveloperError("position is required.");
+  }
+  //>>includeEnd('debug');
+
+  if (frameState.mode === SceneMode.SCENE3D) {
+    return frameState.mapProjection.ellipsoid.cartesianToCartographic(
+      position,
+      result,
+    );
+  }
+
+  const projected = Cartesian3.fromElements(
+    position.y,
+    position.z,
+    position.x,
+    scratchActualPosition,
+  );
+  return frameState.mapProjection.unproject(projected, result);
+};
+
 export default SceneTransforms;
