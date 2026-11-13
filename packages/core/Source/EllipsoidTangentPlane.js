@@ -17,13 +17,13 @@ const scratchCart4 = new Cartesian4();
  * A plane tangent to the provided ellipsoid at the provided origin.
  * If origin is not on the surface of the ellipsoid, it's surface projection will be used.
  * If origin is at the center of the ellipsoid, an exception will be thrown.
- *
- * @exception {DeveloperError} origin must not be at the center of the ellipsoid.
  */
 class EllipsoidTangentPlane {
   /**
    * @param {Cartesian3} origin The point on the surface of the ellipsoid where the tangent plane touches.
    * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid to use.
+   *
+   * @exception {DeveloperError} origin must not be at the center of the ellipsoid.
    */
   constructor(origin, ellipsoid) {
     //>>includeStart('debug', pragmas.debug);
