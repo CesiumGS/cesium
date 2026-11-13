@@ -972,11 +972,12 @@ export class Tileset3D implements TileTree {
   }
 
   /**
-   * Some tile is morphing in (`tileMorph.ts`): the loop keeps ticking until
+   * Some tile is morphing in (`tileMorph.ts`), or its imagery cross-fading
+   * (`GlobeImagery.fading`): the loop keeps ticking until
    * they're done, so a settled scene idles.
    */
   get morphing(): boolean {
-    return this.state.morphs.size > 0;
+    return this.state.morphs.size > 0 || this.imagery?.fading === true;
   }
 
   /** What both `active` and `needsFrames` wait on: work an update does now. */

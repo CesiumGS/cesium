@@ -115,6 +115,8 @@ public struct DrawRecord {
   public uint casterMask;        // views whose shadow cascades alone draw this record
   public uint debug;             // a tile's debug-view data (streaming/debugViews.ts `packTileDebug`); 0: none
   public float morph;            // a globe tile's geomorph: the time it began (View.time.x's clock, seconds); 0: none (render/layout.ts MORPH_WORD)
+  public uint imageryFrom;       // a globe tile's imagery before its last change (packImagery), cross-faded to imagerySlice; read only while imageryFade > 0
+  public float imageryFade;      // when that cross-fade began (View.time.x's clock, seconds); 0: none (render/layout.ts IMAGERY_FADE_WORD)
 };
 
 // A placement composed in float64 on the CPU (World transform table),

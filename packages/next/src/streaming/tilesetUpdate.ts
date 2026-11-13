@@ -556,7 +556,7 @@ export function update(
         wanted.set(tile, LOADING_IMAGERY + priority);
       }
     }
-    tileset.imagery.update(wanted);
+    tileset.imagery.update(wanted, now);
     tileset.lights?.update(wanted);
   }
   tileset.evict(frame);

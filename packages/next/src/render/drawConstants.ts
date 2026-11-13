@@ -8,6 +8,8 @@ import {
   COLOR_WORD,
   DEBUG_WORD,
   FLAGS_WORD,
+  IMAGERY_FADE_WORD,
+  IMAGERY_FROM_WORD,
   IMAGERY_SLICE_WORD,
   INSTANCE_COUNT_WORD,
   LIGHTS_SLICE_WORD,
@@ -249,6 +251,29 @@ export class DrawConstants {
     }
     u32[o + IMAGERY_SLICE_WORD] = packed >>> 0;
     u32[o + FLAGS_WORD] = next;
+    this.table.mark(index);
+    return true;
+  }
+
+  /**
+   * A globe tile's imagery cross-fade: from `from` (`packImagery`) to what
+   * `setImagery` set, from `seconds` on the views' clock (`View.time`); 0
+   * seconds ends it. True when the record changed.
+   */
+  setImageryFade(index: number, from: number, seconds: number): boolean {
+    const o = index * RECORD_WORDS;
+    const u32 = this.table.u32;
+    const f32 = this.table.f32;
+    const start = seconds > 0 ? seconds : 0;
+    const fromWord = start > 0 ? from >>> 0 : 0;
+    if (
+      u32[o + IMAGERY_FROM_WORD] === fromWord &&
+      f32[o + IMAGERY_FADE_WORD] === Math.fround(start)
+    ) {
+      return false;
+    }
+    u32[o + IMAGERY_FROM_WORD] = fromWord;
+    f32[o + IMAGERY_FADE_WORD] = start;
     this.table.mark(index);
     return true;
   }

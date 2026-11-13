@@ -57,6 +57,8 @@ struct DrawRecord_std430_0
     @align(8) casterMask_0 : u32,
     @align(4) debug_0 : u32,
     @align(16) morph_0 : f32,
+    @align(4) imageryFrom_0 : u32,
+    @align(8) imageryFade_0 : f32,
 };
 
 @binding(0) @group(1) var<storage, read> records_0 : array<DrawRecord_std430_0>;

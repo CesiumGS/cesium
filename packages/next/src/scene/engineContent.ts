@@ -182,8 +182,8 @@ function addGlobeSource(
   // transitions (`View.lodTransitions`).
   source.wantsMorph = () =>
     engine.views.some((view) => view.lodTransitions === "morph");
-  const drape = (provider: ImageryProvider) =>
-    new GlobeImagery(
+  const drape = (provider: ImageryProvider) => {
+    const imagery = new GlobeImagery(
       engine.ctx,
       world,
       provider,
@@ -191,6 +191,13 @@ function addGlobeSource(
       engine.scene.workers,
       options.imageryOptions,
     );
+    // Imagery cross-fades while a view morphs LOD transitions.
+    imagery.fadeStart = (nowMs) =>
+      engine.views.some((view) => view.lodTransitions === "morph")
+        ? Math.max((nowMs - engine.scene.startTime) / 1000, 1e-3)
+        : 0;
+    return imagery;
+  };
   if (options.lights) {
     void Promise.resolve(options.lights).then(
       (provider) => {
