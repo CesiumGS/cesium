@@ -31,6 +31,35 @@ export type SmoothInverse = (
   out: Float64Array,
 ) => void;
 
+/**
+ * A parallelepiped of a node's input coordinates: `center` ± the columns of
+ * `axes` (column-major 3×3, the half axes), every point `center + axes · t`
+ * with t in [-1, 1]³. Where the coordinates are geographic, `center` is
+ * (longitude, latitude, height) as ever and `axes` is in local metres at the
+ * centre: its rows are east, north and up, an east metre being
+ * 1 / (RAD · (N + h) cos φ) degrees of longitude and a north metre
+ * 1 / (RAD · (M + h)) degrees of latitude, with N and M the radii of
+ * curvature. The box a bound gives is in the output's coordinates likewise.
+ */
+export interface BoundRegion {
+  readonly center: ArrayLike<number>;
+  readonly axes: ArrayLike<number>;
+}
+
+/**
+ * A bound on a Jacobian over a region (the mean value theorem's): with
+ * `basisIn` and `basisOut` orthonormal (column-major 3×3, their columns the
+ * axes the bound is stated along), J = R_out · J' · R_inᵀ, where
+ * |J'_ij| ≤ `absJ`_ij (column-major) at every point of the region for every
+ * parameter value in range. A displacement x - c across the region then moves
+ * the output along R_out's axis i by at most Σ_j absJ_ij |(R_inᵀ(x - c))_j|.
+ */
+export interface DeclaredBound {
+  readonly basisIn: ArrayLike<number>;
+  readonly basisOut: ArrayLike<number>;
+  readonly absJ: ArrayLike<number>;
+}
+
 export interface SmoothSpec {
   forward: SmoothForward;
   /** Left out, the route solves by Newton with the Jacobian. */
@@ -56,6 +85,22 @@ export interface SmoothSpec {
    * scaled that way.
    */
   identity?: Params;
+  /**
+   * A closed-form bound on the Jacobian over a parallelepiped of the input
+   * coordinates (`BoundRegion`), for every value of the parameters in
+   * `ranges`. Absent for a function without one: a route through it is
+   * sampled.
+   */
+  bound?: (
+    region: BoundRegion,
+    ranges: Readonly<Record<string, readonly [number, number]>>,
+  ) => DeclaredBound;
+  /**
+   * Which sides of the function are geographic coordinates (longitude and
+   * latitude in degrees, height in metres). A region there is in local
+   * metres: see `BoundRegion`.
+   */
+  geographic?: { readonly in?: boolean; readonly out?: boolean };
 }
 
 /** An edge placed by a constant matrix, or by one that depends on time. */

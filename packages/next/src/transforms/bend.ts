@@ -86,6 +86,37 @@ export const bendDescriptor: TransformDescriptor = {
     out[1] = y;
     out[2] = oz + radius - side * Math.hypot(X, W);
   },
+  bound: (region, ranges) => {
+    // J in x, y, z: [[(1 - κ dz) cos θ, 0, -sin θ], [0, 1, 0], [(1 - κ dz)
+    // sin θ, 0, cos θ]], θ = κ dx and dz the height above the neutral line.
+    const c = region.center;
+    const a = region.axes;
+    const wx = Math.abs(a[0]!) + Math.abs(a[3]!) + Math.abs(a[6]!);
+    const wz = Math.abs(a[2]!) + Math.abs(a[5]!) + Math.abs(a[8]!);
+    let dx = 0;
+    for (const o of ranges.ox!) {
+      dx = Math.max(dx, Math.abs(c[0]! - o) + wx);
+    }
+    let kappa = 0;
+    let fac = 1;
+    const dz = [
+      c[2]! - wz - Math.max(...ranges.oz!),
+      c[2]! + wz - Math.min(...ranges.oz!),
+    ];
+    for (const k of ranges.curvature!) {
+      kappa = Math.max(kappa, Math.abs(k));
+      for (const d of dz) {
+        fac = Math.max(fac, Math.abs(1 - k * d));
+      }
+    }
+    const sin = Math.min(1, kappa * dx);
+    const I = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+    return {
+      basisIn: I,
+      basisOut: I,
+      absJ: [fac, 0, fac * sin, 0, 1, 0, sin, 0, 1],
+    };
+  },
   separable: [],
   source,
   slang: "bendParity",

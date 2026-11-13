@@ -15,6 +15,14 @@ import {
   WGS84_RADII,
   type Radii,
 } from "./ellipsoid.ts";
+import {
+  curvatureRadii,
+  enuAtNormal,
+  halfExtents,
+  hull,
+  liftBound,
+  UNBOUNDED,
+} from "./regionBounds.ts";
 
 const frame = heightFrame();
 
@@ -51,6 +59,35 @@ export function heightOffsetDescriptor(
       out[0] = x - offset * frame.n[0]!;
       out[1] = y - offset * frame.n[1]!;
       out[2] = z - offset * frame.n[2]!;
+    },
+    bound(region, ranges) {
+      // J = I + offset · S (I + hS)⁻¹: nothing along the normal, on the
+      // surface a block with eigenvalues offset / (ρ + h) (see the lift).
+      const { min, max } = curvatureRadii(radii);
+      try {
+        locate(radii, region.center, frame, false);
+      } catch {
+        return UNBOUNDED;
+      }
+      const basis = enuAtNormal(frame.n);
+      const w = halfExtents(basis, region.axes);
+      const reach = Math.hypot(w[0], w[1], w[2]);
+      if (!(min + frame.h - reach > 0)) {
+        return UNBOUNDED;
+      }
+      const lam = 1 / (min + frame.h - reach);
+      const hLow = frame.h - w[2];
+      const hHigh = frame.h + w[2] + 0.5 * lam * (w[0] * w[0] + w[1] * w[1]);
+      const t = [1 / (max + hHigh), 1 / (min + hLow)];
+      const dT = hull(ranges.offset!.flatMap((o) => t.map((v) => o * v)));
+      const tilt = Math.min(Math.PI, lam * reach);
+      const axis = Math.hypot(region.center[0]!, region.center[1]!);
+      const twist = axis > reach ? reach / (axis - reach) + tilt : Math.PI;
+      return {
+        basisIn: basis,
+        basisOut: basis,
+        absJ: liftBound(dT, [0, 0], tilt, Math.min(Math.PI, twist)),
+      };
     },
     separable: ["offset"],
     identity: { offset: 0 },

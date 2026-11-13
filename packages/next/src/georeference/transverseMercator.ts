@@ -21,6 +21,13 @@ import {
   type TransverseMercatorForm,
 } from "../scene/warpForms.ts";
 import { revolution, WGS84_RADII, type Radii } from "./ellipsoid.ts";
+import {
+  curvatureRadii,
+  halfExtents,
+  IDENTITY,
+  localMetric,
+  UNBOUNDED,
+} from "./regionBounds.ts";
 
 type K = "centralMeridian" | "scaleFactor" | "falseEasting" | "falseNorthing";
 
@@ -179,6 +186,56 @@ export function transverseMercatorDescriptor(
         v.centralMeridian + Math.atan2(Math.sinh(etap), Math.cos(xip)) / RAD;
       out[1] = Math.atan(tau) / RAD;
       out[2] = h;
+    },
+    geographic: { in: true },
+    bound(region, ranges) {
+      // The projection is conformal where it is defined: its horizontal
+      // part is the point scale k times a rotation by the grid convergence γ
+      // of the surface's metric, so per east and north metre at the centre
+      // the columns are k · (N cos φ) / (the centre's distance from the axis)
+      // and k · M / (M + h at the centre) along grid directions γ off east
+      // and north, and 1 for up. The parallel's radius varies by at most the
+      // largest M times the latitude reached, M by monotonicity in |φ|. k is
+      // the sphere's k0 / √(1 − (cos φ sin Δλ)²), its excess over k0 widened
+      // by 1 + e'² for the flattening, at the furthest longitude from the
+      // central meridian and the highest latitude; |γ| ≤ |Δλ| there, widened
+      // the same way.
+      const c = region.center;
+      const w = halfExtents(IDENTITY, region.axes);
+      const m = localMetric(a, e2, c[1]!, c[2]!, w[1]);
+      if (!(m.east > 0)) {
+        return UNBOUNDED;
+      }
+      const east = (m.parallel + curvatureRadii(radii).max * m.dphi) / m.east;
+      const north = m.meridianMax / m.north;
+      let across = 0;
+      for (const meridian of ranges.centralMeridian!) {
+        const d = ((((c[0]! - meridian) % 360) + 540) % 360) - 180;
+        across = Math.max(across, Math.abs(d) * RAD);
+      }
+      const b = Math.cos(Math.max(0, Math.abs(c[1]!) * RAD - m.dphi));
+      const spread = across + w[0] / m.east;
+      const sin = Math.sin(Math.min(spread, Math.PI / 2));
+      const sec =
+        spread < Math.PI / 2 ? 1 / Math.sqrt(1 - b * b * sin * sin) : Infinity;
+      const flat = 1 + e2 / (1 - e2);
+      const k = ranges.scaleFactor![1] * (1 + flat * (sec - 1));
+      const sg = Math.sin(Math.min(spread * flat, Math.PI / 2));
+      return {
+        basisIn: IDENTITY,
+        basisOut: IDENTITY,
+        absJ: Float64Array.of(
+          k * east,
+          k * east * sg,
+          0,
+          k * north * sg,
+          k * north,
+          0,
+          0,
+          0,
+          1,
+        ),
+      };
     },
     separable: ["scaleFactor", "falseEasting", "falseNorthing"],
     source: sourceOf(e, series.a, a, series.alpha),

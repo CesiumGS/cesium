@@ -96,6 +96,28 @@ export const scaleAlongAxesDescriptor: TransformDescriptor = {
   inverse(q, params, out) {
     apply(params as Named<K>, true, q, out);
   },
+  bound: (_region, ranges) => {
+    // J = Σ s_k e_k e_kᵀ on the orthonormal basis (a, b, u): diagonal in it.
+    const at = (k: keyof Named<K>) => ranges[k]![0];
+    const basis = [
+      at("ax"),
+      at("ay"),
+      at("az"),
+      at("bx"),
+      at("by"),
+      at("bz"),
+      at("ux"),
+      at("uy"),
+      at("uz"),
+    ];
+    const s = (k: "sa" | "sb" | "sc") =>
+      Math.max(...ranges[k]!.map((v) => Math.abs(v)));
+    return {
+      basisIn: basis,
+      basisOut: basis,
+      absJ: [s("sa"), 0, 0, 0, s("sb"), 0, 0, 0, s("sc")],
+    };
+  },
   separable: ["sa", "sb", "sc"],
   identity: { sa: 1, sb: 1, sc: 1 },
   source,
