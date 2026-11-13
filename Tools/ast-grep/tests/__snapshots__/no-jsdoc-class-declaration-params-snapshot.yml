@@ -28,3 +28,19 @@ snapshots:
       style: secondary
       start: 72
       end: 149
+  ? |
+    /** @exception {DeveloperError} Fails during Mercury retrograde. */ class MyClass () {
+      constructor(a, b) {}
+    }
+  : labels:
+    - source: /** @exception {DeveloperError} Fails during Mercury retrograde. */
+      style: primary
+      start: 0
+      end: 67
+    - source: |-
+        class MyClass () {
+          constructor(a, b) {}
+        }
+      style: secondary
+      start: 68
+      end: 111
