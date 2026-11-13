@@ -14,11 +14,13 @@
  * bound, and the change propagates upward.
  *
  * What the numbers do and do not claim:
- * - The deviation is measured at the vertices of both meshes (the difference
- *   of two piecewise-linear surfaces is piecewise linear, so its extreme is
- *   at a vertex of the two meshes laid over each other). Points where an
- *   edge of one mesh crosses an edge of the other are not sampled, so the
- *   deviation can fall short of the true maximum there.
+ * - The deviation is measured at every vertex of the two meshes laid over
+ *   each other: both meshes' vertices, and the crossings of a child edge
+ *   with a parent edge (the difference of two piecewise-linear surfaces is
+ *   piecewise linear over that overlay, so its extreme is at one of them).
+ *   Edges lying along each other cross nowhere but at vertices, which are
+ *   measured. Up to float64 rounding it is exact for the meshes as drawn. A
+ *   pair needing more than `MAX_CROSSING_TESTS` edge tests is unmeasurable.
  * - Heights are the quantized ones (15 bits over the tile's height range), as
  *   drawn. The source's own error against reality is not in the bound.
  * - A child's "own error" is its level estimate until its children refit it:
@@ -49,6 +51,9 @@ export const MAX_REFIT_TRIANGLES = 65536;
 /** Cell entries a mesh's index may hold: up to sixteen per triangle, and a floor for meshes of a few large triangles. */
 const entryBudget = (triangles: number) =>
   Math.max(16 * triangles, 8 * GRID * GRID);
+
+/** Edge-against-edge tests one deviation may make before it gives up (no refit). */
+export const MAX_CROSSING_TESTS = 500_000;
 
 /** Null where the mesh is not worth measuring: see `MAX_REFIT_VERTICES`. */
 const grids = new WeakMap<TerrainHeights, TriangleGrid | null>();
@@ -227,7 +232,7 @@ export function deviationFromParent(
     }
     dev = Math.max(dev, Math.abs(hc - hp));
   }
-  return dev;
+  return Math.max(dev, crossingDeviation(child, parent, qx, qy));
 }
 
 /**
@@ -279,4 +284,89 @@ export function predictedError(s: RefitState): number | undefined {
   return s.deviation === undefined || !Number.isFinite(s.deviation)
     ? undefined
     : Math.min(s.levelError, PREDICTED_ERROR_RATIO * s.deviation);
+}
+
+/**
+ * The largest height difference at crossings of a child edge with a parent
+ * edge, both surfaces linear along their edges there; Infinity past
+ * `MAX_CROSSING_TESTS`. Each child edge (once) is tested against the edges
+ * of the parent triangles binned in the cells its bounds touch.
+ */
+function crossingDeviation(
+  child: TerrainHeights,
+  parent: TerrainHeights,
+  qx: number,
+  qy: number,
+): number {
+  const grid = gridOf(parent)!;
+  const childRange = child.maximumHeight - child.minimumHeight;
+  const parentRange = parent.maximumHeight - parent.minimumHeight;
+  const ch = (i: number) =>
+    child.minimumHeight + (child.h[i]! / QUANT) * childRange;
+  const ph = (i: number) =>
+    parent.minimumHeight + (parent.h[i]! / QUANT) * parentRange;
+  const seen = new Set<number>();
+  let tests = 0;
+  let dev = 0;
+  const cell = (q: number) =>
+    Math.min(GRID - 1, Math.max(0, Math.floor((q / QUANT) * GRID)));
+  const tri = child.triangles;
+  for (let k = 0; k + 2 < tri.length; k += 3) {
+    for (let e = 0; e < 3; e++) {
+      const a = tri[k + e]!;
+      const b = tri[k + ((e + 1) % 3)]!;
+      const key = a < b ? a * 65536 + b : b * 65536 + a;
+      if (a === b || seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      // The edge in the parent's quantized coordinates.
+      const x0 = (qx + child.u[a]! / QUANT) * 0.5 * QUANT;
+      const y0 = (qy + child.v[a]! / QUANT) * 0.5 * QUANT;
+      const x1 = (qx + child.u[b]! / QUANT) * 0.5 * QUANT;
+      const y1 = (qy + child.v[b]! / QUANT) * 0.5 * QUANT;
+      const dx = x1 - x0;
+      const dy = y1 - y0;
+      for (
+        let cy = cell(Math.min(y0, y1));
+        cy <= cell(Math.max(y0, y1));
+        cy++
+      ) {
+        for (
+          let cx = cell(Math.min(x0, x1));
+          cx <= cell(Math.max(x0, x1));
+          cx++
+        ) {
+          const c = cy * GRID + cx;
+          for (let n = grid.start[c]!; n < grid.start[c + 1]!; n++) {
+            const t3 = grid.entries[n]! * 3;
+            for (let f = 0; f < 3; f++) {
+              const p = parent.triangles[t3 + f]!;
+              const q = parent.triangles[t3 + ((f + 1) % 3)]!;
+              if (++tests > MAX_CROSSING_TESTS) {
+                return Infinity;
+              }
+              const ex = parent.u[q]! - parent.u[p]!;
+              const ey = parent.v[q]! - parent.v[p]!;
+              const denom = dx * ey - dy * ex;
+              if (denom === 0 || !Number.isFinite(denom)) {
+                continue; // parallel: no single crossing
+              }
+              const wx = parent.u[p]! - x0;
+              const wy = parent.v[p]! - y0;
+              const t = (wx * ey - wy * ex) / denom;
+              const r = (wx * dy - wy * dx) / denom;
+              if (t < 0 || t > 1 || r < 0 || r > 1) {
+                continue;
+              }
+              const hc = ch(a) + t * (ch(b) - ch(a));
+              const hp = ph(p) + r * (ph(q) - ph(p));
+              dev = Math.max(dev, Math.abs(hc - hp));
+            }
+          }
+        }
+      }
+    }
+  }
+  return dev;
 }

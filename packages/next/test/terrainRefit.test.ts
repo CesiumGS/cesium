@@ -216,6 +216,33 @@ describe("a tile's error refitted from its children", () => {
     expect(bound).toBeLessThan(actual * 3);
   });
 
+  it("measures the gap at an edge crossing that no vertex shows", () => {
+    // Parent: one square, split along its main diagonal, 0 on the diagonal
+    // and 1,000 m at the other two corners. Child (south-west quadrant):
+    // split along the other diagonal, matching the parent at all four of its
+    // vertices (0, 500, 500, 0 m), so no vertex differs. The two diagonals
+    // cross at the quadrant's centre, where the child is 500 m and the
+    // parent 0.
+    const Q = 32767;
+    const parent: TerrainHeights = {
+      u: new Uint16Array([0, Q, 0, Q]),
+      v: new Uint16Array([0, 0, Q, Q]),
+      h: new Uint16Array([0, Q, Q, 0]),
+      triangles: new Uint32Array([0, 1, 3, 0, 3, 2]),
+      minimumHeight: 0,
+      maximumHeight: 1000,
+    };
+    const child: TerrainHeights = {
+      u: new Uint16Array([0, Q, 0, Q]),
+      v: new Uint16Array([0, 0, Q, Q]),
+      h: new Uint16Array([0, Q, Q, 0]),
+      triangles: new Uint32Array([0, 1, 2, 1, 3, 2]),
+      minimumHeight: 0,
+      maximumHeight: 500,
+    };
+    expect(deviationFromParent(child, parent, 0, 0)).toBeCloseTo(500, 0);
+  });
+
   it("gives up on a hostile mesh, quickly, keeping the level estimate", () => {
     const good = gridTile(
       { west: 0.3, south: 0.2, east: 0.304, north: 0.204 },
