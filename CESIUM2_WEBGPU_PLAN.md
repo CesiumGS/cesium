@@ -10403,6 +10403,129 @@ Recorded to explore, nothing decided. Each item gives the question and a first t
 - File formats as their own modules: GeoJSON, KML, CZML, glTF, USD and more, each a loader behind one content interface, loaded on demand.
 - The Slang interface as its own module too, if the API's shader input becomes an IR.
 
+#### Shader toolchain and IR: the four combinations compared (research, 2026-11-13)
+
+The owner's question above, worked through before §13.40's spikes. Nothing is decided here. Measurements were made on this machine (Apple M2, Node 24.19, the store's Slang 2026.21); outside facts give the page and the date read. Scripts were scratch files and aren't in the repository.
+
+**What is there today.**
+
+- _Engine shaders:_ 47 `.slang` files, compiled offline by the pinned `slangc` to checked-in WGSL (`npm run shaders`), with reflection feeding the TypeScript layouts.
+- _Custom shaders:_ `CustomShader.fromSlang` compiles user Slang at run time with the WASM build in a worker, loaded on first use (`slang.ts`, `slangWorker.ts`); `checkBundle` guards that it stays out of the main chunk.
+- _The internal linker:_ `src/shaders/link` (about 850 lines) joins checked WGSL units across declared boundaries, with a `Linker` interface that already names Slang and WESL-style imports as possible strategies.
+- _Styles:_ `styleExpression.ts` compiles 1.x expressions straight to WGSL strings; `VectorStyle.ts` reuses it for point layers. Neither goes through an IR.
+- _Transforms:_ `src/transform` parses restricted JS into `ir.ts` (hash-consed scalar DAG), with forward-mode AD, interval evaluation, Taylor bounds, a float64 CPU evaluator, and WGSL and df64 emitters.
+
+**Measured here.**
+
+| What                                                           | Result                                                                                        |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Slang WASM binary (`slang-wasm.wasm`, 2026.21)                 | 25.2 MB raw, 10.4 MB gzip -9, 7.8 MB brotli -q 11; its JS glue 155 KB raw, 36 KB brotli       |
+| Slang WASM start (Node; a browser's streaming compile differs) | instantiate 36–49 ms, `createGlobalSession` 146–199 ms                                        |
+| A 1.x style as a Slang module, to WGSL                         | first compile 270 ms, then 34–49 ms each (median of 10, new session each, as the worker does) |
+| The same, to GLSL                                              | 29–53 ms each; the output is `#version 450` whatever profile is asked (see below)             |
+| The same style through `styleExpression.ts`, to WGSL           | about 10 µs each (median of 2,000), 1 ms the first time                                       |
+| A JS twist through `parseTransform`, its Jacobian, to WGSL     | about 34 µs each, all three steps                                                             |
+| Pipeline creation for a new shader (the browser's compiler)    | 50–110 ms per new shader, as `ShaderCache.ts` states (not re-measured here)                   |
+
+So a front end on our IR costs microseconds and Slang tens of milliseconds, three to four orders of magnitude apart; both sit beside the browser's own pipeline compile, which costs about as much as Slang's warm compile.
+
+**Five facts that change the question.**
+
+1. _A WebGL 2 backend is a second renderer, not a translation._ §13.17 found that WebGL 2 has no compute, storage buffers or indirect draws, so the GPU-driven renderer's shaders can't be translated to it by any compiler. What could be shared with a WebGL 2 renderer is function-level code: a style's fields, a transform's function, a material's evaluation. So the criterion is "can the style, transform and material functions be emitted as GLSL ES 3.00", not "can the engine's modules".
+2. _Slang's GLSL target isn't GLSL ES._ Asked for GLSL, the WASM build emits `#version 450` with `layout(column_major) buffer;`, and `findProfile` knows no ES profile (`glsl_300_es`, `glsl_es_300`, `glsl_310_es` all return 0; `glsl_330` is known and still gives 450). WebGL 2 would need a second step (Slang to WGSL to naga's GLSL ES writer, or Slang to SPIR-V to SPIRV-Cross).
+3. _Slang in the browser has no CPU target._ The WASM build's targets are GLSL, HLSL, WGSL, SPIR-V, Metal and CUDA. Picks, measurements, legends, queries and accuracy need the same function on the CPU in float64 (§13.37's "truth on the CPU"), which only a JS evaluator of our own gives.
+4. _Slang's generics can carry the IR's interpretations on the GPU._ A function generic over an `INum` interface compiled for both a float and an interval implementation, and `fwd_diff` of a `[Differentiable]` function, both went to WGSL in the WASM build (200 ms cold). So AD and interval evaluation on the GPU aren't a reason by themselves to keep our IR; the CPU side and the latency are.
+
+5. _Slang's own WGSL target is still called a work in progress._ Its WGSL page lists what it can't do (wave intrinsics, 64-bit and float atomics, `SV_PrimitiveID`, `SV_ClipDistance`), and 69 issues labelled WebGPU are open, among them WGSL that only naga accepts, with no diagnostic (#13914), and no way to express compatibility mode (#13933). It has been fine for the engine's kernels offline, where `shaders:check` and the browser test what it emits; it's a larger bet for code generated at run time from data.
+
+**Outside facts (all read 2026-11-13).**
+
+- _Slang:_ latest release 2026.22 (2026-11-10); the pinned 2026.21 is from 2026-11-04, and its WASM zip is 10,512,069 bytes ([releases](https://api.github.com/repos/shader-slang/slang/releases)). No official npm package; issue [#12317](https://github.com/shader-slang/slang/issues/12317) asks for one. "Slang support for WebGPU is a work in progress" ([targets](https://shader-slang.org/slang/user-guide/targets.html); limits in the [WGSL target page](https://github.com/shader-slang/slang/blob/master/docs/user-guide/a2-03-wgsl-target-specific.md)). GLSL is "less mature", with profiles `glsl_130` to `glsl_460` only ([GLSL target page](https://github.com/shader-slang/slang/blob/master/docs/user-guide/a2-04-glsl-target-specific.md), [capabilities](https://github.com/shader-slang/slang/blob/master/source/slang/slang-capabilities.capdef)); ESSL was closed as not planned ([#5635](https://github.com/shader-slang/slang/issues/5635), workaround SPIR-V then `spirv-cross --es --version 300`) and is open as help wanted ([#6142](https://github.com/shader-slang/slang/issues/6142)). [Link-time specialization](https://github.com/shader-slang/slang/blob/master/docs/user-guide/10-link-time-specialization.md): `extern`/`export` types and constants across modules, and precompiled binary IR modules; the WASM bindings expose `loadModuleFromIRBlob` and `Module.serialize` ([bindings](https://github.com/shader-slang/slang/blob/master/source/slang-wasm/slang-wasm-bindings.cpp)). Hosted at Khronos since 2024-11-21 ([announcement](https://www.khronos.org/news/permalink/khronos-group-launches-slang-initiative-hosting-open-source-compiler-contributed-by-nvidia)).
+- _WESL:_ the org is now [webgpu-tools](https://github.com/webgpu-tools/wesl-spec); no 1.0, imports and `@if` are spec drafts. [wesl-rs](https://github.com/webgpu-tools/wesl-rs) says WESL 0.2 has imports, `@if`/`@elif`/`@else` and Cargo packages; generics, namespaces and automatic bindings are planned. npm [`wesl`](https://registry.npmjs.org/wesl/latest) 0.7.31 (2026-09-01, 1.24 MB unpacked), [`wesl-plugin`](https://registry.npmjs.org/wesl-plugin/latest) 0.6.81 for Vite, webpack and Rollup. It [links at run time in the browser](https://wesl-lang.dev/docs/JavaScript-Runtime-Linking.html) with conditions, constants and virtual libraries. Bevy has [experimental support](https://bevy.org/examples/shaders/shader-material-wesl/).
+- _naga:_ 30.0.2 with wgpu (2026-11-12, [crates.io](https://crates.io/crates/naga)). Its GLSL writer supports core 330 to 450 and ES 300 and 310, with a WebGL flag; compute and storage buffers need ES 310, so not WebGL 2 ([`back/glsl`](https://github.com/gfx-rs/wgpu/blob/v30.0.2/naga/src/back/glsl/mod.rs), [features](https://github.com/gfx-rs/wgpu/blob/v30.0.2/naga/src/back/glsl/features.rs)). [`naga-wasm`](https://registry.npmjs.org/naga-wasm/latest) 30.2.0 (2.1 MB unpacked) is third-party ([kekkon-nexus/naga-wasm](https://github.com/kekkon-nexus/naga-wasm), created 2026-09, one maintainer, pinned to naga 30.0.1). WGSL's uniformity analysis is still an open issue in naga ([wgpu#4369](https://github.com/gfx-rs/wgpu/issues/4369)); Tint implements the spec's ([doc](https://github.com/google/dawn/blob/main/docs/tint/uniformity_analysis.md)). So naga accepting a shader doesn't mean Chrome will.
+- _Tint:_ its IR "should _never_ appear in the public API" ([ir.md](https://github.com/google/dawn/blob/main/docs/tint/ir.md)); no standalone WASM build found.
+- _WebGPU in browsers_ ([implementation status](https://github.com/gpuweb/gpuweb/wiki/Implementation-Status), edited 2026-10-02): Chrome on Mac, Windows and ChromeOS since 113 and Android 12+ since 121, Linux partly (Intel Gen12+ since 144); Safari 26 on all Apple platforms; Firefox on Windows (141) and macOS (147), Linux in Nightly. Compatibility mode (`featureLevel: "compatibility"`, OpenGL ES 3.1) shipped opt-in in [Chrome 146](https://developer.chrome.com/blog/new-in-webgpu-146) on Android; D3D11 and ChromeOS were being explored. So the WebGL 2 audience is old devices, Linux, and browsers without WebGPU, and shrinking.
+- _MaterialX:_ 1.39.5 (2026-05-22) added a Slang generator, `MaterialXGenSlang`, with JS bindings ([release](https://github.com/AcademySoftwareFoundation/MaterialX/releases/tag/v1.39.5)). Its generators are GLSL, ESSL, Vulkan GLSL, MSL, OSL, MDL, Slang, and a `WgslShaderGenerator` (1.39.4) that emits Vulkan GLSL written to translate cleanly to WGSL, not WGSL itself ([PR #2407](https://github.com/AcademySoftwareFoundation/MaterialX/pull/2407)). The Emscripten build generates shaders in the browser ([README](https://github.com/AcademySoftwareFoundation/MaterialX/blob/v1.39.5/javascript/README.md)); there's no official npm package.
+- _OpenPBR:_ 1.1.2 (2026-11-05), with MaterialX as its reference implementation ([releases](https://github.com/AcademySoftwareFoundation/OpenPBR/releases)). _OSL:_ CPU, batched SIMD and OptiX only; no GLSL, WGSL or Metal back end ([INSTALL.md](https://github.com/AcademySoftwareFoundation/OpenShadingLanguage/blob/main/INSTALL.md)).
+
+**The four combinations.** In each, the engine's own shaders can stay Slang compiled offline; what differs is what happens at run time and where styles, transforms and vector fields live.
+
+_(1) Slang for everything._ Styling and vector stages are Slang interfaces; a style, a 1.x style or a transform is lowered by a front end to a Slang module and linked with `extern`/`export` against precompiled engine modules; the WASM compiler loads lazily the first time anything is styled; GLSL for WebGL 2 from Slang's GLSL target.
+
+- For: one language from engine kernels to user code, with interfaces, generics, link-time specialization and autodiff that work in the WASM build (measured above). Precompiled IR modules cut the per-compile front-end work. Khronos governance. MaterialX's new Slang generator gives material graphs a direct way in.
+- Against: every styled scene pays 7.8 MB (brotli) and about half a second of compiler start before its first style, and 35–50 ms per style edit on top of the pipeline compile. No CPU target, so picks, legends, queries and interval culling still need a JS evaluator with the same semantics, which is most of option 2's IR anyway. Its GLSL isn't GLSL ES, so WebGL 2 needs a second translator. A front end is still needed per language (1.x expressions aren't Slang). A full compiler runs on code generated from third-party tileset data. `checkBundle`'s guard that styling needs no Slang would go.
+
+_(2) Slang for engine shaders, our IR for what's generated at run time._ Today's model, finished: engine kernels in Slang offline; styles, transforms and vector fields lowered by front ends to `ir.ts` (grown with types, vectors, input kinds and rates, §13.38 spike 1) and emitted as WGSL at the WGSL-level ABI (§3.4); runtime Slang stays lazy, for custom shaders only.
+
+- For: the core pays nothing for a compiler, and a style compiles in microseconds. One semantic core for GPU code, the float64 CPU evaluator, AD, intervals, Taylor bounds and df64. The IR's JSON form can be the spec's interchange (§13.38), and cesium-native implements a few dozen ops, not a compiler. A GLSL ES emitter is about the size of the WGSL one (`wgsl.ts`, 264 lines), and expression-level code is exactly what fact 1 says WebGL 2 would share.
+- Against: we own an IR, which is the wheel the owner doesn't want to reinvent; it must grow types, structs, rates and perhaps bounded loops, carefully. Two worlds meet at the ABI, whose exported names Slang mangles (`records_0`), so `boundary.ts` and its tests keep the seam honest. Built-in transforms are written twice (Slang with `[Differentiable]`, mirrored in TS, §13.37 decision 2). The emitted WGSL is checked only by the browser today.
+
+_(3) WESL as the internal linker, naga only for GLSL._ The `Linker` strategy becomes WESL's runtime `link()` (imports, `@if`, constants); generated styles become WESL modules; `naga-wasm` loads with a WebGL 2 renderer to write GLSL ES.
+
+- For: a community format for WGSL modules, with bundler plugins, npm packages and a runtime linker in the browser; conditional compilation we'd otherwise write; Slang's WGSL output is valid input.
+- Against: no 1.0 and no generics yet, so no interface-based specialization like Slang's. It answers none of the IR questions: no AD, intervals or CPU evaluation. It replaces 850 lines of linker that check our boundaries' signatures, which WESL doesn't know about (not checked whether it can). naga's GLSL ES can't take compute or storage buffers (fact 1 again), and its validation isn't Tint's.
+
+_(4) Our IR to WGSL, naga for validation and GLSL._ As (2), but no Slang at run time (`CustomShader` takes WGSL, or IR, only), with `naga-wasm` validating every emitted WGSL module in CI and writing GLSL ES for a WebGL 2 renderer.
+
+- For: the smallest runtime (about 2 MB unpacked for naga, only with WebGL 2); emitted WGSL validated in CI against a second implementation; a maintained GLSL ES writer for whole modules.
+- Against: drops `CustomShader.fromSlang`, which §3.4 made public API. The wrapper is third-party and young (build our own from the crate, with Rust in the build, if it matters). Translating WGSL to GLSL ES hits the same ES 300 limits. Two validators that disagree on uniformity need a rule for which one wins.
+
+**Scorecard.** Best, good, weak or no, for this engine, from the facts above.
+
+| Criterion                                     | (1) Slang everywhere                             | (2) Slang offline + our IR                            | (3) WESL + naga                          | (4) Our IR + naga                      |
+| --------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------- | -------------------------------------- |
+| Core bundle                                   | Good (lazy), but every styled scene loads 7.8 MB | Best: no compiler for styles                          | Good: `wesl` size in a bundle unmeasured | Best                                   |
+| Latency to a style edit (before the pipeline) | Weak: about 0.5 s cold, 35–50 ms warm            | Best: microseconds                                    | Good: linking only (unmeasured)          | Best                                   |
+| Portability of what reaches the browser       | Good: WGSL, WebGPU target still in progress      | Good: WGSL from a small emitter                       | Good: WGSL                               | Good, and validated in CI              |
+| Autodiff and intervals                        | Good on the GPU; none on the CPU                 | Best: GPU and CPU from one IR                         | No                                       | Best                                   |
+| CPU evaluation (picks, legends, queries)      | No                                               | Best                                                  | No                                       | Best                                   |
+| Specialization                                | Best: generics and link-time types and constants | Good: per-structure programs with uniforms (§13.37)   | Weak: `@if` and constants, no generics   | Good, as (2)                           |
+| WebGL 2 path (function-level code)            | Weak: no GLSL ES without SPIRV-Cross or naga     | Good: a GLSL ES emitter of our own                    | Good: naga, within ES 300's limits       | Good: naga, or our emitter             |
+| Several styling languages                     | Good: front ends emit Slang                      | Best: front ends emit the IR, which is also the spec  | Weak: front ends emit text               | Best                                   |
+| MaterialX, OpenPBR, OSL                       | Best: MaterialX's Slang generator                | Good: its output at the ABI, or its graph into the IR | Weak: its GLSL needs translating         | Good, as (2)                           |
+| Custom shaders in Slang (public API, §3.4)    | Yes                                              | Yes, lazy                                             | Yes, lazy                                | No                                     |
+| Maturity and governance of the dependency     | Khronos; WebGPU target in progress               | Ours; Slang only at build time                        | Pre-1.0 community spec                   | Ours, plus a young third-party wrapper |
+
+**What the engine's API should accept.** Both, in layers, so a new language never touches the core:
+
+- _The IR is the contract_ for styles, transforms and vector fields: typed nodes with declared inputs, kinds and rates (§13.40's runtime contract), with a JSON form that is versioned like a glTF extension. The engine's API takes an IR program.
+- _Languages are front-end modules_ that lower to it: the 1.x expressions, restricted JS functions, the new styling language, and later GML or SLD-style rules, SVG presentation attributes and MapLibre expressions. Each is its own entry point, loaded on demand (§13.36), and none is in the core.
+- _Shader code stays the escape hatch_ at the WGSL-level ABI: Slang (lazy) or WGSL for what the IR can't say. A style that needs more than the IR is a custom shader, not a bigger IR.
+- An IR to Slang emitter is cheap insurance: where a custom shader already loaded the compiler, a style could be linked into its Slang module, and option 1 stays open without rewriting front ends.
+
+**MaterialX, OpenPBR and OSL.**
+
+- _OpenPBR_ is the material model to compare the engine's against (versioned, with a reference in MaterialX); the comparison is its own task.
+- _MaterialX_ meets us in two places. Its node graphs are material functions: pattern nodes map onto the IR's ops one by one, which makes a graph a front end. Its generated code is shader text: the Slang generator plus `slangc` offline turns a `.mtlx` into an engine material at build time, and its ESSL generator serves a WebGL 2 renderer. Its "WGSL" generator still needs naga or Tint.
+- _OSL_ has no GPU back end outside OptiX, so it's a model to learn from (closures as the material's result), not a target.
+
+**Recommendation (to take or leave).** Option 2 now, with the pieces of 4 that cost nothing at run time:
+
+1. Engine kernels stay Slang offline, as today.
+2. `ir.ts` becomes the runtime core for styles, transforms and vector fields, as §13.38 and §13.40 planned; its JSON form is the interface the API takes.
+3. Runtime Slang stays lazy, for custom shaders only, and `checkBundle` keeps styling free of it.
+4. `naga-wasm` as a development dependency: validate every emitted WGSL module in CI, beside the browser's own check. Not shipped.
+5. When a WebGL 2 renderer is built, the IR gets a GLSL ES emitter for function-level code, and naga is considered only for whole modules.
+6. WESL isn't adopted now. The `Linker` interface keeps the door open; look again at its 1.0 or when it has generics.
+7. Revisit option 1 if any of these changes: Slang ships a CPU target in its WASM build, its WASM size falls by an order of magnitude, or the IR grows loops, structs and memory (§13.38's "revisit if").
+
+**Before deciding, three short spikes:**
+
+- (a) Slang WASM cold start and a style compile in Chrome, Safari and Firefox, streaming instantiation, in a worker: the half second above is Node's.
+- (b) `naga-wasm` over all of `src/shaders/generated` and a sample of emitted styles and transforms, counting where it and Tint disagree.
+- (c) The IR to GLSL ES for one style, run in a WebGL 2 context, to size the emitter.
+
+**Questions for the owner.**
+
+1. Is CPU evaluation of a style (picks, legends, queries, interval culling of tiles) a requirement? If yes, an IR in JS is needed whatever else is chosen.
+2. What may a scene that only styles 3D Tiles load: is 7.8 MB and about half a second before its first style acceptable, or does styling stay compiler-free?
+3. Is a WebGL 2 renderer planned, and which content would it draw? That decides whether a GLSL ES path is needed at all, and when.
+4. Does the public API take the IR (JSON) as its normative form, with languages as modules, or only languages?
+5. Are built-in transforms kept in two sources (Slang and TS, checked by parity tests), or moved to the IR as one source emitting WGSL, and Slang where needed?
+6. Is a third-party `naga-wasm` acceptable in CI, or do we build our own from the naga crate (Rust in the build)?
+7. MaterialX: import at build time (its Slang output, compiled by `slangc`) or at run time (its graph into the IR), or both?
+8. Should a style's numeric literals become uniforms, so an edit changes values without a new pipeline (a `CustomShader` uniform already changes through `setUniform` with no new module or pipeline)? This matters more than the front end's speed in every option.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
