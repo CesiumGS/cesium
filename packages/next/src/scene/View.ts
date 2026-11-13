@@ -90,6 +90,11 @@ export interface PickResult {
   item?: SceneItem;
 }
 
+/** α clamped to [0, 1]; NaN is 1. */
+function clampExponent(value: number): number {
+  return Number.isNaN(value) ? 1 : Math.min(1, Math.max(0, value));
+}
+
 /** How a terrain tile replaces a coarser one (`View.lodTransitions`). */
 export type LodTransitions = "morph" | "pop";
 
@@ -152,6 +157,8 @@ export interface ViewOptions {
   debug?: DebugView;
   /** How a terrain tile replaces a coarser one (`View.lodTransitions`). Default "morph". */
   lodTransitions?: LodTransitions;
+  /** The error exponent (`View.lodExponent`), in [0, 1]. Default 1. */
+  lodExponent?: number;
   /** Background color as displayed (already exposed), with "color". */
   clearColor?: readonly [number, number, number];
   /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
@@ -311,6 +318,7 @@ export class View {
     lighting: ViewLighting;
     debug: DebugView;
     lodTransitions: LodTransitions;
+    lodExponent: number;
   };
   private readonly changed = () => this.wake?.();
   private readonly observerChanged = () => {
@@ -582,6 +590,25 @@ export class View {
     return debugLegend(this.state.debug);
   }
   /**
+   * The error policy, α in [0, 1] (clamped; default 1). Under a warp that
+   * stretches content, tile selection measures a tile's error as drawn: its
+   * geometric error times the warp's stretch s. With an exponent it uses
+   * s^α instead. 1 is exact as drawn: a vertical exaggeration of 10 refines
+   * terrain until the 10-times-taller error is small, with the most tiles.
+   * 0 measures the error as if unwarped, as for 1.x: far fewer tiles, and
+   * the error on screen is s times the threshold. In between trades one for
+   * the other. A warp's own `lodExponent` (`Warp.lodExponent`), where it sets
+   * one, wins over this. Changing it reselects.
+   */
+  get lodExponent(): number {
+    return this.state.lodExponent;
+  }
+  set lodExponent(value: number) {
+    this.state.lodExponent = clampExponent(value);
+    this.wake?.();
+  }
+
+  /**
    * How terrain refines on screen: "morph" (the default) eases each new
    * tile's surface from the nearest ancestor that was drawn, over 0.3 seconds
    * (selection can skip levels, so that is not always the parent), so a tile
@@ -667,6 +694,7 @@ export class View {
     this.cityLights = options.cityLights ?? true;
     this.state.debug = options.debug ?? "off";
     this.state.lodTransitions = options.lodTransitions ?? "morph";
+    this.state.lodExponent = clampExponent(options.lodExponent ?? 1);
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.enabled = true;

@@ -3,7 +3,7 @@ import type { DrawSink } from "./DrawSink.ts";
 import type { SelectionView } from "./Stepwise.ts";
 import type { Tile } from "./Tile.ts";
 import { OCCLUDED_TICKS } from "./occlusion.ts";
-import { drawnTile, terrainDrawnError } from "./tileWarp.ts";
+import { drawnTile, lodExponentOf, terrainStretch } from "./tileWarp.ts";
 import { packTileDebug, TileDebugState } from "./debugViews.ts";
 import { type DebugColor, VOLUME_COLORS } from "./debugVolumes.ts";
 import type { TileVolume } from "./volumes.ts";
@@ -140,10 +140,11 @@ export function tileDebugWord(
   let stretch = 1;
   if (view.warp) {
     const drawn = drawnTile(tile, view.warp);
+    const alpha = lodExponentOf(view);
     stretch =
       tile.globe && drawn.slopeMax !== undefined
-        ? terrainDrawnError(tile, drawn, view.position, 1) - drawn.fit
-        : drawn.sigmaMax;
+        ? terrainStretch(tile, drawn, view.position, alpha)
+        : drawn.sigmaMax ** alpha;
   }
   return packTileDebug({
     level: tile.globe?.level ?? tile.depth,

@@ -49,6 +49,8 @@ export interface TileWarp {
   readonly scaleVersion?: number;
   /** Goes up whenever a fit lands or goes: the tiles' fit errors are read again. */
   readonly fitVersion: number;
+  /** The route's own error exponent (`Warp.lodExponent`), where one of its warps sets it; it wins over the view's. */
+  readonly lodExponent?: number;
   /**
    * `points` (n × 3, flat, in the tileset's coordinates) carried through
    * the map into the same coordinates, bounded, with its stretch there.
@@ -496,19 +498,42 @@ export function sinThetaMax(
  * height profile (`drawn.slopeMax`) the error is vertical: stretched by the
  * profile's largest dh′/dh with the horizontal stretch taken as 1, and seen
  * at most by sin θ (`sinThetaMax`). Under any other warp, the isotropic
- * σ_max, as for any content.
+ * σ_max, as for any content. The stretch s is used as s^α (`alpha`, the
+ * error exponent: 1 is exact as drawn, 0 treats the warp as absent).
  */
 export function terrainDrawnError(
   tile: Tile,
   drawn: DrawnTile,
   position: ArrayLike<number>,
   error = tile.geometricError,
+  alpha = 1,
+): number {
+  return error * terrainStretch(tile, drawn, position, alpha) + drawn.fit;
+}
+
+/** The factor `terrainDrawnError` multiplies a geometric error by: s^α, s the direction-aware or isotropic stretch. */
+export function terrainStretch(
+  tile: Tile,
+  drawn: DrawnTile,
+  position: ArrayLike<number>,
+  alpha = 1,
 ): number {
   const rectangle = tile.globe?.rectangle;
   const sphere = drawn.volume.sphere;
+  let s: number;
   if (drawn.slopeMax === undefined || !rectangle || !sphere) {
-    return error * drawn.sigmaMax + drawn.fit;
+    s = drawn.sigmaMax;
+  } else {
+    s = drawn.slopeMax * sinThetaMax(position, sphere, rectangle, tile.globe!);
   }
-  const sin = sinThetaMax(position, sphere, rectangle, tile.globe!);
-  return error * drawn.slopeMax * sin + drawn.fit;
+  return alpha === 1 ? s : s ** alpha;
+}
+
+/** The error exponent selection uses for a view: the route's own where set, else the view's, else 1. */
+export function lodExponentOf(view: {
+  readonly warp?: { readonly lodExponent?: number };
+  readonly lodExponent?: number;
+}): number {
+  const a = view.warp?.lodExponent ?? view.lodExponent ?? 1;
+  return Math.min(1, Math.max(0, a));
 }

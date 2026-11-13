@@ -311,6 +311,9 @@ export async function run({
   const measureNote = el("p", { className: "vex-note", role: "status" });
 
   const factorOut = el("output");
+  const alphaOut = el("output");
+  const tilesOut = el("dd");
+  const trianglesOut = el("dd");
   const routeOut = el("dd");
   const runOut = el("dd");
   const refitOut = el("dd");
@@ -400,6 +403,11 @@ export async function run({
     const { draws } = stats;
     // "fitted" counts every draw drawn at its current term; the exact and compiled ones are not fits.
     const fits = Math.max(0, draws.fitted - draws.exact - draws.routed);
+    const terrain = viewer.globe?.stats.selected;
+    tilesOut.textContent = terrain
+      ? n([...terrain.values()].reduce((a, b) => a + b, 0))
+      : "–";
+    trianglesOut.textContent = n(engine.stats.triangles);
     drawsOut.textContent = `${n(draws.total)}: ${n(draws.exact)} exact, ${n(draws.routed)} compiled, ${n(fits)} fitted, ${n(draws.stale)} stale, ${n(draws.pending)} waiting`;
   };
 
@@ -546,6 +554,35 @@ export async function run({
   };
   slider.onchange = () => setParams({ x: Number(slider.value).toFixed(1) });
 
+  // The error exponent α: how much of the exaggeration the choice of tile
+  // detail honours (`View.lodExponent`). Drag it to see tiles and triangles
+  // fall as it drops, and the visible error rise.
+  const alphaStart = Number(params.alpha);
+  if (params.alpha !== undefined && Number.isFinite(alphaStart)) {
+    view.lodExponent = alphaStart;
+  }
+  const alphaSlider = el("input", {
+    type: "range",
+    min: "0",
+    max: "1",
+    step: "0.05",
+    value: String(view.lodExponent),
+    ariaLabel: "Error exponent α",
+  });
+  const showAlpha = () => {
+    alphaOut.textContent = `α ${view.lodExponent.toFixed(2)}`;
+  };
+  alphaSlider.oninput = () => {
+    view.lodExponent = Number(alphaSlider.value);
+    showAlpha();
+    engine.requestRender();
+  };
+  alphaSlider.onchange = () =>
+    setParams({
+      alpha: view.lodExponent === 1 ? undefined : view.lodExponent.toFixed(2),
+    });
+  showAlpha();
+
   const uprightBox = el("input", {
     type: "checkbox",
     onchange: () => {
@@ -585,6 +622,21 @@ export async function run({
       "p",
       {},
       "One float a tick: terrain is exact and buildings are drawn by the compiled route, so nothing is fitted or fitted again. Pins are placed again, which is no fit.",
+    ),
+    el("h3", {}, "Level of detail"),
+    el("label", { className: "slider" }, "Error α", alphaSlider, alphaOut),
+    el(
+      "p",
+      {},
+      "At 1, terrain is refined until its error is small as drawn: exact, and the most tiles. At 0, as if unexaggerated: the fewest, and the error on screen grows with the exaggeration.",
+    ),
+    el(
+      "dl",
+      {},
+      el("dt", {}, "Terrain tiles drawn"),
+      tilesOut,
+      el("dt", {}, "Triangles"),
+      trianglesOut,
     ),
     el("h3", {}, "View"),
     el(
