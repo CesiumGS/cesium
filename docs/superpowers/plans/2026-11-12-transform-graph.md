@@ -255,6 +255,16 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
     - After a tile appears, the vertex stage blends h from the parent height to its own over about 300 ms, before the lift: g(mix(h_parent, h, t)). When coarsening, the children stay until they have morphed back.
     - This works under every height profile, and for any warp, morphing in the true frame before the route.
   - **Meshes without correspondence (3D Tiles replacement):** a dithered cross-fade of about 300 ms between a parent and its children, both drawn opaque with a blue-noise discard. Only the kept pixels write depth, so occlusion stays correct. The pair costs about twice as much for the fade's duration.
+- **Transitions are where the error shows (owner, 2026-11-12):**
+  - **A swap or a mixed-LOD boundary shows the gap between two levels.** Its drawn size is s · ε_parent, with s the stretch of every node above the content, affine scales included. A model scaled ×10 by an affine node pops ten times as far, as an exaggeration of 10 does.
+  - **During loading it's worse:** a coarse ancestor several levels up stands in, with an error of 2ⁿ times the threshold, times s. That's what the exaggeration scene shows while it loads: large untextured coarse peaks (imagery not loaded yet) poking through finer ones nearby.
+  - **So:**
+    - Request priority follows the drawn error that's showing (s · ε of the tile now drawn in that place, over its distance), so the largest visible errors close first.
+    - Mixed LOD works under any node, through the true-point clip test.
+    - Transitions morph (terrain) or fade (meshes).
+    - The measurements report the largest transition error on screen during loading as well as at rest.
+  - **Affine scales:** check that selection multiplies geometric error by an affine node's largest scale, as 1.x does for a tileset's transform. If not, that's the same bug in its simplest form.
+- **Feedback must converge, not be damped:** occlusion feedback is now monotone under a still camera. A hidden verdict only blocks new refinement and never coarsens, so refinement can only grow and must reach a fixed point. Any remaining tick-to-tick flipping is a verdict changing near the threshold. The fix is hysteresis both ways (a depth margin to enter hidden, two ticks to leave), and a render is requested only when a verdict change would change the selection. A stronger damper isn't the answer.
 - **Increments:**
   1. `lodExponent` per node and per view, plus the general |J·ê| factor for heightfields.
   2. Mixed LOD under warps through true-point clip tests.
