@@ -32,6 +32,8 @@ import meterWgsl from "../shaders/generated/meter.wgsl?raw";
 import adaptWgsl from "../shaders/generated/adapt.wgsl?raw";
 import lightsWgsl from "../shaders/generated/lights.wgsl?raw";
 import depthRangeWgsl from "../shaders/generated/depthRange.wgsl?raw";
+import hzbWgsl from "../shaders/generated/hzb.wgsl?raw";
+import occlusionQueryWgsl from "../shaders/generated/occlusionQuery.wgsl?raw";
 import glareWgsl from "../shaders/generated/glare.wgsl?raw";
 import compositeWgsl from "../shaders/generated/composite.wgsl?raw";
 import fxaaWgsl from "../shaders/generated/fxaa.wgsl?raw";
@@ -386,6 +388,14 @@ export interface Pipelines extends SurfacePipelines {
   lightsAssign: GPUComputePipeline;
   /** The nearest and farthest surface a view shows (`depthRange.slang`). */
   depthRange: GPUComputePipeline;
+  /**
+   * The depth pyramid a view's tile queries test against (`hzb.slang`): its
+   * first level from the multisampled depth, then each from the one before;
+   * and the queries (`occlusionQuery.slang`).
+   */
+  hzbLevel0: GPUComputePipeline;
+  hzbReduce: GPUComputePipeline;
+  occlusionQuery: GPUComputePipeline;
   /** The translucent passes' group 3 (`SurfacePipelines.translucent*`). */
   translucentLayout: GPUBindGroupLayout;
   /**
@@ -1994,6 +2004,9 @@ async function createPipelines(
     translucentSort,
     compositeExact,
     compositeMoments,
+    hzbLevel0,
+    hzbReduce,
+    occlusionQuery,
   ] = await Promise.all([
     device.createComputePipelineAsync({
       label: "cull.records",
@@ -2210,6 +2223,24 @@ async function createPipelines(
     }),
     compositePipeline("composite.exact", "fsSorted"),
     compositePipeline("composite.moments", "fsMoments"),
+    device.createComputePipelineAsync({
+      label: "hzb.level0",
+      layout: "auto",
+      compute: { module: module("hzb", hzbWgsl), entryPoint: "level0" },
+    }),
+    device.createComputePipelineAsync({
+      label: "hzb.reduce",
+      layout: "auto",
+      compute: { module: module("hzb", hzbWgsl), entryPoint: "reduce" },
+    }),
+    device.createComputePipelineAsync({
+      label: "occlusionQuery",
+      layout: "auto",
+      compute: {
+        module: module("occlusionQuery", occlusionQueryWgsl),
+        entryPoint: "main",
+      },
+    }),
   ]);
 
   let chainPipelines: Promise<ChainPipelines> | undefined;
@@ -2549,6 +2580,9 @@ async function createPipelines(
     translucentSort,
     compositeExact,
     compositeMoments,
+    hzbLevel0,
+    hzbReduce,
+    occlusionQuery,
     momentFormats,
     // Münstermann et al. give 5·10⁻⁷ for four power moments in 32-bit
     // floats; computed in 32-bit floats here, that left a lone layer's

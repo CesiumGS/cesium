@@ -96,6 +96,11 @@ export interface BudgetedOptions extends StepwiseOptions {
 const BASE = 0;
 const INTERMEDIATE = 1e11;
 const FRONTIER = 1e12;
+/**
+ * Frontier tiles the view's own depth hides (`ViewOcclusion`): after every
+ * visible request, before content outside the view.
+ */
+const OCCLUDED = 5e12;
 /** Content outside the view, after everything visible. */
 const PREFETCH = 1e13;
 /** Shadow casters off screen, after everything else. */
@@ -234,12 +239,57 @@ export class BudgetedSelection extends StepwiseSelection {
     }
     const cover = this.display(root, view, pass, rootError, NONE, 0, result);
     result.selected.push(...cover.tiles);
+    this.askOcclusion(view, result);
     if (result.standIns) {
       // Only those still drawn: an ancestor may have held instead.
       const selected = new Set(result.selected);
       result.standIns = result.standIns.filter((t) => selected.has(t));
     }
     return result;
+  }
+
+  /**
+   * Hands the view's occlusion feedback the boxes it should test this tick:
+   * the tiles drawn, then the others the walk visited that are in view (the
+   * children it would refine to), so a full list loses candidates first.
+   */
+  private askOcclusion(view: SelectionView, result: SelectionResult): void {
+    const occlusion = view.occlusion;
+    if (!occlusion) {
+      return;
+    }
+    const asked = new Set<Tile>();
+    const ask = (tile: Tile): void => {
+      if (!asked.has(tile) && tile.renderable && !tile.fillFromParent) {
+        asked.add(tile);
+        occlusion.query(tile, this.volumeOf(tile, view));
+      }
+    };
+    for (const tile of result.selected) {
+      ask(tile);
+    }
+    for (const tile of result.touched) {
+      if (isVisible(tile.viewState(view.id))) {
+        ask(tile);
+      }
+    }
+  }
+
+  /**
+   * Whether the view's depth has hidden the tile's box for long enough that
+   * it needn't refine (REPLACE) and its load waits after the visible ones.
+   * Only a tile with content of its own, which then stays
+   * drawn (an empty tile has nothing to draw in place of what is below it),
+   * and not where nothing is loaded or requested above it yet (`levels` is
+   * NONE): a region with nothing drawn waits for what it has.
+   */
+  protected occluded(tile: Tile, view: SelectionView, levels: number): boolean {
+    return (
+      tile.renderable &&
+      levels !== NONE &&
+      view.occlusion !== undefined &&
+      view.occlusion.occluded(tile.viewState(view.id))
+    );
   }
 
   get castsShadows(): boolean {
@@ -541,16 +591,39 @@ export class BudgetedSelection extends StepwiseSelection {
     // An expanded external tileset always refines (its root is its only
     // child); an empty tile only when its error is visible, as in 1.x: an
     // empty tile that meets the SSE means nothing below needs drawing.
-    const refine =
-      tile.children.length > 0 &&
-      ((tile.external && !tile.renderable) ||
+    // A tile the view's depth hides stops refining, and is drawn all the
+    // same (what it draws stays: a stale result can only delay detail).
+    const occluded = this.occluded(tile, view, levels);
+    const forced =
+      tile.children.length > 0 && tile.external && !tile.renderable;
+    const wanted =
+      forced ||
+      (tile.children.length > 0 &&
         state.sse > this.memoryAdjustedScreenSpaceError);
+    // Only where the parent stays drawn in place of its children (REPLACE):
+    // an ADD tile's children add to it, so they are walked, selected and
+    // requested as ever, hidden ones after every visible request.
+    const refine =
+      forced || (wanted && !(occluded && tile.refine === "REPLACE"));
+    if (wanted && !refine) {
+      // Its children's loads in flight go on.
+      for (const child of tile.children) {
+        if (child.state === "loading") {
+          result.touched.push(child);
+        }
+      }
+    }
 
     if (!refine) {
       // Frontier tile.
       if (own === undefined) {
         if (this.worthLoading(tile, view)) {
-          this.request(tile, FRONTIER + group, state.distance * 1e-3, result);
+          this.request(
+            tile,
+            (occluded ? OCCLUDED : FRONTIER) + group,
+            state.distance * 1e-3,
+            result,
+          );
         }
         // Zooming out: finer content still resident keeps drawing until
         // this tile arrives.
@@ -625,7 +698,12 @@ export class BudgetedSelection extends StepwiseSelection {
       if (own) {
         parts.push(...own);
       } else if (childLevels !== 1) {
-        this.request(tile, FRONTIER + group, state.distance * 1e-3, result);
+        this.request(
+          tile,
+          (occluded ? OCCLUDED : FRONTIER) + group,
+          state.distance * 1e-3,
+          result,
+        );
       }
       for (const child of tile.children) {
         if (!isVisible(child.viewState(view.id))) {

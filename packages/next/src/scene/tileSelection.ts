@@ -16,6 +16,7 @@ import type { SelectionView } from "../streaming/Stepwise.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { EngineRaster } from "../render/view/engineRaster.ts";
 import type { EngineScene } from "./engineScene.ts";
+import { occlusionOn } from "./occlusionFeedback.ts";
 import { uploadCpuMs, uploadScale } from "./uploadPacing.ts";
 
 /** @internal Scene side, reading the rasterizer's view targets: what tilesets select for, and the tick's upload budget. */
@@ -28,6 +29,7 @@ export interface SelectionEngine extends Pick<
   | "minimumUploadBytesPerFrame"
   | "moonAxes"
   | "moonPosition"
+  | "occlusionFeedback"
   | "sunDirection"
   | "tilesets"
   | "treeBuildMsPerFrame"
@@ -220,6 +222,9 @@ function selectionViews(
       }) ?? { longitude: 0, latitude: 0, height: 0 },
       planes,
       ...(casters ? { casterPlanes: casters } : {}),
+      ...(occlusionOn(engine, view)
+        ? { occlusion: view.occlusionState.forCamera(camera) }
+        : {}),
       ...(ahead && motion
         ? {
             prefetchPlanes: worldPlanes(ahead, PREFETCH_MARGIN),
@@ -363,6 +368,26 @@ function cameraAhead(
 }
 
 /**
+ * Starts this tick's occlusion queries for each view that has a body camera
+ * (`OcclusionFeedback.begin`): once per update, whatever anchors and
+ * tilesets then ask.
+ */
+function beginOcclusion(engine: SelectionEngine): void {
+  for (const view of engine.views) {
+    if (!view.enabled || !occlusionOn(engine, view)) {
+      continue;
+    }
+    const camera = engine.bodyCamera(view);
+    const height =
+      view.body.ellipsoid.cartesianToCartographic(
+        camera.position,
+        scratchCartographic,
+      )?.height ?? 0;
+    view.occlusionState.begin(camera.position, camera.direction, height);
+  }
+}
+
+/**
  * Runs selection, requests and uploads for the tilesets `due` picks,
  * starting with a different one each frame so none starves the others
  * of the shared upload budget.
@@ -391,6 +416,7 @@ export function updateTilesets(
   const n = engine.tilesets.length;
   const start = n > 0 ? engine.scene.tilesetRotation++ % n : 0;
   engine.scene.selections.clear();
+  beginOcclusion(engine);
   for (let k = 0; k < n; k++) {
     const tileset = engine.tilesets[(start + k) % n]!;
     if (due(tileset)) {

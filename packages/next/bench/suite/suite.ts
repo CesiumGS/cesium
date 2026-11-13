@@ -18,6 +18,7 @@ import {
 import { volumeFromJson } from "../../src/streaming/volumes.ts";
 import { GpuTimer } from "../../src/gpu/GpuTimer.ts";
 import { UPLOAD_PACING_VERSION } from "../../src/scene/uploadPacing.ts";
+import { OCCLUSION_FEEDBACK_VERSION } from "../../src/streaming/occlusion.ts";
 import {
   type CreditSource,
   engineSnapshot,
@@ -420,6 +421,8 @@ export interface Adapter {
   gpuTimer?(): number;
   /** The upload pacing version (`RunMetrics.uploadPacing`). */
   uploadPacing?(): number;
+  /** The occlusion feedback version, absent when it is off (`RunMetrics.occlusionFeedback`). */
+  occlusionFeedback?(): number | undefined;
   /** Nothing loading for the current view. */
   settled(): boolean;
   /** Some content (tiles or models) is drawn. */
@@ -794,6 +797,12 @@ export class NextAdapter implements Adapter {
 
   uploadPacing(): number {
     return UPLOAD_PACING_VERSION;
+  }
+
+  occlusionFeedback(): number | undefined {
+    return this.engine.occlusionFeedback === "on"
+      ? OCCLUSION_FEEDBACK_VERSION
+      : undefined;
   }
 
   settled(): boolean {
@@ -1817,6 +1826,10 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
       metrics.gpuP50 = quantile(gpu, 0.5);
       if (adapter.uploadPacing) {
         metrics.uploadPacing = adapter.uploadPacing();
+      }
+      const occlusion = adapter.occlusionFeedback?.();
+      if (occlusion !== undefined) {
+        metrics.occlusionFeedback = occlusion;
       }
       if (gpu.length && adapter.gpuTimer) {
         metrics.gpuTimer = adapter.gpuTimer();

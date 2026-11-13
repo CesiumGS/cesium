@@ -450,7 +450,7 @@ export function opaquePassBody(
     pass.executeBundles(frame.bundles);
     drawSectionCaps(engine, view, frame, pass, get, { capLow, capHigh });
     // Tiny point symbols the cull rasterized, depth-tested over them.
-    view.world.drawSplats(pass);
+    frame.splatted = view.world.drawSplats(pass);
     if (atmosphere) {
       engine.raster.sky.draw(pass, frame.sky, get(starLayer));
     }

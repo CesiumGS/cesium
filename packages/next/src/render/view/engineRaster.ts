@@ -20,6 +20,7 @@ import type { RenderTarget } from "../../scene/renderTarget.ts";
 import type { World } from "../../scene/World.ts";
 import type { EnvironmentProbe } from "../../gpu/Environment.ts";
 import type { PendingPick } from "./picks.ts";
+import type { OcclusionQueries } from "../../scene/occlusionFeedback.ts";
 import type { PickDomainResources } from "./pickDomain.ts";
 import type { ViewBlock } from "../layout.ts";
 import type { HeightCapture } from "../../scene/heightCaptures.ts";
@@ -95,6 +96,14 @@ export class EngineRaster {
     frame: ViewFrame;
     readback: GPUBuffer;
     scratch: GPUBuffer[];
+  }> = [];
+  /** Occlusion results encoded this tick (`occlusionPass`), mapped after submit. */
+  readonly occlusionReads: Array<{
+    view: View;
+    viewId: number;
+    list: OcclusionQueries;
+    readback: GPUBuffer;
+    words: number;
   }> = [];
   /** HDR images copied this tick (`View.readHdr`), mapped after submit. */
   readonly hdrReads: Array<{

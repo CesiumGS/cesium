@@ -6,6 +6,7 @@ import type { ToneMapping } from "../../scene/observer.ts";
 import type { PixelRect } from "../../scene/renderTarget.ts";
 import type { ViewChain } from "../post/chain.ts";
 import type { GlareViewState } from "../post/glare.ts";
+import type { FrameOcclusion } from "./occlusionPass.ts";
 
 /** Tone mappings by their index in present.slang's `PresentParams`. */
 export const TONE_MAPPINGS: readonly ToneMapping[] = [
@@ -118,6 +119,14 @@ export interface ViewFrame {
   /** The sun's shadow maps were fitted for this view this frame. */
   shadowed: boolean;
   /**
+   * Its depth pyramid and the buffers its tile queries are answered through,
+   * made when selection first asks about boxes (`occlusionPass`) and kept
+   * across ticks.
+   */
+  occlusion: FrameOcclusion | undefined;
+  /** Point splats were drawn into its depth this tick: no occluder (`occlusionPass`). */
+  splatted: boolean;
+  /**
    * The view's clip table (scene/world/clips.ts): its buffer, made when the
    * view first has clips and kept (a pick of an idle view reads it), and the
    * bytes written this tick: 0 when the view has no clip to apply, and its
@@ -202,4 +211,5 @@ export function destroyViewFrame(frame: ViewFrame): void {
   frame.clipBuffer?.destroy();
   frame.ids.destroy();
   frame.depth.destroy();
+  frame.occlusion?.destroy();
 }

@@ -2,6 +2,7 @@
 import { updateEnvironment } from "./environment.ts";
 import { updateExposure, adaptExposure } from "./exposure.ts";
 import { resolvePicks, whenMapped, halfToFloat } from "./picks.ts";
+import { readOcclusion } from "./occlusionPass.ts";
 import { writeTranslucency } from "./translucency.ts";
 import { writeClips } from "./clipTable.ts";
 import { writeView } from "./viewBlocks.ts";
@@ -45,6 +46,7 @@ export interface RenderTickEngine extends Pick<
   | "minimumUploadBytesPerFrame"
   | "moonAxes"
   | "moonPosition"
+  | "occlusionFeedback"
   | "reportFarAnchors"
   | "requestRender"
   | "stats"
@@ -89,6 +91,7 @@ export interface RenderTickEngine extends Pick<
     | "listNodes"
     | "lists"
     | "meters"
+    | "occlusionReads"
     | "overlayColor"
     | "overlayResources"
     | "persistent"
@@ -377,6 +380,7 @@ export function render(
         far! > 0 && near! <= far! ? { near: near!, far: far! } : undefined;
     });
   }
+  readOcclusion(engine.raster.occlusionReads);
   for (const readback of engine.raster.listCounts.splice(0)) {
     whenMapped(readback, () => {
       const needed = new Uint32Array(readback.getMappedRange())[0]!;
