@@ -41,6 +41,13 @@ import {
   type TileRange,
 } from "./quantizedMesh.ts";
 import type { HeightNormalMode } from "./heightNormal.ts";
+import {
+  deviationFromParent,
+  parentBound,
+  predictedError,
+  soundError,
+  type RefitState,
+} from "./terrainRefit.ts";
 import { GlobeStepwiseSelection } from "./GlobeStepwise.ts";
 import { GlobeBudgetedSelection } from "./GlobeBudgeted.ts";
 import { TerrainClips } from "./terrainClip.ts";
@@ -135,6 +142,12 @@ export interface GlobeTile extends Address {
   selection: { pass: number; result: number }[];
   /** Bounds cached by the globe selection. */
   bounds?: unknown;
+  /**
+   * Its geometric error as refitted from its decoded mesh and its
+   * children's (`terrainRefit.ts`). `Tile.geometricError` is what selection
+   * reads; this is where it came from.
+   */
+  refit: RefitState;
 }
 
 export class TerrainSource {
@@ -152,6 +165,19 @@ export class TerrainSource {
   /** The ellipsoid: every tile exists, generated rather than fetched. */
   readonly flat: boolean;
   private readonly levelZeroError: number;
+  /**
+   * Refit each tile's geometric error from its decoded mesh and its
+   * children's (`terrainRefit.ts`), lowering it below its level's estimate
+   * where the surface is smooth. On by default.
+   */
+  refitErrors = true;
+  /**
+   * An estimate, not a bound, for tiles whose children are not loaded: a
+   * tile's error is taken as `PREDICTED_ERROR_RATIO` times its deviation
+   * from its parent's mesh (never above its level's estimate), until its
+   * children give a bound. Off by default. Set it before tiles load.
+   */
+  predictiveErrors = false;
   /**
    * Whether tiles loaded now carry `h·n̂` (`HEIGHT_NORMAL_ATTRIBUTE`), or
    * `(n̂, h)` for `"profile"` (`HEIGHT_PROFILE_ATTRIBUTE`): set by the globe
@@ -588,6 +614,9 @@ export class TerrainSource {
         this.heightsChanged(g.rectangle);
       }
     }
+    if (info.heights && !g.upsampledFrom && !this.flat && this.refitErrors) {
+      this.refitFrom(tile);
+    }
     g.own = {
       minimumHeight: info.minimumHeight,
       maximumHeight: info.maximumHeight,
@@ -619,6 +648,79 @@ export class TerrainSource {
         );
       }
     }
+  }
+
+  /**
+   * A tile's mesh just decoded: measure its deviation from its parent's, and
+   * its already decoded children's from its own, then refit the errors this
+   * changes, upward. A deviation costs one triangle lookup per vertex of
+   * either mesh (a 16 by 16 index per mesh, built on first use).
+   */
+  private refitFrom(tile: Tile): void {
+    const measure = (child: Tile, parent: Tile): void => {
+      const c = child.globe!;
+      const p = parent.globe!;
+      if (
+        c.refit.deviation !== undefined ||
+        !c.heights ||
+        !p.heights ||
+        c.upsampledFrom ||
+        p.upsampledFrom
+      ) {
+        return;
+      }
+      c.refit.deviation = deviationFromParent(
+        c.heights,
+        p.heights,
+        c.x - 2 * p.x,
+        c.y - 2 * p.y,
+      );
+    };
+    if (tile.parent?.globe) {
+      measure(tile, tile.parent);
+    }
+    for (const child of tile.children) {
+      measure(child, tile);
+    }
+    this.refitError(tile);
+    // A new deviation changes the parent's bound; a lowered bound changes
+    // its parent's in turn.
+    let up = tile.parent;
+    while (up?.globe && this.refitError(up)) {
+      up = up.parent;
+    }
+  }
+
+  /**
+   * Recomputes one tile's bound from its four children, and sets the error
+   * selection reads. True if its bound dropped.
+   */
+  private refitError(tile: Tile): boolean {
+    const r = tile.globe!.refit;
+    let changed = false;
+    const kids = tile.children;
+    if (
+      kids.length === 4 &&
+      kids.every((c) => c.globe?.refit.deviation !== undefined)
+    ) {
+      const bound = parentBound(
+        kids.map((c) => ({
+          deviation: c.globe!.refit.deviation!,
+          error: soundError(c.globe!.refit),
+        })),
+      );
+      const next = Math.min(r.levelError, bound);
+      if (Number.isFinite(bound) && next < soundError(r)) {
+        r.soundError = next;
+        changed = true;
+      }
+    }
+    let error = soundError(r);
+    if (this.predictiveErrors && r.soundError === undefined) {
+      error = predictedError(r) ?? error;
+    }
+    tile.geometricError = error;
+    return changed;
   }
 
   /**
@@ -835,6 +937,7 @@ export class TerrainSource {
       ...a,
       rectangle: r,
       metadata: false,
+      refit: { levelError: this.levelZeroError / 2 ** a.level },
       // Nothing below a quadrant without data, nor data below one
       // upsampled.
       expanded: !available || upsampledFrom !== undefined,

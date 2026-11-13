@@ -100,8 +100,12 @@ function originOf(url: string): string {
 export class Tile {
   readonly children: Tile[] = [];
   readonly depth: number;
-  /** Geometric error scaled by the transform's maximum scale. */
-  readonly geometricError: number;
+  /**
+   * Geometric error scaled by the transform's maximum scale. Only a terrain
+   * tile's changes after construction (`TerrainSource` refits it from its
+   * decoded mesh).
+   */
+  geometricError: number;
   readonly refine: Refine;
   readonly transform: Mat4;
   /**
