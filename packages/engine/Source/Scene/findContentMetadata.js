@@ -1,8 +1,6 @@
+import { Frozen, defined, oneTimeWarning } from "@cesium/core";
 import ContentMetadata from "./ContentMetadata.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import hasExtension from "./hasExtension.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * Check if a content has metadata, either defined in its metadata field (3D Tiles 1.1) or in

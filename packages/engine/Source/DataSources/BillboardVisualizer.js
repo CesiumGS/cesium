@@ -1,13 +1,15 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import NearFarScalar from "../Core/NearFarScalar.js";
+import {
+  AssociativeArray,
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Color,
+  DeveloperError,
+  DistanceDisplayCondition,
+  NearFarScalar,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import HeightReference from "../Scene/HeightReference.js";
 import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
@@ -131,10 +133,6 @@ BillboardVisualizer.prototype.update = function (time) {
     }
 
     billboard.show = show;
-    if (item.textureValue !== textureValue) {
-      billboard.image = textureValue;
-      item.textureValue = textureValue;
-    }
     billboard.position = position;
     billboard.color = Property.getValueOrDefault(
       billboardGraphics._color,
@@ -226,6 +224,13 @@ BillboardVisualizer.prototype.update = function (time) {
       time,
       defaultSplitDirection,
     );
+
+    // Apply .image last, so any necessary property values are available
+    // in Billboard#_computeImageTextureSize before adding to the atlas.
+    if (item.textureValue !== textureValue) {
+      billboard.image = textureValue;
+      item.textureValue = textureValue;
+    }
 
     const subRegion = Property.getValueOrUndefined(
       billboardGraphics._imageSubRegion,

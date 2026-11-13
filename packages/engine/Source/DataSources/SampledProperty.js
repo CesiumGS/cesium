@@ -1,11 +1,13 @@
-import binarySearch from "../Core/binarySearch.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import ExtrapolationType from "../Core/ExtrapolationType.js";
-import JulianDate from "../Core/JulianDate.js";
-import LinearApproximation from "../Core/LinearApproximation.js";
+import {
+  Check,
+  DeveloperError,
+  Event,
+  ExtrapolationType,
+  JulianDate,
+  LinearApproximation,
+  binarySearch,
+  defined,
+} from "@cesium/core";
 
 const PackableNumber = {
   packedLength: 1,

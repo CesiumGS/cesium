@@ -1,15 +1,12 @@
+import { Check, Math as CesiumMath, RuntimeError, defined } from "@cesium/core";
 import * as protobuf from "protobufjs/dist/minimal/protobuf.js";
 import buildModuleUrl from "./buildModuleUrl.js";
-import Check from "./Check.js";
 import Credit from "./Credit.js";
-import defined from "./defined.js";
 import GoogleEarthEnterpriseTileInformation from "./GoogleEarthEnterpriseTileInformation.js";
 import isBitSet from "./isBitSet.js";
 import loadAndExecuteScript from "./loadAndExecuteScript.js";
-import CesiumMath from "./Math.js";
 import Request from "./Request.js";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
 import TaskProcessor from "./TaskProcessor.js";
 
 function stringToBuffer(str) {
@@ -140,7 +137,7 @@ Object.defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
  * Creates a metadata object using the Google Earth Enterprise REST API. This is used by the GoogleEarthEnterpriseImageryProvider
  * and GoogleEarthEnterpriseTerrainProvider to share metadata requests.
  *
- * @param {Resource|String} resourceOrUrl The url of the Google Earth Enterprise server hosting the imagery.
+ * @param {Resource|string} resourceOrUrl The url of the Google Earth Enterprise server hosting the imagery.
  *
  * @returns {Promise<GoogleEarthEnterpriseMetadata>} A promise which resolves to the created GoogleEarthEnterpriseMetadata instance/
  */

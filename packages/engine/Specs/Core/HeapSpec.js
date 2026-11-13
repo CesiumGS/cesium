@@ -127,6 +127,19 @@ describe("Core/Heap", function () {
     expectTrailingReferenceToBeRemoved(heap);
   });
 
+  it("insert past maximum length removes trailing references", function () {
+    const heap = new Heap({
+      comparator: comparator,
+    });
+    heap.maximumLength = 5;
+
+    for (let i = 0; i < 6; ++i) {
+      heap.insert(Math.random());
+    }
+
+    expectTrailingReferenceToBeRemoved(heap);
+  });
+
   it("insert returns the removed element when maximumLength is set", function () {
     const heap = new Heap({
       comparator: comparator,

@@ -1,10 +1,12 @@
-import Cartesian4 from "../Core/Cartesian4.js";
-import clone from "../Core/clone.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  Cartesian4,
+  Color,
+  Rectangle,
+  RuntimeError,
+  clone,
+  defined,
+} from "@cesium/core";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import I3SNode from "./I3SNode.js";
 import I3SSymbology from "./I3SSymbology.js";
@@ -31,7 +33,7 @@ function I3SLayer(dataProvider, layerData, parent) {
 
   const parentUrl = this._parent.resource.getUrlComponent();
 
-  let tilesetUrl = "";
+  let tilesetUrl;
   if (parentUrl.match(/layers\/\d/)) {
     tilesetUrl = `${parentUrl}`.replace(/\/+$/, "");
   } else {

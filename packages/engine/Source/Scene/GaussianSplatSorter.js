@@ -1,6 +1,5 @@
-import defined from "../Core/defined.js";
+import { RuntimeError, defined } from "@cesium/core";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 
 /** * A sorter for Gaussian splats that uses a task processor to handle sorting in parallel.
@@ -49,8 +48,8 @@ GaussianSplatSorter._getSorterTaskProcessor = function () {
  * Sorts Gaussian splats using a radix sort algorithm. Sorted by distance from the camera.
  * A new list of indexes is returned, which can be used to render the splats in the correct order.
  *
- * @param {Object} parameters - The parameters for sorting Gaussian splat indexes.
- * @param {Object} parameters.primitive - The primitive containing positions and modelView matrices.
+ * @param {object} parameters - The parameters for sorting Gaussian splat indexes.
+ * @param {object} parameters.primitive - The primitive containing positions and modelView matrices.
  * @returns {Promise|undefined} A promise that resolves to the sorted indexes or undefined if the task cannot be scheduled.
  * @exception {RuntimeError} Sorter could not be initialized.
  * @private

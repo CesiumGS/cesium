@@ -1,13 +1,15 @@
+import {
+  DeveloperError,
+  Event,
+  RuntimeError,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Uri from "urijs";
 import buildModuleUrl from "./buildModuleUrl.js";
-import defined from "./defined.js";
-import destroyObject from "./destroyObject.js";
-import DeveloperError from "./DeveloperError.js";
-import Event from "./Event.js";
 import FeatureDetection from "./FeatureDetection.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
 
 function canTransferArrayBuffer() {
   if (!defined(TaskProcessor._canTransferArrayBuffer)) {
@@ -267,7 +269,7 @@ async function scheduleTask(processor, parameters, transferableObjects) {
  * finished.
  *
  * @param {object} parameters Any input data that will be posted to the worker.
- * @param {Object[]} [transferableObjects] An array of objects contained in parameters that should be
+ * @param {object[]} [transferableObjects] An array of objects contained in parameters that should be
  *                                      transferred to the worker instead of copied.
  * @returns {Promise<object>|undefined} Either a promise that will resolve to the result when available, or undefined
  *                    if there are too many active tasks,

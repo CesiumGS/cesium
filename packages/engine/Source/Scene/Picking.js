@@ -1,19 +1,22 @@
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Check,
+  Color,
+  DeveloperError,
+  Matrix4,
+  OrthographicFrustum,
+  OrthographicOffCenterFrustum,
+  PerspectiveFrustum,
+  PerspectiveOffCenterFrustum,
+  Ray,
+  ShowGeometryInstanceAttribute,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Matrix4 from "../Core/Matrix4.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
-import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
-import PerspectiveOffCenterFrustum from "../Core/PerspectiveOffCenterFrustum.js";
-import Ray from "../Core/Ray.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import Camera from "./Camera.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
@@ -246,6 +249,7 @@ const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
  * height will default to the value of <code>width</code>
  * @param {BoundingRectangle} result The result rectangle
  * @returns {BoundingRectangle} The result rectangle
+ * @ignore
  */
 function computePickingDrawingBufferRectangle(
   drawingBufferHeight,
@@ -262,25 +266,33 @@ function computePickingDrawingBufferRectangle(
 }
 
 /**
- * Returns an object with a <code>primitive</code> property that contains the first (top) primitive in the scene
- * at a particular window coordinate or undefined if nothing is at the location. Other properties may
- * potentially be set depending on the type of primitive and may be used to further identify the picked object.
- * <p>
- * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
- * </p>
+ * Setup needed before picking.
+ *
+ * Exported for use by Snapping, which performs the same offscreen pick render
+ * but targets the snap framebuffer and flags the pass as a snapping pass.
+ *
  * @param {Scene} scene
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {BoundingRectangle} drawingBufferRectangle The output drawing buffer recangle.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {object | undefined} Object containing the picked primitive.
+ * @param {object} [options] Object with the following properties:
+ * @param {PickFramebuffer|SnapFramebuffer} [options.framebuffer] The framebuffer to render into. Defaults to the view's pick framebuffer.
+ * @param {boolean} [options.snap=false] If <code>true</code>, mark the pass as a snapping pass (sets <code>frameState.passes.snap</code>).
+ *
+ * @private
  */
-Picking.prototype.pick = function (scene, windowPosition, width, height) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("windowPosition", windowPosition);
-  //>>includeEnd('debug');
-
+export function pickBegin(
+  scene,
+  windowPosition,
+  drawingBufferRectangle,
+  width,
+  height,
+  options,
+) {
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
+  const framebuffer = options?.framebuffer ?? pickFramebuffer;
 
   scene.view = defaultView;
 
@@ -297,12 +309,12 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
     windowPosition,
     scratchPosition,
   );
-  const drawingBufferRectangle = computePickingDrawingBufferRectangle(
+  computePickingDrawingBufferRectangle(
     context.drawingBufferHeight,
     drawingBufferPosition,
     width,
     height,
-    scratchRectangle,
+    drawingBufferRectangle,
   );
 
   scene.jobScheduler.disableThisFrame();
@@ -317,20 +329,113 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   );
   frameState.invertClassification = false;
   frameState.passes.pick = true;
+  frameState.passes.snap = options?.snap ?? false;
   frameState.tilesetPassState = pickTilesetPassState;
 
   context.uniformState.update(frameState);
 
   scene.updateEnvironment();
 
-  passState = pickFramebuffer.begin(drawingBufferRectangle, viewport);
+  passState = framebuffer.begin(drawingBufferRectangle, viewport);
 
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
+}
 
-  const object = pickFramebuffer.end(drawingBufferRectangle);
+/**
+ * Teardown needed after picking.
+ *
+ * @param {Scene} scene
+ *
+ * @private
+ */
+export function pickEnd(scene) {
+  const { context } = scene;
   context.endFrame();
-  return object;
+}
+
+/**
+ * Same operation as {@link Picking#pick}, but returns a Promise that resolves asynchronously without blocking the main render thread.
+ * Requires WebGL2 else using synchronous fallback.
+ *
+ * @see Picking#pick
+ *
+ * @param {Scene} scene
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
+ * @returns {Promise<object[]>} List of objects containing the picked primitives.
+ *
+ * @exception {RuntimeError} Async Picking Request Timeout.
+ */
+Picking.prototype.pickAsync = async function (
+  scene,
+  windowPosition,
+  width,
+  height,
+  limit = 1,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("windowPosition", windowPosition);
+  //>>includeEnd('debug');
+
+  const { context, frameState, defaultView } = scene;
+  const { pickFramebuffer } = defaultView;
+  const drawingBufferRectangle = scratchRectangle;
+  pickBegin(scene, windowPosition, drawingBufferRectangle, width, height);
+  let pickedObjects;
+  if (context.webgl2) {
+    pickedObjects = pickFramebuffer.endAsync(
+      drawingBufferRectangle,
+      frameState,
+      limit,
+    ); // Promise<Object[]>
+  } else {
+    pickedObjects = pickFramebuffer.end(drawingBufferRectangle, limit); // Object[]
+    pickedObjects = Promise.resolve(pickedObjects); // Promise<Object[]> Wrap as Promise
+    oneTimeWarning(
+      "picking-async-fallback",
+      "Fallback to synchronous picking because async operation requires WebGL2 context.",
+    );
+  }
+  pickEnd(scene);
+  return pickedObjects;
+};
+
+/**
+ * Returns a list of objects with a <code>primitive</code> property that contains the first (top) primitives
+ * in the scene at a particular window coordinate. Other properties may potentially be set depending on the
+ * type of primitive and may be used to further identify the picked object.
+ * <p>
+ * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
+ * </p>
+ * @param {Scene} scene
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
+ * @returns {object[]} List of objects containing the picked primitives.
+ *
+ */
+Picking.prototype.pick = function (
+  scene,
+  windowPosition,
+  width,
+  height,
+  limit = 1,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("windowPosition", windowPosition);
+  //>>includeEnd('debug');
+
+  const { defaultView } = scene;
+  const { pickFramebuffer } = defaultView;
+  const drawingBufferRectangle = scratchRectangle;
+  pickBegin(scene, windowPosition, drawingBufferRectangle, width, height);
+  const pickedObjects = pickFramebuffer.end(drawingBufferRectangle, limit); // Object[]
+  pickEnd(scene);
+  return pickedObjects;
 };
 
 /**
@@ -711,40 +816,56 @@ Picking.prototype.pickPosition = function (scene, windowPosition, result) {
   return result;
 };
 
-function drillPick(limit, pickCallback) {
-  // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
-  // we could update the primitive once, and then just execute their commands for each pass,
-  // and cull commands for picked primitives.  e.g., base on the command's owner.
-  let i;
-  let attributes;
-  const result = [];
-  const pickedPrimitives = [];
-  const pickedAttributes = [];
-  const pickedFeatures = [];
-  if (!defined(limit)) {
-    limit = Number.MAX_VALUE;
-  }
-
-  let pickedResult = pickCallback();
-  while (defined(pickedResult)) {
+/**
+ * @param {object[]} pickedResults the results from the pickCallback
+ * @param {number} limit If supplied, stop drilling after collecting this many picks.
+ * @param {object[]} results
+ * @param {object[]} pickedPrimitives
+ * @param {object[]} pickedAttributes
+ * @param {object[]} pickedFeatures
+ * @param {Set<object>} pickedObjects
+ * @returns {boolean} whether picking should end
+ * @ignore
+ */
+function addDrillPickedResults(
+  pickedResults,
+  limit,
+  results,
+  pickedPrimitives,
+  pickedAttributes,
+  pickedFeatures,
+  pickedObjects,
+) {
+  for (const pickedResult of pickedResults) {
     const object = pickedResult.object;
     const position = pickedResult.position;
     const exclude = pickedResult.exclude;
 
     if (defined(position) && !defined(object)) {
-      result.push(pickedResult);
-      break;
+      results.push(pickedResult);
+      return true;
     }
 
     if (!defined(object) || !defined(object.primitive)) {
-      break;
+      return true;
     }
 
+    // Hidden draped vectors stay in baked surface data until the next render.
+    if (pickedObjects.has(object)) {
+      return true;
+    }
+    pickedObjects.add(object);
+
     if (!exclude) {
-      result.push(pickedResult);
-      if (0 >= --limit) {
-        break;
+      results.push(pickedResult);
+      if (results.length >= limit) {
+        return true;
       }
+    }
+
+    // Hiding a draped vector only dirties its collection, forcing a needless re-bake.
+    if (pickedResult.draped) {
+      return true;
     }
 
     const primitive = object.primitive;
@@ -753,7 +874,7 @@ function drillPick(limit, pickCallback) {
     // If the picked object has a show attribute, use it.
     if (typeof primitive.getGeometryInstanceAttributes === "function") {
       if (defined(object.id)) {
-        attributes = primitive.getGeometryInstanceAttributes(object.id);
+        const attributes = primitive.getGeometryInstanceAttributes(object.id);
         if (defined(attributes) && defined(attributes.show)) {
           hasShowAttribute = true;
           attributes.show = ShowGeometryInstanceAttribute.toValue(
@@ -776,28 +897,64 @@ function drillPick(limit, pickCallback) {
       primitive.show = false;
       pickedPrimitives.push(primitive);
     }
+  }
+}
 
-    pickedResult = pickCallback();
+/**
+ * Drill pick by repeatedly calling a given `pickCallback`, each time stripping away the previously picked objects.
+ * @param {function(number): object[]} pickCallback Pick callback to execute each iteration
+ * @param {number} [limit=Number.MAX_VALUE] If supplied, stop drilling after collecting this many picks
+ * @returns {object[]} List of picked results
+ * @ignore
+ */
+function drillPick(pickCallback, limit) {
+  // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
+  // we could update the primitive once, and then just execute their commands for each pass,
+  // and cull commands for picked primitives.  e.g., base on the command's owner.
+  const results = [];
+  const pickedPrimitives = [];
+  const pickedAttributes = [];
+  const pickedFeatures = [];
+  const pickedObjects = new Set();
+  if (!defined(limit)) {
+    limit = Number.MAX_VALUE;
+  }
+
+  let pickedResults = pickCallback(limit);
+  while (defined(pickedResults) && pickedResults.length > 0) {
+    const complete = addDrillPickedResults(
+      pickedResults,
+      limit,
+      results,
+      pickedPrimitives,
+      pickedAttributes,
+      pickedFeatures,
+      pickedObjects,
+    );
+    if (complete) {
+      break;
+    }
+    pickedResults = pickCallback(limit - results.length);
   }
 
   // Unhide everything we hid while drill picking
-  for (i = 0; i < pickedPrimitives.length; ++i) {
+  for (let i = 0; i < pickedPrimitives.length; ++i) {
     pickedPrimitives[i].show = true;
   }
 
-  for (i = 0; i < pickedAttributes.length; ++i) {
-    attributes = pickedAttributes[i];
+  for (let i = 0; i < pickedAttributes.length; ++i) {
+    const attributes = pickedAttributes[i];
     attributes.show = ShowGeometryInstanceAttribute.toValue(
       true,
       attributes.show,
     );
   }
 
-  for (i = 0; i < pickedFeatures.length; ++i) {
+  for (let i = 0; i < pickedFeatures.length; ++i) {
     pickedFeatures[i].show = true;
   }
 
-  return result;
+  return results;
 }
 
 Picking.prototype.drillPick = function (
@@ -807,21 +964,25 @@ Picking.prototype.drillPick = function (
   width,
   height,
 ) {
-  const that = this;
-  const pickCallback = function () {
-    const object = that.pick(scene, windowPosition, width, height);
-    if (defined(object)) {
-      return {
-        object: object,
-        position: undefined,
-        exclude: false,
-      };
-    }
+  const pickCallback = (limit) => {
+    const pickedObjects = this.pick(
+      scene,
+      windowPosition,
+      width,
+      height,
+      limit,
+    );
+    return pickedObjects.map((object) => ({
+      object: object,
+      position: undefined,
+      exclude: false,
+      draped:
+        defined(object.collection) &&
+        scene.vectorProvider?.has(object.collection) === true,
+    }));
   };
-  const objects = drillPick(limit, pickCallback);
-  return objects.map(function (element) {
-    return element.object;
-  });
+  const objects = drillPick(pickCallback, limit);
+  return objects.map((element) => element.object);
 };
 
 const scratchRight = new Cartesian3();
@@ -928,7 +1089,7 @@ function getTilesets(primitives, objectsToExclude, tilesets) {
  * @param {Picking} picking
  * @param {Scene} scene
  * @param {Ray} ray
- * @param {Object[] | undefined} objectsToExclude
+ * @param {object[] | undefined} objectsToExclude
  * @param {number | undefined} width
  * @param {Function} callback
  * @returns {Promise<Cartesian3 | undefined>}
@@ -1016,7 +1177,8 @@ function getRayIntersection(
   scene.resolveFramebuffers(passState);
 
   let position;
-  const object = view.pickFramebuffer.end(drawingBufferRectangle);
+  // Picking one object, result is either [object] or []
+  const object = view.pickFramebuffer.end(drawingBufferRectangle, 1)[0];
 
   if (scene.context.depthTexture) {
     const { frustumCommandsList } = view;
@@ -1054,7 +1216,7 @@ function getRayIntersection(
   }
 }
 
-function getRayIntersections(
+function drillPickFromRay(
   picking,
   scene,
   ray,
@@ -1065,7 +1227,7 @@ function getRayIntersections(
   mostDetailed,
 ) {
   const pickCallback = function () {
-    return getRayIntersection(
+    const pickResult = getRayIntersection(
       picking,
       scene,
       ray,
@@ -1074,8 +1236,9 @@ function getRayIntersections(
       requirePosition,
       mostDetailed,
     );
+    return pickResult ? [pickResult] : undefined;
   };
-  return drillPick(limit, pickCallback);
+  return drillPick(pickCallback, limit);
 }
 
 function pickFromRay(
@@ -1087,7 +1250,8 @@ function pickFromRay(
   requirePosition,
   mostDetailed,
 ) {
-  const results = getRayIntersections(
+  // Use drillPickFromRay rather than getRayIntersection directly to select the first non-excluded object
+  const results = drillPickFromRay(
     picking,
     scene,
     ray,
@@ -1100,28 +1264,6 @@ function pickFromRay(
   if (results.length > 0) {
     return results[0];
   }
-}
-
-function drillPickFromRay(
-  picking,
-  scene,
-  ray,
-  limit,
-  objectsToExclude,
-  width,
-  requirePosition,
-  mostDetailed,
-) {
-  return getRayIntersections(
-    picking,
-    scene,
-    ray,
-    limit,
-    objectsToExclude,
-    width,
-    requirePosition,
-    mostDetailed,
-  );
 }
 
 function deferPromiseUntilPostRender(scene, promise) {
@@ -1365,7 +1507,7 @@ function sampleHeightMostDetailed(
  * @param {Picking} picking
  * @param {Scene} scene
  * @param {Cartesian3} cartesian
- * @param {Object[]} [objectsToExclude]
+ * @param {object[]} [objectsToExclude]
  * @param {number} [width]
  * @param {Cartesian3} [result]
  * @returns {Promise<Cartesian3 | undefined>}
@@ -1519,7 +1661,7 @@ Picking.prototype.sampleHeightMostDetailed = function (
  * @private
  * @param {Scene} scene
  * @param {Cartesian3[]} cartesians
- * @param {Object[]} [objectsToExclude]
+ * @param {object[]} [objectsToExclude]
  * @param {number} [width]
  * @returns {Promise<Array<Cartesian3 | undefined>>}
  */

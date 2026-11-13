@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Represents the position relative to the terrain.
  *
@@ -26,7 +28,7 @@ const HeightReference = {
   RELATIVE_TO_GROUND: 2,
 
   /**
-   * The position is clamped to terain.
+   * The position is clamped to terrain.
    * @type {number}
    * @constant
    */
@@ -54,7 +56,9 @@ const HeightReference = {
   RELATIVE_TO_3D_TILE: 6,
 };
 
-export default Object.freeze(HeightReference);
+Object.freeze(HeightReference);
+
+export default HeightReference;
 
 /**
  * Returns true if the height should be clamped to the surface

@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * The alpha rendering mode of the material.
  *
@@ -30,4 +32,6 @@ const AlphaMode = {
   BLEND: "BLEND",
 };
 
-export default Object.freeze(AlphaMode);
+Object.freeze(AlphaMode);
+
+export default AlphaMode;

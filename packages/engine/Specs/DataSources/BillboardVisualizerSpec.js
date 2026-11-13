@@ -4,10 +4,12 @@ import {
   Cartesian2,
   Cartesian3,
   Color,
-  defined,
   DistanceDisplayCondition,
   JulianDate,
   NearFarScalar,
+  defined,
+} from "@cesium/core";
+import {
   BillboardGraphics,
   BillboardVisualizer,
   BoundingSphereState,
@@ -19,7 +21,6 @@ import {
   VerticalOrigin,
   SplitDirection,
 } from "../../index.js";
-
 import createGlobe from "../../../../Specs/createGlobe.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -178,9 +179,10 @@ describe(
       const bb = billboardCollection.get(0);
 
       await pollToPromise(function () {
+        entityCluster.update(scene.frameState);
         scene.renderForSpecs();
         visualizer.update(time);
-        return bb.show;
+        return bb.ready;
       });
 
       expect(bb.position).toEqual(testObject.position.getValue(time));

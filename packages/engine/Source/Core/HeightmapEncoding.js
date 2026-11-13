@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * The encoding that is used for a heightmap
  *
@@ -22,4 +24,7 @@ const HeightmapEncoding = {
    */
   LERC: 1,
 };
-export default Object.freeze(HeightmapEncoding);
+
+Object.freeze(HeightmapEncoding);
+
+export default HeightmapEncoding;

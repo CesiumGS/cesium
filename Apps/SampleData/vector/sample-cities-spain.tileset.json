@@ -1,0 +1,17 @@
+{
+  "asset": { "version": "1.1" },
+  "extensionsUsed": [ "3DTILES_content_gltf" ],
+  "extensions": {
+    "3DTILES_content_gltf": {
+      "extensionsRequired": [ "CESIUM_mesh_vector" ],
+      "extensionsUsed": [ "CESIUM_mesh_vector" ]
+    }
+  },
+  "geometricError": 2000000.0,
+  "root": {
+    "boundingVolume": { "region": [ -0.14912553056282754, 0.630603674286057, 0.038089971913258434, 0.7585433514898835, -1000, 1000 ] },
+    "geometricError": 0.0,
+    "refine": "REPLACE",
+    "content": { "uri": "sample-cities-spain.glb" }
+  }
+}

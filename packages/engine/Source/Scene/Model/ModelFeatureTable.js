@@ -1,9 +1,6 @@
+import { Check, Color, defined, destroyObject } from "@cesium/core";
 import BatchTexture from "../BatchTexture.js";
 import Cesium3DTileFeature from "../Cesium3DTileFeature.js";
-import Check from "../../Core/Check.js";
-import Color from "../../Core/Color.js";
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
 import ModelFeature from "./ModelFeature.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import ModelType from "./ModelType.js";

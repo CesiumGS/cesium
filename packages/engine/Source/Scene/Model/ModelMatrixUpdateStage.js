@@ -1,4 +1,4 @@
-import Matrix4 from "../../Core/Matrix4.js";
+import { Matrix4 } from "@cesium/core";
 import ModelUtility from "./ModelUtility.js";
 import SceneMode from "../SceneMode.js";
 

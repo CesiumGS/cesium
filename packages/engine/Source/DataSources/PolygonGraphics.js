@@ -1,8 +1,10 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import PolygonHierarchy from "../Core/PolygonHierarchy.js";
+import {
+  DeveloperError,
+  Event,
+  Frozen,
+  PolygonHierarchy,
+  defined,
+} from "@cesium/core";
 import ConstantProperty from "./ConstantProperty.js";
 import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
@@ -55,7 +57,7 @@ function createPolygonHierarchyProperty(value) {
  * @param {PolygonGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @see Entity
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=polygon|Cesium Sandcastle Polygon Demo}
  */
 function PolygonGraphics(options) {
   this._definitionChanged = new Event();

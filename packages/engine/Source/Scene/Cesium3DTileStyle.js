@@ -1,8 +1,10 @@
-import addAllToArray from "../Core/addAllToArray.js";
-import clone from "../Core/clone.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  DeveloperError,
+  Frozen,
+  addAllToArray,
+  clone,
+  defined,
+} from "@cesium/core";
 import Resource from "../Core/Resource.js";
 import ConditionsExpression from "./ConditionsExpression.js";
 import Expression from "./Expression.js";
@@ -74,6 +76,9 @@ function Cesium3DTileStyle(style) {
   this._labelVerticalOrigin = undefined;
   this._meta = undefined;
 
+  // Vector Tiles in 3D Tiles 2.0.
+  this._lineWidth = undefined;
+
   this._colorShaderFunction = undefined;
   this._showShaderFunction = undefined;
   this._pointSizeShaderFunction = undefined;
@@ -116,6 +121,9 @@ function setup(that, styleJson) {
   that.verticalOrigin = styleJson.verticalOrigin;
   that.labelHorizontalOrigin = styleJson.labelHorizontalOrigin;
   that.labelVerticalOrigin = styleJson.labelVerticalOrigin;
+
+  // Vector Tiles in 3D Tiles 2.0.
+  that.lineWidth = styleJson.lineWidth;
 
   const meta = {};
   if (defined(styleJson.meta)) {
@@ -1281,6 +1289,22 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
       this._style.labelVerticalOrigin = getJsonFromExpression(
         this._labelVerticalOrigin,
       );
+    },
+  },
+
+  /**
+   * Internal-only, supported in Vector Tiles with 3D Tiles 2.0.
+   * @memberof Cesium3DTileStyle.prototype
+   * @type {StyleExpression}
+   * @ignore
+   */
+  lineWidth: {
+    get: function () {
+      return this._lineWidth;
+    },
+    set: function (value) {
+      this._lineWidth = getExpression(this, value);
+      this._style.lineWidth = getJsonFromExpression(this._lineWidth);
     },
   },
 

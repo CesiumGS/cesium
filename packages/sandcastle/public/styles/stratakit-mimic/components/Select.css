@@ -1,0 +1,92 @@
+@layer stratakit.components {
+  /*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+  .stratakit-mimic-select-root {
+    @layer base {
+      &:where(
+        :has(select.stratakit-mimic-select),
+        [data-kiwi-has-select="true"]
+      ) {
+        display: inline-grid;
+        align-items: center;
+        isolation: isolate;
+
+        > * {
+          grid-area: 1 / 1 / -1 / -1;
+        }
+      }
+    }
+  }
+
+  .stratakit-mimic-select:is(.stratakit-mimic-button) {
+    --✨padding-inline-start: var(--stratakit-space-x2);
+    --✨padding-inline-end: calc(
+      var(--stratakit-space-x1) /* Gap */ + var(--stratakit-space-x4)
+        /* Arrow size */ + var(--stratakit-space-x1)
+        /* Padding - disclosure arrow offset */
+    );
+
+    @layer base {
+      min-inline-size: calc(
+        var(--✨padding-inline-start) + 1ch + var(--✨padding-inline-end)
+      );
+      text-overflow: ellipsis;
+
+      &:where(select:not([multiple])) {
+        appearance: none;
+        --🥝button-padding-inline: var(--✨padding-inline-start)
+          var(--✨padding-inline-end);
+        --🥝ghost-inline-offset: var(--✨padding-inline-start);
+
+        > option {
+          background-color: var(--stratakit-color-bg-neutral-base);
+        }
+      }
+    }
+  }
+
+  .stratakit-mimic-select-arrow:is(.stratakit-mimic-disclosure-arrow) {
+    @layer base {
+      justify-self: end;
+      margin-inline-end: var(
+        --stratakit-space-x1
+      ); /* (padding - disclosure offset) */
+      pointer-events: none;
+      z-index: 1; /* should be above the button */
+
+      --🥝icon-color: var(
+          --🌀select-arrow-state--default,
+          var(--stratakit-color-icon-neutral-base)
+        )
+        var(
+          --🌀select-arrow-state--hover,
+          var(--stratakit-color-icon-neutral-hover)
+        )
+        var(
+          --🌀select-arrow-state--disabled,
+          var(--stratakit-color-icon-neutral-disabled)
+        );
+    }
+
+    @layer states {
+      @media (any-hover: hover) {
+        :where(.stratakit-mimic-select:hover) + & {
+          --🌀select-arrow-state: var(--🌀select-arrow-state--hover);
+        }
+      }
+
+      :where(.stratakit-mimic-select:disabled) + & {
+        --🌀select-arrow-state: var(--🌀select-arrow-state--disabled);
+      }
+    }
+
+    @layer base.🌀 {
+      --🌀select-arrow-state: var(--🌀select-arrow-state--default);
+      --🌀select-arrow-state--default: var(--🌀select-arrow-state,);
+      --🌀select-arrow-state--hover: var(--🌀select-arrow-state,);
+      --🌀select-arrow-state--disabled: var(--🌀select-arrow-state,);
+    }
+  }
+}

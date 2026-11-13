@@ -1,23 +1,24 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Cartographic from "../Core/Cartographic.js";
-import Color from "../Core/Color.js";
-import combine from "../Core/combine.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import Intersect from "../Core/Intersect.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Plane from "../Core/Plane.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Cartographic,
+  Color,
+  ComponentDatatype,
+  DeveloperError,
+  EncodedCartesian3,
+  Frozen,
+  IndexDatatype,
+  Intersect,
+  Math as CesiumMath,
+  Matrix4,
+  Plane,
+  RuntimeError,
+  combine,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
@@ -847,7 +848,7 @@ function createVertexArrays(collection, context, projection) {
 
   //stores all of the individual indices arrays.
   const totalIndices = [[]];
-  let indices = totalIndices[0];
+  let indices;
 
   const batchTable = collection._batchTable;
   const useHighlightColor = collection._useHighlightColor;
@@ -1294,9 +1295,7 @@ PolylineBucket.prototype.updateShader = function (
     defines.push("POLYLINE_DASH");
   }
 
-  if (!FeatureDetection.isInternetExplorer()) {
-    defines.push("CLIP_POLYLINE");
-  }
+  defines.push("CLIP_POLYLINE");
 
   const fs = new ShaderSource({
     defines: defines,

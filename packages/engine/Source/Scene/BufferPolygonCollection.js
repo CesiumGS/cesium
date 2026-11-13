@@ -1,0 +1,448 @@
+// @ts-check
+
+import { Frozen, IndexDatatype, assert, defined } from "@cesium/core";
+import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
+import BufferPolygon from "./BufferPolygon.js";
+import renderPolygons from "./renderBufferPolygonCollection.js";
+import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
+
+/** @import BlendOption from "./BlendOption.js"; */
+/** @import { BoundingSphere } from "@cesium/core"; */
+/** @import { TypedArray } from "@cesium/core"; */
+/** @import { Matrix4 } from "@cesium/core"; */
+/** @import FrameState from "./FrameState.js" */
+/** @import HeightReference from "./HeightReference.js"; */
+/** @import { ComponentDatatype } from "@cesium/core"; */
+
+const { DirtyFlags, Error } = BufferPrimitiveCollection;
+const { ERR_CAPACITY } = Error;
+
+const polygonScratch = new BufferPolygon();
+
+/**
+ * @typedef {object} BufferPolygonOptions
+ * @property {Matrix4} [modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
+ * @property {boolean} [show=true]
+ * @property {BufferPolygonMaterial} [material=BufferPolygonMaterial.DEFAULT_MATERIAL]
+ * @property {number} [featureId]
+ * @property {object} [pickObject]
+ * @property {TypedArray} [positions]
+ * @property {TypedArray} [holes]
+ * @property {TypedArray} [triangles]
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+
+/**
+ * @typedef {object} BufferPolygonCollectionOptions
+ * @property {number} [primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of polygons.
+ * @property {number} [vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of vertices.
+ * @property {number} [holeCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of holes.
+ * @property {number} [triangleCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of triangles.
+ * @property {ComponentDatatype} [positionDatatype=ComponentDatatype.DOUBLE] The component datatype used to store position values.
+ * @property {boolean} [positionNormalized=false] When <code>true</code>, integer position values are treated as normalized,
+ *   where the full integer range maps to [-1, 1] (signed) or [0, 1] (unsigned). Only relevant for integer position datatypes
+ *   (BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT).
+ * @property {boolean} [show=true]
+ * @property {boolean} [allowPicking=true] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
+ * @property {BoundingSphere} [boundingVolume] Bounding volume, in world space, for the collection. When
+ *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
+ *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
+ *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
+ * @property {boolean} [debugShowBoundingVolume=false]
+ * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+ * @property {HeightReference} [heightReference=HeightReference.NONE] When set to a clamping value, the
+ *   collection is draped onto terrain and/or 3D Tiles, rather than drawn as geometry of its own.
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+
+/**
+ * Collection of polygons held in ArrayBuffer storage for performance and memory optimization.
+ *
+ * <p>Default buffer memory allocation is arbitrary, and collections cannot be resized,
+ * so specific per-buffer capacities should be provided in the collection
+ * constructor when available.</p>
+ *
+ * @example
+ * import earcut from "earcut";
+ *
+ * const collection = new BufferPolygonCollection({
+ *   primitiveCountMax: 1024,
+ *   vertexCountMax: 4096,
+ *   holeCountMax: 1024,
+ *   triangleCountMax: 2048,
+ * });
+ *
+ * const polygon = new BufferPolygon();
+ * const positions = [ ... ];
+ * const holes = [ ... ];
+ * const material = new BufferPolygonMaterial({color: Color.WHITE});
+ *
+ * // Create a new polygon, temporarily bound to 'polygon' local variable.
+ * collection.add({
+ *   positions: new Float64Array(positions),
+ *   holes: new Uint32Array(holes),
+ *   triangles: new Uint32Array(earcut(positions, holes, 3)),
+ *   material
+ * }, polygon);
+ *
+ * // Iterate over all polygons in collection, temporarily binding 'polygon'
+ * // local variable to each, and updating polygon material.
+ * for (let i = 0; i < collection.primitiveCount; i++) {
+ *   collection.get(i, polygon);
+ *   polygon.setMaterial(material);
+ * }
+ *
+ * @see BufferPolygon
+ * @see BufferPolygonMaterial
+ * @see BufferPrimitiveCollection
+ * @extends BufferPrimitiveCollection<BufferPolygon>
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+class BufferPolygonCollection extends BufferPrimitiveCollection {
+  /**
+   * @param {BufferPolygonCollectionOptions} [options]
+   */
+  constructor(options = Frozen.EMPTY_OBJECT) {
+    super(options);
+
+    /**
+     * @type {number}
+     * @ignore
+     */
+    this._holeCount = 0;
+
+    /**
+     * @type {number}
+     * @protected
+     * @ignore
+     */
+    this._holeCountMax =
+      options.holeCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
+
+    /**
+     * @type {TypedArray}
+     * @ignore
+     */
+    this._holeIndexView = null;
+
+    /**
+     * @type {number}
+     * @ignore
+     */
+    this._triangleCount = 0;
+
+    /**
+     * @type {number}
+     * @protected
+     * @ignore
+     */
+    this._triangleCountMax =
+      options.triangleCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
+
+    /**
+     * @type {TypedArray}
+     * @ignore
+     */
+    this._triangleIndexView = null;
+
+    this._allocateHoleIndexBuffer();
+    this._allocateTriangleIndexBuffer();
+  }
+
+  _getCollectionClass() {
+    return BufferPolygonCollection;
+  }
+
+  _getPrimitiveClass() {
+    return BufferPolygon;
+  }
+
+  _getMaterialClass() {
+    return BufferPolygonMaterial;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // COLLECTION LIFECYCLE
+
+  /**
+   * @private
+   * @ignore
+   */
+  _allocateHoleIndexBuffer() {
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    this._holeIndexView = IndexDatatype.createTypedArray(
+      this._positionCountMax,
+      this._holeCountMax,
+    );
+  }
+
+  /**
+   * @private
+   * @ignore
+   */
+  _allocateTriangleIndexBuffer() {
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    this._triangleIndexView = IndexDatatype.createTypedArray(
+      this._positionCountMax,
+      this._triangleCountMax * 3,
+    );
+  }
+
+  /**
+   * Duplicates the contents of this collection into the result collection.
+   * Result collection is not resized, and must contain enough space for all
+   * primitives in the source collection. Existing polygons in the result
+   * collection will be overwritten.
+   *
+   * <p>Useful when allocating more space for a collection that has reached its
+   * capacity, and efficiently transferring polygons to the new collection.</p>
+   *
+   * @example
+   * const result = new BufferPolygonCollection({ ... }); // allocate larger 'result' collection
+   * BufferPolygonCollection.clone(collection, result);   // copy polygons from 'collection' into 'result'
+   *
+   * @param {BufferPolygonCollection} collection
+   * @param {BufferPolygonCollection} result
+   * @param {function(BufferPolygon, number): boolean} [predicate] When provided, only polygons for which this returns <code>true</code> are copied. Surviving polygons are compacted into contiguous indices.
+   * @returns {BufferPolygonCollection}
+   */
+  static clone(collection, result, predicate) {
+    super.clone(collection, result, predicate);
+
+    // Base class's filtered clone uses PrimitiveClass.clone, which handles holes and triangles, so just return the result.
+    if (defined(predicate)) {
+      return result;
+    }
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(collection.holeCount <= result.holeCountMax, ERR_CAPACITY);
+    assert(collection.triangleCount <= result.triangleCountMax, ERR_CAPACITY);
+    //>>includeEnd('debug');
+
+    this._copySubArray(
+      collection._holeIndexView,
+      result._holeIndexView,
+      collection.holeCount,
+    );
+
+    this._copySubArray(
+      collection._triangleIndexView,
+      result._triangleIndexView,
+      collection._triangleCount * 3,
+    );
+
+    result._holeCount = collection._holeCount;
+    result._triangleCount = collection._triangleCount;
+
+    return result;
+  }
+
+  /**
+   * Returns a copy of the given collection, overriding any constructor options
+   * provided. Omitted options are inherited from the source collection. Any
+   * resized buffers must be large enough to hold every polygon.
+   *
+   * @param {BufferPolygonCollection} collection Source collection to copy.
+   * @param {BufferPolygonCollectionOptions} [options] Constructor options to override. Omitted options are inherited from the source collection.
+   * @param {function(BufferPolygon, number): boolean} [predicate] When provided, only polygons for which this returns <code>true</code> are copied. Surviving polygons are compacted into contiguous indices.
+   * @returns {BufferPolygonCollection}
+   * @override
+   */
+  static fromCollection(collection, options, predicate) {
+    return /** @type {BufferPolygonCollection} */ (
+      super.fromCollection(collection, options, predicate)
+    );
+  }
+
+  /**
+   * @param {BufferPolygonCollectionOptions} [options]
+   * @returns {BufferPolygonCollection}
+   * @override
+   * @ignore
+   */
+  _cloneEmpty(options = Frozen.EMPTY_OBJECT) {
+    return new BufferPolygonCollection({
+      holeCountMax: this.holeCountMax,
+      triangleCountMax: this.triangleCountMax,
+      ...this._cloneEmptyBaseArgs(options),
+    });
+  }
+
+  /**
+   * @param {BufferPolygonCollection} src
+   * @param {BufferPolygonCollection} dst
+   * @override
+   * @ignore
+   */
+  static _replaceBuffers(src, dst) {
+    super._replaceBuffers(src, dst);
+    dst._holeIndexView = src._holeIndexView;
+    dst._triangleIndexView = src._triangleIndexView;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // PRIMITIVE LIFECYCLE
+
+  /**
+   * Adds a new polygon to the collection, with the specified options. A
+   * {@link BufferPolygon} instance is linked to the new polygon, using
+   * the 'result' argument if given, or a new instance if not. For repeated
+   * calls, prefer to reuse a single BufferPolygon instance rather than
+   * allocating a new instance on each call.
+   *
+   * @param {BufferPolygonOptions} options
+   * @param {BufferPolygon} result
+   * @returns {BufferPolygon}
+   * @override
+   */
+  add(options, result = new BufferPolygon()) {
+    super.add(options, result);
+
+    const vertexOffset = this._positionCount;
+    result._setUint32(BufferPolygon.Layout.POSITION_OFFSET_U32, vertexOffset);
+    result._setUint32(BufferPolygon.Layout.POSITION_COUNT_U32, 0);
+
+    const holeOffset = this._holeCount;
+    result._setUint32(BufferPolygon.Layout.HOLE_OFFSET_U32, holeOffset);
+    result._setUint32(BufferPolygon.Layout.HOLE_COUNT_U32, 0);
+
+    const triangleOffset = this._triangleCount;
+    result._setUint32(BufferPolygon.Layout.TRIANGLE_OFFSET_U32, triangleOffset);
+    result._setUint32(BufferPolygon.Layout.TRIANGLE_COUNT_U32, 0);
+
+    if (defined(options.positions)) {
+      result.setPositions(options.positions);
+    }
+
+    if (defined(options.holes)) {
+      result.setHoles(options.holes);
+    }
+
+    if (defined(options.triangles)) {
+      result.setTriangles(options.triangles);
+    }
+
+    return result;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // RENDER
+
+  /**
+   * @param {FrameState} frameState
+   * @ignore
+   */
+  update(frameState) {
+    super.update(frameState);
+
+    if (this._isRendered(frameState)) {
+      this._renderContext = renderPolygons(
+        this,
+        frameState,
+        this._renderContext,
+      );
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // ACCESSORS
+
+  /**
+   * Total byte length of buffers owned by this collection. Includes any unused
+   * space allocated by {@link primitiveCountMax}, even if no polygons have
+   * yet been added in that space.
+   *
+   * @type {number}
+   * @readonly
+   * @override
+   */
+  get byteLength() {
+    return (
+      super.byteLength +
+      this._holeIndexView.byteLength +
+      this._triangleIndexView.byteLength
+    );
+  }
+
+  /**
+   * Number of holes in collection. Must be <= {@link holeCountMax}.
+   *
+   * @type {number}
+   * @readonly
+   */
+  get holeCount() {
+    return this._holeCount;
+  }
+
+  /**
+   * Maximum number of holes in collection. Must be >= {@link holeCount}.
+   *
+   * @type {number}
+   * @readonly
+   * @default {@link BufferPrimitiveCollection.DEFAULT_CAPACITY}
+   */
+  get holeCountMax() {
+    return this._holeCountMax;
+  }
+
+  /**
+   * Number of triangles in collection. Must be <= {@link triangleCountMax}.
+   *
+   * @type {number}
+   * @readonly
+   */
+  get triangleCount() {
+    return this._triangleCount;
+  }
+
+  /**
+   * Maximum number of triangles in collection. Must be >= {@link triangleCount}.
+   *
+   * @type {number}
+   * @readonly
+   * @default {@link BufferPrimitiveCollection.DEFAULT_CAPACITY}
+   */
+  get triangleCountMax() {
+    return this._triangleCountMax;
+  }
+
+  /**
+   * Updates vertex positions over the specified range of primitives. For
+   * position-only updates to many primitives, `setPositions()` is more
+   * efficient than updating each primitive individually.
+   *
+   * Argument `positions` must contain the same total number of vertices as the
+   * target primitive range; vertices cannot be added/removed by this method.
+   *
+   * @param {TypedArray} positions
+   * @param {number} primitiveOffset
+   * @param {number} primitiveCount
+   */
+  setPositions(positions, primitiveOffset, primitiveCount) {
+    const polygon = polygonScratch;
+
+    this.get(primitiveOffset, polygon);
+    const vertexOffset = polygon.vertexOffset;
+
+    this.get(primitiveOffset + primitiveCount - 1, polygon);
+    const vertexCount =
+      polygon.vertexOffset + polygon.vertexCount - vertexOffset;
+
+    //>>includeStart('debug', pragmas.debug);
+    const srcConstructor = positions.constructor;
+    const dstConstructor = this._positionView.constructor;
+    assert(dstConstructor === srcConstructor, "Invalid array type");
+    assert(vertexCount * 3 === positions.length, "Invalid array length");
+    assert(
+      primitiveOffset + primitiveCount <= this._primitiveCount,
+      "Invalid primitive range",
+    );
+    //>>includeEnd('debug');
+
+    this._positionView.set(positions, vertexOffset * 3);
+
+    this._makeDirty(DirtyFlags.GEOMETRY, primitiveOffset, primitiveCount);
+    this._makeDirtyBoundingVolume();
+  }
+}
+export default BufferPolygonCollection;

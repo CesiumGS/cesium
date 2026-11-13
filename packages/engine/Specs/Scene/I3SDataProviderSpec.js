@@ -1,13 +1,11 @@
+import { Math as CesiumMath, Rectangle, RuntimeError } from "@cesium/core";
 import {
   Cesium3DTileset,
   GeographicTilingScheme,
   I3SDataProvider,
   I3SStatistics,
   I3SSublayer,
-  Math as CesiumMath,
-  Rectangle,
   Resource,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/I3SDataProvider", function () {
@@ -1090,7 +1088,7 @@ describe("Scene/I3SDataProvider", function () {
 
   it("BSL get attributes and values", async function () {
     spyOn(Resource.prototype, "fetchJson").and.callFake(function fetch() {
-      let mockedData = {};
+      let mockedData;
       if (this.url.includes("/sublayers/")) {
         const id = this.url.match(/\/sublayers\/\d+\//)[0].split("/")[2];
         mockedData = {

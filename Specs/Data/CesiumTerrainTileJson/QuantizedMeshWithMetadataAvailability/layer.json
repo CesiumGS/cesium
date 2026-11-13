@@ -1,0 +1,25 @@
+{
+    "format": "quantized-mesh-1.0",
+    "version": "1.33.0",
+    "scheme": "tms",
+    "attribution": "",
+    "bounds": [
+        -180,
+        -90,
+        180,
+        90
+    ],
+    "tiles": [
+        "tile.metadataavailability.terrain?v={version}&x={x}&y={y}&z={z}"
+    ],
+    "extensions": [
+        "bvh",
+        "metadata",
+        "octvertexnormals"
+    ],
+    "metadataAvailability": 10,
+    "minzoom": 0,
+    "maxzoom": 8,
+    "projection": "EPSG:4326",
+    "bvhlevels": 6
+}

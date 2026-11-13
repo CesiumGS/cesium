@@ -1,6 +1,4 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
+import { Check, Frozen, defined } from "@cesium/core";
 import PropertyTextureProperty from "./PropertyTextureProperty.js";
 
 /**
@@ -105,7 +103,7 @@ Object.defineProperties(PropertyTexture.prototype, {
    *
    * @memberof PropertyTexture.prototype
    *
-   * @type {PropertyTextureProperty}
+   * @type {Object<string, PropertyTextureProperty>}
    * @readonly
    * @private
    */

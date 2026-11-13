@@ -1,30 +1,32 @@
 import {
   BoundingSphere,
   Cartesian3,
-  Cesium3DTileset,
-  Cesium3DTilesVoxelProvider,
-  CesiumWidget,
   Clock,
   ClockRange,
   ClockStep,
-  CreditDisplay,
   Color,
-  ConstantPositionProperty,
-  ConstantProperty,
-  DataSourceClock,
-  DataSourceCollection,
-  defined,
-  EllipsoidTerrainProvider,
-  Entity,
   HeadingPitchRange,
   JulianDate,
   Matrix4,
   Rectangle,
+  TimeIntervalCollection,
+  WebMercatorProjection,
+  defined,
+} from "@cesium/core";
+import {
+  Cesium3DTileset,
+  Cesium3DTilesVoxelProvider,
+  CesiumWidget,
+  CreditDisplay,
+  ConstantPositionProperty,
+  ConstantProperty,
+  DataSourceClock,
+  DataSourceCollection,
+  EllipsoidTerrainProvider,
+  Entity,
   ScreenSpaceEventHandler,
   TimeDynamicPointCloud,
-  TimeIntervalCollection,
   VoxelPrimitive,
-  WebMercatorProjection,
   Camera,
   ImageryLayer,
   ImageryLayerCollection,
@@ -32,12 +34,13 @@ import {
   SceneMode,
   SkyBox,
   TileCoordinatesImageryProvider,
+  BufferPointCollection,
 } from "../../index.js";
-
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 import getWebGLStub from "../../../../Specs/getWebGLStub.js";
 import MockDataSource from "../../../../Specs/MockDataSource.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+import BufferPoint from "../../Source/Scene/BufferPoint.js";
 
 describe(
   "Widget/CesiumWidget",
@@ -1031,6 +1034,33 @@ describe(
       });
     });
 
+    it("zoomTo zooms to BufferPrimitiveCollection", async () => {
+      widget = createCesiumWidget(container);
+
+      const collection = new BufferPointCollection({ primitiveCountMax: 64 });
+      const point = new BufferPoint();
+
+      collection.add({ position: Cartesian3.UNIT_X }, point);
+      collection.add({ position: Cartesian3.UNIT_Y }, point);
+      collection.add({ position: Cartesian3.UNIT_Z }, point);
+      collection._updateBoundingVolume();
+
+      const offset = new HeadingPitchRange(
+        0.4,
+        1.2,
+        4.0 * collection.boundingVolume.radius,
+      );
+
+      spyOn(widget.camera, "viewBoundingSphere");
+
+      await widget.zoomTo(collection, offset);
+
+      expect(widget.camera.viewBoundingSphere).toHaveBeenCalledOnceWith(
+        collection.boundingVolume,
+        offset,
+      );
+    });
+
     it("zoomTo zooms to entity with undefined offset when offset not defined", function () {
       widget = createCesiumWidget(container);
       widget.entities.add({
@@ -1393,6 +1423,33 @@ describe(
       });
     });
 
+    it("flyTo flies to BufferPrimitiveCollection", async () => {
+      widget = createCesiumWidget(container);
+
+      const collection = new BufferPointCollection({ primitiveCountMax: 64 });
+      const point = new BufferPoint();
+
+      collection.add({ position: Cartesian3.UNIT_X }, point);
+      collection.add({ position: Cartesian3.UNIT_Y }, point);
+      collection.add({ position: Cartesian3.UNIT_Z }, point);
+      collection._updateBoundingVolume();
+
+      const offset = new HeadingPitchRange(
+        0.4,
+        1.2,
+        4.0 * collection.boundingVolume.radius,
+      );
+
+      spyOn(widget.camera, "flyToBoundingSphere").and.callFake((_, options) =>
+        options.complete(),
+      );
+
+      await widget.flyTo(collection, offset);
+      widget._postRender();
+
+      expect(widget.camera.flyToBoundingSphere).toHaveBeenCalled();
+    });
+
     it("flyTo flies to entity with default offset when options not defined", function () {
       widget = createCesiumWidget(container);
 
@@ -1662,17 +1719,17 @@ describe(
         })
         .then(function () {
           const preMixinListenerCount =
-            preMixinDataSource.entities.collectionChanged._listeners.length;
+            preMixinDataSource.entities.collectionChanged._listeners.size;
           const postMixinListenerCount =
-            postMixinDataSource.entities.collectionChanged._listeners.length;
+            postMixinDataSource.entities.collectionChanged._listeners.size;
 
           widget = widget.destroy();
 
           expect(
-            preMixinDataSource.entities.collectionChanged._listeners.length,
+            preMixinDataSource.entities.collectionChanged._listeners.size,
           ).not.toEqual(preMixinListenerCount);
           expect(
-            postMixinDataSource.entities.collectionChanged._listeners.length,
+            postMixinDataSource.entities.collectionChanged._listeners.size,
           ).not.toEqual(postMixinListenerCount);
         });
     });

@@ -1,7 +1,15 @@
+// @ts-check
+
+/** @import {BuildContext, BuildResult} from "esbuild"; */
+
 class ContextCache {
+  /** @param {BuildContext} context */
   constructor(context) {
+    /** @type {BuildContext} context */
     this.context = context;
+    /** @type {Promise<BuildResult|void>} context */
     this.promise = Promise.resolve();
+    /** @type {BuildResult|undefined} context */
     this.result = undefined;
   }
 

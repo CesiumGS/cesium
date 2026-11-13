@@ -1,5 +1,4 @@
 import {
-  ApproximateTerrainHeights,
   Cartesian2,
   Cartesian3,
   Color,
@@ -8,6 +7,9 @@ import {
   Math as CesiumMath,
   TimeInterval,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
   ConstantProperty,
   EllipseGeometryUpdater,
   EllipseGraphics,
@@ -21,7 +23,6 @@ import {
   GeometryVisualizer,
   EntityCollection,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -231,6 +232,61 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
 
       batch.removeAllPrimitives();
     });
+  });
+
+  it("does not crash when removing an entity with a pending show update", function () {
+    if (
+      !GroundPrimitive.isSupported(scene) ||
+      !GroundPrimitive.supportsMaterials(scene)
+    ) {
+      // Don't fail if materials on GroundPrimitive not supported
+      return;
+    }
+
+    const batch = new StaticGroundGeometryPerMaterialBatch(
+      scene.groundPrimitives,
+      ClassificationType.BOTH,
+      MaterialAppearance,
+    );
+
+    const ellipse = new EllipseGraphics();
+    ellipse.semiMajorAxis = new ConstantProperty(2);
+    ellipse.semiMinorAxis = new ConstantProperty(1);
+    ellipse.material = new GridMaterialProperty();
+
+    const entity = new Entity({
+      position: new Cartesian3(1234, 5678, 9101112),
+      ellipse: ellipse,
+    });
+
+    const updater = new EllipseGeometryUpdater(entity, scene);
+    batch.add(time, updater);
+
+    function renderScene() {
+      scene.initializeFrame();
+      const isUpdated = batch.update(time);
+      scene.render(time);
+      return isUpdated;
+    }
+
+    return pollToPromise(renderScene)
+      .then(function () {
+        expect(scene.groundPrimitives.length).toEqual(1);
+
+        // Trigger a show change, which queues the updater in showsUpdated
+        entity.show = false;
+        updater._onEntityPropertyChanged(entity, "isShowing");
+
+        // Remove the entity before the show update is processed
+        batch.remove(updater);
+
+        // This should not crash with "Cannot read properties of undefined (reading 'id')"
+        return pollToPromise(renderScene);
+      })
+      .then(function () {
+        expect(scene.groundPrimitives.length).toEqual(0);
+        batch.removeAllPrimitives();
+      });
   });
 
   it("shows only one primitive while rebuilding primitive", function () {

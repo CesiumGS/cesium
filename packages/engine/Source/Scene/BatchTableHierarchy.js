@@ -1,12 +1,14 @@
-import AttributeType from "./AttributeType.js";
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import combine from "../Core/combine.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  AttributeType,
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  clone,
+  combine,
+  defined,
+} from "@cesium/core";
 import getBinaryAccessor from "./getBinaryAccessor.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 
 /**
  * Object for handling the <code>3DTILES_batch_table_hierarchy</code> extension
@@ -127,7 +129,7 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
   for (i = 0; i < classesLength; ++i) {
     const classInstancesLength = classes[i].length;
     const properties = classes[i].instances;
-    const binaryProperties = getBinaryProperties(
+    const binaryProperties = Cesium3DTileBatchTable.getBinaryProperties(
       classInstancesLength,
       properties,
       binaryBody,
@@ -152,54 +154,6 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
   hierarchy._parentIndexes = parentIndexes;
   hierarchy._parentIds = parentIds;
   hierarchy._byteLength = byteLength;
-}
-
-function getBinaryProperties(featuresLength, properties, binaryBody) {
-  let binaryProperties;
-  for (const name in properties) {
-    if (properties.hasOwnProperty(name)) {
-      const property = properties[name];
-      const byteOffset = property.byteOffset;
-      if (defined(byteOffset)) {
-        // This is a binary property
-        const componentType = property.componentType;
-        const type = property.type;
-        if (!defined(componentType)) {
-          throw new RuntimeError("componentType is required.");
-        }
-        if (!defined(type)) {
-          throw new RuntimeError("type is required.");
-        }
-        if (!defined(binaryBody)) {
-          throw new RuntimeError(
-            `Property ${name} requires a batch table binary.`,
-          );
-        }
-
-        const binaryAccessor = getBinaryAccessor(property);
-        const componentCount = binaryAccessor.componentsPerAttribute;
-        const classType = binaryAccessor.classType;
-        const typedArray = binaryAccessor.createArrayBufferView(
-          binaryBody.buffer,
-          binaryBody.byteOffset + byteOffset,
-          featuresLength,
-        );
-
-        if (!defined(binaryProperties)) {
-          binaryProperties = {};
-        }
-
-        // Store any information needed to access the binary data, including the typed array,
-        // componentCount (e.g. a VEC4 would be 4), and the type used to pack and unpack (e.g. Cartesian4).
-        binaryProperties[name] = {
-          typedArray: typedArray,
-          componentCount: componentCount,
-          type: classType,
-        };
-      }
-    }
-  }
-  return binaryProperties;
 }
 
 function countBinaryPropertyMemory(binaryProperties) {

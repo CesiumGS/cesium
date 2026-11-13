@@ -1,9 +1,11 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import defined from "../Core/defined.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
+import {
+  AssociativeArray,
+  DistanceDisplayCondition,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  ShowGeometryInstanceAttribute,
+  defined,
+} from "@cesium/core";
 import RectangleCollisionChecker from "../Core/RectangleCollisionChecker.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import GroundPrimitive from "../Scene/GroundPrimitive.js";
 import ShadowVolumeAppearance from "../Scene/ShadowVolumeAppearance.js";
 import BoundingSphereState from "./BoundingSphereState.js";
@@ -118,6 +120,7 @@ Batch.prototype.remove = function (updater) {
     if (defined(unsubscribe)) {
       unsubscribe();
       this.subscriptions.remove(id);
+      this.showsUpdated.remove(id);
     }
     return true;
   }
@@ -157,11 +160,13 @@ Batch.prototype.update = function (time) {
         this.material,
       );
 
+      const AppearanceType = this.appearanceType;
+
       primitive = new GroundPrimitive({
         show: false,
         asynchronous: true,
         geometryInstances: geometries.slice(),
-        appearance: new this.appearanceType({
+        appearance: new AppearanceType({
           material: this.material,
           // translucent and closed properties overridden
         }),

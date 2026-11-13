@@ -1,25 +1,27 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Check,
+  DeveloperError,
+  Event,
+  Frozen,
+  GeographicProjection,
+  Math as CesiumMath,
+  Rectangle,
+  RuntimeError,
+  WebMercatorProjection,
+  defined,
+} from "@cesium/core";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
-import GeographicProjection from "../Core/GeographicProjection.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
-import CesiumMath from "../Core/Math.js";
-import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import ArcGisMapService from "./ArcGisMapService.js";
 import DiscardMissingTileImagePolicy from "./DiscardMissingTileImagePolicy.js";
 import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
 import ImageryProvider from "./ImageryProvider.js";
 import ArcGisBaseMapType from "./ArcGisBaseMapType.js";
-import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * @typedef {object} ArcGisMapServerImageryProvider.ConstructorOptions
@@ -324,11 +326,6 @@ function ArcGisMapServerImageryProvider(options) {
   this._layers = options.layers;
   this._credit = options.credit;
   this._tileCredits = undefined;
-
-  let credit = options.credit;
-  if (typeof credit === "string") {
-    credit = new Credit(credit);
-  }
 
   /**
    * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
@@ -681,7 +678,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
  * Creates an {@link ImageryProvider} which provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
  * used, if available.
  *
- * @param {Resource|String} url The URL of the ArcGIS MapServer service.
+ * @param {Resource|string} url The URL of the ArcGIS MapServer service.
  * @param {ArcGisMapServerImageryProvider.ConstructorOptions} [options] Object describing initialization options.
  * @returns {Promise<ArcGisMapServerImageryProvider>} A promise that resolves to the created ArcGisMapServerImageryProvider.
  *

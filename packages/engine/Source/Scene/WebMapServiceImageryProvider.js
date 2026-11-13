@@ -1,9 +1,11 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  DeveloperError,
+  Frozen,
+  WebMercatorProjection,
+  defined,
+} from "@cesium/core";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import Resource from "../Core/Resource.js";
-import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import GetFeatureInfoFormat from "./GetFeatureInfoFormat.js";
 import TimeDynamicImagery from "./TimeDynamicImagery.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
@@ -12,6 +14,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  * EPSG codes known to include reverse axis orders, but are not within 4000-5000.
  *
  * @type {number[]}
+ * @ignore
  */
 const includesReverseAxis = [
   3034, // ETRS89-extended / LCC Europe
@@ -25,6 +28,7 @@ const includesReverseAxis = [
  * EPSG codes known to not include reverse axis orders, and are within 4000-5000.
  *
  * @type {number[]}
+ * @ignore
  */
 const excludesReverseAxis = [
   4471, // Mayotte
@@ -39,15 +43,19 @@ const excludesReverseAxis = [
  * @property {Resource|string} url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
  * @property {string} layers The layers to include, separated by commas.
  * @property {object} [parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
- * @property {object} [getFeatureInfoParameters=WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters] Additional parameters to pass to the WMS server in the GetFeatureInfo URL.
  * @property {boolean} [enablePickFeatures=true] If true, {@link WebMapServiceImageryProvider#pickFeatures} will invoke
  *        the GetFeatureInfo operation on the WMS server and return the features included in the response.  If false,
  *        {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
  *        without communicating with the server.  Set this property to false if you know your WMS server does not support
  *        GetFeatureInfo or if you don't want this provider's features to be pickable. Note that this can be dynamically
  *        overridden by modifying the WebMapServiceImageryProvider#enablePickFeatures property.
+ * @property {object} [getFeatureInfoParameters=WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters] Additional parameters to pass to the WMS server in the GetFeatureInfo URL.
+ * @property {Resource|string} [getFeatureInfoUrl] The getFeatureInfo URL of the WMS service. If the property is not defined then we use the property value of url.
  * @property {GetFeatureInfoFormat[]} [getFeatureInfoFormats=WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
- *        in which to try WMS GetFeatureInfo requests.
+ *        in which to try WMS GetFeatureInfo requests. Since feature info responses vary across WMS services,
+ *        you may need to supply a custom format and parsing callback; see the
+ *        {@link https://sandcastle.cesium.com/?id=web-map-tile-service-picking|Sandcastle example} for a complete
+ *        example of writing your own callback.
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
  * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
@@ -68,7 +76,6 @@ const excludesReverseAxis = [
  *                          an array, each element in the array is a subdomain.
  * @property {Clock} [clock] A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
  * @property {TimeIntervalCollection} [times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
- * @property {Resource|string} [getFeatureInfoUrl] The getFeatureInfo URL of the WMS service. If the property is not defined then we use the property value of url.
  */
 
 /**
@@ -88,12 +95,14 @@ const excludesReverseAxis = [
  * @see WebMapTileServiceImageryProvider
  * @see UrlTemplateImageryProvider
  *
- * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
+ * @see {@link https://enterprise.arcgis.com/en/server/latest/publish-services/linux/wms-services.htm|ArcGIS Server WMS Services}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+ * @see {@link https://sandcastle.cesium.com/?id=web-map-tile-service-picking|Custom GetFeatureInfo Sandcastle Example}
  *
  * @example
+ * // WMS servers operated by the US government https://apps.nationalmap.gov/services/
  * const provider = new Cesium.WebMapServiceImageryProvider({
- *     url : 'https://sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
+ *     url : 'https://basemap.nationalmap.gov:443/arcgis/services/USGSHydroCached/MapServer/WMSServer',
  *     layers : '0',
  *     proxy: new Cesium.DefaultProxy('/proxy/')
  * });

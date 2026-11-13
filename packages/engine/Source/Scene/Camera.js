@@ -1,30 +1,33 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Cartographic from "../Core/Cartographic.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Cartographic,
+  Check,
+  DeveloperError,
+  Ellipsoid,
+  EllipsoidGeodesic,
+  Event,
+  FixedFrameTransforms,
+  Frozen,
+  HeadingPitchRange,
+  HeadingPitchRoll,
+  Intersect,
+  IntersectionTests,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  OrthographicFrustum,
+  OrthographicOffCenterFrustum,
+  PerspectiveFrustum,
+  Quaternion,
+  Ray,
+  Rectangle,
+  defined,
+  getTimestamp,
+} from "@cesium/core";
 import EasingFunction from "../Core/EasingFunction.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import EllipsoidGeodesic from "../Core/EllipsoidGeodesic.js";
-import Event from "../Core/Event.js";
-import getTimestamp from "../Core/getTimestamp.js";
-import HeadingPitchRange from "../Core/HeadingPitchRange.js";
-import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
-import Intersect from "../Core/Intersect.js";
-import IntersectionTests from "../Core/IntersectionTests.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
-import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
-import Quaternion from "../Core/Quaternion.js";
-import Ray from "../Core/Ray.js";
-import Rectangle from "../Core/Rectangle.js";
-import Transforms from "../Core/Transforms.js";
 import CameraFlightPath from "./CameraFlightPath.js";
 import MapMode2D from "./MapMode2D.js";
 import SceneMode from "./SceneMode.js";
@@ -63,8 +66,8 @@ import SceneMode from "./SceneMode.js";
  *
  * @param {Scene} scene The scene.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera%20Tutorial.html|Cesium Sandcastle Camera Tutorial Example}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=camera|Cesium Sandcastle Camera Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=camera-tutorial|Cesium Sandcastle Camera Tutorial Example}
  * @demo {@link https://cesium.com/learn/cesiumjs-learn/cesiumjs-camera|Camera Tutorial}
  *
  * @example
@@ -155,12 +158,13 @@ function Camera(scene) {
   /**
    * The region of space in view.
    *
-   * @type {PerspectiveFrustum|PerspectiveOffCenterFrustum|OrthographicFrustum}
+   * @type {PerspectiveFrustum|PerspectiveOffCenterFrustum|OrthographicFrustum|OrthographicOffCenterFrustum}
    * @default PerspectiveFrustum()
    *
    * @see PerspectiveFrustum
    * @see PerspectiveOffCenterFrustum
    * @see OrthographicFrustum
+   * @see OrthographicOffCenterFrustum
    */
   this.frustum = new PerspectiveFrustum();
   this.frustum.aspectRatio =
@@ -532,7 +536,7 @@ Camera.prototype._updateCameraChanged = function () {
 };
 
 function convertTransformForColumbusView(camera) {
-  Transforms.basisTo2D(
+  FixedFrameTransforms.basisTo2D(
     camera._projection,
     camera._transform,
     camera._actualTransform,
@@ -996,7 +1000,7 @@ Object.defineProperties(Camera.prototype, {
         const ellipsoid = this._projection.ellipsoid;
 
         const oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
-        const transform = Transforms.eastNorthUpToFixedFrame(
+        const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
           this.positionWC,
           ellipsoid,
           scratchHPRMatrix2,
@@ -1027,7 +1031,7 @@ Object.defineProperties(Camera.prototype, {
         const ellipsoid = this._projection.ellipsoid;
 
         const oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
-        const transform = Transforms.eastNorthUpToFixedFrame(
+        const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
           this.positionWC,
           ellipsoid,
           scratchHPRMatrix2,
@@ -1058,7 +1062,7 @@ Object.defineProperties(Camera.prototype, {
         const ellipsoid = this._projection.ellipsoid;
 
         const oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
-        const transform = Transforms.eastNorthUpToFixedFrame(
+        const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
           this.positionWC,
           ellipsoid,
           scratchHPRMatrix2,
@@ -1274,7 +1278,7 @@ function setView3D(camera, position, hpr) {
     camera.transform,
     scratchSetViewTransform1,
   );
-  const localTransform = Transforms.eastNorthUpToFixedFrame(
+  const localTransform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     position,
     camera._projection.ellipsoid,
     scratchSetViewTransform2,
@@ -1396,7 +1400,7 @@ function directionUpToHeadingPitchRoll(camera, position, orientation, result) {
 
   if (camera._scene.mode === SceneMode.SCENE3D) {
     const ellipsoid = camera._projection.ellipsoid;
-    const transform = Transforms.eastNorthUpToFixedFrame(
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
       position,
       ellipsoid,
       scratchHPRMatrix1,
@@ -2343,7 +2347,7 @@ Camera.prototype.lookAt = function (target, offset) {
   const scene = this._scene;
   const ellipsoid = scene.ellipsoid ?? Ellipsoid.default;
 
-  const transform = Transforms.eastNorthUpToFixedFrame(
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     target,
     ellipsoid,
     scratchLookAtMatrix4,
@@ -2356,7 +2360,7 @@ const scratchLookAtHeadingPitchRangeQuaternion1 = new Quaternion();
 const scratchLookAtHeadingPitchRangeQuaternion2 = new Quaternion();
 const scratchHeadingPitchRangeMatrix3 = new Matrix3();
 
-function offsetFromHeadingPitchRange(heading, pitch, range) {
+function offsetFromHeadingPitchRange(heading, pitch, range, result) {
   pitch = CesiumMath.clamp(
     pitch,
     -CesiumMath.PI_OVER_TWO,
@@ -2380,10 +2384,7 @@ function offsetFromHeadingPitchRange(heading, pitch, range) {
     scratchHeadingPitchRangeMatrix3,
   );
 
-  const offset = Cartesian3.clone(
-    Cartesian3.UNIT_X,
-    scratchLookAtHeadingPitchRangeOffset,
-  );
+  const offset = Cartesian3.clone(Cartesian3.UNIT_X, result);
   Matrix3.multiplyByVector(rotMatrix, offset, offset);
   Cartesian3.negate(offset, offset);
   Cartesian3.multiplyByScalar(offset, range, offset);
@@ -2408,11 +2409,11 @@ function offsetFromHeadingPitchRange(heading, pitch, range) {
  *
  * @example
  * // 1. Using a cartesian offset
- * const transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-98.0, 40.0));
+ * const transform = Cesium.FixedFrameTransforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-98.0, 40.0));
  * viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
  *
  * // 2. Using a HeadingPitchRange offset
- * const transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-72.0, 40.0));
+ * const transform = Cesium.FixedFrameTransforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-72.0, 40.0));
  * const heading = Cesium.Math.toRadians(50.0);
  * const pitch = Cesium.Math.toRadians(-20.0);
  * const range = 5000.0;
@@ -2441,6 +2442,7 @@ Camera.prototype.lookAtTransform = function (transform, offset) {
       offset.heading,
       offset.pitch,
       offset.range,
+      scratchLookAtHeadingPitchRangeOffset,
     );
   } else {
     cartesianOffset = offset;
@@ -2490,6 +2492,72 @@ Camera.prototype.lookAtTransform = function (transform, offset) {
   Cartesian3.normalize(this.up, this.up);
 
   this._adjustOrthographicFrustum(true);
+};
+
+const scratchLookAtWorldPositionTransform = new Matrix4();
+const scratchLookAtWorldPositionDirection = new Cartesian3();
+const scratchLookAtWorldPositionWorldUp = new Cartesian3();
+const scratchLookAtWorldPositionRight = new Cartesian3();
+
+/**
+ * Sets the camera orientation to look at a target position in world coordinates. The camera's up vector will be oriented to the world up vector at the target position.
+ * If the camera is at the target position, the camera will be oriented to the world up vector at the target position.
+ * @param {Cartesian3} target The target position in world coordinates.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid to use for determining the world up.
+ */
+Camera.prototype.lookAtWorldPosition = function (
+  target,
+  ellipsoid = Ellipsoid.default,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("target", target);
+  Check.typeOf.object("ellipsoid", ellipsoid);
+  //>>includeEnd('debug');
+
+  const transform = Matrix4.clone(
+    this._transform,
+    scratchLookAtWorldPositionTransform,
+  );
+
+  this._setTransform(Matrix4.IDENTITY);
+
+  // Get direction to look at target
+  let direction = Cartesian3.subtract(
+    target,
+    this.positionWC,
+    scratchLookAtWorldPositionDirection,
+  );
+
+  // If the camera is at the target position, we can't look at it, but we should still continue to re-orient the camera to the world up vector at the target position.
+  if (Cartesian3.magnitudeSquared(direction) < CesiumMath.EPSILON8) {
+    direction = Cartesian3.clone(
+      this.directionWC,
+      scratchLookAtWorldPositionDirection,
+    );
+  }
+
+  direction = Cartesian3.normalize(direction, this.direction);
+
+  // Orient the camera to the world up vector at the target position
+  const worldUp = ellipsoid.geodeticSurfaceNormal(
+    target,
+    scratchLookAtWorldPositionWorldUp,
+  );
+
+  let right = Cartesian3.cross(
+    direction,
+    worldUp,
+    scratchLookAtWorldPositionRight,
+  );
+  if (Cartesian3.magnitudeSquared(right) < CesiumMath.EPSILON8) {
+    right = Cartesian3.clone(this.rightWC, scratchLookAtWorldPositionRight);
+  }
+  Cartesian3.normalize(right, this.right);
+
+  const up = Cartesian3.cross(right, direction, this.up);
+  Cartesian3.normalize(up, this.up);
+
+  this._setTransform(transform);
 };
 
 const viewRectangle3DCartographic1 = new Cartographic();
@@ -3004,6 +3072,17 @@ function getPickRayOrthographic(camera, windowPosition, result) {
   Cartesian3.add(scratchDirection, origin, origin);
 
   Cartesian3.clone(camera.directionWC, result.direction);
+
+  // Account for wrap-around in 2D infinite scroll mode
+  if (
+    camera._mode === SceneMode.SCENE2D &&
+    camera._scene.mapMode2D === MapMode2D.INFINITE_SCROLL
+  ) {
+    const maxHorizontal = camera._maxCoord.x;
+    origin.y =
+      CesiumMath.mod(origin.y + maxHorizontal, 2.0 * maxHorizontal) -
+      maxHorizontal;
+  }
 
   return result;
 }
@@ -3610,13 +3689,14 @@ Camera.prototype.flyToBoundingSphere = function (boundingSphere, options) {
       offset.heading,
       offset.pitch,
       offset.range,
+      scratchflyToBoundingSphereDestination,
     );
   }
 
   const scene = this._scene;
   const ellipsoid = scene.ellipsoid ?? Ellipsoid.default;
 
-  const transform = Transforms.eastNorthUpToFixedFrame(
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     boundingSphere.center,
     ellipsoid,
     scratchflyToBoundingSphereTransform,

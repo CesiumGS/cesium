@@ -2,14 +2,12 @@ import {
   BoundingSphere,
   Cartesian3,
   Math as CesiumMath,
-  OrientedBoundingBox,
   Matrix3,
   Matrix4,
+  OrientedBoundingBox,
   Quaternion,
-  SpatialNode,
-  VoxelShape,
-  VoxelEllipsoidShape,
-} from "../../index.js";
+} from "@cesium/core";
+import { SpatialNode, VoxelShape, VoxelEllipsoidShape } from "../../index.js";
 
 describe("Scene/VoxelEllipsoidShape", function () {
   it("conforms to VoxelShape interface", function () {
@@ -90,17 +88,17 @@ describe("Scene/VoxelEllipsoidShape", function () {
     ).toEqualEpsilon(expectedOrientedBoundingBox.center, CesiumMath.EPSILON12);
 
     const expectedShapeTransform = Matrix4.fromRowMajorArray([
-      (scale.x + maxHeight) * Math.cos(angle),
-      -(scale.x + maxHeight) * Math.sin(angle),
+      Math.cos(angle),
+      -Math.sin(angle),
       0.0,
       expectedOrientedBoundingBox.center.x,
-      (scale.y + maxHeight) * Math.sin(angle),
-      (scale.y + maxHeight) * Math.cos(angle),
+      Math.sin(angle),
+      Math.cos(angle),
       0.0,
       expectedOrientedBoundingBox.center.y,
       0.0,
       0.0,
-      scale.z + maxHeight,
+      1.0,
       expectedOrientedBoundingBox.center.z,
       0.0,
       0.0,

@@ -1,9 +1,11 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
+import {
+  Check,
+  DeveloperError,
+  PixelDatatype,
+  PixelFormat,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
@@ -303,7 +305,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
 
   /**
    * Specifies the tonemapping algorithm used when rendering with high dynamic range.
-   * {@link https://sandcastle.cesium.com/?src=High%20Dynamic%20Range.html|Sandcastle Demo}
+   * {@link https://sandcastle.cesium.com/?id=high-dynamic-range|Sandcastle Demo}
    *
    * @example viewer.scene.postProcessStages.tonemapper = Cesium.Tonemapper.ACES;
    *

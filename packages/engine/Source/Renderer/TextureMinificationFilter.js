@@ -1,4 +1,4 @@
-import WebGLConstants from "../Core/WebGLConstants.js";
+import { WebGLConstants } from "@cesium/core";
 
 /**
  * Enumerates all possible filters used when minifying WebGL textures.
@@ -91,4 +91,6 @@ TextureMinificationFilter.validate = function (textureMinificationFilter) {
   );
 };
 
-export default Object.freeze(TextureMinificationFilter);
+Object.freeze(TextureMinificationFilter);
+
+export default TextureMinificationFilter;

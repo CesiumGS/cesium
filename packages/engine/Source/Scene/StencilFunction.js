@@ -1,5 +1,6 @@
-import WebGLConstants from "../Core/WebGLConstants.js";
+// @ts-check
 
+import { WebGLConstants } from "@cesium/core";
 /**
  * Determines the function used to compare stencil values for the stencil test.
  *
@@ -70,4 +71,7 @@ const StencilFunction = {
    */
   ALWAYS: WebGLConstants.ALWAYS,
 };
-export default Object.freeze(StencilFunction);
+
+Object.freeze(StencilFunction);
+
+export default StencilFunction;

@@ -1,5 +1,5 @@
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
+import { Event, defined } from "@cesium/core";
+
 /**
  * Describes a KmlTour, which uses KmlTourFlyTo, and KmlTourWait to
  * guide the camera to a specified destinations on given time intervals.
@@ -14,7 +14,7 @@ import Event from "../Core/Event.js";
  * @see KmlTourFlyTo
  * @see KmlTourWait
  *
- * @demo {@link https://sandcastle.cesium.com/?src=KML%20Tours.html|KML Tours}
+ * @demo {@link https://sandcastle.cesium.com/?id=kml-tours|KML Tours}
  */
 function KmlTour(name, id) {
   /**

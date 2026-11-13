@@ -41,15 +41,17 @@ import {
   GpxDataSource,
   GoogleEarthEnterpriseImageryProvider,
   GoogleEarthEnterpriseMapsProvider,
-  GoogleEarthEnterpriseMetadata,
   GoogleEarthEnterpriseTerrainProvider,
   GridImageryProvider,
   GridMaterialProperty,
   GroundPolylineGeometry,
+  HermitePolynomialApproximation,
   ImageMaterialProperty,
   ImageryProvider,
   IonImageryProvider,
   KmlDataSource,
+  LagrangePolynomialApproximation,
+  LinearApproximation,
   MapboxImageryProvider,
   MapboxStyleImageryProvider,
   MaterialProperty,
@@ -78,6 +80,7 @@ import {
   RectangleGeometry,
   RectangleOutlineGeometry,
   ReferenceProperty,
+  Resource,
   SampledPositionProperty,
   SampledProperty,
   Scene,
@@ -100,6 +103,7 @@ import {
   WebMapServiceImageryProvider,
   WebMapTileServiceImageryProvider,
   writeTextToCanvas,
+  knockout,
 } from "cesium";
 
 // Verify ImageryProvider instances conform to the expected interface
@@ -155,6 +159,18 @@ dataSource = new KmlDataSource({
 dataSource = new GpxDataSource();
 dataSource = new CustomDataSource();
 
+// KML relative resources can be resolved through a custom Resource.
+const kmlDataSource = new KmlDataSource();
+const kmlDocument = new DOMParser().parseFromString(
+  '<kml xmlns="http://www.opengis.net/kml/2.2"><Document/></kml>',
+  "text/xml",
+);
+const kmlSourceUri = new Resource({
+  url: "https://example.invalid/data/doc.kml",
+});
+KmlDataSource.load(kmlDocument, { sourceUri: kmlSourceUri });
+kmlDataSource.load(kmlDocument, { sourceUri: kmlSourceUri });
+
 // Verify Property instances conform to the expected interface
 let property: Property;
 property = new CallbackProperty(() => 0, false);
@@ -177,7 +193,17 @@ property = new ReferenceProperty(new EntityCollection(), "object1", [
 
 // Verify PositionProperty instances conform to the expected PositionProperty and Property interfaces
 let positionProperty: PositionProperty;
-property = positionProperty = new SampledPositionProperty();
+const sampledPositionProperty = new SampledPositionProperty();
+sampledPositionProperty.setInterpolationOptions({
+  interpolationAlgorithm: HermitePolynomialApproximation,
+});
+sampledPositionProperty.setInterpolationOptions({
+  interpolationAlgorithm: LagrangePolynomialApproximation,
+});
+sampledPositionProperty.setInterpolationOptions({
+  interpolationAlgorithm: LinearApproximation,
+});
+property = positionProperty = sampledPositionProperty;
 property = positionProperty = new CompositePositionProperty();
 property = positionProperty = new ConstantPositionProperty();
 property = positionProperty = new TimeIntervalCollectionPositionProperty();
@@ -401,3 +427,6 @@ pos = undefined;
 if (defined(pos)) {
   consumeDefined(pos);
 }
+
+// Verify knockout is exported correctly - See https://github.com/CesiumGS/cesium/issues/12423
+const observable = knockout.observable();

@@ -1,5 +1,4 @@
-import Check from "../../Core/Check.js";
-import clone from "../../Core/clone.js";
+import { Check, clone } from "@cesium/core";
 
 /**
  * A model is made up of one or more nodes in the scene graph. Some details
@@ -118,7 +117,7 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
    * be used to create a {@link VertexArray} for the draw command. Attributes
    * at the node level may be needed for extensions such as EXT_mesh_gpu_instancing.
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private

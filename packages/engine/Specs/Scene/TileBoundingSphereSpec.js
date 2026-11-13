@@ -4,9 +4,8 @@ import {
   Intersect,
   Math as CesiumMath,
   Plane,
-  TileBoundingSphere,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { TileBoundingSphere } from "../../index.js";
 import createFrameState from "../../../../Specs/createFrameState.js";
 
 describe("Scene/TileBoundingSphere", function () {

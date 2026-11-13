@@ -1,0 +1,12 @@
+{
+    "tilejson": "2.1.0",
+    "format" : "heightmap-1.0",
+    "version" : "1.0.0",
+    "scheme" : "tms",
+    "tiles" : [
+        "../Heightmap/11_3027_1342.terrain?v={version}&x={x}&y={y}&z={z}&foo=0",
+        "../Heightmap/11_3027_1342.terrain?v={version}&x={x}&y={y}&z={z}&foo=1",
+        "../Heightmap/11_3027_1342.terrain?v={version}&x={x}&y={y}&z={z}&foo=2",
+        "../Heightmap/11_3027_1342.terrain?v={version}&x={x}&y={y}&z={z}&foo=3"
+    ]
+}

@@ -1,19 +1,23 @@
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Geometry from "../Core/Geometry.js";
-import GeometryAttribute from "../Core/GeometryAttribute.js";
+import {
+  Check,
+  Color,
+  ComponentDatatype,
+  DeveloperError,
+  Frozen,
+  Geometry,
+  GeometryAttribute,
+  Matrix4,
+  PixelDatatype,
+  PixelFormat,
+  PrimitiveType,
+  RuntimeError,
+  WebGLConstants,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
+import Buffer from "./Buffer.js";
 import loadKTX2 from "../Core/loadKTX2.js";
-import Matrix4 from "../Core/Matrix4.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
 import ViewportQuadVS from "../Shaders/ViewportQuadVS.js";
 import BufferUsage from "./BufferUsage.js";
 import ClearCommand from "./ClearCommand.js";
@@ -21,7 +25,7 @@ import ContextLimits from "./ContextLimits.js";
 import CubeMap from "./CubeMap.js";
 import DrawCommand from "./DrawCommand.js";
 import PassState from "./PassState.js";
-import PixelDatatype from "./PixelDatatype.js";
+import PickId from "./PickId.js";
 import RenderState from "./RenderState.js";
 import ShaderCache from "./ShaderCache.js";
 import ShaderProgram from "./ShaderProgram.js";
@@ -85,32 +89,33 @@ function Context(canvas, options) {
 
   ContextLimits._maximumCombinedTextureImageUnits = gl.getParameter(
     gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS,
-  ); // min: 8
+  );
   ContextLimits._maximumCubeMapSize = gl.getParameter(
     gl.MAX_CUBE_MAP_TEXTURE_SIZE,
-  ); // min: 16
+  );
   ContextLimits._maximumFragmentUniformVectors = gl.getParameter(
     gl.MAX_FRAGMENT_UNIFORM_VECTORS,
-  ); // min: 16
+  );
   ContextLimits._maximumTextureImageUnits = gl.getParameter(
     gl.MAX_TEXTURE_IMAGE_UNITS,
-  ); // min: 8
+  );
   ContextLimits._maximumRenderbufferSize = gl.getParameter(
     gl.MAX_RENDERBUFFER_SIZE,
-  ); // min: 1
-  ContextLimits._maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE); // min: 64
+  );
+  ContextLimits._maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+  ContextLimits._maximum3DTextureSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
   ContextLimits._maximumVaryingVectors = gl.getParameter(
     gl.MAX_VARYING_VECTORS,
-  ); // min: 8
+  );
   ContextLimits._maximumVertexAttributes = gl.getParameter(
     gl.MAX_VERTEX_ATTRIBS,
-  ); // min: 8
+  );
   ContextLimits._maximumVertexTextureImageUnits = gl.getParameter(
     gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS,
-  ); // min: 0
+  );
   ContextLimits._maximumVertexUniformVectors = gl.getParameter(
     gl.MAX_VERTEX_UNIFORM_VECTORS,
-  ); // min: 128
+  );
 
   ContextLimits._maximumSamples = this._webgl2
     ? gl.getParameter(gl.MAX_SAMPLES)
@@ -356,7 +361,7 @@ function Context(canvas, options) {
     this._vertexAttribDivisors.push(0);
   }
 
-  this._pickObjects = {};
+  this._pickObjects = new Map();
   this._nextPickColor = new Uint32Array(1);
 
   /**
@@ -1007,20 +1012,26 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * A 1x1 RGBA texture initialized to [255, 255, 255, 255].  This can
-   * be used as a placeholder texture while other textures are downloaded.
+   * A 1x1 RGBA texture initialized to the color defined by {@link Texture.defaultColor}.
+   * This can be used as a placeholder texture while other textures are downloaded.
    * @memberof Context.prototype
    * @type {Texture}
    */
   defaultTexture: {
     get: function () {
       if (this._defaultTexture === undefined) {
+        const color = Texture.defaultColor;
         this._defaultTexture = new Texture({
           context: this,
           source: {
             width: 1,
             height: 1,
-            arrayBufferView: new Uint8Array([255, 255, 255, 255]),
+            arrayBufferView: new Uint8Array([
+              color.red * 255,
+              color.green * 255,
+              color.blue * 255,
+              color.alpha * 255,
+            ]),
           },
           flipY: false,
         });
@@ -1442,13 +1453,88 @@ Context.prototype.endFrame = function () {
 };
 
 /**
+ * @typedef {object} ReadState
+ *
+ * Options defining a rectangle to read pixels from.
+ *
  * @private
- * @param {object} readState An object with the following properties:
- * @param {number} [readState.x=0] The x offset of the rectangle to read from.
- * @param {number} [readState.y=0] The y offset of the rectangle to read from.
- * @param {number} [readState.width=this.drawingBufferWidth] The width of the rectangle to read from.
- * @param {number} [readState.height=this.drawingBufferHeight] The height of the rectangle to read from.
- * @param {Framebuffer} [readState.framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
+ * @property {number} [x=0] The x offset of the rectangle to read from.
+ * @property {number} [y=0] The y offset of the rectangle to read from.
+ * @property {number} [width=this.drawingBufferWidth] The width of the rectangle to read from.
+ * @property {number} [height=this.drawingBufferHeight] The height of the rectangle to read from.
+ * @property {FrameBuffer|undefined} [framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
+ */
+
+/**
+ * Read pixels from a framebuffer into a Pixel Buffer Object (PBO).
+ *
+ * @private
+ * @param {ReadState} readState Options defining a rectangle to read pixels from.
+ * @returns {Buffer} A PixelBuffer containing the pixels read from the specified rectangle.
+ *
+ * @exception {DeveloperError} A WebGL 2 context is required to read pixels using a PBO.
+ */
+Context.prototype.readPixelsToPBO = function (readState) {
+  const gl = this._gl;
+
+  readState = readState ?? Frozen.EMPTY_OBJECT;
+  const x = Math.max(readState.x ?? 0, 0);
+  const y = Math.max(readState.y ?? 0, 0);
+  const width = readState.width ?? this.drawingBufferWidth;
+  const height = readState.height ?? this.drawingBufferHeight;
+  const framebuffer = readState.framebuffer;
+
+  if (!this._webgl2) {
+    throw new DeveloperError(
+      "A WebGL 2 context is required to read pixels using a PBO.",
+    );
+  }
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThan("readState.width", width, 0);
+  Check.typeOf.number.greaterThan("readState.height", height, 0);
+  //>>includeEnd('debug');
+
+  let pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+  let pixelFormat = PixelFormat.RGBA;
+  if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
+    pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
+    pixelFormat = framebuffer.getColorTexture(0).pixelFormat;
+  }
+
+  const pixels = Buffer.createPixelBuffer({
+    context: this,
+    sizeInBytes: PixelFormat.textureSizeInBytes(
+      pixelFormat,
+      pixelDatatype,
+      width,
+      height,
+    ),
+    usage: BufferUsage.DYNAMIC_READ,
+  });
+
+  bindFramebuffer(this, framebuffer);
+
+  pixels._bind();
+  gl.readPixels(
+    x,
+    y,
+    width,
+    height,
+    pixelFormat,
+    PixelDatatype.toWebGLConstant(pixelDatatype, this._webgl2),
+    0,
+  );
+  pixels._unBind();
+
+  return pixels;
+};
+
+/**
+ * Read pixels from a framebuffer into a typed array.
+ *
+ * @private
+ * @param {ReadState} readState Options defining a rectangle to read pixels from.
  * @returns {Uint8Array|Uint16Array|Float32Array|Uint32Array} The pixels in the specified rectangle.
  */
 Context.prototype.readPixels = function (readState) {
@@ -1467,12 +1553,14 @@ Context.prototype.readPixels = function (readState) {
   //>>includeEnd('debug');
 
   let pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+  let pixelFormat = PixelFormat.RGBA;
   if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
     pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
+    pixelFormat = framebuffer.getColorTexture(0).pixelFormat;
   }
 
   const pixels = PixelFormat.createTypedArray(
-    PixelFormat.RGBA,
+    pixelFormat,
     pixelDatatype,
     width,
     height,
@@ -1486,7 +1574,7 @@ Context.prototype.readPixels = function (readState) {
     width,
     height,
     PixelFormat.RGBA,
-    PixelDatatype.toWebGLConstant(pixelDatatype, this),
+    PixelDatatype.toWebGLConstant(pixelDatatype, this._webgl2),
     pixels,
   );
 
@@ -1562,7 +1650,7 @@ Context.prototype.createViewportQuadCommand = function (
 /**
  * Gets the object associated with a pick color.
  *
- * @param {Color} pickColor The pick color.
+ * @param {number} pickColor The unsigned 32-bit RGBA pick color
  * @returns {object} The object associated with the pick color, or undefined if no object is associated with that color.
  *
  * @example
@@ -1575,29 +1663,7 @@ Context.prototype.getObjectByPickColor = function (pickColor) {
   Check.defined("pickColor", pickColor);
   //>>includeEnd('debug');
 
-  return this._pickObjects[pickColor.toRgba()];
-};
-
-function PickId(pickObjects, key, color) {
-  this._pickObjects = pickObjects;
-  this.key = key;
-  this.color = color;
-}
-
-Object.defineProperties(PickId.prototype, {
-  object: {
-    get: function () {
-      return this._pickObjects[this.key];
-    },
-    set: function (value) {
-      this._pickObjects[this.key] = value;
-    },
-  },
-});
-
-PickId.prototype.destroy = function () {
-  delete this._pickObjects[this.key];
-  return undefined;
+  return this._pickObjects.get(pickColor);
 };
 
 /**
@@ -1606,7 +1672,7 @@ PickId.prototype.destroy = function () {
  * on the pick ID when destroying the input object.
  *
  * @param {object} object The object to associate with the pick ID.
- * @returns {object} A PickId object with a <code>color</code> property.
+ * @returns {PickId} A PickId object with a <code>color</code> property.
  *
  * @exception {RuntimeError} Out of unique Pick IDs.
  *
@@ -1628,12 +1694,12 @@ Context.prototype.createPickId = function (object) {
   // actually detect overflow in the Uint32 value
   ++this._nextPickColor[0];
   const key = this._nextPickColor[0];
-  if (key === 0) {
+  if (key === PickId.NULL_PICK_ID) {
     // In case of overflow
     throw new RuntimeError("Out of unique Pick IDs.");
   }
 
-  this._pickObjects[key] = object;
+  this._pickObjects.set(key, object);
   return new PickId(this._pickObjects, key, Color.fromRgba(key));
 };
 

@@ -1,0 +1,9 @@
+legacyId: Voxels.html
+title: Voxel Rendering
+description: Create and render voxel primitives of different shapes (box, ellipsoid, cylinder) using procedural data. Metadata and custom shaders can control voxel appearance, transparency, and lighting effects—useful for volumetric visualization and scientific analysis.
+labels:
+  - Showcases
+  - Voxels
+  - Metadata
+  - Styling
+thumbnail: thumbnail.jpg

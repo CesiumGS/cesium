@@ -39,6 +39,7 @@
   - Double-check your settings for name and email: `git config --get-regexp user.*`.
   - Recommended Git settings:
     - `git config --global fetch.prune true` - when fetching remote changes, remove any remote branches that no longer exist on the remote.
+    - `git config blame.ignoreRevsFile .git-blame-ignore-revs` - uses the ignore file to skip certain noisy revisions (like formatting) when running git blame. Alternatively, for VSCode users, install the GitLens extension, which will automatically use the ignore file.
 - Have [commit access](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/CommittersGuide/README.md) to CesiumJS?
   - No
     - Fork [cesium](https://github.com/CesiumGS/cesium).
@@ -53,7 +54,7 @@
 
 Prerequisites:
 
-- Install [Node.js](http://nodejs.org/) on your system. Building Cesium requires Node 20.x or newer.
+- Install [Node.js](http://nodejs.org/) on your system. Building Cesium requires Node 22.17.0 or newer.
 
 Cesium uses [npm modules](https://docs.npmjs.com/getting-started/what-is-npm) for development, so after syncing, you need to run `npm install` from the Cesium root directory:
 
@@ -76,7 +77,7 @@ npm start
 Then browse to [http://localhost:8080/](http://localhost:8080/). The landing page includes apps and tools commonly used during development, including:
 
 - **Hello World** : an example for how to create a 3D globe. [Tutorial here](https://cesium.com/learn/cesiumjs-learn/cesiumjs-quickstart/)
-- **Sandcastle** : an app for viewing and creating [code examples](https://sandcastle.cesium.com?src=Hello%20World.html&label=Showcases), complete with a live preview
+- **Sandcastle** : an app for viewing and creating [code examples](https://sandcastle.cesium.com), complete with a live preview
 - **Test Suites** : tests using [Jasmine](https://jasmine.github.io/). [Testing guide here.](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/TestingGuide/README.md#testing-guide)
 - **Documentation** : reference documentation built from source. [Documentation guide here.](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/DocumentationGuide/README.md#documentation-guide)
 
@@ -132,6 +133,9 @@ Here's the full set of scripts and what they do.
     - `--node` - Bundles an `index.cjs` module targeted for use in NodeJS
   - `build-watch` - A never-ending task that watches your file system for changes to Cesium and builds the source code as needed. All `build` options are also available for this task.
   - `build-apps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.
+  - `build-sandcastle` - Builds the Sandcastle app for use with the local CesiumJS library.
+    - Accepts options `--outer-origin` and `--inner-origin` to specify the origins expected by the app. See the [Sandcastle docs](../../../packages/sandcastle/README.md#applicationviewer-structure) for more info.
+    - If `process.env.PROD=true` then this will be built to `Build/Sandcastle2` instead of `Apps/Sandcastle2` and bundle all necessary files with it (see [Building Sandcastle](../../../packages/sandcastle/README.md#building-sandcastle))
   - `build-docs` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc). See the [Documentation Guide](../DocumentationGuide/README.md) for more details.
   - `build-ts` - Generates a TypeScript definitions file for the Cesium library
   - `build-third-party` - Generates `ThirdParty.json`, a file which lists the latest licensing information of installed third party modules

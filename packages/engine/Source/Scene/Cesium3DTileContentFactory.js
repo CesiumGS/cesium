@@ -1,11 +1,12 @@
+import { RuntimeError } from "@cesium/core";
 import Composite3DTileContent from "./Composite3DTileContent.js";
 import Geometry3DTileContent from "./Geometry3DTileContent.js";
 import Implicit3DTileContent from "./Implicit3DTileContent.js";
 import Model3DTileContent from "./Model/Model3DTileContent.js";
 import Tileset3DTileContent from "./Tileset3DTileContent.js";
 import Vector3DTileContent from "./Vector3DTileContent.js";
+import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
 import GaussianSplat3DTileContent from "./GaussianSplat3DTileContent.js";
-import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * Maps a tile's magic field in its header to a new content object for the tile's payload.
@@ -85,6 +86,18 @@ const Cesium3DTileContentFactory = {
   subtreeJson: function (tileset, tile, resource, json) {
     return Implicit3DTileContent.fromSubtreeJson(tileset, tile, resource, json);
   },
+  subtreeGltf: function (tileset, tile, resource, gltf) {
+    return Implicit3DTileContent.fromSubtreeGltf(tileset, tile, resource, gltf);
+  },
+  subtreeGlb: function (tileset, tile, resource, arrayBuffer, byteOffset) {
+    return Implicit3DTileContent.fromSubtreeGlb(
+      tileset,
+      tile,
+      resource,
+      arrayBuffer,
+      byteOffset,
+    );
+  },
   glb: function (tileset, tile, resource, arrayBuffer, byteOffset) {
     const arrayBufferByteLength = arrayBuffer.byteLength;
     if (arrayBufferByteLength < 12) {
@@ -93,34 +106,44 @@ const Cesium3DTileContentFactory = {
     const dataView = new DataView(arrayBuffer, byteOffset);
     const byteLength = dataView.getUint32(8, true);
     const glb = new Uint8Array(arrayBuffer, byteOffset, byteLength);
-    let hasGaussianSplatExtension = false;
-    if (tileset.isGltfExtensionRequired instanceof Function) {
-      hasGaussianSplatExtension = tileset.isGltfExtensionRequired(
-        "KHR_spz_gaussian_splats_compression",
-      );
-    }
-    if (hasGaussianSplatExtension) {
+
+    if (
+      GaussianSplat3DTileContent.tilesetRequiresGaussianSplattingExt(tileset)
+    ) {
       return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, glb);
+    }
+
+    // @deprecated CESIUM_mesh_vector to be removed after v1.142 release.
+    if (
+      tileset.hasExtension("3DTILES_content_gltf_vector") ||
+      tileset.isGltfExtensionUsed("CESIUM_mesh_vector")
+    ) {
+      return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, glb);
     }
 
     return Model3DTileContent.fromGltf(tileset, tile, resource, glb);
   },
   gltf: function (tileset, tile, resource, json) {
-    const forceGaussianSplats =
-      tileset.debugTreatTilesetAsGaussianSplats ?? false;
-    let hasGaussianSplatExtension = false;
-    if (tileset.isGltfExtensionRequired instanceof Function) {
-      hasGaussianSplatExtension = tileset.isGltfExtensionRequired(
-        "KHR_spz_gaussian_splats_compression",
-      );
-    }
-    if (forceGaussianSplats || hasGaussianSplatExtension) {
+    if (
+      GaussianSplat3DTileContent.tilesetRequiresGaussianSplattingExt(tileset)
+    ) {
       return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, json);
+    }
+
+    // @deprecated CESIUM_mesh_vector to be removed after v1.142 release.
+    if (
+      tileset.hasExtension("3DTILES_content_gltf_vector") ||
+      tileset.isGltfExtensionUsed("CESIUM_mesh_vector")
+    ) {
+      return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, json);
     }
 
     return Model3DTileContent.fromGltf(tileset, tile, resource, json);
   },
   geoJson: function (tileset, tile, resource, json) {
+    if (tileset.vectorGeoJson) {
+      return VectorGltf3DTileContent.fromGeoJson(tileset, tile, resource, json);
+    }
     return Model3DTileContent.fromGeoJson(tileset, tile, resource, json);
   },
 };

@@ -59,4 +59,42 @@ exports.defineTags = function (dictionary) {
     canHaveName: true,
     mustHaveValue: true,
   });
+
+  // Note that this @optional tag is neither a JSDoc nor a TSDoc syntax. It is a
+  // custom tag that marks interface members as optional in generated TypeScript
+  // definitions.
+  dictionary.defineTag("optional", {
+    mustNotHaveValue: true,
+    onTagged: function (doclet) {
+      doclet.optional = true;
+    },
+  });
+
+  // Allow @import tags for type-only imports. Ignored by JSDoc, but resolved by tsc.
+  // https://github.com/microsoft/TypeScript/issues/22160#issuecomment-2021459033
+  // https://devblogs.microsoft.com/typescript/announcing-typescript-5-5-beta/#type-imports-in-jsdoc
+  dictionary.defineTag("import", {
+    mustHaveValue: true,
+    canHaveType: false,
+    canHaveName: false,
+    onTagged: function (doclet) {
+      // See: https://github.com/CesiumGS/cesium/issues/13866
+      doclet.ignore = true;
+    },
+  });
+
+  // Marks a symbol that must be a real, public export of its own package (it's
+  // used from another package, e.g. @cesium/core used by @cesium/engine) but
+  // should stay out of the combined "cesium" package's public API and docs,
+  // same as @private did before the symbol's file moved to its own package.
+  // CESIUM_HIDE_INTERNAL is only set by gulpfile.js when generating that
+  // combined build, so per-package .d.ts generation leaves the symbol public.
+  dictionary.defineTag("internal", {
+    mustNotHaveValue: true,
+    onTagged: function (doclet) {
+      if (process.env.CESIUM_HIDE_INTERNAL === "true") {
+        doclet.access = "private";
+      }
+    },
+  });
 };

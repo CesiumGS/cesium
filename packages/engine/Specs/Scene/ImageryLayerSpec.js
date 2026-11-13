@@ -1,6 +1,6 @@
+import { Rectangle } from "@cesium/core";
 import {
   EllipsoidTerrainProvider,
-  Rectangle,
   Request,
   RequestScheduler,
   Resource,
@@ -22,7 +22,6 @@ import {
   UrlTemplateImageryProvider,
   WebMapServiceImageryProvider,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -43,8 +42,6 @@ describe(
     });
 
     afterEach(function () {
-      Resource._Implementations.loadAndExecuteScript =
-        Resource._DefaultImplementations.loadAndExecuteScript;
       Resource._Implementations.createImage =
         Resource._DefaultImplementations.createImage;
       Resource._Implementations.loadWithXhr =
@@ -172,44 +169,6 @@ describe(
     });
 
     async function createWebMercatorProvider() {
-      Resource._Implementations.loadAndExecuteScript = function (
-        url,
-        functionName,
-      ) {
-        window[functionName]({
-          authenticationResultCode: "ValidCredentials",
-          brandLogoUri:
-            "http://dev.virtualearth.net/Branding/logo_powered_by.png",
-          copyright:
-            "Copyright © 2012 Microsoft and its suppliers. All rights reserved. This API cannot be accessed and the content and any results may not be used, reproduced or transmitted in any manner without express written permission from Microsoft Corporation.",
-          resourceSets: [
-            {
-              estimatedTotal: 1,
-              resources: [
-                {
-                  __type:
-                    "ImageryMetadata:http://schemas.microsoft.com/search/local/ws/rest/v1",
-                  imageHeight: 256,
-                  imageUrl:
-                    "http://invalid.{subdomain}.invalid/tiles/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
-                  imageUrlSubdomains: ["t0"],
-                  imageWidth: 256,
-                  imageryProviders: null,
-                  vintageEnd: null,
-                  vintageStart: null,
-                  zoomMax: 21,
-                  zoomMin: 1,
-                },
-              ],
-            },
-          ],
-          statusCode: 200,
-          statusDescription: "OK",
-          traceId:
-            "c9cf8c74a8b24644974288c92e448972|EWRM003311|02.00.171.2600|",
-        });
-      };
-
       Resource._Implementations.createImage = function (
         request,
         crossOrigin,
@@ -231,6 +190,42 @@ describe(
         deferred,
         overrideMimeType,
       ) {
+        if (url.includes("REST/v1/Imagery/Metadata")) {
+          deferred.resolve(
+            JSON.stringify({
+              authenticationResultCode: "ValidCredentials",
+              brandLogoUri:
+                "http://dev.virtualearth.net/Branding/logo_powered_by.png",
+              copyright:
+                "Copyright © 2012 Microsoft and its suppliers. All rights reserved. This API cannot be accessed and the content and any results may not be used, reproduced or transmitted in any manner without express written permission from Microsoft Corporation.",
+              resourceSets: [
+                {
+                  estimatedTotal: 1,
+                  resources: [
+                    {
+                      __type:
+                        "ImageryMetadata:http://schemas.microsoft.com/search/local/ws/rest/v1",
+                      imageHeight: 256,
+                      imageUrl:
+                        "http://invalid.{subdomain}.invalid/tiles/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
+                      imageUrlSubdomains: ["t0"],
+                      imageWidth: 256,
+                      imageryProviders: null,
+                      vintageEnd: null,
+                      vintageStart: null,
+                      zoomMax: 21,
+                      zoomMin: 1,
+                    },
+                  ],
+                },
+              ],
+              statusCode: 200,
+              statusDescription: "OK",
+              traceId:
+                "c9cf8c74a8b24644974288c92e448972|EWRM003311|02.00.171.2600|",
+            }),
+          );
+        }
         Resource._DefaultImplementations.loadWithXhr(
           "Data/Images/Red16x16.png",
           responseType,
@@ -818,6 +813,39 @@ describe(
         expect(textureCoordinates.y).toBeGreaterThan(0.0);
         expect(textureCoordinates.z).toBeLessThan(1.0);
         expect(textureCoordinates.w).toBeLessThan(1.0);
+      });
+
+      it("does not throw when the imagery provider's rectangle does not overlap the layer's rectangle", async function () {
+        // The provider's own rectangle and the layer's rectangle don't overlap at all, so their
+        // intersection (imageryBounds) is undefined. Prior to the fix, this undefined value was
+        // passed straight into Rectangle.intersection() without a defined check, which throws.
+        const provider = await SingleTileImageryProvider.fromUrl(
+          "Data/Images/Green4x4.png",
+          {
+            rectangle: Rectangle.fromDegrees(7.2, 60.9, 9.0, 61.7),
+          },
+        );
+
+        const layer = new ImageryLayer(provider, {
+          rectangle: Rectangle.fromDegrees(-20.0, -20.0, -10.0, -10.0),
+        });
+
+        const terrainProvider = new EllipsoidTerrainProvider();
+        const tiles = QuadtreeTile.createLevelZeroTiles(
+          terrainProvider.tilingScheme,
+        );
+        tiles[0].data = new GlobeSurfaceTile();
+        tiles[1].data = new GlobeSurfaceTile();
+
+        expect(
+          layer._createTileImagerySkeletons(tiles[0], terrainProvider),
+        ).toBe(false);
+        expect(
+          layer._createTileImagerySkeletons(tiles[1], terrainProvider),
+        ).toBe(false);
+
+        expect(tiles[0].data.imagery.length).toBe(0);
+        expect(tiles[1].data.imagery.length).toBe(0);
       });
     });
   },

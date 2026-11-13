@@ -1,24 +1,26 @@
-import AttributeCompression from "./AttributeCompression.js";
-import BoundingSphere from "./BoundingSphere.js";
-import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
+import {
+  AttributeCompression,
+  BoundingSphere,
+  Cartesian3,
+  Check,
+  Ellipsoid,
+  Event,
+  Frozen,
+  IndexDatatype,
+  OrientedBoundingBox,
+  RuntimeError,
+  defined,
+  getJsonFromTypedArray,
+} from "@cesium/core";
 import Credit from "./Credit.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import Ellipsoid from "./Ellipsoid.js";
-import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import WebMercatorTilingScheme from "./WebMercatorTilingScheme.js";
-import getJsonFromTypedArray from "./getJsonFromTypedArray.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
-import IndexDatatype from "./IndexDatatype.js";
 import IonResource from "./IonResource.js";
-import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import QuantizedMeshTerrainData from "./QuantizedMeshTerrainData.js";
 import Request from "./Request.js";
 import RequestType from "./RequestType.js";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
 import TileAvailability from "./TileAvailability.js";
 import TileProviderError from "./TileProviderError.js";
@@ -39,7 +41,7 @@ function LayerInformation(layer) {
 }
 
 /**
- * @typedef {Object} CesiumTerrainProvider.ConstructorOptions
+ * @typedef {object} CesiumTerrainProvider.ConstructorOptions
  *
  * Initialization options for the CesiumTerrainProvider constructor
  *
@@ -1198,7 +1200,7 @@ CesiumTerrainProvider.fromIonAssetId = async function (assetId, options) {
  * <li> {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/heightmap-1.0 Height Map} </li>
  * </ul>
  *
- * @param {Resource|String|Promise<Resource>|Promise<String>} url The URL of the Cesium terrain server.
+ * @param {Resource|string|Promise<Resource>|Promise<string>} url The URL of the Cesium terrain server.
  * @param {CesiumTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  * @returns {Promise<CesiumTerrainProvider>}
  *

@@ -1,8 +1,19 @@
 import globals from "globals";
 import html from "eslint-plugin-html";
+import jsdoc from "eslint-plugin-jsdoc";
+import nodePlugin from "eslint-plugin-n";
 import configCesium from "@cesium/eslint-config";
+import reactHooks from "eslint-plugin-react-hooks";
+import { reactRefresh } from "eslint-plugin-react-refresh";
+import tseslint from "typescript-eslint";
+import seatbelt from "eslint-seatbelt";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default [
+  tseslint.configs.base,
   {
     ignores: [
       "**/Build/",
@@ -13,9 +24,11 @@ export default [
       "index.html",
       "index.release.html",
       "Apps/HelloWorld.html",
-      "Apps/Sandcastle/jsHintOptions.js",
-      "Apps/Sandcastle/gallery/gallery-index.js",
-      "packages/engine/Source/Scene/GltfPipeline/**/*",
+      "Apps/Sandcastle2/",
+      "packages/sandcastle/public/",
+      "packages/sandcastle/templates/Sandcastle.d.ts",
+      "packages/sandcastle/templates/Sandcastle.js",
+      "packages/sandcastle/gallery/pagefind/",
       "packages/engine/Source/Shaders/**/*",
       "Specs/jasmine/*",
       "**/*/SpecList.js",
@@ -23,6 +36,9 @@ export default [
   },
   {
     ...configCesium.configs.recommended,
+    linterOptions: {
+      reportUnusedDisableDirectives: "error",
+    },
     languageOptions: {
       sourceType: "module",
     },
@@ -32,7 +48,15 @@ export default [
     ...configCesium.configs.node,
   },
   {
-    files: [".github/**/*.js", "scripts/**/*.js", "gulpfile.js", "server.js"],
+    files: [
+      ".github/**/*.js",
+      "scripts/**/*.js",
+      "packages/sandcastle/scripts/**/*.js",
+      "gulpfile.js",
+      "gulpfile.apps.js",
+      "gulpfile.makezip.js",
+      "server.js",
+    ],
     ...configCesium.configs.node,
     languageOptions: {
       ...configCesium.configs.node.languageOptions,
@@ -41,14 +65,25 @@ export default [
   },
   {
     files: ["packages/**/*.js", "Apps/**/*.js", "Specs/**/*.js", "**/*.html"],
+    ignores: ["packages/sandcastle/scripts/**/*.js"],
     ...configCesium.configs.browser,
-    plugins: { html },
+    plugins: { html, "eslint-seatbelt": seatbelt },
+    processor: "eslint-seatbelt/seatbelt",
+    settings: {
+      seatbelt: {
+        seatbeltFile: join(__dirname, "eslint.seatbelt.tsv"),
+      },
+    },
     rules: {
       ...configCesium.configs.browser.rules,
+      "eslint-seatbelt/configure": "error",
       "no-unused-vars": [
         "error",
         { vars: "all", args: "none", caughtErrors: "none" },
       ],
+      // There were too many errors to address when this was first turned on.
+      // Using eslint-seatbelt to gradually address them
+      "no-useless-assignment": "error",
       "no-restricted-syntax": [
         "warn",
         {
@@ -61,29 +96,100 @@ export default [
             "Avoid Array.push.apply(). Use addAllToArray() for arrays of unknown size, or the spread syntax for arrays that are known to be small",
         },
       ],
+      // When ES6 class implementations refer to scratch variable instances of
+      // the same class, ESLint raises a use-before-define error. At runtime
+      // this is just fine, so configure ESLint to allow it in upper scopes.
+      "no-use-before-define": [
+        "error",
+        { variables: false, functions: false, classes: false },
+      ],
+      // Prefer @ts-expect-error (with description) over @ts-ignore. Allow both
+      // @ts-check and @ts-nocheck during transition to type checking.
+      "@typescript-eslint/ban-ts-comment": [
+        "error",
+        {
+          minimumDescriptionLength: 3,
+          "ts-ignore": true,
+          "ts-expect-error": "allow-with-description",
+          "ts-check": false,
+          "ts-nocheck": false,
+        },
+      ],
+      // Disallow e.g. `new Cartesian3.fromDegrees(...)`; invalid with ES6 classes.
+      "new-cap": ["error", { capIsNew: true }],
     },
   },
   {
-    files: ["Apps/Sandcastle/**/*", "Apps/TimelineDemo/**/*"],
-    languageOptions: {
-      sourceType: "script",
-      globals: {
-        ...globals.amd,
-        JSON: true,
-        console: true,
-        Sandcastle: true,
-        Cesium: true,
+    // Sources in a package may only import packages declared in that package's
+    // own package.json. Published files may not import devDependencies.
+    files: ["packages/**/*.{js,mjs,cjs,ts,tsx}"],
+    ignores: [
+      "**/*.d.ts",
+      // Build scripts are run from the repo root, so use its devDependencies
+      "packages/*/scripts/**/*",
+    ],
+    plugins: { n: nodePlugin },
+    rules: {
+      "n/no-extraneous-import": "error",
+      "n/no-unpublished-import": "error",
+    },
+  },
+  {
+    files: ["**/*.js"],
+    plugins: { jsdoc },
+    settings: {
+      jsdoc: {
+        preferredTypes: {
+          Object: "object",
+          "object.<>": "Object<>",
+          "object<>": "Object<>",
+        },
       },
     },
     rules: {
-      "no-alert": ["off"],
-      "no-unused-vars": ["off"],
+      "jsdoc/check-types": "error",
+    },
+  },
+  ...[...tseslint.configs.recommended].map((config) => ({
+    // This is needed to restrict to a specific path unless using the tseslint.config function
+    // https://typescript-eslint.io/packages/typescript-eslint#config
+    ...config,
+    files: ["packages/sandcastle/**/*.{ts,tsx}"],
+  })),
+  {
+    // This config came from the vite project generation
+    files: ["packages/sandcastle/**/*.{ts,tsx}"],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+    plugins: {
+      "react-hooks": reactHooks,
+      "react-refresh": reactRefresh.plugin,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      "react-refresh/only-export-components": [
+        "warn",
+        { allowConstantExport: true },
+      ],
     },
   },
   {
-    files: ["Apps/Sandcastle/load-cesium-es6.js"],
+    files: ["packages/sandcastle/gallery/**/*.js"],
     languageOptions: {
+      ecmaVersion: 2022,
       sourceType: "module",
+    },
+    rules: {
+      "no-alert": "off",
+    },
+  },
+  {
+    files: ["packages/sandcastle/gallery/hello-world/main.js"],
+    rules: {
+      // ignore this rule here to avoid the excessive eslint-disable comment in our bare minimum example
+      "no-unused-vars": "off",
     },
   },
   {

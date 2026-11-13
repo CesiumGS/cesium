@@ -1,5 +1,8 @@
 /*global __karma__*/
 import customizeJasmine from "./customizeJasmine.js";
+import { createBaseMatchers } from "./createBaseMatchers.js";
+import { createRendererMatchers } from "./createRendererMatchers.js";
+import { createAsyncMatchers } from "./createAsyncMatchers.js";
 
 let includeCategory = "";
 let excludeCategory = "";
@@ -12,11 +15,11 @@ let debugCanvasHeight;
 if (__karma__.config.args) {
   includeCategory = __karma__.config.args[0];
   excludeCategory = __karma__.config.args[1];
-  webglValidation = __karma__.config.args[4];
-  webglStub = __karma__.config.args[5];
-  release = __karma__.config.args[6];
-  debugCanvasWidth = __karma__.config.args[7];
-  debugCanvasHeight = __karma__.config.args[8];
+  webglValidation = __karma__.config.args[2];
+  webglStub = __karma__.config.args[3];
+  release = __karma__.config.args[4];
+  debugCanvasWidth = __karma__.config.args[5];
+  debugCanvasHeight = __karma__.config.args[6];
 }
 
 if (release) {
@@ -26,8 +29,17 @@ if (release) {
 }
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
-customizeJasmine(
-  jasmine.getEnv(),
+
+const env = jasmine.getEnv();
+env.beforeEach(function () {
+  const debug = !release;
+  env.addMatchers({
+    ...createBaseMatchers(debug),
+    ...createRendererMatchers(),
+  });
+  env.addAsyncMatchers(createAsyncMatchers(debug));
+});
+customizeJasmine(env, {
   includeCategory,
   excludeCategory,
   webglValidation,
@@ -35,4 +47,4 @@ customizeJasmine(
   release,
   debugCanvasWidth,
   debugCanvasHeight,
-);
+});

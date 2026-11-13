@@ -1,8 +1,5 @@
+import { Check, Color, defined, destroyObject } from "@cesium/core";
 import {
-  Check,
-  Color,
-  defined,
-  destroyObject,
   Cesium3DTileColorBlendMode,
   Cesium3DTileFeature,
   Cesium3DTilePass,
@@ -1189,7 +1186,7 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
   /**
    * Gets the available blend modes
    * @memberof Cesium3DTilesInspectorViewModel.prototype
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    */
   colorBlendModes: {

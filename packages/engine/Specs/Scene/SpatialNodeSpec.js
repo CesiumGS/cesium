@@ -1,9 +1,5 @@
-import {
-  Cartesian3,
-  Matrix4,
-  SpatialNode,
-  VoxelBoxShape,
-} from "../../index.js";
+import { Cartesian3, Matrix4 } from "@cesium/core";
+import { SpatialNode, VoxelBoxShape } from "../../index.js";
 
 describe("Scene/SpatialNode", function () {
   function getBasicBoxShape() {

@@ -1,4 +1,4 @@
-import defined from "./defined.js";
+import { defined } from "@cesium/core";
 
 /**
  * @private
@@ -109,4 +109,5 @@ DoublyLinkedList.prototype.splice = function (node, nextNode) {
   nextNode.next = oldNodeNext;
   nextNode.previous = node;
 };
+export { DoublyLinkedListNode };
 export default DoublyLinkedList;

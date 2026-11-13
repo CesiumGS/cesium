@@ -1,16 +1,18 @@
-import Check from "./Check.js";
+import {
+  Check,
+  Ellipsoid,
+  Event,
+  Frozen,
+  Math as CesiumMath,
+  Rectangle,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import Credit from "./Credit.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import Ellipsoid from "./Ellipsoid.js";
-import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import getImagePixels from "./getImagePixels.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
-import CesiumMath from "./Math.js";
-import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
 import TileProviderError from "./TileProviderError.js";
 
@@ -20,7 +22,7 @@ function DataRectangle(rectangle, maxLevel) {
 }
 
 /**
- * @typedef {Object} VRTheWorldTerrainProvider.ConstructorOptions
+ * @typedef {object} VRTheWorldTerrainProvider.ConstructorOptions
  *
  * Initialization options for the VRTheWorldTerrainProvider constructor
  *
@@ -265,7 +267,7 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
  * Creates a {@link TerrainProvider} that produces terrain geometry by tessellating height maps
  * retrieved from a {@link http://vr-theworld.com/|VT MÄK VR-TheWorld server}.
  *
- * @param {Resource|String} url The URL of the VR-TheWorld TileMap.
+ * @param {Resource|string} url The URL of the VR-TheWorld TileMap.
  * @param {VRTheWorldTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  * @returns {Promise<VRTheWorldTerrainProvider>}
  *

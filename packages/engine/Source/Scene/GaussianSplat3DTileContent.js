@@ -1,254 +1,312 @@
-import defined from "../Core/defined.js";
+import {
+  RuntimeError,
+  defined,
+  deprecationWarning,
+  destroyObject,
+  oneTimeWarning,
+} from "@cesium/core";
 import Resource from "../Core/Resource.js";
 import GltfLoader from "./GltfLoader.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Axis from "./Axis.js";
 import GaussianSplatPrimitive from "./GaussianSplatPrimitive.js";
-import destroyObject from "../Core/destroyObject.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
+/** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
+
 /**
- * Represents the contents of a glTF or glb using the {@link https://github.com/CesiumGS/glTF/tree/draft-spz-splat-compression/extensions/2.0/Khronos/KHR_spz_gaussian_splats_compression|KHR_spz_gaussian_splats_compression} extension.
+ * Represents the contents of a glTF or glb using the {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting | KHR_gaussian_splatting} and {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting_compression_spz_2 | KHR_gaussian_splatting_compression_spz_2} extensions.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
  *
- * @alias GaussianSplat3DTileContent
- * @constructor
- * @private
+ * @implements Cesium3DTileContent
  */
-function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
-  this._tileset = tileset;
-  this._tile = tile;
-  this._resource = resource;
-  this._loader = loader;
+class GaussianSplat3DTileContent {
+  constructor(loader, tileset, tile, resource) {
+    this._tileset = tileset;
+    this._tile = tile;
+    this._resource = resource;
+    this._loader = loader;
 
-  if (!defined(this._tileset.gaussianSplatPrimitive)) {
-    this._tileset.gaussianSplatPrimitive = new GaussianSplatPrimitive({
-      tileset: this._tileset,
-    });
+    if (!defined(this._tileset.gaussianSplatPrimitive)) {
+      this._tileset.gaussianSplatPrimitive = new GaussianSplatPrimitive({
+        tileset: this._tileset,
+      });
+    }
+
+    /**
+     * Local copy of the position attribute buffer transformed into root tile space.
+     * The original glTF attribute data is kept untouched so rebuilds can re-apply
+     * transforms from the source coordinates.
+     * @type {undefined|Float32Array}
+     * @private
+     */
+    this._positions = undefined;
+
+    /**
+     * Local copy of the rotation attribute buffer transformed into root tile space.
+     * @type {undefined|Float32Array}
+     * @private
+     */
+    this._rotations = undefined;
+
+    /**
+     * Local copy of the scale attribute buffer transformed into root tile space.
+     * @type {undefined|Float32Array}
+     * @private
+     */
+    this._scales = undefined;
+
+    /**
+     * glTF primitive data that contains the Gaussian splat data needed for rendering.
+     * @type {undefined|Primitive}
+     * @private
+     */
+    this.gltfPrimitive = undefined;
+
+    /**
+     * Transform matrix to turn model coordinates into world coordinates.
+     * @type {undefined|Matrix4}
+     * @private
+     */
+    this.worldTransform = undefined;
+
+    /**
+     * Gets or sets if any feature's property changed.  Used to
+     * optimized applying a style when a feature's property changed.
+     * <p>
+     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+     * not part of the public Cesium API.
+     * </p>
+     *
+     * @type {boolean}
+     *
+     * @private
+     */
+    this.featurePropertiesDirty = false;
+
+    this._metadata = undefined;
+    this._group = undefined;
+    this._ready = false;
+    /**
+     * Indicates whether or not the local coordinates of the tile have been transformed
+     * @type {boolean}
+     * @private
+     */
+    this._transformed = false;
+
+    /**
+     * The degree of the spherical harmonics used for the Gaussian splats.
+     * @type {number}
+     * @private
+     */
+    this._sphericalHarmonicsDegree = 0;
+
+    /**
+     * The number of spherical harmonic coefficients used for the Gaussian splats.
+     * @type {number}
+     * @private
+     */
+    this._sphericalHarmonicsCoefficientCount = 0;
+
+    /**
+     * Spherical Harmonic data that has been packed for use in a texture or shader.
+     * @type {undefined|Uint32Array}
+     * @private
+     */
+    this._packedSphericalHarmonicsData = undefined;
+
+    /**
+     * All per-splat feature ID sets loaded from the glTF primitive,
+     * ordered by their positional index (featureId_0, featureId_1, ...).
+     * Each entry is a Uint32Array with one element per splat.
+     * @type {Array<Uint32Array>}
+     * @private
+     */
+    this._allFeatureIds = [];
+
+    /**
+     * Cached local-space-to-root transform used for the last splat bake.
+     * When unchanged, the transformed buffers can be reused directly.
+     * @type {undefined|Matrix4}
+     * @private
+     */
+    this._lastSplatTransform = undefined;
   }
 
   /**
-   * Original position, scale and rotation values for splats. Used to maintain
-   * consistency when multiple transforms may occur. Downstream consumers otherwise may not know
-   * the underlying data was modified.
-   * @type {undefined|Float32Array}
-   * @private
-   */
-  this._originalPositions = undefined;
-  this._originalRotations = undefined;
-  this._originalScales = undefined;
-
-  /**
-   * glTF primitive data that contains the Gaussian splat data needed for rendering.
-   * @type {undefined|Primitive}
-   * @private
-   */
-  this.splatPrimitive = undefined;
-
-  /**
-   * Transform matrix to turn model coordinates into world coordinates.
-   * @type {undefined|Matrix4}
-   * @private
-   */
-  this.worldTransform = undefined;
-
-  /**
-   * Gets or sets if any feature's property changed.  Used to
-   * optimized applying a style when a feature's property changed.
-   * <p>
-   * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-   * not part of the public Cesium API.
-   * </p>
+   * Performs checks to ensure that the provided tileset has the Gaussian Splatting extensions.
    *
-   * @type {boolean}
-   *
-   * @private
+   * @param {Cesium3DTileset} tileset The tileset to check for the extensions.
+   * @returns {boolean} Returns <code>true</code> if the necessary extensions are included in the tileset.
+   * @static
    */
-  this.featurePropertiesDirty = false;
+  static tilesetRequiresGaussianSplattingExt(tileset) {
+    let hasGaussianSplatExtension = false;
+    if (tileset.isGltfExtensionRequired instanceof Function) {
+      hasGaussianSplatExtension =
+        tileset.isGltfExtensionRequired("KHR_gaussian_splatting") &&
+        tileset.isGltfExtensionRequired(
+          "KHR_gaussian_splatting_compression_spz_2",
+        );
 
-  this._metadata = undefined;
-  this._group = undefined;
-  this._ready = false;
-  /**
-   * Indicates whether or not the local coordinates of the tile have been transformed
-   * @type {boolean}
-   * @private
-   */
-  this._transformed = false;
-}
+      if (
+        tileset.isGltfExtensionRequired("KHR_spz_gaussian_splats_compression")
+      ) {
+        deprecationWarning(
+          "KHR_spz_gaussian_splats_compression",
+          "Support for the original KHR_spz_gaussian_splats_compression extension has been removed in favor " +
+            "of the up to date KHR_gaussian_splatting and KHR_gaussian_splatting_compression_spz_2 extensions" +
+            "\n\nPlease retile your tileset with the KHR_gaussian_splatting and " +
+            "KHR_gaussian_splatting_compression_spz_2 extensions.",
+        );
+      }
+    }
 
-Object.defineProperties(GaussianSplat3DTileContent.prototype, {
+    return hasGaussianSplatExtension;
+  }
+
   /**
    * Gets the number of features in the tile. Currently this is always zero.
    *
-   * @memberof GaussianSplat3DTileContent.prototype
    *
    * @type {number}
    * @readonly
    */
-  featuresLength: {
-    get: function () {
-      return 0;
-    },
-  },
+  get featuresLength() {
+    return 0;
+  }
 
   /**
    * Equal to the number of Gaussian splats in the tile. Each splat is represented by a median point and a set of attributes, so we can
    * treat this as the number of points in the tile.
    *
-   * @memberof GaussianSplat3DTileContent.prototype
    *
    * @type {number}
    * @readonly
    */
-  pointsLength: {
-    get: function () {
-      return this.splatPrimitive.attributes[0].count;
-    },
-  },
+  get pointsLength() {
+    return this.gltfPrimitive.attributes[0].count;
+  }
+
   /**
    * Gets the number of triangles in the tile. Currently this is always zero because Gaussian splats are not represented as triangles in the tile content.
    * <p>
-   * @memberof GaussianSplat3DTileContent.prototype
    *
    * @type {number}
    * @readonly
    */
-  trianglesLength: {
-    get: function () {
-      return 0;
-    },
-  },
+  get trianglesLength() {
+    return 0;
+  }
+
   /**
    * The number of bytes used by the geometry attributes of this content.
    * <p>
-   * @memberof GaussianSplat3DTileContent.prototype
    * @type {number}
    * @readonly
    */
-  geometryByteLength: {
-    get: function () {
-      return this.splatPrimitive.attributes.reduce((totalLength, attribute) => {
-        return totalLength + attribute.byteLength;
-      }, 0);
-    },
-  },
+  get geometryByteLength() {
+    return 0;
+  }
+
   /**
    * The number of bytes used by the textures of this content.
    * <p>
-   * @memberof GaussianSplat3DTileContent.prototype
    * @type {number}
    * @readonly
    */
-  texturesByteLength: {
-    get: function () {
-      const texture = this._tileset.gaussianSplatPrimitive.gaussianSplatTexture;
-      const selectedTileLength =
-        this._tileset.gaussianSplatPrimitive.selectedTileLength;
-      if (!defined(texture) || selectedTileLength === 0) {
-        return 0;
-      }
-      return texture.sizeInBytes / selectedTileLength;
-    },
-  },
+  get texturesByteLength() {
+    const primitive = this._tileset?.gaussianSplatPrimitive;
+    if (!defined(primitive)) {
+      return 0;
+    }
+    const texture = primitive.gaussianSplatTexture;
+    const selectedTileLength = primitive.selectedTileLength;
+    if (!defined(texture) || selectedTileLength === 0) {
+      return 0;
+    }
+    return texture.sizeInBytes / selectedTileLength;
+  }
+
   /**
    * Gets the amount of memory used by the batch table textures and any binary
    * metadata properties not accounted for in geometryByteLength or
    * texturesByteLength
    * <p>
-   * @memberof GaussianSplat3DTileContent.prototype
    *
    * @type {number}
    * @readonly
    */
-  batchTableByteLength: {
-    // eslint-disable-next-line getter-return
-    get: function () {
-      return 0;
-    },
-  },
+  get batchTableByteLength() {
+    return 0;
+  }
+
   /**
    * Gets the array of {@link Cesium3DTileContent} objects for contents that contain other contents, such as composite tiles. The inner contents may in turn have inner contents, such as a composite tile that contains a composite tile.
    *
    * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Composite|Composite specification}
    *
-   * @memberof GaussianSplat3DTileContent.prototype
    *
    * @type {Array}
    * @readonly
    */
-  innerContents: {
-    get: function () {
-      return undefined;
-    },
-  },
+  get innerContents() {
+    return undefined;
+  }
 
   /**
    * Returns true when the tile's content is ready to render; otherwise false
    *
-   * @memberof GaussianSplat3DTileContent.prototype
    *
    * @type {boolean}
    * @readonly
    */
-  ready: {
-    get: function () {
-      return this._ready;
-    },
-  },
+  get ready() {
+    return this._ready;
+  }
 
   /**
    * Returns true when the tile's content is transformed to world coordinates; otherwise false
    * <p>
-   * @memberof GaussianSplat3DTileContent.prototype
    * @type {boolean}
    * @readonly
    */
-  transformed: {
-    get: function () {
-      return this._transformed;
-    },
-  },
+  get transformed() {
+    return this._transformed;
+  }
 
   /**
    * The tileset that this content belongs to.
    * <p>
-   * @memberof GaussianSplat3DTileContent.prototype
    * @type {Cesium3DTileset}
    * @readonly
    */
-  tileset: {
-    get: function () {
-      return this._tileset;
-    },
-  },
+  get tileset() {
+    return this._tileset;
+  }
+
   /**
    * The tile that this content belongs to.
    * <p>
-   * @memberof GaussianSplat3DTileContent.prototype
    * @type {Cesium3DTile}
    * @readonly
    */
-  tile: {
-    get: function () {
-      return this._tile;
-    },
-  },
+  get tile() {
+    return this._tile;
+  }
+
   /**
    * The resource that this content was loaded from.
    * <p>
-   * @memberof GaussianSplat3DTileContent.prototype
-   * @type {Resource}
+   * @type {string}
    * @readonly
    */
-  url: {
-    get: function () {
-      return this._resource.getUrlComponent(true);
-    },
-  },
+  get url() {
+    return this._resource.getUrlComponent(true);
+  }
+
   /**
    * Gets the batch table for this content.
    * <p>
@@ -261,11 +319,10 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    *
    * @private
    */
-  batchTable: {
-    get: function () {
-      return undefined;
-    },
-  },
+  get batchTable() {
+    return undefined;
+  }
+
   /**
    * Gets the metadata for this content, whether it is available explicitly or via
    * implicit tiling. If there is no metadata, this property should be undefined.
@@ -279,14 +336,14 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  metadata: {
-    get: function () {
-      return this._metadata;
-    },
-    set: function (value) {
-      this._metadata = value;
-    },
-  },
+  get metadata() {
+    return this._metadata;
+  }
+
+  set metadata(value) {
+    this._metadata = value;
+  }
+
   /**
    * Gets the group for this content if the content has metadata (3D Tiles 1.1) or
    * if it uses the <code>3DTILES_metadata</code> extension. If neither are present,
@@ -296,246 +353,530 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    * not part of the public Cesium API.
    * </p>
    *
-   * @type {Cesium3DTileContentGroup|undefined}
+   * @type {Cesium3DContentGroup|undefined}
    *
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  group: {
-    get: function () {
-      return this._group;
-    },
-    set: function (value) {
-      this._group = value;
-    },
-  },
-});
-
-/**
- * Creates a new instance of {@link GaussianSplat3DTileContent} from a glTF or glb resource.
- *
- * @param {Cesium3DTileset} tileset - The tileset that this content belongs to.
- * @param {Cesium3DTile} tile - The tile that this content belongs to.
- * @param {Resource|string} resource - The resource or URL of the glTF or glb file.
- * @param {object|Uint8Array} gltf - The glTF JSON object or a Uint8Array containing the glb binary data.
- * @returns {GaussianSplat3DTileContent} A new GaussianSplat3DTileContent instance.
- * @throws {RuntimeError} If the glTF or glb fails to load.
- * @private
- */
-GaussianSplat3DTileContent.fromGltf = async function (
-  tileset,
-  tile,
-  resource,
-  gltf,
-) {
-  const basePath = resource;
-  const baseResource = Resource.createIfNeeded(basePath);
-
-  const loaderOptions = {
-    releaseGltfJson: false,
-    upAxis: Axis.Y,
-    forwardAxis: Axis.Z,
-  };
-
-  if (defined(gltf.asset)) {
-    loaderOptions.gltfJson = gltf;
-    loaderOptions.baseResource = baseResource;
-    loaderOptions.gltfResource = baseResource;
-  } else if (gltf instanceof Uint8Array) {
-    loaderOptions.typedArray = gltf;
-    loaderOptions.baseResource = baseResource;
-    loaderOptions.gltfResource = baseResource;
-  } else {
-    loaderOptions.gltfResource = Resource.createIfNeeded(gltf);
+  get group() {
+    return this._group;
   }
 
-  const loader = new GltfLoader(loaderOptions);
-
-  try {
-    await loader.load();
-  } catch (error) {
-    loader.destroy();
-    throw new RuntimeError(`Failed to load glTF: ${error.message}`);
+  set group(value) {
+    this._group = value;
   }
 
-  return new GaussianSplat3DTileContent(loader, tileset, tile, resource);
-};
+  /** @inheritdoc */
+  get show() {
+    // TODO CONTENT_SHOW: There is no reasonable way to show
+    // or hide a single gaussian splat content. The contents
+    // are mushed together into a GaussianSplatPrimitive that
+    // is part of a tileset. This is broken on several levels
+    // anyhow, so no need to bother here: Just use the 'show'
+    // flag of the tileset.
+    return this._tileset.show;
+  }
 
-/**
- * Updates the content of the tile and prepares it for rendering.
- * @param {Cesium3DTileset}￼Data attribution
- * @param {FrameState} frameState - The current frame state.
- * @private
- */
-GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
-  const loader = this._loader;
+  set show(value) {
+    this._tileset.show = value;
+  }
 
-  if (this._ready) {
-    if (!this._transformed && primitive.root.content.ready) {
-      GaussianSplatPrimitive.transformTile(this._tile);
-      this._transformed = true;
+  /**
+   * Get the transformed positions of this tile's Gaussian splats.
+   * @type {undefined|Float32Array}
+   * @private
+   */
+  get positions() {
+    return this._positions;
+  }
+
+  /**
+   * Get the transformed rotations of this tile's Gaussian splats.
+   * @type {undefined|Float32Array}
+   * @private
+   */
+  get rotations() {
+    return this._rotations;
+  }
+
+  /**
+   * Get the transformed scales of this tile's Gaussian splats.
+   * @type {undefined|Float32Array}
+   * @private
+   */
+  get scales() {
+    return this._scales;
+  }
+
+  /**
+   * The number of spherical harmonic coefficients used for the Gaussian splats.
+   * @type {number}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  get sphericalHarmonicsCoefficientCount() {
+    return this._sphericalHarmonicsCoefficientCount;
+  }
+
+  /**
+   * The degree of the spherical harmonics used for the Gaussian splats.
+   * @type {number}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  get sphericalHarmonicsDegree() {
+    return this._sphericalHarmonicsDegree;
+  }
+
+  /**
+   * The packed spherical harmonic data for the Gaussian splats for use a shader or texture.
+   * @type {number}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  get packedSphericalHarmonicsData() {
+    return this._packedSphericalHarmonicsData;
+  }
+
+  /**
+   * Creates a new instance of {@link GaussianSplat3DTileContent} from a glTF or glb resource.
+   *
+   * @param {Cesium3DTileset} tileset - The tileset that this content belongs to.
+   * @param {Cesium3DTile} tile - The tile that this content belongs to.
+   * @param {Resource|string} resource - The resource or URL of the glTF or glb file.
+   * @param {object|Uint8Array} gltf - The glTF JSON object or a Uint8Array containing the glb binary data.
+   * @returns {GaussianSplat3DTileContent} A new GaussianSplat3DTileContent instance.
+   * @throws {RuntimeError} If the glTF or glb fails to load.
+   * @private
+   */
+  static async fromGltf(tileset, tile, resource, gltf) {
+    const basePath = resource;
+    const baseResource = Resource.createIfNeeded(basePath);
+
+    const loaderOptions = {
+      releaseGltfJson: false,
+      upAxis: Axis.Y,
+      forwardAxis: Axis.Z,
+      // Ensure non-SPZ vertex attributes (e.g. _FEATURE_ID_0) are available as
+      // typed arrays for CPU-side aggregation.  SPZ-decoded attributes already
+      // produce typed arrays regardless of this flag.
+      loadAttributesAsTypedArray: true,
+    };
+
+    if (defined(gltf.asset)) {
+      loaderOptions.gltfJson = gltf;
+      loaderOptions.baseResource = baseResource;
+      loaderOptions.gltfResource = baseResource;
+    } else if (gltf instanceof Uint8Array) {
+      loaderOptions.typedArray = gltf;
+      loaderOptions.baseResource = baseResource;
+      loaderOptions.gltfResource = baseResource;
+    } else {
+      loaderOptions.gltfResource = Resource.createIfNeeded(gltf);
     }
 
-    return;
+    const loader = new GltfLoader(loaderOptions);
+
+    try {
+      await loader.load();
+    } catch (error) {
+      loader.destroy();
+      throw new RuntimeError(`Failed to load glTF: ${error.message}`);
+    }
+
+    return new GaussianSplat3DTileContent(loader, tileset, tile, resource);
   }
 
-  frameState.afterRender.push(() => true);
+  /**
+   * Updates the content of the tile and prepares it for rendering.
+   * @param {Cesium3DTileset}￼Data attribution
+   * @param {FrameState} frameState - The current frame state.
+   * @private
+   */
+  update(primitive, frameState) {
+    const loader = this._loader;
 
-  if (!defined(loader)) {
-    this._ready = true;
-    return;
-  }
+    if (this._ready) {
+      return;
+    }
 
-  if (this._resourcesLoaded) {
-    this.splatPrimitive = loader.components.scene.nodes[0].primitives[0];
-    this.worldTransform = loader.components.scene.nodes[0].matrix;
-    this._ready = true;
+    frameState.afterRender.push(() => true);
 
-    this._originalPositions = new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
+    if (!defined(loader)) {
+      this._ready = true;
+      return;
+    }
+
+    if (this._resourcesLoaded) {
+      this.gltfPrimitive = loader.components.scene.nodes[0].primitives[0];
+      this.worldTransform = loader.components.scene.nodes[0].matrix;
+      this._ready = true;
+
+      // SPZ decode produces Float32Array attributes for these semantics, so
+      // typedArray.slice() preserves the expected runtime type for current data.
+      // If future splat encodings use quantized integer attributes here, revisit
+      // this assumption before relying on the copied array type.
+      this._positions = ModelUtility.getAttributeBySemantic(
+        this.gltfPrimitive,
         VertexAttributeSemantic.POSITION,
-      ).typedArray,
-    );
+      ).typedArray.slice();
 
-    this._originalRotations = new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
+      this._rotations = ModelUtility.getAttributeBySemantic(
+        this.gltfPrimitive,
         VertexAttributeSemantic.ROTATION,
-      ).typedArray,
-    );
+      ).typedArray.slice();
 
-    this._originalScales = new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
+      this._scales = ModelUtility.getAttributeBySemantic(
+        this.gltfPrimitive,
         VertexAttributeSemantic.SCALE,
-      ).typedArray,
-    );
+      ).typedArray.slice();
 
-    return;
+      const { l, n } = degreeAndCoefFromAttributes(
+        this.gltfPrimitive.attributes,
+      );
+      this._sphericalHarmonicsDegree = l;
+      this._sphericalHarmonicsCoefficientCount = n;
+
+      this._packedSphericalHarmonicsData = packSphericalHarmonicsData(this);
+
+      // Load ALL feature ID sets from the primitive so that custom shaders
+      // can access featureId_0, featureId_1, ... simultaneously.
+      const primitiveFeatureIds = this.gltfPrimitive.featureIds;
+      const allFeatureIds = [];
+      if (defined(primitiveFeatureIds)) {
+        // Sequential fallback IDs are identical across sets, so allocate them
+        // once (lazily) and share the array rather than one Uint32Array per set.
+        let sequentialFeatureIds;
+        for (let i = 0; i < primitiveFeatureIds.length; i++) {
+          const fid = primitiveFeatureIds[i];
+          let data;
+          if (defined(fid.setIndex)) {
+            const attr = ModelUtility.getAttributeBySemantic(
+              this.gltfPrimitive,
+              VertexAttributeSemantic.FEATURE_ID,
+              fid.setIndex,
+            );
+            if (defined(attr) && defined(attr.typedArray)) {
+              data = new Uint32Array(attr.typedArray);
+            } else if (defined(attr) && defined(attr.constant)) {
+              // Per glTF 2.0, an accessor without a bufferView is zero-filled.
+              // GltfLoader represents it as a constant (non-SPZ semantics are
+              // not routed through SPZ decoding), so expand it per splat.
+              data = new Uint32Array(this.pointsLength).fill(attr.constant);
+            } else {
+              // The feature ID set references an attribute the primitive does
+              // not have. This is a data error; warn rather than hide it, then
+              // fall back to sequential IDs so the featureId_N shader slots
+              // stay aligned.
+              oneTimeWarning(
+                "GaussianSplatMissingFeatureIdAttribute",
+                `Feature ID set ${i} references attribute _FEATURE_ID_${fid.setIndex} but the primitive does not provide it. Falling back to sequential IDs (0..N-1).`,
+              );
+            }
+          }
+          // Implicit feature IDs (no attribute) use the vertex index per the
+          // EXT_mesh_features spec. The same shared sequential array is reused
+          // as the fallback when a declared attribute is missing its data.
+          if (!defined(data)) {
+            if (!defined(sequentialFeatureIds)) {
+              const count = this.pointsLength;
+              sequentialFeatureIds = new Uint32Array(count);
+              for (let j = 0; j < count; j++) {
+                sequentialFeatureIds[j] = j;
+              }
+            }
+            data = sequentialFeatureIds;
+          }
+          allFeatureIds.push(data);
+        }
+      }
+      this._allFeatureIds = allFeatureIds;
+
+      return;
+    }
+
+    this._resourcesLoaded = loader.process(frameState);
   }
 
-  this._resourcesLoaded = loader.process(frameState);
-};
-/**
- * Returns whether the feature has this property.
- *
- * @param {number} batchId The batchId for the feature.
- * @param {string} name The case-sensitive name of the property.
- * @returns {boolean} <code>true</code> if the feature has this property; otherwise, <code>false</code>.
- */
-GaussianSplat3DTileContent.prototype.hasProperty = function (batchId, name) {
-  return false;
-};
-
-/**
- * Returns the {@link Cesium3DTileFeature} object for the feature with the
- * given <code>batchId</code>.  This object is used to get and modify the
- * feature's properties.
- * <p>
- * Features in a tile are ordered by <code>batchId</code>, an index used to retrieve their metadata from the batch table.
- * </p>
- *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/BatchTable}.
- *
- * @param {number} batchId The batchId for the feature.
- * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
- *
- * @exception {DeveloperError} batchId must be between zero and {@link Cesium3DTileContent#featuresLength} - 1.
- */
-GaussianSplat3DTileContent.prototype.getFeature = function (batchId) {
-  return undefined;
-};
-/**
-     * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
-     * <p>
-     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-     * not part of the public Cesium API.
-     * </p>
-     *
-     * @param {boolean} enabled Whether to enable or disable debug settings.
-     * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
-
-     * @private
-     */
-GaussianSplat3DTileContent.prototype.applyDebugSettings = function (
-  enabled,
-  color,
-) {};
-/**
- * Apply a style to the content
- * <p>
- * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
- * not part of the public Cesium API.
- * </p>
- *
- * @param {Cesium3DTileStyle} style The style.
- *
- * @private
- */
-GaussianSplat3DTileContent.prototype.applyStyle = function (style) {};
-/**
- * Find an intersection between a ray and the tile content surface that was rendered. The ray must be given in world coordinates.
- *
- * @param {Ray} ray The ray to test for intersection.
- * @param {FrameState} frameState The frame state.
- * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
- * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
- *
- * @private
- */
-GaussianSplat3DTileContent.prototype.pick = function (ray, frameState, result) {
-  return undefined;
-};
-/**
- * Returns true if this object was destroyed; otherwise, false.
- * <br /><br />
- * If this object was destroyed, it should not be used; calling any function other than
- * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- * <p>
- * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
- * not part of the public Cesium API.
- * </p>
- *
- * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
- * @see Cesium3DTileContent#destroy
- *
- * @private
- */
-GaussianSplat3DTileContent.prototype.isDestroyed = function () {
-  return this.isDestroyed;
-};
-
-/**
- * Frees the resources used by this object.
- * @private
- */
-GaussianSplat3DTileContent.prototype.destroy = function () {
-  this.splatPrimitive = undefined;
-
-  if (
-    defined(this._tileset.gaussianSplatPrimitive) &&
-    !this._tileset.gaussianSplatPrimitive.isDestroyed()
-  ) {
-    this._tileset.gaussianSplatPrimitive.destroy();
-  }
-  this._tileset.gaussianSplatPrimitive = undefined;
-
-  this._tile = undefined;
-  this._tileset = undefined;
-  this._resource = undefined;
-  this._ready = false;
-  this._group = undefined;
-  this._metadata = undefined;
-  this._resourcesLoaded = false;
-
-  if (defined(this._loader)) {
-    this._loader.destroy();
-    this._loader = undefined;
+  /**
+   * Get all per-splat feature ID sets loaded from the glTF primitive.
+   * Each entry is a Uint32Array with one element per splat, ordered by
+   * positional index (featureId_0, featureId_1, ...).
+   * @type {Array<Uint32Array>}
+   * @private
+   */
+  get allFeatureIds() {
+    return this._allFeatureIds;
   }
 
-  return destroyObject(this);
-};
+  /**
+   * The number of feature ID sets available for this tile content.
+   * @type {number}
+   * @private
+   */
+  get featureIdCount() {
+    return this._allFeatureIds.length;
+  }
+
+  /**
+   * Returns whether the feature has this property.
+   *
+   * @param {number} batchId The batchId for the feature.
+   * @param {string} name The case-sensitive name of the property.
+   * @returns {boolean} <code>true</code> if the feature has this property; otherwise, <code>false</code>.
+   */
+  hasProperty(batchId, name) {
+    return false;
+  }
+
+  /**
+   * Returns the {@link Cesium3DTileFeature} object for the feature with the
+   * given <code>batchId</code>.  This object is used to get and modify the
+   * feature's properties.
+   * <p>
+   * Features in a tile are ordered by <code>batchId</code>, an index used to retrieve their metadata from the batch table.
+   * </p>
+   *
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/BatchTable}.
+   *
+   * @param {number} batchId The batchId for the feature.
+   * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
+   *
+   * @exception {DeveloperError} batchId must be between zero and {@link Cesium3DTileContent#featuresLength} - 1.
+   */
+  getFeature(batchId) {
+    return undefined;
+  }
+
+  /**
+       * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
+       * <p>
+       * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+       * not part of the public Cesium API.
+       * </p>
+       *
+       * @param {boolean} enabled Whether to enable or disable debug settings.
+       * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
+
+       * @private
+       */
+  applyDebugSettings(enabled, color) {}
+
+  /**
+   * Apply a style to the content
+   * <p>
+   * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+   * not part of the public Cesium API.
+   * </p>
+   *
+   * @param {Cesium3DTileStyle} style The style.
+   *
+   * @private
+   */
+  applyStyle(style) {}
+
+  /**
+   * Find an intersection between a ray and the tile content surface that was rendered. The ray must be given in world coordinates.
+   *
+   * @param {Ray} ray The ray to test for intersection.
+   * @param {FrameState} frameState The frame state.
+   * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
+   * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+   *
+   * @private
+   */
+  pick(ray, frameState, result) {
+    return undefined;
+  }
+
+  /**
+   * Returns true if this object was destroyed; otherwise, false.
+   * <br /><br />
+   * If this object was destroyed, it should not be used; calling any function other than
+   * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+   * <p>
+   * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+   * not part of the public Cesium API.
+   * </p>
+   *
+   * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+   *
+   * @see Cesium3DTileContent#destroy
+   *
+   * @private
+   */
+  isDestroyed() {
+    return this.isDestroyed;
+  }
+
+  /**
+   * Frees the resources used by this object.
+   * @private
+   */
+  destroy() {
+    this.splatPrimitive = undefined;
+
+    this._tile = undefined;
+    this._tileset = undefined;
+    this._resource = undefined;
+    this._ready = false;
+    this._group = undefined;
+    this._metadata = undefined;
+    this._resourcesLoaded = false;
+    this._lastSplatTransform = undefined;
+
+    if (defined(this._loader)) {
+      this._loader.destroy();
+      this._loader = undefined;
+    }
+
+    return destroyObject(this);
+  }
+}
+
+function getShAttributePrefix(attribute) {
+  const prefix = attribute.startsWith("KHR_gaussian_splatting:")
+    ? "KHR_gaussian_splatting:"
+    : "_";
+  return `${prefix}SH_DEGREE_`;
+}
+
+/**
+ * Determine Spherical Harmonics degree and coefficient count from attributes
+ * @param {Attribute[]} attributes - The list of glTF attributes.
+ * @returns {object} An object containing the degree (l) and coefficient (n).
+ * @private
+ */
+function degreeAndCoefFromAttributes(attributes) {
+  const shAttributes = attributes.filter((attr) =>
+    attr.name.includes("SH_DEGREE_"),
+  );
+
+  switch (shAttributes.length) {
+    default:
+    case 0:
+      return { l: 0, n: 0 };
+    case 3:
+      return { l: 1, n: 9 };
+    case 8:
+      return { l: 2, n: 24 };
+    case 15:
+      return { l: 3, n: 45 };
+  }
+}
+
+/**
+ * Converts a 32-bit floating point number to a 16-bit floating point number.
+ * @param {number} float32 input
+ * @returns {number} Half precision float
+ * @private
+ */
+const buffer = new ArrayBuffer(4);
+const floatView = new Float32Array(buffer);
+const intView = new Uint32Array(buffer);
+
+function float32ToFloat16(float32) {
+  floatView[0] = float32;
+  const bits = intView[0];
+
+  const sign = (bits >> 31) & 0x1;
+  const exponent = (bits >> 23) & 0xff;
+  const mantissa = bits & 0x7fffff;
+
+  let half;
+
+  if (exponent === 0xff) {
+    half = (sign << 15) | (0x1f << 10) | (mantissa ? 0x200 : 0);
+  } else if (exponent === 0) {
+    half = sign << 15;
+  } else {
+    const newExponent = exponent - 127 + 15;
+    if (newExponent >= 31) {
+      half = (sign << 15) | (0x1f << 10);
+    } else if (newExponent <= 0) {
+      half = sign << 15;
+    } else {
+      half = (sign << 15) | (newExponent << 10) | (mantissa >>> 13);
+    }
+  }
+
+  return half;
+}
+
+/**
+ * Extracts the spherical harmonic degree and coefficient from the attribute name.
+ * @param {string} attribute - The attribute name.
+ * @returns {object} An object containing the degree (l) and coefficient (n).
+ * @private
+ */
+function extractSHDegreeAndCoef(attribute) {
+  const prefix = getShAttributePrefix(attribute);
+  const separator = "_COEF_";
+
+  const lStart = prefix.length;
+  const coefIndex = attribute.indexOf(separator, lStart);
+
+  const l = parseInt(attribute.slice(lStart, coefIndex), 10);
+  const n = parseInt(attribute.slice(coefIndex + separator.length), 10);
+
+  return { l, n };
+}
+
+/**
+ * Packs spherical harmonic data into half-precision floats.
+ * @param {GaussianSplat3DTileContent} tileContent - The tile content containing the spherical harmonic data.
+ * @returns {Uint32Array} - The Float16 packed spherical harmonic data.
+ * @private
+ */
+function packSphericalHarmonicsData(tileContent) {
+  const degree = tileContent.sphericalHarmonicsDegree;
+  const coefs = tileContent.sphericalHarmonicsCoefficientCount;
+  const totalLength = tileContent.pointsLength * (coefs * (2 / 3)); //3 packs into 2
+  const packedData = new Uint32Array(totalLength);
+
+  const shAttributes = tileContent.gltfPrimitive.attributes.filter((attr) =>
+    attr.name.includes("SH_DEGREE_"),
+  );
+  let stride = 0;
+  const base = [0, 9, 24];
+  switch (degree) {
+    case 1:
+      stride = 9;
+      break;
+    case 2:
+      stride = 24;
+      break;
+    case 3:
+      stride = 45;
+      break;
+  }
+  shAttributes.sort((a, b) => {
+    if (a.name < b.name) {
+      return -1;
+    }
+    if (a.name > b.name) {
+      return 1;
+    }
+
+    return 0;
+  });
+  const packedStride = stride * (2 / 3);
+  for (let i = 0; i < shAttributes.length; i++) {
+    const { l, n } = extractSHDegreeAndCoef(shAttributes[i].name);
+    for (let j = 0; j < tileContent.pointsLength; j++) {
+      //interleave the data
+      const packedBase = (base[l - 1] * 2) / 3;
+      const idx = j * packedStride + packedBase + n * 2;
+      const src = j * 3;
+      packedData[idx] =
+        float32ToFloat16(shAttributes[i].typedArray[src]) |
+        (float32ToFloat16(shAttributes[i].typedArray[src + 1]) << 16);
+      packedData[idx + 1] = float32ToFloat16(
+        shAttributes[i].typedArray[src + 2],
+      );
+    }
+  }
+  return packedData;
+}
 
 export default GaussianSplat3DTileContent;

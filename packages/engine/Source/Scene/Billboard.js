@@ -1,18 +1,21 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Matrix4 from "../Core/Matrix4.js";
-import NearFarScalar from "../Core/NearFarScalar.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Cartographic,
+  Check,
+  Color,
+  DeveloperError,
+  DistanceDisplayCondition,
+  Ellipsoid,
+  Frozen,
+  Matrix4,
+  NearFarScalar,
+  createGuid,
+  defined,
+  getExtensionFromUri,
+} from "@cesium/core";
 import Resource from "../Core/Resource.js";
 import BillboardTexture from "./BillboardTexture.js";
 import HeightReference, {
@@ -23,6 +26,7 @@ import SceneMode from "./SceneMode.js";
 import SceneTransforms from "./SceneTransforms.js";
 import VerticalOrigin from "./VerticalOrigin.js";
 import SplitDirection from "./SplitDirection.js";
+import isDataUri from "../Core/isDataUri.js";
 
 /**
  * @typedef {object} Billboard.ConstructorOptions
@@ -32,7 +36,7 @@ import SplitDirection from "./SplitDirection.js";
  * @property {Cartesian3} position The cartesian position of the billboard.
  * @property {*} [id] A user-defined object to return when the billboard is picked with {@link Scene#pick}.
  * @property {boolean} [show=true] Determines if this billboard will be shown.
- * @property {string | HTMLCanvasElement} [image] A loaded HTMLImageElement, ImageData, or a url to an image to use for the billboard.
+ * @property {string | HTMLImageElement | HTMLCanvasElement} [image] A loaded HTMLImageElement, ImageData, or a url to an image to use for the billboard.
  * @property {number} [scale=1.0] A number specifying the uniform scale that is multiplied with the billboard's image size in pixels.
  * @property {Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Specifying the pixel offset in screen space from the origin of this billboard.
  * @property {Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Specifying the 3D Cartesian offset applied to this billboard in eye coordinates.
@@ -50,7 +54,7 @@ import SplitDirection from "./SplitDirection.js";
  * @property {NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} Specifying near and far pixel offset scaling properties of a Billboard based on the billboard's distance from the camera.
  * @property {BoundingRectangle} [imageSubRegion] A {@link BoundingRectangle} Specifying the sub-region of the image to use for the billboard, rather than the entire image.
  * @property {DistanceDisplayCondition} [distanceDisplayCondition] A {@link DistanceDisplayCondition} Specifying the distance from the camera at which this billboard will be displayed.
- * @property {number} [disableDepthTestDistance] A number specifying the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+ * @property {number} [disableDepthTestDistance] The distance from the camera, beyond which, depth testing is disabled—to, for example, prevent clipping against terrain.
  * @property {SplitDirection} [splitDirection] A {@link SplitDirection} Specifying the split property of the billboard.
  */
 
@@ -91,7 +95,7 @@ import SplitDirection from "./SplitDirection.js";
  * @param {Billboard.ConstructorOptions} options Object describing initialization options
  * @param {BillboardCollection} billboardCollection Instance of BillboardCollection
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=billboards|Cesium Sandcastle Billboard Demo}
  */
 function Billboard(options, billboardCollection) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -189,31 +193,27 @@ function Billboard(options, billboardCollection) {
   this._batchIndex = undefined; // Used only by Vector3DTilePoints and BillboardCollection
 
   this._imageTexture = new BillboardTexture(billboardCollection);
+
+  this._imageId = options.imageId;
   this._imageWidth = undefined;
   this._imageHeight = undefined;
-
   this._labelDimensions = undefined;
   this._labelHorizontalOrigin = undefined;
   this._labelTranslate = undefined;
 
   const image = options.image;
-  let imageId = options.imageId;
   if (defined(image)) {
-    if (!defined(imageId)) {
-      if (typeof image === "string") {
-        imageId = image;
-      } else if (defined(image.src)) {
-        imageId = image.src;
-      } else {
-        imageId = createGuid();
-      }
-    }
-
-    this._imageTexture.loadImage(imageId, image);
+    this._computeImageTextureProperties(options.imageId, image);
+    this._imageTexture.loadImage(
+      this._imageId,
+      image,
+      this._imageWidth,
+      this._imageHeight,
+    );
   }
 
   if (defined(options.imageSubRegion)) {
-    this._imageTexture.addImageSubRegion(imageId, options.imageSubRegion);
+    this._imageTexture.addImageSubRegion(this._imageId, options.imageSubRegion);
   }
 
   this._actualClampedPosition = undefined;
@@ -227,6 +227,9 @@ function Billboard(options, billboardCollection) {
   this._updateClamping();
 
   this._splitDirection = options.splitDirection ?? SplitDirection.NONE;
+  // Primarily used by labels to indicate that the position is derived from the parent.
+  // and expensive operations like clamping can be skipped.
+  this._positionFromParent = false;
 }
 
 const SHOW_INDEX = (Billboard.SHOW_INDEX = 0);
@@ -705,8 +708,9 @@ Object.defineProperties(Billboard.prototype, {
   },
 
   /**
-   * Gets or sets the aligned axis in world space. The aligned axis is the unit vector that the billboard up vector points towards.
+   * The aligned axis is the direction vector that the billboard up vector points towards.
    * The default is the zero vector, which means the billboard is aligned to the screen up vector.
+   * Note that only the zero vector (0,0,0) resets the alignment to screen up.
    * @memberof Billboard.prototype
    * @type {Cartesian3}
    * @example
@@ -844,10 +848,13 @@ Object.defineProperties(Billboard.prototype, {
   },
 
   /**
-   * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
-   * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+   * Gets or sets the distance from the camera, beyond which, depth testing is disbaled—to,
+   * for example, prevent clipping against terrain. When set to <code>undefined</code> or
+   * <code>0</code>, the depth test is always applied. When set to
+   * <code>Number.POSITIVE_INFINITY</code>, the depth test is never applied.
    * @memberof Billboard.prototype
-   * @type {number}
+   * @type {number|undefined}
+   * @default undefined
    */
   disableDepthTestDistance: {
     get: function () {
@@ -944,18 +951,13 @@ Object.defineProperties(Billboard.prototype, {
         return;
       }
 
-      let id;
-      if (typeof value === "string") {
-        id = value;
-      } else if (value instanceof Resource) {
-        id = value._url;
-      } else if (defined(value.src)) {
-        id = value.src;
-      } else {
-        id = createGuid();
-      }
-
-      this._imageTexture.loadImage(id, value);
+      this._computeImageTextureProperties(undefined, value);
+      this._imageTexture.loadImage(
+        this._imageId,
+        value,
+        this._imageWidth,
+        this._imageHeight,
+      );
     },
   },
 
@@ -1017,6 +1019,10 @@ Object.defineProperties(Billboard.prototype, {
         value,
         this._actualClampedPosition,
       );
+      if (this._mode === SceneMode.SCENE3D) {
+        // In 3D mode the actual (rendered) position is the same as clamped position (ECEF).
+        Cartesian3.clone(value, this._actualPosition);
+      }
       makeDirty(this, POSITION_INDEX);
     },
   },
@@ -1147,6 +1153,7 @@ Billboard._updateClamping = function (collection, owner) {
 
   if (
     owner._heightReference === HeightReference.NONE ||
+    owner._positionFromParent ||
     !defined(owner._position)
   ) {
     return;
@@ -1162,30 +1169,22 @@ Billboard._updateClamping = function (collection, owner) {
     return;
   }
 
-  function updateFunction(clampedPosition) {
-    const updatedClampedPosition = ellipsoid.cartographicToCartesian(
-      clampedPosition,
-      owner._clampedPosition,
-    );
-
+  function handleSceneUpdateHeight(clampedPositionCartographic) {
+    // Apply the height offset in cartographic space
     if (isHeightReferenceRelative(owner._heightReference)) {
-      if (owner._mode === SceneMode.SCENE3D) {
-        clampedPosition.height += position.height;
-        ellipsoid.cartographicToCartesian(
-          clampedPosition,
-          updatedClampedPosition,
-        );
-      } else {
-        updatedClampedPosition.x += position.height;
-      }
+      clampedPositionCartographic.height += position.height;
     }
 
-    owner._clampedPosition = updatedClampedPosition;
+    // Assign via the setter, as the setter marks the position as dirty.
+    owner._clampedPosition = ellipsoid.cartographicToCartesian(
+      clampedPositionCartographic,
+      owner._clampedPosition,
+    );
   }
 
   owner._removeCallbackFunc = scene.updateHeight(
     position,
-    updateFunction,
+    handleSceneUpdateHeight,
     owner._heightReference,
   );
 
@@ -1195,7 +1194,7 @@ Billboard._updateClamping = function (collection, owner) {
     scratchCartographic.height = height;
   }
 
-  updateFunction(scratchCartographic);
+  handleSceneUpdateHeight(scratchCartographic);
 };
 
 /**
@@ -1248,7 +1247,13 @@ Billboard.prototype.setImage = function (id, image) {
   Check.defined("image", image);
   //>>includeEnd('debug');
 
-  this._imageTexture.loadImage(id, image);
+  this._computeImageTextureProperties(id, image);
+  this._imageTexture.loadImage(
+    this._imageId,
+    image,
+    this._imageWidth,
+    this._imageHeight,
+  );
 };
 
 /**
@@ -1263,6 +1268,54 @@ Billboard.prototype.setImageTexture = function (billboardTexture) {
 
   BillboardTexture.clone(billboardTexture, this._imageTexture);
 };
+
+// Arbitrary limit on allocated SVG size, in pixels. Raster images use image resolution.
+const SVG_MAX_SIZE_PX = 512;
+
+/**
+ * Computes billboard texture ID, width, and height. For raster images, width and height are left
+ * undefined, defaulting to image resolution. For SVG, use billboard pixel width and height.
+ * @param {string | undefined} id The id of the image.
+ * @param {string | HTMLImageElement | HTMLCanvasElement | undefined} image A loaded HTMLImageElement, ImageData, or a url to an image to use for the billboard.
+ * @private
+ */
+Billboard.prototype._computeImageTextureProperties = function (id, image) {
+  this._imageWidth = undefined;
+  this._imageHeight = undefined;
+
+  if (!defined(image)) {
+    this._imageId = createGuid();
+    return;
+  }
+
+  let imageUri;
+  if (typeof image === "string") {
+    imageUri = image;
+  } else if (image instanceof Resource) {
+    imageUri = image._url;
+  } else if (defined(image.src)) {
+    imageUri = image.src;
+  }
+
+  this._imageId = id ?? imageUri ?? createGuid();
+
+  const hasSizeInPixels =
+    defined(this._width) && defined(this._height) && !this._sizeInMeters;
+
+  if (hasSizeInPixels && isSvgUri(imageUri)) {
+    this._imageWidth = Math.min(this._width, SVG_MAX_SIZE_PX);
+    this._imageHeight = Math.min(this._height, SVG_MAX_SIZE_PX);
+  }
+};
+
+function isSvgUri(uri) {
+  if (!defined(uri)) {
+    return false;
+  }
+  return isDataUri(uri)
+    ? uri.startsWith("data:image/svg+xml")
+    : getExtensionFromUri(uri) === "svg";
+}
 
 /**
  * Uses a sub-region of the image with the given id as the image for this billboard,
@@ -1296,20 +1349,22 @@ Billboard.prototype._setTranslate = function (value) {
   }
 };
 
+// `_actualPosition` is the billboard's position in the current render frame:
+// ECEF in 3D, and the projected map coordinate in 2D/Columbus View.
+// It is kept current by `recomputeActualPositions` in 2D/Columbus View, and —
+// for clamped billboards in 3D — by the `_clampedPosition` setter (3D has no
+// per-frame actual-position recompute).
 Billboard.prototype._getActualPosition = function () {
-  return defined(this._clampedPosition)
-    ? this._clampedPosition
-    : this._actualPosition;
+  return this._actualPosition;
 };
 
 Billboard.prototype._setActualPosition = function (value) {
-  if (!defined(this._clampedPosition)) {
-    Cartesian3.clone(value, this._actualPosition);
-  }
+  Cartesian3.clone(value, this._actualPosition);
   makeDirty(this, POSITION_INDEX);
 };
 
 const tempCartesian3 = new Cartesian4();
+const scratchActualPosition = new Cartesian3();
 Billboard._computeActualPosition = function (
   billboard,
   position,
@@ -1320,7 +1375,18 @@ Billboard._computeActualPosition = function (
     if (frameState.mode !== billboard._mode) {
       billboard._updateClamping();
     }
-    return billboard._clampedPosition;
+
+    // Clamped position is already our rendering position when in 3D
+    if (frameState.mode === SceneMode.SCENE3D) {
+      return billboard._clampedPosition;
+    }
+
+    // in 2D and Columbus View we instead project the ECEF coordinate into the current map frame.
+    return SceneTransforms.computeActualEllipsoidPosition(
+      frameState,
+      billboard._clampedPosition,
+      scratchActualPosition,
+    );
   } else if (frameState.mode === SceneMode.SCENE3D) {
     return position;
   }
@@ -1329,6 +1395,7 @@ Billboard._computeActualPosition = function (
   return SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     tempCartesian3,
+    scratchActualPosition,
   );
 };
 
@@ -1407,20 +1474,16 @@ Billboard.prototype.computeScreenSpacePosition = function (scene, result) {
   Cartesian2.clone(this._pixelOffset, scratchPixelOffset);
   Cartesian2.add(scratchPixelOffset, this._translate, scratchPixelOffset);
 
+  const position = this._clampedPosition ?? this._position;
+
   let modelMatrix = billboardCollection.modelMatrix;
-  let position = this._position;
-  if (defined(this._clampedPosition)) {
-    position = this._clampedPosition;
-    if (scene.mode !== SceneMode.SCENE3D) {
-      // position needs to be in world coordinates
-      const projection = scene.mapProjection;
-      const ellipsoid = projection.ellipsoid;
-      const cart = projection.unproject(position, scratchCartographic);
-      position = ellipsoid.cartographicToCartesian(cart, scratchCartesian3);
-      modelMatrix = Matrix4.IDENTITY;
-    }
+
+  if (this._clampedPosition && scene.mode !== SceneMode.SCENE3D) {
+    // The model matrix isn't applied when rendering clamped in 2D/CV (see BillboardCollection#update)
+    modelMatrix = Matrix4.IDENTITY;
   }
 
+  // _computeScreenSpacePosition always expects ECEF position, so no unprojection required.
   const windowCoordinates = Billboard._computeScreenSpacePosition(
     modelMatrix,
     position,

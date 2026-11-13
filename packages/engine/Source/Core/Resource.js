@@ -1,28 +1,30 @@
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  Math as CesiumMath,
+  RuntimeError,
+  clone,
+  combine,
+  defined,
+  getAbsoluteUri,
+  getBaseUri,
+  getExtensionFromUri,
+  objectToQuery,
+  queryToObject,
+} from "@cesium/core";
 import Uri from "urijs";
 import appendForwardSlash from "./appendForwardSlash.js";
-import Check from "./Check.js";
-import clone from "./clone.js";
-import combine from "./combine.js";
-import Frozen from "./Frozen.js";
 import defer from "./defer.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import getAbsoluteUri from "./getAbsoluteUri.js";
-import getBaseUri from "./getBaseUri.js";
-import getExtensionFromUri from "./getExtensionFromUri.js";
 import getImagePixels from "./getImagePixels.js";
 import isBlobUri from "./isBlobUri.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import isDataUri from "./isDataUri.js";
 import loadAndExecuteScript from "./loadAndExecuteScript.js";
-import CesiumMath from "./Math.js";
-import objectToQuery from "./objectToQuery.js";
-import queryToObject from "./queryToObject.js";
 import Request from "./Request.js";
 import RequestErrorEvent from "./RequestErrorEvent.js";
 import RequestScheduler from "./RequestScheduler.js";
 import RequestState from "./RequestState.js";
-import RuntimeError from "./RuntimeError.js";
 import TrustedServers from "./TrustedServers.js";
 
 const xhrBlobSupported = (function () {
@@ -173,7 +175,7 @@ function defaultClone(value, defaultValue) {
  *
  * @returns {Resource} If resource is a String, a Resource constructed with the url and options. Otherwise the resource parameter is returned.
  *
- * @private
+ * @ignore
  */
 Resource.createIfNeeded = function (resource) {
   if (resource instanceof Resource) {
@@ -231,6 +233,8 @@ Resource.supportsImageBitmapOptions = function () {
   })
     .then(function (blob) {
       const imageBitmapOptions = {
+        // 'from-image' is deprecated, new option is 'none'. However, we still need to support older browsers,
+        // and there's no good way to detect support for these options. For now, continue to use 'from-image'. See: https://github.com/CesiumGS/cesium/issues/12846
         imageOrientation: "flipY", // default is "from-image"
         premultiplyAlpha: "none", // default is "default"
         colorSpaceConversion: "none", // default is "default"
@@ -915,7 +919,7 @@ Resource.prototype.fetchImage = function (options) {
     this.isBlobUri ||
     (!this.hasHeaders && !preferBlob)
   ) {
-    return fetchImage({
+    return this._fetchImage({
       resource: this,
       flipY: flipY,
       skipColorSpaceConversion: skipColorSpaceConversion,
@@ -955,8 +959,7 @@ Resource.prototype.fetchImage = function (options) {
         url: blobUrl,
       });
 
-      return fetchImage({
-        resource: generatedBlobResource,
+      return generatedBlobResource._fetchImage({
         flipY: flipY,
         skipColorSpaceConversion: skipColorSpaceConversion,
         preferImageBitmap: false,
@@ -995,16 +998,15 @@ Resource.prototype.fetchImage = function (options) {
 
 /**
  * Fetches an image and returns a promise to it.
- *
  * @param {object} [options] An object with the following properties.
- * @param {Resource} [options.resource] Resource object that points to an image to fetch.
  * @param {boolean} [options.preferImageBitmap] If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
  * @param {boolean} [options.flipY] If true, image will be vertically flipped during decode. Only applies if the browser supports <code>createImageBitmap</code>.
  * @param {boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the image will be ignored. Only applies if the browser supports <code>createImageBitmap</code>.
+ * @returns {Promise<ImageBitmap|HTMLImageElement>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if the request has been throttled and cannot be made at this time.
  * @private
  */
-function fetchImage(options) {
-  const resource = options.resource;
+Resource.prototype._fetchImage = function (options) {
+  const resource = this;
   const flipY = options.flipY;
   const skipColorSpaceConversion = options.skipColorSpaceConversion;
   const preferImageBitmap = options.preferImageBitmap;
@@ -1048,8 +1050,7 @@ function fetchImage(options) {
         request.state = RequestState.UNISSUED;
         request.deferred = undefined;
 
-        return fetchImage({
-          resource: resource,
+        return resource._fetchImage({
           flipY: flipY,
           skipColorSpaceConversion: skipColorSpaceConversion,
           preferImageBitmap: preferImageBitmap,
@@ -1058,7 +1059,7 @@ function fetchImage(options) {
       return Promise.reject(e);
     });
   });
-}
+};
 
 /**
  * Creates a Resource and calls fetchImage() on it.
@@ -1960,6 +1961,7 @@ Resource._Implementations.createImage = function (
   flipY,
   skipColorSpaceConversion,
   preferImageBitmap,
+  headers,
 ) {
   const url = request.url;
   // Passing an Image to createImageBitmap will force it to run on the main thread
@@ -1983,7 +1985,7 @@ Resource._Implementations.createImage = function (
         responseType,
         method,
         undefined,
-        undefined,
+        headers,
         xhrDeferred,
         undefined,
         undefined,
@@ -2025,6 +2027,12 @@ Resource._Implementations.createImage = function (
  * Wrapper for createImageBitmap
  *
  * @private
+ * @param {Blob} blob The image blob.
+ * @param {object} options An object containing the following properties:
+ * @param {boolean} options.flipY Whether to flip the image Y axis.
+ * @param {boolean} options.premultiplyAlpha Whether to premultiply the alpha channel.
+ * @param {boolean} options.skipColorSpaceConversion Whether to skip color space conversion.
+ * @returns {Promise<ImageBitmap>} A promise that resolves to the created image bitmap.
  */
 Resource.createImageBitmapFromBlob = function (blob, options) {
   Check.defined("options", options);
@@ -2036,7 +2044,9 @@ Resource.createImageBitmapFromBlob = function (blob, options) {
   );
 
   return createImageBitmap(blob, {
-    imageOrientation: options.flipY ? "flipY" : "from-image",
+    // 'from-image' is deprecated, new option is 'none'. However, we still need to support older browsers,
+    // and there's no good way to detect support for these options. For now, continue to use 'from-image'. See: https://github.com/CesiumGS/cesium/issues/12846
+    imageOrientation: options.flipY ? "flipY" : "none",
     premultiplyAlpha: options.premultiplyAlpha ? "premultiply" : "none",
     colorSpaceConversion: options.skipColorSpaceConversion ? "none" : "default",
   });

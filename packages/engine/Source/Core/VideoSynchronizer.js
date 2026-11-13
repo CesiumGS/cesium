@@ -1,8 +1,10 @@
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import destroyObject from "./destroyObject.js";
-import Iso8601 from "./Iso8601.js";
-import JulianDate from "./JulianDate.js";
+import {
+  Frozen,
+  Iso8601,
+  JulianDate,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 
 /**
  * Synchronizes a video element with a simulation clock.
@@ -16,7 +18,7 @@ import JulianDate from "./JulianDate.js";
  * @param {JulianDate} [options.epoch=Iso8601.MINIMUM_VALUE] The simulation time that marks the start of the video.
  * @param {number} [options.tolerance=1.0] The maximum amount of time, in seconds, that the clock and video can diverge.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Video.html|Video Material Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=video|Video Material Demo}
  */
 function VideoSynchronizer(options) {
   options = options ?? Frozen.EMPTY_OBJECT;

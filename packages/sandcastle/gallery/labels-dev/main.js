@@ -1,0 +1,168 @@
+import * as Cesium from "cesium";
+import Sandcastle from "Sandcastle";
+
+const viewer = new Cesium.Viewer("cesiumContainer");
+const scene = viewer.scene;
+
+function addLabel() {
+  Sandcastle.declare(addLabel);
+  scene.primitives.removeAll();
+  const labels = scene.primitives.add(new Cesium.LabelCollection());
+  labels.add({
+    position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+    text: "Philadelphia",
+  });
+}
+
+function setFont() {
+  Sandcastle.declare(setFont);
+  scene.primitives.removeAll();
+  const labels = scene.primitives.add(new Cesium.LabelCollection());
+  labels.add({
+    position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+    text: "Philadelphia",
+    // CSS font-family
+    font: "24px Helvetica",
+    fillColor: new Cesium.Color(0.6, 0.9, 1.0),
+    outlineColor: Cesium.Color.BLACK,
+    outlineWidth: 2,
+    style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+  });
+}
+
+function setProperties() {
+  Sandcastle.declare(setProperties);
+  scene.primitives.removeAll();
+  const labels = scene.primitives.add(new Cesium.LabelCollection());
+  const l = labels.add({
+    position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+    text: "Philadelphia",
+  });
+
+  l.position = Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222, 300000.0);
+  l.scale = 2.0;
+}
+
+function inReferenceFrame() {
+  Sandcastle.declare(inReferenceFrame);
+  scene.primitives.removeAll();
+  const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+  const labels = scene.primitives.add(new Cesium.LabelCollection());
+  labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+  labels.add({
+    position: new Cesium.Cartesian3(0.0, 0.0, 0.0),
+    text: "Center",
+    font: "13pt sans-serif",
+    showBackground: true,
+  });
+  labels.add({
+    position: new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
+    text: "East",
+    font: "13pt sans-serif",
+    showBackground: true,
+  });
+  labels.add({
+    position: new Cesium.Cartesian3(0.0, 1000000.0, 0.0),
+    text: "North",
+    font: "13pt sans-serif",
+    showBackground: true,
+  });
+  labels.add({
+    position: new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
+    text: "Up",
+    font: "13pt sans-serif",
+    showBackground: true,
+  });
+}
+
+function offsetByDistance() {
+  Sandcastle.declare(offsetByDistance);
+  scene.primitives.removeAll();
+  const image = new Image();
+  image.onload = function () {
+    const billboards = scene.primitives.add(new Cesium.BillboardCollection());
+    billboards.add({
+      position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+      scaleByDistance: new Cesium.NearFarScalar(1.5e2, 5.0, 1.5e7, 0.5),
+      image: image,
+    });
+
+    const labels = scene.primitives.add(new Cesium.LabelCollection());
+    labels.add({
+      position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+      text: "Label on top of scaling billboard",
+      font: "20px sans-serif",
+      showBackground: true,
+      horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+      pixelOffset: new Cesium.Cartesian2(0.0, -image.height),
+      pixelOffsetScaleByDistance: new Cesium.NearFarScalar(
+        1.5e2,
+        3.0,
+        1.5e7,
+        0.5,
+      ),
+    });
+  };
+  image.src = "../images/facility.gif";
+}
+
+function fadeByDistance() {
+  Sandcastle.declare(fadeByDistance);
+  scene.primitives.removeAll();
+  const labels = scene.primitives.add(new Cesium.LabelCollection());
+  labels.add({
+    position: Cesium.Cartesian3.fromDegrees(-73.94, 40.67),
+    text: "New York",
+    translucencyByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e8, 0.0),
+  });
+  labels.add({
+    position: Cesium.Cartesian3.fromDegrees(-84.39, 33.75),
+    text: "Atlanta",
+    translucencyByDistance: new Cesium.NearFarScalar(1.5e5, 1.0, 1.5e7, 0.0),
+  });
+}
+
+Sandcastle.addToolbarMenu([
+  {
+    text: "Add label",
+    onselect: function () {
+      addLabel();
+      Sandcastle.highlight(addLabel);
+    },
+  },
+  {
+    text: "Set font",
+    onselect: function () {
+      setFont();
+      Sandcastle.highlight(setFont);
+    },
+  },
+  {
+    text: "Set properties",
+    onselect: function () {
+      setProperties();
+      Sandcastle.highlight(setProperties);
+    },
+  },
+  {
+    text: "Add labels in reference frame",
+    onselect: function () {
+      inReferenceFrame();
+      Sandcastle.highlight(inReferenceFrame);
+    },
+  },
+  {
+    text: "Offset label by distance",
+    onselect: function () {
+      offsetByDistance();
+      Sandcastle.highlight(offsetByDistance);
+    },
+  },
+  {
+    text: "Fade label by distance",
+    onselect: function () {
+      fadeByDistance();
+      Sandcastle.highlight(fadeByDistance);
+    },
+  },
+]);

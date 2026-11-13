@@ -1,8 +1,11 @@
-import { Iau2000Orientation, JulianDate, TimeStandard } from "../../index.js";
+import { JulianDate, TimeStandard } from "@cesium/core";
+import { Iau2000Orientation } from "../../index.js";
 
 describe("Core/Iau2000Orientation", function () {
   it("compute moon", function () {
     const date = new JulianDate(2451545.0, -32.184, TimeStandard.TAI);
+
+    // eslint-disable-next-line new-cap
     const param = Iau2000Orientation.ComputeMoon(date);
 
     // expected results taken from STK Components:
