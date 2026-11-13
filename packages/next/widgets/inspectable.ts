@@ -145,6 +145,17 @@ export interface InspectorSnapshot {
   camera?: readonly number[];
 }
 
+/** Records an engine's ticks to a file (development only, `recorder.ts`). */
+export interface Recordable {
+  readonly active: boolean;
+  start(): void;
+  stop(): void;
+  /** Saves the view's image at the next tick that renders. */
+  captureNext(): void;
+  /** Rows and images written, the file's name, and the server's error if any. */
+  status(): { rows: number; frames: number; file?: string; error?: string };
+}
+
 /** An engine (or one view of it) the inspector can show. */
 export interface Inspectable {
   /** Shown in the header ("2.0 · main", "1.146.0"). */
@@ -152,4 +163,6 @@ export interface Inspectable {
   /** A swatch color for the header (CSS color), e.g. a pane's. */
   readonly color?: string;
   snapshot(): InspectorSnapshot;
+  /** Present in development builds of 2.0: the inspector's Record toggle. */
+  readonly record?: Recordable;
 }

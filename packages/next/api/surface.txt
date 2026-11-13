@@ -304,6 +304,7 @@ entry	name	kind	tier
 .	SurfaceKind	enum	-
 .	SurfacePatch	interface	-
 .	SurfaceSample	interface	-
+.	TICK_REASONS	const	-
 .	TerrainQueryOptions	interface	-
 .	TerrainRayOptions	interface	-
 .	TerrainRayPatch	interface	-

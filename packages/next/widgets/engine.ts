@@ -17,6 +17,7 @@ import type {
   ContentMix,
   Inspectable,
   InspectorSnapshot,
+  Recordable,
   MemoryRow,
   StagePercentiles,
 } from "./inspectable.ts";
@@ -66,11 +67,74 @@ export function inspectEngine(
   engine: Engine,
   options: EngineInspectOptions,
 ): Inspectable {
+  const record = import.meta.env.DEV ? recordable(engine, options) : undefined;
   return {
     name: options.name,
     ...(options.color ? { color: options.color } : {}),
     snapshot: () => engineSnapshot(engine, options),
+    ...(record ? { record } : {}),
   };
+}
+
+/** One recorder per engine, made on first use so a page that never records loads none of it. */
+const recordables = new WeakMap<Engine, Recordable>();
+
+/**
+ * Development only. The recorder module loads when recording starts: at once
+ * when the URL says `record` (`#/examples/x?scene=y&record&frames=every:10`),
+ * else from the inspector's toggle.
+ */
+function recordable(
+  engine: Engine,
+  options: EngineSnapshotOptions,
+): Recordable {
+  const existing = recordables.get(engine);
+  if (existing) {
+    return existing;
+  }
+  let recording: Omit<Recordable, "active"> | undefined;
+  let active = false;
+  let pendingFrame = false;
+  const load = async (frames?: string) => {
+    const { createRecorder } = await import("./recorder.ts");
+    recording ??= createRecorder(engine, options, { frames });
+    if (active) {
+      recording.start();
+      if (pendingFrame) {
+        recording.captureNext();
+      }
+    }
+    pendingFrame = false;
+  };
+  const params = new URLSearchParams(
+    `${location.search.slice(1)}&${location.hash.split("?")[1] ?? ""}`,
+  );
+  const r: Recordable = {
+    get active() {
+      return active;
+    },
+    start() {
+      active = true;
+      void load(params.get("frames") ?? undefined);
+    },
+    stop() {
+      active = false;
+      recording?.stop();
+    },
+    captureNext() {
+      if (recording) {
+        recording.captureNext();
+      } else {
+        pendingFrame = true;
+      }
+    },
+    status: () => recording?.status() ?? { rows: 0, frames: 0 },
+  };
+  recordables.set(engine, r);
+  if (params.has("record") && params.get("record") !== "0") {
+    r.start();
+  }
+  return r;
 }
 
 /** One snapshot of a 2.0 engine (for hosts that build their own `Inspectable`). */

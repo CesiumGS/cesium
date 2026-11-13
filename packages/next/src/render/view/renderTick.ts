@@ -294,6 +294,7 @@ export function render(
   );
 
   const encoder = device.createCommandEncoder(FRAME_ENCODER);
+  engine.raster.timer.tag = engine.stats.tick;
   engine.raster.timer.beginFrame();
   for (let i = 0; i < views.length; i++) {
     const view = views[i]!;
@@ -422,6 +423,7 @@ export function render(
     engine.stats.cpuMs === 0
       ? elapsed
       : engine.stats.cpuMs * 0.9 + elapsed * 0.1;
+  engine.stats.lastCpuMs = elapsed;
   engine.stats.gpuMs = engine.raster.timer.milliseconds;
   engine.stats.gpuSpanMs = engine.raster.timer.spanMilliseconds;
   engine.stats.views = slots;

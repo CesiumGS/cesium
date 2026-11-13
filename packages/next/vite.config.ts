@@ -21,6 +21,7 @@ import basicSsl from "@vitejs/plugin-basic-ssl";
 import { configDefaults, defineConfig, type Plugin } from "vitest/config";
 import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
 import { slangShaders } from "./scripts/vitePluginSlang.ts";
+import { recordEndpoint } from "./scripts/vitePluginRecord.ts";
 import { keepEnvSecretsOut } from "./scripts/vitePluginEnvSecrets.ts";
 import { skyPackDevRoute, skyPackGuard } from "./scripts/vitePluginSkyPack.ts";
 import { framesDataDirectory } from "./scripts/frameData.mjs";
@@ -452,6 +453,8 @@ export default defineConfig({
     // Sky data never ships uncleared (§13.29); the dev server offers the store's pack.
     skyPackGuard(),
     skyPackDevRoute(),
+    // The inspector's recorder posts its rows here (dev server only).
+    recordEndpoint(),
     serveDirectory("/cesium1x", cesium1x),
     serveDirectory("/specs-data", specsData),
     serveBenchResults("/bench-results", benchResults),

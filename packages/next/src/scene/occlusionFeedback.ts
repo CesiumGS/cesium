@@ -138,6 +138,12 @@ export class OcclusionFeedback {
   /** Ticks asked about and ticks dropped for want of a free list (stats). */
   asked = 0;
   dropped = 0;
+  /** Results applied, boxes they asked about, and answers they changed (cumulative; the recorder's). */
+  results = 0;
+  queries = 0;
+  flips = 0;
+  /** Boxes the latest result found hidden. */
+  hidden = 0;
   private lastPosition: Float64Array | undefined;
   private lastDirection: Float64Array | undefined;
 
@@ -223,6 +229,7 @@ export class OcclusionFeedback {
   apply(list: OcclusionQueries, bits: Uint32Array, id: number): number {
     let flipped = 0;
     if (list.epoch === this.epoch) {
+      let hiddenNow = 0;
       for (let i = 0; i < list.count; i++) {
         const tile = list.tiles[i];
         if (!tile) {
@@ -236,11 +243,16 @@ export class OcclusionFeedback {
         }
         state.occludedAt = Math.max(state.occludedAt, list.tick);
         const hidden = ((bits[i >> 5]! >>> (i & 31)) & 1) === 1;
+        hiddenNow += hidden ? 1 : 0;
         state.occludedTicks = hidden ? state.occludedTicks + 1 : 0;
         if (this.occluded(state) !== before) {
           flipped++;
         }
       }
+      this.results++;
+      this.queries += list.count;
+      this.flips += flipped;
+      this.hidden = hiddenNow;
     }
     list.clear();
     list.inFlight = false;

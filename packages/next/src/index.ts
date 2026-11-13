@@ -9,6 +9,7 @@ export {
   type EngineOptions,
   type FrameStats,
   type GlobeOptions,
+  TICK_REASONS,
 } from "./scene/Engine.ts";
 export { type ShaderOverrides } from "./scene/RenderContext.ts";
 export {

@@ -63,6 +63,7 @@ const SECTIONS = [
   ["gpu", "GPU"],
   ["history", "Last 30 s"],
   ["pick", "Pick"],
+  ["record", "Record"],
 ] as const;
 type SectionKey = (typeof SECTIONS)[number][0];
 
@@ -144,6 +145,56 @@ export function attachInspector(
     sections.set(key, details);
   }
   sections.get("pick")!.hidden = true;
+  // Recording (development builds of 2.0): a switch, and what it has written.
+  const recordable = source.record;
+  const recordBody = bodies.get("record")!;
+  sections.get("record")!.hidden = !recordable;
+  let recordNote: HTMLElement | undefined;
+  let recordSwitch: HTMLButtonElement | undefined;
+  let frameButton: HTMLButtonElement | undefined;
+  if (recordable) {
+    recordSwitch = document.createElement("button");
+    recordSwitch.type = "button";
+    recordSwitch.className = "ci-switch";
+    recordSwitch.setAttribute("role", "switch");
+    recordSwitch.innerHTML =
+      '<span class="ci-switch-track"><span class="ci-switch-knob"></span></span><span>Record every tick to a CSV</span>';
+    frameButton = document.createElement("button");
+    frameButton.type = "button";
+    frameButton.className = "ci-button";
+    frameButton.textContent = "Save the next tick's image";
+    recordNote = document.createElement("div");
+    recordNote.className = "ci-note ci-record-note";
+    recordBody.append(recordSwitch, frameButton, recordNote);
+    recordSwitch.addEventListener("click", () => {
+      if (recordable.active) {
+        recordable.stop();
+      } else {
+        recordable.start();
+      }
+      refreshRecord();
+    });
+    frameButton.addEventListener("click", () => {
+      recordable.captureNext();
+      refreshRecord();
+    });
+  }
+  function refreshRecord(): void {
+    if (!recordable || !recordSwitch || !frameButton || !recordNote) {
+      return;
+    }
+    const on = recordable.active;
+    const st = recordable.status();
+    recordSwitch.setAttribute("aria-checked", String(on));
+    frameButton.disabled = !on;
+    recordNote.textContent = st.error
+      ? `The dev server refused it: ${st.error}`
+      : on || st.rows > 0
+        ? `${on ? "Recording" : "Stopped"}: ${st.rows} rows, ${st.frames} images${st.file ? ` in ${st.file}` : ""}. Follow it with tail -F ~/.cesium-bench/inspector/latest.csv.`
+        : "Writes one row per tick, and each GPU time under the tick it belongs to, through the dev server.";
+    recordNote.classList.toggle("ci-warn", !!st.error);
+  }
+  refreshRecord();
   root.append(header, body);
   element.append(root);
 
@@ -386,6 +437,9 @@ export function attachInspector(
     lastAt = now;
 
     summary.innerHTML = summaryLine(snap, expanded);
+    if (recordable?.active || expanded) {
+      refreshRecord();
+    }
     root.dataset.state = snap.state;
     const error = snap.problems?.errors[0];
     if (error !== undefined && error !== shownError) {
@@ -1174,6 +1228,29 @@ const CSS = `
 .cesium-inspector .ci-problems li { color: var(--ci-text); margin-bottom: 4px; }
 .cesium-inspector .ci-problems strong { color: var(--ci-warning); margin-inline-end: 4px; }
 .cesium-inspector .ci-problems li.error strong { color: var(--ci-bad); }
+.cesium-inspector .ci-switch {
+  all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 8px;
+  cursor: pointer; color: var(--ci-strong); padding: 2px 0;
+}
+.cesium-inspector .ci-switch:focus-visible, .cesium-inspector .ci-button:focus-visible { outline: 2px solid var(--ci-series-1); outline-offset: 2px; }
+.cesium-inspector .ci-switch-track {
+  position: relative; inline-size: 28px; block-size: 16px; flex: none;
+  border-radius: 8px; background: var(--ci-grid); border: 1px solid var(--ci-border);
+}
+.cesium-inspector .ci-switch-knob {
+  position: absolute; inset: 2px auto 2px 2px; inline-size: 10px; border-radius: 50%;
+  background: var(--ci-muted); transition: transform 0.12s ease, background 0.12s ease;
+}
+.cesium-inspector .ci-switch[aria-checked="true"] .ci-switch-track { background: rgba(239, 108, 90, 0.25); border-color: var(--ci-bad); }
+.cesium-inspector .ci-switch[aria-checked="true"] .ci-switch-knob { transform: translateX(12px); background: var(--ci-bad); }
+.cesium-inspector .ci-button {
+  all: unset; box-sizing: border-box; margin: 6px 0 4px; padding: 3px 8px; cursor: pointer;
+  border: 1px solid var(--ci-border); border-radius: 4px; color: var(--ci-strong); font-size: 11px;
+}
+.cesium-inspector .ci-button:hover:not(:disabled) { border-color: var(--ci-muted); }
+.cesium-inspector .ci-button:disabled { opacity: 0.45; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .cesium-inspector .ci-switch-knob { transition: none; } }
+.cesium-inspector .ci-record-note { margin-top: 4px; word-break: break-word; }
 .cesium-inspector .ci-pick-name { color: var(--ci-strong); font-weight: 600; }
 .cesium-inspector .ci-props { border-collapse: collapse; margin-top: 4px; inline-size: 100%; }
 .cesium-inspector .ci-props th { text-align: left; font-weight: normal; color: var(--ci-muted); padding: 1px 8px 1px 0; vertical-align: top; }

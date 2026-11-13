@@ -63,6 +63,7 @@ export class GpuTimer {
     GPUBuffer,
     {
       count: number;
+      tag: number;
       /** Each pass's label index, as of `afterSubmit`. */
       labels: Uint8Array;
       mapped: () => void;
@@ -80,6 +81,18 @@ export class GpuTimer {
   private readonly writes: GPUComputePassTimestampWrites[] = [];
   private pending?: GPUBuffer;
   private nextIndex = 0;
+  /**
+   * What the next measured frame is tagged with (the engine's tick index):
+   * the recorder files its late result under the tick it belongs to.
+   */
+  tag = 0;
+  /** The latest measured frame, unsmoothed (a recorder's; `samples` counts them). */
+  readonly lastSample: {
+    tag: number;
+    ms: number;
+    passes: Record<string, number>;
+  } = { tag: 0, ms: Number.NaN, passes: {} };
+  samples = 0;
 
   constructor(private readonly device: GPUDevice) {
     if (!device.features.has("timestamp-query")) {
@@ -100,6 +113,7 @@ export class GpuTimer {
       this.idle.push(buffer);
       this.handlers.set(buffer, {
         count: 0,
+        tag: 0,
         labels: new Uint8Array(GpuTimer.maxPasses),
         mapped: () => this.onMapped(buffer),
         failed: () => this.idle.push(buffer),
@@ -192,6 +206,7 @@ export class GpuTimer {
     }
     const handler = this.handlers.get(buffer)!;
     handler.count = count;
+    handler.tag = this.tag;
     handler.labels.set(this.frameLabels);
     void buffer
       .mapAsync(GPUMapMode.READ, 0, count * 8)
@@ -199,7 +214,7 @@ export class GpuTimer {
   }
 
   private onMapped(buffer: GPUBuffer): void {
-    const { count, labels } = this.handlers.get(buffer)!;
+    const { count, labels, tag } = this.handlers.get(buffer)!;
     const words = new Uint32Array(buffer.getMappedRange(0, count * 8));
     const order: number[] = [];
     for (let i = 0; i < count / 2; i++) {
@@ -211,6 +226,15 @@ export class GpuTimer {
     buffer.unmap();
     this.idle.push(buffer);
     this.order = mergeOrder(this.order, order);
+    const sample = this.lastSample;
+    sample.tag = tag;
+    sample.ms = times.total / 1e6;
+    sample.passes = {};
+    const names = [...this.labelIndex.keys()];
+    for (const i of order) {
+      sample.passes[names[i]!] = times.perLabel[i]! / 1e6;
+    }
+    this.samples++;
     this.milliseconds = smooth(this.milliseconds, times.total / 1e6);
     for (let i = 0; i < this.labelIndex.size; i++) {
       this.labelMs[i] = smooth(this.labelMs[i]!, times.perLabel[i]! / 1e6);

@@ -915,3 +915,13 @@ options)` builds two-vector reference frames, adds them to the catalog as
   computer's zone. `placeZone(place, lookup)` gives a civil zone through an
   application's `ZoneLookup`, else solar time, labelled so. The time controls
   use it: with `zoneLookup` they offer and open on the place's civil zone.
+
+## Recording the inspector's numbers
+
+For performance debugging without reading the panel: the dev server can write the inspector's numbers to a CSV, one row per engine tick, for a coding agent to `tail`. Development only; builds contain neither the recorder nor the endpoint.
+
+Start it with `record` in the page's URL (`#/examples/transform-graph?scene=exaggeration&record`) or the Record switch in the inspector. Rows are posted every 500 ms to `/__record` and appended to `~/.cesium-bench/inspector/<start>-<page>.csv` (`INSPECTOR_RECORD_DIR` moves it). `latest.csv` there points at the newest file: `tail -F ~/.cesium-bench/inspector/latest.csv`.
+
+Columns (`widgets/recorderRows.ts`): `kind` (`tick` or `gpu`), `t_ms`, `tick`, `state` (rendering or idle), `why` (what ran the tick, joined by `+`: camera, global, requested, uniforms, tiles, world, pick, wake, animation, continuous, loading), `cpu_ms`, `gpu_ms`, `views`, `drawn`, `known`, `in_flight`, `upload_queue`, `requests`, `bytes_received`, `cancelled`, `evicted`, `cache_mb`, `max_sse`, `occ_queries`, `occ_hidden`, `occ_flips`, `passes`, `frame`. GPU times arrive a few ticks late, so each is its own `gpu` row, filed under the tick that drew it, with every pass as `name=ms` in `passes`.
+
+Images: `&frames=every:10` or `&frames=at:120,240` saves the view's final image as `<start>-<page>/frame-<tick>.png` beside the CSV (the row's `frame` is 1); the inspector's "Save the next tick's image" does one on demand.

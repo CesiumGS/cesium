@@ -143,7 +143,50 @@ export interface FrameStats {
   idle: boolean;
   /** Environments rebuilt from an atmosphere since start (`ViewLighting`). */
   environmentBuilds: number;
+  /** Ticks the loop has run since start (`start`), rendering or not. */
+  tick: number;
+  /** The last render's main-thread time, ms, unsmoothed (`cpuMs` is smoothed). */
+  lastCpuMs: number;
+  /**
+   * Why the last tick ran, as `TICK_REASONS` bits: what woke the loop and
+   * what the tick found to do. A recorder's (`widgets/recorder.ts`).
+   */
+  tickReasons: number;
 }
+
+/**
+ * The bits of `FrameStats.tickReasons`, by name. A tick that rendered shows
+ * what changed (`camera` to `world`); every tick shows why it ran at all
+ * (`wake` to `loading`).
+ */
+export const TICK_REASONS = [
+  "camera", // a view's fingerprint changed: camera, viewport, lighting...
+  "global", // the sun, or the set of enabled views, changed
+  "requested", // `requestRender`
+  "uniforms", // a custom shader's uniform or texture changed
+  "tiles", // a tileset is selecting or streaming
+  "world", // a world's draws changed what a view sees
+  "pick", // a pick waiting for a frame
+  "wake", // `wake()` outside a tick: a watcher, a load ended, an upload
+  "animation", // a tick listener or the camera layer is still moving something
+  "continuous", // the render mode draws every animation frame
+  "loading", // content still loading or settling, clamping busy
+] as const;
+
+/** `FrameStats.tickReasons` bits, by their place in `TICK_REASONS`. */
+const bit = (name: (typeof TICK_REASONS)[number]): number =>
+  1 << TICK_REASONS.indexOf(name);
+const REASON_CAMERA = bit("camera");
+const REASON_GLOBAL = bit("global");
+const REASON_REQUESTED = bit("requested");
+const REASON_UNIFORMS = bit("uniforms");
+const REASON_TILES = bit("tiles");
+const REASON_WORLD = bit("world");
+const REASON_PICK = bit("pick");
+const REASON_WAKE = bit("wake");
+const REASON_ANIMATION = bit("animation");
+const REASON_CONTINUOUS = bit("continuous");
+const REASON_LOADING = bit("loading");
 
 /** Values in one view's on-demand fingerprint (see `viewChanged`). */
 const VIEW_KEY_LENGTH = 30;
@@ -337,6 +380,9 @@ export class Engine {
     rejectedFrames: 0,
     idle: false,
     environmentBuilds: 0,
+    tick: 0,
+    lastCpuMs: 0,
+    tickReasons: 0,
   };
   /**
    * Smoothed GPU time per pass, ms, by pass name (shadow cascades added
@@ -344,6 +390,41 @@ export class Engine {
    */
   get gpuPasses(): Record<string, number> {
     return this.raster.timer.passes;
+  }
+  /**
+   * What occlusion feedback has answered, over the views, since start:
+   * boxes asked about, verdicts changed, and boxes the latest results found
+   * hidden. A recorder's.
+   */
+  get occlusionStats(): { queries: number; flips: number; hidden: number } {
+    let queries = 0;
+    let flips = 0;
+    let hidden = 0;
+    for (const view of this.views) {
+      queries += view.occlusionState.queries;
+      flips += view.occlusionState.flips;
+      hidden += view.occlusionState.hidden;
+    }
+    return { queries, flips, hidden };
+  }
+  /**
+   * The latest measured render's GPU time and its passes' (ms, unsmoothed),
+   * the `FrameStats.tick` it belongs to (a result arrives a few ticks late),
+   * and how many results have arrived: a recorder's.
+   */
+  get gpuSample(): {
+    samples: number;
+    tick: number;
+    ms: number;
+    passes: Readonly<Record<string, number>>;
+  } {
+    const t = this.raster.timer;
+    return {
+      samples: t.samples,
+      tick: t.lastSample.tag,
+      ms: t.lastSample.ms,
+      passes: t.lastSample.passes,
+    };
   }
   /**
    * "onDemand" (default): `start()` renders a frame only when something
@@ -455,6 +536,8 @@ export class Engine {
   private wokenInTick = false;
   /** A listener added inside the frame: the next frame runs it. */
   private listenerAdded = false;
+  /** Why the coming tick runs (`FrameStats.tickReasons`), collected until it does. */
+  private reasons = 0;
   private readonly tickListeners: Array<(now: number) => boolean> = [];
   private readonly afterTickListeners: Array<(now: number) => void> = [];
   /** Per view: what stops watching its camera and canvas (`addView`). */
@@ -1302,6 +1385,7 @@ export class Engine {
       this.wokenInTick = true;
       return;
     }
+    this.reasons |= REASON_WAKE;
     this.schedule();
   }
 
@@ -1417,6 +1501,9 @@ export class Engine {
     if (!this.running) {
       return;
     }
+    this.stats.tick++;
+    this.stats.tickReasons = this.reasons;
+    this.reasons = 0;
     let busy = false;
     let failed = false;
     this.ticking = true;
@@ -1480,6 +1567,8 @@ export class Engine {
       return;
     }
     if (busy || this.renderMode_ === "continuous" || this.needsTicks()) {
+      this.reasons |= busy ? REASON_ANIMATION : 0;
+      this.reasons |= this.renderMode_ === "continuous" ? REASON_CONTINUOUS : 0;
       this.schedule();
     } else {
       this.stats.idle = true; // asleep: nothing more to render
@@ -1646,25 +1735,33 @@ export class Engine {
    */
   private needsTicks(): boolean {
     if (this.wokenInTick) {
+      this.reasons |= REASON_WAKE;
       return true; // woken during the tick, perhaps after it read the change
     }
     const views = this.views;
     for (let i = 0; i < views.length; i++) {
       const view = views[i]!;
-      if (
-        view.enabled &&
-        (this.scene.renderRequested || view.pendingPicks.length > 0)
-      ) {
+      if (view.enabled && this.scene.renderRequested) {
+        this.reasons |= REASON_REQUESTED;
+        return true;
+      }
+      if (view.enabled && view.pendingPicks.length > 0) {
+        this.reasons |= REASON_PICK;
         return true;
       }
     }
     const tilesets = this.tilesets;
     for (let i = 0; i < tilesets.length; i++) {
       if (tilesets[i]!.needsFrames) {
+        this.reasons |= REASON_LOADING;
         return true;
       }
     }
-    return this.clamping.busy;
+    if (this.clamping.busy) {
+      this.reasons |= REASON_LOADING;
+      return true;
+    }
+    return false;
   }
 
   private tick(): void {
@@ -1686,7 +1783,12 @@ export class Engine {
     // with none changed are skipped and keep their last image.
     // A custom shader's uniform or texture changed: everything may show it.
     const uniforms = this.ctx.shaderBindings.flush();
-    const all = this.globalChanged() || this.scene.renderRequested || uniforms;
+    const globalMoved = this.globalChanged();
+    const all = globalMoved || this.scene.renderRequested || uniforms;
+    const why = this.stats;
+    why.tickReasons |= globalMoved ? REASON_GLOBAL : 0;
+    why.tickReasons |= this.scene.renderRequested ? REASON_REQUESTED : 0;
+    why.tickReasons |= uniforms ? REASON_UNIFORMS : 0;
     const dirty = this.dirtyTargets;
     const dirtyViews = this.dirtyViews;
     dirty.clear();
@@ -1700,6 +1802,12 @@ export class Engine {
       }
       const changed = this.viewChanged(view);
       moved ||= changed;
+      why.tickReasons |= changed ? REASON_CAMERA : 0;
+      why.tickReasons |=
+        view.pendingPicks.length > 0 &&
+        !this.raster.viewFrames.get(view)?.rendered
+          ? REASON_PICK
+          : 0;
       // A pick renders a frame only when the view has no last frame to
       // read it from (see `serveIdlePick`).
       if (
@@ -1714,7 +1822,11 @@ export class Engine {
     }
     // Selection runs when a camera moved or content streams; a frame then
     // renders only for the views that can see what changed.
-    updateTilesets(this, (tileset) => all || moved || tileset.active);
+    updateTilesets(this, (tileset) => {
+      const streaming = tileset.active;
+      why.tickReasons |= streaming ? REASON_TILES : 0;
+      return all || moved || streaming;
+    });
     // Tiles just placed are fitted before they draw (held hidden until then).
     if (this.warpTick(this.warpBudgetMs)) {
       this.wake();
@@ -1725,6 +1837,7 @@ export class Engine {
         view.enabled &&
         (view.world.changedViews & this.viewBit(view)) !== 0
       ) {
+        why.tickReasons |= REASON_WORLD;
         dirty.add(view.target);
         dirtyViews.add(view);
       }
