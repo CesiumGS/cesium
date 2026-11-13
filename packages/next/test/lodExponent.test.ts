@@ -116,15 +116,22 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function exaggerated(factor: number) {
+function exaggerated(factor: number, scaleValue?: number) {
   const world = engine.createWorld({ maxDraws: 8 });
   worlds.push(world);
+  const parameter =
+    scaleValue === undefined
+      ? undefined
+      : world.createPlacementParameter(scaleValue, { range: [0, 1] });
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const itrf = catalog.get("ITRF");
   const frame = smoothFrame(
     "exaggerated",
     itrf,
-    verticalExaggeration({ factor }),
+    verticalExaggeration({
+      factor,
+      ...(parameter && { scale: parameter }),
+    }),
   );
   catalog.add(frame);
   const resolver = createFramesResolver(catalog);
@@ -145,7 +152,17 @@ function exaggerated(factor: number) {
       throw new Error(m);
     },
   );
-  return { world, view, earth };
+  const step = () => {
+    engine.cameras.update();
+    world.warps.frame(
+      [{ id: engine.scene.viewIds.get(view)!, routes: view.anchorRoutes() }],
+      Infinity,
+      (m) => {
+        throw new Error(m);
+      },
+    );
+  };
+  return { world, view, earth, parameter, step };
 }
 
 describe("the plain height scale's slopeMax", () => {
@@ -211,5 +228,34 @@ describe("upsampled tiles carry no stretch", () => {
     expect(
       terrainDrawnError(data, d, beside, 100, geometryRefines(data) ? 1 : 0),
     ).toBeGreaterThan(900);
+  });
+});
+
+describe("the closed-form range takes the scale's exact value", () => {
+  it("is exact at the current multiplier, and the drawn volume is made again for a move inside a bucket", () => {
+    const { world, earth, parameter, step } = exaggerated(10, 0.9);
+    const warp = world.tileWarp(earth)!;
+    const region = regionFromJson([
+      LON - 0.001,
+      LAT - 0.001,
+      LON + 0.001,
+      LAT + 0.001,
+      1796,
+      1819,
+    ]);
+    const t = {
+      volume: { kind: "region", region, sphere: sphereFromObb(region.obb) },
+    } as unknown as Tile;
+    const k1 = 1 + 0.9 * 9;
+    expect(warp.heightRange!(1796, 1819).min).toBeCloseTo(1796 * k1, 6);
+    expect(drawnTile(t, warp).slopeMax).toBeCloseTo(k1, 9);
+    const version = warp.scaleVersion;
+    parameter!.value = 0.9005;
+    step();
+    const again = world.tileWarp(earth)!;
+    const k2 = 1 + 0.9005 * 9;
+    expect(again.scaleVersion).toBeGreaterThan(version!);
+    expect(again.heightRange!(1796, 1819).min).toBeCloseTo(1796 * k2, 6);
+    expect(drawnTile(t, again).slopeMax).toBeCloseTo(k2, 9);
   });
 });
