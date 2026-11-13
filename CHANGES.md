@@ -33,6 +33,7 @@
 - Fixed the page hanging, or polylines being drawn with the wrong translucency, when the color of polylines with different depth fail materials changed between opaque and translucent. [#13952](https://github.com/CesiumGS/cesium/issues/13952)
 - Fixed slow loading of models and tilesets using the `CESIUM_primitive_outline` extension, and reduced the size of their outline vertex buffers. [#12084](https://github.com/CesiumGS/cesium/pull/12084)
 - Fixed `Scene.pickVoxel` returning the wrong cell for tiles with more than 65,280 samples, and returning a cell when no voxel sample was rendered at the pick position. [#13950](https://github.com/CesiumGS/cesium/issues/13950)
+- Fixed a crash in `ImageryLayer` when computing tile imagery skeletons for rectangles that do not intersect the imagery provider's bounds. [#13964](https://github.com/CesiumGS/cesium/pull/13694)
 
 ## 1.147 - 2026-11-02
 
