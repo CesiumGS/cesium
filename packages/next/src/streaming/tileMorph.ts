@@ -3,8 +3,7 @@
 //
 // A terrain tile carries the surface height of its nearest drawn ancestor
 // (the parent, unless selection skipped levels) at each vertex
-// (`HEIGHT_MORPH_ATTRIBUTE`), or, where no terrain was drawn above it yet,
-// height 0: the first terrain rises from the bare ellipsoid. From the time its draw record says (the draw
+// (`HEIGHT_MORPH_ATTRIBUTE`). From the time its draw record says (the draw
 // constants' `morph` word, set here through `DrawSink.setDrawMorph`), the
 // vertex stage moves each vertex from that height to its own over
 // `MORPH_SECONDS`. Selection and loading are not involved: the tile is
@@ -89,9 +88,7 @@ export function startMorphs(
       tile.globe?.morphs &&
       tile.placement &&
       morphing(tile) &&
-      // From an ancestor, it must have been on screen; from the bare
-      // ellipsoid, no terrain may have covered it since.
-      ancestorDrawn(tile) !== (tile.globe.morphsFromEllipsoid === true)
+      ancestorDrawn(tile)
     ) {
       tile.morphStart = nowMs;
       tileset.state.morphs.set(tile, nowMs + MORPH_SECONDS * 1000);
