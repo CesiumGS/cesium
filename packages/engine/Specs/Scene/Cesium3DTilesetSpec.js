@@ -51,6 +51,7 @@ import {
   ResourceCache,
   TileBoundingRegion,
   TileOrientedBoundingBox,
+  VectorGltf3DTileContent,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -6300,6 +6301,123 @@ describe(
         expect(tilesetMetadata.getProperty("tileCount")).toBe(
           tilesetProperties.tileCount,
         );
+      });
+
+      describe("featureLayers", function () {
+        const tilesetWithLayersUrl =
+          "Data/Cesium3DTiles/Metadata/Layers/tileset.json";
+
+        it("creates a layer per group", async function () {
+          const tileset = await Cesium3DTilesTester.loadTileset(
+            scene,
+            tilesetWithLayersUrl,
+          );
+          const layers = tileset.featureLayers;
+          const groups = tileset.metadataExtension.groups;
+          expect(layers.length).toBe(2);
+          expect(layers.get(0).name).toBe("Layer A");
+          expect(layers.get(0).metadata).toBe(groups[0]);
+          expect(layers.get(0).index).toBe(0);
+          expect(layers.get(0).show).toBe(true);
+          expect(layers.get(1).name).toBe("Layer B");
+          expect(layers.getByName("Layer B")).toEqual([layers.get(1)]);
+          expect(layers.getByName("Missing")).toEqual([]);
+          expect(layers.contains(layers.get(1))).toBe(true);
+          expect(layers.contains(undefined)).toBe(false);
+        });
+
+        it("has no layers without groups", async function () {
+          const tileset = await Cesium3DTilesTester.loadTileset(
+            scene,
+            tilesetUrl,
+          );
+          expect(tileset.featureLayers.length).toBe(0);
+        });
+
+        it("does not load hidden layers until shown", async function () {
+          const tileset = await Cesium3DTileset.fromUrl(tilesetWithLayersUrl);
+          tileset.featureLayers.getByName("Layer B")[0].show = false;
+          scene.primitives.add(tileset);
+          await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+          const [tileA, tileB] = tileset.root.children;
+          expect(tileA.children.length).toBe(1);
+          expect(tileA.children[0].contentReady).toBe(true);
+          expect(tileB.contentUnloaded).toBe(true);
+          expect(tileB.children.length).toBe(0);
+
+          tileset.featureLayers.get(1).show = true;
+          await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+          expect(tileB.children.length).toBe(1);
+          expect(tileB.children[0].contentReady).toBe(true);
+        });
+
+        it("stops rendering a layer when hidden", async function () {
+          const tileset = await Cesium3DTilesTester.loadTileset(
+            scene,
+            tilesetWithLayersUrl,
+          );
+          const contentA = tileset.root.children[0].children[0].content;
+          const contentB = tileset.root.children[1].children[0].content;
+          expect(tileset._selectedTiles.map((t) => t.content)).toContain(
+            contentB,
+          );
+
+          tileset.featureLayers.get(1).show = false;
+          scene.renderForSpecs();
+          const selected = tileset._selectedTiles.map((t) => t.content);
+          expect(selected).toContain(contentA);
+          expect(selected).not.toContain(contentB);
+        });
+
+        it("gives features the layer of the tile referencing their external tileset", async function () {
+          const tileset = await Cesium3DTilesTester.loadTileset(
+            scene,
+            tilesetWithLayersUrl,
+          );
+          const [tileA, tileB] = tileset.root.children;
+          const layers = tileset.featureLayers;
+          const featureA = tileA.children[0].content.getFeature(0);
+          const featureB = tileB.children[0].content.getFeature(0);
+          expect(featureA.featureLayer).toBe(layers.get(0));
+          expect(featureB.featureLayer).toBe(layers.get(1));
+        });
+
+        it("gives features of ungrouped child tiles their parent's layer", async function () {
+          const tileset = await Cesium3DTilesTester.loadTileset(
+            scene,
+            tilesetWithLayersUrl,
+          );
+          const layer = tileset.featureLayers.get(0);
+          const groupedModel = tileset.root.children[2];
+          const child = groupedModel.children[0];
+          expect(groupedModel.content.getFeature(0).featureLayer).toBe(layer);
+          expect(child.content.getFeature(0).featureLayer).toBe(layer);
+        });
+
+        it("gives features the parent's layer over their own group", async function () {
+          const tileset = await Cesium3DTilesTester.loadTileset(
+            scene,
+            tilesetWithLayersUrl,
+          );
+          const groupedChild = tileset.root.children[2].children[1];
+          expect(groupedChild.content.getFeature(0).featureLayer).toBe(
+            tileset.featureLayers.get(0),
+          );
+        });
+
+        it("gives GeoJSON vector features their layer", async function () {
+          const tileset = await Cesium3DTilesTester.loadTileset(
+            scene,
+            "Data/Cesium3DTiles/Metadata/Layers/geojson.json",
+            { vectorGeoJson: true },
+          );
+          const content = tileset.root.content;
+          expect(content).toBeInstanceOf(VectorGltf3DTileContent);
+          expect(content.getFeature(0, 0).featureLayer).toBe(
+            tileset.featureLayers.get(0),
+          );
+        });
       });
 
       it("loads group metadata", async function () {
