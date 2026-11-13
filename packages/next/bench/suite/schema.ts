@@ -306,6 +306,12 @@ export interface RunMetrics {
    * Only recorded: nothing keeps the versions apart yet.
    */
   uploadPacing?: number;
+  /**
+   * Which occlusion feedback selection ran with (src/streaming/occlusion.ts
+   * `OCCLUSION_FEEDBACK_VERSION`): absent, none; 1, tile boxes against the
+   * view's own depth pyramid. Only recorded.
+   */
+  occlusionFeedback?: number;
   /** `gpuP50` of an older timer, kept apart at reading (gpuTimer.mjs). */
   gpuSummedP50?: number;
   /** Long animation frames (over 50 ms) and the worst blocking time, ms. */

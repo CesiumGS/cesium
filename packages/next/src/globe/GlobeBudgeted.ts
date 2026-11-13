@@ -130,6 +130,7 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
       tile.globe &&
       state.visible &&
       state.sse > this.memoryAdjustedScreenSpaceError &&
+      !view.occlusion?.occluded(state) &&
       this.imageryRefines?.(tile) === true
     ) {
       this.source.upsampleContent(tile);

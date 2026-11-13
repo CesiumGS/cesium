@@ -18,9 +18,10 @@ import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
 import {
   LISTS_PER_VIEW,
+  MAX_QUERIES,
+  QUERY_FLOATS,
   type OcclusionQueries,
 } from "../../scene/occlusionFeedback.ts";
-import { MAX_QUERIES, QUERY_FLOATS } from "../../streaming/occlusion.ts";
 import {
   OCCLUSION_BIAS,
   pyramidShape,

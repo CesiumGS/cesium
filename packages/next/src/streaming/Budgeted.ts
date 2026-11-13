@@ -96,6 +96,11 @@ export interface BudgetedOptions extends StepwiseOptions {
 const BASE = 0;
 const INTERMEDIATE = 1e11;
 const FRONTIER = 1e12;
+/**
+ * Frontier tiles the view's own depth hides (`ViewOcclusion`): after every
+ * visible request, before content outside the view.
+ */
+const OCCLUDED = 5e12;
 /** Content outside the view, after everything visible. */
 const PREFETCH = 1e13;
 /** Shadow casters off screen, after everything else. */
@@ -268,6 +273,22 @@ export class BudgetedSelection extends StepwiseSelection {
         ask(tile);
       }
     }
+  }
+
+  /**
+   * Whether the view's depth has hidden the tile's box for long enough that
+   * it needn't refine. Only a tile with content of its own, which then stays
+   * drawn (an empty tile has nothing to draw in place of what is below it),
+   * and not where nothing is loaded or requested above it yet (`levels` is
+   * NONE): a region with nothing drawn waits for what it has.
+   */
+  protected occluded(tile: Tile, view: SelectionView, levels: number): boolean {
+    return (
+      tile.renderable &&
+      levels !== NONE &&
+      view.occlusion !== undefined &&
+      view.occlusion.occluded(tile.viewState(view.id))
+    );
   }
 
   get castsShadows(): boolean {
@@ -569,16 +590,35 @@ export class BudgetedSelection extends StepwiseSelection {
     // An expanded external tileset always refines (its root is its only
     // child); an empty tile only when its error is visible, as in 1.x: an
     // empty tile that meets the SSE means nothing below needs drawing.
-    const refine =
-      tile.children.length > 0 &&
-      ((tile.external && !tile.renderable) ||
+    // A tile the view's depth hides stops refining, and is drawn all the
+    // same (what it draws stays: a stale result can only delay detail).
+    const occluded = this.occluded(tile, view, levels);
+    const forced =
+      tile.children.length > 0 && tile.external && !tile.renderable;
+    const wanted =
+      forced ||
+      (tile.children.length > 0 &&
         state.sse > this.memoryAdjustedScreenSpaceError);
+    const refine = forced || (wanted && !occluded);
+    if (wanted && !refine) {
+      // Its children's loads in flight go on.
+      for (const child of tile.children) {
+        if (child.state === "loading") {
+          result.touched.push(child);
+        }
+      }
+    }
 
     if (!refine) {
       // Frontier tile.
       if (own === undefined) {
         if (this.worthLoading(tile, view)) {
-          this.request(tile, FRONTIER + group, state.distance * 1e-3, result);
+          this.request(
+            tile,
+            (occluded ? OCCLUDED : FRONTIER) + group,
+            state.distance * 1e-3,
+            result,
+          );
         }
         // Zooming out: finer content still resident keeps drawing until
         // this tile arrives.

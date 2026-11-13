@@ -18,6 +18,8 @@ import type { Tile, TileViewState } from "../streaming/Tile.ts";
 import { volumeObb, type TileVolume } from "../streaming/volumes.ts";
 import type { Vec3 } from "../math/vec3.ts";
 
+export { MAX_QUERIES, QUERY_FLOATS };
+
 /** Lists in the pool: one being built, others awaiting their readbacks. */
 export const LISTS_PER_VIEW = 3;
 
