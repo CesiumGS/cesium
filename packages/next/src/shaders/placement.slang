@@ -168,7 +168,7 @@ float3 latticeDisplacement(uint body, uint cells, float3 p, out float3x3 jacobia
 // derivative in space, so its Jacobian is zero: the point's own is the
 // identity (`Placed.jacobian`), and a normal is not turned by it. A lattice
 // also gives its clip field's value into `clip` (0 for an attribute).
-float3 termDisplacement(uint4 head, uint block, float3 p, uint vertexIndex, uint directory, uint feature,
+float3 termDisplacement(uint4 head, uint block, float3 p, uint vertexIndex, uint directory, uint feature, float4 morph,
                         out float3x3 jacobian, out float clip) {
   if ((head.x & 255u) == WARP_LATTICE) {
     return latticeDisplacement(block + head.z, head.w, p, jacobian, clip);
@@ -181,10 +181,11 @@ float3 termDisplacement(uint4 head, uint block, float3 p, uint vertexIndex, uint
   if ((head.x & 255u) == WARP_PROFILE) {
     float4 up = placementAttribute(directory, head.z, vertexIndex, feature);
     float4 profile = placementRow(block + head.w);
-    return exaggerationLift(up.w, profile.x, profile.y, profile.z) * up.xyz;
+    // A tile morphing in (`morph`, below) lifts the height it is at now.
+    return exaggerationLift(up.w + morph.w, profile.x, profile.y, profile.z) * up.xyz;
   }
   float3 other = placementAttribute(directory, head.z, vertexIndex, feature).xyz;
-  return head.w != 0u ? other - p : other;
+  return head.w != 0u ? other - p : other + morph.xyz;
 }
 
 // Where a placement puts a vertex, and how it turns its surface.
@@ -204,7 +205,12 @@ public struct Placed {
 // (`turnNormal`). Without a placement: the position as it is, and the
 // identity. `clip` is the block's first lattice's scalar (not weighted: a
 // lattice that only carries it has weight 0).
-public Placed placeVertex(uint placement, float3 positionMC, uint vertexIndex, uint directory, uint feature) {
+//
+// `morph` is a terrain tile's geomorph (surface.slang `morphOf`): its xyz the
+// vertex's move so far along the normal, in metres, and w the change of its
+// height. The caller has moved `positionMC` by xyz; an h·n̂ term adds xyz to
+// its attribute, a profile term lifts the height plus w. Zero: no morph.
+public Placed placeVertex(uint placement, float3 positionMC, uint vertexIndex, uint directory, uint feature, float4 morph) {
   Placed placed;
   placed.position = positionMC;
   placed.jacobian = IDENTITY_JACOBIAN;
@@ -222,7 +228,7 @@ public Placed placeVertex(uint placement, float3 positionMC, uint vertexIndex, u
     float w = termWeight(row, head);
     float3x3 jd;
     float clip;
-    d += w * termDisplacement(head, placement, positionMC, vertexIndex, directory, feature, jd, clip);
+    d += w * termDisplacement(head, placement, positionMC, vertexIndex, directory, feature, morph, jd, clip);
     j += w * jd;
     if (!clipTaken && (head.x & 255u) == WARP_LATTICE) {
       placed.clip = clip;
@@ -236,7 +242,7 @@ public Placed placeVertex(uint placement, float3 positionMC, uint vertexIndex, u
 
 // `placeVertex`'s position alone.
 public float3 placePosition(uint placement, float3 positionMC, uint vertexIndex, uint directory, uint feature) {
-  return placeVertex(placement, positionMC, vertexIndex, directory, feature).position;
+  return placeVertex(placement, positionMC, vertexIndex, directory, feature, float4(0.0)).position;
 }
 
 // A normal `n` turned by a placement's Jacobian `j`: the cofactor matrix

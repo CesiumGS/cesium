@@ -82,6 +82,12 @@ export type TerrainLoader = (
      */
     heightNormal?: HeightNormalMode;
     /**
+     * The tile also carries its parent's surface height at each vertex
+     * (`HEIGHT_MORPH_ATTRIBUTE`), from the parent's `heights` over this
+     * tile's quadrant (`qx`, `qy` from the south-west): geomorphing.
+     */
+    morph?: { heights: TerrainHeights; qx: number; qy: number };
+    /**
      * A tile below the last level with data: clipped from the nearest tile
      * with data, over `rect`, from its `heights`, or, once they have left
      * the cache, from its content at `url`.
@@ -125,6 +131,8 @@ export interface GlobeTile extends Address {
   metadata: boolean;
   /** Its surface for height queries, while its content is loaded. */
   heights?: TerrainHeights;
+  /** Its mesh carries its parent's height per vertex (`HEIGHT_MORPH_ATTRIBUTE`): it can morph in. */
+  morphs?: boolean;
   /**
    * A quadrant without data that 1.x would have upsampled by now: it was
    * queued for loading (culled quadrants never are). Globe `Stepwise`.
@@ -185,6 +193,13 @@ export class TerrainSource {
    * is a height-scale warp (scene/world/warps.ts).
    */
   wantsHeightNormal?: () => boolean | "profile";
+  /**
+   * Whether tiles loaded now carry their parent's height per vertex
+   * (`HEIGHT_MORPH_ATTRIBUTE`), for geomorphing: set by the engine from its
+   * views' `lodTransitions`. A tile whose parent is not resident when it
+   * decodes, or that is upsampled, carries none and does not morph.
+   */
+  wantsMorph?: () => boolean;
 
   private constructor(
     readonly url: string,
@@ -582,6 +597,7 @@ export class TerrainSource {
         rect: rectangle(a),
         skirtHeight,
         ...heightNormalRequest(this.wantsHeightNormal?.()),
+        ...this.morphRequest(tile, a, data !== undefined),
         ...(data
           ? {
               upsample: {
@@ -599,7 +615,33 @@ export class TerrainSource {
     return asset;
   }
 
+  /** The parent's surface for the tile's geomorphing, when wanted and resident. */
+  private morphRequest(
+    tile: Tile,
+    a: GlobeTile,
+    upsampled: boolean,
+  ): { morph?: { heights: TerrainHeights; qx: number; qy: number } } {
+    const parent = tile.parent?.globe;
+    if (
+      upsampled ||
+      this.flat ||
+      !parent?.heights ||
+      parent.upsampledFrom ||
+      !this.wantsMorph?.()
+    ) {
+      return {};
+    }
+    return {
+      morph: {
+        heights: parent.heights,
+        qx: a.x - 2 * parent.x,
+        qy: a.y - 2 * parent.y,
+      },
+    };
+  }
+
   private loaded(tile: Tile, g: GlobeTile, info: TerrainTileInfo): void {
+    g.morphs = info.morphs === true;
     if (info.available) {
       info.available.forEach((r, i) => this.addRanges(g.level + 1 + i, r));
       g.metadata = true;

@@ -33,7 +33,7 @@ export const ViewLayout = {
 
 /** `DrawRecord` as `records` holds it: byte offsets. */
 export const DrawRecordLayout = {
-  size: 160,
+  size: 176,
   align: 16,
   center: 0,
   radius: 12,
@@ -70,6 +70,7 @@ export const DrawRecordLayout = {
   skirtStart: 148,
   casterMask: 152,
   debug: 156,
+  morph: 160,
 } as const;
 
 /** `Transform` as `transforms` holds it: byte offsets. */

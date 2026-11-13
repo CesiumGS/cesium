@@ -1792,6 +1792,20 @@ export class World {
     }
   }
 
+  /**
+   * A globe tile draw's geomorph start, in seconds on the views' clock
+   * (`View.time`; 0: none). A draw changed from what it has marks the world
+   * dirty.
+   */
+  setDrawMorph(handle: DrawHandle, seconds: number): void {
+    if (
+      this.hasDraw(handle) &&
+      this.raster.drawConstants.setMorph(handle.index, seconds)
+    ) {
+      this.markDirty(handle.index);
+    }
+  }
+
   setVisible(handle: DrawHandle, visible: boolean): void {
     if (!this.hasDraw(handle)) {
       return;

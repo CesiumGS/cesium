@@ -178,6 +178,10 @@ function addGlobeSource(
     }
     return scale.profile ? "profile" : true;
   };
+  // Tiles carry their parent's height per vertex while a view morphs LOD
+  // transitions (`View.lodTransitions`).
+  source.wantsMorph = () =>
+    engine.views.some((view) => view.lodTransitions === "morph");
   const drape = (provider: ImageryProvider) =>
     new GlobeImagery(
       engine.ctx,

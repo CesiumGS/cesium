@@ -187,6 +187,10 @@ export class Tile {
   debugColor?: readonly number[];
   /** The debug-view word (`packTileDebug`) written to its draws; none before. */
   debugWord?: number;
+  /** It has been drawn in some view (geomorphing's: its children morph from its surface). */
+  drawnOnce?: boolean;
+  /** When it began to morph in, `performance.now()` ms (`startMorphs`); none if it didn't. */
+  morphStart?: number;
   /**
    * Bytes of the loaded content (geometry and textures), plus the tile's
    * fixed cost in the world's tables and on the heap (`Tileset3D`).

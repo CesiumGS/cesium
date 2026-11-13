@@ -97,6 +97,8 @@ export class TilesetState {
    */
   loadEstimateMs = 500;
   masked = new Set<Tile>();
+  /** Tiles morphing in (`tileMorph.ts`), with the time each is done (`performance.now()` ms). */
+  readonly morphs = new Map<Tile, number>();
   /** Tiles with a caster mask (`CasterSelection.casters`). */
   casters = new Set<Tile>();
   /** Bytes of what views used in the last update. */

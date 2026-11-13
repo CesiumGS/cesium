@@ -12,6 +12,7 @@ import {
   INSTANCE_COUNT_WORD,
   LIGHTS_SLICE_WORD,
   MATERIAL_INDEX_WORD,
+  MORPH_WORD,
   PLACEHOLDER_MASK_WORD,
   PLACEMENT_WORD,
   RADIUS_WORD,
@@ -117,6 +118,22 @@ export class DrawConstants {
    */
   setDebug(index: number, word: number): boolean {
     return this.setWord(index, DEBUG_WORD, word);
+  }
+
+  /**
+   * The draw's geomorph start, seconds on the views' clock (`View.time`); 0
+   * for none. True when it changed. A globe tile's draws carry it while the
+   * tile morphs in (`View.lodTransitions`).
+   */
+  setMorph(index: number, seconds: number): boolean {
+    const f = this.table.f32;
+    const at = index * RECORD_WORDS + MORPH_WORD;
+    if (f[at] === Math.fround(seconds)) {
+      return false;
+    }
+    f[at] = seconds;
+    this.table.mark(index);
+    return true;
   }
 
   /** `RecordFlags`; true when they changed. */

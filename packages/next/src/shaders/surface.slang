@@ -780,6 +780,25 @@ PatchVertex patchVertex(DrawRecord r, uint vertexIndex) {
   return result;
 }
 
+// Geomorphing (View.lodTransitions "morph"): a terrain tile carries, per
+// vertex, (n, d): the ellipsoid's unit normal and its parent's surface height
+// there less its own (globe/heightNormal.ts HEIGHT_MORPH_ATTRIBUTE). From the
+// time its draw record says it began (`DrawRecord.morph`), the vertex goes
+// from the parent's height to its own over MORPH_SECONDS, eased with a
+// smoothstep. Returns the move so far, along n (xyz, metres), and the change
+// of height (w). MORPH_HASH is `attributeHash("_HEIGHT_MORPH")`, and
+// MORPH_SECONDS is streaming/tileMorph.ts `MORPH_SECONDS`; test/geomorph.test.ts
+// holds each to its twin.
+static const uint MORPH_HASH = 2431764312u;
+static const float MORPH_SECONDS = 0.3;
+
+float4 morphOf(DrawRecord r, uint vertexIndex) {
+  float4 m = readNamed(r.attributes, MORPH_HASH, vertexIndex, 0u);
+  float t = clamp((view.time.x - r.morph) / MORPH_SECONDS, 0.0, 1.0);
+  float shift = (1.0 - t * t * (3.0 - 2.0 * t)) * m.w;
+  return float4(m.xyz * shift, shift);
+}
+
 SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   DrawItem p = items[item];
   uint draw = p.record;
@@ -827,6 +846,13 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   } else {
     position = read3(r.positionOffset, vertexIndex);
   }
+  // A terrain tile morphing in: its true position moves first, so every
+  // warp acts on the height it is at now.
+  float4 morph = float4(0.0);
+  if (!points && !patched && r.morph > 0.0) {
+    morph = morphOf(r, vertexIndex);
+    position += morph.xyz;
+  }
   // A billboard (RecordFlags.billboard) is placed at its anchor: the corners
   // are pixel offsets on screen, which a placement leaves alone.
   bool billboard = (r.flags & 16u) != 0u;
@@ -872,7 +898,7 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   // stage, in model space: the transform carries the large offset. The
   // placement's Jacobian turns the tangent and the normal with the surface.
   float3 designPosition = position;
-  Placed placed = placeVertex(billboard ? NO_PLACEMENT : r.placement, position, vertexIndex, r.attributes, tableFeature);
+  Placed placed = placeVertex(billboard ? NO_PLACEMENT : r.placement, position, vertexIndex, r.attributes, tableFeature, morph);
   position = placed.position;
   bool placedDraw = r.placement != NO_PLACEMENT && !billboard;
   // A draw under a compiled route (placement.slang `WARP_ROUTE`) is put where

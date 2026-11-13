@@ -16,6 +16,7 @@ import {
 import { ViewLayout } from "../src/render/generated/layouts.ts";
 import {
   DEBUG_WORD,
+  MORPH_WORD,
   RECORD_SIZE,
   RECORD_WORDS,
   VIEW_STRIDE,
@@ -212,9 +213,9 @@ describe("the engine side", () => {
     return { world, view };
   }
 
-  it("keeps the record at 160 bytes with the debug word in its last four", () => {
-    expect(RECORD_SIZE).toBe(160);
-    expect(DEBUG_WORD).toBe(RECORD_WORDS - 1);
+  it("keeps the record at 176 bytes with the debug word just before the morph word", () => {
+    expect(RECORD_SIZE).toBe(176);
+    expect(MORPH_WORD).toBe(DEBUG_WORD + 1);
   });
 
   it("is off by default, and its legend follows the mode", () => {

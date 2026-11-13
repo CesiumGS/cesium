@@ -153,6 +153,7 @@ export {
 } from "./streaming/debugViews.ts";
 export {
   View,
+  type LodTransitions,
   type HdrImage,
   type OutputEncoding,
   type TranslucencyMethod,

@@ -17,7 +17,9 @@
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { horizonCullingPoint } from "../math/horizon.ts";
 import type { GltfAsset, GltfMesh } from "../io/gltfTypes.ts";
+import { parentSurfaceHeights } from "./terrainRefit.ts";
 import {
+  HEIGHT_MORPH_ATTRIBUTE,
   HEIGHT_NORMAL_ATTRIBUTE,
   HEIGHT_PROFILE_ATTRIBUTE,
   type HeightNormalMode,
@@ -27,6 +29,12 @@ import {
 export interface TerrainDecodeOptions {
   /** Also write each vertex's `h·n̂` (`HEIGHT_NORMAL_ATTRIBUTE`), or `(n̂, h)` for `"profile"` (`HEIGHT_PROFILE_ATTRIBUTE`). */
   heightNormal?: HeightNormalMode;
+  /**
+   * The tile's parent's surface and the tile's quadrant of it (`qx`, `qy`
+   * from the south-west): each vertex then also carries the parent's height
+   * there (`HEIGHT_MORPH_ATTRIBUTE`), for geomorphing.
+   */
+  morph?: { heights: TerrainHeights; qx: number; qy: number };
 }
 
 /** A tile's extent in radians. */
@@ -75,6 +83,8 @@ export interface TerrainTileInfo {
    * height queries (`interpolateHeight`, as 1.x's terrain data does).
    */
   heights?: TerrainHeights;
+  /** The tile carries `HEIGHT_MORPH_ATTRIBUTE`: it can morph in from its parent's surface. */
+  morphs?: true;
 }
 
 /** A terrain tile's surface for height queries. */
@@ -411,6 +421,7 @@ export function decodeQuantizedMesh(
     available,
     keepHeights: true,
     ...(options.heightNormal ? { heightNormal: options.heightNormal } : {}),
+    ...(options.morph ? { morph: options.morph } : {}),
   });
 }
 
@@ -440,6 +451,8 @@ interface TerrainTileData {
   keepHeights?: boolean;
   /** Write `HEIGHT_NORMAL_ATTRIBUTE` (or `HEIGHT_PROFILE_ATTRIBUTE`) for each vertex. */
   heightNormal?: HeightNormalMode;
+  /** Write `HEIGHT_MORPH_ATTRIBUTE` against this parent surface. */
+  morph?: { heights: TerrainHeights; qx: number; qy: number };
 }
 
 /**
@@ -818,11 +831,16 @@ function buildTerrainTile(d: TerrainTileData): {
   const heightNormals = d.heightNormal
     ? new Float32Array(total * (profile ? 4 : 3))
     : undefined;
+  // The parent's surface height at each vertex, less its own (`HEIGHT_MORPH_ATTRIBUTE`).
+  const range = maximumHeight - minimumHeight;
+  const parentHeights = d.morph
+    ? parentSurfaceHeights(u, v, d.morph.heights, d.morph.qx, d.morph.qy)
+    : undefined;
+  const morphs = parentHeights ? new Float32Array(total * 4) : undefined;
   const up = new Float64Array(3);
   const ellipsoid = Ellipsoid.WGS84;
   const scratch = new Float64Array(3);
   const carto = { longitude: 0, latitude: 0, height: 0 };
-  const range = maximumHeight - minimumHeight;
   // Below sea level: Earth-fixed vertices (no skirts) for the occludee.
   const below =
     minimumHeight < 0 ? new Float64Array(vertexCount * 3) : undefined;
@@ -853,6 +871,17 @@ function buildTerrainTile(d: TerrainTileData): {
         heightNormals[dst * 3 + 1] = carto.height * up[1]!;
         heightNormals[dst * 3 + 2] = carto.height * up[2]!;
       }
+    }
+    if (morphs) {
+      // A skirt vertex moves with the surface vertex it hangs from.
+      const hp = parentHeights![i]!;
+      ellipsoid.geodeticSurfaceNormalCartographic(carto, up);
+      morphs[dst * 4] = up[0]!;
+      morphs[dst * 4 + 1] = up[1]!;
+      morphs[dst * 4 + 2] = up[2]!;
+      morphs[dst * 4 + 3] = Number.isNaN(hp)
+        ? 0
+        : hp - (minimumHeight + (h[i]! / 32767) * range);
     }
     if (octNormals) {
       octDecode(octNormals[i * 2]!, octNormals[i * 2 + 1]!, normals, dst * 3);
@@ -922,13 +951,22 @@ function buildTerrainTile(d: TerrainTileData): {
     uvs,
     indices,
     ...(skirtCount > 0 ? { skirtStart: vertexCount } : {}),
-    ...(heightNormals
+    ...(heightNormals || morphs
       ? {
           attributes: {
-            [profile ? HEIGHT_PROFILE_ATTRIBUTE : HEIGHT_NORMAL_ATTRIBUTE]: {
-              data: heightNormals,
-              components: profile ? 4 : 3,
-            },
+            ...(heightNormals
+              ? {
+                  [profile
+                    ? HEIGHT_PROFILE_ATTRIBUTE
+                    : HEIGHT_NORMAL_ATTRIBUTE]: {
+                    data: heightNormals,
+                    components: profile ? 4 : 3,
+                  },
+                }
+              : {}),
+            ...(morphs
+              ? { [HEIGHT_MORPH_ATTRIBUTE]: { data: morphs, components: 4 } }
+              : {}),
           },
         }
       : {}),
@@ -969,6 +1007,7 @@ function buildTerrainTile(d: TerrainTileData): {
       ...(horizonOcclusionPoint ? { horizonOcclusionPoint } : {}),
       ...(occludee ? { occludee } : {}),
       quadrants,
+      ...(morphs ? { morphs: true as const } : {}),
       ...(available ? { available } : {}),
       // u, v and h share one buffer (transferred once).
       ...(d.keepHeights
@@ -991,6 +1030,7 @@ function buildTerrainTile(d: TerrainTileData): {
       uvs.buffer,
       indices.buffer,
       ...(heightNormals ? [heightNormals.buffer] : []),
+      ...(morphs ? [morphs.buffer] : []),
       ...(d.keepHeights ? [u.buffer, triangles.buffer] : []),
       ...(d.keepHeights && octNormals ? [octNormals.buffer] : []),
     ],

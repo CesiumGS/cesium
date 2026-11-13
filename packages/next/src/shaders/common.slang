@@ -114,6 +114,7 @@ public struct DrawRecord {
   public uint skirtStart;        // a globe tile's first skirt vertex (mesh-local); 0xffffffff = none
   public uint casterMask;        // views whose shadow cascades alone draw this record
   public uint debug;             // a tile's debug-view data (streaming/debugViews.ts `packTileDebug`); 0: none
+  public float morph;            // a globe tile's geomorph: the time it began (View.time.x's clock, seconds); 0: none (render/layout.ts MORPH_WORD)
 };
 
 // A placement composed in float64 on the CPU (World transform table),

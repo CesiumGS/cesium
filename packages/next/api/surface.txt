@@ -157,6 +157,7 @@ entry	name	kind	tier
 .	LiveEdge	class	-
 .	LiveEdgeOptions	interface	-
 .	LoadProgress	type	-
+.	LodTransitions	type	-
 .	MAX_ANCHORS	const	-
 .	MAX_CLIP_FRAGMENT_EDGES	const	-
 .	MAX_CLIP_POLYGON_VERTICES	const	-

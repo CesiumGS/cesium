@@ -232,6 +232,7 @@ function selectionViews(
           }
         : {}),
       ...(view.debug !== "off" ? { debug: view.debug } : {}),
+      ...(view.lodTransitions === "morph" ? { morph: true } : {}),
       sseDenominator: 2 * Math.tan(camera.fovy(aspect) / 2),
       height: rect.height / pixelRatio,
       pixelRatio,

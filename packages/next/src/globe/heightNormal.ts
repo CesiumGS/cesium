@@ -20,6 +20,17 @@ export const HEIGHT_NORMAL_ATTRIBUTE = "_HEIGHT_NORMAL";
  */
 export const HEIGHT_PROFILE_ATTRIBUTE = "_HEIGHT_PROFILE";
 
+/**
+ * What a terrain tile carries for geomorphing (`View.lodTransitions`): per
+ * vertex `(n̂, δ)`, 4 components, the ellipsoid's unit normal and δ, the
+ * height of its parent's surface at the vertex's (u, v) minus its own height,
+ * in metres. The vertex stage moves the vertex by `(1 − t)·δ·n̂` while the
+ * tile morphs in (t from 0 to 1), before any warp. A tile without it (its
+ * parent was not resident at decode) doesn't morph. Shaders carry the
+ * name's hash (`MORPH_HASH`, shaders/surface.slang).
+ */
+export const HEIGHT_MORPH_ATTRIBUTE = "_HEIGHT_MORPH";
+
 /** What a tile is asked to carry: `h·n̂` (`true`) or `(n̂, h)` for a profile (`"profile"`). */
 export type HeightNormalMode = true | "profile";
 

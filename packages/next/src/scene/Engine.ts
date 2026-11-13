@@ -171,6 +171,7 @@ export const TICK_REASONS = [
   "animation", // a tick listener or the camera layer is still moving something
   "continuous", // the render mode draws every animation frame
   "loading", // content still loading or settling, clamping busy
+  "morph", // terrain tiles are morphing in (`View.lodTransitions`)
 ] as const;
 
 /** `FrameStats.tickReasons` bits, by their place in `TICK_REASONS`. */
@@ -187,9 +188,10 @@ const REASON_WAKE = bit("wake");
 const REASON_ANIMATION = bit("animation");
 const REASON_CONTINUOUS = bit("continuous");
 const REASON_LOADING = bit("loading");
+const REASON_MORPH = bit("morph");
 
 /** Values in one view's on-demand fingerprint (see `viewChanged`). */
-const VIEW_KEY_LENGTH = 31;
+const VIEW_KEY_LENGTH = 32;
 
 /** Options for a globe surface: terrain or the ellipsoid. */
 export interface GlobeOptions extends TilesetOptions {
@@ -438,7 +440,7 @@ export class Engine {
    *   bump);
    * - a view's fingerprinted state (its world, viewport, observer,
    *   lighting, background, sun disk, aerial perspective, clear color,
-   *   output encoding, debug view, enabled; viewport, observer and lighting also
+   *   output encoding, debug view, LOD transitions, enabled; viewport, observer and lighting also
    *   written in place) or a pick;
    * - a world's draws, a custom shader's uniforms or textures;
    * - a tileset's content, settings or selection knobs
@@ -1761,6 +1763,12 @@ export class Engine {
       this.reasons |= REASON_LOADING;
       return true;
     }
+    for (let i = 0; i < tilesets.length; i++) {
+      if (tilesets[i]!.morphing) {
+        this.reasons |= REASON_MORPH;
+        return true;
+      }
+    }
     return false;
   }
 
@@ -1784,8 +1792,12 @@ export class Engine {
     // A custom shader's uniform or texture changed: everything may show it.
     const uniforms = this.ctx.shaderBindings.flush();
     const globalMoved = this.globalChanged();
-    const all = globalMoved || this.scene.renderRequested || uniforms;
+    // Terrain morphing in changes the image with the clock alone.
+    const morphing = this.tilesets.some((tileset) => tileset.morphing);
+    const all =
+      globalMoved || this.scene.renderRequested || uniforms || morphing;
     const why = this.stats;
+    why.tickReasons |= morphing ? REASON_MORPH : 0;
     why.tickReasons |= globalMoved ? REASON_GLOBAL : 0;
     why.tickReasons |= this.scene.renderRequested ? REASON_REQUESTED : 0;
     why.tickReasons |= uniforms ? REASON_UNIFORMS : 0;
@@ -1945,6 +1957,7 @@ export class Engine {
     s[n++] = view.lighting.specularIbl;
     s[n++] = view.world.id;
     s[n++] = view.debugMode;
+    s[n++] = view.lodTransitions === "morph" ? 1 : 0;
     // The placements, and the body anchor (the body camera's).
     s[n++] = view.anchorRevision;
     s[n++] = view.bodyAnchor?.slot ?? -1;

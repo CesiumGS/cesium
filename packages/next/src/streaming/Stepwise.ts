@@ -76,6 +76,8 @@ export interface SelectionView {
    * it draws carry the numbers the mode shows (`writeTileDebug`).
    */
   debug?: DebugView;
+  /** The view morphs terrain in as it refines (`View.lodTransitions` "morph"); else it pops. */
+  morph?: boolean;
   /**
    * Set when the tileset hangs under an anchor placed across a warp: its
    * tiles are selected on their drawn volumes (`drawnTile`), with the

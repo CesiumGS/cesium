@@ -3,6 +3,7 @@ import type { DrawSink, TilesetHost } from "./DrawSink.ts";
 import type { Tile } from "./Tile.ts";
 import type { Tileset3D } from "./Tileset3D.ts";
 import { accumulate } from "./pipeline.ts";
+import { forgetMorph } from "./tileMorph.ts";
 import type { TilesetState } from "./tilesetState.ts";
 
 /** Content side: what's evicted, and when. */
@@ -25,6 +26,7 @@ export interface TilesetEviction extends Pick<
     | "itemList"
     | "loaded"
     | "masked"
+    | "morphs"
     | "order"
     | "overflowBytes"
     | "placeholders"
@@ -188,6 +190,7 @@ export function unload(tileset: TilesetEviction, tile: Tile): void {
   tileset.state.casters.delete(tile);
   tile.debugColor = undefined;
   tile.debugWord = undefined;
+  forgetMorph(tileset, tile);
   tile.appliedPlaceholderMask = 0;
   tile.placeholderMask = 0;
   tile.standInMask = 0;
