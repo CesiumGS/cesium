@@ -379,14 +379,14 @@ function interpolateUsingSurfaceDistance(
 
 /**
  * Initializes a rhumb line on the ellipsoid connecting the two provided planetodetic points.
- *
- * @exception {DeveloperError} angle between start and end must be at least 0.0125 radians.
  */
 class EllipsoidRhumbLine {
   /**
    * @param {Cartographic} [start] The initial planetodetic point on the path.
    * @param {Cartographic} [end] The final planetodetic point on the path.
    * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the rhumb line lies.
+   *
+   * @exception {DeveloperError} angle between start and end must be at least 0.0125 radians.
    */
   constructor(start, end, ellipsoid) {
     const e = ellipsoid ?? Ellipsoid.default;

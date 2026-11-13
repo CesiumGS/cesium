@@ -1,3 +1,5 @@
+// @ts-check
+
 import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Check from "./Check.js";
@@ -26,8 +28,6 @@ const scratchTransformNormal = new Cartesian3();
  * @example
  * // The plane x=0
  * const plane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
- *
- * @exception {DeveloperError} Normal must be normalized
  */
 class Plane {
   /**
@@ -37,6 +37,8 @@ class Plane {
    * is on.  If <code>distance</code> is positive, the origin is in the half-space
    * in the direction of the normal; if negative, the origin is in the half-space
    * opposite to the normal; if zero, the plane passes through the origin.
+   *
+   * @exception {DeveloperError} Normal must be normalized
    */
   constructor(normal, distance) {
     //>>includeStart('debug', pragmas.debug);

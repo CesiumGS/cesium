@@ -1,7 +1,11 @@
+// @ts-check
+
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
 import Intersect from "./Intersect.js";
+
+/** @import Plane from "./Plane.js"; */
 
 let intersectScratch = new Cartesian3();
 

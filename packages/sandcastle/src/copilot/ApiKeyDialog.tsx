@@ -120,9 +120,7 @@ function ApiKeyDialogBody({
     }
     if (!ApiKeyManager.validateApiKeyFormat(apiKey)) {
       trackValidationFailure("gemini", "invalid_format");
-      setGeminiError(
-        "Invalid format. Gemini API keys typically start with 'AI'.",
-      );
+      setGeminiError("Please enter a Gemini API key without spaces.");
       return;
     }
     try {
