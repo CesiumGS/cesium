@@ -140,6 +140,13 @@ function recordable(
   }
   // `&debug=level` (or tiles, error, state, stretch) turns a debug view on
   // in every view the engine has now, for diagnosis without a UI.
+  // `&lod=pop` or `&lod=morph` sets how terrain changes level (A/B checks).
+  const lod = params.get("lod");
+  if (lod === "pop" || lod === "morph") {
+    for (const view of engine.views) {
+      view.lodTransitions = lod;
+    }
+  }
   const debug = params.get("debug");
   if (debug && URL_DEBUG_VIEWS.has(debug)) {
     for (const view of engine.views) {
