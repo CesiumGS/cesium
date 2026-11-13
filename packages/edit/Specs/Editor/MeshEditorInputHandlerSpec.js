@@ -311,6 +311,7 @@ describe(
           const { pick } = mostRecentInput("pointerClick");
           expect(pick.mesh).toBe(mesh._key);
           expect(pick.componentType).toBe(ComponentType.Vertex);
+          expect(typeof pick.componentKey).toBe("bigint");
         }
       });
 
@@ -328,6 +329,7 @@ describe(
           const { pick } = mostRecentInput("pointerClick");
           expect(pick.mesh).toBe(mesh._key);
           expect(pick.componentType).toBe(ComponentType.Face);
+          expect(typeof pick.componentKey).toBe("bigint");
         }
       });
 
