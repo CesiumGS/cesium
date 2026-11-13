@@ -89,6 +89,10 @@ export default defineConfig(({ command }) => {
     cesiumVersion: getCesiumVersion(),
     outerOrigin: "http://localhost:5173",
     innerOrigin: "http://localhost:5173",
+    ionClientSettings: {
+      clientId: "1924",
+      callbackUrl: "http://localhost:5173/",
+    },
     imports: {
       cesium: {
         path: "/Source/Cesium.js",

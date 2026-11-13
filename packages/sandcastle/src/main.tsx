@@ -4,6 +4,7 @@ import App from "./App.tsx";
 import { SettingsProvider } from "./SettingsProvider.tsx";
 import { CopilotSettingsProvider, ModelProvider } from "./copilot";
 import { initAnalytics } from "./analytics";
+import { UserProvider } from "./User/UserProvider.tsx";
 
 initAnalytics();
 
@@ -12,7 +13,9 @@ createRoot(document.getElementById("app-container")!).render(
     <SettingsProvider>
       <CopilotSettingsProvider>
         <ModelProvider>
-          <App />
+          <UserProvider>
+            <App />
+          </UserProvider>
         </ModelProvider>
       </CopilotSettingsProvider>
     </SettingsProvider>
