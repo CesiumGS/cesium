@@ -52,6 +52,8 @@ export const VIEW_SIZE = ViewLayout.size;
 export const VIEW_BIT_WORD = V.viewBit;
 /** Word offset of `View.time`; its y is 1 in a height capture's view. */
 export const VIEW_TIME_WORD = V.time;
+/** Word offset of `View.transition`; its x is the transitions' duration, seconds (varies with the frame rate). */
+export const VIEW_TRANSITION_WORD = V.transition;
 /** Bytes between views' blocks in a staging buffer: `VIEW_SIZE` rounded up to 256. */
 export const VIEW_STRIDE = Math.ceil(VIEW_SIZE / 256) * 256;
 /** Word offset of `View.anchors`: `MAX_ANCHORS` `AnchorEye`s. */
@@ -104,6 +106,8 @@ export interface ViewBlock {
   cityLights: boolean;
   /** Seconds since the engine started (custom shaders' `fsInput.time`). */
   time: number;
+  /** How long a geomorph or an imagery cross-fade takes, seconds (`transitionSeconds`). */
+  transitionSeconds: number;
   /** The view's debug mode (`debugModeId`); 0 or absent: off. */
   debug?: number;
 }
@@ -203,6 +207,10 @@ export function writeViewBlock(
   out[o + V.time + 1] = 0;
   out[o + V.time + 2] = 0;
   out[o + V.time + 3] = block.debug ?? 0;
+  out[o + V.transition] = block.transitionSeconds;
+  out[o + V.transition + 1] = 0;
+  out[o + V.transition + 2] = 0;
+  out[o + V.transition + 3] = 0;
   // The anchor table (`View.anchors`) is the caller's to write after:
   // scene/anchorEyes.ts `writeAnchorEyes`, through `writeAnchorEye`.
 }

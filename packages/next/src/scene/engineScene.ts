@@ -1,6 +1,7 @@
 // An engine's scene data: its views' cameras, tick timing and what tilesets
 // select for, whichever renderer draws them. The rasterizer's half is
 // `EngineRaster`.
+import { MORPH_SECONDS, transitionSeconds } from "../streaming/tileMorph.ts";
 import { WorkerPool } from "../io/WorkerPool.ts";
 import { Camera } from "./Camera.ts";
 import { createAnchorEyes } from "./anchorEyes.ts";
@@ -31,7 +32,37 @@ export class EngineScene {
   readonly anchorEyes = createAnchorEyes();
   /** When the engine was created (`performance.now()`): views' `time`. */
   readonly startTime = performance.now();
+  /** When the last render began (`performance.now()` ms; 0: none yet). */
+  lastRenderAt = 0;
+  /**
+   * The smoothed interval between rendered frames, ms (0: not yet known):
+   * what `transitionSeconds` stretches the transitions by.
+   */
+  frameIntervalMs = 0;
+  /**
+   * How long a geomorph or an imagery cross-fade takes now, seconds
+   * (`transitionSeconds`): computed once per render, written into the view
+   * block, and read by the tilesets for when their transitions end.
+   */
+  transitionSeconds = MORPH_SECONDS;
   renderRequested = true;
+
+  /**
+   * A render begins at `nowMs` (`performance.now()`): updates the smoothed
+   * interval between renders (a gap of a second or more is an idle loop, not
+   * the cadence) and with it the transitions' duration, once for the render.
+   */
+  beginRender(nowMs: number): void {
+    const gap = nowMs - this.lastRenderAt;
+    if (this.lastRenderAt > 0 && gap < 1000) {
+      this.frameIntervalMs =
+        this.frameIntervalMs === 0
+          ? gap
+          : this.frameIntervalMs * 0.8 + gap * 0.2;
+    }
+    this.lastRenderAt = nowMs;
+    this.transitionSeconds = transitionSeconds(this.frameIntervalMs);
+  }
 
   readonly terrainLoader = (
     request: Parameters<TerrainLoader>[0],

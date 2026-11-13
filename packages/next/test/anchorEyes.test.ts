@@ -176,12 +176,12 @@ describe("an eye per anchor (plan 5a, Task 9)", () => {
     expect(b.slice(V.cameraLo, V.cameraLo + 3)).toEqual(want.lo);
     expect(b.slice(V.planes, V.planes + 20)).toEqual(want.planes);
     // Every slot in use (the root, the Earth's, the Moon's): the camera,
-    // the identity, shown. Only those go up: 656 bytes, not the struct's
+    // the identity, shown. Only those go up: 672 bytes, not the struct's
     // 2,976.
     expect(earth.slot).toBe(1);
     expect(uploaded(view)).toBe(viewBlockBytes(3));
-    expect(viewBlockBytes(3)).toBe(656);
-    expect(ViewLayout.size).toBe(2976);
+    expect(viewBlockBytes(3)).toBe(672);
+    expect(ViewLayout.size).toBe(2992);
     expect(MAX_ANCHORS).toBe(32);
     for (let slot = 0; slot < 3; slot++) {
       const e = eye(b, slot);
@@ -394,12 +394,12 @@ describe("an eye per anchor (plan 5a, Task 9)", () => {
     view.camera.copyFrom(pose());
     block(view);
     // No anchor yet: the root's slot alone.
-    expect(uploaded(view)).toBe(496);
+    expect(uploaded(view)).toBe(512);
     const earth = world.bodyAnchor(EARTH);
     const mesh = world.addMesh(createBox());
     world.addDraw({ mesh, origin: Float64Array.of(1, 2, 3), parent: earth });
     block(view);
-    expect(uploaded(view)).toBe(576);
+    expect(uploaded(view)).toBe(592);
   });
 
   it("the body camera follows a camera written in place without version++", () => {

@@ -142,6 +142,8 @@ export interface RenderTickEngine extends Pick<
     | "selectionCascades"
     | "selections"
     | "startTime"
+    | "beginRender"
+    | "transitionSeconds"
     | "tilesetRotation"
     | "uploadBudget"
     | "uploadsWaiting"
@@ -168,6 +170,7 @@ export function render(
   dirtyViews?: ReadonlySet<View>,
 ): void {
   const start = performance.now();
+  engine.scene.beginRender(start);
   engine.scene.renderRequested = false;
   engine.scene.cameraTick++;
   engine.stats.idle = false;

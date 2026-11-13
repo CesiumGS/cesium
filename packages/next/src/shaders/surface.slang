@@ -784,24 +784,22 @@ PatchVertex patchVertex(DrawRecord r, uint vertexIndex) {
 // vertex, (n, d): the ellipsoid's unit normal and its parent's surface height
 // there less its own (globe/heightNormal.ts HEIGHT_MORPH_ATTRIBUTE). From the
 // time its draw record says it began (`DrawRecord.morph`), the vertex goes
-// from the parent's height to its own over MORPH_SECONDS, eased with a
+// from the parent's height to its own over `view.transition.x` seconds, eased with a
 // smoothstep. Returns the move so far, along n (xyz, metres), and the change
-// of height (w). MORPH_HASH is `attributeHash("_HEIGHT_MORPH")`, and
-// MORPH_SECONDS is streaming/tileMorph.ts `MORPH_SECONDS`; test/geomorph.test.ts
-// holds each to its twin.
+// of height (w). MORPH_HASH is `attributeHash("_HEIGHT_MORPH")`;
+// test/geomorph.test.ts holds it to its twin. The duration is the view block's
+// `transition.x` (streaming/tileMorph.ts `transitionSeconds`, written each
+// render), the one number every transition reads.
 static const uint MORPH_HASH = 2431764312u;
-static const float MORPH_SECONDS = 0.3;
 
 // Imagery cross-fade (View.lodTransitions "morph"): a tile whose imagery
 // changed (a finer slice composited over its ancestor's) shows the old imagery
-// (`DrawRecord.imageryFrom`) easing into the new over the same MORPH_SECONDS,
-// from the time `DrawRecord.imageryFade` says. IMAGERY_FADE_SECONDS is
-// streaming/tileMorph.ts `MORPH_SECONDS`; test/imageryFade.test.ts holds them equal.
-static const float IMAGERY_FADE_SECONDS = 0.3;
+// (`DrawRecord.imageryFrom`) easing into the new over `view.transition.x` seconds,
+// from the time `DrawRecord.imageryFade` says.
 
 float4 morphOf(DrawRecord r, uint vertexIndex) {
   float4 m = readNamed(r.attributes, MORPH_HASH, vertexIndex, 0u);
-  float t = clamp((view.time.x - r.morph) / MORPH_SECONDS, 0.0, 1.0);
+  float t = clamp((view.time.x - r.morph) / max(view.transition.x, 0.001), 0.0, 1.0);
   float shift = (1.0 - t * t * (3.0 - 2.0 * t)) * m.w;
   return float4(m.xyz * shift, shift);
 }
@@ -2391,7 +2389,7 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
     float4 fromSample = imagery.SampleGrad(
         imagerySampler, float3(imageryUv(fromPacked, in.uv), float(max(fromPacked & 4095u, 1u) - 1u)),
         dUVdx * float2(fromScale, -fromScale), dUVdy * float2(fromScale, -fromScale));
-    float t = clamp((view.time.x - r.imageryFade) / IMAGERY_FADE_SECONDS, 0.0, 1.0);
+    float t = clamp((view.time.x - r.imageryFade) / max(view.transition.x, 0.001), 0.0, 1.0);
     imagerySample = lerp(fromSample, imagerySample, t * t * (3.0 - 2.0 * t));
   }
   uint lightsPacked = r.lightsSlice;

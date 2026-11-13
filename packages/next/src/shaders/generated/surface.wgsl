@@ -104,6 +104,7 @@ struct View_std140_0
     @align(16) bodyRadii_0 : vec4<f32>,
     @align(16) moonLight_0 : vec4<f32>,
     @align(16) time_0 : vec4<f32>,
+    @align(16) transition_0 : vec4<f32>,
     @align(16) anchors_0 : _Array_std140_AnchorEye32_0,
 };
 
@@ -3114,7 +3115,7 @@ fn shadeSurface_0( in_7 : SurfaceVaryings_0,  frontFacing_3 : bool,  translucent
         var fromScale_0 : f32 = 1.0f / f32((u32(1) << ((((((records_0[_S297].imageryFrom_0) >> (u32(12)))) & (u32(15)))))));
         var _S309 : vec3<f32> = vec3<f32>(imageryUv_0(records_0[_S297].imageryFrom_0, in_7.uv_1), f32(max(((records_0[_S297].imageryFrom_0) & (u32(4095))), u32(1)) - u32(1)));
         var _S310 : vec2<f32> = vec2<f32>(fromScale_0, - fromScale_0);
-        var t_5 : f32 = clamp((view_0.time_0.x - _S307) / 0.30000001192092896f, 0.0f, 1.0f);
+        var t_5 : f32 = clamp((view_0.time_0.x - _S307) / max(view_0.transition_0.x, 0.0010000000474974513f), 0.0f, 1.0f);
         imagerySample_1 = mix((textureSampleGrad((imagery_0), (imagerySampler_0), ((_S309)).xy, i32(((_S309)).z), (dUVdx_0 * _S310), (dUVdy_0 * _S310))), imagerySample_0, vec4<f32>((t_5 * t_5 * (3.0f - 2.0f * t_5))));
     }
     else
@@ -6080,7 +6081,7 @@ fn patchVertex_0( _S593 : u32,  _S594 : u32) -> PatchVertex_0
 fn morphOf_0( _S604 : u32,  _S605 : u32) -> vec4<f32>
 {
     var m_5 : vec4<f32> = readNamed(records_0[_S604].attributes_0, u32(2431764312), _S605, u32(0));
-    var t_14 : f32 = clamp((view_0.time_0.x - records_0[_S604].morph_0) / 0.30000001192092896f, 0.0f, 1.0f);
+    var t_14 : f32 = clamp((view_0.time_0.x - records_0[_S604].morph_0) / max(view_0.transition_0.x, 0.0010000000474974513f), 0.0f, 1.0f);
     var shift_0 : f32 = (1.0f - t_14 * t_14 * (3.0f - 2.0f * t_14)) * m_5.w;
     return vec4<f32>(m_5.xyz * vec3<f32>(shift_0), shift_0);
 }
