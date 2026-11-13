@@ -237,6 +237,42 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
 
 **Fix 6 (candidates, owner to choose): refinement under a smooth node.** The error policy and occlusion culling remain; horizon culling folds into occlusion culling.
 
+**Fix 7: occlusion feedback to selection (design, 2026-11-12).** This is the first step of the overall plan's two-phase occlusion culling (M5), and it can't leave holes.
+
+- **The idea:**
+  - Each opaque view builds a depth pyramid from its own drawn depth.
+  - The next tick, tile selection tests boxes against it: the drawn tiles and their refinement candidates.
+  - A tile that is occluded **stops refining and requesting children**, but it is **still drawn**.
+  - Nothing is ever removed from the picture, so a stale pyramid only delays refinement by a tick or two after the camera moves. It never opens a hole.
+  - Culling draws (the two-phase pass, a second set of draw arguments and bundles) waits until this has been measured, and comes only if GPU time still needs it.
+- **What blocks and what is tested:**
+  - The blockers are the opaque depth actually drawn: real triangles, so a peak hides only what lies behind its own pixels, and the sky (depth 0 with reversed Z) hides nothing.
+  - The tested things are the drawn boxes that selection already uses (fixes 1 and 2), each tested on its own. A child's box isn't assumed to sit inside its parent's.
+  - Translucent content isn't in the opaque depth, so it blocks nothing.
+- **Increment 1: the depth pyramid** (`hzb` compute pass, after `opaque`, opaque views only, not shadow, pick or height views).
+  - Level 0 is half the frame, rounded down. Each texel is the farthest depth of its 2 × 2 block of pixels and of every sample (the opaque depth is `depth32float`, reversed Z, maybe multisampled: the minimum value is the farthest).
+  - Each further level is the farthest of 2 × 2, folding in an odd edge row and column.
+  - It's an `r32float` texture with mips, kept per view across ticks, not a transient frame-graph target. The view-projection it was built with is kept beside it.
+  - No loops beyond a constant bound, and every load is clamped.
+  - A debug view shows a chosen level.
+- **Increment 2: tile queries** (a compute pass after `hzb`, plus a readback).
+  - Selection hands each opaque view a list of up to `MAX_QUERIES` (8,192) boxes: the drawn tiles and the children it would refine to. Each is a centre relative to the eye (float64 on the CPU, float32 on the GPU) and three half-axes, with the tile's slot.
+  - The kernel projects the 8 corners with the pyramid's view-projection. Any corner behind the near plane, or outside the pyramid's camera, means visible.
+  - It picks the level where the screen rectangle spans at most 2 × 2 texels and reads those 4 texels. The tile is occluded if its nearest depth is farther than all 4.
+  - It writes one bit per query. The readback goes through a pool of buffers like `GpuTimer`'s, about one tick late, and a tick is dropped when every buffer is in flight.
+  - The CPU maps each bit back to its tile's `TileViewState.occludedTicks`, a counter cleared at once when the tile is seen.
+- **Increment 3: selection reads it.** In `Budgeted` only (`GlobeBudgeted` included); `Stepwise` keeps 1.x parity.
+  - A tile occluded for 2 or more ticks running doesn't refine, and its children's requests drop below every visible request. A request already in flight is kept.
+  - With no result yet for a tile, or after a camera cut, it is treated as visible.
+  - An engine option, `occlusionFeedback`, is on by default and can be turned off for parity runs. Benchmarks record its version.
+- **Increment 4: measure.**
+  - The exaggeration scene at ×1, ×5 and ×10 (tiles drawn, requests, bytes, GPU per tick, time to settle), the `globe` suite's six views (1.x parity must hold), and a camera flight for pops.
+  - Report the occluded share of the drawn tiles and the candidates.
+- **Risks:**
+  - It adds compute passes and one small readback per view, and no indirect draws, so §13.23's exposure on Intel GPUs doesn't grow.
+  - On this M2, the pyramid's cost must be under about 0.5 ms.
+  - Tiles that should refine as the camera comes round a ridge lag by the readback's latency. That's what the 2-tick hysteresis and the "visible until known" rule bound.
+
 - **An error policy:** measure error in the true frame (as 1.x does, so the drawn error is k× coarser), in the drawn frame (today), or in between (for example, σ_max^½).
 - **Anisotropic error:** terrain's error is vertical. Project k·ε along the drawn up axis at the tile and the view direction, as view-dependent terrain LOD does (Lindstrom et al. 1996), rather than taking an isotropic σ_max · ε. This is exact and gains in steep or top-down views, but little in this example's oblique one.
 - **Horizon culling under a lift:** it is off under any smooth route today. A lift with a ceiling keeps the ellipsoid, shrunk by the lowest drawn height, as a valid occluder, and tile boxes from fix 2 give the culling points in closed form.
