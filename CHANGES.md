@@ -35,6 +35,7 @@
 - Fixed `Scene.pickVoxel` returning the wrong cell for tiles with more than 65,280 samples, and returning a cell when no voxel sample was rendered at the pick position. [#13950](https://github.com/CesiumGS/cesium/issues/13950)
 - Fixed a crash in `ImageryLayer` when computing tile imagery skeletons for rectangles that do not intersect the imagery provider's bounds. [#13964](https://github.com/CesiumGS/cesium/pull/13694)
 - Fixed GPX loading failing when descriptive fields contain URLs by using the current Autolinker replacement callback signature. [#13944](https://github.com/CesiumGS/cesium/pull/13944)
+- Fixed WebGL contexts not being released when a `Viewer` or `CesiumWidget` is destroyed. [#11533](https://github.com/CesiumGS/cesium/issues/11533)
 
 ## 1.147 - 2026-11-02
 
