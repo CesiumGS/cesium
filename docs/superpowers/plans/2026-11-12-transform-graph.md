@@ -270,6 +270,15 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
 - **Increment 4: measure.**
   - **The cost where little is hidden:** big open expanses seen from high up (the `globe` suite's Front Range at 300 km and Everest regional, a whole-Earth view), as pyramid GPU time, query GPU time, CPU per tick to build the queries, and the occluded share. The win where much is hidden: the exaggeration scene, a craggy valley, and dense design models (a building with interiors, an industrial plant) with additive refinement.
   - **Additive refinement must stay snappy (owner):** occlusion never stops an added child from being selected and requested. It only moves the child's request into the occluded band, after every visible one, and the child is drawn as soon as it's loaded, so turning a corner usually finds it resident. Under memory pressure, occluded added content goes first. The no-refinement gate is for replacement refinement only, where the parent stays drawn. Measure how often revealed added content is already resident in a walk-through.
+- **Vectors and Gaussian splats (owner, 2026-11-12): settle each when it's built.** The overall plan's §13.27 (the vector design) and M6 (splats) point here.
+  - **Point splats today** write depth for any covered pixel, translucent symbols included, so a tick that draws them skips the pyramid. That's safe but switches occlusion off in those views. The fix is for splats to draw after the pyramid, or into depth the pyramid doesn't read.
+  - **Vector marks:**
+    - Opaque 3D marks (extruded polygons, tubes, walls) are occluders like any opaque draw.
+    - Screen-space marks (points, billboards, labels) and draped marks never are, and draped content follows its terrain tile's result.
+    - Labels can read the pyramid for their own visibility against terrain and buildings, a known win for declutter.
+  - **Gaussian splats** are blended, so they block nothing as drawn, and their tiles are tested like any other.
+    - Splats behind splats aren't caught. A later option writes a solid depth where accumulated opacity passes a threshold, for example 0.95, in its own target.
+    - Splat tiles refine by replacement, so the occlusion gate applies to them.
 - **Increment 5 (after measuring): an `"auto"` mode.**
   - Per view, run the pyramid and queries every tick while the occluded share is worth it. When it stays low (for example, under 5% for a couple of seconds), drop to one tick in N, and come back on a large camera move or a rising share.
   - The application or the camera controller can still force `"on"` or `"off"`, for example off during a fast flight, or on for a walk-through.
