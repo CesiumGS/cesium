@@ -187,6 +187,7 @@ export function unload(tileset: TilesetEviction, tile: Tile): void {
   tile.casterMask = tile.appliedCasterMask = 0;
   tileset.state.casters.delete(tile);
   tile.debugColor = undefined;
+  tile.debugWord = undefined;
   tile.appliedPlaceholderMask = 0;
   tile.placeholderMask = 0;
   tile.standInMask = 0;

@@ -185,6 +185,8 @@ export class Tile {
   geometry?: TileGeometry[];
   /** Debug tint currently on the draws (linear RGBA; none is white). */
   debugColor?: readonly number[];
+  /** The debug-view word (`packTileDebug`) written to its draws; none before. */
+  debugWord?: number;
   /**
    * Bytes of the loaded content (geometry and textures), plus the tile's
    * fixed cost in the world's tables and on the heap (`Tileset3D`).

@@ -1778,6 +1778,20 @@ export class World {
     this.markDirty(handle.index);
   }
 
+  /**
+   * A draw's debug-view data (`packTileDebug`), read by the shader when a
+   * view's `debug` is on; a draw changed from what it has marks the world
+   * dirty.
+   */
+  setDrawDebug(handle: DrawHandle, word: number): void {
+    if (
+      this.hasDraw(handle) &&
+      this.raster.drawConstants.setDebug(handle.index, word)
+    ) {
+      this.markDirty(handle.index);
+    }
+  }
+
   setVisible(handle: DrawHandle, visible: boolean): void {
     if (!this.hasDraw(handle)) {
       return;

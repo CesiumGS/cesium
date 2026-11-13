@@ -104,6 +104,8 @@ export interface ViewBlock {
   cityLights: boolean;
   /** Seconds since the engine started (custom shaders' `fsInput.time`). */
   time: number;
+  /** The view's debug mode (`debugModeId`); 0 or absent: off. */
+  debug?: number;
 }
 
 /**
@@ -200,7 +202,7 @@ export function writeViewBlock(
   out[o + V.time] = block.time;
   out[o + V.time + 1] = 0;
   out[o + V.time + 2] = 0;
-  out[o + V.time + 3] = 0;
+  out[o + V.time + 3] = block.debug ?? 0;
   // The anchor table (`View.anchors`) is the caller's to write after:
   // scene/anchorEyes.ts `writeAnchorEyes`, through `writeAnchorEye`.
 }
@@ -348,6 +350,8 @@ export const NO_PLACEMENT = 0xffffffff;
 /** Word offsets of a record's range in the instance table (count 0: none). */
 export const INSTANCE_FIRST_WORD = R.instanceFirst;
 export const INSTANCE_COUNT_WORD = R.instanceCount;
+/** Word offset of `DrawRecord.debug`: a tile's debug-view data (streaming/debugViews.ts `packTileDebug`). */
+export const DEBUG_WORD = R.debug;
 /** Word offset of a record's instance streams' stride (words). */
 export const INSTANCE_STRIDE_WORD = R.instanceStride;
 /**
@@ -643,6 +647,7 @@ export function writeDrawRecord(
   u32[o + R.placement] = NO_PLACEMENT; // World.setPlacement
   u32[o + R.skirtStart] = r.skirtStart ?? NO_SKIRT;
   u32[o + R.casterMask] = 0;
+  u32[o + R.debug] = 0;
 }
 
 /** Bits of `Transform.flags` that hold its anchor slot (8 to 15). */

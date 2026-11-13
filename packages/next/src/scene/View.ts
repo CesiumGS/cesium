@@ -5,6 +5,12 @@ import type { FrameKey } from "../camera/frameResolver.ts";
 import type { Route } from "../camera/route.ts";
 import type { FeatureValue } from "../io/gltfTypes.ts";
 import { type ViewLighting } from "../render/layout.ts";
+import {
+  debugLegend,
+  debugModeId,
+  type DebugLegend,
+  type DebugView,
+} from "../streaming/debugViews.ts";
 import { EARTH, bodyKey, type Body } from "./Body.ts";
 import type { CorePick } from "./pick.ts";
 import type { SceneItem } from "./SceneItem.ts";
@@ -139,6 +145,8 @@ export interface ViewOptions {
    * Default true.
    */
   cityLights?: boolean;
+  /** A debug view (`View.debug`). Default "off". */
+  debug?: DebugView;
   /** Background color as displayed (already exposed), with "color". */
   clearColor?: readonly [number, number, number];
   /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
@@ -296,6 +304,7 @@ export class View {
     outputEncoding: OutputEncoding;
     enabled: boolean;
     lighting: ViewLighting;
+    debug: DebugView;
   };
   private readonly changed = () => this.wake?.();
   private readonly observerChanged = () => {
@@ -526,6 +535,46 @@ export class View {
     this.state.outputEncoding = value;
     this.wake?.();
   }
+  /**
+   * A debug shading of this view: the opaque pass draws flat colours in
+   * place of lighting, and keeps its depth, so the picture shows how the
+   * streamed tiles were chosen. Off ("off", the default) costs one uniform
+   * read per fragment and nothing else.
+   *
+   * - "level": each tile coloured by its level in its tree (eight colours,
+   *   repeating; colour-blind safe), for terrain and 3D Tiles alike.
+   * - "tiles": each tile its own colour, and terrain tiles' boundaries
+   *   darkened.
+   * - "error": each tile's screen-space error as a multiple of the
+   *   threshold (viridis). Over 1 is detail the view still wants.
+   * - "state": a tile drawn normally, as a mixed-level placeholder, as a
+   *   stand-in for finer tiles still loading, or held back by occlusion.
+   * - "stretch": how much the warp under the tile stretches its error
+   *   (cividis); 1 where there is no warp.
+   *
+   * A tile's numbers (error, state, stretch) are from this view's own
+   * selection; when several views of one world have a mode on, the first
+   * of them writes the tiles' numbers. Translucent content, points and
+   * lines are not recoloured. `debugLegend()` says what the colours mean.
+   */
+  get debug(): DebugView {
+    return this.state.debug;
+  }
+  set debug(value: DebugView) {
+    this.state.debug = value;
+    this.wake?.();
+  }
+  /** @internal The shader's number for `debug` (`debugModeId`); 0: off. */
+  get debugMode(): number {
+    return debugModeId(this.state.debug);
+  }
+  /**
+   * What the colours of this view's current debug mode mean, for an
+   * application to draw beside the view. "off" has no entries.
+   */
+  debugLegend(): DebugLegend {
+    return debugLegend(this.state.debug);
+  }
   /** Disabled views are skipped (e.g. an offscreen view between captures). */
   get enabled(): boolean {
     return this.state.enabled;
@@ -585,6 +634,7 @@ export class View {
     this.translucencyMethod = options.translucencyMethod ?? "moments";
     this.fxaa = options.fxaa ?? false;
     this.cityLights = options.cityLights ?? true;
+    this.state.debug = options.debug ?? "off";
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.enabled = true;

@@ -84,6 +84,11 @@ export interface DrawSink {
   setDrawMaterial(handle: DrawHandle, material: number): void;
   materialWithFlags(material: number, flags: number): number;
   setColor(handle: DrawHandle, color: ArrayLike<number>): void;
+  /**
+   * A tile draw's debug-view data (`packTileDebug`). Optional: a sink that
+   * draws no debug views ignores it.
+   */
+  setDrawDebug?(handle: DrawHandle, word: number): void;
   setCollision(handle: DrawHandle, collision: boolean): void;
   setGround(handle: DrawHandle, ground: boolean): void;
   setTerrainClip(handle: DrawHandle, mask: number): void;

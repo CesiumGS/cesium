@@ -210,6 +210,7 @@ export function writeView(
   block.exposure = view.exposureScale;
   block.body = view.body;
   block.cityLights = view.cityLights;
+  block.debug = view.debugMode;
   block.time = (performance.now() - engine.scene.startTime) / 1000;
   engine.raster.viewCityLight = cityLightAt(engine, view);
   block.aerial = undefined;

@@ -82,6 +82,9 @@ entry	name	kind	tier
 .	DEFAULT_IMAGERY_SLICES	const	-
 .	DEFAULT_SECTION_LINE_COLOR	const	-
 .	DEFAULT_SKY	const	-
+.	DebugLegend	interface	-
+.	DebugLegendEntry	interface	-
+.	DebugView	type	-
 .	Degree	type	-
 .	DisplayMesh	interface	-
 .	DistanceField	interface	-

@@ -146,7 +146,7 @@ export interface FrameStats {
 }
 
 /** Values in one view's on-demand fingerprint (see `viewChanged`). */
-const VIEW_KEY_LENGTH = 30;
+const VIEW_KEY_LENGTH = 31;
 
 /** Options for a globe surface: terrain or the ellipsoid. */
 export interface GlobeOptions extends TilesetOptions {
@@ -357,7 +357,7 @@ export class Engine {
    *   bump);
    * - a view's fingerprinted state (its world, viewport, observer,
    *   lighting, background, sun disk, aerial perspective, clear color,
-   *   output encoding, enabled; viewport, observer and lighting also
+   *   output encoding, debug view, enabled; viewport, observer and lighting also
    *   written in place) or a pick;
    * - a world's draws, a custom shader's uniforms or textures;
    * - a tileset's content, settings or selection knobs
@@ -1831,6 +1831,7 @@ export class Engine {
     s[n++] = view.lighting.diffuseIbl;
     s[n++] = view.lighting.specularIbl;
     s[n++] = view.world.id;
+    s[n++] = view.debugMode;
     // The placements, and the body anchor (the body camera's).
     s[n++] = view.anchorRevision;
     s[n++] = view.bodyAnchor?.slot ?? -1;
