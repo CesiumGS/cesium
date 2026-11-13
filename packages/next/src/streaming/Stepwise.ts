@@ -29,6 +29,8 @@ import {
   type TileWarp,
 } from "./tileWarp.ts";
 
+import type { ViewOcclusion } from "./occlusion.ts";
+
 /** Planes per box in `SelectionView.casterPlanes`. */
 export const CASTER_PLANES = 6;
 
@@ -78,6 +80,12 @@ export interface SelectionView {
    * anchor's coordinates as ever.
    */
   warp?: TileWarp;
+  /**
+   * What the view's own drawn depth says of tile boxes (`Budgeted` only:
+   * `Stepwise` keeps 1.x's rules): absent where the engine has the feedback
+   * off or the view builds no pyramid.
+   */
+  occlusion?: ViewOcclusion;
 }
 
 /**

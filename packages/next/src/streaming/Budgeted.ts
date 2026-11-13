@@ -234,12 +234,40 @@ export class BudgetedSelection extends StepwiseSelection {
     }
     const cover = this.display(root, view, pass, rootError, NONE, 0, result);
     result.selected.push(...cover.tiles);
+    this.askOcclusion(view, result);
     if (result.standIns) {
       // Only those still drawn: an ancestor may have held instead.
       const selected = new Set(result.selected);
       result.standIns = result.standIns.filter((t) => selected.has(t));
     }
     return result;
+  }
+
+  /**
+   * Hands the view's occlusion feedback the boxes it should test this tick:
+   * the tiles drawn, then the others the walk visited that are in view (the
+   * children it would refine to), so a full list loses candidates first.
+   */
+  private askOcclusion(view: SelectionView, result: SelectionResult): void {
+    const occlusion = view.occlusion;
+    if (!occlusion) {
+      return;
+    }
+    const asked = new Set<Tile>();
+    const ask = (tile: Tile): void => {
+      if (!asked.has(tile) && tile.renderable && !tile.fillFromParent) {
+        asked.add(tile);
+        occlusion.query(tile, this.volumeOf(tile, view));
+      }
+    };
+    for (const tile of result.selected) {
+      ask(tile);
+    }
+    for (const tile of result.touched) {
+      if (isVisible(tile.viewState(view.id))) {
+        ask(tile);
+      }
+    }
   }
 
   get castsShadows(): boolean {

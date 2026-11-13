@@ -28,6 +28,7 @@ export interface SelectionEngine extends Pick<
   | "minimumUploadBytesPerFrame"
   | "moonAxes"
   | "moonPosition"
+  | "occlusionFeedback"
   | "sunDirection"
   | "tilesets"
   | "treeBuildMsPerFrame"
@@ -220,6 +221,9 @@ function selectionViews(
       }) ?? { longitude: 0, latitude: 0, height: 0 },
       planes,
       ...(casters ? { casterPlanes: casters } : {}),
+      ...(engine.occlusionFeedback
+        ? { occlusion: view.occlusionFeedback.forCamera(camera) }
+        : {}),
       ...(ahead && motion
         ? {
             prefetchPlanes: worldPlanes(ahead, PREFETCH_MARGIN),
@@ -363,6 +367,29 @@ function cameraAhead(
 }
 
 /**
+ * Starts this tick's occlusion queries for each view that has a body camera
+ * (`OcclusionFeedback.begin`): once per update, whatever anchors and
+ * tilesets then ask.
+ */
+function beginOcclusion(engine: SelectionEngine): void {
+  if (!engine.occlusionFeedback) {
+    return;
+  }
+  for (const view of engine.views) {
+    if (!view.enabled) {
+      continue;
+    }
+    const camera = engine.bodyCamera(view);
+    const height =
+      view.body.ellipsoid.cartesianToCartographic(
+        camera.position,
+        scratchCartographic,
+      )?.height ?? 0;
+    view.occlusionFeedback.begin(camera.position, camera.direction, height);
+  }
+}
+
+/**
  * Runs selection, requests and uploads for the tilesets `due` picks,
  * starting with a different one each frame so none starves the others
  * of the shared upload budget.
@@ -391,6 +418,7 @@ export function updateTilesets(
   const n = engine.tilesets.length;
   const start = n > 0 ? engine.scene.tilesetRotation++ % n : 0;
   engine.scene.selections.clear();
+  beginOcclusion(engine);
   for (let k = 0; k < n; k++) {
     const tileset = engine.tilesets[(start + k) % n]!;
     if (due(tileset)) {
