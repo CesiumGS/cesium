@@ -56,14 +56,14 @@ export function groupOf(label: string): GpuGroup {
 }
 
 /**
- * Wall time less the time timed passes ran, ms; NaN if either is unknown,
- * never negative. The wall time counts untimed work and queueing, so this
- * is an upper bound.
+ * The GPU frame interval (busy back to back) less the time timed passes
+ * ran, ms: the work no timestamp covers (uploads, copies, presenting). NaN
+ * if either is unknown, as when the GPU idled; never negative.
  */
-export function untimedMs(wall: number | undefined, union: number): number {
-  return wall === undefined || Number.isNaN(wall) || Number.isNaN(union)
+export function untimedMs(interval: number | undefined, union: number): number {
+  return interval === undefined || Number.isNaN(interval) || Number.isNaN(union)
     ? Number.NaN
-    : Math.max(0, wall - union);
+    : Math.max(0, interval - union);
 }
 
 export interface GpuGroupTotal {

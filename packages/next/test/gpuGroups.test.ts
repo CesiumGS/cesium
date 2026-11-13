@@ -41,15 +41,16 @@ describe("GPU groups", () => {
 
 describe("GPU recorder row", () => {
   it("carries span, wall and untimed, and stays as wide as the header", () => {
-    const cells = gpuRow(1, 2, 4, { a: 1 }, 5, 10).split(",");
+    const cells = gpuRow(1, 2, 4, { a: 1 }, 5, 30, 10).split(",");
     expect(cells).toHaveLength(RECORD_COLUMNS.length);
     const at = (c: (typeof RECORD_COLUMNS)[number]) =>
       cells[RECORD_COLUMNS.indexOf(c)];
     expect(at("gpu_span_ms")).toBe("5");
-    expect(at("gpu_wall_ms")).toBe("10");
+    expect(at("gpu_wall_ms")).toBe("30");
+    expect(at("gpu_interval_ms")).toBe("10");
     expect(at("gpu_untimed_ms")).toBe("6");
     const bare = gpuRow(1, 2, 4, { a: 1 }).split(",");
-    expect(bare[RECORD_COLUMNS.indexOf("gpu_wall_ms")]).toBe("");
+    expect(bare[RECORD_COLUMNS.indexOf("gpu_interval_ms")]).toBe("");
     expect(bare[RECORD_COLUMNS.indexOf("gpu_untimed_ms")]).toBe("");
   });
 });

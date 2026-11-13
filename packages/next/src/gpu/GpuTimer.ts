@@ -47,13 +47,21 @@ export class GpuTimer {
    */
   spanMilliseconds = Number.NaN;
   /**
-   * Smoothed wall time of a measured frame, ms: the CPU clock from its
-   * `queue.submit` to `onSubmittedWorkDone`. It counts everything the GPU
-   * did for the submit (uploads, copies, presenting, which take no
-   * timestamps) but also any wait behind the previous frame's work, so it
-   * is an upper bound on the frame's GPU time. NaN until one arrives.
+   * Smoothed latency of a measured frame, ms: the CPU clock from its
+   * `queue.submit` to `onSubmittedWorkDone`. It includes any wait behind
+   * earlier frames' work, so it says how late the image is, not what the
+   * frame costs. NaN until one arrives.
    */
   wallMilliseconds = Number.NaN;
+  /**
+   * Smoothed GPU frame interval while the GPU is busy, ms: the time between
+   * two frames' `onSubmittedWorkDone` resolutions, counted only when the
+   * later frame was submitted before the earlier one finished (the GPU never
+   * idled between them). Then it is what a frame costs the GPU, untimed
+   * work (uploads, copies, presenting) included. NaN when the latest
+   * measured frame followed an idle GPU, or none has arrived.
+   */
+  intervalMilliseconds = Number.NaN;
   /**
    * Smoothed GPU time per pass label (`passWrites`), ms; passes sharing a
    * label (the shadow cascades) add up. For benchmarks: where the time goes.
@@ -89,8 +97,10 @@ export class GpuTimer {
       tag: number;
       /** Each pass's label index, as of `afterSubmit`. */
       labels: Uint8Array;
-      /** Wall time of this frame's submit, ms (NaN if unknown). */
+      /** Latency of this frame's submit, ms (NaN if unknown). */
       wall: number;
+      /** Busy interval (`intervalMilliseconds`), ms; NaN if the GPU idled. */
+      interval: number;
       mapped: () => void;
       failed: () => void;
     }
@@ -129,12 +139,15 @@ export class GpuTimer {
     spanMs: number;
     /** Submit to `onSubmittedWorkDone`, ms (NaN if it hadn't arrived). */
     wallMs: number;
+    /** Busy interval, ms; NaN when the GPU idled before this frame. */
+    intervalMs: number;
     passes: Record<string, number>;
   } = {
     tag: 0,
     ms: Number.NaN,
     spanMs: Number.NaN,
     wallMs: Number.NaN,
+    intervalMs: Number.NaN,
     passes: {},
   };
   samples = 0;
@@ -162,6 +175,7 @@ export class GpuTimer {
         tag: 0,
         labels: new Uint8Array(GpuTimer.maxPasses),
         wall: Number.NaN,
+        interval: Number.NaN,
         mapped: () => this.onMapped(buffer),
         failed: () => this.idle.push(buffer),
       });
@@ -348,17 +362,23 @@ export class GpuTimer {
     this.frameGroupCount = 0;
     const slots = this.frameGroups.slice(0, groups);
     this.groupDirty.fill(false);
+    // Every submitted frame is watched, measured or not: the next one needs
+    // to know whether this one was still running when it was submitted.
+    const handler = buffer ? this.handlers.get(buffer) : undefined;
+    const done = this.watchSubmit(
+      handler && count > 0 ? handler : { wall: 0, interval: 0 },
+    );
     if (!buffer) {
       return;
     }
-    if (count === 0) {
+    if (count === 0 || !handler) {
       this.idle.push(buffer);
       return;
     }
-    const handler = this.handlers.get(buffer)!;
     handler.count = count;
     handler.tag = this.tag;
     handler.wall = Number.NaN;
+    handler.interval = Number.NaN;
     for (let k = 0; k < groups; k++) {
       handler.labels[k] = this.groupLabels[slots[k]!]!;
     }
@@ -366,24 +386,47 @@ export class GpuTimer {
       this.frameLabels.subarray(0, this.nextIndex / 2),
       groups,
     );
-    // Only measured frames wait on the queue; the wait (and the readback,
-    // which can't finish before it) costs no await on the others.
-    const start = performance.now();
-    const queue = this.device.queue;
-    const done = queue.onSubmittedWorkDone().then(
-      () => {
-        handler.wall = performance.now() - start;
-      },
-      () => undefined,
-    );
     void buffer
       .mapAsync(GPUMapMode.READ, 0, count * 8)
       .then(() => done)
       .then(handler.mapped, handler.failed);
   }
 
+  /** Frames submitted and not yet done, and when the last one finished. */
+  private inflight = 0;
+  private lastDoneAt = Number.NaN;
+  /** Most frames watched at once; past it the chain of intervals restarts. */
+  private static readonly maxInflight = 4;
+
+  /**
+   * Watches the frame just submitted: fills `into` with its latency and,
+   * if the GPU was busy back to back (an earlier frame still ran when this
+   * one was submitted), the interval since that frame finished. Frames
+   * finish in submit order.
+   */
+  private watchSubmit(into: { wall: number; interval: number }): Promise<void> {
+    if (!this.querySet || this.inflight >= GpuTimer.maxInflight) {
+      this.lastDoneAt = Number.NaN;
+      return Promise.resolve();
+    }
+    const busy = this.inflight > 0;
+    const start = performance.now();
+    this.inflight++;
+    const finish = () => {
+      const now = performance.now();
+      this.inflight--;
+      into.wall = now - start;
+      into.interval = busy ? now - this.lastDoneAt : Number.NaN;
+      this.lastDoneAt = now;
+    };
+    return this.device.queue.onSubmittedWorkDone().then(finish, () => {
+      this.inflight--;
+      this.lastDoneAt = Number.NaN;
+    });
+  }
+
   private onMapped(buffer: GPUBuffer): void {
-    const { count, labels, tag, wall } = this.handlers.get(buffer)!;
+    const { count, labels, tag, wall, interval } = this.handlers.get(buffer)!;
     const words = new Uint32Array(buffer.getMappedRange(0, count * 8));
     const order: number[] = [];
     for (let i = 0; i < count / 2; i++) {
@@ -400,6 +443,7 @@ export class GpuTimer {
     sample.ms = times.total / 1e6;
     sample.spanMs = times.span / 1e6;
     sample.wallMs = wall;
+    sample.intervalMs = interval;
     sample.passes = {};
     const names = [...this.labelIndex.keys()];
     for (const i of order) {
@@ -413,6 +457,9 @@ export class GpuTimer {
     if (times.span > 0) {
       this.spanMilliseconds = smooth(this.spanMilliseconds, times.span / 1e6);
     }
+    this.intervalMilliseconds = Number.isNaN(interval)
+      ? Number.NaN
+      : smooth(this.intervalMilliseconds, interval);
     if (!Number.isNaN(wall)) {
       this.wallMilliseconds = smooth(this.wallMilliseconds, wall);
     }

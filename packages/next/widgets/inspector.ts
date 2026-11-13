@@ -431,7 +431,10 @@ export function attachInspector(
     untimedHistory.push(
       drawing
         ? finite(
-            untimedMs(snap.frame?.gpuWallMs, snap.frame?.gpuMs ?? Number.NaN),
+            untimedMs(
+              snap.frame?.gpuIntervalMs,
+              snap.frame?.gpuMs ?? Number.NaN,
+            ),
           )
         : 0,
     );
@@ -565,6 +568,51 @@ function summaryLine(s: InspectorSnapshot, expanded: boolean): string {
   return parts.join('<span class="ci-sep">·</span>');
 }
 
+const KIND_LABELS: Record<string, string> = {
+  terrain: "Terrain tiles",
+  meshes: "Meshes (3D Tiles)",
+  instanced: "Instanced models",
+  patches: "Patches, B-reps",
+  billboards: "Billboards, labels",
+  lines: "Lines, vectors",
+  points: "Point clouds",
+};
+
+/** What the frame submitted, by kind: rows for kinds in use, the rest in one line. */
+function geometryHtml(
+  geometry: NonNullable<NonNullable<InspectorSnapshot["frame"]>["geometry"]>,
+  raysCast: number | undefined,
+): string {
+  const used = geometry.filter((k) => k.draws > 0);
+  const idle = geometry.filter((k) => k.draws === 0);
+  const count = (n: number) => Math.round(n).toLocaleString("en-US");
+  const what = (k: (typeof geometry)[number]) =>
+    [
+      k.triangles > 0 ? `${count(k.triangles)} tris` : "",
+      k.points > 0 ? `${count(k.points)} pts` : "",
+      k.segments > 0 ? `${count(k.segments)} segs` : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  return (
+    `<table class="ci-geometry"><thead><tr><th>Submitted</th><th>Draws</th><th>Geometry</th></tr></thead><tbody>${used
+      .map(
+        (k) =>
+          `<tr><td>${escape(KIND_LABELS[k.kind] ?? k.kind)}</td><td class="ci-num">${count(k.draws)}</td><td class="ci-num">${what(k) || "—"}</td></tr>`,
+      )
+      .join("")}</tbody></table>` +
+    `<div class="ci-note">${
+      idle.length
+        ? `None: ${idle.map((k) => escape((KIND_LABELS[k.kind] ?? k.kind).toLowerCase())).join(", ")}. `
+        : ""
+    }Counted before GPU culling; patch triangles aren't counted.${
+      raysCast !== undefined
+        ? ` Rays cast since the last frame: ${count(raysCast)}.`
+        : ""
+    }</div>`
+  );
+}
+
 function frameHtml(s: InspectorSnapshot, framesPerSecond?: number): string {
   const f = s.frame ?? {};
   const rows: [string, string][] = [
@@ -574,9 +622,14 @@ function frameHtml(s: InspectorSnapshot, framesPerSecond?: number): string {
   if (f.gpuMs !== undefined && f.gpuSpanMs !== undefined) {
     rows.push(["GPU span", ms(f.gpuSpanMs)]);
   }
+  if (f.gpuMs !== undefined && f.gpuIntervalMs !== undefined) {
+    rows.push(["GPU frame (busy)", ms(f.gpuIntervalMs)]);
+    rows.push(["Untimed", ms(untimedMs(f.gpuIntervalMs, f.gpuMs))]);
+  } else if (f.gpuMs !== undefined) {
+    rows.push(["GPU frame (busy)", "GPU idle between frames"]);
+  }
   if (f.gpuMs !== undefined && f.gpuWallMs !== undefined) {
-    rows.push(["GPU wall", ms(f.gpuWallMs)]);
-    rows.push(["Untimed (at most)", ms(untimedMs(f.gpuWallMs, f.gpuMs))]);
+    rows.push(["GPU latency", ms(f.gpuWallMs)]);
   }
   if (f.triangles !== undefined && f.trianglesPerPixel !== undefined) {
     rows.push([
@@ -602,7 +655,7 @@ function frameHtml(s: InspectorSnapshot, framesPerSecond?: number): string {
         .join(" · "),
     ]);
   }
-  return kv(rows);
+  return kv(rows) + (f.geometry ? geometryHtml(f.geometry, f.raysCast) : "");
 }
 
 interface LastMove {
@@ -966,7 +1019,7 @@ function passesHtml(
     );
   });
   sections.push(
-    `<div class="ci-group-flat"><span class="ci-key su"></span><span>Untimed (at most)</span><span class="ci-num">${ms(rest)}</span></div>${
+    `<div class="ci-group-flat"><span class="ci-key su"></span><span>Untimed</span><span class="ci-num">${ms(rest)}</span></div>${
       untimed.some((v) => v > 0)
         ? sparklines(
             [{ name: "Untimed", series: untimed, format: ms }],
@@ -980,7 +1033,7 @@ function passesHtml(
     hover !== undefined
       ? `${((HISTORY - 1 - hover) / 4).toFixed(1)} s ago`
       : "Newest at the right; hover for the values at a moment."
-  } Untimed is wall time less timed passes: an upper bound.</div>`;
+  } Untimed is the frame interval less timed passes; none while the GPU idles.</div>`;
 }
 
 const finite = (v: number) => (Number.isFinite(v) ? v : 0);
@@ -1325,6 +1378,9 @@ const CSS = `
 .cesium-inspector .ci-meter { margin-bottom: 4px; }
 .cesium-inspector .ci-meter-head { display: flex; justify-content: space-between; gap: 8px; }
 .cesium-inspector .ci-history-row { margin-bottom: 2px; }
+.cesium-inspector .ci-geometry { inline-size: 100%; border-collapse: collapse; margin-top: 6px; }
+.cesium-inspector .ci-geometry th { text-align: start; font-weight: 400; color: var(--ci-muted); font-size: 11px; padding: 0 0 2px; }
+.cesium-inspector .ci-geometry th:not(:first-child), .cesium-inspector .ci-geometry td.ci-num { text-align: right; padding-inline-start: 8px; }
 .cesium-inspector .ci-group > summary, .cesium-inspector .ci-group-flat { display: grid; grid-template-columns: 10px 1fr auto; gap: 6px; align-items: center; cursor: pointer; margin: 2px 0; }
 .cesium-inspector .ci-group-flat { cursor: default; }
 .cesium-inspector .ci-group > summary .ci-num, .cesium-inspector .ci-group-flat .ci-num { text-align: right; }

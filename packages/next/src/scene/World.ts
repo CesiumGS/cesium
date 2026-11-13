@@ -273,6 +273,8 @@ export class World {
    * materials).
    */
   version = 0;
+  /** Rays cast since the world was made (`castRays`), for the frame stats. */
+  raysCast = 0;
   /**
    * View bits (`Engine.viewBit`) of every record changed since the engine
    * last rendered: the views that can see a change, so on-demand rendering
@@ -1705,6 +1707,7 @@ export class World {
     rays: readonly CastRay[],
     options: CastOptions = {},
   ): Promise<Array<number | undefined>> {
+    this.raysCast += rays.length;
     return castRays(this, rays, options);
   }
 

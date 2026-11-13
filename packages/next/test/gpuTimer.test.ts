@@ -228,6 +228,63 @@ describe("GPU timer groups", () => {
   });
 });
 
+describe("GPU frame interval", () => {
+  it("is reported only when a frame was submitted before the last finished", async () => {
+    const frame = words([0, 1_000_000]);
+    const buffer = () => ({
+      mapAsync: () => Promise.resolve(),
+      getMappedRange: (offset = 0, size = frame.byteLength) =>
+        frame.buffer.slice(offset, offset + size),
+      unmap: () => {},
+      destroy: () => {},
+    });
+    const finish: Array<() => void> = [];
+    const device = {
+      features: new Set(["timestamp-query"]),
+      createQuerySet: () => ({ destroy: () => {} }),
+      createBuffer: buffer,
+      queue: {
+        onSubmittedWorkDone: () =>
+          new Promise<void>((resolve) => finish.push(resolve)),
+      },
+    } as unknown as GPUDevice;
+    installGpuGlobals();
+    const timer = new GpuTimer(device);
+    const encoder = {
+      resolveQuerySet: () => {},
+      copyBufferToBuffer: () => {},
+    } as unknown as GPUCommandEncoder;
+    const submit = () => {
+      timer.beginFrame();
+      timer.passWrites("opaque");
+      timer.endFrame(encoder);
+      timer.afterSubmit();
+    };
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 5));
+    // Alone: the GPU was idle before it.
+    submit();
+    finish.shift()!();
+    await settle();
+    expect(timer.lastSample.intervalMs).toBeNaN();
+    expect(timer.intervalMilliseconds).toBeNaN();
+    // Two in flight: the second follows the first without a gap.
+    submit();
+    submit();
+    finish.shift()!();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    finish.shift()!();
+    await settle();
+    expect(timer.lastSample.intervalMs).toBeGreaterThanOrEqual(5);
+    expect(timer.intervalMilliseconds).toBeGreaterThanOrEqual(5);
+    // Alone again: nothing reported.
+    submit();
+    finish.shift()!();
+    await settle();
+    expect(timer.intervalMilliseconds).toBeNaN();
+    timer.destroy();
+  });
+});
+
 describe("GPU pass times against a brute-force union", () => {
   /** Seeded (mulberry32), so a failure reproduces. */
   function random(seed: number) {
