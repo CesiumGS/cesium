@@ -70,12 +70,7 @@ void main(void)
         lambda -= func / derivative;
     }
     vec3 geodeticNormal = worldCoordinate * inverseRadiiSquared / (1.0 + lambda * inverseRadiiSquared);
-
-    // atan(y, x) is undefined when x is 0, which happens on the poles and on the +/-90 degree meridians.
-    float horizontalLength = length(geodeticNormal.xy);
-    float latitude = horizontalLength == 0.0 ? sign(geodeticNormal.z) * czm_piOverTwo : atan(geodeticNormal.z, horizontalLength);
-    float longitude = geodeticNormal.x == 0.0 ? sign(geodeticNormal.y) * czm_piOverTwo : atan(geodeticNormal.y, geodeticNormal.x);
-    vec2 sphericalLatLong = vec2(latitude, longitude);
+    vec2 sphericalLatLong = vec2(atan(geodeticNormal.z, length(geodeticNormal.xy)), atan(geodeticNormal.y, geodeticNormal.x));
     sphericalLatLong.y += v_uvMinAndSphericalLongitudeRotation.z;
     sphericalLatLong.y = czm_branchFreeTernary(sphericalLatLong.y < czm_pi, sphericalLatLong.y, sphericalLatLong.y - czm_twoPi);
     uv.x = (sphericalLatLong.y - v_sphericalExtents.y) * v_sphericalExtents.w;
