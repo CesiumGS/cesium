@@ -218,6 +218,13 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
 3. **Per-route-shape pipeline compiles.** Generated WGSL of up to about 280 KB takes 2.3–4.3 s per pipeline in the GPU process, compiled one at a time. A routed draw stays hidden until its pipelines exist, so content appears late on first load.
 4. **Terrain loses its exact path under a ceiling.** `verticalExaggeration` with a `ceiling` drops `heightScale` (src/georeference/heightWarps.ts), so the globe's exact `h·n̂` path turns off. Terrain then pays costs 1–3, as in the gallery's scene 1.
 
+**Status (2026-11-12): fixes 1 and 2 built** (`d66510f3cd`, `bbde3070d8`); 3 to 5 not started.
+
+- **Fix 1:** `HeightScale` gains an optional `profile` (ceiling, band). Under it, terrain carries (n̂, signed h) in a 4-component attribute, and the vertex stage draws (k − 1)·G(h)·n̂, with G written once in `heightProfile.slang` and mirrored in `camera/heightProfile.ts`. A region's image is the region over [g(hMin), g(hMax)]. Limits: a view that sets the factor itself still takes the compiled route for terrain, and a tile loaded in the other mode keeps it until it reloads.
+- **Fix 2:** descriptors declare `bound(box, ranges)` as an entrywise bound on |J| in chosen bases, and `composeBox` (`scene/routeBounds.ts`) carries a tile's box along the route by the mean value theorem, as an upper Riemann sum over 4 scaled boxes. Bounded: exaggeration, heightOffset, geographic↔geocentric, TM/UTM and Web Mercator forward, scaleAbout, scaleAlongAxes, bend; the rest sample as before.
+  - Measured against dense sampling: a flat 100 × 100 × 1 km box at ×10 under a 9 km ceiling is 1.00, 1.00 and 1.34 per axis (a sphere bound was 9.8×). UTM is within 1.5, and most exaggeration cases 1.0–1.2. Flat regions 100 km across near the ceiling reach 4.4 vertically.
+  - `ParamSpec.expected` exists but no descriptor sets it yet, so bounds use each parameter's current value.
+
 **The fixes, in order of payoff:**
 
 1. **Exact terrain under any height profile.** Terrain carries h, so generalize `HeightScale` to a height profile f(h): the lift with a ceiling and blend band, with parameters as uniforms. Terrain under it stays on the exact attribute path, with no bounds sampling and no route compile. Tile bounds come from f over the tile's height range, which is exact and closed form.
