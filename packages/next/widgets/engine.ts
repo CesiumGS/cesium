@@ -153,6 +153,11 @@ function recordable(
       view.debug = debug as DebugView;
     }
   }
+  if (params.get("probe") === "sse") {
+    void import("./sseProbe.ts").then((m) =>
+      m.startSseProbe(engine, options.tilesets),
+    );
+  }
   return r;
 }
 
