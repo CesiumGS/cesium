@@ -3,6 +3,7 @@
 // with self time summed by function and by file. `node scripts/profilePage.mjs
 // <url> [seconds = 20]` with the dev server running. PROFILE_WIDTH and
 // PROFILE_HEIGHT set the window (CSS px), PROFILE_SCALE its pixel ratio.
+import { writeFileSync } from "node:fs";
 import { chromium } from "playwright";
 
 const [url, secondsArg] = process.argv.slice(2);
@@ -32,6 +33,14 @@ try {
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   page.on("console", (m) => {
+    // Probe output (`&probe=sse`) is kept whole, in PROFILE_PROBE_OUT.
+    if (m.text().startsWith("[probe]")) {
+      if (process.env.PROFILE_PROBE_OUT) {
+        writeFileSync(process.env.PROFILE_PROBE_OUT, m.text());
+      }
+      console.log(m.text().split("\n")[0]);
+      return;
+    }
     if (m.type() === "error" || m.type() === "warning") {
       errors.push(`[${m.type()}] ${m.text().slice(0, 200)}`);
     }
