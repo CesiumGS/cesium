@@ -52,8 +52,14 @@ void main(void)
 #ifdef TEXTURE_COORDINATES
     vec2 uv;
 #ifdef SPHERICAL
-    // Treat world coords as a sphere normal for spherical coordinates
-    vec2 sphericalLatLong = czm_approximateSphericalCoordinates(worldCoordinate);
+    // Geodetic latitude and longitude from the (unnormalized) ellipsoid surface normal.
+    // position * inverseRadii^2 is only the normal for positions on the ellipsoid, and terrain height
+    // tilts it by about 4 meters of latitude per kilometer. So first move the position down to the surface.
+    vec3 scaledPosition = worldCoordinate * czm_ellipsoidInverseRadii;
+    vec3 geodeticNormal = normalize(scaledPosition * czm_ellipsoidInverseRadii);
+    float approximateHeight = length(worldCoordinate) * (1.0 - 1.0 / length(scaledPosition));
+    geodeticNormal = (worldCoordinate - approximateHeight * geodeticNormal) * czm_ellipsoidInverseRadii * czm_ellipsoidInverseRadii;
+    vec2 sphericalLatLong = vec2(atan(geodeticNormal.z, length(geodeticNormal.xy)), atan(geodeticNormal.y, geodeticNormal.x));
     sphericalLatLong.y += v_uvMinAndSphericalLongitudeRotation.z;
     sphericalLatLong.y = czm_branchFreeTernary(sphericalLatLong.y < czm_pi, sphericalLatLong.y, sphericalLatLong.y - czm_twoPi);
     uv.x = (sphericalLatLong.y - v_sphericalExtents.y) * v_sphericalExtents.w;

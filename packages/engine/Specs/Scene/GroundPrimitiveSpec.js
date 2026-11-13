@@ -1,4 +1,5 @@
 import {
+  Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
   DistanceDisplayConditionGeometryInstanceAttribute,
@@ -787,6 +788,125 @@ describe(
           [255, 255, 255, 255],
           largeRectangle,
         );
+      });
+
+      // Renders a large rectangle whose material is red south of the rectangle's
+      // middle latitude and green north of it, over depth at the given height.
+      // Returns a function that checks the color at an offset in meters north of the middle.
+      function createLatitudeSplitScene(textureRectangle, height) {
+        const center = Rectangle.center(textureRectangle);
+        const depthRectangle = new Rectangle(
+          center.longitude - 0.001,
+          center.latitude - 0.001,
+          center.longitude + 0.001,
+          center.latitude + 0.001,
+        );
+        const depthPrimitive = new Primitive({
+          geometryInstances: new GeometryInstance({
+            geometry: new RectangleGeometry({
+              ellipsoid: ellipsoid,
+              rectangle: depthRectangle,
+              height: height,
+            }),
+            attributes: {
+              color: ColorGeometryInstanceAttribute.fromColor(Color.BLUE),
+            },
+          }),
+          appearance: new PerInstanceColorAppearance({
+            translucent: false,
+            flat: true,
+          }),
+          asynchronous: false,
+        });
+        const mockDepthPrimitive = new MockPrimitive(
+          depthPrimitive,
+          Pass.GLOBE,
+        );
+        mockDepthPrimitive.destroy = function () {
+          this._primitive.destroy();
+          return destroyObject(this);
+        };
+        largeScene.primitives.add(mockDepthPrimitive);
+
+        const material = new Material({
+          fabric: {
+            source:
+              "czm_material czm_getMaterial(czm_materialInput materialInput) {\n" +
+              "    czm_material material = czm_getDefaultMaterial(materialInput);\n" +
+              "    material.diffuse = mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), step(0.5, materialInput.st.t));\n" +
+              "    return material;\n" +
+              "}\n",
+          },
+        });
+        largeScene.groundPrimitives.add(
+          new GroundPrimitive({
+            geometryInstances: new GeometryInstance({
+              geometry: new RectangleGeometry({
+                ellipsoid: ellipsoid,
+                rectangle: textureRectangle,
+              }),
+            }),
+            appearance: new EllipsoidSurfaceAppearance({
+              aboveGround: false,
+              flat: true,
+              material: material,
+            }),
+            asynchronous: false,
+          }),
+        );
+        largeScene.postProcessStages.fxaa.enabled = false;
+
+        return function (metersNorth, expectedColor) {
+          // Look straight down from 5 meters above the depth, so both rows of
+          // pixels are within 1.5 meters of the camera's latitude.
+          largeScene.camera.setView({
+            destination: Cartesian3.fromRadians(
+              center.longitude,
+              center.latitude + metersNorth / ellipsoid.maximumRadius,
+              height + 5.0,
+            ),
+          });
+          expect(largeScene).toRenderAndCall(function (rgba) {
+            // All four pixels
+            for (let i = 0; i < rgba.length; i += 4) {
+              expect(rgba.slice(i, i + 4)).toEqual(expectedColor);
+            }
+          });
+        };
+      }
+
+      it("aligns textures on large GeometryInstances with geodetic latitude", function () {
+        if (
+          !GroundPrimitive.isSupported(scene) ||
+          !GroundPrimitive.supportsMaterials(scene)
+        ) {
+          return;
+        }
+
+        // The rectangle from https://github.com/CesiumGS/cesium/issues/12943
+        const expectColor = createLatitudeSplitScene(
+          Rectangle.fromDegrees(-86.6, 23.7, -70.2, 46.2),
+          0.0,
+        );
+        expectColor(-100.0, [255, 0, 0, 255]);
+        expectColor(100.0, [0, 255, 0, 255]);
+      });
+
+      it("aligns textures on large GeometryInstances with geodetic latitude on high terrain", function () {
+        if (
+          !GroundPrimitive.isSupported(scene) ||
+          !GroundPrimitive.supportsMaterials(scene)
+        ) {
+          return;
+        }
+
+        // Without accounting for height, the texture is about 15 meters too far south here.
+        const expectColor = createLatitudeSplitScene(
+          Rectangle.fromDegrees(80.0, 25.0, 95.0, 40.0),
+          5000.0,
+        );
+        expectColor(-7.5, [255, 0, 0, 255]);
+        expectColor(7.5, [0, 255, 0, 255]);
       });
     });
 

@@ -748,42 +748,9 @@ ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function (
   return attributes;
 };
 
-const spherePointScratch = new Cartesian3();
-function latLongToSpherical(latitude, longitude, ellipsoid, result) {
-  const cartographic = cartographicScratch;
-  cartographic.latitude = latitude;
-  cartographic.longitude = longitude;
-  cartographic.height = 0.0;
-
-  const spherePoint = Cartographic.toCartesian(
-    cartographic,
-    ellipsoid,
-    spherePointScratch,
-  );
-
-  // Project into plane with vertical for latitude
-  const magXY = Math.sqrt(
-    spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y,
-  );
-
-  // Use fastApproximateAtan2 for alignment with shader
-  const sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
-  const sphereLongitude = CesiumMath.fastApproximateAtan2(
-    spherePoint.x,
-    spherePoint.y,
-  );
-
-  result.x = sphereLatitude;
-  result.y = sphereLongitude;
-
-  return result;
-}
-
-const sphericalScratch = new Cartesian2();
 /**
  * Gets an attributes object containing:
- * - the southwest corner of a rectangular area in spherical coordinates, as well as the inverse of the latitude/longitude range.
- *   These are computed using the same atan2 approximation used in the shader.
+ * - the southwest corner of a rectangular area in geodetic coordinates, as well as the inverse of the latitude/longitude range.
  * - 1 texture coordinate rotation GeometryInstanceAttributes
  * - 2 GeometryInstanceAttributes used to compute high-precision points in 2D and Columbus View.
  *   These points are used to compute eye-space planes like above.
@@ -795,14 +762,12 @@ const sphericalScratch = new Cartesian2();
  *
  * @param {Rectangle} boundingRectangle Rectangle object that the spherical extents will approximately bound
  * @param {number[]} textureCoordinateRotationPoints Points in the computed texture coordinate system for remapping texture coordinates
- * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
  * @param {MapProjection} projection The MapProjection used for 2D and Columbus View.
  * @returns {object} An attributes dictionary containing spherical texture coordinate attributes.
  */
 ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes = function (
   boundingRectangle,
   textureCoordinateRotationPoints,
-  ellipsoid,
   projection,
 ) {
   //>>includeStart('debug', pragmas.debug);
@@ -811,29 +776,13 @@ ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes = function (
     "textureCoordinateRotationPoints",
     textureCoordinateRotationPoints,
   );
-  Check.typeOf.object("ellipsoid", ellipsoid);
   Check.typeOf.object("projection", projection);
   //>>includeEnd('debug');
 
-  // rectangle cartographic coords !== spherical because it's on an ellipsoid
-  const southWestExtents = latLongToSpherical(
-    boundingRectangle.south,
-    boundingRectangle.west,
-    ellipsoid,
-    sphericalScratch,
-  );
-
-  let south = southWestExtents.x;
-  let west = southWestExtents.y;
-
-  const northEastExtents = latLongToSpherical(
-    boundingRectangle.north,
-    boundingRectangle.east,
-    ellipsoid,
-    sphericalScratch,
-  );
-  let north = northEastExtents.x;
-  let east = northEastExtents.y;
+  let south = boundingRectangle.south;
+  let west = boundingRectangle.west;
+  let north = boundingRectangle.north;
+  let east = boundingRectangle.east;
 
   // If the bounding rectangle crosses the IDL, rotate the spherical extents so the cross no longer happens.
   // This rotation must happen in the shader too.
