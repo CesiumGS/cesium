@@ -75,6 +75,26 @@ export interface InspectorSnapshot {
     }>;
     /** Rays cast since the frame before (height queries, clamping, queries). */
     raysCast?: number;
+    /** Inside the frame's markers, not covered by a timed pass, ms. */
+    gpuInFrameUntimedMs?: number;
+    /** Previous frame's last marker to this one's first, ms; absent when the GPU idled. */
+    gpuBetweenFramesMs?: number;
+    /** CPU-side GPU work since the frame before (queue writes, copies, submits, resources created). */
+    work?: {
+      uploadCalls: number;
+      uploadBytes: number;
+      textureCalls: number;
+      textureBytes: number;
+      submits: number;
+      copyCalls: number;
+      copyBytes: number;
+      createdCount: number;
+      createdBytes: number;
+      mapCalls: number;
+      /** Largest first: label, bytes, calls. */
+      uploadBy: Array<[string, number, number]>;
+      createdBy: Array<[string, number, number]>;
+    };
     /** Submit to done, ms: latency, including waits behind earlier frames. */
     gpuWallMs?: number;
     /**

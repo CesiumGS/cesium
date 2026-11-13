@@ -101,6 +101,7 @@ import {
   addHeightCapture,
   removeHeightCapture,
 } from "./heightCaptures.ts";
+import { enableGpuWork, type GpuWork } from "../gpu/GpuWork.ts";
 import { EngineScene } from "./engineScene.ts";
 import { EngineRaster } from "../render/view/engineRaster.ts";
 import {
@@ -145,6 +146,22 @@ export interface FrameStats {
    * frame): what a frame costs the GPU, untimed work included.
    */
   gpuIntervalMs: number;
+  /**
+   * Smoothed time inside a frame's encoder, between its first and last
+   * marker, that no timed pass covered (copies, clears, work between
+   * passes), ms. NaN until a marked frame arrives.
+   */
+  gpuInFrameUntimedMs: number;
+  /**
+   * Smoothed gap from the previous frame's last marker to the next one's
+   * first, ms, while the GPU was busy back to back; NaN when it idled.
+   */
+  gpuBetweenFramesMs: number;
+  /**
+   * CPU-side GPU work (queue writes, copies, submits, resources created)
+   * since the frame before; set once `trackGpuWork()` was called.
+   */
+  work?: GpuWork;
   views: number;
   draws: number;
   /** Indirect draw calls per view (one per batch). */
@@ -412,6 +429,8 @@ export class Engine {
     gpuSpanMs: Number.NaN,
     gpuWallMs: Number.NaN,
     gpuIntervalMs: Number.NaN,
+    gpuInFrameUntimedMs: Number.NaN,
+    gpuBetweenFramesMs: Number.NaN,
     views: 0,
     draws: 0,
     batches: 0,
@@ -427,6 +446,15 @@ export class Engine {
     lastCpuMs: 0,
     tickReasons: 0,
   };
+  /**
+   * Starts counting the CPU-side GPU work between frames (`FrameStats.work`):
+   * queue writes, copies, submits, resources created. Wraps WebGPU's
+   * methods once for the page; nothing is counted before it is called.
+   * False where WebGPU's classes aren't available.
+   */
+  trackGpuWork(): boolean {
+    return enableGpuWork();
+  }
   /**
    * Smoothed GPU time per pass, ms, by pass name (shadow cascades added
    * up): where `stats.gpuMs` goes. Empty without `timestamp-query`.
@@ -458,7 +486,10 @@ export class Engine {
    * one's end; `wallMs` is the submit's latency (NaN if it hadn't arrived);
    * `intervalMs` is the time since the previous frame finished, set only
    * when the GPU was busy back to back (else NaN), so `intervalMs - ms` is
-   * the untimed share.
+   * the untimed share. `inFrameUntimedMs` is the part of it inside the
+   * frame's encoder (between its first and last marker, less the timed
+   * passes); `betweenFramesMs` is the gap between the previous frame's last
+   * marker and this one's first (NaN when the GPU idled).
    */
   get gpuSample(): {
     samples: number;
@@ -467,6 +498,9 @@ export class Engine {
     spanMs: number;
     wallMs: number;
     intervalMs: number;
+    inFrameUntimedMs: number;
+    betweenFramesMs: number;
+    markerSpanMs: number;
     passes: Readonly<Record<string, number>>;
   } {
     const t = this.raster.timer;
@@ -477,6 +511,9 @@ export class Engine {
       spanMs: t.lastSample.spanMs,
       wallMs: t.lastSample.wallMs,
       intervalMs: t.lastSample.intervalMs,
+      inFrameUntimedMs: t.lastSample.inFrameUntimedMs,
+      betweenFramesMs: t.lastSample.betweenFramesMs,
+      markerSpanMs: t.lastSample.markerSpanMs,
       passes: t.lastSample.passes,
     };
   }
