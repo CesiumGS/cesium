@@ -399,7 +399,8 @@ export function updateTilesets(
   }
   engine.scene.selections.clear();
   engine.scene.uploadsWaiting = engine.tilesets.some(
-    (t) => t.state.ready.length > 0,
+    // Test doubles of a tileset may have no state: nothing waits there.
+    (t) => ((t.state as Tileset3D["state"] | undefined)?.ready.length ?? 0) > 0,
   );
   engine.scene.budgetFilled = engine.scene.uploadBudget.bytes <= 0;
   // After the tilesets: their loads and unloads announce height changes.
