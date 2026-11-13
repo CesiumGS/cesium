@@ -484,8 +484,8 @@ function moveItems(batch, items, time) {
     const itemsToRemove = item.itemsToRemove;
     const itemsToMoveLength = itemsToRemove.length;
     if (itemsToMoveLength > 0) {
-      for (i = 0; i < itemsToMoveLength; i++) {
-        const updater = itemsToRemove[i];
+      for (let j = 0; j < itemsToMoveLength; j++) {
+        const updater = itemsToRemove[j];
         item.remove(updater);
         batch.add(time, updater);
         itemsMoved = true;
