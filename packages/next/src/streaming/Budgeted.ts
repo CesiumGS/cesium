@@ -126,6 +126,13 @@ interface Cover {
   complete: boolean;
   /** Incomplete covers: the tiles whose regions have no content yet. */
   holes: readonly Tile[];
+  /**
+   * False when a hole's region also has drawn tiles inside it (finer content
+   * that arrived there, a stand-in). A placeholder is clipped to the area
+   * nothing else draws, so it may only be clipped to exact holes. Absent
+   * means exact.
+   */
+  exact?: boolean;
 }
 
 const NO_HOLES: readonly Tile[] = [];
@@ -648,7 +655,14 @@ export class BudgetedSelection extends StepwiseSelection {
         if (tile.refine === "REPLACE" && tile.residentBelow > 0) {
           this.resident(tile, view, pass, rootError, result, partial, 0);
         }
-        return { tiles: partial, complete: false, holes: [tile] };
+        // The hole is the whole tile, so resident content drawn inside it
+        // makes it inexact.
+        return {
+          tiles: partial,
+          complete: false,
+          holes: [tile],
+          exact: partial.length === 0,
+        };
       }
       if (
         tile.refine === "REPLACE" &&
@@ -732,13 +746,25 @@ export class BudgetedSelection extends StepwiseSelection {
       // complete once this level's own content is present.
       return own !== undefined
         ? { tiles: parts, complete: true, holes: NO_HOLES }
-        : { tiles: parts, complete: false, holes: [tile] };
+        : {
+            tiles: parts,
+            complete: false,
+            holes: [tile],
+            exact: parts.length === 0,
+          };
     }
 
     // REPLACE: the visible children must all be coverable.
     const parts: Tile[] = [];
     const holes: Tile[] = [];
-    const missing: Tile[] = [];
+    // The clip regions for a placeholder: each incomplete child contributes
+    // its finest holes when exact; a child that drew nothing may stand for
+    // them with its whole box (`coarse`). One that drew something with
+    // inexact holes can't be clipped to at all.
+    const coarse: Tile[] = [];
+    let incomplete = 0;
+    let allExact = true;
+    let clippable = true;
     let complete = true;
     let visible = 0;
     for (const child of tile.children) {
@@ -759,8 +785,18 @@ export class BudgetedSelection extends StepwiseSelection {
       parts.push(...d.tiles);
       if (!d.complete) {
         complete = false;
+        incomplete++;
         holes.push(...d.holes);
-        missing.push(child);
+        if (d.exact === false) {
+          allExact = false;
+        }
+        if (d.tiles.length === 0) {
+          coarse.push(child);
+        } else if (d.exact !== false) {
+          coarse.push(...d.holes);
+        } else {
+          clippable = false;
+        }
       }
     }
     if (complete) {
@@ -771,13 +807,16 @@ export class BudgetedSelection extends StepwiseSelection {
     if (own !== undefined && own.length > 0) {
       // Mixed LOD: the arrived finer content draws, and this tile fills only
       // the missing volumes, at its true depth (clipped per fragment). The
-      // finest holes when few enough, else the missing children.
+      // finest holes when few enough, else the missing children (those that
+      // drew nothing; the rest contribute their own holes).
       if (parts.length > 0 && this.mixes(tile)) {
+        // Only boxes no other tile draws in: a hole that drew finer content
+        // would put the placeholder's surface through it.
         const clip =
-          holes.length <= CLIP_BOXES
+          allExact && holes.length <= CLIP_BOXES
             ? holes
-            : missing.length <= CLIP_BOXES
-              ? missing
+            : clippable && coarse.length <= CLIP_BOXES
+              ? coarse
               : undefined;
         if (clip) {
           result.placeholders!.set(tile, clip);
@@ -800,11 +839,11 @@ export class BudgetedSelection extends StepwiseSelection {
       // quarter 0.045; Stepwise 0.028).
       if (
         parts.length > 0 &&
-        missing.length * 2 <= visible &&
+        incomplete * 2 <= visible &&
         !drawnLastFrame(tile, view) &&
         parts.some((t) => drawnLastFrame(t, view))
       ) {
-        return { tiles: parts, complete: false, holes };
+        return { tiles: parts, complete: false, holes, exact: allExact };
       }
       // Drawn whole while its region refines: a stand-in.
       (result.standIns ??= []).push(tile);
@@ -814,6 +853,7 @@ export class BudgetedSelection extends StepwiseSelection {
       tiles: parts,
       complete: false,
       holes: parts.length === 0 ? [tile] : holes,
+      exact: parts.length === 0 || allExact,
     };
   }
 

@@ -24,6 +24,7 @@ import { GlobeStepwiseSelection } from "../src/globe/GlobeStepwise.ts";
 import { imageryLevel } from "../src/globe/GlobeImagery.ts";
 import type { ImageryProvider } from "../src/globe/ImageryProvider.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
+import { expectExactPlaceholders } from "./placeholderInvariant.ts";
 import type { SelectionView } from "../src/streaming/Stepwise.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import { at, contains, gridTile } from "./terrainRayFixtures.ts";
@@ -344,6 +345,7 @@ async function settle(
   for (let pass = 0; pass < 40; pass++) {
     const result = selection.select(source.root, source.geometricError, view());
     selected = result.selected;
+    expectExactPlaceholders(result);
     const pending = result.requested.filter((t) => t.state === "unloaded");
     if (pending.length === 0) {
       break;
