@@ -10,6 +10,7 @@
 import { TICK_REASONS, type Engine } from "@cesium/next";
 import type { EngineSnapshotOptions } from "./engine.ts";
 import {
+  RECORD_HEADER_NAME,
   RowBuffer,
   gpuRow,
   parseFrames,
@@ -73,7 +74,9 @@ export function createRecorder(
         const r = await fetch(url, {
           method: "POST",
           body,
-          headers: { "Content-Type": type },
+          // The custom header makes a cross-origin POST need a preflight,
+          // which the dev server never grants (vitePluginRecord.ts).
+          headers: { "Content-Type": type, [RECORD_HEADER_NAME]: "1" },
         });
         if (!r.ok) {
           status.error = `${r.status} ${await r.text()}`;

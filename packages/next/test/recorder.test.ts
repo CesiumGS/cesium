@@ -6,6 +6,7 @@ import {
   MAX_RECORD_BYTES,
   checkBody,
   framePath,
+  fromOwnPage,
   isPng,
   parseTick,
   pathInside,
@@ -130,5 +131,25 @@ describe("record endpoint", () => {
       ),
     ).toBe(true);
     expect(isPng(Uint8Array.from([1, 2, 3]))).toBe(false);
+  });
+});
+
+describe("the record endpoint's origin check", () => {
+  it("takes only same-origin requests that carry the recorder's header", () => {
+    const own = { "x-cesium-record": "1", host: "127.0.0.1:5190" };
+    expect(fromOwnPage(own)).toBe(true);
+    expect(
+      fromOwnPage({
+        ...own,
+        origin: "http://127.0.0.1:5190",
+        "sec-fetch-site": "same-origin",
+      }),
+    ).toBe(true);
+    // No header: a plain cross-site form or fetch.
+    expect(fromOwnPage({ host: "127.0.0.1:5190" })).toBe(false);
+    // Another site, even if it somehow sent the header.
+    expect(fromOwnPage({ ...own, "sec-fetch-site": "cross-site" })).toBe(false);
+    expect(fromOwnPage({ ...own, origin: "https://example.com" })).toBe(false);
+    expect(fromOwnPage({ ...own, origin: "not a url" })).toBe(false);
   });
 });

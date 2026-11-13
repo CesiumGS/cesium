@@ -42,6 +42,13 @@ export type RecordColumn = (typeof RECORD_COLUMNS)[number];
 /** The header line, without its newline. */
 export const RECORD_HEADER = RECORD_COLUMNS.join(",");
 
+/**
+ * The request header every recorder POST carries. A custom header makes a
+ * cross-origin request need a CORS preflight, which the dev server never
+ * grants, so other sites can't write recordings.
+ */
+export const RECORD_HEADER_NAME = "X-Cesium-Record";
+
 /** What one tick leaves in its row. Fields the engine can't give stay out. */
 export interface TickSample {
   /** ms since recording began. */

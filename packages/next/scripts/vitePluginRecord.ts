@@ -10,7 +10,11 @@ import {
 import { homedir } from "node:os";
 import { basename, join, resolve, sep } from "node:path";
 import type { Plugin } from "vite";
-import { RECORD_COLUMNS, RECORD_HEADER } from "../widgets/recorderRows.ts";
+import {
+  RECORD_COLUMNS,
+  RECORD_HEADER,
+  RECORD_HEADER_NAME,
+} from "../widgets/recorderRows.ts";
 
 /** The largest body accepted, bytes: 500 ms of rows is a few KB. */
 export const MAX_RECORD_BYTES = 256 * 1024;
@@ -21,6 +25,37 @@ const CELL = /^[\w.+= -]*$/;
 /** The largest frame image accepted, bytes. */
 export const MAX_FRAME_BYTES = 12 * 1024 * 1024;
 const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+/** Recordings (page ids) one dev server keeps, frames each, and bytes in all. */
+export const MAX_RECORDINGS = 64;
+export const MAX_FRAMES = 2000;
+export const MAX_SESSION_BYTES = 2 * 1024 ** 3;
+
+/**
+ * Whether a request comes from the dev server's own pages: it carries the
+ * recorder's header (so a cross-origin one needed a preflight, never
+ * granted), and the browser says it's same-origin where it says anything.
+ */
+export function fromOwnPage(headers: {
+  [name: string]: string | string[] | undefined;
+}): boolean {
+  if (headers[RECORD_HEADER_NAME.toLowerCase()] !== "1") {
+    return false;
+  }
+  const site = headers["sec-fetch-site"];
+  if (site !== undefined && site !== "same-origin") {
+    return false;
+  }
+  const origin = headers.origin;
+  const host = headers.host;
+  if (typeof origin === "string" && typeof host === "string") {
+    try {
+      return new URL(origin).host === host;
+    } catch {
+      return false;
+    }
+  }
+  return true;
+}
 
 /** A tick index from a query value: a whole number from 0 to 2^31, else undefined. */
 export function parseTick(text: string | null | undefined): number | undefined {
@@ -120,6 +155,8 @@ export function checkBody(text: string): string[] | string {
  */
 export function recordEndpoint(directory = recordDirectory()): Plugin {
   const files = new Map<string, string>();
+  const frames = new Map<string, number>();
+  let written = 0;
   return {
     name: "record-endpoint",
     apply: "serve",
@@ -129,15 +166,39 @@ export function recordEndpoint(directory = recordDirectory()): Plugin {
           next();
           return;
         }
+        // Replies are fixed plain text: nothing from the request or an
+        // exception is echoed (exceptions go to the dev server's log).
         const fail = (status: number, message: string) => {
           res.statusCode = status;
+          res.setHeader("Content-Type", "text/plain; charset=utf-8");
+          res.setHeader("X-Content-Type-Options", "nosniff");
           res.end(message);
         };
+        const broke = (e: unknown) => {
+          server.config.logger.error(`record endpoint: ${String(e)}`);
+          fail(500, "could not write the recording");
+        };
+        if (!fromOwnPage(req.headers)) {
+          fail(403, "not from this dev server's pages");
+          return;
+        }
+        if (written > MAX_SESSION_BYTES) {
+          fail(507, "recording limit reached; restart the dev server");
+          return;
+        }
         const url = new URL(req.url ?? "/", "http://localhost");
         const page = sanitizePageId(url.searchParams.get("page"));
         if (url.pathname === "/frame") {
           const tick = parseTick(url.searchParams.get("tick"));
           const csv = files.get(page);
+          if (req.headers["content-type"] !== "image/png") {
+            fail(415, "frames are image/png");
+            return;
+          }
+          if ((frames.get(page) ?? 0) >= MAX_FRAMES) {
+            fail(429, "frame limit for this recording reached");
+            return;
+          }
           const chunks: Buffer[] = [];
           let size = 0;
           req.on("data", (chunk: Buffer) => {
@@ -157,10 +218,16 @@ export function recordEndpoint(directory = recordDirectory()): Plugin {
             } else if (!path || !isPng(bytes)) {
               fail(400, "bad tick, unknown page or not a PNG");
             } else {
-              mkdirSync(join(path, ".."), { recursive: true });
-              writeFileSync(path, bytes);
-              res.statusCode = 204;
-              res.end();
+              try {
+                mkdirSync(join(path, ".."), { recursive: true });
+                writeFileSync(path, bytes);
+                frames.set(page, (frames.get(page) ?? 0) + 1);
+                written += bytes.length;
+                res.statusCode = 204;
+                res.end();
+              } catch (e) {
+                broke(e);
+              }
             }
           });
           return;
@@ -190,6 +257,10 @@ export function recordEndpoint(directory = recordDirectory()): Plugin {
             mkdirSync(directory, { recursive: true });
             let name = files.get(page);
             const fresh = name === undefined;
+            if (fresh && files.size >= MAX_RECORDINGS) {
+              fail(429, "recording limit reached; restart the dev server");
+              return;
+            }
             name ??= recordFileName(new Date(), page);
             const path = pathInside(directory, name);
             if (!path) {
@@ -201,12 +272,14 @@ export function recordEndpoint(directory = recordDirectory()): Plugin {
               writeFileSync(path, `${RECORD_HEADER}\n`);
               point(directory, name);
             }
-            appendFileSync(path, `${rows.join("\n")}\n`);
+            const text = `${rows.join("\n")}\n`;
+            appendFileSync(path, text);
+            written += text.length;
             res.statusCode = 204;
             res.setHeader("X-Record-File", name);
             res.end();
           } catch (e) {
-            fail(500, String(e));
+            broke(e);
           }
         });
       });
