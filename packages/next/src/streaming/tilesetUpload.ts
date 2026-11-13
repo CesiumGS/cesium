@@ -96,11 +96,13 @@ export function upload(tileset: TilesetUpload): void {
     tileset.state.capacityWait--;
     exceeded = tileset.state.ready.length > 0;
   }
+  const uploadLimit = Math.max(
+    1,
+    Math.round(tileset.state.uploadsPerFrame * budget.scale),
+  );
   for (
     let n = 0;
-    n < tileset.state.uploadsPerFrame &&
-    tileset.state.ready.length > 0 &&
-    !exceeded;
+    n < uploadLimit && tileset.state.ready.length > 0 && !exceeded;
     n++
   ) {
     // Casters don't hold back what views need: they leave first.
@@ -108,8 +110,8 @@ export function upload(tileset: TilesetUpload): void {
       exceeded = true;
       break;
     }
-    // The engine-wide budget for this frame (one upload always goes).
-    if (budget.uploads > 0 && budget.bytes <= 0) {
+    // The engine-wide budget for this tick (one upload always goes).
+    if (budget.uploads > 0 && (budget.bytes <= 0 || budget.uploadMs <= 0)) {
       break;
     }
     // Views' content first, in any tileset: the engine's budget is shared.
@@ -236,6 +238,7 @@ export function upload(tileset: TilesetUpload): void {
       budget.bytes -= model.bytes;
       budget.uploads++;
       const uploaded = performance.now();
+      budget.uploadMs -= uploaded - uploadStart;
       const network = asset.timing?.networkMs ?? 0;
       const decode = asset.timing?.decodeMs ?? 0;
       tileset.state.recent.push({

@@ -16,6 +16,7 @@ import type { SelectionView } from "../streaming/Stepwise.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { EngineRaster } from "../render/view/engineRaster.ts";
 import type { EngineScene } from "./engineScene.ts";
+import { uploadCpuMs, uploadScale } from "./uploadPacing.ts";
 
 /** @internal Scene side, reading the rasterizer's view targets: what tilesets select for, and the tick's upload budget. */
 export interface SelectionEngine extends Pick<
@@ -47,6 +48,7 @@ export interface SelectionEngine extends Pick<
     | "selections"
     | "tilesetRotation"
     | "uploadBudget"
+    | "uploadsWaiting"
     | "viewIds"
     | "viewMotion"
   >;
@@ -371,11 +373,20 @@ export function updateTilesets(
   due: (tileset: Tileset3D) => boolean,
 ): void {
   adaptUploadBudget(engine, performance.now());
-  // Budgets are per 60 Hz frame; a faster loop gets its share by time.
-  const share = Math.min(1, engine.scene.lastUpdateInterval / (1000 / 60));
+  // Budgets are per 60 Hz tick; a faster loop gets its share by time, a
+  // slower one (slow GPU) more, while uploads were waiting (uploadScale).
+  const share = uploadScale(
+    engine.scene.lastUpdateInterval,
+    engine.scene.uploadsWaiting,
+  );
+  engine.scene.uploadBudget.scale = share;
   engine.scene.uploadBudget.bytes = engine.uploadBytesPerFrame * share;
   engine.scene.uploadBudget.uploads = 0;
   engine.scene.uploadBudget.ms = engine.treeBuildMsPerFrame * share;
+  engine.scene.uploadBudget.uploadMs = uploadCpuMs(
+    share,
+    engine.treeBuildMsPerFrame,
+  );
   engine.scene.uploadBudget.trees = 0;
   const n = engine.tilesets.length;
   const start = n > 0 ? engine.scene.tilesetRotation++ % n : 0;
@@ -387,6 +398,9 @@ export function updateTilesets(
     }
   }
   engine.scene.selections.clear();
+  engine.scene.uploadsWaiting = engine.tilesets.some(
+    (t) => t.state.ready.length > 0,
+  );
   engine.scene.budgetFilled = engine.scene.uploadBudget.bytes <= 0;
   // After the tilesets: their loads and unloads announce height changes.
   engine.clamping.update();

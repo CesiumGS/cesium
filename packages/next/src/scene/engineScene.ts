@@ -59,6 +59,17 @@ export class EngineScene {
    * thread time for building external tilesets' tile trees (at least one
    * of each happens per tick).
    */
-  readonly uploadBudget = { bytes: 0, uploads: 0, ms: 0, trees: 0 };
+  readonly uploadBudget = {
+    /** Scale of the per-tick limits this tick (uploadScale). */
+    scale: 1,
+    bytes: 0,
+    uploads: 0,
+    ms: 0,
+    /** CPU left for uploads this tick, ms (Infinity at 1x or less). */
+    uploadMs: Infinity,
+    trees: 0,
+  };
+  /** Content was still waiting to upload when the last update ended. */
+  uploadsWaiting = false;
   tilesetRotation = 0;
 }
