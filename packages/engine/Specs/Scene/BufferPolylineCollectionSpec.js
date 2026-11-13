@@ -4,6 +4,8 @@ import {
   Color,
   ComponentDatatype,
   Matrix4,
+} from "@cesium/core";
+import {
   BufferPolyline,
   BufferPolylineCollection,
   BufferPolylineMaterial,
@@ -31,6 +33,16 @@ describe("Scene/BufferPolylineCollection", () => {
     expect(polyline.featureId).toBe(2);
   });
 
+  it("widthUnits", () => {
+    expect(new BufferPolylineCollection().widthUnits).toBe("pixels");
+    expect(
+      new BufferPolylineCollection({ widthUnits: "meters" }).widthUnits,
+    ).toBe("meters");
+    expect(
+      () => new BufferPolylineCollection({ widthUnits: "em" }),
+    ).toThrowDeveloperError();
+  });
+
   it("positions", () => {
     const collection = new BufferPolylineCollection();
     const polyline = new BufferPolyline();
@@ -52,6 +64,44 @@ describe("Scene/BufferPolylineCollection", () => {
 
     collection.get(2, polyline);
     expect(polyline.getPositions(positionsScratch)).toEqual(positions3);
+  });
+
+  it("setPositions", () => {
+    const collection = new BufferPolylineCollection();
+    const polyline = new BufferPolyline();
+
+    const positions1 = new Float64Array([0, 0, 0, 0, 0, 1, 0, 0, 2]);
+    const positions2 = new Float64Array([0, 1, 0, 0, 1, 1, 0, 1, 2]);
+    const positions3 = new Float64Array([0, 2, 0, 0, 2, 1, 0, 2, 2]);
+
+    collection.add({ positions: positions1 }, polyline);
+    collection.add({ positions: positions2 }, polyline);
+    collection.add({ positions: positions3 }, polyline);
+
+    expect(collection._dirtyFlags).toBe(
+      BufferPolylineCollection.DirtyFlags.ALL,
+    );
+
+    collection._makeClean();
+
+    // prettier-ignore
+    collection.setPositions(new Float64Array([
+      0, 1, 0, 0, 1, 1, 0, 1, 123,
+      0, 2, 0, 0, 2, 1, 0, 2, 123
+    ]), 1, 2);
+
+    collection.get(0, polyline);
+    expect(polyline.getPositions()).toEqual(positions1);
+
+    collection.get(1, polyline);
+    expect(polyline.getPositions()[8]).toEqual(123);
+
+    collection.get(2, polyline);
+    expect(polyline.getPositions()[8]).toEqual(123);
+
+    expect(collection._dirtyFlags).toBe(
+      BufferPolylineCollection.DirtyFlags.GEOMETRY,
+    );
   });
 
   it("show", () => {
@@ -108,6 +158,7 @@ describe("Scene/BufferPolylineCollection", () => {
     const src = new BufferPolylineCollection({
       primitiveCountMax: 2,
       vertexCountMax: 6,
+      widthUnits: "meters",
     });
 
     const positions1 = new Float64Array([0, 0, 0, 0, 0, 1, 0, 0, 2]);
@@ -145,6 +196,8 @@ describe("Scene/BufferPolylineCollection", () => {
     dst.get(2, polyline);
     expect(polyline.getMaterial(material).color).toEqual(Color.BLUE);
     expect(polyline.getPositions(positionsScratch)).toEqual(positions3);
+
+    expect(src._cloneEmpty().widthUnits).toBe("meters");
   });
 
   it("sort", () => {
@@ -329,5 +382,26 @@ describe("Scene/BufferPolylineCollection", () => {
     expect(collection.boundingVolume.center.y).toBeCloseTo(0, 1);
     expect(collection.boundingVolume.center.z).toBeCloseTo(0, 1);
     expect(collection.boundingVolume.radius).toBeCloseTo(scale, 0);
+  });
+
+  it("pickObject", () => {
+    const collection = new BufferPolylineCollection();
+    const polyline = new BufferPolyline();
+
+    const positions1 = new Float64Array([0, 0, 0, 0, 0, 1, 0, 0, 2]);
+    const positions2 = new Float64Array([0, 1, 0, 0, 1, 1, 0, 1, 2]);
+
+    collection.add({ positions: positions1 }, polyline);
+    collection.add({ positions: positions2, pickObject: 1 }, polyline);
+
+    collection.get(0, polyline);
+    expect(polyline.pickObject).toBe(undefined);
+    polyline.pickObject = 2;
+    expect(polyline.pickObject).toBe(2);
+
+    collection.get(1, polyline);
+    expect(polyline.pickObject).toBe(1);
+    polyline.pickObject = 3;
+    expect(polyline.pickObject).toBe(3);
   });
 });

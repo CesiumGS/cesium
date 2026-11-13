@@ -1,8 +1,11 @@
 import {
   Color,
+  PixelDatatype,
   PixelFormat,
   PrimitiveType,
   WebGLConstants,
+} from "@cesium/core";
+import {
   Buffer,
   BufferUsage,
   ClearCommand,
@@ -10,7 +13,6 @@ import {
   CubeMap,
   DrawCommand,
   Framebuffer,
-  PixelDatatype,
   Renderbuffer,
   RenderbufferFormat,
   RenderState,
@@ -18,7 +20,6 @@ import {
   Texture,
   VertexArray,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe(
@@ -41,6 +42,18 @@ describe(
       sp = sp && sp.destroy();
       va = va && va.destroy();
       framebuffer = framebuffer && framebuffer.destroy();
+    });
+
+    it("updates the context's framebuffer binding cache on construction", function () {
+      // Construction binds and unbinds a framebuffer; the cache must reflect
+      // that the default framebuffer is bound afterward, not a stale value.
+      context._currentFramebuffer = {};
+
+      framebuffer = new Framebuffer({
+        context: context,
+        colorTextures: [new Texture({ context: context, width: 1, height: 1 })],
+      });
+      expect(context._currentFramebuffer).toBeUndefined();
     });
 
     it("has a color texture attachment", function () {

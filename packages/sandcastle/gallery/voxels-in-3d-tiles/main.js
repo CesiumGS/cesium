@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 import Sandcastle from "Sandcastle";
 
@@ -57,6 +59,15 @@ Sandcastle.addToolbarMenu([
     onselect: async function () {
       const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
         "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
+      );
+      createPrimitive(provider);
+    },
+  },
+  {
+    text: "Box - 3D Tiles 2.0",
+    onselect: async function () {
+      const provider = await Cesium.Cesium3DTilesVoxelProvider.fromGltf(
+        "../../SampleData/Cesium3DTiles/Voxel/VoxelBox3DTiles2/voxels.tileset.gltf",
       );
       createPrimitive(provider);
     },

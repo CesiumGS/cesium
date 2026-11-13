@@ -1,7 +1,5 @@
+import { BoundingRectangle, Color, defined } from "@cesium/core";
 import {
-  BoundingRectangle,
-  Color,
-  defined,
   ClearCommand,
   Pass,
   CreditDisplay,

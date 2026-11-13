@@ -1,5 +1,5 @@
+import { Cartographic } from "@cesium/core";
 import GoogleStreetViewCubeMapPanoramaProvider from "../../Source/Scene/GoogleStreetViewCubeMapPanoramaProvider.js";
-import Cartographic from "../../Source/Core/Cartographic.js";
 import CubeMapPanorama from "../../Source/Scene/CubeMapPanorama.js";
 import PanoramaProvider from "../../Source/Scene/PanoramaProvider.js";
 import GoogleMaps from "../../Source/Core/GoogleMaps.js";

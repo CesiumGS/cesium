@@ -1,16 +1,19 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import CullingVolume from "../Core/CullingVolume.js";
-import defined from "../Core/defined.js";
-import getTimestamp from "../Core/getTimestamp.js";
-import Interval from "../Core/Interval.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  BoundingRectangle,
+  Cartesian3,
+  CullingVolume,
+  Interval,
+  Math as CesiumMath,
+  Matrix4,
+  defined,
+  getTimestamp,
+} from "@cesium/core";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PassState from "../Renderer/PassState.js";
 import Camera from "./Camera.js";
 import EdgeFramebuffer from "./EdgeFramebuffer.js";
+import PlanarFillIdFramebuffer from "./PlanarFillIdFramebuffer.js";
 import FrustumCommands from "./FrustumCommands.js";
 import GlobeDepth from "./GlobeDepth.js";
 import GlobeTranslucencyFramebuffer from "./GlobeTranslucencyFramebuffer.js";
@@ -62,9 +65,11 @@ function View(scene, camera, viewport) {
   this.viewport = viewport;
   this.passState = passState;
   this.pickFramebuffer = new PickFramebuffer(context);
+  this.snapFramebuffer = undefined;
   this.pickDepthFramebuffer = new PickDepthFramebuffer();
   this.sceneFramebuffer = new SceneFramebuffer();
   this.edgeFramebuffer = new EdgeFramebuffer();
+  this.planarFillIdFramebuffer = new PlanarFillIdFramebuffer();
   this.globeDepth = globeDepth;
   this.globeTranslucencyFramebuffer = new GlobeTranslucencyFramebuffer();
   this.oit = oit;
@@ -439,11 +444,14 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
 
 View.prototype.destroy = function () {
   this.pickFramebuffer = this.pickFramebuffer && this.pickFramebuffer.destroy();
+  this.snapFramebuffer = this.snapFramebuffer && this.snapFramebuffer.destroy();
   this.pickDepthFramebuffer =
     this.pickDepthFramebuffer && this.pickDepthFramebuffer.destroy();
   this.sceneFramebuffer =
     this.sceneFramebuffer && this.sceneFramebuffer.destroy();
   this.edgeFramebuffer = this.edgeFramebuffer && this.edgeFramebuffer.destroy();
+  this.planarFillIdFramebuffer =
+    this.planarFillIdFramebuffer && this.planarFillIdFramebuffer.destroy();
   this.globeDepth = this.globeDepth && this.globeDepth.destroy();
   this.oit = this.oit && this.oit.destroy();
   this.translucentTileClassification =

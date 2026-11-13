@@ -1,6 +1,5 @@
+import { Color, Event } from "@cesium/core";
 import {
-  Color,
-  Event,
   ColorMaterialProperty,
   createMaterialPropertyDescriptor,
   ImageMaterialProperty,

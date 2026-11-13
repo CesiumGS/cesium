@@ -1,9 +1,7 @@
+import { Cartesian2, Cartesian3, Matrix3 } from "@cesium/core";
 import {
-  Cartesian2,
-  Cartesian3,
   ImageBasedLighting,
   ImageBasedLightingPipelineStage,
-  Matrix3,
   ShaderBuilder,
   _shadersImageBasedLightingStageFS,
 } from "../../../index.js";

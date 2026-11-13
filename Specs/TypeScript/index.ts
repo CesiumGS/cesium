@@ -41,15 +41,17 @@ import {
   GpxDataSource,
   GoogleEarthEnterpriseImageryProvider,
   GoogleEarthEnterpriseMapsProvider,
-  GoogleEarthEnterpriseMetadata,
   GoogleEarthEnterpriseTerrainProvider,
   GridImageryProvider,
   GridMaterialProperty,
   GroundPolylineGeometry,
+  HermitePolynomialApproximation,
   ImageMaterialProperty,
   ImageryProvider,
   IonImageryProvider,
   KmlDataSource,
+  LagrangePolynomialApproximation,
+  LinearApproximation,
   MapboxImageryProvider,
   MapboxStyleImageryProvider,
   MaterialProperty,
@@ -100,6 +102,7 @@ import {
   WebMapServiceImageryProvider,
   WebMapTileServiceImageryProvider,
   writeTextToCanvas,
+  knockout,
 } from "cesium";
 
 // Verify ImageryProvider instances conform to the expected interface
@@ -177,7 +180,17 @@ property = new ReferenceProperty(new EntityCollection(), "object1", [
 
 // Verify PositionProperty instances conform to the expected PositionProperty and Property interfaces
 let positionProperty: PositionProperty;
-property = positionProperty = new SampledPositionProperty();
+const sampledPositionProperty = new SampledPositionProperty();
+sampledPositionProperty.setInterpolationOptions({
+  interpolationAlgorithm: HermitePolynomialApproximation,
+});
+sampledPositionProperty.setInterpolationOptions({
+  interpolationAlgorithm: LagrangePolynomialApproximation,
+});
+sampledPositionProperty.setInterpolationOptions({
+  interpolationAlgorithm: LinearApproximation,
+});
+property = positionProperty = sampledPositionProperty;
 property = positionProperty = new CompositePositionProperty();
 property = positionProperty = new ConstantPositionProperty();
 property = positionProperty = new TimeIntervalCollectionPositionProperty();
@@ -401,3 +414,6 @@ pos = undefined;
 if (defined(pos)) {
   consumeDefined(pos);
 }
+
+// Verify knockout is exported correctly - See https://github.com/CesiumGS/cesium/issues/12423
+const observable = knockout.observable();

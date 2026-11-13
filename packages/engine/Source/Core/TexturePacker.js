@@ -1,6 +1,4 @@
-import BoundingRectangle from "./BoundingRectangle.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
+import { BoundingRectangle, Check, defined } from "@cesium/core";
 
 /**
  * @typedef {object} TexturePacker.PackableObject
@@ -48,7 +46,7 @@ function TextureNode({ x, y, width, height }) {
  * @alias TexturePacker
  * @constructor
  * @private
- * @param {options} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {number} options.width Width of the atlas, in pixels
  * @param {number} options.height Height of atlas, in pixels
  * @param {number} options.borderPadding Amount of border padding, in pixels

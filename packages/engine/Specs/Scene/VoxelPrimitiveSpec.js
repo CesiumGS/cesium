@@ -1,9 +1,7 @@
+import { Cartesian3, Matrix4, clone } from "@cesium/core";
 import {
-  Cartesian3,
   Cesium3DTilesVoxelProvider,
-  clone,
   CustomShader,
-  Matrix4,
   VoxelBoxShape,
   VoxelCylinderShape,
   VoxelEllipsoidShape,

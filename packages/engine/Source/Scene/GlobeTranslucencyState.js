@@ -1,7 +1,4 @@
-import combine from "../Core/combine.js";
-import defined from "../Core/defined.js";
-import NearFarScalar from "../Core/NearFarScalar.js";
-import Rectangle from "../Core/Rectangle.js";
+import { NearFarScalar, Rectangle, combine, defined } from "@cesium/core";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";

@@ -3,7 +3,7 @@ import * as Cesium from "cesium";
 // Generate a share key for access to an iTwin without OAuth
 // https://developer.bentley.com/apis/access-control-v2/operations/create-itwin-share/
 Cesium.ITwinPlatform.defaultShareKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiMDRiYTcyNWYtZjNjMC00ZjMwLTgwMTQtYTQ0ODhjYmQ2MTJkIiwiaWQiOiI1OTBkMzA0NC1jZTdiLTRkOTItOTJhZS0yZGFiYTUxZWI4MTUiLCJleHAiOjE3ODgyNDM5NzB9.9qv2Rg8MwNVR9q8p7Z9rZn078VJlAA2qEBiqGGMR7Ac";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiMDRiYTcyNWYtZjNjMC00ZjMwLTgwMTQtYTQ0ODhjYmQ2MTJkIiwiaWQiOiJkNzBiNWJmZi05ZTk0LTQzMzctYTZhZi05MjA1MWUwNDRhMGYiLCJleHAiOjE3OTg3ODAzMjR9.UhAMzHh1zlE6fjAPXISizai4L8FKjM2PcVMaExuWUvQ";
 
 // For alternative forms of authentication you can use, visit https://developer.bentley.com/apis/overview/authorization/. Then set your access token like this:
 // Cesium.ITwinPlatform.defaultAccessToken = 'your token'

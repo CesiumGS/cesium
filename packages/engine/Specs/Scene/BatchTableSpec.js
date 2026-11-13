@@ -3,10 +3,8 @@ import {
   ComponentDatatype,
   Math as CesiumMath,
   PixelDatatype,
-  Texture,
-  BatchTable,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { Texture, BatchTable } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

@@ -1,6 +1,6 @@
 // @ts-check
-import RuntimeError from "../Core/RuntimeError.js";
 
+import { RuntimeError } from "@cesium/core";
 // Mapbox Vector Tile specification:
 // https://github.com/mapbox/vector-tile-spec/tree/master/2.1
 

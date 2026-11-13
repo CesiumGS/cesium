@@ -1,6 +1,5 @@
+import { Ellipsoid, Frozen } from "@cesium/core";
 import CesiumTerrainProvider from "./CesiumTerrainProvider.js";
-import Frozen from "./Frozen.js";
-import Ellipsoid from "./Ellipsoid.js";
 
 /**
  * Creates a {@link CesiumTerrainProvider} instance for the {@link https://cesium.com/content/#cesium-world-terrain|Cesium World Terrain}.

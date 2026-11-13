@@ -1,16 +1,17 @@
 // @ts-check
 
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Matrix2 from "../Core/Matrix2.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import RuntimeError from "../Core/RuntimeError.js";
-
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Color,
+  DeveloperError,
+  Matrix2,
+  Matrix3,
+  Matrix4,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 /**
  * @param {WebGL2RenderingContext} gl
  * @param {WebGLActiveInfo} activeUniform

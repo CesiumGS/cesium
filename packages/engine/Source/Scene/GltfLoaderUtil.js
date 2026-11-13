@@ -1,8 +1,4 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import Matrix3 from "../Core/Matrix3.js";
+import { Cartesian2, Check, Frozen, Matrix3, defined } from "@cesium/core";
 import Sampler from "../Renderer/Sampler.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";

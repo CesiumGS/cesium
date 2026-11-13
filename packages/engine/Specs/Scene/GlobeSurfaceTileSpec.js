@@ -1,5 +1,5 @@
+import { Cartesian4 } from "@cesium/core";
 import {
-  Cartesian4,
   GeographicTilingScheme,
   GlobeSurfaceTile,
   ImageryLayerCollection,

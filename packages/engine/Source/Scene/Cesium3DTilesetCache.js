@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core";
 import DoublyLinkedList from "../Core/DoublyLinkedList.js";
 
 /**
@@ -31,6 +31,21 @@ Cesium3DTilesetCache.prototype.touch = function (tile) {
 Cesium3DTilesetCache.prototype.add = function (tile) {
   if (!defined(tile.cacheNode)) {
     tile.cacheNode = this._list.add(tile);
+  }
+};
+
+/**
+ * Invokes the callback for each tile with loaded content in the cache.
+ *
+ * @param {Function} callback A function that takes a {@link Cesium3DTile}.
+ * @private
+ */
+Cesium3DTilesetCache.prototype.forEachLoadedTile = function (callback) {
+  for (let node = this._list.head; defined(node); node = node.next) {
+    // The sentinel node has no item.
+    if (defined(node.item)) {
+      callback(node.item);
+    }
   }
 };
 

@@ -1,9 +1,9 @@
+import { defined } from "@cesium/core";
 import {
   GltfTextureLoader,
   Resource,
   ResourceCache,
   SupportedImageFormats,
-  defined,
   GltfMeshPrimitiveGpmLoader,
 } from "../../../../../index.js";
 import createScene from "../../../../../../../Specs/createScene.js";

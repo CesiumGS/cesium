@@ -25,6 +25,9 @@ import { SettingsContext } from "../SettingsContext.ts";
 const galleryListPath = `gallery/list.json`;
 const pagefindUrl = `gallery/pagefind/pagefind.js`;
 
+// Hide preamble @ts-check/@ts-nocheck annotations in gallery/*/main.js.
+const TS_ANNOTATION_REGEX = /^\/\/ @ts-(no)?check\s+/;
+
 export type GalleryItem = {
   url: string;
   id: string;
@@ -268,7 +271,8 @@ export function useGalleryItemStore({ withoutSearch = false } = {}) {
         const getJsCode = async () => {
           const url = new URL("main.js", galleryBaseUrl);
           const req = await fetch(url.href);
-          return await req.text();
+          const code = await req.text();
+          return code.replace(TS_ANNOTATION_REGEX, "");
         };
 
         const getHtmlCode = async () => {

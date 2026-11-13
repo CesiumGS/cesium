@@ -1,8 +1,5 @@
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { Check, DeveloperError, RuntimeError, defined } from "@cesium/core";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
 
 /**
  * Default settings for accessing the iTwin platform.
@@ -19,23 +16,27 @@ const ITwinPlatform = {};
  * Valid values are: <code>NotStarted</code>, <code>InProgress</code>, <code>Complete</code>, <code>Invalid</code>
  * @enum {string}
  */
-ITwinPlatform.ExportStatus = Object.freeze({
+ITwinPlatform.ExportStatus = {
   NotStarted: "NotStarted",
   InProgress: "InProgress",
   Complete: "Complete",
   Invalid: "Invalid",
-});
+};
+
+Object.freeze(ITwinPlatform.ExportStatus);
 
 /**
  * Types of mesh-export exports. CesiumJS only supports loading <code>3DTILES</code> type exports.
  * Valid values are: <code>IMODEL</code>, <code>CESIUM</code>, <code>3DTILES</code>
  * @enum {string}
  */
-ITwinPlatform.ExportType = Object.freeze({
+ITwinPlatform.ExportType = {
   IMODEL: "IMODEL",
   CESIUM: "CESIUM",
   "3DTILES": "3DTILES",
-});
+};
+
+Object.freeze(ITwinPlatform.ExportType);
 
 /**
  * Types of Reality data. This is a partial list of types we know we can support
@@ -43,7 +44,7 @@ ITwinPlatform.ExportType = Object.freeze({
  * @see https://developer.bentley.com/apis/reality-management/rm-rd-details/#types
  * @enum {string}
  */
-ITwinPlatform.RealityDataType = Object.freeze({
+ITwinPlatform.RealityDataType = {
   Cesium3DTiles: "Cesium3DTiles",
   PNTS: "PNTS",
   RealityMesh3DTiles: "RealityMesh3DTiles",
@@ -52,7 +53,9 @@ ITwinPlatform.RealityDataType = Object.freeze({
   KML: "KML",
   GeoJSON: "GeoJSON",
   Unstructured: "Unstructured",
-});
+};
+
+Object.freeze(ITwinPlatform.RealityDataType);
 
 /**
  * Gets or sets the default iTwin access token. This token should have the <code>itwin-platform</code> scope.

@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core";
 
 /**
  * Defines a bounding volume for a tile. This type describes an interface

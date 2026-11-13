@@ -1,5 +1,4 @@
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import { defined, destroyObject } from "@cesium/core";
 
 /**
  * @private

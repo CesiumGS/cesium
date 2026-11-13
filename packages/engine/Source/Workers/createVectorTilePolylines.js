@@ -1,9 +1,11 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import combine from "../Core/combine.js";
+import {
+  Cartesian3,
+  Ellipsoid,
+  IndexDatatype,
+  Rectangle,
+  combine,
+} from "@cesium/core";
 import decodeVectorPolylinePositions from "../Core/decodeVectorPolylinePositions.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import Rectangle from "../Core/Rectangle.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 const scratchRectangle = new Rectangle();

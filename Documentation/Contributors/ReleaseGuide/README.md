@@ -28,6 +28,11 @@ The remainder of this guide exists to make that shared release ownership clear, 
      - If an update is incompatible, open a new issue tagged with the `dependencies` label
      - If an update can be resolved, commit the changes and open a PR for review
    - Update PRs should be merged before starting the release process
+3. **Update dependency install scripts permissions**
+   - Run `npm approve-scripts --allow-scripts-pending` to list any new install scripts that are not currently allowed in the package.json's `allowScripts` field.
+     - For any new install scripts, verify the install script is safe: check what it does, and if it is from a reputable source.
+     - If safe, allow it: `npm approve-scripts <packageName>`. This will add a line to `allowScripts` for every installed version of the package.
+   - Clean up unused script permissions (e.g., from removed dependencies, or newer versions that no longer use an install script): `npm install-scripts prune`.
 
 > [!IMPORTANT]
 > We pin an exact version of **`prettier`**. If the version of `prettier` should be incremented, use an exact version by running `npm install prettier@latest --save-exact`.
@@ -83,11 +88,11 @@ To release CesiumJS, you'll need access to the following resources. Check with a
    - Set the title. Titles are named like this: `1.85 Release - Delete on November 1st, 2021`.
    - Review the summary and generate API key. On the result screen, copy the API key and paste content in `ArcGisMapService.js`.
    - Return to the **Content** tab and **Delete** the key from the previous release
-4. Proofread [`CHANGES.md`](../../../CHANGES.md)
+4. Proofread and edit [`CHANGES.md`](../../../CHANGES.md)
    - Verify the date of the release
+   - Verify each change is in the section for the relevant workspace
    - Order items roughly by prominence or popularity
-   - Provide a link to the relevant issue or PR for each item, if possible
-   - Ensure each change is in the section for the relevant workspace
+   - Edit descriptions following the [guidance for writing `CHANGES.md`](../CodeReviewGuide/README.md#writing-changesmd-descriptions)
    - Check for consistency with spelling, casing, tense, and punctuation
 5. Based on `CHANGES.md`, update each workspace version following the rules of [semantic versioning](https://semver.org/), e.g.,
    `npm version minor -w @cesium/engine --no-git-tag-version`. This includes `@cesium/sandcastle`.
@@ -97,7 +102,7 @@ To release CesiumJS, you'll need access to the following resources. Check with a
 > #### Versioning rules
 >
 > - If a workspace incremented a version of any dependencies, at minimum a new patch version of that workspace is required.
-> - Following the above rule, incrementing a workspace version will require an ensuing version bump in dependent workspaces—for example, `CHANGES.md` reports changes only in `@cesium/engine`, but the required version increment for `@cesium/engine` will also require a version increment for `@cesium/widgets`.
+> - Following the above rule, incrementing a workspace version will require an ensuing version bump in dependent workspaces—for example, `CHANGES.md` reports changes only in `@cesium/core`, but the required version increment for `@cesium/core` will also require a version increment for `@cesium/engine` and `@cesium/widgets`.
 
 <!-- markdownlint-disable MD029 -->
 
@@ -147,6 +152,7 @@ To release CesiumJS, you'll need access to the following resources. Check with a
    - Publish the release
 3. Authenticate your npm account with `npm login`. (The first time you do this, you will need to authorize the machine using `npm adduser`.)
 4. Use `npm publish -w <WORKSPACE>` in the repository root (not the unzipped file directory) to publish the workspaces. Repeat this step for each updated workspace, in the following order:
+   - `npm publish -w @cesium/core`
    - `npm publish -w @cesium/engine`
    - `npm publish -w @cesium/widgets`
 5. Publish the top-level `cesium` package to npm by running `npm publish` in the repository root (not the unzipped file directory)
@@ -158,6 +164,6 @@ To release CesiumJS, you'll need access to the following resources. Check with a
 
 ### Announcements and next steps
 
-1. Coordinate with the Comms team to add highlights to the monthly blog post
+1. Coordinate with the Comms team to add highlights to the monthly blog post. Use [`CHANGES.md`](../../../CHANGES.md) and guidance from ["Writing `CHANGES.md` Descriptions" in the Code Review Guide](../CodeReviewGuide/README.md#writing-changesmd-descriptions).
 2. After the `cesium.com` branch is live on cesium.com, comment in the `Communications` channel in Teams to notify Comms that the release is done
 3. Continue to the [Cesium Analytics release](https://github.com/CesiumGS/cesium-analytics/tree/main/Documentation/ReleaseGuide)

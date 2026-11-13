@@ -5,8 +5,8 @@ const viewer = new Cesium.Viewer("cesiumContainer");
 // Add a WMS imagery layer
 const layer = new Cesium.ImageryLayer(
   new Cesium.WebMapServiceImageryProvider({
-    url: "https://services.ga.gov.au/gis/services/NM_Hydrology_and_Marine_Points/MapServer/WMSServer",
-    layers: "Bores",
+    url: "https://services.ga.gov.au/gis/services/2022OffshorePetroleumAcreageReleaseAreas/MapServer/WMSServer",
+    layers: "2022OffshorePetroleumAcreageReleaseAreas",
     parameters: {
       transparent: true,
       format: "image/png",
