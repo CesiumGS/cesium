@@ -477,6 +477,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Kanchan Basnet](https://github.com/Kanchanbasnet)
 - [Silvi Kabra](https://github.com/silvikabra1)
 - [Mhayk Whandson](https://github.com/mhayk)
+- [Diego Mazala](https://github.com/diegomazala)
 - [TianHengZhuang](https://github.com/TianHengZhuang)
 - [Yu Cheng](https://github.com/KtzeAbyss)
 - [Peter Mayrhofer](https://github.com/mapeGeoinfo)
