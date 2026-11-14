@@ -57,10 +57,11 @@ const counts = (c) => ({
  * The snapshot: every item with what the tracker derives for it (ready,
  * blocked, open needs, who needs it), the projects and initiatives with
  * their progress, the dependencies between projects, the check's
- * problems, and `elsewhere` (claimsElsewhere's answer, read by the
- * caller, which may cache it). `root` is the repository root.
+ * problems, `elsewhere` (claimsElsewhere's answer) and `history`
+ * (statusHistory's), both read by the caller, which may cache them.
+ * `root` is the repository root.
  */
-export function queryWork(root, { elsewhere = [] } = {}) {
+export function queryWork(root, { elsewhere = [], history = [] } = {}) {
   const items = loadWorkTree(root);
   const g = buildGraph(items);
   const item = (it) => {
@@ -113,8 +114,41 @@ export function queryWork(root, { elsewhere = [] } = {}) {
     ),
     project_deps: projectDeps(g),
     elsewhere,
+    history,
     problems: checkItems(items, { root }),
   };
+}
+
+/**
+ * The status history of the items on this branch, from git: one event
+ * per commit that set an item's status (its creation included), oldest
+ * first, with the commit's date. Read in one `git log`; uncommitted
+ * changes aren't history yet (the snapshot has the current state).
+ */
+export function statusHistory(root) {
+  const log = git(root, [
+    "log",
+    "-p",
+    "-U0",
+    "--reverse",
+    "--no-merges",
+    "--format=@@commit %cI",
+    "--",
+    "packages/next/work/items",
+  ]);
+  const events = [];
+  let at;
+  let id;
+  for (const line of (log ?? "").split("\n")) {
+    if (line.startsWith("@@commit ")) {
+      at = line.slice(9).trim();
+    } else if (line.startsWith("diff --git ")) {
+      id = /\/(CS-[1-9]\d*)[-.][^/]*$/.exec(line)?.[1];
+    } else if (id && at && line.startsWith("+status: ")) {
+      events.push({ id, at, status: line.slice(9).trim() });
+    }
+  }
+  return events;
 }
 
 /**

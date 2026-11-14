@@ -3,12 +3,13 @@ import { describe, expect, it } from "vitest";
 import { layoutDag } from "../bench/suite/dagLayout.ts";
 import {
   boardStatus,
-  byUrgency,
-  columnsOf,
-  countsOf,
   filterItems,
+  flowOf,
   inFlightOf,
+  nextActor,
   ownerQueue,
+  stageOf,
+  unblocksOf,
   waitingOnOwner,
   type WorkItem,
   type WorkSnapshot,
@@ -127,6 +128,7 @@ const snapshot: WorkSnapshot = {
   project_deps: [],
   problems: [],
   elsewhere: [],
+  history: [],
 };
 
 describe("the Work board's model (bench/suite/work.ts)", () => {
@@ -145,33 +147,83 @@ describe("the Work board's model (bench/suite/work.ts)", () => {
     expect(ids({ q: "s1" })).toEqual(["CS-12"]);
   });
 
-  it("puts each item in its status column, the most urgent first", () => {
-    const cols = columnsOf(snapshot.items);
-    expect(cols.map((c) => c.status)).toEqual([
-      "Proposed",
-      "Planned",
-      "In progress",
-      "Done",
-      "Dropped",
-    ]);
-    // Ready before blocked; high priority first; then what unblocks most.
-    expect(cols[1]!.items.map((i) => i.id)).toEqual([
-      "CS-14",
-      "CS-10",
-      "CS-11",
-    ]);
-    expect([...snapshot.items].sort(byUrgency)[0]!.id).toBe("CS-14");
+  it("says whose move each open item is", () => {
+    const who = Object.fromEntries(
+      snapshot.items.map((i) => [i.id, nextActor(i)]),
+    );
+    expect(who).toEqual({
+      "CS-10": "owner", // a decision the owner answers, nothing before it
+      "CS-11": "items", // waits on CS-10
+      "CS-12": "agents", // in progress
+      "CS-13": undefined, // done
+      "CS-14": "agents", // ready
+      "CS-15": undefined, // dropped
+    });
   });
 
-  it("counts the tiles", () => {
-    expect(countsOf(snapshot.items)).toEqual({
-      owner: 1,
-      ready: 2,
-      inProgress: 1,
-      blocked: 1,
-      done: 1,
-      live: 5,
-    });
+  it("puts each item in its stage", () => {
+    expect(snapshot.items.map((i) => stageOf(i))).toEqual([
+      "Ready",
+      "Waiting",
+      "In flight",
+      "Done",
+      "Ready",
+      undefined,
+    ]);
+  });
+
+  it("counts what waits behind an item, through other items too", () => {
+    const chain: WorkSnapshot = {
+      ...snapshot,
+      items: [
+        item("CS-1", { needed_by: ["CS-2"] }),
+        item("CS-2", { needed_by: ["CS-3", "CS-4"] }),
+        item("CS-3"),
+        item("CS-4"),
+      ],
+    };
+    const n = unblocksOf(chain);
+    expect([n.get("CS-1"), n.get("CS-2"), n.get("CS-3")]).toEqual([3, 2, 0]);
+  });
+});
+
+describe("flow, replayed from the status history", () => {
+  const day = (d: number, h = 12) =>
+    new Date(2026, 10, 13 + d, h).toISOString();
+  const history: WorkSnapshot = {
+    ...snapshot,
+    items: [
+      item("CS-1", { status: "Done", ready: false }),
+      item("CS-2", { status: "In progress", ready: false }),
+      item("CS-3"),
+    ],
+    history: [
+      // The import, on the first day.
+      { id: "CS-1", at: day(0, 9), status: "Planned" },
+      { id: "CS-2", at: day(0, 9), status: "Planned" },
+      // CS-1 done the same day; CS-2 claimed the next; CS-3 made the next.
+      { id: "CS-1", at: day(0, 15), status: "Done" },
+      { id: "CS-2", at: day(1), status: "In progress" },
+      { id: "CS-3", at: day(1, 13), status: "Planned" },
+    ],
+  };
+  const flow = flowOf(history, history.items, {
+    now: new Date(2026, 10, 14, 18).getTime(),
+  });
+
+  it("keeps a stock per stage for each day, now last", () => {
+    expect(flow.days).toHaveLength(2);
+    expect(flow.stocks.Ready).toEqual([1, 1]); // CS-2, then CS-3
+    expect(flow.stocks["In flight"]).toEqual([0, 1]);
+    expect(flow.stocks.Done).toEqual([1, 1]);
+  });
+
+  it("counts moves between stages, a same-day finish included, not the import", () => {
+    expect(flow.left.Ready).toBe(2); // CS-1 to Done, CS-2 to In flight
+    expect(flow.arrived.Done).toBe(1);
+    expect(flow.arrived["In flight"]).toBe(1);
+    expect(flow.created).toBe(1); // CS-3; the first day's items are the import
+    expect(flow.leadDays.map((d) => Math.round(d * 24))).toEqual([6]);
   });
 });
 
@@ -181,15 +233,11 @@ describe("work in flight on other branches", () => {
     elsewhere: [{ id: "CS-14", claimed: "s2", where: "ui", worktree: true }],
   });
 
-  // The high-priority CS-14 comes first in the column.
-  it("shows a claim elsewhere as in progress, not ready", () => {
+  it("shows a claim elsewhere as in flight, not ready", () => {
     const it14 = snapshot.items.find((i) => i.id === "CS-14")!;
     expect(boardStatus(it14, flight)).toBe("In progress");
-    expect(
-      columnsOf(snapshot.items, flight)[2]!.items.map((i) => i.id),
-    ).toEqual(["CS-14", "CS-12"]);
-    const counts = countsOf(snapshot.items, flight);
-    expect([counts.ready, counts.inProgress]).toEqual([1, 2]);
+    expect(stageOf(it14, flight)).toBe("In flight");
+    expect(nextActor(it14, flight)).toBe("agents");
   });
 
   it("never reopens a closed item", () => {

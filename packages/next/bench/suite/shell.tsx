@@ -244,7 +244,10 @@ export function Shell() {
   const attention = useAttention(summaries);
   const work = useWork().snapshot;
   const ownerDecisions = useMemo(
-    () => work?.items.filter(isOwnerDecision).length ?? 0,
+    // Decisions the owner can answer now (none before them still open).
+    () =>
+      work?.items.filter((it) => isOwnerDecision(it) && !it.open_needs.length)
+        .length ?? 0,
     [work],
   );
   const active = destinationOf(path);

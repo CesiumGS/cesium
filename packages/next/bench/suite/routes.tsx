@@ -49,25 +49,14 @@ export const runsLayoutRoute = createRoute({
 
 // ------------------------------------------------------------ needs a look
 
-export type WorkView =
-  "owner" | "ready" | "progress" | "blocked" | "board" | "graph";
-const WORK_VIEWS: readonly WorkView[] = [
-  "owner",
-  "ready",
-  "progress",
-  "blocked",
-  "board",
-  "graph",
-];
+const WORK_STAGES = ["Proposed", "Waiting", "Ready", "In flight", "Done"];
 export interface WorkSearch {
-  /** The question the page answers; waiting on the owner by default. */
-  view?: Exclude<WorkView, "owner">;
   initiative?: string;
   project?: string;
-  /** One kind: work, decision or external. */
-  kind?: string;
   q?: string;
-  /** The item open beside the board. */
+  /** The flow stage whose items are listed. */
+  stage?: string;
+  /** The item open beside the page. */
   item?: string;
 }
 /** The tracker's board (CS-170): it reads the work items on this branch. */
@@ -76,14 +65,12 @@ export const workRoute = createRoute({
   path: "/work",
   validateSearch: (s: Record<string, unknown>): WorkSearch =>
     clean({
-      view:
-        s.view !== "owner" && WORK_VIEWS.includes(s.view as WorkView)
-          ? (s.view as WorkSearch["view"])
-          : undefined,
       initiative: str(s.initiative),
       project: str(s.project),
-      kind: str(s.kind),
       q: str(s.q),
+      stage: WORK_STAGES.includes(str(s.stage) ?? "")
+        ? str(s.stage)
+        : undefined,
       item: str(s.item),
     }),
   component: lazyRouteComponent(() => import("./views/Work.tsx"), "Work"),

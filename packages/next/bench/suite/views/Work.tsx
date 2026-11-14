@@ -9,13 +9,10 @@ import {
   IconButton,
   InputAdornment,
   InputLabel,
-  LinearProgress,
   Link,
   ListSubheader,
   MenuItem,
   Select,
-  Tab,
-  Tabs,
   TextField,
   Typography,
   useMediaQuery,
@@ -39,14 +36,15 @@ import {
   useRef,
   useState,
 } from "react";
-import type { WorkSearch, WorkView } from "../routes.tsx";
+import type { WorkSearch } from "../routes.tsx";
 import { useWork } from "../useWork.ts";
 import {
-  boardStatus,
+  type Actor,
+  ageText,
   byProject,
-  columnsOf,
-  countsOf,
+  type Flow,
   filterItems,
+  flowOf,
   idNumber,
   type InFlight,
   inFlightOf,
@@ -54,18 +52,22 @@ import {
   isOwnerDecision,
   type ItemKind,
   KIND_NAMES,
-  KINDS,
   loadItemText,
+  median,
+  nextActor,
   ownerQueue,
+  type Stage,
+  STAGE_NAMES,
+  STAGES,
+  stageOf,
   stateOf,
-  type Status,
-  waitingOnOwner,
+  unblocksOf,
   type WorkContainer,
   type WorkItem,
   type WorkItemText,
   type WorkSnapshot,
 } from "../work.ts";
-import { Empty, Page, toast } from "./common.tsx";
+import { Empty, Page, Section, toast } from "./common.tsx";
 import { InlineText, ItemText } from "./ItemText.tsx";
 import { Status as StatusBadge } from "./runParts.tsx";
 import { WorkGraph } from "./WorkGraph.tsx";
@@ -80,29 +82,6 @@ import { WorkGraph } from "./WorkGraph.tsx";
  */
 
 const route = getRouteApi("/work");
-
-/** Cards a column shows before "Show more". */
-const COLUMN_PAGE = 40;
-
-const STATUS_HINTS: Record<Status, string> = {
-  Proposed: "Not committed: waits on a decision or the owner's go",
-  Planned: "Committed; ready once everything it needs is done",
-  "In progress": "Claimed here or on another branch",
-  Done: "Finished and merged",
-  Dropped: "Not worth doing, with the reason",
-};
-
-/** What each view answers, under the tabs. */
-const VIEW_HINTS: Record<WorkView, string> = {
-  owner:
-    "Open decisions the owner answers, the most waited-on first, with the items that wait on each.",
-  ready: "Planned items whose needs are all done, by project.",
-  progress:
-    "Items claimed on this branch, and on other branches and worktrees of this machine whose claims haven't merged.",
-  blocked: "Items that wait on other items, with what they wait on.",
-  board: "Every item by its place in the lifecycle.",
-  graph: "How projects wait on each other, and a project's items.",
-};
 
 export function Work() {
   const search = route.useSearch();
@@ -140,7 +119,7 @@ export function Work() {
 }
 
 const DESCRIPTION =
-  "The tracker's items: what waits on the owner, what is ready, and what is moving.";
+  "The tracker as a running system: what waits on you, how work flows, and what moves next.";
 
 function WorkHelp() {
   return (
@@ -170,44 +149,63 @@ function Board({
   search: WorkSearch;
   set: (patch: Partial<WorkSearch>, replace?: boolean) => void;
 }) {
-  const view: WorkView = search.view ?? "owner";
-  const narrow = useMediaQuery("(max-width: 900px)");
-  const kind = (KINDS as readonly string[]).includes(search.kind ?? "")
-    ? (search.kind as ItemKind)
-    : undefined;
   const flight = useMemo(() => inFlightOf(s), [s]);
-  // The tabs count the chosen scope and kind and words, so each count
-  // says what its tab will show.
+  // Where and words narrow every section and count.
   const items = useMemo(
     () =>
       filterItems(s, {
         initiative: search.initiative,
         project: search.project,
-        kinds: kind ? [kind] : undefined,
         q: search.q,
       }),
-    [s, search.initiative, search.project, kind, search.q],
+    [s, search.initiative, search.project, search.q],
   );
-  const counts = useMemo(() => countsOf(items, flight), [items, flight]);
-  const all = useMemo(() => countsOf(s.items, flight), [s, flight]);
-  const owner = useMemo(() => waitingOnOwner(s), [s]);
   const projectOf = useMemo(
     () => new Map(s.projects.map((p) => [p.id, p])),
     [s],
   );
   const itemOf = useMemo(() => new Map(s.items.map((i) => [i.id, i])), [s]);
-  const filtered =
-    !!search.initiative || !!search.project || !!kind || !!search.q;
-  const tabsId = useId();
-  const tabs: Array<[WorkView, string, number | undefined]> = [
-    ["owner", "Waiting on the owner", counts.owner],
-    ["ready", "Ready", counts.ready],
-    ["progress", "In progress", counts.inProgress],
-    ["blocked", "Blocked", counts.blocked],
-    ["board", "Board", undefined],
-    ["graph", "Graph", undefined],
-  ];
-  const here = (it: WorkItem) => !flight.has(it.id);
+  const unblocks = useMemo(() => unblocksOf(s), [s]);
+  const flow = useMemo(() => flowOf(s, items, { flight }), [s, items, flight]);
+  const moves = useMemo(() => {
+    const by: Record<Actor, WorkItem[]> = {
+      owner: [],
+      agents: [],
+      outside: [],
+      items: [],
+    };
+    for (const it of items) {
+      const a = nextActor(it, flight);
+      if (a) {
+        by[a].push(it);
+      }
+    }
+    return by;
+  }, [items, flight]);
+  const filtered = !!search.initiative || !!search.project || !!search.q;
+  const decisions = moves.owner.filter(isOwnerDecision);
+  const toCommit = moves.owner.filter((it) => !isOwnerDecision(it));
+  const ready = moves.agents.filter((it) => stageOf(it, flight) === "Ready");
+  const moving = items.filter((it) => stageOf(it, flight) === "In flight");
+  const now = Date.now();
+  const ageOf = (it: WorkItem) => now - (flow.since.get(it.id) ?? now);
+  const oldestDecision = Math.max(0, ...decisions.map(ageOf));
+  const window = flow.window;
+  const decided = (s.history ?? []).filter(
+    (e) =>
+      e.status === "Done" &&
+      itemOf.get(e.id)?.kind === "decision" &&
+      Date.parse(e.at) > now - window * 86_400_000,
+  ).length;
+  const asked = decisions.filter(
+    (it) => ageOf(it) < window * 86_400_000,
+  ).length;
+  const to = (id: string) =>
+    document.getElementById(id)?.scrollIntoView({ block: "start" });
+  const historySince = new Date(flow.days[0] ?? now).toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+  });
 
   return (
     <Page
@@ -236,21 +234,6 @@ function Board({
         </span>
       }
     >
-      <div className="work-progress">
-        <LinearProgress
-          variant="determinate"
-          value={all.live ? (100 * all.done) / all.live : 0}
-          aria-hidden="true"
-          className="work-progress-bar"
-        />
-        <Typography variant="body-sm" color="textSecondary">
-          {all.done} of {all.live} items done · {all.inProgress} in progress
-          {s.elsewhere.length > 0 &&
-            ` (${new Set(s.elsewhere.map((c) => c.id)).size} on other branches)`}{" "}
-          · {s.items.length} items in {s.projects.length} projects
-        </Typography>
-      </div>
-
       {s.problems.length > 0 && (
         <Alert severity="warning" className="work-gap">
           The tracker's check reports{" "}
@@ -263,142 +246,203 @@ function Board({
         </Alert>
       )}
 
-      <Tabs
-        value={view}
-        size="small"
-        // Scrolling tabs fade their edges: only where they don't fit.
-        variant={narrow ? "scrollable" : "standard"}
-        className="work-tabs"
-        aria-label="Views"
-        onChange={(_, next: WorkView) =>
-          set({ view: next === "owner" ? undefined : next })
-        }
-      >
-        {tabs.map(([v, label, n]) => (
-          <Tab
-            key={v}
-            value={v}
-            id={`${tabsId}-${v}`}
-            aria-controls={`${tabsId}-panel`}
-            label={
-              <span className="work-tab">
-                {label}
-                {n !== undefined && (
-                  <span
-                    className={`work-tab-count${v === "owner" && n ? " attention" : ""}`}
-                  >
-                    {n}
-                  </span>
-                )}
-              </span>
-            }
-          />
-        ))}
-      </Tabs>
-
       <Filters
         s={s}
         search={search}
-        kind={kind}
         set={set}
-        shown={view === "board" || view === "graph" ? items.length : undefined}
         filtered={filtered}
+        count={items.length}
       />
 
-      <div
-        role="tabpanel"
-        id={`${tabsId}-panel`}
-        aria-labelledby={`${tabsId}-${view}`}
+      <ul className="work-moves" aria-label="Whose move">
+        <Move
+          who="You"
+          value={decisions.length + toCommit.length}
+          lines={[
+            `${decisions.length} ${decisions.length === 1 ? "decision" : "decisions"}, ${toCommit.length} to commit or drop`,
+            decisions.length
+              ? `Oldest waiting ${ageText(oldestDecision)}`
+              : "Nothing waiting",
+          ]}
+          tone={decisions.length ? "attention" : undefined}
+          onClick={() => to("work-owner")}
+        />
+        <Move
+          who="Agents"
+          value={ready.length + moving.length}
+          lines={[
+            `${ready.length} ready to start`,
+            `${moving.length} in flight`,
+          ]}
+          onClick={() => to("work-next")}
+        />
+        <Move
+          who="Outside"
+          value={moves.outside.length}
+          lines={["Waits on other parties"]}
+          onClick={() => to("work-outside")}
+        />
+        <Move
+          who="Nobody yet"
+          value={moves.items.length}
+          lines={["Waiting on other items to finish"]}
+          onClick={() => {
+            set({ stage: "Waiting" });
+            to("work-flow");
+          }}
+        />
+      </ul>
+
+      <Section
+        id="work-owner"
+        title="Waiting on you"
+        description={`Your attention is the system's constraint, so it comes first: decisions you can answer now, the most waited-on first. ${asked} arrived and ${decided} answered in the last ${window} days.`}
       >
-        <Typography
-          variant="body-sm"
-          color="textSecondary"
-          render={<p />}
-          className="work-view-hint"
-        >
-          {VIEW_HINTS[view]}
-        </Typography>
-        {view === "graph" ? (
-          <WorkGraph
-            s={s}
-            items={items}
-            project={search.project}
-            initiative={search.initiative}
-            selected={search.item}
-            onProject={(id) => set({ project: id })}
-          />
-        ) : !items.length ? (
-          <Empty
-            title="Nothing matches these filters"
-            action={
-              <Button
-                variant="outlined"
-                onClick={() =>
-                  set({
-                    initiative: undefined,
-                    project: undefined,
-                    kind: undefined,
-                    q: undefined,
-                  })
-                }
-              >
-                Clear filters
-              </Button>
-            }
-          >
-            Try another project or fewer words.
-          </Empty>
-        ) : view === "owner" ? (
-          <OwnerQueue
-            s={s}
-            items={items}
-            selected={search.item}
-            projectOf={projectOf}
-          />
-        ) : view === "ready" ? (
-          <Grouped
-            s={s}
-            items={items.filter((it) => it.ready && here(it))}
-            empty="Nothing here is ready: everything open waits on something."
-            selected={search.item}
-            projectOf={projectOf}
-            line={(it) =>
-              it.needed_by.length
-                ? `Unblocks ${it.needed_by.length}`
-                : undefined
-            }
-          />
-        ) : view === "progress" ? (
-          <Grouped
-            s={s}
-            items={items.filter(
-              (it) => boardStatus(it, flight) === "In progress",
-            )}
-            empty="Nothing is in progress."
-            selected={search.item}
-            projectOf={projectOf}
-            line={(it) => whereOf(it, flight, s.branch)}
-          />
-        ) : view === "blocked" ? (
-          <Grouped
-            s={s}
-            items={items.filter((it) => it.blocked && here(it))}
-            empty="Nothing here waits on another item."
-            selected={search.item}
-            projectOf={projectOf}
-            needs={(it) => it.open_needs.map((n) => itemOf.get(n) ?? n)}
-          />
-        ) : (
-          <Columns
-            items={items}
-            selected={search.item}
-            projectOf={projectOf}
-            owner={owner}
-            flight={flight}
-            branch={s.branch}
-          />
+        <OwnerQueue
+          s={s}
+          items={decisions}
+          selected={search.item}
+          projectOf={projectOf}
+          unblocks={unblocks}
+        />
+        {toCommit.length > 0 && (
+          <details className="work-commit">
+            <summary>
+              <Typography variant="body-md" render={<span />}>
+                {toCommit.length} proposed{" "}
+                {toCommit.length === 1 ? "item waits" : "items wait"} for you to
+                commit or drop
+              </Typography>
+            </summary>
+            <Grouped
+              s={s}
+              items={toCommit}
+              empty=""
+              selected={search.item}
+              projectOf={projectOf}
+              line={(it) =>
+                unblocks.get(it.id)
+                  ? `Unblocks ${unblocks.get(it.id)}`
+                  : undefined
+              }
+            />
+          </details>
         )}
-      </div>
+      </Section>
+
+      <Section
+        id="work-flow"
+        title="Flow"
+        description={`Items in each stage at the end of each day since ${historySince}, and what moved between stages in the last ${window} days. Choose a stage to list its items.`}
+      >
+        <FlowStages
+          flow={flow}
+          stage={search.stage}
+          onStage={(st) => set({ stage: st === search.stage ? undefined : st })}
+        />
+        <LittlesLaw flow={flow} inFlight={moving.length} />
+        {search.stage && (
+          <div className="work-stage-list">
+            <Typography variant="subtitle-md" render={<h3 />}>
+              {STAGE_NAMES[search.stage as Stage]}
+            </Typography>
+            <Grouped
+              s={s}
+              items={items.filter((it) => stageOf(it, flight) === search.stage)}
+              empty="Nothing in this stage."
+              selected={search.item}
+              projectOf={projectOf}
+              line={(it) =>
+                search.stage === "In flight"
+                  ? whereOf(it, flight, s.branch)
+                  : flow.since.has(it.id)
+                    ? `Here ${ageText(now - flow.since.get(it.id)!)}`
+                    : undefined
+              }
+              needs={
+                search.stage === "Waiting"
+                  ? (it) => it.open_needs.map((n) => itemOf.get(n) ?? n)
+                  : undefined
+              }
+            />
+          </div>
+        )}
+      </Section>
+
+      <Section
+        id="work-in-flight"
+        title="In flight"
+        description="Claimed on this branch, or on another branch or worktree of this machine whose claim hasn't merged."
+      >
+        <Grouped
+          s={s}
+          items={moving}
+          empty="Nothing is in flight."
+          selected={search.item}
+          projectOf={projectOf}
+          line={(it) => {
+            const at = flow.since.get(it.id);
+            return [
+              whereOf(it, flight, s.branch),
+              at ? `for ${ageText(now - at)}` : "",
+            ]
+              .filter(Boolean)
+              .join(", ");
+          }}
+        />
+      </Section>
+
+      <Section
+        id="work-next"
+        title="Next up"
+        description="Ready items, the ones the most work waits on first (directly or through other items)."
+      >
+        <Ranked
+          items={ready}
+          unblocks={unblocks}
+          projectOf={projectOf}
+          selected={search.item}
+        />
+      </Section>
+
+      <Section
+        id="work-outside"
+        title="Waiting outside"
+        description="Waits on other parties: what each one holds up."
+      >
+        <Ranked
+          items={moves.outside}
+          unblocks={unblocks}
+          projectOf={projectOf}
+          selected={search.item}
+          party
+        />
+      </Section>
+
+      <Section
+        id="work-structure"
+        title="Structure"
+        description="How projects wait on each other; choose one for its items and their needs."
+      >
+        <WorkGraph
+          s={s}
+          items={items}
+          project={search.project}
+          initiative={search.initiative}
+          selected={search.item}
+          onProject={(id) => set({ project: id })}
+        />
+      </Section>
+
+      <Typography
+        variant="caption-md"
+        color="textTertiary"
+        render={<p />}
+        className="work-later"
+      >
+        Tokens per item, verification, the merge queue, quotas and the
+        controllers' steps join this page when HITLd records them.
+      </Typography>
 
       <ItemPanel
         s={s}
@@ -413,18 +457,270 @@ function Board({
   );
 }
 
+/** One cell of the "whose move" strip: who acts, how much, and a link down. */
+function Move({
+  who,
+  value,
+  lines,
+  tone,
+  onClick,
+}: {
+  who: string;
+  value: number;
+  lines: string[];
+  tone?: "attention";
+  onClick: () => void;
+}) {
+  return (
+    <li>
+      <button
+        type="button"
+        className={`work-move ${tone ?? ""}`}
+        onClick={onClick}
+      >
+        <Typography variant="caption-lg" color="textSecondary">
+          {who}
+        </Typography>
+        <span className="work-move-value">{value}</span>
+        {lines.map((l) => (
+          <Typography key={l} variant="caption-md" color="textSecondary">
+            {l}
+          </Typography>
+        ))}
+      </button>
+    </li>
+  );
+}
+
+/**
+ * The stages as a row of stocks joined by arrows: each stage's count now,
+ * a sparkline of its count day by day, what came and went in the window,
+ * and the oldest item's time in it. The stage that grew most is marked:
+ * a growing queue is where the flow is held up.
+ */
+function FlowStages({
+  flow,
+  stage,
+  onStage,
+}: {
+  flow: Flow;
+  stage?: string;
+  onStage: (stage: Stage) => void;
+}) {
+  const growth = (st: Stage) => flow.arrived[st] - flow.left[st];
+  const growing = STAGES.filter((st) => st !== "Done" && growth(st) > 0).sort(
+    (a, b) => growth(b) - growth(a),
+  )[0];
+  return (
+    <ol className="work-flow" aria-label="Stages">
+      {STAGES.map((st, i) => {
+        const series = flow.stocks[st];
+        const value = series.at(-1) ?? 0;
+        return (
+          <li key={st} className="work-flow-step">
+            {i > 0 && (
+              <span className="work-flow-arrow" aria-hidden="true">
+                →
+              </span>
+            )}
+            <button
+              type="button"
+              className={`work-stage${stage === st ? " selected" : ""}${growing === st ? " growing" : ""}`}
+              aria-pressed={stage === st}
+              onClick={() => onStage(st)}
+            >
+              <span className="work-stage-top">
+                <Typography variant="caption-lg" color="textSecondary">
+                  {STAGE_NAMES[st]}
+                </Typography>
+                {growing === st && (
+                  <StatusBadge tone="warning">Growing</StatusBadge>
+                )}
+              </span>
+              <span className="work-stage-value">{value}</span>
+              <Sparkline
+                days={flow.days}
+                values={series}
+                label={`${STAGE_NAMES[st]}: ${value} now`}
+              />
+              <Typography variant="caption-md" color="textSecondary">
+                {flow.arrived[st]} in, {flow.left[st]} out in {flow.window} days
+              </Typography>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/** One stage's count over the days, with each day's value on hover. */
+function Sparkline({
+  days,
+  values,
+  label,
+}: {
+  days: number[];
+  values: number[];
+  label: string;
+}) {
+  const w = 120;
+  const h = 28;
+  const max = Math.max(1, ...values);
+  const x = (i: number) =>
+    values.length < 2 ? w : 4 + (i * (w - 8)) / (values.length - 1);
+  const y = (v: number) => h - 4 - ((h - 8) * v) / max;
+  const path = values
+    .map((v, i) => `${i ? "L" : "M"}${x(i)},${y(v)}`)
+    .join(" ");
+  const day = (t: number) =>
+    new Date(t).toLocaleDateString([], { month: "short", day: "numeric" });
+  return (
+    <svg
+      className="work-spark"
+      width={w}
+      height={h}
+      viewBox={`0 0 ${w} ${h}`}
+      role="img"
+      aria-label={`${label}; ${values.map((v, i) => `${day(days[i]!)} ${v}`).join(", ")}`}
+    >
+      <path d={path} className="work-spark-line" />
+      <circle
+        cx={x(values.length - 1)}
+        cy={y(values.at(-1) ?? 0)}
+        r={4}
+        className="work-spark-dot"
+      />
+      {values.map((v, i) => (
+        <rect
+          key={i}
+          x={x(i) - w / values.length / 2}
+          y={0}
+          width={w / values.length}
+          height={h}
+          className="work-spark-hit"
+        >
+          <title>{`${day(days[i]!)}: ${v}`}</title>
+        </rect>
+      ))}
+    </svg>
+  );
+}
+
+/** Little's law, read off the flow: in flight, throughput and lead time. */
+function LittlesLaw({ flow, inFlight }: { flow: Flow; inFlight: number }) {
+  const done = flow.arrived.Done;
+  const lead = median(flow.leadDays);
+  const DAY_MS = 86_400_000;
+  return (
+    <Typography
+      variant="body-sm"
+      color="textSecondary"
+      render={<p />}
+      className="work-little"
+    >
+      {flow.created} new · {inFlight} in flight · {done} done in the last{" "}
+      {flow.window} days
+      {" · "}
+      {lead === undefined || flow.leadDays.length < 3
+        ? "too few finished items for a lead time yet"
+        : `lead time, planned to done: median ${ageText(lead * DAY_MS)} (${flow.leadDays.length} items)`}
+    </Typography>
+  );
+}
+
+/** Items ranked by how much waits on them. */
+function Ranked({
+  items,
+  unblocks,
+  projectOf,
+  selected,
+  party,
+}: {
+  items: WorkItem[];
+  unblocks: Map<string, number>;
+  projectOf: Map<string, WorkContainer>;
+  selected?: string;
+  /** Show who is waited on (external items). */
+  party?: boolean;
+}) {
+  const [all, setAll] = useState(false);
+  const ranked = [...items].sort(
+    (a, b) =>
+      (unblocks.get(b.id) ?? 0) - (unblocks.get(a.id) ?? 0) ||
+      idNumber(a.id) - idNumber(b.id),
+  );
+  const shown = all ? ranked : ranked.slice(0, RANKED_PAGE);
+  if (!items.length) {
+    return (
+      <Typography variant="body-md" color="textSecondary" render={<p />}>
+        Nothing here.
+      </Typography>
+    );
+  }
+  return (
+    <>
+      <ol className="work-rows work-ranked">
+        {shown.map((it) => {
+          const n = unblocks.get(it.id) ?? 0;
+          return (
+            <li
+              key={it.id}
+              className={`work-row${it.id === selected ? " selected" : ""}`}
+            >
+              <ItemLink id={it.id} className="work-row-main">
+                <span className="work-id">{it.id}</span>
+                <span className="work-row-title">
+                  <InlineText text={it.title} />
+                  <Typography
+                    variant="caption-md"
+                    color="textSecondary"
+                    render={<span />}
+                    className="work-row-sub"
+                  >
+                    {party && it.party ? `${it.party} · ` : ""}
+                    {projectOf.get(it.project ?? "")?.title ?? it.project}
+                  </Typography>
+                </span>
+                <span className="work-row-extra">
+                  {n ? `${n} wait on it` : "Nothing waits on it"}
+                </span>
+              </ItemLink>
+            </li>
+          );
+        })}
+      </ol>
+      {ranked.length > RANKED_PAGE && (
+        <Button
+          variant="text"
+          size="small"
+          className="work-more"
+          onClick={() => setAll(!all)}
+        >
+          {all ? "Show fewer" : `Show all ${ranked.length}`}
+        </Button>
+      )}
+    </>
+  );
+}
+
+const RANKED_PAGE = 12;
+
 /** Who holds an item and where: "s1 on this branch", "s2 on dyno-ui". */
 function whereOf(
   it: WorkItem,
   flight: InFlight,
   branch?: string,
 ): string | undefined {
+  // A session named after its branch reads "on dyno-ui", not twice.
+  const on = (who: string | undefined, where: string) =>
+    who && who !== where ? `${who} on ${where}` : `on ${where}`;
   const parts: string[] = [];
   if (it.status === "In progress") {
-    parts.push(`${it.claimed ?? "Claimed"} on ${branch ?? "this branch"}`);
+    parts.push(on(it.claimed, branch ?? "this branch"));
   }
   for (const c of flight.get(it.id) ?? []) {
-    parts.push(`${c.claimed ?? "Claimed"} on ${c.where}`);
+    parts.push(on(c.claimed, c.where));
   }
   return parts.join("; ") || undefined;
 }
@@ -436,21 +732,18 @@ function whereOf(
 function Filters({
   s,
   search,
-  kind,
   set,
-  shown,
+  count,
   filtered,
 }: {
   s: WorkSnapshot;
   search: WorkSearch;
-  kind?: ItemKind;
   set: (patch: Partial<WorkSearch>, replace?: boolean) => void;
-  /** Items shown, for views that show them all. */
-  shown?: number;
+  /** Items the filters keep. */
+  count: number;
   filtered: boolean;
 }) {
   const scopeId = useId();
-  const kindId = useId();
   const input = useRef<HTMLInputElement>(null);
   const scope = search.project
     ? `p:${search.project}`
@@ -505,24 +798,6 @@ function Filters({
           {scopeOptions}
         </Select>
       </FormControl>
-      <FormControl size="small" className="work-kind-pick">
-        <InputLabel id={kindId}>Kind</InputLabel>
-        <Select
-          labelId={kindId}
-          label="Kind"
-          value={kind ?? ""}
-          displayEmpty
-          renderValue={(v) => (v ? KIND_PLURALS[v as ItemKind] : "Every kind")}
-          onChange={(e) => set({ kind: String(e.target.value) || undefined })}
-        >
-          <MenuItem value="">Every kind</MenuItem>
-          {KINDS.map((k) => (
-            <MenuItem key={k} value={k}>
-              {KIND_PLURALS[k]}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
       <TextField
         size="small"
         type="search"
@@ -557,9 +832,9 @@ function Filters({
         }}
       />
       <span className="work-shown" aria-live="polite">
-        {shown !== undefined && filtered && (
+        {filtered && (
           <Typography variant="body-sm" color="textSecondary">
-            {shown} of {s.items.length} items
+            {count} of {s.items.length} items
           </Typography>
         )}
         {filtered && (
@@ -570,7 +845,6 @@ function Filters({
               set({
                 initiative: undefined,
                 project: undefined,
-                kind: undefined,
                 q: undefined,
               })
             }
@@ -583,12 +857,6 @@ function Filters({
   );
 }
 
-const KIND_PLURALS: Record<ItemKind, string> = {
-  work: "Work items",
-  decision: "Decisions",
-  external: "Outside waits",
-};
-
 // ------------------------------------------------------------ the owner's queue
 
 function OwnerQueue({
@@ -596,13 +864,25 @@ function OwnerQueue({
   items,
   selected,
   projectOf,
+  unblocks,
 }: {
   s: WorkSnapshot;
   items: WorkItem[];
   selected?: string;
   projectOf: Map<string, WorkContainer>;
+  /** Open items behind each, directly or through others. */
+  unblocks: Map<string, number>;
 }) {
-  const queue = useMemo(() => ownerQueue(s, items), [s, items]);
+  // The most waited-on first, counting what waits through other items.
+  const queue = useMemo(
+    () =>
+      ownerQueue(s, items).sort(
+        (a, b) =>
+          (unblocks.get(b.decision.id) ?? 0) -
+          (unblocks.get(a.decision.id) ?? 0),
+      ),
+    [s, items, unblocks],
+  );
   if (!queue.length) {
     return (
       <Typography variant="body-md" color="textSecondary" render={<p />}>
@@ -640,7 +920,7 @@ function OwnerQueue({
             <div className="work-queue-waits">
               <Typography variant="caption-lg" color="textSecondary">
                 {waiting.length
-                  ? `${waiting.length} ${waiting.length === 1 ? "item waits" : "items wait"} on it`
+                  ? `${unblocks.get(d.id) ?? waiting.length} ${(unblocks.get(d.id) ?? 0) === 1 ? "item waits" : "items wait"} on it${(unblocks.get(d.id) ?? 0) > waiting.length ? `, ${waiting.length} directly` : ""}`
                   : "Nothing waits on it yet"}
               </Typography>
               {waiting.map((w) => (
@@ -661,148 +941,6 @@ function OwnerQueue({
         );
       })}
     </ol>
-  );
-}
-
-// ------------------------------------------------------------ the board
-
-function Columns({
-  items,
-  selected,
-  projectOf,
-  owner,
-  flight,
-  branch,
-}: {
-  items: WorkItem[];
-  selected?: string;
-  projectOf: Map<string, WorkContainer>;
-  owner: Set<string>;
-  flight: InFlight;
-  branch?: string;
-}) {
-  const columns = useMemo(() => columnsOf(items, flight), [items, flight]);
-  return (
-    <div className="work-board">
-      {columns.map(({ status, items: column }) => (
-        <Column
-          key={status}
-          status={status}
-          items={column}
-          selected={selected}
-          projectOf={projectOf}
-          owner={owner}
-          flight={flight}
-          branch={branch}
-        />
-      ))}
-    </div>
-  );
-}
-
-function Column({
-  status,
-  items,
-  selected,
-  projectOf,
-  owner,
-  flight,
-  branch,
-}: {
-  status: Status;
-  items: WorkItem[];
-  selected?: string;
-  projectOf: Map<string, WorkContainer>;
-  owner: Set<string>;
-  flight: InFlight;
-  branch?: string;
-}) {
-  const [shown, setShown] = useState(COLUMN_PAGE);
-  const headingId = useId();
-  // Planned splits into what can start now and what waits.
-  const parts: Array<[string | undefined, WorkItem[]]> =
-    status === "Planned"
-      ? [
-          ["Ready", items.filter((it) => it.ready)],
-          ["Waiting on other items", items.filter((it) => !it.ready)],
-        ]
-      : [[undefined, items]];
-  let budget = shown;
-  return (
-    <section className="work-column" aria-labelledby={headingId}>
-      <header className="work-column-header">
-        <Typography variant="subtitle-md" render={<h2 />} id={headingId}>
-          {status}
-        </Typography>
-        <span className="work-count" aria-label={`${items.length} items`}>
-          {items.length}
-        </span>
-      </header>
-      <Typography
-        variant="caption-md"
-        color="textSecondary"
-        render={<p />}
-        className="work-column-hint"
-      >
-        {STATUS_HINTS[status]}
-      </Typography>
-      {!items.length && (
-        <Typography
-          variant="body-sm"
-          color="textTertiary"
-          render={<p />}
-          className="work-column-empty"
-        >
-          None
-        </Typography>
-      )}
-      {parts.map(([title, part]) => {
-        if (!part.length || budget <= 0) {
-          return null;
-        }
-        const visible = part.slice(0, budget);
-        budget -= visible.length;
-        return (
-          <div key={title ?? "all"}>
-            {title && (
-              <Typography
-                variant="caption-lg"
-                color="textSecondary"
-                render={<h3 />}
-                className="work-column-part"
-              >
-                {title} · {part.length}
-              </Typography>
-            )}
-            <ul className="work-cards">
-              {visible.map((it) => (
-                <li key={it.id}>
-                  <Card
-                    it={it}
-                    selected={it.id === selected}
-                    project={projectOf.get(it.project ?? "")}
-                    waitsOnOwner={owner.has(it.id)}
-                    holder={whereOf(it, flight, branch)}
-                    moving={boardStatus(it, flight) === "In progress"}
-                  />
-                </li>
-              ))}
-            </ul>
-          </div>
-        );
-      })}
-      {items.length > shown && (
-        <Button
-          variant="text"
-          size="small"
-          className="work-more"
-          onClick={() => setShown((n) => n + COLUMN_PAGE * 5)}
-        >
-          Show {Math.min(items.length - shown, COLUMN_PAGE * 5)} more of{" "}
-          {items.length - shown}
-        </Button>
-      )}
-    </section>
   );
 }
 
@@ -827,72 +965,6 @@ function ItemLink({
     >
       {children}
     </RouterLink>
-  );
-}
-
-function Card({
-  it,
-  selected,
-  project,
-  waitsOnOwner,
-  holder,
-  moving,
-}: {
-  it: WorkItem;
-  selected: boolean;
-  project?: WorkContainer;
-  waitsOnOwner: boolean;
-  /** Who holds it and where, when it is in progress. */
-  holder?: string;
-  moving: boolean;
-}) {
-  const state = stateOf(it);
-  const badge =
-    !isOpen(it) || moving ? null : isOwnerDecision(it) ? (
-      <StatusBadge tone="warning">Owner decides</StatusBadge>
-    ) : waitsOnOwner ? (
-      <StatusBadge tone="warning">Waits on the owner</StatusBadge>
-    ) : it.status !== "Proposed" || it.blocked ? (
-      <StatusBadge tone={state.tone}>{state.text}</StatusBadge>
-    ) : null;
-  return (
-    <ItemLink
-      id={it.id}
-      className={`work-card${selected ? " selected" : ""}${isOpen(it) ? "" : " closed"}`}
-    >
-      <span className="work-card-top">
-        <span className="work-id">{it.id}</span>
-        {it.kind !== "work" && <KindBadge kind={it.kind} />}
-        {(it.priority === "urgent" || it.priority === "high") && (
-          <StatusBadge tone="error">
-            {it.priority === "urgent" ? "Urgent" : "High"}
-          </StatusBadge>
-        )}
-      </span>
-      <Typography variant="body-md" className="work-card-title">
-        <InlineText text={it.title} />
-      </Typography>
-      {badge && <span className="work-card-state">{badge}</span>}
-      <span className="work-card-bottom">
-        <Typography
-          variant="caption-md"
-          color="textSecondary"
-          className="work-card-project"
-          title={project ? `${project.id} ${project.title}` : undefined}
-        >
-          {project?.title ?? it.project ?? "No project"}
-        </Typography>
-      </span>
-      {moving && holder && (
-        <Typography
-          variant="caption-md"
-          className="work-claim"
-          title={`Claimed: ${holder}`}
-        >
-          {holder}
-        </Typography>
-      )}
-    </ItemLink>
   );
 }
 

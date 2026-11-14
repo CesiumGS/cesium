@@ -95,22 +95,6 @@ export const isOpen = (it: WorkItem) =>
 /** "CS-170" → 170, for ordering by number. */
 export const idNumber = (id: string) => Number(id.replace(/^\D+-/, "")) || 0;
 
-const PRIORITY_RANK = { urgent: 0, high: 1, medium: 2, low: 3 } as const;
-
-/**
- * The order cards take in a column: ready before blocked, then by
- * priority, then what unblocks the most, then by number.
- */
-export function byUrgency(a: WorkItem, b: WorkItem): number {
-  return (
-    Number(b.ready) - Number(a.ready) ||
-    (PRIORITY_RANK[a.priority ?? "low"] ?? 4) -
-      (PRIORITY_RANK[b.priority ?? "low"] ?? 4) ||
-    b.needed_by.length - a.needed_by.length ||
-    idNumber(a.id) - idNumber(b.id)
-  );
-}
-
 // ------------------------------------------------------------ the owner
 
 /** Open decisions the owner answers. */
@@ -203,19 +187,6 @@ export function boardStatus(it: WorkItem, flight?: InFlight): Status {
   return isOpen(it) && flight?.has(it.id) ? "In progress" : it.status;
 }
 
-/** The board's columns: each status with its items, most urgent first. */
-export function columnsOf(
-  items: readonly WorkItem[],
-  flight?: InFlight,
-): Array<{ status: Status; items: WorkItem[] }> {
-  return STATUSES.map((status) => ({
-    status,
-    items: items
-      .filter((it) => boardStatus(it, flight) === status)
-      .sort(byUrgency),
-  }));
-}
-
 /**
  * The owner's queue: open decisions the owner answers, each with the
  * open items that need it, most waited-on first.
@@ -266,37 +237,6 @@ export function byProject(
 
 // ------------------------------------------------------------ counts
 
-export interface WorkCounts {
-  /** Open decisions the owner answers (whether or not claimed). */
-  owner: number;
-  ready: number;
-  inProgress: number;
-  blocked: number;
-  done: number;
-  /** Everything but Dropped. */
-  live: number;
-}
-
-/**
- * The views' counts over a set of items (`views.mjs` counts the same;
- * work claimed elsewhere counts as in progress, not ready or blocked).
- */
-export function countsOf(
-  items: readonly WorkItem[],
-  flight?: InFlight,
-): WorkCounts {
-  const here = (it: WorkItem) => !flight?.has(it.id);
-  return {
-    owner: items.filter(isOwnerDecision).length,
-    ready: items.filter((it) => it.ready && here(it)).length,
-    inProgress: items.filter((it) => boardStatus(it, flight) === "In progress")
-      .length,
-    blocked: items.filter((it) => it.blocked && here(it)).length,
-    done: items.filter((it) => it.status === "Done").length,
-    live: items.filter((it) => it.status !== "Dropped").length,
-  };
-}
-
 /** The badge's words for an item's state on a card. */
 export function stateOf(
   it: WorkItem,
@@ -320,3 +260,265 @@ export function stateOf(
 
 /** Item IDs in text ("needs CS-391"), for links in an item's body. */
 export const ID_IN_TEXT = /\bCS-[1-9]\d*\b/g;
+
+// ------------------------------------------------------------ whose move
+
+/**
+ * Who acts next on an open item (the distinction the page is built on,
+ * since it is the one someone acts on):
+ *
+ * - the owner: an open decision the owner answers, or a Proposed item
+ *   with nothing open before it (the owner commits it, or not);
+ * - agents: ready work, and work in flight here or on another branch;
+ * - outside: a wait on another party;
+ * - items: waiting on other items to finish (nobody can act on it yet).
+ */
+export type Actor = "owner" | "agents" | "outside" | "items";
+
+export function nextActor(it: WorkItem, flight?: InFlight): Actor | undefined {
+  if (!isOpen(it)) {
+    return undefined;
+  }
+  if (boardStatus(it, flight) === "In progress") {
+    return it.kind === "external" ? "outside" : "agents";
+  }
+  if (it.open_needs.length) {
+    return "items";
+  }
+  if (it.kind === "external") {
+    return "outside";
+  }
+  if (isOwnerDecision(it) || it.status === "Proposed") {
+    return "owner";
+  }
+  return "agents";
+}
+
+// ------------------------------------------------------------ flow
+
+/** The stages work flows through, in order (Dropped leaves the flow). */
+export const STAGES = [
+  "Proposed",
+  "Waiting",
+  "Ready",
+  "In flight",
+  "Done",
+] as const;
+export type Stage = (typeof STAGES)[number];
+
+export const STAGE_NAMES: Record<Stage, string> = {
+  Proposed: "Proposed",
+  Waiting: "Waiting on items",
+  Ready: "Ready",
+  "In flight": "In flight",
+  Done: "Done",
+};
+
+/** An item's stage now (undefined once Dropped). */
+export function stageOf(it: WorkItem, flight?: InFlight): Stage | undefined {
+  const status = boardStatus(it, flight);
+  return status === "Dropped"
+    ? undefined
+    : status === "Proposed"
+      ? "Proposed"
+      : status === "In progress"
+        ? "In flight"
+        : status === "Done"
+          ? "Done"
+          : it.open_needs.length
+            ? "Waiting"
+            : "Ready";
+}
+
+/**
+ * How many open items wait on each item, directly or through others: the
+ * weight of everything behind it (cost of delay, until items carry one).
+ */
+export function unblocksOf(s: WorkSnapshot): Map<string, number> {
+  const itemOf = new Map(s.items.map((i) => [i.id, i]));
+  const memo = new Map<string, Set<string>>();
+  const behind = (id: string, seen: Set<string>): Set<string> => {
+    const known = memo.get(id);
+    if (known) {
+      return known;
+    }
+    const out = new Set<string>();
+    if (seen.has(id)) {
+      return out; // a cycle: the check reports it
+    }
+    seen.add(id);
+    for (const d of itemOf.get(id)?.needed_by ?? []) {
+      out.add(d);
+      for (const x of behind(d, seen)) {
+        out.add(x);
+      }
+    }
+    seen.delete(id);
+    memo.set(id, out);
+    return out;
+  };
+  return new Map(s.items.map((i) => [i.id, behind(i.id, new Set()).size]));
+}
+
+const DAY = 86_400_000;
+/** "Nov 14" style day keys are local days. */
+const dayStart = (t: number) => {
+  const d = new Date(t);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+};
+
+export interface Flow {
+  /** The first day with history, and each day since (local midnights). */
+  days: number[];
+  /** Items in each stage at the end of each day; the last is now. */
+  stocks: Record<Stage, number[]>;
+  /** Items that entered or left each stage over the last `window` days. */
+  arrived: Record<Stage, number>;
+  left: Record<Stage, number>;
+  window: number;
+  /** When each open item entered its current stage (ms). */
+  since: Map<string, number>;
+  /** Days from Planned to Done for items finished in the window. */
+  leadDays: number[];
+  /** Items made in the window, after the tracker's first day (its import). */
+  created: number;
+}
+
+/**
+ * The tracker's stocks and flows, replayed from the status history: each
+ * item's stage at the end of every day since the history begins, with
+ * readiness from its needs' statuses that day. The last point is now, from
+ * the snapshot (uncommitted changes and claims elsewhere included).
+ */
+export function flowOf(
+  s: WorkSnapshot,
+  items: readonly WorkItem[],
+  {
+    now = Date.now(),
+    window = 7,
+    flight,
+  }: { now?: number; window?: number; flight?: InFlight } = {},
+): Flow {
+  const events = new Map<string, Array<{ t: number; status: Status }>>();
+  for (const e of s.history ?? []) {
+    const list = events.get(e.id) ?? [];
+    list.push({ t: Date.parse(e.at), status: e.status });
+    events.set(e.id, list);
+  }
+  const first = Math.min(now, ...[...events.values()].map((l) => l[0]!.t));
+  const days: number[] = [];
+  for (let d = dayStart(first); d <= dayStart(now); d += DAY) {
+    days.push(d);
+  }
+  const statusAt = (id: string, t: number): Status | undefined => {
+    let at: Status | undefined;
+    for (const e of events.get(id) ?? []) {
+      if (e.t > t) {
+        break;
+      }
+      at = e.status;
+    }
+    return at;
+  };
+  const itemOf = new Map(s.items.map((i) => [i.id, i]));
+  const stageAt = (it: WorkItem, t: number): Stage | undefined => {
+    const st = statusAt(it.id, t);
+    if (!st || st === "Dropped") {
+      return undefined;
+    }
+    if (st === "Planned") {
+      const open = it.needs.some((n) => {
+        const need = itemOf.get(n);
+        return need ? statusAt(n, t) !== "Done" : true;
+      });
+      return open ? "Waiting" : "Ready";
+    }
+    return st === "In progress" ? "In flight" : st;
+  };
+  const empty = () =>
+    Object.fromEntries(STAGES.map((x) => [x, 0])) as Record<Stage, number>;
+  const stocks = Object.fromEntries(
+    STAGES.map((x) => [x, days.map(() => 0)]),
+  ) as Record<Stage, number[]>;
+  const arrived = empty();
+  const left = empty();
+  const since = new Map<string, number>();
+  const leadDays: number[] = [];
+  const cutoff = now - window * DAY;
+  // Flows are counted at every commit in the window (an item can arrive
+  // and leave in one day). New items count from the day after the
+  // history's first: that day is the tracker's import, not work arriving.
+  const importDay = dayStart(first) + DAY;
+  let created = 0;
+  const moments = [
+    ...new Set([...events.values()].flatMap((l) => l.map((e) => e.t))),
+  ]
+    .sort((a, b) => a - b)
+    .filter((t) => t > first && t > cutoff);
+  for (const it of items) {
+    // Each day's end, then now from the snapshot.
+    const path = days.map((d, i) =>
+      i === days.length - 1 ? stageOf(it, flight) : stageAt(it, d + DAY - 1),
+    );
+    path.forEach((stage, i) => {
+      if (stage) {
+        stocks[stage][i]!++;
+      }
+    });
+    let before = stageAt(it, Math.max(first, cutoff));
+    for (const [n, t] of [...moments, now].entries()) {
+      const after = n === moments.length ? stageOf(it, flight) : stageAt(it, t);
+      // Moves between stages only: an item's creation is counted in
+      // `created`, and its import isn't counted at all.
+      if (after !== before && before) {
+        left[before]++;
+        if (after) {
+          arrived[after]++;
+        }
+      }
+      before = after;
+    }
+    const current = path.at(-1);
+    if (current && current !== "Done") {
+      let i = path.length - 1;
+      while (i > 0 && path[i - 1] === current) {
+        i--;
+      }
+      since.set(it.id, i === 0 ? first : days[i]!);
+    }
+    const list = events.get(it.id) ?? [];
+    if (list[0] && list[0].t >= importDay && list[0].t >= cutoff) {
+      created++;
+    }
+    const done = list.find((e) => e.status === "Done");
+    const planned = list.find(
+      (e) => e.status === "Planned" || e.status === "In progress",
+    );
+    if (done && planned && done.t >= cutoff) {
+      leadDays.push((done.t - planned.t) / DAY);
+    }
+  }
+  return { days, stocks, arrived, left, window, since, leadDays, created };
+}
+
+/** A duration in words: "3 days", "5 hours", "under an hour". */
+export function ageText(ms: number): string {
+  if (ms < DAY) {
+    const h = Math.floor(ms / 3_600_000);
+    return h < 1 ? "under an hour" : `${h} ${h === 1 ? "hour" : "hours"}`;
+  }
+  const d = ms / DAY;
+  return d < 1
+    ? "under a day"
+    : `${Math.floor(d)} ${Math.floor(d) === 1 ? "day" : "days"}`;
+}
+
+export const median = (xs: readonly number[]): number | undefined => {
+  if (!xs.length) {
+    return undefined;
+  }
+  const s = [...xs].sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1]! + s[m]!) / 2;
+};

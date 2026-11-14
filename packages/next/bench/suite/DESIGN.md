@@ -34,7 +34,7 @@ and `test/dynoRail.test.ts` checks this table against it.
 
 | Group        | Item            | Key | Route                        | What it is                                          |
 | ------------ | --------------- | --- | ---------------------------- | --------------------------------------------------- |
-| Needs a look | Work            | w   | `/work`                      | The tracker's items; decisions waiting (a count)    |
+| Needs a look | Work            | w   | `/work`                      | The tracker as a running system; your decisions     |
 |              | Overview        | o   | `/overview`                  | The latest run's verdict, budgets, machines, to-dos |
 |              | Alerts          | a   | `/alerts`                    | Change points to triage (a count)                   |
 |              | Images          | i   | `/images`                    | Image checks to review (a count)                    |
@@ -95,45 +95,55 @@ timings don't compare, and it says so.
 
 ## The Work board
 
-The tracker's items (`packages/next/work`) on the branch Dyno is served
-from, for whoever is choosing what to do next: the owner first (what
-waits on their decision), then anyone picking a ready item. It reads,
-never writes: a change to an item is a change to its file.
+The tracker (`packages/next/work`) as a running system, for the owner
+first and then anyone choosing what moves next. Its shape comes from the
+first principles in human-in-the-lead's systems-thinking notes, not from
+a team's lifecycle columns: work is stocks and flows; the owner's
+attention is the constraint; a distinction earns its place only if
+someone acts on it. It reads, never writes: a change to an item is a
+change to its file.
 
-- **It reads one API.** The board reads the tracker's read API
-  (`/work-api/query.json` and `/work-api/item/CS-<n>.json` on the dev
-  server, versioned), never the item files. `scripts/work/query.mjs` is
-  the only adapter between the two: when the human-in-the-lead plugin's
-  `hitld work query --json` exists, that file changes and nothing here.
-- **Layout:** the header names the branch and commit it read, with one
-  line of progress. Tabs ask one question each, with a count: what
-  waits on the owner (the default, and the rail's count), what is ready,
-  what is in progress, what is blocked; then the board and the graph.
-  One row of filters narrows every tab: where (all work, an initiative,
-  or a project, in one grouped list), which kind, and words. All of it
-  is in the URL. An item opens in a panel on the right
-  (`?item=CS-<n>`): its facts, who holds it and where, its needs and
-  what needs it, its text, and its path to copy or open in the editor.
-- **Waiting on the owner** lists the open decisions the owner answers,
-  the most waited-on first, each with the items that wait on it.
-- **The board** has a column per lifecycle state; Planned splits into
-  ready and waiting. Cards show the ID, kind, title, state in words,
-  project and claim. Columns show 40 cards, then "Show more".
-- **The graph** shows projects and how they wait on each other, or,
-  with a project chosen, its items with their needs from other projects
-  (dashed). Arrows point from what is needed to what needs it; nodes
-  that link to nothing are listed under the graph.
-- **Work in flight:** the API includes claims made in other worktrees
-  and on other local branches of this machine (as `views.mjs claims`
-  finds them), and the board shows those items in progress, with who
-  holds them and on which branch, until the claim merges. Claims on
-  other machines arrive with a bundle or a push.
-- **Staying current:** the dev server tells open pages when an item
-  file changes and they read again; pages also read when the window
-  comes to the front and every minute while visible (claims elsewhere
-  are scanned at most every 30 s).
-- **Counts** match `views.mjs` (test/dynoWork.test.ts); the rail's count
-  is the open decisions the owner answers.
+- **It reads one API.** `/work-api/query.json` and
+  `/work-api/item/CS-<n>.json` on the dev server, versioned, built by
+  `scripts/work/query.mjs`, the only adapter between the page and the
+  tracker's files. When the human-in-the-lead plugin's `hitld work query
+--json` and its readouts exist, that file changes and nothing here.
+- **Whose move.** Every open item has one next actor: the owner (a
+  decision they can answer now, or a proposed item to commit or drop),
+  agents (ready work, work in flight), an outside party, or nobody yet
+  (waiting on other items). A strip of four counts says so at the top,
+  and each one leads to its section. The rail's count is the owner's.
+- **Waiting on you** comes first, because the owner's attention is the
+  constraint: the decisions they can answer now, the most waited-on
+  first (counting what waits through other items), with what arrived and
+  what was answered in the last 7 days. Proposed items to commit or drop
+  fold below.
+- **Flow.** The stages (proposed, waiting on items, ready, in flight,
+  done) as stocks joined by arrows: each one's count now, a sparkline of
+  its count at the end of each day since the history begins (replayed
+  from the items' committed status changes), and the moves in and out of
+  it in the last 7 days, counted at every commit. The stage that grew
+  most is marked "Growing": a growing queue is where flow is held up.
+  Under it, Little's law's terms: new items, in flight, done, and lead
+  time from planned to done. The tracker's import (its first day) counts
+  as neither arrivals nor new items. Choosing a stage lists its items.
+- **In flight**, with who holds each and on which branch, claims in
+  other worktrees and on other local branches included until they merge.
+- **Next up**: ready items, the most waited-on first, until items carry
+  a cost of delay and a size. **Waiting outside**: the external waits,
+  ranked the same way.
+- **Structure**: how projects wait on each other, and a project's items
+  with their needs.
+- **Later, from HITLd's records:** tokens per item, verification, the
+  merge queue, quotas and the controllers' steps. The page says so in
+  one line rather than showing empty sections.
+- **Filters:** where (all work, an initiative or a project, in one
+  grouped list) and words; both narrow every section. An item opens in a
+  panel on the right (`?item=CS-<n>`).
+- **Staying current:** the dev server tells open pages when an item file
+  changes; pages also read when the window comes to the front and every
+  minute (claims elsewhere are scanned at most every 30 s, the history
+  once per commit).
 
 ## Page anatomy
 

@@ -2,7 +2,12 @@ import { execFileSync } from "node:child_process";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 import { join } from "node:path";
-import { claimsElsewhere, queryWork, showItem } from "./work/query.mjs";
+import {
+  claimsElsewhere,
+  queryWork,
+  showItem,
+  statusHistory,
+} from "./work/query.mjs";
 
 /** How long claims found elsewhere are reused (scanning takes about 1 s). */
 const ELSEWHERE_MS = 30_000;
@@ -34,6 +39,19 @@ export function workApi(prefix = "/work-api"): Plugin {
         }
         return elsewhere.claims;
       };
+      // The history changes only with a commit: kept per HEAD.
+      let history:
+        { head: string; events: ReturnType<typeof statusHistory> } | undefined;
+      const events = () => {
+        const head = execFileSync("git", ["rev-parse", "HEAD"], {
+          cwd: root,
+          encoding: "utf8",
+        }).trim();
+        if (history?.head !== head) {
+          history = { head, events: statusHistory(root) };
+        }
+        return history.events;
+      };
       const workDir = join(root, "packages", "next", "work");
       server.watcher.add(workDir);
       const changed = (file: string) => {
@@ -61,7 +79,11 @@ export function workApi(prefix = "/work-api"): Plugin {
           const path = (req.url ?? "").split("?")[0] ?? "";
           try {
             if (path === "/query.json") {
-              send(res, 200, queryWork(root, { elsewhere: claims() }));
+              send(
+                res,
+                200,
+                queryWork(root, { elsewhere: claims(), history: events() }),
+              );
               return;
             }
             const m = path.match(/^\/item\/(CS-[1-9]\d*)\.json$/);

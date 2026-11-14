@@ -73,6 +73,15 @@ export interface WorkSnapshot {
   problems: string[];
   /** Work in flight in other worktrees and on other local branches. */
   elsewhere: WorkElsewhere[];
+  /** Every committed status change on this branch, oldest first. */
+  history: WorkEvent[];
+}
+
+export interface WorkEvent {
+  id: string;
+  /** The commit's date (ISO 8601). */
+  at: string;
+  status: Status;
 }
 
 export interface WorkElsewhere {
@@ -95,7 +104,8 @@ export interface WorkItemText {
 export const API_VERSION: 1;
 export function queryWork(
   root: string,
-  options?: { elsewhere?: WorkElsewhere[] },
+  options?: { elsewhere?: WorkElsewhere[]; history?: WorkEvent[] },
 ): WorkSnapshot;
+export function statusHistory(root: string): WorkEvent[];
 export function claimsElsewhere(root: string): WorkElsewhere[];
 export function showItem(root: string, id: string): WorkItemText | undefined;
