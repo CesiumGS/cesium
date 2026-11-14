@@ -185,8 +185,8 @@ function sphereVolume(center: Vec3, radius: number): TileVolume {
 }
 
 /** The volume carried through `warp`: a box or region by its image's bounding sphere, a sphere by its centre's image and σ_max · radius. A map that fails on a sample (not finite) leaves the volume where it is. */
-function carried(volume: TileVolume, warp: TileWarp): Carried {
-  const made = carry(volume, warp);
+function carried(volume: TileVolume, warp: TileWarp, below = 0): Carried {
+  const made = carry(volume, warp, below);
   const c = made.volume.sphere;
   if (
     c &&
@@ -234,7 +234,11 @@ function holding(volume: TileVolume): {
   };
 }
 
-function carry(volume: TileVolume, warp: TileWarp): Carried {
+function padded<S extends { radius: number }>(sphere: S, by: number): S {
+  return by > 0 ? { ...sphere, radius: sphere.radius + by } : sphere;
+}
+
+function carry(volume: TileVolume, warp: TileWarp, below = 0): Carried {
   if (volume.kind === "region" && warp.heightRange) {
     // A region's image under a height profile is the region over the drawn
     // heights: exact in height, nothing sampled.
@@ -249,7 +253,12 @@ function carry(volume: TileVolume, warp: TileWarp): Carried {
       image.max,
     ]);
     return {
-      volume: { kind: "sphere", sphere: sphereFromObb(drawn.obb) },
+      volume: {
+        kind: "sphere",
+        // Skirts hang below the region's lowest height, and the map stretches
+        // that depth by at most slopeMax: the sphere reaches their tips.
+        sphere: padded(sphereFromObb(drawn.obb), image.slopeMax * below),
+      },
       sigmaMax: image.sigmaMax,
       slopeMax: image.slopeMax,
     };
@@ -298,6 +307,18 @@ function carry(volume: TileVolume, warp: TileWarp): Carried {
 }
 
 /**
+ * How far below its region's lowest height a terrain tile's mesh reaches:
+ * its skirts hang at most 5 × the level's error (a tile upsampled from data
+ * hangs its outer edges at the data tile's depth). The tile's volume leaves
+ * them out; a drawn volume must not, or a skirt tip is culled while visible.
+ */
+function skirtBelow(tile: Tile): number {
+  const g = tile.globe;
+  const level = (g?.upsampledFrom?.globe ?? g)?.refit?.levelError;
+  return level === undefined ? 0 : 5 * level;
+}
+
+/**
  * Where `tile`'s draws put its volume under `warp`, cached on the tile for
  * the map's version and the volume it came from (a padded or tightened
  * volume is a new object); the fit's error is read again when fits change.
@@ -321,7 +342,11 @@ export function drawnTile(tile: Tile, warp: TileWarp): DrawnTile {
     tile.drawnCache = cache;
   }
   if (!cache || cache.version !== warp.version || cache.basis !== basis) {
-    const { volume, sigmaMax, slopeMax, remake } = carried(basis, warp);
+    const { volume, sigmaMax, slopeMax, remake } = carried(
+      basis,
+      warp,
+      skirtBelow(tile),
+    );
     cache = {
       warp,
       version: warp.version,
@@ -340,7 +365,7 @@ export function drawnTile(tile: Tile, warp: TileWarp): DrawnTile {
   } else if (cache.scaleVersion !== scaleVersion) {
     cache.scaleVersion = scaleVersion;
     const { volume, sigmaMax, slopeMax, remake } =
-      cache.remake?.() ?? carried(basis, warp);
+      cache.remake?.() ?? carried(basis, warp, skirtBelow(tile));
     cache.drawn = {
       volume,
       sigmaMax,
