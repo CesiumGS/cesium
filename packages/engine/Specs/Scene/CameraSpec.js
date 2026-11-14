@@ -255,23 +255,18 @@ describe("Scene/Camera", function () {
     [false, true].forEach(function (useReferenceFrame) {
       const frame = useReferenceFrame ? "local reference frame" : "fixed frame";
       ["heading", "pitch", "roll"].forEach(function (property) {
-        it(
-          `reads ${property} without moving the camera in a ${frame}`,
-          function () {
-            setPose(useReferenceFrame);
-            const before = snapshot(camera);
-            const expected = { heading: 0.3, pitch: -0.7, roll: 0.0 };
-            for (let i = 0; i < 600; ++i) {
-              expect(
-                CesiumMath.negativePiToPi(
-                  camera[property] - expected[property],
-                ),
-              ).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
-            }
-            // Exact preservation, not EPSILON8: View detects EPSILON15 motion.
-            expect(snapshot(camera)).toEqual(before);
-          },
-        );
+        it(`reads ${property} without moving the camera in a ${frame}`, function () {
+          setPose(useReferenceFrame);
+          const before = snapshot(camera);
+          const expected = { heading: 0.3, pitch: -0.7, roll: 0.0 };
+          for (let i = 0; i < 600; ++i) {
+            expect(
+              CesiumMath.negativePiToPi(camera[property] - expected[property]),
+            ).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
+          }
+          // Exact preservation, not EPSILON8: View detects EPSILON15 motion.
+          expect(snapshot(camera)).toEqual(before);
+        });
       });
 
       it(`does not move for a changed listener in a ${frame}`, function () {
@@ -295,103 +290,97 @@ describe("Scene/Camera", function () {
       function (mode) {
         [MapMode2D.INFINITE_SCROLL, MapMode2D.ROTATE].forEach(
           function (mapMode) {
-            it(
-              `preserves the pose in mode ${mode} and map mode ${mapMode}`,
-              function () {
-                scene.mapMode2D = mapMode;
-                scene.mapProjection = new GeographicProjection(
-                  new Ellipsoid(3000000.0, 3000000.0, 2000000.0),
-                );
-                camera = new Camera(scene);
-                scene.camera = camera;
-                if (mode === SceneMode.SCENE2D) {
-                  camera.frustum = new OrthographicOffCenterFrustum({
-                    left: -1000000.0,
-                    right: 1000000.0,
-                    top: 1000000.0,
-                    bottom: -1000000.0,
-                    near: 1.0,
-                    far: 1000000000.0,
-                  });
+            it(`preserves the pose in mode ${mode} and map mode ${mapMode}`, function () {
+              scene.mapMode2D = mapMode;
+              scene.mapProjection = new GeographicProjection(
+                new Ellipsoid(3000000.0, 3000000.0, 2000000.0),
+              );
+              camera = new Camera(scene);
+              scene.camera = camera;
+              if (mode === SceneMode.SCENE2D) {
+                camera.frustum = new OrthographicOffCenterFrustum({
+                  left: -1000000.0,
+                  right: 1000000.0,
+                  top: 1000000.0,
+                  bottom: -1000000.0,
+                  near: 1.0,
+                  far: 1000000000.0,
+                });
+              }
+              camera.update(mode);
+              camera.setView({
+                destination: Cartesian3.fromDegrees(
+                  -75.0,
+                  30.0,
+                  1000000.0,
+                  scene.mapProjection.ellipsoid,
+                ),
+                orientation: { heading: 0.3, pitch: -0.7, roll: 2.4 },
+              });
+              [false, true].forEach(function (useReferenceFrame) {
+                if (useReferenceFrame) {
+                  const ellipsoid = scene.mapProjection.ellipsoid;
+                  camera._setTransform(
+                    FixedFrameTransforms.eastNorthUpToFixedFrame(
+                      Cartesian3.fromDegrees(-75.0, 30.0, 0.0, ellipsoid),
+                      ellipsoid,
+                    ),
+                  );
                 }
-                camera.update(mode);
-                camera.setView({
-                  destination: Cartesian3.fromDegrees(
-                    -75.0,
-                    30.0,
-                    1000000.0,
-                    scene.mapProjection.ellipsoid,
-                  ),
-                  orientation: { heading: 0.3, pitch: -0.7, roll: 2.4 },
-                });
-                [false, true].forEach(function (useReferenceFrame) {
-                  if (useReferenceFrame) {
-                    const ellipsoid = scene.mapProjection.ellipsoid;
-                    camera._setTransform(
-                      FixedFrameTransforms.eastNorthUpToFixedFrame(
-                        Cartesian3.fromDegrees(-75.0, 30.0, 0.0, ellipsoid),
-                        ellipsoid,
-                      ),
-                    );
-                  }
-                  const before = snapshot(camera);
-                  const angles = [camera.heading, camera.pitch, camera.roll];
-                  for (let i = 0; i < 600; ++i) {
-                    expect([camera.heading, camera.pitch, camera.roll]).toEqual(
-                      angles,
-                    );
-                  }
-                  expect(snapshot(camera)).toEqual(before);
-                });
-              },
-            );
+                const before = snapshot(camera);
+                const angles = [camera.heading, camera.pitch, camera.roll];
+                for (let i = 0; i < 600; ++i) {
+                  expect([camera.heading, camera.pitch, camera.roll]).toEqual(
+                    angles,
+                  );
+                }
+                expect(snapshot(camera)).toEqual(before);
+              });
+            });
           },
         );
       },
     );
 
     [false, true].forEach(function (useReferenceFrame) {
-      it(
-        `does not report getter-induced camera motion with local frame ${useReferenceFrame}`,
-        function () {
-          setPose(useReferenceFrame);
-          scene.cameraEventWaitTime = 500.0;
-          camera.changed.addEventListener(function () {});
+      it(`does not report getter-induced camera motion with local frame ${useReferenceFrame}`, function () {
+        setPose(useReferenceFrame);
+        scene.cameraEventWaitTime = 500.0;
+        camera.changed.addEventListener(function () {});
+        camera._updateCameraChanged();
+        snapshot(camera);
+        const view = {
+          camera: camera,
+          _cameraClone: Camera.clone(camera),
+          _cameraStartFired: false,
+        };
+        const moveStart = jasmine.createSpy("moveStart");
+        const moveEnd = jasmine.createSpy("moveEnd");
+        camera.moveStart.addEventListener(moveStart);
+        camera.moveEnd.addEventListener(moveEnd);
+        let detections = 0;
+        for (let i = 0; i < 600; ++i) {
           camera._updateCameraChanged();
-          snapshot(camera);
-          const view = {
-            camera: camera,
-            _cameraClone: Camera.clone(camera),
-            _cameraStartFired: false,
-          };
-          const moveStart = jasmine.createSpy("moveStart");
-          const moveEnd = jasmine.createSpy("moveEnd");
-          camera.moveStart.addEventListener(moveStart);
-          camera.moveEnd.addEventListener(moveEnd);
-          let detections = 0;
-          for (let i = 0; i < 600; ++i) {
-            camera._updateCameraChanged();
-            if (View.prototype.checkForCameraUpdates.call(view, scene)) {
-              ++detections;
-            }
+          if (View.prototype.checkForCameraUpdates.call(view, scene)) {
+            ++detections;
           }
-          expect(detections).toEqual(0);
-          expect(moveStart).not.toHaveBeenCalled();
-          camera.moveLeft(1.0);
-          expect(View.prototype.checkForCameraUpdates.call(view, scene)).toBe(
-            true,
-          );
-          expect(moveStart).toHaveBeenCalled();
-          expect(View.prototype.checkForCameraUpdates.call(view, scene)).toBe(
-            false,
-          );
-          view._cameraMovedTime = -1000000000.0;
-          expect(View.prototype.checkForCameraUpdates.call(view, scene)).toBe(
-            false,
-          );
-          expect(moveEnd).toHaveBeenCalled();
-        },
-      );
+        }
+        expect(detections).toEqual(0);
+        expect(moveStart).not.toHaveBeenCalled();
+        camera.moveLeft(1.0);
+        expect(View.prototype.checkForCameraUpdates.call(view, scene)).toBe(
+          true,
+        );
+        expect(moveStart).toHaveBeenCalled();
+        expect(View.prototype.checkForCameraUpdates.call(view, scene)).toBe(
+          false,
+        );
+        view._cameraMovedTime = -1000000000.0;
+        expect(View.prototype.checkForCameraUpdates.call(view, scene)).toBe(
+          false,
+        );
+        expect(moveEnd).toHaveBeenCalled();
+      });
     });
 
     it("does not swallow repeated intentional micro-rotations", function () {
