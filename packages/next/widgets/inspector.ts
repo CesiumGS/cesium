@@ -262,8 +262,8 @@ export function attachInspector(
     `${storageKey}.sections`,
     {},
   );
-  /** The Frame section's title bar: the pause state and its switch. */
-  let pauseChip: HTMLElement | undefined;
+  /** Each chart section's readout slot (the moment under the cursor), and Frame's pause switch. */
+  const readouts: HTMLElement[] = [];
   let pauseButton: HTMLButtonElement | undefined;
   for (const [key, title] of SECTIONS) {
     const details = document.createElement("details");
@@ -273,17 +273,21 @@ export function attachInspector(
     s.append(document.createTextNode(title));
     const bar = document.createElement("span");
     bar.className = "ci-sumbar";
+    if (key === "frame" || key === "streaming" || key === "memory") {
+      const readout = document.createElement("span");
+      readout.className = "ci-readout";
+      readout.dataset.on = "0";
+      readouts.push(readout);
+      bar.append(readout);
+    }
     if (key === "frame") {
-      pauseChip = document.createElement("span");
-      pauseChip.className = "ci-chip ci-pausechip";
-      pauseChip.dataset.on = "0";
       pauseButton = document.createElement("button");
       pauseButton.type = "button";
       pauseButton.className = "ci-pausebtn";
       pauseButton.textContent = "Pause";
       pauseButton.setAttribute("aria-pressed", "false");
       pauseButton.title = "Freeze the charts; then ← and → step, Shift for ten";
-      bar.append(pauseChip, pauseButton);
+      bar.append(pauseButton);
     }
     const text = SECTION_INFO[key];
     if (text) {
@@ -633,14 +637,16 @@ export function attachInspector(
 
   // One tooltip beside the crosshair with every chart's value at the
   // moment, one for the "i" buttons and status icons.
-  const tip = document.createElement("div");
-  tip.className = "ci-tip";
-  tip.hidden = true;
+  /** Detail the rows can't show, beside the panel (never over a chart). */
+  const detail = document.createElement("div");
+  detail.className = "ci-detail";
+  detail.hidden = true;
+  element.append(detail);
   const infoTip = document.createElement("div");
   infoTip.className = "ci-tip ci-tip-prose";
   infoTip.hidden = true;
   infoTip.setAttribute("role", "tooltip");
-  root.append(tip, infoTip);
+  root.append(infoTip);
 
   const showInfo = (el: HTMLElement) => {
     const text = el.dataset.info;
@@ -879,90 +885,99 @@ export function attachInspector(
         set(key, html[key]);
       }
     }
-    updateTip();
+    updateReadout();
   }
 
+  let frozenText = "";
   function updateBar(): void {
     const frozenNow = paused || hovering;
-    if (pauseChip) {
-      pauseChip.dataset.on = frozenNow ? "1" : "0";
-      pauseChip.textContent = `paused · ${((performance.now() - frozenAt) / 1000).toFixed(1)} s behind live`;
-    }
+    frozenText = frozenNow
+      ? `paused · ${((performance.now() - frozenAt) / 1000).toFixed(1)} s behind live`
+      : "";
     if (pauseButton) {
       pauseButton.textContent = paused ? "Live" : "Pause";
       pauseButton.setAttribute("aria-pressed", String(paused));
     }
   }
 
-  function updateTip(): void {
+  function updateReadout(): void {
     const w = shown;
     const moment = hovering || pinned || paused ? cursor : undefined;
-    if (!moment || !w || !expanded) {
-      tip.hidden = true;
-      return;
-    }
-    tip.replaceChildren();
-    const frameIndex = indexIn(w.frame, moment);
-    const head = document.createElement("div");
-    head.className = "ci-tip-when";
-    const end = w.frame.times[w.frame.n - 1] ?? moment.t;
-    head.textContent = `${pinned ? "pinned · " : ""}${((end - moment.t) / 1000).toFixed(1)} s ago`;
-    tip.append(head);
-    const entry =
-      frameIndex !== undefined ? w.frame.detail?.[frameIndex] : undefined;
-    if (entry) {
-      const line = document.createElement("div");
-      line.className = "ci-tip-when";
-      line.textContent = `tick ${entry.tick} · ${entry.rendering ? "rendered" : "no render"} · ${entry.why.length ? entry.why.join(" + ") : "—"}`;
-      tip.append(line);
-    }
-    for (const row of body.querySelectorAll<HTMLElement>("[data-tip]")) {
-      if (row.offsetParent === null) {
-        continue;
+    let text = frozenText;
+    let full = frozenText;
+    detail.hidden = true;
+    if (moment && w && expanded) {
+      const fi = indexIn(w.frame, moment);
+      const entry = fi !== undefined ? w.frame.detail?.[fi] : undefined;
+      const label = momentLabel(w.frame, moment, pinned, entry);
+      text = label;
+      full = label;
+      // Detail the rows can't show: group values and the tick's passes.
+      const legend = [
+        ...body.querySelectorAll<HTMLElement>(".ci-glegend [data-tip]"),
+      ];
+      if (legend.length > 0 || entry) {
+        detail.replaceChildren();
+        const add = (cls: string, a: string, b?: string) => {
+          const r = document.createElement("div");
+          r.className = cls;
+          if (b === undefined) {
+            r.textContent = a;
+          } else {
+            const v = document.createElement("strong");
+            v.textContent = a;
+            const n = document.createElement("span");
+            n.textContent = b;
+            r.append(v, n);
+          }
+          detail.append(r);
+        };
+        add("ci-detail-head", label);
+        for (const row of legend) {
+          add(
+            "ci-detail-row",
+            row.dataset.tipValue ?? "—",
+            row.dataset.tip ?? "",
+          );
+        }
+        if (w.frame.detail) {
+          const gpu = entry?.gpu;
+          add(
+            "ci-detail-head",
+            gpu ? `GPU ${gpu.ms.toFixed(2)} ms by pass` : "GPU: not measured",
+          );
+          for (const [pass, v] of gpu?.passes ?? []) {
+            add("ci-detail-row", v.toFixed(2), pass);
+          }
+        }
+        // Beside the inspector on the side with room, level with the pointer;
+        // with none (a narrow view) it docks into the header's readout.
+        detail.hidden = false;
+        const er = element.getBoundingClientRect();
+        const rr = root.getBoundingClientRect();
+        const width = detail.offsetWidth;
+        const left =
+          er.right - rr.right - 8 >= width
+            ? rr.right - er.left + 8
+            : rr.left - er.left - 8 >= width
+              ? rr.left - er.left - 8 - width
+              : undefined;
+        if (left === undefined) {
+          detail.hidden = true;
+          const gpu = entry?.gpu;
+          full = `${label}${gpu ? ` · GPU ${gpu.ms.toFixed(2)} ms` : ""}`;
+          text = full;
+        } else {
+          detail.style.left = `${left}px`;
+          const y = hovering && lastY ? lastY : rr.top + rr.height / 2;
+          detail.style.top = `${Math.max(0, Math.min(y - er.top - detail.offsetHeight / 2, er.height - detail.offsetHeight))}px`;
+        }
       }
-      const r = document.createElement("div");
-      r.className = "ci-tip-row";
-      const v = document.createElement("strong");
-      v.textContent = row.dataset.tipValue ?? "—";
-      const n = document.createElement("span");
-      n.textContent = row.dataset.tip ?? "";
-      r.append(v, n);
-      tip.append(r);
     }
-    if (w.frame.detail) {
-      const gpu = entry?.gpu;
-      const line = document.createElement("div");
-      line.className = "ci-tip-when";
-      line.textContent = gpu
-        ? `GPU ${gpu.ms.toFixed(2)} ms`
-        : "GPU: not measured";
-      tip.append(line);
-      for (const [pass, v] of gpu?.passes ?? []) {
-        const r = document.createElement("div");
-        r.className = "ci-tip-row";
-        const val = document.createElement("strong");
-        val.textContent = `${v.toFixed(2)}`;
-        const n = document.createElement("span");
-        n.textContent = pass;
-        r.append(val, n);
-        tip.append(r);
-      }
-    }
-    tip.hidden = false;
-    // Beside the crosshair, on the side with room.
-    const frame = body.querySelector<SVGElement>('svg[data-win="frame"]');
-    const plot = frame ?? body.querySelector<SVGElement>("svg[data-plot]");
-    const box = root.getBoundingClientRect();
-    if (plot) {
-      const rect = plot.getBoundingClientRect();
-      const win = plot.getAttribute("data-win") === "frame" ? w.frame : w.slow;
-      const i = indexIn(win, moment) ?? win.n - 1;
-      const px = rect.left + (rect.width * i) / Math.max(1, win.n - 1);
-      const right = px - rect.left < rect.width / 2;
-      const x = px - box.left;
-      tip.style.left = `${Math.max(0, right ? x + 12 : x - tip.offsetWidth - 12)}px`;
-      const y = hovering && lastY ? lastY : rect.top;
-      tip.style.top = `${Math.max(0, Math.min(y - box.top - tip.offsetHeight / 2, box.height - tip.offsetHeight))}px`;
+    for (const r of readouts) {
+      r.textContent = text;
+      r.title = full;
+      r.dataset.on = text ? "1" : "0";
     }
   }
 
@@ -1124,6 +1139,7 @@ export function attachInspector(
     dispose() {
       clearInterval(timer);
       unsubscribe?.();
+      detail.remove();
       root.remove();
     },
   };
@@ -1148,6 +1164,28 @@ function alignTimes(
     ...Array.from({ length: pad }, (_, i) => first - (pad - i) * step),
     ...out,
   ];
+}
+
+/**
+ * The header readout's text for a moment: pinned or not, the tick, how long
+ * before the window's newest sample, and why the tick ran. Its slot has a
+ * fixed width (the text is cut with an ellipsis, the whole in its title).
+ */
+export function momentLabel(
+  w: { times: number[]; n: number },
+  c: Cursor,
+  pinned: boolean,
+  entry?: { tick: number; rendering: boolean; why: readonly string[] },
+): string {
+  const end = w.times[w.n - 1] ?? c.t;
+  return [
+    pinned ? "pinned" : "",
+    entry ? `tick ${entry.tick}` : "",
+    `${((end - c.t) / 1000).toFixed(1)} s ago`,
+    entry ? (entry.why.length ? entry.why.join("+") : "no wake") : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 // ------------------------------------------------------------- sections
@@ -1619,7 +1657,8 @@ function lineSvg(
         ? `<polyline class="ci-limit" points="${limit.map((v, i) => `${x(i)},${y(v)}`).join(" ")}" />`
         : ""
     }<polygon class="ci-area" style="fill:${color}" points="${pts} ${w},${h - 1} 0,${h - 1}" />` +
-    `<polyline class="ci-line" style="stroke:${color}" points="${pts}" />${crossLine(n, w, h, ci, pinned)}</svg>`
+    `<polyline class="ci-line" style="stroke:${color}" points="${pts}" />${crossLine(n, w, h, ci, pinned)}` +
+    `<circle class="ci-mark" r="2.4" cx="${x(ci ?? 0)}" cy="${y(series[ci ?? 0] ?? 0)}" visibility="${ci === undefined ? "hidden" : "visible"}" style="fill:${color}" /></svg>`
   );
 }
 
@@ -2420,8 +2459,14 @@ const CSS = `
 }
 /* The title bar's controls: the "i", and on Frame the pause state. */
 .cesium-inspector .ci-sumbar { float: right; display: inline-flex; align-items: center; gap: 6px; text-transform: none; letter-spacing: 0; font-weight: 400; }
-.cesium-inspector .ci-pausechip { inline-size: 24ch; color: var(--ci-strong); background: rgba(250, 178, 25, 0.12); border-color: var(--ci-warning); visibility: hidden; font-variant-numeric: tabular-nums; overflow: hidden; }
-.cesium-inspector .ci-pausechip[data-on="1"] { visibility: visible; }
+.cesium-inspector .ci-readout { inline-size: 26ch; box-sizing: border-box; padding: 0 6px; border-radius: 9px; border: 1px solid var(--ci-warning); background: rgba(250, 178, 25, 0.12); color: var(--ci-strong); font-size: 11px; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; visibility: hidden; }
+.cesium-inspector .ci-readout[data-on="1"] { visibility: visible; }
+.cesium-inspector .ci-mark { stroke: var(--ci-strong); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.ci-detail { position: absolute; z-index: 6; inline-size: 230px; box-sizing: border-box; pointer-events: none; padding: 6px 8px; border-radius: 6px; font: 11px/1.45 system-ui, sans-serif; color: #c3c2b7; background: rgba(13, 13, 13, 0.92); border: 1px solid #383835; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); }
+.ci-detail[hidden] { display: none; }
+.ci-detail-head { color: #8d8c84; margin: 2px 0; overflow-wrap: anywhere; }
+.ci-detail-row { display: flex; gap: 8px; }
+.ci-detail-row strong { min-inline-size: 7ch; text-align: right; color: #f0efec; font-weight: 600; font-variant-numeric: tabular-nums; }
 .cesium-inspector .ci-pausebtn {
   all: unset; box-sizing: border-box; inline-size: 7ch; text-align: center; cursor: pointer;
   font-size: 11px; line-height: 16px; border: 1px solid var(--ci-border); border-radius: 4px; color: var(--ci-strong);
