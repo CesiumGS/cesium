@@ -10539,6 +10539,17 @@ _(4) Our IR to WGSL, naga for validation and GLSL._ As (2), but no Slang at run 
 7. MaterialX: import at build time (its Slang output, compiled by `slangc`) or at run time (its graph into the IR), or both?
 8. Should a style's numeric literals become uniforms, so an edit changes values without a new pipeline (a `CustomShader` uniform already changes through `setUniform` with no new module or pipeline)? This matters more than the front end's speed in every option.
 
+**Owner's answers (2026-11-13).**
+
+1. **CPU evaluation of styles is a requirement** (picks, legends, queries, interval culling of tiles).
+2. **Styling stays compiler-free:** Slang loads only for custom shaders, never for a style.
+3. **The PoC builds a WebGL 2 renderer,** to exercise the renderer seam designed in the renderer research (a renderer behind each view, support reported in the scene's terms, AOVs; decisions above). It is a second, simpler renderer, not a translation of the GPU-driven one: no compute, storage buffers or indirect draws. Scope it as a task: which content it draws (decision 8 of the renderer questions: globe, terrain, imagery, meshes at least), how styles and transforms reach GLSL ES, and how its support report reads.
+4. **Open, to discuss:** the owner isn't sold on our own IR yet, and wants to see how far the API gets **without** a WGSL escape hatch before adding one.
+5. **Built-in transforms in one source:** written in the IR, or in something that compiles to it quickly.
+6. **naga in CI: yes.** Also evaluate building our own WebAssembly of naga instead of the third-party `naga-wasm` (a small Rust crate over naga with exactly the API we need, pinned, built in CI; Rust is compiled to `wasm32-unknown-unknown` with wasm-bindgen, not Emscripten).
+7. **MaterialX: the owner wants live graph editing in the PoC,** with a gallery example: edit a material graph and see it update live. Build-time import alone isn't enough.
+8. **Style literals become uniforms: yes.**
+
 #### Swappable and hybrid renderers behind `Engine`, `World` and `View` (research, 2026-11-13)
 
 This works through four of the questions above: the renderer swap, hybrid rendering, the owner's OptiX lead, and wgpu. It's research, and nothing is decided. Code facts are from a read-only survey of `packages/next` on this date. Outside facts were read on 2026-11-13; "undated" means the page shows no date. The shader-toolchain comparison (Slang, WESL, naga, our IR) is a separate research session and isn't repeated here.
