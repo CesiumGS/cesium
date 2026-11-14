@@ -13,7 +13,6 @@ import {
   Written,
 } from "../parts.tsx";
 import { ReachFacts, ReachOptions } from "../reach.tsx";
-import { WEBGPU_USAGE } from "../sources.ts";
 
 const SUPPORT: { browser: string; platform: string; state: ReactNode }[] = [
   {
@@ -187,13 +186,14 @@ export function Compatibility() {
       <Section title="How many people that is">
         <ul>
           <li>
-            <strong>{WEBGPU_USAGE} of global browser usage</strong> has WebGPU:
-            86.83% full and 1.8% partial, per <Cite id="caniuse" />, using
-            StatCounter for October 2026.
+            <strong>86.83% of global browser usage</strong> has WebGPU in full,
+            and 3.32% more in part (Safari on macOS 1.80%, Firefox desktop
+            1.52%), per <Cite id="caniuseData" />. Partial means only on some OS
+            or CPU families.
           </li>
           <li>
-            <strong>81.18% of reports</strong> returned a working adapter, per{" "}
-            <Cite id="survey" />, with 0.04% of those a fallback adapter.
+            <strong>81.86% of reports</strong> returned a working adapter, per{" "}
+            <Cite id="surveyR1" />, with 0.04% of those a fallback adapter.
           </li>
         </ul>
         <Figure caption="Share of Web3D Survey reports with a working WebGPU adapter, by platform. The page states no survey period.">

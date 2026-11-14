@@ -1296,22 +1296,21 @@ export function Selection() {
         <ul>
           <li>
             <strong>
-              The streaks on cliffs are sun shadows, not yet separated from an
-              artifact.
+              The streaks on cliffs are a shadow artifact, most likely shadow
+              acne.
             </strong>{" "}
             At vertical exaggeration ×10 in the Zermatt close view, dark
             straight bands cross the cliffs. They are not skirts: with{" "}
-            <C>"skirts"</C> on, the streaked cliffs show no magenta. They
-            probably aren't tile borders, and aren't stretched imagery, whose
-            streaks would be soft and run down the fall line. With shadows off,
-            or the sun off, the bands vanish. Ambient occlusion off changes
-            nothing. At ×4 they are fainter, and at ×1 absent. The shadow
-            casters go through the same warped vertex stage as the colour pass,
-            so these are most likely real shadows of ridges ten times taller on
-            a wall the sun grazes. That is not shown yet: the plan lists what to
-            vary (the sun's elevation, the depth bias, a tint by cascade) to see
-            whether the band edges move as shadows should or crawl. 1.x has no
-            ×10 comparison page.
+            <C>"skirts"</C> on, the streaked cliffs show no magenta. They aren't
+            stretched imagery, whose streaks would be soft and run down the fall
+            line. With shadows off, or the sun off, the bands vanish; ambient
+            occlusion off changes nothing; at ×4 they are fainter, and at ×1
+            absent. They form a regular grid seen at an angle, which real ridge
+            shadows wouldn't: the shadow map's texel grid projected onto a wall
+            the sun grazes, where the bias is too small. The suspects are the
+            receiver's normal offset, which may not use the drawn (warped)
+            normal, and a slope-scaled bias that doesn't see the wall's drawn
+            slope. The check is a sweep of both at ×10 with a tint by cascade.
           </li>
           <li>
             <strong>At α = 1, selection runs away under a steep warp.</strong>{" "}

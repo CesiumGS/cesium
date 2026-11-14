@@ -60,7 +60,7 @@ const OPTIONS: {
       <>
         97.29% of global usage has WebGL 2 (<Cite id="webgl2Usage" />) and
         98.21% of one survey's reports (<Cite id="webgl2Survey" />
-        ), against 88.63% and 81.18% for WebGPU.
+        ), against 86.83% (in full) and 81.86% for WebGPU.
       </>
     ),
   },
@@ -730,14 +730,14 @@ export function ReachFacts() {
               {
                 api: "WebGPU",
                 measure: "Global usage, by browser version",
-                figure: "88.63%",
-                source: "caniuse",
+                figure: "86.83% full, 3.32% partial",
+                source: "caniuseData",
               },
               {
                 api: "WebGPU",
                 measure: "Reports with a working adapter",
-                figure: "81.18%",
-                source: "survey",
+                figure: "81.86%",
+                source: "surveyR1",
               },
               {
                 api: "WebGL 2",
