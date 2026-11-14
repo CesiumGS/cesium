@@ -1459,6 +1459,17 @@ function frameHtml(v: InspectorView): string {
   if (f.raysCast !== undefined) {
     t("Rays cast", count(f.raysCast), "Since the last frame");
   }
+  // The job system (main-thread apply phase and queues): fixed rows while it
+  // exists, so values never move the layout.
+  if (f.jobs) {
+    const j = f.jobs;
+    t("Jobs applied", `${ms2(j.applyMs)} ms · ${j.applied} this tick`);
+    t(
+      "Jobs queued",
+      `${j.queued} queued · ${j.running} running · ${j.waiting} to apply · ${j.slicing} progressive`,
+    );
+    t("Job memory", escape(j.memory));
+  }
   html += `<div class="ci-ptable ci-ptable-plain">${timing.join("")}</div>`;
   if (f.geometry) {
     html += geometryHtml(f.geometry, f.hiddenByOcclusion);

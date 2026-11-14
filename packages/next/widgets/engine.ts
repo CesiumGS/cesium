@@ -325,6 +325,15 @@ export function engineSnapshot(
       rendering:
         engine.renderMode === "continuous" ? "continuous" : "on demand",
       framesRendered: s.framesRendered,
+      jobs: {
+        memory: s.jobs.memory === "shared" ? "shared memory" : "transfer",
+        slicing: s.jobs.slicing,
+        applyMs: s.jobs.applyMs,
+        applied: s.jobs.applied,
+        queued: s.jobs.queued,
+        running: s.jobs.running,
+        waiting: s.jobs.waiting,
+      },
     },
   };
   const warnings = [...new Set(tilesets.flatMap((t) => [...t.warnings]))];

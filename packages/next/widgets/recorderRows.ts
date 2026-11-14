@@ -60,6 +60,11 @@ export const RECORD_COLUMNS = [
   "occ_culled_draws", // tick: draw items occlusion culling left undrawn (the latest readout, a tick or two late)
   "occ_culled_triangles", // tick: their whole triangles
   "frame", // tick: 1 when the view's image was saved as frame-<tick>.png
+  "jobs_apply_ms", // tick: the jobs' apply phase's time (Engine.jobBudgetMs)
+  "jobs_applied", // tick: jobs the apply phase applied
+  "jobs_waiting", // tick: finished jobs waiting for the apply phase after it
+  "jobs_queued", // tick: jobs waiting for other jobs or for a worker
+  "jobs_running", // tick: jobs on a worker
 ] as const;
 
 export type RecordColumn = (typeof RECORD_COLUMNS)[number];
@@ -119,6 +124,14 @@ export interface TickSample {
   occCulledTriangles?: number;
   /** The tick's image was saved. */
   frame?: boolean;
+  /** The job system after the tick's apply phase (`FrameStats.jobs`). */
+  jobs?: {
+    applyMs: number;
+    applied: number;
+    waiting: number;
+    queued: number;
+    running: number;
+  };
 }
 
 /** A number as plain text: integers as they are, else up to three decimals, never e-notation. */
@@ -186,6 +199,11 @@ export function tickRow(s: TickSample): string {
       s.rendering ? s.occCulledTriangles : undefined,
     ),
     frame: s.frame ? "1" : "",
+    jobs_apply_ms: formatNumber(s.jobs?.applyMs),
+    jobs_applied: formatNumber(s.jobs?.applied),
+    jobs_waiting: formatNumber(s.jobs?.waiting),
+    jobs_queued: formatNumber(s.jobs?.queued),
+    jobs_running: formatNumber(s.jobs?.running),
   });
 }
 

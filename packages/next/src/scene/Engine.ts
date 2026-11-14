@@ -44,6 +44,10 @@ import {
 } from "./world/clips.ts";
 import { curvedClipSets } from "../render/view/clipTable.ts";
 import { WARP_BUDGET_MS } from "./world/warps.ts";
+import type { JobStats } from "../io/Jobs.ts";
+
+/** What the jobs' apply phase may cost a tick, ms, by default (plan §13.43). */
+export const JOB_BUDGET_MS = 4;
 import { type AnchorHandle, type WorldOptions } from "./world/types.ts";
 import { CameraLayer } from "../camera/CameraLayer.ts";
 import { ANCHOR_EYE_REACH } from "./anchorEyes.ts";
@@ -113,6 +117,8 @@ export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
   /** What the warp fits may cost a frame, ms (default 4): `WorldWarps.frame`'s budget. */
   warpBudgetMs?: number;
+  /** What the jobs' apply phase may cost a tick, ms (default 4): `Engine.jobBudgetMs`. */
+  jobBudgetMs?: number;
   /** Replace built-in shaders with complete WGSL modules (e.g. from Slang). */
   shaders?: ShaderOverrides;
   /**
@@ -200,6 +206,11 @@ export interface FrameStats {
   /** The last render's main-thread time, ms, unsmoothed (`cpuMs` is smoothed). */
   lastCpuMs: number;
   /**
+   * The job system's apply phase in the last tick (plan §13.43): what it
+   * applied and its time, and the jobs queued, running and arrived.
+   */
+  jobs: JobStats;
+  /**
    * Why the last tick ran, as `TICK_REASONS` bits: what woke the loop and
    * what the tick found to do. A recorder's (`widgets/recorder.ts`).
    */
@@ -224,6 +235,7 @@ export const TICK_REASONS = [
   "continuous", // the render mode draws every animation frame
   "loading", // content still loading or settling, clamping busy
   "morph", // terrain tiles are morphing in (`View.lodTransitions`)
+  "jobs", // finished jobs wait for the apply phase (`Engine.jobBudgetMs`)
 ] as const;
 
 /** `FrameStats.tickReasons` bits, by their place in `TICK_REASONS`. */
@@ -241,6 +253,7 @@ const REASON_ANIMATION = bit("animation");
 const REASON_CONTINUOUS = bit("continuous");
 const REASON_LOADING = bit("loading");
 const REASON_MORPH = bit("morph");
+const REASON_JOBS = bit("jobs");
 
 /** Values in one view's on-demand fingerprint (see `viewChanged`). */
 const VIEW_KEY_LENGTH = 33;
@@ -444,6 +457,17 @@ export class Engine {
     environmentBuilds: 0,
     tick: 0,
     lastCpuMs: 0,
+    jobs: {
+      memory: "transfer",
+      slicing: 0,
+      queued: 0,
+      running: 0,
+      waiting: 0,
+      applied: 0,
+      applyMs: 0,
+      appliedTotal: 0,
+      cancelledTotal: 0,
+    },
     tickReasons: 0,
   };
   /**
@@ -637,6 +661,14 @@ export class Engine {
    * their last fit, and the loop stays awake while any wait.
    */
   warpBudgetMs = WARP_BUDGET_MS;
+  /**
+   * What the jobs' apply phase may cost a tick, ms (plan §13.43): the
+   * main-thread steps of finished worker jobs (a terrain tile's decode
+   * completion, a refit) run at the end of each tick in request-priority
+   * order until it is spent, and the rest wait for the next tick. At least
+   * one runs per tick.
+   */
+  jobBudgetMs = JOB_BUDGET_MS;
   private readonly maxViews: number;
   private frameHandle = 0;
   /** An animation frame is requested for the loop (`start`). */
@@ -808,6 +840,7 @@ export class Engine {
     // their CPU-side sources arrives with the streaming cache (M2).
     const engine = new Engine(gpu, ctx, sky, options.maxViews ?? 16);
     engine.warpBudgetMs = options.warpBudgetMs ?? WARP_BUDGET_MS;
+    engine.jobBudgetMs = options.jobBudgetMs ?? JOB_BUDGET_MS;
     engine.setHaze(
       options.visibility === undefined ? 60 : (options.visibility ?? undefined),
       options.aerosol ?? "continental",
@@ -1611,6 +1644,10 @@ export class Engine {
       return;
     }
     this.running = true;
+    // Finished jobs now wait for the loop's apply phase.
+    const jobs = this.scene.workers.jobs;
+    jobs.onReady ??= () => this.wake();
+    jobs.phased = true;
     this.schedule();
   }
 
@@ -1695,6 +1732,16 @@ export class Engine {
       } catch (error) {
         this.reportLoopError("an after-tick listener", error);
       }
+    }
+    // The apply phase (plan §13.43): finished jobs' main-thread steps,
+    // most urgent first, within the budget. Last, so what they hand on
+    // (content for the upload queue) is there for the next tick.
+    try {
+      const jobs = this.scene.workers.jobs;
+      jobs.apply(this.jobBudgetMs);
+      Object.assign(this.stats.jobs, jobs.stats);
+    } catch (error) {
+      this.reportLoopError("the jobs' apply phase", error);
     }
     if (!this.running || failed) {
       return;
@@ -1900,6 +1947,10 @@ export class Engine {
         return true;
       }
     }
+    if (this.scene.workers.jobs.waiting > 0) {
+      this.reasons |= REASON_JOBS;
+      return true;
+    }
     return false;
   }
 
@@ -2098,6 +2149,8 @@ export class Engine {
 
   stop(): void {
     this.running = false;
+    // No phase runs now: what waits applies, and results apply as they come.
+    this.scene.workers.jobs.phased = false;
     if (this.scheduled) {
       this.scheduled = false;
       cancelAnimationFrame(this.frameHandle);
@@ -2125,6 +2178,7 @@ export class Engine {
   }
 
   destroy(): void {
+    this.scene.workers.jobs.destroy();
     this.stop();
     for (const unwatch of this.viewWatches.values()) {
       unwatch();

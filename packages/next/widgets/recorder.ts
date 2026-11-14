@@ -174,6 +174,7 @@ export function createRecorder(
       occHidden: hidden,
       occFlips: flips - occFlips,
       frame,
+      jobs: { ...s.jobs },
     };
     occQueries = queries;
     occFlips = flips;
