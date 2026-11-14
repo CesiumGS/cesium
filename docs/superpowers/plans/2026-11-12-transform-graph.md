@@ -352,6 +352,15 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
   - Measured against dense sampling: a flat 100 × 100 × 1 km box at ×10 under a 9 km ceiling is 1.00, 1.00 and 1.34 per axis (a sphere bound was 9.8×). UTM is within 1.5, and most exaggeration cases 1.0–1.2. Flat regions 100 km across near the ceiling reach 4.4 vertically.
   - `ParamSpec.expected` exists but no descriptor sets it yet, so bounds use each parameter's current value.
 
+**Occlusion, unified (owner, 2026-11-13).** Horizon culling is occlusion by a known convex occluder, so both live behind one interface:
+
+- **The interface:** a per-view list of occluders, each answering `hidden(bound, view)`: true only when it proves the bound hidden. A bound is hidden if any occluder says so. Selection (refine), the request scheduler (fetch) and the GPU draw cull all ask the same list.
+- **Analytic occluders** (CPU, no latency, can cull what was never loaded): first `bodyOccluder`, the body's ellipsoid scaled to fit inside the drawn terrain. It holds under any warp because it is derived from the drawn terrain's bounds, not from a property of the warp. Its soundness premises are a closed, opaque drawn surface (no translucent globe, no clip holes, the underlay counted) with the camera outside it; otherwise it is off. It is local: only the cap facing the camera has to enclose it, with exact minima from loaded tiles' vertices and box bounds elsewhere. Later: content-declared proxies (a building's interior box).
+- **The image occluder:** the depth pyramid (one frame late, the real drawn depth; it can't cull what was never drawn from here). Draw culling is two-phase, so nothing pops.
+- **Combined:** analytic occluders can be rasterized into the pyramid as a prior, which gives the GPU cull horizon culling and a sound start after a camera jump.
+
+Built on branches `dev/horizon` (the interface and the body occluder) and the "Occlusion-cull hidden draws with the depth pyramid" session (the draw cull).
+
 **The fixes, in order of payoff:**
 
 1. **Exact terrain under any height profile.** Terrain carries h, so generalize `HeightScale` to a height profile f(h): the lift with a ceiling and blend band, with parameters as uniforms. Terrain under it stays on the exact attribute path, with no bounds sampling and no route compile. Tile bounds come from f over the tile's height range, which is exact and closed form.

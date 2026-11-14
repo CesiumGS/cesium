@@ -3,6 +3,7 @@
  * timing, the tilesets' streaming and content pipeline, and the world's GPU
  * pools.
  */
+import { parseAlpha } from "./urlAlpha.ts";
 import {
   SlicePool,
   modelUsage,
@@ -75,7 +76,11 @@ export function inspectEngine(
   return {
     name: options.name,
     ...(options.color ? { color: options.color } : {}),
-    snapshot: () => engineSnapshot(engine, options),
+    snapshot: () => {
+      // The inspector is on: count the GPU work between frames (once).
+      engine.trackGpuWork();
+      return engineSnapshot(engine, options);
+    },
     ...(record ? { record } : {}),
   };
 }
@@ -196,6 +201,13 @@ function recordable(
   if (occlusionCull === "off" || occlusionCull === "on") {
     engine.occlusionCulling = occlusionCull;
   }
+  // `&alpha=<0..1>` sets the error exponent (`View.lodExponent`).
+  const alpha = parseAlpha(params.get("alpha"));
+  if (alpha !== undefined) {
+    for (const view of engine.views) {
+      view.lodExponent = alpha;
+    }
+  }
   const debug = params.get("debug");
   if (debug && URL_DEBUG_VIEWS.has(debug)) {
     for (const view of engine.views) {
@@ -250,12 +262,19 @@ export function engineSnapshot(
       })),
       raysCast: s.raysCast,
       ...hiddenByOcclusion(engine),
+      ...(s.work ? { work: s.work } : {}),
       ...(Number.isNaN(s.gpuMs)
         ? {}
         : {
             gpuMs: s.gpuMs,
             ...(Number.isNaN(s.gpuSpanMs) ? {} : { gpuSpanMs: s.gpuSpanMs }),
             ...(Number.isNaN(s.gpuWallMs) ? {} : { gpuWallMs: s.gpuWallMs }),
+            ...(Number.isNaN(s.gpuInFrameUntimedMs)
+              ? {}
+              : { gpuInFrameUntimedMs: s.gpuInFrameUntimedMs }),
+            ...(Number.isNaN(s.gpuBetweenFramesMs)
+              ? {}
+              : { gpuBetweenFramesMs: s.gpuBetweenFramesMs }),
             ...(Number.isNaN(s.gpuIntervalMs)
               ? {}
               : { gpuIntervalMs: s.gpuIntervalMs }),

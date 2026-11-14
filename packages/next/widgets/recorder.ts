@@ -165,6 +165,7 @@ export function createRecorder(
       cpuMs: s.lastCpuMs,
       views: s.views,
       triangles: s.triangles,
+      ...(s.work ? { work: s.work } : {}),
       draws: totals(s.geometry, "draws"),
       points: totals(s.geometry, "points"),
       occCulledDraws: culled.draws,
@@ -210,6 +211,9 @@ export function createRecorder(
           gpu.spanMs,
           gpu.wallMs,
           gpu.intervalMs,
+          gpu.inFrameUntimedMs,
+          gpu.betweenFramesMs,
+          gpu.markerSpanMs,
         ),
       );
       status.rows++;
@@ -226,6 +230,7 @@ export function createRecorder(
       t0 = performance.now();
       framesRendered = engine.stats.framesRendered;
       gpuSamples = engine.gpuSample.samples;
+      engine.trackGpuWork();
       remove = engine.onAfterTick(onTick);
       timer = setInterval(flush, FLUSH_MS);
     },

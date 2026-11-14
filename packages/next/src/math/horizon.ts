@@ -10,6 +10,9 @@ import type { Vec3 } from "./vec3.ts";
 const RADII = [6378137.0, 6378137.0, 6356752.314245179] as const;
 const MINIMUM_RADIUS = RADII[2];
 
+/** WGS84's radii (x, y, z), m: the ellipsoid the horizon is tested on. */
+export const HORIZON_RADII = RADII;
+
 /** Radii of the (possibly shrunk) occluding ellipsoid. */
 function radiiFor(minimumHeight: number | undefined): readonly number[] {
   return minimumHeight !== undefined &&
@@ -30,7 +33,19 @@ export function horizonCullingPoint(
   positions: ArrayLike<number>,
   minimumHeight: number | undefined,
 ): Vec3 | undefined {
-  const radii = radiiFor(minimumHeight);
+  return horizonCullingPointOn(
+    radiiFor(minimumHeight),
+    directionToPoint,
+    positions,
+  );
+}
+
+/** `horizonCullingPoint` for an occluding ellipsoid of any `radii` (x, y, z). */
+export function horizonCullingPointOn(
+  radii: readonly number[],
+  directionToPoint: ArrayLike<number>,
+  positions: ArrayLike<number>,
+): Vec3 | undefined {
   let dx = directionToPoint[0]!;
   let dy = directionToPoint[1]!;
   let dz = directionToPoint[2]!;
@@ -86,7 +101,15 @@ export function isScaledSpacePointVisible(
   occludee: ArrayLike<number>,
   minimumHeight: number | undefined,
 ): boolean {
-  const radii = radiiFor(minimumHeight);
+  return isScaledSpacePointVisibleOn(radiiFor(minimumHeight), camera, occludee);
+}
+
+/** `isScaledSpacePointVisible` for an occluding ellipsoid of any `radii`. */
+export function isScaledSpacePointVisibleOn(
+  radii: readonly number[],
+  camera: ArrayLike<number>,
+  occludee: ArrayLike<number>,
+): boolean {
   const cx = camera[0]! / radii[0]!;
   const cy = camera[1]! / radii[1]!;
   const cz = camera[2]! / radii[2]!;

@@ -269,6 +269,9 @@ function warpOf(spec: SmoothFrameSpec, from: Frame, to: Frame): Warp {
     get heightScale() {
       return spec.heightScale;
     },
+    get lodExponent() {
+      return spec.lodExponent;
+    },
     get smooth() {
       return spec.smooth;
     },

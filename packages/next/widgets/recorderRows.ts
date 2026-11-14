@@ -25,6 +25,20 @@ export const RECORD_COLUMNS = [
   "gpu_wall_ms", // gpu: latency, submit to done on the CPU clock (waits behind earlier frames included)
   "gpu_interval_ms", // gpu: since the previous frame finished, only when the GPU was busy back to back
   "gpu_untimed_ms", // gpu: gpu_interval_ms less gpu_ms: work no timestamp covers
+  "gpu_in_frame_untimed_ms", // gpu: inside the frame's markers, not covered by a timed pass (copies, clears, work between passes)
+  "gpu_marker_span_ms", // gpu: first marker to last, the frame encoder as the GPU ran it
+  "gpu_between_frames_ms", // gpu: previous frame's last marker to this one's first, GPU busy back to back only
+  "upload_bytes", // tick: queue.writeBuffer bytes since the render before
+  "upload_calls", // tick: queue.writeBuffer calls
+  "texture_bytes", // tick: queue.writeTexture bytes
+  "submits", // tick: queue.submit calls
+  "copy_bytes", // tick: bytes copied by encoder copies (textures estimated)
+  "copy_calls", // tick: encoder copy calls
+  "created_bytes", // tick: bytes of buffers and textures created (textures estimated)
+  "created_count", // tick: buffers and textures created
+  "map_calls", // tick: mapAsync calls
+  "upload_by", // tick: largest writeBuffer targets, as "label=bytes"
+  "created_by", // tick: largest resources created, as "label=bytes"
   "views", // views drawn
   "drawn", // tiles drawn
   "known", // tiles the engine knows of
@@ -83,6 +97,20 @@ export interface TickSample {
   occQueries?: number;
   occHidden?: number;
   occFlips?: number;
+  /** The render's GPU work counters (`Engine.trackGpuWork`). */
+  work?: {
+    uploadBytes: number;
+    uploadCalls: number;
+    textureBytes: number;
+    submits: number;
+    copyBytes: number;
+    copyCalls: number;
+    createdBytes: number;
+    createdCount: number;
+    mapCalls: number;
+    uploadBy: ReadonlyArray<readonly [string, number, number]>;
+    createdBy: ReadonlyArray<readonly [string, number, number]>;
+  };
   triangles?: number;
   draws?: number;
   points?: number;
@@ -139,6 +167,17 @@ export function tickRow(s: TickSample): string {
     occ_queries: formatNumber(s.occQueries),
     occ_hidden: formatNumber(s.occHidden),
     occ_flips: formatNumber(s.occFlips),
+    upload_bytes: formatNumber(s.rendering ? s.work?.uploadBytes : undefined),
+    upload_calls: formatNumber(s.rendering ? s.work?.uploadCalls : undefined),
+    texture_bytes: formatNumber(s.rendering ? s.work?.textureBytes : undefined),
+    submits: formatNumber(s.rendering ? s.work?.submits : undefined),
+    copy_bytes: formatNumber(s.rendering ? s.work?.copyBytes : undefined),
+    copy_calls: formatNumber(s.rendering ? s.work?.copyCalls : undefined),
+    created_bytes: formatNumber(s.rendering ? s.work?.createdBytes : undefined),
+    created_count: formatNumber(s.rendering ? s.work?.createdCount : undefined),
+    map_calls: formatNumber(s.rendering ? s.work?.mapCalls : undefined),
+    upload_by: s.rendering && s.work ? labelled(s.work.uploadBy) : "",
+    created_by: s.rendering && s.work ? labelled(s.work.createdBy) : "",
     triangles: formatNumber(s.rendering ? s.triangles : undefined),
     draws: formatNumber(s.rendering ? s.draws : undefined),
     points: formatNumber(s.rendering ? s.points : undefined),
@@ -148,6 +187,15 @@ export function tickRow(s: TickSample): string {
     ),
     frame: s.frame ? "1" : "",
   });
+}
+
+/** Largest writers as "label=bytes label=bytes", safe in a cell. */
+function labelled(
+  by: ReadonlyArray<readonly [string, number, number]>,
+): string {
+  return by
+    .map(([label, bytes]) => `${safeText(label)}=${formatNumber(bytes)}`)
+    .join(" ");
 }
 
 /**
@@ -163,6 +211,9 @@ export function gpuRow(
   spanMs: number = Number.NaN,
   wallMs: number = Number.NaN,
   intervalMs: number = Number.NaN,
+  inFrameMs: number = Number.NaN,
+  betweenMs: number = Number.NaN,
+  markerSpanMs: number = Number.NaN,
 ): string {
   return line({
     kind: "gpu",
@@ -173,6 +224,9 @@ export function gpuRow(
     gpu_wall_ms: formatNumber(wallMs),
     gpu_interval_ms: formatNumber(intervalMs),
     gpu_untimed_ms: formatNumber(untimedMs(intervalMs, ms)),
+    gpu_in_frame_untimed_ms: formatNumber(inFrameMs),
+    gpu_marker_span_ms: formatNumber(markerSpanMs),
+    gpu_between_frames_ms: formatNumber(betweenMs),
     passes: Object.entries(passes)
       .map(([name, v]) => `${safeText(name)}=${formatNumber(v)}`)
       .join(" "),

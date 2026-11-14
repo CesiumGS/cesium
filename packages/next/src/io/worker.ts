@@ -6,8 +6,10 @@ import {
   upsampleTerrainTile,
   type Rectangle,
   type MorphSource,
+  type TerrainRefitParent,
   type TerrainHeights,
 } from "../globe/quantizedMesh.ts";
+import { deviationFromParent } from "../globe/terrainRefit.ts";
 
 /** Quantized-mesh with the extensions we decode, as 1.x requests it. */
 const TERRAIN_ACCEPT =
@@ -52,6 +54,8 @@ self.onmessage = async (
     heightNormal?: true | "profile";
     /** A terrain tile also carries its nearest drawn ancestor's height per vertex, for geomorphing (`TerrainLoader`). */
     morph?: MorphSource;
+    /** A terrain tile's parent surface: its deviation from it is measured here (`TerrainRefitParent`). */
+    refit?: TerrainRefitParent;
     /** A terrain tile below the last level with data (`TerrainLoader`). */
     upsample?: { rect: Rectangle; heights?: TerrainHeights; url?: string };
     /** "stars": the star map's six faces. */
@@ -144,6 +148,17 @@ self.onmessage = async (
         event.data.skirtHeight,
         decodeOptions,
       );
+      const parent = event.data.refit;
+      if (parent && info.heights) {
+        // The parent's heights came over from the page: the deviation
+        // costs the page nothing (`deviationFromParent` keeps its caps).
+        info.deviation = deviationFromParent(
+          info.heights,
+          parent.heights,
+          parent.qx,
+          parent.qy,
+        );
+      }
       asset.timing = {
         format: "quantized-mesh",
         networkMs: decodeStart - start,

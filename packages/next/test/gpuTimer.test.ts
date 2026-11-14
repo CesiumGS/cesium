@@ -120,14 +120,24 @@ describe("GPU frame times", () => {
     expect(times.span).toBeCloseTo(15e6, 0);
   });
 
+  it("ignores a pass whose queries were never written (read as 0)", () => {
+    const ns = [0, 0, 5e6, 9e6];
+    const times = frameTimes(words(ns), 2, [0, 1], frameScratch(2));
+    expect(times.total).toBeCloseTo(4e6, 0);
+    expect(times.span).toBeCloseTo(4e6, 0);
+    expect(times.perLabel[0]).toBe(0);
+  });
+
   it("is what the timer reports: per-pass entries add up to its frame time", async () => {
     // A device with timestamp queries whose readbacks hold one frame:
     // opaque, then the translucent passes overlapping it (as measured on
     // a tiler; ns).
-    const frame = words([
-      0, 1_000_000, 1_100_000, 8_500_000, 1_200_000, 9_900_000, 1_250_000,
-      10_800_000, 1_250_000, 11_100_000,
-    ]);
+    const frame = words(
+      [
+        0, 1_000_000, 1_100_000, 8_500_000, 1_200_000, 9_900_000, 1_250_000,
+        10_800_000, 1_250_000, 11_100_000,
+      ].map((t) => t + 1_000_000),
+    );
     const buffer = () => ({
       mapAsync: () => Promise.resolve(),
       getMappedRange: (offset = 0, size = frame.byteLength) =>
@@ -177,7 +187,7 @@ describe("GPU timer groups", () => {
   it("puts a group's interval first, with the wall time of the submit", async () => {
     // Imagery (a group, run before the frame: 0-2 ms), then opaque
     // (2.5-6.5 ms).
-    const frame = words([0, 2_000_000, 2_500_000, 6_500_000]);
+    const frame = words([1e6, 3e6, 3.5e6, 7.5e6]);
     const buffer = () => ({
       mapAsync: () => Promise.resolve(),
       getMappedRange: (offset = 0, size = frame.byteLength) =>
@@ -224,6 +234,74 @@ describe("GPU timer groups", () => {
       copyBufferToBuffer: (...a: unknown[]) => copies.push(a[3] as number),
     } as unknown as GPUCommandEncoder);
     expect(copies).toEqual([0]);
+    timer.destroy();
+  });
+});
+
+describe("GPU frame markers", () => {
+  it("splits the untimed share into in-frame and between-frames", async () => {
+    // One pass 2-6 ms; markers: first 0 / 0.5 ms, last 7 / 7.5 ms. Then a
+    // second frame whose first marker comes 1.5 ms after the last (9 ms).
+    const first = words([2e6, 6e6, 0, 0.5e6, 7e6, 7.5e6]);
+    const second = words([11e6, 14e6, 9e6, 9.5e6, 15e6, 15.5e6]);
+    let frames = [first, second];
+    const mapped = new Map<object, Uint32Array>();
+    const make = () => {
+      const b = {
+        mapAsync: () => {
+          mapped.set(b, frames.shift()!);
+          return Promise.resolve();
+        },
+        getMappedRange: (offset = 0, size = 1e6) =>
+          mapped.get(b)!.buffer.slice(offset, offset + size),
+        unmap: () => {},
+        destroy: () => {},
+      };
+      return b;
+    };
+    const finish: Array<() => void> = [];
+    const device = {
+      features: new Set(["timestamp-query"]),
+      createQuerySet: () => ({ destroy: () => {} }),
+      createBuffer: make,
+      createShaderModule: () => ({}),
+      createComputePipeline: () => ({}),
+      queue: {
+        onSubmittedWorkDone: () =>
+          new Promise<void>((resolve) => finish.push(resolve)),
+      },
+    } as unknown as GPUDevice;
+    installGpuGlobals();
+    const timer = new GpuTimer(device);
+    const encoder = {
+      beginComputePass: () => ({
+        setPipeline: () => {},
+        dispatchWorkgroups: () => {},
+        end: () => {},
+      }),
+      resolveQuerySet: () => {},
+      copyBufferToBuffer: () => {},
+    } as unknown as GPUCommandEncoder;
+    const submit = () => {
+      timer.beginFrame();
+      timer.startMarker(encoder);
+      timer.passWrites("opaque");
+      timer.endFrame(encoder);
+      timer.afterSubmit();
+    };
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 5));
+    submit();
+    submit();
+    finish.shift()!();
+    await settle();
+    expect(timer.lastSample.inFrameUntimedMs).toBeCloseTo(2.5, 6);
+    // The GPU idled before the first frame: no between-frames gap.
+    expect(timer.lastSample.betweenFramesMs).toBeNaN();
+    finish.shift()!();
+    await settle();
+    expect(timer.lastSample.inFrameUntimedMs).toBeCloseTo(2.5, 6);
+    expect(timer.lastSample.betweenFramesMs).toBeCloseTo(1.5, 6);
+    frames = [];
     timer.destroy();
   });
 });

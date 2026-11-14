@@ -10448,6 +10448,18 @@ So a front end on our IR costs microseconds and Slang tens of milliseconds, thre
 - _MaterialX:_ 1.39.5 (2026-05-22) added a Slang generator, `MaterialXGenSlang`, with JS bindings ([release](https://github.com/AcademySoftwareFoundation/MaterialX/releases/tag/v1.39.5)). Its generators are GLSL, ESSL, Vulkan GLSL, MSL, OSL, MDL, Slang, and a `WgslShaderGenerator` (1.39.4) that emits Vulkan GLSL written to translate cleanly to WGSL, not WGSL itself ([PR #2407](https://github.com/AcademySoftwareFoundation/MaterialX/pull/2407)). The Emscripten build generates shaders in the browser ([README](https://github.com/AcademySoftwareFoundation/MaterialX/blob/v1.39.5/javascript/README.md)); there's no official npm package.
 - _OpenPBR:_ 1.1.2 (2026-11-05), with MaterialX as its reference implementation ([releases](https://github.com/AcademySoftwareFoundation/OpenPBR/releases)). _OSL:_ CPU, batched SIMD and OptiX only; no GLSL, WGSL or Metal back end ([INSTALL.md](https://github.com/AcademySoftwareFoundation/OpenShadingLanguage/blob/main/INSTALL.md)).
 
+**Re-checked against the latest code (2026-11-13, at the owner's request).** Slang master `8d46e920`, wgpu trunk, Dawn main `696f37e8`, MaterialX main `9176de82`, wesl-spec main `37bf3f3a`, npm. All the tool claims above still hold:
+
+- **Slang:** GLSL profiles are 150 to 460 only, and the emitter requires 450 (`slang-profile-defs.h`, `slang-emit-glsl.cpp`). `slang-wasm.cpp` lists GLSL, HLSL, WGSL, SPIR-V, Metal and CUDA, so there is no CPU target. The WGSL target is still "a work in progress", with no `SV_ClipDistance`, `SV_PrimitiveID` or wave intrinsics, and 69 open `WebGPU` issues. #13914 and #13933 are open. The 2026.22 WASM zip is 10,567,678 bytes (+0.5%).
+- **npm:** there is no official package. #12317 is now "Add slang bundler plugins for the web", and the maintainers plan a package manager.
+- **naga trunk:** ES 300 and 310, with compute and storage buffers needing 310.
+- **`naga-wasm`:** 30.2.0 (2026-09-30), one maintainer, a repository created 2026-09-17; it validates and writes GLSL ES 300.
+- **WESL:** no tags or releases; npm 0.7.31 is still the latest.
+- **Tint:** its IR is internal, and no standalone WASM build was found.
+- **MaterialX:** 1.39.5 is still the latest. `JsMaterialXGenSlang` exists, and the WGSL generator is "WGSL Flavor of Vulkan GLSL".
+
+Nothing here changes the recommendation below.
+
 **The four combinations.** In each, the engine's own shaders can stay Slang compiled offline; what differs is what happens at run time and where styles, transforms and vector fields live.
 
 _(1) Slang for everything._ Styling and vector stages are Slang interfaces; a style, a 1.x style or a transform is lowered by a front end to a Slang module and linked with `extern`/`export` against precompiled engine modules; the WASM compiler loads lazily the first time anything is styled; GLSL for WebGL 2 from Slang's GLSL target.
@@ -10708,6 +10720,18 @@ They stack. Candidate 1 is worth doing before the API review. Candidate 2 is a s
 7. Is a progressive view (one that improves over ticks) a concept in the API, with a "converged" signal and samples so far?
 8. Which content kinds must every renderer draw, and which may it leave out (vectors and labels for a path tracer; patches and b-reps for WebGL 2)?
 9. Do browser- and hardware-specific paths show in the API at all, or only in the report and the inspector?
+
+##### Decisions (owner, 2026-11-13)
+
+1. **Support reports: yes.** Each view reports what it supports in the scene's terms (`view.support`: content kinds, view options, outputs, queries). An unmet request warns once and falls back as documented; a strict mode throws, for tests and careful hosts. Today's silent fallbacks (glare's `"auto"`, direct draws without `indirect-first-instance`) become reported ones.
+2. **Outputs as AOVs: yes.** Name a view's outputs (colour, display colour, IDs, depth) now. Taking an outside colour and depth to composite comes later, under the same names.
+3. **The user shader contract: to be discussed with the shader toolchain research.** WGSL at the interface probably isn't right: a WGSL string can't reach a second renderer.
+4. **`GpuDevice`, `Capabilities` and `LimitsTier` move to an advanced entry point** (`@cesium/next/gpu`); the main API stays renderer-agnostic (the worker mode needs this too: a shared device can't cross threads). **Open design:** the broader engine-profile design, so that support reports, device facts, tiers and presets don't become a fragile system. Design it before adding more tiers.
+5. **`Engine.queries` takes backends: yes,** so an application or a second renderer can supply its own.
+6. **GPU-side ray queries: later.** Design the module boundary so it can be added; don't ship it in 2.0 unless a 2.0 feature needs it.
+7. **Progressive views: yes, as a special case of a general concept (proposed, to confirm): refinement.** A view's image converges over ticks; refinement sources each report progress and a done state: streaming (tiles loading), transitions (geomorph, imagery fades), async shader compiles (placeholder pipelines), occlusion feedback reaching its fixed point, temporal accumulation (TAA, still-frame supersampling for screenshots and print), a progressive path tracer's samples. `view.refinement` lists the active sources; `view.converged(options)` resolves when they are done (screenshots, printing, tests, benchmarks, exports); the on-demand loop ticks while any source is active, replacing the ad-hoc `TICK_REASONS`. A progressive view is a view with an accumulation source.
+8. **Content every renderer must draw:** globe, terrain, imagery and meshes (3D Tiles, glTF). Optional but declared in `view.support`: vectors and labels, points and splats, b-rep patches, advanced translucency. Design this carefully with item 4.
+9. **Browser- and hardware-specific paths stay out of the API:** they show in the support report and the inspector only. Where such a path can run, the engine detects it automatically and uses it.
 
 ## 14. Follow-ups
 

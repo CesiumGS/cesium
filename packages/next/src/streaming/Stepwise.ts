@@ -26,11 +26,14 @@ import {
   drawnContentVolume,
   drawnRequestVolume,
   drawnTile,
+  geometryRefines,
+  lodExponentOf,
   terrainDrawnError,
   type TileWarp,
 } from "./tileWarp.ts";
 
 import type { ViewOcclusion } from "./occlusion.ts";
+import type { Occluder } from "./occluders.ts";
 
 /** Planes per box in `SelectionView.casterPlanes`. */
 export const CASTER_PLANES = 6;
@@ -79,6 +82,12 @@ export interface SelectionView {
   /** The view morphs terrain in as it refines (`View.lodTransitions` "morph"); else it pops. */
   morph?: boolean;
   /**
+   * The error exponent α in [0, 1] (`View.lodExponent`): under a warp,
+   * selection uses its stretch s as s^α. Absent: 1. A warp's own
+   * (`TileWarp.lodExponent`) wins.
+   */
+  lodExponent?: number;
+  /**
    * Set when the tileset hangs under an anchor placed across a warp: its
    * tiles are selected on their drawn volumes (`drawnTile`), with the
    * geometric error stretched by the map, and are not horizon-culled. The
@@ -88,6 +97,13 @@ export interface SelectionView {
    * anchor's coordinates as ever.
    */
   warp?: TileWarp;
+  /**
+   * What can prove a tile hidden for this view (`occluders.ts`): a tile any
+   * of them hides is neither drawn nor fetched. Under a warp the body's
+   * (`globe/bodyOccluder.ts`) stands in for the ellipsoid's horizon, which
+   * is not sound for a drawn Earth of another shape.
+   */
+  occluders?: readonly Occluder[];
   /**
    * What the view's own drawn depth says of tile boxes (`Budgeted` only:
    * `Stepwise` keeps 1.x's rules): absent where the engine has the feedback
@@ -565,7 +581,11 @@ export class StepwiseSelection implements TileSelection {
       ? tile.parent.viewState(view.id).planeMask
       : MASK_INDETERMINATE;
     const volume = this.volumeOf(tile, view);
-    state.distance = volumeDistance(volume, view.position, view.cartographic);
+    state.distance = volumeDistance(
+      view.warp ? (drawnTile(tile, view.warp).surface ?? volume) : volume,
+      view.position,
+      view.cartographic,
+    );
     const center = volumeCenter(volume);
     state.centerZDepth =
       (center[0]! - view.position[0]!) * view.direction[0]! +
@@ -613,10 +633,16 @@ export class StepwiseSelection implements TileSelection {
       // stretches it by at most σ_max over the volume (an estimate), and its
       // fit adds its own error.
       const drawn = drawnTile(source, view.warp);
+      // The stretched part counts only where refining can reduce it: a tile
+      // upsampled from its data ancestor, or one whose children are known to
+      // have no data, gains nothing but imagery (which the warp doesn't
+      // stretch), so its error is measured as if unwarped (s^0).
+      const alpha = geometryRefines(source) ? lodExponentOf(view) : 0;
       error =
         source.globe && drawn.slopeMax !== undefined
-          ? terrainDrawnError(source, drawn, view.position, error)
-          : error * drawn.sigmaMax + drawn.fit;
+          ? terrainDrawnError(source, drawn, view.position, error, alpha)
+          : error * (alpha === 1 ? drawn.sigmaMax : drawn.sigmaMax ** alpha) +
+            drawn.fit;
     }
     if (error === 0) {
       return 0;
