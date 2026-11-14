@@ -565,6 +565,9 @@ export async function run({
   // The error exponent α: how much of the exaggeration the choice of tile
   // detail honours (`View.lodExponent`). Drag it to see tiles and triangles
   // fall as it drops, and the visible error rise.
+  // The engine's default (0.3), read before the URL may change it, so the
+  // link carries `alpha` only when it differs.
+  const alphaDefault = view.lodExponent;
   const alphaStart = Number(params.alpha);
   if (params.alpha !== undefined && Number.isFinite(alphaStart)) {
     view.lodExponent = alphaStart;
@@ -587,7 +590,10 @@ export async function run({
   };
   alphaSlider.onchange = () =>
     setParams({
-      alpha: view.lodExponent === 1 ? undefined : view.lodExponent.toFixed(2),
+      alpha:
+        view.lodExponent === alphaDefault
+          ? undefined
+          : view.lodExponent.toFixed(2),
     });
   showAlpha();
 

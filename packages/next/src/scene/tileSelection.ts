@@ -17,6 +17,7 @@ import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { EngineRaster } from "../render/view/engineRaster.ts";
 import type { EngineScene } from "./engineScene.ts";
 import { occlusionOn } from "./occlusionFeedback.ts";
+import { DEFAULT_LOD_EXPONENT } from "../streaming/tileWarp.ts";
 import { uploadCpuMs, uploadScale } from "./uploadPacing.ts";
 
 /** @internal Scene side, reading the rasterizer's view targets: what tilesets select for, and the tick's upload budget. */
@@ -233,7 +234,9 @@ export function selectionViews(
         : {}),
       ...(view.debug !== "off" ? { debug: view.debug } : {}),
       ...(view.lodTransitions === "morph" ? { morph: true } : {}),
-      ...(view.lodExponent !== 1 ? { lodExponent: view.lodExponent } : {}),
+      ...(view.lodExponent !== DEFAULT_LOD_EXPONENT
+        ? { lodExponent: view.lodExponent }
+        : {}),
       sseDenominator: 2 * Math.tan(camera.fovy(aspect) / 2),
       height: rect.height / pixelRatio,
       pixelRatio,

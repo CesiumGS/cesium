@@ -69,8 +69,8 @@ export interface Warp {
   readonly heightScale?: HeightScale;
   /**
    * The error policy for content drawn through this warp, in [0, 1]: terrain
-   * and tile selection use the warp's stretch s as s^α. 1 (the default where
-   * no node or view says) is exact in the drawn frame: a tile is refined
+   * and tile selection use the warp's stretch s as s^α (default 0.3 where no
+   * node or view says, `DEFAULT_LOD_EXPONENT`). 1 is exact in the drawn frame: a tile is refined
    * until its error is small as drawn. 0 measures the error in the content's
    * own frame, as if unwarped, so a warp that stretches draws coarser tiles
    * and its transitions show s times larger. A view's `lodExponent` is used

@@ -245,7 +245,12 @@ function setup(
   const earth = world.bodyAnchor(EARTH);
   resolver.bindAnchor(earth, placed);
   engine.cameras.setResolver(world, resolver);
-  const view = engine.addView({ target: new OffscreenTarget(64, 48), world });
+  // Exact, as-drawn selection (α = 1), which these tests check, not the default.
+  const view = engine.addView({
+    target: new OffscreenTarget(64, 48),
+    world,
+    lodExponent: 1,
+  });
   views.push(view);
   engine.cameras.setRig(view, {
     position: { frame: itrf },
@@ -1031,6 +1036,7 @@ describe("tiles across a warp", () => {
       cartographic: { longitude: 0, latitude: 0, height: 4000 },
       planes: new Float64Array(0),
       sseDenominator: 2 * Math.tan(Math.PI / 6),
+      lodExponent: 1, // exact, as-drawn selection, which these tests check
       height: 4000,
     };
   }

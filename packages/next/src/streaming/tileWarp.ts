@@ -596,12 +596,21 @@ export function terrainStretch(
   return alpha === 1 ? s : s ** alpha;
 }
 
-/** The error exponent selection uses for a view: the route's own where set, else the view's, else 1. */
+/**
+ * The default error exponent α (`View.lodExponent`, `Warp.lodExponent`):
+ * 0.3, chosen by the owner on 2026-11-13 from the α sweep
+ * (`scripts/alphaSweep.mjs`). At ×4 and ×10 exaggeration, α 0.25 and 0.5
+ * differed from the exact image (α 1) by less than the run-to-run noise
+ * (about 2% of pixels), with a quarter to a fifth of α 1's terrain tiles.
+ */
+export const DEFAULT_LOD_EXPONENT = 0.3;
+
+/** The error exponent selection uses for a view: the route's own where set, else the view's, else `DEFAULT_LOD_EXPONENT`. */
 export function lodExponentOf(view: {
   readonly warp?: { readonly lodExponent?: number };
   readonly lodExponent?: number;
 }): number {
-  const a = view.warp?.lodExponent ?? view.lodExponent ?? 1;
+  const a = view.warp?.lodExponent ?? view.lodExponent ?? DEFAULT_LOD_EXPONENT;
   return Math.min(1, Math.max(0, a));
 }
 

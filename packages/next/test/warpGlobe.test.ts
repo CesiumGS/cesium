@@ -136,7 +136,12 @@ function setup(): Setup {
   const earth = world.bodyAnchor(EARTH);
   resolver.bindAnchor(earth, exaggerated);
   engine.cameras.setResolver(world, resolver);
-  const view = engine.addView({ target: new OffscreenTarget(64, 48), world });
+  // Exact, as-drawn selection (α = 1), which these tests check, not the default.
+  const view = engine.addView({
+    target: new OffscreenTarget(64, 48),
+    world,
+    lodExponent: 1,
+  });
   views.push(view);
   engine.cameras.setRig(view, {
     position: { frame: itrf },
@@ -347,6 +352,7 @@ describe("the acceptance world", () => {
       cartographic: { longitude: 0, latitude: 0, height: 4000 },
       planes: new Float64Array(0),
       sseDenominator: 2 * Math.tan(Math.PI / 6),
+      lodExponent: 1, // exact, as-drawn selection, which these tests check
       height: 4000,
     };
     for (let i = 0; i < 100 && tileset.root.state !== "ready"; i++) {
@@ -586,6 +592,7 @@ describe("warpAt", () => {
       cartographic: { longitude: 0, latitude: 0, height: 4000 },
       planes: new Float64Array(0),
       sseDenominator: 2 * Math.tan(Math.PI / 6),
+      lodExponent: 1, // exact, as-drawn selection, which these tests check
       height: 4000,
     };
     for (let i = 0; i < 100 && tileset.root.state !== "ready"; i++) {
@@ -884,6 +891,7 @@ describe("the globe across a warp", () => {
       cartographic,
       planes: new Float64Array(0),
       sseDenominator: 2 * Math.tan(Math.PI / 6),
+      lodExponent: 1, // exact, as-drawn selection, which these tests check
       height: 1000,
       ...(warp && { warp }),
     };

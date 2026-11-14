@@ -34,6 +34,7 @@ import {
   pointToRender,
 } from "./viewAnchors.ts";
 import { ViewAnchorState } from "./viewAnchorState.ts";
+import { DEFAULT_LOD_EXPONENT } from "../streaming/tileWarp.ts";
 import {
   DAYLIGHT_EXPOSURE,
   type GlareTier,
@@ -93,7 +94,9 @@ export interface PickResult {
 
 /** α clamped to [0, 1]; NaN is 1. */
 function clampExponent(value: number): number {
-  return Number.isNaN(value) ? 1 : Math.min(1, Math.max(0, value));
+  return Number.isNaN(value)
+    ? DEFAULT_LOD_EXPONENT
+    : Math.min(1, Math.max(0, value));
 }
 
 /** How a terrain tile replaces a coarser one (`View.lodTransitions`). */
@@ -158,7 +161,7 @@ export interface ViewOptions {
   debug?: DebugView;
   /** How a terrain tile replaces a coarser one (`View.lodTransitions`). Default "morph". */
   lodTransitions?: LodTransitions;
-  /** The error exponent (`View.lodExponent`), in [0, 1]. Default 1. */
+  /** The error exponent (`View.lodExponent`), in [0, 1]. Default 0.3. */
   lodExponent?: number;
   /** Background color as displayed (already exposed), with "color". */
   clearColor?: readonly [number, number, number];
@@ -598,7 +601,7 @@ export class View {
     return debugLegend(this.state.debug);
   }
   /**
-   * The error policy, α in [0, 1] (clamped; default 1). Under a warp that
+   * The error policy, α in [0, 1] (clamped; default 0.3, `DEFAULT_LOD_EXPONENT`). Under a warp that
    * stretches content, tile selection measures a tile's error as drawn: its
    * geometric error times the warp's stretch s. With an exponent it uses
    * s^α instead. 1 is exact as drawn: a vertical exaggeration of 10 refines
@@ -714,7 +717,9 @@ export class View {
     this.cityLights = options.cityLights ?? true;
     this.state.debug = options.debug ?? "off";
     this.state.lodTransitions = options.lodTransitions ?? "morph";
-    this.state.lodExponent = clampExponent(options.lodExponent ?? 1);
+    this.state.lodExponent = clampExponent(
+      options.lodExponent ?? DEFAULT_LOD_EXPONENT,
+    );
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.enabled = true;

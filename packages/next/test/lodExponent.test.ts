@@ -14,6 +14,7 @@ import type { View } from "../src/scene/View.ts";
 import type { World } from "../src/scene/World.ts";
 import { selectionViews } from "../src/scene/tileSelection.ts";
 import {
+  DEFAULT_LOD_EXPONENT,
   drawnTile,
   geometryRefines,
   lodExponentOf,
@@ -77,8 +78,9 @@ describe("the error exponent in terrain error", () => {
 });
 
 describe("which exponent a view uses", () => {
-  it("the route's own wins over the view's; both clamp; default 1", () => {
-    expect(lodExponentOf({})).toBe(1);
+  it("the route's own wins over the view's; both clamp; default 0.3", () => {
+    expect(lodExponentOf({})).toBe(DEFAULT_LOD_EXPONENT);
+    expect(DEFAULT_LOD_EXPONENT).toBe(0.3);
     expect(lodExponentOf({ lodExponent: 0.25 })).toBe(0.25);
     expect(
       lodExponentOf({ lodExponent: 0.25, warp: { lodExponent: 0.75 } }),
@@ -190,12 +192,12 @@ describe("the plain height scale's slopeMax", () => {
 });
 
 describe("the view's exponent reaches selection", () => {
-  it("is in the selection view only when not 1, and clamps", () => {
+  it("is in the selection view only when not the default, and clamps", () => {
     const { view, world, earth } = exaggerated(2);
     const sel = () =>
       selectionViews(engine as never, world, earth)[0] as
         { lodExponent?: number } | undefined;
-    expect(view.lodExponent).toBe(1);
+    expect(view.lodExponent).toBe(DEFAULT_LOD_EXPONENT);
     expect(sel()?.lodExponent).toBeUndefined();
     view.lodExponent = 0.4;
     expect(sel()?.lodExponent).toBe(0.4);

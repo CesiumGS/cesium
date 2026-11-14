@@ -183,6 +183,8 @@ function viewAt(
     sseDenominator: 2 * Math.tan(camera.fovy(ASPECT) / 2),
     height: HEIGHT,
     pixelRatio: 1,
+    // These tests check exact, as-drawn selection: α = 1, not the default.
+    lodExponent: 1,
     ...(warp && { warp }),
   };
 }
