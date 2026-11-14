@@ -176,11 +176,19 @@ export function renderItem(data, body = "") {
         lines.push(`${key}: [${v.join(", ")}]`);
       }
     } else {
-      lines.push(`${key}: ${needsQuotes(v) ? JSON.stringify(v) : v}`);
+      lines.push(`${key}: ${needsQuotes(v) ? quote(String(v)) : v}`);
     }
   }
   lines.push("---", "");
   return `${lines.join("\n")}${body.replace(/^\n+/, "\n")}`;
+}
+
+// Prettier's choice: single quotes when the value has more double quotes
+// than single ones, so a formatted file and a written one agree.
+function quote(v) {
+  const doubles = (v.match(/"/g) ?? []).length;
+  const singles = (v.match(/'/g) ?? []).length;
+  return doubles > singles ? `'${v.replace(/'/g, "''")}'` : JSON.stringify(v);
 }
 
 function needsQuotes(v) {

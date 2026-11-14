@@ -29,9 +29,9 @@
 ```text
 packages/next/work/
   README.md                       how to use it, plus the generated lists
-  initiatives/CS-1-renderers-and-profiles.md
-  projects/CS-7-cesium-ir.md
-  items/CS-23-the-core.md
+  initiatives/CS-1-renderers-and-engine-profiles.md
+  projects/CS-10-cesium-ir.md
+  items/CS-48-the-core-types-rates-equations-literal-slots.md
 ```
 
 - **Names:** `CS-<n>-<slug>.md`. The slug comes from the title when the file is created and never changes, even when the title does. The `id` in the frontmatter must match the name's number. Because the name is fixed at creation, the same number under two different names is two different items (section 5).
@@ -89,7 +89,7 @@ The frontmatter is a small subset of YAML, read by our own parser: `key: value` 
 ## 4. Allocating IDs: `new.mjs`
 
 ```sh
-node scripts/work/new.mjs --kind work --project CS-7 --title "…" [--needs CS-23,CS-24] [--milestone core] [--status Planned]
+node scripts/work/new.mjs --kind work --project CS-10 --title "…" [--needs CS-48,CS-49] [--milestone core] [--status Planned]
 ```
 
 - It takes the highest `CS-<n>` it can see and adds one. It looks in:
@@ -146,5 +146,5 @@ A Proposed item in this project: a Dyno page with a kanban by lifecycle, the ite
 
 These are decision items in the tracker's project (see `views.mjs decisions`):
 
-1. **The initiatives.** Six are proposed from the old milestone groupings: renderers and profiles; Cesium IR and materials; threading; loading and level of detail; the transform graph; the development harness. Recommend keeping them until a second engineer's work shows a better cut.
+1. **The initiatives.** Seven are proposed from the old milestone groupings: renderers and engine profiles; Cesium IR and materials; threading; loading and level of detail; warps and the transform graph; the development harness; upstream follow-ups. Recommend keeping them until a second engineer's work shows a better cut.
 2. **The renumbering table.** Keep `docs/history/2026-11-13-work-items-renumbered.md` as the one place old names may appear, or delete it once the old names stop appearing in session prompts. Recommend keeping it: commit messages before 2026-11-13 use the old names.
