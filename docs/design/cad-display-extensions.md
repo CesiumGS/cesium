@@ -1,0 +1,12 @@
+# CAD display extensions, with the vector design (owner, 2026-11-08)
+
+**What this holds:** CAD display extensions and how they meet the vector design (owner, 2026-11-08). Moved from the overall plan (`CESIUM2_WEBGPU_PLAN.md`) on 2026-11-13, with its content and dates unchanged.
+
+Do soon, designed together with vector drawing, because they overlap with it. `BENTLEY_materials_planar_fill`, `BENTLEY_materials_line_style`, `BENTLEY_materials_point_style` and `EXT_mesh_primitive_edge_visibility` are implemented in 1.x and not in 2.0 (noted in §11's CAD display extensions). Most of the CAD content in the catalog uses none of them: a scan on 2026-11-08 found none in `bim-design-model`, `aec-design` or `aec-site`. Test content: ion asset 4665927 uses `EXT_mesh_primitive_edge_visibility` (7 of 7 sampled tiles) and `BENTLEY_materials_planar_fill` (5 of 7). Add it to the catalog, with its license checked.
+
+- **One line and point path:** line width, dashes, points and edges should share what vector drawing uses, rather than a second quad expansion. A material's line style and a style expression's stroke should reach the same shader, so `line_style` could read as a style.
+- **Planar fill:** "behind" order for coplanar faces needs a depth or id approach. 1.x uses an id framebuffer (`PlanarFillIdFramebuffer.js`). 2.0 already writes a per-pixel feature id during the opaque pass, so §11 expects a later pass can apply the same-feature depth offset without that prepass. Check that holds with translucency.
+- **Coincident surfaces are for the content or the application (owner, 2026-11-08).** The engine adds no general depth shift or tie-break. `BENTLEY_materials_planar_fill` is how content declares the order of coplanar faces, so any offset above applies only where a material asks for it. Asset 2464651 has coincident faces with no such extension: teal and grey triangles in one primitive at the same height, in every vertex. They fight in 2.0 and in 1.x, and that stays. A trial with a depth offset per feature cleared them at three views and was dropped.
+- **Edges and curves:** edges are currently mesh data, so exact edges from curves can come later (§13.26).
+- **Snap:** 1.x's `Scene.snap` prefers edges, and 2.0's snap should use these.
+- **Occlusion feedback:** opaque 3D marks are occluders; screen-space and draped marks never are; labels can read the depth pyramid for declutter; point splats must stop disabling the pyramid. See `docs/superpowers/plans/2026-11-12-transform-graph.md`, Task 12, fix 7.

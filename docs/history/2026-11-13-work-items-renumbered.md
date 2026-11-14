@@ -145,4 +145,90 @@ Where an old milestone had a partial dependency, it was split in two, and both h
 
 The old milestone groups M8 to M13 each became one project: M8 CS-12 (the job system's ports), M9 CS-14 (level-of-detail transitions), M10 CS-11 (live MaterialX graph editing), M11 CS-15 (refinement and convergence), M12 CS-16 (streaming robustness), M13 CS-13 (the worker-mode façade). M7 became three: CS-8 (engine profiles), CS-10 (Cesium IR) and CS-9 (the WebGL 2 renderer).
 
+## Section numbers
+
+The overall plan's numbered sections, and where their text went on 2026-11-13. Unnumbered sections went with the numbered section above them, except where listed in the overview's index.
+
+| Old section | Now |
+| --- | --- |
+| 2 | `docs/design/why-1x-is-slow.md` |
+| 3 | `docs/design/architecture.md` |
+| 3.1 | `docs/design/architecture.md` |
+| 3.2 | `docs/design/architecture.md` |
+| 3.3 | `docs/design/architecture.md` |
+| 3.4 | `docs/design/shaders.md` |
+| 3.5 | `docs/design/architecture.md` |
+| 3.6 | `docs/design/architecture.md` |
+| 3.7 | `docs/design/architecture.md` |
+| 3.8 | `docs/design/architecture.md` |
+| 3.9 | `docs/design/architecture.md` |
+| 3.10 | `docs/design/architecture.md` |
+| 3.11 | `docs/design/architecture.md` |
+| 4 | `docs/design/parity.md` |
+| 4.1 | `docs/design/parity.md` |
+| 4.2 | `docs/design/lighting-and-shading.md` |
+| 5 | `docs/design/performance-methodology.md` |
+| 6 | `docs/history/milestones-m0-to-m3.md` |
+| 7 | `docs/design/risks.md` |
+| 7.1 | `docs/design/risks.md` |
+| 7.2 | `docs/design/risks.md` |
+| 7.3 | `docs/design/risks.md` |
+| 8 | `docs/decisions/r4-owner-decisions.md` |
+| 9 | `docs/history/r3-review-sources.md` |
+| 10 | `docs/history/m0-spike-results.md` |
+| 11 | `docs/history/m1-progress.md` |
+| 12 | `docs/history/m2-progress.md` |
+| 13 | `docs/design/tile-selection-and-memory.md` |
+| 13.1 | `docs/design/tile-selection-and-memory.md` |
+| 13.2 | `docs/design/tile-selection-and-memory.md` |
+| 13.3 | `docs/design/tile-selection-and-memory.md` |
+| 13.4 | `docs/design/tile-selection-and-memory.md` |
+| 13.5 | `docs/design/tile-selection-and-memory.md` |
+| 13.6 | `docs/design/tile-selection-and-memory.md` |
+| 13.7 | `docs/design/tile-selection-and-memory.md` |
+| 13.8 | `docs/design/rendering-on-demand.md` |
+| 13.9 | `docs/design/transforms-and-instancing.md` |
+| 13.10 | `docs/design/ray-queries-and-path-tracing.md` |
+| 13.11 | `docs/design/real-time-tracks.md` |
+| 13.12 | `docs/design/examples-and-the-gallery.md` |
+| 13.13 | `docs/design/time-and-its-controls.md` |
+| 13.14 | `docs/design/bodies-frames-and-engineering-coordinates.md` |
+| 13.15 | `docs/design/gpu-limits-and-capacities.md` |
+| 13.16 | `docs/design/ray-queries-where-they-run.md` |
+| 13.17 | `docs/design/layers-engine-renderer-backend.md` |
+| 13.18 | `docs/design/colour-in-the-styling-language.md` |
+| 13.19 | `docs/design/semantic-metadata-and-picking.md` |
+| 13.20 | `docs/design/editing.md` |
+| 13.21 | `docs/design/ion-as-a-module.md` |
+| 13.22 | `docs/design/custom-post-processing.md` |
+| 13.23 | `docs/design/indirect-draws-on-intel.md` |
+| 13.24 | `docs/design/reference-data.md` |
+| 13.25 | `docs/design/scene-items.md` |
+| 13.26 | `docs/design/geometry-through-placement-review.md` |
+| 13.27 | `docs/design/cad-display-extensions.md` |
+| 13.28 | `docs/design/water-and-sun-glare.md` |
+| 13.29 | `docs/decisions/2026-11-08-owners-calls-for-later-plans.md` |
+| 13.30 | `docs/design/sun-and-sky-example.md` |
+| 13.31 | `docs/design/orbits-example.md` |
+| 13.32 | `docs/design/sky-light-and-points-unifications.md` |
+| 13.33 | `docs/design/breps-and-geometry-queries.md` |
+| 13.34 | `docs/design/infrastructure-and-geoscience-capabilities.md` |
+| 13.35 | `docs/design/black-hole-visualization.md` |
+| 13.36 | `docs/design/modular-renderer.md` |
+| 13.37 | `docs/design/transform-graph.md` |
+| 13.38 | `docs/design/styling-and-a-shared-ir.md` |
+| 13.39 | `docs/design/lidar-example.md` |
+| 13.40 | `docs/design/styling-language.md` |
+| 13.41 | `docs/design/investigations-2026-11-13.md` |
+| 13.42 | `docs/design/core-ir.md` |
+| 13.43 | `docs/design/job-system.md` |
+| 14 | `packages/next/work/` (items and the work README) |
+| 15 | `docs/history/m3-progress.md` |
+| 16 | `docs/design/benchmark-suite.md` |
+| 16.9 | `docs/design/benchmark-analysis-and-experience.md` |
+| 16.10 | `docs/design/image-regression-in-dyno.md` |
+| 6, M0 to M6 | `docs/history/` (one file per milestone, see the overview's index) |
+| 6, M7 to M13 and the kickoff order | `packages/next/work/`: the items, the project files' summaries, and the work README's order section |
+| 16.1 to 16.8 | `docs/design/benchmark-suite.md` |
+
 The old follow-ups table's rows became external items: row 1 CS-174, row 2 CS-175, row 3 CS-176, row 4 CS-177, row 5 CS-178, row 6 CS-179, row 8 CS-180, row 9 CS-181, row 10 CS-182, row 11 CS-183, row 12 CS-184, row 13 CS-185, row 14 CS-186, row 15 CS-187. Row 7 was closed by CS-16.

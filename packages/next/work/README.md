@@ -177,7 +177,7 @@ Milestone: gaps
 
 #### The job system's ports
 
-[CS-12](./projects/CS-12-the-job-system-s-ports.md), In progress, led by owner: 1 of 15 done, 10 ready, 4 blocked.
+[CS-12](./projects/CS-12-the-job-system-s-ports.md), In progress, led by owner: 1 of 15 done, 10 ready, 4 blocked. Plan: [job-system.md](../../../docs/design/job-system.md).
 
 - [x] [CS-86](./items/CS-86-the-first-slice-jobs-behind-workerpool.md) The first slice: `Jobs` behind `WorkerPool`. Done.
 - [ ] [CS-87](./items/CS-87-content-decode-with-priorities-and-cancellation.md) Content decode with priorities and cancellation, onto `Jobs`. Needs CS-86.

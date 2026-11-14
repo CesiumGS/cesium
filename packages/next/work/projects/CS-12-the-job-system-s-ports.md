@@ -6,6 +6,7 @@ status: In progress
 created: 2026-11-13
 initiative: CS-3
 lead: owner
+plan: docs/design/job-system.md
 ---
 
 ## Summary
