@@ -23,11 +23,54 @@ import type { ObserverSettings } from "../../scene/observer.ts";
 import type { View } from "../../scene/View.ts";
 
 /**
- * What a built-in stage is given (`GraphStage.register`). For what `PostStagePass`
- * can't declare: an instanced draw, a buffer, a blend. Not public until a second
- * user asks for it.
+ * What a stage that records its own passes sees of a view's glare, when the view has any:
+ * the engine's light list and the kernel of its spikes. The engine computes both; what to
+ * draw from them is the stage's (the night-sky example draws a lens's spikes).
+ */
+export interface GlareIo {
+  /**
+   * The light list, a storage buffer of 32-byte records (glare.slang `GlareSource`; see
+   * shaders/glareSource.slang). Record 0 is a header: `pixel.x` the count of records in use,
+   * the sun's among them; the sources follow, brightest star last. `radius` is the sprite's,
+   * in pixels, for the view's spikes (0 for none); `light` is in lux and `visibility` is the
+   * share of the source seen.
+   */
+  readonly sources: GPUBuffer;
+  /**
+   * The view's spikes' kernel, once its worker has made it (a tick is asked for when it
+   * arrives), or undefined: no spikes are set, or it isn't here yet.
+   */
+  kernel(): GlareKernelHandle | undefined;
+}
+
+/** A pupil's kernel on the GPU, and how it maps to the view (`GlareIo.kernel`). */
+export interface GlareKernelHandle {
+  /** `rgba16float`, mipmapped, square. Multiply what's read by `scale`. */
+  readonly view: GPUTextureView;
+  readonly sampler: GPUSampler;
+  readonly scale: number;
+  /** Texels on a side at level 0. */
+  readonly size: number;
+  /** The share of the light that goes to the spikes (`GlareSettings.spikes.share`). */
+  readonly share: number;
+  /** The kernel's extent on the view, degrees (`GlareSettings.spikes.extent`). */
+  readonly extent: number;
+}
+
+/**
+ * What a stage that records its own passes is given (`GraphStage.register`), for what
+ * `PostStagePass` can't declare: an instanced draw, a buffer, a blend.
  */
 export interface ChainIo {
+  /** The GPU device: for pipelines and bind groups. */
+  readonly device: GPUDevice;
+  /** The view's glare, when it has any (`ObserverSettings.glare`). */
+  readonly glare: GlareIo | undefined;
+  /**
+   * Timestamps for a pass of this name, to set on its descriptor, where the device times
+   * passes (`Engine.gpuPasses` then has it): undefined where it doesn't.
+   */
+  passWrites(label: string): GPURenderPassTimestampWrites | undefined;
   /** The latest image before it this tick: resolve it in a pass body. */
   source(): TextureHandle;
   /** Every image `source` can be: declare these as the pass's reads. */
@@ -42,14 +85,28 @@ export interface ChainIo {
   pixelAngle(): number;
 }
 
-/** A built-in stage, registered in the same place. */
+/** What a stage's `register` adds its passes with: the view's graph. */
+export type GraphStageBuilder = Pick<FrameGraph, "addPass">;
+
+/**
+ * A stage that records its own passes in the view's graph, for `view.observer.stages`
+ * beside `PostStage`: the way to draw what a `PostStage` can't (an instanced draw, a
+ * buffer of the engine's, a blend). It leaves no image of its own unless it says it does:
+ * `enabled` false makes it a side effect, drawing into the latest image before it, as the
+ * next stage then reads it. Its pipelines are its own to make, with `ChainIo.device`;
+ * its slot says where it sits.
+ */
 export interface GraphStage {
+  /** Unique within a view's list. */
   readonly name: string;
   readonly slot: PostStageSlot;
   readonly kind: PostStageKind;
   readonly label: string;
+  /** False: it adds no image to the chain (it draws into the one before it). */
   enabled: boolean;
-  register(graph: FrameGraph, io: ChainIo): void;
+  /** How far it lifts what's faint, as `PostStage.shadowGain`. Default 1. */
+  readonly shadowGain?: number;
+  register(graph: GraphStageBuilder, io: ChainIo): void;
 }
 
 export type ChainEntry = PostStage | GraphStage;
@@ -112,7 +169,7 @@ export function observerShadowGain(settings: ObserverSettings): number {
   for (let i = 0; i < stages.length; i++) {
     const stage = stages[i]!;
     if (stage.slot === "exposed" && stage.enabled) {
-      gain *= stage.shadowGain;
+      gain *= stage.shadowGain ?? 1;
     }
   }
   return gain;
@@ -439,6 +496,8 @@ export class ViewChain {
   >();
   /** The split pipelines, once asked for and ready. */
   pipelines: ChainPipelines | undefined;
+  /** The view's glare, as stages that record passes see it (`ChainIo.glare`). */
+  glare: GlareIo | undefined;
   /** The group `fsResponse` reads, with what it was made for. */
   responseGroup: GPUBindGroup | undefined;
   responseInputs: readonly GPUTextureView[] = [];
@@ -695,6 +754,9 @@ export function registerSlot(
         output,
       });
       entry.register(graph, {
+        device: engine.ctx.device,
+        glare: chain.glare,
+        passWrites: (label) => engine.raster?.timer.passWrites(label),
         source: () => slot.source(index),
         sources,
         output,

@@ -34,7 +34,13 @@ import glareUpTopWgsl from "../../shaders/generated/glareUpTop.wgsl?raw";
 import glareUpTopLayout from "../../shaders/generated/glareUpTop.json";
 import glareVeilWgsl from "../../shaders/generated/glareVeil.wgsl?raw";
 import glareVeilLayout from "../../shaders/generated/glareVeil.json";
-import type { ChainEntry, ChainEngine, ChainIo, GraphStage } from "./chain.ts";
+import type {
+  ChainEntry,
+  ChainEngine,
+  ChainIo,
+  GlareIo,
+  GraphStage,
+} from "./chain.ts";
 import type { GlareKernelImage } from "./glareKernel.ts";
 import { VEIL_LEVELS, veilWeights } from "./veilWeights.ts";
 
@@ -51,16 +57,11 @@ export const GLARE_SPRITE_MAX_RADIUS = 512;
 
 /** The image's largest value in glare's chain, pre-exposed. */
 export const GLARE_IMAGE_CLAMP = 10_000;
-/** A sprite's largest value at a pixel, pre-exposed (glare.slang `GLARE_SPRITE_CLAMP`). */
-export const GLARE_SPRITE_CLAMP = 200;
 /** The buffer of sources, as the veil's passes name it. */
 export const GLARE_RECORDS = "glareRecords";
 
 /** Passes the chain registers, as a stage's are: named at run time. */
 const SOURCES_PASS = "glare.sources";
-const SPRITES_PASS = "glare.sprites";
-/** The veil stage's result in a view's graph. */
-const GLARE_IMAGE = "post.glare";
 const DEG = Math.PI / 180;
 
 /** Bytes of a record; the header is one more. */
@@ -85,7 +86,6 @@ export function discTaps(n: number): [number, number][] {
 /** What glare adds to the engine's pipelines, made when first asked for. */
 export interface GlarePipelines {
   sources: GPUComputePipeline;
-  sprite: GPURenderPipeline;
 }
 
 /** A kernel's grid: the plan's GPU safety table holds a worker to one at this size. */
@@ -317,8 +317,6 @@ export class GlareViewState {
   private group: GPUBindGroup | undefined;
   private pipelines: GlarePipelines | undefined;
   private kernel: LoadedKernel | undefined;
-  private spriteKernel: LoadedKernel | undefined;
-  private spriteGroup: GPUBindGroup | undefined;
   /** This tick wrote its frame: its sky was drawn. */
   private fresh = false;
   /** The list holds nothing, for a view with no sky. */
@@ -434,77 +432,28 @@ export class GlareViewState {
     label: "glare.sources",
   };
 
-  /** Draws the sprites: a degenerate triangle for each slot past the list's count. */
-  drawSprites(pass: GPURenderPassEncoder): void {
-    const { pipelines, kernel } = this;
-    if (pipelines && kernel) {
-      pass.setPipeline(pipelines.sprite);
-      pass.setBindGroup(0, this.spriteGroupFor(pipelines, kernel));
-    }
-    pass.draw(4, GLARE_SOURCES);
-  }
-
-  private spriteGroupFor(
-    pipelines: GlarePipelines,
-    kernel: LoadedKernel,
-  ): GPUBindGroup {
-    if (this.spriteKernel !== kernel) {
-      this.spriteKernel = kernel;
-      this.spriteGroup = this.engine.ctx.device.createBindGroup({
-        label: "glare.sprites",
-        layout: pipelines.sprite.getBindGroupLayout(0),
-        entries: [
-          { binding: 0, resource: { buffer: this.frameBuffer } },
-          { binding: 6, resource: { buffer: this.sources } },
-          { binding: 7, resource: kernel.view },
-          { binding: 8, resource: this.engine.raster.glareKernels.sampler },
-        ],
-      });
-    }
-    return this.spriteGroup!;
-  }
-
   /**
-   * The stage that draws the sprites, additively, into glare's image. It leaves no
-   * image of its own.
+   * What a stage that records passes sees of this view's glare (`ChainIo.glare`): the
+   * list, and the spikes' kernel, as it stands when asked.
    */
-  spritesStage(): GraphStage {
-    const color: GPURenderPassColorAttachment = {
-      view: undefined as never,
-      loadOp: "load",
-      storeOp: "store",
-    };
-    const descriptor: GPURenderPassDescriptor = {
-      label: "glare.sprites",
-      colorAttachments: [color],
-    };
+  io(): GlareIo {
+    const { engine, view } = this;
     return {
-      name: "glare-sprites",
-      slot: "scene",
-      kind: "physics",
-      label: "Glare: a lens's spikes",
-      enabled: false,
-      register: (graph: FrameGraph, io: ChainIo) => {
-        graph.addPass(
-          SPRITES_PASS,
-          { reads: [...io.sources], sideEffect: true },
-          (enc, get) => {
-            const source = io.source();
-            if (
-              source.name !== GLARE_IMAGE ||
-              !this.kernel ||
-              !this.pipelines
-            ) {
-              return;
-            }
-            color.view = get(source);
-            descriptor.timestampWrites =
-              this.engine.raster.timer.passWrites("glare.sprites");
-            const pass = enc.beginRenderPass(descriptor);
-            this.drawSprites(pass);
-            pass.end();
-          },
-        );
+      sources: this.sources,
+      kernel: () => {
+        const spikes = view.observer.glare?.spikes;
+        const { kernel } = this;
+        if (!spikes || !kernel) {
+          return undefined;
+        }
+        return {
+          view: kernel.view,
+          sampler: engine.raster.glareKernels.sampler,
+          scale: kernel.image.scale,
+          size: kernel.image.size,
+          share: spikes.share,
+          extent: spikes.extent,
+        };
       },
     };
   }
@@ -749,8 +698,5 @@ export function glareFor(
     state.sourcesStage(),
     veilStage(resolved.levels, resolved.basePixels),
   ];
-  if (resolved.spikes) {
-    entries.push(state.spritesStage());
-  }
   return { entries, state };
 }

@@ -921,7 +921,7 @@ export function createPostStage(options: PostStageOptions): PostStage {
 }
 
 /** Refuses a list that names a stage twice: their passes would share a name. */
-export function checkStageList(stages: readonly PostStage[]): void {
+export function checkStageList(stages: readonly { name: string }[]): void {
   const names = new Set<string>();
   for (const stage of stages) {
     if (names.has(stage.name)) {

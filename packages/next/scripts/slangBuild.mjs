@@ -32,6 +32,8 @@ import { SLANG_VERSION, slangcPath } from "./slangTools.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SOURCES = join(root, "src");
+/** Examples may hold shaders of their own, built to a `generated/` beside them. */
+const EXAMPLES = join(root, "examples");
 export const GENERATED = join(root, "src", "shaders", "generated");
 /** The TypeScript layouts, from `layouts.slang`'s reflection. */
 export const LAYOUTS_TS = join(root, "src", "render", "generated", "layouts.ts");
@@ -48,14 +50,21 @@ const INCLUDES = [
   SOURCES,
 ];
 
-/** Every `.slang` under src/ (the generated folder and cesium.slang aside). */
+/** Where a source's output goes: the engine's folder, or an example's own. */
+export function outDirFor(source) {
+  return source.startsWith(EXAMPLES + sep)
+    ? join(dirname(source), "generated")
+    : GENERATED;
+}
+
+/** Every `.slang` under src/ and examples/ (the generated folders and cesium.slang aside). */
 export function slangSources() {
   const out = [];
   const walk = (dir) => {
     for (const name of readdirSync(dir)) {
       const path = join(dir, name);
       if (statSync(path).isDirectory()) {
-        if (path !== GENERATED) {
+        if (name !== "generated" && name !== "node_modules") {
           walk(path);
         }
       } else if (name.endsWith(".slang") && name !== "cesium.slang") {
@@ -65,6 +74,9 @@ export function slangSources() {
     }
   };
   walk(SOURCES);
+  if (existsSync(EXAMPLES)) {
+    walk(EXAMPLES);
+  }
   return out.sort();
 }
 
@@ -144,7 +156,7 @@ const slangOutput = (path) => readFileSync(path, "utf8").replaceAll("\r\n", "\n"
  * Compiles one entry source into `outDir`: `<name>.wgsl` and
  * `<name>.json`. Throws with slangc's messages on an error.
  */
-export function compile(slangc, source, outDir = GENERATED, includes = []) {
+export function compile(slangc, source, outDir = outDirFor(source), includes = []) {
   if (isPostStage(source)) {
     return compilePostStage(slangc, source, outDir, includes);
   }
@@ -453,7 +465,7 @@ async function main() {
   if (!check) {
     for (const source of sources) {
       compile(slangc, source);
-      console.log(`${relative(root, source)} → src/shaders/generated/${basename(source, ".slang")}.wgsl`);
+      console.log(`${relative(root, source)} → ${relative(root, outDirFor(source))}/${basename(source, ".slang")}.wgsl`);
       if (basename(source) === "layouts.slang") {
         mkdirSync(dirname(LAYOUTS_TS), { recursive: true });
         writeFileSync(
@@ -481,9 +493,8 @@ async function main() {
       for (const ext of [".wgsl", ".json"]) {
         const file = `${basename(source, ".slang")}${ext}`;
         const fresh = readFileSync(join(temp, file), "utf8");
-        const kept = existsSync(join(GENERATED, file))
-          ? readFileSync(join(GENERATED, file), "utf8")
-          : undefined;
+        const keptAt = join(outDirFor(source), file);
+        const kept = existsSync(keptAt) ? readFileSync(keptAt, "utf8") : undefined;
         if (fresh !== kept) {
           stale.push(file);
         }
@@ -505,7 +516,7 @@ async function main() {
     }
     // Generated files without a source any more.
     const expected = new Set(
-      sources.flatMap((s) => {
+      sources.filter((s) => outDirFor(s) === GENERATED).flatMap((s) => {
         const n = basename(s, ".slang");
         return [`${n}.wgsl`, `${n}.json`];
       }),

@@ -169,6 +169,7 @@ export {
   type GlareTier,
   type ObserverReadout,
   type ObserverSettings,
+  type ObserverStage,
   type PointSpread,
   type ToneMapping,
   DAYLIGHT_EXPOSURE,
@@ -202,6 +203,14 @@ export {
   type SlangPostShader,
 } from "./scene/postStage.ts";
 export { astrophotoCurveStage } from "./render/post/astroCurve.ts";
+export type {
+  ChainIo,
+  GlareIo,
+  GlareKernelHandle,
+  GraphStage,
+  GraphStageBuilder,
+} from "./render/post/chain.ts";
+export type { ResolveView, TextureHandle } from "./render/FrameGraph.ts";
 export { eyeLimitStage } from "./scene/eyeLimit.ts";
 export { wgslUnit, type ShaderUnit } from "./shaders/link/unit.ts";
 export {

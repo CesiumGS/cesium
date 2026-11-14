@@ -4,6 +4,7 @@
 // pre-exposure, a matter of fp16's range, and the stars' point spread, which
 // keeps each star's energy (CESIUM2_WEBGPU_PLAN.md §13.32).
 import type { PostStage } from "./postStage.ts";
+import type { GraphStage } from "../render/post/chain.ts";
 import { eyeLimitStage } from "./eyeLimit.ts";
 import type { PointSpread } from "./pointSpread.ts";
 
@@ -102,6 +103,9 @@ export interface GlareSettings {
   spikes: { aperture: GlarePupil; share: number; extent: number } | null;
 }
 
+/** A step of the chain: a declared stage, or one that records its own passes. */
+export type ObserverStage = PostStage | GraphStage;
+
 /**
  * Who is looking: everything between the scene's light and a pixel, per
  * view. `eyeObserver` and `cameraObserver` give the two usual sets.
@@ -119,10 +123,11 @@ export interface ObserverSettings {
   /** Glare; null for none. */
   glare: GlareSettings | null;
   /**
-   * Further steps of the chain, in order within each slot (`createPostStage`).
-   * A new list rebuilds the view's graph; `PostStage.enabled` doesn't.
+   * Further steps of the chain, in order within each slot (`createPostStage`, or a
+   * `GraphStage` that records its own passes). A new list rebuilds the view's graph;
+   * `PostStage.enabled` doesn't.
    */
-  stages: readonly PostStage[];
+  stages: readonly ObserverStage[];
 }
 
 /**
