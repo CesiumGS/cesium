@@ -47,6 +47,7 @@ import { drawnTile, type TileWarp } from "../streaming/tileWarp.ts";
 import type { TileVolume } from "../streaming/volumes.ts";
 import { flatTerrainHeights, type TerrainHeights } from "./quantizedMesh.ts";
 import { ELLIPSOID_LEVEL_ZERO_ERROR } from "./TerrainSource.ts";
+import { soundError } from "./terrainRefit.ts";
 
 const ellipsoid = Ellipsoid.WGS84;
 const RADII = ellipsoid.radii;
@@ -70,9 +71,8 @@ interface Options {
 
 interface Exact {
   readonly key: string;
-  readonly heights: TerrainHeights | undefined;
+  readonly heights: TerrainHeights;
   readonly value: number;
-  readonly exact: boolean;
 }
 
 interface Prepared {
@@ -200,41 +200,56 @@ export class BodyOccluder implements Occluder {
     return this.own(tile, warp);
   }
 
-  /** A tile's own bound: exact where its heights are resident (and the time allows), else its drawn volume's. */
+  /**
+   * A tile's own bound. Its own mesh's exact bound where its heights are
+   * resident (and the time allows). Otherwise the nearest loaded ancestor's
+   * exact bound less the most the full-resolution surface can dip below that
+   * ancestor's mesh: its geometric error (a bound on the deviation, the
+   * refit's where measured), stretched along the normal by the warp there.
+   * Nothing loaded above: 0, which culls nothing.
+   */
   private own(tile: Tile, warp: TileWarp): number {
+    const mine = this.resident(tile, warp, true);
+    if (mine !== undefined) {
+      return mine;
+    }
+    for (let a = tile.parent; a?.globe; a = a.parent) {
+      const base = this.resident(a, warp, false);
+      if (base !== undefined) {
+        const drawn = drawnTile(a, warp);
+        const stretch = Math.max(1, drawn.slopeMax ?? drawn.sigmaMax);
+        const error = soundError(a.globe.refit);
+        return Math.max(0, base - (error * stretch) / R_MIN);
+      }
+    }
+    return 0;
+  }
+
+  /** The exact bound of a tile's own mesh, cached; undefined without resident heights (or, when `limited`, past this pass's time). */
+  private resident(
+    tile: Tile,
+    warp: TileWarp,
+    limited: boolean,
+  ): number | undefined {
     const source = tile.globe?.upsampledFrom ?? tile;
     const heights =
       source.globe?.heights ??
       (this.options.flat ? (flatHeights ??= flatTerrainHeights()) : undefined);
+    if (!heights || !source.globe) {
+      return undefined;
+    }
     const kept = this.bounds.get(tile);
-    if (
-      kept &&
-      kept.key === this.keyNow &&
-      kept.heights === heights &&
-      (kept.exact || heights === undefined || performance.now() >= this.spent)
-    ) {
+    if (kept && kept.key === this.keyNow && kept.heights === heights) {
       return kept.value;
     }
-    if (heights && source.globe && performance.now() < this.spent) {
-      const value = exactBound(source, heights, warp);
-      if (value !== undefined) {
-        this.bounds.set(tile, {
-          key: this.keyNow,
-          heights,
-          value,
-          exact: true,
-        });
-        return value;
-      }
+    if (limited && performance.now() >= this.spent) {
+      return undefined;
     }
-    const value =
-      regionBound(tile, warp) ?? volumeBound(drawnTile(tile, warp).volume);
-    this.bounds.set(tile, {
-      key: this.keyNow,
-      heights,
-      value,
-      exact: false,
-    });
+    const value = exactBound(source, heights, warp);
+    if (value === undefined) {
+      return undefined;
+    }
+    this.bounds.set(tile, { key: this.keyNow, heights, value });
     return value;
   }
 }
@@ -265,92 +280,6 @@ function meetsCap(tile: Tile, cap: { direction: Vec3; cos: number }): boolean {
   // distance: asin(r / d), padded by the flattening's skew.
   const reach = Math.asin(Math.min(1, radius / distance)) * 1.02 + 1e-4;
   return angle - reach <= Math.acos(Math.min(1, Math.max(-1, cap.cos)));
-}
-
-/** A lower bound of the scaled norm over a volume: its nearest point to the centre, over the largest radius. */
-function volumeBound(volume: TileVolume): number {
-  if (volume.kind === "sphere") {
-    const { center, radius } = volume.sphere;
-    return (
-      Math.max(0, Math.hypot(center[0]!, center[1]!, center[2]!) - radius) /
-      R_MAX
-    );
-  }
-  const box = volume.kind === "box" ? volume.obb : volume.region.obb;
-  const c = box.center;
-  const h = box.halfAxes;
-  // Nearest point of the box to the origin (axes orthogonal): clamp the
-  // origin's coordinates along each.
-  const p = [c[0]!, c[1]!, c[2]!];
-  for (let a = 0; a < 3; a++) {
-    const ax = h[a * 3]!;
-    const ay = h[a * 3 + 1]!;
-    const az = h[a * 3 + 2]!;
-    const len2 = ax * ax + ay * ay + az * az;
-    if (len2 === 0) {
-      continue;
-    }
-    const t = Math.min(
-      1,
-      Math.max(-1, -(c[0]! * ax + c[1]! * ay + c[2]! * az) / len2),
-    );
-    p[0]! += t * ax;
-    p[1]! += t * ay;
-    p[2]! += t * az;
-  }
-  return Math.hypot(p[0]!, p[1]!, p[2]!) / R_MAX;
-}
-
-/**
- * A lower bound from the tile's region alone: a grid of points over its
- * rectangle at three heights through the warp's map, less what a surface
- * between the grid's points dips under their shell (an estimate of the
- * map, as `TileWarp.bounds` is). Tighter than the drawn volume's sphere or
- * box, which for a tile of hundreds of km is a few percent of the radius.
- */
-function regionBound(tile: Tile, warp: TileWarp): number | undefined {
-  const volume = tile.volume;
-  if (volume.kind !== "region" || !warp.images) {
-    return undefined;
-  }
-  const r = volume.region;
-  const steps = 4;
-  const heights = [
-    r.minimumHeight,
-    (r.minimumHeight + r.maximumHeight) / 2,
-    r.maximumHeight,
-  ];
-  const points = new Float64Array((steps + 1) ** 2 * 3 * 3);
-  const out = new Float64Array(3);
-  let count = 0;
-  for (const height of heights) {
-    for (let j = 0; j <= steps; j++) {
-      for (let i = 0; i <= steps; i++) {
-        ellipsoid.cartographicToCartesian(
-          {
-            longitude: r.west + ((r.east - r.west) * i) / steps,
-            latitude: r.south + ((r.north - r.south) * j) / steps,
-            height,
-          },
-          out,
-        );
-        points.set(out, count * 3);
-        count++;
-      }
-    }
-  }
-  const images = warp.images(points);
-  if (!images) {
-    return undefined;
-  }
-  let lowest = Infinity;
-  for (let i = 0; i < count; i++) {
-    lowest = Math.min(lowest, lowestAlong(images, i));
-  }
-  const cell =
-    R_MAX * Math.hypot(r.east - r.west, r.north - r.south) * (1.5 / steps);
-  const dip = (CHORD_MARGIN * cell * cell) / (8 * R_MIN) / R_MIN;
-  return Number.isFinite(lowest) ? Math.max(0, lowest - dip) : undefined;
 }
 
 /**

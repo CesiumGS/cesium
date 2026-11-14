@@ -179,6 +179,60 @@ describe("the body as an occluder", () => {
     );
   });
 
+  it("never lies above a fine tile that dips below its coarse ancestor's mesh by up to the ancestor's error", () => {
+    const error = 500;
+    const ancestor = tileOf(-0.02, 0.02, 0, 8);
+    (ancestor.globe as { refit?: unknown }).refit = { levelError: error };
+    const child = tileOf(-0.01, 0.0, 0, 9);
+    (child.globe as { heights?: unknown }).heights = undefined;
+    (child as { parent?: Tile }).parent = ancestor;
+    const fill = (): Tile =>
+      ({ ...tileOf(0, 0.01, 0, 9), fillFromParent: true }) as Tile;
+    (ancestor as { children: Tile[] }).children = [
+      child,
+      fill(),
+      fill(),
+      fill(),
+    ];
+    const world = regionFromJson([-Math.PI, -1.5, Math.PI, 1.5, -1000, 9000]);
+    const root = {
+      volume: {
+        kind: "region",
+        region: world,
+        sphere: sphereFromObb(world.obb),
+      },
+      children: [ancestor],
+    } as unknown as Tile;
+    (ancestor as { parent?: Tile }).parent = root;
+    const occluder = new BodyOccluder({
+      root,
+      flat: false,
+      enabled: () => true,
+    });
+    const camera = wgs84.cartographicToCartesian(
+      { longitude: 0, latitude: 0, height: 10 },
+      new Float64Array(3),
+    );
+    const view = {
+      id: 1,
+      position: camera,
+      warp: warpOf(10),
+    } as unknown as SelectionView;
+    occluder.prepare(view);
+    const s = occluder.scaleFor(view)!;
+    // The fine surface at -error m, drawn ×10: its scaled norm is no less than s.
+    const dipped = wgs84.cartographicToCartesian(
+      { longitude: 0, latitude: 0, height: -error * 10 },
+      new Float64Array(3),
+    );
+    const norm = Math.hypot(
+      dipped[0]! / wgs84.radii[0]!,
+      dipped[1]! / wgs84.radii[1]!,
+      dipped[2]! / wgs84.radii[2]!,
+    );
+    expect(s).toBeLessThanOrEqual(norm);
+  });
+
   it("offers its shape for a depth pyramid", () => {
     const { occluder, view } = setup();
     const shape = occluder.shape(view)!;

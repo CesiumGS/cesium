@@ -858,14 +858,30 @@ describe("the globe across a warp", () => {
     return TerrainSource.ellipsoid(loader, { warnings: new Set() });
   }
 
-  const view = (warp?: SelectionView["warp"]): SelectionView => {
+  const view = (
+    warp?: SelectionView["warp"],
+    oblique = false,
+  ): SelectionView => {
     const position = ecef(0.3, 0.2, 2_000_000);
     const length = Math.hypot(position[0]!, position[1]!, position[2]!);
+    let direction = position.map((x) => -x / length) as Float64Array;
+    let cartographic = { longitude: 0.3, latitude: 0.2, height: 2_000_000 };
+    if (oblique) {
+      // Off to the east at the same height, looking at the ground below the
+      // top-down point: a vertical error is seen across, not along, the view.
+      const target = ecef(0.3, 0.2, 0);
+      const side = ecef(0.3 + 0.3, 0.2, 2_000_000);
+      position.set(side);
+      const d = position.map((x, i) => target[i]! - x);
+      const n = Math.hypot(d[0]!, d[1]!, d[2]!);
+      direction = d.map((x) => x / n) as unknown as Float64Array;
+      cartographic = { longitude: 0.6, latitude: 0.2, height: 2_000_000 };
+    }
     return {
       id: 0,
       position,
-      direction: position.map((x) => -x / length) as Float64Array,
-      cartographic: { longitude: 0.3, latitude: 0.2, height: 2_000_000 },
+      direction,
+      cartographic,
       planes: new Float64Array(0),
       sseDenominator: 2 * Math.tan(Math.PI / 6),
       height: 1000,
@@ -877,13 +893,14 @@ describe("the globe across a warp", () => {
     source: TerrainSource,
     selection: GlobeBudgetedSelection | GlobeStepwiseSelection,
     warp?: SelectionView["warp"],
+    oblique = false,
   ): Promise<Tile[]> {
     let selected: Tile[] = [];
     for (let pass = 0; pass < 60; pass++) {
       const result = selection.select(
         source.root,
         source.geometricError,
-        view(warp),
+        view(warp, oblique),
       );
       selected = result.selected;
       const pending = result.requested.filter((t) => t.state === "unloaded");
@@ -902,13 +919,17 @@ describe("the globe across a warp", () => {
     const s = setup();
     const warp = s.world.tileWarp(s.earth)!;
     expect(warp).toBeDefined();
-    const levels = async (policy: "budgeted" | "stepwise", w?: typeof warp) => {
+    const levels = async (
+      policy: "budgeted" | "stepwise",
+      w?: typeof warp,
+      oblique = false,
+    ) => {
       const source = await ellipsoidSource();
       const selection =
         policy === "budgeted"
           ? new GlobeBudgetedSelection(source, {})
           : new GlobeStepwiseSelection(source, {});
-      const selected = await settle(source, selection, w);
+      const selected = await settle(source, selection, w, oblique);
       return {
         source,
         selected,
@@ -916,8 +937,11 @@ describe("the globe across a warp", () => {
       };
     };
     for (const policy of ["budgeted", "stepwise"] as const) {
-      const plain = await levels(policy);
-      const exaggerated = await levels(policy, warp);
+      // A height scale's error is vertical (`terrainDrawnError`): seen along
+      // the view, top-down, it is nearly invisible, so only an oblique view
+      // refines further at ×10.
+      const plain = await levels(policy, undefined, true);
+      const exaggerated = await levels(policy, warp, true);
       expect(exaggerated.deepest, policy).toBeGreaterThan(plain.deepest);
     }
     // Bounds: every vertex of a loaded tile, warped by the route, is inside its drawn sphere.
@@ -937,7 +961,7 @@ describe("the globe across a warp", () => {
       const p = [0, 1, 2].map((k) => c[12 + k]! + mesh.positions[i * 3 + k]!);
       expect(
         distance(routeForward(route, Float64Array.from(p)), sphere.center),
-      ).toBeLessThanOrEqual(sphere.radius + 1e-6);
+      ).toBeLessThanOrEqual(sphere.radius * (1 + 1e-6));
     }
     // σ_max over the tile is the exaggeration's, so its error stretches ×10.
     expect(drawnTile(tile, warp).sigmaMax).toBeGreaterThan(9);

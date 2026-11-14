@@ -26,6 +26,8 @@ import {
   drawnContentVolume,
   drawnRequestVolume,
   drawnTile,
+  geometryRefines,
+  lodExponentOf,
   terrainDrawnError,
   type TileWarp,
 } from "./tileWarp.ts";
@@ -79,6 +81,12 @@ export interface SelectionView {
   debug?: DebugView;
   /** The view morphs terrain in as it refines (`View.lodTransitions` "morph"); else it pops. */
   morph?: boolean;
+  /**
+   * The error exponent α in [0, 1] (`View.lodExponent`): under a warp,
+   * selection uses its stretch s as s^α. Absent: 1. A warp's own
+   * (`TileWarp.lodExponent`) wins.
+   */
+  lodExponent?: number;
   /**
    * Set when the tileset hangs under an anchor placed across a warp: its
    * tiles are selected on their drawn volumes (`drawnTile`), with the
@@ -621,10 +629,16 @@ export class StepwiseSelection implements TileSelection {
       // stretches it by at most σ_max over the volume (an estimate), and its
       // fit adds its own error.
       const drawn = drawnTile(source, view.warp);
+      // The stretched part counts only where refining can reduce it: a tile
+      // upsampled from its data ancestor, or one whose children are known to
+      // have no data, gains nothing but imagery (which the warp doesn't
+      // stretch), so its error is measured as if unwarped (s^0).
+      const alpha = geometryRefines(source) ? lodExponentOf(view) : 0;
       error =
         source.globe && drawn.slopeMax !== undefined
-          ? terrainDrawnError(source, drawn, view.position, error)
-          : error * drawn.sigmaMax + drawn.fit;
+          ? terrainDrawnError(source, drawn, view.position, error, alpha)
+          : error * (alpha === 1 ? drawn.sigmaMax : drawn.sigmaMax ** alpha) +
+            drawn.fit;
     }
     if (error === 0) {
       return 0;

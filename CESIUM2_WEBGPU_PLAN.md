@@ -10709,6 +10709,18 @@ They stack. Candidate 1 is worth doing before the API review. Candidate 2 is a s
 8. Which content kinds must every renderer draw, and which may it leave out (vectors and labels for a path tracer; patches and b-reps for WebGL 2)?
 9. Do browser- and hardware-specific paths show in the API at all, or only in the report and the inspector?
 
+##### Decisions (owner, 2026-11-13)
+
+1. **Support reports: yes.** Each view reports what it supports in the scene's terms (`view.support`: content kinds, view options, outputs, queries). An unmet request warns once and falls back as documented; a strict mode throws, for tests and careful hosts. Today's silent fallbacks (glare's `"auto"`, direct draws without `indirect-first-instance`) become reported ones.
+2. **Outputs as AOVs: yes.** Name a view's outputs (colour, display colour, IDs, depth) now. Taking an outside colour and depth to composite comes later, under the same names.
+3. **The user shader contract: to be discussed with the shader toolchain research.** WGSL at the interface probably isn't right: a WGSL string can't reach a second renderer.
+4. **`GpuDevice`, `Capabilities` and `LimitsTier` move to an advanced entry point** (`@cesium/next/gpu`); the main API stays renderer-agnostic (the worker mode needs this too: a shared device can't cross threads). **Open design:** the broader engine-profile design, so that support reports, device facts, tiers and presets don't become a fragile system. Design it before adding more tiers.
+5. **`Engine.queries` takes backends: yes,** so an application or a second renderer can supply its own.
+6. **GPU-side ray queries: later.** Design the module boundary so it can be added; don't ship it in 2.0 unless a 2.0 feature needs it.
+7. **Progressive views: yes, as a special case of a general concept (proposed, to confirm): refinement.** A view's image converges over ticks; refinement sources each report progress and a done state: streaming (tiles loading), transitions (geomorph, imagery fades), async shader compiles (placeholder pipelines), occlusion feedback reaching its fixed point, temporal accumulation (TAA, still-frame supersampling for screenshots and print), a progressive path tracer's samples. `view.refinement` lists the active sources; `view.converged(options)` resolves when they are done (screenshots, printing, tests, benchmarks, exports); the on-demand loop ticks while any source is active, replacing the ad-hoc `TICK_REASONS`. A progressive view is a view with an accumulation source.
+8. **Content every renderer must draw:** globe, terrain, imagery and meshes (3D Tiles, glTF). Optional but declared in `view.support`: vectors and labels, points and splats, b-rep patches, advanced translucency. Design this carefully with item 4.
+9. **Browser- and hardware-specific paths stay out of the API:** they show in the support report and the inspector only. Where such a path can run, the engine detects it automatically and uses it.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each

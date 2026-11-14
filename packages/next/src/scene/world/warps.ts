@@ -451,6 +451,17 @@ class AnchorTileWarp implements TileWarp {
     return { at: first, delta, span: 1 };
   }
 
+  /** The route's own error exponent: the smallest `Warp.lodExponent` any of its warps sets (the most permissive node wins); undefined where none does. */
+  get lodExponent(): number | undefined {
+    let out: number | undefined;
+    for (const step of this.#route?.steps ?? []) {
+      if (step.kind === "warp" && step.warp.lodExponent !== undefined) {
+        out = Math.min(out ?? 1, step.warp.lodExponent);
+      }
+    }
+    return out;
+  }
+
   /** Present while the route is a height profile: drawn heights in closed form (`TileWarp.heightRange`). */
   get heightRange(): TileWarp["heightRange"] {
     const profile = this.#profile;
@@ -459,7 +470,11 @@ class AnchorTileWarp implements TileWarp {
     }
     return (min, max) => {
       const { height, low, high } = profile;
-      const { ceiling, band } = height.profile!;
+      // A plain height scale is the profile with no ceiling: h' = base + k (h − base).
+      const { ceiling, band } = height.profile ?? {
+        ceiling: Infinity,
+        band: 1,
+      };
       const base = height.baseHeight ?? 0;
       const [lo, hi] = drawnHeightRange(
         min,
@@ -520,26 +535,31 @@ class AnchorTileWarp implements TileWarp {
   }
 
   #route: Route | undefined;
+  /** The height scale's own scale value at the last `refresh`; NaN without one. */
+  #exact = NaN;
   #afterRoute: Route | undefined;
   #after: Float64Array | undefined;
   /** Each scaled warp's bucket now: the span its scale holds over. */
   #spans = new Map<Warp, { low: number; high: number }>();
 
-  /** Whether the route is one height-scale warp with a profile then rigid steps, and the multipliers its bucket holds. */
+  /** Whether the route is one height-scale warp (with a profile or not) then rigid steps, and the multipliers its bucket holds. */
   #setProfile(
     route: Route,
     buckets: ReadonlyMap<Warp, { low: number; high: number }>,
   ): void {
     const height = heightScaleOf(route);
-    if (!height?.profile) {
+    if (!height) {
       this.#profile = undefined;
       return;
     }
     const warp = (route.steps[0] as { warp: Warp }).warp;
     const bucket = buckets.get(warp);
     const k = (s: number) => 1 + s * (height.factor - 1);
-    const a = k(bucket ? bucket.low : 1);
-    const b = k(bucket ? bucket.high : 1);
+    // The closed-form range takes the scale's exact value now, not its
+    // bucket's ends: the bucket saves sampled maps, and this is arithmetic.
+    const exact = warp.scale ? warpScaleOf(warp) : 1;
+    const a = k(Number.isFinite(exact) ? exact : bucket ? bucket.low : 1);
+    const b = k(Number.isFinite(exact) ? exact : bucket ? bucket.high : 1);
     this.#profile = {
       height,
       low: Math.min(a, b),
@@ -557,6 +577,16 @@ class AnchorTileWarp implements TileWarp {
    */
   refresh(route: Route, stamp: number): void {
     this.#route = route;
+    // The height scale's exact value moves the closed-form ranges inside a
+    // bucket: the drawn volumes are made again (`scaleVersion`).
+    const hs = heightScaleOf(route);
+    const exactNow = hs
+      ? warpScaleOf((route.steps[0] as { warp: Warp }).warp)
+      : NaN;
+    const exactMoved =
+      exactNow !== this.#exact &&
+      !(Number.isNaN(exactNow) && Number.isNaN(this.#exact));
+    this.#exact = exactNow;
     const parts: string[] = [`${stamp}`];
     const buckets = new Map<Warp, { key: string; low: number; high: number }>();
     for (const s of route.steps) {
@@ -576,6 +606,10 @@ class AnchorTileWarp implements TileWarp {
     const identity = affine ? `${stamp}:a` : parts.join(":");
     const key = affine ? `${identity}:${parts[1]}` : identity;
     if (key === this.#key) {
+      if (exactMoved && this.#profile) {
+        this.#setProfile(route, buckets);
+        this.scaleVersion++;
+      }
       return;
     }
     this.#key = key;

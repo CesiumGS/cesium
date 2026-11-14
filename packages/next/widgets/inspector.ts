@@ -14,7 +14,7 @@
  * multiples for history. Text stays in text colors; marks carry the data
  * colors.
  */
-import { GPU_GROUPS, gpuWindow, untimedMs } from "./gpuGroups.ts";
+import { GPU_GROUPS, align, gpuWindow, untimedMs } from "./gpuGroups.ts";
 import type {
   ContentMix,
   Inspectable,
@@ -230,6 +230,9 @@ export function attachInspector(
   const passOrder: string[] = [];
   /** What no timestamp covers, per refresh (`untimedMs`). */
   const untimedHistory: number[] = [];
+  /** The untimed share's two parts: inside the frame's markers, and between frames. */
+  const inFrameHistory: number[] = [];
+  const betweenHistory: number[] = [];
   /** Groups the user opened (they survive the redraw). */
   /** GPU groups the viewer folded away (all open by default). */
   const closedGroups = new Set<string>();
@@ -396,6 +399,7 @@ export function attachInspector(
               passHistory,
               passOrder,
               untimedHistory,
+              { inFrame: inFrameHistory, between: betweenHistory },
               closedGroups,
               hover,
               gpuShare,
@@ -477,6 +481,16 @@ export function attachInspector(
     );
     if (untimedHistory.length > HISTORY) {
       untimedHistory.shift();
+    }
+    inFrameHistory.push(
+      drawing ? finite(snap.frame?.gpuInFrameUntimedMs ?? 0) : 0,
+    );
+    betweenHistory.push(
+      drawing ? finite(snap.frame?.gpuBetweenFramesMs ?? 0) : 0,
+    );
+    if (inFrameHistory.length > HISTORY) {
+      inFrameHistory.shift();
+      betweenHistory.shift();
     }
 
     // The last move: from when the camera stopped until streaming settled,
@@ -650,6 +664,38 @@ function geometryHtml(
   );
 }
 
+/** CPU-side GPU work since the frame before, as a small table. */
+function workHtml(
+  w: NonNullable<NonNullable<InspectorSnapshot["frame"]>["work"]>,
+): string {
+  const count = (n: number) => Math.round(n).toLocaleString("en-US");
+  const mb = (b: number) => `${(b / 1048576).toFixed(b < 1048576 ? 2 : 1)} MB`;
+  const by = (list: Array<[string, number, number]>) =>
+    list
+      .slice(0, 3)
+      .map(([label, bytes]) => `${escape(label)} ${mb(bytes)}`)
+      .join(", ");
+  const rows: Array<[string, string, string]> = [
+    ["Buffer writes", count(w.uploadCalls), mb(w.uploadBytes)],
+    ["Texture writes", count(w.textureCalls), mb(w.textureBytes)],
+    ["Copies encoded", count(w.copyCalls), mb(w.copyBytes)],
+    ["Resources created", count(w.createdCount), mb(w.createdBytes)],
+    ["Submits", count(w.submits), ""],
+    ["mapAsync", count(w.mapCalls), ""],
+  ];
+  return (
+    `<table class="ci-geometry"><thead><tr><th>GPU work since the last frame</th><th>Calls</th><th>Bytes</th></tr></thead><tbody>${rows
+      .map(
+        ([k, calls, bytes]) =>
+          `<tr><td>${k}</td><td class="ci-num">${calls}</td><td class="ci-num">${bytes || "—"}</td></tr>`,
+      )
+      .join("")}</tbody></table>` +
+    `<div class="ci-note">${
+      w.uploadBy.length ? `Largest writes: ${by(w.uploadBy)}. ` : ""
+    }${w.createdBy.length ? `Largest created: ${by(w.createdBy)}. ` : ""}</div>`
+  );
+}
+
 function frameHtml(s: InspectorSnapshot, framesPerSecond?: number): string {
   const f = s.frame ?? {};
   const rows: [string, string][] = [
@@ -692,7 +738,11 @@ function frameHtml(s: InspectorSnapshot, framesPerSecond?: number): string {
         .join(" · "),
     ]);
   }
-  return kv(rows) + (f.geometry ? geometryHtml(f.geometry, f.raysCast) : "");
+  return (
+    kv(rows) +
+    (f.geometry ? geometryHtml(f.geometry, f.raysCast) : "") +
+    (f.work ? workHtml(f.work) : "")
+  );
 }
 
 interface LastMove {
@@ -1114,6 +1164,7 @@ function passesHtml(
   passes: Map<string, number[]>,
   order: readonly string[],
   untimed: number[],
+  parts: { inFrame: number[]; between: number[] },
   closed: ReadonlySet<string>,
   hover: number | undefined,
   share: boolean,
@@ -1215,7 +1266,34 @@ function passesHtml(
     win.untimed.mean,
     bar(win.untimed.mean, "var(--ci-muted)"),
   );
-  return `${chart}${legend}<div class="ci-ptable">${header}${groups.join("")}${untimedRow}</div><div class="ci-note">${
+  const sub = (name: string, tip: string, values: number[]) => {
+    const series = align(values, HISTORY);
+    const mean = series.reduce((a, b) => a + b, 0) / series.length;
+    return row(
+      "ci-psub",
+      `<i class="ci-key ci-key-hatch" style="opacity:.55"></i>`,
+      name,
+      lineSvg(series, "var(--ci-muted)", SW, SH, hover),
+      at(series),
+      mean,
+      bar(mean, "var(--ci-muted)", 0.6),
+    ).replace(
+      `<div class="ci-prow`,
+      `<div title="${escape(tip)}" class="ci-prow`,
+    );
+  };
+  const subRows =
+    sub(
+      "in frame, between passes",
+      "Inside the frame's first and last marker, not covered by a timed pass: copies, clears, work the driver adds between passes.",
+      parts.inFrame,
+    ) +
+    sub(
+      "between frames",
+      "From the previous frame's last marker to this frame's first, less timed passes in the gap: the GPU waiting for the next submit (the main thread busy), or work in other submits (uploads, copies) that takes no timestamp.",
+      parts.between,
+    );
+  return `${chart}${legend}<div class="ci-ptable">${header}${groups.join("")}${untimedRow}${subRows}</div><div class="ci-note">${
     hover !== undefined
       ? `${((HISTORY - 1 - hover) / 4).toFixed(1)} s ago`
       : "Newest at the right; hover for a moment's values."

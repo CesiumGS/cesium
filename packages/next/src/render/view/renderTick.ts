@@ -12,6 +12,7 @@ import type {
   TargetFrame,
   WorldFrame,
 } from "./viewFrameData.ts";
+import { gpuWorkEnabled, takeGpuWork } from "../../gpu/GpuWork.ts";
 import {
   addGeometry,
   resetGeometry,
@@ -313,6 +314,7 @@ export function render(
   const encoder = device.createCommandEncoder(FRAME_ENCODER);
   engine.raster.timer.tag = engine.stats.tick;
   engine.raster.timer.beginFrame();
+  engine.raster.timer.startMarker(encoder);
   for (let i = 0; i < views.length; i++) {
     const view = views[i]!;
     if (drawn.has(view)) {
@@ -445,6 +447,13 @@ export function render(
   engine.stats.gpuSpanMs = engine.raster.timer.spanMilliseconds;
   engine.stats.gpuWallMs = engine.raster.timer.wallMilliseconds;
   engine.stats.gpuIntervalMs = engine.raster.timer.intervalMilliseconds;
+  engine.stats.gpuInFrameUntimedMs =
+    engine.raster.timer.inFrameUntimedMilliseconds;
+  engine.stats.gpuBetweenFramesMs =
+    engine.raster.timer.betweenFramesMilliseconds;
+  if (gpuWorkEnabled()) {
+    engine.stats.work = takeGpuWork();
+  }
   engine.stats.views = slots;
   for (let i = 0; i < engine.worlds.length; i++) {
     engine.worlds[i]!.changedViews = 0;

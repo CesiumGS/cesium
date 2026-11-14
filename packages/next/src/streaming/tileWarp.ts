@@ -56,6 +56,8 @@ export interface TileWarp {
   readonly scaleVersion?: number;
   /** Goes up whenever a fit lands or goes: the tiles' fit errors are read again. */
   readonly fitVersion: number;
+  /** The route's own error exponent (`Warp.lodExponent`), where one of its warps sets it; it wins over the view's. */
+  readonly lodExponent?: number;
   /**
    * `points` (n × 3, flat, in the tileset's coordinates) carried through
    * the map into the same coordinates, bounded, with its stretch there.
@@ -199,8 +201,8 @@ function sphereVolume(center: Vec3, radius: number): TileVolume {
 }
 
 /** The volume carried through `warp`: a box or region by its image's bounding sphere, a sphere by its centre's image and σ_max · radius. A map that fails on a sample (not finite) leaves the volume where it is. */
-function carried(volume: TileVolume, warp: TileWarp): Carried {
-  const made = carry(volume, warp);
+function carried(volume: TileVolume, warp: TileWarp, below = 0): Carried {
+  const made = carry(volume, warp, below);
   const c = made.volume.sphere;
   if (
     c &&
@@ -248,7 +250,11 @@ function holding(volume: TileVolume): {
   };
 }
 
-function carry(volume: TileVolume, warp: TileWarp): Carried {
+function padded<S extends { radius: number }>(sphere: S, by: number): S {
+  return by > 0 ? { ...sphere, radius: sphere.radius + by } : sphere;
+}
+
+function carry(volume: TileVolume, warp: TileWarp, below = 0): Carried {
   if (volume.kind === "region" && warp.heightRange) {
     // A region's image under a height profile is the region over the drawn
     // heights: exact in height, nothing sampled.
@@ -263,7 +269,12 @@ function carry(volume: TileVolume, warp: TileWarp): Carried {
       image.max,
     ]);
     return {
-      volume: { kind: "sphere", sphere: sphereFromObb(drawn.obb) },
+      volume: {
+        kind: "sphere",
+        // Skirts hang below the region's lowest height, and the map stretches
+        // that depth by at most slopeMax: the sphere reaches their tips.
+        sphere: padded(sphereFromObb(drawn.obb), image.slopeMax * below),
+      },
       sigmaMax: image.sigmaMax,
       slopeMax: image.slopeMax,
     };
@@ -312,6 +323,18 @@ function carry(volume: TileVolume, warp: TileWarp): Carried {
 }
 
 /**
+ * How far below its region's lowest height a terrain tile's mesh reaches:
+ * its skirts hang at most 5 × the level's error (a tile upsampled from data
+ * hangs its outer edges at the data tile's depth). The tile's volume leaves
+ * them out; a drawn volume must not, or a skirt tip is culled while visible.
+ */
+function skirtBelow(tile: Tile): number {
+  const g = tile.globe;
+  const level = (g?.upsampledFrom?.globe ?? g)?.refit?.levelError;
+  return level === undefined ? 0 : 5 * level;
+}
+
+/**
  * Where `tile`'s draws put its volume under `warp`, cached on the tile for
  * the map's version and the volume it came from (a padded or tightened
  * volume is a new object); the fit's error is read again when fits change.
@@ -335,7 +358,11 @@ export function drawnTile(tile: Tile, warp: TileWarp): DrawnTile {
     tile.drawnCache = cache;
   }
   if (!cache || cache.version !== warp.version || cache.basis !== basis) {
-    const { volume, sigmaMax, slopeMax, remake } = carried(basis, warp);
+    const { volume, sigmaMax, slopeMax, remake } = carried(
+      basis,
+      warp,
+      skirtBelow(tile),
+    );
     cache = {
       warp,
       version: warp.version,
@@ -354,7 +381,7 @@ export function drawnTile(tile: Tile, warp: TileWarp): DrawnTile {
   } else if (cache.scaleVersion !== scaleVersion) {
     cache.scaleVersion = scaleVersion;
     const { volume, sigmaMax, slopeMax, remake } =
-      cache.remake?.() ?? carried(basis, warp);
+      cache.remake?.() ?? carried(basis, warp, skirtBelow(tile));
     cache.drawn = {
       volume,
       sigmaMax,
@@ -512,19 +539,61 @@ export function sinThetaMax(
  * height profile (`drawn.slopeMax`) the error is vertical: stretched by the
  * profile's largest dh′/dh with the horizontal stretch taken as 1, and seen
  * at most by sin θ (`sinThetaMax`). Under any other warp, the isotropic
- * σ_max, as for any content.
+ * σ_max, as for any content. The stretch s is used as s^α (`alpha`, the
+ * error exponent: 1 is exact as drawn, 0 treats the warp as absent).
  */
 export function terrainDrawnError(
   tile: Tile,
   drawn: DrawnTile,
   position: ArrayLike<number>,
   error = tile.geometricError,
+  alpha = 1,
+): number {
+  return error * terrainStretch(tile, drawn, position, alpha) + drawn.fit;
+}
+
+/** The factor `terrainDrawnError` multiplies a geometric error by: s^α, s the direction-aware or isotropic stretch. */
+export function terrainStretch(
+  tile: Tile,
+  drawn: DrawnTile,
+  position: ArrayLike<number>,
+  alpha = 1,
 ): number {
   const rectangle = tile.globe?.rectangle;
   const sphere = drawn.volume.sphere;
+  let s: number;
   if (drawn.slopeMax === undefined || !rectangle || !sphere) {
-    return error * drawn.sigmaMax + drawn.fit;
+    s = drawn.sigmaMax;
+  } else {
+    s = drawn.slopeMax * sinThetaMax(position, sphere, rectangle, tile.globe!);
   }
-  const sin = sinThetaMax(position, sphere, rectangle, tile.globe!);
-  return error * drawn.slopeMax * sin + drawn.fit;
+  return alpha === 1 ? s : s ** alpha;
+}
+
+/** The error exponent selection uses for a view: the route's own where set, else the view's, else 1. */
+export function lodExponentOf(view: {
+  readonly warp?: { readonly lodExponent?: number };
+  readonly lodExponent?: number;
+}): number {
+  const a = view.warp?.lodExponent ?? view.lodExponent ?? 1;
+  return Math.min(1, Math.max(0, a));
+}
+
+/**
+ * Whether refining `tile` can still reduce its geometric (vertical) error:
+ * false for a globe tile upsampled from a data ancestor (`globe.upsampledFrom`,
+ * `fillFromParent`), and for one whose children all are (no data below it).
+ * Anything else, including tiles whose children aren't known yet, can.
+ */
+export function geometryRefines(tile: Tile): boolean {
+  const g = tile.globe;
+  if (!g) {
+    return true;
+  }
+  if (tile.fillFromParent || g.upsampledFrom !== undefined) {
+    return false;
+  }
+  return !(
+    tile.children.length > 0 && tile.children.every((c) => c.fillFromParent)
+  );
 }
