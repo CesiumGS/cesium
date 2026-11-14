@@ -1,6 +1,6 @@
 # Engine profiles: the look, support and fidelity
 
-**Status (2026-11-13):** design and plan, not started. Written for review in the main session.
+**Status (2026-11-13):** design and plan, not started. The owner reviewed it on 2026-11-13: all eight proposals in section 9 were accepted, and four additions were asked for (`resolution`, `msaa`, a resolution-only governor, and aerial perspective's steps). They are written in below.
 
 **Spec:** CESIUM2_WEBGPU_PLAN.md §13.41, its research section "Swappable and hybrid renderers behind `Engine`, `World` and `View`", that section's decisions (owner, 2026-11-13), and "Architecture decisions from the 2026-11-13 discussion".
 
@@ -27,6 +27,12 @@ From this design session (owner, 2026-11-13):
 - **Framing:** the app owns the look and the engine owns fidelity, as above. App builders want one design that reads the same everywhere and drops the expensive extras on weak hardware. They don't want a quality dial.
 - **Default fidelity is automatic.** Apps can pin it (`fidelity: "fixed"`).
 - Low/medium/high presets, intent names and budget-first designs were weighed and set aside (see "Alternatives considered").
+
+From the owner's review of this plan (2026-11-13):
+
+- The eight proposals in section 9 are decided.
+- New features: `resolution` (view) and `msaa` (engine), and aerial perspective's three methods become steps (section 2, "Features added in review").
+- A resolution-only frame-time governor, opt-in, comes right after M4 as its own milestone (section 3, "The resolution governor").
 
 ## 1. Prior art
 
@@ -128,7 +134,7 @@ interface FeatureEntry<Step extends string> {
 }
 ```
 
-First entries (lead's proposal; ladders to confirm per feature during M2):
+First entries (ladders to confirm per feature during M2):
 
 | Feature | Steps, best first | Importance | Notes |
 | --- | --- | --- | --- |
@@ -136,11 +142,59 @@ First entries (lead's proposal; ladders to confirm per feature during M2):
 | `shadows` | `full` (4 cascades, 2048 px) | preferred | Later cheaper steps: 2 cascades or 1024 px. Today it's fixed |
 | `ambientOcclusion` | `full` | extra | The 4096² pixel cap becomes a limit rule |
 | `translucency` | `exact`, `moments32`, `moments16` | preferred | `moments16` is today's quiet fallback without `float32-blendable` (bias 6 × 10⁻⁴ instead of 5 × 10⁻⁶) |
-| `fxaa` | `on` | extra | |
-| `aerialPerspective`, `sunDisk`, `cityLights` | `on` | preferred | No steps today |
+| `fxaa` | `on` | extra | Also implied by `msaa`'s `1x+fxaa` step |
+| `resolution` | `1`, `0.75`, `0.5` | preferred | Added in review. Runtime, so no shader variants. See below |
+| `msaa` (engine) | `4x`, `1x+fxaa` | preferred | Added in review. Changing it rebuilds pipelines. See below |
+| `aerialPerspective` | `march`, `screen`, `volume`, ranked by altitude | preferred | Added in review: today's three methods. See below |
+| `sunDisk`, `cityLights` | `on` | preferred | No steps today |
 | `lodTransitions` | `morph`, `pop` | preferred | |
 | `textureTranscode` (engine) | not a feature: a path | – | BC7, ASTC, ETC2, RGBA8 |
 | `worldCapacity` (engine) | not a feature: a limit | – | Clamps become limit notices |
+
+### Features added in review (owner, 2026-11-13)
+
+**`resolution` (view scope, appearance class).**
+
+- **What it is:** the scene's internal render scale relative to the canvas's backing store. The backing store is the canvas's CSS size × devicePixelRatio (or `CanvasTarget.fixedPixelRatio` where set).
+- **Steps:** `1`, `0.75`, `0.5`, best first. All are runtime parameters, so no shader variants.
+- **What renders scaled:** the scene passes. These are the prepass, opaque, translucent, the screen-space parts of shadows, ambient occlusion and aerial perspective, at 4× MSAA as today. Post stages in the `scene` and `exposed` slots run at the scaled size too.
+- **What stays at full resolution:** the output pass upscales, starting with bilinear; a sharper upscaler can be a later step. HTML overlays and in-engine labels and UI stay at full resolution: they draw after the upscale, or in their own full-resolution pass.
+- **Picks:** the ID and depth targets are scaled, so a pick lands on the nearest scaled texel. Positions are still refined on the CPU in float64, as they are today, so a pick's position keeps its stated accuracy. Only which feature wins at a sub-texel edge can change.
+- **Why (measured by the owner, 2026-11-13):** on the owner's Mac at 1718 × 1406 with 4× MSAA, the GPU frame is about 50 ms in a sparse view. About half of it is per-pixel shading: the opaque pass takes about 25–30 ms, of which aerial perspective is about 6 ms and shadow sampling about 3 ms. Per-pixel work scales with the pixel count, so `0.75` shades about 56% of the pixels and `0.5` about 25%.
+- **"Does resolution here mean dpi?" (owner):** not quite. It's relative to the backing store, which already includes devicePixelRatio. On a 2× display, `0.5` renders at 1× density, one pixel per CSS pixel. On a 1× display, `0.5` renders below CSS resolution.
+- **Under `auto`:** cost rules may step it down only where measured, and the resolution governor (section 3) can move it when the app opts in. Under `fixed` it stays at `1` unless pinned.
+
+**`msaa` (engine scope, appearance class).**
+
+- **Steps:** `4x`, `1x+fxaa`.
+- **What changes at 1×:**
+  - Translucency loses its per-sample path. `sampleRateProbe` chooses between `fsListSamples` (per-sample storage writes) and `fsList` today; at 1× only the per-pixel path exists, and the probe isn't needed.
+  - The four 4× targets shrink to a quarter of their memory, and their resolves go away. The targets are HDR colour (rgba16float), display colour (rgba8unorm-srgb), feature IDs (rg16uint) and depth (depth32float), about 20 bytes per sample. At the owner's 1718 × 1406 that's about 190 MB at 4× against about 48 MB at 1×, before resolve targets. The bandwidth falls with it.
+  - Edges alias. FXAA on the display colour smooths what is seen, but feature IDs and depth stay aliased, so picks at edges follow the 1× pixel.
+- **Engine scope:** the sample count is fixed in every render pipeline, so a change rebuilds them all. That makes it a compile-time step. It is chosen at creation or on an explicit change, never by the governor or by a cost rule during a session.
+
+**`aerialPerspective` steps (view scope, appearance class).**
+
+The engine already computes aerial perspective three ways, and chooses between them by camera altitude (`src/atmosphere/Sky.ts`):
+
+- **`volume`:** the precomputed volume, 32 × 32 directions × 128 distances, read per pixel. It is cheap. From higher up, neighbouring rays in the volume are kilometres apart in height near the ground, where the haze changes fastest, so interpolating between them draws bands at the volume's row spacing.
+- **`march`:** a march per vertex along the vertex's own ray (the opaque pass's `aerialMarch`), interpolated across each triangle. It is exact at vertices. Per pixel it cost 4.5 ms at 2.6 megapixels, so it runs per vertex.
+- **`screen`:** a 640 × 400 screen grid, each texel marching its own ray to the ellipsoid (`aerialScreenFragment`). From very high up the per-vertex march spans triangles hundreds of kilometres wide and drew blocky streaks at the day/night line; the grid doesn't.
+
+Today the choice blends by altitude: from the volume to the march between `MARCH_FROM` and `MARCH_TO` (2 to 5 km), and from the march to the screen grid between `SCREEN_HAZE_FROM` and `SCREEN_HAZE_TO` (500 to 1000 km).
+
+As steps:
+
+- **This is the first ladder whose order depends on context.** At each altitude a context rule ranks the methods: the accurate one first, then cheaper ones, each with its visible artifact named in the rule's reason.
+  - Below 2 km: `volume` first, and nothing cheaper but off.
+  - From 5 to 500 km: `march` first; `volume` as a cost step, which shows banding.
+  - Above 1000 km: `screen` first; `volume` as a cost step, which shows banding. `march` is not offered, because of the streaks.
+  - The blend bands stay. A step changes which methods blend.
+- **Under `fixed`,** the result is exactly today's altitude choice.
+- **Under `auto`,** a cost rule may step down to the cheaper method. That's reported as `stepped`, with the banding named.
+- **Visible differences:** `volume` above 2 km bands, and `march` above 500 km streaks. Within their own bands the methods agree closely; the parity check in M4b measures how closely.
+- **The catalog grows one field:** `rank`, a context rule that orders the steps. Invariant 3 ("never better than asked") compares ranks at the same context.
+- The methods' relative costs per altitude haven't been measured separately. M4b measures them with `GpuTimer` before any cost rule uses them.
 
 ## 3. Detection versus declaration
 
@@ -159,9 +213,33 @@ First entries (lead's proposal; ladders to confirm per feature during M2):
 
 **Probes** are allowed when they are cheap, deterministic, run once, and their result is recorded as a fact: the sample-rate probe and the thread probe today. A probe that errors records "unknown" and takes the safe path. That too is a reported fact, unlike today's sample-rate probe, which quietly assumes per-sample.
 
-**Benchmarks** are not run at startup (Unreal's drift, first-run effects, shared GPUs). Per-step costs are measured from real ticks through `GpuTimer` where timestamps exist, and recorded for tuning the cost rules and for a later governor.
+**Benchmarks** are not run at startup (Unreal's drift, first-run effects, shared GPUs). Per-step costs are measured from real ticks through `GpuTimer` where timestamps exist, and recorded for tuning the cost rules. The resolution governor below uses them as they arrive, and only for `resolution`.
 
 **Vendor and architecture rules** are cost rules with provenance. Glare's rules say "measured on M2; Intel and the rest estimated". The inspector marks estimated rules. Unknown hardware matches no rule and gets the best supported step, never a guessed lower bucket.
+
+### The resolution governor (owner, 2026-11-13; opt-in; after M4)
+
+An opt-in governor that moves only `resolution`, as model-viewer does: it lowers the render scale to hold a tick-time target, and raises it again when the view settles.
+
+- **Opt-in:** `EngineOptions.governor: { tickMs: number }`, for example `16.7`. It is off by default.
+- **Scope:**
+  - It touches only views whose `resolution` is left at `true`. A pinned resolution is never moved.
+  - It never touches any other feature.
+  - It never runs under `fidelity: "fixed"`.
+- **Inputs:**
+  - Where `timestamp-query` exists, the GPU time per tick from `GpuTimer` (summed over passes). This shows headroom below the display's refresh interval, so the governor can raise the scale with confidence.
+  - Otherwise, the spacing between ticks. Vsync caps it, so it shows only when the target is missed, not how much room is left. Without timestamps the governor therefore raises only when the view settles.
+- **Hysteresis:**
+  - Lower one step when the median of the last 30 ticks exceeds the target by more than 10%.
+  - Raise one step only when the median, scaled by the pixel ratio between steps, predicts staying under 80% of the target.
+  - Hold at least 2 s after any change before the next one.
+  - When the view settles (the camera has stopped and no refinement source is active), return to `1` for the settled image, as model-viewer does.
+  - These numbers are starting points, to be tuned against the inspector's recorded time series.
+- **Reporting:**
+  - Each change is a `stepped` notice, with no console output, carrying the input and the median that triggered it.
+  - The inspector shows the scale as a series in the Frame section, beside CPU and GPU time.
+- **Refinement:** returning to full resolution is a refinement source, so `view.converged()` (the refinement plan) waits for it.
+- **Tests:** a Node test drives the governor with synthetic timing series (steady, a spike, a slow ramp, no timestamps) and checks its steps and holds. No browser is needed for the logic.
 
 ## 4. Fallback rules
 
@@ -265,9 +343,12 @@ const engine = await Engine.create({
   warnings: true,            // false: no console output; notices are still recorded
   thread: "auto",
   renderer: "auto",
+  msaa: true,                // engine scope: "4x" or "1x+fxaa"; changing it rebuilds pipelines
+  governor: { tickMs: 16.7 }, // opt-in; moves only `resolution` left at `true`
 });
 
 const view = engine.createView({
+  resolution: true,          // 1, 0.75 or 0.5 of the backing store; the engine (or governor) picks
   shadows: true,             // the engine picks the step
   glare: "reduced",          // pinned: lowered only if unsupported, with a warning
   ambientOcclusion: false,
@@ -318,7 +399,7 @@ The snapshot comes from public reads (`view.support`, `view.effective`) plus `en
 **Viewer defaults:**
 
 - One table of defaults: the catalog's `defaultLook`. The Viewer stops overriding shadows and ambient occlusion.
-- The lead's proposal (question 1 below): the engine's defaults turn shadows on (`preferred`) and ambient occlusion on (`extra`), because automatic fidelity now handles weak devices. Parity tests set their looks explicitly under `fixed`.
+- Decided (question 1 below): the engine's defaults turn shadows on (`preferred`) and ambient occlusion on (`extra`), because automatic fidelity now handles weak devices. Parity tests set their looks explicitly under `fixed`.
 - The Viewer's `eyeObserver()` stays. It's what the widget is for, not a quality setting.
 - The Viewer's smaller World capacities (65,536 draws against 262,144; 768 MiB of vertex bytes against 1 GiB) become one default derived from device limits, with clamps reported (question 6).
 
@@ -338,31 +419,34 @@ Sized for one agent each. Use Sonnet unless marked Opus. Each milestone runs typ
 | M2 | **Catalog, rules, resolver** (Opus). `src/profile/` types, the predicate language, the catalog's first entries, rules from today's behaviour, `resolve()` with explain trails, `support()`. The invariant tests 1–9 over personas. Node only, not wired in | M | M1 | none |
 | M3 | **Paths in one place.** Move every facts read (star submission, moments format, KTX2 target, sample-rate probe, timer) behind `paths(facts)` and `effective`. Add the seam test | S | M2 | one parity page per changed path |
 | M4 | **Wire into `Engine` and `View`** (Opus for review). `view.support`, `view.effective`, `view.explain`, the `support` notice kind, `warnOnce`, `strict`, `warnings`. Re-resolve on resize and device loss. Glare migrated. The ambient occlusion cap, World clamps, the slice pool, screen-space error and caster scale as limit notices | M | M3 | glare and translucency parity |
+| M4a | **`resolution` and `msaa`** (Opus for review). A scaled scene target and an upscaling output pass, with overlays, labels and UI at full resolution. Picks mapped from CSS coordinates to the scaled targets. `msaa: "1x+fxaa"` with the per-pixel translucency path and pipelines rebuilt on change. Measure each step's GPU time at the owner's 1718 × 1406 | M | M4 | parity at each step; one timing page |
+| M4b | **Aerial perspective steps.** `volume`, `march` and `screen` as steps, with the catalog's `rank` field and the altitude rule. Under `fixed` the output matches today's. Measure each method's cost per altitude band before any cost rule | S | M4 | aerial perspective parity at three altitudes |
+| M4c | **The resolution governor.** `EngineOptions.governor`, the timestamp and tick-spacing inputs, the hysteresis, a return to `1` when settled, `stepped` notices, and the scale series in the inspector's Frame section. A Node test with synthetic timings | S | M4a | one page to check the settle-and-restore behaviour |
 | M5 | **Inspector and emulation.** The Profile section (DOM-skeleton test), notices in Problems, `emulate`, Dyno `?persona=` | M | M4 | one inspector page, both themes |
 | M6 | **`@cesium/next/gpu` entry point.** Move exports, update the surface and the import-boundary test. The main API keeps no GPU type | S | M4 | none |
 | M7 | **Viewer migration and defaults.** One defaults table, the Viewer's overrides removed, its capacities resolved (questions 1 and 6) | S | M4 | the Viewer example |
 | M8 | **The WebGL 2 renderer's facts and support rules,** with the WebGL 2 plan. Its persona and the required-content invariant | S | M2; the WebGL 2 renderer | per the WebGL 2 plan |
 | M9 | **The worker mode.** Snapshot transport for support, effective settings and notices; strict validation from the snapshot; the API tests in both modes | S | M4; the worker spike | per the worker plan |
 
-M1–M4 are the core. M5–M7 can run in parallel after M4. M8 and M9 wait on other plans.
+M1–M4 are the core. M4a, M4b and M5–M7 can run in parallel after M4; M4c follows M4a. M8 and M9 wait on other plans.
 
 **Later (not planned here):**
 
 - Measured per-step costs recorded from real ticks.
-- An opt-in governor that adjusts only `true` features under `auto`, to hold a tick-time target.
+- Widening the governor beyond `resolution` to other features left at `true` under `auto`, once their costs are measured.
 - An end-user fidelity bias for apps that offer a quality slider.
 - Host-supplied storage for measured costs.
 - Context facts from the host (power, user preferences).
 
-## 9. Questions for the owner
+## 9. Decided (owner, 2026-11-13)
 
-Each has the lead's proposal. M2 starts from these unless the owner says otherwise.
+These were the lead's proposals. The owner accepted all eight in the review of 2026-11-13. The original questions are kept for the record.
 
-1. **Engine defaults.** Should the engine turn shadows (`preferred`) and ambient occlusion (`extra`) on by default, now that automatic fidelity handles weak devices, so the Viewer's defaults and the engine's become one? _Proposal: yes. Parity tests pin their looks under `fixed`._
-2. **Importance names:** `essential`, `preferred`, `extra`? _Proposal: yes. Three levels, a catalog default for each feature, per-view overrides._
-3. **Feature values:** `false`, `true` (the engine picks the step) or a named step (pinned)? _Proposal: yes. It matches glare's `"auto"` and named tiers today._
-4. **Fidelity modes:** only `"auto"` and `"fixed"`, with `strict` separate, and no `exact` mode? _Proposal: yes. A capture uses `fixed`, plus `view.converged()` from the refinement plan._
-5. **Accuracy under hard limits.** Should a memory-forced raise of screen-space error stay automatic, reported with its effect on accuracy and carried into query results, rather than becoming an error? _Proposal: yes. The alternative is blank tiles._
-6. **World capacities.** Should one default be derived from device limits, so the Viewer's smaller values go away? _Proposal: yes, unless the Viewer's values were chosen for a reason the code doesn't record._
-7. **Emulation.** Should `emulate` be in `@cesium/next/gpu` for any host, or for development builds only? _Proposal: the advanced entry, never persisted by the engine, always shown in the inspector._
-8. **Unknown hardware** gets the best supported step, with "no rule matched" in the inspector, rather than a cautious guess. _Proposal: yes. A wrong cautious bucket fails silently, as Unreal's device profiles do._
+1. **Engine defaults.** Should the engine turn shadows (`preferred`) and ambient occlusion (`extra`) on by default, now that automatic fidelity handles weak devices, so the Viewer's defaults and the engine's become one? _Decided: yes. Parity tests pin their looks under `fixed`._
+2. **Importance names:** `essential`, `preferred`, `extra`? _Decided: yes. Three levels, a catalog default for each feature, per-view overrides._
+3. **Feature values:** `false`, `true` (the engine picks the step) or a named step (pinned)? _Decided: yes. It matches glare's `"auto"` and named tiers today._
+4. **Fidelity modes:** only `"auto"` and `"fixed"`, with `strict` separate, and no `exact` mode? _Decided: yes. A capture uses `fixed`, plus `view.converged()` from the refinement plan._
+5. **Accuracy under hard limits.** Should a memory-forced raise of screen-space error stay automatic, reported with its effect on accuracy and carried into query results, rather than becoming an error? _Decided: yes. The alternative is blank tiles._
+6. **World capacities.** Should one default be derived from device limits, so the Viewer's smaller values go away? _Decided: yes, unless the Viewer's values were chosen for a reason the code doesn't record._
+7. **Emulation.** Should `emulate` be in `@cesium/next/gpu` for any host, or for development builds only? _Decided: the advanced entry, never persisted by the engine, always shown in the inspector._
+8. **Unknown hardware** gets the best supported step, with "no rule matched" in the inspector, rather than a cautious guess. _Decided: yes. A wrong cautious bucket fails silently, as Unreal's device profiles do._
