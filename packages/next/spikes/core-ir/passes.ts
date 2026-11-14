@@ -10,6 +10,7 @@ import {
   type Input,
   type Program,
   type Rate,
+  type TableDecl,
   type Type,
   type Value,
 } from "./cir.ts";
@@ -74,8 +75,10 @@ export function shapeKey(p: Program): string {
       e.type,
       e.args,
       e.index ?? null,
+      e.table ?? null,
       e.op === "const" ? e.value : null,
     ]),
+    (p.tables ?? []).map((t) => [t.name, t.columns, t.rows]),
     p.outputs.map((o) => o.id),
   ]);
 }
@@ -92,6 +95,7 @@ export interface ProgramJson {
   readonly vocabulary: string;
   readonly extensions: readonly string[];
   readonly inputs: readonly Input[];
+  readonly tables?: readonly TableDecl[];
   readonly eqns: readonly (readonly [
     string,
     Type,
@@ -111,6 +115,7 @@ export function toJson(p: Program): ProgramJson {
       ),
     ],
     inputs: p.inputs,
+    ...(p.tables ? { tables: p.tables } : {}),
     eqns: p.eqns.map((e) => {
       const extra: Record<string, unknown> = {};
       if (e.value !== undefined) {
@@ -121,6 +126,9 @@ export function toJson(p: Program): ProgramJson {
       }
       if (e.index !== undefined) {
         extra.index = e.index;
+      }
+      if (e.table !== undefined) {
+        extra.table = e.table;
       }
       return Object.keys(extra).length > 0
         ? [e.op, e.type, e.args, extra]
@@ -183,5 +191,20 @@ export function fromJson(json: ProgramJson): Program {
     }
     return { name: n, id };
   });
-  return { version: json.version, inputs: json.inputs, eqns, outputs };
+  const tables = json.tables ?? [];
+  eqns.forEach((e, id) => {
+    if (e.table !== undefined) {
+      const t = tables.find((x) => x.name === e.table);
+      if (!t || e.index === undefined || e.index >= t.columns.length) {
+        throw new Error(`eqn ${id}: no table column ${e.table}[${e.index}]`);
+      }
+    }
+  });
+  return {
+    version: json.version,
+    inputs: json.inputs,
+    ...(json.tables ? { tables: json.tables } : {}),
+    eqns,
+    outputs,
+  };
 }

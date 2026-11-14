@@ -3,7 +3,7 @@
 // lane by lane; booleans are [0, 0], [1, 1] or [0, 1]). No outward
 // rounding, as today's `transform/interval.ts`.
 
-import { width, type Program } from "./cir.ts";
+import { clampRow, searchRows, tableOf, width, type Program } from "./cir.ts";
 
 export interface Iv {
   readonly lo: number;
@@ -173,6 +173,7 @@ const hull = (a: Iv, b: Iv) => iv(Math.min(a.lo, b.lo), Math.max(a.hi, b.hi));
 export function evaluateInterval(
   p: Program,
   inputs: Readonly<Record<string, Lanes>>,
+  tables: Readonly<Record<string, readonly number[]>> = {},
 ): Record<string, Lanes> {
   const v: Lanes[] = [];
   p.eqns.forEach((e, id) => {
@@ -199,6 +200,36 @@ export function evaluateInterval(
         v[id] = x;
         return;
       }
+      case "cesium/search": {
+        // Monotone in the key: the rows of its ends.
+        const t = tableOf(p, e.table!);
+        const data = tableData(tables, t.name);
+        v[id] = [
+          iv(
+            searchRows(data, t, e.index!, a![0]!.lo),
+            searchRows(data, t, e.index!, a![0]!.hi),
+          ),
+        ];
+        return;
+      }
+      case "cesium/tableGet": {
+        // The hull of the column over the rows the index may be.
+        const t = tableOf(p, e.table!);
+        const data = tableData(tables, t.name);
+        const stride = t.columns.length;
+        let lo = Infinity;
+        let hi = -Infinity;
+        for (let r = clampRow(a![0]!.lo, t); r <= clampRow(a![0]!.hi, t); r++) {
+          const x = data[r * stride + e.index!]!;
+          lo = Math.min(lo, x);
+          hi = Math.max(hi, x);
+        }
+        v[id] = [iv(lo, hi)];
+        return;
+      }
+      case "type/intToFloat":
+        v[id] = a!;
+        return;
       case "math/select": {
         const cond = a![0]!;
         v[id] =
@@ -255,4 +286,77 @@ export function evaluateInterval(
     );
   });
   return Object.fromEntries(p.outputs.map((o) => [o.name, v[o.id]!]));
+}
+
+function tableData(
+  tables: Readonly<Record<string, readonly number[]>>,
+  name: string,
+): readonly number[] {
+  const d = tables[name];
+  if (!d) {
+    throw new Error(`table '${name}' has no data`);
+  }
+  return d;
+}
+
+function nextDown(x: number): number {
+  if (!Number.isFinite(x) || x === 0) {
+    return x === 0 ? -Number.MIN_VALUE : x;
+  }
+  const b = new DataView(new ArrayBuffer(8));
+  b.setFloat64(0, x);
+  b.setBigInt64(0, b.getBigInt64(0) + (x > 0 ? -1n : 1n));
+  return b.getFloat64(0);
+}
+
+/**
+ * Bounds as `evaluateInterval`'s, with lane `lane` of input `input` split at
+ * every breakpoint of the tables the program searches (each search's key is
+ * taken to be that lane), so each piece reads one row per table and no
+ * branch is hulled with another piece's: intervals across segment
+ * boundaries without the overestimate of hulling rows.
+ */
+export function evaluateIntervalSplit(
+  p: Program,
+  inputs: Readonly<Record<string, Lanes>>,
+  tables: Readonly<Record<string, readonly number[]>>,
+  input: string,
+  lane: number,
+): { bounds: Record<string, Lanes>; pieces: number } {
+  const range = inputs[input]![lane]!;
+  const cuts = new Set<number>();
+  for (const e of p.eqns) {
+    if (e.op === "cesium/search") {
+      const t = tableOf(p, e.table!);
+      const data = tableData(tables, t.name);
+      for (let r = 0; r < t.rows; r++) {
+        const x = data[r * t.columns.length + e.index!]!;
+        if (x > range.lo && x <= range.hi) {
+          cuts.add(x);
+        }
+      }
+    }
+  }
+  const edges = [range.lo, ...[...cuts].sort((x, y) => x - y), range.hi];
+  let out: Record<string, Lanes> | undefined;
+  let pieces = 0;
+  for (let k = 0; k + 1 < edges.length; k++) {
+    const last = k + 2 === edges.length;
+    const piece = iv(edges[k]!, last ? edges[k + 1]! : nextDown(edges[k + 1]!));
+    if (piece.lo > piece.hi) {
+      continue;
+    }
+    const lanes = inputs[input]!.map((x, i) => (i === lane ? piece : x));
+    const b = evaluateInterval(p, { ...inputs, [input]: lanes }, tables);
+    pieces++;
+    out = out
+      ? Object.fromEntries(
+          Object.entries(out).map(([n, ls]) => [
+            n,
+            ls.map((x, i) => hull(x, b[n]![i]!)),
+          ]),
+        )
+      : b;
+  }
+  return { bounds: out!, pieces };
 }

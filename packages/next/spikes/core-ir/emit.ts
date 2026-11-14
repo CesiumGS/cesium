@@ -4,7 +4,7 @@
 // layout. Other inputs are the function's parameters; the linker gives them
 // their per-feature, per-vertex or per-fragment sources.
 
-import { width, type Eqn, type Program, type Type } from "./cir.ts";
+import { tableOf, width, type Eqn, type Program, type Type } from "./cir.ts";
 
 export type Target = "wgsl" | "glsl";
 
@@ -71,6 +71,7 @@ export function emit(p: Program, target: Target, fnName = "cir_main"): Emitted {
     return `${T[e.type]}(${v.map(num).join(", ")})`;
   };
   const expr: string[] = [];
+  const searches = new Set<string>();
   const lines: string[] = [];
   const ref = (id: number) => expr[id]!;
   p.eqns.forEach((e, id) => {
@@ -95,6 +96,21 @@ export function emit(p: Program, target: Target, fnName = "cir_main"): Emitted {
         }
         return;
       }
+      case "cesium/search": {
+        const t = tableOf(p, e.table!);
+        searches.add(`${t.name}|${e.index}`);
+        rhs = `cir_search_${t.name}_${e.index}(${a[0]})`;
+        break;
+      }
+      case "cesium/tableGet": {
+        const t = tableOf(p, e.table!);
+        const n = t.columns.length;
+        rhs =
+          target === "wgsl"
+            ? `cir_t_${t.name}[u32(clamp(${a[0]}, 0, ${t.rows - 1})) * ${n}u + ${e.index}u]`
+            : `cir_tget_${t.name}(clamp(${a[0]}, 0, ${t.rows - 1}) * ${n} + ${e.index})`;
+        break;
+      }
       default:
         rhs = call(e, a, target);
     }
@@ -109,7 +125,7 @@ export function emit(p: Program, target: Target, fnName = "cir_main"): Emitted {
 
   const nUniforms = Object.keys(slots).length;
   const out = p.outputs;
-  const decl: string[] = [];
+  const decl: string[] = tableDecls(p, target, searches);
   if (target === "wgsl") {
     if (nUniforms > 0) {
       decl.push(`struct CirUniforms { k: array<vec4f, ${nUniforms}> }`);
@@ -232,6 +248,8 @@ function call(e: Eqn, a: readonly string[], target: Target): string {
         : `select(${a[2]}, ${a[1]}, ${a[0]})`;
     case "type/boolToFloat":
       return glsl ? `float(${a[0]})` : `f32(${a[0]})`;
+    case "type/intToFloat":
+      return glsl ? `float(${a[0]})` : `f32(${a[0]})`;
     default:
       break;
   }
@@ -242,4 +260,66 @@ function call(e: Eqn, a: readonly string[], target: Target): string {
     return `${a[0]}.${SWIZZLE[e.index!]}`;
   }
   throw new Error(`spike: no ${target} for '${e.op}'`);
+}
+
+/**
+ * Each table as GPU data, and a bounded binary search per searched column.
+ * WGSL: a read-only storage array of f32, row-major (binding
+ * `CIR_TABLE_<name>`). GLSL ES 3.00: a std140 uniform block of vec4s (WebGL 2
+ * has no storage buffers). The loop runs at most ceil(log2(rows)) + 1 times,
+ * a constant, as the GPU safety rules ask.
+ */
+function tableDecls(
+  p: Program,
+  target: Target,
+  searches: ReadonlySet<string>,
+): string[] {
+  const out: string[] = [];
+  for (const t of p.tables ?? []) {
+    const n = t.columns.length;
+    if (target === "wgsl") {
+      out.push(
+        `@group(CIR_GROUP) @binding(CIR_TABLE_${t.name}) var<storage, read> cir_t_${t.name}: array<f32, ${t.rows * n}>;`,
+      );
+    } else {
+      out.push(
+        `layout(std140) uniform CirT_${t.name} { vec4 cir_t_${t.name}[${Math.ceil((t.rows * n) / 4)}]; };`,
+        `float cir_tget_${t.name}(int e) { return cir_t_${t.name}[e >> 2][e & 3]; }`,
+      );
+    }
+  }
+  for (const key of searches) {
+    const [name, col] = key.split("|") as [string, string];
+    const t = tableOf(p, name);
+    const n = t.columns.length;
+    const steps = Math.ceil(Math.log2(Math.max(t.rows, 2))) + 1;
+    const read = (mid: string) =>
+      target === "wgsl"
+        ? `cir_t_${name}[u32(${mid}) * ${n}u + ${col}u]`
+        : `cir_tget_${name}(${mid} * ${n} + ${col})`;
+    out.push(
+      target === "wgsl"
+        ? `fn cir_search_${name}_${col}(key: f32) -> i32 {
+  var lo = 0;
+  var hi = ${t.rows - 1};
+  for (var it = 0; it < ${steps}; it++) {
+    if (lo >= hi) { break; }
+    let mid = (lo + hi + 1) / 2;
+    if (${read("mid")} <= key) { lo = mid; } else { hi = mid - 1; }
+  }
+  return lo;
+}`
+        : `int cir_search_${name}_${col}(float key) {
+  int lo = 0;
+  int hi = ${t.rows - 1};
+  for (int it = 0; it < ${steps}; ++it) {
+    if (lo >= hi) { break; }
+    int mid = (lo + hi + 1) / 2;
+    if (${read("mid")} <= key) { lo = mid; } else { hi = mid - 1; }
+  }
+  return lo;
+}`,
+    );
+  }
+  return out;
 }

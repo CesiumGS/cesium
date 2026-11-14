@@ -49,11 +49,26 @@ export interface Eqn {
   readonly value?: Value;
   readonly slot?: string;
   readonly index?: number;
+  /** `cesium/search`, `cesium/tableGet`: the table read (`index` is the column). */
+  readonly table?: string;
+}
+
+/**
+ * A typed constant table: rows of float columns, uniform rate. Its data is
+ * an input (row-major `number[]` under the table's name), so editing it is a
+ * buffer write, never a new shape; the row count is part of the shape (it
+ * bounds the search on the GPU).
+ */
+export interface TableDecl {
+  readonly name: string;
+  readonly columns: readonly string[];
+  readonly rows: number;
 }
 
 export interface Program {
   readonly version: string;
   readonly inputs: readonly Input[];
+  readonly tables?: readonly TableDecl[];
   readonly eqns: readonly Eqn[];
   readonly outputs: readonly { readonly name: string; readonly id: Id }[];
 }
@@ -188,6 +203,13 @@ export const OPS: Readonly<Record<string, OpDef>> = {
   "math/extract3": { kind: "special", arity: 1 },
   "math/extract4": { kind: "special", arity: 1 },
   "type/boolToFloat": { kind: "special", arity: 1 },
+  "type/intToFloat": { kind: "special", arity: 1 },
+  // Extensions (not in KHR_interactivity): typed constant tables. `search`
+  // is the largest row whose column is at most the key (0 if none; the
+  // column is sorted), a bounded binary search on the GPU; `tableGet` reads
+  // a row's column. Both are piecewise constant in their operand.
+  "cesium/search": { kind: "special", arity: 1 },
+  "cesium/tableGet": { kind: "special", arity: 1 },
   // KHR: t = saturate((c - min(a, b)) / |b - a|), t² (3 - 2t): the ramp
   // always rises, whichever edge is larger (GLSL's is undefined there).
   "math/smoothStep": {
@@ -279,6 +301,17 @@ export function typeOf(
         throw new Error("type/boolToFloat needs a bool");
       }
       return "float";
+    case "type/intToFloat":
+    case "cesium/tableGet":
+      if (args[0] !== "int") {
+        throw new Error(`${op} needs an int`);
+      }
+      return "float";
+    case "cesium/search":
+      if (args[0] !== "float") {
+        throw new Error("cesium/search needs a float key");
+      }
+      return "int";
     default:
       break;
   }
@@ -312,12 +345,13 @@ const valueKey = (v: Value | undefined): string =>
 /** Append-only builder: typed, hash-consed, folding constants. */
 export class Builder {
   readonly inputs: Input[] = [];
+  readonly tables: TableDecl[] = [];
   readonly eqns: Eqn[] = [];
   private readonly index = new Map<string, Id>();
   private readonly inputIds = new Map<string, Id>();
 
   private intern(e: Eqn): Id {
-    const key = `${e.op}|${e.type}|${e.args.join(",")}|${valueKey(e.value)}|${e.slot ?? ""}|${e.index ?? ""}`;
+    const key = `${e.op}|${e.type}|${e.args.join(",")}|${valueKey(e.value)}|${e.slot ?? ""}|${e.index ?? ""}|${e.table ?? ""}`;
     const found = this.index.get(key);
     if (found !== undefined) {
       return found;
@@ -345,6 +379,32 @@ export class Builder {
     });
     this.inputIds.set(name, id);
     return id;
+  }
+
+  /** Declares a table (its data is given at evaluation, under its name). */
+  table(name: string, columns: readonly string[], rows: number): TableDecl {
+    const t = { name, columns, rows };
+    this.tables.push(t);
+    return t;
+  }
+
+  /** The row of `t` whose `column` is the largest at most `key`. */
+  search(t: TableDecl, column: string, key: Id): Id {
+    return this.tableOp("cesium/search", t, column, key);
+  }
+
+  /** Row `row`'s `column` of `t`. */
+  get(t: TableDecl, column: string, row: Id): Id {
+    return this.tableOp("cesium/tableGet", t, column, row);
+  }
+
+  private tableOp(op: string, t: TableDecl, column: string, arg: Id): Id {
+    const index = t.columns.indexOf(column);
+    if (index < 0) {
+      throw new Error(`table '${t.name}' has no column '${column}'`);
+    }
+    const type = typeOf(op, [this.typeOf(arg)], index);
+    return this.intern({ op, args: [arg], type, index, table: t.name });
   }
 
   const(value: Value): Id {
@@ -497,6 +557,7 @@ export class Builder {
     return {
       version: IR_VERSION,
       inputs: [...this.inputs],
+      ...(this.tables.length > 0 ? { tables: [...this.tables] } : {}),
       eqns,
       outputs: Object.entries(outputs).map(([name, id]) => ({
         name,
@@ -509,6 +570,7 @@ export class Builder {
   static from(p: Program): Builder {
     const builder = new Builder();
     builder.inputs.push(...p.inputs);
+    builder.tables.push(...(p.tables ?? []));
     for (const e of p.eqns) {
       const id = builder.intern(e);
       if (e.op === "input") {
@@ -587,6 +649,8 @@ export function applyValue(
     }
     case "type/boolToFloat":
       return args[0] ? 1 : 0;
+    case "type/intToFloat":
+      return args[0]!;
     default:
       break;
   }
@@ -620,6 +684,20 @@ export function evaluate(
         values[id] = v;
         break;
       }
+      case "cesium/search":
+      case "cesium/tableGet": {
+        const t = tableOf(p, e.table!);
+        const data = inputs[t.name];
+        if (!Array.isArray(data)) {
+          throw new Error(`table '${t.name}' has no data`);
+        }
+        const x = values[e.args[0]!] as number;
+        values[id] =
+          e.op === "cesium/search"
+            ? searchRows(data, t, e.index!, x)
+            : data[clampRow(x, t) * t.columns.length + e.index!]!;
+        break;
+      }
       default:
         values[id] = applyValue(
           e.op,
@@ -629,6 +707,38 @@ export function evaluate(
     }
   });
   return Object.fromEntries(p.outputs.map((o) => [o.name, values[o.id]!]));
+}
+
+export function tableOf(p: Program, name: string): TableDecl {
+  const t = p.tables?.find((x) => x.name === name);
+  if (!t) {
+    throw new Error(`no table '${name}'`);
+  }
+  return t;
+}
+
+export const clampRow = (i: number, t: TableDecl): number =>
+  Math.min(Math.max(Math.trunc(i), 0), t.rows - 1);
+
+/** The largest row whose `column` is at most `key` (0 if none): a binary search, as the GPU's. */
+export function searchRows(
+  data: readonly number[],
+  t: TableDecl,
+  column: number,
+  key: number,
+): number {
+  const stride = t.columns.length;
+  let lo = 0;
+  let hi = t.rows - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (data[mid * stride + column]! <= key) {
+      lo = mid;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return lo;
 }
 
 // ---------------------------------------------------------------- text form
@@ -644,7 +754,7 @@ export function print(p: Program): string {
           ? JSON.stringify(e.value)
           : e.op === "literal"
             ? `literal[${e.slot}] ${JSON.stringify(e.value)}`
-            : `${e.op}${e.index !== undefined ? `[${e.index}]` : ""} ${e.args.map(name).join(" ")}`;
+            : `${e.op}${e.table ? `[${e.table}.${tableOf(p, e.table).columns[e.index!]}]` : e.index !== undefined ? `[${e.index}]` : ""} ${e.args.map(name).join(" ")}`;
     return `  ${name(id)}:${e.type} = ${rhs}`;
   });
   const outs = p.outputs.map((o) => `${o.name}=${name(o.id)}`).join(", ");

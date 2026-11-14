@@ -21,6 +21,7 @@ import { transformProgram } from "./fromTransform.ts";
 import { materialXProgram, mtlxEdit } from "./fromMaterialX.ts";
 import { fromSpirv } from "./fromSpirv.ts";
 import { encodeOnnx, fromOnnx, toOnnx } from "./onnx.ts";
+import { alignmentSection } from "./benchAlignment.ts";
 import {
   FEATURES,
   MTLX,
@@ -389,5 +390,6 @@ export async function run(deps: Deps): Promise<Record<string, unknown>> {
     onnx[name] = row;
   }
   R.onnx = onnx;
+  R.alignment = await alignmentSection(deps);
   return R;
 }

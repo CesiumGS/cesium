@@ -12,6 +12,7 @@ import { emit } from "./emit.ts";
 import { hoistLiterals } from "./passes.ts";
 import { encodeOnnx, toOnnx } from "./onnx.ts";
 import { fromSpirv } from "./fromSpirv.ts";
+import { alignmentProgram } from "./fromAlignment.ts";
 import { MTLX, STYLE, TWIST_SOURCE, WGSL_FN } from "./samples.ts";
 
 const results = {};
@@ -388,6 +389,13 @@ if (device) {
         .code,
     ),
   );
+  await check(
+    "alignment (tables, bounded search)",
+    emit(alignmentProgram(5, 3), "wgsl")
+      .code.replaceAll("CIR_GROUP", "0")
+      .replace("CIR_TABLE_plan", "1")
+      .replace("CIR_TABLE_profile", "2"),
+  );
   if (naga) {
     const m = naga.parseWgsl(WGSL_FN);
     const p = fromSpirv(
@@ -453,6 +461,15 @@ if (gl) {
     a.ok ? "ok" : "no",
   );
   const mxGlsl = emit(hoistLiterals(materialXProgram(MTLX)).program, "glsl");
+  const al = emit(alignmentProgram(5, 3), "glsl");
+  const alc = compileGlsl(glslWrapper(al, "vec4(r.q, 1.0)"));
+  results.webgl2Alignment = alc;
+  row(
+    "WebGL 2 compiles the alignment's GLSL (tables as uniform blocks, bounded search)",
+    alc.ok ? "yes" : "no",
+    alc.ok ? `${msf(alc.ms)} compile and link` : alc.log,
+    alc.ok ? "ok" : "no",
+  );
   const b = compileGlsl(glslWrapper(mxGlsl, "vec4(r.base_color, 1.0)"));
   results.webgl2MaterialX = b;
   row(

@@ -73,6 +73,12 @@ export function jvp(
       case "math/or":
       case "math/not":
       case "type/boolToFloat":
+      case "type/intToFloat":
+      case "cesium/search":
+      case "cesium/tableGet":
+        // Search and table reads are piecewise constant in their operand: the
+        // derivative of a piecewise function is its piece's, one-sided at a
+        // breakpoint as the CPU's choice.
         return null;
       case "math/neg": {
         const t = tangent(a);

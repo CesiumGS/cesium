@@ -137,6 +137,17 @@ export function toOnnx(
     return out;
   };
   const names: string[] = [];
+  const tableInputs = new Set<string>();
+  const tableInput = (table: string, column: number): string => {
+    const t = p.tables!.find((x) => x.name === table)!;
+    const name = `${table}.${t.columns[column]}`;
+    if (!tableInputs.has(name)) {
+      tableInputs.add(name);
+      input.push({ name, elem_type: DOUBLE, dims: [t.rows] });
+      meta.push({ key: `table.${name}`, value: `${table}[${column}]` });
+    }
+    return name;
+  };
   p.eqns.forEach((e, id) => {
     const a = e.args.map((x) => names[x]!);
     const out = `v${id}`;
@@ -309,6 +320,37 @@ export function toOnnx(
       case "type/boolToFloat":
         names[id] = emit("Cast", a, out, [{ name: "to", i: DOUBLE, type: 2 }]);
         return;
+      case "type/intToFloat":
+        // Ints are carried as doubles here.
+        names[id] = a[0]!;
+        return;
+      case "cesium/tableGet": {
+        // A column is a graph input (its data, editable) of shape [rows].
+        const column = tableInput(e.table!, e.index!);
+        const row = emit("Cast", [a[0]!], fresh(), [
+          { name: "to", i: INT64, type: 2 },
+        ]);
+        names[id] = emit("Gather", [column, row], out, [
+          { name: "axis", i: 0, type: 2 },
+        ]);
+        return;
+      }
+      case "cesium/search": {
+        // ONNX has no sorted search: count the rows at most the key, minus one
+        // (O(rows) compares; a Loop would be control flow).
+        const column = tableInput(e.table!, e.index!);
+        const hits = emit(
+          "Cast",
+          [emit("LessOrEqual", [column, a[0]!])],
+          fresh(),
+          [{ name: "to", i: DOUBLE, type: 2 }],
+        );
+        const count = emit("ReduceSum", [hits, i64([0])], fresh(), [
+          { name: "keepdims", i: 0, type: 2 },
+        ]);
+        names[id] = emit("Max", [emit("Sub", [count, k(1)]), k(0)], out);
+        return;
+      }
       default:
         break;
     }
