@@ -388,8 +388,9 @@ export function Shading() {
           plan is not to make WGSL the contract. Users write styles, transforms,
           materials and functions in a front-end language, and each lowers into
           one small intermediate form, the core IR, working name{" "}
-          <C>cesium-ir</C>. This is a plan. The spikes are built, and the
-          engine's style compiler and transform code do not use it yet.
+          <C>cesium-ir</C>. This is decided and planned (owner, 2026-11-13). The
+          spikes are built, and the engine's style compiler and transform code
+          do not use it yet.
         </p>
         <ul>
           <li>
@@ -415,6 +416,16 @@ export function Shading() {
             and WGSL's at the edges, and borrowing them means the CPU evaluator
             matches 1.x styles exactly: all eight features tried, relative error
             0. GPU code is a float32 approximation of the float64 spec.
+          </li>
+          <li>
+            <strong>Decided (owner, 2026-11-13).</strong> The vocabulary's names
+            and meanings are normative, and <C>cesium/</C> extensions are added
+            only where it lacks an op, tables and a bounded search first. Our
+            versioned JSON, <C>cesium-ir/&lt;major&gt;.&lt;minor&gt;</C>, is
+            normative, with a lossless writer and reader for the spec&apos;s own
+            graph JSON. WGSL is a front end through naga, loaded lazily, and
+            what the IR can&apos;t express is refused with a diagnostic. Not
+            built in the engine yet.
           </li>
           <li>
             <strong>Compared and set aside.</strong> ONNX's graph format (

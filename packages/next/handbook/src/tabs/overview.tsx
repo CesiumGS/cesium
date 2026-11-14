@@ -51,7 +51,7 @@ const MILESTONES = [
   {
     work: "Core IR (section 13.42)",
     what: "One small typed IR on KHR_interactivity's vocabulary for styles, transforms and materials, with a CPU evaluator, differentiation and bounds, and emitters for WGSL and GLSL ES. WGSL becomes a front end, not the contract",
-    state: "Researched and spiked; not in the engine",
+    state: "Decided, planned and spiked; not in the engine",
   },
   {
     work: "Threads, jobs, renderers and engine profiles (section 13.41)",
