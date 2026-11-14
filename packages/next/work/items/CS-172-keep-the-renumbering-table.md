@@ -2,7 +2,7 @@
 id: CS-172
 title: Keep the renumbering table?
 kind: decision
-status: Planned
+status: Done
 created: 2026-11-13
 project: CS-18
 decided-by: owner
@@ -18,4 +18,4 @@ Recommend keeping it: commit messages written before 2026-11-13 use the old name
 
 ## Answer
 
-Open.
+Keep the renumbering table in `docs/history/` (owner, 2026-11-13). It is history, not an alias: no tool accepts an old name.

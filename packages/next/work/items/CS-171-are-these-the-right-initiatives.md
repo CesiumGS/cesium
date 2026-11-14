@@ -2,7 +2,7 @@
 id: CS-171
 title: Are these the right initiatives?
 kind: decision
-status: Planned
+status: Done
 created: 2026-11-13
 project: CS-18
 decided-by: owner
@@ -18,4 +18,4 @@ Recommend keeping them until a second engineer's work shows a better cut. Two ar
 
 ## Answer
 
-Open.
+Keep the seven initiatives (owner, 2026-11-13). Revisit when a second engineer's work shows a better cut.

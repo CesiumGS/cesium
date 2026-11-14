@@ -22,7 +22,7 @@ The public API is open to breaking changes. 1.x serves two roles only: it is the
 
 - Entities/DataSources; Primitive/Geometry/Appearance
 - 2D and Columbus view; widgets
-- WebGL fallback and **WebGPU compatibility mode**
+- **WebGPU compatibility mode** (WebGL 2 is a second renderer, not a fallback: [the WebGL 2 plan](docs/superpowers/plans/2026-11-13-webgl2-renderer.md))
 - CZML/KML/GeoJSON
 - Underground and globe translucency
 - Imagery draped on 3D Tiles
