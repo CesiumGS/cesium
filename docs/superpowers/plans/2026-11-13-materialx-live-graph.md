@@ -24,6 +24,8 @@
 6. **glTF:** the `KHR_materials_*` extensions load into the same extended material, as a milestone of this plan.
 7. **Terrain inputs:** a fragment hook on the globe surface, with height, slope, aspect and the **water mask** as graph inputs. The quantized-mesh water mask is extension 2 of the format, named in `quantizedMesh.ts`'s header but not decoded today.
 8. **The official MaterialX Graph Editor** (owner asked whether it helps): it is desktop C++ on ImGui and isn't built for the browser, so it isn't code we run. We borrow its UX (node search by category, a property panel, a render view beside the graph, entering subgraphs) and the idea of its auto-layout (`source/MaterialXGraphEditor/Layout.cpp`). The official web viewer, **MaterialXView** (three.js on the full MaterialX WebAssembly build), is the reference renderer we compare against (task 11).
+9. **Assets are fetched by `npm run setup`,** not vendored: the shaderball, example materials and their images, pinned, in a store outside the repository (task 1).
+10. **Places that look cool** and show what custom shading on terrain and cities enables: water, moving snow lines, rock strata, procedural grass, floods, rain, lit windows. Eleven places, listed in section 1.
 
 > **For agentic workers:** execute task by task, with a fresh implementer per task. Verification is lean, as the owner asked on 2026-11-11:
 >
@@ -100,16 +102,45 @@ React Flow is chosen (owner, 2026-11-13). It loads only in the example's lazy ch
 **Scenes** (picker at the top of the panel):
 
 1. **Stage.** MaterialX's shaderball on the Slang playground's stage: background colour, environment (Studio, Sunset, Overcast, Dark), key light, exposure. The model list from the playground (shapes, repository samples, Khronos samples) is one click away. Default scene.
-2. **City.** OSM Buildings (ion) over Cesium World Terrain, at a place with varied buildings, the material on every building. City graphs use object or local positions and triplanar projection, since OSM Buildings has no texture coordinates. A "per building" input (`geompropvalue` of the feature ID) lets a graph vary by building.
-3. **Terrain.** Cesium World Terrain with imagery, at a coast with mountains, the material on the globe surface. Graph inputs: `height` (m above the ellipsoid), `slope` (radians), `aspect` (radians from north), `water` (0 to 1, the water mask), and the imagery's colour. Presets paint rock on steep slopes, snow above a height and a wet sheen along the shore.
+2. **City.** OSM Buildings (ion) over Cesium World Terrain, the material on every building, at four places (below). City graphs use local positions and triplanar projection, since OSM Buildings has no texture coordinates. Per-building inputs (`geompropvalue` of the feature ID and of OSM properties such as the building's height and kind) let a graph vary by building.
+3. **Terrain.** Cesium World Terrain with imagery, the material on the globe surface, at seven places (below). Graph inputs: `height` (m above the ellipsoid), `slope` (radians), `aspect` (radians from north), `water` (0 to 1, the water mask, filtered so its edge is soft), `latitude`, `camera_distance` (m, for detail that fades with distance), and the imagery's colour.
 
-The exact places for 2 and 3 are chosen in task 5 and flagged to the owner (cheap to change).
+**Scene controls are graph inputs.** Each place's preset exposes a few interface inputs as large sliders over the view: season, snow line, flood level, wind, wetness, time of day. Moving one is a uniform edit, so it is instant everywhere. Inputs the scene owns (the sun's elevation, the clock) are written once per frame by the example through the same `setUniform`.
+
+### Places (owner, 2026-11-13: "places that look cool … that will blow minds that this is CesiumJS")
+
+Each place is a camera view plus a default graph. The picker shows them as cards with a thumbnail. Coordinates are where the camera looks; views are tuned in task 5d. Every graph below uses only subset A plus tier 1 lobes, unless marked.
+
+**City** (OSM Buildings):
+
+| Place                             | Look at            | The show                                                                                                                                                                                                                                                                     |
+| --------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Seattle: the Space Needle         | 47.6205, −122.3493 | **Rain.** A wetness slider darkens walls, drops roughness on flat roofs (normal near up) and adds rain ripples there: animated noise in the normal. Wet ground meets dry walls where the slope turns vertical.                                                               |
+| Philadelphia: City Hall           | 39.9524, −75.1636  | **Night windows.** Brick and limestone by building (feature ID picks the palette), a window grid from local height (floors every 3.5 m) and position along the wall, and some windows lit at night: emission in nits, so exposure makes them glow as the sun sets (task 6a). |
+| Paris: from the Eiffel Tower east | 48.8584, 2.2945    | **Haussmann.** Cream limestone walls, zinc roofs (flat-ish normals get a blue-grey metal with F82 tint, task 6) and a golden-hour time-of-day slider.                                                                                                                        |
+| Manhattan: Midtown                | 40.7549, −73.9840  | **Glass towers.** Tall buildings (by OSM height) get mirror-like curtain walls with a mullion grid, reflecting the sky through image-based lighting; low ones stay masonry. Lit floors at night as in Philadelphia.                                                          |
+
+**Terrain** (Cesium World Terrain):
+
+| Place                                         | Look at            | The show                                                                                                                                                                                                                                                                                                                               |
+| --------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Crete: Balos lagoon and the White Mountains   | 35.58, 23.59       | **Water.** The water mask drives a sea surface: animated wave normals from two scrolling noise layers, IOR 1.33, low roughness so the sun glints, turquoise in the shallows near the soft mask edge and deep blue away from it, a foam band at the shore. The White Mountains (2,453 m) inland get winter snow from the season slider. |
+| The Himalayas: Everest, Lhotse and Ama Dablam | 27.9881, 86.9250   | **Moving snow line.** Snow above a line that a season slider moves (or that plays a year in 30 seconds); north faces hold snow lower (aspect); slopes past about 50° shed it, so rock ribs stay dark; blue glacier ice on gentle slopes in a height band. Noise breaks the line up so it reads as real.                                |
+| Grand Canyon: Mather Point                    | 36.0617, −112.1077 | **Rock strata.** Bands by height after the canyon's real layers, rim to river: Kaibab limestone (cream grey), Toroweap, Coconino sandstone (pale), Hermit shale and Supai (red), Redwall limestone (grey stained red), Tonto, Vishnu schist (dark). Noise warps the band edges. A "Topographic" toggle overlays contour lines.         |
+| Mount Fuji and Lake Kawaguchi                 | 35.3606, 138.7274  | **Seasons on a cone.** The symmetric snow cap grows and shrinks with the season slider; the lake below uses the water graph, calm (less wave height).                                                                                                                                                                                  |
+| The Matterhorn and Zermatt                    | 45.9763, 7.6586    | **Procedural grass.** Where the slope is gentle, the height is below the tree line and the imagery is green, close-up detail is added that imagery can't have: noise colour variation and a grassy normal, fading out by `camera_distance` (2 km). Rock above, snow on top.                                                            |
+| Geirangerfjord, Norway                        | 62.1049, 7.0947    | **Fjord.** Glassy dark green water reflecting the sky and the cliffs' colour, steep walls left as rock, meadows on the ledges (the grass graph), snow on the tops.                                                                                                                                                                     |
+| The Netherlands: Flevoland and the IJsselmeer | 52.45, 5.50        | **Flood level.** A slider raises a water level; land below it (height under the level) turns to the water graph, with the shoreline foam moving as it rises. Flevoland lies about 5 m below sea level. To verify in task 5d: that Cesium World Terrain's heights there are good enough to show it.                                     |
+
+**A global snow line** is one more terrain preset that works anywhere: the snow line's height follows latitude (about 5,000 m near the equator, falling toward the poles) and the season slider, so flying anywhere shows plausible snow.
+
+**Cost:** terrain graphs run on every terrain fragment. Each place's default graph must hold 60 frames a second at 1080p on an Apple M2; task 5d measures with the inspector recorder and caps noise octaves by `camera_distance` where needed.
 
 **Presets** (a gallery strip under the scene picker, each with a small swatch):
 
 - **Graphs from MaterialX:** marble, brick, wood, brass, onyx. These show rewiring best.
 - **OpenPBR materials from MaterialX:** the ten examples. Parameter-only; once the engine material is extended (tasks 6–7) they show coat, F82 metals, thin film and fuzz. Glass, honey, ketchup and the soap bubble need tier 3; until then they draw with a "needs transmission" badge and the lobes this renderer has.
-- **Our own,** written for this example: "Topographic" (terrain: contour lines from `height`, tinted by slope), "Shoreline" (terrain: water mask with a wet-sand band), "Weathered roofs" (city: noise by feature ID, darker on flat tops), "Sun-faded paint" (city: fade by normal toward the sun direction).
+- **Our own,** written for this example: the places' graphs above (water, snow line, strata, grass, flood, rain, night windows, glass towers), plus "Topographic" (contour lines from `height`, tinted by slope) and the global snow line. Each works on any place of its scene, not only its own.
 - **New:** an empty graph with an `open_pbr_surface` and a material output.
 
 **Editing.**
@@ -321,7 +352,8 @@ Sizes: S is half a day of agent work, M a day, L two days.
 
 - `packages/next/materialx/`: XML reader and writer, document model, `scripts/materialxDefs.mjs` and its generated table, definition resolution, flattening (steps 1–7 of section 5) with no back end.
 - The package entry and the `checkBundle` rule that `src/` never imports it.
-- Tests: round-trip of every v1.39.5 example material (fetched by a test-data script, not committed), flattening of marble and brick to expected slot lists, refusal messages with line and column.
+- **Assets through `npm run setup`** (owner, 2026-11-13): `scripts/materialxAssets.mjs`, after `scripts/stepSamples.mjs`. It fetches MaterialX's v1.39.5 source archive from GitHub, pinned by SHA-256, and keeps only what the example and tests use: the example materials, their images and `shaderball.glb`, each pinned too, in a store outside the repository (`~/.cesium-bench/materialx/1.39.5`, or `MATERIALX_ASSETS_DIR`), with MaterialX's licence and NOTICE beside them. The dev server serves it at `/materialx-assets/` (`serveDirectory` in `vite.config.ts`). Never committed, never bundled. Without it the stage falls back to a sphere and the presets list says what to run.
+- Tests: round-trip of every v1.39.5 example material (from the store; skipped with a message when setup hasn't run), flattening of marble and brick to expected slot lists, refusal messages with line and column.
 
 ### Task 2: the pre-IR back end and parameter edits on presets (L) — works before the core IR
 
@@ -345,9 +377,9 @@ Sizes: S is half a day of agent work, M a day, L two days.
 ### Task 5: city and terrain (L)
 
 - **5a.** Engine: `Tileset3D.setShader(shader, { swap: "whenReady" })`.
-- **5b.** Engine: a fragment hook on the globe surface (`Globe.setShader`), with the model contract's inputs plus `height`, `slope`, `aspect`, `water` and the imagery colour as named inputs.
+- **5b.** Engine: a fragment hook on the globe surface (`Globe.setShader`), with the model contract's inputs plus `height`, `slope`, `aspect`, `water`, `latitude`, `camera_distance` and the imagery colour as named inputs. The same `camera_distance` and `latitude` go to model and tileset shaders.
 - **5c.** Engine: the water mask. Request quantized-mesh extension 2 (`extensions=octvertexnormals-watermask` in the `Accept` header, as 1.x does), decode the per-tile mask (one byte for all land or all water, or 256 × 256), upload it as a per-tile texture, sample it in the hook. In the format, 0 is land and 255 is water; the graph input reads 0 to 1.
-- **5d.** The example's city and terrain scenes and their presets. The places are picked here and flagged to the owner.
+- **5d.** The example's city and terrain scenes: the eleven places of section 1 with their cards, camera views and graphs, the scene-control sliders, and the frame-rate check per place. Night windows and zinc roofs wait for task 6 and show a "needs task 6" badge until then. Larger than the other parts: may split into city (5d) and terrain (5e) when it starts.
 
 ### Task 6: OpenPBR tier 1 in the engine (L)
 
@@ -405,8 +437,7 @@ About 12–14 agent days in all. The first visible result (presets with live par
 
 ## Open questions for the owner
 
-- The exact city and terrain places (task 5; flagged then).
-- Whether to vendor the shaderball and example textures, or fetch them from MaterialX's GitHub at the pinned tag as the playground fetches Khronos samples. The plan assumes fetching (no repository growth), with a fallback sphere if offline.
+None left. Task 5d flags the tuned camera views and whether the Netherlands' heights hold up.
 
 ## Answers recorded (owner, 2026-11-13)
 
@@ -421,3 +452,5 @@ About 12–14 agent days in all. The first visible result (presets with live par
 | Emission units?                                | Support both display-relative and nits (the 2026-11-08 switch, which isn't built yet).     |
 | glTF extensions onto the same model?           | Yes, as a milestone.                                                                       |
 | Terrain inputs?                                | Hook with height, slope and aspect; and the water mask would be useful.                    |
+| Vendor or fetch the MaterialX assets?          | Fetching with `npm run setup` is fine.                                                     |
+| Which places?                                  | Places that look cool and show what custom terrain shading enables: section 1, "Places".   |
