@@ -300,6 +300,18 @@ export interface Pipelines extends SurfacePipelines {
   /** Per-batch indirect args. */
   writeDrawArgs: GPUComputePipeline;
   /**
+   * Two-phase occlusion culling (cull.slang, render/view/occlusionCull.ts):
+   * the view's own cull, testing what the frustum keeps against its last
+   * depth pyramid; both sets of arguments; and the second phase, the listed
+   * items against this tick's pyramid. Group 2: `occlusionCullLayout`.
+   */
+  cullRecordsOccluded: GPUComputePipeline;
+  cullInstancesOccluded: GPUComputePipeline;
+  writeDrawArgsOccluded: GPUComputePipeline;
+  retestOccluded: GPUComputePipeline;
+  /** The occlusion cull's group 2: its uniforms and the view's pyramid. */
+  occlusionCullLayout: GPUBindGroupLayout;
+  /**
    * A patch draw's per-view dice into its chunks, then its draw arguments
    * (dice.slang); group 0 the view, 1 `cullPatchWorldLayout`, 2 the draw's.
    */
@@ -1059,6 +1071,28 @@ async function createPipelines(
   const cullLayout = device.createPipelineLayout({
     bindGroupLayouts: [viewLayout, cullWorldLayout],
   });
+  // The occlusion cull's kernels are the engine's whatever `overrides.cull` is.
+  const occlusionCullModule = module("cull", cullWgsl);
+  const occlusionCullLayout = device.createBindGroupLayout({
+    label: "cull.occlusion",
+    entries: [
+      { binding: 0, visibility: COMPUTE, buffer: { type: "uniform" } },
+      {
+        binding: 1,
+        visibility: COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+    ],
+  });
+  const occludedCullLayout = device.createPipelineLayout({
+    bindGroupLayouts: [viewLayout, cullWorldLayout, occlusionCullLayout],
+  });
+  const occludedCull = (entryPoint: string) =>
+    device.createComputePipelineAsync({
+      label: `cull.${entryPoint}`,
+      layout: occludedCullLayout,
+      compute: { module: occlusionCullModule, entryPoint },
+    });
   const pointCullLayout = device.createBindGroupLayout({
     label: "cull.points",
     entries: [
@@ -1979,6 +2013,10 @@ async function createPipelines(
     cullRecords,
     cullInstances,
     writeDrawArgs,
+    cullRecordsOccluded,
+    cullInstancesOccluded,
+    writeDrawArgsOccluded,
+    retestOccluded,
     cullPoints,
     writePointArgs,
     dicePatches,
@@ -2023,6 +2061,10 @@ async function createPipelines(
       layout: cullLayout,
       compute: { module: cullModule, entryPoint: "writeDrawArgs" },
     }),
+    occludedCull("cullRecordsOccluded"),
+    occludedCull("cullInstancesOccluded"),
+    occludedCull("writeDrawArgsOccluded"),
+    occludedCull("retestOccluded"),
     device.createComputePipelineAsync({
       label: "cull.points",
       layout: pointCullPipelineLayout,
@@ -2513,6 +2555,7 @@ async function createPipelines(
   return {
     viewLayout,
     cullWorldLayout,
+    occlusionCullLayout,
     capLayout,
     capParity: capParityPipelines.get,
     capParityPending: capParityPipelines.pending,
@@ -2532,6 +2575,10 @@ async function createPipelines(
     cullRecords,
     cullInstances,
     writeDrawArgs,
+    cullRecordsOccluded,
+    cullInstancesOccluded,
+    writeDrawArgsOccluded,
+    retestOccluded,
     dicePatches,
     writePatchArgs,
     pointCullLayout,

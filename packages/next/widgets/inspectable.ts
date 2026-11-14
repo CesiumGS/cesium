@@ -75,6 +75,11 @@ export interface InspectorSnapshot {
     }>;
     /** Rays cast since the frame before (height queries, clamping, queries). */
     raysCast?: number;
+    /**
+     * What occlusion culling left undrawn (draw items, whole triangles), a
+     * tick or two late; absent when no view culls by occlusion.
+     */
+    hiddenByOcclusion?: { draws: number; triangles: number };
     /** Submit to done, ms: latency, including waits behind earlier frames. */
     gpuWallMs?: number;
     /**

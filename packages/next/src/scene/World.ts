@@ -174,8 +174,10 @@ import {
   depthBundle,
   pickBundle,
   clippedBundle,
+  retestBundle,
   type BundleKind,
   encodeCull,
+  encodeRetest,
   translucentRange,
   encodeTranslucent,
 } from "../render/world/bundles.ts";
@@ -1943,6 +1945,16 @@ export class World {
   }
 
   /**
+   * @internal The second phase's bundle of `kind` for a view with two-phase
+   * occlusion culling (`retestBundle`); undefined before the world's first frame.
+   */
+  retestBundle(
+    kind: "opaque" | "depth" | "prepass",
+  ): GPURenderBundle | undefined {
+    return retestBundle(this, kind);
+  }
+
+  /**
    * Adds a clip: shapes in a reference frame, combined, keeping their
    * inside or outside (`ClipSet`). It cuts nothing until a view uses it
    * (`View.clipMask`, the clip's `bit`). Each clip is tested where its
@@ -1993,8 +2005,47 @@ export class World {
     points = true,
     pixels = 0,
     diceWrites?: () => GPUComputePassTimestampWrites | undefined,
+    occlusion?: GPUBindGroup,
   ): void {
-    encodeCull(this, encoder, timestampWrites, points, pixels, diceWrites);
+    encodeCull(
+      this,
+      encoder,
+      timestampWrites,
+      points,
+      pixels,
+      diceWrites,
+      occlusion,
+    );
+  }
+
+  /**
+   * @internal Where two-phase occlusion culling's second set of arguments,
+   * slices, retest list and counters are (`DrawArguments.occlusionLayout`).
+   */
+  get occlusionLayout(): {
+    argumentRows: number;
+    itemRows: number;
+    counterWord: number;
+  } {
+    return this.raster.drawArguments.occlusionLayout;
+  }
+
+  /** @internal Copies the occlusion cull's counters (`DrawArguments.copyCounters`). */
+  copyOcclusionCounters(encoder: GPUCommandEncoder, target: GPUBuffer): void {
+    this.raster.drawArguments.copyCounters(encoder, target);
+  }
+
+  /**
+   * @internal The second phase of two-phase occlusion culling, after the
+   * first phase's depth and pyramid (`encodeRetest`); `occlusion` is the
+   * group the view's `encodeCull` took.
+   */
+  encodeRetest(
+    encoder: GPUCommandEncoder,
+    occlusion: GPUBindGroup,
+    timestampWrites?: GPUComputePassTimestampWrites,
+  ): void {
+    encodeRetest(this, encoder, occlusion, timestampWrites);
   }
 
   /**

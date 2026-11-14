@@ -127,20 +127,25 @@ export interface CameraBox {
   readonly axes: ArrayLike<number>;
 }
 
+/** The widest window the box test reads, texels across (hzbTest.slang). */
+export const MAX_WINDOW = 8;
+
 /** The depth margin (relative) a box's nearest depth is tested with. */
 export const OCCLUSION_BIAS = 1e-3;
 
 /**
- * Whether the box is certainly hidden by the pyramid: `occlusionQuery.slang`'s
- * test. Any corner at or behind the near plane, a rectangle off the screen,
- * or a rectangle that isn't covered by 2 × 2 texels of its level leaves it
- * visible.
+ * Whether the box is certainly hidden by the pyramid: `hzbTest.slang`'s test
+ * (the tile queries', `window` 2). Any corner at or behind the near plane, a
+ * rectangle off the screen, or a rectangle that isn't covered by `window` ×
+ * `window` texels of its level leaves it visible. A wider window reads a
+ * finer level (the draws' occlusion cull reads 8).
  */
 export function boxHidden(
   levels: readonly PyramidLevel[],
   camera: PyramidCamera,
   box: CameraBox,
   bias = OCCLUSION_BIAS,
+  window = 2,
 ): boolean {
   const { frameWidth, frameHeight } = camera;
   const c = box.centre;
@@ -194,8 +199,9 @@ export function boxHidden(
     Math.min(lastY >> 1, shape.height - 1) -
     Math.min(firstY >> 1, shape.height - 1);
   const extent = Math.max(spanX, spanY) + 1;
+  const wide = Math.min(Math.max(window, 2), MAX_WINDOW);
   let level = 0;
-  while (2 ** level < extent && level + 1 < shape.levels) {
+  while (((extent - 1) >> level) + 2 > wide && level + 1 < shape.levels) {
     level++;
   }
   const [width, height] = levelSize(shape, level);
@@ -203,7 +209,7 @@ export function boxHidden(
   const toX = Math.min(lastX >> (level + 1), width - 1);
   const fromY = Math.min(firstY >> (level + 1), height - 1);
   const toY = Math.min(lastY >> (level + 1), height - 1);
-  if (toX - fromX > 1 || toY - fromY > 1) {
+  if (toX - fromX > wide - 1 || toY - fromY > wide - 1) {
     return false;
   }
   let farthest = Infinity;
@@ -214,4 +220,30 @@ export function boxHidden(
   }
   const nearest = camera.near / nearestZ;
   return farthest > nearest * (1 + bias);
+}
+
+/**
+ * Whether a draw's culling sphere is certainly hidden by the pyramid: the
+ * occlusion cull's test (cull.slang `sphereHidden`), the box around the
+ * sphere along the camera's axes, through the widest window. `centre` is in camera space (x right, y
+ * up, z forward), relative to the eye. A sphere with no bound (a radius of
+ * 10³⁰ or more) never is.
+ */
+export function sphereHidden(
+  levels: readonly PyramidLevel[],
+  camera: PyramidCamera,
+  centre: ArrayLike<number>,
+  radius: number,
+  bias = OCCLUSION_BIAS,
+): boolean {
+  if (!(radius < 1e30)) {
+    return false;
+  }
+  return boxHidden(
+    levels,
+    camera,
+    { centre, axes: [radius, 0, 0, 0, radius, 0, 0, 0, radius] },
+    bias,
+    MAX_WINDOW,
+  );
 }

@@ -50,7 +50,10 @@ export class DepthPyramid {
   /** All levels, for the queries. */
   readonly view: GPUTextureView;
   private readonly groups: GPUBindGroup[] = [];
-  /** The camera it was built for: what the queries' camera space is. */
+  /**
+   * The camera it was built for: what the queries' camera space is, and what
+   * the next tick's occlusion cull sees it from (occlusionCull.ts).
+   */
   built:
     | {
         tanX: number;
@@ -58,6 +61,8 @@ export class DepthPyramid {
         near: number;
         position: Float64Array;
         direction: Float64Array;
+        up: Float64Array;
+        right: Float64Array;
       }
     | undefined;
 
@@ -266,6 +271,26 @@ export class FrameOcclusion {
   }
 }
 
+/** The camera a tick draws a view with, as a pyramid keeps it (`DepthPyramid.built`). */
+export function cullCamera(
+  engine: Pick<Engine, "bodyCamera">,
+  view: View,
+  frame: { width: number; height: number },
+): NonNullable<DepthPyramid["built"]> {
+  const camera = engine.bodyCamera(view);
+  const aspect = frame.width / frame.height;
+  const tanY = Math.tan(camera.fovy(aspect) / 2);
+  return {
+    tanX: tanY * aspect,
+    tanY,
+    near: camera.near,
+    position: Float64Array.from(camera.position),
+    direction: Float64Array.from(camera.direction),
+    up: Float64Array.from(camera.up),
+    right: Float64Array.from(camera.right),
+  };
+}
+
 /** Whether two float64 vectors are the same. */
 function same(a: ArrayLike<number>, b: ArrayLike<number>): boolean {
   return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
@@ -275,6 +300,10 @@ function same(a: ArrayLike<number>, b: ArrayLike<number>): boolean {
  * The pass after `opaque`: the pyramid and the queries selection made this
  * tick, if any. A list made for another camera than the one drawn (selection
  * ran earlier, and the camera moved) isn't tested: its tiles stay unknown.
+ * In a tick that culls the view's draws by occlusion (occlusionCull.ts), the
+ * pyramid is built from the whole depth even without queries: the next
+ * tick's first phase tests against it. Not from a depth point splats wrote
+ * into: that tick's first-phase pyramid stays.
  */
 export function occlusionPass(
   engine: OcclusionPassEngine,
@@ -286,21 +315,27 @@ export function occlusionPass(
   return (enc, get) => {
     const feedback = view.occlusionState;
     const list = feedback.current;
+    const camera = engine.bodyCamera(view);
     // Off, nothing asked, or splats drawn: their depth is written for any
     // covered pixel, translucent symbols included, so it isn't an occluder.
     if (
       !occlusionOn(engine, view) ||
       !list ||
       list.count === 0 ||
-      frame.splatted
-    ) {
-      return;
-    }
-    const camera = engine.bodyCamera(view);
-    if (
+      frame.splatted ||
       !same(camera.position, list.position) ||
       !same(camera.direction, list.direction)
     ) {
+      if (frame.cull?.active && !frame.splatted && frame.occlusion) {
+        const writes = engine.raster.timer.passWrites("hzb");
+        const hzb = enc.beginComputePass({
+          label: "hzb",
+          ...(writes ? { timestampWrites: writes } : {}),
+        });
+        frame.occlusion.pyramid.encode(hzb, pipelines);
+        hzb.end();
+        frame.occlusion.pyramid.built = cullCamera(engine, view, frame);
+      }
       return;
     }
     const occlusion = (frame.occlusion ??= new FrameOcclusion(
@@ -310,20 +345,12 @@ export function occlusionPass(
       frame.width,
       frame.height,
     ));
-    const aspect = frame.width / frame.height;
-    const tanY = Math.tan(camera.fovy(aspect) / 2);
     const taken = feedback.take()!;
     const { readback, words } = occlusion.encode(
       enc,
       pipelines,
       taken,
-      {
-        tanX: tanY * aspect,
-        tanY,
-        near: camera.near,
-        position: Float64Array.from(camera.position),
-        direction: Float64Array.from(camera.direction),
-      },
+      cullCamera(engine, view, frame),
       {
         hzb: engine.raster.timer.passWrites("hzb"),
         query: engine.raster.timer.passWrites("occlusion-query"),

@@ -25,11 +25,12 @@ import {
 import type { EngineRaster } from "./engineRaster.ts";
 import { encodeClipTable } from "./clipTable.ts";
 import { drawSectionCaps } from "./capPasses.ts";
+import { phaseBundles, prepareOcclusionCull } from "./occlusionCull.ts";
 
 /** Rasterizer side: pass bodies up to the opaque image. */
 export interface ScenePassEngine extends Pick<
   Engine,
-  "bodyCamera" | "ctx" | "stats" | "sunDirection"
+  "bodyCamera" | "ctx" | "occlusionCulling" | "stats" | "sunDirection"
 > {
   readonly raster: Pick<
     EngineRaster,
@@ -191,6 +192,8 @@ export function cullPass(
       frame.width * frame.height,
       // The patch dice's own pass, asked for only if it runs.
       () => engine.raster.timer.passWrites("dice"),
+      // Its first phase, when the tick culls by occlusion (occlusionCull.ts).
+      prepareOcclusionCull(engine, view, frame),
     );
   };
 }
@@ -275,10 +278,13 @@ export function prepassPassBody(
     prepassDepthAttachment.view = get(prepassDepth);
     prepassPass.timestampWrites = engine.raster.timer.passWrites("prepass");
     const pass = enc.beginRenderPass(prepassPass);
-    pass.executeBundles([
+    const bundle =
       (frame.clipBytes > 0 && view.world.clippedBundle("prepass")) ||
-        view.world.prepassBundle(),
-    ]);
+      view.world.prepassBundle();
+    // Both phases' draws when the tick culls by occlusion (occlusionCull.ts).
+    pass.executeBundles(
+      frame.cull?.active ? phaseBundles(view, "prepass", bundle) : [bundle],
+    );
     pass.end();
   };
 }
@@ -436,16 +442,29 @@ export function opaquePassBody(
     opaqueDisplay.resolveTarget = get(displayResolved);
     opaqueDepth.view = get(depth);
     opaquePass.timestampWrites = engine.raster.timer.passWrites("opaque");
+    // Culling by occlusion (occlusionCull.ts), the first phase's depth is
+    // drawn already (`occlusion-depth`): loaded, with the second's drawn over
+    // it, then both phases shaded.
+    const culled = frame.cull?.active === true;
+    opaqueDepth.depthLoadOp = culled ? "load" : "clear";
     const pass = enc.beginRenderPass(opaquePass);
+    frame.bundles.length = 0;
     // Its depth first, then its shading where that depth is (each
     // sample shaded once, not every fragment drawn over it).
-    if (engine.ctx.pipelines.depthPrepass) {
-      frame.bundles[0] =
+    if (culled) {
+      const depthAgain = view.world.retestBundle("depth");
+      if (depthAgain) {
+        frame.bundles.push(depthAgain);
+      }
+      frame.bundles.push(...phaseBundles(view, "opaque", frame.bundle!));
+    } else if (engine.ctx.pipelines.depthPrepass) {
+      frame.bundles.push(
         (frame.clipBytes > 0 && view.world.clippedBundle("depth")) ||
-        view.world.depthBundle();
-      frame.bundles[1] = frame.bundle!;
+          view.world.depthBundle(),
+        frame.bundle!,
+      );
     } else {
-      frame.bundles[0] = frame.bundle!;
+      frame.bundles.push(frame.bundle!);
     }
     pass.executeBundles(frame.bundles);
     drawSectionCaps(engine, view, frame, pass, get, { capLow, capHigh });

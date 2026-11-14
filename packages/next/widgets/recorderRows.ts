@@ -43,6 +43,8 @@ export const RECORD_COLUMNS = [
   "triangles", // tick: whole triangles submitted by the render, before GPU culling
   "draws", // tick: draw items submitted (instances counted each)
   "points", // tick: points submitted (point sets: their capacity)
+  "occ_culled_draws", // tick: draw items occlusion culling left undrawn (the latest readout, a tick or two late)
+  "occ_culled_triangles", // tick: their whole triangles
   "frame", // tick: 1 when the view's image was saved as frame-<tick>.png
 ] as const;
 
@@ -84,6 +86,9 @@ export interface TickSample {
   triangles?: number;
   draws?: number;
   points?: number;
+  /** Draw items and their triangles occlusion culling left undrawn (`Engine.occlusionCullStats`). */
+  occCulledDraws?: number;
+  occCulledTriangles?: number;
   /** The tick's image was saved. */
   frame?: boolean;
 }
@@ -137,6 +142,10 @@ export function tickRow(s: TickSample): string {
     triangles: formatNumber(s.rendering ? s.triangles : undefined),
     draws: formatNumber(s.rendering ? s.draws : undefined),
     points: formatNumber(s.rendering ? s.points : undefined),
+    occ_culled_draws: formatNumber(s.rendering ? s.occCulledDraws : undefined),
+    occ_culled_triangles: formatNumber(
+      s.rendering ? s.occCulledTriangles : undefined,
+    ),
     frame: s.frame ? "1" : "",
   });
 }

@@ -52,6 +52,7 @@ export interface RenderTickEngine extends Pick<
   | "minimumUploadBytesPerFrame"
   | "moonAxes"
   | "moonPosition"
+  | "occlusionCulling"
   | "occlusionFeedback"
   | "reportFarAnchors"
   | "requestRender"
@@ -399,6 +400,10 @@ export function render(
     });
   }
   readOcclusion(engine.raster.occlusionReads, () => engine.requestRender());
+  // The occlusion cull's counters (occlusionCull.ts), a figure for the inspector.
+  for (const frame of engine.raster.viewFrames.values()) {
+    frame.cull?.afterSubmit();
+  }
   for (const readback of engine.raster.listCounts.splice(0)) {
     whenMapped(readback, () => {
       const needed = new Uint32Array(readback.getMappedRange())[0]!;

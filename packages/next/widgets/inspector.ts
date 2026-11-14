@@ -619,6 +619,7 @@ const KIND_LABELS: Record<string, string> = {
 function geometryHtml(
   geometry: NonNullable<NonNullable<InspectorSnapshot["frame"]>["geometry"]>,
   raysCast: number | undefined,
+  hidden?: { draws: number; triangles: number },
 ): string {
   const used = geometry.filter((k) => k.draws > 0);
   const idle = geometry.filter((k) => k.draws === 0);
@@ -637,12 +638,20 @@ function geometryHtml(
         (k) =>
           `<tr><td>${escape(KIND_LABELS[k.kind] ?? k.kind)}</td><td class="ci-num">${count(k.draws)}</td><td class="ci-num">${what(k) || "—"}</td></tr>`,
       )
-      .join("")}</tbody></table>` +
+      .join("")}${
+      hidden
+        ? `<tr class="ci-hidden"><td>Hidden by occlusion</td><td class="ci-num">${count(hidden.draws)}</td><td class="ci-num">${hidden.triangles > 0 ? `${count(hidden.triangles)} tris` : "—"}</td></tr>`
+        : ""
+    }</tbody></table>` +
     `<div class="ci-note">${
       idle.length
         ? `None: ${idle.map((k) => escape((KIND_LABELS[k.kind] ?? k.kind).toLowerCase())).join(", ")}. `
         : ""
     }Counted before GPU culling; patch triangles aren't counted.${
+      hidden
+        ? " Hidden by occlusion: submitted, then left undrawn because the view's own depth hid them (a tick or two late)."
+        : ""
+    }${
       raysCast !== undefined
         ? ` Rays cast since the last frame: ${count(raysCast)}.`
         : ""
@@ -692,7 +701,12 @@ function frameHtml(s: InspectorSnapshot, framesPerSecond?: number): string {
         .join(" · "),
     ]);
   }
-  return kv(rows) + (f.geometry ? geometryHtml(f.geometry, f.raysCast) : "");
+  return (
+    kv(rows) +
+    (f.geometry
+      ? geometryHtml(f.geometry, f.raysCast, f.hiddenByOcclusion)
+      : "")
+  );
 }
 
 interface LastMove {
@@ -1567,6 +1581,7 @@ const CSS = `
 .cesium-inspector .ci-geometry { inline-size: 100%; border-collapse: collapse; margin-top: 6px; }
 .cesium-inspector .ci-geometry th { text-align: start; font-weight: 400; color: var(--ci-muted); font-size: 11px; padding: 0 0 2px; }
 .cesium-inspector .ci-geometry th:not(:first-child), .cesium-inspector .ci-geometry td.ci-num { text-align: right; padding-inline-start: 8px; }
+.cesium-inspector .ci-geometry tr.ci-hidden td { color: var(--ci-muted); border-top: 1px solid var(--ci-grid); padding-top: 2px; }
 .cesium-inspector .ci-gpu-head { display: flex; align-items: center; gap: 8px; margin: 2px 0 4px; color: var(--ci-muted); font-size: 11px; }
 .cesium-inspector .ci-gpu-head > span:first-child { color: var(--ci-text); }
 .cesium-inspector .ci-gpu-head > .ci-muted { margin-inline-start: auto; }

@@ -278,6 +278,9 @@ const ARGUMENT_ACCESSORS = [
   "countChunks",
   "countedChunks",
   "storePatchArguments",
+  "retestArgumentSlot",
+  "addToCounter",
+  "counted",
 ] as const;
 
 /** Lines of a Slang module that index `args[` outside its accessors. */

@@ -149,6 +149,7 @@ export function createRecorder(
     framesRendered = s.framesRendered;
 
     const { queries, flips, hidden } = engine.occlusionStats;
+    const culled = engine.occlusionCullStats;
     const frame =
       rendering &&
       (captureNext || (wantFrame?.(s.tick) ?? false)) &&
@@ -166,6 +167,8 @@ export function createRecorder(
       triangles: s.triangles,
       draws: totals(s.geometry, "draws"),
       points: totals(s.geometry, "points"),
+      occCulledDraws: culled.draws,
+      occCulledTriangles: culled.triangles,
       occQueries: queries - occQueries,
       occHidden: hidden,
       occFlips: flips - occFlips,
