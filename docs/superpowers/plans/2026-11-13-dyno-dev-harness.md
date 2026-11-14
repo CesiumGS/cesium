@@ -26,11 +26,10 @@
 
 **Sources:**
 
-- `CESIUM2_WEBGPU_PLAN.md` §16 (all of it), in particular:
-  - §16.5 (interfaces) and §16.6 (engine names);
-  - §16.7 (frozen builds, reuse, early stop, areas and tiers);
-  - §16.9 (sweeps, Workspace, Alerts);
-  - §16.10 (image checks).
+- The benchmark suite's design, all of it:
+  - `docs/design/benchmark-suite.md`, in particular "Interfaces: agents, scripts and people", "Engines and versions", and "Findings to work through (r33)" (frozen builds, reuse, early stop, areas and tiers);
+  - `docs/design/benchmark-analysis-and-experience.md` (sweeps, the Workspace, Alerts);
+  - `docs/design/image-regression-in-dyno.md` (image checks).
 - `packages/next/AGENTS.md`; `packages/next/bench/suite/DESIGN.md`.
 - Code, read for this plan (paths under `packages/next/`):
   - the suite's core: `bench/suite/cli.mjs`, `engines.mjs`, `engineBuilds.mjs`, `frozen.mjs`, `report.mjs` (`summarizeRun`, `METRICS`), `schema.ts`, `images.mjs`, `suite.ts`, `data.ts`;
@@ -111,7 +110,7 @@ DEFINITIONS (repo)         Dataset · Scene (groups A to D) · Scenario · Check
 | --- | --- | --- | --- | --- |
 | **Item** | Work | A tracker item, `CS-<n>`: a task, a decision, an investigation. | A study serves one item; several studies may serve one item. | The tracker. Dyno stores the ID only. |
 | **Study** (new) | Judgement | A question, a hypothesis, expectations, a design, notes, a status (open, concluded or abandoned) and a verdict. No machine details; runs cited by ID. | It is the study. | The repo: `packages/next/work/studies/<id>.md`, beside the tracker's items |
-| **Expectations** | Judgement | The primary metric, the guardrails and the tolerance, declared before results (§16.9's "decide" practice). | A study declares them; its runs copy them into `plan`, so each run's scorecard tests them. | The study; a copy in each run |
+| **Expectations** | Judgement | The primary metric, the guardrails and the tolerance, declared before results (the "Decide" practice in `docs/design/benchmark-analysis-and-experience.md`). | A study declares them; its runs copy them into `plan`, so each run's scorecard tests them. | The study; a copy in each run |
 | **Verdict** (new) | Judgement | Supported, refuted or inconclusive, with the reasoning, the runs cited (each with what it showed) and the decision it informs (`CS-<n>`). | It ends a study. | The study |
 | **Run** | Execution | One invocation, one result file, one machine and commit. Its **kind** is `bench`, `images`, `lab`, `recording` or `tests`. | Evidence: a run made for a study records `study`. An earlier run can be attached. | `<store>/<id>.json`, with its summary and assets |
 | **Purpose** | Execution | `baseline` (the integration branch, clean, the history Trends draws) or `dev` (everything else). | Study runs are dev runs. A verdict may cite baseline runs. | The run |
@@ -129,7 +128,7 @@ DEFINITIONS (repo)         Dataset · Scene (groups A to D) · Scenario · Check
 | **Check** | Definition | A scene at a moment of its camera path (or settled), captured and compared. | Image runs capture checks; a study cites them. | The scene (`checks`) |
 | **Approved image** | Judgement | The image a check is compared against, per renderer class (the files say "baselines"). | A study may approve a new image as part of its verdict. | `<store>/baselines/<class>/` |
 | **Setup**, **setting** | Definition | A setup is named engine settings without a build (`2.0+stepwise`); a setting is one variable in the registry (section 4). | Sweep axes are settings. | The catalog; `bench/suite/settings.mjs` |
-| **Engine** | Definition | 1.x or 2.0, from a release, the working tree or a git ref (§16.6). | | `engines.mjs` |
+| **Engine** | Definition | 1.x or 2.0, from a release, the working tree or a git ref (`docs/design/benchmark-suite.md`, "Engines and versions"). | | `engines.mjs` |
 | **Metric**, **budget** | Definition | A measured quantity with units and a direction; a budget is a limit on one per scene. | Expectations name metrics. | `report.mjs`, the catalog |
 | **Lab page** | Definition | A harness with `mount` and `run`. | A group D scene can name one. | `lab/pages.ts` |
 | **Machine**, **runner**, **device** | Execution context | A machine is a computer with an alias (`mac`, `win`) and a hardware class. A runner is a machine that lends its browser and GPU to runs another machine drives and serves; a device is any paired browser (section 8). "Served remotely" is part of a machine's identity. | A study can use runs from every machine and device, and Dyno warns when a timing claim mixes them. | `BENCH_MACHINE`; the hub's device registry |
@@ -292,7 +291,7 @@ A group D scene names a gallery example, its parameters and how to frame it.
   - An example opts out by declaring `pose: false` in `examples/index.ts`, for examples whose camera is the point of the example.
   - The Explorer's and the Viewer's "save this view" writes the same six numbers.
 - **When it is settled.**
-  - Until the refinement plan's `view.converged()` lands (§6 M11, R1 and R5), the driver uses `alphaSweep.mjs`'s rule, generalized. Every tileset reports nothing in flight, queued or loading, and the drawn triangle and tile counts hold for `holdMs`. The cap is `capSeconds`.
+  - Until the refinement plan's `view.converged()` lands (CS-136, after CS-134 and CS-138), the driver uses `alphaSweep.mjs`'s rule, generalized. Every tileset reports nothing in flight, queued or loading, and the drawn triangle and tile counts hold for `holdMs`. The cap is `capSeconds`.
   - The engine's state is read, not an example's own "refining" indicator.
   - When `converged({ until: "converged" })` exists, the driver calls it with the cap as its timeout and records what was still pending.
   - A run that hits the cap is **not settled**, not failed. Its metrics are recorded with `settled: false`, the reason, and the request rate over its last 30 s ("still rising").
@@ -401,7 +400,7 @@ One component shows a sweep run. It appears in two places: a run's report (Runs)
   - A thumbnail per point, laid out by the same two axes. Each carries its pixel difference from the reference as words ("within noise", "4.1% of pixels").
   - A click opens the pair in the Images view's compare modes (side by side, swipe, flicker, FLIP heatmap). These take any two images, not only a check and its approved image.
 - **Expectations:** the run's (or its study's) primary metric and guardrails, with the scorecard's result per point against the reference.
-- **Later:** parallel coordinates and parameter importance (§16.9). Three axes read well as small multiples.
+- **Later:** parallel coordinates and parameter importance (`docs/design/benchmark-analysis-and-experience.md`, "Explore"; CS-333). Three axes read well as small multiples.
 
 ## 5. Branches, worktrees and purpose
 
@@ -657,7 +656,7 @@ The same split (the Mac serves, drives where it can, and records) reaches any pa
   - Manual device runs have no controlled conditions (no cooldown, no quiet rule, no telemetry), so they are valid with warnings by design.
   - Their timings are evidence for "it runs, and roughly how fast", never for small differences.
 - **What it is for:**
-  - the WebGL 2 plan's R1 device measurements: an iPhone on iOS 18, an Android phone with a Mali or Xclipse GPU, Firefox on Linux;
+  - the WebGL 2 browser research's device measurements (CS-43, and the probe runs CS-47 on the devices CS-46 names): an iPhone on iOS 18, an Android phone with a Mali or Xclipse GPU, Firefox on Linux;
   - the engine profiles' real-device facts, gathered as runs in the store and cited by studies instead of copied by hand.
 
 ### Archives by hand (DH-11, the fallback)
@@ -799,7 +798,7 @@ How they are run:
 | DH-11 | **Archives: export and import** (the manual fallback). The merge rules of section 8 (runs, triage, approved images, annotations; studies travel with the branch), archive naming, and Machines with both stores. | new `bench/suite/commands/sync.mjs`; `cli.mjs` | Exporting from one store and importing into another twice gives the same store as importing once. A triage edit on each side keeps the newer, with the other in its history. Approved images of two renderer classes merge without review. All tested on two temporary stores. | DH-1 |
 | DH-12 | **Lab into the store.** One registry for Lab and `bench/run.mjs`, which fixes the six broken commands. Lab scenes in group D. Lab's "Run and record" records a `lab` run. Spikes' checks recorded. | `bench/run.mjs`, `lab/pages.ts`, `lab/harness.ts`, `views/Lab.tsx`, `cli.mjs`, `manifest.mjs` | Every id Lab shows runs headless. `run --scenes globe-parity` records FLIP per view. A recorded Lab run shows in Runs. | DH-1, DH-5 |
 | DH-13 | **Acceptance B: the ×10 cliff-band study.** The image checks and the sweeps of section 10B as one study; the verdict; the conclusion in the transform-graph plan. | the plan; the study | Section 10B's "done when". | DH-8, DH-17, and the engine's shadow knobs and `debug=cascade` (the cliff-band study's own task) |
-| DH-14 | **AGENTS.md and the skill, with the tracker.** Section 12's text lands in one coordinated AGENTS.md change with the tracker's "Work items" section, and both skills in `.claude/skills/`, adjusted to what was built. A first version after DH-1, DH-3 and DH-16 covers tagging, studies, run IDs, the lock, and the commands that exist. The full version follows DH-17. | `packages/next/AGENTS.md`, `.claude/skills/measuring-with-dyno/SKILL.md` (committed past the local exclude), with the tracker's own skill beside it | A fresh session, given only "find out what α does at ×10", opens a study, runs a tagged Dyno sweep, records a verdict, and reports the study and run IDs. | DH-1, DH-3, DH-16 (first); DH-17 (full); the tracker's section |
+| DH-14 | **AGENTS.md and the skill, with the tracker.** Section 12's text lands in `packages/next/AGENTS.md` beside the tracker's "Work items" section (already merged), the two cross-referenced, with this plan's skill beside the tracker's `work-items` skill in `packages/next/.claude/skills/`, adjusted to what was built. A first version after DH-1, DH-3 and DH-16 covers tagging, studies, run IDs, the lock, and the commands that exist. The full version follows DH-17. | `packages/next/AGENTS.md`, `packages/next/.claude/skills/measuring-with-dyno/SKILL.md`, beside `work-items/SKILL.md` | A fresh session, given only "find out what α does at ×10", opens a study, runs a tagged Dyno sweep, records a verdict, and reports the study and run IDs. | DH-1, DH-3, DH-16 (first); DH-17 (full); the tracker's section |
 | DH-15 | **The navigation rail** (section 16).The rail regrouped by what people come to do, with a reserved first place for the tracker's Work page. Images beside Overview and Alerts. Machines moved into Overview. Examples in the looking group. The footer's Settings item. The redirect for `?tab=machines`. Shortcuts and the command palette updated. DESIGN.md's who-it-is-for list, information architecture, words and the shell's comment updated. Analysis keeps its name and place until DH-17 replaces it. | `bench/suite/shell.tsx`, `routes.tsx`, `views/Analysis.tsx` (Machines out), `views/Overview.tsx` (Machines), `views/FirstRun.tsx` (links), `DESIGN.md`, the route and link tests | Every route in section 16's inventory is reachable from the rail, a run, a scene or the palette, and highlights the right rail item. Old links land on their new homes. The rail fits a 900 px tall window, collapsed and expanded. DESIGN.md's table matches `shell.tsx`. Owner review by clicking around. | DH-2 |
 | DH-16 | **Studies: the model, the files and the commands.** (Opus.) The study file format (the tracker's frontmatter subset and sections) in `packages/next/work/studies/`, with its validator, shared with the tracker's `check`. `study new`, `note`, `attach`, `verdict`, `abandon`, `reopen`, `show`; `studies` (with `--all-branches`, reading other branches through git). `run --study`, inheriting item and expectations; the implicit study for `--hypothesis`. ID uniqueness across local branches. Retention keeping every run a study cites or attaches. The dev server's read endpoints and its validated write endpoint, which writes files into its own worktree. | new `bench/suite/studies.mjs`, `commands/studies.mjs`, `packages/next/work/studies/README.md`; `cli.mjs` (dispatch, `--study`), `schema.ts`, `vite.config.ts` (endpoints), `data.ts`, the store's clean-up; the tracker's `scripts/work/views.mjs` (`check` calls the validator) | A study made, run against, noted and concluded from the CLI reads back with its evidence, and its file diffs cleanly. A verdict citing an invalid run warns. A run with `--hypothesis` and no study creates a file. A study on another local branch lists with its branch. The endpoint rejects a malformed or oversized body and never writes outside `work/studies/` (tested). A cited run survives retention. `studies --item CS-<n> --json` is stable for the tracker. | DH-1, and the tracker's `work/` folder |
 | DH-17 | **The Studies page.** (Opus.) Studies: a list with status, item, question, latest evidence, branch, and a mark for uncommitted changes; studies on other local branches, read-only. A study's page: the question, hypothesis and expectations; the design as copyable commands, each marked with the run that executed it; the evidence, with each sweep in the sweep view, image runs as grids, before-and-after runs as forest plots with their results, and runs not in this store shown by ID and machine; notes; the verdict form (outcome, reasoning, cited runs picked from the evidence, decision item), which writes the file. Analysis replaced: `/analysis` redirects to Studies, and sweep runs without a study open in their run report. Overview's "Open studies". "Investigate" on alerts. Decision annotations on Trends. | new `views/Studies.tsx`, `views/Study.tsx`, `studies.css`; `views/Analysis.tsx` (removed), `routes.tsx`, `shell.tsx` (the rail item), `views/Overview.tsx`, `views/Alerts.tsx`, `trendsModel.ts`, `DESIGN.md` | The α study (DH-7) reads from question to verdict on one page. A verdict recorded in the page writes the file and appears in `study show`, and the reverse. Old `/analysis?sweep=` links land on the run's report or its study. Owner review by clicking around. | DH-6, DH-15, DH-16 |
@@ -819,14 +818,14 @@ How they are run:
 
 ## 12. Draft: AGENTS.md section and skill
 
-These land in one coordinated AGENTS.md change with the tracker's "Work items" section (DH-14). The two sections refer to each other: items say what to do, studies say what was found. Both skills live in `.claude/skills/` (question 6).
+These land in `packages/next/AGENTS.md` beside the tracker's "Work items" section, which merged first (DH-14). The two sections refer to each other: items say what to do, studies say what was found. Both skills live in `packages/next/.claude/skills/` (question 6).
 
 ### For `packages/next/AGENTS.md` (proposed text; not applied)
 
 ```markdown
 ## Measuring with Dyno
 
-Dyno (`bench/suite/`, plan §16) is where we measure. Its results store
+Dyno (`bench/suite/`, `docs/design/benchmark-suite.md`) is where we measure. Its results store
 (`~/.cesium-bench/results`, `BENCH_RESULTS`) is outside the repo and shared by
 every worktree on the machine, so a run you make is visible to the main
 session and the owner as soon as it finishes. The skill
@@ -939,7 +938,7 @@ description: Use when you need a number about rendering, streaming, GPU or
 | 3 | Who may make baseline runs? | **Only clean runs of the integration branch**, enforced by the CLI. Old runs count as baseline runs. |
 | 4 | The default way to measure a change? | **In one run against the base engine** (`--against-base`). |
 | 5 | The second machine? | **Changed:** no results repository for now. The laptop lends a browser endpoint over the LAN; the Mac builds, serves, drives and records (section 8). Archives by hand stay as the fallback. A Bentley-internal results repository later, perhaps. |
-| 6 | Where does the skill live? | **`.claude/skills/measuring-with-dyno/SKILL.md`, committed** past the local exclude, beside the tracker's skill. |
+| 6 | Where does the skill live? | **`packages/next/.claude/skills/measuring-with-dyno/SKILL.md`, committed**, beside the tracker's `work-items` skill. |
 | 7 | The engine's development knobs: public or development-only? | **Development-only**, through the dev handle, not in `api/surface.txt`. |
 | 8 | Group D scenes on Scenes and in Overview? | **On Scenes under their own heading; never in Overview, headline means or budgets.** |
 | 9 | Retention? | **Keep bench and image runs; prune test runs and recordings by count; never prune a cited or pinned run.** |
@@ -964,7 +963,7 @@ Each has a recommendation; the plan assumes it.
 ## 14. Non-goals and follow-ups
 
 - **Not here:**
-  - running benchmarks on CI or runner machines beyond the owner's two (§16.8 v2);
+  - running benchmarks on CI or dedicated runner machines beyond the owner's two (`docs/design/benchmark-suite.md`, "Later (v2 and beyond)"; CS-323 and CS-324);
   - the handbook reading the store instead of `bench/results` (a handbook change after DH-12);
   - parallel coordinates and parameter importance;
   - popping in motion as a metric. The α study measured static frames only. The transform-graph plan defines a pop as the largest screen displacement when tiles swap; that metric is a follow-up once a camera path runs on example scenes;
