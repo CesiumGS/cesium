@@ -69,6 +69,12 @@ export function buildPyramid(
   frameWidth: number,
   frameHeight: number,
   depth: (x: number, y: number) => number,
+  /**
+   * A single-sampled depth (hzb.slang `level0Pixels`): each level-0 texel
+   * also folds the ring of pixels round its block, so no multisample within
+   * those pixels sees farther than the texel says.
+   */
+  dilate = false,
 ): PyramidLevel[] {
   const shape = pyramidShape(frameWidth, frameHeight);
   const out: PyramidLevel[] = [];
@@ -78,9 +84,18 @@ export function buildPyramid(
     const [y0, y1] = blockOf(y, frameHeight, height);
     for (let x = 0; x < width; x++) {
       const [x0, x1] = blockOf(x, frameWidth, width);
+      const ring = dilate ? 1 : 0;
       let farthest = Infinity;
-      for (let j = y0; j <= y1; j++) {
-        for (let i = x0; i <= x1; i++) {
+      for (
+        let j = Math.max(y0 - ring, 0);
+        j <= Math.min(y1 + ring, frameHeight - 1);
+        j++
+      ) {
+        for (
+          let i = Math.max(x0 - ring, 0);
+          i <= Math.min(x1 + ring, frameWidth - 1);
+          i++
+        ) {
           farthest = Math.min(farthest, depth(i, j));
         }
       }

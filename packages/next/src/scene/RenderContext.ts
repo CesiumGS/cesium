@@ -402,10 +402,12 @@ export interface Pipelines extends SurfacePipelines {
   depthRange: GPUComputePipeline;
   /**
    * The depth pyramid a view's tile queries test against (`hzb.slang`): its
-   * first level from the multisampled depth, then each from the one before;
-   * and the queries (`occlusionQuery.slang`).
+   * first level from the multisampled depth, or from the ambient-occlusion
+   * prepass's single-sampled depth (`hzbLevel0Pixels`), then each from the
+   * one before; and the queries (`occlusionQuery.slang`).
    */
   hzbLevel0: GPUComputePipeline;
+  hzbLevel0Pixels: GPUComputePipeline;
   hzbReduce: GPUComputePipeline;
   occlusionQuery: GPUComputePipeline;
   /** The translucent passes' group 3 (`SurfacePipelines.translucent*`). */
@@ -2043,6 +2045,7 @@ async function createPipelines(
     compositeExact,
     compositeMoments,
     hzbLevel0,
+    hzbLevel0Pixels,
     hzbReduce,
     occlusionQuery,
   ] = await Promise.all([
@@ -2269,6 +2272,14 @@ async function createPipelines(
       label: "hzb.level0",
       layout: "auto",
       compute: { module: module("hzb", hzbWgsl), entryPoint: "level0" },
+    }),
+    device.createComputePipelineAsync({
+      label: "hzb.level0Pixels",
+      layout: "auto",
+      compute: {
+        module: module("hzb", hzbWgsl),
+        entryPoint: "level0Pixels",
+      },
     }),
     device.createComputePipelineAsync({
       label: "hzb.reduce",
@@ -2603,6 +2614,7 @@ async function createPipelines(
     compositeExact,
     compositeMoments,
     hzbLevel0,
+    hzbLevel0Pixels,
     hzbReduce,
     occlusionQuery,
     momentFormats,

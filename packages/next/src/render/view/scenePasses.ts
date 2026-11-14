@@ -25,7 +25,11 @@ import {
 import type { EngineRaster } from "./engineRaster.ts";
 import { encodeClipTable } from "./clipTable.ts";
 import { drawSectionCaps } from "./capPasses.ts";
-import { phaseBundles, prepareOcclusionCull } from "./occlusionCull.ts";
+import {
+  encodeSecondPhase,
+  prepareOcclusionCull,
+  secondPhaseBundle,
+} from "./occlusionCull.ts";
 
 /** Rasterizer side: pass bodies up to the opaque image. */
 export interface ScenePassEngine extends Pick<
@@ -276,16 +280,30 @@ export function prepassPassBody(
     }
     prepassColor.view = get(prepassNormal);
     prepassDepthAttachment.view = get(prepassDepth);
+    prepassColor.loadOp = "clear";
+    prepassDepthAttachment.depthLoadOp = "clear";
     prepassPass.timestampWrites = engine.raster.timer.passWrites("prepass");
     const pass = enc.beginRenderPass(prepassPass);
-    const bundle =
+    pass.executeBundles([
       (frame.clipBytes > 0 && view.world.clippedBundle("prepass")) ||
-      view.world.prepassBundle();
-    // Both phases' draws when the tick culls by occlusion (occlusionCull.ts).
-    pass.executeBundles(
-      frame.cull?.active ? phaseBundles(view, "prepass", bundle) : [bundle],
-    );
+        view.world.prepassBundle(),
+    ]);
     pass.end();
+    // Culling by occlusion (occlusionCull.ts), that was the first phase: the
+    // pyramid of its depth and the second phase, whose draws go into the
+    // same targets. No depth pass of the cull's own.
+    if (frame.cull?.active && frame.cull.firstDepth === "prepass") {
+      encodeSecondPhase(engine, view, frame, enc, get(prepassDepth));
+      const second = secondPhaseBundle(view, "prepass");
+      if (second) {
+        prepassColor.loadOp = "load";
+        prepassDepthAttachment.depthLoadOp = "load";
+        prepassPass.timestampWrites = engine.raster.timer.passWrites("prepass");
+        const again = enc.beginRenderPass(prepassPass);
+        again.executeBundles([second]);
+        again.end();
+      }
+    }
   };
 }
 
@@ -442,21 +460,29 @@ export function opaquePassBody(
     opaqueDisplay.resolveTarget = get(displayResolved);
     opaqueDepth.view = get(depth);
     opaquePass.timestampWrites = engine.raster.timer.passWrites("opaque");
-    // Culling by occlusion (occlusionCull.ts), the first phase's depth is
-    // drawn already (`occlusion-depth`): loaded, with the second's drawn over
-    // it, then both phases shaded.
+    // Culling by occlusion (occlusionCull.ts): both phases' depth, then both
+    // shaded. Where the first phase's depth had a pass of its own
+    // (`occlusion-depth`, a view without the prepass this tick), it is loaded.
     const culled = frame.cull?.active === true;
-    opaqueDepth.depthLoadOp = culled ? "load" : "clear";
+    const loaded = culled && frame.cull!.firstDepth === "opaque";
+    opaqueDepth.depthLoadOp = loaded ? "load" : "clear";
     const pass = enc.beginRenderPass(opaquePass);
     frame.bundles.length = 0;
     // Its depth first, then its shading where that depth is (each
     // sample shaded once, not every fragment drawn over it).
     if (culled) {
-      const depthAgain = view.world.retestBundle("depth");
-      if (depthAgain) {
-        frame.bundles.push(depthAgain);
+      if (!loaded) {
+        frame.bundles.push(view.world.depthBundle());
       }
-      frame.bundles.push(...phaseBundles(view, "opaque", frame.bundle!));
+      for (const kind of ["depth", "opaque"] as const) {
+        if (kind === "opaque") {
+          frame.bundles.push(frame.bundle!);
+        }
+        const second = secondPhaseBundle(view, kind);
+        if (second) {
+          frame.bundles.push(second);
+        }
+      }
     } else if (engine.ctx.pipelines.depthPrepass) {
       frame.bundles.push(
         (frame.clipBytes > 0 && view.world.clippedBundle("depth")) ||
