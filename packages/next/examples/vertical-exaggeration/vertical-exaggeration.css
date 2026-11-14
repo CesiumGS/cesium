@@ -7,6 +7,55 @@
   z-index: 2;
 }
 
+/* What is still refining once something has drawn: a small chip at the bottom
+   centre, fixed in size, taking no input. */
+.vex-refining {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 26ch;
+  max-width: calc(100% - 16px);
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in oklab, Canvas 82%, transparent);
+  color: CanvasText;
+  border: 1px solid color-mix(in oklab, CanvasText 16%, transparent);
+  backdrop-filter: blur(6px);
+  font: 400 12px/18px var(--cesium-ui-font, system-ui, sans-serif);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.vex-refining[hidden] {
+  display: none;
+}
+.vex-refining-ring {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid color-mix(in oklab, CanvasText 20%, transparent);
+  border-top-color: var(--cesium-ui-accent, AccentColor);
+  animation: vex-spin 1s linear infinite;
+}
+.vex-refining-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vex-refining-ring {
+    animation: none;
+    border-color: var(--cesium-ui-accent, AccentColor);
+  }
+}
+
 /* A load in progress: a card that names the stage, over a view that stays live. */
 .vex-loading {
   position: absolute;
