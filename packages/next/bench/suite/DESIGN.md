@@ -18,7 +18,7 @@ Engineers working on CesiumJS 2.0. They come to:
    or flaky tests, open studies.
 2. **Read results:** one run or two compared (Runs, a run's report,
    Compare), metrics over time (Trends), one scene's history (Scenes).
-3. **Look at content live:** a scene in one or two engines (Explorer),
+3. **Look at content live:** a scene in one or two engines (the top of its page),
    any content in one engine (Viewer), an example (Examples).
 4. **Find things out:** a sweep (Analysis, until Studies replace it) or
    a focused check (Lab).
@@ -40,9 +40,8 @@ and `test/dynoRail.test.ts` checks this table against it.
 |              | Images          | i   | `/images`                    | Image checks to review (a count)                    |
 | Results      | Trends          | t   | `/trends`                    | Metrics run to run                                  |
 |              | Runs            | r   | `/runs`, `/runs/$run`        | Every run; a run's report; pick two to compare      |
-|              | Scenes          | s   | `/scenes`, `/scenes/$scene`  | The catalog; a scene's page is its history          |
+|              | Scenes          | s   | `/scenes`, `/scenes/$scene`  | The catalog; a scene's results, and the scene live  |
 | Look         | Viewer          | v   | `/viewer`                    | Any content in one engine at a time, to debug       |
-|              | Explorer        | e   | `/explorer`                  | A scene live in one or two engines                  |
 |              | Examples        | x   | `/examples`, `/examples/$id` | What 2.0 is for, one feature or use case each       |
 | Experiment   | Analysis        | n   | `/analysis`                  | Sweeps; Studies replace it (CS-405)                 |
 |              | Lab             | l   | `/lab`, `/lab/$id`           | Parity checks, microbenchmarks, spikes              |
@@ -57,7 +56,8 @@ and `test/dynoRail.test.ts` checks this table against it.
   a rail item (a run's report, a scene, an example, a Lab page)
   highlights its item. `/` opens the Overview.
 - **Moved:** Machines is a section of the Overview (`/overview#machines`);
-  old `/analysis?tab=machines` links land there.
+  old `/analysis?tab=machines` links land there. The Explorer is now the top
+  of each scene's page (below).
 - **On a phone** (600 px and narrower) the rail starts folded, opens
   over the page, and folds after a pick.
 
@@ -82,6 +82,16 @@ run**, **item** (`CS-<n>`, a work item in the tracker); **sweep**,
 Never "baseline" alone: say "baseline run", "baseline and candidate" or
 "approved image". Pages that still call a run's result its verdict
 change as the harness's pages land.
+
+## A scene's page
+
+One page per scene (`/scenes/$scene`), top to bottom: the scene live in
+one or two engines side by side (the former Explorer), its content and
+licences, then its measured results (best results, history, changes,
+requests, filmstrip). The live view's engines and place on the camera
+path are in the page's search, so a report links to a moment. It loads
+with the page; the engines share one GPU and main thread, so its
+timings don't compare, and it says so.
 
 ## The Work board
 
@@ -178,7 +188,7 @@ to see.
   never `sx`, never hard-coded colors except the validated chart palette
   and the 3D viewport's HUD.
 
-## Live engines (Explorer, Viewer)
+## Live engines (a scene's live view, the Viewer)
 
 - **Inspector**: every engine view carries the inspector
   (`widgets/inspector.ts`) over it, collapsed to one line; 1.x and 2.0
@@ -186,7 +196,7 @@ to see.
 - **Credits**: each engine's credits sit in its own view, bottom left,
   as 1.x shows them (required notices on screen, the rest behind Data
   attribution).
-- **Timings**: the Explorer says up front that its timings don't compare
+- **Timings**: the live view says up front that its timings don't compare
   (both engines share the machine) and links measured results; the
   Viewer runs one engine at a time.
 - **The Viewer follows StrataKit's app layout** (its sandbox) instead of

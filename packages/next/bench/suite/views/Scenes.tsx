@@ -15,12 +15,11 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { svgArrowLeft } from "@stratakit/icons/arrow-left";
 import { svgChartLine } from "@stratakit/icons/chart-line";
-import { svgGlobe } from "@stratakit/icons/globe";
 import { Icon } from "@stratakit/mui";
+import { svgArrowLeft } from "@stratakit/icons/arrow-left";
 import { getRouteApi, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { ALERT_METRICS, detectAlerts } from "../changepoints.mjs";
 import { lineChart } from "../charts.mjs";
 import { waterfall } from "../diagnose.mjs";
@@ -46,6 +45,11 @@ import {
   useRuns,
 } from "./common.tsx";
 import "./scenes.css";
+
+/** The live view, loaded with its engines only when a scene's page opens. */
+const LiveView = lazy(() =>
+  import("./Explorer.tsx").then((m) => ({ default: m.LiveView })),
+);
 
 /**
  * Dyno's scenes (DESIGN.md: Scenes), after Strava segments: the catalog
@@ -578,14 +582,6 @@ function SceneDetail({
           >
             Open in trends
           </Button>
-          <Button
-            color="primary"
-            render={<Link to="/explorer" search={{ scene: entry.scene }} />}
-            nativeButton={false}
-            startIcon={<Icon href={svgGlobe} />}
-          >
-            Open in the explorer
-          </Button>
         </>
       }
       help={
@@ -607,6 +603,72 @@ function SceneDetail({
         </>
       }
     >
+      {scene && (
+        <Suspense
+          fallback={
+            <div className="section scene-live-pending" role="status">
+              <CircularProgress size={16} />
+              <Typography variant="body-sm">Starting the live view…</Typography>
+            </div>
+          }
+        >
+          <LiveView sceneId={entry.scene} />
+        </Suspense>
+      )}
+
+      {datasets.length > 0 && (
+        <Section title="Content and licenses">
+          <div className="table-scroll">
+            <Table size="small" className="content-table">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Dataset</TableCell>
+                  <TableCell>Kind</TableCell>
+                  <TableCell>License</TableCell>
+                  <TableCell>Use</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {datasets.map((d) => (
+                  <TableRow key={d.id}>
+                    <TableCell render={<th scope="row" />}>{d.title}</TableCell>
+                    <TableCell>{KIND[d.kind]}</TableCell>
+                    <TableCell>
+                      {d.license.source ? (
+                        <MuiLink
+                          href={d.license.source}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {d.license.name}
+                        </MuiLink>
+                      ) : (
+                        d.license.name
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title={d.license.notes ?? ""}>
+                        <Badge
+                          variant="inline"
+                          size="small"
+                          type="muted"
+                          color={
+                            d.license.status === "stream-only"
+                              ? "secondary"
+                              : "success"
+                          }
+                          badgeContent={LICENSE[d.license.status]}
+                        />
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Section>
+      )}
+
       {!runs.length ? (
         <div className="section">
           <Empty title="Not run yet.">
@@ -841,59 +903,6 @@ function SceneDetail({
             )}
           </Section>
         </>
-      )}
-
-      {datasets.length > 0 && (
-        <Section title="Content and licenses">
-          <div className="table-scroll">
-            <Table size="small" className="content-table">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Dataset</TableCell>
-                  <TableCell>Kind</TableCell>
-                  <TableCell>License</TableCell>
-                  <TableCell>Use</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {datasets.map((d) => (
-                  <TableRow key={d.id}>
-                    <TableCell render={<th scope="row" />}>{d.title}</TableCell>
-                    <TableCell>{KIND[d.kind]}</TableCell>
-                    <TableCell>
-                      {d.license.source ? (
-                        <MuiLink
-                          href={d.license.source}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {d.license.name}
-                        </MuiLink>
-                      ) : (
-                        d.license.name
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Tooltip title={d.license.notes ?? ""}>
-                        <Badge
-                          variant="inline"
-                          size="small"
-                          type="muted"
-                          color={
-                            d.license.status === "stream-only"
-                              ? "secondary"
-                              : "success"
-                          }
-                          badgeContent={LICENSE[d.license.status]}
-                        />
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </Section>
       )}
     </Page>
   );

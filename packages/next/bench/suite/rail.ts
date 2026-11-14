@@ -80,13 +80,6 @@ export const DESTINATIONS: readonly Destination[] = [
     hint: "Any content in one engine, to debug",
   },
   {
-    to: "/explorer",
-    label: "Explorer",
-    group: "Look",
-    key: "e",
-    hint: "A scene live in one or two engines",
-  },
-  {
     to: "/examples",
     label: "Examples",
     group: "Look",
@@ -139,9 +132,10 @@ export const destinationForKey = (key: string): Destination | undefined =>
   DESTINATIONS.find((d) => d.key === key);
 
 /**
- * Where an old link lands now: `/analysis?tab=machines` (Machines moved
- * into the Overview) goes to the Overview's machines section. Anything
- * else stays put (undefined).
+ * Where an old link lands now, or undefined if it stays put:
+ *
+ * - `/analysis?tab=machines` (Machines moved into the Overview) goes to
+ *   the Overview's machines section.
  */
 export function movedTo(
   path: string,

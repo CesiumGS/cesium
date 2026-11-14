@@ -6,7 +6,6 @@ import {
   Divider,
   FormControlLabel,
   IconButton,
-  Link,
   Popover,
   Slider,
   Switch,
@@ -24,7 +23,7 @@ import { svgPause } from "@stratakit/icons/pause";
 import { svgPlay } from "@stratakit/icons/play";
 import { svgStopwatch } from "@stratakit/icons/stopwatch";
 import { Icon } from "@stratakit/mui";
-import { getRouteApi, Link as RouterLink } from "@tanstack/react-router";
+import { getRouteApi } from "@tanstack/react-router";
 import {
   type ReactNode,
   useEffect,
@@ -52,7 +51,7 @@ import {
   setupOf,
 } from "../engines.mjs";
 import { DEPTH_COLORS, type DrawnTile } from "../suite.ts";
-import { Choice, Empty, Page, Section, toast, useRuns } from "./common.tsx";
+import { Choice, Help, Section, Toolbar, toast, useRuns } from "./common.tsx";
 import {
   ExplorerSession,
   PANE_COLORS,
@@ -61,9 +60,10 @@ import {
 } from "./explorerSession.ts";
 
 /**
- * Dyno's explorer (DESIGN.md: Explorer): a catalog scene live in one or
- * two engine configurations side by side, for looking, not measuring (the
- * engines share one GPU and main thread).
+ * A scene's live view (DESIGN.md: Scenes; the former Explorer), the first
+ * section of the scene's page: the catalog scene live in one or two engine
+ * configurations side by side, for looking, not measuring (the engines
+ * share one GPU and main thread).
  *
  * - Camera path: both cameras on the scene's benchmark camera path; scrub
  *   it or play it. Free flight: fly either engine; linked cameras follow
@@ -74,8 +74,9 @@ import {
  *   `debugShowBoundingVolume`, 2.0 `Tileset3D.debugShowBoundingVolume`);
  *   the selection by depth in both engines.
  *
- * State lives in the route's search (scene, left, right, t, cesium), so
- * a report can link to a place on a scene's camera path. The engines live
+ * The scene is the page's path (`/scenes/$scene`) and the rest lives in
+ * its search (left, right, t, cesium), so a report can link to a place on
+ * a scene's camera path. The engines live
  * in an `ExplorerSession` outside React, which survives StrictMode's
  * mount, unmount and mount.
  */
@@ -93,7 +94,7 @@ const catalog = publicCatalog as unknown as {
   render?: RenderSettings;
 };
 
-const route = getRouteApi("/_runs/explorer");
+const route = getRouteApi("/_runs/scenes/$scene");
 
 /**
  * An engine spec (engines.mjs) as a configuration the explorer can load:
@@ -158,10 +159,10 @@ const SPEEDS = [
   ["2", "2×"],
 ] as const;
 
-export function Explorer() {
+/** A catalog scene's live view, the first section of its page. */
+export function LiveView({ sceneId }: { sceneId: string }) {
   const search = route.useSearch();
   const navigate = route.useNavigate();
-  const sceneId = search.scene ?? catalog.scenes[0]!.id;
   const { index, summaries } = useRuns();
   const left = search.left ?? catalog.engines.baseline;
   const right = search.right ?? catalog.engines.candidate;
@@ -199,7 +200,7 @@ export function Explorer() {
   }, [session]);
 
   // A different scene starts at the path's start.
-  const loadedScene = useRef(search.scene);
+  const loadedScene = useRef<string>(sceneId);
   useEffect(() => {
     if (!scene) {
       return;
@@ -305,7 +306,7 @@ export function Explorer() {
 
   const command = `node packages/next/bench/suite/cli.mjs run --scenes ${sceneId} --engines ${ids.join(",")}${
     ids.length === 2 ? ` --baseline ${left} --candidate ${right}` : ""
-  } --reps 3 --note "explorer: ${sceneId}"`;
+  } --reps 3 --note "live: ${sceneId}"`;
 
   // Releases (the catalog's and any a run measured), then the working
   // tree's setups.
@@ -350,54 +351,22 @@ export function Explorer() {
   );
 
   if (!scene) {
-    return (
-      <Page title="Explorer" help={help}>
-        <Empty title={`No scene “${sceneId}” in the catalog.`}>
-          Pick a scene:{" "}
-          <Choice
-            label="Scene"
-            value={undefined}
-            minWidth={280}
-            options={catalog.scenes.map((s) => [s.id, s.title] as const)}
-            onChange={(v) => setSearch({ scene: v, t: undefined })}
-          />
-        </Empty>
-      </Page>
-    );
+    return null;
   }
   return (
-    <Page
-      className="explorer-page"
-      title="Explorer"
-      description={
-        <>
-          A scene live in two engines side by side, to compare what each one
-          draws. Timings here don't compare: both engines share the CPU, GPU and
-          network. For performance, see the scene's{" "}
-          <Link
-            render={
-              <RouterLink to="/scenes/$scene" params={{ scene: sceneId }} />
-            }
-          >
-            measured results
-          </Link>
-          .
-        </>
-      }
-      help={help}
-      actions={<MeasureThis command={command} />}
-      toolbar={
-        <>
+    <div className="explorer-page">
+      <Section
+        title="Live"
+        description="In one or two engines side by side, to compare what each one draws. Timings here don't compare: both engines share the CPU, GPU and network; the measured results are below."
+        actions={
+          <>
+            <Help label="About the live view">{help}</Help>
+            <MeasureThis command={command} />
+          </>
+        }
+      >
+        <Toolbar>
           <div className="explorer-group">
-            <Choice
-              label="Scene"
-              value={sceneId}
-              minWidth={300}
-              options={catalog.scenes.map(
-                (s) => [s.id, `${s.title} (${s.group})`] as const,
-              )}
-              onChange={(v) => setSearch({ scene: v, t: undefined })}
-            />
             <Choice
               label="Left"
               value={left}
@@ -517,167 +486,167 @@ export function Explorer() {
               />
             ))}
           </Group>
-        </>
-      }
-    >
-      {status?.error && (
-        <Alert severity="error" className="explorer-alert">
-          {status.text}
-        </Alert>
-      )}
+        </Toolbar>
+        {status?.error && (
+          <Alert severity="error" className="explorer-alert">
+            {status.text}
+          </Alert>
+        )}
 
-      <div className="explorer-stage">
-        <div className="explorer-transport">
-          {mode === "path" ? (
-            <>
-              <IconButton
-                label={
-                  playing ? "Pause the camera path" : "Play the camera path"
-                }
-                variant="outlined"
-                onClick={togglePlay}
+        <div className="explorer-stage">
+          <div className="explorer-transport">
+            {mode === "path" ? (
+              <>
+                <IconButton
+                  label={
+                    playing ? "Pause the camera path" : "Play the camera path"
+                  }
+                  variant="outlined"
+                  onClick={togglePlay}
+                >
+                  <Icon href={playing ? svgPause : svgPlay} />
+                </IconButton>
+                <Slider
+                  size="small"
+                  className="explorer-scrubber"
+                  value={Math.round(progress * 1000)}
+                  max={1000}
+                  aria-label="Place on the camera path"
+                  getAriaValueText={(v) => `${(v / 10).toFixed(1)}%`}
+                  onChange={(_, v) => {
+                    const t = (v as number) / 1000;
+                    session.playing = false;
+                    setPlaying(false);
+                    session.setProgress(t);
+                    setProgress(t);
+                  }}
+                  onChangeCommitted={(_, v) =>
+                    commitProgress((v as number) / 1000)
+                  }
+                />
+                <Typography
+                  variant="body-sm"
+                  color="textSecondary"
+                  className="explorer-percent"
+                  aria-hidden="true"
+                >
+                  {(progress * 100).toFixed(1)}%
+                </Typography>
+                <ToggleButtonGroup
+                  size="small"
+                  exclusive
+                  value={speed}
+                  onChange={(_, v: string | null) => {
+                    if (v) {
+                      session.speed = Number(v);
+                      setSpeed(v);
+                    }
+                  }}
+                  aria-label="Playback speed"
+                >
+                  {SPEEDS.map(([v, text]) => (
+                    <ToggleButton
+                      key={v}
+                      value={v}
+                      render={<Button variant="outlined" size="small" />}
+                    >
+                      {text}
+                    </ToggleButton>
+                  ))}
+                </ToggleButtonGroup>
+              </>
+            ) : (
+              <>
+                {configs.length > 1 && (
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        size="small"
+                        checked={link}
+                        onChange={(_, on) => setLink((session.link = on))}
+                      />
+                    }
+                    label="Link cameras"
+                  />
+                )}
+                <Typography variant="body-sm" color="textSecondary">
+                  Drag to rotate, wheel to zoom, Ctrl-drag to tilt.
+                </Typography>
+              </>
+            )}
+            {status && !status.error && (
+              <div className="explorer-status" role="status">
+                <CircularProgress size={14} />
+                <Typography variant="body-sm" color="textSecondary">
+                  {status.text}
+                </Typography>
+              </div>
+            )}
+          </div>
+
+          <div className="explorer-panes" data-count={configs.length}>
+            {configs.map((config, i) => (
+              <div
+                key={`${loadKey}#${i}`}
+                className="explorer-pane"
+                onPointerDownCapture={() => session.lead(i)}
+                onWheelCapture={() => session.lead(i)}
               >
-                <Icon href={playing ? svgPause : svgPlay} />
-              </IconButton>
-              <Slider
-                size="small"
-                className="explorer-scrubber"
-                value={Math.round(progress * 1000)}
-                max={1000}
-                aria-label="Place on the camera path"
-                getAriaValueText={(v) => `${(v / 10).toFixed(1)}%`}
-                onChange={(_, v) => {
-                  const t = (v as number) / 1000;
-                  session.playing = false;
-                  setPlaying(false);
-                  session.setProgress(t);
-                  setProgress(t);
-                }}
-                onChangeCommitted={(_, v) =>
-                  commitProgress((v as number) / 1000)
-                }
-              />
+                <div
+                  className="explorer-view"
+                  ref={(el) => {
+                    if (el) {
+                      panes.current[i] = el;
+                    }
+                  }}
+                />
+                <PaneInspector
+                  session={session}
+                  index={i}
+                  name={paneName(config, index.branch)}
+                  color={PANE_COLORS[i]!}
+                />
+              </div>
+            ))}
+          </div>
+
+          {snapshot?.undrawn.map(
+            (undrawn, i) =>
+              undrawn &&
+              configs[i] && (
+                <Alert key={i} severity="warning" className="explorer-undrawn">
+                  {paneName(configs[i], index.branch)} can&rsquo;t draw the
+                  content of {undrawn.tiles.toLocaleString()}{" "}
+                  {undrawn.tiles === 1 ? "tile" : "tiles"} so far, though the
+                  tile counts include them:{" "}
+                  {undrawn.reasons.slice(0, 3).join("; ")}
+                  {undrawn.reasons.length > 3 &&
+                    `; and ${undrawn.reasons.length - 3} more kinds`}
+                </Alert>
+              ),
+          )}
+
+          <div className="explorer-below">
+            {(colors !== "plain" || volumes.bounding || volumes.content) && (
+              <Legend colors={colors} volumes={volumes} configs={configs} />
+            )}
+            {snapshot?.camera && (
               <Typography
                 variant="body-sm"
                 color="textSecondary"
-                className="explorer-percent"
-                aria-hidden="true"
+                className="explorer-readout"
               >
-                {(progress * 100).toFixed(1)}%
+                Camera {snapshot.camera[0].toFixed(5)}°,{" "}
+                {snapshot.camera[1].toFixed(5)}°,{" "}
+                {Math.round(snapshot.camera[2]).toLocaleString()} m
               </Typography>
-              <ToggleButtonGroup
-                size="small"
-                exclusive
-                value={speed}
-                onChange={(_, v: string | null) => {
-                  if (v) {
-                    session.speed = Number(v);
-                    setSpeed(v);
-                  }
-                }}
-                aria-label="Playback speed"
-              >
-                {SPEEDS.map(([v, text]) => (
-                  <ToggleButton
-                    key={v}
-                    value={v}
-                    render={<Button variant="outlined" size="small" />}
-                  >
-                    {text}
-                  </ToggleButton>
-                ))}
-              </ToggleButtonGroup>
-            </>
-          ) : (
-            <>
-              {configs.length > 1 && (
-                <FormControlLabel
-                  control={
-                    <Switch
-                      size="small"
-                      checked={link}
-                      onChange={(_, on) => setLink((session.link = on))}
-                    />
-                  }
-                  label="Link cameras"
-                />
-              )}
-              <Typography variant="body-sm" color="textSecondary">
-                Drag to rotate, wheel to zoom, Ctrl-drag to tilt.
-              </Typography>
-            </>
-          )}
-          {status && !status.error && (
-            <div className="explorer-status" role="status">
-              <CircularProgress size={14} />
-              <Typography variant="body-sm" color="textSecondary">
-                {status.text}
-              </Typography>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        <div className="explorer-panes" data-count={configs.length}>
-          {configs.map((config, i) => (
-            <div
-              key={`${loadKey}#${i}`}
-              className="explorer-pane"
-              onPointerDownCapture={() => session.lead(i)}
-              onWheelCapture={() => session.lead(i)}
-            >
-              <div
-                className="explorer-view"
-                ref={(el) => {
-                  if (el) {
-                    panes.current[i] = el;
-                  }
-                }}
-              />
-              <PaneInspector
-                session={session}
-                index={i}
-                name={paneName(config, index.branch)}
-                color={PANE_COLORS[i]!}
-              />
-            </div>
-          ))}
-        </div>
-
-        {snapshot?.undrawn.map(
-          (undrawn, i) =>
-            undrawn &&
-            configs[i] && (
-              <Alert key={i} severity="warning" className="explorer-undrawn">
-                {paneName(configs[i], index.branch)} can&rsquo;t draw the
-                content of {undrawn.tiles.toLocaleString()}{" "}
-                {undrawn.tiles === 1 ? "tile" : "tiles"} so far, though the tile
-                counts include them: {undrawn.reasons.slice(0, 3).join("; ")}
-                {undrawn.reasons.length > 3 &&
-                  `; and ${undrawn.reasons.length - 3} more kinds`}
-              </Alert>
-            ),
-        )}
-
-        <div className="explorer-below">
-          {(colors !== "plain" || volumes.bounding || volumes.content) && (
-            <Legend colors={colors} volumes={volumes} configs={configs} />
-          )}
-          {snapshot?.camera && (
-            <Typography
-              variant="body-sm"
-              color="textSecondary"
-              className="explorer-readout"
-            >
-              Camera {snapshot.camera[0].toFixed(5)}°,{" "}
-              {snapshot.camera[1].toFixed(5)}°,{" "}
-              {Math.round(snapshot.camera[2]).toLocaleString()} m
-            </Typography>
-          )}
-        </div>
-      </div>
-
-      {snapshot && <Selection drawn={snapshot.drawn} configs={configs} />}
-    </Page>
+        {snapshot && <Selection drawn={snapshot.drawn} configs={configs} />}
+      </Section>
+    </div>
   );
 }
 

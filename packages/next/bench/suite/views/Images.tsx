@@ -563,14 +563,15 @@ function Check({
           variant="text"
           render={
             <Link
-              to="/explorer"
-              search={{ scene: row.scene, t: row.progress }}
+              to="/scenes/$scene"
+              params={{ scene: row.scene }}
+              search={{ t: row.progress }}
             />
           }
           nativeButton={false}
           startIcon={<Icon href={svgGlobe} />}
         >
-          Open in the explorer
+          Look at it live
         </Button>
         {saving ? <CircularProgress size={16} aria-label="Saving" /> : null}
       </div>

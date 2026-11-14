@@ -149,3 +149,10 @@
 .scene-detail .content-table th {
   font-weight: inherit;
 }
+
+/* While the live view's code loads, at the top of a scene's page. */
+.scene-live-pending {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+}

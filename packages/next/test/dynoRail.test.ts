@@ -16,7 +16,7 @@ describe("Dyno's rail, grouped by what people come to do", () => {
     expect(GROUPS.map((g) => g.map((d) => d.label))).toEqual([
       ["Work", "Overview", "Alerts", "Images"],
       ["Trends", "Runs", "Scenes"],
-      ["Viewer", "Explorer", "Examples"],
+      ["Viewer", "Examples"],
       ["Analysis", "Lab"],
     ]);
   });
@@ -30,7 +30,6 @@ describe("Dyno's rail, grouped by what people come to do", () => {
       ["r", "Runs"],
       ["a", "Alerts"],
       ["s", "Scenes"],
-      ["e", "Explorer"],
       ["v", "Viewer"],
       ["i", "Images"],
       ["x", "Examples"],
@@ -54,7 +53,6 @@ describe("Dyno's rail, grouped by what people come to do", () => {
       ["/compare", "Runs"],
       ["/scenes", "Scenes"],
       ["/scenes/osm-philadelphia", "Scenes"],
-      ["/explorer", "Explorer"],
       ["/viewer", "Viewer"],
       ["/examples", "Examples"],
       ["/examples/frames-explorer", "Examples"],
@@ -87,6 +85,7 @@ describe("Dyno's rail, grouped by what people come to do", () => {
     });
     expect(movedTo("/analysis", { sweep: "run.json" })).toBeUndefined();
     expect(movedTo("/overview", { tab: "machines" })).toBeUndefined();
+    expect(destinationForKey("e")).toBeUndefined();
   });
 
   it("matches DESIGN.md's information architecture table", () => {

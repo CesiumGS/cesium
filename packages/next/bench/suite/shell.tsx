@@ -24,7 +24,6 @@ import {
 import { svgChartBarLarge } from "@stratakit/icons/chart-bar";
 import { svgChartLineLarge } from "@stratakit/icons/chart-line";
 import { svgClipboardLarge } from "@stratakit/icons/clipboard";
-import { svgCompareLarge } from "@stratakit/icons/compare";
 import { svgDashboardLarge } from "@stratakit/icons/dashboard";
 import { svgDismiss } from "@stratakit/icons/dismiss";
 import { svgGlobeLarge } from "@stratakit/icons/globe";
@@ -46,6 +45,7 @@ import { EXAMPLES } from "../../examples/index.ts";
 import { HARNESSES } from "../../lab/pages.ts";
 import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
 import {
+  catalog,
   cellKey,
   cellTitle,
   loadRuns,
@@ -91,7 +91,6 @@ const ICONS: Record<string, string> = {
   "/runs": svgListLarge,
   "/scenes": svgLayersLarge,
   "/viewer": svgGlobeLarge,
-  "/explorer": svgCompareLarge,
   "/examples": svgPlayCircleLarge,
   "/analysis": svgChartBarLarge,
   "/lab": svgModelCubeLarge,
@@ -587,7 +586,11 @@ function CommandPalette({
       to: d.to,
       words: d.hint,
     }));
-    const scenes = new Map<string, string>();
+    // Every catalog scene (its page opens with it live), then any a run
+    // measured under another scenario.
+    const scenes = new Map<string, string>(
+      catalog.scenes.map((s) => [s.id, s.title]),
+    );
     for (const s of summaries) {
       for (const c of s.scenes) {
         scenes.set(cellKey(c), cellTitle(c));
@@ -599,6 +602,7 @@ function CommandPalette({
         kind: "scene",
         to: "/scenes/$scene",
         params: { scene },
+        words: "live side by side compare engines",
       });
     }
     for (const x of EXAMPLES) {

@@ -186,18 +186,7 @@ export const scenesRoute = createRoute({
   component: lazyRouteComponent(() => import("./views/Scenes.tsx"), "Scenes"),
 });
 
-/** A scene's page; `$scene` is its key (scene id, or id|scenario). */
-export const sceneRoute = createRoute({
-  getParentRoute: () => runsLayoutRoute,
-  path: "/scenes/$scene",
-  component: lazyRouteComponent(
-    () => import("./views/Scenes.tsx"),
-    "ScenePage",
-  ),
-});
-
-export interface ExplorerSearch {
-  scene?: string;
+export interface SceneLiveSearch {
   left?: string;
   /** Empty: one engine only. */
   right?: string;
@@ -206,20 +195,25 @@ export interface ExplorerSearch {
   /** The 1.x build this page loaded ("repo" or a version). */
   cesium?: string;
 }
-export const explorerRoute = createRoute({
+const liveSearch = (s: Record<string, unknown>): SceneLiveSearch =>
+  clean({
+    left: str(s.left),
+    right: s.right === "" ? "" : str(s.right),
+    t: num(s.t),
+    cesium: str(s.cesium),
+  });
+
+/**
+ * A scene's page; `$scene` is its key (scene id, or id|scenario). Its
+ * search is the live view's (engines, place on the path, 1.x build).
+ */
+export const sceneRoute = createRoute({
   getParentRoute: () => runsLayoutRoute,
-  path: "/explorer",
-  validateSearch: (s: Record<string, unknown>): ExplorerSearch =>
-    clean({
-      scene: str(s.scene),
-      left: str(s.left),
-      right: s.right === "" ? "" : str(s.right),
-      t: num(s.t),
-      cesium: str(s.cesium),
-    }),
+  path: "/scenes/$scene",
+  validateSearch: liveSearch,
   component: lazyRouteComponent(
-    () => import("./views/Explorer.tsx"),
-    "Explorer",
+    () => import("./views/Scenes.tsx"),
+    "ScenePage",
   ),
 });
 
@@ -351,7 +345,6 @@ export const routeTree = rootRoute.addChildren([
     alertsRoute,
     scenesRoute,
     sceneRoute,
-    explorerRoute,
     viewerRoute,
     analysisRoute,
     startRoute,

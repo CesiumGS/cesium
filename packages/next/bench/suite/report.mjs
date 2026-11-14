@@ -776,7 +776,7 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
       ? `${pathOverlay({ profiles, configs, baseline, candidate, color, metric: pathMetric })}
 <div class="diag">${segmentTable({ profiles, configs, baseline, color, metric: pathMetric })}${pathMap({ path, profiles, configs, color, metric: pathMetric, title: "Faster along the camera path" })}</div>`
       : "";
-    const explore = `/#/explorer?scene=${encodeURIComponent(run.scene)}&amp;left=${encodeURIComponent(baseline)}&amp;right=${encodeURIComponent(candidate)}`;
+    const explore = `/#/scenes/${encodeURIComponent(run.scene)}?left=${encodeURIComponent(baseline)}&amp;right=${encodeURIComponent(candidate)}`;
     const strip = filmstrip({
       explore,
       // Older runs' entries have no scenario (and mixed scenarios).
@@ -855,7 +855,7 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
     // The first scene opens, so its diagnostics are in view.
     sections.push(`<details class="scene"${sections.length === 0 ? " open" : ""}><summary>${validityBadge(sceneVerdict)} ${escape(run.sceneTitle)} <span class="tag">${run.group}</span> <span class="tag">${escape(run.scenario)}</span>${notes.length ? ` <span class="flag">${notes.length} note${notes.length > 1 ? "s" : ""}</span>` : ""}</summary>
   ${notes.length || warnings.length ? `<p class="note">${[...warnings, ...notes].map(escape).join("<br>")}</p>` : ""}
-  <p class="explore-link"><a target="_top" href="${explore}">Open this scene in the explorer</a> (live, both engines side by side; needs the dev server). Click a point on a path chart to open it there.</p>
+  <p class="explore-link"><a target="_top" href="${explore}">Look at this scene live</a> (both engines side by side, in Dyno; needs the dev server). Click a point on a path chart to open it there.</p>
   <div data-explore="${explore}">${diagnosis}</div>
   ${strip}
   ${motionFrames}
@@ -921,7 +921,7 @@ ${sections.join("\n")}
 ${environmentSection(results)}
 ${lineageSection(results)}
 </div><script>${CHART_SCRIPT}
-// Path charts: a click opens the explorer at that point of the path.
+// Path charts: a click opens the scene live at that point of the path.
 document.addEventListener("chart-click", (e) => {
   const host = e.target.closest("[data-explore]");
   if (host && e.detail.x >= 0 && e.detail.x <= 100) {
