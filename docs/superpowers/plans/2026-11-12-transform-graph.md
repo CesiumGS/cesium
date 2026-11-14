@@ -400,7 +400,10 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
 - **Horizon culling was off under any warp.** It is now an occluder built from the drawn terrain (below), which needs a small set of base levels resident. The first version requested levels 0 to 4 for every globe (682 tiles) and walked cold for 236 ms. Being changed: a small base set only for warped views, and an incremental walk that is a yielding job.
 - **97% of the remaining draws were hidden** (5,396 of 5,567 settled): far terrain refined during load, before the depth pyramid showed it hidden, and kept its refinement. The depth-pyramid draw cull (two-phase) and the coarsening of long-hidden tiles (hysteresis both ways) address it.
 - **The error exponent α** (`View.lodExponent`, `Warp.lodExponent`, the example's slider): a first sweep suggested 0.5, but every number in it predates the fixes above. Re-sweep before choosing the default.
-- **Still open:** the cliff streaks at ×10. Either boundary skirts drawn ten times deeper, or imagery smeared vertically (a ×10 wall has a tenth of the imagery's resolution per drawn metre vertically). A debug tint for skirts would settle it.
+- **Settled (2026-11-13): the cliff streaks at ×10 are imagery, not skirts.** With `&debug=skirts` (skirt fragments in magenta, keyed on the provoking vertex, which is the skirt vertex in both triangles of every skirt quad) the streaked cliffs at `vertical-exaggeration?x=10&view=zermatt-close` show no magenta at all; a coarse view shows only thin skirt slivers at tile edges. The streaks are the imagery stretched along the ×10 wall: a drawn metre of wall has a tenth of a true metre's imagery. Remedies to weigh, not yet planned:
+  - choose imagery levels by the drawn footprint (the stretch), not the true one, up to the source's finest level;
+  - anisotropic filtering on globe imagery, which samples the stretched footprint better but can't add resolution the source lacks;
+  - procedural detail on steep drawn slopes (rock strata, as the MaterialX plan's terrain places do), faded in where imagery runs out.
 
 > **Job system (owner, 2026-11-13):** warp fits (`warpTick`) and the horizon occluder's walk (`BoundJob`) move onto the job system as progressive jobs: JP-5 and JP-4 in CESIUM2_WEBGPU_PLAN.md §13.43, tracked in §6 M8.
 
