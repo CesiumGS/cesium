@@ -234,6 +234,8 @@ Engine (1 GPUDevice, PipelineCache, ContentCache, RequestScheduler, WorkerPool)
 
 ### 3.4 Shaders: Slang as the one source, WGSL where it must be, a WGSL-level user contract
 
+> **Superseded in part (owner, 2026-11-13; §13.41 renderer decisions and §13.42):** the user-facing contract is **Cesium IR** (`cesium-ir`), not a WGSL-level ABI. Styles, transforms, materials and user functions are written in any front-end language (1.x and 3D Tiles styles, restricted JS, MaterialX, Slang offline, WGSL functions through naga) and lowered into Cesium IR, whose vocabulary is `KHR_interactivity`'s. A WGSL string can't reach a second renderer or the CPU evaluator, so raw WGSL is not offered as an escape hatch. Engine kernels stay Slang compiled offline, as below.
+
 **Why decide now.** The user-facing shader contract is public API.
 
 **What Slang gives us**:
@@ -959,7 +961,7 @@ Principles, each fixing a 1.x abstraction problem:
 - **Engine, World, View separation**, with N views per engine.
 - **Core is DOM-free.** An `OffscreenCanvas`-in-worker smoke test runs from M0 to catch DOM leaks.
 - **Typed-array math with required `out` params.**
-- **Shader extension through a versioned WGSL-level ABI**, with Slang as the first-class authoring language.
+- **Shader extension through a versioned WGSL-level ABI**, with Slang as the first-class authoring language. _Superseded (2026-11-13): through Cesium IR, with any front-end language; see §13.42._
 - **UI and widgets live outside core.** Camera controllers are separate, replaceable modules.
 
 ### 3.11 Techniques considered and deferred
@@ -3823,21 +3825,21 @@ thing to cull there.
 
 ### 7.2 Platform and WebGPU risks
 
-| Risk                                                                            | Mitigation                                                                           |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Hi/lo precision broken by compiler reassociation or fusion (Metal relaxed math) | Single compute draw-prep site; integer-assisted subtraction if needed; M0 Metal test |
-| Silent no-op indirect draws without `indirect-first-instance`                   | Instance-step attribute fallback always compiled in                                  |
-| Integer MRT can't be MSAA-resolved                                              | Sample-0 custom resolve in the pick pass                                             |
-| Dawn indirect-draw validation overhead                                          | Measure in M0; keep args in bounds provably where possible                           |
-| No VRAM budget API; OOM = device loss                                           | Heuristic budgets, adaptive after loss, robust device-loss replay                    |
-| Single queue, no async compute; uploads stall rendering                         | Per-frame upload byte/ms budget; encode compute early                                |
-| `mapAsync` latency of 1–3 frames                                                | Async pick/query APIs by design                                                      |
-| Subgroups ≈0% on Safari/Firefox                                                 | Portable kernel paths (wait-free radix sort, workgroup reductions)                   |
-| Render bundles invalidated by pipeline or bind-group changes                    | Rebuild per tile on change; limit target configurations                              |
-| Slang WGSL backend gaps                                                         | Hand-written WGSL kernels allowed; WGSL-level ABI; WESL fallback                     |
-| Browser coverage                                                                | Chromium first; parity suite on Safari and Firefox where available                   |
-| Compatibility mode not supported                                                | Stated non-goal                                                                      |
-| Fragment storage writes run once per sample under MSAA (Apple, Metal)           | Lists' nodes carry their samples; per-sample pass where probed; parity ground truth  |
+| Risk                                                                            | Mitigation                                                                                                                |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Hi/lo precision broken by compiler reassociation or fusion (Metal relaxed math) | Single compute draw-prep site; integer-assisted subtraction if needed; M0 Metal test                                      |
+| Silent no-op indirect draws without `indirect-first-instance`                   | Instance-step attribute fallback always compiled in                                                                       |
+| Integer MRT can't be MSAA-resolved                                              | Sample-0 custom resolve in the pick pass                                                                                  |
+| Dawn indirect-draw validation overhead                                          | Measure in M0; keep args in bounds provably where possible                                                                |
+| No VRAM budget API; OOM = device loss                                           | Heuristic budgets, adaptive after loss, robust device-loss replay                                                         |
+| Single queue, no async compute; uploads stall rendering                         | Per-frame upload byte/ms budget; encode compute early                                                                     |
+| `mapAsync` latency of 1–3 frames                                                | Async pick/query APIs by design                                                                                           |
+| Subgroups ≈0% on Safari/Firefox                                                 | Portable kernel paths (wait-free radix sort, workgroup reductions)                                                        |
+| Render bundles invalidated by pipeline or bind-group changes                    | Rebuild per tile on change; limit target configurations                                                                   |
+| Slang WGSL backend gaps                                                         | Hand-written WGSL kernels allowed; WGSL-level ABI; WESL fallback (user contract superseded 2026-11-13: Cesium IR, §13.42) |
+| Browser coverage                                                                | Chromium first; parity suite on Safari and Firefox where available                                                        |
+| Compatibility mode not supported                                                | Stated non-goal                                                                                                           |
+| Fragment storage writes run once per sample under MSAA (Apple, Metal)           | Lists' nodes carry their samples; per-sample pass where probed; parity ground truth                                       |
 
 ### 7.3 Project risks
 
@@ -3857,15 +3859,15 @@ Recommendations already adopted from the review: core-only (no compatibility mod
 
 **Decided by the plan owner (r4):**
 
-| Decision        | Choice                                                                                                                                                                                                 |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Shaders         | Slang for materials and vertex/fragment code; hand-written WGSL allowed for compute kernels; user contract is a WGSL-level ABI. Gated by the M0 spike, with WGSL + WESL as the fallback.               |
-| Default look    | **HDR + tonemapping by default** for lit color, LDR as a per-view option; unlit color is display-referred and never tonemapped (r26). Parity baseline is 1.x with HDR on for lit color, off for unlit. |
-| Multi-view      | All four scenarios in the PoC: split views on one canvas, multiple canvases, offscreen targets, linked views (`ViewLink`).                                                                             |
-| CAD data        | Team-chosen CAD/BIM assets in Cesium ion; iModels can be tiled into ion.                                                                                                                               |
-| Foundation      | `packages/next` in this monorepo; TypeScript strict; new typed-array math module tested against 1.x.                                                                                                   |
-| Platforms       | Chromium is the gate; Safari and Firefox best-effort; core WebGPU only.                                                                                                                                |
-| Milestone order | 3D Tiles (M2) before globe (M3). The draw-record format is locked in M1 with the globe's needs included.                                                                                               |
+| Decision        | Choice                                                                                                                                                                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shaders         | Slang for materials and vertex/fragment code; hand-written WGSL allowed for compute kernels; user contract is a WGSL-level ABI. Gated by the M0 spike, with WGSL + WESL as the fallback. (user contract superseded 2026-11-13: Cesium IR, §13.42) |
+| Default look    | **HDR + tonemapping by default** for lit color, LDR as a per-view option; unlit color is display-referred and never tonemapped (r26). Parity baseline is 1.x with HDR on for lit color, off for unlit.                                            |
+| Multi-view      | All four scenarios in the PoC: split views on one canvas, multiple canvases, offscreen targets, linked views (`ViewLink`).                                                                                                                        |
+| CAD data        | Team-chosen CAD/BIM assets in Cesium ion; iModels can be tiled into ion.                                                                                                                                                                          |
+| Foundation      | `packages/next` in this monorepo; TypeScript strict; new typed-array math module tested against 1.x.                                                                                                                                              |
+| Platforms       | Chromium is the gate; Safari and Firefox best-effort; core WebGPU only.                                                                                                                                                                           |
+| Milestone order | 3D Tiles (M2) before globe (M3). The draw-record format is locked in M1 with the globe's needs included.                                                                                                                                          |
 
 **Still open:** none blocking M0. Exact OIT, auto-exposure and the M6 picks are decided at those milestones.
 
@@ -8536,7 +8538,7 @@ So streaming's logic is already free of the GPU API. `Engine.ts` and `World.ts` 
 
 - Slang can target GLSL, but whether its output fits GLSL ES 3.00 needs a spike. Nothing has been tested.
 - 43 compute kernels need CPU equivalents or a design without them. Some, such as culling, have obvious ones. Others, such as atmosphere tables or FLIP, may need fragment passes or to be dropped.
-- The style compiler (`styleExpression.ts`) needs a GLSL emitter or an intermediate form.
+- The style compiler (`styleExpression.ts`) needs a GLSL emitter or an intermediate form. _Decided (2026-11-13): it lowers to Cesium IR, which has WGSL and GLSL ES 3.00 emitters (§13.42)._
 - User shaders written in WGSL wouldn't port. Slang ones might, which would be a reason to steer portable shaders to Slang.
 - Picks and depth readback need another path, and queries need their CPU backend.
 
@@ -10079,7 +10081,7 @@ The example lands after the transform graph is built.
 **Short answers.** Brainstorm, nothing decided.
 
 1. _JS is already the 1.x answer, as a subset._ The 3D Tiles 1.x styling language is, in the spec's words, "a small subset of JavaScript (ECMAScript 5), plus native vector and regular expression types" ([3D Tiles Styling](https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling)). The real choice is how far to widen that subset (expressions in JSON strings, to functions and statements, to TypeScript), and what the _normative artefact_ is. Recommended: the spec defines the language and an IR with a JSON form, and JS/TS is one front end onto it, not the definition.
-2. _No library replaces our own small IR; none gives us AD, intervals or df64._ Keep `src/transform/ir.ts` as the semantic core. Use Naga (a 2 MB WASM build) or the browser's own compiler to validate and translate the WGSL we emit, in CI and at build time. Revisit e-graph rewriting only if a measure asks for it.
+2. _No library replaces our own small IR; none gives us AD, intervals or df64._ Keep `src/transform/ir.ts` as the semantic core. _(Taken further on 2026-11-13: `ir.ts` becomes Cesium IR, with `KHR_interactivity`'s vocabulary; §13.42.)_ Use Naga (a 2 MB WASM build) or the browser's own compiler to validate and translate the WGSL we emit, in CI and at build time. Revisit e-graph rewriting only if a measure asks for it.
 
 #### What 3D Tiles 1.x styling is
 
