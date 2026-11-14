@@ -1,6 +1,6 @@
 # Dyno as the development harness: design plan
 
-**Status (2026-11-13):** proposed, for the owner's review. Nothing is built. The open questions are in section 13; each has a recommendation, and the plan assumes them.
+**Status (2026-11-13):** proposed, for the owner's review. Nothing is built. The open questions are in section 13; each has a recommendation, and the plan assumes them. Section 16, Dyno's navigation rail, was added at the owner's request the same day (milestone DH-15, questions 10 to 13).
 
 **Goal:** every measurement that steers development goes through Dyno, so it lands in the results store, shows in Trends, and can be found again by run ID. Today the numbers behind recent decisions (the error exponent α, the ×10 cliff bands, the culling gains) came from one-off Playwright scripts that wrote CSVs and PNGs to temporary folders. Those numbers can't be compared with later ones, and nobody can find them a week on.
 
@@ -147,7 +147,7 @@ The existing `flipEnd` stays what it is: the image difference from the baseline 
 
 ### Analysis for multi-axis sweeps
 
-The Sweeps tab grows into a study page for one sweep run. It follows DESIGN.md's page anatomy and charts.
+The Sweeps tab grows into a study page for one sweep run, and becomes its own rail item, Sweeps (section 16). It follows DESIGN.md's page anatomy and charts.
 
 - **Toolbar:** the sweep run, the scene (or the geometric mean), the x axis (any swept axis), "lines by" (another axis), "panels by" (the third, as small multiples), and a metric group.
 - **Charts:** one line per value of the "lines by" axis, one panel per value of the "panels by" axis, the reference as a dashed line or a marked point, hollow markers for points that didn't settle, the noise floor as a band on pixel-difference charts. A table twin under every chart.
@@ -222,7 +222,7 @@ Two runs at once share the GPU, and their timings mean nothing. The CLI takes a 
   A failing test whose precondition is unmet is recorded as `environment`, not `failed`, with the precondition named.
 - **Flakes** are computed, not declared: a test that both passed and failed on the same tree (same commit and `diffSha256`) is flaky, and its flake rate is failures over runs on unchanged trees. `test/noSceneGains.test.ts` is the known case; its cause isn't established yet (a time-dependent uniform word, or the 30 s timeout under load, are the guesses).
 - **`cli.mjs tests [-- vitest args]`** runs vitest with the reporter and a `--purpose` and `--item`, for the cases where an agent wants to tag a test run; plain `npm test` records too, untagged.
-- **A Tests view** (rail group Results, after Alerts): failing now (newest full run per branch), flaky tests with their rate and last failure, environment-only failures with their precondition, the slowest files over time, and one test's history across branches. Retention: the newest 200 full runs and 500 focused runs; older ones are dropped, except runs cited by a plan.
+- **A Tests view** (in the rail's first group with the other queues, section 16): failing now (newest full run per branch), flaky tests with their rate and last failure, environment-only failures with their precondition, the slowest files over time, and one test's history across branches. Retention: the newest 200 full runs and 500 focused runs; older ones are dropped, except runs cited by a plan.
 
 ## 8. The second machine
 
@@ -293,7 +293,7 @@ node packages/next/bench/suite/cli.mjs run --scenes vex-x10-zermatt,vex-x1-zerma
 
 ## 11. Milestones
 
-Sized for one agent each. Per the cost rules: Sonnet by default, Opus for DH-4 and DH-6 (the settings registry and sweep record, and the study page, are the design). Each milestone runs typecheck, eslint and prettier on its files and its own tests; the full `npm test` runs once at the end of DH-6 and again at the end of DH-12. UI milestones (DH-2, DH-6, DH-9, DH-10) follow DESIGN.md and StrataKit, are checked in both themes, at 380 px, by keyboard and with a clean console, and the owner reviews them by clicking around. No durations: order and dependencies only.
+Sized for one agent each. Per the cost rules: Sonnet by default, Opus for DH-4 and DH-6 (the settings registry and sweep record, and the study page, are the design). Each milestone runs typecheck, eslint and prettier on its files and its own tests; the full `npm test` runs once at the end of DH-6 and again at the end of DH-12. UI milestones (DH-2, DH-6, DH-9, DH-10, DH-15) follow DESIGN.md and StrataKit, are checked in both themes, at 380 px, by keyboard and with a clean console, and the owner reviews them by clicking around. No durations: order and dependencies only.
 
 | # | Milestone | Files | Done when | Needs |
 | --- | --- | --- | --- | --- |
@@ -302,7 +302,7 @@ Sized for one agent each. Per the cost rules: Sonnet by default, Opus for DH-4 a
 | DH-3 | **Finding runs from the terminal.** `cli.mjs runs` (filters, table and JSON), `show <id>`, `pin <id>`. | new `bench/suite/commands/runs.mjs`; `cli.mjs` (dispatch) | The commands list and show runs from summaries only; `--json` output is stable and tested; a pinned run is listed as pinned. | DH-1 |
 | DH-4 | **The settings registry and multi-axis sweeps.** `settings.mjs`; validation before a run; `engine.` and `view.` settings applied by the catalog adapter (`lodExponent`, `shadows`, `debug`, `occlusionCull`, `coarsen`, `lod`); repeated `--sweep`, `--sweep-file`, `--reference`, `--reference-reps`, the point count and `--yes`; the sweep record with `axes`, `reference` and `points`, reading old one-axis records. (Opus.) | new `bench/suite/settings.mjs`; `cli.mjs`, `engineBuilds.mjs`, `engines.mjs` (labels), `suite.ts` (the adapter), `schema.ts`, `report.mjs` | `--sweep lodExponent=0,1` is refused with the list of settings; a two-axis sweep on a catalog scene records every point and its coordinates; `view.lodExponent` reaches the view (a test reads it back from the page); old sweep runs still plot. | DH-1 |
 | DH-5 | **Example scenes and the development metrics.** `catalog/dev.json` and group D; `example.html` in the frozen build; the host pose contract (`camera=`) and declared example parameters; the settle rule with "not settled"; the metrics of section 4 (tiles and requests per tileset, requests and bytes by host class, triangles and draws, GPU per pass, `probe=sse`, page errors); tileset labels in the vertical-exaggeration example; group D kept out of headline means, Overview and budgets; "Measure this" in the Examples view. | new `bench/suite/catalog/dev.json`, `example.html`, `exampleDriver.ts`; `manifest.mjs`, `cli.mjs`, `frozen.mjs`, `schema.ts`, `report.mjs` (`METRICS`), `examples/index.ts`, `views/exampleRun.ts`, `views/Examples.tsx`, `examples/vertical-exaggeration/main.ts` (labels only), `scorecard.mjs` | `run --scenes vex-x10-zermatt` measures the example from the frozen build, records every metric in the table, and reports a capped run as not settled rather than failed; `param.x` sweeps; group D scenes don't change Overview's numbers. | DH-4 |
-| DH-6 | **Reference images and the study page.** Captures per point; pixel difference and FLIP against the reference point, whole frame and crops; the noise floor from reference repetitions; the Sweeps tab as a study page (axes as lines and panels, hollow unsettled points, noise band, table twins, the image grid); Images' compare modes for any two images. (Opus.) | `cli.mjs` (capture), new `bench/suite/reference.mjs`; `views/Analysis.tsx`, `analysis.css`, `views/Images.tsx` (compare any pair), `charts.mjs` | A three-axis sweep reads as small multiples with an image grid; a point within noise says so; a click on a thumbnail opens the pair in swipe and flicker. Owner review. | DH-4, DH-5 |
+| DH-6 | **Reference images and the study page.** Captures per point; pixel difference and FLIP against the reference point, whole frame and crops; the noise floor from reference repetitions; the Sweeps page as a study page (axes as lines and panels, hollow unsettled points, noise band, table twins, the image grid); Images' compare modes for any two images. (Opus.) | `cli.mjs` (capture), new `bench/suite/reference.mjs`; `views/Sweeps.tsx` (Analysis renamed by DH-15), `analysis.css`, `views/Images.tsx` (compare any pair), `charts.mjs` | A three-axis sweep reads as small multiples with an image grid; a point within noise says so; a click on a thumbnail opens the pair in swipe and flicker. Owner review. | DH-4, DH-5 |
 | DH-7 | **Acceptance A: the α sweep.** Run it, check it against the 13 November numbers, delete `scripts/alphaSweep.mjs`, cite the run in the transform-graph plan. | `scripts/alphaSweep.mjs` (deleted), `docs/superpowers/plans/2026-11-12-transform-graph.md` | Section 10A's "done when". | DH-6 |
 | DH-8 | **Image checks for group D and sweeps.** `images.mjs` runs example and Lab scenes (`checks: ["settled"]`), takes `--sweep` and `--reference`, and records crops; Images labels group D checks and links them to the study page. | `images.mjs`, `cli.mjs`, `views/Images.tsx` | `images --scenes vex-x10-zermatt` captures, compares against its baseline and is reviewable; a swept image run shows as a grid. | DH-5, DH-6 |
 | DH-9 | **Recordings as runs.** The metadata endpoint and body (allowlisted parameters, no tokens, tested); "Save as run"; the reducer; `import-recording`; the recording page with time series. | `scripts/vitePluginRecord.ts`, `widgets/recorder.ts`, `widgets/inspector.ts`, new `bench/suite/recording.mjs`, `views/Report.tsx` (or a new `Recording.tsx`), `cli.mjs` | A recording saved from the vertical-exaggeration example appears in Runs with its metadata and time series; a URL with an unknown or key-like parameter records without it (tested); the existing recorder tests pass. Owner review. | DH-1 |
@@ -311,8 +311,9 @@ Sized for one agent each. Per the cost rules: Sonnet by default, Opus for DH-4 a
 | DH-12 | **Lab into the store.** One registry for Lab and `bench/run.mjs` (the six broken commands fixed); Lab scenes in group D; Lab's "Run" records a `lab` run when asked ("Run and record"); spikes' checks recorded. | `bench/run.mjs`, `lab/pages.ts`, `lab/harness.ts`, `views/Lab.tsx`, `cli.mjs`, `manifest.mjs` | Every id Lab shows runs headless; `run --scenes globe-parity` records FLIP per view; a recorded Lab run shows in Runs. | DH-1, DH-5 |
 | DH-13 | **Acceptance B: the ×10 shadow study through Dyno.** Image checks and the sweeps of section 10B, the conclusion in the transform-graph plan. | the plan; the run IDs | Section 10B's "done when". | DH-8, and the engine's shadow knobs and `debug=cascade` (the shadow study's own task) |
 | DH-14 | **AGENTS.md and the skill.** Land section 12's text, adjusted to what was built: a first version after DH-1 and DH-3 (tagging, run IDs, the lock, the commands that exist), the full version after DH-6. | `packages/next/AGENTS.md`, the skill (where section 13 decides) | A fresh session, given only "measure the effect of α at ×10", runs a tagged Dyno sweep and reports the run ID. | DH-1, DH-3 (first); DH-6 (full) |
+| DH-15 | **The navigation rail** (section 16). The rail regrouped by what people come to do; Images and Tests beside Overview and Alerts as the queues; Analysis renamed Sweeps, with Machines moved into Overview; Examples in the looking group; the footer's Settings item; redirects from old routes (`/analysis`, `?tab=machines`); shortcuts and the command palette updated; DESIGN.md's information architecture, words and shell comment updated. | `bench/suite/shell.tsx`, `routes.tsx`, `views/Analysis.tsx` → `views/Sweeps.tsx`, `views/Overview.tsx` (machines, development runs), `views/FirstRun.tsx` (links), `DESIGN.md`, the route and link tests | Every route in section 16's inventory is reachable from the rail, a run, a scene or the palette, and highlights the right rail item; old links land on their new homes; the rail fits a 900 px tall window collapsed and expanded; DESIGN.md's table matches `shell.tsx`. Owner review by clicking around. | DH-2 |
 
-**Order.** DH-1 first. Then DH-2, DH-3, DH-4, DH-9, DH-10 and DH-11 can run together: they touch different files, except `cli.mjs`, where each adds only a dispatch line once DH-1 has split the commands. DH-14's first version follows DH-3. DH-5 follows DH-4, then DH-6, then DH-7 and DH-8. DH-12 follows DH-5. DH-13 waits for DH-8 and the engine's knobs.
+**Order.** DH-1 first. Then DH-2, DH-3, DH-4, DH-9, DH-10 and DH-11 can run together: they touch different files, except `cli.mjs`, where each adds only a dispatch line once DH-1 has split the commands. DH-14's first version follows DH-3. DH-5 follows DH-4, then DH-6, then DH-7 and DH-8. DH-12 follows DH-5. DH-13 waits for DH-8 and the engine's knobs. DH-15 follows DH-2 (both change `routes.tsx`) and lands before DH-6 and DH-10, so the Sweeps page and the Tests view are built into the new rail rather than moved later.
 
 ## 12. Draft: AGENTS.md section and skill
 
@@ -419,6 +420,10 @@ Each has a recommendation; the plan assumes them.
 | 7 | Should the engine's development knobs (`tune.shadow.*`, `debug=cascade`) be public `View` options or development-only? | **Development-only**, through the dev handle, with no entry in `api/surface.txt`. If a knob proves useful to apps, it goes through the API review separately. | Public options now: visible to apps before we know the right values. |
 | 8 | Should group D (development) scenes appear on Scenes and in Overview? | **On Scenes, under their own heading; never in Overview, headline means or budgets.** | Hidden everywhere except Analysis and Runs: less clutter, harder to find. |
 | 9 | Retention for development runs: keep everything, or prune? | **Keep bench and image runs; prune tests and recordings by count** (section 7), never anything a plan cites (pinned). Revisit when the store passes a size you set. | Prune development runs older than a set age: smaller store, and plans' citations may break. |
+| 10 | How should the rail be grouped? | **By what people come to do** (section 16, proposal A): what needs a look (Overview and the three queues), results, looking, experimenting, then setup in the footer. | By kind of object (proposal B): results, content, workbench; a smaller change from today. |
+| 11 | Rename Analysis to Sweeps and move Machines into Overview? | **Yes.** With multi-axis studies, sweeps are the whole page; Machines is "where things stand", per machine. | Keep Analysis with two tabs, and add the study page as a third. |
+| 12 | Where do Scenes go: with results, or with the tools for looking? | **With results.** A scene's page is mostly its history (best results, change points, filmstrip over time); it links to the Explorer for looking. | With the looking tools, since it is the catalog of what the Explorer opens. |
+| 13 | The footer: keep Keyboard shortcuts and Theme as their own items? | **Fold them into one Settings item** beside Getting started and the ion token, so the rail fits a laptop window with the new items. | Keep four footer items and accept scrolling in the rail on short windows. |
 
 ## 14. Non-goals and follow-ups
 
@@ -433,3 +438,82 @@ Each has a recommendation; the plan assumes them.
 - **Example scenes drift from the examples.** An example may change its parameters or presets. Declared parameters make the CLI fail loudly when one disappears; group D image checks show a changed look.
 - **Timings from a busy machine.** The lock serializes runs, but a person's open dev server still renders. The run records other GPU processes and flags them; development runs are judged within one run (against the base engine), which cancels most of it.
 - **Secrets in metadata.** URLs and recordings could carry keys. Requests are classified by host, never stored as URLs; recording metadata keeps only allowlisted parameters; DH-9 tests a key-like parameter.
+
+## 16. Dyno's navigation rail (owner, 2026-11-13)
+
+The owner asked for a rethink of the left rail: the order and grouping of the pages no longer make obvious sense, and this plan adds pages. This section takes stock of what is built, groups it by what people come to do, and proposes a rail with one alternative. Milestone DH-15 builds it; questions 10 to 13 are the decisions.
+
+### What the rail shows today
+
+From `shell.tsx` (`GROUPS`, the footer) and `routes.tsx`. The rail is StrataKit's `NavigationRail`: a "Go to…" button (the command palette, Ctrl K) at the top, three groups separated by dividers with no headings, and a footer. DESIGN.md's table lists two groups as the code has them but leaves out Examples, and its footer row lists only Getting started and the ion token.
+
+| Rail | Item (shortcut `g` + letter) | Route | Page's own sentence (or what it is for) |
+| --- | --- | --- | --- |
+| Top | Go to… | (palette) | Views, scenes, runs, examples and Lab pages by name. |
+| Group 1 | Overview (`o`) | `/overview`, `/` | "Where 2.0 stands against 1.x in the latest run, and what needs a look." |
+| | Trends (`t`) | `/trends` | Metrics run to run (the former Workspace), with control bands and annotations. |
+| | Runs (`r`) | `/runs`, `/runs/$run` | "Every run of the suite: open one for its report, or select two to compare." |
+| | Alerts (`a`, count) | `/alerts` | "Metrics that changed and stayed changed from one run to the next, to triage." |
+| Group 2 | Scenes (`s`) | `/scenes`, `/scenes/$scene` | "Every scene in the catalog, with its best results in each engine." A scene's page is its history. |
+| | Explorer (`e`) | `/explorer` | A catalog scene live in one or two engines, on its camera path or in free flight. |
+| | Viewer (`v`) | `/viewer` | "One engine at a time, to debug content and try settings." |
+| | Images (`i`, count) | `/images` | "Image checks that changed or are new, to approve or reject." |
+| | Examples (`x`) | `/examples`, `/examples/$id` | "What 2.0 is for, one feature or use case each." Not in DESIGN.md's table. |
+| Group 3 | Analysis (`n`) | `/analysis?tab=` | Two tabs: Sweeps (one setting or a release range) and Machines (latest run per hardware class). |
+| | Lab (`l`) | `/lab`, `/lab/$id` | "Focused checks and measurements, one engine behavior each." |
+| Footer | Getting started | `/start` | Setup checks and a first run. |
+| | Keyboard shortcuts | (dialog) | |
+| | Theme | (button) | Cycles light, dark and system. |
+| | ion token | (popover) | The token every view uses, and which one is in use. |
+| Off the rail | Compare | `/compare` | From Runs (two selected), an alert or a link. |
+
+What doesn't fit any more:
+
+- **Group 2 mixes three jobs.** Images is a review queue (a result, with a count, like Alerts). Explorer, Viewer and Examples are tools for looking. Scenes is the catalog, and a scene's page is mostly results over time.
+- **Analysis is two unrelated pages.** Sweeps is experimenting; Machines is "where things stand", per machine.
+- **The queues are split.** Alerts sits in group 1 and Images in group 2, though both are "what needs a look" with counts.
+- **The new pages have no obvious home:** Tests (a queue and a history), development runs by branch or item (filters, not a page), group D scenes, the study page for multi-axis sweeps, recordings (runs of a new kind).
+- **The footer has four items**, and the rail gains items: collapsed, 12 destinations (11 today and Tests), the palette and four footer items don't fit a 900 px tall window without scrolling.
+
+### What people come to do
+
+DESIGN.md's list, extended for the harness:
+
+1. **See what needs a look:** where 2.0 stands, regressions to triage, images to approve, failing or flaky tests, what development runs landed for an item.
+2. **Read results:** one run, two runs compared, metrics over time, one scene's history.
+3. **Look at content live:** a scene in one or two engines, any content in one engine, an example.
+4. **Experiment:** a sweep or study over settings, a focused Lab check.
+5. **Set up:** first run, the ion token, theme and shortcuts.
+
+### Proposal A (recommended): by what people come to do
+
+| Group (DESIGN.md name; the rail shows dividers) | Items, in order | Changes |
+| --- | --- | --- |
+| Needs a look | Overview · Alerts · Images · Tests | Images moves up beside Alerts; Tests (DH-10) joins. The three queues carry counts. Overview gains a Machines section (from Analysis) and a "Development runs" section (the newest runs per plan item, from DH-1's fields). |
+| Results | Trends · Runs · Scenes | Scenes moves here: its pages are history. Runs holds every run kind (bench, images, Lab, recordings; test runs open in the Tests view), filtered by purpose, branch and item (DH-2). Compare stays off the rail. |
+| Look | Explorer · Viewer · Examples | The three live tools together. Examples keeps its page; its "Measure this" points at its group D scene. |
+| Experiment | Sweeps · Lab | Analysis is renamed Sweeps and holds the sweep runs and the study page (DH-6). Lab keeps its pages; "Run and record" (DH-12). |
+| Footer | Getting started · ion token · Settings | Settings (a menu) holds Theme and Keyboard shortcuts. |
+
+- **Order inside the rail:** attention first, because that is where a person starts a day and where Overview's "to look at" list points; results next; looking and experimenting after; setup in the footer.
+- **Shortcuts:** existing letters stay (`o t r a s e v i x l`); Tests takes `u`, Sweeps takes `w`, and `n` stays as an alias for Sweeps. The palette searches plan items and branches too ("Runs for LT-4").
+- **Routes:** `/sweeps` and `/sweeps?run=<id>`; `/analysis` redirects there; `/analysis?tab=machines` redirects to `/overview#machines`; `/tests`. Child pages highlight their parent: a run's report and a recording highlight Runs, a scene highlights Scenes, a Lab page highlights Lab, an example highlights Examples, Compare highlights Runs.
+- **Group D scenes** appear on Scenes under their own heading (question 8), never in Overview's verdict.
+- **Names stay** where they work: Overview, Trends, Runs, Alerts, Images, Scenes, Explorer, Viewer, Examples, Lab. "Sweeps" replaces "Analysis" because the page is only sweeps once Machines leaves; DESIGN.md's banned words ("experiment", "workspace") stay banned as page names, so the group heading "Experiment" lives in DESIGN.md only, not on screen.
+
+### Proposal B: by kind of object
+
+| Group | Items |
+| --- | --- |
+| Results | Overview · Trends · Runs · Alerts · Images · Tests |
+| Content | Scenes · Examples · Explorer · Viewer |
+| Workbench | Analysis (Sweeps, Machines) · Lab |
+| Footer | Getting started · ion token · Keyboard shortcuts · Theme |
+
+The smaller change: Images moves to Results, Tests joins it, the middle group is renamed. Against it: a Results group of six mixes the queues with history, Machines stays hidden in a tab, and Scenes (history) sits with the live tools.
+
+### StrataKit and DESIGN.md
+
+- The rail stays StrataKit's `NavigationRail` with dividers between groups and the footer; no custom chrome. If the rail gains section headings, the group names above are its labels; until then, missing headings go in `STRATAKIT_FEEDBACK.md` with the reason (a 12-item rail is hard to scan without them).
+- Counts stay as they are (a badge with an accessible label, "3 to look at"), now on Alerts, Images and Tests.
+- DH-15 rewrites DESIGN.md's "Who it is for" list (section 16's five jobs), the information architecture table (proposal as built), the words list (Sweeps, recording, purpose, item) and `shell.tsx`'s header comment, in the same change.
