@@ -2,10 +2,13 @@ import { execFileSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 import { layoutDag } from "../bench/suite/dagLayout.ts";
 import {
+  boardStatus,
   byUrgency,
   columnsOf,
   countsOf,
   filterItems,
+  inFlightOf,
+  ownerQueue,
   waitingOnOwner,
   type WorkItem,
   type WorkSnapshot,
@@ -123,6 +126,7 @@ const snapshot: WorkSnapshot = {
   initiatives: [],
   project_deps: [],
   problems: [],
+  elsewhere: [],
 };
 
 describe("the Work board's model (bench/suite/work.ts)", () => {
@@ -168,6 +172,46 @@ describe("the Work board's model (bench/suite/work.ts)", () => {
       done: 1,
       live: 5,
     });
+  });
+});
+
+describe("work in flight on other branches", () => {
+  const flight = inFlightOf({
+    ...snapshot,
+    elsewhere: [{ id: "CS-14", claimed: "s2", where: "ui", worktree: true }],
+  });
+
+  // The high-priority CS-14 comes first in the column.
+  it("shows a claim elsewhere as in progress, not ready", () => {
+    const it14 = snapshot.items.find((i) => i.id === "CS-14")!;
+    expect(boardStatus(it14, flight)).toBe("In progress");
+    expect(
+      columnsOf(snapshot.items, flight)[2]!.items.map((i) => i.id),
+    ).toEqual(["CS-14", "CS-12"]);
+    const counts = countsOf(snapshot.items, flight);
+    expect([counts.ready, counts.inProgress]).toEqual([1, 2]);
+  });
+
+  it("never reopens a closed item", () => {
+    const done = snapshot.items.find((i) => i.id === "CS-13")!;
+    expect(
+      boardStatus(
+        done,
+        inFlightOf({
+          ...snapshot,
+          elsewhere: [{ id: "CS-13", where: "old", worktree: false }],
+        }),
+      ),
+    ).toBe("Done");
+  });
+});
+
+describe("the owner's queue", () => {
+  it("lists open owner decisions with what waits on each", () => {
+    const q = ownerQueue(snapshot, snapshot.items);
+    expect(q.map((x) => [x.decision.id, x.waiting.map((w) => w.id)])).toEqual([
+      ["CS-10", ["CS-11"]],
+    ]);
   });
 });
 

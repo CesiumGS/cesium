@@ -1,7 +1,11 @@
 import { execFileSync } from "node:child_process";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
-import { queryWork, showItem } from "./work/query.mjs";
+import { join } from "node:path";
+import { claimsElsewhere, queryWork, showItem } from "./work/query.mjs";
+
+/** How long claims found elsewhere are reused (scanning takes about 1 s). */
+const ELSEWHERE_MS = 30_000;
 
 /**
  * The tracker's read API on Dyno's dev server (dev only; the board says
@@ -9,6 +13,9 @@ import { queryWork, showItem } from "./work/query.mjs";
  * `/work-api/item/CS-<n>.json` one item's text, both from
  * scripts/work/query.mjs, the one adapter between the board and the
  * tracker. Read-only, GET only, and only for the dev server's own pages.
+ * When an item file changes, open pages hear `work:changed` and read
+ * again; claims in other worktrees and branches are read at most every
+ * 30 s.
  */
 export function workApi(prefix = "/work-api"): Plugin {
   return {
@@ -19,6 +26,24 @@ export function workApi(prefix = "/work-api"): Plugin {
         cwd: server.config.root,
         encoding: "utf8",
       }).trim();
+      let elsewhere:
+        { at: number; claims: ReturnType<typeof claimsElsewhere> } | undefined;
+      const claims = () => {
+        if (!elsewhere || Date.now() - elsewhere.at > ELSEWHERE_MS) {
+          elsewhere = { at: Date.now(), claims: claimsElsewhere(root) };
+        }
+        return elsewhere.claims;
+      };
+      const workDir = join(root, "packages", "next", "work");
+      server.watcher.add(workDir);
+      const changed = (file: string) => {
+        if (file.startsWith(workDir) && file.endsWith(".md")) {
+          server.ws.send({ type: "custom", event: "work:changed" });
+        }
+      };
+      server.watcher.on("change", changed);
+      server.watcher.on("add", changed);
+      server.watcher.on("unlink", changed);
       const send = (res: ServerResponse, status: number, body: unknown) => {
         res.statusCode = status;
         res.setHeader("Content-Type", "application/json");
@@ -36,7 +61,7 @@ export function workApi(prefix = "/work-api"): Plugin {
           const path = (req.url ?? "").split("?")[0] ?? "";
           try {
             if (path === "/query.json") {
-              send(res, 200, queryWork(root));
+              send(res, 200, queryWork(root, { elsewhere: claims() }));
               return;
             }
             const m = path.match(/^\/item\/(CS-[1-9]\d*)\.json$/);

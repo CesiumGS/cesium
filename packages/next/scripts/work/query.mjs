@@ -17,6 +17,8 @@ import {
   ID_PATTERN,
   buildGraph,
   checkItems,
+  listPlaces,
+  loadPlaces,
   loadWorkTree,
   progress,
   projectDeps,
@@ -54,10 +56,11 @@ const counts = (c) => ({
 /**
  * The snapshot: every item with what the tracker derives for it (ready,
  * blocked, open needs, who needs it), the projects and initiatives with
- * their progress, the dependencies between projects, and the check's
- * problems. `root` is the repository root.
+ * their progress, the dependencies between projects, the check's
+ * problems, and `elsewhere` (claimsElsewhere's answer, read by the
+ * caller, which may cache it). `root` is the repository root.
  */
-export function queryWork(root) {
+export function queryWork(root, { elsewhere = [] } = {}) {
   const items = loadWorkTree(root);
   const g = buildGraph(items);
   const item = (it) => {
@@ -109,8 +112,50 @@ export function queryWork(root) {
       ),
     ),
     project_deps: projectDeps(g),
+    elsewhere,
     problems: checkItems(items, { root }),
   };
+}
+
+/**
+ * Work in flight elsewhere: items In progress in another worktree or on
+ * another local branch, where this checkout's copy says otherwise (its
+ * claim hasn't merged yet). One entry per place, as `views.mjs claims`
+ * finds them. Other machines' claims arrive only with a bundle or a push.
+ */
+export function claimsElsewhere(root) {
+  const here = buildGraph(loadWorkTree(root));
+  const top = git(root, ["rev-parse", "--show-toplevel"]);
+  // Detached checkouts are benchmark snapshots (.bench/), not work.
+  const places = listPlaces(root).filter(
+    (p) => p.path !== top && !p.where.startsWith("detached"),
+  );
+  const out = [];
+  const seen = new Set();
+  for (const { where, items } of loadPlaces(root, places)) {
+    for (const it of items) {
+      const d = it.data;
+      if (!d?.id || d.status !== "In progress") {
+        continue;
+      }
+      const mine = here.get(d.id)?.data;
+      if (mine && mine.status === d.status && mine.claimed === d.claimed) {
+        continue;
+      }
+      const key = `${d.id}|${d.claimed}|${where}`;
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      out.push({
+        id: d.id,
+        claimed: d.claimed,
+        where: where.replace(/ \(worktree\)$/, ""),
+        worktree: where.endsWith("(worktree)"),
+      });
+    }
+  }
+  return out;
 }
 
 /**

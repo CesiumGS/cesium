@@ -16,7 +16,7 @@ describe("Dyno's rail, grouped by what people come to do", () => {
     expect(GROUPS.map((g) => g.map((d) => d.label))).toEqual([
       ["Work", "Overview", "Alerts", "Images"],
       ["Trends", "Runs", "Scenes"],
-      ["Explorer", "Viewer", "Examples"],
+      ["Viewer", "Explorer", "Examples"],
       ["Analysis", "Lab"],
     ]);
   });

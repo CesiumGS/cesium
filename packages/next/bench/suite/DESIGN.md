@@ -41,8 +41,8 @@ and `test/dynoRail.test.ts` checks this table against it.
 | Results      | Trends          | t   | `/trends`                    | Metrics run to run                                  |
 |              | Runs            | r   | `/runs`, `/runs/$run`        | Every run; a run's report; pick two to compare      |
 |              | Scenes          | s   | `/scenes`, `/scenes/$scene`  | The catalog; a scene's page is its history          |
-| Look         | Explorer        | e   | `/explorer`                  | A scene live in one or two engines                  |
-|              | Viewer          | v   | `/viewer`                    | Any content in one engine at a time, to debug       |
+| Look         | Viewer          | v   | `/viewer`                    | Any content in one engine at a time, to debug       |
+|              | Explorer        | e   | `/explorer`                  | A scene live in one or two engines                  |
 |              | Examples        | x   | `/examples`, `/examples/$id` | What 2.0 is for, one feature or use case each       |
 | Experiment   | Analysis        | n   | `/analysis`                  | Sweeps; Studies replace it (CS-405)                 |
 |              | Lab             | l   | `/lab`, `/lab/$id`           | Parity checks, microbenchmarks, spikes              |
@@ -95,13 +95,17 @@ never writes: a change to an item is a change to its file.
   server, versioned), never the item files. `scripts/work/query.mjs` is
   the only adapter between the two: when the human-in-the-lead plugin's
   `hitld work query --json` exists, that file changes and nothing here.
-- **Layout:** the header names the branch and commit it read. Five
-  tiles say what waits (on the owner, ready, in progress, blocked, done)
-  and act as shortcuts. Under them, four views as tabs (board, ready,
-  blocked, graph) and the filters (initiative, project, kinds, waiting
-  on the owner, words), all kept in the URL. An item opens in a panel
-  on the right (`?item=CS-<n>`): its facts, its needs and what needs it,
-  its text, and its path to copy or open in the editor.
+- **Layout:** the header names the branch and commit it read, with one
+  line of progress. Tabs ask one question each, with a count: what
+  waits on the owner (the default, and the rail's count), what is ready,
+  what is in progress, what is blocked; then the board and the graph.
+  One row of filters narrows every tab: where (all work, an initiative,
+  or a project, in one grouped list), which kind, and words. All of it
+  is in the URL. An item opens in a panel on the right
+  (`?item=CS-<n>`): its facts, who holds it and where, its needs and
+  what needs it, its text, and its path to copy or open in the editor.
+- **Waiting on the owner** lists the open decisions the owner answers,
+  the most waited-on first, each with the items that wait on it.
 - **The board** has a column per lifecycle state; Planned splits into
   ready and waiting. Cards show the ID, kind, title, state in words,
   project and claim. Columns show 40 cards, then "Show more".
@@ -109,10 +113,17 @@ never writes: a change to an item is a change to its file.
   with a project chosen, its items with their needs from other projects
   (dashed). Arrows point from what is needed to what needs it; nodes
   that link to nothing are listed under the graph.
+- **Work in flight:** the API includes claims made in other worktrees
+  and on other local branches of this machine (as `views.mjs claims`
+  finds them), and the board shows those items in progress, with who
+  holds them and on which branch, until the claim merges. Claims on
+  other machines arrive with a bundle or a push.
+- **Staying current:** the dev server tells open pages when an item
+  file changes and they read again; pages also read when the window
+  comes to the front and every minute while visible (claims elsewhere
+  are scanned at most every 30 s).
 - **Counts** match `views.mjs` (test/dynoWork.test.ts); the rail's count
-  is the open decisions the owner answers. It reads again when the
-  window comes to the front. Claims on other branches stay a
-  `views.mjs claims` job, and the page says it shows this branch only.
+  is the open decisions the owner answers.
 
 ## Page anatomy
 

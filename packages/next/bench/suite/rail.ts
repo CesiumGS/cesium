@@ -73,18 +73,18 @@ export const DESTINATIONS: readonly Destination[] = [
     hint: "The catalog, and each scene's history",
   },
   {
-    to: "/explorer",
-    label: "Explorer",
-    group: "Look",
-    key: "e",
-    hint: "A scene live in one or two engines",
-  },
-  {
     to: "/viewer",
     label: "Viewer",
     group: "Look",
     key: "v",
     hint: "Any content in one engine, to debug",
+  },
+  {
+    to: "/explorer",
+    label: "Explorer",
+    group: "Look",
+    key: "e",
+    hint: "A scene live in one or two engines",
   },
   {
     to: "/examples",

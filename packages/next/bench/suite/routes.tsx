@@ -49,16 +49,23 @@ export const runsLayoutRoute = createRoute({
 
 // ------------------------------------------------------------ needs a look
 
-export type WorkView = "board" | "ready" | "blocked" | "graph";
+export type WorkView =
+  "owner" | "ready" | "progress" | "blocked" | "board" | "graph";
+const WORK_VIEWS: readonly WorkView[] = [
+  "owner",
+  "ready",
+  "progress",
+  "blocked",
+  "board",
+  "graph",
+];
 export interface WorkSearch {
-  /** The board (the default), ready, blocked or the graphs. */
-  view?: Exclude<WorkView, "board">;
+  /** The question the page answers; waiting on the owner by default. */
+  view?: Exclude<WorkView, "owner">;
   initiative?: string;
   project?: string;
-  /** Kinds shown, comma-separated ("decision,external"). */
+  /** One kind: work, decision or external. */
   kind?: string;
-  /** Only what waits on the owner. */
-  owner?: boolean;
   q?: string;
   /** The item open beside the board. */
   item?: string;
@@ -70,13 +77,12 @@ export const workRoute = createRoute({
   validateSearch: (s: Record<string, unknown>): WorkSearch =>
     clean({
       view:
-        s.view === "ready" || s.view === "blocked" || s.view === "graph"
+        s.view !== "owner" && WORK_VIEWS.includes(s.view as WorkView)
           ? (s.view as WorkSearch["view"])
           : undefined,
       initiative: str(s.initiative),
       project: str(s.project),
       kind: str(s.kind),
-      owner: bool(s.owner),
       q: str(s.q),
       item: str(s.item),
     }),

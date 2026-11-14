@@ -9,6 +9,7 @@ import type {
   ItemKind,
   Status,
   WorkContainer,
+  WorkElsewhere,
   WorkItem,
   WorkItemText,
   WorkSnapshot,
@@ -18,6 +19,7 @@ export type {
   ItemKind,
   Status,
   WorkContainer,
+  WorkElsewhere,
   WorkItem,
   WorkItemText,
   WorkSnapshot,
@@ -180,14 +182,63 @@ export function filterItems(s: WorkSnapshot, f: WorkFilter): WorkItem[] {
   });
 }
 
+// ------------------------------------------------------------ in flight
+
+/** Claims elsewhere (other worktrees and branches), by item. */
+export type InFlight = ReadonlyMap<string, readonly WorkElsewhere[]>;
+
+export function inFlightOf(s: WorkSnapshot): InFlight {
+  const out = new Map<string, WorkElsewhere[]>();
+  for (const c of s.elsewhere ?? []) {
+    out.set(c.id, [...(out.get(c.id) ?? []), c]);
+  }
+  return out;
+}
+
+/**
+ * The status the board shows: In progress when claimed here or on any
+ * other branch whose claim hasn't merged yet; else the file's status.
+ */
+export function boardStatus(it: WorkItem, flight?: InFlight): Status {
+  return isOpen(it) && flight?.has(it.id) ? "In progress" : it.status;
+}
+
 /** The board's columns: each status with its items, most urgent first. */
 export function columnsOf(
   items: readonly WorkItem[],
+  flight?: InFlight,
 ): Array<{ status: Status; items: WorkItem[] }> {
   return STATUSES.map((status) => ({
     status,
-    items: items.filter((it) => it.status === status).sort(byUrgency),
+    items: items
+      .filter((it) => boardStatus(it, flight) === status)
+      .sort(byUrgency),
   }));
+}
+
+/**
+ * The owner's queue: open decisions the owner answers, each with the
+ * open items that need it, most waited-on first.
+ */
+export function ownerQueue(
+  s: WorkSnapshot,
+  items: readonly WorkItem[],
+): Array<{ decision: WorkItem; waiting: WorkItem[] }> {
+  const itemOf = new Map(s.items.map((i) => [i.id, i]));
+  return items
+    .filter(isOwnerDecision)
+    .map((decision) => ({
+      decision,
+      waiting: decision.needed_by
+        .map((id) => itemOf.get(id))
+        .filter((x): x is WorkItem => !!x),
+    }))
+    .sort(
+      (a, b) =>
+        b.waiting.length - a.waiting.length ||
+        Number(b.decision.ready) - Number(a.decision.ready) ||
+        idNumber(a.decision.id) - idNumber(b.decision.id),
+    );
 }
 
 /** Items grouped by project, in the snapshot's project order. */
@@ -216,7 +267,7 @@ export function byProject(
 // ------------------------------------------------------------ counts
 
 export interface WorkCounts {
-  /** Open decisions the owner answers. */
+  /** Open decisions the owner answers (whether or not claimed). */
   owner: number;
   ready: number;
   inProgress: number;
@@ -226,24 +277,35 @@ export interface WorkCounts {
   live: number;
 }
 
-/** The tiles' counts over a set of items (`views.mjs` counts the same). */
-export function countsOf(items: readonly WorkItem[]): WorkCounts {
+/**
+ * The views' counts over a set of items (`views.mjs` counts the same;
+ * work claimed elsewhere counts as in progress, not ready or blocked).
+ */
+export function countsOf(
+  items: readonly WorkItem[],
+  flight?: InFlight,
+): WorkCounts {
+  const here = (it: WorkItem) => !flight?.has(it.id);
   return {
     owner: items.filter(isOwnerDecision).length,
-    ready: items.filter((it) => it.ready).length,
-    inProgress: items.filter((it) => it.status === "In progress").length,
-    blocked: items.filter((it) => it.blocked).length,
+    ready: items.filter((it) => it.ready && here(it)).length,
+    inProgress: items.filter((it) => boardStatus(it, flight) === "In progress")
+      .length,
+    blocked: items.filter((it) => it.blocked && here(it)).length,
     done: items.filter((it) => it.status === "Done").length,
     live: items.filter((it) => it.status !== "Dropped").length,
   };
 }
 
 /** The badge's words for an item's state on a card. */
-export function stateOf(it: WorkItem): {
+export function stateOf(
+  it: WorkItem,
+  flight?: InFlight,
+): {
   text: string;
   tone: "success" | "warning" | "info" | "secondary";
 } {
-  if (it.status === "In progress") {
+  if (boardStatus(it, flight) === "In progress") {
     return { text: "In progress", tone: "info" };
   }
   if (it.ready) {

@@ -21,10 +21,10 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { svg3DObjectLarge } from "@stratakit/icons/3d-object";
 import { svgChartBarLarge } from "@stratakit/icons/chart-bar";
 import { svgChartLineLarge } from "@stratakit/icons/chart-line";
 import { svgClipboardLarge } from "@stratakit/icons/clipboard";
+import { svgCompareLarge } from "@stratakit/icons/compare";
 import { svgDashboardLarge } from "@stratakit/icons/dashboard";
 import { svgDismiss } from "@stratakit/icons/dismiss";
 import { svgGlobeLarge } from "@stratakit/icons/globe";
@@ -90,8 +90,8 @@ const ICONS: Record<string, string> = {
   "/trends": svgChartLineLarge,
   "/runs": svgListLarge,
   "/scenes": svgLayersLarge,
-  "/explorer": svgGlobeLarge,
-  "/viewer": svg3DObjectLarge,
+  "/viewer": svgGlobeLarge,
+  "/explorer": svgCompareLarge,
   "/examples": svgPlayCircleLarge,
   "/analysis": svgChartBarLarge,
   "/lab": svgModelCubeLarge,

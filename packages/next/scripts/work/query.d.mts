@@ -71,6 +71,17 @@ export interface WorkSnapshot {
   project_deps: Array<{ from: string; to: string; count: number }>;
   /** What `views.mjs check` reports. */
   problems: string[];
+  /** Work in flight in other worktrees and on other local branches. */
+  elsewhere: WorkElsewhere[];
+}
+
+export interface WorkElsewhere {
+  id: string;
+  claimed?: string;
+  /** The branch. */
+  where: string;
+  /** Checked out in a worktree on this machine. */
+  worktree: boolean;
 }
 
 export interface WorkItemText {
@@ -82,5 +93,9 @@ export interface WorkItemText {
 }
 
 export const API_VERSION: 1;
-export function queryWork(root: string): WorkSnapshot;
+export function queryWork(
+  root: string,
+  options?: { elsewhere?: WorkElsewhere[] },
+): WorkSnapshot;
+export function claimsElsewhere(root: string): WorkElsewhere[];
 export function showItem(root: string, id: string): WorkItemText | undefined;
