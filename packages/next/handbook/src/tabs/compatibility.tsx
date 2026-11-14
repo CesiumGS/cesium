@@ -13,7 +13,6 @@ import {
   Written,
 } from "../parts.tsx";
 import { ReachFacts, ReachOptions } from "../reach.tsx";
-import { WEBGPU_USAGE } from "../sources.ts";
 
 const SUPPORT: { browser: string; platform: string; state: ReactNode }[] = [
   {
@@ -155,10 +154,11 @@ export function Compatibility() {
       status="current"
       lede={
         <>
-          The engine needs core WebGPU. By usage share that reaches about 89% of
-          browsers worldwide, and by working adapters about 81% of the devices
-          one survey sees. Its largest gaps are Linux, older Android devices and
-          Firefox outside Windows and macOS.
+          The engine needs core WebGPU. Between 7% and 18% of browsers lack it,
+          and which end is nearer depends on what is counted: Can I use counts
+          browser versions, and Web3D Survey counts working adapters. Its
+          largest gaps are Linux, older Android devices and Firefox outside
+          Windows and Apple Silicon Macs.
         </>
       }
     >
@@ -186,13 +186,14 @@ export function Compatibility() {
       <Section title="How many people that is">
         <ul>
           <li>
-            <strong>{WEBGPU_USAGE} of global browser usage</strong> has WebGPU:
-            86.83% full and 1.8% partial, per <Cite id="caniuse" />, using
-            StatCounter for October 2026.
+            <strong>86.83% of global browser usage</strong> has WebGPU in full,
+            and 3.32% more in part (Safari on macOS 1.80%, Firefox desktop
+            1.52%), per <Cite id="caniuseData" />. Partial means only on some OS
+            or CPU families.
           </li>
           <li>
-            <strong>81.18% of reports</strong> returned a working adapter, per{" "}
-            <Cite id="survey" />, with 0.04% of those a fallback adapter.
+            <strong>81.86% of reports</strong> returned a working adapter, per{" "}
+            <Cite id="surveyR1" />, with 0.04% of those a fallback adapter.
           </li>
         </ul>
         <Figure caption="Share of Web3D Survey reports with a working WebGPU adapter, by platform. The page states no survey period.">
@@ -223,6 +224,93 @@ export function Compatibility() {
             testing, and the Can I use figure read with them in mind.
           </p>
         </Note>
+      </Section>
+
+      <Section title="The share without WebGPU: 7% to 18%">
+        <p>
+          Two public sources give two answers, and neither can narrow the other.
+          The answer is a range, and no point inside it is better supported.
+          Both were read on 13 Nov 2026.
+        </p>
+        <DataTable
+          label="The share of browsers without WebGPU, by source"
+          columns={[
+            { head: "Source", cell: (r) => r.source },
+            { head: "Without WebGPU", cell: (r) => r.without },
+            { head: "What it measures", cell: (r) => r.measures },
+          ]}
+          rows={[
+            {
+              source: <Cite id="caniuseData" />,
+              without:
+                "7.42% of page views marked no, and 3.32% partial. 86.83% yes.",
+              measures:
+                "Whether a browser version ships it, weighted by StatCounter page views. It can't see the operating system, GPU or driver, so it overstates who has WebGPU. The partial class enables it on some operating systems or CPU families only.",
+            },
+            {
+              source: <Cite id="surveyR1" />,
+              without: "18.14% of reports. 81.86% had a working adapter.",
+              measures:
+                "Whether requestAdapter() worked in a real browser. The sample is whoever ran the survey's script, so it leans to developers, test sites and automated runs. The page states no date or period.",
+            },
+          ]}
+        />
+        <ul>
+          <li>
+            Behind the 7.42%: Safari on iOS 18 and earlier (3.00%), old Chrome
+            (1.35%), Safari on macOS 18 and earlier (1.11%), old Firefox desktop
+            (0.60%), UC Browser (0.58%) and Firefox for Android (0.38%).
+          </li>
+          <li>
+            By platform, the survey has no working adapter in 80.6% of Linux
+            reports, 23.4% of Android, 15.6% of Windows, 12.0% of iOS, 9.0% of
+            macOS and 6.7% of ChromeOS. Linux is the nearest proxy for the
+            population with no WebGPU.
+          </li>
+          <li>
+            WebGL 2 is almost universal: 97.29% of page views by Can I use and
+            98.27% of tested reports by the survey, with 5.97% of those flagged
+            as possibly running in software.
+          </li>
+        </ul>
+        <Note title="The earlier single figure">
+          <p>
+            This tab used to state 88.63% from Can I use, read on 8 Nov. That is
+            the 86.83% yes plus 1.80% partial. The data read on 13 Nov also has
+            Firefox desktop's 1.52% as partial, 3.32% in all, so counting every
+            partial browser would give 90.15%. The "yes" figure didn't change,
+            so the difference is which browsers were counted, not a new month.
+            The survey's figure moved from 81.18% to 81.86% between the two
+            reads, with no period stated. Neither is a number to quote alone.
+          </p>
+        </Note>
+        <h3>What a WebGL 2 renderer would need of those browsers</h3>
+        <p>
+          The research note behind the WebGL 2 plan (R1, reviewed and accepted
+          by the owner) sets a floor and names no browser list. The floor is a
+          WebGL 2 context, <C>EXT_color_buffer_float</C> (99.95% of reports,
+          99.67% on Linux, the lowest platform), a texture size of at least
+          4096, 4 samples, 4 draw buffers, a uniform block of 16384 bytes and 16
+          vertex texture units. Every report in the survey meets all of them. A
+          device below it is refused with a message that names what is missing.
+          Everything else is a reported path with a fallback: log depth through{" "}
+          <C>EXT_clip_control</C>, multi-draw, linear and blendable float
+          textures, the timer query and parallel shader compile. Firefox lacks{" "}
+          <C>WEBGL_multi_draw</C>, the timer query and parallel shader compile,
+          and added <C>EXT_clip_control</C> in 159 (<Cite id="firefox159" />
+          ). Safari's float filtering and blending sit at 53% to 58%.
+        </p>
+        <p>
+          The plan orders the renderer's later steps by this: FXAA, clips, the
+          depth-range readback, shadows, ambient occlusion, 16-bit moments, and
+          32-bit moments only where <C>EXT_float_blend</C> exists. Browser
+          sniffing decides nothing. The renderer is planned and nothing of it is
+          built.
+        </p>
+        <Written
+          from="docs/superpowers/plans/2026-11-13-webgl2-r1-browser-reach.md and the WebGL 2 renderer plan"
+          on="2026-11-13"
+        />
       </Section>
 
       <Section title="The standard">
@@ -326,6 +414,9 @@ export function Compatibility() {
         ids={[
           "impl",
           "caniuse",
+          "caniuseData",
+          "surveyR1",
+          "firefox159",
           "mdn",
           "survey",
           "webgpu",

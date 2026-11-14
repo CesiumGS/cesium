@@ -18,7 +18,14 @@ export interface Source {
 
 export const STALE_AFTER_DAYS = 90;
 
-/** Global browser usage with WebGPU, from Can I use with StatCounter. */
+/**
+ * Global browser usage with WebGPU, from Can I use with StatCounter, read
+ * 2026-11-08: 86.83% full plus 1.80% partial (Safari on macOS). It is not the
+ * only way to count: the data file read on 2026-11-13 (`caniuseData`) also
+ * has Firefox desktop's 1.52% as partial, 3.32% in all, which would make
+ * 90.15%. The handbook shows the share without WebGPU as a range
+ * (`caniuseData` against `surveyR1`), never from this constant alone.
+ */
 export const WEBGPU_USAGE = "88.63%";
 
 export const SOURCES = {
@@ -35,6 +42,28 @@ export const SOURCES = {
     url: "https://caniuse.com/webgpu",
     pageDate: "StatCounter usage for October 2026",
     checked: "2026-11-08",
+  },
+  caniuseData: {
+    short: "Can I use data file",
+    title: "Fyrd/caniuse: data.json (the data behind Can I use)",
+    url: "https://github.com/Fyrd/caniuse",
+    pageDate: "file updated 2026-11-11 05:48 UTC; no StatCounter month stated",
+    checked: "2026-11-13",
+    note: "Read for the WebGL 2 R1 note, whose figures this page takes. The file itself wasn't opened again for the handbook.",
+  },
+  surveyR1: {
+    short: "Web3D Survey, 13 Nov",
+    title: "Web3D Survey: WebGPU",
+    url: "https://web3dsurvey.com/webgpu",
+    checked: "2026-11-13",
+    note: "The page was re-opened: 81.86% of reports had a working adapter. The 18.14% without is that figure subtracted from 100%, not one the page gives. It states no date or period. Platform and extension tables are from the R1 note.",
+  },
+  firefox159: {
+    short: "Firefox 159 notes",
+    title: "MDN: Firefox 159 release notes",
+    url: "https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/159",
+    checked: "2026-11-13",
+    note: "Read for the R1 note, which records that 159 added EXT_clip_control. Not opened again for the handbook.",
   },
   mdn: {
     short: "MDN",

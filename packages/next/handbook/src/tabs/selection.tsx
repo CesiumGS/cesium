@@ -904,14 +904,22 @@ export function Selection() {
         <ul>
           <li>
             <strong>The error exponent α.</strong> <C>View.lodExponent</C>, in
-            [0, 1] with a default of 1, makes the error s<sup>α</sup> times the
-            geometric error instead of s times it. At 1 the error is as drawn,
-            with the most tiles. At 0 it's measured as if unwarped, as 1.x does:
-            far fewer tiles, and the error on screen is s times the threshold. A
-            warp's own <C>Warp.lodExponent</C> wins over the view's. The default
-            is to be found by measurement and not chosen: the first sweep (0,
-            0.25, 0.5, 0.75 and 1) predates the fixes below, and is to be run
-            again. The example has a slider and a <C>&amp;alpha=</C> switch.
+            [0, 1] with a default of 0.3 (<C>DEFAULT_LOD_EXPONENT</C>), makes
+            the error s<sup>α</sup> times the geometric error instead of s times
+            it. At 1 the error is as drawn, with the most tiles. At 0 it's
+            measured as if unwarped, as 1.x does: far fewer tiles, and the error
+            on screen is s times the threshold. A warp's own{" "}
+            <C>Warp.lodExponent</C> wins over the view's. The owner chose 0.3 on
+            2026-11-13 from a second sweep (0 to 1, at ×1, ×4 and ×10, in the
+            valley and Zermatt close views, after the culling fixes below). At
+            ×4 and ×10, α 0.25 and 0.5 differed from the exact image (α 1) by
+            less than the run-to-run noise, about 2% of pixels, with a quarter
+            to a fifth of α 1's terrain tiles: 471 and 760 tiles against 2,161
+            in the valley at ×4, and GPU time of 70 and 90 ms against 146 on
+            that Mac. α 0 was visibly coarser at ×4 (4.1% of pixels). Only
+            static frames were compared; popping in motion was not measured. The
+            sweep is <C>scripts/alphaSweep.mjs</C>, and the example has a slider
+            and a <C>&amp;alpha=</C> switch.
           </li>
           <li>
             <strong>Exact drawn height ranges.</strong> A tile's bound under a
@@ -1209,6 +1217,11 @@ export function Selection() {
             <C>"stretch"</C>: how much the warp under a tile stretches its
             error, the factor selection used.
           </li>
+          <li>
+            <C>"skirts"</C> (<C>&amp;debug=skirts</C>): terrain skirt fragments
+            in magenta, with everything else shaded as normal. It works under
+            any warp.
+          </li>
         </ul>
         <p>
           <C>View.debugLegend()</C> returns what the colours mean, for an
@@ -1264,9 +1277,9 @@ export function Selection() {
           </li>
           <li>
             Coarsening pops: the children leave at once. Morphing out would keep
-            them alive after the selection drops them, and isn't built. Normals
-            keep the mesh's own. 3D Tiles content pops too; a dithered
-            cross-fade is a later increment.
+            them alive after the selection drops them, and isn't built (the plan
+            below covers it). Normals keep the mesh's own. 3D Tiles content pops
+            too.
           </li>
           <li>
             The loop keeps ticking while a tile morphs or fades (the wake reason{" "}
@@ -1275,6 +1288,93 @@ export function Selection() {
         </ul>
         <Written
           from="the transform-graph plan, task 12, fix 8, and test/geomorph.test.ts"
+          on="2026-11-13"
+        />
+      </Section>
+
+      <Section title="Open at ×10: two findings">
+        <ul>
+          <li>
+            <strong>
+              The streaks on cliffs are a shadow artifact, most likely shadow
+              acne.
+            </strong>{" "}
+            At vertical exaggeration ×10 in the Zermatt close view, dark
+            straight bands cross the cliffs. They are not skirts: with{" "}
+            <C>"skirts"</C> on, the streaked cliffs show no magenta. They aren't
+            stretched imagery, whose streaks would be soft and run down the fall
+            line. With shadows off, or the sun off, the bands vanish; ambient
+            occlusion off changes nothing; at ×4 they are fainter, and at ×1
+            absent. They form a regular grid seen at an angle, which real ridge
+            shadows wouldn't: the shadow map's texel grid projected onto a wall
+            the sun grazes, where the bias is too small. The suspects are the
+            receiver's normal offset, which may not use the drawn (warped)
+            normal, and a slope-scaled bias that doesn't see the wall's drawn
+            slope. The check is a sweep of both at ×10 with a tint by cascade.
+          </li>
+          <li>
+            <strong>At α = 1, selection runs away under a steep warp.</strong>{" "}
+            Valley ×10 reached 9,546 terrain tiles and 23,512 imagery requests,
+            still rising after 120 s. Valley ×4 made 14,559 imagery requests
+            against 2,117 at α 0.75. An exact as-drawn error should converge, so
+            something about the stretched error or the imagery choice under it
+            diverges. The cause isn't found. The new default of 0.3 stays clear
+            of it, but the cause is still to be tracked down.
+          </li>
+        </ul>
+        <Written
+          from="the transform-graph plan, task 12 and its notes on the ×10 views"
+          on="2026-11-13"
+        />
+      </Section>
+
+      <Section title="Planned: transitions both ways (M9)">
+        <p>
+          Reviewed by the owner, not built. The goal is that nothing pops when a
+          level of detail changes, except the very first load. Today terrain
+          morphs in and imagery cross-fades when they refine, and coarsening and
+          3D Tiles content pop. The plan's decisions:
+        </p>
+        <ul>
+          <li>
+            <strong>Terrain morphs back when it coarsens.</strong> Deselected
+            children stay drawn for one transition and morph to the replacing
+            tile's surface, today's morph reversed, while their imagery fades to
+            its texels. Then they swap unseen. It is neither a dither nor a
+            distance-driven morph, which stays an option if the measurements
+            ask.
+          </li>
+          <li>
+            <strong>3D Tiles content dithers both ways.</strong> Replaced
+            content fades out and its replacement in, with mixed-level boxes.
+            Added children fade in. A tileset's first content pops, like
+            terrain's first load. The fades dither in every pass (opaque,
+            translucent and shadow) with complementary masks. Picks and height
+            queries see only the destination.
+          </li>
+          <li>
+            <strong>One setting.</strong> <C>View.lodTransitions</C> becomes{" "}
+            <C>"smooth" | "pop"</C>, and a tileset or globe layer may set its
+            own. A view's <C>"pop"</C> wins everywhere, for A/B and parity runs.
+            One duration serves every transition.
+          </li>
+          <li>
+            <strong>A signed word and one clock.</strong> The record's morph
+            word becomes a signed start time: positive coming in, negative
+            leaving. A reversal restarts the tile at the progress it showed, so
+            it doesn't jump. The clock's epoch is rebased on the CPU so that
+            long sessions keep small shader times.
+          </li>
+          <li>
+            <strong>Bounded memory.</strong> Leaving tiles are held at most one
+            transition. If the cache is over budget by more than what's leaving,
+            new coarsening transitions pop, and the stats say so. Multi-level
+            coarsening goes one level at a time, and is skipped for tiles off
+            screen or hidden, or when the swap's error is under half a pixel.
+          </li>
+        </ul>
+        <Written
+          from="the LOD transitions plan and section 6, M9 (LT-1 to LT-8)"
           on="2026-11-13"
         />
       </Section>

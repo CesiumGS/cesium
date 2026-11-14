@@ -340,15 +340,17 @@ export function Architecture() {
 
       <Section title="Planned: threads, jobs, renderers and profiles">
         <p>
-          These are decisions in the plans, written down on 2026-11-13. None of
-          them is built as described. They matter to a host because they set
-          what the API may and may not promise.
+          These are decisions in the plans, written down and reviewed on
+          2026-11-13. Only the first slice of the job system is merged; the rest
+          is planned. They matter to a host because they set what the API may
+          and may not promise. The order they are built in is below.
         </p>
         <ul>
           <li>
-            <strong>One API, the engine on either thread.</strong> The app calls
-            the same API on the main thread. A thin layer either runs the engine
-            there or forwards to an engine thread, a worker with an{" "}
+            <strong>One API, the engine on either thread</strong> (the
+            worker-mode façade, reviewed; milestones WF-1 to WF-12). The app
+            calls the same API on the main thread. A thin layer either runs the
+            engine there or forwards to an engine thread, a worker with an{" "}
             <C>OffscreenCanvas</C>. Commands are ordered messages batched per
             tick. Reads come from a snapshot taken each tick. Queries return
             promises. Code that must run inside the engine, such as a warp, a
@@ -356,11 +358,29 @@ export function Architecture() {
             thread. The main-thread mode offers no synchronous read that the
             worker mode can't, and the API tests run in both. A probe chooses
             the mode, not browser sniffing, and the host can force it with{" "}
-            <C>thread: "auto" | "main" | "worker"</C>.
+            <C>thread: "auto" | "main" | "worker"</C>. Review decisions: a
+            closure the engine would run on its own thread is refused in both
+            modes, but only once Cesium IR's self-contained function path
+            exists, so examples migrate once. HTML overlays are the app's: the
+            engine publishes tracked points (pixel, height, visibility) each
+            tick. After a lost worker or device the host can call{" "}
+            <C>restart()</C>, and may opt in to rebuilding the scene from the
+            façade's mirror. The façade waits for the public API review, which
+            also designs observed value types so that a write such as{" "}
+            <C>camera.position.x = 5</C> becomes a command.
           </li>
           <li>
-            <strong>Jobs.</strong> <C>WorkerPool</C> stays as the transport. The
-            scheduler orders work by visible screen-space error, with
+            <strong>Jobs. The first slice is built</strong> (
+            <C>src/io/Jobs.ts</C>, section 13.43): priorities, dependencies,
+            cancellation, a budgeted apply phase (4 ms by default) and shared
+            memory when isolated. Terrain decode completion and the refit
+            fallback run on it. Moving the other work onto it (JP-1 to JP-9),
+            app jobs and the inspector's Jobs section are planned. On its
+            before-and-after runs the tick spacing differed between runs of one
+            build by more than between builds, so the slice is not shown to
+            change smoothness; what it changes is where work runs, and that it
+            is bounded and visible. <C>WorkerPool</C> stays as the transport.
+            The scheduler orders work by visible screen-space error, with
             dependencies, cancellation and one main-thread apply phase with a
             millisecond budget. Shared memory is used when the page is
             cross-origin isolated and never required. A job may return partial
@@ -374,7 +394,13 @@ export function Architecture() {
             nothing. The plan generalises it: <C>view.refinement</C> lists the
             active sources (streaming, transitions, shader compiles, occlusion
             feedback, accumulation), and <C>view.converged()</C> resolves when
-            they are done, for screenshots, tests and exports.
+            they are done, for screenshots, tests and exports. It is reviewed
+            (M11): <C>converged()</C> replaces <C>whenReady</C>, takes a level (
+            <C>"drawn"</C>, <C>"correct"</C> or <C>"converged"</C>) and
+            deadlines, and a <C>freeze</C> option holds the view's selection so
+            fades and fits finish on what has loaded. Transitions, pending
+            shader swaps and the resolution governor report as sources. Jobs
+            report through <C>JobSpec.refinement</C>. Only the chip is built.
           </li>
           <li>
             <strong>A renderer behind each view.</strong> The seam for a second
@@ -388,6 +414,22 @@ export function Architecture() {
             point, so the main API doesn't name the GPU.
           </li>
           <li>
+            <strong>Streaming robustness</strong> (M12, reviewed). Every fetch
+            gets a deadline from its origin's measured latency. Transient
+            failures retry with backoff inside per-origin budgets. A 404 or 204
+            on 3D Tiles content is empty content and the parent stays drawn.
+            Failed tiles get another chance after cool-downs, and ion tokens
+            refresh once per generation. Request options reach 1.x's parity: a
+            proxy (a prefix or a function), query parameters and headers
+            inherited by derived requests, credentials for trusted origins, and
+            an app hook that refreshes authorization.
+          </li>
+          <li>
+            <strong>Cesium IR, MaterialX and a WebGL 2 renderer</strong> are
+            described on the Shading tab and under Browser compatibility; their
+            plans are reviewed and none is built.
+          </li>
+          <li>
             <strong>Engine profiles.</strong> The plan in{" "}
             <C>docs/superpowers/plans/2026-11-13-engine-profiles.md</C> has the
             app describe a look, and the engine keep as much of it as the device
@@ -399,7 +441,75 @@ export function Architecture() {
           </li>
         </ul>
         <Written
-          from="the overall plan, section 13.41, and the engine profiles plan"
+          from="the overall plan, sections 13.41 and 13.43, and the plans for engine profiles, the worker-mode façade, refinement and streaming robustness"
+          on="2026-11-13"
+        />
+      </Section>
+
+      <Section title="The planned work, in order">
+        <p>
+          Milestones M7 to M13 of the overall plan's section 6, reviewed by the
+          owner on 2026-11-13. Each lists order and dependencies only. "Not
+          built" means no code is merged.
+        </p>
+        <DataTable
+          label="Milestones M7 to M13"
+          columns={[
+            { head: "Milestone", cell: (r) => r.m },
+            { head: "What", cell: (r) => r.what },
+            { head: "State", cell: (r) => r.state },
+          ]}
+          rows={[
+            {
+              m: "M7",
+              what: "Engine profiles (M1 to M9), Cesium IR (IR-1 to IR-15, then gaps for noise, textures, matrices, derivatives, loops and structs) and the WebGL 2 renderer (W0 to W11). R1's browser research is done and ordered W10.",
+              state: "Reviewed; not built",
+            },
+            {
+              m: "M8",
+              what: "The job system: the first slice, then JP-1 to JP-9 move existing work onto it.",
+              state: "First slice built; the rest planned",
+            },
+            {
+              m: "M9",
+              what: "Level-of-detail transitions: coarsening and 3D Tiles both ways (LT-1 to LT-8).",
+              state: "Reviewed; not built",
+            },
+            {
+              m: "M10",
+              what: "Live MaterialX graph editing in a gallery example (MX-1 to MX-11); after IR-15 and noise.",
+              state: "Reviewed; not built",
+            },
+            {
+              m: "M11",
+              what: "Refinement and convergence: view.refinement, converged(), and the loop's reasons (R1 to R10).",
+              state: "Reviewed; not built",
+            },
+            {
+              m: "M12",
+              what: "Streaming robustness and request options (SR-1 to SR-13).",
+              state: "Reviewed; not built",
+            },
+            {
+              m: "M13",
+              what: "The worker-mode façade (WF-1 to WF-12), after the public API review.",
+              state: "Reviewed; not built",
+            },
+          ]}
+        />
+        <p>
+          The kickoff order groups work so that no two agents write the same
+          files. Wave A starts in parallel on new files: Cesium IR's core and
+          our naga build, the façade's protocol table, the WebGL 2 shader route
+          spike, the MaterialX document layer, the LOD measurement script and
+          the profiles' device facts. Wave B is the renderer seam alone, as pure
+          moves. Wave C runs by area once it lands: the signed transition word,
+          swap-when-ready shaders, the refinement registry, content decode on
+          jobs, the profiles' catalog and Cesium IR's passes. Wave D follows
+          each item's inputs.
+        </p>
+        <Written
+          from="the overall plan, section 6, M7 to M13"
           on="2026-11-13"
         />
       </Section>

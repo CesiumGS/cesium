@@ -46,17 +46,25 @@ const MILESTONES = [
   {
     work: "Level of detail and culling under warps",
     what: "An error exponent, exact drawn height ranges, geomorphing and imagery cross-fades, mixed LOD with exact holes, horizon culling from the drawn terrain, two-phase GPU occlusion culling of draws, and coarsening of long-hidden tiles. Debug views, and an inspector with a recorder, for seeing what they do",
-    state: "Built; the exponent's default is still to be measured",
+    state:
+      "Built; the exponent's default is 0.3, from a re-sweep. A runaway at exponent 1 is still to be tracked down",
   },
   {
     work: "Core IR (section 13.42)",
     what: "One small typed IR on KHR_interactivity's vocabulary for styles, transforms and materials, with a CPU evaluator, differentiation and bounds, and emitters for WGSL and GLSL ES. WGSL becomes a front end, not the contract",
-    state: "Decided, planned and spiked; not in the engine",
+    state:
+      "Decided, planned (IR-1 to IR-15, reviewed) and spiked; not in the engine",
   },
   {
     work: "Threads, jobs, renderers and engine profiles (section 13.41)",
     what: "The engine on either thread behind one API, a job scheduler, loading as refinement, a renderer behind each view with support reports, and a profile system where the app owns the look and the engine owns fidelity",
-    state: "Planned; the refinement chip in the warp examples is built",
+    state:
+      "Planned and reviewed. Built: the job system's first slice and the refinement chip in the warp examples",
+  },
+  {
+    work: "Transitions, refinement, streaming robustness, the worker-mode façade, live MaterialX editing (M9 to M13)",
+    what: "Nothing pops when a level of detail changes, one model of an image still improving, deadlines and retries for every fetch with 1.x's request options, one API with the engine on either thread, and an editable MaterialX gallery example",
+    state: "Reviewed; not built",
   },
   {
     work: "B-reps, GPU tessellation and CSG",
