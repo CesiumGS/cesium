@@ -332,7 +332,12 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
   - **Measured:** at ×10 with occlusion on, loading stopped but the drawn set flipped between about 2,626 and 3,219 tiles, and the loop never went idle. With it off, the scene settled at 3,360 tiles and idled.
   - **Cause:** a refined tile that read hidden was coarsened back to its parent. That changed the depth, so its children read visible again.
   - **Fix** (`1f4fb9c463`): hiding only blocks new refinement. A refined tile keeps its children, and a result asks for a render only when a verdict changed.
-- **Increment 5 (after measuring): an `"auto"` mode.**
+- **Increment 5: an `"auto"` mode — deferred (owner, 2026-11-13).** Not worth its complexity and bug risk now: a per-view heuristic state machine, flapping near its threshold, history-dependent slowness that is hard to reproduce, and no data on what culling would gain while it is off. Keep culling on by default with the existing per-view switch (`View.occlusionCulling`, `View.occlusionFeedback`); an application that knows its scenes are sparse turns it off. Instead, cut the overhead structurally so every scene pays less:
+  - **The measured overhead,** ×1 in the vertical-exaggeration example, settled, 126 tiles at 1718 × 1406 on the owner's Mac: the first phase's extra depth pass (`occlusion-depth`) 2.3 ms and the pyramid build (`hzb`) 2.0 ms, against opaque 25 ms, with nothing to cull.
+  - **Fold the occlusion depth phase into the depth prepass:** split the prepass itself into the two phases (draw what was visible last tick, build the pyramid from that depth, then draw the re-tested remainder), so there is no separate occlusion-depth pass.
+  - **A cheaper pyramid:** start from a lower-resolution level, or build only the levels the tests read.
+  - Revisit `"auto"` only if varied scenes show the remaining overhead mattering after both.
+  - The text below is the earlier sketch, kept for reference.
   - Per view, run the pyramid and queries every tick while the occluded share is worth it. When it stays low (for example, under 5% for a couple of seconds), drop to one tick in N, and come back on a large camera move or a rising share.
   - The application or the camera controller can still force `"on"` or `"off"`, for example off during a fast flight, or on for a walk-through.
   - The exaggeration scene at ×1, ×5 and ×10 (tiles drawn, requests, bytes, GPU per tick, time to settle), the `globe` suite's six views (1.x parity must hold), and a camera flight for pops.
@@ -366,7 +371,7 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
     - With coarsening on (417 tiles, 1.01 M triangles), it leaves out 68 items and 0.12 M triangles: the coarsened tiles are large, and a sphere around one rarely fits behind a wall. Opaque 116–118 ms on, 125 ms off.
     - The default view frozen at 8.4 M triangles: 1,337 items and 2.08 M triangles left out (25%). With the tile queries' 2 × 2 window instead of 8 × 8, about 5%.
     - **Images:** the same frozen scene drawn on and off compares bit for bit in scene-referred light (`View.readHdr`) at 1.0 M and at 4.8 M triangles. One frozen state of the default view at 8.4 M triangles had 13 of 1.15 M pixels differ by at most 0.09%; not explained (an order between surfaces at equal depth is the suspect, AO isn't: on and off agree with it either way).
-  - **Next:** tighter bounds. Selection's drawn boxes (fix 2) are far tighter than spheres for flat or tall tiles; a per-draw box needs a place the cull can read (group 1 is at the base tier's 8 storage buffers). Then an `"auto"` mode with the feedback's, and clusters (§13.41).
+  - **Next:** tighter bounds. Selection's drawn boxes (fix 2) are far tighter than spheres for flat or tall tiles; a per-draw box needs a place the cull can read (group 1 is at the base tier's 8 storage buffers). Then the structural overhead cuts above (the prepass split into the two phases, a cheaper pyramid), and clusters (§13.41). `"auto"` is deferred.
 
 - **An error policy:** measure error in the true frame (as 1.x does, so the drawn error is k× coarser), in the drawn frame (today), or in between (for example, σ_max^½).
 - **Anisotropic error:** terrain's error is vertical. Project k·ε along the drawn up axis at the tile and the view direction, as view-dependent terrain LOD does (Lindstrom et al. 1996), rather than taking an isotropic σ_max · ε. This is exact and gains in steep or top-down views, but little in this example's oblique one.
