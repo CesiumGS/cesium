@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { API_ROWS, isBreaking } from "./apiMap.ts";
 import { C } from "./parts.tsx";
-import { WEBGPU_USAGE } from "./sources.ts";
 
 /**
  * The Overview's costs, by hand: what more development closes, what the
@@ -205,8 +204,6 @@ const GAPS: readonly {
   },
 ];
 
-const usageWithout = (100 - Number.parseFloat(WEBGPU_USAGE)).toFixed(2);
-
 const GIVEN_UP: readonly {
   what: ReactNode;
   why: ReactNode;
@@ -217,10 +214,11 @@ const GIVEN_UP: readonly {
     why: "The renderer is GPU-driven: compute culls, indirect draws consume the result, and vertex shaders pull from storage buffers. WebGL 2 has none of those, so a thin fallback can't carry it.",
     cost: (
       <>
-        About {usageWithout}% of global browser usage, by the{" "}
-        <a href="#/browsers">Browser compatibility</a> tab's figure. Apps that
-        need those browsers stay on 1.x there. The other options are
-        compatibility mode or a second renderer, compared on that tab.
+        Between 7% and 18% of browsers, depending on whether versions or working
+        adapters are counted: see the{" "}
+        <a href="#/browsers">Browser compatibility</a> tab. Apps that need those
+        browsers stay on 1.x there. The other options are compatibility mode or
+        a second renderer, compared on that tab.
       </>
     ),
   },

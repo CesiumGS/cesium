@@ -915,7 +915,9 @@ export function ReachFacts() {
             <Cite id="slangKhronos" />
             ), and its newest release is v2026.22 (
             <Cite id="slangReleases" />
-            ). The engine compiles its shaders at build time.
+            ). The engine compiles its shaders at build time with a pinned
+            compiler, now 2026.22; the rebuilt shaders differ from 2026.21's
+            only in the version line of each generated header.
           </li>
           <li>
             <strong>Community.</strong> npm's weekly downloads rose between the
@@ -948,7 +950,8 @@ export function ReachFacts() {
           </li>
           <li>
             <strong>The WebGL 2 spike.</strong> Slang to GLSL ES on two kernels
-            and one material, as section 13.17 says.
+            and one material, as section 13.17 says. The WebGL 2 plan lists it
+            as W0 and nothing of it is built.
           </li>
           <li>
             <strong>Virtual desktops.</strong> In each of Citrix, Omnissa

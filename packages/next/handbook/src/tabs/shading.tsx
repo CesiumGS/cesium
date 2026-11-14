@@ -388,9 +388,14 @@ export function Shading() {
           plan is not to make WGSL the contract. Users write styles, transforms,
           materials and functions in a front-end language, and each lowers into
           one small intermediate form, the core IR, working name{" "}
-          <C>cesium-ir</C>. This is decided and planned (owner, 2026-11-13). The
-          spikes are built, and the engine's style compiler and transform code
-          do not use it yet.
+          <C>cesium-ir</C>. This is decided, and its implementation plan is
+          reviewed (owner, 2026-11-13): IR-1 to IR-15, then gaps for noise,
+          textures and samplers, matrices, screen-space derivatives, general
+          bounded loops and structs, in that order. The plan's WGSL front end
+          goes through our own build of naga (Rust, in development and CI only),
+          and vendor extensions of the graph JSON take the <C>BENTLEY_</C>{" "}
+          prefix. The spikes are built, and the engine's style compiler and
+          transform code do not use it yet.
         </p>
         <ul>
           <li>
@@ -456,6 +461,28 @@ export function Shading() {
           on="2026-11-13"
         />
         <Sources ids={["khrInteractivity", "onnxReleases", "naga"]} />
+      </Section>
+
+      <Section title="Planned: live MaterialX graph editing">
+        <p>
+          A gallery example, reviewed and not built (M10). A MaterialX graph is
+          edited live on a lookdev stage, in four city places and seven terrain
+          places. Value edits are instant, because literals are uniforms.
+          Rewiring recompiles in the background as a cancellable job while the
+          last good material stays on screen. MaterialX stays at the edge, in{" "}
+          <C>packages/next/materialx/</C>, which the engine never imports. At
+          review there is no emitter of its own before the IR: the lowering is
+          Cesium IR's IR-15, noise comes first among the IR's gaps, and the
+          example reads MaterialX XML with its own reader and a generated
+          definitions table. The engine gains OpenPBR tier 1 (emission in nits
+          first) and tier 2 (fuzz, anisotropy, tangents), a fragment hook on the
+          globe surface (height, slope, aspect, water, latitude, camera
+          distance) and a water mask from quantized-mesh data.
+        </p>
+        <Written
+          from="the MaterialX live graph editing plan and section 6, M10"
+          on="2026-11-13"
+        />
       </Section>
 
       <Section title="Still to write">
