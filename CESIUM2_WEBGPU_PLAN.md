@@ -10448,6 +10448,18 @@ So a front end on our IR costs microseconds and Slang tens of milliseconds, thre
 - _MaterialX:_ 1.39.5 (2026-05-22) added a Slang generator, `MaterialXGenSlang`, with JS bindings ([release](https://github.com/AcademySoftwareFoundation/MaterialX/releases/tag/v1.39.5)). Its generators are GLSL, ESSL, Vulkan GLSL, MSL, OSL, MDL, Slang, and a `WgslShaderGenerator` (1.39.4) that emits Vulkan GLSL written to translate cleanly to WGSL, not WGSL itself ([PR #2407](https://github.com/AcademySoftwareFoundation/MaterialX/pull/2407)). The Emscripten build generates shaders in the browser ([README](https://github.com/AcademySoftwareFoundation/MaterialX/blob/v1.39.5/javascript/README.md)); there's no official npm package.
 - _OpenPBR:_ 1.1.2 (2026-11-05), with MaterialX as its reference implementation ([releases](https://github.com/AcademySoftwareFoundation/OpenPBR/releases)). _OSL:_ CPU, batched SIMD and OptiX only; no GLSL, WGSL or Metal back end ([INSTALL.md](https://github.com/AcademySoftwareFoundation/OpenShadingLanguage/blob/main/INSTALL.md)).
 
+**Re-checked against the latest code (2026-11-13, at the owner's request).** Slang master `8d46e920`, wgpu trunk, Dawn main `696f37e8`, MaterialX main `9176de82`, wesl-spec main `37bf3f3a`, npm. All the tool claims above still hold:
+
+- **Slang:** GLSL profiles are 150 to 460 only, and the emitter requires 450 (`slang-profile-defs.h`, `slang-emit-glsl.cpp`). `slang-wasm.cpp` lists GLSL, HLSL, WGSL, SPIR-V, Metal and CUDA, so there is no CPU target. The WGSL target is still "a work in progress", with no `SV_ClipDistance`, `SV_PrimitiveID` or wave intrinsics, and 69 open `WebGPU` issues. #13914 and #13933 are open. The 2026.22 WASM zip is 10,567,678 bytes (+0.5%).
+- **npm:** there is no official package. #12317 is now "Add slang bundler plugins for the web", and the maintainers plan a package manager.
+- **naga trunk:** ES 300 and 310, with compute and storage buffers needing 310.
+- **`naga-wasm`:** 30.2.0 (2026-09-30), one maintainer, a repository created 2026-09-17; it validates and writes GLSL ES 300.
+- **WESL:** no tags or releases; npm 0.7.31 is still the latest.
+- **Tint:** its IR is internal, and no standalone WASM build was found.
+- **MaterialX:** 1.39.5 is still the latest. `JsMaterialXGenSlang` exists, and the WGSL generator is "WGSL Flavor of Vulkan GLSL".
+
+Nothing here changes the recommendation below.
+
 **The four combinations.** In each, the engine's own shaders can stay Slang compiled offline; what differs is what happens at run time and where styles, transforms and vector fields live.
 
 _(1) Slang for everything._ Styling and vector stages are Slang interfaces; a style, a 1.x style or a transform is lowered by a front end to a Slang module and linked with `extern`/`export` against precompiled engine modules; the WASM compiler loads lazily the first time anything is styled; GLSL for WebGL 2 from Slang's GLSL target.
