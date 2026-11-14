@@ -131,6 +131,93 @@ export interface PostStagePass {
   storage?: readonly { name: string; type: string }[];
 }
 
+/**
+ * What the engine checks of a post shader compiled from Slang (`slangPostShader`): the
+ * resources and uniform fields it declares, by their names in the source, as the build
+ * (`npm run shaders`) read them from the compiler's reflection.
+ */
+export interface SlangPostLayout {
+  /** The uniform struct's fields, in bytes from its start. */
+  readonly uniforms: readonly { name: string; offset: number }[];
+  /** What it declares in group 1. */
+  readonly bindings: readonly {
+    name: string;
+    binding: number;
+    kind: "uniform" | "sampler" | "texture" | "storage";
+  }[];
+}
+
+/** A post shader compiled offline from Slang: WGSL with no entry point, and its layout. */
+export interface SlangPostShader extends ShaderUnit {
+  readonly layout: SlangPostLayout;
+}
+
+/**
+ * A post shader from the build's output for a Slang stage (src/shaders/stages/, see
+ * shaders/postApi.slang): its generated `.wgsl` text, and its `.json` layout. It takes
+ * `shader`'s place, in a stage or in a pass. Its group 1 is its own, in the numbers the
+ * engine gives a pass; the stage is refused, naming the field, if they differ.
+ */
+export function slangPostShader(
+  name: string,
+  wgsl: string,
+  layout: SlangPostLayout,
+): SlangPostShader {
+  return { ...wgslUnit(name, wgsl), layout };
+}
+
+const isSlangShader = (unit: ShaderUnit): unit is SlangPostShader =>
+  "layout" in unit;
+
+/** What the engine's pass offers a Slang shader's group 1, to check what it declares. */
+function slangLayoutProblem(
+  layout: SlangPostLayout,
+  offered: {
+    uniforms: UniformLayout;
+    bindings: readonly PostStageBinding[];
+    storage: readonly { name: string; binding: number }[];
+  },
+): string | undefined {
+  const expected = [
+    ...(offered.uniforms.bytes > 0
+      ? [{ name: "uniforms", binding: 0, kind: "uniform" }]
+      : []),
+    ...(offered.bindings.length > 0
+      ? [{ name: undefined, binding: 1, kind: "sampler" }]
+      : []),
+    ...offered.bindings.map((b) => ({
+      name: b.texture.name,
+      binding: b.binding,
+      kind: "texture",
+    })),
+    ...offered.storage.map((b) => ({ ...b, kind: "storage" })),
+  ];
+  const offer = expected
+    .map((e) => `${e.binding}: ${e.name ?? "a sampler"} (${e.kind})`)
+    .join(", ");
+  for (const declared of layout.bindings) {
+    const match = expected.find(
+      (e) => e.binding === declared.binding && e.kind === declared.kind,
+    );
+    if (!match) {
+      return `it declares \`${declared.name}\` as a ${declared.kind} at group 1, binding ${declared.binding}, and this pass has ${offer || "no resources"}.`;
+    }
+    if (match.name !== undefined && match.name !== declared.name) {
+      return `binding ${declared.binding} is \`${match.name}\` in this pass, and the shader calls it \`${declared.name}\`.`;
+    }
+  }
+  for (const field of layout.uniforms) {
+    const have = offered.uniforms.fields.find((f) => f.name === field.name);
+    if (!have) {
+      return `its Uniforms struct has \`${field.name}\`, which the stage doesn't declare in \`uniforms\`.`;
+    }
+    if (have.offset !== field.offset) {
+      return `\`uniforms.${field.name}\` is at byte ${field.offset} in the shader and ${have.offset} in the stage: declare them in the same order and types.`;
+    }
+  }
+  return undefined;
+}
+
 /** What a slot's images are. */
 export const SLOT_FORMAT: Readonly<Record<PostStageSlot, PostStageFormat>> = {
   scene: "rgba16float",
@@ -169,12 +256,16 @@ export interface PostStageOptions {
   label: string;
   /**
    * WGSL defining `fn postStage(input: PostInput) -> vec4<f32>`, or a unit
-   * holding it, from the offline Slang compiler, say. Or give `passes`. It may
-   * use:
+   * holding it. A stage written in Slang (`float4 postStage(PostInput input)`,
+   * shaders/postApi.slang) is compiled offline by `npm run shaders` to a unit
+   * that `slangPostShader` takes; it declares its own group 1, and the engine
+   * checks it against `uniforms`, `textures` and `reads`. Or give `passes`. It
+   * may use:
    *
    * - `PostInput`: of what the pass writes, `uv` (0 to 1, from the top left),
    *   `pixel` (`vec2<i32>`), `size` (`vec2<f32>`, pixels), and `pixelAngle`
-   *   (radians per pixel at the view's center); and `preExposure`;
+   *   (radians per pixel at the view's center); `preExposure`; and `mip`, the
+   *   level of the texture it writes (0 for the output);
    * - `postColor(uv)`, `postColorAt(pixel)`: the image before the stage, its
    *   slot says in what terms (`PostStageSlot`), in the view's pixels;
    * - `postDepthAt(pixel)`: reverse-Z depth, 0 where nothing was drawn, with
@@ -667,8 +758,20 @@ function resolvePass(
     typeof pass.shader === "string"
       ? wgslUnit(`${context.unitName} shader`, pass.shader)
       : pass.shader;
+  const slang = isSlangShader(unit);
+  if (slang && compute) {
+    throw refuse(
+      `${field}compute`,
+      "a shader compiled from Slang is a fragment pass; a compute pass is WGSL.",
+    );
+  }
   const code = blankComments(unit.code);
-  const own = /@\s*(group|binding|vertex|fragment|compute)\b/.exec(code);
+  // A Slang shader declares its own group 1, which is checked against this pass's below.
+  const own = (
+    slang
+      ? /@\s*(vertex|fragment|compute)\b/
+      : /@\s*(group|binding|vertex|fragment|compute)\b/
+  ).exec(code);
   if (own) {
     throw refuse(
       `${field}shader`,
@@ -695,29 +798,41 @@ function resolvePass(
       );
     }
   }
-  const declared = [
-    ...(uniforms.fields.length > 0
-      ? [
-          `struct Uniforms { ${uniforms.fields.map((f) => `${f.name}: ${f.type}`).join(", ")} };`,
-          "@group(1) @binding(0) var<uniform> uniforms: Uniforms;",
-        ]
-      : []),
-    ...(bindings.length > 0
-      ? ["@group(1) @binding(1) var postSampler: sampler;"]
-      : []),
-    ...bindings.map(
-      (b) =>
-        `@group(1) @binding(${b.binding}) var ${b.texture.name}: texture_2d<f32>;`,
-    ),
-    ...stored.map(
-      (b) =>
-        `@group(1) @binding(${b.binding}) var ${b.texture.name}: texture_storage_2d<${b.texture.format}, write>;`,
-    ),
-    ...storage.map(
-      (b) =>
-        `@group(1) @binding(${b.binding}) var<storage, read> ${b.name}: ${b.type};`,
-    ),
-  ];
+  if (slang) {
+    const problem = slangLayoutProblem(unit.layout, {
+      uniforms,
+      bindings,
+      storage,
+    });
+    if (problem !== undefined) {
+      throw refuse(`${field}shader`, problem);
+    }
+  }
+  const declared = slang
+    ? []
+    : [
+        ...(uniforms.fields.length > 0
+          ? [
+              `struct Uniforms { ${uniforms.fields.map((f) => `${f.name}: ${f.type}`).join(", ")} };`,
+              "@group(1) @binding(0) var<uniform> uniforms: Uniforms;",
+            ]
+          : []),
+        ...(bindings.length > 0
+          ? ["@group(1) @binding(1) var postSampler: sampler;"]
+          : []),
+        ...bindings.map(
+          (b) =>
+            `@group(1) @binding(${b.binding}) var ${b.texture.name}: texture_2d<f32>;`,
+        ),
+        ...stored.map(
+          (b) =>
+            `@group(1) @binding(${b.binding}) var ${b.texture.name}: texture_storage_2d<${b.texture.format}, write>;`,
+        ),
+        ...storage.map(
+          (b) =>
+            `@group(1) @binding(${b.binding}) var<storage, read> ${b.name}: ${b.type};`,
+        ),
+      ];
   const module = new WgslLinker().link({
     label: `post stage "${context.unitName}"`,
     units: [

@@ -14,6 +14,7 @@
     "verbatimModuleSyntax": true,
     "allowJs": false,
     "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
     "noEmit": true,
     "jsx": "react-jsx"

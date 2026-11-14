@@ -288,6 +288,8 @@ entry	name	kind	tier
 .	SkyOptions	interface	-
 .	SkyPackManifest	interface	-
 .	SlangCache	interface	-
+.	SlangPostLayout	interface	-
+.	SlangPostShader	interface	-
 .	SlicePool	class	-
 .	SliceScheduler	interface	-
 .	SliceUser	interface	-
@@ -466,6 +468,7 @@ entry	name	kind	tier
 .	secondDerivativeBound	function	-
 .	sectionBrep	function	-
 .	sectionTile	function	-
+.	slangPostShader	function	-
 .	summarizeContent	function	-
 .	surfaceCount	function	-
 .	tableResolver	function	-

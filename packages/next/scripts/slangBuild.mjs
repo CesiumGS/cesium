@@ -41,7 +41,12 @@ export const BOUNDARY_TS = join(root, "src", "shaders", "generated", "boundary.t
  * Where `import name;` looks: the folders holding modules (the shaders',
  * the atmosphere's), then the source tree.
  */
-const INCLUDES = [join(root, "src", "shaders"), join(root, "src", "atmosphere"), SOURCES];
+const INCLUDES = [
+  join(root, "src", "shaders"),
+  join(root, "src", "shaders", "stages"),
+  join(root, "src", "atmosphere"),
+  SOURCES,
+];
 
 /** Every `.slang` under src/ (the generated folder and cesium.slang aside). */
 export function slangSources() {
@@ -64,8 +69,26 @@ export function slangSources() {
 }
 
 /** Whether a source defines entry points (else it is a module). */
-export function definesEntryPoints(path) {
+function hasEntryPoints(path) {
   return /\[\s*shader\s*\(/.test(readFileSync(path, "utf8"));
+}
+
+/**
+ * Whether a source is a post stage written in Slang (shaders/postApi.slang): a file under
+ * shaders/stages/ that defines `postStage`. Its other files there are modules.
+ */
+export function isPostStage(path) {
+  return (
+    dirname(path) === join(root, "src", "shaders", "stages") &&
+    /\bfloat4\s+postStage\s*\(/.test(
+      readFileSync(path, "utf8").replace(/\/\/[^\n]*/g, ""),
+    )
+  );
+}
+
+/** Whether the build compiles a source to a generated file: entry points, or a post stage. */
+export function definesEntryPoints(path) {
+  return hasEntryPoints(path) || isPostStage(path);
 }
 
 /** The modules a source imports (`import name;`), by name. */
@@ -122,6 +145,9 @@ const slangOutput = (path) => readFileSync(path, "utf8").replaceAll("\r\n", "\n"
  * `<name>.json`. Throws with slangc's messages on an error.
  */
 export function compile(slangc, source, outDir = GENERATED, includes = []) {
+  if (isPostStage(source)) {
+    return compilePostStage(slangc, source, outDir, includes);
+  }
   const name = basename(source, ".slang");
   const temp = mkdtempSync(join(tmpdir(), "slang-build-"));
   try {
@@ -147,6 +173,123 @@ export function compile(slangc, source, outDir = GENERATED, includes = []) {
       header(source) + slangOutput(wgsl),
     );
     writeFileSync(join(outDir, `${name}.json`), slangOutput(json));
+  } catch (e) {
+    const message = String(e.stderr ?? e.message).trim();
+    throw new Error(`${relative(root, source)}:\n${message}`, { cause: e });
+  } finally {
+    rmSync(temp, { recursive: true, force: true });
+  }
+}
+
+/** The bridge that calls a stage's `postStage` across the glue's names (postStage.slang). */
+const postBridge = (stage) => `import postApi;
+import ${stage};
+export __extern_cpp float4 postStageBridge(float2 uv, int2 pixel, float2 size, float preExposure, float pixelAngle, uint mip) {
+  PostInput i;
+  i.uv = uv;
+  i.pixel = pixel;
+  i.size = size;
+  i.preExposure = preExposure;
+  i.pixelAngle = pixelAngle;
+  i.mip = mip;
+  return postStage(i);
+}
+[shader("fragment")]
+void postStageStub() {}
+`;
+
+/** The WGSL side of the bridge: the glue's `postStage`, calling it. */
+const POST_ADAPTER = `fn postStage(input: PostInput) -> vec4<f32> {
+  return postStageBridge(input.uv, input.pixel, input.size, input.preExposure, input.pixelAngle, input.mip);
+}
+`;
+
+/** The kinds of group 1's resources, by reflection's names. */
+const POST_KINDS = {
+  constantBuffer: "uniform",
+  samplerState: "sampler",
+  texture2D: "texture",
+  structuredBuffer: "storage",
+};
+
+/**
+ * What the engine checks of a compiled post stage: the uniform struct's fields with
+ * their offsets, and the resources it declares, by source name and group 1 binding.
+ */
+function postStageLayout(reflection, source) {
+  const uniforms = [];
+  const bindings = [];
+  for (const p of reflection.parameters) {
+    const { kind, baseShape } = p.type;
+    const what = POST_KINDS[kind === "resource" ? baseShape : kind];
+    if (!what || p.binding.space !== 1) {
+      throw new Error(
+        `${relative(root, source)}: \`${p.name}\` isn't in group 1 as a uniform buffer, a sampler, a 2D texture or a structured buffer: declare it as \`[[vk::binding(n, 1)]]\` (postApi.slang).`,
+      );
+    }
+    bindings.push({ name: p.name, binding: p.binding.index, kind: what });
+    if (what === "uniform") {
+      for (const f of p.type.elementType.fields) {
+        uniforms.push({
+          name: f.name,
+          offset: f.binding.offset,
+          size: f.binding.size,
+        });
+      }
+    }
+  }
+  return { uniforms, bindings };
+}
+
+/**
+ * Compiles a post stage (shaders/postApi.slang): the stage, a bridge and a stub entry point
+ * (slangc compiles from an entry), to the stage's WGSL unit and its layout. The unit has no
+ * entry point: the stub's is cut, and the glue's `postStage` calls the bridge.
+ */
+function compilePostStage(slangc, source, outDir, includes) {
+  const name = basename(source, ".slang");
+  const temp = mkdtempSync(join(tmpdir(), "slang-stage-"));
+  try {
+    const bridge = join(temp, "bridge.slang");
+    const wgsl = join(temp, "bridge.wgsl");
+    const json = join(temp, "bridge.json");
+    writeFileSync(bridge, postBridge(name));
+    execFileSync(
+      slangc,
+      [
+        bridge,
+        "-target",
+        "wgsl",
+        "-entry",
+        "postStageStub",
+        "-stage",
+        "fragment",
+        ...[...includes, ...INCLUDES].flatMap((i) => ["-I", i]),
+        "-reflection-json",
+        json,
+        "-o",
+        wgsl,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+    const text = slangOutput(wgsl);
+    const stub = /^@fragment\nfn postStageStub\(\)\n\{\n    return;\n\}\n/m;
+    if (!stub.test(text)) {
+      throw new Error("the stub entry point isn't where the build cuts it");
+    }
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(
+      join(outDir, `${name}.wgsl`),
+      header(source) + text.replace(stub, "") + "\n" + POST_ADAPTER,
+    );
+    writeFileSync(
+      join(outDir, `${name}.json`),
+      JSON.stringify(
+        postStageLayout(JSON.parse(slangOutput(json)), source),
+        null,
+        2,
+      ) + "\n",
+    );
   } catch (e) {
     const message = String(e.stderr ?? e.message).trim();
     throw new Error(`${relative(root, source)}:\n${message}`, { cause: e });

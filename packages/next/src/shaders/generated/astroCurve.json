@@ -1,0 +1,16 @@
+{
+  "uniforms": [
+    {
+      "name": "strength",
+      "offset": 0,
+      "size": 4
+    }
+  ],
+  "bindings": [
+    {
+      "name": "uniforms",
+      "binding": 0,
+      "kind": "uniform"
+    }
+  ]
+}

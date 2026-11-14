@@ -186,6 +186,7 @@ export {
   PostStage,
   PostStageError,
   createPostStage,
+  slangPostShader,
   type PostStageFormat,
   type PostStageImage,
   type PostStageLevel,
@@ -197,6 +198,8 @@ export {
   type PostStageKind,
   type PostStageRead,
   type PostStageSlot,
+  type SlangPostLayout,
+  type SlangPostShader,
 } from "./scene/postStage.ts";
 export { astrophotoCurveStage } from "./render/post/astroCurve.ts";
 export { eyeLimitStage } from "./scene/eyeLimit.ts";

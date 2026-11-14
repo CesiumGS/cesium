@@ -6,6 +6,7 @@
 // `glareSources` is bound by constants: 32 taps, unrolled, and at most 2,048 stars, with
 // a `break` at the source or pixel budget.
 import common;
+import glareSource;
 
 // Pinned against render/post/glare.ts by test/glareSources.test.ts.
 static const uint GLARE_SOURCES = 256u;
@@ -85,17 +86,6 @@ struct GlareFrame {
   float uvPerPixel;
   float kernelLevel;
   float topRadius;      // the air's, km
-};
-
-// A source. In record 0, the header: pixel.x the count of records in use, the sun's among
-// them; pixel.y the sun's z along the view; radius the sine of its angular radius;
-// visibility the pixels spent.
-public struct GlareSource {
-  float2 pixel;
-  float radius;       // a sprite's, pixels; 0 for none
-  float visibility;
-  float3 light;       // lux, through the air
-  float kind;         // 0: none, 1: the sun, 2: a star
 };
 
 [[vk::binding(0, 0)]] ConstantBuffer<GlareFrame> frame;

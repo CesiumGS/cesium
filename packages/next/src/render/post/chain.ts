@@ -428,10 +428,14 @@ export class ViewChain {
     preExposure: 1,
     pixelAngle: 0,
   };
-  /** `PostInput`'s values as last written, per size that passes write. */
+  /** `PostInput`'s values as last written, per size and level that passes write. */
   private readonly params = new Map<
     number,
-    { readonly buffer: GPUBuffer; readonly values: Float32Array<ArrayBuffer> }
+    {
+      readonly buffer: GPUBuffer;
+      readonly values: Float32Array<ArrayBuffer>;
+      readonly level: Uint32Array<ArrayBuffer>;
+    }
   >();
   /** The split pipelines, once asked for and ready. */
   pipelines: ChainPipelines | undefined;
@@ -457,22 +461,34 @@ export class ViewChain {
     return (this.slots.display?.active ?? false) && !!this.pipelines;
   }
 
-  /** The buffer of `PostInput`'s values at a size, shared by what writes that size. */
-  private paramsAt(device: GPUDevice, width: number, height: number) {
-    const key = width * 65536 + height;
+  /** The buffer of `PostInput`'s values at a size and level, shared by what writes them. */
+  private paramsAt(
+    device: GPUDevice,
+    width: number,
+    height: number,
+    mip: number,
+  ) {
+    const key = (width * 65536 + height) * 32 + mip;
     let params = this.params.get(key);
     if (!params) {
+      const values = new Float32Array(8).fill(Number.NaN);
       params = {
-        buffer: this.buffer(device, "postParams", 16),
-        values: new Float32Array(4).fill(Number.NaN),
+        buffer: this.buffer(device, "postParams", 32),
+        values,
+        level: new Uint32Array(values.buffer),
       };
       this.params.set(key, params);
     }
     return params;
   }
 
-  paramBuffer(device: GPUDevice, width: number, height: number): GPUBuffer {
-    return this.paramsAt(device, width, height).buffer;
+  paramBuffer(
+    device: GPUDevice,
+    width: number,
+    height: number,
+    mip = 0,
+  ): GPUBuffer {
+    return this.paramsAt(device, width, height, mip).buffer;
   }
 
   /** Writes `PostInput`'s values, for what a pass writes, if they moved. */
@@ -482,18 +498,25 @@ export class ViewChain {
     height: number,
     preExposure: number,
     pixelAngle: number,
+    mip = 0,
   ): void {
-    const { buffer, values: p } = this.paramsAt(device, width, height);
+    const {
+      buffer,
+      values: p,
+      level,
+    } = this.paramsAt(device, width, height, mip);
     if (
       p[0] !== width ||
       p[1] !== height ||
       p[2] !== Math.fround(preExposure) ||
-      p[3] !== Math.fround(pixelAngle)
+      p[3] !== Math.fround(pixelAngle) ||
+      level[4] !== mip
     ) {
       p[0] = width;
       p[1] = height;
       p[2] = preExposure;
       p[3] = pixelAngle;
+      level[4] = mip;
       device.queue.writeBuffer(buffer, 0, p);
     }
   }
@@ -747,9 +770,10 @@ function registerStage(
       ? chain.buffer(device, `post.${stage.name}`, stage.uniformLayout.bytes)
       : undefined;
   stage.passes.forEach((pass, i) => {
+    const mip = pass.writes[0]!.mip ?? 0;
     const { width, height } = levelSize(
       textures.get(pass.writes[0]!.texture)!,
-      pass.writes[0]!.mip ?? 0,
+      mip,
     );
     const handles = (bindings: readonly PostStageBinding[]) =>
       bindings.flatMap((b) => textures.get(b.texture)!.handle ?? []);
@@ -803,6 +827,7 @@ function registerStage(
           height,
           view.preExposure(),
           (view.pixelAngle() * view.height) / height,
+          mip,
         );
         if (uniforms) {
           values.upload(device, uniforms);
@@ -821,7 +846,7 @@ function registerStage(
               {
                 binding: 2,
                 resource: {
-                  buffer: chain.paramBuffer(device, width, height),
+                  buffer: chain.paramBuffer(device, width, height, mip),
                 },
               },
               ...pass.reads.map((read) =>
