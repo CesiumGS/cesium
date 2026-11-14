@@ -12,7 +12,9 @@ public struct Batch {
   public uint itemBase;          // first slot of this batch in `itemList`
   public uint indexCount;
   public uint firstIndex;
-  public uint pad;
+  // Bit 0: its items may be culled by the depth pyramid (two-phase occlusion
+  // culling, cull.slang): opaque triangles only (bundles.ts `occludable`).
+  public uint flags;
 };
 
 public struct CullParams {
@@ -97,6 +99,28 @@ public void storeIndexedArguments(uint a, uint indexCount, uint firstIndex) {
 [ForceInline]
 public void storeArgument(uint a, uint word, uint value) {
   args[a + word].store(value);
+}
+
+// Two-phase occlusion culling (cull.slang `cullRecordsOccluded`): the
+// arguments' buffer holds a second set after the first `rows` batches', the
+// draws the second phase finds visible, then a few counters. Its first word
+// for batch `batch`.
+[ForceInline]
+public uint retestArgumentSlot(uint batch, uint rows) {
+  uint a = (rows + batch) * ARGUMENT_WORDS;
+  return a;
+}
+
+// Adds `n` to the counter word `word` (past both sets of arguments); returns
+// the count before.
+[ForceInline]
+public uint addToCounter(uint word, uint n) {
+  return args[word].add(n);
+}
+
+[ForceInline]
+public uint counted(uint word) {
+  return args[word].load();
 }
 
 // A patch draw's batch (the dice kernels, dice.slang): its arguments are an

@@ -1,0 +1,61 @@
+{
+  "uniforms": [
+    {
+      "name": "viewSize",
+      "offset": 0,
+      "size": 8
+    },
+    {
+      "name": "pixelAngle",
+      "offset": 8,
+      "size": 4
+    },
+    {
+      "name": "share",
+      "offset": 12,
+      "size": 4
+    },
+    {
+      "name": "imageShare",
+      "offset": 16,
+      "size": 4
+    },
+    {
+      "name": "w0",
+      "offset": 32,
+      "size": 16
+    },
+    {
+      "name": "w1",
+      "offset": 48,
+      "size": 16
+    },
+    {
+      "name": "w2",
+      "offset": 64,
+      "size": 4
+    },
+    {
+      "name": "basePixels",
+      "offset": 68,
+      "size": 4
+    }
+  ],
+  "bindings": [
+    {
+      "name": "uniforms",
+      "binding": 0,
+      "kind": "uniform"
+    },
+    {
+      "name": "stageSampler",
+      "binding": 1,
+      "kind": "sampler"
+    },
+    {
+      "name": "pyramid",
+      "binding": 2,
+      "kind": "texture"
+    }
+  ]
+}

@@ -15,6 +15,7 @@ import {
 import type { Engine } from "../src/scene/Engine.ts";
 import { cameraObserver, type GlarePupil } from "../src/scene/observer.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
+import { spritesStage } from "../examples/night-sky/sprites.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const SIZE = 128;
@@ -241,32 +242,94 @@ describe("the sprite pass", () => {
     engine.stop();
   });
 
-  it("draws 4 vertices of 256 instances, and never an indirect draw", async () => {
+  const spikes = {
+    tier: "full",
+    veil: { share: 0.2 },
+    spikes: { aperture: "vanes", share: 0.05, extent: 3 },
+  } as const;
+
+  it("is not the engine's: only the example's stage draws it", () => {
+    const view = engine.addView({
+      target: new OffscreenTarget(256, 256),
+      world: engine.createWorld(),
+      observer: { ...cameraObserver({ ev100: 15 }), glare: { ...spikes } },
+    });
+    engine.renderFrame();
+    const passes = engine.raster.viewFrames.get(view)!.graph.compile();
+    expect(passes).toContain("glare.sources");
+    expect(passes).not.toContain("glare.sprites");
+  });
+
+  it("runs after the veil, as the example's stage in the observer's list", () => {
     const view = engine.addView({
       target: new OffscreenTarget(256, 256),
       world: engine.createWorld(),
       observer: {
         ...cameraObserver({ ev100: 15 }),
-        glare: {
-          tier: "full",
-          veil: { share: 0.2 },
-          spikes: { aperture: "vanes", share: 0.05, extent: 3 },
-        },
+        glare: { ...spikes },
+        stages: [spritesStage()],
       },
     });
     engine.renderFrame();
-    const { glare, graph } = engine.raster.viewFrames.get(view)!;
-    expect(graph.compile()).toContain("glare.sprites");
-    expect(graph.compile().indexOf("glare.sprites")).toBeGreaterThan(
-      graph.compile().indexOf("post.glare.composite"),
+    const passes = engine.raster.viewFrames.get(view)!.graph.compile();
+    expect(passes).toContain("glare.sprites");
+    expect(passes.indexOf("glare.sprites")).toBeGreaterThan(
+      passes.indexOf("post.glare.composite"),
     );
+  });
+
+  it("draws 4 vertices of 256 instances, and never an indirect draw", () => {
     const pass = {
       setPipeline: vi.fn(),
       setBindGroup: vi.fn(),
       draw: vi.fn(),
       drawIndirect: vi.fn(),
+      end: vi.fn(),
     };
-    glare!.drawSprites(pass as unknown as GPURenderPassEncoder);
+    const encoder = { beginRenderPass: vi.fn(() => pass) };
+    const device = {
+      createShaderModule: vi.fn(() => ({})),
+      createRenderPipeline: vi.fn(() => ({
+        getBindGroupLayout: () => ({}),
+      })),
+      createBuffer: vi.fn(() => ({})),
+      createBindGroup: vi.fn(() => ({})),
+      queue: { writeBuffer: vi.fn() },
+    };
+    const image = { id: 1, name: "post.glare" };
+    let run: ((enc: unknown, get: (h: unknown) => unknown) => void) | undefined;
+    spritesStage().register(
+      {
+        addPass: (_name, _setup, execute) => {
+          run = execute as typeof run;
+        },
+      },
+      {
+        device: device as unknown as GPUDevice,
+        glare: {
+          sources: {} as GPUBuffer,
+          kernel: () => ({
+            view: {} as GPUTextureView,
+            sampler: {} as GPUSampler,
+            scale: 1,
+            size: 1024,
+            share: 0.05,
+            extent: 3,
+          }),
+        },
+        passWrites: () => undefined,
+        source: () => image,
+        sources: [image],
+        output: image,
+        depth: image,
+        ids: image,
+        width: 256,
+        height: 256,
+        preExposure: () => 1,
+        pixelAngle: () => 0.001,
+      },
+    );
+    run!(encoder, () => ({}));
     expect(pass.draw).toHaveBeenCalledWith(4, 256);
     expect(pass.drawIndirect).not.toHaveBeenCalled();
   });

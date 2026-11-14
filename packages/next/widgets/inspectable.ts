@@ -75,6 +75,11 @@ export interface InspectorSnapshot {
     }>;
     /** Rays cast since the frame before (height queries, clamping, queries). */
     raysCast?: number;
+    /**
+     * What occlusion culling left undrawn (draw items, whole triangles), a
+     * tick or two late; absent when no view culls by occlusion.
+     */
+    hiddenByOcclusion?: { draws: number; triangles: number };
     /** Inside the frame's markers, not covered by a timed pass, ms. */
     gpuInFrameUntimedMs?: number;
     /** Previous frame's last marker to this one's first, ms; absent when the GPU idled. */
@@ -202,6 +207,35 @@ export interface Recordable {
   status(): { rows: number; frames: number; file?: string; error?: string };
 }
 
+/**
+ * One event of an engine's per-tick feed (`Inspectable.ticks`): a tick of
+ * the loop, or, a few ticks later, the GPU time of the render of an earlier one.
+ */
+export type TickEvent =
+  | {
+      kind: "tick";
+      /** `FrameStats.tick`. */
+      tick: number;
+      /** Whether the tick rendered. */
+      rendering: boolean;
+      /** Why it ran (`TICK_REASONS`). */
+      why: readonly string[];
+      /** Main-thread time of its render, ms, unsmoothed. */
+      cpuMs: number;
+    }
+  | {
+      kind: "gpu";
+      /** The tick whose render this measured. */
+      tick: number;
+      ms: number;
+      /** GPU time per pass, ms, in the frame's order. */
+      passes: Array<[string, number]>;
+      /** NaN when the GPU idled. */
+      intervalMs: number;
+      inFrameUntimedMs: number;
+      betweenFramesMs: number;
+    };
+
 /** An engine (or one view of it) the inspector can show. */
 export interface Inspectable {
   /** Shown in the header ("2.0 · main", "1.146.0"). */
@@ -209,6 +243,12 @@ export interface Inspectable {
   /** A swatch color for the header (CSS color), e.g. a pane's. */
   readonly color?: string;
   snapshot(): InspectorSnapshot;
+  /**
+   * Calls `listener` for each tick of the engine's loop and each GPU result
+   * (the inspector reads the last 300 ticks one by one when a chart is
+   * frozen or pinned); returns the remover. Absent: the charts read 4 Hz.
+   */
+  ticks?(listener: (event: TickEvent) => void): () => void;
   /** Present in development builds of 2.0: the inspector's Record toggle. */
   readonly record?: Recordable;
 }

@@ -18,6 +18,21 @@
             }
         },
         {
+            "name": "pixels",
+            "binding": {"kind": "descriptorTableSlot", "index": 0},
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "resultType": {
+                    "kind": "scalar",
+                    "scalarType": "float32"
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
             "name": "target0",
             "binding": {"kind": "descriptorTableSlot", "index": 1},
             "format": "r32f",
@@ -77,6 +92,21 @@
                     "kind": "resource",
                     "baseShape": "texture2D",
                     "multisample": true,
+                    "resultType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "pixels",
+                "binding": {"kind": "descriptorTableSlot", "index": 0},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
                     "resultType": {
                         "kind": "scalar",
                         "scalarType": "float32"
@@ -185,6 +215,76 @@
                     "binding": {"kind": "descriptorTableSlot", "index": 0}
                 },
                 {
+                    "name": "pixels",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "target0",
+                    "binding": {"kind": "descriptorTableSlot", "index": 1},
+                    "format": "r32f"
+                },
+                {
+                    "name": "source",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "target",
+                    "binding": {"kind": "descriptorTableSlot", "index": 1},
+                    "format": "r32f"
+                }
+            ]
+        },
+        {
+            "name": "level0Pixels",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "semanticName": "SV_DISPATCHTHREADID",
+                        "type": {
+                            "kind": "vector",
+                            "elementCount": 3,
+                            "elementType": {
+                                "kind": "scalar",
+                                "scalarType": "uint32"
+                            },
+                            "sizes": [
+
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "semanticName": "SV_DISPATCHTHREADID",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 3,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "uint32"
+                        },
+                        "sizes": [
+
+                        ]
+                    }
+                }
+            ],
+            "threadGroupSize": [8, 8, 1],
+            "bindings": [
+                {
+                    "name": "depth",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "pixels",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
                     "name": "target0",
                     "binding": {"kind": "descriptorTableSlot", "index": 1},
                     "format": "r32f"
@@ -244,6 +344,10 @@
             "bindings": [
                 {
                     "name": "depth",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "pixels",
                     "binding": {"kind": "descriptorTableSlot", "index": 0}
                 },
                 {

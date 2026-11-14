@@ -54,6 +54,7 @@ entry	name	kind	tier
 .	Cartographic	interface	-
 .	CastOptions	interface	-
 .	CastRay	interface	-
+.	ChainIo	interface	-
 .	ChangeableWarp	interface	-
 .	Clamp	interface	-
 .	ClampOptions	interface	-
@@ -126,6 +127,8 @@ entry	name	kind	tier
 .	GeometryQueries	interface	-
 .	GeometryRayAnswer	type	-
 .	Georeference	interface	-
+.	GlareIo	interface	-
+.	GlareKernelHandle	interface	-
 .	GlarePupil	type	-
 .	GlareSettings	interface	-
 .	GlareTier	type	-
@@ -138,6 +141,8 @@ entry	name	kind	tier
 .	GlobeTerrain	class	-
 .	GltfAsset	interface	-
 .	GpuDevice	class	-
+.	GraphStage	interface	-
+.	GraphStageBuilder	type	-
 .	HdrImage	interface	-
 .	HeightOffset	interface	-
 .	HeightOffsetOptions	interface	-
@@ -204,6 +209,7 @@ entry	name	kind	tier
 .	NurbsSurface	interface	-
 .	ObserverReadout	interface	-
 .	ObserverSettings	interface	-
+.	ObserverStage	type	-
 .	OffscreenTarget	class	-
 .	OrbitBasis	interface	-
 .	OrbitController	class	-
@@ -260,6 +266,7 @@ entry	name	kind	tier
 .	RefinedPick	interface	-
 .	RenderTarget	interface	-
 .	RequestPurpose	type	-
+.	ResolveView	type	-
 .	Rig	interface	-
 .	RigOrientation	type	-
 .	RigPosition	interface	-
@@ -288,6 +295,8 @@ entry	name	kind	tier
 .	SkyOptions	interface	-
 .	SkyPackManifest	interface	-
 .	SlangCache	interface	-
+.	SlangPostLayout	interface	-
+.	SlangPostShader	interface	-
 .	SlicePool	class	-
 .	SliceScheduler	interface	-
 .	SliceUser	interface	-
@@ -295,6 +304,7 @@ entry	name	kind	tier
 .	SmoothFrameSpec	type	-
 .	SpatialQueries	interface	-
 .	Stage	type	-
+.	StageInfo	interface	-
 .	StageStats	interface	-
 .	StandingQuery	interface	-
 .	StepwiseSelection	class	-
@@ -323,6 +333,7 @@ entry	name	kind	tier
 .	TerrainRegionShape	type	-
 .	TessellateOptions	interface	-
 .	TextureBinding	interface	-
+.	TextureHandle	interface	-
 .	TextureSetOptions	interface	-
 .	TextureSource	type	-
 .	TextureUniform	interface	-
@@ -466,6 +477,7 @@ entry	name	kind	tier
 .	secondDerivativeBound	function	-
 .	sectionBrep	function	-
 .	sectionTile	function	-
+.	slangPostShader	function	-
 .	summarizeContent	function	-
 .	surfaceCount	function	-
 .	tableResolver	function	-
@@ -823,6 +835,7 @@ widgets	OrbitOptions	interface	-
 widgets	OrbitPlan	interface	-
 widgets	PickInfo	interface	-
 widgets	StagePercentiles	interface	-
+widgets	TickEvent	type	-
 widgets	TilesetSource	type	-
 widgets	TimeControlsHandle	interface	-
 widgets	TimeControlsOptions	interface	-

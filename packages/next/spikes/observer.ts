@@ -1,6 +1,7 @@
 // The sky and observer plan's check page: what Node tests can't see, on the GPU, in
 // small offscreen targets. No token and no network: the scene is a quad under the
 // sky or a flat color. Each group prints its checks; a device loss stops the run.
+import { spritesStage } from "../examples/night-sky/sprites.ts";
 import "../lab/harness.css";
 import type { Harness } from "../lab/harness.ts";
 import {
@@ -167,7 +168,12 @@ async function image(
     const stages = view.observer.stages;
     const waiting = nodes.some((node) => {
       const stage = stages.find((s) => `post.${s.name}` === node.output.name);
-      return !!stage && stage.enabled && !stage.error && !node.enabled;
+      return (
+        !!stage &&
+        stage.enabled &&
+        !("error" in stage && stage.error) &&
+        !node.enabled
+      );
     });
     if (!waiting && !splitWaits) {
       break;
@@ -968,7 +974,8 @@ class SkyScene {
       world: this.world,
       background: "atmosphere",
       sunDisk: true,
-      observer: { exposure },
+      // The lens's spikes are the night-sky example's stage: drawn where `glare.spikes` is set.
+      observer: { exposure, stages: [spritesStage()] },
     });
   }
 
@@ -2540,7 +2547,10 @@ async function glareStillsGroup(
       engine,
       globe: "terrain",
       ...(token ? { accessToken: token } : {}),
-      observer: cameraObserver({ ev100: 14 }),
+      observer: {
+        ...cameraObserver({ ev100: 14 }),
+        stages: [spritesStage()],
+      },
       credits: false,
       timeControls: false,
     });

@@ -12,6 +12,7 @@ import {
 } from "../../src/index.ts";
 import { holdBrowserGestures } from "../../src/scene/touchGestures.ts";
 import { attachObserverPanel } from "../../widgets/observerPanel.ts";
+import { spritesStage } from "./sprites.ts";
 import type { ExampleContext } from "../types.ts";
 
 /**
@@ -21,8 +22,9 @@ import type { ExampleContext } from "../types.ts";
  * physics, a model of an eye or a lens, or a look.
  *
  * Public API only. The presets are data (§13.30): a date, a place and a
- * direction, an observer. It needs no sky pack: with none it draws 1.x's star map,
- * and `?pack=local` uses a pack the dev server offers.
+ * direction, an observer. It needs no sky pack: with none it draws 1.x's star map.
+ * In development the Viewer uses the pack the dev server offers, when there is
+ * one (`ViewerOptions.skyPack`); `?pack=none` draws 1.x's map instead.
  */
 
 const DEG = Math.PI / 180;
@@ -53,7 +55,14 @@ interface Preset {
   observer: () => Partial<ObserverSettings>;
 }
 
-const skyCamera = (ev100: number): Partial<ObserverSettings> =>
+/**
+ * The long exposures' EV100. A pack holds real fluxes, and -6.5 shows its stars and the
+ * Milky Way. 1.x's map gives its 86,000 points a brightness by rank, a stand-in, and most
+ * sit under the sky's own glow at -6.5: without a pack the page exposes two stops longer.
+ */
+let longExposure = -8.5;
+
+const skyCamera = (ev100 = longExposure): Partial<ObserverSettings> =>
   cameraObserver({ ev100 });
 
 /** The presets, in the order they are listed. */
@@ -61,26 +70,26 @@ const PRESETS: readonly Preset[] = [
   {
     id: "orion",
     title: "Orion",
-    note: "A camera at EV100 −6.5, from a dark site in winter. Stars and the Milky Way come from the exposure alone.",
-    time: "2027-01-15T04:30:00Z",
+    note: "A long exposure from a dark site in winter, no moon. Stars and the Milky Way come from the exposure alone.",
+    time: "2027-01-08T05:30:00Z",
     place: { longitude: -105, latitude: 30, height: 2000 },
     look: { ra: 84, dec: 7, fov: 60 },
-    observer: () => skyCamera(-6.5),
+    observer: () => skyCamera(),
   },
   {
     id: "core",
     title: "The Milky Way's core",
     note: "A wide view toward the galactic center from the Atacama in July, one long exposure.",
-    time: "2027-07-10T03:30:00Z",
+    time: "2027-07-06T04:00:00Z",
     place: { longitude: -70.4, latitude: -24.6, height: 2400 },
     look: { ra: 266.4, dec: -29, fov: 100 },
-    observer: () => skyCamera(-6.5),
+    observer: () => skyCamera(),
   },
   {
     id: "winter",
     title: "The winter sky, to the eye",
     note: "An eye, dark-adapted. Compare it with the camera presets: far fewer faint stars show.",
-    time: "2026-12-21T04:00:00Z",
+    time: "2026-12-10T04:00:00Z",
     place: { longitude: -100, latitude: 45, height: 400 },
     look: { azimuth: 180, elevation: 45, fov: 100 },
     observer: () => eyeObserver({ speed: 1000 }),
@@ -94,7 +103,7 @@ const PRESETS: readonly Preset[] = [
     look: { ra: 266.4, dec: -29, fov: 80 },
     // Well below the horizon, a little to one side: night over the Earth below.
     sun: { azimuth: 18, elevation: -45, fromLook: true },
-    observer: () => skyCamera(-6.5),
+    observer: () => skyCamera(),
   },
   {
     id: "low-sun",
@@ -141,13 +150,18 @@ export async function run({
   signal,
 }: ExampleContext) {
   const { engine, world, view } = viewer;
+  const sprites = spritesStage();
   viewer.creditsShown = true;
   // Looking around is this example's own: the globe's controls would move the Earth.
   viewer.controller.enabled = false;
   view.shadows = false;
-  if (params.pack === "local") {
-    void viewer.setSkyPack("/sky-pack/");
-  }
+  // The Viewer takes the dev server's sky pack in development; `?pack=none`
+  // compares with 1.x's map.
+  const pack =
+    params.pack === "none"
+      ? await viewer.setSkyPack(null)
+      : await viewer.skyPackReady;
+  longExposure = pack ? -6.5 : -8.5;
 
   // ----------------------------------------------------------- the look-around
   const state = { azimuth: 0, elevation: 0, fov: 60 };
@@ -345,11 +359,10 @@ export async function run({
     } else {
       viewer.sunFromClock = true;
     }
-    view.observer = {
-      stages: [],
-      glare: null,
-      ...preset.observer(),
-    };
+    const observer = { stages: [], glare: null, ...preset.observer() };
+    // The lens's spikes are this page's own stage (sprites.ts): always in the list, and
+    // drawing only where the observer's glare has spikes.
+    view.observer = { ...observer, stages: [...observer.stages, sprites] };
     aim();
     if (preset.structure) {
       addStructure();

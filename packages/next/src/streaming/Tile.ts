@@ -91,8 +91,13 @@ export interface TileViewState {
   occludedTicks: number;
   occludedAt: number;
   occlusionEpoch: number;
-  /** `Budgeted` refined the tile in its last walk: occlusion doesn't coarsen it. */
+  /** `Budgeted` refined the tile in its last walk: occlusion doesn't coarsen it, until it has been hidden long (`ViewOcclusion.longHidden`). */
   heldRefined: boolean;
+  /** When (ms, the feedback's clock) the current run of hidden results began. */
+  hiddenSince: number;
+  /** `Budgeted` coarsened it because it stayed hidden: shown again, it may not coarsen so again before `coarsenAfter` (ms). */
+  coarsenedHidden: boolean;
+  coarsenAfter: number;
 }
 
 /** A scheme or a protocol-relative URI: not relative to its base's origin. */
@@ -553,6 +558,9 @@ export class Tile {
         occludedAt: 0,
         occlusionEpoch: 0,
         heldRefined: false,
+        hiddenSince: 0,
+        coarsenedHidden: false,
+        coarsenAfter: 0,
       };
       this.views[viewId] = s;
     }

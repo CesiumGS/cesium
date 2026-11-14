@@ -12,24 +12,33 @@
 // which is an occluder for the camera by the usual horizon test, with the
 // radii times s.
 //
-// The scale s is a lower bound of the terrain's scaled norm over the cap
-// the camera can see of it:
-//   a. s_global: the lower bound over a cover of the whole tile tree;
-//   b. the cap: the points within the angle the s_global ellipsoid's horizon
-//      makes at the camera. The ellipsoid of scale s ≥ s_global shows no
-//      more than that, so the cap holds everything the camera sees of the
-//      surface (padded for the radii's difference from a sphere's);
-//   c. s: the lower bound over the tiles meeting that cap. One pass only.
+// Which s. The ball of scaled radius R is a sound occluder for a camera at
+// scaled distance c > R when the drawn terrain that the camera could see of
+// it lies at scaled radius R or more, that is, over the cap of angular
+// radius acos(R / c) about the camera's direction (padded for the radii's
+// difference from a sphere's and for the camera's cell). As R grows the cap
+// shrinks, so the smallest bound over it does not fall: the largest R with
+// (smallest bound over cap(R)) >= R is found by bisection, each test a walk
+// over the tiles meeting the cap. Every R that passes is sound on its own,
+// so each is handed out as soon as it is found.
+//
+// Skirts are left out of these bounds. The occluder only has to lie inside
+// the closed, opaque surface the tops of the tiles make; skirts are extra
+// geometry hung below that surface to hide cracks, and they do not change
+// whether the surface encloses the ball: a ray that slips through a hairline
+// crack at the surface meets the skirt curtains there, far above the ball.
+// (Skirts stay in the tiles' cull volumes, as everywhere.)
 //
 // Per-tile lower bounds are a min-hierarchy: a tile's bound is the smallest
 // of its four children's when it has them (a child with no data of its own is
 // drawn from its parent, whose bound then counts), else its own. A tile's own
-// bound is exact once its heights are resident (its vertices, and the bottoms
-// of its skirts, through the warp's map, less the most a triangle's chord dips
-// under the surface it connects), otherwise that of its drawn volume (the box
-// or sphere the warp carries its volume to, nearest point to the centre).
-// Exact bounds are made within a time budget a pass; a tile without one keeps
-// its volume's bound until the next.
+// bound is exact once its heights are resident (its vertices through the
+// warp's map, less the most a triangle's chord dips under the shell its
+// vertices lie on). Without resident heights it is the nearest loaded
+// ancestor's, less the most a tile below it can dip under its mesh: the
+// ancestor's geometric error, stretched along the normal by the warp there.
+// Exact bounds are made where they bind, in chunks within a time budget a
+// tick (`BoundJob`).
 //
 // It is on only while the premise holds: the globe is shown with no regions
 // (cuts, translucent ground), the warp can map points, and the camera is
@@ -46,18 +55,25 @@ import type { Tile } from "../streaming/Tile.ts";
 import { drawnTile, type TileWarp } from "../streaming/tileWarp.ts";
 import type { TileVolume } from "../streaming/volumes.ts";
 import { flatTerrainHeights, type TerrainHeights } from "./quantizedMesh.ts";
-import { ELLIPSOID_LEVEL_ZERO_ERROR } from "./TerrainSource.ts";
 import { soundError } from "./terrainRefit.ts";
 
 const ellipsoid = Ellipsoid.WGS84;
 const RADII = ellipsoid.radii;
-const R_MAX = Math.max(...RADII);
 const R_MIN = Math.min(...RADII);
 
 /** Time for exact bounds in a pass, ms. */
-const EXACT_MS = 2;
+/** Main-thread time a call may spend on a view's bound, ms. */
+const BUDGET_MS = 1;
+/** How close to the largest sound radius the bisection goes (scaled units, about 600 m). */
+const TOLERANCE = 1e-4;
+/** Vertices a bound reads between looks at the clock. */
+const CHUNK = 256;
 /** A triangle's chord dips by up to this times the standard sagitta under the drawn (stretched) surface: margin for the warp's stretch along the surface. */
-const CHORD_MARGIN = 1.2;
+const CHORD_MARGIN = 1.1;
+/** The camera's cell for a kept cap, rad. */
+const CELL = 0.02;
+/** The ellipsoid's flat tiles stand for their subtrees from this level (finer ones only raise a bound). */
+const FLAT_LEVELS = 6;
 
 interface Options {
   readonly root: Tile;
@@ -67,12 +83,81 @@ interface Options {
   enabled(): boolean;
   /** Occluders sharing the anchor that bound the same surface (the ellipsoid under terrain). */
   partners?(): readonly BodyOccluder[];
+  /** Time for a call's walks and exact bounds, ms (default 1). */
+  readonly budgetMs?: number;
+  /** Counts the tiles unloaded: a bound made before one may be too high. Absent: nothing is reused across calls. */
+  unloads?(): number;
+  /** Changes whenever tiles load, unload or appear (what a kept bound was made from). Absent: nothing is kept between calls. */
+  signature?(): number;
 }
 
 interface Exact {
   readonly key: string;
   readonly heights: TerrainHeights;
+  /** The smallest scaled norm of the tile's surface (tops, not skirts). */
   readonly value: number;
+}
+
+interface ViewState {
+  /** The scale in force, from a finished or first-yielded job. */
+  current?: { place: string; signature: number; scale: number };
+  job?: BoundJob;
+}
+
+/**
+ * The bound as a resumable job. `step(budgetMs)` runs it for at most about
+ * that long and returns the best scale so far: `s` (set when a result is
+ * ready, a sound lower bound the moment it is, never to be retracted while
+ * the job isn't cancelled) and whether the walk is `done`. The results
+ * rise: each is the largest radius found sound so far. `cancel()` abandons it
+ * (a warp, camera-cell or unload change): its results are void. `place`
+ * names what it was made for; `signature` the tiles it started from.
+ */
+export class BoundJob {
+  private readonly steps: Generator<void, void>;
+  private cancelled = false;
+  private result: number | undefined;
+  private fresh = false;
+  private deadline = 0;
+  constructor(
+    owner: BodyOccluder,
+    warp: TileWarp,
+    readonly place: string,
+    readonly signature: number,
+    centre: Vec3,
+    top: number,
+    start: number,
+  ) {
+    this.steps = owner.walk(
+      warp,
+      centre,
+      top,
+      start,
+      (s) => {
+        this.result = s;
+        this.fresh = true;
+      },
+      () => performance.now() >= this.deadline,
+    );
+  }
+
+  step(budgetMs: number): { s?: number; done: boolean } {
+    if (this.cancelled) {
+      return { done: true };
+    }
+    this.deadline = performance.now() + budgetMs;
+    this.fresh = false;
+    const next = this.steps.next();
+    const done = next.done === true;
+    return this.fresh && this.result !== undefined
+      ? { s: this.result, done }
+      : { done };
+  }
+
+  cancel(): void {
+    this.cancelled = true;
+    this.steps.return();
+  }
 }
 
 interface Prepared {
@@ -85,7 +170,7 @@ let flatHeights: TerrainHeights | undefined;
 export class BodyOccluder implements Occluder {
   private readonly bounds = new WeakMap<Tile, Exact>();
   private readonly prepared = new Map<number, Prepared>();
-  private spent = 0;
+  private readonly states = new Map<number, ViewState>();
   private keyNow = "";
 
   constructor(private readonly options: Options) {}
@@ -144,93 +229,267 @@ export class BodyOccluder implements Occluder {
     return p ? p.own : this.compute(view);
   }
 
+  /**
+   * The scheduling adapter: drives a view's `BoundJob` for `BUDGET_MS` a
+   * call, and answers with the best sound scale so far. A job belongs to
+   * one warp, one camera cell and the unloads so far; any change of those
+   * cancels it, and the scale is off until its first result. Loading only
+   * raises a bound, so a scale already made stays sound as tiles load, and
+   * a new job (for the tiles now loaded) replaces it only when it ends.
+   */
   private compute(view: SelectionView): number | undefined {
     const warp = view.warp;
     if (!warp?.images || !this.options.enabled()) {
       return undefined;
     }
-    this.keyNow = `${warp.version}:${warp.scaleVersion ?? 0}`;
-    this.spent = performance.now() + EXACT_MS;
-    const root = this.options.root;
+    const key = `${warp.version}:${warp.scaleVersion ?? 0}`;
+    this.keyNow = key;
+    const signature = this.options.signature?.() ?? NaN;
+    const unloads = this.options.unloads?.() ?? NaN;
     const camera = view.position;
     const c = scaledNorm(camera);
-    const global = this.bound(root, warp, undefined, undefined);
-    if (!(c > global)) {
-      return undefined;
+    const direction = unit(camera);
+    const lon = Math.round(Math.atan2(direction[1]!, direction[0]!) / CELL);
+    const lat = Math.round(Math.asin(direction[2]!) / CELL);
+    const top = Math.ceil(c * 1e4) / 1e4;
+    const place = `${lon},${lat},${top}|${key}|${unloads}`;
+    let state = this.states.get(view.id);
+    if (!state) {
+      state = {};
+      this.states.set(view.id, state);
     }
-    const angle = Math.min(
-      Math.PI,
-      Math.acos(Math.min(1, global / c)) * 1.02 + 1e-4,
-    );
-    const cap = { direction: unit(camera), cos: Math.cos(angle) };
-    const scale = this.bound(root, warp, cap, undefined);
-    return c > scale && scale > 0 ? scale : undefined;
+    if (state.current && state.current.place !== place) {
+      state.current = undefined;
+    }
+    if (state.job && state.job.place !== place) {
+      state.job.cancel();
+      state.job = undefined;
+    }
+    if (
+      !state.job &&
+      (!state.current || state.current.signature !== signature)
+    ) {
+      const centre = [
+        Math.cos(lat * CELL) * Math.cos(lon * CELL),
+        Math.cos(lat * CELL) * Math.sin(lon * CELL),
+        Math.sin(lat * CELL),
+      ] as unknown as Vec3;
+      state.job = new BoundJob(
+        this,
+        warp,
+        place,
+        signature,
+        centre,
+        top,
+        state.current?.place === place ? state.current.scale : 0,
+      );
+    }
+    if (state.job) {
+      const result = state.job.step(this.options.budgetMs ?? BUDGET_MS);
+      if (result.s !== undefined) {
+        // Each result is a sound bound of its own, so the largest is.
+        state.current = {
+          place,
+          signature: state.job.signature,
+          scale: Math.max(result.s, state.current?.scale ?? 0),
+        };
+      }
+      if (result.done) {
+        state.job = undefined;
+      }
+    }
+    const scale = state.current?.scale;
+    return scale !== undefined && c > scale && scale > 0 ? scale : undefined;
   }
 
   /**
-   * The lower bound of the scaled norm of the surface drawn by `tile` and
-   * below, over the tiles meeting `cap` when given.
+   * The resumable walk (`BoundJob`): bisection for the largest sound radius
+   * in [`start`, `top`] (`start`, from an earlier job for this cell, is
+   * tested first). `yield` hands control back at a node when the budget is
+   * spent.
    */
-  private bound(
+  *walk(
+    warp: TileWarp,
+    centre: Vec3,
+    top: number,
+    start: number,
+    publish: (s: number) => void,
+    expired: () => boolean,
+  ): Generator<void, void> {
+    this.keyNow = `${warp.version}:${warp.scaleVersion ?? 0}`;
+    let low = 0;
+    let high = top;
+    if (start > 0 && (yield* this.sound(start, warp, centre, top, expired))) {
+      low = start;
+      publish(start);
+    }
+    while (high - low > TOLERANCE) {
+      const mid = (low + high) / 2;
+      if (yield* this.sound(mid, warp, centre, top, expired)) {
+        low = mid;
+        publish(mid);
+      } else {
+        high = mid;
+      }
+    }
+  }
+
+  /**
+   * Whether the ball of scaled radius `radius` is sound: the smallest bound
+   * over the cap it leaves the camera is at least `radius`. Walks over what is
+   * made already and, while that falls short, makes the exact bound of the
+   * tile that sets it (or of its nearest loaded ancestor that has none yet),
+   * until it passes or nothing that sets it can be made more exact.
+   */
+  private *sound(
+    radius: number,
+    warp: TileWarp,
+    centre: Vec3,
+    top: number,
+    expired: () => boolean,
+  ): Generator<void, boolean> {
+    if (!(radius < top)) {
+      return false;
+    }
+    // The cap is taken about the camera's cell, grown to hold every camera in
+    // it and for the radii's difference from a sphere's.
+    const angle = Math.min(
+      Math.PI,
+      Math.acos(Math.min(1, radius / top)) * 1.02 + 1e-4 + CELL * 1.5,
+    );
+    const cap = { direction: centre, cos: Math.cos(angle) };
+    for (;;) {
+      const found = yield* this.peekBound(
+        this.options.root,
+        warp,
+        cap,
+        expired,
+      );
+      if (found.value >= radius) {
+        return true;
+      }
+      const target = this.unmade(found.tile, warp);
+      if (!target) {
+        return false;
+      }
+      yield* this.resident(target, warp, expired);
+      if (expired()) {
+        yield;
+      }
+    }
+  }
+
+  /**
+   * The tile at or above `tile`, nearest the root, with resident heights and
+   * no bound made yet: refining from the top, a coarse bound serves every
+   * tile under it before any finer one is made.
+   */
+  private unmade(tile: Tile | undefined, _warp: TileWarp): Tile | undefined {
+    let found: Tile | undefined;
+    for (let t = tile; t?.globe; t = t.parent) {
+      const source = t.globe.upsampledFrom ?? t;
+      if (
+        (source.globe?.heights ?? (this.options.flat ? true : undefined)) &&
+        this.cached(t) === undefined
+      ) {
+        found = t;
+      }
+    }
+    return found;
+  }
+
+  /** A bound made already for `tile`, if still good. */
+  private cached(tile: Tile): Exact | undefined {
+    const source = tile.globe?.upsampledFrom ?? tile;
+    const heights =
+      source.globe?.heights ??
+      (this.options.flat ? (flatHeights ??= flatTerrainHeights()) : undefined);
+    const kept = this.bounds.get(tile);
+    return kept && kept.key === this.keyNow && kept.heights === heights
+      ? kept
+      : undefined;
+  }
+
+  /** `bound` over what is made already: the smallest, and the tile whose own bound it is. */
+  private *peekBound(
     tile: Tile,
     warp: TileWarp,
-    cap: { direction: Vec3; cos: number } | undefined,
-    _unused: undefined,
-  ): number {
-    if (cap && !meetsCap(tile, cap)) {
-      return Infinity;
+    cap: { direction: Vec3; cos: number },
+    expired: () => boolean,
+  ): Generator<void, { value: number; tile: Tile | undefined }> {
+    if (expired()) {
+      yield;
+    }
+    if (!meetsCap(tile, cap)) {
+      return { value: Infinity, tile: undefined };
+    }
+    if (
+      tile.globe &&
+      (this.options.flat
+        ? tile.globe.level >= FLAT_LEVELS
+        : tile.residentBelow === 0 &&
+          !tile.globe.heights &&
+          !tile.globe.upsampledFrom)
+    ) {
+      return { value: this.peekOwn(tile, warp), tile };
     }
     const kids = tile.children;
-    const isRoot = tile.globe === undefined;
-    if (kids.length > 0 && (kids.length === 4 || isRoot)) {
-      let lowest = Infinity;
+    if (kids.length > 0 && (kids.length === 4 || tile.globe === undefined)) {
+      let best: { value: number; tile: Tile | undefined } = {
+        value: Infinity,
+        tile: undefined,
+      };
       let fills = false;
       for (const kid of kids) {
         if (kid.fillFromParent) {
           fills = true;
         } else {
-          lowest = Math.min(lowest, this.bound(kid, warp, cap, undefined));
+          const r = yield* this.peekBound(kid, warp, cap, expired);
+          if (r.value < best.value) {
+            best = r;
+          }
         }
       }
       if (fills) {
-        lowest = Math.min(lowest, this.own(tile, warp));
+        const own = this.peekOwn(tile, warp);
+        if (own < best.value) {
+          best = { value: own, tile };
+        }
       }
-      return lowest;
+      return best;
     }
-    return this.own(tile, warp);
+    return { value: this.peekOwn(tile, warp), tile };
   }
 
-  /**
-   * A tile's own bound. Its own mesh's exact bound where its heights are
-   * resident (and the time allows). Otherwise the nearest loaded ancestor's
-   * exact bound less the most the full-resolution surface can dip below that
-   * ancestor's mesh: its geometric error (a bound on the deviation, the
-   * refit's where measured), stretched along the normal by the warp there.
-   * Nothing loaded above: 0, which culls nothing.
-   */
-  private own(tile: Tile, warp: TileWarp): number {
-    const mine = this.resident(tile, warp, true);
-    if (mine !== undefined) {
-      return mine;
+  /** `own` from the bounds made already: the tile's own, else the nearest ancestor's less its error (0 with none). */
+  private peekOwn(tile: Tile, warp: TileWarp): number {
+    const mine = this.cached(tile);
+    if (mine) {
+      return mine.value;
     }
     for (let a = tile.parent; a?.globe; a = a.parent) {
-      const base = this.resident(a, warp, false);
-      if (base !== undefined) {
-        const drawn = drawnTile(a, warp);
-        const stretch = Math.max(1, drawn.slopeMax ?? drawn.sigmaMax);
-        const error = soundError(a.globe.refit);
-        return Math.max(0, base - (error * stretch) / R_MIN);
+      const base = this.cached(a);
+      if (base) {
+        return this.derived(a, base.value, warp);
       }
     }
     return 0;
   }
 
-  /** The exact bound of a tile's own mesh, cached; undefined without resident heights (or, when `limited`, past this pass's time). */
-  private resident(
+  /** The bound under ancestor `a` (its bound `tops`): its error, stretched along the normal. */
+  private derived(a: Tile, tops: number, warp: TileWarp): number {
+    const drawn = drawnTile(a, warp);
+    const stretch = Math.max(1, drawn.slopeMax ?? drawn.sigmaMax);
+    const error = soundError(a.globe!.refit);
+    return Math.max(0, tops - (error * stretch) / R_MIN);
+  }
+
+  /** The exact bound of a tile's own mesh, cached; undefined without resident heights . */
+  private *resident(
     tile: Tile,
     warp: TileWarp,
-    limited: boolean,
-  ): number | undefined {
+    expired: () => boolean,
+  ): Generator<void, Exact | undefined> {
     const source = tile.globe?.upsampledFrom ?? tile;
     const heights =
       source.globe?.heights ??
@@ -240,17 +499,15 @@ export class BodyOccluder implements Occluder {
     }
     const kept = this.bounds.get(tile);
     if (kept && kept.key === this.keyNow && kept.heights === heights) {
-      return kept.value;
+      return kept;
     }
-    if (limited && performance.now() >= this.spent) {
-      return undefined;
-    }
-    const value = exactBound(source, heights, warp);
+    const value = yield* exactBound(source, heights, warp, expired);
     if (value === undefined) {
       return undefined;
     }
-    this.bounds.set(tile, { key: this.keyNow, heights, value });
-    return value;
+    const made = { key: this.keyNow, heights, value };
+    this.bounds.set(tile, made);
+    return made;
   }
 }
 
@@ -283,75 +540,78 @@ function meetsCap(tile: Tile, cap: { direction: Vec3; cos: number }): boolean {
 }
 
 /**
- * The bound from a tile's resident vertices: each, and the bottom of the
- * skirt under each edge vertex, through the warp's map, the smallest scaled
- * norm over the scale's span, less what the chord of a triangle dips under
- * its vertices' shell. Undefined where the warp can't map them.
+ * The bound from a tile's resident vertices: each, through the warp's map,
+ * the smallest scaled norm over the scale's span, less what the chord of a
+ * triangle dips under the shell its vertices lie on (below). Undefined where
+ * the warp can't map them.
  */
-function exactBound(
+function* exactBound(
   tile: Tile,
   heights: TerrainHeights,
   warp: TileWarp,
-): number | undefined {
+  expired: () => boolean,
+): Generator<void, number | undefined> {
   const g = tile.globe!;
   const r = g.rectangle;
   const n = heights.u.length;
-  const skirt =
-    (5 * ELLIPSOID_LEVEL_ZERO_ERROR) / 2 ** Math.max(0, g.level - 1);
   const span = heights.maximumHeight - heights.minimumHeight;
-  const points = new Float64Array(n * 6);
   const carto = { longitude: 0, latitude: 0, height: 0 };
   const out = new Float64Array(3);
-  let count = 0;
-  for (let i = 0; i < n; i++) {
-    const u = heights.u[i]!;
-    const v = heights.v[i]!;
-    carto.longitude = r.west + (u / 32767) * (r.east - r.west);
-    carto.latitude = r.south + (v / 32767) * (r.north - r.south);
-    carto.height = heights.minimumHeight + (heights.h[i]! / 32767) * span;
-    ellipsoid.cartographicToCartesian(carto, out);
-    points.set(out, count * 3);
-    count++;
-    if (u === 0 || u === 32767 || v === 0 || v === 32767) {
-      carto.height -= skirt;
-      ellipsoid.cartographicToCartesian(carto, out);
-      points.set(out, count * 3);
-      count++;
-    }
-  }
-  const images = warp.images?.(points.subarray(0, count * 3));
-  if (!images) {
-    return undefined;
-  }
   let lowest = Infinity;
-  for (let i = 0; i < count; i++) {
-    lowest = Math.min(lowest, lowestAlong(images, i));
+  // In chunks of vertices, handing control back between them when the
+  // call's time is spent.
+  for (let from = 0; from < n; from += CHUNK) {
+    const to = Math.min(n, from + CHUNK);
+    const points = new Float64Array((to - from) * 3);
+    for (let i = from; i < to; i++) {
+      carto.longitude = r.west + (heights.u[i]! / 32767) * (r.east - r.west);
+      carto.latitude = r.south + (heights.v[i]! / 32767) * (r.north - r.south);
+      carto.height = heights.minimumHeight + (heights.h[i]! / 32767) * span;
+      ellipsoid.cartographicToCartesian(carto, out);
+      points.set(out, (i - from) * 3);
+    }
+    const images = warp.images?.(points);
+    if (!images) {
+      return undefined;
+    }
+    for (let i = 0; i < to - from; i++) {
+      lowest = Math.min(lowest, lowestAlong(images, i));
+    }
+    if (expired()) {
+      yield;
+    }
   }
   if (!Number.isFinite(lowest)) {
     return undefined;
   }
-  // The longest edge of a triangle, as a fraction of the tile, bounds the
-  // chord's dip under the surface its vertices lie on.
+  // The longest triangle edge, as an angle at the body's centre (an edge
+  // runs at most that far along the surface), bounds how far the chord
+  // between its ends dips under the shell they lie on: its middle is at
+  // least cos(angle / 2) of the ends' radius.
   let edge = 0;
   const t = heights.triangles;
+  const width = r.east - r.west;
+  const depth = r.north - r.south;
   for (let k = 0; k + 2 < t.length; k += 3) {
     for (let e = 0; e < 3; e++) {
       const a = t[k + e]!;
       const b = t[k + ((e + 1) % 3)]!;
       edge = Math.max(
         edge,
-        Math.abs(heights.u[a]! - heights.u[b]!),
-        Math.abs(heights.v[a]! - heights.v[b]!),
+        Math.hypot(
+          ((heights.u[a]! - heights.u[b]!) / 32767) * width,
+          ((heights.v[a]! - heights.v[b]!) / 32767) * depth,
+        ),
       );
     }
+    if ((k & 8191) === 0 && k > 0 && expired()) {
+      yield;
+    }
   }
-  const chord =
-    (edge / 32767) *
-    R_MAX *
-    Math.hypot(r.east - r.west, r.north - r.south) *
-    1.5;
-  const dip = (CHORD_MARGIN * chord * chord) / (8 * R_MIN) / R_MIN;
-  return Math.max(0, lowest - dip);
+  // The stretch along the surface and the body's flattening: a margin.
+  const half = Math.min(Math.PI, edge * CHORD_MARGIN) / 2;
+  const keep = Math.max(0, Math.cos(half));
+  return lowest * keep;
 }
 
 /** The smallest scaled norm of image `i` over the span of scales: the norm is convex along the line, so its minimum is where the derivative vanishes, clamped. */

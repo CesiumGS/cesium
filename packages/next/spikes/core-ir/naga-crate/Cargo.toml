@@ -1,0 +1,34 @@
+# Candidate for "our own wasm-bindgen build of naga" (plan §13.42).
+# NOT BUILT: there is no Rust toolchain on the machine the spike ran on, and
+# installing one was refused by the session's permission check. The size in
+# the plan is an estimate from naga-wasm and other builds.
+#   cargo build --release --target wasm32-unknown-unknown
+#   wasm-bindgen --target web --out-dir pkg target/wasm32-unknown-unknown/release/cesium_naga.wasm
+#   wasm-opt -Oz pkg/cesium_naga_bg.wasm -o pkg/cesium_naga_bg.wasm
+[package]
+name = "cesium-naga"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+naga = { version = "=30.0.2", features = ["wgsl-in", "glsl-out", "spv-out"] }
+wasm-bindgen = "=0.2.129"
+
+[features]
+# IR export as JSON, for a lowering that reads naga's IR directly (candidate c).
+ir-json = ["naga/serialize", "dep:serde_json"]
+
+[dependencies.serde_json]
+version = "1"
+optional = true
+
+[profile.release]
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true

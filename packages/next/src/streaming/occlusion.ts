@@ -16,6 +16,18 @@ export const QUERY_FLOATS = 12;
 /** Results in a row, each a tick's, before an occluded tile stops refining. */
 export const OCCLUDED_TICKS = 2;
 /**
+ * A refined REPLACE tile hidden this long (ms), over at least
+ * `COARSEN_RESULTS` results in a row, may coarsen to itself: what it hides
+ * behind is drawn by tiles that are seen, so its coarser content changes no
+ * depth in front of it. It refines again with the first result that sees it,
+ * and then may not coarsen so for `COARSEN_BACKOFF_MS`: a cycle, if one
+ * could start, is at least that long.
+ */
+export const COARSEN_AFTER_MS = 2000;
+/** As `OCCLUDED_TICKS`: results only come with renders, and an idle view renders none (a still camera keeps its verdicts). */
+export const COARSEN_RESULTS = OCCLUDED_TICKS;
+export const COARSEN_BACKOFF_MS = 10_000;
+/**
  * Ticks a result stays good for. A tile no tick asked about (it left the
  * view's walk) is unknown again after this, and so counts as visible.
  */
@@ -42,4 +54,11 @@ export interface ViewOcclusion {
    * lately; false for unknown.
    */
   occluded(state: TileViewState): boolean;
+  /**
+   * Whether the tile has stayed hidden long enough that a refined REPLACE
+   * tile may coarsen (`COARSEN_AFTER_MS`, `COARSEN_RESULTS`, and not within
+   * `COARSEN_BACKOFF_MS` of being seen again after it did); false for
+   * unknown. Absent: never.
+   */
+  longHidden?(state: TileViewState): boolean;
 }

@@ -303,6 +303,7 @@ describe("a view's chain", () => {
     "select-view",
     "lights",
     "cull",
+    "occlusion-cull",
     "sky-view",
     "environment",
     "aerial-perspective",
@@ -1253,6 +1254,8 @@ describe("a stage of several passes", () => {
         [32, 18],
         [64, 36],
       ]);
+      // The level of what each writes: `PostInput.mip`.
+      expect(write.mock.calls.map((c) => c[5])).toEqual([0, 1, 2, 3, 0, 0]);
       // Radians per pixel of what it writes.
       expect(write.mock.calls[1]![4]).toBeCloseTo(
         write.mock.calls[5]![4] * 4,

@@ -15,10 +15,32 @@ import type { View } from "../../scene/View.ts";
 import type { FrameGraph } from "../FrameGraph.ts";
 import {
   createPostStage,
+  slangPostShader,
   type PostStage,
   type PostStagePass,
+  type SlangPostLayout,
 } from "../../scene/postStage.ts";
-import type { ChainEntry, ChainEngine, ChainIo, GraphStage } from "./chain.ts";
+import glareClosedWgsl from "../../shaders/generated/glareClosed.wgsl?raw";
+import glareClosedLayout from "../../shaders/generated/glareClosed.json";
+import glareCompositeWgsl from "../../shaders/generated/glareComposite.wgsl?raw";
+import glareCompositeLayout from "../../shaders/generated/glareComposite.json";
+import glareDownWgsl from "../../shaders/generated/glareDown.wgsl?raw";
+import glareDownLayout from "../../shaders/generated/glareDown.json";
+import glareInputWgsl from "../../shaders/generated/glareInput.wgsl?raw";
+import glareInputLayout from "../../shaders/generated/glareInput.json";
+import glareUpWgsl from "../../shaders/generated/glareUp.wgsl?raw";
+import glareUpLayout from "../../shaders/generated/glareUp.json";
+import glareUpTopWgsl from "../../shaders/generated/glareUpTop.wgsl?raw";
+import glareUpTopLayout from "../../shaders/generated/glareUpTop.json";
+import glareVeilWgsl from "../../shaders/generated/glareVeil.wgsl?raw";
+import glareVeilLayout from "../../shaders/generated/glareVeil.json";
+import type {
+  ChainEntry,
+  ChainEngine,
+  ChainIo,
+  GlareIo,
+  GraphStage,
+} from "./chain.ts";
 import type { GlareKernelImage } from "./glareKernel.ts";
 import { VEIL_LEVELS, veilWeights } from "./veilWeights.ts";
 
@@ -35,17 +57,11 @@ export const GLARE_SPRITE_MAX_RADIUS = 512;
 
 /** The image's largest value in glare's chain, pre-exposed. */
 export const GLARE_IMAGE_CLAMP = 10_000;
-/** A sprite's largest value at a pixel, pre-exposed (glare.slang `GLARE_SPRITE_CLAMP`). */
-export const GLARE_SPRITE_CLAMP = 200;
 /** The buffer of sources, as the veil's passes name it. */
 export const GLARE_RECORDS = "glareRecords";
-const SOURCES_BUFFER = GLARE_RECORDS;
 
 /** Passes the chain registers, as a stage's are: named at run time. */
 const SOURCES_PASS = "glare.sources";
-const SPRITES_PASS = "glare.sprites";
-/** The veil stage's result in a view's graph. */
-const GLARE_IMAGE = "post.glare";
 const DEG = Math.PI / 180;
 
 /** Bytes of a record; the header is one more. */
@@ -70,7 +86,6 @@ export function discTaps(n: number): [number, number][] {
 /** What glare adds to the engine's pipelines, made when first asked for. */
 export interface GlarePipelines {
   sources: GPUComputePipeline;
-  sprite: GPURenderPipeline;
 }
 
 /** A kernel's grid: the plan's GPU safety table holds a worker to one at this size. */
@@ -302,8 +317,6 @@ export class GlareViewState {
   private group: GPUBindGroup | undefined;
   private pipelines: GlarePipelines | undefined;
   private kernel: LoadedKernel | undefined;
-  private spriteKernel: LoadedKernel | undefined;
-  private spriteGroup: GPUBindGroup | undefined;
   /** This tick wrote its frame: its sky was drawn. */
   private fresh = false;
   /** The list holds nothing, for a view with no sky. */
@@ -419,77 +432,28 @@ export class GlareViewState {
     label: "glare.sources",
   };
 
-  /** Draws the sprites: a degenerate triangle for each slot past the list's count. */
-  drawSprites(pass: GPURenderPassEncoder): void {
-    const { pipelines, kernel } = this;
-    if (pipelines && kernel) {
-      pass.setPipeline(pipelines.sprite);
-      pass.setBindGroup(0, this.spriteGroupFor(pipelines, kernel));
-    }
-    pass.draw(4, GLARE_SOURCES);
-  }
-
-  private spriteGroupFor(
-    pipelines: GlarePipelines,
-    kernel: LoadedKernel,
-  ): GPUBindGroup {
-    if (this.spriteKernel !== kernel) {
-      this.spriteKernel = kernel;
-      this.spriteGroup = this.engine.ctx.device.createBindGroup({
-        label: "glare.sprites",
-        layout: pipelines.sprite.getBindGroupLayout(0),
-        entries: [
-          { binding: 0, resource: { buffer: this.frameBuffer } },
-          { binding: 6, resource: { buffer: this.sources } },
-          { binding: 7, resource: kernel.view },
-          { binding: 8, resource: this.engine.raster.glareKernels.sampler },
-        ],
-      });
-    }
-    return this.spriteGroup!;
-  }
-
   /**
-   * The stage that draws the sprites, additively, into glare's image. It leaves no
-   * image of its own.
+   * What a stage that records passes sees of this view's glare (`ChainIo.glare`): the
+   * list, and the spikes' kernel, as it stands when asked.
    */
-  spritesStage(): GraphStage {
-    const color: GPURenderPassColorAttachment = {
-      view: undefined as never,
-      loadOp: "load",
-      storeOp: "store",
-    };
-    const descriptor: GPURenderPassDescriptor = {
-      label: "glare.sprites",
-      colorAttachments: [color],
-    };
+  io(): GlareIo {
+    const { engine, view } = this;
     return {
-      name: "glare-sprites",
-      slot: "scene",
-      kind: "physics",
-      label: "Glare: a lens's spikes",
-      enabled: false,
-      register: (graph: FrameGraph, io: ChainIo) => {
-        graph.addPass(
-          SPRITES_PASS,
-          { reads: [...io.sources], sideEffect: true },
-          (enc, get) => {
-            const source = io.source();
-            if (
-              source.name !== GLARE_IMAGE ||
-              !this.kernel ||
-              !this.pipelines
-            ) {
-              return;
-            }
-            color.view = get(source);
-            descriptor.timestampWrites =
-              this.engine.raster.timer.passWrites("glare.sprites");
-            const pass = enc.beginRenderPass(descriptor);
-            this.drawSprites(pass);
-            pass.end();
-          },
-        );
+      sources: this.sources,
+      kernel: () => {
+        const spikes = view.observer.glare?.spikes;
+        const { kernel } = this;
+        if (!spikes || !kernel) {
+          return undefined;
+        }
+        return {
+          view: kernel.view,
+          sampler: engine.raster.glareKernels.sampler,
+          scale: kernel.image.scale,
+          size: kernel.image.size,
+          share: spikes.share,
+          extent: spikes.extent,
+        };
       },
     };
   }
@@ -519,150 +483,51 @@ export class GlareViewState {
 }
 
 /**
- * A down pass's tap, source texels from its center. With what the joins' B-splines add, a
- * level's σ comes to `basePixels × 2^i`: a variance of 5/3 of a texel² per axis here.
+ * A down pass's tap, source texels from its center (stages/glareCommon.slang
+ * `DOWN_REACH`). With what the joins' B-splines add, a level's σ comes to `basePixels × 2^i`:
+ * a variance of 5/3 of a texel² per axis here.
  */
-const DOWN_REACH = 1.2083;
+export const DOWN_REACH = 1.2083;
 /** How far past the sun's disc the veil's input is masked, the view's pixels. */
-const MASK_MARGIN = 1.5;
+export const MASK_MARGIN = 1.5;
 
-const float = (value: number) =>
-  Number.isInteger(value) ? `${value}.0` : `${value}`;
-
-/** The weight of level `i`, as a uniform. */
-const levelWeight = (i: number) =>
-  i < 8 ? `uniforms.w${i >> 2}.${"xyzw"[i & 3]}` : "uniforms.w2";
-
-/** `veilSpread` in WGSL: per the view's pixel². */
-function spreadWgsl(levels: number, basePixels: number): string {
-  const terms = Array.from({ length: levels }, (_, i) => {
-    const variance = (basePixels * 2 ** i) ** 2;
-    return `  sum += ${levelWeight(i)} * exp(-r2 / ${float(2 * variance)}) / ${float(2 * Math.PI * variance)};`;
-  });
-  return `fn glareSpread(r2: f32) -> f32 {
-  var sum = 0.0;
-${terms.join("\n")}
-  return sum;
-}`;
-}
-
-const GLARE_COMMON = `struct GlareSource {
-  pixel: vec2<f32>,
-  radius: f32,
-  visibility: f32,
-  light: vec3<f32>,
-  kind: f32,
+/** The veil's passes, written in Slang (shaders/stages/glare*.slang, built by `npm run shaders`). */
+const unit = (name: string, wgsl: string, layout: unknown) =>
+  slangPostShader(`${name}.slang`, wgsl, layout as SlangPostLayout);
+const SHADERS = {
+  input: unit("glareInput", glareInputWgsl, glareInputLayout),
+  down: unit("glareDown", glareDownWgsl, glareDownLayout),
+  upTop: unit("glareUpTop", glareUpTopWgsl, glareUpTopLayout),
+  up: unit("glareUp", glareUpWgsl, glareUpLayout),
+  veil: unit("glareVeil", glareVeilWgsl, glareVeilLayout),
+  composite: unit("glareComposite", glareCompositeWgsl, glareCompositeLayout),
+  closed: unit("glareClosed", glareClosedWgsl, glareClosedLayout),
 };
 
-fn glareImage(c: vec4<f32>) -> vec4<f32> {
-  // Below 0 is light out of sRGB's gamut, which a veil can't spread.
-  let finite = postFinite(c);
-  return vec4<f32>(clamp(finite.rgb, vec3<f32>(0.0), vec3<f32>(${float(GLARE_IMAGE_CLAMP)})), finite.a);
-}
-
-// A pixel at \`uv\` is within the sun's disc, and the margin: by the sine of its angle
-// from the sun, in the view's axes.
-fn glareInSun(uv: vec2<f32>) -> bool {
-  let sun = ${SOURCES_BUFFER}[1];
-  let head = ${SOURCES_BUFFER}[0];
-  if (sun.kind < 0.5 || head.pixel.y <= 0.0) {
-    return false;
-  }
-  let t = (uv - vec2<f32>(0.5)) * uniforms.viewSize * uniforms.pixelAngle;
-  let s = (sun.pixel - uniforms.viewSize * 0.5) * uniforms.pixelAngle;
-  let d = t - s;
-  let across = t.x * s.y - t.y * s.x;
-  let sine = sqrt(dot(d, d) + across * across) / sqrt((1.0 + dot(t, t)) * (1.0 + dot(s, s)));
-  return sine < head.radius + ${float(MASK_MARGIN)} * uniforms.pixelAngle;
-}`;
-
-/** The sun's veil at `uv`, pre-exposed: `sunVeil`, as veilWeights.ts has it. */
-const SUN_VEIL = `fn glareSunVeil(uv: vec2<f32>, preExposure: f32) -> vec3<f32> {
-  let sun = ${SOURCES_BUFFER}[1];
-  let head = ${SOURCES_BUFFER}[0];
-  if (sun.visibility <= 0.0) {
-    return vec3<f32>(0.0);
-  }
-  let pixel = uv * uniforms.viewSize;
-  let offset = pixel - sun.pixel;
-  let t = (pixel - uniforms.viewSize * 0.5) * uniforms.pixelAngle;
-  let z = 1.0 / sqrt(1.0 + dot(t, t));
-  let solid = uniforms.pixelAngle * uniforms.pixelAngle * z * z * z;
-  if (solid <= 0.0) {
-    return vec3<f32>(0.0);
-  }
-  let fade = smoothstep(0.05, 0.15, head.pixel.y);
-  return sun.light * sun.visibility * uniforms.share * glareSpread(dot(offset, offset)) / solid * fade * preExposure;
-}`;
-
-/** A pass's common text, and the buffer it reads. */
-const withSources = (
-  name: string,
-  shader: string,
-  more: Partial<PostStagePass> = {},
-): PostStagePass => ({
-  name,
-  shader: `${GLARE_COMMON}\n${shader}`,
-  storage: [{ name: SOURCES_BUFFER, type: "array<GlareSource>" }],
-  ...more,
-});
-
-/** A cubic B-spline over a texture of one level, in 4 bilinear taps (Sigg and Hadwiger 2005). */
-const bicubic = (
-  texture: string,
-) => `fn glareBicubic(uv: vec2<f32>) -> vec3<f32> {
-  let size = vec2<f32>(textureDimensions(${texture}));
-  let p = uv * size - vec2<f32>(0.5);
-  let i = floor(p);
-  let f = p - i;
-  let f2 = f * f;
-  let f3 = f2 * f;
-  let w0 = (vec2<f32>(1.0) - 3.0 * f + 3.0 * f2 - f3) / 6.0;
-  let w1 = (vec2<f32>(4.0) - 6.0 * f2 + 3.0 * f3) / 6.0;
-  let w3 = f3 / 6.0;
-  let g0 = w0 + w1;
-  let g1 = vec2<f32>(1.0) - g0;
-  let h0 = (i + vec2<f32>(-0.5) + w1 / g0) / size;
-  let h1 = (i + vec2<f32>(1.5) + w3 / g1) / size;
-  let a = textureSampleLevel(${texture}, postSampler, h0, 0.0).rgb;
-  let b = textureSampleLevel(${texture}, postSampler, vec2<f32>(h1.x, h0.y), 0.0).rgb;
-  let c = textureSampleLevel(${texture}, postSampler, vec2<f32>(h0.x, h1.y), 0.0).rgb;
-  let d = textureSampleLevel(${texture}, postSampler, h1, 0.0).rgb;
-  return g0.y * (g0.x * a + g1.x * b) + g1.y * (g0.x * c + g1.x * d);
-}`;
+/** The list the passes that read it bind, in group 1 after their textures. */
+const records = [{ name: GLARE_RECORDS, type: "array<GlareSource>" }];
 
 /**
  * The passes of a veil with a pyramid: `levels` of them, from `basePixels`. The levels
  * join from the top, each taking the sum above it up one level: 4 taps a pixel in all, not
  * 4 per level (3.6 ms at 2560×1440 on an M2, composed in one pass; this is under 1).
  */
-function pyramidPasses(levels: number, basePixels: number): PostStagePass[] {
+function pyramidPasses(levels: number): PostStagePass[] {
   const down: PostStagePass[] = [];
   for (let i = 1; i < levels; i++) {
     down.push({
       name: `down.${i}`,
       reads: [{ texture: "pyramid", mip: i - 1 }],
       writes: [{ texture: "pyramid", mip: i }],
-      shader: `fn postStage(input: PostInput) -> vec4<f32> {
-  let o = ${float(DOWN_REACH)} / vec2<f32>(textureDimensions(pyramid));
-  return 0.25 * (
-    textureSampleLevel(pyramid, postSampler, input.uv + vec2<f32>(-o.x, -o.y), 0.0) +
-    textureSampleLevel(pyramid, postSampler, input.uv + vec2<f32>(o.x, -o.y), 0.0) +
-    textureSampleLevel(pyramid, postSampler, input.uv + vec2<f32>(-o.x, o.y), 0.0) +
-    textureSampleLevel(pyramid, postSampler, input.uv + vec2<f32>(o.x, o.y), 0.0));
-}`,
+      shader: SHADERS.down,
     });
   }
-  const pyramidAt =
-    "textureSampleLevel(pyramid, postSampler, input.uv, 0.0).rgb";
   const up: PostStagePass[] = [
     {
       name: `up.${levels - 1}`,
       reads: [{ texture: "pyramid", mip: levels - 1 }],
       writes: [{ texture: "veil", mip: levels - 1 }],
-      shader: `fn postStage(input: PostInput) -> vec4<f32> {
-  return vec4<f32>(${levelWeight(levels - 1)} * ${pyramidAt}, 1.0);
-}`,
+      shader: SHADERS.upTop,
     },
   ];
   for (let i = levels - 2; i >= 1; i--) {
@@ -673,76 +538,40 @@ function pyramidPasses(levels: number, basePixels: number): PostStagePass[] {
         { texture: "veil", mip: i + 1 },
       ],
       writes: [{ texture: "veil", mip: i }],
-      shader: `${bicubic("veil")}
-fn postStage(input: PostInput) -> vec4<f32> {
-  return vec4<f32>(${levelWeight(i)} * ${pyramidAt} + glareBicubic(input.uv), 1.0);
-}`,
+      shader: SHADERS.up,
     });
   }
   return [
-    withSources(
-      "input",
-      `fn postStage(input: PostInput) -> vec4<f32> {
-  if (glareInSun(input.uv)) {
-    return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-  }
-  let o = 0.25 / input.size;
-  let c = 0.25 * (
-    glareImage(postColor(input.uv + vec2<f32>(-o.x, -o.y))) +
-    glareImage(postColor(input.uv + vec2<f32>(o.x, -o.y))) +
-    glareImage(postColor(input.uv + vec2<f32>(-o.x, o.y))) +
-    glareImage(postColor(input.uv + vec2<f32>(o.x, o.y))));
-  return vec4<f32>(c.rgb, 1.0);
-}`,
-      { writes: [{ texture: "pyramid", mip: 0 }] },
-    ),
+    {
+      name: "input",
+      shader: SHADERS.input,
+      storage: records,
+      writes: [{ texture: "pyramid", mip: 0 }],
+    },
     ...down,
     ...up,
-    withSources(
-      "veil",
-      `${spreadWgsl(levels, basePixels)}
-${SUN_VEIL}
-${bicubic("veil")}
-fn postStage(input: PostInput) -> vec4<f32> {
-  let sum = ${levelWeight(0)} * ${pyramidAt} + glareBicubic(input.uv);
-  let veil = uniforms.share * sum + glareSunVeil(input.uv, input.preExposure);
-  return vec4<f32>(min(veil, vec3<f32>(${float(GLARE_IMAGE_CLAMP)})), 1.0);
-}`,
-      {
-        reads: [
-          { texture: "pyramid", mip: 0 },
-          { texture: "veil", mip: 1 },
-        ],
-        writes: [{ texture: "veil", mip: 0 }],
-      },
-    ),
-    withSources(
-      "composite",
-      `fn postStage(input: PostInput) -> vec4<f32> {
-  let c = glareImage(postColorAt(input.pixel));
-  let veil = textureSampleLevel(veil, postSampler, input.uv, 0.0).rgb;
-  let lit = c.rgb * (1.0 - uniforms.imageShare) + veil;
-  return vec4<f32>(min(lit, vec3<f32>(${float(GLARE_IMAGE_CLAMP)})), c.a);
-}`,
-      { reads: [{ texture: "veil", mip: 0 }] },
-    ),
+    {
+      name: "veil",
+      shader: SHADERS.veil,
+      storage: records,
+      reads: [
+        { texture: "pyramid", mip: 0 },
+        { texture: "veil", mip: 1 },
+      ],
+      writes: [{ texture: "veil", mip: 0 }],
+    },
+    {
+      name: "composite",
+      shader: SHADERS.composite,
+      storage: records,
+      reads: [{ texture: "veil", mip: 0 }],
+    },
   ];
 }
 
 /** The pass of glare with no pyramid: the image, and the sun's veil in closed form. */
-function closedFormPass(levels: number, basePixels: number): PostStagePass[] {
-  return [
-    withSources(
-      "composite",
-      `${spreadWgsl(levels, basePixels)}
-${SUN_VEIL}
-fn postStage(input: PostInput) -> vec4<f32> {
-  let c = glareImage(postColorAt(input.pixel));
-  let lit = c.rgb + glareSunVeil(input.uv, input.preExposure);
-  return vec4<f32>(min(lit, vec3<f32>(${float(GLARE_IMAGE_CLAMP)})), c.a);
-}`,
-    ),
-  ];
+function closedFormPass(): PostStagePass[] {
+  return [{ name: "composite", shader: SHADERS.closed, storage: records }];
 }
 
 /** What a view's veil last set, so a tick that changes nothing writes nothing. */
@@ -783,6 +612,7 @@ export function veilStage(levels: number, basePixels: number): PostStage {
       w0: { type: "vec4f" },
       w1: { type: "vec4f" },
       w2: { type: "f32" },
+      basePixels: { type: "f32", value: basePixels },
     },
     ...(levels > 0
       ? {
@@ -790,9 +620,9 @@ export function veilStage(levels: number, basePixels: number): PostStage {
             pyramid: { scale: 1 / basePixels, mips: levels },
             veil: { scale: 1 / basePixels, mips: levels },
           },
-          passes: pyramidPasses(levels, basePixels),
+          passes: pyramidPasses(levels),
         }
-      : { passes: closedFormPass(weightLevels, basePixels) }),
+      : { passes: closedFormPass() }),
     perView({ view, pixelAngle, width, height }, values) {
       const share = view.observer.glare?.veil?.share ?? 0;
       let last = seen.get(values);
@@ -821,8 +651,15 @@ export function veilStage(levels: number, basePixels: number): PostStage {
       values.setUniform("pixelAngle", pixelAngle);
       values.setUniform("share", share);
       values.setUniform("imageShare", levels > 0 ? share * total : 0);
-      values.setUniform("w0", [...weights.subarray(0, 4)]);
-      values.setUniform("w1", [...weights.subarray(4, 8)]);
+      // The shader sums 9 levels: a smaller pyramid's last weights are 0.
+      values.setUniform(
+        "w0",
+        [0, 1, 2, 3].map((i) => weights[i] ?? 0),
+      );
+      values.setUniform(
+        "w1",
+        [4, 5, 6, 7].map((i) => weights[i] ?? 0),
+      );
       values.setUniform("w2", weights[8] ?? 0);
     },
   });
@@ -861,8 +698,5 @@ export function glareFor(
     state.sourcesStage(),
     veilStage(resolved.levels, resolved.basePixels),
   ];
-  if (resolved.spikes) {
-    entries.push(state.spritesStage());
-  }
   return { entries, state };
 }

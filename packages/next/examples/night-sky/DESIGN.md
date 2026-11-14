@@ -37,6 +37,12 @@ what it means on a camera. Every figure is shown with its unit and in context.
 
 - A preset sets the clock, the place and direction, and the observer, and
   leaves the panel where it is, so it shows what the preset chose.
+- The long-exposure presets sit on dates with no moon up, so a dark site is dark. Their
+  exposure is EV100 −6.5 with a pack, whose stars have real fluxes, and −8.5 without one:
+  1.x's map gives its 86,000 points a brightness by rank, and most of them sit under the
+  sky's own glow at −6.5.
+- A lens's spikes are this page's own stage (`sprites.ts`, `sprites.slang`), through the
+  public `GraphStage`: the engine keeps the light list and the kernel, not the drawing.
 - With no sky pack it draws 1.x's star map. `?pack=local` uses a pack from
   the dev server where one is offered, and the panel says when it isn't cleared.
   Nothing from a pack is committed.
