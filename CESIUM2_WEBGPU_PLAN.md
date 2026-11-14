@@ -3920,6 +3920,34 @@ The first slice is merged: `Jobs` behind `WorkerPool` (priorities, dependencies,
 - R9: migrate the waits (bench, parity, scripts, examples, widgets, spikes). Needs R3 and R4.
 - R10: the handbook page "Loading is refinement". Needs R3.
 
+### Implementation kickoff order across M7–M11 (2026-11-13)
+
+Which first milestones can start now, grouped so that no two agents write the same files at once. Order and dependencies only, no durations. Each wave's items run in parallel; a later wave waits only where it says.
+
+**Wave A: new files, start now, in parallel.**
+
+- IR-1 (Cesium IR's core, new `src/ir/`) and IR-10 (our naga crate, Rust, development and CI only).
+- W0 (the shader route spike: naga and Slang → WGSL → GLSL ES; a spike folder).
+- MX-1 (the MaterialX document layer, new `packages/next/materialx/`).
+- LT-7's script (`scripts/frameJumps.mjs`, reading recorder dumps).
+- Profiles M1 (device facts and personas). It touches the device's start-up and `test/fakeGpu.ts`, which W1 also moves, so it lands before W1 starts.
+
+**Wave B: the seam, alone.** W1 extracts `WorldDraws`, `RenderDevice`, `WorldMirror` and `ViewRenderer` as pure moves across `src/render/` and `src/scene/`. Nearly every later milestone touches those files, so W1 runs by itself after Profiles M1, with a type check per commit and the suites once at the end (the refactor rule). Wave A's other items don't touch these files and can keep running.
+
+**Wave C: after W1, in parallel by area.**
+
+- LT-1 (the signed transition word: `common.slang`, `layout.ts`, `drawConstants.ts`, `streaming/tileMorph.ts`, `View.ts`).
+- MX-2b (swap-when-ready shaders: `ModelPlacement`, the shader cache).
+- R1 of the refinement plan (the source registry: new `src/scene/refinement.ts`, with adapters in `Tileset3D`, `GlobeImagery`, `HeightClamping`, warps, `occlusionFeedback`, `Jobs`).
+- JP-1 to JP-3 (content decode, one-off loads and dedicated groups onto `Jobs`: `engineContent.ts`, `engineScene.ts`, the loaders).
+- Profiles M2 (the catalog and resolver: new `src/profile/`, Node only).
+- IR-2, IR-3 and IR-4 as IR-1 lands (all in `src/ir/`, one agent at a time).
+- `Engine.ts` is shared by R1 and JP-1 to JP-3: whichever starts second rebases on the first, and neither reorganizes the file.
+
+**Wave D: after its inputs.** MX-6 (OpenPBR tier 1) after LT-1, since both edit `surface.slang`. LT-2 after LT-1. W2 and W3 after W1 (W3 also after Profiles M2). R2 and R5 after R1. The worker-mode façade's milestones once its plan is reviewed.
+
+**Waiting on plans not yet reviewed:** the worker-mode façade, streaming robustness and WebGL 2 R1 (being written on 2026-11-13). Their findings may reorder Wave D, not Waves A–C.
+
 ---
 
 ## 7. Risks
