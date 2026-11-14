@@ -565,9 +565,13 @@ export class TerrainSource {
     return this.rayTileOwners.get(rayTile);
   }
 
+  /** How many tiles' height data has left (what a bound made from them may have counted on). */
+  unloads = 0;
+
   /** Content left the cache: its height data goes too. */
   unloadTile(tile: Tile): void {
     if (tile.globe?.heights) {
+      this.unloads++;
       tile.globe.heights = undefined;
       if (!tile.globe.upsampledFrom) {
         this.heightsChanged(tile.globe.rectangle);
