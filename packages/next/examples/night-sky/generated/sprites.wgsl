@@ -1,4 +1,4 @@
-// Generated from examples/night-sky/sprites.slang by slangc 2026.21
+// Generated from examples/night-sky/sprites.slang by slangc 2026.22
 // (scripts/slangBuild.mjs). Do not edit: change the .slang and regenerate.
 struct GlareSource_std430_0
 {

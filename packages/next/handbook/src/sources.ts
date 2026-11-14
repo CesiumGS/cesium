@@ -493,8 +493,8 @@ export const SOURCES = {
     short: "Slang releases",
     title: "shader-slang/slang: releases",
     url: "https://github.com/shader-slang/slang/releases",
-    pageDate: "newest v2026.21, 4 Nov 2026",
-    checked: "2026-11-08",
+    pageDate: "newest v2026.22, 10 Nov 2026",
+    checked: "2026-11-13",
   },
   khrInteractivity: {
     short: "KHR_interactivity",

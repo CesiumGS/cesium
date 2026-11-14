@@ -1,4 +1,4 @@
-// Generated from src/shaders/ibl.slang by slangc 2026.21
+// Generated from src/shaders/ibl.slang by slangc 2026.22
 // (scripts/slangBuild.mjs). Do not edit: change the .slang and regenerate.
 struct SkyParams_std140_0
 {

@@ -1,5 +1,5 @@
 // Generated from src/shaders/layouts.slang's reflection by
-// scripts/slangBuild.mjs (slangc 2026.21). Do not edit: change
+// scripts/slangBuild.mjs (slangc 2026.22). Do not edit: change
 // src/shaders/common.slang and regenerate. render/layout.ts reads these.
 
 /** `View` as `view` holds it: byte offsets. */

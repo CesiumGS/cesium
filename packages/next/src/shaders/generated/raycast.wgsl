@@ -1,4 +1,4 @@
-// Generated from src/shaders/raycast.slang by slangc 2026.21
+// Generated from src/shaders/raycast.slang by slangc 2026.22
 // (scripts/slangBuild.mjs). Do not edit: change the .slang and regenerate.
 struct Job_std430_0
 {

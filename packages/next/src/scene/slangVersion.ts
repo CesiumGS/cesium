@@ -4,4 +4,4 @@
  * (scripts/slangTools.mjs), the generated shaders are compiled with it, and
  * browser-compiled shaders are cached under it (slangCache.ts). Node-safe.
  */
-export const SLANG_VERSION = "2026.21";
+export const SLANG_VERSION = "2026.22";

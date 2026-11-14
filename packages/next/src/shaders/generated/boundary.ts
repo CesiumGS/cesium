@@ -1,5 +1,5 @@
 // Generated from the reflection of src/shaders/boundary.slang and
-// src/shaders/cesium.slang by scripts/slangBuild.mjs (slangc 2026.21).
+// src/shaders/cesium.slang by scripts/slangBuild.mjs (slangc 2026.22).
 // Do not edit: change surfaceBoundary.slang or cesium.slang and regenerate.
 
 /** A field of a boundary struct: its WGSL type, or a struct's name. */
