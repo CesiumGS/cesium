@@ -57,8 +57,26 @@ void main() {
     // Re-apply pre-multiplied alpha to match PRE_MULTIPLIED_ALPHA_BLEND.
     vec3 finalRgb = max(material.diffuse, vec3(0.0));
     float finalAlpha = clamp(material.alpha, 0.0, 1.0);
-    out_FragColor = vec4(finalRgb * finalAlpha, finalAlpha);
+    vec4 splatColor = vec4(finalRgb * finalAlpha, finalAlpha);
 #else
-    out_FragColor = baseColor;
+    vec4 splatColor = baseColor;
 #endif
+
+    if (u_stochastic > 0.5) {
+        // Spark-style stochastic transparency: treat alpha as coverage and use a hash that
+        // includes per-splat entropy. This relies on depth writes + no blending.
+        uint uTime = (u_stochasticSteady > 0.5) ? 0u : floatBitsToUint(czm_frameNumber);
+        uvec2 coord = uvec2(gl_FragCoord.xy);
+        uint state = uTime + 0x9e3779b9u * coord.x + 0x85ebca6bu * coord.y + 0xc2b2ae35u * v_splatIndex;
+        state = state * 747796405u + 2891336453u;
+        uint hash = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+        hash = (hash >> 22u) ^ hash;
+        float rand = float(hash) / 4294967296.0;
+        if (rand >= splatColor.a) {
+            discard;
+        }
+        out_FragColor = vec4(splatColor.rgb / splatColor.a, 1.0);
+    } else {
+        out_FragColor = splatColor;
+    }
 }

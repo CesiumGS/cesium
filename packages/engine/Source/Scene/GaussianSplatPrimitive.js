@@ -244,6 +244,14 @@ function markSteadySortStart(primitive, frameState) {
   primitive._hasLastSteadySortCameraDirection = true;
 }
 
+function createSequentialIndexes(count) {
+  const indexes = new Uint32Array(count);
+  for (let i = 0; i < count; i++) {
+    indexes[i] = i;
+  }
+  return indexes;
+}
+
 /**
  * Checks whether the set of currently selected tiles differs from the set
  * recorded on the primitive. This is used to detect LOD transitions that
@@ -1106,6 +1114,7 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._gaussianSplatTexturePending = false;
+  this._lastStochasticMode = false;
 
   /**
    * The draw command used to render the Gaussian splats.
@@ -1694,6 +1703,13 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   const renderResources = new GaussianSplatRenderResources(primitive);
   const { shaderBuilder } = renderResources;
   const renderStateOptions = renderResources.renderStateOptions;
+  const stochastic =
+    defined(tileset) && tileset._gaussianSplatStochastic === true;
+  primitive._lastStochasticMode = stochastic;
+  if (stochastic) {
+    renderStateOptions.depthMask = true;
+    renderStateOptions.blending = BlendingState.DISABLED;
+  }
 
   // Splats are inherently translucent, so TRANSLUCENT (like INHERIT) keeps the
   // dedicated GAUSSIAN_SPLATS pass. Routing them through Pass.TRANSLUCENT would
@@ -1712,6 +1728,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   shaderBuilder.addAttribute("float", "a_splatIndex");
   shaderBuilder.addVarying("vec4", "v_splatColor");
   shaderBuilder.addVarying("vec2", "v_vertPos");
+  shaderBuilder.addVarying("uint", "v_splatIndex", "flat");
   shaderBuilder.addUniform(
     "float",
     "u_splitDirection",
@@ -1722,6 +1739,12 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     "highp usampler2D",
     "u_splatAttributeTexture",
     ShaderDestination.VERTEX,
+  );
+  shaderBuilder.addUniform("float", "u_stochastic", ShaderDestination.FRAGMENT);
+  shaderBuilder.addUniform(
+    "float",
+    "u_stochasticSteady",
+    ShaderDestination.FRAGMENT,
   );
 
   shaderBuilder.addUniform(
@@ -1764,6 +1787,18 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   };
   uniformMap.u_splatRowShift = function () {
     return primitive._splatRowShift;
+  };
+  uniformMap.u_stochastic = function () {
+    const tileset = primitive._tileset;
+    return defined(tileset) && tileset._gaussianSplatStochastic === true
+      ? 1.0
+      : 0.0;
+  };
+  uniformMap.u_stochasticSteady = function () {
+    const tileset = primitive._tileset;
+    return defined(tileset) && tileset._gaussianSplatStochasticSteady === true
+      ? 1.0
+      : 0.0;
   };
 
   if (primitive._sphericalHarmonicsDegree > 0) {
@@ -1966,6 +2001,8 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
  */
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
+  const stochastic =
+    defined(tileset) && tileset._gaussianSplatStochastic === true;
 
   const targetCustomShader = defined(tileset.customShader)
     ? tileset.customShader
@@ -2012,6 +2049,17 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   const camera = frameState.camera;
   if (!defined(camera)) {
     return;
+  }
+
+  if (
+    defined(this._drawCommand) &&
+    this._lastStochasticMode !== stochastic &&
+    this._numSplats > 0 &&
+    hasRootTransform &&
+    defined(this._indexes) &&
+    this._indexes.length === this._numSplats
+  ) {
+    GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
   }
 
   if (this._sorterState === GaussianSplatSortingState.IDLE) {
@@ -2347,6 +2395,17 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       Matrix4.clone(camera.viewMatrix, this._prevViewMatrix);
       Matrix4.multiply(camera.viewMatrix, this._rootTransform, scratchMatrix4A);
 
+      if (pending.state === SnapshotState.TEXTURE_READY && stochastic) {
+        pending.indexes = createSequentialIndexes(pending.numSplats);
+        pending.state = SnapshotState.READY;
+        this._pendingSortPromise = undefined;
+        this._pendingSort = undefined;
+        commitSnapshot(this, pending, frameState);
+        this._pendingSnapshot = undefined;
+        GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
+        return;
+      }
+
       if (
         pending.state === SnapshotState.TEXTURE_READY &&
         !defined(this._pendingSortPromise)
@@ -2399,6 +2458,17 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     }
 
     if (!hasRootTransform) {
+      return;
+    }
+
+    if (stochastic) {
+      if (!defined(this._indexes) || this._indexes.length !== this._numSplats) {
+        this._indexes = createSequentialIndexes(this._numSplats);
+      }
+      if (!defined(this._drawCommand)) {
+        GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
+      }
+      Matrix4.clone(camera.viewMatrix, this._prevViewMatrix);
       return;
     }
 
