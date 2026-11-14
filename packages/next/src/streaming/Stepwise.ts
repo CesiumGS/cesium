@@ -31,6 +31,7 @@ import {
 } from "./tileWarp.ts";
 
 import type { ViewOcclusion } from "./occlusion.ts";
+import type { Occluder } from "./occluders.ts";
 
 /** Planes per box in `SelectionView.casterPlanes`. */
 export const CASTER_PLANES = 6;
@@ -88,6 +89,13 @@ export interface SelectionView {
    * anchor's coordinates as ever.
    */
   warp?: TileWarp;
+  /**
+   * What can prove a tile hidden for this view (`occluders.ts`): a tile any
+   * of them hides is neither drawn nor fetched. Under a warp the body's
+   * (`globe/bodyOccluder.ts`) stands in for the ellipsoid's horizon, which
+   * is not sound for a drawn Earth of another shape.
+   */
+  occluders?: readonly Occluder[];
   /**
    * What the view's own drawn depth says of tile boxes (`Budgeted` only:
    * `Stepwise` keeps 1.x's rules): absent where the engine has the feedback

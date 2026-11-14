@@ -9,6 +9,9 @@ import { PlacementTable } from "./placementTable.ts";
 import type { SceneItem, SceneItemOptions } from "./SceneItem.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { TileWarp } from "../streaming/tileWarp.ts";
+import type { Occluder } from "../streaming/occluders.ts";
+
+const NO_OCCLUDERS: readonly Occluder[] = [];
 import {
   INSTANCE_WORDS,
   INSTANCE_COUNT_WORD,
@@ -1125,6 +1128,27 @@ export class World {
    */
   tileWarp(anchor: AnchorHandle, viewId?: number): TileWarp | undefined {
     return this.warps.tileWarp(anchor.slot, viewId);
+  }
+
+  readonly #occluders = new Map<number, Set<Occluder>>();
+
+  /** @internal Registers what can prove content under `anchor` hidden (`Occluder`); returns the way to take it away. */
+  addOccluder(anchor: AnchorHandle, occluder: Occluder): () => void {
+    let set = this.#occluders.get(anchor.slot);
+    if (!set) {
+      set = new Set();
+      this.#occluders.set(anchor.slot, set);
+    }
+    set.add(occluder);
+    return () => {
+      set.delete(occluder);
+    };
+  }
+
+  /** @internal The occluders registered under `anchor`, none when there are none. */
+  occluders(anchor: AnchorHandle): readonly Occluder[] {
+    const set = this.#occluders.get(anchor.slot);
+    return set && set.size > 0 ? [...set] : NO_OCCLUDERS;
   }
 
   /**

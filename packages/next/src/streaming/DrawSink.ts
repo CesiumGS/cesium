@@ -20,6 +20,7 @@ import type {
 import type { RequestScheduler } from "./RequestScheduler.ts";
 import type { Tileset3D } from "./Tileset3D.ts";
 import type { TileWarp } from "./tileWarp.ts";
+import type { Occluder } from "./occluders.ts";
 import type { AccelerationStructures } from "./acceleration.ts";
 
 /** Draws, their meshes, transforms and clips, as content changes them. */
@@ -76,6 +77,12 @@ export interface DrawSink {
    * sink with no warps has none.
    */
   tileWarp?(anchor: AnchorHandle, viewId?: number): TileWarp | undefined;
+  /**
+   * What can prove content hidden under `anchor`, in its coordinates
+   * (`Occluder`): the body's own terrain's, for what hangs under the globe's
+   * anchor. Optional: a sink with none hides nothing.
+   */
+  occluders?(anchor: AnchorHandle): readonly Occluder[];
   drawMatrix<T extends Float64Array = Float64Array<ArrayBuffer>>(
     handle: DrawHandle,
     out?: T,
@@ -108,7 +115,10 @@ export interface TilesetHost {
   readonly requests: RequestScheduler;
   readonly tilesets: readonly Tileset3D[];
   readonly uploadBytesPerFrame: number;
-  readonly scene: Pick<EngineScene, "uploadBudget" | "startTime" | "transitionSeconds">;
+  readonly scene: Pick<
+    EngineScene,
+    "uploadBudget" | "startTime" | "transitionSeconds"
+  >;
   loadGltf(
     url: string | URL,
     options?: { headers?: Record<string, string>; signal?: AbortSignal },

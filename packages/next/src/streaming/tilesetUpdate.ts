@@ -238,7 +238,13 @@ export function update(
         .filter((view) => ((wanted >>> view.id) & 1) !== 0)
         .map((view) => {
           const warp = tileset.world.tileWarp?.(tileset.anchor, view.id);
-          return warp ? { ...view, warp } : view;
+          if (!warp) {
+            return view;
+          }
+          const occluders = tileset.world.occluders?.(tileset.anchor);
+          return occluders?.length
+            ? { ...view, warp, occluders }
+            : { ...view, warp };
         })
     : [];
   if (allViews.length === 0) {
