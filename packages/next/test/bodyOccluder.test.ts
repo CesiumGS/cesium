@@ -86,6 +86,7 @@ function tileOf(west: number, east: number, height: number, level = 12): Tile {
       level,
       rectangle: { west, south: -0.01, east, north: 0.01 },
       heights,
+      refit: { levelError: 10 },
     },
   } as unknown as Tile;
 }
@@ -111,7 +112,7 @@ function setup(basin = false, enabled = true) {
     root,
     flat: false,
     enabled: () => enabled,
-    exactMs: Infinity,
+    budgetMs: Infinity,
   });
   const camera = wgs84.cartographicToCartesian(
     { longitude: 0, latitude: 0, height: 10 },
@@ -209,7 +210,7 @@ describe("the body as an occluder", () => {
       root,
       flat: false,
       enabled: () => true,
-      exactMs: Infinity,
+      budgetMs: Infinity,
     });
     const camera = wgs84.cartographicToCartesian(
       { longitude: 0, latitude: 0, height: 10 },
@@ -259,7 +260,7 @@ describe("the body as an occluder", () => {
       root,
       flat: false,
       enabled: () => true,
-      exactMs: Infinity,
+      budgetMs: Infinity,
     });
     const view = {
       id: 1,

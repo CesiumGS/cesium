@@ -38,12 +38,13 @@ import {
 import type { SelectionResult, SelectionView } from "../streaming/Stepwise.ts";
 import type { Tile, TileViewState } from "../streaming/Tile.ts";
 import type { TerrainSource } from "./TerrainSource.ts";
+import { COVER_LEVEL } from "./baseLevels.ts";
 import { FOG_SSE, fog, fogDensity } from "./GlobeStepwise.ts";
 
 /** Main-thread time per selection pass for expanding visited tiles, ms. */
 const EXPAND_MS = 4;
-/** Levels kept loaded whatever is in view (0 to this, exclusive): 682 small tiles. */
-const BASE_LEVELS = 4;
+/** Levels kept loaded whatever is in view (0 to this, inclusive): 42 small tiles. */
+const BASE_LEVELS = COVER_LEVEL;
 
 export class GlobeBudgetedSelection extends BudgetedSelection {
   protected override selectsCasters = false;
@@ -151,6 +152,8 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
     // The base levels stay loaded whatever is in view: the body occluder's
     // bounds under a warp rest on the meshes of the tiles above any that
     // aren't loaded (a few hundred small tiles).
+    // Only for a view that has a use for it: one under a warp with occluders.
+    const wanted = view.warp !== undefined && view.occluders?.length;
     const base = (tile: Tile): void => {
       if (tile.globe === undefined || tile.globe.level >= BASE_LEVELS) {
         return;
@@ -170,7 +173,7 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
         base(child);
       }
     };
-    for (const tile of this.source.root.children) {
+    for (const tile of wanted ? this.source.root.children : []) {
       if (
         tile.state === "unloaded" &&
         tile.contentUrl !== undefined &&
