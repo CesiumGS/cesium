@@ -1,6 +1,6 @@
 # WebGL 2 renderer, R1: the browsers without WebGPU
 
-**Status (2026-11-13):** research note, for the owner's review. Nothing is implemented. It answers R1 of `docs/superpowers/plans/2026-11-13-webgl2-renderer.md` (section 8) and open question 1 of its section 9, "Which browsers the WebGL 2 renderer is for". Every figure has a source and the date it was read. All sources were read on 2026-11-13 unless a row says otherwise.
+**Status (2026-11-13):** research note, reviewed: **the owner accepted all seven recommendations** (section 10) on 2026-11-13. The WebGL 2 plan carries them (floor, W10 order, personas, earlier steps). Which test devices are available (question 7) is still open. Nothing is implemented. It answers R1 of `docs/superpowers/plans/2026-11-13-webgl2-renderer.md` (section 8) and open question 1 of its section 9, "Which browsers the WebGL 2 renderer is for". Every figure has a source and the date it was read. All sources were read on 2026-11-13 unless a row says otherwise.
 
 **Scope:** technical browser and device facts only. The plan's wording rules apply: no time estimates, and "accuracy" and "precision" are kept apart.
 

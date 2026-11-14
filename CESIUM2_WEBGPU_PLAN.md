@@ -3858,8 +3858,8 @@ Three plans, reviewed by the owner on 2026-11-13, with their milestones folded i
 - W7: styles and warps through Cesium IR. Needs W6, IR-5, IR-7 and IR-8.
 - W8: picks, outputs and user code. Needs W4; its second half (user code) needs IR-11 and IR-13.
 - W9: the atmosphere. Needs W6.
-- R1: research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have. Needs nothing; orders W10.
-- W10: further steps (shadows, moments translucency, FXAA, clips, ambient occlusion, the depth-range readback). Needs W9 and R1.
+- R1: research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have. **Done 2026-11-13** ([`2026-11-13-webgl2-r1-browser-reach.md`](docs/superpowers/plans/2026-11-13-webgl2-r1-browser-reach.md); 7% to 18% lack WebGPU; a floor with no browser list; all seven recommendations accepted). It ordered W10: FXAA, clips, the depth-range readback, shadows, ambient occlusion, `moments16`, `moments32` where `EXT_float_blend` exists.
+- W10: further steps, in R1's order (FXAA, clips, the depth-range readback, shadows, ambient occlusion, `moments16`, `moments32`). Needs W9.
 - W11: the runner suite, the gallery's renderer switch, the handbook. Grows from W4.
 
 **Order across the three.** Profiles M1–M2, W0, W1, IR-1 and IR-10 can start together (different files). W3 waits for Profiles M2. W7 waits for IR-5, IR-7 and IR-8; W8's second half for IR-11 and IR-13. Profiles M8 lands with W3. The MaterialX live-editing example (M10) waits for IR-15 and IR-G4 (and IR-G1 for its image nodes).
