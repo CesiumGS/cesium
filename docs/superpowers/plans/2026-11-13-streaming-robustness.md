@@ -1,6 +1,6 @@
 # Streaming robustness: design plan
 
-**Status (2026-11-13):** drafted for the owner's review. Nothing is built. Its milestones (SR-1 to SR-12) are proposed for `CESIUM2_WEBGPU_PLAN.md` §6 as M12; this plan doesn't edit that file. It closes §14 follow-up 7.
+**Status (2026-11-13):** reviewed and merged. The owner accepted all eight recommendations (section 12) and added one requirement at review: request options at 1.x parity, proxies first (section 16, SR-13). Its milestones are in `CESIUM2_WEBGPU_PLAN.md` §6, M12. Nothing is built. It closes §14 follow-up 7.
 
 **Goal:** a content request that stalls, fails or is throttled costs the view a bounded, visible amount, and the view recovers by itself. Today a request that never answers holds its slot until no view needs the tile, and a failed tile stays failed for the session.
 
@@ -378,7 +378,7 @@ interface NetworkOptions {
 
 ## 12. Open questions for the owner
 
-Each has a recommendation; the plan assumes them.
+Each has a recommendation; the plan assumes them. **The owner accepted all eight on 2026-11-13.**
 
 | # | Question | Recommendation | Alternative |
 | --- | --- | --- | --- |
@@ -483,6 +483,8 @@ Sized for one agent each; proposed for §6 as M12. Per the cost rules: Sonnet by
 
 **Order.** SR-1 to SR-4 are a chain. SR-5 follows SR-4. SR-6, SR-7 and SR-8 can then run together (different files, except `tileRetry.ts`, which SR-4 and SR-5 leave stable). SR-9 and SR-10 follow, then SR-11 and SR-12.
 
+| SR-13 | **Request options at 1.x parity** (section 16): proxies (prefix and function forms), query parameters and headers inherited by derived URLs, credentials for trusted servers, the app's auth-refresh hook. | new `src/io/requestOptions.ts`; `fetchBytes.ts`, `io/worker.ts`, `tilesetLoad.ts`, `Tile.ts` (URL resolution), `TerrainSource.ts`, `ImageryProvider.ts`, `ion.ts`, `Engine.ts` | A proxy prefix routes every content, terrain, imagery, sub-resource and metadata request (tested with the fault harness); a function proxy and the auth hook run on the main thread and reach worker fetches as resolved URLs and headers; query parameters reach external tilesets and their content; credentials go only to trusted origins; no option value appears in any diagnostic. | SR-2 (SR-7 for the auth hook) |
+
 **For the overall plan (§6, M12):** "Streaming robustness (proposed 2026-11-13)": SR-1 harness; SR-2 fetch layer; SR-3 origin health (Opus); SR-4 retries for 3D Tiles (Opus); SR-5 missing content and recovery; SR-6 the globe; SR-7 ion tokens; SR-8 online, hidden and offline; SR-9 inspector and recorder; SR-10 refinement entries (needs refinement R1); SR-11 headless check and parity guard; SR-12 handbook and plan updates. No durations: order and dependencies only.
 
 ## 15. Risks
@@ -494,3 +496,35 @@ Sized for one agent each; proposed for §6 as M12. Per the cost rules: Sonnet by
 - **`ready` and empty with `missing`** touches the selection's readiness rule (`contentAvailable`). Its tests (SR-5) run beside the existing Stepwise and Budgeted suites; a mistake shows as a hole or a stuck parent.
 - **Worker timers in hidden tabs** are unmeasured; the `suspended` rule is the fallback.
 - **ion's undocumented behaviour** (403, 429, expiry of the endpoint token) is handled by class, not by status. SR-7's measurement and the questions in §14 narrow it.
+
+## 16. Request options at 1.x parity (owner, 2026-11-13)
+
+Added at review: "we need to support the proxy stuff that 1.x has". 2.0 has only `headers` (tilesets, terrain, imagery, models). 1.x's `Resource` offers more, and apps rely on it, most often a proxy for servers without CORS. What 1.x has (read 2026-11-13, `packages/engine/Source/Core/Resource.js`, `DefaultProxy.js`, `TrustedServers.js`):
+
+- **`proxy`:** a `Proxy` whose `getURL(url)` returns the URL to fetch. `DefaultProxy(prefix)` appends the encoded URL as the sole query parameter (`/proxy/?<encoded url>`). Derived resources (child tiles, sub-resources) inherit the proxy.
+- **`queryParameters`** and **`headers`:** sent with the request and inherited by derived resources, so a key in a query string reaches every tile.
+- **`templateValues`:** `{x}`-style substitution in URLs.
+- **`TrustedServers`:** origins that get `withCredentials` (cookies) on their requests.
+- **`retryCallback` and `retryAttempts`:** the app decides whether to retry a failed request, typically to refresh its own token on a 401.
+
+**What 2.0 adds, one options object for every request a source makes:**
+
+```ts
+interface RequestOptions {
+  /** A prefix proxy (1.x DefaultProxy), or a function run on the main thread. */
+  proxy?: string | ((url: string) => string);
+  headers?: Record<string, string>;
+  queryParameters?: Record<string, string>;
+  /** Send cookies (fetch `credentials: "include"`) to these origins only. */
+  credentials?: { origins: readonly string[] };
+  /** A 401 or 403 from this source: return fresh headers or query parameters, or undefined to fail. */
+  onAuthFailure?: (failure: FetchFailure) => Promise<Partial<Pick<RequestOptions, "headers" | "queryParameters">> | undefined>;
+}
+```
+
+- **Where:** on `Tileset3D` options, terrain and imagery sources, `loadModel`, and as `engine.network.request` defaults. Derived URLs inherit them: content, external tilesets, sub-resources (buffers, textures of i3dm and glTF), implicit tiling subtrees.
+- **Workers:** worker fetches receive plain data only. A prefix proxy, headers, query parameters and credentials travel in the request payload. A function proxy runs on the main thread when the request is issued, and the worker gets the resolved URL; sub-resource URLs resolved inside the worker go back to the main thread for the function, or the source has to use the prefix form. This is one of the façade plan's hard cases (user functions called per request), named there.
+- **Auth refresh:** `onAuthFailure` generalizes section 7's ion refresh: the same single-flight, once-per-generation rule, with ion's refresh as the built-in instance. It replaces 1.x's `retryCallback` for the common case; the other retries are the engine's (section 5).
+- **Templates:** imagery URL templates already substitute `{x}`, `{y}`, `{z}`; `templateValues` for app keys follow the same path.
+- **Never printed:** proxy URLs can carry the target URL, so the same rule as section 4 applies: no URL, query or header value in any diagnostic.
+- **Parity:** a parity page loads the same tileset through a local proxy prefix in 1.x and 2.0 and compares the requests made.
