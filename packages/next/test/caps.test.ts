@@ -1,4 +1,4 @@
-// Caps for clips (src/scene/world/caps.ts, plan §13.26 increment 8b): the
+// Caps for clips (src/scene/world/caps.ts, docs/design/geometry-through-placement-review.md increment 8b): the
 // planes of a clip set, b-rep caps drawn through `addBrep` under a bias, mesh
 // caps cut per tile and cached, and the scheduler's throttle and budget.
 import { beforeAll, describe, expect, it } from "vitest";

@@ -16,7 +16,7 @@ import {
 import { el } from "./ui.ts";
 
 /**
- * The feature tree (plan §13.33): compact rows with a twisty, an icon for
+ * The feature tree (docs/design/breps-and-geometry-queries.md): compact rows with a twisty, an icon for
  * the node's kind, the leaf's colour, its name (double-click to rename), a
  * badge for its role among a difference's operands (the first is the base,
  * the rest are cut from it) and an eye that leaves it out of the model

@@ -6,7 +6,7 @@
 guide product decisions and engineering tradeoffs as the engine grows,
 and catch regressions. Rendering and runtime only for now: streaming,
 selection, CPU and GPU time, memory, interaction. Tiling is out of scope
-here, but the schema leaves room for it (dataset lineage, §16.2), since
+here, but the schema leaves room for it (dataset lineage, "Manifests and storage" above), since
 the 2.0 tiler will shape runtime performance.
 
 **What exists (r29).** `bench/run.mjs` (Playwright, Edge, one JSON file
@@ -44,7 +44,7 @@ and field of view, recorded in either engine and replayed in both.
 ## Manifests and storage
 
 - **Public manifest in the repo** (`bench/catalog/public.json`): public
-  datasets (§16.4) with URLs or ion asset IDs from 1.x's public
+  datasets ("Catalog (initial)" above) with URLs or ion asset IDs from 1.x's public
   Sandcastles, licenses, sizes and checksums, and the scenes and
   scenarios built on them.
 - **Private manifests outside the repo**, same schema, found through
@@ -232,7 +232,7 @@ generators):
 - several heavy tilesets at once: Google + OSM + CAD + terrain;
 - multiple views of one world (split views, linked views);
 - dynamic content: 10,000 to 100,000 moving, clamped tracks from a
-  synthetic feed at 1-10 Hz (§13.11; instanced models until billboards
+  synthetic feed at 1-10 Hz ([real-time-tracks.md](real-time-tracks.md); instanced models until billboards
   exist);
 - very large Gaussian splat datasets: 1.x struggles with them even with
   splat LOD (its sort and per-frame upload), where 2.0 sorts on the GPU
@@ -246,8 +246,8 @@ generators):
 - huge feature counts with picking and styling;
 - content in and out of a live world over long sessions (hitches, memory
   stability);
-- later: vector tiles and billboards at scale (§13.9), path tracing
-  (§13.10).
+- later: vector tiles and billboards at scale ([transforms-and-instancing.md](transforms-and-instancing.md)), path tracing
+  ([ray-queries-and-path-tracing.md](ray-queries-and-path-tracing.md)).
 
 ## Interfaces: agents, scripts and people
 
@@ -420,7 +420,7 @@ machine, by hand or by script.
 
 Open for v1's exit: the results page with trends across runs, scenes for
 group B (after license review), warm-cache and throttled scenarios in the
-default set, the 1.x instancing generator, real-time tracks (§13.11).
+default set, the 1.x instancing generator, real-time tracks ([real-time-tracks.md](real-time-tracks.md)).
 
 ## Findings to work through (r33)
 
@@ -430,7 +430,7 @@ addressed in 2.0 (each with a Dyno scene to show the fix):
 - **`Budgeted` selection draws visibly differently from 1.x**, most
   apparent on Mount Rainier (terrain and imagery): in-between and settled
   views pick different levels than `Stepwise`. Wanted: a parity pass on
-  `Budgeted` against a fully refined reference (§4 L1′) per scene, the
+  `Budgeted` against a fully refined reference ([parity.md](parity.md) L1′) per scene, the
   explorer's paused streaming and the filmstrip's FLIP to find where it
   under-refines, and an image guardrail in the scorecard so a faster
   policy can't pass by drawing less. The explorer's selection view (r34)
@@ -449,7 +449,7 @@ addressed in 2.0 (each with a Dyno scene to show the fix):
   ground, about 30 m below the WGS84 ellipsoid there (geoid), draws under
   the ellipsoid and only the tall buildings show. 1.x clears depth after
   the globe unless `Globe.depthTestAgainstTerrain` is set (default off),
-  so tiles always draw over it. _Decided (r37, §8 product choices)_: real
+  so tiles always draw over it. _Decided (r37, [product-choices.md](../decisions/product-choices.md))_: real
   terrain occludes; the bare ellipsoid never does. Aerometrex now matches
   1.x.
 - **Settle time on terrain scenes**: Rainier ×1.16 and OSM Philadelphia
@@ -458,11 +458,11 @@ addressed in 2.0 (each with a Dyno scene to show the fix):
   later. _r37_: terrain loaded one level per round trip under `Budgeted`
   (expanded only once loaded); fixed, with parallel adapter setup: Rainier
   now settles ×0.74 of 1.x, OSM Philadelphia within noise. See the planned
-  `Budgeted` work (§6), which now lists these findings first.
+  `Budgeted` work ([budgeted-selection-milestone.md](../history/budgeted-selection-milestone.md)), which now lists these findings first.
 - **Bytes**: NYC buildings ×3.3 and OSM Philadelphia ×1.5 of 1.x; Japan
   ×1.3.
 - **JS heap** above 1.x on terrain scenes and NYC (scorecard guardrail).
-  _r39_: a measurement artifact (§6, JS heap); 2.0 holds less JS heap than
+  _r39_: a measurement artifact ([budgeted-selection-milestone.md](../history/budgeted-selection-milestone.md), JS heap); 2.0 holds less JS heap than
   1.x everywhere measured, and 4 to 5 times its buffers.
 - **Benchmarks take the GPU and stop development (r39).** A terrain
   comparison (3 scenes, 3 engines, 3 reps) took 26.5 minutes: 54 runs of
@@ -519,8 +519,8 @@ addressed in 2.0 (each with a Dyno scene to show the fix):
     would be sounder than the bootstrap there.
 
 - **Lighting**: 1.x lights tilesets with an environment map from its
-  atmosphere; 2.0's own IBL is brighter and bluer until M4 (§16.3).
-- **Primitive outlines** and the other extensions in §4.1.
+  atmosphere; 2.0's own IBL is brighter and bluer until M4 ("Measurement and statistics" above).
+- **Primitive outlines** and the other extensions in [parity.md](parity.md), "Extension coverage".
 
 ## Later (v2 and beyond)
 

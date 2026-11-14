@@ -2,7 +2,7 @@
 
 **What this holds:** The planned and finished work on `Budgeted` selection after M3, in order (r37 onwards). Open points in it are not work items yet. Moved from the overall plan (`CESIUM2_WEBGPU_PLAN.md`) on 2026-11-13, with its content and dates unchanged.
 
-In order (r37). First the findings from the r37 baseline (§16.7), so each
+In order (r37). First the findings from the r37 baseline ([benchmark-suite.md](../design/benchmark-suite.md), "Scope of v1 (milestone "Benchmark suite v1")"), so each
 change after them is measured against a guardrail:
 
 - **Image guardrail (done r37)**: selection parity, `Budgeted` against
@@ -71,7 +71,7 @@ change after them is measured against a guardrail:
   Philadelphia 37 drawn of 94; selection parity, settle and resettle
   unchanged. What remains (NYC ×2.6 of 1.x) is mostly content 2.0 draws
   during the orbit and 1.x never loads: a choice of quality in motion
-  against bytes (§8 product choices), not waste.
+  against bytes ([product-choices.md](../decisions/product-choices.md)), not waste.
 - **Quality in motion (done r37)**: the image guardrail compares settled
   views only, so it can't see what loading in motion buys. After the
   measured runs, each engine replays the motion in a fresh context (cold
@@ -252,7 +252,7 @@ _r38 (overnight, toward the L1′ exit check)_:
   → 200 MB); the views remain (23 MB), as do 6 to 7 MB each of Tile
   objects, plain objects, heap numbers and short strings. Tiles also keep
   content URIs relative (resolved on use) instead of each carrying the
-  tileset URL's query. A cheaper step first: build volumes lazily (keep the 6 or 12 numbers from the JSON; corners, normals, box and sphere on first use, which most of NYC's 36k tiles never see; `childrenWithinParent` and `childrenPartition` on first use too). The real fix is the SoA tile table (§13.7): one
+  tileset URL's query. A cheaper step first: build volumes lazily (keep the 6 or 12 numbers from the JSON; corners, normals, box and sphere on first use, which most of NYC's 36k tiles never see; `childrenWithinParent` and `childrenPartition` on first use too). The real fix is the SoA tile table ([tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Structure and formats"): one
   Float64Array per tileset for every volume. (A 32 MB external string
   in the snapshot is the benchmark page's script source, 1.x's
   unminified build, loaded for both engines.)
@@ -421,15 +421,15 @@ _r38 (overnight, toward the L1′ exit check)_:
 
 Then the planned work:
 
-- Budget-driven refinement (benefit per byte, §13.3), which is also the
+- Budget-driven refinement (benefit per byte, [tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Budget-driven refinement"), which is also the
   slow-link answer from the throttled L1′ runs.
 - Multi-view priority and view weights; fair queueing of an origin's window
-  across tilesets and views (§13.2, §13.4).
+  across tilesets and views ([tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Request scheduling", [tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Multi-view priority").
 - Silhouette weighting for design models; GPU coverage feedback from the
-  HZB (§13.5).
-- Traversal in a worker over a transferable SoA tile table (§13.7).
+  HZB ([tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Visual quality signals beyond geometric error").
+- Traversal in a worker over a transferable SoA tile table ([tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Structure and formats").
 - Paging lessons: thrashing rate, working-set or ARC-style eviction, and a
-  prefetch band sized by its hit rate (§13.2, §13.6).
+  prefetch band sized by its hit rate ([tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Request scheduling", [tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Memory management (open design question)").
 - A second photogrammetry city in L1′ (done r38: Aerometrex SF beside
   Google Midtown); network profiles from real-user data (follow-up 6;
   synthetic profiles until that data exists: fast, and 20 Mbit/s with

@@ -7,11 +7,11 @@
 - Two-phase occlusion culling (optional if targets are already met).
 - HZB tile-coverage feedback into `Budgeted`.
 - Upload budgeting; the remaining `Budgeted` stability and prediction work.
-- Benchmark suite v2 (§16.8, §16.9): nightly runs on dedicated machines,
+- Benchmark suite v2 ([benchmark-suite.md](../design/benchmark-suite.md), "Later (v2 and beyond)", [benchmark-analysis-and-experience.md](../design/benchmark-analysis-and-experience.md)): nightly runs on dedicated machines,
   a results store, change points, alerts and triage, automatic
   bisection, pull-request comments, scene pages, "what differs" analysis,
   traces from the report.
-- _Exit_: §5 targets met or the gap explained, including multi-view.
+- _Exit_: [performance-methodology.md](../design/performance-methodology.md) targets met or the gap explained, including multi-view.
 
 ## M6 — Compute showcases and future-proofing (time-boxed, pick 2–3)
 

@@ -1,4 +1,4 @@
-// SMLib in WebAssembly (plan §13.33, scripts/smlib/README.md): NVIDIA's
+// SMLib in WebAssembly (docs/design/breps-and-geometry-queries.md, scripts/smlib/README.md): NVIDIA's
 // usd-brep at one pinned commit, built with one pinned Emscripten into a
 // store outside the repo (~/.cesium-bench/smlib/<commit>), never committed.
 // What is committed is how to build it: the JavaScript-facing bindings

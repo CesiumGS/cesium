@@ -1,4 +1,4 @@
-// The transform graph's CPU side (plan section 13.37, task 1): nodes,
+// The transform graph's CPU side (docs/design/transform-graph.md, task 1): nodes,
 // routes through the lowest common ancestor, collapsed affine runs, smooth
 // nodes inverted by declaration or by Newton, switches chosen per view, and
 // the frames catalogue as affine nodes.

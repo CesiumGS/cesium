@@ -70,7 +70,7 @@ export function patchChunkIndices(cells = PATCH_CHUNK_CELLS): Uint16Array {
  * the second phase's slices after the first `items`, then the retest list.
  * A bundle draws one phase's (`drawBatch`'s `retest`). Multi-draw indirect (the first instance in
  * the arguments, one list bound once) or GPU-driven submission replaces
- * this class's emulation, not its callers (CESIUM2_WEBGPU_PLAN.md §7.1,
+ * this class's emulation, not its callers (docs/design/risks.md, "Bindless textures: not in the PoC, designed for in 2.0",
  * "design for it; don't build it").
  */
 export class DrawArguments {

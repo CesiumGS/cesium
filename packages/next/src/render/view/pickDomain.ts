@@ -1,4 +1,4 @@
-// The pick variant's pass (CESIUM2_WEBGPU_PLAN.md §13.26, increment 5): what
+// The pick variant's pass (docs/design/geometry-through-placement-review.md, increment 5): what
 // the opaque pass drew under a pixel, drawn again into a few pixels' targets
 // (`PICK_SIZE` square) around it, with the same cull, vertex stage,
 // placement and discards, writing the draw, the triangle and barycentrics or

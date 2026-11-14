@@ -1,7 +1,7 @@
 import { RangeAllocator } from "../gpu/RangeAllocator.ts";
 
 /**
- * A world's geometry in slabs (CESIUM2_WEBGPU_PLAN.md §13.15, "Arena
+ * A world's geometry in slabs (docs/design/gpu-limits-and-capacities.md, "Arena
  * slabs", after Bevy's mesh allocator): each slab is a vertex buffer and an
  * index buffer, each at most one storage binding (the device's
  * `maxStorageBufferBindingSize`, and a cap), suballocated by range.

@@ -1,6 +1,6 @@
-// Filmstrip processing for the benchmark CLI (plan §16.9, Diagnose): turns
+// Filmstrip processing for the benchmark CLI (docs/design/benchmark-analysis-and-experience.md, Diagnose): turns
 // a captured PNG into a JPEG frame and, given the baseline's frame of the
-// same moment, the image parity (FLIP, §4) and its heatmap. The CLI calls
+// same moment, the image parity (FLIP, docs/design/parity.md) and its heatmap. The CLI calls
 // `processFrame` through Playwright once the runs are done.
 import { createGpuFlip, type GpuFlip } from "../../parity/flipGpu.ts";
 import { flip } from "../../parity/flip.js";

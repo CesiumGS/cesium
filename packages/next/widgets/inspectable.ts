@@ -1,5 +1,5 @@
 /**
- * What the inspector reads (plan §16.9, Inspector): a snapshot an engine
+ * What the inspector reads (docs/design/benchmark-analysis-and-experience.md, Inspector): a snapshot an engine
  * fills in as far as it can measure, a few times a second. 2.0 implements
  * it from public APIs (`inspectEngine`); Dyno's 1.x adapter implements it
  * too, so one inspector shows both engines. Fields an engine can't measure
@@ -114,7 +114,7 @@ export interface InspectorSnapshot {
     /** "continuous" or "on demand". */
     rendering?: string;
     /**
-     * The job system (plan §13.43): the apply phase's time and jobs applied
+     * The job system (docs/design/job-system.md): the apply phase's time and jobs applied
      * in the latest tick, and the jobs queued, running and waiting to apply.
      */
     jobs?: {
@@ -187,7 +187,7 @@ export interface InspectorSnapshot {
     adapter?: string;
     /**
      * The device's limits tier ("base", "minimum", "adapter") and the
-     * limits it was created with that shape the engine (plan §13.15).
+     * limits it was created with that shape the engine (docs/design/gpu-limits-and-capacities.md).
      */
     limits?: {
       tier: string;

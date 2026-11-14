@@ -1,5 +1,5 @@
 // A box carried through a route by declared bounds (plan 2026-11-12, task
-// 12, fix 2; plan §13.37 "Queries through routes", Bounds): in place of
+// 12, fix 2; docs/design/transform-graph.md "Queries through routes", Bounds): in place of
 // sampling the route at 7 to 27 points per tile with its exact height solve,
 // each smooth step is evaluated once, at the box's centre. A parallelepiped
 // (centre c, half axes the columns of A) through a smooth step F with the

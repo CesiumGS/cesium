@@ -49,7 +49,7 @@ export interface SliceWorld {
 /**
  * A world's globe imagery slices: one `texture_2d_array` that every
  * imagery layer of the world composites into (surface imagery and night
- * lights alike), bound once for all of them (CESIUM2_WEBGPU_PLAN.md §13.15:
+ * lights alike), bound once for all of them (docs/design/gpu-limits-and-capacities.md:
  * one array instead of one per layer keeps the fragment stage within the
  * base tier's 16 sampled textures).
  *

@@ -1,5 +1,5 @@
 /**
- * The inspector overlay (plan §16.9, Inspector): a panel over an engine's
+ * The inspector overlay (docs/design/benchmark-analysis-and-experience.md, Inspector): a panel over an engine's
  * view showing what it draws, streams and holds, from any `Inspectable`.
  * Plain DOM, no framework, so any app can attach it (as 1.x's
  * CesiumInspector was a widget, not core). Collapsed, it is one summary
@@ -2214,7 +2214,7 @@ function gpuHtml(g: NonNullable<InspectorSnapshot["gpu"]>): string {
     [
       ["Adapter", g.adapter ? escape(g.adapter) : ""],
       // Binding counts the engine fits (the tier), then capacities it grows
-      // into (plan §13.15), a short row each.
+      // into (docs/design/gpu-limits-and-capacities.md), a short row each.
       ["Limits tier", l ? escape(l.tier) : ""],
       ["Storage / stage", l ? `${l.storageBuffersPerStage}` : ""],
       ["Textures / stage", l ? `${l.sampledTexturesPerStage}` : ""],

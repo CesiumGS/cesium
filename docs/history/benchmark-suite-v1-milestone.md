@@ -2,7 +2,7 @@
 
 **What this holds:** The benchmark suite's first milestone as planned. Moved from the overall plan (`CESIUM2_WEBGPU_PLAN.md`) on 2026-11-13, with its content and dates unchanged.
 
-The §16 foundations, enough for first 1.x vs 2.0 numbers on
+The [benchmark-suite.md](../design/benchmark-suite.md) foundations, enough for first 1.x vs 2.0 numbers on
 representative content; it then guards every later milestone.
 
 - The dataset, scene and scenario schemas; the public manifest in the
@@ -11,12 +11,12 @@ representative content; it then guards every later milestone.
 - The engine adapter interface with a 1.x adapter (this repo's build,
   pinned) and a 2.0 adapter; the existing harnesses (`baseline`, `hitch`,
   `lod`, `trace`) move onto it.
-- 10-15 scenes across the three catalog groups (§16.4), cold and warm,
+- 10-15 scenes across the three catalog groups ([benchmark-suite.md](../design/benchmark-suite.md), "Catalog (initial)"), cold and warm,
   unthrottled and one throttled profile.
 - A report per run: each metric per scene, 2.0 against 1.x with
   confidence intervals, and the environment fingerprint; a runner page
-  and a results page with comparisons and trends (§16.5).
-- The first phase of §16.9: lap overlays with delta traces and track
+  and a results page with comparisons and trends ([benchmark-suite.md](../design/benchmark-suite.md), "Interfaces: agents, scripts and people").
+- The first phase of [benchmark-analysis-and-experience.md](../design/benchmark-analysis-and-experience.md): lap overlays with delta traces and track
   maps, filmstrips with parity, frame-time percentile curves and stutter
   metrics, request waterfalls, a validity verdict per run, a scorecard
   with declared primary and guardrail metrics, and the tracking

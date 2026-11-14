@@ -2,9 +2,9 @@
 
 **What this holds:** The review of geometry, placement and warps, its increments and the owner's answers. Moved from the overall plan (`CESIUM2_WEBGPU_PLAN.md`) on 2026-11-13, with its content and dates unchanged.
 
-Do this before b-rep step 5, the GPU tessellation engine (§13.33), which evaluates placements at points the content never had and takes normals from the placement's Jacobian: a dual position can do neither (moved up by the owner, 2026-11-09). It also has to come before plan 5f's fitted operations are built. Goal: one elegant way of handling reference frames and reprojection through the geometry pipeline, without patched-together machinery. Things it has to settle:
+Do this before b-rep step 5, the GPU tessellation engine ([breps-and-geometry-queries.md](breps-and-geometry-queries.md)), which evaluates placements at points the content never had and takes normals from the placement's Jacobian: a dual position can do neither (moved up by the owner, 2026-11-09). It also has to come before plan 5f's fitted operations are built. Goal: one elegant way of handling reference frames and reprojection through the geometry pipeline, without patched-together machinery. Things it has to settle:
 
-- **Also (§13.34):** the acceptance test that an application can exaggerate everything, the globe and terrain included, through placements alone (exaggeration is the application's, not an engine feature); and clip and section planes in the same coordinates.
+- **Also ([infrastructure-and-geoscience-capabilities.md](infrastructure-and-geoscience-capabilities.md)):** the acceptance test that an application can exaggerate everything, the globe and terrain included, through placements alone (exaggeration is the application's, not an engine feature); and clip and section planes in the same coordinates.
 
 - **One model of a placement:** rigid, dual position and fitted operation as cases of a single idea, and what each layer owns: the frame tree (rigid), coordinate operations (non-rigid), content (precomputed results), and the renderer's placement seam (applying the mapping per vertex).
 - **Normals and tangents.** Today a dual-position vertex moves but keeps its rigid normal: 0.197 degrees on the 44 km corridor, 0.225 calculated at 50 km. Tried on 2026-11-08: deriving it per fragment from both positions. It fails, because the design position isn't in the fragment stage, a varying would cost every draw, and float32 derivative noise is estimated at about 0.13 degrees up close. Other options: a second normal, 12 bytes a vertex or about 4 octahedrally encoded; a displacement varying on placed draws; or dropping dual positions for a fitted operation with its Jacobian.
@@ -12,8 +12,8 @@ Do this before b-rep step 5, the GPU tessellation engine (§13.33), which evalua
 - **Recomputing a placement when the root changes.** The spec (§7.2 step 3, §7.6) has the frames module recomputing per-vertex placements for each root. No such hook exists: `FrameResolver` has no method for it, a placement is a model-space map, and `DrawPlacementInfo.root` names a root nothing is computed for. Harmless for dual positions, and 5f will need it.
 - **Bounds, picks and snaps, and shadow casters** through the same model, and the inter-stage varying budget, which is full.
 - **2D and Columbus view as design view (owner, 2026-11-08).** Design view (spec §13.2) is 2.0's route to this need: the render root in a projected CRS, tiles fitted flat, and an orthographic camera for the 2D look. As specified, it's regional, drawn within the CRS's area of use. Decide whether a whole-world flat map follows from the same mechanism, with a world-spanning CRS, tiling and wrapping across the antimeridian.
-- **What the tile format carries,** and how it relates to glTF 2.1 external assets and 3D Tiles (§13.25).
-- **Curves through placement.** Vector geometry as render curves: an exact source (a circle or clothoid in its own CRS), then placement, then quadratic segments with an optional rational weight and a per-segment error bound, refined by view. A conic stays a conic only under projective maps, and a reprojection isn't one, so a circle is exact in design coordinates only, and a measure or snap goes back to the source. Quadratics through a perspective view become rational. Planar faces with curved trims and 3D Tiles 2.0's 3D-native vectors both meet this; curved surfaces meet the tessellation seam, and b-reps (§13.20).
+- **What the tile format carries,** and how it relates to glTF 2.1 external assets and 3D Tiles ([scene-items.md](scene-items.md)).
+- **Curves through placement.** Vector geometry as render curves: an exact source (a circle or clothoid in its own CRS), then placement, then quadratic segments with an optional rational weight and a per-segment error bound, refined by view. A conic stays a conic only under projective maps, and a reprojection isn't one, so a circle is exact in design coordinates only, and a measure or snap goes back to the source. Quadratics through a perspective view become rational. Planar faces with curved trims and 3D Tiles 2.0's 3D-native vectors both meet this; curved surfaces meet the tessellation seam, and b-reps ([editing.md](editing.md)).
 
 **The review (2026-11-10).** Not yet approved by the owner.
 
@@ -69,9 +69,9 @@ _One placement interface, exact on the CPU and fitted for the GPU._
 
 _What each layer owns:_
 
-- **The frames layer:** coordinate operations, the frame tree, and a placement cache keyed by item, tile, root, and map revision. It refits on `routeRevision` and `watch`. This is the missing per-root hook of §7.2 step 3, so `DrawPlacementInfo.root` names a root that something was computed for.
+- **The frames layer:** coordinate operations, the frame tree, and a placement cache keyed by item, tile, root, and map revision. It refits on `routeRevision` and `watch`. This is the missing per-root hook of the spec's §7.2 step 3, so `DrawPlacementInfo.root` names a root that something was computed for.
 - **Content:** true geometry in its own CRS, with metadata naming that CRS. Nothing is baked: "hosted" content declares that its producer reprojected it.
-- **Items:** a placement per scene item. The globe becomes an item, or at least takes a placement, ahead of §13.25's full version.
+- **Items:** a placement per scene item. The globe becomes an item, or at least takes a placement, ahead of [scene-items.md](scene-items.md)'s full version.
 - **The renderer:** the seam it has now, plus the Jacobian.
 
 _Normals and tangents._
@@ -97,7 +97,7 @@ _Picks, snaps and measurements: view questions answered with true points._
 - The GPU snap pass (5f) works in drawn space, with its pixel tolerance there, and returns true points the same way.
 - Measurements report true values, name their frame, and say when what was drawn was exaggerated.
 - Their lines and labels are content in true coordinates, drawn through the same map. A straight true segment draws as a curve, sampled by the curves-through-placement path.
-- `GeometryQueries` answer in true coordinates only. The pick refinement entry from the b-rep brainstorm (§13.33) takes a pick's (draw, primitive, barycentrics), or (face, u, v), never a drawn position.
+- `GeometryQueries` answer in true coordinates only. The pick refinement entry from the b-rep brainstorm ([breps-and-geometry-queries.md](breps-and-geometry-queries.md)) takes a pick's (draw, primitive, barycentrics), or (face, u, v), never a drawn position.
 
 _Clip and section planes:_
 
@@ -134,7 +134,7 @@ _The acceptance increments, in order:_
    - The tests read true heights while k goes from 1 to 10.
 8. Clip planes on the design position, with caps.
 
-Increments 1 to 3 come before b-rep step 5. Increment 8 comes with §13.34's capabilities (2).
+Increments 1 to 3 come before b-rep step 5. Increment 8 comes with [infrastructure-and-geoscience-capabilities.md](infrastructure-and-geoscience-capabilities.md)'s capabilities (2).
 
 **Brainstorm: one geometry interface, from domains, fields and maps (owner's question, 2026-11-10).** The question: is there one change to the abstractions that lifts the limits above, such as dual positions that can't be resampled and picks that need an inverse, without costing the main pass? A proposal for review. If accepted, it revises the dual-position bullet and increment 5 above.
 
@@ -166,7 +166,7 @@ _The model: every representation is a domain, an embedding, and fields._
   - _vertex:_ through the geometry's own basis. On a NURBS surface that means the control points.
   - _faceVarying:_ per corner of each face
 
-  §13.34's scalar fields (1) are fields. The styling language's run-time data by element ID (5) is a uniform field.
+  [infrastructure-and-geoscience-capabilities.md](infrastructure-and-geoscience-capabilities.md)'s scalar fields (1) are fields. The styling language's run-time data by element ID (5) is a uniform field.
 
 - **Maps** act on space, not on the domain: coordinate operations and drawn maps, as the review above has them.
 
@@ -239,7 +239,7 @@ _Lessons from the renderers:_
   - `Pref`: the reference position that textures and analysis stick to while the shape deforms. That's the true position.
   - REYES: split and dice in parameter space, then displace. That's b-rep step 5's order: sample the domain, then deform, then warp.
   - Deformation blur: time-sampled positions are morph targets keyed by time.
-- **USD:** primvars and their interpolation classes for fields; `UsdSkel` blend shapes for morph targets. The owner leans towards USD's concepts (§13.25), so these are the names to use.
+- **USD:** primvars and their interpolation classes for fields; `UsdSkel` blend shapes for morph targets. The owner leans towards USD's concepts ([scene-items.md](scene-items.md)), so these are the names to use.
 - **pbrt:**
   - Normals transform by the inverse transpose, as the cofactor matrix above.
   - Floating-point error bounds (the γₙ terms, carried as `pError`) turn our float32 noise estimates into sound accuracy terms.
@@ -247,7 +247,7 @@ _Lessons from the renderers:_
 - **Differentiable renderers:**
   - nvdiffrast's barycentric and triangle-ID buffer: picks as domain points.
   - Mitsuba 3 and Dr.Jit: forward-mode derivatives through the whole pipeline.
-  - What we take: derivatives as a property of the pipeline, not hand-written per kind. That gives Jacobians for normals, and the sensitivity of a point to a placement's parameters. That sensitivity is what aligning a model to a site by optimization needs (§13.34's AR, 7).
+  - What we take: derivatives as a property of the pipeline, not hand-written per kind. That gives Jacobians for normals, and the sensitivity of a point to a placement's parameters. That sensitivity is what aligning a model to a site by optimization needs ([infrastructure-and-geoscience-capabilities.md](infrastructure-and-geoscience-capabilities.md)'s AR, 7).
   - What we leave: the gradients of visibility.
 
 **Second review (Fable 5.2, 2026-11-10): adjust, don't replace.** The owner accepted the brainstorm, with `Warp` as the name for the exact map. An independent review then kept its core (float64-exact maps, a per-tile cubic on the GPU, picks as domain points) and found three reformulations that cut concepts, and gaps to close before increment 1. Its code citations were spot-checked. This is the current proposal: where it differs from the review or the brainstorm above, it wins. It is not locked until the owner answers the questions at the end.
@@ -330,7 +330,7 @@ _Revised increments, replacing the list above:_
 
 Increments 1 to 3 come before b-rep step 5.
 
-**Overnight summary (2026-11-11).** Placement increments 4 to 7, 8a, 8b and 8c landed, each with a GPU spike or Node tests. Picks report a domain point and the exact true point with no inverse of any warp (5); measurements and snaps are in true frames, and the drawn distance is named as one (6); world clips are tested per fragment in true or drawn space (8a); the vertical exaggeration example holds true heights constant across ×1 to ×10 with no refit on the slider (7). Caps landed with 8b: exact for b-reps, joined loops for meshes, and the example's engine gaps closed with it. Curved clips landed with 8c: a clip across a non-rigid route is cut along a signed distance fitted per draw (spike 7 of 7). The CSG sample's core (§13.33) was built ahead of its date: a tree of leaves and booleans evaluated in a worker through either kernel, with picks naming the leaf and drag previews (the four-view layout and fillets wait). The handbook gained its clipping deep dive, updated for 8c. B-rep faces of degree 4 to 7 now draw on the GPU (`d0af2f8938`: a wide de Casteljau path, the cubic one unchanged; a 5 × 4 weighted patch within 0.055 px), so no face is a CPU mesh in drawing and the brepTrims spike passes all 17 checks headless, CTC-05 at 208 of 208 faces with no pinholes. Every ray backend respects clips (`17e50883e7`): terrain, the GPU draw cast and the distance field march past removed hits, `RayQuery.clips` defaults to the view's when a view is named, and standing queries answer again on clip changes. The placement leftovers are closed (`c0179db727`): each lattice's centre reaches the cull as float32 hi and lo parts, summed exactly, so a 37 km displacement is 0.03 mm on the GPU (was 0.43) and `DrawItem` is 96 bytes; shadow, request and dynamic-error volumes are drawn volumes; and point sets and pools follow warps (`warpRadius`, `warpTolerance`). Warp fits are keyed by the route's shape (`54d85b4ada`), so a re-root that leaves it unchanged refits nothing and shows nothing hidden. Plans 5c and 5d were reviewed against the placement model; their proposed amendments and owner questions are at the top of each plan (`62f28384bd`). Owner decisions pending: the proposal below, "no placement modes", and the 5c/5d questions (warp domains first: today an exaggeration warp would also warp the Moon in the same world).
+**Overnight summary (2026-11-11).** Placement increments 4 to 7, 8a, 8b and 8c landed, each with a GPU spike or Node tests. Picks report a domain point and the exact true point with no inverse of any warp (5); measurements and snaps are in true frames, and the drawn distance is named as one (6); world clips are tested per fragment in true or drawn space (8a); the vertical exaggeration example holds true heights constant across ×1 to ×10 with no refit on the slider (7). Caps landed with 8b: exact for b-reps, joined loops for meshes, and the example's engine gaps closed with it. Curved clips landed with 8c: a clip across a non-rigid route is cut along a signed distance fitted per draw (spike 7 of 7). The CSG sample's core ([breps-and-geometry-queries.md](breps-and-geometry-queries.md)) was built ahead of its date: a tree of leaves and booleans evaluated in a worker through either kernel, with picks naming the leaf and drag previews (the four-view layout and fillets wait). The handbook gained its clipping deep dive, updated for 8c. B-rep faces of degree 4 to 7 now draw on the GPU (`d0af2f8938`: a wide de Casteljau path, the cubic one unchanged; a 5 × 4 weighted patch within 0.055 px), so no face is a CPU mesh in drawing and the brepTrims spike passes all 17 checks headless, CTC-05 at 208 of 208 faces with no pinholes. Every ray backend respects clips (`17e50883e7`): terrain, the GPU draw cast and the distance field march past removed hits, `RayQuery.clips` defaults to the view's when a view is named, and standing queries answer again on clip changes. The placement leftovers are closed (`c0179db727`): each lattice's centre reaches the cull as float32 hi and lo parts, summed exactly, so a 37 km displacement is 0.03 mm on the GPU (was 0.43) and `DrawItem` is 96 bytes; shadow, request and dynamic-error volumes are drawn volumes; and point sets and pools follow warps (`warpRadius`, `warpTolerance`). Warp fits are keyed by the route's shape (`54d85b4ada`), so a re-root that leaves it unchanged refits nothing and shows nothing hidden. Plans 5c and 5d were reviewed against the placement model; their proposed amendments and owner questions are at the top of each plan (`62f28384bd`). Owner decisions pending: the proposal below, "no placement modes", and the 5c/5d questions (warp domains first: today an exaggeration warp would also warp the Moon in the same world).
 
 **Increment 1, in progress (2026-11-10).** Slices A to C are done. Each was implemented by a Sonnet 5.5 agent from a brief, against a contract committed first (`camera/route.ts`, `scene/warpTerms.ts`).
 
@@ -516,11 +516,11 @@ True heights stay put while the drawn ones follow the slider. `test/verticalExag
 
 - **The answer is yes, no modes.** The mode says something the content's CRS already says, once it's declared fully:
   - **The content is in an engineering CRS:** local Cartesian, ground distances, as a building or plant is authored. It's tied to the Earth by a declared similarity transform (a site transform, as IFC's `IfcMapConversion` is). That's a rigid edge in the frame tree, an ordinary transform, drawn with no warp. Today's "rigid".
-  - **The content is in a projected or geographic CRS:** grid coordinates, as civil alignments and survey data are. Its route to the body frame is a coordinate operation: a warp edge, fitted per tile (§13.26). Today's "reprojected".
+  - **The content is in a projected or geographic CRS:** grid coordinates, as civil alignments and survey data are. Its route to the body frame is a coordinate operation: a warp edge, fitted per tile (above). Today's "reprojected".
   - **The content is already in the body's frame:** ECEF or ITRF. That's the identity route. Today's "hosted".
 - So the engine never asks how to place content; it routes from the declared CRS, and whether the route is rigid is a property of the route. The one reason "rigid" existed for projected content was to approximate the reprojection near an anchor, sagging away from it. The fits make that approximation pointless: same drawing cost, no sag.
 - **The real distinction underneath is grid against ground distances.** That is a property of the CRS, not a mode. A design in a projected CRS has grid distances, scaled by the projection; reprojecting is right. A design meant to keep its dimensions on the ground belongs in an engineering CRS with a site transform. `IfcMapConversionScaled`'s scale factors are how IFC carries the difference.
-- **Consequences (approved 2026-11-11; to build in the API review, 5i, with the renames):**
+- **Consequences (approved 2026-11-11; to build in the API review, CS-102, with the renames):**
   - The Spec extensions tab already drops the proposal "A placement mode on the source CRS", and reworks the others (below).
   - `BENTLEY_engineering_frame` loses its placement-mode field. It keeps what the 2.0 draft's extensions can't say (below), and may shrink to that.
   - `DesignPlacement.mode` goes, and `Georeference` (the API review's name) is just the route from the content's CRS to the body frame.
@@ -546,7 +546,7 @@ True heights stay put while the drawn ones follow the slider. `test/verticalExag
   - _`IfcMapConversionScaled`'s scale semantics._ A node's scale and an `EXT_georeference` anchor can carry IFC's origin, rotation and one scale. IFC's separate horizontal and vertical factors, and what they scale (grid or ground distances), may not fit. Left open, and reworked in the Spec extensions tab.
   - _Alignments:_ nothing in the four extensions carries alignment geometry, so `BENTLEY_alignments` stays as a proposal.
   - _The site transform at the tileset level._ `EXT_georeference` is on a glTF node, so a tileset whose tiles all share a site transform either repeats it per tile or declares it once. A tileset-level declaration may remain, as what `BENTLEY_engineering_frame` holds, without a mode.
-- **Built with the API review (5i):** it changes a public API (`DesignPlacement`, `georeferenceTileset`) and a declared extension. The code already reads `EXT_geospatial_crs`'s shape (`src/engineering/georeference.ts`), so reading the 2.0 draft's CRS and node anchor is a small step.
+- **Built with the API review (CS-102):** it changes a public API (`DesignPlacement`, `georeferenceTileset`) and a declared extension. The code already reads `EXT_geospatial_crs`'s shape (`src/engineering/georeference.ts`), so reading the 2.0 draft's CRS and node anchor is a small step.
 
 **Clip planes and caps: decided by the owner (2026-11-10).** Built as increment 8, once increments 2a and 3 have landed. 2a's varying swap provides the true point per fragment.
 
@@ -566,9 +566,9 @@ True heights stay put while the drawn ones follow the slider. `test/verticalExag
    - Caps are cached per tile, clip and revision, and rebuilt within a per-frame budget.
    - Known gap: tiles at different levels of detail may not meet, so a loop can stay open until they settle.
    - B-rep caps are exact, and mesh caps are as accurate as the mesh's geometric error.
-7. **Cap styling is the styling language's:** hatching per material or element, through §13.27's planar fill.
+7. **Cap styling is the styling language's:** hatching per material or element, through [cad-display-extensions.md](cad-display-extensions.md)'s planar fill.
 8. **Queries support both uses.** Every query takes `clips: "view" | ClipSet | "none"`. Picks and snaps default to their view's clips. World questions, such as distance, clearance and line of sight, default to none, and can pass a set.
-9. **A plane can define an orthographic section view** looking at the cut (5d's orthographic camera), which leads to printing to scale (§13.34, 6).
+9. **A plane can define an orthographic section view** looking at the cut (5d's orthographic camera), which leads to printing to scale ([infrastructure-and-geoscience-capabilities.md](infrastructure-and-geoscience-capabilities.md), 6).
 10. **Exemptions are the styling language's:** run-time data by element ID, for example "don't clip the terrain". There is no exemption list per clip.
 
 **Increment 2a, normals and the varying swap (2026-11-10).** Reformulations 2 and 3 of the second review, without the height lookup, which waits for the API review.
@@ -606,7 +606,7 @@ _Open questions for the owner:_
    - A hypsometric tint, contours, a style's height thresholds and the air's density are lookups keyed by height. Keyed by drawn height, a legend reading 1,000 m would sit at 100 m of true height when k = 10, and an exaggerated summit would stand in near-vacuum.
    - Integrating the drawn path while reading density at the true height is the same as warping the atmosphere along with everything else. That is the consistent picture.
    - The true height comes from the free `.w` scalar (reformulation 2), or from the true-position varying (reformulation 3).
-   - Not settled: whether the owner agrees. The owner wants to see it first: a spike comparing a tint and a height-based haze keyed to drawn and to true height, on an exaggerated terrain patch. It's deferred to the API review (5i), to be judged with the rest of the API.
+   - Not settled: whether the owner agrees. The owner wants to see it first: a spike comparing a tint and a height-based haze keyed to drawn and to true height, on an exaggerated terrain patch. It's deferred to the API review (CS-102), to be judged with the rest of the API.
 3. **Terrain keeps (u, v, h).** Exaggeration and flattening are exact in height for terrain, with no fit along it.
 4. **Accuracy: both, provisionally.**
    - A worst-case `bound` comes from fits, representation error, tessellation and float32 rounding. Bounds compose linearly, by the (L, ε) algebra.
@@ -625,4 +625,4 @@ _Open questions for the owner:_
 - **Scene items:** they attach to a frame, and their morph targets take weights: `world.add(tileset, { frame, weights })`. `ModelPlacement` becomes an instance, as USD names it.
 - "Place" survives as an ordinary verb.
 
-The renames themselves wait for the API review (5i). New code from increment 1 uses these names.
+The renames themselves wait for the API review (CS-102). New code from increment 1 uses these names.

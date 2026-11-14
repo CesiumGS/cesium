@@ -1,5 +1,5 @@
 // A form's axis-aligned bounds from the form itself, with no tessellation
-// (overall plan §13.33): a part's size and its lowest point, to place it. The
+// (docs/design/breps-and-geometry-queries.md): a part's size and its lowest point, to place it. The
 // box holds the whole boundary and is tight to about a tenth of a percent of
 // the part's size on analytic faces, and to about a percent on free-form
 // ones. A draft.

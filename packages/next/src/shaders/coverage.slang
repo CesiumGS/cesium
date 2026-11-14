@@ -1,4 +1,4 @@
-// The coverage kernel (CESIUM2_WEBGPU_PLAN.md §13.33, "Step 5 redirected",
+// The coverage kernel (docs/design/breps-and-geometry-queries.md, "Step 5 redirected",
 // part 2): whether a point is inside a closed outline made of monotone
 // quadratic pieces, by the winding number of a ray along +x, after Slug
 // (Lengyel, "GPU-Centered Font Rendering Directly from Glyph Outlines",

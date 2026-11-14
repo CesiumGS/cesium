@@ -1,4 +1,4 @@
-// The kernel worker's host with the real kernels (plan §13.33), behind a
+// The kernel worker's host with the real kernels (docs/design/breps-and-geometry-queries.md), behind a
 // loopback with a worker's structured clone and transfer: SMLib's and Open
 // CASCADE's booleans and a NIST STEP file come back as the forms the kernels
 // make directly, measured; every Open CASCADE handle the host made is freed,

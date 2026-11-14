@@ -1,4 +1,4 @@
-// The tessellator's error bounds (overall plan §13.33) are sound: every point
+// The tessellator's error bounds (docs/design/breps-and-geometry-queries.md) are sound: every point
 // of every triangle lies within the mesh's stated error of the surface, for
 // analytic surfaces, for NURBS surfaces that carry an analytic identity
 // (whose parameterization is not uniform in angle), and for free-form

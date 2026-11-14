@@ -1,4 +1,4 @@
-// The surface shaders' boundary with run-time code (plan §3.4, step 5):
+// The surface shaders' boundary with run-time code (docs/design/shaders.md, step 5):
 // the structs that cross it and the stages the engine calls by name. A
 // module of its own so the build reads it whole: its reflection
 // (boundary.slang) becomes src/shaders/generated/boundary.ts, from which
@@ -152,7 +152,7 @@ public export __extern_cpp struct SurfaceVertex {
   // A custom shader's named attributes and metadata, packed into four
   // slots (CustomShader.ts `namedCode`). The engine's own stages leave
   // them zero and read none: slots a fragment stage doesn't read cost
-  // nothing (the stages are linked; plan §3.4, step 5).
+  // nothing (the stages are linked; docs/design/shaders.md, step 5).
   public __extern_cpp float4 named0;
   public __extern_cpp float4 named1;
   public __extern_cpp float4 named2;

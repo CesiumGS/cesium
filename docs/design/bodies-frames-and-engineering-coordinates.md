@@ -68,7 +68,7 @@ resolved when tiles are made or when a point is measured.
 
 **Typed frames in the API (noted r53, with the model ownership API).** Today
 every matrix and position is a bare `Float64Array`. Precision is safe:
-float64 throughout, hi/lo and camera-relative on the GPU (§13.15). What the
+float64 throughout, hi/lo and camera-relative on the GPU ([gpu-limits-and-capacities.md](gpu-limits-and-capacities.md)). What the
 type doesn't say is which frame a value is in, and the frame tree above
 will multiply the frames in play:
 
@@ -746,7 +746,7 @@ build:lib` exits 0, and `loadProj` from its output resolves in a browser
   (dist plus `/frames-data/` with `Content-Length`): PROJ loads, Run all gives
   212 / 0 / 13, the design grid draws at ±2.00 m and Orion's path at ±10 m.
   The module worker and its runtime `import()` of `proj_capi.mjs` work with
-  no `worker.format` change, so §13.14's "`loadProj` in a production build"
+  no `worker.format` change, so above's "`loadProj` in a production build"
   item is closed, and so is the `build:lib` check. The longest
   requestAnimationFrame gap during Run all was 33 ms in the first build
   and 50 ms in the repo's build (limit 100 ms); the dev server showed
@@ -938,7 +938,7 @@ CRS). The declaration is renamed `BENTLEY_engineering_frame` and composes
 with those. What is new, and worth proposing:
 
 - **A placement mode on the source CRS (3D Tiles 2.0, #131):** _withdrawn
-  (owner, 2026-11-11); see "no placement modes" in §13.26._ It was one field,
+  (owner, 2026-11-11); see "no placement modes" in [geometry-through-placement-review.md](geometry-through-placement-review.md)._ It was one field,
   `"placement": "rigid" | "reprojected"`, saying whether content in a design
   CRS is meant to be placed rigidly at an anchor or reprojected vertex by
   vertex. The 3D Tiles 2.0 draft's CRS types and `EXT_georeference` select
@@ -1050,21 +1050,21 @@ NURBS. Plan 5 only keeps the seam open: per-vertex placement and the frames
 module's per-draw projection are what this engine would consume.
 
 _Plan 5 design input: groundwork for post-V1 WebGPU features (owner,
-2026-11-07)._ Apply the bindless pattern (§7.1: "design for it; don't build
+2026-11-07)._ Apply the bindless pattern ([risks.md](risks.md), "Bindless textures: not in the PoC, designed for in 2.0": "design for it; don't build
 it": one seam every caller goes through, plus a test that fails on any
 bypass) to the features the WebGPU working group has tagged for after V1, so
 adopting them later is a backend swap rather than a refactor. Only where the
 seam costs nothing today; no design compromises in the current WebGPU path.
 
 - **Ray queries and acceleration structures.** Every ray or spatial query
-  (picking, snapping, line of sight, height queries, §13.16) goes through one
+  (picking, snapping, line of sight, height queries, [ray-queries-where-they-run.md](ray-queries-where-they-run.md)) goes through one
   query interface that names its frame and instant. Today it runs on CPU BVHs
   or compute traversal; a hardware ray-query backend drops in behind it.
   Acceleration-structure lifetime (build, refit, evict) hangs off tile and
   draw lifetime in streaming through one hook, so a per-tile BLAS and a
   per-frame TLAS have a place to live.
 - **Mesh shaders.** Geometry reaches the GPU through the GPU-driven
-  submission path only (§7, M1), and the content pipeline can carry
+  submission path only (the frames spec's §7, M1), and the content pipeline can carry
   meshlet or cluster data, consumed today by compute culling and indirect
   draws. A mesh-shader backend replaces the compute-plus-indirect stage, not
   the content format or the callers.
@@ -1072,14 +1072,14 @@ seam costs nothing today; no design compromises in the current WebGPU path.
   64-bit atomics:** per-draw constants and draw-argument buffers go through
   one seam each, so multi-draw indirect and immediates replace an emulation
   rather than call sites; 64-bit atomics would enable a visibility buffer or
-  software rasterization later (§7.1's reassessment).
+  software rasterization later ([risks.md](risks.md), "Bindless textures: not in the PoC, designed for in 2.0"'s reassessment).
 - **Subgroups and cooperative matrices:** keep the portable kernels with
-  subgroup fast paths behind a capability check (§7.2), and extend the same
+  subgroup fast paths behind a capability check ([risks.md](risks.md), "Platform and WebGPU risks"), and extend the same
   rule to any matrix-unit work.
 - **Multiple queues and async compute:** the job graph marks each pass's
   queue affinity and dependencies now, so async compute is a scheduling
   change.
-- **Capability tiers:** one registry of probed features and limits (§13.15's
+- **Capability tiers:** one registry of probed features and limits ([gpu-limits-and-capacities.md](gpu-limits-and-capacities.md)'s
   tiers), read by every backend choice; Slang shaders are organized per
   capability, so a new stage (mesh, ray query) adds a module rather than
   editing every shader. Each seam gets a bypass test like
@@ -1110,7 +1110,7 @@ Plan 5's API review designs the seams:
   drawing can be modularized enough to support WebGPU's compatibility mode,
   or a WebGL 2 backend. Not now: the owner wants no design compromises in
   the WebGPU approach while the prototype is built. Notes on the layers this
-  would need are in §13.17.
+  would need are in [layers-engine-renderer-backend.md](layers-engine-renderer-backend.md).
 
 _Plan 5 design input: tessellating reprojected models (owner, 2026-11-07)._ A
 reprojected model's edges are straight chords between reprojected vertices,
@@ -1414,7 +1414,7 @@ we probably don't need the async API". So:
   operations, not about the frame tree.
 
 **Ray queries through the frame tree (owner, 2026-11-06).** Ray queries
-(§13.10) assume one Earth-fixed world today. Plan 5 makes them frame-aware:
+([ray-queries-and-path-tracing.md](ray-queries-and-path-tracing.md)) assume one Earth-fixed world today. Plan 5 makes them frame-aware:
 
 - **Rays in a frame.** A ray is given in some frame at an instant (a dish's
   ENU, a drone camera's mount, a robot tool, a lunar site), and the library
@@ -1610,7 +1610,7 @@ are left out.
   because the CPU trace can't meet its 50 ms budget.
 - **Plan 5: the Moon as a tileset.** In Earth views, the Moon is a backdrop
   body, and the scenarios say so.
-- **Plan 5 / §13.16: a near-field bounded terrain trace.** Trace 20–50 km
+- **Plan 5 / [ray-queries-where-they-run.md](ray-queries-where-they-run.md): a near-field bounded terrain trace.** Trace 20–50 km
   round each end with tiles at a level chosen for the error, whatever the
   camera is doing. Today a sight line takes the error of the tiles the
   camera happened to load. That is why the ship's lighthouse reads "in
@@ -1619,7 +1619,7 @@ are left out.
   for it) and "can't tell" where coarser tiles stand in (the buoy it
   replaced always did), why the drone often reads "can't tell yet", and why
   an Earth end in the capstone says "not judged from this far out".
-- **Plan 5 / §13.16: a per-tile terrain error over open water,** or a
+- **Plan 5 / [ray-queries-where-they-run.md](ray-queries-where-they-run.md): a per-tile terrain error over open water,** or a
   quantized-mesh water mask. The level-wide error overstates the error over
   flat sea many times over.
 - **Plan 5: one ENU convention.** Body frames take "up" at their foot;
@@ -1951,7 +1951,7 @@ render space with anchors and an eye per anchor, rigs, the camera layer and
 the reference frame resolver, the catalog, `attachSky`, picks and the pick
 interpreter, the coordinate service and `hosted`, per-vertex placements, the
 query interface, the seams with their bypass tests, and the surface map.
-Scene items (§13.25) replaced the design globe's pairing of two tilesets.
+Scene items ([scene-items.md](scene-items.md)) replaced the design globe's pairing of two tilesets.
 Closed by Task 22.
 
 - **Parity.** On Metal, the parity suites the tasks ran (image, models,
@@ -2021,7 +2021,7 @@ real work. The wording and test-strength nits the reviews raised are left out.
   node for the meter, so the 32-node cap holds 16 such layers, and at the cut a
   layer's emission can stay without its body. The moments branch of `layersAt`
   has no Node port or pin.
-- **Plan 5i's list (the API review):**
+- **The public API review's (CS-102) list (the API review):**
   - "placement" means five things: `SceneItemOptions.placement` (a number from
     0 to 1), the `Placement` union, `Tileset3D.placement`, `ModelPlacement`,
     and `/proj`'s `TilesetPlacement`, `PlacementMode` and `placeRigid`. An
@@ -2043,7 +2043,7 @@ real work. The wording and test-strength nits the reviews raised are left out.
   - core names in the public surface: `castTerrainRay`, `TerrainRay*`,
     `SlicePool`, `SliceUser`, `STAGES`, `MaterialFlags`, `BASE_*_LIMITS`,
     `PLACEMENT_MONOMIALS`, `collectFullDetailContents`, `summarizeContent`,
-    `tileHeaderKey`. Ion's names belong behind the content source of §13.21;
+    `tileHeaderKey`. Ion's names belong behind the content source of [ion-as-a-module.md](ion-as-a-module.md);
   - smaller: `FrameStats` beside `FrameResolver` and `FrameMotion`;
     `PickCamera` in both core and `/proj`; a `Globe` takes degrees in
     `terrainClipped`, radians in `sampleHeight`; `/frames` publishes
@@ -2071,15 +2071,15 @@ real work. The wording and test-strength nits the reviews raised are left out.
   0.3 micrometres of height near the equator. Tile load, unload and slot reuse
   have no clip tests. A thrown server error does not reset the snap run. The
   design globe shows a thin line where its item switches to opaque, and its
-  rigid normals stay as they are until the §13.26 review.
+  rigid normals stay as they are until the [geometry-through-placement-review.md](geometry-through-placement-review.md) review.
 - **Content the engine doesn't load yet.** Implicit tiling, all of a tile's
   multiple contents, S2 volumes, metadata and glTF 1.0 content; point clouds
   and vector tiles (`pnts`, `vctr`, `geom`) wait for the vector renderer.
 
-Owner-requested later work, written up as notes and designs, is §13.17 to
-§13.26: layers, scene items (§13.25), reference data (§13.24), the indirect
-draw risk on Intel integrated GPUs (§13.23) and the review of geometry
-through placement (§13.26).
+Owner-requested later work, written up as notes and designs, is [layers-engine-renderer-backend.md](layers-engine-renderer-backend.md) to
+[geometry-through-placement-review.md](geometry-through-placement-review.md): layers, scene items ([scene-items.md](scene-items.md)), reference data ([reference-data.md](reference-data.md)), the indirect
+draw risk on Intel integrated GPUs ([indirect-draws-on-intel.md](indirect-draws-on-intel.md)) and the review of geometry
+through placement ([geometry-through-placement-review.md](geometry-through-placement-review.md)).
 
 **Frames 5b results (2026-11-09).** Plan 5b
 (docs/superpowers/plans/2026-11-07-frames-5b-frames-library.md) built the
@@ -2158,8 +2158,8 @@ _Carried forward from the sky and observer plan._ These are deferred items that 
 - **The Moon and planets in the light list.** `lightListFor` and glare's records hold the sun and stars. Adding them also ends the Moon's undercount where it clips at a low EV100.
 - **The eye's color for bright stars.** Under dark adaptation bright stars read gray-blue (`eyeSees`), where the eye sees their color. A decision for the owner, by looking.
 - **Ambient occlusion's slot.** It feeds shading before the opaque pass, so no post stage can hold it. It needs a slot there.
-- **Graph-level slicing (§13.32).** A long chain of stages on a slow GPU has no way to spread over ticks.
-- **A `Renderer` interface**, when a second renderer is chosen (§13.32). Not before.
+- **Graph-level slicing ([sky-light-and-points-unifications.md](sky-light-and-points-unifications.md)).** A long chain of stages on a slow GPU has no way to spread over ticks.
+- **A `Renderer` interface**, when a second renderer is chosen ([sky-light-and-points-unifications.md](sky-light-and-points-unifications.md)). Not before.
 - **A hidden sun's veil pops at the screen's edge.** While any disc tap is on screen the veil takes its visibility from those; a sun leaving the screen jumps to the body-only answer in about one tick of a pan.
 - **Recovery after device loss.** A loss turns the stages that were on off for good and says so; nothing listens to `restored`.
 - **The eye's limit costs 3.9 ms at 2560×1440 on an M2** (the cost page), the biggest single post stage. A half-size ring would cut it.

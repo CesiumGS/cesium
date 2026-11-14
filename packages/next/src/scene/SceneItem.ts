@@ -87,7 +87,7 @@ export interface SceneItemOptions {
   shader?: CustomShader;
   /**
    * Where the route that places its anchor is evaluated, when it crosses a
-   * warp (`World.setWarpAt`, plan §13.26): `"vertex"`, the default, stretches
+   * warp (`World.setWarpAt`, docs/design/geometry-through-placement-review.md): `"vertex"`, the default, stretches
    * its content with the warp, as a reprojection does; `"anchor"` moves each
    * tile of it rigidly by the route at the tile's origin, keeping its shape
    * (a vehicle, a symbol): translated, and turned by the rotation of the

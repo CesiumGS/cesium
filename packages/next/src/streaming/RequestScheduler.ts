@@ -1,6 +1,6 @@
 /**
  * Content request concurrency per origin, shared by every tileset on that
- * origin (plan §13.2). 1.x caps each tileset at 18, an HTTP/1.1-era limit;
+ * origin (docs/design/tile-selection-and-memory.md, "Request scheduling"). 1.x caps each tileset at 18, an HTTP/1.1-era limit;
  * here the window starts from the negotiated protocol and then adapts.
  *
  * - **Seed:** HTTP/1.1 about 6 (the browser's per-host connection limit:

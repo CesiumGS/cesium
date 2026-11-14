@@ -2,7 +2,7 @@
 
 **What this holds:** The real-time tracks milestone as planned and worked through. Open points in it are not work items yet. Moved from the overall plan (`CESIUM2_WEBGPU_PLAN.md`) on 2026-11-13, with its content and dates unchanged.
 
-- §13.11: track collections as instance data with a bulk update API,
+- [real-time-tracks.md](../design/real-time-tracks.md): track collections as instance data with a bulk update API,
   GPU clamping, interpolation between feed samples, billboard symbology
   with custom shading, labels with decluttering, picking per track.
 - _Exit_: 100,000 clamped tracks updated at 10 Hz from a synthetic feed
@@ -131,7 +131,7 @@ switchDistance, delay, clock })`: tracks as instance data. Positions
 
 **Increment 4 (r47): the showcase and the benchmark against 1.x.**
 
-- _Dyno's Examples_ (§13.12): a rail entry and `/#/examples/<id>`. An
+- _Dyno's Examples_ ([examples-and-the-gallery.md](../design/examples-and-the-gallery.md)): a rail entry and `/#/examples/<id>`. An
   example is a module under `examples/<slug>/` (`examples/types.ts`):
   metadata (title, description, labels, the globe it needs) and
   `run({ viewer, panel, accessToken, signal })`, which builds its scene

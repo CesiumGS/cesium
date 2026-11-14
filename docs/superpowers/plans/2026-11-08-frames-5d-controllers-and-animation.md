@@ -4,7 +4,7 @@
 
 ## After the transform graph (2026-11-12)
 
-This replaces the amendments written on 2026-11-11 for §13.26's warps (and 5c's, which they inherited), with their open questions. Read with §13.37 of the overall plan, `2026-11-12-transform-graph.md` and 5c's matching section.
+This replaces the amendments written on 2026-11-11 for [geometry-through-placement-review.md](../../design/geometry-through-placement-review.md)'s warps (and 5c's, which they inherited), with their open questions. Read with [transform-graph.md](../../design/transform-graph.md) of the overall plan, `2026-11-12-transform-graph.md` and 5c's matching section.
 
 **What changed.**
 
@@ -15,12 +15,12 @@ This replaces the amendments written on 2026-11-11 for §13.26's warps (and 5c's
 - **Parameters have two ranges:** `valid` (from the function: the exaggeration needs k > 0) and `expected` (a hint for bounds).
 - **Still true, and not about warps:** `setRig` re-roots through `carryCamera`; `GlobeController` works on the drawn ground and zoom target; `View.toPixel` follows routes; `CorePick.route` freezes a pick's scales; `commonAncestor` exists privately (`frames/resolver.ts`), so Task 10 only exposes it; `dice.slang` handles orthographic views; `routeSingularRange` gives σ_min for snaps. The review's orthographic findings carry into Tasks 14 and 15.
 
-**The former open questions** (§13.37):
+**The former open questions** ([transform-graph.md](../../design/transform-graph.md)):
 
 1. **A flight that leaves an exaggerated frame:** there is none to leave. The picture doesn't depend on the rig, so nothing snaps. An application that wants a fade animates the parameter through `onWeight` and `view.setParameter`, and the engine fades nothing.
 2. **A rig target across a warp:** the anchor rule, as above. The refusal goes.
 3. **Per-view warp terms:** per-view parameters, and switch nodes for different structures (owner, 2026-11-12), built in the transform plan's Task 6. The stated limit is dropped.
-4. **Printing to scale under a deformer:** report the singular values of J along the route from the content's node to the sheet. That is one scale for a similarity, two (H and V) when constant along the sheet's axes, and a range otherwise. Task 14 adds `View.scaleAt`. The printing step (§13.34, 6) refuses only when one scale is demanded and the range exceeds its tolerance.
+4. **Printing to scale under a deformer:** report the singular values of J along the route from the content's node to the sheet. That is one scale for a similarity, two (H and V) when constant along the sheet's axes, and a range otherwise. Task 14 adds `View.scaleAt`. The printing step ([infrastructure-and-geoscience-capabilities.md](../../design/infrastructure-and-geoscience-capabilities.md), 6) refuses only when one scale is demanded and the range exceeds its tolerance.
 5. **A range-bound parameter and an overshooting easing:** two ranges. `animate` clamps an easing to `valid` and a direct set outside it throws. Leaving `expected` rebuilds bounds and never throws.
 6. **Order:** 5c and 5d start after the transform graph's Task 6, so there is no placement increment 9. 5c comes first, as before.
 
@@ -74,9 +74,9 @@ Only what those plans' Interfaces blocks produce. Anything else 5d needs, it add
 
 **Not produced by either, so 5d adds it:** a resolver's common ancestor (Task 10), quaternions (Task 2), a retained glTF node tree (Task 4), a rig's kind, damping and reference (Task 5), the body-fixed guard (Task 6).
 
-**From §13.14's 5a lists:** 5d touches only the 5i note that "placement" means five things, so its setter is named for the parameter, not the placement (Task 4). It adds to 5i's list in Task 21.
+**From [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)'s 5a lists:** 5d touches only the 5i note that "placement" means five things, so its setter is named for the parameter, not the placement (Task 4). It adds to 5i's list in Task 21.
 
-**What 5d leaves alone.** No change to how normals or per-vertex kinds work, and nothing added to how a route is recomputed on a change of root: those are the transform graph's, and 5d only triggers them. Models don't become scene items, and there is no scene graph and no `Entity` class: §13.25's full version and §13.29's names wait for their brainstorm and 5i. The design globe keeps its own flights until 5f.
+**What 5d leaves alone.** No change to how normals or per-vertex kinds work, and nothing added to how a route is recomputed on a change of root: those are the transform graph's, and 5d only triggers them. Models don't become scene items, and there is no scene graph and no `Entity` class: [scene-items.md](../../design/scene-items.md)'s full version and [2026-11-08-owners-calls-for-later-plans.md](../../decisions/2026-11-08-owners-calls-for-later-plans.md)'s names wait for their brainstorm and 5i. The design globe keeps its own flights until 5f.
 
 ## Author's calls
 
@@ -91,7 +91,7 @@ In order: the animation core (1 to 11), rigs (12 to 16), controllers (17 to 23),
 6. **No iterations, fill modes or composition.** The spec lists duration, delay, easing, play, pause, reverse, rate and `finished`. An animation's value stays where its setter last wrote it. _Undo:_ additive.
 7. **Easing presets are CSS's values** (`linear`, `ease`, `ease-in`, `ease-out`, `ease-in-out`). A spring is `{ kind: "spring", response, dampingRatio?, velocity? }`: `response` is its time constant in seconds, `dampingRatio` defaults to 1. With no `duration`, a spring's animation lasts until it settles within 0.001 of 1, in value and in value per second. _Undo:_ a type.
 8. **Samplers read glTF 2.0's definitions** (step, linear with slerp for rotations, cubic spline with its in-tangent, value, out-tangent layout), with time in seconds, held at the ends. _Undo:_ none; it's the format.
-9. **Time-varying properties have their home in `Timeline.bind`:** a value read from a scene clock's seconds and written through a setter whenever the clock moves. Names stay provisional for the vector design and 5i (§13.29). See ruling 1. _Undo:_ one method.
+9. **Time-varying properties have their home in `Timeline.bind`:** a value read from a scene clock's seconds and written through a setter whenever the clock moves. Names stay provisional for the vector design and 5i ([2026-11-08-owners-calls-for-later-plans.md](../../decisions/2026-11-08-owners-calls-for-later-plans.md)). See ruling 1. _Undo:_ one method.
 10. **The core's setters live in a new `src/scene/animationSetters.ts`,** so the animation folder stays free of the scene. _Undo:_ a file.
 11. **Per-node transforms keep today's flat transforms.** A placement keeps one table transform per node that holds draws or lights. `setNodeTransform` recomputes that subtree's local matrices on the CPU from a retained node tree and writes them with `World.setTransform`. Nothing changes on the GPU. An instanced placement refuses it. _Undo:_ one method.
 12. **`{ kind: "free", reference? }`:** a free orientation may name a `reference` (an `up`, and optionally a `forward` for heading 0, in a reference frame's axes), which a controller reads as its up. `freeRig(rig)` turns any rig into the form a controller can own: `axes` keeps its `frame`, `up` and `forward` as the reference; `aim` keeps `upFrame` and `up`; the offset goes, and `anchor` stays (the orbit's default pivot). It returns the same object when nothing changes, so `Viewer`'s comparison with its own rig still holds. _Undo:_ a type and a function.
@@ -136,7 +136,7 @@ In order: the animation core (1 to 11), rigs (12 to 16), controllers (17 to 23),
 
 Places where the spec, read against the code and the earlier plans, is contradictory or can't be built as written, and what this plan does.
 
-1. **"Bindings" means two things.** Spec section 11.4's bindings are gesture maps. §13.29 says what people use Entity for "is covered through scene items, styling and the bindings of 5d". Gesture maps can't hold a time-varying property. _Ruling:_ section 11.4's meaning stands for the word "binding" in the code's gesture API. Time-varying values, tracks and clamping get their home in the animation core and what exists: `Timeline.bind` (call 9) for a value over time, `ModelPlacement.setTransform` or `PointSource.update` for where it goes, a rig's `anchor` with `World.frameOf` to follow it, and `PointSource`'s `clamp` to stand on the ground. The first question at the end asks whether that's what was meant. A moving clamped model has no path today (`Clamp` anchors at one place), and goes on the carried-forward list.
+1. **"Bindings" means two things.** Spec section 11.4's bindings are gesture maps. [2026-11-08-owners-calls-for-later-plans.md](../../decisions/2026-11-08-owners-calls-for-later-plans.md) says what people use Entity for "is covered through scene items, styling and the bindings of 5d". Gesture maps can't hold a time-varying property. _Ruling:_ section 11.4's meaning stands for the word "binding" in the code's gesture API. Time-varying values, tracks and clamping get their home in the animation core and what exists: `Timeline.bind` (call 9) for a value over time, `ModelPlacement.setTransform` or `PointSource.update` for where it goes, a rig's `anchor` with `World.frameOf` to follow it, and `PointSource`'s `clamp` to stand on the ground. The first question at the end asks whether that's what was meant. A moving clamped model has no path today (`Clamp` anchors at one place), and goes on the carried-forward list.
 2. **"Unknown inputs and actions are refused at bind time" against "an action an active controller doesn't have is skipped"** (section 11.4). _Ruling:_ "unknown" means outside the vocabulary (`STANDARD_ACTIONS` and registered custom actions). A known action the active controller lacks is skipped at dispatch (call 24).
 3. **"The deepest common ancestor"** (section 11.5) needs a tree, and `FrameResolver` knows none. _Ruling:_ call 39. `Frame.ts` and the frames resolver already have the walk.
 4. **"Damping per rig part"** (sections 7.5 and 11.3) against a rig whose free parts are written by the controller, so the rig has nothing to damp. _Ruling:_ call 14: the controller writes the goal.
@@ -144,10 +144,10 @@ Places where the spec, read against the code and the earlier plans, is contradic
 6. **"Reverse-Z, as the perspective one"** (section 11.3). Today's reverse-Z has an infinite far plane, and code reads depth as `near / depth`. An orthographic projection has no infinite form. _Ruling:_ call 33. Linear reverse-Z in float32 is coarsest near the camera: about 6 × 10⁻⁸ of the range, so 6 mm at 100 km. A `far` an application or `fitBounds` sets tightens it.
 7. **"Earth to a lunar site blends in ICRF"** (section 11.5) puts the eye about 1.5 × 10¹¹ m from render space's origin. Anchors are safe: each has its own eye. Two things are not. Draws under no anchor would wrap past hi/lo's ±2³¹ m, since slot 0 is never hidden; call 16 hides them. And float64's step at that size is about 30 µm, which is the precision of the blended pose while it runs: well under a pixel for content more than a few centimetres away. A test states it (Task 10).
 8. **§14.4's "GCRF gets an orbit rig about the Earth's centre on the `"inertial"` preset".** 5b's `inertial` takes its primary vector as the target's position from the central body, and with GCRF's origin at the Earth that vector is zero, so the preset is degenerate. _Ruling for 5d:_ GCRF needs no preset: an orbit rig on GCRF with reference up +Z holds the stars still. Task 20 pins it, and 5g's table should say so.
-9. **§13.25 lists "models and per-node transforms (5d)" among things to take up as items,** and section 11.5 adds them to `ModelPlacement`. _Ruling:_ section 11.5. They are a method on `ModelPlacement` now, and a later item can wrap it (call 11).
+9. **[scene-items.md](../../design/scene-items.md) lists "models and per-node transforms (5d)" among things to take up as items,** and section 11.5 adds them to `ModelPlacement`. _Ruling:_ section 11.5. They are a method on `ModelPlacement` now, and a later item can wrap it (call 11).
 10. **"Within a pixel at the target"** (section 11.6) names no resolution. _Ruling:_ at the transition's end, on a view 1,024 px tall, the target's origin lands within 1 px of where the target rig's own evaluation puts it (Tasks 10 and 20).
 
-## Leave room for (overall plan §13.34)
+## Leave room for ([infrastructure-and-geoscience-capabilities.md](../../design/infrastructure-and-geoscience-capabilities.md))
 
 - Time-bound values that scale to millions of elements (per-element appearance over time, for construction scheduling): evaluated on the GPU, not per element in JavaScript. Keep the animation core's value types able to target a GPU column.
 - View linking and viewports general enough for an application's comparison views (a swipe or a split between two captures or designs). Comparison is the application's, not an engine feature.
@@ -160,8 +160,8 @@ Nothing here is built in 5d; these are constraints on its interfaces.
 
 Copied from the earlier plans where they apply, with 5d's additions.
 
-- **Precision** (spec section 4): "Float64 on the CPU throughout. The GPU sees only camera-relative values (hi/lo and camera-relative, §13.15). Hi/lo is valid to ±2³¹ m (about 2.1 million km), which covers Earth to Moon." Nothing large is ever rotated in float32. Blends, springs and quaternions are float64.
-- **Earth-only scenes are unchanged:** "The parity pages, the bench gate and every test keep passing. A globe-only scene renders the same pixels before and after." This holds after every task. The gates are 5a's call 46: `parity`, `models`, `tileset`, `customShader`, `translucency`, `tracks` and `imagery`, plus `globe`, `heights` and `lod` with a token; the bench gate is `alloc`. Metal can reorder a float sum when a kernel's code changes, so explain a one-ulp difference before accepting it (§13.14).
+- **Precision** (spec section 4): "Float64 on the CPU throughout. The GPU sees only camera-relative values (hi/lo and camera-relative, [gpu-limits-and-capacities.md](../../design/gpu-limits-and-capacities.md)). Hi/lo is valid to ±2³¹ m (about 2.1 million km), which covers Earth to Moon." Nothing large is ever rotated in float32. Blends, springs and quaternions are float64.
+- **Earth-only scenes are unchanged:** "The parity pages, the bench gate and every test keep passing. A globe-only scene renders the same pixels before and after." This holds after every task. The gates are 5a's call 46: `parity`, `models`, `tileset`, `customShader`, `translucency`, `tracks` and `imagery`, plus `globe`, `heights` and `lod` with a token; the bench gate is `alloc`. Metal can reorder a float sum when a kernel's code changes, so explain a one-ulp difference before accepting it ([bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)).
 - **Cost rule:** per-view work grows with the number of anchors and bodies, not the number of draws or tiles. An idle timeline, a view with no controller and an undamped view do no new work per tick.
 - **Pay for what you use.** A globe-only Viewer loads nothing new. `src/animation/` and `src/camera/` import nothing from `/time` or `/frames`.
 - **The dependency rule** (spec section 7.7): the core imports nothing from `frames`, `proj` or `measure`, and nothing from `time`. It sees time only through `SceneClock`. The widgets import the other entry points by the package's name and nothing under `src/`. `test/importBoundary.test.ts` enforces it. The animation core and camera layer are core.
@@ -175,7 +175,7 @@ Copied from the earlier plans where they apply, with 5d's additions.
   - Commands run in `packages/next`.
   - Commit locally and never push. End each message with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
   - Other agents share this checkout. Commit only your task's files, by path (`git add -- <paths>` then `git commit -m "…" -- <paths>`). Check `git diff --cached --name-only` first. Never `git add -A`, `git stash`, `git checkout`, `git reset` or `git push`. While `.git/index.lock` exists, wait and retry.
-  - A pure move is its own commit (`git mv`), with no fix in it (§13.17). Tests that reach privates by cast change in the same commit.
+  - A pure move is its own commit (`git mv`), with no fix in it ([layers-engine-renderer-backend.md](../../design/layers-engine-renderer-backend.md)). Tests that reach privates by cast change in the same commit.
   - Slang for engine shaders, compiled by `npm run shaders`. Never edit generated output; `npm run shaders:check` must pass.
   - Node 24 (`engines`).
 - **Testing cadence per task:** the task's focused tests (`npx vitest run <files>`; data tests `FRAMES_DATA=1 npx vitest run test/data/<file>`), `npx tsc --noEmit -p .`, and `npx eslint` and `npx prettier --check` on the changed files. A task that changes `World`, `View`, `Engine`, `CameraLayer`, `Camera` or the Viewer also runs `npm test`. A task that changes `src/frames` also runs `npm run test:data`.
@@ -735,7 +735,7 @@ New files, by responsibility (modified code is named by symbol in each task):
   - `m4.orthographicReverseZ(out, halfX, halfY, near, far)`;
   - `isScaledSpacePointVisibleParallel(direction, occludee, minimumHeight)`, beside the existing test, for an eye at infinity;
   - `SelectionView.orthographicHeight?: number`: with it, a tile's screen-space error is `error × σ_max × height / orthographicHeight + fit error`, at every distance (σ_max is 1 on a rigid route);
-  - `View.scaleAt(point: ArrayLike<number>, node?: FrameKey): { readonly min: number; readonly max: number }`: the singular values [σ_min, σ_max] of J along the route from the point's node (default the content's own) to the view's render space (`routeSingularRange`). Times the orthographic view's pixels per metre, this is the print scale: one value for a similarity, two when H and V differ, a range otherwise. Refusing a demanded single scale is the printing step's (§13.34, 6);
+  - `View.scaleAt(point: ArrayLike<number>, node?: FrameKey): { readonly min: number; readonly max: number }`: the singular values [σ_min, σ_max] of J along the route from the point's node (default the content's own) to the view's render space (`routeSingularRange`). Times the orthographic view's pixels per metre, this is the print scale: one value for a similarity, two when H and V differ, a range otherwise. Refusing a demanded single scale is the printing step's ([infrastructure-and-geoscience-capabilities.md](../../design/infrastructure-and-geoscience-capabilities.md), 6);
   - `depthDistance` takes `{ near, far? }`: with `far`, distance is `far − depth × (far − near)`; underlay scaling as today;
   - `PickCamera` keeps `fovy` for hosts and gains `orthographicHeight?`; the tolerance sites read `pickMetresPerPixel(camera, distance)`.
   - A new seam in `test/seams.test.ts`: `.fovy` is read only in `Camera`'s file and where a `PickCamera` is built, naming the line otherwise (author's call 34). `Camera.fovy` stays for hosts, and in an orthographic view returns the narrowest dolly field of view.
@@ -952,11 +952,11 @@ A browser check (port 5193).
 **Files:**
 
 - Create: `test/cameraDocs.test.ts`
-- Modify: the package's README, the handbook's `cameras` tab, the overall plan's §13.14
+- Modify: the package's README, the handbook's `cameras` tab, [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)
 
 - [ ] **Step 1: Write the failing test** (`test/cameraDocs.test.ts`): every value export `api/surface.txt` lists from `src/animation` and `src/camera` (by a list in the test) is named in the README, and the handbook's `cameras` tab has a "checked" date no older than this task's. It fails until Step 2.
 - [ ] **Step 2: README and handbook.** Document the animation core (clocks, easing, samplers, `Timeline.bind`), setters, per-node transforms, rig kinds and damping and references, the controller seam, each controller's actions and constraints, bindings with their grammar and presets, transitions with their paths, defaults and interruptions, the orthographic camera and what is off in it, `fitBounds`, `scaleAt`, and frames under a deformer (displayed poses, transitions that cross none). Update the handbook's `cameras` tab in the same change: prose, "checked" date, status. Keep it to generic words.
-- [ ] **Step 3: Plan note** in §13.14, "Frames 5d results": the measured values, the author's calls and rulings one line each, and a "Carried forward from frames plan 5d" list of real deferred work, without nits, written before the ledger is deleted. It includes: ambient occlusion and the light grid in orthographic views; a moving clamped model's path; the design globe's flights moving to transitions (5f); the note for 5g's table on GCRF (ruling 8); and for 5i: `Timeline.bind`'s name, `InspectController`'s rename, the controllers' folder, and what examples reach past the public API.
+- [ ] **Step 3: Plan note** in [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md), "Frames 5d results": the measured values, the author's calls and rulings one line each, and a "Carried forward from frames plan 5d" list of real deferred work, without nits, written before the ledger is deleted. It includes: ambient occlusion and the light grid in orthographic views; a moving clamped model's path; the design globe's flights moving to transitions (5f); the note for 5g's table on GCRF (ruling 8); and for 5i: `Timeline.bind`'s name, `InspectController`'s rename, the controllers' folder, and what examples reach past the public API.
 - [ ] **Step 4: Gates:**
   - `npx tsc --noEmit -p .`, `npx tsc --noEmit -p tsconfig.lib.json`, `npx eslint .`, `npx prettier --check .`;
   - `npm test`, `npm run test:data`;
@@ -979,7 +979,7 @@ A browser check (port 5193).
 
 Most important first. Each has the default the plan follows. The owner took all four defaults on 2026-11-08, to be tweaked after trying them.
 
-1. **§13.29 says Entity's uses are covered by "the bindings of 5d", and section 11.4's bindings are gesture maps.** Did you mean values bound to time? _Default:_ yes: `Timeline.bind` plus setters, with the names provisional for the vector design and 5i (ruling 1).
+1. **[2026-11-08-owners-calls-for-later-plans.md](../../decisions/2026-11-08-owners-calls-for-later-plans.md) says Entity's uses are covered by "the bindings of 5d", and section 11.4's bindings are gesture maps.** Did you mean values bound to time? _Default:_ yes: `Timeline.bind` plus setters, with the names provisional for the vector design and 5i (ruling 1).
 2. **Renaming `InspectController` to `OrbitController` now, ahead of 5i, and dropping the old proof-of-concept of that name.** Fine to do it here, or should the names wait for the API review? _Default:_ rename now (call 18).
 3. **What "offers" means for free flight near a body.** The plan calls an application's `onOffer`, and shows nothing itself. Should the Viewer take the hand-over automatically or show a prompt? _Default:_ the Viewer leaves it at `"offer"`, with no prompt, so near a body the camera stays in free flight until the application accepts (call 31).
 4. **One gesture set against today's orbit pages.** Under the one `default` map, a right drag zooms everywhere, but in the Viewer's orbit mode it pans today. _Default:_ the Viewer keeps panning there through an override (call 28). Say if you'd rather have the one set.

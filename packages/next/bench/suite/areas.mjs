@@ -1,4 +1,4 @@
-// Which scenes a change needs (plan §16, r39). The catalog's areas name
+// Which scenes a change needs (docs/design/benchmark-suite.md, r39). The catalog's areas name
 // the source paths they cover; scenes list the areas they exercise. A run
 // with --changed takes the scenes of every area a changed file falls in;
 // changes nothing measures (docs, Dyno's pages, widgets) select none.

@@ -10,7 +10,7 @@ import type { Harness } from "../lab/harness.ts";
 import "./instances.css";
 
 /**
- * Instancing benchmark (plan §13.9): a multi-primitive glTF (the Cesium
+ * Instancing benchmark (docs/design/transforms-and-instancing.md): a multi-primitive glTF (the Cesium
  * milk truck: several nodes and textured materials) placed N times through
  * `PlacementOptions.instances`, one draw per primitive culled per instance on
  * the GPU. Per N: time to place, instance-table use, CPU and GPU time per

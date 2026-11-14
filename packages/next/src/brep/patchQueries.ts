@@ -1,4 +1,4 @@
-// Queries on rational Bézier patches and curve segments (overall plan §13.33,
+// Queries on rational Bézier patches and curve segments (docs/design/breps-and-geometry-queries.md,
 // the b-rep adapter): a ray against a patch by subdivision and Newton, the
 // nearest point of a patch by branch and bound with Newton at the
 // leaves, and the nearest point of a curve segment. A patch point is a convex

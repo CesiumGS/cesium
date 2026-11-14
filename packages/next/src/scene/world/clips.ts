@@ -1,4 +1,4 @@
-// Clips: sections cut through the world's content (plan §13.26, "Clip planes
+// Clips: sections cut through the world's content (docs/design/geometry-through-placement-review.md, "Clip planes
 // and caps: decided by the owner", increment 8a; caps are 8b).
 //
 // A `ClipSet` is a world object: shapes (planes, boxes, extruded polygons) named
@@ -145,7 +145,7 @@ export type ClipEffect =
  *
  * Exemptions are per draw (`DrawOptions.clipExempt`, `Tileset3D`'s
  * `clipExempt`): the hook where the styling language's, run-time data by
- * element ID, will land (plan §13.26, decision 10). There is no list per clip.
+ * element ID, will land (docs/design/geometry-through-placement-review.md, decision 10). There is no list per clip.
  */
 export interface ClipSet {
   /** The reference frame the shapes are named in (any frame: content's own, the camera's root, or one between). */
@@ -1305,7 +1305,7 @@ export interface CapPlane {
 }
 
 /**
- * The planes a set's kept region is bounded by, for caps (plan §13.26, item 5
+ * The planes a set's kept region is bounded by, for caps (docs/design/geometry-through-placement-review.md, item 5
  * and 6): a set of planes, or of one box. Each plane's cap is the section by it,
  * limited to where it bounds what is kept: with the shapes combined by
  * intersection that is inside the other planes' half-spaces; by union, outside

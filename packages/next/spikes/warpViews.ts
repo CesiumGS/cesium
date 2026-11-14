@@ -1,4 +1,4 @@
-// One world drawn in three views, each by its own route (plan §13.37, "one
+// One world drawn in three views, each by its own route (docs/design/transform-graph.md, "one
 // view's content under different transforms"; the Node test is
 // test/warpViewVariants.test.ts). The Earth's content sits in a switch frame
 // under ITRF whose edge is chosen per view:

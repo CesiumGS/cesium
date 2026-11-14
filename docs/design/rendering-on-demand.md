@@ -85,7 +85,7 @@ clean view costs one copy. Single-view canvases, `renderFrame()` and
 continuous mode draw straight into the target with no extra memory. In
 the viewer's split view, moving one camera ten times rendered that view
 ten times and the other none. Cost: one image per view on a shared canvas
-(not yet counted in the render-target budget, §13.6).
+(not yet counted in the render-target budget, [tile-selection-and-memory.md](tile-selection-and-memory.md), "Memory management (open design question)").
 
 **Measure.** Frames rendered while idle (zero), time from a change to its
 frame (one frame), and no stale frames in the parity harnesses' interactive

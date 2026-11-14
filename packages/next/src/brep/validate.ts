@@ -1,4 +1,4 @@
-// A checker for the b-rep render form (overall plan §13.33). It reports what
+// A checker for the b-rep render form (docs/design/breps-and-geometry-queries.md). It reports what
 // is wrong and where, and never throws: a host can run it on a form it did
 // not write. Lengths are metres.
 import { evaluateCurve2, evaluateCurve3, evaluateSurface } from "./evaluate.ts";

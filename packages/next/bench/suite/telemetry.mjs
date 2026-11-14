@@ -1,4 +1,4 @@
-// Hardware conditions during benchmark runs (plan §16.3): clocks,
+// Hardware conditions during benchmark runs (docs/design/benchmark-suite.md, "Measurement and statistics"): clocks,
 // temperatures, power and throttling, sampled while the suite runs, so 1.x
 // and 2.0 are compared under the same conditions or the report says they
 // were not. Timings are not "corrected" by clock (the relation isn't

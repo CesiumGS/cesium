@@ -577,4 +577,9 @@ describe("the real items", () => {
   it("pass check", () => {
     expect(checkItems(loadWorkTree(repoRoot), { root: repoRoot })).toEqual([]);
   });
+
+  it("leave no old-style names or section references in the repository", () => {
+    const hits = [...staleNames(repoRoot), ...bareSectionRefs(repoRoot)];
+    expect(hits.map((h) => `${h.path}:${h.line}: ${h.name}`)).toEqual([]);
+  });
 });

@@ -1,4 +1,4 @@
-// Per-pixel trimming of b-rep faces on the GPU (plan Â§13.33, "Step 5
+// Per-pixel trimming of b-rep faces on the GPU (docs/design/breps-and-geometry-queries.md, "Step 5
 // redirected", part 2): every face is a patch draw, and a face whose trim is
 // not its rect tests the pixel against its loops' pcurves (src/brep/gpuTrims.ts,
 // shaders/coverage.slang) in the fragment stage, which discards outside it

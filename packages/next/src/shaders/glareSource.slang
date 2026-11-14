@@ -1,4 +1,4 @@
-// A glare source (CESIUM2_WEBGPU_PLAN.md §13.22, §13.32): the record glare.slang's kernel writes
+// A glare source (docs/design/custom-post-processing.md, docs/design/sky-light-and-points-unifications.md): the record glare.slang's kernel writes
 // and the veil stages (stages/glare*.slang) and sprites read, as one struct.
 module glareSource;
 

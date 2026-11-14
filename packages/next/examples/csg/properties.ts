@@ -15,7 +15,7 @@ import {
 import { el, scrub, segmented, type Phase, type Scrub } from "./ui.ts";
 
 /**
- * The properties panel (plan §13.33): only the selected node's own
+ * The properties panel (docs/design/breps-and-geometry-queries.md): only the selected node's own
  * parameters, as compact numeric fields whose labels scrub the value, with
  * units. A leaf has its parameters, its position and its rotation; an
  * operation has its kind and its operands in order (a difference's first is

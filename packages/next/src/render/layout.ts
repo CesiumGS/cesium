@@ -821,8 +821,8 @@ export interface MaterialData {
   /**
    * The material's texture references by slot (`MaterialTextureSlot`),
    * `NO_TEXTURE` where it has none; packed two per word in the record's
-   * last three words. The bindless seam (CESIUM2_WEBGPU_PLAN.md §7.1,
-   * §13.15): today a reference is the slot in the batch's texture set
+   * last three words. The bindless seam (docs/design/risks.md, "Bindless textures: not in the PoC, designed for in 2.0",
+   * docs/design/gpu-limits-and-capacities.md): today a reference is the slot in the batch's texture set
    * (`World.textureRefs`), with resource tables it becomes the texture's
    * index in the table; the record's layout and every shader that reads
    * material textures (through `materialTexture`) stay as they are.

@@ -15,7 +15,7 @@ import type { GpuPatches } from "../../src/brep/gpuPatches.ts";
 
 /**
  * The kernels behind the example's second and third scenes. The CSG spike's
- * (plan §13.33): the same three booleans made live by SMLib and by Open
+ * (docs/design/breps-and-geometry-queries.md): the same three booleans made live by SMLib and by Open
  * CASCADE in WebAssembly, each converted to the engine's one render form.
  * Each input's faces are tagged first, so every face of a result says which
  * input it came from. The STEP scene imports NIST's parts through the same

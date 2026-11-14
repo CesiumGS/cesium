@@ -54,7 +54,7 @@ import {
 import { captureThumbnail } from "./thumbnails.ts";
 
 /**
- * Examples (plan §13.12): what 2.0 is for, one feature or use case each,
+ * Examples (docs/design/examples-and-the-gallery.md): what 2.0 is for, one feature or use case each,
  * with its source. The example page keeps one engine while examples come
  * and go, each in a viewer of its own on it (examples/types.ts has the
  * contract).

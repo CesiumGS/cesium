@@ -65,7 +65,7 @@ const REASONS: Reason[] = [
         <C>View.shadows</C>, <C>fxaa</C>, <C>overlays</C>, <C>icrfToFixed</C>{" "}
         and the sky. So the leak is smaller, not gone, and the Overview's live
         view has to call it for the sun. Closing the list is a question for the
-        API review (plan 5i).
+        API review (CS-102).
       </>
     ),
     snippet: "ondemand",
@@ -136,7 +136,7 @@ const REASONS: Reason[] = [
       <>
         Whether <C>GpuDevice</C> and <C>World</C> belong in the public surface
         is open for the API review, since a host that shares a device may need
-        them (overall plan, section 13.17).
+        them (the design note docs/design/layers-engine-renderer-backend.md).
       </>
     ),
   },
@@ -242,7 +242,7 @@ export function WhyApiChanges() {
         these choices for WebGL and for its time, and they've served for many
         years. What follows are consequences of those constraints. Where 2.0
         still leaks, or a break has shown no benefit yet, it says so, for the
-        API review (plan 5i).
+        API review (CS-102).
       </p>
       {REASONS.map((r) => (
         <section className="why" key={r.title}>

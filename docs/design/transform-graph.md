@@ -2,7 +2,7 @@
 
 **What this holds:** The transform graph's design: nodes, routes, placement and the gallery scenes (owner, 2026-11-11). The plan is `docs/superpowers/plans/2026-11-12-transform-graph.md`. Moved from the overall plan (`CESIUM2_WEBGPU_PLAN.md`) on 2026-11-13, with its content and dates unchanged.
 
-This revisits §13.26's warps from first principles. Three passes led here:
+This revisits [geometry-through-placement-review.md](geometry-through-placement-review.md)'s warps from first principles. Three passes led here:
 
 - The owner asked what a warp is for and how it relates to the frame tree.
 - Fable and the lead wrote independent notes (session files `warps-first-principles-*.md`).
@@ -51,7 +51,7 @@ A general DAG (a node with several parents) adds nothing the switch doesn't. It 
 - **Proposed API:** `affine(...)` and `smooth({ forward, inverse?, params })` nodes; "smooth transform" in the docs. "Warp" remains the friendly word for presentation-minded ones (3ds Max calls these "space warps").
 - **Modules:**
   - **`transform`** (core): the graph, the compiler and IR, autodiff, routes and accuracy.
-  - **`frames`**: the reference-frame catalogue (ICRF, ITRF, bodies, EOP, ephemerides), which is data feeding the graph. It isn't renamed to "georeference", which names placing _content_: `Georeference` replaces `DesignPlacement`, as §13.26 planned.
+  - **`frames`**: the reference-frame catalogue (ICRF, ITRF, bodies, EOP, ephemerides), which is data feeding the graph. It isn't renamed to "georeference", which names placing _content_: `Georeference` replaces `DesignPlacement`, as [geometry-through-placement-review.md](geometry-through-placement-review.md) planned.
   - **`georeference`**: CRSs (`EXT_geospatial_crs`, WKID, WKT2, `EXT_georeference`), reprojection nodes, and the geo transforms built on `smooth`: vertical exaggeration, height offset, flattening.
   - **`transforms`**: common smooth transforms (bend, twist, taper, lattice (FFD), scale-about, bump, lens distortion, corridor unroll, velocity model).
 
@@ -68,7 +68,7 @@ A general DAG (a node with several parents) adds nothing the switch doesn't. It 
 
 The example lands after the transform graph is built.
 
-**Migration from §13.26's code.**
+**Migration from [geometry-through-placement-review.md](geometry-through-placement-review.md)'s code.**
 
 - **Keep:** float64 maps, fits as the fallback for functions the compiler can't take, picks by domain point, cofactor normals, drawn bounds and curved clips.
 - **Change:**

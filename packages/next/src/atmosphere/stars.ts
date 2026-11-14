@@ -1,5 +1,5 @@
 /**
- * Stars as points (plan §4.2, the night sky): read out of a star map. 1.x's
+ * Stars as points (docs/design/lighting-and-shading.md, the night sky): read out of a star map. 1.x's
  * Tycho map draws each star as one texel (5 arcminutes) whose value grows
  * with the star's brightness, compressed (Sirius about 240 of 255, a ninth
  * magnitude star about 16), over a faint 8-bit background (the Milky Way).

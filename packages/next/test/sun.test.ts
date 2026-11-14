@@ -1,4 +1,4 @@
-// The sun's position from a time (plan §13.13) against almanac values, and
+// The sun's position from a time (docs/design/time-and-its-controls.md) against almanac values, and
 // the clock.
 import { describe, expect, it } from "vitest";
 import { sunDirection, sunTimes } from "../src/time/sun.ts";

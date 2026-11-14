@@ -29,12 +29,12 @@ source.
 
 **The Slang playground (r50).** A second example: a live shader editor
 beside a viewer. Edit Slang custom shader stages (`import cesium;`,
-`vertexMain` and `fragmentMain` against the user contract, §3.4) and see
+`vertexMain` and `fragmentMain` against the user contract, [shaders.md](shaders.md)) and see
 them on content as you type.
 
 - _Why now._ It is the first user-facing use of runtime Slang
   (`CustomShader.fromSlang`: the WebAssembly build in a worker). It is
-  where the Slang-first migration's open questions show (§3.4): the WASM
+  where the Slang-first migration's open questions show ([shaders.md](shaders.md)): the WASM
   build's size and compile latency are measured on every edit, in the
   page.
 - _How it works._
@@ -294,7 +294,7 @@ max)`, `Color(r, g, b)` (linear RGB), `Toggle(on)` and `Label("…")`. A
     (tessellating faces and edges at the view's tolerance), or offline,
     converting B-rep to tiles with exact edges, and what it costs in
     size.
-  - The same editor for vector styles (§13.9).
+  - The same editor for vector styles ([transforms-and-instancing.md](transforms-and-instancing.md)).
   - Exact highlighting from the server's semantic tokens, instead of the
     stream mode.
   - Readiness signals: resume presentation automatically once the content
@@ -392,7 +392,7 @@ bundler setups must set and populate by copying `Workers/`, `Assets/`,
 
 Slugs name the use case, not the API (`real-time-tracks`,
 `offshore-platform`, `campus-splats`). Example scenes are written so the
-benchmark suite (§16) can load the same scene definitions, so a showcase
+benchmark suite ([benchmark-suite.md](benchmark-suite.md)) can load the same scene definitions, so a showcase
 and its measurement never drift apart.
 
 The gallery skeleton comes with the first example beyond the viewer

@@ -900,7 +900,7 @@ export class Tileset3D implements TileTree {
    * The terrain as drawn in the views of `viewMask` (default all; a view's
    * bit is `Engine.viewBit`), read-only, for exact ray queries
    * (`terrainLineOfSight`). Undefined for 3D Tiles: they keep no CPU
-   * triangles and are ray cast on the GPU (§13.10, `World.castRays`).
+   * triangles and are ray cast on the GPU (docs/design/ray-queries-and-path-tracing.md, `World.castRays`).
    */
   terrainRayTarget(viewMask?: number): TerrainRayTarget | undefined {
     return this.state.source?.rayTarget?.(viewMask);

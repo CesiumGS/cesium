@@ -7,7 +7,7 @@ import { Jobs, type Job, type JobReply, type JobSpec } from "./Jobs.ts";
 
 /**
  * A small pool of content workers, started lazily up to `size`, with the
- * job system in front of them (`Jobs`, plan §13.43): `submit` takes a job
+ * job system in front of them (`Jobs`, docs/design/job-system.md): `submit` takes a job
  * with a priority, dependencies, cancellation and a main-thread step for
  * the engine's apply phase; `request` is a job with none of these.
  */

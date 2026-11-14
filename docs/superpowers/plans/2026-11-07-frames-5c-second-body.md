@@ -4,7 +4,7 @@
 
 ## After the transform graph (2026-11-12)
 
-This replaces the amendments written on 2026-11-11 for §13.26's warps, and their open questions. Read with §13.37 of the overall plan and `2026-11-12-transform-graph.md`.
+This replaces the amendments written on 2026-11-11 for [geometry-through-placement-review.md](../../design/geometry-through-placement-review.md)'s warps, and their open questions. Read with [transform-graph.md](../../design/transform-graph.md) of the overall plan and `2026-11-12-transform-graph.md`.
 
 **What changed.**
 
@@ -18,7 +18,7 @@ This replaces the amendments written on 2026-11-11 for §13.26's warps, and thei
   - world clips work in any reference frame, so call 5's "Earth-only" covers only `TerrainClips`;
   - point sources and `View.toPixel` follow routes.
 
-**The former open questions** (§13.37):
+**The former open questions** ([transform-graph.md](../../design/transform-graph.md)):
 
 1. **Warp domains:** none. Scope is placement, and reach is the profile's. The Moon beside an exaggerated Earth is a regression test in Tasks 1, 4 and 10, not a feature.
 2. **Per-view warp terms:** per-view parameters, and switch nodes for different structures (owner, 2026-11-12), built in the transform plan's Task 6. The stated limit and its warning test are dropped.
@@ -26,7 +26,7 @@ This replaces the amendments written on 2026-11-11 for §13.26's warps, and thei
    - Rigid, the default: as written.
    - Under a lift on its own body: the ellipsoid is a fixed point, so the limb is exact. Its error takes σ_max, since the relief scales, and its floor sphere takes the drawn depth of `terrainBand.min`.
    - Under any other smooth node: the impostor is off with one warning naming the node, and surface tiles draw by their own route. A proxy mesh through the ordinary vertex path is later work.
-4. **A CRS's datum and body precedence:** georeferencing is data (no placement modes, §13.26). The loader reads the CRS in `georeference`, places the content at the datum's body node and passes the body as `TilesetOptions.body`, so it is call 1's first source. A disagreement with `3DTILES_ellipsoid` or the anchor is refused, naming both. The core reads no CRS.
+4. **A CRS's datum and body precedence:** georeferencing is data (no placement modes, [geometry-through-placement-review.md](../../design/geometry-through-placement-review.md)). The loader reads the CRS in `georeference`, places the content at the datum's body node and passes the body as `TilesetOptions.body`, so it is call 1's first source. A disagreement with `3DTILES_ellipsoid` or the anchor is refused, naming both. The core reads no CRS.
 5. **Should a world clip cut the impostor?** **Open.** Fable's answer, taken as the default: yes. The impostor is a level of detail of the content, and levels must agree on what is visible. Task 7 builds it so unless the owner says otherwise.
 
 **Tasks.**
@@ -115,15 +115,15 @@ Places where the spec, read against the code and the 5a and 5b plans, is contrad
 10. **Section 18 asks that Cesium Moon's access be checked before the handover is built.** _Ruling:_ Task 6's probe (call 32) records what ion's endpoint returns for a good token and a bad one. The case "the asset isn't in My Assets" can be seen only from an account without it; if the owner's account has it, the 404 mapping stays the plan's reading and is listed for the owner.
 11. **"The impostor … sits at infinity behind everything, placed from the sky inputs"** is also a public API today (`engine.moonPosition`, `engine.moonAxes`). _Ruling:_ call 21.
 
-## Leave room for (overall plan §13.34)
+## Leave room for ([infrastructure-and-geoscience-capabilities.md](../../design/infrastructure-and-geoscience-capabilities.md))
 
-Per-body volumes, clamping and impostors take their route from where their content sits, so a deformer over one body's content (an application's exaggeration, §13.37) reaches that content and no other body's. Nothing to build here beyond the tests named in Tasks 1, 4, 5, 7 and 10.
+Per-body volumes, clamping and impostors take their route from where their content sits, so a deformer over one body's content (an application's exaggeration, [transform-graph.md](../../design/transform-graph.md)) reaches that content and no other body's. Nothing to build here beyond the tests named in Tasks 1, 4, 5, 7 and 10.
 
 ## Global Constraints
 
 Copied from 5a's and 5b's plans where they apply, with 5c's additions.
 
-- **Precision** (spec section 4): "Float64 on the CPU throughout. The GPU sees only camera-relative values (hi/lo and camera-relative, §13.15). Hi/lo is valid to ±2³¹ m (about 2.1 million km), which covers Earth to Moon." Nothing large is ever rotated in float32; the impostor is ray-cast in its body's scaled space with the eye-relative offset form `moonDisk` uses, so no large values cancel.
+- **Precision** (spec section 4): "Float64 on the CPU throughout. The GPU sees only camera-relative values (hi/lo and camera-relative, [gpu-limits-and-capacities.md](../../design/gpu-limits-and-capacities.md)). Hi/lo is valid to ±2³¹ m (about 2.1 million km), which covers Earth to Moon." Nothing large is ever rotated in float32; the impostor is ray-cast in its body's scaled space with the eye-relative offset form `moonDisk` uses, so no large values cancel.
 - **Earth-only scenes are unchanged:** "The parity pages, the bench gate and every test keep passing. A globe-only scene renders the same pixels before and after." This holds after every task, not only at the end. The gates are 5a's call 46: `parity`, `models`, `tileset`, `customShader`, `translucency`, `tracks` and `imagery`, plus `globe`, `heights` and `lod` with a token; the bench gate is `alloc`.
 - **Cost rule:** per-view work grows with the number of anchors and impostors, not the number of draws or tiles.
 - **Pay for what you use.** A globe-only Viewer downloads nothing new and **makes no request for the Moon to ion** (no endpoint call, no tile), with or without a token. Its per-tick work for the Moon is what the sky's Moon costs today. **The library never adds ion content or contacts ion on its own:** only the application, or the Viewer on its say-so, declares ion assets, and a declared asset is fetched only when the camera nears its body.
@@ -632,10 +632,10 @@ A browser check (port 5195), with a token.
 
 **Files:**
 
-- Modify: `packages/next/README.md`, `CESIUM2_WEBGPU_PLAN.md` §13.14
+- Modify: `packages/next/README.md`, [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)
 
 - [ ] **Step 1: README.** Document a tileset's body and `3DTILES_ellipsoid`; per-body volumes, horizon culling, clamping and picks; what stays Earth-only; a view on another body; depth across bodies and the underlay; impostors (states, error, threshold, bias, modes, and what a deformer over a body's content does to them), surface tilesets, declared tilesets and their failures; header refresh; the shared material; the Viewer's `moon` and `moonMap`; credits that follow what draws.
-- [ ] **Step 2: Plan note** in §13.14, "Frames 5c results": the measured values (the check page's, the parity metrics against the base commit, the bundle size, the ion probe's statuses, `CESIUM_MOON_ALBEDO_MEAN`), the plan's calls and rulings one line each, the owner's open items (the 404 case if unseen; the bundled map's credit if unfound), and a "Carried forward" list of real deferred work from this plan's ledger, without nits, written before the ledger is deleted. It includes a single cache budget across tilesets (ruling 6), the Earth's appearance for its impostor (5e), and controllers on the Moon (5d). Mark the section 16 row "The Moon as a tileset" closed, naming the tasks.
+- [ ] **Step 2: Plan note** in [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md), "Frames 5c results": the measured values (the check page's, the parity metrics against the base commit, the bundle size, the ion probe's statuses, `CESIUM_MOON_ALBEDO_MEAN`), the plan's calls and rulings one line each, the owner's open items (the 404 case if unseen; the bundled map's credit if unfound), and a "Carried forward" list of real deferred work from this plan's ledger, without nits, written before the ledger is deleted. It includes a single cache budget across tilesets (ruling 6), the Earth's appearance for its impostor (5e), and controllers on the Moon (5d). Mark the section 16 row "The Moon as a tileset" closed, naming the tasks.
 - [ ] **Step 3: Gates:**
   - `npx tsc --noEmit -p .`, `npx eslint .`, `npx prettier --check .`;
   - `npm test`, `npm run test:data`;

@@ -157,7 +157,7 @@ const COMPAT_PIECES: { piece: string; today: ReactNode; change: ReactNode }[] =
       today:
         "The overall plan's audit counts 7 in the translucent fragment stage: materials, clip boxes, lights and ambient occlusion among them. The default limit there is 4.",
       change:
-        "Pack tables into fewer buffers, the step section 13.15 already names, or use data textures. What real adapters offer above 4 isn't measured.",
+        "Pack tables into fewer buffers, the step the design note docs/design/gpu-limits-and-capacities.md already names, or use data textures. What real adapters offer above 4 isn't measured.",
     },
     {
       piece: "Scene targets",
@@ -450,8 +450,9 @@ export function ReachOptions() {
       <h3>The work for a WebGL 2 renderer</h3>
       <p>
         WebGL 2 has no compute, storage buffers or indirect draws, so a thin
-        backend can't carry today's renderer. This is section 13.17's view, with
-        the 43 compute entry points grouped from the code.
+        backend can't carry today's renderer. This is the design note
+        docs/design/layers-engine-renderer-backend.md's view, with the 43
+        compute entry points grouped from the code.
       </p>
       <PieceTable
         label="A WebGL 2 renderer, piece by piece"
@@ -843,15 +844,17 @@ export function ReachFacts() {
           example's own inline script, and a same-origin worker served{" "}
           <C>script-src 'self' 'wasm-unsafe-eval'</C>. A worker from another
           origin starts through a <C>blob:</C> URL, so that page's policy must
-          allow it. This is from the overall plan, section 13.12.
+          allow it. This is from the design note
+          docs/design/examples-and-the-gallery.md.
         </p>
         <h3>Air-gapped use</h3>
         <p>
           The engine's reference data downloads today into a store outside the
           repository, so a disconnected deployment has to supply it. A separate
-          optional data package is proposed and not built. The overall plan,
-          section 13.24, records what its author read of each data source's
-          terms. That reading needs legal confirmation before anything ships.
+          optional data package is proposed and not built. The design note
+          docs/design/reference-data.md, records what its author read of each
+          data source's terms. That reading needs legal confirmation before
+          anything ships.
         </p>
         <h3>Accessibility</h3>
         <p>
@@ -950,8 +953,9 @@ export function ReachFacts() {
           </li>
           <li>
             <strong>The WebGL 2 spike.</strong> Slang to GLSL ES on two kernels
-            and one material, as section 13.17 says. The WebGL 2 plan lists it
-            as W0 and nothing of it is built.
+            and one material, as the design note
+            docs/design/layers-engine-renderer-backend.md says. The WebGL 2 plan
+            lists it as CS-32 and nothing of it is built.
           </li>
           <li>
             <strong>Virtual desktops.</strong> In each of Citrix, Omnissa

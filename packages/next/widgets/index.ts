@@ -1,7 +1,7 @@
 /**
  * Widgets: UI over an engine view, kept out of the headless engine core (as
  * 1.x keeps its widgets apart from its engine). `Viewer`, 2.0's counterpart
- * to `Cesium.Viewer`; the inspector (plan §16.9), for 2.0 through
+ * to `Cesium.Viewer`; the inspector (docs/design/benchmark-analysis-and-experience.md), for 2.0 through
  * `inspectEngine` and for other engines through `Inspectable`; the credits.
  */
 export {

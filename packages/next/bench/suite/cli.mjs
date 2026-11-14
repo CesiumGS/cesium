@@ -1,4 +1,4 @@
-// Benchmark suite command line (plan §16).
+// Benchmark suite command line (docs/design/benchmark-suite.md).
 //
 //   node packages/next/bench/suite/cli.mjs list
 //   node packages/next/bench/suite/cli.mjs verify
@@ -44,8 +44,8 @@
 //        (benchstat-style: two configurations of one run, or one
 //        configuration across two runs, e.g. before and after a change)
 //
-// A run declares what it is meant to move before results exist (plan
-// §16.9): --primary cpuP50 --guardrails settleMs,bytes --hypothesis "…";
+// A run declares what it is meant to move before results exist (
+// docs/design/benchmark-analysis-and-experience.md): --primary cpuP50 --guardrails settleMs,bytes --hypothesis "…";
 // the report's scorecard tests them.
 //
 // BENCH_MANIFEST adds a private manifest (outside the repo). Results go to
@@ -360,7 +360,7 @@ async function run() {
       }
     }
   }
-  // A parameter sweep (plan §16.9, Explore): each 2.0 engine (or
+  // A parameter sweep (docs/design/benchmark-analysis-and-experience.md, Explore): each 2.0 engine (or
   // --sweep-engines) once per value, e.g. --sweep maximumScreenSpaceError=8,16,32
   // or --sweep render.pixelRatio=1,2: "2.0+maximumScreenSpaceError=8".
   let sweep;
@@ -632,7 +632,7 @@ async function run() {
     // "build" (production) or "dev" (--dev, the live tree).
     ...(frozen ? { frozen: frozen.sha } : {}),
     served: frozen ? "build" : "dev",
-    // Lineage (plan §16.9, Trust): how to reproduce this run exactly.
+    // Lineage (docs/design/benchmark-analysis-and-experience.md, Trust): how to reproduce this run exactly.
     command: ["node", "packages/next/bench/suite/cli.mjs", command, ...rest],
     diffSha256: sha256(
       execSync("git diff HEAD", {
@@ -1444,7 +1444,7 @@ function requestKind(url) {
 }
 
 /**
- * A run's validity (plan §16.9, Trust): invalid when it failed or timed
+ * A run's validity (docs/design/benchmark-analysis-and-experience.md, Trust): invalid when it failed or timed
  * out; a warning when its conditions were not reached (cooldown or quiet
  * waits ran out, the machine stayed busy). Reasons are listed.
  */

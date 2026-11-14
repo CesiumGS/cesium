@@ -35,7 +35,7 @@ const TEMPLATE = `
 <h1>Custom shaders</h1>
 <p>
   Boxes on a ground plane, drawn with the engine's shader and with a custom
-  shader's stages (plan §3.4, "Custom shading"): every pass that draws them
+  shader's stages (docs/design/shaders.md, "Custom shading"): every pass that draws them
   (opaque, depth, shadow, ambient occlusion, translucent) compiles from the
   custom module. Stages that change nothing, and a shader that fails to
   compile (the content keeps the default), must match the default exactly;
@@ -501,7 +501,7 @@ const TWIST_HEIGHT = new CustomShader({
 const SLANG_WASM = "/slang-wasm/slang-wasm.js";
 
 /**
- * ToonMaterial (the Slang spike's user material, plan §3.4 step 7) in
+ * ToonMaterial (the Slang spike's user material, docs/design/shaders.md step 7) in
  * WGSL: what toon.slang must draw, at build time and at runtime.
  */
 const TOON = new CustomShader({

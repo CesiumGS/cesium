@@ -1,4 +1,4 @@
-// A world's warp context (plan §13.26, increments 1 and 4): draws under an
+// A world's warp context (docs/design/geometry-through-placement-review.md, increments 1 and 4): draws under an
 // anchor whose route to the view's render root crosses a warp are drawn
 // warped. The app defines a warp frame and puts the rig on it; nothing is
 // set per item. Until a draw's first fit exists it is held hidden, so

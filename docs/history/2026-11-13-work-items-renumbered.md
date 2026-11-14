@@ -1,6 +1,6 @@
 # Work items renumbered (2026-11-13)
 
-**What this holds:** the table from the old milestone names to the work items' `CS-<n>` IDs, made when work tracking moved into `packages/next/work/` on 2026-11-13. It is history, kept so that commit messages, session notes and prompts written before then stay readable. It is not an alias list: no tool accepts an old name, and this is the one file the stale-name check (`scripts/work/views.mjs check`) leaves alone.
+**What this holds:** the table from the old milestone names to the work items' `CS-<n>` IDs, made when work tracking moved into `packages/next/work/` on 2026-11-13. It is history, kept so that commit messages, session notes and prompts written before then stay readable. It is not an alias list: no tool accepts an old name, and with the tracker's test fixtures it is one of the two files the stale-name check (`scripts/work/views.mjs check`) leaves alone.
 
 Where an old milestone had a partial dependency, it was split in two, and both halves are listed. Items that had no old name (decisions, external items, the transform graph's open tasks, new splits of contingent work) aren't listed.
 

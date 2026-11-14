@@ -4,7 +4,7 @@
 // `placePosition` is its GPU twin, in float32 and in the same order of
 // operations, and scene/placementTable.ts the layout between them.
 // `termsOf` converts today's `Placement` kinds, which stay as input until
-// the API review (5i).
+// the API review (CS-102).
 import { liftedPart } from "../camera/heightProfile.ts";
 import {
   PLACEMENT_MONOMIALS,

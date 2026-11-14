@@ -1,4 +1,4 @@
-// The kernel worker's brain (overall plan §13.33): runs the requests of
+// The kernel worker's brain (docs/design/breps-and-geometry-queries.md): runs the requests of
 // kernelProtocol.ts against SMLib and Open CASCADE, one at a time, in
 // whatever scope it is created in. `kernelWorker.ts` makes one in a Web
 // Worker; tests make one in-process. Provisional.

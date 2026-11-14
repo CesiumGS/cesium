@@ -1,10 +1,10 @@
-// A draw's warp on the GPU (plan §13.26, the second review): up to three
+// A draw's warp on the GPU (docs/design/geometry-through-placement-review.md, the second review): up to three
 // weighted displacement terms in model space, p' = p + Σ wᵢ·Dᵢ(p). One form
 // for every case: a route's fit (a cubic lattice, weight 1), an
 // application's exaggeration (weight k − 1), a morph target (a vertex
 // attribute, weight from the application), and their mixes. It replaces
 // the closed set of `Placement` kinds inside the engine; those stay as
-// input until the API review (5i) and are converted to terms. Types only:
+// input until the API review (CS-102) and are converted to terms. Types only:
 // the CPU twin and the GPU layout are scene/warpEvaluate.ts and
 // shaders/placement.slang's.
 import type { PlacementParameter } from "./placement.ts";
@@ -17,7 +17,7 @@ export const LATTICE_CELLS = [1, 2, 4, 8] as const;
 
 /**
  * A scalar fitted over a lattice's cells, in the free fourth channel of its
- * rows (`.w`): a curved clip's signed distance (plan §13.26, increment 8c).
+ * rows (`.w`): a curved clip's signed distance (docs/design/geometry-through-placement-review.md, increment 8c).
  * The same cells and local coordinates as the displacement, 20 monomials a
  * cell: coefficient `cell · 20 + term`, metres, the sign
  * being the clip's keep rule (kept where it is ≤ 0).

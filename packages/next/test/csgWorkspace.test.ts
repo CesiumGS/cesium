@@ -1,4 +1,4 @@
-// The CSG sample's workspace (plan §13.33, direct manipulation), without a
+// The CSG sample's workspace (docs/design/breps-and-geometry-queries.md, direct manipulation), without a
 // kernel, a GPU or a page: dragging rows (the drops a tree accepts and
 // refuses, what they mean, grouping for the booleans), the undo stack, the
 // view math and the gizmo's hit tests and drags, the faces' geometry and the

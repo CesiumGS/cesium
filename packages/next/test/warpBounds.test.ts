@@ -1,4 +1,4 @@
-// Bounds of warps (plan §13.26, increment 3): a draw's sphere moves by the
+// Bounds of warps (docs/design/geometry-through-placement-review.md, increment 3): a draw's sphere moves by the
 // displacement at its centre and pads by the residual, for every value in
 // its parameters' ranges; a map's drawn bounding sphere and [σ_min, σ_max].
 import { describe, expect, it } from "vitest";

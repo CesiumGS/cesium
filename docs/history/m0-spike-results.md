@@ -64,7 +64,7 @@ culls nothing.
 - **Decision input:** build-time Slang is viable as the engine and user
   authoring path. Runtime Slang works but costs ≈8 MB (brotli) and ≈0.5 s
   before the first compile, so it stays lazy, worker-hosted and optional, with
-  offline compilation the recommended path, as §3.4 proposed.
+  offline compilation the recommended path, as [shaders.md](../design/shaders.md) proposed.
 
 ## M0 close-out (r8)
 
@@ -124,4 +124,4 @@ with FLIP, precision, worker, Slang correctness and 1.x baselines are done on
 Windows. Carried into M1: the Slang performance gate, steady-state allocation
 measurement, the 2.0 first-frame cost, and the per-indirect-call cost
 (batching). Deferred: the Metal precision run (done r50: it failed in the
-float form and passes in the integer-assisted one, §3.3).
+float form and passes in the integer-assisted one, [architecture.md](../design/architecture.md), "Render world and draws (render/): GPU-driven from M1").

@@ -1,5 +1,5 @@
 // What a pick needs of a world to give a hit's point in the content's own
-// domain (CESIUM2_WEBGPU_PLAN.md §13.26, increment 5; scene/pickDomain.ts):
+// domain (docs/design/geometry-through-placement-review.md, increment 5; scene/pickDomain.ts):
 // where a patch draw's faces come from, and an instance's matrix.
 import type { PickHint, RefinedPick } from "../../geometry/brep.ts";
 import {

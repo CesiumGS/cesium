@@ -2,7 +2,7 @@
  * `Stepwise` tile selection: refines one level at a time, loading each
  * level on the way down, a parent drawn until its children load. CesiumJS
  * 1.x's default (non-skip-LOD) base traversal, reproduced for fair
- * comparisons and selection parity tests (plan §12). Runs once per view over a shared tile tree; per-view state
+ * comparisons and selection parity tests (docs/history/m2-progress.md). Runs once per view over a shared tile tree; per-view state
  * lives in `Tile.views[viewId]`.
  *
  * Sources: Cesium3DTilesetBaseTraversal.js, Cesium3DTilesetTraversal.js,

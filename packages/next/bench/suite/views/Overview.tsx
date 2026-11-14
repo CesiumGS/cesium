@@ -330,7 +330,8 @@ export function Overview() {
           </p>
           <p>
             Better and worse count scenes whose 95% interval excludes no change.
-            Budgets are the catalog's limits (plan §5).
+            Budgets are the catalog's limits
+            (docs/design/performance-methodology.md).
           </p>
         </>
       }

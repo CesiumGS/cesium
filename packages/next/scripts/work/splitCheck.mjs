@@ -87,7 +87,10 @@ for (const [i, l] of old.entries()) {
 const isHeading = (l) => /^#{1,6} /.test(l);
 const norm = (l) =>
   isHeading(l)
-    ? l.replace(/^#+ +/, "").replace(/^\d+(?:\.\d+)*\.? +/, "").trim()
+    ? l
+        .replace(/^#+ +/, "")
+        .replace(/^\d+(?:\.\d+)*\.? +/, "")
+        .trim()
     : l.trim();
 const skip = (l) => /^\s*$/.test(l) || /^-{3,}$/.test(l.trim());
 
@@ -103,7 +106,8 @@ const headings = (ls) => {
   }
   return n;
 };
-const rows = (ls) => ls.filter((l) => /^\|/.test(l) && !/^\|[\s|:-]+\|$/.test(l)).length;
+const rows = (ls) =>
+  ls.filter((l) => /^\|/.test(l) && !/^\|[\s|:-]+\|$/.test(l)).length;
 
 function multiset(items) {
   const m = new Map();
@@ -124,7 +128,9 @@ function tokens(line) {
   for (const m of t.matchAll(/\]\(([^)]+)\)/g)) {
     out.push(`link:${m[1].split("/").pop()}`);
   }
-  for (const m of t.replace(/`[^`]+`/g, " ").matchAll(/(?<![\w.-])[0-9][0-9,]*(?:\.[0-9]+)?(?![\w-])/g)) {
+  for (const m of t
+    .replace(/`[^`]+`/g, " ")
+    .matchAll(/(?<![\w.-])[0-9][0-9,]*(?:\.[0-9]+)?(?![\w-])/g)) {
     out.push(m[0]);
   }
   return out;
@@ -173,5 +179,9 @@ console.log(
 console.log(
   `new: ${fresh.length} lines in ${newFiles.length} files, ${headings(fresh)} headings, ${rows(fresh)} table rows`,
 );
-console.log(problems.length ? `${problems.length} problem(s)` : `${mode}: everything accounted for`);
+console.log(
+  problems.length
+    ? `${problems.length} problem(s)`
+    : `${mode}: everything accounted for`,
+);
 process.exitCode = problems.length ? 1 : 0;

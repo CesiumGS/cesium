@@ -14,7 +14,7 @@
 - **Task 5 left two things open:** tessellation is a spike only, and Taylor bounds aren't used for selection on geodetic routes.
 - **Tasks 6–8 unblocked (owner, 2026-11-12):** the tree with per-view switch nodes and the names (`affine`/`smooth`; modules `transform`, `frames`, `georeference`, `transforms`) are confirmed. After task 8, a handbook revamp for the new model (owner).
 - **The exaggeration example's remaining ~1 s long task** is warped tile bounds in selection (`drawnTile` → `scaledImage`), not shader compilation.
-- **Per-view route structure (task 6's known limit) is closed, not yet committed:** views that reach an anchor by routes of different shape are drawn by one twin of each mesh draw per shape (`src/scene/world/variants.ts`; CESIUM2_WEBGPU_PLAN.md §13.37, "Per-view route structure"). Billboards, instanced draws and patch draws have no twin.
+- **Per-view route structure (task 6's known limit) is closed, not yet committed:** views that reach an anchor by routes of different shape are drawn by one twin of each mesh draw per shape (`src/scene/world/variants.ts`; [transform-graph.md](../../design/transform-graph.md), "Per-view route structure"). Billboards, instanced draws and patch draws have no twin.
 
 > **For agentic workers:** execute task by task, with a fresh implementer per task. Verification is lean, as the owner asked on 2026-11-11:
 >
@@ -24,14 +24,14 @@
 >
 > Name existing code by symbol (`grep -rn "class WarpFrame" packages/next/src`). Other agents share this checkout: start each task with `git status` for the files it changes.
 
-**Goal:** replace §13.26's warps (`warpFrame`, `Warp.presentation`, `Warp.domain`, one warp context per world) with one transform graph.
+**Goal:** replace [geometry-through-placement-review.md](../../design/geometry-through-placement-review.md)'s warps (`warpFrame`, `Warp.presentation`, `Warp.domain`, one warp context per world) with one transform graph.
 
 - **Edges:** each is affine or smooth (a differentiable function with parameters).
 - **Placement:** where content and cameras sit decides what is warped.
 - **Compilation:** a compiler differentiates smooth nodes automatically and emits fused GPU code per route shape, with a float64 CPU path for truth.
 - **Library:** built-in transforms in Slang autodiff with TS mirrors; application functions in restricted plain JS.
 
-**Spec:** CESIUM2_WEBGPU_PLAN.md §13.37, plus the session note `transform-graph-unified.md` and the handbook's "Transform graph (draft)" tab.
+**Spec:** [transform-graph.md](../../design/transform-graph.md), plus the session note `transform-graph-unified.md` and the handbook's "Transform graph (draft)" tab.
 
 **Decisions in force (owner, 2026-11-11):**
 
@@ -49,7 +49,7 @@
 **Builds on:**
 
 - `277f2f3e57`, the GPU warp spike: `warpForms.ts`, `warpDirect.ts`, `warpFitGpu.ts`, `warpFitDirect.slang` and `warpFitGpu.slang`;
-- the fits, picks by domain point, drawn bounds and curved clips from §13.26.
+- the fits, picks by domain point, drawn bounds and curved clips from [geometry-through-placement-review.md](../../design/geometry-through-placement-review.md).
 
 ## Architecture
 
@@ -122,7 +122,7 @@
 - **Selection bounds:** interval or Taylor bounds per tile over parameters' expected ranges (and `valid` ranges for clamping), replacing `warpBounds.ts`'s sampling where an IR exists.
 - **Clips:** a clip set is placed at a node. Curved clips come from the route between the clip's node and the content's.
 - **Tessellation:** an H-based chord bound per triangle edge. A compute subdivision pass for meshes whose bound exceeds the tolerance, reusing the b-rep dicing's indirect-draw path. B-rep patches evaluate the route after `vsPatch`'s surface evaluation.
-- **Status (2026-11-12):** built as above except that selection bounds keep sampling and tessellation is a spike (`spikes/routeTessellation.ts`), not wired; results and reasons in CESIUM2_WEBGPU_PLAN.md §13.37, "Queries through routes".
+- **Status (2026-11-12):** built as above except that selection bounds keep sampling and tessellation is a spike (`spikes/routeTessellation.ts`), not wired; results and reasons in [transform-graph.md](../../design/transform-graph.md), "Queries through routes".
 
 ### Task 6: migrate the engine and examples
 
@@ -135,11 +135,11 @@
 
 ### Task 7: rewrite plans 5c and 5d
 
-Rewrite plans 5c and 5d against the graph. Their open questions are answered by placement (§13.37's table). Remove the amendments that no longer apply.
+Rewrite plans 5c and 5d against the graph. Their open questions are answered by placement ([transform-graph.md](../../design/transform-graph.md)'s table). Remove the amendments that no longer apply.
 
 ### Task 8: the "Transform graph" gallery example
 
-Build the gallery example from §13.37's eight scenes, on real data, each with its graph and route shown.
+Build the gallery example from [transform-graph.md](../../design/transform-graph.md)'s eight scenes, on real data, each with its graph and route shown.
 
 ## Order and size
 
@@ -319,7 +319,7 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
 - **Increment 4: measure.**
   - **The cost where little is hidden:** big open expanses seen from high up (the `globe` suite's Front Range at 300 km and Everest regional, a whole-Earth view), as pyramid GPU time, query GPU time, CPU per tick to build the queries, and the occluded share. The win where much is hidden: the exaggeration scene, a craggy valley, and dense design models (a building with interiors, an industrial plant) with additive refinement.
   - **Additive refinement must stay snappy (owner):** occlusion never stops an added child from being selected and requested. It only moves the child's request into the occluded band, after every visible one, and the child is drawn as soon as it's loaded, so turning a corner usually finds it resident. Under memory pressure, occluded added content goes first. The no-refinement gate is for replacement refinement only, where the parent stays drawn. Measure how often revealed added content is already resident in a walk-through.
-- **Vectors and Gaussian splats (owner, 2026-11-12): settle each when it's built.** The overall plan's §13.27 (the vector design) and M6 (splats) point here.
+- **Vectors and Gaussian splats (owner, 2026-11-12): settle each when it's built.** [cad-display-extensions.md](../../design/cad-display-extensions.md) (the vector design) and M6 (splats) point here.
   - **Point splats today** write depth for any covered pixel, translucent symbols included, so a tick that draws them skips the pyramid. That's safe but switches occlusion off in those views. The fix is for splats to draw after the pyramid, or into depth the pyramid doesn't read.
   - **Vector marks:**
     - Opaque 3D marks (extruded polygons, tubes, walls) are occluders like any opaque draw.
@@ -351,7 +351,7 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
   - The exaggeration scene at ×1, ×5 and ×10 (tiles drawn, requests, bytes, GPU per tick, time to settle), the `globe` suite's six views (1.x parity must hold), and a camera flight for pops.
   - Report the occluded share of the drawn tiles and the candidates.
 - **Risks:**
-  - It adds compute passes and one small readback per view, and no indirect draws, so §13.23's exposure on Intel GPUs doesn't grow.
+  - It adds compute passes and one small readback per view, and no indirect draws, so [indirect-draws-on-intel.md](../../design/indirect-draws-on-intel.md)'s exposure on Intel GPUs doesn't grow.
   - On this M2, the pyramid's cost must be under about 0.5 ms.
   - Tiles that should refine as the camera comes round a ridge lag by the readback's latency. That's what the 2-tick hysteresis and the "visible until known" rule bound.
 - **Coarsening tiles hidden long (2026-11-13).** Hidden REPLACE tiles kept the refinement they reached, so far terrain that refined while loading stayed refined behind the walls. Now a refined tile hidden for `COARSEN_AFTER_MS` (2 s) over at least two results in a row may coarsen to itself (`Budgeted`, `ViewOcclusion.longHidden`).
@@ -379,7 +379,7 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
     - With coarsening on (417 tiles, 1.01 M triangles), it leaves out 68 items and 0.12 M triangles: the coarsened tiles are large, and a sphere around one rarely fits behind a wall. Opaque 116–118 ms on, 125 ms off.
     - The default view frozen at 8.4 M triangles: 1,337 items and 2.08 M triangles left out (25%). With the tile queries' 2 × 2 window instead of 8 × 8, about 5%.
     - **Images:** the same frozen scene drawn on and off compares bit for bit in scene-referred light (`View.readHdr`) at 1.0 M and at 4.8 M triangles. One frozen state of the default view at 8.4 M triangles had 13 of 1.15 M pixels differ by at most 0.09%; not explained (an order between surfaces at equal depth is the suspect, AO isn't: on and off agree with it either way).
-  - **Next:** tighter bounds. Selection's drawn boxes (fix 2) are far tighter than spheres for flat or tall tiles; a per-draw box needs a place the cull can read (group 1 is at the base tier's 8 storage buffers). Then the structural overhead cuts above (the prepass split into the two phases, a cheaper pyramid), and clusters (§13.41). `"auto"` is deferred.
+  - **Next:** tighter bounds. Selection's drawn boxes (fix 2) are far tighter than spheres for flat or tall tiles; a per-draw box needs a place the cull can read (group 1 is at the base tier's 8 storage buffers). Then the structural overhead cuts above (the prepass split into the two phases, a cheaper pyramid), and clusters ([investigations-2026-11-13.md](../../design/investigations-2026-11-13.md)). `"auto"` is deferred.
 
 - **An error policy:** measure error in the true frame (as 1.x does, so the drawn error is k× coarser), in the drawn frame (today), or in between (for example, σ_max^½).
 - **Anisotropic error:** terrain's error is vertical. Project k·ε along the drawn up axis at the tile and the view direction, as view-dependent terrain LOD does (Lindstrom et al. 1996), rather than taking an isotropic σ_max · ε. This is exact and gains in steep or top-down views, but little in this example's oblique one.
@@ -411,7 +411,7 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
   - **Tests:** the same view with shadows off, unlit, with triangle edges shown, and in 1.x with `terrainExaggeration` 10. 1.x samples globe imagery as we do (clamp to edge, generated mips, maximum anisotropy, and an in-shader mask outside the imagery rectangle: `ImageryLayer.js`, `GlobeFS.glsl`), so sampling isn't where the two differ.
   - **Separately, if imagery stretch is shown to matter** (owner, 2026-11-13): choose imagery levels by the drawn footprint, with the levels gained from stretch capped and `lodExponent` applying, up to the source's finest level. Anisotropic filtering is already on (`maxAnisotropy: 16`). Procedural rock detail: not wanted.
 
-> **Job system (owner, 2026-11-13):** warp fits (`warpTick`) and the horizon occluder's walk (`BoundJob`) move onto the job system as progressive jobs: JP-5 and JP-4 in CESIUM2_WEBGPU_PLAN.md §13.43, tracked in §6 M8.
+> **Job system (owner, 2026-11-13):** warp fits (`warpTick`) and the horizon occluder's walk (`BoundJob`) move onto the job system as progressive jobs: CS-91 and CS-90 in [job-system.md](../../design/job-system.md), tracked in project CS-12.
 
 **Occlusion, unified (owner, 2026-11-13).** Horizon culling is occlusion by a known convex occluder, so both live behind one interface:
 

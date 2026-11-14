@@ -1,5 +1,5 @@
 // Where the sky data store is: outside the repository, beside the frames
-// store (§13.29). Packs live under `packs/<name>/`.
+// store (docs/decisions/2026-11-08-owners-calls-for-later-plans.md). Packs live under `packs/<name>/`.
 import { homedir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";

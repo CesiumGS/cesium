@@ -1,4 +1,4 @@
-// Loops for kernel converters (overall plan §13.33): edge uses with their
+// Loops for kernel converters (docs/design/breps-and-geometry-queries.md): edge uses with their
 // pcurves as NURBS, turned to the render form's winding before they go to
 // `BrepBuilder`. Shared by the SMLib and Open CASCADE readers.
 import type { BrepUse } from "./build.ts";

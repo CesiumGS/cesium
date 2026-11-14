@@ -15,8 +15,8 @@ import type { Tile, TileTree } from "./Tile.ts";
 import type { Georeference } from "../georeference/georeference.ts";
 
 /**
- * A hierarchical content source other than a 3D Tiles tileset.json (plan
- * §3.7): its own root, content loader and placement; selection, requests,
+ * A hierarchical content source other than a 3D Tiles tileset.json (
+ * docs/design/architecture.md, "Unified streaming and tile selection (streaming/)"): its own root, content loader and placement; selection, requests,
  * cache, view masks and rendering stay shared.
  */
 export interface TileSource {

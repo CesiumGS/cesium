@@ -21,10 +21,10 @@ improved.
 - What depends on time is computed per view from its clock: the sun and
   moon directions (L0 parity with 1.x), the star field's rotation, the
   atmosphere's light and the environment lighting, time-dynamic content
-  (§13.11 tracks, time-dynamic tiles). `Engine.sunDirection` becomes a
+  ([real-time-tracks.md](real-time-tracks.md) tracks, time-dynamic tiles). `Engine.sunDirection` becomes a
   derived, per-view value; setting the sun by hand stays possible (an
   override, as the Viewer's sliders do today).
-- Changing the time renders on demand like any other change (§13.8);
+- Changing the time renders on demand like any other change ([rendering-on-demand.md](rendering-on-demand.md));
   scrubbing must stay smooth, so what time rebuilds per frame (the
   atmosphere's sky-view table, the environment's radiance and SH) has to
   fit in a frame.

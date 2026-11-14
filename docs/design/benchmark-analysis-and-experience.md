@@ -7,7 +7,7 @@ Graphics benchmarking is closer to a mix of race telemetry, web
 performance monitoring, online experimentation, manufacturing quality
 control and game frame analysis. This section starts from what the suite
 has to do, borrows from the fields that already solved each job, and
-phases the result into the suite's milestones (§16.7, §16.8).
+phases the result into the suite's milestones ([benchmark-suite.md](benchmark-suite.md), "Scope of v1 (milestone "Benchmark suite v1")", [benchmark-suite.md](benchmark-suite.md), "Later (v2 and beyond)").
 
 **Principles.**
 
@@ -23,10 +23,10 @@ phases the result into the suite's milestones (§16.7, §16.8).
   the path, the frames, the requests, the trace.
 - Graphics terms in the app and reports (camera path, path segments,
   frame cost); the analogies below are sources, not vocabulary.
-- The suite, the examples (§13.12) and parity (§4) share scene
+- The suite, the examples ([examples-and-the-gallery.md](examples-and-the-gallery.md)) and parity ([parity.md](parity.md)) share scene
   definitions, so a showcase, its measurement and its image check never
   drift apart.
-- Results stay internal (§16.2); views can be shared inside Bentley.
+- Results stay internal ([benchmark-suite.md](benchmark-suite.md), "Manifests and storage"); views can be shared inside Bentley.
 
 ## Decide: is B really better than A?
 
@@ -41,13 +41,13 @@ Google's Kayenta), Go's `benchstat` and clinical trials.
   exist, so nobody picks the flattering metric afterwards.
 - _Validity checks before any result_ (the experimentation platforms'
   sample-ratio checks): both engines ran the same scenes, repetitions and
-  datasets (checksums), under comparable conditions (§16.3); otherwise
+  datasets (checksums), under comparable conditions ([benchmark-suite.md](benchmark-suite.md), "Measurement and statistics"); otherwise
   the comparison says why it isn't valid instead of showing a verdict.
 - _Variance reduction_ (CUPED-style): adjust run metrics with
   measurements taken before each run (idle clocks, temperature, machine
   utility) where that demonstrably narrows intervals; report both.
 - _A scorecard_ (Kayenta): each metric tested per scene (bootstrap ratio,
-  §16.3), weighted into pass, marginal or fail overall; the merge gate for
+  [benchmark-suite.md](benchmark-suite.md), "Measurement and statistics"), weighted into pass, marginal or fail overall; the merge gate for
   2.0 changes and the verdict line on every report.
 - _A terse comparison table_ (`benchstat`): old, new, change with interval,
   per scene and metric, for pull-request comments and the CLI.
@@ -63,7 +63,7 @@ detection (MongoDB, Apache Otava) and Grafana annotations.
   baseline window, per scene, metric and hardware class), with simple
   run rules that catch drift (several runs in a row on one side, a trend
   of rising points), not only steps. Humans read these at a glance.
-- _Change points_ (E-Divisive means, §16.8) marked on trends.
+- _Change points_ (E-Divisive means, [benchmark-suite.md](benchmark-suite.md), "Later (v2 and beyond)") marked on trends.
 - _Alerts with triage:_ a detected regression or improvement becomes an
   alert with a commit range, the affected scenes and metrics, and a state
   (new, acknowledged, expected, invalid, fixed), plus who owns it and a
@@ -91,7 +91,7 @@ and trace viewers (Perfetto, Tracy, Unreal Insights).
   Where in the scene a difference happens becomes obvious.
 - _Filmstrip_ (WebPageTest): screenshots of each engine at fixed moments
   (first content, settled, every quarter of the motion), side by side,
-  with the image-parity FLIP score and heatmap (§4) under each pair, so
+  with the image-parity FLIP score and heatmap ([parity.md](parity.md)) under each pair, so
   "faster" is never mistaken for "drawing less".
 - _Side-by-side video with overlays_ (Digital Foundry): optional
   recordings of both engines on the same path with frame time and
@@ -99,7 +99,7 @@ and trace viewers (Perfetto, Tracy, Unreal Insights).
 - _Request waterfall_ (WebPageTest): every content request over time per
   engine (queued, waiting, receiving; bytes; tileset; host), aligned with
   the load phase, to explain settle-time differences (the open OSM
-  Philadelphia question, §15).
+  Philadelphia question, [m3-progress.md](../history/m3-progress.md)).
 - _Frame-time percentile curves and stutter metrics_ (frame analysis
   tools): the full percentile curve of frame times per engine, "1% low"
   style metrics, hitch counts by size, frame-time variance; better than a
@@ -145,7 +145,7 @@ HParams) and hardware result browsers (3DMark, Geekbench).
 
 - _Sweeps as experiments:_ screen-space error, upload budget, selection
   policy, cache size, the CesiumJS version across a release sweep
-  (§16.6): each sweep a set of runs with its parameters.
+  ([benchmark-suite.md](benchmark-suite.md), "Engines and versions"): each sweep a set of runs with its parameters.
 - _Parallel coordinates and parameter importance:_ which parameters move
   which metrics, and how much.
 - _Hardware scaling:_ the same scenes across GPUs and machines, per engine
@@ -159,7 +159,7 @@ segments.
 - _Narrative reports:_ a page that combines live charts and text (a
   release comparison, a design decision), built from saved views.
 - _Budgets_ (built, r33): per scene and metric limits (Lighthouse
-  budgets) that turn red when exceeded. The catalog's `budgets` hold §5's
+  budgets) that turn red when exceeded. The catalog's `budgets` hold [performance-methodology.md](performance-methodology.md)'s
   targets (CPU per frame at most ⅓ of 1.x, time to settle at most ½,
   frame p95 within 17.5 ms with vsync, no hitches over 100 ms), checked in
   every report and drawn as limit lines in the workspace. The first full
@@ -198,7 +198,7 @@ as Dyno does for 1.x and 2.0.
   in the URL and saved views by name. Summaries now keep scenarios apart
   and carry conditions and validity (`cli.mjs resummarize` rewrites old
   ones). Commit subjects show where a run has no note.
-- _Alerts_ (built, r33): the triage queue (§16.9, Detect).
+- _Alerts_ (built, r33): the triage queue (above, Detect).
   `changepoints.mjs` runs E-Divisive means (energy statistic, binary
   segmentation, permutation test at p < 0.05, O(n²) per split) on each
   metric's run medians per scene, scenario, configuration and hardware,
@@ -281,7 +281,7 @@ param=a,b,c` runs each 2.0 configuration (or `--sweep-configs`) once
     scene's camera script; load other content (an ion asset, a tileset or
     glTF URL, a local file, a dataset from the private manifest), place
     it, and save the result as a catalog scene: public scenes go through
-    the license review (§16.2), private ones into the private manifest
+    the license review ([benchmark-suite.md](benchmark-suite.md), "Manifests and storage"), private ones into the private manifest
     outside the repo; then a first measured run from the same tab.
 
 ## Experience (r33)
@@ -431,11 +431,11 @@ explorer.
 - _v3_ (Cesium-wide): sweeps view, hardware scaling, narrative reports,
   budgets, reference overlays and the review checklist.
 - _Deferred (r34, decided):_ the CI image job on a software rasterizer
-  (§16.10) and automatic bisection of alerts wait until after the
+  ([image-regression-in-dyno.md](image-regression-in-dyno.md)) and automatic bisection of alerts wait until after the
   Explorer's inspection tools and Dyno's controls are done; they need CI
   runners and a build per commit, which the prototype does not have yet.
 
-Sources for §16.4, §16.8 and §16.9 (checked October 2026; licenses to be
+Sources for [benchmark-suite.md](benchmark-suite.md), "Catalog (initial)", [benchmark-suite.md](benchmark-suite.md), "Later (v2 and beyond)" and above (checked October 2026; licenses to be
 confirmed at the source before mirroring):
 [PLATEAU streaming tutorial](https://github.com/Project-PLATEAU/plateau-streaming-tutorial/blob/main/3d-tiles/plateau-3dtiles-streaming.md),
 [Awesome PLATEAU](https://japan-opendata.github.io/awesome-plateau/),

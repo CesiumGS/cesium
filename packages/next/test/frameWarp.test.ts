@@ -1,4 +1,4 @@
-// A smooth edge of the frame tree (plan §13.37): a frame whose coordinates
+// A smooth edge of the frame tree (docs/design/transform-graph.md): a frame whose coordinates
 // map up to its parent's. The frames resolver's `route()` carries it as a
 // warp step, forward going up and inverse going down, `resolve()` refuses
 // it, and a route that doesn't cross it is as it was. A switch frame chooses

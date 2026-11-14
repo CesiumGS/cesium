@@ -1,4 +1,4 @@
-// The surface shaders (plan §3.4, step 5): opaque geometry with glTF
+// The surface shaders (docs/design/shaders.md, step 5): opaque geometry with glTF
 // metallic-roughness PBR, and translucency's passes over the same shading.
 //
 // Vertex pulling: every attribute is a separate stream of f32 words in the
@@ -104,7 +104,7 @@ struct Shadows {
 [[vk::binding(15, 0)]] StructuredBuffer<uint> aoWords;
 // Aerial perspective from high up, a ray per texel of a screen grid
 // (sky.slang `aerialScreenFragment`): layer 0 in-scatter (pre-exposed),
-// layer 1 transmittance (one binding, §13.15).
+// layer 1 transmittance (one binding, docs/design/gpu-limits-and-capacities.md).
 [[vk::binding(16, 0)]] Texture2DArray<float4> aerialScreen;
 // Point and spot lights (scene/lights.ts) and, after them, their froxels'
 // lists (lights.slang): a struct ending in a runtime-sized array, read as
@@ -127,7 +127,7 @@ static const uint CLUSTERS_BYTES = LIGHT_HEADER_BYTES + MAX_VIEW_LIGHTS * LIGHT_
 // Globe imagery: one slice per terrain tile, composited (GlobeImagery). The
 // night lights (light the surface emits, GlobeImagery "lights") are slices
 // of the same array (SlicePool): one binding for every imagery layer,
-// within the base tier's 16 sampled textures (§13.15).
+// within the base tier's 16 sampled textures (docs/design/gpu-limits-and-capacities.md).
 [[vk::binding(5, 1)]] Texture2DArray<float4> imagery;
 [[vk::binding(6, 1)]] SamplerState imagerySampler;
 
@@ -386,7 +386,7 @@ float3 sunIlluminance(float3 relPosition) {
   return sunlightThroughAir(relPosition, view.sunDirection.xyz);
 }
 
-// --- material textures: the bindless seam (plan §7.1, §13.15) -----------
+// --- material textures: the bindless seam (docs/design/risks.md, "Bindless textures: not in the PoC, designed for in 2.0", docs/design/gpu-limits-and-capacities.md) -----------
 //
 // Every material texture read goes through `materialTexture` (and its
 // presence through `materialHasTexture`, common.slang); test/bindless.test.ts
@@ -2422,7 +2422,7 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
     }
   }
   // Mixed-LOD placeholder: a coarse tile fills only the volumes of its
-  // missing finer descendants, at its true depth (plan §13.1); clipped
+  // missing finer descendants, at its true depth (docs/design/tile-selection-and-memory.md, "Mixed-LOD drawing"); clipped
   // terrain draws nothing inside its regions, and translucent terrain is
   // that much less opaque. After the depth prepass (`cutOutInDepth`) a
   // clipped or translucent terrain fragment has no depth of its own to
@@ -2589,7 +2589,7 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   float aoSpecular = clamp(pow(nDotV + ao, exp2(-16.0 * roughness - 1.0)) - 1.0 + ao, 0.0, 1.0);
   float3 indirect = (diffuseIbl * aoDiffuse * view.diffuseIbl + specularIbl * aoSpecular * view.specularIbl) * occlusion;
 
-  // Pre-exposed (plan §4.2). Emission is display-relative: authored
+  // Pre-exposed (docs/design/lighting-and-shading.md). Emission is display-relative: authored
   // emissive colors look the same at any exposure.
   float3 emitted = float3(0.0);
   if (lightsPacked != 0u && view.iblFrame[0].w > 0.5) {
@@ -2816,7 +2816,7 @@ FsPointsOut fsPoints(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) {
   return out;
 }
 
-// --- translucency (plan §3.5) ----------------------------------------------------
+// --- translucency (docs/design/architecture.md, "Frame graph") ----------------------------------------------------
 //
 // Blended materials' surfaces, shaded as the opaque pass shades them
 // (`shadeSurface`), then put in order over what the opaque pass drew
@@ -2844,7 +2844,7 @@ FsPointsOut fsPoints(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) {
 // top four bits), and `sortLists` blends each sample on its own. Where a
 // fragment shader's storage writes run once per covered sample (Apple's
 // GPUs, Metal: each run seeing the whole coverage mask, so every layer went
-// into its list once a sample, plan §3.5), the pass runs per sample
+// into its list once a sample, docs/design/architecture.md, "Frame graph"), the pass runs per sample
 // explicitly (`fsListSamples`) and only the first covered sample's run
 // writes; elsewhere once a pixel (`fsList`). RenderContext probes which.
 // The moments' passes run single-sampled (their targets multisampled

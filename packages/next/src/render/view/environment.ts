@@ -73,7 +73,7 @@ function probeOf(engine: EnvironmentEngine, view: View): EnvironmentProbe {
  * altitude); by night, when the Moon has moved as much or its light by
  * 10%; and when the exposure has moved by a stop (the sky it's built
  * from is pre-exposed: a night sky at a day's exposure is below fp16's
- * smallest values). About 10 ms of GPU work each time (plan §4.2: to
+ * smallest values). About 10 ms of GPU work each time (docs/design/lighting-and-shading.md: to
  * cut).
  */
 export function updateEnvironment(engine: EnvironmentEngine, view: View): void {

@@ -1,5 +1,5 @@
 // Compiles Slang custom shader stages (`import cesium;`) to custom shader
-// WGSL at build time, the recommended path (plan §3.4):
+// WGSL at build time, the recommended path (docs/design/shaders.md):
 //
 //   node scripts/slangShader.mjs stages.slang [-o stages.wgsl]  (slangc from `npm run setup`, or SLANGC)
 //     [--attributes name:type,...] [--metadata name:type,...]

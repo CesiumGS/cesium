@@ -1,7 +1,7 @@
 # Frames, bodies and measurement: design
 
 Date: 2026-11-05. For `packages/next` (the Cesium 2.0 WebGPU engine).
-Extends CESIUM2_WEBGPU_PLAN.md §13.14 ("Bodies, frames and engineering
+Extends [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md) ("Bodies, frames and engineering
 coordinates"), which this document turns into a buildable design. Calls
 marked **(builder's call)** were made by the author of this document, not
 decided with the product owner; everything else was agreed.
@@ -56,7 +56,7 @@ Two gallery examples exercise and show this off:
   product. Link quality is a stated model.
 - The globe (terrain and imagery tiling) stays Earth-only. The Moon is a 3D
   Tiles tileset (Cesium Moon), not a globe **(builder's call, consistent with
-  §13.14)**.
+  [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md))**.
 - Reading alignments out of real iModels or IFC 4.3 files (later; the
   synthetic corridor defines its alignment directly).
 - Apparent-position rendering (light time and aberration applied to what is
@@ -77,7 +77,7 @@ plasma look like a game's while claiming to be physical.
 
 - **Precision:** float64 on the CPU throughout; the GPU only ever sees
   camera-relative values (the existing hi/lo and camera-relative scheme,
-  plan §13.15). Hi/lo is valid to ±2^31 m, which covers Earth-Moon.
+  [gpu-limits-and-capacities.md](../../design/gpu-limits-and-capacities.md)). Hi/lo is valid to ±2^31 m, which covers Earth-Moon.
 - **Browser only:** no server-side computation. Data the engine needs is
   self-hosted (none of JPL, NAIF or IERS send CORS headers; CelesTrak does
   for EOP).

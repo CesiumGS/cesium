@@ -1,4 +1,4 @@
-// Per-view variants of a draw (plan §13.37, "one view's content under
+// Per-view variants of a draw (docs/design/transform-graph.md, "one view's content under
 // different transforms"). A draw has one program and one record, so when the
 // views of a world reach an anchor by routes of different structure (a switch
 // frame with an exaggeration for one view and the identity or a plan-and-

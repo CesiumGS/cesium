@@ -1,4 +1,4 @@
-// Exposure meter for automatic exposure and the eye (plan §4.2): the
+// Exposure meter for automatic exposure and the eye (docs/design/lighting-and-shading.md): the
 // average log2 luminance of a view's HDR image, in the scene's units (the
 // image is pre-exposed; `exposure` is divided out), photopic (the cones')
 // and scotopic (the rods': Larson, Rushmeier and Piatko 1997's estimate

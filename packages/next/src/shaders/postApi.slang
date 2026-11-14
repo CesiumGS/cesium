@@ -1,4 +1,4 @@
-// What a post stage written in Slang may use (CESIUM2_WEBGPU_PLAN.md §13.22): the
+// What a post stage written in Slang may use (docs/design/custom-post-processing.md): the
 // stage's side of postStage.slang's glue, for `import postApi;`. A stage is a file in
 // src/shaders/stages/ that defines
 //

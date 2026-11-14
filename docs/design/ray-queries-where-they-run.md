@@ -3,7 +3,7 @@
 **What this holds:** Placement of ray queries on CPU and GPU, and when acceleration structures are built (owner, 2026-11-06). Moved from the overall plan (`CESIUM2_WEBGPU_PLAN.md`) on 2026-11-13, with its content and dates unchanged.
 
 The owner: "we're going to have to think carefully about ray queries, where
-they're performed, when we build acceleration structures, etc." §13.10
+they're performed, when we build acceleration structures, etc." [ray-queries-and-path-tracing.md](ray-queries-and-path-tracing.md)
 sketches the techniques: CPU lookups on terrain, GPU raster probes and
 compute ray tracing. This section is the architecture they have to fit into.
 It is open, for a brainstorm before any plan.
@@ -27,7 +27,7 @@ the questions below:
 - viewsheds and footprints (many rays);
 - measurement (distance to the surface, clearance);
 - collision and reach checks (a robot arm, a camera's minimum range);
-- path tracing (§13.10).
+- path tracing ([ray-queries-and-path-tracing.md](ray-queries-and-path-tracing.md)).
 
 **Questions to settle:**
 
@@ -44,7 +44,7 @@ the questions below:
    - per frame for the top level (a TLAS over transforms and instances, which
      is cheap).
      This is memory against latency. The structures count against the tile
-     memory budget (§13.6) and are evicted with their tile.
+     memory budget ([tile-selection-and-memory.md](tile-selection-and-memory.md), "Memory management (open design question)") and are evicted with their tile.
 3. **Which geometry a ray sees:**
    - the drawn LOD for the current view (what the user sees, view-dependent,
      and coarse far away);
@@ -58,10 +58,10 @@ the questions below:
    before counting off-screen or unloaded spans as unknown, or every
    ground-to-space query is "unknown". The same applies to other bodies (the
    Moon in MOON_ME).
-5. **Many views and stereo.** Each view has its own drawn LOD (§13.4).
+5. **Many views and stereo.** Each view has its own drawn LOD ([tile-selection-and-memory.md](tile-selection-and-memory.md), "Multi-view priority").
    Queries name the view they are consistent with, or none.
 6. **The frame tree:** see plan 5's "Ray queries through the frame tree"
-   (§13.14). Rays and targets live in frames, at an instant, with composed
+   ([bodies-frames-and-engineering-coordinates.md](bodies-frames-and-engineering-coordinates.md)). Rays and targets live in frames, at an instant, with composed
    accuracy.
 7. **The API shape.**
    - Batched rays in and hits out: distance, point, normal, target, feature,

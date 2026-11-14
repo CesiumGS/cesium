@@ -168,7 +168,7 @@ float shBasis(float3 d, uint k) {
 }
 
 // The nine sums unrolled (constant indices): a small array indexed in a
-// loop stayed out of registers on Metal (plan §3.4, the adapt kernel).
+// loop stayed out of registers on Metal (docs/design/shaders.md, the adapt kernel).
 [shader("compute")]
 [numthreads(64, 1, 1)]
 void shFace(uint lid : SV_GroupIndex, uint3 wg : SV_GroupID) {

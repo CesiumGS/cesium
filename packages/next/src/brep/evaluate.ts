@@ -1,5 +1,5 @@
-// Exact float64 evaluation of the b-rep form's surfaces (overall plan
-// §13.33). Positions are metres, derivatives are metres per parameter unit.
+// Exact float64 evaluation of the b-rep form's surfaces (
+// docs/design/breps-and-geometry-queries.md). Positions are metres, derivatives are metres per parameter unit.
 import { evaluatePatch, evaluateSegment } from "./bezier.ts";
 import { SurfaceKind, type BezierCurves, type BrepForm } from "./form.ts";
 

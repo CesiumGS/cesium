@@ -1,4 +1,4 @@
-// Clips (plan §13.26, increment 8a): the shapes and their combination in
+// Clips (docs/design/geometry-through-placement-review.md, increment 8a): the shapes and their combination in
 // float64, the table the fragment stage reads (a CPU twin of its test, with
 // float32 rows), which space each clip is tested in by its frame's route
 // (true, drawn, curved), a view's table end to end, and queries filtered by

@@ -1059,7 +1059,7 @@ export function Dyno() {
           </li>
         </ul>
         <Written
-          from="the transform-graph plan, task 12, and the inspector rules in the overall plan, section 13.41"
+          from="the transform-graph plan, task 12, and the inspector rules in the design note docs/design/investigations-2026-11-13.md"
           on="2026-11-13"
         />
       </Section>

@@ -1,6 +1,6 @@
 // A lens's spikes, as a kernel: from a pupil, by its diffraction, once, in a worker. No
-// FFT runs in the live path: a sprite is one sample of what this leaves (CESIUM2_WEBGPU_PLAN.md
-// §13.22). No GPU types here.
+// FFT runs in the live path: a sprite is one sample of what this leaves (
+// docs/design/custom-post-processing.md). No GPU types here.
 import type { GlarePupil } from "../../scene/observer.ts";
 
 /** What a kernel holds. */

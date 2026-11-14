@@ -1,5 +1,5 @@
 /**
- * Benchmark suite schema (plan §16): datasets, scenes and scenarios, as
+ * Benchmark suite schema (docs/design/benchmark-suite.md): datasets, scenes and scenarios, as
  * the catalogs (`catalog/public.json`, private manifests outside the repo)
  * write them, and the results a run produces. Engine-neutral: the same
  * scene and scenario run on every engine adapter.
@@ -27,7 +27,7 @@ export type DatasetSource =
   | { kind: "generator"; generator: string; params: Record<string, number> };
 
 /**
- * License review of a dataset (plan §16.2). The public catalog may hold
+ * License review of a dataset (docs/design/benchmark-suite.md, "Manifests and storage"). The public catalog may hold
  * only "redistributable" (compatible with CesiumJS's Apache-2.0 license:
  * public domain, CC0, CC BY, Apache, MIT...) and "stream-only" (referenced,
  * never copied, under the provider's terms). A private manifest may hold
@@ -125,7 +125,7 @@ export interface Scene {
   render?: Partial<RenderSettings>;
   id: string;
   title: string;
-  /** Catalog group (plan §16.4): A classic Cesium, B large public, C 2.0's architecture. */
+  /** Catalog group (docs/design/benchmark-suite.md, "Catalog (initial)"): A classic Cesium, B large public, C 2.0's architecture. */
   group: "A" | "B" | "C";
   description?: string;
   /** The globe: none, the ellipsoid, or terrain from a dataset. */
@@ -232,7 +232,7 @@ export interface EffectiveRender {
 }
 
 /**
- * A budget (plan §16.9, Communicate; Lighthouse budgets): a limit on a
+ * A budget (docs/design/benchmark-analysis-and-experience.md, Communicate; Lighthouse budgets): a limit on a
  * metric for a configuration, absolute (`max`, in the metric's raw unit)
  * or relative to the run's baseline (`maxRatio`), for every scene or the
  * listed ones, optionally one scenario.

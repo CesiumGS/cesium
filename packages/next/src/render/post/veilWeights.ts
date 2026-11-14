@@ -1,4 +1,4 @@
-// The veil's weights (CESIUM2_WEBGPU_PLAN.md §13.22): equal energy per octave of angle,
+// The veil's weights (docs/design/custom-post-processing.md): equal energy per octave of angle,
 // so a point's veil falls as 1/θ². A level of a mip pyramid conserves energy, so its peak
 // falls by 4 per level, and equal weights give a slope of -2. Halved weights, as the
 // paper's section 5.1 has, give -3. No GPU types here; glare.ts holds the same in WGSL.

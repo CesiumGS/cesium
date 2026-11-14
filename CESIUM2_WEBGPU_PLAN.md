@@ -26,7 +26,7 @@ The public API is open to breaking changes. 1.x serves two roles only: it is the
 - CZML/KML/GeoJSON
 - Underground and globe translucency
 - Imagery draped on 3D Tiles
-- Bindless textures (designed for, not built; §7.1)
+- Bindless textures (designed for, not built; [risks.md](docs/design/risks.md), "Bindless textures: not in the PoC, designed for in 2.0")
 
 ---
 

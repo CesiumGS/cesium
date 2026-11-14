@@ -1,4 +1,4 @@
-// The public definition of a post stage (CESIUM2_WEBGPU_PLAN.md §13.22): its passes,
+// The public definition of a post stage (docs/design/custom-post-processing.md): its passes,
 // what each reads and writes, the textures it owns, where in the chain it sits, and
 // whether it's physics, a model or a look. Most stages are one fullscreen function.
 // Plain data with no GPU types: the rasterizer draws it (render/post/chain.ts), and

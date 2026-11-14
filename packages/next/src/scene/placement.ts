@@ -33,7 +33,7 @@
  * float64 but not in float32 (past about 3.4 × 10^38), where the GPU
  * reads it.
  *
- * A placement turns normals and tangents by its Jacobian J (plan §13.26,
+ * A placement turns normals and tangents by its Jacobian J (docs/design/geometry-through-placement-review.md,
  * increment 2a): the normal by J's cofactor matrix, the tangent by J
  * (shaders/placement.slang `placeVertex`, its CPU twin
  * scene/warpEvaluate.ts `placeJacobianWithTerms`). A dual position or morph

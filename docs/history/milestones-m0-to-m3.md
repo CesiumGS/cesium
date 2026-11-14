@@ -2,14 +2,14 @@
 
 **What this holds:** The first milestones as planned: foundations and spikes, GPU-driven glTF, unified streaming and 3D Tiles, the globe. Their progress is in the progress logs beside this file. Moved from the overall plan (`CESIUM2_WEBGPU_PLAN.md`) on 2026-11-13, with its content and dates unchanged.
 
-Durations are rough and **optimistic** for one engineer with AI assistance. If time runs short, the droppable items are listed under §7.
+Durations are rough and **optimistic** for one engineer with AI assistance. If time runs short, the droppable items are listed under [risks.md](../design/risks.md).
 
 ## M0 — Foundations and de-risking spikes (≈3 wks)
 
 - Scaffold `packages/next`, the GPU layer and the frame-graph skeleton.
 - **Spikes**:
   - multi-view skeleton covering all four target kinds (split, second canvas, offscreen, a `ViewLink` overview), plus the view-agnostic bundle trick
-  - Slang (§3.4 checks)
+  - Slang ([shaders.md](../design/shaders.md) checks)
   - **hi/lo precision on Metal**
   - **MSAA feature-ID sample-0 resolve**
   - Dawn indirect-validation overhead
@@ -47,9 +47,9 @@ Durations are rough and **optimistic** for one engineer with AI assistance. If t
 - Quantized-mesh terrain; horizon culling (in selection since r25).
 - Imagery sources plus the **texture-array composite cache**.
 - Height queries and clamping (r29).
-- Closed out in r31 (§15, increment 6): model instancing and i3dm, the
+- Closed out in r31 ([m3-progress.md](m3-progress.md), increment 6): model instancing and i3dm, the
   100,000-instance benchmark, runtime tileset `modelMatrix`, the viewer's
   city clamped, `sampleHeightMostDetailed`. Clamping billboards and labels
-  moves to real-time tracks (§13.11), with the billboards themselves.
+  moves to real-time tracks ([real-time-tracks.md](../design/real-time-tracks.md)), with the billboards themselves.
 - **Status: M3 complete (r31).**
 - _Exit_: the CAD tileset sits on Cesium World Terrain with ion imagery; globe `Stepwise` L1 ≥99%.

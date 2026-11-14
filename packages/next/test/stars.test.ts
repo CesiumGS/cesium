@@ -1,4 +1,4 @@
-// Stars read out of a star map (plan §4.2): positions, brightness by rank,
+// Stars read out of a star map (docs/design/lighting-and-shading.md): positions, brightness by rank,
 // the background.
 import { describe, expect, it } from "vitest";
 import {

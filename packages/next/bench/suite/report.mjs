@@ -1,4 +1,4 @@
-// A self-contained HTML report of one suite run (plan §16.5), overview
+// A self-contained HTML report of one suite run (docs/design/benchmark-suite.md, "Interfaces: agents, scripts and people"), overview
 // first and details on demand: verdict tiles (the geometric mean ratio
 // across scenes and how many scenes were better or worse), a forest plot
 // per headline metric (each scene's ratio with its interval), the hardware
@@ -284,7 +284,7 @@ ${table([
 }
 
 /**
- * Lineage (plan §16.9, Trust): what produced the run, enough to reproduce
+ * Lineage (docs/design/benchmark-analysis-and-experience.md, Trust): what produced the run, enough to reproduce
  * it: the command, commit and working-tree state, catalog and dataset
  * checksums, engine builds with their integrity hashes, the plan.
  */
@@ -463,7 +463,7 @@ function validityBadge(verdict) {
 }
 
 /**
- * The run's validity before any number (plan §16.9, Trust): how many
+ * The run's validity before any number (docs/design/benchmark-analysis-and-experience.md, Trust): how many
  * scenes were valid, valid with warnings, invalid or not run, and why.
  */
 function validitySummary(scenes) {

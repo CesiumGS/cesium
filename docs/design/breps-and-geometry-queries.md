@@ -2,9 +2,9 @@
 
 **What this holds:** B-reps, their render form and a geometry query interface (owner, 2026-11-09). Moved from the overall plan (`CESIUM2_WEBGPU_PLAN.md`) on 2026-11-13, with its content and dates unchanged.
 
-**Decided to plan.** Not designed in detail or built. The engine evaluates exact geometry but never models it: booleans, fillets, healing as an edit, feature history and constraints belong to the application, or to a kernel it brings. Builds on §13.26 (curves through placement), §13.27 (CAD display), §13.20 (editing), the tessellation design input in §13.14 and the vector design.
+**Decided to plan.** Not designed in detail or built. The engine evaluates exact geometry but never models it: booleans, fillets, healing as an edit, feature history and constraints belong to the application, or to a kernel it brings. Builds on [geometry-through-placement-review.md](geometry-through-placement-review.md) (curves through placement), [cad-display-extensions.md](cad-display-extensions.md) (CAD display), [editing.md](editing.md) (editing), the tessellation design input in [bodies-frames-and-engineering-coordinates.md](bodies-frames-and-engineering-coordinates.md) and the vector design.
 
-**One query interface for every representation.** Meshes, b-reps and implicit surfaces (f-reps) each answer the same queries, and every answer states its accuracy: bounds, ray hit, closest point and distance, topology (face, edge and vertex IDs), and display at a tolerance. A mesh is the case where the exact and displayed geometry are the same, so today's picks, snapping and measurement move onto it first with no change in results. Every query names its reference frame and instant, as the ray-query seam in §13.14 already requires. F-reps are designed in from the start and built later: answers come from the distance field, and they draw by ray marching bounded by a constant step count, writing depth.
+**One query interface for every representation.** Meshes, b-reps and implicit surfaces (f-reps) each answer the same queries, and every answer states its accuracy: bounds, ray hit, closest point and distance, topology (face, edge and vertex IDs), and display at a tolerance. A mesh is the case where the exact and displayed geometry are the same, so today's picks, snapping and measurement move onto it first with no change in results. Every query names its reference frame and instant, as the ray-query seam in [bodies-frames-and-engineering-coordinates.md](bodies-frames-and-engineering-coordinates.md) already requires. F-reps are designed in from the start and built later: answers come from the distance field, and they draw by ray marching bounded by a constant step count, writing depth.
 
 **One render b-rep form, produced two ways.** The engine defines its own form, as custom shaders take precompiled WGSL or Slang compiled at runtime:
 
@@ -14,9 +14,9 @@
 
 The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, torus); NURBS, split into rational Bézier patches by the loader in TypeScript (exact, no kernel); trim loops in each face's parameter space; face, loop, edge and vertex tables, each edge with its exact 3D curve and its two faces; stable source IDs for every entity; per-entity tolerances as accuracy terms; and a content version.
 
-**SMLib's jobs** (NVIDIA's USD BRep, Apache 2.0, includes SMLib; noted in §13.14): conversion from what applications export, including surfaces that aren't NURBS (offsets, sweeps); healing; surface intersection for sections and clashes; and a reference tessellation to test the GPU path against. Never in the core.
+**SMLib's jobs** (NVIDIA's USD BRep, Apache 2.0, includes SMLib; noted in [bodies-frames-and-engineering-coordinates.md](bodies-frames-and-engineering-coordinates.md)): conversion from what applications export, including surfaces that aren't NURBS (offsets, sweeps); healing; surface intersection for sections and clashes; and a reference tessellation to test the GPU path against. Never in the core.
 
-**View-based GPU tessellation from the start,** in the one tessellation engine §13.14 describes:
+**View-based GPU tessellation from the start,** in the one tessellation engine [bodies-frames-and-engineering-coordinates.md](bodies-frames-and-engineering-coordinates.md) describes:
 
 - **Edges first.** Each topological edge is tessellated once at the view's tolerance, and both faces take their boundary from it, so faces don't crack apart. This is the vector pipeline's curve refinement.
 - **Patches by screen-space error,** evaluated with the draw's placement in compute and drawn with indirect draws.
@@ -35,7 +35,7 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 
 **Editing.** Modeling, undo, persistence and collaboration are the application's. The engine shows changing geometry fast and correctly:
 
-- **Overrides on tiles:** an edited element hides its tiled version by stable ID across every tile that holds it and draws a live version, until republished tiles replace it. This is how edits coexist with immutable tiles (§13.20).
+- **Overrides on tiles:** an edited element hides its tiled version by stable ID across every tile that holds it and draws a live version, until republished tiles replace it. This is how edits coexist with immutable tiles ([editing.md](editing.md)).
 - **Incremental updates** at face granularity: only changed patches upload, and the GPU re-tessellates them on the next tick.
 - **Transient geometry** for drag previews and handles, with picking optional.
 - **Queries see the edit,** live geometry and tiles both, excluding the element being dragged.
@@ -44,7 +44,7 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 **Reprojection, for b-reps and vectors together.**
 
 - **Evaluate in source coordinates, then place** each evaluated point. Subdivision measures error after placement, including how far the placement bends across a patch.
-- **Normals** are the surface's derivatives times the placement's Jacobian: exact, which avoids the dual-position normal error in §13.26.
+- **Normals** are the surface's derivatives times the placement's Jacobian: exact, which avoids the dual-position normal error in [geometry-through-placement-review.md](geometry-through-placement-review.md).
 - **Trims and fills are tested in intrinsic coordinates,** (u, v) or the source plane, which reprojection can't change. The rule for both: tessellate the domain by curvature plus placement error, test coverage in intrinsic coordinates. A large planar face under a non-rigid reprojection isn't planar once placed, so it subdivides; its coverage test doesn't change.
 - **Quadratic segments are made after placement,** with their error measured there; snaps and measurements go back to the exact source.
 - **Measurements name their reference frame:** a distance in design coordinates and on the ground differ by the projection's scale factor.
@@ -62,7 +62,7 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 2. Spike: one trimmed NURBS face on the GPU (tessellation by screen-space error and the per-pixel trim), against SMLib's tessellation for accuracy and cost. It also tests the shared fill idea. Both spikes are decision tools. Done; see the result below.
 3. The query interface, with the mesh adapter and an f-rep slot.
 4. The render b-rep form and the glTF extension draft, with the TypeScript loader and analytic surfaces.
-5. The GPU tessellation engine: edges first, patches, planar faces as fills. Preceded by the placement review (§13.26), so it builds on one model of a placement.
+5. The GPU tessellation engine: edges first, patches, planar faces as fills. Preceded by the placement review ([geometry-through-placement-review.md](geometry-through-placement-review.md)), so it builds on one model of a placement.
 6. Trims and edges on the shared vector kernels, from the vector design.
 7. Exact picks, snapping and measurement, then the server-backed queries.
 8. SMLib as a module: `fromUsd`, healing, sections.
@@ -77,8 +77,8 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 
 - **The tree:** primitives (box, cylinder, sphere, cone, torus) with parameters and transforms as leaves; union, difference and intersection as nodes. Editing a parameter re-evaluates in a worker: SMLib makes the solid, it converts to `BrepForm`, and `tessellateBrep` draws it until step 5's GPU path exists.
 - **Picks to the tree:** a picked face highlights the node that made it, from the kernel's record of which input each output face came from: the stable topology names above, in practice.
-- **Editing as §13.33 describes it:** drag previews as transient geometry, updates face by face, and queries that skip what is being dragged.
-- **A four-view layout (owner, 2026-11-10):** CAD's quad view in third-angle projection, Top above Front, Right beside Front, and an isometric perspective in the fourth corner. Four views in one canvas by viewports; the three projected views linked (one target and zoom, and a pan moving the matching axis in the others) while the perspective orbits on its own; a pick in any view highlights the same face and tree node in all four. It exercises an application's comparison views (§13.34) on the engine's linked views and viewports, and 5d's orthographic camera; until 5d lands, the projected views use a very long lens or the layout waits.
+- **Editing as above describes it:** drag previews as transient geometry, updates face by face, and queries that skip what is being dragged.
+- **A four-view layout (owner, 2026-11-10):** CAD's quad view in third-angle projection, Top above Front, Right beside Front, and an isometric perspective in the fourth corner. Four views in one canvas by viewports; the three projected views linked (one target and zoom, and a pan moving the matching axis in the others) while the perspective orbits on its own; a pick in any view highlights the same face and tree node in all four. It exercises an application's comparison views ([infrastructure-and-geoscience-capabilities.md](infrastructure-and-geoscience-capabilities.md)) on the engine's linked views and viewports, and 5d's orthographic camera; until 5d lands, the projected views use a very long lens or the layout waits.
 - **First, a spike:** box minus cylinder in each kernel in WebAssembly, converted to `BrepForm` and drawn in the first-look example. It measures each boolean's time and checks that both results validate, and for OCCT records the build's size (a full build is tens of megabytes; a custom one with modeling and STEP only is smaller), whether it needs threads and so cross-origin isolation, and how actively its WebAssembly build is maintained. Its conversion (SMLib's b-rep to `BrepForm`) is the one `fromUsd` needs too, so step 8's start moves here, with SMLib's pinned setup step and build script (above).
 - **Open:** both kernels' robustness on real models (their first measures are in "CSG spike, SMLib's half" and "OCCT's half" below, and both answer face provenance); the worker protocol for a re-evaluated solid; OCCT's licence (LGPL 2.1 with Open CASCADE's exception, unlike SMLib's Apache 2.0): kept as a separate, lazily loaded WebAssembly module in the example only, and checked before anything built with it is distributed. If OCCT proves too heavy, or its licence doesn't fit, the sample runs on SMLib alone and the interface costs nothing extra.
 
@@ -93,7 +93,7 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 - **Timings:** an 8-boolean bracket takes about 50 ms warm and 250 to 450 ms cold in SMLib, and about 240 ms in OCCT.
 - **Not built:** the four-view layout (it needs 5d's orthographic camera) and fillets.
 
-**Also (§13.34):** step 3's queries respect clipping and read scalar fields, step 5 draws section caps on B-reps, and step 7's exact picks work through a cut.
+**Also ([infrastructure-and-geoscience-capabilities.md](infrastructure-and-geoscience-capabilities.md)):** step 3's queries respect clipping and read scalar fields, step 5 draws section caps on B-reps, and step 7's exact picks work through a cut.
 
 **The CSG sample, direct manipulation (owner, 2026-11-11).** The owner asked for 3D widgets for manipulating the solid: extrusions on faces, grabbing and dragging points or lines, "whatever SolidWorks does, how close can we get?". Phases, each usable alone. Phases 1 to 3 are a direct-modeling tool (what SpaceClaim and the Fusion 360 and SolidWorks "move face" tools do). Phases 4 and 5 are the parametric core of SolidWorks and Onshape, a much larger step. A reasonable target for a sample is 1 to 3, and a small version of 4.
 
@@ -125,7 +125,7 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 1. B-rep work that doesn't touch the shared kernels starts first: both spikes, the query interface, the render form, GPU patch tessellation through placement, and exact picks, snapping and measurement. Spike B's trim coverage test is throwaway.
 2. The vector design session sets the shared curve, coverage and stroke contracts, with b-rep trims and edges as stated requirements.
 3. B-rep trims and edges move onto those kernels.
-4. Vectors build the rest: styling, labels, the columnar store that replaces Entity (§13.29), and draping.
+4. Vectors build the rest: styling, labels, the columnar store that replaces Entity ([2026-11-08-owners-calls-for-later-plans.md](../decisions/2026-11-08-owners-calls-for-later-plans.md)), and draping.
 
 The extensions here are drafts for this proof of concept and free to change, so a format chosen early is no constraint.
 
@@ -233,7 +233,7 @@ Nothing stands in for TBB. SMLib's TBB code (parallel UV trim curves and tessell
   - _GPU picks come back in through the adapter:_ the pick fragment's (face, u, v) is refined by the adapter, as an entry beside `closestPoint`, to an exact point with its accuracy terms. The render parameterization stays an adapter detail. If identity and parameterization ever diverge, as with refit pcurves (option 3), the adapter owns the map and adds its error.
   - _Server answers_ stay at the scene layer (step 3's question 1). A server is one more route, whose accuracy carries the same terms and which upgrades a provisional answer when it arrives.
   - What this asks of step 3's code: an adapter for b-reps, accuracy as terms with a route, and a refine-a-pick entry. Nothing above the interface changes.
-- **An example of geometry as one thing (owner, 2026-11-10).** Because exact geometry lives behind one query interface, the engine can answer questions that cross representations and reference frames, which a traditional CAD tool can't. The example: the shortest distance between a 3D Tiles reality mesh (as-built, in its tileset's frame) and an edge of a design b-rep (as-designed, placed from a projected or engineering frame through §13.26). Each side states its accuracy terms: the mesh its tile's geometric error at the loaded level; the b-rep its model tolerance plus representation error; the frames the accuracy of the transform between them (the frames layer's terms). The answer composes them.
+- **An example of geometry as one thing (owner, 2026-11-10).** Because exact geometry lives behind one query interface, the engine can answer questions that cross representations and reference frames, which a traditional CAD tool can't. The example: the shortest distance between a 3D Tiles reality mesh (as-built, in its tileset's frame) and an edge of a design b-rep (as-designed, placed from a projected or engineering frame through [geometry-through-placement-review.md](geometry-through-placement-review.md)). Each side states its accuracy terms: the mesh its tile's geometric error at the loaded level; the b-rep its model tolerance plus representation error; the frames the accuracy of the transform between them (the frames layer's terms). The answer composes them.
   - It shows the interface's point: picks, snaps and measurements don't care what a geometry is made of or which frame it was authored in. They name a frame and an instant, and each answer says how sure it is.
   - Use cases: clearance between a designed bridge or pipe and scanned ground or structure, clashes between design and as-built, and checking a design against survey.
   - What it needs: the b-rep adapter (above); the tileset mesh adapter reporting each tile's geometric error as an accuracy term; a distance-between-two-geometries query (closest pair, an entity on each side) beside `segmentDistance`; and the frames layer's transform accuracy feeding `GeometryAccuracy`. A later example, once step 3's b-rep adapter exists.
@@ -268,7 +268,7 @@ Nothing stands in for TBB. SMLib's TBB code (parallel UV trim curves and tessell
 - **Fast paths:** a face whose trim is its rectangle skips the test, and so do grid cells classified as fully inside. Their fragments keep early depth.
 - **Seams:** neighbouring faces trim along their own pcurve images of the same edge, so they meet within the edge's tolerance plus the tessellation error. A dilation of about half a pixel outward in (u, v) closes pinholes, and the edge lines draw over the seam. Stitching to shared edge samples isn't needed for drawing.
 - **The varying budget:** a patch draw's UV varying carries the face's (u, v), offset to the rectangle's corner so float32 holds it. No varying is added. Depth, shadow and pick passes need the same discard, so patch draws get a fragment stage there.
-- **Picks:** each fragment knows its face and (u, v), so a pick is a domain point (§13.26's brainstorm) and the exact point is a float64 evaluation.
+- **Picks:** each fragment knows its face and (u, v), so a pick is a domain point ([geometry-through-placement-review.md](geometry-through-placement-review.md)'s brainstorm) and the exact point is a float64 evaluation.
 - **What the CPU tessellator keeps:** the offline glTF fallback mesh, the mesh adapter for queries until the b-rep adapter exists, and the reference in tests. Nothing it does is in the drawing path.
 - **Part 1 is done (2026-11-10, a Sonnet 5.5 agent from a brief).**
   - `brep/gpuPatches.ts` writes a 48-word record per (face, span) for every face. Each holds:
@@ -329,7 +329,7 @@ Nothing stands in for TBB. SMLib's TBB code (parallel UV trim curves and tessell
   - Only a face with nothing to draw (no loop of a finite extent, no patch under its rect) is `unsupported`. The `cpuFaces: "trimmed"` diagnostic is kept.
   - `runBrepTrims()` now passes all 17 checks headless, among them CTC-05: 208 of 208 faces on the GPU, with no pinholes at three distances.
   - The tessellation and B-reps handbook tabs no longer say that a higher-degree face is a CPU mesh.
-- **Ray backends respect clips (2026-11-11, `17e50883e7`, §13.34's "step 3's queries respect clipping").** `RayQuery.clips` is a `ClipsOption`: it defaults to `"view"` when the query names a view (picks and snaps) and to `"none"` otherwise (distance, clearance, line of sight). Every target honors it, apart from a body's ellipsoid and an impostor, which are no drawn surface.
+- **Ray backends respect clips (2026-11-11, `17e50883e7`, [infrastructure-and-geoscience-capabilities.md](infrastructure-and-geoscience-capabilities.md)'s "step 3's queries respect clipping").** `RayQuery.clips` is a `ClipsOption`: it defaults to `"view"` when the query names a view (picks and snaps) and to `"none"` otherwise (distance, clearance, line of sight). Every target honors it, apart from a body's ellipsoid and an impostor, which are no drawn surface.
   - The terrain's march goes past a removed hit, and a terrain the clips remove entirely answers "unknown".
   - The GPU draw cast casts again from behind a removed hit, at most 256 times a ray, skipping 1 mm (or a millionth of the distance), so a kept surface closer than that behind a removed one is passed over. A ray through more than 256 removed surfaces is an error.
   - `sdfGeometry.rayHit` marches past removed hits. `closestPoint` and `segmentDistance` on it still ignore clips.

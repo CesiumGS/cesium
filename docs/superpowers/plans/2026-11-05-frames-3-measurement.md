@@ -512,7 +512,7 @@ Each ruling ends with what it costs if it is wrong.
 
 **Files:**
 
-- Modify: `packages/next/README.md` (the frames section), `CESIUM2_WEBGPU_PLAN.md` §13.14
+- Modify: `packages/next/README.md` (the frames section), [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)
 
 - [ ] **Step 1: README.** Document:
   - `measure`, its result fields and `measureSpan`;
@@ -520,7 +520,7 @@ Each ruling ends with what it costs if it is wrong.
   - how to read an accuracy statement;
   - the Artemis covariance units (R7);
   - the DSN Now credit.
-- [ ] **Step 2: Plan note.** Add the measured agreements to §13.14:
+- [ ] **Step 2: Plan note.** Add the measured agreements to [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md):
   - SPICE light time and directions, DSS-43, geodesic;
   - DSN Now range and round-trip light-time differences;
   - the computed LOS and AOS per complex against 22:44 and 23:25;

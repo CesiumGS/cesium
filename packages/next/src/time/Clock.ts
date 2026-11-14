@@ -15,7 +15,7 @@ interface ClockEvents {
 }
 
 /**
- * The time a scene shows (plan §13.13): what the sun, the sky, the stars
+ * The time a scene shows (docs/design/time-and-its-controls.md): what the sun, the sky, the stars
  * and time-dynamic content follow. 1.x's `Clock` without its ranges and
  * steps for now; views share one (per-view clocks, for comparing two
  * times side by side, come with time on views).

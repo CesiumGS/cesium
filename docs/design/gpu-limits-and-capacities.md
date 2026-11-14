@@ -104,7 +104,7 @@ bundles that bake the bind groups (`World.tableGeneration`). The ceiling
 is the smaller of the option, `maxStorageBufferBindingSize` and
 `maxBufferSize` over the row size.
 
-**Arena slabs** (replacing §13.9's "arena pages"). Bevy's mesh allocator
+**Arena slabs** (replacing [transforms-and-instancing.md](transforms-and-instancing.md)'s "arena pages"). Bevy's mesh allocator
 solved this for WebGPU: meshes go into _slabs_ suballocated with Aaltonen's
 OffsetAllocator; a slab starts small and grows to a cap; oversized meshes
 get their own buffer; draws batch per slab. Vulkan Memory Allocator and
@@ -122,7 +122,7 @@ inside one binding, so they don't get past the binding limit here.
 - A new slab opens only when the last one can't grow. An emptied slab
   (other than the first) is destroyed.
 - The allocator becomes constant-time size classes (OffsetAllocator's
-  scheme) instead of first-fit, which §13.6 asked for if streaming
+  scheme) instead of first-fit, which [tile-selection-and-memory.md](tile-selection-and-memory.md), "Memory management (open design question)" asked for if streaming
   fragmented it.
 
 **Capacity in the residency budget.** Unreal's texture and Nanite streaming
@@ -149,7 +149,7 @@ materials in total, and tiles that share a material can batch together.
 
 **Material textures and bindless.** WebGPU has no bindless yet: the WGSL
 group called its October 2025 work groundwork for bindless, and Chrome's
-texture and sampler "lets" (desktop 146) are a step toward it (§7.1).
+texture and sampler "lets" (desktop 146) are a step toward it ([risks.md](risks.md), "Bindless textures: not in the PoC, designed for in 2.0").
 Before bindless, engines grouped textures into arrays by size and format,
 or into a virtual-texture physical cache (the globe's imagery slices
 already are one).
@@ -170,7 +170,7 @@ already are one).
 1. Quick unblocks: shared materials and the world's default material,
    transactional uploads, retries after capacity failures, requesting
    `maxTextureArrayLayers`, a point-cull layout with only what it reads
-   (a stopgap: the vector pipeline is to be generalized, §13.9).
+   (a stopgap: the vector pipeline is to be generalized, [transforms-and-instancing.md](transforms-and-instancing.md)).
 2. The `base` tier: the limits option, the recording-device layout test,
    readable layout errors.
 3. Per-stage counts: textures to 16 (property textures only in the
@@ -236,7 +236,7 @@ would resample them or need a virtual-texture page cache.
   is destroyed when its range is released; past the binding or the
   budget it fails with a `CapacityError` naming the bytes and the limit.
   The allocator stays first-fit for now (with growth and a free tail);
-  size classes wait for a measurement of streaming churn (§13.6).
+  size classes wait for a measurement of streaming churn ([tile-selection-and-memory.md](tile-selection-and-memory.md), "Memory management (open design question)").
   Checked: OSM Buildings over terrain under `?limits=minimum` (128 MiB
   bindings), the first slab growing 16 → 32 MiB; tests for slabs that
   grow, multiply and close, and for the budget's `CapacityError`.
@@ -247,7 +247,7 @@ would resample them or need a virtual-texture page cache.
   limits tier, per-stage binding counts and capacities. The Viewer's
   settings choose the limits tier (the page reloads on it).
 - _6, the bindless seam._ Texture references in material records,
-  `World.textureRefs`, the one shader accessor and its guard test (§7.1).
+  `World.textureRefs`, the one shader accessor and its guard test ([risks.md](risks.md), "Bindless textures: not in the PoC, designed for in 2.0").
   The Slang port mirrors it (`materialTextureRef`, `materialHasTexture`,
   its own `materialTexture`), and its default material tests presence by
   reference instead of by flag bit. Texture arrays stay deferred until a
@@ -261,7 +261,7 @@ would resample them or need a virtual-texture page cache.
   and shading predate the atmosphere, exposure and view-struct changes,
   so it renders garbage. A second hand-kept copy of a shader drifts; see the
   decision to make Slang the one source of engine shaders, and its
-  migration (§3.4, "Slang-first, for real").
+  migration ([shaders.md](shaders.md), "Slang-first, for real").
 - _Found: custom shaders' translucent layouts over 16 (r50 on)._ The
   custom-shader page failed 22 of 51 cases from this increment on: the
   built-in translucent layout was exactly 16, and a custom shader's

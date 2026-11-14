@@ -112,7 +112,7 @@ export function dispatchSize(n: number): {
 }
 
 /**
- * Live points (plan §13.11, vector sources): many moving features as GPU
+ * Live points (docs/design/real-time-tracks.md, vector sources): many moving features as GPU
  * data, not objects, drawn by styled layers (`VectorLayer`). A feed's
  * update (`update`) is one copy of a typed array, four numbers per point;
  * a kernel applies it, and each frame another moves every point between

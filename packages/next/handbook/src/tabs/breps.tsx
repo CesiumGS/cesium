@@ -651,8 +651,8 @@ export function Breps() {
           from={
             <>
               <C>src/brep/form.ts</C>, <C>build.ts</C>, <C>validate.ts</C>,{" "}
-              <C>gltf.ts</C> and <C>BENTLEY_brep.md</C>, and the overall plan,
-              section 13.33
+              <C>gltf.ts</C> and <C>BENTLEY_brep.md</C>, and the design note
+              docs/design/breps-and-geometry-queries.md
             </>
           }
           on="2026-11-11"
@@ -693,7 +693,7 @@ export function Breps() {
           there in float64, with no tessellation's error in it.
         </p>
         <Written
-          from="the overall plan, section 13.33, the modeling-and-render-geometry brainstorm, and the form's fields"
+          from="the design note docs/design/breps-and-geometry-queries.md, the modeling-and-render-geometry brainstorm, and the form's fields"
           on="2026-11-11"
         />
       </Section>
@@ -973,9 +973,10 @@ export function Breps() {
         <Written
           from={
             <>
-              the overall plan, section 13.33 (the CSG spike), the code named
-              above, <C>src/brep/faceDigest.ts</C>, the commit that added the
-              caches (<C>e397488591</C>), and timings run for this page
+              the design note docs/design/breps-and-geometry-queries.md (the CSG
+              spike), the code named above, <C>src/brep/faceDigest.ts</C>, the
+              commit that added the caches (<C>e397488591</C>), and timings run
+              for this page
             </>
           }
           on="2026-11-12"
@@ -1143,10 +1144,11 @@ export function Breps() {
         <h3>Domain points are the currency</h3>
         <p>
           A pick today answers with a position and works back to what it hit.
-          The proposal in the plan (section 13.26, for review) reverses that:
-          every draw path writes <em>which geometry</em>, as a domain point, and
-          the position follows. A domain point is a discrete element plus
-          continuous coordinates, and each representation has one.
+          The proposal in the plan (the design note
+          docs/design/geometry-through-placement-review.md, for review) reverses
+          that: every draw path writes <em>which geometry</em>, as a domain
+          point, and the position follows. A domain point is a discrete element
+          plus continuous coordinates, and each representation has one.
         </p>
         <DataTable
           label="Domain points by representation"
@@ -1215,8 +1217,10 @@ export function Breps() {
         <Written
           from={
             <>
-              the overall plan, section 13.33 and the geometry-interface
-              brainstorm in section 13.26, and <C>src/geometry</C>
+              the design note docs/design/breps-and-geometry-queries.md and the
+              geometry-interface brainstorm in the design note
+              docs/design/geometry-through-placement-review.md, and{" "}
+              <C>src/geometry</C>
             </>
           }
           on="2026-11-11"
@@ -1344,8 +1348,9 @@ export function Breps() {
         <Written
           from={
             <>
-              the overall plan, section 13.33, <C>src/scene/world/brep.ts</C>,{" "}
-              <C>patches.ts</C>, <C>src/scene/engineReady.ts</C> and{" "}
+              the design note docs/design/breps-and-geometry-queries.md,{" "}
+              <C>src/scene/world/brep.ts</C>, <C>patches.ts</C>,{" "}
+              <C>src/scene/engineReady.ts</C> and{" "}
               <C>test/engineReady.test.ts</C>
             </>
           }
@@ -1487,7 +1492,10 @@ export function Breps() {
           <C>coverage.slang</C>, written for the vector fills to share. The
           vector design's contracts are still to be set over it.
         </p>
-        <Written from="the overall plan, section 13.33" on="2026-11-11" />
+        <Written
+          from="the design note docs/design/breps-and-geometry-queries.md"
+          on="2026-11-11"
+        />
       </Section>
 
       <Section title="What's built and what's planned">

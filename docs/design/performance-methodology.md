@@ -21,6 +21,6 @@
   - GPU time ≤ 1.x
   - N views well under N× memory
 - Automated in Playwright + Chromium with WebGPU, with JSON results per commit.
-- **The benchmark suite** (§16) turns this into a repeatable comparison of
+- **The benchmark suite** ([benchmark-suite.md](benchmark-suite.md)) turns this into a repeatable comparison of
   1.x and 2.0 over a catalog of real scenes, public and private, and is
   designed to grow into a benchmark suite for Cesium as a whole.

@@ -1,5 +1,5 @@
 // The stretch of a route at a point: the extreme singular values [σ_min,
-// σ_max] of its Jacobian there (CESIUM2_WEBGPU_PLAN.md §13.26, second review
+// σ_max] of its Jacobian there (docs/design/geometry-through-placement-review.md, second review
 // flaw 6). A drawn distance is at least σ_min and at most σ_max times the
 // true one, so a pixel's worth of drawn metres is at most 1/σ_min true
 // metres: it is what divides a snap's or a pick's pixel tolerance. The same

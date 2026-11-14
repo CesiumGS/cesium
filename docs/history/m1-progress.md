@@ -68,7 +68,7 @@ difference in the default column is the intended sRGB correction.
   translucent geometry are not a reference. 2.0 is tested against its own exact
   per-pixel-linked-list mode, including opaque/translucent interaction.
 - **One compositor for translucent meshes and splats (r10).** Both feed
-  depth-ordered fragment streams into a single compute resolve (§3.5, §3.6), so
+  depth-ordered fragment streams into a single compute resolve ([architecture.md](../design/architecture.md), "Frame graph", [architecture.md](../design/architecture.md), "Compute shaders: where they pay off"), so
   glass, splats and opaque geometry composite correctly together. Its splat
   side (GPU radix sort, tile binning) lands with M6; the mesh side with M4.
 

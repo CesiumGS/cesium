@@ -23,7 +23,7 @@ like itself. Three tiers, each with its own test:
   cameras, depth, clipping;
 - direct sunlight with image-based lighting off (the parity harness's
   `direct` mode): the same glTF BRDF on both sides, so a difference is a
-  bug on one of them (filed in §14 when it is 1.x's).
+  bug on one of them (filed as a follow-up item for other teams, project CS-19, when it is 1.x's).
 
 **Intent parity (statistics vs 1.x, not FLIP).** The default look of a lit
 scene: average luminance of lit content within a third of a stop, sky
@@ -126,7 +126,7 @@ any zoom. 2.0 draws the sky as it is, so the camera decides what shows:
   core about 22 mag/arcsec², some 2 × 10⁻⁴ cd/m², as faint as the natural
   night sky): they show only under a dark sky at long exposures, as with a
   real camera. Image licenses to check. Not in 5e: the owner dropped
-  deep-sky patches on 2026-11-09 (§13.29, decision (f)).
+  deep-sky patches on 2026-11-09 ([2026-11-08-owners-calls-for-later-plans.md](../decisions/2026-11-08-owners-calls-for-later-plans.md), decision (f)).
 - **Moon and planets** from ephemerides: the moon's disk lit by the sun
   with its phase (and earthshine), the planets as points with their
   magnitudes. The moon's light also lights the scene at night (about
@@ -394,7 +394,7 @@ Later:
   colors (a license decision).
 - **Translucency**: order-independent transparency (M4); cut-out and
   blended materials are drawn opaque until then. Done (r45): see M4
-  (§6), "Progress (r45)".
+  ([m4-visual-parity.md](../history/m4-visual-parity.md)), "Progress (r45)".
 - **Weather fog**: a haze medium of its own beside the clear air's.
 
 Progress (r43): **the Moon**. `moonPosition(time)` (time/moon.ts) ports
@@ -567,13 +567,13 @@ real-time lighting at scale. What transfers to 2.0, and what doesn't:
 
 - **A path tracer in the engine as the reference.** Unreal ships one that
   renders the same scene, materials and lights, and Epic checks Lumen
-  against it. 2.0's references (§4.2 tiers) should grow into the same: the
+  against it. 2.0's references (above tiers) should grow into the same: the
   path tracer we plan to experiment with is first the oracle for every
   real-time approximation, then a product feature.
 - **One sky system feeding everything.** Sky Atmosphere (Hillaire's model,
   above), Volumetric Clouds and the Sky Light, which re-captures the sky
   (with clouds) into the environment lighting in real time. The same shape
-  as §4.2: one atmosphere, one environment derived from it.
+  as above: one atmosphere, one environment derived from it.
 - **Physical units and exposure as the default.** Lux, candela, nits and
   EV100 throughout, with automatic exposure set in physical terms. Epic made
   these the default after years of unitless settings; 2.0 starts there.
@@ -709,7 +709,7 @@ Order: the moon as a light, then `KHR_lights_punctual` with clustered
 shading (unshadowed), IES profiles, an atlas of shadow maps for a few
 lights, area lights, then the BVH, temporal accumulation and stochastic
 sampling together with probe GI. Units throughout are photometric (lux,
-candela, lumens), so the night exposure (§13.13) and the false-color
+candela, lumens), so the night exposure ([time-and-its-controls.md](time-and-its-controls.md)) and the false-color
 illuminance view work unchanged.
 
 ## Scaling to the hardware
@@ -743,7 +743,7 @@ Both programmatically and with options, in layers:
 - **Deterministic for tests and benchmarks.** The benchmark suite and the
   parity harnesses pin a tier (no `"auto"`, no controller), so runs stay
   comparable; the suite measures each tier separately, and tiers get
-  budgets in the catalog (§16).
+  budgets in the catalog ([benchmark-suite.md](benchmark-suite.md)).
 
 ## Order of work in M4
 
@@ -837,7 +837,7 @@ visibility buffer (Burns and Hunt 2013, Nanite's) rasterizes triangle IDs
 and depth, then shades per pixel from them. For ambient occlusion and
 other screen-space passes what's needed is depth and normals before
 shading, which the prepass gives directly. The visibility buffer's other
-half, deferred material shading, still waits on bindless textures (§7.1:
+half, deferred material shading, still waits on bindless textures ([risks.md](risks.md), "Bindless textures: not in the PoC, designed for in 2.0":
 the material pass must reach every visible tile's textures), and writing
 triangle IDs needs the `primitive_index` builtin, an optional WebGPU
 feature not yet everywhere. The prepass draws from the same GPU-culled
@@ -1011,7 +1011,7 @@ texel in that table (Unreal's sky light capture) instead of a march, with
 the same accuracy (horizontal irradiance within 0.4-1.5% on the ground,
 3.9% at 10 km). A 1080p frame of the sky costs 0.64 ms on the GPU, 1.85 ms
 when the environment is rebuilt in it: about 1.2 ms per rebuild, affordable
-every frame while scrubbing time (§13.13), so the prefilter keeps its 256
+every frame while scrubbing time ([time-and-its-controls.md](time-and-its-controls.md)), so the prefilter keeps its 256
 samples. Spreading a rebuild over frames stays available if it's needed on
 smaller GPUs.
 
@@ -1087,7 +1087,7 @@ haze" medium, an analytic exponential, is the follow-up for that). Other
 ways to remove interpolation artifacts, if they come back: jittering the
 volume's samples with temporal accumulation (Frostbite's and AC4's
 volumetric fog; needs temporal reprojection), and a reduced-resolution
-march with depth-aware upsampling (once depth comes before shading, §6's
+march with depth-aware upsampling (once depth comes before shading: a
 visibility buffer).
 
 **Haze: visibility and kinds of aerosols** (r42). `Engine.visibility`
@@ -1141,7 +1141,7 @@ sun read as the sun in a photograph or to the eye is glare, not the disk:
 - **Lens effects as options**: diffraction spikes from an aperture shape,
   ghosts and flares. Looks, not physics; off by default.
 - **Eclipses.** The moon's disk (from the ephemeris, at its real angular
-  size, or its tileset, §13.14) covers the sun's: the visible fraction of
+  size, or its tileset, [bodies-frames-and-engineering-coordinates.md](bodies-frames-and-engineering-coordinates.md)) covers the sun's: the visible fraction of
   the disk, computed per sample point along the sky's march, scales the
   sunlight, so the umbra's 100-odd km darkens the sky overhead while the
   horizon stays lit from outside it (the 360° sunset of totality) with no

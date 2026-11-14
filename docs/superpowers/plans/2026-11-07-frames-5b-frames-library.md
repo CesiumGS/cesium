@@ -90,7 +90,7 @@ Places where the spec, read against the code and 5a's plan, is contradictory or 
 
 Copied from 5a's plan where they apply, with 5b's additions.
 
-- **Precision** (spec section 4): "Float64 on the CPU throughout. The GPU sees only camera-relative values (hi/lo and camera-relative, §13.15)." Rays and hits stay float64 on the CPU.
+- **Precision** (spec section 4): "Float64 on the CPU throughout. The GPU sees only camera-relative values (hi/lo and camera-relative, [gpu-limits-and-capacities.md](../../design/gpu-limits-and-capacities.md))." Rays and hits stay float64 on the CPU.
 - **Earth-only scenes are unchanged:** "The parity pages, the bench gate and every test keep passing." This holds after every task.
 - **Pay for what you use:** a globe-only Viewer downloads nothing new, fetches no frames data and no Moon content, and does no new work per tick. An idle `Engine.bulk` registers no tick listener.
 - **The dependency rule** (spec section 7.7): the core imports nothing from `frames`, `proj` or `measure`, and nothing from `time`. `time` imports nothing but the math module and the clock interface. `frames` imports `time` and core types only (values only from `src/scene/Body.ts` and `src/camera/frameResolver.ts`). `measure` imports `frames`. The Viewer and the widgets may import `time` without `frames`. 5a's `test/importBoundary.test.ts` enforces it; a new time file joins its time-layer list.
@@ -487,7 +487,7 @@ And `test/framesRayAccuracy.test.ts` (the frames module, stubbed data as 5a's te
 - Consumes: Task 7's `RayTarget`, `castFrameRays`, `Body.terrainBand`; `Tile.geometry` (`TileGeometry`: model-space triangles and their float64 matrix in the tileset's anchor), `Tile.viewMask`, `Tile.standInMask`, `Tile.geometricError`, `volumeObb(tile.volume)`; `Tileset3D.retainGeometry`, `Tileset3D.anchor`.
 - Produces:
   - `castTilesetRays(tileset: Tileset3D, rays: readonly QueryRay[], options: { readonly band?: Body["terrainBand"]; readonly ellipsoid?: Ellipsoid; readonly endTolerance?: number }): RayAnswer[]` (plan's call 32), in the tileset's anchor coordinates:
-    - the segment is first clipped to the band (heights above `ellipsoid`): above it, clear; below it, blocked ("below the body's lowest terrain"); this is §13.16's question 4, applied for the Earth and the Moon;
+    - the segment is first clipped to the band (heights above `ellipsoid`): above it, clear; below it, blocked ("below the body's lowest terrain"); this is [ray-queries-where-they-run.md](../../design/ray-queries-where-they-run.md)'s question 4, applied for the Earth and the Moon;
     - inside the band, it walks the tiles whose oriented box the segment crosses; a drawn tile with geometry is tested triangle by triangle in float64 (each triangle's box grown by the tile's geometric error is the broad phase); a miss closer than the error is `withinError`; a stand-in tile is `notRefined`; a span with no drawn tile is `notLoaded`;
     - a tileset that doesn't retain geometry answers `unknown` with `"unsupported"` and the note "the tileset keeps no triangles (retainGeometry)";
     - the answer's accuracy is the largest geometric error among the tiles crossed, noted as the drawn tiles' error.
@@ -649,10 +649,10 @@ A browser check (port 5191).
 
 **Files:**
 
-- Modify: `packages/next/README.md`, `CESIUM2_WEBGPU_PLAN.md` §13.14
+- Modify: `packages/next/README.md`, [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)
 
 - [ ] **Step 1: README.** Document two-vector frames and freezing, `axesAt`, the presets and `held`, piecewise reference frames, the accuracy figures and how they compose (confidence, sources, axis, covariance, the ellipsoid, route terms), `separationAccuracy`, rays in a reference frame and their targets, the terrain bands, the bulk shape and `Engine.bulk`, `samplePath` and `accuracySpan`, and the time formatter with its zone lookup.
-- [ ] **Step 2: Plan note** in §13.14, "Frames 5b results": the fixture worst values, the accuracy moves (from `accuracyMoves.json`), the plan's calls and rulings one line each, and a "Carried forward" list of real deferred work from this plan's ledger, without nits, written before the ledger is deleted. Mark the section 16 rows 5b closed (`measureSpan`'s factors, the downlink's light time, explicit timeouts, composed accuracy beyond 1σ, `accuracyOf` on `pointAccuracy` (both entries), the time-display API, reference frames that change at an instant), naming the task.
+- [ ] **Step 2: Plan note** in [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md), "Frames 5b results": the fixture worst values, the accuracy moves (from `accuracyMoves.json`), the plan's calls and rulings one line each, and a "Carried forward" list of real deferred work from this plan's ledger, without nits, written before the ledger is deleted. Mark the section 16 rows 5b closed (`measureSpan`'s factors, the downlink's light time, explicit timeouts, composed accuracy beyond 1σ, `accuracyOf` on `pointAccuracy` (both entries), the time-display API, reference frames that change at an instant), naming the task.
 - [ ] **Step 3: Gates:**
   - `npx tsc --noEmit -p .`, `npx eslint .`, `npx prettier --check .`;
   - `npm test`, `npm run test:data`;

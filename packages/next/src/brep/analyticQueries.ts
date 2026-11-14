@@ -1,5 +1,5 @@
-// Closed-form queries on the b-rep form's analytic surfaces (overall plan
-// §13.33, the b-rep adapter): where a ray crosses a surface (planes,
+// Closed-form queries on the b-rep form's analytic surfaces (
+// docs/design/breps-and-geometry-queries.md, the b-rep adapter): where a ray crosses a surface (planes,
 // cylinders, cones and spheres by quadratics, tori by the roots of a quartic),
 // the (u, v) of a point on it, the stationary points of the distance to a
 // point (the nearest point is one of them), and a box around a (u, v) region.

@@ -31,8 +31,8 @@ all anchors, per-instance updates without allocation (100,000 instances:
 - _Smooth motion:_ interpolation (or extrapolation) between feed samples
   in the shader from two timestamped positions per track, so 1-10 Hz
   feeds animate at frame rate.
-- _Symbology:_ billboards by point expansion (§13.9) with programmable
-  shading (custom shading, §3.4) for military symbols (MIL-STD-2525 /
+- _Symbology:_ billboards by point expansion ([transforms-and-instancing.md](transforms-and-instancing.md)) with programmable
+  shading (custom shading, [shaders.md](shaders.md)) for military symbols (MIL-STD-2525 /
   APP-6 style) from per-instance attributes; decals for areas; labels
   with GPU decluttering.
 - _Picking and selection per track_ through per-instance feature IDs.
@@ -51,12 +51,12 @@ all anchors, per-instance updates without allocation (100,000 instances:
   streams by name (`vsInput.instance.<name>`, Custom shading increment
   9), and `World.setInstanceStreams` rewrites many instances in one
   copy.
-- _The showcase:_ the first showcase example (§13.12), in the gallery as
+- _The showcase:_ the first showcase example ([examples-and-the-gallery.md](examples-and-the-gallery.md)), in the gallery as
   an Examples section of Dyno (one engine and canvas, deep links), its
   module following the `run(context)` contract so it can move to
   Sandcastle or get a standalone page.
 
-**Measure** (benchmark suite v1, §16.4 group C; instanced models until
+**Measure** (benchmark suite v1, [benchmark-suite.md](benchmark-suite.md), "Catalog (initial)" group C; instanced models until
 billboards exist): 10,000 and 100,000 tracks updated at 1 Hz and 10 Hz
 from a synthetic feed over terrain and over Google 3D Tiles: CPU per
 frame, GPU per frame, update-to-display latency, clamping error, frame

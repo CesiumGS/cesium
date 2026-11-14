@@ -83,7 +83,7 @@ Done:
   loaded on demand, transforms, refine inheritance, viewer request volumes,
   content volumes and the children-within-parent optimization.
 - **`Stepwise`** (`streaming/Stepwise.ts`): the 1.x base traversal rule for
-  rule (§12 spec), including dynamic SSE, children-bounds culling,
+  rule (the M2 spec above), including dynamic SSE, children-bounds culling,
   `meetsScreenSpaceErrorEarly`, empty-subtree refinement, plane-mask frustum
   culling with 1.x's far plane, and content-volume culling at selection. Per-view
   state lives on the tiles, so one tree serves every view.
@@ -214,7 +214,7 @@ photogrammetry stream, with ≥ 99% L1 in multiple views (100% measured).
 
 ## Open design question: memory management
 
-See §13.6 for the fuller notes. 1.x's static 512 + 512 MiB per tileset is
+See [tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Memory management (open design question)" for the fuller notes. 1.x's static 512 + 512 MiB per tileset is
 the parity default, not a design. To work out before `Budgeted` and M5:
 
 - One engine-wide GPU budget shared by tilesets, render targets and textures,
@@ -268,7 +268,7 @@ remaining gap is in-between quality: `Budgeted` keeps a region's coarse
 ancestor until all its visible frontier tiles have arrived, while 1.x's
 level-by-level refinement (at twice the bytes) improves in small steps.
 
-**Next step: mixed-LOD drawing** (§13.1).
+**Next step: mixed-LOD drawing** ([tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Mixed-LOD drawing").
 
 ## Increment 5 (r21): mixed-LOD drawing
 
@@ -314,7 +314,7 @@ visible children as empty and shows the correct detail there.
 
 ## Increment 6 (r22): hold, prefetch, clipped mixing; design models
 
-The r21 depth offset was the wrong mechanism (§13.1): placeholders fell
+The r21 depth offset was the wrong mechanism ([tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Mixed-LOD drawing"): placeholders fell
 behind unrelated surfaces and the context globe, jumped as tiles changed
 role, and textures swam. Removing it exposed a worse problem it had been
 hiding: rotating brought an unloaded tile into view, the region fell back to
@@ -391,9 +391,9 @@ small steps, while `Budgeted` skips levels and a region stays coarse longer.
 Mixing narrows the gap a little. More concurrency hurts on a saturated
 link: 64 parallel requests split the bandwidth, so everything arrives later
 and together instead of nearest first. Consequences: adaptive concurrency
-grows only while throughput rises (§13.2), and how many levels `Budgeted` skips
+grows only while throughput rises ([tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Request scheduling"), and how many levels `Budgeted` skips
 should follow bandwidth (skip on fast links, load intermediate levels on
-slow ones), which is §13.3's benefit per byte. Pan: equal FLIP avg (0.546
+slow ones), which is [tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Budget-driven refinement"'s benefit per byte. Pan: equal FLIP avg (0.546
 to 0.549), `Budgeted` 7.4 s vs 8.0 s. Zoom out: equal within noise (one `Budgeted`
 run settled in 7.0 s against 2.0 to 2.4 s for the others; to recheck).
 
@@ -421,10 +421,10 @@ First readings, Midtown in the viewer (`Budgeted`, unthrottled):
 
 - **Queued p50 3.0 s, p95 4.4 s; network p50 133 ms.** Tiles wait about 3 s
   for one of the 18 request slots, then download in a seventh of a second.
-  The cap, not the network, dominates (§13.2).
+  The cap, not the network, dominates ([tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Request scheduling").
 - **111 MB received became 543 MB of textures** (JPEG decoded to RGBA with
   mips, about 8× its wire size; 953 MB resident in all). Texture transcoding
-  (§13.6) is the largest memory lever for photogrammetry.
+  ([tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Memory management (open design question)") is the largest memory lever for photogrammetry.
 - **Prefetch and hold keep content resident:** tiles they touch can't be
   evicted, so the cache sat near budget + overflow (953 of 1024 MB). Prefetch
   should yield to the budget before the memory-adjusted SSE rises.
@@ -439,12 +439,12 @@ M2 close-out:
 2. `TileSource`: one streaming abstraction for 3D Tiles, quantized-mesh
    terrain and imagery, sharing the scheduler, cache and per-view selection.
 3. One engine-wide cache budget across tilesets, terrain and imagery
-   (§13.6), replacing per-tileset 512 + 512 MB.
+   ([tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Memory management (open design question)"), replacing per-tileset 512 + 512 MB.
 
-Then M3 (globe), then the planned `Budgeted` selection work (§6): budget-driven refinement, multi-view
+Then M3 (globe), then the planned `Budgeted` selection work ([budgeted-selection-milestone.md](budgeted-selection-milestone.md)): budget-driven refinement, multi-view
 priority, silhouettes and HZB feedback, worker traversal over an SoA tile
 table, paging and readahead lessons, a second photogrammetry city.
 
 Done along the way: `Budgeted` is the default (parity harnesses pin
 `stepwise`); rendering is on demand, per view, including views sharing a
-canvas (§13.8).
+canvas ([rendering-on-demand.md](../design/rendering-on-demand.md)).

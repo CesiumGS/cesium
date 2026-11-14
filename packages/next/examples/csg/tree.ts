@@ -7,7 +7,7 @@ import {
 } from "../../src/brep/kernelProtocol.ts";
 
 /**
- * The CSG sample's model (plan §13.33): a tree whose leaves are primitives
+ * The CSG sample's model (docs/design/breps-and-geometry-queries.md): a tree whose leaves are primitives
  * with parameters and a placement, and whose nodes are booleans. It is plain
  * data, so it round-trips through JSON, and it becomes the worker's recipe
  * (`SolidRecipe`) for evaluation, which carries each leaf's id as the tag its

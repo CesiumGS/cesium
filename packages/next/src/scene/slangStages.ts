@@ -1,5 +1,5 @@
 /**
- * Slang custom shader stages' sources (plan §3.4): the `cesium` module
+ * Slang custom shader stages' sources (docs/design/shaders.md): the `cesium` module
  * for a shader's declarations, and which stages a source defines. Shared
  * by runtime compilation (`CustomShader.fromSlang`) and the build-time CLI
  * (scripts/slangShader.mjs). No browser or bundler APIs here.

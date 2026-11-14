@@ -1,4 +1,4 @@
-// Diagnosis views for benchmark reports (plan §16.9, Diagnose), borrowed
+// Diagnosis views for benchmark reports (docs/design/benchmark-analysis-and-experience.md, Diagnose), borrowed
 // from race telemetry and web performance tools:
 //
 // - a path overlay: each configuration's per-frame cost against progress

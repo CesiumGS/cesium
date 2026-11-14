@@ -1,5 +1,5 @@
 // The astrophoto curve: a look, as a stage, over the whole image, so stars, Earth and
-// clouds all go through it (CESIUM2_WEBGPU_PLAN.md §13.32). It's built only on the
+// clouds all go through it (docs/design/sky-light-and-points-unifications.md). It's built only on the
 // public stage interface, and is that interface's example of a stage written in Slang
 // (shaders/stages/astroCurve.slang, compiled by `npm run shaders`). Nothing here
 // changes the scene's light.

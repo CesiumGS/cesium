@@ -1,4 +1,4 @@
-// Selection under a warped anchor (plan §13.26, increment 3): tiles are
+// Selection under a warped anchor (docs/design/geometry-through-placement-review.md, increment 3): tiles are
 // selected on their drawn volumes (distance, frustum, screen-space error),
 // the geometric error is stretched by σ_max and added to the fit's error, and
 // the horizon test is off for them. Synthetic trees and a `TileWarp` made of

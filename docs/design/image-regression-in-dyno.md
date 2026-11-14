@@ -3,16 +3,16 @@
 **What this holds:** Image regression checks in Dyno. Moved from the overall plan (`CESIUM2_WEBGPU_PLAN.md`) on 2026-11-13, with its content and dates unchanged.
 
 Image regression belongs in Dyno, not in a separate app: it needs the same
-scene definitions, engine adapters, capture, FLIP (§4), results store,
+scene definitions, engine adapters, capture, FLIP ([parity.md](parity.md)), results store,
 lineage and review UI, and a change is judged on both axes at once
 ("faster" must not mean "drawing differently"). What differs is the run,
 not the system, so Dyno gets a second kind of run with its own command,
 CI job and tab.
 
 - _Two questions, two baselines._
-  - Parity (§4 L2): does 2.0 draw what 1.x draws? 2.0 against 1.x on the
+  - Parity ([parity.md](parity.md) L2): does 2.0 draw what 1.x draws? 2.0 against 1.x on the
     same scene and pose, judged with FLIP thresholds (mean ≤ 0.05, p95
-    ≤ 0.2) and the drift sources §4 lists. This is what the filmstrip
+    ≤ 0.2) and the drift sources [parity.md](parity.md) lists. This is what the filmstrip
     already shows per performance run.
   - Regression: did a change alter what 2.0 draws? 2.0 against its own
     approved image of the same check, near-exact (FLIP p95 near 0 on the
@@ -40,7 +40,7 @@ CI job and tab.
   content. Performance runs stay on real hardware only.
 - _Review in Dyno (an Images tab)_, after Chromatic and Skia Gold: a
   queue of changed checks, each with the baseline and new image side by
-  side, a swipe, a flicker toggle and the FLIP heatmap (§4 L3), and
+  side, a swipe, a flicker toggle and the FLIP heatmap ([parity.md](parity.md) L3), and
   approve or reject (approvals go to the baseline store, or to a commit
   for in-repo baselines); history per check; and "open in the explorer"
   at that pose in both engines.
@@ -54,7 +54,7 @@ CI job and tab.
   `scene.checks` points of the camera path, default the start; FLIP
   against the approved baseline per renderer class, thresholds mean 0.01
   and p95 0.05; `--parity` captures the pinned 1.x release too and scores
-  it against §4 L2; `--update` approves; `--software` runs on SwiftShader;
+  it against [parity.md](parity.md) L2; `--update` approves; `--software` runs on SwiftShader;
   JSON, JUnit and Markdown output; exit 1 on changed or new images);
   `runCheck` in the suite page; Dyno's Images tab (side by side, swipe,
   flicker, FLIP heatmap, parity view; approve copies the image into the
@@ -62,4 +62,4 @@ CI job and tab.
   0.002–0.006 mean and 0.04 p95 run to run (selection settles slightly
   differently); a fully refined check mode would make them exact. Next:
   the CI job on SwiftShader with offline content (deferred, r34: see
-  §16.9 phasing), checks saved from the explorer, parity pages as checks.
+  [benchmark-analysis-and-experience.md](benchmark-analysis-and-experience.md) phasing), checks saved from the explorer, parity pages as checks.

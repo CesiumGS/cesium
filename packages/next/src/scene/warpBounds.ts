@@ -1,4 +1,4 @@
-// Bounds of warps (plan §13.26, the second review's flaw 1 and 6; increment
+// Bounds of warps (docs/design/geometry-through-placement-review.md, the second review's flaw 1 and 6; increment
 // 3). A draw's culling sphere MOVES by the displacement at its centre and
 // grows only by the residual, how far the displacement differs from that
 // over the sphere. Weights read parameters that may declare a range, so

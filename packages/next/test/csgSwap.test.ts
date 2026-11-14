@@ -1,4 +1,4 @@
-// Changing the CSG sample's solid without a bad frame (plan §13.33): the new
+// Changing the CSG sample's solid without a bad frame (docs/design/breps-and-geometry-queries.md): the new
 // solid waits hidden until the engine says it is ready (`Engine.whenReady`),
 // then replaces the old one in one step, and a newer one supersedes a solid
 // still waiting, aborting its wait.

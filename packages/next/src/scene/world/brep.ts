@@ -1,4 +1,4 @@
-// A b-rep as a world's draws (CESIUM2_WEBGPU_PLAN.md §13.33, "Step 5
+// A b-rep as a world's draws (docs/design/breps-and-geometry-queries.md, "Step 5
 // redirected", part 2): every face is a patch draw, diced per view, in two:
 // the faces whose trim is their rect (early depth), and the faces with a
 // trim, whose fragment stage tests it per pixel. Patches of degree 1 to 7
@@ -298,7 +298,7 @@ export function addBrep(
       transforms,
     };
   } catch (error) {
-    // Nothing taken may outlive a failure (transactional, §13.15).
+    // Nothing taken may outlive a failure (transactional, docs/design/gpu-limits-and-capacities.md).
     for (const draw of draws) {
       world.removeDraw(draw);
     }

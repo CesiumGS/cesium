@@ -1,4 +1,4 @@
-﻿// The CSG sample's recipes in the real kernels (plan Â§13.33): a tree of
+﻿// The CSG sample's recipes in the real kernels (docs/design/breps-and-geometry-queries.md): a tree of
 // primitives and booleans, made in SMLib and in Open CASCADE behind the
 // worker's loopback, comes back as one valid, outward-facing form whose
 // faces are tagged by the leaf that made them; placements turn and move the

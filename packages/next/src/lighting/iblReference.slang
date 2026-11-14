@@ -1,4 +1,4 @@
-// The image-based lighting reference (plan §4.2): for each pixel of a
+// The image-based lighting reference (docs/design/lighting-and-shading.md): for each pixel of a
 // camera's view of analytic spheres, the light reflected toward the camera
 // from an environment cube, integrated by Monte Carlo with the glTF
 // specification's BRDF (Appendix B: Lambertian diffuse and GGX specular

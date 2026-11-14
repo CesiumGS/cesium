@@ -1,4 +1,4 @@
-// The real-time atmosphere's model (plan §4.2): Hillaire's "A Scalable and
+// The real-time atmosphere's model (docs/design/lighting-and-shading.md): Hillaire's "A Scalable and
 // Production Ready Sky and Atmosphere Rendering Technique" (2020) with
 // Bruneton's 2017 parameters, at four wavelengths per pass (two passes
 // cover the 8 bands of `spectralBands`, combined into sRGB after). The

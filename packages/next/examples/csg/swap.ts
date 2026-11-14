@@ -1,5 +1,5 @@
 /**
- * Changing the solid without a bad frame (plan §13.33, editing). A new
+ * Changing the solid without a bad frame (docs/design/breps-and-geometry-queries.md, editing). A new
  * solid's draws aren't right the moment `addBrep` returns: their custom
  * shader's pipelines compile and their textures load in the frames that
  * follow, and until then a draw uses a stand-in (the colour palette, read

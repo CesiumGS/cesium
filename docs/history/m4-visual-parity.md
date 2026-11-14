@@ -2,7 +2,7 @@
 
 **What this holds:** Milestone M4 as planned and worked through. Moved from the overall plan (`CESIUM2_WEBGPU_PLAN.md`) on 2026-11-13, with its content and dates unchanged.
 
-- Lighting and shading as designed in §4.2: physical units and exposure,
+- Lighting and shading as designed in [lighting-and-shading.md](../design/lighting-and-shading.md): physical units and exposure,
   Hillaire's atmosphere (sky, aerial perspective, environment lighting),
   shadows and ambient occlusion.
 - LDR/HDR paths, FXAA.
@@ -50,7 +50,7 @@ moments tell apart worst. Cutouts (alpha mask, and those opaque parts)
 use alpha to coverage in the opaque pass's depth stage, the alpha
 sharpened to a pixel-wide ramp across the cutoff, so their edges
 antialias like geometry's; shading at equal depth fills just those
-samples. Deviation from §3.5: the lists are the reference and an option,
+samples. Deviation from [architecture.md](../design/architecture.md), "Frame graph": the lists are the reference and an option,
 not the default with the moments as overflow fallback; the moments are
 the default, cheaper and bounded (below).
 
@@ -126,7 +126,7 @@ ms at 60 Hz), so the scene without glass came out slower than with
 moments and exact at +22; both cost measurements now render their frames
 back to back and wait once. Where the probe finds once a pixel, the pass
 costs what it did at r45. Exact stays the reference, antialiased;
-moments stay the default; the Windows runs (§3.4 step 4) measure both
+moments stay the default; the Windows runs ([shaders.md](../design/shaders.md) step 4) measure both
 again.
 
 Found by the gallery's translucency example (examples/translucency,
@@ -165,7 +165,7 @@ into an encoded 8-bit image and FXAA reads it into the view's rectangle,
 overlays after. It smooths what MSAA leaves (within shading, and the
 moments' single-sampled edges). A viewer switch for both engines.
 
-**LDR/HDR paths**: settled differently than §3.5 planned. There is one
+**LDR/HDR paths**: settled differently than [architecture.md](../design/architecture.md), "Frame graph" planned. There is one
 path, HDR (rgba16float, pre-exposed, tonemapped in the present pass),
 with display-referred content (unlit: imagery, photogrammetry) kept in
 its own 8-bit sRGB target and added after tonemapping, so photographs

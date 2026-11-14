@@ -1,5 +1,5 @@
 /**
- * The eye's response to light (View.ts `Exposure` "eye", plan §4.2): what
+ * The eye's response to light (View.ts `Exposure` "eye", docs/design/lighting-and-shading.md): what
  * a person there would see, shown on a display.
  *
  * Visibility follows Ferwerda, Pattanaik, Shirley and Greenberg (1996), "A

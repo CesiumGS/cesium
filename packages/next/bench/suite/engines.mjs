@@ -1,4 +1,4 @@
-// Engine names for the benchmark suite (plan §16.6): what was built, from
+// Engine names for the benchmark suite (docs/design/benchmark-suite.md, "Engines and versions"): what was built, from
 // where, with which settings. One grammar for the CLI, results, reports
 // and Dyno:
 //

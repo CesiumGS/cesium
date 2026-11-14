@@ -1,5 +1,5 @@
 /**
- * GPU check (CESIUM2_WEBGPU_PLAN.md §13.23): an adapter report, then steps
+ * GPU check (docs/design/indirect-draws-on-intel.md): an adapter report, then steps
  * run one at a time from a click, smallest first, to find what an unfamiliar
  * GPU (starting with Intel UHD 7xx and Iris Xe) can't do. A device loss
  * stops the run. Spike only: it adds nothing to the library, uses no network

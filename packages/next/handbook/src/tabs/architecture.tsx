@@ -291,10 +291,10 @@ export function Architecture() {
           from the host's coordinate service. A projected or geographic CRS is a
           coordinate operation, a smooth edge fitted per tile. A local CRS with
           a site transform is a rigid edge. The mode field is still in the code,
-          and goes with the API review (plan 5i).
+          and goes with the public API review (CS-102).
         </p>
         <Written
-          from="the plan 5 spec, sections 7.2, 7.7, 7.9 and 7.10, and the overall plan, section 13.26"
+          from="the plan 5 spec, sections 7.2, 7.7, 7.9 and 7.10, and the design note docs/design/geometry-through-placement-review.md"
           on="2026-11-12"
         />
       </Section>
@@ -348,7 +348,7 @@ export function Architecture() {
         <ul>
           <li>
             <strong>One API, the engine on either thread</strong> (the
-            worker-mode façade, reviewed; milestones WF-1 to WF-12). The app
+            worker-mode façade, reviewed; work items CS-101 to CS-120). The app
             calls the same API on the main thread. A thin layer either runs the
             engine there or forwards to an engine thread, a worker with an{" "}
             <C>OffscreenCanvas</C>. Commands are ordered messages batched per
@@ -371,20 +371,20 @@ export function Architecture() {
           </li>
           <li>
             <strong>Jobs. The first slice is built</strong> (
-            <C>src/io/Jobs.ts</C>, section 13.43): priorities, dependencies,
-            cancellation, a budgeted apply phase (4 ms by default) and shared
-            memory when isolated. Terrain decode completion and the refit
-            fallback run on it. Moving the other work onto it (JP-1 to JP-9),
-            app jobs and the inspector's Jobs section are planned. On its
-            before-and-after runs the tick spacing differed between runs of one
-            build by more than between builds, so the slice is not shown to
-            change smoothness; what it changes is where work runs, and that it
-            is bounded and visible. <C>WorkerPool</C> stays as the transport.
-            The scheduler orders work by visible screen-space error, with
-            dependencies, cancellation and one main-thread apply phase with a
-            millisecond budget. Shared memory is used when the page is
-            cross-origin isolated and never required. A job may return partial
-            results that are sound, such as the horizon occluder's walk.
+            <C>src/io/Jobs.ts</C>, the design note docs/design/job-system.md):
+            priorities, dependencies, cancellation, a budgeted apply phase (4 ms
+            by default) and shared memory when isolated. Terrain decode
+            completion and the refit fallback run on it. Moving the other work
+            onto it (CS-87 to CS-98), app jobs and the inspector's Jobs section
+            are planned. On its before-and-after runs the tick spacing differed
+            between runs of one build by more than between builds, so the slice
+            is not shown to change smoothness; what it changes is where work
+            runs, and that it is bounded and visible. <C>WorkerPool</C> stays as
+            the transport. The scheduler orders work by visible screen-space
+            error, with dependencies, cancellation and one main-thread apply
+            phase with a millisecond budget. Shared memory is used when the page
+            is cross-origin isolated and never required. A job may return
+            partial results that are sound, such as the horizon occluder's walk.
           </li>
           <li>
             <strong>Loading is refinement.</strong> A scene is interactive at
@@ -395,8 +395,8 @@ export function Architecture() {
             active sources (streaming, transitions, shader compiles, occlusion
             feedback, accumulation), and <C>view.converged()</C> resolves when
             they are done, for screenshots, tests and exports. It is reviewed
-            (M11): <C>converged()</C> replaces <C>whenReady</C>, takes a level (
-            <C>"drawn"</C>, <C>"correct"</C> or <C>"converged"</C>) and
+            (CS-15): <C>converged()</C> replaces <C>whenReady</C>, takes a level
+            (<C>"drawn"</C>, <C>"correct"</C> or <C>"converged"</C>) and
             deadlines, and a <C>freeze</C> option holds the view's selection so
             fades and fits finish on what has loaded. Transitions, pending
             shader swaps and the resolution governor report as sources. Jobs
@@ -414,7 +414,7 @@ export function Architecture() {
             point, so the main API doesn't name the GPU.
           </li>
           <li>
-            <strong>Streaming robustness</strong> (M12, reviewed). Every fetch
+            <strong>Streaming robustness</strong> (CS-16, reviewed). Every fetch
             gets a deadline from its origin's measured latency. Transient
             failures retry with backoff inside per-origin budgets. A 404 or 204
             on 3D Tiles content is empty content and the parent stays drawn.
@@ -446,53 +446,64 @@ export function Architecture() {
         />
       </Section>
 
-      <Section title="The planned work, in order">
+      <Section title="The planned work, by project">
         <p>
-          Milestones M7 to M13 of the overall plan's section 6, reviewed by the
-          owner on 2026-11-13. Each lists order and dependencies only. "Not
-          built" means no code is merged.
+          The work items in <C>packages/next/work/</C>, one file per item,
+          grouped by project; each project is a plan reviewed by the owner on
+          2026-11-13. Items list order and dependencies only. "Not built" means
+          no code is merged.
         </p>
         <DataTable
-          label="Milestones M7 to M13"
+          label="Planned work by project"
           columns={[
-            { head: "Milestone", cell: (r) => r.m },
+            { head: "Project", cell: (r) => r.m },
             { head: "What", cell: (r) => r.what },
             { head: "State", cell: (r) => r.state },
           ]}
           rows={[
             {
-              m: "M7",
-              what: "Engine profiles (M1 to M9), Cesium IR (IR-1 to IR-15, then gaps for noise, textures, matrices, derivatives, loops and structs) and the WebGL 2 renderer (W0 to W11). R1's browser research is done and ordered W10.",
+              m: "CS-8 Engine profiles",
+              what: "Facts and personas, the catalog and resolver, wiring into Engine and View, features, the inspector, the gpu entry point, the Viewer's defaults, then the WebGL 2 and worker hooks (CS-20 to CS-31).",
               state: "Reviewed; not built",
             },
             {
-              m: "M8",
-              what: "The job system: the first slice, then JP-1 to JP-9 move existing work onto it.",
+              m: "CS-10 Cesium IR",
+              what: "The core, format, passes and emitters; transforms and styles moved onto it; the front ends and API surface; then gaps for noise, textures, matrices, derivatives, loops and structs (CS-48 to CS-69).",
+              state: "Reviewed; not built",
+            },
+            {
+              m: "CS-9 The WebGL 2 renderer",
+              what: "The shader route spike, the seam, first draws, the globe, lighting, styles and warps, picks and user code, the atmosphere and further steps (CS-32 to CS-47). The browser research (CS-43) is done and ordered the further steps.",
+              state: "Reviewed; not built",
+            },
+            {
+              m: "CS-12 The job system's ports",
+              what: "The first slice (CS-86), then CS-87 to CS-100 move existing work onto it.",
               state: "First slice built; the rest planned",
             },
             {
-              m: "M9",
-              what: "Level-of-detail transitions: coarsening and 3D Tiles both ways (LT-1 to LT-8).",
+              m: "CS-14 Level-of-detail transitions",
+              what: "Coarsening and 3D Tiles both ways, then measurement and the options it decides (CS-121 to CS-133).",
               state: "Reviewed; not built",
             },
             {
-              m: "M10",
-              what: "Live MaterialX graph editing in a gallery example (MX-1 to MX-11); after IR-15 and noise.",
+              m: "CS-11 Live MaterialX graph editing",
+              what: "A gallery example (CS-70 to CS-85); after Cesium IR's MaterialX front end (CS-63) and noise (CS-64).",
               state: "Reviewed; not built",
             },
             {
-              m: "M11",
-              what: "Refinement and convergence: view.refinement, converged(), and the loop's reasons (R1 to R10).",
+              m: "CS-15 Refinement and convergence",
+              what: "view.refinement, converged(), and the loop's reasons (CS-134 to CS-143).",
               state: "Reviewed; not built",
             },
             {
-              m: "M12",
-              what: "Streaming robustness and request options (SR-1 to SR-13).",
+              m: "CS-16 Streaming robustness",
+              what: "Streaming robustness and request options (CS-144 to CS-158).",
               state: "Reviewed; not built",
             },
             {
-              m: "M13",
-              what: "The worker-mode façade (WF-1 to WF-12), after the public API review.",
+              m: "CS-13 The worker-mode façade",
+              what: "The protocol table, the public API review (CS-102), then the façade and worker mode (CS-101 to CS-120).",
               state: "Reviewed; not built",
             },
           ]}
@@ -509,16 +520,17 @@ export function Architecture() {
           each item's inputs.
         </p>
         <Written
-          from="the overall plan, section 6, M7 to M13"
+          from="the work items in packages/next/work (views.mjs lists)"
           on="2026-11-13"
         />
       </Section>
 
       <Section title="Splitting the core later">
         <p>
-          The plan's current answer (section 13.36, notes for later) is to keep
-          one package until a second consumer needs a part left out: for example
-          a b-rep viewer with no tilesets. What lets the split happen cheaply is
+          The plan's current answer (the design note
+          docs/design/modular-renderer.md, notes for later) is to keep one
+          package until a second consumer needs a part left out: for example a
+          b-rep viewer with no tilesets. What lets the split happen cheaply is
           already built, and tested:
         </p>
         <ul>
@@ -543,7 +555,10 @@ export function Architecture() {
           bundle check shows tilesets cost an app that doesn't use them. None of
           that is started.
         </p>
-        <Written from="the overall plan, section 13.36" on="2026-11-12" />
+        <Written
+          from="the design note docs/design/modular-renderer.md"
+          on="2026-11-12"
+        />
       </Section>
     </Page>
   );

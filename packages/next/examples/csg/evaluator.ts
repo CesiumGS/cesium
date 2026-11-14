@@ -17,7 +17,7 @@ export const STEP_NEEDS_OCCT =
   "a STEP part needs Open CASCADE (SMLib doesn't read STEP files)";
 
 /**
- * Re-evaluating the tree as it is edited (plan §13.33, editing): the
+ * Re-evaluating the tree as it is edited (docs/design/breps-and-geometry-queries.md, editing): the
  * kernels' workers, one per kernel so a switch costs no reload, and the
  * rate at which edits become evaluations.
  */

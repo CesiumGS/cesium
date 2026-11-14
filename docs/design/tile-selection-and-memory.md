@@ -115,10 +115,10 @@ were solved first):
 - **Congestion control:** model the bottleneck (BBR), not just react to
   loss or delay (AIMD); Little's law sizes the window. Implemented above.
 - **Readahead:** the OS grows its prefetch window while prefetched pages get
-  used and shrinks it when they don't. Size the prefetch band (§13.5) by its
+  used and shrinks it when they don't. Size the prefetch band ("Visual quality signals beyond geometric error" above) by its
   hit rate: prefetched tiles later displayed vs evicted unused.
 - **Fair queueing** (weighted fair queueing, deficit round robin): share an
-  origin's window across tilesets and views by weight (§13.4) instead of
+  origin's window across tilesets and views by weight ("Multi-view priority" above) instead of
   first come, first served.
 - **Deadlines (EDF):** a tile the camera's motion will reveal has a deadline,
   the time until it is visible; request earliest deadline first. **Aging**
@@ -193,7 +193,7 @@ while loading, though it settles later on more bytes. Which default is right
 depends on the distribution of our users' bandwidth and latency (desktop on
 office networks vs mobile and field use, regions). Get that distribution
 (ion CDN logs, or opt-in client telemetry) before tuning defaults; until
-then, adapt at runtime from measured throughput (§13.2), and add a 2nd and
+then, adapt at runtime from measured throughput ("Request scheduling" above), and add a 2nd and
 10th percentile profile to L1′ once the distribution is known.
 
 ## Multi-view priority
@@ -252,7 +252,7 @@ views and asymmetric weights.
   The HTTP cache already keeps raw bytes.
 - **Fragmentation:** the arena allocator is first-fit. Measure churn under
   streaming, and move to TLSF or size classes if it fragments. (r50: size
-  classes come with the arena slabs, §13.15; the pools' capacity joins the
+  classes come with the arena slabs, [gpu-limits-and-capacities.md](gpu-limits-and-capacities.md); the pools' capacity joins the
   budget there too.)
 - **Visibility:** the viewer's memory panel shows every pool against its cap,
   so budget changes are visible in real time.
@@ -268,4 +268,4 @@ views and asymmetric weights.
 - **Formats:** pnts (M6, with the compute point-cloud path), i3dm (instancing
   maps directly onto draw records: one record per instance), cmpt.
 - **Edge and planar-fill extensions for CAD** (`EXT_mesh_primitive_edge_visibility`,
-  `BENTLEY_materials_planar_fill`, line and point styles), as noted in §11.
+  `BENTLEY_materials_planar_fill`, line and point styles), as noted in [m1-progress.md](../history/m1-progress.md).

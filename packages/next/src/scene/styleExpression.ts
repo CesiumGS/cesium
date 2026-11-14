@@ -1,6 +1,6 @@
 /**
  * 3D Tiles styling expressions (the 1.x `Cesium3DTileStyle` language)
- * compiled to WGSL over a feature's metadata (plan §3.4, feature styling).
+ * compiled to WGSL over a feature's metadata (docs/design/shaders.md, feature styling).
  * Node-safe. Semantics follow 1.x's `Expression`: `rgb` takes bytes,
  * `hsl` a hue in [0, 1], `color` a CSS name or hex string and an alpha;
  * colors are RGBA in [0, 1] as written (sRGB); each caller converts them

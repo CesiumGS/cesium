@@ -2,7 +2,7 @@
 
 **What this holds:** Slang as the one source, WGSL where it must be, and the user contract (since 2026-11-13, Cesium IR programs: see `core-ir.md`). Moved from the overall plan (`CESIUM2_WEBGPU_PLAN.md`) on 2026-11-13, with its content and dates unchanged.
 
-> **Superseded in part (owner, 2026-11-13; §13.41 renderer decisions and §13.42):** the user-facing contract is **Cesium IR** (`cesium-ir`), not a WGSL-level ABI. Styles, transforms, materials and user functions are written in any front-end language (1.x and 3D Tiles styles, restricted JS, MaterialX, Slang offline, WGSL functions through naga) and lowered into Cesium IR, whose vocabulary is `KHR_interactivity`'s. A WGSL string can't reach a second renderer or the CPU evaluator, so raw WGSL is not offered as an escape hatch. Engine kernels stay Slang compiled offline, as below.
+> **Superseded in part (owner, 2026-11-13; [investigations-2026-11-13.md](investigations-2026-11-13.md) renderer decisions and [core-ir.md](core-ir.md)):** the user-facing contract is **Cesium IR** (`cesium-ir`), not a WGSL-level ABI. Styles, transforms, materials and user functions are written in any front-end language (1.x and 3D Tiles styles, restricted JS, MaterialX, Slang offline, WGSL functions through naga) and lowered into Cesium IR, whose vocabulary is `KHR_interactivity`'s. A WGSL string can't reach a second renderer or the CPU evaluator, so raw WGSL is not offered as an escape hatch. Engine kernels stay Slang compiled offline, as below.
 
 **Why decide now.** The user-facing shader contract is public API.
 
@@ -50,7 +50,7 @@ practice every engine shader grew as hand-written WGSL: 26 files, about
 7,800 lines, `opaque.wgsl` alone 1,451. The Slang spike's M0-era port
 became a second copy that nobody kept in sync. By r50 its `View` had 19
 of the engine's 26 fields and its `DrawRecord` lacked five, so it
-rendered garbage, and the page had failed outright since r48 (§13.15).
+rendered garbage, and the page had failed outright since r48 ([gpu-limits-and-capacities.md](gpu-limits-and-capacities.md)).
 Two copies of a shader drift. The fix is one source, Slang, with WGSL
 generated from it, not a better-kept copy.
 
@@ -71,7 +71,7 @@ _What one Slang source buys, from this revision's own problems:_
   later, chosen at link time where today it's a WGSL function swap.
 - **Materials as `IMaterial`** (the spike's model), with parameter blocks
   sized from reflection (the "generic material parameters" item below).
-- **One language for the vector pipeline's kernels** (§13.9): a style
+- **One language for the vector pipeline's kernels** ([transforms-and-instancing.md](transforms-and-instancing.md)): a style
   compiles to an interface implementation, not to string-pasted WGSL.
 
 _What stays WGSL:_
@@ -124,10 +124,10 @@ _Migration, in steps that each leave the engine working:_
 5. **The surface shaders.** opaque and translucent on `IMaterial`,
    `IMaterialTextures` and `SplitPosition`, linked to run-time code
    through a declared boundary (_Step 5 design_ below). Checked by image
-   regression in Dyno (§16.10), the parity pages and the custom-shader
+   regression in Dyno ([image-regression-in-dyno.md](image-regression-in-dyno.md)), the parity pages and the custom-shader
    parity page.
 6. **Sky and atmosphere** (`sky.wgsl`, `atmosphere.wgsl`,
-   `reference.wgsl`), checked by their reference comparisons (§4.2).
+   `reference.wgsl`), checked by their reference comparisons ([lighting-and-shading.md](lighting-and-shading.md)).
    IBL's kernels and its Monte Carlo reference moved into step 4.
 7. **Retire the spike.** Its port is the engine's source by then, and the
    page becomes a check that `ToonMaterial` links against it.
@@ -433,7 +433,7 @@ rewriting the compiler's output:
   read cost the same as one slot with one read. Metal drops outputs the
   linked fragment stage doesn't read, so one module with four slots serves
   every pipeline, the engine's own included. To check on D3D12 and Vulkan
-  (§3.4 step 4's Windows runs).
+  (above step 4's Windows runs).
 
 _Step 5 architecture: compilation units and a linker._ Composition is a
 first-class step, not string joining spread through `RenderContext`:
@@ -547,7 +547,7 @@ user contract._ Today 3D Tiles styles, the vector styling language and
 alternative is to generate Slang: styles become implementations of a
 style interface, custom shaders link as modules, and the WASM `slangc`
 compiles them in a worker (as `CustomShader.fromSlang` and the Slang
-playground already do, §13.12). Compare the two on:
+playground already do, [examples-and-the-gallery.md](examples-and-the-gallery.md)). Compare the two on:
 
 - **Latency:** compile time per style edit, cold (loading the 10 MB
   build) and warm. The playground shows it on every edit.
@@ -598,7 +598,7 @@ style need:
    vertex modifier moves geometry the same way in every pass. A vertex
    modifier declares its displacement bound, which pads culling bounds;
    ray queries see undeformed geometry until compute skinning exists
-   (§13.9).
+   ([transforms-and-instancing.md](transforms-and-instancing.md)).
 5. _A versioned `cesium` Slang module as the public contract:_
    `SurfaceInput`/`Surface`, attribute access, per-instance streams,
    feature IDs and feature-property lookup (for `IFeatureStyle` and 3D

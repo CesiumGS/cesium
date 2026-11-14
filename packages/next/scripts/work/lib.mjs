@@ -534,9 +534,10 @@ function findCycles(g) {
 
 // --- Stale names -------------------------------------------------------------
 
-/** The one file where old names may appear: the renumbering table. */
+/** Where old names may appear: the renumbering table and the tests' fixtures. */
 export const STALE_EXEMPT = [
   "docs/history/2026-11-13-work-items-renumbered.md",
+  "packages/next/test/work.test.ts", // fixtures hold old names on purpose
 ];
 
 /**
@@ -548,12 +549,12 @@ export const STALE_EXEMPT = [
 export const STALE_PATTERNS = [
   {
     name: "old milestone name",
-    regex: String.raw`\b(?:IR-G?[0-9]+|JP-[0-9]+|LT-[0-9]+|MX-[0-9]+[a-d]?|SR-[0-9]+|WF-[0-9]+[a-d]?|W(?:[0-9]|1[01])|Profiles M[0-9]+[a-c]?)\b`,
+    regex: String.raw`\b(?:IR-(?:[1-9]|1[0-5])|IR-G[1-6]|JP-[1-9]|LT-[1-8]|MX-(?:[1-9]|1[01])[a-d]?|SR-(?:[1-9]|1[0-3])|WF-(?:[1-9]|1[0-2])[a-d]?|W(?:[0-9]|1[01])|Profiles M[1-9][a-c]?)\b(?!-)`,
     paths: ["docs", "CESIUM2_WEBGPU_PLAN.md", "packages/next"],
   },
   {
     name: "old milestone name",
-    regex: String.raw`\b(?:R(?:[1-9]|10)|M(?:7|8|9|1[0-3])|5i)\b(?![\s,]*[-0-9.])`,
+    regex: String.raw`(?<!\x60)\b(?:R(?:[1-9]|10)|M(?:7|8|9|1[0-3])|5i)\b(?![\s,]*[-0-9.])`,
     paths: [
       "CESIUM2_WEBGPU_PLAN.md",
       "docs/decisions",
@@ -567,7 +568,7 @@ export const STALE_PATTERNS = [
   },
   {
     name: "section reference into the old overall plan",
-    regex: String.raw`(?:CESIUM2_WEBGPU_PLAN(?:\.md)?|overall plan(?:'s)?|the plan(?:'s)?|[Pp]lan) *(?:§|section +[0-9])`,
+    regex: String.raw`(?:CESIUM2_WEBGPU_PLAN(?:\.md)?\x60?|[Oo]verall plan(?:'s)?|the plan(?:'s)?|\b[Pp]lan),? *§|(?:CESIUM2_WEBGPU_PLAN(?:\.md)?\x60?|[Oo]verall plan(?:'s)?|\bthe plan),? *section +[0-9]|\b[Pp]lan section +[0-9]`,
     paths: ["docs", "CESIUM2_WEBGPU_PLAN.md", "packages/next"],
   },
 ];
@@ -625,6 +626,19 @@ export function staleNames(root, patterns = STALE_PATTERNS) {
   }
   return hits;
 }
+
+/** The old overall plan's numbered sections, the only targets of a stale reference. */
+const OLD_SECTIONS = new Set([
+  ...[...Array(16).keys()].map((i) => String(i + 1)),
+  ...[...Array(11).keys()].map((i) => `3.${i + 1}`),
+  "4.1",
+  "4.2",
+  "7.1",
+  "7.2",
+  "7.3",
+  ...[...Array(43).keys()].map((i) => `13.${i + 1}`),
+  ...[...Array(10).keys()].map((i) => `16.${i + 1}`),
+]);
 
 /**
  * A bare section sign followed by a number, in a markdown file that has no
@@ -684,13 +698,16 @@ export function bareSectionRefs(root, paths = ["docs", "packages/next"]) {
       // Qualified by a document named just before it ("spec.md §5",
       // "RFC 3339 §5.6", "the 3D Tiles spec §2"): not ours.
       if (
-        /(\.md|\bspec|\bRFC ?[0-9]+|\bISO[ 0-9-]*|\bIEEE|\bIERS|\bIAU|\bstandard|\bspecification|\bguide|\bdocument|\bpaper)[^§]{0,40}§ ?[0-9.]+$/i.test(
+        /(\.md|\bspec|\bRFC ?[0-9]+|\bISO[ 0-9-]*|\bIEEE|\bIERS|\bIAU|\bIOGP|\bIS-GPS|\bEPSG|\bU\.S\.C\.|\bet al\b|\bApache-2\.0|\blicen[cs]e|\bstandard|\bspecification|\bguide|\bdocument|\bpaper)(?:[^§]|§ ?[0-9.]+){0,60}§ ?[0-9.]+$/i.test(
           before,
         )
       ) {
         continue;
       }
       const num = ref[2];
+      if (!OLD_SECTIONS.has(num)) {
+        continue; // never a section of the old plan: someone else's
+      }
       const sections = ownSections(path);
       const top = num.split(".")[0];
       if (sections.has(num) || (sections.size && sections.has(top))) {

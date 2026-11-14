@@ -254,8 +254,8 @@ world; worst frame and frames over 34 ms) as a regression gate, built on
 `bench/trace.mjs`.
 
 Next increments: height queries and the CAD tileset on terrain (and the
-camera's terrain collision); cross-tileset scheduling (§13.2); fetch
-timeouts and retries (§14, item 7); imagery filtering and level choice
+camera's terrain collision); cross-tileset scheduling ([tile-selection-and-memory.md](../design/tile-selection-and-memory.md), "Request scheduling"); fetch
+timeouts and retries (follow-up 7, closed by project CS-16); imagery filtering and level choice
 against the spec's parity hazards.
 
 ## Increment 5 (r29): height queries and clamping
@@ -294,7 +294,7 @@ Unlike 1.x it is event-driven:
 - A clamped model moves by one `setTransform` on its root transform.
 
 **Ray casting (`World.castRays`, `raycast.wgsl`).** The first `RayQuery`
-backend of §13.10: rays in float64; the CPU picks draws whose bounds a
+backend of [ray-queries-and-path-tracing.md](../design/ray-queries-and-path-tracing.md): rays in float64; the CPU picks draws whose bounds a
 ray crosses and splits them into 64-triangle jobs; a workgroup per job
 tests triangles read from the arena (instanced draws per instance) and
 keeps the nearest hit per ray with an atomic min; one readback. No views,
@@ -306,7 +306,7 @@ Manhattan. Against 1.x `Scene.sampleHeight` (a depth render, so what 1.x
 draws): the same 49 and 29 points hit, within 6 mm (1.x depth precision).
 Against 1.x `Cesium3DTileset.getHeight`, what 1.x clamps models to: it
 misses more than half of those points and returns a lower surface at four
-per view (§14, item 9).
+per view (CS-181).
 
 **Tilesets.** `enableCollision` (default false, as 1.x) marks content
 draws so ray casts with `collisionOnly` hit them; it can change at
@@ -339,7 +339,7 @@ primitives, 3,624 triangles):
 | 100,000   | 96 ms | 0.30 ms     | 35.5 ms     | 1.8 ms          | 101 ms   |
 
 GPU time is linear in triangles drawn (36 M and 362 M), not in culling:
-per-instance LOD is the lever (§13.9). A glTF asset is shared within a
+per-instance LOD is the lever ([transforms-and-instancing.md](../design/transforms-and-instancing.md)). A glTF asset is shared within a
 world; uploading consumes its images, so another world needs its own
 load.
 
@@ -375,4 +375,4 @@ of 225 points hit, within 7.5 mm (1.x depth precision).
 **Viewer.** The "Parity and benchmarks" panel lists every parity page,
 benchmark and spike.
 
-**M3 is complete.** Next: benchmark suite v1 (§16), then M4.
+**M3 is complete.** Next: benchmark suite v1 ([benchmark-suite.md](../design/benchmark-suite.md)), then M4.

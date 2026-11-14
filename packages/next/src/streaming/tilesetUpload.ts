@@ -289,7 +289,7 @@ export function upload(tileset: TilesetUpload): void {
         continue;
       }
       if (isCapacityError(error)) {
-        // A pool is full, not the content bad (§13.15): the upload took
+        // A pool is full, not the content bad (docs/design/gpu-limits-and-capacities.md): the upload took
         // nothing, so the tile waits at the front of the queue while
         // eviction frees room and the error threshold rises, as for bytes.
         tileset.state.ready.unshift({ tile, asset, arrivedAt });

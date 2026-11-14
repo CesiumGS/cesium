@@ -52,7 +52,7 @@ export function eastNorthUpToFixedFrame(
  * 2^24 the nearest integer is exact in float32. Valid to ±2^31 m (the
  * Moon's distance is 2^28.5).
  *
- * Why integers (CESIUM2_WEBGPU_PLAN.md §3.3, "Precision"): on Apple GPUs
+ * Why integers (docs/design/architecture.md, "Render world and draws (render/): GPU-driven from M1", "Precision"): on Apple GPUs
  * Dawn compiles with relaxed math, which may reassociate
  * `(hiA - hiB) + (loA - loB)` into a sum of the large values; measured on
  * an M-series Mac (r50) the hi/lo path then erred as much as plain float32

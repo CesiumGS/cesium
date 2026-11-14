@@ -18,7 +18,7 @@ API: rays in float64 in, hits out (distance, point, normal, draw, feature).
    instance tables, rebuilt per frame (it covers draws, so it is cheap).
    Exact nearest hits for any batch of rays.
 
-Rays and targets across frames of the frame tree, such as the Moon in MOON_ME, moving bodies and design-space models, are plan 5 (§13.14, "Ray queries through the frame tree"). Where queries run and when acceleration structures are built is §13.16.
+Rays and targets across frames of the frame tree, such as the Moon in MOON_ME, moving bodies and design-space models, are plan 5 ([bodies-frames-and-engineering-coordinates.md](bodies-frames-and-engineering-coordinates.md), "Ray queries through the frame tree"). Where queries run and when acceleration structures are built is [ray-queries-where-they-run.md](ray-queries-where-they-run.md).
 
 **Path tracing grows out of (2).** The architecture suits it: all geometry
 is in one arena read by index from storage buffers, and materials, draw
@@ -28,5 +28,5 @@ tracing (traversal is software, as in three-gpu-pathtracer: fine for
 progressive or offline images, not real time at Google 3D Tiles scale; a
 native Slang backend could use hardware ray queries); no bindless textures
 (texture sets would move into arrays or atlases, as imagery already is,
-§7.1); float32 (the TLAS is camera-relative with hi/lo origins, as the
+[risks.md](risks.md), "Bindless textures: not in the PoC, designed for in 2.0"); float32 (the TLAS is camera-relative with hi/lo origins, as the
 rasterizer is); streaming (BLAS once per tile, TLAS per frame).

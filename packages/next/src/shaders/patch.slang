@@ -1,4 +1,4 @@
-// B-rep patches on the GPU (CESIUM2_WEBGPU_PLAN.md §13.33, "Step 5
+// B-rep patches on the GPU (docs/design/breps-and-geometry-queries.md, "Step 5
 // redirected", part 1): a patch draw's spans and their evaluation.
 //
 // A span is a face's rect over one Bézier patch or one angular piece of an

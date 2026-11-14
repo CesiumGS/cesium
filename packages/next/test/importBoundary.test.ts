@@ -76,11 +76,11 @@ function layerOf(file: string): Layer {
 const FRAMES_CORE_VALUES = new Set([
   "src/scene/Body.ts",
   "src/camera/frameResolver.ts",
-  // Routes and warps (plan §13.26): the resolver's contract, like frameResolver.ts.
+  // Routes and warps (docs/design/geometry-through-placement-review.md): the resolver's contract, like frameResolver.ts.
   "src/camera/route.ts",
   // The bulk shape (5b): neutral, it imports nothing.
   "src/core/bulk.ts",
-  // The transform graph's nodes (plan section 13.37): geo-free, it imports nothing.
+  // The transform graph's nodes (docs/design/transform-graph.md): geo-free, it imports nothing.
   "src/transform/graph.ts",
   // Queries and accuracy along transform-graph routes (13.37, task 5): geo-free.
   "src/transform/accuracy.ts",
@@ -337,7 +337,7 @@ it("proj and measure follow their rules", () => {
   expect(violations("proj")).toEqual([]);
   expect(violations("measure")).toEqual([]);
 });
-// The built-in transforms (plan section 13.37) are core modules with no geo
+// The built-in transforms (docs/design/transform-graph.md) are core modules with no geo
 // or engine knowledge beyond the transform graph, the route and warp
 // contract (`camera/route.ts`, which the live helpers implement), the
 // exaggeration's height profile (`camera/heightProfile.ts`, a leaf) and the
@@ -446,7 +446,7 @@ it("resolves each published name to the file that declares it", () => {
   expect(where("src/index.ts", "Engine")).toEqual(["src/scene/Engine.ts"]);
 }, 30_000);
 
-// Layers inside the core (plan section 13.17): content, scene, renderer and
+// Layers inside the core (docs/design/layers-engine-renderer-backend.md): content, scene, renderer and
 // GPU. Assigned by file, like the rest. Content must not reach the renderer,
 // the GPU layer or the classes that hold them; the renderer may not reach
 // content's internals.
@@ -491,7 +491,7 @@ const TIER_EXCEPTIONS: Readonly<Record<string, string>> = {
   // A plain function with no GPU types: a kernel is computed once, off the main thread.
   "src/io/worker.ts → src/render/post/glareKernel.ts":
     "the worker computes a glare kernel",
-  // Public signatures, for the API review (5i): `Tileset3D.world`,
+  // Public signatures, for the API review (CS-102): `Tileset3D.world`,
   // `Tileset3D.load`, `Globe.create`.
   "src/streaming/Tileset3D.ts → src/scene/World.ts": "public signature",
   "src/streaming/Tileset3D.ts → src/scene/Engine.ts": "public signature",
@@ -506,7 +506,7 @@ const TIER_EXCEPTIONS: Readonly<Record<string, string>> = {
     "composites on the GPU",
 };
 
-/** The renderer's imports from content (plan section 13.17 wants none). */
+/** The renderer's imports from content (docs/design/layers-engine-renderer-backend.md wants none). */
 const RENDERER_READS_CONTENT = [
   "src/render/view/engineRaster.ts → src/globe/ImageryProvider.ts",
   "src/render/view/engineRaster.ts → src/globe/cityLight.ts",

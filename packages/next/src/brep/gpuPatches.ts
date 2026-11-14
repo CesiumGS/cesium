@@ -1,4 +1,4 @@
-// The b-rep form prepared for GPU dicing (overall plan §13.33, "Step 5
+// The b-rep form prepared for GPU dicing (docs/design/breps-and-geometry-queries.md, "Step 5
 // redirected", part 1): one record per (face, span) with everything the
 // shaders need, and a float64 reference of what they compute.
 //

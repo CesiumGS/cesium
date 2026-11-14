@@ -1,4 +1,4 @@
-// The CSG sample's lighting settings (plan §13.33): what a link says is
+// The CSG sample's lighting settings (docs/design/breps-and-geometry-queries.md): what a link says is
 // clamped to what the sliders allow, the defaults leave the link empty, and
 // the settings land on the viewer's view and sun.
 import { describe, expect, it, vi } from "vitest";

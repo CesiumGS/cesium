@@ -1,5 +1,5 @@
 /**
- * The custom shader contract's code (plan §3.4, step 5), generated from the
+ * The custom shader contract's code (docs/design/shaders.md, step 5), generated from the
  * boundary's description (shaders/generated/boundary.ts, Slang's reflection
  * of surfaceBoundary.slang and cesium.slang): no struct is written twice by
  * hand, and nothing reads the compiler's output.

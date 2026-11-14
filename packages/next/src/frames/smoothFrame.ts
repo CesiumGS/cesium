@@ -1,4 +1,4 @@
-// A frame whose edge to its parent is smooth, not a 4×4 (plan §13.37, the
+// A frame whose edge to its parent is smooth, not a 4×4 (docs/design/transform-graph.md, the
 // transform graph's `smooth` node): its coordinates map UP to the parent's by
 // `spec.forward`, the scene-graph direction. A deformer is placed over the
 // content it deforms: an "Earth content (exaggerated)" frame under ITRF whose

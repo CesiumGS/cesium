@@ -388,7 +388,7 @@ export function addDraw(world: AddDrawWorld, options: DrawOptions): DrawHandle {
       );
     }
   }
-  // Nothing taken may outlive a failure below (transactional, §13.15).
+  // Nothing taken may outlive a failure below (transactional, docs/design/gpu-limits-and-capacities.md).
   const releasePoints = () => {
     if (pointList !== undefined) {
       world.slabs

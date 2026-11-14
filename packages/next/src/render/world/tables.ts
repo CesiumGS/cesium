@@ -178,7 +178,7 @@ export function growInstances(world: TableWorld, count: number): void {
 }
 
 /**
- * @internal Room for draw slots below `count` on the GPU (§13.15, growable tables):
+ * @internal Room for draw slots below `count` on the GPU (docs/design/gpu-limits-and-capacities.md, growable tables):
  * the records double (copied), the per-batch buffers and the items are
  * recreated (rewritten every frame or with the bundle), and what binds
  * them is rebuilt.

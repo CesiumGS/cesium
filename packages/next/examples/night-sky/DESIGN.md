@@ -27,7 +27,7 @@ what it means on a camera. Every figure is shown with its unit and in context.
   (the field of view), and move with the arrow keys when it has focus.
 - The side column has two parts. The first is the presets, one line each,
   with what each one is for. They are data: a date, a place or a direction, and
-  an observer (§13.30). The second is the observer panel, in four sections
+  an observer ([sun-and-sky-example.md](../../../../docs/design/sun-and-sky-example.md)). The second is the observer panel, in four sections
   (Exposure, Optics, Look, Sky data), each tagged Physics, Model, Look or Data.
 - Narrow windows stack: the view first, then the column, with the page
   scrolling. Nothing is cut off at 380 px, and no readout changes its box as

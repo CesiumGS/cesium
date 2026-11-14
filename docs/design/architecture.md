@@ -38,7 +38,7 @@ The package lives in the existing monorepo so the parity harness can import 1.x 
   - `dual-source-blending`
   - **immediates** (`var<immediate>` / `setImmediates`, shipping in Chrome 149–150, usable in render bundles)
   - **`TRANSIENT_ATTACHMENT`** for MSAA targets (Chrome 146+)
-- **Limits** (r50, §13.15): binding counts per stage fit the `base` tier (the spec defaults), checked by a test; capacities (table rows, arena bytes, array layers) grow to the device's limits and press on the residency budget when full.
+- **Limits** (r50, [gpu-limits-and-capacities.md](gpu-limits-and-capacities.md)): binding counts per stage fit the `base` tier (the spec defaults), checked by a test; capacities (table rows, arena bytes, array layers) grow to the device's limits and press on the residency budget when full.
 - Resources are typed handles with explicit ownership. `dispose()` also supports `Symbol.dispose`, so `using` works.
 - **Allocators**:
   - Geometry arenas: 64–256 MB chunks managed by an offset allocator such as TLSF.
@@ -58,7 +58,7 @@ Engine (1 GPUDevice, PipelineCache, ContentCache, RequestScheduler, WorkerPool)
 ```
 
 - **One device for all views.** Geometry, textures, pipelines and the tile cache are shared across canvases. 1.x duplicates them per viewer.
-- **Multi-view-aware tile selection** (details in §3.7):
+- **Multi-view-aware tile selection** (details in "Unified streaming and tile selection (streaming/)" above):
   - Each view gets its own selected-tile set.
   - Loads are deduplicated and ordered by combined importance.
   - Tiles are pinned for as long as any view uses them, tracked as a **last-used frame per view** so views that render on demand at different rates don't evict each other's tiles.
@@ -105,7 +105,7 @@ Engine (1 GPUDevice, PipelineCache, ContentCache, RequestScheduler, WorkerPool)
 - imagery array slice
 - flags
 
-**Records below tile granularity.** Large CAD/OSM tiles are split by node or primitive bounds, so culling works below tile level. This is the useful lesson from Nanite without adopting its cluster DAG (§3.11).
+**Records below tile granularity.** Large CAD/OSM tiles are split by node or primitive bounds, so culling works below tile level. This is the useful lesson from Nanite without adopting its cluster DAG ("Techniques considered and deferred" above).
 
 **Steady state.** Draws are added on upload, removed on eviction, and flagged dirty on change. **Zero steady-state allocations is a CI gate from M1.**
 
@@ -179,7 +179,7 @@ Engine (1 GPUDevice, PipelineCache, ContentCache, RequestScheduler, WorkerPool)
 **Material table.** Untextured materials, which is most of CAD/BIM, live in a storage-buffer table, so thousands of parts share one pipeline and one bind group. Textured materials reference a `TextureHandle`:
 
 - Today it resolves to a per-material bind group baked into the tile's bundle.
-- When WebGPU resource tables ship, it resolves to a table index without changing callers (§7.1).
+- When WebGPU resource tables ship, it resolves to a table index without changing callers ([risks.md](risks.md), "Bindless textures: not in the PoC, designed for in 2.0").
 
 **Submission from M1.** M1 already uses per-tile `GPURenderBundle`s with `drawIndexedIndirect`, and a trivial compute kernel writes the args. Later milestones only make the kernel smarter (frustum → horizon → occlusion). No milestone is built on CPU-encoded direct draws that would later need a rewrite.
 
@@ -203,7 +203,7 @@ Per-view frame:
    - **MSAA 4×**, with the MSAA color target as a `TRANSIENT_ATTACHMENT` where supported.
    - **Integer targets can't be MSAA-resolved.** The feature-ID target is resolved by a **custom sample-0 resolve inside the pick-readback pass**, only for the requested region.
 4. **Sky / atmosphere** after opaque. Fog and atmosphere linearize reverse-Z depth.
-5. **Translucent** (clean-slate design; 1.x is not the reference, see r9/r10): a **unified compute translucency compositor** shared with Gaussian splats (§3.6). Translucent mesh fragments go into per-pixel linked lists in the fragment stage; splats are radix-sorted on the GPU and binned into screen tiles; one compute resolve merges both depth-ordered streams per pixel and composites front to back over the opaque depth, with early termination at full opacity. **Moment-based OIT** is the bounded-memory fallback when a pixel's list overflows. The exact (unbounded, sorted) resolve doubles as the ground-truth reference for tests. WebGPU has no fragment interlock.
+5. **Translucent** (clean-slate design; 1.x is not the reference, see r9/r10): a **unified compute translucency compositor** shared with Gaussian splats ("Compute shaders: where they pay off" above). Translucent mesh fragments go into per-pixel linked lists in the fragment stage; splats are radix-sorted on the GPU and binned into screen tiles; one compute resolve merges both depth-ordered streams per pixel and composites front to back over the opaque depth, with early termination at full opacity. **Moment-based OIT** is the bounded-memory fallback when a pixel's list overflows. The exact (unbounded, sorted) resolve doubles as the ground-truth reference for tests. WebGPU has no fragment interlock.
 6. **Resolve and post**:
    - Exposure and tonemapping by default. The tonemapper matches 1.x's HDR tonemapper for parity; auto-exposure via a compute histogram comes later.
    - Pass-through in LDR mode.
@@ -304,7 +304,7 @@ Principles, each fixing a 1.x abstraction problem:
 - **Engine, World, View separation**, with N views per engine.
 - **Core is DOM-free.** An `OffscreenCanvas`-in-worker smoke test runs from M0 to catch DOM leaks.
 - **Typed-array math with required `out` params.**
-- **Shader extension through a versioned WGSL-level ABI**, with Slang as the first-class authoring language. _Superseded (2026-11-13): through Cesium IR, with any front-end language; see §13.42._
+- **Shader extension through a versioned WGSL-level ABI**, with Slang as the first-class authoring language. _Superseded (2026-11-13): through Cesium IR, with any front-end language; see [core-ir.md](core-ir.md)._
 - **UI and widgets live outside core.** Camera controllers are separate, replaceable modules.
 
 ## Techniques considered and deferred
@@ -315,4 +315,4 @@ Principles, each fixing a 1.x abstraction problem:
 | Meshlets / Nanite-style cluster DAG    | **No** cluster hierarchies in the engine                                  | 3D Tiles HLOD already provides streaming and LOD units. A cluster DAG is a tile-format question, not a renderer one. We take sub-tile draw records and GPU feedback from Nanite instead, and keep the draw-record format producer-agnostic. |
 | Virtual texturing                      | **No** for 3D Tiles; the imagery array cache is a tile-aligned form of it | Per-tile photogrammetry textures gain nothing from repacking                                                                                                                                                                                |
 | Multi-draw-indirect                    | **Opportunistic only**                                                    | Still behind an unsafe flag in Chrome                                                                                                                                                                                                       |
-| Bindless                               | **Design for it; don't build it**                                         | §7.1                                                                                                                                                                                                                                        |
+| Bindless                               | **Design for it; don't build it**                                         | [risks.md](risks.md), "Bindless textures: not in the PoC, designed for in 2.0"                                                                                                                                                              |

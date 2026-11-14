@@ -1,5 +1,5 @@
 /**
- * `Budgeted` tile selection (formerly `Next`) (plan §3.7). Shares 1.x's visibility, distance and
+ * `Budgeted` tile selection (formerly `Next`) (docs/design/architecture.md, "Unified streaming and tile selection (streaming/)"). Shares 1.x's visibility, distance and
  * dynamic screen-space error (proven at 100% L1 parity) but replaces the
  * refinement rules:
  *

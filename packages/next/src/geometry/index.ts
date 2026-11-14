@@ -1,4 +1,4 @@
-// Geometry queries per object (overall plan §13.33): one interface that a
+// Geometry queries per object (docs/design/breps-and-geometry-queries.md): one interface that a
 // mesh, a b-rep and an implicit surface each answer, with the accuracy of
 // every answer. Meshes, b-reps and distance fields. A draft before the API
 // review.

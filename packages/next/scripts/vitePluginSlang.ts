@@ -8,7 +8,7 @@ import { slangcPath } from "./slangTools.mjs";
  * sources importing it, into src/shaders/generated/), and Vite reloads
  * from that. The engine imports only the generated files, so without
  * slangc nothing breaks: edits just don't regenerate (said once).
- * CESIUM2_WEBGPU_PLAN.md §3.4, "Slang-first, for real", step 2.
+ * docs/design/shaders.md, "Slang-first, for real", step 2.
  */
 export function slangShaders(): Plugin {
   let warned = false;

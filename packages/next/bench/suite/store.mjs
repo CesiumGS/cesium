@@ -1,4 +1,4 @@
-// The benchmark content store (plan §16.2): datasets pinned by checksum.
+// The benchmark content store (docs/design/benchmark-suite.md, "Manifests and storage"): datasets pinned by checksum.
 // A dataset's checksum is the SHA-256 of its sorted file list (path and
 // each file's SHA-256), so any changed, added or removed file changes it.
 // Local datasets (Specs data) are hashed in place; mirrored datasets are

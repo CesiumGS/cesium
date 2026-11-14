@@ -1,4 +1,4 @@
-// The b-rep adapter on kernel forms from the setup store (plan §13.33): NIST's
+// The b-rep adapter on kernel forms from the setup store (docs/design/breps-and-geometry-queries.md): NIST's
 // STEP models through Open CASCADE (analytic faces, trimmed, with real
 // tolerances; CTC-05 is a real CAD part of 208 faces) and SMLib's solids (every
 // face Bézier patches). Rays and closest points are checked against a dense

@@ -1,4 +1,4 @@
-// A coordinate operation as a smooth edge (plan §13.26, §13.37): a design
+// A coordinate operation as a smooth edge (docs/design/geometry-through-placement-review.md, docs/design/transform-graph.md): a design
 // CRS's frame sits under the body-fixed frame (`smoothFrame(name, bodyFixed,
 // spec)`), its coordinates map up to the body's through the operation, and
 // content placed in it keeps its design coordinates and is drawn at its true

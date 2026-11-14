@@ -195,7 +195,7 @@ polygons to drape as decals, all shaded programmatically:
     `parameters`, and what comes next) compile to the same kernel
     interface for every kind, so a new expression or property is a
     compiler change, not a new pipeline.
-  - _The binding budget_ (§13.15): style kernels get a fixed slot (one
+  - _The binding budget_ ([gpu-limits-and-capacities.md](gpu-limits-and-capacities.md)): style kernels get a fixed slot (one
     group: the style's uniforms and its symbol resources), and feature
     data reaches them through the world's tables and arena, so a richer
     style never adds per-stage bindings. r50 only narrowed the point
@@ -210,7 +210,7 @@ polygons to drape as decals, all shaded programmatically:
 - _Arena pages:_ one vertex buffer runs into the device's largest storage
   binding (the viewer caps the arena at a quarter of it; mobile allows
   far less). The arena becomes several pages, with occasional compaction.
-  Designed in §13.15 as slabs (r50).
+  Designed in [gpu-limits-and-capacities.md](gpu-limits-and-capacities.md) as slabs (r50).
 - _Clusters (meshlets) and two-phase occlusion culling_ (Nanite, Bevy,
   Unity's GPU Resident Drawer) in compute, since WebGPU has no mesh
   shaders: ~128-triangle clusters built in the worker (meshoptimizer),

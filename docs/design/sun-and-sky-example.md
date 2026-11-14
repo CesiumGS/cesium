@@ -19,21 +19,21 @@ A Dyno example of beauty shots with presets, showing off the physical sky and dr
 
 **What it needs:**
 
-| Feature                                | Where                 | Why                                                                                               |
-| -------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------- |
-| Moon tileset loading                   | 5c                    | Earthrise, lunar sites                                                                            |
-| Camera moves, long lenses, preset rigs | 5d                    | Moving between shots, the Moon's size                                                             |
-| Planets, the shutter                   | 5e, §13.29            | Astrophotography. Stars, the eye and camera looks, and glare are built (sky and observer plan)    |
-| Glare and sun glint                    | §13.28                | Sunsets, the sun itself                                                                           |
-| Water, reflecting the sky              | §13.28                | Sea sunsets, reflections                                                                          |
-| A wider ephemeris pack                 | Data                  | The pack covers 2000 to 2050, and Earthrise and the Blue Marble are earlier; `de440s` covers them |
-| Clouds, at least a 2D layer            | Not planned yet       | A sunset without clouds is a thin picture                                                         |
-| Crepuscular rays                       | Volumetric fog, later | Optional                                                                                          |
-| Aurora                                 | New module            | Below                                                                                             |
+| Feature                                | Where                                                                                                     | Why                                                                                               |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Moon tileset loading                   | 5c                                                                                                        | Earthrise, lunar sites                                                                            |
+| Camera moves, long lenses, preset rigs | 5d                                                                                                        | Moving between shots, the Moon's size                                                             |
+| Planets, the shutter                   | 5e, [2026-11-08-owners-calls-for-later-plans.md](../decisions/2026-11-08-owners-calls-for-later-plans.md) | Astrophotography. Stars, the eye and camera looks, and glare are built (sky and observer plan)    |
+| Glare and sun glint                    | [water-and-sun-glare.md](water-and-sun-glare.md)                                                          | Sunsets, the sun itself                                                                           |
+| Water, reflecting the sky              | [water-and-sun-glare.md](water-and-sun-glare.md)                                                          | Sea sunsets, reflections                                                                          |
+| A wider ephemeris pack                 | Data                                                                                                      | The pack covers 2000 to 2050, and Earthrise and the Blue Marble are earlier; `de440s` covers them |
+| Clouds, at least a 2D layer            | Not planned yet                                                                                           | A sunset without clouds is a thin picture                                                         |
+| Crepuscular rays                       | Volumetric fog, later                                                                                     | Optional                                                                                          |
+| Aurora                                 | New module                                                                                                | Below                                                                                             |
 
 **Aurora, a first idea.** Emission only, with no scattering to solve, so it's cheap: a compute pass evolves a 2D field of curtains around the geomagnetic oval, and the sky marches a shell from 100 to about 300 km through it in a constant number of steps, at reduced resolution, adding green low (557.7 nm oxygen), red high (630 nm oxygen) and a purple lower edge. The air's transmittance dims it, and it's in cd/m² under the same exposure. A self-contained module, loaded only when used.
 
-**Limits to keep in mind:** Google's tiles are live-stream only here: publishing images isn't cleared, so presets using them stream with attribution and no stills go in the handbook. Sky data follows the R&D rules in §13.29. Content for specific sites needs its own license check.
+**Limits to keep in mind:** Google's tiles are live-stream only here: publishing images isn't cleared, so presets using them stream with attribution and no stills go in the handbook. Sky data follows the R&D rules in [2026-11-08-owners-calls-for-later-plans.md](../decisions/2026-11-08-owners-calls-for-later-plans.md). Content for specific sites needs its own license check.
 
 **Clouds are in scope (owner, 2026-11-08),** and need a design of their own: a sunset's look comes from clouds lit from below by a low sun, which a 2D layer can't show well.
 
@@ -41,6 +41,6 @@ A Dyno example of beauty shots with presets, showing off the physical sky and dr
 
 **Fog (owner).** Today the sky has haze only: one aerosol layer with an exponential profile (scale height about 1 km), set by visibility and type. The plan's "weather haze" isn't built. Real fog differs: droplets scatter nearly neutral light, a fog layer has a top, it sits in terrain, and at under 1 km visibility multiple scattering dominates, which the sky model isn't checked for. Three cases to try, to be designed with clouds: thin mist or dust as a spectrally flat medium in the march; a layer with a sharp top, following an inversion, for a marine layer; and valley fog as cloud at ground level, sharing the cloud function, using height above the terrain. Shots: a sea of fog with peaks through it, a marine layer through a bridge, shafts through forest mist.
 
-**Shutter time, for star trails and more.** `View.exposure` today is one number, with no notion of duration, so a long exposure needs a camera shutter with a length. How to draw it is undecided: accumulating renders in HDR across the shutter is the physical path and takes many renders, and drawing arcs analytically is cheap but the owner doubts it's physical and expects it to interact poorly with the rest of the system. Think it through when 5e gets there. Real-time motion blur from a velocity buffer is a separate effect (§13.22).
+**Shutter time, for star trails and more.** `View.exposure` today is one number, with no notion of duration, so a long exposure needs a camera shutter with a length. How to draw it is undecided: accumulating renders in HDR across the shutter is the physical path and takes many renders, and drawing arcs analytically is cheap but the owner doubts it's physical and expects it to interact poorly with the rest of the system. Think it through when 5e gets there. Real-time motion blur from a velocity buffer is a separate effect ([custom-post-processing.md](custom-post-processing.md)).
 
 **Order:** a first slice can use what exists today (sky, aerosols, visibility, Moon and its phase, moonlight, city lights, exposure, solved dates). The rest grows as 5c, 5d, 5e and water land. Clouds and aurora are decisions of their own.

@@ -2,7 +2,7 @@
 
 **What this holds:** The custom shading milestone as planned and worked through. Open points in it are not work items yet. Moved from the overall plan (`CESIUM2_WEBGPU_PLAN.md`) on 2026-11-13, with its content and dates unchanged.
 
-- §3.4 foundations 1-6: shader identity in batches with an async pipeline
+- [shaders.md](../design/shaders.md) foundations 1-6: shader identity in batches with an async pipeline
   cache, attribute directory, material parameter blocks, pass variants,
   the `cesium` Slang module, runtime compilation in a worker.
 - Public API: a custom material and vertex modifier per model or tileset,
