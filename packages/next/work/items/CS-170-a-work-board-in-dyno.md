@@ -2,7 +2,7 @@
 id: CS-170
 title: A work board in Dyno
 kind: work
-status: Proposed
+status: Planned
 created: 2026-11-13
 project: CS-18
 needs: [CS-403]
@@ -35,3 +35,5 @@ Its place in Dyno is the first item of the rail's "Needs a look" group, which th
 - It passes the UI checklist in `packages/next/AGENTS.md`: both themes, 380 px, keyboard only, reduced motion, a clean console.
 
 Detail: `docs/superpowers/plans/2026-11-13-work-tracker.md`, section 9.
+
+Committed (owner, 2026-11-13): build it now, with the rail (CS-403).
