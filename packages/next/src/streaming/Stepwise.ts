@@ -573,7 +573,11 @@ export class StepwiseSelection implements TileSelection {
       ? tile.parent.viewState(view.id).planeMask
       : MASK_INDETERMINATE;
     const volume = this.volumeOf(tile, view);
-    state.distance = volumeDistance(volume, view.position, view.cartographic);
+    state.distance = volumeDistance(
+      view.warp ? (drawnTile(tile, view.warp).surface ?? volume) : volume,
+      view.position,
+      view.cartographic,
+    );
     const center = volumeCenter(volume);
     state.centerZDepth =
       (center[0]! - view.position[0]!) * view.direction[0]! +

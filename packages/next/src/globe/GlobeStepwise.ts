@@ -400,7 +400,7 @@ export class GlobeStepwiseSelection implements TileSelection {
     const drawn = view.warp ? drawnTile(tile, view.warp) : undefined;
     if (drawn) {
       state.distance = volumeDistance(
-        drawn.volume,
+        drawn.surface ?? drawn.volume,
         view.position,
         view.cartographic,
       );

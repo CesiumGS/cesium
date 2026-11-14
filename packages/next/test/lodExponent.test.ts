@@ -259,3 +259,27 @@ describe("the closed-form range takes the scale's exact value", () => {
     expect(drawnTile(t, again).slopeMax).toBeCloseTo(k2, 9);
   });
 });
+
+describe("distance ignores skirts, culling keeps them", () => {
+  it("a height-scaled terrain tile's surface volume is inside its cull volume and smaller by the skirt reach", () => {
+    const { world, earth } = exaggerated(10);
+    const warp = world.tileWarp(earth)!;
+    const region = regionFromJson([
+      LON - 0.001,
+      LAT - 0.001,
+      LON + 0.001,
+      LAT + 0.001,
+      1796,
+      1819,
+    ]);
+    const t = {
+      volume: { kind: "region", region, sphere: sphereFromObb(region.obb) },
+      globe: { refit: { levelError: 20 }, rectangle },
+    } as unknown as Tile;
+    const d = drawnTile(t, warp);
+    const cull = (d.volume as { sphere: { radius: number } }).sphere;
+    const surface = (d.surface as { sphere: { radius: number } }).sphere;
+    // Skirts reach 5 × 20 m below, stretched by slopeMax (10).
+    expect(cull.radius - surface.radius).toBeCloseTo(10 * 100, 6);
+  });
+});
