@@ -1,5 +1,5 @@
-// True values and what was drawn (CESIUM2_WEBGPU_PLAN.md §13.26, placement
-// increment 6; §13.37). A view may draw its content through a route that
+// True values and what was drawn (docs/design/geometry-through-placement-review.md, placement
+// increment 6; docs/design/transform-graph.md). A view may draw its content through a route that
 // crosses a smooth edge: a vertical exaggeration over the content's frame, a
 // reprojection. A pick, a snap or a measurement is about where the content
 // is, in the content's own frame, which names itself; this module says what

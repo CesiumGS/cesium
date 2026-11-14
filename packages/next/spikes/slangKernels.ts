@@ -50,8 +50,8 @@ import atmosphereSlang from "../src/shaders/generated/atmosphere.wgsl?raw";
 import skySlang from "../src/shaders/generated/sky.wgsl?raw";
 import pathSlang from "../src/shaders/generated/reference.wgsl?raw";
 /**
- * The Slang-first migration's performance gate (CESIUM2_WEBGPU_PLAN.md
- * §3.4, step 4): each ported kernel against the hand-written WGSL it
+ * The Slang-first migration's performance gate (
+ * docs/design/shaders.md, step 4): each ported kernel against the hand-written WGSL it
  * replaces (spikes/slang/reference/), in isolation: the same synthetic
  * inputs (in the engine's formats), the two pipelines dispatched
  * alternately, each timed by GPU timestamps, medians compared; and their

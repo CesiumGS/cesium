@@ -1,5 +1,5 @@
 /**
- * The Viewer's engines (Dyno, plan §16.9): one engine at a time in a page,
+ * The Viewer's engines (Dyno, docs/design/benchmark-analysis-and-experience.md): one engine at a time in a page,
  * loading samples, ion assets and iModels, with view settings, lighting,
  * picking, credits and the inspector. 2.0 does everything the former
  * standalone viewer did; 1.x does what CesiumJS can, and says what it

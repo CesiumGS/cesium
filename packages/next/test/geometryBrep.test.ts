@@ -1,4 +1,4 @@
-// The b-rep adapter behind the geometry query interface (brep 3, plan §13.33):
+// The b-rep adapter behind the geometry query interface (brep 3, docs/design/breps-and-geometry-queries.md):
 // rays, closest points, segments, entities and picks answered from the form's
 // surfaces, checked against a dense tessellation of the same form, on the
 // gallery's fixtures (analytic, trimmed, free-form), an SMLib-like rational

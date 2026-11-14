@@ -1,4 +1,4 @@
-// The reference atmosphere (plan §4.2), checked and measured:
+// The reference atmosphere (docs/design/lighting-and-shading.md), checked and measured:
 // 1. the GPU path tracer limited to single scattering against the CPU's
 //    deterministic integral (same model, same units): they must agree;
 // 2. the full reference (multiple scattering, ozone, the ground's bounce):

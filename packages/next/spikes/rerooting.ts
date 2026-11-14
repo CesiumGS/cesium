@@ -505,7 +505,7 @@ async function runRerooting(): Promise<RerootingResult> {
     // 2. GCRF with the clock playing at 3,600×: the sky stays, the Earth turns.
     status.textContent = "2: GCRF with the clock playing…";
     onItrf.view.enabled = false;
-    // 5i: nothing public says the star map has loaded; Sky's starsOn does.
+    // CS-102: nothing public says the star map has loaded; Sky's starsOn does.
     const starsOn = () =>
       (engine.raster.sky as unknown as { starsOn: number }).starsOn === 1;
     await settle(engine, starsOn, 30_000);

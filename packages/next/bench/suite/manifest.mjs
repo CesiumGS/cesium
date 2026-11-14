@@ -1,4 +1,4 @@
-// Loads the benchmark catalog (plan §16.2): the public catalog in the repo,
+// Loads the benchmark catalog (docs/design/benchmark-suite.md, "Manifests and storage"): the public catalog in the repo,
 // merged with a private manifest outside it when BENCH_MANIFEST names one.
 // Private entries replace public ones with the same id. Checks references
 // so a typo fails before a long run, not during it.
@@ -77,7 +77,7 @@ export function loadCatalog(manifest = process.env.BENCH_MANIFEST) {
 }
 
 /**
- * Why a dataset may not be in a catalog (plan §16.2), or undefined. Public:
+ * Why a dataset may not be in a catalog (docs/design/benchmark-suite.md, "Manifests and storage"), or undefined. Public:
  * redistributable (compatible with Apache-2.0) or stream-only, and only
  * redistributable data may be mirrored. Private: cleared for commercial use
  * at Bentley (commercial-ok, redistributable, or stream-only through
@@ -145,7 +145,7 @@ export function sceneDatasets(catalog, scene) {
 }
 
 /**
- * Formats each engine can draw today (plan §16.4: unsupported scenes are
+ * Formats each engine can draw today (docs/design/benchmark-suite.md, "Catalog (initial)": unsupported scenes are
  * still run on the engines that can, and reported as gaps).
  */
 export const ENGINE_FORMATS = {

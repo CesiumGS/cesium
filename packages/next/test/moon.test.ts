@@ -1,4 +1,4 @@
-// The Moon (plan §13.14): its position (Meeus's chapter 47, ELP-2000/82's main
+// The Moon (docs/design/bodies-frames-and-engineering-coordinates.md): its position (Meeus's chapter 47, ELP-2000/82's main
 // terms) against Meeus's worked example, and its brightness by phase.
 import { describe, expect, it } from "vitest";
 import {

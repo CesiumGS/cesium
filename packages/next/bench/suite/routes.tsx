@@ -220,7 +220,7 @@ export const imagesRoute = createRoute({
   component: lazyRouteComponent(() => import("./views/Images.tsx"), "Images"),
 });
 
-/** The gallery (plan §13.12): examples in one viewer, with their source. */
+/** The gallery (docs/design/examples-and-the-gallery.md): examples in one viewer, with their source. */
 export const examplesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/examples",

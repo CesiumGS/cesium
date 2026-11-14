@@ -1,4 +1,4 @@
-// The sky behind a view's scene (plan §4.2), with air.slang's model
+// The sky behind a view's scene (docs/design/lighting-and-shading.md), with air.slang's model
 // (Sky.ts).
 //
 // Inside the atmosphere, each frame renders the view's sky-view table
@@ -140,7 +140,7 @@ float sunDisk(float3 direction) {
 
 // --- the stars ------------------------------------------------------------------
 
-// The stars behind the atmosphere (plan §4.2, the night sky), in the
+// The stars behind the atmosphere (docs/design/lighting-and-shading.md, the night sky), in the
 // celestial frame (ICRF), turned to Earth-fixed axes by the time: points,
 // each splatted into the view's star layer through a point spread function
 // (`starVertex`), over a smooth background (the Milky Way, a low-passed
@@ -843,7 +843,7 @@ static const int AERIAL_SUBSTEPS = 2;
 
 // In-scatter in slices 0..AERIAL_SLICES-1, transmittance in the next
 // AERIAL_SLICES: one volume each (one sampled texture in the opaque pass,
-// CESIUM2_WEBGPU_PLAN.md §13.15).
+// docs/design/gpu-limits-and-capacities.md).
 [[vk::binding(5, 2)]] Texture3D<float4> aerialPartial;
 [[vk::binding(7, 2)]] [[vk::image_format("rgba16f")]] WTexture3D<float4> aerialOut;
 

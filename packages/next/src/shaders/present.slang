@@ -2,7 +2,7 @@
 // tonemapping (Khronos PBR Neutral, AgX or ACES: View.ts `ToneMapping`),
 // then output encoding: the exact sRGB curve, or gamma 2.2 to match
 // CesiumJS 1.x (`czm_inverseGamma`). The image is already exposed (shading
-// pre-exposes, plan §4.2).
+// pre-exposes, docs/design/lighting-and-shading.md).
 
 struct PresentParams {
   float2 origin;     // viewport origin in target pixels

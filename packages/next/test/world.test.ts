@@ -4,7 +4,7 @@ import type { Engine } from "../src/scene/Engine.ts";
 import { createBox } from "../src/scene/meshes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
-/** World pools (CESIUM2_WEBGPU_PLAN.md §13.15) on the fake device. */
+/** World pools (docs/design/gpu-limits-and-capacities.md) on the fake device. */
 describe("world pools", () => {
   let engine: Engine;
   beforeAll(async () => {

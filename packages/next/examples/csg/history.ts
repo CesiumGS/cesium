@@ -1,7 +1,7 @@
 import { cloneTree, leavesOf, isStepLeaf, type CsgTree } from "./tree.ts";
 
 /**
- * Undo and redo for every edit of the CSG sample (plan §13.33): a stack of
+ * Undo and redo for every edit of the CSG sample (docs/design/breps-and-geometry-queries.md): a stack of
  * the tree's states, one per finished edit (a drag is one, however many
  * evaluations it made), each with the selection that went with it. The tree
  * is small plain data, so a state is a copy of it: an undo is exact, and

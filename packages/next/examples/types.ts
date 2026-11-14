@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { GlobeKind, Viewer } from "@cesium/next/widgets";
 
 /**
- * Examples (plan §13.12): what users and stakeholders see, one per
+ * Examples (docs/design/examples-and-the-gallery.md): what users and stakeholders see, one per
  * feature or use case. Each is a module under `examples/<slug>/` whose
  * `run` builds its scene in a viewer of its own and returns what undoes
  * it; the gallery (Dyno's Examples) keeps one engine while examples come

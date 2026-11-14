@@ -1031,7 +1031,7 @@ function buildTerrainTile(d: TerrainTileData): {
   };
   // Kept heights go back to workers with later requests (morphs, refits,
   // upsampling): shared, when the page can share memory, they are never
-  // copied again (plan §13.43).
+  // copied again (docs/design/job-system.md).
   let kept: TerrainHeights | undefined;
   let shared = false;
   if (d.keepHeights) {

@@ -1,5 +1,5 @@
-// Fitting a route's displacement over a tile with a lattice of cubics (plan
-// §13.26, the second review, flaws 2 and 8). Float64 and CPU-side, so a draw
+// Fitting a route's displacement over a tile with a lattice of cubics (
+// docs/design/geometry-through-placement-review.md, the second review, flaws 2 and 8). Float64 and CPU-side, so a draw
 // can carry a warp the GPU evaluates cheaply; scene/warpTerms.ts has the
 // lattice's layout.
 import { invertAffine, multiply, mat4 } from "../math/mat4.ts";

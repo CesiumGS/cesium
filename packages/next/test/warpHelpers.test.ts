@@ -1,4 +1,4 @@
-// The smooth-frame helpers (plan §13.26, §13.37): each helper's forward,
+// The smooth-frame helpers (docs/design/geometry-through-placement-review.md, docs/design/transform-graph.md): each helper's forward,
 // Jacobian and inverse at Earth scale, the exaggeration against its
 // definition, and the helpers through `smoothFrame`, the frames resolver's
 // `route()` and `routeForward`: forward going up from the frame to its

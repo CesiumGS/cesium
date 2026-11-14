@@ -1,5 +1,5 @@
-// A pick's hit as a point of the content's own domain (CESIUM2_WEBGPU_PLAN.md
-// §13.26, increment 5): the pick variant (render/view/pickDomain.ts) draws
+// A pick's hit as a point of the content's own domain (
+// docs/design/geometry-through-placement-review.md, increment 5): the pick variant (render/view/pickDomain.ts) draws
 // what the opaque pass drew into a few pixels around the cursor and writes
 // per pixel the draw, and in it a triangle's number and barycentrics or a
 // b-rep face and its (u, v). This module turns that into the content's exact

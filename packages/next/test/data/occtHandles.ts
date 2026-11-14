@@ -1,4 +1,4 @@
-// Counts the embind handles a piece of code leaves alive (plan §13.33): wraps
+// Counts the embind handles a piece of code leaves alive (docs/design/breps-and-geometry-queries.md): wraps
 // the OCCT module so every object it hands out that has a `delete` is
 // recorded, and removed again by that `delete`. A heap's size can't show a
 // leak here, as embind frees a forgotten handle once the JS garbage

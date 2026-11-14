@@ -1,4 +1,4 @@
-// A route across a warp on the GPU against the float64 route (plan §13.26,
+// A route across a warp on the GPU against the float64 route (docs/design/geometry-through-placement-review.md,
 // increment 1, slice D; the Node test is test/warpWorld.test.ts). The
 // Earth's anchor is placed in `exaggerated`, a smooth frame under ITRF that
 // multiplies height over a sphere by 10 (and by a scale, a world's placement parameter: the

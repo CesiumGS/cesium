@@ -1,4 +1,4 @@
-// The base of the live smooth-frame helpers (plan §13.37): a revision, and the
+// The base of the live smooth-frame helpers (docs/design/transform-graph.md): a revision, and the
 // frames to invalidate when the helper changes. `verticalExaggeration`,
 // `heightOffset` (georeference), `scaleAbout`, `blend` and `fromFunction`
 // build on it; each returns a `SmoothFrameSpec` for `smoothFrame`.

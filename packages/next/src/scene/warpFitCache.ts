@@ -1,7 +1,7 @@
 // Fits kept per (item, variant): the variant is what the fit's displacement
 // depends on besides the item (the world names it by the route's shape, not
-// the render root, so a re-root that leaves it alone reuses the fit). Made lazily within a frame's budget (plan
-// §13.26, the second review, flaw 8): a route whose revision moved is
+// the render root, so a re-root that leaves it alone reuses the fit). Made lazily within a frame's budget (
+// docs/design/geometry-through-placement-review.md, the second review, flaw 8): a route whose revision moved is
 // refitted on a budget, and until its new fit lands the stale one is drawn.
 //
 // Main thread for now. Warps are JS closures, which a worker can't be sent,

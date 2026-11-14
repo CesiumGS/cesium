@@ -1,4 +1,4 @@
-// The reference atmosphere (plan §4.2): an unbiased spectral Monte Carlo
+// The reference atmosphere (docs/design/lighting-and-shading.md): an unbiased spectral Monte Carlo
 // volumetric path tracer through a spherical planet's atmosphere, against
 // which real-time approximations are judged. Not fast; exact in the limit
 // (AtmosphereReference.ts).
@@ -19,7 +19,7 @@
 // About 5% more stays: in Chrome on Metal, Tint guards every loop it can't
 // prove finite with a 64-bit iteration counter, and Slang writes every
 // loop as `loop {}` (only a constant-bounded `for` is exempt); the ratio
-// tracking's loop does little else per step (plan §3.4, step 6).
+// tracking's loop does little else per step (docs/design/shaders.md, step 6).
 //
 // Precision: positions are in a frame whose origin is the ground point
 // below the observer, z up, so heights above the sphere are computed

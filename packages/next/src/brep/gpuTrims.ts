@@ -1,4 +1,4 @@
-// A face's trim as the fragment stage reads it (overall plan §13.33, "Step 5
+// A face's trim as the fragment stage reads it (docs/design/breps-and-geometry-queries.md, "Step 5
 // redirected", part 2): the loops' pcurves as monotone quadratic pieces in
 // horizontal bands of v, so a pixel's inside-or-outside is the winding number
 // of a ray along +u, as Slug does for glyphs (Lengyel, "GPU-Centered Font

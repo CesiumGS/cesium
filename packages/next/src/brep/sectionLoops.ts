@@ -1,6 +1,6 @@
 // Pieces of a cap's boundary in the section plane's (u, v): joining them into
 // loops, cutting loops by a half-plane (the sides of a clip box), and nesting
-// loops into outer boundaries and holes (plan §13.26, caps; section.ts).
+// loops into outer boundaries and holes (docs/design/geometry-through-placement-review.md, caps; section.ts).
 // A piece is a chain of rational Bézier segments of one degree, an edge of
 // the cap; a loop is pieces end to end; interior on the left throughout.
 import {

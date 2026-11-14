@@ -140,13 +140,13 @@
     <main>
       <h1>Core IR spike: per-edit cost in the browser</h1>
       <p class="lede">
-        Plan §13.42. A MaterialX graph is lowered to CesiumIR (candidate a), its
-        literals hoisted to uniforms, and emitted as WGSL. A value edit keeps
-        the program's shape and is a uniform write; a category or wiring edit
-        changes the shape and costs a new shader module and pipeline. The table
-        below times each stage here, and checks the emitted WGSL with WebGPU and
-        the emitted GLSL ES 3.00 with WebGL 2. Decision asked: which core IR
-        (see the plan section).
+        Plan docs/design/core-ir.md. A MaterialX graph is lowered to CesiumIR
+        (candidate a), its literals hoisted to uniforms, and emitted as WGSL. A
+        value edit keeps the program's shape and is a uniform write; a category
+        or wiring edit changes the shape and costs a new shader module and
+        pipeline. The table below times each stage here, and checks the emitted
+        WGSL with WebGPU and the emitted GLSL ES 3.00 with WebGL 2. Decision
+        asked: which core IR (see the plan section).
       </p>
       <div class="grid">
         <div class="panel">

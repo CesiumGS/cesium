@@ -76,7 +76,7 @@ const NOUN: Record<string, string> = {
   bufferBytes: "memory",
 };
 
-/** Catalog groups (plan §16.4), in the order the catalog lists them. */
+/** Catalog groups (docs/design/benchmark-suite.md, "Catalog (initial)"), in the order the catalog lists them. */
 const GROUPS: Array<[Scene["group"], string, string?]> = [
   ["A", "Classic Cesium content", "What 1.x users load today."],
   ["B", "Large public datasets"],

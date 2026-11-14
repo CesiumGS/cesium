@@ -1,4 +1,4 @@
-// SMLib's b-reps as the engine's render form (overall plan §13.33): the
+// SMLib's b-reps as the engine's render form (docs/design/breps-and-geometry-queries.md): the
 // conversion the CSG sample and `fromUsd` share. SMLib itself is a separate
 // WebAssembly module (scripts/smlibTools.mjs builds it; the dev server serves
 // it at /smlib/), loaded only by whoever asks for it: nothing in the engine

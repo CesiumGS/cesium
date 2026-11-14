@@ -1,5 +1,5 @@
 /**
- * The STEP files the CSG sample imports (plan §13.33): NIST's public-domain
+ * The STEP files the CSG sample imports (docs/design/breps-and-geometry-queries.md): NIST's public-domain
  * test models the dev server serves at /step-samples/ (`npm run setup`
  * fetches them; scripts/stepSamples.mjs pins the same files), or a file the
  * user picks or drops.

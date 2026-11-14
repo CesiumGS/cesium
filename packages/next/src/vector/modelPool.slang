@@ -12,7 +12,7 @@
 //
 // The style is WGSL composed at run time (vector/VectorStyle.ts), appended
 // to this module's WGSL with its uniforms (binding 6). That is the runtime
-// boundary (CESIUM2_WEBGPU_PLAN.md §3.4), declared here, not found by
+// boundary (docs/design/shaders.md), declared here, not found by
 // rewriting output: the style defines `styleShow`, `styleHeading`
 // (degrees) and `styleScale`, by point and its distance from the nearest
 // camera, called by their names (`__target_intrinsic`); and it reads points

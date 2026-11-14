@@ -408,8 +408,8 @@ export function Georeferencing() {
         <Written
           from={
             <>
-              <C>src/georeference/georeference.ts</C> and the overall plan,
-              section 13.26
+              <C>src/georeference/georeference.ts</C> and the design note
+              docs/design/geometry-through-placement-review.md
             </>
           }
           on="2026-11-12"
@@ -481,7 +481,8 @@ export function Georeferencing() {
         <Written
           from={
             <>
-              the overall plan, section 13.26, <C>src/georeference/</C> and{" "}
+              the design note docs/design/geometry-through-placement-review.md,{" "}
+              <C>src/georeference/</C> and{" "}
               <C>src/engineering/georeference.ts</C>
             </>
           }
@@ -514,7 +515,7 @@ export function Georeferencing() {
           rows={THREE}
         />
         <Written
-          from="the overall plan, section 13.26, and examples/transform-graph"
+          from="the design note docs/design/geometry-through-placement-review.md, and examples/transform-graph"
           on="2026-11-12"
         />
       </Sec>
@@ -577,7 +578,7 @@ export function Georeferencing() {
           rows={OPEN}
         />
         <Written
-          from="the overall plan, section 13.26 (“Decided: no placement modes”)"
+          from="the design note docs/design/geometry-through-placement-review.md (“Decided: no placement modes”)"
           on="2026-11-12"
         />
       </Sec>

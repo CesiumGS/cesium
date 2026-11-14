@@ -1,4 +1,4 @@
-// A small CPU tessellator for the b-rep render form (overall plan §13.33). It
+// A small CPU tessellator for the b-rep render form (docs/design/breps-and-geometry-queries.md). It
 // turns a BrepForm into ordinary meshes: shaded faces and edges as lines. It
 // serves a host that loads no WebAssembly and the gallery example. It is not
 // the reference: the exact float64 evaluation is the ground truth for chordal

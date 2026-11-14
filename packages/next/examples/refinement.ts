@@ -11,7 +11,7 @@
 //
 // The shape matches what the engine plans for a view: a set of refinement
 // sources, each a count of work still to do, and `converged()` for when all
-// are zero (plan §13.41, renderer decisions, item 7). When the engine has
+// are zero (docs/design/investigations-2026-11-13.md, renderer decisions, item 7). When the engine has
 // them, `Source.count` reads `view.refinement`; nothing else here changes.
 
 /** One kind of work that is still refining, as a count of what is left. */

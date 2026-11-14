@@ -34,8 +34,8 @@ export function greenwichSiderealTime(ms: number): number {
  *
  * 1.x computes the sun with Simon et al. (1994) and turns it with the IAU
  * 2006 model when its Earth-orientation data is loaded, else as here by
- * sidereal time; porting those for exact parity is a follow-up (plan
- * §13.13). Earth only: other bodies need their own ephemerides (§13.14).
+ * sidereal time; porting those for exact parity is a follow-up (
+ * docs/design/time-and-its-controls.md). Earth only: other bodies need their own ephemerides (docs/design/bodies-frames-and-engineering-coordinates.md).
  */
 export function sunDirection(ms: number, out: Vec3): Vec3 {
   const n = julianDate(ms) - 2_451_545.0;

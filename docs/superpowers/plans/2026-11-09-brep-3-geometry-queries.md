@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, vitest, no new dependencies.
 
-**Spec:** `CESIUM2_WEBGPU_PLAN.md` §13.33, "One query interface for every representation" and "Exact queries, mostly without a kernel". Read §13.33 before starting.
+**Spec:** [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md), "One query interface for every representation" and "Exact queries, mostly without a kernel". Read [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md) before starting.
 
 ## Global Constraints
 
@@ -291,13 +291,13 @@ Behaviour:
 
 - Create: `packages/next/src/geometry/index.ts` (re-exports `query.ts`, `meshGeometry`, `sdfGeometry` and their option types)
 - Modify: `packages/next/src/index.ts` (after the ray query exports near line 336)
-- Modify: `CESIUM2_WEBGPU_PLAN.md` §13.33 (repo root)
+- Modify: [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md) (repo root)
 
-- [ ] **Step 1: Export.** In `src/index.ts`, after `terrainQueries`, add a comment, "Geometry queries per object (plan §13.33, a draft before the API review): meshes and distance fields today, b-reps next", followed by `export * from "./geometry/index.ts";`. If a name clashes (check `npm run typecheck`), export by name instead.
-- [ ] **Step 2: Record the draft and its questions in §13.33.** After the "Spike B result" paragraph, add a paragraph headed `**Step 3 draft (2026-11-09).**` that summarises the interface: per object, synchronous, float64, placed coordinates with an `origin`; three-way ray answers; accuracy on every answer; mesh and distance-field adapters; tileset rays and snap occlusion moved onto it. Follow it with `**Questions for the API review:**` and these items, worded plainly:
-  1. Two layers: a synchronous object layer under the asynchronous scene layer. Should a server's staged answers (§13.33) arrive as a scene-layer backend, as drafted, or should the object layer be asynchronous?
+- [ ] **Step 1: Export.** In `src/index.ts`, after `terrainQueries`, add a comment, "Geometry queries per object ([breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md), a draft before the API review): meshes and distance fields today, b-reps next", followed by `export * from "./geometry/index.ts";`. If a name clashes (check `npm run typecheck`), export by name instead.
+- [ ] **Step 2: Record the draft and its questions in [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md).** After the "Spike B result" paragraph, add a paragraph headed `**Step 3 draft (2026-11-09).**` that summarises the interface: per object, synchronous, float64, placed coordinates with an `origin`; three-way ray answers; accuracy on every answer; mesh and distance-field adapters; tileset rays and snap occlusion moved onto it. Follow it with `**Questions for the API review:**` and these items, worded plainly:
+  1. Two layers: a synchronous object layer under the asynchronous scene layer. Should a server's staged answers ([breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md)) arrive as a scene-layer backend, as drafted, or should the object layer be asynchronous?
   2. Frames and instants live at the scene layer, and object answers are in placed coordinates. Should each object state its frame and instant?
-  3. `EntityRef` is a number plus an optional feature ID, and mesh edges are half-edges (`triangle * 3 + side`). Stable source IDs (§13.33, "The tiles must carry") need strings or a source table.
+  3. `EntityRef` is a number plus an optional feature ID, and mesh edges are half-edges (`triangle * 3 + side`). Stable source IDs ([breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md), "The tiles must carry") need strings or a source table.
   4. `GeometryAccuracy` is one number in metres. Should it compose with the measure module's `AccuracyTerm`s, and is it a bound or 1σ?
   5. Is `display(tolerance)` a query, or does it belong to the render form (steps 4 and 5)?
   6. `segmentDistance` exists for the "missed by less than its error" verdict. Keep it, or replace it with a ray answer that carries the near miss?
@@ -305,4 +305,4 @@ Behaviour:
   8. There is no acceleration structure: queries are linear in triangles, as before.
 - [ ] **Step 3: Run the full suite once.** `npm run typecheck`, then `npx vitest run`. Expected: everything passes. On a failure, find which task caused it: run that task's files, and its parent commit if needed.
 - [ ] **Step 4: Snyk.** Run `snyk_code_scan` on `packages/next/src/geometry` and the two modified files. Fix any issue it finds and scan again.
-- [ ] **Step 5: Commit.** `git commit -m "geometry: export the draft and record it in §13.33" -- packages/next/src/geometry/index.ts packages/next/src/index.ts CESIUM2_WEBGPU_PLAN.md` (run from the repo root).
+- [ ] **Step 5: Commit.** `git commit -m "geometry: export the draft and record it in [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md)" -- packages/next/src/geometry/index.ts packages/next/src/index.ts CESIUM2_WEBGPU_PLAN.md` (run from the repo root).

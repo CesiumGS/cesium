@@ -1,5 +1,5 @@
 /**
- * Exact ray queries against the drawn terrain (plan §13.10, "Height and
+ * Exact ray queries against the drawn terrain (docs/design/ray-queries-and-path-tracing.md, "Height and
  * pick queries"): each loaded terrain tile keeps its drawn triangles on the
  * CPU (`TerrainHeights`), so a segment can be traced through them exactly,
  * synchronously, in float64. No sampling step: a feature one cell wide is
@@ -31,7 +31,7 @@
  * clearance.
  *
  * 3D Tiles (buildings, BIM) are not here: they keep no CPU triangles, so
- * their rays go through §13.10's batched GPU API (`World.castRays`). See
+ * their rays go through docs/design/ray-queries-and-path-tracing.md's batched GPU API (`World.castRays`). See
  * the extension point in `terrainLineOfSight`.
  */
 import type { ClipFilter } from "../geometry/query.ts";

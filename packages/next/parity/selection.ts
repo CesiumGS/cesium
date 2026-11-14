@@ -38,7 +38,7 @@ const $ = <T extends Element = HTMLElement>(id: string) =>
   root.querySelector<T>(`[data-id="${id}"]`)!;
 
 /**
- * L1 selection parity (plan §4): the tiles `Stepwise` selects in each of two
+ * L1 selection parity (docs/design/parity.md): the tiles `Stepwise` selects in each of two
  * views, rendered at once over one shared tile cache, against the tiles 1.x
  * selects for the same cameras, after loading settles. Jaccard over content
  * URLs, ≥ 99% required.

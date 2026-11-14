@@ -1,5 +1,5 @@
-// The globe, anchored content and instances across a warp (plan §13.26,
-// increment 4; §13.37). The acceptance test's world: the Earth's content sits
+// The globe, anchored content and instances across a warp (docs/design/geometry-through-placement-review.md,
+// increment 4; docs/design/transform-graph.md). The acceptance test's world: the Earth's content sits
 // in a node under ITRF that exaggerates heights ten times (`verticalExaggeration`,
 // so no Jacobian is written by hand), the camera stays on ITRF, and a globe's terrain tile, a tileset, a model with
 // instances and a billboard all draw, with nothing set per item. Checked on

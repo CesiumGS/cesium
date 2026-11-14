@@ -1,5 +1,5 @@
 /**
- * Device limits by kind (CESIUM2_WEBGPU_PLAN.md §13.15).
+ * Device limits by kind (docs/design/gpu-limits-and-capacities.md).
  *
  * - **Binding counts** (per-stage storage buffers, sampled textures,
  *   samplers, bind groups) are code: every `@binding` is written into the
@@ -12,7 +12,7 @@
  * Bindless: when resource tables ship, a higher tier will raise nothing
  * here; textures move out of per-stage counts into a table (one binding),
  * so the `base` budget gets more headroom, not less. Until then every
- * texture a material reads goes through a texture reference (§13.15).
+ * texture a material reads goes through a texture reference (docs/design/gpu-limits-and-capacities.md).
  */
 
 /** Binding counts every pipeline fits: WebGPU's defaults. */
@@ -186,7 +186,7 @@ export function describeViolations(
         : `${v.count} in the ${v.stage} stage (${v.limit} ${v.max})`,
     )
     .join("; ");
-  return `Pipeline layout "${label}" exceeds the device's limits: ${what}. Binding counts are designed to the base tier (CESIUM2_WEBGPU_PLAN.md §13.15).`;
+  return `Pipeline layout "${label}" exceeds the device's limits: ${what}. Binding counts are designed to the base tier (docs/design/gpu-limits-and-capacities.md).`;
 }
 
 /** Entries of every bind group layout a device created, for checks. */

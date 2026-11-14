@@ -1,4 +1,4 @@
-// Shader composition (plan §3.4, step 5): units, boundaries, linkers.
+// Shader composition (docs/design/shaders.md, step 5): units, boundaries, linkers.
 export { declarations, blankComments } from "./declarations.ts";
 export type { Declaration, DeclarationKind } from "./declarations.ts";
 export { MAX_LOOP_ITERATIONS, unguardedLoop } from "./loopGuard.ts";

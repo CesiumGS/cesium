@@ -2,7 +2,7 @@ import type { Boundary } from "./boundary.ts";
 import type { ShaderUnit } from "./unit.ts";
 
 /**
- * Linking (plan §3.4, step 5): units in, one module out, or what stops
+ * Linking (docs/design/shaders.md, step 5): units in, one module out, or what stops
  * it. A strategy sits behind `Linker`: the first joins checked WGSL
  * (`WgslLinker`); others could link Slang modules where the compiler is
  * loaded anyway, or resolve WESL-style imports.

@@ -41,7 +41,7 @@ const DECLARATIONS = [
     name: "BENTLEY_engineering_frame",
     what: "Declares a tileset's engineering frame: its design CRS, placement mode and site transform. It composes with ESRI_crs, the 3D Tiles 2.0 draft's EXT_geospatial_crs and EXT_georeference, and 3DTILES_ellipsoid rather than replacing them.",
     state:
-      "In use by the design globe. The owner decided on no placement modes (plan section 13.26, 2026-11-11), so the mode field goes with the API review (5i), and the declaration may shrink to what the 2.0 draft's extensions can't say, such as a site transform for a whole tileset. 5f may add a declared chord tolerance.",
+      "In use by the design globe. The owner decided on no placement modes (docs/design/geometry-through-placement-review.md, 2026-11-11), so the mode field goes with the API review (CS-102), and the declaration may shrink to what the 2.0 draft's extensions can't say, such as a site transform for a whole tileset. 5f may add a declared chord tolerance.",
   },
   {
     name: "BENTLEY_alignments",
@@ -153,7 +153,7 @@ const WEBGPU: {
         ).
       </>
     ),
-    engine: "For a later visibility buffer. To be audited in 5i.",
+    engine: "For a later visibility buffer. To be audited in CS-102.",
   },
 ];
 
@@ -185,12 +185,13 @@ export function Specs() {
           CRS&apos;s type (geographic, geocentric, projected, compound or local)
           already says how content reaches the Earth, so the earlier idea of a
           placement mode on the CRS is dropped: the owner decided against it
-          (plan, section 13.26, 2026-11-11). The type selects the route: a
-          geocentric CRS is the identity, a geographic, projected or compound
-          one is a coordinate operation, and a local one with{" "}
-          <C>EXT_georeference</C> or a site transform is a rigid edge. The
-          declaration composes with those, and only what is new is worth
-          proposing:
+          (plan, the design note
+          docs/design/geometry-through-placement-review.md, 2026-11-11). The
+          type selects the route: a geocentric CRS is the identity, a
+          geographic, projected or compound one is a coordinate operation, and a
+          local one with <C>EXT_georeference</C> or a site transform is a rigid
+          edge. The declaration composes with those, and only what is new is
+          worth proposing:
         </p>
         <DataTable
           label="Proposals for 3D Tiles and glTF"
@@ -208,25 +209,27 @@ export function Specs() {
         </p>
         <p>
           <strong>Candidates to add:</strong> a declared chord tolerance for
-          reprojected models (plan 5, section 13.4). A <C>hosted</C> placement
+          reprojected models (plan 5, the design note
+          docs/design/tile-selection-and-memory.md). A <C>hosted</C> placement
           mode is no longer a candidate: content already in the body&apos;s
-          frame is a geocentric CRS, whose route is the identity (section
-          13.26).
+          frame is a geocentric CRS, whose route is the identity (the design
+          note docs/design/geometry-through-placement-review.md).
         </p>
         <p>
           <strong>Brainstorm, nothing decided:</strong> a next-generation
           styling language. The 3D Tiles 1.x language is already a small subset
-          of JavaScript. The plan&apos;s recommendation (section 13.38) is that
-          the spec define the language and an IR with a JSON form, with
-          JavaScript or TypeScript as one front end onto it, not the definition,
-          and that the same IR serve transform functions and vector styling.
+          of JavaScript. The plan&apos;s recommendation (the design note
+          docs/design/styling-and-a-shared-ir.md) is that the spec define the
+          language and an IR with a JSON form, with JavaScript or TypeScript as
+          one front end onto it, not the definition, and that the same IR serve
+          transform functions and vector styling.
         </p>
         <p>
           <strong>Proposed, not built:</strong> an explicit colour space in the
           styling language, using CSS Color 4 syntax (
           <C>color(srgb-linear 1 0.5 0)</C>, <C>color(display-p3 ...)</C>)
-          passed through the existing <C>color('...')</C> string (the overall
-          plan, section 13.18).
+          passed through the existing <C>color('...')</C> string (the design
+          note docs/design/colour-in-the-styling-language.md).
         </p>
         <p>
           <strong>What the engine reads today:</strong> a tileset's CRS from{" "}
@@ -234,7 +237,7 @@ export function Specs() {
           <C>BENTLEY_engineering_frame</C>. The glTF-level{" "}
           <C>EXT_geospatial_crs</C> (with its <C>wkid</C> and <C>wkt2</C>{" "}
           formats) and <C>EXT_georeference</C> aren&apos;t read yet. Reading
-          them is a small step, planned with the API review (5i), where{" "}
+          them is a small step, planned with the API review (CS-102), where{" "}
           <C>georeferenceTileset</C> picks the route from the CRS&apos;s type.
           The reprojection nodes that routes use (UTM, transverse Mercator,
           Lambert conformal conic, web Mercator) are built.
@@ -250,7 +253,7 @@ export function Specs() {
           rows={DECLARATIONS}
         />
         <Written
-          from="the overall plan, sections 13.14, 13.26 and 13.37, and the plan 5 spec, section 15.3"
+          from="the design notes docs/design/bodies-frames-and-engineering-coordinates.md, geometry-through-placement-review.md and transform-graph.md, and the plan 5 spec, section 15.3"
           on="2026-11-12"
         />
       </Section>
@@ -291,7 +294,10 @@ export function Specs() {
           still to raise with both, and to check on Tint's HLSL and SPIR-V
           writers.
         </p>
-        <Written from="the overall plan, section 3.4" on="2026-11-08" />
+        <Written
+          from="the design note docs/design/shaders.md"
+          on="2026-11-08"
+        />
       </Section>
 
       <Sources

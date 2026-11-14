@@ -1,4 +1,4 @@
-// A point source's points through a warp on the GPU (plan §13.26, increment
+// A point source's points through a warp on the GPU (docs/design/geometry-through-placement-review.md, increment
 // 4; the Node test is test/warpPoints.test.ts). The Earth's anchor is placed
 // in a smooth frame under ITRF that multiplies height over a sphere by 10. A `PointSource` 1 km
 // above the sphere holds points up to 15 km from its origin; its frame

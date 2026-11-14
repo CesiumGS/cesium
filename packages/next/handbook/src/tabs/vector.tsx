@@ -68,7 +68,7 @@ export function Vector() {
           ground.
         </p>
         <Written
-          from="the overall plan, Real-time tracks and section 13.11"
+          from="the overall plan, Real-time tracks and the design note docs/design/real-time-tracks.md"
           on="2026-11-08"
         />
       </Section>
@@ -86,7 +86,10 @@ export function Vector() {
           <a href="#/breps">B-reps tab</a> lists what's shared and the order the
           work goes in.
         </p>
-        <Written from="the overall plan, section 13.33" on="2026-11-12" />
+        <Written
+          from="the design note docs/design/breps-and-geometry-queries.md"
+          on="2026-11-12"
+        />
       </Section>
 
       <Section title="Still to write">

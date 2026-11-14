@@ -65,11 +65,11 @@ if (!BASE) {
 /** page path → global function that runs it and returns JSON-serializable results */
 const suites = {
   precision: ["/spikes/precision.html?bench", "runPrecision"],
-  // The reference atmosphere (plan §4.2): GPU path tracer vs CPU integral.
+  // The reference atmosphere (docs/design/lighting-and-shading.md): GPU path tracer vs CPU integral.
   atmosphere: ["/spikes/atmosphere.html?bench", "runAtmosphere"],
-  // 2.0's image-based lighting vs a Monte Carlo reference (plan §4.2).
+  // 2.0's image-based lighting vs a Monte Carlo reference (docs/design/lighting-and-shading.md).
   ibl: ["/spikes/ibl.html?bench", "runIbl"],
-  // The real-time atmosphere vs the reference (plan §4.2).
+  // The real-time atmosphere vs the reference (docs/design/lighting-and-shading.md).
   sky: ["/spikes/sky.html?bench", "runSky"],
   // The observer's chain: stages, and later the sky and glare (sky and observer plan).
   observer: [
@@ -87,7 +87,7 @@ const suites = {
   baseline: ["/bench/baseline.html?bench", "runBaseline"],
   // Content in and out of a live world (needs VITE_ION_TOKEN).
   hitch: ["/bench/hitch.html?bench", "runHitch"],
-  // Many instances of one multi-primitive model (plan §13.9).
+  // Many instances of one multi-primitive model (docs/design/transforms-and-instancing.md).
   instances: ["/bench/instances.html?bench", "runInstances"],
   // Public Specs tilesets; ION_ASSET=<id> (with VITE_ION_TOKEN in .env.local)
   // runs a private ion asset instead, without the id entering the repo.
@@ -105,7 +105,7 @@ const suites = {
     "runGlobe",
   ],
   imagery: ["/parity/imagery.html?bench", "runImagery"],
-  // Moment-based OIT against the exact per-pixel lists (plan §6 M4).
+  // Moment-based OIT against the exact per-pixel lists (packages/next/work/README.md M4).
   translucency: ["/parity/translucency.html?bench", "runTranslucency"],
   customShader: ["/parity/customShader.html?bench", "runCustomShader"],
   tracks: ["/parity/tracks.html?bench", "runTracks"],

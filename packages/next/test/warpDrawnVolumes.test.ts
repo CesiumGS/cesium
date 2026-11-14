@@ -1,5 +1,5 @@
 // The parts of selection that run on drawn volumes under a warped anchor
-// besides distance, frustum and error (plan §13.26, increment 3): the shadow
+// besides distance, frustum and error (docs/design/geometry-through-placement-review.md, increment 3): the shadow
 // casters' reach, the viewer's request volume and the dynamic screen-space
 // error's root volume. A fake `TileWarp` moves each tile by a translation, so
 // what is drawn is far from where the volume says; with no warp, selection is

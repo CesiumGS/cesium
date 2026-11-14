@@ -1,5 +1,5 @@
 // A placed draw's order-0 displacement against the float64 route, at the
-// millimetre (plan §13.26, the second review's flaw 3; the Node test is
+// millimetre (docs/design/geometry-through-placement-review.md, the second review's flaw 3; the Node test is
 // test/warpPrecision.test.ts). The fit's constant term used to be added to
 // each vertex in model space, before the camera-relative transform, so two
 // large float32 numbers cancelled: 4 mm at a 36 km displacement, 0.25 to

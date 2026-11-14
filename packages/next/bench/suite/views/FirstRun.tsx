@@ -236,7 +236,8 @@ export function FirstRun() {
         </Step>
       </ol>
       <Typography variant="caption-lg" color="textSecondary" render={<p />}>
-        More in the plan, §16 (benchmark suite) and §16.9 (Dyno):{" "}
+        More in the design notes on the benchmark suite and on Dyno's analysis
+        and experience, indexed in the overview:{" "}
         <Link href="/CESIUM2_WEBGPU_PLAN.md" target="_blank" rel="noreferrer">
           CESIUM2_WEBGPU_PLAN.md
           <span aria-hidden="true">&nbsp;↗</span>

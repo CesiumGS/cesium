@@ -35,7 +35,7 @@ import {
  * (scene/placementTable.ts), the per-draw data placements add.
  * Immediates or push constants, or another layout of the per-draw data,
  * would replace this class and that one function, not their callers
- * (CESIUM2_WEBGPU_PLAN.md §7.1, "design for it; don't build it").
+ * (docs/design/risks.md, "Bindless textures: not in the PoC, designed for in 2.0", "design for it; don't build it").
  *
  * The records are the layout's (`writeDrawRecord`, render/layout.ts): this
  * class changes no byte of them. Each write marks its row for the next

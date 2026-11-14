@@ -578,7 +578,7 @@ export function Viewer() {
                     ["adapter", "Adapter: all raised (experiments)"],
                   ]}
                   // A device's limits are fixed at creation: the page
-                  // reloads with the engine on the chosen tier (plan §13.15).
+                  // reloads with the engine on the chosen tier (docs/design/gpu-limits-and-capacities.md).
                   onChange={(v) => reloadWithLimits(v)}
                 />
               )}

@@ -5,7 +5,7 @@ import * as layouts from "../src/render/generated/layouts.ts";
  * The shared structs are defined once, in shaders/common.slang, and the
  * TypeScript offsets come from its reflection (render/generated/
  * layouts.ts; `npm run shaders:check` keeps it current). Every shader is
- * Slang now (CESIUM2_WEBGPU_PLAN.md §3.4, step 7): no WGSL copy of the
+ * Slang now (docs/design/shaders.md, step 7): no WGSL copy of the
  * structs remains to check against.
  */
 describe("shared struct layouts", () => {

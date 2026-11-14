@@ -28,7 +28,7 @@ import {
 } from "./viewMath.ts";
 
 /**
- * Direct manipulation in the view (plan §13.33, phases 1 and 2): the
+ * Direct manipulation in the view (docs/design/breps-and-geometry-queries.md, phases 1 and 2): the
  * translate and rotate gizmo of the selected leaf, and the push-pull arrow
  * of a picked face. It draws on a 2D canvas over the view, tests the handles
  * itself in pixels (so a press on a handle never reaches the orbit controls,

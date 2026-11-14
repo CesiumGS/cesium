@@ -70,10 +70,12 @@ export interface ApiRow {
   snippet?: string;
 }
 
-const NON_GOALS = "Overall plan, section 1, non-goals for the PoC";
+const NON_GOALS =
+  "The overview's goal (CESIUM2_WEBGPU_PLAN.md), non-goals for the PoC";
 const LASTS =
-  "Overall plan, section 1: the architecture is to absorb this later";
-const EXTENSIONS = "Overall plan, section 4, the extension table: missing";
+  "The overview's goal (CESIUM2_WEBGPU_PLAN.md): the architecture is to absorb this later";
+const EXTENSIONS =
+  "The design note docs/design/parity.md, the extension table: missing";
 
 /** Rows that code written against 1.x has to change for. */
 export const isBreaking = (row: ApiRow) =>
@@ -178,7 +180,7 @@ export const API_ROWS: readonly ApiRow[] = [
     supporting: ["VerticalExaggeration", "VerticalExaggerationOptions"],
     status: "changed",
     note: "Exaggeration isn't a scene setting. `verticalExaggeration({ factor, baseHeight, ceiling })` is a smooth node placed over the content it exaggerates, so terrain, tilesets and models under it are drawn exaggerated, what isn't under it (the Moon, the camera) isn't, and picks and measurements still return true heights. `baseHeight` is 1.x's relative height; a `ceiling` shifts the sky instead of stretching it. A slider is one float, and a view may hold its own value.",
-    source: "Overall plan, section 13.37",
+    source: "The design note docs/design/transform-graph.md",
     snippet: "exaggeration",
   },
   {
@@ -334,7 +336,8 @@ export const API_ROWS: readonly ApiRow[] = [
     status: "absent",
     gap: "later",
     note: "`TerrainLoader` has a general shape: a URL goes in, and a mesh and its heights come out. But the worker decodes only quantized mesh, `TerrainSource` refuses other formats, and neither seam is public yet. The plan chooses which to build from demand, each as an optional module, so none is promised.",
-    source: 'Overall plan, section 13.21, "Two layers, not one"',
+    source:
+      'The design note docs/design/ion-as-a-module.md, "Two layers, not one"',
   },
   {
     group: "globe",
@@ -343,7 +346,8 @@ export const API_ROWS: readonly ApiRow[] = [
     status: "absent",
     gap: "later",
     note: "A tileset draws today through `addTileset`, and `sampleHeightMostDetailed` reads it, but it isn't a globe: `sampleHeight` is undefined for it, and it takes no terrain regions. The plan chooses from demand, so this isn't promised.",
-    source: 'Overall plan, section 13.21, "Two layers, not one"',
+    source:
+      'The design note docs/design/ion-as-a-module.md, "Two layers, not one"',
   },
   {
     group: "globe",
@@ -397,7 +401,7 @@ export const API_ROWS: readonly ApiRow[] = [
     supporting: ["ClampOptions"],
     status: "changed",
     note: 'Values are strings such as `"clampToGround"`, and a `Clamp` samples the most detailed ground first and settles once, rather than moving on each refinement.',
-    source: "Overall plan, section 8, product choices",
+    source: "The decision record docs/decisions/product-choices.md",
     snippet: "model",
   },
 
@@ -492,7 +496,8 @@ export const API_ROWS: readonly ApiRow[] = [
     status: "absent",
     gap: "later",
     note: "A provider gives a URL per tile, so an app can write these today: TMS flips its row, and WMS builds a bounding box. The templates can't do either. The plan chooses which to ship from demand, each as an optional module, so none is promised.",
-    source: 'Overall plan, section 13.21, "Two layers, not one"',
+    source:
+      'The design note docs/design/ion-as-a-module.md, "Two layers, not one"',
   },
   {
     group: "imagery",
@@ -506,7 +511,8 @@ export const API_ROWS: readonly ApiRow[] = [
     status: "absent",
     gap: "later",
     note: "`ImageryProvider` fetches an image from a URL per tile. Google Earth Enterprise's tiles need decoding first, and these others have no URL per tile.",
-    source: 'Overall plan, section 13.21, "Two layers, not one"',
+    source:
+      'The design note docs/design/ion-as-a-module.md, "Two layers, not one"',
   },
   {
     group: "imagery",
@@ -657,7 +663,7 @@ export const API_ROWS: readonly ApiRow[] = [
     nextLabel: "Numbers, and strings in styles",
     status: "changed",
     note: 'No `Color` class: colours are numbers, and strings in styles. CSS notation such as `#ff8800` is sRGB in both, so an opaque, unlit colour matches. Blending happens in linear, so `colorBlendMode` `"mix"` and `"replace"` and translucent colours differ, and `vec4` colours are linear in 2.0 and plain numbers in 1.x.',
-    source: "Overall plan, section 13.18",
+    source: "The design note docs/design/colour-in-the-styling-language.md",
   },
   {
     group: "tiles",
@@ -732,7 +738,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "triangulateRegion",
     ],
     status: "changed",
-    note: "Clips are world objects, not per tileset or model: `world.addClip(set)` with planes, boxes and extruded polygons in any frame, combined by union or intersection, keeping inside or outside, and views opt in by mask. 1.x's `edgeWidth` highlight has no direct equivalent: a set's `effect` can instead give a custom shader the distance to the cut to glow or fade, draw what was cut as a translucent ghost, or only report. Each set is tested per fragment on the true point or the drawn one, whichever its frame reaches rigidly, so a cut named in ITRF stays at its true height under exaggeration, and across a deformed route it is cut along a fitted distance. Picks and the view's queries respect them; world questions take a clip set explicitly. Caps close a cut: instantly on the GPU for the views that ask (`View.clipCaps`: the solid draws, `DrawOptions.solid`, are counted behind each cut face per pixel and the cap is drawn where the count is odd, so a moving clip never has a frame without it); exact for a b-rep (`BrepCaps`, `sectionBrep`, in steps within a frame's budget or in a worker through a `SectionRunner`), cut from the triangles for a mesh (`MeshCaps`, with its polygons exposed for exact picks). A `CapScheduler` given the engine rebuilds them and wakes it. Curved clips have no GPU cap. A draw can exempt itself from clips (`DrawOptions.clipExempt`); a per-feature exemption comes with the styling language's run-time data. Plan §13.26, increment 8.",
+    note: "Clips are world objects, not per tileset or model: `world.addClip(set)` with planes, boxes and extruded polygons in any frame, combined by union or intersection, keeping inside or outside, and views opt in by mask. 1.x's `edgeWidth` highlight has no direct equivalent: a set's `effect` can instead give a custom shader the distance to the cut to glow or fade, draw what was cut as a translucent ghost, or only report. Each set is tested per fragment on the true point or the drawn one, whichever its frame reaches rigidly, so a cut named in ITRF stays at its true height under exaggeration, and across a deformed route it is cut along a fitted distance. Picks and the view's queries respect them; world questions take a clip set explicitly. Caps close a cut: instantly on the GPU for the views that ask (`View.clipCaps`: the solid draws, `DrawOptions.solid`, are counted behind each cut face per pixel and the cap is drawn where the count is odd, so a moving clip never has a frame without it); exact for a b-rep (`BrepCaps`, `sectionBrep`, in steps within a frame's budget or in a worker through a `SectionRunner`), cut from the triangles for a mesh (`MeshCaps`, with its polygons exposed for exact picks). A `CapScheduler` given the engine rebuilds them and wakes it. Curved clips have no GPU cap. A draw can exempt itself from clips (`DrawOptions.clipExempt`); a per-feature exemption comes with the styling language's run-time data. Plan docs/design/geometry-through-placement-review.md, increment 8.",
     snippet: "clipping",
   },
   {
@@ -806,7 +812,7 @@ export const API_ROWS: readonly ApiRow[] = [
     status: "absent",
     gap: "later",
     note: "glTF animation and node access aren't built. Animated content is noted for later.",
-    source: "Overall plan, section 13.8",
+    source: "The design note docs/design/rendering-on-demand.md",
   },
   {
     group: "models",
@@ -1024,7 +1030,7 @@ export const API_ROWS: readonly ApiRow[] = [
     ],
     status: "renamed",
     note: "A stage is one fullscreen function in `view.observer.stages`, in a slot before or after exposure and tone mapping, marked physics, a model or a look. FXAA and ambient occlusion are still `View` settings. A stage can also declare passes, fragment or compute, over textures it owns; what a declaration can't carry (an instanced draw, a storage buffer) stays internal.",
-    source: "Overall plan, section 13.22",
+    source: "The design note docs/design/custom-post-processing.md",
   },
   {
     group: "light",
@@ -1225,7 +1231,7 @@ export const API_ROWS: readonly ApiRow[] = [
     ],
     status: "new",
     note: "One query interface per object, for meshes, B-reps and distance fields: ray hits, closest points and topology, each answer with its accuracy and, for a B-rep, the route it took (a closed form, or Newton on a patch) and a refine-a-pick entry for GPU picks. A draft before the API review.",
-    source: "Overall plan, section 13.33",
+    source: "The design note docs/design/breps-and-geometry-queries.md",
   },
 
   {
@@ -1260,7 +1266,7 @@ export const API_ROWS: readonly ApiRow[] = [
     ],
     status: "new",
     note: "The engine's own B-rep form as typed arrays, with exact evaluation, an exact NURBS split, a builder, a validator, the draft BENTLEY_brep glTF extension and a small CPU tessellator that turns it into meshes and edge lines. The GPU draws it through the provisional, internal World.addBrep: spans diced each view to a pixel error, with trims tested per pixel (see the Tessellation tab). A draft before the API review.",
-    source: "Overall plan, section 13.33",
+    source: "The design note docs/design/breps-and-geometry-queries.md",
   },
 
   // ------------------------------------------------- Points and vector data
@@ -1288,7 +1294,7 @@ export const API_ROWS: readonly ApiRow[] = [
     ],
     status: "changed",
     note: "Large sets of points are typed arrays updated on the GPU and drawn by a compiled style, so there's no per-object `position` to set.",
-    source: "Overall plan, section 13.11",
+    source: "The design note docs/design/real-time-tracks.md",
     snippet: "points",
   },
   {
@@ -1865,7 +1871,8 @@ export const API_ROWS: readonly ApiRow[] = [
     nextLabel: "Projections as nodes of the transform graph",
     status: "covered",
     note: "The map math is a smooth node with an inverse (`webMercator`, `utm`, `transverseMercator`, `lambertConformalConic`, and the `...ToGeographic` ones for content authored in a projected CRS), not a projection object you call. What 1.x used these for, 2D and Columbus view, is planned in 5f's design view and isn't built. A whole-world flat map, as with Web Mercator, isn't in the spec and is an open point.",
-    source: "Overall plan, section 13.37; plan 5 spec, section 13.2",
+    source:
+      "The design note docs/design/transform-graph.md; plan 5 spec, the design note docs/design/tile-selection-and-memory.md",
   },
 
   // -------------------------------------------------------------------- Math
@@ -1915,7 +1922,7 @@ export const API_ROWS: readonly ApiRow[] = [
     ],
     status: "changed",
     note: "Classes give way to typed arrays and functions with a required out parameter, so all math code must change, and it's smaller: only `vec3` and `mat4` are public.",
-    source: "Overall plan, section 3.10",
+    source: "The design note docs/design/architecture.md",
     snippet: "math",
   },
   {
@@ -2156,7 +2163,7 @@ export const API_ROWS: readonly ApiRow[] = [
     status: "absent",
     gap: "design",
     note: "Use the DOM's own events on the canvas. The core touches no DOM, so it has no input handler to wrap them.",
-    source: "Overall plan, section 3.10",
+    source: "The design note docs/design/architecture.md",
     snippet: "pick",
   },
   {
@@ -2165,7 +2172,7 @@ export const API_ROWS: readonly ApiRow[] = [
     next: ["Engine"],
     status: "changed",
     note: "Creation is asynchronous everywhere and nothing has a ready flag; objects register with their world rather than being added to `primitives`.",
-    source: "Overall plan, section 3.10",
+    source: "The design note docs/design/architecture.md",
     snippet: "tileset",
   },
   {
@@ -2198,7 +2205,7 @@ export const API_ROWS: readonly ApiRow[] = [
     status: "absent",
     gap: "later",
     note: "Wrappers around ion's REST calls, such as element metadata, are noted for later in the ion module's plan.",
-    source: "Overall plan, section 13.21",
+    source: "The design note docs/design/ion-as-a-module.md",
   },
   {
     group: "network",
@@ -2223,6 +2230,6 @@ export const API_ROWS: readonly ApiRow[] = [
       "One scheduler inside the engine, with `maximumRequests` on a tileset",
     status: "changed",
     note: "One scheduler serves the globe and tilesets, with limits such as `maximumRequests` on the tileset. It's not a public object to configure.",
-    source: "Overall plan, section 3",
+    source: "The design note docs/design/architecture.md",
   },
 ];

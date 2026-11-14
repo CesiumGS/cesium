@@ -871,8 +871,8 @@ export function Unified() {
           <li>
             <strong>One IR, perhaps.</strong> The transform graph's IR could
             also sit under 3D Tiles styling and vector styling, with JavaScript
-            as one front end. That is a brainstorm (plan section 13.38): nothing
-            is decided.
+            as one front end. That is a brainstorm
+            (docs/design/styling-and-a-shared-ir.md): nothing is decided.
           </li>
         </ul>
         <Written
@@ -893,7 +893,10 @@ export function Unified() {
         >
           <UsesMatrix />
         </Figure>
-        <Written from="the overall plan, section 13.34" on="2026-11-12" />
+        <Written
+          from="the design note docs/design/infrastructure-and-geoscience-capabilities.md"
+          on="2026-11-12"
+        />
       </Section>
 
       <Section title="The rule it gives">

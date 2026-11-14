@@ -1,4 +1,4 @@
-// B-reps (overall plan §13.33): the engine's render form as typed arrays,
+// B-reps (docs/design/breps-and-geometry-queries.md): the engine's render form as typed arrays,
 // exact evaluation, the exact NURBS split, a builder and a validator, and the
 // draft glTF extension BENTLEY_brep, and a small CPU tessellator. A draft before
 // the API review.

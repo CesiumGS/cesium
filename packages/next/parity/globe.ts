@@ -41,7 +41,7 @@ const $ = <T extends Element = HTMLElement>(id: string) =>
   root.querySelector<T>(`[data-id="${id}"]`)!;
 
 /**
- * L1 globe selection parity (plan §15): the terrain tiles the globe
+ * L1 globe selection parity (docs/history/m3-progress.md): the terrain tiles the globe
  * `Stepwise` selection renders against those 1.x's globe renders
  * (`globe._surface._tilesToRender`) for the same camera, after loading
  * settles. Each camera starts from fresh tile state in both engines, since
@@ -258,7 +258,7 @@ async function legacySelection(
   // Heights come from sampleTerrain (below): 1.x frees a tile's quantized
   // buffers once its mesh exists, and its interpolateHeight then compares
   // texture coordinates in 0..1 with u, v scaled to 0..32767, so loaded
-  // globe tiles can't be sampled (a 1.x bug, plan §14).
+  // globe tiles can't be sampled (a 1.x bug, packages/next/work/README.md).
   const heights: Array<number | undefined> = points.map(() => undefined);
   // The drawn surface: 1.x clamps models and billboards to it.
   const surface = points.map(([lon, lat]) =>

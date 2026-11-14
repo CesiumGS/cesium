@@ -1,5 +1,5 @@
 // Checks a kernel's solid, converted to the render form, against the exact
-// solid it should be (plan §13.33, the CSG spike): the form validates, and
+// solid it should be (docs/design/breps-and-geometry-queries.md, the CSG spike): the form validates, and
 // every face's outside really is outside. Shared by the SMLib and OCCT tests.
 import { expect } from "vitest";
 import { evaluateSurface } from "../../src/brep/evaluate.ts";

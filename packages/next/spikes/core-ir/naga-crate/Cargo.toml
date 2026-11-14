@@ -1,4 +1,4 @@
-# Candidate for "our own wasm-bindgen build of naga" (plan §13.42).
+# Candidate for "our own wasm-bindgen build of naga" (docs/design/core-ir.md).
 # NOT BUILT: there is no Rust toolchain on the machine the spike ran on, and
 # installing one was refused by the session's permission check. The size in
 # the plan is an estimate from naga-wasm and other builds.

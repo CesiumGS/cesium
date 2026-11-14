@@ -1,4 +1,4 @@
-// A built-in smooth edge as the live spec a smooth frame takes (plan §13.37).
+// A built-in smooth edge as the live spec a smooth frame takes (docs/design/transform-graph.md).
 // The built-ins (`twist`, `bend`, `utm`, `radialDistortion`, …) return graph
 // edges, which are values: this puts one over content in the frames
 // (`smoothFrame(name, parent, liveEdge(edge, …))`), with its parameters

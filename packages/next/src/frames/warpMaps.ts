@@ -1,4 +1,4 @@
-// The scale-aware maps an application calls on a warp or a route (plan §13.26;
+// The scale-aware maps an application calls on a warp or a route (docs/design/geometry-through-placement-review.md;
 // the "Vertical exaggeration" example's gaps): where a point goes through a
 // warp's edge, and what point went through it, each warp at its live `scale`
 // (a slider's one float). A warp's own `inverse` is the inverse at scale 1,

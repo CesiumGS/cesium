@@ -1,5 +1,5 @@
 /**
- * Custom shaders' typed uniforms and textures (plan §3.4 foundation 3):
+ * Custom shaders' typed uniforms and textures (docs/design/shaders.md foundation 3):
  * declarations, their uniform buffer's layout, and the WGSL and Slang that
  * declare them. Node-safe (the Slang CLI uses it).
  *

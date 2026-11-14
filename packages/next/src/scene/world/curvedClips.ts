@@ -1,4 +1,4 @@
-// Curved clips (plan §13.26, increment 8c): a clip set whose frame reaches a
+// Curved clips (docs/design/geometry-through-placement-review.md, increment 8c): a clip set whose frame reaches a
 // draw's content only across a warp that bends it (a plane named in a design
 // CRS, the content in ITRF or drawn exaggerated) is a curved surface in the
 // content's own coordinates. Its signed distance is fitted per draw as a scalar

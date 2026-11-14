@@ -18,7 +18,7 @@ import {
 } from "./viewMath.ts";
 
 /**
- * Face push-pull (plan §13.33, direct manipulation phase 2): a picked face
+ * Face push-pull (docs/design/breps-and-geometry-queries.md, direct manipulation phase 2): a picked face
  * of the solid is a face of one leaf, and the leaf's kind says which of its
  * parameters that face is. Dragging the face along its normal changes that
  * parameter (and, where the opposite face must stay, the leaf's move), and

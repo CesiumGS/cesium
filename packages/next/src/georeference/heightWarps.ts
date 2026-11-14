@@ -1,5 +1,5 @@
 // Warps of height above a reference surface: vertical exaggeration and a
-// constant lift (plan §13.26). A point p is carried along the surface's
+// constant lift (docs/design/geometry-through-placement-review.md). A point p is carried along the surface's
 // normal through it, from height h above the surface to h′(h), so
 // q = p + (h′ − h)·n, with the exact Jacobian
 //

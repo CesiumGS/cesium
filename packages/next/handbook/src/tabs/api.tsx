@@ -190,7 +190,7 @@ export function Api() {
             <>
               <C>src/transform</C>, <C>src/transforms</C>,{" "}
               <C>src/georeference</C>, <C>src/frames/smoothFrame.ts</C> and the
-              overall plan, section 13.37
+              design note docs/design/transform-graph.md
             </>
           }
           on="2026-11-12"
@@ -231,8 +231,8 @@ export function Api() {
         <Generated from={<C>api/surface.txt</C>} />
         <p>
           Stability tiers are the map's fourth column, and {count(untiered)} of{" "}
-          {count(data.surface.total)} names have none yet. Sub-plan 5i, the API
-          review, assigns them and proposes moves. Until then, treat every name
+          {count(data.surface.total)} names have none yet. The public API review
+          (CS-102) assigns them and proposes moves. Until then, treat every name
           here as subject to change.
         </p>
         <Tabs.Provider selectedId={selected} setSelectedId={setSelected}>

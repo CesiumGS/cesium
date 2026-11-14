@@ -7,7 +7,7 @@
 // call per batch rather than per item. Each batch's visible items are
 // counted straight into its arguments' instance count (cleared before each
 // view): no separate counts buffer, one storage binding fewer (the base
-// tier's 8, CESIUM2_WEBGPU_PLAN.md §13.15).
+// tier's 8, docs/design/gpu-limits-and-capacities.md).
 //
 // Two-phase occlusion culling (the `...Occluded` kernels, a view's own cull
 // only; render/view/occlusionCull.ts): the first phase tests each item the

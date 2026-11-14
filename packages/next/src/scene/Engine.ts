@@ -46,7 +46,7 @@ import { curvedClipSets } from "../render/view/clipTable.ts";
 import { WARP_BUDGET_MS } from "./world/warps.ts";
 import type { JobStats } from "../io/Jobs.ts";
 
-/** What the jobs' apply phase may cost a tick, ms, by default (plan §13.43). */
+/** What the jobs' apply phase may cost a tick, ms, by default (docs/design/job-system.md). */
 export const JOB_BUDGET_MS = 4;
 import { type AnchorHandle, type WorldOptions } from "./world/types.ts";
 import { CameraLayer } from "../camera/CameraLayer.ts";
@@ -206,7 +206,7 @@ export interface FrameStats {
   /** The last render's main-thread time, ms, unsmoothed (`cpuMs` is smoothed). */
   lastCpuMs: number;
   /**
-   * The job system's apply phase in the last tick (plan §13.43): what it
+   * The job system's apply phase in the last tick (docs/design/job-system.md): what it
    * applied and its time, and the jobs queued, running and arrived.
    */
   jobs: JobStats;
@@ -656,13 +656,13 @@ export class Engine {
   private readonly farAnchors = new WeakMap<View, Set<AnchorHandle>>();
   private readonly freeViewIds: number[] = [];
   /**
-   * What fitting the draws' warps may cost a frame, ms (plan §13.26): fits
+   * What fitting the draws' warps may cost a frame, ms (docs/design/geometry-through-placement-review.md): fits
    * past it wait for the next frame, their draws held hidden or drawn at
    * their last fit, and the loop stays awake while any wait.
    */
   warpBudgetMs = WARP_BUDGET_MS;
   /**
-   * What the jobs' apply phase may cost a tick, ms (plan §13.43): the
+   * What the jobs' apply phase may cost a tick, ms (docs/design/job-system.md): the
    * main-thread steps of finished worker jobs (a terrain tile's decode
    * completion, a refit) run at the end of each tick in request-priority
    * order until it is spent, and the rest wait for the next tick. At least
@@ -1370,7 +1370,7 @@ export class Engine {
     const view = new View(options);
     const atmosphere = view.body.atmosphere;
     if (atmosphere && atmosphere !== this.raster.sky.atmosphere.parameters) {
-      // Per-body atmospheres follow with per-body frames (plan §13.14).
+      // Per-body atmospheres follow with per-body frames (docs/design/bodies-frames-and-engineering-coordinates.md).
       throw new Error(
         `Only the Earth's atmosphere is built so far (view body ${view.body.name}).`,
       );
@@ -1733,7 +1733,7 @@ export class Engine {
         this.reportLoopError("an after-tick listener", error);
       }
     }
-    // The apply phase (plan §13.43): finished jobs' main-thread steps,
+    // The apply phase (docs/design/job-system.md): finished jobs' main-thread steps,
     // most urgent first, within the budget. Last, so what they hand on
     // (content for the upload queue) is there for the next tick.
     try {

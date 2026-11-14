@@ -171,7 +171,7 @@ export function ellipsoidShape(id: string): EllipsoidShape {
 /**
  * A geog2D-domain Helmert (EPSG 9603, 9606, 9607) by hand: the source
  * geographic position to geocentric on its ellipsoid (IOGP 373-7-2 §4.1.1),
- * the Helmert (§4.2), and back to geographic on the target's. A "geog2D
+ * the Helmert (IOGP §4.2), and back to geographic on the target's. A "geog2D
  * domain" method transforms latitude and longitude only, so the height is
  * kept: PROJ's push and pop of the height around the geocentric step.
  * Returns the target's (longitude, latitude, height) and its geocentric

@@ -365,7 +365,7 @@ do.
   right) and the stop-4 inset (bottom left, or top right on a narrow view).
 - **Not this example's to solve.** Camera rigs attached to frames, as a
   general engine feature (a camera that rides any frame, with its own up and
-  limits), are plan 5's (CESIUM2_WEBGPU_PLAN.md §13.14); this is the example's
+  limits), are plan 5's ([bodies-frames-and-engineering-coordinates.md](../../../../docs/design/bodies-frames-and-engineering-coordinates.md)); this is the example's
   use of the orbit controls plan 4 gave.
 
 ### Scenarios (spec 2026-11-06; replaced the tour)

@@ -1,4 +1,4 @@
-// Content warped at its anchor (plan §13.26, increment 4, `warpAt:
+// Content warped at its anchor (docs/design/geometry-through-placement-review.md, increment 4, `warpAt:
 // "anchor"`): what must keep its shape (a vehicle, a symbol, a billboard)
 // moves rigidly by the route evaluated at one point, its origin, in float64.
 //

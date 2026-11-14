@@ -286,18 +286,19 @@ export function Compatibility() {
         </Note>
         <h3>What a WebGL 2 renderer would need of those browsers</h3>
         <p>
-          The research note behind the WebGL 2 plan (R1, reviewed and accepted
-          by the owner) sets a floor and names no browser list. The floor is a
-          WebGL 2 context, <C>EXT_color_buffer_float</C> (99.95% of reports,
-          99.67% on Linux, the lowest platform), a texture size of at least
-          4096, 4 samples, 4 draw buffers, a uniform block of 16384 bytes and 16
-          vertex texture units. Every report in the survey meets all of them. A
-          device below it is refused with a message that names what is missing.
-          Everything else is a reported path with a fallback: log depth through{" "}
-          <C>EXT_clip_control</C>, multi-draw, linear and blendable float
-          textures, the timer query and parallel shader compile. Firefox lacks{" "}
-          <C>WEBGL_multi_draw</C>, the timer query and parallel shader compile,
-          and added <C>EXT_clip_control</C> in 159 (<Cite id="firefox159" />
+          The research note behind the WebGL 2 plan (CS-43, reviewed and
+          accepted by the owner) sets a floor and names no browser list. The
+          floor is a WebGL 2 context, <C>EXT_color_buffer_float</C> (99.95% of
+          reports, 99.67% on Linux, the lowest platform), a texture size of at
+          least 4096, 4 samples, 4 draw buffers, a uniform block of 16384 bytes
+          and 16 vertex texture units. Every report in the survey meets all of
+          them. A device below it is refused with a message that names what is
+          missing. Everything else is a reported path with a fallback: log depth
+          through <C>EXT_clip_control</C>, multi-draw, linear and blendable
+          float textures, the timer query and parallel shader compile. Firefox
+          lacks <C>WEBGL_multi_draw</C>, the timer query and parallel shader
+          compile, and added <C>EXT_clip_control</C> in 159 (
+          <Cite id="firefox159" />
           ). Safari's float filtering and blending sit at 53% to 58%.
         </p>
         <p>
@@ -402,7 +403,8 @@ export function Compatibility() {
             ). This engine renders with indirect draws by default, and{" "}
             <C>SubmissionMode</C>'s <C>"direct"</C> may avoid it, though point
             sets still draw from the cull there. We haven't reproduced it, or
-            tried that. The overall plan, section 13.23, holds the work.
+            tried that. The design note docs/design/indirect-draws-on-intel.md,
+            holds the work.
           </p>
         </Note>
       </Section>

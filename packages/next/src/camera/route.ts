@@ -1,4 +1,4 @@
-// Routes through the frame tree, rigid edges and smooth edges (plan §13.37).
+// Routes through the frame tree, rigid edges and smooth edges (docs/design/transform-graph.md).
 // A warp is a smooth edge: a map from a frame's own coordinates up to its
 // parent's, exact in float64, which the engine compiles or fits for the GPU.
 // A route is the path from a content frame to a base (ISO 19111's
@@ -19,7 +19,7 @@ export interface WarpScale {
 
 /**
  * The marker of a warp that scales heights above a reference ellipsoid
- * (plan §13.26, increment 4): `forward(p) = p + (factor − 1)·h·n̂`, with `h`
+ * (docs/design/geometry-through-placement-review.md, increment 4): `forward(p) = p + (factor − 1)·h·n̂`, with `h`
  * the geodetic height of `p` above the ellipsoid and `n̂` its normal there,
  * so a point keeps its longitude and latitude and its height becomes
  * `factor · h`. At warp scale `s` (`Warp.scale`) the factor in force is

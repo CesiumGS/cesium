@@ -10,7 +10,7 @@
 //
 // The style is WGSL composed at run time (vector/VectorStyle.ts, or
 // RenderContext's defaults), appended to this module's WGSL. That is the
-// runtime boundary (CESIUM2_WEBGPU_PLAN.md §3.4), declared here, not found
+// runtime boundary (docs/design/shaders.md), declared here, not found
 // by rewriting output: the style defines `styleShow`, `styleSize`
 // (pixels), `styleColor` (sRGB with alpha), `styleShapeAt` (a signed
 // distance in the symbol's −1…1 box, y down) and `styleOffset` (pixels, y

@@ -2,8 +2,8 @@ import { isStepLeaf, primitiveOf, type LeafNode, type Vec3 } from "./tree.ts";
 import type { Primitive } from "../../src/brep/kernelProtocol.ts";
 
 /**
- * The transient preview of a primitive while a parameter is dragged (plan
- * §13.33, editing): its wire, as line segments in the world's coordinates,
+ * The transient preview of a primitive while a parameter is dragged (
+ * docs/design/breps-and-geometry-queries.md, editing): its wire, as line segments in the world's coordinates,
  * made at once on the page without a kernel, so the edit shows at the
  * pointer's pace while the solid re-evaluates behind it. The wire is a
  * proxy: a box's edges, circles for the round parts and the lines joining

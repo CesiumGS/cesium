@@ -1,4 +1,4 @@
-// The API the engine needs from naga, and nothing else (plan §13.42):
+// The API the engine needs from naga, and nothing else (docs/design/core-ir.md):
 // validate WGSL as WebGPU would (not with every capability on, as the
 // third-party naga-wasm does), write GLSL ES 3.00 for the WebGL 2 renderer,
 // and write SPIR-V (the stable bridge the WGSL front end reads). NOT BUILT;

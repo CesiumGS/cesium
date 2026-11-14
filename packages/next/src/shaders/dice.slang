@@ -1,4 +1,4 @@
-// B-rep patch dicing (CESIUM2_WEBGPU_PLAN.md §13.33, "Step 5 redirected",
+// B-rep patch dicing (docs/design/breps-and-geometry-queries.md, "Step 5 redirected",
 // part 1): per view, after the cull, `dicePatches` turns each visible patch
 // draw's spans into chunks of at most 4 × 4 cells and `writePatchArgs` writes
 // the draw's one indexed indirect draw (indexCount = 4 · 4 · 6 and

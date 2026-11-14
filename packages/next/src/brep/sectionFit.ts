@@ -1,5 +1,5 @@
 // Rational Bézier pieces in the section plane's (u, v), and the fit of a
-// section curve to them (plan §13.26, caps). A line is one segment; a circle
+// section curve to them (docs/design/geometry-through-placement-review.md, caps). A line is one segment; a circle
 // or an ellipse is exact, in rational quadratic arcs of at most a quarter
 // turn; anything else is fitted in cubics from its points and tangents, cut
 // until every sampled point of the curve is within the tolerance of the fit.

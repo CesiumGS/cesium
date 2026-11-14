@@ -1,4 +1,4 @@
-// The b-rep section on real solids (src/brep/section.ts, plan §13.26 caps):
+// The b-rep section on real solids (src/brep/section.ts, docs/design/geometry-through-placement-review.md caps):
 // NIST's STEP models through Open CASCADE (CTC-05 is a real CAD part of 208
 // faces, with tolerances) and SMLib's solids (every face Bézier patches).
 // Run with `npm run test:data`. The cap areas of the STEP models are checked

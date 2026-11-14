@@ -22,7 +22,7 @@ import { flip } from "./flip.ts";
 const TEMPLATE = `
 <h1>Live points and styled layers</h1>
 <p>
-  Tracks (plan §13.11) as a live point source drawn by a vector style: a
+  Tracks (docs/design/real-time-tracks.md) as a live point source drawn by a vector style: a
   feed update writes their samples at once; each frame a kernel moves them
   on the GPU and writes their anchors; a style draws each as a truck
   within the switch distance of the camera (a model pool) and a red

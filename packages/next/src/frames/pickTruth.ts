@@ -1,4 +1,4 @@
-// A pick as a true point (CESIUM2_WEBGPU_PLAN.md §13.26, placement increment
+// A pick as a true point (docs/design/geometry-through-placement-review.md, placement increment
 // 6). A core pick carries the depth's position, which is where the content is
 // drawn; under a warp that differs from where it is. When the pick variant
 // resolved a domain point the content's own point is `CorePick.truePosition`

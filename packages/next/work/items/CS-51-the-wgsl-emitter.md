@@ -1,0 +1,23 @@
+---
+id: CS-51
+title: The WGSL emitter
+kind: work
+status: Planned
+created: 2026-11-13
+project: CS-10
+milestone: core
+needs: [CS-48]
+---
+
+The WGSL emitter. Needs CS-48.
+
+## Done when
+
+- Emitted WGSL for every test program is accepted by naga (CI) and by Chrome (the browser suite).
+- A GPU readback of each op over its edge cases agrees with the float64 evaluator to a stated float32 tolerance per op. The test writes the tolerances down.
+
+## Files
+
+- `src/ir/`
+
+Detail: `docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.

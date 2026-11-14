@@ -1,4 +1,4 @@
-// Builds refuse a sky data pack that isn't cleared (§13.29): the plugin, its
+// Builds refuse a sky data pack that isn't cleared (docs/decisions/2026-11-08-owners-calls-for-later-plans.md): the plugin, its
 // presence in each build config, a guard on what the repository tracks, and
 // the dev route's fixed names. Every fixture is synthetic.
 import { execFileSync } from "node:child_process";
@@ -85,7 +85,9 @@ describe("skyPackGuard", () => {
     );
     expect(message).toContain("assets/pack-1.json");
     expect(message).toContain("synthetic");
-    expect(message).toContain("§13.29");
+    expect(message).toContain(
+      "docs/decisions/2026-11-08-owners-calls-for-later-plans.md",
+    );
   });
 
   it("refuses a manifest with no flag", () => {

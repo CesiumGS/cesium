@@ -2,7 +2,7 @@
 // and `terms`: what its page says, with the date it was read (2026-11-08;
 // re-read before relying on it). A recipe never sets `distributable` to
 // true and never writes a clearance: a person edits the manifest after
-// review. There is no recipe for raw Hipparcos or Gaia files (§13.29).
+// review. There is no recipe for raw Hipparcos or Gaia files (docs/decisions/2026-11-08-owners-calls-for-later-plans.md).
 
 /** The default recipe: NASA's deep star map layers, and HYG v4.1 for the bright end. */
 export const RECIPES = {

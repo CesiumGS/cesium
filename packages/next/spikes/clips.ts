@@ -1,4 +1,4 @@
-// Clips on the GPU against the CPU's classification (plan §13.26, increment
+// Clips on the GPU against the CPU's classification (docs/design/geometry-through-placement-review.md, increment
 // 8a; the Node test is test/clips.test.ts). Unlit white content on black,
 // drawn into an offscreen target with clips on, and every pixel read back and
 // compared with what float64 says the clip keeps there: the pixel's ray,

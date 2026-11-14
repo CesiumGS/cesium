@@ -1,4 +1,4 @@
-// The celestial frame's rotation to Earth-fixed axes (stars, plan §4.2):
+// The celestial frame's rotation to Earth-fixed axes (stars, docs/design/lighting-and-shading.md):
 // precession to the date and sidereal time, against catalog stars.
 import { describe, expect, it } from "vitest";
 import { icrfToFixed } from "../src/time/celestial.ts";

@@ -1,5 +1,5 @@
 /**
- * Browser-compiled Slang, cached (plan §3.4, step 5): what the WebAssembly
+ * Browser-compiled Slang, cached (docs/design/shaders.md, step 5): what the WebAssembly
  * compiler made of a shader, kept in IndexedDB under a digest of everything
  * the compile read, so a visitor's second visit (or another page with the
  * same shader) doesn't load the compiler at all. A cache: when IndexedDB or

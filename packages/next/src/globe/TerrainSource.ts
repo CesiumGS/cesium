@@ -179,7 +179,7 @@ export interface GlobeTile extends Address {
 }
 
 /**
- * The engine's job system (`WorkerPool`, plan §13.43), for a source whose
+ * The engine's job system (`WorkerPool`, docs/design/job-system.md), for a source whose
  * tiles decode as jobs and whose leftover deviations are measured on a
  * worker.
  */

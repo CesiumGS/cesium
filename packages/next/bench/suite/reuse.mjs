@@ -1,4 +1,4 @@
-// Reusing stored runs of engines that can't change (plan §16, r39).
+// Reusing stored runs of engines that can't change (docs/design/benchmark-suite.md, r39).
 //
 // A release, a commit, or the working tree frozen at a commit measures the
 // same on the same machine with the same method and data, so a comparison

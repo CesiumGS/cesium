@@ -1,4 +1,4 @@
-// Shared memory when the page allows it (plan §13.43): with cross-origin
+// Shared memory when the page allows it (docs/design/job-system.md): with cross-origin
 // isolation (COOP `same-origin` and COEP `require-corp` or `credentialless`)
 // a `SharedArrayBuffer` passes between the page and the workers without a
 // copy. Without it, the same data is transferred or copied: nothing may

@@ -1,4 +1,4 @@
-// Curved clips (plan §13.26, increment 8c; §13.37): a plane named in a design
+// Curved clips (docs/design/geometry-through-placement-review.md, increment 8c; docs/design/transform-graph.md): a plane named in a design
 // frame whose route to the content crosses a smooth edge that bends it. Its signed
 // distance is fitted per draw into the lattice rows' `w` channel; these check
 // the fit against float64 on the route, what the table and the packed rows

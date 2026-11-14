@@ -9,7 +9,7 @@ import {
 } from "../src/render/layout.ts";
 
 /**
- * The bindless seam (CESIUM2_WEBGPU_PLAN.md §7.1, §13.15): material
+ * The bindless seam (docs/design/risks.md, "Bindless textures: not in the PoC, designed for in 2.0", docs/design/gpu-limits-and-capacities.md): material
  * textures are read only through surface.slang `materialTexture` (and
  * their presence through `materialHasTexture`), so a resource-table backend
  * replaces that one function, the records' references

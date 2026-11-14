@@ -40,7 +40,7 @@ export interface GpuDeviceOptions {
   /** Recreate the device automatically after an unexpected loss. Default true. */
   recoverFromLoss?: boolean;
   /**
-   * Which limits the device gets (`gpu/limits.ts`, §13.15). `base` (the
+   * Which limits the device gets (`gpu/limits.ts`, docs/design/gpu-limits-and-capacities.md). `base` (the
    * default): binding counts at the spec defaults, capacities at the
    * adapter's. `minimum`: everything at the spec defaults, to see what the
    * smallest device would. `adapter`: everything raised, for experiments.

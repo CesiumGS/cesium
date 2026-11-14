@@ -383,8 +383,8 @@ export function Precision() {
           One name in the code crosses this line. The catalog's <C>Precision</C>{" "}
           type, with its levels <C>"analytic"</C> and <C>"precise"</C>, chooses
           which model and data answer, so what it sets is accuracy. Values are
-          float64 either way. The name is a candidate for the API review in
-          sub-plan 5i. This handbook calls them levels.
+          float64 either way. The name is a candidate for the public API review
+          (CS-102). This handbook calls them levels.
         </p>
       </Section>
 
@@ -553,7 +553,7 @@ export function Precision() {
           </li>
         </ul>
         <Written
-          from="the overall plan, section 13.37, and spikes/transformGraph.html"
+          from="the design note docs/design/transform-graph.md, and spikes/transformGraph.html"
           on="2026-11-12"
         />
       </Section>

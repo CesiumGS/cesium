@@ -496,12 +496,14 @@ export function Scene() {
       <Section title="What's planned">
         <p>
           The small version is what's built. The architectural review of
-          geometry through placement (overall plan, section 13.26) became the
-          transform graph, which is built: see the{" "}
+          geometry through placement (the design note
+          docs/design/geometry-through-placement-review.md) became the transform
+          graph, which is built: see the{" "}
           <a href="#/transform-graph">Transform graph</a> tab. What's still
-          planned, with no dates, is a brainstorm (section 13.25) on models and
-          per-node transforms as items, the globe as an item, one tileset across
-          worlds, groups and editing, before or with the API review.
+          planned, with no dates, is a brainstorm (the design note
+          docs/design/scene-items.md) on models and per-node transforms as
+          items, the globe as an item, one tileset across worlds, groups and
+          editing, before or with the API review.
         </p>
         <h3>Related work being looked at</h3>
         <p>

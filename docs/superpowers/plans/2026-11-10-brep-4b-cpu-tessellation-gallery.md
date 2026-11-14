@@ -4,11 +4,11 @@
 
 **Goal:** See B-reps on screen before GPU tessellation exists. `tessellateBrep` turns a `BrepForm` into ordinary meshes: shaded faces, plus edges as lines. A gallery example draws step 4's three fixtures with them, and one b-rep that went through the `BENTLEY_brep` glTF path.
 
-**Architecture:** `src/brep/tessellate.ts` is small and kept, but it isn't the reference: SMLib is (§13.33, "SMLib's jobs"), for real models' trims, seams and singular faces, and the exact float64 evaluation is the ground truth for chordal error. This tessellator serves the host path that loads no WebAssembly (`display(tolerance)` and a quick fallback mesh) and this example. The tiler, offline, uses SMLib natively. Each face's parameter domain is tessellated as a grid whose density comes from a chordal-error bound. Triangles whose centre falls outside the trim are dropped, and the edges, drawn on top as lines, hide the jagged trim boundary. Only the example's glue gets replaced at step 5. Placement is an ordinary rigid model matrix, so this doesn't wait for the placement review (§13.26).
+**Architecture:** `src/brep/tessellate.ts` is small and kept, but it isn't the reference: SMLib is ([breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md), "SMLib's jobs"), for real models' trims, seams and singular faces, and the exact float64 evaluation is the ground truth for chordal error. This tessellator serves the host path that loads no WebAssembly (`display(tolerance)` and a quick fallback mesh) and this example. The tiler, offline, uses SMLib natively. Each face's parameter domain is tessellated as a grid whose density comes from a chordal-error bound. Triangles whose centre falls outside the trim are dropped, and the edges, drawn on top as lines, hide the jagged trim boundary. Only the example's glue gets replaced at step 5. Placement is an ordinary rigid model matrix, so this doesn't wait for the placement review ([geometry-through-placement-review.md](../../design/geometry-through-placement-review.md)).
 
 **Tech Stack:** TypeScript, vitest, the engine's `World.addMesh` and `addDraw`, the examples gallery.
 
-**Spec:** `CESIUM2_WEBGPU_PLAN.md` §13.33. Step 4's plan, `docs/superpowers/plans/2026-11-10-brep-4-render-form.md`, defines `BrepForm` (its "The form" section).
+**Spec:** [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md). Step 4's plan, `docs/superpowers/plans/2026-11-10-brep-4-render-form.md`, defines `BrepForm` (its "The form" section).
 
 ## Global Constraints
 

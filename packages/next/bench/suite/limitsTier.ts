@@ -22,7 +22,7 @@ const fromPage = (() => {
 /**
  * The device limits tier Dyno's 2.0 engines are created with: the page's
  * `?limits=`, e.g. `/?limits=minimum#/viewer` to see on this machine what
- * the smallest WebGPU device would (CESIUM2_WEBGPU_PLAN.md §13.15). It is
+ * the smallest WebGPU device would (docs/design/gpu-limits-and-capacities.md). It is
  * kept for the browser tab's session; `?limits=base` goes back. Default
  * `base`.
  */

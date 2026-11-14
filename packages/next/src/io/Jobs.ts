@@ -1,4 +1,4 @@
-// The job system behind the content workers (plan §13.43): jobs with a
+// The job system behind the content workers (docs/design/job-system.md): jobs with a
 // priority, dependencies and cancellation run on the workers, and their
 // main-thread steps run in one apply phase of the engine's loop, within a
 // time budget.
@@ -174,7 +174,7 @@ const abortError = () => new DOMException("Aborted", "AbortError");
 /**
  * Runs jobs on a port's workers. Ready jobs wait in one queue, ordered by
  * priority each time it is read; an idle worker takes the most urgent one,
- * so there is no per-worker queue for another to steal from (§13.43). Each
+ * so there is no per-worker queue for another to steal from (docs/design/job-system.md). Each
  * job's main-thread step runs in `apply`, the engine's apply phase, or at
  * once while no loop has taken the phase (`phased`).
  */

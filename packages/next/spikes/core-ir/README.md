@@ -1,4 +1,4 @@
-# Core IR spike (plan §13.42)
+# Core IR spike ([core-ir.md](../../../../docs/design/core-ir.md))
 
 Spike code for choosing the engine's core IR. Nothing here is part of `@cesium/next`; its dependencies live in this folder's own `package.json`, and nothing was added to the package's.
 

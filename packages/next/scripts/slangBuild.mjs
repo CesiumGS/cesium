@@ -1,5 +1,5 @@
 // Compiles the engine's Slang shaders to the WGSL the engine loads
-// (CESIUM2_WEBGPU_PLAN.md §3.4, "Slang-first, for real", step 2).
+// (docs/design/shaders.md, "Slang-first, for real", step 2).
 //
 //   node scripts/slangBuild.mjs           regenerate src/shaders/generated/
 //   node scripts/slangBuild.mjs --check   fail if any is out of date (CI)
@@ -36,9 +36,21 @@ const SOURCES = join(root, "src");
 const EXAMPLES = join(root, "examples");
 export const GENERATED = join(root, "src", "shaders", "generated");
 /** The TypeScript layouts, from `layouts.slang`'s reflection. */
-export const LAYOUTS_TS = join(root, "src", "render", "generated", "layouts.ts");
+export const LAYOUTS_TS = join(
+  root,
+  "src",
+  "render",
+  "generated",
+  "layouts.ts",
+);
 /** The surface boundary's description, from reflection (`boundaryTs`). */
-export const BOUNDARY_TS = join(root, "src", "shaders", "generated", "boundary.ts");
+export const BOUNDARY_TS = join(
+  root,
+  "src",
+  "shaders",
+  "generated",
+  "boundary.ts",
+);
 /**
  * Where `import name;` looks: the folders holding modules (the shaders',
  * the atmosphere's), then the source tree.
@@ -105,9 +117,9 @@ export function definesEntryPoints(path) {
 
 /** The modules a source imports (`import name;`), by name. */
 function imports(path) {
-  return [...readFileSync(path, "utf8").matchAll(/^\s*import\s+([\w.]+)\s*;/gm)].map(
-    (m) => m[1],
-  );
+  return [
+    ...readFileSync(path, "utf8").matchAll(/^\s*import\s+([\w.]+)\s*;/gm),
+  ].map((m) => m[1]);
 }
 
 /** Entry sources that use `changed` (itself, or through imports). */
@@ -124,8 +136,7 @@ export function dependents(changed, sources = slangSources()) {
       }
       const usesAffected = names.some(
         (n) =>
-          n === name ||
-          [...affected].some((a) => basename(a, ".slang") === n),
+          n === name || [...affected].some((a) => basename(a, ".slang") === n),
       );
       if (usesAffected) {
         affected.add(source);
@@ -150,13 +161,19 @@ function header(source) {
 }
 
 /** slangc's output, as the checked-in files hold it: LF (slangc writes CRLF on Windows). */
-const slangOutput = (path) => readFileSync(path, "utf8").replaceAll("\r\n", "\n");
+const slangOutput = (path) =>
+  readFileSync(path, "utf8").replaceAll("\r\n", "\n");
 
 /**
  * Compiles one entry source into `outDir`: `<name>.wgsl` and
  * `<name>.json`. Throws with slangc's messages on an error.
  */
-export function compile(slangc, source, outDir = outDirFor(source), includes = []) {
+export function compile(
+  slangc,
+  source,
+  outDir = outDirFor(source),
+  includes = [],
+) {
   if (isPostStage(source)) {
     return compilePostStage(slangc, source, outDir, includes);
   }
@@ -285,22 +302,22 @@ function compilePostStage(slangc, source, outDir, includes) {
       { stdio: ["ignore", "pipe", "pipe"] },
     );
     const text = slangOutput(wgsl);
-    const stub = /^@fragment\nfn postStageStub\(\)\n\{\n    return;\n\}\n/m;
+    const stub = /^@fragment\nfn postStageStub\(\)\n\{\n {4}return;\n\}\n/m;
     if (!stub.test(text)) {
       throw new Error("the stub entry point isn't where the build cuts it");
     }
     mkdirSync(outDir, { recursive: true });
     writeFileSync(
       join(outDir, `${name}.wgsl`),
-      header(source) + text.replace(stub, "") + "\n" + POST_ADAPTER,
+      `${header(source) + text.replace(stub, "")}\n${POST_ADAPTER}`,
     );
     writeFileSync(
       join(outDir, `${name}.json`),
-      JSON.stringify(
+      `${JSON.stringify(
         postStageLayout(JSON.parse(slangOutput(json)), source),
         null,
         2,
-      ) + "\n",
+      )}\n`,
     );
   } catch (e) {
     const message = String(e.stderr ?? e.message).trim();
@@ -348,13 +365,20 @@ ${blocks.join("\n\n")}
 /** A reflected type as WGSL writes it; a struct by its name. */
 function wgslType(type) {
   const scalar = (t) =>
-    ({ float32: "f32", uint32: "u32", int32: "i32", bool: "bool" })[t.scalarType];
+    ({ float32: "f32", uint32: "u32", int32: "i32", bool: "bool" })[
+      t.scalarType
+    ];
   switch (type.kind) {
     case "scalar":
       return { type: scalar(type) };
     case "vector": {
       const s = scalar(type.elementType);
-      return { type: s === "bool" ? `vec${type.elementCount}<bool>` : `vec${type.elementCount}${s[0]}` };
+      return {
+        type:
+          s === "bool"
+            ? `vec${type.elementCount}<bool>`
+            : `vec${type.elementCount}${s[0]}`,
+      };
     }
     case "matrix":
       return { type: `mat${type.columnCount}x${type.rowCount}f` };
@@ -371,7 +395,10 @@ function reflectedStructs(reflection) {
   for (const parameter of reflection.parameters) {
     const struct = parameter.type.resultType ?? parameter.type.elementType;
     if (struct?.kind === "struct") {
-      structs[struct.name] = struct.fields.map((f) => ({ name: f.name, ...wgslType(f.type) }));
+      structs[struct.name] = struct.fields.map((f) => ({
+        name: f.name,
+        ...wgslType(f.type),
+      }));
     }
   }
   return structs;
@@ -388,18 +415,28 @@ async function contractReflection(slangc) {
   try {
     writeFileSync(
       join(temp, "cesium.slang"),
-      cesiumModule(readFileSync(join(root, "src", "shaders", "cesium.slang"), "utf8"), {
-        attributes: {},
-        metadata: {},
-      }),
+      cesiumModule(
+        readFileSync(join(root, "src", "shaders", "cesium.slang"), "utf8"),
+        {
+          attributes: {},
+          metadata: {},
+        },
+      ),
     );
-    const names = ["VertexInput", "VertexOutput", "FragmentInput", "MaterialOutput"];
+    const names = [
+      "VertexInput",
+      "VertexOutput",
+      "FragmentInput",
+      "MaterialOutput",
+    ];
     const entry = join(temp, "contract.slang");
     writeFileSync(
       entry,
       [
         "import cesium;",
-        ...names.map((n, i) => `[[vk::binding(${i}, 0)]] StructuredBuffer<${n}> b${i};`),
+        ...names.map(
+          (n, i) => `[[vk::binding(${i}, 0)]] StructuredBuffer<${n}> b${i};`,
+        ),
         `[[vk::binding(${names.length}, 0)]] RWStructuredBuffer<float> out;`,
         '[shader("compute")] [numthreads(1, 1, 1)] void contract() {',
         `  out[0] = b0[0].time + b1[0].positionMC.x + b2[0].time + b3[0].alpha;`,
@@ -416,7 +453,7 @@ async function contractReflection(slangc) {
 }
 
 /**
- * The surface boundary's description (plan §3.4, step 5): the structs that
+ * The surface boundary's description (docs/design/shaders.md, step 5): the structs that
  * cross it, field by field in order with their WGSL types, from Slang's
  * reflection: the engine's (`boundary.slang`, surfaceBoundary.slang's) and
  * the custom shader contract's (cesium.slang). CustomShader.ts and
@@ -465,19 +502,26 @@ async function main() {
   if (!check) {
     for (const source of sources) {
       compile(slangc, source);
-      console.log(`${relative(root, source)} → ${relative(root, outDirFor(source))}/${basename(source, ".slang")}.wgsl`);
+      console.log(
+        `${relative(root, source)} → ${relative(root, outDirFor(source))}/${basename(source, ".slang")}.wgsl`,
+      );
       if (basename(source) === "layouts.slang") {
         mkdirSync(dirname(LAYOUTS_TS), { recursive: true });
         writeFileSync(
           LAYOUTS_TS,
-          await layoutsTs(readFileSync(join(GENERATED, "layouts.json"), "utf8")),
+          await layoutsTs(
+            readFileSync(join(GENERATED, "layouts.json"), "utf8"),
+          ),
         );
         console.log("  → src/render/generated/layouts.ts");
       }
       if (basename(source) === "boundary.slang") {
         writeFileSync(
           BOUNDARY_TS,
-          await boundaryTs(slangc, readFileSync(join(GENERATED, "boundary.json"), "utf8")),
+          await boundaryTs(
+            slangc,
+            readFileSync(join(GENERATED, "boundary.json"), "utf8"),
+          ),
         );
         console.log("  → src/shaders/generated/boundary.ts");
       }
@@ -494,21 +538,32 @@ async function main() {
         const file = `${basename(source, ".slang")}${ext}`;
         const fresh = readFileSync(join(temp, file), "utf8");
         const keptAt = join(outDirFor(source), file);
-        const kept = existsSync(keptAt) ? readFileSync(keptAt, "utf8") : undefined;
+        const kept = existsSync(keptAt)
+          ? readFileSync(keptAt, "utf8")
+          : undefined;
         if (fresh !== kept) {
           stale.push(file);
         }
       }
       if (basename(source) === "layouts.slang") {
-        const fresh = await layoutsTs(readFileSync(join(temp, "layouts.json"), "utf8"));
-        const kept = existsSync(LAYOUTS_TS) ? readFileSync(LAYOUTS_TS, "utf8") : undefined;
+        const fresh = await layoutsTs(
+          readFileSync(join(temp, "layouts.json"), "utf8"),
+        );
+        const kept = existsSync(LAYOUTS_TS)
+          ? readFileSync(LAYOUTS_TS, "utf8")
+          : undefined;
         if (fresh !== kept) {
           stale.push("src/render/generated/layouts.ts");
         }
       }
       if (basename(source) === "boundary.slang") {
-        const fresh = await boundaryTs(slangc, readFileSync(join(temp, "boundary.json"), "utf8"));
-        const kept = existsSync(BOUNDARY_TS) ? readFileSync(BOUNDARY_TS, "utf8") : undefined;
+        const fresh = await boundaryTs(
+          slangc,
+          readFileSync(join(temp, "boundary.json"), "utf8"),
+        );
+        const kept = existsSync(BOUNDARY_TS)
+          ? readFileSync(BOUNDARY_TS, "utf8")
+          : undefined;
         if (fresh !== kept) {
           stale.push("src/shaders/generated/boundary.ts");
         }
@@ -516,13 +571,19 @@ async function main() {
     }
     // Generated files without a source any more.
     const expected = new Set(
-      sources.filter((s) => outDirFor(s) === GENERATED).flatMap((s) => {
-        const n = basename(s, ".slang");
-        return [`${n}.wgsl`, `${n}.json`];
-      }),
+      sources
+        .filter((s) => outDirFor(s) === GENERATED)
+        .flatMap((s) => {
+          const n = basename(s, ".slang");
+          return [`${n}.wgsl`, `${n}.json`];
+        }),
     );
     for (const file of existsSync(GENERATED) ? readdirSync(GENERATED) : []) {
-      if (!expected.has(file) && file !== "README.md" && file !== "boundary.ts") {
+      if (
+        !expected.has(file) &&
+        file !== "README.md" &&
+        file !== "boundary.ts"
+      ) {
         stale.push(`${file} (no source)`);
       }
     }
@@ -535,9 +596,14 @@ async function main() {
     );
     process.exit(1);
   }
-  console.log(`${sources.length} generated shaders up to date (slangc ${SLANG_VERSION}).`);
+  console.log(
+    `${sources.length} generated shaders up to date (slangc ${SLANG_VERSION}).`,
+  );
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (
+  process.argv[1] &&
+  resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   await main();
 }

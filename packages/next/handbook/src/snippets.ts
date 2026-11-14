@@ -136,6 +136,6 @@ export const TASKS: readonly Task[] = [
     group: "entities",
     note: "1.x loads it as entities.",
     noNext:
-      "No 2.0 equivalent yet. CZML, KML and GeoJSON are outside the proof of concept (the overall plan, section 1).",
+      "No 2.0 equivalent yet. CZML, KML and GeoJSON are outside the proof of concept (the overview's goal (CESIUM2_WEBGPU_PLAN.md)).",
   },
 ];

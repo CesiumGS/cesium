@@ -375,7 +375,7 @@ const goals = (): readonly Goal[] => [
         "built",
         "A shader that fails to link falls back to the engine's, with the error reported.",
       ],
-      ["planned", "The API review (plan 5i), so names can still change."],
+      ["planned", "The public API review (CS-102), so names can still change."],
     ],
     tab: "api",
     tabLabel: "Public API",
@@ -386,7 +386,7 @@ const goals = (): readonly Goal[] => [
     sentence:
       "Parity against 1.x, benchmarks and image regression, so claims have numbers.",
     state: "measured",
-    oneX: "1.x's own test suite and years of production use are what make it a useful oracle. The parity tests compare against it, and building 2.0 this way turned up follow-ups for 1.x, in the plan's section 14.",
+    oneX: "1.x's own test suite and years of production use are what make it a useful oracle. The parity tests compare against it, and building 2.0 this way turned up follow-ups for 1.x, tracked as work items for other teams (project CS-19 in packages/next/work).",
     today: [
       [
         "built",

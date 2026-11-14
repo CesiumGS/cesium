@@ -85,7 +85,7 @@ function readManifest(
 }
 
 /**
- * Builds: refuse to emit a sky data pack that isn't cleared (§13.29). A
+ * Builds: refuse to emit a sky data pack that isn't cleared (docs/decisions/2026-11-08-owners-calls-for-later-plans.md). A
  * JSON asset with a manifest's shape (`format`, `points`, `background`) is a
  * manifest; any asset that starts with a pack's magic, whatever its name, is
  * a pack file, and so is a chunk that inlines one as base64. The build
@@ -117,7 +117,7 @@ export function skyPackGuard(): Plugin {
         }
       }
       const rule =
-        "§13.29 keeps sky data out of builds unless its manifest says distributable: true with a complete clearance (by, date, note)";
+        "docs/decisions/2026-11-08-owners-calls-for-later-plans.md keeps sky data out of builds unless its manifest says distributable: true with a complete clearance (by, date, note)";
       for (const [file, m] of manifests) {
         if (!m.cleared) {
           this.error(`sky pack "${m.name}" (${file}) is not cleared: ${rule}.`);

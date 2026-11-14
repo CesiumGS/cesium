@@ -1,4 +1,4 @@
-// Open CASCADE's b-reps as the engine's render form (overall plan §13.33):
+// Open CASCADE's b-reps as the engine's render form (docs/design/breps-and-geometry-queries.md):
 // the CSG sample's second kernel, beside SMLib (smlib.ts). OCCT is replicad's
 // WebAssembly build of OpenCascade.js, LGPL 2.1: a separate module
 // (scripts/occtTools.mjs fetches it; the dev server serves it at /occt/),

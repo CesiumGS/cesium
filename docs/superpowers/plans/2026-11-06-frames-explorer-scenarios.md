@@ -298,7 +298,7 @@ The diagnosis was made in a browser on 5190 (ledger, 2026-11-06). In one-path, w
 - [ ] **Step 4: Measure again** in the browser, with the same protocol (1 h/s, slow rotation, 10 s). The target is no once-a-second bursts, and slow frames at the paused baseline (about 1%). Report before and after numbers.
 - [ ] **Step 5: Run** the gates (`npm test`, `npm run test:data` with 225 results and unchanged fingerprints, tsc, lint), then commit with "examples: frames explorer: the tree's values update in place while the clock plays (no once-a-second rebuild)".
 
-The library-level design (revisions, cheap synchronous queries and budgeted async ones) is plan 5 (CESIUM2_WEBGPU_PLAN.md §13.14). This task fixes the example only.
+The library-level design (revisions, cheap synchronous queries and budgeted async ones) is plan 5 ([bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)). This task fixes the example only.
 
 ### Task 5: Terrain line of sight (library)
 
@@ -330,7 +330,7 @@ The library-level design (revisions, cheap synchronous queries and budgeted asyn
 
 ### Task 5b: Line of sight as a ray query against the drawn terrain (owner, 2026-11-06)
 
-The owner, on Task 5's stepped version: "isn't this a ray tracing query?" Yes. Task 5 marches along the ray at a fixed step against a height sampler, so it carries a step error and can miss features narrower than the step. CESIUM2_WEBGPU_PLAN.md §13.10 already describes the exact version: each loaded terrain tile keeps its drawn triangles on the CPU, so a ray can be traced through them exactly. "Rebuild it now."
+The owner, on Task 5's stepped version: "isn't this a ray tracing query?" Yes. Task 5 marches along the ray at a fixed step against a height sampler, so it carries a step error and can miss features narrower than the step. [ray-queries-and-path-tracing.md](../../design/ray-queries-and-path-tracing.md) already describes the exact version: each loaded terrain tile keeps its drawn triangles on the CPU, so a ray can be traced through them exactly. "Rebuild it now."
 
 **Files:**
 
@@ -346,7 +346,7 @@ The owner, on Task 5's stepped version: "isn't this a ray tracing query?" Yes. T
 - **Unknown stays unknown.** Spans where no tile is loaded, or the loaded tile is only an ancestor placeholder (the brief may call this state "not refined"), make `clear: undefined` and add to `unknownFraction` by length. A blocking hit found anywhere still makes `clear: false`.
 - **Accuracy.** The note states the terrain's own accuracy at the levels the ray crossed. Coarse tiles widen it, using the level's geometric error. It never claims more than the data supports.
 - **Fallback.** Keep the sampler-based path only if a caller still needs it, such as tests or heights with no tiles, and label it plainly as approximate. The page uses the ray path.
-- **Buildings and BIM.** 3D Tiles are out of scope. They need the GPU ray API in §13.10. Leave one clear extension point, and a comment pointing at §13.10.
+- **Buildings and BIM.** 3D Tiles are out of scope. They need the GPU ray API in [ray-queries-and-path-tracing.md](../../design/ray-queries-and-path-tracing.md). Leave one clear extension point, and a comment pointing at [ray-queries-and-path-tracing.md](../../design/ray-queries-and-path-tracing.md).
 - **Performance.** A 40 km ray over loaded tiles should take well under a frame. Report a measured time, from Node or a microbenchmark.
 
 - [ ] **Step 1: Write failing tests** with synthetic tiles: a small grid mesh shaped as a hill, a narrow ridge one cell wide, a gap with no tile, and a coarse ancestor-only span. Check:
@@ -543,8 +543,8 @@ The owner: "Proof" overclaims. Most checks are verification: they compare the co
         - An unbounded edge makes the total unbounded and names that edge. It is never dropped.
         - This generalises the example's `accuracyOf`, which moves into it.
       - The arm, and the scenarios already on screen, use it. The answer names the dominant term. Test it against hand computations: two arm poses, plus earth-turns' existing angular case.
-      - Confidence levels, correlated terms and per-direction error ellipsoids are plan 5 (CESIUM2_WEBGPU_PLAN.md §13.14). Don't build them here; mark every value as 1σ for now, as the example already does.
-  - **Library gaps:** record any in the report and in CESIUM2_WEBGPU_PLAN.md §13.14 "Carried forward". Implement one only if it is small and the scenario can't be honest without it, and ledger the ruling. Candidates:
+      - Confidence levels, correlated terms and per-direction error ellipsoids are plan 5 ([bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)). Don't build them here; mark every value as 1σ for now, as the example already does.
+  - **Library gaps:** record any in the report and in [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md) "Carried forward". Implement one only if it is small and the scenario can't be honest without it, and ledger the ruling. Candidates:
     - a revision or change signal, so a state-dependent frame can stay cached and the renderer knows to redraw;
     - velocities (plan 3).
 - **robot-arm:**
@@ -625,7 +625,7 @@ The owner: "Proof" overclaims. Most checks are verification: they compare the co
 
 ### Task 10: Docs
 
-**Files:** `CESIUM2_WEBGPU_PLAN.md` §13.14, `packages/next/README.md`.
+**Files:** [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md), `packages/next/README.md`.
 
 - [ ] **Step 1: Write a "Frames explorer scenarios" results note:**
   - the eleven scenarios and their trees;

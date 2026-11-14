@@ -8,7 +8,7 @@ import { fakeEngine } from "./fakeGpu.ts";
 import { RAY_MODULES, rayBypasses, rayProgram } from "./raySeam.ts";
 
 /**
- * Seams for later WebGPU features (CESIUM2_WEBGPU_PLAN.md §7.1's bindless
+ * Seams for later WebGPU features (docs/design/risks.md, "Bindless textures: not in the PoC, designed for in 2.0"'s bindless
  * pattern: design for it, don't build it; plan 5a's call 37). Each is one
  * place every caller goes through, so the feature replaces an emulation
  * there rather than call sites:

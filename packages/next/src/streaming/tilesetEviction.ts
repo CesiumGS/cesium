@@ -38,7 +38,7 @@ export interface TilesetEviction extends Pick<
 
 /**
  * World pool pressure (World.pressure) past which streaming evicts as if
- * over its byte budget (§13.15).
+ * over its byte budget (docs/design/gpu-limits-and-capacities.md).
  */
 const CAPACITY_PRESSURE = 0.9;
 

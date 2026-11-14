@@ -34,7 +34,7 @@ It also fetches the Slang toolchain, pinned to one release in
 `node scripts/slangTools.mjs` fetches just these. `SLANGC` and
 `SLANG_WASM_DIR` still point elsewhere if set.
 
-**SMLib in WebAssembly** (plan §13.33). `setup` fetches NVIDIA's usd-brep at
+**SMLib in WebAssembly** ([breps-and-geometry-queries.md](../../docs/design/breps-and-geometry-queries.md)). `setup` fetches NVIDIA's usd-brep at
 one commit (SMLib and its SM_API) and emsdk at one version (about 750 MB),
 both pinned in `scripts/smlibTools.mjs`, into `~/.cesium-bench/smlib` and
 `~/.cesium-bench/emsdk`. It builds `smlib.mjs` and `smlib.wasm` there, which
@@ -46,7 +46,7 @@ build and converts its solids to `BrepForm`; the dev server serves it at
 measures size, startup, tessellation and a boolean. `SMLIB_DIR` points at
 another build.
 
-**Open CASCADE in WebAssembly** (plan §13.33, the CSG sample's second kernel).
+**Open CASCADE in WebAssembly** ([breps-and-geometry-queries.md](../../docs/design/breps-and-geometry-queries.md), the CSG sample's second kernel).
 `setup` also fetches replicad's OpenCascade.js build (`replicad-opencascadejs`,
 one npm version pinned in `scripts/occtTools.mjs` and checked against its
 integrity hash, about 20 MB) into `~/.cesium-bench/occt`. Only the
@@ -57,7 +57,7 @@ to `BrepForm`. Check the licence before distributing anything built with it.
 `node scripts/occtTools.mjs` fetches it alone, and `OCCT_DIR` points at
 another copy.
 
-**NIST STEP test models** (plan §13.33, the first-look example's "STEP file"
+**NIST STEP test models** ([breps-and-geometry-queries.md](../../docs/design/breps-and-geometry-queries.md), the first-look example's "STEP file"
 scene). `setup` also fetches four parts of NIST's MBE PMI test models (the
 geometry-only STEP AP203 files of FTC-06, FTC-10, FTC-11 and CTC-05, 0.9 MB) from
 NIST's official zip on nist.gov (about 14 MB to fetch, `scripts/stepSamples.mjs`

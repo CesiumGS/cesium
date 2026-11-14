@@ -1,4 +1,4 @@
-// The kernel worker's `evaluate` request (plan §13.33, the CSG sample), in
+// The kernel worker's `evaluate` request (docs/design/breps-and-geometry-queries.md, the CSG sample), in
 // process over fake kernels that record their calls (the real ones are in
 // test/data/csgKernels.test.ts): a recipe is folded left to right in each
 // kernel's own way, leaves are made, placed and tagged in that order, every

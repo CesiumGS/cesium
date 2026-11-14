@@ -38,7 +38,7 @@ export type {
 } from "./uniforms.ts";
 
 /**
- * A user's shader stages for models and tilesets (plan §3.4, "Custom
+ * A user's shader stages for models and tilesets (docs/design/shaders.md, "Custom
  * shading"): WGSL against the contract (`VertexInput`, `VertexOutput`,
  * `FragmentInput`, generated here with the shader's own types, and the
  * engine's `MaterialOutput`), named as CesiumJS 1.x `CustomShader`'s:
@@ -465,7 +465,7 @@ export class CustomShader {
   /** Unique per shader object; batches key on it (0: the default). */
   readonly id = nextId++;
   /**
-   * Its compilation units (plan §3.4, step 5), linked after the engine's
+   * Its compilation units (docs/design/shaders.md, step 5), linked after the engine's
    * surface units: its stages (defaults filled in), the contract and its
    * named values' code, its uniforms' bindings.
    */
@@ -478,7 +478,7 @@ export class CustomShader {
   readonly uniformLayout: UniformLayout;
   /**
    * Reads metadata per fragment (`readFragmentProperty`), so its pipelines
-   * bind the texture set's property textures; others don't (§13.15).
+   * bind the texture set's property textures; others don't (docs/design/gpu-limits-and-capacities.md).
    */
   get readsPropertyTextures(): boolean {
     return this.code.includes("readFragmentProperty(");

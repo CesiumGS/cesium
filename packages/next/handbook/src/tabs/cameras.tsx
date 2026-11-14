@@ -169,7 +169,7 @@ export function Cameras() {
           from uniforms, is follow-up task 11 in the transform graph plan.
         </p>
         <Written
-          from="the overall plan, section 13.37, and the transform graph plan's task 11"
+          from="the design note docs/design/transform-graph.md, and the transform graph plan's task 11"
           on="2026-11-12"
         />
       </Section>

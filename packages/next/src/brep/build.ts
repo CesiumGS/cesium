@@ -1,4 +1,4 @@
-// A builder for the b-rep render form (overall plan §13.33). A host writes
+// A builder for the b-rep render form (docs/design/breps-and-geometry-queries.md). A host writes
 // surfaces, vertices, edges and faces by name, and the builder does the
 // offset counting: it splits NURBS into rational Bézier segments and patches
 // exactly, and lays every array out as the form fixes. Lengths are metres and

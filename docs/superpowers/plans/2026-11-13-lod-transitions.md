@@ -1,6 +1,6 @@
 # Level-of-detail transitions: coarsening, and 3D Tiles both ways
 
-**Status (2026-11-13):** design, reviewed and merged. The owner answered seven questions on 2026-11-13 (recorded under "Decisions") and accepted the plan with two additions at review: retargeting runs on the job system, and the clock rebase moves into milestone 1. Its milestones are in `CESIUM2_WEBGPU_PLAN.md` §6, M9. Nothing is built yet.
+**Status (2026-11-13):** design, reviewed and merged. The owner answered seven questions on 2026-11-13 (recorded under "Decisions") and accepted the plan with two additions at review: retargeting runs on the job system, and the clock rebase moves into milestone 1. Its milestones are in project CS-14. Nothing is built yet.
 
 **Goal:** nothing pops when a level of detail changes, except the very first load. Today terrain morphs in and imagery cross-fades when they refine. This plan adds:
 
@@ -11,7 +11,7 @@
 **Sources:**
 
 - The transform-graph plan (`2026-11-12-transform-graph.md`): fix 8 (transitions) and "What the ×10 views showed".
-- `CESIUM2_WEBGPU_PLAN.md` §3.7 ("cross-fade or dither transitions, budgeting for the overlap"), §13.1 ("dithered cross-fades for whole-region swaps"), §13.5 ("Stability") and §13.41 item 7 (refinement as a general concept, of which transitions are one source).
+- [architecture.md](../../design/architecture.md), "Unified streaming and tile selection (streaming/)" ("cross-fade or dither transitions, budgeting for the overlap"), [tile-selection-and-memory.md](../../design/tile-selection-and-memory.md), "Mixed-LOD drawing" ("dithered cross-fades for whole-region swaps"), [tile-selection-and-memory.md](../../design/tile-selection-and-memory.md), "Visual quality signals beyond geometric error" ("Stability") and [investigations-2026-11-13.md](../../design/investigations-2026-11-13.md) item 7 (refinement as a general concept, of which transitions are one source).
 
 > **For agentic workers:** execute milestone by milestone, with a fresh implementer per milestone. Verification is lean, as in the transform-graph plan: typecheck, eslint and prettier on the files changed, the milestone's own tests, and at most one headless check. The lead runs the full suite and the parity suites once before each merge. Name code by symbol (`grep -rn "function startMorphs" packages/next/src`). Start each milestone with `git status` for the files it changes.
 
@@ -113,7 +113,7 @@ Coarsening needs a tile to stay drawn after selection drops it. This is one mech
 - **Occlusion:** a tile coarsened because it was hidden long enough (the occlusion session's work) pops by the hidden rule, as it can't be seen. Leaving tiles aren't queried.
 - **Mixed-LOD placeholders:** a leaving child counts as present for its parent's placeholder clip. The parent's holes don't open where a child is still leaving; they close as each child is released.
 - **Debug view:** the tile-state view (`View.debug` "state") gains `leaving` and `arriving` colours beside drawn, placeholder, stand-in, held and hidden.
-- **The loop:** while any tile is transitioning, the on-demand loop keeps ticking (today's `morph` wake reason, renamed `transition`), and `view.refinement` lists it as a source once §13.41 item 7 lands.
+- **The loop:** while any tile is transitioning, the on-demand loop keeps ticking (today's `morph` wake reason, renamed `transition`), and `view.refinement` lists it as a source once [investigations-2026-11-13.md](../../design/investigations-2026-11-13.md) item 7 lands.
 
 ### 3. Terrain coarsening: morph back
 
@@ -122,7 +122,7 @@ Coarsening needs a tile to stay drawn after selection drops it. This is one mech
   - The child's d is recomputed against the destination's resident `heights`, in the decode worker, with the same code `morphRequest` uses (`MorphSource`: the ancestor's heights, scale and quadrant).
   - The new `(n̂, d)` stream is rewritten into the arena in place (16 bytes a vertex; a level-15 tile is about 65 KB).
   - The child stays drawn and selected-looking until it lands, a tick or two. That's invisible: the picture doesn't change while it waits. A request older than one transition gives up and pops (counted as `skipped: retarget`).
-  - **On the job system** (§13.43, owner at review): the recompute is a `Jobs` job with the decode workers' group, prioritised by the swap's screen error, with an apply step that writes the stream into the arena. The give-up rule is its cancellation, as is the child's release or a reversal; the inspector's Jobs section shows it.
+  - **On the job system** ([job-system.md](../../design/job-system.md), owner at review): the recompute is a `Jobs` job with the decode workers' group, prioritised by the swap's screen error, with an apply step that writes the stream into the arena. The give-up rule is its cancellation, as is the child's release or a reversal; the inspector's Jobs section shows it.
 - **Tiles with no morph data** (parent not resident at decode): a dither fade both ways, with the `dither` flag. Upsampled tiles keep no geometry change to hide (they are their source's surface, cut smaller), so only their imagery changes, which the imagery fade covers.
 - **Skirts** move with the morph, as they do on morph-in (they share `morphOf`).
 - **Neighbours at different progress** leave small cracks for a moment, as morph-in does; skirts cover them.
@@ -163,7 +163,7 @@ Three cases.
 - **ADD, refining:** a child's content fades in over its parent, which stays.
 - **ADD, coarsening:** a child's content fades out (held by the leaving set) over what stays.
 - **The first content of a tileset pops** (decision 2): a tile with no drawn ancestor and nothing drawn in its place doesn't fade in.
-- **Instanced and point-set content** (`I3DM`, point clouds) fade per record, as meshes. Gaussian splats, when they land, fade by opacity: they're blended already, and the splat session decides (§13.41, M6).
+- **Instanced and point-set content** (`I3DM`, point clouds) fade per record, as meshes. Gaussian splats, when they land, fade by opacity: they're blended already, and the splat session decides ([investigations-2026-11-13.md](../../design/investigations-2026-11-13.md), M6).
 
 **Passes (decision 4).**
 
@@ -177,7 +177,7 @@ Three cases.
 
 **GPU cost, and on tile-based GPUs.**
 
-- **Vertex and rasterization cost:** both levels for one transition, as §3.7 budgets ("the overlap of two tiles drawn at once"). Fragment shading isn't doubled: the opaque pass shades only kept fragments.
+- **Vertex and rasterization cost:** both levels for one transition, as [architecture.md](../../design/architecture.md), "Unified streaming and tile selection (streaming/)" budgets ("the overlap of two tiles drawn at once"). Fragment shading isn't doubled: the opaque pass shades only kept fragments.
 - **Discard defeats early depth tests,** on immediate-mode GPUs (late Z for that pipeline) and on tile-based GPUs (Apple's hidden-surface removal can't reject a discarding fragment before it runs).
 - **It's already paid in the prepass:** the prepass fragment stages discard today for placeholders and cutouts, so the dither adds no new class of pipeline. It adds a uniform per-draw branch (the word is per record), and discards only for fading draws.
 - **Mitigations, in order:**
@@ -223,7 +223,7 @@ Three cases.
 
 ## Milestones
 
-Sized for one agent each. Each lands on the proof-of-concept branch with its tests; the lead runs the suites once per merge. The overall plan names them LT-1 to LT-8 (§6, M9).
+Sized for one agent each. Each lands on the proof-of-concept branch with its tests; the lead runs the suites once per merge. The overall plan names them CS-121, CS-122, CS-123, CS-124, CS-125, CS-126, CS-127, CS-128 and CS-133 (project CS-14).
 
 1. **The word, the flag, the rename.** `morph` → `transition` in `common.slang`, `layout.ts`, `drawConstants.ts`; signed start; `RecordFlags.ditherTransition`; `morphOf` reads the sign; the clock's epoch rebase (section 1, with a test that a transition spanning a rebase stays continuous); `View.lodTransitions` `"smooth" | "pop"`; `&lod=` values; `api/surface.txt`. `tileMorph.ts` → `transitions.ts` with reversal math and tests (`morphFactor` continuous across a reversal). No behaviour change beyond the names. *Model: fast.*
 2. **The leaving set** (section 2), with terrain morph-back for the common case (destination = the decode-time ancestor), skip rules, chaining, the memory rule, `stats.transitions`, the placeholder rule and the debug state. Tests with `test/fakeGpu.ts`: a coarsening holds the children for one transition, then releases them; hidden and off-screen children pop; a reversal keeps the tile. *Model: most capable (design-heavy, touches selection output).*

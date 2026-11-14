@@ -1,4 +1,4 @@
-// The drawn distance (CESIUM2_WEBGPU_PLAN.md §13.26, the owner's answer 6): the
+// The drawn distance (docs/design/geometry-through-placement-review.md, the owner's answer 6): the
 // one question that is about the drawing, in the view's render space, under a
 // name that can't be mistaken for a true distance. What a vector style needs
 // (dash lengths, label spacing, symbol density in what is on the screen).

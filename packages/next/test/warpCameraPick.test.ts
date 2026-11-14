@@ -1,4 +1,4 @@
-// The engine's gaps the "Vertical exaggeration" example found (plan §13.26):
+// The engine's gaps the "Vertical exaggeration" example found (docs/design/geometry-through-placement-review.md):
 // a pick carries the route it was drawn by, so a slider that moves before it
 // resolves doesn't change its true point; `View.toPixel` carries a point of an
 // anchor through the view's route; a view on ITRF re-roots onto a frame

@@ -1,4 +1,4 @@
-// SMLib's solids as render forms (plan §13.33, the CSG spike): the build in
+// SMLib's solids as render forms (docs/design/breps-and-geometry-queries.md, the CSG spike): the build in
 // the store (npm run setup) converts primitives and booleans, and each form
 // validates, faces outward, and keeps the tags of the faces it came from.
 import { join } from "node:path";

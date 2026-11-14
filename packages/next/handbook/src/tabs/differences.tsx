@@ -238,7 +238,10 @@ export function Differences() {
           ]}
           rows={CHOICES}
         />
-        <Written from="the overall plan, section 8" on="2026-11-08" />
+        <Written
+          from="the decision record docs/decisions/r4-owner-decisions.md"
+          on="2026-11-08"
+        />
       </Section>
 
       <Section title="What 2.0 doesn't do yet">
@@ -258,8 +261,8 @@ export function Differences() {
         />
         <p className="provenance">
           Read from the loaders' supported lists in the code on 2026-11-12. The
-          overall plan's section 4.1 table, from revision r33, says more is
-          planned than this lists.
+          extension table in <C>docs/design/parity.md</C>, from revision r33,
+          says more is planned than this lists.
         </p>
       </Section>
 
@@ -274,7 +277,8 @@ export function Differences() {
           ))}
         </ul>
         <p>
-          Details are in the overall plan's section 14 and{" "}
+          Details are in the follow-up items for other teams (project CS-19 in{" "}
+          <C>packages/next/work/</C>) and{" "}
           <C>packages/next/docs/clamping-1x-spec.md</C>.
         </p>
         <h3>Worth backporting to 1.x</h3>

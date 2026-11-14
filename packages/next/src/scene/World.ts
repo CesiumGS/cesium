@@ -585,7 +585,7 @@ export class World {
    * How full the fullest pool is (0 to 1) and which it is: tables against
    * their ceilings, the arenas by bytes. Streaming evicts as it does over its
    * byte budget once this passes a threshold, so uploads rarely meet a full
-   * pool (CESIUM2_WEBGPU_PLAN.md §13.15, "Capacity in the residency
+   * pool (docs/design/gpu-limits-and-capacities.md, "Capacity in the residency
    * budget").
    */
   pressure(): { fraction: number; pool: string } {
@@ -668,7 +668,7 @@ export class World {
   }
 
   /**
-   * @internal Provisional (CESIUM2_WEBGPU_PLAN.md §13.33, step 5, part 1).
+   * @internal Provisional (docs/design/breps-and-geometry-queries.md, step 5, part 1).
    * A b-rep's patches as a mesh: the span records and control points
    * `packGpuPatches` makes, in the arena. A draw of it (`addDraw`) is
    * diced per view on the GPU into chunks of 4 × 4 cells (dice.slang) and
@@ -738,7 +738,7 @@ export class World {
   }
 
   /**
-   * @internal Provisional (CESIUM2_WEBGPU_PLAN.md §13.33, step 5, part 2).
+   * @internal Provisional (docs/design/breps-and-geometry-queries.md, step 5, part 2).
    * A b-rep solid in this world: every face the GPU can evaluate as a patch
    * draw diced per view in pixels of error (`errorPixels`), faces that are
    * complete as their (u, v) rect (a box's, a cylinder's side) in one draw and
@@ -784,7 +784,7 @@ export class World {
 
   /**
    * Adds a material to the table and returns its index. Materials are
-   * immutable and shared by content (§13.15, "Shared materials"): a record
+   * immutable and shared by content (docs/design/gpu-limits-and-capacities.md, "Shared materials"): a record
    * equal to one in the table returns that index with one more reference,
    * so every terrain tile shares one or two slots instead of taking two
    * each. Each `addMaterial` is balanced by one `removeMaterial`.
@@ -818,7 +818,7 @@ export class World {
   /**
    * A material's texture references for `options` (its texture set's
    * textures), by slot (`MaterialTextureSlot`), for `addMaterial`'s
-   * `textures`. The bindless seam (CESIUM2_WEBGPU_PLAN.md §7.1, §13.15):
+   * `textures`. The bindless seam (docs/design/risks.md, "Bindless textures: not in the PoC, designed for in 2.0", docs/design/gpu-limits-and-capacities.md):
    * with texture sets a reference is the slot itself (the batch binds the
    * set), `NO_TEXTURE` where the slot is empty; a resource-table backend
    * returns each texture's index in the world's table instead, and
@@ -1059,7 +1059,7 @@ export class World {
 
   /**
    * Where the route that places the draw's anchor is evaluated, when it
-   * crosses a warp (plan §13.26, `warpAt`):
+   * crosses a warp (docs/design/geometry-through-placement-review.md, `warpAt`):
    *
    * - `"vertex"`, the default: at every vertex, so content stretches with
    *   the warp (a reprojection, an exaggeration). Fitted per draw to

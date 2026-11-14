@@ -21,7 +21,7 @@ import type { ExampleContext } from "../types.ts";
  * looking (an eye, or a camera at an exposure) and shows what each setting is:
  * physics, a model of an eye or a lens, or a look.
  *
- * Public API only. The presets are data (§13.30): a date, a place and a
+ * Public API only. The presets are data (docs/design/sun-and-sky-example.md): a date, a place and a
  * direction, an observer. It needs no sky pack: with none it draws 1.x's star map.
  * In development the Viewer uses the pack the dev server offers, when there is
  * one (`ViewerOptions.skyPack`); `?pack=none` draws 1.x's map instead.

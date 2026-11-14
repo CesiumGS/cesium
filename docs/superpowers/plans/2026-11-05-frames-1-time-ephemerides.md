@@ -331,7 +331,7 @@
 
 **Files:**
 
-- Modify: `CESIUM2_WEBGPU_PLAN.md` §13.14 (a short "Frames 1 (r61)" results note pointing to the design and this plan, with the measured agreement figures from the tests), and this plan's checkboxes.
+- Modify: [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md) (a short "Frames 1 (r61)" results note pointing to the design and this plan, with the measured agreement figures from the tests), and this plan's checkboxes.
 
 - [x] **Step 1: Write the note:** what landed, the measured worst agreement for each check, the data span, and that the engine's rendering is unchanged (plan 2 switches it over).
 - [x] **Step 2: Commit** with "Plan: frames 1 results".

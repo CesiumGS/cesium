@@ -450,7 +450,7 @@ export default defineConfig({
     slangShaders(),
     // The ion token in .env.local is the dev server's only (ionToken.ts).
     keepEnvSecretsOut(),
-    // Sky data never ships uncleared (§13.29); the dev server offers the store's pack.
+    // Sky data never ships uncleared (docs/decisions/2026-11-08-owners-calls-for-later-plans.md); the dev server offers the store's pack.
     skyPackGuard(),
     skyPackDevRoute(),
     // The inspector's recorder posts its rows here (dev server only).

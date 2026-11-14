@@ -1,4 +1,4 @@
-// The transform graph (plan section 13.37): a tree of nodes, each placed in
+// The transform graph (docs/design/transform-graph.md): a tree of nodes, each placed in
 // its parent by an affine matrix, a smooth function, or a switch that picks
 // one of those per view. Content, cameras and lights sit at nodes; a route
 // between two nodes (route.ts) is what warps them. No geo knowledge here.

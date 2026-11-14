@@ -1,4 +1,4 @@
-// The page's side of the kernel worker (overall plan §13.33): typed calls
+// The page's side of the kernel worker (docs/design/breps-and-geometry-queries.md): typed calls
 // that become the messages of kernelProtocol.ts, with stage callbacks for a
 // loading overlay. Provisional; the CSG sample reshapes it.
 //

@@ -1,4 +1,4 @@
-// Clip effects on the GPU (plan §13.26, the owner's question of 2026-11-11:
+// Clip effects on the GPU (docs/design/geometry-through-placement-review.md, the owner's question of 2026-11-11:
 // "can the box clips replace terrain clipping, and show the terrain inside a
 // clip volume translucent, or shaded by a custom shader?").
 //

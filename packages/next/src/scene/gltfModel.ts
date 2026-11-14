@@ -534,7 +534,7 @@ const X_UP_TO_Z_UP = Float64Array.from([
 /**
  * Uploads a parsed glTF asset into a world: textures (sRGB where glTF says
  * so, with mips), materials and texture sets, and meshes, as a
- * `ModelResource` the caller owns. Transactional (§13.15): an upload that
+ * `ModelResource` the caller owns. Transactional (docs/design/gpu-limits-and-capacities.md): an upload that
  * runs out of room releases what it took and leaves the asset as it was,
  * so streaming can retry the tile once eviction frees room.
  */
@@ -688,7 +688,7 @@ function uploadAssetInto(
  * compose in float64, so large Earth-fixed coordinates never reach
  * float32. `EXT_mesh_gpu_instancing` nodes draw their mesh once per
  * instance, culled per instance on the GPU. Transactional, as the upload
- * (§13.15): a placement that runs out of draws or transforms removes what
+ * (docs/design/gpu-limits-and-capacities.md): a placement that runs out of draws or transforms removes what
  * it placed.
  */
 export function placeModel(
