@@ -160,8 +160,12 @@ export interface ViewerOptions {
    * its credits show on screen while it draws. A pack that fails to load,
    * or isn't marked distributable, warns once (builds refuse such a pack).
    * Ignored with `stars: false`.
+   *
+   * Left out in development, the Viewer uses the pack the dev server offers
+   * when there is one (the local store's, never in the repository or a
+   * build); `null` keeps the default map even then.
    */
-  skyPack?: string | URL;
+  skyPack?: string | URL | null;
   /**
    * The Moon in the sky and its light at night (default true: placed and
    * turned by the clock, with Cesium Moon Terrain's map when the ion token
@@ -503,7 +507,11 @@ export class Viewer {
     if (this.starsOn) {
       this.engine.setStarMap(STAR_MAP);
       if (options.skyPack) {
-        void this.setSkyPack(options.skyPack);
+        this.skyPackReady = this.setSkyPack(options.skyPack);
+      } else if (options.skyPack === undefined && import.meta.env.DEV) {
+        this.skyPackReady = devSkyPack().then((url) =>
+          url ? this.setSkyPack(url) : undefined,
+        );
       }
     }
     if (options.timeControls !== false) {
@@ -945,6 +953,14 @@ export class Viewer {
   }
 
   /** The sky data pack in use, or undefined for 1.x's star map. */
+  /**
+   * Settles once the starting sky pack has loaded or been refused (with its
+   * manifest, or undefined for the default map): the option's pack, or in
+   * development the dev server's. Resolved at once when there is none.
+   */
+  skyPackReady: Promise<SkyPackManifest | undefined> =
+    Promise.resolve(undefined);
+
   get skyPackManifest(): SkyPackManifest | undefined {
     return this.pack;
   }
@@ -1180,5 +1196,21 @@ export class Viewer {
       this.target.destroy();
     }
     this.canvas.remove();
+  }
+}
+
+/**
+ * Development only: the dev server's sky pack (the local store's, served by
+ * scripts/vitePluginSkyPack.ts), when it offers one: its manifest answers.
+ * No warning when it doesn't. Builds drop this with its caller
+ * (`import.meta.env.DEV`), so no pack URL reaches a build.
+ */
+async function devSkyPack(): Promise<string | undefined> {
+  const url = "/sky-pack/";
+  try {
+    const r = await fetch(`${url}manifest.json`, { cache: "no-store" });
+    return r.ok ? url : undefined;
+  } catch {
+    return undefined;
   }
 }

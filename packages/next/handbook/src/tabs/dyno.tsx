@@ -258,7 +258,7 @@ const GROUPS: readonly { title: string; views: readonly ViewNote[] }[] = [
       },
       {
         name: "Viewer and the inspector",
-        what: "Any content in one engine at a time, with settings beside it for selection, lighting, globe and rendering. The inspector over it shows problems, frame, streaming and its load timeline, the content pipeline and mix, memory, the GPU, the last 30 seconds and the last pick.",
+        what: "Any content in one engine at a time, with settings beside it for selection, lighting, globe and rendering. The inspector over it has sections for problems, frame (CPU and GPU time together), streaming and its load timeline, the content pipeline and mix, memory, the GPU, the last pick and a recorder.",
         when: "To debug content or try settings, with the whole machine for one engine.",
         how: "Viewer in the rail, or g v. An app can also attach the inspector itself.",
         shot: {
@@ -995,6 +995,72 @@ export function Dyno() {
             </>
           }
           on="2026-11-08"
+        />
+      </Section>
+
+      <Section title="The inspector and the debug tools">
+        <p>
+          The inspector is a widget, not part of the core, so an application can
+          attach it to any engine. Its layout never depends on its values: every
+          row, cell and table slot is always there, and shows a dash when empty.
+          Numbers are tabular, in cells of fixed width, and a fixed explanation
+          sits behind an info button. A test compares the skeleton of the page
+          across states.
+        </p>
+        <ul>
+          <li>
+            <strong>Sections by subject.</strong> Series sit in the section they
+            belong to. CPU time and GPU time are together in Frame, on one time
+            axis with one crosshair.
+          </li>
+          <li>
+            <strong>GPU time.</strong> A stacked chart and a pass table show
+            every pass timed or grouped. Passes outside the frame's encoder
+            (imagery, environment, atmosphere, points, warp fit, mip builds)
+            share one timestamped interval per group. A frame has a span and a
+            wall time, in milliseconds. The part with no timing is split in two:
+            untimed time inside the frame, between two markers, and untimed time
+            between frames. The in-frame part is real GPU work with no
+            timestamp; the gap is idle time or other work. The between-frames
+            part is reported only when the GPU was busy back to back.
+          </li>
+          <li>
+            <strong>Geometry.</strong> Draws, whole triangles, points and
+            segments, by kind, with rays cast per frame, the draws and triangles
+            that occlusion culling hid, and a count of GPU calls, copies,
+            created resources and mapAsync calls by label.
+          </li>
+          <li>
+            <strong>Reading a moving chart.</strong> Hovering a chart freezes
+            the display while data keeps recording, and a dot marks each hovered
+            point. A click pins a moment to its tick, so it stays under the
+            pointer as time moves. Pause and arrow keys step one tick at a time,
+            from a ring of the last 300 ticks. There is no tooltip over a chart:
+            each section has a readout in its header, and the detail sits beside
+            the panel.
+          </li>
+          <li>
+            <strong>The recorder.</strong> In development only, it writes one
+            CSV row per tick (time, GPU, triangles, culling counts, streaming)
+            to a file that a script can read while the page runs, and can save
+            the final image of the view. Off, none of it is loaded. A time
+            series shows what a snapshot misses.
+          </li>
+          <li>
+            <strong>The dev handle.</strong> In development,{" "}
+            <C>globalThis.__cesium</C> reaches the page's engines and tilesets
+            from a console or a script. It isn't in builds.
+          </li>
+          <li>
+            <strong>Debug views.</strong> <C>View.debug</C> colours the scene by
+            tile level, tile, error, state or stretch, and{" "}
+            <C>View.debugLegend()</C> says what the colours mean. See the Tile
+            selection tab.
+          </li>
+        </ul>
+        <Written
+          from="the transform-graph plan, task 12, and the inspector rules in the overall plan, section 13.41"
+          on="2026-11-13"
         />
       </Section>
 

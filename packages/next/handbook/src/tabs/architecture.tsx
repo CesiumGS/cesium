@@ -338,6 +338,72 @@ export function Architecture() {
         </p>
       </Section>
 
+      <Section title="Planned: threads, jobs, renderers and profiles">
+        <p>
+          These are decisions in the plans, written down on 2026-11-13. None of
+          them is built as described. They matter to a host because they set
+          what the API may and may not promise.
+        </p>
+        <ul>
+          <li>
+            <strong>One API, the engine on either thread.</strong> The app calls
+            the same API on the main thread. A thin layer either runs the engine
+            there or forwards to an engine thread, a worker with an{" "}
+            <C>OffscreenCanvas</C>. Commands are ordered messages batched per
+            tick. Reads come from a snapshot taken each tick. Queries return
+            promises. Code that must run inside the engine, such as a warp, a
+            style or a per-tick callback, loads as a module on the engine's
+            thread. The main-thread mode offers no synchronous read that the
+            worker mode can't, and the API tests run in both. A probe chooses
+            the mode, not browser sniffing, and the host can force it with{" "}
+            <C>thread: "auto" | "main" | "worker"</C>.
+          </li>
+          <li>
+            <strong>Jobs.</strong> <C>WorkerPool</C> stays as the transport. The
+            scheduler orders work by visible screen-space error, with
+            dependencies, cancellation and one main-thread apply phase with a
+            millisecond budget. Shared memory is used when the page is
+            cross-origin isolated and never required. A job may return partial
+            results that are sound, such as the horizon occluder's walk.
+          </li>
+          <li>
+            <strong>Loading is refinement.</strong> A scene is interactive at
+            once. A card blocks only until something first draws. After that, a
+            small chip of fixed size says what still refines. The warp examples
+            show it now, for example "Refining · 12 tiles, 3 fits". It blocks
+            nothing. The plan generalises it: <C>view.refinement</C> lists the
+            active sources (streaming, transitions, shader compiles, occlusion
+            feedback, accumulation), and <C>view.converged()</C> resolves when
+            they are done, for screenshots, tests and exports.
+          </li>
+          <li>
+            <strong>A renderer behind each view.</strong> The seam for a second
+            renderer, such as a WebGL 2 one, is a renderer behind a view, not a
+            GPU backend under one renderer. Each view reports what it supports
+            in the scene's terms (<C>view.support</C>): an unmet request warns
+            once and falls back, or throws in a strict mode. Every renderer must
+            draw the globe, terrain, imagery and meshes. Outputs are named
+            (colour, display colour, IDs, depth). <C>GpuDevice</C>,{" "}
+            <C>Capabilities</C> and <C>LimitsTier</C> move to an advanced entry
+            point, so the main API doesn't name the GPU.
+          </li>
+          <li>
+            <strong>Engine profiles.</strong> The plan in{" "}
+            <C>docs/superpowers/plans/2026-11-13-engine-profiles.md</C> has the
+            app describe a look, and the engine keep as much of it as the device
+            allows. Each feature has a short ladder of cheaper steps, including
+            render resolution, multisampling and aerial perspective's three
+            methods. Rules are data. Fidelity is automatic unless the app pins
+            it. An opt-in governor may change only the render scale. Not
+            started.
+          </li>
+        </ul>
+        <Written
+          from="the overall plan, section 13.41, and the engine profiles plan"
+          on="2026-11-13"
+        />
+      </Section>
+
       <Section title="Splitting the core later">
         <p>
           The plan's current answer (section 13.36, notes for later) is to keep

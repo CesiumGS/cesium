@@ -1,0 +1,15 @@
+{
+  "uniforms": [],
+  "bindings": [
+    {
+      "name": "stageSampler",
+      "binding": 1,
+      "kind": "sampler"
+    },
+    {
+      "name": "pyramid",
+      "binding": 2,
+      "kind": "texture"
+    }
+  ]
+}

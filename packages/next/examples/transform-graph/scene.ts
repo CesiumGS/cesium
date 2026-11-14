@@ -44,8 +44,10 @@ export interface SceneHost {
   frameOf(anchor: AnchorHandle | undefined): Frame | undefined;
   /** Describes the graph for the panel. */
   describe(spec: GraphSpec): void;
-  /** Names what the view waits for in the loading card; undefined hides it. */
+  /** Names what the view waits for to draw anything, in the card over it; undefined hides it. Only until the first draw. */
   loading(text: string | undefined): void;
+  /** What is still refining after that ("Refining · 12 tiles, 3 fits"), in a small chip that blocks nothing; undefined hides it. */
+  refining(text: string | undefined): void;
   /** A line about content that did not load, or a stand-in in its place, kept under the readouts. */
   note(text: string): void;
   /** The scene's own handler of a pick in any view. Returns what stops it. */

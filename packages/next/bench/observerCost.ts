@@ -11,6 +11,7 @@ import {
   type View,
   type World,
 } from "../src/index.ts";
+import { spritesStage } from "../examples/night-sky/sprites.ts";
 import {
   MAGNITUDE_ZERO_ILLUMINANCE,
   STAR_FLOATS,
@@ -826,7 +827,8 @@ async function measure(params: URLSearchParams): Promise<CostResults> {
     });
     day.aim(DAY);
     const glareOf = (glare: GlareSettings | null) => {
-      day.view.observer = { glare };
+      // The spikes are the night-sky example's stage (the veil's rows have no use for it).
+      day.view.observer = { glare, stages: [spritesStage()] };
     };
     await engineRow(
       "glare",

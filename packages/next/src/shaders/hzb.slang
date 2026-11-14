@@ -8,10 +8,21 @@
 // covers every pixel its parent's block does (`min(p >> (level + 1), size - 1)`
 // maps a pixel to its texel at a level, which occlusionQuery.slang relies on).
 //
-// Loops are bounded by constants: a block is at most 3 x 3 texels, and a
-// multisampled depth has at most MAX_SAMPLES samples.
+// Level 0 comes from the opaque pass's multisampled depth (`level0`), or from
+// the single-sampled depth of the ambient-occlusion prepass (`level0Pixels`),
+// which the view's occlusion cull builds it from when it has one
+// (render/view/occlusionCull.ts). A single sample is the pixel's centre, and
+// the image's samples lie within it: so that no sample sees farther than its
+// texel says (a surface's edge passing between a centre and a sample), a
+// level-0 texel there takes the farthest over its block and the pixels all
+// round it, one deep.
+//
+// Loops are bounded by constants: a block is at most 3 x 3 texels (5 x 5
+// pixels with the ring round it), and a multisampled depth has at most
+// MAX_SAMPLES samples.
 
 [[vk::binding(0, 0)]] DepthTexture2DMS depth;
+[[vk::binding(0, 0)]] DepthTexture2D pixels;
 [[vk::binding(1, 0)]] [[vk::image_format("r32f")]] WTexture2D<float> target0;
 
 [[vk::binding(0, 0)]] Texture2D<float> source;
@@ -75,6 +86,40 @@ void level0(uint3 id : SV_DispatchThreadID) {
         }
         farthest = min(farthest, depth.Load(int2(x, y), s));
       }
+    }
+  }
+  target0.Store(id.xy, farthest);
+}
+
+[shader("compute")]
+[numthreads(8, 8, 1)]
+void level0Pixels(uint3 id : SV_DispatchThreadID) {
+  uint width;
+  uint height;
+  pixels.GetDimensions(width, height);
+  uint outWidth;
+  uint outHeight;
+  target0.GetDimensions(outWidth, outHeight);
+  if (id.x >= outWidth || id.y >= outHeight) {
+    return;
+  }
+  uint2 bx = blockOf(id.x, width, outWidth);
+  uint2 by = blockOf(id.y, height, outHeight);
+  // The block and the ring of pixels round it, clamped to the frame.
+  uint2 from = uint2(bx.x > 0u ? bx.x - 1u : 0u, by.x > 0u ? by.x - 1u : 0u);
+  uint2 to = uint2(min(bx.y + 1u, width - 1u), min(by.y + 1u, height - 1u));
+  float farthest = 3.4e38;
+  for (uint j = 0u; j < 5u; j++) {
+    uint y = from.y + j;
+    if (y > to.y) {
+      break;
+    }
+    for (uint i = 0u; i < 5u; i++) {
+      uint x = from.x + i;
+      if (x > to.x) {
+        break;
+      }
+      farthest = min(farthest, pixels.Load(int3(x, y, 0)));
     }
   }
   target0.Store(id.xy, farthest);

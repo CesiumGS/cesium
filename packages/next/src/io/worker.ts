@@ -169,6 +169,22 @@ self.onmessage = async (
       self.postMessage({ id, ok: true, result: { asset, info } }, transfer);
       return;
     }
+    if (type === "terrainDeviation") {
+      // A terrain tile's deviation from its parent's mesh, for a pair the
+      // decode didn't measure (`TerrainSource`'s refit jobs).
+      const d = event.data as unknown as {
+        child: TerrainHeights;
+        parent: TerrainHeights;
+        qx: number;
+        qy: number;
+      };
+      self.postMessage({
+        id,
+        ok: true,
+        result: deviationFromParent(d.child, d.parent, d.qx, d.qy),
+      });
+      return;
+    }
     if (type === "stars") {
       // The stars read out of a star map (atmosphere/stars.ts): about a
       // second of work, here rather than on the page.

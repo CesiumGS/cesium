@@ -86,7 +86,9 @@ export function request(
   const casterWaiting =
     tileset.state.ready.some((r) => !isCaster(r.tile)) ||
     tileset.state.externals.some((e) => !isCaster(e.tile));
-  for (const [tile] of order) {
+  for (const [tile, priority] of order) {
+    // Its jobs follow it, loading or not (`Jobs`).
+    tile.requestPriority = priority;
     if (tile.state !== "unloaded") {
       continue;
     }

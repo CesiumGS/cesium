@@ -3,66 +3,52 @@
 // build).
 import workerUrl from "./worker.ts?worker&url";
 
-interface Pending {
-  resolve: (value: unknown) => void;
-  reject: (error: Error) => void;
-}
-
-interface Slot {
-  worker: Worker;
-  busy: number;
-}
+import { Jobs, type Job, type JobReply, type JobSpec } from "./Jobs.ts";
 
 /**
- * A small pool of content workers. Requests go to the least-busy worker;
- * workers start lazily, up to `size`.
+ * A small pool of content workers, started lazily up to `size`, with the
+ * job system in front of them (`Jobs`, plan §13.43): `submit` takes a job
+ * with a priority, dependencies, cancellation and a main-thread step for
+ * the engine's apply phase; `request` is a job with none of these.
  */
 export class WorkerPool {
-  private readonly slots: Slot[] = [];
-  private readonly pending = new Map<number, Pending>();
-  private nextId = 0;
+  private readonly workers: Worker[] = [];
+  readonly jobs: Jobs;
 
   constructor(
     readonly size = Math.max(
       1,
       Math.min(4, (globalThis.navigator?.hardwareConcurrency ?? 4) - 1),
     ),
-  ) {}
+  ) {
+    this.jobs = new Jobs({
+      size,
+      post: (worker, message, transfer) =>
+        this.worker(worker).postMessage(message, transfer),
+    });
+  }
 
   /**
    * Runs a request on a worker. Aborting `signal` cancels it there (its
-   * fetches abort) and rejects with an AbortError.
+   * fetches abort) and rejects with an AbortError. It may fetch, so it
+   * isn't held to the jobs' per-worker CPU limit.
    */
   request<T>(
     type: string,
     payload: Record<string, unknown>,
     signal?: AbortSignal,
   ): Promise<T> {
-    if (signal?.aborted) {
-      return Promise.reject(new DOMException("Aborted", "AbortError"));
-    }
-    const slot = this.pickSlot();
-    const id = this.nextId++;
-    slot.busy++;
-    return new Promise<T>((resolve, reject) => {
-      this.pending.set(id, {
-        resolve: resolve as (value: unknown) => void,
-        reject,
-      });
-      signal?.addEventListener(
-        "abort",
-        () => {
-          if (this.pending.delete(id)) {
-            slot.worker.postMessage({ id, type: "cancel" });
-            reject(new DOMException("Aborted", "AbortError"));
-          }
-        },
-        { once: true },
-      );
-      slot.worker.postMessage({ id, type, ...payload });
-    }).finally(() => {
-      slot.busy--;
-    });
+    return this.jobs.submit<T>({
+      type,
+      payload,
+      io: true,
+      ...(signal ? { signal } : {}),
+    }).promise;
+  }
+
+  /** Submits a job (`Jobs.submit`). */
+  submit<R, A = R>(spec: JobSpec<R, A>): Job<A> {
+    return this.jobs.submit(spec);
   }
 
   /**
@@ -71,51 +57,28 @@ export class WorkerPool {
    * them (r38).
    */
   warm(): void {
-    while (this.slots.length < this.size) {
-      this.spawn();
+    for (let i = 0; i < this.size; i++) {
+      this.worker(i);
     }
   }
 
   destroy(): void {
-    for (const slot of this.slots) {
-      slot.worker.terminate();
+    this.jobs.destroy();
+    for (const worker of this.workers) {
+      worker?.terminate();
     }
-    for (const pending of this.pending.values()) {
-      pending.reject(new Error("Worker pool destroyed."));
-    }
-    this.slots.length = 0;
-    this.pending.clear();
+    this.workers.length = 0;
   }
 
-  private pickSlot(): Slot {
-    const idle = this.slots.find((s) => s.busy === 0);
-    if (idle || this.slots.length >= this.size) {
-      return idle ?? this.slots.reduce((a, b) => (b.busy < a.busy ? b : a));
+  private worker(index: number): Worker {
+    let worker = this.workers[index];
+    if (!worker) {
+      worker = new Worker(workerScript(), { type: "module" });
+      worker.onmessage = (event: MessageEvent<JobReply>) =>
+        this.jobs.reply(event.data);
+      this.workers[index] = worker;
     }
-    return this.spawn();
-  }
-
-  private spawn(): Slot {
-    const worker = new Worker(workerScript(), { type: "module" });
-    worker.onmessage = (
-      event: MessageEvent<{
-        id: number;
-        ok: boolean;
-        result?: unknown;
-        error?: string;
-      }>,
-    ) => {
-      const pending = this.pending.get(event.data.id);
-      this.pending.delete(event.data.id);
-      if (event.data.ok) {
-        pending?.resolve(event.data.result);
-      } else {
-        pending?.reject(new Error(event.data.error));
-      }
-    };
-    const slot = { worker, busy: 0 };
-    this.slots.push(slot);
-    return slot;
+    return worker;
   }
 }
 

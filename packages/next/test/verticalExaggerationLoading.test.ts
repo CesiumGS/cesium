@@ -1,7 +1,10 @@
-// The vertical-exaggeration page's loading card: what it says while the view waits, and when it goes for good.
+// The vertical-exaggeration page's loading card and refinement chip: the card
+// names what the first draw waits for and goes at that draw; after it the view
+// only refines, and a chip counts what is left.
 import { describe, expect, it } from "vitest";
 import {
   createLoading,
+  hasDrawn,
   loadingStage,
   type LoadingState,
 } from "../examples/vertical-exaggeration/loading.ts";
@@ -12,6 +15,8 @@ function state(
     exact?: number;
     pending?: number;
     waiting?: number;
+    fitted?: number;
+    tiles?: number;
   },
   buildings: LoadingState["buildings"],
 ): LoadingState {
@@ -24,7 +29,7 @@ function state(
     pending: over.pending ?? 0,
     draws: {
       total: 0,
-      fitted: 0,
+      fitted: over.fitted ?? 0,
       stale: 0,
       pending: over.waiting ?? 0,
       exact: over.exact ?? 0,
@@ -32,55 +37,63 @@ function state(
     },
     variants: { groups: 0, draws: 0 },
   };
-  return { stats, buildings };
+  return { stats, buildings, tiles: over.tiles ?? 0 };
 }
 
 describe("loadingStage", () => {
-  it("names the terrain, then the buildings, then the fits left", () => {
+  it("names the terrain until something draws, then nothing", () => {
     expect(loadingStage(state({}, "loading"))).toBe("Loading terrain…");
-    expect(loadingStage(state({ pending: 3 }, "waiting"))).toBe(
+    expect(loadingStage(state({ pending: 3, tiles: 9 }, "waiting"))).toBe(
       "Loading terrain…",
     );
-    expect(loadingStage(state({ exact: 1 }, "loading"))).toBe(
-      "Loading Cesium OSM Buildings…",
-    );
-    expect(
-      loadingStage(state({ exact: 5, pending: 2, waiting: 1 }, "drawn")),
-    ).toBe("Fitting 3 tiles to the exaggeration…");
-    expect(loadingStage(state({ exact: 5, pending: 1 }, "failed"))).toBe(
-      "Fitting 1 tile to the exaggeration…",
-    );
+    expect(loadingStage(state({ exact: 1 }, "loading"))).toBeUndefined();
+    expect(loadingStage(state({ fitted: 2 }, "waiting"))).toBeUndefined();
+    expect(loadingStage(state({}, "drawn"))).toBeUndefined();
   });
 
-  it("is silent once the terrain and buildings are drawn and nothing is pending", () => {
-    expect(loadingStage(state({ exact: 5 }, "drawn"))).toBeUndefined();
-    // Buildings that failed aren't waited for.
-    expect(loadingStage(state({ exact: 5 }, "failed"))).toBeUndefined();
+  it("does not hold the card for buildings, fits or tiles still arriving", () => {
+    expect(
+      hasDrawn(
+        state({ exact: 5, pending: 2, waiting: 1, tiles: 12 }, "loading"),
+      ),
+    ).toBe(true);
   });
 });
 
 describe("createLoading", () => {
-  it("holds its last stage for a quiet check or two, then is done for good", () => {
+  it("drops the card at the first draw and shows what still refines in a chip", () => {
     const loading = createLoading(2);
-    expect(loading.update(state({}, "loading"))).toBe("Loading terrain…");
-    expect(loading.update(state({ exact: 1, pending: 4 }, "drawn"))).toBe(
-      "Fitting 4 tiles to the exaggeration…",
+    const first = loading.update(state({ tiles: 4 }, "loading"));
+    expect(first.card).toBe("Loading terrain…");
+    expect(first.chip).toBeUndefined();
+    const drawn = loading.update(
+      state({ exact: 1, pending: 2, waiting: 1, tiles: 12 }, "loading"),
     );
-    // One quiet check: still shown.
-    expect(loading.update(state({ exact: 1 }, "drawn"))).toBe(
-      "Fitting 4 tiles to the exaggeration…",
-    );
-    expect(loading.done).toBe(false);
-    // A fit queued again resets it.
-    expect(loading.update(state({ exact: 1, pending: 1 }, "drawn"))).toBe(
-      "Fitting 1 tile to the exaggeration…",
-    );
-    expect(loading.update(state({ exact: 1 }, "drawn"))).toBeDefined();
-    expect(loading.update(state({ exact: 1 }, "drawn"))).toBeUndefined();
-    expect(loading.done).toBe(true);
-    // Never again: a camera that moves loads more tiles.
-    expect(loading.update(state({ exact: 1, pending: 9 }, "drawn"))).toBe(
-      undefined,
-    );
+    expect(drawn.card).toBeUndefined();
+    expect(drawn.chip).toBe("Refining · 12 tiles, 3 fits");
+    expect(drawn.converged).toBe(false);
+    expect(
+      loading.update(state({ exact: 1, tiles: 1, pending: 1 }, "drawn")).chip,
+    ).toBe("Refining · 1 tile, 1 fit");
+  });
+
+  it("holds the chip a check or two past the last work, then converges", () => {
+    const loading = createLoading(2);
+    loading.update(state({ exact: 1, tiles: 3 }, "drawn"));
+    expect(loading.update(state({ exact: 1 }, "drawn")).chip).toBeDefined();
+    expect(loading.update(state({ exact: 1 }, "drawn")).chip).toBeDefined();
+    const done = loading.update(state({ exact: 1 }, "drawn"));
+    expect(done.chip).toBeUndefined();
+    expect(done.converged).toBe(true);
+  });
+
+  it("never brings the card back, and the chip returns when a moving camera loads more", () => {
+    const loading = createLoading(1);
+    loading.update(state({ exact: 1 }, "drawn"));
+    loading.update(state({ exact: 1 }, "drawn"));
+    loading.update(state({ exact: 1 }, "drawn"));
+    const more = loading.update(state({ exact: 0, tiles: 7 }, "drawn"));
+    expect(more.card).toBeUndefined();
+    expect(more.chip).toBe("Refining · 7 tiles");
   });
 });

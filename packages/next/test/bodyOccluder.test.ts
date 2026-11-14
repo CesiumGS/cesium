@@ -86,6 +86,7 @@ function tileOf(west: number, east: number, height: number, level = 12): Tile {
       level,
       rectangle: { west, south: -0.01, east, north: 0.01 },
       heights,
+      refit: { levelError: 10 },
     },
   } as unknown as Tile;
 }
@@ -111,6 +112,7 @@ function setup(basin = false, enabled = true) {
     root,
     flat: false,
     enabled: () => enabled,
+    budgetMs: Infinity,
   });
   const camera = wgs84.cartographicToCartesian(
     { longitude: 0, latitude: 0, height: 10 },
@@ -128,10 +130,10 @@ function setup(basin = false, enabled = true) {
 describe("the body as an occluder", () => {
   it("hides a tile beyond the drawn horizon and keeps one just over it, by drawn heights", () => {
     const { occluder, view } = setup();
-    // Drawn ×10, 1000 m peaks stand 10 km: visible out to about 0.059 rad.
-    const beyond = regionVolume(0.2, 0.2005, 0, 1000);
-    const over = regionVolume(0.04, 0.0405, 0, 1000);
-    const under = regionVolume(0.0, 0.0005, 0, 1000);
+    // Volumes are as drawn: 1000 m peaks ×10 stand 10 km, visible out to about 0.058 rad.
+    const beyond = regionVolume(0.2, 0.2005, 0, 10000);
+    const over = regionVolume(0.04, 0.0405, 0, 10000);
+    const under = regionVolume(0.0, 0.0005, 0, 10000);
     expect(occluder.hidden(beyond, view)).toBe(true);
     expect(occluder.hidden(over, view)).toBe(false);
     expect(occluder.hidden(under, view)).toBe(false);
@@ -147,21 +149,21 @@ describe("the body as an occluder", () => {
       flat.occluder.scaleFor(flat.view)!,
       9,
     );
-    const volume = regionVolume(0.2, 0.2005, 0, 1000);
+    const volume = regionVolume(0.2, 0.2005, 0, 10000);
     expect(basin.occluder.hidden(volume, basin.view)).toBe(true);
   });
 
   it("is off while the globe has regions, or without a map, or with the camera under the surface", () => {
     const off = setup(false, false);
     expect(
-      off.occluder.hidden(regionVolume(0.2, 0.2005, 0, 1000), off.view),
+      off.occluder.hidden(regionVolume(0.2, 0.2005, 0, 10000), off.view),
     ).toBe(false);
     const { occluder, view } = setup();
     const unmapped = { ...view, warp: { ...view.warp!, images: undefined } };
     occluder.prepare(unmapped as SelectionView);
     expect(
       occluder.hidden(
-        regionVolume(0.2, 0.2005, 0, 1000),
+        regionVolume(0.2, 0.2005, 0, 10000),
         unmapped as SelectionView,
       ),
     ).toBe(false);
@@ -174,7 +176,7 @@ describe("the body as an occluder", () => {
       ),
     } as SelectionView;
     occluder.prepare(under);
-    expect(occluder.hidden(regionVolume(0.2, 0.2005, 0, 1000), under)).toBe(
+    expect(occluder.hidden(regionVolume(0.2, 0.2005, 0, 10000), under)).toBe(
       false,
     );
   });
@@ -208,6 +210,7 @@ describe("the body as an occluder", () => {
       root,
       flat: false,
       enabled: () => true,
+      budgetMs: Infinity,
     });
     const camera = wgs84.cartographicToCartesian(
       { longitude: 0, latitude: 0, height: 10 },
@@ -231,6 +234,81 @@ describe("the body as an occluder", () => {
       dipped[2]! / wgs84.radii[2]!,
     );
     expect(s).toBeLessThanOrEqual(norm);
+  });
+
+  it("is not zeroed by an unloaded subtree once its root-level ancestor is loaded", () => {
+    const top = tileOf(-0.02, 0.02, 0, 0);
+    (top.globe as { refit?: unknown }).refit = { levelError: 100 };
+    const kids = [0, 1, 2, 3].map((i) => {
+      const k = tileOf(-0.02 + i * 0.01, -0.01 + i * 0.01, 0, 1);
+      (k.globe as { heights?: unknown }).heights = undefined;
+      (k as { parent?: Tile }).parent = top;
+      return k;
+    });
+    (top as { children: Tile[] }).children = kids;
+    const world = regionFromJson([-Math.PI, -1.5, Math.PI, 1.5, -1000, 9000]);
+    const root = {
+      volume: {
+        kind: "region",
+        region: world,
+        sphere: sphereFromObb(world.obb),
+      },
+      children: [top],
+    } as unknown as Tile;
+    (top as { parent?: Tile }).parent = root;
+    const occluder = new BodyOccluder({
+      root,
+      flat: false,
+      enabled: () => true,
+      budgetMs: Infinity,
+    });
+    const view = {
+      id: 1,
+      position: wgs84.cartographicToCartesian(
+        { longitude: 0, latitude: 0, height: 10 },
+        new Float64Array(3),
+      ),
+      warp: warpOf(10),
+    } as unknown as SelectionView;
+    occluder.prepare(view);
+    expect(occluder.scaleFor(view)).toBeGreaterThan(0);
+  });
+
+  it("finds the largest sound radius: it satisfies the condition and no larger one within the tolerance does", () => {
+    // A level-12 tile under the camera at the surface, and a deep basin
+    // (-5000 m, drawn -50 km) beside it, within the camera's reach.
+    const near = tileOf(-0.02, 0.02, 0);
+    const basin = tileOf(0.02, 0.06, -5000);
+    const world = regionFromJson([-Math.PI, -1.5, Math.PI, 1.5, -1000, 9000]);
+    const root = {
+      volume: {
+        kind: "region",
+        region: world,
+        sphere: sphereFromObb(world.obb),
+      },
+      children: [near, basin],
+    } as unknown as Tile;
+    const occluder = new BodyOccluder({
+      root,
+      flat: false,
+      enabled: () => true,
+      budgetMs: Infinity,
+    });
+    const view = {
+      id: 1,
+      position: wgs84.cartographicToCartesian(
+        { longitude: 0, latitude: 0, height: 10 },
+        new Float64Array(3),
+      ),
+      warp: warpOf(10),
+    } as unknown as SelectionView;
+    occluder.prepare(view);
+    const s = occluder.scaleFor(view)!;
+    const floor = (6378137 - 50000) / 6378137;
+    // The basin lies in the cap of every radius above its own floor, so the
+    // radius can't pass it: sound (at most the basin's floor), and maximal.
+    expect(s).toBeLessThanOrEqual(floor + 1e-9);
+    expect(s).toBeGreaterThan(floor - 3e-4);
   });
 
   it("offers its shape for a depth pyramid", () => {

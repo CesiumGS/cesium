@@ -1,12 +1,9 @@
 // The veil's rules (sky and observer plan, Task 13). spikes/observer.ts (group `veil`)
 // draws them.
+import { SPRITE_CLAMP, SPRITE_SLOTS } from "../examples/night-sky/sprites.ts";
 import { readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  GLARE_IMAGE_CLAMP,
-  GLARE_SOURCES,
-  GLARE_SPRITE_CLAMP,
-} from "../src/render/post/glare.ts";
+import { GLARE_IMAGE_CLAMP, GLARE_SOURCES } from "../src/render/post/glare.ts";
 import {
   VEIL_LEVELS,
   sunVeil,
@@ -181,14 +178,16 @@ describe("the composite", () => {
   });
 
   it("can't reach fp16's infinity, with every sprite on one pixel", () => {
-    expect(GLARE_IMAGE_CLAMP + GLARE_SOURCES * GLARE_SPRITE_CLAMP).toBeLessThan(
+    // The sprites are the night-sky example's stage, which keeps its own clamp.
+    expect(GLARE_IMAGE_CLAMP + GLARE_SOURCES * SPRITE_CLAMP).toBeLessThan(
       65504,
     );
     const source = readFileSync(
-      new URL("../src/shaders/glare.slang", import.meta.url),
+      new URL("../examples/night-sky/sprites.slang", import.meta.url),
       "utf8",
     );
-    expect(source).toContain(`GLARE_SPRITE_CLAMP = ${GLARE_SPRITE_CLAMP}.0`);
+    expect(source).toContain(`SPRITE_CLAMP = ${SPRITE_CLAMP}.0`);
+    expect(SPRITE_SLOTS).toBe(GLARE_SOURCES);
   });
 
   it("makes what isn't finite 0", () => {

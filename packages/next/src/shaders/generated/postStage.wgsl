@@ -5,6 +5,7 @@ struct PostParams_std140_0
     @align(16) size_0 : vec2<f32>,
     @align(8) preExposure_0 : f32,
     @align(4) pixelAngle_0 : f32,
+    @align(16) mip_0 : u32,
 };
 
 @binding(2) @group(0) var<uniform> postParams_0 : PostParams_std140_0;
@@ -35,6 +36,7 @@ struct PostInput
      size : vec2<f32>,
      preExposure : f32,
      pixelAngle : f32,
+     mip : u32,
 };
 
 fn postInputAt( pixel_0 : vec2<i32>) -> PostInput
@@ -45,6 +47,7 @@ fn postInputAt( pixel_0 : vec2<i32>) -> PostInput
     input_0.uv = (vec2<f32>(pixel_0) + vec2<f32>(0.5f)) / postParams_0.size_0;
     input_0.preExposure = postParams_0.preExposure_0;
     input_0.pixelAngle = postParams_0.pixelAngle_0;
+    input_0.mip = postParams_0.mip_0;
     return input_0;
 }
 

@@ -6,6 +6,7 @@
 import { parseAlpha } from "./urlAlpha.ts";
 import {
   SlicePool,
+  TICK_REASONS,
   modelUsage,
   type ContentSummary,
   type DebugView,
@@ -80,6 +81,35 @@ export function inspectEngine(
       // The inspector is on: count the GPU work between frames (once).
       engine.trackGpuWork();
       return engineSnapshot(engine, options);
+    },
+    ticks: (listener) => {
+      let rendered = engine.stats.framesRendered;
+      let gpuSamples = engine.gpuSample.samples;
+      return engine.onAfterTick(() => {
+        const s = engine.stats;
+        const rendering = s.framesRendered !== rendered;
+        rendered = s.framesRendered;
+        listener({
+          kind: "tick",
+          tick: s.tick,
+          rendering,
+          why: TICK_REASONS.filter((_, i) => (s.tickReasons & (1 << i)) !== 0),
+          cpuMs: s.lastCpuMs,
+        });
+        const gpu = engine.gpuSample;
+        if (gpu.samples !== gpuSamples) {
+          gpuSamples = gpu.samples;
+          listener({
+            kind: "gpu",
+            tick: gpu.tick,
+            ms: gpu.ms,
+            passes: Object.entries(gpu.passes),
+            intervalMs: gpu.intervalMs,
+            inFrameUntimedMs: gpu.inFrameUntimedMs,
+            betweenFramesMs: gpu.betweenFramesMs,
+          });
+        }
+      });
     },
     ...(record ? { record } : {}),
   };
@@ -195,6 +225,21 @@ function recordable(
       view.lodTransitions = lod;
     }
   }
+  // `&occlusionCull=off` culls draws by the frustum alone (A/B checks of
+  // `Engine.occlusionCulling`); tile selection's occlusion feedback stays.
+  const occlusionCull = params.get("occlusionCull");
+  if (occlusionCull === "off") {
+    engine.occlusionCulling = "off";
+  } else if (occlusionCull === "on") {
+    engine.occlusionCulling = "on";
+  }
+  // `&coarsen=off` keeps hidden tiles' refinement however long they stay
+  // hidden (A/B checks of `OcclusionFeedback.coarsen`).
+  if (params.get("coarsen") === "off") {
+    for (const view of engine.views) {
+      view.occlusionState.coarsen = false;
+    }
+  }
   // `&alpha=<0..1>` sets the error exponent (`View.lodExponent`).
   const alpha = parseAlpha(params.get("alpha"));
   if (alpha !== undefined) {
@@ -225,6 +270,14 @@ const URL_DEBUG_VIEWS: ReadonlySet<string> = new Set<DebugView>([
   "stretch",
 ]);
 
+/** What occlusion culling left undrawn, when some view culls by occlusion. */
+function hiddenByOcclusion(engine: Engine): {
+  hiddenByOcclusion?: { draws: number; triangles: number };
+} {
+  const { views, draws, triangles } = engine.occlusionCullStats;
+  return views > 0 ? { hiddenByOcclusion: { draws, triangles } } : {};
+}
+
 /** One snapshot of a 2.0 engine (for hosts that build their own `Inspectable`). */
 export function engineSnapshot(
   engine: Engine,
@@ -247,6 +300,7 @@ export function engineSnapshot(
         ...k,
       })),
       raysCast: s.raysCast,
+      ...hiddenByOcclusion(engine),
       ...(s.work ? { work: s.work } : {}),
       ...(Number.isNaN(s.gpuMs)
         ? {}
@@ -271,6 +325,15 @@ export function engineSnapshot(
       rendering:
         engine.renderMode === "continuous" ? "continuous" : "on demand",
       framesRendered: s.framesRendered,
+      jobs: {
+        memory: s.jobs.memory === "shared" ? "shared memory" : "transfer",
+        slicing: s.jobs.slicing,
+        applyMs: s.jobs.applyMs,
+        applied: s.jobs.applied,
+        queued: s.jobs.queued,
+        running: s.jobs.running,
+        waiting: s.jobs.waiting,
+      },
     },
   };
   const warnings = [...new Set(tilesets.flatMap((t) => [...t.warnings]))];
@@ -310,9 +373,7 @@ export function engineSnapshot(
           }
         : {}),
       known: sum((t) => t.stats.tiles),
-      ...(sum((t) => t.stats.undrawn) > 0
-        ? { undrawn: sum((t) => t.stats.undrawn) }
-        : {}),
+      undrawn: sum((t) => t.stats.undrawn),
       loading: sum((t) => t.stats.inFlight),
       window: {
         max: widest.stats.maxInFlight,

@@ -234,6 +234,8 @@ Engine (1 GPUDevice, PipelineCache, ContentCache, RequestScheduler, WorkerPool)
 
 ### 3.4 Shaders: Slang as the one source, WGSL where it must be, a WGSL-level user contract
 
+> **Superseded in part (owner, 2026-11-13; §13.41 renderer decisions and §13.42):** the user-facing contract is **Cesium IR** (`cesium-ir`), not a WGSL-level ABI. Styles, transforms, materials and user functions are written in any front-end language (1.x and 3D Tiles styles, restricted JS, MaterialX, Slang offline, WGSL functions through naga) and lowered into Cesium IR, whose vocabulary is `KHR_interactivity`'s. A WGSL string can't reach a second renderer or the CPU evaluator, so raw WGSL is not offered as an escape hatch. Engine kernels stay Slang compiled offline, as below.
+
 **Why decide now.** The user-facing shader contract is public API.
 
 **What Slang gives us**:
@@ -959,7 +961,7 @@ Principles, each fixing a 1.x abstraction problem:
 - **Engine, World, View separation**, with N views per engine.
 - **Core is DOM-free.** An `OffscreenCanvas`-in-worker smoke test runs from M0 to catch DOM leaks.
 - **Typed-array math with required `out` params.**
-- **Shader extension through a versioned WGSL-level ABI**, with Slang as the first-class authoring language.
+- **Shader extension through a versioned WGSL-level ABI**, with Slang as the first-class authoring language. _Superseded (2026-11-13): through Cesium IR, with any front-end language; see §13.42._
 - **UI and widgets live outside core.** Camera controllers are separate, replaceable modules.
 
 ### 3.11 Techniques considered and deferred
@@ -1169,7 +1171,8 @@ any zoom. 2.0 draws the sky as it is, so the camera decides what shows:
   objects, as images with their catalog surface brightness (Andromeda's
   core about 22 mag/arcsec², some 2 × 10⁻⁴ cd/m², as faint as the natural
   night sky): they show only under a dark sky at long exposures, as with a
-  real camera. Image licenses to check.
+  real camera. Image licenses to check. Not in 5e: the owner dropped
+  deep-sky patches on 2026-11-09 (§13.29, decision (f)).
 - **Moon and planets** from ephemerides: the moon's disk lit by the sun
   with its phase (and earthshine), the planets as points with their
   magnitudes. The moon's light also lights the scene at night (about
@@ -3798,6 +3801,62 @@ thing to cull there.
 - WebXR.
 - Headless rendering via Dawn.
 
+### M7 — Renderers, engine profiles and Cesium IR (decided 2026-11-13)
+
+Three plans, reviewed by the owner on 2026-11-13, with their milestones folded in here. Each plan holds the detail and its "done when"; this list holds the order and the dependencies between them. No durations: order and dependencies only (owner, 2026-11-13).
+
+**Engine profiles** ([`docs/superpowers/plans/2026-11-13-engine-profiles.md`](docs/superpowers/plans/2026-11-13-engine-profiles.md); §13.41 renderer decision 4). The app owns the look, the engine owns fidelity.
+
+- Profiles M1: facts and personas. Needs nothing.
+- Profiles M2: the catalog, rules and resolver. Needs Profiles M1.
+- Profiles M3: paths in one place, with the seam test. Needs Profiles M2.
+- Profiles M4: wired into `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, notices, `strict`). Needs Profiles M3.
+- Profiles M4a: `resolution` and `msaa` as features. Needs Profiles M4.
+- Profiles M4b: aerial perspective steps. Needs Profiles M4.
+- Profiles M4c: the opt-in resolution governor. Needs Profiles M4a.
+- Profiles M5: the inspector's Profile section and emulation. Needs Profiles M4.
+- Profiles M6: the `@cesium/next/gpu` entry point. Needs Profiles M4.
+- Profiles M7: the Viewer's defaults migrated. Needs Profiles M4.
+- Profiles M8: the WebGL 2 renderer's facts and support rules. Needs Profiles M2 and WebGL 2 W3.
+- Profiles M9: the worker mode's snapshots. Needs Profiles M4 and the worker spike (§13.43).
+
+**Cesium IR** ([`docs/superpowers/plans/2026-11-13-cesium-ir.md`](docs/superpowers/plans/2026-11-13-cesium-ir.md); §13.42, reviewed 2026-11-13). The core IR every function goes through: styles, transforms and warps, materials, user functions. It absorbs transform-graph Task 9 (arrays, bounded loops, missing ops).
+
+- IR-1: the core (types, rates, equations, literal slots, the builder). Needs nothing.
+- IR-2: the versioned JSON format. Needs IR-1.
+- IR-3: the passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms). Needs IR-1.
+- IR-4: the WGSL emitter. Needs IR-1.
+- IR-5: the GLSL ES 3.00 emitter. Needs IR-4.
+- IR-6: transforms move onto Cesium IR, as pure moves. Needs IR-1, IR-3 and IR-4.
+- IR-7: routes on both emitters, with the residual and df64 forms. Needs IR-5 and IR-6.
+- IR-8: styles move onto Cesium IR, literals as uniforms. Needs IR-3, IR-4 and IR-5.
+- IR-9: tables and the bounded search, the first extensions, with the residual's row window. Needs IR-6 and IR-7.
+- IR-10: our naga crate (Rust in development and CI only). Needs nothing.
+- IR-11: the WGSL front end, through naga and SPIR-V, with diagnostics. Needs IR-1 and IR-10.
+- IR-12: the writer and reader for `KHR_interactivity`'s graph JSON (vendor extension `BENTLEY_interactivity_ir`). Needs IR-2, and IR-9 for tables.
+- IR-13: the API surface (a program is the normative input; languages as entry points loaded on demand; `CustomShader` hooks take programs or WGSL functions). Needs IR-2, IR-8, IR-9 and IR-11.
+- IR-14: the inspector and debugging. Needs IR-4 and IR-8.
+- IR-15: the MaterialX front end. Needs IR-3, IR-4 and IR-8.
+- IR-G1 to IR-G6, in the owner's order after IR-9: textures and samplers, matrices, screen-space derivatives, noise, general bounded loops, structs. Each needs the one before it.
+
+**The WebGL 2 renderer** ([`docs/superpowers/plans/2026-11-13-webgl2-renderer.md`](docs/superpowers/plans/2026-11-13-webgl2-renderer.md); §13.41 toolchain answer 3). A second, simpler renderer that exercises the seam: a device per engine, a renderer per view.
+
+- W0: the shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points. Needs nothing.
+- W1: the seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves. Needs nothing.
+- W2: renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`). Needs W1.
+- W3: the probe, the `renderer` option and an empty WebGL 2 device. Needs W1 and Profiles M2.
+- W4: first draws, unlit (glTF and 3D Tiles meshes). Needs W0, W2 and W3.
+- W5: the globe, terrain and imagery. Needs W4.
+- W6: lighting and instancing. Needs W4.
+- W7: styles and warps through Cesium IR. Needs W6, IR-5, IR-7 and IR-8.
+- W8: picks, outputs and user code. Needs W4; its second half (user code) needs IR-11 and IR-13.
+- W9: the atmosphere. Needs W6.
+- R1: research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have. Needs nothing; orders W10.
+- W10: further steps (shadows, moments translucency, FXAA, clips, ambient occlusion, the depth-range readback). Needs W9 and R1.
+- W11: the runner suite, the gallery's renderer switch, the handbook. Grows from W4.
+
+**Order across the three.** Profiles M1–M2, W0, W1, IR-1 and IR-10 can start together (different files). W3 waits for Profiles M2. W7 waits for IR-5, IR-7 and IR-8; W8's second half for IR-11 and IR-13. Profiles M8 lands with W3. The MaterialX live-editing example waits for IR-15 (and IR-G1 for its image nodes).
+
 ---
 
 ## 7. Risks
@@ -3822,21 +3881,21 @@ thing to cull there.
 
 ### 7.2 Platform and WebGPU risks
 
-| Risk                                                                            | Mitigation                                                                           |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Hi/lo precision broken by compiler reassociation or fusion (Metal relaxed math) | Single compute draw-prep site; integer-assisted subtraction if needed; M0 Metal test |
-| Silent no-op indirect draws without `indirect-first-instance`                   | Instance-step attribute fallback always compiled in                                  |
-| Integer MRT can't be MSAA-resolved                                              | Sample-0 custom resolve in the pick pass                                             |
-| Dawn indirect-draw validation overhead                                          | Measure in M0; keep args in bounds provably where possible                           |
-| No VRAM budget API; OOM = device loss                                           | Heuristic budgets, adaptive after loss, robust device-loss replay                    |
-| Single queue, no async compute; uploads stall rendering                         | Per-frame upload byte/ms budget; encode compute early                                |
-| `mapAsync` latency of 1–3 frames                                                | Async pick/query APIs by design                                                      |
-| Subgroups ≈0% on Safari/Firefox                                                 | Portable kernel paths (wait-free radix sort, workgroup reductions)                   |
-| Render bundles invalidated by pipeline or bind-group changes                    | Rebuild per tile on change; limit target configurations                              |
-| Slang WGSL backend gaps                                                         | Hand-written WGSL kernels allowed; WGSL-level ABI; WESL fallback                     |
-| Browser coverage                                                                | Chromium first; parity suite on Safari and Firefox where available                   |
-| Compatibility mode not supported                                                | Stated non-goal                                                                      |
-| Fragment storage writes run once per sample under MSAA (Apple, Metal)           | Lists' nodes carry their samples; per-sample pass where probed; parity ground truth  |
+| Risk                                                                            | Mitigation                                                                                                                |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Hi/lo precision broken by compiler reassociation or fusion (Metal relaxed math) | Single compute draw-prep site; integer-assisted subtraction if needed; M0 Metal test                                      |
+| Silent no-op indirect draws without `indirect-first-instance`                   | Instance-step attribute fallback always compiled in                                                                       |
+| Integer MRT can't be MSAA-resolved                                              | Sample-0 custom resolve in the pick pass                                                                                  |
+| Dawn indirect-draw validation overhead                                          | Measure in M0; keep args in bounds provably where possible                                                                |
+| No VRAM budget API; OOM = device loss                                           | Heuristic budgets, adaptive after loss, robust device-loss replay                                                         |
+| Single queue, no async compute; uploads stall rendering                         | Per-frame upload byte/ms budget; encode compute early                                                                     |
+| `mapAsync` latency of 1–3 frames                                                | Async pick/query APIs by design                                                                                           |
+| Subgroups ≈0% on Safari/Firefox                                                 | Portable kernel paths (wait-free radix sort, workgroup reductions)                                                        |
+| Render bundles invalidated by pipeline or bind-group changes                    | Rebuild per tile on change; limit target configurations                                                                   |
+| Slang WGSL backend gaps                                                         | Hand-written WGSL kernels allowed; WGSL-level ABI; WESL fallback (user contract superseded 2026-11-13: Cesium IR, §13.42) |
+| Browser coverage                                                                | Chromium first; parity suite on Safari and Firefox where available                                                        |
+| Compatibility mode not supported                                                | Stated non-goal                                                                                                           |
+| Fragment storage writes run once per sample under MSAA (Apple, Metal)           | Lists' nodes carry their samples; per-sample pass where probed; parity ground truth                                       |
 
 ### 7.3 Project risks
 
@@ -3856,15 +3915,15 @@ Recommendations already adopted from the review: core-only (no compatibility mod
 
 **Decided by the plan owner (r4):**
 
-| Decision        | Choice                                                                                                                                                                                                 |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Shaders         | Slang for materials and vertex/fragment code; hand-written WGSL allowed for compute kernels; user contract is a WGSL-level ABI. Gated by the M0 spike, with WGSL + WESL as the fallback.               |
-| Default look    | **HDR + tonemapping by default** for lit color, LDR as a per-view option; unlit color is display-referred and never tonemapped (r26). Parity baseline is 1.x with HDR on for lit color, off for unlit. |
-| Multi-view      | All four scenarios in the PoC: split views on one canvas, multiple canvases, offscreen targets, linked views (`ViewLink`).                                                                             |
-| CAD data        | Team-chosen CAD/BIM assets in Cesium ion; iModels can be tiled into ion.                                                                                                                               |
-| Foundation      | `packages/next` in this monorepo; TypeScript strict; new typed-array math module tested against 1.x.                                                                                                   |
-| Platforms       | Chromium is the gate; Safari and Firefox best-effort; core WebGPU only.                                                                                                                                |
-| Milestone order | 3D Tiles (M2) before globe (M3). The draw-record format is locked in M1 with the globe's needs included.                                                                                               |
+| Decision        | Choice                                                                                                                                                                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shaders         | Slang for materials and vertex/fragment code; hand-written WGSL allowed for compute kernels; user contract is a WGSL-level ABI. Gated by the M0 spike, with WGSL + WESL as the fallback. (user contract superseded 2026-11-13: Cesium IR, §13.42) |
+| Default look    | **HDR + tonemapping by default** for lit color, LDR as a per-view option; unlit color is display-referred and never tonemapped (r26). Parity baseline is 1.x with HDR on for lit color, off for unlit.                                            |
+| Multi-view      | All four scenarios in the PoC: split views on one canvas, multiple canvases, offscreen targets, linked views (`ViewLink`).                                                                                                                        |
+| CAD data        | Team-chosen CAD/BIM assets in Cesium ion; iModels can be tiled into ion.                                                                                                                                                                          |
+| Foundation      | `packages/next` in this monorepo; TypeScript strict; new typed-array math module tested against 1.x.                                                                                                                                              |
+| Platforms       | Chromium is the gate; Safari and Firefox best-effort; core WebGPU only.                                                                                                                                                                           |
+| Milestone order | 3D Tiles (M2) before globe (M3). The draw-record format is locked in M1 with the globe's needs included.                                                                                                                                          |
 
 **Still open:** none blocking M0. Exact OIT, auto-exposure and the M6 picks are decided at those milestones.
 
@@ -8535,7 +8594,7 @@ So streaming's logic is already free of the GPU API. `Engine.ts` and `World.ts` 
 
 - Slang can target GLSL, but whether its output fits GLSL ES 3.00 needs a spike. Nothing has been tested.
 - 43 compute kernels need CPU equivalents or a design without them. Some, such as culling, have obvious ones. Others, such as atmosphere tables or FLIP, may need fragment passes or to be dropped.
-- The style compiler (`styleExpression.ts`) needs a GLSL emitter or an intermediate form.
+- The style compiler (`styleExpression.ts`) needs a GLSL emitter or an intermediate form. _Decided (2026-11-13): it lowers to Cesium IR, which has WGSL and GLSL ES 3.00 emitters (§13.42)._
 - User shaders written in WGSL wouldn't port. Slang ones might, which would be a reason to steer portable shaders to Slang.
 - Picks and depth readback need another path, and queries need their CPU backend.
 
@@ -9324,14 +9383,14 @@ Do soon, designed together with vector drawing, because they overlap with it. `B
   - **Sharper points.** A tight core with real dynamic range, and glare only on what's bright enough, through §13.28's convolution instead of a fixed halo on every star.
   - **Two looks over one sky.** The eye (dark-adapted, close to colorless, a limit near magnitude 6) and a camera (long exposure, color, more stars, the Milky Way's structure, optionally a lens's spikes or streaks). The engine's physical values stay the same; a camera's look is its exposure and point spread.
   - **Finish removing the star exposure.** The public `View.starExposure` is gone, but the eye path still passes a fixed `EYE_STARS_EV100` (−3) to the sky shader's `starExposure`, which shows stars at that exposure wherever the sky behind them is dark, whatever the view has adapted to. It's why stars show beside the sunlit Earth from orbit, and it isn't physical. The sky and observer plan removed it (§13.32 moved it before 5b), so stars follow the view's exposure or the eye model alone, and decides by looking how to get stars in that view when wanted. The air's transmittance and sky brightness are physical; measure which stars show at twilight against naked-eye limits once the rule is gone.
-- **Deep-sky objects and other sky light (owner, 2026-11-08).** Nebulae, galaxies and the Messier objects, where not too small or dim. Star catalogs don't hold gas or unresolved galaxies. Three layers to test: an all-sky emission and dust map in the background, for large structure; real images for a short list of showpieces (Andromeda, the Magellanic Clouds, the Orion Nebula, the Pleiades, Carina and so on), calibrated linear so each one's total matches its catalog magnitude, with its stars removed; and a catalog's shape and magnitude with a simple profile for what's only a few pixels. All in cd/m² under the same exposure, so the eye sees a smudge and a long exposure shows structure. They all sit at infinity, which holds across the solar system. Terms need reading per source, since survey images often restrict reuse.
+- **Deep-sky objects and other sky light (owner, 2026-11-08; the patches are out of 5e's scope since decision (f) below, 2026-11-09).** Nebulae, galaxies and the Messier objects, where not too small or dim. Star catalogs don't hold gas or unresolved galaxies. Three layers to test: an all-sky emission and dust map in the background, for large structure; real images for a short list of showpieces (Andromeda, the Magellanic Clouds, the Orion Nebula, the Pleiades, Carina and so on), calibrated linear so each one's total matches its catalog magnitude, with its stars removed; and a catalog's shape and magnitude with a simple profile for what's only a few pixels. All in cd/m² under the same exposure, so the eye sees a smudge and a long exposure shows structure. They all sit at infinity, which holds across the solar system. Terms need reading per source, since survey images often restrict reuse.
 - **Sky data during R&D (owner, 2026-11-08).** The prototype keeps new sky data out of everything it distributes, and how data ships gets decided later, after legal review. Terms read so far are unsettled for stars (ESA's Gaia and Hipparcos pages state CC BY-NC 3.0 IGO), so:
   - **Source-neutral engine.** The sky takes a data pack (points, a background, deep-sky patches, a manifest), with no knowledge of where it came from. Today's star map stays the default, so a checkout with no pack draws what it draws now.
   - **Local only.** A script in the repository fetches from the source and builds the pack in the setup store, on the developer's machine. No sky data, derived data or derived images in the repository, on a server of ours, in a library build, or in the handbook's file.
   - **A manifest that blocks by default.** Each pack names its sources, credits and a `distributable` flag, false until cleared. Builds refuse a pack that isn't, with a test. The Viewer shows the manifest's credits.
   - **Order of sources.** Start with what reads as most open: NASA and ESA/Hubble or ESO images. Hold raw Gaia and Hipparcos as an optional local path, off by default, until their terms are answered, since R&D inside a company may itself count under a non-commercial clause.
 - **The star spike's decisions (owner, 2026-11-09).** (a) Data: the NASA map plus a catalog for the bright end, to start, under the R&D rules. (b) A tight core. (c) The world stays physical; the astrophoto curve is a programmable post pass, written in Slang on the graph, and serves as that interface's example. (d) The veil is in, also as a Slang post pass. FFT glare is out, too expensive. Spike sprites live in an example, not in the engine. (e) Sky cells and strips look best, but benchmark the drawing methods across GPUs before settling. (f) No deep-sky patches; they look pasted on.
-- **Follow-up from those decisions, after the usage reset:** the built curve and veil are WGSL stages and the sprites are an engine `GraphStage`, so: make Slang post stages work, move the curve and veil onto them, move the sprites out of the engine into the `night-sky` example, drop deep-sky patches from 5e's scope, and run the cost page on other GPUs (Intel first).
+- **Follow-up from those decisions, after the usage reset:** the built curve and veil are WGSL stages and the sprites are an engine `GraphStage`, so: make Slang post stages work, move the curve and veil onto them, move the sprites out of the engine into the `night-sky` example, drop deep-sky patches from 5e's scope, and run the cost page on other GPUs (Intel first). Done on `dev/stars` (2026-11-13): Slang post stages (`src/shaders/stages/`, `postApi.slang`, `slangPostShader`; `PostInput.mip`), the curve and the veil on them, matching the WGSL's pixels within 1/255; the sprites are the `night-sky` example's `GraphStage` (`examples/night-sky/sprites.ts`), through a public `GraphStage`, `ChainIo` and `GlareIo`; deep-sky patches are out of 5e. Open: the cost page on other GPUs (Intel first), which needs the owner's laptop.
 - **Planets as points, then disks.** The planets aren't drawn yet, and the ephemeris pack holds only the Sun, the Earth-Moon barycenter and the Moon. Add their barycenters from DE440, magnitudes that follow phase and distance, and a point at ordinary fields of view (Jupiter is under a pixel at about 0.03° a pixel), growing into an impostor when a long lens resolves it, on 5c's impostor path. A view of Orion with a planet nearby should use a real date, found from the ephemeris.
 - **Entity is retired as an engine concept; its ideas stay.** 2.0 has no `Entity` class or data-source layer in the engine. What people use Entity for (a time-varying property, a clamped label, a track with a path) is covered through scene items, styling and 5d's time-bound values (`Timeline.bind`). Exact names and any compatibility layer belong to the vector design and the API review (5i).
 
@@ -9358,7 +9417,7 @@ A Dyno example of beauty shots with presets, showing off the physical sky and dr
 | -------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------- |
 | Moon tileset loading                   | 5c                    | Earthrise, lunar sites                                                                            |
 | Camera moves, long lenses, preset rigs | 5d                    | Moving between shots, the Moon's size                                                             |
-| Planets, deep sky, the shutter         | 5e, §13.29            | Astrophotography. Stars, the eye and camera looks, and glare are built (sky and observer plan)    |
+| Planets, the shutter                   | 5e, §13.29            | Astrophotography. Stars, the eye and camera looks, and glare are built (sky and observer plan)    |
 | Glare and sun glint                    | §13.28                | Sunsets, the sun itself                                                                           |
 | Water, reflecting the sky              | §13.28                | Sea sunsets, reflections                                                                          |
 | A wider ephemeris pack                 | Data                  | The pack covers 2000 to 2050, and Earthrise and the Blue Marble are earlier; `de440s` covers them |
@@ -9410,7 +9469,7 @@ Read together, the recent sketches (§13.22, §13.28, §13.29, §13.30, §13.31,
 
 Don't build the interface until a second renderer needs it: the second pass only keeps scene data and rasterizer data apart, so the seam can open later. Two consumers (a tracer and a WebGL 2 renderer) will shape it better than guessing at one.
 
-**Order.** The second pass of the file split comes first, since its contexts and passes are the seams these plug into: it should be designed with this section open. Then, before 5b (owner, 2026-11-08), a sky and observer plan, so the API has moved before 5d and 5e build on it: the observer stage on a first version of §13.22's interface, the sky data pack, star drawing, glare, and removing the fudges. Planets, the shutter and deep sky stay in 5e. The medium stack follows from the `sky-measure` results (branch `sky-measure`, 2026-11-09, against the reference path tracer, RGB rather than per band): single scattering agrees within about 3% along the twilight antisolar vertical, and the error is in the higher-order term. It's good at 1 and 2° of depression in clean air, but at 4° it's 72 to 112% too bright in the band and the dark band vanishes, and worse in V20 haze. Under shadow, unshadowed higher-order light is fine only for narrow shadows or clean air (median +39%, +85% at V10), and no fixed blur of visibility works, so it needs a term set by shadow size against mean free path: a first try, scaling by the shadow's first-order share, gets 22% rms. Shaft contrast peaks near V20 but doesn't collapse at V10. The eclipse case wasn't measured. and the point pipeline from the star measurements.
+**Order.** The second pass of the file split comes first, since its contexts and passes are the seams these plug into: it should be designed with this section open. Then, before 5b (owner, 2026-11-08), a sky and observer plan, so the API has moved before 5d and 5e build on it: the observer stage on a first version of §13.22's interface, the sky data pack, star drawing, glare, and removing the fudges. Planets and the shutter stay in 5e. Deep-sky patches are out of its scope (owner's decision (f), 2026-11-09, §13.29: they look pasted on). The medium stack follows from the `sky-measure` results (branch `sky-measure`, 2026-11-09, against the reference path tracer, RGB rather than per band): single scattering agrees within about 3% along the twilight antisolar vertical, and the error is in the higher-order term. It's good at 1 and 2° of depression in clean air, but at 4° it's 72 to 112% too bright in the band and the dark band vanishes, and worse in V20 haze. Under shadow, unshadowed higher-order light is fine only for narrow shadows or clean air (median +39%, +85% at V10), and no fixed blur of visibility works, so it needs a term set by shadow size against mean free path: a first try, scaling by the shadow's first-order share, gets 22% rms. Shaft contrast peaks near V20 but doesn't collapse at V10. The eclipse case wasn't measured. and the point pipeline from the star measurements.
 
 #### Sky and observer results (2026-11-09)
 
@@ -10078,7 +10137,7 @@ The example lands after the transform graph is built.
 **Short answers.** Brainstorm, nothing decided.
 
 1. _JS is already the 1.x answer, as a subset._ The 3D Tiles 1.x styling language is, in the spec's words, "a small subset of JavaScript (ECMAScript 5), plus native vector and regular expression types" ([3D Tiles Styling](https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling)). The real choice is how far to widen that subset (expressions in JSON strings, to functions and statements, to TypeScript), and what the _normative artefact_ is. Recommended: the spec defines the language and an IR with a JSON form, and JS/TS is one front end onto it, not the definition.
-2. _No library replaces our own small IR; none gives us AD, intervals or df64._ Keep `src/transform/ir.ts` as the semantic core. Use Naga (a 2 MB WASM build) or the browser's own compiler to validate and translate the WGSL we emit, in CI and at build time. Revisit e-graph rewriting only if a measure asks for it.
+2. _No library replaces our own small IR; none gives us AD, intervals or df64._ Keep `src/transform/ir.ts` as the semantic core. _(Taken further on 2026-11-13: `ir.ts` becomes Cesium IR, with `KHR_interactivity`'s vocabulary; §13.42.)_ Use Naga (a 2 MB WASM build) or the browser's own compiler to validate and translate the WGSL we emit, in CI and at build time. Revisit e-graph rewriting only if a measure asks for it.
 
 #### What 3D Tiles 1.x styling is
 
@@ -10543,8 +10602,8 @@ _(4) Our IR to WGSL, naga for validation and GLSL._ As (2), but no Slang at run 
 
 1. **CPU evaluation of styles is a requirement** (picks, legends, queries, interval culling of tiles).
 2. **Styling stays compiler-free:** Slang loads only for custom shaders, never for a style.
-3. **The PoC builds a WebGL 2 renderer,** to exercise the renderer seam designed in the renderer research (a renderer behind each view, support reported in the scene's terms, AOVs; decisions above). It is a second, simpler renderer, not a translation of the GPU-driven one: no compute, storage buffers or indirect draws. Scope it as a task: which content it draws (decision 8 of the renderer questions: globe, terrain, imagery, meshes at least), how styles and transforms reach GLSL ES, and how its support report reads.
-4. **Open, to discuss:** the owner isn't sold on our own IR yet, and wants to see how far the API gets **without** a WGSL escape hatch before adding one.
+3. **The PoC builds a WebGL 2 renderer** ([plan](docs/superpowers/plans/2026-11-13-webgl2-renderer.md), reviewed 2026-11-13; milestones in §6 M7), to exercise the renderer seam designed in the renderer research (a renderer behind each view, support reported in the scene's terms, AOVs; decisions above). It is a second, simpler renderer, not a translation of the GPU-driven one: no compute, storage buffers or indirect draws. Scope it as a task: which content it draws (decision 8 of the renderer questions: globe, terrain, imagery, meshes at least), how styles and transforms reach GLSL ES, and how its support report reads.
+4. **Open, to discuss:** the owner isn't sold on our own IR yet, and wants to see how far the API gets **without** a WGSL escape hatch before adding one. **Answered in §13.42** (owner, 2026-11-13): Cesium IR, a small IR on `KHR_interactivity`'s ratified vocabulary; WGSL as a front end through naga, not an escape hatch.
 5. **Built-in transforms in one source:** written in the IR, or in something that compiles to it quickly.
 6. **naga in CI: yes.** Also evaluate building our own WebAssembly of naga instead of the third-party `naga-wasm` (a small Rust crate over naga with exactly the API we need, pinned, built in CI; Rust is compiled to `wasm32-unknown-unknown` with wasm-bindgen, not Emscripten).
 7. **MaterialX: the owner wants live graph editing in the PoC,** with a gallery example: edit a material graph and see it update live. Build-time import alone isn't enough.
@@ -10737,7 +10796,7 @@ They stack. Candidate 1 is worth doing before the API review. Candidate 2 is a s
 1. **Support reports: yes.** Each view reports what it supports in the scene's terms (`view.support`: content kinds, view options, outputs, queries). An unmet request warns once and falls back as documented; a strict mode throws, for tests and careful hosts. Today's silent fallbacks (glare's `"auto"`, direct draws without `indirect-first-instance`) become reported ones.
 2. **Outputs as AOVs: yes.** Name a view's outputs (colour, display colour, IDs, depth) now. Taking an outside colour and depth to composite comes later, under the same names.
 3. **The user shader contract: to be discussed with the shader toolchain research.** WGSL at the interface probably isn't right: a WGSL string can't reach a second renderer.
-4. **`GpuDevice`, `Capabilities` and `LimitsTier` move to an advanced entry point** (`@cesium/next/gpu`); the main API stays renderer-agnostic (the worker mode needs this too: a shared device can't cross threads). **Open design:** the broader engine-profile design, so that support reports, device facts, tiers and presets don't become a fragile system. Design it before adding more tiers.
+4. **`GpuDevice`, `Capabilities` and `LimitsTier` move to an advanced entry point** (`@cesium/next/gpu`); the main API stays renderer-agnostic (the worker mode needs this too: a shared device can't cross threads). **Open design:** the broader engine-profile design, so that support reports, device facts, tiers and presets don't become a fragile system. Design it before adding more tiers. **Planned:** [`docs/superpowers/plans/2026-11-13-engine-profiles.md`](docs/superpowers/plans/2026-11-13-engine-profiles.md), reviewed and decided by the owner on 2026-11-13. The app owns the look and the engine owns fidelity; features have short ladders of steps, including render resolution, MSAA and aerial perspective; rules are data; and an opt-in governor changes only render scale.
 5. **`Engine.queries` takes backends: yes,** so an application or a second renderer can supply its own.
 6. **GPU-side ray queries: later.** Design the module boundary so it can be added; don't ship it in 2.0 unless a 2.0 feature needs it.
 7. **Progressive views: yes, as a special case of a general concept (proposed, to confirm): refinement.** A view's image converges over ticks; refinement sources each report progress and a done state: streaming (tiles loading), transitions (geomorph, imagery fades), async shader compiles (placeholder pipelines), occlusion feedback reaching its fixed point, temporal accumulation (TAA, still-frame supersampling for screenshots and print), a progressive path tracer's samples. `view.refinement` lists the active sources; `view.converged(options)` resolves when they are done (screenshots, printing, tests, benchmarks, exports); the on-demand loop ticks while any source is active, replacing the ad-hoc `TICK_REASONS`. A progressive view is a view with an accumulation source.
@@ -10778,7 +10837,7 @@ They stack. Candidate 1 is worth doing before the API review. Candidate 2 is a s
 **Warps: exact when compilable, fitted only as a fallback.**
 
 - A user warp whose `forward` is written in the restricted subset (or given as `source`) is compiled to exact GPU code, with its Jacobian from autodiff. A warp given as an opaque closure is fitted. Its hand-written Jacobian (`forward(p, out, jacobian)`) tightens the fit's bounds and helps the CPU (picks, the Newton inverse, selection's stretch), but it doesn't remove the fit.
-- **Built-in smooth nodes are all exact:** plan and profile (a segment table with lines, arcs and clothoids, plus a vertical profile in closed form), twist, bend, height scales and the rest. Branch `dev/analytic-warps` is the first pass.
+- **Built-in smooth nodes are already exact** (audit, 2026-11-13): `corridorUnroll`, `bend`, `twist`, `taper`, `bump`, `lattice`, `radialDistortion`, `scaleAbout`, `scaleAlongAxes`, `velocityModel`, the height-scale and height-offset edges, `flatten`, transverse Mercator, Lambert conformal conic, Web Mercator and geocentric/geographic all compile; only `blendWarps` and opaque user closures are fitted. The cost is elsewhere: with no table-lookup op, the corridor compiles per element (a 39-line road: 607 IR nodes, a 34 KB shader, 200 parameters, 416 floats per draw, 1.2 s to parse). The core IR's table op is the fix (Task 9's array parameters). The precision to keep: the map within 1e-8 m of the CPU map and the Jacobian within 1e-9 (`test/corridorUnrollCompiled.test.ts`).
 - **Fitting stays, narrowed,** to opaque code (a WebAssembly library such as proj.js, a solver, simulation output), unbounded or implicit definitions, and an app's deliberate choice to approximate an expensive exact function, with the error bound reported. Grid-based datum shifts (NTv2, geoid grids) leave this list once the core IR has table and texture lookups.
 - The inspector's count of exact, compiled and fitted warped draws shows whether fitting is still needed. If fitted draws appear only in deliberate cases, the mechanism shrinks to a utility that makes a lattice from a function; the GPU draws lattices exactly as data.
 
@@ -10793,6 +10852,454 @@ They stack. Candidate 1 is worth doing before the API review. Candidate 2 is a s
 - Series sit in the section they belong to. CPU and GPU time are together in Frame, sharing the time axis and crosshair; "Last 30 s" is gone.
 - Reading a moving chart: hover pauses the display, a click pins a sample (anchored to its tick, not a pixel), Pause/Live with arrow-key stepping, and a per-tick ring buffer so a paused chart can be read frame by frame.
 - Charts follow data-visualization practice: form by job, one scale per chart, colour by entity in a fixed, validated order, and hover values everywhere.
+
+### 13.42 The core IR: what the middle end should be (research and spikes, 2026-11-13)
+
+The question left open in §13.41 (owner's answer 4): should the engine's middle end be an IR of our own, a standard graph format, or naga's IR? This section answers it with research and three spikes. Working name: **CesiumIR** (naming at the end). Nothing is decided until the owner answers the questions below.
+
+The framing from §13.41 holds. The **core IR** is the middle end: pure, typed functions with rates, where the passes run (float64 CPU evaluation, forward-mode autodiff, interval and Taylor bounds, rate analysis, literals to uniforms, linking into engine shaders). The **shader IR** is naga's, for whole modules: validation, and translation to WGSL and GLSL ES. Front ends: 1.x styles, restricted JS transforms, MaterialX, and WGSL functions through naga. Back ends: WGSL, GLSL ES 3.00 and a JS evaluator.
+
+Spike code: `packages/next/spikes/core-ir/` (its README lists the files), with the browser page `spikes/coreIr.html`. Nothing was added to `packages/next/package.json`. Measurements: Apple M2, Node 26.5, Chrome in the app's browser pane. Other sessions were running on the machine, so absolute times are noisy; compare within a row.
+
+#### Research (all sources read 2026-11-13)
+
+**glTF `KHR_interactivity`: the vocabulary to borrow.**
+
+- **Ratified.** The spec's status reads "Complete, Ratified by the Khronos Group", changed from Release Candidate in [glTF PR #2637](https://github.com/KhronosGroup/glTF/pull/2637), merged 2026-08-30. It's on the [registry's ratified list](https://github.com/KhronosGroup/glTF/blob/main/extensions/README.md). Spec: [Specification.adoc](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_interactivity/Specification.adoc), main at `a7963af6dc` (2026-10-19).
+- **Types:** `bool`, `int` (32-bit), `float`, `float2` to `float4`, `float2x2` to `float4x4`. **`float` is "a double precision IEEE-754 floating-point scalar"**, and implementations MUST support it (L268–278). Nothing permits lower precision.
+- **Math nodes, by the spec's groups:** constants (`E`, `Pi`, `Tau`, `Inf`, `NaN`); arithmetic (`abs`, `sign`, `trunc`, `floor`, `ceil`, `round`, `fract`, `neg`, `add`, `sub`, `mul`, `div`, `rem`, `min`, `max`, `clamp`, `saturate`, `mix`, `smoothStep`); comparison (`eq`, `lt`, `le`, `gt`, `ge`); special (`isNaN`, `isInf`, `select`, `switch`, `random`); trigonometry and hyperbolics (with `atan2`); exponentials (`exp`, `log`, `log2`, `log10`, `sqrt`, `cbrt`, `pow`); vectors (`length`, `normalize`, `dot`, `cross`, `rotate2D`, `rotate3D`, `transform`, `slerp`); matrices (`transpose`, `determinant`, `inverse`, `matMul`, `matCompose`, `matDecompose`); quaternions (nine ops); swizzles (`combine2`…`combine4x4`, `extract2`…`extract4x4`); integer and bitwise ops; booleans; OkLCh colour conversion; and `type/` conversions. All are `math/<name>` or `type/<name>`.
+- **Semantics are exact and componentwise**, with a table for ±0, ±∞ and NaN per op. The ones that matter here:
+  - `mix` is `(1 - c) * a + c * b`, in that form (L813).
+  - `clamp` is `min(max(a, min(b, c)), max(b, c))`, so reversed bounds work (L773). GLSL's and WGSL's `clamp` don't promise that.
+  - `smoothStep(a, b, c)` uses `saturate((c - min(a, b)) / |b - a|)`, so the ramp always rises (L833). GLSL's is undefined for reversed edges and WGSL's reverses.
+  - `rem` truncates, like JavaScript's `%` (L692). `round` rounds halves away from zero (L568).
+- **JSON form:** a graph's `declarations` (ops) and `nodes`; a node's `values` reference `{ "node": i, "socket": "value" }`, and **a value reference MUST point to a lower node index**, so the data subgraph is single-assignment and topologically ordered by construction, as a jaxpr is. The math and type nodes have no flow sockets; the flow, variable, pointer, animation and event nodes are the interactive part. There is **no version field**; vendor ops are declarations with an `extension` name and their sockets, and an unknown one turns into a no-op.
+
+**ONNX.** Latest release 1.23.2 (2026-10-06): IR version 14, default opset 28; main is preparing opset 29 ([releases](https://api.github.com/repos/onnx/onnx/releases), [Versioning.md](https://github.com/onnx/onnx/blob/main/docs/Versioning.md), [schema.h at v1.23.2](https://github.com/onnx/onnx/blob/v1.23.2/onnx/defs/schema.h)).
+
+- **double:** Add, Sub, Mul, Div, Pow, Sqrt, Exp, Log, the trigonometric ops, Abs, Neg, Floor, Ceil, Min, Max, Clip, Sign, Mod, the comparisons, Where, If, Cast and MatMul all take `tensor(double)`. And, Or and Not take bool only ([Operators.md](https://github.com/onnx/onnx/blob/main/docs/Operators.md)).
+- **Missing for us:** no Atan2, Fract, Mix, Clamp with per-lane bounds, Smoothstep, Dot, Cross, Normalize or Length.
+- **Versioning is strong:** an operator is (domain, op type, since version); any change of type, attribute or meaning is a new opset; a released opset never changes; a model pins `opset_import` ([Versioning.md](https://github.com/onnx/onnx/blob/main/docs/Versioning.md), [IR.md](https://github.com/onnx/onnx/blob/main/docs/IR.md)). A JSON form exists through protobuf's JSON mapping ([serialization.py](https://github.com/onnx/onnx/blob/main/onnx/serialization.py)); no sign it's used much.
+- **onnxruntime-web 1.31.1:** `ort-wasm-simd-threaded.wasm` is 14,848,852 bytes ([unpkg](https://unpkg.com/onnxruntime-web@1.31.1/dist/?meta)). Its CPU kernels have no double for Tan, Asin, Acos and Atan ([OperatorKernels.md](https://github.com/microsoft/onnxruntime/blob/main/docs/OperatorKernels.md)).
+
+**naga** (crate 30.0.2, 2026-11-12; tag `wgpu-v30.0.2`, commit `2b38d994b38d`).
+
+- **Features:** `serialize` and `deserialize` derive serde on every IR type (60 derives in `naga/src/ir/mod.rs`), so any serde format works; naga's own tests snapshot the IR as RON. There is no `validate` or `ir` feature: both are always built. The naga CLI writes a Debug dump (`.txt`) or bincode (`.bin`), not JSON ([naga-cli](https://github.com/gfx-rs/wgpu/blob/wgpu-v30.0.2/naga-cli/src/bin/naga.rs)).
+- **No stability promise for the IR.** None is stated in naga's README, `lib.rs` or `ir/mod.rs`, and no IR enum is `#[non_exhaustive]`. wgpu "releases a breaking version every three months" ([README](https://github.com/gfx-rs/wgpu/blob/wgpu-v30.0.2/README.md)). Diffing `ir/mod.rs` at each major: 18 changes from 24 to 25, 16, 3, 19, 35 from 28 to 29, and 6 from 29 to 30. **Every major changed the IR**, and the changelog doesn't list them all.
+- **Shape:** expressions in a per-function arena, ordered by a statement tree (`Emit` ranges, blocks, locals, loops). `f64` exists in the IR but can never reach GLSL ES (the writer marks it missing on ES).
+- **Lone functions:** the validator needs no entry point and the WGSL front end accepts function-only source, but the GLSL writer needs an entry point, so a function is wrapped in one.
+- **`naga-wasm` 30.2.0** ([npm](https://registry.npmjs.org/naga-wasm), [source](https://github.com/kekkon-nexus/naga-wasm)): `naga_bg.wasm` is 2,053,200 bytes (592,380 brotli, measured). API: `parseWgsl`, `parseGlsl`, `parseSpirv`, `validate`, `writeWgsl`, `writeSpirv`, `writeGlsl` (version, stage, entry point), `writeHlsl`, `writeMsl`. **`Module` is an opaque handle: no IR export.** **Validation is hard-coded to `Capabilities::all()`**, so it can't check against what WebGPU allows. One maintainer, created 2026-09-17, pinned to naga 30.0.1. Other wrappers (`web-naga`, `nagami-rs`) don't export the IR either.
+
+**MaterialX.** Latest release 1.39.5 (2026-05-22); 1.39.6-rc1 tagged 2026-10-30 ([releases](https://github.com/AcademySoftwareFoundation/MaterialX/releases)).
+
+- **No JSON in core:** `source/MaterialXFormat` has XML only. The JSON proposal ([#1500](https://github.com/AcademySoftwareFoundation/MaterialX/issues/1500)) was closed in 2024; JSON lives outside the project ([materialxjson](https://github.com/kwokcb/materialxjson)) and in glTF's draft procedural-texture extensions ([glTF PR #2381](https://github.com/KhronosGroup/glTF/pull/2381), open).
+- **No double type;** float precision is unspecified ([spec](https://github.com/AcademySoftwareFoundation/MaterialX/blob/main/documents/Specification/MaterialX.Specification.md)).
+- **The nodes styles and transforms need** are all in `stdlib_defs.mtlx`: arithmetic, `modulo` (floored), trigonometry, `atan2`, `clamp`, `smoothstep`, `mix (fg, bg, mix)`, `remap`, `range`, `ifgreater`, `ifgreatereq`, `ifequal`, `switch`, boolean `and`/`or`/`not`, `geompropvalue`, `constant`, `convert`, `extract`, `combine2`–`4`, `dotproduct`, `crossproduct`, `normalize`, `magnitude`. Names differ from KHR's (`absval`, `subtract`, `ln`, `magnitude`, `dotproduct`), so a front end maps them.
+- **JS:** official Emscripten bindings load and edit documents in the browser; `JsMaterialXCore.wasm` is 1,139,803 bytes and `JsMaterialXGenShader.wasm` 2,202,939 bytes plus a 1.5 MB data file ([hosted build](https://academysoftwarefoundation.github.io/MaterialX/)). No official npm package. The in-repository web viewer renders ESSL through three.js; it edits uniforms, not graphs. Live graph editing in a browser exists only in third-party tools.
+
+**Design models.**
+
+- **jaxpr** ([jaxpr.md](https://github.com/jax-ml/jax/blob/main/docs/601/jaxpr.md), [Autodidax](https://github.com/jax-ml/jax/blob/main/docs/autodidax.md)): typed, first-order, in A-normal form; equations of primitives with parameters; single assignment. Evaluation, `jvp` and `vmap` are interpreters of one IR: "any transformation could be implemented by first tracing to a jaxpr and then interpreting the jaxpr". The spike's candidate (a) copies this.
+- **StableHLO** is the versioning model at the other end: 5 years backward and 2 years forward compatibility through a versioned dialect ([compatibility.md](https://github.com/openxla/stablehlo/blob/main/docs/compatibility.md)); `jax.export` itself promises only 6 months back ([export.md](https://github.com/jax-ml/jax/blob/main/docs/export/export.md)).
+- **MLIR** ([Rationale](https://github.com/llvm/llvm-project/blob/main/mlir/docs/Rationale/Rationale.md)): dialects and progressive lowering. Its bytecode is versioned, but only "assuming immutable dialects" ([BytecodeFormat.md](https://github.com/llvm/llvm-project/blob/main/mlir/docs/BytecodeFormat.md)). The model for us: front ends lower into the core IR, the core IR lowers into naga's (or straight to text), and each layer keeps its own version.
+- **Substrait** ([extensions](https://github.com/substrait-io/substrait/blob/main/extensions/functions_arithmetic.yaml), [breaking-change policy](https://github.com/substrait-io/substrait/blob/main/site/docs/spec/breaking_change_policy.md)) versions its function vocabulary as named extension files with URNs. That's the model for our `cesium/` ops beyond KHR's.
+
+**Other standardized expression IRs, checked and set aside.**
+
+- _OGC CQL2_ ([21-065r2](https://docs.ogc.org/is/21-065r2/21-065r2.html), approved 2024): boolean filters only, one number type, no vectors. A good input language for filters, not a core.
+- _MapLibre style expressions_ (spec v8, package 26.7.0, [v8.json](https://github.com/maplibre/maplibre-style-spec/blob/main/src/reference/v8.json)): no vectors, no `atan2`. A good input language for styles.
+- _Google CEL_ ([langdef](https://github.com/google/cel-spec/blob/master/doc/langdef.md)): 64-bit doubles but almost no math.
+- _W3C WebNN_ ([spec](https://www.w3.org/TR/webnn/)): no float64 type and no serialization.
+- _SPIR-V_ 1.6: far below the level the passes need, and WebGPU takes only WGSL. It's useful as a bridge out of naga, though (below).
+
+#### What the spikes built
+
+**(a) CesiumIR, minimal.** One structure, jaxpr-like: inputs with a type and a rate (uniform, feature, vertex, fragment); equations `{ op, args, type }` in dependency order; outputs. Op names and semantics are KHR_interactivity's, one for one, and the four inputs needed no op outside it. Equal equations are one (hash-consing) and constants fold as they're built. An editable literal is a `literal` equation with a **slot** (its place in the source: a path in a style's syntax tree, or `node.input` in a MaterialX graph), so hoisting literals to uniforms gives the same program shape whatever the values are. That shape is the pipeline-cache key. Passes, each an interpretation of the same structure: the float64 evaluator, `jvp` (Jacobians as programs), intervals, rates, literal hoisting, the WGSL and GLSL ES 3.00 emitters, and the JSON writer and checking reader (`cesium-ir/0.1`, vocabulary name, extension list; a reader refuses an unknown major version or an unlisted extension op, and re-derives every type).
+
+**(b) ONNX as the core IR.** The same programs written as ONNX models: opset 28, IR 14, double tensors (scalars shape `[]`, vectors `[n]`). Literals map well: they become graph inputs with initializers, which is ONNX's own overridable default. Rates have no place and go in `metadata_props`. Missing ops are decomposed. A reader turns the models back into (a)'s structure, so the same passes ran on them; a real (b) would write the passes against ONNX nodes. onnxruntime-web (1.31.0-dev, from the repository's tree) evaluated the models in float64 as an independent check.
+
+**(c) naga's IR as the core IR.** Not built: it needs Rust, and installing a toolchain was refused by this session's permission check. What could be measured was: naga-wasm in Node and the browser, and a WGSL function lowered through naga. naga-wasm can't export its IR, so the WGSL front end goes WGSL → naga → **SPIR-V** → CesiumIR (`fromSpirv.ts`, 161 lines, straight-line functions). SPIR-V is a ratified binary with a versioned grammar, so it's the bridge out of naga that holds still. `naga-crate/` has the source of our own minimal crate (validate WGSL with WebGPU's capabilities, write GLSL ES 3.00, write SPIR-V, and optionally export the IR as JSON), unbuilt.
+
+**The four inputs.**
+
+1. A 1.x style with `show` and `color`: two properties, a ternary, `color()`, `rgb()`, `vec4()`, `mix()` and `clamp()`. Front end: today's `parseStyleExpression`. Oracle: 1.x `Cesium3DTileStyle`, on eight features.
+2. The built-in twist (`src/transforms/twist.ts`), its restricted JS source through today's `parseTransform`, with its Jacobian. Oracles: today's evaluator, today's AD and the twist's own analytic Jacobian.
+3. A MaterialX graph of 13 nodes (height bands with stripes: `texcoord`, `geompropvalue`, `extract`, `multiply`, `modulo`, `smoothstep`, `divide`, `clamp`, `mix`, `add`), edited live: a value, a node's category, and a wire.
+4. A WGSL function (`length`, `clamp`, `atan2`, `sin`, `smoothstep`) lowered through naga. Oracle: the same function in float64 by hand.
+
+#### Results
+
+| Measure                                 | (a) CesiumIR                                                                                                                                                                                                      | (b) ONNX graph                                                                                                                                                                      | (c) naga IR                                                                                                          |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Style, float64, against 1.x             | exact on all 8 features (relative error 0), `show` identical. With `a + (b - a)t` for `mix` it was 1 ulp off; KHR's form matches 1.x                                                                              | exact through our reader; onnxruntime-web also exact (relative error 0)                                                                                                             | not built                                                                                                            |
+| Twist, float64, against today           | forward exact; J against the analytic one, 4.4 × 10⁻¹⁶ relative; J against today's AD, exact                                                                                                                      | exact through our reader and through onnxruntime-web                                                                                                                                | not built                                                                                                            |
+| WGSL function via naga, float64         | exact against the hand-written function (via SPIR-V). Its constants are f32, as WGSL's are                                                                                                                        | —                                                                                                                                                                                   | the same naga parse; passes would be Rust                                                                            |
+| AD                                      | forward mode as a pass; J of the twist is 166 equations from 64. The WGSL function's gradient agrees with central differences to 3 × 10⁻¹¹ (the differences' own error)                                           | none in the format; our pass on the reader's output                                                                                                                                 | would be written in Rust, over statement trees, locals and loops                                                     |
+| Intervals                               | the twist over a 40 × 20 × 20 m box equals today's to within 2 ulp; the style over Height 20 to 60 m gives `show` true and colour bounds                                                                          | our pass, as (a)                                                                                                                                                                    | Rust                                                                                                                 |
+| Per edit, Node (front end, hoist, WGSL) | style 143 µs for both fields (today's straight-to-WGSL compiler: 33 µs for `color` alone, same run); MaterialX 144 µs; twist with J 1.2 ms                                                                        | (a)'s front end, then 330–690 µs to build and encode the model; an onnxruntime session 10–55 ms warm (up to 460 ms in a loaded run)                                                 | WGSL via naga to the IR 0.66 ms                                                                                      |
+| Per edit, browser                       | style 115 µs; MaterialX 114 µs; MaterialX to GLSL 117 µs; twist with J 0.64 ms                                                                                                                                    | encode 0.74 ms                                                                                                                                                                      | WGSL via naga to the IR 0.24–0.33 ms; naga-wasm instantiate 0.1–0.6 s (2.1 s once, pane hidden)                      |
+| GPU cost of an edit (browser, WebGPU)   | value edit: a uniform write, 0.2 ms end to end, no module or pipeline. Shape edit: IR and WGSL 0.2–0.3 ms, module 1.1–1.6 ms, render pipeline 45 ms cold (2–4 ms when Chrome's pipeline cache already has it)     | same GPU cost                                                                                                                                                                       | same GPU cost                                                                                                        |
+| Bundle                                  | core passes 22.8 KB minified, 7.0 KB brotli; with the style front end 10.5 KB; all of (a) with today's JS transform parser 21.3 KB                                                                                | the format code 4.9 KB brotli on top of (a)'s passes; a runtime adds 14.8 MB of wasm                                                                                                | naga in the styling path: naga-wasm 592 KB brotli; our crate estimated 0.9–1.3 MB raw, 270–380 KB brotli (not built) |
+| WGSL output                             | accepted by Chrome's WebGPU for the style, the twist's J and the naga-lowered function                                                                                                                            | via (a)'s emitter                                                                                                                                                                   | —                                                                                                                    |
+| GLSL ES 3.00                            | our emitter's style and MaterialX GLSL compile and link in WebGL 2 (3–9 ms). naga's GLSL for the style also links, once the vertex shader names naga's varying (`_vs2fs_location0`); naga turns `&&` into an `if` | —                                                                                                                                                                                   | naga's writer, as (a)'s check                                                                                        |
+| Size of a program                       | style: 45 equations (23 operations), 18 literals; MaterialX: 28 (15), 11 literals; JSON 2,583 bytes for the style, read and checked in 50 µs                                                                      | style 55 nodes, MaterialX 38, twist 59 (2.4× (a)'s operations for MaterialX, from decomposed `mix`, `smoothStep`, `clamp`, `atan2`, swizzles); protobuf 1.7–2.9 KB, JSON 4.4–7.2 KB | —                                                                                                                    |
+| Versioning                              | ours: `cesium-ir/<major>.<minor>`, a vocabulary name, listed extensions; op meanings fixed by a ratified Khronos spec                                                                                             | the best of the three: opsets never change after release. But the repository's onnxruntime-web (1.31.0-dev) refuses IR 14 (ONNX 1.23); the spike wrote IR 10, opset 21 for it       | none: every naga major since 25 changed the IR                                                                       |
+| Literals to uniforms                    | literal slots; the shape key makes a value edit a uniform write (verified for style and MaterialX edits)                                                                                                          | literals as inputs with initializers: a natural fit                                                                                                                                 | Overrides or uniforms, through WGSL text                                                                             |
+| Rates                                   | in the type of every input; `rates()` gives every equation's                                                                                                                                                      | metadata only                                                                                                                                                                       | none                                                                                                                 |
+| Lines we'd own (spike, formatted)       | 1,603 for the IR and its passes; 873 for four front ends                                                                                                                                                          | 586 for the format on top of the passes, which stay ours                                                                                                                            | the passes again in Rust, the crate (73 so far), a Rust toolchain in CI, and front ends that write WGSL text         |
+
+**Findings beyond the table.**
+
+1. **Borrowing KHR_interactivity's names means borrowing its meanings, and that's the point.** Its `mix`, `clamp` and `smoothStep` differ from GLSL's and WGSL's at the edges. The emitters write KHR's formulas (two extra `min`/`max` for `clamp`, KHR's ramp for `smoothStep`), and the evaluator follows the spec. That's what made the style exact against 1.x.
+2. **The GPU side is a documented float32 approximation.** KHR requires float64; WGSL and GLSL ES have float32. The CPU evaluator is the conformant one, and the emitters say they approximate (df64 where a pass needs more, as today).
+3. **Literals to uniforms needs slots, not values.** With hash-consing by value, two equal literals become one node, and editing one changes the shape. Giving each written literal its place as identity fixes it; constant folding then leaves literals alone.
+4. **Chrome's pipeline cache hides repeated shapes.** A shape seen before costs 2–4 ms; a new one 45 ms for this small material. Toggling a node back and forth in an editor is cheap after the first time.
+5. **ONNX fits the format question better than the shader question.** Its versioning and its literal-as-default-input story are good. But it's tensor-oriented: no rates, no vectors as types (shape `[3]` tensors), none of the shader ops above, 2.4× the nodes, and its runtime is 14.8 MB and lags the format (refusing IR 14).
+6. **naga is a good shader IR and a poor core IR.** Its IR changes every quarter and isn't reachable from JS without our own build; it would put a compiler in every styled scene (contrary to the owner's answer 2); f64 can't reach GLSL ES. As the edge for whole modules (CI validation, GLSL ES) and as the WGSL-function front end (through SPIR-V, offline or lazily), it's the right tool.
+7. **A CesiumIR program is nearly a KHR_interactivity data subgraph.** Same op names, same types, values referencing lower indices only. A writer to KHR's graph JSON (math and type nodes, with inputs as variables) looks small; not built in the spike, because the socket names of every op need checking against the spec first.
+8. **What the IR still lacks before an escape hatch isn't needed** (the owner's answer 4): texture and sampler reads (MaterialX image nodes, imagery), matrices (KHR has them; the spike didn't need them), general bounded loops (§13.38; tables and a search primitive are below), noise (MaterialX's `noise2d`, `fractal3d`), screen-space derivatives, and structs. None of the first four inputs needed any of them.
+
+#### Tables, search and piecewise functions (input 5; added 2026-11-13 at the main session's request)
+
+**Why it matters.** A user's JS warp avoids GPU fitting only when the engine can compile it: restricted JS is parsed into the IR, emitted as exact WGSL, and differentiated by forward-mode AD; an opaque closure is fitted. So the IR's expressiveness decides how many real warps run exactly. Real warps need more than a scalar DAG: a corridor needs a table of segments, a search by station and per-segment closed forms; lattices and lookups need table reads. Every built-in warp compiles exactly today, but without a table op the corridor compiles **per element**: the 39-line road (Täsch to Zermatt) gives 607 IR nodes, 200 dynamic parameters, 34,260 characters of WGSL and 416 floats per draw (`test/corridorUnrollCompiled.test.ts` on `dev/analytic-warps`, all four re-measured here). The main session measured 1.2 s to parse it in the plan-and-profile scene, holding the first warped draw for about 2.8 s; in Node here, parse took 20 ms and `compileRoute` 25 ms.
+
+**What (a) gained** (`cir.ts`, `fromAlignment.ts`):
+
+- **Typed constant tables:** a table is declared with named float columns and a row count. Its data is an input, so editing the alignment is a buffer write, never a new shape; the row count is part of the shape, because it bounds the GPU's search. On the GPU a table is a read-only storage array (WGSL) or a std140 uniform block of vec4s (GLSL ES 3.00, as WebGL 2 has no storage buffers); on the CPU, a typed array.
+- **`cesium/search`:** the last row whose column is at most a key (0 if none), as a binary search bounded by `ceil(log2(rows)) + 1` steps, a constant, as the GPU safety rules require. **`cesium/tableGet`:** a row's column. Both are extensions; `type/intToFloat` is KHR's.
+- **Piecewise selection** is KHR's `math/select` on a table value (the line or arc by the row's curvature); `math/switch` is there for integer cases.
+- **No general loops.** KHR's loops are flow nodes (`flow/for`, `flow/while`), not pure math. A search primitive covers sorted tables while keeping every pass simple. General bounded loops stay on the gap list.
+
+**Input 5:** a plan-and-profile alignment as one warp, (station, offset, height) to (x, y, z). Plan: a 300 m line, a 400 m arc of radius 500 m, and a 300 m line (today's `corridorUnroll` placement); profile: a 3% grade, a 300 m parabolic vertical curve to −2%, and the tangent. Two tables (plan: 5 rows by 6 columns; profile: 3 by 4), two searches, and the closed forms: **59 equations, whatever the number of elements**. The same program runs the 39-line road with its 41-row table, and matches today's corridor exactly there.
+
+**How each pass handles a table** (all measured on the CPU except df64):
+
+- _Float64 evaluation:_ the search on the CPU is the same binary search. Map against the reference (today's corridor descriptor plus the profile by hand), at every breakpoint and a hair either side, past both ends, and offsets to ±1.5 km: **exact (0 m)**; the baseline asks 10⁻⁸ m.
+- _AD:_ a search and a table read are piecewise constant, so their tangent is zero and a derivative is its piece's, one-sided at a breakpoint as the CPU chooses. J against the analytic one: **8.9 × 10⁻¹⁶** (baseline 10⁻⁹). The Jacobian program is 62 equations.
+- _Intervals:_ a search maps a key interval to a row interval; a table read takes the hull of the column over those rows. Across the line-to-arc join that is useless: the unselected arc branch divides by a curvature interval holding 0, and the bounds come out NaN. **Splitting at the tables' breakpoints** (`evaluateIntervalSplit`: each piece reads one row per table) gives finite bounds: 62.7, 57.1 and 6.3 m wide for a 50 by 40 by 5 m box over the join, in 2 pieces, with no dense sample outside them.
+- _Residual (the compiler's float32 change from a draw's centre):_ a per-draw **window of rows**. A draw stores its centre's row per table and the rows either side, and for each the centre values the rules read, the crossing term `v_i(c) - v_ic(c)` (a float64 difference stored in float32) and the breakpoints relative to the centre. A vertex picks its row by comparing its float32 offset with those breakpoints (no table search per vertex) and adds the crossing term to the residual rules' change within the row, where the table values are constants. Emulated in float32 (`residualDelta`): **0.026 mm** worst at offsets to ±1.5 km, with 200 of the samples in a different row from their centre's (baseline 0.1 mm). Estimated per-draw data: **79 floats** for a window of one row each side, whatever the number of elements. The window must cover a draw's radius: the road's shortest segment is 36 m, so larger draws need more rows (per-draw data grows with the window, not the table).
+- _df64 centre pass:_ the per-draw search runs on (hi, lo) copies of the table (twice its floats), about log2(rows) df64 comparisons per draw and none per vertex. Not built.
+- _GPU:_ Chrome's WebGPU accepts the WGSL (storage arrays and the search function); WebGL 2 compiles and links the GLSL ES 3.00 (uniform-block tables, dynamic indexing, the bounded loop) in 30 ms.
+
+| Input 5 measure    | (a) tables and search                                                                                                                                 | Today, per element (3 elements / 39-line road)       | (b) ONNX                                                                                                                    | (c) naga IR                                                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| IR size            | 59 equations for any element count; J 62                                                                                                              | 83 / 607 nodes                                       | 77 nodes                                                                                                                    | —                                                                                                                   |
+| Dynamic parameters | none: table data, 42 / 258 floats per view                                                                                                            | 21 / 200                                             | table columns as graph inputs                                                                                               | storage arrays                                                                                                      |
+| Shader size        | 2.5 KB for the float32 function (the residual form not built; it would be about today's route for a program this size, constant in the element count) | 12.0 / 34.3 KB                                       | via (a)'s emitter                                                                                                           | —                                                                                                                   |
+| Per-draw floats    | about 79 (estimate, window of 1 row)                                                                                                                  | 76 / 416                                             | —                                                                                                                           | —                                                                                                                   |
+| Build              | 39 µs; with WGSL 53 µs; with J and WGSL 131 µs                                                                                                        | parse 0.4 / 20 ms; `compileRoute` 1.3 / 25 ms (Node) | session 5.5 ms; exact against (a)                                                                                           | —                                                                                                                   |
+| Map, J, residual   | 0 m; 8.9 × 10⁻¹⁶; 0.026 mm                                                                                                                            | the baseline's 10⁻⁸ m, 10⁻⁹, 0.1 mm                  | map exact                                                                                                                   | —                                                                                                                   |
+| Search             | a primitive, binary, bounded                                                                                                                          | a chain of selects over every element                | no sorted search: compare every row and count (`LessOrEqual`, `ReduceSum`); our passes would have to recognize that pattern | `Loop` with `Break` natively; passes in Rust would have to recognize it as a search to keep AD and intervals simple |
+
+So tables and a search primitive turn the corridor from a program that grows with the alignment into a fixed program over data. That is the case for adding them as the first `cesium/` extensions. ONNX can represent tables (as inputs) but not a sorted search. naga's IR can represent anything a shader can, but its passes would have to rediscover the same primitive from loops.
+
+#### Recommendation (to take or leave)
+
+**Candidate (a): CesiumIR, a small jaxpr-like IR whose op vocabulary and semantics are KHR_interactivity's.**
+
+- What we'd own is the container (`cir.ts`, 632 lines before formatting: types, rates, equations, slots, the evaluator) and the passes (the evaluator, AD, intervals, rates, hoisting, two emitters), which we'd own under any candidate. The meanings of the ops are Khronos's, ratified, float64, with edge cases specified. That answers most of the "rolling our own IR" worry: the wheel we'd make is the axle, not the tyre.
+- The JSON form is versioned (`cesium-ir/<major>.<minor>`), names its vocabulary, and lists extension ops, so a reader refuses what it doesn't know. `cesium/` ops are added like Substrait's extensions, each with its own version.
+- **ONNX: no** as the core IR. **naga's IR: no** as the core IR. **naga: yes** at the edges: validating emitted WGSL in CI, writing GLSL ES for whole modules, and reading WGSL functions into the IR through SPIR-V.
+- Today's `src/transform/ir.ts` becomes this IR (its scalar ops map one for one; `TODAY_TO_CIR` in the spike), and `styleExpression.ts` lowers to it instead of to WGSL strings. The style front end costs a few times today's direct compiler (143 µs for `show` and `color`, against 33 µs for `color` alone), small beside the 45 ms pipeline a shape change causes.
+
+**How the WebGL 2 renderer uses it.** It takes the same programs. The GLSL ES 3.00 emitter is the WGSL one's twin (one `call()` switch with the differences: `atan`, `mod`'s sign, the ternary for `select`, `clamp` for `saturate`). Uniforms are one std140 block of vec4 slots in both languages, so the slot layout and the values array are shared. Its own whole-module shaders can be written in WGSL and translated by naga's GLSL writer, within ES 3.00's limits (§13.41 fact 1).
+
+**How the MaterialX live-editing example uses it.** MaterialX stays at the edge: the front end reads a graph (the browser's `DOMParser`, or JsMaterialXCore's 1.1 MB wasm when full document semantics are needed, such as nodedef lookup and version upgrades) and maps nodes to KHR ops by name. A value edit (a slider) is a uniform write: 0.2 ms, no compile. A category or wiring edit is a new shape: 0.2–0.3 ms to re-emit, then a pipeline (45 ms cold here, a few milliseconds once Chrome has seen that shape). The example can show both costs live, as `spikes/coreIr.html` does, and keep the last pipeline on screen while the new one compiles.
+
+#### Questions for the owner
+
+1. **Adopt KHR_interactivity's math and type nodes as the normative vocabulary** (names and meanings, float64 included), with `cesium/` extensions only where it lacks an op?
+2. **The normative serialization:** our compact versioned JSON (the spike's), or KHR_interactivity's graph JSON itself (math and type nodes, with rates and slots in an extension), so a CesiumIR program is a valid glTF interactivity subgraph? The second costs verbose files and a version field KHR doesn't have.
+3. **The GPU side as a documented float32 approximation** of float64 semantics, with df64 where a pass needs it: agreed?
+4. **Our own naga crate:** it needs a Rust toolchain (rustup, `wasm32-unknown-unknown`, wasm-bindgen) on development machines and CI. Installing it here was refused by the session's permission check, so the crate is source only. Approve installing it, so the crate is built and its size measured? Until then, naga-wasm in CI validates with every capability on, which is looser than WebGPU.
+5. **The order of the gap list** (finding 8) toward an API without a WGSL escape hatch: textures first (imagery and MaterialX images), then matrices, noise, general bounded loops?
+6. **Tables and a search primitive as the first `cesium/` extensions** (input 5), with the residual pass's row window, so the corridor and other table-driven warps compile to a fixed program (59 equations instead of 607 nodes for the road)? General loops would wait.
+7. **The name** (below).
+
+#### Owner's decisions (2026-11-13)
+
+1. **The vocabulary:** `KHR_interactivity`'s math and type nodes, names and meanings, float64 included, are normative. `cesium/` extensions are added only where it lacks an op.
+2. **The serialization:** our compact versioned JSON (`cesium-ir/<major>.<minor>`, its vocabulary named, extensions listed) is normative, with a lossless writer and reader to `KHR_interactivity`'s graph JSON for glTF interchange.
+3. **The GPU side** is a documented float32 approximation of float64 semantics, with df64 where a pass needs it. The CPU evaluator is the conformant one.
+4. **A Rust toolchain on development machines and CI is approved,** for our own naga crate (validation with WebGPU's capabilities, GLSL ES 3.00, SPIR-V, IR export). Rust and naga never reach a production build: the crate runs in CI and in offline translation (the WebGL 2 renderer's whole-module shaders), and naga loads in a browser only lazily, for the WGSL front end below.
+5. **WGSL is a front end, not an escape hatch:** a WGSL function, lowered through naga into Cesium IR (lazily loaded, as runtime Slang is), gets every pass (CPU evaluation, autodiff, intervals, literals to uniforms, the WebGL 2 renderer). What the IR can't yet express is refused with a diagnostic; raw WGSL that bypasses the IR is not offered.
+6. **The gap order:** textures and samplers first (imagery, MaterialX images), then matrices, then screen-space derivatives (procedural patterns need them for antialiasing), then noise, general bounded loops and structs.
+7. **Tables and the bounded search** are the first `cesium/` extensions, with the residual pass's row window, so the corridor and other table-driven warps compile to a fixed program. They also cover transform-graph Task 9's array parameters. General loops wait.
+8. **The name:** **Cesium IR** in prose, two words, as Slang IR, Tint IR and Naga IR are written; **`cesium-ir`** as the identifier (the JSON format and the package). No abbreviation: "CIR" is taken by ClangIR and Codon's IR.
+9. **Vendor extensions we define use the `BENTLEY_` prefix** (owner, 2026-11-13): Cesium IR's extension in `KHR_interactivity` files is `BENTLEY_interactivity_ir`. Existing extensions the engine reads, such as `CESIUM_primitive_outline`, keep their names. Where Cesium IR lives (`src/ir/` and `@cesium/next/ir` until IR-13), runtime Slang through Cesium IR, and MaterialX parsing (`DOMParser`, JsMaterialXCore only when needed) are decided in the implementation plan.
+
+#### Naming
+
+- **"CesiumIR"**: no project, package or repository by that name found (web search; npm `cesium-ir`, `cesiumir` and `@cesium/ir` unused; GitHub, no repositories), read 2026-11-13. Its obvious abbreviation **"CIR" is taken twice**: ClangIR, and the IR of the Codon compiler ([docs](https://docs.exaloop.io/developers/ir/)).
+- **Alternative 1: "CsIR"**, after caesium's chemical symbol. No compiler or IR by that name found (web search, npm, GitHub). Short, tied to the project without spelling it out, and unlike "CIR" it doesn't collide. Risk: "CSIR" is India's Council of Scientific and Industrial Research, a different field.
+- **Alternative 2: "Tessera"**, a mosaic tile: small typed pieces that compose, and a nod to tiles. No IR or shader project by that name found, but npm's `tessera` is taken by an unrelated package, so the package would be scoped (`@cesium/tessera`). A word, not an acronym, so it reads well in docs ("a Tessera program").
+- Recommendation: keep "CesiumIR" in prose and use **CsIR** as the short form; take Tessera if the owner wants a name that isn't an acronym.
+
+### 13.43 A job system for background work (design and first slice, 2026-11-13)
+
+**Why.** A CPU profile of the vertical-exaggeration example (`?x=4`) showed ticks about 120 ms apart while the render took about 3 ms of CPU. The terrain refit alone took about 7 of 25 s on the main thread; it now runs in the decode worker (merged 7358ab5310). The owner wants one system for multi-tick background work, modelled on game engines: jobs with priorities, dependencies and cancellation on a pool of workers, a tick in fixed phases, and a time budget only for what has to stay on the device's thread.
+
+#### Prior art
+
+All pages read 2026-11-13.
+
+| System                                                                               | Date                                                                       | What matters here                                                                                                                                                                                                                                                                                                            | Source                                                                                    |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Unreal Tasks System (`UE::Tasks`)                                                    | UE 5.0, released 2022-04-05 (that it first appeared in 5.0 is unconfirmed) | A graph of tasks with prerequisites, and waiting on one doesn't block a worker. Five priorities, from High to BackgroundLow. Pipes run a chain of tasks one after another. It shares TaskGraph's workers. The docs don't mention cancellation or work stealing.                                                              | dev.epicgames.com/documentation/en-us/unreal-engine/tasks-systems-in-unreal-engine        |
+| Unity C# Job System                                                                  | 2018.1 (blog 2018-05-02)                                                   | Each job gets a copy of its data in native memory, never managed references. A `JobHandle` makes one job depend on others, and `CombineDependencies` merges them. The main thread calls `Complete()` before it reads a result. A worker that runs out of work takes jobs from other workers' queues (work stealing).         | docs.unity.com …/job-system/overview, …/job-dependencies                                  |
+| Unity Async Upload Pipeline                                                          | blog 2018-10-08                                                            | `QualitySettings.asyncUploadTimeSlice`: at most this many ms per frame (1–33, default 2) of texture and mesh uploads on the render thread, with a ring buffer (`asyncUploadBufferSize`). Advice: the largest slice that doesn't drop frames, raised during loading screens.                                                  | unity.com/blog/engine-platform/understanding-the-async-upload-pipeline                    |
+| Naughty Dog, "Parallelizing the Naughty Dog Engine Using Fibers" (Christian Gyrling) | GDC 2015                                                                   | A fiber-based job system, with The Last of Us Remastered running at 60 fps on PS4. Two details come only from secondhand copies of the slides: jobs wait on atomic counters as their dependencies, and there are three priority queues with worker threads locked to cores. FiberTaskingLib, built from the talk, does both. | gdcvault.com/play/1022186; github.com/RichieSams/FiberTaskingLib                          |
+| Bevy task pools (`bevy_tasks`)                                                       | Bevy 0.2, 2020-09-19                                                       | Three pools: compute (work that must finish for the next frame), async compute (work that may span frames) and I/O. Built on `async-executor`. Its docs don't say whether it steals work.                                                                                                                                    | docs.rs/bevy_tasks; bevy.org/news/bevy-0-2                                                |
+| Browser `scheduler.postTask`                                                         | Chrome 94, Firefox 142, no Safari; a WICG draft (2025-05-30)               | Three priorities: user-blocking, user-visible and background. A `TaskController` aborts a task or changes its priority later. Exposed in workers too. It orders work within one thread; it doesn't spread work across threads.                                                                                               | developer.mozilla.org/docs/Web/API/Scheduler/postTask; wicg.github.io/scheduling-apis     |
+| OffscreenCanvas, worker `requestAnimationFrame`, `SharedArrayBuffer`                 | Baseline since March 2023 (the first two)                                  | `requestAnimationFrame` works only in dedicated workers that have an owner window. `SharedArrayBuffer` needs cross-origin isolation: COOP `same-origin` plus COEP `require-corp` or `credentialless`.                                                                                                                        | MDN: OffscreenCanvas, DedicatedWorkerGlobalScope.requestAnimationFrame, SharedArrayBuffer |
+
+What we take: Unity's and Bevy's split between work that must finish this tick and work that may span ticks; Unreal's and Unity's prerequisites and Naughty Dog's counters as dependencies; Unity's upload time slice as the model for one main-thread budget; `postTask`'s `TaskController` as the model for cancelling and re-prioritizing from outside the job. What doesn't carry over: fibers and shared-memory work stealing need threads that share a heap, which browser workers don't, except through `SharedArrayBuffer`.
+
+#### The design
+
+- **Job types.** A job is a request type the content worker knows (`worker.ts`): a pure function of its payload, whose large arrays are transferred (`JobSpec.transfer`), never shared. Its main-thread step (`JobSpec.apply`) is separate and runs only in the apply phase. A job that fetches says so (`io: true`); in time, fetching moves out of the job and the job becomes the decode alone, over the bytes it is handed.
+- **Priority.** A job's priority is its tile's request priority, the same number the tileset orders requests by (`Budgeted`: band plus distance, lower first; `Tile.requestPriority`). It is a function, read each time the queue or the apply phase sorts, so a job follows its tile as the camera moves. Screen-space error enters through the bands; a pure SSE order would be a change to `Budgeted`, not to the jobs.
+- **Dependencies.** `JobSpec.after` lists jobs that must apply first; the payload may be a function of their values, read when the job is posted. Example (the slice): a tile whose parent's surface isn't resident measures its deviation after the parent's decode job applies. A cancelled dependency cancels its dependents; a failed one fails them.
+- **Cancellation.** The tile's `AbortSignal` (deselected, a caster yielding, the tileset destroyed) or `Job.cancel()` (`TerrainSource.unloadTile`: evicted) ends a job wherever it is: never posted from the queue, told to stop on its worker (its fetches abort; the worker stays counted busy until it answers), or its arrived result discarded (`JobSpec.discard`) before the apply phase.
+- **Worker pool.** One queue on the main thread, sorted by priority when read. A worker takes the most urgent ready job when it has room: at most `CPU_PER_WORKER` (2) CPU jobs at once, one running and one in its message queue, so the order holds; I/O jobs aren't held to it (the request scheduler bounds them per origin). With no per-worker queues there is nothing to steal: a central queue that idle workers pull from is the message-passing equivalent of Unity's work stealing: no worker sits idle while a job it could run waits. Per-worker deques with stealing need shared memory (below).
+- **Main-thread apply.** One phase at the end of each tick (`Engine.loop`, after the after-tick listeners): finished jobs' steps, most urgent first, until `Engine.jobBudgetMs` (4 ms) is spent; a step expected (from its type's recent cost) to overrun waits for the next tick, but at least one runs. Its results (content for the upload queue) are there for the next tick's selection and uploads. While no loop runs (tests, `stop()`), results apply as they arrive, as before. The inspector's Frame section shows the phase's time and count, and the jobs queued, running and waiting to apply (`FrameStats.jobs`); the recorder has `jobs_*` columns.
+- **Shared memory, detected (the owner, 2026-11-13).** The rule of §3.7 stands: nothing may require `SharedArrayBuffer`, because many deployers can't set COOP and COEP. So the engine detects isolation (`globalThis.crossOriginIsolated`, on the page and in each worker) and uses shared memory only when it is there. The `Jobs` API is the same either way, callers never branch, and the inspector shows the mode ("Job memory: shared memory" or "transfer"; `JobStats.memory`).
+  - **Done in this slice.** A decoded terrain tile's kept heights (u, v, h, triangles, normals) go into one `SharedArrayBuffer`, so every later post of them shares instead of the page copying them. That covers a child's morph and refit requests, upsampling and deviation jobs. Checked under COOP `same-origin` with COEP `credentialless`: all 1,216 resident tiles held shared heights, with no errors.
+  - **Next.**
+    - The SoA tile table (§3.7, §13.7) in shared memory, so traversal can run in a worker over the live table.
+    - Rings in shared memory between workers and the device thread. Workers park on `Atomics.wait`. The page can't block, so it polls once a tick in the apply phase, or uses `Atomics.waitAsync` (Chrome 90, Firefox 145, Safari 16.4).
+    - Per-worker deques with stealing.
+    - Decode workers writing vertex data straight into a shared upload ring. `queue.writeBuffer` and `writeTexture` take `AllowSharedBufferSource`, so the device thread uploads from the ring with no copy.
+  - **Deployment notes.**
+    - An iframe gets isolation only from an isolated parent and `allow="cross-origin-isolated"`. That permission is in Chrome 88 and later; Firefox and Safari don't support it (MDN compat data).
+    - COEP `credentialless` eases third-party assets: Chrome 96, Firefox 119, not in Safari (MDN compat data, read 2026-11-13). So Safari needs `require-corp`, with CORP or CORS on every asset.
+- **Progressive jobs (the owner, 2026-11-13).** `Jobs.slice({ step(budgetMs) → { partial?, done }, onPartial, priority, signal, cancel })` is a resumable walk on the device's thread.
+  - Each slice can hand back a partial result the engine uses at once, for example a sound lower bound that only tightens.
+  - Slices share what the apply phase has left, most urgent first.
+  - A changed input aborts the walk, and the caller starts a new one.
+  - The body occluder's walk on `dev/horizon` (`BoundJob.step(budgetMs) → { s?, done }`, `bodyOccluder.ts`) has exactly this shape. It is the second workload to move once it lands, followed by imagery compositing, geometry-stats recounts and a progressive renderer's accumulation (§13.41's "refinement" item: a progressive job can report as a refinement source).
+  - Where a walk's data can move, the same step function runs on a worker. Each partial then comes back as a result applied in the phase.
+
+#### Where it plugs in
+
+The loop's phases today (`src/scene/Engine.ts`, `loop` then `tick`):
+
+| Phase                  | What runs                                                                                                                                     | Budget today                                                            |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 1 Tick listeners       | the app's clocks and animations; bulk slices (`tickSlices`)                                                                                   | bulk: 4 ms                                                              |
+| 2 Camera layer         | placements (`cameras.update`)                                                                                                                 | none                                                                    |
+| 3 Warp fits            | `warpTick`                                                                                                                                    | `warpBudgetMs` 4 ms                                                     |
+| 4 Tick                 | sky upload slice; links; change detection; selection, requests and uploads (`updateTilesets`); warp fits for placed tiles; idle picks; render | uploads: bytes and ms (`uploadBudget`); external tile trees: one a tick |
+| 5 After-tick listeners | the app                                                                                                                                       | none                                                                    |
+| 6 Apply (new)          | jobs' main-thread steps                                                                                                                       | `jobBudgetMs` 4 ms                                                      |
+
+Outside the loop, worker replies used to run their main-thread steps as messages arrived, between ticks and unbudgeted; the terrain refit's page-side fallback ran on its own `setTimeout`, 2 ms per 16 ms. Both now run in phase 6 when the engine is running. Later, the budgets of phases 1, 3, 4 and 6 should come from one tick budget (the time left before the next vsync), not four fixed ones.
+
+**Main-thread hot spots.** Measured with `profilePage` (500 µs samples, which inflate wall time) and `profileTree` (inclusive time) on `#/examples/vertical-exaggeration?x=4` and `?x=10&view=zermatt-close`, headless Edge on this machine's GPU, 25 s each, 2026-11-13.
+
+| Hot spot                               | x=4 before the refit merge (337427411e) | x=4 now (7358ab5310) | zermatt-close now | Where it goes                                                                                                                                                                                                                                                                                                                 |
+| -------------------------------------- | --------------------------------------- | -------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Profile: wall / main thread busy       | 40.8 s / 17.9 s                         | 63.7 s / 16.8 s      | 97.3 s / 37.7 s   |                                                                                                                                                                                                                                                                                                                               |
+| Terrain decode completion (`loaded`)   | 9.0 s, 8.9 s of it the refit            | under 0.1 s          | under 0.1 s       | Refit: decode worker (merged). The rest: the apply phase (this slice); the fallback becomes deviation jobs.                                                                                                                                                                                                                   |
+| Tile selection (`updateTilesets`)      | 5.4 s                                   | 11.5 s               | 27.6 s            | The biggest by far. Not a background job: it needs this tick's camera. Make it cheaper first (`display` 6.2 / 14.1 s, `updateVisibility` 4.8 / 10.6 s, screen-space error 2.1 / 4.0 s, the warp's `drawnTile` 1.1 / 2.7 s), then traverse in a worker over the tile table in shared memory (§13.7), or move the whole engine. |
+| Occlusion asks (`askOcclusion`)        | 0.4 s                                   | 1.25 s               | 2.8 s             | Part of selection; GPU feedback                                                                                                                                                                                                                                                                                               |
+| Requests (`tilesetLoad.request`)       | 0.5 s                                   | 1.1 s                | 2.4 s             | Stays (per tile, cheap)                                                                                                                                                                                                                                                                                                       |
+| Render (`renderTick.render`)           | 0.7 s                                   | 1.1 s                | 3.3 s             | Device thread                                                                                                                                                                                                                                                                                                                 |
+| Imagery update (`GlobeImagery.update`) | 0.6 s                                   | 0.8 s                | 2.5 s             | Compositing as a progressive job                                                                                                                                                                                                                                                                                              |
+| Warp fits (`warpTick`)                 | 0.3 s                                   | 0.4 s                | 1.3 s             | Already budgeted; a progressive job                                                                                                                                                                                                                                                                                           |
+| Uploads (`tilesetUpload.upload`)       | 0.2 s                                   | 0.3 s                | 0.8 s             | Device thread, budgeted (`uploadBudget`)                                                                                                                                                                                                                                                                                      |
+| The example's React UI                 | 0.45 s                                  | 0.8 s                | 1.2 s             | The app's                                                                                                                                                                                                                                                                                                                     |
+
+**What fills the time between ticks.** Each profile sample was classed by the task it ran in. At x=4 before the merge, a tick plus the gap after it averaged about 150 ms: 51% idle, 25% terrain decode completion, 14% the tick, the rest other tasks. After the merge, the decode completion is gone, but the main thread is still idle for 62% of that time at x=4.
+
+The ticks are held by the GPU. Each submit takes a median of 206 ms (x=4) and 189 ms (zermatt-close) from `queue.submit` to `onSubmittedWorkDone`, while the page's own `requestAnimationFrame` runs at 16.7 ms. Other sessions were using this GPU, so these numbers can't separate the example's own GPU cost from contention.
+
+So the "120 ms apart" seen earlier was main-thread work only in part. Before the merge, a quarter of the gap was the refit. At zermatt-close, selection fills about half of each gap. A trace with nothing else on the GPU should come next (next steps, below).
+
+#### First slice (this change)
+
+- `src/io/Jobs.ts`: the queue, the dependencies, cancellation and the apply phase, over a port (`JobPort`) so tests use a fake worker. `WorkerPool` now sends every request through it: `request()` is a job with no priority and no apply step (as before); `submit()` takes the rest.
+- `Engine`: the apply phase as the loop's last step (`jobBudgetMs`, default 4 ms), a `jobs` tick reason while results wait, `FrameStats.jobs`, and the inspector's and recorder's rows.
+- The workload migrated, terrain (`TerrainSource.jobs`, set by `addTerrain` and `addEllipsoid`):
+  - A tile's decode is an I/O job with its tile's request priority, and its decode completion (`loaded`: availability, children, bounds, the refit's bookkeeping) is the job's apply step.
+  - The refit's page-side fallback (pairs the decode worker couldn't measure because the parent's surface wasn't resident) is now a `terrainDeviation` CPU job on a worker. It runs after the parent's decode job when the child came first, and is cancelled when either surface leaves or the parent's decode is cancelled. It replaces the fallback's own 2 ms per 16 ms `setTimeout` budget, which stays for a source without jobs (tests).
+- Tests:
+  - `test/jobs.test.ts` (27): priority order and re-reading, the CPU limit, the apply phase and its budget, cancellation (queued, running and arrived), dependencies with values, failure, and progressive jobs (partials, sharing the budget, cancellation).
+  - `test/sharedMemory.test.ts` (3): shared heights when isolated, transferred otherwise, and the mode.
+  - Three in `test/terrainRefit.test.ts`: the same errors as measuring on the page; a child measured after its parent's decode, in the apply phase; and cancellation by eviction and by the parent's decode.
+  - Full suite, 2026-11-13, on a machine heavily loaded by other sessions: the failures were timeouts, plus `internalMembers` (skipLibCheck) and `warpGlobe` (stepwise under a warp), which fail on the base 7358ab5310 too, and `volumes`, which needs 1.x's generated shaders that this worktree lacks. Two `casterLoop` tests failed only after earlier tests in the file timed out, and pass alone on both builds.
+- Measurement tools: `profilePage.mjs` keeps the raw profile (`PROFILE_OUT`), and `scripts/profileTree.mjs` sums inclusive time by function.
+
+**Before and after**, recorder only (no profiler), alternating builds, three runs of 25 s each. Before is the merged base 7358ab5310; after is this slice. Tick gaps are from 3 s on.
+
+| Page          | Build  | Tick gap p50 / p90, ms (per run)  | Long tasks, s (per run) | Apply phase, ms (p50 / p99 / max) |
+| ------------- | ------ | --------------------------------- | ----------------------- | --------------------------------- |
+| x=4           | before | 183 / 250 · 33 / 117 · 50 / 167   | 0.65 · 1.87 · 1.49      | —                                 |
+| x=4           | after  | 167 / 217 · 117 / 200 · 50 / 167  | 0.05 · 0.57 · 0.82      | 0.2 / 3.5 / 4.0                   |
+| zermatt-close | before | 150 / 267 · 83 / 117 · 133 / 250  | 12.6 · 21.2 · 13.2      | —                                 |
+| zermatt-close | after  | 100 / 117 · 117 / 133 · 117 / 167 | 23.0 · 20.4 · 17.4      | 0.6 / 3.4 / 7.7                   |
+
+What this shows:
+
+- The tick spacing differs between runs of the same build by more than between the builds. With the GPU holding the ticks (above), the slice can't move it in these runs, and it doesn't.
+- At x=4, long tasks were fewer after (0.05–0.82 s against 0.65–1.87 s), but three runs are too few to claim a gain.
+- The apply phase keeps to its budget: p99 3.4–3.6 ms, with one step over it (7.7 ms, a step longer than the budget runs alone).
+- Main-thread busy time, from the profiles: x=4 16.8 s before and 13.9 s after, zermatt-close 37.7 s and 51.9 s. The runs' wall times differ (64 and 50 s, 97 and 113 s), so these are noise as well.
+- What the slice changes is where the work runs and that it is bounded and visible. The cost that remains is selection, on the main thread.
+
+#### Spike: the whole engine in a worker (measurements only, not merged)
+
+The spike page is `spikes/workerLatency.html` on the branch `spike/offscreen-worker`, which is not merged; it builds on the M0 smoke test (§10, `spikes/worker.html`), which was rerun as well. It runs the M0 worker spike's scene with the ellipsoid globe streaming under it: the globe's tiles decode in content workers, which are nested ones when the engine itself is in a worker. The same probe code runs with the engine on the page (`?mode=main`) or in a dedicated worker on a transferred `OffscreenCanvas` (`?mode=worker`).
+
+A script drives the page in headless Edge on this machine's GPU (1280 by 800 CSS px). Each mode runs with the page idle, and then with a 50 ms busy-wait on the page every 200 ms (`busy`):
+
+- Frame stability: the camera turns every tick for 8 s, and we time the engine's ticks.
+- Input: 60 real pointer moves, 100–140 ms apart, each setting the camera's heading. We time from the event's `timeStamp` to the end of the tick that renders it ("submit"), and to `onSubmittedWorkDone` for that frame ("GPU done"). GPU done stands in for the photon. Display latency adds the compositor's frame or two, which a headless browser can't show.
+- Picks: 30 picks of the view's centre, timed on the page's clock from the call to the answer.
+
+Headless Edge, this machine's GPU (shared with other sessions), 2026-11-13. Two rounds; each cell gives round 1 then round 2.
+
+| Measure                                   | Main thread                    | Main, busy page     | Worker                           | Worker, busy page     |
+| ----------------------------------------- | ------------------------------ | ------------------- | -------------------------------- | --------------------- |
+| Tick gap p90 / p99, ms                    | 16.7 / 16.8 · 33 / 50          | 16.8 / 33 · 33 / 50 | 33 / 50 · 16.7 / 16.8            | 33 / 67 · 50 / 83     |
+| Ticks over 25 ms                          | 0% · 28%                       | 9% · 25%            | 14% · 0.2%                       | 13% · 24%             |
+| Input → submit, p50 / p90, ms             | 10 / 16 · 11 / 17              | 12 / 26 · 13 / 52   | 12 / 18 · 11 / 18                | 12 / 28 · 15 / 56     |
+| Input → GPU done, p50 / p90, ms           | 20 / 25 · 30 / 42              | 26 / 60 · 39 / 86   | 25 / 39 · 22 / 28                | 28 / 50 · 55 / 98     |
+| Pick, p50 / p90, ms                       | 4.2 / 14.5 · 14 / 18           | 5.8 / 53 · 13 / 55  | 1.3 / 1.9 · 1.5 / 3.0            | 1.3 / 2.5 · 1.7 / 8.2 |
+| HTML pin behind the canvas, p90 / max, ms | 0 / 0 (written in the tick)    | 0 / 0               | 0.2 / 2 · 0.1 / 0.2              | 34 / 111 · 32 / 48    |
+| Ready (page load to first frame), ms      | 785 · 2,250; later 1,554–1,739 |                     | 2,594 · 3,854; later 2,738–3,992 |                       |
+
+- The M0 smoke test (`spikes/worker.html`) still passes. Its heading went from 11° to 95° across a 3 s block of the page.
+- `?mode=auto` probes in the worker: `navigator.gpu`, then an adapter, then a WebGPU context on a throwaway `OffscreenCanvas(1, 1)`. Its answer came 1.7–2.1 s after page load, mostly the worker's module load (the dev server serves modules unbundled). Startup was then 3.2–3.8 s, against 2.7–4.0 s when the worker was asked for directly. So in two runs the probe added no time that could be told apart from noise.
+- Frame stability is inconclusive: the two rounds disagree, and the GPU wasn't ours alone. These findings held in both rounds:
+  - A busy page delays input in either mode, since input arrives on the main thread. The worker doesn't help input.
+  - Picks answer faster from the worker (1.3–1.7 ms p50).
+  - A worker's HTML overlays trail the canvas by about two frames at p90 (32–34 ms) when the page is busy, and up to seven. Labels drawn in the engine have no such lag.
+  - Starting in a worker costs about 1.2–2 s more in development.
+
+**What the app-facing API would need.** Today the API is synchronous and in-thread: 843 exported names over six entry points, 506 of them in the core. Applications read engine state every tick: the vertical-exaggeration example's readings, pins and sites read cameras, heights and stats in tick listeners, and its panels are DOM. There are two ways to put the engine in a worker:
+
+- **Proxying.** Page-side handles mirror `Engine`, `View`, `World` and the tilesets. Every read becomes async, or a snapshot pushed each tick, and `onTick` listeners can no longer change the scene in the tick they run in. That is a second API, and its reads lag a tick behind the image.
+- **Running app code in the worker.** The application's engine-facing module runs in the worker with the API unchanged. Its UI stays on the page and talks to that module over the application's own messages. The engine would ship a small bridge for this: input forwarding (pointer, wheel and key events as plain data, with coalesced moves), resize and pixel ratio, picks, and the widgets' data. `engineSnapshot` and the recorder's rows are already plain data.
+
+The second is far smaller and keeps one API, so it is the recommendation if we go this way. The core touches no DOM (handbook API tab), so nothing in it blocks either option.
+
+**Risks for an app that embeds the engine.**
+
+- Input arrives only on the main thread. A busy page still delays input on its way to the worker; the spike measures this.
+- HTML overlays (labels, pins) are placed from worker results a message later than the canvas they sit on, so they lag the image by a hop. Labels drawn in the canvas don't.
+- A host that already uses WebGPU on the page can't share our device with it: a device lives on one thread. So a host with its own WebGPU work would have to move that work into the worker too.
+- Nested workers: our content workers then start from inside a worker. They do in Edge (measured here) and, per the compat data, in Safari from 15.5.
+- The worker's script and its blob trampoline (`workerStart`) need `worker-src` in the host's CSP, as the content workers already do.
+- Screenshots and readbacks (`toBlob`, `readHdr`) go through the worker.
+- WebXR sessions are owned by the page; an XR mode would need the engine back on the main thread or a WebXR-in-worker path. Unchecked.
+- Debugging spans two threads, and errors surface in the worker.
+
+**Decision table.**
+
+| Question                                      | Answer                                                                                                                                                                                                                                                 | Basis                                                                             |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| Does the engine run unchanged in a worker?    | Yes                                                                                                                                                                                                                                                    | M0 smoke test rerun; this spike with a streaming globe and nested content workers |
+| Is the app-facing API the same in both modes? | **Decided (the owner, 2026-11-13)**: one main-thread API whose layer underneath runs the engine in-thread or in a worker                                                                                                                               | See "One API, two backends" below                                                 |
+| Does a worker free the page?                  | For rendering, yes: it kept rendering through a 3 s block. For input, no: input reaches the worker through the page                                                                                                                                    | M0 rerun; input rows above                                                        |
+| Is frame stability better in a worker?        | Can't tell from these runs                                                                                                                                                                                                                             | The rounds disagree; GPU shared                                                   |
+| HTML overlay lag in a worker                  | About 2 frames at p90 under a busy page, up to 7; none in-thread; none for in-engine labels                                                                                                                                                            | Pin row                                                                           |
+| Picks                                         | Faster from the worker                                                                                                                                                                                                                                 | Pick row                                                                          |
+| Can it detect WebGPU in a worker?             | Yes, with a probe inside the worker (prototyped as `?mode=auto`)                                                                                                                                                                                       | See "Choosing the thread" below                                                   |
+| Worker by default in Dyno?                    | **Not yet.** Make `thread: "auto"` available in Dyno (`&thread=`) and make it the default only after a headed run on an otherwise idle GPU shows smoother ticks                                                                                        | This spike                                                                        |
+| Keep main-thread mode for                     | Hosts that share a WebGPU device with the engine, use WebXR, need HTML overlays in the same frame, have a CSP without `worker-src`, or run Firefox where its worker WebGPU is missing (not Windows or Apple silicon). Also tests, which need no worker | Support facts below                                                               |
+
+**One API, two backends (decided by the owner, 2026-11-13).** In the owner's words: "the user facing API is always the same and you call it from the main thread, but under the hood we might have a layer that translates that to the engine running in a different thread or leave the execution synchronous in the main thread." What follows from it:
+
+1. A main-thread façade over two backends: in-thread (synchronous) and worker (proxied).
+2. The façade's rules:
+   - Commands become an ordered queue, batched per tick, needing no reply.
+   - Reads come from a per-tick snapshot store: cameras after the rig, stats, and overlay screen positions published by the engine each tick.
+   - Queries (pick, heights, rays) are promises.
+   - App code that must run inside the engine (warps written as closures, frame resolvers, per-tick callbacks, `addFrameCompute`) becomes worklet-style modules loaded by URL into the engine's thread.
+3. Both modes offer only what both can keep. The main-thread mode offers no synchronous read that the worker mode couldn't; there, a snapshot is simply current.
+4. The API test suite runs in both modes, to enforce that parity.
+5. Comlink suits the query round trips (promises over messages). The per-tick command stream uses our own batched protocol.
+
+What breaks those rules today is the migration work. An audit of the core types (2026-11-13) counts 110–130 members. A summary:
+
+| Kind                                         | Members today (examples)                                                                                                                                                                                                                                                                                                                                                                                                                   | Becomes                                                                                                                                                                                            |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Synchronous reads of engine state (about 75) | `engine.stats`, `gpuPasses`, `occlusionStats`, `errors`, `time`, `bodyCamera(view)`; `view.camera` values once a rig or link moved it, `readout()`, `anchorPlacement`, `anchorRoute(s)`, `toPixel`, `occlusionState`; `world.memory`, `pressure()`, the revision counters, `items`, the matrices of tile draws, `feature(id)`; `tileset.stats`, `idle`, `active`, `morphing`, `credits()`, `sampleHeight`, `surfaceHeight`; `Clamp.height` | Snapshot fields, plus `toPixel` positions published for chosen points. `sampleHeight` and `surfaceHeight` become promises, or a height grid streamed to the page. `feature(id)` becomes a promise. |
+| Calls returning a handle                     | Page-side ids: `createWorld`, `addView`, `link`, `addEllipsoid`, `world.add`, `addClip`, `addLight`, `addAnchor`, `addHeightCapture`. A worker-side slot: `addDraw`, `addTransform`, `addMesh`, `addMaterial` (deduplicated), `allocateClip`, `removeMesh`                                                                                                                                                                                 | The page names the handle and the worker maps it, so the command needs no reply. Slot numbers and capacity errors arrive later, as events.                                                         |
+| Writes in place that no command carries      | `sunDirection`, `icrfToFixed`, camera vectors plus `version++`, `viewport`, `observer`, `lighting`, `View.overlays`, the `tileset.selection` proxy                                                                                                                                                                                                                                                                                         | Setters that queue commands                                                                                                                                                                        |
+| Callbacks run inside the tick                | `onTick` (it returns "busy"), `queries.standing`'s query closure, `debugTileColor`, `addFrameCompute`, `Warp.forward` / `inverse`, frame resolvers, `toParent`                                                                                                                                                                                                                                                                             | A page `requestAnimationFrame` that sends commands, plus a keep-awake command. Code that must run inside the tick becomes worklets.                                                                |
+| Events                                       | `onAfterTick`, `onError`, tileset events, `onHeightsChanged`, `Camera.watch` for engine-made changes                                                                                                                                                                                                                                                                                                                                       | Delivered after the tick (already this shape)                                                                                                                                                      |
+| Already async                                | `create`, `loadGltf`, `loadTileset`, `addTerrain`, `whenReady`, `compileShader`, `sampleHeightMostDetailed`, `pick`, `pickPosition`, `pickPoint`, `readHdr`, `castRays`, `queryRays`, `whenSettled`                                                                                                                                                                                                                                        | Unchanged                                                                                                                                                                                          |
+| DOM                                          | `CanvasTarget(HTMLCanvasElement)`, `devicePixelRatio`, `ResizeObserver` in `watchView`, controllers' pointer listeners, `TextureSource` canvases, the widgets                                                                                                                                                                                                                                                                              | Stay on the page and send commands (resize, camera). A canvas texture becomes an `ImageBitmap`.                                                                                                    |
+
+**Choosing the thread (the owner, 2026-11-13).** A host option, `thread: "auto" | "main" | "worker"`, default `"auto"`:
+
+1. Start the engine's module worker. If that fails (a CSP without `worker-src`, or no module workers), use the main thread.
+2. Probe inside the worker:
+   - `navigator.gpu` is present;
+   - `await navigator.gpu.requestAdapter()` isn't null;
+   - `new OffscreenCanvas(1, 1).getContext("webgpu")` isn't null.
+
+   The probe uses a throwaway canvas because `transferControlToOffscreen()` on the real canvas can't be undone. The adapter request overlaps work the engine does at startup anyway.
+
+3. If the probe passes, transfer the real canvas and run there. If it fails, run on the main thread with the same API.
+4. Cache the answer per user-agent string in `localStorage` (with try/catch). If the cached mode then fails, probe again.
+5. The inspector shows the chosen mode and why.
+6. The same probe serves a future WebGL 2 renderer (`getContext("webgl2")`).
+
+The spike prototypes steps 1–3; the cache and the inspector row come with the façade.
+
+**Support, as of 2026-11-13** (MDN browser-compat-data unless noted):
+
+- WebGPU in workers (`WorkerNavigator.gpu`) and `OffscreenCanvas.getContext("webgpu")`:
+  - Chrome: 113 (2023-05-02) on ChromeOS, macOS and Windows; 144 (2026-01-13) adds Linux on newer Intel GPUs.
+  - Safari: 26 (2025-09-15).
+  - Firefox: 141 (2025-07-22) on Windows; Apple silicon from 145 or 147 depending on the macOS version; no Intel Macs or Linux.
+  - The WebGPU spec exposes the API in workers. The vendors' release posts don't mention workers.
+- `requestAnimationFrame` in dedicated workers with an owner window, and `OffscreenCanvas`: Baseline since March 2023.
+- Module workers: Chrome 80, Safari 15, Firefox 114. Nested workers: Safari 15.5.
+- CSP: `worker-src` (Chrome 59, Firefox 58, Safari 15.5) falls back to `child-src`, then `script-src`, then `default-src`. A `blob:` worker, which is our cross-origin trampoline (`workerStart`), needs `blob:` listed; `'self'` doesn't match it (CSP3).
+
+**Build vs adopt (the owner asked, 2026-11-13).** Read on the packages' npm and GitHub pages 2026-11-13. Downloads are for the week to 2026-11-12. Sizes are minified / gzip, from bundlephobia.
+
+| Library                                                 | Latest                       | Weekly downloads | Open issues        | License    | Browser                                   | Size              | For us                                                                                                                                                  |
+| ------------------------------------------------------- | ---------------------------- | ---------------- | ------------------ | ---------- | ----------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Comlink                                                 | 4.4.2, 2024-11-07            | 4.1 M            | 79                 | Apache-2.0 | Workers; module workers not stated        | 4.3 / 1.9 kB      | RPC by `Proxy` over `postMessage`, with transfer handlers. No pool, priority, cancellation or budget. **Evaluate for the façade's query round trips.**  |
+| workerpool                                              | 10.0.3, 2026-07-01           | 14.5 M           | 27                 | Apache-2.0 | Yes; module workers not stated            | 32.1 / 9.2 kB     | A pool; cancelling terminates the worker. No priority, dependencies or budget.                                                                          |
+| loaders.gl `WorkerFarm` / `WorkerPool`                  | 4.5.4, 2026-10-11            | 2.4 M            | 9                  | MIT        | Classic workers only                      | 13.7 / 4.7 kB     | A FIFO queue: no priority, no cancelling a queued job.                                                                                                  |
+| loaders.gl `RequestScheduler`                           | 4.5.4, 2026-10-10            | 2.5 M            | (same repository)  | MIT        | Yes                                       | in 36.8 / 11.9 kB | The closest prior art in our domain; mechanism below.                                                                                                   |
+| CesiumJS 1.x `TaskProcessor`                            | `cesium` 1.147.0, 2026-11-02 | —                | 1,557 (repository) | Apache-2.0 | Module workers                            | —                 | One worker per instance. Over `maximumActiveTasks` it returns `undefined` and the caller retries next frame. No priority, cancellation or dependencies. |
+| wasm-bindgen-rayon                                      | crate 1.3.0, 2024-12-21      | not on npm       | 7                  | Apache-2.0 | Needs isolation, nightly Rust, `+atomics` | —                 | Rayon threads for Rust/WASM only. Adopt only if heavy compute moves to Rust.                                                                            |
+| `scheduler.postTask` / `yield` and `scheduler-polyfill` | polyfill 1.3.0, 2024-10-22   | 144 k            | 0                  | Apache-2.0 | Chrome 94 and 129, Firefox 142, no Safari | 6.5 / 2.3 kB      | Priorities and cancellation within one thread. Fits page-side, non-engine work, not the pool.                                                           |
+| React `scheduler`                                       | 0.28.0, 2026-09-09           | 263 M            | (react repository) | MIT        | Yes; the API is marked unfinished         | 3.7 / 1.6 kB      | Time-slicing on one thread with 5 ms yields. No workers.                                                                                                |
+| threads.js                                              | 1.7.0, 2021-09-25            | 0.9 M            | 102                | MIT        | Yes                                       | 34.8 / 10.6 kB    | Unmaintained since 2022 (last npm change).                                                                                                              |
+| Piscina, Tinypool                                       | 5.3.2 / 2.2.0                | 16.5 M / 67 M    | 8 / 2              | MIT        | Node only (`worker_threads`)              | —                 | Not usable here.                                                                                                                                        |
+
+How loaders.gl's `RequestScheduler` works (`request-scheduler.ts`):
+
+- It throttles network slots: `maxRequests` is 6 by default.
+- On each arrival or completion, never on a tick, it calls every queued request's `getPriority`. A negative value cancels the request, and the rest are sorted with the lowest number first. Its doc comment says the opposite.
+- It has no time budget, and it can't cancel a request already in flight.
+
+Ours re-ranks every time it orders the queue, cancels at every stage, and adds dependencies and a device-thread budget.
+
+**Verdict.** It confirms the working recommendation. No library found combines priority re-ranking, cancellation at every stage, dependencies and a per-tick device-thread budget. So:
+
+- Keep `WorkerPool` as the transport.
+- Keep the scheduler our own (this slice).
+- Evaluate Comlink for the façade's query round trips only.
+- Adopt wasm-bindgen-rayon only if heavy compute moves to Rust/WASM.
+
+No dependency is added without the owner's agreement.
+
+#### Next steps
+
+1. Measure frame pacing headed, on an otherwise idle GPU, with `gpuprobe` (submit to done) beside the recorder. Today's tick spacing was held by the GPU, in runs where other sessions shared it.
+2. Selection: cut `display` and `updateVisibility`. Then traversal in a worker over the tile table, shared when isolated (§13.7).
+3. The body occluder's walk as the second workload (`Jobs.slice`) once `dev/horizon` lands. Then imagery compositing, the warp fits and the bulk slices, all from one tick budget instead of four fixed ones.
+4. Rings in shared memory, and fetching moved out of decode jobs, so a job is the decode alone over the bytes it is handed.
+5. The façade: its command protocol, the snapshot store and `thread: "auto"`, with the API tests run in both modes. Start with the reads in the migration table that examples use (`stats`, `view.camera` after a rig, `toPixel`, `sampleHeight`).
 
 ## 14. Follow-ups
 

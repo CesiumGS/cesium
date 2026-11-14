@@ -108,6 +108,15 @@ export class WorldRaster {
     { bundle: GPURenderBundle; for: GPURenderBundle }
   >();
   /**
+   * The second phase's bundles of two-phase occlusion culling
+   * (`retestBundle`): the occludable batches' draws from their second set of
+   * arguments, by kind, each with the draw bundle it was recorded with.
+   */
+  readonly retestBundles = new Map<
+    string,
+    { bundle: GPURenderBundle; for: GPURenderBundle }
+  >();
+  /**
    * Per bundle recorded (kind, and "+clip" for the clipped one), the batches
    * it draws with a stand-in: their custom shader's pipeline is still being
    * made, or its textures are loading (`World.ready`). Cleared when the draw

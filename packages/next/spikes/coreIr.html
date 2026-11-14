@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Core IR spike</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f7f7f5;
+        --panel: #ffffff;
+        --ink: #1d1d1b;
+        --muted: #65645f;
+        --line: #deddd8;
+        --accent: #2f6bd8;
+        --good: #1f7a4d;
+        --bad: #b3261e;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #161615;
+          --panel: #1f1f1d;
+          --ink: #ecebe6;
+          --muted: #a19f97;
+          --line: #34332f;
+          --accent: #7aa7ff;
+          --good: #6fcf97;
+          --bad: #ff8a80;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          15px/1.5 system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 24px 16px 64px;
+      }
+      h1 {
+        font-size: 22px;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 28px 0 8px;
+      }
+      p.lede {
+        color: var(--muted);
+        margin: 0 0 16px;
+        max-width: 72ch;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+        gap: 16px;
+      }
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px;
+      }
+      canvas {
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: 8px;
+        display: block;
+        background: #000;
+      }
+      label {
+        display: block;
+        margin: 10px 0 2px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      input[type="range"],
+      select {
+        width: 100%;
+      }
+      .stat {
+        font-variant-numeric: tabular-nums;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 6px 8px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      td.num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .ok {
+        color: var(--good);
+      }
+      .no {
+        color: var(--bad);
+      }
+      pre {
+        margin: 0;
+        max-height: 300px;
+        overflow: auto;
+        font-size: 12px;
+        background: var(--bg);
+        border-radius: 6px;
+        padding: 8px;
+      }
+      .log {
+        color: var(--muted);
+        font-size: 13px;
+        min-height: 1.5em;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Core IR spike: per-edit cost in the browser</h1>
+      <p class="lede">
+        Plan §13.42. A MaterialX graph is lowered to CesiumIR (candidate a), its
+        literals hoisted to uniforms, and emitted as WGSL. A value edit keeps
+        the program's shape and is a uniform write; a category or wiring edit
+        changes the shape and costs a new shader module and pipeline. The table
+        below times each stage here, and checks the emitted WGSL with WebGPU and
+        the emitted GLSL ES 3.00 with WebGL 2. Decision asked: which core IR
+        (see the plan section).
+      </p>
+      <div class="grid">
+        <div class="panel">
+          <canvas
+            id="view"
+            width="320"
+            height="320"
+            aria-label="Material preview"
+          ></canvas>
+          <label for="height">Feature property Height (m), per feature</label>
+          <input id="height" type="range" min="0" max="120" value="50" />
+          <label for="stripes">stripes_in.in2 (a value edit)</label>
+          <input
+            id="stripes"
+            type="range"
+            min="1"
+            max="24"
+            step="1"
+            value="8"
+          />
+          <label for="category">stripes_in category (a shape edit)</label>
+          <select id="category">
+            <option>multiply</option>
+            <option>add</option>
+            <option>subtract</option>
+            <option>power</option>
+          </select>
+          <label for="wire">base.mix wired to (a shape edit)</label>
+          <select id="wire">
+            <option value="hclamp">hclamp (height)</option>
+            <option value="edge">edge (stripes)</option>
+          </select>
+          <p class="log stat" id="editLog" aria-live="polite"></p>
+        </div>
+        <div class="panel">
+          <table id="results">
+            <thead>
+              <tr>
+                <th>What</th>
+                <th class="num">Median</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <h2>Emitted WGSL (current graph)</h2>
+      <pre id="wgsl"></pre>
+      <h2>Emitted GLSL ES 3.00 (the style)</h2>
+      <pre id="glsl"></pre>
+    </main>
+    <script type="module" src="./core-ir/browser.mjs"></script>
+  </body>
+</html>

@@ -74,6 +74,7 @@ export interface BundleWorld extends Pick<
     | "prepassFor"
     | "recordsF32"
     | "recordsU32"
+    | "retestBundles"
     | "shaderGroups"
     | "textureSetEntries"
     | "textureSets"
@@ -100,6 +101,7 @@ export interface CullWorld extends Pick<World, "ctx" | "hasDraw" | "slabs"> {
     | "frameComputes"
     | "instanceHighWater"
     | "instances"
+    | "materialsU32"
     | "patchDraws"
     | "patchWorldBindGroup"
     | "pendingUploads"
@@ -181,6 +183,7 @@ export interface PrepareWorld extends Pick<
     | "prepassFor"
     | "recordsF32"
     | "recordsU32"
+    | "retestBundles"
     | "shaderGroups"
     | "splats"
     | "textureSetEntries"
@@ -346,9 +349,39 @@ export function clippedBundle(
   return entry.bundle;
 }
 
+/**
+ * The second phase's bundle of `kind` ("opaque", "depth" or "prepass") for a
+ * view with two-phase occlusion culling (render/view/occlusionCull.ts): the
+ * occludable batches' draws from their second set of arguments and slices.
+ * Recorded when first asked for and again whenever the draw bundle is;
+ * undefined before the world's first frame. Views with clips don't cull by
+ * occlusion: there is no clipped one.
+ */
+export function retestBundle(
+  world: BundleWorld,
+  kind: "opaque" | "depth" | "prepass",
+): GPURenderBundle | undefined {
+  const base = world.raster.bundle;
+  if (!base) {
+    return undefined;
+  }
+  let entry = world.raster.retestBundles.get(kind);
+  if (!entry || entry.for !== base) {
+    entry = { bundle: recordBundle(world, kind, false, true), for: base };
+    world.raster.retestBundles.set(kind, entry);
+  }
+  return entry.bundle;
+}
+
 export type BundleKind =
   "opaque" | "shadow" | "height" | "prepass" | "depth" | "pick" | "caps";
 
+/**
+ * A view's cull. `occlusion`: the view's own cull with two-phase occlusion
+ * culling (render/view/occlusionCull.ts), its group 2: the first phase, and
+ * both phases' arguments; the second phase is `encodeRetest`, after the
+ * first phase's depth and pyramid.
+ */
 export function encodeCull(
   world: CullWorld,
   encoder: GPUCommandEncoder,
@@ -356,11 +389,16 @@ export function encodeCull(
   points = true,
   pixels = 0,
   diceWrites?: () => GPUComputePassTimestampWrites | undefined,
+  occlusion?: GPUBindGroup,
 ): void {
   const { pipelines, currentViewBindGroup } = world.ctx;
   // The batches' instance counts start at zero (cull.slang `append`
   // counts into them); the rest of the arguments `writeDrawArgs` writes.
-  world.raster.drawArguments.clear(encoder, world.raster.batchList.length);
+  world.raster.drawArguments.clear(
+    encoder,
+    world.raster.batchList.length,
+    occlusion !== undefined,
+  );
   if (points && world.raster.pointDraws.size) {
     encoder.clearBuffer(world.raster.pointCounts);
     if ([...world.raster.pointDraws.values()].some((d) => d.tiny > 0)) {
@@ -387,16 +425,25 @@ export function encodeCull(
   uploadTables(world, pass);
   pass.setBindGroup(0, currentViewBindGroup);
   pass.setBindGroup(1, world.raster.cullBindGroup);
-  pass.setPipeline(pipelines.cullRecords);
+  if (occlusion) {
+    pass.setBindGroup(2, occlusion);
+  }
+  pass.setPipeline(
+    occlusion ? pipelines.cullRecordsOccluded : pipelines.cullRecords,
+  );
   pass.dispatchWorkgroups(Math.ceil(Math.max(world.raster.drawCount, 1) / 64));
   if (world.raster.instanceHighWater > 0) {
-    pass.setPipeline(pipelines.cullInstances);
+    pass.setPipeline(
+      occlusion ? pipelines.cullInstancesOccluded : pipelines.cullInstances,
+    );
     // Two dimensions past 65,535 groups (`cullInstances` reads them).
     const groups = Math.ceil(world.raster.instanceHighWater / 64);
     const x = Math.min(groups, 65535);
     pass.dispatchWorkgroups(x, Math.ceil(groups / x));
   }
-  pass.setPipeline(pipelines.writeDrawArgs);
+  pass.setPipeline(
+    occlusion ? pipelines.writeDrawArgsOccluded : pipelines.writeDrawArgs,
+  );
   pass.dispatchWorkgroups(
     Math.ceil(Math.max(world.raster.batchList.length, 1) / 64),
   );
@@ -449,6 +496,64 @@ export function encodeCull(
   }
 }
 
+/**
+ * The second phase of two-phase occlusion culling (cull.slang
+ * `retestOccluded`): the items the first phase listed, against the pyramid
+ * built from its depth since, into their batches' second set of arguments.
+ * The same groups as the view's `encodeCull` with `occlusion`.
+ */
+export function encodeRetest(
+  world: CullWorld,
+  encoder: GPUCommandEncoder,
+  occlusion: GPUBindGroup,
+  timestampWrites?: GPUComputePassTimestampWrites,
+): void {
+  const { pipelines, currentViewBindGroup } = world.ctx;
+  const pass = encoder.beginComputePass({
+    label: "occlusion-retest",
+    ...(timestampWrites ? { timestampWrites } : {}),
+  });
+  pass.setBindGroup(0, currentViewBindGroup);
+  pass.setBindGroup(1, world.raster.cullBindGroup);
+  pass.setBindGroup(2, occlusion);
+  pass.setPipeline(pipelines.retestOccluded);
+  // A thread an item at most: the list is never longer than the items.
+  const groups = Math.ceil(
+    Math.max(world.raster.drawCount + world.raster.instanceHighWater, 1) / 64,
+  );
+  const x = Math.min(groups, 65535);
+  pass.dispatchWorkgroups(x, Math.ceil(groups / x));
+  pass.end();
+}
+
+/**
+ * Whether two-phase occlusion culling may cull a batch's items (its batch
+ * table flag, cull.slang `occludable`): opaque triangles the opaque pass's
+ * depth prepass draws, in the engine's pipelines. Never a material that
+ * blends (its translucent part draws in the translucent passes from the same
+ * arguments), a line, a point set, a patch draw (the dice reads its
+ * arguments), a billboard (its corners are offsets on screen, outside its
+ * sphere) or a custom shader's draw (its vertex stage may move what it draws).
+ */
+export function occludable(
+  batch: Pick<
+    Batch,
+    "material" | "points" | "patches" | "billboard" | "shader" | "mesh"
+  >,
+  materialsU32: Uint32Array,
+): boolean {
+  return (
+    !batch.points &&
+    !batch.patches &&
+    !batch.billboard &&
+    batch.shader === undefined &&
+    batch.mesh.topology !== "line-list" &&
+    (materialsU32[batch.material * MATERIAL_WORDS + 12]! &
+      (MaterialFlags.alphaBlend | MaterialFlags.blendedOnly)) ===
+      0
+  );
+}
+
 /** Assigns each batch its slice of the item list and uploads the batch table. */
 function writeBatches(world: CullWorld): void {
   const table = new Uint32Array(Math.max(1, world.raster.batchList.length) * 4);
@@ -465,6 +570,7 @@ function writeBatches(world: CullWorld): void {
     table[o] = base;
     table[o + 1] = batch.mesh.indexCount;
     table[o + 2] = batch.mesh.firstIndex;
+    table[o + 3] = occludable(batch, world.raster.materialsU32) ? 1 : 0;
     base += batch.items;
   }
   for (let i = 0; i < world.raster.drawCount; i++) {
@@ -501,6 +607,7 @@ export function recordBundle(
   world: BundleWorld,
   kind: BundleKind = "opaque",
   clipped = false,
+  retest = false,
 ): GPURenderBundle {
   const { device, targets, currentViewBindGroup } = world.ctx;
   // Height captures draw the casters, with their own pipelines.
@@ -535,7 +642,7 @@ export function recordBundle(
               sampleCount: 1,
             }
           : {
-              label: depth ? "world.depthBundle" : "world.bundle",
+              label: `${depth ? "world.depthBundle" : "world.bundle"}${retest ? ".retest" : ""}`,
               colorFormats: targets.colorFormats,
               depthStencilFormat: targets.depthFormat,
               sampleCount: targets.sampleCount,
@@ -655,6 +762,7 @@ export function recordBundle(
   for (const batch of order) {
     if (
       batch.items === 0 ||
+      (retest && !occludable(batch, world.raster.materialsU32)) ||
       world.raster.brokenTextureSets.has(batch.textureSet) ||
       ((shadow || prepass || depth || pick || caps) &&
         batch.mesh.topology === "line-list") ||
@@ -701,11 +809,13 @@ export function recordBundle(
       encoder.setBindGroup(2, group);
     }
     // A patch draw's index buffer replaced the slab's: the next draw binds it again.
-    if (world.raster.drawArguments.drawBatch(encoder, batch, direct, pick)) {
+    if (
+      world.raster.drawArguments.drawBatch(encoder, batch, direct, pick, retest)
+    ) {
       slab = -1;
     }
   }
-  const gapKey = clipped ? `${kind}+clip` : kind;
+  const gapKey = `${kind}${clipped ? "+clip" : ""}${retest ? "+retest" : ""}`;
   if (gaps.size > 0) {
     world.raster.pipelineGaps.set(gapKey, gaps);
   } else {

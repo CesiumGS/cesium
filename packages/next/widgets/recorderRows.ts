@@ -57,7 +57,14 @@ export const RECORD_COLUMNS = [
   "triangles", // tick: whole triangles submitted by the render, before GPU culling
   "draws", // tick: draw items submitted (instances counted each)
   "points", // tick: points submitted (point sets: their capacity)
+  "occ_culled_draws", // tick: draw items occlusion culling left undrawn (the latest readout, a tick or two late)
+  "occ_culled_triangles", // tick: their whole triangles
   "frame", // tick: 1 when the view's image was saved as frame-<tick>.png
+  "jobs_apply_ms", // tick: the jobs' apply phase's time (Engine.jobBudgetMs)
+  "jobs_applied", // tick: jobs the apply phase applied
+  "jobs_waiting", // tick: finished jobs waiting for the apply phase after it
+  "jobs_queued", // tick: jobs waiting for other jobs or for a worker
+  "jobs_running", // tick: jobs on a worker
 ] as const;
 
 export type RecordColumn = (typeof RECORD_COLUMNS)[number];
@@ -112,8 +119,19 @@ export interface TickSample {
   triangles?: number;
   draws?: number;
   points?: number;
+  /** Draw items and their triangles occlusion culling left undrawn (`Engine.occlusionCullStats`). */
+  occCulledDraws?: number;
+  occCulledTriangles?: number;
   /** The tick's image was saved. */
   frame?: boolean;
+  /** The job system after the tick's apply phase (`FrameStats.jobs`). */
+  jobs?: {
+    applyMs: number;
+    applied: number;
+    waiting: number;
+    queued: number;
+    running: number;
+  };
 }
 
 /** A number as plain text: integers as they are, else up to three decimals, never e-notation. */
@@ -176,7 +194,16 @@ export function tickRow(s: TickSample): string {
     triangles: formatNumber(s.rendering ? s.triangles : undefined),
     draws: formatNumber(s.rendering ? s.draws : undefined),
     points: formatNumber(s.rendering ? s.points : undefined),
+    occ_culled_draws: formatNumber(s.rendering ? s.occCulledDraws : undefined),
+    occ_culled_triangles: formatNumber(
+      s.rendering ? s.occCulledTriangles : undefined,
+    ),
     frame: s.frame ? "1" : "",
+    jobs_apply_ms: formatNumber(s.jobs?.applyMs),
+    jobs_applied: formatNumber(s.jobs?.applied),
+    jobs_waiting: formatNumber(s.jobs?.waiting),
+    jobs_queued: formatNumber(s.jobs?.queued),
+    jobs_running: formatNumber(s.jobs?.running),
   });
 }
 

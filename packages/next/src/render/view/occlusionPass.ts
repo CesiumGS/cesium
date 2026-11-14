@@ -35,7 +35,10 @@ export interface OcclusionPassEngine extends Pick<
   Engine,
   "bodyCamera" | "ctx" | "occlusionFeedback"
 > {
-  readonly raster: Pick<EngineRaster, "occlusionReads" | "timer">;
+  readonly raster: Pick<
+    EngineRaster,
+    "frameNumber" | "occlusionReads" | "timer"
+  >;
   readonly scene: Pick<EngineScene, "viewIds">;
 }
 
@@ -49,8 +52,35 @@ export class DepthPyramid {
   readonly shape: PyramidShape;
   /** All levels, for the queries. */
   readonly view: GPUTextureView;
+  /** Level 0 alone, as storage: what `priors` draw into. */
+  readonly level0: GPUTextureView;
+  /**
+   * Analytic occluders drawn into level 0 after the depth is folded and
+   * before the levels above are reduced (a hook; none is registered yet).
+   * Each writes, per texel, the nearer (larger, reverse-Z) of what is there
+   * and its own depth, for a shape that is certainly opaque where it is: the
+   * body occluder's ellipsoid (`streaming/occluders.ts` `BodyShape`, inside
+   * the drawn terrain) would be one, from its centre and radii seen from
+   * `built`'s camera. Both phases of the draws' occlusion cull and the tile
+   * queries then read it, so a shape hidden in the drawn depth adds nothing
+   * and one the depth lacks (terrain not loaded yet) hides what it proves.
+   */
+  readonly priors: Array<
+    (pass: GPUComputePassEncoder, pyramid: DepthPyramid) => void
+  > = [];
   private readonly groups: GPUBindGroup[] = [];
-  /** The camera it was built for: what the queries' camera space is. */
+  /** Level 0's group from a single-sampled depth, and the view it binds (`encode`'s `pixels`). */
+  private pixelsGroup: GPUBindGroup | undefined;
+  private pixelsFor: GPUTextureView | undefined;
+  /**
+   * The tick (`EngineRaster.frameNumber`) it was last built in: the occlusion
+   * cull builds it once a tick, and the tile queries then read that one.
+   */
+  builtTick = -1;
+  /**
+   * The camera it was built for: what the queries' camera space is, and what
+   * the next tick's occlusion cull sees it from (occlusionCull.ts).
+   */
   built:
     | {
         tanX: number;
@@ -58,11 +88,13 @@ export class DepthPyramid {
         near: number;
         position: Float64Array;
         direction: Float64Array;
+        up: Float64Array;
+        right: Float64Array;
       }
     | undefined;
 
   constructor(
-    device: GPUDevice,
+    private readonly device: GPUDevice,
     pipelines: Pick<
       OcclusionPassEngine["ctx"]["pipelines"],
       "hzbLevel0" | "hzbReduce"
@@ -86,12 +118,13 @@ export class DepthPyramid {
     this.view = this.texture.createView({ label: "occlusion.pyramid" });
     const level = (mip: number) =>
       this.texture.createView({ baseMipLevel: mip, mipLevelCount: 1 });
+    this.level0 = level(0);
     this.groups.push(
       device.createBindGroup({
         layout: pipelines.hzbLevel0.getBindGroupLayout(0),
         entries: [
           { binding: 0, resource: depth },
-          { binding: 1, resource: level(0) },
+          { binding: 1, resource: this.level0 },
         ],
       }),
     );
@@ -108,17 +141,48 @@ export class DepthPyramid {
     }
   }
 
-  /** Encodes every level, in order, into one compute pass. */
+  /**
+   * Encodes every level, in order, into one compute pass: level 0 from the
+   * multisampled depth it was made with, or from `pixels`, a single-sampled
+   * depth of the same size (the ambient-occlusion prepass's; hzb.slang
+   * `level0Pixels`).
+   */
   encode(
     pass: GPUComputePassEncoder,
     pipelines: Pick<
       OcclusionPassEngine["ctx"]["pipelines"],
-      "hzbLevel0" | "hzbReduce"
+      "hzbLevel0" | "hzbLevel0Pixels" | "hzbReduce"
     >,
+    pixels?: GPUTextureView,
   ): void {
+    if (pixels && (!this.pixelsGroup || this.pixelsFor !== pixels)) {
+      this.pixelsFor = pixels;
+      this.pixelsGroup = this.device.createBindGroup({
+        label: "occlusion.pyramid.pixels",
+        layout: pipelines.hzbLevel0Pixels.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: pixels },
+          { binding: 1, resource: this.level0 },
+        ],
+      });
+    }
     for (let mip = 0; mip < this.shape.levels; mip++) {
-      pass.setPipeline(mip === 0 ? pipelines.hzbLevel0 : pipelines.hzbReduce);
-      pass.setBindGroup(0, this.groups[mip]!);
+      if (mip === 1) {
+        for (const prior of this.priors) {
+          prior(pass, this);
+        }
+      }
+      pass.setPipeline(
+        mip > 0
+          ? pipelines.hzbReduce
+          : pixels
+            ? pipelines.hzbLevel0Pixels
+            : pipelines.hzbLevel0,
+      );
+      pass.setBindGroup(
+        0,
+        mip === 0 && pixels ? this.pixelsGroup! : this.groups[mip]!,
+      );
       const width = Math.max(this.shape.width >> mip, 1);
       const height = Math.max(this.shape.height >> mip, 1);
       pass.dispatchWorkgroups(Math.ceil(width / 8), Math.ceil(height / 8));
@@ -200,7 +264,9 @@ export class FrameOcclusion {
    * Builds the pyramid from the depth and tests the list's boxes against it,
    * in two compute passes (`writes` to time them), and copies the bits to the
    * list's readback buffer: what `readOcclusion` then maps. `camera` is the
-   * one the depth was drawn with and the boxes were made for.
+   * one the depth was drawn with and the boxes were made for. `build` false:
+   * the pyramid was built this tick for that camera already (the occlusion
+   * cull's), and the boxes are tested against it.
    */
   encode(
     enc: GPUCommandEncoder,
@@ -211,16 +277,19 @@ export class FrameOcclusion {
       hzb?: GPUComputePassTimestampWrites | undefined;
       query?: GPUComputePassTimestampWrites | undefined;
     } = {},
+    build = true,
   ): { readback: GPUBuffer; words: number } {
     const { pyramid } = this;
     const slot = this.slot(list.index, pipelines);
-    const hzb = enc.beginComputePass({
-      label: "hzb",
-      ...(writes.hzb ? { timestampWrites: writes.hzb } : {}),
-    });
-    pyramid.encode(hzb, pipelines);
-    hzb.end();
-    pyramid.built = camera;
+    if (build) {
+      const hzb = enc.beginComputePass({
+        label: "hzb",
+        ...(writes.hzb ? { timestampWrites: writes.hzb } : {}),
+      });
+      pyramid.encode(hzb, pipelines);
+      hzb.end();
+      pyramid.built = camera;
+    }
     const params = new ArrayBuffer(PARAMS_BYTES);
     new Uint32Array(params, 0, 4).set([
       list.count,
@@ -266,6 +335,26 @@ export class FrameOcclusion {
   }
 }
 
+/** The camera a tick draws a view with, as a pyramid keeps it (`DepthPyramid.built`). */
+export function cullCamera(
+  engine: Pick<Engine, "bodyCamera">,
+  view: View,
+  frame: { width: number; height: number },
+): NonNullable<DepthPyramid["built"]> {
+  const camera = engine.bodyCamera(view);
+  const aspect = frame.width / frame.height;
+  const tanY = Math.tan(camera.fovy(aspect) / 2);
+  return {
+    tanX: tanY * aspect,
+    tanY,
+    near: camera.near,
+    position: Float64Array.from(camera.position),
+    direction: Float64Array.from(camera.direction),
+    up: Float64Array.from(camera.up),
+    right: Float64Array.from(camera.right),
+  };
+}
+
 /** Whether two float64 vectors are the same. */
 function same(a: ArrayLike<number>, b: ArrayLike<number>): boolean {
   return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
@@ -275,6 +364,11 @@ function same(a: ArrayLike<number>, b: ArrayLike<number>): boolean {
  * The pass after `opaque`: the pyramid and the queries selection made this
  * tick, if any. A list made for another camera than the one drawn (selection
  * ran earlier, and the camera moved) isn't tested: its tiles stay unknown.
+ * In a tick that culls the view's draws by occlusion (occlusionCull.ts), the
+ * cull built the pyramid already, once, from its first phase's depth: the
+ * queries read that one (it lacks only what the second phase drew, which
+ * leaves a box visible, never hides one), and the next tick's first phase
+ * tests against it.
  */
 export function occlusionPass(
   engine: OcclusionPassEngine,
@@ -286,18 +380,20 @@ export function occlusionPass(
   return (enc, get) => {
     const feedback = view.occlusionState;
     const list = feedback.current;
-    // Off, nothing asked, or splats drawn: their depth is written for any
-    // covered pixel, translucent symbols included, so it isn't an occluder.
+    const camera = engine.bodyCamera(view);
+    // The occlusion cull built this tick's pyramid already (occlusionCull.ts),
+    // from the first phase's depth, before any splat: the queries read it.
+    const built =
+      frame.occlusion !== undefined &&
+      frame.occlusion.pyramid.builtTick === engine.raster.frameNumber;
+    // Off, nothing asked, or splats drawn into the depth it would be built
+    // from: their depth is written for any covered pixel, translucent symbols
+    // included, so it isn't an occluder.
     if (
       !occlusionOn(engine, view) ||
       !list ||
       list.count === 0 ||
-      frame.splatted
-    ) {
-      return;
-    }
-    const camera = engine.bodyCamera(view);
-    if (
+      (frame.splatted && !built) ||
       !same(camera.position, list.position) ||
       !same(camera.direction, list.direction)
     ) {
@@ -310,24 +406,17 @@ export function occlusionPass(
       frame.width,
       frame.height,
     ));
-    const aspect = frame.width / frame.height;
-    const tanY = Math.tan(camera.fovy(aspect) / 2);
     const taken = feedback.take()!;
     const { readback, words } = occlusion.encode(
       enc,
       pipelines,
       taken,
+      cullCamera(engine, view, frame),
       {
-        tanX: tanY * aspect,
-        tanY,
-        near: camera.near,
-        position: Float64Array.from(camera.position),
-        direction: Float64Array.from(camera.direction),
-      },
-      {
-        hzb: engine.raster.timer.passWrites("hzb"),
+        hzb: built ? undefined : engine.raster.timer.passWrites("hzb"),
         query: engine.raster.timer.passWrites("occlusion-query"),
       },
+      !built,
     );
     engine.raster.occlusionReads.push({
       view,
@@ -337,6 +426,31 @@ export function occlusionPass(
       words,
     });
   };
+}
+
+/** A render asked for at a time (ms, `performance.now`), per view: the earliest asked. */
+const wakes = new WeakMap<
+  View,
+  { at: number; timer: ReturnType<typeof setTimeout> }
+>();
+
+/** Asks for a render at `at` (a hidden tile may coarsen then), unless one is due sooner. */
+function wakeAt(view: View, at: number, requestRender: () => void): void {
+  const pending = wakes.get(view);
+  if (pending && pending.at <= at) {
+    return;
+  }
+  if (pending) {
+    clearTimeout(pending.timer);
+  }
+  const timer = setTimeout(
+    () => {
+      wakes.delete(view);
+      requestRender();
+    },
+    Math.max(0, at - performance.now()) + 1,
+  );
+  wakes.set(view, { at, timer });
 }
 
 /**
@@ -362,13 +476,13 @@ export function readOcclusion(
           read.readback.getMappedRange(0, read.words * 4).slice(0),
         );
         read.readback.unmap();
-        const flipped = read.view.occlusionState.apply(
-          read.list,
-          bits,
-          read.viewId,
-        );
+        const feedback = read.view.occlusionState;
+        const flipped = feedback.apply(read.list, bits, read.viewId);
         if (flipped > 0) {
           requestRender();
+        }
+        if (feedback.coarsenAt !== undefined) {
+          wakeAt(read.view, feedback.coarsenAt, requestRender);
         }
       },
       () => read.view.occlusionState.release(read.list),

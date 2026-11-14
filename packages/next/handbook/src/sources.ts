@@ -496,6 +496,31 @@ export const SOURCES = {
     pageDate: "newest v2026.21, 4 Nov 2026",
     checked: "2026-11-08",
   },
+  khrInteractivity: {
+    short: "KHR_interactivity",
+    title: "glTF: KHR_interactivity specification",
+    url: "https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_interactivity/Specification.adoc",
+    pageDate: "status Complete, Ratified by the Khronos Group",
+    checked: "2026-11-13",
+    note: "The status line was read on the raw spec. The ratification date (glTF PR 2637, 30 Aug 2026) is from the overall plan and was not re-read.",
+  },
+  onnxReleases: {
+    short: "ONNX releases",
+    title: "onnx/onnx: releases",
+    url: "https://github.com/onnx/onnx/releases",
+    pageDate:
+      "v1.23.2, 6 Oct (year not shown); v1.23.0 notes: IR version 13 to 14",
+    checked: "2026-11-13",
+    note: "Opset 28 is from the overall plan; the page names only a fix for it.",
+  },
+  naga: {
+    short: "naga",
+    title: "gfx-rs/wgpu: naga, the shader translation crate",
+    url: "https://github.com/gfx-rs/wgpu/tree/trunk/naga",
+    pageDate: "wgpu trunk workspace version 30.0.0",
+    checked: "2026-11-13",
+    note: "The crates.io page showed no version. The plan's 30.0.2 was not confirmed.",
+  },
   npm: {
     short: "npm download counts",
     title: "npm: download counts API",

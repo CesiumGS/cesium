@@ -8,6 +8,9 @@
 // Lists are pooled with the GPU buffers that answer them: while every list is
 // in flight, a tick asks nothing, and what was known stays known.
 import {
+  COARSEN_AFTER_MS,
+  COARSEN_BACKOFF_MS,
+  COARSEN_RESULTS,
   MAX_QUERIES,
   OCCLUDED_TICKS,
   QUERY_FLOATS,
@@ -144,10 +147,19 @@ export class OcclusionFeedback {
   flips = 0;
   /** Boxes the latest result found hidden. */
   hidden = 0;
+  /**
+   * The earliest time (ms) a refined tile the latest result found hidden may
+   * coarsen (`longHidden`), if later than now: a view that idles meanwhile
+   * renders then (`readOcclusion`), or it would never coarsen.
+   */
+  coarsenAt: number | undefined;
+  /** Whether tiles hidden long may coarsen (`longHidden`); off for A/B runs (`&coarsen=off`). */
+  coarsen = true;
   private lastPosition: Float64Array | undefined;
   private lastDirection: Float64Array | undefined;
 
-  constructor() {
+  /** The clock (ms) long-hidden tiles are timed by (`longHidden`); a test's own. */
+  constructor(private readonly now: () => number = () => performance.now()) {
     for (let i = 0; i < LISTS_PER_VIEW; i++) {
       this.lists.push(new OcclusionQueries(i));
     }
@@ -208,7 +220,25 @@ export class OcclusionFeedback {
         this.current?.add(tile, volume, camera);
       },
       occluded: (state) => this.occluded(state),
+      longHidden: (state) => this.longHidden(state),
     };
+  }
+
+  /**
+   * Whether a refined REPLACE tile hidden this long may coarsen
+   * (`COARSEN_AFTER_MS`): hidden now, for `COARSEN_RESULTS` results in a row
+   * over `COARSEN_AFTER_MS`, and not within `COARSEN_BACKOFF_MS` of being
+   * seen again after it last coarsened so.
+   */
+  longHidden(state: TileViewState): boolean {
+    const now = this.now();
+    return (
+      this.coarsen &&
+      this.occluded(state) &&
+      state.occludedTicks >= COARSEN_RESULTS &&
+      now - state.hiddenSince >= COARSEN_AFTER_MS &&
+      now >= state.coarsenAfter
+    );
   }
 
   /** Whether the tile was hidden `OCCLUDED_TICKS` results in a row, lately. */
@@ -230,6 +260,8 @@ export class OcclusionFeedback {
     let flipped = 0;
     if (list.epoch === this.epoch) {
       let hiddenNow = 0;
+      const now = this.now();
+      let coarsenAt: number | undefined;
       for (let i = 0; i < list.count; i++) {
         const tile = list.tiles[i];
         if (!tile) {
@@ -244,7 +276,25 @@ export class OcclusionFeedback {
         state.occludedAt = Math.max(state.occludedAt, list.tick);
         const hidden = ((bits[i >> 5]! >>> (i & 31)) & 1) === 1;
         hiddenNow += hidden ? 1 : 0;
+        if (hidden && state.occludedTicks === 0) {
+          state.hiddenSince = this.now();
+        }
+        if (!hidden && state.coarsenedHidden) {
+          // Seen again after it coarsened for being hidden: it refines now,
+          // and doesn't coarsen so again for a while.
+          state.coarsenedHidden = false;
+          state.coarsenAfter = this.now() + COARSEN_BACKOFF_MS;
+        }
         state.occludedTicks = hidden ? state.occludedTicks + 1 : 0;
+        if (hidden && state.heldRefined && this.coarsen) {
+          const at = Math.max(
+            state.hiddenSince + COARSEN_AFTER_MS,
+            state.coarsenAfter,
+          );
+          if (at > now && (coarsenAt === undefined || at < coarsenAt)) {
+            coarsenAt = at;
+          }
+        }
         if (this.occluded(state) !== before) {
           flipped++;
         }
@@ -253,6 +303,7 @@ export class OcclusionFeedback {
       this.queries += list.count;
       this.flips += flipped;
       this.hidden = hiddenNow;
+      this.coarsenAt = coarsenAt;
     }
     list.clear();
     list.inFlight = false;

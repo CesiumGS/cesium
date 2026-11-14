@@ -3,6 +3,8 @@
 // with self time summed by function and by file. `node scripts/profilePage.mjs
 // <url> [seconds = 20]` with the dev server running. PROFILE_WIDTH and
 // PROFILE_HEIGHT set the window (CSS px), PROFILE_SCALE its pixel ratio.
+// PROFILE_OUT=<file.cpuprofile> keeps the raw profile (DevTools opens it;
+// `scripts/profileTree.mjs` sums inclusive time by function).
 import { writeFileSync } from "node:fs";
 import { chromium } from "playwright";
 
@@ -67,6 +69,9 @@ try {
     heap.push(Math.round(h / 2 ** 20));
   }
   const { profile } = await cdp.send("Profiler.stop");
+  if (process.env.PROFILE_OUT) {
+    writeFileSync(process.env.PROFILE_OUT, JSON.stringify(profile));
+  }
   const longTasks = await page.evaluate(() => globalThis.__longTasks);
 
   // Self time per node: samples × interval.

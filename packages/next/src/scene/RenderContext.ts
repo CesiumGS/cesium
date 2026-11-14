@@ -300,6 +300,18 @@ export interface Pipelines extends SurfacePipelines {
   /** Per-batch indirect args. */
   writeDrawArgs: GPUComputePipeline;
   /**
+   * Two-phase occlusion culling (cull.slang, render/view/occlusionCull.ts):
+   * the view's own cull, testing what the frustum keeps against its last
+   * depth pyramid; both sets of arguments; and the second phase, the listed
+   * items against this tick's pyramid. Group 2: `occlusionCullLayout`.
+   */
+  cullRecordsOccluded: GPUComputePipeline;
+  cullInstancesOccluded: GPUComputePipeline;
+  writeDrawArgsOccluded: GPUComputePipeline;
+  retestOccluded: GPUComputePipeline;
+  /** The occlusion cull's group 2: its uniforms and the view's pyramid. */
+  occlusionCullLayout: GPUBindGroupLayout;
+  /**
    * A patch draw's per-view dice into its chunks, then its draw arguments
    * (dice.slang); group 0 the view, 1 `cullPatchWorldLayout`, 2 the draw's.
    */
@@ -390,10 +402,12 @@ export interface Pipelines extends SurfacePipelines {
   depthRange: GPUComputePipeline;
   /**
    * The depth pyramid a view's tile queries test against (`hzb.slang`): its
-   * first level from the multisampled depth, then each from the one before;
-   * and the queries (`occlusionQuery.slang`).
+   * first level from the multisampled depth, or from the ambient-occlusion
+   * prepass's single-sampled depth (`hzbLevel0Pixels`), then each from the
+   * one before; and the queries (`occlusionQuery.slang`).
    */
   hzbLevel0: GPUComputePipeline;
+  hzbLevel0Pixels: GPUComputePipeline;
   hzbReduce: GPUComputePipeline;
   occlusionQuery: GPUComputePipeline;
   /** The translucent passes' group 3 (`SurfacePipelines.translucent*`). */
@@ -1059,6 +1073,28 @@ async function createPipelines(
   const cullLayout = device.createPipelineLayout({
     bindGroupLayouts: [viewLayout, cullWorldLayout],
   });
+  // The occlusion cull's kernels are the engine's whatever `overrides.cull` is.
+  const occlusionCullModule = module("cull", cullWgsl);
+  const occlusionCullLayout = device.createBindGroupLayout({
+    label: "cull.occlusion",
+    entries: [
+      { binding: 0, visibility: COMPUTE, buffer: { type: "uniform" } },
+      {
+        binding: 1,
+        visibility: COMPUTE,
+        texture: { sampleType: "unfilterable-float" },
+      },
+    ],
+  });
+  const occludedCullLayout = device.createPipelineLayout({
+    bindGroupLayouts: [viewLayout, cullWorldLayout, occlusionCullLayout],
+  });
+  const occludedCull = (entryPoint: string) =>
+    device.createComputePipelineAsync({
+      label: `cull.${entryPoint}`,
+      layout: occludedCullLayout,
+      compute: { module: occlusionCullModule, entryPoint },
+    });
   const pointCullLayout = device.createBindGroupLayout({
     label: "cull.points",
     entries: [
@@ -1979,6 +2015,10 @@ async function createPipelines(
     cullRecords,
     cullInstances,
     writeDrawArgs,
+    cullRecordsOccluded,
+    cullInstancesOccluded,
+    writeDrawArgsOccluded,
+    retestOccluded,
     cullPoints,
     writePointArgs,
     dicePatches,
@@ -2005,6 +2045,7 @@ async function createPipelines(
     compositeExact,
     compositeMoments,
     hzbLevel0,
+    hzbLevel0Pixels,
     hzbReduce,
     occlusionQuery,
   ] = await Promise.all([
@@ -2023,6 +2064,10 @@ async function createPipelines(
       layout: cullLayout,
       compute: { module: cullModule, entryPoint: "writeDrawArgs" },
     }),
+    occludedCull("cullRecordsOccluded"),
+    occludedCull("cullInstancesOccluded"),
+    occludedCull("writeDrawArgsOccluded"),
+    occludedCull("retestOccluded"),
     device.createComputePipelineAsync({
       label: "cull.points",
       layout: pointCullPipelineLayout,
@@ -2229,6 +2274,14 @@ async function createPipelines(
       compute: { module: module("hzb", hzbWgsl), entryPoint: "level0" },
     }),
     device.createComputePipelineAsync({
+      label: "hzb.level0Pixels",
+      layout: "auto",
+      compute: {
+        module: module("hzb", hzbWgsl),
+        entryPoint: "level0Pixels",
+      },
+    }),
+    device.createComputePipelineAsync({
       label: "hzb.reduce",
       layout: "auto",
       compute: { module: module("hzb", hzbWgsl), entryPoint: "reduce" },
@@ -2286,37 +2339,12 @@ async function createPipelines(
   let glarePipelines: Promise<GlarePipelines> | undefined;
   const makeGlarePipelines = async (): Promise<GlarePipelines> => {
     const glare = module("glare", glareWgsl);
-    const [sources, sprite] = await Promise.all([
-      device.createComputePipelineAsync({
-        label: "glare.sources",
-        layout: "auto",
-        compute: { module: glare, entryPoint: "glareSources" },
-      }),
-      device.createRenderPipelineAsync({
-        label: "glare.sprites",
-        layout: "auto",
-        vertex: { module: glare, entryPoint: "spriteVertex" },
-        fragment: {
-          module: glare,
-          entryPoint: "spriteFragment",
-          targets: [
-            {
-              format: "rgba16float",
-              blend: {
-                color: { srcFactor: "one", dstFactor: "one", operation: "add" },
-                alpha: {
-                  srcFactor: "zero",
-                  dstFactor: "one",
-                  operation: "add",
-                },
-              },
-            },
-          ],
-        },
-        primitive: { topology: "triangle-strip" },
-      }),
-    ]);
-    return { sources, sprite };
+    const sources = await device.createComputePipelineAsync({
+      label: "glare.sources",
+      layout: "auto",
+      compute: { module: glare, entryPoint: "glareSources" },
+    });
+    return { sources };
   };
   // The clipped variants of the engine's own set, each made when first asked
   // for (`Pipelines.clippedPipeline`).
@@ -2513,6 +2541,7 @@ async function createPipelines(
   return {
     viewLayout,
     cullWorldLayout,
+    occlusionCullLayout,
     capLayout,
     capParity: capParityPipelines.get,
     capParityPending: capParityPipelines.pending,
@@ -2532,6 +2561,10 @@ async function createPipelines(
     cullRecords,
     cullInstances,
     writeDrawArgs,
+    cullRecordsOccluded,
+    cullInstancesOccluded,
+    writeDrawArgsOccluded,
+    retestOccluded,
     dicePatches,
     writePatchArgs,
     pointCullLayout,
@@ -2581,6 +2614,7 @@ async function createPipelines(
     compositeExact,
     compositeMoments,
     hzbLevel0,
+    hzbLevel0Pixels,
     hzbReduce,
     occlusionQuery,
     momentFormats,

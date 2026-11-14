@@ -23,6 +23,7 @@
  *   level's error below each edge.
  */
 import { Tile, type TileJson, type TileTree } from "../streaming/Tile.ts";
+import type { Job, JobSpec } from "../io/Jobs.ts";
 import { volumeFromJson } from "../streaming/volumes.ts";
 import type { TileSelection } from "../streaming/Stepwise.ts";
 import type { TilesetOptions } from "../streaming/tilesetTypes.ts";
@@ -171,7 +172,23 @@ export interface GlobeTile extends Address {
    * reads; this is where it came from.
    */
   refit: RefitState;
+  /** Its decode job while in flight (`TerrainSource.jobs`): a refit job may run after it. */
+  decoding?: Job;
+  /** The job measuring its deviation from its parent, while one is pending. */
+  refitJob?: Job;
 }
+
+/**
+ * The engine's job system (`WorkerPool`, plan §13.43), for a source whose
+ * tiles decode as jobs and whose leftover deviations are measured on a
+ * worker.
+ */
+export interface TerrainJobs {
+  submit<R, A = R>(spec: JobSpec<R, A>): Job<A>;
+}
+
+/** A terrain decode's reply (`TerrainLoader`). */
+type TerrainResult = Awaited<ReturnType<TerrainLoader>>;
 
 export class TerrainSource {
   readonly root: Tile;
@@ -199,6 +216,16 @@ export class TerrainSource {
    * the worker did not (`measure`): the rest queue. Infinity: no limit.
    */
   refitBudgetMs = REFIT_BUDGET_MS;
+  /**
+   * The engine's job system. With it, a tile decodes as a job whose
+   * main-thread step (`loaded`: availability, children, refit) runs in the
+   * engine's apply phase within its budget, in request-priority order; and a
+   * deviation the decode didn't measure is measured on a worker (after the
+   * parent's decode, when the child came first) rather than on the page.
+   * Without it (tests), `load` decodes and the page measures within
+   * `refitBudgetMs`.
+   */
+  jobs?: TerrainJobs;
   /**
    * An estimate, not a bound, for tiles whose children are not loaded: a
    * tile's error is taken as `PREDICTED_ERROR_RATIO` times its deviation
@@ -565,9 +592,19 @@ export class TerrainSource {
     return this.rayTileOwners.get(rayTile);
   }
 
+  /** How many tiles' height data has left (what a bound made from them may have counted on). */
+  unloads = 0;
+
   /** Content left the cache: its height data goes too. */
   unloadTile(tile: Tile): void {
+    // Its surface leaves: a deviation pending from or to it would measure
+    // nothing that stays.
+    tile.globe?.refitJob?.cancel();
+    for (const child of tile.children) {
+      child.globe?.refitJob?.cancel();
+    }
     if (tile.globe?.heights) {
+      this.unloads++;
       tile.globe.heights = undefined;
       if (!tile.globe.upsampledFrom) {
         this.heightsChanged(tile.globe.rectangle);
@@ -610,28 +647,48 @@ export class TerrainSource {
     const skirtHeight = data
       ? skirtDepths(a, data.globe!, skirt(data.globe!.level), skirt(a.level))
       : skirt(a.level);
-    const { asset, info } = await this.load(
-      {
-        url: tile.contentUrl!,
-        ...(this.headers ? { headers: this.headers } : {}),
-        rect: rectangle(a),
-        skirtHeight,
-        ...heightNormalRequest(this.wantsHeightNormal?.()),
-        ...this.morphRequest(tile, a, data !== undefined),
-        ...this.refitRequest(tile, a, data !== undefined),
-        ...(data
-          ? {
-              upsample: {
-                rect: data.globe!.rectangle,
-                ...(data.globe!.heights
-                  ? { heights: data.globe!.heights }
-                  : { url: data.contentUrl! }),
-              },
-            }
-          : {}),
-      },
-      signal,
-    );
+    const request: Parameters<TerrainLoader>[0] = {
+      url: tile.contentUrl!,
+      ...(this.headers ? { headers: this.headers } : {}),
+      rect: rectangle(a),
+      skirtHeight,
+      ...heightNormalRequest(this.wantsHeightNormal?.()),
+      ...this.morphRequest(tile, a, data !== undefined),
+      ...this.refitRequest(tile, a, data !== undefined),
+      ...(data
+        ? {
+            upsample: {
+              rect: data.globe!.rectangle,
+              ...(data.globe!.heights
+                ? { heights: data.globe!.heights }
+                : { url: data.contentUrl! }),
+            },
+          }
+        : {}),
+    };
+    if (this.jobs) {
+      const job = this.jobs.submit<TerrainResult, GltfAsset>({
+        type: "terrain",
+        payload: request,
+        io: true,
+        signal,
+        priority: () => tile.requestPriority,
+        apply: ({ asset, info }) => {
+          a.decoding = undefined;
+          this.loaded(tile, a, info);
+          return asset;
+        },
+      });
+      a.decoding = job;
+      try {
+        return await job.promise;
+      } finally {
+        if (a.decoding === job) {
+          a.decoding = undefined;
+        }
+      }
+    }
+    const { asset, info } = await this.load(request, signal);
     this.loaded(tile, a, info);
     return asset;
   }
@@ -791,6 +848,10 @@ export class TerrainSource {
    * and the errors keep their level estimates (sound) until it is drained.
    */
   private measure(child: Tile, parent: Tile): void {
+    if (this.jobs) {
+      this.measureInWorker(this.jobs, child, parent);
+      return;
+    }
     const c = child.globe!;
     const p = parent.globe!;
     if (
@@ -821,6 +882,62 @@ export class TerrainSource {
       c.y - 2 * p.y,
     );
     this.refitSpent += performance.now() - now;
+  }
+
+  /**
+   * Measures a child's deviation from its parent as a job on a worker: at
+   * once when both surfaces are resident, else after the parent's decode
+   * job (a child that decoded first). Its main-thread step, in the apply
+   * phase, refits the errors upward. Cancelled when either tile's surface
+   * leaves (`unloadTile`) or the parent's decode is cancelled.
+   */
+  private measureInWorker(jobs: TerrainJobs, child: Tile, parent: Tile): void {
+    const c = child.globe!;
+    const p = parent.globe!;
+    if (
+      c.refit.deviation !== undefined ||
+      c.refitJob ||
+      !c.heights ||
+      c.upsampledFrom ||
+      p.upsampledFrom
+    ) {
+      return;
+    }
+    const after = p.heights ? [] : p.decoding ? [p.decoding] : undefined;
+    if (!after) {
+      return; // measured when the parent loads (`refitFrom`)
+    }
+    const qx = c.x - 2 * p.x;
+    const qy = c.y - 2 * p.y;
+    const job = jobs.submit<number, void>({
+      type: "terrainDeviation",
+      after,
+      // Read as it is posted: after the parent's decode, its surface.
+      payload: () => {
+        if (!c.heights || !p.heights) {
+          throw new Error("a surface left before its deviation was measured");
+        }
+        return { child: c.heights, parent: p.heights, qx, qy };
+      },
+      priority: () => child.requestPriority,
+      apply: (deviation) => {
+        c.refitJob = undefined;
+        if (!c.heights || !p.heights || c.refit.deviation !== undefined) {
+          return;
+        }
+        c.refit.deviation = deviation;
+        let up: Tile | undefined = parent;
+        while (up?.globe && this.refitError(up)) {
+          up = up.parent;
+        }
+      },
+    });
+    c.refitJob = job;
+    job.promise.catch(() => {
+      if (c.refitJob === job) {
+        c.refitJob = undefined;
+      }
+    });
   }
 
   private readonly refitQueue: { child: Tile; parent: Tile }[] = [];

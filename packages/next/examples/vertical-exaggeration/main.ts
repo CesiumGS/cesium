@@ -9,6 +9,7 @@ import {
 } from "@cesium/next";
 import { truePick, type Frames } from "@cesium/next/frames";
 import { Instant } from "@cesium/next/time";
+import { createRefinementChip } from "../refinement.ts";
 import type { Dispose, ExampleContext } from "../types.ts";
 import {
   createExaggeration,
@@ -152,9 +153,9 @@ export async function run({
   }
   scope.defer(() => overlay.remove());
 
-  // A card names what the view waits for until the terrain and buildings are
-  // drawn and no fit is pending; the view stays live under it, and it takes
-  // no input.
+  // A card names what the first draw waits for, until something draws. From
+  // there the view is only refining: a small chip counts the tiles and fits
+  // still to come and blocks nothing. Both take no input.
   const loadingText = document.createElement("span");
   const loadingCard = document.createElement("div");
   loadingCard.className = "vex-loading";
@@ -167,17 +168,20 @@ export async function run({
   loadingCard.append(loadingBody);
   loadingText.textContent = "Loading terrain…";
   overlay.append(loadingCard);
+  const refiningChip = createRefinementChip("vex-refining");
+  overlay.append(refiningChip.element);
   let buildings: LoadingState["buildings"] = "waiting";
   let tileset:
     | {
         readonly stats: {
           readonly loaded: number;
+          readonly inFlight: number;
+          readonly uploadQueue: number;
           readonly selected: ReadonlyMap<number, number>;
         };
       }
     | undefined;
   const loading = createLoading();
-  const loadingStarted = performance.now();
   const loadingTimer = setInterval(() => {
     if (
       buildings === "loading" &&
@@ -187,15 +191,18 @@ export async function run({
     ) {
       buildings = "drawn";
     }
-    const stage = loading.update({ stats: world.warpStats(), buildings });
-    // Content that never settles (a tileset with nothing near the camera)
-    // doesn't hold the card up forever.
-    if (stage === undefined || performance.now() - loadingStarted > 90_000) {
-      loadingCard.hidden = true;
-      clearInterval(loadingTimer);
-      return;
+    const pending = (t: typeof tileset) =>
+      t ? t.stats.inFlight + t.stats.uploadQueue : 0;
+    const view = loading.update({
+      stats: world.warpStats(),
+      buildings,
+      tiles: pending(viewer.globe) + pending(tileset),
+    });
+    loadingCard.hidden = view.card === undefined;
+    if (view.card !== undefined) {
+      loadingText.textContent = view.card;
     }
-    loadingText.textContent = stage;
+    refiningChip.show(view.chip);
   }, 250);
   scope.defer(() => clearInterval(loadingTimer));
 

@@ -136,8 +136,10 @@ describe("in an engine", () => {
     const release = vi.spyOn(engine.raster.pool, "release");
     const b = addView({ ...cameraGlare(), tier: "full" });
     engine.renderFrame();
-    expect(passes(a)).not.toContain("glare.sprites");
-    expect(passes(b)).toContain("glare.sprites");
+    // Each view composes its own glare (the spike sprites are the night-sky
+    // example's stage now, not the engine's).
+    expect(passes(a)).toContain("post.glare.composite");
+    expect(passes(b)).toContain("post.glare.composite");
     const glareFrame = (view: View) =>
       engine.raster.viewFrames.get(view)!.glare!;
     expect(glareFrame(a)).not.toBe(glareFrame(b));

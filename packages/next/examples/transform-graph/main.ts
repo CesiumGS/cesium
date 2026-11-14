@@ -2,6 +2,7 @@ import "./transform-graph.css";
 import type { AnchorHandle, CorePick, View } from "@cesium/next";
 import type { Frame, FrameCatalog } from "@cesium/next/frames";
 import type { Dispose, ExampleContext } from "../types.ts";
+import { createRefinementChip } from "../refinement.ts";
 import { createGraphPanel, type GraphSpec } from "./graphPanel.ts";
 import { createQueries } from "./queries.ts";
 import { SCENES } from "./scenes.ts";
@@ -57,6 +58,9 @@ export async function run({
     ),
   );
   overlay.append(loadingCard);
+  // What is still refining, once something has drawn: a small chip, not a gate.
+  const refiningChip = createRefinementChip("tgx-refining");
+  overlay.append(refiningChip.element);
 
   const picker = el("div", {
     className: "tgx-picker",
@@ -152,8 +156,9 @@ export async function run({
     readouts.replaceChildren();
     notes.replaceChildren();
     loadingCard.hidden = true;
+    refiningChip.show(undefined);
     for (const child of [...overlay.children]) {
-      if (child !== loadingCard) {
+      if (child !== loadingCard && child !== refiningChip.element) {
         child.remove();
       }
     }
@@ -221,6 +226,11 @@ export async function run({
         }
         loadingCard.hidden = text === undefined;
         loadingText.textContent = text ?? "";
+      },
+      refining(text) {
+        if (mine === generation) {
+          refiningChip.show(text);
+        }
       },
       note(text) {
         if (mine === generation) {

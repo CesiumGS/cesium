@@ -25,11 +25,16 @@ import {
 import type { EngineRaster } from "./engineRaster.ts";
 import { encodeClipTable } from "./clipTable.ts";
 import { drawSectionCaps } from "./capPasses.ts";
+import {
+  encodeSecondPhase,
+  prepareOcclusionCull,
+  secondPhaseBundle,
+} from "./occlusionCull.ts";
 
 /** Rasterizer side: pass bodies up to the opaque image. */
 export interface ScenePassEngine extends Pick<
   Engine,
-  "bodyCamera" | "ctx" | "stats" | "sunDirection"
+  "bodyCamera" | "ctx" | "occlusionCulling" | "stats" | "sunDirection"
 > {
   readonly raster: Pick<
     EngineRaster,
@@ -191,6 +196,8 @@ export function cullPass(
       frame.width * frame.height,
       // The patch dice's own pass, asked for only if it runs.
       () => engine.raster.timer.passWrites("dice"),
+      // Its first phase, when the tick culls by occlusion (occlusionCull.ts).
+      prepareOcclusionCull(engine, view, frame),
     );
   };
 }
@@ -273,6 +280,8 @@ export function prepassPassBody(
     }
     prepassColor.view = get(prepassNormal);
     prepassDepthAttachment.view = get(prepassDepth);
+    prepassColor.loadOp = "clear";
+    prepassDepthAttachment.depthLoadOp = "clear";
     prepassPass.timestampWrites = engine.raster.timer.passWrites("prepass");
     const pass = enc.beginRenderPass(prepassPass);
     pass.executeBundles([
@@ -280,6 +289,21 @@ export function prepassPassBody(
         view.world.prepassBundle(),
     ]);
     pass.end();
+    // Culling by occlusion (occlusionCull.ts), that was the first phase: the
+    // pyramid of its depth and the second phase, whose draws go into the
+    // same targets. No depth pass of the cull's own.
+    if (frame.cull?.active && frame.cull.firstDepth === "prepass") {
+      encodeSecondPhase(engine, view, frame, enc, get(prepassDepth));
+      const second = secondPhaseBundle(view, "prepass");
+      if (second) {
+        prepassColor.loadOp = "load";
+        prepassDepthAttachment.depthLoadOp = "load";
+        prepassPass.timestampWrites = engine.raster.timer.passWrites("prepass");
+        const again = enc.beginRenderPass(prepassPass);
+        again.executeBundles([second]);
+        again.end();
+      }
+    }
   };
 }
 
@@ -436,16 +460,37 @@ export function opaquePassBody(
     opaqueDisplay.resolveTarget = get(displayResolved);
     opaqueDepth.view = get(depth);
     opaquePass.timestampWrites = engine.raster.timer.passWrites("opaque");
+    // Culling by occlusion (occlusionCull.ts): both phases' depth, then both
+    // shaded. Where the first phase's depth had a pass of its own
+    // (`occlusion-depth`, a view without the prepass this tick), it is loaded.
+    const culled = frame.cull?.active === true;
+    const loaded = culled && frame.cull!.firstDepth === "opaque";
+    opaqueDepth.depthLoadOp = loaded ? "load" : "clear";
     const pass = enc.beginRenderPass(opaquePass);
+    frame.bundles.length = 0;
     // Its depth first, then its shading where that depth is (each
     // sample shaded once, not every fragment drawn over it).
-    if (engine.ctx.pipelines.depthPrepass) {
-      frame.bundles[0] =
+    if (culled) {
+      if (!loaded) {
+        frame.bundles.push(view.world.depthBundle());
+      }
+      for (const kind of ["depth", "opaque"] as const) {
+        if (kind === "opaque") {
+          frame.bundles.push(frame.bundle!);
+        }
+        const second = secondPhaseBundle(view, kind);
+        if (second) {
+          frame.bundles.push(second);
+        }
+      }
+    } else if (engine.ctx.pipelines.depthPrepass) {
+      frame.bundles.push(
         (frame.clipBytes > 0 && view.world.clippedBundle("depth")) ||
-        view.world.depthBundle();
-      frame.bundles[1] = frame.bundle!;
+          view.world.depthBundle(),
+        frame.bundle!,
+      );
     } else {
-      frame.bundles[0] = frame.bundle!;
+      frame.bundles.push(frame.bundle!);
     }
     pass.executeBundles(frame.bundles);
     drawSectionCaps(engine, view, frame, pass, get, { capLow, capHigh });

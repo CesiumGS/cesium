@@ -136,6 +136,7 @@ export async function addTerrain(
     engine.scene.terrainLoader,
     { warnings: new Set() },
   );
+  source.jobs = engine.scene.workers;
   return addGlobeSource(engine, world, source, options);
 }
 
@@ -147,6 +148,7 @@ export function addEllipsoid(
   const source = TerrainSource.ellipsoid(engine.scene.terrainLoader, {
     warnings: new Set(),
   });
+  source.jobs = engine.scene.workers;
   return addGlobeSource(engine, world, source, options);
 }
 
