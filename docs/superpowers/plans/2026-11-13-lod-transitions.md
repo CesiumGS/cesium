@@ -1,6 +1,6 @@
 # Level-of-detail transitions: coarsening, and 3D Tiles both ways
 
-**Status (2026-11-13):** design. The owner answered seven questions on 2026-11-13 (recorded under "Decisions"). Nothing is built yet.
+**Status (2026-11-13):** design, reviewed and merged. The owner answered seven questions on 2026-11-13 (recorded under "Decisions") and accepted the plan with two additions at review: retargeting runs on the job system, and the clock rebase moves into milestone 1. Its milestones are in `CESIUM2_WEBGPU_PLAN.md` §6, M9. Nothing is built yet.
 
 **Goal:** nothing pops when a level of detail changes, except the very first load. Today terrain morphs in and imagery cross-fades when they refine. This plan adds:
 
@@ -88,7 +88,7 @@
   - Set: dither in the fragment stage (3D Tiles content, and globe tiles without morph data).
 - **The free word stays free.** The record is nearly full; one shared word with a flag covers both methods, since no draw needs both.
 - **Reversal is continuous.** If a tile going out is selected again (or one coming in is deselected), its new start is chosen so its shown amount doesn't jump. Smoothstep is symmetric (e(1 − t) = 1 − e(t)), so a tile at progress t in one direction restarts at 1 − t in the other: `start = now − (1 − t) · duration`, with the sign flipped. A test holds `morphFactor` continuous across a reversal.
-- **Precision:** an f32 time in seconds loses steps after long sessions (at 10⁶ s, about 11 days, a step is 0.06 s). The clock is the scene's, from `startTime`, so this matches today's morph. Noted under risks.
+- **Precision:** an f32 time in seconds loses steps after long sessions (at 10⁶ s, about 11 days, a step is 0.06 s). **Fix in milestone 1 (owner, at review):** the word and `View.time.x` share an epoch kept on the CPU in f64. When the shader clock passes a threshold (an hour), the epoch moves forward and every nonzero word is rebased by the same amount in the next record write, so the shader always works with small times.
 
 ### 2. Leaving tiles: the shared machinery
 
@@ -122,6 +122,7 @@ Coarsening needs a tile to stay drawn after selection drops it. This is one mech
   - The child's d is recomputed against the destination's resident `heights`, in the decode worker, with the same code `morphRequest` uses (`MorphSource`: the ancestor's heights, scale and quadrant).
   - The new `(n̂, d)` stream is rewritten into the arena in place (16 bytes a vertex; a level-15 tile is about 65 KB).
   - The child stays drawn and selected-looking until it lands, a tick or two. That's invisible: the picture doesn't change while it waits. A request older than one transition gives up and pops (counted as `skipped: retarget`).
+  - **On the job system** (§13.43, owner at review): the recompute is a `Jobs` job with the decode workers' group, prioritised by the swap's screen error, with an apply step that writes the stream into the arena. The give-up rule is its cancellation, as is the child's release or a reversal; the inspector's Jobs section shows it.
 - **Tiles with no morph data** (parent not resident at decode): a dither fade both ways, with the `dither` flag. Upsampled tiles keep no geometry change to hide (they are their source's surface, cut smaller), so only their imagery changes, which the imagery fade covers.
 - **Skirts** move with the morph, as they do on morph-in (they share `morphOf`).
 - **Neighbours at different progress** leave small cracks for a moment, as morph-in does; skirts cover them.
@@ -222,12 +223,12 @@ Three cases.
 
 ## Milestones
 
-Sized for one agent each. Each lands on the proof-of-concept branch with its tests; the lead runs the suites once per merge.
+Sized for one agent each. Each lands on the proof-of-concept branch with its tests; the lead runs the suites once per merge. The overall plan names them LT-1 to LT-8 (§6, M9).
 
-1. **The word, the flag, the rename.** `morph` → `transition` in `common.slang`, `layout.ts`, `drawConstants.ts`; signed start; `RecordFlags.ditherTransition`; `morphOf` reads the sign; `View.lodTransitions` `"smooth" | "pop"`; `&lod=` values; `api/surface.txt`. `tileMorph.ts` → `transitions.ts` with reversal math and tests (`morphFactor` continuous across a reversal). No behaviour change beyond the names. *Model: fast.*
+1. **The word, the flag, the rename.** `morph` → `transition` in `common.slang`, `layout.ts`, `drawConstants.ts`; signed start; `RecordFlags.ditherTransition`; `morphOf` reads the sign; the clock's epoch rebase (section 1, with a test that a transition spanning a rebase stays continuous); `View.lodTransitions` `"smooth" | "pop"`; `&lod=` values; `api/surface.txt`. `tileMorph.ts` → `transitions.ts` with reversal math and tests (`morphFactor` continuous across a reversal). No behaviour change beyond the names. *Model: fast.*
 2. **The leaving set** (section 2), with terrain morph-back for the common case (destination = the decode-time ancestor), skip rules, chaining, the memory rule, `stats.transitions`, the placeholder rule and the debug state. Tests with `test/fakeGpu.ts`: a coarsening holds the children for one transition, then releases them; hidden and off-screen children pop; a reversal keeps the tile. *Model: most capable (design-heavy, touches selection output).*
 3. **Imagery coarsening** (section 4): children fade to the destination's texels; retired slices; `applied` forgotten when a tile stops drawing. First a test that shows each suspected bug (fade from a given-up slice; fade from a recycled slice on return), then the fixes. *Model: fast, with a capable reviewer.*
-4. **Retargeting and the terrain dither fallback:** worker recompute of `_HEIGHT_MORPH` against a new destination, the in-place stream rewrite, the give-up rule; dither fades for globe tiles without morph data. *Model: fast.*
+4. **Retargeting and the terrain dither fallback:** worker recompute of `_HEIGHT_MORPH` against a new destination as a `Jobs` job (cancelled by the give-up rule), the in-place stream rewrite, the give-up rule; dither fades for globe tiles without morph data. *Model: fast.*
 5. **The dither in the shaders:** the noise, `cutOut`, the prepass stages, translucent and shadow stages, the destination rule in `pickOutput`, `heightFs` and CPU ray queries. Read the Metal output with `scripts/dumpMsl.mjs` before the first browser run. Tests: complementary coverage on a fake pair; picks during a fade hit the destination. *Model: fast.*
 6. **3D Tiles transitions:** REPLACE both ways (whole region and mixed-LOD boxes with per-box start times), ADD in and out, first content pops. *Model: most capable (mixed-LOD boxes).*
 7. **Measure** (section 8): `scripts/frameJumps.mjs`, the protocols, the report. Then decide the two measured options: the plain prepass pipeline and the per-sample MSAA mask. *Model: fast.*
@@ -241,7 +242,7 @@ Milestones 1 and 7's script can start at once. 2 needs 1; 3 and 4 need 2; 5 need
 
 ## Risks and open points
 
-- **Time precision:** f32 seconds on the scene clock lose steps after many days of uptime. A later fix rebases the clock (subtract a recent epoch kept on the CPU) for both the view block and the words.
+- **Time precision:** handled by milestone 1's epoch rebase. The remaining risk is a rebase landing mid-transition; its test covers that.
 - **Fast zoom-outs:** chaining adds up to one transition per level for tiles that stay visible. The half-pixel and off-screen skips should cover most; the dolly protocol measures the extra tiles drawn.
 - **The parent must be resident to coarsen to it.** With skip-LOD (photogrammetry), ancestors may have been evicted. Coarsening then waits for the ancestor's load, drawing the finer children meanwhile: correct, but it costs memory while zoomed out. The stats show how often.
 - **Dither look on large flat content** (a city's ground plane from a 3D Tiles mesh): a visible dissolve for one transition. The MSAA mask is the first remedy.

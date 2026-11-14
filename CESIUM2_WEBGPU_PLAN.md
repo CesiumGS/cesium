@@ -3868,6 +3868,19 @@ The first slice is merged: `Jobs` behind `WorkerPool` (priorities, dependencies,
 - App jobs (`engine.jobs.run`). Needs JP-3 (the app worker group) and the one-API façade (§13.41, threading).
 - The façade itself and worker mode by default: after a run on an otherwise idle GPU shows smoother ticks (§13.43's spike).
 
+### M9 — Level-of-detail transitions (decided 2026-11-13)
+
+[`docs/superpowers/plans/2026-11-13-lod-transitions.md`](docs/superpowers/plans/2026-11-13-lod-transitions.md), reviewed by the owner on 2026-11-13 (seven decisions, plus the clock rebase in LT-1 and retargeting on the job system). Nothing pops when a level of detail changes, except the very first load: terrain morphs back when it coarsens, imagery fades to the destination's texels, and 3D Tiles content dithers both ways. It is one of the refinement sources of §13.41 item 7. No durations: order and dependencies only.
+
+- LT-1: the signed `transition` word, the dither flag, `View.lodTransitions: "smooth" | "pop"`, the clock's epoch rebase. Needs nothing.
+- LT-2: the leaving set, terrain morph-back for the common case, skip rules, chaining, the memory rule, `stats.transitions`. Needs LT-1.
+- LT-3: imagery coarsening, including the two suspected slice bugs (shown by tests first). Needs LT-2.
+- LT-4: retargeting as a `Jobs` job, and the dither fallback for terrain without morph data. Needs LT-2 and the first job-system slice (merged).
+- LT-5: the dither in every pass; picks and height queries see the destination. Needs LT-1.
+- LT-6: 3D Tiles transitions (REPLACE both ways with mixed-LOD boxes, ADD in and out). Needs LT-2 and LT-5.
+- LT-7: measurement (`scripts/frameJumps.mjs`, the protocols), then the two measured options (a plain prepass pipeline, a per-sample MSAA mask). Its script needs nothing.
+- LT-8: distance-driven morph factors for terrain, only if LT-7's numbers ask.
+
 ---
 
 ## 7. Risks
@@ -11353,6 +11366,7 @@ Each item moves existing code onto `Jobs` (priority, cancellation, an apply step
 - Engine profiles plan: the governor and the measured step costs read job and apply-phase timings.
 - The refinement plan: progressive jobs report as refinement sources.
 - The transform-graph plan: warp fits (JP-5) and the occluder walk (JP-4).
+- The LOD transitions plan: LT-4's retargeting recompute is a job (decode workers' group, prioritised by screen error, cancelled by its give-up rule, a release or a reversal).
 
 ## 14. Follow-ups
 
