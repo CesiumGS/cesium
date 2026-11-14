@@ -1,6 +1,6 @@
 # The worker-mode façade: design plan
 
-**Status (2026-11-13):** plan for the owner's review. Nothing is built. Its milestones are named WF-1 to WF-12 (with WF-2a to WF-2d) so `CESIUM2_WEBGPU_PLAN.md` §6 can list them.
+**Status (2026-11-13):** reviewed and merged (answers in section 8). Its milestones are in `CESIUM2_WEBGPU_PLAN.md` §6, M13, sequenced with the public API review (Plan 5i). Nothing is built. Its milestones are named WF-1 to WF-12 (with WF-2a to WF-2d) so `CESIUM2_WEBGPU_PLAN.md` §6 can list them.
 
 **Goal:** one app-facing API, called on the main thread, whose layer underneath runs the engine either on the main thread, synchronously, or in a dedicated worker on a transferred `OffscreenCanvas`. A probe picks the thread (`thread: "auto" | "main" | "worker"`). The same app code runs in both modes, and the API tests run in both modes to keep it so.
 
@@ -477,3 +477,16 @@ Each has a recommendation and the alternative.
 | Q8 | **What `"auto"` resolves to before the WF-11 gate passes.** | **The main thread, while the probe still runs and reports what it would pick** (inspector, `threadReason`: "worker available; main by default until measured"). Dyno's `&thread=worker` forces the worker for testing. Passing the gate flips one constant. The gate's thresholds are in section 5. | `"auto"` picks the worker as soon as WF-6 lands, in the library and in Dyno, with main-thread mode as the fallback only. |
 | Q9 | **Large arrays in commands:** copied or transferred by default? | **Copied by default**, so the app keeps its arrays in both modes; `{ transfer: true }` detaches them in both modes (main-thread mode detaches too). | Transferred by default: faster for big meshes, but the app's arrays are detached in worker mode and not in main-thread mode, unless main-thread mode emulates it. |
 | Q10 | **The 136 engine internals exported today** (`World`'s GPU buffers, render bundles and encoders, `Tile` graph links, `ChainIo`, `Engine.ctx`, `HeightCapture`'s GPU objects…): where do they go? | **Out of the main entry, into the advanced `@cesium/next/gpu` entry (main-thread mode only) or unexported** (WF-2d), as decision 11 already does for `GpuDevice`. The two examples that use the device directly (night-sky, translucency) move to a stage module or force main-thread mode. | Keep them exported and document them as main-thread-only. The main entry then carries members that throw in worker mode, which decision 7 rules out. |
+
+## 8. Owner's answers (2026-11-13)
+
+- **Q1, closures:** refused in both modes, **but only once IR-13's self-contained-function path exists**, so the examples migrate once (not to modules and then to functions). Until then WF-2c adds the module and program forms beside closures. Callbacks that run on the page (`onTick` in worker mode, `onAfterTick`, events, page-side controllers) take ordinary closures in both modes; only functions the engine runs on its own thread need a program, a self-contained function or a module. The docs say that line plainly.
+- **Q2 to Q5, Q8 to Q10:** accepted as recommended.
+- **Q6, HTML overlays:** HTML overlays don't belong in the engine. The engine publishes tracked points (pixel, height, visibility) each tick, and placing DOM is the app's. The synchronized-present option is dropped. Drawing labels and pins in the engine comes with vector rendering, later. (`View.overlays` is in-engine line lists and unaffected.)
+- **Q7, recovery:** report it and offer `restart()`, **and include the scene rebuild as an opt-in** (a flag on `Engine.create` or `restart`): the façade's mirror of app-authored state replays every live handle into a new engine after worker loss or device loss, in both modes. New milestone WF-7b.
+- **Sequencing with the API review (Plan 5i):** WF-1's protocol table is the review's "map of today's surface". The order is WF-1, then the 5i review with the façade's constraints in hand, then WF-2a to WF-2d, so the API is reshaped once.
+- **Proposed at review, pending the owner:** observed value types for writable engine state (camera vectors, sun direction, warp parameters) that turn in-place writes (`camera.position.x = 5`, `.set(…)`) into commands, in place of WF-2b's setters, so code written the three.js way works in both modes; and the 5i review checking the final API against three.js, Babylon.js and MapLibre idioms.
+
+| # | Milestone | Needs | Files | Done when |
+| --- | --- | --- | --- | --- |
+| WF-7b | **Scene rebuild on loss, opt-in.** Replay the façade's mirror (every live handle, its options and app-authored state) into a fresh engine after worker loss or device loss, in both modes; the flag on `Engine.create` and `restart`; handles keep their ids. | WF-7 | `src/thread/facade/`, `host.ts`, `errors.ts` | A test kills the engine (channel transport) and the rebuilt scene matches the mirror; a browser check loses the device and comes back with the same scene, in a worker and on the main thread. |

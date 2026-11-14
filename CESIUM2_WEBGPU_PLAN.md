@@ -3936,6 +3936,23 @@ The first slice is merged: `Jobs` behind `WorkerPool` (priorities, dependencies,
 - SR-12: handbook and plan updates. Needs SR-9 and SR-10.
 - SR-13: request options at 1.x parity: proxies (prefix and function), inherited query parameters and headers, credentials for trusted origins, the app's auth-refresh hook (owner, 2026-11-13). Needs SR-2 (SR-7 for the hook).
 
+### M13 — The worker-mode façade (decided 2026-11-13)
+
+[`docs/superpowers/plans/2026-11-13-worker-facade.md`](docs/superpowers/plans/2026-11-13-worker-facade.md), reviewed by the owner on 2026-11-13 (§13.41 threading, §13.43). One API on the main thread; the engine on the main thread or in a worker, chosen by a probe (`thread: "auto" | "main" | "worker"`). Commands, per-tick snapshots, queries as promises; user code the engine runs is a Cesium IR program, a self-contained function or a module; HTML overlays are the app's (the engine publishes tracked points). Sequenced with the public API review (Plan 5i): WF-1's map first, then the review, then WF-2. No durations: order and dependencies only.
+
+- WF-1: the protocol table, every public member classified, checked against `api/surface.txt`. Needs nothing (Wave A).
+- The public API review (Plan 5i), with WF-1's map and the façade's constraints. Needs WF-1.
+- WF-2a, WF-2b, WF-2c, WF-2d: reads, writes, functions and internals reshaped on the main thread. Need the 5i review; WF-2c's program forms need IR-6, IR-8, IR-9 and IR-13, and closures are refused only once IR-13 lands; WF-2d needs the `@cesium/next/gpu` entry (Profiles M6).
+- WF-3: the façade and the direct transport. Needs WF-2a, WF-2b, WF-2d.
+- WF-4: the channel transport, and the API suite in both modes. Needs WF-3.
+- WF-5: the worker backend (canvas transfer, resize, input, built-in controllers). Needs WF-4.
+- WF-6: the probe and `thread: "auto"`. Needs WF-5.
+- WF-7: errors and loss, `restart()`. Needs WF-5. WF-7b: the opt-in scene rebuild. Needs WF-7.
+- WF-8: modules in the engine's thread. Needs WF-3 (WF-5 for the worker).
+- WF-9: widgets, the inspector, the recorder, `__cesium`. Needs WF-5.
+- WF-10: a shared snapshot, only if WF-11 asks. WF-11: measurements and the default. Needs WF-6 and WF-9.
+- WF-12: the other plans plug in (refinement R2/R3 worker mode, Profiles M9, streaming robustness's `NetState` forwarding and its `"failed"` event and `retryFailed()`, a function proxy as a per-request hard case, the examples, the handbook's threading tab). Needs WF-5 and each plan's own milestone.
+
 ### Implementation kickoff order across M7–M11 (2026-11-13)
 
 Which first milestones can start now, grouped so that no two agents write the same files at once. Order and dependencies only, no durations. Each wave's items run in parallel; a later wave waits only where it says.
@@ -3943,6 +3960,7 @@ Which first milestones can start now, grouped so that no two agents write the sa
 **Wave A: new files, start now, in parallel.**
 
 - IR-1 (Cesium IR's core, new `src/ir/`) and IR-10 (our naga crate, Rust, development and CI only).
+- WF-1 (the façade's protocol table: every public member classified; new `src/thread/protocol.ts` and a test against `api/surface.txt`). It is also the public API review's (5i) map of the surface.
 - W0 (the shader route spike: naga and Slang → WGSL → GLSL ES; a spike folder).
 - MX-1 (the MaterialX document layer, new `packages/next/materialx/`).
 - LT-7's script (`scripts/frameJumps.mjs`, reading recorder dumps).
@@ -3962,7 +3980,7 @@ Which first milestones can start now, grouped so that no two agents write the sa
 
 **Wave D: after its inputs.** MX-6 (OpenPBR tier 1) after LT-1, since both edit `surface.slang`. LT-2 after LT-1. W2 and W3 after W1 (W3 also after Profiles M2). R2 and R5 after R1. The worker-mode façade's milestones once its plan is reviewed.
 
-**Waiting on plans not yet reviewed:** the worker-mode façade, streaming robustness and WebGL 2 R1 (being written on 2026-11-13). Their findings may reorder Wave D, not Waves A–C.
+**Reviewed since (2026-11-13):** WebGL 2 R1 (W10's order), streaming robustness (M12) and the worker-mode façade (M13, with WF-1 in Wave A and the 5i review before WF-2).
 
 ---
 
