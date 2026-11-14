@@ -59,4 +59,5 @@ export type {
   MemoryRow,
   PickInfo,
   StagePercentiles,
+  TickEvent,
 } from "./inspectable.ts";
