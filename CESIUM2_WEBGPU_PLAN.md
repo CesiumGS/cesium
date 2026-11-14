@@ -3801,6 +3801,45 @@ thing to cull there.
 - WebXR.
 - Headless rendering via Dawn.
 
+### M7 — Renderers, engine profiles and Cesium IR (decided 2026-11-13)
+
+Three plans, reviewed by the owner on 2026-11-13, with their milestones folded in here. Each plan holds the detail and its "done when"; this list holds the order and the dependencies between them. No durations: order and dependencies only (owner, 2026-11-13).
+
+**Engine profiles** ([`docs/superpowers/plans/2026-11-13-engine-profiles.md`](docs/superpowers/plans/2026-11-13-engine-profiles.md); §13.41 renderer decision 4). The app owns the look, the engine owns fidelity.
+
+- Profiles M1: facts and personas. Needs nothing.
+- Profiles M2: the catalog, rules and resolver. Needs Profiles M1.
+- Profiles M3: paths in one place, with the seam test. Needs Profiles M2.
+- Profiles M4: wired into `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, notices, `strict`). Needs Profiles M3.
+- Profiles M4a: `resolution` and `msaa` as features. Needs Profiles M4.
+- Profiles M4b: aerial perspective steps. Needs Profiles M4.
+- Profiles M4c: the opt-in resolution governor. Needs Profiles M4a.
+- Profiles M5: the inspector's Profile section and emulation. Needs Profiles M4.
+- Profiles M6: the `@cesium/next/gpu` entry point. Needs Profiles M4.
+- Profiles M7: the Viewer's defaults migrated. Needs Profiles M4.
+- Profiles M8: the WebGL 2 renderer's facts and support rules. Needs Profiles M2 and WebGL 2 W3.
+- Profiles M9: the worker mode's snapshots. Needs Profiles M4 and the worker spike (§13.42 on the job-system branch, to be renumbered).
+
+**Cesium IR** (§13.42, decided; the implementation plan, `docs/superpowers/plans/2026-11-13-cesium-ir.md`, is being written). Its milestones are listed here when that plan lands. The WebGL 2 plan depends on four of them by name: the GLSL ES 3.00 emitter, the style front end, the transform graph on Cesium IR, tables and bounded search; and two more for user code: the WGSL front end through naga, hooks and post stages on Cesium IR. It also absorbs transform-graph Task 9 (arrays, bounded loops, missing ops).
+
+**The WebGL 2 renderer** ([`docs/superpowers/plans/2026-11-13-webgl2-renderer.md`](docs/superpowers/plans/2026-11-13-webgl2-renderer.md); §13.41 toolchain answer 3). A second, simpler renderer that exercises the seam: a device per engine, a renderer per view.
+
+- W0: the shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points. Needs nothing.
+- W1: the seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves. Needs nothing.
+- W2: renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`). Needs W1.
+- W3: the probe, the `renderer` option and an empty WebGL 2 device. Needs W1 and Profiles M2.
+- W4: first draws, unlit (glTF and 3D Tiles meshes). Needs W0, W2 and W3.
+- W5: the globe, terrain and imagery. Needs W4.
+- W6: lighting and instancing. Needs W4.
+- W7: styles and warps through Cesium IR. Needs W6 and the four Cesium IR milestones above.
+- W8: picks, outputs and user code. Needs W4; its second half (user code) needs the Cesium IR WGSL front end and hooks.
+- W9: the atmosphere. Needs W6.
+- R1: research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have. Needs nothing; orders W10.
+- W10: further steps (shadows, moments translucency, FXAA, clips, ambient occlusion, the depth-range readback). Needs W9 and R1.
+- W11: the runner suite, the gallery's renderer switch, the handbook. Grows from W4.
+
+**Order across the three.** Profiles M1–M2, W0, W1 and the first Cesium IR milestones can start together (different files). W3 waits for Profiles M2. W7 and W8's second half wait for Cesium IR. Profiles M8 lands with W3.
+
 ---
 
 ## 7. Risks
@@ -10546,7 +10585,7 @@ _(4) Our IR to WGSL, naga for validation and GLSL._ As (2), but no Slang at run 
 
 1. **CPU evaluation of styles is a requirement** (picks, legends, queries, interval culling of tiles).
 2. **Styling stays compiler-free:** Slang loads only for custom shaders, never for a style.
-3. **The PoC builds a WebGL 2 renderer,** to exercise the renderer seam designed in the renderer research (a renderer behind each view, support reported in the scene's terms, AOVs; decisions above). It is a second, simpler renderer, not a translation of the GPU-driven one: no compute, storage buffers or indirect draws. Scope it as a task: which content it draws (decision 8 of the renderer questions: globe, terrain, imagery, meshes at least), how styles and transforms reach GLSL ES, and how its support report reads.
+3. **The PoC builds a WebGL 2 renderer** ([plan](docs/superpowers/plans/2026-11-13-webgl2-renderer.md), reviewed 2026-11-13; milestones in §6 M7), to exercise the renderer seam designed in the renderer research (a renderer behind each view, support reported in the scene's terms, AOVs; decisions above). It is a second, simpler renderer, not a translation of the GPU-driven one: no compute, storage buffers or indirect draws. Scope it as a task: which content it draws (decision 8 of the renderer questions: globe, terrain, imagery, meshes at least), how styles and transforms reach GLSL ES, and how its support report reads.
 4. **Open, to discuss:** the owner isn't sold on our own IR yet, and wants to see how far the API gets **without** a WGSL escape hatch before adding one. **Answered in §13.42** (owner, 2026-11-13): Cesium IR, a small IR on `KHR_interactivity`'s ratified vocabulary; WGSL as a front end through naga, not an escape hatch.
 5. **Built-in transforms in one source:** written in the IR, or in something that compiles to it quickly.
 6. **naga in CI: yes.** Also evaluate building our own WebAssembly of naga instead of the third-party `naga-wasm` (a small Rust crate over naga with exactly the API we need, pinned, built in CI; Rust is compiled to `wasm32-unknown-unknown` with wasm-bindgen, not Emscripten).
