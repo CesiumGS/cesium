@@ -65,9 +65,31 @@ Example pages are documentation and demos at once. They have to work as a visual
 - The handbook is for outside readers. Describe the engine as an embeddable rendering core whose host application can supply its own services, and add nothing about the roadmap beyond the plans in this repository without the owner's agreement.
 - `handbook/DESIGN.md` has the full list of what to update by hand.
 
+## Work items
+
+Work is tracked as files in `work/`: one file per item, grouped into projects and initiatives. Every item has a `CS-<n>` ID. The format and rules are in the tracker's design (`docs/superpowers/plans/2026-11-13-work-tracker.md`, at the repository root), and the `work-items` skill walks through it. The commands below run from `packages/next`.
+
+- **Finding work:** run `node scripts/work/views.mjs ready`. It lists Planned items whose `needs` are all Done. `blocked` shows what waits on what. Read the item, then the plan it points to.
+- **Claims first:** run `node scripts/work/views.mjs claims` at session start, before you choose. It lists items claimed in other worktrees and on other branches.
+- **Claiming:** do it in your branch's first commit. Set the item's `status: In progress` and `claimed:` to your session's name, and commit that before any work.
+- **The limitation:** claims aren't atomic.
+  - Another worktree of this clone sees your claim as soon as the file is written.
+  - The other machine or a collaborator's clone sees it only after a bundle or a push carries it.
+  - Two claims on one item meet as a merge conflict on `claimed`. So check `claims`, claim early, and let the main session merge in order.
+- **Closing:** the branch that does the work sets its item to `status: Done` in the same change that finishes it, so that merging the branch closes the item. Don't leave it for a later commit.
+- **Creating items:** run `node scripts/work/new.mjs --kind work --project CS-<n> --title "…" [--needs CS-<n>,…]`.
+  - It takes the next free number across every worktree and branch. Never pick a number by hand. Never reuse, renumber or add a letter to one.
+  - It prints a repository-relative path. Never paste an absolute path into an item, a commit or a plan.
+  - Use `--kind external --party "…"` for a wait outside our control.
+- **Decisions go to the owner:** a question only the owner can answer becomes a `decision` item (`decided-by: owner`), with the options and a recommendation in its body. Work that depends on the answer `needs` the decision, and contingent work stays `Proposed`. `views.mjs decisions` lists what waits on the owner. Don't settle these in code.
+- **Never add a frontmatter key that runs code** (`onStatusChange` and the like). The schema is an allowlist, and `check` refuses any other key.
+- **Before committing a change to an item, run `node scripts/work/views.mjs check`.** `npm test` runs it too. It also fails on old-style milestone names and on section numbers that point into the old overall plan: name work by `CS-<n>`, and documents by their path.
+- **Across machines:** after fetching a bundle into a branch, run `check --branches` before merging. If a number was taken on both sides, the branch that arrives second gives its item a new number.
+- Leave the generated lists in `work/README.md` alone; the main session regenerates them after merges.
+
 ## Coding agents
 
-- Implementation follows the plans in `docs/superpowers/plans/`, task by task, with a fresh reviewer per task.
+- Implementation follows the plans in `docs/superpowers/plans/`, task by task, with a fresh reviewer per task. The work items in `work/` say which tasks are ready; claim one before starting (see "Work items").
 - Choose the model per role: a fast model for well-specified implementation and scoped re-reviews, the most capable one for design-heavy tasks and risky reviews.
 - Send back only Important review findings as fix rounds; fix Minor ones in one pass or fold them into the next task.
 - Leave generated shader output out of review diffs.
