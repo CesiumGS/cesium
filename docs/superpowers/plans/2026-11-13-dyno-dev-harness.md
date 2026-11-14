@@ -8,10 +8,10 @@
   - **Questions 5, 16 and 19:** other machines and devices reach the Mac through a Dyno-managed local certificate authority and one hub process (section 8). The laptop runs a small runner that connects out and lends its browser; phones pair the same way (DH-20). SSH and Tailscale are rejected, with the reasons. Archives moved by hand stay as the fallback.
 - **Added:** studies, and the data model behind them (section 2). A study holds a question, a hypothesis, the runs that test it and a recorded verdict. Sweeps fold into study pages, and the rail's Experiment group becomes Studies and Lab (section 16).
 - **Adjusted with the main session:**
-  - Items are the work tracker's global IDs (`CZ-<n>`, the prefix the tracker's files use), with no per-plan prefixes or letters.
+  - Items are the work tracker's global IDs (`CS-<n>`, the prefix the tracker's files use), with no per-plan prefixes or letters.
   - The rail reserves the first place for the tracker's Work page.
   - This plan's AGENTS.md section lands in one coordinated change with the tracker's "Work items" section, with both skills in one place.
-- **Milestone names:** DH-1 to DH-20 keep their names in this document. They become `CZ-<n>` items under a development-harness initiative when the tracker lands; the tracker's session converts them after merge.
+- **Milestone names:** DH-1 to DH-20 keep their names in this document. They become `CS-<n>` items under a development-harness initiative when the tracker lands; the tracker's session converts them after merge.
 - **Open questions:** 15, 17 and 18 (section 13), each with a recommendation the plan assumes.
 
 **Goal:** every measurement that steers development goes through Dyno, so it lands in the results store, shows in Trends, and can be found again by its run and its study. Today the numbers behind recent decisions (the error exponent α, the ×10 cliff bands, the culling gains) came from one-off Playwright scripts that wrote CSVs and PNGs to temporary folders. Those numbers can't be compared with later ones, nobody can find them a week on, and the reasoning that turned them into a decision lives in chat.
@@ -76,7 +76,7 @@ Benchmarking data answers five questions. The model gives each one a home.
 2. **What was measured, where and how?** These are executions: one invocation, on one machine, of one commit, with its configurations. A run is immutable once written.
 3. **What does the history say?** This is derived data: series over baseline runs, change points, flake rates. It can always be recomputed.
 4. **What did we conclude?** These are judgements, made by a person or an agent: a study's verdict, an alert's triage, an approved image, an annotation. They are mutable, and each records who made it and when.
-5. **Why did we measure, and what is it for?** This is the work: the tracker's items (`CZ-<n>`), including the decisions waiting on the owner. It lives in the tracker, not in Dyno.
+5. **Why did we measure, and what is it for?** This is the work: the tracker's items (`CS-<n>`), including the decisions waiting on the owner. It lives in the tracker, not in Dyno.
 
 A **study** is the judgement that ties questions 2, 4 and 5 together. It holds a question and a hypothesis written before results, the runs that test it, and a verdict that cites them and informs a decision. A study doesn't execute anything; runs do. A run doesn't conclude anything; a study does.
 
@@ -85,7 +85,7 @@ A **study** is the judgement that ties questions 2, 4 and 5 together. It holds a
 Where each layer lives follows one rule. Judgements about the work (studies) live with the work, in the repository, on the branch. Judgements about runs (triage, approved images, pins) live with the runs, in the store on the machine that holds them.
 
 ```text
-WORK (repo, the tracker)   Item CZ-<n> ─────────── decision items
+WORK (repo, the tracker)   Item CS-<n> ─────────── decision items
                               │ serves                  ▲ informs
 JUDGEMENTS (repo)          Study ─ question, hypothesis, expectations, status
                               │      design: the runs it plans (commands)
@@ -109,10 +109,10 @@ DEFINITIONS (repo)         Dataset · Scene (groups A to D) · Scenario · Check
 
 | Concept | Layer | What it is | Relation to studies | Where it lives |
 | --- | --- | --- | --- | --- |
-| **Item** | Work | A tracker item, `CZ-<n>`: a task, a decision, an investigation. | A study serves one item; several studies may serve one item. | The tracker. Dyno stores the ID only. |
+| **Item** | Work | A tracker item, `CS-<n>`: a task, a decision, an investigation. | A study serves one item; several studies may serve one item. | The tracker. Dyno stores the ID only. |
 | **Study** (new) | Judgement | A question, a hypothesis, expectations, a design, notes, a status (open, concluded or abandoned) and a verdict. No machine details; runs cited by ID. | It is the study. | The repo: `packages/next/work/studies/<id>.md`, beside the tracker's items |
 | **Expectations** | Judgement | The primary metric, the guardrails and the tolerance, declared before results (§16.9's "decide" practice). | A study declares them; its runs copy them into `plan`, so each run's scorecard tests them. | The study; a copy in each run |
-| **Verdict** (new) | Judgement | Supported, refuted or inconclusive, with the reasoning, the runs cited (each with what it showed) and the decision it informs (`CZ-<n>`). | It ends a study. | The study |
+| **Verdict** (new) | Judgement | Supported, refuted or inconclusive, with the reasoning, the runs cited (each with what it showed) and the decision it informs (`CS-<n>`). | It ends a study. | The study |
 | **Run** | Execution | One invocation, one result file, one machine and commit. Its **kind** is `bench`, `images`, `lab`, `recording` or `tests`. | Evidence: a run made for a study records `study`. An earlier run can be attached. | `<store>/<id>.json`, with its summary and assets |
 | **Purpose** | Execution | `baseline` (the integration branch, clean, the history Trends draws) or `dev` (everything else). | Study runs are dev runs. A verdict may cite baseline runs. | The run |
 | **Sweep** | Execution | Part of a run's design: axes, points and a reference. It is one run because its points must alternate in one session for the statistics to hold. | A study's design may call for several runs (a sweep, an image run, a before and after); each sweep is one of them. | The run (`results.sweep`) |
@@ -153,7 +153,7 @@ A study holds no machine details. It cites runs by ID only (an ID carries the ma
 ---
 id: 2026-11-14-alpha-default
 title: The error exponent α for vertical exaggeration
-item: CZ-<n>
+item: CS-<n>
 status: concluded
 created: 2026-11-14
 primary: tiles.terrain
@@ -161,7 +161,7 @@ guardrails: [pixelDiffShare, gpuP50]
 tolerance: 0.03
 attached: [2026-11-13T…-win]
 outcome: supported
-decision: CZ-<n>
+decision: CS-<n>
 cites:
   - 2026-11-14T…-mac
 ---
@@ -213,7 +213,7 @@ Supported. (The reasoning, in prose.)
 ### Commands
 
 ```bash
-node packages/next/bench/suite/cli.mjs study new alpha-default --item CZ-<n> --question "…" --hypothesis "…" --primary tiles.terrain --guardrails pixelDiffShare,gpuP50
+node packages/next/bench/suite/cli.mjs study new alpha-default --item CS-<n> --question "…" --hypothesis "…" --primary tiles.terrain --guardrails pixelDiffShare,gpuP50
 ```
 
 ```bash
@@ -221,7 +221,7 @@ node packages/next/bench/suite/cli.mjs run --study 2026-11-14-alpha-default --sc
 ```
 
 ```bash
-node packages/next/bench/suite/cli.mjs study verdict 2026-11-14-alpha-default --outcome supported --cite <run> --reasoning "…" --decision CZ-<n>
+node packages/next/bench/suite/cli.mjs study verdict 2026-11-14-alpha-default --outcome supported --cite <run> --reasoning "…" --decision CS-<n>
 ```
 
 The full set:
@@ -245,7 +245,7 @@ Added to the vocabulary, one meaning each:
 - **verdict**, for studies only (supported, refuted, inconclusive);
 - **result**, a run's scorecard (pass, marginal, fail);
 - **validity** (valid, warning, invalid);
-- **purpose**, **baseline run**, **development run**, **item** (`CZ-<n>`);
+- **purpose**, **baseline run**, **development run**, **item** (`CS-<n>`);
 - **sweep**, **axis**, **point**, **reference**, **setting**, **configuration**;
 - **series**, **machine**, **runner**, **device**, **hub**, **recording**.
 
@@ -413,7 +413,7 @@ Every run kind adds these fields to its result and summary:
 | --- | --- | --- |
 | `id` | `<ISO stamp>-<machine>`, e.g. `2026-11-14T09-12-03-512Z-mac` | The file name, now with the machine alias, so two machines never collide (section 8). The Images server's run-name check changes with it. |
 | `purpose` | `dev` or `baseline` | `--purpose`, default `dev`. |
-| `item` | `CZ-<n>` | `--item`, or inherited from `--study`. The CLI warns on anything not of the form `CZ-<n>`. |
+| `item` | `CS-<n>` | `--item`, or inherited from `--study`. The CLI warns on anything not of the form `CS-<n>`. |
 | `study` | `2026-11-14-alpha-default` | `--study`. |
 | `plan` | `{ primary, guardrails, tolerance, hypothesis }` | The study's expectations and hypothesis, or the run's own options (`--primary`, `--guardrails`, `--tolerance`, `--hypothesis`), which override them. |
 | `branch` | `claude/plan-dyno-harness-18e1ff` | Unchanged (`treeRef`). |
@@ -474,7 +474,7 @@ Two runs at once share the GPU, and their timings mean nothing.
   - the study ID, its branch, and its verdict in a sentence, or "open" with the latest note;
   - for each run, the run ID, the command, one line of what it showed, and the Dyno path;
   - larger findings in the shared notes folder, with the same IDs.
-- **The main session finds them** with `cli.mjs studies --item CZ-<n>`, `study show <id>`, and `cli.mjs runs` with filters (`--item`, `--study`, `--branch`, `--worktree`, `--purpose`, `--machine`, `--since`, `--kind`). `cli.mjs show <id>` prints a run's header, expectations, result and the development metrics per point. These commands read summaries and study files only, so they are fast. `studies --all-branches` and `study show <id> --branch <b>` read an agent's study from its branch through git, before it merges.
+- **The main session finds them** with `cli.mjs studies --item CS-<n>`, `study show <id>`, and `cli.mjs runs` with filters (`--item`, `--study`, `--branch`, `--worktree`, `--purpose`, `--machine`, `--since`, `--kind`). `cli.mjs show <id>` prints a run's header, expectations, result and the development metrics per point. These commands read summaries and study files only, so they are fast. `studies --all-branches` and `study show <id> --branch <b>` read an agent's study from its branch through git, before it merges.
 - **The owner finds them** in Dyno:
   - Studies (open ones first, each with its verdict or latest note);
   - a study's page (question, evidence, verdict);
@@ -702,7 +702,7 @@ Both are studies from start to finish.
 ### A. The α study, redone through Dyno
 
 ```bash
-node packages/next/bench/suite/cli.mjs study new alpha-default --item CZ-<n> --question "Which error exponent α should the vertical exaggeration default to?" --hypothesis "α 0.25 to 0.5 draw α 1's image within noise with a third of its terrain tiles or fewer" --primary tiles.terrain --guardrails pixelDiffShare,gpuP50
+node packages/next/bench/suite/cli.mjs study new alpha-default --item CS-<n> --question "Which error exponent α should the vertical exaggeration default to?" --hypothesis "α 0.25 to 0.5 draw α 1's image within noise with a third of its terrain tiles or fewer" --primary tiles.terrain --guardrails pixelDiffShare,gpuP50
 ```
 
 ```bash
@@ -740,7 +740,7 @@ The live hypothesis: the dark bands on ×10 cliffs form a regular grid seen at a
 - a slope-scaled bias that doesn't see the wall's drawn slope.
 
 ```bash
-node packages/next/bench/suite/cli.mjs study new x10-cliff-bands --item CZ-<n> --question "What draws the regular dark bands on ×10 cliffs?" --hypothesis "Shadow acne: the bands fade as the normal offset and slope bias grow at ×10, and ×1 doesn't change" --primary pixelDiffShare
+node packages/next/bench/suite/cli.mjs study new x10-cliff-bands --item CS-<n> --question "What draws the regular dark bands on ×10 cliffs?" --hypothesis "Shadow acne: the bands fade as the normal offset and slope bias grow at ×10, and ×1 doesn't change" --primary pixelDiffShare
 ```
 
 **Needs, from the engine:** the cliff-band study's own work, not Dyno's:
@@ -782,11 +782,11 @@ How they are run:
 - **Checks.** Each milestone runs typecheck, eslint and prettier on its files, plus its own tests. The full `npm test` runs once at the end of DH-6, DH-12, DH-17, DH-19 and DH-20.
 - **UI milestones** (DH-2, DH-6, DH-9, DH-10, DH-15, DH-17) follow DESIGN.md and StrataKit. They are checked in both themes, at 380 px, by keyboard and with a clean console, and the owner reviews them by clicking around.
 - **No durations:** order and dependencies only.
-- **Names:** DH-1 to DH-20 become `CZ-<n>` items under a development-harness initiative when the tracker lands.
+- **Names:** DH-1 to DH-20 become `CS-<n>` items under a development-harness initiative when the tracker lands.
 
 | # | Milestone | Files | Done when | Needs |
 | --- | --- | --- | --- | --- |
-| DH-1 | **Run identity and the lock.** `purpose`, `item` (`CZ-<n>`), `study`, `worktree`, `base`, `machine`, `servedFrom` and the new `id` on every run kind (bench, images). The baseline guard and `--against-base`. The CLI's first and last lines, naming the run and its Dyno paths. The machine-wide run lock; `npm run dyno` on a free port. Old runs read as baseline runs. New commands get their own modules, so later milestones touch `cli.mjs` less. | `bench/suite/cli.mjs`, new `bench/suite/identity.mjs`, `runLock.mjs`; `images.mjs`, `report.mjs` (`summarizeRun`), `data.ts`, `schema.ts`, `vite.config.ts` (the Images run-name check), `scripts/setup.mjs` (`BENCH_MACHINE`), `package.json` (`dyno`) | A dev run from a worktree records every field. `--purpose baseline` is refused from a dirty tree and from a feature branch (tested). Two runs started together run one after the other, the second saying whose run it waited for. An existing store still loads in Dyno unchanged. | nothing |
+| DH-1 | **Run identity and the lock.** `purpose`, `item` (`CS-<n>`), `study`, `worktree`, `base`, `machine`, `servedFrom` and the new `id` on every run kind (bench, images). The baseline guard and `--against-base`. The CLI's first and last lines, naming the run and its Dyno paths. The machine-wide run lock; `npm run dyno` on a free port. Old runs read as baseline runs. New commands get their own modules, so later milestones touch `cli.mjs` less. | `bench/suite/cli.mjs`, new `bench/suite/identity.mjs`, `runLock.mjs`; `images.mjs`, `report.mjs` (`summarizeRun`), `data.ts`, `schema.ts`, `vite.config.ts` (the Images run-name check), `scripts/setup.mjs` (`BENCH_MACHINE`), `package.json` (`dyno`) | A dev run from a worktree records every field. `--purpose baseline` is refused from a dirty tree and from a feature branch (tested). Two runs started together run one after the other, the second saying whose run it waited for. An existing store still loads in Dyno unchanged. | nothing |
 | DH-2 | **Purpose, branch, item and study in the views.** Trends defaults to baseline runs and gains purpose, branch and item filters. Runs gains the columns and filters. A run's page shows its identity. Compare gets its "this branch against its base" default. Alerts work on baseline runs only. | `views/Trends.tsx`, `trendsModel.ts`, `Runs.tsx`, `runParts.tsx`, `Compare.tsx`, `Report.tsx`, `Alerts.tsx`, `changepoints.mjs`, `routes.tsx` | With a store holding baseline runs and dev runs from two branches, Trends draws only the baseline runs until asked. Compare opened from a branch picks the branch's newest run against the baseline run at its base, and says so. Change-point tests show dev runs don't move alerts. Owner review. | DH-1 |
 | DH-3 | **Finding runs from the terminal.** `cli.mjs runs` (filters, table and JSON), `show <id>`, `pin <id>`. | new `bench/suite/commands/runs.mjs`; `cli.mjs` (dispatch) | The commands list and show runs from summaries only. `--json` output is stable and tested. A pinned run is listed as pinned. | DH-1 |
 | DH-4 | **The settings registry and multi-axis sweeps.** (Opus.) `settings.mjs`, and validation before a run. `engine.` and `view.` settings applied by the catalog adapter (`lodExponent`, `shadows`, `debug`, `occlusionCull`, `coarsen`, `lod`). Repeated `--sweep`, `--sweep-file`, `--reference`, `--reference-reps`, the point count and `--yes`. The sweep record with `axes`, `reference` and `points`, reading old one-axis records. | new `bench/suite/settings.mjs`; `cli.mjs`, `engineBuilds.mjs`, `engines.mjs` (labels), `suite.ts` (the adapter), `schema.ts`, `report.mjs` | `--sweep lodExponent=0,1` is refused with the list of settings. A two-axis sweep on a catalog scene records every point and its coordinates. `view.lodExponent` reaches the view: a test reads it back from the page. Old sweep runs still plot. | DH-1 |
@@ -801,7 +801,7 @@ How they are run:
 | DH-13 | **Acceptance B: the ×10 cliff-band study.** The image checks and the sweeps of section 10B as one study; the verdict; the conclusion in the transform-graph plan. | the plan; the study | Section 10B's "done when". | DH-8, DH-17, and the engine's shadow knobs and `debug=cascade` (the cliff-band study's own task) |
 | DH-14 | **AGENTS.md and the skill, with the tracker.** Section 12's text lands in one coordinated AGENTS.md change with the tracker's "Work items" section, and both skills in `.claude/skills/`, adjusted to what was built. A first version after DH-1, DH-3 and DH-16 covers tagging, studies, run IDs, the lock, and the commands that exist. The full version follows DH-17. | `packages/next/AGENTS.md`, `.claude/skills/measuring-with-dyno/SKILL.md` (committed past the local exclude), with the tracker's own skill beside it | A fresh session, given only "find out what α does at ×10", opens a study, runs a tagged Dyno sweep, records a verdict, and reports the study and run IDs. | DH-1, DH-3, DH-16 (first); DH-17 (full); the tracker's section |
 | DH-15 | **The navigation rail** (section 16).The rail regrouped by what people come to do, with a reserved first place for the tracker's Work page. Images beside Overview and Alerts. Machines moved into Overview. Examples in the looking group. The footer's Settings item. The redirect for `?tab=machines`. Shortcuts and the command palette updated. DESIGN.md's who-it-is-for list, information architecture, words and the shell's comment updated. Analysis keeps its name and place until DH-17 replaces it. | `bench/suite/shell.tsx`, `routes.tsx`, `views/Analysis.tsx` (Machines out), `views/Overview.tsx` (Machines), `views/FirstRun.tsx` (links), `DESIGN.md`, the route and link tests | Every route in section 16's inventory is reachable from the rail, a run, a scene or the palette, and highlights the right rail item. Old links land on their new homes. The rail fits a 900 px tall window, collapsed and expanded. DESIGN.md's table matches `shell.tsx`. Owner review by clicking around. | DH-2 |
-| DH-16 | **Studies: the model, the files and the commands.** (Opus.) The study file format (the tracker's frontmatter subset and sections) in `packages/next/work/studies/`, with its validator, shared with the tracker's `check`. `study new`, `note`, `attach`, `verdict`, `abandon`, `reopen`, `show`; `studies` (with `--all-branches`, reading other branches through git). `run --study`, inheriting item and expectations; the implicit study for `--hypothesis`. ID uniqueness across local branches. Retention keeping every run a study cites or attaches. The dev server's read endpoints and its validated write endpoint, which writes files into its own worktree. | new `bench/suite/studies.mjs`, `commands/studies.mjs`, `packages/next/work/studies/README.md`; `cli.mjs` (dispatch, `--study`), `schema.ts`, `vite.config.ts` (endpoints), `data.ts`, the store's clean-up; the tracker's `scripts/work/views.mjs` (`check` calls the validator) | A study made, run against, noted and concluded from the CLI reads back with its evidence, and its file diffs cleanly. A verdict citing an invalid run warns. A run with `--hypothesis` and no study creates a file. A study on another local branch lists with its branch. The endpoint rejects a malformed or oversized body and never writes outside `work/studies/` (tested). A cited run survives retention. `studies --item CZ-<n> --json` is stable for the tracker. | DH-1, and the tracker's `work/` folder |
+| DH-16 | **Studies: the model, the files and the commands.** (Opus.) The study file format (the tracker's frontmatter subset and sections) in `packages/next/work/studies/`, with its validator, shared with the tracker's `check`. `study new`, `note`, `attach`, `verdict`, `abandon`, `reopen`, `show`; `studies` (with `--all-branches`, reading other branches through git). `run --study`, inheriting item and expectations; the implicit study for `--hypothesis`. ID uniqueness across local branches. Retention keeping every run a study cites or attaches. The dev server's read endpoints and its validated write endpoint, which writes files into its own worktree. | new `bench/suite/studies.mjs`, `commands/studies.mjs`, `packages/next/work/studies/README.md`; `cli.mjs` (dispatch, `--study`), `schema.ts`, `vite.config.ts` (endpoints), `data.ts`, the store's clean-up; the tracker's `scripts/work/views.mjs` (`check` calls the validator) | A study made, run against, noted and concluded from the CLI reads back with its evidence, and its file diffs cleanly. A verdict citing an invalid run warns. A run with `--hypothesis` and no study creates a file. A study on another local branch lists with its branch. The endpoint rejects a malformed or oversized body and never writes outside `work/studies/` (tested). A cited run survives retention. `studies --item CS-<n> --json` is stable for the tracker. | DH-1, and the tracker's `work/` folder |
 | DH-17 | **The Studies page.** (Opus.) Studies: a list with status, item, question, latest evidence, branch, and a mark for uncommitted changes; studies on other local branches, read-only. A study's page: the question, hypothesis and expectations; the design as copyable commands, each marked with the run that executed it; the evidence, with each sweep in the sweep view, image runs as grids, before-and-after runs as forest plots with their results, and runs not in this store shown by ID and machine; notes; the verdict form (outcome, reasoning, cited runs picked from the evidence, decision item), which writes the file. Analysis replaced: `/analysis` redirects to Studies, and sweep runs without a study open in their run report. Overview's "Open studies". "Investigate" on alerts. Decision annotations on Trends. | new `views/Studies.tsx`, `views/Study.tsx`, `studies.css`; `views/Analysis.tsx` (removed), `routes.tsx`, `shell.tsx` (the rail item), `views/Overview.tsx`, `views/Alerts.tsx`, `trendsModel.ts`, `DESIGN.md` | The α study (DH-7) reads from question to verdict on one page. A verdict recorded in the page writes the file and appears in `study show`, and the reverse. Old `/analysis?sweep=` links land on the run's report or its study. Owner review by clicking around. | DH-6, DH-15, DH-16 |
 | DH-18 | **The certificate authority, the hub and pairing.** (Opus.) `ca init` and `ca rotate`: an ECDSA root with Name Constraints, short-lived leaves for `<mac>.local` and the LAN addresses, made with a reviewed X.509 dependency, the key kept outside the repo. `hub`: LAN-only binding with the source-address check; the plain-HTTP certificate page with fingerprint and per-platform steps; the pairing page and `/pair`; device tokens (cookie or file), the registry, revocation. Settings › Devices in Dyno (list, pair, revoke, the authority's fingerprint). The platform check of Name Constraints, recorded. | new `bench/suite/hub/ca.mjs`, `hub.mjs`, `pairing.mjs`, `devices.mjs`, `commands/hub.mjs`, `views/Devices.tsx`; `cli.mjs` (dispatch), `routes.tsx`, `shell.tsx` (the Settings menu), `package.json` (`hub`, the X.509 dependency) | Tests with two temporary homes on loopback: the issued leaf verifies under the root, and a certificate for a public name can't be issued. A request without a token, with a revoked token, or from a public source address is refused. A code works once and fails after three wrong tries. The authority's key is never written inside the repo or into an archive, and the hub logs no token. The owner pairs the laptop's Edge and an iPhone by clicking around. | DH-1 |
 | DH-19 | **The runner and remote runs.** `runner pair` and `runner` on the laptop: the outbound WebSocket, the device token, the pinned authority, jobs as browser sessions (`launchServer` on loopback, the Playwright protocol carried in the WebSocket), the laptop's run lock and wake lock, the telemetry stream, the versions and flags report. `bench/suite/browserArgs.mjs` shared by both sides. On the Mac: `run --on` and `images --on`, the hub fronting each run's servers with a session cookie, origins rewritten for pages, `chromium.connect` to the hub's local endpoint, the runner's telemetry in place of the local sampler, the link measured, `servedFrom` and the machine key, the runner's state on Getting started. | new `bench/suite/runner/runner.mjs`, `bench/suite/hub/jobs.mjs`, `hub/front.mjs`, `browserArgs.mjs`; `commands/runner.mjs`, `cli.mjs`, `images.mjs`, `telemetry.mjs`, `reuse.mjs` (the machine key), `views/FirstRun.tsx` | The α study's run, started on the Mac with `--on win`, measures in the laptop's Edge in a secure, cross-origin-isolated context and lands in the Mac's store as `machine: win`, served from `mac`. A remote run's first content differs from a local one on the laptop while frame time doesn't, and the two never share a series or reuse each other's repetitions. A second job waits on the laptop's lock and is told whose run holds it. Ctrl-C on the Mac, or a dropped connection, leaves no browser or lock on the laptop. A Playwright mismatch is refused with the fix. Nothing listens on the laptop's network interfaces. | DH-1, DH-18 |
@@ -841,7 +841,7 @@ session and the owner as soon as it finishes. The skill
   or want to report, becomes a Dyno scene or sweep first. Scripts that write
   CSVs or PNGs to temporary folders are not a way to report results.
 - **A question is a study.** Before measuring anything you expect to change,
-  open a study (or use your item's): `cli.mjs study new <slug> --item CZ-<n>
+  open a study (or use your item's): `cli.mjs study new <slug> --item CS-<n>
   --question "…" --hypothesis "…" --primary <metric> --guardrails <metrics>`.
   Make its runs with `--study <id>`. When the evidence is in, record the
   verdict (`study verdict`: supported, refuted or inconclusive, with the runs
@@ -858,9 +858,9 @@ session and the owner as soon as it finishes. The skill
     an unknown one is refused).
   - `images --study <id> --scenes <ids>`: image checks.
   - `… --on win`: the same run in the laptop's browser and GPU, served and recorded here.
-  - `studies --item CZ-<n>`, `study show <id>`, `runs --study <id>`,
+  - `studies --item CS-<n>`, `study show <id>`, `runs --study <id>`,
     `show <run>`: find and read results.
-- **Tag every run** with `--study` (which carries the item) or `--item CZ-<n>`.
+- **Tag every run** with `--study` (which carries the item) or `--item CS-<n>`.
   Runs are development runs by default. Never pass `--purpose baseline` from
   a worktree: baseline runs are the integration branch, clean, made by the
   main session.
@@ -897,7 +897,7 @@ description: Use when you need a number about rendering, streaming, GPU or
 1. **Probe or measurement?** A probe steers your next edit and is reported
    to nobody: use the dev handle or the inspector. Anything you will report,
    repeat or compare is a measurement: continue.
-2. **Open or find the study.** `cli.mjs studies --item CZ-<n>`. If none fits,
+2. **Open or find the study.** `cli.mjs studies --item CS-<n>`. If none fits,
    `study new` with the question, the hypothesis, the primary metric and the
    guardrails. Write them before you look at any result.
 3. **Pick or make the scene.** `cli.mjs list`. Catalog scenes compare 1.x and
@@ -918,7 +918,7 @@ description: Use when you need a number about rendering, streaming, GPU or
    no difference. A run's result (pass, marginal, fail) is input, not the
    verdict.
 6. **Conclude.** `study verdict <id> --outcome supported|refuted|inconclusive
-   --cite <run>:"what it showed" --reasoning "…" --decision CZ-<n>`.
+   --cite <run>:"what it showed" --reasoning "…" --decision CS-<n>`.
    Inconclusive says what would settle it. Or leave the study open with a
    `study note`. Commit `work/studies/<id>.md` with your work.
 7. **Report.** The study ID, its branch and its verdict; run IDs, commands, one line each;
@@ -947,7 +947,7 @@ description: Use when you need a number about rendering, streaming, GPU or
 | 11 | Rename Analysis to Sweeps and move Machines into Overview? | **Accepted**, then superseded by studies: Analysis becomes **Studies** (sweeps fold into study pages), and Machines moves into Overview. |
 | 12 | Where do Scenes go? | **With results.** |
 | 13 | The footer? | **One Settings item** for Theme and Keyboard shortcuts, beside Getting started and the ion token. |
-| 14 | Where do studies live? | **In the repository**, beside the tracker's items (`packages/next/work/studies/`), with date-and-slug IDs, each linked to its `CZ-<n>` item. No machine details; runs cited by ID. Agents commit study changes with their work. |
+| 14 | Where do studies live? | **In the repository**, beside the tracker's items (`packages/next/work/studies/`), with date-and-slug IDs, each linked to its `CS-<n>` item. No machine details; runs cited by ID. Agents commit study changes with their work. |
 | 16 | How do other machines get a secure context and an encrypted channel? | **A Dyno-managed local certificate authority and one hub** on the requesting machine (section 8). Rejected: SSH (setup on each device; phones can't take part) and Tailscale (unavailable on the work laptop; not open-source friendly). |
 | 19 | Do test devices install the authority? | **Yes, once per device,** from the hub's certificate page, then pair with a one-time code. |
 
@@ -1090,7 +1090,7 @@ DESIGN.md's list, extended for the harness and the tracker:
   - Existing letters stay: `o t r a s e v i x l`.
   - New ones: Work `w`, Tests `u`, Studies `y`.
   - `n`, which opened Analysis, opens Studies.
-  - The palette also searches studies, plan items and branches ("Studies for `CZ-<n>`", "Runs on `<branch>`").
+  - The palette also searches studies, plan items and branches ("Studies for `CS-<n>`", "Runs on `<branch>`").
 - **Routes:**
   - New: `/studies`, `/studies/$study`, `/tests`; `/work` is reserved for the tracker.
   - Redirects: `/analysis` goes to `/studies`; `/analysis?tab=machines` to `/overview#machines`; `/analysis?sweep=<run>` to that run's study if it has one, else its report.
