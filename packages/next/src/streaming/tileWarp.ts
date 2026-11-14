@@ -36,6 +36,13 @@ export interface WarpedPoints {
   readonly image?: object;
 }
 
+/** Points' images over the interval of scales a map holds for (`TileWarp.images`). */
+export interface TileImages {
+  readonly at: Float64Array;
+  readonly delta: Float64Array;
+  readonly span: number;
+}
+
 /** A tileset's anchor's route, as selection uses it (`World.tileWarp`). */
 export interface TileWarp {
   /** Goes up whenever the map changes (the route, a scaled warp's value past a bucket): drawn volumes made under an older one are remade. */
@@ -70,6 +77,15 @@ export interface TileWarp {
     center: ArrayLike<number>,
     axes: ArrayLike<number>,
   ): { center: Vec3; axes: Float64Array; sigmaMax: number } | undefined;
+  /**
+   * `points` (n × 3, flat, in the tileset's coordinates) carried through the
+   * map, in the same coordinates, for every scale the bounds hold for: point
+   * i drawn at `at[i] + t·delta[i]` for t in [0, `span`] (affine in t where
+   * the map is affine in its scale; between the ends of its bucket
+   * otherwise: an estimate there). Undefined where the map fails at a point.
+   * For a bound over the drawn surface (`globe/bodyOccluder.ts`).
+   */
+  images?(points: ArrayLike<number>): TileImages | undefined;
   /** What `bounds` gave, for the scale as it is now: the `image` it came with, taken again. */
   rebound?(image: object): WarpedPoints;
   /** The worst error (m) of the fits drawing these draws against the route; 0 where there is none yet. */

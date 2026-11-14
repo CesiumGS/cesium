@@ -35,6 +35,7 @@ import {
 } from "./Stepwise.ts";
 import { CLIP_BOXES } from "../scene/contentLimits.ts";
 import type { Tile, TileViewState } from "./Tile.ts";
+import { hiddenBy } from "./occluders.ts";
 import {
   INSIDE,
   OUTSIDE,
@@ -182,19 +183,30 @@ export class BudgetedSelection extends StepwiseSelection {
       return;
     }
     super.updateVisibility(tile, state, view, pass);
-    // Not under a warped anchor: the horizon test's occluder is the true
-    // ellipsoid shrunk to the volume's lowest height, and the drawn Earth
-    // under a warp is another shape (a drawn height need not be the true
-    // one), so no occludee made from drawn bounds would be sound.
-    // The frustum and the screen-space error still cull and refine.
-    if (
-      state.visible &&
-      this.horizonCulling &&
-      view.warp === undefined &&
-      !aboveHorizon(tile, view.position)
-    ) {
+    if (state.visible && this.hiddenByHorizon(tile, view)) {
       state.visible = false;
     }
+  }
+
+  /**
+   * Whether the horizon hides `tile` from `view`. Unwarped, the true
+   * ellipsoid shrunk to the volume's lowest height. Under a warp that is not
+   * sound (the drawn Earth is another shape: a drawn height need not be the
+   * true one), so the view's occluders decide on the tile's drawn volume
+   * (`bodyOccluder`: the drawn terrain's own bounds); with none, nothing is
+   * culled. The frustum and the screen-space error still cull and refine.
+   */
+  private hiddenByHorizon(tile: Tile, view: SelectionView): boolean {
+    if (!this.horizonCulling) {
+      return false;
+    }
+    if (view.warp === undefined) {
+      return !aboveHorizon(tile, view.position);
+    }
+    return (
+      view.occluders !== undefined &&
+      hiddenBy(view.occluders, this.volumeOf(tile, view), view)
+    );
   }
 
   /** The band a request's priority falls in. */
@@ -230,6 +242,9 @@ export class BudgetedSelection extends StepwiseSelection {
     this.density = this.dynamicScreenSpaceError
       ? this.computeDensity(root, view)
       : 0;
+    for (const occluder of view.occluders ?? []) {
+      occluder.prepare(view);
+    }
     this.updateTile(root, view, pass, rootError);
     if (!isVisible(root.viewState(view.id))) {
       return result;
@@ -894,9 +909,7 @@ export class BudgetedSelection extends StepwiseSelection {
       !planes ||
       this.prefetchErrorScale <= 0 ||
       !insidePlanes(this.volumeOf(tile, view), planes) ||
-      (this.horizonCulling &&
-        view.warp === undefined &&
-        !aboveHorizon(tile, view.position))
+      this.hiddenByHorizon(tile, view)
     ) {
       return;
     }

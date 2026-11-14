@@ -118,7 +118,11 @@ import {
   type WeightedTerm,
 } from "../warpTerms.ts";
 import type { World } from "../World.ts";
-import type { TileWarp, WarpedPoints } from "../../streaming/tileWarp.ts";
+import type {
+  TileImages,
+  TileWarp,
+  WarpedPoints,
+} from "../../streaming/tileWarp.ts";
 import { setPlacement } from "./placements.ts";
 import { WorldRoutes, type RoutedAnchor } from "./routes.ts";
 import { drawMatrix } from "./transforms.ts";
@@ -403,6 +407,48 @@ class AnchorTileWarp implements TileWarp {
         secondDerivative: NaN,
       };
     }
+  }
+
+  images(points: ArrayLike<number>): TileImages | undefined {
+    const count = Math.floor(points.length / 3);
+    const affine = this.#affine;
+    const maps = affine ? [affine.base, affine.full] : this.#maps;
+    if (maps.length === 0) {
+      return undefined;
+    }
+    const first = new Float64Array(count * 3);
+    const second = new Float64Array(count * 3);
+    const at = new Float64Array(3);
+    const out = new Float64Array(3);
+    try {
+      for (let m = 0; m < Math.min(2, maps.length); m++) {
+        const into = m === 0 ? first : second;
+        for (let i = 0; i < count; i++) {
+          at[0] = points[i * 3]!;
+          at[1] = points[i * 3 + 1]!;
+          at[2] = points[i * 3 + 2]!;
+          maps[m]!(at, out);
+          into.set(out, i * 3);
+        }
+      }
+    } catch {
+      return undefined;
+    }
+    if (maps.length === 1) {
+      return { at: first, delta: new Float64Array(count * 3), span: 0 };
+    }
+    const delta = new Float64Array(count * 3);
+    for (let i = 0; i < delta.length; i++) {
+      delta[i] = second[i]! - first[i]!;
+    }
+    if (affine) {
+      // Image at scale s is base + s·(full − base), s in [low, high].
+      for (let i = 0; i < first.length; i++) {
+        first[i] = first[i]! + this.#low * delta[i]!;
+      }
+      return { at: first, delta, span: this.#high - this.#low };
+    }
+    return { at: first, delta, span: 1 };
   }
 
   /** The route's own error exponent: the smallest `Warp.lodExponent` any of its warps sets (the most permissive node wins); undefined where none does. */

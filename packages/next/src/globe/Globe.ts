@@ -21,6 +21,8 @@ import type { CustomShader } from "../scene/CustomShader.ts";
 import type { World } from "../scene/World.ts";
 import type { DrawHandle } from "../scene/world/types.ts";
 import { Tileset3D } from "../streaming/Tileset3D.ts";
+import { BodyOccluder } from "./bodyOccluder.ts";
+import type { TerrainSource } from "./TerrainSource.ts";
 import {
   type TileSource,
   type TilesetOptions,
@@ -451,7 +453,37 @@ export class Globe extends Tileset3D {
   ): Globe {
     const globe = new Globe(engine, world, source, options);
     globe.attachSource(source);
+    globe.registerOccluder();
     return globe;
+  }
+
+  /**
+   * The globe's drawn surface as an occluder for what hangs under its anchor
+   * (`BodyOccluder`): only a warped anchor uses it, and only while the globe
+   * is shown with no regions.
+   */
+  private registerOccluder(): void {
+    const source = this.state.source as unknown as TerrainSource;
+    const world = this.world;
+    const anchor = this.anchor;
+    const occluder: BodyOccluder = new BodyOccluder({
+      root: source.root,
+      flat: source.flat,
+      enabled: () =>
+        !this.isDestroyed() && this.show && this.clips.entries.length === 0,
+      partners: () =>
+        world
+          .occluders(anchor)
+          .filter((o): o is BodyOccluder => o instanceof BodyOccluder),
+    });
+    this.removeOccluder = world.addOccluder(anchor, occluder);
+  }
+
+  private removeOccluder: (() => void) | undefined;
+
+  override destroy(): void {
+    this.removeOccluder?.();
+    super.destroy();
   }
 
   /** @internal The regions as the CPU tests them. */
