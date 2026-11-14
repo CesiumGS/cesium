@@ -144,7 +144,7 @@ function selectionFor(
 }
 
 /**
- * Builds the selection inputs for every enabled view of `world`, with
+ * @internal Builds the selection inputs for every enabled view of `world`, with
  * each view's camera in `anchor` (`View.anchorCamera`): positions,
  * directions, planes and the camera's cartographic are in the anchor's
  * coordinates (Earth-fixed for the Earth's). In the view's body anchor
