@@ -3820,7 +3820,24 @@ Three plans, reviewed by the owner on 2026-11-13, with their milestones folded i
 - Profiles M8: the WebGL 2 renderer's facts and support rules. Needs Profiles M2 and WebGL 2 W3.
 - Profiles M9: the worker mode's snapshots. Needs Profiles M4 and the worker spike (§13.42 on the job-system branch, to be renumbered).
 
-**Cesium IR** (§13.42, decided; the implementation plan, `docs/superpowers/plans/2026-11-13-cesium-ir.md`, is being written). Its milestones are listed here when that plan lands. The WebGL 2 plan depends on four of them by name: the GLSL ES 3.00 emitter, the style front end, the transform graph on Cesium IR, tables and bounded search; and two more for user code: the WGSL front end through naga, hooks and post stages on Cesium IR. It also absorbs transform-graph Task 9 (arrays, bounded loops, missing ops).
+**Cesium IR** ([`docs/superpowers/plans/2026-11-13-cesium-ir.md`](docs/superpowers/plans/2026-11-13-cesium-ir.md); §13.42, reviewed 2026-11-13). The core IR every function goes through: styles, transforms and warps, materials, user functions. It absorbs transform-graph Task 9 (arrays, bounded loops, missing ops).
+
+- IR-1: the core (types, rates, equations, literal slots, the builder). Needs nothing.
+- IR-2: the versioned JSON format. Needs IR-1.
+- IR-3: the passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms). Needs IR-1.
+- IR-4: the WGSL emitter. Needs IR-1.
+- IR-5: the GLSL ES 3.00 emitter. Needs IR-4.
+- IR-6: transforms move onto Cesium IR, as pure moves. Needs IR-1, IR-3 and IR-4.
+- IR-7: routes on both emitters, with the residual and df64 forms. Needs IR-5 and IR-6.
+- IR-8: styles move onto Cesium IR, literals as uniforms. Needs IR-3, IR-4 and IR-5.
+- IR-9: tables and the bounded search, the first extensions, with the residual's row window. Needs IR-6 and IR-7.
+- IR-10: our naga crate (Rust in development and CI only). Needs nothing.
+- IR-11: the WGSL front end, through naga and SPIR-V, with diagnostics. Needs IR-1 and IR-10.
+- IR-12: the writer and reader for `KHR_interactivity`'s graph JSON (vendor extension `BENTLEY_interactivity_ir`). Needs IR-2, and IR-9 for tables.
+- IR-13: the API surface (a program is the normative input; languages as entry points loaded on demand; `CustomShader` hooks take programs or WGSL functions). Needs IR-2, IR-8, IR-9 and IR-11.
+- IR-14: the inspector and debugging. Needs IR-4 and IR-8.
+- IR-15: the MaterialX front end. Needs IR-3, IR-4 and IR-8.
+- IR-G1 to IR-G6, in the owner's order after IR-9: textures and samplers, matrices, screen-space derivatives, noise, general bounded loops, structs. Each needs the one before it.
 
 **The WebGL 2 renderer** ([`docs/superpowers/plans/2026-11-13-webgl2-renderer.md`](docs/superpowers/plans/2026-11-13-webgl2-renderer.md); §13.41 toolchain answer 3). A second, simpler renderer that exercises the seam: a device per engine, a renderer per view.
 
@@ -3831,14 +3848,14 @@ Three plans, reviewed by the owner on 2026-11-13, with their milestones folded i
 - W4: first draws, unlit (glTF and 3D Tiles meshes). Needs W0, W2 and W3.
 - W5: the globe, terrain and imagery. Needs W4.
 - W6: lighting and instancing. Needs W4.
-- W7: styles and warps through Cesium IR. Needs W6 and the four Cesium IR milestones above.
-- W8: picks, outputs and user code. Needs W4; its second half (user code) needs the Cesium IR WGSL front end and hooks.
+- W7: styles and warps through Cesium IR. Needs W6, IR-5, IR-7 and IR-8.
+- W8: picks, outputs and user code. Needs W4; its second half (user code) needs IR-11 and IR-13.
 - W9: the atmosphere. Needs W6.
 - R1: research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have. Needs nothing; orders W10.
 - W10: further steps (shadows, moments translucency, FXAA, clips, ambient occlusion, the depth-range readback). Needs W9 and R1.
 - W11: the runner suite, the gallery's renderer switch, the handbook. Grows from W4.
 
-**Order across the three.** Profiles M1–M2, W0, W1 and the first Cesium IR milestones can start together (different files). W3 waits for Profiles M2. W7 and W8's second half wait for Cesium IR. Profiles M8 lands with W3.
+**Order across the three.** Profiles M1–M2, W0, W1, IR-1 and IR-10 can start together (different files). W3 waits for Profiles M2. W7 waits for IR-5, IR-7 and IR-8; W8's second half for IR-11 and IR-13. Profiles M8 lands with W3. The MaterialX live-editing example waits for IR-15 (and IR-G1 for its image nodes).
 
 ---
 
@@ -11009,6 +11026,7 @@ So tables and a search primitive turn the corridor from a program that grows wit
 6. **The gap order:** textures and samplers first (imagery, MaterialX images), then matrices, then screen-space derivatives (procedural patterns need them for antialiasing), then noise, general bounded loops and structs.
 7. **Tables and the bounded search** are the first `cesium/` extensions, with the residual pass's row window, so the corridor and other table-driven warps compile to a fixed program. They also cover transform-graph Task 9's array parameters. General loops wait.
 8. **The name:** **Cesium IR** in prose, two words, as Slang IR, Tint IR and Naga IR are written; **`cesium-ir`** as the identifier (the JSON format and the package). No abbreviation: "CIR" is taken by ClangIR and Codon's IR.
+9. **Vendor extensions we define use the `BENTLEY_` prefix** (owner, 2026-11-13): Cesium IR's extension in `KHR_interactivity` files is `BENTLEY_interactivity_ir`. Existing extensions the engine reads, such as `CESIUM_primitive_outline`, keep their names. Where Cesium IR lives (`src/ir/` and `@cesium/next/ir` until IR-13), runtime Slang through Cesium IR, and MaterialX parsing (`DOMParser`, JsMaterialXCore only when needed) are decided in the implementation plan.
 
 #### Naming
 
