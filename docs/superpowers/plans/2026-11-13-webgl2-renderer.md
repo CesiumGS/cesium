@@ -1,6 +1,6 @@
 # A WebGL 2 renderer behind the same scene: plan
 
-**Status (2026-11-13):** planned, nothing built. The owner's answers from this planning session are in section 9.
+**Status (2026-11-13):** planned, nothing built. The owner reviewed it on the same day. The answers from planning and from the review are in section 9.
 
 **Goal:** a second, simpler renderer in the PoC that draws the same `Engine`, `World` and `View` with WebGL 2. Its job is to exercise the renderer seam. WebGL 2 has no compute shaders, no storage buffers and no indirect draws, so this is a different renderer, not a translation of the GPU-driven one.
 
@@ -8,7 +8,9 @@
 
 - CESIUM2_WEBGPU_PLAN.md §13.17 (layers: engine, renderer, GPU backend) and §13.41, especially "Swappable and hybrid renderers", its decisions of 2026-11-13, and "Architecture decisions from the 2026-11-13 discussion".
 - `docs/superpowers/plans/2026-11-12-transform-graph.md` (routes, the IR, centre constants, fitted lattices).
-- The engine profiles plan (branch `claude/festive-margulis-3b88c7`, `docs/superpowers/plans/2026-11-13-engine-profiles.md`): facts, paths, support reports, personas. This plan uses its terms and fills its M8.
+- CESIUM2_WEBGPU_PLAN.md §13.42, "The core IR", and its owner's decisions: Cesium IR (`cesium-ir`).
+- The Cesium IR implementation plan, being written separately. W7 and W8 depend on its milestones, named here as `Cesium IR plan: <milestone>`. The names are provisional until that plan is merged. Whoever merges it updates the references here to its real names.
+- The engine profiles plan (`docs/superpowers/plans/2026-11-13-engine-profiles.md`): facts, paths, support reports, personas. This plan uses its terms and fills its M8.
 - Code facts are from a read-only survey of `packages/next` on this date. File references are under `packages/next/`.
 
 **Decisions in force:**
@@ -21,8 +23,15 @@
 - Hardware- and browser-specific paths appear only in the support report and the inspector, and they're detected automatically.
 - One main-thread API runs the engine on the main thread or in a worker. The probe that detects WebGPU in a worker serves `"webgl2"` too.
 - Styling stays compiler-free (no Slang).
-- The core IR is undecided. The core IR spike compares a minimal own IR with ONNX's graph format and naga's IR. Whatever wins must reach GLSL ES.
-- **From this session (section 9):** a device per engine, with a renderer per view inside it. naga is allowed as a build tool, and as a lazily loaded runtime chunk for user code. Parity tolerances are tiered. Without `EXT_clip_control`, depth falls back to logarithmic depth. Styles and warps get a GLSL ES target now.
+- **The core IR is Cesium IR (§13.42):** `KHR_interactivity`'s math and type vocabulary, a versioned JSON form (`cesium-ir/<major>.<minor>`), GLSL ES 3.00 and WGSL emitters, and tables with a bounded search. WGSL is a front end, lowered through naga into Cesium IR. It isn't an escape hatch: raw WGSL that bypasses the IR is not offered.
+- **From planning and review (section 9):**
+  - A device per engine, with a renderer per view inside it.
+  - Styles, warps and user code reach GLSL ES only through Cesium IR's emitter.
+  - naga runs at build time for the engine's shaders, from our own crate unless it's far larger than the published naga-wasm.
+  - Parity tolerances are tiered.
+  - Without `EXT_clip_control`, depth falls back to logarithmic depth.
+  - "auto" falls back to WebGL 2 with a warning.
+  - No time estimates: milestones state dependencies, order and "done when".
 
 ## 1. Scope
 
@@ -35,7 +44,7 @@
 | Globe: ellipsoid and quantized-mesh terrain, skirts, upsampled quadrants | Required | Yes | W5 |
 | Globe imagery (slices of a texture array, ancestor fallback, fades) | Required | Yes, composited by fragment passes | W5 |
 | Billboards (pins) | Not listed | Yes: a quad per instance | W6 |
-| Styles (`FeatureStyle`: `show`, `color`) | Not a content kind | Yes, through a GLSL ES target | W7 |
+| Styles (`FeatureStyle`: `show`, `color`) | Not a content kind | Yes, through Cesium IR's GLSL ES emitter | W7 |
 | Warped content (compiled routes, fitted lattices) | Not a content kind | Yes | W7 |
 | B-reps through CPU tessellation (plan 4b's render form) | Meshes | Yes: they're meshes | W6 |
 | B-rep patches diced on the GPU | Optional | No: declared unsupported | – |
@@ -167,8 +176,8 @@ interface ViewRenderer {
 
 ### Warps
 
-- **Compiled routes:** the transform graph's IR gets a GLSL ES emitter beside `codegen.ts`'s WGSL (section 4). The vertex stage runs the same fused `transformPoint`.
-- **Centre constants** are computed on the CPU in float64 per draw. This replaces the df64 compute pass (`warpFitDirect.slang`) for parameters that don't separate. Parameters that enter linearly stay per-view uniforms.
+- **Compiled routes:** the transform graph lowers to Cesium IR, and Cesium IR's GLSL ES emitter writes the vertex stage's fused `transformPoint` (section 4). Table-driven warps, such as the corridor, compile to a fixed program over a table. WebGL 2 holds the table as a std140 uniform block of vec4s; §13.42 measured that compiling and linking in WebGL 2.
+- **Centre constants** are computed on the CPU in float64 per draw, by Cesium IR's evaluator (the conformant one). This replaces the df64 compute pass (`warpFitDirect.slang`) for parameters that don't separate. Parameters that enter linearly stay per-view uniforms.
 - **Fitted lattices** go into float textures (`RGBA32F`, `texelFetch` with trilinear filtering in the shader, since float textures filter only with `OES_texture_float_linear`). The fits already have a CPU implementation (`fitLattice` in `src/scene/warpFit.ts`), which the WebGL 2 device uses in place of `warpFitGpu.slang`.
 - **Height-normal terrain** (`setDrawHeightNormal`) reads the per-vertex `h·n̂` attribute as WebGPU's vertex stage does.
 
@@ -213,17 +222,24 @@ interface ViewRenderer {
 
 Three kinds of code have to reach GLSL ES 3.00, each by its own route.
 
-| Code | Route | Depends on the core IR spike? |
+| Code | Route | Depends on |
 | --- | --- | --- |
-| Engine shaders (surfaces, terrain, imagery composite, present, atmosphere, IBL) | **Build time:** new WebGL-shaped entry points in Slang (attributes, uniform blocks, data textures, no storage buffers) that import the same pure modules (BRDF, materials, atmosphere sampling, tone curves). `slangc` writes WGSL, then naga writes GLSL ES 300. Checked in as generated output, as the WGSL is today (`npm run shaders`, `shaders:check`). naga is found through `NAGA`, as `slangc` is through `SLANGC` | No |
-| Styles (`FeatureStyle`) and warps (compiled routes) | **Run time, compiler-free:** a GLSL ES 300 target beside WGSL in `styleExpression.ts` and in the transform graph's `codegen.ts`. Both are small expression emitters. A test compiles samples to both and checks they agree on CPU evaluation and in the parity pages | **Yes, later:** both targets retire for the core IR's GLSL ES back end once the spike decides. The emitters stay until then |
-| User code: `CustomShader` hooks (WGSL, or Slang through slang-wasm) and user post stages (WGSL) | **Run time:** the linker joins the user's units with the WebGL surface entry points' WGSL (generated at build time and kept as link input), then a lazily loaded naga WASM chunk translates the linked module to GLSL ES 300 in a worker (owner, 2026-11-13). Slang hooks go Slang → WGSL (slang-wasm, as today) → naga | **Yes:** if the core IR takes "a WGSL function lowered through naga" as an input, user code may go through the IR instead. Until then, this route |
+| Engine shaders (surfaces, terrain, imagery composite, present, atmosphere, IBL) | **Build time:** new WebGL-shaped entry points in Slang (attributes, uniform blocks, data textures, no storage buffers) that import the same pure modules (BRDF, materials, atmosphere sampling, tone curves). `slangc` writes WGSL, then naga writes GLSL ES 300. naga is our own crate, built with the approved Rust toolchain on development machines and CI (§13.42, decision 4). Rust never reaches a production build. The output is checked in as generated code, as the WGSL is today (`npm run shaders`, `shaders:check`). naga is found through `NAGA`, as `slangc` is through `SLANGC` | W0 only |
+| Styles (`FeatureStyle`) and warps (compiled routes, table-driven warps) | **Run time, compiler-free:** `styleExpression.ts` and the transform graph lower to Cesium IR, and Cesium IR's GLSL ES 3.00 emitter writes the code. The WebGL 2 renderer has no emitter of its own, and `styleExpression.ts` and `codegen.ts` get no GLSL target. Uniforms are one std140 block of vec4 slots in both languages, so the slot layout and the values array are shared with WebGPU. Tables are std140 uniform blocks on WebGL 2 | Cesium IR plan: GLSL ES 3.00 emitter. Cesium IR plan: style front end. Cesium IR plan: transform graph on Cesium IR. Cesium IR plan: tables and bounded search |
+| User code: `CustomShader` hooks (WGSL, or Slang through slang-wasm) and user post stages (WGSL) | **Run time:** the user's WGSL is lowered through naga into Cesium IR. naga loads lazily, as runtime Slang does. The program then goes through the same GLSL ES emitter, and the result is linked into the WebGL entry points at their hook sites. Slang hooks go Slang → WGSL (slang-wasm, as today) → the same front end. Anything the IR can't yet express is refused with a diagnostic that names the construct. There is no whole-module naga translation at run time, and no raw WGSL that bypasses the IR, on either renderer | Cesium IR plan: WGSL front end through naga. Cesium IR plan: hooks and post stages on Cesium IR. For hooks that sample textures: Cesium IR plan: textures and samplers (first on the gap list) |
 
 Notes:
 
 - **Slang has no GLSL ES target.** `slangc` 2026.21 lists GLSL profiles `glsl_150` to `glsl_460` only (checked with `slangc -h` on 2026-11-13). Hence WGSL as the hop.
 - **naga's GLSL ES back end works only for vertex and fragment code** with uniforms and textures, which is why the WebGL entry points are separate. Today's surface WGSL pulls vertices from storage buffers, which GLSL ES 3.00 can't do.
-- **What W0 must confirm before anything depends on this route:** naga's handling of Slang's WGSL output (uniform layouts against std140, texture and sampler pairs combined, integer textures, `invariant`), the generated code's size, and the naga WASM chunk's size compressed. Which naga build to use (a published WASM package or our own from the crate) comes back to the owner with W0's numbers. That's the dependency the owner allowed.
+- **The hook sites:** the WebGL entry points carry the same hook sites as WebGPU's. A linked program is the entry point's build-time GLSL with Cesium IR's emitted functions spliced in, so the run time never translates engine code.
+- **What the gap list means here:** Cesium IR's gaps come in a fixed order (§13.42, decision 6): textures and samplers, matrices, screen-space derivatives, then noise, general bounded loops and structs. A hook that needs a later item is refused on both renderers until Cesium IR has it. The parity rows cover only hooks that Cesium IR accepts.
+- **What W0 must confirm before anything depends on the build-time route:**
+  - how naga handles Slang's WGSL output: uniform layouts against std140, texture and sampler pairs combined, integer textures, `invariant`;
+  - the size of the generated code;
+  - the size of our crate's WASM build against the published naga-wasm (30.2.0: 2,053,200 bytes, 592,380 brotli, measured in §13.42).
+
+  Ours is chosen unless it's far larger. The same crate serves the Cesium IR plan (validation with WebGPU's capabilities, IR export), so whichever plan reaches it first builds it.
 - **GPU safety rules carry over:** every loop bounded by a constant, every data-texture index clamped. Read the generated GLSL before the first browser run of a changed shader, as `scripts/dumpMsl.mjs` is read for Metal.
 
 ## 5. Outputs and post stages
@@ -234,12 +250,12 @@ Notes:
   - `depth`: resolved by `blitFramebuffer` (one sample, not an average).
   - `ids`: a single-sampled `RG16UI` pass (a 32-bit ID in two halves, as on WebGPU), drawn only when something reads it. A pick scissors it to the pick's window. A post stage reading IDs draws it full screen, which costs a second geometry pass, reported in the inspector.
 - **Post chain:** the same three slots (`scene`, `exposed`, `display`) as fragment passes over the resolved targets. FXAA is already a fragment pass. Glare has no WebGL 2 step in the PoC.
-- **User post stages** run through the runtime naga route in section 4. A stage whose WGSL uses compute (`POST_COMPUTE_BOUNDARY`) is refused with a notice. That's the same rule as the compute kernels.
+- **User post stages** go through Cesium IR (section 4), as hooks do. A stage whose WGSL uses compute (`POST_COMPUTE_BOUNDARY`), or anything else the IR can't express, is refused with a diagnostic.
 - **Picks:** feature IDs and depth from the ID pass, read back asynchronously. `pickPosition` comes from depth and is stated with the depth buffer's accuracy at that distance. Log depth and reversed-Z give different accuracies, and both are stated. The exact hit point (WebGPU's `pickTriangle`) comes from the CPU ray backends where a tile's geometry is retained, and is otherwise the depth estimate with its accuracy.
 
 ## 6. Detection and selection
 
-- **The option:** `Engine.create({ renderer: "auto" | "webgpu" | "webgl2" })`, default `"auto"`. Auto means WebGPU, then WebGL 2 if WebGPU is missing, with a warning once that gives the reason. Forcing one names it, and `strict` throws instead of falling back. This is the lead's default from batch 1; the owner didn't object (section 9).
+- **The option:** `Engine.create({ renderer: "auto" | "webgpu" | "webgl2" })`, default `"auto"`. Auto means WebGPU, then WebGL 2 if WebGPU is missing, with a warning once that gives the reason. Forcing one names it, and `strict` throws instead of falling back. The owner accepted this in review (section 9).
 - **The probe** is the same as the thread probe's (§13.41, "Threading"). It runs where the engine will run, in the worker when worker mode is chosen:
   1. WebGPU: `navigator.gpu`, `requestAdapter()` and a throwaway `OffscreenCanvas` `"webgpu"` context.
   2. Otherwise WebGL 2: a throwaway `OffscreenCanvas` `"webgl2"` context, plus the required extension `EXT_color_buffer_float` (HDR targets). Without it there's no renderer, and `Engine.create` rejects with a message that names what's missing.
@@ -256,7 +272,9 @@ Notes:
 
 - `test/fakeGl.ts`, beside `test/fakeGpu.ts`: a WebGL 2 stand-in that records calls and state and draws nothing. Tests count draw calls, programs and texture uploads, and check the change log drains completely.
 - The boundary tests from section 2, and a bundle check that the WebGL 2 chunk loads only on demand.
-- Emitter agreement: styles and routes compiled to WGSL and GLSL ES and evaluated on the CPU at sample points.
+- Emitter agreement (WGSL against GLSL ES against the CPU evaluator) belongs to the Cesium IR plan. Here, two tests:
+  - `src/webgl2/` takes its GLSL for styles, warps and user code only from Cesium IR's emitter. It builds no shader strings outside the build-time output and the hook linker.
+  - A refused hook reports the same diagnostic on both renderers.
 - Seam tests: records written only through `DrawConstants`, whichever device mirrors them.
 
 ### Parity against the WebGPU renderer
@@ -283,7 +301,7 @@ Before any threshold is used, measure WebGPU against itself over two runs, and w
 | `parity/selection.html`, `parity/lod.html` | Identical selection | W4 |
 | `parity/globe.html` (six cameras) | Terrain, skirts, upsampled quadrants, horizon culling | W5 |
 | `parity/imagery.html` | Imagery compositing, ancestor fallback | W5 |
-| `parity/customShader.html` (style rows only) | Styles. Hook rows once runtime naga lands | W7, W8 |
+| `parity/customShader.html` (style rows only) | Styles. Hook rows that Cesium IR accepts, once W8's user-code half lands | W7, W8 |
 | Gallery: `vertical-exaggeration` | Warps on terrain and a tileset, the height-normal path | W7 |
 | Gallery: `transform-graph` | Compiled routes, fitted lattices, per-view parameters | W7 |
 | Gallery: `clipping` | Clip boxes and terrain clips | W10 |
@@ -296,50 +314,67 @@ The machine is shared and overloaded: browser runs happen at the milestones' end
 
 ## 8. Milestones
 
-Sizes: S is a few days with agents, M about a week. Model per role, as AGENTS.md says: the most capable model for design-heavy tasks and risky reviews, a fast one for well-specified work.
+No time estimates: each milestone states what it needs, its order and when it's done. Model per role, as AGENTS.md says: the most capable model for design-heavy tasks and risky reviews, a fast one for well-specified work.
 
-| # | Milestone | Size | Model | Needs | Done when |
-| --- | --- | --- | --- | --- | --- |
-| W0 | **Shader route spike** (a decision tool, per the spike rules). naga as a build tool through `NAGA`. Three entry points through Slang → WGSL → naga → GLSL ES 300: a minimal surface (attributes, a uniform block, a data texture), `present`, and one atmosphere table as a fragment pass. The naga WASM chunk built or adopted, its size measured, one user hook linked and translated in a worker. The page states the data, costs and decision asked | S | Opus | – | The owner picks the naga build; the route is confirmed or replaced |
-| W1 | **Seam extraction, WebGPU only.** `WorldDraws` (records, batches, transforms, instances, materials, placements on the CPU, with a change log), `RenderDevice`, `WorldMirror`, `ViewRenderer`. The WebGPU renderer implements them. Pure moves: a type check per commit, the full suite and parity once at the end (the refactor rule) | M | Opus | – | No behaviour change. WebGPU parity suites unchanged. The boundary test has the `webgl2` tier |
-| W2 | **Neutral content resources.** Texture sources in place of GPU textures in `gltfModel.ts`. `MeshData` kept until uploaded. `ImageryCompositor` with the WebGPU compute implementation moved behind it. The `GlobeImagery` exceptions removed from `TIER_EXCEPTIONS` | M | Opus | W1 | Same parity. Three fewer named exceptions |
-| W3 | **Probe, option and an empty WebGL 2 device.** `renderer` option, the probe on both threads, facts, personas, the `webgl2` chunk loaded dynamically. Clears to the background colour; the inspector shows the device and reason. The profiles plan's M8 (support rules) lands with it | S | Sonnet | W1; profiles M2 | `emulate: "webgl2-basic"` makes an engine that clears. The bundle check passes |
-| W4 | **First draws, unlit.** Slab mirrors, VAOs, data textures for records, materials and transforms, CPU culling, eye-relative float64 matrices, both depth paths, 4× MSAA, the present pass. glTF and 3D Tiles meshes, unlit | M | Opus | W0, W2, W3 | `models` and `tileset` unlit within tolerance. Selection identical |
-| W5 | **Globe, terrain and imagery.** Terrain draws (skirts, upsampled clip boxes, height-normal attribute, geomorph), the fragment imagery compositor into a texture array, fades | M | Opus | W4 | `globe` and `imagery` within tolerance |
-| W6 | **Lighting and instancing.** Sun and fixed ambient, PBR metallic-roughness, normal maps, double-sided, alpha mask, per-draw ordering for blended draws, instanced draws, billboards | M | Sonnet | W4 | Lit `models`, i3dm tiles, b-reps through CPU tessellation within tolerance |
-| W7 | **Styles and warps.** GLSL ES targets in `styleExpression.ts` and the transform graph's emitter, the arena data texture, CPU centre constants, lattices as float textures | M | Opus | W6 | Style rows, `vertical-exaggeration` and `transform-graph` within tolerance. Emitter agreement tests |
-| W8 | **Picks, outputs and user code.** The ID pass, async readbacks, `pickPosition`, named outputs, `view.support.outputs`. The runtime naga route for `CustomShader` hooks and user post stages | M | Opus | W4, W0's naga build | Pick parity. `customShader` hook rows within tolerance |
-| W9 | **Atmosphere.** Atmosphere and sky tables as fragment passes, the sky, aerial perspective, image-based light from it, average-luminance exposure | M | Opus | W6 | Default-look pages within the atmosphere tolerance |
-| W10 | **Further steps,** each small and separate: shadows, moments translucency, FXAA, clips, ambient occlusion, the depth-range readback | S each | Sonnet | W9 | Each step's page within tolerance. Each listed in the support rules |
-| W11 | **The runner suite, the gallery switch and the handbook.** `node bench/run.mjs webgl2`; a renderer switch in the gallery shell; the handbook's architecture tab with the device and renderer levels and the WebGL 2 support table | S | Sonnet | Grows from W4 | One command runs every page in section 7 |
+| # | Milestone | Model | Needs | Done when |
+| --- | --- | --- | --- | --- |
+| W0 | **Shader route spike** (a decision tool, per the spike rules). Our own naga crate, built with the approved Rust toolchain on development machines and CI, found through `NAGA`. Three entry points through Slang → WGSL → naga → GLSL ES 300: a minimal surface (attributes, a uniform block, a data texture), `present`, and one atmosphere table as a fragment pass. Our crate's WASM build is measured against the published naga-wasm. The page states the data, the costs and the decision asked | Opus | – | The build-time route is confirmed or replaced. Our crate is adopted, unless it's far larger than naga-wasm; then the owner decides |
+| W1 | **Seam extraction, WebGPU only.** `WorldDraws` (records, batches, transforms, instances, materials, placements on the CPU, with a change log), `RenderDevice`, `WorldMirror`, `ViewRenderer`. The WebGPU renderer implements them. Pure moves: a type check per commit, the full suite and parity once at the end (the refactor rule) | Opus | – | No behaviour change. WebGPU parity suites unchanged. The boundary test has the `webgl2` tier |
+| W2 | **Neutral content resources.** Texture sources in place of GPU textures in `gltfModel.ts`. `MeshData` kept until uploaded. `ImageryCompositor` with the WebGPU compute implementation moved behind it. The `GlobeImagery` exceptions removed from `TIER_EXCEPTIONS` | Opus | W1 | Same parity. Three fewer named exceptions |
+| W3 | **Probe, option and an empty WebGL 2 device.** `renderer` option, the probe on both threads, facts, personas, the `webgl2` chunk loaded dynamically. Clears to the background colour; the inspector shows the device and reason. The profiles plan's M8 (support rules) lands with it | Sonnet | W1; profiles M2 | `emulate: "webgl2-basic"` makes an engine that clears. The bundle check passes |
+| W4 | **First draws, unlit** (the first visible milestone). Slab mirrors, VAOs, data textures for records, materials and transforms, CPU culling, eye-relative float64 matrices, both depth paths, 4× MSAA, the present pass. glTF and 3D Tiles meshes, unlit | Opus | W0, W2, W3 | `models` and `tileset` unlit within tolerance. Selection identical |
+| W5 | **Globe, terrain and imagery.** Terrain draws (skirts, upsampled clip boxes, height-normal attribute, geomorph), the fragment imagery compositor into a texture array, fades | Opus | W4 | `globe` and `imagery` within tolerance |
+| W6 | **Lighting and instancing.** Sun and fixed ambient, PBR metallic-roughness, normal maps, double-sided, alpha mask, per-draw ordering for blended draws, instanced draws, billboards | Sonnet | W4 | Lit `models`, i3dm tiles, b-reps through CPU tessellation within tolerance |
+| W7 | **Styles and warps through Cesium IR.** The renderer takes the GLSL ES that Cesium IR's emitter writes for styles, compiled routes and table-driven warps, and binds their uniform block and tables. Also: the arena data texture, centre constants from Cesium IR's float64 evaluator, and lattices as float textures. No GLSL target in `styleExpression.ts` or `codegen.ts` | Opus | W6. Cesium IR plan: GLSL ES 3.00 emitter. Cesium IR plan: style front end. Cesium IR plan: transform graph on Cesium IR. Cesium IR plan: tables and bounded search | Style rows, `vertical-exaggeration` and `transform-graph` within tolerance. The test that `src/webgl2/` builds no style or warp GLSL itself passes |
+| W8 | **Picks, outputs and user code.** First half, which doesn't need Cesium IR and may land first: the ID pass, async readbacks, `pickPosition`, named outputs, `view.support.outputs`. Second half: `CustomShader` hooks and user post stages. User WGSL (or Slang, through slang-wasm to WGSL) is lowered through naga into Cesium IR, emitted as GLSL ES and linked at the entry points' hook sites. Refusals carry Cesium IR's diagnostic | Opus | W4. Second half also: Cesium IR plan: WGSL front end through naga. Cesium IR plan: hooks and post stages on Cesium IR | Pick parity. `customShader` hook rows within tolerance for every hook Cesium IR accepts. Refused hooks report the same diagnostic on both renderers |
+| W9 | **Atmosphere.** Atmosphere and sky tables as fragment passes, the sky, aerial perspective, image-based light from it, average-luminance exposure | Opus | W6 | Default-look pages within the atmosphere tolerance |
+| R1 | **Research: the browsers without WebGPU.** The share of users without WebGPU, by browser and platform, and which WebGL 2 extensions they expose: `EXT_clip_control`, `WEBGL_multi_draw`, `EXT_float_blend`, `OES_texture_float_linear`, `EXT_color_buffer_float`, `EXT_disjoint_timer_query_webgl2`, and the compressed formats. Every figure has a dated source. Feeds the handbook's compatibility tab and the personas | Sonnet | – | A dated table in this plan (or a linked note) that orders W10's steps, and the personas checked against it |
+| W10 | **Further steps,** each small and separate: shadows, moments translucency, FXAA, clips, ambient occlusion, the depth-range readback. Ordered by what R1 found those browsers have | Sonnet | W9, R1 | Each step's page within tolerance. Each listed in the support rules |
+| W11 | **The runner suite, the gallery switch and the handbook.** `node bench/run.mjs webgl2`; a renderer switch in the gallery shell; the handbook's architecture tab with the device and renderer levels and the WebGL 2 support table | Sonnet | Grows from W4 | One command runs every page in section 7 |
 
-**Order.** W0 and W1 can run in parallel: different files, no shared results. Then W2 and W3, which touch different files and can also run in parallel. W4 needs W0, W2 and W3. After W4 the work is sequential, since W5 to W9 touch the same renderer files: W5, W6, W7, then W8 and W9, then W10. W11 grows from W4 onwards.
+**Order.**
+
+- W0 and W1 can run in parallel: different files, no shared results. R1 is reading only and can start at any point. It has to finish before W10's steps are ordered, and it's more useful before W3, where the personas are written.
+- Then W2 and W3, which touch different files and can also run in parallel.
+- W4 needs W0, W2 and W3.
+- After W4 the work is sequential, since W5 to W9 touch the same renderer files: W5, W6, W7, then W8 and W9, then W10. W11 grows from W4 onwards.
+- W7 and W8's second half also wait on the Cesium IR plan. If its milestones aren't merged when W6 ends, W8's first half and W9 go next, and W7 and the rest of W8 follow when they are.
 
 ## 9. Questions for the owner, with answers
 
-**Answered on 2026-11-13:**
+**Answered while planning (2026-11-13):**
 
 1. **Is the renderer chosen per engine or per view?** _Answer: a device per engine, and a renderer per view inside it._ The owner's case was a WebGPU raster view beside a WebGPU path tracer, sharing textures. That fits, since both renderers sit on one device. WebGL 2 is a device of its own with one renderer. Mixed engines can come later if needed.
 2. **Is naga OK as a build tool?** _Answer: yes._
 3. **Parity tolerances against WebGPU?** _Answer: tiered, as in section 7._
 4. **Depth without `EXT_clip_control`?** _Answer: logarithmic depth written per fragment, as a reported path._
-5. **User custom shaders and post stages on WebGL 2?** _Answer: naga at run time, as a lazily loaded WASM chunk in a worker._ This makes naga a runtime dependency for user code only. The engine's own shaders don't need it.
-6. **Styles and warps before the core IR decides?** _Answer: a GLSL ES target in both emitters now, retired for the core IR's back end later._
+5. **User custom shaders and post stages on WebGL 2?** The planning answer, naga translating linked user modules at run time, was replaced in review (review answer 2 below).
+6. **Styles and warps before the core IR decides?** The planning answer, GLSL ES targets in both emitters, was replaced in review (review answer 2 below).
 
-**Lead's defaults, not objected to (confirm in review):**
+**Answered in review (2026-11-13):**
 
-1. **"auto" falls back to WebGL 2** when WebGPU is missing, warns once, and reports it.
-2. **The first visible milestones** draw unlit (W4), then lit by the sun with a clear background (W6), with the atmosphere in W9. W4 starts unlit because unlit parity is the simplest check of the seam.
+1. **"auto"** falls back to WebGL 2 when WebGPU is missing, with a warning. The first visible milestone is unlit (W4), and lighting comes at W6.
+2. **Styles, warps and user code go through Cesium IR** (replaces planning answers 5 and 6):
+   - all of them reach GLSL ES through Cesium IR's emitter;
+   - there are no stopgap GLSL targets in `styleExpression.ts` or `codegen.ts`;
+   - linked user WGSL isn't translated as a whole module by naga;
+   - user WGSL is lowered through naga into Cesium IR, and what the IR can't express is refused with a diagnostic.
+
+   The Cesium IR implementation plan is a prerequisite. W7 and W8 name its milestones.
+3. **The naga build:** W0 builds our own crate (a Rust toolchain on development machines and CI is approved, and Rust never reaches production builds) and measures it against the published naga-wasm. Ours is chosen unless it's far larger. The engine's shaders use naga at build time, as planned.
+4. **Which browsers:** open, and it needs research. That's R1, before W10's steps are ordered.
+5. **No time estimates:** the Size column and every duration are gone. Dependencies, order and "done when" stay. Every milestone, W0 to W11, stays in scope.
 
 **Still open:**
 
-1. **Which naga WASM build?** A published package or our own from the crate. W0 brings sizes, and the owner picks.
-2. **Which browsers is the WebGL 2 renderer for?** The handbook's compatibility tab should give the share without WebGPU before W10's further steps are ordered, so they follow what those browsers have (for example clip control, float blending, multi-draw).
-3. **When does the WebGPU device split from its raster passes,** so a path-tracer view can share them? Not needed for this plan. It should be planned with the path tracer.
+1. **Which browsers the WebGL 2 renderer is for:** R1 answers it.
+2. **The Cesium IR plan's milestone names:** the names in W7, W8 and section 4 are provisional until that plan is merged.
+3. **When the WebGPU device splits from its raster passes,** so a path-tracer view can share them. This plan doesn't need it. It should be planned with the path tracer.
 
 ## 10. Risks
 
 - **naga and Slang's WGSL** may disagree on layouts or features. W0 exists to find this out early. The fallback is hand-written GLSL ES for the entry points, keeping the shared modules shared through the WGSL hop where it works.
+- **The Cesium IR plan is on the critical path for W7 and W8's second half.** The order in section 8 keeps the renderer moving while that plan lands. The gap list decides which hooks run, on WebGPU as well as WebGL 2, because raw WGSL isn't offered on either renderer.
 - **Draw-call count:** without multi-draw, Google Photorealistic 3D Tiles or NYC-scale scenes may reach thousands of draws per view. The inspector's counters will show it. Merging tiles' draws on the CPU is a later step, not a PoC one.
 - **Log depth** loses early depth testing and differs from reversed-Z at silhouettes. Its parity is checked against WebGPU with its own stated `pickPosition` accuracy.
 - **Two copies of work:** every new WebGPU feature now needs a decision for WebGL 2 (a step, or a declared absence). The support rules make that decision visible. The profiles plan's invariant tests fail when a required content kind lacks an implementation.
