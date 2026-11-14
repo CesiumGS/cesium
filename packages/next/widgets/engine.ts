@@ -198,8 +198,17 @@ function recordable(
   // `&occlusionCull=off` culls draws by the frustum alone (A/B checks of
   // `Engine.occlusionCulling`); tile selection's occlusion feedback stays.
   const occlusionCull = params.get("occlusionCull");
-  if (occlusionCull === "off" || occlusionCull === "on") {
-    engine.occlusionCulling = occlusionCull;
+  if (occlusionCull === "off") {
+    engine.occlusionCulling = "off";
+  } else if (occlusionCull === "on") {
+    engine.occlusionCulling = "on";
+  }
+  // `&coarsen=off` keeps hidden tiles' refinement however long they stay
+  // hidden (A/B checks of `OcclusionFeedback.coarsen`).
+  if (params.get("coarsen") === "off") {
+    for (const view of engine.views) {
+      view.occlusionState.coarsen = false;
+    }
   }
   // `&alpha=<0..1>` sets the error exponent (`View.lodExponent`).
   const alpha = parseAlpha(params.get("alpha"));

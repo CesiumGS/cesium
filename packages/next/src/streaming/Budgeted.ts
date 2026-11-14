@@ -625,14 +625,27 @@ export class BudgetedSelection extends StepwiseSelection {
     // Only where the parent stays drawn in place of its children (REPLACE):
     // an ADD tile's children add to it, so they are walked, selected and
     // requested as ever, hidden ones after every visible request.
-    // A tile already refined keeps what it has: hiding only blocks new
-    // refinement (coarsening it would change the depth, and the hidden
-    // children could show again). It un-refines only as its error says, or
-    // by eviction.
+    // A tile already refined keeps what it has while it is hidden briefly:
+    // hiding blocks new refinement. Hidden long (`longHidden`: seconds, and
+    // not soon after it was last seen again), it may coarsen to itself: what
+    // hides it is drawn by tiles that are seen, so its coarser content
+    // changes no depth in front of it. Its first result that sees it
+    // refines it again (`OcclusionFeedback.apply`).
+    const longHidden =
+      occluded &&
+      tile.refine === "REPLACE" &&
+      view.occlusion?.longHidden?.(state) === true;
     const refine =
       forced ||
       (wanted &&
-        !(occluded && tile.refine === "REPLACE" && !state.heldRefined));
+        !(
+          occluded &&
+          tile.refine === "REPLACE" &&
+          (!state.heldRefined || longHidden)
+        ));
+    if (wanted && !refine && state.heldRefined && longHidden) {
+      state.coarsenedHidden = true;
+    }
     state.heldRefined = refine;
     if (wanted && !refine) {
       // Its children's loads in flight go on.

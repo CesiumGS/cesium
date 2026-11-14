@@ -34,14 +34,16 @@ describe("what a style change costs", () => {
     const first = await cost(() =>
       scene.setShader(new FeatureStyle({ show: "${Height} > 5" }).shader),
     );
-    // Opaque, its shadow, the depth prepass and the depth pass.
-    expect(first).toEqual({
+    // Opaque, its shadow, the depth prepass and the depth pass, in the order
+    // the frame first records their bundles (occlusion culling records the
+    // depth bundle first).
+    expect({ ...first, pipelines: [...first.pipelines].sort() }).toEqual({
       modules: 1,
       pipelines: [
-        "feature style opaque",
-        "feature style shadow",
-        "feature style prepass",
         "feature style depth",
+        "feature style opaque",
+        "feature style prepass",
+        "feature style shadow",
       ],
     });
     // Only a constant differs, and it is part of the code: all again.

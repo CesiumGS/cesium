@@ -49,6 +49,22 @@ export class DepthPyramid {
   readonly shape: PyramidShape;
   /** All levels, for the queries. */
   readonly view: GPUTextureView;
+  /** Level 0 alone, as storage: what `priors` draw into. */
+  readonly level0: GPUTextureView;
+  /**
+   * Analytic occluders drawn into level 0 after the depth is folded and
+   * before the levels above are reduced (a hook; none is registered yet).
+   * Each writes, per texel, the nearer (larger, reverse-Z) of what is there
+   * and its own depth, for a shape that is certainly opaque where it is: the
+   * body occluder's ellipsoid (`streaming/occluders.ts` `BodyShape`, inside
+   * the drawn terrain) would be one, from its centre and radii seen from
+   * `built`'s camera. Both phases of the draws' occlusion cull and the tile
+   * queries then read it, so a shape hidden in the drawn depth adds nothing
+   * and one the depth lacks (terrain not loaded yet) hides what it proves.
+   */
+  readonly priors: Array<
+    (pass: GPUComputePassEncoder, pyramid: DepthPyramid) => void
+  > = [];
   private readonly groups: GPUBindGroup[] = [];
   /**
    * The camera it was built for: what the queries' camera space is, and what
@@ -91,12 +107,13 @@ export class DepthPyramid {
     this.view = this.texture.createView({ label: "occlusion.pyramid" });
     const level = (mip: number) =>
       this.texture.createView({ baseMipLevel: mip, mipLevelCount: 1 });
+    this.level0 = level(0);
     this.groups.push(
       device.createBindGroup({
         layout: pipelines.hzbLevel0.getBindGroupLayout(0),
         entries: [
           { binding: 0, resource: depth },
-          { binding: 1, resource: level(0) },
+          { binding: 1, resource: this.level0 },
         ],
       }),
     );
@@ -122,6 +139,11 @@ export class DepthPyramid {
     >,
   ): void {
     for (let mip = 0; mip < this.shape.levels; mip++) {
+      if (mip === 1) {
+        for (const prior of this.priors) {
+          prior(pass, this);
+        }
+      }
       pass.setPipeline(mip === 0 ? pipelines.hzbLevel0 : pipelines.hzbReduce);
       pass.setBindGroup(0, this.groups[mip]!);
       const width = Math.max(this.shape.width >> mip, 1);
@@ -366,6 +388,31 @@ export function occlusionPass(
   };
 }
 
+/** A render asked for at a time (ms, `performance.now`), per view: the earliest asked. */
+const wakes = new WeakMap<
+  View,
+  { at: number; timer: ReturnType<typeof setTimeout> }
+>();
+
+/** Asks for a render at `at` (a hidden tile may coarsen then), unless one is due sooner. */
+function wakeAt(view: View, at: number, requestRender: () => void): void {
+  const pending = wakes.get(view);
+  if (pending && pending.at <= at) {
+    return;
+  }
+  if (pending) {
+    clearTimeout(pending.timer);
+  }
+  const timer = setTimeout(
+    () => {
+      wakes.delete(view);
+      requestRender();
+    },
+    Math.max(0, at - performance.now()) + 1,
+  );
+  wakes.set(view, { at, timer });
+}
+
 /**
  * After the submit: maps each list's readback and hands its bits to the
  * view's feedback. A readback that fails (the frame was rejected, the
@@ -389,13 +436,13 @@ export function readOcclusion(
           read.readback.getMappedRange(0, read.words * 4).slice(0),
         );
         read.readback.unmap();
-        const flipped = read.view.occlusionState.apply(
-          read.list,
-          bits,
-          read.viewId,
-        );
+        const feedback = read.view.occlusionState;
+        const flipped = feedback.apply(read.list, bits, read.viewId);
         if (flipped > 0) {
           requestRender();
+        }
+        if (feedback.coarsenAt !== undefined) {
+          wakeAt(read.view, feedback.coarsenAt, requestRender);
         }
       },
       () => read.view.occlusionState.release(read.list),
