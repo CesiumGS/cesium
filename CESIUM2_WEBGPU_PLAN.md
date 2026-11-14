@@ -3857,6 +3857,17 @@ Three plans, reviewed by the owner on 2026-11-13, with their milestones folded i
 
 **Order across the three.** Profiles M1–M2, W0, W1, IR-1 and IR-10 can start together (different files). W3 waits for Profiles M2. W7 waits for IR-5, IR-7 and IR-8; W8's second half for IR-11 and IR-13. Profiles M8 lands with W3. The MaterialX live-editing example waits for IR-15 (and IR-G1 for its image nodes).
 
+### M8 — The job system (decided 2026-11-13; §13.43)
+
+The first slice is merged: `Jobs` behind `WorkerPool` (priorities, dependencies, cancellation, a budgeted apply phase), shared memory when the page is cross-origin isolated, terrain decode completion and the refit fallback on it. No durations: order and dependencies only.
+
+- JP-1 to JP-3: content decode, one-off loads and dedicated worker groups onto `Jobs`. Need nothing beyond the first slice.
+- JP-4 to JP-8: main-thread budgets onto the apply phase's slices (occluder walk, warp fits, b-rep sections, the public slicers, the refit fallback). Need nothing beyond the first slice.
+- The inspector's Jobs section. Needs JP-1 to JP-3 for its kinds and groups.
+- JP-9: tile selection off the main thread. Needs a fresh profile, then §13.7's transferable tile table.
+- App jobs (`engine.jobs.run`). Needs JP-3 (the app worker group) and the one-API façade (§13.41, threading).
+- The façade itself and worker mode by default: after a run on an otherwise idle GPU shows smoother ticks (§13.43's spike).
+
 ---
 
 ## 7. Risks
@@ -11300,6 +11311,48 @@ No dependency is added without the owner's agreement.
 3. The body occluder's walk as the second workload (`Jobs.slice`) once `dev/horizon` lands. Then imagery compositing, the warp fits and the bulk slices, all from one tick budget instead of four fixed ones.
 4. Rings in shared memory, and fetching moved out of decode jobs, so a job is the decode alone over the bytes it is handed.
 5. The façade: its command protocol, the snapshot store and `thread: "auto"`, with the API tests run in both modes. Start with the reads in the migration table that examples use (`stats`, `view.camera` after a rig, `toPixel`, `sampleHeight`).
+
+#### Owner's decisions after review (2026-11-13)
+
+**App jobs: yes, narrowly, later.** Apps will be able to submit their own jobs, but not until the internal API has settled across more engine workloads (JP-1 to JP-9 below). The shape to build then:
+
+- `engine.jobs.run(moduleUrl, name, input, { priority, signal })` returns a promise. An async-iterator form serves progressive jobs that yield partial results. An optional `apply(result)` step runs in the budgeted apply phase, for results that change the scene.
+- App code loads by module URL, the worklet-style rule for app code inside the engine (§13.41, threading), so it works the same in both thread modes.
+- App jobs run in **their own worker group**: they share the scheduler's priorities and budget accounting, but never the engine's decode workers, so a slow or failing app job can't stall content.
+- App priority bands sit below "visible content" by default. An app can raise a job to "interactive", never above the engine's own visible work.
+- App jobs appear in the inspector as their own group.
+- Internal job kinds, dependencies and slices stay internal until then.
+
+**The inspector's Jobs section** (built under the inspector rules: values change, the layout doesn't; recorder columns for every value; per-tick stepping when paused):
+
+- **Main-thread apply** as a sparkline row against its budget line, in Frame, beside CPU and GPU time.
+- **A table by job kind** (decode, refit, imagery, occluder walk, warp fits, b-rep, Slang, app): running, queued, latency from submit to applied (a 30-second sparkline), worker time, cancelled. A stacked chart of worker time by kind, as the GPU section stacks passes.
+- **Worker utilization:** a small busy-against-idle bar per worker, per group (engine, dedicated, app).
+- **Progressive jobs** with their progress, the same items the refinement API reports as sources.
+- **The memory mode** in the header ("shared" when cross-origin isolated, else "transfer"), and shared-ring use in Memory.
+- **Device-thread budgets** that aren't CPU jobs (imagery compositing passes, upload pacing) report in the same section, so all scheduled work is in one place.
+
+#### Porting existing work onto the job system (owner, 2026-11-13: tracked so it isn't forgotten)
+
+Each item moves existing code onto `Jobs` (priority, cancellation, an apply step or slices, inspector visibility). Found by an inventory of `src/` on 2026-11-13 (`new Worker(`, direct `workers.request`, and main-thread budgets).
+
+- **JP-1: content decode with priorities and cancellation.** glTF and 3D Tiles content (`engineContent.ts` `workers.request`), and the terrain request in `engineScene.ts`. They pass through `Jobs` today but with no priority, no cancellation when a tile is deselected and no apply step. Give them the tileset's request priority, cancel on deselection or eviction, and move the upload-preparing main-thread work into apply steps.
+- **JP-2: one-off engine loads.** The glare kernel, the star field and the sky pack (`Engine.ts`, direct `workers.request`): priorities below visible content, cancellation on dispose.
+- **JP-3: dedicated worker groups.** Workers outside the pool, which are long-lived or carry large WebAssembly, keep their own workers but are scheduled and shown through `Jobs` as dedicated groups: the Moon map (`moonMapLoad.ts`), the Slang compiler (`slang.ts`), the b-rep kernels (`brep/kernelClient.ts`, Open CASCADE and SMLib) and b-rep sections (`brep/sectionClient.ts`). This is also the mechanism app jobs use later.
+- **JP-4: the horizon occluder's walk.** `BoundJob` (`globe/bodyOccluder.ts`) and its `BUDGET_MS` adapter become a progressive job of the apply phase's slices, reporting as a refinement source.
+- **JP-5: warp fits.** `warpTick` (`Engine.ts`, `warpBudgetMs`) becomes progressive jobs, fits off the main thread where the warp's function can run in a worker (compiled routes, built-ins), and a main-thread slice otherwise (closures).
+- **JP-6: b-rep sections' main-thread steps.** `section.step(budgetMs)` (`brep/section.ts`) moves onto the apply phase's slices.
+- **JP-7: the public slicers.** `timeSlices` and `tickSlices` (`core/bulk.ts`, used by frames, measurement and engineering frames) run on the job system's slices, so app bulk work and engine work share one budget.
+- **JP-8: the refit fallback's own budget.** `REFIT_BUDGET_MS` in `TerrainSource.ts`, if anything of it remains after the first slice, folds into the apply phase.
+- **JP-9: tile selection off the main thread.** The biggest main-thread cost profiled (§13.43's hot spots): the worker traversal over a transferable tile table (§13.7), as jobs. Re-profile first: horizon culling, occlusion and coarsening cut the deep views' tiles from thousands to hundreds after those profiles.
+
+**Planned work in other plans that uses the job system, not ad-hoc workers or budgets:**
+
+- Cesium IR plan: IR-11's lazily loaded naga is a job type on a dedicated worker group, and compiles triggered by live edits (the MaterialX example) are cancellable jobs, a newer edit cancelling an older compile.
+- WebGL 2 plan: lattice fits, light binning and naga translation run as jobs; per-draw culling stays on the engine thread.
+- Engine profiles plan: the governor and the measured step costs read job and apply-phase timings.
+- The refinement plan: progressive jobs report as refinement sources.
+- The transform-graph plan: warp fits (JP-5) and the occluder walk (JP-4).
 
 ## 14. Follow-ups
 

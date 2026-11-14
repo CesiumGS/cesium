@@ -6,6 +6,8 @@
 
 **Goal:** one system for device facts, support reports, quality and presets, which doesn't become fragile as renderers, browsers and devices are added.
 
+> **Job system (owner, 2026-11-13):** the resolution governor and the measured per-step costs read job and apply-phase timings from the job system (CESIUM2_WEBGPU_PLAN.md §13.43), which the inspector also shows.
+
 ## The idea in one paragraph
 
 **The look is the app's; the fidelity is the engine's.** The app describes one look: which features its design uses, and how much each one matters. The engine reproduces that look as faithfully as the renderer and device allow. First it switches to cheaper versions of the same effect. It drops a feature only as a last resort, and every step or drop it takes is reported. Hardware- and browser-specific paths with no visible difference are chosen automatically and appear only in the support report and the inspector. There are no quality levels and no per-level feature tables. Each feature owns a short ladder of steps, rules are data, and one pure function resolves the look into effective settings. Every value can be traced back to the rule that set it.
