@@ -3899,6 +3899,21 @@ The first slice is merged: `Jobs` behind `WorkerPool` (priorities, dependencies,
 - MX-10: the WebGL 2 renderer's path. Needs W7.
 - MX-11: the comparison against MaterialX's own renderer. Needs MX-3 and MX-6.
 
+### M11 — Refinement and convergence (decided 2026-11-13)
+
+[`docs/superpowers/plans/2026-11-13-refinement-and-convergence.md`](docs/superpowers/plans/2026-11-13-refinement-and-convergence.md), reviewed by the owner on 2026-11-13 (§13.41 renderer decision 7: loading is refinement). One model for "the image is still improving": refinement sources per view, `view.refinement`, `converged()`, and the loop's changes and refining reasons in place of `TICK_REASONS`. A timeout resolves with a status; changes and requests stay apart from sources; what blocks is decided by each entry's effect. Transitions (M9), pending shader swaps (M10) and the resolution governor (Profiles M4c) report as sources. No durations: order and dependencies only.
+
+- R1: the source registry and snapshot, with adapters and a check against today's `needsTicks`; no behaviour change. Needs nothing.
+- R2: public reads (`view.refinement`, `onRefinement`, `stats.loop`). Needs R1.
+- R3: `converged()`, replacing `whenReady`. Needs R2.
+- R4: `freeze` (a per-view selection hold; suspends the governor). Needs R3.
+- R5: the loop switch (`wake(kind)`, `FrameStats.why`). Needs R1.
+- R6: the inspector's refinement table, flags and converge times. Needs R2 and R5.
+- R7: holds and the jobs hook (`JobSpec.refinement`, `SliceSpec.refinement`). Needs R1 and the first job-system slice (merged); each JP item declares its own when it lands.
+- R8: the examples' indicator. Needs R2.
+- R9: migrate the waits (bench, parity, scripts, examples, widgets, spikes). Needs R3 and R4.
+- R10: the handbook page "Loading is refinement". Needs R3.
+
 ---
 
 ## 7. Risks
@@ -11382,7 +11397,7 @@ Each item moves existing code onto `Jobs` (priority, cancellation, an apply step
 - Cesium IR plan: IR-11's lazily loaded naga is a job type on a dedicated worker group, and compiles triggered by live edits (the MaterialX example) are cancellable jobs, a newer edit cancelling an older compile.
 - WebGL 2 plan: lattice fits, light binning and naga translation run as jobs; per-draw culling stays on the engine thread.
 - Engine profiles plan: the governor and the measured step costs read job and apply-phase timings.
-- The refinement plan: progressive jobs report as refinement sources.
+- The refinement plan (§6 M11): progressive jobs report as refinement sources through `JobSpec.refinement` and `SliceSpec.refinement`; one owner per item.
 - The transform-graph plan: warp fits (JP-5) and the occluder walk (JP-4).
 - The LOD transitions plan: LT-4's retargeting recompute is a job (decode workers' group, prioritised by screen error, cancelled by its give-up rule, a release or a reversal).
 - The MaterialX plan: a rewire's compile and each edit's thumbnails are cancellable jobs; a newer edit cancels an older one.

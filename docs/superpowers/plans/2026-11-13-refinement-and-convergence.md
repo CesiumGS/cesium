@@ -1,6 +1,6 @@
 # Refinement and convergence: design plan
 
-**Status (2026-11-13):** design for the owner to confirm. Nothing is built. Section 1 records the owner's answers so far and three recommendations still to confirm.
+**Status (2026-11-13):** reviewed and merged. The owner confirmed decisions A, B and C as recommended and accepted two additions at review (section 1). Its milestones are in `CESIUM2_WEBGPU_PLAN.md` §6, M11. Nothing is built.
 
 **Updated after the job system merged (§13.43):** jobs and slices report through the Jobs API (`JobSpec.refinement`, `SliceSpec.refinement`, section 4, "Jobs: the hook"), not through holds.
 
@@ -16,7 +16,9 @@
 - `CESIUM2_WEBGPU_PLAN.md` §13.41: the renderer decisions' item 7 (progressive views as a case of refinement) and "Architecture decisions from the 2026-11-13 discussion" (threading, jobs that yield partial results, loading is refinement, inspector rules).
 - `CESIUM2_WEBGPU_PLAN.md` §13.43, "A job system for background work", with "Owner's decisions after review" and "Porting existing work onto the job system" (JP-1 to JP-9; tracked in §6 M8). Code: `src/io/Jobs.ts`.
 - `docs/superpowers/plans/2026-11-12-transform-graph.md`: "feedback must converge, not be damped" (occlusion), geomorph, the ×10 measurements.
-- `docs/superpowers/plans/2026-11-13-lod-transitions.md` (branch `claude/frosty-fermi-ccee6c`): coarsening transitions and the leaving set, which are transitions too.
+- `docs/superpowers/plans/2026-11-13-lod-transitions.md` (merged, §6 M9): coarsening transitions and the leaving set, which are transitions too.
+- `docs/superpowers/plans/2026-11-13-materialx-live-graph.md` (§6 M10): swap-when-ready shaders.
+- `docs/superpowers/plans/2026-11-13-engine-profiles.md` (§6 M7): the opt-in resolution governor.
 - Code: `src/scene/Engine.ts` (`TICK_REASONS`, `needsTicks`, `loop`, `tick`), `src/scene/engineReady.ts`, `src/streaming/Tileset3D.ts` (`idle`, `active`, `needsFrames`, `morphing`), `src/globe/GlobeImagery.ts` (`busy`, `fading`), `src/scene/HeightClamping.ts`, `src/scene/occlusionFeedback.ts`, `widgets/inspector.ts`, `widgets/engine.ts`, `widgets/recorder.ts`.
 
 ## 1. Decisions
@@ -44,15 +46,20 @@
 | ticking | refining | Normal: uploads, transitions, fits, feedback. |
 | ticking | converged | A busy loop. The bug class seen twice already: the exposure meter alternating between two readings 0.01% apart (`test/onDemandIdle.test.ts`), and occlusion verdicts flipping at ×10 (the transform-graph plan). The inspector flags it. |
 
-### Recommended, to confirm
+### Confirmed at review (owner, 2026-11-13)
 
-These were asked and not yet answered. The design below assumes the recommendation.
+The owner confirmed all three recommendations. The design below follows them.
 
-| # | Question | Recommendation | Alternative |
+| # | Question | Decision | Alternative (not chosen) |
 | --- | --- | --- | --- |
 | A | What does `converged({ timeoutMs })` do on timeout? | **Resolve with status:** `{ converged: false, pending, cut, changing }`. It rejects only on abort or a removed view. Tests assert `result.converged`. It reads the same in worker mode. Babylon and Playwright both lean this way (section 2). | Reject with an error carrying the snapshot. |
 | B | Do sources cover everything that ticks the loop? | **Two groups.** Sources replace `tiles`, `loading` and `morph`, and add compiles, fits, occlusion, exposure, accumulation and jobs. Changes (camera, world, animation…) and requests (picks, queries) stay a smaller, separate set. Camera motion restarts refinement but isn't a source. | Everything is a source, with "motion" excluded from `converged` by default. |
 | C | Which sources block `converged()` by default? | **Those whose finishing can change the image:** visible streaming, stand-ins, fits, clamping, transitions, the occlusion fixed point, exposure adaptation. Not prefetch, open-ended accumulation, live data, or jobs that only change cost (the horizon occluder's walk). Section 4 makes this a field, `effect`. | All block; or only streaming and compiles. |
+
+### Added at review (owner, 2026-11-13)
+
+- **A pending shader swap is a compile.** MaterialX's `setShader(next, { swap: "whenReady" })` keeps drawing the old material while `next`'s pipelines build. That counts under `compiles` with effect `standIn`, so `converged()` after a rewire waits for the new material, not just for any material.
+- **The resolution governor is non-blocking adaptation.** Engine profiles' opt-in governor (Profiles M4c) is a feedback loop that changes the image. It reports as an `adaptation` entry that doesn't block, is done by hysteresis (not damping), and is suspended by `freeze`, so a capture never lands mid-step. A view with the governor on converges at whatever resolution it holds when everything else is done.
 
 ## 2. Prior art
 
@@ -182,7 +189,7 @@ interface RefinementEntry {
 | Kind | From | Effect | Wants | Done when |
 | --- | --- | --- | --- | --- |
 | streaming | `Tileset3D` (`state.inFlight`, `wanted`, `ready`, `externals`, the memory-adjusted SSE), `GlobeImagery.busy`, `loadGltf` | coarse; prefetch is cost | events while only loads are in flight, else ticks (today's `needsFrames`) | nothing the view draws is wanted at the target SSE, and the selection hasn't changed for 3 ticks (today's rule, moved inside) |
-| compiles | custom-shader pipelines (`World.ready`) | standIn | events | no draw uses the default material |
+| compiles | custom-shader pipelines (`World.ready`); pending `swap: "whenReady"` shader swaps (added at review) | standIn | events | no draw uses the default material, and no swap is pending |
 | tessellation | patch draws (`World.addBrep`), vectors and splats ("settle each when it's built") | standIn | ticks | every draw diced and drawn once |
 | streaming (textures) | custom-shader textures (`World.ready`) | standIn | events | no draw uses the white texture |
 | fits | `world.warps`, curved clips (`warpTick` returns busy, recorded as `animation` today) | standIn while held hidden, coarse while drawn at the last fit | ticks | no fit pending |
@@ -190,6 +197,7 @@ interface RefinementEntry {
 | transitions | `Tileset3D.morphing`, `GlobeImagery.fading`, the leaving set (the LOD-transitions plan), `View.transitionSeconds` transitions | coarse | ticks | none running (each lasts at least 8 frames, 0.3–1 s) |
 | occlusion | `occlusionFeedback.ts` verdicts | coarse | ticks | no verdict that would change the selection changed in the last `RESULT_MAX_AGE` results |
 | adaptation | the exposure meter (`adaptExposure`) | coarse | ticks | the reading is within the settled band |
+| adaptation | the resolution governor (Profiles M4c, opt-in; added at review) | coarse, not blocking | ticks while stepping | its hysteresis band holds; suspended by `freeze` |
 | accumulation | none yet | coarse | ticks | `total` samples or frames reached; open-ended without a target |
 | any declared kind; `jobs` by default | jobs and slices declared with `refinement` (`JobSpec.refinement`, `SliceSpec.refinement`; see "Jobs" below) | declared per job (the horizon occluder's walk: cost) | ticks for slices, events for worker jobs | applied, or the slice is done |
 | app | `engine.refinement.hold()` | per hold (default coarse) | events | released |
@@ -383,7 +391,7 @@ interface ConvergedResult {
 - It's level-triggered and latched by the promise (lesson 1). There is no "N quiet frames" rule: each source owns its done condition. The tileset's "changed in the last 3 ticks" rule moves inside the streaming source.
 - **It works with a manual loop.** Parity pages drive frames with `engine.renderFrame()`. Waiters are evaluated at the end of `renderFrame` too.
 - **Timeout:** resolves with `converged: false` (decision A, to confirm). Abort rejects with the signal's reason. A removed view rejects.
-- **`freeze`** holds the view's selection: no new refinement or coarsening. Loads in flight still finish, and fades and fits run to the end on what is drawn. The hold is released when the promise settles. It's today's `Tileset3D.freezeSelection`, made per view and per wait.
+- **`freeze`** holds the view's selection: no new refinement or coarsening. It also suspends the resolution governor (added at review). Loads in flight still finish, and fades and fits run to the end on what is drawn. The hold is released when the promise settles. It's today's `Tileset3D.freezeSelection`, made per view and per wait.
 
 ### Worker mode
 
@@ -533,7 +541,7 @@ One page, "Loading is refinement":
 
 ## 9. Milestones
 
-Sized for one agent each. Per the cost rules: Sonnet by default, Opus for R3 and R5 (design and risk). Each runs typecheck, eslint and prettier on its files, its own tests on the fake device (`test/fakeGpu.ts`), and at most one headless check. The full suite runs once at the end of R5 and again at the end of R9.
+Sized for one agent each; the overall plan lists them in §6, M11. Per the cost rules: Sonnet by default, Opus for R3 and R5 (design and risk). Each runs typecheck, eslint and prettier on its files, its own tests on the fake device (`test/fakeGpu.ts`), and at most one headless check. The full suite runs once at the end of R5 and again at the end of R9.
 
 | # | Milestone | Files | Done when |
 | --- | --- | --- | --- |
@@ -552,7 +560,6 @@ Sized for one agent each. Per the cost rules: Sonnet by default, Opus for R3 and
 
 ## 10. Risks and open items
 
-- **Decisions A, B and C** (section 1) are recommendations until the owner confirms them.
 - **Per-view streaming counts** need the per-view wanted lists. Where a selection policy doesn't keep them, the entry concerns every view showing the tileset. That's conservative but may delay one view's convergence.
 - **Honest sources are the whole design.** A source that says "done" early gives early screenshots; one that never says "done" gives timeouts. R1's agreement check, the stall flag and the busy-loop flag exist to catch both.
 - **The GPU-done step** adds about a frame of latency to `converged()`. That's fine for screenshots and tests; the indicator doesn't use it.
