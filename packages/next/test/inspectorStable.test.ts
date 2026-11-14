@@ -4,6 +4,7 @@
 // the same elements, classes and row counts, text and inline widths aside.
 import { describe, expect, it } from "vitest";
 import {
+  momentLabel,
   renderSections,
   summaryHtml,
   type Cursor,
@@ -301,5 +302,25 @@ describe("the inspector's skeleton", () => {
     expect(html).not.toContain("Counted before GPU culling</");
     expect(html).not.toContain("None:");
     expect(html).not.toContain("Largest writes:");
+  });
+
+  it("marks the hovered point in every sparkline, hidden or not", () => {
+    for (const html of [
+      renderSections(heavy()),
+      renderSections(heavy({ cursor: HOVER })),
+    ]) {
+      expect(html.streaming).toContain("ci-mark");
+      expect(html.memory).toContain("ci-mark");
+    }
+  });
+
+  it("words the header readout from a moment", () => {
+    const w = frame(300, () => 1, true);
+    const entry = w.detail![290]!;
+    const c = { t: w.times[290]!, tick: entry.tick };
+    expect(momentLabel(w, c, false, entry)).toBe(
+      "tick 1290 · 0.1 s ago · camera",
+    );
+    expect(momentLabel(w, c, true)).toBe("pinned · 0.1 s ago");
   });
 });
