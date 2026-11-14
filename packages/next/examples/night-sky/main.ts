@@ -22,8 +22,9 @@ import type { ExampleContext } from "../types.ts";
  * physics, a model of an eye or a lens, or a look.
  *
  * Public API only. The presets are data (§13.30): a date, a place and a
- * direction, an observer. It needs no sky pack: with none it draws 1.x's star map,
- * and `?pack=local` uses a pack the dev server offers.
+ * direction, an observer. It needs no sky pack: with none it draws 1.x's star map.
+ * In development the Viewer uses the pack the dev server offers, when there is
+ * one (`ViewerOptions.skyPack`); `?pack=none` draws 1.x's map instead.
  */
 
 const DEG = Math.PI / 180;
@@ -154,10 +155,13 @@ export async function run({
   // Looking around is this example's own: the globe's controls would move the Earth.
   viewer.controller.enabled = false;
   view.shadows = false;
-  longExposure = params.pack === "local" ? -6.5 : -8.5;
-  if (params.pack === "local") {
-    void viewer.setSkyPack("/sky-pack/");
-  }
+  // The Viewer takes the dev server's sky pack in development; `?pack=none`
+  // compares with 1.x's map.
+  const pack =
+    params.pack === "none"
+      ? await viewer.setSkyPack(null)
+      : await viewer.skyPackReady;
+  longExposure = pack ? -6.5 : -8.5;
 
   // ----------------------------------------------------------- the look-around
   const state = { azimuth: 0, elevation: 0, fov: 60 };

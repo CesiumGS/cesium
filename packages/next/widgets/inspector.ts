@@ -428,7 +428,7 @@ export function attachInspector(
   /** GPU groups the viewer folded away (all open by default). */
   const closedGroups = new Set<string>();
   /** The GPU chart as shares of the frame rather than milliseconds. */
-  let gpuShare = read(`${storageKey}.gpuShare`, false) === true;
+  let gpuShare = read<boolean>(`${storageKey}.gpuShare`, false) === true;
   const pushPasses = (
     passes: Array<[string, number]> | undefined,
     drawing: boolean,
