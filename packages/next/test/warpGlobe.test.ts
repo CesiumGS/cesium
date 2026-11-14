@@ -961,9 +961,7 @@ describe("the globe across a warp", () => {
       const p = [0, 1, 2].map((k) => c[12 + k]! + mesh.positions[i * 3 + k]!);
       expect(
         distance(routeForward(route, Float64Array.from(p)), sphere.center),
-        // Within a few percent: a height scale's drawn volume is the region at
-        // its drawn heights (closed form), which leaves out the skirts' tips.
-      ).toBeLessThanOrEqual(sphere.radius * 1.05);
+      ).toBeLessThanOrEqual(sphere.radius * (1 + 1e-6));
     }
     // σ_max over the tile is the exaggeration's, so its error stretches ×10.
     expect(drawnTile(tile, warp).sigmaMax).toBeGreaterThan(9);
