@@ -1127,12 +1127,37 @@ export function TransformGraph() {
             bulge by <C>(1/8)·M₂·L²</C>, with M₂ from Jacobian differences. The
             tile&apos;s geometric error is stretched by σ_max, the largest
             singular value of J. A ranged parameter is bounded per bucket (16
-            over the range), so selection follows the value a slider is at.
+            over the range), so selection follows the value a slider is at. A
+            plain height scale is the exception: its bound uses the scale&apos;s
+            exact value and is made again when the value changes, since a
+            bucket&apos;s range left about 1 km of slack at 1.8 km altitude.{" "}
+            <C>View.lodExponent</C> and <C>Warp.lodExponent</C> set how much of
+            the stretch selection counts, from none (0) to all of it (1, the
+            default). Tiles that refining can&apos;t add geometry to, the
+            upsampled ones, take no stretch.
           </li>
           <li>
-            <strong>The horizon test is off</strong> under a warped anchor. Its
-            occluder is the true ellipsoid, which says nothing about a drawn
-            Earth.
+            <strong>Horizon culling works under a warp</strong>, from an
+            occluder built out of the drawn terrain, not the true ellipsoid. Its
+            soundness doesn&apos;t depend on which warp it is: it needs a
+            closed, opaque drawn surface and a camera outside it. The Tile
+            selection tab has the details.
+          </li>
+          <li>
+            <strong>Exact where compilable.</strong> A built-in smooth node
+            compiles to exact GPU code, with its Jacobian by differentiation
+            (audit, 2026-11-13). Only <C>blendWarps</C> and a user&apos;s opaque
+            closure are fitted. The plan keeps fitting, narrowed, for opaque
+            code and deliberate approximation, with the error bound reported. A
+            warp written in the restricted subset compiles. The cost left is the
+            corridor unroll, which compiles per element until a table op exists.
+          </li>
+          <li>
+            <strong>Refinement shows, and blocks nothing.</strong> In the warp
+            examples a card holds only until something first draws. After that,
+            a fixed-size chip counts what still refines, for example
+            &quot;Refining · 12 tiles, 3 fits&quot;. It is shared in{" "}
+            <C>examples/refinement.ts</C>.
           </li>
         </ul>
         <p>
@@ -1173,10 +1198,11 @@ export function TransformGraph() {
             <>
               <C>src/scene/warpBounds.ts</C>, <C>src/streaming/tileWarp.ts</C>,{" "}
               <C>src/transform/taylorBounds.ts</C>, <C>curvature.ts</C> and the
-              plan, section 13.37, &quot;Queries through routes&quot;
+              plan, section 13.37, &quot;Queries through routes&quot;; the
+              2026-11-13 notes in the transform graph plan and section 13.41
             </>
           }
-          on="2026-11-12"
+          on="2026-11-13"
         />
       </Sec>
 

@@ -479,8 +479,8 @@ export function Rendering() {
           />
         </Figure>
         <Written
-          from="src/scene/Engine.ts, src/render/view and src/render/world"
-          on="2026-11-08"
+          from="src/scene/Engine.ts, src/render/view and src/render/world, with the occlusion passes read on 2026-11-13"
+          on="2026-11-13"
         />
       </Section>
 
@@ -884,23 +884,47 @@ export function Rendering() {
         </p>
         <p>
           Glare is a veil of light scattered across the image, from a pyramid of
-          blurs, and spikes from a lens's aperture, drawn from a list of the
-          brightest sources, each with its own visibility. It comes after the
-          meter and the eye's adaptation, so it doesn't move the exposure. It
-          has tiers by GPU and view size, and only an M2 has been measured: the
-          Intel figures are still owed. The idea of spreading a star's luminance
-          by a perception-based glare filter is in{" "}
+          blurs, built from a list of the brightest sources, each with its own
+          visibility. It comes after the meter and the eye's adaptation, so it
+          doesn't move the exposure. It has tiers by GPU and view size, and only
+          an M2 has been measured: the Intel figures are still owed. The idea of
+          spreading a star's luminance by a perception-based glare filter is in{" "}
           <Cite id="smallerThanPixels" />.
+        </p>
+        <p>
+          Post stages can be written in Slang. A stage is a Slang file under{" "}
+          <C>src/shaders/stages/</C> that defines <C>postStage(PostInput)</C>.
+          <C>npm run shaders</C> compiles it offline to a WGSL unit with no
+          entry point and a layout (name, binding, offset) that{" "}
+          <C>createPostStage</C> checks against the stage's uniforms, textures
+          and reads. <C>PostInput</C> carries the mip level a pass writes, so
+          one compiled pass serves every level of a pyramid. The astrophoto
+          curve and the veil, with its seven passes, are the first stages
+          written this way. Their images match the WGSL versions' within 1/255,
+          and the curve's strength is a uniform.
+        </p>
+        <p>
+          The lens's spikes are no longer the engine's. The night-sky example
+          draws them in a stage of its own, an instanced, blended pass fed by
+          the engine's light list and glare kernel. That took one small addition
+          to the public API: a <C>GraphStage</C> can sit beside a{" "}
+          <C>PostStage</C> in <C>ObserverSettings.stages</C>. The engine keeps
+          no sprite stage. The long-exposure presets sit on dates with no moon
+          up, and expose two stops longer when no star data pack is loaded, as
+          1.x's star map has brightness by rank only. In development, the Viewer
+          uses a sky data pack that the local dev server offers; a build never
+          does, and the example can compare against 1.x's map.
         </p>
         <Written
           from={
             <>
               <C>src/scene/observer.ts</C>, <C>src/render/post</C>,{" "}
               <C>src/atmosphere/starCells.ts</C> and{" "}
-              <C>widgets/observerPanel.ts</C>
+              <C>widgets/observerPanel.ts</C>, and the post stages and the
+              night-sky example's own pass
             </>
           }
-          on="2026-11-09"
+          on="2026-11-13"
         />
         <Sources ids={["smallerThanPixels"]} />
       </Section>

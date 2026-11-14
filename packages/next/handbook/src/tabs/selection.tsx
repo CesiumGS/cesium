@@ -524,6 +524,18 @@ export function Selection() {
             drawn once the coarser tile is here. Otherwise a still view would
             depend on where the camera had been.
           </li>
+          <li>
+            <strong>Placeholders are clipped only to exact holes:</strong> each
+            cover says whether its holes are exact, meaning that nothing else
+            draws in them. A placeholder never covers a tile that is drawn. The
+            inexact cases are an ADD tile with drawn children, the frontier, and
+            a REPLACE parent with an inexact child. The fallback for missing
+            children uses only children that drew nothing; the others add their
+            own exact holes. Where no exact hole can be made, there is no
+            placeholder, and the hold or stand-in branch runs. Placeholders clip
+            in the true frame, so mixed LOD works under any placement or warp,
+            including tilesets that move vertices.
+          </li>
         </ul>
       </Section>
 
@@ -789,6 +801,16 @@ export function Selection() {
             levels can be different captures, so a still view would change with
             where the camera had been.
           </li>
+          <li>
+            A terrain tile's refit, its deviation from its parent's surface (the
+            error that selection propagates), is measured in the decode worker.
+            The request carries the parent's heights, and the decoded tile comes
+            back with the deviation. The page only propagates errors. Pairs the
+            worker couldn't measure take at most 2 ms of each 16 ms on the page,
+            and the rest queue. Before this, the refit ran on the main thread
+            and took about 7 s of a 25 s load in the vertical exaggeration
+            example at ×10.
+          </li>
         </ul>
         <h3>Imagery</h3>
         <p>
@@ -866,6 +888,172 @@ export function Selection() {
             </>
           }
           on="2026-11-12"
+        />
+      </Section>
+
+      <Section title="Level of detail under a warp">
+        <p>
+          A warp that stretches content changes what an error looks like on
+          screen. A vertical exaggeration of 10 shows a tile's geometric error
+          ten times taller. Selection measures a tile's error as drawn, so it
+          multiplies the error by the stretch s of the warp under the tile. Four
+          rules keep that honest and cheap. They came from watching the vertical
+          exaggeration example at ×10 in the Zermatt view, where terrain draws
+          fell from 8,487 during loading toward what the near field needs.
+        </p>
+        <ul>
+          <li>
+            <strong>The error exponent α.</strong> <C>View.lodExponent</C>, in
+            [0, 1] with a default of 1, makes the error s<sup>α</sup> times the
+            geometric error instead of s times it. At 1 the error is as drawn,
+            with the most tiles. At 0 it's measured as if unwarped, as 1.x does:
+            far fewer tiles, and the error on screen is s times the threshold. A
+            warp's own <C>Warp.lodExponent</C> wins over the view's. The default
+            is to be found by measurement and not chosen: the first sweep (0,
+            0.25, 0.5, 0.75 and 1) predates the fixes below, and is to be run
+            again. The example has a slider and a <C>&amp;alpha=</C> switch.
+          </li>
+          <li>
+            <strong>Exact drawn height ranges.</strong> A tile's bound under a
+            height scale uses the scale's exact value, not the range of its
+            bucket, and the volumes are made again for each value. With the
+            range 9.44 to 10, a 13 m tile had a 619 m sphere and the camera
+            counted as inside 979 tiles. The volumes reach the tips of the
+            skirts, and a plain height scale has an exact slope.
+          </li>
+          <li>
+            <strong>Upsampled tiles take no warp stretch.</strong> Past the
+            data's last level a tile is its parent's surface, cut smaller.
+            Refining it adds no geometry, so the stretched part of its error
+            counts only where refining can add some. Elsewhere the error is
+            unstretched, as imagery isn't stretched vertically.
+          </li>
+          <li>
+            <strong>Distance to the drawn surface.</strong> Cull volumes include
+            skirts, so a bound never misses geometry. Selection measures
+            distance to the surface alone, without them. An upsampled tile hangs
+            its data tile's skirt depth only on edges at that tile's boundary.
+          </li>
+        </ul>
+        <p>
+          The globe's stepwise selection honours the exponent too, and the debug
+          view <C>"stretch"</C> shows the factor each tile used. Request
+          priority follows the error that is showing, so the largest visible
+          errors close first.
+        </p>
+        <Written
+          from="the transform-graph plan, task 12 and its notes on what the ×10 views showed, and test/lodExponent.test.ts"
+          on="2026-11-13"
+        />
+      </Section>
+
+      <Section title="Culling what can't be seen">
+        <p>
+          Three mechanisms skip what is hidden, at three places: selection,
+          requests and the draw. They share one idea, an occluder that answers
+          only when it can prove a bound hidden.
+        </p>
+        <h3>Occluders</h3>
+        <p>
+          An <C>Occluder</C> answers <C>hidden(bound, view)</C>: true only when
+          it proves it. A bound is hidden if any occluder in the view's list
+          says so, and selection, the request scheduler and the draw cull all
+          ask the same list. There are two kinds.
+        </p>
+        <ul>
+          <li>
+            <strong>Analytic occluders</strong> run on the CPU with no delay and
+            can cull what was never loaded. The first is the body occluder,
+            which does horizon culling under a warp. The ellipsoid test it
+            replaces was off under any warp. The body occluder instead fits a
+            shell inside the terrain that is drawn, so it holds under any warp,
+            with no flag for one. It is sound only for a closed, opaque drawn
+            surface with the camera outside it; with a translucent globe or clip
+            holes it is off.
+          </li>
+          <li>
+            <strong>The depth pyramid</strong> is the image occluder: the view's
+            own drawn depth, a tick late. It proves hidden on the GPU. Its CPU
+            verdicts come from another camera, so selection uses them only where
+            nothing drawn is removed.
+          </li>
+        </ul>
+        <h3>The horizon occluder as a job</h3>
+        <p>
+          The shell is bounded by the drawn terrain: a min-hierarchy of tile
+          bounds, exact once heights are resident. A tile without resident
+          heights is bounded by the nearest loaded ancestor's exact minimum,
+          less its geometric error stretched by the warp, so there is no sampled
+          estimate. Skirts are left out of the occluder's bounds. The radius is
+          the largest sound one, found by bisection over the cap facing the
+          camera, so no global bound is needed. Only that cap has to enclose it.
+        </p>
+        <p>
+          The work is a resumable, budgeted job. Under a warp with occluders it
+          needs base levels 0 to 2 resident, and only then, for warped views. It
+          yields, taking about 1 ms of a tick. A first version loaded levels 0
+          to 4 for every globe (682 tiles) and walked cold for 236 ms.
+        </p>
+        <h3>Two-phase culling of draws</h3>
+        <p>
+          The opaque pass was geometry-bound at ×10, with thousands of terrain
+          tiles behind valley walls. Each view now skips the draws its own depth
+          hides. The first phase tests what the frustum keeps against the
+          pyramid of the view's last tick, seen from that tick's camera. What it
+          hides goes to a retest list. The first phase's depth builds this
+          tick's pyramid, and the second phase draws the listed items that
+          pyramid shows. A wrong first verdict costs time and never the image.
+        </p>
+        <ul>
+          <li>
+            <strong>Which draws:</strong> opaque triangles in the engine's own
+            pipelines. Never blended material, lines, points, patches,
+            billboards or custom shaders. Not in views with clips, with direct
+            submission, or in an engine with no depth prepass.
+          </li>
+          <li>
+            <strong>Where it runs:</strong> the first phase rides inside the
+            depth prepass when ambient occlusion is on, and the pyramid is built
+            once a tick, from one sample a pixel. That cut culling's GPU cost at
+            ×1 from +0.45 ms to +0.02 ms, in a 1718 × 1406 view on an Apple
+            laptop, with no draws to cull. Without the prepass, the first phase
+            has a pass of its own.
+          </li>
+          <li>
+            <strong>
+              Measured, in the Zermatt view at ×10 with coarsening off:
+            </strong>{" "}
+            6,856 of 7,205 draw items and 82% of 4.83 million triangles are left
+            out, and the opaque pass takes 57 to 67 ms against 145 to 220 ms.
+            Frozen, the image is the same with culling on or off, bit for bit.
+          </li>
+          <li>
+            <strong>Switch:</strong> <C>View.occlusionCulling</C>, beside{" "}
+            <C>View.occlusionFeedback</C>, on by default. An <C>"auto"</C> mode
+            was weighed and deferred.
+          </li>
+        </ul>
+        <h3>Coarsening tiles hidden long</h3>
+        <p>
+          Hidden tiles used to keep the refinement they reached while loading.
+          Now a refined tile hidden for 2 s, over two results in a row, may
+          coarsen to itself. What hides it is drawn by tiles that are seen, so
+          its coarser content changes no depth in front of it, and the feedback
+          cannot flip as an earlier version did. It refines again with the first
+          result that sees it, and may not coarsen that way for 10 s. An idle
+          view wakes when the earliest such tile may coarsen. The cost is that
+          rounding a ridge shows the coarse tile until its children load, which
+          are usually still resident. In the same view, the drawn set falls from
+          7,194 tiles to about 410, and triangles from 4.83 million to 1.01
+          million.
+        </p>
+        <p className="provenance">
+          Still open: the cost of tile queries beyond the cap of 8,192 per tick,
+          which may explain verdicts flipping in a still view.
+        </p>
+        <Written
+          from="the transform-graph plan, fix 7 and its notes on occlusion unified, and the commits that built them"
+          on="2026-11-13"
         />
       </Section>
 
@@ -1034,17 +1222,18 @@ export function Selection() {
         />
       </Section>
 
-      <Section title="Terrain geomorphing: no pop when a tile refines">
+      <Section title="Transitions: terrain geomorphing and imagery cross-fade">
         <p>
           A terrain tile replacing a coarser one used to jump to its own
           surface. Under a vertical exaggeration the jump is magnified, and
           while loading coarse stand-ins sit beside finer neighbours. Each
-          terrain tile now carries, per vertex, its parent's surface height at
-          the same (u, v): the parent mesh's height interpolated on its
-          triangles, the lookup the error refit already makes. Over 0.3 seconds
-          from the tile's first drawn tick, the vertex stage moves each vertex
-          from that height to its own, with a smoothstep, before any warp: a
-          height profile lifts the height it is at now.
+          terrain tile now carries, per vertex, the surface height of the
+          nearest ancestor that was drawn, at the same (u, v): the ancestor
+          mesh's height interpolated on its triangles, the lookup the error
+          refit already makes. A level-skipping selection still eases. From the
+          tile's first drawn tick, the vertex stage moves each vertex from that
+          height to its own, with a smoothstep, before any warp: a height
+          profile lifts the height it is at now.
         </p>
         <ul>
           <li>
@@ -1053,9 +1242,25 @@ export function Selection() {
             and a draw costs one record word compared with zero.
           </li>
           <li>
-            A tile morphs only if a coarser ancestor was drawn before it, and
-            its parent was resident when it decoded. The first tiles of a scene
-            don't morph from nothing.
+            <strong>Duration:</strong> at least 8 frames, and not under 0.3 s or
+            over 1 s. The engine works it out once a render from the smoothed
+            interval between renders, and writes it into the view block, so both
+            stages read it in place of a constant. A transition running when it
+            changes may jump slightly. Tilesets and the globe's imagery end
+            theirs by the same number.
+          </li>
+          <li>
+            <strong>Imagery cross-fade:</strong> when a drawn tile's imagery
+            changes from one picture to another, in morph mode, the fragment
+            stage blends the old and the new over that same duration. The draw
+            record keeps its 176 bytes. A slice a fade leaves isn't recycled
+            until the fade ends.
+          </li>
+          <li>
+            <strong>The first load pops, by design.</strong> A tile morphs only
+            if a coarser ancestor was drawn before it. The first terrain does
+            not rise from the bare ellipsoid: a trial of that read as the camera
+            moving, and the owner preferred the pop.
           </li>
           <li>
             Coarsening pops: the children leave at once. Morphing out would keep
@@ -1064,7 +1269,7 @@ export function Selection() {
             cross-fade is a later increment.
           </li>
           <li>
-            The loop keeps ticking while a tile morphs (the wake reason{" "}
+            The loop keeps ticking while a tile morphs or fades (the wake reason{" "}
             <C>"morph"</C>) and sleeps once all are done.
           </li>
         </ul>

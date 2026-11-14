@@ -2,12 +2,14 @@ import { count, data, libraryEntry, size } from "../data.ts";
 import { ShaderRoutes } from "../flows.tsx";
 import {
   C,
+  Cite,
   DataTable,
   Figure,
   Flow,
   Generated,
   Page,
   Section,
+  Sources,
   Written,
 } from "../parts.tsx";
 
@@ -286,6 +288,12 @@ export function Shading() {
       </Section>
 
       <Section title="The user contract">
+        <p className="provenance">
+          Superseded in part, as a plan (2026-11-13): the next section's core IR
+          replaces a WGSL-level contract for users' styles, transforms and
+          functions. Engine kernels stay Slang, compiled offline. What follows
+          describes what is built today.
+        </p>
         <p>
           The contract is specified at the WGSL level: struct layouts and
           entry-point signatures, versioned. Slang is the first-class way to
@@ -372,6 +380,71 @@ export function Shading() {
           from="the overall plan, section 3.4, and AGENTS.md"
           on="2026-11-08"
         />
+      </Section>
+
+      <Section title="Planned: one core IR for what users write">
+        <p>
+          A WGSL string can't reach a CPU evaluator or a second renderer, so the
+          plan is not to make WGSL the contract. Users write styles, transforms,
+          materials and functions in a front-end language, and each lowers into
+          one small intermediate form, the core IR, working name{" "}
+          <C>cesium-ir</C>. This is a plan. The spikes are built, and the
+          engine's style compiler and transform code do not use it yet.
+        </p>
+        <ul>
+          <li>
+            <strong>Two layers.</strong> The core IR is typed pure functions
+            with rates (per uniform, feature, vertex or fragment). The passes
+            run on it: float64 evaluation on the CPU, forward-mode
+            differentiation, interval bounds, rate analysis, turning literals
+            into uniforms, and linking. A shader IR, for whole modules, sits
+            below it for validation and for translation to WGSL and GLSL ES
+            3.00.
+          </li>
+          <li>
+            <strong>Front ends:</strong> 1.x and 3D Tiles styles, restricted JS
+            or TS transforms, MaterialX, Slang compiled offline, and WGSL
+            functions lowered through naga. MaterialX stays at the edge, as an
+            input language and an editing format. Raw shader text is not an
+            escape hatch.
+          </li>
+          <li>
+            <strong>Vocabulary.</strong> Op names, types and meanings come from{" "}
+            <Cite id="khrInteractivity" />, a ratified Khronos spec. Its{" "}
+            <C>mix</C>, <C>clamp</C> and <C>smoothStep</C> differ from GLSL's
+            and WGSL's at the edges, and borrowing them means the CPU evaluator
+            matches 1.x styles exactly: all eight features tried, relative error
+            0. GPU code is a float32 approximation of the float64 spec.
+          </li>
+          <li>
+            <strong>Compared and set aside.</strong> ONNX's graph format (
+            <Cite id="onnxReleases" />) has good versioning but is tensor-based:
+            no rates, 2.4 times the nodes for a material, and a runtime of 14.8
+            MB that refused its latest IR version. naga's IR (
+            <Cite id="naga" />) changes every major release, can't be reached
+            from JS without our own build, and suits whole modules and CI
+            validation, not styling.
+          </li>
+          <li>
+            <strong>Cost, from the spike.</strong> Its passes are 22.8 KB
+            minified, 7.0 KB brotli. A style edit that changes a value is a
+            uniform write, about 0.2 ms; one that changes shape rebuilds a
+            pipeline, about 45 ms cold in Chrome. Apple M2, with other work
+            running, so compare within a row.
+          </li>
+          <li>
+            <strong>Still missing:</strong> texture reads, matrices, general
+            loops, noise, derivatives and structs. Real warps also need typed
+            constant tables, a search primitive and piecewise selection. A
+            corridor of a 39-line road compiles per element today, to 607 nodes
+            and 34 KB of WGSL. A table op is the fix.
+          </li>
+        </ul>
+        <Written
+          from="the overall plan, sections 13.41 and 13.42, and the spikes in spikes/core-ir"
+          on="2026-11-13"
+        />
+        <Sources ids={["khrInteractivity", "onnxReleases", "naga"]} />
       </Section>
 
       <Section title="Still to write">

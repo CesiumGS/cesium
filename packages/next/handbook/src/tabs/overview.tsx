@@ -44,6 +44,21 @@ const MILESTONES = [
     state: "Built (tasks 1 to 8), with a gallery example; follow-ups open",
   },
   {
+    work: "Level of detail and culling under warps",
+    what: "An error exponent, exact drawn height ranges, geomorphing and imagery cross-fades, mixed LOD with exact holes, horizon culling from the drawn terrain, two-phase GPU occlusion culling of draws, and coarsening of long-hidden tiles. Debug views, and an inspector with a recorder, for seeing what they do",
+    state: "Built; the exponent's default is still to be measured",
+  },
+  {
+    work: "Core IR (section 13.42)",
+    what: "One small typed IR on KHR_interactivity's vocabulary for styles, transforms and materials, with a CPU evaluator, differentiation and bounds, and emitters for WGSL and GLSL ES. WGSL becomes a front end, not the contract",
+    state: "Researched and spiked; not in the engine",
+  },
+  {
+    work: "Threads, jobs, renderers and engine profiles (section 13.41)",
+    what: "The engine on either thread behind one API, a job scheduler, loading as refinement, a renderer behind each view with support reports, and a profile system where the app owns the look and the engine owns fidelity",
+    state: "Planned; the refinement chip in the warp examples is built",
+  },
+  {
     work: "B-reps, GPU tessellation and CSG",
     what: "Exact b-rep geometry behind a query interface, every face diced and trimmed per pixel on the GPU at degrees 1 to 7, kernels in workers, and a CSG workspace on SMLib or Open CASCADE",
     state: "Built, provisional API",
@@ -249,8 +264,8 @@ export function Overview() {
           rows={MILESTONES}
         />
         <Written
-          from="the overall plan (sections 13.26, 13.33, 13.37 and 13.38), the transform graph plan and git"
-          on="2026-11-12"
+          from="the overall plan (sections 13.26, 13.33, 13.37, 13.38, 13.41 and 13.42), the transform graph plan, the engine profiles plan and git"
+          on="2026-11-13"
         />
       </Section>
 
