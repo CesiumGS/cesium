@@ -3941,7 +3941,7 @@ The first slice is merged: `Jobs` behind `WorkerPool` (priorities, dependencies,
 [`docs/superpowers/plans/2026-11-13-worker-facade.md`](docs/superpowers/plans/2026-11-13-worker-facade.md), reviewed by the owner on 2026-11-13 (§13.41 threading, §13.43). One API on the main thread; the engine on the main thread or in a worker, chosen by a probe (`thread: "auto" | "main" | "worker"`). Commands, per-tick snapshots, queries as promises; user code the engine runs is a Cesium IR program, a self-contained function or a module; HTML overlays are the app's (the engine publishes tracked points). Sequenced with the public API review (Plan 5i): WF-1's map first, then the review, then WF-2. No durations: order and dependencies only.
 
 - WF-1: the protocol table, every public member classified, checked against `api/surface.txt`. Needs nothing (Wave A).
-- The public API review (Plan 5i), with WF-1's map and the façade's constraints. Needs WF-1.
+- The public API review (Plan 5i), with WF-1's map and the façade's constraints. It also designs observed value types for in-place writes (three.js-style `camera.position.x = 5` becoming commands, owner 2026-11-13) and checks the API against three.js, Babylon.js and MapLibre idioms. Needs WF-1.
 - WF-2a, WF-2b, WF-2c, WF-2d: reads, writes, functions and internals reshaped on the main thread. Need the 5i review; WF-2c's program forms need IR-6, IR-8, IR-9 and IR-13, and closures are refused only once IR-13 lands; WF-2d needs the `@cesium/next/gpu` entry (Profiles M6).
 - WF-3: the façade and the direct transport. Needs WF-2a, WF-2b, WF-2d.
 - WF-4: the channel transport, and the API suite in both modes. Needs WF-3.
