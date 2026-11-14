@@ -18,6 +18,7 @@ struct PostParams {
   float2 size;       // the image, pixels
   float preExposure; // the scene's light × this is what `scene` holds
   float pixelAngle;  // radians per pixel at the view's center
+  uint mip;          // the level of what the pass writes: 0 unless it writes a level of a texture
 };
 
 [[vk::binding(0, 0)]] Texture2D<float4> postImage;
@@ -34,6 +35,7 @@ export __extern_cpp struct PostInput {
   __extern_cpp float2 size;         // the image, pixels
   __extern_cpp float preExposure;
   __extern_cpp float pixelAngle;
+  __extern_cpp uint mip;            // the level this pass writes
 };
 
 /** What a stage knows of a pixel of what it writes. */
@@ -44,6 +46,7 @@ export __extern_cpp PostInput postInputAt(int2 pixel) {
   input.uv = (float2(pixel) + 0.5) / postParams.size;
   input.preExposure = postParams.preExposure;
   input.pixelAngle = postParams.pixelAngle;
+  input.mip = postParams.mip;
   return input;
 }
 

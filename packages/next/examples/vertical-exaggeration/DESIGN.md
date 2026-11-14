@@ -26,7 +26,7 @@ Engineers who will build exaggeration into their own viewer, and geoscientists w
 
 The default overlay panel over the view, in the gallery's plain controls style. Labels for pins and the ruler are HTML over the canvas, placed from the true point's pixel (`View.toPixel` carries it through the route). A pick shows a ring that stays on the true point as the heights change.
 
-While the terrain and buildings load, a card over the view (the B-reps example's: a spinner and the stage) says what is awaited: the terrain, the buildings, then the tiles still queued to fit (`world.warpStats()`). It goes once the terrain and buildings are drawn and no fit is pending, for good (`loading.ts`: a camera that moves loads more, which doesn't bring it back), and takes no input.
+Until something draws, a card over the view (a spinner and the stage) says what the first draw waits for: the terrain. It goes at the first draw, for good, and takes no input. After that the view is live and only refining: a small fixed-size chip at the bottom centre counts the tiles still in flight (the globe's and the buildings') and the fits pending (`world.warpStats()`), as "Refining · 12 tiles, 3 fits", and comes and goes with them, so a camera that moves loads more and brings it back (`loading.ts`, `../refinement.ts`). It is shaped as the engine's planned `view.refinement` sources and `view.converged()` (plan §13.41).
 
 ## Known edges
 

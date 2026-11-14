@@ -13,7 +13,7 @@
 5. the graph: the nodes with their kinds, what sits at each, affine runs collapsed, and the route of the last pick lit, with its direction through each smooth node;
 6. sources and credits.
 
-A loading card names what the view waits for. Scenes with no globe get a plain studio (background, procedural light).
+A card names what the first draw waits for, until something draws; after that the view is only refining, and a small fixed-size chip at the bottom centre counts it ("Refining · 12 tiles, 3 fits"; `refinement.ts`, `loading.ts`). Neither blocks input. Scenes with no globe get a plain studio (background, procedural light).
 
 **Scenes and what makes each one honest.**
 

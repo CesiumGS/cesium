@@ -352,6 +352,17 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
   - Measured against dense sampling: a flat 100 × 100 × 1 km box at ×10 under a 9 km ceiling is 1.00, 1.00 and 1.34 per axis (a sphere bound was 9.8×). UTM is within 1.5, and most exaggeration cases 1.0–1.2. Flat regions 100 km across near the ceiling reach 4.4 vertically.
   - `ParamSpec.expected` exists but no descriptor sets it yet, so bounds use each parameter's current value.
 
+**What the ×10 views showed (2026-11-13, measured with the dev handle `globalThis.__cesium`).** In `vertical-exaggeration?x=10&view=zermatt-close`, terrain draws went from 8,487 (mid-load) toward the near field's needs as each cause was found:
+
+- **Upsampled tiles took the warp's stretch.** Beyond the data's last level (13 there) tiles are upsampled: their parent's surface, cut smaller. Refining them adds no geometry, so the stretched part of an error counts only where refining can add geometry (`geometryRefines`); elsewhere the error is unstretched, since imagery isn't stretched vertically.
+- **Height-scale bounds were made for a range of multipliers.** That range (9.44 to 10) left about 1 km of slack at 1.8 km altitude. A 13 m tile got a 619 m sphere, and the camera was "inside" 979 tiles (distance 0, refined to level 21). The closed-form height range now uses the exact multiplier and is remade on every change.
+- **Skirts belong to culling, not to level of detail.** Cull volumes include skirts so a bound never misses geometry. The distance for screen-space error is measured to the surface alone (`DrawnTile.surface`). Upsampled tiles hang their source tile's skirt depth only on edges at the source tile's boundary (`skirtDepths`).
+- **The per-tile refit ran on the main thread:** about 7 s of a 25 s load. It now runs in the decode worker; the page measures only pairs the worker couldn't, within 2 ms a frame.
+- **Horizon culling was off under any warp.** It is now an occluder built from the drawn terrain (below), which needs a small set of base levels resident. The first version requested levels 0 to 4 for every globe (682 tiles) and walked cold for 236 ms. Being changed: a small base set only for warped views, and an incremental walk that is a yielding job.
+- **97% of the remaining draws were hidden** (5,396 of 5,567 settled): far terrain refined during load, before the depth pyramid showed it hidden, and kept its refinement. The depth-pyramid draw cull (two-phase) and the coarsening of long-hidden tiles (hysteresis both ways) address it.
+- **The error exponent α** (`View.lodExponent`, `Warp.lodExponent`, the example's slider): a first sweep suggested 0.5, but every number in it predates the fixes above. Re-sweep before choosing the default.
+- **Still open:** the cliff streaks at ×10. Either boundary skirts drawn ten times deeper, or imagery smeared vertically (a ×10 wall has a tenth of the imagery's resolution per drawn metre vertically). A debug tint for skirts would settle it.
+
 **Occlusion, unified (owner, 2026-11-13).** Horizon culling is occlusion by a known convex occluder, so both live behind one interface:
 
 - **The interface:** a per-view list of occluders, each answering `hidden(bound, view)`: true only when it proves the bound hidden. A bound is hidden if any occluder says so. Selection (refine), the request scheduler (fetch) and the GPU draw cull all ask the same list.

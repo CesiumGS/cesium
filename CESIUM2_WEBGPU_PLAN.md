@@ -1169,7 +1169,8 @@ any zoom. 2.0 draws the sky as it is, so the camera decides what shows:
   objects, as images with their catalog surface brightness (Andromeda's
   core about 22 mag/arcsec², some 2 × 10⁻⁴ cd/m², as faint as the natural
   night sky): they show only under a dark sky at long exposures, as with a
-  real camera. Image licenses to check.
+  real camera. Image licenses to check. Not in 5e: the owner dropped
+  deep-sky patches on 2026-11-09 (§13.29, decision (f)).
 - **Moon and planets** from ephemerides: the moon's disk lit by the sun
   with its phase (and earthshine), the planets as points with their
   magnitudes. The moon's light also lights the scene at night (about
@@ -9324,14 +9325,14 @@ Do soon, designed together with vector drawing, because they overlap with it. `B
   - **Sharper points.** A tight core with real dynamic range, and glare only on what's bright enough, through §13.28's convolution instead of a fixed halo on every star.
   - **Two looks over one sky.** The eye (dark-adapted, close to colorless, a limit near magnitude 6) and a camera (long exposure, color, more stars, the Milky Way's structure, optionally a lens's spikes or streaks). The engine's physical values stay the same; a camera's look is its exposure and point spread.
   - **Finish removing the star exposure.** The public `View.starExposure` is gone, but the eye path still passes a fixed `EYE_STARS_EV100` (−3) to the sky shader's `starExposure`, which shows stars at that exposure wherever the sky behind them is dark, whatever the view has adapted to. It's why stars show beside the sunlit Earth from orbit, and it isn't physical. The sky and observer plan removed it (§13.32 moved it before 5b), so stars follow the view's exposure or the eye model alone, and decides by looking how to get stars in that view when wanted. The air's transmittance and sky brightness are physical; measure which stars show at twilight against naked-eye limits once the rule is gone.
-- **Deep-sky objects and other sky light (owner, 2026-11-08).** Nebulae, galaxies and the Messier objects, where not too small or dim. Star catalogs don't hold gas or unresolved galaxies. Three layers to test: an all-sky emission and dust map in the background, for large structure; real images for a short list of showpieces (Andromeda, the Magellanic Clouds, the Orion Nebula, the Pleiades, Carina and so on), calibrated linear so each one's total matches its catalog magnitude, with its stars removed; and a catalog's shape and magnitude with a simple profile for what's only a few pixels. All in cd/m² under the same exposure, so the eye sees a smudge and a long exposure shows structure. They all sit at infinity, which holds across the solar system. Terms need reading per source, since survey images often restrict reuse.
+- **Deep-sky objects and other sky light (owner, 2026-11-08; the patches are out of 5e's scope since decision (f) below, 2026-11-09).** Nebulae, galaxies and the Messier objects, where not too small or dim. Star catalogs don't hold gas or unresolved galaxies. Three layers to test: an all-sky emission and dust map in the background, for large structure; real images for a short list of showpieces (Andromeda, the Magellanic Clouds, the Orion Nebula, the Pleiades, Carina and so on), calibrated linear so each one's total matches its catalog magnitude, with its stars removed; and a catalog's shape and magnitude with a simple profile for what's only a few pixels. All in cd/m² under the same exposure, so the eye sees a smudge and a long exposure shows structure. They all sit at infinity, which holds across the solar system. Terms need reading per source, since survey images often restrict reuse.
 - **Sky data during R&D (owner, 2026-11-08).** The prototype keeps new sky data out of everything it distributes, and how data ships gets decided later, after legal review. Terms read so far are unsettled for stars (ESA's Gaia and Hipparcos pages state CC BY-NC 3.0 IGO), so:
   - **Source-neutral engine.** The sky takes a data pack (points, a background, deep-sky patches, a manifest), with no knowledge of where it came from. Today's star map stays the default, so a checkout with no pack draws what it draws now.
   - **Local only.** A script in the repository fetches from the source and builds the pack in the setup store, on the developer's machine. No sky data, derived data or derived images in the repository, on a server of ours, in a library build, or in the handbook's file.
   - **A manifest that blocks by default.** Each pack names its sources, credits and a `distributable` flag, false until cleared. Builds refuse a pack that isn't, with a test. The Viewer shows the manifest's credits.
   - **Order of sources.** Start with what reads as most open: NASA and ESA/Hubble or ESO images. Hold raw Gaia and Hipparcos as an optional local path, off by default, until their terms are answered, since R&D inside a company may itself count under a non-commercial clause.
 - **The star spike's decisions (owner, 2026-11-09).** (a) Data: the NASA map plus a catalog for the bright end, to start, under the R&D rules. (b) A tight core. (c) The world stays physical; the astrophoto curve is a programmable post pass, written in Slang on the graph, and serves as that interface's example. (d) The veil is in, also as a Slang post pass. FFT glare is out, too expensive. Spike sprites live in an example, not in the engine. (e) Sky cells and strips look best, but benchmark the drawing methods across GPUs before settling. (f) No deep-sky patches; they look pasted on.
-- **Follow-up from those decisions, after the usage reset:** the built curve and veil are WGSL stages and the sprites are an engine `GraphStage`, so: make Slang post stages work, move the curve and veil onto them, move the sprites out of the engine into the `night-sky` example, drop deep-sky patches from 5e's scope, and run the cost page on other GPUs (Intel first).
+- **Follow-up from those decisions, after the usage reset:** the built curve and veil are WGSL stages and the sprites are an engine `GraphStage`, so: make Slang post stages work, move the curve and veil onto them, move the sprites out of the engine into the `night-sky` example, drop deep-sky patches from 5e's scope, and run the cost page on other GPUs (Intel first). Done on `dev/stars` (2026-11-13): Slang post stages (`src/shaders/stages/`, `postApi.slang`, `slangPostShader`; `PostInput.mip`), the curve and the veil on them, matching the WGSL's pixels within 1/255; the sprites are the `night-sky` example's `GraphStage` (`examples/night-sky/sprites.ts`), through a public `GraphStage`, `ChainIo` and `GlareIo`; deep-sky patches are out of 5e. Open: the cost page on other GPUs (Intel first), which needs the owner's laptop.
 - **Planets as points, then disks.** The planets aren't drawn yet, and the ephemeris pack holds only the Sun, the Earth-Moon barycenter and the Moon. Add their barycenters from DE440, magnitudes that follow phase and distance, and a point at ordinary fields of view (Jupiter is under a pixel at about 0.03° a pixel), growing into an impostor when a long lens resolves it, on 5c's impostor path. A view of Orion with a planet nearby should use a real date, found from the ephemeris.
 - **Entity is retired as an engine concept; its ideas stay.** 2.0 has no `Entity` class or data-source layer in the engine. What people use Entity for (a time-varying property, a clamped label, a track with a path) is covered through scene items, styling and 5d's time-bound values (`Timeline.bind`). Exact names and any compatibility layer belong to the vector design and the API review (5i).
 
@@ -9358,7 +9359,7 @@ A Dyno example of beauty shots with presets, showing off the physical sky and dr
 | -------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------- |
 | Moon tileset loading                   | 5c                    | Earthrise, lunar sites                                                                            |
 | Camera moves, long lenses, preset rigs | 5d                    | Moving between shots, the Moon's size                                                             |
-| Planets, deep sky, the shutter         | 5e, §13.29            | Astrophotography. Stars, the eye and camera looks, and glare are built (sky and observer plan)    |
+| Planets, the shutter                   | 5e, §13.29            | Astrophotography. Stars, the eye and camera looks, and glare are built (sky and observer plan)    |
 | Glare and sun glint                    | §13.28                | Sunsets, the sun itself                                                                           |
 | Water, reflecting the sky              | §13.28                | Sea sunsets, reflections                                                                          |
 | A wider ephemeris pack                 | Data                  | The pack covers 2000 to 2050, and Earthrise and the Blue Marble are earlier; `de440s` covers them |
@@ -9410,7 +9411,7 @@ Read together, the recent sketches (§13.22, §13.28, §13.29, §13.30, §13.31,
 
 Don't build the interface until a second renderer needs it: the second pass only keeps scene data and rasterizer data apart, so the seam can open later. Two consumers (a tracer and a WebGL 2 renderer) will shape it better than guessing at one.
 
-**Order.** The second pass of the file split comes first, since its contexts and passes are the seams these plug into: it should be designed with this section open. Then, before 5b (owner, 2026-11-08), a sky and observer plan, so the API has moved before 5d and 5e build on it: the observer stage on a first version of §13.22's interface, the sky data pack, star drawing, glare, and removing the fudges. Planets, the shutter and deep sky stay in 5e. The medium stack follows from the `sky-measure` results (branch `sky-measure`, 2026-11-09, against the reference path tracer, RGB rather than per band): single scattering agrees within about 3% along the twilight antisolar vertical, and the error is in the higher-order term. It's good at 1 and 2° of depression in clean air, but at 4° it's 72 to 112% too bright in the band and the dark band vanishes, and worse in V20 haze. Under shadow, unshadowed higher-order light is fine only for narrow shadows or clean air (median +39%, +85% at V10), and no fixed blur of visibility works, so it needs a term set by shadow size against mean free path: a first try, scaling by the shadow's first-order share, gets 22% rms. Shaft contrast peaks near V20 but doesn't collapse at V10. The eclipse case wasn't measured. and the point pipeline from the star measurements.
+**Order.** The second pass of the file split comes first, since its contexts and passes are the seams these plug into: it should be designed with this section open. Then, before 5b (owner, 2026-11-08), a sky and observer plan, so the API has moved before 5d and 5e build on it: the observer stage on a first version of §13.22's interface, the sky data pack, star drawing, glare, and removing the fudges. Planets and the shutter stay in 5e. Deep-sky patches are out of its scope (owner's decision (f), 2026-11-09, §13.29: they look pasted on). The medium stack follows from the `sky-measure` results (branch `sky-measure`, 2026-11-09, against the reference path tracer, RGB rather than per band): single scattering agrees within about 3% along the twilight antisolar vertical, and the error is in the higher-order term. It's good at 1 and 2° of depression in clean air, but at 4° it's 72 to 112% too bright in the band and the dark band vanishes, and worse in V20 haze. Under shadow, unshadowed higher-order light is fine only for narrow shadows or clean air (median +39%, +85% at V10), and no fixed blur of visibility works, so it needs a term set by shadow size against mean free path: a first try, scaling by the shadow's first-order share, gets 22% rms. Shaft contrast peaks near V20 but doesn't collapse at V10. The eclipse case wasn't measured. and the point pipeline from the star measurements.
 
 #### Sky and observer results (2026-11-09)
 
@@ -10539,6 +10540,17 @@ _(4) Our IR to WGSL, naga for validation and GLSL._ As (2), but no Slang at run 
 7. MaterialX: import at build time (its Slang output, compiled by `slangc`) or at run time (its graph into the IR), or both?
 8. Should a style's numeric literals become uniforms, so an edit changes values without a new pipeline (a `CustomShader` uniform already changes through `setUniform` with no new module or pipeline)? This matters more than the front end's speed in every option.
 
+**Owner's answers (2026-11-13).**
+
+1. **CPU evaluation of styles is a requirement** (picks, legends, queries, interval culling of tiles).
+2. **Styling stays compiler-free:** Slang loads only for custom shaders, never for a style.
+3. **The PoC builds a WebGL 2 renderer,** to exercise the renderer seam designed in the renderer research (a renderer behind each view, support reported in the scene's terms, AOVs; decisions above). It is a second, simpler renderer, not a translation of the GPU-driven one: no compute, storage buffers or indirect draws. Scope it as a task: which content it draws (decision 8 of the renderer questions: globe, terrain, imagery, meshes at least), how styles and transforms reach GLSL ES, and how its support report reads.
+4. **Open, to discuss:** the owner isn't sold on our own IR yet, and wants to see how far the API gets **without** a WGSL escape hatch before adding one.
+5. **Built-in transforms in one source:** written in the IR, or in something that compiles to it quickly.
+6. **naga in CI: yes.** Also evaluate building our own WebAssembly of naga instead of the third-party `naga-wasm` (a small Rust crate over naga with exactly the API we need, pinned, built in CI; Rust is compiled to `wasm32-unknown-unknown` with wasm-bindgen, not Emscripten).
+7. **MaterialX: the owner wants live graph editing in the PoC,** with a gallery example: edit a material graph and see it update live. Build-time import alone isn't enough.
+8. **Style literals become uniforms: yes.**
+
 #### Swappable and hybrid renderers behind `Engine`, `World` and `View` (research, 2026-11-13)
 
 This works through four of the questions above: the renderer swap, hybrid rendering, the owner's OptiX lead, and wgpu. It's research, and nothing is decided. Code facts are from a read-only survey of `packages/next` on this date. Outside facts were read on 2026-11-13; "undated" means the page shows no date. The shader-toolchain comparison (Slang, WESL, naga, our IR) is a separate research session and isn't repeated here.
@@ -10732,6 +10744,56 @@ They stack. Candidate 1 is worth doing before the API review. Candidate 2 is a s
 7. **Progressive views: yes, as a special case of a general concept (proposed, to confirm): refinement.** A view's image converges over ticks; refinement sources each report progress and a done state: streaming (tiles loading), transitions (geomorph, imagery fades), async shader compiles (placeholder pipelines), occlusion feedback reaching its fixed point, temporal accumulation (TAA, still-frame supersampling for screenshots and print), a progressive path tracer's samples. `view.refinement` lists the active sources; `view.converged(options)` resolves when they are done (screenshots, printing, tests, benchmarks, exports); the on-demand loop ticks while any source is active, replacing the ad-hoc `TICK_REASONS`. A progressive view is a view with an accumulation source.
 8. **Content every renderer must draw:** globe, terrain, imagery and meshes (3D Tiles, glTF). Optional but declared in `view.support`: vectors and labels, points and splats, b-rep patches, advanced translucency. Design this carefully with item 4.
 9. **Browser- and hardware-specific paths stay out of the API:** they show in the support report and the inspector only. Where such a path can run, the engine detects it automatically and uses it.
+
+#### Architecture decisions from the 2026-11-13 discussion (owner)
+
+**Threading: one API, the engine on either thread.**
+
+- The app always calls the same API on the main thread. A thin layer underneath either runs the engine there, synchronously, or forwards to an engine thread (`OffscreenCanvas` in a worker). Threading is an implementation detail behind the API (this section's principle: room to change what's underneath).
+- **The API's rules hold in both modes:**
+  - commands are ordered messages batched per frame, never needing a reply;
+  - reads come from a per-frame snapshot (camera, stats, overlay screen positions);
+  - queries (pick, heights, rays) return promises;
+  - app code that must run inside the engine (warps written as JS, styles, per-frame callbacks) registers as worklet-style modules loaded on the engine's thread;
+  - the engine publishes per-frame screen positions for HTML overlays.
+- **The main-thread mode offers no synchronous read the worker mode can't.** The API tests run in both modes to enforce it.
+- **Mode is detected by a probe, not by browser sniffing.** The engine starts its module worker. A worker that can't start (CSP `worker-src`, no module workers) means main-thread mode. Inside the worker, `navigator.gpu`, `requestAdapter()` and a throwaway `OffscreenCanvas` `"webgpu"` context must all succeed before the real canvas is transferred, since `transferControlToOffscreen()` can't be undone. The result is cached per user agent. The host can force it (`thread: "auto" | "main" | "worker"`, default auto), and the inspector shows the mode and why. The same probe serves a WebGL 2 renderer (`"webgl2"`).
+
+**Jobs.**
+
+- `WorkerPool` stays as the transport, and Comlink is evaluated for the query round trips; the per-frame command stream uses our own batched protocol.
+- The scheduler is ours: priority by visible screen-space error (shared with requests), dependencies, cancellation when a tile is deselected, and one main-thread apply phase with a millisecond budget shown in the inspector.
+- **Shared memory is detected, never required:** with `crossOriginIsolated`, a `SharedArrayBuffer` and `Atomics` path; without it, transferables, behind the same API. `queue.writeBuffer` takes shared views, so decode workers can fill a shared ring the device thread uploads without a copy.
+- **Jobs may yield sound partial results** the engine uses at once, cancellable when their inputs change. Examples: the horizon occluder's walk, imagery compositing, and later a progressive renderer's accumulation. Such jobs report as refinement sources (renderer decision 7).
+- No new dependency without the owner's OK. The job-system session writes the design section with prior art, build against adopt, and the engine-in-a-worker spike's measurements.
+
+**The core IR.**
+
+- Two layers. The **core IR** (the middle end): typed pure functions with rates, where the passes run (float64 CPU evaluation, forward-mode autodiff, interval and Taylor bounds, rate analysis, literals to uniforms, linking). The **shader IR**: whole modules (naga's level) for validation and translation to WGSL and GLSL ES.
+- Front ends lower into the core IR: 1.x and 3D Tiles styles, restricted JS/TS transforms, MaterialX, and WGSL or GLSL functions through naga (Slang offline through its WGSL). Back ends: WGSL, GLSL ES 300 and a JS evaluator.
+- **MaterialX stays at the edge,** as an input language and the live-editing example's format, not in the engine core.
+- **No WGSL escape hatch yet:** see how far the API gets without one. If one is needed, it should be "a function in WGSL, lowered through naga", not raw shader text.
+- **Our own core IR isn't decided.** Working name: CesiumIR. The core IR spike compares a minimal jaxpr-like IR with ops borrowed one-to-one from a standard vocabulary (ONNX or `KHR_interactivity`), ONNX's graph format with our passes, and naga's IR with passes in Rust. Its inputs are a style, the twist transform with its Jacobian, a live-edited MaterialX graph, a WGSL function, and a plan-and-profile alignment.
+- **Requirements from real warps:** typed constant tables, bounded loops or a search primitive, and piecewise selection, with autodiff and interval evaluation through them.
+
+**Warps: exact when compilable, fitted only as a fallback.**
+
+- A user warp whose `forward` is written in the restricted subset (or given as `source`) is compiled to exact GPU code, with its Jacobian from autodiff. A warp given as an opaque closure is fitted. Its hand-written Jacobian (`forward(p, out, jacobian)`) tightens the fit's bounds and helps the CPU (picks, the Newton inverse, selection's stretch), but it doesn't remove the fit.
+- **Built-in smooth nodes are already exact** (audit, 2026-11-13): `corridorUnroll`, `bend`, `twist`, `taper`, `bump`, `lattice`, `radialDistortion`, `scaleAbout`, `scaleAlongAxes`, `velocityModel`, the height-scale and height-offset edges, `flatten`, transverse Mercator, Lambert conformal conic, Web Mercator and geocentric/geographic all compile; only `blendWarps` and opaque user closures are fitted. The cost is elsewhere: with no table-lookup op, the corridor compiles per element (a 39-line road: 607 IR nodes, a 34 KB shader, 200 parameters, 416 floats per draw, 1.2 s to parse). The core IR's table op is the fix (Task 9's array parameters). The precision to keep: the map within 1e-8 m of the CPU map and the Jacobian within 1e-9 (`test/corridorUnrollCompiled.test.ts`).
+- **Fitting stays, narrowed,** to opaque code (a WebAssembly library such as proj.js, a solver, simulation output), unbounded or implicit definitions, and an app's deliberate choice to approximate an expensive exact function, with the error bound reported. Grid-based datum shifts (NTv2, geoid grids) leave this list once the core IR has table and texture lookups.
+- The inspector's count of exact, compiled and fitted warped draws shows whether fitting is still needed. If fitted draws appear only in deliberate cases, the mechanism shrinks to a utility that makes a lattice from a function; the GPU draws lattices exactly as data.
+
+**Loading is refinement, not a gate.**
+
+- Scenes are interactive at once. A blocking card shows at most until something first draws. After that, a small fixed-size indicator names what is still refining ("Refining · 12 tiles, 3 fits"), never "Loading tiles". It reads the engine's refinement sources once those exist (renderer decision 7).
+- **The first load pops** (owner, 2026-11-13): terrain doesn't rise from the ellipsoid, which read as the camera moving.
+
+**Inspector rules.**
+
+- Values may change; the layout may not. Fixed explanations sit behind an ⓘ tooltip, varying sentences become fixed-slot tables, the header has fixed segments, numbers use tabular figures, and a DOM-skeleton test enforces all of it.
+- Series sit in the section they belong to. CPU and GPU time are together in Frame, sharing the time axis and crosshair; "Last 30 s" is gone.
+- Reading a moving chart: hover pauses the display, a click pins a sample (anchored to its tick, not a pixel), Pause/Live with arrow-key stepping, and a per-tick ring buffer so a paused chart can be read frame by frame.
+- Charts follow data-visualization practice: form by job, one scale per chart, colour by entity in a fixed, validated order, and hover values everywhere.
 
 ## 14. Follow-ups
 

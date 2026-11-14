@@ -2286,37 +2286,12 @@ async function createPipelines(
   let glarePipelines: Promise<GlarePipelines> | undefined;
   const makeGlarePipelines = async (): Promise<GlarePipelines> => {
     const glare = module("glare", glareWgsl);
-    const [sources, sprite] = await Promise.all([
-      device.createComputePipelineAsync({
-        label: "glare.sources",
-        layout: "auto",
-        compute: { module: glare, entryPoint: "glareSources" },
-      }),
-      device.createRenderPipelineAsync({
-        label: "glare.sprites",
-        layout: "auto",
-        vertex: { module: glare, entryPoint: "spriteVertex" },
-        fragment: {
-          module: glare,
-          entryPoint: "spriteFragment",
-          targets: [
-            {
-              format: "rgba16float",
-              blend: {
-                color: { srcFactor: "one", dstFactor: "one", operation: "add" },
-                alpha: {
-                  srcFactor: "zero",
-                  dstFactor: "one",
-                  operation: "add",
-                },
-              },
-            },
-          ],
-        },
-        primitive: { topology: "triangle-strip" },
-      }),
-    ]);
-    return { sources, sprite };
+    const sources = await device.createComputePipelineAsync({
+      label: "glare.sources",
+      layout: "auto",
+      compute: { module: glare, entryPoint: "glareSources" },
+    });
+    return { sources };
   };
   // The clipped variants of the engine's own set, each made when first asked
   // for (`Pipelines.clippedPipeline`).

@@ -2,6 +2,7 @@
 // built on the public stage interface. The fake GPU runs no shaders, so the rule is
 // checked here and the shader's source pinned; spikes/observer.ts (group `curve`)
 // checks its pixels.
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   astroCurve,
@@ -45,12 +46,13 @@ describe("astroCurve", () => {
 });
 
 describe("astrophotoCurveStage", () => {
-  it("is a simple user of the interface: one function, no uniform to go stale", () => {
+  it("is a simple user of the interface: one Slang function, one uniform", () => {
     const stage = astrophotoCurveStage();
     expect(stage.passes.length).toBe(1);
     expect(stage.textures.map((t) => t.name)).toEqual(["output"]);
-    expect(stage.uniformLayout.fields).toEqual([]);
-    expect(() => stage.setUniform("strength", 4)).toThrow(/uniforms\.strength/);
+    expect(stage.uniformLayout.fields.map((f) => f.name)).toEqual(["strength"]);
+    // A uniform it has, but `shadowGain` is fixed with it: make another stage.
+    expect(() => stage.setUniform("other", 4)).toThrow(/uniforms\.other/);
   });
 
   it("says what it is", () => {
@@ -77,35 +79,47 @@ describe("astrophotoCurveStage", () => {
   });
 
   it("defaults to full strength, and refuses one that makes no sense", () => {
-    const code = (options?: { strength: number }) =>
-      astrophotoCurveStage(options).passes[0]!.module.code;
-    expect(code()).toContain("const s: f32 = 1;");
-    expect(code({ strength: 0.5 })).toContain("const s: f32 = 0.5;");
+    const strength = (options?: { strength: number }) => {
+      const stage = astrophotoCurveStage(options);
+      const data = stage.uniformData;
+      return data.getFloat32(stage.uniformLayout.fields[0]!.offset, true);
+    };
+    expect(strength()).toBe(1);
+    expect(strength({ strength: 0.5 })).toBe(0.5);
     for (const strength of [-1, Number.NaN, Infinity]) {
       expect(() => astrophotoCurveStage({ strength })).toThrow(PostStageError);
     }
   });
 
-  describe("its shader", () => {
-    const source = astrophotoCurveStage().passes[0]!.module.code;
-    const own = source.slice(source.indexOf("fn postStage(input: PostInput)"));
+  describe("its Slang source (shaders/stages/astroCurve.slang)", () => {
+    const source = readFileSync(
+      new URL("../src/shaders/stages/astroCurve.slang", import.meta.url),
+      "utf8",
+    ).replace(/\/\/[^\n]*/g, "");
 
     it("holds the rule's constants", () => {
-      expect(own).toContain("8.0");
-      expect(own).toContain("0.004");
-      expect(own).toContain("asinh");
+      expect(source).toContain("STRETCH = 8.0");
+      expect(source).toContain("BLACK_POINT = 0.004");
+      expect(source).toContain("asinh");
     });
 
     it("works on luminance, with one ratio for all three channels", () => {
-      expect(own).toContain("0.2126, 0.7152, 0.0722");
-      expect(own).toContain("c.rgb * ratio");
+      expect(source).toContain("0.2126, 0.7152, 0.0722");
+      expect(source).toContain("c.rgb * ratio");
       // No per-channel curve.
-      expect(own).not.toMatch(/asinh\([^)]*c\.[rgb]\b/);
+      expect(source).not.toMatch(/asinh\([^)]*c\.[rgb]\b/);
     });
 
     it("adds its saturation about the curved luminance, up to 1.4 times", () => {
-      expect(own).toContain("1.0 + 0.4 * s");
-      expect(own).toContain("mix(vec3<f32>(curved)");
+      expect(source).toContain("1.0 + 0.4 * s");
+      expect(source).toContain("lerp(float3(curved)");
     });
+  });
+
+  it("is compiled: the unit is the build's, with no entry point and its own group 1", () => {
+    const { code } = astrophotoCurveStage().passes[0]!.module;
+    expect(code).toContain("@group(1)");
+    expect(code).not.toMatch(/@(vertex|fragment|compute)\s+fn postStageStub/);
+    expect(code).toContain("fn postStageBridge(");
   });
 });
