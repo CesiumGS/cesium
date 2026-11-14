@@ -572,6 +572,7 @@ export class View {
    *   stand-in for finer tiles still loading, or held back by occlusion.
    * - "stretch": how much the warp under the tile stretches its error
    *   (cividis); 1 where there is no warp.
+   * - "skirts": terrain skirts magenta, everything else shaded as normal.
    *
    * A tile's numbers (error, state, stretch) are from this view's own
    * selection; when several views of one world have a mode on, the first

@@ -2682,7 +2682,7 @@ float3 debugStretchColor(float t) {
   return lerp(DEBUG_STRETCH_RAMP[i], DEBUG_STRETCH_RAMP[i + 1u], x - float(i));
 }
 
-// The display colour (linear) of a fragment in debug mode `mode` (1 to 5).
+// The display colour (linear) of a fragment in debug mode `mode` (1 to 5; 6, "skirts", is shadeOpaque's).
 // Derivatives: call it in uniform control flow.
 float3 debugShade(SurfaceVaryings in, DrawRecord r, uint mode) {
   float2 edgeRate = fwidth(in.uv);
@@ -2735,10 +2735,16 @@ FsOut shadeOpaque(SurfaceVaryings in, bool frontFacing) {
   // display target carries them premultiplied, the scene's light the rest.
   float lined = patchLine.w;
   uint debugMode = uint(view.time.w);
-  if (debugMode != 0u) {
+  if (debugMode != 0u && debugMode != 6u) {
     // A debug view: a flat display-referred colour, the depth as drawn.
+    // (The mode is uniform, so the derivatives in debugShade are too.)
     out.color = float4(0.0);
     out.display = float4(debugShade(in, drawRecord(in.ids.x), debugMode), 1.0);
+  } else if (debugMode == 6u && (in.ids.z & SKIRT_BIT) != 0u) {
+    // The "skirts" view: a globe tile's skirt fragment, magenta. Every other
+    // fragment is shaded as normal (below, as in a view with debug off).
+    out.color = float4(0.0);
+    out.display = float4(srgbToLinear(float3(255.0, 0.0, 255.0) / 255.0), 1.0);
   } else if (s.unlit) {
     // Unlit color is display-referred (photographs: globe imagery,
     // photogrammetry such as Google's tiles): it goes to the display target,

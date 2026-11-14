@@ -3664,21 +3664,45 @@ fn shadeOpaque_0( in_8 : SurfaceVaryings_0,  frontFacing_4 : bool) -> FsOut_0
     var debugMode_0 : u32 = u32(view_0.time_0.w);
     if(debugMode_0 != u32(0))
     {
+        _S353 = debugMode_0 != u32(6);
+    }
+    else
+    {
+        _S353 = false;
+    }
+    if(_S353)
+    {
         out_0.color_19 = vec4<f32>(0.0f);
         out_0.display_2 = vec4<f32>(debugShade_0(in_8, in_8.ids_0.x, debugMode_0), 1.0f);
     }
     else
     {
-        if(s_9.unlit_1)
+        if(debugMode_0 == u32(6))
         {
-            out_0.color_19 = vec4<f32>(0.0f);
-            out_0.display_2 = vec4<f32>(mix(s_9.color_17, patchLine_0.xyz, vec3<f32>(lined_0)), 1.0f);
+            _S353 = (((in_8.ids_0.z) & (u32(2147483648)))) != u32(0);
         }
         else
         {
-            var _S355 : f32 = 1.0f - lined_0;
-            out_0.color_19 = vec4<f32>(s_9.color_17 * vec3<f32>(_S355), s_9.sceneShare_0 * _S355);
-            out_0.display_2 = vec4<f32>(patchLine_0.xyz * vec3<f32>(lined_0), lined_0);
+            _S353 = false;
+        }
+        if(_S353)
+        {
+            out_0.color_19 = vec4<f32>(0.0f);
+            out_0.display_2 = vec4<f32>(srgbToLinear_0(vec3<f32>(255.0f, 0.0f, 255.0f) / vec3<f32>(255.0f)), 1.0f);
+        }
+        else
+        {
+            if(s_9.unlit_1)
+            {
+                out_0.color_19 = vec4<f32>(0.0f);
+                out_0.display_2 = vec4<f32>(mix(s_9.color_17, patchLine_0.xyz, vec3<f32>(lined_0)), 1.0f);
+            }
+            else
+            {
+                var _S355 : f32 = 1.0f - lined_0;
+                out_0.color_19 = vec4<f32>(s_9.color_17 * vec3<f32>(_S355), s_9.sceneShare_0 * _S355);
+                out_0.display_2 = vec4<f32>(patchLine_0.xyz * vec3<f32>(lined_0), lined_0);
+            }
         }
     }
     return out_0;
