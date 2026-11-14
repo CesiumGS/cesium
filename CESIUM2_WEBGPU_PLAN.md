@@ -3836,8 +3836,9 @@ Three plans, reviewed by the owner on 2026-11-13, with their milestones folded i
 - IR-12: the writer and reader for `KHR_interactivity`'s graph JSON (vendor extension `BENTLEY_interactivity_ir`). Needs IR-2, and IR-9 for tables.
 - IR-13: the API surface (a program is the normative input; languages as entry points loaded on demand; `CustomShader` hooks take programs or WGSL functions). Needs IR-2, IR-8, IR-9 and IR-11.
 - IR-14: the inspector and debugging. Needs IR-4 and IR-8.
-- IR-15: the MaterialX front end. Needs IR-3, IR-4 and IR-8.
-- IR-G1 to IR-G6, in the owner's order after IR-9: textures and samplers, matrices, screen-space derivatives, noise, general bounded loops, structs. Each needs the one before it.
+- IR-15: the MaterialX front end, including the lowering the MaterialX plan's task 9 had (no pre-IR emitter). Needs IR-3, IR-4 and IR-8.
+- IR-G4 (noise) first among the gaps (amended at the MaterialX review). Needs IR-3, IR-4 and IR-5.
+- IR-G1, G2, G3, G5, G6 after IR-9 and IR-G4, in the owner's order: textures and samplers, matrices, screen-space derivatives, general bounded loops, structs. Each needs the one before it.
 
 **The WebGL 2 renderer** ([`docs/superpowers/plans/2026-11-13-webgl2-renderer.md`](docs/superpowers/plans/2026-11-13-webgl2-renderer.md); §13.41 toolchain answer 3). A second, simpler renderer that exercises the seam: a device per engine, a renderer per view.
 
@@ -3855,7 +3856,7 @@ Three plans, reviewed by the owner on 2026-11-13, with their milestones folded i
 - W10: further steps (shadows, moments translucency, FXAA, clips, ambient occlusion, the depth-range readback). Needs W9 and R1.
 - W11: the runner suite, the gallery's renderer switch, the handbook. Grows from W4.
 
-**Order across the three.** Profiles M1–M2, W0, W1, IR-1 and IR-10 can start together (different files). W3 waits for Profiles M2. W7 waits for IR-5, IR-7 and IR-8; W8's second half for IR-11 and IR-13. Profiles M8 lands with W3. The MaterialX live-editing example waits for IR-15 (and IR-G1 for its image nodes).
+**Order across the three.** Profiles M1–M2, W0, W1, IR-1 and IR-10 can start together (different files). W3 waits for Profiles M2. W7 waits for IR-5, IR-7 and IR-8; W8's second half for IR-11 and IR-13. Profiles M8 lands with W3. The MaterialX live-editing example (M10) waits for IR-15 and IR-G4 (and IR-G1 for its image nodes).
 
 ### M8 — The job system (decided 2026-11-13; §13.43)
 
@@ -3880,6 +3881,23 @@ The first slice is merged: `Jobs` behind `WorkerPool` (priorities, dependencies,
 - LT-6: 3D Tiles transitions (REPLACE both ways with mixed-LOD boxes, ADD in and out). Needs LT-2 and LT-5.
 - LT-7: measurement (`scripts/frameJumps.mjs`, the protocols), then the two measured options (a plain prepass pipeline, a per-sample MSAA mask). Its script needs nothing.
 - LT-8: distance-driven morph factors for terrain, only if LT-7's numbers ask.
+
+### M10 — Live MaterialX graph editing (decided 2026-11-13)
+
+[`docs/superpowers/plans/2026-11-13-materialx-live-graph.md`](docs/superpowers/plans/2026-11-13-materialx-live-graph.md), reviewed by the owner on 2026-11-13. A gallery example: a MaterialX graph edited live on a lookdev stage, four city places and seven terrain places. MaterialX stays at the edge (`packages/next/materialx/`, never imported by `src/`). At review: no pre-IR emitter (the lowering is IR-15), noise first in Cesium IR's gap order, and our own XML reader with a generated definitions table. No durations: order and dependencies only.
+
+- MX-1: the document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`). Needs nothing.
+- MX-2b: `setShader(…, { swap: "whenReady" })` on models, so the last good material stays on screen. Needs nothing.
+- MX-5a, MX-5b, MX-5c: `Tileset3D.setShader`, the globe surface's fragment hook (height, slope, aspect, water, latitude, camera distance), the quantized-mesh water mask. Need nothing.
+- MX-6: OpenPBR tier 1 in the engine material, starting with emission in nits (the 2026-11-08 decision); lobes registered as profile features. Needs nothing.
+- MX-7: OpenPBR tier 2 (fuzz, anisotropy, tangents). Needs MX-6.
+- MX-8: glTF `KHR_materials_*` onto the same material. Needs MX-6 (MX-7 for sheen and anisotropy).
+- MX-2: presets with live parameters on the stage. Needs MX-1, MX-2b, IR-15 and IR-G4.
+- MX-3: the node editor (React Flow) and rewiring, with compiles as cancellable jobs. Needs MX-2.
+- MX-4: thumbnails (a cancellable job on IR-3's evaluator) and picks. Needs MX-3.
+- MX-5d: the city and terrain places. Needs MX-3, MX-5a to MX-5c; night windows and zinc roofs need MX-6.
+- MX-10: the WebGL 2 renderer's path. Needs W7.
+- MX-11: the comparison against MaterialX's own renderer. Needs MX-3 and MX-6.
 
 ---
 
@@ -11047,10 +11065,10 @@ So tables and a search primitive turn the corridor from a program that grows wit
 3. **The GPU side** is a documented float32 approximation of float64 semantics, with df64 where a pass needs it. The CPU evaluator is the conformant one.
 4. **A Rust toolchain on development machines and CI is approved,** for our own naga crate (validation with WebGPU's capabilities, GLSL ES 3.00, SPIR-V, IR export). Rust and naga never reach a production build: the crate runs in CI and in offline translation (the WebGL 2 renderer's whole-module shaders), and naga loads in a browser only lazily, for the WGSL front end below.
 5. **WGSL is a front end, not an escape hatch:** a WGSL function, lowered through naga into Cesium IR (lazily loaded, as runtime Slang is), gets every pass (CPU evaluation, autodiff, intervals, literals to uniforms, the WebGL 2 renderer). What the IR can't yet express is refused with a diagnostic; raw WGSL that bypasses the IR is not offered.
-6. **The gap order:** textures and samplers first (imagery, MaterialX images), then matrices, then screen-space derivatives (procedural patterns need them for antialiasing), then noise, general bounded loops and structs.
+6. **The gap order:** textures and samplers first (imagery, MaterialX images), then matrices, then screen-space derivatives (procedural patterns need them for antialiasing), then noise, general bounded loops and structs. **Amended at the MaterialX review (2026-11-13): noise comes first**, ahead of textures: it needs only integer and bitwise ops, and every MaterialX example graph uses it.
 7. **Tables and the bounded search** are the first `cesium/` extensions, with the residual pass's row window, so the corridor and other table-driven warps compile to a fixed program. They also cover transform-graph Task 9's array parameters. General loops wait.
 8. **The name:** **Cesium IR** in prose, two words, as Slang IR, Tint IR and Naga IR are written; **`cesium-ir`** as the identifier (the JSON format and the package). No abbreviation: "CIR" is taken by ClangIR and Codon's IR.
-9. **Vendor extensions we define use the `BENTLEY_` prefix** (owner, 2026-11-13): Cesium IR's extension in `KHR_interactivity` files is `BENTLEY_interactivity_ir`. Existing extensions the engine reads, such as `CESIUM_primitive_outline`, keep their names. Where Cesium IR lives (`src/ir/` and `@cesium/next/ir` until IR-13), runtime Slang through Cesium IR, and MaterialX parsing (`DOMParser`, JsMaterialXCore only when needed) are decided in the implementation plan.
+9. **Vendor extensions we define use the `BENTLEY_` prefix** (owner, 2026-11-13): Cesium IR's extension in `KHR_interactivity` files is `BENTLEY_interactivity_ir`. Existing extensions the engine reads, such as `CESIUM_primitive_outline`, keep their names. Where Cesium IR lives (`src/ir/` and `@cesium/next/ir` until IR-13), runtime Slang through Cesium IR, and MaterialX parsing are decided in the implementation plan. (MaterialX parsing, amended at the MaterialX review: our own XML reader and a generated definitions table; JsMaterialXCore only upgrades documents older than 1.39.)
 
 #### Naming
 
@@ -11367,6 +11385,7 @@ Each item moves existing code onto `Jobs` (priority, cancellation, an apply step
 - The refinement plan: progressive jobs report as refinement sources.
 - The transform-graph plan: warp fits (JP-5) and the occluder walk (JP-4).
 - The LOD transitions plan: LT-4's retargeting recompute is a job (decode workers' group, prioritised by screen error, cancelled by its give-up rule, a release or a reversal).
+- The MaterialX plan: a rewire's compile and each edit's thumbnails are cancellable jobs; a newer edit cancels an older one.
 
 ## 14. Follow-ups
 

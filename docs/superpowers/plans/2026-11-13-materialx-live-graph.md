@@ -1,6 +1,6 @@
 # Live MaterialX graph editing: plan for the gallery example
 
-**Status (2026-11-13):** a plan, not started. It waits for the owner's review in the main session.
+**Status (2026-11-13):** reviewed and merged. At review the owner dropped the pre-IR emitter (the example goes through Cesium IR's IR-15, with noise first in the gap order) and chose our own XML reader with a generated definitions table (see "Decided at review"). Its tasks are in `CESIUM2_WEBGPU_PLAN.md` §6, M10. Nothing is built yet.
 
 **Goal:** a gallery example where the user edits a MaterialX material graph and sees it update live on a model, on a city and on terrain. Parameter edits are instant. Rewiring recompiles in the background while the last good material stays on screen.
 
@@ -14,11 +14,18 @@
 - Style literals become uniforms, so a value edit needs no new pipeline. The same rule applies to material graphs.
 - Polished, deliberate UI. Build the design in context; the owner reviews by clicking around. No separate mockup gate.
 
+**Decided at review (owner, 2026-11-13, after Cesium IR was decided):**
+
+- **No pre-IR emitter.** The example lowers through Cesium IR (IR-15): WGSL from IR-4, GLSL ES from IR-5, float64 CPU evaluation from IR-3, literals as uniforms from IR-8. A second emitter would duplicate those and their tests.
+- **Noise first in Cesium IR's gap order.** IR-G4 (noise) needs only the vocabulary's integer and bitwise ops, not textures, matrices or derivatives, so it moves to the front of the gap list. The places' graphs all need it. The gap milestones keep their labels.
+- **Our own XML reader and a generated definitions table** (section 4), because `DOMParser` doesn't exist in workers or Node. This replaces the Cesium IR plan's `DOMParser` answer (its question 4). JsMaterialXCore loads only to upgrade documents older than 1.39.
+- **While IR-15 isn't ready,** the document layer, the editor UI and the engine work (swap when ready, tileset and globe shader hooks, the water mask, emission in nits, OpenPBR tiers, glTF extensions) proceed: none of it needs the IR.
+
 **Decided while planning (owner, 2026-11-13):**
 
 1. **Scenes:** a lookdev stage, a city (OSM Buildings) and terrain. Terrain needs a custom-shader hook on the globe surface, which this plan adds.
 2. **Node editor:** React Flow (`@xyflow/react`) is approved as a new dependency.
-3. **Before the core IR lands:** a small graph-to-WGSL (and JS) emitter in the MaterialX module, behind a back-end interface. It is deleted when the core IR back end passes the same tests.
+3. ~~Before the core IR lands: a small graph-to-WGSL (and JS) emitter.~~ **Superseded at review (owner, 2026-11-13):** no pre-IR emitter. Cesium IR was decided after this answer, and its IR-15 is the MaterialX front end. See "Decided at review".
 4. **OpenPBR:** extend the engine's material, not only map onto today's. Tiers 1 and 2 belong to this plan. Tier 3 is listed below for a later plan.
 5. **Emission:** support both display-relative and physical (nits). The switch was already decided on 2026-11-08 (CESIUM2_WEBGPU_PLAN.md, "Emission in nits") but isn't built: today `gltfParse.ts` ignores `KHR_materials_emissive_strength` and `surface.slang` treats all emission as display-relative. This plan builds it first (task 6a).
 6. **glTF:** the `KHR_materials_*` extensions load into the same extended material, as a milestone of this plan.
@@ -73,6 +80,17 @@
 
 React Flow is chosen (owner, 2026-11-13). It loads only in the example's lazy chunk, never in the engine.
 
+**MaterialX's own shader generators** (checked 2026-11-13 on the repository's `main`; owner asked at review):
+
+- MaterialX has generators for GLSL, ESSL, MSL, OSL, MDL, Vulkan GLSL and **Slang** (`MaterialXGenSlang`, with `MaterialXRenderSlang`; the release notes first mention Slang at v1.39.5). Its **"WGSL" generator** is a flavour of the Vulkan GLSL generator ("WGSL Flavor of Vulkan GLSL shader generator"): GLSL meant to be translated to WGSL, not WGSL itself.
+- The JavaScript build exposes all of them (`JsMaterialXGenSlang`, `JsMaterialXGenWgsl`, `JsMaterialXGenEssl` and others in `source/JsMaterialX`).
+- **Not the runtime path,** for these reasons:
+  - **Whole shaders with MaterialX's own lighting.** The generators emit complete shaders with MaterialX's closures and BSDF code. We need the pattern graph only, bound onto the engine's material and lighting (section 5), so the same graph lights like everything else in the scene.
+  - **No CPU evaluation.** Thumbnails and picks need the graph evaluated in float64 on the CPU (section 6). Generated text gives none.
+  - **Compilers at runtime.** Live Slang would load the MaterialX generator wasm and the Slang compiler on every rewire, which the owner ruled out for styling (§13.41: compiler-free, Slang offline or for post stages only). The "WGSL" flavour would need a GLSL-to-WGSL translator in the browser.
+  - **One path for both renderers.** Cesium IR emits WGSL and GLSL ES from one program, with literals already turned into uniforms.
+- **Where they help:** as a reference. MaterialX's generated code is the authors' own implementation of each node, so it can check IR-15's per-node results offline (dev and CI only, with the native Slang compiler or the GLSL output), and task 11 compares whole materials against MaterialXView.
+
 **Prior art in the browser.**
 
 - **MaterialXLab** (Bernard Kwok): a web graph editor that wraps LiteGraph and runs the full MaterialX WebAssembly build. Its layout puts the graph on the left, the view and a property editor on the right. Its repository returned 404 on 2026-11-13, so its licence is unchecked. UX prior art only.
@@ -86,7 +104,7 @@ React Flow is chosen (owner, 2026-11-13). It loads only in the example's lazy ch
 - **Pipelines** (`src/scene/ShaderCache.ts`): one entry per distinct shader source, kept for the device's life, so returning to an earlier graph costs nothing. The code says 50–110 ms per new shader in the background. Opaque one-sided content with shadows and AO needs 4 of 19 pipelines. Until a pipeline is ready, **content draws with the engine's default material**, not the previous shader. `Engine.compileShader` compiles all 19 (seconds on a cold engine, says `examples/csg`); `Engine.whenReady(view, { draws })` waits for only the pipelines in use, and `examples/csg` adds a new solid hidden and swaps it in after that wait.
 - **Where shaders attach:** `ModelPlacement.setShader` changes a model's shader at any time. `Tileset3D` takes `customShader` only as a constructor option. The globe has no custom-shader hook.
 - **Picks** carry a `PickDomain` for meshes: the triangle and its barycentrics (`src/scene/pickDomain.ts`), so a material input (texture coordinate, normal, position) can be interpolated exactly on the CPU, if the mesh's CPU attributes are still held.
-- **An IR already exists for transforms** (`src/transform/ir.ts`): a hash-consed scalar DAG with named parameters, float64 evaluation, autodiff, intervals and a WGSL back end. It has no textures, vectors as values, integers or loops. It is not the core IR, which is undecided.
+- **An IR already exists for transforms** (`src/transform/ir.ts`): a hash-consed scalar DAG with named parameters, float64 evaluation, autodiff, intervals and a WGSL back end. It has no textures, vectors as values, integers or loops. **Cesium IR** (§13.42, decided after this plan was drafted) replaces it and is the core IR every function goes through, MaterialX included (IR-15).
 - **Gallery:** examples are modules under `packages/next/examples/<slug>/` registered in `examples/index.ts`. `run` may return a React panel. The **Slang playground** (`examples/slang-playground`) is the closest sibling: a lookdev stage (no globe, a background colour, procedural studio light, a key light, orbit controls), a model list including Khronos samples loaded from GitHub, and "keep the last shader that compiled".
 
 ## 1. The experience
@@ -211,7 +229,7 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 - **Document model:** plain typed objects: `materialx` (version, colorspace), `nodegraph`, nodes, `input` (type, value, `nodename`, `nodegraph` + `output`, `interfacename`, `colorspace`, `uniform`, UI attributes), `output`, `surfacematerial`. `look`, `materialassign`, `xi:include` and anything unknown are kept as opaque elements, so they round-trip, and are flagged "ignored".
 - **Writer:** writes the model back with stable attribute order. Round-trip tests: every example material at v1.39.5 reads and writes to a semantically equal document.
 - **Node definitions:** `scripts/materialxDefs.mjs` reads `stdlib_defs.mtlx`, `stdlib_ng.mtlx` and the bxdf definitions at the pinned tag v1.39.5 and writes a compact generated table: each nodedef's category, group, inputs (name, type, default, enum values) and outputs, plus the node graph implementations of the 44 categories that have them. Checked in as generated data with Apache-2.0 attribution. Estimated 60–80 KB, about 10 KB compressed. Node definitions resolve by MaterialX's rule (category, output type, input types).
-- **Versions:** 1.39 documents are read. Older versions are refused with a message naming the version (MaterialX's own upgrade code isn't ported).
+- **Versions:** 1.39 documents are read directly. Older versions are upgraded by JsMaterialXCore (the official library's WebAssembly build, about 1.1 MB), loaded on demand only for such a document and never in the main chunk; where it can't load, the document is refused with a message naming the version.
 - **Colour spaces:** values and images carry `colorspace` (document default, then per input). Supported: `lin_rec709` (the engine's), `srgb_texture`, `acescg`, `g22_rec709`, `lin_ap1`; conversion is folded into the lowering. Others are refused with a message.
 
 **Supported first** (subset A, task 2; about 70 categories counting those that expand from MaterialX's graphs):
@@ -220,7 +238,7 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 - **Adjustment and compositing:** mix, remap, range, smoothstep, contrast, saturate, luminance, rgbtohsv, hsvtorgb, hsvadjust, colorcorrect; plus, minus, difference, burn, dodge, screen, overlay.
 - **Conditional:** ifgreater, ifgreatereq, ifequal, switch, and, or, not, xor.
 - **Geometric and application:** position, normal, texcoord (index 0), geomcolor, geompropvalue (named attributes, and the terrain names), time.
-- **Procedural:** noise2d, noise3d, fractal2d, fractal3d, cellnoise2d, cellnoise3d, worleynoise2d, worleynoise3d, checkerboard, ramp, ramp4, ramplr, ramptb, splitlr, splittb, randomfloat, randomcolor. Noise is ported from MaterialX's GLSL library (Apache-2.0) to WGSL and JS. Its hash is integer arithmetic (`mx_hash_int`, Jenkins), which JS reproduces exactly with `Math.imul` and `>>> 0`, so CPU and GPU agree except for float rounding.
+- **Procedural:** noise2d, noise3d, fractal2d, fractal3d, cellnoise2d, cellnoise3d, worleynoise2d, worleynoise3d, checkerboard, ramp, ramp4, ramplr, ramptb, splitlr, splittb, randomfloat, randomcolor. Noise is written as Cesium IR library functions (IR-G4), after MaterialX's GLSL library (Apache-2.0). Its hash is integer arithmetic (`mx_hash_int`, Jenkins), which the float64 evaluator reproduces exactly (`Math.imul` and `>>> 0`), so CPU and GPU agree except for float rounding.
 - **Texture:** image, tiledimage, triplanarprojection. At most 4 images per material (the `CustomShader` limit).
 - **Surfaces:** open_pbr_surface, standard_surface (through MaterialX's `standard_surface_to_open_pbr` graph), gltf_pbr, surface_unlit, surfacematerial.
 
@@ -235,10 +253,8 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 ```text
 .mtlx text ──read──▶ document ──flatten──▶ flat graph ──lower──▶ core IR ──▶ WGSL         (WebGPU renderer)
                        ▲  │                (one surface,                 ├─▶ GLSL ES 300  (WebGL 2 renderer)
-                       │  │                 typed, literals              └─▶ JS evaluator (thumbnails, picks)
-             editor commands                as uniform slots)
-                                                   │
-                                                   └──(until the core IR lands)──▶ pre-IR emitter: WGSL + JS
+                       │  │                 typed, literals              └─▶ float64 evaluator (thumbnails, picks)
+             editor commands                as uniform slots)        (Cesium IR: IR-15 lowers; IR-3, IR-4, IR-5, IR-8)
 ```
 
 **Where the code lives.** MaterialX stays at the edge: a new entry `packages/next/materialx/` (published as `@cesium/next/materialx`, like `widgets`), never imported by `src/`. It holds the reader and writer, the document model, the generated definitions, flattening, lowering and the surface binding. The example (`examples/materialx-graph/`) holds only the UI and scenes. `scripts/checkBundle.mjs` gains a check that no `src/` chunk imports `materialx/`.
@@ -267,33 +283,16 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 - tilesets: a new `Tileset3D.setShader` (task 5a), since `customShader` is constructor-only today;
 - terrain: the new globe surface hook (task 5b).
 
-**The back-end seam.** One interface, so the back end can change without touching the editor:
+**Cesium IR is the back end** (decided at review). The lowering is IR-15 of the Cesium IR plan: the flat graph becomes a Cesium IR program through IR-1's builder, with each unconnected input a literal slot. The IR's passes do the rest:
 
-```ts
-interface MaterialBackend {
-  /** Lowers a flat graph; throws LoweringError naming the node and why. */
-  compile(graph: FlatGraph): CompiledMaterial;
-}
-interface CompiledMaterial {
-  wgsl: string;                       // fragmentMain and helpers
-  glsl?: string;                      // GLSL ES 300, for the WebGL 2 renderer
-  uniforms: UniformSlot[];            // key, type, initial value
-  textures: TextureSlot[];            // at most 4
-  features: LobeFeatures;             // which lobes are on (pipeline choice)
-  evaluate(inputs: PointInputs, values: Float64Array): NodeValues;  // CPU, float64
-}
-```
+- IR-8 turns literal slots into uniforms, so a value edit is a uniform write;
+- IR-4 emits WGSL for the `CustomShader`'s `fragmentMain`, IR-5 GLSL ES for the WebGL 2 renderer;
+- IR-3's float64 evaluator computes thumbnails and picks on the CPU;
+- the program's hash keys the shader cache, so undo to a graph seen before costs nothing.
 
-**The pre-IR emitter** (decision 3): a table per supported node with a WGSL snippet and a JS snippet over typed operands, and a topological walk that names each output once. Uniform slots become `uniforms.<slot>`. It is the first `MaterialBackend`. It covers subset A only, has no optimizer, and generates readable code. **Checking its two halves agree:** the fake GPU can't run shaders, so unit tests check the JS half against hand-computed values per node, CI validates every preset's WGSL with naga (approved for CI on 2026-11-13), and one headless browser check per task compares a material readback against the JS half.
+Closures never enter the IR: the surface binding above maps the surface node onto the material struct, outside the program. MaterialX ops map onto the vocabulary through IR-15's table; noise is IR-G4's library functions; images wait for IR-G1. A node the IR can't express yet is refused with IR-15's diagnostic, shown on the node.
 
-**The core IR back end** (task 9) replaces it. Its dependency on the core IR spike (branch from "Core IR spike: CesiumIR vs adopting a standard", in progress) is marked here:
-
-- **If the spike picks CesiumIR** (a minimal jaxpr-like IR with ops borrowed from a standard vocabulary): the lowering emits CesiumIR through its builder. The passes that the core IR provides (literals to uniforms, rate analysis, float64 CPU evaluation, WGSL and GLSL ES back ends) replace the emitter's tables. MaterialX ops map one to one where the IR borrows them; noise and texture lookups are library functions in the IR. The IR needs typed constant tables, bounded loops and texture lookups, which are already on its requirements list (2026-11-13, "Requirements from real warps").
-- **If it picks ONNX's graph format with our passes:** the same lowering targets an ONNX-shaped graph through the same builder interface. MaterialX's node graphs are close to ONNX graphs already (typed nodes, named inputs). Custom ops cover noise and textures.
-- **If it picks naga's IR:** the lowering emits WGSL functions (the pre-IR emitter grows into this) and naga validates them and translates to GLSL ES. CPU evaluation still needs a JS evaluator, because CPU evaluation is a requirement (owner, 2026-11-13): the emitter's JS half stays.
-- **If no core IR is ready when the example must ship:** the pre-IR emitter stays the back end, with a GLSL ES snippet per node added for the WebGL 2 renderer. The deletion in task 9 waits.
-
-The builder interface the lowering targets (`const`, `uniform`, `input`, `op`, `call`, `select`, `loop`) is written in task 2 for the emitter, so each of these is a new implementation of one interface, not a new front end.
+**Compiles are jobs** (§13.43): a rewire's pipeline build is a cancellable `Jobs` job, and a newer edit cancels an older one, as the Cesium IR plan says for live edits.
 
 ## 6. CPU evaluation: thumbnails and picks
 
@@ -301,11 +300,11 @@ The builder interface the lowering targets (`const`, `uniform`, `input`, `op`, `
 
 - Each pattern node shows a 48 × 48 swatch (96 × 96 on high-DPI screens) of its output: a float as grey, a colour as itself, a vector as its components mapped to RGB.
 - **The swatch is a sphere:** each pixel has the sphere's analytic position, normal and texture coordinate, so 3D patterns read as they would on a ball and 2D ones as they would on its UVs. A toggle switches to a flat UV square.
-- **One evaluation fills every thumbnail:** the JS back end evaluates the whole graph once per pixel and records each node's value. 2,304 pixels (48²) per edit, in a worker.
+- **One evaluation fills every thumbnail:** Cesium IR's float64 evaluator (IR-3) runs the whole program once per pixel and records each node's value. 2,304 pixels (48²) per edit, as a `Jobs` job on a worker: a newer edit cancels an older thumbnail job, and its apply step updates the swatches.
 - **Budget:** under 30 ms for a 50-node graph on an M2, refreshed after the GPU update (thumbnails never delay the view). During a value drag, thumbnails downstream of the edited node refresh at 24 × 24 and sharpen when the drag ends.
 - **Images** are sampled on the CPU from a decoded copy (`ImageBitmap` to pixels once per image), bilinear, matching the GPU's sampler settings.
 - **Surface nodes** show no swatch; the view is their preview.
-- **Why CPU and not GPU:** a GPU swatch per node would need a shader per node output, so a pipeline per node and a compile per rewire per node. The CPU path costs no pipelines, and it exercises the JS evaluator that picks and the core IR need anyway.
+- **Why CPU and not GPU:** a GPU swatch per node would need a shader per node output, so a pipeline per node and a compile per rewire per node. The CPU path costs no pipelines, and it exercises the float64 evaluator that picks need anyway.
 
 **Picks.**
 
@@ -325,6 +324,7 @@ The builder interface the lowering targets (`const`, `uniform`, `input`, `op`, `
 - **Tables:** directional albedo of the coat GGX over (μ, roughness, IOR), as a small texture in the lighting bind group; the existing multiple-scattering table stays for the base.
 - **Image-based lighting:** one more prefiltered fetch for the coat.
 - **Cost control:** per-lobe feature bits in the pipeline key. A material with coat weight 0 compiles no coat code. Weights are uniforms.
+- **Lobes are profile features** (engine profiles plan, added at review): coat, thin film, fuzz and anisotropy are entries in the profile catalog, so a tier or renderer that drops one says so in `view.support`, and the example's "not drawn" marks read that report.
 - **Tests:** a white-furnace test (energy within 1% of the reference for each lobe alone and in layers) on the existing IBL reference path (`src/lighting/IblReference.ts`), and the default-material parity unchanged.
 
 **Tier 2 (task 7):**
@@ -346,85 +346,85 @@ The builder interface the lowering targets (`const`, `uniform`, `input`, `op`, `
 
 ## Tasks
 
-Sizes: S is half a day of agent work, M a day, L two days.
+No durations (owner, 2026-11-13): order and dependencies only.
 
-### Task 1: the MaterialX document layer (M)
+### Task 1: the MaterialX document layer
 
 - `packages/next/materialx/`: XML reader and writer, document model, `scripts/materialxDefs.mjs` and its generated table, definition resolution, flattening (steps 1–7 of section 5) with no back end.
 - The package entry and the `checkBundle` rule that `src/` never imports it.
 - **Assets through `npm run setup`** (owner, 2026-11-13): `scripts/materialxAssets.mjs`, after `scripts/stepSamples.mjs`. It fetches MaterialX's v1.39.5 source archive from GitHub, pinned by SHA-256, and keeps only what the example and tests use: the example materials, their images and `shaderball.glb`, each pinned too, in a store outside the repository (`~/.cesium-bench/materialx/1.39.5`, or `MATERIALX_ASSETS_DIR`), with MaterialX's licence and NOTICE beside them. The dev server serves it at `/materialx-assets/` (`serveDirectory` in `vite.config.ts`). Never committed, never bundled. Without it the stage falls back to a sphere and the presets list says what to run.
 - Tests: round-trip of every v1.39.5 example material (from the store; skipped with a message when setup hasn't run), flattening of marble and brick to expected slot lists, refusal messages with line and column.
 
-### Task 2: the pre-IR back end and parameter edits on presets (L) — works before the core IR
+### Task 2: parameter edits on presets (needs IR-15 and IR-G4)
 
-- **2a.** The builder interface; the pre-IR emitter (WGSL and JS) for subset A; noise ported from MaterialX; the surface binding onto today's `MaterialOutput`; `CompiledMaterial` to `CustomShader`.
-- **2b.** Engine: `setShader(next, { swap: "whenReady" })` on `ModelPlacement`, keeping the current shader until `next`'s pipelines for this content's passes are ready. A test on the fake GPU that no frame draws the default material during a swap.
+- **2a.** The surface binding onto today's `MaterialOutput`, and a Cesium IR program (from IR-15) to a `CustomShader`. The lowering itself is IR-15, in the Cesium IR plan.
+- **2b.** Engine (needs no IR; can start at once): `setShader(next, { swap: "whenReady" })` on `ModelPlacement`, keeping the current shader until `next`'s pipelines for this content's passes are ready. A test on the fake GPU that no frame draws the default material during a swap.
 - **2c.** The example skeleton (`examples/materialx-graph/`, registered in `examples/index.ts`): the stage scene with the shaderball, the presets strip, and the **material interface panel** (parameters only, no node editor). Value edits go through `setUniform`.
 - **Done when:** marble, brick and wood draw on the shaderball, and every interface value edits live with no compile (the shader cache's compile count stays flat during a drag; tested).
 
-### Task 3: the node editor and rewiring (L)
+### Task 3: the node editor and rewiring
 
 - React Flow added (approved); the document-to-view mapping; commands with undo; the custom node component; palette with search; type-checked connections; subgraph entry; auto-layout; open, download and link.
-- Rewiring through the pre-IR back end with swap-when-ready, the compile chip, inline errors and "not supported yet".
+- Rewiring through Cesium IR with swap-when-ready, the compile chip, inline errors and "not supported yet".
 - All three layouts (desktop, tablet, phone) built in context, then the owner clicks around; one polish round after.
 - Latency measured with the inspector recorder (section 2's targets), written into this plan.
 
-### Task 4: thumbnails and picks (M)
+### Task 4: thumbnails and picks
 
-- Thumbnails in a worker from the JS back end, with the drag-time resolution drop.
+- Thumbnails as a cancellable `Jobs` job on Cesium IR's float64 evaluator, with the drag-time resolution drop.
 - Picks: the CPU attribute check, the opt-in to keep attributes if needed, the readout.
 
-### Task 5: city and terrain (L)
+### Task 5: city and terrain
 
 - **5a.** Engine: `Tileset3D.setShader(shader, { swap: "whenReady" })`.
 - **5b.** Engine: a fragment hook on the globe surface (`Globe.setShader`), with the model contract's inputs plus `height`, `slope`, `aspect`, `water`, `latitude`, `camera_distance` and the imagery colour as named inputs. The same `camera_distance` and `latitude` go to model and tileset shaders.
 - **5c.** Engine: the water mask. Request quantized-mesh extension 2 (`extensions=octvertexnormals-watermask` in the `Accept` header, as 1.x does), decode the per-tile mask (one byte for all land or all water, or 256 × 256), upload it as a per-tile texture, sample it in the hook. In the format, 0 is land and 255 is water; the graph input reads 0 to 1.
 - **5d.** The example's city and terrain scenes: the eleven places of section 1 with their cards, camera views and graphs, the scene-control sliders, and the frame-rate check per place. Night windows and zinc roofs wait for task 6 and show a "needs task 6" badge until then. Larger than the other parts: may split into city (5d) and terrain (5e) when it starts.
 
-### Task 6: OpenPBR tier 1 in the engine (L)
+### Task 6: OpenPBR tier 1 in the engine
 
 - **6a.** Emission in nits and display-relative (the 2026-11-08 decision), with its tests and the playground presets' `emission: "display"`.
 - **6b.** The extended material, the tier 1 lobes, the coat albedo table, feature bits, the white-furnace test.
 - **6c.** The OpenPBR binding moves from today's fields to the new ones; "not drawn" marks drop for tier 1 inputs.
 - Independent of tasks 3–5 (different files): can run alongside them.
 
-### Task 7: OpenPBR tier 2 (M)
+### Task 7: OpenPBR tier 2
 
 - Fuzz with its tables, anisotropy, tangents in the fragment contract, coat normal and tangent. The `tangent`, `bitangent`, `normalmap` and `bump` nodes join subset A.
 
-### Task 8: glTF material extensions onto the same model (M)
+### Task 8: glTF material extensions onto the same model
 
 - `gltfParse.ts` reads `KHR_materials_clearcoat`, `specular`, `ior`, `sheen`, `iridescence`, `anisotropy` and `emissive_strength` into the extended material.
 - `gltf_pbr` maps one to one.
 - Test content: Khronos's sample models for each extension (ClearCoatTest, SpecularTest, IORTestGrid, SheenChair, IridescenceLamp, AnisotropyBarnLamp, EmissiveStrengthTest), loaded from GitHub like the playground's.
 - After task 6 (7 for sheen and anisotropy).
 
-### Task 9: the core IR back end (M, after the spike)
+### Task 9: folded into IR-15
 
-- The lowering targets the core IR through the builder interface; WGSL, GLSL ES and JS come from the IR's back ends.
-- The same tests as the emitter, then the pre-IR emitter is deleted (decision 3).
-- If the spike chooses differently, section 5's fallback applies and this task is rewritten.
+The lowering onto the core IR is IR-15 of the Cesium IR plan (decided at review). There is no emitter to delete.
 
-### Task 10: the WebGL 2 renderer (S, after its plan)
+### Task 10: the WebGL 2 renderer (after W7)
 
 - The material's GLSL ES path on the WebGL 2 renderer, and its support report read by the example's "not drawn" marks.
 
-### Task 11: checking against MaterialX's own renderer (S)
+### Task 11: checking against MaterialX's own renderer
 
 - A dev script renders each preset in MaterialXView (in a browser, by hand or headless when the machine allows) with a matching environment and camera, saved outside the repository. A comparison by FLIP against our stage, reported per preset. Differences are expected where the engine approximates (EON against MaterialX's diffuse, real-time layering against MaterialX's); the report says which lobe each difference comes from.
 
-## Order and size
+## Order
+
+The overall plan names these tasks MX-1 to MX-11 (§6, M10), with the parts that need no IR (MX-1, MX-2b, MX-5a to MX-5c, MX-6) listed first.
 
 ```text
-1 ──▶ 2 ──▶ 3 ──▶ 4
-       │     └──▶ 5
-       └────────────────▶ 9 (after the core IR spike) ──▶ 10 (after the WebGL 2 plan)
+IR-15 + IR-G4 ─┐
+1 ─────────────┴─▶ 2 ──▶ 3 ──▶ 4
+                         └──▶ 5 (5a, 5b, 5c can start at once; 5d needs 3)
 6 ──▶ 7
 6 ──▶ 8
-(6 can start at once; 11 after 3 and 6)
+2b, 5a, 5b, 5c, 6 and 1 can start at once; 10 after W7; 11 after 3 and 6
 ```
 
-About 12–14 agent days in all. The first visible result (presets with live parameters on the stage) is task 2, before the core IR.
+The first visible result (presets with live parameters on the stage) is task 2, once IR-15 and IR-G4 land. Until then the engine tasks and the document layer proceed.
 
 ## Risks
 
@@ -432,7 +432,7 @@ About 12–14 agent days in all. The first visible result (presets with live par
 - **Uniform count:** a large graph may have hundreds of slots. 16 bytes each, 100 nodes × 4 inputs is 6.4 KB, well within WebGPU's 64 KB uniform binding minimum. Past that, slots move to a storage buffer.
 - **The 4-texture limit** bites the tiled-material presets (brass, wood have several images). If it does, raising `MAX_TEXTURES` for material shaders or packing channels is a small engine task.
 - **Noise parity** between float64 JS and float32 WGSL: the integer hash is exact, but gradients and fades round differently. Thumbnails and picks may differ from the view in the last bits; tests use tolerances.
-- **The core IR's timing:** if the spike's choice lands late, the pre-IR emitter lives longer than planned. Its scope stays subset A until then.
+- **Waiting on Cesium IR:** the example's first picture needs IR-15 and IR-G4 (and IR-G1 for image nodes). The engine tasks and the document layer don't, so they go first.
 - **OpenPBR approximation drift:** real-time layering won't match MaterialX's reference renders exactly. Task 11 makes the differences visible and attributes them.
 
 ## Open questions for the owner
@@ -454,3 +454,5 @@ None left. Task 5d flags the tuned camera views and whether the Netherlands' hei
 | Terrain inputs?                                | Hook with height, slope and aspect; and the water mask would be useful.                    |
 | Vendor or fetch the MaterialX assets?          | Fetching with `npm run setup` is fine.                                                     |
 | Which places?                                  | Places that look cool and show what custom terrain shading enables: section 1, "Places".   |
+| At review: keep the pre-IR emitter?            | No. Lower through Cesium IR (IR-15); noise moves first in the gap order.                   |
+| At review: `DOMParser` or our own reader?      | Our own reader and generated table; JsMaterialXCore only for pre-1.39 upgrades.            |
