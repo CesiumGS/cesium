@@ -101,6 +101,12 @@ export interface DrawnTile {
    * horizontal stretch taken as 1 (`terrainDrawnError`).
    */
   readonly slopeMax?: number;
+  /**
+   * Under a height scale on terrain: the drawn surface alone, without the
+   * skirts `volume` reaches (a curtain hides cracks and needs no detail).
+   * Selection measures its distance to this, and culls with `volume`.
+   */
+  readonly surface?: TileVolume;
   /** The fit's error (m), added to the stretched geometric error. */
   fit: number;
 }
@@ -110,6 +116,8 @@ interface Carried {
   readonly volume: TileVolume;
   readonly sigmaMax: number;
   readonly slopeMax?: number;
+  /** `DrawnTile.surface`. */
+  readonly surface?: TileVolume;
   readonly remake?: () => Carried;
 }
 
@@ -253,6 +261,7 @@ function carry(volume: TileVolume, warp: TileWarp, below = 0): Carried {
       image.max,
     ]);
     return {
+      surface: { kind: "sphere", sphere: sphereFromObb(drawn.obb) },
       volume: {
         kind: "sphere",
         // Skirts hang below the region's lowest height, and the map stretches
@@ -314,8 +323,23 @@ function carry(volume: TileVolume, warp: TileWarp, below = 0): Carried {
  */
 function skirtBelow(tile: Tile): number {
   const g = tile.globe;
-  const level = (g?.upsampledFrom?.globe ?? g)?.refit?.levelError;
-  return level === undefined ? 0 : 5 * level;
+  const own = g?.refit?.levelError;
+  if (g === undefined || own === undefined) {
+    return 0;
+  }
+  const data = g.upsampledFrom?.globe;
+  const outer = data?.refit?.levelError;
+  if (data === undefined || outer === undefined) {
+    return 5 * own;
+  }
+  // Only an edge on the data tile's boundary hangs the data tile's depth
+  // (`skirtDepths`); the inner edges hang the tile's own.
+  const span = 2 ** (g.level - data.level);
+  const x0 = data.x * span;
+  const y0 = data.y * span;
+  const onBoundary =
+    g.x === x0 || g.y === y0 || g.x === x0 + span - 1 || g.y === y0 + span - 1;
+  return 5 * (onBoundary ? outer : own);
 }
 
 /**
@@ -342,7 +366,7 @@ export function drawnTile(tile: Tile, warp: TileWarp): DrawnTile {
     tile.drawnCache = cache;
   }
   if (!cache || cache.version !== warp.version || cache.basis !== basis) {
-    const { volume, sigmaMax, slopeMax, remake } = carried(
+    const { volume, sigmaMax, slopeMax, surface, remake } = carried(
       basis,
       warp,
       skirtBelow(tile),
@@ -356,6 +380,7 @@ export function drawnTile(tile: Tile, warp: TileWarp): DrawnTile {
         volume,
         sigmaMax,
         ...(slopeMax !== undefined && { slopeMax }),
+        ...(surface && { surface }),
         fit: 0,
       },
       ...(remake && { remake }),
@@ -364,12 +389,13 @@ export function drawnTile(tile: Tile, warp: TileWarp): DrawnTile {
     tile.drawnCache = cache;
   } else if (cache.scaleVersion !== scaleVersion) {
     cache.scaleVersion = scaleVersion;
-    const { volume, sigmaMax, slopeMax, remake } =
+    const { volume, sigmaMax, slopeMax, surface, remake } =
       cache.remake?.() ?? carried(basis, warp, skirtBelow(tile));
     cache.drawn = {
       volume,
       sigmaMax,
       ...(slopeMax !== undefined && { slopeMax }),
+      ...(surface && { surface }),
       fit: cache.drawn.fit,
     };
     cache.remake = remake;
