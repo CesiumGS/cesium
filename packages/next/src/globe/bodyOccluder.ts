@@ -58,6 +58,10 @@ const R_MIN = Math.min(...RADII);
 const EXACT_MS = 2;
 /** A triangle's chord dips by up to this times the standard sagitta under the drawn (stretched) surface: margin for the warp's stretch along the surface. */
 const CHORD_MARGIN = 1.2;
+/** The camera's cell for a kept cap, rad. */
+const CELL = 0.02;
+/** The ellipsoid's flat tiles stand for their subtrees from this level (finer ones only raise a bound). */
+const FLAT_LEVELS = 6;
 
 interface Options {
   readonly root: Tile;
@@ -67,12 +71,19 @@ interface Options {
   enabled(): boolean;
   /** Occluders sharing the anchor that bound the same surface (the ellipsoid under terrain). */
   partners?(): readonly BodyOccluder[];
+  /** Time for exact bounds in a call, ms (default 2). */
+  readonly exactMs?: number;
+  /** Changes whenever tiles load, unload or appear (what a kept bound was made from). Absent: nothing is kept between calls. */
+  signature?(): number;
 }
 
 interface Exact {
   readonly key: string;
   readonly heights: TerrainHeights;
+  /** With the skirts' bottoms: what the tile drawn by itself reaches. */
   readonly value: number;
+  /** Its surface without them: what finer tiles under it are held to. */
+  readonly tops: number;
 }
 
 interface Prepared {
@@ -86,6 +97,10 @@ export class BodyOccluder implements Occluder {
   private readonly bounds = new WeakMap<Tile, Exact>();
   private readonly prepared = new Map<number, Prepared>();
   private spent = 0;
+  /** A bound was left to a coarser one for want of time this call: nothing is kept. */
+  private incomplete = false;
+  private global: { key: string; signature: number; value: number } | undefined;
+  private readonly caps = new Map<number, { cell: string; scale: number }>();
   private keyNow = "";
 
   constructor(private readonly options: Options) {}
@@ -150,20 +165,58 @@ export class BodyOccluder implements Occluder {
       return undefined;
     }
     this.keyNow = `${warp.version}:${warp.scaleVersion ?? 0}`;
-    this.spent = performance.now() + EXACT_MS;
+    const signature = this.options.signature?.() ?? NaN;
+    this.spent = performance.now() + (this.options.exactMs ?? EXACT_MS);
+    this.incomplete = false;
     const root = this.options.root;
     const camera = view.position;
     const c = scaledNorm(camera);
-    const global = this.bound(root, warp, undefined, undefined);
-    if (!(c > global)) {
+    // The global bound only sets the cap's size: it holds until the tiles
+    // or the warp change.
+    let global = this.global;
+    if (
+      !global ||
+      global.key !== this.keyNow ||
+      global.signature !== signature
+    ) {
+      const value = this.bound(root, warp, undefined);
+      global = { key: this.keyNow, signature, value };
+      if (!this.incomplete) {
+        this.global = global;
+      }
+    }
+    if (!(c > global.value)) {
       return undefined;
     }
-    const angle = Math.min(
-      Math.PI,
-      Math.acos(Math.min(1, global / c)) * 1.02 + 1e-4,
-    );
-    const cap = { direction: unit(camera), cos: Math.cos(angle) };
-    const scale = this.bound(root, warp, cap, undefined);
+    // The cap is taken about the camera's cell, grown to hold every camera
+    // in it, so the walk runs again only when the camera leaves its cell.
+    const direction = unit(camera);
+    const lon = Math.round(Math.atan2(direction[1]!, direction[0]!) / CELL);
+    const lat = Math.round(Math.asin(direction[2]!) / CELL);
+    const top = Math.ceil(c * 1e4) / 1e4;
+    const cell = `${this.keyNow}|${signature}|${lon},${lat}|${top}`;
+    const kept = this.caps.get(view.id);
+    let scale: number | undefined;
+    if (kept && kept.cell === cell) {
+      scale = kept.scale;
+    } else {
+      const centre = [
+        Math.cos(lat * CELL) * Math.cos(lon * CELL),
+        Math.cos(lat * CELL) * Math.sin(lon * CELL),
+        Math.sin(lat * CELL),
+      ] as unknown as Vec3;
+      const angle = Math.min(
+        Math.PI,
+        Math.acos(Math.min(1, global.value / top)) * 1.02 + 1e-4 + CELL * 1.5,
+      );
+      scale = this.bound(root, warp, {
+        direction: centre,
+        cos: Math.cos(angle),
+      });
+      if (!this.incomplete) {
+        this.caps.set(view.id, { cell, scale });
+      }
+    }
     return c > scale && scale > 0 ? scale : undefined;
   }
 
@@ -175,10 +228,23 @@ export class BodyOccluder implements Occluder {
     tile: Tile,
     warp: TileWarp,
     cap: { direction: Vec3; cos: number } | undefined,
-    _unused: undefined,
   ): number {
     if (cap && !meetsCap(tile, cap)) {
       return Infinity;
+    }
+    // Nothing loaded at or under it: what finer tiles would be held to is
+    // its own bound, which only grows with depth (shallower skirts, smaller
+    // errors), so its subtree needn't be walked. The ellipsoid's flat tiles
+    // are all alike: below a level they stand for their subtrees too.
+    if (
+      tile.globe &&
+      (this.options.flat
+        ? tile.globe.level >= FLAT_LEVELS
+        : tile.residentBelow === 0 &&
+          !tile.globe.heights &&
+          !tile.globe.upsampledFrom)
+    ) {
+      return this.own(tile, warp);
     }
     const kids = tile.children;
     const isRoot = tile.globe === undefined;
@@ -189,7 +255,7 @@ export class BodyOccluder implements Occluder {
         if (kid.fillFromParent) {
           fills = true;
         } else {
-          lowest = Math.min(lowest, this.bound(kid, warp, cap, undefined));
+          lowest = Math.min(lowest, this.bound(kid, warp, cap));
         }
       }
       if (fills) {
@@ -211,7 +277,7 @@ export class BodyOccluder implements Occluder {
   private own(tile: Tile, warp: TileWarp): number {
     const mine = this.resident(tile, warp, true);
     if (mine !== undefined) {
-      return mine;
+      return mine.value;
     }
     for (let a = tile.parent; a?.globe; a = a.parent) {
       const base = this.resident(a, warp, false);
@@ -219,7 +285,11 @@ export class BodyOccluder implements Occluder {
         const drawn = drawnTile(a, warp);
         const stretch = Math.max(1, drawn.slopeMax ?? drawn.sigmaMax);
         const error = soundError(a.globe.refit);
-        return Math.max(0, base - (error * stretch) / R_MIN);
+        // The tile's own skirt hangs below its surface too (stretched).
+        const level = tile.globe?.level ?? a.globe.level + 1;
+        const skirt =
+          (5 * ELLIPSOID_LEVEL_ZERO_ERROR) / 2 ** Math.max(0, level - 1);
+        return Math.max(0, base.tops - ((error + skirt) * stretch) / R_MIN);
       }
     }
     return 0;
@@ -230,7 +300,7 @@ export class BodyOccluder implements Occluder {
     tile: Tile,
     warp: TileWarp,
     limited: boolean,
-  ): number | undefined {
+  ): Exact | undefined {
     const source = tile.globe?.upsampledFrom ?? tile;
     const heights =
       source.globe?.heights ??
@@ -240,17 +310,24 @@ export class BodyOccluder implements Occluder {
     }
     const kept = this.bounds.get(tile);
     if (kept && kept.key === this.keyNow && kept.heights === heights) {
-      return kept.value;
+      return kept;
     }
     if (limited && performance.now() >= this.spent) {
+      this.incomplete = true;
       return undefined;
     }
     const value = exactBound(source, heights, warp);
     if (value === undefined) {
       return undefined;
     }
-    this.bounds.set(tile, { key: this.keyNow, heights, value });
-    return value;
+    const made = {
+      key: this.keyNow,
+      heights,
+      value: value.all,
+      tops: value.tops,
+    };
+    this.bounds.set(tile, made);
+    return made;
   }
 }
 
@@ -292,7 +369,7 @@ function exactBound(
   tile: Tile,
   heights: TerrainHeights,
   warp: TileWarp,
-): number | undefined {
+): { all: number; tops: number } | undefined {
   const g = tile.globe!;
   const r = g.rectangle;
   const n = heights.u.length;
@@ -300,6 +377,7 @@ function exactBound(
     (5 * ELLIPSOID_LEVEL_ZERO_ERROR) / 2 ** Math.max(0, g.level - 1);
   const span = heights.maximumHeight - heights.minimumHeight;
   const points = new Float64Array(n * 6);
+  const isSkirt = new Uint8Array(n * 2);
   const carto = { longitude: 0, latitude: 0, height: 0 };
   const out = new Float64Array(3);
   let count = 0;
@@ -316,6 +394,7 @@ function exactBound(
       carto.height -= skirt;
       ellipsoid.cartographicToCartesian(carto, out);
       points.set(out, count * 3);
+      isSkirt[count] = 1;
       count++;
     }
   }
@@ -324,10 +403,15 @@ function exactBound(
     return undefined;
   }
   let lowest = Infinity;
+  let tops = Infinity;
   for (let i = 0; i < count; i++) {
-    lowest = Math.min(lowest, lowestAlong(images, i));
+    const norm = lowestAlong(images, i);
+    lowest = Math.min(lowest, norm);
+    if (!isSkirt[i]) {
+      tops = Math.min(tops, norm);
+    }
   }
-  if (!Number.isFinite(lowest)) {
+  if (!Number.isFinite(lowest) || !Number.isFinite(tops)) {
     return undefined;
   }
   // The longest edge of a triangle, as a fraction of the tile, bounds the
@@ -351,7 +435,7 @@ function exactBound(
     Math.hypot(r.east - r.west, r.north - r.south) *
     1.5;
   const dip = (CHORD_MARGIN * chord * chord) / (8 * R_MIN) / R_MIN;
-  return Math.max(0, lowest - dip);
+  return { all: Math.max(0, lowest - dip), tops: Math.max(0, tops - dip) };
 }
 
 /** The smallest scaled norm of image `i` over the span of scales: the norm is convex along the line, so its minimum is where the derivative vanishes, clamped. */

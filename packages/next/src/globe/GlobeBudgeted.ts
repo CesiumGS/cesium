@@ -42,6 +42,8 @@ import { FOG_SSE, fog, fogDensity } from "./GlobeStepwise.ts";
 
 /** Main-thread time per selection pass for expanding visited tiles, ms. */
 const EXPAND_MS = 4;
+/** Levels kept loaded whatever is in view (0 to this, exclusive): 682 small tiles. */
+const BASE_LEVELS = 4;
 
 export class GlobeBudgetedSelection extends BudgetedSelection {
   protected override selectsCasters = false;
@@ -146,6 +148,39 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
     this.expandUntil = performance.now() + EXPAND_MS;
     this.metadataWanted.clear();
     const result = super.select(root, rootGeometricError, view);
+    // The base levels stay loaded whatever is in view: the body occluder's
+    // bounds under a warp rest on the meshes of the tiles above any that
+    // aren't loaded (a few hundred small tiles).
+    const base = (tile: Tile): void => {
+      if (tile.globe === undefined || tile.globe.level >= BASE_LEVELS) {
+        return;
+      }
+      if (!tile.globe.expanded) {
+        this.source.expand(tile);
+      }
+      for (const child of tile.children) {
+        if (
+          child.state === "unloaded" &&
+          child.contentUrl !== undefined &&
+          !result.priority!.has(child)
+        ) {
+          result.requested.push(child);
+          result.priority!.set(child, 0);
+        }
+        base(child);
+      }
+    };
+    for (const tile of this.source.root.children) {
+      if (
+        tile.state === "unloaded" &&
+        tile.contentUrl !== undefined &&
+        !result.priority!.has(tile)
+      ) {
+        result.requested.push(tile);
+        result.priority!.set(tile, 0);
+      }
+      base(tile);
+    }
     // Ahead of the pass's other requests: what finer terrain waits for.
     for (const tile of this.metadataWanted) {
       if (tile.state === "unloaded" && !result.priority!.has(tile)) {

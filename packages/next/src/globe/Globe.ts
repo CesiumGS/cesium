@@ -469,6 +469,8 @@ export class Globe extends Tileset3D {
     const occluder: BodyOccluder = new BodyOccluder({
       root: source.root,
       flat: source.flat,
+      signature: () =>
+        this.stats.requestsTotal + this.stats.loaded + this.stats.tiles,
       enabled: () =>
         !this.isDestroyed() && this.show && this.clips.entries.length === 0,
       partners: () =>

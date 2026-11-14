@@ -111,6 +111,7 @@ function setup(basin = false, enabled = true) {
     root,
     flat: false,
     enabled: () => enabled,
+    exactMs: Infinity,
   });
   const camera = wgs84.cartographicToCartesian(
     { longitude: 0, latitude: 0, height: 10 },
@@ -208,6 +209,7 @@ describe("the body as an occluder", () => {
       root,
       flat: false,
       enabled: () => true,
+      exactMs: Infinity,
     });
     const camera = wgs84.cartographicToCartesian(
       { longitude: 0, latitude: 0, height: 10 },
@@ -231,6 +233,44 @@ describe("the body as an occluder", () => {
       dipped[2]! / wgs84.radii[2]!,
     );
     expect(s).toBeLessThanOrEqual(norm);
+  });
+
+  it("is not zeroed by an unloaded subtree once its root-level ancestor is loaded", () => {
+    const top = tileOf(-0.02, 0.02, 0, 0);
+    (top.globe as { refit?: unknown }).refit = { levelError: 100 };
+    const kids = [0, 1, 2, 3].map((i) => {
+      const k = tileOf(-0.02 + i * 0.01, -0.01 + i * 0.01, 0, 1);
+      (k.globe as { heights?: unknown }).heights = undefined;
+      (k as { parent?: Tile }).parent = top;
+      return k;
+    });
+    (top as { children: Tile[] }).children = kids;
+    const world = regionFromJson([-Math.PI, -1.5, Math.PI, 1.5, -1000, 9000]);
+    const root = {
+      volume: {
+        kind: "region",
+        region: world,
+        sphere: sphereFromObb(world.obb),
+      },
+      children: [top],
+    } as unknown as Tile;
+    (top as { parent?: Tile }).parent = root;
+    const occluder = new BodyOccluder({
+      root,
+      flat: false,
+      enabled: () => true,
+      exactMs: Infinity,
+    });
+    const view = {
+      id: 1,
+      position: wgs84.cartographicToCartesian(
+        { longitude: 0, latitude: 0, height: 10 },
+        new Float64Array(3),
+      ),
+      warp: warpOf(10),
+    } as unknown as SelectionView;
+    occluder.prepare(view);
+    expect(occluder.scaleFor(view)).toBeGreaterThan(0);
   });
 
   it("offers its shape for a depth pyramid", () => {
