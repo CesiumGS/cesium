@@ -1,4 +1,4 @@
-// Generated from src/shaders/adapt.slang by slangc 2026.21
+// Generated from src/shaders/adapt.slang by slangc 2026.22
 // (scripts/slangBuild.mjs). Do not edit: change the .slang and regenerate.
 @binding(2) @group(0) var grid_0 : texture_storage_3d<rgba16float, write>;
 

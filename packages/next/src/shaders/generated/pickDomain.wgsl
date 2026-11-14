@@ -1,4 +1,4 @@
-// Generated from src/shaders/pickDomain.slang by slangc 2026.21
+// Generated from src/shaders/pickDomain.slang by slangc 2026.22
 // (scripts/slangBuild.mjs). Do not edit: change the .slang and regenerate.
 @binding(0) @group(0) var ids_0 : texture_2d<u32>;
 

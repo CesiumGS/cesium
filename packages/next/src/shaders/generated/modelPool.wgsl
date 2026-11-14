@@ -1,4 +1,4 @@
-// Generated from src/vector/modelPool.slang by slangc 2026.21
+// Generated from src/vector/modelPool.slang by slangc 2026.22
 // (scripts/slangBuild.mjs). Do not edit: change the .slang and regenerate.
 @binding(4) @group(0) var<storage, read_write> counters_0 : array<atomic<u32>>;
 

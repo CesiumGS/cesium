@@ -1,4 +1,4 @@
-// Generated from src/shaders/stages/glareDown.slang by slangc 2026.21
+// Generated from src/shaders/stages/glareDown.slang by slangc 2026.22
 // (scripts/slangBuild.mjs). Do not edit: change the .slang and regenerate.
 @binding(1) @group(1) var stageSampler_0 : sampler;
 

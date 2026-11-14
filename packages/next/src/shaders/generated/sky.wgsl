@@ -1,4 +1,4 @@
-// Generated from src/atmosphere/sky.slang by slangc 2026.21
+// Generated from src/atmosphere/sky.slang by slangc 2026.22
 // (scripts/slangBuild.mjs). Do not edit: change the .slang and regenerate.
 @binding(5) @group(3) var<storage, read> starPoints_0 : array<vec4<f32>>;
 

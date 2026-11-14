@@ -322,7 +322,7 @@ _What stays WGSL:_
 
 _Migration, in steps that each leave the engine working:_
 
-1. **Re-run the M0 checks on today's Slang (2026.21) and today's
+1. **Re-run the M0 checks on today's Slang (2026.21 when written; the pin is now 2026.22) and today's
    features.** The checks above, plus what the engine now uses:
    `@builtin(sample_mask)` (`SV_Coverage`), flat interpolation,
    `override` constants sizing workgroup arrays, 32-bit atomics, 3D
@@ -402,6 +402,12 @@ renaming its output with text manipulation is out.
     probe checks they don't today).
   - The probe and golden tests of the generated boundary therefore guard
     every Slang upgrade, and the version stays pinned.
+    - _Pin moved 2026-11-13: 2026.21 to 2026.22._ Rebuilt shaders differ
+      from 2026.21's only in the version line of each header; the feature
+      probes, the golden and boundary tests and the offline Slang compile
+      give the same results (WASM zip 10,567,678 bytes, native macOS arm64
+      zip 65,185,549 bytes; the fetch checks each against the SHA-256 GitHub
+      publishes: WASM `f5b2b196…b75699`, native `f6d6fe9c…af61cc3`).
 - Buffer-backed structs keep a layout copy (`View_std140_0`, fields named)
   and wrapped matrices. Runtime code never reads them directly: what it
   needs comes through the contract structs (as the custom-shader contract

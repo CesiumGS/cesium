@@ -1,4 +1,4 @@
-// Generated from src/shaders/boundary.slang by slangc 2026.21
+// Generated from src/shaders/boundary.slang by slangc 2026.22
 // (scripts/slangBuild.mjs). Do not edit: change the .slang and regenerate.
 @binding(5) @group(0) var<storage, read_write> out_0 : array<u32>;
 

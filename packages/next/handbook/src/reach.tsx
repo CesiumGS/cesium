@@ -913,7 +913,7 @@ export function ReachFacts() {
             governance at Khronos since November 2024, licensed under Apache 2.0
             (
             <Cite id="slangKhronos" />
-            ), and its newest release is v2026.21 (
+            ), and its newest release is v2026.22 (
             <Cite id="slangReleases" />
             ). The engine compiles its shaders at build time.
           </li>
