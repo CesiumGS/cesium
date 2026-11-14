@@ -170,6 +170,7 @@ export {
   type ObserverReadout,
   type ObserverSettings,
   type ObserverStage,
+  type StageInfo,
   type PointSpread,
   type ToneMapping,
   DAYLIGHT_EXPOSURE,

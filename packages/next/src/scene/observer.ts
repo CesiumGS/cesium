@@ -3,8 +3,7 @@
 // output passes); nothing here reaches a scene or sky shader except the
 // pre-exposure, a matter of fp16's range, and the stars' point spread, which
 // keeps each star's energy (CESIUM2_WEBGPU_PLAN.md §13.32).
-import type { PostStage } from "./postStage.ts";
-import type { GraphStage } from "../render/post/chain.ts";
+import type { PostStage, PostStageKind, PostStageSlot } from "./postStage.ts";
 import { eyeLimitStage } from "./eyeLimit.ts";
 import type { PointSpread } from "./pointSpread.ts";
 
@@ -103,8 +102,23 @@ export interface GlareSettings {
   spikes: { aperture: GlarePupil; share: number; extent: number } | null;
 }
 
+/**
+ * What the chain needs to know of any step, with no GPU types here: a `GraphStage`
+ * (render/post/chain.ts) is this and a `register` that records its passes.
+ */
+export interface StageInfo {
+  /** Unique within a view's list. */
+  readonly name: string;
+  readonly slot: PostStageSlot;
+  readonly kind: PostStageKind;
+  readonly label: string;
+  enabled: boolean;
+  /** How far it lifts what's faint, as `PostStage.shadowGain`. Default 1. */
+  readonly shadowGain?: number;
+}
+
 /** A step of the chain: a declared stage, or one that records its own passes. */
-export type ObserverStage = PostStage | GraphStage;
+export type ObserverStage = PostStage | StageInfo;
 
 /**
  * Who is looking: everything between the scene's light and a pixel, per

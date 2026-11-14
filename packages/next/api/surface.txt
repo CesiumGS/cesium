@@ -304,6 +304,7 @@ entry	name	kind	tier
 .	SmoothFrameSpec	type	-
 .	SpatialQueries	interface	-
 .	Stage	type	-
+.	StageInfo	interface	-
 .	StageStats	interface	-
 .	StandingQuery	interface	-
 .	StepwiseSelection	class	-

@@ -19,7 +19,7 @@ import {
   type ResolvedPostPass,
 } from "../../scene/postStage.ts";
 import { EYE_LIMIT_STAGE } from "../../scene/eyeLimit.ts";
-import type { ObserverSettings } from "../../scene/observer.ts";
+import type { ObserverSettings, StageInfo } from "../../scene/observer.ts";
 import type { View } from "../../scene/View.ts";
 
 /**
@@ -96,16 +96,7 @@ export type GraphStageBuilder = Pick<FrameGraph, "addPass">;
  * next stage then reads it. Its pipelines are its own to make, with `ChainIo.device`;
  * its slot says where it sits.
  */
-export interface GraphStage {
-  /** Unique within a view's list. */
-  readonly name: string;
-  readonly slot: PostStageSlot;
-  readonly kind: PostStageKind;
-  readonly label: string;
-  /** False: it adds no image to the chain (it draws into the one before it). */
-  enabled: boolean;
-  /** How far it lifts what's faint, as `PostStage.shadowGain`. Default 1. */
-  readonly shadowGain?: number;
+export interface GraphStage extends StageInfo {
   register(graph: GraphStageBuilder, io: ChainIo): void;
 }
 
@@ -120,16 +111,13 @@ export function chainEntries(
   observer: ObserverSettings,
   glare: readonly ChainEntry[] = [],
 ): readonly ChainEntry[] {
+  const stages = observer.stages as readonly ChainEntry[];
   if (glare.length === 0) {
-    return observer.stages;
+    return stages;
   }
   // The eye's point limit comes first: what it fades can't glare.
-  const after = observer.stages.findIndex((s) => s.name === EYE_LIMIT_STAGE);
-  return [
-    ...observer.stages.slice(0, after + 1),
-    ...glare,
-    ...observer.stages.slice(after + 1),
-  ];
+  const after = stages.findIndex((s) => s.name === EYE_LIMIT_STAGE);
+  return [...stages.slice(0, after + 1), ...glare, ...stages.slice(after + 1)];
 }
 
 /** The slots' order: stable by list position. */
