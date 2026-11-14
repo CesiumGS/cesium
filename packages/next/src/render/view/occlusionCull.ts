@@ -6,16 +6,25 @@
 //                     the view's last tick left, seen from that tick's camera:
 //                     an item it hides goes to the retest list, the rest to
 //                     their batches (phase 1);
-//   occlusion-depth   phase 1's depth, alone (the opaque pass's depth bundle);
-//   hzb               a pyramid of it (occlusionPass.ts `DepthPyramid`);
-//   occlusion-retest  the listed items against that pyramid from this tick's
-//                     camera: the visible ones to their batches' second set of
-//                     arguments (phase 2);
-//   prepass, opaque   draw both sets: the opaque pass loads phase 1's depth
-//                     and draws phase 2's depth before shading both.
+//   prepass           with ambient occlusion this tick, the prepass splits in
+//                     two: it draws phase 1; `hzb` builds a pyramid of its
+//                     single-sampled depth (each level-0 texel taking the ring
+//                     of pixels round its block too, so no multisample sees
+//                     farther than it says); `occlusion-retest` tests the
+//                     listed items against it from this tick's camera, the
+//                     visible ones to their batches' second set of arguments
+//                     (phase 2); the prepass then draws phase 2 into the same
+//                     targets;
+//   occlusion-depth   without the prepass this tick: phase 1's depth alone
+//                     (the opaque pass's depth bundle), then `hzb` from it
+//                     (multisampled) and `occlusion-retest`;
+//   opaque            both phases' depth, then both shaded (the depth pass's
+//                     phase 1 loaded where it had a pass of its own).
 //
-// After the opaque pass the pyramid is built again from the whole depth, for
-// the next tick (occlusionPass.ts), unless point splats wrote into it.
+// The pyramid is built once a tick, there; the tile queries after the opaque
+// pass (occlusionPass.ts) and the next tick's first phase read it. It lacks
+// what the second phase drew, which only leaves a box visible, never hides one;
+// and it is built before point splats draw.
 //
 // What last tick's depth hid and this tick's doesn't is drawn this tick, so
 // nothing pops in; a wrong first-phase verdict (the camera jumped, the scene
@@ -160,6 +169,13 @@ export class ViewOcclusionCull {
   private copied: GPUBuffer | undefined;
   /** This tick culls by occlusion (set by the cull pass, read by the rest). */
   active = false;
+  /**
+   * Where this tick's first phase draws its depth: the ambient-occlusion
+   * prepass, split into the two phases ("prepass", when the view has one this
+   * tick), or the opaque pass's depth prepass, split into a pass of its own
+   * and the opaque pass ("opaque").
+   */
+  firstDepth: "prepass" | "opaque" = "opaque";
   /** The latest counters read back: what the pyramid hid in a tick. */
   hidden = { draws: 0, triangles: 0 };
 
@@ -270,7 +286,7 @@ export interface OcclusionCullEngine extends Pick<
   Engine,
   "bodyCamera" | "ctx" | "occlusionCulling"
 > {
-  readonly raster: Pick<EngineRaster, "timer">;
+  readonly raster: Pick<EngineRaster, "frameNumber" | "timer">;
 }
 
 /**
@@ -297,6 +313,7 @@ export function prepareOcclusionCull(
   }
   const cull = (frame.cull ??= new ViewOcclusionCull(device));
   cull.active = true;
+  cull.firstDepth = frame.ambient ? "prepass" : "opaque";
   const occlusion = (frame.occlusion ??= new FrameOcclusion(
     device,
     pipelines,
@@ -314,10 +331,51 @@ export function prepareOcclusionCull(
 }
 
 /**
- * The pass after the cull, when the tick culls by occlusion: the first
- * phase's depth, its pyramid, and the second phase. The depth pass has the
- * opaque pass's attachments (the depth bundle was recorded for them); its
- * colors are cleared and not stored.
+ * Between the two phases: the pyramid of the first phase's depth (the
+ * multisampled depth, or `pixels`, the prepass's single-sampled one), built
+ * once this tick, then the second phase (`World.encodeRetest`) and the copy of
+ * its counters.
+ */
+export function encodeSecondPhase(
+  engine: OcclusionCullEngine,
+  view: View,
+  frame: ViewFrame,
+  enc: GPUCommandEncoder,
+  pixels?: GPUTextureView,
+): void {
+  const cull = frame.cull;
+  const group = cull?.bindGroup;
+  if (!cull?.active || !group || !frame.occlusion) {
+    return;
+  }
+  const { pyramid } = frame.occlusion;
+  const hzbWrites = engine.raster.timer.passWrites("hzb");
+  const hzb = enc.beginComputePass({
+    label: "hzb",
+    ...(hzbWrites ? { timestampWrites: hzbWrites } : {}),
+  });
+  pyramid.encode(hzb, engine.ctx.pipelines, pixels);
+  hzb.end();
+  pyramid.built = cullCamera(engine, view, frame);
+  pyramid.builtTick = engine.raster.frameNumber;
+  view.world.encodeRetest(
+    enc,
+    group,
+    engine.raster.timer.passWrites("occlusion-retest"),
+  );
+  const readback = cull.takeReadback();
+  if (readback) {
+    view.world.copyOcclusionCounters(enc, readback);
+  }
+}
+
+/**
+ * The pass after the cull, when the tick culls by occlusion and the view
+ * draws no ambient-occlusion prepass this tick: the first phase's depth (the
+ * opaque pass's depth bundle, in a pass of its own), then the second phase.
+ * The depth pass has the opaque pass's attachments (the depth bundle was
+ * recorded for them); its colors are cleared and not stored. With a prepass
+ * the prepass does this (`scenePasses.ts` `prepassPassBody`).
  */
 export function occlusionCullPass(
   engine: OcclusionCullEngine,
@@ -354,12 +412,9 @@ export function occlusionCullPass(
     depthStencilAttachment: depthAttachment,
   };
   return (enc, get) => {
-    const cull = frame.cull;
-    const group = cull?.bindGroup;
-    if (!cull?.active || !group || !frame.occlusion) {
+    if (!frame.cull?.active || frame.cull.firstDepth !== "opaque") {
       return;
     }
-    const { pipelines } = engine.ctx;
     colors[0]!.view = get(color);
     colors[1]!.view = get(ids);
     colors[2]!.view = get(display);
@@ -367,38 +422,16 @@ export function occlusionCullPass(
     descriptor.timestampWrites =
       engine.raster.timer.passWrites("occlusion-depth");
     const pass = enc.beginRenderPass(descriptor);
-    const first = view.world.depthBundle();
-    pass.executeBundles([first]);
+    pass.executeBundles([view.world.depthBundle()]);
     pass.end();
-    const hzbWrites = engine.raster.timer.passWrites("hzb");
-    const hzb = enc.beginComputePass({
-      label: "hzb",
-      ...(hzbWrites ? { timestampWrites: hzbWrites } : {}),
-    });
-    frame.occlusion.pyramid.encode(hzb, pipelines);
-    hzb.end();
-    frame.occlusion.pyramid.built = cullCamera(engine, view, frame);
-    view.world.encodeRetest(
-      enc,
-      group,
-      engine.raster.timer.passWrites("occlusion-retest"),
-    );
-    const readback = cull.takeReadback();
-    if (readback) {
-      view.world.copyOcclusionCounters(enc, readback);
-    }
+    encodeSecondPhase(engine, view, frame, enc);
   };
 }
 
-/**
- * The bundles the prepass or the opaque pass draws in a tick that culls by
- * occlusion: the first phase's, then the second's.
- */
-export function phaseBundles(
+/** The second phase's bundle of `kind`, if the tick culls by occlusion and it is recorded. */
+export function secondPhaseBundle(
   view: View,
-  kind: "opaque" | "prepass",
-  first: GPURenderBundle,
-): GPURenderBundle[] {
-  const second = view.world.retestBundle(kind);
-  return second ? [first, second] : [first];
+  kind: "opaque" | "depth" | "prepass",
+): GPURenderBundle | undefined {
+  return view.world.retestBundle(kind);
 }

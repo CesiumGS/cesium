@@ -317,6 +317,20 @@ describe("the draws' test", () => {
   });
 });
 
+describe("the pyramid of a single-sampled depth", () => {
+  it("folds the ring round each block, so a sample past an edge isn't hidden by its centre", () => {
+    // A near wall over the pixels x < 8, sky beyond. Level-0 texel 3 covers
+    // pixels 6 and 7, all wall at their centres; but pixel 7's samples near
+    // its right edge may see past the wall's edge, as pixel 8's centre does.
+    const edge = (x: number) => (x < 8 ? 0.5 : 0);
+    expect(buildPyramid(W, H, edge)[0]!.texels[3]).toBe(0.5);
+    // With the ring it takes pixel 8 too: it doesn't claim the wall.
+    expect(buildPyramid(W, H, edge, true)[0]!.texels[3]).toBe(0);
+    // Away from the edge it still does.
+    expect(buildPyramid(W, H, edge, true)[0]!.texels[2]).toBe(0.5);
+  });
+});
+
 describe("a tick on the fake engine", () => {
   let engine: Engine;
   const square: MeshData = {
@@ -441,6 +455,39 @@ describe("a tick on the fake engine", () => {
     expect(seen.retestDraws).not.toContain(
       rows * 20 + args.slotOf(translucent.index),
     );
+    done();
+  });
+
+  it("splits the ambient-occlusion prepass into the two phases, with no depth pass of its own", () => {
+    const { view, render, done } = scene();
+    view.ambientOcclusion = true;
+    render();
+    const { pipelines } = engine.ctx;
+    expect(seen.passes).not.toContain("occlusion-depth");
+    // The prepass's first phase, the pyramid of its single-sampled depth,
+    // the second phase, then the prepass's second phase, then the opaque pass.
+    const prepass = seen.passes.indexOf("prepass");
+    const hzb = seen.passes.indexOf("hzb");
+    const retest = seen.passes.indexOf("occlusion-retest");
+    const again = seen.passes.indexOf("prepass", prepass + 1);
+    const opaque = seen.passes.indexOf("opaque");
+    expect(prepass).toBeGreaterThan(-1);
+    expect(hzb).toBeGreaterThan(prepass);
+    expect(retest).toBeGreaterThan(hzb);
+    expect(again).toBeGreaterThan(retest);
+    expect(opaque).toBeGreaterThan(again);
+    expect(seen.pipelines).toContain(pipelines.hzbLevel0Pixels);
+    expect(seen.pipelines).not.toContain(pipelines.hzbLevel0);
+    // One pyramid a tick.
+    expect(seen.passes.filter((p) => p === "hzb")).toHaveLength(1);
+    done();
+  });
+
+  it("builds the pyramid once a tick from its own depth pass without the prepass", () => {
+    const { render, done } = scene();
+    render();
+    expect(seen.passes.filter((p) => p === "hzb")).toHaveLength(1);
+    expect(seen.pipelines).toContain(engine.ctx.pipelines.hzbLevel0);
     done();
   });
 
