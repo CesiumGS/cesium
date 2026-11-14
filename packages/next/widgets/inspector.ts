@@ -723,6 +723,17 @@ function frameHtml(s: InspectorSnapshot, framesPerSecond?: number): string {
   if (f.intervalMs !== undefined) {
     rows.push(["Frame interval", ms(f.intervalMs)]);
   }
+  if (f.jobs) {
+    const j = f.jobs;
+    rows.push(["Jobs applied", `${ms(j.applyMs)} · ${j.applied} this tick`]);
+    rows.push([
+      "Jobs queued",
+      `${j.queued} queued · ${j.running} running · ${j.waiting} to apply${
+        j.slicing > 0 ? ` · ${j.slicing} progressive` : ""
+      }`,
+    ]);
+    rows.push(["Job memory", escape(j.memory)]);
+  }
   if (f.rendering || framesPerSecond !== undefined) {
     rows.push([
       "Rendering",

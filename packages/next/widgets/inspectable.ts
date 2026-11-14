@@ -108,6 +108,21 @@ export interface InspectorSnapshot {
     intervalMs?: number;
     /** "continuous" or "on demand". */
     rendering?: string;
+    /**
+     * The job system (plan §13.42): the apply phase's time and jobs applied
+     * in the latest tick, and the jobs queued, running and waiting to apply.
+     */
+    jobs?: {
+      /** "shared memory" with cross-origin isolation, else "transfer". */
+      memory: string;
+      /** Progressive jobs taking slices of the apply phase. */
+      slicing: number;
+      applyMs: number;
+      applied: number;
+      queued: number;
+      running: number;
+      waiting: number;
+    };
     /** Frames rendered so far (the inspector derives frames per second). */
     framesRendered?: number;
   };

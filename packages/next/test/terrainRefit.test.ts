@@ -10,6 +10,7 @@ import type { Rectangle, TerrainHeights } from "../src/globe/quantizedMesh.ts";
 import { deviationFromParent, parentBound } from "../src/globe/terrainRefit.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
+import { Jobs, type JobMessage } from "../src/io/Jobs.ts";
 import { gridTile } from "./terrainRayFixtures.ts";
 
 const EMPTY_ASSET = {
@@ -385,3 +386,148 @@ function heightIn(t: TerrainHeights, u: number, v: number): number {
   }
   throw new Error("outside the mesh");
 }
+
+/**
+ * The source's decodes and leftover deviations as jobs (`TerrainSource.jobs`)
+ * on a fake worker: it runs the source's own loader for "terrain" and
+ * `deviationFromParent` for "terrainDeviation", replying when the test
+ * delivers (or at once, in a microtask, with `auto`).
+ */
+function withJobs(terrain: TerrainSource, auto = false) {
+  const load = (terrain as unknown as { load: TerrainLoader }).load;
+  const held: JobMessage[] = [];
+  const run = async (m: JobMessage) => {
+    const result =
+      m.type === "terrain"
+        ? await load(m as unknown as Parameters<TerrainLoader>[0], signal)
+        : deviationFromParent(
+            m.child as TerrainHeights,
+            m.parent as TerrainHeights,
+            m.qx as number,
+            m.qy as number,
+          );
+    jobs.reply({ id: m.id, ok: true, result });
+  };
+  const jobs = new Jobs({
+    size: 2,
+    post: (_worker, message) => {
+      if (message.type === "cancel") {
+        return;
+      }
+      if (auto) {
+        queueMicrotask(() => void run(message));
+      } else {
+        held.push(message);
+      }
+    },
+  });
+  terrain.jobs = jobs;
+  /** Replies to the held messages `pick` chooses. */
+  const deliver = async (pick: (m: JobMessage) => boolean) => {
+    for (const m of held.filter(pick)) {
+      held.splice(held.indexOf(m), 1);
+      await run(m);
+    }
+  };
+  return { jobs, held, deliver };
+}
+
+const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+describe("the refit as jobs (TerrainSource.jobs)", () => {
+  const LON = 0.3;
+  const LAT = 0.2;
+  const surface: Surface = (lon, lat) =>
+    800 * Math.sin(lon * 3e3) * Math.cos(lat * 2e3) + 3000 * lon;
+
+  it("gives the same errors as measuring on the page", async () => {
+    const here = await source(surface, 10);
+    const there = await source(surface, 10);
+    withJobs(there, true);
+    const a = await loadPath(here, 6, LON, LAT);
+    const b = await loadPath(there, 6, LON, LAT);
+    await settle();
+    for (let level = 0; level <= 6; level++) {
+      expect(b[level]!.globe!.refit.deviation).toBe(
+        a[level]!.globe!.refit.deviation,
+      );
+      expect(b[level]!.geometricError).toBe(a[level]!.geometricError);
+    }
+  });
+
+  it("measures a child that decoded first after its parent's decode, in the apply phase", async () => {
+    const terrain = await source(surface, 10);
+    const { jobs } = withJobs(terrain, true);
+    const path = await loadPath(terrain, 3, LON, LAT);
+    await settle();
+    const parent = path[3]!;
+    const child = parent.children[0]!;
+    // The parent's surface left the cache; it reloads, and its child's
+    // decode wins the race.
+    terrain.unloadTile(parent);
+    const manual = withJobs(terrain);
+    manual.jobs.phased = true;
+    const parentLoad = terrain.loadTile(parent, signal);
+    const childLoad = terrain.loadTile(child, signal);
+    expect(parent.globe!.decoding?.state).toBe("running");
+    await manual.deliver(
+      (m) => m.type === "terrain" && (m.url as string) === child.contentUrl,
+    );
+    manual.jobs.apply(Infinity);
+    await childLoad;
+    const refit = child.globe!.refitJob!;
+    expect(refit.state).toBe("waiting");
+    expect(manual.held.some((m) => m.type === "terrainDeviation")).toBe(false);
+    // The parent decodes and applies: the child's measure is posted with
+    // its surface, and applies in a later phase.
+    await manual.deliver((m) => m.type === "terrain");
+    manual.jobs.apply(Infinity);
+    await parentLoad;
+    expect(refit.state).toBe("running");
+    const posted = manual.held.find((m) => m.type === "terrainDeviation")!;
+    expect(posted.parent).toBe(parent.globe!.heights);
+    await manual.deliver((m) => m.type === "terrainDeviation");
+    expect(child.globe!.refit.deviation).toBeUndefined();
+    manual.jobs.apply(Infinity);
+    expect(child.globe!.refit.deviation).toBe(
+      deviationFromParent(child.globe!.heights!, parent.globe!.heights!, 0, 0),
+    );
+    expect(child.globe!.refitJob).toBeUndefined();
+    expect(jobs.stats.running).toBe(0);
+  });
+
+  it("cancels a child's measure with its parent's decode, and when its surface leaves", async () => {
+    const terrain = await source(surface, 10);
+    withJobs(terrain, true);
+    const path = await loadPath(terrain, 3, LON, LAT);
+    await settle();
+    const parent = path[3]!;
+    const [first, second] = parent.children;
+    terrain.unloadTile(parent);
+    const manual = withJobs(terrain);
+    manual.jobs.phased = true;
+    const parentAbort = new AbortController();
+    const parentLoad = terrain.loadTile(parent, parentAbort.signal);
+    const loads = [first!, second!].map((c) => terrain.loadTile(c, signal));
+    await manual.deliver(
+      (m) =>
+        m.type === "terrain" &&
+        [first!.contentUrl, second!.contentUrl].includes(m.url as string),
+    );
+    manual.jobs.apply(Infinity);
+    await Promise.all(loads);
+    const a = first!.globe!.refitJob!;
+    const b = second!.globe!.refitJob!;
+    expect([a.state, b.state]).toEqual(["waiting", "waiting"]);
+    // The first child is evicted: its measure goes.
+    terrain.unloadTile(first!);
+    expect(a.state).toBe("cancelled");
+    // The parent is deselected mid-decode: the second child's measure goes with it.
+    parentAbort.abort();
+    await expect(parentLoad).rejects.toThrow(/Aborted/);
+    expect(b.state).toBe("cancelled");
+    await settle();
+    expect(second!.globe!.refitJob).toBeUndefined();
+    expect(manual.held.some((m) => m.type === "terrainDeviation")).toBe(false);
+  });
+});

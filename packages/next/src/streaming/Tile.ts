@@ -255,6 +255,12 @@ export class Tile {
    * each load counts as drawn at most once.
    */
   purpose?: RequestPurpose;
+  /**
+   * Its latest request priority while a tileset wants its content (lower
+   * comes sooner: `Budgeted`'s band plus distance): what its jobs are
+   * ordered by (`Jobs`).
+   */
+  requestPriority = Infinity;
   /** Pipeline timestamps: first wanted, and its fetch started. */
   wantedAt = 0;
   fetchStartAt = 0;

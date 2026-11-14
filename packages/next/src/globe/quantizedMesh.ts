@@ -14,6 +14,7 @@
  * Positions come out relative to the tile center, in Earth-fixed axes;
  * skirts hang `skirtHeight` below each edge to hide cracks between levels.
  */
+import { shareArrays, sharedMemory } from "../io/sharedMemory.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { horizonCullingPoint } from "../math/horizon.ts";
 import type { GltfAsset, GltfMesh } from "../io/gltfTypes.ts";
@@ -1028,6 +1029,32 @@ function buildTerrainTile(d: TerrainTileData): {
     featureTables: [],
     warnings: [],
   };
+  // Kept heights go back to workers with later requests (morphs, refits,
+  // upsampling): shared, when the page can share memory, they are never
+  // copied again (plan §13.42).
+  let kept: TerrainHeights | undefined;
+  let shared = false;
+  if (d.keepHeights) {
+    kept = { u, v, h, triangles, minimumHeight, maximumHeight };
+    if (octNormals) {
+      kept.normals = octNormals;
+    }
+    if (sharedMemory()) {
+      const [su, sv, sh, st, sn] = shareArrays(
+        octNormals ? [u, v, h, triangles, octNormals] : [u, v, h, triangles],
+      );
+      kept = {
+        u: su as Uint16Array,
+        v: sv as Uint16Array,
+        h: sh as Uint16Array,
+        triangles: st as Uint32Array,
+        minimumHeight,
+        maximumHeight,
+        ...(sn ? { normals: sn as Uint8Array } : {}),
+      };
+      shared = true;
+    }
+  }
   return {
     asset,
     info: {
@@ -1039,20 +1066,8 @@ function buildTerrainTile(d: TerrainTileData): {
       quadrants,
       ...(morphs ? { morphs: true as const } : {}),
       ...(available ? { available } : {}),
-      // u, v and h share one buffer (transferred once).
-      ...(d.keepHeights
-        ? {
-            heights: {
-              u,
-              v,
-              h,
-              triangles,
-              minimumHeight,
-              maximumHeight,
-              ...(octNormals ? { normals: octNormals } : {}),
-            },
-          }
-        : {}),
+      // u, v and h share one buffer (transferred once), unless shared.
+      ...(kept ? { heights: kept } : {}),
     },
     transfer: [
       positions.buffer,
@@ -1061,8 +1076,8 @@ function buildTerrainTile(d: TerrainTileData): {
       indices.buffer,
       ...(heightNormals ? [heightNormals.buffer] : []),
       ...(morphs ? [morphs.buffer] : []),
-      ...(d.keepHeights ? [u.buffer, triangles.buffer] : []),
-      ...(d.keepHeights && octNormals ? [octNormals.buffer] : []),
+      ...(d.keepHeights && !shared ? [u.buffer, triangles.buffer] : []),
+      ...(d.keepHeights && !shared && octNormals ? [octNormals.buffer] : []),
     ],
   };
 }
