@@ -39,11 +39,12 @@ import {
   type GlareTier,
   type ObserverReadout,
   type ObserverSettings,
+  type ObserverStage,
   cameraObserver,
   ev100ToScale,
   observerReadout,
 } from "./observer.ts";
-import { type PostStage, checkStageList } from "./postStage.ts";
+import { PostStage, checkStageList } from "./postStage.ts";
 import {
   OcclusionFeedback,
   type OcclusionSwitch,
@@ -328,7 +329,7 @@ export class View {
   };
   private observerRevision_ = 0;
   /** The stages it listens to: their changes wake the loop too. */
-  private stages_: readonly PostStage[] = [];
+  private stages_: readonly ObserverStage[] = [];
   /** What glare's passes were when `stagesRevision` last moved. */
   private glareShape_ = "";
   /**
@@ -447,7 +448,7 @@ export class View {
       this.observerChanged,
       (key, stages) => {
         if (key === "stages") {
-          checkStageList(stages as readonly PostStage[]);
+          checkStageList(stages as readonly ObserverStage[]);
         }
       },
     );
@@ -472,10 +473,14 @@ export class View {
       return;
     }
     for (const stage of old) {
-      stage.unwatch(this.observerChanged);
+      if (stage instanceof PostStage) {
+        stage.unwatch(this.observerChanged);
+      }
     }
     for (const stage of stages) {
-      stage.watch(this.observerChanged);
+      if (stage instanceof PostStage) {
+        stage.watch(this.observerChanged);
+      }
     }
     this.stages_ = stages;
     this.stagesRevision++;
@@ -483,7 +488,9 @@ export class View {
   /** @internal The view is gone: its stages may outlive it. */
   releaseStages(): void {
     for (const stage of this.stages_) {
-      stage.unwatch(this.observerChanged);
+      if (stage instanceof PostStage) {
+        stage.unwatch(this.observerChanged);
+      }
     }
   }
   /** Counts changes to `observer`, assigned or written in place, and its stages'. */

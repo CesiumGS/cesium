@@ -17,7 +17,7 @@ import {
 } from "./RenderContext.ts";
 import { createBox } from "./meshes.ts";
 import { View, type ViewOptions } from "./View.ts";
-import { PostStageError } from "./postStage.ts";
+import { PostStage, PostStageError } from "./postStage.ts";
 import {
   CanvasTarget,
   OffscreenTarget,
@@ -667,7 +667,9 @@ export class Engine {
       );
       const detail = `The GPU device was lost (${info.message}).`;
       for (const stage of stages) {
-        stage.fail(new PostStageError(stage.name, "device", detail));
+        if (stage instanceof PostStage) {
+          stage.fail(new PostStageError(stage.name, "device", detail));
+        }
         stage.enabled = false;
       }
       const names = [...stages].map((s) => `"${s.name}"`).join(", ");

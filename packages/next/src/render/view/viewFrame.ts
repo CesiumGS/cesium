@@ -243,6 +243,7 @@ function buildViewFrame(
   });
   if (glare) {
     chain.share(GLARE_RECORDS, glare.state.sources);
+    chain.glare = glare.state.io();
   }
   if (stages.exposed.length + stages.display.length > 0) {
     void engine.ctx.pipelines.chain().then((pipelines) => {
