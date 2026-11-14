@@ -8,7 +8,7 @@ project: CS-389
 needs: [CS-391]
 ---
 
-(section 16).The rail regrouped by what people come to do, with a reserved first place for the tracker's Work page. Images beside Overview and Alerts. Machines moved into Overview. Examples in the looking group. The footer's Settings item. The redirect for `?tab=machines`. Shortcuts and the command palette updated. DESIGN.md's who-it-is-for list, information architecture, words and the shell's comment updated. Analysis keeps its name and place until CS-405 replaces it.
+The rail regrouped by what people come to do, with a reserved first place for the tracker's Work page. Images beside Overview and Alerts. Machines moved into Overview. Examples in the looking group. The footer's Settings item. The redirect for `?tab=machines`. Shortcuts and the command palette updated. DESIGN.md's who-it-is-for list, information architecture, words and the shell's comment updated. Analysis keeps its name and place until CS-405 replaces it.
 
 Reserves the first place in "Needs a look" for the Work board (CS-170), which needs this item.
 
