@@ -551,14 +551,14 @@ Milestone: 5h ascent and entry
 
 ### Development harness
 
-[CS-6](./initiatives/CS-6-development-harness.md), In progress: 4 of 27 done, 12 ready, 6 blocked, 7 proposed.
+[CS-6](./initiatives/CS-6-development-harness.md), In progress: 4 of 49 done, 16 ready, 25 blocked, 7 proposed.
 
 #### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), In progress, led by owner: 4 of 6 done, 1 ready, 0 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), In progress, led by owner: 4 of 6 done, 1 ready, 1 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 - [x] [CS-169](./items/CS-169-the-tracker-format-scripts-items-and-the-plan-s.md) The tracker: format, scripts, items and the plan's split. Done.
-- [?] [CS-170](./items/CS-170-a-work-board-in-dyno.md) A work board in Dyno. Proposed. Needs nothing.
+- [?] [CS-170](./items/CS-170-a-work-board-in-dyno.md) A work board in Dyno. Proposed. Needs CS-403 (Dyno as the development harness).
 - [x] [CS-171](./items/CS-171-are-these-the-right-initiatives.md) decision: Are these the right initiatives?. Done.
 - [x] [CS-172](./items/CS-172-keep-the-renumbering-table.md) decision: Keep the renumbering table?. Done.
 - [x] [CS-173](./items/CS-173-which-older-open-questions-in-the-design-notes.md) decision: Which older open questions in the design notes are still open?. Done.
@@ -572,7 +572,7 @@ Milestone: 5h ascent and entry
 - [ ] [CS-324](./items/CS-324-benchmark-suite-v2-nightly-and-per-merge-runs-a.md) Benchmark suite v2: nightly and per-merge runs, a results store and a dashboard. Needs CS-323.
 - [ ] [CS-325](./items/CS-325-automatic-bisection-of-benchmark-alerts.md) Automatic bisection of benchmark alerts. Needs CS-324.
 - [ ] [CS-326](./items/CS-326-pull-request-comments-and-traces-from-the.md) Pull-request comments and traces from the benchmark report. Needs CS-324.
-- [ ] [CS-327](./items/CS-327-image-regression-in-ci-on-swiftshader-with.md) Image regression in CI on SwiftShader, with saved checks and the parity pages as checks. Needs CS-323.
+- [ ] [CS-327](./items/CS-327-image-regression-in-ci-on-swiftshader-with.md) Image regression in CI on SwiftShader, with saved checks and the parity pages as checks. Needs CS-323, CS-397 (Dyno as the development harness) and CS-401 (Dyno as the development harness).
 - [ ] [CS-328](./items/CS-328-network-profiles-a-link-shaping-content-server.md) Network profiles: a link-shaping content server and a throttled scenario. Needs nothing.
 - [ ] [CS-329](./items/CS-329-m5-s-exit-the-performance-targets-met-or-the.md) M5's exit: the performance targets met or the gaps explained, including multi-view. Needs nothing.
 - [ ] [CS-330](./items/CS-330-custom-shaders-and-feature-styles-compared.md) Custom shaders and feature styles compared against 1.x. Needs nothing.
@@ -594,6 +594,33 @@ Milestone: 5h ascent and entry
 - [ ] [CS-362](./items/CS-362-prettier-clean-across-packages-next.md) Prettier clean across `packages/next`. Needs nothing.
 - [?] [CS-363](./items/CS-363-packaging-for-pages-without-a-build-step.md) Packaging for pages without a build step. Proposed. Needs nothing.
 - [?] [CS-364](./items/CS-364-the-gallery-shell-filters-editable-source.md) The gallery shell: filters, editable source, checked-in thumbnails, the playground's later list. Proposed. Needs nothing.
+
+#### Dyno as the development harness
+
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 0 of 22 done, 4 ready, 18 blocked. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+
+- [ ] [CS-390](./items/CS-390-run-identity-and-the-machine-wide-run-lock.md) Run identity and the machine-wide run lock. Needs nothing.
+- [ ] [CS-391](./items/CS-391-purpose-branch-item-and-study-in-trends-runs.md) Purpose, branch, item and study in Trends, Runs, Compare and Alerts. Needs CS-390.
+- [ ] [CS-392](./items/CS-392-finding-runs-from-the-terminal-runs-show-pin.md) Finding runs from the terminal (`runs`, `show`, `pin`). Needs CS-390.
+- [ ] [CS-393](./items/CS-393-the-settings-registry-and-multi-axis-sweeps.md) The settings registry and multi-axis sweeps. Needs CS-390.
+- [ ] [CS-394](./items/CS-394-example-scenes-and-the-development-metrics.md) Example scenes and the development metrics. Needs CS-393.
+- [ ] [CS-395](./items/CS-395-reference-images-and-the-sweep-view.md) Reference images and the sweep view. Needs CS-393 and CS-394.
+- [ ] [CS-396](./items/CS-396-the-study-through-dyno-acceptance-a.md) The α study through Dyno (acceptance A). Needs CS-395 and CS-405.
+- [ ] [CS-397](./items/CS-397-image-checks-for-development-scenes-and-sweeps.md) Image checks for development scenes and sweeps. Needs CS-394 and CS-395.
+- [ ] [CS-398](./items/CS-398-recordings-as-runs.md) Recordings as runs. Needs CS-390.
+- [ ] [CS-399](./items/CS-399-test-results-in-dyno-the-vitest-reporter-and.md) Test results in Dyno: the vitest reporter and the Tests view. Needs CS-390.
+- [ ] [CS-400](./items/CS-400-archives-export-and-import-the-manual-fallback.md) Archives: export and import (the manual fallback). Needs CS-390.
+- [ ] [CS-401](./items/CS-401-lab-pages-and-their-results-in-the-store.md) Lab pages and their results in the store. Needs CS-390 and CS-394.
+- [ ] [CS-402](./items/CS-402-measuring-with-dyno-in-agents-md-and-its-skill.md) "Measuring with Dyno" in AGENTS.md, and its skill. Needs CS-390, CS-392 and CS-404.
+- [ ] [CS-403](./items/CS-403-dyno-s-navigation-rail-regrouped-by-what-people.md) Dyno's navigation rail, regrouped by what people come to do. Needs CS-391.
+- [ ] [CS-404](./items/CS-404-studies-the-model-the-files-and-the-commands.md) Studies: the model, the files and the commands. Needs CS-390.
+- [ ] [CS-405](./items/CS-405-the-studies-page.md) The Studies page. Needs CS-395, CS-403 and CS-404.
+- [ ] [CS-406](./items/CS-406-the-local-certificate-authority-the-hub-and.md) The local certificate authority, the hub and pairing. Needs CS-390.
+- [ ] [CS-407](./items/CS-407-the-runner-and-remote-runs.md) The runner and remote runs. Needs CS-390 and CS-406.
+- [ ] [CS-408](./items/CS-408-the-device-lab.md) The device lab. Needs CS-394, CS-404 and CS-407.
+- [ ] [CS-409](./items/CS-409-who-records-a-study-s-verdict-and-does-a.md) decision: Who records a study's verdict, and does a verdict close a decision?. Needs nothing. Decided by owner.
+- [ ] [CS-410](./items/CS-410-does-hypothesis-on-a-run-without-study-open-a.md) decision: Does `--hypothesis` on a run without `--study` open a study?. Needs nothing. Decided by owner.
+- [ ] [CS-411](./items/CS-411-may-the-mac-make-baseline-runs-in-the-laptop-s.md) decision: May the Mac make baseline runs in the laptop's browser?. Needs nothing. Decided by owner.
 
 ### Upstream follow-ups
 
