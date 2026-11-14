@@ -28,6 +28,27 @@ body {
 .rail {
   flex: none;
 }
+/* A phone: the rail opens over the page (shell.tsx), which keeps its width. */
+.shell {
+  position: relative;
+}
+.rail.rail-over {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 3;
+  box-shadow: var(--stratakit-shadow-surface-lg);
+}
+.rail-spacer {
+  flex: none;
+}
+.rail-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: var(--stratakit-color-bg-page-base);
+  opacity: 0.6;
+}
 .brand {
   display: flex;
   align-items: center;
@@ -170,6 +191,11 @@ kbd {
   border-bottom-width: 2px;
   border-radius: 4px;
   padding: 0 4px;
+}
+/* A shortcut at the end of a menu item (Settings, Keyboard shortcuts). */
+.menu-kbd {
+  margin-inline-start: var(--stratakit-space-600);
+  color: var(--stratakit-color-text-neutral-secondary);
 }
 /* Change in words (formatChange): the words carry it, color reinforces. */
 .better {

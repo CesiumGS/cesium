@@ -148,7 +148,14 @@ const To = ({
   to,
   children,
 }: {
-  to: "/runs" | "/trends" | "/alerts" | "/explorer" | "/images" | "/lab";
+  to:
+    | "/overview"
+    | "/runs"
+    | "/trends"
+    | "/alerts"
+    | "/explorer"
+    | "/images"
+    | "/lab";
   children: ReactNode;
 }) => <Link render={<RouterLink to={to} />}>{children}</Link>;
 
@@ -218,10 +225,11 @@ export function FirstRun() {
             </Button>
           </div>
           <Typography variant="body-sm" color="textSecondary" render={<p />}>
-            Each run's report in <To to="/runs">Runs</To> gives the verdict and
-            every scene in detail. <To to="/trends">Trends</To> follows metrics
-            from run to run, and <To to="/alerts">Alerts</To> start after about
-            six runs of a scene.
+            The <To to="/overview">Overview</To> shows where the latest run
+            stands and how each machine compares, and each run's report in{" "}
+            <To to="/runs">Runs</To> gives every scene in detail.{" "}
+            <To to="/trends">Trends</To> follows metrics from run to run, and{" "}
+            <To to="/alerts">Alerts</To> start after about six runs of a scene.
           </Typography>
         </Step>
         <Step title="Meanwhile, look at a scene live">

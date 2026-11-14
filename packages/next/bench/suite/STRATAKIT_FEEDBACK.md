@@ -184,6 +184,16 @@ Versions: `@stratakit/mui` 1.2.0, `@stratakit/foundations` 1.0.4,
     A selected-row treatment that isn't a tinted wash (a neutral surface
     and an accent bar) had to be built by hand; an accent further from
     the status hues, or a documented neutral selection style, would help.
+47. **The rail has no section headings.** `NavigationRail` separates
+    groups only by dividers. Dyno's rail has eleven destinations in four
+    groups (needs a look, results, look, experiment), growing to thirteen;
+    without a heading per group a long rail is hard to scan, and the
+    groups' names live only in DESIGN.md. A heading slot per list (hidden
+    when the rail is collapsed) would carry them.
+48. **The rail doesn't adapt to a phone.** Expanded, the rail keeps its
+    width at 380 px and squeezes the page to a sliver. Dyno folds it on
+    narrow windows and opens it over the page with a scrim (shell.tsx);
+    an overlay mode built into `NavigationRail` would save every app that.
 
 ## What worked well
 

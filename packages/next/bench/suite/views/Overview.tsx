@@ -11,7 +11,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { Link as RouterLink } from "@tanstack/react-router";
+import { Link as RouterLink, useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ALERT_METRICS, detectAlerts } from "../changepoints.mjs";
 import { engineLabel, isRelease, setupOf } from "../engines.mjs";
@@ -19,6 +19,7 @@ import { METRICS } from "../report.mjs";
 import { catalog, geomean, metricInfo, short, type Summary } from "../data.ts";
 import type { Budget } from "../schema.ts";
 import { formatChange, Page, Section, useRuns } from "./common.tsx";
+import { Machines } from "./Machines.tsx";
 import {
   Change,
   dateOf,
@@ -311,6 +312,14 @@ export function Overview() {
     [summaries],
   );
 
+  // Links to a section (`/overview#machines`, old Machines links) land on it.
+  const hash = useLocation({ select: (l) => l.hash });
+  useEffect(() => {
+    if (hash && latest) {
+      document.getElementById(hash)?.scrollIntoView({ block: "start" });
+    }
+  }, [hash, latest]);
+
   if (!latest) {
     return null;
   }
@@ -529,6 +538,14 @@ export function Overview() {
           />
         </Section>
       </div>
+
+      <Section
+        id="machines"
+        title="Machines"
+        description="The latest run on each machine: the candidate against the baseline, geometric mean over scenes."
+      >
+        <Machines />
+      </Section>
 
       <Section
         title="Recent runs"

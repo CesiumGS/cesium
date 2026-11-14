@@ -5,12 +5,13 @@ import {
   redirect,
 } from "@tanstack/react-router";
 import { loadRuns } from "./data.ts";
+import { movedTo } from "./rail.ts";
 import { searchToParams } from "./views/exampleRun.ts";
 import { RunsLayout, Shell, ShellError, ShellPending } from "./shell.tsx";
 
 /**
- * Dyno's routes (hash history: /#/overview?…), following the navigation
- * in DESIGN.md. Each view is its own chunk, loaded on first visit; its
+ * Dyno's routes (hash history: /#/overview?…), following the rail in
+ * rail.ts and DESIGN.md. Each view is its own chunk, loaded on first visit; its
  * state is the route's path and search params, validated here so views
  * get typed values and links stay shareable. The views that read the
  * runs sit under a pathless layout route whose loader reads them once;
@@ -241,23 +242,27 @@ export const exampleRoute = createRoute({
   ),
 });
 
-// ------------------------------------------------------------ workbench
+// ------------------------------------------------------------ experiment
 
 export interface AnalysisSearch {
-  /** Sweeps (the default) or machines. */
-  tab?: "machines";
   sweep?: string;
   scene?: string;
 }
 export const analysisRoute = createRoute({
   getParentRoute: () => runsLayoutRoute,
   path: "/analysis",
+  // Machines moved into the Overview (rail.ts `movedTo`).
+  beforeLoad: ({ location }) => {
+    const moved = movedTo(
+      location.pathname,
+      location.search as Record<string, unknown>,
+    );
+    if (moved) {
+      throw redirect({ to: moved.to, hash: moved.hash, replace: true });
+    }
+  },
   validateSearch: (s: Record<string, unknown>): AnalysisSearch =>
-    clean({
-      tab: s.tab === "machines" ? ("machines" as const) : undefined,
-      sweep: str(s.sweep),
-      scene: str(s.scene),
-    }),
+    clean({ sweep: str(s.sweep), scene: str(s.scene) }),
   component: lazyRouteComponent(
     () => import("./views/Analysis.tsx"),
     "Analysis",

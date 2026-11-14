@@ -1,23 +1,11 @@
 import "./analysis.css";
-import {
-  Button,
-  Link,
-  Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Tabs,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Button, Link, Typography } from "@mui/material";
 import {
   getRouteApi,
   Link as RouterLink,
   useNavigate,
 } from "@tanstack/react-router";
-import { useId, useMemo } from "react";
+import { useMemo } from "react";
 import { lineChart } from "../charts.mjs";
 import { compareEngines, engineLabel, isRelease } from "../engines.mjs";
 import {
@@ -28,12 +16,10 @@ import {
   type Summary,
   when,
 } from "../data.ts";
-import { ratio } from "../stats.mjs";
 import {
   Chart,
   Choice,
   Empty,
-  formatChange,
   Page,
   Section,
   Toolbar,
@@ -41,12 +27,11 @@ import {
 } from "./common.tsx";
 
 /**
- * Dyno's Analysis (DESIGN.md, Workbench): two tabs. Sweeps: a run that
- * varied one parameter (`cli.mjs run --sweep`) or ran several CesiumJS
- * releases (`--releases`), each metric against the parameter's values,
- * one line per swept configuration, the baseline as a dashed reference.
- * Machines: the latest ordinary run on each machine, candidate against
- * baseline per headline metric.
+ * Dyno's Analysis (DESIGN.md, Experiment): sweeps. A run that varied one
+ * parameter (`cli.mjs run --sweep`) or ran several CesiumJS releases
+ * (`--releases`), each metric against the parameter's values, one line
+ * per swept configuration, the baseline as a dashed reference. Studies
+ * replace this page (CS-405); Machines moved into the Overview.
  */
 
 const route = getRouteApi("/_runs/analysis");
@@ -78,87 +63,26 @@ const SWEEP_GROUPS: Array<[string, string[]]> = [
   ["Image", ["flipEnd", "motionFlip"]],
 ];
 
-/** Shorter column headings for the machines table. */
-const COLUMN_NAMES: Record<string, string> = {
-  cpuP50: "CPU per frame",
-  gpuP50: "GPU per frame",
-  frameP95: "Frame time p95",
-  bytes: "Bytes",
-};
-/** "Edge 155" from "Microsoft Edge 155.0.4283.62". */
-const browserOf = (s: Summary) =>
-  s.browser?.replace(/^Microsoft /, "").replace(/(\d+)(\.\d+)+$/, "$1");
-
-/** The machines table's metrics, and how each one's change reads. */
-const MACHINE_METRICS: Array<[string, string | undefined]> = [
-  ["cpuP50", undefined],
-  ["gpuP50", undefined],
-  ["frameP95", undefined],
-  ["settleMs", undefined],
-  ["bytes", "data"],
-  ["heapBytes", "memory"],
-  ["bufferBytes", "memory"],
-];
-
 export function Analysis() {
-  const search = route.useSearch();
-  const navigate = useNavigate({ from: "/analysis" });
-  const id = useId();
-  const tab = search.tab ?? "sweeps";
   return (
     <Page
       title="Analysis"
-      description="What a parameter or a CesiumJS release does to every metric, and how each machine compares."
+      description="What a parameter or a CesiumJS release does to every metric."
       help={
-        <>
-          <p>
-            <b>Sweeps</b>: a run that varied one parameter runs each
-            configuration once per value (
-            <code>--sweep maximumScreenSpaceError=8,16,32</code>); a run of
-            several 1.x releases (<code>--releases 1.120.0..1.146.0</code>)
-            sweeps the release. Each chart is one metric against the values.
-          </p>
-          <p>
-            <b>Machines</b>: the same comparison on each machine the suite ran
-            on. How each engine scales across GPUs shows where it is bound.
-          </p>
-        </>
+        <p>
+          A run that varied one parameter runs each configuration once per value
+          (<code>--sweep maximumScreenSpaceError=8,16,32</code>); a run of
+          several 1.x releases (<code>--releases 1.120.0..1.146.0</code>) sweeps
+          the release. Each chart is one metric against the values. How each
+          machine compares is on the{" "}
+          <Link render={<RouterLink to="/overview" hash="machines" />}>
+            Overview
+          </Link>
+          .
+        </p>
       }
     >
-      <Tabs
-        value={tab}
-        size="small"
-        className="analysis-tabs"
-        onChange={(_, next: string) =>
-          void navigate({
-            search: (prev) => ({
-              ...prev,
-              tab: next === "machines" ? ("machines" as const) : undefined,
-            }),
-          })
-        }
-      >
-        <Tab
-          value="sweeps"
-          label="Sweeps"
-          id={`${id}-sweeps`}
-          aria-controls={`${id}-panel`}
-        />
-        <Tab
-          value="machines"
-          label="Machines"
-          id={`${id}-machines`}
-          aria-controls={`${id}-panel`}
-        />
-      </Tabs>
-      <div
-        role="tabpanel"
-        id={`${id}-panel`}
-        aria-labelledby={`${id}-${tab}`}
-        className="analysis-panel"
-      >
-        {tab === "machines" ? <Machines /> : <Sweeps />}
-      </div>
+      <Sweeps />
     </Page>
   );
 }
@@ -392,139 +316,6 @@ function Sweeps() {
           </div>
         </Section>
       ))}
-    </>
-  );
-}
-
-// ------------------------------------------------------------ machines
-
-function Machines() {
-  const { summaries } = useRuns();
-  const rows = useMemo(() => {
-    // Sweeps vary the configurations; compare ordinary runs only.
-    const plain = summaries.filter((s) => !s.sweep);
-    const machines = [...new Set(plain.map((s) => s.hardware))];
-    return machines.map((h) => {
-      const s = plain.findLast((x) => x.hardware === h)!;
-      const base = s.baseline ?? s.configs[0]!;
-      const cand = s.candidate ?? s.configs.find((c) => c !== base) ?? base;
-      const ratios = MACHINE_METRICS.map(([metric]) => {
-        const values: number[] = [];
-        for (const c of s.scenes.filter((x) => x.config === cand)) {
-          const b = s.scenes.find(
-            (x) => x.config === base && cellKey(x) === cellKey(c),
-          );
-          const r =
-            b &&
-            ratio(
-              b.metrics[metric]?.values ?? [],
-              c.metrics[metric]?.values ?? [],
-            );
-          if (r?.value) {
-            values.push(r.value);
-          }
-        }
-        return geomean(values);
-      });
-      return {
-        s,
-        base,
-        cand,
-        ratios,
-        runs: summaries.filter((x) => x.hardware === h).length,
-      };
-    });
-  }, [summaries]);
-
-  if (!rows.length) {
-    return (
-      <Empty title="No runs to compare yet">
-        Machines compare ordinary runs (a sweep varies the configurations, so it
-        doesn't count). On each machine, run{" "}
-        <code>node packages/next/bench/suite/cli.mjs run</code>.
-      </Empty>
-    );
-  }
-
-  return (
-    <>
-      <Typography
-        variant="body-sm"
-        color="textSecondary"
-        render={<p />}
-        className="analysis-note"
-      >
-        The latest run on each machine: the candidate against the baseline,
-        geometric mean over scenes.
-        {rows.length === 1 &&
-          " One machine so far; runs from others appear here once their results are in the results directory."}
-      </Typography>
-      <div className="analysis-table">
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Machine</TableCell>
-              <TableCell>Latest run</TableCell>
-              {MACHINE_METRICS.map(([k]) => (
-                <TableCell key={k} className="num">
-                  {COLUMN_NAMES[k] ?? nameOf(k)}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map(({ s, base, cand, ratios, runs }) => (
-              <TableRow key={s.hardware}>
-                <TableCell render={<th scope="row" />}>
-                  <Typography variant="body-md" className="analysis-machine">
-                    {s.hardware}
-                  </Typography>
-                  <Typography variant="caption-md" color="textSecondary">
-                    {[browserOf(s), `${runs} ${runs === 1 ? "run" : "runs"}`]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Link
-                    render={
-                      <RouterLink to="/runs/$run" params={{ run: s.name }} />
-                    }
-                    className="analysis-nowrap"
-                  >
-                    {when(s)}
-                  </Link>
-                  <Typography
-                    variant="caption-md"
-                    color="textSecondary"
-                    className="analysis-block"
-                  >
-                    {engineLabel(cand)} against {engineLabel(base)}
-                  </Typography>
-                </TableCell>
-                {ratios.map((g, i) => {
-                  const [metric, noun] = MACHINE_METRICS[i]!;
-                  const change = formatChange(g, { noun });
-                  return (
-                    <TableCell key={metric} className="num">
-                      {g === undefined ? (
-                        <span className="none">–</span>
-                      ) : (
-                        <Tooltip
-                          title={`×${g.toFixed(2)} (${engineLabel(cand)} / ${engineLabel(base)})`}
-                          describeChild
-                        >
-                          <span className={change.tone}>{change.text}</span>
-                        </Tooltip>
-                      )}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
     </>
   );
 }

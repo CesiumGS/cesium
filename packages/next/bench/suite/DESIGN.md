@@ -12,37 +12,54 @@ gets in the way in [STRATAKIT_FEEDBACK.md](STRATAKIT_FEEDBACK.md).
 
 Engineers working on CesiumJS 2.0. They come to:
 
-1. **See where 2.0 stands** against 1.x now (Overview).
-2. **Follow metrics over time** and catch regressions (Trends, Alerts).
-3. **Understand one run** or compare two (Runs, a run's report, Compare).
-4. **Look at a scene** live in both engines (Scenes, Explorer), at any
-   content in one engine at a time (Viewer), or at images that changed
-   (Images).
-5. **Try a variation** (Analysis: sweeps and machines) or run a focused
-   check (Lab).
+1. **See what needs a look:** decisions waiting on the owner (Work),
+   where 2.0 stands against 1.x and on each machine (Overview),
+   regressions to triage (Alerts), images to approve (Images), failing
+   or flaky tests, open studies.
+2. **Read results:** one run or two compared (Runs, a run's report,
+   Compare), metrics over time (Trends), one scene's history (Scenes).
+3. **Look at content live:** a scene in one or two engines (Explorer),
+   any content in one engine (Viewer), an example (Examples).
+4. **Find things out:** a sweep (Analysis, until Studies replace it) or
+   a focused check (Lab).
+5. **Set up:** the first run, the ion token, the theme and shortcuts.
 
 ## Information architecture
 
-The navigation rail (`NavigationRail` from `@stratakit/structures`) has
-three groups separated by dividers, then a footer:
+The navigation rail (`NavigationRail` from `@stratakit/structures`)
+follows those jobs: four groups separated by dividers, then a footer.
+The groups have names here, not on screen (the rail has no section
+headings; see STRATAKIT_FEEDBACK.md). `rail.ts` holds the rail as data
+and `test/dynoRail.test.ts` checks this table against it.
 
-| Group     | Item            | Route                       | What it is                                           |
-| --------- | --------------- | --------------------------- | ---------------------------------------------------- |
-| Results   | Overview        | `/overview`                 | The latest run's verdict, budgets, alerts and to-dos |
-|           | Trends          | `/trends`                   | Metrics run to run (the former Workspace)            |
-|           | Runs            | `/runs`, `/runs/$run`       | Every run; a run's report; pick two to compare       |
-|           | Alerts          | `/alerts`                   | Change points to triage                              |
-| Scenes    | Scenes          | `/scenes`, `/scenes/$scene` | The catalog; a scene's page                          |
-|           | Explorer        | `/explorer`                 | A scene live in one or two engines                   |
-|           | Viewer          | `/viewer`                   | Any content in one engine at a time, to debug        |
-|           | Images          | `/images`                   | Image checks to review                               |
-| Workbench | Analysis        | `/analysis`                 | Sweeps and machines (tabs)                           |
-|           | Lab             | `/lab`, `/lab/$id`          | Parity checks, microbenchmarks, spikes               |
-| Footer    | Getting started | `/start`                    | Setup checks and a first run; also shortcuts, theme  |
-|           | ion token       | (popover)                   | The Cesium ion token every view uses; what's in use  |
+| Group        | Item            | Key | Route                        | What it is                                          |
+| ------------ | --------------- | --- | ---------------------------- | --------------------------------------------------- |
+| Needs a look | Overview        | o   | `/overview`                  | The latest run's verdict, budgets, machines, to-dos |
+|              | Alerts          | a   | `/alerts`                    | Change points to triage (a count)                   |
+|              | Images          | i   | `/images`                    | Image checks to review (a count)                    |
+| Results      | Trends          | t   | `/trends`                    | Metrics run to run                                  |
+|              | Runs            | r   | `/runs`, `/runs/$run`        | Every run; a run's report; pick two to compare      |
+|              | Scenes          | s   | `/scenes`, `/scenes/$scene`  | The catalog; a scene's page is its history          |
+| Look         | Explorer        | e   | `/explorer`                  | A scene live in one or two engines                  |
+|              | Viewer          | v   | `/viewer`                    | Any content in one engine at a time, to debug       |
+|              | Examples        | x   | `/examples`, `/examples/$id` | What 2.0 is for, one feature or use case each       |
+| Experiment   | Analysis        | n   | `/analysis`                  | Sweeps; Studies replace it (CS-405)                 |
+|              | Lab             | l   | `/lab`, `/lab/$id`           | Parity checks, microbenchmarks, spikes              |
+| Footer       | Getting started |     | `/start`                     | Setup checks and a first run                        |
+|              | ion token       |     | (popover)                    | The Cesium ion token every view uses; what's in use |
+|              | Settings        |     | (menu)                       | Theme and keyboard shortcuts                        |
 
-Compare (`/compare`) is reached from Runs (select two runs), from an
-alert, or a link; it is not in the rail. `/` opens the Overview.
+- **Reserved:** the first place in "Needs a look" is the tracker's Work
+  page (`/work`, `w`), with a count of decisions waiting on the owner.
+  Tests (`u`) joins the group, and Studies (`y`) replaces Analysis.
+- **Off the rail:** Compare (`/compare`) is reached from Runs (select
+  two runs), from an alert, or a link, and highlights Runs. A page under
+  a rail item (a run's report, a scene, an example, a Lab page)
+  highlights its item. `/` opens the Overview.
+- **Moved:** Machines is a section of the Overview (`/overview#machines`);
+  old `/analysis?tab=machines` links land there.
+- **On a phone** (600 px and narrower) the rail starts folded, opens
+  over the page, and folds after a pick.
 
 Words that mean one thing each: **run** (one invocation of the suite),
 **scene** (catalog content with a camera path), **engine** (1.x, any
@@ -51,8 +68,20 @@ build, e.g. `2.0+stepwise`), **check** (one image check), **Lab page**.
 Engines are always named through `engineLabel` (engines.mjs), never by
 raw id: a release by its version ("1.146.0"), a build by engine and
 branch or ref ("2.0 · main", "2.0 · cesium-2.0-webgpu-poc · stepwise
-selection"). Never "lap", "tab" (for a view), "experiment",
-"workspace", "1.x@1.146.0".
+selection"). Never "lap", "tab" (for a view), "experiment" (on
+screen; it names a rail group here only), "workspace", "1.x@1.146.0".
+
+The Dyno harness (project CS-389) adds, one meaning each: **study**,
+**question**, **hypothesis**, **expectations**, **evidence**;
+**verdict**, for studies only (supported, refuted, inconclusive);
+**result**, a run's scorecard (pass, marginal, fail); **validity**
+(valid, warning, invalid); **purpose**, **baseline run**, **development
+run**, **item** (`CS-<n>`, a work item in the tracker); **sweep**,
+**axis**, **point**, **reference**, **setting**, **configuration**;
+**series**, **machine**, **runner**, **device**, **hub**, **recording**.
+Never "baseline" alone: say "baseline run", "baseline and candidate" or
+"approved image". Pages that still call a run's result its verdict
+change as the harness's pages land.
 
 ## Page anatomy
 

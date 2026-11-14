@@ -1,8 +1,5 @@
-/* Analysis (views/Analysis.tsx): sweeps and machines, as tabs. */
+/* Analysis (views/Analysis.tsx): sweeps. */
 
-.analysis-tabs {
-  margin-bottom: var(--stratakit-space-500);
-}
 .analysis-note {
   margin: 0 0 var(--stratakit-space-500);
   max-width: 900px;
@@ -16,29 +13,6 @@
 .analysis-chart figure {
   margin: 0;
 }
-.analysis-table {
-  overflow-x: auto;
-  border: 1px solid var(--stratakit-color-border-neutral-muted);
-  border-radius: var(--stratakit-radius-md);
-}
-.analysis-table th[scope="row"] {
-  text-align: start;
-  font-weight: normal;
-  min-width: 200px;
-}
-.analysis-block {
-  display: block;
-}
-.analysis-machine {
-  display: block;
-  font-weight: 600;
-}
-.analysis-table .num {
-  white-space: nowrap;
-}
 .analysis-toolbar-end {
   align-self: flex-end;
-}
-.analysis-nowrap {
-  white-space: nowrap;
 }
