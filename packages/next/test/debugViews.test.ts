@@ -67,7 +67,7 @@ describe("debug view words", () => {
   });
 
   it("numbers the modes from 1, with off as 0", () => {
-    expect(DEBUG_VIEWS.map(debugModeId)).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(DEBUG_VIEWS.map(debugModeId)).toEqual([0, 1, 2, 3, 4, 5, 6]);
   });
 });
 
@@ -88,6 +88,9 @@ describe("legends", () => {
     expect(debugLegend("state").entries).toHaveLength(4);
     expect(debugLegend("error").kind).toBe("ramp");
     expect(debugLegend("stretch").kind).toBe("ramp");
+    expect(debugLegend("skirts").entries).toEqual([
+      { label: "Skirt", color: "#ff00ff" },
+    ]);
   });
 
   it("samples the ramps at their stops", () => {
@@ -237,6 +240,8 @@ describe("the engine side", () => {
     expect(read()).toBe(0);
     view.debug = "stretch";
     expect(read()).toBe(debugModeId("stretch"));
+    view.debug = "skirts";
+    expect(read()).toBe(6);
   });
 
   it("writes a draw's debug word through the constants seam", () => {

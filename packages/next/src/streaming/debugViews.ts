@@ -12,9 +12,9 @@
 
 /** What a view's debug shading shows (`View.debug`). */
 export type DebugView =
-  "off" | "level" | "tiles" | "error" | "state" | "stretch";
+  "off" | "level" | "tiles" | "error" | "state" | "stretch" | "skirts";
 
-/** The modes, in the order the shader numbers them (1 to 5; "off" is 0). */
+/** The modes, in the order the shader numbers them (1 to 6; "off" is 0). */
 export const DEBUG_VIEWS: readonly DebugView[] = [
   "off",
   "level",
@@ -22,6 +22,7 @@ export const DEBUG_VIEWS: readonly DebugView[] = [
   "error",
   "state",
   "stretch",
+  "skirts",
 ];
 
 /** The shader's number for a mode (`View.time.w`): 0 for "off". */
@@ -273,6 +274,15 @@ export function debugLegend(mode: DebugView): DebugLegend {
         })),
       };
     }
+    case "skirts":
+      return {
+        mode,
+        title: "Terrain skirts",
+        description:
+          "Terrain skirts, the curtains hung below each tile's edges to hide cracks, are magenta. Everything else is shaded as normal.",
+        kind: "categories",
+        entries: [{ label: "Skirt", color: "#ff00ff" }],
+      };
     default:
       return {
         mode: "off",
