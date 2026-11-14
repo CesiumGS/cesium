@@ -3,14 +3,15 @@
 **Status (2026-11-13):** reviewed by the owner and revised. Nothing is built.
 
 - **Accepted as recommended:** questions 1 to 4 and 6 to 13 (section 13 records each).
-- **Changed:** question 5. There is no Bentley-internal results repository for now. Instead, a runner on the local network (section 8) lets the Mac request suite runs on the Windows laptop, with the results returned into the Mac's store. Archives moved by hand stay as the fallback.
+- **Changed:** question 5. There is no Bentley-internal results repository for now. Instead, the Windows laptop lends its browser and GPU to runs the Mac drives (section 8). Archives moved by hand stay as the fallback.
+- **Refined the same day:** the laptop runs no code of its own. It lends a browser endpoint over SSH; the Mac builds, serves, drives and records (section 8). A device lab for phones and other browsers follows the same split (DH-20).
 - **Added:** studies, and the data model behind them (section 2). A study holds a question, a hypothesis, the runs that test it and a recorded verdict. Sweeps fold into study pages, and the rail's Experiment group becomes Studies and Lab (section 16).
 - **Adjusted with the main session:**
   - Items are the work tracker's global IDs (`CS-<n>`), with no per-plan prefixes or letters.
   - The rail reserves the first place for the tracker's Work page.
   - This plan's AGENTS.md section lands in one coordinated change with the tracker's "Work items" section, with both skills in one place.
-- **Milestone names:** DH-1 to DH-19 keep their names in this document. They become `CS-<n>` items under a development-harness initiative when the tracker lands; the tracker's session converts them after merge.
-- **Open questions:** 14 to 18 (section 13), each with a recommendation the plan assumes.
+- **Milestone names:** DH-1 to DH-20 keep their names in this document. They become `CS-<n>` items under a development-harness initiative when the tracker lands; the tracker's session converts them after merge.
+- **Open questions:** 14 to 19 (section 13), each with a recommendation the plan assumes.
 
 **Goal:** every measurement that steers development goes through Dyno, so it lands in the results store, shows in Trends, and can be found again by its run and its study. Today the numbers behind recent decisions (the error exponent α, the ×10 cliff bands, the culling gains) came from one-off Playwright scripts that wrote CSVs and PNGs to temporary folders. Those numbers can't be compared with later ones, nobody can find them a week on, and the reasoning that turned them into a decision lives in chat.
 
@@ -19,7 +20,7 @@
 - **Every run says what it is for:** development or baseline, the tracker item it serves, the study it belongs to, its branch, worktree and machine. Development runs never pollute the baselines.
 - **A study turns runs into a decision:** a question and a hypothesis, stated before results; the runs that test it; a verdict with its reasoning and the runs it cites.
 - **Results come back by ID.** Agents leave their results in the shared store and report study and run IDs; the main session and the owner find them by item, study or branch.
-- **Other sources reach the same store:** test results, live inspector recordings, and runs made on the laptop at the Mac's request.
+- **Other sources reach the same store:** test results, live inspector recordings, and runs the Mac drives in the laptop's browser.
 - **New sessions learn it from AGENTS.md** and a short skill.
 
 **Sources:**
@@ -128,7 +129,7 @@ DEFINITIONS (repo)     Dataset · Scene (groups A to D) · Scenario · Check · 
 | **Engine** | Definition | 1.x or 2.0, from a release, the working tree or a git ref (§16.6). | | `engines.mjs` |
 | **Metric**, **budget** | Definition | A measured quantity with units and a direction; a budget is a limit on one per scene. | Expectations name metrics. | `report.mjs`, the catalog |
 | **Lab page** | Definition | A harness with `mount` and `run`. | A group D scene can name one. | `lab/pages.ts` |
-| **Machine**, **runner** | Execution context | A machine is a computer with an alias (`mac`, `win`) and a hardware class. A runner is a machine that accepts runs from paired machines (section 8). | A study can use runs from both machines. | `BENCH_MACHINE`; pairing files |
+| **Machine**, **runner**, **device** | Execution context | A machine is a computer with an alias (`mac`, `win`) and a hardware class. A runner is a machine that lends its browser and GPU to runs another machine drives and serves (section 8); a device is a browser in the device lab (DH-20). "Served remotely" is part of a machine's identity. | A study can use runs from every machine and device, and Dyno warns when a timing claim mixes them. | `BENCH_MACHINE`; the runner's key and pinned host key |
 | **Recording** | Execution | A run of kind `recording`: a live session's time series, with no repetitions and no controlled conditions. | Evidence for "what happens when", never for "faster". | The run |
 | **Annotation** | Judgement | A dated note on series: method, machine, data, or (new) **decision**. | A concluded study whose decision lands adds a decision annotation at that commit. | `annotations.json`, the store |
 | **Pin** | Judgement | Keeps a run out of retention. | A verdict pins every run it cites. | The run's sidecar |
@@ -390,11 +391,11 @@ Every run kind adds these fields to its result and summary:
 | `item` | `CS-<n>` | `--item`, or inherited from `--study`. The CLI warns on anything not of the form `CS-<n>`. |
 | `study` | `2026-11-14-alpha-default` | `--study`. |
 | `plan` | `{ primary, guardrails, tolerance, hypothesis }` | The study's expectations and hypothesis, or the run's own options (`--primary`, `--guardrails`, `--tolerance`, `--hypothesis`), which override them. |
-| `branch` | `claude/plan-dyno-harness-18e1ff` | Unchanged (`treeRef`). For a run on the runner, the requester's branch. |
-| `worktree` | `plan-dyno-harness-18e1ff` or `main checkout` | The basename of the worktree's top level, never the full path (it carries the user name). For a run on the runner, the requester's worktree. |
+| `branch` | `claude/plan-dyno-harness-18e1ff` | Unchanged (`treeRef`). |
+| `worktree` | `plan-dyno-harness-18e1ff` or `main checkout` | The basename of the worktree's top level, never the full path (it carries the user name). |
 | `base` | `{ ref: "cesium-2.0-webgpu-poc", sha }` | `git merge-base HEAD <integration branch>`. The integration branch is a catalog setting: `cesium-2.0-webgpu-poc` today, `main` after the merge. |
 | `machine` | `mac`, `win` | `BENCH_MACHINE`, else a short alias derived from the platform and GPU, set once per machine by `npm run setup`. |
-| `requestedBy` | `mac` | Runs made on a runner at another machine's request (section 8). |
+| `servedFrom` | `mac` | Runs whose browser and GPU were on a runner while the pages came from this machine (section 8). Part of the machine identity. |
 
 - **Baselines are guarded.**
   - `--purpose baseline` is accepted only from a clean tree (`dirty: false`) on the integration branch, and only for `bench` and `images` runs. Anything else is refused with the reason.
@@ -428,7 +429,7 @@ Every run kind adds these fields to its result and summary:
 
 Two runs at once share the GPU, and their timings mean nothing.
 
-- **The lock.** The CLI takes a machine-wide lock, `~/.cesium-bench/run.lock` (process id, worktree, command, start), for any run that drives a browser, local or requested through the runner.
+- **The lock.** The CLI takes a machine-wide lock, `~/.cesium-bench/run.lock` (process id, worktree, command, start), for any run whose browser is on this machine. A run on the runner takes the runner's lock instead, on the runner (section 8).
 - **Waiting.** A second run waits, with a line saying whose run holds the lock; `--no-wait` exits instead. A lock whose process is gone is taken over.
 - **Live dev servers aren't covered.** People look at pages while runs happen. A run records how many other browser GPU processes were alive at its start, and the report flags a busy GPU.
 
@@ -494,107 +495,128 @@ Two runs at once share the GPU, and their timings mean nothing.
   - one test's history across branches.
 - **Retention:** the newest 200 full runs and 500 focused runs. Older ones are dropped, except runs a study cites (question 9).
 
-## 8. The second machine: a runner on the local network
+## 8. The second machine: a browser endpoint on the local network
 
-**Decided at review (question 5, changed):** no Bentley-internal results repository for now. A machine on the local network, the owner's Windows laptop with its NVIDIA GPU, runs suite runs on request from another machine (this Mac), and the results come back into the requester's store. Archives moved by hand (DH-11) stay as the fallback, and they are the format the runner returns.
+**Decided at review (question 5, changed, then refined the same day):** there is no Bentley-internal results repository for now. The second machine doesn't run its own copy of the code. The owner's Windows laptop, with its NVIDIA GPU, only lends a browser. The Mac does everything else:
+
+- it freezes and builds the tree as today, and serves it;
+- it drives the laptop's browser over the network;
+- it writes the results straight into its own store.
+
+There is no bundle, no remote build and no result archive. Archives moved by hand (DH-11) stay only as a manual fallback. The same idea, generalized, becomes a device lab (DH-20).
 
 ### Roles
 
-| Role | Machine | Command |
+| Role | Machine | What runs there |
 | --- | --- | --- |
-| Runner | The laptop (`win`) | `cli.mjs runner serve`: listens while it runs, in a terminal the owner started. Nothing installs a service or starts it at login. |
-| Requester | The Mac (`mac`) | `cli.mjs run … --on win` and `cli.mjs images … --on win`: the same commands, run elsewhere. |
+| Runner | The laptop (`win`) | A browser endpoint: Playwright's `launchServer` for Edge with WebGPU, bound to the laptop's own `127.0.0.1`. One endpoint has vsync and one is uncapped, with the same flags as a local run. The runner's own checkout, already on the laptop, supplies only three things: the endpoint, the GPU lock, and the machine's telemetry (temperatures, clocks, slowdown reasons, CPU utility, power) and wake lock. No engine code, no pages and no build come from the laptop's checkout. |
+| Requester | The Mac (`mac`) | `cli.mjs run … --on win` and `cli.mjs images … --on win`: the same commands, with the browser elsewhere. The frozen tree is built and served here. The run's file, summary, report and captures are written here. |
 
-A machine can be both. Pairing is per pair of machines, and each direction is paired on its own.
+### Secure context, and the channel: one SSH connection
 
-### Discovery and pairing
+WebGPU and cross-origin isolation need a secure context, and `http://<mac-ip>:<port>` isn't one. Three ways to get one:
 
-- **Discovery is an address the person types:** `host:port`, where `laptop.local` works if the network resolves mDNS names. Nothing is broadcast. An mDNS advertisement carrying only the alias and the certificate fingerprint is a later convenience, not part of this plan.
-- **Pairing, once per pair:**
-  1. On the runner: `cli.mjs runner pair`. It creates the runner's key and certificate on first use, prints the runner's alias, its address and a one-time pairing code (eight characters from an unambiguous alphabet), and waits.
-  2. On the requester: `cli.mjs runner add win --address laptop.local:5280 --code <code>`.
-  3. The two sides prove they hold the code without sending it, bound to the runner's certificate fingerprint and fresh nonces from both sides. A machine in the middle would need the code and would change the fingerprint. The code works once and allows three tries, and it expires when `runner pair` exits.
-  4. On success, the runner generates a random 256-bit **pair secret** and sends it over the now-verified channel. Each side stores the other's alias, the runner's certificate fingerprint and the secret in `~/.cesium-bench/runner/pairs.json`, readable by the user only.
-- **Unpairing:** `cli.mjs runner remove <alias>` on either side deletes the entry. The other side's requests then fail authentication.
+| Option | Secure context | Encryption | Against |
+| --- | --- | --- | --- |
+| **Forward the Mac's server to the laptop's `localhost` over SSH** (recommended) | Yes: pages load from `http://127.0.0.1:<port>` on the laptop, which is potentially trustworthy, exactly as in a local run. Same origin, same COOP and COEP, same `crossOriginIsolated`. | The whole channel is SSH: the pages, the engine, the Playwright protocol and the telemetry. | The owner enables Windows' built-in OpenSSH server once (a system setting, so the owner does it), private networks only. |
+| `--unsafely-treat-insecure-origin-as-secure=http://<mac>:<port>` on the remote browser | Treated as secure. The flag is fixed when the browser launches, so the Mac's address and every port (the frozen tree, snapshot servers) must be known in advance. | None. The pages, and any token a page holds, cross the LAN in clear, and Playwright's own protocol is plain WebSocket. | The Mac serves on the LAN. Origins differ from local runs. Flags meant for testing stand in for real behaviour. |
+| HTTPS from the Mac with a locally trusted certificate | Yes, with a different origin (`https://mac.local:<port>`). | The pages only; the Playwright protocol still needs its own protection. | A certificate authority installed in the laptop's trust store, certificates for the Mac's LAN names, and a second mechanism for the endpoint. Kept for phones (DH-20), which can't forward ports. |
 
-### The channel
+**Recommendation: SSH forwarding (question 16).** One connection from the Mac to the laptop carries everything:
 
+- **Local forwards** (`-L`) carry the two browser endpoints: the Mac connects to `ws://127.0.0.1:<local port>/<endpoint token>`.
+- **Remote forwards** (`-R`) carry each server the CLI starts (the frozen tree, each snapshot server for an engine at a ref) to the same port number on the laptop's `127.0.0.1`. Where a port is taken there, the CLI picks another, and it rewrites every origin it hands to a page (`page.server` included) to the laptop-side one.
+- **The Mac serves nothing on the LAN.** Its servers stay bound to its own `127.0.0.1`, as today.
+
+### Pairing and access
+
+- **Pairing, once:** `cli.mjs runner pair win --host laptop.local` on the Mac.
+  1. It creates a dedicated key for this runner (`~/.cesium-bench/runner/win_ed25519`, readable by the user only).
+  2. It prints one `authorized_keys` line for the owner to add on the laptop. The line is restricted: `restrict`, `port-forwarding`, `permitopen` for the two endpoint ports only, `permitlisten` for a small port range on `127.0.0.1` only, and a forced `command` that starts `runner serve`.
+  3. With that key, the Mac can open no shell, run no other command, and forward nothing else.
+  4. On the first connection, the Mac shows the laptop's host key fingerprint. The owner compares it with the one `runner serve --show-host-key` prints on the laptop. It is then pinned in a known-hosts file of its own.
+- **The endpoint token.** `runner serve`, the forced command, starts the endpoints with an unguessable random `wsPath` (Playwright's own access token in the endpoint) and prints it to the Mac over the SSH session, with its versions. The token keeps other users and processes on the laptop away from the browser. It changes on every connection and is never written to disk or logs.
 - **LAN only.**
-  - The runner binds to the LAN interface the person names (or all private interfaces), never a public address. It refuses connections from outside private and link-local ranges (10/8, 172.16/12, 192.168/16, 169.254/16, fc00::/7, fe80::/10).
-  - The runner tells the person to allow it on private networks only in the Windows firewall.
-  - No UPnP, no port forwarding, no relay, nothing reachable from the internet.
-- **Authenticated and encrypted.**
-  - The requester talks to the runner over TLS. It pins the runner's certificate by the fingerprint learned at pairing; there is no certificate authority.
-  - Every request is also signed with the pair secret: HMAC-SHA256 over the method, the path, a timestamp, a nonce and the body's SHA-256.
-  - The runner rejects an unknown alias, a bad signature, a timestamp outside a small window, or a nonce it has already seen.
-  - How the TLS key and certificate are made is DH-18's call. Node can't issue X.509 certificates by itself, so the choice is between a self-signed certificate made with OpenSSL (on Windows, the one bundled with Git) or a small reviewed dependency, and TLS with a pre-shared key derived from the pair secret. The requirements are fixed either way: authenticated both ways, encrypted, no certificate authority, nothing new listening when `runner serve` isn't running.
-- **Endpoints** (all signed): `POST /v1/have` (which commits the runner has), `POST /v1/requests` (a request and its bundle), `GET /v1/requests/<id>/events` (progress), `DELETE /v1/requests/<id>` (cancel), `GET /v1/requests/<id>/archive` (the result). Nothing else answers.
+  - sshd listens on the laptop's private interfaces, allowed in the Windows firewall's private profile only.
+  - No UPnP, no port forwarding on the router, no relay, nothing reachable from the internet.
+  - With no SSH session open, nothing of Dyno's listens on the laptop.
+- **Unpairing:** remove the line from `authorized_keys`, or `cli.mjs runner remove win` on the Mac, which deletes the key.
+- **The fallback.** If the owner prefers not to enable OpenSSH, the fallback is Dyno's own channel: a pairing code, a pinned certificate and signed requests over TLS, carrying the same two forwards. This is more code to write and review; question 16 has it as the alternative.
 
-### What a request carries
+### A run on the runner
 
-```json
-{
-  "request": "mac-2026-11-14T09-30-00Z-k3f9",
-  "command": "run",
-  "options": {
-    "scenes": ["vex-valley", "vex-zermatt"],
-    "sweep": ["param.x=1,4,10", "view.lodExponent=0,0.25,0.5,0.75,1"],
-    "reference": "view.lodExponent=1",
-    "referenceReps": 3,
-    "purpose": "dev",
-    "item": "CS-<n>",
-    "study": "2026-11-14-alpha-default"
-  },
-  "commit": "<frozen sha>",
-  "labels": { "branch": "claude/…", "worktree": "…", "machine": "mac" }
-}
-```
+1. **Before anything,** the Mac resolves engines and starts its servers, exactly as a local run.
+2. **The Mac opens the SSH connection** with every forward, waiting for `runner serve` to report ready.
+3. **`runner serve` takes the laptop's machine-wide run lock** (DH-1's `run.lock`, on the laptop). Local runs on the laptop and runs requested by any paired machine therefore serialize there. While it waits, it tells the Mac whose run holds the lock. The Mac's own lock isn't taken, since the Mac's GPU isn't measuring.
+4. **The runner streams telemetry** as JSON lines over the session: GPU temperature, clocks, power and slowdown reasons from `nvidia-smi`, CPU speed and utility, and power source. It also holds the laptop's wake lock. The Mac's CLI uses this stream wherever it uses its local sampler today: cooldown, the quiet rule, conditions per run, timelines.
+5. **The Mac connects** with `chromium.connect(wsEndpoint)` instead of `chromium.launch`, and runs the run as today. Each repetition gets a fresh browser context (cold cache), configurations alternate, and captures and FLIP happen in the remote browser and come back over the connection.
+6. **Results are written on the Mac.** The run, its summary, report and captures land in the Mac's store, with the identity below.
+7. **Afterwards,** the Mac closes the session. `runner serve` closes the browsers, releases the lock and exits.
 
-- **The commit.**
-  - The requester freezes its working tree into a commit, exactly as a local run does (`frozen.mjs`: a commit object for a dirty tree, HEAD for a clean one).
-  - It asks the runner which of the commit's ancestors it has (`/v1/have`, with the frozen commit, its base and the integration branch's tip). It sends a `git bundle` of the frozen commit, excluding what the runner has, plus the base commit when `--against-base` needs it.
-  - The runner runs `git bundle verify`, then fetches the bundle into its own ref namespace (`refs/dyno/<requester>/<request>`), with no tags and no other refs.
-  - A size cap applies to the bundle.
-- **The command** is one of the suite's own: `run` or `images`. It is never a string to execute, and never a path, an environment variable or a shell fragment.
-  - Options are a structured object checked against the same option schema the CLI uses. Each option is allowlisted and typed.
-  - Scenes, settings (the registry), metrics and engine specs are validated against the runner's catalog at the requested commit. Engines at refs may only name commits inside the bundle.
-  - Not allowed: `--dev`, `BENCH_MANIFEST`, `report`, `compare`, `annotate`, `resummarize`, `import`, `export`, file arguments of any kind.
-  - The runner builds the argument list itself and starts `node cli.mjs` without a shell.
-- **The ion token is never in a request.** Each machine uses its own: the runner's frozen checkout copies the runner's own `.env.local`, as `checkoutFrozen` already does, or its Dyno token setting. The result archive never includes either.
-- **Trust.** "Only the suite's commands" bounds the entry point, not the code. Building and running a commit runs that commit's code (its Vite config, its pages, the engine). Pairing therefore means the runner trusts the requester's commits as it would trust checking out the requester's branch. Both machines are the owner's (question 16).
-- **Dependencies.** The runner never installs packages from a request. If the commit's `package-lock.json` differs from what the runner has installed, the request fails with "package-lock.json differs: run `npm ci` on the runner". Nothing downloads on a requester's say-so.
+- **Progress** is the CLI's own output on the Mac, since the run is the Mac's process.
+- **Cancellation** is Ctrl-C on the Mac, which closes the session. The runner closes its browsers and releases the lock when the session ends, however it ends.
+- **Disconnects.** If the connection drops mid-run, the run fails like a crashed local browser. Nothing is left running on the laptop.
 
-### The runner side
+### Identity, timing and what "served remotely" changes
 
-- **States:** `queued` → `fetching` → `building` → `running` → `packing` → `done`, or `failed`, or `cancelled`.
-- **Its own worktree.** The runner checks the commit out into `.bench/remote/<requester>`, reused between requests, and builds the frozen pages there. The runner's own checkout and its other worktrees are untouched.
-- **Its own lock.** A request takes the same machine-wide run lock as a local run (DH-1), so the laptop never runs two things at once. While a request waits, its events say whose run holds the lock.
-- **Identity.** The run is recorded on the runner with `machine: win`, `requestedBy: mac`, the request ID, and the requester's labels (branch, worktree, item, study).
-- **Baseline runs on the runner** are allowed when the requested commit is reachable from the integration branch's tip, which the runner fetches into its namespace and checks with `merge-base --is-ancestor`, and the tree was clean (question 18).
-- **The result** is an archive of exactly that run's files (result, summary, report, assets), made with DH-11's `export`. The runner keeps it until the requester has fetched it, or until the newest 20 archives push it out. The runner's own store keeps the run too, so its Trends sees it.
+- **The run records** `machine: win` (where the GPU and browser are) and `servedFrom: mac` (where the pages and engine came from).
+  - The runner's hardware class and telemetry come from the laptop.
+  - The browser version comes from the remote browser.
+  - The commit, branch, worktree, item and study come from the Mac, as for any run.
+- **"Served remotely" is part of the machine identity:** `win, served from mac` is a different machine key from `win` served locally. So:
+  - baseline reuse (`reuse.mjs`) never mixes the two;
+  - Trends draws them as separate series;
+  - Compare warns when it pairs them.
+- **The link is measured at the start of each run:** the round-trip time and throughput through the forward, by fetching a fixed asset a few times. They are recorded with the conditions, and a run whose link is far slower than the runner's recorded norm is flagged.
+- **What it affects.** The engine bundle, its wasm, workers and the suite pages are fetched over the LAN in every cold context. The effect:
+  - **First content and time to settle:** affected. Engine startup waits on those downloads.
+  - **Requests and bytes:** counts unchanged, timing affected. The same files are fetched; local assets are counted by host class, never mixed with content.
+  - **Frame time, CPU and GPU per frame, memory, image metrics:** unaffected once loaded.
+  - **Content tiles** go from ion and Google straight to the laptop, as in a local run on the laptop.
+  - **1.x releases and refs** are served by the Mac too, so every engine in a run pays the same cost. Within-run comparisons, which are the default for changes, stay fair.
+- **The ion token** reaches the remote page exactly as it reaches a local one. Nothing about how pages get tokens changes, and the CLI never puts a token in a URL, an argument or a log.
+  - It crosses the LAN only inside the SSH channel, and it lives in the remote browser's memory and its temporary profile, which Playwright deletes when the browser closes.
+  - `runner serve` logs nothing of page traffic. Playwright's debug logging and tracing are off on the runner.
+  - Both machines are the owner's.
 
-### Progress and cancellation
+### Versions
 
-- **Progress.** `/v1/requests/<id>/events` streams the state changes and the CLI's progress as structured lines: `{ phase, done, total, scene, config }`, plus the queue position while waiting. The requester's CLI prints them as a local run would. Dyno's Runs page shows requested runs in flight, with their state, read from the requester's local record of open requests.
-- **Disconnects.** If the requester disconnects, the run continues. `cli.mjs runner status` lists open requests; `cli.mjs runner fetch <request>` collects the archive later and imports it.
-- **Cancellation.** Ctrl-C in the requester's CLI asks "cancel the run on win?". `cli.mjs runner cancel <request>` does the same. The runner stops the run's process tree, releases the lock, deletes partial results, and keeps the worktree for reuse.
+- **Playwright's client and server must match exactly.** `runner serve` reports its Playwright version and its browser's (Edge) version, and the Mac refuses a mismatch with the instruction: "Playwright 1.62.1 here, 1.61.0 on win: run `npm ci` in the laptop's checkout at a commit with 1.62.1".
+- **The runner uses the repository's pinned version.** `runner serve` runs from the laptop's own checkout of this repository, using that checkout's installed Playwright (the lockfile's exact version), never one fetched on the Mac's say-so.
+- **Browser flags live in one module,** `bench/suite/browserArgs.mjs`, which both sides read. `runner serve` reports the flags it launched with; the run records them, and a difference from the Mac's list refuses the run.
 
-### Getting results home
+### The device lab (later: DH-20)
 
-- **Import.** The requester imports the archive with DH-11's `import`. The run's ID carries `win`, so it never collides. The run appears in the Mac's Runs, Trends (under the laptop's hardware class), its study's evidence, and `cli.mjs runs --machine win`.
-- **Reach.** Studies work across machines. A verdict can cite runs from both, and Dyno warns when a timing claim mixes hardware classes.
-- **The fallback.** Archives by hand: `cli.mjs export` on one machine, `scp`, `cli.mjs import` on the other. The merge rules are below, and they are the same ones the runner's results use.
+The same split (the Mac serves and records; another device only renders) reaches any browser on the LAN.
 
-### Archives and their merge rules (DH-11)
+- **Browsers Playwright can drive** run automatically, through `runner serve` on that machine:
+  - Firefox on Linux through `firefox.launchServer`;
+  - Chrome on an Android phone through Playwright's Android support over `adb`, with `adb reverse` forwarding the Mac's server to the phone's `localhost`, which gives a secure context without a certificate.
+- **Browsers Playwright can't drive** (iOS Safari, for example) open a run link by hand.
+  - `cli.mjs device-run --scenes … --device iphone-ios18` makes a one-time link and shows it with a QR code.
+  - The device loads the suite page from the Mac. The page runs the same scene, check or capability report as the Playwright driver would (`runScene`, `runCheck`, a capability report of the adapter, limits, features and WebGL 2 extensions), and posts its results to the Mac, authenticated by the link's one-time token.
+  - The Mac writes the run into its store.
+  - **Secure context on phones.** A phone can't forward ports, so the Mac serves the link over HTTPS with a certificate from a local certificate authority that the owner installs once on each test device (question 19). WebGL 2 measurements also work over plain HTTP, but WebGPU and cross-origin isolation don't.
+  - The Mac listens on the LAN only while a device run is open, and only for that run's token.
+- **Identity and validity.**
+  - A device has an alias and a hardware class, recorded from what its browser reports.
+  - Manual device runs have no controlled conditions (no cooldown, no quiet rule, no telemetry), so they are valid with warnings by design.
+  - Their timings are evidence for "it runs, and roughly how fast", never for small differences.
+- **What it is for:**
+  - the WebGL 2 plan's R1 device measurements: an iPhone on iOS 18, an Android phone with a Mali or Xclipse GPU, Firefox on Linux;
+  - the engine profiles' real-device facts, gathered as runs in the store and cited by studies instead of copied by hand.
 
-- **`cli.mjs export [--since <id or date>] [--out file]`** writes a `.tar` of run files (results, summaries, reports, assets, test runs, image runs) newer than the last export to that machine, plus the mutable files (triage, approved images, annotations, studies).
+### Archives by hand (DH-11, the fallback)
+
+- **`cli.mjs export [--since <id or date>] [--out file]`** writes a `.tar` of run files newer than the last export to that machine (results, summaries, reports, assets, test runs, image runs), plus the mutable files (triage, approved images, annotations, studies).
 - **`cli.mjs import <file>`** merges:
   - run files by ID (they carry the machine alias, so they never collide; an existing ID is skipped);
   - `triage.json` per alert key: the newer edit wins, with both kept in a `history` list;
-  - approved images per renderer class: the two machines' classes differ (Apple M2 against an NVIDIA laptop GPU), so they don't conflict; a same-class conflict keeps both and lists it for review in Images;
+  - approved images per renderer class: the two machines' classes differ, so they don't conflict; a same-class conflict keeps both and lists it for review in Images;
   - studies per ID: the newer `updatedAt` wins, with the other version in `history`; a different study under the same ID gets a suffix;
   - annotations by date and text.
-- **Names.** The archive's name says the source machine and the newest run ID, as the git bundles name their tip commit.
+- **Names.** The archive's name says the source machine and the newest run ID.
+- **When to use it:** to bring the laptop's own history (its runs made locally, before or without the runner) into the Mac's store, and back.
 
 ## 9. Recording from a live session
 
@@ -655,7 +677,7 @@ The decision this study informs was already made (α 0.3, the owner, 2026-11-13)
 - **The α 1 runaway shows as it should:** valley ×10 at α 1 is drawn hollow (not settled at the cap), with its request rate at the end and imagery requests in the tens of thousands, not reported as a failed run.
 - **The verdict** is recorded (supported, refuted or inconclusive) with the cited run and the decision item.
 - **Cleanup.** `scripts/alphaSweep.mjs` is deleted in the same change, and the transform-graph plan's α paragraph cites the study.
-- **The second machine.** After DH-19, the same run with `--on win` lands in the Mac's store as `machine: win` and joins the study's evidence.
+- **The second machine.** After DH-19, the same run with `--on win` measures in the laptop's browser and lands in the Mac's store as `machine: win`, served from `mac`, in the study's evidence.
 
 ### B. The ×10 cliff-band study: image checks and a sweep
 
@@ -703,15 +725,15 @@ How they are run:
   - DH-6: the sweep view;
   - DH-16: the study model;
   - DH-17: the study page;
-  - DH-18: the runner's channel.
-- **Checks.** Each milestone runs typecheck, eslint and prettier on its files, plus its own tests. The full `npm test` runs once at the end of DH-6, DH-12, DH-17 and DH-19.
+  - DH-18: the runner's endpoint and channel.
+- **Checks.** Each milestone runs typecheck, eslint and prettier on its files, plus its own tests. The full `npm test` runs once at the end of DH-6, DH-12, DH-17, DH-19 and DH-20.
 - **UI milestones** (DH-2, DH-6, DH-9, DH-10, DH-15, DH-17) follow DESIGN.md and StrataKit. They are checked in both themes, at 380 px, by keyboard and with a clean console, and the owner reviews them by clicking around.
 - **No durations:** order and dependencies only.
-- **Names:** DH-1 to DH-19 become `CS-<n>` items under a development-harness initiative when the tracker lands.
+- **Names:** DH-1 to DH-20 become `CS-<n>` items under a development-harness initiative when the tracker lands.
 
 | # | Milestone | Files | Done when | Needs |
 | --- | --- | --- | --- | --- |
-| DH-1 | **Run identity and the lock.** `purpose`, `item` (`CS-<n>`), `study`, `worktree`, `base`, `machine`, `requestedBy` and the new `id` on every run kind (bench, images). The baseline guard and `--against-base`. The CLI's first and last lines, naming the run and its Dyno paths. The machine-wide run lock; `npm run dyno` on a free port. Old runs read as baseline runs. New commands get their own modules, so later milestones touch `cli.mjs` less. | `bench/suite/cli.mjs`, new `bench/suite/identity.mjs`, `runLock.mjs`; `images.mjs`, `report.mjs` (`summarizeRun`), `data.ts`, `schema.ts`, `vite.config.ts` (the Images run-name check), `scripts/setup.mjs` (`BENCH_MACHINE`), `package.json` (`dyno`) | A dev run from a worktree records every field. `--purpose baseline` is refused from a dirty tree and from a feature branch (tested). Two runs started together run one after the other, the second saying whose run it waited for. An existing store still loads in Dyno unchanged. | nothing |
+| DH-1 | **Run identity and the lock.** `purpose`, `item` (`CS-<n>`), `study`, `worktree`, `base`, `machine`, `servedFrom` and the new `id` on every run kind (bench, images). The baseline guard and `--against-base`. The CLI's first and last lines, naming the run and its Dyno paths. The machine-wide run lock; `npm run dyno` on a free port. Old runs read as baseline runs. New commands get their own modules, so later milestones touch `cli.mjs` less. | `bench/suite/cli.mjs`, new `bench/suite/identity.mjs`, `runLock.mjs`; `images.mjs`, `report.mjs` (`summarizeRun`), `data.ts`, `schema.ts`, `vite.config.ts` (the Images run-name check), `scripts/setup.mjs` (`BENCH_MACHINE`), `package.json` (`dyno`) | A dev run from a worktree records every field. `--purpose baseline` is refused from a dirty tree and from a feature branch (tested). Two runs started together run one after the other, the second saying whose run it waited for. An existing store still loads in Dyno unchanged. | nothing |
 | DH-2 | **Purpose, branch, item and study in the views.** Trends defaults to baseline runs and gains purpose, branch and item filters. Runs gains the columns and filters. A run's page shows its identity. Compare gets its "this branch against its base" default. Alerts work on baseline runs only. | `views/Trends.tsx`, `trendsModel.ts`, `Runs.tsx`, `runParts.tsx`, `Compare.tsx`, `Report.tsx`, `Alerts.tsx`, `changepoints.mjs`, `routes.tsx` | With a store holding baseline runs and dev runs from two branches, Trends draws only the baseline runs until asked. Compare opened from a branch picks the branch's newest run against the baseline run at its base, and says so. Change-point tests show dev runs don't move alerts. Owner review. | DH-1 |
 | DH-3 | **Finding runs from the terminal.** `cli.mjs runs` (filters, table and JSON), `show <id>`, `pin <id>`. | new `bench/suite/commands/runs.mjs`; `cli.mjs` (dispatch) | The commands list and show runs from summaries only. `--json` output is stable and tested. A pinned run is listed as pinned. | DH-1 |
 | DH-4 | **The settings registry and multi-axis sweeps.** (Opus.) `settings.mjs`, and validation before a run. `engine.` and `view.` settings applied by the catalog adapter (`lodExponent`, `shadows`, `debug`, `occlusionCull`, `coarsen`, `lod`). Repeated `--sweep`, `--sweep-file`, `--reference`, `--reference-reps`, the point count and `--yes`. The sweep record with `axes`, `reference` and `points`, reading old one-axis records. | new `bench/suite/settings.mjs`; `cli.mjs`, `engineBuilds.mjs`, `engines.mjs` (labels), `suite.ts` (the adapter), `schema.ts`, `report.mjs` | `--sweep lodExponent=0,1` is refused with the list of settings. A two-axis sweep on a catalog scene records every point and its coordinates. `view.lodExponent` reaches the view: a test reads it back from the page. Old sweep runs still plot. | DH-1 |
@@ -721,15 +743,16 @@ How they are run:
 | DH-8 | **Image checks for group D and sweeps.** `images.mjs` runs example and Lab scenes (`checks: ["settled"]`). It takes `--sweep`, `--reference` and `--study`, and records crops. Images labels group D checks and links them to their study. | `images.mjs`, `cli.mjs`, `views/Images.tsx` | `images --scenes vex-x10-zermatt` captures, compares against its approved image, and is reviewable. A swept image run shows as a grid. | DH-5, DH-6 |
 | DH-9 | **Recordings as runs.** The metadata endpoint and body (allowlisted parameters, no tokens, tested). "Save as run" and the reducer; `import-recording`. The recording page, with time series. | `scripts/vitePluginRecord.ts`, `widgets/recorder.ts`, `widgets/inspector.ts`, new `bench/suite/recording.mjs`, `views/Report.tsx` (or a new `Recording.tsx`), `cli.mjs` | A recording saved from the vertical-exaggeration example appears in Runs with its metadata and time series. A URL with an unknown or key-like parameter records without it (tested). The existing recorder tests pass. Owner review. | DH-1 |
 | DH-10 | **Test results.** The vitest reporter, `testEnvironment.json`, flake computation, `cli.mjs tests`, retention, and the Tests view in the rail's first group. | new `bench/suite/testsReporter.ts`, `testEnvironment.json`, `commands/tests.mjs`, `views/Tests.tsx`, `tests.css`; `vite.config.ts` (vitest block, a read endpoint), `routes.tsx`, `shell.tsx` (rail) | A full `npm test` in a fresh worktree records `test/volumes.test.ts` as environment-only, with its precondition. A test made to fail one run in three shows as flaky, with its rate. Nothing is written under `CI`. Owner review. | DH-1 |
-| DH-11 | **Archives: export and import.** The merge rules of section 8 (runs, triage, approved images, annotations, and studies once DH-16 exists), archive naming, and Machines with both stores. | new `bench/suite/commands/sync.mjs`; `cli.mjs` | Exporting from one store and importing into another twice gives the same store as importing once. A triage edit on each side keeps the newer, with the other in its history. Approved images of two renderer classes merge without review. All tested on two temporary stores. | DH-1 |
+| DH-11 | **Archives: export and import** (the manual fallback). The merge rules of section 8 (runs, triage, approved images, annotations, and studies once DH-16 exists), archive naming, and Machines with both stores. | new `bench/suite/commands/sync.mjs`; `cli.mjs` | Exporting from one store and importing into another twice gives the same store as importing once. A triage edit on each side keeps the newer, with the other in its history. Approved images of two renderer classes merge without review. All tested on two temporary stores. | DH-1 |
 | DH-12 | **Lab into the store.** One registry for Lab and `bench/run.mjs`, which fixes the six broken commands. Lab scenes in group D. Lab's "Run and record" records a `lab` run. Spikes' checks recorded. | `bench/run.mjs`, `lab/pages.ts`, `lab/harness.ts`, `views/Lab.tsx`, `cli.mjs`, `manifest.mjs` | Every id Lab shows runs headless. `run --scenes globe-parity` records FLIP per view. A recorded Lab run shows in Runs. | DH-1, DH-5 |
 | DH-13 | **Acceptance B: the ×10 cliff-band study.** The image checks and the sweeps of section 10B as one study; the verdict; the conclusion in the transform-graph plan. | the plan; the study | Section 10B's "done when". | DH-8, DH-17, and the engine's shadow knobs and `debug=cascade` (the cliff-band study's own task) |
 | DH-14 | **AGENTS.md and the skill, with the tracker.** Section 12's text lands in one coordinated AGENTS.md change with the tracker's "Work items" section, and both skills in `.claude/skills/`, adjusted to what was built. A first version after DH-1, DH-3 and DH-16 covers tagging, studies, run IDs, the lock, and the commands that exist. The full version follows DH-17. | `packages/next/AGENTS.md`, `.claude/skills/measuring-with-dyno/SKILL.md` (committed past the local exclude), with the tracker's own skill beside it | A fresh session, given only "find out what α does at ×10", opens a study, runs a tagged Dyno sweep, records a verdict, and reports the study and run IDs. | DH-1, DH-3, DH-16 (first); DH-17 (full); the tracker's section |
 | DH-15 | **The navigation rail** (section 16).The rail regrouped by what people come to do, with a reserved first place for the tracker's Work page. Images beside Overview and Alerts. Machines moved into Overview. Examples in the looking group. The footer's Settings item. The redirect for `?tab=machines`. Shortcuts and the command palette updated. DESIGN.md's who-it-is-for list, information architecture, words and the shell's comment updated. Analysis keeps its name and place until DH-17 replaces it. | `bench/suite/shell.tsx`, `routes.tsx`, `views/Analysis.tsx` (Machines out), `views/Overview.tsx` (Machines), `views/FirstRun.tsx` (links), `DESIGN.md`, the route and link tests | Every route in section 16's inventory is reachable from the rail, a run, a scene or the palette, and highlights the right rail item. Old links land on their new homes. The rail fits a 900 px tall window, collapsed and expanded. DESIGN.md's table matches `shell.tsx`. Owner review by clicking around. | DH-2 |
 | DH-16 | **Studies: the model and the commands.** (Opus.) The study schema and files. `study new`, `note`, `attach`, `verdict`, `abandon`, `reopen`, `show`; `studies`. `run --study`, inheriting item and expectations; the implicit study for `--hypothesis`. Pins for cited runs. The dev server's read and write endpoints, validated and capped. The study merge rule in `import`, if DH-11 has landed; otherwise DH-11 adds it. | new `bench/suite/studies.mjs`, `commands/studies.mjs`; `cli.mjs` (dispatch, `--study`), `schema.ts`, `vite.config.ts` (endpoints), `data.ts` | A study made, run against, noted and concluded from the CLI reads back with its evidence. A verdict citing an invalid run warns. A run with `--hypothesis` and no study opens one. The endpoint rejects a malformed or oversized body (tested). `studies --item CS-<n> --json` is stable for the tracker. | DH-1 |
 | DH-17 | **The Studies page.** (Opus.) Studies, a list with status, item, question and latest evidence. A study's page: the question, hypothesis and expectations; the design as copyable commands, each marked with the run that executed it; the evidence, with each sweep in the sweep view, image runs as grids, and before-and-after runs as forest plots with their results; notes; the verdict form (outcome, reasoning, cited runs picked from the evidence, decision item). Analysis replaced: `/analysis` redirects to Studies, and sweep runs without a study open in their run report. Overview's "Open studies". "Investigate" on alerts. Decision annotations on Trends. | new `views/Studies.tsx`, `views/Study.tsx`, `studies.css`; `views/Analysis.tsx` (removed), `routes.tsx`, `shell.tsx` (the rail item), `views/Overview.tsx`, `views/Alerts.tsx`, `trendsModel.ts`, `DESIGN.md` | The α study (DH-7) reads from question to verdict on one page. A verdict recorded in the page appears in `study show`, and the reverse. Old `/analysis?sweep=` links land on the run's report or its study. Owner review by clicking around. | DH-6, DH-15, DH-16 |
-| DH-18 | **The runner: pairing and the channel.** (Opus.) `runner pair`, `add`, `remove`, `serve` (accepting nothing yet but `/v1/have`). The pairing proof, the pair secret, TLS with the pinned runner certificate, and request signing with replay protection. The LAN-only bind and the source-address check. The choice of how certificates are made, recorded in this plan. | new `bench/suite/runner/pairing.mjs`, `channel.mjs`, `commands/runner.mjs`; `cli.mjs` (dispatch) | Tests on loopback with two temporary homes: pairing succeeds with the code and fails with a wrong one (three tries);. an unpaired, replayed, stale or altered request is refused;. a connection from a public source address is refused;. nothing listens without `runner serve`;. `pairs.json` is readable by the user only. | DH-1 |
-| DH-19 | **The runner: remote runs.** `run --on` and `images --on`. Freezing, the `have` negotiation and the bundle. The validated command schema; the runner's worktree, build and lock. The `package-lock.json` check. Progress events; disconnect, `status`, `fetch` and cancel. The result archive through DH-11's `export` and `import`. Requested runs in flight on Dyno's Runs page. | new `bench/suite/runner/requests.mjs`, `runnerSide.mjs`; `commands/runner.mjs`, `cli.mjs`, `frozen.mjs` (bundle helpers), `views/Runs.tsx` (in flight) | The α study's run, requested from the Mac with `--on win`, runs on the laptop and lands in the Mac's store as `machine: win`, in the study's evidence. A request with a disallowed option, a path, or an unknown scene is refused before anything is fetched (tested). Cancelling mid-run frees the laptop's lock and leaves no partial run. A differing `package-lock.json` fails with the instruction. | DH-1, DH-4, DH-11, DH-18 |
+| DH-18 | **The runner: a browser endpoint over SSH.** (Opus.) `runner serve` on the laptop as the forced command: the two `launchServer` endpoints on `127.0.0.1` with a random endpoint token, the laptop's run lock, the telemetry stream and wake lock, the versions and flags report. `bench/suite/browserArgs.mjs` shared by both sides. `runner pair`, `remove` and `--show-host-key`: the dedicated key, the restricted `authorized_keys` line, host-key pinning. The setup steps for Windows' OpenSSH server in `bench/suite/RUNNER.md`. | new `bench/suite/runner/serve.mjs`, `pair.mjs`, `browserArgs.mjs`, `commands/runner.mjs`, `RUNNER.md`; `telemetry.mjs` (the stream), `runLock.mjs`, `cli.mjs` (dispatch, flags from `browserArgs.mjs`) | Tests with a loopback SSH server and two temporary homes: the restricted key can't open a shell, run another command, or forward another port. A second session waits on the lock and is told whose run holds it. The endpoint token changes per session and appears in no file or log. A Playwright version mismatch is refused with the instruction. Nothing of Dyno's listens on the laptop without a session. | DH-1 |
+| DH-19 | **Remote runs through the runner.** `run --on` and `images --on`: the SSH session with a forward per server, origins rewritten for pages, `chromium.connect` in place of `launch`, the runner's telemetry in place of the local sampler (cooldown, quiet rule, conditions), the link measured at the start, `servedFrom` and the machine key, and the runner's state on Getting started. | `cli.mjs`, `images.mjs`, `telemetry.mjs`, `reuse.mjs` (the machine key), new `bench/suite/runner/remote.mjs`; `views/FirstRun.tsx` (paired runners) | The α study's run, started on the Mac with `--on win`, measures in the laptop's Edge and lands in the Mac's store as `machine: win`, served from `mac`, in the study's evidence. A remote run's first content differs from a local one on the laptop while frame time doesn't, and the two never share a series or reuse each other's repetitions. Ctrl-C on the Mac leaves no browser, lock or listener on the laptop. | DH-1, DH-18 |
+| DH-20 | **The device lab.** `runner serve` for Firefox on Linux. Android Chrome over `adb` with `adb reverse`. Manual device runs: `device-run` with one-time links and QR codes, HTTPS from a local certificate authority, the suite page's post-back of scenes, checks and the capability report, device aliases, and validity "warning" by design. | `commands/device.mjs`, new `bench/suite/device/serve.mjs`, `capabilities.ts`; `suite.ts` (post-back), `runner/serve.mjs` (Firefox, Android), `manifest.mjs`, `views/Runs.tsx` (devices) | An iPhone opens a run link and its capability report and one scene's timings land in the Mac's store under its alias. Firefox on Linux runs a scene automatically. An Android phone runs a WebGPU scene over `adb reverse` in a secure context. A link works once. The Mac stops listening on the LAN when the device run closes. | DH-5, DH-16, DH-19 |
 
 **Order.**
 
@@ -739,7 +762,7 @@ How they are run:
 4. **DH-15** follows DH-2 (both change `routes.tsx`).
 5. **The sweep chain:** DH-5 follows DH-4, then DH-6.
 6. **DH-17** follows DH-6, DH-15 and DH-16.
-7. **Then:** DH-7 follows DH-17; DH-8 follows DH-5 and DH-6; DH-12 follows DH-5; DH-13 waits for DH-8, DH-17 and the engine's knobs; DH-19 follows DH-4, DH-11 and DH-18.
+7. **Then:** DH-7 follows DH-17; DH-8 follows DH-5 and DH-6; DH-12 follows DH-5; DH-13 waits for DH-8, DH-17 and the engine's knobs; DH-19 follows DH-18; DH-20 follows DH-5, DH-16 and DH-19.
 
 ## 12. Draft: AGENTS.md section and skill
 
@@ -780,7 +803,7 @@ session and the owner as soon as it finishes. The skill
     [--reference <setting>=v]`: a sweep over settings (`settings` lists them;
     an unknown one is refused).
   - `images --study <id> --scenes <ids>`: image checks.
-  - `… --on win`: the same run on the laptop's GPU, results returned here.
+  - `… --on win`: the same run in the laptop's browser and GPU, served and recorded here.
   - `studies --item CS-<n>`, `study show <id>`, `runs --study <id>`,
     `show <run>`: find and read results.
 - **Tag every run** with `--study` (which carries the item) or `--item CS-<n>`.
@@ -799,7 +822,7 @@ session and the owner as soon as it finishes. The skill
 - **Tests record themselves.** `npm test` writes its results to the store
   (failures, flakes, environment-only failures such as missing 1.x shaders).
   Check Dyno's Tests view before deciding a failure is yours.
-- Never put an ion token on a command line or in a request to the runner;
+- Never put an ion token on a command line, in a URL or in a log;
   each machine's Dyno and examples take theirs from Dyno's token setting or
   `.env.local`.
 ```
@@ -861,7 +884,7 @@ description: Use when you need a number about rendering, streaming, GPU or
 | 2 | Does plain `npm test` record? | **Yes**, when the store exists and `CI` isn't set. |
 | 3 | Who may make baseline runs? | **Only clean runs of the integration branch**, enforced by the CLI. Old runs count as baseline runs. |
 | 4 | The default way to measure a change? | **In one run against the base engine** (`--against-base`). |
-| 5 | The second machine? | **Changed:** a runner on the local network (section 8), with archives by hand as the fallback. A Bentley-internal results repository later, perhaps. |
+| 5 | The second machine? | **Changed:** no results repository for now. The laptop lends a browser endpoint over the LAN; the Mac builds, serves, drives and records (section 8). Archives by hand stay as the fallback. A Bentley-internal results repository later, perhaps. |
 | 6 | Where does the skill live? | **`.claude/skills/measuring-with-dyno/SKILL.md`, committed** past the local exclude, beside the tracker's skill. |
 | 7 | The engine's development knobs: public or development-only? | **Development-only**, through the dev handle, not in `api/surface.txt`. |
 | 8 | Group D scenes on Scenes and in Overview? | **On Scenes under their own heading; never in Overview, headline means or budgets.** |
@@ -879,9 +902,10 @@ Each has a recommendation; the plan assumes it.
 | --- | --- | --- | --- |
 | 14 | Where do studies live, and are they tracker items? | **In Dyno's store, with date-and-slug IDs, each linked to one `CS-<n>` item.** They hold machine details by reference and cite runs that stay internal; the tracker reads them by item. One item may have several studies. | Studies as a tracker item type (`CS-<n>` each): one list of everything, but the tracker then holds evidence about private runs, and a study can't exist before its item. |
 | 15 | Who records a verdict, and does a verdict close a decision? | **Agents may record verdicts on studies. A verdict that informs a decision item is shown on that item, and closing the decision stays the owner's step in the tracker.** | Only the owner records verdicts: slower, and agents' conclusions sit in notes until reviewed. |
-| 16 | Does the runner accept requests from a paired machine automatically? | **Yes, automatically.** Both machines are yours, the commands are allowlisted, and the runner prints every request it starts. `runner serve --confirm` asks before each, for when you want it. | Confirm every request on the laptop: safer against a compromised Mac, and it needs someone at the laptop for every run. |
+| 16 | How does the laptop's browser get a secure context, and what carries the channel? | **SSH, with Windows' built-in OpenSSH server:** the Mac's servers forward to the laptop's `localhost` (a secure context, the same origin as a local run) and the browser endpoints forward back, all inside one encrypted connection. The Mac's key is restricted to those forwards and the `runner serve` command. You enable OpenSSH once, private networks only. | Dyno's own TLS channel (a pairing code, a pinned certificate, signed requests) carrying the same forwards: no OS feature to enable, more code to write and review. The insecure-origin flag is not recommended: nothing is encrypted, and the flag is fixed at launch. |
 | 17 | Does `--hypothesis` on a run without `--study` open a study? | **Yes**, named from the item and the date, so no hypothesis is left on a lone run. | Refuse, and require `study new` first: one more step for agents, a cleaner store. |
-| 18 | May the Mac request baseline runs on the laptop? | **Yes, when the commit is on the integration branch and the tree is clean.** The laptop holds the history, and the main session can then keep its Trends current from the Mac. | Baseline runs only from the laptop's own checkout: simpler rules, and someone at the laptop for each baseline run. |
+| 18 | May the Mac make baseline runs in the laptop's browser? | **Yes, from a clean integration-branch commit on the Mac.** They form their own series (`win, served from mac`), beside the laptop's locally served history. | Baseline runs only from the laptop's own checkout, served locally: one series, and someone at the laptop for each baseline run. |
+| 19 | Phones in the device lab: install a local certificate authority on each test device? | **Yes**, once per device, so phones get HTTPS and with it WebGPU and cross-origin isolation. Android also works over `adb reverse` without it. | Plain HTTP for phones: WebGL 2 only, no WebGPU; no certificate to install. |
 
 ## 14. Non-goals and follow-ups
 
@@ -891,6 +915,7 @@ Each has a recommendation; the plan assumes it.
   - parallel coordinates and parameter importance;
   - popping in motion as a metric. The α study measured static frames only. The transform-graph plan defines a pop as the largest screen displacement when tiles swap; that metric is a follow-up once a camera path runs on example scenes;
   - runner discovery by mDNS;
+  - the laptop building or running its own copy of the engine (it only lends a browser);
   - a Bentley-internal results repository.
 - **Follow-ups owned elsewhere:**
   - the engine's shadow tuning knobs and `debug=cascade` (the cliff-band study);
@@ -907,18 +932,21 @@ Each has a recommendation; the plan assumes it.
 - **A setting that isn't applied.** The registry closes the silent no-op for known settings. DH-4's test reads a setting back from the page, so an adapter that stops applying it fails a test, not a study.
 - **Example scenes drift from the examples.** An example may change its parameters or presets. Declared parameters make the CLI fail loudly when one disappears, and group D image checks show a changed look.
 - **Timings from a busy machine.** The lock serializes runs, but a person's open dev server still renders. The run records other GPU processes and flags them. Development runs are judged within one run, against the base engine, which cancels most of it.
-- **The runner as an attack surface.** It listens on the LAN and builds code it is sent. The defences:
-  - pairing with a one-time code;
-  - a pinned certificate and signed requests with replay protection;
-  - private source addresses only, and nothing listening unless `runner serve` runs;
-  - allowlisted commands and options, no shell, and no package installs.
+- **The runner as an attack surface.** It accepts SSH connections on the LAN and runs a browser on pages the Mac serves. The defences:
+  - a dedicated key per pair, restricted to two forwards and the `runner serve` command (no shell);
+  - a pinned host key;
+  - an endpoint token that changes per session;
+  - sshd on private networks only;
+  - nothing of Dyno's listening without a session.
 
-  The residual risk is that a compromised paired Mac can run code on the laptop through a commit. That is the trust pairing grants, stated in section 8 and question 16.
+  What a paired Mac can do on the laptop is load pages into a sandboxed browser, which is what it is for.
+- **Timings skewed by the link.** Engine assets cross the LAN in every cold context. "Served remotely" is part of the machine identity, the link is measured and flagged, and first content and settle are named as affected. Within-run comparisons, where every engine pays the same, stay the default.
+- **Version drift between the machines.** Playwright, the browser and the flags must match. The runner reports all three and the Mac refuses a mismatch with the fix.
 - **Secrets in metadata or requests.** URLs, recordings and requests could carry keys. The defences:
   - requests are classified by host, never stored as URLs;
   - recording metadata keeps only allowlisted parameters;
-  - runner requests have no field for a token, and their archives exclude `.env.local`;
-  - DH-9 and DH-19 test it.
+  - the runner's channel is SSH, and neither side logs page traffic or the endpoint token;
+  - DH-9, DH-18 and DH-19 test it.
 
 ## 16. Dyno's navigation rail (owner, 2026-11-13)
 
@@ -992,7 +1020,7 @@ DESIGN.md's list, extended for the harness and the tracker:
 | Group (a DESIGN.md name; the rail shows dividers) | Items, in order | Changes |
 | --- | --- | --- |
 | Needs a look | Work · Overview · Alerts · Images · Tests | Work is reserved for the tracker's board (kanban by lifecycle, dependency graphs, the decision backlog), with a count of decisions waiting on the owner. The tracker builds the page; until it exists, the rail shows nothing in its place. Images moves up beside Alerts, and Tests (DH-10) joins; the three queues carry counts. Overview gains Machines (from Analysis, DH-15) and "Open studies" (DH-17). |
-| Results | Trends · Runs · Scenes | Scenes moves here: its pages are history. Runs holds every run kind (bench, images, Lab, recordings; test runs open in the Tests view), filtered by purpose, branch, item, study and machine (DH-2), with requested runs in flight (DH-19). Compare stays off the rail. |
+| Results | Trends · Runs · Scenes | Scenes moves here: its pages are history. Runs holds every run kind (bench, images, Lab, recordings; test runs open in the Tests view), filtered by purpose, branch, item, study and machine (DH-2); runs on the runner and devices show their machine. Compare stays off the rail. |
 | Look | Explorer · Viewer · Examples | The three live tools together. Examples keeps its page; its "Measure this" points at its group D scene. |
 | Experiment | Studies · Lab | Studies replaces Analysis (DH-17). Sweeps fold into study pages, and a sweep run without a study shows its sweep view in its run report. Lab keeps its pages, with "Run and record" (DH-12). |
 | Footer | Getting started · ion token · Settings | Settings, a menu, holds Theme and Keyboard shortcuts. Getting started lists paired runners and whether each answers (DH-19). |
