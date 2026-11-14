@@ -5,6 +5,7 @@ kind: work
 status: Proposed
 created: 2026-11-13
 project: CS-18
+needs: [CS-403]
 ---
 
 A Dyno page over the work items on the current branch, like Backlog.md's board but over our own files. Proposed, not committed: don't build it yet.
@@ -25,7 +26,7 @@ A Dyno page over the work items on the current branch, like Backlog.md's board b
 
 ## Not before
 
-Where it sits in Dyno waits on Dyno's rail rethink, in the Dyno harness plan (`claude/plan-dyno-harness-18e1ff`, not yet reviewed or merged). When that plan is reviewed, its session adds the Dyno project here, and a `needs` on the rail item. Then the owner decides whether to move this item to Planned.
+Its place in Dyno is the first item of the rail's "Needs a look" group, which the Dyno harness's rail item (CS-403, project CS-389) reserves for it, with a count of decisions waiting on the owner. The owner decides whether to move this item to Planned.
 
 ## Done when
 
