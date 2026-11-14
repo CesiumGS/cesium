@@ -1,4 +1,4 @@
-// Picks by domain point on the GPU (plan §13.26, increment 5; the Node tests
+// Picks by domain point on the GPU (docs/design/geometry-through-placement-review.md, increment 5; the Node tests
 // are test/pickDomain.test.ts). The pick variant draws what the opaque pass
 // drew into a few pixels around the cursor and writes the draw's triangle and
 // barycentrics, or a b-rep patch draw's face and (u, v); the content's own

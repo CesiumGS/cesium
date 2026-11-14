@@ -1,7 +1,7 @@
 // Prints the Metal Shading Language Chrome's WebGPU (Dawn, its WGSL
 // compiler Tint) makes from a WGSL module's compute entry points: what
 // Metal actually compiles, for performance questions the WGSL can't answer
-// (plan §3.4: Tint guards every loop it can't prove finite with a 64-bit
+// (docs/design/shaders.md: Tint guards every loop it can't prove finite with a 64-bit
 // counter, which is how Slang's `loop {}` loops paid 5% in the atmosphere's
 // path tracer).
 //
@@ -49,7 +49,10 @@ try {
       for (const entryPoint of entries) {
         device.pushErrorScope("validation");
         await device
-          .createComputePipelineAsync({ layout: "auto", compute: { module, entryPoint } })
+          .createComputePipelineAsync({
+            layout: "auto",
+            compute: { module, entryPoint },
+          })
           .catch((e) => failed.push(`${entryPoint}: ${e.message}`));
         const error = await device.popErrorScope();
         if (error) {

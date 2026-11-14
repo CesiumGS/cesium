@@ -177,4 +177,4 @@ These are settled here; the owner can override them:
 
 - `docs/superpowers/plans/2026-11-06-frames-explorer-example.md`: the existing plan, R1–R18.
 - `packages/next/examples/frames-explorer/DESIGN.md`: the visual language, the globe rules and the HUD.
-- `CESIUM2_WEBGPU_PLAN.md` §13.14: plan 5's design inputs (camera rigs attached to frames; design space and the global view, with a morph), which this example will later demonstrate.
+- [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md): plan 5's design inputs (camera rigs attached to frames; design space and the global view, with a morph), which this example will later demonstrate.

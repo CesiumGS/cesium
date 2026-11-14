@@ -1,4 +1,4 @@
-// A b-rep as a geometry (brep 3's adapter, overall plan §13.33): the query
+// A b-rep as a geometry (brep 3's adapter, docs/design/breps-and-geometry-queries.md): the query
 // interface over a `BrepForm`, answered from the modeling surfaces and never
 // from a mesh. Each query picks its route per surface: a closed form from the
 // analytic surface (planes, cylinders, cones, spheres, tori), subdivision and

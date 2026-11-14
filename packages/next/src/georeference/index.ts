@@ -1,4 +1,4 @@
-// The geo smooth transforms (plan section 13.37): the height-based
+// The geo smooth transforms (docs/design/transform-graph.md): the height-based
 // transforms of a body's ellipsoid (vertical exaggeration, height offset,
 // flatten) and the reprojection nodes between geographic, geocentric and
 // projected coordinates. Each is a descriptor like src/transforms/'s and a

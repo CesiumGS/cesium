@@ -1,4 +1,4 @@
-// NIST's STEP test models through Open CASCADE (plan §13.33, the b-rep example's
+// NIST's STEP test models through Open CASCADE (docs/design/breps-and-geometry-queries.md, the b-rep example's
 // "STEP file" scene): the files `npm run setup` keeps in the store are the
 // pinned ones, each imports in metres, converts to a render form, faces
 // outward, and has the faces, kinds and size it is known to have. Three

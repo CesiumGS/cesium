@@ -761,7 +761,7 @@ export function Rendering() {
         <Written
           from={
             <>
-              the overall plan, section 13.37, and{" "}
+              the design note docs/design/transform-graph.md, and{" "}
               <C>docs/superpowers/plans/2026-11-12-transform-graph.md</C>
             </>
           }
@@ -949,8 +949,8 @@ export function Rendering() {
         <ul>
           <li>The draw record field by field, and the transform table.</li>
           <li>
-            Lighting and atmosphere, which the overall plan's section 4.2 covers
-            at length.
+            Lighting and atmosphere, which{" "}
+            <C>docs/design/lighting-and-shading.md</C> covers at length.
           </li>
           <li>Device loss and recovery.</li>
         </ul>

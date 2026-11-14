@@ -7,7 +7,7 @@ This is plan 5 of the frames work. It builds on the frames design
 called "the frames spec" below), whose §8.2 example, "Earth to Moon: Artemis
 II", is plan 5's showcase. Since the frames spec was written, the owner has
 made many design decisions about plan 5. They are recorded in
-`CESIUM2_WEBGPU_PLAN.md` §13.14 as paragraphs starting "_Plan 5 design input_",
+[bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md) as paragraphs starting "_Plan 5 design input_",
 "_Upstream proposals_", "_Terms_" and "_Design input after plan 5_", and in
 the "Carried forward" lists. This document turns them into a buildable design.
 
@@ -157,8 +157,8 @@ What plan 5 builds on, as of 2026-11-07:
   draw's placement evaluated together in compute, subdivided by screen-space
   error, with trim curves and indirect draws. Plan 5 builds none of it. It
   keeps the seam open (section 8.4).
-- **The architecture of ray queries** (§13.16: where a query runs, when
-  acceleration structures are built, which level of detail a ray sees). §13.16
+- **The architecture of ray queries** ([ray-queries-where-they-run.md](../../design/ray-queries-where-they-run.md): where a query runs, when
+  acceleration structures are built, which level of detail a ray sees). [ray-queries-where-they-run.md](../../design/ray-queries-where-they-run.md)
   is open, for its own brainstorm. Plan 5 puts every ray and spatial query
   through one query seam (section 7.10) and makes rays go through the frame
   tree on the CPU paths that exist (section 9.5). The owner, 2026-11-07:
@@ -215,7 +215,7 @@ What plan 5 builds on, as of 2026-11-07:
 ## 4. Constraints
 
 - **Precision.** Float64 on the CPU throughout. The GPU sees only
-  camera-relative values (hi/lo and camera-relative, §13.15). Hi/lo is valid to
+  camera-relative values (hi/lo and camera-relative, [gpu-limits-and-capacities.md](../../design/gpu-limits-and-capacities.md)). Hi/lo is valid to
   ±2³¹ m (about 2.1 million km), which covers Earth to Moon. Any per-vertex
   placement keeps its large offsets in hi/lo and evaluates only small
   tile-local terms in float32.
@@ -499,7 +499,7 @@ rig on ITRF), every one of them computes what it computes today.
 
 ### 7.5 The rig and the render root
 
-Decided by the owner (§13.14, "camera rigs attached to frames"):
+Decided by the owner ([bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md), "camera rigs attached to frames"):
 
 - "The rig is only a pose in a frame." It holds no rules about where the camera
   may go. Controllers own the constraints (section 11.3).
@@ -560,7 +560,7 @@ A placement is one of:
     partner positions as the attribute, as it does today; a declared
     pairing is a candidate upstream proposal, not plan 5's. (Overtaken in
     Task 20: the core now reads `CESIUM_dual_position` for scene items; see
-    the overall plan, §13.25.) `t` may be any
+    [scene-items.md](../../design/scene-items.md).) `t` may be any
     finite number, so values past 1 extrapolate, which keeps the design
     globe's "exaggerate the error" control. Only at `t = 0` or `t = 1` does a
     pick give content coordinates;
@@ -699,8 +699,8 @@ diagram draws from it.
 
 ### 7.10 Seams for later WebGPU features
 
-Decided by the owner (§13.14, "groundwork for post-V1 WebGPU features"):
-apply the bindless pattern (§7.1: "design for it; don't build it": one seam
+Decided by the owner ([bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md), "groundwork for post-V1 WebGPU features"):
+apply the bindless pattern ([risks.md](../../design/risks.md), "Bindless textures": "design for it; don't build it": one seam
 every caller goes through, plus a test that fails on any bypass) to the
 features the WebGPU working group has tagged for after V1, so adopting them
 later is a backend swap rather than a refactor. "Only where the seam costs
@@ -709,7 +709,7 @@ nothing today; no design compromises in the current WebGPU path."
 5a lays the seams that plan 5's own work touches **(author's call)**:
 
 - **One query interface for rays and spatial queries** (picking, snapping,
-  line of sight, height queries, §13.16), naming its reference frame and its
+  line of sight, height queries, [ray-queries-where-they-run.md](../../design/ray-queries-where-they-run.md)), naming its reference frame and its
   scene time. Today it runs on CPU structures or compute traversal; a
   hardware ray-query backend drops in behind it later. 5b's rays (section
   9.5) and 5f's snap pass (section 13.3) go through it. The owner deferred the
@@ -800,7 +800,7 @@ are audited in 5i, which lists each seam, its bypass test, and any gap.
   tilesets stays in the example.
 - Each new WebGPU seam has its bypass test.
 - The surface-map tool for 5i is in place (section 15.2), and every later
-  sub-plan shows its surface diff. (Overtaken in Task 20: see the overall plan, §13.25.)
+  sub-plan shows its surface diff. (Overtaken in Task 20: see [scene-items.md](../../design/scene-items.md).)
 
 ## 8. Sub-plan 5a, continued: the seam for later tessellation
 
@@ -907,7 +907,7 @@ before the data begins and after it ends. **Design (author's calls):**
 
 The owner: "Seems easy for a user to screw up." The app declares each edge's
 error in its own terms, and the library composes it. 5b builds the rest of
-§13.14's list:
+[bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)'s list:
 
 - **Confidence is declared, and never mixed silently.** Each edge says whether
   it gives 1σ, a 95% bound or a hard maximum. The composer converts where a
@@ -931,7 +931,7 @@ error in its own terms, and the library composes it. 5b builds the rest of
 
 ### 9.5 Rays through the frame tree
 
-From §13.14 "Ray queries through the frame tree", on the CPU paths that exist,
+From [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md) "Ray queries through the frame tree", on the CPU paths that exist,
 behind section 7.10's query interface:
 
 - A ray is given in any reference frame at an instant, and is carried to each
@@ -943,7 +943,7 @@ behind section 7.10's query interface:
   10.4), which answers as its ellipsoid with its relief as the accuracy.
 - Hits are float64, reported in the reference frame the caller asks for, with
   the composed accuracy of the route plus the target's own.
-- Unknown stays unknown. §13.16's question 4 (clip to the body's terrain band
+- Unknown stays unknown. [ray-queries-where-they-run.md](../../design/ray-queries-where-they-run.md)'s question 4 (clip to the body's terrain band
   before counting unloaded spans as unknown) is applied here, for the Earth and
   the Moon, because ground-to-space rays need it **(author's call)**.
 
@@ -1015,7 +1015,7 @@ puts the Earth's content under its anchor. 5c adds the second body.
 
 ### 10.2 What was decided
 
-From the frames spec §6.4 and §13.14:
+From the frames spec §6.4 and [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md):
 
 - Bodies are the existing `Body` class (a name, an ellipsoid, an optional
   atmosphere). The Moon is a `Body` with no atmosphere.
@@ -1156,7 +1156,7 @@ view a rig; 5d gives the rig controllers, bindings and transitions.
 
 ### 11.2 The animation core
 
-Decided by the owner (§13.14, "animation, starting with camera
+Decided by the owner ([bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md), "animation, starting with camera
 transitions"):
 
 - **Not camera-specific.** An animation animates a value over a timeline, with
@@ -1340,7 +1340,7 @@ Design **(author's calls)**:
 - The explorer's orbit scenes showing the Earth's sunrise colours in space are
   "a bug in how the camera's position reaches the atmosphere, not a missing
   blend".
-- From §13.14 "Other bodies": the Moon lit by the sun with a regolith BRDF
+- From [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md) "Other bodies": the Moon lit by the sun with a regolith BRDF
   (Lommel-Seeliger or Hapke: the full Moon's flat look and its opposition
   surge, which Lambert gets wrong), plus earthshine, and seen through the
   atmosphere. "Its phase, libration and eclipses come out right with no
@@ -1397,7 +1397,7 @@ Design **(author's calls)**:
 
 ### 13.1 Routing a design CRS to the tree's root
 
-Decided by the owner (§13.14, "routing a design CRS into the frame tree"):
+Decided by the owner ([bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md), "routing a design CRS into the frame tree"):
 
 - **Route to the frame tree's own root, not to WGS 84.** Relate a design CRS
   to ITRF2020 at the engineering frame's epoch, through the published
@@ -1433,7 +1433,7 @@ Design:
 
 ### 13.2 Design view and the morph
 
-Decided by the owner (§13.14, "design space and the global view, with a morph
+Decided by the owner ([bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md), "design space and the global view, with a morph
 between them"):
 
 - In isolation, in its native design space, the render root is the
@@ -1510,7 +1510,7 @@ Design:
 
 ### 13.4 Reprojected models the engine didn't generate
 
-The owner's options (§13.14, "tessellating reprojected models"): compute
+The owner's options ([bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md), "tessellating reprojected models"): compute
 subdivision with indirect draws; per-vertex placement in the vertex shader
 carrying design coordinates; refinement by screen-space error in tile
 selection; or requiring producers to subdivide, with the rule stated in
@@ -1806,7 +1806,7 @@ never holds up the engine work.
 
 ### 15.2 5i: the public API review
 
-Decided by the owner (§13.14, "A public API review", and "modules with
+Decided by the owner ([bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md), "A public API review", and "modules with
 interfaces"):
 
 - Two outputs: a map of today's surface, and proposed moves.
@@ -1857,7 +1857,7 @@ Design **(author's calls)**:
 
 ### 15.3 Upstream proposals
 
-For the owner to take to the right people (§13.14): a placement mode on the
+For the owner to take to the right people ([bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)): a placement mode on the
 source CRS for the 3D Tiles 2.0 draft (CesiumGS/glTF#131); alignments after IFC
 4.3's `IfcAlignment`; a declared coordinate operation as WKT2; a site
 transform mapped to `IfcMapConversionScaled`. Deliberately not proposed: the
@@ -1866,7 +1866,7 @@ mode are candidates to add to that list **(author's call)**.
 
 ## 16. Carried-forward items, by sub-plan
 
-Every "Plan 5" item in §13.14's carried-forward lists and results notes, and
+Every "Plan 5" item in [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)'s carried-forward lists and results notes, and
 the inputs that arrived after the first draft:
 
 | Item | Sub-plan |
@@ -1889,8 +1889,8 @@ the inputs that arrived after the first draft:
 | TEME and SGP4 ("Plan 5 or a frames add-on") | Add-on after 5a (section 3) |
 | A GPU viewshed | Not plan 5 unless the owner says so (section 17, question 1) |
 | The Moon as a tileset | 5c, with its impostor (section 10.4) |
-| A near-field bounded terrain trace (§13.16) | As the GPU viewshed |
-| A per-tile terrain error over open water (§13.16) | As the GPU viewshed |
+| A near-field bounded terrain trace ([ray-queries-where-they-run.md](../../design/ray-queries-where-they-run.md)) | As the GPU viewshed |
+| A per-tile terrain error over open water ([ray-queries-where-they-run.md](../../design/ray-queries-where-they-run.md)) | As the GPU viewshed |
 | One ENU convention | 5a |
 | The API review of the scenarios plan's additions | 5i |
 | Groundwork for post-V1 WebGPU features | Seams 5a (section 7.10); audit 5i |
@@ -1909,16 +1909,16 @@ the default plan 5 follows if the owner says nothing.
 1. _Answered (2026-11-07): no, deferred to its own project._ "Can't tell" is
    acceptable for many of plan 5's ray queries, and a later GPU engine must
    reach the examples without a rewrite (section 7.10's interface shape).
-   The question was: **does plan 5 take on any of §13.16's ray-query
+   The question was: **does plan 5 take on any of [ray-queries-where-they-run.md](../../design/ray-queries-where-they-run.md)'s ray-query
    design?** Plan 5 has one
    query seam (section 7.10) with CPU rays behind it (section 9.5). At the
    lunar south pole the Earth sits near the horizon, so the antenna's line of
    sight runs far over the Moon's terrain, mostly across tiles no view loaded,
    and will mostly read "can't tell". A real answer needs a bounded terrain
    load along the ray (the carried "near-field bounded terrain trace"), which
-   is part of §13.16's open design. The GPU viewshed and the per-tile water
+   is part of [ray-queries-where-they-run.md](../../design/ray-queries-where-they-run.md)'s open design. The GPU viewshed and the per-tile water
    error wait on the same design. _Why it matters:_ yes adds a sub-plan (the
-   §13.16 brainstorm, then its build) before 5g's line-of-sight readouts.
+   [ray-queries-where-they-run.md](../../design/ray-queries-where-they-run.md) brainstorm, then its build) before 5g's line-of-sight readouts.
    _Default:_ no; 5g says "can't tell" honestly.
 2. **One package with entry points, or separate packages?** Section 7.7
    chose entry points of `@cesium/next` (`/time`, `/frames`, `/proj`,
@@ -1975,7 +1975,7 @@ the default plan 5 follows if the owner says nothing.
   licences and credits.
 - **The Near Space Network's links** during launch and ascent are not modelled
   in plan 5 (section 14.5) unless the TEME and SGP4 add-on lands first.
-- **The lunar reference systems** (§13.14 "Watch"): LunaNet's LRS standard,
+- **The lunar reference systems** ([bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md) "Watch"): LunaNet's LRS standard,
   ILuRF2026 and a lunar height system are to be checked before 5g builds the
   lunar antenna's site grid. When one is adopted, it is added beside MOON_ME
   and MOON_PA.

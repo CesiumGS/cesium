@@ -51,7 +51,7 @@ const $ = <T extends Element = HTMLElement>(id: string) =>
   root.querySelector<T>(`[data-id="${id}"]`)!;
 
 /**
- * L2 globe imagery parity (plan §15): Cesium World Terrain with the ion
+ * L2 globe imagery parity (docs/history/m3-progress.md): Cesium World Terrain with the ion
  * default imagery (Bing Maps Aerial), rendered by 1.x and by 2.0 for the
  * same cameras after loading settles. Terrain selection is identical in
  * both (globe `Stepwise`, 100% L1), and fog and atmosphere are off in

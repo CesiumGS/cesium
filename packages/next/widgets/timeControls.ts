@@ -1,5 +1,5 @@
 /**
- * Time controls over an engine view (plan §13.13): what 1.x's `Animation`
+ * Time controls over an engine view (docs/design/time-and-its-controls.md): what 1.x's `Animation`
  * dial and `Timeline` do, reworked around what the time means at the place
  * being looked at. Plain DOM beside the credits and the inspector.
  *

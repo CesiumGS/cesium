@@ -2,7 +2,7 @@
 // with no GPU types. The rasterizer reads them (render/view/exposure.ts and the
 // output passes); nothing here reaches a scene or sky shader except the
 // pre-exposure, a matter of fp16's range, and the stars' point spread, which
-// keeps each star's energy (CESIUM2_WEBGPU_PLAN.md §13.32).
+// keeps each star's energy (docs/design/sky-light-and-points-unifications.md).
 import type { PostStage, PostStageKind, PostStageSlot } from "./postStage.ts";
 import { eyeLimitStage } from "./eyeLimit.ts";
 import type { PointSpread } from "./pointSpread.ts";
@@ -10,7 +10,7 @@ import type { PointSpread } from "./pointSpread.ts";
 export { observerPointSpread, type PointSpread } from "./pointSpread.ts";
 
 /**
- * How a view turns the scene's light into an image (plan §4.2): as a
+ * How a view turns the scene's light into an image (docs/design/lighting-and-shading.md): as a
  * camera records it (a fixed exposure, a plain scale, or metered), or as
  * the eye sees it (`EYE`). Light is in physical units by default (lux,
  * cd/m²), so the default is a camera set for daylight.

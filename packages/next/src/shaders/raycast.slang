@@ -7,7 +7,7 @@
 // clips remove is found on the CPU in float64 and the ray cast again from
 // behind it (scene/world/rays.ts).
 // Brute force over candidate draws: a BVH replaces the job list later
-// (plan §13.10). A cast's rays are in one anchor's coordinates
+// (docs/design/ray-queries-and-path-tracing.md). A cast's rays are in one anchor's coordinates
 // (CastOptions.anchor), and only draws under that anchor are candidates,
 // so a ray and a transform's origin share coordinates.
 
@@ -64,7 +64,7 @@ void main(uint3 wg : SV_GroupID, uint lane : SV_GroupIndex) {
   Job job = jobs[jobIndex];
   // The record's fields, read once here: Slang splits a large struct's
   // load into a read of each field where it is used, and the repeated
-  // bounds-checked reads cost this kernel 30% (the gate, plan §3.4).
+  // bounds-checked reads cost this kernel 30% (the gate, docs/design/shaders.md).
   DrawRecord r = drawRecord(job.record);
   uint indexCount = r.indexCount;
   uint firstIndex = r.firstIndex;

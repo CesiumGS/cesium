@@ -1,4 +1,4 @@
-// What a view's glare takes its light from (CESIUM2_WEBGPU_PLAN.md §13.32, point 3). A
+// What a view's glare takes its light from (docs/design/sky-light-and-points-unifications.md, point 3). A
 // first version: the sun, where the view draws it, and the star field's bright end. 5e
 // adds the Moon and the planets.
 

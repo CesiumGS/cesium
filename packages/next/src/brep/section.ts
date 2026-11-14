@@ -1,4 +1,4 @@
-// The section of a b-rep by planes: the cap faces (plan §13.26, "Clip planes
+// The section of a b-rep by planes: the cap faces (docs/design/geometry-through-placement-review.md, "Clip planes
 // and caps: decided by the owner", item 5: B-rep caps are exact; increment 8b).
 //
 // For each plane, every face of the solid is cut by it. The section curve of

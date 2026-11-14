@@ -62,7 +62,7 @@ interface Row {
  * distance with room for the last addition (measured 4e-8 × distance on
  * D3D12 and Metal), and a micrometer near zero. Relaxed math folding the
  * hi/lo split back into float32 errs by 0.25 to 0.47 m and fails at every
- * distance (an M-series Mac before r50, plan §3.3 "Precision").
+ * distance (an M-series Mac before r50, docs/design/architecture.md, "Render world and draws (render/): GPU-driven from M1" "Precision").
  */
 function bound(distance: number): number {
   return 1.5e-7 * distance + 1e-6;

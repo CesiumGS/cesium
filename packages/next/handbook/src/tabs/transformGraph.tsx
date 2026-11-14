@@ -440,7 +440,7 @@ const MEASURES = [
     check:
       "The df64 centre pass, for a parameter that doesn't separate (a moving centre, a time-varying field)",
     result: "About 4 µs for 1,024 draws.",
-    where: "the compiler's GPU spike, plan section 13.37",
+    where: "the compiler's GPU spike, docs/design/transform-graph.md",
   },
   {
     check:
@@ -607,7 +607,7 @@ export function TransformGraph() {
           generic built-ins).
         </p>
         <Written
-          from="the overall plan, section 13.37, and src/transform/graph.ts and route.ts"
+          from="the design note docs/design/transform-graph.md, and src/transform/graph.ts and route.ts"
           on="2026-11-12"
         />
       </Sec>
@@ -737,8 +737,9 @@ export function TransformGraph() {
         </ul>
         <p>
           A builder, or another way to write a function, comes later, as a
-          second front end to the same IR; the plan&apos;s section 13.38 is the
-          brainstorm on how far the language should go.
+          second front end to the same IR; the plan&apos;s the design note
+          docs/design/styling-and-a-shared-ir.md is the brainstorm on how far
+          the language should go.
         </p>
         <Written
           from={
@@ -1105,7 +1106,7 @@ export function TransformGraph() {
         <Written
           from={
             <>
-              the overall plan, section 13.37,{" "}
+              the design note docs/design/transform-graph.md,{" "}
               <C>src/scene/world/variants.ts</C> and <C>View.setParameter</C>
             </>
           }
@@ -1198,8 +1199,9 @@ export function TransformGraph() {
             <>
               <C>src/scene/warpBounds.ts</C>, <C>src/streaming/tileWarp.ts</C>,{" "}
               <C>src/transform/taylorBounds.ts</C>, <C>curvature.ts</C> and the
-              plan, section 13.37, &quot;Queries through routes&quot;; the
-              2026-11-13 notes in the transform graph plan and section 13.41
+              design note docs/design/transform-graph.md, &quot;Queries through
+              routes&quot;; the 2026-11-13 notes in the transform graph plan and
+              the design note docs/design/investigations-2026-11-13.md
             </>
           }
           on="2026-11-13"
@@ -1227,7 +1229,7 @@ export function TransformGraph() {
           separate figure.
         </p>
         <Written
-          from="the commit messages of transform graph tasks 2 to 8 and the plan, section 13.37"
+          from="the commit messages of transform graph tasks 2 to 8 and the design note docs/design/transform-graph.md"
           on="2026-11-12"
         />
       </Sec>
@@ -1255,7 +1257,7 @@ export function TransformGraph() {
           rows={ALSO}
         />
         <Written
-          from="docs/superpowers/plans/2026-11-12-transform-graph.md, tasks 9 to 11, and the plan, section 13.37"
+          from="docs/superpowers/plans/2026-11-12-transform-graph.md, tasks 9 to 11, and the design note docs/design/transform-graph.md"
           on="2026-11-12"
         />
       </Sec>

@@ -81,7 +81,7 @@ import {
 } from "./trendsModel.ts";
 
 /**
- * Trends (plan §16.9, after W&B's workspace): every metric run to run.
+ * Trends (docs/design/benchmark-analysis-and-experience.md, after W&B's workspace): every metric run to run.
  * A toolbar picks the scene, baseline and candidate; a run list beside
  * the charts shows or hides each run, searches and filters them, and pins
  * one as the reference; collapsible sections hold same-sized chart panels.

@@ -1,4 +1,4 @@
-// Two-phase occlusion culling of a view's draws (CESIUM2_WEBGPU_PLAN.md §13.41;
+// Two-phase occlusion culling of a view's draws (docs/design/investigations-2026-11-13.md;
 // the kernels are cull.slang's `...Occluded` and `retestOccluded`). A view's
 // tick, when it culls by occlusion (`cullsByOcclusion`):
 //

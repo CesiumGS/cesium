@@ -1,4 +1,4 @@
-// The engine's own b-rep render form (overall plan §13.33): plain typed
+// The engine's own b-rep render form (docs/design/breps-and-geometry-queries.md): plain typed
 // arrays, so it moves between workers without copying and a host with its
 // own kernel can write it directly. Every surface is analytic, with a fixed
 // parameterization, or a list of rational Bézier patches. Lengths are metres

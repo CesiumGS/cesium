@@ -526,10 +526,10 @@ Each ruling is listed with what it costs if it is wrong.
 
 - Modify:
   - `packages/next/README.md` (the frames section plan 1 added)
-  - `CESIUM2_WEBGPU_PLAN.md` §13.14
+  - [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)
 
 - [ ] **Step 1: README.** Document the frame tree and its names, `frameTransform` and `convertPoint`, `Trajectory` with the `j2000` warning (R1), the Viewer's `frameData` option, the store's new files and their credits, and R2 (Newtonian edges until plan 3).
-- [ ] **Step 2: Plan note.** Add to §13.14:
+- [ ] **Step 2: Plan note.** Add to [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md):
   - what landed;
   - the measured OEM-to-SPK maximum difference (R9);
   - the size of the EME2000 bias at the flyby;

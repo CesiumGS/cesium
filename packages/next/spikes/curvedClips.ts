@@ -1,4 +1,4 @@
-// Curved clips on the GPU against the CPU's classification (plan §13.26,
+// Curved clips on the GPU against the CPU's classification (docs/design/geometry-through-placement-review.md,
 // increment 8c; the Node test is test/curvedClips.test.ts). Unlit white
 // content on black, drawn into an offscreen target with a clip on, and every
 // pixel read back and compared with what float64 says the clip keeps there:

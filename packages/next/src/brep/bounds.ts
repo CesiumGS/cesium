@@ -1,5 +1,5 @@
 // Sound bounds on a rational Bézier patch's derivatives, for the CPU
-// tessellator's grid density (overall plan §13.33). Every bound is over the
+// tessellator's grid density (docs/design/breps-and-geometry-queries.md). Every bound is over the
 // patch's local parameters s and t in [0, 1], and holds for any positive
 // weights: a patch point is a convex combination of its control points, and
 // the Bernstein coefficients of a polynomial bound the polynomial. Bernstein

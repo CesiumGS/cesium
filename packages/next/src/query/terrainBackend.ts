@@ -1,7 +1,7 @@
 /**
  * The query interface's terrain engine for 5a (spec section 7.10): each
  * ray is traced exactly against the drawn terrain's CPU triangles
- * (`castTerrainRay`, plan §13.10), in the Earth-fixed coordinates of the
+ * (`castTerrainRay`, docs/design/ray-queries-and-path-tracing.md), in the Earth-fixed coordinates of the
  * globe's anchor. A GPU ray-query engine replaces this backend, not the
  * callers (`queries.ts`).
  */
@@ -76,7 +76,7 @@ export function terrainRayAnswer(
           to: s.to,
           reason: s.reason === "not refined" ? "notRefined" : "notLoaded",
         }));
-  // Extension point (plan §13.10): buildings and BIM (3D Tiles) keep no CPU
+  // Extension point (docs/design/ray-queries-and-path-tracing.md): buildings and BIM (3D Tiles) keep no CPU
   // triangles; the draws target answers them (`drawBackend.ts`), and a
   // query naming both gets the nearer hit (`combineRayAnswers`).
   const blocked = ray.hit !== undefined;
@@ -123,7 +123,7 @@ export function terrainRayAnswer(
       `exact against the drawn terrain triangles (${levels}); the drawn surface may lie up to ±${round(known.geometricError)} m from the source's heights (level ${known.minLevel}'s geometric error, the coarsest crossed)`,
     );
     notes.push(
-      "that per-level error (level zero's, halving each level, as 1.x) is a heuristic, not a bound: quantized-mesh carries no per-tile error (a real bound is plan §13.16's)",
+      "that per-level error (level zero's, halving each level, as 1.x) is a heuristic, not a bound: quantized-mesh carries no per-tile error (a real bound is docs/design/ray-queries-where-they-run.md's)",
     );
     notes.push(
       source

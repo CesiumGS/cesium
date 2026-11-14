@@ -1,4 +1,4 @@
-// A smooth transform from a plain function (plan §13.37, owner 2026-11-11:
+// A smooth transform from a plain function (docs/design/transform-graph.md, owner 2026-11-11:
 // application functions are restricted plain JS). The function is the CPU
 // path, called as it is; its source is parsed, never evaluated, into the IR
 // (`parseTransform`), which gives the engine an exact Jacobian by autodiff

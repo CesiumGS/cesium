@@ -7,7 +7,7 @@ import { clike } from "@codemirror/legacy-modes/mode/clike";
  * and the custom shader contract's types (src/shaders/cesium.slang).
  * CodeMirror has no Slang mode. Completion, hover and diagnostics come from
  * the Slang language server (languageServer.ts); its semantic tokens would
- * make this highlighting exact, which is later work (plan §13.12).
+ * make this highlighting exact, which is later work (docs/design/examples-and-the-gallery.md).
  */
 const words = (s: string) =>
   Object.fromEntries(s.split(/\s+/).map((w) => [w, true]));

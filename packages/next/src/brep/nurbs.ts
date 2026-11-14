@@ -1,4 +1,4 @@
-// NURBS to rational Bézier, exactly (overall plan §13.33). Boehm knot
+// NURBS to rational Bézier, exactly (docs/design/breps-and-geometry-queries.md). Boehm knot
 // insertion in homogeneous coordinates (Piegl and Tiller, "The NURBS Book",
 // A5.1 for curves, applied in each direction for surfaces), up to full
 // multiplicity at every interior knot. The de Boor evaluators are for tests

@@ -18,7 +18,7 @@ import {
 } from "../suite.ts";
 
 /**
- * The Explorer's engines (plan §16.9, Explore), outside React: one or two
+ * The Explorer's engines (docs/design/benchmark-analysis-and-experience.md, Explore), outside React: one or two
  * adapters drawing a catalog scene, a frame loop that drives their
  * cameras (along the benchmark camera path, or free flight with linked
  * cameras), and the inspection settings (paused streaming, tile tints,

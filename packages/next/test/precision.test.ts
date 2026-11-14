@@ -6,7 +6,7 @@ import { splitHigh, splitVec3 } from "../src/math/transforms.ts";
 
 /**
  * Float64 positions reach the GPU as float32 pairs (hi, lo). Two rules keep
- * their precision (CESIUM2_WEBGPU_PLAN.md §3.3, "Precision"):
+ * their precision (docs/design/architecture.md, "Render world and draws (render/): GPU-driven from M1", "Precision"):
  *
  * - Shaders combine hi/lo values only through `hiLoDifference` (an offset
  *   between positions, the highs subtracted as integers so relaxed math

@@ -1,5 +1,5 @@
-// A bounding-volume hierarchy over boxes, for the b-rep adapter (overall plan
-// §13.33): built once, top-down by the median of the longest axis, and walked
+// A bounding-volume hierarchy over boxes, for the b-rep adapter (
+// docs/design/breps-and-geometry-queries.md): built once, top-down by the median of the longest axis, and walked
 // by a ray (near child first) or by distance to a point (best-first). The
 // walks call back per item and read the current bound each time, so a hit or
 // a closer point shrinks the work that remains.

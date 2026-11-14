@@ -60,7 +60,7 @@ const STYLE_TYPES: Record<NamedType, StyleType> = {
 };
 
 /**
- * Feature styling (plan §3.4): 1.x's 3D Tiles style (`show`, `color`,
+ * Feature styling (docs/design/shaders.md): 1.x's 3D Tiles style (`show`, `color`,
  * `defines`, `conditions`) compiled to a custom shader over the features'
  * metadata: feature table columns, property attributes or property
  * textures, whichever a mesh has. `show` false, or a color with alpha 0,

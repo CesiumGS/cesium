@@ -1,5 +1,5 @@
 // Stars sorted into sky cells, so a view draws only the cells it sees and, in each,
-// only the stars bright enough to show (CESIUM2_WEBGPU_PLAN.md §13.32). Plain data
+// only the stars bright enough to show (docs/design/sky-light-and-points-unifications.md). Plain data
 // with no GPU types. It runs in the worker, for any star field, and `cullCell` is the
 // plain function that sky.slang's `starCull` mirrors.
 import type { PointSpread } from "../scene/observer.ts";

@@ -4,7 +4,7 @@ import probesJson from "./slang/generated/probes.json";
 
 /**
  * Slang feature probes (the Slang-first migration's step 1,
- * CESIUM2_WEBGPU_PLAN.md §3.4): each feature the engine's shaders need,
+ * docs/design/shaders.md): each feature the engine's shaders need,
  * compiled by slangc to WGSL (spikes/slang/probes.mjs) and validated here
  * in WebGPU: the module compiles, its pipelines are made, and for the
  * hi/lo type its results are compared bit for bit with the engine's WGSL.

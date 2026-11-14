@@ -17,7 +17,7 @@ import type { WarpAt } from "../warpAnchor.ts";
 import type { WarpTerms } from "../warpTerms.ts";
 
 /**
- * A world's ceilings (CESIUM2_WEBGPU_PLAN.md §13.15, "Growable tables"):
+ * A world's ceilings (docs/design/gpu-limits-and-capacities.md, "Growable tables"):
  * every per-slot GPU table starts small and doubles as slots are used, up to
  * these and to what the device's largest storage binding holds. A pool at
  * its ceiling throws `CapacityError`, which streaming answers by evicting
@@ -85,7 +85,7 @@ export interface Usage {
 }
 
 /**
- * A world's pools against their ceilings (CESIUM2_WEBGPU_PLAN.md §13.15):
+ * A world's pools against their ceilings (docs/design/gpu-limits-and-capacities.md):
  * tables count rows, the arenas bytes against the world's budgets.
  */
 export interface WorldMemory {

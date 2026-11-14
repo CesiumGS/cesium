@@ -1,5 +1,5 @@
-// Measurement graphics drawn through the route (CESIUM2_WEBGPU_PLAN.md
-// §13.26, placement increment 6): a measurement's lines, polylines, area
+// Measurement graphics drawn through the route (
+// docs/design/geometry-through-placement-review.md, placement increment 6): a measurement's lines, polylines, area
 // outlines and labels are content in true coordinates, drawn through the same
 // route as everything else. A straight true segment draws as a curve under a
 // warp, so each is sampled adaptively until the drawn polyline is within a

@@ -31,7 +31,7 @@ Plans 1–3 supply the frame tree, `Body` (EARTH, MOON), `Ellipsoid`, `measure` 
 
 **Roadmap:**
 
-- **4b:** the 3D Tiles georeferencing reader, rigid and reprojected placement of tilesets, picking design coordinates, snapping (client-side and exact), and the corridor generator and example. It also covers global geoid and height-system coverage, lazily loaded: country and region geoids from PROJ-data's catalog, with opt-in EGM96 and EGM2008 fallbacks (the owner's requirement; see CESIUM2_WEBGPU_PLAN.md §13.14, Carried forward).
+- **4b:** the 3D Tiles georeferencing reader, rigid and reprojected placement of tilesets, picking design coordinates, snapping (client-side and exact), and the corridor generator and example. It also covers global geoid and height-system coverage, lazily loaded: country and region geoids from PROJ-data's catalog, with opt-in EGM96 and EGM2008 fallbacks (the owner's requirement; see [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md), Carried forward).
 - **5:** multiple bodies and the Artemis example.
 
 ## Rulings this plan makes
@@ -450,7 +450,7 @@ Each ruling ends with what it costs if it is wrong.
 
 **Files:**
 
-- Modify: `packages/next/README.md`, `CESIUM2_WEBGPU_PLAN.md` §13.14
+- Modify: `packages/next/README.md`, [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)
 
 - [ ] **Step 1: README.** Document:
   - engineering frames and the CRS reference shape (R3);
@@ -464,7 +464,7 @@ Each ruling ends with what it costs if it is wrong.
   - the `projection` accuracy term;
   - where PROJ comes from (R1);
   - EPSG/IOGP and NOAA credits.
-- [ ] **Step 2: Plan note.** Add the measured agreements to §13.14:
+- [ ] **Step 2: Plan note.** Add the measured agreements to [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md):
   - PROJ against pyproj;
   - round trips;
   - factors;

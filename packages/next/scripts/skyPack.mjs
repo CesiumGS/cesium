@@ -1,4 +1,4 @@
-// Builds a sky data pack on this machine (§13.29): fetches a recipe's
+// Builds a sky data pack on this machine (docs/decisions/2026-11-08-owners-calls-for-later-plans.md): fetches a recipe's
 // sources into the sky store, then writes manifest.json, points.bin and
 // background.bin. Nothing here is committed, and a pack is never marked
 // distributable: a person edits the manifest after review.

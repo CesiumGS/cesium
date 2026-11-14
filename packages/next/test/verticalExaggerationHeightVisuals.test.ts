@@ -1,4 +1,4 @@
-// The "Vertical exaggeration" example's height visuals (plan §13.26, the
+// The "Vertical exaggeration" example's height visuals (docs/design/geometry-through-placement-review.md, the
 // owner's answer 2): the ramp and its legend, the shader's switches, and the
 // globe taking the shader only while an effect is on.
 import { describe, expect, it, vi } from "vitest";

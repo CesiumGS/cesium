@@ -36,10 +36,10 @@
 - 8.1 (the example);
 - 9 and 10.
 
-It also builds the owner's 4b requirement and the "Plan 4b" items in `CESIUM2_WEBGPU_PLAN.md` §13.14. Read with it:
+It also builds the owner's 4b requirement and the "Plan 4b" items in [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md). Read with it:
 
 - `docs/superpowers/plans/2026-11-05-frames-4a-engineering-frames.md`. Its rulings R1–R9 still bind, except where "Amended rulings" below says otherwise.
-- The §13.14 entry "Design space and the global view, with a morph between them (owner, 2026-11-06)", which is plan 5's input.
+- The [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md) entry "Design space and the global view, with a morph between them (owner, 2026-11-06)", which is plan 5's input.
 
 **Roadmap:** plan 5 covers multiple bodies, the Artemis example, camera rigs, and the morph between this plan's two placements.
 
@@ -1121,7 +1121,7 @@ The owner: the portfolio "should show every country done right, and talk about t
 
 - Modify:
   - `packages/next/README.md`
-  - `CESIUM2_WEBGPU_PLAN.md` §13.14
+  - [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)
 
 - [ ] **Step 1: README.** Document:
   - grids, the catalog trust root, `GridSource` and its layout, and `/proj-grids/`;
@@ -1130,7 +1130,7 @@ The owner: the portfolio "should show every country done right, and talk about t
   - `pickDesign`, `SnapService` and the pick term;
   - **"`BENTLEY_engineering_frame`"**: its JSON shape, how it builds on `EXT_geospatial_crs` and composes with `ESRI_crs`, `EXT_geospatial_crs_source` and `3DTILES_ellipsoid`, and what the draft lacks (the placement mode, the site scale, alignments as `BENTLEY_alignments`);
   - the PROJ-data credits and licenses.
-- [ ] **Step 2: Plan note** in §13.14, "Frames 4b results":
+- [ ] **Step 2: Plan note** in [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md), "Frames 4b results":
   - the measured agreements (round trips, sag, geoid cases against their references, snapping);
   - the calls made, one line each;
   - the held items;

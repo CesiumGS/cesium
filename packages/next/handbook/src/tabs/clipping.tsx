@@ -549,7 +549,7 @@ const NOT_BUILT = [
   {
     what: "Element styling of caps",
     state:
-      "Hatching is built for GPU caps. Hatching or a colour per material or element is the styling language's planar fill (plan section 13.27). An exact cap has a flat colour and a feature ID per element, and `style` is the hook.",
+      "Hatching is built for GPU caps. Hatching or a colour per material or element is the styling language's planar fill (docs/design/cad-display-extensions.md). An exact cap has a flat colour and a feature ID per element, and `style` is the hook.",
   },
   {
     what: "A section view from a plane, and printing to scale",
@@ -707,7 +707,8 @@ export function Clipping() {
           <C>clipExempt</C> on a tileset or model), so buried pipes stay whole
           under a clip that removes or ghosts the ground over them. There is
           still no list per clip, and exempting by element data is the styling
-          language&apos;s (plan section 13.26, decision 10).
+          language&apos;s (docs/design/geometry-through-placement-review.md,
+          decision 10).
         </p>
         <p>
           A set&apos;s <C>frame</C> may also be a node of a transform graph (a{" "}
@@ -721,7 +722,7 @@ export function Clipping() {
         <CodeBlock language="ts" code={snippetText("clip.next.ts")} />
         <p>That snippet compiles against the real types.</p>
         <Written
-          from="the overall plan, section 13.26, src/scene/world/clips.ts and nodeResolver.ts"
+          from="the design note docs/design/geometry-through-placement-review.md, src/scene/world/clips.ts and nodeResolver.ts"
           on="2026-11-12"
         />
       </Section>
@@ -903,7 +904,7 @@ export function Clipping() {
         />
         <TerrainTimings />
         <Written
-          from="spikes/clipEffectsBench.ts, src/globe/Globe.ts and the overall plan, section 13.26"
+          from="spikes/clipEffectsBench.ts, src/globe/Globe.ts and the design note docs/design/geometry-through-placement-review.md"
           on="2026-11-12"
         />
       </Section>
@@ -1234,11 +1235,12 @@ export function Clipping() {
           A GPU cap has a flat colour (a warm grey by default, linear RGBA 0.78,
           0.74, 0.68) and optional hatching: lines in the cut&apos;s plane,
           anchored to it. Styling by element is the styling language&apos;s, by
-          planar fill (plan section 13.27). An exact cap has the same default
-          colour, a section line is orange, a mesh cap carries a feature ID per
-          element, and <C>style</C> is the hook: a function from the cap&apos;s
-          kind and feature to a colour, called where the language will say how a
-          cap looks. Without a result the default stands.
+          planar fill (docs/design/cad-display-extensions.md). An exact cap has
+          the same default colour, a section line is orange, a mesh cap carries
+          a feature ID per element, and <C>style</C> is the hook: a function
+          from the cap&apos;s kind and feature to a colour, called where the
+          language will say how a cap looks. Without a result the default
+          stands.
         </p>
         <Written
           from="src/brep/section*.ts, src/scene/world/caps.ts, capFaces.ts, meshCaps.ts and clips.ts (capPlanes), src/render/view/capPasses.ts and src/shaders/sectionCap.slang, with the tests below"
@@ -1256,7 +1258,7 @@ export function Clipping() {
           rows={NOT_BUILT}
         />
         <Written
-          from="the overall plan, section 13.26, and what the code has"
+          from="the design note docs/design/geometry-through-placement-review.md, and what the code has"
           on="2026-11-11"
         />
       </Section>
@@ -1297,7 +1299,7 @@ export function Clipping() {
           about the cap, not an arithmetic twin agreeing with itself.
         </p>
         <Written
-          from="spikes/clips.ts, spikes/caps.ts, the tests above, and the measurements in the plan, section 13.26"
+          from="spikes/clips.ts, spikes/caps.ts, the tests above, and the measurements in the design note docs/design/geometry-through-placement-review.md"
           on="2026-11-11"
         />
       </Section>

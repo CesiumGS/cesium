@@ -617,7 +617,7 @@ function buildViewFrame(
 
   // The chain, after the meter and (but for the eye under glare) the adaptation, so
   // neither sees a stage's result; the HDR readback has read the image by now too
-  // (§13.22).
+  // (docs/design/custom-post-processing.md).
   const chainView: ChainView = {
     width,
     height,

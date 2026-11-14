@@ -1,4 +1,4 @@
-// Image regression (plan §16.10): `cli.mjs images` captures image checks
+// Image regression (docs/design/image-regression-in-dyno.md): `cli.mjs images` captures image checks
 // (a scene at points of its camera path, settled, with the benchmark's
 // render settings and fixed sun), compares each with its approved
 // baseline for this renderer class using FLIP, and writes a run (JSON,
@@ -21,7 +21,7 @@ import { resolveEngine } from "./engineBuilds.mjs";
 
 /** Regression thresholds: the same engine on the same renderer class. */
 export const REGRESSION = { mean: 0.01, p95: 0.05 };
-/** Parity thresholds against 1.x (§4 L2). */
+/** Parity thresholds against 1.x (docs/design/parity.md L2). */
 export const PARITY = { mean: 0.05, p95: 0.2 };
 
 const sha256 = (data) => createHash("sha256").update(data).digest("hex");

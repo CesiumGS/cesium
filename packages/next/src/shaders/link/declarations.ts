@@ -1,5 +1,5 @@
 /**
- * A WGSL unit's top-level declarations, read from its source (plan §3.4,
+ * A WGSL unit's top-level declarations, read from its source (docs/design/shaders.md,
  * step 5's linker): names, kinds, lines, functions' parameter and result
  * types, bindings. It reads; it never rewrites. Comments and the bodies
  * of functions and structs are skipped by depth, so it needs no grammar

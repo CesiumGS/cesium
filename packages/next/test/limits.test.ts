@@ -82,7 +82,7 @@ describe("limits", () => {
 });
 
 /**
- * Every layout the engine creates fits the `base` tier (§13.15): the
+ * Every layout the engine creates fits the `base` tier (docs/design/gpu-limits-and-capacities.md): the
  * engine starts on a recording fake device, and each explicit layout (and
  * each `layout: "auto"` pipeline, from its WGSL) is checked against the
  * spec defaults.

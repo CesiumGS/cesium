@@ -533,7 +533,7 @@ export interface ShaderOverrides {
   opaque?: string;
   cull?: string;
   /**
-   * How the surface shaders are composed with run-time code (plan §3.4,
+   * How the surface shaders are composed with run-time code (docs/design/shaders.md,
    * step 5). Default `WgslLinker`: checked units joined.
    */
   linker?: Linker;
@@ -756,7 +756,7 @@ async function createPipelines(
       // Diffuse irradiance by normal (the environment's irradiance cube).
       { binding: 6, visibility: FRAGMENT, texture: { viewDimension: "cube" } },
       // Aerial perspective: in-scatter, then transmittance, along depth
-      // (one volume, §13.15).
+      // (one volume, docs/design/gpu-limits-and-capacities.md).
       { binding: 7, visibility: FRAGMENT, texture: { viewDimension: "3d" } },
       // The air marched per vertex: parameters, then transmittance and
       // multiple-scattering tables (a layer per group of wavelengths).
@@ -816,7 +816,7 @@ async function createPipelines(
   });
   // The point cull's world tables: only what its kernels read (records,
   // transforms, indirect arguments), so with its own group 2 the compute
-  // stage binds 8 storage buffers, not 13 (the base tier, §13.15).
+  // stage binds 8 storage buffers, not 13 (the base tier, docs/design/gpu-limits-and-capacities.md).
   const cullPointWorldLayout = device.createBindGroupLayout({
     label: "cull.pointWorld",
     entries: [
@@ -885,7 +885,7 @@ async function createPipelines(
   // Metadata property textures (read with textureLoad): only in the layouts
   // of custom shaders that read metadata per fragment, so the built-in
   // pipelines don't spend two of the base tier's 16 sampled textures on
-  // them (§13.15). Bindless: they become texture references too.
+  // them (docs/design/gpu-limits-and-capacities.md). Bindless: they become texture references too.
   const propertyTextureEntries: GPUBindGroupLayoutEntry[] = Array.from(
     { length: PROPERTY_TEXTURES },
     (_, k) => ({
@@ -955,7 +955,7 @@ async function createPipelines(
   // depth: the moments are read-only storage textures, which count against
   // their own per-stage limit (4, unused by fragments otherwise), so a
   // custom shader has the same room here as in its opaque layout but one
-  // (§13.15). Their format is part of their WGSL type, so their
+  // (docs/design/gpu-limits-and-capacities.md). Their format is part of their WGSL type, so their
   // declarations follow `momentFormats` (`momentBindings`).
   const translucentLayout = device.createBindGroupLayout({
     label: "translucent",
@@ -1022,7 +1022,7 @@ async function createPipelines(
   const module = (label: string, ...sources: string[]) =>
     device.createShaderModule({ label, code: sources.join("\n") });
   const linker = overrides.linker ?? new WgslLinker();
-  // The surface shaders as compilation units (plan §3.4, step 5), linked
+  // The surface shaders as compilation units (docs/design/shaders.md, step 5), linked
   // with a custom shader's or the engine's own stages across the surface
   // boundary.
   // One module draws every surface pass, opaque and translucent: the

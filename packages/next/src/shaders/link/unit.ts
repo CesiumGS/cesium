@@ -1,7 +1,7 @@
 import { declarations, type Declaration } from "./declarations.ts";
 
 /**
- * A compilation unit (plan §3.4, step 5): WGSL with a name and its
+ * A compilation unit (docs/design/shaders.md, step 5): WGSL with a name and its
  * symbol table. Engine units are generated or hand-written modules (the
  * surface shaders, a kernel); run-time units come from front ends (a
  * custom shader's stages, its contract and glue, its uniforms' bindings,

@@ -95,7 +95,7 @@ const GAPS: readonly {
   {
     what: "Implicit tiling, multiple contents and more bounding volumes",
     state: "planned",
-    today: "Overall plan, section 4.1.",
+    today: "The design note docs/design/parity.md.",
   },
   {
     what: "Classification",
@@ -105,7 +105,8 @@ const GAPS: readonly {
   {
     what: "Vector tiles, labels, wide lines, and polygons draped on terrain and tilesets",
     state: "planned",
-    today: "Overall plan, section 13.9, as a design for the vector renderer.",
+    today:
+      "The design note docs/design/transforms-and-instancing.md, as a design for the vector renderer.",
   },
   {
     what: "Several imagery layers on a globe",
@@ -130,8 +131,8 @@ const GAPS: readonly {
     today: (
       <>
         Later, not designed: a public interface, with FXAA and ambient occlusion
-        built on it (overall plan, section 13.22). Today those two are{" "}
-        <C>View</C> settings.
+        built on it (the design note docs/design/custom-post-processing.md).
+        Today those two are <C>View</C> settings.
       </>
     ),
   },
@@ -145,15 +146,16 @@ const GAPS: readonly {
     what: "The Entity API, and CZML, KML and GeoJSON data sources",
     state: "unplanned",
     today:
-      "Out of scope for the proof of concept, with no plan yet beyond that. The vector design in section 13.9 reads GeoJSON from a service, not as a data source.",
+      "Out of scope for the proof of concept, with no plan yet beyond that. The vector design in the design note docs/design/transforms-and-instancing.md reads GeoJSON from a service, not as a data source.",
   },
   {
     what: "Other imagery and terrain sources",
     state: "unplanned",
     today: (
       <>
-        The overall plan's section 13.21 says how they'd go in, and to choose
-        from demand, each as an optional module. Some imagery works today
+        The design note on ion as a module (
+        <C>docs/design/ion-as-a-module.md</C>) says how they'd go in, and to
+        choose from demand, each as an optional module. Some imagery works today
         through <C>UrlTemplateImagery</C>, and an app can write its own{" "}
         <C>ImageryProvider</C>. Terrain needs a decoder and a public seam first.
       </>

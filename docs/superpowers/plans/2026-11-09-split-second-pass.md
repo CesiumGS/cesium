@@ -1,6 +1,6 @@
 # File split, second pass: real layers
 
-Pure moves only: no behaviour, public API (`api/surface.txt`), shader or pass-order change. Pixels identical to main. Plan §13.17 and §13.32 are the frame for this; the renderer interface itself is not built.
+Pure moves only: no behaviour, public API (`api/surface.txt`), shader or pass-order change. Pixels identical to main. Plan [layers-engine-renderer-backend.md](../../design/layers-engine-renderer-backend.md) and [sky-light-and-points-unifications.md](../../design/sky-light-and-points-unifications.md) are the frame for this; the renderer interface itself is not built.
 
 ## The shape
 
@@ -56,11 +56,11 @@ Every commit: both tsc configs, and the tests it changed. Each batch ends with o
 
 ## Calls, and what undoing costs
 
-1. **Real state objects, not a cast.** The cheaper option was keeping fields on the class as `private` and handing out `this as unknown as Context`: no test churn, but unchecked, and scene and rasterizer data would stay mixed in one object. State objects are checked by the compiler and keep the sides physically apart, as §13.32 asks. Undo: mechanical, but touches every moved function.
+1. **Real state objects, not a cast.** The cheaper option was keeping fields on the class as `private` and handing out `this as unknown as Context`: no test churn, but unchecked, and scene and rasterizer data would stay mixed in one object. State objects are checked by the compiler and keep the sides physically apart, as [sky-light-and-points-unifications.md](../../design/sky-light-and-points-unifications.md) asks. Undo: mechanical, but touches every moved function.
 2. **Fields a constructor assigns lose `readonly`** in the state classes (`x!: T`), because the constructor stays on `World` and `Engine` in its order. Moving construction into the state classes would risk order. Undo: move those lines later, one at a time.
 3. **Contexts per group of functions, not per function or file.** Per file, a hub such as `prepareFrame` made its neighbours as wide as itself; per function would be noise. Undo: merge or split one by editing its list.
 4. **Tests go through `world.raster.x`** instead of a cast to a shape. That is stronger: the compiler now checks the name. Undo: not needed.
 5. **`draws.ts`, `meshes.ts` and the like stay in `src/scene/world`,** even where a context shows they're mostly rasterizer. The context is the record of it; moving files is a later choice. Undo: a file move.
 6. **Public signatures stay.** `Tileset3D.world`, `Tileset3D.addItem`, `Globe.load`'s parameters name `World` and `Engine` in public API, so those imports stay and are named exceptions in the boundary test, for the API review (5i).
 7. **`GlobeImagery.ts` and `SlicePool.ts` keep their raw GPU calls** and their `RenderContext`, as named exceptions. They composite imagery on the GPU, so they're really rasterizer code living in content; moving them is its own task.
-8. **Not done, for the seam's next step (review I3):** scene data and rasterizer data are apart for transforms, anchors and placements only. Material values live only in the rasterizer's packed table, a draw has no scene-side record, and scene code grows GPU tables directly; record a neutral draw list and material values in §13.17 or §13.32.
+8. **Not done, for the seam's next step (review I3):** scene data and rasterizer data are apart for transforms, anchors and placements only. Material values live only in the rasterizer's packed table, a draw has no scene-side record, and scene code grows GPU tables directly; record a neutral draw list and material values in [layers-engine-renderer-backend.md](../../design/layers-engine-renderer-backend.md) or [sky-light-and-points-unifications.md](../../design/sky-light-and-points-unifications.md).

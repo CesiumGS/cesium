@@ -1,5 +1,5 @@
-// The "Vertical exaggeration" example (plan §13.26's acceptance test, increment
-// 7; §13.37), its frame as the example builds them: a deformer node over the
+// The "Vertical exaggeration" example (docs/design/geometry-through-placement-review.md's acceptance test, increment
+// 7; docs/design/transform-graph.md), its frame as the example builds them: a deformer node over the
 // Earth's content under ITRF, where the camera stays; a terrain tile and a billboard drawn under it, and
 // the questions the page asks (a pick's way back through the map, the measure
 // module) answered in true coordinates while k goes from 1 to 10. Checked on

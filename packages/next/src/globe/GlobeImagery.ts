@@ -1,5 +1,5 @@
 /**
- * Globe imagery (plan §3.8): each drawn terrain tile gets one slice of a
+ * Globe imagery (docs/design/architecture.md, "Globe, terrain and imagery (globe/)"): each drawn terrain tile gets one slice of a
  * `texture_2d_array`, composited on the GPU from the imagery provider's
  * tiles and reprojected to the tile's geographic grid, so every terrain
  * draw samples one texture through one bind group.
@@ -75,7 +75,7 @@ export interface GlobeImageryOptions {
   baseColor?: readonly [number, number, number];
   /**
    * The imagery as the surface's color, lit by the sun and the sky (the
-   * default, plan §4.2: an albedo estimate from the photographs), with
+   * default, docs/design/lighting-and-shading.md: an albedo estimate from the photographs), with
    * aerial perspective; or false: shown as is, unlit (display-referred, as
    * 1.x's globe without lighting, its default), which the parity harnesses
    * use against 1.x.

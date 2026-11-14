@@ -76,7 +76,7 @@ import { formBounds, type FormBounds } from "../../src/brep/formBounds.ts";
  * - Two kernels: three booleans (a box minus a cylinder, and a box and a
  *   sphere united and intersected) made live by SMLib and by Open CASCADE in
  *   WebAssembly, side by side, each converted to the same render form: the
- *   CSG spike (plan §13.33). SMLib's faces arrive as Bézier patches that
+ *   CSG spike (docs/design/breps-and-geometry-queries.md). SMLib's faces arrive as Bézier patches that
  *   carry their analytic identity, OCCT's as analytic kinds. A picked face
  *   says which input it came from. The kernels load only when the scene is
  *   first shown.
@@ -89,7 +89,7 @@ import { formBounds, type FormBounds } from "../../src/brep/formBounds.ts";
  *
  * Faces are drawn by one of two tessellators, chosen in the panel.
  *
- * - GPU (default): `World.addBrep` (provisional, plan §13.33, step 5) puts
+ * - GPU (default): `World.addBrep` (provisional, docs/design/breps-and-geometry-queries.md, step 5) puts
  *   each shape's faces in the engine, diced per view on the GPU to an error
  *   target in pixels (the slider, `setPatchErrorPixels`). Faces the GPU path
  *   can't draw yet are a CPU mesh inside `addBrep`; the panel counts both,

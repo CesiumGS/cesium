@@ -1,4 +1,4 @@
-// 2.0's image-based lighting against the reference (plan §4.2): material
+// 2.0's image-based lighting against the reference (docs/design/lighting-and-shading.md): material
 // balls rendered by the engine (spherical harmonics for diffuse, GGX-
 // prefiltered specular, split-sum BRDF table, Fdez-Agüera multiple
 // scattering) and by Monte Carlo integration of the glTF BRDF under the

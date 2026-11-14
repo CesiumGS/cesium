@@ -18,7 +18,7 @@ import type { Harness } from "../lab/harness.ts";
 declare const Cesium: any;
 
 /**
- * Real-time tracks benchmark (plan §13.11): N tracks circling, fed at 10 Hz
+ * Real-time tracks benchmark (docs/design/real-time-tracks.md): N tracks circling, fed at 10 Hz
  * by a synthetic feed, drawn as 16 px symbols, in 2.0 (a `PointSource`:
  * one typed-array update, moved on the GPU, drawn by a `VectorLayer`) and
  * in 1.x as a

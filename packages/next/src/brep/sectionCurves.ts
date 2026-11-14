@@ -1,4 +1,4 @@
-// Where a plane cuts a face's surface (plan §13.26, caps; the b-rep section in
+// Where a plane cuts a face's surface (docs/design/geometry-through-placement-review.md, caps; the b-rep section in
 // section.ts). Every curve is given in the plane's own coordinates (the cap
 // plane's (u, v)), as a parameter range with exact point and tangent
 // evaluation, and the (u, v) on the face's surface for the trim test. The

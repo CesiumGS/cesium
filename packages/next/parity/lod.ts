@@ -29,7 +29,7 @@ const flip = async (
 };
 
 /**
- * L1′ (plan §4): `Budgeted` vs `Stepwise` over camera moves. For each move and
+ * L1′ (docs/design/parity.md): `Budgeted` vs `Stepwise` over camera moves. For each move and
  * policy, a fresh tileset settles at the start camera, then the camera moves;
  * from the move until settled we record requests, GPU bytes, time, and image
  * error (FLIP) at 250 ms, 1 s and settled against a fully refined reference

@@ -15,7 +15,7 @@ import {
 import type { Harness } from "../lab/harness.ts";
 
 /**
- * Custom shaders' costs (plan §3.4, "Custom shading" exit): frames while a
+ * Custom shaders' costs (docs/design/shaders.md, "Custom shading" exit): frames while a
  * new shader's pipelines compile in the background (its content draws with
  * the engine's shader meanwhile), and the CPU and GPU time of the same
  * boxes split across more shaders (a batch and a pipeline switch each).

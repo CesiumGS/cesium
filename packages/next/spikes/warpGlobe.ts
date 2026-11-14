@@ -1,5 +1,5 @@
 // The globe, a billboard and anchored content across a warp on the GPU
-// (plan §13.26, increment 4; the Node test is test/warpGlobe.test.ts, and
+// (docs/design/geometry-through-placement-review.md, increment 4; the Node test is test/warpGlobe.test.ts, and
 // spikes/warpRoute.ts is the model). The Earth's anchor is placed in
 // `exaggerated`, a `verticalExaggeration` of 10 under ITRF with a scale the
 // page moves; the camera stays on ITRF. Near

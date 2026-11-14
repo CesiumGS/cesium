@@ -1,5 +1,5 @@
-// A blend of two smooth specs: the weighted mix of their maps (plan §13.37; the
-// helper `blendWarps` of §13.26). Both go from one frame to its parent, each
+// A blend of two smooth specs: the weighted mix of their maps (docs/design/transform-graph.md; the
+// helper `blendWarps` of docs/design/geometry-through-placement-review.md). Both go from one frame to its parent, each
 // at its own `scale`; the Jacobian is the same blend of theirs, exact, and the
 // inverse is the engine's Newton. It is a function of two functions, not of
 // source text, so it is fitted, not compiled.

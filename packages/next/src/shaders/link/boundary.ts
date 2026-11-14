@@ -1,5 +1,5 @@
 /**
- * A boundary between units (plan §3.4, step 5): the functions one side
+ * A boundary between units (docs/design/shaders.md, step 5): the functions one side
  * calls by name and the other must define, with their types, and the
  * names the providing side exports for the other to use. The structs that
  * cross the surface boundary are described from Slang's reflection

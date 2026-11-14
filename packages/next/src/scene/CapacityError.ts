@@ -1,7 +1,7 @@
 /**
  * A world pool had no room: a table at its ceiling, an arena without a
  * range that size. Unlike bad content, this failure is transient: streaming
- * retries the tile once eviction frees room (CESIUM2_WEBGPU_PLAN.md §13.15,
+ * retries the tile once eviction frees room (docs/design/gpu-limits-and-capacities.md,
  * "Capacity in the residency budget"). Whatever threw it has already
  * released what it took.
  */

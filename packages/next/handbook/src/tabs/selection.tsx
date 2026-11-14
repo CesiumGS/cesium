@@ -1328,7 +1328,7 @@ export function Selection() {
         />
       </Section>
 
-      <Section title="Planned: transitions both ways (M9)">
+      <Section title="Planned: transitions both ways (CS-14)">
         <p>
           Reviewed by the owner, not built. The goal is that nothing pops when a
           level of detail changes, except the very first load. Today terrain
@@ -1374,7 +1374,7 @@ export function Selection() {
           </li>
         </ul>
         <Written
-          from="the LOD transitions plan and section 6, M9 (LT-1 to LT-8)"
+          from="the LOD transitions plan, project CS-14 (CS-121 to CS-133)"
           on="2026-11-13"
         />
       </Section>

@@ -1,4 +1,4 @@
-// Glare (CESIUM2_WEBGPU_PLAN.md §13.22, §13.32): settings to passes. It comes after the
+// Glare (docs/design/custom-post-processing.md, docs/design/sky-light-and-points-unifications.md): settings to passes. It comes after the
 // meter and the eye's adaptation, so neither sees it. Its light list (glare.slang
 // `glareSources`) gives the sun's record, and the stars that get a sprite.
 import type { Sky } from "../../atmosphere/Sky.ts";

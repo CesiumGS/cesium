@@ -1,4 +1,4 @@
-// Change points and alerts (plan §16.9, Detect), shared by the CLI and
+// Change points and alerts (docs/design/benchmark-analysis-and-experience.md, Detect), shared by the CLI and
 // Dyno. A metric's run-to-run series (each run's median for one scene,
 // scenario, configuration and hardware class) is split where its
 // distribution changes, with E-Divisive means as MongoDB and Apache Otava

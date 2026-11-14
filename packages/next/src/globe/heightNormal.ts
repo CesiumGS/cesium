@@ -5,7 +5,7 @@ import { Ellipsoid } from "../math/ellipsoid.ts";
  * a height-scale warp (`HeightScale`, camera/route.ts): per vertex `h·n̂`, the
  * geodetic height times the ellipsoid's normal there, in metres, so that
  * scaling heights by k is the displacement `(k − 1)·h·n̂`, exact and with no
- * fit (plan §13.26, the owner's answer 3: terrain keeps (u, v, h)).
+ * fit (docs/design/geometry-through-placement-review.md, the owner's answer 3: terrain keeps (u, v, h)).
  */
 export const HEIGHT_NORMAL_ATTRIBUTE = "_HEIGHT_NORMAL";
 

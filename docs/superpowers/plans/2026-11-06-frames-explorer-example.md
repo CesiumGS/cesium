@@ -20,7 +20,7 @@ The same suite runs headless as a regression data test.
 
 **Spec:**
 
-- The owner's request, recorded in `CESIUM2_WEBGPU_PLAN.md` §13.14 under Carried forward: "a gallery example for frames and projections", with its viewer addition of 2026-11-06.
+- The owner's request, recorded in [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md) under Carried forward: "a gallery example for frames and projections", with its viewer addition of 2026-11-06.
 - `docs/superpowers/specs/2026-11-05-frames-bodies-measurement-design.md` for the frames and measurements it shows.
 - The owner skipped further questions: iterate on the design once it's built.
 
@@ -85,7 +85,7 @@ Plan 4b later adds three things here:
   - **The costs, accepted:**
     - frame data is held twice;
     - the message layer isn't covered by the Node data test, so it gets its own tests (Task 4);
-    - module workers and the worker's runtime `import()` of `proj_capi.mjs` must work in the production build, not only the dev server. Task 6 checks the built gallery, which also covers §13.14's carried-forward note that `loadProj` was only checked in dev;
+    - module workers and the worker's runtime `import()` of `proj_capi.mjs` must work in the production build, not only the dev server. Task 6 checks the built gallery, which also covers [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)'s carried-forward note that `loadProj` was only checked in dev;
     - errors and logs inside the worker show in the worker's console context.
 - **R14. The page's information architecture (owner's addition, 2026-11-06).**
   - **Three views, one selection.** The tree (structure), the globe (space) and the tests (evidence) share one selection state in `selection.ts`: `type Selection = { kind: "frame"; id: string } | { kind: "result"; id: string } | { kind: "none" }`.
@@ -230,7 +230,7 @@ Plan 4b later adds three things here:
   - Commit locally and never push. End each message with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
   - `npx tsc --noEmit -p .`, `npx eslint` and prettier pass.
   - Run `snyk_code_scan` on new code.
-  - Before deleting the SDD workspace, copy real deferred work to §13.14's "Carried forward" list, without nits.
+  - Before deleting the SDD workspace, copy real deferred work to [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)'s "Carried forward" list, without nits.
   - Commands run in `packages/next`.
 - **Performance.** Don't benchmark on this page, which loads the GPU heavily. A full test run should finish in under 10 s on this machine; print the time in the data test. During a run in the page, the main thread never blocks for more than 100 ms (R13).
 
@@ -725,14 +725,14 @@ Plan 4b later adds three things here:
 
 **Files:**
 
-- Modify: `CESIUM2_WEBGPU_PLAN.md` §13.14, `packages/next/README.md` (one line in the frames section pointing at the example)
+- Modify: [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md), `packages/next/README.md` (one line in the frames section pointing at the example)
 
 - [ ] **Step 1: Plan note.**
-  - Mark the §13.14 "Carried forward" entry for this example as done, and state what 4b adds: tileset placement modes and the global-geoid cases.
+  - Mark the [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md) "Carried forward" entry for this example as done, and state what 4b adds: tileset placement modes and the global-geoid cases.
   - Record the data test's case count and run time.
   - List the reference sources used (R10) and any that couldn't be fetched.
   - Record the rigid-placement budget table and the effect sizes.
-  - Record the production-build check (R13). If it passed, remove §13.14's carried-forward item that `loadProj` was checked only in the dev server.
+  - Record the production-build check (R13). If it passed, remove [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)'s carried-forward item that `loadProj` was checked only in the dev server.
   - List the screenshots' findings.
   - Add the deferred items from this plan's ledger, without nits.
 - [ ] **Step 2: README.** Add one line in the frames section pointing at the example.

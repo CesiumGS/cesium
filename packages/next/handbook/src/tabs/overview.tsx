@@ -50,19 +50,19 @@ const MILESTONES = [
       "Built; the exponent's default is 0.3, from a re-sweep. A runaway at exponent 1 is still to be tracked down",
   },
   {
-    work: "Core IR (section 13.42)",
+    work: "Core IR (the design note docs/design/core-ir.md)",
     what: "One small typed IR on KHR_interactivity's vocabulary for styles, transforms and materials, with a CPU evaluator, differentiation and bounds, and emitters for WGSL and GLSL ES. WGSL becomes a front end, not the contract",
     state:
-      "Decided, planned (IR-1 to IR-15, reviewed) and spiked; not in the engine",
+      "Decided, planned (CS-48 to CS-63, reviewed) and spiked; not in the engine",
   },
   {
-    work: "Threads, jobs, renderers and engine profiles (section 13.41)",
+    work: "Threads, jobs, renderers and engine profiles (the design note docs/design/investigations-2026-11-13.md)",
     what: "The engine on either thread behind one API, a job scheduler, loading as refinement, a renderer behind each view with support reports, and a profile system where the app owns the look and the engine owns fidelity",
     state:
       "Planned and reviewed. Built: the job system's first slice and the refinement chip in the warp examples",
   },
   {
-    work: "Transitions, refinement, streaming robustness, the worker-mode façade, live MaterialX editing (M9 to M13)",
+    work: "Transitions, refinement, streaming robustness, the worker-mode façade, live MaterialX editing (projects CS-11, CS-13, CS-14, CS-15 and CS-16)",
     what: "Nothing pops when a level of detail changes, one model of an image still improving, deadlines and retries for every fetch with 1.x's request options, one API with the engine on either thread, and an editable MaterialX gallery example",
     state: "Reviewed; not built",
   },
@@ -77,7 +77,7 @@ const MILESTONES = [
     state: "Built",
   },
   {
-    work: "Plans 5b to 5i, rebased",
+    work: "Plans 5b onwards and the public API review (CS-102), rebased",
     what: "The frames library, a second body, controllers and animation (5c and 5d rewritten against the transform graph), the physical sky per body, design space, the Artemis II replay, and the API review, which also removes placement modes and renames the declared extensions to 3D Tiles 2.0's",
     state: "Planned",
   },
@@ -208,7 +208,7 @@ export function Overview() {
           </p>
           <p>Whatever the tooling, going to production involves:</p>
           <ul>
-            <li>the API review (plan 5i) and documentation</li>
+            <li>the public API review (CS-102) and documentation</li>
             <li>1.x parity gaps, migration, and a migration guide</li>
             <li>the plan's open performance and compute milestones (M5, M6)</li>
             <li>browser reach, and testing on real hardware</li>

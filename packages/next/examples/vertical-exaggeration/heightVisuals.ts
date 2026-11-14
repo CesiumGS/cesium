@@ -1,8 +1,8 @@
 import { CustomShader, type Globe } from "@cesium/next";
 
 /**
- * Height visuals, the placement review's open question as a spike (plan
- * §13.26, the owner's answer 2): a hypsometric tint, contours and a haze whose
+ * Height visuals, the placement review's open question as a spike (
+ * docs/design/geometry-through-placement-review.md, the owner's answer 2): a hypsometric tint, contours and a haze whose
  * density falls with height, each of which can be keyed to the height the
  * terrain really has ("true") or the height it is drawn at ("drawn"), on a
  * terrain drawn up to ten times as tall.

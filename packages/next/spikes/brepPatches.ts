@@ -1,4 +1,4 @@
-// B-rep patches diced on the GPU (plan §13.33, "Step 5 redirected", part 1):
+// B-rep patches diced on the GPU (docs/design/breps-and-geometry-queries.md, "Step 5 redirected", part 1):
 // faces the rect completes (no trim test) drawn from span records and control
 // points, the grid per view. An analytic cylinder face, a dome (a sphere's
 // span) and a free-form weighted rational Bézier patch, and one of degree 5 × 4 (the wide

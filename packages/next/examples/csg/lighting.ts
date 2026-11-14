@@ -1,7 +1,7 @@
 import { DAYLIGHT_SUN_ILLUMINANCE } from "../../src/render/layout.ts";
 
 /**
- * The CSG sample's lighting controls (plan §13.33): what the engine's view
+ * The CSG sample's lighting controls (docs/design/breps-and-geometry-queries.md): what the engine's view
  * exposes of the sun, shadows, ambient occlusion, sky light and exposure, as
  * plain settings that a deep link carries (`encodeLighting`/`decodeLighting`)
  * and `applyLighting` puts on a viewer.

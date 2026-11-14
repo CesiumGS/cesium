@@ -1,4 +1,4 @@
-// The CSG sample's model (plan §13.33), without a kernel or a GPU: a tree
+// The CSG sample's model (docs/design/breps-and-geometry-queries.md), without a kernel or a GPU: a tree
 // becomes the worker's recipe and comes back from it, and from JSON; edits
 // keep ids unique; a face's tag finds its leaf and a node finds its faces;
 // the preview's outline and the edit scheduler behave.

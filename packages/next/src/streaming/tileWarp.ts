@@ -1,4 +1,4 @@
-// Where a warped anchor's tiles are drawn (plan §13.26, increment 3). Under
+// Where a warped anchor's tiles are drawn (docs/design/geometry-through-placement-review.md, increment 3). Under
 // an anchor whose route to the view's root crosses a warp, a tile is drawn
 // where the route takes its content, not where its bounding volume says:
 // selection (distance, the frustum, the screen-space error, the viewer's

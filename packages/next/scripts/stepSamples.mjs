@@ -1,5 +1,5 @@
 // NIST's public-domain STEP test models, for the b-rep example's "STEP file"
-// scene (plan §13.33): real CAD parts to import through Open CASCADE. The
+// scene (docs/design/breps-and-geometry-queries.md): real CAD parts to import through Open CASCADE. The
 // official zip from nist.gov, pinned by SHA-256, from which only the chosen
 // geometry-only AP203 files are kept, each pinned too, in a store outside the
 // repo (~/.cesium-bench/step/nist-pmi/<version>), never committed and never

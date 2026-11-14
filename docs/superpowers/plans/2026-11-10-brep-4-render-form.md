@@ -4,11 +4,11 @@
 
 **Goal:** The engine's own B-rep form, as typed arrays. It comes with exact float64 evaluation of its surfaces and curves, an exact split of NURBS into rational Bézier pieces, a builder and a validator, and a draft glTF extension, `BENTLEY_brep`, that carries the form beside a fallback mesh, read by `parseGltf`.
 
-**Architecture:** A new core module, `src/brep/`. It has no drawing: GPU tessellation is step 5, after the placement review (§13.26). The form is plain typed arrays, so it moves between workers without copying, and a host with its own kernel can write it directly. Every surface and curve is either analytic, with a fixed parameterization, or rational Bézier. NURBS are split into Bézier pieces by knot insertion, which is exact. Trims (pcurves) and 3D edge curves are stored exactly, as rational Bézier segments of degree 1 to 3. Making quadratic segments for the coverage kernel is the renderer's job later (step 6). This is a draft, and the choices below are review material: the extension's name and schema are open in §13.33.
+**Architecture:** A new core module, `src/brep/`. It has no drawing: GPU tessellation is step 5, after the placement review ([geometry-through-placement-review.md](../../design/geometry-through-placement-review.md)). The form is plain typed arrays, so it moves between workers without copying, and a host with its own kernel can write it directly. Every surface and curve is either analytic, with a fixed parameterization, or rational Bézier. NURBS are split into Bézier pieces by knot insertion, which is exact. Trims (pcurves) and 3D edge curves are stored exactly, as rational Bézier segments of degree 1 to 3. Making quadratic segments for the coverage kernel is the renderer's job later (step 6). This is a draft, and the choices below are review material: the extension's name and schema are open in [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md).
 
 **Tech Stack:** TypeScript, vitest. No new dependencies.
 
-**Spec:** `CESIUM2_WEBGPU_PLAN.md` §13.33: "One render b-rep form, produced two ways", "The form: …", and Spike B's result. Read §13.33 before starting.
+**Spec:** [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md): "One render b-rep form, produced two ways", "The form: …", and Spike B's result. Read [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md) before starting.
 
 ## Global Constraints
 
@@ -320,7 +320,7 @@ export function writeBrepExtension(forms: readonly BrepForm[], firstBufferView: 
   - The same GLB with the root extension truncated (one bufferView index past the end): the mesh loads, `asset.breps` is `[undefined]` or absent, `mesh.brep` is absent, and `warnings` names `BENTLEY_brep`.
   - A typed array whose bufferView byteOffset is not aligned gets copied, not misread: build one by hand.
 - [ ] **Step 2: Run and see it fail.**
-- [ ] **Step 3: Implement.** In `gltfParse.ts`: add `"BENTLEY_brep"` to `SUPPORTED_EXTENSIONS` with a comment, "draft: b-rep beside a fallback mesh (src/brep/BENTLEY_brep.md)". Read the root extension once, where `featureTables` is read, using the same `bufferView` function. Set `mesh.brep` from the primitive's extension when that b-rep read cleanly. Add the forms' array buffers to `transfer`, without duplicates. Write `BENTLEY_brep.md` in the style of a glTF extension README: status (draft, for this proof of concept, free to change), dependencies (glTF 2.0), overview, the schema (the root and primitive objects, every property with its type), the parameterizations (copy them from `form.ts`), the fallback rule, and the open questions in §13.33 that concern the format. No vendor or product names beyond the extension's own prefix.
+- [ ] **Step 3: Implement.** In `gltfParse.ts`: add `"BENTLEY_brep"` to `SUPPORTED_EXTENSIONS` with a comment, "draft: b-rep beside a fallback mesh (src/brep/BENTLEY_brep.md)". Read the root extension once, where `featureTables` is read, using the same `bufferView` function. Set `mesh.brep` from the primitive's extension when that b-rep read cleanly. Add the forms' array buffers to `transfer`, without duplicates. Write `BENTLEY_brep.md` in the style of a glTF extension README: status (draft, for this proof of concept, free to change), dependencies (glTF 2.0), overview, the schema (the root and primitive objects, every property with its type), the parameterizations (copy them from `form.ts`), the fallback rule, and the open questions in [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md) that concern the format. No vendor or product names beyond the extension's own prefix.
 - [ ] **Step 4: Run the tests, then `npm run typecheck`, plus `npx vitest run test/composite.test.ts` (it must still pass).**
 - [ ] **Step 5: Commit.** `git commit -m "brep: the BENTLEY_brep glTF extension draft" -- src/brep/gltf.ts src/brep/BENTLEY_brep.md src/io/gltfParse.ts src/io/gltfTypes.ts test/brepGltf.test.ts`
 
@@ -331,17 +331,17 @@ export function writeBrepExtension(forms: readonly BrepForm[], firstBufferView: 
 - Create: `packages/next/src/brep/index.ts`
 - Modify: `packages/next/src/index.ts`, `packages/next/api/surface.txt` (via `npm run surface`) and `packages/next/handbook/src/apiMap.ts` (one new row in group `picking`, after the geometry queries row)
 - Modify: `packages/next/handbook/src/tabs/specs.tsx` (a `DECLARATIONS` entry for `BENTLEY_brep`) and `packages/next/handbook/src/tabs/breps.tsx` (the status note and "Still to write")
-- Modify: `CESIUM2_WEBGPU_PLAN.md` §13.33 (a "Step 4 draft" paragraph after "Step 3 draft")
+- Modify: [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md) (a "Step 4 draft" paragraph after "Step 3 draft")
 
 - [ ] **Step 1: Export** from `src/index.ts`, by name (the handbook's surface reader doesn't follow `export *`): `BrepBuilder`, `validateBrep`, `nurbsSurfaceToPatches`, `nurbsCurveToSegments`, `evaluateSurface`, `faceNormal`, and the types `BrepForm`, `BezierCurves`, `BrepUse`, `BrepProblem`, `NurbsSurface`, `NurbsCurve`, `SurfaceSample`. `SurfaceKind` is a `const enum`, so export it as a type and document its values. Then run `npm run surface` and add the apiMap row (status `new`, with a note naming it a draft).
 - [ ] **Step 2: Handbook.**
   - The specs tab gets a `BENTLEY_brep` declaration: "A B-rep beside a fallback mesh: surfaces, trims, edges and stable IDs as typed arrays", with the state "Draft. Read by the loader; nothing draws it yet."
   - The B-reps tab's note says the form and the extension are drafted, and "Still to write" drops "the extension's name and schema", replaced by "The extension's name, and review of its schema".
-- [ ] **Step 3: §13.33.** A "Step 4 draft (2026-11-10, plan …)" paragraph: what the form holds, the exact NURBS split, the builder and validator, the extension and its fallback rule. Then its questions for the review:
+- [ ] **Step 3: [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md).** A "Step 4 draft (2026-11-10, plan …)" paragraph: what the form holds, the exact NURBS split, the builder and validator, the extension and its fallback rule. Then its questions for the review:
   1. Bézier patches are stored in place of NURBS: size against loader work.
   2. Pcurves and edges are exact rational Bézier of degree ≤ 3, and quadratic segments are made later.
   3. One `ids` string table.
   4. Float64 everywhere in the file.
   5. The `BENTLEY_` prefix.
 - [ ] **Step 4: Run the full suite once** (`npm run typecheck`, `npx tsc -p handbook --noEmit`, `npx vitest run`), and Snyk on `src/brep`, `src/io/gltfParse.ts` and `src/io/gltfTypes.ts`.
-- [ ] **Step 5: Commit** from the repo root by pathspec: `git commit -m "brep: export the draft; handbook and §13.33" -- …`
+- [ ] **Step 5: Commit** from the repo root by pathspec: `git commit -m "brep: export the draft; handbook and [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md)" -- …`

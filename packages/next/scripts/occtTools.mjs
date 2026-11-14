@@ -1,4 +1,4 @@
-// Open CASCADE in WebAssembly (plan §13.33, the CSG sample's second kernel):
+// Open CASCADE in WebAssembly (docs/design/breps-and-geometry-queries.md, the CSG sample's second kernel):
 // replicad's custom build of OpenCascade.js, pinned to one npm version and
 // checked against its integrity hash, unpacked into a store outside the repo
 // (~/.cesium-bench/occt/<version>), never committed and never bundled. It is

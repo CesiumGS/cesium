@@ -1,4 +1,4 @@
-// Caps on the GPU (plan §13.26, increment 8b; the Node tests are
+// Caps on the GPU (docs/design/geometry-through-placement-review.md, increment 8b; the Node tests are
 // test/brepSection*.test.ts, test/meshCaps.test.ts and test/caps.test.ts).
 // Unlit white content on black, cut by a plane the view opts into, and the
 // cut closed by a cap in red (a section line in orange). Every pixel is

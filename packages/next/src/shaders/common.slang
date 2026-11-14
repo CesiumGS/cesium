@@ -1,5 +1,5 @@
 // The engine's shared structs, constants and helpers: the one source of
-// their layouts (CESIUM2_WEBGPU_PLAN.md §3.4, "Slang-first, for real",
+// their layouts (docs/design/shaders.md, "Slang-first, for real",
 // step 3). Kernels written in Slang `import common;`. The TypeScript
 // offsets are generated from this module's reflection (scripts/
 // slangBuild.mjs, `layouts.slang` → src/render/generated/layouts.ts).
@@ -223,7 +223,7 @@ public static const uint CLUSTER_LIGHTS = 16u;
 // with relaxed math on Apple GPUs, which may reassociate
 // `(aHi - bHi) + (aLo - bLo)` into a sum of the large values, and on an
 // M-series Mac that erred as much as plain float32 (0.45 m at
-// Philadelphia, r50; plan §3.3 "Precision"). Integer arithmetic can't be
+// Philadelphia, r50; docs/design/architecture.md, "Render world and draws (render/): GPU-driven from M1" "Precision"). Integer arithmetic can't be
 // reassociated with float arithmetic.
 public struct SplitPosition {
   float3 hi;

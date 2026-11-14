@@ -5,7 +5,7 @@ import methodNotes from "./annotations.json";
 import type { Budget, Dataset, EngineConfig, Scene } from "./schema.ts";
 
 /**
- * Dyno's data (plan §16.5, §16.9): the results directory through the dev
+ * Dyno's data (docs/design/benchmark-suite.md, "Interfaces: agents, scripts and people", docs/design/benchmark-analysis-and-experience.md): the results directory through the dev
  * server, compact run summaries (from `*.summary.json` when present, else
  * summarized here), full results on demand, and small helpers every view
  * shares. Loaded once per page.

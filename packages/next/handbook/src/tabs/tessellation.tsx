@@ -438,8 +438,8 @@ export function Tessellation() {
         <Written
           from={
             <>
-              the overall plan, section 13.33, <C>src/scene/world/brep.ts</C>{" "}
-              and <C>src/brep/tessellate.ts</C>
+              the design note docs/design/breps-and-geometry-queries.md,{" "}
+              <C>src/scene/world/brep.ts</C> and <C>src/brep/tessellate.ts</C>
             </>
           }
           on="2026-11-11"
@@ -527,8 +527,8 @@ export function Tessellation() {
           from={
             <>
               <C>src/brep/tessellate.ts</C>, <C>src/brep/bounds.ts</C>,{" "}
-              <C>test/brepTessellateBounds.test.ts</C> and the overall plan,
-              section 13.33
+              <C>test/brepTessellateBounds.test.ts</C> and the design note
+              docs/design/breps-and-geometry-queries.md
             </>
           }
           on="2026-11-11"
@@ -889,7 +889,7 @@ export function Tessellation() {
             <>
               <C>src/brep/gpuTrims.ts</C>, <C>src/shaders/coverage.slang</C>,{" "}
               <C>src/shaders/surface.slang</C>, <C>test/brepGpuTrims.test.ts</C>{" "}
-              and the overall plan, section 13.33
+              and the design note docs/design/breps-and-geometry-queries.md
             </>
           }
           on="2026-11-11"
@@ -961,9 +961,9 @@ export function Tessellation() {
         <Written
           from={
             <>
-              the overall plan, section 13.33 (the brainstorm on modeling and
-              render geometry), <C>src/brep/gpuTrims.ts</C> and{" "}
-              <C>src/brep/tessellate.ts</C>
+              the design note docs/design/breps-and-geometry-queries.md (the
+              brainstorm on modeling and render geometry),{" "}
+              <C>src/brep/gpuTrims.ts</C> and <C>src/brep/tessellate.ts</C>
             </>
           }
           on="2026-11-11"
@@ -1061,9 +1061,10 @@ export function Tessellation() {
         <Written
           from={
             <>
-              the overall plan, section 13.33 (Part 1's cost, the performance
-              pass and Spike B), <C>spikes/brepPatches.ts</C>,{" "}
-              <C>spikes/brepTrims.ts</C> and the tests
+              the design note docs/design/breps-and-geometry-queries.md (Part
+              1's cost, the performance pass and Spike B),{" "}
+              <C>spikes/brepPatches.ts</C>, <C>spikes/brepTrims.ts</C> and the
+              tests
             </>
           }
           on="2026-11-11"
@@ -1104,7 +1105,7 @@ export function Tessellation() {
           follow-ups, tasks 9 and 10.
         </p>
         <Written
-          from="the plan 5 spec, section 13.4, and section 13.37"
+          from="the plan 5 spec, section 13.4, and the design note docs/design/transform-graph.md"
           on="2026-11-12"
         />
       </Section>
@@ -1172,7 +1173,7 @@ export function Tessellation() {
           </li>
         </ul>
         <Written
-          from="the overall plan, section 13.33 (the follow-ups), and what the code has"
+          from="the design note docs/design/breps-and-geometry-queries.md (the follow-ups), and what the code has"
           on="2026-11-11"
         />
       </Section>

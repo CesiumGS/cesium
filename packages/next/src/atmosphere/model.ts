@@ -1,6 +1,6 @@
 // A planet's atmosphere as participating media, spectrally: the parameters
 // shared by the reference integrators (here on the CPU, reference.slang on
-// the GPU) and the real-time model to come (plan §4.2). Lengths in meters,
+// the GPU) and the real-time model to come (docs/design/lighting-and-shading.md). Lengths in meters,
 // wavelengths in nanometers, positions relative to the planet's center.
 //
 // Earth's defaults are Bruneton's 2017 reference values: Rayleigh scattering

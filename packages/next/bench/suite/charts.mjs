@@ -1,4 +1,4 @@
-// Inline SVG charts for benchmark reports (plan §16.5), following the
+// Inline SVG charts for benchmark reports (docs/design/benchmark-suite.md, "Interfaces: agents, scripts and people"), following the
 // data-viz method: one y-axis per chart, thin marks, hairline grid, a
 // legend for two or more series, text in ink tokens (never series
 // colors), a table twin for every chart, and a crosshair readout on hover

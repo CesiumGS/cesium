@@ -1,4 +1,4 @@
-// Released CesiumJS builds for the benchmark suite (plan §16.6): a 1.x
+// Released CesiumJS builds for the benchmark suite (docs/design/benchmark-suite.md, "Engines and versions"): a 1.x
 // configuration can run this repository's build or any version published
 // on npm. Versions are resolved ("latest" → an exact version), downloaded
 // once with `npm pack` into the store outside the repo

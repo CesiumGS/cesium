@@ -1,4 +1,4 @@
-// The kernel worker's protocol, client and host (plan §13.33), in-process: a
+// The kernel worker's protocol, client and host (docs/design/breps-and-geometry-queries.md), in-process: a
 // `KernelHost` behind a loopback with a real worker's structured clone and
 // transfer, over fake kernels (the real ones are in test/data). The form's
 // buffers move, requests report stages, a new request supersedes the old one

@@ -1,4 +1,4 @@
-// Open CASCADE's solids as render forms (plan §13.33, the CSG spike's second
+// Open CASCADE's solids as render forms (docs/design/breps-and-geometry-queries.md, the CSG spike's second
 // kernel): the build in the store (npm run setup) converts primitives and
 // booleans; each form validates, faces outward, keeps OCCT's analytic
 // surfaces as the form's analytic kinds, and keeps the tags of the faces it

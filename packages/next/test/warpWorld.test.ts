@@ -1,4 +1,4 @@
-// A world's draws across a warp (plan §13.26, increment 1, slice D; §13.37):
+// A world's draws across a warp (docs/design/geometry-through-placement-review.md, increment 1, slice D; docs/design/transform-graph.md):
 // a view whose camera is on ITRF draws content placed in a smooth frame under
 // it (`exaggerated`, with the Earth's anchor bound to it) warped, per vertex,
 // by fits of the route, which the

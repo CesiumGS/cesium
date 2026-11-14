@@ -13,7 +13,7 @@ import type { PointProperty } from "./PointSource.ts";
 
 /**
  * A vector styling language for point layers (a subset of the owner's
- * vector style lab; the language itself is open, plan §13.40), compiled
+ * vector style lab; the language itself is open, docs/design/styling-language.md), compiled
  * for the GPU: each
  * layer's fields become WGSL evaluated per point, per frame, in the
  * point's own vertex and fragment stages, so restyling, parameters and

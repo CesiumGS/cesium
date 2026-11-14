@@ -1,4 +1,4 @@
-// Placement increment 6 (CESIUM2_WEBGPU_PLAN.md §13.26): measurements and
+// Placement increment 6 (docs/design/geometry-through-placement-review.md): measurements and
 // snaps in true frames, with their graphics drawn through the route. True
 // distances and heights don't move with the exaggeration; the drawn
 // distance, named as one, scales with it; a measurement's lines are

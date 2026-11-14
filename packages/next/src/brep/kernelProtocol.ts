@@ -1,4 +1,4 @@
-// The kernel worker's messages (overall plan §13.33, the CSG sample's
+// The kernel worker's messages (docs/design/breps-and-geometry-queries.md, the CSG sample's
 // "kernel interface, workers"): what a page asks of the worker that hosts the
 // WebAssembly kernels (SMLib, Open CASCADE), and what comes back. Provisional:
 // the CSG sample reshapes it. Every message is structured-cloneable; the

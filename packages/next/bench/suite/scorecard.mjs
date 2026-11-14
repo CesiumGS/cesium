@@ -1,4 +1,4 @@
-// Scorecards and comparison tables (plan §16.9, Decide), borrowed from
+// Scorecards and comparison tables (docs/design/benchmark-analysis-and-experience.md, Decide), borrowed from
 // canary analysis (Kayenta) and Go's benchstat.
 //
 // A comparison declares, before results exist, its primary metric (the
@@ -6,7 +6,7 @@
 // worse by more than a tolerance). The plan comes from the run
 // (`--primary`, `--guardrails`, `--hypothesis`), else the defaults here.
 // Each metric is tested per scene with the bootstrap ratio of medians
-// (§16.3); the scorecard is pass, marginal or fail:
+// (docs/design/benchmark-suite.md, "Measurement and statistics"); the scorecard is pass, marginal or fail:
 //
 // - fail: the primary metric got worse (more scenes clearly worse than
 //   better, geometric mean above 1), or a guardrail broke in 2+ scenes;
@@ -25,7 +25,7 @@
 // judges what should match: time to settle, frame time, hitches and the
 // bytes until settled; bytes in motion (2.0 loads in motion and prefetches
 // ahead, 1.x defers requests while moving) and the JS heap (2.0 keeps
-// structures 1.x doesn't; plan §6) are product choices there, reported
+// structures 1.x doesn't; packages/next/work/README.md) are product choices there, reported
 // but not judged. 2.0 against 2.0 (a change against main) judges them all.
 //
 // No scene measured by both engines (all errored, say) has no scorecard.
@@ -446,7 +446,7 @@ export function budgetsHtml(checked) {
         .join(" · ")}${worst.length > 6 ? " …" : ""}</td></tr>`;
     })
     .join("");
-  return `<div class="scorecard budgets"><div class="sc-head"><span class="sc-title">Budgets</span><span>limits from the catalog (plan §5 targets); a budget is broken in a scene when its median is over the limit</span></div><table class="sc"><tr><th>Budget</th><th>Status</th><th>Over the limit</th></tr>${rows}</table></div>`;
+  return `<div class="scorecard budgets"><div class="sc-head"><span class="sc-title">Budgets</span><span>limits from the catalog (docs/design/performance-methodology.md targets); a budget is broken in a scene when its median is over the limit</span></div><table class="sc"><tr><th>Budget</th><th>Status</th><th>Over the limit</th></tr>${rows}</table></div>`;
 }
 
 export const SCORECARD_CSS = `

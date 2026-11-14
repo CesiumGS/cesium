@@ -16,7 +16,7 @@ import {
 } from "./viewMath.ts";
 
 /**
- * The translate and rotate gizmo of the selected leaf (plan §13.33, direct
+ * The translate and rotate gizmo of the selected leaf (docs/design/breps-and-geometry-queries.md, direct
  * manipulation phase 1), as the math of it: where its handles are for a
  * camera, which one a pixel is over, and what dragging one asks of the leaf.
  * It is drawn on a 2D canvas over the view (`drawGizmo`), so it is never

@@ -6,7 +6,7 @@
 // focus, its up and its heading 0. The Earth's views keep the globe
 // controls, so the ground is a zoom away. Plain functions; cameraRig.ts applies them, follows
 // the clock and draws the pivot marker (pivot.ts). The larger design, camera
-// rigs attached to frames, is plan 5's (CESIUM2_WEBGPU_PLAN.md §13.14).
+// rigs attached to frames, is plan 5's (docs/design/bodies-frames-and-engineering-coordinates.md).
 import { Camera } from "../../src/scene/Camera.ts";
 import {
   orbitBasis,

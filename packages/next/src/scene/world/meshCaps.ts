@@ -1,4 +1,4 @@
-// Mesh caps (plan §13.26, "Clip planes and caps: decided by the owner", item
+// Mesh caps (docs/design/geometry-through-placement-review.md, "Clip planes and caps: decided by the owner", item
 // 6; increment 8b). Mesh caps are real geometry, because content may be open
 // meshes: each tile's triangles are cut by the clip plane, the cuts are
 // segments keyed by element (feature) ID, segments are joined into loops per

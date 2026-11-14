@@ -66,7 +66,7 @@ export interface TerrainLineOfSight {
  * interface (`queries`: `Engine.queries`, or `terrainQueries` over a
  * terrain the caller built) for the view the answer is shown in
  * (`options.view`). Today's engine is an exact ray query against the drawn
- * triangles (plan §13.10): no sampling step, so a ridge one cell wide is
+ * triangles (docs/design/ray-queries-and-path-tracing.md): no sampling step, so a ridge one cell wide is
  * caught wherever it sits, and the earth's curvature comes with the
  * Earth-fixed triangles. Endpoints are observers standing on or above the
  * terrain: a hit within 1 mm of either end is their own ground.

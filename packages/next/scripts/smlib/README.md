@@ -1,6 +1,6 @@
 # SMLib's build inputs
 
-What `scripts/smlibTools.mjs` builds SMLib with (plan §13.33). The sources come
+What `scripts/smlibTools.mjs` builds SMLib with ([breps-and-geometry-queries.md](../../../../docs/design/breps-and-geometry-queries.md)). The sources come
 from NVIDIA-Omniverse/usd-brep at the commit pinned in `smlibTools.mjs`. They
 are fetched into `~/.cesium-bench/smlib`, outside version control, and built
 there with the pinned emsdk.

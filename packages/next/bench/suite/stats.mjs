@@ -1,4 +1,4 @@
-// Statistics for benchmark runs (plan §16.3): medians with bootstrap
+// Statistics for benchmark runs (docs/design/benchmark-suite.md, "Measurement and statistics"): medians with bootstrap
 // confidence intervals, and ratios between configurations, so a difference
 // is reported only when the intervals separate.
 

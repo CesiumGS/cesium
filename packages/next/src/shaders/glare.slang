@@ -1,4 +1,4 @@
-// Glare's light list and spike sprites (CESIUM2_WEBGPU_PLAN.md §13.22, §13.32). The
+// Glare's light list and spike sprites (docs/design/custom-post-processing.md, docs/design/sky-light-and-points-unifications.md). The
 // kernel `glareSources` runs on one thread once per view each tick: it writes the sun's
 // record, with what share of its disc is seen, then walks the bright stars. The veil
 // reads the sun's record (render/post/glare.ts); a lens's spikes are drawn from the rest by a

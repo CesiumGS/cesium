@@ -2,7 +2,7 @@
   "name": "core-ir-spike",
   "private": true,
   "type": "module",
-  "description": "Spike-only dependencies for the core IR spike (plan §13.42). Not part of @cesium/next.",
+  "description": "Spike-only dependencies for the core IR spike (docs/design/core-ir.md). Not part of @cesium/next.",
   "dependencies": {
     "naga-wasm": "^30.2.0"
   }

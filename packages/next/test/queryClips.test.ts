@@ -1,4 +1,4 @@
-// Every ray query respects clips (plan §13.26, clip decision 8): a hit where
+// Every ray query respects clips (docs/design/geometry-through-placement-review.md, clip decision 8): a hit where
 // the clips remove the surface is passed over and the first kept hit is the
 // answer, in each backend (the drawn terrain, the GPU draw cast, a tileset's
 // geometry, a distance field); "none" ignores clips; a query with a view

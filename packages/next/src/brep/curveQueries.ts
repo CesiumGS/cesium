@@ -1,6 +1,6 @@
 // The nearest point of a rational Bézier curve segment to a point, in 2D (a
-// face's pcurves) or 3D (an edge's curve), for the b-rep adapter (overall plan
-// §13.33). A line is projected in closed form; a curve is sampled, and each
+// face's pcurves) or 3D (an edge's curve), for the b-rep adapter (
+// docs/design/breps-and-geometry-queries.md). A line is projected in closed form; a curve is sampled, and each
 // dip of the samples is bracketed and bisected on the derivative of the
 // squared distance.
 import { evaluateSegment } from "./bezier.ts";

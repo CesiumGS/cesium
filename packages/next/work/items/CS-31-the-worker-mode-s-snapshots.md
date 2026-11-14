@@ -1,0 +1,17 @@
+---
+id: CS-31
+title: The worker mode's snapshots
+kind: work
+status: Planned
+created: 2026-11-13
+project: CS-8
+needs: [CS-23, CS-99]
+---
+
+The worker mode's snapshots. Needs CS-23 and the worker spike (`docs/design/job-system.md`).
+
+## Files
+
+- `src/profile/`
+
+Detail: `docs/superpowers/plans/2026-11-13-engine-profiles.md`, its milestone table.

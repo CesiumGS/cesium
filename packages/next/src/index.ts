@@ -50,7 +50,7 @@ export {
 } from "./scene/FeatureStyle.ts";
 export { World } from "./scene/World.ts";
 export type { WarpStats } from "./scene/world/warps.ts";
-// Clips (plan §13.26, increment 8a): shapes in a reference frame that cut
+// Clips (docs/design/geometry-through-placement-review.md, increment 8a): shapes in a reference frame that cut
 // the content of the views that use them (`World.addClip`, `View.clipMask`).
 export {
   clipFilter,
@@ -69,7 +69,7 @@ export {
   type ClipsOption,
   type WorldClip,
 } from "./scene/world/clips.ts";
-// Caps for clips (plan §13.26, increment 8b): exact b-rep caps and mesh caps,
+// Caps for clips (docs/design/geometry-through-placement-review.md, increment 8b): exact b-rep caps and mesh caps,
 // rebuilt within a per-frame budget.
 export {
   BREP_CAP_NAME,
@@ -275,7 +275,7 @@ export type {
   Georeference,
   PlacementMode,
 } from "./georeference/georeference.ts";
-// The live helpers for a smooth frame (plan §13.37; `smoothFrame` is in
+// The live helpers for a smooth frame (docs/design/transform-graph.md; `smoothFrame` is in
 // `@cesium/next/frames`): geo transforms (`georeference`) and generic ones
 // (`transforms`). Each returns a spec to place over the content it deforms.
 // The built-ins below return a graph edge (`SmoothEdge`); `liveEdge` makes the
@@ -506,7 +506,7 @@ export {
   type UnknownSpan,
 } from "./query/queries.ts";
 export { terrainQueries } from "./query/terrainBackend.ts";
-// Geometry queries per object (plan §13.33, a draft before the API review):
+// Geometry queries per object (docs/design/breps-and-geometry-queries.md, a draft before the API review):
 // meshes, b-reps and distance fields.
 export {
   brepGeometry,
@@ -536,7 +536,7 @@ export {
   type SdfGeometryOptions,
   type SegmentDistance,
 } from "./geometry/index.ts";
-// B-reps (plan §13.33, a draft before the API review): the render form,
+// B-reps (docs/design/breps-and-geometry-queries.md, a draft before the API review): the render form,
 // exact evaluation, a builder and a validator, and the glTF extension draft.
 export {
   BrepBuilder,

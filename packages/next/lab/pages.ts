@@ -11,7 +11,7 @@ export const HARNESSES: HarnessInfo[] = [
     group: "parity",
     title: "Image parity",
     description:
-      "A small synthetic scene in both engines from canonical cameras, compared with FLIP (plan §4 L2).",
+      "A small synthetic scene in both engines from canonical cameras, compared with FLIP (docs/design/parity.md L2).",
     page: "/parity/",
     entry: "runParity",
     cesium1x: true,
@@ -85,7 +85,7 @@ export const HARNESSES: HarnessInfo[] = [
     group: "parity",
     title: "Selection against full detail",
     description:
-      "Each selection policy against a fully refined reference (plan §4 L1′): image error and bytes, on fast and throttled networks.",
+      "Each selection policy against a fully refined reference (docs/design/parity.md L1′): image error and bytes, on fast and throttled networks.",
     page: "/parity/lod.html",
     entry: "runLod",
     cesium1x: true,

@@ -1,5 +1,5 @@
-// A dense tessellation as the oracle for the b-rep adapter's answers (plan
-// §13.33): the tessellator's mesh as a mesh geometry in the form's own
+// A dense tessellation as the oracle for the b-rep adapter's answers (
+// docs/design/breps-and-geometry-queries.md): the tessellator's mesh as a mesh geometry in the form's own
 // coordinates, and the checks the adapter's tests share.
 import { expect } from "vitest";
 import { evaluateSurface } from "../src/brep/evaluate.ts";

@@ -6,8 +6,8 @@ import {
 } from "../atmosphere/model.ts";
 
 /**
- * A planetary body: its shape and its atmosphere, if it has one (plan
- * §13.14). Views see a body's sky and light (`View.body`); content will
+ * A planetary body: its shape and its atmosphere, if it has one (
+ * docs/design/bodies-frames-and-engineering-coordinates.md). Views see a body's sky and light (`View.body`); content will
  * belong to a body (a tileset's `3DTILES_ellipsoid`, or 3D Tiles 2.0's
  * georeference), each in its own fixed frame. Earth only for now: the
  * engine builds Earth's atmosphere; the Moon and Mars follow with

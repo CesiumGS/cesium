@@ -1,4 +1,4 @@
-// The eye's response (plan §4.2): Ferwerda et al. 1996's thresholds,
+// The eye's response (docs/design/lighting-and-shading.md): Ferwerda et al. 1996's thresholds,
 // Tumblin and Rushmeier's brightness, and the calibration to daylight.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";

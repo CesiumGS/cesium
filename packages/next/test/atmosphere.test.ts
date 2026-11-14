@@ -1,5 +1,5 @@
 // The atmosphere model's photometric scale and the reference's frame
-// (plan §4.2): CPU, double precision.
+// (docs/design/lighting-and-shading.md): CPU, double precision.
 import { describe, expect, it } from "vitest";
 import {
   EARTH,

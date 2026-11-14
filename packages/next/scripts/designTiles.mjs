@@ -399,7 +399,7 @@ function tileContents(mesh, frame, rigid) {
   // the generator also wrote reprojected normals, from the frame's Jacobian at
   // each tile's centre, inverse transpose; `git show b2f8c3ae0e:packages/next/
   // scripts/designTiles.mjs` has it (`tileContents`). Plan 5f's review
-  // (CESIUM2_WEBGPU_PLAN.md section 13.26) decides where it comes back.
+  // (docs/design/geometry-through-placement-review.md) decides where it comes back.
   return {
     drawn,
     centre,

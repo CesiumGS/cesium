@@ -1,4 +1,4 @@
-// A world's b-rep patch draws (provisional, CESIUM2_WEBGPU_PLAN.md §13.33,
+// A world's b-rep patch draws (provisional, docs/design/breps-and-geometry-queries.md,
 // "Step 5 redirected", part 1): a patch mesh puts a b-rep's span records and
 // control points (src/brep/gpuPatches.ts) in a slab's arena, and a draw of it
 // owns the per-view dice's parameters and chunk list. The dice and the vertex

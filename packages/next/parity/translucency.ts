@@ -21,7 +21,7 @@ const TEMPLATE = `
 <p>
   Blended surfaces in controlled scenes on the bare ellipsoid (no terrain),
   rendered with moment-based OIT ("moments", the default) and with the
-  exact per-pixel lists (the reference, plan §6 M4): stacked and crossing
+  exact per-pixel lists (the reference, packages/next/work/README.md M4): stacked and crossing
   layers, glass around opaque boxes, a dense stack, near-opaque layers and
   layers a centimeter apart. FLIP of moments against exact; and the exact
   lists against themselves with the draws added in reverse (order
@@ -293,7 +293,7 @@ interface Truth {
   momentsMax: number;
 }
 
-// What passes (plan §3.5's record, with margin). The exact lists match
+// What passes (docs/design/architecture.md, "Frame graph"'s record, with margin). The exact lists match
 // the ground truth to the 8-bit rounding (fp16 color, sRGB encoding);
 // moments approximate it, worst where layers are near opaque, and alias
 // glass's own edges, which exact antialiases (near-opaque's mean 0.020).

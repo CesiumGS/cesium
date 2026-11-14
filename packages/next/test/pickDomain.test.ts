@@ -1,4 +1,4 @@
-// Picks by domain point (plan §13.26, increment 5): what the pick variant
+// Picks by domain point (docs/design/geometry-through-placement-review.md, increment 5): what the pick variant
 // writes (a mesh's triangle and barycentrics, a patch draw's face and (u, v))
 // becomes the content's own point: a mesh's stored corners weighted by the
 // barycentrics and carried by the draw's matrix, a b-rep face's exact point

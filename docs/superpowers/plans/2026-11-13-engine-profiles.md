@@ -2,11 +2,11 @@
 
 **Status (2026-11-13):** design and plan, not started. The owner reviewed it on 2026-11-13: all eight proposals in section 9 were accepted, and four additions were asked for (`resolution`, `msaa`, a resolution-only governor, and aerial perspective's steps). They are written in below.
 
-**Spec:** CESIUM2_WEBGPU_PLAN.md §13.41, its research section "Swappable and hybrid renderers behind `Engine`, `World` and `View`", that section's decisions (owner, 2026-11-13), and "Architecture decisions from the 2026-11-13 discussion".
+**Spec:** [investigations-2026-11-13.md](../../design/investigations-2026-11-13.md), its research section "Swappable and hybrid renderers behind `Engine`, `World` and `View`", that section's decisions (owner, 2026-11-13), and "Architecture decisions from the 2026-11-13 discussion".
 
 **Goal:** one system for device facts, support reports, quality and presets, which doesn't become fragile as renderers, browsers and devices are added.
 
-> **Job system (owner, 2026-11-13):** the resolution governor and the measured per-step costs read job and apply-phase timings from the job system (CESIUM2_WEBGPU_PLAN.md §13.43), which the inspector also shows.
+> **Job system (owner, 2026-11-13):** the resolution governor and the measured per-step costs read job and apply-phase timings from the job system ([job-system.md](../../design/job-system.md)), which the inspector also shows.
 
 ## The idea in one paragraph
 
@@ -34,7 +34,7 @@ From the owner's review of this plan (2026-11-13):
 
 - The eight proposals in section 9 are decided.
 - New features: `resolution` (view) and `msaa` (engine), and aerial perspective's three methods become steps (section 2, "Features added in review").
-- A resolution-only frame-time governor, opt-in, comes right after M4 as its own milestone (section 3, "The resolution governor").
+- A resolution-only frame-time governor, opt-in, comes right after CS-23 as its own milestone (section 3, "The resolution governor").
 
 ## 1. Prior art
 
@@ -136,7 +136,7 @@ interface FeatureEntry<Step extends string> {
 }
 ```
 
-First entries (ladders to confirm per feature during M2):
+First entries (ladders to confirm per feature during CS-21):
 
 | Feature | Steps, best first | Importance | Notes |
 | --- | --- | --- | --- |
@@ -194,9 +194,9 @@ As steps:
   - The blend bands stay. A step changes which methods blend.
 - **Under `fixed`,** the result is exactly today's altitude choice.
 - **Under `auto`,** a cost rule may step down to the cheaper method. That's reported as `stepped`, with the banding named.
-- **Visible differences:** `volume` above 2 km bands, and `march` above 500 km streaks. Within their own bands the methods agree closely; the parity check in M4b measures how closely.
+- **Visible differences:** `volume` above 2 km bands, and `march` above 500 km streaks. Within their own bands the methods agree closely; the parity check in CS-25 measures how closely.
 - **The catalog grows one field:** `rank`, a context rule that orders the steps. Invariant 3 ("never better than asked") compares ranks at the same context.
-- The methods' relative costs per altitude haven't been measured separately. M4b measures them with `GpuTimer` before any cost rule uses them.
+- The methods' relative costs per altitude haven't been measured separately. CS-25 measures them with `GpuTimer` before any cost rule uses them.
 
 ## 3. Detection versus declaration
 
@@ -219,7 +219,7 @@ As steps:
 
 **Vendor and architecture rules** are cost rules with provenance. Glare's rules say "measured on M2; Intel and the rest estimated". The inspector marks estimated rules. Unknown hardware matches no rule and gets the best supported step, never a guessed lower bucket.
 
-### The resolution governor (owner, 2026-11-13; opt-in; after M4)
+### The resolution governor (owner, 2026-11-13; opt-in; after CS-23)
 
 An opt-in governor that moves only `resolution`, as model-viewer does: it lowers the render scale to hold a tick-time target, and raises it again when the view settles.
 
@@ -273,7 +273,7 @@ From a read-only survey of `packages/next` at `c45a3751bb`:
 | `src/gpu/GpuTimer.ts:190` | No `timestamp-query`: `gpuMs` is NaN | Fact; the inspector says "GPU timing unavailable" instead of NaN |
 | `src/gpu/sampleRateProbe.ts`, `RenderContext.ts:721` | Probe picks `fsListSamples` or `fsList`; on error, assumes per-sample, silently | Fact (`sampleRate: "per-sample" \| "per-pixel" \| "unknown"`) and a path |
 | `src/render/post/glare.ts:184-191` | `"auto"`: vendor and pixel rule; the reason shows in `readout()` only | `glare: true` resolved by cost rules; notice `stepped`; `readout().glare` becomes a view onto `effective` |
-| `src/render/view/shadowBlocks.ts:227` | Ambient occlusion skipped above 4096 × 4096 pixels, silently | Limit rule `ambientOcclusion.maxPixels`; notice `limited` (or a cost rule if it turns out to be cost, not a resource limit; check in M4) |
+| `src/render/view/shadowBlocks.ts:227` | Ambient occlusion skipped above 4096 × 4096 pixels, silently | Limit rule `ambientOcclusion.maxPixels`; notice `limited` (or a cost rule if it turns out to be cost, not a resource limit; check in CS-23) |
 | `src/globe/SlicePool.ts:196-201` | Imagery slice ceiling from `maxTextureArrayLayers`; tooltip only | Limit notice; a support-report entry for imagery capacity |
 | `SlicePool.ts:394-400` | Out of memory while growing: shares scaled down; `usage().warning` | Limit notice (accuracy class: imagery resolution), joining the same channel |
 | `src/scene/World.ts:333-360` | `maxDraws`, `maxTransforms`, `maxMaterials`, `maxInstances` clamped silently | Limit notice when a requested capacity is clamped |
@@ -284,7 +284,7 @@ From a read-only survey of `packages/next` at `c45a3751bb`:
 | `src/transform/compile.ts:367` | `"auto"` normals: linear on a costly route | Step of an accuracy-class feature `normals` (`exact`, `linear`), reported. It changes shading only, so it is allowed under `auto`, with the route's normal error stated |
 | `src/streaming/Budgeted.ts:168,890` | `mixedLod: "auto"` | Stays a streaming policy; shown in the inspector. Not part of the look |
 
-Device facts that need fixing on the way (M1):
+Device facts that need fixing on the way (CS-20):
 
 - `Capabilities` reports 6 of 12 features.
 - `float32-filterable`, `clip-distances`, `dual-source-blending` and `core-features-and-limits` are requested with no field. `subgroups` and `shaderF16` are never read.
@@ -417,20 +417,20 @@ Sized for one agent each. Use Sonnet unless marked Opus. Each milestone runs typ
 
 | # | Milestone | Size | Depends on | Browser |
 | --- | --- | --- | --- | --- |
-| M1 | **Facts and personas.** `DeviceFacts` from `device.features` (not the adapter), limits, adapter info with `isFallbackAdapter`, probes as facts. `fakeGpu.ts` fakes features, adapter info and `requiredFeatures`. Persona fact sets. No behaviour change | S | – | none |
-| M2 | **Catalog, rules, resolver** (Opus). `src/profile/` types, the predicate language, the catalog's first entries, rules from today's behaviour, `resolve()` with explain trails, `support()`. The invariant tests 1–9 over personas. Node only, not wired in | M | M1 | none |
-| M3 | **Paths in one place.** Move every facts read (star submission, moments format, KTX2 target, sample-rate probe, timer) behind `paths(facts)` and `effective`. Add the seam test | S | M2 | one parity page per changed path |
-| M4 | **Wire into `Engine` and `View`** (Opus for review). `view.support`, `view.effective`, `view.explain`, the `support` notice kind, `warnOnce`, `strict`, `warnings`. Re-resolve on resize and device loss. Glare migrated. The ambient occlusion cap, World clamps, the slice pool, screen-space error and caster scale as limit notices | M | M3 | glare and translucency parity |
-| M4a | **`resolution` and `msaa`** (Opus for review). A scaled scene target and an upscaling output pass, with overlays, labels and UI at full resolution. Picks mapped from CSS coordinates to the scaled targets. `msaa: "1x+fxaa"` with the per-pixel translucency path and pipelines rebuilt on change. Measure each step's GPU time at the owner's 1718 × 1406 | M | M4 | parity at each step; one timing page |
-| M4b | **Aerial perspective steps.** `volume`, `march` and `screen` as steps, with the catalog's `rank` field and the altitude rule. Under `fixed` the output matches today's. Measure each method's cost per altitude band before any cost rule | S | M4 | aerial perspective parity at three altitudes |
-| M4c | **The resolution governor.** `EngineOptions.governor`, the timestamp and tick-spacing inputs, the hysteresis, a return to `1` when settled, `stepped` notices, and the scale series in the inspector's Frame section. A Node test with synthetic timings | S | M4a | one page to check the settle-and-restore behaviour |
-| M5 | **Inspector and emulation.** The Profile section (DOM-skeleton test), notices in Problems, `emulate`, Dyno `?persona=` | M | M4 | one inspector page, both themes |
-| M6 | **`@cesium/next/gpu` entry point.** Move exports, update the surface and the import-boundary test. The main API keeps no GPU type | S | M4 | none |
-| M7 | **Viewer migration and defaults.** One defaults table, the Viewer's overrides removed, its capacities resolved (questions 1 and 6) | S | M4 | the Viewer example |
-| M8 | **The WebGL 2 renderer's facts and support rules,** with the WebGL 2 plan. Its persona and the required-content invariant | S | M2; the WebGL 2 renderer | per the WebGL 2 plan |
-| M9 | **The worker mode.** Snapshot transport for support, effective settings and notices; strict validation from the snapshot; the API tests in both modes | S | M4; the worker spike | per the worker plan |
+| CS-20 | **Facts and personas.** `DeviceFacts` from `device.features` (not the adapter), limits, adapter info with `isFallbackAdapter`, probes as facts. `fakeGpu.ts` fakes features, adapter info and `requiredFeatures`. Persona fact sets. No behaviour change | S | – | none |
+| CS-21 | **Catalog, rules, resolver** (Opus). `src/profile/` types, the predicate language, the catalog's first entries, rules from today's behaviour, `resolve()` with explain trails, `support()`. The invariant tests 1–9 over personas. Node only, not wired in | M | CS-20 | none |
+| CS-22 | **Paths in one place.** Move every facts read (star submission, moments format, KTX2 target, sample-rate probe, timer) behind `paths(facts)` and `effective`. Add the seam test | S | CS-21 | one parity page per changed path |
+| CS-23 | **Wire into `Engine` and `View`** (Opus for review). `view.support`, `view.effective`, `view.explain`, the `support` notice kind, `warnOnce`, `strict`, `warnings`. Re-resolve on resize and device loss. Glare migrated. The ambient occlusion cap, World clamps, the slice pool, screen-space error and caster scale as limit notices | M | CS-22 | glare and translucency parity |
+| CS-24 | **`resolution` and `msaa`** (Opus for review). A scaled scene target and an upscaling output pass, with overlays, labels and UI at full resolution. Picks mapped from CSS coordinates to the scaled targets. `msaa: "1x+fxaa"` with the per-pixel translucency path and pipelines rebuilt on change. Measure each step's GPU time at the owner's 1718 × 1406 | M | CS-23 | parity at each step; one timing page |
+| CS-25 | **Aerial perspective steps.** `volume`, `march` and `screen` as steps, with the catalog's `rank` field and the altitude rule. Under `fixed` the output matches today's. Measure each method's cost per altitude band before any cost rule | S | CS-23 | aerial perspective parity at three altitudes |
+| CS-26 | **The resolution governor.** `EngineOptions.governor`, the timestamp and tick-spacing inputs, the hysteresis, a return to `1` when settled, `stepped` notices, and the scale series in the inspector's Frame section. A Node test with synthetic timings | S | CS-24 | one page to check the settle-and-restore behaviour |
+| CS-27 | **Inspector and emulation.** The Profile section (DOM-skeleton test), notices in Problems, `emulate`, Dyno `?persona=` | M | CS-23 | one inspector page, both themes |
+| CS-28 | **`@cesium/next/gpu` entry point.** Move exports, update the surface and the import-boundary test. The main API keeps no GPU type | S | CS-23 | none |
+| CS-29 | **Viewer migration and defaults.** One defaults table, the Viewer's overrides removed, its capacities resolved (questions 1 and 6) | S | CS-23 | the Viewer example |
+| CS-30 | **The WebGL 2 renderer's facts and support rules,** with the WebGL 2 plan. Its persona and the required-content invariant | S | CS-21; the WebGL 2 renderer | per the WebGL 2 plan |
+| CS-31 | **The worker mode.** Snapshot transport for support, effective settings and notices; strict validation from the snapshot; the API tests in both modes | S | CS-23; the worker spike | per the worker plan |
 
-M1–M4 are the core. M4a, M4b and M5–M7 can run in parallel after M4; M4c follows M4a. M8 and M9 wait on other plans.
+CS-20 to CS-23 are the core. CS-24, CS-25 and CS-27 to CS-29 can run in parallel after CS-23; CS-26 follows CS-24. CS-30 and CS-31 wait on other plans.
 
 **Later (not planned here):**
 

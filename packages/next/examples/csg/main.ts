@@ -103,7 +103,7 @@ import { VIEW_ANGLES, createViewCube, type StandardView } from "./viewCube.ts";
 import { mad, makeRig, type Rig, type V3 } from "./viewMath.ts";
 
 /**
- * A solid modeling sample with CSG (plan §13.33): a small CAD tool whose
+ * A solid modeling sample with CSG (docs/design/breps-and-geometry-queries.md): a small CAD tool whose
  * interface is a tree of primitives and booleans. The application owns the
  * modeling and the engine draws and queries the result.
  *

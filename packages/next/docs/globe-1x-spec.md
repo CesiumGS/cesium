@@ -1,6 +1,6 @@
 # CesiumJS 1.x globe tile selection: parity spec
 
-Reference for the globe `Stepwise` port (plan §15, M3 increment 2). Derived
+Reference for the globe `Stepwise` port ([m3-progress.md](../../../docs/history/m3-progress.md), M3 increment 2). Derived
 from the 1.x source in this repository; paths are relative to `packages/`
 (`engine/Source/Scene` unless noted; Core math is in `core/Source`).
 

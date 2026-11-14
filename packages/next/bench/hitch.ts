@@ -13,7 +13,7 @@ import "./hitch.css";
 import { NEEDS_TOKEN, userToken } from "./suite/ionToken.ts";
 
 /**
- * Hitch benchmark (plan §15, r27): a live world takes content in and out
+ * Hitch benchmark (docs/history/m3-progress.md, r27): a live world takes content in and out
  * while it renders, as an application does. Each step (add or remove a
  * tileset, a camera jump into an uncached area) is measured from the
  * action until everything has settled: frames over 34 ms (two vsyncs at

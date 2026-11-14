@@ -1,4 +1,4 @@
-// The real-time atmosphere's tables and probe (plan §4.2), with air.slang's
+// The real-time atmosphere's tables and probe (docs/design/lighting-and-shading.md), with air.slang's
 // model (RealtimeAtmosphere.ts):
 //
 // - transmittanceLut: transmittance to the top of the atmosphere by height

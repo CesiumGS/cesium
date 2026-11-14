@@ -1,4 +1,4 @@
-// Caps for clips (plan §13.26, "Clip planes and caps: decided by the owner",
+// Caps for clips (docs/design/geometry-through-placement-review.md, "Clip planes and caps: decided by the owner",
 // items 5 to 7; increment 8b). A clip removes content per fragment; a cap is
 // the surface that closes the cut.
 //
@@ -15,7 +15,7 @@
 // (`CapScheduler`), and each cap lies a hair inside what the clip keeps (the
 // `bias`), so the clip that made it does not remove it: a cap is on the plane
 // itself, and a per-fragment test of the plane would drop half of it to
-// rounding. Styling is the styling language's (§13.27: hatching per material
+// rounding. Styling is the styling language's (docs/design/cad-display-extensions.md: hatching per material
 // or element, by planar fill, not built yet): a cap has a feature ID per
 // element and a default flat colour, and `style` is where the language will
 // hook in.
@@ -63,7 +63,7 @@ export interface CapStyleInput {
 }
 
 /**
- * Where the styling language (§13.27) will say how a cap looks, per element:
+ * Where the styling language (docs/design/cad-display-extensions.md) will say how a cap looks, per element:
  * a colour for now. Undefined keeps the default.
  */
 export type CapStyle = (input: CapStyleInput) => CapColor | undefined;

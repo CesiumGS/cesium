@@ -37,7 +37,7 @@ const $ = <T extends Element = HTMLElement>(id: string) =>
   root.querySelector<T>(`[data-id="${id}"]`)!;
 
 /**
- * 3D Tiles height parity (plan §15, clamping): the height clamped content
+ * 3D Tiles height parity (docs/history/m3-progress.md, clamping): the height clamped content
  * stands on, over a grid of points around a camera target, after both
  * engines settle the same view of OSM Buildings with the 1.x selection.
  * 2.0: `World.castRays` on the GPU down the geodetic normal against the
@@ -48,7 +48,7 @@ const $ = <T extends Element = HTMLElement>(id: string) =>
  * - `Cesium3DTileset.getHeight`, what 1.x clamps models to: CPU picking of
  *   the selected tiles along a geocentric ray, the first tile with any hit.
  *   It misses geometry the renderer draws and can return a lower surface
- *   (plan §14), so it is reported, not held to.
+ *   (packages/next/work/README.md), so it is reported, not held to.
  */
 
 const WIDTH = 480;

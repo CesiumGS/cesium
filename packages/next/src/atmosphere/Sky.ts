@@ -289,7 +289,7 @@ export class Sky {
   /**
    * The view's aerial-perspective volume: in-scatter in slices
    * 0..AERIAL_SLICES-1, transmittance in the next AERIAL_SLICES (one
-   * sampled texture in the opaque pass instead of two, §13.15).
+   * sampled texture in the opaque pass instead of two, docs/design/gpu-limits-and-capacities.md).
    */
   readonly aerialVolume: GPUTexture;
   /**
@@ -392,7 +392,7 @@ export class Sky {
     this.starPass = { label: "stars", colorAttachments: [this.starAttachment] };
     // In-scatter (layer 0) and transmittance (layer 1) in one array: one
     // sampled texture in the opaque pass instead of two (the base tier's
-    // 16, §13.15), each layer one of the pass's two targets.
+    // 16, docs/design/gpu-limits-and-capacities.md), each layer one of the pass's two targets.
     this.aerialScreen = device.createTexture({
       label: "sky.aerialScreen",
       size: [...AERIAL_SCREEN, 2],

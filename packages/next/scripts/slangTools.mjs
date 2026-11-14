@@ -1,4 +1,4 @@
-// The Slang toolchain, pinned to one release (plan §3.4): the native
+// The Slang toolchain, pinned to one release (docs/design/shaders.md): the native
 // compiler `slangc` (build-time Slang: the spike's ports, scripts/
 // slangShader.mjs, later the engine's shaders) and the WebAssembly build
 // (runtime Slang: CustomShader.fromSlang, Dyno's Slang playground).

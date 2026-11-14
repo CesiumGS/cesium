@@ -377,7 +377,7 @@ export function Shading() {
           run.
         </p>
         <Written
-          from="the overall plan, section 3.4, and AGENTS.md"
+          from="the design note docs/design/shaders.md, and AGENTS.md"
           on="2026-11-08"
         />
       </Section>
@@ -389,7 +389,7 @@ export function Shading() {
           materials and functions in a front-end language, and each lowers into
           one small intermediate form, the core IR, working name{" "}
           <C>cesium-ir</C>. This is decided, and its implementation plan is
-          reviewed (owner, 2026-11-13): IR-1 to IR-15, then gaps for noise,
+          reviewed (owner, 2026-11-13): CS-48 to CS-63, then gaps for noise,
           textures and samplers, matrices, screen-space derivatives, general
           bounded loops and structs, in that order. The plan's WGSL front end
           goes through our own build of naga (Rust, in development and CI only),
@@ -465,22 +465,22 @@ export function Shading() {
 
       <Section title="Planned: live MaterialX graph editing">
         <p>
-          A gallery example, reviewed and not built (M10). A MaterialX graph is
-          edited live on a lookdev stage, in four city places and seven terrain
-          places. Value edits are instant, because literals are uniforms.
-          Rewiring recompiles in the background as a cancellable job while the
-          last good material stays on screen. MaterialX stays at the edge, in{" "}
-          <C>packages/next/materialx/</C>, which the engine never imports. At
-          review there is no emitter of its own before the IR: the lowering is
-          Cesium IR's IR-15, noise comes first among the IR's gaps, and the
-          example reads MaterialX XML with its own reader and a generated
-          definitions table. The engine gains OpenPBR tier 1 (emission in nits
-          first) and tier 2 (fuzz, anisotropy, tangents), a fragment hook on the
-          globe surface (height, slope, aspect, water, latitude, camera
-          distance) and a water mask from quantized-mesh data.
+          A gallery example, reviewed and not built (CS-11). A MaterialX graph
+          is edited live on a lookdev stage, in four city places and seven
+          terrain places. Value edits are instant, because literals are
+          uniforms. Rewiring recompiles in the background as a cancellable job
+          while the last good material stays on screen. MaterialX stays at the
+          edge, in <C>packages/next/materialx/</C>, which the engine never
+          imports. At review there is no emitter of its own before the IR: the
+          lowering is Cesium IR's CS-63, noise comes first among the IR's gaps,
+          and the example reads MaterialX XML with its own reader and a
+          generated definitions table. The engine gains OpenPBR tier 1 (emission
+          in nits first) and tier 2 (fuzz, anisotropy, tangents), a fragment
+          hook on the globe surface (height, slope, aspect, water, latitude,
+          camera distance) and a water mask from quantized-mesh data.
         </p>
         <Written
-          from="the MaterialX live graph editing plan and section 6, M10"
+          from="the MaterialX live graph editing plan, project CS-11"
           on="2026-11-13"
         />
       </Section>

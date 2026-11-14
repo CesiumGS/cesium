@@ -1,4 +1,4 @@
-// The kernel worker (overall plan §13.33): the Web Worker that hosts SMLib and
+// The kernel worker (docs/design/breps-and-geometry-queries.md): the Web Worker that hosts SMLib and
 // Open CASCADE for `KernelClient`. Provisional. All of its logic is in
 // `KernelHost`, which tests run in-process.
 import { KernelHost } from "./kernelHost.ts";

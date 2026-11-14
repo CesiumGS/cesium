@@ -535,7 +535,7 @@ export const DECISIONS: readonly DecisionNote[] = [
     chosen:
       "A world's draws are recorded into bundles, re-recorded only when its batches change. Per-view data lives in buffers rewritten per view.",
     why: "CPU time per tick stayed flat, at 0.6 to 0.9 ms, from 1,000 to 20,000 draws.",
-    source: "Overall plan, section 10",
+    source: "The history note docs/history/m0-spike-results.md",
     passes: ["select-view", "opaque"],
   },
   {
@@ -545,7 +545,7 @@ export const DECISIONS: readonly DecisionNote[] = [
       "The opaque pass draws its depth, then shades only where depth is equal. Positions are @invariant, so both stages agree to the bit.",
     insteadOf: "Shading every fragment that passes the depth test as drawn.",
     why: "With lights, cost was per fragment drawn, not per pixel. Over lower Manhattan by night, the opaque pass took 6.9 ms against 10.0 with 576 spots, and 4.3 against 6.4 without lights.",
-    source: "Overall plan, section 4.2, r44",
+    source: "The design note docs/design/lighting-and-shading.md, r44",
     passes: ["opaque"],
   },
   {
@@ -555,7 +555,7 @@ export const DECISIONS: readonly DecisionNote[] = [
       "A separate, single-sampled prepass drawn from the same culled batches.",
     insteadOf: "A visibility buffer.",
     why: "Ambient occlusion needs depth and normals before shading. A visibility buffer's deferred shading waits on bindless textures, and writing triangle IDs needs primitive_index, an optional feature. A visibility buffer can replace the prepass later without changing what reads its targets.",
-    source: "Overall plan, section 4.2",
+    source: "The design note docs/design/lighting-and-shading.md",
     passes: ["prepass", "ambient-occlusion"],
   },
   {
@@ -565,7 +565,7 @@ export const DECISIONS: readonly DecisionNote[] = [
       "The engine tracks what changed, per view, and renders only what can show it. Continuous rendering is an option.",
     insteadOf: "Rendering every tick, 1.x's default.",
     why: "Every scene change already goes through engine APIs, so the engine can see them. 1.x can't see every change, so its on-demand mode is opt-in.",
-    source: "Overall plan, section 13.8",
+    source: "The design note docs/design/rendering-on-demand.md",
     passes: [],
   },
   {
@@ -575,7 +575,8 @@ export const DECISIONS: readonly DecisionNote[] = [
       "A draw record holds a transform index. Transforms live in their own table, composed in float64 on the CPU.",
     insteadOf: "A flattened placement in every record (192 bytes then).",
     why: "With placements flattened into records, moving anything meant rewriting every one of its records. The record is 148 bytes used, padded to WGSL's 16-byte alignment.",
-    source: "Overall plan, section 13.9; src/render/layout.ts",
+    source:
+      "The design note docs/design/transforms-and-instancing.md; src/render/layout.ts",
     passes: ["cull"],
   },
   {
@@ -584,7 +585,7 @@ export const DECISIONS: readonly DecisionNote[] = [
     chosen:
       "Lit color in rgba16float, tone mapped at the end. Unlit color in rgba8unorm-srgb, never tone mapped.",
     why: "It matches the parity baseline: 1.x with HDR on for lit color, and off for unlit.",
-    source: "Overall plan, section 8",
+    source: "The decision record docs/decisions/r4-owner-decisions.md",
     passes: ["opaque", "present"],
   },
   {
@@ -612,7 +613,7 @@ export const DECISIONS: readonly DecisionNote[] = [
     title: "Two translucency modes, chosen per view",
     chosen:
       'Translucent fragments are composited in a dedicated pass, as exact per-pixel lists ("exact") or by moments ("moments").',
-    source: "Overall plan, section 3.5",
+    source: "The design note docs/design/architecture.md",
     passes: ["translucent", "composite"],
   },
 ];

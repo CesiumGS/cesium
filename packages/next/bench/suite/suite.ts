@@ -48,7 +48,7 @@ declare const Cesium: any;
 type Json = any;
 
 /**
- * Benchmark suite page (plan §16): runs one scene × scenario × engine
+ * Benchmark suite page (docs/design/benchmark-suite.md): runs one scene × scenario × engine
  * configuration and returns its metrics. The CLI (`cli.mjs`) drives it
  * through `runScene`; people pick a scene and engine in the page and press
  * Run. Engine-specific code is the two adapters below; the scenario, the
@@ -478,7 +478,7 @@ export interface Adapter {
   destroy(): void;
 }
 
-/** A drawn tile, comparable across engines (plan §16.9, Explorer). */
+/** A drawn tile, comparable across engines (docs/design/benchmark-analysis-and-experience.md, Explorer). */
 export interface DrawnTile {
   /**
    * 3D Tiles: the tile's header (bounding volume and geometric error as
@@ -1561,7 +1561,7 @@ export interface MotionFrame {
 }
 
 /**
- * Quality in motion (plan §6): the scenario's motion again in a fresh page
+ * Quality in motion (packages/next/work/README.md): the scenario's motion again in a fresh page
  * after the measured runs (nothing here is timed), the canvas copied as
  * drawn at evenly spaced points of the motion; then each of those poses
  * fully loaded. The CLI compares the two (FLIP): what motion cost the
@@ -1640,7 +1640,7 @@ export async function runMotionQuality(
 }
 
 /**
- * An image check (plan §16.10): the scene at one point of its camera path,
+ * An image check (docs/design/image-regression-in-dyno.md): the scene at one point of its camera path,
  * settled, then a few more frames so nothing is mid-transition, captured
  * through the CLI's `captureMoment`. Deterministic by construction: fixed
  * size, render settings and sun, no timing in the image.

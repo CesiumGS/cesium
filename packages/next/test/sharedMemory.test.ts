@@ -1,4 +1,4 @@
-// Shared memory where the page allows it (plan §13.43): kept terrain
+// Shared memory where the page allows it (docs/design/job-system.md): kept terrain
 // heights in a SharedArrayBuffer under cross-origin isolation, transferred
 // otherwise; the job system reports which.
 import { afterEach, describe, expect, it, vi } from "vitest";
