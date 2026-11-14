@@ -402,6 +402,8 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
 - **The error exponent α** (`View.lodExponent`, `Warp.lodExponent`, the example's slider): a first sweep suggested 0.5, but every number in it predates the fixes above. Re-sweep before choosing the default.
 - **Still open:** the cliff streaks at ×10. Either boundary skirts drawn ten times deeper, or imagery smeared vertically (a ×10 wall has a tenth of the imagery's resolution per drawn metre vertically). A debug tint for skirts would settle it.
 
+> **Job system (owner, 2026-11-13):** warp fits (`warpTick`) and the horizon occluder's walk (`BoundJob`) move onto the job system as progressive jobs: JP-5 and JP-4 in CESIUM2_WEBGPU_PLAN.md §13.43, tracked in §6 M8.
+
 **Occlusion, unified (owner, 2026-11-13).** Horizon culling is occlusion by a known convex occluder, so both live behind one interface:
 
 - **The interface:** a per-view list of occluders, each answering `hidden(bound, view)`: true only when it proves the bound hidden. A bound is hidden if any occluder says so. Selection (refine), the request scheduler (fetch) and the GPU draw cull all ask the same list.

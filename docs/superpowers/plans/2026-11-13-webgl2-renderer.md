@@ -33,6 +33,8 @@
   - "auto" falls back to WebGL 2 with a warning.
   - No time estimates: milestones state dependencies, order and "done when".
 
+> **Job system (owner, 2026-11-13):** the CPU work this renderer adds runs as jobs, not ad-hoc workers or budgets: lattice fits, light binning and the naga translation of user code. Per-draw culling stays on the engine thread. See CESIUM2_WEBGPU_PLAN.md §13.43 and §6 M8.
+
 ## 1. Scope
 
 ### What it draws, in order
