@@ -49,8 +49,27 @@ export class DepthPyramid {
   readonly shape: PyramidShape;
   /** All levels, for the queries. */
   readonly view: GPUTextureView;
+  /** Level 0 alone, as storage: what `priors` draw into. */
+  readonly level0: GPUTextureView;
+  /**
+   * Analytic occluders drawn into level 0 after the depth is folded and
+   * before the levels above are reduced (a hook; none is registered yet).
+   * Each writes, per texel, the nearer (larger, reverse-Z) of what is there
+   * and its own depth, for a shape that is certainly opaque where it is: the
+   * body occluder's ellipsoid (`streaming/occluders.ts` `BodyShape`, inside
+   * the drawn terrain) would be one, from its centre and radii seen from
+   * `built`'s camera. Both phases of the draws' occlusion cull and the tile
+   * queries then read it, so a shape hidden in the drawn depth adds nothing
+   * and one the depth lacks (terrain not loaded yet) hides what it proves.
+   */
+  readonly priors: Array<
+    (pass: GPUComputePassEncoder, pyramid: DepthPyramid) => void
+  > = [];
   private readonly groups: GPUBindGroup[] = [];
-  /** The camera it was built for: what the queries' camera space is. */
+  /**
+   * The camera it was built for: what the queries' camera space is, and what
+   * the next tick's occlusion cull sees it from (occlusionCull.ts).
+   */
   built:
     | {
         tanX: number;
@@ -58,6 +77,8 @@ export class DepthPyramid {
         near: number;
         position: Float64Array;
         direction: Float64Array;
+        up: Float64Array;
+        right: Float64Array;
       }
     | undefined;
 
@@ -86,12 +107,13 @@ export class DepthPyramid {
     this.view = this.texture.createView({ label: "occlusion.pyramid" });
     const level = (mip: number) =>
       this.texture.createView({ baseMipLevel: mip, mipLevelCount: 1 });
+    this.level0 = level(0);
     this.groups.push(
       device.createBindGroup({
         layout: pipelines.hzbLevel0.getBindGroupLayout(0),
         entries: [
           { binding: 0, resource: depth },
-          { binding: 1, resource: level(0) },
+          { binding: 1, resource: this.level0 },
         ],
       }),
     );
@@ -117,6 +139,11 @@ export class DepthPyramid {
     >,
   ): void {
     for (let mip = 0; mip < this.shape.levels; mip++) {
+      if (mip === 1) {
+        for (const prior of this.priors) {
+          prior(pass, this);
+        }
+      }
       pass.setPipeline(mip === 0 ? pipelines.hzbLevel0 : pipelines.hzbReduce);
       pass.setBindGroup(0, this.groups[mip]!);
       const width = Math.max(this.shape.width >> mip, 1);
@@ -266,6 +293,26 @@ export class FrameOcclusion {
   }
 }
 
+/** The camera a tick draws a view with, as a pyramid keeps it (`DepthPyramid.built`). */
+export function cullCamera(
+  engine: Pick<Engine, "bodyCamera">,
+  view: View,
+  frame: { width: number; height: number },
+): NonNullable<DepthPyramid["built"]> {
+  const camera = engine.bodyCamera(view);
+  const aspect = frame.width / frame.height;
+  const tanY = Math.tan(camera.fovy(aspect) / 2);
+  return {
+    tanX: tanY * aspect,
+    tanY,
+    near: camera.near,
+    position: Float64Array.from(camera.position),
+    direction: Float64Array.from(camera.direction),
+    up: Float64Array.from(camera.up),
+    right: Float64Array.from(camera.right),
+  };
+}
+
 /** Whether two float64 vectors are the same. */
 function same(a: ArrayLike<number>, b: ArrayLike<number>): boolean {
   return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
@@ -275,6 +322,10 @@ function same(a: ArrayLike<number>, b: ArrayLike<number>): boolean {
  * The pass after `opaque`: the pyramid and the queries selection made this
  * tick, if any. A list made for another camera than the one drawn (selection
  * ran earlier, and the camera moved) isn't tested: its tiles stay unknown.
+ * In a tick that culls the view's draws by occlusion (occlusionCull.ts), the
+ * pyramid is built from the whole depth even without queries: the next
+ * tick's first phase tests against it. Not from a depth point splats wrote
+ * into: that tick's first-phase pyramid stays.
  */
 export function occlusionPass(
   engine: OcclusionPassEngine,
@@ -286,21 +337,27 @@ export function occlusionPass(
   return (enc, get) => {
     const feedback = view.occlusionState;
     const list = feedback.current;
+    const camera = engine.bodyCamera(view);
     // Off, nothing asked, or splats drawn: their depth is written for any
     // covered pixel, translucent symbols included, so it isn't an occluder.
     if (
       !occlusionOn(engine, view) ||
       !list ||
       list.count === 0 ||
-      frame.splatted
-    ) {
-      return;
-    }
-    const camera = engine.bodyCamera(view);
-    if (
+      frame.splatted ||
       !same(camera.position, list.position) ||
       !same(camera.direction, list.direction)
     ) {
+      if (frame.cull?.active && !frame.splatted && frame.occlusion) {
+        const writes = engine.raster.timer.passWrites("hzb");
+        const hzb = enc.beginComputePass({
+          label: "hzb",
+          ...(writes ? { timestampWrites: writes } : {}),
+        });
+        frame.occlusion.pyramid.encode(hzb, pipelines);
+        hzb.end();
+        frame.occlusion.pyramid.built = cullCamera(engine, view, frame);
+      }
       return;
     }
     const occlusion = (frame.occlusion ??= new FrameOcclusion(
@@ -310,20 +367,12 @@ export function occlusionPass(
       frame.width,
       frame.height,
     ));
-    const aspect = frame.width / frame.height;
-    const tanY = Math.tan(camera.fovy(aspect) / 2);
     const taken = feedback.take()!;
     const { readback, words } = occlusion.encode(
       enc,
       pipelines,
       taken,
-      {
-        tanX: tanY * aspect,
-        tanY,
-        near: camera.near,
-        position: Float64Array.from(camera.position),
-        direction: Float64Array.from(camera.direction),
-      },
+      cullCamera(engine, view, frame),
       {
         hzb: engine.raster.timer.passWrites("hzb"),
         query: engine.raster.timer.passWrites("occlusion-query"),
@@ -337,6 +386,31 @@ export function occlusionPass(
       words,
     });
   };
+}
+
+/** A render asked for at a time (ms, `performance.now`), per view: the earliest asked. */
+const wakes = new WeakMap<
+  View,
+  { at: number; timer: ReturnType<typeof setTimeout> }
+>();
+
+/** Asks for a render at `at` (a hidden tile may coarsen then), unless one is due sooner. */
+function wakeAt(view: View, at: number, requestRender: () => void): void {
+  const pending = wakes.get(view);
+  if (pending && pending.at <= at) {
+    return;
+  }
+  if (pending) {
+    clearTimeout(pending.timer);
+  }
+  const timer = setTimeout(
+    () => {
+      wakes.delete(view);
+      requestRender();
+    },
+    Math.max(0, at - performance.now()) + 1,
+  );
+  wakes.set(view, { at, timer });
 }
 
 /**
@@ -362,13 +436,13 @@ export function readOcclusion(
           read.readback.getMappedRange(0, read.words * 4).slice(0),
         );
         read.readback.unmap();
-        const flipped = read.view.occlusionState.apply(
-          read.list,
-          bits,
-          read.viewId,
-        );
+        const feedback = read.view.occlusionState;
+        const flipped = feedback.apply(read.list, bits, read.viewId);
         if (flipped > 0) {
           requestRender();
+        }
+        if (feedback.coarsenAt !== undefined) {
+          wakeAt(read.view, feedback.coarsenAt, requestRender);
         }
       },
       () => read.view.occlusionState.release(read.list),

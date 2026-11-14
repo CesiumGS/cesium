@@ -23,6 +23,7 @@ import {
 import { translucentPass, compositePassBody } from "./translucentPasses.ts";
 import { sectionCapsPass } from "./capPasses.ts";
 import { occlusionPass } from "./occlusionPass.ts";
+import { occlusionCullPass } from "./occlusionCull.ts";
 import {
   meterPass,
   depthRangePass,
@@ -54,6 +55,7 @@ export interface ViewFrameEngine extends Pick<
   | "cameras"
   | "ctx"
   | "gpu"
+  | "occlusionCulling"
   | "occlusionFeedback"
   | "requestRender"
   | "stats"
@@ -296,6 +298,7 @@ function buildViewFrame(
     sky: engine.raster.sky.createView(),
     shadowed: false,
     occlusion: undefined,
+    cull: undefined,
     splatted: false,
     clipBuffer: undefined,
     clipBytes: 0,
@@ -347,6 +350,14 @@ function buildViewFrame(
   graph.addPass("lights", { sideEffect: true }, lightsPass(engine, frame));
 
   graph.addPass("cull", { sideEffect: true }, cullPass(engine, view, frame));
+
+  // Culling by occlusion (occlusionCull.ts): the first phase's depth, its
+  // pyramid, and the second phase, before anything draws the culled lists.
+  graph.addPass(
+    "occlusion-cull",
+    { writes: [color, ids, display, depth], sideEffect: true },
+    occlusionCullPass(engine, view, frame, { color, ids, display, depth }),
+  );
 
   // The sky around the camera, before the opaque pass draws from it.
   graph.addPass(

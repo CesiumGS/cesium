@@ -2024,7 +2024,7 @@
                             "binding": {"kind": "uniform", "offset": 8, "size": 4, "elementStride": 0}
                         },
                         {
-                            "name": "pad",
+                            "name": "flags",
                             "type": {
                                 "kind": "scalar",
                                 "scalarType": "uint32",
@@ -4212,7 +4212,7 @@
                                 "binding": {"kind": "uniform", "offset": 8, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "pad",
+                                "name": "flags",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",

@@ -6,6 +6,13 @@ import {
   RECORD_WORDS,
 } from "./layout.ts";
 
+/**
+ * Counter words after both sets of arguments (two-phase occlusion culling,
+ * cull.slang): items the first phase listed for the retest, their triangles,
+ * items the second phase showed again, their triangles.
+ */
+export const OCCLUSION_COUNTERS = 4;
+
 /** What a batch's draw needs to know of it (scene/world/types.ts `Batch`). */
 export interface ArgumentBatch {
   /** Its row in the batch table and the draw arguments. */
@@ -55,7 +62,13 @@ export function patchChunkIndices(cells = PATCH_CHUNK_CELLS): Uint16Array {
  * world binds them (`buffer`, `itemList`) in the cull's groups.
  *
  * Today each batch is one draw, its items bound as a vertex buffer at the
- * batch's slice of the list. Multi-draw indirect (the first instance in
+ * batch's slice of the list.
+ *
+ * Two-phase occlusion culling (cull.slang `retestOccluded`) adds a second
+ * set: the arguments' buffer holds the second phase's arguments after the
+ * first `rows` batches', then `OCCLUSION_COUNTERS` words; the item list holds
+ * the second phase's slices after the first `items`, then the retest list.
+ * A bundle draws one phase's (`drawBatch`'s `retest`). Multi-draw indirect (the first instance in
  * the arguments, one list bound once) or GPU-driven submission replaces
  * this class's emulation, not its callers (CESIUM2_WEBGPU_PLAN.md §7.1,
  * "design for it; don't build it").
@@ -63,6 +76,10 @@ export function patchChunkIndices(cells = PATCH_CHUNK_CELLS): Uint16Array {
 export class DrawArguments {
   private arguments: GPUBuffer;
   private items: GPUBuffer;
+  /** The batch rows the arguments hold, a set. */
+  private rows: number;
+  /** The items a list holds, a phase. */
+  private itemRows: number;
   private direct: GPUBuffer;
   /** The one index buffer every patch chunk draws over. */
   private readonly patchIndices: GPUBuffer;
@@ -78,6 +95,8 @@ export class DrawArguments {
     batchRows: number,
     items: number,
   ) {
+    this.rows = batchRows;
+    this.itemRows = items;
     this.arguments = this.createArguments(batchRows);
     [this.items, this.direct] = this.createLists(items);
     const indices = patchChunkIndices();
@@ -128,12 +147,14 @@ export class DrawArguments {
 
   /** Arguments for `rows` batches (the old ones are rewritten per view). */
   growBatches(rows: number): void {
+    this.rows = rows;
     this.arguments.destroy();
     this.arguments = this.createArguments(rows);
   }
 
   /** Item lists for `items` items (rewritten by the cull and the batches). */
   growItems(items: number): void {
+    this.itemRows = items;
     this.items.destroy();
     this.direct.destroy();
     [this.items, this.direct] = this.createLists(items);
@@ -148,14 +169,53 @@ export class DrawArguments {
   }
 
   /**
-   * Clears the first `batches` batches' arguments before a view's cull,
-   * which counts into their instance counts and writes the rest.
+   * Where the second phase's arguments, slices, retest list and counters
+   * are (the occlusion cull's uniforms, render/view/occlusionCull.ts): the
+   * batch rows a set holds, the items a phase's list holds, and the first
+   * counter's word.
    */
-  clear(encoder: GPUCommandEncoder, batches: number): void {
-    encoder.clearBuffer(
+  get occlusionLayout(): {
+    argumentRows: number;
+    itemRows: number;
+    counterWord: number;
+  } {
+    return {
+      argumentRows: this.rows,
+      itemRows: this.itemRows,
+      counterWord: (2 * this.rows * INDIRECT_SIZE) / 4,
+    };
+  }
+
+  /**
+   * Clears the first `batches` batches' arguments before a view's cull,
+   * which counts into their instance counts and writes the rest; with
+   * `retest`, the second set's and the counters too.
+   */
+  clear(encoder: GPUCommandEncoder, batches: number, retest = false): void {
+    const size = Math.max(INDIRECT_SIZE, batches * INDIRECT_SIZE);
+    encoder.clearBuffer(this.arguments, 0, size);
+    if (retest) {
+      encoder.clearBuffer(this.arguments, this.rows * INDIRECT_SIZE, size);
+      encoder.clearBuffer(
+        this.arguments,
+        2 * this.rows * INDIRECT_SIZE,
+        OCCLUSION_COUNTERS * 4,
+      );
+    }
+  }
+
+  /** Copies the occlusion counters to `target` at `offset` (16 bytes). */
+  copyCounters(
+    encoder: GPUCommandEncoder,
+    target: GPUBuffer,
+    offset = 0,
+  ): void {
+    encoder.copyBufferToBuffer(
       this.arguments,
-      0,
-      Math.max(INDIRECT_SIZE, batches * INDIRECT_SIZE),
+      2 * this.rows * INDIRECT_SIZE,
+      target,
+      offset,
+      OCCLUSION_COUNTERS * 4,
     );
   }
 
@@ -167,14 +227,30 @@ export class DrawArguments {
    * cull and dice listed them: their chunks are the instances). Returns
    * whether it replaced the bound index buffer (a patch draw binds the one
    * all chunks share): the caller binds its slab's again before the next
-   * draw that reads one.
+   * draw that reads one. `retest`: the second phase's arguments and slice
+   * (an indexed batch's, through the cull; never a point set's or a patch
+   * draw's, which the occlusion cull leaves alone).
    */
   drawBatch(
     pass: GPURenderPassEncoder | GPURenderBundleEncoder,
     batch: ArgumentBatch,
     direct: boolean,
     pick = false,
+    retest = false,
   ): boolean {
+    if (retest) {
+      if (direct || batch.patches || batch.points) {
+        return false;
+      }
+      pass.setVertexBuffer(0, this.items, (this.itemRows + batch.itemBase) * 4);
+      const at = (this.rows + batch.index) * INDIRECT_SIZE;
+      if (pick) {
+        pass.drawIndirect(this.arguments, at);
+      } else {
+        pass.drawIndexedIndirect(this.arguments, at);
+      }
+      return false;
+    }
     if (batch.patches) {
       if (!direct && batch.chunks) {
         pass.setVertexBuffer(0, batch.chunks);
@@ -221,7 +297,8 @@ export class DrawArguments {
   private createArguments(rows: number): GPUBuffer {
     return this.device.createBuffer({
       label: "world.indirect",
-      size: rows * INDIRECT_SIZE,
+      // Both phases' sets, then the occlusion counters.
+      size: 2 * rows * INDIRECT_SIZE + OCCLUSION_COUNTERS * 4,
       usage:
         GPUBufferUsage.STORAGE |
         GPUBufferUsage.INDIRECT |
@@ -234,7 +311,8 @@ export class DrawArguments {
     return [
       this.device.createBuffer({
         label: "world.itemList",
-        size: items * 4,
+        // Both phases' slices, then the retest list.
+        size: 3 * items * 4,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX,
       }),
       this.device.createBuffer({

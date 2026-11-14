@@ -134,17 +134,40 @@ struct DrawItem_std430_0
 
 @binding(3) @group(1) var<storage, read_write> items_0 : array<DrawItem_std430_0>;
 
-@binding(9) @group(1) var<storage, read_write> args_0 : array<atomic<u32>>;
+struct OcclusionCull_std140_0
+{
+    @align(16) lastRight_0 : vec4<f32>,
+    @align(16) lastUp_0 : vec4<f32>,
+    @align(16) lastForward_0 : vec4<f32>,
+    @align(16) lastLens_0 : vec4<f32>,
+    @align(16) right_0 : vec4<f32>,
+    @align(16) up_0 : vec4<f32>,
+    @align(16) forward_0 : vec4<f32>,
+    @align(16) lens_0 : vec4<f32>,
+    @align(16) width_0 : u32,
+    @align(4) height_0 : u32,
+    @align(8) levels_0 : u32,
+    @align(4) test_0 : u32,
+    @align(16) argumentRows_0 : u32,
+    @align(4) itemRows_0 : u32,
+    @align(8) counters_0 : u32,
+    @align(4) pad_0 : u32,
+};
 
+@binding(0) @group(2) var<uniform> occlusion_0 : OcclusionCull_std140_0;
 struct Batch_std430_0
 {
     @align(4) itemBase_0 : u32,
     @align(4) indexCount_1 : u32,
     @align(4) firstIndex_1 : u32,
-    @align(4) pad_0 : u32,
+    @align(4) flags_2 : u32,
 };
 
 @binding(6) @group(1) var<storage, read> batches_0 : array<Batch_std430_0>;
+
+@binding(1) @group(2) var pyramid_0 : texture_2d<f32>;
+
+@binding(9) @group(1) var<storage, read_write> args_0 : array<atomic<u32>>;
 
 @binding(4) @group(1) var<storage, read_write> itemList_0 : array<u32>;
 
@@ -155,7 +178,7 @@ struct Instance_std430_0
     @align(16) row2_0 : vec4<f32>,
     @align(16) record_1 : u32,
     @align(4) feature_1 : u32,
-    @align(8) flags_2 : u32,
+    @align(8) flags_3 : u32,
     @align(4) tint_1 : u32,
 };
 
@@ -419,231 +442,516 @@ fn inFrustum_0( m_1 : mat4x4<f32>,  center_1 : vec3<f32>,  radius_1 : f32) -> bo
     return true;
 }
 
-fn append_0( batch_1 : u32,  item_1 : u32)
+fn occludable_0( batch_1 : u32) -> bool
 {
-    var slot_0 : u32 = atomicAdd(&(args_0[batch_1 * u32(5) + u32(1)]), u32(1));
-    itemList_0[batches_0[batch_1].itemBase_0 + slot_0] = item_1;
+    return (((batches_0[batch_1].flags_2) & (u32(1)))) != u32(0);
+}
+
+struct PyramidCamera_0
+{
+     width_1 : u32,
+     height_1 : u32,
+     levels_1 : u32,
+     tanX_0 : f32,
+     tanY_0 : f32,
+     near_1 : f32,
+     bias_0 : f32,
+};
+
+fn boxHidden_0( pyramid_1 : texture_2d<f32>,  camera_0 : PyramidCamera_0,  centre_0 : vec3<f32>,  a_4 : vec3<f32>,  b_4 : vec3<f32>,  c_1 : vec3<f32>,  window_0 : u32) -> bool
+{
+    var frameWidth_0 : f32 = f32(camera_0.width_1);
+    var frameHeight_0 : f32 = f32(camera_0.height_1);
+    const _S19 : vec2<f32> = vec2<f32>(-3.39999995214436425e+38f, -3.39999995214436425e+38f);
+    var low_0 : vec2<f32> = vec2<f32>(3.39999995214436425e+38f, 3.39999995214436425e+38f);
+    var high_0 : vec2<f32> = _S19;
+    var nearestZ_0 : f32 = 3.39999995214436425e+38f;
+    var k_0 : u32 = u32(0);
+    loop
+    {
+        if((k_0 < u32(8)))
+        {
+        }
+        else
+        {
+            break;
+        }
+        var _S20 : vec3<f32>;
+        if(((k_0 & (u32(1)))) == u32(0))
+        {
+            _S20 = (vec3<f32>(0) - a_4);
+        }
+        else
+        {
+            _S20 = a_4;
+        }
+        var _S21 : vec3<f32> = centre_0 + _S20;
+        var _S22 : vec3<f32>;
+        if(((k_0 & (u32(2)))) == u32(0))
+        {
+            _S22 = (vec3<f32>(0) - b_4);
+        }
+        else
+        {
+            _S22 = b_4;
+        }
+        var _S23 : vec3<f32> = _S21 + _S22;
+        var _S24 : vec3<f32>;
+        if(((k_0 & (u32(4)))) == u32(0))
+        {
+            _S24 = (vec3<f32>(0) - c_1);
+        }
+        else
+        {
+            _S24 = c_1;
+        }
+        var p_4 : vec3<f32> = _S23 + _S24;
+        var _S25 : f32 = p_4.z;
+        if(!(_S25 > (camera_0.near_1)))
+        {
+            return false;
+        }
+        var inverse_0 : f32 = 1.0f / _S25;
+        var screen_0 : vec2<f32> = vec2<f32>((p_4.x * inverse_0 / camera_0.tanX_0 * 0.5f + 0.5f) * frameWidth_0, (0.5f - p_4.y * inverse_0 / camera_0.tanY_0 * 0.5f) * frameHeight_0);
+        var _S26 : vec2<f32> = min(low_0, screen_0);
+        var _S27 : vec2<f32> = max(high_0, screen_0);
+        var _S28 : f32 = min(nearestZ_0, _S25);
+        var _S29 : u32 = k_0 + u32(1);
+        low_0 = _S26;
+        high_0 = _S27;
+        nearestZ_0 = _S28;
+        k_0 = _S29;
+    }
+    var _S30 : bool;
+    if(!((high_0.x) >= 0.0f))
+    {
+        _S30 = true;
+    }
+    else
+    {
+        _S30 = !((high_0.y) >= 0.0f);
+    }
+    if(_S30)
+    {
+        _S30 = true;
+    }
+    else
+    {
+        _S30 = !((low_0.x) < frameWidth_0);
+    }
+    if(_S30)
+    {
+        _S30 = true;
+    }
+    else
+    {
+        _S30 = !((low_0.y) < frameHeight_0);
+    }
+    if(_S30)
+    {
+        return false;
+    }
+    const _S31 : vec2<f32> = vec2<f32>(0.0f, 0.0f);
+    var _S32 : vec2<f32> = vec2<f32>(frameWidth_0 - 1.0f, frameHeight_0 - 1.0f);
+    var _S33 : vec2<u32> = vec2<u32>(clamp(floor(low_0), _S31, _S32));
+    var _S34 : vec2<u32> = vec2<u32>(clamp(floor(high_0), _S31, _S32));
+    var _S35 : u32 = max(((camera_0.width_1) >> (u32(1))), u32(1));
+    var _S36 : u32 = max(((camera_0.height_1) >> (u32(1))), u32(1));
+    var _S37 : u32 = _S35 - u32(1);
+    var _S38 : u32 = _S36 - u32(1);
+    var span_0 : vec2<u32> = vec2<u32>(min(((_S34.x) >> (u32(1))), _S37), min(((_S34.y) >> (u32(1))), _S38)) - vec2<u32>(min(((_S33.x) >> (u32(1))), _S37), min(((_S33.y) >> (u32(1))), _S38));
+    var _S39 : u32 = max(span_0.x, span_0.y) + u32(1);
+    var wide_0 : u32 = clamp(window_0, u32(2), u32(8));
+    var l_0 : u32 = u32(0);
+    var level_0 : u32 = u32(0);
+    loop
+    {
+        if((l_0 < u32(16)))
+        {
+        }
+        else
+        {
+            break;
+        }
+        if((((((_S39 - u32(1)) >> (level_0))) + u32(2)) <= wide_0))
+        {
+            _S30 = true;
+        }
+        else
+        {
+            _S30 = ((level_0 + u32(1)) >= (camera_0.levels_1));
+        }
+        if(_S30)
+        {
+            break;
+        }
+        var _S40 : u32 = level_0 + u32(1);
+        l_0 = l_0 + u32(1);
+        level_0 = _S40;
+    }
+    var _S41 : vec2<u32> = vec2<u32>((level_0 + u32(1)));
+    var _S42 : vec2<u32> = vec2<u32>(max((_S35 >> (level_0)), u32(1)), max((_S36 >> (level_0)), u32(1))) - vec2<u32>(u32(1));
+    var _S43 : vec2<u32> = min((_S33 >> (_S41)), _S42);
+    var _S44 : vec2<u32> = min((_S34 >> (_S41)), _S42);
+    var _S45 : u32 = _S44.x;
+    var _S46 : u32 = _S43.x;
+    var _S47 : u32 = wide_0 - u32(1);
+    if(((_S45 - _S46) > _S47))
+    {
+        _S30 = true;
+    }
+    else
+    {
+        _S30 = ((_S44.y - _S43.y) > _S47);
+    }
+    if(_S30)
+    {
+        return false;
+    }
+    var farthest_0 : f32 = 3.39999995214436425e+38f;
+    var j_1 : u32 = u32(0);
+    loop
+    {
+        if((j_1 < u32(8)))
+        {
+        }
+        else
+        {
+            break;
+        }
+        var y_0 : u32 = _S43.y + j_1;
+        if((y_0 > (_S44.y)))
+        {
+            break;
+        }
+        var i_2 : u32 = u32(0);
+        loop
+        {
+            if((i_2 < u32(8)))
+            {
+            }
+            else
+            {
+                break;
+            }
+            var x_0 : u32 = _S46 + i_2;
+            if((x_0 > _S45))
+            {
+                break;
+            }
+            var _S48 : vec3<i32> = vec3<i32>(i32(x_0), i32(y_0), i32(level_0));
+            var _S49 : f32 = min(farthest_0, (textureLoad((pyramid_1), ((_S48)).xy, ((_S48)).z).x));
+            var _S50 : u32 = i_2 + u32(1);
+            farthest_0 = _S49;
+            i_2 = _S50;
+        }
+        j_1 = j_1 + u32(1);
+    }
+    return (farthest_0 > (camera_0.near_1 / nearestZ_0 * (1.0f + camera_0.bias_0)));
+}
+
+fn sphereHidden_0( centre_1 : vec3<f32>,  radius_2 : f32,  right_1 : vec4<f32>,  up_1 : vec4<f32>,  forward_1 : vec4<f32>,  lens_1 : vec4<f32>) -> bool
+{
+    if(!(radius_2 < 1.00000001504746622e+30f))
+    {
+        return false;
+    }
+    var camera_1 : PyramidCamera_0;
+    camera_1.width_1 = occlusion_0.width_0;
+    camera_1.height_1 = occlusion_0.height_0;
+    camera_1.levels_1 = occlusion_0.levels_0;
+    camera_1.tanX_0 = lens_1.x;
+    camera_1.tanY_0 = lens_1.y;
+    camera_1.near_1 = lens_1.z;
+    camera_1.bias_0 = lens_1.w;
+    return boxHidden_0(pyramid_0, camera_1, vec3<f32>(dot(right_1.xyz, centre_1) + right_1.w, dot(up_1.xyz, centre_1) + up_1.w, dot(forward_1.xyz, centre_1) + forward_1.w), vec3<f32>(radius_2, 0.0f, 0.0f), vec3<f32>(0.0f, radius_2, 0.0f), vec3<f32>(0.0f, 0.0f, radius_2), u32(8));
+}
+
+fn trianglesOf_0( batch_2 : u32) -> u32
+{
+    return batches_0[batch_2].indexCount_1 / u32(3);
+}
+
+fn append_0( batch_3 : u32,  item_1 : u32)
+{
+    var slot_0 : u32 = atomicAdd(&(args_0[batch_3 * u32(5) + u32(1)]), u32(1));
+    itemList_0[batches_0[batch_3].itemBase_0 + slot_0] = item_1;
     return;
 }
 
-fn drawable_0( _S19 : u32,  _S20 : ptr<function, Transform_std430_0>) -> bool
+fn place_0( batch_4 : u32,  item_2 : u32,  centre_2 : vec3<f32>,  radius_3 : f32)
+{
+    var _S51 : bool;
+    if((occlusion_0.test_0) != u32(0))
+    {
+        _S51 = occludable_0(batch_4);
+    }
+    else
+    {
+        _S51 = false;
+    }
+    if(_S51)
+    {
+        _S51 = sphereHidden_0(centre_2, radius_3, occlusion_0.lastRight_0, occlusion_0.lastUp_0, occlusion_0.lastForward_0, occlusion_0.lastLens_0);
+    }
+    else
+    {
+        _S51 = false;
+    }
+    if(_S51)
+    {
+        var _S52 : u32 = atomicAdd(&(args_0[occlusion_0.counters_0]), u32(1));
+        var _S53 : u32 = atomicAdd(&(args_0[occlusion_0.counters_0 + u32(1)]), trianglesOf_0(batch_4));
+        itemList_0[u32(2) * occlusion_0.itemRows_0 + min(_S52, occlusion_0.itemRows_0 - u32(1))] = item_2;
+        return;
+    }
+    append_0(batch_4, item_2);
+    return;
+}
+
+fn recordMatrix_0( _S54 : u32,  _S55 : ptr<function, Transform_std430_0>,  _S56 : ptr<function, f32>) -> mat4x4<f32>
+{
+    (*_S56) = records_0[_S54].radius_0 * (*_S55).scale_0;
+    var _S57 : mat4x4<f32> = relativeMatrix_0(&((*_S55)));
+    return _S57;
+}
+
+fn drawable_0( _S58 : u32,  _S59 : ptr<function, Transform_std430_0>) -> bool
 {
     var mask_0 : u32;
     if(((view_0.time_0.z) > 0.5f))
     {
-        mask_0 = ((records_0[_S19].viewMask_0) | ((records_0[_S19].casterMask_0)));
+        mask_0 = ((records_0[_S58].viewMask_0) | ((records_0[_S58].casterMask_0)));
     }
     else
     {
-        mask_0 = records_0[_S19].viewMask_0;
+        mask_0 = records_0[_S58].viewMask_0;
     }
-    var _S21 : u32 = records_0[_S19].flags_0;
-    var _S22 : bool;
-    if((((records_0[_S19].flags_0) & (u32(1)))) == u32(0))
+    var _S60 : u32 = records_0[_S58].flags_0;
+    var _S61 : bool;
+    if((((records_0[_S58].flags_0) & (u32(1)))) == u32(0))
     {
-        _S22 = ((((*_S20).flags_1) & (u32(1)))) == u32(0);
+        _S61 = ((((*_S59).flags_1) & (u32(1)))) == u32(0);
     }
     else
     {
-        _S22 = false;
+        _S61 = false;
     }
-    if(_S22)
+    if(_S61)
     {
-        _S22 = (records_0[_S19].indexCount_0) != u32(0);
+        _S61 = (records_0[_S58].indexCount_0) != u32(0);
     }
     else
     {
-        _S22 = false;
+        _S61 = false;
     }
-    if(_S22)
+    if(_S61)
     {
-        _S22 = ((mask_0 & ((view_0.viewBit_0)))) != u32(0);
+        _S61 = ((mask_0 & ((view_0.viewBit_0)))) != u32(0);
     }
     else
     {
-        _S22 = false;
+        _S61 = false;
     }
-    if(_S22)
+    if(_S61)
     {
         if(((view_0.time_0.y) > 0.5f))
         {
-            _S22 = ((_S21 & (u32(32)))) != u32(0);
+            _S61 = ((_S60 & (u32(32)))) != u32(0);
         }
         else
         {
-            _S22 = false;
+            _S61 = false;
         }
-        _S22 = !_S22;
+        _S61 = !_S61;
     }
     else
     {
-        _S22 = false;
+        _S61 = false;
     }
-    if(_S22)
+    if(_S61)
     {
-        var _S23 : AnchorEye_0 = anchorEye_0(&((*_S20)));
-        _S22 = ((_S23.eyeHi_0.w) < 0.5f);
+        var _S62 : AnchorEye_0 = anchorEye_0(&((*_S59)));
+        _S61 = ((_S62.eyeHi_0.w) < 0.5f);
     }
     else
     {
-        _S22 = false;
+        _S61 = false;
     }
-    return _S22;
+    return _S61;
 }
 
 @compute
 @workgroup_size(64, 1, 1)
 fn cullRecords(@builtin(global_invocation_id) gid_0 : vec3<u32>)
 {
-    var i_2 : u32 = gid_0.x;
-    if((i_2 >= (params_0.recordCount_0)))
+    var _S63 : u32 = gid_0.x;
+    loop
     {
-        return;
-    }
-    if((records_0[i_2].instanceCount_1) != u32(0))
-    {
-        return;
-    }
-    var _S24 : Transform_std430_0 = transforms_0[records_0[i_2].transform_0];
-    var _S25 : mat4x4<f32> = relativeMatrix_0(&(_S24));
-    var _S26 : vec3<f32> = vec3<f32>(_S25[i32(0)][i32(3)], _S25[i32(1)][i32(3)], _S25[i32(2)][i32(3)]);
-    var _S27 : u32 = records_0[i_2].placement_0;
-    var drawn_2 : vec3<f32>;
-    if((records_0[i_2].placement_0) != u32(4294967295))
-    {
-        var offsetHi_1 : vec3<f32>;
-        var offsetLo_1 : vec3<f32>;
-        placementOffset_0(_S27, &(offsetHi_1), &(offsetLo_1));
-        var _S28 : vec3<f32> = drawnTranslation_0(&(_S24), offsetHi_1, offsetLo_1);
-        drawn_2 = _S28;
-    }
-    else
-    {
-        drawn_2 = _S26;
-    }
-    var _S29 : DrawItem_0 = drawItem_0(_S25, drawn_2, i_2, u32(0), u32(0), u32(4294967295));
-    var _S30 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(_S29.relModel_0[i32(0)][i32(0)], _S29.relModel_0[i32(1)][i32(0)], _S29.relModel_0[i32(2)][i32(0)], _S29.relModel_0[i32(3)][i32(0)]), vec4<f32>(_S29.relModel_0[i32(0)][i32(1)], _S29.relModel_0[i32(1)][i32(1)], _S29.relModel_0[i32(2)][i32(1)], _S29.relModel_0[i32(3)][i32(1)]), vec4<f32>(_S29.relModel_0[i32(0)][i32(2)], _S29.relModel_0[i32(1)][i32(2)], _S29.relModel_0[i32(2)][i32(2)], _S29.relModel_0[i32(3)][i32(2)]), vec4<f32>(_S29.relModel_0[i32(0)][i32(3)], _S29.relModel_0[i32(1)][i32(3)], _S29.relModel_0[i32(2)][i32(3)], _S29.relModel_0[i32(3)][i32(3)]) );
-    items_0[i_2].relModel_0.data_3 = _S30;
-    items_0[i_2].drawn_0 = _S29.drawn_0;
-    items_0[i_2].record_0 = _S29.record_0;
-    items_0[i_2].feature_0 = _S29.feature_0;
-    items_0[i_2].instance_0 = _S29.instance_0;
-    items_0[i_2].tint_0 = _S29.tint_0;
-    var _S31 : bool = drawable_0(i_2, &(_S24));
-    var _S32 : bool;
-    if(_S31)
-    {
-        _S32 = inFrustum_0(_S25, records_0[i_2].center_0, records_0[i_2].radius_0 * _S24.scale_0);
-    }
-    else
-    {
-        _S32 = false;
-    }
-    if(_S32)
-    {
-        append_0(records_0[i_2].batch_0, i_2);
+        if((_S63 >= (params_0.recordCount_0)))
+        {
+            break;
+        }
+        if((records_0[_S63].instanceCount_1) != u32(0))
+        {
+            break;
+        }
+        var _S64 : Transform_std430_0 = transforms_0[records_0[_S63].transform_0];
+        var radius_4 : f32;
+        var _S65 : mat4x4<f32> = recordMatrix_0(_S63, &(_S64), &(radius_4));
+        var _S66 : vec3<f32> = vec3<f32>(_S65[i32(0)][i32(3)], _S65[i32(1)][i32(3)], _S65[i32(2)][i32(3)]);
+        var _S67 : u32 = records_0[_S63].placement_0;
+        var drawn_2 : vec3<f32>;
+        if((records_0[_S63].placement_0) != u32(4294967295))
+        {
+            var offsetHi_1 : vec3<f32>;
+            var offsetLo_1 : vec3<f32>;
+            placementOffset_0(_S67, &(offsetHi_1), &(offsetLo_1));
+            var _S68 : vec3<f32> = drawnTranslation_0(&(_S64), offsetHi_1, offsetLo_1);
+            drawn_2 = _S68;
+        }
+        else
+        {
+            drawn_2 = _S66;
+        }
+        var _S69 : DrawItem_0 = drawItem_0(_S65, drawn_2, _S63, u32(0), u32(0), u32(4294967295));
+        var _S70 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(_S69.relModel_0[i32(0)][i32(0)], _S69.relModel_0[i32(1)][i32(0)], _S69.relModel_0[i32(2)][i32(0)], _S69.relModel_0[i32(3)][i32(0)]), vec4<f32>(_S69.relModel_0[i32(0)][i32(1)], _S69.relModel_0[i32(1)][i32(1)], _S69.relModel_0[i32(2)][i32(1)], _S69.relModel_0[i32(3)][i32(1)]), vec4<f32>(_S69.relModel_0[i32(0)][i32(2)], _S69.relModel_0[i32(1)][i32(2)], _S69.relModel_0[i32(2)][i32(2)], _S69.relModel_0[i32(3)][i32(2)]), vec4<f32>(_S69.relModel_0[i32(0)][i32(3)], _S69.relModel_0[i32(1)][i32(3)], _S69.relModel_0[i32(2)][i32(3)], _S69.relModel_0[i32(3)][i32(3)]) );
+        items_0[_S63].relModel_0.data_3 = _S70;
+        items_0[_S63].drawn_0 = _S69.drawn_0;
+        items_0[_S63].record_0 = _S69.record_0;
+        items_0[_S63].feature_0 = _S69.feature_0;
+        items_0[_S63].instance_0 = _S69.instance_0;
+        items_0[_S63].tint_0 = _S69.tint_0;
+        var _S71 : bool = drawable_0(_S63, &(_S64));
+        var _S72 : bool;
+        if(_S71)
+        {
+            _S72 = inFrustum_0(_S65, records_0[_S63].center_0, radius_4);
+        }
+        else
+        {
+            _S72 = false;
+        }
+        if(_S72)
+        {
+            append_0(records_0[_S63].batch_0, _S63);
+        }
+        break;
     }
     return;
 }
 
-var<private> _S33 : vec3<u32>;
+var<private> _S73 : vec3<u32>;
 
 fn WorkgroupCount_0() -> vec3<u32>
 {
-    return _S33;
+    return _S73;
+}
+
+fn instanceMatrix_0( _S74 : ptr<function, Instance_std430_0>,  _S75 : u32,  _S76 : ptr<function, Transform_std430_0>,  _S77 : ptr<function, mat4x4<f32>>,  _S78 : ptr<function, f32>) -> mat4x4<f32>
+{
+    (*_S77) = mat4x4<f32>((*_S74).row0_0, (*_S74).row1_0, (*_S74).row2_0, vec4<f32>(0.0f, 0.0f, 0.0f, 1.0f));
+    (*_S78) = records_0[_S75].radius_0 * ((*_S76).scale_0 * max(length(vec3<f32>((*_S77)[i32(0)][i32(0)], (*_S77)[i32(1)][i32(0)], (*_S77)[i32(2)][i32(0)])), max(length(vec3<f32>((*_S77)[i32(0)][i32(1)], (*_S77)[i32(1)][i32(1)], (*_S77)[i32(2)][i32(1)])), length(vec3<f32>((*_S77)[i32(0)][i32(2)], (*_S77)[i32(1)][i32(2)], (*_S77)[i32(2)][i32(2)])))));
+    var _S79 : mat4x4<f32> = relativeMatrix_0(&((*_S76)));
+    return ((((*_S77)) * (_S79)));
 }
 
 @compute
 @workgroup_size(64, 1, 1)
 fn cullInstances(@builtin(global_invocation_id) gid_1 : vec3<u32>, @builtin(num_workgroups) _builtinWorkgroupCount_0 : vec3<u32>)
 {
-    _S33 = _builtinWorkgroupCount_0;
-    var j_1 : u32 = gid_1.x + gid_1.y * WorkgroupCount_0().x * u32(64);
-    if((j_1 >= (params_0.instanceCount_0)))
+    _S73 = _builtinWorkgroupCount_0;
+    var _S80 : u32 = gid_1.x + gid_1.y * WorkgroupCount_0().x * u32(64);
+    loop
     {
-        return;
-    }
-    var inst_0 : Instance_std430_0 = instanceTable_0[j_1];
-    if((inst_0.record_1) == u32(4294967295))
-    {
-        return;
-    }
-    var _S34 : u32 = inst_0.record_1;
-    var _S35 : Transform_std430_0 = transforms_0[records_0[_S34].transform_0];
-    var local_0 : mat4x4<f32> = mat4x4<f32>(inst_0.row0_0, inst_0.row1_0, inst_0.row2_0, vec4<f32>(0.0f, 0.0f, 0.0f, 1.0f));
-    var _S36 : mat4x4<f32> = relativeMatrix_0(&(_S35));
-    var m_2 : mat4x4<f32> = (((local_0) * (_S36)));
-    var shown_0 : bool;
-    if((inst_0.feature_1) != u32(4294967295))
-    {
-        shown_0 = (records_0[_S34].featureId_0) != u32(0);
-    }
-    else
-    {
-        shown_0 = false;
-    }
-    var feature_3 : u32;
-    if(shown_0)
-    {
-        feature_3 = records_0[_S34].featureId_0 + inst_0.feature_1;
-    }
-    else
-    {
-        feature_3 = u32(0);
-    }
-    var item_2 : u32 = params_0.firstInstanceItem_0 + j_1;
-    var _S37 : DrawItem_0 = drawItem_0(m_2, vec3<f32>(m_2[i32(0)][i32(3)], m_2[i32(1)][i32(3)], m_2[i32(2)][i32(3)]), inst_0.record_1, feature_3, j_1 - records_0[_S34].instanceFirst_0, inst_0.tint_1);
-    var _S38 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(_S37.relModel_0[i32(0)][i32(0)], _S37.relModel_0[i32(1)][i32(0)], _S37.relModel_0[i32(2)][i32(0)], _S37.relModel_0[i32(3)][i32(0)]), vec4<f32>(_S37.relModel_0[i32(0)][i32(1)], _S37.relModel_0[i32(1)][i32(1)], _S37.relModel_0[i32(2)][i32(1)], _S37.relModel_0[i32(3)][i32(1)]), vec4<f32>(_S37.relModel_0[i32(0)][i32(2)], _S37.relModel_0[i32(1)][i32(2)], _S37.relModel_0[i32(2)][i32(2)], _S37.relModel_0[i32(3)][i32(2)]), vec4<f32>(_S37.relModel_0[i32(0)][i32(3)], _S37.relModel_0[i32(1)][i32(3)], _S37.relModel_0[i32(2)][i32(3)], _S37.relModel_0[i32(3)][i32(3)]) );
-    items_0[item_2].relModel_0.data_3 = _S38;
-    items_0[item_2].drawn_0 = _S37.drawn_0;
-    items_0[item_2].record_0 = _S37.record_0;
-    items_0[item_2].feature_0 = _S37.feature_0;
-    items_0[item_2].instance_0 = _S37.instance_0;
-    items_0[item_2].tint_0 = _S37.tint_0;
-    var scale_1 : f32 = _S35.scale_0 * max(length(vec3<f32>(local_0[i32(0)][i32(0)], local_0[i32(1)][i32(0)], local_0[i32(2)][i32(0)])), max(length(vec3<f32>(local_0[i32(0)][i32(1)], local_0[i32(1)][i32(1)], local_0[i32(2)][i32(1)])), length(vec3<f32>(local_0[i32(0)][i32(2)], local_0[i32(1)][i32(2)], local_0[i32(2)][i32(2)]))));
-    if((((inst_0.flags_2) & (u32(6)))) != u32(0))
-    {
-        var within_0 : bool = ((length((((vec4<f32>(records_0[_S34].center_0, 1.0f)) * (m_2))).xyz)) <= (unpack2x16float((((inst_0.flags_2) >> (u32(16))))).x));
-        if((((inst_0.flags_2) & (u32(2)))) != u32(0))
+        if((_S80 >= (params_0.instanceCount_0)))
         {
-            shown_0 = within_0;
+            break;
+        }
+        var _S81 : Instance_std430_0 = instanceTable_0[_S80];
+        var _S82 : u32 = _S81.record_1;
+        if((_S81.record_1) == u32(4294967295))
+        {
+            break;
+        }
+        var _S83 : Transform_std430_0 = transforms_0[records_0[_S82].transform_0];
+        var local_0 : mat4x4<f32>;
+        var radius_5 : f32;
+        var _S84 : mat4x4<f32> = instanceMatrix_0(&(_S81), _S82, &(_S83), &(local_0), &(radius_5));
+        var _S85 : u32 = _S81.feature_1;
+        var shown_0 : bool;
+        if((_S81.feature_1) != u32(4294967295))
+        {
+            shown_0 = (records_0[_S82].featureId_0) != u32(0);
         }
         else
         {
-            shown_0 = !within_0;
+            shown_0 = false;
         }
-    }
-    else
-    {
-        shown_0 = true;
-    }
-    if((((inst_0.flags_2) & (u32(1)))) == u32(0))
-    {
-    }
-    else
-    {
-        shown_0 = false;
-    }
-    if(shown_0)
-    {
-        var _S39 : bool = drawable_0(inst_0.record_1, &(_S35));
-        shown_0 = _S39;
-    }
-    else
-    {
-        shown_0 = false;
-    }
-    if(shown_0)
-    {
-        shown_0 = inFrustum_0(m_2, records_0[_S34].center_0, records_0[_S34].radius_0 * scale_1);
-    }
-    else
-    {
-        shown_0 = false;
-    }
-    if(shown_0)
-    {
-        append_0(records_0[_S34].batch_0, item_2);
+        var feature_3 : u32;
+        if(shown_0)
+        {
+            feature_3 = records_0[_S82].featureId_0 + _S85;
+        }
+        else
+        {
+            feature_3 = u32(0);
+        }
+        var item_3 : u32 = params_0.firstInstanceItem_0 + _S80;
+        var _S86 : DrawItem_0 = drawItem_0(_S84, vec3<f32>(_S84[i32(0)][i32(3)], _S84[i32(1)][i32(3)], _S84[i32(2)][i32(3)]), _S82, feature_3, _S80 - records_0[_S82].instanceFirst_0, _S81.tint_1);
+        var _S87 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(_S86.relModel_0[i32(0)][i32(0)], _S86.relModel_0[i32(1)][i32(0)], _S86.relModel_0[i32(2)][i32(0)], _S86.relModel_0[i32(3)][i32(0)]), vec4<f32>(_S86.relModel_0[i32(0)][i32(1)], _S86.relModel_0[i32(1)][i32(1)], _S86.relModel_0[i32(2)][i32(1)], _S86.relModel_0[i32(3)][i32(1)]), vec4<f32>(_S86.relModel_0[i32(0)][i32(2)], _S86.relModel_0[i32(1)][i32(2)], _S86.relModel_0[i32(2)][i32(2)], _S86.relModel_0[i32(3)][i32(2)]), vec4<f32>(_S86.relModel_0[i32(0)][i32(3)], _S86.relModel_0[i32(1)][i32(3)], _S86.relModel_0[i32(2)][i32(3)], _S86.relModel_0[i32(3)][i32(3)]) );
+        items_0[item_3].relModel_0.data_3 = _S87;
+        items_0[item_3].drawn_0 = _S86.drawn_0;
+        items_0[item_3].record_0 = _S86.record_0;
+        items_0[item_3].feature_0 = _S86.feature_0;
+        items_0[item_3].instance_0 = _S86.instance_0;
+        items_0[item_3].tint_0 = _S86.tint_0;
+        var _S88 : u32 = _S81.flags_3;
+        if((((_S81.flags_3) & (u32(6)))) != u32(0))
+        {
+            var within_0 : bool = ((length((((vec4<f32>(records_0[_S82].center_0, 1.0f)) * (_S84))).xyz)) <= (unpack2x16float(((_S88 >> (u32(16))))).x));
+            if(((_S88 & (u32(2)))) != u32(0))
+            {
+                shown_0 = within_0;
+            }
+            else
+            {
+                shown_0 = !within_0;
+            }
+        }
+        else
+        {
+            shown_0 = true;
+        }
+        if(((_S88 & (u32(1)))) == u32(0))
+        {
+        }
+        else
+        {
+            shown_0 = false;
+        }
+        if(shown_0)
+        {
+            var _S89 : bool = drawable_0(_S82, &(_S83));
+            shown_0 = _S89;
+        }
+        else
+        {
+            shown_0 = false;
+        }
+        if(shown_0)
+        {
+            shown_0 = inFrustum_0(_S84, records_0[_S82].center_0, radius_5);
+        }
+        else
+        {
+            shown_0 = false;
+        }
+        if(shown_0)
+        {
+            append_0(records_0[_S82].batch_0, item_3);
+        }
+        break;
     }
     return;
 }
@@ -652,17 +960,367 @@ fn cullInstances(@builtin(global_invocation_id) gid_1 : vec3<u32>, @builtin(num_
 @workgroup_size(64, 1, 1)
 fn writeDrawArgs(@builtin(global_invocation_id) gid_2 : vec3<u32>)
 {
-    var b_4 : u32 = gid_2.x;
-    if((b_4 >= (params_0.batchCount_0)))
+    var _S90 : u32 = gid_2.x;
+    loop
+    {
+        if((_S90 >= (params_0.batchCount_0)))
+        {
+            break;
+        }
+        var batch_5 : Batch_std430_0 = batches_0[_S90];
+        var a_5 : u32 = _S90 * u32(5);
+        atomicStore(&(args_0[a_5]), batch_5.indexCount_1);
+        atomicStore(&(args_0[a_5 + u32(2)]), batch_5.firstIndex_1);
+        atomicStore(&(args_0[a_5 + u32(3)]), u32(0));
+        atomicStore(&(args_0[a_5 + u32(4)]), u32(0));
+        break;
+    }
+    return;
+}
+
+@compute
+@workgroup_size(64, 1, 1)
+fn cullRecordsOccluded(@builtin(global_invocation_id) gid_3 : vec3<u32>)
+{
+    var _S91 : u32 = gid_3.x;
+    loop
+    {
+        if((_S91 >= (params_0.recordCount_0)))
+        {
+            break;
+        }
+        if((records_0[_S91].instanceCount_1) != u32(0))
+        {
+            break;
+        }
+        var _S92 : Transform_std430_0 = transforms_0[records_0[_S91].transform_0];
+        var radius_6 : f32;
+        var _S93 : mat4x4<f32> = recordMatrix_0(_S91, &(_S92), &(radius_6));
+        var _S94 : vec3<f32> = vec3<f32>(_S93[i32(0)][i32(3)], _S93[i32(1)][i32(3)], _S93[i32(2)][i32(3)]);
+        var _S95 : u32 = records_0[_S91].placement_0;
+        var drawn_3 : vec3<f32>;
+        if((records_0[_S91].placement_0) != u32(4294967295))
+        {
+            var offsetHi_2 : vec3<f32>;
+            var offsetLo_2 : vec3<f32>;
+            placementOffset_0(_S95, &(offsetHi_2), &(offsetLo_2));
+            var _S96 : vec3<f32> = drawnTranslation_0(&(_S92), offsetHi_2, offsetLo_2);
+            drawn_3 = _S96;
+        }
+        else
+        {
+            drawn_3 = _S94;
+        }
+        var _S97 : DrawItem_0 = drawItem_0(_S93, drawn_3, _S91, u32(0), u32(0), u32(4294967295));
+        var _S98 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(_S97.relModel_0[i32(0)][i32(0)], _S97.relModel_0[i32(1)][i32(0)], _S97.relModel_0[i32(2)][i32(0)], _S97.relModel_0[i32(3)][i32(0)]), vec4<f32>(_S97.relModel_0[i32(0)][i32(1)], _S97.relModel_0[i32(1)][i32(1)], _S97.relModel_0[i32(2)][i32(1)], _S97.relModel_0[i32(3)][i32(1)]), vec4<f32>(_S97.relModel_0[i32(0)][i32(2)], _S97.relModel_0[i32(1)][i32(2)], _S97.relModel_0[i32(2)][i32(2)], _S97.relModel_0[i32(3)][i32(2)]), vec4<f32>(_S97.relModel_0[i32(0)][i32(3)], _S97.relModel_0[i32(1)][i32(3)], _S97.relModel_0[i32(2)][i32(3)], _S97.relModel_0[i32(3)][i32(3)]) );
+        items_0[_S91].relModel_0.data_3 = _S98;
+        items_0[_S91].drawn_0 = _S97.drawn_0;
+        items_0[_S91].record_0 = _S97.record_0;
+        items_0[_S91].feature_0 = _S97.feature_0;
+        items_0[_S91].instance_0 = _S97.instance_0;
+        items_0[_S91].tint_0 = _S97.tint_0;
+        var _S99 : bool = drawable_0(_S91, &(_S92));
+        var _S100 : bool;
+        if(_S99)
+        {
+            _S100 = inFrustum_0(_S93, records_0[_S91].center_0, radius_6);
+        }
+        else
+        {
+            _S100 = false;
+        }
+        if(_S100)
+        {
+            place_0(records_0[_S91].batch_0, _S91, (((vec4<f32>(records_0[_S91].center_0, 1.0f)) * (_S93))).xyz, radius_6);
+        }
+        break;
+    }
+    return;
+}
+
+@compute
+@workgroup_size(64, 1, 1)
+fn cullInstancesOccluded(@builtin(global_invocation_id) gid_4 : vec3<u32>)
+{
+    var _S101 : u32 = gid_4.x + gid_4.y * WorkgroupCount_0().x * u32(64);
+    loop
+    {
+        if((_S101 >= (params_0.instanceCount_0)))
+        {
+            break;
+        }
+        var _S102 : Instance_std430_0 = instanceTable_0[_S101];
+        var _S103 : u32 = _S102.record_1;
+        if((_S102.record_1) == u32(4294967295))
+        {
+            break;
+        }
+        var _S104 : Transform_std430_0 = transforms_0[records_0[_S103].transform_0];
+        var local_1 : mat4x4<f32>;
+        var radius_7 : f32;
+        var _S105 : mat4x4<f32> = instanceMatrix_0(&(_S102), _S103, &(_S104), &(local_1), &(radius_7));
+        var _S106 : u32 = _S102.feature_1;
+        var shown_1 : bool;
+        if((_S102.feature_1) != u32(4294967295))
+        {
+            shown_1 = (records_0[_S103].featureId_0) != u32(0);
+        }
+        else
+        {
+            shown_1 = false;
+        }
+        var feature_4 : u32;
+        if(shown_1)
+        {
+            feature_4 = records_0[_S103].featureId_0 + _S106;
+        }
+        else
+        {
+            feature_4 = u32(0);
+        }
+        var item_4 : u32 = params_0.firstInstanceItem_0 + _S101;
+        var _S107 : DrawItem_0 = drawItem_0(_S105, vec3<f32>(_S105[i32(0)][i32(3)], _S105[i32(1)][i32(3)], _S105[i32(2)][i32(3)]), _S103, feature_4, _S101 - records_0[_S103].instanceFirst_0, _S102.tint_1);
+        var _S108 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(_S107.relModel_0[i32(0)][i32(0)], _S107.relModel_0[i32(1)][i32(0)], _S107.relModel_0[i32(2)][i32(0)], _S107.relModel_0[i32(3)][i32(0)]), vec4<f32>(_S107.relModel_0[i32(0)][i32(1)], _S107.relModel_0[i32(1)][i32(1)], _S107.relModel_0[i32(2)][i32(1)], _S107.relModel_0[i32(3)][i32(1)]), vec4<f32>(_S107.relModel_0[i32(0)][i32(2)], _S107.relModel_0[i32(1)][i32(2)], _S107.relModel_0[i32(2)][i32(2)], _S107.relModel_0[i32(3)][i32(2)]), vec4<f32>(_S107.relModel_0[i32(0)][i32(3)], _S107.relModel_0[i32(1)][i32(3)], _S107.relModel_0[i32(2)][i32(3)], _S107.relModel_0[i32(3)][i32(3)]) );
+        items_0[item_4].relModel_0.data_3 = _S108;
+        items_0[item_4].drawn_0 = _S107.drawn_0;
+        items_0[item_4].record_0 = _S107.record_0;
+        items_0[item_4].feature_0 = _S107.feature_0;
+        items_0[item_4].instance_0 = _S107.instance_0;
+        items_0[item_4].tint_0 = _S107.tint_0;
+        var _S109 : u32 = _S102.flags_3;
+        if((((_S102.flags_3) & (u32(6)))) != u32(0))
+        {
+            var within_1 : bool = ((length((((vec4<f32>(records_0[_S103].center_0, 1.0f)) * (_S105))).xyz)) <= (unpack2x16float(((_S109 >> (u32(16))))).x));
+            if(((_S109 & (u32(2)))) != u32(0))
+            {
+                shown_1 = within_1;
+            }
+            else
+            {
+                shown_1 = !within_1;
+            }
+        }
+        else
+        {
+            shown_1 = true;
+        }
+        if(((_S109 & (u32(1)))) == u32(0))
+        {
+        }
+        else
+        {
+            shown_1 = false;
+        }
+        if(shown_1)
+        {
+            var _S110 : bool = drawable_0(_S103, &(_S104));
+            shown_1 = _S110;
+        }
+        else
+        {
+            shown_1 = false;
+        }
+        if(shown_1)
+        {
+            shown_1 = inFrustum_0(_S105, records_0[_S103].center_0, radius_7);
+        }
+        else
+        {
+            shown_1 = false;
+        }
+        if(shown_1)
+        {
+            place_0(records_0[_S103].batch_0, item_4, (((vec4<f32>(records_0[_S103].center_0, 1.0f)) * (_S105))).xyz, radius_7);
+        }
+        break;
+    }
+    return;
+}
+
+@compute
+@workgroup_size(64, 1, 1)
+fn writeDrawArgsOccluded(@builtin(global_invocation_id) gid_5 : vec3<u32>)
+{
+    var _S111 : u32 = gid_5.x;
+    loop
+    {
+        if((_S111 >= (params_0.batchCount_0)))
+        {
+            break;
+        }
+        var batch_6 : Batch_std430_0 = batches_0[_S111];
+        var a_6 : u32 = _S111 * u32(5);
+        atomicStore(&(args_0[a_6]), batch_6.indexCount_1);
+        atomicStore(&(args_0[a_6 + u32(2)]), batch_6.firstIndex_1);
+        atomicStore(&(args_0[a_6 + u32(3)]), u32(0));
+        atomicStore(&(args_0[a_6 + u32(4)]), u32(0));
+        var a_7 : u32 = (occlusion_0.argumentRows_0 + _S111) * u32(5);
+        atomicStore(&(args_0[a_7]), batch_6.indexCount_1);
+        atomicStore(&(args_0[a_7 + u32(2)]), batch_6.firstIndex_1);
+        atomicStore(&(args_0[a_7 + u32(3)]), u32(0));
+        atomicStore(&(args_0[a_7 + u32(4)]), u32(0));
+        break;
+    }
+    return;
+}
+
+struct DrawRecord_0
+{
+     center_0 : vec3<f32>,
+     radius_0 : f32,
+     color_0 : vec4<f32>,
+     transform_0 : u32,
+     flags_0 : u32,
+     materialIndex_0 : u32,
+     indexCount_0 : u32,
+     firstIndex_0 : u32,
+     featureId_0 : u32,
+     batch_0 : u32,
+     positionOffset_0 : u32,
+     normalOffset_0 : u32,
+     uvOffset_0 : u32,
+     colorOffset_0 : u32,
+     tangentOffset_0 : u32,
+     textureSet_0 : u32,
+     imagerySlice_0 : u32,
+     featureIdOffset_0 : u32,
+     viewMask_0 : u32,
+     clipBlock_0 : u32,
+     placeholderMask_0 : u32,
+     terrainClip_0 : u32,
+     instanceFirst_0 : u32,
+     instanceCount_1 : u32,
+     instanceStreams_0 : u32,
+     instanceStride_0 : u32,
+     lightsSlice_0 : u32,
+     attributes_0 : u32,
+     instanceDirectory_0 : u32,
+     billboardSize_0 : f32,
+     billboardDepthTest_0 : f32,
+     placement_0 : u32,
+     skirtStart_0 : u32,
+     casterMask_0 : u32,
+     debug_0 : u32,
+     morph_0 : f32,
+     imageryFrom_0 : u32,
+     imageryFade_0 : f32,
+};
+
+@compute
+@workgroup_size(64, 1, 1)
+fn retestOccluded(@builtin(global_invocation_id) gid_6 : vec3<u32>)
+{
+    var k_1 : u32 = gid_6.x + gid_6.y * WorkgroupCount_0().x * u32(64);
+    var _S112 : u32 = atomicLoad(&(args_0[occlusion_0.counters_0]));
+    if((k_1 >= (min(_S112, occlusion_0.itemRows_0))))
     {
         return;
     }
-    var batch_2 : Batch_std430_0 = batches_0[b_4];
-    var a_4 : u32 = b_4 * u32(5);
-    atomicStore(&(args_0[a_4]), batch_2.indexCount_1);
-    atomicStore(&(args_0[a_4 + u32(2)]), batch_2.firstIndex_1);
-    atomicStore(&(args_0[a_4 + u32(3)]), u32(0));
-    atomicStore(&(args_0[a_4 + u32(4)]), u32(0));
+    var item_5 : u32 = itemList_0[u32(2) * occlusion_0.itemRows_0 + k_1];
+    var radius_8 : f32;
+    var r_0 : DrawRecord_0;
+    var m_2 : mat4x4<f32>;
+    if((itemList_0[u32(2) * occlusion_0.itemRows_0 + k_1] < (params_0.firstInstanceItem_0)))
+    {
+        var _S113 : DrawRecord_std430_0 = records_0[item_5];
+        var _S114 : Transform_std430_0 = transforms_0[_S113.transform_0];
+        var _S115 : mat4x4<f32> = recordMatrix_0(item_5, &(_S114), &(radius_8));
+        r_0.center_0 = _S113.center_0;
+        r_0.radius_0 = _S113.radius_0;
+        r_0.color_0 = _S113.color_0;
+        r_0.transform_0 = _S113.transform_0;
+        r_0.flags_0 = _S113.flags_0;
+        r_0.materialIndex_0 = _S113.materialIndex_0;
+        r_0.indexCount_0 = _S113.indexCount_0;
+        r_0.firstIndex_0 = _S113.firstIndex_0;
+        r_0.featureId_0 = _S113.featureId_0;
+        r_0.batch_0 = _S113.batch_0;
+        r_0.positionOffset_0 = _S113.positionOffset_0;
+        r_0.normalOffset_0 = _S113.normalOffset_0;
+        r_0.uvOffset_0 = _S113.uvOffset_0;
+        r_0.colorOffset_0 = _S113.colorOffset_0;
+        r_0.tangentOffset_0 = _S113.tangentOffset_0;
+        r_0.textureSet_0 = _S113.textureSet_0;
+        r_0.imagerySlice_0 = _S113.imagerySlice_0;
+        r_0.featureIdOffset_0 = _S113.featureIdOffset_0;
+        r_0.viewMask_0 = _S113.viewMask_0;
+        r_0.clipBlock_0 = _S113.clipBlock_0;
+        r_0.placeholderMask_0 = _S113.placeholderMask_0;
+        r_0.terrainClip_0 = _S113.terrainClip_0;
+        r_0.instanceFirst_0 = _S113.instanceFirst_0;
+        r_0.instanceCount_1 = _S113.instanceCount_1;
+        r_0.instanceStreams_0 = _S113.instanceStreams_0;
+        r_0.instanceStride_0 = _S113.instanceStride_0;
+        r_0.lightsSlice_0 = _S113.lightsSlice_0;
+        r_0.attributes_0 = _S113.attributes_0;
+        r_0.instanceDirectory_0 = _S113.instanceDirectory_0;
+        r_0.billboardSize_0 = _S113.billboardSize_0;
+        r_0.billboardDepthTest_0 = _S113.billboardDepthTest_0;
+        r_0.placement_0 = _S113.placement_0;
+        r_0.skirtStart_0 = _S113.skirtStart_0;
+        r_0.casterMask_0 = _S113.casterMask_0;
+        r_0.debug_0 = _S113.debug_0;
+        r_0.morph_0 = _S113.morph_0;
+        r_0.imageryFrom_0 = _S113.imageryFrom_0;
+        r_0.imageryFade_0 = _S113.imageryFade_0;
+        m_2 = _S115;
+    }
+    else
+    {
+        var _S116 : Instance_std430_0 = instanceTable_0[min(item_5 - params_0.firstInstanceItem_0, params_0.instanceCount_0 - u32(1))];
+        var _S117 : DrawRecord_std430_0 = records_0[_S116.record_1];
+        var _S118 : Transform_std430_0 = transforms_0[_S117.transform_0];
+        var local_2 : mat4x4<f32>;
+        var _S119 : mat4x4<f32> = instanceMatrix_0(&(_S116), _S116.record_1, &(_S118), &(local_2), &(radius_8));
+        r_0.center_0 = _S117.center_0;
+        r_0.radius_0 = _S117.radius_0;
+        r_0.color_0 = _S117.color_0;
+        r_0.transform_0 = _S117.transform_0;
+        r_0.flags_0 = _S117.flags_0;
+        r_0.materialIndex_0 = _S117.materialIndex_0;
+        r_0.indexCount_0 = _S117.indexCount_0;
+        r_0.firstIndex_0 = _S117.firstIndex_0;
+        r_0.featureId_0 = _S117.featureId_0;
+        r_0.batch_0 = _S117.batch_0;
+        r_0.positionOffset_0 = _S117.positionOffset_0;
+        r_0.normalOffset_0 = _S117.normalOffset_0;
+        r_0.uvOffset_0 = _S117.uvOffset_0;
+        r_0.colorOffset_0 = _S117.colorOffset_0;
+        r_0.tangentOffset_0 = _S117.tangentOffset_0;
+        r_0.textureSet_0 = _S117.textureSet_0;
+        r_0.imagerySlice_0 = _S117.imagerySlice_0;
+        r_0.featureIdOffset_0 = _S117.featureIdOffset_0;
+        r_0.viewMask_0 = _S117.viewMask_0;
+        r_0.clipBlock_0 = _S117.clipBlock_0;
+        r_0.placeholderMask_0 = _S117.placeholderMask_0;
+        r_0.terrainClip_0 = _S117.terrainClip_0;
+        r_0.instanceFirst_0 = _S117.instanceFirst_0;
+        r_0.instanceCount_1 = _S117.instanceCount_1;
+        r_0.instanceStreams_0 = _S117.instanceStreams_0;
+        r_0.instanceStride_0 = _S117.instanceStride_0;
+        r_0.lightsSlice_0 = _S117.lightsSlice_0;
+        r_0.attributes_0 = _S117.attributes_0;
+        r_0.instanceDirectory_0 = _S117.instanceDirectory_0;
+        r_0.billboardSize_0 = _S117.billboardSize_0;
+        r_0.billboardDepthTest_0 = _S117.billboardDepthTest_0;
+        r_0.placement_0 = _S117.placement_0;
+        r_0.skirtStart_0 = _S117.skirtStart_0;
+        r_0.casterMask_0 = _S117.casterMask_0;
+        r_0.debug_0 = _S117.debug_0;
+        r_0.morph_0 = _S117.morph_0;
+        r_0.imageryFrom_0 = _S117.imageryFrom_0;
+        r_0.imageryFade_0 = _S117.imageryFade_0;
+        m_2 = _S119;
+    }
+    var _S120 : DrawRecord_0 = r_0;
+    if(sphereHidden_0((((vec4<f32>(r_0.center_0, 1.0f)) * (m_2))).xyz, radius_8, occlusion_0.right_0, occlusion_0.up_0, occlusion_0.forward_0, occlusion_0.lens_0))
+    {
+        return;
+    }
+    var _S121 : u32 = atomicAdd(&(args_0[occlusion_0.counters_0 + u32(2)]), u32(1));
+    var _S122 : u32 = atomicAdd(&(args_0[occlusion_0.counters_0 + u32(3)]), trianglesOf_0(_S120.batch_0));
+    var slot_1 : u32 = atomicAdd(&(args_0[(occlusion_0.argumentRows_0 + _S120.batch_0) * u32(5) + u32(1)]), u32(1));
+    itemList_0[occlusion_0.itemRows_0 + batches_0[_S120.batch_0].itemBase_0 + slot_1] = item_5;
     return;
 }
 

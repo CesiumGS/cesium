@@ -75,6 +75,11 @@ export interface InspectorSnapshot {
     }>;
     /** Rays cast since the frame before (height queries, clamping, queries). */
     raysCast?: number;
+    /**
+     * What occlusion culling left undrawn (draw items, whole triangles), a
+     * tick or two late; absent when no view culls by occlusion.
+     */
+    hiddenByOcclusion?: { draws: number; triangles: number };
     /** Inside the frame's markers, not covered by a timed pass, ms. */
     gpuInFrameUntimedMs?: number;
     /** Previous frame's last marker to this one's first, ms; absent when the GPU idled. */

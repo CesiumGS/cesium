@@ -1272,6 +1272,7 @@ const KIND_LABELS: Record<string, string> = {
 /** What the frame submitted, by kind: every kind has its row, an unused one muted. */
 function geometryHtml(
   geometry: NonNullable<NonNullable<InspectorSnapshot["frame"]>["geometry"]>,
+  hidden?: { draws: number; triangles: number },
 ): string {
   const what = (k: (typeof geometry)[number]) =>
     [
@@ -1284,14 +1285,31 @@ function geometryHtml(
   return table(
     ["Submitted", "Draws", "Geometry"],
     ["n1", "n3"],
-    geometry.map((k) => {
-      const label = KIND_LABELS[k.kind] ?? k.kind;
-      return {
-        zero: k.draws === 0,
-        cells: [escape(label), count(k.draws), what(k)],
-        title: `${label}: ${what(k)}`,
-      };
-    }),
+    [
+      ...geometry.map((k) => {
+        const label = KIND_LABELS[k.kind] ?? k.kind;
+        return {
+          zero: k.draws === 0,
+          cells: [escape(label), count(k.draws), what(k)],
+          title: `${label}: ${what(k)}`,
+        };
+      }),
+      // Present while the view culls by occlusion (a feature, not a value).
+      ...(hidden
+        ? [
+            {
+              zero: hidden.draws === 0,
+              cells: [
+                "Hidden by occlusion",
+                count(hidden.draws),
+                hidden.triangles > 0 ? `${count(hidden.triangles)} tris` : "—",
+              ],
+              title:
+                "Submitted, then left undrawn because the view's own depth hid them (a tick or two late)",
+            },
+          ]
+        : []),
+    ],
     "geometry",
     "Counted before GPU culling; patch triangles aren't counted. A kind with no draws this frame is muted.",
   );
@@ -1443,7 +1461,7 @@ function frameHtml(v: InspectorView): string {
   }
   html += `<div class="ci-ptable ci-ptable-plain">${timing.join("")}</div>`;
   if (f.geometry) {
-    html += geometryHtml(f.geometry);
+    html += geometryHtml(f.geometry, f.hiddenByOcclusion);
   }
   if (f.work) {
     html += workHtml(f.work);

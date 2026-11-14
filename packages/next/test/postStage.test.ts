@@ -303,6 +303,7 @@ describe("a view's chain", () => {
     "select-view",
     "lights",
     "cull",
+    "occlusion-cull",
     "sky-view",
     "environment",
     "aerial-perspective",

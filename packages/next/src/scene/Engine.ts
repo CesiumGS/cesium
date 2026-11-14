@@ -463,6 +463,30 @@ export class Engine {
     return this.raster.timer.passes;
   }
   /**
+   * What occlusion culling left undrawn in the views' latest readouts
+   * (`occlusionCulling`): draw items (instances counted each) and their whole
+   * triangles, and the views that culled by occlusion in their last render.
+   * A tick or two late; a view that doesn't cull adds nothing.
+   */
+  get occlusionCullStats(): {
+    views: number;
+    draws: number;
+    triangles: number;
+  } {
+    let views = 0;
+    let draws = 0;
+    let triangles = 0;
+    for (const view of this.views) {
+      const cull = this.raster.viewFrames.get(view)?.cull;
+      if (cull?.active) {
+        views++;
+        draws += cull.hidden.draws;
+        triangles += cull.hidden.triangles;
+      }
+    }
+    return { views, draws, triangles };
+  }
+  /**
    * What occlusion feedback has answered, over the views, since start:
    * boxes asked about, verdicts changed, and boxes the latest results found
    * hidden. A recorder's.
@@ -1451,6 +1475,21 @@ export class Engine {
    * (`OCCLUSION_FEEDBACK_VERSION`).
    */
   occlusionFeedback: OcclusionSwitch = "on";
+  /**
+   * Each view skips the opaque draws its own drawn depth hides, in two
+   * phases so that nothing pops in (render/view/occlusionCull.ts): the draws
+   * the view's last depth hid are left out of a first depth pass, then tested
+   * against a pyramid of that depth, and the ones it doesn't hide are drawn in
+   * the same tick. Translucent draws, lines, points, billboards, patch draws
+   * and custom shaders' draws are never culled, and nothing translucent hides
+   * anything. Views with clips or "direct" submission don't cull, nor an
+   * engine whose opaque shader is overridden (it has no depth prepass). On
+   * by default ("on"); "off" culls by the frustum alone. A
+   * view can override it (`View.occlusionCulling`); room is left for an
+   * "auto" value. Independent of `occlusionFeedback`, which acts on tile
+   * selection; both read the view's one pyramid.
+   */
+  occlusionCulling: OcclusionSwitch = "on";
 
   /**
    * Asks for a frame in on-demand mode, for changes the engine can't see:

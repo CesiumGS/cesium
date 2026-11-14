@@ -225,6 +225,21 @@ function recordable(
       view.lodTransitions = lod;
     }
   }
+  // `&occlusionCull=off` culls draws by the frustum alone (A/B checks of
+  // `Engine.occlusionCulling`); tile selection's occlusion feedback stays.
+  const occlusionCull = params.get("occlusionCull");
+  if (occlusionCull === "off") {
+    engine.occlusionCulling = "off";
+  } else if (occlusionCull === "on") {
+    engine.occlusionCulling = "on";
+  }
+  // `&coarsen=off` keeps hidden tiles' refinement however long they stay
+  // hidden (A/B checks of `OcclusionFeedback.coarsen`).
+  if (params.get("coarsen") === "off") {
+    for (const view of engine.views) {
+      view.occlusionState.coarsen = false;
+    }
+  }
   // `&alpha=<0..1>` sets the error exponent (`View.lodExponent`).
   const alpha = parseAlpha(params.get("alpha"));
   if (alpha !== undefined) {
@@ -255,6 +270,14 @@ const URL_DEBUG_VIEWS: ReadonlySet<string> = new Set<DebugView>([
   "stretch",
 ]);
 
+/** What occlusion culling left undrawn, when some view culls by occlusion. */
+function hiddenByOcclusion(engine: Engine): {
+  hiddenByOcclusion?: { draws: number; triangles: number };
+} {
+  const { views, draws, triangles } = engine.occlusionCullStats;
+  return views > 0 ? { hiddenByOcclusion: { draws, triangles } } : {};
+}
+
 /** One snapshot of a 2.0 engine (for hosts that build their own `Inspectable`). */
 export function engineSnapshot(
   engine: Engine,
@@ -277,6 +300,7 @@ export function engineSnapshot(
         ...k,
       })),
       raysCast: s.raysCast,
+      ...hiddenByOcclusion(engine),
       ...(s.work ? { work: s.work } : {}),
       ...(Number.isNaN(s.gpuMs)
         ? {}

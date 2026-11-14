@@ -674,6 +674,12 @@ export class View {
    * no pyramid and runs no queries for the view.
    */
   occlusionFeedback: OcclusionSwitch | undefined;
+  /**
+   * Whether this view skips drawing what its own drawn depth hides
+   * (`Engine.occlusionCulling`): undefined takes the engine's. "off" culls
+   * its draws by the frustum alone.
+   */
+  occlusionCulling: OcclusionSwitch | undefined;
   /** @internal The glare tier at the last render, and why (`readout`). */
   glareResolved?: { tier: GlareTier; reason: string };
   /** @internal Waiting for the view's next render (`readHdr`). */

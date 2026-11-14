@@ -7,6 +7,7 @@ import type { PixelRect } from "../../scene/renderTarget.ts";
 import type { ViewChain } from "../post/chain.ts";
 import type { GlareViewState } from "../post/glare.ts";
 import type { FrameOcclusion } from "./occlusionPass.ts";
+import type { ViewOcclusionCull } from "./occlusionCull.ts";
 
 /** Tone mappings by their index in present.slang's `PresentParams`. */
 export const TONE_MAPPINGS: readonly ToneMapping[] = [
@@ -124,6 +125,11 @@ export interface ViewFrame {
    * across ticks.
    */
   occlusion: FrameOcclusion | undefined;
+  /**
+   * Its two-phase occlusion cull's uniforms and counters (occlusionCull.ts),
+   * made the first tick it culls by occlusion, and whether this tick does.
+   */
+  cull: ViewOcclusionCull | undefined;
   /** Point splats were drawn into its depth this tick: no occluder (`occlusionPass`). */
   splatted: boolean;
   /**
@@ -212,4 +218,5 @@ export function destroyViewFrame(frame: ViewFrame): void {
   frame.ids.destroy();
   frame.depth.destroy();
   frame.occlusion?.destroy();
+  frame.cull?.destroy();
 }

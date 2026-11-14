@@ -20,6 +20,9 @@ import {
 } from "../src/render/view/occlusionMath.ts";
 import { BudgetedSelection } from "../src/streaming/Budgeted.ts";
 import {
+  COARSEN_AFTER_MS,
+  COARSEN_BACKOFF_MS,
+  COARSEN_RESULTS,
   MAX_QUERIES,
   OCCLUDED_TICKS,
   QUERY_FLOATS,
@@ -342,6 +345,59 @@ describe("what the results do to a tile", () => {
     expect(feedback.occluded(a.viewState(0))).toBe(false);
   });
 
+  it("calls a tile long hidden after seconds of results in a row, and not again soon after it is seen", () => {
+    let now = 0;
+    const feedback = new OcclusionFeedback(() => now);
+    const [a] = tiles() as [Tile];
+    const state = a.viewState(0);
+    const result = (hidden: boolean) =>
+      feedback.apply(tick(feedback, [a]), hidden ? bits(0) : bits(), 0);
+    // Hidden for long enough in time, but too few results.
+    result(true);
+    now += COARSEN_AFTER_MS;
+    expect(feedback.longHidden(state)).toBe(false);
+    // Enough results, and the time since the first.
+    for (let i = 1; i < COARSEN_RESULTS; i++) {
+      result(true);
+    }
+    expect(feedback.occluded(state)).toBe(true);
+    expect(feedback.longHidden(state)).toBe(true);
+    // Many results in a short time aren't enough: a new run starts when seen.
+    result(false);
+    expect(feedback.longHidden(state)).toBe(false);
+    for (let i = 0; i < COARSEN_RESULTS + 2; i++) {
+      result(true);
+    }
+    expect(feedback.longHidden(state)).toBe(false);
+    now += COARSEN_AFTER_MS;
+    expect(feedback.longHidden(state)).toBe(true);
+    // Coarsened for it (Budgeted marks it), then seen: not again for a while.
+    state.coarsenedHidden = true;
+    result(false);
+    expect(state.coarsenedHidden).toBe(false);
+    for (let i = 0; i < COARSEN_RESULTS; i++) {
+      result(true);
+    }
+    now += COARSEN_AFTER_MS;
+    expect(feedback.occluded(state)).toBe(true);
+    expect(feedback.longHidden(state)).toBe(false);
+    now += COARSEN_BACKOFF_MS;
+    expect(feedback.longHidden(state)).toBe(true);
+  });
+
+  it("says when a refined tile it found hidden may coarsen, for a view that idles until then", () => {
+    let now = 1000;
+    const feedback = new OcclusionFeedback(() => now);
+    const [a, b] = tiles() as [Tile, Tile];
+    a.viewState(0).heldRefined = true;
+    feedback.apply(tick(feedback, [a, b]), bits(0, 1), 0);
+    // Only the refined one can coarsen.
+    expect(feedback.coarsenAt).toBe(1000 + COARSEN_AFTER_MS);
+    now += COARSEN_AFTER_MS;
+    feedback.apply(tick(feedback, [a, b]), bits(0, 1), 0);
+    expect(feedback.coarsenAt).toBeUndefined();
+  });
+
   it("keeps views apart", () => {
     const feedback = new OcclusionFeedback();
     const [a] = tiles() as [Tile];
@@ -582,6 +638,51 @@ describe("selection with occlusion feedback", () => {
     expect(result.requested).toEqual([]);
     // The finer ones weren't walked, so weren't asked about.
     expect(asked).not.toContain(mid.children[0]);
+  });
+
+  it("keeps a refined tile refined while it is hidden briefly, and coarsens it once hidden long", () => {
+    const top = pyramidTree();
+    ready(top);
+    const mid = top.children[0]!;
+    const selection = policy();
+    // Seen: refined.
+    expect(
+      selection.select(top, 1600, view(occlusionOf([]))).selected,
+    ).toHaveLength(4);
+    // Hidden briefly: what it reached stays.
+    expect(
+      selection.select(top, 1600, view(occlusionOf([mid]))).selected,
+    ).toHaveLength(4);
+    expect(mid.viewState(0).coarsenedHidden).toBe(false);
+    // Hidden long: drawn as itself, and marked for the backoff.
+    const long: ViewOcclusion = {
+      ...occlusionOf([mid]),
+      longHidden: (state) => state === mid.viewState(0),
+    };
+    expect(selection.select(top, 1600, view(long)).selected).toEqual([mid]);
+    expect(mid.viewState(0).coarsenedHidden).toBe(true);
+    // Still hidden, but no longer long (the backoff): it stays coarse,
+    // since hiding blocks new refinement.
+    expect(
+      selection.select(top, 1600, view(occlusionOf([mid]))).selected,
+    ).toEqual([mid]);
+    // Seen again: refined at once.
+    expect(
+      selection.select(top, 1600, view(occlusionOf([]))).selected,
+    ).toHaveLength(4);
+  });
+
+  it("never coarsens ADD content for being hidden", () => {
+    const top = pyramidTree("mid.glb", "ADD");
+    ready(top);
+    const mid = top.children[0]!;
+    const selection = policy();
+    const seen = selection.select(top, 1600, view(occlusionOf([]))).selected;
+    const long: ViewOcclusion = {
+      ...occlusionOf([mid]),
+      longHidden: () => true,
+    };
+    expect(selection.select(top, 1600, view(long)).selected).toEqual(seen);
   });
 
   it("treats a tile with no result as visible", () => {

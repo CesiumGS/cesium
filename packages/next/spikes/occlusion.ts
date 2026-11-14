@@ -275,6 +275,8 @@ async function runOcclusion() {
       near: camera.near,
       position: new Float64Array(3),
       direction: Float64Array.of(0, 0, 1),
+      up: Float64Array.of(0, 1, 0),
+      right: Float64Array.of(1, 0, 0),
     };
     const enc = device.createCommandEncoder();
     const { readback, words } = occlusion.encode(enc, pipelines, list, built);
@@ -422,6 +424,8 @@ async function runOcclusion() {
       near: 1,
       position: new Float64Array(3),
       direction: Float64Array.of(0, 0, 1),
+      up: Float64Array.of(0, 1, 0),
+      right: Float64Array.of(1, 0, 0),
     };
     const querySet = device.createQuerySet({ type: "timestamp", count: 4 });
     const resolve = device.createBuffer({

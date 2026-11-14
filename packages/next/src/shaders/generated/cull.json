@@ -2,6 +2,471 @@
     "version": "1.1",
     "parameters": [
         {
+            "name": "occlusion",
+            "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0},
+            "type": {
+                "kind": "constantBuffer",
+                "elementType": {
+                    "kind": "struct",
+                    "name": "OcclusionCull",
+                    "fields": [
+                        {
+                            "name": "lastRight",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "lastUp",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "lastForward",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 32, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "lastLens",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 48, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "right",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 64, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "up",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 80, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "forward",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 96, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "lens",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 112, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "width",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "height",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 132, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "levels",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 136, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "test",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "argumentRows",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 144, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "itemRows",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 148, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "counters",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 152, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "pad",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 156, "size": 4, "elementStride": 0}
+                        }
+                    ],
+                    "sizes": [
+                        {"kind": "uniform", "value": 160, "alignment": 16}
+                    ]
+                },
+                "containerVarLayout": {
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                "elementVarLayout": {
+                    "type": {
+                        "kind": "struct",
+                        "name": "OcclusionCull",
+                        "fields": [
+                            {
+                                "name": "lastRight",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "lastUp",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "lastForward",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 32, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "lastLens",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 48, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "right",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 64, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "up",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 80, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "forward",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 96, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "lens",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 112, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "width",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "height",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 132, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "levels",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 136, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "test",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "argumentRows",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 144, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "itemRows",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 148, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "counters",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 152, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "pad",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 156, "size": 4, "elementStride": 0}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 160, "alignment": 16}
+                        ]
+                    },
+                    "binding": {"kind": "uniform", "offset": 0, "size": 160, "elementStride": 0}
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "pyramid",
+            "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1},
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "resultType": {
+                    "kind": "scalar",
+                    "scalarType": "float32"
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
             "name": "view",
             "binding": {"kind": "descriptorTableSlot", "index": 0},
             "type": {
@@ -1631,7 +2096,7 @@
                             "binding": {"kind": "uniform", "offset": 8, "size": 4, "elementStride": 0}
                         },
                         {
-                            "name": "pad",
+                            "name": "flags",
                             "type": {
                                 "kind": "scalar",
                                 "scalarType": "uint32",
@@ -1818,6 +2283,471 @@
     "globalScope": {
         "kind": "none",
         "parameters": [
+            {
+                "name": "occlusion",
+                "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0},
+                "type": {
+                    "kind": "constantBuffer",
+                    "elementType": {
+                        "kind": "struct",
+                        "name": "OcclusionCull",
+                        "fields": [
+                            {
+                                "name": "lastRight",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "lastUp",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "lastForward",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 32, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "lastLens",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 48, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "right",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 64, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "up",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 80, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "forward",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 96, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "lens",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 112, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "width",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "height",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 132, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "levels",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 136, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "test",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "argumentRows",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 144, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "itemRows",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 148, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "counters",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 152, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "pad",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 156, "size": 4, "elementStride": 0}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 160, "alignment": 16}
+                        ]
+                    },
+                    "containerVarLayout": {
+                        "binding": {"kind": "descriptorTableSlot", "index": 0}
+                    },
+                    "elementVarLayout": {
+                        "type": {
+                            "kind": "struct",
+                            "name": "OcclusionCull",
+                            "fields": [
+                                {
+                                    "name": "lastRight",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "lastUp",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "lastForward",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 32, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "lastLens",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 48, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "right",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 64, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "up",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 80, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "forward",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 96, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "lens",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 112, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "width",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "height",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 132, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "levels",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 136, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "test",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "argumentRows",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 144, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "itemRows",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 148, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "counters",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 152, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "pad",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 156, "size": 4, "elementStride": 0}
+                                }
+                            ],
+                            "sizes": [
+                                {"kind": "uniform", "value": 160, "alignment": 16}
+                            ]
+                        },
+                        "binding": {"kind": "uniform", "offset": 0, "size": 160, "elementStride": 0}
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "pyramid",
+                "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "resultType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
             {
                 "name": "view",
                 "binding": {"kind": "descriptorTableSlot", "index": 0},
@@ -3448,7 +4378,7 @@
                                 "binding": {"kind": "uniform", "offset": 8, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "pad",
+                                "name": "flags",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -3677,6 +4607,14 @@
             "threadGroupSize": [64, 1, 1],
             "bindings": [
                 {
+                    "name": "occlusion",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0}
+                },
+                {
+                    "name": "pyramid",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1}
+                },
+                {
                     "name": "view",
                     "binding": {"kind": "descriptorTableSlot", "index": 0}
                 },
@@ -3760,6 +4698,14 @@
             ],
             "threadGroupSize": [64, 1, 1],
             "bindings": [
+                {
+                    "name": "occlusion",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0}
+                },
+                {
+                    "name": "pyramid",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1}
+                },
                 {
                     "name": "view",
                     "binding": {"kind": "descriptorTableSlot", "index": 0}
@@ -3845,6 +4791,382 @@
             "threadGroupSize": [64, 1, 1],
             "bindings": [
                 {
+                    "name": "occlusion",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0}
+                },
+                {
+                    "name": "pyramid",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1}
+                },
+                {
+                    "name": "view",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "records",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
+                },
+                {
+                    "name": "transforms",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "instanceTable",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2}
+                },
+                {
+                    "name": "items",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3}
+                },
+                {
+                    "name": "itemList",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 4}
+                },
+                {
+                    "name": "batches",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 6}
+                },
+                {
+                    "name": "args",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 9}
+                },
+                {
+                    "name": "params",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 8}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
+                }
+            ]
+        },
+        {
+            "name": "cullRecordsOccluded",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+                    {
+                        "name": "gid",
+                        "semanticName": "SV_DISPATCHTHREADID",
+                        "type": {
+                            "kind": "vector",
+                            "elementCount": 3,
+                            "elementType": {
+                                "kind": "scalar",
+                                "scalarType": "uint32"
+                            },
+                            "sizes": [
+
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "gid",
+                    "semanticName": "SV_DISPATCHTHREADID",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 3,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "uint32"
+                        },
+                        "sizes": [
+
+                        ]
+                    }
+                }
+            ],
+            "threadGroupSize": [64, 1, 1],
+            "bindings": [
+                {
+                    "name": "occlusion",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0}
+                },
+                {
+                    "name": "pyramid",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1}
+                },
+                {
+                    "name": "view",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "records",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
+                },
+                {
+                    "name": "transforms",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "instanceTable",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2}
+                },
+                {
+                    "name": "items",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3}
+                },
+                {
+                    "name": "itemList",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 4}
+                },
+                {
+                    "name": "batches",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 6}
+                },
+                {
+                    "name": "args",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 9}
+                },
+                {
+                    "name": "params",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 8}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
+                }
+            ]
+        },
+        {
+            "name": "cullInstancesOccluded",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+                    {
+                        "name": "gid",
+                        "semanticName": "SV_DISPATCHTHREADID",
+                        "type": {
+                            "kind": "vector",
+                            "elementCount": 3,
+                            "elementType": {
+                                "kind": "scalar",
+                                "scalarType": "uint32"
+                            },
+                            "sizes": [
+
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "gid",
+                    "semanticName": "SV_DISPATCHTHREADID",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 3,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "uint32"
+                        },
+                        "sizes": [
+
+                        ]
+                    }
+                }
+            ],
+            "threadGroupSize": [64, 1, 1],
+            "bindings": [
+                {
+                    "name": "occlusion",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0}
+                },
+                {
+                    "name": "pyramid",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1}
+                },
+                {
+                    "name": "view",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "records",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
+                },
+                {
+                    "name": "transforms",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "instanceTable",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2}
+                },
+                {
+                    "name": "items",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3}
+                },
+                {
+                    "name": "itemList",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 4}
+                },
+                {
+                    "name": "batches",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 6}
+                },
+                {
+                    "name": "args",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 9}
+                },
+                {
+                    "name": "params",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 8}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
+                }
+            ]
+        },
+        {
+            "name": "writeDrawArgsOccluded",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+                    {
+                        "name": "gid",
+                        "semanticName": "SV_DISPATCHTHREADID",
+                        "type": {
+                            "kind": "vector",
+                            "elementCount": 3,
+                            "elementType": {
+                                "kind": "scalar",
+                                "scalarType": "uint32"
+                            },
+                            "sizes": [
+
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "gid",
+                    "semanticName": "SV_DISPATCHTHREADID",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 3,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "uint32"
+                        },
+                        "sizes": [
+
+                        ]
+                    }
+                }
+            ],
+            "threadGroupSize": [64, 1, 1],
+            "bindings": [
+                {
+                    "name": "occlusion",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0}
+                },
+                {
+                    "name": "pyramid",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1}
+                },
+                {
+                    "name": "view",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "records",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
+                },
+                {
+                    "name": "transforms",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "instanceTable",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2}
+                },
+                {
+                    "name": "items",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3}
+                },
+                {
+                    "name": "itemList",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 4}
+                },
+                {
+                    "name": "batches",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 6}
+                },
+                {
+                    "name": "args",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 9}
+                },
+                {
+                    "name": "params",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 8}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
+                }
+            ]
+        },
+        {
+            "name": "retestOccluded",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+                    {
+                        "name": "gid",
+                        "semanticName": "SV_DISPATCHTHREADID",
+                        "type": {
+                            "kind": "vector",
+                            "elementCount": 3,
+                            "elementType": {
+                                "kind": "scalar",
+                                "scalarType": "uint32"
+                            },
+                            "sizes": [
+
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "gid",
+                    "semanticName": "SV_DISPATCHTHREADID",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 3,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "uint32"
+                        },
+                        "sizes": [
+
+                        ]
+                    }
+                }
+            ],
+            "threadGroupSize": [64, 1, 1],
+            "bindings": [
+                {
+                    "name": "occlusion",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0}
+                },
+                {
+                    "name": "pyramid",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1}
+                },
+                {
                     "name": "view",
                     "binding": {"kind": "descriptorTableSlot", "index": 0}
                 },
@@ -3887,5 +5209,5 @@
             ]
         }
     ],
-    "bindlessSpaceIndex": 2
+    "bindlessSpaceIndex": 3
 }
