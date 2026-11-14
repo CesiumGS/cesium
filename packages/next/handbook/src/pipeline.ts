@@ -135,6 +135,28 @@ export const PASSES: Record<string, PassNote> = {
       "draw arguments",
     ],
   },
+  "occlusion-cull": {
+    group: "Depth and occlusion",
+    kind: "compute, render",
+    summary:
+      "Two phases: what last tick's depth hides is tested again against this tick's.",
+    detail:
+      "The cull tests what the frustum keeps against the depth pyramid the view's last tick left. What it hides goes to a retest list, the rest to their batches (phase 1). Phase 1's depth builds this tick's pyramid, from one sample a pixel, and the retest draws the listed items that the new pyramid shows (phase 2). So nothing pops in, and a wrong first verdict, after a camera jump, costs time and never the image. With ambient occlusion on, the pass rides inside the depth prepass, which splits in two. Without it, the pass draws phase 1's depth itself. Only opaque triangles in the engine's own pipelines are tested: no blended material, line, point, patch, billboard or custom shader. Views with clips, direct submission, or no depth prepass in the engine don't cull this way. `View.occlusionCulling` switches it, \"on\" by default. The inspector counts the draws and triangles it hides.",
+    skipped:
+      "When the view's switch is off, or it has clips or direct submission.",
+    reads: ["draw records", "items"],
+    writes: ["items", "draw arguments"],
+  },
+  occlusion: {
+    group: "Depth and occlusion",
+    kind: "compute",
+    summary:
+      "The tile boxes selection asked about, tested against the pyramid.",
+    detail:
+      "The view's drawn depth, as a pyramid, answers the boxes tile selection queried. The verdicts come a tick or two late, so selection uses them only where nothing drawn is removed: holding back refinement, ordering requests, and coarsening a tile that has been hidden for 2 s. With the draw cull on, this reads the pyramid that pass built, instead of building its own. An analytic occluder, such as the horizon occluder of a warped globe, answers on the CPU with no delay and can be drawn into the pyramid first.",
+    skipped: "When the view has no tile boxes to ask about.",
+    reads: ["view block"],
+  },
   "ambient-occlusion": {
     group: "Depth and occlusion",
     kind: "compute",

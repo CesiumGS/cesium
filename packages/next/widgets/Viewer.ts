@@ -162,8 +162,8 @@ export interface ViewerOptions {
    * Ignored with `stars: false`.
    *
    * Left out in development, the Viewer uses the pack the dev server offers
-   * at `/sky-pack/` when there is one (the local store's, never in the
-   * repository or a build); `null` keeps the default map even then.
+   * when there is one (the local store's, never in the repository or a
+   * build); `null` keeps the default map even then.
    */
   skyPack?: string | URL | null;
   /**
