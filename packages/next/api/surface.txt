@@ -823,6 +823,7 @@ widgets	OrbitOptions	interface	-
 widgets	OrbitPlan	interface	-
 widgets	PickInfo	interface	-
 widgets	StagePercentiles	interface	-
+widgets	TickEvent	type	-
 widgets	TilesetSource	type	-
 widgets	TimeControlsHandle	interface	-
 widgets	TimeControlsOptions	interface	-

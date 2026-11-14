@@ -3,24 +3,38 @@
  * view showing what it draws, streams and holds, from any `Inspectable`.
  * Plain DOM, no framework, so any app can attach it (as 1.x's
  * CesiumInspector was a widget, not core). Collapsed, it is one summary
- * line; expanded, the debug viewer's panels: problems, frame, streaming
- * (with the load timeline and the cost of the last move), the content
- * pipeline and content mix, memory, the GPU, the last 30 seconds, and the
- * last pick.
+ * line; expanded: problems, the frame (CPU and GPU time over the last 30 s,
+ * the geometry it submitted), streaming (rates, load, requests), the content
+ * pipeline and mix, memory, the GPU's facts, the last pick and the recorder.
  *
- * Panels follow the data-viz rules: stat tiles for single values, meters
- * for a value against a limit, horizontal bars to compare magnitudes (the
- * slowest stage emphasized), one stacked bar for part-to-whole, small
- * multiples for history. Text stays in text colors; marks carry the data
- * colors.
+ * The layout never depends on the values. Values change; structure changes
+ * only when a feature turns on or the viewer opens or closes a section.
+ * Every row, cell and table slot is always there (an empty one shows "—" or
+ * is muted), numbers are tabular and right-aligned in cells of fixed width
+ * and fixed decimals, and every fixed explanation sits behind a small "i"
+ * button that shows it in the tooltip on hover and keyboard focus. State
+ * (zero, warning, pinned) is carried in `data-*` attributes, never in the
+ * class list, so `test/inspectorStable.test.ts` can compare skeletons.
+ *
+ * Charts follow the data-viz rules: a stat for a single value, a stacked bar
+ * with direct labels for part-to-whole, aligned horizontal bars on one scale
+ * to compare magnitudes, line or area sparklines over a shared time axis and
+ * crosshair for change. Text stays in text colors; marks carry the data
+ * colors; status colors come with an icon.
+ *
+ * Time: the charts record at 4 Hz for 30 s and, from the engine's per-tick
+ * feed, every tick for the last 300. Hovering a chart freezes the display
+ * (data keeps recording); a click pins the moment under the pointer to its
+ * tick; the Frame section's Pause button freezes it and the arrow keys step.
+ * Frozen or pinned, the charts read per tick.
  */
 import { GPU_GROUPS, align, gpuWindow, untimedMs } from "./gpuGroups.ts";
 import type {
   ContentMix,
   Inspectable,
   InspectorSnapshot,
-  MemoryRow,
   PickInfo,
+  TickEvent,
 } from "./inspectable.ts";
 
 export interface InspectorOptions {
@@ -53,20 +67,32 @@ export interface InspectorHandle {
 
 /** 30 s of history at 4 Hz. */
 const HISTORY = 120;
+/** The per-tick ring: the last ticks the charts can read one by one. */
+const TICKS = 300;
 
 const SECTIONS = [
   ["problems", "Problems"],
   ["frame", "Frame"],
-  ["passes", "GPU time"],
   ["streaming", "Streaming"],
   ["pipeline", "Content pipeline"],
   ["memory", "Memory"],
   ["gpu", "GPU"],
-  ["history", "Last 30 s"],
   ["pick", "Pick"],
   ["record", "Record"],
 ] as const;
-type SectionKey = (typeof SECTIONS)[number][0];
+export type SectionKey = (typeof SECTIONS)[number][0];
+
+/** What each section's "i" button says (nothing in the live panel repeats it). */
+const SECTION_INFO: Partial<Record<SectionKey, string>> = {
+  frame:
+    "Charts show the last 30 s, newest at the right; hover one to freeze it and read every chart at that moment, click to pin the moment to its tick. Frozen, they read tick by tick. Each sparkline is on its own scale (shape, not size); the share bars compare passes on one scale. Dashed lines: 16.7 and 33.3 ms (60 and 30 fps). Untimed is the GPU frame less timed passes, while the GPU is busy back to back. Share: of the frame, averaged over the window.",
+  streaming:
+    "Sparklines show the last 30 s on their own scales (shape, not size). Hover one to freeze it and read every chart at that moment.",
+  memory:
+    "Sparklines show the last 30 s on their own scales (shape, not size). Bars fill against the budget or capacity; a warning icon appears past 90%.",
+  record:
+    "Writes one row per tick, and each GPU time under the tick it belongs to, through the dev server. Follow it with tail -F ~/.cesium-bench/inspector/latest.csv.",
+};
 
 type Series =
   | "cache"
@@ -78,8 +104,116 @@ type Series =
   | "uploadQueue"
   | "decode"
   | "frames"
-  | "cpu"
-  | "gpu";
+  | "cpu";
+
+type Win = "frame" | "slow";
+
+/** A moment under the pointer or pinned: when, and the tick if it has one. */
+export interface Cursor {
+  t: number;
+  tick?: number;
+}
+
+/** What one tick of the engine looked like (`TickEvent`, stamped on arrival). */
+export interface TickEntry {
+  tick: number;
+  t: number;
+  rendering: boolean;
+  why: readonly string[];
+  cpuMs: number;
+  gpu?: {
+    ms: number;
+    passes: Array<[string, number]>;
+    untimed: number;
+    inFrame: number;
+    between: number;
+  };
+}
+
+/** The 4 Hz window the Streaming and Memory charts read. */
+export interface SlowWin {
+  n: number;
+  /** Samples that are real (the rest is padding before the first). */
+  valid: number;
+  times: number[];
+  series: Record<Series, number[]>;
+}
+
+/** The window the Frame charts read: 4 Hz samples live, ticks when frozen or pinned. */
+export interface FrameWin {
+  n: number;
+  valid: number;
+  times: number[];
+  /** Tick ids (-1: padding); only when the window reads per tick. */
+  ticks?: number[];
+  detail?: Array<TickEntry | undefined>;
+  /** Whether a tick has a GPU sample (per-tick windows). */
+  measured?: boolean[];
+  cpu: number[];
+  fps: number[];
+  passes: Map<string, number[]>;
+  order: string[];
+  untimed: number[];
+  inFrame: number[];
+  between: number[];
+}
+
+/** Everything the section builders read: pure, so a test can render it. */
+export interface InspectorView {
+  snap: InspectorSnapshot;
+  frame: FrameWin;
+  slow: SlowWin;
+  cursor?: Cursor;
+  pinned?: boolean;
+  lastMove?: LastMove;
+  moving?: boolean;
+  closedGroups?: ReadonlySet<string>;
+  gpuShare?: boolean;
+}
+
+export interface LastMove {
+  ms: number;
+  requests?: number;
+  bytes?: number;
+}
+
+/** The sample a cursor points at in a window, if it is still in it. */
+export function indexIn(
+  w: { n: number; times: number[]; ticks?: number[] },
+  c: Cursor | undefined,
+): number | undefined {
+  if (!c) {
+    return undefined;
+  }
+  if (c.tick !== undefined && w.ticks) {
+    const i = w.ticks.lastIndexOf(c.tick);
+    return i < 0 ? undefined : i;
+  }
+  let first = -1;
+  let last = -1;
+  for (let i = 0; i < w.n; i++) {
+    if (w.ticks && w.ticks[i]! < 0) {
+      continue;
+    }
+    first = first < 0 ? i : first;
+    last = i;
+  }
+  if (first < 0) {
+    return undefined;
+  }
+  const step =
+    first === last ? 1 : (w.times[last]! - w.times[first]!) / (last - first);
+  let best = first;
+  let distance = Infinity;
+  for (let i = first; i <= last; i++) {
+    const d = Math.abs(w.times[i]! - c.t);
+    if (d < distance) {
+      distance = d;
+      best = i;
+    }
+  }
+  return distance > 2 * step ? undefined : best;
+}
 
 /** Attaches an inspector over `element` (positioned relative to it). */
 export function attachInspector(
@@ -128,12 +262,36 @@ export function attachInspector(
     `${storageKey}.sections`,
     {},
   );
+  /** The Frame section's title bar: the pause state and its switch. */
+  let pauseChip: HTMLElement | undefined;
+  let pauseButton: HTMLButtonElement | undefined;
   for (const [key, title] of SECTIONS) {
     const details = document.createElement("details");
     details.className = "ci-section";
     details.open = opened[key] ?? (key !== "gpu" && key !== "memory");
     const s = document.createElement("summary");
-    s.textContent = title;
+    s.append(document.createTextNode(title));
+    const bar = document.createElement("span");
+    bar.className = "ci-sumbar";
+    if (key === "frame") {
+      pauseChip = document.createElement("span");
+      pauseChip.className = "ci-chip ci-pausechip";
+      pauseChip.dataset.on = "0";
+      pauseButton = document.createElement("button");
+      pauseButton.type = "button";
+      pauseButton.className = "ci-pausebtn";
+      pauseButton.textContent = "Pause";
+      pauseButton.setAttribute("aria-pressed", "false");
+      pauseButton.title = "Freeze the charts; then ← and → step, Shift for ten";
+      bar.append(pauseChip, pauseButton);
+    }
+    const text = SECTION_INFO[key];
+    if (text) {
+      bar.insertAdjacentHTML("beforeend", info(text, `section-${key}`));
+    }
+    if (bar.childElementCount > 0) {
+      s.append(bar);
+    }
     const content = document.createElement("div");
     content.className = "ci-content";
     details.append(s, content);
@@ -146,11 +304,20 @@ export function attachInspector(
     sections.set(key, details);
   }
   sections.get("pick")!.hidden = true;
+  // Buttons in a summary are for pressing, not for folding the section.
+  body.addEventListener("click", (e) => {
+    if ((e.target as Element | null)?.closest?.(".ci-sumbar")) {
+      e.preventDefault();
+    }
+  });
+
   // Recording (development builds of 2.0): a switch, and what it has written.
   const recordable = source.record;
   const recordBody = bodies.get("record")!;
   sections.get("record")!.hidden = !recordable;
-  let recordNote: HTMLElement | undefined;
+  let recordCells:
+    | Record<"state" | "rows" | "images" | "file" | "error", HTMLElement>
+    | undefined;
   let recordSwitch: HTMLButtonElement | undefined;
   let frameButton: HTMLButtonElement | undefined;
   if (recordable) {
@@ -164,9 +331,24 @@ export function attachInspector(
     frameButton.type = "button";
     frameButton.className = "ci-button";
     frameButton.textContent = "Save the next tick's image";
-    recordNote = document.createElement("div");
-    recordNote.className = "ci-note ci-record-note";
-    recordBody.append(recordSwitch, frameButton, recordNote);
+    const grid = document.createElement("div");
+    grid.className = "ci-kv";
+    const cell = (label: string) => {
+      const k = document.createElement("span");
+      k.textContent = label;
+      const v = document.createElement("span");
+      v.className = "ci-num ci-vtext";
+      grid.append(k, v);
+      return v;
+    };
+    recordCells = {
+      state: cell("State"),
+      rows: cell("Rows"),
+      images: cell("Images"),
+      file: cell("File"),
+      error: cell("Server"),
+    };
+    recordBody.append(recordSwitch, frameButton, grid);
     recordSwitch.addEventListener("click", () => {
       if (recordable.active) {
         recordable.stop();
@@ -181,25 +363,31 @@ export function attachInspector(
     });
   }
   function refreshRecord(): void {
-    if (!recordable || !recordSwitch || !frameButton || !recordNote) {
+    if (!recordable || !recordSwitch || !frameButton || !recordCells) {
       return;
     }
     const on = recordable.active;
     const st = recordable.status();
     recordSwitch.setAttribute("aria-checked", String(on));
     frameButton.disabled = !on;
-    recordNote.textContent = st.error
-      ? `The dev server refused it: ${st.error}`
-      : on || st.rows > 0
-        ? `${on ? "Recording" : "Stopped"}: ${st.rows} rows, ${st.frames} images${st.file ? ` in ${st.file}` : ""}. Follow it with tail -F ~/.cesium-bench/inspector/latest.csv.`
-        : "Writes one row per tick, and each GPU time under the tick it belongs to, through the dev server.";
-    recordNote.classList.toggle("ci-warn", !!st.error);
+    recordCells.state.textContent = on
+      ? "Recording"
+      : st.rows > 0
+        ? "Stopped"
+        : "Off";
+    recordCells.rows.textContent = count(st.rows);
+    recordCells.images.textContent = count(st.frames);
+    recordCells.file.textContent = st.file ?? "—";
+    recordCells.file.title = st.file ?? "";
+    recordCells.error.textContent = st.error ?? "OK";
+    recordCells.error.title = st.error ?? "";
+    recordCells.error.dataset.warn = st.error ? "1" : "0";
   }
   refreshRecord();
   root.append(header, body);
   element.append(root);
 
-  // History, frame rate and the last move are derived across snapshots.
+  // History (4 Hz), the frame rate and the last move are derived across snapshots.
   const history: Record<Series, number[]> = {
     cache: [],
     targets: [],
@@ -211,8 +399,8 @@ export function attachInspector(
     decode: [],
     frames: [],
     cpu: [],
-    gpu: [],
   };
+  const times: number[] = [];
   const push = (series: Series, value: number) => {
     const s = history[series];
     s.push(value);
@@ -233,11 +421,10 @@ export function attachInspector(
   /** The untimed share's two parts: inside the frame's markers, and between frames. */
   const inFrameHistory: number[] = [];
   const betweenHistory: number[] = [];
-  /** Groups the user opened (they survive the redraw). */
   /** GPU groups the viewer folded away (all open by default). */
   const closedGroups = new Set<string>();
   /** The GPU chart as shares of the frame rather than milliseconds. */
-  let gpuShare = read(`${storageKey}.gpuShare`, false);
+  let gpuShare = read(`${storageKey}.gpuShare`, false) === true;
   const pushPasses = (
     passes: Array<[string, number]> | undefined,
     drawing: boolean,
@@ -268,6 +455,41 @@ export function attachInspector(
       }
     }
   };
+
+  // The engine's per-tick feed, newest last.
+  const ring: TickEntry[] = [];
+  const unsubscribe = source.ticks?.((e: TickEvent) => {
+    if (e.kind === "tick") {
+      ring.push({
+        tick: e.tick,
+        t: performance.now(),
+        rendering: e.rendering,
+        why: e.why,
+        cpuMs: e.cpuMs,
+      });
+      if (ring.length > TICKS) {
+        ring.shift();
+      }
+    } else {
+      // A GPU result arrives a few ticks after the tick it belongs to.
+      for (let i = ring.length - 1; i >= 0; i--) {
+        if (ring[i]!.tick === e.tick) {
+          ring[i]!.gpu = {
+            ms: e.ms,
+            passes: e.passes,
+            untimed: finite(untimedMs(e.intervalMs, e.ms)),
+            inFrame: finite(e.inFrameUntimedMs),
+            between: finite(e.betweenFramesMs),
+          };
+          break;
+        }
+        if (ring[i]!.tick < e.tick) {
+          break;
+        }
+      }
+    }
+  });
+
   let last: InspectorSnapshot | undefined;
   let lastAt = performance.now();
   let framesPerSecond: number | undefined;
@@ -278,68 +500,294 @@ export function attachInspector(
   let move:
     { stoppedAt: number; requests?: number; bytes?: number } | undefined;
   let lastMove: LastMove | undefined;
-  let hover: number | undefined;
-  let shownError: string | undefined;
+  let expanded = false;
 
-  // Hover over either section of sparklines: a moment's values in both.
-  // One tooltip beside the crosshair with every row's value at that
-  // moment (as the retired standalone viewer's history had), on the side
-  // with room.
+  // ---- time: one state for every chart
+  /** The Pause button's. */
+  let paused = false;
+  /** The pointer is over a chart. */
+  let hovering = false;
+  /** A click pinned the moment under the cursor. */
+  let pinned = false;
+  let cursor: Cursor | undefined;
+  /** The windows frozen when the display stopped, and when. */
+  let frozen: { frame: FrameWin; slow: SlowWin } | undefined;
+  let frozenAt = 0;
+  /** The windows the charts show now (what a pointer position means). */
+  let shown: { frame: FrameWin; slow: SlowWin } | undefined;
+  let lastY = 0;
+
+  const slowWindow = (): SlowWin => ({
+    n: HISTORY,
+    valid: Math.min(times.length, HISTORY),
+    times: alignTimes(times, HISTORY, 1000 / 4),
+    series: Object.fromEntries(
+      (Object.keys(history) as Series[]).map((k) => [
+        k,
+        align(history[k], HISTORY),
+      ]),
+    ) as Record<Series, number[]>,
+  });
+  const liveFrameWindow = (): FrameWin => ({
+    n: HISTORY,
+    valid: Math.min(times.length, HISTORY),
+    times: alignTimes(times, HISTORY, 1000 / 4),
+    cpu: align(history.cpu, HISTORY),
+    fps: align(history.frames, HISTORY),
+    passes: passHistory,
+    order: passOrder,
+    untimed: untimedHistory,
+    inFrame: inFrameHistory,
+    between: betweenHistory,
+  });
+  const tickWindow = (): FrameWin => {
+    const entries = ring.slice(-TICKS);
+    const pad = TICKS - entries.length;
+    const first = entries[0]?.t ?? performance.now();
+    const win: FrameWin = {
+      n: TICKS,
+      valid: entries.length,
+      times: [
+        ...Array.from({ length: pad }, (_, i) => first - (pad - i) * 16),
+        ...entries.map((e) => e.t),
+      ],
+      ticks: [
+        ...new Array<number>(pad).fill(-1),
+        ...entries.map((e) => e.tick),
+      ],
+      detail: [...new Array<undefined>(pad).fill(undefined), ...entries],
+      measured: [
+        ...new Array<boolean>(pad).fill(false),
+        ...entries.map((e) => e.gpu !== undefined),
+      ],
+      cpu: [
+        ...new Array<number>(pad).fill(0),
+        ...entries.map((e) => (e.rendering ? e.cpuMs : 0)),
+      ],
+      fps: [],
+      passes: new Map(),
+      order: [],
+      untimed: [
+        ...new Array<number>(pad).fill(0),
+        ...entries.map((e) => e.gpu?.untimed ?? 0),
+      ],
+      inFrame: [
+        ...new Array<number>(pad).fill(0),
+        ...entries.map((e) => e.gpu?.inFrame ?? 0),
+      ],
+      between: [
+        ...new Array<number>(pad).fill(0),
+        ...entries.map((e) => e.gpu?.between ?? 0),
+      ],
+    };
+    let prevRender: number | undefined;
+    win.fps = [
+      ...new Array<number>(pad).fill(0),
+      ...entries.map((e) => {
+        if (!e.rendering) {
+          return 0;
+        }
+        const v =
+          prevRender === undefined ? 0 : 1000 / Math.max(1, e.t - prevRender);
+        prevRender = e.t;
+        return v;
+      }),
+    ];
+    for (const name of passOrder) {
+      if (entries.some((e) => e.gpu?.passes.some(([p]) => p === name))) {
+        win.order.push(name);
+      }
+    }
+    for (const e of entries) {
+      for (const [p] of e.gpu?.passes ?? []) {
+        if (!win.order.includes(p)) {
+          win.order.push(p);
+        }
+      }
+    }
+    for (const name of win.order) {
+      win.passes.set(name, [
+        ...new Array<number>(pad).fill(0),
+        ...entries.map(
+          (e) => e.gpu?.passes.find(([p]) => p === name)?.[1] ?? 0,
+        ),
+      ]);
+    }
+    return win;
+  };
+  const buildWindows = (perTick: boolean) => ({
+    frame: perTick && ring.length > 0 ? tickWindow() : liveFrameWindow(),
+    slow: slowWindow(),
+  });
+  const windows = () => {
+    if (paused || hovering) {
+      if (!frozen) {
+        frozen = buildWindows(true);
+        frozenAt = performance.now();
+      }
+      return frozen;
+    }
+    frozen = undefined;
+    return buildWindows(pinned);
+  };
+
+  // One tooltip beside the crosshair with every chart's value at the
+  // moment, one for the "i" buttons and status icons.
   const tip = document.createElement("div");
   tip.className = "ci-tip";
   tip.hidden = true;
-  root.append(tip);
-  const hoverAt = (el: HTMLElement, e: PointerEvent) => {
-    // The chart under the pointer (the GPU table's rows have their own),
-    // else the section's first.
-    const plot =
-      (e.target as Element | null)?.closest?.("svg[data-plot]") ??
-      el.querySelector("svg");
-    if (!plot) {
+  const infoTip = document.createElement("div");
+  infoTip.className = "ci-tip ci-tip-prose";
+  infoTip.hidden = true;
+  infoTip.setAttribute("role", "tooltip");
+  root.append(tip, infoTip);
+
+  const showInfo = (el: HTMLElement) => {
+    const text = el.dataset.info;
+    if (!text) {
+      return;
+    }
+    infoTip.textContent = text;
+    infoTip.hidden = false;
+    const box = root.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    const left = Math.min(
+      Math.max(0, r.left - box.left - 8),
+      Math.max(0, box.width - infoTip.offsetWidth),
+    );
+    infoTip.style.left = `${left}px`;
+    const below = r.bottom - box.top + 4;
+    infoTip.style.top = `${
+      below + infoTip.offsetHeight > box.height
+        ? Math.max(0, r.top - box.top - infoTip.offsetHeight - 4)
+        : below
+    }px`;
+  };
+  const hideInfo = () => {
+    infoTip.hidden = true;
+  };
+  root.addEventListener("pointerover", (e) => {
+    const el = (e.target as Element | null)?.closest?.<HTMLElement>(
+      "[data-info]",
+    );
+    if (el) {
+      showInfo(el);
+    }
+  });
+  root.addEventListener("pointerout", (e) => {
+    const el = (e.target as Element | null)?.closest?.("[data-info]");
+    if (el && !el.contains(e.relatedTarget as Node | null)) {
+      hideInfo();
+    }
+  });
+  root.addEventListener("focusin", (e) => {
+    const el = (e.target as Element | null)?.closest?.<HTMLElement>(
+      "[data-info]",
+    );
+    if (el) {
+      showInfo(el);
+    }
+  });
+  root.addEventListener("focusout", hideInfo);
+
+  const releasePin = () => {
+    pinned = false;
+    if (!hovering && !paused) {
+      cursor = undefined;
+    }
+  };
+
+  const cursorKey = (c: Cursor | undefined) =>
+    c ? `${c.tick ?? ""}@${c.t}` : "";
+  const hoverAt = (plot: Element, e: PointerEvent) => {
+    lastY = e.clientY;
+    const win =
+      plot.getAttribute("data-win") === "frame" ? shown?.frame : shown?.slow;
+    if (!win) {
       return;
     }
     const rect = plot.getBoundingClientRect();
-    const f = (e.clientX - rect.left) / rect.width;
-    hover = f < 0 || f > 1 ? undefined : Math.round(f * (HISTORY - 1));
-    renderHistory();
-    if (hover === undefined) {
-      tip.hidden = true;
-      return;
+    const f = (e.clientX - rect.left) / Math.max(1, rect.width);
+    const before = `${hovering}${cursorKey(cursor)}`;
+    if (!pinned) {
+      const i = Math.min(win.n - 1, Math.max(0, Math.round(f * (win.n - 1))));
+      const tick = (win as FrameWin).ticks?.[i];
+      cursor =
+        tick !== undefined && tick < 0
+          ? undefined
+          : { t: win.times[i]!, ...(tick !== undefined ? { tick } : {}) };
     }
-    tip.replaceChildren();
-    const when = document.createElement("div");
-    when.className = "ci-tip-when";
-    when.textContent = `${((HISTORY - 1 - hover) / 4).toFixed(1)} s ago`;
-    tip.append(when);
-    // The rows' heads show their values at the hovered moment.
-    // The rows' heads show their values at the hovered moment; the GPU
-    // section's legend carries its own (`data-tip`).
-    for (const head of el.querySelectorAll<HTMLElement>(
-      ".ci-history-head, [data-tip]",
-    )) {
-      const [name, value] = head.querySelectorAll("span");
-      const row = document.createElement("div");
-      row.className = "ci-tip-row";
-      const v = document.createElement("strong");
-      v.textContent = head.dataset.tipValue ?? value?.textContent ?? "—";
-      const n = document.createElement("span");
-      n.textContent = head.dataset.tip ?? name?.textContent ?? "";
-      row.append(v, n);
-      tip.append(row);
+    hovering = true;
+    if (before !== `${hovering}${cursorKey(cursor)}`) {
+      render(false);
     }
-    tip.hidden = false;
-    const box = root.getBoundingClientRect();
-    const x = e.clientX - box.left;
-    const right = e.clientX - rect.left < rect.width / 2;
-    tip.style.left = `${right ? x + 12 : x - tip.offsetWidth - 12}px`;
-    tip.style.top = `${Math.max(0, e.clientY - box.top - tip.offsetHeight / 2)}px`;
   };
   const hoverOff = () => {
-    hover = undefined;
-    tip.hidden = true;
-    renderHistory();
+    if (!hovering) {
+      return;
+    }
+    hovering = false;
+    if (!pinned && !paused) {
+      cursor = undefined;
+    }
+    render(false);
   };
-  bodies.get("passes")!.addEventListener(
+  root.addEventListener("pointermove", (e) => {
+    const plot = (e.target as Element | null)?.closest?.("svg[data-plot]");
+    if (plot) {
+      hoverAt(plot, e);
+    } else {
+      hoverOff();
+    }
+  });
+  root.addEventListener("pointerleave", hoverOff);
+  body.addEventListener("click", (e) => {
+    const plot = (e.target as Element | null)?.closest?.("svg[data-plot]");
+    if (!plot) {
+      return;
+    }
+    if (pinned) {
+      releasePin();
+    } else if (cursor) {
+      pinned = true;
+    }
+    render(false);
+  });
+  root.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      hideInfo();
+      if (pinned) {
+        releasePin();
+        render(false);
+      }
+      return;
+    }
+    if (paused && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+      const win = shown?.frame;
+      if (!win) {
+        return;
+      }
+      e.preventDefault();
+      const delta = (e.key === "ArrowLeft" ? -1 : 1) * (e.shiftKey ? 10 : 1);
+      const at = indexIn(win, cursor) ?? win.n - 1;
+      let i = Math.min(win.n - 1, Math.max(0, at + delta));
+      while (i < win.n - 1 && win.ticks && win.ticks[i]! < 0) {
+        i++;
+      }
+      const tick = win.ticks?.[i];
+      cursor = { t: win.times[i]!, ...(tick !== undefined ? { tick } : {}) };
+      render(false);
+    }
+  });
+  pauseButton?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    paused = !paused;
+    if (!paused && !hovering && !pinned) {
+      cursor = undefined;
+    }
+    render(false);
+  });
+  bodies.get("frame")!.addEventListener(
     "toggle",
     (e) => {
       const el = e.target as HTMLDetailsElement;
@@ -354,21 +802,15 @@ export function attachInspector(
     },
     true,
   );
-  bodies.get("passes")!.addEventListener("click", (e) => {
+  bodies.get("frame")!.addEventListener("click", (e) => {
     const button = (e.target as Element | null)?.closest?.("[data-gpu-scale]");
     if (button instanceof HTMLElement) {
       gpuShare = button.dataset.gpuScale === "share";
       write(`${storageKey}.gpuShare`, gpuShare);
-      renderHistory();
+      render(false);
     }
   });
-  for (const key of ["history", "passes"] as const) {
-    const el = bodies.get(key)!;
-    el.addEventListener("pointermove", (e) => hoverAt(el, e));
-    el.addEventListener("pointerleave", hoverOff);
-  }
 
-  let expanded = false;
   const setExpanded = (on: boolean) => {
     expanded = on;
     root.classList.toggle("expanded", on);
@@ -382,30 +824,145 @@ export function attachInspector(
     refresh();
   });
 
+  /** Sets a section's content, keeping the keyboard focus on its button across the redraw. */
   const set = (key: SectionKey, html: string | undefined) => {
     sections.get(key)!.hidden = html === undefined;
-    if (html !== undefined) {
-      bodies.get(key)!.innerHTML = html;
+    if (html === undefined) {
+      return;
+    }
+    const content = bodies.get(key)!;
+    const active = document.activeElement;
+    const focus =
+      active instanceof HTMLElement && content.contains(active)
+        ? active.dataset.focus
+        : undefined;
+    content.innerHTML = html;
+    if (focus) {
+      content
+        .querySelector<HTMLElement>(`[data-focus="${cssEscape(focus)}"]`)
+        ?.focus({ preventScroll: true });
     }
   };
 
-  function renderHistory(): void {
-    if (expanded && last) {
-      set("history", historyHtml(history, last, hover));
-      set(
-        "passes",
-        passHistory.size
-          ? passesHtml(
-              passHistory,
-              passOrder,
-              untimedHistory,
-              { inFrame: inFrameHistory, between: betweenHistory },
-              closedGroups,
-              hover,
-              gpuShare,
-            )
-          : undefined,
-      );
+  const CHART_SECTIONS: SectionKey[] = ["frame", "streaming", "memory"];
+
+  /** Draws the sections (the ones with charts only when `all` is false). */
+  function render(all: boolean): void {
+    updateBar();
+    if (!expanded || !last) {
+      return;
+    }
+    const w = windows();
+    shown = w;
+    // A pinned moment that scrolled out of its window is let go.
+    if (
+      pinned &&
+      indexIn(w.frame.ticks ? w.frame : w.slow, cursor) === undefined
+    ) {
+      releasePin();
+    }
+    const html = renderSections({
+      snap: last,
+      frame: w.frame,
+      slow: w.slow,
+      ...(cursor && (hovering || pinned || paused) ? { cursor } : {}),
+      pinned,
+      lastMove,
+      moving: move !== undefined,
+      closedGroups,
+      gpuShare,
+    });
+    for (const key of all
+      ? (Object.keys(html) as SectionKey[])
+      : CHART_SECTIONS) {
+      if (key !== "pick" && key !== "record") {
+        set(key, html[key]);
+      }
+    }
+    updateTip();
+  }
+
+  function updateBar(): void {
+    const frozenNow = paused || hovering;
+    if (pauseChip) {
+      pauseChip.dataset.on = frozenNow ? "1" : "0";
+      pauseChip.textContent = `paused · ${((performance.now() - frozenAt) / 1000).toFixed(1)} s behind live`;
+    }
+    if (pauseButton) {
+      pauseButton.textContent = paused ? "Live" : "Pause";
+      pauseButton.setAttribute("aria-pressed", String(paused));
+    }
+  }
+
+  function updateTip(): void {
+    const w = shown;
+    const moment = hovering || pinned || paused ? cursor : undefined;
+    if (!moment || !w || !expanded) {
+      tip.hidden = true;
+      return;
+    }
+    tip.replaceChildren();
+    const frameIndex = indexIn(w.frame, moment);
+    const head = document.createElement("div");
+    head.className = "ci-tip-when";
+    const end = w.frame.times[w.frame.n - 1] ?? moment.t;
+    head.textContent = `${pinned ? "pinned · " : ""}${((end - moment.t) / 1000).toFixed(1)} s ago`;
+    tip.append(head);
+    const entry =
+      frameIndex !== undefined ? w.frame.detail?.[frameIndex] : undefined;
+    if (entry) {
+      const line = document.createElement("div");
+      line.className = "ci-tip-when";
+      line.textContent = `tick ${entry.tick} · ${entry.rendering ? "rendered" : "no render"} · ${entry.why.length ? entry.why.join(" + ") : "—"}`;
+      tip.append(line);
+    }
+    for (const row of body.querySelectorAll<HTMLElement>("[data-tip]")) {
+      if (row.offsetParent === null) {
+        continue;
+      }
+      const r = document.createElement("div");
+      r.className = "ci-tip-row";
+      const v = document.createElement("strong");
+      v.textContent = row.dataset.tipValue ?? "—";
+      const n = document.createElement("span");
+      n.textContent = row.dataset.tip ?? "";
+      r.append(v, n);
+      tip.append(r);
+    }
+    if (w.frame.detail) {
+      const gpu = entry?.gpu;
+      const line = document.createElement("div");
+      line.className = "ci-tip-when";
+      line.textContent = gpu
+        ? `GPU ${gpu.ms.toFixed(2)} ms`
+        : "GPU: not measured";
+      tip.append(line);
+      for (const [pass, v] of gpu?.passes ?? []) {
+        const r = document.createElement("div");
+        r.className = "ci-tip-row";
+        const val = document.createElement("strong");
+        val.textContent = `${v.toFixed(2)}`;
+        const n = document.createElement("span");
+        n.textContent = pass;
+        r.append(val, n);
+        tip.append(r);
+      }
+    }
+    tip.hidden = false;
+    // Beside the crosshair, on the side with room.
+    const frame = body.querySelector<SVGElement>('svg[data-win="frame"]');
+    const plot = frame ?? body.querySelector<SVGElement>("svg[data-plot]");
+    const box = root.getBoundingClientRect();
+    if (plot) {
+      const rect = plot.getBoundingClientRect();
+      const win = plot.getAttribute("data-win") === "frame" ? w.frame : w.slow;
+      const i = indexIn(win, moment) ?? win.n - 1;
+      const px = rect.left + (rect.width * i) / Math.max(1, win.n - 1);
+      const right = px - rect.left < rect.width / 2;
+      const x = px - box.left;
+      tip.style.left = `${Math.max(0, right ? x + 12 : x - tip.offsetWidth - 12)}px`;
+      const y = hovering && lastY ? lastY : rect.top;
+      tip.style.top = `${Math.max(0, Math.min(y - box.top - tip.offsetHeight / 2, box.height - tip.offsetHeight))}px`;
     }
   }
 
@@ -431,6 +988,10 @@ export function attachInspector(
     }
     const received = snap.tiles?.received?.bytes;
     const lastReceived = last?.tiles?.received?.bytes;
+    times.push(now);
+    if (times.length > HISTORY) {
+      times.shift();
+    }
     push("cache", snap.tiles?.cache?.bytes ?? 0);
     push("targets", snap.gpu?.renderTargetBytes ?? 0);
     push("inFlight", snap.tiles?.loading ?? 0);
@@ -467,7 +1028,6 @@ export function attachInspector(
       framesPerSecond > 0 ||
       now - lastFrameAt < Math.max(500, 2.5 * frameIntervalMs);
     push("cpu", drawing ? (snap.frame?.cpuMs ?? 0) : 0);
-    push("gpu", drawing ? (snap.frame?.gpuMs ?? 0) : 0);
     pushPasses(snap.frame?.gpuPasses, drawing);
     untimedHistory.push(
       drawing
@@ -526,7 +1086,13 @@ export function attachInspector(
     last = snap;
     lastAt = now;
 
-    summary.innerHTML = summaryLine(snap, expanded);
+    summary.innerHTML = summaryHtml(snap, expanded);
+    const reason = problemsReason(snap);
+    if (reason) {
+      header.setAttribute("aria-description", reason);
+    } else {
+      header.removeAttribute("aria-description");
+    }
     if (recordable?.active || expanded) {
       refreshRecord();
     }
@@ -539,33 +1105,9 @@ export function attachInspector(
     if (!expanded) {
       return;
     }
-    const problems = snap.problems;
-    set(
-      "problems",
-      problems && problems.errors.length + problems.warnings.length > 0
-        ? problemsHtml(problems)
-        : undefined,
-    );
-    set("frame", frameHtml(snap, framesPerSecond));
-    set(
-      "streaming",
-      snap.tiles
-        ? streamingHtml(
-            snap.tiles,
-            snap.camera ? { lastMove, move } : undefined,
-          )
-        : undefined,
-    );
-    set(
-      "pipeline",
-      snap.pipeline && (snap.pipeline.samples > 0 || snap.pipeline.content)
-        ? pipelineHtml(snap.pipeline)
-        : undefined,
-    );
-    set("memory", snap.memory ? memoryHtml(snap.memory) : undefined);
-    set("gpu", snap.gpu ? gpuHtml(snap.gpu) : undefined);
-    renderHistory();
+    render(true);
   }
+  let shownError: string | undefined;
   refresh();
   const timer = setInterval(refresh, interval);
 
@@ -581,42 +1123,102 @@ export function attachInspector(
     },
     dispose() {
       clearInterval(timer);
+      unsubscribe?.();
       root.remove();
     },
   };
 }
 
+/** `CSS.escape` where there is a CSS global, else a plain quote guard (tests). */
+function cssEscape(value: string): string {
+  const css = (globalThis as { CSS?: { escape?: (v: string) => string } }).CSS;
+  return css?.escape ? css.escape(value) : value.replace(/["\\]/g, "\\$&");
+}
+
+/** `times` right-aligned to `n`, the padding spaced `step` ms before the first. */
+function alignTimes(
+  times: readonly number[],
+  n: number,
+  step: number,
+): number[] {
+  const out = times.slice(-n);
+  const first = out[0] ?? performance.now();
+  const pad = n - out.length;
+  return [
+    ...Array.from({ length: pad }, (_, i) => first - (pad - i) * step),
+    ...out,
+  ];
+}
+
 // ------------------------------------------------------------- sections
 
-/** Collapsed: the headline numbers; expanded (the sections show them): the state. */
-function summaryLine(s: InspectorSnapshot, expanded: boolean): string {
-  const parts: string[] = [];
-  const problems = s.problems
+/** Every section's HTML for a view (undefined: the section has nothing to show). */
+export function renderSections(
+  v: InspectorView,
+): Record<SectionKey, string | undefined> {
+  const s = v.snap;
+  const problems = s.problems;
+  return {
+    problems:
+      problems && problems.errors.length + problems.warnings.length > 0
+        ? problemsHtml(problems)
+        : undefined,
+    frame: frameHtml(v),
+    streaming: s.tiles ? streamingHtml(v) : undefined,
+    pipeline:
+      s.pipeline && (s.pipeline.samples > 0 || s.pipeline.content)
+        ? pipelineHtml(s.pipeline)
+        : undefined,
+    memory:
+      s.memory || s.tiles?.cache || s.gpu?.renderTargetBytes !== undefined
+        ? memoryHtml(v)
+        : undefined,
+    gpu: s.gpu ? gpuHtml(s.gpu) : undefined,
+    pick: undefined,
+    record: undefined,
+  };
+}
+
+const problemsReason = (s: InspectorSnapshot): string | undefined => {
+  const n = s.problems
     ? s.problems.errors.length + s.problems.warnings.length
     : 0;
+  return n > 0
+    ? `${n} ${s.problems!.errors.length > 0 ? "problem" : "warning"}${n === 1 ? "" : "s"}: see Problems`
+    : undefined;
+};
+
+/**
+ * The header's segments: collapsed, the headline numbers; always, a status
+ * icon, the streaming state and its two counts, each in a cell of its own
+ * width so a change in one never moves another.
+ */
+export function summaryHtml(s: InspectorSnapshot, expanded: boolean): string {
+  const cells: string[] = [];
   if (!expanded) {
     if (s.frame?.cpuMs !== undefined) {
-      parts.push(
-        `CPU ${ms(s.frame.cpuMs)}${s.frame.gpuMs !== undefined ? ` · GPU ${ms(s.frame.gpuMs)}` : ""}`,
+      cells.push(
+        `<span class="ci-cell ci-c-ms">CPU <b class="ci-num">${ms2(s.frame.cpuMs)}</b></span>`,
+        `<span class="ci-cell ci-c-ms">GPU <b class="ci-num">${s.frame.gpuMs !== undefined ? ms2(s.frame.gpuMs) : "—"}</b></span>`,
       );
     }
     if (s.tiles) {
-      parts.push(`${count(s.tiles.drawn)} tiles`);
+      cells.push(
+        `<span class="ci-cell ci-c-tiles"><b class="ci-num">${count(s.tiles.drawn)}</b> tiles</span>`,
+      );
     }
   }
-  if (problems > 0) {
-    parts.push(
-      `<span class="ci-warn">⚠ ${problems} ${s.problems!.errors.length > 0 ? "problem" : "warning"}${problems === 1 ? "" : "s"}</span>`,
-    );
-  }
-  const loading =
-    s.state === "loading" && s.tiles
-      ? `loading · ${s.tiles.loading} in flight${s.tiles.window?.uploadQueue ? `, ${s.tiles.window.uploadQueue} to upload` : ""}`
-      : "loading";
-  parts.push(
-    `<span class="ci-dot"></span>${s.state === "settled" ? "settled" : s.state === "paused" ? "streaming paused" : loading}`,
+  cells.push(status(problemsReason(s)));
+  cells.push(
+    `<span class="ci-chip ci-statechip" data-state="${s.state}"><span class="ci-dot"></span>${s.state}</span>`,
   );
-  return parts.join('<span class="ci-sep">·</span>');
+  const flight = s.tiles?.loading;
+  const queue = s.tiles?.window?.uploadQueue;
+  cells.push(
+    `<span class="ci-cell ci-c-count" data-zero="${flight ? 0 : 1}"><b class="ci-num">${flight !== undefined ? count(flight) : "—"}</b> in flight</span>`,
+    `<span class="ci-cell ci-c-count" data-zero="${queue ? 0 : 1}"><b class="ci-num">${queue !== undefined ? count(queue) : "—"}</b> to upload</span>`,
+  );
+  return cells.join("");
 }
 
 const KIND_LABELS: Record<string, string> = {
@@ -629,14 +1231,10 @@ const KIND_LABELS: Record<string, string> = {
   points: "Point clouds",
 };
 
-/** What the frame submitted, by kind: rows for kinds in use, the rest in one line. */
+/** What the frame submitted, by kind: every kind has its row, an unused one muted. */
 function geometryHtml(
   geometry: NonNullable<NonNullable<InspectorSnapshot["frame"]>["geometry"]>,
-  raysCast: number | undefined,
 ): string {
-  const used = geometry.filter((k) => k.draws > 0);
-  const idle = geometry.filter((k) => k.draws === 0);
-  const count = (n: number) => Math.round(n).toLocaleString("en-US");
   const what = (k: (typeof geometry)[number]) =>
     [
       k.triangles > 0 ? `${count(k.triangles)} tris` : "",
@@ -644,151 +1242,610 @@ function geometryHtml(
       k.segments > 0 ? `${count(k.segments)} segs` : "",
     ]
       .filter(Boolean)
-      .join(" · ");
-  return (
-    `<table class="ci-geometry"><thead><tr><th>Submitted</th><th>Draws</th><th>Geometry</th></tr></thead><tbody>${used
-      .map(
-        (k) =>
-          `<tr><td>${escape(KIND_LABELS[k.kind] ?? k.kind)}</td><td class="ci-num">${count(k.draws)}</td><td class="ci-num">${what(k) || "—"}</td></tr>`,
-      )
-      .join("")}</tbody></table>` +
-    `<div class="ci-note">${
-      idle.length
-        ? `None: ${idle.map((k) => escape((KIND_LABELS[k.kind] ?? k.kind).toLowerCase())).join(", ")}. `
-        : ""
-    }Counted before GPU culling; patch triangles aren't counted.${
-      raysCast !== undefined
-        ? ` Rays cast since the last frame: ${count(raysCast)}.`
-        : ""
-    }</div>`
+      .join(" · ") || "—";
+  return table(
+    ["Submitted", "Draws", "Geometry"],
+    ["n1", "n3"],
+    geometry.map((k) => {
+      const label = KIND_LABELS[k.kind] ?? k.kind;
+      return {
+        zero: k.draws === 0,
+        cells: [escape(label), count(k.draws), what(k)],
+        title: `${label}: ${what(k)}`,
+      };
+    }),
+    "geometry",
+    "Counted before GPU culling; patch triangles aren't counted. A kind with no draws this frame is muted.",
   );
 }
 
-/** CPU-side GPU work since the frame before, as a small table. */
+/** A table with fixed column widths: `cols` name the numeric columns' width classes. */
+function table(
+  head: string[],
+  cols: string[],
+  rows: Array<{ cells: string[]; zero?: boolean; title?: string }>,
+  key: string,
+  infoText?: string,
+): string {
+  return (
+    `<table class="ci-geometry"><colgroup><col>${cols.map((c) => `<col class="${c}">`).join("")}</colgroup>` +
+    `<thead><tr>${head
+      .map(
+        (h, i) =>
+          `<th>${h}${i === 0 && infoText ? info(infoText, `table-${key}`) : ""}</th>`,
+      )
+      .join("")}</tr></thead><tbody>${rows
+      .map(
+        (r) =>
+          `<tr data-zero="${r.zero ? 1 : 0}"${r.title ? ` title="${escape(r.title)}"` : ""}>${r.cells
+            .map((c, i) => `<td${i > 0 ? ' class="ci-num"' : ""}>${c}</td>`)
+            .join("")}</tr>`,
+      )
+      .join("")}</tbody></table>`
+  );
+}
+
+/** CPU-side GPU work since the frame before, as small tables. */
 function workHtml(
   w: NonNullable<NonNullable<InspectorSnapshot["frame"]>["work"]>,
 ): string {
-  const count = (n: number) => Math.round(n).toLocaleString("en-US");
-  const mb = (b: number) => `${(b / 1048576).toFixed(b < 1048576 ? 2 : 1)} MB`;
-  const by = (list: Array<[string, number, number]>) =>
-    list
-      .slice(0, 3)
-      .map(([label, bytes]) => `${escape(label)} ${mb(bytes)}`)
-      .join(", ");
   const rows: Array<[string, string, string]> = [
     ["Buffer writes", count(w.uploadCalls), mb(w.uploadBytes)],
     ["Texture writes", count(w.textureCalls), mb(w.textureBytes)],
     ["Copies encoded", count(w.copyCalls), mb(w.copyBytes)],
     ["Resources created", count(w.createdCount), mb(w.createdBytes)],
-    ["Submits", count(w.submits), ""],
-    ["mapAsync", count(w.mapCalls), ""],
+    ["Submits", count(w.submits), "—"],
+    ["mapAsync", count(w.mapCalls), "—"],
   ];
+  // The three largest, always three slots.
+  const top = (
+    title: string,
+    list: Array<[string, number, number]>,
+    key: string,
+  ) =>
+    table(
+      [title, "Calls", "Bytes"],
+      ["n1", "n2"],
+      [0, 1, 2].map((i) => {
+        const e = list[i];
+        return {
+          zero: e === undefined,
+          cells: e ? [escape(e[0]), count(e[2]), mb(e[1])] : ["—", "—", "—"],
+          ...(e ? { title: `${e[0]}: ${mb(e[1])}` } : {}),
+        };
+      }),
+      key,
+    );
   return (
-    `<table class="ci-geometry"><thead><tr><th>GPU work since the last frame</th><th>Calls</th><th>Bytes</th></tr></thead><tbody>${rows
-      .map(
-        ([k, calls, bytes]) =>
-          `<tr><td>${k}</td><td class="ci-num">${calls}</td><td class="ci-num">${bytes || "—"}</td></tr>`,
-      )
-      .join("")}</tbody></table>` +
-    `<div class="ci-note">${
-      w.uploadBy.length ? `Largest writes: ${by(w.uploadBy)}. ` : ""
-    }${w.createdBy.length ? `Largest created: ${by(w.createdBy)}. ` : ""}</div>`
+    table(
+      ["GPU work since the last frame", "Calls", "Bytes"],
+      ["n1", "n2"],
+      rows.map(([k, calls, bytes]) => ({ cells: [k, calls, bytes] })),
+      "work",
+    ) +
+    top("Largest writes", w.uploadBy, "writes") +
+    top("Largest created", w.createdBy, "created")
   );
 }
 
-function frameHtml(s: InspectorSnapshot, framesPerSecond?: number): string {
-  const f = s.frame ?? {};
-  const rows: [string, string][] = [
-    ["CPU / frame", f.cpuMs !== undefined ? ms(f.cpuMs) : "—"],
-    ["GPU / frame", f.gpuMs !== undefined ? ms(f.gpuMs) : "not exposed"],
-  ];
-  if (f.gpuMs !== undefined && f.gpuSpanMs !== undefined) {
-    rows.push(["GPU span", ms(f.gpuSpanMs)]);
+/** Frame: the rate and CPU time over the same axis as the GPU's, then the GPU, then what was submitted. */
+function frameHtml(v: InspectorView): string {
+  const f = v.snap.frame ?? {};
+  const w = v.frame;
+  const ci = indexIn(w, v.cursor);
+  const tickMode = w.ticks !== undefined;
+  const label = tickMode ? `${TICKS} ticks` : "30 s";
+  const unmeasured =
+    ci !== undefined && w.measured !== undefined && !w.measured[ci];
+  const cpuRows = [
+    f.framesRendered !== undefined
+      ? sparkRow({
+          name: "Frames / s",
+          values: w.fps,
+          valid: w.valid,
+          fmt: fixed0,
+          ci,
+          win: "frame",
+          cursor: v,
+          color: "var(--ci-text)",
+        })
+      : "",
+    sparkRow({
+      name: "CPU / frame (ms)",
+      values: w.cpu,
+      valid: w.valid,
+      fmt: ms2,
+      ci,
+      win: "frame",
+      cursor: v,
+      color: "var(--ci-text)",
+      key: `<i class="ci-key" style="background:var(--ci-text)"></i>`,
+      share: true,
+    }),
+    f.rendering
+      ? valueRow("Rendering", escape(f.rendering), { share: true })
+      : "",
+  ].join("");
+  let html = `<div class="ci-ptable">${pHead("Time", label, true)}${cpuRows}</div>`;
+
+  // GPU: stacked chart, legend, table.
+  if (w.passes.size > 0 || f.gpuMs !== undefined) {
+    html += gpuTimeHtml(v, ci, unmeasured, label);
   }
-  if (f.gpuMs !== undefined && f.gpuIntervalMs !== undefined) {
-    rows.push(["GPU frame (busy)", ms(f.gpuIntervalMs)]);
-    rows.push(["Untimed", ms(untimedMs(f.gpuIntervalMs, f.gpuMs))]);
-  } else if (f.gpuMs !== undefined) {
-    rows.push(["GPU frame (busy)", "GPU idle between frames"]);
-  }
-  if (f.gpuMs !== undefined && f.gpuWallMs !== undefined) {
-    rows.push(["GPU latency", ms(f.gpuWallMs)]);
+  const timing: string[] = [];
+  const t = (name: string, text: string | undefined, title?: string) => {
+    if (text !== undefined) {
+      timing.push(
+        valueRow(name, text, { share: true, ...(title ? { title } : {}) }),
+      );
+    }
+  };
+  if (f.gpuMs !== undefined) {
+    t("GPU / frame (ms)", ms2(f.gpuMs));
+    t("GPU span (ms)", f.gpuSpanMs !== undefined ? ms2(f.gpuSpanMs) : "—");
+    t(
+      "GPU busy (ms)",
+      f.gpuIntervalMs !== undefined ? ms2(f.gpuIntervalMs) : "—",
+      f.gpuIntervalMs === undefined
+        ? "The GPU idled between frames"
+        : "Time between frames finishing while the GPU was busy back to back",
+    );
+    t("GPU latency (ms)", f.gpuWallMs !== undefined ? ms2(f.gpuWallMs) : "—");
+  } else {
+    t("GPU / frame", "not exposed");
   }
   if (f.triangles !== undefined && f.trianglesPerPixel !== undefined) {
-    rows.push([
-      "Triangles",
-      `${Math.round(f.triangles).toLocaleString("en-US")} · ${f.trianglesPerPixel.toFixed(2)} per pixel`,
-    ]);
+    t("Triangles / pixel", fixed(f.trianglesPerPixel, 2));
   }
   if (f.intervalMs !== undefined) {
-    rows.push(["Frame interval", ms(f.intervalMs)]);
+    t("Frame interval (ms)", ms2(f.intervalMs));
   }
-  if (f.rendering || framesPerSecond !== undefined) {
-    rows.push([
-      "Rendering",
-      [
-        f.rendering ? escape(f.rendering) : "",
-        framesPerSecond === undefined
-          ? ""
-          : framesPerSecond < 0.5
-            ? "idle"
-            : `${framesPerSecond.toFixed(0)} frames/s`,
-      ]
-        .filter(Boolean)
-        .join(" · "),
-    ]);
+  if (f.raysCast !== undefined) {
+    t("Rays cast", count(f.raysCast), "Since the last frame");
   }
+  html += `<div class="ci-ptable ci-ptable-plain">${timing.join("")}</div>`;
+  if (f.geometry) {
+    html += geometryHtml(f.geometry);
+  }
+  if (f.work) {
+    html += workHtml(f.work);
+  }
+  return html;
+}
+
+/** The header of a table of rows: names, a chart column, now and mean. */
+function pHead(first: string, window: string, share: boolean): string {
   return (
-    kv(rows) +
-    (f.geometry ? geometryHtml(f.geometry, f.raysCast) : "") +
-    (f.work ? workHtml(f.work) : "")
+    `<div class="ci-prow ci-phead${share ? "" : " ci-nos"}"><span></span><span>${escape(first)}</span>` +
+    `<span data-info="Each chart is on its own scale: it shows shape, not size. The share bars compare on one scale.">${escape(window)}</span>` +
+    `<span>now</span><span>mean</span>${share ? "<span>share</span>" : ""}</div>`
   );
 }
 
-interface LastMove {
-  ms: number;
-  requests?: number;
-  bytes?: number;
+/**
+ * One row of the time tables: key, name (with its "i"), a sparkline, the
+ * value at the cursor (else the latest) and the mean, every cell always there.
+ */
+function sparkRow(o: {
+  name: string;
+  values: number[];
+  valid: number;
+  fmt: (v: number) => string;
+  ci: number | undefined;
+  win: Win;
+  cursor: { cursor?: Cursor | undefined; pinned?: boolean | undefined };
+  color?: string;
+  limit?: number[];
+  key?: string;
+  share?: boolean;
+  info?: string;
+  titleAttr?: string;
+}): string {
+  const n = o.values.length;
+  const at = o.values[o.ci ?? n - 1] ?? 0;
+  const recent = o.values.slice(Math.max(0, n - Math.max(1, o.valid)));
+  const mean = recent.length
+    ? recent.reduce((a, b) => a + b, 0) / recent.length
+    : 0;
+  const plot = lineSvg(
+    o.values,
+    o.color ?? "var(--ci-series-1)",
+    64,
+    14,
+    o.win,
+    o.ci,
+    !!o.cursor.pinned,
+    o.limit,
+  );
+  return prow({
+    key: o.key ?? "",
+    name: o.name,
+    plot,
+    now: o.fmt(at),
+    mean: o.fmt(mean),
+    share: o.share ? "" : undefined,
+    tip: [o.name, o.fmt(at)],
+    ...(o.info ? { info: o.info } : {}),
+    ...(o.titleAttr ? { title: o.titleAttr } : {}),
+  });
 }
 
-function streamingHtml(
-  t: NonNullable<InspectorSnapshot["tiles"]>,
-  moves: { lastMove: LastMove | undefined; move: unknown } | undefined,
+/** A row with only a value (in the "now" column, under the charts' values). */
+function valueRow(
+  name: string,
+  text: string,
+  o: { info?: string; title?: string; share?: boolean; zero?: boolean } = {},
 ): string {
+  return prow({
+    key: "",
+    name,
+    plot: "",
+    now: text,
+    mean: "",
+    share: o.share ? "" : undefined,
+    zero: !!o.zero,
+    ...(o.info ? { info: o.info } : {}),
+    ...(o.title ? { title: o.title } : {}),
+  });
+}
+
+function prow(o: {
+  cls?: string;
+  key: string;
+  name: string;
+  plot: string;
+  now: string;
+  mean: string;
+  /** The share bar's HTML when the table has the column ("" for an empty cell). */
+  share: string | undefined;
+  info?: string;
+  title?: string;
+  zero?: boolean;
+  tip?: [string, string];
+}): string {
+  return `<div class="ci-prow ${o.share === undefined ? "ci-nos " : ""}${o.cls ?? ""}"${o.zero ? ' data-zero="1"' : ' data-zero="0"'}${
+    o.tip
+      ? ` data-tip="${escape(o.tip[0])}" data-tip-value="${escape(o.tip[1])}"`
+      : ""
+  }>${o.key || "<span></span>"}<span class="ci-pname"${o.title ? ` title="${escape(o.title)}"` : ""}><span class="ci-ptext">${escape(o.name)}</span>${
+    o.info ? info(o.info, `row-${o.name}`) : ""
+  }</span>${o.plot || "<span></span>"}<span class="ci-num ci-now">${o.now}</span><span class="ci-num ci-mean">${o.mean}</span>${
+    o.share === undefined ? "" : o.share || "<span></span>"
+  }</div>`;
+}
+
+/** A group's colour token, and a shade of it for its `k`th pass. */
+const groupColor = (name: string) =>
+  `var(--ci-series-${GPU_GROUPS.indexOf(name as never) + 1})`;
+const PASS_SHADES = [1, 0.72, 0.5, 0.34];
+const shade = (k: number) => PASS_SHADES[k % PASS_SHADES.length]!;
+
+/** A plot's crosshair at `ci`, always in the markup (hidden without one). */
+function crossLine(
+  n: number,
+  w: number,
+  h: number,
+  ci: number | undefined,
+  pinned: boolean,
+): string {
+  const x = (((ci ?? 0) / Math.max(1, n - 1)) * w).toFixed(1);
+  return `<line class="ci-cross" data-pin="${pinned ? 1 : 0}" x1="${x}" y1="0" x2="${x}" y2="${h}" visibility="${ci === undefined ? "hidden" : "visible"}" />`;
+}
+
+const plotOpen = (win: Win, n: number, w: number, h: number) =>
+  `<svg data-plot data-win="${win}" data-n="${n}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">`;
+
+/**
+ * Bands stacked bottom up, as SVG polygons over `w` × `h`: each band's
+ * values a sample, scaled so `top` is the full height. `share` divides each
+ * sample by its column's sum (a 100% stack). A 1px gap in the panel's
+ * colour separates the bands.
+ */
+function stackSvg(
+  bands: ReadonlyArray<{
+    series: number[];
+    fill: string;
+    opacity?: number;
+    hatch?: boolean;
+  }>,
+  w: number,
+  h: number,
+  top: number,
+  share: boolean,
+  win: Win,
+  ci: number | undefined,
+  pinned: boolean,
+  extra = "",
+): string {
+  const n = Math.max(2, bands[0]?.series.length ?? 0);
+  const x = (i: number) => ((i / (n - 1)) * w).toFixed(1);
+  const sums = new Array<number>(n).fill(0);
+  for (const b of bands) {
+    b.series.forEach((v, i) => (sums[i]! += v));
+  }
+  const scale = (i: number) =>
+    share ? (sums[i]! > 0 ? 1 / sums[i]! : 0) : top > 0 ? 1 / top : 0;
+  const y = (v: number) => (h - Math.min(1, v) * (h - 1)).toFixed(1);
+  const lower = new Array<number>(n).fill(0);
+  const polygons = bands.map((b) => {
+    const upper = Array.from(
+      { length: n },
+      (_, i) => lower[i]! + (b.series[i] ?? 0) * scale(i),
+    );
+    const pts = [
+      ...upper.map((v, i) => `${x(i)},${y(v)}`),
+      ...lower.map((v, i) => `${x(i)},${y(v)}`).reverse(),
+    ].join(" ");
+    lower.splice(0, n, ...upper);
+    const fill = b.hatch ? "url(#ci-hatch)" : b.fill;
+    return `<polygon class="ci-band" points="${pts}" style="fill:${fill};fill-opacity:${b.opacity ?? 1}" />`;
+  });
+  return (
+    `${plotOpen(
+      win,
+      n,
+      w,
+      h,
+    )}<defs><pattern id="ci-hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">` +
+    `<rect width="4" height="4" fill="var(--ci-grid)" /><line x1="0" y1="0" x2="0" y2="4" stroke="var(--ci-muted)" stroke-width="1.5" /></pattern></defs>` +
+    `<line class="ci-base" x1="0" y1="${h - 0.5}" x2="${w}" y2="${h - 0.5}" />${polygons.join("")}${extra}${crossLine(n, w, h, ci, pinned)}</svg>`
+  );
+}
+
+/** One series as a line on its own scale, in `color` (a limit, if any, as a thin line). */
+function lineSvg(
+  series: number[],
+  color: string,
+  w: number,
+  h: number,
+  win: Win,
+  ci: number | undefined,
+  pinned: boolean,
+  limit?: number[],
+): string {
+  const n = Math.max(2, series.length);
+  const max = Math.max(1e-6, ...series, ...(limit ?? []));
+  const x = (i: number) => ((i / (n - 1)) * w).toFixed(1);
+  const y = (v: number) => (h - 1 - (v / max) * (h - 3)).toFixed(1);
+  const pts = series.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+  return (
+    `${plotOpen(
+      win,
+      n,
+      w,
+      h,
+    )}<line class="ci-base" x1="0" y1="${h - 0.5}" x2="${w}" y2="${h - 0.5}" />${
+      limit
+        ? `<polyline class="ci-limit" points="${limit.map((v, i) => `${x(i)},${y(v)}`).join(" ")}" />`
+        : ""
+    }<polygon class="ci-area" style="fill:${color}" points="${pts} ${w},${h - 1} 0,${h - 1}" />` +
+    `<polyline class="ci-line" style="stroke:${color}" points="${pts}" />${crossLine(n, w, h, ci, pinned)}</svg>`
+  );
+}
+
+/** A round number at or above `v`, for the chart's scale. */
+function niceCeil(v: number): number {
+  if (!(v > 0)) {
+    return 1;
+  }
+  const p = 10 ** Math.floor(Math.log10(v));
+  return ([1, 2, 2.5, 5, 10].find((m) => m * p >= v) ?? 10) * p;
+}
+
+/**
+ * The GPU time over the window. On top, the groups stacked over time on
+ * one millisecond scale (or as shares of the frame: `share`), with the
+ * untimed remainder hatched on top and the 60 and 30 fps frame times as
+ * reference lines; its legend, a fixed grid, gives each group's time at the
+ * moment shown. Below, a table: a row a group (its passes stacked, in
+ * shades of its colour, so their mix shows over time) and a row a pass (its
+ * own line, on its own scale, for shape), each with its time now, its mean
+ * over the window, and a bar of its share of the frame on one common scale.
+ */
+function gpuTimeHtml(
+  v: InspectorView,
+  ci: number | undefined,
+  unmeasured: boolean,
+  label: string,
+): string {
+  const w = v.frame;
+  const closed = v.closedGroups ?? new Set<string>();
+  const share = !!v.gpuShare;
+  const pinned = !!v.pinned;
+  const win = gpuWindow(w.passes, w.order, w.untimed, w.n);
+  const at = (series: number[]) => series[ci ?? series.length - 1] ?? 0;
+  const val = (series: number[]) => (unmeasured ? "—" : ms2(at(series)));
+  const top = niceCeil(Math.max(...win.total));
+  const bands = [
+    ...win.groups.map((g) => ({ series: g.series, fill: groupColor(g.name) })),
+    { series: win.untimed.series, fill: "var(--ci-muted)", hatch: true },
+  ];
+  const W = 300;
+  const H = 64;
+  // The 60 and 30 fps lines are always in the markup; one off the scale is hidden.
+  const budget = [16.7, 33.3]
+    .map((ms) => {
+      const y = (H - Math.min(1, ms / top) * (H - 1)).toFixed(1);
+      return `<line class="ci-budget" visibility="${share || ms >= top ? "hidden" : "visible"}" x1="0" y1="${y}" x2="${W}" y2="${y}" />`;
+    })
+    .join("");
+  const chart =
+    `<div class="ci-gpu-head"><span class="ci-gtotal">GPU frame <strong class="ci-num">${val(win.total)} ms</strong></span>` +
+    `<span class="ci-seg" role="group" aria-label="Scale">` +
+    `<button type="button" data-gpu-scale="ms" data-focus="scale-ms" aria-pressed="${!share}">ms</button>` +
+    `<button type="button" data-gpu-scale="share" data-focus="scale-share" aria-pressed="${share}">share</button></span>` +
+    `<span class="ci-muted ci-grange">${share ? "0–100%" : `0–${top} ms`}</span></div>` +
+    `<div class="ci-gpu-chart">${stackSvg(bands, W, H, top, share, "frame", ci, pinned, budget)}</div>`;
+  // A fixed grid: every group, in order, with the untimed share last.
+  const legendItem = (
+    name: string,
+    key: string,
+    series: number[] | undefined,
+  ) =>
+    `<span class="ci-litem" data-tip="${escape(name)}" data-tip-value="${series ? (unmeasured ? "—" : `${val(series)} ms`) : "—"}">${key}<span class="ci-ltext">${escape(name)}</span><b class="ci-num">${series ? val(series) : "—"}</b></span>`;
+  const legend = `<div class="ci-glegend">${[
+    ...GPU_GROUPS.map((name) => {
+      const g = win.groups.find((x) => x.name === name);
+      return legendItem(
+        name,
+        `<i class="ci-key" style="background:${groupColor(name)}"></i>`,
+        g?.series ?? new Array<number>(w.n).fill(0),
+      );
+    }),
+    legendItem(
+      "Untimed",
+      `<i class="ci-key ci-key-hatch"></i>`,
+      win.untimed.series,
+    ),
+  ].join("")}</div>`;
+
+  const base = win.totalMean || 1;
+  const bar = (mean: number, color: string, opacity = 1) =>
+    `<span class="ci-share" data-info="${((mean / base) * 100).toFixed(1)}% of the frame on average"><span style="inline-size:${Math.min(100, (mean / base) * 100).toFixed(1)}%;background:${color};opacity:${opacity}"></span></span>`;
+  const SW = 64;
+  const SH = 14;
+  const row = (
+    cls: string,
+    key: string,
+    name: string,
+    plot: string,
+    series: number[],
+    mean: number,
+    shareBar: string,
+    title?: string,
+  ) =>
+    prow({
+      cls,
+      key,
+      name,
+      plot,
+      now: val(series),
+      mean: ms2(mean),
+      share: shareBar,
+      ...(title ? { title } : {}),
+    });
+  const groups = win.groups.map((g) => {
+    const color = groupColor(g.name);
+    const stacked = stackSvg(
+      g.passes.map((p, k) => ({
+        series: p.series,
+        fill: color,
+        opacity: shade(k),
+      })),
+      SW,
+      SH,
+      g.max,
+      false,
+      "frame",
+      ci,
+      pinned,
+    );
+    const summary = row(
+      "ci-pgroup",
+      `<i class="ci-key" style="background:${color}"></i>`,
+      g.name,
+      stacked,
+      g.series,
+      g.mean,
+      bar(g.mean, color),
+    );
+    const passRows = g.passes.map((p, k) =>
+      row(
+        "",
+        `<i class="ci-key" style="background:${color};opacity:${shade(k)}"></i>`,
+        p.name,
+        lineSvg(p.series, color, SW, SH, "frame", ci, pinned),
+        p.series,
+        p.mean,
+        bar(p.mean, color, shade(k)),
+        p.name,
+      ),
+    );
+    return `<details class="ci-group"${closed.has(g.name) ? "" : " open"} data-group="${escape(g.name)}"><summary>${summary}</summary>${passRows.join("")}</details>`;
+  });
+  const untimedRow = row(
+    "ci-pgroup ci-pflat",
+    `<i class="ci-key ci-key-hatch"></i>`,
+    "Untimed",
+    lineSvg(win.untimed.series, "var(--ci-muted)", SW, SH, "frame", ci, pinned),
+    win.untimed.series,
+    win.untimed.mean,
+    bar(win.untimed.mean, "var(--ci-muted)"),
+  );
+  const sub = (name: string, tip: string, values: number[]) => {
+    const series = align(values, w.n);
+    const mean = series.reduce((a, b) => a + b, 0) / series.length;
+    return prow({
+      cls: "ci-psub",
+      key: `<i class="ci-key ci-key-hatch" style="opacity:.55"></i>`,
+      name,
+      plot: lineSvg(series, "var(--ci-muted)", SW, SH, "frame", ci, pinned),
+      now: val(series),
+      mean: ms2(mean),
+      share: bar(mean, "var(--ci-muted)", 0.6),
+      info: tip,
+    });
+  };
+  const subRows =
+    sub(
+      "in frame, between passes",
+      "Inside the frame's first and last marker, not covered by a timed pass: copies, clears, work the driver adds between passes.",
+      w.inFrame,
+    ) +
+    sub(
+      "between frames",
+      "From the previous frame's last marker to this frame's first, less timed passes in the gap: the GPU waiting for the next submit (the main thread busy), or work in other submits (uploads, copies) that takes no timestamp.",
+      w.between,
+    );
+  return `${chart}${legend}<div class="ci-ptable">${pHead("GPU time (ms)", label, true)}${groups.join("")}${untimedRow}${subRows}</div>`;
+}
+
+const finite = (v: number) => (Number.isFinite(v) ? v : 0);
+
+function streamingHtml(v: InspectorView): string {
+  const t = v.snap.tiles!;
+  const s = v.slow;
+  const ci = indexIn(s, v.cursor);
+  const row = (
+    name: string,
+    series: Series,
+    fmt: (n: number) => string,
+    extra: { limit?: number[]; info?: string } = {},
+  ) =>
+    sparkRow({
+      name,
+      values: s.series[series],
+      valid: s.valid,
+      fmt,
+      ci,
+      win: "slow",
+      cursor: v,
+      ...extra,
+    });
+  // Headline numbers as stats.
   const tiles: string[] = [];
   tiles.push(
     tile(
       "Drawn",
       count(t.drawn),
       t.perView
-        ? t.perView.map(([n, v]) => `${escape(n)} ${count(v)}`).join(" · ")
+        ? t.perView.map(([n, c]) => `${escape(n)} ${count(c)}`).join(" · ")
         : t.known !== undefined
           ? `of ${count(t.known)} known`
           : "",
     ),
   );
-  if (t.undrawn) {
-    tiles.push(tile("Can't draw", count(t.undrawn), "see Problems"));
-  }
-  if (t.window) {
-    const w = t.window;
+  if (t.undrawn !== undefined) {
     tiles.push(
       tile(
-        "In flight",
-        `${t.loading} <span class="ci-of">of ${w.max}</span>`,
-        [
-          w.adaptive ? "adaptive window" : "fixed window",
-          w.protocol ? escape(w.protocol) : "",
-          w.cancelled !== undefined ? `${count(w.cancelled)} cancelled` : "",
-          w.uploadQueue !== undefined ? `${w.uploadQueue} to upload` : "",
-        ]
-          .filter(Boolean)
-          .join(" · "),
-        meter(t.loading / Math.max(1, w.max)),
+        "Can't draw",
+        count(t.undrawn),
+        t.undrawn > 0 ? "see Problems" : "",
+        "",
+        undefined,
+        t.undrawn === 0,
       ),
     );
-  } else {
-    tiles.push(tile("In flight", String(t.loading)));
   }
   if (t.cache) {
     const c = t.cache;
@@ -800,9 +1857,10 @@ function streamingHtml(
         "Tile cache",
         mb(c.bytes),
         c.budget !== undefined
-          ? `budget ${mb(c.budget)}${c.overflow ? ` + ${mb(c.overflow)} overflow` : ""} ${nearLimit(fraction)}`
+          ? `budget ${mb(c.budget)}${c.overflow ? ` + ${mb(c.overflow)}` : ""}`
           : "",
         limit ? meter(fraction, c.budget! / limit) : "",
+        fraction > 0.9 ? "Near the budget (over 90%)" : undefined,
       ),
     );
   }
@@ -813,7 +1871,7 @@ function streamingHtml(
         `${t.sse.maximum} px`,
         [
           t.sse.adjusted !== undefined
-            ? `${t.sse.adjusted.toFixed(1)} memory-adjusted`
+            ? `${fixed(t.sse.adjusted, 1)} memory-adjusted`
             : "",
           t.sse.placeholders !== undefined
             ? `${t.sse.placeholders} mixed-LOD`
@@ -825,56 +1883,129 @@ function streamingHtml(
     );
   }
   let html = `<div class="ci-tiles">${tiles.join("")}</div>`;
+
+  // Rates: one row each, with its chart.
+  const w = t.window;
+  const rows = [
+    row("In flight", "inFlight", fixed0, {
+      ...(w ? { limit: s.series.window } : {}),
+      info: w
+        ? `Requests in flight, against the request window (the dashed line, now ${w.max}): ${w.adaptive ? "adaptive" : "fixed"}${w.protocol ? `, ${w.protocol}` : ""}.`
+        : "Content requests in flight.",
+    }),
+  ];
+  if (w?.uploadQueue !== undefined) {
+    rows.push(
+      row("To upload", "uploadQueue", fixed0, {
+        info: "Loaded content waiting for its GPU upload.",
+      }),
+    );
+  }
+  if (t.received) {
+    rows.push(
+      row("Received (MB/s)", "received", (b) => fixed(b / MB, 2), {
+        info: "Bytes received per second, from the totals below.",
+      }),
+    );
+  }
+  if (t.purposes) {
+    rows.push(
+      row("Prefetch share", "prefetch", (f) => `${fixed(f * 100, 0)}%`, {
+        info: "Prefetch's share of the bytes received since the last sample.",
+      }),
+    );
+  }
+  rows.push(
+    row("Decode p50 (ms)", "decode", (n) => fixed(n, 1), {
+      info: "The median decode time of recent loads (see Content pipeline).",
+    }),
+  );
+  const wasted = (t.purposes ?? []).reduce(
+    (n, p) => n + (p.unused ?? 0) + (p.cancelled ?? 0),
+    0,
+  );
+  const values: string[] = [];
+  if (w?.cancelled !== undefined) {
+    values.push(
+      valueRow("Cancelled", count(w.cancelled), { zero: w.cancelled === 0 }),
+    );
+  }
+  if (t.purposes) {
+    values.push(
+      valueRow("Evicted undrawn or cancelled", count(wasted), {
+        zero: wasted === 0,
+        info: "Loads evicted without ever being drawn, or cancelled, since loading began.",
+      }),
+    );
+  }
   if (t.load) {
     const total = t.load.phases.reduce((sum, p) => sum + p.ms, 0);
-    const title = `Load: ${t.load.settled ? `settled in ${duration(total)}` : `${duration(total)} so far`}${
-      t.received
-        ? ` <span class="ci-note">${count(t.received.requests)} requests · ${mb(t.received.bytes)} received</span>`
-        : ""
-    }`;
+    values.push(
+      valueRow(
+        t.load.settled ? "Load time (settled)" : "Load time (so far)",
+        duration(total),
+      ),
+    );
+  }
+  if (t.received) {
+    values.push(
+      valueRow("Requests", count(t.received.requests)),
+      valueRow("Received", mb(t.received.bytes)),
+    );
+  }
+  html += `<div class="ci-ptable ci-nos-table">${pHead("Streaming", "30 s", false)}${rows.join("")}${values.join("")}</div>`;
+
+  if (t.load) {
     html += stacked(
-      title,
+      "Load phases",
+      "How long loading spent in each phase, in order: resolving the endpoint, the root tileset, to the first content, then to settled.",
+      "load",
       t.load.phases.map((p) => ({
         label: p.label,
         value: p.ms,
         text: duration(p.ms),
       })),
     );
-  } else if (t.received) {
-    html += `<div class="ci-note">${count(t.received.requests)} requests · ${mb(t.received.bytes)} received</div>`;
   }
-  if (t.purposes?.some((p) => p.requests > 0)) {
+  if (t.purposes) {
     // Bytes by what they were for; "drawn" is how many of those loads a
     // view has drawn so far (the rest are in flight, waiting, cancelled or
     // evicted unused).
-    const wasted = t.purposes.reduce(
-      (n, p) => n + (p.unused ?? 0) + (p.cancelled ?? 0),
-      0,
-    );
     html += stacked(
-      `Requests by purpose <span class="ci-note">bytes received${
-        wasted ? ` · ${count(wasted)} evicted undrawn or cancelled` : ""
-      }</span>`,
+      "Requests by purpose",
+      "Bytes received by what the requests were for. Drawn: how many of those loads a view has drawn so far; the rest are in flight, waiting, cancelled or evicted unused.",
+      "purposes",
       t.purposes.map((p) => ({
         label: p.label,
         value: p.bytes,
-        text: `${mb(p.bytes)} · ${count(p.drawn)} of ${count(p.requests)} drawn`,
+        text: `${mb(p.bytes)} · ${count(p.drawn)}/${count(p.requests)}`,
       })),
     );
   }
-  if (moves) {
-    const { lastMove, move } = moves;
-    html += `<div class="ci-tiles">${
-      lastMove
-        ? tile(
-            "Last move settled in",
-            duration(lastMove.ms),
-            lastMove.requests !== undefined
-              ? `${count(lastMove.requests)} requests · ${mb(lastMove.bytes!)}`
-              : "",
-          )
-        : tile("Last move", move ? "Settling…" : "—", "after the camera stops")
-    }</div>`;
+  if (v.snap.camera) {
+    const m = v.lastMove;
+    html += `<div class="ci-ptable ci-nos-table">${[
+      valueRow(
+        m
+          ? "Last move settled in"
+          : v.moving
+            ? "Last move (settling)"
+            : "Last move",
+        m ? duration(m.ms) : "—",
+        {
+          info: "From when the camera stopped until streaming settled, and what it cost.",
+          zero: !m,
+        },
+      ),
+      valueRow(
+        "Move requests",
+        m?.requests !== undefined ? count(m.requests) : "—",
+        { zero: m?.requests === undefined },
+      ),
+      valueRow("Move bytes", m?.bytes !== undefined ? mb(m.bytes) : "—", {
+        zero: m?.bytes === undefined,
+      }),
+    ].join("")}</div>`;
   }
   return html;
 }
@@ -890,75 +2021,123 @@ const STAGE_NAMES: Record<string, string> = {
 
 function pipelineHtml(p: NonNullable<InspectorSnapshot["pipeline"]>): string {
   let html = "";
-  const entries = Object.entries(p.stages);
-  if (entries.length > 0 && p.samples > 0) {
-    const max = Math.max(1e-6, ...entries.map(([, s]) => s.p95));
-    const slowest = entries.reduce((a, b) => (b[1].p50 > a[1].p50 ? b : a))[0];
-    html += `<div class="ci-chart-title">Where load time goes <span class="ci-note">${
-      p.note ? escape(p.note) : `p50 bar · p95 tick · last ${p.samples} loads`
-    }</span></div>`;
-    html += entries
-      .map(([stage, s]) => {
-        const label = STAGE_NAMES[stage] ?? stage;
-        const tip =
-          s.p95 !== s.p50
-            ? `p50 ${duration(s.p50)}, p95 ${duration(s.p95)}`
-            : duration(s.p50);
-        return (
-          `<div class="ci-hbar" title="${escape(label)}: ${tip}"><span>${escape(label)}</span>` +
-          `<span class="ci-hbar-plot"><span class="ci-hbar-bar${stage === slowest ? " accent" : ""}" style="width:${pct(s.p50 / max)}"></span>${
-            s.p95 !== s.p50
-              ? `<span class="ci-hbar-tick" style="left:${pct(s.p95 / max)}"></span>`
-              : ""
-          }</span><span class="ci-num">${duration(s.p50)}</span></div>`
-        );
-      })
-      .join("");
-  }
+  // Every known stage has its row (a missing one reads "—"), on one scale.
+  const keys = [
+    ...Object.keys(STAGE_NAMES),
+    ...Object.keys(p.stages).filter((k) => !(k in STAGE_NAMES)),
+  ];
+  const present = keys.filter((k) => p.stages[k]);
+  const max = Math.max(1e-6, ...present.map((k) => p.stages[k]!.p95));
+  const slowest = present.reduce<string | undefined>(
+    (a, b) => (a === undefined || p.stages[b]!.p50 > p.stages[a]!.p50 ? b : a),
+    undefined,
+  );
+  html += chartTitle(
+    "Where load time goes",
+    `Bars: the median (p50) time of each stage; the tick: the 95th percentile. All on one scale. ${p.note ? p.note : `Over the last ${p.samples} loads.`} The slowest stage is highlighted.`,
+    "stages",
+  );
+  html += keys
+    .map((stage) => {
+      const s = p.stages[stage];
+      const label = STAGE_NAMES[stage] ?? stage;
+      const tip = s
+        ? s.p95 !== s.p50
+          ? `${label}: p50 ${duration(s.p50)}, p95 ${duration(s.p95)}`
+          : `${label}: ${duration(s.p50)}`
+        : `${label}: no samples`;
+      return (
+        `<div class="ci-hbar" data-zero="${s ? 0 : 1}" data-info="${escape(tip)}"><span>${escape(label)}</span>` +
+        `<span class="ci-hbar-plot"><span class="ci-hbar-bar" data-accent="${stage === slowest ? 1 : 0}" style="width:${pct(s ? s.p50 / max : 0)}"></span><span class="ci-hbar-tick" data-zero="${s && s.p95 !== s.p50 ? 0 : 1}" style="left:${pct(s ? s.p95 / max : 0)}"></span></span><span class="ci-num">${s ? duration(s.p50) : "—"}</span></div>`
+      );
+    })
+    .join("");
   if (p.content) {
     html += contentHtml(p.content);
   }
   return html;
 }
 
-/** Content mix: counts as tiles, decoded bytes as one stacked bar. */
+const IMAGE_TYPES = ["jpeg", "png", "webp", "ktx2"] as const;
+
+/** Content mix: counts as stats, decoded bytes as one stacked bar, image types in fixed cells. */
 function contentHtml(c: ContentMix): string {
-  const images = Object.entries(c.images)
-    .filter(([, n]) => n > 0)
-    .map(([type, n]) => `${type.replace("image/", "").toUpperCase()} ${n}`)
-    .join(" · ");
   const geometry = [
     c.lines > 0 ? `${count(c.lines)} lines` : "",
     c.points > 0 ? `${count(c.points)} points` : "",
   ]
     .filter(Boolean)
     .join(" · ");
+  const byType = new Map<string, number>();
+  for (const [type, n] of Object.entries(c.images)) {
+    const k = type.replace("image/", "").toLowerCase();
+    const key = (IMAGE_TYPES as readonly string[]).includes(k) ? k : "other";
+    byType.set(key, (byType.get(key) ?? 0) + n);
+  }
+  const cells = [...IMAGE_TYPES, "other"]
+    .map((k) => {
+      const n = byType.get(k) ?? 0;
+      return `<span class="ci-icell" data-zero="${n > 0 ? 0 : 1}">${k.toUpperCase()} <b class="ci-num">${count(n)}</b></span>`;
+    })
+    .join("");
   return `<div class="ci-tiles">${tile("Triangles", count(c.triangles), geometry)}${tile(
     "Features",
     count(c.features),
     c.formats ? escape(c.formats) : "",
-  )}</div>${stacked("Decoded bytes", [
-    { label: "Geometry", value: c.geometryBytes, text: mb(c.geometryBytes) },
-    { label: "Textures", value: c.textureBytes, text: mb(c.textureBytes) },
-  ])}${images ? `<div class="ci-note">Images: ${escape(images)}</div>` : ""}`;
+  )}</div>${stacked(
+    "Decoded bytes",
+    "Geometry and texture bytes held by resident content, after decoding.",
+    "decoded",
+    [
+      { label: "Geometry", value: c.geometryBytes, text: mb(c.geometryBytes) },
+      { label: "Textures", value: c.textureBytes, text: mb(c.textureBytes) },
+    ],
+  )}<div class="ci-icells" aria-label="Texture images by type">${cells}</div>`;
 }
 
-function memoryHtml(rows: MemoryRow[]): string {
-  return rows
-    .map((r) => {
-      const value = (v: number) => (r.unit === "bytes" ? mb(v) : count(v));
-      const text =
-        r.text ??
-        (r.capacity !== undefined
-          ? `${value(r.used)} of ${value(r.capacity)}`
-          : value(r.used));
-      const fraction = r.capacity ? r.used / r.capacity : undefined;
-      const title = r.detail ? ` title="${escape(r.detail)}"` : "";
-      return `<div class="ci-meter"${title}><div class="ci-meter-head"><span>${escape(r.label)}</span><span class="ci-num">${escape(text)}</span></div>${
-        fraction !== undefined ? meter(fraction) + nearLimit(fraction) : ""
-      }</div>`;
-    })
-    .join("");
+function memoryHtml(v: InspectorView): string {
+  const s = v.snap;
+  const w = v.slow;
+  const ci = indexIn(w, v.cursor);
+  const row = (name: string, series: Series) =>
+    sparkRow({
+      name: `${name} (MB)`,
+      values: w.series[series],
+      valid: w.valid,
+      fmt: (b) => fixed(b / MB, 1),
+      ci,
+      win: "slow",
+      cursor: v,
+    });
+  const charts: string[] = [];
+  if (s.tiles?.cache) {
+    charts.push(row("Tile cache", "cache"));
+  }
+  if (s.gpu?.renderTargetBytes !== undefined) {
+    charts.push(row("Render targets", "targets"));
+  }
+  const rows = (s.memory ?? []).map((r) => {
+    const value = (n: number) => (r.unit === "bytes" ? mb(n) : count(n));
+    const text =
+      r.text ??
+      (r.capacity !== undefined
+        ? `${value(r.used)} of ${value(r.capacity)}`
+        : value(r.used));
+    const fraction = r.capacity ? r.used / r.capacity : undefined;
+    const near = fraction !== undefined && fraction > 0.9;
+    return `<div class="ci-meter"><div class="ci-meter-head"><span class="ci-mlabel"><span class="ci-ptext">${escape(r.label)}</span>${
+      r.detail ? info(r.detail, `mem-${r.label}`) : ""
+    }</span><span class="ci-num ci-mtext" title="${escape(text)}">${escape(text)}</span>${status(
+      near
+        ? `${r.label} is near its limit (${fixed((fraction ?? 0) * 100, 0)}%)`
+        : undefined,
+    )}</div>${meter(fraction ?? 0, undefined, fraction === undefined)}</div>`;
+  });
+  return `${
+    charts.length
+      ? `<div class="ci-ptable ci-nos-table">${pHead("Held", "30 s", false)}${charts.join("")}</div>`
+      : ""
+  }${rows.join("")}`;
 }
 
 function gpuHtml(g: NonNullable<InspectorSnapshot["gpu"]>): string {
@@ -983,389 +2162,6 @@ function gpuHtml(g: NonNullable<InspectorSnapshot["gpu"]>): string {
       ],
     ].filter(([, v]) => v) as [string, string][],
   );
-}
-
-/** Small multiples, one series per row; hover for a moment's values. */
-function historyHtml(
-  h: Record<Series, number[]>,
-  s: InspectorSnapshot,
-  hover: number | undefined,
-): string {
-  const rows: Array<{
-    name: string;
-    series: number[];
-    format: (v: number) => string;
-    limit?: number[];
-  }> = [];
-  if (s.tiles?.cache) {
-    rows.push({ name: "Tile cache", series: h.cache, format: mb });
-  }
-  if (s.gpu?.renderTargetBytes !== undefined) {
-    rows.push({ name: "Render targets", series: h.targets, format: mb });
-  }
-  if (s.tiles) {
-    rows.push({
-      name: "Requests in flight",
-      series: h.inFlight,
-      format: (v) => v.toFixed(0),
-      ...(s.tiles.window ? { limit: h.window } : {}),
-    });
-  }
-  if (s.tiles?.received) {
-    rows.push({
-      name: "Received",
-      series: h.received,
-      format: (v) => `${(v / MB).toFixed(1)} MB/s`,
-    });
-  }
-  if (s.tiles?.purposes) {
-    rows.push({
-      name: "Prefetch share of bytes",
-      series: h.prefetch,
-      format: (v) => `${(v * 100).toFixed(0)}%`,
-    });
-  }
-  if (s.tiles?.window?.uploadQueue !== undefined) {
-    rows.push({
-      name: "Upload queue",
-      series: h.uploadQueue,
-      format: (v) => v.toFixed(0),
-    });
-  }
-  if (s.pipeline?.stages.decode) {
-    rows.push({ name: "Decode p50", series: h.decode, format: duration });
-  }
-  if (s.frame?.framesRendered !== undefined) {
-    rows.push({
-      name: "Frames rendered",
-      series: h.frames,
-      format: (v) => `${v.toFixed(0)}/s`,
-    });
-  }
-  rows.push({ name: "CPU frame", series: h.cpu, format: ms });
-  if (s.frame?.gpuMs !== undefined) {
-    rows.push({ name: "GPU frame", series: h.gpu, format: ms });
-  }
-  return sparklines(rows, hover);
-}
-
-/** A group's colour token, and a shade of it for its `k`th pass. */
-const groupColor = (name: string) =>
-  `var(--ci-series-${GPU_GROUPS.indexOf(name as never) + 1})`;
-const PASS_SHADES = [1, 0.72, 0.5, 0.34];
-const shade = (k: number) => PASS_SHADES[k % PASS_SHADES.length]!;
-
-/** A compact millisecond figure for the table (its header says ms). */
-const msShort = (v: number) =>
-  v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2);
-
-/**
- * Bands stacked bottom up, as SVG polygons over `w` × `h`: each band's
- * values a sample, scaled so `top` is the full height. `share` divides each
- * sample by its column's sum (a 100% stack). A 1px gap in the panel's
- * colour separates the bands.
- */
-function stackSvg(
-  bands: ReadonlyArray<{
-    series: number[];
-    fill: string;
-    opacity?: number;
-    hatch?: boolean;
-  }>,
-  w: number,
-  h: number,
-  top: number,
-  share: boolean,
-  hover: number | undefined,
-  extra = "",
-): string {
-  const n = bands[0]?.series.length ?? 0;
-  if (n < 2) {
-    return `<svg data-plot viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"></svg>`;
-  }
-  const x = (i: number) => ((i / (n - 1)) * w).toFixed(1);
-  const sums = new Array<number>(n).fill(0);
-  for (const b of bands) {
-    b.series.forEach((v, i) => (sums[i]! += v));
-  }
-  const scale = (i: number) =>
-    share ? (sums[i]! > 0 ? 1 / sums[i]! : 0) : top > 0 ? 1 / top : 0;
-  const y = (v: number) => (h - Math.min(1, v) * (h - 1)).toFixed(1);
-  const lower = new Array<number>(n).fill(0);
-  const polygons = bands.map((b) => {
-    const upper = b.series.map((v, i) => lower[i]! + v * scale(i));
-    const pts = [
-      ...upper.map((v, i) => `${x(i)},${y(v)}`),
-      ...lower.map((v, i) => `${x(i)},${y(v)}`).reverse(),
-    ].join(" ");
-    lower.splice(0, n, ...upper);
-    const fill = b.hatch ? "url(#ci-hatch)" : b.fill;
-    return `<polygon class="ci-band" points="${pts}" style="fill:${fill};fill-opacity:${b.opacity ?? 1}" />`;
-  });
-  const cross =
-    hover !== undefined
-      ? `<line class="ci-cross" x1="${((hover / (HISTORY - 1)) * w).toFixed(1)}" y1="0" x2="${((hover / (HISTORY - 1)) * w).toFixed(1)}" y2="${h}" />`
-      : "";
-  return (
-    `<svg data-plot viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">` +
-    `<defs><pattern id="ci-hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">` +
-    `<rect width="4" height="4" fill="var(--ci-grid)" /><line x1="0" y1="0" x2="0" y2="4" stroke="var(--ci-muted)" stroke-width="1.5" /></pattern></defs>` +
-    `<line class="ci-base" x1="0" y1="${h - 0.5}" x2="${w}" y2="${h - 0.5}" />${polygons.join("")}${extra}${cross}</svg>`
-  );
-}
-
-/** One series as a line on its own scale, in `color`. */
-function lineSvg(
-  series: number[],
-  color: string,
-  w: number,
-  h: number,
-  hover: number | undefined,
-): string {
-  const n = series.length;
-  const max = Math.max(1e-6, ...series);
-  const x = (i: number) => ((i / Math.max(1, n - 1)) * w).toFixed(1);
-  const y = (v: number) => (h - 1 - (v / max) * (h - 3)).toFixed(1);
-  const pts = series.map((v, i) => `${x(i)},${y(v)}`).join(" ");
-  const cross =
-    hover !== undefined
-      ? `<line class="ci-cross" x1="${((hover / (HISTORY - 1)) * w).toFixed(1)}" y1="0" x2="${((hover / (HISTORY - 1)) * w).toFixed(1)}" y2="${h}" />`
-      : "";
-  return (
-    `<svg data-plot viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">` +
-    `<line class="ci-base" x1="0" y1="${h - 0.5}" x2="${w}" y2="${h - 0.5}" />` +
-    `<polygon class="ci-area" style="fill:${color}" points="${pts} ${w},${h - 1} 0,${h - 1}" />` +
-    `<polyline class="ci-line" style="stroke:${color}" points="${pts}" />${cross}</svg>`
-  );
-}
-
-/** A round number at or above `v`, for the chart's scale. */
-function niceCeil(v: number): number {
-  if (!(v > 0)) {
-    return 1;
-  }
-  const p = 10 ** Math.floor(Math.log10(v));
-  return ([1, 2, 2.5, 5, 10].find((m) => m * p >= v) ?? 10) * p;
-}
-
-/**
- * The GPU time over the last 30 s. On top, the groups stacked over time on
- * one millisecond scale (or as shares of the frame: `share`), with the
- * untimed remainder hatched on top and the 60 and 30 fps frame times as
- * reference lines; its legend gives each group's time at the moment shown.
- * Below, a table: a row a group (its passes stacked, in shades of its
- * colour, so their mix shows over time) and a row a pass (its own line, on
- * its own scale, for shape), each with its time now, its mean over the
- * window, and a bar of its share of the frame on one common scale. Every
- * pass has its row, idle ones too. Groups open by default;
- * `closed` remembers the ones folded away.
- */
-function passesHtml(
-  passes: Map<string, number[]>,
-  order: readonly string[],
-  untimed: number[],
-  parts: { inFrame: number[]; between: number[] },
-  closed: ReadonlySet<string>,
-  hover: number | undefined,
-  share: boolean,
-): string {
-  const win = gpuWindow(passes, order, untimed, HISTORY);
-  const at = (series: number[]) =>
-    (hover !== undefined ? series[hover] : series.at(-1)) ?? 0;
-  const total = at(win.total);
-  const top = niceCeil(Math.max(...win.total));
-  const bands = [
-    ...win.groups.map((g) => ({ series: g.series, fill: groupColor(g.name) })),
-    { series: win.untimed.series, fill: "var(--ci-muted)", hatch: true },
-  ];
-  const W = 300;
-  const H = 64;
-  const budget = share
-    ? ""
-    : [16.7, 33.3]
-        .filter((v) => v < top)
-        .map((v) => {
-          const y = (H - (v / top) * (H - 1)).toFixed(1);
-          return `<line class="ci-budget" x1="0" y1="${y}" x2="${W}" y2="${y}" />`;
-        })
-        .join("");
-  const chart =
-    `<div class="ci-gpu-head"><span>GPU frame <strong class="ci-num">${msShort(total)} ms</strong></span>` +
-    `<span class="ci-seg" role="group" aria-label="Scale">` +
-    `<button type="button" data-gpu-scale="ms" aria-pressed="${!share}">ms</button>` +
-    `<button type="button" data-gpu-scale="share" aria-pressed="${share}">share</button></span>` +
-    `<span class="ci-muted">${share ? "0–100%" : `0–${top} ms`}</span></div>` +
-    `<div class="ci-gpu-chart">${stackSvg(bands, W, H, top, share, hover, budget)}</div>`;
-  const legend = `<div class="ci-legend">${[
-    ...win.groups.map(
-      (g) =>
-        `<span data-tip="${escape(g.name)}" data-tip-value="${msShort(at(g.series))} ms"><i class="ci-key" style="background:${groupColor(g.name)}"></i>${escape(g.name)} <b class="ci-num">${msShort(at(g.series))}</b></span>`,
-    ),
-    `<span data-tip="Untimed" data-tip-value="${msShort(at(win.untimed.series))} ms"><i class="ci-key ci-key-hatch"></i>Untimed <b class="ci-num">${msShort(at(win.untimed.series))}</b></span>`,
-  ].join("")}</div>`;
-
-  const base = win.totalMean || 1;
-  const bar = (mean: number, color: string, opacity = 1) =>
-    `<span class="ci-share" title="${((mean / base) * 100).toFixed(1)}% of the frame on average"><span style="inline-size:${Math.min(100, (mean / base) * 100).toFixed(1)}%;background:${color};opacity:${opacity}"></span></span>`;
-  const SW = 64;
-  const SH = 14;
-  const row = (
-    cls: string,
-    key: string,
-    name: string,
-    plot: string,
-    now: number,
-    mean: number,
-    shareBar: string,
-  ) =>
-    `<div class="ci-prow ${cls}">${key}<span class="ci-pname" title="${escape(name)}">${escape(name)}</span>${plot}` +
-    `<span class="ci-num">${msShort(now)}</span><span class="ci-num ci-mean">${msShort(mean)}</span>${shareBar}</div>`;
-  const header = `<div class="ci-prow ci-phead"><span></span><span>Pass</span><span>30 s</span><span>now</span><span>mean</span><span>share</span></div>`;
-  const groups = win.groups.map((g) => {
-    const color = groupColor(g.name);
-    const stacked = stackSvg(
-      g.passes.map((p, k) => ({
-        series: p.series,
-        fill: color,
-        opacity: shade(k),
-      })),
-      SW,
-      SH,
-      g.max,
-      false,
-      hover,
-    );
-    const summary = row(
-      "ci-pgroup",
-      `<i class="ci-key" style="background:${color}"></i>`,
-      g.name,
-      stacked,
-      at(g.series),
-      g.mean,
-      bar(g.mean, color),
-    );
-    const passRows = g.passes.map((p, k) =>
-      row(
-        "",
-        `<i class="ci-key" style="background:${color};opacity:${shade(k)}"></i>`,
-        p.name,
-        lineSvg(p.series, color, SW, SH, hover),
-        at(p.series),
-        p.mean,
-        bar(p.mean, color, shade(k)),
-      ),
-    );
-    return `<details class="ci-group"${closed.has(g.name) ? "" : " open"} data-group="${escape(g.name)}"><summary>${summary}</summary>${passRows.join("")}</details>`;
-  });
-  const untimedRow = row(
-    "ci-pgroup ci-pflat",
-    `<i class="ci-key ci-key-hatch"></i>`,
-    "Untimed",
-    lineSvg(win.untimed.series, "var(--ci-muted)", SW, SH, hover),
-    at(win.untimed.series),
-    win.untimed.mean,
-    bar(win.untimed.mean, "var(--ci-muted)"),
-  );
-  const sub = (name: string, tip: string, values: number[]) => {
-    const series = align(values, HISTORY);
-    const mean = series.reduce((a, b) => a + b, 0) / series.length;
-    return row(
-      "ci-psub",
-      `<i class="ci-key ci-key-hatch" style="opacity:.55"></i>`,
-      name,
-      lineSvg(series, "var(--ci-muted)", SW, SH, hover),
-      at(series),
-      mean,
-      bar(mean, "var(--ci-muted)", 0.6),
-    ).replace(
-      `<div class="ci-prow`,
-      `<div title="${escape(tip)}" class="ci-prow`,
-    );
-  };
-  const subRows =
-    sub(
-      "in frame, between passes",
-      "Inside the frame's first and last marker, not covered by a timed pass: copies, clears, work the driver adds between passes.",
-      parts.inFrame,
-    ) +
-    sub(
-      "between frames",
-      "From the previous frame's last marker to this frame's first, less timed passes in the gap: the GPU waiting for the next submit (the main thread busy), or work in other submits (uploads, copies) that takes no timestamp.",
-      parts.between,
-    );
-  return `${chart}${legend}<div class="ci-ptable">${header}${groups.join("")}${untimedRow}${subRows}</div><div class="ci-note">${
-    hover !== undefined
-      ? `${((HISTORY - 1 - hover) / 4).toFixed(1)} s ago`
-      : "Newest at the right; hover for a moment's values."
-  } Dashed lines: 16.7 and 33.3 ms (60 and 30 fps). Untimed is the GPU frame less timed passes, while the GPU is busy back to back. Share: of the frame, averaged over 30 s.</div>`;
-}
-
-const finite = (v: number) => (Number.isFinite(v) ? v : 0);
-
-/** Small multiples, one series per row, each on its own scale. */
-function sparklines(
-  rows: Array<{
-    name: string;
-    series: number[];
-    format: (v: number) => string;
-    limit?: number[];
-  }>,
-  hover: number | undefined,
-  note = true,
-): string {
-  const w = 240;
-  const rowH = 20;
-  const x = (i: number, n: number) =>
-    (((HISTORY - n + i) / (HISTORY - 1)) * w).toFixed(1);
-  const html = rows.map(({ name, series, format, limit }) => {
-    const max = Math.max(1e-6, ...(limit ?? []), ...series);
-    const y = (v: number) => (rowH - 1 - (v / max) * (rowH - 3)).toFixed(1);
-    const line = (values: number[]) =>
-      values.map((v, i) => `${x(i, values.length)},${y(v)}`).join(" ");
-    const at = (values: number[]) =>
-      hover !== undefined
-        ? values[values.length - HISTORY + hover]
-        : values.at(-1);
-    const value = at(series);
-    const text =
-      value === undefined
-        ? "—"
-        : limit !== undefined
-          ? `${format(value)} of ${at(limit) ?? 0}`
-          : format(value);
-    const area =
-      series.length > 1
-        ? `<polygon class="ci-area" points="${line(series)} ${w},${rowH - 1} ${x(0, series.length)},${rowH - 1}" />`
-        : "";
-    const cross =
-      hover !== undefined ? ((hover / (HISTORY - 1)) * w).toFixed(1) : "";
-    return (
-      `<div class="ci-history-row"><div class="ci-history-head"><span>${name}</span><span class="ci-num">${text}</span></div>` +
-      `<svg viewBox="0 0 ${w} ${rowH}" preserveAspectRatio="none" aria-hidden="true">` +
-      `<line class="ci-base" x1="0" y1="${rowH - 0.5}" x2="${w}" y2="${rowH - 0.5}" />${
-        limit && limit.length > 1
-          ? `<polyline class="ci-limit" points="${line(limit)}" />`
-          : ""
-      }${area}${
-        series.length > 1
-          ? `<polyline class="ci-line" points="${line(series)}" />`
-          : ""
-      }${
-        cross
-          ? `<line class="ci-cross" x1="${cross}" y1="0" x2="${cross}" y2="${rowH}" />`
-          : ""
-      }</svg></div>`
-    );
-  });
-  return `${html.join("")}${
-    note
-      ? `<div class="ci-note">${
-          hover !== undefined
-            ? `${((HISTORY - 1 - hover) / 4).toFixed(1)} s ago`
-            : "Newest at the right; hover for the values at a moment."
-        }</div>`
-      : ""
-  }`;
 }
 
 function problemsHtml(p: { errors: string[]; warnings: string[] }): string {
@@ -1399,59 +2195,78 @@ function pickHtml(pick: PickInfo | undefined): string {
 // ------------------------------------------------------------- pieces
 
 function kv(rows: [string, string][]): string {
-  return `<div class="ci-kv">${rows.map(([k, v]) => `<span>${k}</span><span class="ci-num">${v}</span>`).join("")}</div>`;
+  return `<div class="ci-kv">${rows.map(([k, v]) => `<span>${k}</span><span class="ci-num ci-vtext" title="${escape(v.replace(/<[^>]*>/g, ""))}">${v}</span>`).join("")}</div>`;
 }
 
-/** Stat tile: label, value, optional meter and note. */
-function tile(label: string, value: string, note = "", extra = ""): string {
-  return `<div class="ci-tile"><div class="ci-tile-label">${label}</div><div class="ci-tile-value">${value}</div>${extra}${note ? `<div class="ci-note">${note}</div>` : ""}</div>`;
+/** The "i" button: its text shows in the tooltip on hover and on keyboard focus. */
+function info(text: string, key: string): string {
+  return `<button type="button" class="ci-info" data-info="${escape(text)}" data-focus="${escape(key)}" aria-label="${escape(text)}">i</button>`;
+}
+
+/** A status icon in its reserved cell: empty, or a warning whose reason is its tooltip. */
+function status(reason: string | undefined): string {
+  return reason
+    ? `<span class="ci-status" data-on="1" data-info="${escape(reason)}" role="img" aria-label="${escape(reason)}">⚠</span>`
+    : `<span class="ci-status" data-on="0"></span>`;
+}
+
+/** Stat tile: label (and a status slot), value, optional meter, a one-line note slot. */
+function tile(
+  label: string,
+  value: string,
+  note = "",
+  extra = "",
+  warn?: string,
+  zero = false,
+): string {
+  return `<div class="ci-tile" data-zero="${zero ? 1 : 0}"><div class="ci-tile-label"><span>${label}</span>${status(warn)}</div><div class="ci-tile-value">${value}</div>${extra}<div class="ci-note ci-tile-note" title="${escape(note.replace(/<[^>]*>/g, ""))}">${note}</div></div>`;
 }
 
 /** A meter: fill against a limit (warning near it), with an optional marker. */
-function meter(fraction: number, marker?: number): string {
-  return `<span class="ci-track"><span class="ci-fill${fraction > 0.9 ? " warn" : ""}" style="width:${pct(fraction)}"></span>${
-    marker !== undefined
-      ? `<span class="ci-marker" style="left:${pct(marker)}"></span>`
-      : ""
-  }</span>`;
+function meter(fraction: number, marker?: number, none = false): string {
+  return `<span class="ci-track" data-none="${none ? 1 : 0}"><span class="ci-fill" data-warn="${fraction > 0.9 ? 1 : 0}" style="width:${pct(fraction)}"></span><span class="ci-marker" data-zero="${marker === undefined ? 1 : 0}" style="left:${pct(marker ?? 0)}"></span></span>`;
 }
 
-const nearLimit = (fraction: number) =>
-  fraction > 0.9 ? `<span class="ci-warn">⚠ near limit</span>` : "";
+const chartTitle = (text: string, infoText: string, key: string) =>
+  `<div class="ci-chart-title"><span>${escape(text)}</span>${info(infoText, `chart-${key}`)}</div>`;
 
-/** One stacked bar (part-to-whole) with its legend. */
+/**
+ * One stacked bar (part-to-whole of a moment) and its legend as rows of
+ * swatch, label, value. Every part has its segment (a zero one is hidden)
+ * and its tooltip.
+ */
 function stacked(
   title: string,
+  infoText: string,
+  key: string,
   parts: Array<{ label: string; value: number; text: string }>,
 ): string {
   const total = parts.reduce((sum, p) => sum + p.value, 0) || 1;
-  return `<div class="ci-chart-title">${title}</div><div class="ci-stack">${parts
-    .map((p, i) =>
-      p.value > 0
-        ? `<span class="s${i + 1}" style="flex-grow:${p.value / total}" title="${escape(p.label)}: ${p.text}"></span>`
-        : "",
-    )
-    .join("")}</div><div class="ci-legend">${parts
+  const cls = (i: number) => `s${Math.min(i + 1, 6)}`;
+  return `${chartTitle(title, infoText, key)}<div class="ci-stack">${parts
     .map(
       (p, i) =>
-        `<span class="ci-key s${i + 1}"></span><span>${escape(p.label)}</span><span class="ci-num">${p.text}</span>`,
+        `<span class="${cls(i)}" data-zero="${p.value > 0 ? 0 : 1}" style="flex-grow:${p.value / total}" data-info="${escape(`${p.label}: ${p.text.replace(/<[^>]*>/g, "")}`)}"></span>`,
+    )
+    .join("")}</div><div class="ci-lrows">${parts
+    .map(
+      (p, i) =>
+        `<div class="ci-lrow"><i class="ci-key ${cls(i)}"></i><span class="ci-ltext">${escape(p.label)}</span><span class="ci-num">${p.text}</span></div>`,
     )
     .join("")}</div>`;
 }
 
 const MB = 1048576;
 const pct = (f: number) => `${(Math.min(Math.max(f, 0), 1) * 100).toFixed(2)}%`;
-const ms = (v: number) => `${v.toFixed(2)} ms`;
+/** Fixed decimals per metric: milliseconds 2, megabytes 1, rates and counts whole. */
+const fixed = (v: number, d: number) =>
+  Number.isFinite(v) ? v.toFixed(d) : "—";
+const fixed0 = (v: number) => fixed(v, 0);
+const ms2 = (v: number) => fixed(v, 2);
 const duration = (v: number) =>
-  v < 1000 ? `${v.toFixed(v < 10 ? 1 : 0)} ms` : `${(v / 1000).toFixed(1)} s`;
-const mb = (bytes: number) =>
-  `${(bytes / MB).toFixed(bytes < 10 * MB ? 1 : 0)} MB`;
-const count = (n: number) =>
-  n >= 1e6
-    ? `${(n / 1e6).toFixed(1)}M`
-    : n >= 1e4
-      ? `${(n / 1e3).toFixed(0)}k`
-      : n.toLocaleString("en-US");
+  v < 1000 ? `${v.toFixed(1)} ms` : `${(v / 1000).toFixed(1)} s`;
+const mb = (bytes: number) => `${(bytes / MB).toFixed(1)} MB`;
+const count = (n: number) => Math.round(n).toLocaleString("en-US");
 
 function formatValue(value: unknown): string {
   if (typeof value === "number") {
@@ -1525,7 +2340,8 @@ const CSS = `
   left: 8px;
   top: 8px;
   max-height: calc(100% - 16px);
-  width: max-content;
+  /* A fixed width, collapsed or open: what the header shows never moves it. */
+  width: 480px;
   max-width: calc(100% - 16px);
   display: flex;
   flex-direction: column;
@@ -1538,7 +2354,7 @@ const CSS = `
   /* Topmost of the viewer's overlays (credits and time controls at 2, an app's own below them). */
   z-index: 5;
 }
-.cesium-inspector.expanded { width: 320px; }
+.cesium-inspector.expanded { width: 360px; }
 .cesium-inspector.right { left: auto; right: 8px; }
 /* At the bottom it opens upward: the summary line stays at the bottom edge and the sections stack above it. */
 /* It leaves the top 60 px free for an app's own controls in the corner above. */
@@ -1560,19 +2376,31 @@ const CSS = `
 }
 .cesium-inspector .ci-header:focus-visible { outline: 2px solid var(--ci-series-1); outline-offset: -2px; }
 .cesium-inspector .ci-swatch { inline-size: 10px; block-size: 10px; border-radius: 2px; flex: none; }
-.cesium-inspector .ci-name { color: var(--ci-strong); font-weight: 600; }
+.cesium-inspector .ci-name { color: var(--ci-strong); font-weight: 600; flex: none; }
 .cesium-inspector .ci-summary {
-  display: flex; align-items: center; gap: 5px; min-width: 0;
+  display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;
   font-variant-numeric: tabular-nums; overflow: hidden;
 }
-.cesium-inspector .ci-sep { color: var(--ci-muted); }
+/* Fixed cells: the number right-aligned in its own width, the unit after it. */
+.cesium-inspector .ci-cell { display: inline-flex; gap: 3px; flex: none; }
+.cesium-inspector .ci-cell b { font-weight: 500; text-align: right; }
+.cesium-inspector .ci-c-ms b { min-inline-size: 6ch; }
+.cesium-inspector .ci-c-tiles b { min-inline-size: 5ch; }
+.cesium-inspector .ci-c-count b { min-inline-size: 4ch; }
+.cesium-inspector .ci-cell[data-zero="1"] b { color: var(--ci-muted); }
+/* A status icon has its cell whether or not it shows. */
+.cesium-inspector .ci-status { display: inline-block; flex: none; inline-size: 2ch; text-align: center; color: var(--ci-warning); }
+.cesium-inspector .ci-chip {
+  display: inline-block; flex: none; box-sizing: content-box; padding: 0 6px; border-radius: 9px;
+  border: 1px solid var(--ci-border); font-size: 11px; line-height: 16px; white-space: nowrap; text-align: left;
+}
+.cesium-inspector .ci-statechip { inline-size: 9ch; }
 .cesium-inspector .ci-dot {
   display: inline-block; inline-size: 7px; block-size: 7px; border-radius: 50%;
   margin-inline-end: 4px; background: var(--ci-series-1);
 }
-.cesium-inspector[data-state="settled"] .ci-dot { background: var(--ci-good); }
-.cesium-inspector[data-state="paused"] .ci-dot { background: var(--ci-muted); }
-.cesium-inspector .ci-warn { color: var(--ci-warning); }
+.cesium-inspector .ci-statechip[data-state="settled"] .ci-dot { background: var(--ci-good); }
+.cesium-inspector .ci-statechip[data-state="paused"] .ci-dot { background: var(--ci-muted); }
 .cesium-inspector .ci-chevron {
   margin-inline-start: auto; inline-size: 6px; block-size: 6px;
   border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
@@ -1588,10 +2416,28 @@ const CSS = `
 .cesium-inspector .ci-section { border-top: 1px solid var(--ci-border); }
 .cesium-inspector .ci-section > summary {
   cursor: pointer; padding: 5px 0; color: var(--ci-strong); font-weight: 600;
-  font-size: 11px; letter-spacing: 0.02em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.02em; text-transform: uppercase; min-block-size: 16px;
 }
+/* The title bar's controls: the "i", and on Frame the pause state. */
+.cesium-inspector .ci-sumbar { float: right; display: inline-flex; align-items: center; gap: 6px; text-transform: none; letter-spacing: 0; font-weight: 400; }
+.cesium-inspector .ci-pausechip { inline-size: 24ch; color: var(--ci-strong); background: rgba(250, 178, 25, 0.12); border-color: var(--ci-warning); visibility: hidden; font-variant-numeric: tabular-nums; overflow: hidden; }
+.cesium-inspector .ci-pausechip[data-on="1"] { visibility: visible; }
+.cesium-inspector .ci-pausebtn {
+  all: unset; box-sizing: border-box; inline-size: 7ch; text-align: center; cursor: pointer;
+  font-size: 11px; line-height: 16px; border: 1px solid var(--ci-border); border-radius: 4px; color: var(--ci-strong);
+}
+.cesium-inspector .ci-pausebtn:hover { border-color: var(--ci-muted); }
+.cesium-inspector .ci-pausebtn[aria-pressed="true"] { background: var(--ci-grid); border-color: var(--ci-warning); }
+.cesium-inspector .ci-pausebtn:focus-visible, .cesium-inspector .ci-info:focus-visible { outline: 2px solid var(--ci-series-1); outline-offset: 1px; }
+.cesium-inspector .ci-info {
+  all: unset; box-sizing: border-box; flex: none; display: inline-grid; place-items: center; cursor: help;
+  inline-size: 13px; block-size: 13px; border-radius: 50%; border: 1px solid var(--ci-muted);
+  color: var(--ci-muted); font: italic 600 9px/1 Georgia, serif; text-transform: none;
+}
+.cesium-inspector .ci-info:hover { color: var(--ci-strong); border-color: var(--ci-strong); }
 .cesium-inspector .ci-content { padding-bottom: 6px; }
-.cesium-inspector .ci-num { font-variant-numeric: tabular-nums; color: var(--ci-strong); }
+.cesium-inspector .ci-num { font-variant-numeric: tabular-nums; color: var(--ci-strong); text-align: right; }
+.cesium-inspector [data-zero="1"] > .ci-num, .cesium-inspector .ci-prow[data-zero="1"] .ci-num, .cesium-inspector tr[data-zero="1"] td, .cesium-inspector .ci-icell[data-zero="1"] b, .cesium-inspector .ci-tile[data-zero="1"] .ci-tile-value { color: var(--ci-muted); }
 .cesium-inspector .ci-note { color: var(--ci-muted); font-size: 11px; }
 .cesium-inspector .ci-tip {
   position: absolute; z-index: 1; pointer-events: none; white-space: nowrap;
@@ -1599,6 +2445,7 @@ const CSS = `
   background: var(--ci-bg); border: 1px solid var(--ci-border);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); backdrop-filter: blur(6px);
 }
+.cesium-inspector .ci-tip.ci-tip-prose { white-space: normal; max-inline-size: 240px; z-index: 2; background: #151514; }
 .cesium-inspector .ci-tip[hidden] { display: none; }
 .cesium-inspector .ci-tip-when { color: var(--ci-muted); margin-bottom: 3px; }
 .cesium-inspector .ci-tip-row { display: flex; gap: 8px; }
@@ -1607,47 +2454,64 @@ const CSS = `
   font-weight: 600; font-variant-numeric: tabular-nums;
 }
 .cesium-inspector .ci-tip-row span { color: var(--ci-text); }
-.cesium-inspector .ci-kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; }
+.cesium-inspector .ci-kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; }
 .cesium-inspector .ci-kv .ci-num { text-align: right; }
+.cesium-inspector .ci-vtext { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cesium-inspector .ci-vtext[data-warn="1"] { color: var(--ci-warning); }
 .cesium-inspector .ci-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin-bottom: 8px; }
-.cesium-inspector .ci-tile-label { color: var(--ci-muted); font-size: 11px; }
-.cesium-inspector .ci-tile-value { color: var(--ci-strong); font-size: 15px; font-variant-numeric: tabular-nums; }
-.cesium-inspector .ci-of { color: var(--ci-muted); font-size: 12px; }
+.cesium-inspector .ci-tile { min-width: 0; }
+.cesium-inspector .ci-tile-label { display: flex; align-items: center; justify-content: space-between; color: var(--ci-muted); font-size: 11px; }
+.cesium-inspector .ci-tile-value { color: var(--ci-strong); font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cesium-inspector .ci-tile-note { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-block-size: 1.45em; }
 .cesium-inspector .ci-track {
   position: relative; display: block; block-size: 4px; margin: 3px 0;
   background: var(--ci-grid); border-radius: 2px;
 }
+.cesium-inspector .ci-track[data-none="1"] { display: none; }
 .cesium-inspector .ci-fill { position: absolute; inset: 0 auto 0 0; background: var(--ci-series-1); border-radius: 2px; }
-.cesium-inspector .ci-fill.warn { background: var(--ci-warning); }
+.cesium-inspector .ci-fill[data-warn="1"] { background: var(--ci-warning); }
 .cesium-inspector .ci-marker { position: absolute; top: -2px; bottom: -2px; inline-size: 1px; background: var(--ci-strong); }
-.cesium-inspector .ci-chart-title { color: var(--ci-text); margin: 4px 0; }
+.cesium-inspector .ci-marker[data-zero="1"] { display: none; }
+.cesium-inspector .ci-chart-title { display: flex; align-items: center; gap: 6px; color: var(--ci-text); margin: 6px 0 4px; }
 .cesium-inspector .ci-stack { display: flex; gap: 2px; block-size: 8px; margin-bottom: 4px; }
 .cesium-inspector .ci-stack > span { border-radius: 2px; min-inline-size: 2px; }
+.cesium-inspector .ci-stack > span[data-zero="1"] { display: none; }
 .cesium-inspector .s1 { background: var(--ci-series-1); }
 .cesium-inspector .s2 { background: var(--ci-series-2); }
 .cesium-inspector .s3 { background: var(--ci-series-3); }
 .cesium-inspector .s4 { background: var(--ci-series-4); }
 .cesium-inspector .s5 { background: var(--ci-series-5); }
 .cesium-inspector .s6 { background: var(--ci-series-6); }
-.cesium-inspector .su { background: var(--ci-muted); }
-.cesium-inspector .ci-legend { display: grid; grid-template-columns: 10px 1fr auto; gap: 1px 6px; align-items: center; margin-bottom: 8px; }
-.cesium-inspector .ci-legend .ci-num { text-align: right; }
+/* Legends are grids of swatch, label, value: nothing wraps. */
+.cesium-inspector .ci-lrows { margin-bottom: 8px; }
+.cesium-inspector .ci-lrow { display: grid; grid-template-columns: 8px minmax(0, 1fr) 22ch; gap: 6px; align-items: center; font-size: 11px; }
+.cesium-inspector .ci-ltext { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cesium-inspector .ci-key { inline-size: 8px; block-size: 8px; border-radius: 2px; }
-.cesium-inspector .ci-hbar { display: grid; grid-template-columns: 76px 1fr 52px; align-items: center; gap: 8px; }
-.cesium-inspector .ci-hbar .ci-num { text-align: right; }
+.cesium-inspector i.ci-key { display: inline-block; flex: none; }
+.cesium-inspector .ci-key-hatch { background: repeating-linear-gradient(45deg, var(--ci-muted) 0 1.5px, var(--ci-grid) 1.5px 3px); }
+.cesium-inspector .ci-hbar { display: grid; grid-template-columns: 76px 1fr 7ch; align-items: center; gap: 8px; }
+.cesium-inspector .ci-hbar[data-zero="1"] { color: var(--ci-muted); }
 .cesium-inspector .ci-hbar-plot { position: relative; block-size: 8px; }
 .cesium-inspector .ci-hbar-bar { position: absolute; inset: 0 auto 0 0; background: var(--ci-muted); border-radius: 2px; }
-.cesium-inspector .ci-hbar-bar.accent { background: var(--ci-series-1); }
+.cesium-inspector .ci-hbar-bar[data-accent="1"] { background: var(--ci-series-1); }
 .cesium-inspector .ci-hbar-tick { position: absolute; top: -1px; bottom: -1px; inline-size: 2px; background: var(--ci-strong); }
+.cesium-inspector .ci-hbar-tick[data-zero="1"] { display: none; }
 .cesium-inspector .ci-meter { margin-bottom: 4px; }
-.cesium-inspector .ci-meter-head { display: flex; justify-content: space-between; gap: 8px; }
-.cesium-inspector .ci-history-row { margin-bottom: 2px; }
-.cesium-inspector .ci-geometry { inline-size: 100%; border-collapse: collapse; margin-top: 6px; }
-.cesium-inspector .ci-geometry th { text-align: start; font-weight: 400; color: var(--ci-muted); font-size: 11px; padding: 0 0 2px; }
+.cesium-inspector .ci-meter-head { display: grid; grid-template-columns: minmax(0, 1fr) auto 2ch; gap: 8px; align-items: center; }
+.cesium-inspector .ci-mlabel { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.cesium-inspector .ci-mtext { white-space: nowrap; }
+.cesium-inspector .ci-geometry { inline-size: 100%; border-collapse: collapse; margin-top: 6px; table-layout: fixed; }
+.cesium-inspector .ci-geometry col.n1 { inline-size: 7ch; }
+.cesium-inspector .ci-geometry col.n2 { inline-size: 10ch; }
+.cesium-inspector .ci-geometry col.n3 { inline-size: 19ch; }
+.cesium-inspector .ci-geometry th { text-align: start; font-weight: 400; color: var(--ci-muted); font-size: 11px; padding: 0 0 2px; white-space: nowrap; }
+.cesium-inspector .ci-geometry th:first-child { display: flex; align-items: center; gap: 6px; }
+.cesium-inspector .ci-geometry td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cesium-inspector .ci-geometry th:not(:first-child), .cesium-inspector .ci-geometry td.ci-num { text-align: right; padding-inline-start: 8px; }
-.cesium-inspector .ci-gpu-head { display: flex; align-items: center; gap: 8px; margin: 2px 0 4px; color: var(--ci-muted); font-size: 11px; }
-.cesium-inspector .ci-gpu-head > span:first-child { color: var(--ci-text); }
-.cesium-inspector .ci-gpu-head > .ci-muted { margin-inline-start: auto; }
+.cesium-inspector .ci-gpu-head { display: flex; align-items: center; gap: 8px; margin: 6px 0 4px; color: var(--ci-muted); font-size: 11px; }
+.cesium-inspector .ci-gtotal { color: var(--ci-text); inline-size: 17ch; white-space: nowrap; }
+.cesium-inspector .ci-gtotal strong { font-weight: 500; }
+.cesium-inspector .ci-grange { margin-inline-start: auto; inline-size: 11ch; text-align: right; white-space: nowrap; }
 .cesium-inspector .ci-seg { display: inline-flex; border: 1px solid var(--ci-border); border-radius: 4px; overflow: hidden; }
 .cesium-inspector .ci-seg button {
   font: inherit; font-size: 10px; color: var(--ci-muted); background: transparent;
@@ -1659,27 +2523,28 @@ const CSS = `
 .cesium-inspector .ci-gpu-chart svg { display: block; inline-size: 100%; block-size: 64px; }
 .cesium-inspector .ci-band { stroke: #0d0d0d; stroke-width: 1; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
 .cesium-inspector .ci-budget { stroke: var(--ci-muted); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.6; vector-effect: non-scaling-stroke; }
-.cesium-inspector .ci-legend { display: flex; flex-wrap: wrap; gap: 2px 10px; margin: 5px 0 8px; font-size: 11px; color: var(--ci-text); }
-.cesium-inspector .ci-legend > span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
-.cesium-inspector .ci-legend b { font-weight: 500; }
-.cesium-inspector i.ci-key { display: inline-block; flex: none; }
-.cesium-inspector .ci-key-hatch { background: repeating-linear-gradient(45deg, var(--ci-muted) 0 1.5px, var(--ci-grid) 1.5px 3px); }
+.cesium-inspector .ci-glegend { display: grid; grid-template-columns: 1fr 1fr; gap: 1px 14px; margin: 5px 0 8px; font-size: 11px; color: var(--ci-text); }
+.cesium-inspector .ci-litem { display: grid; grid-template-columns: 8px minmax(0, 1fr) 6ch; gap: 6px; align-items: center; }
 .cesium-inspector .ci-ptable { font-size: 11px; }
+.cesium-inspector .ci-ptable + .ci-geometry, .cesium-inspector .ci-ptable-plain { margin-top: 6px; }
+.cesium-inspector .ci-nos-table { margin-bottom: 8px; }
 .cesium-inspector .ci-prow {
-  display: grid; grid-template-columns: 10px minmax(0, 1fr) 64px 38px 38px 42px;
+  display: grid; grid-template-columns: 10px minmax(0, 1fr) 64px 7ch 7ch 42px;
   gap: 6px; align-items: center; min-block-size: 18px;
 }
+.cesium-inspector .ci-prow.ci-nos { grid-template-columns: 10px minmax(0, 1fr) 64px 7ch 7ch; }
 .cesium-inspector .ci-prow svg { display: block; inline-size: 64px; block-size: 14px; }
-.cesium-inspector .ci-prow > .ci-num { text-align: right; }
+.cesium-inspector .ci-prow > .ci-num { text-align: right; white-space: nowrap; }
 .cesium-inspector .ci-prow .ci-mean { color: var(--ci-muted); }
-.cesium-inspector .ci-pname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ci-text); }
+.cesium-inspector .ci-pname { display: flex; align-items: center; gap: 4px; min-width: 0; color: var(--ci-text); }
+.cesium-inspector .ci-ptext { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cesium-inspector .ci-phead { color: var(--ci-muted); font-size: 10px; min-block-size: 14px; border-bottom: 1px solid var(--ci-border); margin-bottom: 2px; }
 .cesium-inspector .ci-phead > span:nth-child(n + 4) { text-align: right; }
 .cesium-inspector .ci-pgroup .ci-pname { color: var(--ci-strong); font-weight: 600; }
 .cesium-inspector .ci-group > summary { list-style: none; cursor: pointer; }
 .cesium-inspector .ci-group > summary::-webkit-details-marker { display: none; }
 .cesium-inspector .ci-group > summary .ci-pname::before {
-  content: ""; display: inline-block; inline-size: 4px; block-size: 4px; margin: 0 6px 2px 1px;
+  content: ""; display: inline-block; flex: none; inline-size: 4px; block-size: 4px; margin: 0 4px 2px 1px;
   border-right: 1.5px solid var(--ci-muted); border-bottom: 1.5px solid var(--ci-muted); transform: rotate(-45deg);
 }
 .cesium-inspector .ci-group[open] > summary .ci-pname::before { transform: rotate(45deg); }
@@ -1688,13 +2553,16 @@ const CSS = `
 .cesium-inspector .ci-group + .ci-group, .cesium-inspector .ci-group + .ci-pflat { border-top: 1px solid var(--ci-grid); }
 .cesium-inspector .ci-share { position: relative; block-size: 6px; background: var(--ci-grid); border-radius: 2px; overflow: hidden; }
 .cesium-inspector .ci-share > span { position: absolute; inset: 0 auto 0 0; border-radius: 2px; }
-.cesium-inspector .ci-history-head { display: flex; justify-content: space-between; color: var(--ci-muted); font-size: 11px; }
-.cesium-inspector .ci-history-row svg { display: block; inline-size: 100%; block-size: 20px; }
+.cesium-inspector .ci-icells { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; font-size: 11px; margin-bottom: 8px; }
+.cesium-inspector .ci-icell { white-space: nowrap; color: var(--ci-text); }
+.cesium-inspector .ci-icell[data-zero="1"] { color: var(--ci-muted); }
 .cesium-inspector .ci-line { fill: none; stroke: var(--ci-series-1); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
 .cesium-inspector .ci-area { fill: var(--ci-series-1); opacity: 0.12; }
-.cesium-inspector .ci-limit { fill: none; stroke: var(--ci-muted); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.cesium-inspector .ci-limit { fill: none; stroke: var(--ci-muted); stroke-width: 1; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }
 .cesium-inspector .ci-base { stroke: var(--ci-grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .cesium-inspector .ci-cross { stroke: var(--ci-muted); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.cesium-inspector .ci-cross[data-pin="1"] { stroke: var(--ci-strong); stroke-width: 1.5; }
+.cesium-inspector svg[data-plot] { cursor: crosshair; }
 .cesium-inspector .ci-problems { margin: 0; padding: 0; list-style: none; }
 .cesium-inspector .ci-problems li { color: var(--ci-text); margin-bottom: 4px; }
 .cesium-inspector .ci-problems strong { color: var(--ci-warning); margin-inline-end: 4px; }
@@ -1721,7 +2589,6 @@ const CSS = `
 .cesium-inspector .ci-button:hover:not(:disabled) { border-color: var(--ci-muted); }
 .cesium-inspector .ci-button:disabled { opacity: 0.45; cursor: default; }
 @media (prefers-reduced-motion: reduce) { .cesium-inspector .ci-switch-knob { transition: none; } }
-.cesium-inspector .ci-record-note { margin-top: 4px; word-break: break-word; }
 .cesium-inspector .ci-pick-name { color: var(--ci-strong); font-weight: 600; }
 .cesium-inspector .ci-props { border-collapse: collapse; margin-top: 4px; inline-size: 100%; }
 .cesium-inspector .ci-props th { text-align: left; font-weight: normal; color: var(--ci-muted); padding: 1px 8px 1px 0; vertical-align: top; }

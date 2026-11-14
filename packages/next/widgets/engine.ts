@@ -6,6 +6,7 @@
 import { parseAlpha } from "./urlAlpha.ts";
 import {
   SlicePool,
+  TICK_REASONS,
   modelUsage,
   type ContentSummary,
   type DebugView,
@@ -80,6 +81,35 @@ export function inspectEngine(
       // The inspector is on: count the GPU work between frames (once).
       engine.trackGpuWork();
       return engineSnapshot(engine, options);
+    },
+    ticks: (listener) => {
+      let rendered = engine.stats.framesRendered;
+      let gpuSamples = engine.gpuSample.samples;
+      return engine.onAfterTick(() => {
+        const s = engine.stats;
+        const rendering = s.framesRendered !== rendered;
+        rendered = s.framesRendered;
+        listener({
+          kind: "tick",
+          tick: s.tick,
+          rendering,
+          why: TICK_REASONS.filter((_, i) => (s.tickReasons & (1 << i)) !== 0),
+          cpuMs: s.lastCpuMs,
+        });
+        const gpu = engine.gpuSample;
+        if (gpu.samples !== gpuSamples) {
+          gpuSamples = gpu.samples;
+          listener({
+            kind: "gpu",
+            tick: gpu.tick,
+            ms: gpu.ms,
+            passes: Object.entries(gpu.passes),
+            intervalMs: gpu.intervalMs,
+            inFrameUntimedMs: gpu.inFrameUntimedMs,
+            betweenFramesMs: gpu.betweenFramesMs,
+          });
+        }
+      });
     },
     ...(record ? { record } : {}),
   };
@@ -310,9 +340,7 @@ export function engineSnapshot(
           }
         : {}),
       known: sum((t) => t.stats.tiles),
-      ...(sum((t) => t.stats.undrawn) > 0
-        ? { undrawn: sum((t) => t.stats.undrawn) }
-        : {}),
+      undrawn: sum((t) => t.stats.undrawn),
       loading: sum((t) => t.stats.inFlight),
       window: {
         max: widest.stats.maxInFlight,
