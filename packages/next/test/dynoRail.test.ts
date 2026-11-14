@@ -14,7 +14,7 @@ const read = (file: string) => readFileSync(new URL(file, suite), "utf8");
 describe("Dyno's rail, grouped by what people come to do", () => {
   it("orders the groups attention first, then results, looking, experimenting", () => {
     expect(GROUPS.map((g) => g.map((d) => d.label))).toEqual([
-      ["Overview", "Alerts", "Images"],
+      ["Work", "Overview", "Alerts", "Images"],
       ["Trends", "Runs", "Scenes"],
       ["Explorer", "Viewer", "Examples"],
       ["Analysis", "Lab"],
@@ -36,6 +36,7 @@ describe("Dyno's rail, grouped by what people come to do", () => {
       ["x", "Examples"],
       ["l", "Lab"],
       ["n", "Analysis"],
+      ["w", "Work"],
     ]) {
       expect(destinationForKey(key!)?.label).toBe(label);
     }
@@ -43,6 +44,7 @@ describe("Dyno's rail, grouped by what people come to do", () => {
 
   it("highlights the right rail item for every page", () => {
     const highlighted: Array<[string, string | undefined]> = [
+      ["/work", "Work"],
       ["/overview", "Overview"],
       ["/alerts", "Alerts"],
       ["/images", "Images"],

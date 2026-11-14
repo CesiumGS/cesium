@@ -23,7 +23,13 @@ export interface Destination {
  * in DESIGN.md (StrataKit's rail has no section headings yet).
  */
 export const DESTINATIONS: readonly Destination[] = [
-  // The first place is reserved for the tracker's Work page (`/work`, `w`).
+  {
+    to: "/work",
+    label: "Work",
+    group: "Needs a look",
+    key: "w",
+    hint: "The tracker's items on this branch: ready, blocked, decisions waiting on the owner",
+  },
   {
     to: "/overview",
     label: "Overview",

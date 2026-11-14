@@ -47,6 +47,42 @@ export const runsLayoutRoute = createRoute({
   staleTime: Infinity,
 });
 
+// ------------------------------------------------------------ needs a look
+
+export type WorkView = "board" | "ready" | "blocked" | "graph";
+export interface WorkSearch {
+  /** The board (the default), ready, blocked or the graphs. */
+  view?: Exclude<WorkView, "board">;
+  initiative?: string;
+  project?: string;
+  /** Kinds shown, comma-separated ("decision,external"). */
+  kind?: string;
+  /** Only what waits on the owner. */
+  owner?: boolean;
+  q?: string;
+  /** The item open beside the board. */
+  item?: string;
+}
+/** The tracker's board (CS-170): it reads the work items on this branch. */
+export const workRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/work",
+  validateSearch: (s: Record<string, unknown>): WorkSearch =>
+    clean({
+      view:
+        s.view === "ready" || s.view === "blocked" || s.view === "graph"
+          ? (s.view as WorkSearch["view"])
+          : undefined,
+      initiative: str(s.initiative),
+      project: str(s.project),
+      kind: str(s.kind),
+      owner: bool(s.owner),
+      q: str(s.q),
+      item: str(s.item),
+    }),
+  component: lazyRouteComponent(() => import("./views/Work.tsx"), "Work"),
+});
+
 // ------------------------------------------------------------ results
 
 const indexRoute = createRoute({
@@ -314,6 +350,7 @@ export const routeTree = rootRoute.addChildren([
     analysisRoute,
     startRoute,
   ]),
+  workRoute,
   imagesRoute,
   examplesRoute,
   exampleRoute,

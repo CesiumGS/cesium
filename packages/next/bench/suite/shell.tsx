@@ -24,6 +24,7 @@ import {
 import { svg3DObjectLarge } from "@stratakit/icons/3d-object";
 import { svgChartBarLarge } from "@stratakit/icons/chart-bar";
 import { svgChartLineLarge } from "@stratakit/icons/chart-line";
+import { svgClipboardLarge } from "@stratakit/icons/clipboard";
 import { svgDashboardLarge } from "@stratakit/icons/dashboard";
 import { svgDismiss } from "@stratakit/icons/dismiss";
 import { svgGlobeLarge } from "@stratakit/icons/globe";
@@ -62,6 +63,8 @@ import {
   destinationOf,
 } from "./rail.ts";
 import { useTheme } from "./theme.tsx";
+import { useWork } from "./useWork.ts";
+import { isOwnerDecision, type WorkItem } from "./work.ts";
 import { useRuns } from "./views/common.tsx";
 import { FirstRun } from "./views/FirstRun.tsx";
 import { worksWithoutRuns } from "./withoutRuns.ts";
@@ -80,6 +83,7 @@ import { worksWithoutRuns } from "./withoutRuns.ts";
 /** Each rail item's icon (a destination without one shows a list). */
 const iconOf = (to: string) => ICONS[to] ?? svgListLarge;
 const ICONS: Record<string, string> = {
+  "/work": svgClipboardLarge,
   "/overview": svgDashboardLarge,
   "/alerts": svgNotificationsLarge,
   "/images": svgImageLarge,
@@ -239,6 +243,11 @@ export function Shell() {
   }>();
   const main = useRef<HTMLElement>(null);
   const attention = useAttention(summaries);
+  const work = useWork().snapshot;
+  const ownerDecisions = useMemo(
+    () => work?.items.filter(isOwnerDecision).length ?? 0,
+    [work],
+  );
   const active = destinationOf(path);
 
   useEffect(() => {
@@ -305,11 +314,18 @@ export function Shell() {
   }, [navigate]);
 
   const count = (to: string) =>
-    to === "/alerts"
-      ? attention.alerts
-      : to === "/images"
-        ? attention.images
-        : 0;
+    to === "/work"
+      ? ownerDecisions
+      : to === "/alerts"
+        ? attention.alerts
+        : to === "/images"
+          ? attention.images
+          : 0;
+  /** What each count says, for screen readers. */
+  const countLabel = (to: string, n: number) =>
+    to === "/work"
+      ? `${n} ${n === 1 ? "decision" : "decisions"} waiting on the owner`
+      : `${n} to look at`;
 
   return (
     <div className="shell">
@@ -380,7 +396,7 @@ export function Shell() {
                               variant="inline"
                               color={d.to === "/alerts" ? "error" : "warning"}
                               size="small"
-                              aria-label={`${n} to look at`}
+                              aria-label={countLabel(d.to, n)}
                             />
                           ) : undefined
                         }
@@ -473,6 +489,7 @@ export function Shell() {
         open={palette}
         onClose={() => setPalette(false)}
         summaries={summaries}
+        workItems={work?.items}
       />
       <Dialog open={shortcuts} onClose={() => setShortcuts(false)}>
         <DialogTitle>Keyboard shortcuts</DialogTitle>
@@ -484,7 +501,7 @@ export function Shell() {
                   <kbd>Ctrl</kbd> <kbd>K</kbd>
                 </TableCell>
                 <TableCell>
-                  Go to a view, scene, run, example or Lab page
+                  Go to a view, scene, run, example, Lab page or work item
                 </TableCell>
               </TableRow>
               {DESTINATIONS.map((d) => (
@@ -544,6 +561,7 @@ interface Item {
   kind: string;
   to: string;
   params?: Record<string, string>;
+  search?: Record<string, string>;
   /** More words to match ("machines" finds the Overview). */
   words?: string;
 }
@@ -552,10 +570,12 @@ function CommandPalette({
   open,
   onClose,
   summaries,
+  workItems,
 }: {
   open: boolean;
   onClose: () => void;
   summaries: Summary[];
+  workItems?: readonly WorkItem[];
 }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
@@ -605,8 +625,17 @@ function CommandPalette({
         params: { run: s.name },
       });
     }
+    // Work items last: there are hundreds, so they show when searched for.
+    for (const it of workItems ?? []) {
+      out.push({
+        label: `${it.id} ${it.title}`,
+        kind: it.kind === "work" ? "item" : it.kind,
+        to: "/work",
+        search: { item: it.id },
+      });
+    }
     return out;
-  }, [summaries]);
+  }, [summaries, workItems]);
   const q = query.trim().toLowerCase();
   const matches = (
     q
@@ -620,7 +649,11 @@ function CommandPalette({
     if (item) {
       onClose();
       setQuery("");
-      void navigate({ to: item.to, params: item.params } as never);
+      void navigate({
+        to: item.to,
+        params: item.params,
+        search: item.search,
+      } as never);
     }
   };
   return (
@@ -631,7 +664,7 @@ function CommandPalette({
           autoFocus
           fullWidth
           type="search"
-          placeholder="A view, a scene, a run or a Lab page"
+          placeholder="A view, a scene, a run, a Lab page or a CS item"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {

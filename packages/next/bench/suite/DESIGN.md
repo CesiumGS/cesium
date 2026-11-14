@@ -34,7 +34,8 @@ and `test/dynoRail.test.ts` checks this table against it.
 
 | Group        | Item            | Key | Route                        | What it is                                          |
 | ------------ | --------------- | --- | ---------------------------- | --------------------------------------------------- |
-| Needs a look | Overview        | o   | `/overview`                  | The latest run's verdict, budgets, machines, to-dos |
+| Needs a look | Work            | w   | `/work`                      | The tracker's items; decisions waiting (a count)    |
+|              | Overview        | o   | `/overview`                  | The latest run's verdict, budgets, machines, to-dos |
 |              | Alerts          | a   | `/alerts`                    | Change points to triage (a count)                   |
 |              | Images          | i   | `/images`                    | Image checks to review (a count)                    |
 | Results      | Trends          | t   | `/trends`                    | Metrics run to run                                  |
@@ -49,9 +50,8 @@ and `test/dynoRail.test.ts` checks this table against it.
 |              | ion token       |     | (popover)                    | The Cesium ion token every view uses; what's in use |
 |              | Settings        |     | (menu)                       | Theme and keyboard shortcuts                        |
 
-- **Reserved:** the first place in "Needs a look" is the tracker's Work
-  page (`/work`, `w`), with a count of decisions waiting on the owner.
-  Tests (`u`) joins the group, and Studies (`y`) replaces Analysis.
+- **Coming:** Tests (`u`) joins "Needs a look", and Studies (`y`)
+  replaces Analysis.
 - **Off the rail:** Compare (`/compare`) is reached from Runs (select
   two runs), from an alert, or a link, and highlights Runs. A page under
   a rail item (a run's report, a scene, an example, a Lab page)
@@ -82,6 +82,37 @@ run**, **item** (`CS-<n>`, a work item in the tracker); **sweep**,
 Never "baseline" alone: say "baseline run", "baseline and candidate" or
 "approved image". Pages that still call a run's result its verdict
 change as the harness's pages land.
+
+## The Work board
+
+The tracker's items (`packages/next/work`) on the branch Dyno is served
+from, for whoever is choosing what to do next: the owner first (what
+waits on their decision), then anyone picking a ready item. It reads,
+never writes: a change to an item is a change to its file.
+
+- **It reads one API.** The board reads the tracker's read API
+  (`/work-api/query.json` and `/work-api/item/CS-<n>.json` on the dev
+  server, versioned), never the item files. `scripts/work/query.mjs` is
+  the only adapter between the two: when the human-in-the-lead plugin's
+  `hitld work query --json` exists, that file changes and nothing here.
+- **Layout:** the header names the branch and commit it read. Five
+  tiles say what waits (on the owner, ready, in progress, blocked, done)
+  and act as shortcuts. Under them, four views as tabs (board, ready,
+  blocked, graph) and the filters (initiative, project, kinds, waiting
+  on the owner, words), all kept in the URL. An item opens in a panel
+  on the right (`?item=CS-<n>`): its facts, its needs and what needs it,
+  its text, and its path to copy or open in the editor.
+- **The board** has a column per lifecycle state; Planned splits into
+  ready and waiting. Cards show the ID, kind, title, state in words,
+  project and claim. Columns show 40 cards, then "Show more".
+- **The graph** shows projects and how they wait on each other, or,
+  with a project chosen, its items with their needs from other projects
+  (dashed). Arrows point from what is needed to what needs it; nodes
+  that link to nothing are listed under the graph.
+- **Counts** match `views.mjs` (test/dynoWork.test.ts); the rail's count
+  is the open decisions the owner answers. It reads again when the
+  window comes to the front. Claims on other branches stay a
+  `views.mjs claims` job, and the page says it shows this branch only.
 
 ## Page anatomy
 

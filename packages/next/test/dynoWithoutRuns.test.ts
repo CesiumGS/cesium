@@ -9,6 +9,7 @@ describe("Dyno views on a machine with no runs", () => {
 
   it("keeps the other run-free views", () => {
     for (const path of [
+      "/work",
       "/explorer",
       "/viewer",
       "/images",
