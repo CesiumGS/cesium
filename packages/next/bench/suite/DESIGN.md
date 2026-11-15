@@ -110,8 +110,12 @@ milestones named by their outcome, each with an `outcome` sentence,
   `scripts/work/query.mjs`, the only adapter between the page and the
   tracker's files. When the human-in-the-lead plugin's `hitld work query
 --json` and its readouts exist, that file changes and nothing here.
-- **Scope.** A trail at the top (all work, an initiative, a project, a
-  milestone) and a find field; both narrow every view. An item or a list
+- **Scope, search and views.** At the top, a labelled Scope button names
+  the scope (all work, an initiative, a project, a milestone) and opens
+  the picker; the lines above the scope follow it, to go back up, with a
+  button back to all work. A Search field sits beside it; both narrow
+  every view. Below them, the views are tabs, whose rule runs into the
+  view they choose. An item or a list
   opens in a pane on the right (`?item=CS-<n>`, `?list=…`), beside the
   view when the window is wide enough and over it when not.
 - **HITLd's names.** Statuses are the tracker's (Proposed, Planned, In

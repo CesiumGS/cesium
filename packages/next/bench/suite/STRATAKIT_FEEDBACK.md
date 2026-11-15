@@ -195,6 +195,19 @@ Versions: `@stratakit/mui` 1.2.0, `@stratakit/foundations` 1.0.4,
     narrow windows and opens it over the page with a scrim (shell.tsx);
     an overlay mode built into `NavigationRail` would save every app that.
 
+49. **Focused text fields draw two rings.** The input theme gives the field
+    a focus outline (`outline` with an offset, on `:focus-within`), and
+    MUI's own focused style for an outlined input still applies: a 2 px
+    `primary.main` border on the notched outline. Both draw at once, as
+    two concentric rings. Dyno keeps one (a 2 px accent border) in
+    `dyno.css`.
+50. **Scrollable tabs fade the first tab when nothing has scrolled.**
+    `Tabs` with `variant="scrollable"` gets a fixed `mask-image` on the
+    scroller, transparent over the first 24 px, whatever the scroll
+    position, so the first tab's label is cut at rest. The edge cue
+    should show only when content is hidden past that edge. Dyno's Work
+    page uses the standard variant and tightens the tabs when narrow.
+
 ## What worked well
 
 - Setup was small: one `Root`, one types entry, one Vite option, and MUI

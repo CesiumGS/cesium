@@ -202,47 +202,56 @@
   min-width: 0;
   container-type: inline-size;
 }
+/*
+ * Above the views: the scope and the search, which narrow every view;
+ * then the views' tabs, whose rule runs into the view they choose.
+ */
 .work-main-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--stratakit-space-300) var(--stratakit-space-500);
-  margin-bottom: var(--stratakit-space-500);
-}
-/* The scope is the main area's headline. */
-.work-main-bar .work-trail ol {
-  font-size: var(--stratakit-font-size-subtitle-md, 16px);
-}
-.work-main-bar .work-trail-here {
-  font-weight: 600;
+  margin-bottom: var(--stratakit-space-400);
 }
 .work-main-bar .work-trail {
   flex: 1 1 auto;
   min-width: 0;
 }
-.work-main-tools {
-  display: flex;
-  align-items: center;
-  gap: var(--stratakit-space-300);
+.work-main-bar .work-trail-here {
+  font-weight: 600;
 }
-.work-main-tools .work-search {
+.work-main-bar .work-search {
   flex: 0 1 260px;
   min-width: 180px;
 }
 @container (max-width: 560px) {
-  .work-main-tools {
-    flex-wrap: wrap;
-    width: 100%;
-  }
-  .work-main-tools .work-search {
+  .work-main-bar .work-search {
     flex: 1 1 100%;
   }
 }
-.work-views .MuiButton-root {
+.work-tabs {
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+  margin-bottom: var(--stratakit-space-500);
+}
+/* Narrow: tighter tabs, so all four fit without scrolling (StrataKit's
+   scrollable tabs fade the first tab even unscrolled). */
+@container (max-width: 480px) {
+  .work-tabs .MuiTabs-list {
+    gap: 0;
+  }
+  .work-tabs .MuiTab-root {
+    min-width: 0;
+    padding-inline: var(--stratakit-space-150);
+  }
+}
+.work-trail-path {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--stratakit-space-200);
-  white-space: nowrap;
-  flex: none;
+  min-width: 0;
+  color: var(--stratakit-color-text-neutral-secondary);
 }
 .work-count-badge {
   display: inline-flex;
@@ -1456,21 +1465,19 @@ a.work-related-item:focus-visible {
 /* The measures that replace velocity. */
 
 /* The scope picker: the trail's last step, opening the whole tree. */
+/* The scope: StrataKit's outlined button, labelled, naming the scope. */
 .work-picker-button {
-  all: unset;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--stratakit-space-100);
-  padding: 2px var(--stratakit-space-200);
-  margin: -2px calc(-1 * var(--stratakit-space-200));
-  border-radius: var(--stratakit-radius-md);
-  cursor: pointer;
+  gap: var(--stratakit-space-150);
+  max-width: 100%;
+  min-width: 0;
 }
-.work-picker-button:hover {
-  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+.work-picker-button .work-trail-here {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.work-picker-button:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
+.work-picker-name {
+  color: var(--stratakit-color-text-neutral-secondary);
 }
 .work-picker {
   width: min(420px, calc(100vw - 32px));

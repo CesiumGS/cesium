@@ -334,3 +334,18 @@ kbd {
   align-self: center;
   white-space: nowrap;
 }
+
+/*
+ * Text fields: one focus indicator. StrataKit's input theme draws a focus
+ * outline, and MUI's focused outlined input also draws a 2 px primary
+ * border; together they make two concentric rings (STRATAKIT_FEEDBACK.md,
+ * item 49). Keep a 2 px accent border, which is the field's own edge.
+ */
+.MuiInputBase-root.MuiOutlinedInput-root:focus-within {
+  outline: none;
+}
+.MuiInputBase-root.MuiOutlinedInput-root.Mui-focused
+  .MuiOutlinedInput-notchedOutline {
+  border-width: 2px;
+  border-color: var(--stratakit-color-border-accent-strong);
+}

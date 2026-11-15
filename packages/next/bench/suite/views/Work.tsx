@@ -6,6 +6,8 @@ import {
   Divider,
   Drawer,
   IconButton,
+  Tab,
+  Tabs,
   InputAdornment,
   Link,
   Popover,
@@ -22,6 +24,7 @@ import { svgChevronRight } from "@stratakit/icons/chevron-right";
 import { svgClipboard } from "@stratakit/icons/clipboard";
 import { svgCopy } from "@stratakit/icons/copy";
 import { svgDismiss } from "@stratakit/icons/dismiss";
+import { svgFilter } from "@stratakit/icons/filter";
 import { svgFlag } from "@stratakit/icons/flag";
 import { svgFolderOpen } from "@stratakit/icons/folder-open";
 import { svgGitBranch } from "@stratakit/icons/git-branch";
@@ -455,409 +458,423 @@ function Board({
                   : scopeTo(go)
               }
             />
-            <span className="work-main-tools">
-              <ToggleButtonGroup
-                size="small"
-                exclusive
-                value={view}
-                onChange={(_, v: View | null) =>
-                  v && set({ view: v === "move" ? undefined : v })
-                }
-                aria-label="View"
-                className="work-views"
-              >
-                {VIEWS.map((v) => (
-                  <ToggleButton
-                    key={v.id}
-                    value={v.id}
-                    render={<Button variant="outlined" size="small" />}
-                  >
-                    {v.label}
-                  </ToggleButton>
-                ))}
-              </ToggleButtonGroup>
-              <FindField q={search.q} set={set} />
-            </span>
+            <FindField q={search.q} set={set} />
           </div>
+          <Tabs
+            value={view}
+            onChange={(_, v: View) =>
+              set({ view: v === "move" ? undefined : v })
+            }
+            aria-label="Views"
+            className="work-tabs"
+          >
+            {VIEWS.map((v) => (
+              <Tab
+                key={v.id}
+                value={v.id}
+                label={v.label}
+                id={`work-tab-${v.id}`}
+                aria-controls="work-view"
+              />
+            ))}
+          </Tabs>
+          <div
+            id="work-view"
+            role="tabpanel"
+            aria-labelledby={`work-tab-${view}`}
+            className="work-view"
+          >
+            {view === "move" && (
+              <div className="work-dash">
+                <Card
+                  id="work-needs-h"
+                  title="Your decisions"
+                  className="span-7"
+                  stat={{
+                    value: decisions.length,
+                    detail: decisions.length
+                      ? `Oldest waiting ${ageText(Math.max(...decisions.map(ageOf)))}`
+                      : "Nothing waits on you",
+                    tone: decisions.length ? "attention" : undefined,
+                    onOpen: () => open("owner"),
+                  }}
+                  foot={
+                    decisions.length > 8 && (
+                      <Link
+                        component="button"
+                        type="button"
+                        onClick={() => open("owner")}
+                      >
+                        All {decisions.length} decisions
+                      </Link>
+                    )
+                  }
+                >
+                  <LeverageBars
+                    items={mostWaitedOn(decisions)}
+                    unblocks={unblocks}
+                    limit={8}
+                    selected={search.item}
+                    empty="Nothing waits on you."
+                  />
+                </Card>
 
-          {view === "move" && (
-            <div className="work-dash">
-              <Card
-                id="work-needs-h"
-                title="Your decisions"
-                className="span-7"
-                stat={{
-                  value: decisions.length,
-                  detail: decisions.length
-                    ? `Oldest waiting ${ageText(Math.max(...decisions.map(ageOf)))}`
-                    : "Nothing waits on you",
-                  tone: decisions.length ? "attention" : undefined,
-                  onOpen: () => open("owner"),
-                }}
-                foot={
-                  decisions.length > 8 && (
-                    <Link
-                      component="button"
-                      type="button"
-                      onClick={() => open("owner")}
-                    >
-                      All {decisions.length} decisions
-                    </Link>
-                  )
-                }
-              >
-                <LeverageBars
-                  items={mostWaitedOn(decisions)}
-                  unblocks={unblocks}
-                  limit={8}
-                  selected={search.item}
-                  empty="Nothing waits on you."
-                />
-              </Card>
+                <Card
+                  id="work-ready-h"
+                  title="Ready to start"
+                  className="span-5"
+                  stat={{
+                    value: readyToStart.length,
+                    onOpen: () => open("ready"),
+                  }}
+                  foot={
+                    readyToStart.length > 8 && (
+                      <Link
+                        component="button"
+                        type="button"
+                        onClick={() => open("ready")}
+                      >
+                        All {readyToStart.length} ready
+                      </Link>
+                    )
+                  }
+                >
+                  <LeverageBars
+                    items={mostWaitedOn(readyToStart)}
+                    unblocks={unblocks}
+                    limit={8}
+                    selected={search.item}
+                    empty="Nothing is ready to start."
+                  />
+                </Card>
 
-              <Card
-                id="work-ready-h"
-                title="Ready to start"
-                className="span-5"
-                stat={{
-                  value: readyToStart.length,
-                  onOpen: () => open("ready"),
-                }}
-                foot={
-                  readyToStart.length > 8 && (
-                    <Link
-                      component="button"
-                      type="button"
-                      onClick={() => open("ready")}
-                    >
-                      All {readyToStart.length} ready
-                    </Link>
-                  )
-                }
-              >
-                <LeverageBars
-                  items={mostWaitedOn(readyToStart)}
-                  unblocks={unblocks}
-                  limit={8}
-                  selected={search.item}
-                  empty="Nothing is ready to start."
-                />
-              </Card>
+                <Card
+                  id="work-flight-h"
+                  title="In progress"
+                  className="span-7"
+                  stat={{
+                    value: inFlight.length,
+                    detail: "Who holds each, and for how long",
+                    onOpen: () => open("working"),
+                  }}
+                >
+                  <InFlightRows
+                    items={inFlight}
+                    flight={flight}
+                    branch={s.branch}
+                    since={flow.since}
+                    selected={search.item}
+                  />
+                </Card>
 
-              <Card
-                id="work-flight-h"
-                title="In progress"
-                className="span-7"
-                stat={{
-                  value: inFlight.length,
-                  detail: "Who holds each, and for how long",
-                  onOpen: () => open("working"),
-                }}
-              >
-                <InFlightRows
-                  items={inFlight}
-                  flight={flight}
-                  branch={s.branch}
-                  since={flow.since}
-                  selected={search.item}
-                />
-              </Card>
+                <Card
+                  id="work-outside-h"
+                  title="Waiting outside"
+                  className="span-5"
+                  stat={{
+                    value: byActor.outside.length,
+                    detail: byActor.outside.length
+                      ? `On ${new Set(byActor.outside.map((it) => it.party ?? "")).size} other parties`
+                      : "Nothing waits outside",
+                    onOpen: () => open("outside"),
+                  }}
+                  foot={
+                    byActor.outside.length > 5 && (
+                      <Link
+                        component="button"
+                        type="button"
+                        onClick={() => open("outside")}
+                      >
+                        All {byActor.outside.length}
+                      </Link>
+                    )
+                  }
+                >
+                  <LeverageBars
+                    items={mostWaitedOn(byActor.outside)}
+                    unblocks={unblocks}
+                    limit={5}
+                    selected={search.item}
+                    empty="Nothing waits on other parties."
+                    party
+                  />
+                </Card>
+              </div>
+            )}
 
-              <Card
-                id="work-outside-h"
-                title="Waiting outside"
-                className="span-5"
-                stat={{
-                  value: byActor.outside.length,
-                  detail: byActor.outside.length
-                    ? `On ${new Set(byActor.outside.map((it) => it.party ?? "")).size} other parties`
-                    : "Nothing waits outside",
-                  onOpen: () => open("outside"),
-                }}
-                foot={
-                  byActor.outside.length > 5 && (
-                    <Link
-                      component="button"
-                      type="button"
-                      onClick={() => open("outside")}
-                    >
-                      All {byActor.outside.length}
-                    </Link>
-                  )
-                }
-              >
-                <LeverageBars
-                  items={mostWaitedOn(byActor.outside)}
-                  unblocks={unblocks}
-                  limit={5}
-                  selected={search.item}
-                  empty="Nothing waits on other parties."
-                  party
-                />
-              </Card>
-            </div>
-          )}
-
-          {view === "roadmap" && (
-            <div className="work-dash">
-              <Card
-                id="work-roadmap-h"
-                title={projectScope ? "Linked projects" : "Roadmap"}
-                caption={
-                  projectScope
-                    ? "What it waits on, and what waits on it"
-                    : roadmapBy === "matrix"
-                      ? "Each row's open items that wait on each column's"
-                      : roadmapBy === "groups" && oneInitiative
-                        ? "The most open work first; choose one to scope to it"
-                        : "In the order their work can happen, from the needs between their items"
-                }
-                className="span-12"
-                tools={
-                  !projectScope && (
-                    <span className="work-card-tools">
-                      {roadmapBy === "milestones" && (
+            {view === "roadmap" && (
+              <div className="work-dash">
+                <Card
+                  id="work-roadmap-h"
+                  title={projectScope ? "Linked projects" : "Roadmap"}
+                  caption={
+                    projectScope
+                      ? "What it waits on, and what waits on it"
+                      : roadmapBy === "matrix"
+                        ? "Each row's open items that wait on each column's"
+                        : roadmapBy === "groups" && oneInitiative
+                          ? "The most open work first; choose one to scope to it"
+                          : "In the order their work can happen, from the needs between their items"
+                  }
+                  className="span-12"
+                  tools={
+                    !projectScope && (
+                      <span className="work-card-tools">
+                        {roadmapBy === "milestones" && (
+                          <ToggleButtonGroup
+                            size="small"
+                            exclusive
+                            value={asMap ? "map" : "list"}
+                            onChange={(_, v: string | null) =>
+                              v &&
+                              set(
+                                {
+                                  layout:
+                                    v === (narrow ? "list" : "map")
+                                      ? undefined
+                                      : v,
+                                },
+                                true,
+                              )
+                            }
+                            aria-label="Show milestones as"
+                          >
+                            <ToggleButton
+                              value="map"
+                              render={
+                                <Button variant="outlined" size="small" />
+                              }
+                            >
+                              Map
+                            </ToggleButton>
+                            <ToggleButton
+                              value="list"
+                              render={
+                                <Button variant="outlined" size="small" />
+                              }
+                            >
+                              List
+                            </ToggleButton>
+                          </ToggleButtonGroup>
+                        )}
+                        {roadmapBy === "milestones" && asMap && (
+                          <ToggleButtonGroup
+                            size="small"
+                            exclusive
+                            value={across}
+                            onChange={(_, v: string | null) =>
+                              v &&
+                              set(
+                                { across: v === "steps" ? undefined : v },
+                                true,
+                              )
+                            }
+                            aria-label="Across"
+                          >
+                            <ToggleButton
+                              value="steps"
+                              render={
+                                <Button variant="outlined" size="small" />
+                              }
+                            >
+                              Steps
+                            </ToggleButton>
+                            <ToggleButton
+                              value="tokens"
+                              disabled={!hasTokens}
+                              render={
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  title={
+                                    hasTokens
+                                      ? "Across by the tokens left on the way"
+                                      : "No token estimates yet: give items estimate_tokens, or milestones appetite_tokens"
+                                  }
+                                />
+                              }
+                            >
+                              Tokens
+                            </ToggleButton>
+                          </ToggleButtonGroup>
+                        )}
                         <ToggleButtonGroup
                           size="small"
                           exclusive
-                          value={asMap ? "map" : "list"}
+                          value={roadmapBy}
                           onChange={(_, v: string | null) =>
                             v &&
                             set(
-                              {
-                                layout:
-                                  v === (narrow ? "list" : "map")
-                                    ? undefined
-                                    : v,
-                              },
+                              { roadmap: v === "milestones" ? undefined : v },
                               true,
                             )
                           }
-                          aria-label="Show milestones as"
+                          aria-label="Roadmap by"
                         >
                           <ToggleButton
-                            value="map"
+                            value="milestones"
                             render={<Button variant="outlined" size="small" />}
                           >
-                            Map
+                            Milestones
                           </ToggleButton>
                           <ToggleButton
-                            value="list"
+                            value="groups"
                             render={<Button variant="outlined" size="small" />}
                           >
-                            List
+                            {oneInitiative ? "Projects" : "Initiatives"}
+                          </ToggleButton>
+                          <ToggleButton
+                            value="matrix"
+                            render={<Button variant="outlined" size="small" />}
+                          >
+                            Project waits
                           </ToggleButton>
                         </ToggleButtonGroup>
-                      )}
-                      {roadmapBy === "milestones" && asMap && (
-                        <ToggleButtonGroup
-                          size="small"
-                          exclusive
-                          value={across}
-                          onChange={(_, v: string | null) =>
-                            v &&
-                            set({ across: v === "steps" ? undefined : v }, true)
-                          }
-                          aria-label="Across"
-                        >
-                          <ToggleButton
-                            value="steps"
-                            render={<Button variant="outlined" size="small" />}
-                          >
-                            Steps
-                          </ToggleButton>
-                          <ToggleButton
-                            value="tokens"
-                            disabled={!hasTokens}
-                            render={
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                title={
-                                  hasTokens
-                                    ? "Across by the tokens left on the way"
-                                    : "No token estimates yet: give items estimate_tokens, or milestones appetite_tokens"
-                                }
-                              />
-                            }
-                          >
-                            Tokens
-                          </ToggleButton>
-                        </ToggleButtonGroup>
-                      )}
-                      <ToggleButtonGroup
-                        size="small"
-                        exclusive
-                        value={roadmapBy}
-                        onChange={(_, v: string | null) =>
-                          v &&
-                          set(
-                            { roadmap: v === "milestones" ? undefined : v },
-                            true,
-                          )
-                        }
-                        aria-label="Roadmap by"
-                      >
-                        <ToggleButton
-                          value="milestones"
-                          render={<Button variant="outlined" size="small" />}
-                        >
-                          Milestones
-                        </ToggleButton>
-                        <ToggleButton
-                          value="groups"
-                          render={<Button variant="outlined" size="small" />}
-                        >
-                          {oneInitiative ? "Projects" : "Initiatives"}
-                        </ToggleButton>
-                        <ToggleButton
-                          value="matrix"
-                          render={<Button variant="outlined" size="small" />}
-                        >
-                          Project waits
-                        </ToggleButton>
-                      </ToggleButtonGroup>
-                    </span>
-                  )
-                }
-              >
-                {projectScope ? (
-                  <ProjectLinks
-                    s={s}
-                    project={oneProject!}
-                    onCell={(from, to) => open(`dep:${from}:${to}`)}
-                  />
-                ) : roadmapBy === "matrix" ? (
-                  <MatrixView
-                    s={s}
-                    items={items}
-                    onCell={(from, to) => open(`dep:${from}:${to}`)}
-                    onProject={(id) => scopeTo({ project: id })}
-                  />
-                ) : roadmapBy === "groups" && oneInitiative ? (
-                  <ProjectBars
-                    s={s}
-                    items={items}
-                    flight={flight}
-                    single={false}
-                    onProject={(id) => scopeTo({ project: id })}
-                    onSegment={(id, st) =>
-                      set({
-                        project: id,
-                        initiative: undefined,
-                        list: `stage:${st}`,
-                      })
-                    }
-                  />
-                ) : roadmapBy === "milestones" && asMap ? (
-                  <MilestoneMap
-                    s={s}
-                    flight={flight}
-                    unit={across}
-                    inScope={size ? msInScope : undefined}
-                    selected={
-                      search.list?.startsWith("ms:")
-                        ? search.list.slice(3)
-                        : milestoneId
-                    }
-                    onOpen={(id) => open(`ms:${id}`)}
-                    onWait={(from, to) => open(`mdep:${to}:${from}`)}
-                    release={search.release}
-                    onRelease={(id) => set({ release: id }, true)}
-                    shape={search.shape === "graph" ? "graph" : "lanes"}
-                    onShape={(v) =>
-                      set({ shape: v === "graph" ? v : undefined }, true)
-                    }
-                  />
-                ) : (
-                  <Roadmap
-                    s={s}
-                    flight={flight}
-                    by={roadmapBy === "groups" ? "initiatives" : "milestones"}
-                    inScope={size ? msInScope : undefined}
-                    selected={
-                      search.list?.startsWith("ms:")
-                        ? search.list.slice(3)
-                        : (milestoneId ?? oneInitiative)
-                    }
-                    onOpen={(id) => open(`ms:${id}`)}
-                    onZoom={(id) => scopeTo({ initiative: id })}
-                    onWait={(from, to) =>
-                      open(
-                        `${roadmapBy === "groups" ? "idep" : "mdep"}:${from}:${to}`,
-                      )
-                    }
-                  />
-                )}
-              </Card>
+                      </span>
+                    )
+                  }
+                >
+                  {projectScope ? (
+                    <ProjectLinks
+                      s={s}
+                      project={oneProject!}
+                      onCell={(from, to) => open(`dep:${from}:${to}`)}
+                    />
+                  ) : roadmapBy === "matrix" ? (
+                    <MatrixView
+                      s={s}
+                      items={items}
+                      onCell={(from, to) => open(`dep:${from}:${to}`)}
+                      onProject={(id) => scopeTo({ project: id })}
+                    />
+                  ) : roadmapBy === "groups" && oneInitiative ? (
+                    <ProjectBars
+                      s={s}
+                      items={items}
+                      flight={flight}
+                      single={false}
+                      onProject={(id) => scopeTo({ project: id })}
+                      onSegment={(id, st) =>
+                        set({
+                          project: id,
+                          initiative: undefined,
+                          list: `stage:${st}`,
+                        })
+                      }
+                    />
+                  ) : roadmapBy === "milestones" && asMap ? (
+                    <MilestoneMap
+                      s={s}
+                      flight={flight}
+                      unit={across}
+                      inScope={size ? msInScope : undefined}
+                      selected={
+                        search.list?.startsWith("ms:")
+                          ? search.list.slice(3)
+                          : milestoneId
+                      }
+                      onOpen={(id) => open(`ms:${id}`)}
+                      onWait={(from, to) => open(`mdep:${to}:${from}`)}
+                      release={search.release}
+                      onRelease={(id) => set({ release: id }, true)}
+                      shape={search.shape === "graph" ? "graph" : "lanes"}
+                      onShape={(v) =>
+                        set({ shape: v === "graph" ? v : undefined }, true)
+                      }
+                    />
+                  ) : (
+                    <Roadmap
+                      s={s}
+                      flight={flight}
+                      by={roadmapBy === "groups" ? "initiatives" : "milestones"}
+                      inScope={size ? msInScope : undefined}
+                      selected={
+                        search.list?.startsWith("ms:")
+                          ? search.list.slice(3)
+                          : (milestoneId ?? oneInitiative)
+                      }
+                      onOpen={(id) => open(`ms:${id}`)}
+                      onZoom={(id) => scopeTo({ initiative: id })}
+                      onWait={(from, to) =>
+                        open(
+                          `${roadmapBy === "groups" ? "idep" : "mdep"}:${from}:${to}`,
+                        )
+                      }
+                    />
+                  )}
+                </Card>
 
-              <Card
-                id="work-chain-h"
-                title="Longest chains"
-                caption="Items that must happen in order, by where they start"
-                className="span-12"
-              >
-                <ChainBars
-                  chains={chains}
-                  flight={flight}
-                  projectOf={projectOf}
-                  limit={6}
-                  onChain={(head) => open(`chain:${head}`)}
+                <Card
+                  id="work-chain-h"
+                  title="Longest chains"
+                  caption="Items that must happen in order, by where they start"
+                  className="span-12"
+                >
+                  <ChainBars
+                    chains={chains}
+                    flight={flight}
+                    projectOf={projectOf}
+                    limit={6}
+                    onChain={(head) => open(`chain:${head}`)}
+                  />
+                </Card>
+              </div>
+            )}
+
+            {view === "proposals" && (
+              <div className="work-dash">
+                <ProposalsCard
+                  groups={proposals}
+                  itemOf={itemOf}
+                  unblocks={unblocks}
+                  selected={search.item}
+                  gate={
+                    search.gate === "free" ||
+                    search.gate === "decision" ||
+                    search.gate === "items"
+                      ? search.gate
+                      : undefined
+                  }
+                  onGate={(gate) => set({ gate }, true)}
+                  onMilestone={(id) => open(`ms:${id}`)}
+                  msOf={msOf}
                 />
-              </Card>
-            </div>
-          )}
+              </div>
+            )}
 
-          {view === "proposals" && (
-            <div className="work-dash">
-              <ProposalsCard
-                groups={proposals}
-                itemOf={itemOf}
-                unblocks={unblocks}
-                selected={search.item}
-                gate={
-                  search.gate === "free" ||
-                  search.gate === "decision" ||
-                  search.gate === "items"
-                    ? search.gate
-                    : undefined
-                }
-                onGate={(gate) => set({ gate }, true)}
-                onMilestone={(id) => open(`ms:${id}`)}
-                msOf={msOf}
-              />
-            </div>
-          )}
-
-          {view === "flow" && (
-            <div className="work-dash">
-              <Card
-                id="work-flow-h"
-                title="Items in each stage, day by day"
-                caption={`A band that widens is a queue growing; choose one to list it. ${flow.created} ${flow.created === 1 ? "item" : "items"} new in the last ${flow.window} days.`}
-                className="span-12"
-              >
-                <FlowChart flow={flow} onStage={(st) => open(`stage:${st}`)} />
-              </Card>
-              <MeasuresCard
-                s={s}
-                items={items}
-                flow={flow}
-                doneDaily={doneDaily}
-                itemOf={itemOf}
-                onOpen={open}
-              />
-              <Typography
-                variant="caption-md"
-                color="textTertiary"
-                render={<p />}
-                className="work-later"
-              >
-                The merge queue, quotas and the controllers' steps join this
-                view when HITLd records them.
-              </Typography>
-            </div>
-          )}
+            {view === "flow" && (
+              <div className="work-dash">
+                <Card
+                  id="work-flow-h"
+                  title="Items in each stage, day by day"
+                  caption={`A band that widens is a queue growing; choose one to list it. ${flow.created} ${flow.created === 1 ? "item" : "items"} new in the last ${flow.window} days.`}
+                  className="span-12"
+                >
+                  <FlowChart
+                    flow={flow}
+                    onStage={(st) => open(`stage:${st}`)}
+                  />
+                </Card>
+                <MeasuresCard
+                  s={s}
+                  items={items}
+                  flow={flow}
+                  doneDaily={doneDaily}
+                  itemOf={itemOf}
+                  onOpen={open}
+                />
+                <Typography
+                  variant="caption-md"
+                  color="textTertiary"
+                  render={<p />}
+                  className="work-later"
+                >
+                  The merge queue, quotas and the controllers' steps join this
+                  view when HITLd records them.
+                </Typography>
+              </div>
+            )}
+          </div>
         </div>
 
         <ListPanel
@@ -2663,35 +2680,51 @@ function ScopeTrail({
         ]
       : []),
   ];
+  const here = steps[steps.length - 1]!;
+  // The lines above the scope, for going back up: not "All work", which
+  // the clear button is.
+  const above = steps.slice(1, -1);
   return (
     <nav className="work-trail" aria-label="Scope">
-      <ol>
-        {steps.map((st, i) => (
-          // The picker keeps its key, so it stays open as lines are added.
-          <li key={i < steps.length - 1 ? st.label : "here"}>
-            {st.mark && <LevelMark level={st.mark} />}
-            {i < steps.length - 1 ? (
-              <Link
-                component="button"
-                type="button"
-                onClick={() => onScope(st.go)}
-              >
-                {st.label}
-              </Link>
-            ) : (
-              <ScopePicker
-                s={s}
-                flight={flight}
-                chosen={chosen}
-                label={st.label}
-                title={several ? names.join(", ") : undefined}
-                onScope={onScope}
-                onToggle={onToggle}
-              />
-            )}
-          </li>
-        ))}
-      </ol>
+      <ScopePicker
+        s={s}
+        flight={flight}
+        chosen={chosen}
+        label={here.label}
+        mark={here.mark}
+        title={several ? names.join(", ") : undefined}
+        onScope={onScope}
+        onToggle={onToggle}
+      />
+      {above.length > 0 && (
+        <span className="work-trail-path">
+          in
+          <ol>
+            {above.map((st) => (
+              <li key={st.label}>
+                {st.mark && <LevelMark level={st.mark} />}
+                <Link
+                  component="button"
+                  type="button"
+                  onClick={() => onScope(st.go)}
+                >
+                  {st.label}
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </span>
+      )}
+      {steps.length > 1 && (
+        <IconButton
+          size="small"
+          label="Show all work"
+          onClick={() => onScope({})}
+          className="work-trail-clear"
+        >
+          <Icon href={svgDismiss} />
+        </IconButton>
+      )}
     </nav>
   );
 }
@@ -2707,6 +2740,7 @@ function ScopePicker({
   flight,
   chosen,
   label,
+  mark,
   title,
   onScope,
   onToggle,
@@ -2715,6 +2749,8 @@ function ScopePicker({
   flight: InFlight;
   chosen: ScopeSet;
   label: string;
+  /** What the scope is: an initiative, a project or a milestone. */
+  mark?: Level;
   /** The chosen lines, when there are several. */
   title?: string;
   onScope: (go: Partial<WorkSearch>) => void;
@@ -2754,21 +2790,24 @@ function ScopePicker({
   }, [at]);
   return (
     <>
-      <button
-        type="button"
+      <Button
+        variant="outlined"
+        size="small"
         className="work-picker-button"
         aria-haspopup="dialog"
         aria-expanded={!!anchor}
-        aria-current="page"
         title={title ? `${title}: change the scope` : "Change the scope"}
         onClick={(e) => {
           setAnchor(e.currentTarget);
           setActive(Math.max(0, entries.findIndex(inScope)));
         }}
       >
+        <Icon href={svgFilter} />
+        <span className="work-picker-name">Scope</span>
+        {mark && <LevelMark level={mark} />}
         <span className="work-trail-here">{label}</span>
         <Icon href={svgChevronDown} />
-      </button>
+      </Button>
       <Popover
         open={!!anchor}
         anchorEl={anchor}
@@ -2932,7 +2971,7 @@ function FindField({
     <TextField
       size="small"
       type="search"
-      placeholder="Find in every item"
+      placeholder="Search"
       value={q ?? ""}
       inputRef={input}
       onChange={(e) => {
@@ -2944,7 +2983,7 @@ function FindField({
       }}
       className="work-search"
       slotProps={{
-        htmlInput: { "aria-label": "Find in every item" },
+        htmlInput: { "aria-label": "Search every item" },
         input: {
           startAdornment: (
             <InputAdornment position="start">
