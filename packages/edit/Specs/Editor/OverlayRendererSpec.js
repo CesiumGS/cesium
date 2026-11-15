@@ -31,12 +31,16 @@ const layouts = {
     components: 4,
     uniformName: "u_triangleTexture",
   },
-  selection: {
+  flags: {
     scalarType: "unorm8",
     components: 1,
-    uniformName: "u_selectionTexture",
+    uniformName: "u_flagTexture",
   },
 };
+
+// The wasm module's component flag bits.
+const SELECTED_FLAG = 1;
+const HIDDEN_FLAG = 2;
 
 // A 2 x 2 square in the xy-plane, made of two triangle faces.
 const square = {
@@ -142,14 +146,18 @@ const points = {
 /**
  * @param {number} count The number of components.
  * @param {number[]} [selected] The indices of the selected components.
- * @returns {Uint8Array} 255 for selected components, 0 for the rest.
+ * @param {number[]} [hidden] The indices of the hidden components.
+ * @returns {Uint8Array} Each component's flags.
  */
-function createSelection(count, selected = []) {
-  const selection = new Uint8Array(count);
+function createFlags(count, selected = [], hidden = []) {
+  const flags = new Uint8Array(count);
   for (const index of selected) {
-    selection[index] = 255;
+    flags[index] |= SELECTED_FLAG;
   }
-  return selection;
+  for (const index of hidden) {
+    flags[index] |= HIDDEN_FLAG;
+  }
+  return flags;
 }
 
 // Distinct bases, so no two default keys collide across component types.
@@ -182,15 +190,16 @@ function createKeys(componentName, count, componentKeys) {
  * overlay views do.
  *
  * @param {{ buffer: ArrayBuffer }} memory Gets a new buffer, as when wasm memory grows.
- * @param {object} overlay positions ([x, y, z] per vertex), edges ([a, b] per edge), triangles ([a, b, c, face] per triangle), faceCount, and optionally selected: { verts, edges, faces } index arrays and componentKeys: { verts, edges, faces } bigint arrays.
+ * @param {object} overlay positions ([x, y, z] per vertex), edges ([a, b] per edge), triangles ([a, b, c, face] per triangle), faceCount, and optionally selected and hidden: { verts, edges, faces } index arrays and componentKeys: { verts, edges, faces } bigint arrays.
  * @param {object} [options]
  * @param {boolean} [options.fullRefresh=true] Whether every buffer changed.
- * @param {object} [options.dirtyRanges] Changed element ranges when not a full refresh, shaped like the views: { positions, edges, triangles, selection: { verts, edges, faces } }.
+ * @param {object} [options.dirtyRanges] Changed element ranges when not a full refresh, shaped like the views: { positions, edges, triangles, flags: { verts, edges, faces } }.
  * @returns {object} The overlay views.
  */
 function createOverlayViews(memory, overlay, options = {}) {
   const { fullRefresh = true, dirtyRanges = {} } = options;
   const selected = overlay.selected ?? {};
+  const hidden = overlay.hidden ?? {};
   const componentKeys = overlay.componentKeys ?? {};
   const vertexCount = overlay.positions.length;
   const edgeCount = overlay.edges.length;
@@ -199,9 +208,9 @@ function createOverlayViews(memory, overlay, options = {}) {
     new Float32Array(overlay.positions.flatMap((p) => [...p, 0.0])),
     new Uint32Array(overlay.edges.flat()),
     new Uint32Array(overlay.triangles.flat()),
-    createSelection(vertexCount, selected.verts),
-    createSelection(edgeCount, selected.edges),
-    createSelection(overlay.faceCount, selected.faces),
+    createFlags(vertexCount, selected.verts, hidden.verts),
+    createFlags(edgeCount, selected.edges, hidden.edges),
+    createFlags(overlay.faceCount, selected.faces, hidden.faces),
     createKeys("verts", vertexCount, componentKeys.verts),
     createKeys("edges", edgeCount, componentKeys.edges),
     createKeys("faces", overlay.faceCount, componentKeys.faces),
@@ -235,16 +244,16 @@ function createOverlayViews(memory, overlay, options = {}) {
     elementCount: arrays[i].length,
   });
 
-  const selectionRanges = dirtyRanges.selection ?? {};
+  const flagRanges = dirtyRanges.flags ?? {};
   return {
     fullRefresh,
     positions: createView(0, layouts.positions, dirtyRanges.positions),
     edges: createView(1, layouts.edges, dirtyRanges.edges),
     triangles: createView(2, layouts.triangles, dirtyRanges.triangles),
-    selection: {
-      verts: createView(3, layouts.selection, selectionRanges.verts),
-      edges: createView(4, layouts.selection, selectionRanges.edges),
-      faces: createView(5, layouts.selection, selectionRanges.faces),
+    flags: {
+      verts: createView(3, layouts.flags, flagRanges.verts),
+      edges: createView(4, layouts.flags, flagRanges.edges),
+      faces: createView(5, layouts.flags, flagRanges.faces),
     },
     componentKeys: {
       verts: createKeyView(6),
@@ -615,7 +624,7 @@ describe(
           {
             fullRefresh: false,
             dirtyRanges: {
-              selection: {
+              flags: {
                 verts: { start: 0, end: 1 },
                 edges: { start: 0, end: 1 },
                 faces: { start: 0, end: 1 },
@@ -629,6 +638,40 @@ describe(
         expectPixel(overlay, [0.0, -1.0, 0.0], selectedEdgeColor);
         expectPixel(overlay, [0.0, 1.0, 0.0], black);
         expectPixel(overlay, [0.5, -0.5, 0.0], selectedFaceColor);
+        expectPixel(overlay, [-0.5, 0.5, 0.0], faceColor);
+      });
+
+      it("doesn't draw hidden components", function () {
+        const overlay = addSquare();
+        expectPixel(overlay, [0.5, -0.5, 0.0], faceColor);
+
+        // Hides the bottom-right vertex, the bottom and right edges, and the
+        // bottom-right face, as a partial update. Selected hidden components
+        // stay hidden.
+        overlay.setOverlay(
+          {
+            ...square,
+            selected: { verts: [1], edges: [], faces: [0] },
+            hidden: { verts: [1], edges: [0, 1], faces: [0] },
+          },
+          {
+            fullRefresh: false,
+            dirtyRanges: {
+              flags: {
+                verts: { start: 1, end: 2 },
+                edges: { start: 0, end: 2 },
+                faces: { start: 0, end: 1 },
+              },
+            },
+          },
+        );
+
+        expectPixel(overlay, [1.0, -1.0, 0.0], background);
+        expectPixel(overlay, [0.0, -1.0, 0.0], background);
+        expectPixel(overlay, [1.0, 0.0, 0.0], background);
+        expectPixel(overlay, [0.5, -0.5, 0.0], background);
+        expectPixel(overlay, [-1.0, -1.0, 0.0], black);
+        expectPixel(overlay, [0.0, 1.0, 0.0], black);
         expectPixel(overlay, [-0.5, 0.5, 0.0], faceColor);
       });
 
@@ -908,6 +951,30 @@ describe(
           componentType: ComponentType.Face,
           componentKey: defaultKey("faces", 0),
         });
+        expectPick(overlay, [-0.5, 0.5, 0.0], {
+          primitive: overlay.mesh,
+          componentType: ComponentType.Face,
+          componentKey: defaultKey("faces", 1),
+        });
+      });
+
+      it("doesn't pick hidden components", function () {
+        const overlay = new OverlayTestPrimitive(shaders);
+        overlay.setOverlay({
+          ...square,
+          hidden: { verts: [1], edges: [0, 1], faces: [0] },
+        });
+        scene.primitives.add(overlay);
+        scene.renderForSpecs();
+
+        for (const position of [
+          [1.0, -1.0, 0.0],
+          [0.0, -1.0, 0.0],
+          [0.5, -0.5, 0.0],
+        ]) {
+          const { x, y } = getWindowPosition(overlay, position);
+          expect(scene).notToPick(x, y);
+        }
         expectPick(overlay, [-0.5, 0.5, 0.0], {
           primitive: overlay.mesh,
           componentType: ComponentType.Face,

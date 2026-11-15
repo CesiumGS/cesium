@@ -89,11 +89,11 @@ import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
  * @property {object} renderStateOptions The options of the component type's render state.
  * @property {RenderState} renderState The component type's render state, from the render state cache.
  * @property {"edges" | "triangles" | undefined} topologyViewName The overlay view with the component type's edges or triangles. Undefined for points.
- * @property {"verts" | "edges" | "faces"} componentName The name of a view into the overlay's selection and component key arrays.
+ * @property {"verts" | "edges" | "faces"} componentName The name of a view into the overlay's flag and component key arrays.
  * @property {boolean} shown Whether to draw the component type.
  * @property {boolean} pickable Whether to draw the component type in the pick pass, if shown.
  * @property {BufferTexture | undefined} topologyTexture The edges or triangles. Undefined for points.
- * @property {BufferTexture | undefined} selectionTexture The component type's selection.
+ * @property {BufferTexture | undefined} flagTexture The component type's flags: whether each component is selected or hidden.
  * @property {PickId[]} pickIds One pick ID per component.
  * @property {Uint8Array} pickColors Each pick ID's color, four bytes each. May have spare capacity.
  * @property {BufferTexture} pickColorTexture The pick colors, by component index.
@@ -570,15 +570,15 @@ class OverlayRenderer {
         );
       }
 
-      const selectionView = overlayViews.selection[componentName];
-      componentOverlay.selectionTexture ??= this.#createBufferTexture(
-        selectionView.layout,
+      const flagView = overlayViews.flags[componentName];
+      componentOverlay.flagTexture ??= this.#createBufferTexture(
+        flagView.layout,
       );
 
       this.#uploadView(
         context,
-        componentOverlay.selectionTexture,
-        selectionView,
+        componentOverlay.flagTexture,
+        flagView,
         fullRefresh,
       );
 
@@ -681,7 +681,7 @@ class OverlayRenderer {
 
     for (const componentOverlay of this.#componentOverlays) {
       componentOverlay.topologyTexture?.texture.destroy();
-      componentOverlay.selectionTexture?.texture.destroy();
+      componentOverlay.flagTexture?.texture.destroy();
       componentOverlay.pickColorTexture.texture.destroy();
 
       for (const pickId of componentOverlay.pickIds) {
@@ -711,7 +711,7 @@ class OverlayRenderer {
    * @param {Object<string, function(): *> | undefined} options.outlineUniforms The style uniforms to override to draw the outline. Undefined for faces.
    * @param {object} options.renderStateOptions The options of the component type's render state.
    * @param {"edges" | "triangles" | undefined} options.topologyViewName The overlay view with the component type's edges or triangles. Undefined for points.
-   * @param {"verts" | "edges" | "faces"} options.componentName The name of a view into the overlay's selection and component key arrays.
+   * @param {"verts" | "edges" | "faces"} options.componentName The name of a view into the overlay's flag and component key arrays.
    * @returns {ComponentOverlay}
    * @ignore
    */
@@ -722,7 +722,7 @@ class OverlayRenderer {
       shown: true,
       pickable: true,
       topologyTexture: undefined,
-      selectionTexture: undefined,
+      flagTexture: undefined,
       pickIds: [],
       pickColors: new Uint8Array(0),
       pickColorTexture: {
@@ -988,7 +988,7 @@ class OverlayRenderer {
     for (const bufferTexture of [
       this.#positionTexture,
       componentOverlay.topologyTexture,
-      componentOverlay.selectionTexture,
+      componentOverlay.flagTexture,
       componentOverlay.pickColorTexture,
     ]) {
       if (!defined(bufferTexture)) {
