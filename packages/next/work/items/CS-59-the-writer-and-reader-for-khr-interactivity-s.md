@@ -5,7 +5,6 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-10
-milestone: front ends and surface
 needs: [CS-49]
 ---
 

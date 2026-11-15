@@ -3,9 +3,16 @@
 // docs/superpowers/plans/2026-11-13-work-tracker.md, section 4.
 //
 //   node scripts/work/new.mjs --kind work --project CS-7 --title "…" \
-//     [--needs CS-1,CS-2] [--milestone name] [--status Planned|Proposed] \
-//     [--priority high] [--decided-by owner] [--party "Cesium ion"] \
+//     [--needs CS-1,CS-2] [--status Planned|Proposed] \
+//     [--decided-by owner] [--party "Cesium ion"] \
 //     [--initiative CS-1 --lead owner --plan docs/…md] [--dry-run]
+//   node scripts/work/new.mjs --kind capability|learning \
+//     (--project CS-7 | --initiative CS-1) --title "<the outcome, named>" \
+//     [--outcome "…"] [--status Proposed]
+//
+// Milestones follow human-in-the-lead's format: named by their outcome,
+// never numbered; their constraints (`needs: CS-n c1`) are added at
+// shaping. Items no longer take a milestone or a priority.
 //
 // The number is one more than the highest taken in this checkout, in every
 // worktree's working copy and on every local and remote-tracking branch.
@@ -56,6 +63,10 @@ const isItem = ["work", "decision", "external"].includes(kind);
 if (isItem && !option("project")) {
   fail("--project CS-<n> is required for an item");
 }
+const isMilestone = ["capability", "learning"].includes(kind);
+if (isMilestone && !option("project") === !option("initiative")) {
+  fail("a milestone takes one of --project CS-<n> or --initiative CS-<n>");
+}
 if (kind === "project" && !option("initiative")) {
   fail("--initiative CS-<n> is required for a project");
 }
@@ -72,10 +83,8 @@ const data = {
   title: titleText,
   kind,
   status,
-  priority: option("priority"),
   created: today,
-  project: isItem ? option("project") : undefined,
-  milestone: option("milestone"),
+  project: isItem || isMilestone ? option("project") : undefined,
   needs: option("needs")
     ?.split(",")
     .map((s) => s.trim())
@@ -83,7 +92,9 @@ const data = {
   "decided-by":
     kind === "decision" ? (option("decided-by") ?? "owner") : undefined,
   party: kind === "external" ? option("party") : undefined,
-  initiative: kind === "project" ? option("initiative") : undefined,
+  initiative:
+    kind === "project" || isMilestone ? option("initiative") : undefined,
+  outcome: isMilestone ? option("outcome") : undefined,
   lead: ["project", "initiative"].includes(kind)
     ? (option("lead") ?? "owner")
     : undefined,
@@ -96,6 +107,8 @@ const BODY = {
   external: "\n## Waiting on\n\n\n",
   project: "\n## Summary\n\n\n",
   initiative: "\n## Goal\n\n\n",
+  capability: "\n## Why\n\n\n## Done when\n\n\n## Notes\n\n",
+  learning: "\n## Why\n\n\n## Done when\n\n\n## Notes\n\n",
 };
 const slug = slugify(titleText);
 

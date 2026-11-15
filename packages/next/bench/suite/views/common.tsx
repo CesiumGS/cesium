@@ -123,14 +123,17 @@ export function Section({
   description,
   actions,
   children,
+  id,
 }: {
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
   children?: ReactNode;
+  /** An anchor for links to this section (`#machines`). */
+  id?: string;
 }) {
   return (
-    <section className="section">
+    <section className="section" id={id}>
       <div className="section-header">
         <div>
           <Typography variant="subtitle-md" render={<h2 />}>

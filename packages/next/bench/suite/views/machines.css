@@ -1,0 +1,28 @@
+/* Machines (views/Machines.tsx), in the Overview. */
+
+.machines-note {
+  margin: 0 0 var(--stratakit-space-300);
+}
+.machines-table {
+  overflow-x: auto;
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-md);
+}
+.machines-table th[scope="row"] {
+  text-align: start;
+  font-weight: normal;
+  min-width: 200px;
+}
+.machines-table .num {
+  white-space: nowrap;
+}
+.machines-block {
+  display: block;
+}
+.machines-machine {
+  display: block;
+  font-weight: 600;
+}
+.machines-nowrap {
+  white-space: nowrap;
+}

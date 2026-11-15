@@ -5,12 +5,13 @@ import {
   redirect,
 } from "@tanstack/react-router";
 import { loadRuns } from "./data.ts";
+import { movedTo } from "./rail.ts";
 import { searchToParams } from "./views/exampleRun.ts";
 import { RunsLayout, Shell, ShellError, ShellPending } from "./shell.tsx";
 
 /**
- * Dyno's routes (hash history: /#/overview?…), following the navigation
- * in DESIGN.md. Each view is its own chunk, loaded on first visit; its
+ * Dyno's routes (hash history: /#/overview?…), following the rail in
+ * rail.ts and DESIGN.md. Each view is its own chunk, loaded on first visit; its
  * state is the route's path and search params, validated here so views
  * get typed values and links stay shareable. The views that read the
  * runs sit under a pathless layout route whose loader reads them once;
@@ -44,6 +45,60 @@ export const runsLayoutRoute = createRoute({
   errorComponent: ShellError,
   // The runs don't change while the page is open (reload for new runs).
   staleTime: Infinity,
+});
+
+// ------------------------------------------------------------ needs a look
+
+export interface WorkSearch {
+  /** The question the page answers: "roadmap" or "flow" ("Your move" by default). */
+  view?: string;
+  initiative?: string;
+  project?: string;
+  /** A milestone's constraints as the scope. */
+  milestone?: string;
+  q?: string;
+  /**
+   * The list open in the details panel: "owner", "commit", "outside",
+   * "done", "projects", "graph", or "stage:<Stage>" (with the scope's
+   * project, if any).
+   */
+  list?: string;
+  /** The item open in the details panel. */
+  item?: string;
+  /** The milestone map across "tokens" (steps by default). */
+  across?: string;
+  /** Milestones as a "map" or a "list" (the map, unless the view is phone-narrow). */
+  layout?: string;
+  /** The release gate the milestone map measures to. */
+  release?: string;
+  /** The milestone map as project lanes (default) or a "graph" with the fewest crossings. */
+  shape?: string;
+  /** The roadmap by "groups" (initiatives, or an initiative's projects) or "matrix" (milestones by default). */
+  roadmap?: string;
+}
+/** The tracker's board (CS-170): it reads the work items on this branch. */
+export const workRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/work",
+  validateSearch: (s: Record<string, unknown>): WorkSearch =>
+    clean({
+      view: s.view === "roadmap" || s.view === "flow" ? s.view : undefined,
+      initiative: str(s.initiative),
+      project: str(s.project),
+      milestone: str(s.milestone),
+      q: str(s.q),
+      list: str(s.list),
+      item: str(s.item),
+      across: s.across === "tokens" ? "tokens" : undefined,
+      layout: s.layout === "map" || s.layout === "list" ? s.layout : undefined,
+      release: str(s.release),
+      shape: s.shape === "graph" ? "graph" : undefined,
+      roadmap:
+        s.roadmap === "groups" || s.roadmap === "matrix"
+          ? s.roadmap
+          : undefined,
+    }),
+  component: lazyRouteComponent(() => import("./views/Work.tsx"), "Work"),
 });
 
 // ------------------------------------------------------------ results
@@ -143,18 +198,7 @@ export const scenesRoute = createRoute({
   component: lazyRouteComponent(() => import("./views/Scenes.tsx"), "Scenes"),
 });
 
-/** A scene's page; `$scene` is its key (scene id, or id|scenario). */
-export const sceneRoute = createRoute({
-  getParentRoute: () => runsLayoutRoute,
-  path: "/scenes/$scene",
-  component: lazyRouteComponent(
-    () => import("./views/Scenes.tsx"),
-    "ScenePage",
-  ),
-});
-
-export interface ExplorerSearch {
-  scene?: string;
+export interface SceneLiveSearch {
   left?: string;
   /** Empty: one engine only. */
   right?: string;
@@ -163,20 +207,25 @@ export interface ExplorerSearch {
   /** The 1.x build this page loaded ("repo" or a version). */
   cesium?: string;
 }
-export const explorerRoute = createRoute({
+const liveSearch = (s: Record<string, unknown>): SceneLiveSearch =>
+  clean({
+    left: str(s.left),
+    right: s.right === "" ? "" : str(s.right),
+    t: num(s.t),
+    cesium: str(s.cesium),
+  });
+
+/**
+ * A scene's page; `$scene` is its key (scene id, or id|scenario). Its
+ * search is the live view's (engines, place on the path, 1.x build).
+ */
+export const sceneRoute = createRoute({
   getParentRoute: () => runsLayoutRoute,
-  path: "/explorer",
-  validateSearch: (s: Record<string, unknown>): ExplorerSearch =>
-    clean({
-      scene: str(s.scene),
-      left: str(s.left),
-      right: s.right === "" ? "" : str(s.right),
-      t: num(s.t),
-      cesium: str(s.cesium),
-    }),
+  path: "/scenes/$scene",
+  validateSearch: liveSearch,
   component: lazyRouteComponent(
-    () => import("./views/Explorer.tsx"),
-    "Explorer",
+    () => import("./views/Scenes.tsx"),
+    "ScenePage",
   ),
 });
 
@@ -241,23 +290,27 @@ export const exampleRoute = createRoute({
   ),
 });
 
-// ------------------------------------------------------------ workbench
+// ------------------------------------------------------------ experiment
 
 export interface AnalysisSearch {
-  /** Sweeps (the default) or machines. */
-  tab?: "machines";
   sweep?: string;
   scene?: string;
 }
 export const analysisRoute = createRoute({
   getParentRoute: () => runsLayoutRoute,
   path: "/analysis",
+  // Machines moved into the Overview (rail.ts `movedTo`).
+  beforeLoad: ({ location }) => {
+    const moved = movedTo(
+      location.pathname,
+      location.search as Record<string, unknown>,
+    );
+    if (moved) {
+      throw redirect({ to: moved.to, hash: moved.hash, replace: true });
+    }
+  },
   validateSearch: (s: Record<string, unknown>): AnalysisSearch =>
-    clean({
-      tab: s.tab === "machines" ? ("machines" as const) : undefined,
-      sweep: str(s.sweep),
-      scene: str(s.scene),
-    }),
+    clean({ sweep: str(s.sweep), scene: str(s.scene) }),
   component: lazyRouteComponent(
     () => import("./views/Analysis.tsx"),
     "Analysis",
@@ -304,11 +357,11 @@ export const routeTree = rootRoute.addChildren([
     alertsRoute,
     scenesRoute,
     sceneRoute,
-    explorerRoute,
     viewerRoute,
     analysisRoute,
     startRoute,
   ]),
+  workRoute,
   imagesRoute,
   examplesRoute,
   exampleRoute,

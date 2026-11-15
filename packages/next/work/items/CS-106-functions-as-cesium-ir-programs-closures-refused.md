@@ -5,7 +5,6 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-13
-milestone: reshape
 needs: [CS-105, CS-53, CS-55, CS-56, CS-61]
 ---
 

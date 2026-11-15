@@ -5,7 +5,6 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-9
-milestone: the seam
 ---
 
 The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points. Needs nothing.

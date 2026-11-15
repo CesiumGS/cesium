@@ -5,7 +5,6 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-9
-milestone: parity steps
 needs: [CS-38, CS-52, CS-54, CS-55]
 ---
 

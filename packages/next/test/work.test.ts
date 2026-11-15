@@ -65,6 +65,8 @@ const FOLDERS: Record<string, string> = {
   work: "items",
   decision: "items",
   external: "items",
+  capability: "milestones",
+  learning: "milestones",
 };
 
 function put(root: string, data: ItemData, body = "\nBody.\n", name?: string) {
@@ -91,7 +93,6 @@ function sample(root: string) {
     status: "Planned",
     initiative: "CS-1",
     lead: "owner",
-    milestones: ["first", "second"],
   });
   put(root, {
     id: "CS-3",
@@ -99,7 +100,15 @@ function sample(root: string) {
     kind: "work",
     status: "Done",
     project: "CS-2",
-    milestone: "first",
+  });
+  // A milestone (human-in-the-lead's format): CS-3 is its one constraint.
+  put(root, {
+    id: "CS-19",
+    title: "First",
+    kind: "capability",
+    status: "Planned",
+    project: "CS-2",
+    needs: ["CS-3 c?"],
   });
   put(root, {
     id: "CS-4",
@@ -283,7 +292,7 @@ describe("checks", () => {
     });
     put(root, {
       id: "CS-17",
-      title: "Bad milestone",
+      title: "Retired milestone key",
       kind: "work",
       status: "Planned",
       project: "CS-2",
@@ -299,7 +308,7 @@ describe("checks", () => {
     expect(problems).toMatch(/CS-15-orphan.md: no project/);
     expect(problems).toMatch(/an external item needs party/);
     expect(problems).toMatch(
-      /milestone "third" isn't one of CS-2's \(first, second\)/,
+      /"milestone" is retired \(milestones are files; order is derived\)/,
     );
   });
 
@@ -383,7 +392,7 @@ describe("views", () => {
     const lists = renderLists(g);
     expect(lists).toContain("### Renderers");
     expect(lists).toContain("#### The core");
-    expect(lists).toContain("Milestone: first");
+    expect(lists).toContain("Milestone: First");
     expect(lists).toContain("- [x] CS-3 Types. Done.");
     expect(lists).toContain("- [ ] CS-5 Passes. Needs CS-4.");
     expect(lists).toContain(

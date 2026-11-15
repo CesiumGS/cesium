@@ -5,8 +5,7 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-13
-milestone: reshape
-needs: [CS-102, CS-28]
+needs: [CS-438, CS-28]
 ---
 
 Internals out of the main entry.

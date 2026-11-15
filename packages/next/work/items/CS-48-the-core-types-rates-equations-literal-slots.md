@@ -5,7 +5,6 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-10
-milestone: core
 ---
 
 The core (types, rates, equations, literal slots, the builder). Needs nothing.

@@ -22,6 +22,7 @@ import { configDefaults, defineConfig, type Plugin } from "vitest/config";
 import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
 import { slangShaders } from "./scripts/vitePluginSlang.ts";
 import { recordEndpoint } from "./scripts/vitePluginRecord.ts";
+import { workApi } from "./scripts/vitePluginWork.ts";
 import { keepEnvSecretsOut } from "./scripts/vitePluginEnvSecrets.ts";
 import { skyPackDevRoute, skyPackGuard } from "./scripts/vitePluginSkyPack.ts";
 import { framesDataDirectory } from "./scripts/frameData.mjs";
@@ -455,6 +456,8 @@ export default defineConfig({
     skyPackDevRoute(),
     // The inspector's recorder posts its rows here (dev server only).
     recordEndpoint(),
+    // The tracker's read API for Dyno's Work board (scripts/work/query.mjs).
+    workApi(),
     serveDirectory("/cesium1x", cesium1x),
     serveDirectory("/specs-data", specsData),
     serveBenchResults("/bench-results", benchResults),

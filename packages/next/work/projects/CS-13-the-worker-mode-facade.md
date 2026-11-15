@@ -7,7 +7,6 @@ created: 2026-11-13
 initiative: CS-3
 lead: owner
 plan: docs/superpowers/plans/2026-11-13-worker-facade.md
-milestones: [map and review, reshape, the façade, the default]
 ---
 
 ## Summary

@@ -148,7 +148,14 @@ const To = ({
   to,
   children,
 }: {
-  to: "/runs" | "/trends" | "/alerts" | "/explorer" | "/images" | "/lab";
+  to:
+    | "/overview"
+    | "/runs"
+    | "/trends"
+    | "/alerts"
+    | "/scenes"
+    | "/images"
+    | "/lab";
   children: ReactNode;
 }) => <Link render={<RouterLink to={to} />}>{children}</Link>;
 
@@ -218,18 +225,20 @@ export function FirstRun() {
             </Button>
           </div>
           <Typography variant="body-sm" color="textSecondary" render={<p />}>
-            Each run's report in <To to="/runs">Runs</To> gives the verdict and
-            every scene in detail. <To to="/trends">Trends</To> follows metrics
-            from run to run, and <To to="/alerts">Alerts</To> start after about
-            six runs of a scene.
+            The <To to="/overview">Overview</To> shows where the latest run
+            stands and how each machine compares, and each run's report in{" "}
+            <To to="/runs">Runs</To> gives every scene in detail.{" "}
+            <To to="/trends">Trends</To> follows metrics from run to run, and{" "}
+            <To to="/alerts">Alerts</To> start after about six runs of a scene.
           </Typography>
         </Step>
         <Step title="Meanwhile, look at a scene live">
           <Typography variant="body-sm" color="textSecondary" render={<p />}>
-            The <To to="/explorer">Explorer</To> needs no runs: both engines
-            side by side on a scene's camera path, with tiles tinted by depth,
-            bounding volumes and each level's selection compared. Image checks
-            from <code>cli.mjs images --parity</code> are reviewed in{" "}
+            Each scene's page in <To to="/scenes">Scenes</To> opens with it
+            live, and needs no runs: both engines side by side on a scene's
+            camera path, with tiles tinted by depth, bounding volumes and each
+            level's selection compared. Image checks from{" "}
+            <code>cli.mjs images --parity</code> are reviewed in{" "}
             <To to="/images">Images</To>, and the <To to="/lab">Lab</To> has
             focused parity checks and microbenchmarks.
           </Typography>

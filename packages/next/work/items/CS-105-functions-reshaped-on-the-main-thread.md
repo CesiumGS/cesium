@@ -5,11 +5,10 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-13
-milestone: reshape
-needs: [CS-102]
+needs: [CS-438]
 ---
 
-Functions reshaped on the main thread: self-contained functions and modules. Needs the API review (CS-102). The program forms are CS-106, split out because only they wait for Cesium IR.
+Functions reshaped on the main thread: self-contained functions and modules. Needs the owner's decision on the API review's proposals (CS-438). The program forms are CS-106, split out because only they wait for Cesium IR.
 
 ## Done when
 

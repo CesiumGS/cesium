@@ -7,7 +7,6 @@ created: 2026-11-13
 initiative: CS-2
 lead: owner
 plan: docs/superpowers/plans/2026-11-13-cesium-ir.md
-milestones: [core, front ends and surface, gaps]
 ---
 
 ## Summary

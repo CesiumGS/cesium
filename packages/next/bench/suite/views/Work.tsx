@@ -1,0 +1,5634 @@
+import "./work.css";
+import {
+  Alert,
+  Button,
+  CircularProgress,
+  Divider,
+  Drawer,
+  IconButton,
+  InputAdornment,
+  Link,
+  Popover,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
+import { svgChevronDown } from "@stratakit/icons/chevron-down";
+import { svgCheckmark } from "@stratakit/icons/checkmark";
+import { svgChevronRight } from "@stratakit/icons/chevron-right";
+import { svgClipboard } from "@stratakit/icons/clipboard";
+import { svgCopy } from "@stratakit/icons/copy";
+import { svgDismiss } from "@stratakit/icons/dismiss";
+import { svgFlag } from "@stratakit/icons/flag";
+import { svgFolderOpen } from "@stratakit/icons/folder-open";
+import { svgGitBranch } from "@stratakit/icons/git-branch";
+import { svgInfo } from "@stratakit/icons/info";
+import { svgLayers } from "@stratakit/icons/layers";
+import { svgSearch } from "@stratakit/icons/search";
+import { Icon } from "@stratakit/mui";
+import {
+  getRouteApi,
+  Link as RouterLink,
+  useNavigate,
+} from "@tanstack/react-router";
+import {
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type { WorkSearch } from "../routes.tsx";
+import { useWork } from "../useWork.ts";
+import {
+  type Actor,
+  ageText,
+  byProject,
+  dependencyMatrix,
+  type Flow,
+  findWork,
+  flowOf,
+  idNumber,
+  type InFlight,
+  inFlightOf,
+  isOpen,
+  isOwnerDecision,
+  type ItemKind,
+  KIND_NAMES,
+  loadItemText,
+  criticalPathOf,
+  loopTies,
+  longestChains,
+  type MeasurePoint,
+  type Measures,
+  measuresOf,
+  median,
+  percentile,
+  type MapEdge,
+  type MapNode,
+  type MilestoneMap as MilestoneMapData,
+  mapEntityItems,
+  mapEntityTitle,
+  milestoneMapOf,
+  milestoneRoadmapOf,
+  nextActor,
+  type RoadmapRow,
+  roadmapOf,
+  ownerQueue,
+  type Stage,
+  STAGE_NAMES,
+  UNSHAPED,
+  STAGES,
+  stageOf,
+  stateOf,
+  unblocksOf,
+  type WorkContainer,
+  type WorkFound,
+  type WorkItem,
+  type WorkItemText,
+  type WorkMilestone,
+  type WorkSnapshot,
+} from "../work.ts";
+import { Empty, Page, toast, useChartTokens } from "./common.tsx";
+import {
+  coordSimplex,
+  decrossTwoLayer,
+  graph as dagGraph,
+  layeringSimplex,
+  type MutGraphNode,
+  sugiyama,
+} from "d3-dag";
+import { InlineText, ItemText } from "./ItemText.tsx";
+import { Status as StatusBadge } from "./runParts.tsx";
+
+/**
+ * The Work board (DESIGN.md; CS-170): the tracker's items on the branch
+ * Dyno is served from, with work claimed on other branches and worktrees,
+ * read through the tracker's read API (work.ts), never edited here. Tabs
+ * ask one question each (what waits on the owner, what is ready, what is
+ * moving, what is blocked, everything by lifecycle, how it connects),
+ * one row of filters narrows them, and an item opens beside them.
+ */
+
+const route = getRouteApi("/work");
+
+export function Work() {
+  const search = route.useSearch();
+  const navigate = useNavigate({ from: "/work" });
+  const { snapshot, error } = useWork();
+  const set = (patch: Partial<WorkSearch>, replace = false) =>
+    void navigate({
+      search: (prev) =>
+        Object.fromEntries(
+          Object.entries({ ...prev, ...patch }).filter(
+            ([, v]) => v !== undefined && v !== "",
+          ),
+        ),
+      replace,
+    });
+
+  if (!snapshot) {
+    return (
+      <Page title="Work" description={DESCRIPTION} help={<WorkHelp />}>
+        {error ? (
+          <Empty title="The board can't read the tracker">
+            {error.message}. The same lists are in a terminal:{" "}
+            <code>node scripts/work/views.mjs ready</code>.
+          </Empty>
+        ) : (
+          <div className="work-loading" role="status">
+            <CircularProgress size={20} />
+            <Typography variant="body-md">Reading the tracker…</Typography>
+          </div>
+        )}
+      </Page>
+    );
+  }
+  return <Board s={snapshot} search={search} set={set} />;
+}
+
+const DESCRIPTION =
+  "The tracker as a running system, at a glance. Choose anything to see its items.";
+
+function WorkHelp() {
+  return (
+    <>
+      <p>
+        The board reads the work items in <code>packages/next/work</code> on the
+        branch Dyno is served from, through the tracker's read API. It never
+        changes a file: edit the item, or make one with{" "}
+        <code>node scripts/work/new.mjs</code>.
+      </p>
+      <p>
+        Claims made in other worktrees and on other local branches show as in
+        progress until they merge. Claims on other machines arrive with a bundle
+        or a push. The board reads again when an item file changes, when the
+        window comes to the front, and every minute.
+      </p>
+    </>
+  );
+}
+
+const DAY_MS = 86_400_000;
+
+/** What each stage's colour means, for the tooltip on anything coloured by stage. */
+const STAGE_MEANING: Record<Stage, string> = {
+  Proposed: "grey: proposed, not committed to yet",
+  Waiting: "red: blocked until the items it needs are done",
+  Ready: "blue: ready, nothing it needs is open",
+  "In flight": "violet: in flight, someone has it",
+  Done: "green: done",
+};
+const stageTip = (st: Stage, lead?: string) =>
+  `${lead ? `${lead} · ` : ""}${STAGE_NAMES[st]} (${STAGE_MEANING[st]})`;
+
+type View = "move" | "roadmap" | "flow";
+const VIEWS: Array<{ id: View; label: string }> = [
+  { id: "move", label: "Your move" },
+  { id: "roadmap", label: "Roadmap" },
+  { id: "flow", label: "Flow" },
+];
+/** The layout's width at which the pane sits beside the view, not over it. */
+const PANE_MIN = 1000;
+
+/** An element's laid-out width, kept current. */
+function useWidth(ref: RefObject<HTMLElement | null>): number {
+  const [width, setWidth] = useState(() =>
+    typeof window === "undefined" ? 0 : window.innerWidth - 300,
+  );
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) {
+      return;
+    }
+    setWidth(el.getBoundingClientRect().width);
+    const ro = new ResizeObserver(([e]) => setWidth(e!.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref]);
+  return width;
+}
+
+type ScopeKind = "initiative" | "project" | "milestone";
+/** The scope: any mix of initiatives, projects and milestones; none is all work. */
+type ScopeSet = Record<ScopeKind, string[]>;
+const SCOPE_KINDS: ScopeKind[] = ["initiative", "project", "milestone"];
+const listOf = (v?: string) => (v ? v.split(",").filter(Boolean) : []);
+const scopeSetOf = (search: WorkSearch): ScopeSet => ({
+  initiative: listOf(search.initiative),
+  project: listOf(search.project),
+  milestone: listOf(search.milestone),
+});
+/** The scope as search fields, each a comma-separated list. */
+const scopeSearch = (set: ScopeSet): Partial<WorkSearch> =>
+  Object.fromEntries(
+    SCOPE_KINDS.map((k) => [k, set[k].join(",") || undefined]),
+  );
+const scopeSize = (set: ScopeSet) =>
+  set.initiative.length + set.project.length + set.milestone.length;
+
+function Board({
+  s,
+  search,
+  set,
+}: {
+  s: WorkSnapshot;
+  search: WorkSearch;
+  set: (patch: Partial<WorkSearch>, replace?: boolean) => void;
+}) {
+  const layout = useRef<HTMLDivElement>(null);
+  const width = useWidth(layout);
+  const inline = width >= PANE_MIN;
+  const view: View =
+    search.view === "roadmap" || search.view === "flow" ? search.view : "move";
+  const flight = useMemo(() => inFlightOf(s), [s]);
+  const projectOf = useMemo(
+    () => new Map(s.projects.map((p) => [p.id, p])),
+    [s],
+  );
+  const chosen = useMemo(
+    () => scopeSetOf(search),
+    [search.initiative, search.project, search.milestone],
+  );
+  const size = scopeSize(chosen);
+  // One line chosen, of one kind: the views that read one scope's shape.
+  const oneOf = (k: ScopeKind) =>
+    size === 1 && chosen[k].length === 1 ? chosen[k][0] : undefined;
+  const oneInitiative = oneOf("initiative");
+  const oneProject = oneOf("project");
+  const milestoneId = oneOf("milestone");
+  // Everything the scope's lines hold, together.
+  const items = useMemo(() => {
+    if (!size) {
+      return s.items;
+    }
+    const constraints = new Set(
+      s.milestones
+        .filter((m) => chosen.milestone.includes(m.id))
+        .flatMap((m) => m.constraints.map((c) => c.id)),
+    );
+    return s.items.filter(
+      (it) =>
+        chosen.project.includes(it.project ?? "") ||
+        chosen.initiative.includes(
+          projectOf.get(it.project ?? "")?.initiative ?? "",
+        ) ||
+        constraints.has(it.id),
+    );
+  }, [s, chosen, size, projectOf]);
+  const msInScope = (m: WorkMilestone) =>
+    !size ||
+    chosen.milestone.includes(m.id) ||
+    chosen.project.includes(m.project ?? "") ||
+    chosen.initiative.includes(
+      m.initiative ?? projectOf.get(m.project ?? "")?.initiative ?? "",
+    );
+  const itemOf = useMemo(() => new Map(s.items.map((i) => [i.id, i])), [s]);
+  const unblocks = useMemo(() => unblocksOf(s), [s]);
+  const chains = useMemo(() => longestChains(items), [items]);
+  const flow = useMemo(() => flowOf(s, items, { flight }), [s, items, flight]);
+  // Agents' work alone (no decisions, no outside waits), for "ready to start".
+  const workFlow = useMemo(
+    () =>
+      flowOf(
+        s,
+        items.filter((it) => it.kind === "work"),
+        { flight },
+      ),
+    [s, items, flight],
+  );
+  const byActor = useMemo(() => {
+    const by: Record<Actor, WorkItem[]> = {
+      owner: [],
+      agents: [],
+      outside: [],
+      items: [],
+    };
+    for (const it of items) {
+      const a = nextActor(it, flight);
+      if (a) {
+        by[a].push(it);
+      }
+    }
+    return by;
+  }, [items, flight]);
+  const mostWaitedOn = (list: WorkItem[]) =>
+    [...list].sort(
+      (a, b) => (unblocks.get(b.id) ?? 0) - (unblocks.get(a.id) ?? 0),
+    );
+  const decisions = byActor.owner.filter(isOwnerDecision);
+  const toCommit = byActor.owner.filter((it) => !isOwnerDecision(it));
+  const readyToStart = byActor.agents.filter(
+    (it) => stageOf(it, flight) === "Ready",
+  );
+  const inFlight = items.filter((it) => stageOf(it, flight) === "In flight");
+  const now = Date.now();
+  const ageOf = (it: WorkItem) => now - (flow.since.get(it.id) ?? now);
+  const doneDaily = useMemo(
+    () => doneByDay(s, items, flow.days),
+    [s, items, flow.days],
+  );
+  const open = (list: string) => set({ list, item: undefined });
+  /** Scopes to one line (or all work), replacing the scope. */
+  const scopeTo = (patch: Partial<WorkSearch>) =>
+    set({
+      initiative: undefined,
+      project: undefined,
+      milestone: undefined,
+      ...patch,
+    });
+  /** Adds a line to the scope, or takes it out. */
+  const toggleScope = (kind: ScopeKind, id: string) => {
+    const next: ScopeSet = { ...chosen, [kind]: [...chosen[kind]] };
+    const at = next[kind].indexOf(id);
+    if (at >= 0) {
+      next[kind].splice(at, 1);
+    } else {
+      next[kind].push(id);
+    }
+    set(scopeSearch(next));
+  };
+  const scopeTitle = (kind: ScopeKind, id: string) =>
+    (kind === "milestone"
+      ? s.milestones.find((m) => m.id === id)?.title
+      : kind === "project"
+        ? projectOf.get(id)?.title
+        : s.initiatives.find((i) => i.id === id)?.title) ?? id;
+  const scopeNames = SCOPE_KINDS.flatMap((k) =>
+    chosen[k].map((id) => scopeTitle(k, id)),
+  );
+  const scope =
+    scopeNames.length > 2
+      ? `${scopeNames[0]} and ${scopeNames.length - 1} more`
+      : scopeNames.join(" and ") || undefined;
+  const roadmapBy =
+    search.roadmap === "groups" || search.roadmap === "matrix"
+      ? search.roadmap
+      : "milestones";
+  const projectScope = !!oneProject;
+  // The view's own width: the pane, when inline, takes 400 px of the layout.
+  const mainWidth =
+    inline && (search.list || search.item) ? width - 424 : width;
+  const hasTokens =
+    s.items.some(
+      (it) => it.estimate_tokens !== undefined || it.tokens_spent !== undefined,
+    ) || s.milestones.some((m) => m.appetite_tokens !== undefined);
+  // The map by default; a phone-width view starts on the list.
+  const narrow = mainWidth < 480;
+  const asMap =
+    search.layout === "map" || (search.layout !== "list" && !narrow);
+  const across: "steps" | "tokens" =
+    search.across === "tokens" && hasTokens ? "tokens" : "steps";
+
+  return (
+    <Page
+      title="Work"
+      description={DESCRIPTION}
+      help={<WorkHelp />}
+      className="work-page"
+      actions={
+        <span
+          className="work-branch"
+          title={`Read ${new Date(s.generated).toLocaleString()} from ${s.source}`}
+        >
+          <Icon href={svgGitBranch} />
+          <Typography variant="body-sm">
+            {s.branch ?? "this checkout"}
+          </Typography>
+          {s.commit && (
+            <Typography
+              variant="caption-md"
+              color="textSecondary"
+              className="work-mono"
+            >
+              {s.commit}
+            </Typography>
+          )}
+        </span>
+      }
+    >
+      {s.problems.length > 0 && (
+        <Alert severity="warning" className="work-gap">
+          The tracker's check reports{" "}
+          {s.problems.length === 1
+            ? "a problem"
+            : `${s.problems.length} problems`}
+          . Run <code>node scripts/work/views.mjs check</code>.
+        </Alert>
+      )}
+
+      <div
+        ref={layout}
+        className={`work-layout${inline && (search.list || search.item) ? " has-pane" : ""}`}
+      >
+        <div className="work-main">
+          <div className="work-main-bar">
+            <ScopeTrail
+              s={s}
+              search={search}
+              flight={flight}
+              chosen={chosen}
+              names={scopeNames}
+              onToggle={toggleScope}
+              onScope={(go) =>
+                go.milestone
+                  ? set({
+                      initiative: undefined,
+                      project: undefined,
+                      milestone: go.milestone,
+                      list: `ms:${go.milestone}`,
+                      item: undefined,
+                    })
+                  : scopeTo(go)
+              }
+            />
+            <span className="work-main-tools">
+              <ToggleButtonGroup
+                size="small"
+                exclusive
+                value={view}
+                onChange={(_, v: View | null) =>
+                  v && set({ view: v === "move" ? undefined : v })
+                }
+                aria-label="View"
+                className="work-views"
+              >
+                {VIEWS.map((v) => (
+                  <ToggleButton
+                    key={v.id}
+                    value={v.id}
+                    render={<Button variant="outlined" size="small" />}
+                  >
+                    {v.label}
+                    {v.id === "move" && decisions.length > 0 && (
+                      <span className="work-count-badge">
+                        {decisions.length}
+                      </span>
+                    )}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+              <FindField q={search.q} set={set} />
+            </span>
+          </div>
+
+          {view === "move" && (
+            <div className="work-dash">
+              <Card
+                id="work-needs-h"
+                title="Your decisions"
+                className="span-7"
+                stat={{
+                  value: decisions.length,
+                  detail: decisions.length
+                    ? `Oldest waiting ${ageText(Math.max(...decisions.map(ageOf)))}`
+                    : "Nothing waits on you",
+                  tone: decisions.length ? "attention" : undefined,
+                  onOpen: () => open("owner"),
+                }}
+                foot={
+                  <>
+                    {decisions.length > 8 && (
+                      <Link
+                        component="button"
+                        type="button"
+                        onClick={() => open("owner")}
+                      >
+                        All {decisions.length} decisions
+                      </Link>
+                    )}
+                    {toCommit.length > 0 && (
+                      <Link
+                        component="button"
+                        type="button"
+                        onClick={() => open("commit")}
+                      >
+                        {toCommit.length} proposed to commit or drop
+                      </Link>
+                    )}
+                  </>
+                }
+              >
+                <LeverageBars
+                  items={mostWaitedOn(decisions)}
+                  unblocks={unblocks}
+                  limit={8}
+                  selected={search.item}
+                  empty="Nothing waits on you."
+                />
+              </Card>
+
+              <Card
+                id="work-ready-h"
+                title="Ready to start"
+                className="span-5"
+                stat={{
+                  value: readyToStart.length,
+                  series: workFlow.stocks.Ready,
+                  days: flow.days,
+                  onOpen: () => open("ready"),
+                }}
+                foot={
+                  readyToStart.length > 8 && (
+                    <Link
+                      component="button"
+                      type="button"
+                      onClick={() => open("ready")}
+                    >
+                      All {readyToStart.length} ready
+                    </Link>
+                  )
+                }
+              >
+                <LeverageBars
+                  items={mostWaitedOn(readyToStart)}
+                  unblocks={unblocks}
+                  limit={8}
+                  selected={search.item}
+                  empty="Nothing is ready to start."
+                />
+              </Card>
+
+              <Card
+                id="work-flight-h"
+                title="In flight"
+                className="span-7"
+                stat={{
+                  value: inFlight.length,
+                  detail: "Who holds each, and for how long",
+                  series: flow.stocks["In flight"],
+                  days: flow.days,
+                  onOpen: () => open("stage:In flight"),
+                }}
+              >
+                <InFlightRows
+                  items={inFlight}
+                  flight={flight}
+                  branch={s.branch}
+                  since={flow.since}
+                  selected={search.item}
+                />
+              </Card>
+
+              <Card
+                id="work-outside-h"
+                title="Waiting outside"
+                className="span-5"
+                stat={{
+                  value: byActor.outside.length,
+                  detail: byActor.outside.length
+                    ? `On ${new Set(byActor.outside.map((it) => it.party ?? "")).size} other parties`
+                    : "Nothing waits outside",
+                  onOpen: () => open("outside"),
+                }}
+                foot={
+                  byActor.outside.length > 5 && (
+                    <Link
+                      component="button"
+                      type="button"
+                      onClick={() => open("outside")}
+                    >
+                      All {byActor.outside.length}
+                    </Link>
+                  )
+                }
+              >
+                <LeverageBars
+                  items={mostWaitedOn(byActor.outside)}
+                  unblocks={unblocks}
+                  limit={5}
+                  selected={search.item}
+                  empty="Nothing waits on other parties."
+                  party
+                />
+              </Card>
+            </div>
+          )}
+
+          {view === "roadmap" && (
+            <div className="work-dash">
+              <Card
+                id="work-roadmap-h"
+                title={projectScope ? "Linked projects" : "Roadmap"}
+                caption={
+                  projectScope
+                    ? "What it waits on, and what waits on it"
+                    : roadmapBy === "matrix"
+                      ? "Each row's open items that wait on each column's"
+                      : roadmapBy === "groups" && oneInitiative
+                        ? "The most open work first; choose one to scope to it"
+                        : "In the order their work can happen, from the needs between their items"
+                }
+                className="span-12"
+                tools={
+                  !projectScope && (
+                    <span className="work-card-tools">
+                      {roadmapBy === "milestones" && (
+                        <ToggleButtonGroup
+                          size="small"
+                          exclusive
+                          value={asMap ? "map" : "list"}
+                          onChange={(_, v: string | null) =>
+                            v &&
+                            set(
+                              {
+                                layout:
+                                  v === (narrow ? "list" : "map")
+                                    ? undefined
+                                    : v,
+                              },
+                              true,
+                            )
+                          }
+                          aria-label="Show milestones as"
+                        >
+                          <ToggleButton
+                            value="map"
+                            render={<Button variant="outlined" size="small" />}
+                          >
+                            Map
+                          </ToggleButton>
+                          <ToggleButton
+                            value="list"
+                            render={<Button variant="outlined" size="small" />}
+                          >
+                            List
+                          </ToggleButton>
+                        </ToggleButtonGroup>
+                      )}
+                      {roadmapBy === "milestones" && asMap && (
+                        <ToggleButtonGroup
+                          size="small"
+                          exclusive
+                          value={across}
+                          onChange={(_, v: string | null) =>
+                            v &&
+                            set({ across: v === "steps" ? undefined : v }, true)
+                          }
+                          aria-label="Across"
+                        >
+                          <ToggleButton
+                            value="steps"
+                            render={<Button variant="outlined" size="small" />}
+                          >
+                            Steps
+                          </ToggleButton>
+                          <ToggleButton
+                            value="tokens"
+                            disabled={!hasTokens}
+                            render={
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                title={
+                                  hasTokens
+                                    ? "Across by the tokens left on the way"
+                                    : "No token estimates yet: give items estimate_tokens, or milestones appetite_tokens"
+                                }
+                              />
+                            }
+                          >
+                            Tokens
+                          </ToggleButton>
+                        </ToggleButtonGroup>
+                      )}
+                      <ToggleButtonGroup
+                        size="small"
+                        exclusive
+                        value={roadmapBy}
+                        onChange={(_, v: string | null) =>
+                          v &&
+                          set(
+                            { roadmap: v === "milestones" ? undefined : v },
+                            true,
+                          )
+                        }
+                        aria-label="Roadmap by"
+                      >
+                        <ToggleButton
+                          value="milestones"
+                          render={<Button variant="outlined" size="small" />}
+                        >
+                          Milestones
+                        </ToggleButton>
+                        <ToggleButton
+                          value="groups"
+                          render={<Button variant="outlined" size="small" />}
+                        >
+                          {oneInitiative ? "Projects" : "Initiatives"}
+                        </ToggleButton>
+                        <ToggleButton
+                          value="matrix"
+                          render={<Button variant="outlined" size="small" />}
+                        >
+                          Project waits
+                        </ToggleButton>
+                      </ToggleButtonGroup>
+                    </span>
+                  )
+                }
+              >
+                {projectScope ? (
+                  <ProjectLinks
+                    s={s}
+                    project={oneProject!}
+                    onCell={(from, to) => open(`dep:${from}:${to}`)}
+                  />
+                ) : roadmapBy === "matrix" ? (
+                  <MatrixView
+                    s={s}
+                    items={items}
+                    onCell={(from, to) => open(`dep:${from}:${to}`)}
+                    onProject={(id) => scopeTo({ project: id })}
+                  />
+                ) : roadmapBy === "groups" && oneInitiative ? (
+                  <ProjectBars
+                    s={s}
+                    items={items}
+                    flight={flight}
+                    single={false}
+                    onProject={(id) => scopeTo({ project: id })}
+                    onSegment={(id, st) =>
+                      set({
+                        project: id,
+                        initiative: undefined,
+                        list: `stage:${st}`,
+                      })
+                    }
+                  />
+                ) : roadmapBy === "milestones" && asMap ? (
+                  <MilestoneMap
+                    s={s}
+                    flight={flight}
+                    unit={across}
+                    inScope={size ? msInScope : undefined}
+                    selected={
+                      search.list?.startsWith("ms:")
+                        ? search.list.slice(3)
+                        : milestoneId
+                    }
+                    onOpen={(id) => open(`ms:${id}`)}
+                    onWait={(from, to) => open(`mdep:${to}:${from}`)}
+                    release={search.release}
+                    onRelease={(id) => set({ release: id }, true)}
+                    shape={search.shape === "graph" ? "graph" : "lanes"}
+                    onShape={(v) =>
+                      set({ shape: v === "graph" ? v : undefined }, true)
+                    }
+                  />
+                ) : (
+                  <Roadmap
+                    s={s}
+                    flight={flight}
+                    by={roadmapBy === "groups" ? "initiatives" : "milestones"}
+                    inScope={size ? msInScope : undefined}
+                    selected={
+                      search.list?.startsWith("ms:")
+                        ? search.list.slice(3)
+                        : (milestoneId ?? oneInitiative)
+                    }
+                    onOpen={(id) => open(`ms:${id}`)}
+                    onZoom={(id) => scopeTo({ initiative: id })}
+                    onWait={(from, to) =>
+                      open(
+                        `${roadmapBy === "groups" ? "idep" : "mdep"}:${from}:${to}`,
+                      )
+                    }
+                  />
+                )}
+              </Card>
+
+              <Card
+                id="work-chain-h"
+                title="Longest chains"
+                caption="Items that must happen in order, by where they start"
+                className="span-12"
+              >
+                <ChainBars
+                  chains={chains}
+                  flight={flight}
+                  projectOf={projectOf}
+                  limit={6}
+                  onChain={(head) => open(`chain:${head}`)}
+                />
+              </Card>
+            </div>
+          )}
+
+          {view === "flow" && (
+            <div className="work-dash">
+              <ul className="work-kpis" aria-label="Flow at a glance">
+                <Kpi
+                  label="Waiting on items"
+                  value={flow.stocks.Waiting.at(-1) ?? 0}
+                  series={flow.stocks.Waiting}
+                  days={flow.days}
+                  onOpen={() => open("stage:Waiting")}
+                />
+                <Kpi
+                  label="Proposed"
+                  value={flow.stocks.Proposed.at(-1) ?? 0}
+                  series={flow.stocks.Proposed}
+                  days={flow.days}
+                  onOpen={() => open("stage:Proposed")}
+                />
+                <Kpi
+                  label={`Done, last ${flow.window} days`}
+                  value={flow.arrived.Done}
+                  series={doneDaily}
+                  days={flow.days}
+                  detail={leadLine(flow)}
+                  onOpen={() => open("done")}
+                />
+                <Kpi
+                  label={`New, last ${flow.window} days`}
+                  value={flow.created}
+                  detail="Items made since the tracker's import"
+                />
+              </ul>
+              <Card
+                id="work-flow-h"
+                title="Items in each stage, day by day"
+                caption="A band that widens is a queue growing; choose one to list it"
+                className="span-12"
+              >
+                <FlowChart flow={flow} onStage={(st) => open(`stage:${st}`)} />
+              </Card>
+              <MeasuresCard
+                s={s}
+                items={items}
+                flow={flow}
+                flight={flight}
+                doneDaily={doneDaily}
+                itemOf={itemOf}
+                milestones={s.milestones.filter(
+                  (m) =>
+                    m.status !== "Done" &&
+                    m.status !== "Dropped" &&
+                    msInScope(m),
+                )}
+                onOpen={open}
+              />
+              <Typography
+                variant="caption-md"
+                color="textTertiary"
+                render={<p />}
+                className="work-later"
+              >
+                The merge queue, quotas and the controllers' steps join this
+                view when HITLd records them.
+              </Typography>
+            </div>
+          )}
+        </div>
+
+        <ListPanel
+          s={s}
+          list={search.list}
+          open={!!search.list && !(inline && search.item)}
+          inline={inline}
+          items={items}
+          flight={flight}
+          flow={flow}
+          unblocks={unblocks}
+          projectOf={projectOf}
+          itemOf={itemOf}
+          selected={search.item}
+          search={search}
+          scope={scope}
+          onClose={() =>
+            set({ list: undefined, item: undefined, q: undefined })
+          }
+          onList={(l) => set({ list: l, item: undefined })}
+          onQuery={(q: string) =>
+            set({ q: q || undefined, list: q ? "find" : undefined }, true)
+          }
+        />
+        <ItemPanel
+          s={s}
+          id={search.item}
+          inline={inline}
+          projectOf={projectOf}
+          itemOf={itemOf}
+          flight={flight}
+          back={search.list ? listTitle(search.list, scope, s) : undefined}
+          onClose={() => set({ item: undefined })}
+          onProject={(id) =>
+            set({
+              project: id,
+              initiative: undefined,
+              milestone: undefined,
+              item: undefined,
+              list: undefined,
+            })
+          }
+        />
+      </div>
+    </Page>
+  );
+}
+
+/** Below this many samples, a measure shows its points but no typical value. */
+const MIN_SAMPLES = 10;
+
+/**
+ * The measures that replace velocity (human-in-the-lead's design, part
+ * 11): flow from the tracker's history now, tokens and quality once its
+ * ledger records them. Each row has its value, a chart over time, how it
+ * is read (the info tip) and its pair, the measure that must not get
+ * worse if this one is pushed (part 11.3).
+ */
+function MeasuresCard({
+  s,
+  items,
+  flow,
+  flight,
+  doneDaily,
+  itemOf,
+  milestones,
+  onOpen,
+}: {
+  s: WorkSnapshot;
+  items: WorkItem[];
+  flow: Flow;
+  flight: InFlight;
+  doneDaily: number[];
+  itemOf: Map<string, WorkItem>;
+  milestones: WorkMilestone[];
+  onOpen: (list: string) => void;
+}) {
+  const m: Measures = useMemo(
+    () => measuresOf(s, items, flow),
+    [s, items, flow],
+  );
+  const end = Date.now();
+  const began = flow.days[0] ?? end;
+  // At least two weeks across, so a short history reads as short.
+  const start = Math.min(began, end - 14 * DAY_MS);
+  const typical = (xs: number[], what: string) =>
+    xs.length >= MIN_SAMPLES
+      ? {
+          value: ageText(median(xs)!),
+          sub: `Median of ${xs.length}; 90th percentile ${ageText(percentile(xs, 90)!)}`,
+        }
+      : {
+          value: `${xs.length} ${what}`,
+          sub: `Too few for a typical time (it needs ${MIN_SAMPLES}); each dot is one`,
+        };
+  const lead = typical(m.lead, m.lead.length === 1 ? "finished" : "finished");
+  const answered = typical(m.decisionLatency, "answered");
+  const titleOf = (id: string) => itemOf.get(id)?.title ?? id;
+  const chains = milestones
+    .map((ms) => ({ ms, ...criticalPathOf(ms, itemOf) }))
+    .filter((p) => p.path.length > 0)
+    .sort((a, b) => b.path.length - b.done - (a.path.length - a.done));
+  return (
+    <Card
+      id="work-measures-h"
+      title="Measures"
+      caption="Each is paired with the measure that must not get worse when it is pushed"
+      className="span-12"
+    >
+      <ul className="work-mrows">
+        <MeasureRow
+          name="Throughput"
+          info={`Items moved to Done, by day; the headline counts the last ${flow.window} days. The tracker's import, which arrived with items already Done, isn't counted.`}
+          value={`${flow.arrived.Done} done`}
+          sub={`In the last ${flow.window} days`}
+          pair="Change failure rate, escaped defects"
+          onOpen={() => onOpen("done")}
+          chart={
+            <MiniChart
+              kind="bars"
+              start={start}
+              began={began}
+              end={end}
+              days={flow.days}
+              series={doneDaily}
+              tone="done"
+              format={(v) => `${v} done`}
+              label="Items done per day"
+            />
+          }
+        />
+        <MeasureRow
+          name="Lead time"
+          info="From an item's Planned to its Done, for items finished since the history began. Each dot is one item, at the day it finished; higher took longer. Work that lands as one merge shows the merge's timing, so the numbers firm up once HITLd records claims."
+          value={lead.value}
+          sub={lead.sub}
+          chart={
+            <MiniChart
+              kind="dots"
+              start={start}
+              began={began}
+              end={end}
+              points={m.leadPoints}
+              tone="done"
+              median={m.lead.length >= MIN_SAMPLES ? median(m.lead) : undefined}
+              format={(v) => ageText(v)}
+              pointLabel={(p) => `${p.id} ${titleOf(p.id)}: ${ageText(p.v)}`}
+              label="Lead time of each finished item"
+              empty="No item has finished since the history began"
+            />
+          }
+        />
+        <MeasureRow
+          name="Decision latency"
+          info="From a decision being asked (its creation) to its answer (Done). Filled dots are answered decisions, at the day they were answered; the open column at the right is every decision still waiting, by how long it has waited."
+          value={answered.value}
+          sub={
+            m.decisionsOpen.length
+              ? `${m.decisionsOpen.length} open, oldest asked ${ageText(Math.max(...m.decisionsOpen))} ago`
+              : "None open"
+          }
+          pair="How often answered decisions are overruled or reversed"
+          onOpen={() => onOpen("owner")}
+          chart={
+            <MiniChart
+              kind="dots"
+              start={start}
+              began={began}
+              end={end}
+              points={m.decisionPoints}
+              tone="attention"
+              median={
+                m.decisionLatency.length >= MIN_SAMPLES
+                  ? median(m.decisionLatency)
+                  : undefined
+              }
+              format={(v) => ageText(v)}
+              pointLabel={(p) =>
+                `${p.id} ${titleOf(p.id)}: ${p.open ? `waiting ${ageText(p.v)}` : `answered after ${ageText(p.v)}`}`
+              }
+              label="How long each decision waited"
+            />
+          }
+        />
+        <MeasureRow
+          name="Blocked on your decisions"
+          info="Open items that need an open decision of yours, at the end of each day. The item-days are how long those waiting now have waited so far, together."
+          value={`${m.blocked.items} ${m.blocked.items === 1 ? "item" : "items"}`}
+          sub={
+            m.blocked.items
+              ? `Behind ${m.blocked.decisions} ${m.blocked.decisions === 1 ? "decision" : "decisions"}; ${Math.round(m.blocked.itemDays)} item-days so far`
+              : "No open item waits on you"
+          }
+          onOpen={() => onOpen("owner")}
+          chart={
+            <MiniChart
+              kind="line"
+              start={start}
+              began={began}
+              end={end}
+              days={flow.days}
+              series={m.blockedDaily}
+              tone="attention"
+              format={(v) => `${v} blocked`}
+              label="Items blocked on your decisions, by day"
+            />
+          }
+        />
+        <MeasureRow
+          name="Token estimate error"
+          info={`How far each item type's token estimates are from the tokens spent: accuracy is the bias (the mean of log actual over estimate), precision the spread. It needs estimates on items (estimate_tokens; ${m.estimated} have one) and actual tokens from HITLd's ledger.`}
+          pair="Appetite use: estimates mustn't be padded"
+        />
+        <MeasureRow
+          name="Tokens per accepted item"
+          info="All tokens spent on an item (the work, retries, checks and reviews) for items merged and not reverted, by tier and item type. It needs HITLd's ledger."
+          pair="First-pass yield, escaped defects"
+        />
+        <MeasureRow
+          name="First-pass yield"
+          info="The share of items whose first report passed verification and merged without a second round. It needs HITLd's ledger."
+        />
+      </ul>
+
+      {chains.length > 0 && (
+        <div className="work-chains-ms">
+          <header className="work-chains-ms-head">
+            <Typography variant="subtitle-sm" render={<h3 />}>
+              Longest chain in each milestone
+            </Typography>
+            <InfoTip text="Inside each open milestone, the longest run of items where each needs the one before. Its length is the fewest steps the milestone can take, however many agents work on it; each square is one item, coloured by its stage, and the next one to move is named." />
+          </header>
+          <ul className="work-chainrows">
+            {chains.map(({ ms, path, done }) => {
+              const next = path.find((it) => it.status !== "Done");
+              const nextStage = next ? stageOf(next, flight) : undefined;
+              return (
+                <li key={ms.id} className="work-chainrow">
+                  <button
+                    type="button"
+                    className="work-pbar-name"
+                    onClick={() => onOpen(`ms:${ms.id}`)}
+                    title={`${ms.title}: open the milestone`}
+                  >
+                    <LevelMark level="milestone" />
+                    <span className="work-outline-label">{ms.title}</span>
+                  </button>
+                  <ol
+                    className="work-chainsq"
+                    aria-label={`${path.length} steps, ${done} done`}
+                  >
+                    {path.map((it) => (
+                      <li key={it.id}>
+                        <ItemLink
+                          id={it.id}
+                          className={`work-chainsq-step stage-${slug(stageOf(it, flight) ?? "Waiting")}`}
+                          tip={stageTip(
+                            stageOf(it, flight) ?? "Waiting",
+                            it.id,
+                          )}
+                          label={`${it.id} ${it.title}: ${STAGE_NAMES[stageOf(it, flight) ?? "Waiting"]}`}
+                        >
+                          <span className="visually-hidden">{it.id}</span>
+                        </ItemLink>
+                      </li>
+                    ))}
+                  </ol>
+                  <span className="work-chainrow-count">
+                    {done} of {path.length}
+                  </span>
+                  {next ? (
+                    <ItemLink id={next.id} className="work-chainrow-next">
+                      Next: <span className="work-id">{next.id}</span>{" "}
+                      {nextStage === "Ready"
+                        ? "ready"
+                        : nextStage === "In flight"
+                          ? "in flight"
+                          : isOwnerDecision(next)
+                            ? "your decision"
+                            : (
+                                STAGE_NAMES[nextStage ?? "Waiting"] ?? ""
+                              ).toLowerCase()}
+                    </ItemLink>
+                  ) : (
+                    <span className="work-chainrow-next">All done</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <span className="work-legend">
+            {STAGES.map((st) => (
+              <span
+                key={st}
+                className="work-legend-key"
+                data-tip={STAGE_MEANING[st]}
+              >
+                <span
+                  className={`work-swatch stage-${slug(st)}`}
+                  aria-hidden="true"
+                />
+                {STAGE_NAMES[st]}
+              </span>
+            ))}
+          </span>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+/** An info mark that shows how something is read, on hover or focus. */
+function InfoTip({ text }: { text: string }) {
+  return (
+    <Tooltip title={text} placement="top" arrow>
+      <button type="button" className="work-info" aria-label={text}>
+        <Icon href={svgInfo} />
+      </button>
+    </Tooltip>
+  );
+}
+
+/**
+ * One measure: its name and how it is read (the info tip), its value now,
+ * a chart over time, and its pair. With no value it isn't measured yet,
+ * and the chart's place says what it waits for.
+ */
+function MeasureRow({
+  name,
+  info,
+  value,
+  sub,
+  chart,
+  pair,
+  onOpen,
+}: {
+  name: string;
+  info: string;
+  value?: string;
+  sub?: string;
+  chart?: ReactNode;
+  pair?: string;
+  onOpen?: () => void;
+}) {
+  const later = value === undefined;
+  return (
+    <li className={`work-mrow${later ? " later" : ""}`}>
+      <span className="work-mrow-name">
+        <Typography variant="body-sm" render={<h3 />}>
+          {name}
+        </Typography>
+        <InfoTip text={info} />
+      </span>
+      <span className="work-mrow-value">
+        {later ? (
+          <span className="work-mrow-big muted">Not measured yet</span>
+        ) : onOpen ? (
+          <button type="button" className="work-mrow-big" onClick={onOpen}>
+            {value}
+          </button>
+        ) : (
+          <span className="work-mrow-big">{value}</span>
+        )}
+        {sub && (
+          <Typography variant="caption-md" color="textSecondary">
+            {sub}
+          </Typography>
+        )}
+      </span>
+      <span className="work-mrow-chart">
+        {chart ?? (
+          <Typography variant="caption-md" color="textSecondary">
+            Arrives with HITLd's ledger
+          </Typography>
+        )}
+      </span>
+      <Typography
+        variant="caption-md"
+        color="textSecondary"
+        className="work-mrow-pair"
+      >
+        {pair ? (
+          <>Paired with {pair.charAt(0).toLowerCase() + pair.slice(1)}</>
+        ) : (
+          "No pair"
+        )}
+      </Typography>
+    </li>
+  );
+}
+
+/**
+ * A small chart over the history's days: bars or a line for a count per
+ * day, or dots for things that finished (how long each took, at the day
+ * it finished; open ones stand at the right edge, hollow). Hovering
+ * follows the pointer with a crosshair and reads the nearest day or dot.
+ */
+function MiniChart({
+  kind,
+  start,
+  began,
+  end,
+  days = [],
+  series = [],
+  points = [],
+  tone,
+  median: mid,
+  format,
+  pointLabel,
+  label,
+  empty = "Nothing yet",
+}: {
+  kind: "bars" | "line" | "dots";
+  start: number;
+  /** When the history began: before it, the chart is shaded. */
+  began: number;
+  end: number;
+  days?: number[];
+  series?: number[];
+  points?: MeasurePoint[];
+  tone: "done" | "attention";
+  median?: number;
+  format: (v: number) => string;
+  pointLabel?: (p: MeasurePoint) => string;
+  label: string;
+  empty?: string;
+}) {
+  const [at, setAt] = useState<number>();
+  const ref = useRef<SVGSVGElement>(null);
+  const hatch = useId();
+  const w = 240;
+  const h = 44;
+  const pad = 5;
+  const span = Math.max(1, end - start);
+  const xt = (t: number) => pad + ((t - start) / span) * (w - 2 * pad);
+  const values = kind === "dots" ? points.map((p) => p.v) : series;
+  const max = Math.max(1, ...values, mid ?? 0);
+  const y = (v: number) => h - pad - ((h - 2 * pad) * v) / max;
+  // Day bars and line points sit at each day's middle, the last at now.
+  const dayX = (i: number) =>
+    i === days.length - 1
+      ? xt(end) - (kind === "bars" ? 4 : 0)
+      : xt(days[i]! + DAY_MS / 2);
+  // Open ones all stand at now: spread them leftwards in a narrow band,
+  // longest-waiting nearest the edge, so each one shows.
+  const openOrder = new Map(
+    points
+      .filter((p) => p.open)
+      .sort((a, b) => b.v - a.v)
+      .map((p, i) => [p.id, i]),
+  );
+  const px = (p: MeasurePoint) =>
+    p.open ? xt(p.t) - ((openOrder.get(p.id) ?? 0) % 6) * 4 : xt(p.t);
+  const xs = kind === "dots" ? points.map(px) : days.map((_, i) => dayX(i));
+  const day = (t: number) =>
+    new Date(t).toLocaleDateString([], { month: "short", day: "numeric" });
+  if (!values.length) {
+    return <span className="work-mini-empty">{empty}</span>;
+  }
+  const follow = (clientX: number) => {
+    const r = ref.current?.getBoundingClientRect();
+    if (!r?.width) {
+      return;
+    }
+    const px = ((clientX - r.left) / r.width) * w;
+    let best = 0;
+    for (let i = 1; i < xs.length; i++) {
+      if (Math.abs(xs[i]! - px) < Math.abs(xs[best]! - px)) {
+        best = i;
+      }
+    }
+    setAt(best);
+  };
+  const read =
+    at === undefined
+      ? undefined
+      : kind === "dots"
+        ? (pointLabel?.(points[at]!) ?? format(points[at]!.v))
+        : `${day(days[at]!)}: ${format(series[at]!)}`;
+  const barW = Math.max(
+    3,
+    Math.min(14, ((w - 2 * pad) / Math.max(1, (end - start) / DAY_MS)) * 0.6),
+  );
+  return (
+    <span
+      className={`work-spark-wrap work-mini ${tone}`}
+      onPointerMove={(e) => follow(e.clientX)}
+      onPointerLeave={() => setAt(undefined)}
+    >
+      <svg
+        ref={ref}
+        width={w}
+        height={h}
+        viewBox={`0 0 ${w} ${h}`}
+        role="img"
+        aria-label={`${label}, ${day(start)} to ${day(end)}${kind === "dots" ? `: ${points.length} shown` : `: ${series.map((v, i) => `${day(days[i]!)} ${format(v)}`).join(", ")}`}`}
+        className="work-mini-svg"
+      >
+        <defs>
+          <pattern
+            id={hatch}
+            width="4"
+            height="4"
+            patternUnits="userSpaceOnUse"
+            patternTransform="rotate(45)"
+          >
+            <line x1="0" y1="0" x2="0" y2="4" className="work-mini-hatch" />
+          </pattern>
+        </defs>
+        {began > start && (
+          <rect
+            x={pad}
+            y={0}
+            width={Math.max(0, xt(began) - pad)}
+            height={h - pad}
+            fill={`url(#${hatch})`}
+          >
+            <title>Before the history began</title>
+          </rect>
+        )}
+        <line
+          x1={pad}
+          x2={w - pad}
+          y1={h - pad}
+          y2={h - pad}
+          className="work-mini-base"
+        />
+        {mid !== undefined && (
+          <line
+            x1={pad}
+            x2={w - pad}
+            y1={y(mid)}
+            y2={y(mid)}
+            className="work-mini-median"
+          />
+        )}
+        {at !== undefined && (
+          <line
+            x1={xs[at]}
+            x2={xs[at]}
+            y1={0}
+            y2={h}
+            className="work-spark-cross"
+          />
+        )}
+        {kind === "bars" &&
+          series.map((v, i) =>
+            v > 0 ? (
+              <rect
+                key={i}
+                x={dayX(i) - barW / 2}
+                y={y(v)}
+                width={barW}
+                height={h - pad - y(v)}
+                rx={2}
+                className={`work-mini-mark${at === i ? " on" : ""}`}
+              />
+            ) : null,
+          )}
+        {kind === "line" && (
+          <>
+            <path
+              d={series
+                .map((v, i) => `${i ? "L" : "M"}${dayX(i)},${y(v)}`)
+                .join(" ")}
+              className="work-mini-line"
+            />
+            {series.map((v, i) => (
+              <circle
+                key={i}
+                cx={dayX(i)}
+                cy={y(v)}
+                r={at === i ? 3.5 : 2.5}
+                className="work-mini-mark"
+              />
+            ))}
+          </>
+        )}
+        {kind === "dots" &&
+          points.map((p, i) => (
+            <circle
+              key={p.id}
+              cx={px(p)}
+              cy={y(p.v)}
+              r={at === i ? 4 : 3}
+              className={`work-mini-mark${p.open ? " open" : ""}${at === i ? " on" : ""}`}
+            />
+          ))}
+        <rect x={0} y={0} width={w} height={h} className="work-spark-hit" />
+      </svg>
+      {read && (
+        <span
+          className="work-spark-read"
+          aria-hidden="true"
+          style={{
+            left: `${(xs[at!]! / w) * 100}%`,
+            transform: `translateX(-${(xs[at!]! / w) * 100}%)`,
+          }}
+        >
+          {read}
+        </span>
+      )}
+    </span>
+  );
+}
+
+type Level = "initiative" | "project" | "milestone" | "item";
+const LEVEL_NAMES: Record<Level, string> = {
+  initiative: "Initiative",
+  project: "Project",
+  milestone: "Milestone",
+  item: "Item",
+};
+
+/**
+ * What a line is, by shape, the same everywhere on the page: stacked
+ * layers for an initiative (it holds projects), a clipboard for a project
+ * (usually one plan), a diamond for a milestone (the roadmap's mark), a
+ * ring for an item. Shape, not colour: colour already means a stage (the
+ * blue ramp) or "needs you" (amber). Items' IDs carry the ring by
+ * themselves (`.work-id`).
+ */
+function LevelMark({ level }: { level: Level }) {
+  return (
+    <span
+      className={`work-level ${level}`}
+      role="img"
+      aria-label={LEVEL_NAMES[level]}
+      title={LEVEL_NAMES[level]}
+    >
+      {level === "initiative" ? (
+        <Icon href={svgLayers} />
+      ) : level === "project" ? (
+        <Icon href={svgClipboard} />
+      ) : null}
+    </span>
+  );
+}
+
+/** A dashboard card: a titled section, optional tools at its head, links at its foot. */
+function Card({
+  id,
+  title,
+  caption,
+  stat,
+  className,
+  tools,
+  foot,
+  children,
+}: {
+  id: string;
+  title: string;
+  caption?: string;
+  /** A section led by its number: the count, a line on it, its trend; choosing it lists the items. */
+  stat?: {
+    value: number;
+    detail?: string;
+    series?: number[];
+    days?: number[];
+    tone?: "attention";
+    onOpen?: () => void;
+  };
+  className?: string;
+  tools?: ReactNode;
+  foot?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className={`work-card ${className ?? ""}`} aria-labelledby={id}>
+      <header className={`work-card-head${stat ? " has-stat" : ""}`}>
+        {stat ? (
+          <span className="work-card-titles">
+            <h2 id={id} className="work-stat-title">
+              <button
+                type="button"
+                className={`work-stat ${stat.tone ?? ""}`}
+                onClick={stat.onOpen}
+                title={`List all ${stat.value}`}
+              >
+                <span className="work-stat-value">{stat.value}</span>
+                <span className="work-stat-label">{title}</span>
+              </button>
+            </h2>
+            {stat.detail && (
+              <Typography variant="caption-md" color="textSecondary">
+                {stat.detail}
+              </Typography>
+            )}
+          </span>
+        ) : (
+          <span className="work-card-titles">
+            <Typography variant="subtitle-md" render={<h2 />} id={id}>
+              {title}
+            </Typography>
+            {caption && (
+              <Typography variant="caption-md" color="textSecondary">
+                {caption}
+              </Typography>
+            )}
+          </span>
+        )}
+        {stat?.series && stat.days && stat.series.length > 1 && (
+          <span className="work-stat-trend">
+            <Sparkline
+              days={stat.days}
+              values={stat.series}
+              label={`${title}: ${stat.value} now`}
+            />
+            <Typography variant="caption-md" color="textSecondary">
+              {(() => {
+                const d = stat.value - stat.series[0]!;
+                return d === 0
+                  ? "No change since the history began"
+                  : `${d > 0 ? "+" : "−"}${Math.abs(d)} since the history began`;
+              })()}
+            </Typography>
+          </span>
+        )}
+        {tools}
+      </header>
+      {children}
+      {foot && <div className="work-card-foot">{foot}</div>}
+    </section>
+  );
+}
+
+/** Items in flight: who holds each, where, and since when. */
+function InFlightRows({
+  items,
+  flight,
+  branch,
+  since,
+  selected,
+}: {
+  items: WorkItem[];
+  flight: InFlight;
+  branch?: string;
+  since: Map<string, number>;
+  selected?: string;
+}) {
+  if (!items.length) {
+    return (
+      <Typography
+        variant="body-sm"
+        color="textSecondary"
+        render={<p />}
+        className="work-empty"
+      >
+        Nothing is in flight.
+      </Typography>
+    );
+  }
+  const now = Date.now();
+  return (
+    <ul className="work-rows">
+      {items.map((it) => (
+        <li
+          key={it.id}
+          className={`work-row${it.id === selected ? " selected" : ""}`}
+        >
+          <ItemLink id={it.id} className="work-row-main">
+            <span className="work-id">{it.id}</span>
+            <span className="work-row-title">
+              <InlineText text={it.title} />
+            </span>
+            <Typography
+              variant="caption-md"
+              color="textSecondary"
+              className="work-row-extra"
+            >
+              {[
+                whereOf(it, flight, branch),
+                since.has(it.id) ? ageText(now - since.get(it.id)!) : undefined,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </Typography>
+          </ItemLink>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Items finished on each day of the flow's days (the throughput run). */
+function doneByDay(
+  s: WorkSnapshot,
+  items: readonly WorkItem[],
+  days: number[],
+): number[] {
+  const ids = new Set(items.map((i) => i.id));
+  const out = days.map(() => 0);
+  // Moves into Done only: an item whose first record is Done arrived
+  // finished (the tracker's import), and finished no work that day.
+  const last = new Map<string, string>();
+  const ordered = [...(s.history ?? [])].sort(
+    (a, b) => Date.parse(a.at) - Date.parse(b.at),
+  );
+  for (const e of ordered) {
+    const before = last.get(e.id);
+    last.set(e.id, e.status);
+    if (e.status !== "Done" || !ids.has(e.id) || !before || before === "Done") {
+      continue;
+    }
+    const t = Date.parse(e.at);
+    const i = days.findLastIndex((d) => d <= t);
+    if (i >= 0) {
+      out[i]!++;
+    }
+  }
+  return out;
+}
+
+function leadLine(flow: Flow): string {
+  const lead = median(flow.leadDays);
+  return lead === undefined || flow.leadDays.length < 3
+    ? "Too few finished for a lead time"
+    : `Lead time ${ageText(lead * 86_400_000)} (median, ${flow.leadDays.length})`;
+}
+
+/** A headline number: what it is, its trend, one line, and its items. */
+function Kpi({
+  label,
+  value,
+  series,
+  days,
+  detail,
+  tone,
+  onOpen,
+}: {
+  label: string;
+  value: number;
+  series?: number[];
+  days?: number[];
+  detail?: string;
+  tone?: "attention";
+  /** Lists its items; a number with no list of its own leaves it out. */
+  onOpen?: () => void;
+}) {
+  const first = series?.[0];
+  const delta = series && first !== undefined ? value - first : undefined;
+  const Tag = onOpen ? "button" : "div";
+  return (
+    <li>
+      <Tag
+        type={onOpen ? "button" : undefined}
+        className={`work-kpi ${tone ?? ""}${onOpen ? "" : " still"}`}
+        onClick={onOpen}
+      >
+        <Typography variant="caption-lg" color="textSecondary">
+          {label}
+        </Typography>
+        <span className="work-kpi-row">
+          <span className="work-kpi-value">{value}</span>
+          {series && days && series.length > 1 && (
+            <Sparkline
+              days={days}
+              values={series}
+              label={`${label}: ${value} now`}
+            />
+          )}
+        </span>
+        <Typography variant="caption-md" color="textSecondary">
+          {detail ??
+            (delta === undefined || !series || series.length < 2
+              ? " "
+              : delta === 0
+                ? "No change since the history began"
+                : `${delta > 0 ? "+" : "−"}${Math.abs(delta)} since the history began`)}
+        </Typography>
+      </Tag>
+    </li>
+  );
+}
+
+/** Items as rows with a bar for how much waits behind each. */
+function LeverageBars({
+  items,
+  unblocks,
+  limit,
+  party,
+  selected,
+  empty = "Nothing here.",
+}: {
+  items: WorkItem[];
+  unblocks: Map<string, number>;
+  limit: number;
+  party?: boolean;
+  selected?: string;
+  empty?: string;
+}) {
+  const shown = items.slice(0, limit);
+  const max = Math.max(1, ...shown.map((it) => unblocks.get(it.id) ?? 0));
+  if (!shown.length) {
+    return (
+      <Typography
+        variant="body-sm"
+        color="textSecondary"
+        render={<p />}
+        className="work-empty"
+      >
+        {empty}
+      </Typography>
+    );
+  }
+  return (
+    <ol className="work-bars">
+      <li className="work-bars-head" aria-hidden="true">
+        <span />
+        <span>Items waiting behind each</span>
+      </li>
+      {shown.map((it) => {
+        const n = unblocks.get(it.id) ?? 0;
+        return (
+          <li
+            key={it.id}
+            className={it.id === selected ? "selected" : undefined}
+          >
+            <ItemLink
+              id={it.id}
+              className="work-bar"
+              label={`${it.id} ${it.title}: ${n} items wait behind it`}
+            >
+              <span className="work-bar-label">
+                <span className="work-id">{it.id}</span>{" "}
+                <InlineText
+                  text={
+                    party && it.party ? `${it.party}: ${it.title}` : it.title
+                  }
+                />
+              </span>
+              <span className="work-bar-track" aria-hidden="true">
+                <span
+                  className="work-bar-fill"
+                  style={{ width: `${(100 * n) / max}%` }}
+                />
+              </span>
+              <span className="work-bar-value">{n}</span>
+            </ItemLink>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/**
+ * The cumulative flow diagram: each stage's count stacked, day by day, so
+ * a band that widens is a queue growing. Hover reads a day's counts;
+ * choosing a band lists its items.
+ */
+function FlowChart({
+  flow,
+  onStage,
+}: {
+  flow: Flow;
+  onStage: (st: Stage) => void;
+}) {
+  const [hover, setHover] = useState<number>();
+  const w = 560;
+  const h = 180;
+  const order = [...STAGES].reverse(); // Done at the bottom
+  const n = flow.days.length;
+  const totals = flow.days.map((_, i) =>
+    order.reduce((sum, st) => sum + flow.stocks[st][i]!, 0),
+  );
+  const max = Math.max(1, ...totals);
+  const x = (i: number) => (n < 2 ? (i ? w : 0) : (i * w) / (n - 1));
+  const y = (v: number) => h - (h * v) / max;
+  // With one day of history, draw it as a band across.
+  const xs = n < 2 ? [0, 1] : flow.days.map((_, i) => i);
+  const at = (st: Stage, i: number) => flow.stocks[st][n < 2 ? 0 : i]!;
+  const bands = order.map((st, k) => {
+    const lower = xs.map((i) =>
+      order.slice(0, k).reduce((sum, o) => sum + at(o, i), 0),
+    );
+    const upper = lower.map((v, j) => v + at(st, xs[j]!));
+    const d = `${xs
+      .map((i, j) => `${j ? "L" : "M"}${x(i)},${y(upper[j]!)}`)
+      .join(" ")} ${[...xs]
+      .reverse()
+      .map((i, j) => `L${x(i)},${y(lower[xs.length - 1 - j]!)}`)
+      .join(" ")} Z`;
+    const mid = (upper.at(-1)! + lower.at(-1)!) / 2;
+    return { st, d, mid, thick: upper.at(-1)! - lower.at(-1)! };
+  });
+  const day = (t: number) =>
+    new Date(t).toLocaleDateString([], { month: "short", day: "numeric" });
+  const hi = hover ?? n - 1;
+  return (
+    <div className="work-cfd">
+      <ul className="work-legend" aria-label="Stages">
+        {STAGES.map((st) => (
+          <li key={st}>
+            <button
+              type="button"
+              className="work-legend-item"
+              onClick={() => onStage(st)}
+              data-tip={`${STAGE_MEANING[st]}; choose to list them`}
+            >
+              <span
+                className={`work-swatch stage-${slug(st)}`}
+                aria-hidden="true"
+              />
+              {STAGE_NAMES[st]} <b>{flow.stocks[st].at(-1)}</b>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        className="work-cfd-svg"
+        role="img"
+        aria-label={`Items by stage since ${day(flow.days[0] ?? Date.now())}: ${STAGES.map((st) => `${STAGE_NAMES[st]} ${flow.stocks[st].at(-1)}`).join(", ")}`}
+        preserveAspectRatio="none"
+        onMouseLeave={() => setHover(undefined)}
+      >
+        {bands.map((b) => (
+          <path
+            key={b.st}
+            d={b.d}
+            className={`work-band stage-${slug(b.st)}`}
+            onClick={() => onStage(b.st)}
+          >
+            <title>{`${stageTip(b.st)}; choose to list its items`}</title>
+          </path>
+        ))}
+        {n > 1 &&
+          flow.days.map((_, i) => (
+            <rect
+              key={i}
+              x={x(i) - w / (n - 1) / 2}
+              y={0}
+              width={w / (n - 1)}
+              height={h}
+              className="work-cfd-hit"
+              onMouseEnter={() => setHover(i)}
+            />
+          ))}
+        {hover !== undefined && n > 1 && (
+          <line
+            x1={x(hover)}
+            x2={x(hover)}
+            y1={0}
+            y2={h}
+            className="work-cfd-cross"
+          />
+        )}
+      </svg>
+      <div className="work-cfd-axis" aria-hidden="true">
+        <span>{day(flow.days[0] ?? Date.now())}</span>
+        <span>{n > 1 ? "Today" : ""}</span>
+      </div>
+      <Typography
+        variant="caption-md"
+        color="textSecondary"
+        render={<p />}
+        className="work-cfd-read"
+      >
+        {n > 1 ? day(flow.days[hi]!) : "Today"}:{" "}
+        {STAGES.map((st) => `${STAGE_NAMES[st]} ${flow.stocks[st][hi]}`).join(
+          " · ",
+        )}
+        {n < 3 &&
+          ` · the history began ${day(
+            flow.days[0] ?? Date.now(),
+          )}; the bands fill in as work moves`}
+      </Typography>
+    </div>
+  );
+}
+
+const slug = (st: Stage) => st.toLowerCase().replace(/\s+/g, "-");
+
+/**
+ * Each project's items by stage, as one stacked bar each (small
+ * multiples on one scale). Choosing a name zooms the page to it; choosing
+ * a segment lists those items.
+ */
+function ProjectBars({
+  s,
+  items,
+  flight,
+  single,
+  onProject,
+  onSegment,
+}: {
+  s: WorkSnapshot;
+  items: WorkItem[];
+  flight: InFlight;
+  single: boolean;
+  onProject: (id: string) => void;
+  onSegment: (id: string, st: Stage) => void;
+}) {
+  const [all, setAll] = useState(false);
+  const rows = s.projects
+    .map((p) => {
+      const mine = items.filter((it) => it.project === p.id);
+      const counts = Object.fromEntries(STAGES.map((st) => [st, 0])) as Record<
+        Stage,
+        number
+      >;
+      for (const it of mine) {
+        const st = stageOf(it, flight);
+        if (st) {
+          counts[st]++;
+        }
+      }
+      return {
+        p,
+        counts,
+        total: mine.length,
+        open: mine.filter(isOpen).length,
+      };
+    })
+    .filter((r) => r.total > 0)
+    .sort((a, b) => b.open - a.open);
+  const max = Math.max(1, ...rows.map((r) => r.total));
+  const shown = all || single ? rows : rows.slice(0, 8);
+  return (
+    <>
+      <ul className="work-pbars">
+        {shown.map(({ p, counts, total }) => (
+          <li key={p.id} className="work-pbar">
+            <button
+              type="button"
+              className="work-pbar-name"
+              onClick={() => onProject(p.id)}
+              title={`${p.id} ${p.title}: scope to it`}
+            >
+              <LevelMark level="project" />
+              <span className="work-outline-label">{p.title}</span>
+            </button>
+            <span
+              className="work-pbar-track"
+              style={{ width: `${(100 * total) / max}%` }}
+            >
+              {STAGES.map((st) =>
+                counts[st] ? (
+                  <button
+                    key={st}
+                    type="button"
+                    className={`work-pbar-seg stage-${slug(st)}`}
+                    style={{ flexGrow: counts[st] }}
+                    onClick={() => onSegment(p.id, st)}
+                    aria-label={`${p.title}: ${counts[st]} ${STAGE_NAMES[st].toLowerCase()}`}
+                    data-tip={stageTip(st, `${counts[st]}`)}
+                  />
+                ) : null,
+              )}
+            </span>
+            <span className="work-pbar-value">{counts.Ready} ready</span>
+          </li>
+        ))}
+      </ul>
+      {!single && rows.length > 8 && (
+        <Button
+          variant="text"
+          size="small"
+          className="work-more"
+          onClick={() => setAll(!all)}
+        >
+          {all ? "Show fewer" : `All ${rows.length} projects`}
+        </Button>
+      )}
+    </>
+  );
+}
+
+/** A list's name, for the panel's title and the item's way back. */
+function listTitle(
+  list: string,
+  scope: string | undefined,
+  s: WorkSnapshot,
+): string {
+  const titleOf = (id: string) =>
+    s.projects.find((p) => p.id === id)?.title ?? id;
+  const initiativeTitle = (id: string) =>
+    s.initiatives.find((i) => i.id === id)?.title ?? id;
+  if (list.startsWith("chain:")) {
+    return `The chain from ${list.slice(6)}`;
+  }
+  if (list.startsWith("ms:")) {
+    return mapEntityTitle(s, list.slice(3));
+  }
+  if (list.startsWith("mdep:")) {
+    const [, from, to] = list.split(":") as [string, string, string];
+    return `${mapEntityTitle(s, from)} waits on ${mapEntityTitle(s, to)}`;
+  }
+  if (list.startsWith("idep:")) {
+    const [, from, to] = list.split(":") as [string, string, string];
+    return `${initiativeTitle(from)} waits on ${initiativeTitle(to)}`;
+  }
+  if (list.startsWith("dep:")) {
+    const [, from, to] = list.split(":") as [string, string, string];
+    return `${titleOf(from)} waits on ${titleOf(to)}`;
+  }
+  const base =
+    list === "owner"
+      ? "Your decisions"
+      : list === "find"
+        ? "Found"
+        : list === "ready"
+          ? "Ready to start"
+          : list === "commit"
+            ? "Proposed, to commit or drop"
+            : list === "outside"
+              ? "Waiting outside"
+              : list === "done"
+                ? "Done"
+                : list === "matrix"
+                  ? "Dependency matrix"
+                  : list.startsWith("stage:")
+                    ? (STAGE_NAMES[list.slice(6) as Stage] ?? list)
+                    : list;
+  return scope ? `${base} · ${scope}` : base;
+}
+
+/**
+ * The pane beside the views: inline when the page is wide enough, so the
+ * view stays in sight with what was chosen highlighted; a drawer over it
+ * when not. Escape closes it either way.
+ */
+function Pane({
+  inline,
+  open,
+  onClose,
+  labelledBy,
+  className,
+  children,
+}: {
+  inline: boolean;
+  open: boolean;
+  onClose: () => void;
+  labelledBy: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
+  // A drawer renders outside the page: it takes the page's color tokens.
+  const tokens = useChartTokens();
+  if (inline) {
+    return open ? (
+      <aside
+        className={`work-panel work-pane ${tokens} ${className ?? ""}`}
+        aria-labelledby={labelledBy}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            onClose();
+          }
+        }}
+      >
+        {children}
+      </aside>
+    ) : null;
+  }
+  return (
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      transitionDuration={reduced ? 0 : undefined}
+      slotProps={{
+        paper: {
+          className: `work-panel ${tokens} ${className ?? ""}`,
+          "aria-labelledby": labelledBy,
+          role: "dialog",
+        } as object,
+      }}
+    >
+      {children}
+    </Drawer>
+  );
+}
+
+/** The pane's lists: the items behind whatever was chosen in a view. */
+function ListPanel({
+  s,
+  list,
+  open,
+  inline,
+  items,
+  flight,
+  flow,
+  unblocks,
+  projectOf,
+  itemOf,
+  selected,
+  search,
+  scope,
+  onClose,
+  onList,
+  onQuery,
+}: {
+  s: WorkSnapshot;
+  list?: string;
+  open: boolean;
+  inline: boolean;
+  items: WorkItem[];
+  flight: InFlight;
+  flow: Flow;
+  unblocks: Map<string, number>;
+  projectOf: Map<string, WorkContainer>;
+  itemOf: Map<string, WorkItem>;
+  selected?: string;
+  search: WorkSearch;
+  /** The scope's name, for the lists it narrows. */
+  scope?: string;
+  onClose: () => void;
+  /** Opens another list (a milestone's waits). */
+  onList: (list: string) => void;
+  /** Changes Find's words. */
+  onQuery: (q: string) => void;
+}) {
+  const titleId = useId();
+  const msRows = useMemo(
+    () => milestoneRoadmapOf(s, s.items, flight),
+    [s, flight],
+  );
+  const now = Date.now();
+  let body: ReactNode = null;
+  if (list === "owner") {
+    body = (
+      <OwnerQueue
+        s={s}
+        items={items.filter(
+          (it) => isOwnerDecision(it) && !it.open_needs.length,
+        )}
+        selected={selected}
+        projectOf={projectOf}
+        unblocks={unblocks}
+      />
+    );
+  } else if (list === "commit") {
+    body = (
+      <Ranked
+        items={items.filter(
+          (it) => nextActor(it, flight) === "owner" && !isOwnerDecision(it),
+        )}
+        unblocks={unblocks}
+        projectOf={projectOf}
+        selected={selected}
+      />
+    );
+  } else if (list === "ready") {
+    body = (
+      <Ranked
+        items={items.filter(
+          (it) =>
+            nextActor(it, flight) === "agents" &&
+            stageOf(it, flight) === "Ready",
+        )}
+        unblocks={unblocks}
+        projectOf={projectOf}
+        selected={selected}
+      />
+    );
+  } else if (list === "outside") {
+    body = (
+      <Ranked
+        items={items.filter((it) => nextActor(it, flight) === "outside")}
+        unblocks={unblocks}
+        projectOf={projectOf}
+        selected={selected}
+        party
+      />
+    );
+  } else if (list === "done") {
+    body = (
+      <Grouped
+        s={s}
+        items={items.filter((it) => stageOf(it, flight) === "Done")}
+        empty="Nothing is done yet."
+        selected={selected}
+        projectOf={projectOf}
+      />
+    );
+  } else if (list?.startsWith("chain:")) {
+    const head = list.slice(6);
+    const chain = longestChains(items).find((c) => c[0]!.id === head) ?? [];
+    body = (
+      <ol className="work-steps">
+        {chain.map((it, i) => [
+          // A label where the chain enters a project.
+          i === 0 || chain[i - 1]!.project !== it.project ? (
+            <li key={`p${i}`} className="work-steps-project">
+              {projectOf.get(it.project ?? "")?.title ?? it.project}
+            </li>
+          ) : null,
+          <li
+            key={it.id}
+            className={it.id === selected ? "selected" : undefined}
+          >
+            <span className="work-step-n">{i + 1}</span>
+            <ItemLink id={it.id} className="work-step">
+              <span
+                className={`work-swatch stage-${slug(stageOf(it, flight) ?? "Waiting")}`}
+                aria-hidden="true"
+                data-tip={stageTip(stageOf(it, flight) ?? "Waiting")}
+              />
+              <span className="work-id">{it.id}</span>
+              <span className="work-tree-title">
+                <InlineText text={it.title} />
+              </span>
+              <span className="work-tree-state">
+                {nextActor(it, flight) === "owner"
+                  ? "Your decision"
+                  : it.kind === "external"
+                    ? "Outside"
+                    : STAGE_NAMES[stageOf(it, flight) ?? "Waiting"]}
+              </span>
+            </ItemLink>
+          </li>,
+        ])}
+      </ol>
+    );
+  } else if (list === "find") {
+    body = (
+      <>
+        <TextField
+          size="small"
+          type="search"
+          fullWidth
+          autoFocus
+          value={search.q ?? ""}
+          onChange={(e) => onQuery(e.target.value)}
+          className="work-find-field"
+          slotProps={{
+            htmlInput: { "aria-label": "Find an item" },
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Icon href={svgSearch} />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+        <FindResults
+          q={search.q ?? ""}
+          itemOf={itemOf}
+          projectOf={projectOf}
+          selected={selected}
+        />
+      </>
+    );
+  } else if (list?.startsWith(`ms:${UNSHAPED}`)) {
+    body = (
+      <>
+        <Typography variant="body-sm" color="textSecondary" render={<p />}>
+          This project's open items that no milestone holds yet. Shaping puts
+          them into milestones: each milestone names its outcome and the items
+          without which it can't be true.
+        </Typography>
+        <Grouped
+          s={s}
+          items={mapEntityItems(s, list.slice(3))
+            .map((id) => itemOf.get(id))
+            .filter((x): x is WorkItem => !!x)}
+          empty="Every open item is in a milestone."
+          selected={selected}
+          projectOf={projectOf}
+        />
+      </>
+    );
+  } else if (list?.startsWith("ms:")) {
+    const m = s.milestones.find((x) => x.id === list.slice(3));
+    body = m ? (
+      <div className="work-ms">
+        <dl className="work-facts">
+          <Fact name="Outcome">{m.outcome ?? "To shape"}</Fact>
+          <Fact name="Kind">{m.kind}</Fact>
+          <Fact name="Status">{m.status}</Fact>
+          <Fact name="Check">{m.check ?? "To shape"}</Fact>
+          <Fact name="Progress">
+            {m.progress.done} of {m.progress.total} constraints done
+            {m.check_due ? " · check due" : ""}
+          </Fact>
+          {(() => {
+            const row = msRows.find((r) => r.id === m.id);
+            if (!row) {
+              return null;
+            }
+            return (
+              <>
+                <Fact name="Order">
+                  {row.step === 1
+                    ? "Can move now"
+                    : `After step ${row.step - 1} of the roadmap`}
+                </Fact>
+                {row.waitsOn.length > 0 && (
+                  <Fact name="Waits on">
+                    {[...row.waitsOn]
+                      .sort((a, b) => b.items.length - a.items.length)
+                      .map((w, i) => (
+                        <span key={w.id}>
+                          {i > 0 && ", "}
+                          <Link
+                            component="button"
+                            type="button"
+                            onClick={() => onList(`mdep:${m.id}:${w.id}`)}
+                          >
+                            {s.milestones.find((x) => x.id === w.id)?.title ??
+                              w.id}
+                          </Link>{" "}
+                          ({w.items.length})
+                        </span>
+                      ))}
+                  </Fact>
+                )}
+              </>
+            );
+          })()}
+          {m.to_shape.length > 0 && (
+            <Fact name="Shaping owes">
+              {m.to_shape.map((x) => SHAPE_NAMES[x] ?? x).join(", ")}
+            </Fact>
+          )}
+        </dl>
+        {m.done_when.length > 0 && (
+          <ol className="work-ms-clauses">
+            {m.done_when.map((c) => (
+              <li key={c.clause}>
+                <b>{c.clause}</b> {c.text}
+              </li>
+            ))}
+          </ol>
+        )}
+        <Grouped
+          s={s}
+          items={m.constraints
+            .map((c) => itemOf.get(c.id))
+            .filter((x): x is WorkItem => !!x)}
+          empty="No constraints yet."
+          selected={selected}
+          projectOf={projectOf}
+          line={(it) => {
+            const c = m.constraints.find((x) => x.id === it.id)?.clause;
+            return c === "c?" ? "Not linked to a clause yet" : `Clause ${c}`;
+          }}
+        />
+        <Typography variant="caption-md" color="textSecondary" render={<p />}>
+          {m.path}
+        </Typography>
+      </div>
+    ) : (
+      <Typography variant="body-md" render={<p />}>
+        No such milestone.
+      </Typography>
+    );
+  } else if (list?.startsWith("mdep:")) {
+    const [, from, to] = list.split(":") as [string, string, string];
+    const b = new Set(mapEntityItems(s, to));
+    body = (
+      <Grouped
+        s={s}
+        items={mapEntityItems(s, from)
+          .map((id) => itemOf.get(id))
+          .filter(
+            (it): it is WorkItem =>
+              !!it && isOpen(it) && it.open_needs.some((n) => b.has(n)),
+          )}
+        empty={`It needs ${to} itself, not through its items.`}
+        selected={selected}
+        projectOf={projectOf}
+        needs={(it) =>
+          it.open_needs.filter((n) => b.has(n)).map((n) => itemOf.get(n) ?? n)
+        }
+      />
+    );
+  } else if (list?.startsWith("idep:")) {
+    const [, from, to] = list.split(":") as [string, string, string];
+    const iniOf = (id?: string) => projectOf.get(id ?? "")?.initiative;
+    const inTo = (n: string) => iniOf(itemOf.get(n)?.project) === to;
+    body = (
+      <Grouped
+        s={s}
+        items={s.items.filter(
+          (it) =>
+            iniOf(it.project) === from &&
+            isOpen(it) &&
+            it.open_needs.some(inTo),
+        )}
+        empty="Nothing waits there now."
+        selected={selected}
+        projectOf={projectOf}
+        needs={(it) =>
+          it.open_needs.filter(inTo).map((n) => itemOf.get(n) ?? n)
+        }
+      />
+    );
+  } else if (list?.startsWith("dep:")) {
+    const [, from, to] = list.split(":") as [string, string, string];
+    const inTo = (n: string) => itemOf.get(n)?.project === to;
+    body = (
+      <Grouped
+        s={s}
+        items={s.items.filter(
+          (it) => it.project === from && isOpen(it) && it.open_needs.some(inTo),
+        )}
+        empty="Nothing waits there now."
+        selected={selected}
+        projectOf={projectOf}
+        needs={(it) =>
+          it.open_needs.filter(inTo).map((n) => itemOf.get(n) ?? n)
+        }
+      />
+    );
+  } else if (list?.startsWith("stage:")) {
+    const st = list.slice(6) as Stage;
+    const these = items.filter((it) => stageOf(it, flight) === st);
+    body =
+      st === "Ready" ? (
+        <Ranked
+          items={these}
+          unblocks={unblocks}
+          projectOf={projectOf}
+          selected={selected}
+        />
+      ) : (
+        <Grouped
+          s={s}
+          items={these}
+          empty="Nothing in this stage."
+          selected={selected}
+          projectOf={projectOf}
+          line={(it) =>
+            st === "In flight"
+              ? whereOf(it, flight, s.branch)
+              : flow.since.has(it.id)
+                ? `Here ${ageText(now - flow.since.get(it.id)!)}`
+                : undefined
+          }
+          needs={
+            st === "Waiting"
+              ? (it) => it.open_needs.map((n) => itemOf.get(n) ?? n)
+              : undefined
+          }
+        />
+      );
+  }
+  // A wait between milestones goes back to the milestone it came from.
+  const from = list?.startsWith("mdep:") ? list.split(":")[1] : undefined;
+  return (
+    <Pane
+      inline={inline}
+      open={open}
+      onClose={onClose}
+      labelledBy={titleId}
+      className="work-list-panel"
+    >
+      {from && (
+        <Link
+          component="button"
+          type="button"
+          className="work-panel-back"
+          onClick={() => onList(`ms:${from}`)}
+        >
+          ← {listTitle(`ms:${from}`, undefined, s)}
+        </Link>
+      )}
+      <div className="work-panel-head">
+        <Typography
+          variant="subtitle-md"
+          render={<h2 />}
+          id={titleId}
+          className="work-marked"
+        >
+          {list?.startsWith("ms:") && <LevelMark level="milestone" />}
+          {list ? listTitle(list, scope, s) : ""}
+        </Typography>
+        <IconButton label="Close" onClick={onClose}>
+          <Icon href={svgDismiss} />
+        </IconButton>
+      </div>
+      <div className="work-panel-body">{body}</div>
+    </Pane>
+  );
+}
+
+/**
+ * One count over the days. Hovering follows the pointer with a crosshair
+ * on the nearest day and reads that day's count above the line; the
+ * label lists every day for screen readers.
+ */
+function Sparkline({
+  days,
+  values,
+  label,
+}: {
+  days: number[];
+  values: number[];
+  label: string;
+}) {
+  const [at, setAt] = useState<number>();
+  const ref = useRef<SVGSVGElement>(null);
+  const w = 120;
+  const h = 28;
+  const max = Math.max(1, ...values);
+  const x = (i: number) =>
+    values.length < 2 ? w : 4 + (i * (w - 8)) / (values.length - 1);
+  const y = (v: number) => h - 4 - ((h - 8) * v) / max;
+  const path = values
+    .map((v, i) => `${i ? "L" : "M"}${x(i)},${y(v)}`)
+    .join(" ");
+  const day = (t: number) =>
+    new Date(t).toLocaleDateString([], { month: "short", day: "numeric" });
+  const follow = (clientX: number) => {
+    const r = ref.current?.getBoundingClientRect();
+    if (!r || !r.width || !values.length) {
+      return;
+    }
+    const px = ((clientX - r.left) / r.width) * w;
+    let best = 0;
+    for (let i = 1; i < values.length; i++) {
+      if (Math.abs(x(i) - px) < Math.abs(x(best) - px)) {
+        best = i;
+      }
+    }
+    setAt(best);
+  };
+  const shown = at ?? values.length - 1;
+  // Kept inside the line's width: the readout's anchor slides with it.
+  const frac = x(shown) / w;
+  return (
+    <span
+      className="work-spark-wrap"
+      onPointerMove={(e) => follow(e.clientX)}
+      onPointerLeave={() => setAt(undefined)}
+    >
+      <svg
+        ref={ref}
+        className="work-spark"
+        width={w}
+        height={h}
+        viewBox={`0 0 ${w} ${h}`}
+        role="img"
+        aria-label={`${label}; ${values.map((v, i) => `${day(days[i]!)} ${v}`).join(", ")}`}
+      >
+        {at !== undefined && (
+          <line
+            x1={x(at)}
+            x2={x(at)}
+            y1={0}
+            y2={h}
+            className="work-spark-cross"
+          />
+        )}
+        <path d={path} className="work-spark-line" />
+        <circle
+          cx={x(shown)}
+          cy={y(values[shown] ?? 0)}
+          r={at === undefined ? 4 : 3.5}
+          className="work-spark-dot"
+        />
+        <rect x={0} y={0} width={w} height={h} className="work-spark-hit" />
+      </svg>
+      {at !== undefined && (
+        <span
+          className="work-spark-read"
+          aria-hidden="true"
+          style={{
+            left: `${frac * 100}%`,
+            transform: `translateX(-${frac * 100}%)`,
+          }}
+        >
+          {day(days[at]!)} <b>{values[at]}</b>
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** Items ranked by how much waits on them. */
+function Ranked({
+  items,
+  unblocks,
+  projectOf,
+  selected,
+  party,
+}: {
+  items: WorkItem[];
+  unblocks: Map<string, number>;
+  projectOf: Map<string, WorkContainer>;
+  selected?: string;
+  /** Show who is waited on (external items). */
+  party?: boolean;
+}) {
+  const [all, setAll] = useState(false);
+  const ranked = [...items].sort(
+    (a, b) =>
+      (unblocks.get(b.id) ?? 0) - (unblocks.get(a.id) ?? 0) ||
+      idNumber(a.id) - idNumber(b.id),
+  );
+  const shown = all ? ranked : ranked.slice(0, RANKED_PAGE);
+  if (!items.length) {
+    return (
+      <Typography variant="body-md" color="textSecondary" render={<p />}>
+        Nothing here.
+      </Typography>
+    );
+  }
+  return (
+    <>
+      <ol className="work-rows work-ranked">
+        {shown.map((it) => {
+          const n = unblocks.get(it.id) ?? 0;
+          return (
+            <li
+              key={it.id}
+              className={`work-row${it.id === selected ? " selected" : ""}`}
+            >
+              <ItemLink id={it.id} className="work-row-main">
+                <span className="work-id">{it.id}</span>
+                <span className="work-row-title">
+                  <span>
+                    <InlineText text={it.title} />
+                  </span>
+                  <Typography
+                    variant="caption-md"
+                    color="textSecondary"
+                    render={<span />}
+                    className="work-row-sub"
+                  >
+                    {party && it.party ? `${it.party} · ` : ""}
+                    {projectOf.get(it.project ?? "")?.title ?? it.project}
+                  </Typography>
+                </span>
+                <span className="work-row-extra">
+                  {n ? `${n} wait on it` : "Nothing waits on it"}
+                </span>
+              </ItemLink>
+            </li>
+          );
+        })}
+      </ol>
+      {ranked.length > RANKED_PAGE && (
+        <Button
+          variant="text"
+          size="small"
+          className="work-more"
+          onClick={() => setAll(!all)}
+        >
+          {all ? "Show fewer" : `Show all ${ranked.length}`}
+        </Button>
+      )}
+    </>
+  );
+}
+
+const RANKED_PAGE = 12;
+
+/** Who holds an item and where: "s1 on this branch", "s2 on dyno-ui". */
+function whereOf(
+  it: WorkItem,
+  flight: InFlight,
+  branch?: string,
+): string | undefined {
+  // A session named after its branch reads "on dyno-ui", not twice.
+  const on = (who: string | undefined, where: string) =>
+    who && who !== where ? `${who} on ${where}` : `on ${where}`;
+  const parts: string[] = [];
+  if (it.status === "In progress") {
+    parts.push(on(it.claimed, branch ?? "this branch"));
+  }
+  for (const c of flight.get(it.id) ?? []) {
+    parts.push(on(c.claimed, c.where));
+  }
+  return parts.join("; ") || undefined;
+}
+
+/** The scope's chain: an initiative, a project, a milestone, as far as chosen. */
+function scopeChain(s: WorkSnapshot, search: WorkSearch) {
+  const milestone = search.milestone
+    ? s.milestones.find((m) => m.id === search.milestone)
+    : undefined;
+  const projectId = search.project ?? milestone?.project;
+  const project = projectId
+    ? s.projects.find((p) => p.id === projectId)
+    : undefined;
+  const initiativeId =
+    search.initiative ?? project?.initiative ?? milestone?.initiative;
+  const initiative = initiativeId
+    ? s.initiatives.find((i) => i.id === initiativeId)
+    : undefined;
+  return { initiative, project, milestone };
+}
+
+/** One line of the scope's tree: All work, an initiative, a project, a milestone. */
+interface ScopeEntry {
+  key: string;
+  /** What adding it to the scope adds; All work and "No initiative" add nothing. */
+  kind?: ScopeKind;
+  title: string;
+  level: number;
+  /** Its parents' titles, for a match found by typing. */
+  path: string[];
+  /** Owner decisions there, open items there. */
+  decisions: number;
+  open: number;
+  go: Partial<WorkSearch>;
+}
+
+/**
+ * The scope's tree in reading order, with each line's counts: what the
+ * outline shows and the picker lists.
+ */
+function scopeEntries(s: WorkSnapshot, flight: InFlight): ScopeEntry[] {
+  const decisions = new Map<string, number>();
+  const open = new Map<string, number>();
+  const iniOf = new Map(s.projects.map((p) => [p.id, p.initiative ?? ""]));
+  const add = (m: Map<string, number>, k: string) =>
+    m.set(k, (m.get(k) ?? 0) + 1);
+  for (const it of s.items) {
+    if (!isOpen(it)) {
+      continue;
+    }
+    const p = it.project;
+    const owner = nextActor(it, flight) === "owner" && isOwnerDecision(it);
+    for (const k of p ? [p, iniOf.get(p) ?? "", "*"] : ["*"]) {
+      add(open, k);
+      if (owner) {
+        add(decisions, k);
+      }
+    }
+  }
+  const out: ScopeEntry[] = [
+    {
+      key: "*",
+      title: "All work",
+      level: 0,
+      path: [],
+      decisions: decisions.get("*") ?? 0,
+      open: open.get("*") ?? 0,
+      go: {},
+    },
+  ];
+  const milestone = (m: WorkMilestone, level: number, path: string[]) => ({
+    key: m.id,
+    title: m.title,
+    level,
+    path,
+    kind: "milestone" as const,
+    decisions: 0,
+    open: m.progress.total - m.progress.done,
+    go: { milestone: m.id },
+  });
+  const groups = [
+    ...s.initiatives.map((i) => ({ id: i.id, title: i.title })),
+    ...(s.projects.some((p) => !p.initiative)
+      ? [{ id: "", title: "No initiative" }]
+      : []),
+  ];
+  for (const g of groups) {
+    out.push({
+      key: g.id || "none",
+      kind: g.id ? "initiative" : undefined,
+      title: g.title,
+      level: 1,
+      path: [],
+      decisions: decisions.get(g.id) ?? 0,
+      open: open.get(g.id) ?? 0,
+      go: g.id ? { initiative: g.id } : {},
+    });
+    for (const p of s.projects.filter((x) => (x.initiative ?? "") === g.id)) {
+      out.push({
+        key: p.id,
+        kind: "project",
+        title: p.title,
+        level: 2,
+        path: [g.title],
+        decisions: decisions.get(p.id) ?? 0,
+        open: open.get(p.id) ?? 0,
+        go: { project: p.id },
+      });
+      for (const m of s.milestones.filter((x) => x.project === p.id)) {
+        out.push(milestone(m, 3, [g.title, p.title]));
+      }
+    }
+    if (g.id) {
+      for (const m of s.milestones.filter(
+        (x) => !x.project && x.initiative === g.id,
+      )) {
+        out.push(milestone(m, 2, [g.title]));
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Where the page looks, as a trail: All work › an initiative › a project ›
+ * a milestone. Each step above goes back up; the last is the scope picker,
+ * which lists the whole tree and finds a line by typing, so any scope is
+ * one choice away.
+ */
+function ScopeTrail({
+  s,
+  search,
+  flight,
+  chosen,
+  names,
+  onScope,
+  onToggle,
+}: {
+  s: WorkSnapshot;
+  search: WorkSearch;
+  flight: InFlight;
+  chosen: ScopeSet;
+  /** The chosen lines' names. */
+  names: string[];
+  onScope: (go: Partial<WorkSearch>) => void;
+  onToggle: (kind: ScopeKind, id: string) => void;
+}) {
+  const several = scopeSize(chosen) > 1;
+  const { initiative, project, milestone } = several
+    ? {}
+    : scopeChain(s, search);
+  const steps: Array<{
+    label: string;
+    go: Partial<WorkSearch>;
+    mark?: Level;
+  }> = [
+    { label: "All work", go: {} },
+    ...(several ? [{ label: `${names.length} chosen`, go: {} }] : []),
+    ...(initiative
+      ? [
+          {
+            label: initiative.title,
+            go: { initiative: initiative.id },
+            mark: "initiative" as const,
+          },
+        ]
+      : []),
+    ...(project
+      ? [
+          {
+            label: project.title,
+            go: { project: project.id },
+            mark: "project" as const,
+          },
+        ]
+      : []),
+    ...(milestone
+      ? [
+          {
+            label: milestone.title,
+            go: { milestone: milestone.id },
+            mark: "milestone" as const,
+          },
+        ]
+      : []),
+  ];
+  return (
+    <nav className="work-trail" aria-label="Scope">
+      <ol>
+        {steps.map((st, i) => (
+          // The picker keeps its key, so it stays open as lines are added.
+          <li key={i < steps.length - 1 ? st.label : "here"}>
+            {st.mark && <LevelMark level={st.mark} />}
+            {i < steps.length - 1 ? (
+              <Link
+                component="button"
+                type="button"
+                onClick={() => onScope(st.go)}
+              >
+                {st.label}
+              </Link>
+            ) : (
+              <ScopePicker
+                s={s}
+                flight={flight}
+                chosen={chosen}
+                label={st.label}
+                title={several ? names.join(", ") : undefined}
+                onScope={onScope}
+                onToggle={onToggle}
+              />
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
+
+/**
+ * The scope picker: a button naming the scope, opening the tree with a
+ * field that narrows it as you type. Choosing a line scopes to it alone;
+ * its box (or Ctrl- or ⌘-Enter) adds it to the scope or takes it out, so
+ * the views add up several. Arrow keys move, Escape closes.
+ */
+function ScopePicker({
+  s,
+  flight,
+  chosen,
+  label,
+  title,
+  onScope,
+  onToggle,
+}: {
+  s: WorkSnapshot;
+  flight: InFlight;
+  chosen: ScopeSet;
+  label: string;
+  /** The chosen lines, when there are several. */
+  title?: string;
+  onScope: (go: Partial<WorkSearch>) => void;
+  onToggle: (kind: ScopeKind, id: string) => void;
+}) {
+  const inScope = (e: ScopeEntry) =>
+    e.kind
+      ? chosen[e.kind].includes(e.key)
+      : e.key === "*" && !scopeSize(chosen);
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const [q, setQ] = useState("");
+  const [active, setActive] = useState(0);
+  const listId = useId();
+  const listRef = useRef<HTMLUListElement>(null);
+  const tokens = useChartTokens();
+  const entries = useMemo(() => scopeEntries(s, flight), [s, flight]);
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const shown = words.length
+    ? entries.filter((e) => {
+        const text = `${e.title} ${e.path.join(" ")} ${e.key}`.toLowerCase();
+        return words.every((w) => text.includes(w));
+      })
+    : entries;
+  const close = () => {
+    setAnchor(null);
+    setQ("");
+  };
+  const choose = (e: ScopeEntry) => {
+    close();
+    onScope(e.go);
+  };
+  const at = Math.min(active, shown.length - 1);
+  useEffect(() => {
+    listRef.current
+      ?.querySelector(`[data-at="${at}"]`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [at]);
+  return (
+    <>
+      <button
+        type="button"
+        className="work-picker-button"
+        aria-haspopup="dialog"
+        aria-expanded={!!anchor}
+        aria-current="page"
+        title={title ? `${title}: change the scope` : "Change the scope"}
+        onClick={(e) => {
+          setAnchor(e.currentTarget);
+          setActive(Math.max(0, entries.findIndex(inScope)));
+        }}
+      >
+        <span className="work-trail-here">{label}</span>
+        <Icon href={svgChevronDown} />
+      </button>
+      <Popover
+        open={!!anchor}
+        anchorEl={anchor}
+        onClose={close}
+        // The find field takes focus, not the dialog.
+        disableAutoFocus
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        slotProps={{
+          paper: {
+            className: `work-picker ${tokens}`,
+            role: "dialog",
+            "aria-label": "Choose the scope",
+          } as object,
+        }}
+      >
+        <TextField
+          size="small"
+          fullWidth
+          autoFocus
+          placeholder="Find an initiative, project or milestone"
+          value={q}
+          onChange={(e) => {
+            setQ(e.target.value);
+            setActive(0);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowDown") {
+              e.preventDefault();
+              setActive(Math.min(at + 1, shown.length - 1));
+            } else if (e.key === "ArrowUp") {
+              e.preventDefault();
+              setActive(Math.max(at - 1, 0));
+            } else if (e.key === "Enter" && shown[at]) {
+              e.preventDefault();
+              const pick = shown[at];
+              if ((e.metaKey || e.ctrlKey) && pick.kind) {
+                onToggle(pick.kind, pick.key);
+              } else {
+                choose(pick);
+              }
+            }
+          }}
+          className="work-picker-find"
+          slotProps={{
+            htmlInput: {
+              role: "combobox",
+              "aria-label": "Find a scope",
+              "aria-expanded": true,
+              "aria-controls": listId,
+              "aria-activedescendant": shown[at]
+                ? `${listId}-${at}`
+                : undefined,
+            },
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Icon href={svgSearch} />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+        <ul
+          id={listId}
+          ref={listRef}
+          role="listbox"
+          aria-label="Scopes"
+          aria-multiselectable="true"
+          className="work-picker-list"
+        >
+          {shown.map((e, i) => (
+            <li
+              key={e.key}
+              id={`${listId}-${i}`}
+              data-at={i}
+              role="option"
+              aria-selected={inScope(e)}
+              className={`work-picker-option level-${words.length ? 0 : e.level}${i === at ? " active" : ""}${inScope(e) ? " here" : ""}`}
+              onMouseMove={() => i !== at && setActive(i)}
+              onClick={() => choose(e)}
+            >
+              {e.kind ? (
+                <span
+                  className={`work-picker-box${inScope(e) ? " on" : ""}`}
+                  aria-hidden="true"
+                  title={
+                    inScope(e)
+                      ? "Take it out of the scope"
+                      : "Add it to the scope"
+                  }
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    onToggle(e.kind!, e.key);
+                  }}
+                >
+                  {inScope(e) && <Icon href={svgCheckmark} />}
+                </span>
+              ) : (
+                <span className="work-picker-box none" aria-hidden="true" />
+              )}
+              {e.key !== "*" && <LevelMark level={e.kind ?? "initiative"} />}
+              <span className="work-picker-text">
+                <span className="work-outline-label">{e.title}</span>
+                {words.length > 0 && e.path.length > 0 && (
+                  <Typography
+                    variant="caption-md"
+                    color="textSecondary"
+                    className="work-outline-label"
+                  >
+                    {e.path.join(" › ")}
+                  </Typography>
+                )}
+              </span>
+              {e.decisions > 0 && (
+                <span
+                  className="work-count-badge"
+                  aria-label={`${e.decisions} of your decisions`}
+                  data-tip="Amber: your decisions waiting here"
+                >
+                  {e.decisions}
+                </span>
+              )}
+              <Typography
+                variant="caption-md"
+                color="textSecondary"
+                className="work-picker-open"
+              >
+                {e.open} open
+              </Typography>
+            </li>
+          ))}
+          {!shown.length && (
+            <li className="work-picker-none">Nothing matches “{q}”.</li>
+          )}
+        </ul>
+        <Typography
+          variant="caption-md"
+          color="textSecondary"
+          render={<p />}
+          className="work-picker-hint"
+        >
+          Enter scopes to one line. Its box, or Ctrl- or ⌘-Enter, adds it, and
+          the views add up everything chosen.
+        </Typography>
+      </Popover>
+    </>
+  );
+}
+
+/** Find: every item, whatever the scope; the matches open in the pane. */
+function FindField({
+  q,
+  set,
+}: {
+  q?: string;
+  set: (patch: Partial<WorkSearch>, replace?: boolean) => void;
+}) {
+  const input = useRef<HTMLInputElement>(null);
+  return (
+    <TextField
+      size="small"
+      type="search"
+      placeholder="Find in every item"
+      value={q ?? ""}
+      inputRef={input}
+      onChange={(e) => {
+        const v = e.target.value;
+        set(
+          { q: v || undefined, list: v ? "find" : undefined, item: undefined },
+          true,
+        );
+      }}
+      className="work-search"
+      slotProps={{
+        htmlInput: { "aria-label": "Find in every item" },
+        input: {
+          startAdornment: (
+            <InputAdornment position="start">
+              <Icon href={svgSearch} />
+            </InputAdornment>
+          ),
+          endAdornment: q ? (
+            <InputAdornment position="end">
+              <IconButton
+                label="Clear"
+                size="small"
+                onClick={() => {
+                  set({ q: undefined, list: undefined }, true);
+                  input.current?.focus();
+                }}
+              >
+                <Icon href={svgDismiss} />
+              </IconButton>
+            </InputAdornment>
+          ) : undefined,
+        },
+      }}
+    />
+  );
+}
+
+/**
+ * What Find found: every item whose file (text and metadata alike) or
+ * project mentions all the words, title matches first, each with where
+ * the words were found and the words highlighted in a snippet.
+ */
+function FindResults({
+  q,
+  itemOf,
+  projectOf,
+  selected,
+}: {
+  q: string;
+  itemOf: Map<string, WorkItem>;
+  projectOf: Map<string, WorkContainer>;
+  selected?: string;
+}) {
+  const [found, setFound] = useState<{
+    q: string;
+    result?: WorkFound;
+    error?: string;
+  }>();
+  useEffect(() => {
+    let live = true;
+    // Ask once typing pauses.
+    const t = setTimeout(() => {
+      findWork(q).then(
+        (result) => live && setFound({ q, result }),
+        (e: Error) => live && setFound({ q, error: e.message }),
+      );
+    }, 200);
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+  }, [q]);
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const mark = (text: string) => {
+    const parts: ReactNode[] = [];
+    const lower = text.toLowerCase();
+    let at = 0;
+    while (at < text.length) {
+      let next = -1;
+      let word = "";
+      for (const w of words) {
+        const i = lower.indexOf(w, at);
+        if (i >= 0 && (next < 0 || i < next)) {
+          next = i;
+          word = w;
+        }
+      }
+      if (next < 0) {
+        parts.push(text.slice(at));
+        break;
+      }
+      parts.push(
+        text.slice(at, next),
+        <mark key={next}>{text.slice(next, next + word.length)}</mark>,
+      );
+      at = next + word.length;
+    }
+    return parts;
+  };
+  if (!found || found.q !== q) {
+    return (
+      <div className="work-loading" role="status">
+        <CircularProgress size={16} />
+        <Typography variant="body-sm">Searching every item…</Typography>
+      </div>
+    );
+  }
+  if (found.error) {
+    return (
+      <Alert severity="error">The search didn't run ({found.error}).</Alert>
+    );
+  }
+  const matches = found.result!.matches;
+  const WHERE = {
+    title: "In the title",
+    metadata: "In its details",
+    text: "In its text",
+  };
+  return (
+    <>
+      <Typography
+        variant="body-sm"
+        color="textSecondary"
+        render={<p />}
+        className="work-find-count"
+      >
+        {matches.length
+          ? `${matches.length} ${matches.length === 1 ? "item mentions" : "items mention"} “${q}”, searching every item's text and details.`
+          : `No item mentions “${q}”.`}
+      </Typography>
+      <ol className="work-rows work-found">
+        {matches.map((m) => {
+          const it = itemOf.get(m.id);
+          return (
+            <li
+              key={m.id}
+              className={`work-row${m.id === selected ? " selected" : ""}`}
+            >
+              <ItemLink id={m.id} className="work-row-main">
+                <span className="work-id">{m.id}</span>
+                <span className="work-row-title">
+                  <span>{it ? mark(it.title) : m.id}</span>
+                  <Typography
+                    variant="caption-md"
+                    color="textSecondary"
+                    render={<span />}
+                    className="work-row-sub"
+                  >
+                    {projectOf.get(it?.project ?? "")?.title ?? it?.project} ·{" "}
+                    {WHERE[m.where]}
+                  </Typography>
+                  {m.snippet && (
+                    <span className="work-found-snippet">
+                      {mark(m.snippet)}
+                    </span>
+                  )}
+                </span>
+              </ItemLink>
+            </li>
+          );
+        })}
+      </ol>
+    </>
+  );
+}
+
+// ------------------------------------------------------------ the owner's queue
+
+function OwnerQueue({
+  s,
+  items,
+  selected,
+  projectOf,
+  unblocks,
+}: {
+  s: WorkSnapshot;
+  items: WorkItem[];
+  selected?: string;
+  projectOf: Map<string, WorkContainer>;
+  /** Open items behind each, directly or through others. */
+  unblocks: Map<string, number>;
+}) {
+  // The most waited-on first, counting what waits through other items.
+  const queue = useMemo(
+    () =>
+      ownerQueue(s, items).sort(
+        (a, b) =>
+          (unblocks.get(b.decision.id) ?? 0) -
+          (unblocks.get(a.decision.id) ?? 0),
+      ),
+    [s, items, unblocks],
+  );
+  if (!queue.length) {
+    return (
+      <Typography variant="body-md" color="textSecondary" render={<p />}>
+        Nothing here waits on the owner.
+      </Typography>
+    );
+  }
+  return (
+    <ol className="work-queue">
+      {queue.map(({ decision: d, waiting }) => {
+        const project = projectOf.get(d.project ?? "");
+        return (
+          <li
+            key={d.id}
+            className={`work-queue-item${d.id === selected ? " selected" : ""}`}
+          >
+            <ItemLink id={d.id} className="work-queue-main">
+              <span className="work-card-top">
+                <span className="work-id">{d.id}</span>
+                {d.ready ? (
+                  <StatusBadge tone="warning">Ready to decide</StatusBadge>
+                ) : (
+                  <StatusBadge tone="secondary">
+                    First needs {d.open_needs.join(", ")}
+                  </StatusBadge>
+                )}
+              </span>
+              <Typography variant="body-md" className="work-queue-title">
+                <InlineText text={d.title} />
+              </Typography>
+              <Typography variant="caption-md" color="textSecondary">
+                {project?.title ?? d.project}
+              </Typography>
+            </ItemLink>
+            <div className="work-queue-waits">
+              <Typography variant="caption-lg" color="textSecondary">
+                {waiting.length
+                  ? `${unblocks.get(d.id) ?? waiting.length} ${(unblocks.get(d.id) ?? 0) === 1 ? "item waits" : "items wait"} on it${(unblocks.get(d.id) ?? 0) > waiting.length ? `, ${waiting.length} directly` : ""}`
+                  : "Nothing waits on it yet"}
+              </Typography>
+              {waiting.map((w) => (
+                <ItemLink
+                  key={w.id}
+                  id={w.id}
+                  className="work-need"
+                  label={`${w.id} ${w.title}`}
+                >
+                  <span className="work-id">{w.id}</span>
+                  <span className="work-need-title">
+                    <InlineText text={w.title} />
+                  </span>
+                </ItemLink>
+              ))}
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/** A link that opens an item beside the board, keeping the filters. */
+function ItemLink({
+  id,
+  className,
+  children,
+  label,
+  tip,
+}: {
+  id: string;
+  className?: string;
+  children: ReactNode;
+  label?: string;
+  /** A quick tooltip (what its colour means). */
+  tip?: string;
+}) {
+  return (
+    <RouterLink
+      to="/work"
+      search={(prev: WorkSearch) => ({ ...prev, item: id })}
+      className={className}
+      aria-label={label}
+      data-tip={tip}
+    >
+      {children}
+    </RouterLink>
+  );
+}
+
+function KindBadge({ kind }: { kind: ItemKind }) {
+  return <span className={`work-kind ${kind}`}>{KIND_NAMES[kind]}</span>;
+}
+
+// ------------------------------------------------------------ ready and blocked
+
+function Grouped({
+  s,
+  items,
+  empty,
+  selected,
+  projectOf,
+  line,
+  needs,
+}: {
+  s: WorkSnapshot;
+  items: WorkItem[];
+  empty: string;
+  selected?: string;
+  projectOf: Map<string, WorkContainer>;
+  line?: (it: WorkItem) => string | undefined;
+  needs?: (it: WorkItem) => Array<WorkItem | string>;
+}) {
+  if (!items.length) {
+    return (
+      <Typography variant="body-md" color="textSecondary" render={<p />}>
+        {empty}
+      </Typography>
+    );
+  }
+  return (
+    <div className="work-groups">
+      {byProject(s, items).map(({ project, items: group }) => {
+        const p = project ?? projectOf.get(group[0]!.project ?? "");
+        return (
+          <section key={p?.id ?? "none"} className="work-group">
+            <header className="work-group-header">
+              <Typography
+                variant="subtitle-md"
+                render={<h2 />}
+                className="work-marked"
+              >
+                {p && <LevelMark level="project" />}
+                {p ? p.title : "No project"}
+              </Typography>
+              <Typography variant="caption-md" color="textSecondary">
+                {p?.id} · {group.length} {group.length === 1 ? "item" : "items"}
+              </Typography>
+            </header>
+            <ul className="work-rows">
+              {[...group]
+                .sort(
+                  (a, b) =>
+                    b.needed_by.length - a.needed_by.length ||
+                    idNumber(a.id) - idNumber(b.id),
+                )
+                .map((it) => {
+                  const extra = line?.(it);
+                  const open = needs?.(it) ?? [];
+                  return (
+                    <li
+                      key={it.id}
+                      className={`work-row${it.id === selected ? " selected" : ""}`}
+                    >
+                      <ItemLink id={it.id} className="work-row-main">
+                        <span className="work-id">{it.id}</span>
+                        <span className="work-row-title">
+                          <InlineText text={it.title} />
+                        </span>
+                        {it.kind !== "work" && <KindBadge kind={it.kind} />}
+                        {extra && (
+                          <Typography
+                            variant="caption-md"
+                            color="textSecondary"
+                            className="work-row-extra"
+                          >
+                            {extra}
+                          </Typography>
+                        )}
+                      </ItemLink>
+                      {open.length > 0 && (
+                        <div className="work-row-needs">
+                          <Typography
+                            variant="caption-md"
+                            color="textSecondary"
+                          >
+                            Waits on
+                          </Typography>
+                          {open.map((n) =>
+                            typeof n === "string" ? (
+                              <span key={n} className="work-need missing">
+                                {n} (not in the tracker)
+                              </span>
+                            ) : (
+                              <ItemLink
+                                key={n.id}
+                                id={n.id}
+                                className="work-need"
+                                label={`${n.id} ${n.title}, ${n.status}`}
+                              >
+                                <span className="work-id">{n.id}</span>
+                                <span className="work-need-title">
+                                  <InlineText text={n.title} />
+                                </span>
+                              </ItemLink>
+                            ),
+                          )}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+            </ul>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+// ------------------------------------------------------------ one item
+
+function ItemPanel({
+  s,
+  id,
+  inline,
+  projectOf,
+  itemOf,
+  flight,
+  back,
+  onClose,
+  onProject,
+}: {
+  s: WorkSnapshot;
+  id?: string;
+  inline: boolean;
+  projectOf: Map<string, WorkContainer>;
+  itemOf: Map<string, WorkItem>;
+  flight: InFlight;
+  /** The list under this panel, to go back to. */
+  back?: string;
+  onClose: () => void;
+  onProject: (id: string) => void;
+}) {
+  const it = id ? itemOf.get(id) : undefined;
+  const [text, setText] = useState<{
+    id: string;
+    text?: WorkItemText;
+    error?: string;
+  }>();
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+    let live = true;
+    setText({ id });
+    loadItemText(id).then(
+      (t) => live && setText({ id, text: t }),
+      (e: Error) => live && setText({ id, error: e.message }),
+    );
+    return () => {
+      live = false;
+    };
+  }, [id, s.generated]);
+  const known = useMemo(() => new Set(s.items.map((x) => x.id)), [s]);
+  const loaded = text?.id === id ? text : undefined;
+  const project = it?.project ? projectOf.get(it.project) : undefined;
+  const initiative = project?.initiative
+    ? s.initiatives.find((i) => i.id === project.initiative)
+    : undefined;
+  const titleId = useId();
+  const path = it?.path;
+  // Vite's dev server opens a file in the editor, relative to its root.
+  const editorPath = path?.replace(/^packages\/next\//, "");
+
+  return (
+    <Pane inline={inline} open={!!id} onClose={onClose} labelledBy={titleId}>
+      {back && (
+        <Link
+          component="button"
+          type="button"
+          className="work-panel-back"
+          onClick={onClose}
+        >
+          ← {back}
+        </Link>
+      )}
+      <div className="work-panel-head">
+        <span className="work-card-top">
+          <span className="work-id">{id}</span>
+          {it && it.kind !== "work" && <KindBadge kind={it.kind} />}
+        </span>
+        <IconButton label="Close" onClick={onClose}>
+          <Icon href={svgDismiss} />
+        </IconButton>
+      </div>
+      {!it ? (
+        <div className="work-panel-body">
+          <Typography variant="headline-sm" render={<h2 />} id={titleId}>
+            Not on this branch
+          </Typography>
+          <Typography variant="body-md" color="textSecondary" render={<p />}>
+            {id} isn't among this branch's items. It may be on another branch,
+            or not made yet.
+          </Typography>
+        </div>
+      ) : (
+        <div className="work-panel-body">
+          <Typography variant="headline-sm" render={<h2 />} id={titleId}>
+            <InlineText text={it.title} />
+          </Typography>
+          <div className="work-panel-states">
+            <StatusBadge
+              tone={
+                it.status === "Done"
+                  ? "success"
+                  : it.status === "In progress"
+                    ? "info"
+                    : "secondary"
+              }
+            >
+              {it.status}
+            </StatusBadge>
+            {isOpen(it) && it.status !== "In progress" && (
+              <StatusBadge tone={stateOf(it).tone}>
+                {stateOf(it).text}
+              </StatusBadge>
+            )}
+            {isOwnerDecision(it) && (
+              <StatusBadge tone="warning">Owner decides</StatusBadge>
+            )}
+          </div>
+          <dl className="work-facts">
+            {project && (
+              <Fact name="Project">
+                <Link
+                  component="button"
+                  type="button"
+                  onClick={() => onProject(project.id)}
+                  title="Scope to this project"
+                  className="work-marked"
+                >
+                  <LevelMark level="project" />
+                  {project.title}
+                </Link>
+              </Fact>
+            )}
+            {initiative && (
+              <Fact name="Initiative">
+                <span className="work-marked">
+                  <LevelMark level="initiative" />
+                  {initiative.title}
+                </span>
+              </Fact>
+            )}
+            {(it.status === "In progress" || flight.has(it.id)) && (
+              <Fact name="Claimed">{whereOf(it, flight, s.branch)}</Fact>
+            )}
+            {it.decided_by && <Fact name="Decided by">{it.decided_by}</Fact>}
+            {it.party && <Fact name="Waits on">{it.party}</Fact>}
+            {it.milestones.length > 0 && (
+              <Fact
+                name={it.milestones.length === 1 ? "Milestone" : "Milestones"}
+              >
+                {it.milestones.map((m, i) => (
+                  <span key={m} className="work-marked">
+                    {i > 0 && ", "}
+                    <LevelMark level="milestone" />
+                    {s.milestones.find((x) => x.id === m)?.title ?? m}
+                  </span>
+                ))}
+              </Fact>
+            )}
+            {it.created && <Fact name="Created">{it.created}</Fact>}
+            {it.reason && <Fact name="Reason">{it.reason}</Fact>}
+          </dl>
+
+          <FocusTrees it={it} itemOf={itemOf} flight={flight} />
+
+          <Divider className="work-panel-divider" />
+          {!loaded || (!loaded.text && !loaded.error) ? (
+            <div className="work-loading" role="status">
+              <CircularProgress size={16} />
+              <Typography variant="body-sm">Reading the item…</Typography>
+            </div>
+          ) : loaded.error ? (
+            <Alert severity="error">
+              The item's text didn't load ({loaded.error}).
+            </Alert>
+          ) : (
+            <ItemText
+              text={loaded.text!.body}
+              known={known}
+              itemLink={(ref, key) => (
+                <Link
+                  key={key}
+                  render={
+                    <RouterLink
+                      to="/work"
+                      search={(prev: WorkSearch) => ({ ...prev, item: ref })}
+                    />
+                  }
+                >
+                  {ref}
+                </Link>
+              )}
+            />
+          )}
+        </div>
+      )}
+      {path && (
+        <div className="work-panel-foot">
+          <Typography
+            variant="caption-md"
+            color="textSecondary"
+            className="work-mono work-path"
+            title={path}
+          >
+            {path}
+          </Typography>
+          <span className="work-panel-actions">
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<Icon href={svgCopy} />}
+              onClick={() =>
+                navigator.clipboard.writeText(path).then(
+                  () => toast("Copied the item's path"),
+                  () => toast("Couldn't copy: the browser refused", "bad"),
+                )
+              }
+            >
+              Copy path
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<Icon href={svgFolderOpen} />}
+              onClick={() =>
+                fetch(
+                  `/__open-in-editor?file=${encodeURIComponent(editorPath!)}`,
+                ).then(
+                  (r) =>
+                    toast(
+                      r.ok
+                        ? "Opened in your editor"
+                        : "The dev server couldn't open an editor",
+                      r.ok ? undefined : "bad",
+                    ),
+                  () => toast("The dev server didn't answer", "bad"),
+                )
+              }
+            >
+              Open in editor
+            </Button>
+          </span>
+        </div>
+      )}
+    </Pane>
+  );
+}
+
+function Fact({ name, children }: { name: string; children: ReactNode }) {
+  return (
+    <div className="work-fact">
+      <dt>
+        <Typography variant="caption-lg" color="textSecondary">
+          {name}
+        </Typography>
+      </dt>
+      <dd>
+        <Typography variant="body-sm">{children}</Typography>
+      </dd>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------ dependencies
+
+/**
+ * Projects against projects (a design structure matrix): row waits on
+ * column, each cell the number of the row's open items that need the
+ * column's. Ordered so what's needed comes first, marks sit below the
+ * diagonal; one above it is a two-way wait. Choosing a cell lists the
+ * items behind it.
+ */
+function MatrixView({
+  s,
+  items,
+  onCell,
+  onProject,
+}: {
+  s: WorkSnapshot;
+  items: WorkItem[];
+  onCell: (from: string, to: string) => void;
+  /** Zooms the dashboard into a project. */
+  onProject: (id: string) => void;
+}) {
+  const m = useMemo(() => dependencyMatrix(s, items), [s, items]);
+  const title = (id: string) =>
+    s.projects.find((p) => p.id === id)?.title ?? id;
+  const max = Math.max(1, ...[...m.cells.values()].map((v) => v.length));
+  const level = (n: number) => Math.min(4, Math.ceil((4 * n) / max));
+  const [hot, setHot] = useState<{ r: number; c: number }>();
+  if (!m.order.length) {
+    return (
+      <Typography variant="body-md" color="textSecondary" render={<p />}>
+        No project here waits on another.
+      </Typography>
+    );
+  }
+  return (
+    <div className="work-matrix">
+      <Typography
+        variant="body-sm"
+        color="textSecondary"
+        render={<p />}
+        className="work-matrix-note"
+      >
+        Each row waits on the columns marked: the number is how many of the
+        row's open items need the column's. What's needed comes first, so marks
+        sit below the diagonal; one above it means two projects wait on each
+        other.
+      </Typography>
+      <Typography
+        variant="body-sm"
+        render={<p />}
+        className="work-matrix-read"
+        aria-live="polite"
+      >
+        {hot
+          ? (() => {
+              const from = m.order[hot.r]!;
+              const to = m.order[hot.c]!;
+              const n = m.cells.get(`${from}|${to}`)?.length ?? 0;
+              return hot.r === hot.c ? (
+                <>
+                  <b>{title(from)}</b> (the diagonal)
+                </>
+              ) : (
+                <>
+                  <b>{title(from)}</b> waits on <b>{title(to)}</b>:{" "}
+                  {n ? `${n} ${n === 1 ? "item" : "items"}` : "nothing"}
+                  {n > 0 && m.cells.has(`${to}|${from}`)
+                    ? `, and ${title(to)} waits on it too`
+                    : n > 0 && hot.c > hot.r
+                      ? ", part of a loop of waits through other projects"
+                      : ""}
+                </>
+              );
+            })()
+          : "Point at a cell to name its row and column."}
+      </Typography>
+      <div className="work-matrix-scroll">
+        <table
+          className="work-matrix-table"
+          onMouseLeave={() => setHot(undefined)}
+        >
+          <thead>
+            <tr>
+              <th scope="col" className="work-matrix-corner">
+                <span className="visually-hidden">Waiting project</span>
+              </th>
+              {m.order.map((id, c) => (
+                <th
+                  key={id}
+                  scope="col"
+                  className={`work-matrix-col${hot?.c === c ? " hot" : ""}`}
+                  title={`${id} ${title(id)}`}
+                >
+                  <span className="work-matrix-col-label">
+                    <span className="work-matrix-n">{c + 1}</span> {title(id)}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {m.order.map((from, r) => (
+              <tr key={from}>
+                <th
+                  scope="row"
+                  className={`work-matrix-row${hot?.r === r ? " hot" : ""}`}
+                  title={`${from} ${title(from)}`}
+                >
+                  <span className="work-matrix-n">{r + 1}</span>{" "}
+                  <LevelMark level="project" /> {title(from)}
+                </th>
+                {m.order.map((to, c) => {
+                  const list = m.cells.get(`${from}|${to}`);
+                  const n = list?.length ?? 0;
+                  return (
+                    <td
+                      key={to}
+                      className={`work-matrix-cell${r === c ? " diag" : ""}${n && c > r ? " above" : ""}${hot && (hot.r === r || hot.c === c) ? " cross" : ""}${hot && hot.r === r && hot.c === c ? " at" : ""}`}
+                      onMouseEnter={() => setHot({ r, c })}
+                    >
+                      {n > 0 && (
+                        <button
+                          type="button"
+                          className={`work-matrix-mark l${level(n)}`}
+                          onClick={() => onCell(from, to)}
+                          aria-label={`${title(from)} waits on ${title(to)}: ${n} ${n === 1 ? "item" : "items"}`}
+                          title={`${title(from)} waits on ${title(to)}: ${n}`}
+                        >
+                          {n}
+                        </button>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {m.alone.length > 0 && (
+        <section className="work-alone">
+          <Typography variant="subtitle-md" render={<h3 />}>
+            Not linked to another project
+          </Typography>
+          <Typography variant="caption-md" color="textSecondary" render={<p />}>
+            Their items wait only on each other. Choose one to zoom in.
+          </Typography>
+          <ul className="work-alone-list">
+            {m.alone.map((id) => {
+              const mine = items.filter((it) => it.project === id);
+              const open = mine.filter(isOpen).length;
+              const ready = mine.filter((it) => it.ready).length;
+              return (
+                <li key={id}>
+                  <button
+                    type="button"
+                    className="work-alone-item"
+                    onClick={() => onProject(id)}
+                  >
+                    <span className="work-alone-title work-marked">
+                      <LevelMark level="project" />
+                      {title(id)}
+                    </span>
+                    <Typography variant="caption-md" color="textSecondary">
+                      {open} open · {ready} ready
+                    </Typography>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}
+
+/**
+ * A project's place among the others: the projects it waits on and the
+ * ones that wait on it, each with how many items (its row and column of
+ * the matrix, as lists).
+ */
+function ProjectLinks({
+  s,
+  project,
+  onCell,
+}: {
+  s: WorkSnapshot;
+  project: string;
+  onCell: (from: string, to: string) => void;
+}) {
+  const m = useMemo(() => dependencyMatrix(s, s.items), [s]);
+  const title = (id: string) =>
+    s.projects.find((p) => p.id === id)?.title ?? id;
+  const waitsOn: Array<[string, number]> = [];
+  const waitedOnBy: Array<[string, number]> = [];
+  for (const [k, list] of m.cells) {
+    const [from, to] = k.split("|") as [string, string];
+    if (from === project) {
+      waitsOn.push([to, list.length]);
+    } else if (to === project) {
+      waitedOnBy.push([from, list.length]);
+    }
+  }
+  const max = Math.max(
+    1,
+    ...waitsOn.map((x) => x[1]),
+    ...waitedOnBy.map((x) => x[1]),
+  );
+  const rows = (list: Array<[string, number]>, dir: "on" | "by") =>
+    !list.length ? (
+      <Typography
+        variant="body-sm"
+        color="textSecondary"
+        render={<p />}
+        className="work-empty"
+      >
+        None
+      </Typography>
+    ) : (
+      <ol className="work-bars">
+        {list
+          .sort((a, b) => b[1] - a[1])
+          .map(([id, n]) => (
+            <li key={id}>
+              <button
+                type="button"
+                className="work-bar"
+                onClick={() =>
+                  dir === "on" ? onCell(project, id) : onCell(id, project)
+                }
+              >
+                <span className="work-bar-label work-marked">
+                  <LevelMark level="project" />
+                  <span className="work-outline-label">{title(id)}</span>
+                </span>
+                <span className="work-bar-track" aria-hidden="true">
+                  <span
+                    className="work-bar-fill"
+                    style={{ width: `${(100 * n) / max}%` }}
+                  />
+                </span>
+                <span className="work-bar-value">{n}</span>
+              </button>
+            </li>
+          ))}
+      </ol>
+    );
+  return (
+    <div className="work-links">
+      <div>
+        <Typography variant="caption-lg" color="textSecondary" render={<h3 />}>
+          Waits on
+        </Typography>
+        {rows(waitsOn, "on")}
+      </div>
+      <div>
+        <Typography variant="caption-lg" color="textSecondary" render={<h3 />}>
+          Waited on by
+        </Typography>
+        {rows(waitedOnBy, "by")}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The longest chains, ranked: each a bar for how many items it runs in
+ * order, labelled with where it starts and who moves that first item now.
+ * Choosing one lists the chain step by step.
+ */
+function ChainBars({
+  chains,
+  flight,
+  projectOf,
+  limit,
+  onChain,
+}: {
+  chains: WorkItem[][];
+  flight: InFlight;
+  projectOf: Map<string, WorkContainer>;
+  limit: number;
+  onChain: (head: string) => void;
+}) {
+  if (!chains.length) {
+    return (
+      <Typography
+        variant="body-sm"
+        color="textSecondary"
+        render={<p />}
+        className="work-empty"
+      >
+        No open item waits on another here.
+      </Typography>
+    );
+  }
+  const shown = chains.slice(0, limit);
+  const max = shown[0]!.length;
+  return (
+    <ol className="work-bars work-chains">
+      {shown.map((chain) => {
+        const head = chain[0]!;
+        const actor = nextActor(head, flight);
+        const projects = new Set(chain.map((it) => it.project));
+        const where = projectOf.get(head.project ?? "")?.title ?? head.project;
+        return (
+          <li key={head.id}>
+            <button
+              type="button"
+              className="work-bar"
+              onClick={() => onChain(head.id)}
+              aria-label={`${chain.length} items from ${head.id} ${head.title}`}
+            >
+              <span className="work-bar-label">
+                <span className="work-id">{head.id}</span>{" "}
+                <InlineText text={head.title} />
+                <span className="work-chain-meta">
+                  {where}
+                  {projects.size > 1 && ` +${projects.size - 1}`} ·{" "}
+                  {actor === "owner"
+                    ? "your decision first"
+                    : actor === "outside"
+                      ? "waits outside first"
+                      : stageOf(head, flight) === "In flight"
+                        ? "first is in flight"
+                        : "first is ready"}
+                </span>
+              </span>
+              <span className="work-bar-track" aria-hidden="true">
+                <span
+                  className="work-bar-fill"
+                  style={{ width: `${(100 * chain.length) / max}%` }}
+                />
+              </span>
+              <span className="work-bar-value">{chain.length}</span>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/**
+ * An item's dependencies as two trees around it: what it waits on above
+ * (each open need expandable into its own needs, down to what someone can
+ * act on now) and what waits on it below (expandable the same way). A
+ * path is followed by opening a branch, not by tracing lines.
+ */
+function FocusTrees({
+  it,
+  itemOf,
+  flight,
+}: {
+  it: WorkItem;
+  itemOf: Map<string, WorkItem>;
+  flight: InFlight;
+}) {
+  return (
+    <>
+      <section className="work-related">
+        <Typography variant="subtitle-md" render={<h3 />}>
+          Waits on
+        </Typography>
+        {it.needs.length ? (
+          <DepTree
+            ids={it.needs}
+            dir="up"
+            itemOf={itemOf}
+            flight={flight}
+            depth={0}
+            trail={[it.id]}
+          />
+        ) : (
+          <Typography variant="body-sm" color="textSecondary" render={<p />}>
+            Nothing: it can start once planned.
+          </Typography>
+        )}
+      </section>
+      <section className="work-related">
+        <Typography variant="subtitle-md" render={<h3 />}>
+          Unblocks
+        </Typography>
+        {it.needed_by.length ? (
+          <DepTree
+            ids={it.needed_by}
+            dir="down"
+            itemOf={itemOf}
+            flight={flight}
+            depth={0}
+            trail={[it.id]}
+          />
+        ) : (
+          <Typography variant="body-sm" color="textSecondary" render={<p />}>
+            No open item needs it.
+          </Typography>
+        )}
+      </section>
+    </>
+  );
+}
+
+function DepTree({
+  ids,
+  dir,
+  itemOf,
+  flight,
+  depth,
+  trail,
+}: {
+  ids: string[];
+  dir: "up" | "down";
+  itemOf: Map<string, WorkItem>;
+  flight: InFlight;
+  depth: number;
+  /** The items on the way here, so a cycle stops. */
+  trail: string[];
+}) {
+  // Open first, then by number; done needs fold to the end.
+  const sorted = [...ids].sort((a, b) => {
+    const x = itemOf.get(a);
+    const y = itemOf.get(b);
+    return (
+      Number(!!y && isOpen(y)) - Number(!!x && isOpen(x)) ||
+      idNumber(a) - idNumber(b)
+    );
+  });
+  return (
+    <ul
+      className={`work-tree${depth ? " nested" : ""}`}
+      role={depth ? "group" : "tree"}
+    >
+      {sorted.map((id) => (
+        <DepNode
+          key={id}
+          id={id}
+          dir={dir}
+          itemOf={itemOf}
+          flight={flight}
+          depth={depth}
+          trail={trail}
+        />
+      ))}
+    </ul>
+  );
+}
+
+function DepNode({
+  id,
+  dir,
+  itemOf,
+  flight,
+  depth,
+  trail,
+}: {
+  id: string;
+  dir: "up" | "down";
+  itemOf: Map<string, WorkItem>;
+  flight: InFlight;
+  depth: number;
+  trail: string[];
+}) {
+  const x = itemOf.get(id);
+  const next = x
+    ? (dir === "up" ? x.open_needs : x.needed_by).filter(
+        (n) => !trail.includes(n),
+      )
+    : [];
+  const [open, setOpen] = useState(false);
+  const st = x ? stageOf(x, flight) : undefined;
+  const actor = x ? nextActor(x, flight) : undefined;
+  return (
+    <li
+      role="treeitem"
+      aria-expanded={next.length ? open : undefined}
+      className="work-tree-item"
+    >
+      <div className="work-tree-row">
+        {next.length ? (
+          <IconButton
+            label={
+              open
+                ? `Hide what ${id} ${dir === "up" ? "waits on" : "unblocks"}`
+                : `Show what ${id} ${dir === "up" ? "waits on" : "unblocks"}`
+            }
+            size="small"
+            className="work-tree-toggle"
+            onClick={() => setOpen(!open)}
+          >
+            <Icon href={open ? svgChevronDown : svgChevronRight} />
+          </IconButton>
+        ) : (
+          <span className="work-tree-spacer" aria-hidden="true" />
+        )}
+        {x ? (
+          <ItemLink
+            id={id}
+            className={`work-tree-link${isOpen(x) ? "" : " closed"}`}
+          >
+            <span
+              className={`work-swatch stage-${slug(st ?? "Done")}`}
+              aria-hidden="true"
+              data-tip={stageTip(st ?? "Done")}
+            />
+            <span className="work-id">{id}</span>
+            <span className="work-tree-title">
+              <InlineText text={x.title} />
+            </span>
+            <span className="work-tree-state">
+              {!isOpen(x)
+                ? x.status
+                : dir === "up" && actor && actor !== "items"
+                  ? actor === "owner"
+                    ? "Your move"
+                    : actor === "outside"
+                      ? "Outside"
+                      : STAGE_NAMES[st ?? "Ready"]
+                  : next.length
+                    ? `${next.length} more`
+                    : STAGE_NAMES[st ?? "Waiting"]}
+            </span>
+          </ItemLink>
+        ) : (
+          <span className="work-tree-link missing">
+            <span className="work-id">{id}</span> not in the tracker on this
+            branch
+          </span>
+        )}
+      </div>
+      {open && next.length > 0 && (
+        <DepTree
+          ids={next}
+          dir={dir}
+          itemOf={itemOf}
+          flight={flight}
+          depth={depth + 1}
+          trail={[...trail, id]}
+        />
+      )}
+    </li>
+  );
+}
+
+/** Tokens in short: 950, 12k, 1.4M. */
+const tokenText = (n: number) =>
+  n >= 1e6
+    ? `${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)}M`
+    : n >= 1e3
+      ? `${Math.round(n / 1e3)}k`
+      : `${Math.round(n)}`;
+
+/**
+ * The milestone map: the milestones as a plan without dates. Lanes are
+ * projects; across is the order the work can happen, in steps or in the
+ * tokens left on the way; each bar starts once everything it waits on is
+ * done. Curves are waits between milestones, thicker for more items
+ * behind them; the critical path, the chain with no slack, is drawn in
+ * the accent. Hovering a milestone lights what feeds it and what it
+ * unblocks; choosing one opens it in the pane.
+ */
+function MilestoneMap({
+  s,
+  flight,
+  unit,
+  inScope,
+  selected,
+  onOpen,
+  onWait,
+  release,
+  onRelease,
+  shape,
+  onShape,
+}: {
+  s: WorkSnapshot;
+  flight: InFlight;
+  unit: "steps" | "tokens";
+  /** Project lanes, or a layered graph that crosses fewer waits. */
+  shape: "lanes" | "graph";
+  onShape: (shape: "lanes" | "graph") => void;
+  /** Milestones outside the scope stay, dimmed, for context. */
+  inScope?: (m: WorkMilestone) => boolean;
+  selected?: string;
+  onOpen: (milestone: string) => void;
+  onWait: (from: string, to: string) => void;
+  /** The release gate in focus. */
+  release?: string;
+  onRelease: (id: string | undefined) => void;
+}) {
+  const box = useRef<HTMLDivElement>(null);
+  const width = useWidth(box);
+  const [hover, setHover] = useState<string>();
+  const map = useMemo(
+    () => milestoneMapOf(s, flight, unit, release),
+    [s, flight, unit, release],
+  );
+  // The graph places by steps whatever the axis: its layers are steps.
+  const graphMap = useMemo(
+    () =>
+      unit === "steps" ? map : milestoneMapOf(s, flight, "steps", release),
+    [map, s, flight, unit, release],
+  );
+  const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
+  const titleOf = (id: string) => msOf.get(id)?.title ?? mapEntityTitle(s, id);
+  const over = (n: MapNode) =>
+    n.tokens.spent !== undefined &&
+    n.tokens.budget !== undefined &&
+    n.tokens.spent > n.tokens.budget;
+  const laneW = width < 820 ? 130 : 170;
+  const steps = unit === "steps" ? Math.max(1, map.total) : 0;
+  const plotW = Math.max(
+    width - laneW - 8,
+    unit === "steps" ? steps * 210 : 640,
+  );
+  const span = Math.max(1e-9, map.total);
+  const x = (v: number) => laneW + (v / span) * plotW;
+  const PAD = 10;
+  const AXIS = unit === "steps" ? 44 : 28;
+  // A lane with milestones has full rows; one with only unshaped work, slim ones.
+  const shapedLanes = new Set(
+    map.nodes.filter((n) => !n.unshaped).map((n) => n.lane),
+  );
+  const rowOf = (lane: string) => (shapedLanes.has(lane) ? 84 : 40);
+  const laneTop = new Map<string, number>();
+  const laneH = new Map<string, number>();
+  let y0 = AXIS;
+  for (const l of map.lanes) {
+    laneTop.set(l.id, y0);
+    laneH.set(l.id, l.subs * rowOf(l.id) + PAD * 2);
+    y0 += laneH.get(l.id)!;
+  }
+  const height = y0;
+  const nodeOf = new Map(map.nodes.map((n) => [n.id, n]));
+  const top = (n: MapNode) =>
+    laneTop.get(n.lane)! + PAD + n.sub * rowOf(n.lane);
+  const nodeH = (n: MapNode) => (n.unshaped ? 30 : 72);
+  const left = (n: MapNode) => x(n.x0) + 4;
+  const right = (n: MapNode) =>
+    Math.max(left(n) + 60, x(n.x1) - (unit === "steps" ? 16 : 4));
+  // Each wait leaves and enters a bar at its own point down the bar's
+  // edge, ordered by where the other end sits, so arrows don't merge.
+  const portY = new Map<string, { out: number; in: number }>();
+  for (const n of map.nodes) {
+    const ins = map.edges
+      .filter((e) => e.to === n.id && nodeOf.has(e.from))
+      .sort((a, b) => top(nodeOf.get(a.from)!) - top(nodeOf.get(b.from)!));
+    const outs = map.edges
+      .filter((e) => e.from === n.id && nodeOf.has(e.to))
+      .sort((a, b) => top(nodeOf.get(a.to)!) - top(nodeOf.get(b.to)!));
+    const at = (k: number, of: number) =>
+      top(n) + 4 + ((k + 1) * (nodeH(n) - 8)) / (of + 1);
+    ins.forEach((e, k) => {
+      const key = `${e.from}>${e.to}`;
+      portY.set(key, { out: portY.get(key)?.out ?? 0, in: at(k, ins.length) });
+    });
+    outs.forEach((e, k) => {
+      const key = `${e.from}>${e.to}`;
+      portY.set(key, { in: portY.get(key)?.in ?? 0, out: at(k, outs.length) });
+    });
+  }
+  const geom = (e: MapEdge) => {
+    const a = nodeOf.get(e.from)!;
+    const b = nodeOf.get(e.to)!;
+    const p = portY.get(`${e.from}>${e.to}`)!;
+    const x1 = right(a);
+    const x2 = left(b) - 2;
+    return { x1, y1: p.out, x2, y2: p.in };
+  };
+  // What feeds the hovered milestone, and what it unblocks.
+  const lit = useMemo(() => {
+    if (!hover) {
+      return undefined;
+    }
+    const set = new Set([hover]);
+    const walk = (id: string, up: boolean) => {
+      for (const e of map.edges) {
+        const next = up
+          ? e.to === id
+            ? e.from
+            : ""
+          : e.from === id
+            ? e.to
+            : "";
+        if (next && !set.has(next)) {
+          set.add(next);
+          walk(next, up);
+        }
+      }
+    };
+    walk(hover, true);
+    walk(hover, false);
+    return set;
+  }, [hover, map.edges]);
+  // Steps: a header over each column (what is in it); tokens: round ticks.
+  const columns =
+    unit === "steps"
+      ? Array.from({ length: steps }, (_, i) => {
+          const here = map.nodes.filter(
+            (n) => !n.unshaped && Math.round(n.x0) === i,
+          );
+          const done = here.reduce((k, n) => k + n.counts.Done, 0);
+          const all = here.reduce(
+            (k, n) => k + STAGES.reduce((j, st) => j + n.counts[st], 0),
+            0,
+          );
+          const started = here.filter((n) => n.started).length;
+          return { i, count: here.length, done, all, started };
+        })
+      : [];
+  const ticks =
+    unit === "steps"
+      ? columns.map((c) => ({ v: c.i, label: "" }))
+      : niceTicks(map.total).map((v) => ({ v, label: tokenText(v) }));
+  if (!map.nodes.length) {
+    return (
+      <Typography variant="body-sm" color="textSecondary" render={<p />}>
+        No open milestones.
+      </Typography>
+    );
+  }
+  const focusTitle = map.focus ? titleOf(map.focus) : undefined;
+  return (
+    <div>
+      <div className="work-map-focus">
+        <Typography variant="caption-lg" color="textSecondary">
+          Layout
+        </Typography>
+        <ToggleButtonGroup
+          size="small"
+          exclusive
+          value={shape}
+          onChange={(_, v: "lanes" | "graph" | null) => v && onShape(v)}
+          aria-label="Layout"
+        >
+          <ToggleButton
+            value="lanes"
+            render={<Button variant="outlined" size="small" />}
+          >
+            Project lanes
+          </ToggleButton>
+          <ToggleButton
+            value="graph"
+            render={<Button variant="outlined" size="small" />}
+          >
+            Fewest crossings
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </div>
+      {map.gates.length > 0 && (
+        <div className="work-map-focus">
+          <Typography variant="caption-lg" color="textSecondary">
+            Measure to
+          </Typography>
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={map.focus ?? "all"}
+            onChange={(_, v: string | null) =>
+              v && onRelease(v === "all" ? undefined : v)
+            }
+            aria-label="Measure to"
+          >
+            <ToggleButton
+              value="all"
+              render={<Button variant="outlined" size="small" />}
+            >
+              Everything
+            </ToggleButton>
+            {map.gates.map((g) => (
+              <ToggleButton
+                key={g.id}
+                value={g.id}
+                render={<Button variant="outlined" size="small" />}
+              >
+                <Icon href={svgFlag} />
+                {g.title}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </div>
+      )}
+      <p className="work-map-done">
+        <span className="work-map-done-mark" aria-hidden="true" />
+        {map.done.length ? (
+          <>
+            Done:{" "}
+            {map.done.map((d, i) => (
+              <span key={d.id}>
+                {i > 0 && ", "}
+                <Link
+                  component="button"
+                  type="button"
+                  onClick={() => onOpen(d.id)}
+                >
+                  {d.title}
+                </Link>
+              </span>
+            ))}
+          </>
+        ) : (
+          "No milestone is done yet: the map starts from now."
+        )}
+      </p>
+      {shape === "graph" ? (
+        <MilestoneGraph
+          s={s}
+          map={graphMap}
+          selected={selected}
+          onOpen={onOpen}
+          onWait={onWait}
+        />
+      ) : (
+        <div className="work-map-wrap" ref={box}>
+          <div
+            className="work-map"
+            style={{ width: laneW + plotW + 8, height }}
+            onPointerLeave={() => setHover(undefined)}
+          >
+            {map.lanes.map((l, i) => (
+              <div
+                key={l.id}
+                className={`work-map-lane${i % 2 ? " odd" : ""}${l.outside ? " outside" : ""}${l.id === "releases" ? " releases" : ""}`}
+                style={{ top: laneTop.get(l.id), height: laneH.get(l.id) }}
+              >
+                {l.outside && !map.lanes[i - 1]?.outside && (
+                  <span className="work-map-band">
+                    Not needed for {focusTitle}
+                  </span>
+                )}
+                <span
+                  className="work-map-lane-name"
+                  style={{ width: laneW - 12 }}
+                >
+                  {l.id === "releases" ? (
+                    <Icon href={svgFlag} />
+                  ) : (
+                    <LevelMark level="project" />
+                  )}
+                  <span className="work-outline-label">{l.title}</span>
+                </span>
+              </div>
+            ))}
+            {ticks.map((t) => (
+              <span
+                key={t.v}
+                className="work-map-tick"
+                style={{ left: x(t.v), height }}
+              >
+                {t.label && (
+                  <span className="work-map-tick-label">{t.label}</span>
+                )}
+              </span>
+            ))}
+            <span className="work-map-corner" style={{ width: laneW - 12 }}>
+              Project
+            </span>
+            {columns.map((c) => (
+              <span
+                key={`h${c.i}`}
+                className="work-map-col"
+                style={{ left: x(c.i), width: x(c.i + 1) - x(c.i) }}
+                data-tip={`${
+                  c.i === 0
+                    ? "Now: these wait on no other milestone; those under way (an item done or in flight) are filled, the rest can start"
+                    : `Step ${c.i + 1}: starts once what it waits on in ${c.i === 1 ? "step 1" : `steps 1 to ${c.i}`} is done`
+                }; ${c.done} of ${c.all} items done`}
+              >
+                <span className="work-map-col-n">{c.i + 1}</span>
+                <span className="work-map-col-text">
+                  {c.i === 0 && <b>Now</b>}
+                  <span>
+                    {c.i === 0
+                      ? `${c.started} in progress · ${c.count - c.started} can start`
+                      : `${c.count} ${c.count === 1 ? "milestone" : "milestones"}`}
+                  </span>
+                </span>
+              </span>
+            ))}
+            <svg
+              className="work-map-edges"
+              width={laneW + plotW + 8}
+              height={height}
+              aria-hidden="true"
+            >
+              <defs>
+                <marker
+                  id="work-map-arrow"
+                  viewBox="0 0 8 8"
+                  refX="7"
+                  refY="4"
+                  markerUnits="userSpaceOnUse"
+                  markerWidth="9"
+                  markerHeight="9"
+                  orient="auto"
+                >
+                  <path d="M0,0 L8,4 L0,8 Z" className="work-map-arrowhead" />
+                </marker>
+              </defs>
+              {map.edges.map((e) => {
+                const a = nodeOf.get(e.from);
+                const b = nodeOf.get(e.to);
+                if (
+                  !a ||
+                  !b ||
+                  (e.soft && hover !== e.from && hover !== e.to)
+                ) {
+                  return null;
+                }
+                const { x1, y1, x2, y2 } = geom(e);
+                const bend = Math.max(24, Math.abs(x2 - x1) / 2);
+                const on = !lit || (lit.has(e.from) && lit.has(e.to));
+                // The hovered milestone's own waits stand out from the chain beyond.
+                const near = !!hover && (e.from === hover || e.to === hover);
+                return (
+                  <path
+                    key={`${e.from}>${e.to}`}
+                    d={`M${x1},${y1} C${x1 + bend},${y1} ${x2 - bend},${y2} ${x2},${y2}`}
+                    className={`work-map-edge${e.critical ? " critical" : ""}${on ? "" : " dim"}${near ? " near" : ""}${e.items.length ? "" : " direct"}${e.soft ? " soft" : ""}`}
+                    style={{ strokeWidth: 1 + Math.min(3, e.items.length / 2) }}
+                    markerEnd="url(#work-map-arrow)"
+                  />
+                );
+              })}
+            </svg>
+            {map.nodes.map((n) => {
+              const m = msOf.get(n.id);
+              const total = STAGES.reduce((k, st) => k + n.counts[st], 0);
+              const out = inScope && m ? !inScope(m) : false;
+              const dim = (lit && !lit.has(n.id)) || out;
+              const waits = map.edges.filter((e) => e.to === n.id);
+              return (
+                <Tooltip
+                  key={n.id}
+                  placement="top"
+                  title={
+                    <span className="work-map-tip">
+                      <b>{n.title}</b>
+                      {n.unshaped && (
+                        <span>
+                          Open items of this project that no milestone holds
+                          yet; choose to list them
+                        </span>
+                      )}
+                      {n.gate && (
+                        <>
+                          <span>
+                            A release gate: it needs {n.gate.milestones}{" "}
+                            milestones, {n.gate.milestonesDone} done
+                          </span>
+                          <span>
+                            {n.gate.itemsDone} of {n.gate.items} of their items
+                            done
+                            {n.gate.tokensLeft > 0 &&
+                              `; ${tokenText(n.gate.tokensLeft)} tokens left on them`}
+                          </span>
+                          {n.gate.decisions > 0 && (
+                            <span>
+                              {n.gate.decisions} of your decisions hold it up
+                            </span>
+                          )}
+                          <span>Choose "Measure to" above to focus on it</span>
+                        </>
+                      )}
+                      <span>
+                        {msOf.get(n.id)?.project &&
+                          s.projects.find(
+                            (p) => p.id === msOf.get(n.id)?.project,
+                          )?.title}
+                      </span>
+                      <span>
+                        {n.counts.Done} of {total} done
+                        {STAGES.filter((st) => st !== "Done" && n.counts[st])
+                          .map(
+                            (st) =>
+                              `, ${n.counts[st]} ${STAGE_NAMES[st].toLowerCase()}`,
+                          )
+                          .join("")}
+                      </span>
+                      <span>
+                        {waits.length
+                          ? `After ${waits.map((w) => `${titleOf(w.from)} (${w.items.length} ${w.items.length === 1 ? "item" : "items"})`).join(", ")}`
+                          : "Waits on no other milestone"}
+                      </span>
+                      <span>
+                        {Number.isNaN(n.slack)
+                          ? `Not needed for ${focusTitle}`
+                          : n.critical
+                            ? `On the critical path: any delay here delays ${focusTitle ?? "the end"}`
+                            : `Can slip ${unit === "steps" ? `${n.slack} ${n.slack === 1 ? "step" : "steps"}` : `${tokenText(n.slack)} tokens`} before it delays ${focusTitle ?? "the last milestone"}`}
+                      </span>
+                      <span>
+                        {n.tokens.estimated
+                          ? `${tokenText(n.tokens.left)} tokens left, from ${n.tokens.estimated} of ${n.tokens.open} open items' estimates`
+                          : n.tokens.appetite
+                            ? `Appetite ${tokenText(n.tokens.appetite)} tokens; no item estimates yet`
+                            : "No token estimates yet"}
+                      </span>
+                      {n.tokens.budget !== undefined && (
+                        <span>
+                          Budget {tokenText(n.tokens.budget)} tokens (
+                          {n.tokens.appetite !== undefined
+                            ? "its appetite"
+                            : "its items' estimates together"}
+                          );{" "}
+                          {n.tokens.spent === undefined
+                            ? "spent: not recorded until HITLd's ledger"
+                            : over(n)
+                              ? `spent ${tokenText(n.tokens.spent)}, ${Math.round((100 * (n.tokens.spent - n.tokens.budget)) / n.tokens.budget)}% over`
+                              : `spent ${tokenText(n.tokens.spent)}, ${Math.round((100 * n.tokens.spent) / n.tokens.budget)}% of it`}
+                        </span>
+                      )}
+                      {n.decisions > 0 && (
+                        <span>{n.decisions} of your decisions hold it up</span>
+                      )}
+                      {n.loop && (
+                        <span>
+                          Waits round a loop with{" "}
+                          {n.loop
+                            .filter((id) => id !== n.id)
+                            .map(titleOf)
+                            .join(", ")}
+                        </span>
+                      )}
+                      {m && m.to_shape.length > 0 && (
+                        <span>
+                          To shape:{" "}
+                          {m.to_shape
+                            .map((k) => SHAPE_NAMES[k] ?? k)
+                            .join(", ")}
+                        </span>
+                      )}
+                    </span>
+                  }
+                >
+                  <button
+                    type="button"
+                    className={`work-map-node${n.gate ? " gate" : n.unshaped ? " unshaped" : n.started ? " started" : " idle"}${unit === "tokens" && over(n) ? " over" : ""}${n.critical ? " critical" : ""}${n.id === selected ? " selected" : ""}${dim ? " dim" : ""}${n.loop ? " loop" : ""}`}
+                    style={{
+                      left: left(n),
+                      top: top(n),
+                      width: right(n) - left(n),
+                    }}
+                    onPointerEnter={() => setHover(n.id)}
+                    onFocus={() => setHover(n.id)}
+                    onBlur={() => setHover(undefined)}
+                    onClick={() => onOpen(n.id)}
+                  >
+                    <span className="work-map-node-title">
+                      {n.gate ? (
+                        <Icon href={svgFlag} />
+                      ) : (
+                        <LevelMark level={n.unshaped ? "item" : "milestone"} />
+                      )}
+                      <span className="work-outline-label">{n.title}</span>
+                      {n.decisions > 0 && (
+                        <span className="work-count-badge">{n.decisions}</span>
+                      )}
+                    </span>
+                    {unit === "tokens" && n.tokens.budget !== undefined ? (
+                      <BudgetMeter
+                        budget={n.tokens.budget}
+                        spent={n.tokens.spent}
+                      />
+                    ) : (
+                      <span
+                        className="work-pbar-track work-map-bar"
+                        aria-hidden="true"
+                      >
+                        {STAGES.map((st) =>
+                          n.counts[st] ? (
+                            <span
+                              key={st}
+                              className={`work-roadmap-seg stage-${slug(st)}`}
+                              style={{ flexGrow: n.counts[st] }}
+                            />
+                          ) : null,
+                        )}
+                      </span>
+                    )}
+                    <span
+                      className={`work-map-node-meta${over(n) ? " over" : ""}`}
+                    >
+                      {n.gate ? (
+                        `${n.gate.milestonesDone} of ${n.gate.milestones} milestones · ${n.gate.itemsDone} of ${n.gate.items} items done`
+                      ) : n.unshaped && unit === "steps" ? (
+                        `${n.tokens.open} open items${n.after.length ? ` · after ${n.after.map(titleOf).join(" and ")}` : ""}`
+                      ) : unit === "tokens" && n.tokens.budget !== undefined ? (
+                        n.tokens.spent === undefined ? (
+                          `${tokenText(n.tokens.budget)} budget · spent not recorded`
+                        ) : (
+                          `${tokenText(n.tokens.spent)} of ${tokenText(n.tokens.budget)}${over(n) ? ` · ${Math.round((100 * (n.tokens.spent - n.tokens.budget)) / n.tokens.budget)}% over` : ""}`
+                        )
+                      ) : (
+                        <>
+                          {n.counts["In flight"] > 0
+                            ? `${n.counts["In flight"]} in flight · `
+                            : n.started
+                              ? "Under way · "
+                              : "Not started · "}
+                          {n.counts.Done} of {total} done
+                          {unit === "tokens" && n.tokens.left > 0
+                            ? ` · ${tokenText(n.tokens.left)} tokens`
+                            : ""}
+                          {n.after.length > 0 &&
+                            ` · after ${n.after.map(titleOf).join(" and ")}`}
+                        </>
+                      )}
+                    </span>
+                  </button>
+                </Tooltip>
+              );
+            })}
+            {hover &&
+              map.edges
+                .filter(
+                  (e) =>
+                    (e.from === hover || e.to === hover) &&
+                    nodeOf.has(e.from) &&
+                    nodeOf.has(e.to),
+                )
+                .map((e) => {
+                  const { x1, y1, x2, y2 } = geom(e);
+                  return (
+                    <span
+                      key={`c${e.from}>${e.to}`}
+                      className="work-map-count"
+                      style={{ left: (x1 + x2) / 2, top: (y1 + y2) / 2 }}
+                    >
+                      {e.items.length
+                        ? `${e.items.length} ${e.items.length === 1 ? "item" : "items"}`
+                        : "named"}
+                    </span>
+                  );
+                })}
+            {/* The waits, as choosable spots at each arrow's head. */}
+            {map.edges.map((e) => {
+              const b = nodeOf.get(e.to);
+              const a = nodeOf.get(e.from);
+              if (!a || !b || (e.soft && hover !== e.from && hover !== e.to)) {
+                return null;
+              }
+              return (
+                <button
+                  key={`w${e.from}>${e.to}`}
+                  type="button"
+                  className="work-map-wait"
+                  style={{ left: left(b) - 16, top: geom(e).y2 - 8 }}
+                  data-tip={`${titleOf(e.to)} waits on ${titleOf(e.from)}: ${e.items.length} ${e.items.length === 1 ? "item" : "items"}`}
+                  aria-label={`${titleOf(e.to)} waits on ${titleOf(e.from)}: list the items`}
+                  onClick={() => onWait(e.from, e.to)}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+      <ul className="work-map-legend" aria-label="Key">
+        <li>
+          <span className="work-map-key started" aria-hidden="true" />
+          In progress: an item done or in flight
+        </li>
+        <li>
+          <span className="work-map-key idle" aria-hidden="true" />
+          Not started
+        </li>
+        <li>
+          <span className="work-map-key loop" aria-hidden="true" />
+          Waits round a loop
+        </li>
+        <li>
+          <span className="work-map-key-line" aria-hidden="true" />A wait,
+          thicker for more items
+        </li>
+        <li>
+          <span className="work-map-key-line direct" aria-hidden="true" />
+          Named by the milestone itself
+        </li>
+      </ul>
+      {map.path.length > 0 && (
+        <Typography
+          variant="caption-md"
+          color="textSecondary"
+          render={<p />}
+          className="work-map-path"
+        >
+          <span className="work-map-path-key" aria-hidden="true" />
+          Critical path{focusTitle ? ` to ${focusTitle}` : ""},{" "}
+          {unit === "steps"
+            ? `${map.end} ${map.end === 1 ? "step" : "steps"}`
+            : `${tokenText(map.end)} tokens`}
+          : {map.path.map(titleOf).join(" → ")}. A delay anywhere on it delays{" "}
+          {focusTitle ?? "the last milestone"}; hover any milestone for its
+          slack.
+        </Typography>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Tokens spent against a budget (a bullet chart): the track is the
+ * budget, the fill what has been spent, and past the budget mark the
+ * overage runs on in red. With nothing recorded yet, only the budget.
+ */
+function BudgetMeter({ budget, spent }: { budget: number; spent?: number }) {
+  const top = Math.max(budget, spent ?? 0) || 1;
+  const within = Math.min(spent ?? 0, budget);
+  const over = (spent ?? 0) - budget;
+  return (
+    <span
+      className={`work-meter${over > 0 ? " over" : ""}`}
+      role="img"
+      aria-label={
+        spent === undefined
+          ? `Budget ${tokenText(budget)} tokens; spent not recorded`
+          : `${tokenText(spent)} of ${tokenText(budget)} tokens spent${over > 0 ? `, ${tokenText(over)} over` : ""}`
+      }
+    >
+      <span
+        className="work-meter-budget"
+        style={{ width: `${(100 * budget) / top}%` }}
+      />
+      {spent !== undefined && (
+        <span
+          className="work-meter-fill"
+          style={{ width: `${(100 * within) / top}%` }}
+        />
+      )}
+      {over > 0 && (
+        <span
+          className="work-meter-over"
+          style={{
+            left: `${(100 * budget) / top}%`,
+            width: `${(100 * over) / top}%`,
+          }}
+        />
+      )}
+      <span
+        className="work-meter-mark"
+        style={{ left: `${(100 * budget) / top}%` }}
+      />
+    </span>
+  );
+}
+
+/**
+ * The milestones as a layered graph (d3-dag's Sugiyama layout, MIT): one
+ * column per step, the rows ordered to cross as few waits as possible,
+ * and each wait routed through the columns between its ends. It trades
+ * the project lanes for fewer crossings; each milestone names its
+ * project instead. Work no milestone holds is left out.
+ */
+function MilestoneGraph({
+  s,
+  map,
+  selected,
+  onOpen,
+  onWait,
+}: {
+  s: WorkSnapshot;
+  map: MilestoneMapData;
+  selected?: string;
+  onOpen: (milestone: string) => void;
+  onWait: (from: string, to: string) => void;
+}) {
+  const [hover, setHover] = useState<string>();
+  const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
+  const projectTitle = (id: string) => {
+    const m = msOf.get(id);
+    return (
+      s.projects.find((p) => p.id === m?.project)?.title ??
+      s.initiatives.find((i) => i.id === m?.initiative)?.title ??
+      ""
+    );
+  };
+  const NODE_W = 216;
+  const NODE_H = 80;
+  const laid = useMemo(() => {
+    const g = dagGraph<MapNode, MapEdge>();
+    const byId = new Map<string, MutGraphNode<MapNode, MapEdge>>();
+    for (const n of map.nodes) {
+      if (!n.unshaped) {
+        byId.set(n.id, g.node(n));
+      }
+    }
+    for (const e of map.edges) {
+      const a = byId.get(e.from);
+      const b = byId.get(e.to);
+      if (a && b && !e.soft) {
+        g.link(a, b, e);
+      }
+    }
+    try {
+      // Layers run down in d3-dag; here they run across, so the axes swap.
+      const layout = sugiyama()
+        .layering(
+          layeringSimplex().rank(({ data }: { data: MapNode }) =>
+            Math.round(data.x0),
+          ),
+        )
+        .decross(decrossTwoLayer())
+        .coord(coordSimplex())
+        .nodeSize(() => [NODE_H, NODE_W] as const)
+        .gap([14, 48]);
+      const { width, height } = layout(g);
+      const nodes = [...g.nodes()].map((n) => ({
+        n: n.data,
+        x: n.y - NODE_W / 2,
+        y: n.x - NODE_H / 2,
+      }));
+      const links = [...g.links()].map((l) => ({
+        e: l.data,
+        points: l.points.map(([px, py]) => [py, px] as const),
+      }));
+      return { width: height, height: width, nodes, links, error: undefined };
+    } catch (error) {
+      return {
+        width: 0,
+        height: 0,
+        nodes: [],
+        links: [],
+        error: String(error),
+      };
+    }
+  }, [map]);
+  const lit = useMemo(() => {
+    if (!hover) {
+      return undefined;
+    }
+    const set = new Set([hover]);
+    const walk = (id: string, up: boolean) => {
+      for (const { e } of laid.links) {
+        const next = up
+          ? e.to === id
+            ? e.from
+            : ""
+          : e.from === id
+            ? e.to
+            : "";
+        if (next && !set.has(next)) {
+          set.add(next);
+          walk(next, up);
+        }
+      }
+    };
+    walk(hover, true);
+    walk(hover, false);
+    return set;
+  }, [hover, laid.links]);
+  if (laid.error) {
+    return (
+      <Alert severity="warning">
+        The layered layout couldn't place these milestones ({laid.error}).
+      </Alert>
+    );
+  }
+  // A smooth path through the routed points, flowing left to right.
+  const pathOf = (pts: readonly (readonly [number, number])[]) =>
+    pts
+      .map(([x, y], i) => {
+        if (!i) {
+          return `M${x},${y}`;
+        }
+        const [px, py] = pts[i - 1]!;
+        const dx = (x - px) / 2;
+        return `C${px + dx},${py} ${x - dx},${y} ${x},${y}`;
+      })
+      .join(" ");
+  const PAD = 8;
+  return (
+    <div className="work-map-wrap">
+      <div
+        className="work-map work-graph"
+        style={{ width: laid.width + PAD * 2, height: laid.height + PAD * 2 }}
+        onPointerLeave={() => setHover(undefined)}
+      >
+        <svg
+          className="work-map-edges"
+          width={laid.width + PAD * 2}
+          height={laid.height + PAD * 2}
+          aria-hidden="true"
+        >
+          <defs>
+            <marker
+              id="work-graph-arrow"
+              viewBox="0 0 8 8"
+              refX="7"
+              refY="4"
+              markerUnits="userSpaceOnUse"
+              markerWidth="9"
+              markerHeight="9"
+              orient="auto"
+            >
+              <path d="M0,0 L8,4 L0,8 Z" className="work-map-arrowhead" />
+            </marker>
+          </defs>
+          <g transform={`translate(${PAD},${PAD})`}>
+            {laid.links.map(({ e, points }) => {
+              const on = !lit || (lit.has(e.from) && lit.has(e.to));
+              const near = !!hover && (e.from === hover || e.to === hover);
+              // Ends at the bars' edges, not their centres.
+              const pts = points.map(([x, y]) => [x, y] as [number, number]);
+              pts[0]![0] += NODE_W / 2;
+              pts[pts.length - 1]![0] -= NODE_W / 2 + 2;
+              return (
+                <path
+                  key={`${e.from}>${e.to}`}
+                  d={pathOf(pts)}
+                  className={`work-map-edge${e.critical ? " critical" : ""}${on ? "" : " dim"}${near ? " near" : ""}${e.items.length ? "" : " direct"}`}
+                  style={{ strokeWidth: 1 + Math.min(3, e.items.length / 2) }}
+                  markerEnd="url(#work-graph-arrow)"
+                  onClick={() => onWait(e.from, e.to)}
+                />
+              );
+            })}
+          </g>
+        </svg>
+        {laid.nodes.map(({ n, x, y }) => {
+          const total = STAGES.reduce((k, st) => k + n.counts[st], 0);
+          const dim = lit && !lit.has(n.id);
+          return (
+            <button
+              key={n.id}
+              type="button"
+              className={`work-map-node${n.gate ? " gate" : n.started ? " started" : " idle"}${n.critical ? " critical" : ""}${n.id === selected ? " selected" : ""}${dim ? " dim" : ""}${n.loop ? " loop" : ""}`}
+              style={{
+                left: x + PAD,
+                top: y + PAD,
+                width: NODE_W,
+                height: NODE_H,
+              }}
+              title={`${n.title}${projectTitle(n.id) ? ` (${projectTitle(n.id)})` : ""}`}
+              onPointerEnter={() => setHover(n.id)}
+              onFocus={() => setHover(n.id)}
+              onBlur={() => setHover(undefined)}
+              onClick={() => onOpen(n.id)}
+            >
+              <span className="work-map-node-title">
+                {n.gate ? (
+                  <Icon href={svgFlag} />
+                ) : (
+                  <LevelMark level="milestone" />
+                )}
+                <span className="work-outline-label">{n.title}</span>
+                {n.decisions > 0 && (
+                  <span className="work-count-badge">{n.decisions}</span>
+                )}
+              </span>
+              <span className="work-pbar-track work-map-bar" aria-hidden="true">
+                {STAGES.map((st) =>
+                  n.counts[st] ? (
+                    <span
+                      key={st}
+                      className={`work-roadmap-seg stage-${slug(st)}`}
+                      style={{ flexGrow: n.counts[st] }}
+                    />
+                  ) : null,
+                )}
+              </span>
+              <span className="work-map-node-meta">
+                {n.gate
+                  ? `${n.gate.milestonesDone} of ${n.gate.milestones} milestones`
+                  : `${n.counts.Done} of ${total} done · ${projectTitle(n.id)}`}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** About five round values from zero to the top, for a token axis. */
+function niceTicks(top: number): number[] {
+  if (top <= 0) {
+    return [0];
+  }
+  const raw = top / 5;
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 5, 10].map((k) => k * mag).find((v) => v >= raw)!;
+  const out: number[] = [];
+  for (let v = 0; v <= top + 1e-9; v += step) {
+    out.push(v);
+  }
+  return out;
+}
+
+// ------------------------------------------------------------ the roadmap
+
+/**
+ * The roadmap: milestones (human-in-the-lead's milestone graph) or
+ * initiatives, in the order their work can happen, step by step from the
+ * top, a line each. Those that wait on each other are boxed together with the
+ * fewest waits that tie them named, so the loop can be read and, if
+ * wanted, broken. A milestone's outcome, shaping and waits are in its
+ * pane.
+ */
+function Roadmap({
+  s,
+  flight,
+  by,
+  inScope,
+  selected,
+  onOpen,
+  onZoom,
+  onWait,
+}: {
+  s: WorkSnapshot;
+  flight: InFlight;
+  by: "milestones" | "initiatives";
+  /** Only the milestones in the scope. */
+  inScope?: (m: WorkMilestone) => boolean;
+  selected?: string;
+  /** Opens a milestone in the pane. */
+  onOpen: (milestone: string) => void;
+  onZoom: (initiative: string) => void;
+  onWait: (from: string, to: string) => void;
+}) {
+  const all = useMemo(
+    () =>
+      by === "milestones"
+        ? milestoneRoadmapOf(s, s.items, flight)
+        : roadmapOf(s, s.items, flight),
+    [s, flight, by],
+  );
+  const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
+  const rows =
+    by === "milestones" && inScope
+      ? all.filter((r) => {
+          const m = msOf.get(r.id);
+          return !!m && inScope(m);
+        })
+      : all;
+  const title = (id: string) =>
+    msOf.get(id)?.title ?? s.initiatives.find((i) => i.id === id)?.title ?? id;
+  const steps = [...new Set(rows.map((r) => r.step))].sort((a, b) => a - b);
+  const covered = new Set(
+    s.milestones.flatMap((m) => m.constraints.map((c) => c.id)),
+  );
+  const outside = s.items.filter((it) => isOpen(it) && !covered.has(it.id));
+  if (!rows.length) {
+    return (
+      <Typography
+        variant="body-sm"
+        color="textSecondary"
+        render={<p />}
+        className="work-empty"
+      >
+        {by === "milestones"
+          ? inScope
+            ? "No milestones in this scope yet."
+            : "No milestones yet."
+          : "No initiatives."}{" "}
+        Make a milestone with{" "}
+        <code>node scripts/work/new.mjs --kind capability</code>.
+      </Typography>
+    );
+  }
+  return (
+    <>
+      <div className="work-roadmap">
+        {steps.map((step) => {
+          const here = rows.filter((r) => r.step === step);
+          const groups = [...new Set(here.map((r) => r.group))];
+          return (
+            <section
+              key={step}
+              className="work-roadmap-step"
+              aria-label={
+                step === 1 ? "Can move now" : `After step ${step - 1}`
+              }
+            >
+              <Typography
+                variant="caption-lg"
+                color="textSecondary"
+                render={<h3 />}
+                className="work-roadmap-step-head"
+              >
+                <span className="work-roadmap-step-n">{step}</span>
+                {step === 1 ? "Can move now" : `After step ${step - 1}`}
+              </Typography>
+              {groups.map((group) => {
+                const members = here.filter((r) => r.group === group);
+                const lines = (
+                  <ul className="work-rm-lines">
+                    {members.map((r) => (
+                      <RoadmapLine
+                        key={r.id}
+                        row={r}
+                        milestone={msOf.get(r.id)}
+                        selected={r.id === selected}
+                        title={title}
+                        onOpen={() =>
+                          by === "milestones" ? onOpen(r.id) : onZoom(r.id)
+                        }
+                        onWait={onWait}
+                      />
+                    ))}
+                  </ul>
+                );
+                if (group.length < 2) {
+                  return <div key={group.join()}>{lines}</div>;
+                }
+                const ties = loopTies(rows, group);
+                return (
+                  <div key={group.join()} className="work-roadmap-loop">
+                    <Typography
+                      variant="caption-md"
+                      render={<p />}
+                      className="work-roadmap-loop-head"
+                    >
+                      These {group.length} wait on each other
+                      {ties.length > 0 && (
+                        <>
+                          , tied by{" "}
+                          {ties.map((t, i) => (
+                            <span key={`${t.from}${t.to}`}>
+                              {i > 0 &&
+                                (i === ties.length - 1 ? " and " : ", ")}
+                              <Link
+                                component="button"
+                                type="button"
+                                onClick={() => onWait(t.from, t.to)}
+                                title={`Items: ${t.items.join(", ")}`}
+                              >
+                                {title(t.from)} on {title(t.to)}
+                              </Link>
+                            </span>
+                          ))}
+                        </>
+                      )}
+                      .
+                    </Typography>
+                    {lines}
+                  </div>
+                );
+              })}
+            </section>
+          );
+        })}
+      </div>
+      <div className="work-roadmap-legend">
+        <span className="work-legend">
+          {STAGES.map((st) => (
+            <span
+              key={st}
+              className="work-legend-key"
+              data-tip={STAGE_MEANING[st]}
+            >
+              <span
+                className={`work-swatch stage-${slug(st)}`}
+                aria-hidden="true"
+              />
+              {STAGE_NAMES[st]}
+            </span>
+          ))}
+        </span>
+        {by === "milestones" && !inScope && (
+          <Typography variant="caption-md" color="textSecondary">
+            {s.milestones.length} milestones hold {covered.size} items;{" "}
+            {outside.length} open{" "}
+            {outside.length === 1 ? "item is" : "items are"} in none yet.
+          </Typography>
+        )}
+      </div>
+    </>
+  );
+}
+
+const SHAPE_NAMES: Record<string, string> = {
+  outcome: "outcome",
+  clauses: "done-when clauses",
+  check: "check",
+  links: "links to clauses",
+};
+
+/** One milestone or initiative: its name, a stage bar, done of all, what it waits on. */
+function RoadmapLine({
+  row,
+  milestone,
+  selected,
+  title,
+  onOpen,
+  onWait,
+}: {
+  row: RoadmapRow;
+  milestone?: WorkMilestone;
+  selected: boolean;
+  title: (id: string) => string;
+  onOpen: () => void;
+  onWait: (from: string, to: string) => void;
+}) {
+  const total = STAGES.reduce((n, st) => n + row.counts[st], 0);
+  const waits = [...row.waitsOn].sort(
+    (a, b) => b.items.length - a.items.length,
+  );
+  return (
+    <li className={`work-rm-line${selected ? " selected" : ""}`}>
+      <button
+        type="button"
+        className="work-rm-name"
+        onClick={onOpen}
+        aria-current={selected ? "true" : undefined}
+        title={
+          milestone
+            ? `${row.title}: open it${milestone.to_shape.length ? ` (to shape: ${milestone.to_shape.map((x) => SHAPE_NAMES[x] ?? x).join(", ")})` : ""}`
+            : `${row.title}: scope to it`
+        }
+      >
+        <LevelMark level={milestone ? "milestone" : "initiative"} />
+        <span className="work-rm-title">{row.title}</span>
+        {milestone?.check_due && (
+          <StatusBadge tone="info">Check due</StatusBadge>
+        )}
+      </button>
+      <span
+        className="work-pbar-track work-rm-bar"
+        role="img"
+        aria-label={STAGES.filter((st) => row.counts[st])
+          .map((st) => `${row.counts[st]} ${STAGE_NAMES[st].toLowerCase()}`)
+          .join(", ")}
+      >
+        {STAGES.map((st) =>
+          row.counts[st] ? (
+            <span
+              key={st}
+              className={`work-roadmap-seg stage-${slug(st)}`}
+              style={{ flexGrow: row.counts[st] }}
+              data-tip={stageTip(st, `${row.counts[st]}`)}
+            />
+          ) : null,
+        )}
+      </span>
+      <span className="work-rm-count">
+        {row.counts.Done}/{total}
+      </span>
+      {waits.length > 0 && (
+        <Typography
+          variant="caption-md"
+          color="textSecondary"
+          className="work-rm-waits"
+        >
+          After{" "}
+          {waits.map((w, i) => (
+            <span key={w.id}>
+              {i > 0 && ", "}
+              <Link
+                component="button"
+                type="button"
+                onClick={() => onWait(row.id, w.id)}
+                title={
+                  w.items.length
+                    ? `${w.items.length} of its open items need ${title(w.id)}'s`
+                    : `It needs ${title(w.id)} itself`
+                }
+              >
+                {title(w.id)}
+              </Link>
+            </span>
+          ))}
+        </Typography>
+      )}
+    </li>
+  );
+}

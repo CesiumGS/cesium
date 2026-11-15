@@ -7,6 +7,11 @@ import {
   DialogTitle,
   Divider,
   IconButton,
+  ListItemIcon,
+  ListSubheader,
+  ListItemText,
+  Menu,
+  MenuItem,
   Snackbar,
   Table,
   TableBody,
@@ -14,24 +19,24 @@ import {
   TableRow,
   TextField,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
-import { svg3DObjectLarge } from "@stratakit/icons/3d-object";
 import { svgChartBarLarge } from "@stratakit/icons/chart-bar";
 import { svgChartLineLarge } from "@stratakit/icons/chart-line";
+import { svgClipboardLarge } from "@stratakit/icons/clipboard";
 import { svgDashboardLarge } from "@stratakit/icons/dashboard";
 import { svgDismiss } from "@stratakit/icons/dismiss";
 import { svgGlobeLarge } from "@stratakit/icons/globe";
 import { svgHelpLarge } from "@stratakit/icons/help";
 import { svgImageLarge } from "@stratakit/icons/image";
-import { svgKeyboardLarge } from "@stratakit/icons/keyboard";
+import { svgKeyboard } from "@stratakit/icons/keyboard";
 import { svgLayersLarge } from "@stratakit/icons/layers";
 import { svgListLarge } from "@stratakit/icons/list";
 import { svgModelCubeLarge } from "@stratakit/icons/model-cube";
-import { svgMoonLarge } from "@stratakit/icons/moon";
 import { svgNotificationsLarge } from "@stratakit/icons/notifications";
 import { svgPlayCircleLarge } from "@stratakit/icons/play-circle";
 import { svgSearchLarge } from "@stratakit/icons/search";
-import { svgSunLarge } from "@stratakit/icons/sun";
+import { svgSettingsLarge } from "@stratakit/icons/settings";
 import { Icon } from "@stratakit/mui";
 import { unstable_NavigationRail as NavigationRail } from "@stratakit/structures";
 import { Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
@@ -40,6 +45,7 @@ import { EXAMPLES } from "../../examples/index.ts";
 import { HARNESSES } from "../../lab/pages.ts";
 import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
 import {
+  catalog,
   cellKey,
   cellTitle,
   loadRuns,
@@ -50,56 +56,45 @@ import logomark from "./assets/cesium-logomark.svg";
 import wordmarkDark from "./assets/Cesium_Logo_Color_Overlay_Light.png";
 import wordmarkLight from "./assets/Cesium_Logo_Color_Overlay.png";
 import { IonTokenRailItem } from "./IonTokenSettings.tsx";
+import {
+  DESTINATIONS,
+  GROUPS,
+  destinationForKey,
+  destinationOf,
+} from "./rail.ts";
 import { useTheme } from "./theme.tsx";
+import { useWork } from "./useWork.ts";
+import { isOwnerDecision, type WorkItem } from "./work.ts";
 import { useRuns } from "./views/common.tsx";
 import { FirstRun } from "./views/FirstRun.tsx";
 import { worksWithoutRuns } from "./withoutRuns.ts";
 
 /**
- * Dyno's shell (DESIGN.md): StrataKit's navigation rail in three groups
- * (results, scenes, workbench) with counts of what needs attention, a
- * command palette (Ctrl/⌘ K) over views, scenes, runs and Lab pages,
- * keyboard shortcuts (g then a letter; / to search; ? for the list), the
- * ion token every view uses (IonTokenSettings.tsx), the color scheme, and
- * messages after actions. Views render their own page
- * header (views/common.tsx `Page`) into the outlet.
+ * Dyno's shell (DESIGN.md): StrataKit's navigation rail grouped by what
+ * people come to do (rail.ts: needs a look, results, look, experiment;
+ * dividers between groups), with counts on the queues; the footer's
+ * Getting started, ion token (IonTokenSettings.tsx) and Settings (theme,
+ * keyboard shortcuts); a command palette (Ctrl/⌘ K) over views, scenes,
+ * runs, examples and Lab pages; keyboard shortcuts (g then a letter; / to
+ * search; ? for the list); and messages after actions. Views render their
+ * own page header (views/common.tsx `Page`) into the outlet.
  */
 
-interface Destination {
-  to: string;
-  label: string;
-  icon: string;
-  /** g then this letter. */
-  key: string;
-}
-
-const GROUPS: Destination[][] = [
-  [
-    { to: "/overview", label: "Overview", icon: svgDashboardLarge, key: "o" },
-    { to: "/trends", label: "Trends", icon: svgChartLineLarge, key: "t" },
-    { to: "/runs", label: "Runs", icon: svgListLarge, key: "r" },
-    { to: "/alerts", label: "Alerts", icon: svgNotificationsLarge, key: "a" },
-  ],
-  [
-    { to: "/scenes", label: "Scenes", icon: svgLayersLarge, key: "s" },
-    { to: "/explorer", label: "Explorer", icon: svgGlobeLarge, key: "e" },
-    { to: "/viewer", label: "Viewer", icon: svg3DObjectLarge, key: "v" },
-    { to: "/images", label: "Images", icon: svgImageLarge, key: "i" },
-    { to: "/examples", label: "Examples", icon: svgPlayCircleLarge, key: "x" },
-  ],
-  [
-    { to: "/analysis", label: "Analysis", icon: svgChartBarLarge, key: "n" },
-    { to: "/lab", label: "Lab", icon: svgModelCubeLarge, key: "l" },
-  ],
-];
-const DESTINATIONS = GROUPS.flat();
-
-/** The rail item a path belongs to (a run's report belongs to Runs). */
-const destinationOf = (path: string) =>
-  DESTINATIONS.find((d) => path === d.to || path.startsWith(`${d.to}/`)) ??
-  (path === "/compare"
-    ? DESTINATIONS.find((d) => d.to === "/runs")
-    : undefined);
+/** Each rail item's icon (a destination without one shows a list). */
+const iconOf = (to: string) => ICONS[to] ?? svgListLarge;
+const ICONS: Record<string, string> = {
+  "/work": svgClipboardLarge,
+  "/overview": svgDashboardLarge,
+  "/alerts": svgNotificationsLarge,
+  "/images": svgImageLarge,
+  "/trends": svgChartLineLarge,
+  "/runs": svgListLarge,
+  "/scenes": svgLayersLarge,
+  "/viewer": svgGlobeLarge,
+  "/examples": svgPlayCircleLarge,
+  "/analysis": svgChartBarLarge,
+  "/lab": svgModelCubeLarge,
+};
 
 export function ShellPending() {
   return (
@@ -213,11 +208,33 @@ export function Shell() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { choice, scheme, setChoice } = useTheme();
-  const [expanded, setExpanded] = useState(
+  // The rail as people left it; on a phone it starts folded, opens over
+  // the page, and folds again after a pick.
+  const narrow = useMediaQuery("(max-width: 600px)");
+  const [stored, setStored] = useState(
     () => localStorage.getItem("dyno.rail") === "expanded",
   );
+  const [open, setOpen] = useState(false);
+  // The folded rail's width, held in its place while it opens over the page.
+  const [folded, setFolded] = useState(0);
+  const expanded = narrow ? open : stored;
+  const setExpanded = (v: boolean) => {
+    if (narrow) {
+      if (v) {
+        setFolded(
+          document.querySelector(".rail")?.getBoundingClientRect().width ?? 0,
+        );
+      }
+      setOpen(v);
+    } else {
+      setStored(v);
+      localStorage.setItem("dyno.rail", v ? "expanded" : "collapsed");
+    }
+  };
+  useEffect(() => setOpen(false), [path, narrow]);
   const [palette, setPalette] = useState(false);
   const [shortcuts, setShortcuts] = useState(false);
+  const [settings, setSettings] = useState<HTMLElement | null>(null);
   const [message, setMessage] = useState<{
     id: number;
     text: string;
@@ -225,6 +242,14 @@ export function Shell() {
   }>();
   const main = useRef<HTMLElement>(null);
   const attention = useAttention(summaries);
+  const work = useWork().snapshot;
+  const ownerDecisions = useMemo(
+    // Decisions the owner can answer now (none before them still open).
+    () =>
+      work?.items.filter((it) => isOwnerDecision(it) && !it.open_needs.length)
+        .length ?? 0,
+    [work],
+  );
   const active = destinationOf(path);
 
   useEffect(() => {
@@ -279,7 +304,7 @@ export function Shell() {
       } else if (e.key === "g") {
         pendingG = Date.now();
       } else if (Date.now() - pendingG < 1200) {
-        const d = DESTINATIONS.find((x) => x.key === e.key);
+        const d = destinationForKey(e.key);
         if (d) {
           void navigate({ to: d.to });
         }
@@ -291,26 +316,25 @@ export function Shell() {
   }, [navigate]);
 
   const count = (to: string) =>
-    to === "/alerts"
-      ? attention.alerts
-      : to === "/images"
-        ? attention.images
-        : 0;
-  const nextChoice = {
-    system: "light",
-    light: "dark",
-    dark: "system",
-  } as const;
+    to === "/work"
+      ? ownerDecisions
+      : to === "/alerts"
+        ? attention.alerts
+        : to === "/images"
+          ? attention.images
+          : 0;
+  /** What each count says, for screen readers. */
+  const countLabel = (to: string, n: number) =>
+    to === "/work"
+      ? `${n} ${n === 1 ? "decision" : "decisions"} waiting on the owner`
+      : `${n} to look at`;
 
   return (
     <div className="shell">
       <NavigationRail.Root
         expanded={expanded}
-        setExpanded={(v) => {
-          setExpanded(v);
-          localStorage.setItem("dyno.rail", v ? "expanded" : "collapsed");
-        }}
-        className="rail"
+        setExpanded={setExpanded}
+        className={narrow && open ? "rail rail-over" : "rail"}
       >
         <NavigationRail.Header>
           <a
@@ -355,11 +379,14 @@ export function Shell() {
                         href={`#${d.to}`}
                         icon={
                           n && !expanded ? (
-                            <Badge variant="dot" color="error">
-                              <Icon href={d.icon} size="large" />
+                            <Badge
+                              variant="dot"
+                              color={d.to === "/alerts" ? "error" : "warning"}
+                            >
+                              <Icon href={iconOf(d.to)} size="large" />
                             </Badge>
                           ) : (
-                            d.icon
+                            iconOf(d.to)
                           )
                         }
                         label={d.label}
@@ -371,7 +398,7 @@ export function Shell() {
                               variant="inline"
                               color={d.to === "/alerts" ? "error" : "warning"}
                               size="small"
-                              aria-label={`${n} to look at`}
+                              aria-label={countLabel(d.to, n)}
                             />
                           ) : undefined
                         }
@@ -392,26 +419,66 @@ export function Shell() {
                   active={path === "/start"}
                 />
               </NavigationRail.ListItem>
-              <NavigationRail.ListItem>
-                <NavigationRail.Button
-                  icon={svgKeyboardLarge}
-                  label="Keyboard shortcuts (?)"
-                  onClick={() => setShortcuts(true)}
-                />
-              </NavigationRail.ListItem>
               <IonTokenRailItem expanded={expanded} />
               <NavigationRail.ListItem>
                 <NavigationRail.Button
-                  icon={scheme === "dark" ? svgMoonLarge : svgSunLarge}
-                  label={`Theme: ${choice} (switch to ${nextChoice[choice]})`}
-                  onClick={() => setChoice(nextChoice[choice])}
+                  icon={svgSettingsLarge}
+                  label="Settings"
+                  aria-haspopup="menu"
+                  aria-expanded={!!settings}
+                  onClick={(e) => setSettings(e.currentTarget)}
                 />
+                <Menu
+                  open={!!settings}
+                  anchorEl={settings}
+                  onClose={() => setSettings(null)}
+                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                  transformOrigin={{ vertical: "bottom", horizontal: "left" }}
+                >
+                  <ListSubheader>Theme</ListSubheader>
+                  {(["system", "light", "dark"] as const).map((c) => (
+                    <MenuItem
+                      key={c}
+                      role="menuitemradio"
+                      aria-checked={choice === c}
+                      onClick={() => {
+                        setChoice(c);
+                        setSettings(null);
+                      }}
+                    >
+                      <ListItemText primary={THEME_NAMES[c]} />
+                    </MenuItem>
+                  ))}
+                  <Divider />
+                  <MenuItem
+                    onClick={() => {
+                      setSettings(null);
+                      setShortcuts(true);
+                    }}
+                  >
+                    <ListItemIcon>
+                      <Icon href={svgKeyboard} />
+                    </ListItemIcon>
+                    <ListItemText primary="Keyboard shortcuts" />
+                    <kbd className="menu-kbd">?</kbd>
+                  </MenuItem>
+                </Menu>
               </NavigationRail.ListItem>
             </NavigationRail.List>
           </NavigationRail.Footer>
         </NavigationRail.Content>
       </NavigationRail.Root>
 
+      {narrow && open && (
+        <>
+          <div className="rail-spacer" style={{ width: folded }} />
+          <div
+            className="rail-scrim"
+            aria-hidden="true"
+            onClick={() => setOpen(false)}
+          />
+        </>
+      )}
       <main
         ref={main}
         className={`content viz ${scheme}`}
@@ -424,6 +491,7 @@ export function Shell() {
         open={palette}
         onClose={() => setPalette(false)}
         summaries={summaries}
+        workItems={work?.items}
       />
       <Dialog open={shortcuts} onClose={() => setShortcuts(false)}>
         <DialogTitle>Keyboard shortcuts</DialogTitle>
@@ -435,7 +503,7 @@ export function Shell() {
                   <kbd>Ctrl</kbd> <kbd>K</kbd>
                 </TableCell>
                 <TableCell>
-                  Go to a view, scene, run, example or Lab page
+                  Go to a view, scene, run, example, Lab page or work item
                 </TableCell>
               </TableRow>
               {DESTINATIONS.map((d) => (
@@ -484,21 +552,32 @@ export function Shell() {
   );
 }
 
+const THEME_NAMES = {
+  system: "Same as the system",
+  light: "Light",
+  dark: "Dark",
+} as const;
+
 interface Item {
   label: string;
   kind: string;
   to: string;
   params?: Record<string, string>;
+  search?: Record<string, string>;
+  /** More words to match ("machines" finds the Overview). */
+  words?: string;
 }
 
 function CommandPalette({
   open,
   onClose,
   summaries,
+  workItems,
 }: {
   open: boolean;
   onClose: () => void;
   summaries: Summary[];
+  workItems?: readonly WorkItem[];
 }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
@@ -508,8 +587,13 @@ function CommandPalette({
       label: d.label,
       kind: "view",
       to: d.to,
+      words: d.hint,
     }));
-    const scenes = new Map<string, string>();
+    // Every catalog scene (its page opens with it live), then any a run
+    // measured under another scenario.
+    const scenes = new Map<string, string>(
+      catalog.scenes.map((s) => [s.id, s.title]),
+    );
     for (const s of summaries) {
       for (const c of s.scenes) {
         scenes.set(cellKey(c), cellTitle(c));
@@ -521,6 +605,7 @@ function CommandPalette({
         kind: "scene",
         to: "/scenes/$scene",
         params: { scene },
+        words: "live side by side compare engines",
       });
     }
     for (const x of EXAMPLES) {
@@ -547,12 +632,23 @@ function CommandPalette({
         params: { run: s.name },
       });
     }
+    // Work items last: there are hundreds, so they show when searched for.
+    for (const it of workItems ?? []) {
+      out.push({
+        label: `${it.id} ${it.title}`,
+        kind: it.kind === "work" ? "item" : it.kind,
+        to: "/work",
+        search: { item: it.id },
+      });
+    }
     return out;
-  }, [summaries]);
+  }, [summaries, workItems]);
   const q = query.trim().toLowerCase();
   const matches = (
     q
-      ? items.filter((i) => `${i.label} ${i.kind}`.toLowerCase().includes(q))
+      ? items.filter((i) =>
+          `${i.label} ${i.kind} ${i.words ?? ""}`.toLowerCase().includes(q),
+        )
       : items
   ).slice(0, 40);
   useEffect(() => setActive(0), [query, open]);
@@ -560,7 +656,11 @@ function CommandPalette({
     if (item) {
       onClose();
       setQuery("");
-      void navigate({ to: item.to, params: item.params } as never);
+      void navigate({
+        to: item.to,
+        params: item.params,
+        search: item.search,
+      } as never);
     }
   };
   return (
@@ -571,7 +671,7 @@ function CommandPalette({
           autoFocus
           fullWidth
           type="search"
-          placeholder="A view, a scene, a run or a Lab page"
+          placeholder="A view, a scene, a run, a Lab page or a CS item"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {

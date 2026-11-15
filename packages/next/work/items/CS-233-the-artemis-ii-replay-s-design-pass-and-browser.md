@@ -5,7 +5,6 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-188
-milestone: 5g the Artemis II replay
 needs: [CS-230, CS-231, CS-232]
 ---
 

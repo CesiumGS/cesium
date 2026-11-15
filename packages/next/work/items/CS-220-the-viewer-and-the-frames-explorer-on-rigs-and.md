@@ -5,7 +5,6 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-188
-milestone: 5d controllers and animation
 needs: [CS-217, CS-219]
 ---
 

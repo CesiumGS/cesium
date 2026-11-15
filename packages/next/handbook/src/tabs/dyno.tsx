@@ -79,7 +79,7 @@ const QUESTIONS = [
   },
   {
     q: "Does this tileset select the same tiles as 1.x?",
-    a: "The Explorer's selection by depth counts each engine's tiles per level and how many only one draws. It can tint tiles by which engine selects them. The Lab's selection parity pages test it.",
+    a: "A scene's live view counts, in its selection by depth, each engine's tiles per level and how many only one draws. It can tint tiles by which engine selects them. The Lab's selection parity pages test it.",
   },
   {
     q: "Does this look the same?",
@@ -172,7 +172,7 @@ const PIECES: BoardStep[] = [
     lane: 3,
     row: 1,
     title: "Views that run engines live",
-    body: "Explorer, Viewer, Examples and Lab, for looking. They load the engines directly, and don't write results.",
+    body: "A scene's live view, the Viewer, Examples and Lab, for looking. They load the engines directly, and don't write results.",
   },
 ];
 
@@ -193,7 +193,7 @@ const GROUPS: readonly { title: string; views: readonly ViewNote[] }[] = [
         name: "Overview",
         what: "The latest ordinary run against 1.x: whether it can be trusted, which budgets it meets, and what needs a look, such as new regressions and images to review.",
         when: "The first look of the day, or after a run.",
-        how: "The first item in the rail, or g o.",
+        how: "Overview in the rail, or g o.",
         shot: {
           name: "overview",
           alt: "Dyno's Overview: the latest run's verdict and budgets, what to look at, and recent runs.",
@@ -246,15 +246,15 @@ const GROUPS: readonly { title: string; views: readonly ViewNote[] }[] = [
           "A scene an engine can't draw shows as not run for that engine: point clouds and splats in 2.0, and instancing at this scale in 1.x.",
         what: "The catalog as cards, each with its best results per engine. A scene's page adds its history, the changes that moved it, a filmstrip over time, and its content and licences.",
         when: "To see what's measured, or how one scene has changed.",
-        how: "Scenes in the rail, or g s.",
+        how: "Scenes in the rail, or g s. A scene's page opens with the scene live, then its content and licences, then its results.",
       },
       {
-        name: "Explorer",
+        name: "A scene, live",
         partly:
           "Picks show per engine: a click picks in that pane, and each engine's inspector shows its own, so comparing means clicking in both. It loads ion scenes: the generated fleet failed here with \"not an ion dataset\". There's no capture of it on this page, since most of its scenes show licensed content.",
         what: "A catalog scene live in one or two engines side by side. Play or scrub the benchmark's camera path, or fly with linked cameras. Pause streaming, tint tiles by depth or by which engine selects them, show bounding volumes, and read the tile table: selection by depth, with how many tiles only one engine draws.",
         when: "To see why two engines differ. It's for looking, since the two share a GPU and main thread, and it says so.",
-        how: "Explorer in the rail, g e, or a link from a report to that place on the path.",
+        how: "The top of a scene's page, or a link from a report to that place on the path.",
       },
       {
         name: "Viewer and the inspector",
@@ -1199,8 +1199,9 @@ export function Dyno() {
         <Note title="What it can't tell you">
           <ul>
             <li>
-              Anything from the Explorer or Viewer's timings against another
-              engine. The Explorer's two engines share a GPU and main thread.
+              Anything from a scene's live view or the Viewer's timings against
+              another engine. The live view's two engines share a GPU and main
+              thread.
             </li>
             <li>
               How a machine it hasn't run on behaves, or what real users'
@@ -1305,7 +1306,7 @@ export function Dyno() {
           <li>
             <strong>Images.</strong> Planned or deferred: image checks in CI on
             a software rasterizer, baselines on real GPUs across runners, and
-            checks saved from the Explorer.
+            checks saved from a scene's live view.
           </li>
           <li>
             <strong>A simulated network.</strong> Tiles from a local server with

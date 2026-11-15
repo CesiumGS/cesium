@@ -11,7 +11,23 @@ import { join, relative } from "node:path";
 
 /** The work folder, relative to the repository root. */
 export const WORK_DIR = "packages/next/work";
-export const KINDS = ["work", "decision", "external", "project", "initiative"];
+export const KINDS = [
+  "work",
+  "decision",
+  "external",
+  "project",
+  "initiative",
+  "capability",
+  "learning",
+];
+/** Milestones (human-in-the-lead's format): a capability or a learning goal. */
+export const MILESTONE_KINDS = ["capability", "learning"];
+/**
+ * Keys human-in-the-lead's format retired: milestones are their own files,
+ * and order is derived. `scripts/work/migrate.mjs` (or `hitld work migrate`)
+ * removes them.
+ */
+export const RETIRED_KEYS = ["milestone", "milestones", "priority"];
 export const STATUSES = [
   "Proposed",
   "Planned",
@@ -19,7 +35,6 @@ export const STATUSES = [
   "Done",
   "Dropped",
 ];
-export const PRIORITIES = ["urgent", "high", "medium", "low"];
 const ITEM_KINDS = ["work", "decision", "external"];
 /** Folder per kind: containers have their own, every item kind shares one. */
 export const FOLDER = {
@@ -28,38 +43,58 @@ export const FOLDER = {
   work: "items",
   decision: "items",
   external: "items",
+  capability: "milestones",
+  learning: "milestones",
 };
-const COMMON_KEYS = ["id", "title", "kind", "status", "priority", "created"];
+const COMMON_KEYS = ["id", "title", "kind", "status", "created"];
+const MILESTONE_KEYS = [
+  ...COMMON_KEYS,
+  "project",
+  "initiative",
+  "outcome",
+  "done_when",
+  "needs",
+  "serves",
+  "appetite_tokens",
+  "deadline",
+  "check",
+  "check_results",
+  "reason",
+];
 /** The allowlist: any key not listed for an item's kind is an error. */
 export const KEYS = {
-  work: [...COMMON_KEYS, "project", "milestone", "needs", "claimed", "reason"],
+  // estimate_tokens: human-in-the-lead's optional key, the tokens an item
+  // is expected to take; the board scales its milestone map by it.
+  work: [
+    ...COMMON_KEYS,
+    "project",
+    "needs",
+    "claimed",
+    "reason",
+    "estimate_tokens",
+  ],
   decision: [
     ...COMMON_KEYS,
     "project",
-    "milestone",
     "needs",
     "claimed",
     "reason",
     "decided-by",
+    "estimate_tokens",
   ],
   external: [
     ...COMMON_KEYS,
     "project",
-    "milestone",
     "needs",
     "claimed",
     "reason",
     "party",
+    "estimate_tokens",
   ],
-  project: [
-    ...COMMON_KEYS,
-    "initiative",
-    "lead",
-    "plan",
-    "milestones",
-    "reason",
-  ],
+  project: [...COMMON_KEYS, "initiative", "lead", "plan", "reason"],
   initiative: [...COMMON_KEYS, "lead", "reason"],
+  capability: MILESTONE_KEYS,
+  learning: MILESTONE_KEYS,
 };
 /** Keys some tool would run as code. Refused with their own message. */
 export const CODE_KEYS = [
@@ -75,7 +110,13 @@ export const CODE_KEYS = [
   "cmd",
   "shell",
 ];
-const LIST_KEYS = new Set(["needs", "milestones"]);
+const LIST_KEYS = new Set([
+  "needs",
+  "milestones",
+  "done_when",
+  "serves",
+  "check_results",
+]);
 export const ID_PATTERN = /^CS-[1-9]\d*$/;
 const FILE_PATTERN = /^(CS-[1-9]\d*)(-[a-z0-9-]+)?\.md$/;
 
@@ -223,7 +264,7 @@ export function idNumber(id) {
  */
 export function loadWorkTree(root) {
   const items = [];
-  for (const folder of ["initiatives", "projects", "items"]) {
+  for (const folder of ["initiatives", "projects", "items", "milestones"]) {
     const dir = join(root, WORK_DIR, folder);
     if (!existsSync(dir)) {
       continue;
@@ -277,11 +318,15 @@ export function buildGraph(items) {
     duplicates,
     all,
     get: (id) => byId.get(id),
-    needs: (it) => list(it.data.needs),
+    // A milestone's entries carry a clause ("CS-52 c1"); the ID comes first.
+    needs: (it) => list(it.data.needs).map((e) => String(e).split(/\s+/)[0]),
     isItem: (it) => ITEM_KINDS.includes(it.data.kind),
     isOpen: (it) => !["Done", "Dropped"].includes(it.data.status),
   };
   g.items = all.filter(g.isItem);
+  g.milestones = all.filter((it) => MILESTONE_KINDS.includes(it.data.kind));
+  /** The milestones whose constraints (`needs`) name an item. */
+  g.milestonesOf = (id) => g.milestones.filter((m) => g.needs(m).includes(id));
   g.projects = all.filter((it) => it.data.kind === "project");
   g.initiatives = all.filter((it) => it.data.kind === "initiative");
   g.openNeeds = (it) =>
@@ -383,6 +428,13 @@ export function checkItems(items, { root } = {}) {
       continue;
     }
     for (const key of Object.keys(d)) {
+      if (RETIRED_KEYS.includes(key)) {
+        say(
+          it,
+          `"${key}" is retired (milestones are files; order is derived): run node scripts/work/migrate.mjs`,
+        );
+        continue;
+      }
       if (!KEYS[d.kind].includes(key) && !CODE_KEYS.includes(key)) {
         say(it, `"${key}" isn't an allowed key for a ${d.kind}`);
       }
@@ -411,11 +463,13 @@ export function checkItems(items, { root } = {}) {
     if (!STATUSES.includes(d.status)) {
       say(it, `status "${d.status ?? ""}" isn't one of ${STATUSES.join(", ")}`);
     }
-    if (d.priority !== undefined && !PRIORITIES.includes(d.priority)) {
-      say(it, `priority "${d.priority}" isn't one of ${PRIORITIES.join(", ")}`);
-    }
     if (d.created !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(d.created)) {
       say(it, `created "${d.created}" isn't YYYY-MM-DD`);
+    }
+    for (const key of ["estimate_tokens", "appetite_tokens"]) {
+      if (d[key] !== undefined && !/^[1-9]\d*$/.test(String(d[key]))) {
+        say(it, `${key} "${d[key]}" isn't a whole number of tokens`);
+      }
     }
     if (d.status === "Dropped" && !d.reason) {
       say(it, "Dropped needs a reason");
@@ -446,6 +500,72 @@ export function checkItems(items, { root } = {}) {
     if (d.kind === "project" && !d.initiative) {
       say(it, "a project needs an initiative");
     }
+    if (MILESTONE_KINDS.includes(d.kind)) {
+      if (!d.project === !d.initiative) {
+        say(it, "a milestone sits under one project or one initiative");
+      }
+      if (d.status === "In progress") {
+        say(
+          it,
+          "a milestone is never In progress: items are claimed, milestones aren't",
+        );
+      }
+      const clauses = new Set();
+      for (const c of list(d.done_when)) {
+        const m = String(c).match(/^(c\d+): \S/);
+        if (!m) {
+          say(it, `done_when "${c}" isn't "c<n>: <text>"`);
+        } else {
+          clauses.add(m[1]);
+        }
+      }
+      for (const e of list(d.needs)) {
+        const m = String(e).match(/^(CS-[1-9]\d*) (c\d+|c\?)$/);
+        if (!m) {
+          say(
+            it,
+            `needs "${e}" isn't "<CS-n> <clause>" (c1, or c? until shaped)`,
+          );
+        } else if (m[2] !== "c?" && !clauses.has(m[2])) {
+          say(
+            it,
+            `needs ${m[1]} links clause ${m[2]}, which done_when doesn't have`,
+          );
+        }
+      }
+      for (const e of list(d.serves)) {
+        if (
+          !/^CS-[1-9]\d* value=(1|2|3|5|8|13) confidence=(0(\.\d+)?|1(\.0+)?)$/.test(
+            String(e),
+          )
+        ) {
+          say(
+            it,
+            `serves "${e}" isn't "<CS-n> value=<1,2,3,5,8,13> confidence=<0 to 1>"`,
+          );
+        }
+      }
+      if (
+        d.check !== undefined &&
+        !/^(demo|integration-test|study) \S/.test(d.check)
+      ) {
+        say(
+          it,
+          `check "${d.check}" isn't "<demo|integration-test|study> <target>"`,
+        );
+      }
+      if (d.status === "Done") {
+        const last = list(d.check_results)
+          .filter((r) => /^(pass|fail|verdict) /.test(String(r)))
+          .at(-1);
+        if (!last || String(last).startsWith("fail")) {
+          say(
+            it,
+            "a milestone is Done only when its check passed (check_results)",
+          );
+        }
+      }
+    }
     if (d.plan && root && !existsSync(join(root, d.plan))) {
       say(it, `plan ${d.plan} doesn't exist`);
     }
@@ -469,23 +589,36 @@ export function checkItems(items, { root } = {}) {
       }
       return target;
     };
-    if (ITEM_KINDS.includes(d.kind)) {
-      const project = ref("project", "project");
-      if (d.milestone && project) {
-        const ms = list(project.data.milestones);
-        if (!ms.includes(d.milestone)) {
-          say(
-            it,
-            `milestone "${d.milestone}" isn't one of ${project.data.id}'s (${ms.join(", ") || "none"})`,
-          );
+    if (MILESTONE_KINDS.includes(d.kind)) {
+      if (d.project) {
+        ref("project", "project");
+      }
+      if (d.initiative) {
+        ref("initiative", "initiative");
+      }
+      for (const e of list(d.serves)) {
+        const id = String(e).split(/\s+/)[0];
+        if (!g.get(id)) {
+          say(it, `serves ${id}, which doesn't exist`);
         }
+      }
+    }
+    if (ITEM_KINDS.includes(d.kind) || MILESTONE_KINDS.includes(d.kind)) {
+      if (ITEM_KINDS.includes(d.kind)) {
+        ref("project", "project");
       }
       for (const n of g.needs(it)) {
         const target = g.get(n);
         if (!target) {
           say(it, `needs ${n}, which doesn't exist`);
-        } else if (!g.isItem(target)) {
-          say(it, `needs ${n}, a ${target.data.kind}; needs name items only`);
+        } else if (
+          !g.isItem(target) &&
+          !MILESTONE_KINDS.includes(target.data.kind)
+        ) {
+          say(
+            it,
+            `needs ${n}, a ${target.data.kind}; needs name items and milestones only`,
+          );
         } else if (target.data.status === "Dropped" && g.isOpen(it)) {
           say(it, `needs ${n}, which was dropped; it can never be ready`);
         }
@@ -524,7 +657,7 @@ function findCycles(g) {
     stack.pop();
     state.set(id, 2);
   };
-  for (const it of g.items) {
+  for (const it of [...g.items, ...g.milestones]) {
     if (!state.has(it.data.id)) {
       visit(it.data.id);
     }
@@ -780,12 +913,14 @@ export function listPlaces(root, { remotes = false } = {}) {
 /** Item file names in a place, without reading their contents. */
 export function fileNamesIn(root, place) {
   if (place.path) {
-    return ["initiatives", "projects", "items"].flatMap((folder) => {
-      const dir = join(place.path, WORK_DIR, folder);
-      return existsSync(dir)
-        ? readdirSync(dir).filter((f) => FILE_PATTERN.test(f))
-        : [];
-    });
+    return ["initiatives", "projects", "items", "milestones"].flatMap(
+      (folder) => {
+        const dir = join(place.path, WORK_DIR, folder);
+        return existsSync(dir)
+          ? readdirSync(dir).filter((f) => FILE_PATTERN.test(f))
+          : [];
+      },
+    );
   }
   try {
     return itemFileNames(
@@ -1012,14 +1147,17 @@ export function renderLists(g, { linkBase = "" } = {}) {
       `${pid}, ${p.data.status}, led by ${p.data.lead}: ${describeProgress(progress(g, items))}.${plan}`,
       "",
     );
-    const milestones = list(p.data.milestones);
+    // A project's milestones are files; an item is listed under each
+    // milestone whose constraints name it, then the rest.
+    const milestones = g.milestones.filter((m) => m.data.project === p.data.id);
+    const inSome = new Set(milestones.flatMap((m) => g.needs(m)));
     const groups = milestones.length
       ? [
           ...milestones.map((m) => [
-            m,
-            items.filter((it) => it.data.milestone === m),
+            m.data.title,
+            items.filter((it) => g.needs(m).includes(it.data.id)),
           ]),
-          ["", items.filter((it) => !milestones.includes(it.data.milestone))],
+          ["", items.filter((it) => !inSome.has(it.data.id))],
         ]
       : [["", items]];
     for (const [m, its] of groups) {
@@ -1231,4 +1369,106 @@ export function allocate(root, write, remove, tries = 8) {
     return { id: `CS-${n}`, path };
   }
   throw new Error("couldn't allocate a number; try again");
+}
+
+// --- Loops between projects and initiatives ----------------------------------
+
+/**
+ * Loops of waits above the item level: groups of projects (or of
+ * initiatives) whose open items need each other's, round a loop. Not an
+ * error, since the tree is for accountability and `needs` for dependency,
+ * but a loop means the group has no order. For each group, the fewest
+ * waits that tie it (removed smallest first, by how many items make each,
+ * until what's left has an order), with the items behind them.
+ * `level` is "project" or "initiative".
+ */
+export function containerLoops(g, level = "project") {
+  const of = (it) => {
+    const p = it?.data.project;
+    return level === "project" ? p : g.get(p)?.data.initiative;
+  };
+  const waits = new Map(); // "a→b" → item IDs
+  for (const it of g.items.filter(g.isOpen)) {
+    const a = of(it);
+    for (const n of g.openNeeds(it)) {
+      const b = of(g.get(n));
+      if (a && b && a !== b) {
+        const key = `${a}→${b}`;
+        waits.set(key, [...new Set([...(waits.get(key) ?? []), it.data.id])]);
+      }
+    }
+  }
+  const nodes = [...new Set([...waits.keys()].flatMap((k) => k.split("→")))];
+  const out = (v, kept) =>
+    [...kept.keys()]
+      .filter((k) => k.startsWith(`${v}→`))
+      .map((k) => k.split("→")[1]);
+  // Tarjan's strongly connected components.
+  const index = new Map();
+  const low = new Map();
+  const stack = [];
+  const on = new Set();
+  const groups = [];
+  let next = 0;
+  const strong = (v) => {
+    index.set(v, next);
+    low.set(v, next++);
+    stack.push(v);
+    on.add(v);
+    for (const w of out(v, waits)) {
+      if (!index.has(w)) {
+        strong(w);
+        low.set(v, Math.min(low.get(v), low.get(w)));
+      } else if (on.has(w)) {
+        low.set(v, Math.min(low.get(v), index.get(w)));
+      }
+    }
+    if (low.get(v) === index.get(v)) {
+      const group = [];
+      let w;
+      do {
+        w = stack.pop();
+        on.delete(w);
+        group.push(w);
+      } while (w !== v);
+      if (group.length > 1) {
+        groups.push(group.sort((x, y) => idNumber(x) - idNumber(y)));
+      }
+    }
+  };
+  for (const v of nodes) {
+    if (!index.has(v)) {
+      strong(v);
+    }
+  }
+  return groups.map((group) => {
+    const inside = new Set(group);
+    const kept = new Map(
+      [...waits].filter(([k]) => k.split("→").every((x) => inside.has(x))),
+    );
+    const reaches = (from, to, edges, seen = new Set()) =>
+      from === to ||
+      out(from, edges).some(
+        (w) => !seen.has(w) && (seen.add(w), reaches(w, to, edges, seen)),
+      );
+    const ties = [];
+    for (;;) {
+      const onLoop = [...kept]
+        .filter(([k]) => {
+          const [a, b] = k.split("→");
+          const rest = new Map(kept);
+          rest.delete(k);
+          return reaches(b, a, rest);
+        })
+        .sort((x, y) => x[1].length - y[1].length);
+      if (!onLoop.length) {
+        break;
+      }
+      const [k, items] = onLoop[0];
+      const [from, to] = k.split("→");
+      ties.push({ from, to, items });
+      kept.delete(k);
+    }
+    return { group, ties };
+  });
 }

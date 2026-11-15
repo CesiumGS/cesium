@@ -5,7 +5,6 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-9
-milestone: first draws
 needs: [CS-32, CS-34, CS-35]
 ---
 
