@@ -82,6 +82,7 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-basic-ssl": "2.3.0",
     "@webgpu/types": "^0.1.74",
+    "d3-dag": "1.2.2",
     "typescript": "^6.0.2",
     "vite": "8.0.16",
     "vitest": "^5.0.5"

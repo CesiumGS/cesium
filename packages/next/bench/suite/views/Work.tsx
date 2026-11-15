@@ -72,6 +72,7 @@ import {
   percentile,
   type MapEdge,
   type MapNode,
+  type MilestoneMap as MilestoneMapData,
   mapEntityItems,
   mapEntityTitle,
   milestoneMapOf,
@@ -95,6 +96,14 @@ import {
   type WorkSnapshot,
 } from "../work.ts";
 import { Empty, Page, toast, useChartTokens } from "./common.tsx";
+import {
+  coordSimplex,
+  decrossTwoLayer,
+  graph as dagGraph,
+  layeringSimplex,
+  type MutGraphNode,
+  sugiyama,
+} from "d3-dag";
 import { InlineText, ItemText } from "./ItemText.tsx";
 import { Status as StatusBadge } from "./runParts.tsx";
 
@@ -768,6 +777,10 @@ function Board({
                     onWait={(from, to) => open(`mdep:${to}:${from}`)}
                     release={search.release}
                     onRelease={(id) => set({ release: id }, true)}
+                    shape={search.shape === "graph" ? "graph" : "lanes"}
+                    onShape={(v) =>
+                      set({ shape: v === "graph" ? v : undefined }, true)
+                    }
                   />
                 ) : (
                   <Roadmap
@@ -4425,10 +4438,15 @@ function MilestoneMap({
   onWait,
   release,
   onRelease,
+  shape,
+  onShape,
 }: {
   s: WorkSnapshot;
   flight: InFlight;
   unit: "steps" | "tokens";
+  /** Project lanes, or a layered graph that crosses fewer waits. */
+  shape: "lanes" | "graph";
+  onShape: (shape: "lanes" | "graph") => void;
   /** Milestones outside the scope stay, dimmed, for context. */
   inScope?: (m: WorkMilestone) => boolean;
   selected?: string;
@@ -4444,6 +4462,12 @@ function MilestoneMap({
   const map = useMemo(
     () => milestoneMapOf(s, flight, unit, release),
     [s, flight, unit, release],
+  );
+  // The graph places by steps whatever the axis: its layers are steps.
+  const graphMap = useMemo(
+    () =>
+      unit === "steps" ? map : milestoneMapOf(s, flight, "steps", release),
+    [map, s, flight, unit, release],
   );
   const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
   const titleOf = (id: string) => msOf.get(id)?.title ?? mapEntityTitle(s, id);
@@ -4566,6 +4590,31 @@ function MilestoneMap({
   const focusTitle = map.focus ? titleOf(map.focus) : undefined;
   return (
     <div>
+      <div className="work-map-focus">
+        <Typography variant="caption-lg" color="textSecondary">
+          Layout
+        </Typography>
+        <ToggleButtonGroup
+          size="small"
+          exclusive
+          value={shape}
+          onChange={(_, v: "lanes" | "graph" | null) => v && onShape(v)}
+          aria-label="Layout"
+        >
+          <ToggleButton
+            value="lanes"
+            render={<Button variant="outlined" size="small" />}
+          >
+            Project lanes
+          </ToggleButton>
+          <ToggleButton
+            value="graph"
+            render={<Button variant="outlined" size="small" />}
+          >
+            Fewest crossings
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </div>
       {map.gates.length > 0 && (
         <div className="work-map-focus">
           <Typography variant="caption-lg" color="textSecondary">
@@ -4621,341 +4670,359 @@ function MilestoneMap({
           "No milestone is done yet: the map starts from now."
         )}
       </p>
-      <div className="work-map-wrap" ref={box}>
-        <div
-          className="work-map"
-          style={{ width: laneW + plotW + 8, height }}
-          onPointerLeave={() => setHover(undefined)}
-        >
-          {map.lanes.map((l, i) => (
-            <div
-              key={l.id}
-              className={`work-map-lane${i % 2 ? " odd" : ""}${l.outside ? " outside" : ""}${l.id === "releases" ? " releases" : ""}`}
-              style={{ top: laneTop.get(l.id), height: laneH.get(l.id) }}
-            >
-              {l.outside && !map.lanes[i - 1]?.outside && (
-                <span className="work-map-band">
-                  Not needed for {focusTitle}
-                </span>
-              )}
-              <span
-                className="work-map-lane-name"
-                style={{ width: laneW - 12 }}
-              >
-                {l.id === "releases" ? (
-                  <Icon href={svgFlag} />
-                ) : (
-                  <LevelMark level="project" />
-                )}
-                <span className="work-outline-label">{l.title}</span>
-              </span>
-            </div>
-          ))}
-          {ticks.map((t) => (
-            <span
-              key={t.v}
-              className="work-map-tick"
-              style={{ left: x(t.v), height }}
-            >
-              {t.label && (
-                <span className="work-map-tick-label">{t.label}</span>
-              )}
-            </span>
-          ))}
-          <span className="work-map-corner" style={{ width: laneW - 12 }}>
-            Project
-          </span>
-          {columns.map((c) => (
-            <span
-              key={`h${c.i}`}
-              className="work-map-col"
-              style={{ left: x(c.i), width: x(c.i + 1) - x(c.i) }}
-              data-tip={`${
-                c.i === 0
-                  ? "Now: these wait on no other milestone; those under way (an item done or in flight) are filled, the rest can start"
-                  : `Step ${c.i + 1}: starts once what it waits on in ${c.i === 1 ? "step 1" : `steps 1 to ${c.i}`} is done`
-              }; ${c.done} of ${c.all} items done`}
-            >
-              <span className="work-map-col-n">{c.i + 1}</span>
-              <span className="work-map-col-text">
-                {c.i === 0 && <b>Now</b>}
-                <span>
-                  {c.i === 0
-                    ? `${c.started} in progress · ${c.count - c.started} can start`
-                    : `${c.count} ${c.count === 1 ? "milestone" : "milestones"}`}
-                </span>
-              </span>
-            </span>
-          ))}
-          <svg
-            className="work-map-edges"
-            width={laneW + plotW + 8}
-            height={height}
-            aria-hidden="true"
+      {shape === "graph" ? (
+        <MilestoneGraph
+          s={s}
+          map={graphMap}
+          selected={selected}
+          onOpen={onOpen}
+          onWait={onWait}
+        />
+      ) : (
+        <div className="work-map-wrap" ref={box}>
+          <div
+            className="work-map"
+            style={{ width: laneW + plotW + 8, height }}
+            onPointerLeave={() => setHover(undefined)}
           >
-            <defs>
-              <marker
-                id="work-map-arrow"
-                viewBox="0 0 8 8"
-                refX="7"
-                refY="4"
-                markerWidth="6"
-                markerHeight="6"
-                orient="auto"
+            {map.lanes.map((l, i) => (
+              <div
+                key={l.id}
+                className={`work-map-lane${i % 2 ? " odd" : ""}${l.outside ? " outside" : ""}${l.id === "releases" ? " releases" : ""}`}
+                style={{ top: laneTop.get(l.id), height: laneH.get(l.id) }}
               >
-                <path d="M0,0 L8,4 L0,8 Z" className="work-map-arrowhead" />
-              </marker>
-            </defs>
+                {l.outside && !map.lanes[i - 1]?.outside && (
+                  <span className="work-map-band">
+                    Not needed for {focusTitle}
+                  </span>
+                )}
+                <span
+                  className="work-map-lane-name"
+                  style={{ width: laneW - 12 }}
+                >
+                  {l.id === "releases" ? (
+                    <Icon href={svgFlag} />
+                  ) : (
+                    <LevelMark level="project" />
+                  )}
+                  <span className="work-outline-label">{l.title}</span>
+                </span>
+              </div>
+            ))}
+            {ticks.map((t) => (
+              <span
+                key={t.v}
+                className="work-map-tick"
+                style={{ left: x(t.v), height }}
+              >
+                {t.label && (
+                  <span className="work-map-tick-label">{t.label}</span>
+                )}
+              </span>
+            ))}
+            <span className="work-map-corner" style={{ width: laneW - 12 }}>
+              Project
+            </span>
+            {columns.map((c) => (
+              <span
+                key={`h${c.i}`}
+                className="work-map-col"
+                style={{ left: x(c.i), width: x(c.i + 1) - x(c.i) }}
+                data-tip={`${
+                  c.i === 0
+                    ? "Now: these wait on no other milestone; those under way (an item done or in flight) are filled, the rest can start"
+                    : `Step ${c.i + 1}: starts once what it waits on in ${c.i === 1 ? "step 1" : `steps 1 to ${c.i}`} is done`
+                }; ${c.done} of ${c.all} items done`}
+              >
+                <span className="work-map-col-n">{c.i + 1}</span>
+                <span className="work-map-col-text">
+                  {c.i === 0 && <b>Now</b>}
+                  <span>
+                    {c.i === 0
+                      ? `${c.started} in progress · ${c.count - c.started} can start`
+                      : `${c.count} ${c.count === 1 ? "milestone" : "milestones"}`}
+                  </span>
+                </span>
+              </span>
+            ))}
+            <svg
+              className="work-map-edges"
+              width={laneW + plotW + 8}
+              height={height}
+              aria-hidden="true"
+            >
+              <defs>
+                <marker
+                  id="work-map-arrow"
+                  viewBox="0 0 8 8"
+                  refX="7"
+                  refY="4"
+                  markerUnits="userSpaceOnUse"
+                  markerWidth="9"
+                  markerHeight="9"
+                  orient="auto"
+                >
+                  <path d="M0,0 L8,4 L0,8 Z" className="work-map-arrowhead" />
+                </marker>
+              </defs>
+              {map.edges.map((e) => {
+                const a = nodeOf.get(e.from);
+                const b = nodeOf.get(e.to);
+                if (
+                  !a ||
+                  !b ||
+                  (e.soft && hover !== e.from && hover !== e.to)
+                ) {
+                  return null;
+                }
+                const { x1, y1, x2, y2 } = geom(e);
+                const bend = Math.max(24, Math.abs(x2 - x1) / 2);
+                const on = !lit || (lit.has(e.from) && lit.has(e.to));
+                // The hovered milestone's own waits stand out from the chain beyond.
+                const near = !!hover && (e.from === hover || e.to === hover);
+                return (
+                  <path
+                    key={`${e.from}>${e.to}`}
+                    d={`M${x1},${y1} C${x1 + bend},${y1} ${x2 - bend},${y2} ${x2},${y2}`}
+                    className={`work-map-edge${e.critical ? " critical" : ""}${on ? "" : " dim"}${near ? " near" : ""}${e.items.length ? "" : " direct"}${e.soft ? " soft" : ""}`}
+                    style={{ strokeWidth: 1 + Math.min(3, e.items.length / 2) }}
+                    markerEnd="url(#work-map-arrow)"
+                  />
+                );
+              })}
+            </svg>
+            {map.nodes.map((n) => {
+              const m = msOf.get(n.id);
+              const total = STAGES.reduce((k, st) => k + n.counts[st], 0);
+              const out = inScope && m ? !inScope(m) : false;
+              const dim = (lit && !lit.has(n.id)) || out;
+              const waits = map.edges.filter((e) => e.to === n.id);
+              return (
+                <Tooltip
+                  key={n.id}
+                  placement="top"
+                  title={
+                    <span className="work-map-tip">
+                      <b>{n.title}</b>
+                      {n.unshaped && (
+                        <span>
+                          Open items of this project that no milestone holds
+                          yet; choose to list them
+                        </span>
+                      )}
+                      {n.gate && (
+                        <>
+                          <span>
+                            A release gate: it needs {n.gate.milestones}{" "}
+                            milestones, {n.gate.milestonesDone} done
+                          </span>
+                          <span>
+                            {n.gate.itemsDone} of {n.gate.items} of their items
+                            done
+                            {n.gate.tokensLeft > 0 &&
+                              `; ${tokenText(n.gate.tokensLeft)} tokens left on them`}
+                          </span>
+                          {n.gate.decisions > 0 && (
+                            <span>
+                              {n.gate.decisions} of your decisions hold it up
+                            </span>
+                          )}
+                          <span>Choose "Measure to" above to focus on it</span>
+                        </>
+                      )}
+                      <span>
+                        {msOf.get(n.id)?.project &&
+                          s.projects.find(
+                            (p) => p.id === msOf.get(n.id)?.project,
+                          )?.title}
+                      </span>
+                      <span>
+                        {n.counts.Done} of {total} done
+                        {STAGES.filter((st) => st !== "Done" && n.counts[st])
+                          .map(
+                            (st) =>
+                              `, ${n.counts[st]} ${STAGE_NAMES[st].toLowerCase()}`,
+                          )
+                          .join("")}
+                      </span>
+                      <span>
+                        {waits.length
+                          ? `After ${waits.map((w) => `${titleOf(w.from)} (${w.items.length} ${w.items.length === 1 ? "item" : "items"})`).join(", ")}`
+                          : "Waits on no other milestone"}
+                      </span>
+                      <span>
+                        {Number.isNaN(n.slack)
+                          ? `Not needed for ${focusTitle}`
+                          : n.critical
+                            ? `On the critical path: any delay here delays ${focusTitle ?? "the end"}`
+                            : `Can slip ${unit === "steps" ? `${n.slack} ${n.slack === 1 ? "step" : "steps"}` : `${tokenText(n.slack)} tokens`} before it delays ${focusTitle ?? "the last milestone"}`}
+                      </span>
+                      <span>
+                        {n.tokens.estimated
+                          ? `${tokenText(n.tokens.left)} tokens left, from ${n.tokens.estimated} of ${n.tokens.open} open items' estimates`
+                          : n.tokens.appetite
+                            ? `Appetite ${tokenText(n.tokens.appetite)} tokens; no item estimates yet`
+                            : "No token estimates yet"}
+                      </span>
+                      {n.tokens.budget !== undefined && (
+                        <span>
+                          Budget {tokenText(n.tokens.budget)} tokens (
+                          {n.tokens.appetite !== undefined
+                            ? "its appetite"
+                            : "its items' estimates together"}
+                          );{" "}
+                          {n.tokens.spent === undefined
+                            ? "spent: not recorded until HITLd's ledger"
+                            : over(n)
+                              ? `spent ${tokenText(n.tokens.spent)}, ${Math.round((100 * (n.tokens.spent - n.tokens.budget)) / n.tokens.budget)}% over`
+                              : `spent ${tokenText(n.tokens.spent)}, ${Math.round((100 * n.tokens.spent) / n.tokens.budget)}% of it`}
+                        </span>
+                      )}
+                      {n.decisions > 0 && (
+                        <span>{n.decisions} of your decisions hold it up</span>
+                      )}
+                      {n.loop && (
+                        <span>
+                          Waits round a loop with{" "}
+                          {n.loop
+                            .filter((id) => id !== n.id)
+                            .map(titleOf)
+                            .join(", ")}
+                        </span>
+                      )}
+                      {m && m.to_shape.length > 0 && (
+                        <span>
+                          To shape:{" "}
+                          {m.to_shape
+                            .map((k) => SHAPE_NAMES[k] ?? k)
+                            .join(", ")}
+                        </span>
+                      )}
+                    </span>
+                  }
+                >
+                  <button
+                    type="button"
+                    className={`work-map-node${n.gate ? " gate" : n.unshaped ? " unshaped" : n.started ? " started" : " idle"}${unit === "tokens" && over(n) ? " over" : ""}${n.critical ? " critical" : ""}${n.id === selected ? " selected" : ""}${dim ? " dim" : ""}${n.loop ? " loop" : ""}`}
+                    style={{
+                      left: left(n),
+                      top: top(n),
+                      width: right(n) - left(n),
+                    }}
+                    onPointerEnter={() => setHover(n.id)}
+                    onFocus={() => setHover(n.id)}
+                    onBlur={() => setHover(undefined)}
+                    onClick={() => onOpen(n.id)}
+                  >
+                    <span className="work-map-node-title">
+                      {n.gate ? (
+                        <Icon href={svgFlag} />
+                      ) : (
+                        <LevelMark level={n.unshaped ? "item" : "milestone"} />
+                      )}
+                      <span className="work-outline-label">{n.title}</span>
+                      {n.decisions > 0 && (
+                        <span className="work-count-badge">{n.decisions}</span>
+                      )}
+                    </span>
+                    {unit === "tokens" && n.tokens.budget !== undefined ? (
+                      <BudgetMeter
+                        budget={n.tokens.budget}
+                        spent={n.tokens.spent}
+                      />
+                    ) : (
+                      <span
+                        className="work-pbar-track work-map-bar"
+                        aria-hidden="true"
+                      >
+                        {STAGES.map((st) =>
+                          n.counts[st] ? (
+                            <span
+                              key={st}
+                              className={`work-roadmap-seg stage-${slug(st)}`}
+                              style={{ flexGrow: n.counts[st] }}
+                            />
+                          ) : null,
+                        )}
+                      </span>
+                    )}
+                    <span
+                      className={`work-map-node-meta${over(n) ? " over" : ""}`}
+                    >
+                      {n.gate ? (
+                        `${n.gate.milestonesDone} of ${n.gate.milestones} milestones · ${n.gate.itemsDone} of ${n.gate.items} items done`
+                      ) : n.unshaped && unit === "steps" ? (
+                        `${n.tokens.open} open items${n.after.length ? ` · after ${n.after.map(titleOf).join(" and ")}` : ""}`
+                      ) : unit === "tokens" && n.tokens.budget !== undefined ? (
+                        n.tokens.spent === undefined ? (
+                          `${tokenText(n.tokens.budget)} budget · spent not recorded`
+                        ) : (
+                          `${tokenText(n.tokens.spent)} of ${tokenText(n.tokens.budget)}${over(n) ? ` · ${Math.round((100 * (n.tokens.spent - n.tokens.budget)) / n.tokens.budget)}% over` : ""}`
+                        )
+                      ) : (
+                        <>
+                          {n.counts["In flight"] > 0
+                            ? `${n.counts["In flight"]} in flight · `
+                            : n.started
+                              ? "Under way · "
+                              : "Not started · "}
+                          {n.counts.Done} of {total} done
+                          {unit === "tokens" && n.tokens.left > 0
+                            ? ` · ${tokenText(n.tokens.left)} tokens`
+                            : ""}
+                          {n.after.length > 0 &&
+                            ` · after ${n.after.map(titleOf).join(" and ")}`}
+                        </>
+                      )}
+                    </span>
+                  </button>
+                </Tooltip>
+              );
+            })}
+            {hover &&
+              map.edges
+                .filter(
+                  (e) =>
+                    (e.from === hover || e.to === hover) &&
+                    nodeOf.has(e.from) &&
+                    nodeOf.has(e.to),
+                )
+                .map((e) => {
+                  const { x1, y1, x2, y2 } = geom(e);
+                  return (
+                    <span
+                      key={`c${e.from}>${e.to}`}
+                      className="work-map-count"
+                      style={{ left: (x1 + x2) / 2, top: (y1 + y2) / 2 }}
+                    >
+                      {e.items.length
+                        ? `${e.items.length} ${e.items.length === 1 ? "item" : "items"}`
+                        : "named"}
+                    </span>
+                  );
+                })}
+            {/* The waits, as choosable spots at each arrow's head. */}
             {map.edges.map((e) => {
-              const a = nodeOf.get(e.from);
               const b = nodeOf.get(e.to);
+              const a = nodeOf.get(e.from);
               if (!a || !b || (e.soft && hover !== e.from && hover !== e.to)) {
                 return null;
               }
-              const { x1, y1, x2, y2 } = geom(e);
-              const bend = Math.max(24, Math.abs(x2 - x1) / 2);
-              const on = !lit || (lit.has(e.from) && lit.has(e.to));
-              // The hovered milestone's own waits stand out from the chain beyond.
-              const near = !!hover && (e.from === hover || e.to === hover);
               return (
-                <path
-                  key={`${e.from}>${e.to}`}
-                  d={`M${x1},${y1} C${x1 + bend},${y1} ${x2 - bend},${y2} ${x2},${y2}`}
-                  className={`work-map-edge${e.critical ? " critical" : ""}${on ? "" : " dim"}${near ? " near" : ""}${e.items.length ? "" : " direct"}${e.soft ? " soft" : ""}`}
-                  style={{ strokeWidth: 1 + Math.min(3, e.items.length / 2) }}
-                  markerEnd="url(#work-map-arrow)"
+                <button
+                  key={`w${e.from}>${e.to}`}
+                  type="button"
+                  className="work-map-wait"
+                  style={{ left: left(b) - 16, top: geom(e).y2 - 8 }}
+                  data-tip={`${titleOf(e.to)} waits on ${titleOf(e.from)}: ${e.items.length} ${e.items.length === 1 ? "item" : "items"}`}
+                  aria-label={`${titleOf(e.to)} waits on ${titleOf(e.from)}: list the items`}
+                  onClick={() => onWait(e.from, e.to)}
                 />
               );
             })}
-          </svg>
-          {map.nodes.map((n) => {
-            const m = msOf.get(n.id);
-            const total = STAGES.reduce((k, st) => k + n.counts[st], 0);
-            const out = inScope && m ? !inScope(m) : false;
-            const dim = (lit && !lit.has(n.id)) || out;
-            const waits = map.edges.filter((e) => e.to === n.id);
-            return (
-              <Tooltip
-                key={n.id}
-                placement="top"
-                title={
-                  <span className="work-map-tip">
-                    <b>{n.title}</b>
-                    {n.unshaped && (
-                      <span>
-                        Open items of this project that no milestone holds yet;
-                        choose to list them
-                      </span>
-                    )}
-                    {n.gate && (
-                      <>
-                        <span>
-                          A release gate: it needs {n.gate.milestones}{" "}
-                          milestones, {n.gate.milestonesDone} done
-                        </span>
-                        <span>
-                          {n.gate.itemsDone} of {n.gate.items} of their items
-                          done
-                          {n.gate.tokensLeft > 0 &&
-                            `; ${tokenText(n.gate.tokensLeft)} tokens left on them`}
-                        </span>
-                        {n.gate.decisions > 0 && (
-                          <span>
-                            {n.gate.decisions} of your decisions hold it up
-                          </span>
-                        )}
-                        <span>Choose "Measure to" above to focus on it</span>
-                      </>
-                    )}
-                    <span>
-                      {msOf.get(n.id)?.project &&
-                        s.projects.find((p) => p.id === msOf.get(n.id)?.project)
-                          ?.title}
-                    </span>
-                    <span>
-                      {n.counts.Done} of {total} done
-                      {STAGES.filter((st) => st !== "Done" && n.counts[st])
-                        .map(
-                          (st) =>
-                            `, ${n.counts[st]} ${STAGE_NAMES[st].toLowerCase()}`,
-                        )
-                        .join("")}
-                    </span>
-                    <span>
-                      {waits.length
-                        ? `After ${waits.map((w) => `${titleOf(w.from)} (${w.items.length} ${w.items.length === 1 ? "item" : "items"})`).join(", ")}`
-                        : "Waits on no other milestone"}
-                    </span>
-                    <span>
-                      {Number.isNaN(n.slack)
-                        ? `Not needed for ${focusTitle}`
-                        : n.critical
-                          ? `On the critical path: any delay here delays ${focusTitle ?? "the end"}`
-                          : `Can slip ${unit === "steps" ? `${n.slack} ${n.slack === 1 ? "step" : "steps"}` : `${tokenText(n.slack)} tokens`} before it delays ${focusTitle ?? "the last milestone"}`}
-                    </span>
-                    <span>
-                      {n.tokens.estimated
-                        ? `${tokenText(n.tokens.left)} tokens left, from ${n.tokens.estimated} of ${n.tokens.open} open items' estimates`
-                        : n.tokens.appetite
-                          ? `Appetite ${tokenText(n.tokens.appetite)} tokens; no item estimates yet`
-                          : "No token estimates yet"}
-                    </span>
-                    {n.tokens.budget !== undefined && (
-                      <span>
-                        Budget {tokenText(n.tokens.budget)} tokens (
-                        {n.tokens.appetite !== undefined
-                          ? "its appetite"
-                          : "its items' estimates together"}
-                        );{" "}
-                        {n.tokens.spent === undefined
-                          ? "spent: not recorded until HITLd's ledger"
-                          : over(n)
-                            ? `spent ${tokenText(n.tokens.spent)}, ${Math.round((100 * (n.tokens.spent - n.tokens.budget)) / n.tokens.budget)}% over`
-                            : `spent ${tokenText(n.tokens.spent)}, ${Math.round((100 * n.tokens.spent) / n.tokens.budget)}% of it`}
-                      </span>
-                    )}
-                    {n.decisions > 0 && (
-                      <span>{n.decisions} of your decisions hold it up</span>
-                    )}
-                    {n.loop && (
-                      <span>
-                        Waits round a loop with{" "}
-                        {n.loop
-                          .filter((id) => id !== n.id)
-                          .map(titleOf)
-                          .join(", ")}
-                      </span>
-                    )}
-                    {m && m.to_shape.length > 0 && (
-                      <span>
-                        To shape:{" "}
-                        {m.to_shape.map((k) => SHAPE_NAMES[k] ?? k).join(", ")}
-                      </span>
-                    )}
-                  </span>
-                }
-              >
-                <button
-                  type="button"
-                  className={`work-map-node${n.gate ? " gate" : n.unshaped ? " unshaped" : n.started ? " started" : " idle"}${unit === "tokens" && over(n) ? " over" : ""}${n.critical ? " critical" : ""}${n.id === selected ? " selected" : ""}${dim ? " dim" : ""}${n.loop ? " loop" : ""}`}
-                  style={{
-                    left: left(n),
-                    top: top(n),
-                    width: right(n) - left(n),
-                  }}
-                  onPointerEnter={() => setHover(n.id)}
-                  onFocus={() => setHover(n.id)}
-                  onBlur={() => setHover(undefined)}
-                  onClick={() => onOpen(n.id)}
-                >
-                  <span className="work-map-node-title">
-                    {n.gate ? (
-                      <Icon href={svgFlag} />
-                    ) : (
-                      <LevelMark level={n.unshaped ? "item" : "milestone"} />
-                    )}
-                    <span className="work-outline-label">{n.title}</span>
-                    {n.decisions > 0 && (
-                      <span className="work-count-badge">{n.decisions}</span>
-                    )}
-                  </span>
-                  {unit === "tokens" && n.tokens.budget !== undefined ? (
-                    <BudgetMeter
-                      budget={n.tokens.budget}
-                      spent={n.tokens.spent}
-                    />
-                  ) : (
-                    <span
-                      className="work-pbar-track work-map-bar"
-                      aria-hidden="true"
-                    >
-                      {STAGES.map((st) =>
-                        n.counts[st] ? (
-                          <span
-                            key={st}
-                            className={`work-roadmap-seg stage-${slug(st)}`}
-                            style={{ flexGrow: n.counts[st] }}
-                          />
-                        ) : null,
-                      )}
-                    </span>
-                  )}
-                  <span
-                    className={`work-map-node-meta${over(n) ? " over" : ""}`}
-                  >
-                    {n.gate ? (
-                      `${n.gate.milestonesDone} of ${n.gate.milestones} milestones · ${n.gate.itemsDone} of ${n.gate.items} items done`
-                    ) : n.unshaped && unit === "steps" ? (
-                      `${n.tokens.open} open items${n.after.length ? ` · after ${n.after.map(titleOf).join(" and ")}` : ""}`
-                    ) : unit === "tokens" && n.tokens.budget !== undefined ? (
-                      n.tokens.spent === undefined ? (
-                        `${tokenText(n.tokens.budget)} budget · spent not recorded`
-                      ) : (
-                        `${tokenText(n.tokens.spent)} of ${tokenText(n.tokens.budget)}${over(n) ? ` · ${Math.round((100 * (n.tokens.spent - n.tokens.budget)) / n.tokens.budget)}% over` : ""}`
-                      )
-                    ) : (
-                      <>
-                        {n.counts["In flight"] > 0
-                          ? `${n.counts["In flight"]} in flight · `
-                          : n.started
-                            ? "Under way · "
-                            : "Not started · "}
-                        {n.counts.Done} of {total} done
-                        {unit === "tokens" && n.tokens.left > 0
-                          ? ` · ${tokenText(n.tokens.left)} tokens`
-                          : ""}
-                        {n.after.length > 0 &&
-                          ` · after ${n.after.map(titleOf).join(" and ")}`}
-                      </>
-                    )}
-                  </span>
-                </button>
-              </Tooltip>
-            );
-          })}
-          {hover &&
-            map.edges
-              .filter(
-                (e) =>
-                  (e.from === hover || e.to === hover) &&
-                  nodeOf.has(e.from) &&
-                  nodeOf.has(e.to),
-              )
-              .map((e) => {
-                const { x1, y1, x2, y2 } = geom(e);
-                return (
-                  <span
-                    key={`c${e.from}>${e.to}`}
-                    className="work-map-count"
-                    style={{ left: (x1 + x2) / 2, top: (y1 + y2) / 2 }}
-                  >
-                    {e.items.length
-                      ? `${e.items.length} ${e.items.length === 1 ? "item" : "items"}`
-                      : "named"}
-                  </span>
-                );
-              })}
-          {/* The waits, as choosable spots at each arrow's head. */}
-          {map.edges.map((e) => {
-            const b = nodeOf.get(e.to);
-            const a = nodeOf.get(e.from);
-            if (!a || !b || (e.soft && hover !== e.from && hover !== e.to)) {
-              return null;
-            }
-            return (
-              <button
-                key={`w${e.from}>${e.to}`}
-                type="button"
-                className="work-map-wait"
-                style={{ left: left(b) - 16, top: geom(e).y2 - 8 }}
-                data-tip={`${titleOf(e.to)} waits on ${titleOf(e.from)}: ${e.items.length} ${e.items.length === 1 ? "item" : "items"}`}
-                aria-label={`${titleOf(e.to)} waits on ${titleOf(e.from)}: list the items`}
-                onClick={() => onWait(e.from, e.to)}
-              />
-            );
-          })}
+          </div>
         </div>
-      </div>
+      )}
       <ul className="work-map-legend" aria-label="Key">
         <li>
           <span className="work-map-key started" aria-hidden="true" />
@@ -5042,6 +5109,233 @@ function BudgetMeter({ budget, spent }: { budget: number; spent?: number }) {
         style={{ left: `${(100 * budget) / top}%` }}
       />
     </span>
+  );
+}
+
+/**
+ * The milestones as a layered graph (d3-dag's Sugiyama layout, MIT): one
+ * column per step, the rows ordered to cross as few waits as possible,
+ * and each wait routed through the columns between its ends. It trades
+ * the project lanes for fewer crossings; each milestone names its
+ * project instead. Work no milestone holds is left out.
+ */
+function MilestoneGraph({
+  s,
+  map,
+  selected,
+  onOpen,
+  onWait,
+}: {
+  s: WorkSnapshot;
+  map: MilestoneMapData;
+  selected?: string;
+  onOpen: (milestone: string) => void;
+  onWait: (from: string, to: string) => void;
+}) {
+  const [hover, setHover] = useState<string>();
+  const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
+  const projectTitle = (id: string) => {
+    const m = msOf.get(id);
+    return (
+      s.projects.find((p) => p.id === m?.project)?.title ??
+      s.initiatives.find((i) => i.id === m?.initiative)?.title ??
+      ""
+    );
+  };
+  const NODE_W = 176;
+  const NODE_H = 64;
+  const laid = useMemo(() => {
+    const g = dagGraph<MapNode, MapEdge>();
+    const byId = new Map<string, MutGraphNode<MapNode, MapEdge>>();
+    for (const n of map.nodes) {
+      if (!n.unshaped) {
+        byId.set(n.id, g.node(n));
+      }
+    }
+    for (const e of map.edges) {
+      const a = byId.get(e.from);
+      const b = byId.get(e.to);
+      if (a && b && !e.soft) {
+        g.link(a, b, e);
+      }
+    }
+    try {
+      // Layers run down in d3-dag; here they run across, so the axes swap.
+      const layout = sugiyama()
+        .layering(
+          layeringSimplex().rank(({ data }: { data: MapNode }) =>
+            Math.round(data.x0),
+          ),
+        )
+        .decross(decrossTwoLayer())
+        .coord(coordSimplex())
+        .nodeSize(() => [NODE_H, NODE_W] as const)
+        .gap([14, 48]);
+      const { width, height } = layout(g);
+      const nodes = [...g.nodes()].map((n) => ({
+        n: n.data,
+        x: n.y - NODE_W / 2,
+        y: n.x - NODE_H / 2,
+      }));
+      const links = [...g.links()].map((l) => ({
+        e: l.data,
+        points: l.points.map(([px, py]) => [py, px] as const),
+      }));
+      return { width: height, height: width, nodes, links, error: undefined };
+    } catch (error) {
+      return {
+        width: 0,
+        height: 0,
+        nodes: [],
+        links: [],
+        error: String(error),
+      };
+    }
+  }, [map]);
+  const lit = useMemo(() => {
+    if (!hover) {
+      return undefined;
+    }
+    const set = new Set([hover]);
+    const walk = (id: string, up: boolean) => {
+      for (const { e } of laid.links) {
+        const next = up
+          ? e.to === id
+            ? e.from
+            : ""
+          : e.from === id
+            ? e.to
+            : "";
+        if (next && !set.has(next)) {
+          set.add(next);
+          walk(next, up);
+        }
+      }
+    };
+    walk(hover, true);
+    walk(hover, false);
+    return set;
+  }, [hover, laid.links]);
+  if (laid.error) {
+    return (
+      <Alert severity="warning">
+        The layered layout couldn't place these milestones ({laid.error}).
+      </Alert>
+    );
+  }
+  // A smooth path through the routed points, flowing left to right.
+  const pathOf = (pts: readonly (readonly [number, number])[]) =>
+    pts
+      .map(([x, y], i) => {
+        if (!i) {
+          return `M${x},${y}`;
+        }
+        const [px, py] = pts[i - 1]!;
+        const dx = (x - px) / 2;
+        return `C${px + dx},${py} ${x - dx},${y} ${x},${y}`;
+      })
+      .join(" ");
+  const PAD = 8;
+  return (
+    <div className="work-map-wrap">
+      <div
+        className="work-map work-graph"
+        style={{ width: laid.width + PAD * 2, height: laid.height + PAD * 2 }}
+        onPointerLeave={() => setHover(undefined)}
+      >
+        <svg
+          className="work-map-edges"
+          width={laid.width + PAD * 2}
+          height={laid.height + PAD * 2}
+          aria-hidden="true"
+        >
+          <defs>
+            <marker
+              id="work-graph-arrow"
+              viewBox="0 0 8 8"
+              refX="7"
+              refY="4"
+              markerUnits="userSpaceOnUse"
+              markerWidth="9"
+              markerHeight="9"
+              orient="auto"
+            >
+              <path d="M0,0 L8,4 L0,8 Z" className="work-map-arrowhead" />
+            </marker>
+          </defs>
+          <g transform={`translate(${PAD},${PAD})`}>
+            {laid.links.map(({ e, points }) => {
+              const on = !lit || (lit.has(e.from) && lit.has(e.to));
+              const near = !!hover && (e.from === hover || e.to === hover);
+              // Ends at the bars' edges, not their centres.
+              const pts = points.map(([x, y]) => [x, y] as [number, number]);
+              pts[0]![0] += NODE_W / 2;
+              pts[pts.length - 1]![0] -= NODE_W / 2 + 2;
+              return (
+                <path
+                  key={`${e.from}>${e.to}`}
+                  d={pathOf(pts)}
+                  className={`work-map-edge${e.critical ? " critical" : ""}${on ? "" : " dim"}${near ? " near" : ""}${e.items.length ? "" : " direct"}`}
+                  style={{ strokeWidth: 1 + Math.min(3, e.items.length / 2) }}
+                  markerEnd="url(#work-graph-arrow)"
+                  onClick={() => onWait(e.from, e.to)}
+                />
+              );
+            })}
+          </g>
+        </svg>
+        {laid.nodes.map(({ n, x, y }) => {
+          const total = STAGES.reduce((k, st) => k + n.counts[st], 0);
+          const dim = lit && !lit.has(n.id);
+          return (
+            <button
+              key={n.id}
+              type="button"
+              className={`work-map-node${n.gate ? " gate" : n.started ? " started" : " idle"}${n.critical ? " critical" : ""}${n.id === selected ? " selected" : ""}${dim ? " dim" : ""}${n.loop ? " loop" : ""}`}
+              style={{
+                left: x + PAD,
+                top: y + PAD,
+                width: NODE_W,
+                height: NODE_H,
+              }}
+              title={`${n.title}${projectTitle(n.id) ? ` (${projectTitle(n.id)})` : ""}`}
+              onPointerEnter={() => setHover(n.id)}
+              onFocus={() => setHover(n.id)}
+              onBlur={() => setHover(undefined)}
+              onClick={() => onOpen(n.id)}
+            >
+              <span className="work-map-node-title">
+                {n.gate ? (
+                  <Icon href={svgFlag} />
+                ) : (
+                  <LevelMark level="milestone" />
+                )}
+                <span className="work-outline-label">{n.title}</span>
+                {n.decisions > 0 && (
+                  <span className="work-count-badge">{n.decisions}</span>
+                )}
+              </span>
+              <span className="work-pbar-track work-map-bar" aria-hidden="true">
+                {STAGES.map((st) =>
+                  n.counts[st] ? (
+                    <span
+                      key={st}
+                      className={`work-roadmap-seg stage-${slug(st)}`}
+                      style={{ flexGrow: n.counts[st] }}
+                    />
+                  ) : null,
+                )}
+              </span>
+              <span className="work-map-node-meta">
+                {n.gate
+                  ? `${n.gate.milestonesDone} of ${n.gate.milestones} milestones`
+                  : `${n.counts.Done} of ${total} done · ${projectTitle(n.id)}`}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

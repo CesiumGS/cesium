@@ -71,6 +71,8 @@ export interface WorkSearch {
   layout?: string;
   /** The release gate the milestone map measures to. */
   release?: string;
+  /** The milestone map as project lanes (default) or a "graph" with the fewest crossings. */
+  shape?: string;
   /** The roadmap by "groups" (initiatives, or an initiative's projects) or "matrix" (milestones by default). */
   roadmap?: string;
 }
@@ -90,6 +92,7 @@ export const workRoute = createRoute({
       across: s.across === "tokens" ? "tokens" : undefined,
       layout: s.layout === "map" || s.layout === "list" ? s.layout : undefined,
       release: str(s.release),
+      shape: s.shape === "graph" ? "graph" : undefined,
       roadmap:
         s.roadmap === "groups" || s.roadmap === "matrix"
           ? s.roadmap
