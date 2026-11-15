@@ -145,22 +145,31 @@ milestones named by their outcome, each with an `outcome` sentence,
     that wait on nothing and that nothing waits on sit apart below, in a
     grid by project. The critical path is drawn in the accent; hovering a
     milestone lights what feeds it and what it unblocks; choosing a wait
-    lists the items behind it. With release gates, "Measure to" keeps a
-    gate and what it needs. A milestone with an item done or in progress
-    is filled; a milestone's pane gives its longest chain of items that
-    must happen in order. The roadmap is committed work only;
+    lists the items behind it. Release gates are release items (HITLd's
+    format: a work item with a `release` version, needing the milestones
+    and items the release waits for), drawn as flags in a Releases lane;
+    "Measure to" keeps a gate and what it needs. A milestone with an
+    item done or in progress is filled; a milestone's pane gives its
+    longest chain of items that must happen in order. The roadmap is
+    committed work only;
     proposals have their own view. A milestone's bar counts its work;
     the owner's decisions and waits on other parties that hold it up are
     badges beside its name. Decisions and outside waits no milestone
     holds stay in Your move and Waiting outside.
   - **Proposals**: what could be taken on next, as bets to commit or
-    drop. Grouped by project: projects whose open items are all
-    proposed come first, as one bet each, and a proposed milestone keeps
-    its items under it. Each idea says what stands between it and
-    committing (nothing, one of the owner's decisions, or other items),
-    how much waits on it, and which committed milestone needs it; its
-    text, the why, opens in the pane. A toggle narrows the view to one of
-    those three.
+    drop, in one table read top to bottom. Every row has the same
+    columns: the idea, what stands between it and committing, and how
+    many open items wait on it. What stands in the way is one of three,
+    marked as the board marks stages: ready to commit (nothing it needs
+    is open), waits on your answer (an open decision of the owner's,
+    whose answer commits or drops it), or waits on other items; the
+    cell names what it waits on by ID, each title on hover. Projects
+    head their rows, whole projects of proposals first, and a proposed
+    milestone keeps its ideas under it; a committed milestone that needs
+    an idea is named under it. A toggle narrows the table to one of the
+    three; narrowed to your answers, the rows group by the decision they
+    wait on, the one that frees most first. The whole row opens the
+    idea's text, the why, in the pane. Narrow, each row stacks.
   - **Flow**: the stages (proposed, blocked, ready, in progress, done)
     as a band per stage, day by day since the history begins (replayed
     from the items' committed status changes); a band that widens is a

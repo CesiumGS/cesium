@@ -46,6 +46,9 @@ export const FOLDER = {
   capability: "milestones",
   learning: "milestones",
 };
+/** A semantic version, as human-in-the-lead's release key takes it. */
+const RELEASE_VERSION =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$/;
 const COMMON_KEYS = ["id", "title", "kind", "status", "created"];
 const MILESTONE_KEYS = [
   ...COMMON_KEYS,
@@ -72,6 +75,9 @@ export const KEYS = {
     "claimed",
     "reason",
     "estimate_tokens",
+    // release: human-in-the-lead's key on a release item, the version it
+    // makes; the item's needs are what the release waits for.
+    "release",
   ],
   decision: [
     ...COMMON_KEYS,
@@ -608,6 +614,30 @@ export function checkItems(items, { root } = {}) {
   const g = buildGraph(items);
   for (const [a, b] of g.duplicates) {
     problems.push(`${a.data.id}: in both ${a.path} and ${b.path}`);
+  }
+  // A release item carries the version it makes (human-in-the-lead's
+  // format): a version without the "v", and one release item per version.
+  const releases = new Map();
+  for (const it of g.all) {
+    const v = it.data.release;
+    if (v === undefined) {
+      continue;
+    }
+    if (!RELEASE_VERSION.test(String(v))) {
+      say(
+        it,
+        `release "${v}" isn't a version (such as 2.0.0 or 2.0.0-alpha.1)`,
+      );
+      continue;
+    }
+    releases.set(String(v), [...(releases.get(String(v)) ?? []), it.data.id]);
+  }
+  for (const [version, ids] of releases) {
+    if (ids.length > 1) {
+      problems.push(
+        `release ${version}: set on ${ids.join(" and ")}; one release item per version`,
+      );
+    }
   }
   for (const it of g.all) {
     const d = it.data;

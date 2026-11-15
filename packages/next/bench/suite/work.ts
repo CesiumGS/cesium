@@ -108,6 +108,14 @@ export const isOpen = (it: WorkItem) =>
 /** Work to do, as against a decision or a wait on another party. */
 export const isWork = (it: WorkItem) => it.kind === "work";
 
+/**
+ * A release item (human-in-the-lead's format): the work item that makes a
+ * release, carrying the version it makes. What it needs, milestones and
+ * items, is what the release waits for: its gates.
+ */
+export const isReleaseItem = (it: WorkItem | undefined): boolean =>
+  !!it && it.kind === "work" && !!it.release;
+
 /** "CS-170" → 170, for ordering by number. */
 export const idNumber = (id: string) => Number(id.replace(/^\D+-/, "")) || 0;
 
@@ -1178,20 +1186,45 @@ export function milestoneRoadmapOf(
   proposals = false,
 ): RoadmapRow[] {
   const ids = new Set(s.milestones.map((m) => m.id));
+  const held = new Set(
+    s.milestones.flatMap((m) => m.constraints.map((c) => c.id)),
+  );
   return orderOf(
-    s.milestones
-      .filter(
-        (m) =>
-          m.status !== "Done" &&
-          m.status !== "Dropped" &&
-          (proposals || m.status !== "Proposed"),
-      )
-      .map((m) => ({
-        id: m.id,
-        title: m.title,
-        members: m.constraints.map((c) => c.id).filter((id) => !ids.has(id)),
-        needs: m.constraints.map((c) => c.id).filter((id) => ids.has(id)),
-      })),
+    [
+      ...s.milestones
+        .filter(
+          (m) =>
+            m.status !== "Done" &&
+            m.status !== "Dropped" &&
+            (proposals || m.status !== "Proposed"),
+        )
+        .map((m) => ({
+          id: m.id,
+          title: m.title,
+          members: m.constraints.map((c) => c.id).filter((id) => !ids.has(id)),
+          needs: m.constraints.map((c) => c.id).filter((id) => ids.has(id)),
+        })),
+      // Each open release item is a gate: it waits on the milestones it
+      // needs, and on the items it needs, directly or through their
+      // milestones. Needed items no milestone holds go in with it, so what
+      // they wait on places the gate too.
+      ...s.items
+        .filter(
+          (it) =>
+            isReleaseItem(it) &&
+            isOpen(it) &&
+            (proposals || it.status !== "Proposed"),
+        )
+        .map((it) => ({
+          id: it.id,
+          title: it.title,
+          members: [
+            it.id,
+            ...it.needs.filter((id) => !ids.has(id) && !held.has(id)),
+          ],
+          needs: it.needs.filter((id) => ids.has(id)),
+        })),
+    ],
     s,
     items,
     flight,
@@ -1204,7 +1237,10 @@ export const UNSHAPED = "unshaped-";
 const RELEASES = "releases";
 const OUTSIDE = "outside-";
 
-/** A map entity's items: a milestone's constraints, or a project's items no milestone holds. */
+/**
+ * A map entity's items: a milestone's constraints, a release item's own
+ * item needs, or a project's items no milestone holds.
+ */
 export function mapEntityItems(s: WorkSnapshot, id: string): string[] {
   if (id.startsWith(UNSHAPED)) {
     const project = id.slice(UNSHAPED.length);
@@ -1217,6 +1253,11 @@ export function mapEntityItems(s: WorkSnapshot, id: string): string[] {
       )
       .map((it) => it.id);
   }
+  const release = s.items.find((it) => it.id === id);
+  if (release && isReleaseItem(release)) {
+    const ms = new Set(s.milestones.map((m) => m.id));
+    return release.needs.filter((n) => !ms.has(n));
+  }
   return (
     s.milestones.find((m) => m.id === id)?.constraints.map((c) => c.id) ?? []
   );
@@ -1228,7 +1269,11 @@ export function mapEntityTitle(s: WorkSnapshot, id: string): string {
     const project = id.slice(UNSHAPED.length);
     return `${s.projects.find((p) => p.id === project)?.title ?? project}: not in a milestone yet`;
   }
-  return s.milestones.find((m) => m.id === id)?.title ?? id;
+  return (
+    s.milestones.find((m) => m.id === id)?.title ??
+    s.items.find((it) => it.id === id)?.title ??
+    id
+  );
 }
 
 /** One milestone on the map: where it sits, how much of it is left, and why. */
@@ -1351,6 +1396,7 @@ export function milestoneMapOf(
       it.project &&
       isOpen(it) &&
       isWork(it) &&
+      !isReleaseItem(it) &&
       it.status !== "Proposed" &&
       !covered.has(it.id)
     ) {
@@ -1386,7 +1432,11 @@ export function milestoneMapOf(
   };
   const rows = milestoneRoadmapOf(s, s.items, flight, true);
   const itemsIn = (id: string) =>
-    unshaped.get(id) ?? msOf.get(id)?.constraints.map((c) => c.id) ?? [];
+    unshaped.get(id) ??
+    msOf.get(id)?.constraints.map((c) => c.id) ??
+    (isReleaseItem(itemOf.get(id))
+      ? itemOf.get(id)!.needs.filter((n) => !msOf.has(n))
+      : []);
   const shown = new Set(rows.map((r) => r.id));
   const tokensOf = (id: string) => {
     const m = msOf.get(id);
@@ -1472,18 +1522,14 @@ export function milestoneMapOf(
     }
     return seen;
   };
-  const isGate = (id: string) => {
-    const m = msOf.get(id);
-    return (
-      !!m &&
-      m.constraints.length > 0 &&
-      m.constraints.every((c) => msOf.has(c.id))
-    );
-  };
-  // A gate's progress: over the milestones it needs, and their items.
+  // Release gates are release items (human-in-the-lead's format): each
+  // one waits on the milestones and items it needs.
+  const isGate = (id: string) => isReleaseItem(itemOf.get(id));
+  // A gate's progress: over the milestones it needs, their items, and the
+  // items it needs directly.
   const gateStats = (id: string) => {
     const ms = [...upstreamOf(id)].filter((x) => !isGate(x));
-    const items = new Set(ms.flatMap((x) => itemsIn(x)));
+    const items = new Set([...ms.flatMap((x) => itemsIn(x)), ...itemsIn(id)]);
     let done = 0;
     let left = 0;
     const decisions = new Set<string>();

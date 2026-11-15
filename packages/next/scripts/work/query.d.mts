@@ -25,6 +25,8 @@ export interface WorkItem {
   estimate_tokens?: number;
   /** Tokens actually spent on it, from human-in-the-lead's ledger; absent until it records them. */
   tokens_spent?: number;
+  /** On a release item only: the version it makes, such as 2.0.0-alpha.1. */
+  release?: string;
   /** Repository-relative. */
   path: string;
   /** Planned, with every need Done. */
