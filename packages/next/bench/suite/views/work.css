@@ -2465,3 +2465,95 @@ a.work-chainrow-next:hover {
   color: var(--stratakit-color-text-neutral-secondary);
   transform: translateY(-100%);
 }
+
+/* Waits on other parties: beside the decisions badge, in a neutral tone. */
+.work-count-badge.outside {
+  background: var(--stratakit-color-bg-neutral-base);
+  color: var(--stratakit-color-text-neutral-secondary);
+  box-shadow: inset 0 0 0 1px var(--stratakit-color-border-neutral-base);
+}
+.work-count-badge + .work-count-badge {
+  margin-left: 4px;
+}
+
+/*
+ * The Proposals view: each project's ideas kept whole, in columns as wide
+ * as a row reads well; a proposed milestone holds its ideas under a rule.
+ */
+.work-proposal-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-700);
+}
+.work-proposal-section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--stratakit-space-400);
+  padding-bottom: var(--stratakit-space-200);
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-proposal-section-head h3 {
+  margin: 0;
+}
+.work-proposal-groups {
+  columns: 2 420px;
+  column-gap: var(--stratakit-space-700);
+}
+.work-proposal-group {
+  break-inside: avoid;
+  margin-bottom: var(--stratakit-space-600);
+}
+.work-proposal-group .work-row-needs {
+  padding-inline: 0;
+}
+.work-proposal-ms {
+  margin: var(--stratakit-space-200) 0 var(--stratakit-space-300);
+  padding-inline-start: var(--stratakit-space-400);
+  border-inline-start: 2px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-proposal-ms-head {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: var(--stratakit-space-200) 0;
+  cursor: pointer;
+  border-radius: var(--stratakit-radius-sm);
+}
+.work-proposal-ms-head:hover .work-proposal-ms-title {
+  text-decoration: underline;
+}
+.work-proposal-ms-head:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.work-proposal-ms-title {
+  font-weight: 600;
+}
+button.work-need {
+  font: inherit;
+  font-size: var(--stratakit-font-size-body-sm);
+  background: none;
+  cursor: pointer;
+  align-items: center;
+}
+.work-need.decision {
+  border-color: var(--stratakit-color-border-attention-base);
+}
+.work-toggle-count {
+  margin-inline-start: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-variant-numeric: tabular-nums;
+}
+/* Narrow: the gates scroll sideways rather than squeeze their words. */
+.work-proposal-gates {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.work-proposal-gates button {
+  white-space: nowrap;
+  flex: none;
+}

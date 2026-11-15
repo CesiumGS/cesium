@@ -114,13 +114,15 @@ milestones named by their outcome, each with an `outcome` sentence,
   milestone) and a find field; both narrow every view. An item or a list
   opens in a pane on the right (`?item=CS-<n>`, `?list=…`), beside the
   view when the window is wide enough and over it when not.
-- **Three views, one question each:**
+- **Four views, one question each:**
   - **Your move** (the default): the owner's attention is the
     constraint, so each section leads with its number and lists the
     most waited-on first, counting what waits through other items.
     Your decisions, ready to start, in flight (who holds each, on which
     branch, claims in other worktrees and local branches included until
     they merge) and waiting outside. The rail's count is the owner's.
+    A link under the decisions opens the proposals that can be
+    committed now.
   - **Roadmap**: what comes after what, without dates. By milestones (a
     map or a list), by initiatives or projects, or as the projects'
     waits on each other. The milestone map runs across in steps or in
@@ -131,7 +133,19 @@ milestones named by their outcome, each with an `outcome` sentence,
     waits. The critical path is drawn in the accent; hovering a
     milestone lights what feeds it and what it unblocks; choosing a wait
     lists the items behind it. With release gates, "Measure to" keeps a
-    gate and what it needs.
+    gate and what it needs. The roadmap is committed work only;
+    proposals have their own view. A milestone's bar counts its work;
+    the owner's decisions and waits on other parties that hold it up are
+    badges beside its name. Decisions and outside waits no milestone
+    holds stay in Your move and Waiting outside.
+  - **Proposals**: what could be taken on next, as bets to commit or
+    drop. Grouped by project: projects whose open items are all
+    proposed come first, as one bet each, and a proposed milestone keeps
+    its items under it. Each idea says what stands between it and
+    committing (nothing, one of the owner's decisions, or other items),
+    how much waits on it, and which committed milestone needs it; its
+    text, the why, opens in the pane. A toggle narrows the view to one of
+    those three.
   - **Flow**: the stages (proposed, waiting on items, ready, in flight,
     done) as a band per stage, day by day since the history begins
     (replayed from the items' committed status changes); a band that
