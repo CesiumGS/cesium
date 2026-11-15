@@ -5,7 +5,6 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-9
-milestone: the seam
 needs: [CS-33, CS-21]
 ---
 

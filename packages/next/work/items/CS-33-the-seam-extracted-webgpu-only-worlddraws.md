@@ -5,7 +5,6 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-9
-milestone: the seam
 ---
 
 The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves. Needs nothing.

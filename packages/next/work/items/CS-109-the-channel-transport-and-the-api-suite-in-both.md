@@ -5,7 +5,6 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-13
-milestone: the façade
 needs: [CS-108]
 ---
 

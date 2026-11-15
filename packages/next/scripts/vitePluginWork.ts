@@ -4,6 +4,7 @@ import type { Plugin } from "vite";
 import { join } from "node:path";
 import {
   claimsElsewhere,
+  findItems,
   queryWork,
   showItem,
   statusHistory,
@@ -84,6 +85,13 @@ export function workApi(prefix = "/work-api"): Plugin {
                 200,
                 queryWork(root, { elsewhere: claims(), history: events() }),
               );
+              return;
+            }
+            if (path === "/find.json") {
+              const q = new URLSearchParams((req.url ?? "").split("?")[1] ?? "")
+                .get("q")
+                ?.slice(0, 200);
+              send(res, 200, findItems(root, q ?? ""));
               return;
             }
             const m = path.match(/^\/item\/(CS-[1-9]\d*)\.json$/);

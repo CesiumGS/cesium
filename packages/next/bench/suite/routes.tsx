@@ -49,15 +49,30 @@ export const runsLayoutRoute = createRoute({
 
 // ------------------------------------------------------------ needs a look
 
-const WORK_STAGES = ["Proposed", "Waiting", "Ready", "In flight", "Done"];
 export interface WorkSearch {
+  /** The question the page answers: "roadmap" or "flow" ("Your move" by default). */
+  view?: string;
   initiative?: string;
   project?: string;
+  /** A milestone's constraints as the scope. */
+  milestone?: string;
   q?: string;
-  /** The flow stage whose items are listed. */
-  stage?: string;
-  /** The item open beside the page. */
+  /**
+   * The list open in the details panel: "owner", "commit", "outside",
+   * "done", "projects", "graph", or "stage:<Stage>" (with the scope's
+   * project, if any).
+   */
+  list?: string;
+  /** The item open in the details panel. */
   item?: string;
+  /** The milestone map across "tokens" (steps by default). */
+  across?: string;
+  /** Milestones as a "map" or a "list" (the map, unless the view is phone-narrow). */
+  layout?: string;
+  /** The release gate the milestone map measures to. */
+  release?: string;
+  /** The roadmap by "groups" (initiatives, or an initiative's projects) or "matrix" (milestones by default). */
+  roadmap?: string;
 }
 /** The tracker's board (CS-170): it reads the work items on this branch. */
 export const workRoute = createRoute({
@@ -65,13 +80,20 @@ export const workRoute = createRoute({
   path: "/work",
   validateSearch: (s: Record<string, unknown>): WorkSearch =>
     clean({
+      view: s.view === "roadmap" || s.view === "flow" ? s.view : undefined,
       initiative: str(s.initiative),
       project: str(s.project),
+      milestone: str(s.milestone),
       q: str(s.q),
-      stage: WORK_STAGES.includes(str(s.stage) ?? "")
-        ? str(s.stage)
-        : undefined,
+      list: str(s.list),
       item: str(s.item),
+      across: s.across === "tokens" ? "tokens" : undefined,
+      layout: s.layout === "map" || s.layout === "list" ? s.layout : undefined,
+      release: str(s.release),
+      roadmap:
+        s.roadmap === "groups" || s.roadmap === "matrix"
+          ? s.roadmap
+          : undefined,
     }),
   component: lazyRouteComponent(() => import("./views/Work.tsx"), "Work"),
 });

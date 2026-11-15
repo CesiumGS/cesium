@@ -5,7 +5,6 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-13
-milestone: the default
 needs: [CS-111, CS-116, CS-99]
 ---
 

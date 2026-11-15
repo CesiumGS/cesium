@@ -7,13 +7,6 @@ created: 2026-11-13
 initiative: CS-5
 lead: owner
 plan: docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md
-milestones:
-  - 5c the second body
-  - 5d controllers and animation
-  - 5e sky and light per body
-  - 5f design space
-  - 5g the Artemis II replay
-  - 5h ascent and entry
 ---
 
 ## Summary

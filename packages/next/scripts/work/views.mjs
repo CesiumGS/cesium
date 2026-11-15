@@ -19,6 +19,7 @@ import {
   WORK_DIR,
   bareSectionRefs,
   buildGraph,
+  containerLoops,
   checkItems,
   describeProgress,
   findClaims,
@@ -179,6 +180,20 @@ if (cmd === "ready") {
   );
 } else if (cmd === "check") {
   const problems = checkItems(items, { root });
+  // Warnings, never failures: loops of waits between projects and
+  // initiatives (the tree is for accountability, so a loop isn't an error,
+  // but it leaves the group without an order).
+  for (const level of ["initiative", "project"]) {
+    for (const { group, ties } of containerLoops(g, level)) {
+      const names = group.map((id) => `${id} ${title(id)}`).join(", ");
+      const by = ties
+        .map((t) => `${t.from} on ${t.to} (${t.items.join(", ")})`)
+        .join("; ");
+      console.log(
+        `warning: ${level}s wait on each other: ${names}. Tied by ${by}.`,
+      );
+    }
+  }
   for (const h of [...staleNames(root), ...bareSectionRefs(root)]) {
     problems.push(
       `${h.path}:${h.line}: ${h.name}: ${h.text.trim().slice(0, 140)}`,

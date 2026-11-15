@@ -5,7 +5,6 @@ kind: decision
 status: Planned
 created: 2026-11-13
 project: CS-13
-milestone: the default
 needs: [CS-117]
 decided-by: owner
 ---

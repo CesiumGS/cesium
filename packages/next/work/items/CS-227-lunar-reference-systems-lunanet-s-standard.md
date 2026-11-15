@@ -5,7 +5,6 @@ kind: external
 status: Planned
 created: 2026-11-13
 project: CS-188
-milestone: 5g the Artemis II replay
 party: NASA, IAU and IAG
 ---
 

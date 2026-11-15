@@ -5,8 +5,7 @@ kind: work
 status: Planned
 created: 2026-11-13
 project: CS-13
-milestone: reshape
-needs: [CS-102]
+needs: [CS-438]
 ---
 
 Writes reshaped, on the main thread.

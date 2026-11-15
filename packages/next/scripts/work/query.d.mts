@@ -1,4 +1,4 @@
-// Types for query.mjs: the tracker's read API, version 1. Adding a field
+// Types for query.mjs: the tracker's read API, version 2. Adding a field
 // keeps the version; removing or retyping one raises it.
 
 export type Status =
@@ -10,9 +10,7 @@ export interface WorkItem {
   title: string;
   kind: ItemKind;
   status: Status;
-  priority?: "urgent" | "high" | "medium" | "low";
   project?: string;
-  milestone?: string;
   needs: string[];
   /** Who holds it, while In progress. */
   claimed?: string;
@@ -23,6 +21,10 @@ export interface WorkItem {
   /** External waits: who we wait on. */
   party?: string;
   created?: string;
+  /** The tokens it is expected to take (human-in-the-lead's estimate_tokens). */
+  estimate_tokens?: number;
+  /** Tokens actually spent on it, from human-in-the-lead's ledger; absent until it records them. */
+  tokens_spent?: number;
   /** Repository-relative. */
   path: string;
   /** Planned, with every need Done. */
@@ -32,6 +34,36 @@ export interface WorkItem {
   open_needs: string[];
   /** Open items that need this one. */
   needed_by: string[];
+  /** Milestones whose constraints name it. */
+  milestones: string[];
+}
+
+/** A milestone (human-in-the-lead's format): a checkable future state. */
+export interface WorkMilestone {
+  id: string;
+  title: string;
+  kind: "capability" | "learning";
+  status: Status;
+  project?: string;
+  /** Its own, or its project's. */
+  initiative?: string;
+  /** One sentence: the state for users, or the question answered. */
+  outcome?: string;
+  done_when: Array<{ clause: string; text: string }>;
+  /** Items (or milestones) without which a clause can't be true; "c?" until shaped. */
+  constraints: Array<{ id: string; clause: string }>;
+  serves: Array<{ id: string; value: number; confidence: number }>;
+  check?: string;
+  check_results: string[];
+  /** The most tokens it should take, set at shaping. */
+  appetite_tokens?: number;
+  path: string;
+  /** Its item constraints done, of all. */
+  progress: { done: number; total: number };
+  /** Every constraint done and the check not yet passed. */
+  check_due: boolean;
+  /** What shaping still owes it: "outcome", "clauses", "check", "links". */
+  to_shape: string[];
 }
 
 export interface WorkProgress {
@@ -58,13 +90,14 @@ export interface WorkContainer {
 }
 
 export interface WorkSnapshot {
-  api_version: 1;
+  api_version: 2;
   /** Where it was read from. */
   source: string;
   branch?: string;
   commit?: string;
   generated: string;
   items: WorkItem[];
+  milestones: WorkMilestone[];
   projects: WorkContainer[];
   initiatives: WorkContainer[];
   /** `from` waits on `to` through `count` open needs. */
@@ -94,14 +127,27 @@ export interface WorkElsewhere {
 }
 
 export interface WorkItemText {
-  api_version: 1;
+  api_version: 2;
   id: string;
   path: string;
   /** Markdown, without the frontmatter. */
   body: string;
 }
 
-export const API_VERSION: 1;
+export interface WorkFound {
+  api_version: 2;
+  q: string;
+  matches: Array<{
+    id: string;
+    /** Where every word was found: the ID and title, the metadata, or only the text. */
+    where: "title" | "metadata" | "text";
+    /** The text around the first word, when it isn't in the title. */
+    snippet?: string;
+  }>;
+}
+
+export const API_VERSION: 2;
+export function findItems(root: string, q: string, limit?: number): WorkFound;
 export function queryWork(
   root: string,
   options?: { elsewhere?: WorkElsewhere[]; history?: WorkEvent[] },

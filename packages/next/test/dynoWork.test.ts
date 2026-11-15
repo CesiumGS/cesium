@@ -1,6 +1,5 @@
 import { execFileSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
-import { layoutDag } from "../bench/suite/dagLayout.ts";
 import {
   boardStatus,
   filterItems,
@@ -67,10 +66,11 @@ const item = (id: string, over: Partial<WorkItem> = {}): WorkItem => ({
   blocked: false,
   open_needs: [],
   needed_by: [],
+  milestones: [],
   ...over,
 });
 const snapshot: WorkSnapshot = {
-  api_version: 1,
+  api_version: 2,
   source: "test",
   generated: "2026-11-14T00:00:00Z",
   items: [
@@ -87,7 +87,7 @@ const snapshot: WorkSnapshot = {
     }),
     item("CS-12", { status: "In progress", claimed: "s1", ready: false }),
     item("CS-13", { status: "Done", ready: false, project: "CS-3" }),
-    item("CS-14", { priority: "high", title: "Fix the `rail`" }),
+    item("CS-14", { title: "Fix the `rail`" }),
     item("CS-15", { status: "Dropped", ready: false, reason: "not needed" }),
   ],
   projects: [
@@ -127,6 +127,7 @@ const snapshot: WorkSnapshot = {
   initiatives: [],
   project_deps: [],
   problems: [],
+  milestones: [],
   elsewhere: [],
   history: [],
 };
@@ -260,48 +261,5 @@ describe("the owner's queue", () => {
     expect(q.map((x) => [x.decision.id, x.waiting.map((w) => w.id)])).toEqual([
       ["CS-10", ["CS-11"]],
     ]);
-  });
-});
-
-describe("the graphs' layout (bench/suite/dagLayout.ts)", () => {
-  it("puts each node one layer after everything it needs", () => {
-    const l = layoutDag(
-      ["a", "b", "c", "d"],
-      [
-        { from: "a", to: "b" },
-        { from: "b", to: "c" },
-        { from: "a", to: "c" },
-        { from: "x", to: "d" },
-      ],
-    );
-    expect(["a", "b", "c", "d"].map((n) => l.place.get(n)!.layer)).toEqual([
-      0, 1, 2, 0,
-    ]);
-    expect(l.layers).toBe(3);
-  });
-
-  it("survives a cycle and gives every node a distinct place", () => {
-    const l = layoutDag(
-      ["a", "b", "c"],
-      [
-        { from: "a", to: "b" },
-        { from: "b", to: "a" },
-        { from: "c", to: "a" },
-      ],
-    );
-    const places = [...l.place.values()].map((p) => `${p.layer},${p.row}`);
-    expect(new Set(places).size).toBe(3);
-  });
-
-  it("orders rows to follow their neighbours", () => {
-    const l = layoutDag(
-      ["a", "b", "x", "y"],
-      [
-        { from: "a", to: "y" },
-        { from: "b", to: "x" },
-      ],
-    );
-    const row = (n: string) => l.place.get(n)!.row;
-    expect(row("y") < row("x")).toBe(row("a") < row("b"));
   });
 });

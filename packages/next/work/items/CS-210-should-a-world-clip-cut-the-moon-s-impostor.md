@@ -5,7 +5,6 @@ kind: decision
 status: Planned
 created: 2026-11-13
 project: CS-188
-milestone: 5c the second body
 decided-by: owner
 ---
 
