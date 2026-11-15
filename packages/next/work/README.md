@@ -60,18 +60,19 @@ Generated from the item files by `views.mjs lists --write`. The main session reg
 
 ### Renderers and engine profiles
 
-[CS-1](./initiatives/CS-1-renderers-and-engine-profiles.md), Planned: 1 of 76 done, 13 ready, 47 blocked, 35 proposed.
+[CS-1](./initiatives/CS-1-renderers-and-engine-profiles.md), Planned: 1 of 77 done, 13 ready, 48 blocked, 35 proposed.
 
 #### Engine profiles
 
-[CS-8](./projects/CS-8-engine-profiles.md), Planned, led by owner: 0 of 17 done, 2 ready, 15 blocked, 2 proposed. Plan: [2026-11-13-engine-profiles.md](../../../docs/superpowers/plans/2026-11-13-engine-profiles.md).
+[CS-8](./projects/CS-8-engine-profiles.md), Planned, led by owner: 0 of 18 done, 2 ready, 16 blocked, 2 proposed. Plan: [2026-11-13-engine-profiles.md](../../../docs/superpowers/plans/2026-11-13-engine-profiles.md).
 
 Milestone: Each view knows what the device supports and why
 
 - [ ] [CS-20](./items/CS-20-facts-and-personas.md) Facts and personas. Needs nothing.
 - [ ] [CS-21](./items/CS-21-the-catalog-rules-and-resolver.md) The catalog, rules and resolver. Needs CS-20.
 - [ ] [CS-22](./items/CS-22-paths-in-one-place-with-the-seam-test.md) Paths in one place, with the seam test. Needs CS-21.
-- [ ] [CS-23](./items/CS-23-wired-into-engine-and-view-view-support-view.md) Wired into `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, notices, `strict`). Needs CS-22.
+- [ ] [CS-23](./items/CS-23-wired-into-engine-and-view-view-support-view.md) Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`). Needs CS-22.
+- [ ] [CS-507](./items/CS-507-silent-fallbacks-become-support-notices.md) Silent fallbacks become support notices. Needs CS-23.
 
 Milestone: Fidelity adapts without silent fallbacks
 
@@ -86,12 +87,12 @@ Milestone: Every entry point and renderer reads the profile
 
 - [ ] [CS-28](./items/CS-28-the-cesium-next-gpu-entry-point.md) The `@cesium/next/gpu` entry point. Needs CS-23.
 - [ ] [CS-29](./items/CS-29-the-viewer-s-defaults-migrated.md) The Viewer's defaults migrated. Needs CS-23.
-- [ ] [CS-30](./items/CS-30-the-webgl-2-renderer-s-facts-and-support-rules.md) The WebGL 2 renderer's facts and support rules. Needs CS-21 and CS-35 (WebGL 2 renderer).
 - [ ] [CS-31](./items/CS-31-the-worker-mode-s-snapshots.md) The worker mode's snapshots. Needs CS-23 and CS-99 (job system's ports).
 - [ ] [CS-368](./items/CS-368-engine-queries-takes-the-application-s-backends.md) `Engine.queries` takes the application's backends. Needs nothing.
 
 No milestone
 
+- [ ] [CS-30](./items/CS-30-the-webgl-2-renderer-s-facts-and-support-rules.md) The WebGL 2 renderer's facts and support rules. Needs CS-21 and CS-35 (WebGL 2 renderer).
 - [?] [CS-367](./items/CS-367-profiles-later-measured-step-costs-a-wider.md) Profiles later: measured step costs, a wider governor, a fidelity bias, host facts and storage. Proposed. Needs CS-26.
 - [?] [CS-369](./items/CS-369-importing-an-outside-renderer-s-colour-and-depth.md) Importing an outside renderer's colour and depth. Proposed. Needs CS-23.
 
@@ -101,7 +102,6 @@ No milestone
 
 Milestone: Renderers plug in behind one seam
 
-- [ ] [CS-32](./items/CS-32-the-shader-route-spike-our-own-naga-crate.md) The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points. Needs nothing.
 - [ ] [CS-33](./items/CS-33-the-seam-extracted-webgpu-only-worlddraws.md) The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves. Needs nothing.
 - [ ] [CS-34](./items/CS-34-renderer-neutral-content-resources-texture.md) Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`). Needs CS-33.
 - [ ] [CS-35](./items/CS-35-the-probe-the-renderer-option-and-an-empty.md) The probe, the `renderer` option and an empty WebGL 2 device. Needs CS-33 and CS-21 (Engine profiles).
@@ -109,6 +109,7 @@ Milestone: Renderers plug in behind one seam
 
 Milestone: WebGL 2 draws models, tiles and the globe
 
+- [ ] [CS-32](./items/CS-32-the-shader-route-spike-our-own-naga-crate.md) The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points. Needs nothing.
 - [ ] [CS-36](./items/CS-36-first-draws-unlit-gltf-and-3d-tiles-meshes.md) First draws, unlit (glTF and 3D Tiles meshes). Needs CS-32, CS-34 and CS-35.
 - [ ] [CS-37](./items/CS-37-the-globe-terrain-and-imagery.md) The globe, terrain and imagery. Needs CS-36.
 - [ ] [CS-38](./items/CS-38-lighting-and-instancing.md) Lighting and instancing. Needs CS-36.
@@ -317,11 +318,11 @@ No milestone
 
 ### Threading
 
-[CS-3](./initiatives/CS-3-threading.md), In progress: 1 of 39 done, 11 ready, 27 blocked, 4 proposed.
+[CS-3](./initiatives/CS-3-threading.md), In progress: 1 of 40 done, 11 ready, 28 blocked, 4 proposed.
 
 #### The job system's ports
 
-[CS-12](./projects/CS-12-the-job-system-s-ports.md), In progress, led by owner: 1 of 19 done, 10 ready, 8 blocked, 3 proposed. Plan: [job-system.md](../../../docs/design/job-system.md).
+[CS-12](./projects/CS-12-the-job-system-s-ports.md), In progress, led by owner: 1 of 20 done, 10 ready, 9 blocked, 3 proposed. Plan: [job-system.md](../../../docs/design/job-system.md).
 
 Milestone: A headed run shows whether worker mode ticks smoother
 
@@ -333,7 +334,6 @@ Milestone: Loads and decodes run on Jobs
 - [ ] [CS-88](./items/CS-88-one-off-engine-loads-onto-jobs.md) One-off engine loads onto `Jobs`. Needs CS-86.
 - [ ] [CS-89](./items/CS-89-dedicated-worker-groups-onto-jobs.md) Dedicated worker groups onto `Jobs`. Needs CS-86.
 - [ ] [CS-95](./items/CS-95-the-inspector-s-jobs-section.md) The inspector's Jobs section. Needs CS-87, CS-88 and CS-89.
-- [ ] [CS-100](./items/CS-100-app-jobs-engine-jobs-run.md) App jobs (`engine.jobs.run`). Needs CS-89 and CS-108 (worker-mode façade).
 
 Milestone: Main-thread work fits the tick's slices
 
@@ -342,6 +342,7 @@ Milestone: Main-thread work fits the tick's slices
 - [ ] [CS-92](./items/CS-92-b-rep-sections-main-thread-steps-onto-the-apply.md) B-rep sections' main-thread steps onto the apply phase's slices. Needs CS-86.
 - [ ] [CS-93](./items/CS-93-the-public-slicers-onto-the-apply-phase-s-slices.md) The public slicers onto the apply phase's slices. Needs CS-86.
 - [ ] [CS-94](./items/CS-94-the-refit-fallback-s-own-budget.md) The refit fallback's own budget. Needs CS-86.
+- [ ] [CS-510](./items/CS-510-program-form-warp-fits-run-off-the-main-thread.md) Program-form warp fits run off the main thread. Needs CS-91 and CS-105 (worker-mode façade).
 
 Milestone: Tile selection runs off the main thread
 
@@ -355,6 +356,10 @@ Milestone: Jobs share one tick budget and decode can't hang
 - [?] [CS-375](./items/CS-375-one-tick-budget-and-more-progressive-jobs.md) One tick budget, and more progressive jobs. Proposed. Needs CS-90, CS-91 and CS-93.
 - [?] [CS-376](./items/CS-376-shared-memory-rings-and-decode-only-jobs.md) Shared-memory rings and decode-only jobs. Proposed. Needs CS-87.
 - [?] [CS-377](./items/CS-377-a-decode-watchdog.md) A decode watchdog. Proposed. Needs CS-87.
+
+Milestone: Apps run their own jobs
+
+- [ ] [CS-100](./items/CS-100-app-jobs-engine-jobs-run.md) App jobs (`engine.jobs.run`). Needs CS-89 and CS-108 (worker-mode façade).
 
 No milestone
 
@@ -401,7 +406,7 @@ No milestone
 
 ### Loading and level of detail
 
-[CS-4](./initiatives/CS-4-loading-and-level-of-detail.md), Planned: 0 of 67 done, 22 ready, 44 blocked, 12 proposed.
+[CS-4](./initiatives/CS-4-loading-and-level-of-detail.md), Planned: 0 of 68 done, 22 ready, 45 blocked, 12 proposed.
 
 #### Level-of-detail transitions
 
@@ -458,26 +463,25 @@ No milestone
 
 #### Streaming robustness
 
-[CS-16](./projects/CS-16-streaming-robustness.md), Planned, led by owner: 0 of 21 done, 6 ready, 15 blocked, 1 proposed. Plan: [2026-11-13-streaming-robustness.md](../../../docs/superpowers/plans/2026-11-13-streaming-robustness.md).
+[CS-16](./projects/CS-16-streaming-robustness.md), Planned, led by owner: 0 of 22 done, 6 ready, 16 blocked, 1 proposed. Plan: [2026-11-13-streaming-robustness.md](../../../docs/superpowers/plans/2026-11-13-streaming-robustness.md).
 
 Milestone: Every fetch has a deadline and retries within its origin's budget
 
 - [ ] [CS-144](./items/CS-144-the-fault-injection-harness.md) The fault-injection harness. Needs nothing.
 - [ ] [CS-145](./items/CS-145-the-fetch-layer-three-timers-structured.md) The fetch layer (three timers, structured failures, `isCancel`). Needs CS-144.
 - [ ] [CS-146](./items/CS-146-origin-health-latency-samples-derived-timeouts.md) Origin health (latency samples, derived timeouts, the retry bucket, throttling, `Retry-After` pauses). Needs CS-145.
+- [ ] [CS-147](./items/CS-147-retries-for-3d-tiles-content-episodes-owned-by.md) Retries for 3D Tiles content (episodes owned by the tile). Needs CS-146.
 - [ ] [CS-156](./items/CS-156-request-options-at-1-x-parity-proxies-inherited.md) Request options at 1.x parity: proxies, inherited query parameters and headers, credentials for trusted origins. Needs CS-145.
-- [ ] [CS-158](./items/CS-158-cesium-ion-s-answers-on-status-codes-and-token.md) external: Cesium ion's answers on status codes and token lifetimes. Needs nothing. Waiting on Cesium ion.
-- [ ] [CS-383](./items/CS-383-timeouts-and-failure-kinds-for-one-off-worker.md) Timeouts and failure kinds for one-off worker loads. Needs CS-145 and CS-88 (job system's ports).
+- [ ] [CS-383](./items/CS-383-timeouts-and-failure-kinds-for-one-off-worker.md) Timeouts and failure kinds for one-off worker loads. Needs CS-145.
+- [ ] [CS-508](./items/CS-508-retries-for-the-one-off-worker-loads.md) Retries for the one-off worker loads. Needs CS-383, CS-88 (job system's ports) and CS-147.
 
 Milestone: Failed content recovers on its own
 
-- [ ] [CS-147](./items/CS-147-retries-for-3d-tiles-content-episodes-owned-by.md) Retries for 3D Tiles content (episodes owned by the tile). Needs CS-146.
 - [ ] [CS-148](./items/CS-148-missing-content-and-recovery-the-parent-stays.md) Missing content and recovery (the parent stays, cool-downs, `retryFailed()`). Needs CS-147.
 - [ ] [CS-149](./items/CS-149-the-globe-terrain-upsampled-on-404-imagery.md) The globe (terrain upsampled on 404, imagery recovery). Needs CS-147 and CS-148.
 - [ ] [CS-150](./items/CS-150-ion-tokens.md) ion tokens. Needs CS-147.
 - [ ] [CS-151](./items/CS-151-online-hidden-and-offline.md) Online, hidden and offline. Needs CS-147.
 - [ ] [CS-157](./items/CS-157-the-app-s-auth-refresh-hook.md) The app's auth-refresh hook. Needs CS-156 and CS-150.
-- [ ] [CS-441](./items/CS-441-upsampling-follow-ups-a-local-imagery-stop.md) Upsampling follow-ups: a local imagery stop, child refetches inside the terrain request window, imagery slices in the byte budget. Needs nothing.
 
 Milestone: Network health is visible and guarded
 
@@ -485,13 +489,15 @@ Milestone: Network health is visible and guarded
 - [ ] [CS-153](./items/CS-153-the-refinement-entries.md) The refinement entries. Needs CS-149 and CS-134 (Refinement and convergence).
 - [ ] [CS-154](./items/CS-154-the-headless-fault-check-and-the-zero-fault.md) The headless fault check and the zero-fault parity guard. Needs CS-149, CS-150 and CS-151.
 - [ ] [CS-155](./items/CS-155-handbook-and-plan-updates.md) Handbook and plan updates. Needs CS-152 and CS-153.
-- [ ] [CS-177](./items/CS-177-timing-allow-origin-on-the-ion-tile-cdn.md) external: `Timing-Allow-Origin` on the ion tile CDN. Needs nothing. Waiting on Cesium ion.
-- [ ] [CS-178](./items/CS-178-timing-allow-origin-on-the-itwin-mesh-export-cdn.md) external: `Timing-Allow-Origin` on the iTwin mesh-export CDN. Needs nothing. Waiting on iTwin Platform.
-- [ ] [CS-179](./items/CS-179-real-users-bandwidth-and-latency-distribution.md) external: Real users' bandwidth and latency distribution. Needs nothing. Waiting on Cesium ion / product.
 
 No milestone
 
+- [ ] [CS-158](./items/CS-158-cesium-ion-s-answers-on-status-codes-and-token.md) external: Cesium ion's answers on status codes and token lifetimes. Needs nothing. Waiting on Cesium ion.
+- [ ] [CS-177](./items/CS-177-timing-allow-origin-on-the-ion-tile-cdn.md) external: `Timing-Allow-Origin` on the ion tile CDN. Needs nothing. Waiting on Cesium ion.
+- [ ] [CS-178](./items/CS-178-timing-allow-origin-on-the-itwin-mesh-export-cdn.md) external: `Timing-Allow-Origin` on the iTwin mesh-export CDN. Needs nothing. Waiting on iTwin Platform.
+- [ ] [CS-179](./items/CS-179-real-users-bandwidth-and-latency-distribution.md) external: Real users' bandwidth and latency distribution. Needs nothing. Waiting on Cesium ion / product.
 - [?] [CS-384](./items/CS-384-re-rooting-google-s-photorealistic-3d-tiles.md) Re-rooting Google's Photorealistic 3D Tiles after its session window. Proposed. Needs CS-150.
+- [ ] [CS-441](./items/CS-441-upsampling-follow-ups-a-local-imagery-stop.md) Upsampling follow-ups: a local imagery stop, child refetches inside the terrain request window, imagery slices in the byte budget. Needs nothing.
 
 #### Content sources and formats
 
