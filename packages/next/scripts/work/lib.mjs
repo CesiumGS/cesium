@@ -135,7 +135,7 @@ export function parseItem(text) {
   }
   const data = {};
   let listKey = null;
-  for (const [n, line] of m[1].split("\n").entries()) {
+  for (const [n, line] of joinFlowLists(m[1].split("\n"))) {
     const at = `frontmatter line ${n + 2}`;
     if (line.trim() === "") {
       continue;
@@ -179,6 +179,40 @@ export function parseItem(text) {
     }
   }
   return { data, body: normalized.slice(m[0].length), errors };
+}
+
+/**
+ * Prettier writes a long inline list over several lines (`needs:`, then
+ * `[`, one entry per line, `]`). Joins those lines back into
+ * `needs: [a, b]`, numbered by the key's line; a list still open at the
+ * end stays open, so the parser reports it.
+ */
+function joinFlowLists(lines) {
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+    const n = i;
+    const kv = line.match(/^([A-Za-z_][\w-]*):\s*(.*)$/);
+    const next = lines[i + 1]?.trim() ?? "";
+    const opens =
+      kv && (kv[2].startsWith("[") || (kv[2] === "" && next.startsWith("[")));
+    if (opens) {
+      let v = kv[2];
+      while (
+        !v.trimEnd().endsWith("]") &&
+        i + 1 < lines.length &&
+        /^\s/.test(lines[i + 1])
+      ) {
+        v += ` ${lines[++i].trim()}`;
+      }
+      line = `${kv[1]}: ${v
+        .trim()
+        .replace(/\[\s+/, "[")
+        .replace(/,?\s*\]$/, "]")}`;
+    }
+    out.push([n, line]);
+  }
+  return out;
 }
 
 function scalar(raw, at, errors) {

@@ -160,6 +160,24 @@ describe("the item format", () => {
     expect(body).toBe("\nThe body.\n");
   });
 
+  it("reads an inline list Prettier spread over several lines", () => {
+    const { data, errors } = parseItem(
+      "---\nid: CS-4\nneeds:\n  [\n    CS-1 c?,\n    CS-2 c?,\n  ]\nstatus: Planned\n---\n",
+    );
+    expect(errors).toEqual([]);
+    expect(data).toEqual({
+      id: "CS-4",
+      needs: ["CS-1 c?", "CS-2 c?"],
+      status: "Planned",
+    });
+    expect(parseItem("---\nneeds: [CS-1,\n  CS-2]\n---\n").data?.needs).toEqual(
+      ["CS-1", "CS-2"],
+    );
+    expect(parseItem("---\nneeds:\n  [\n    CS-1,\n---\n").errors[0]).toMatch(
+      /must end/,
+    );
+  });
+
   it("refuses block strings, anchors, aliases, tags and duplicate keys", () => {
     for (const bad of [
       "title: |",
