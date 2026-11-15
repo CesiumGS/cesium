@@ -4479,7 +4479,7 @@ function MilestoneMap({
   const steps = unit === "steps" ? Math.max(1, map.total) : 0;
   const plotW = Math.max(
     width - laneW - 8,
-    unit === "steps" ? steps * 160 : 640,
+    unit === "steps" ? steps * 210 : 640,
   );
   const span = Math.max(1e-9, map.total);
   const x = (v: number) => laneW + (v / span) * plotW;
@@ -4489,7 +4489,7 @@ function MilestoneMap({
   const shapedLanes = new Set(
     map.nodes.filter((n) => !n.unshaped).map((n) => n.lane),
   );
-  const rowOf = (lane: string) => (shapedLanes.has(lane) ? 68 : 40);
+  const rowOf = (lane: string) => (shapedLanes.has(lane) ? 84 : 40);
   const laneTop = new Map<string, number>();
   const laneH = new Map<string, number>();
   let y0 = AXIS;
@@ -4502,7 +4502,7 @@ function MilestoneMap({
   const nodeOf = new Map(map.nodes.map((n) => [n.id, n]));
   const top = (n: MapNode) =>
     laneTop.get(n.lane)! + PAD + n.sub * rowOf(n.lane);
-  const nodeH = (n: MapNode) => (n.unshaped ? 30 : 56);
+  const nodeH = (n: MapNode) => (n.unshaped ? 30 : 72);
   const left = (n: MapNode) => x(n.x0) + 4;
   const right = (n: MapNode) =>
     Math.max(left(n) + 60, x(n.x1) - (unit === "steps" ? 16 : 4));
@@ -5142,8 +5142,8 @@ function MilestoneGraph({
       ""
     );
   };
-  const NODE_W = 176;
-  const NODE_H = 64;
+  const NODE_W = 216;
+  const NODE_H = 80;
   const laid = useMemo(() => {
     const g = dagGraph<MapNode, MapEdge>();
     const byId = new Map<string, MutGraphNode<MapNode, MapEdge>>();

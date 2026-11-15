@@ -2089,7 +2089,7 @@ a.work-chainrow-next:hover {
   all: unset;
   box-sizing: border-box;
   position: absolute;
-  height: 56px;
+  height: 72px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -2122,11 +2122,24 @@ a.work-chainrow-next:hover {
 }
 .work-map-node-title {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--stratakit-space-150);
   min-width: 0;
   font-size: var(--stratakit-font-size-body-sm);
   font-weight: 600;
+}
+/* Milestones are named by their outcome, so a name takes two lines. */
+.work-map-node-title .work-outline-label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  white-space: normal;
+  line-height: 1.25;
+}
+.work-map-node.unshaped .work-map-node-title .work-outline-label {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
 }
 .work-map-bar {
   flex: none;
