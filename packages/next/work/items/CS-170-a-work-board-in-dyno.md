@@ -2,14 +2,13 @@
 id: CS-170
 title: A work board in Dyno
 kind: work
-status: In progress
-claimed: dyno-work-ui
+status: Done
 created: 2026-11-13
 project: CS-18
 needs: [CS-403]
 ---
 
-A Dyno page over the work items on the current branch, like Backlog.md's board but over our own files. Proposed, not committed: don't build it yet.
+A Dyno page over the work items on the current branch, like Backlog.md's board but over our own files.
 
 ## What it shows
 
