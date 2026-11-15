@@ -10,6 +10,11 @@ needs: [CS-20]
 
 The catalog, rules and resolver. Needs CS-20.
 
+## Done when
+
+- The plan's invariant tests 1 to 9 pass in Node, over the personas, looks and fidelity levels.
+- The catalog's first rules describe today's behaviour.
+
 ## Files
 
 - `src/profile/`

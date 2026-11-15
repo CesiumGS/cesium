@@ -11,7 +11,9 @@ The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `V
 
 ## Done when
 
-No behaviour change. WebGPU parity suites unchanged. The boundary test has the `webgl2` tier
+- WebGPU parity suites give the same results as before the move.
+- The WebGPU renderer is reached only through `WorldDraws`, `RenderDevice`, `WorldMirror` and `ViewRenderer`.
+- The import-boundary test has a `webgl2` tier and forbids it from importing WebGPU code.
 
 ## Files
 

@@ -5,7 +5,7 @@ kind: capability
 status: Planned
 created: 2026-11-14
 project: CS-13
-outcome: "On the main thread, reads are promises, per-tick snapshots or tracked points, writes are commands, functions the engine runs are modules or programs, and engine internals are out of the main entry."
+outcome: "On the main thread, reads are promises, per-tick snapshots or tracked points, writes are commands, functions the engine runs are modules or programs, and engine internals are out of the main entry, and content is placed by its declared CRS, with no placement mode."
 done_when:
   - "c1: An app reads engine-computed state only from the per-tick snapshot, tracked points or promises; the only synchronous reads that take arbitrary arguments are `toPixel` and `fromPixel`, and the examples render at their parity baselines."
   - "c2: Every public write takes effect without `requestRender()`, and the engine never reads an object after the app has changed it in place."
@@ -26,8 +26,6 @@ To be written with CS-101: every member of api/surface.txt has a kind, every com
 
 ## Shaping questions
 
-- CS-378 (placement by CRS) isn't about crossing a thread; it is here so the API is reshaped once. Keep c5 (and say so in the outcome), or make CS-378 a contribution?
-- CS-105's Done-when ends with CS-91's fits running off the main thread, and CS-91 is in CS-463: move that part to CS-91?
 - c3's closure refusal (CS-106) waits on Cesium IR, so this milestone will likely close after CS-422, which builds on it.
 
 ## Notes

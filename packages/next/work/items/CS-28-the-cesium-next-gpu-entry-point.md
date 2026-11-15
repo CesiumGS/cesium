@@ -10,6 +10,12 @@ needs: [CS-23]
 
 The `@cesium/next/gpu` entry point. Needs CS-23.
 
+## Done when
+
+- The main entry exports no GPU type.
+- The import-boundary test covers `@cesium/next/gpu`.
+- `api/surface.txt` shows the GPU exports moved to `@cesium/next/gpu`.
+
 ## Files
 
 - `src/gpu/`

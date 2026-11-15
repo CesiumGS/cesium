@@ -12,7 +12,11 @@ Request options at 1.x parity: proxies (prefix and function), inherited query pa
 
 ## Done when
 
-A proxy prefix routes every content, terrain, imagery, sub-resource and metadata request (tested with the fault harness); a function proxy and the auth hook run on the main thread and reach worker fetches as resolved URLs and headers; query parameters reach external tilesets and their content; credentials go only to trusted origins; no option value appears in any diagnostic.
+- A proxy prefix routes every content, terrain, imagery, sub-resource and metadata request (tested with the fault harness).
+- A function proxy runs on the main thread and reaches worker fetches as resolved URLs and headers.
+- Query parameters reach external tilesets and their content.
+- Credentials go only to trusted origins.
+- No option value appears in any diagnostic.
 
 ## Files
 

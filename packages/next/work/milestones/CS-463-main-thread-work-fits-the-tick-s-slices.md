@@ -6,7 +6,7 @@ status: Planned
 created: 2026-11-15
 project: CS-12
 outcome: "The horizon walk, warp fits, B-rep sections' main-thread steps and the public slicers run in the apply phase's slices, and the refit fallback has its own budget."
-needs: [CS-90 c?, CS-91 c?, CS-92 c?, CS-93 c?, CS-94 c?]
+needs: [CS-90 c?, CS-91 c?, CS-92 c?, CS-93 c?, CS-94 c?, CS-510 c?]
 ---
 
 ## Done when

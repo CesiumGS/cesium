@@ -12,7 +12,9 @@ Handbook and plan updates.
 
 ## Done when
 
-Reviewed by the owner.
+- A handbook page says what the engine does when the network misbehaves: deadlines, retries, cool-downs, missing content, tokens, offline, `engine.network`, `retryFailed()` and the failed event.
+- The page has a checked date, and its numbers match the shipped defaults.
+- The overall plan records the streaming plan's follow-ups and the Cesium ion questions.
 
 ## Files
 

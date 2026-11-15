@@ -12,7 +12,9 @@ Internals out of the main entry.
 
 ## Done when
 
-The main entry exports no member of kind "can't cross"; the import-boundary test enforces it; night-sky and translucency run (on a stage module, or forced to main-thread mode).
+- Nothing exported from the main entry is refused by the channel transport.
+- The import-boundary test enforces this.
+- Night-sky and translucency run, on a stage module or forced to main-thread mode.
 
 ## Files
 

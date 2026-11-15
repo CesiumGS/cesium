@@ -5,14 +5,13 @@ kind: capability
 status: Planned
 created: 2026-11-15
 project: CS-12
-outcome: "Content decode, one-off engine loads and dedicated worker groups run on Jobs with priorities and cancellation, apps can run narrow jobs of their own, and the inspector shows them."
+outcome: "Content decode, one-off engine loads and dedicated worker groups run on Jobs with priorities and cancellation and the inspector shows them."
 done_when:
   - "c1: glTF, 3D Tiles and terrain content decode at their tile's request priority; a tile that is deselected or evicted cancels its decode wherever it is, and upload preparation runs in the budgeted apply phase."
   - "c2: The glare kernel, the star field and the sky pack load below visible content, and are cancelled when the engine is disposed."
   - "c3: The Moon map, the Slang compiler and the B-rep kernels and sections keep their own workers but are scheduled through `Jobs` as dedicated groups, sharing its priorities and budget accounting."
   - "c4: The inspector's Jobs section shows, per job kind, running, queued, submit-to-applied latency, worker time and cancelled counts, and each worker's busy time by group (engine, dedicated, app); every value has a recorder column."
-  - "c5: An app runs its own job from a module URL with `engine.jobs.run`, in its own worker group, below visible content by default; a slow or failing app job doesn't delay content, and the same call works in both thread modes."
-needs: [CS-87 c1, CS-88 c2, CS-89 c3, CS-95 c4, CS-100 c5]
+needs: [CS-87 c1, CS-88 c2, CS-89 c3, CS-95 c4]
 check: "integration-test test/engineJobs.test.ts, with test/jobs.test.ts"
 ---
 
@@ -22,11 +21,10 @@ Drafted on 2026-11-15 for the owner's review: the clauses, the check and each co
 
 ## Check
 
-To be written: a tileset's decodes follow request priority and are cancelled on deselection and eviction, one-off loads are cancelled on dispose, and an app job's failure leaves content loading; with the existing test/jobs.test.ts (27 tests), and a Dyno run that flies away from a loading tileset and shows cancellations in the recorder's jobs columns.
+To be written: a tileset's decodes follow request priority and are cancelled on deselection and eviction, one-off loads are cancelled on dispose; with the existing test/jobs.test.ts (27 tests), and a Dyno run that flies away from a loading tileset and shows cancellations in the recorder's jobs columns.
 
 ## Shaping questions
 
-- CS-100 (app jobs) breaks the job-system design's own rule: app jobs wait until the internal API settles across CS-87 to CS-94 and CS-98, and CS-90 to CS-94 are in CS-463, CS-98 in CS-464; CS-100 also needs CS-108 (CS-422). Move it to a later milestone and drop c5 here?
 - c4 can cover only the job kinds these items create; refit, imagery, occluder walk and warp fits come with CS-463. The recorder has no cancelled or per-kind columns yet.
 
 ## Notes

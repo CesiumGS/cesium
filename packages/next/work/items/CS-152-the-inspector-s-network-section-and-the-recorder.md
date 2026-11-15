@@ -12,7 +12,12 @@ The inspector's Network section and the recorder.
 
 ## Done when
 
-The DOM-skeleton test holds (the layout doesn't change across states). The owner reviews it by clicking around (the UI quality bar).
+- Per origin, the Network section shows the protocol, the request window, requests in flight, time to first byte at p50 and p95, and the derived timeouts.
+- The section shows a state chip and counters by failure class.
+- Each tileset's failed list has a Retry failed control.
+- Failures and retries show on the shared time axis.
+- The layout doesn't move between states: the DOM-skeleton test holds.
+- The recorder has the columns `net_timeouts`, `net_retries`, `net_failed` and `net_paused`, and Dyno's report and diagnose scripts read them.
 
 ## Files
 

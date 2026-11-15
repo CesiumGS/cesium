@@ -12,7 +12,11 @@ ion tokens.
 
 ## Done when
 
-The token tests pass (one refresh for 50 simultaneous 401s; no loop; no token or query in any output).
+- 50 simultaneous 401s cause one token refresh.
+- A refresh never loops.
+- No token or query string appears in any output.
+- The 403 refresh is kept or dropped according to what the real Cesium ion service returns for a stale token, measured with a token the owner supplies.
+- The token tests cover the first three.
 
 ## Files
 

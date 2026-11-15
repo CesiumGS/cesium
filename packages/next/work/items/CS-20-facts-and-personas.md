@@ -9,6 +9,14 @@ project: CS-8
 
 Facts and personas. Needs nothing.
 
+## Done when
+
+- `DeviceFacts` reports every feature the device granted: all 12 requested, not 6.
+- `DeviceFacts` carries the adapter info, including `isFallbackAdapter`.
+- `DeviceFacts` carries the probe results, with `unknown` where a probe errors.
+- `test/fakeGpu.ts` stands up each named persona.
+- The full suite's results are unchanged.
+
 ## Files
 
 - `src/gpu/device.ts`

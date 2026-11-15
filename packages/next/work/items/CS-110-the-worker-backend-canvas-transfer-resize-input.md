@@ -12,7 +12,9 @@ The worker backend (canvas transfer, resize, input, built-in controllers).
 
 ## Done when
 
-The `worker` browser suite (section 3.9) renders the same images in both modes on its three pages; the M0 smoke test passes through the façade; `checkBundle` shows the worker chunk and keeps it out of the main chunk.
+- A scene keeps rendering in a worker, through the façade, while the page is blocked for 3 s.
+- The `worker` browser suite renders the same images in both modes on its three pages.
+- `checkBundle` shows the worker chunk, separate from the main chunk.
 
 ## Files
 

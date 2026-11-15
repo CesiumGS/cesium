@@ -9,6 +9,9 @@ project: CS-16
 
 ## Done when
 
-Upsampling has a local imagery stop (an `upsampledFromParent` rule); a child's refetch after eviction goes through the terrain request window; imagery slices count in the byte budget; and the worker path of upsampling has been run.
+- Upsampling has a local imagery stop (an `upsampledFromParent` rule).
+- A child's refetch after eviction goes through the terrain request window.
+- Imagery slices count in the byte budget.
+- Upsampling through the real worker draws what the main-thread path draws (`test/terrainUpsampleEngine.test.ts` or the headless check).
 
 Detail: `docs/design/bodies-frames-and-engineering-coordinates.md`, "Carried forward from frames plan 5a", "Upsampling follow-ups".

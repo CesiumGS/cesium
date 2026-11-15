@@ -12,7 +12,8 @@ Errors and loss, `restart()`.
 
 ## Done when
 
-Tests on the channel transport for each error path; a browser check that kills the worker and restarts on a fresh canvas, in a worker and then on the main thread.
+- Each error path reaches the app as an `EngineError` with its code (tests on the channel transport).
+- A killed worker restarts on a fresh canvas, in a worker and then on the main thread (a browser check).
 
 ## Files
 
