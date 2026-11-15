@@ -114,11 +114,11 @@ const twoSquares = {
 // TODO: Have specs set their own colors once the renderer's are configurable.
 // The renderer's default colors, as RGBA bytes. Faces facing the camera are
 // shaded by 1.05.
-const background = [255, 255, 255, 255];
+const background = [0, 0, 255, 255];
 const black = [0, 0, 0, 255];
 const faceColor = [214, 214, 214, 255];
 const selectedPointColor = [255, 122, 0, 255];
-const selectedEdgeColor = [0, 199, 255, 255];
+const selectedEdgeColor = [255, 255, 255, 255];
 const selectedFaceColor = [230, 201, 150, 255];
 
 // The square as one quad face, made of two triangles.
@@ -336,8 +336,8 @@ describe(
       camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
       camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
 
-      // Points and edges are black.
-      scene.backgroundColor = Color.WHITE;
+      // Differs from every default style color, including white selected edges.
+      scene.backgroundColor = Color.BLUE;
     });
 
     afterEach(function () {
@@ -680,10 +680,10 @@ describe(
         expectPixel(overlay, [0.0, -1.0, 0.0], black);
 
         overlay.style.edgeColor = Color.RED;
-        overlay.style.faceColor = Color.BLUE;
+        overlay.style.faceColor = Color.LIME;
 
         expectPixel(overlay, [0.0, -1.0, 0.0], [255, 0, 0, 255]);
-        expectPixel(overlay, [0.5, -0.5, 0.0], [0, 0, 255, 255]);
+        expectPixel(overlay, [0.5, -0.5, 0.0], [0, 255, 0, 255]);
       });
     });
 
