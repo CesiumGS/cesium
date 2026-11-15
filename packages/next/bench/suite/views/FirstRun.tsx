@@ -6,6 +6,7 @@ import { svgRefresh } from "@stratakit/icons/refresh";
 import { Icon } from "@stratakit/mui";
 import { Link as RouterLink } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
+import { useAvailableReleases } from "../releases.ts";
 import { Page, toast, useRuns } from "./common.tsx";
 
 /**
@@ -30,14 +31,40 @@ const STATE: Record<
   checking: ["Checking", "secondary"],
 };
 
-const FIRST_RUN =
-  'node packages/next/bench/suite/cli.mjs run --scenes osm-philadelphia --engines 1.146.0,2.0 --reps 3 --note "first run"';
+/** The first run's command, against one 1.x release (or npm's latest). */
+const firstRun = (release: string) =>
+  `node packages/next/bench/suite/cli.mjs run --scenes osm-philadelphia --engines ${release},2.0 --reps 3 --note "first run"`;
 
-function useChecks(): Record<"webgpu" | "release" | "repo", Check> {
+/** "1.147.0" after "1.146.0": by each number, not as text. */
+const newer = (a: string, b: string) => {
+  const x = a.split(".").map(Number);
+  const y = b.split(".").map(Number);
+  for (let i = 0; i < 3; i++) {
+    if (x[i] !== y[i]) {
+      return (x[i] ?? 0) > (y[i] ?? 0);
+    }
+  }
+  return false;
+};
+
+/**
+ * The 1.x release a first run measures: the newest stable release npm
+ * lists or the store holds, so the page follows npm without an edit.
+ * Undefined until the dev server answers, or when it knows of none.
+ */
+function useNewestRelease(): { version?: string; installed: boolean } {
+  const { installed, recent } = useAvailableReleases();
+  const version = [...recent, ...installed].reduce<string | undefined>(
+    (best, v) => (!best || newer(v, best) ? v : best),
+    undefined,
+  );
+  return { version, installed: !!version && installed.includes(version) };
+}
+
+function useChecks(): Record<"webgpu" | "repo", Check> {
   const checking: Check = { state: "checking", detail: "Checking…" };
   const [checks, setChecks] = useState({
     webgpu: checking,
-    release: checking,
     repo: checking,
   });
   useEffect(() => {
@@ -72,19 +99,6 @@ function useChecks(): Record<"webgpu" | "release" | "repo", Check> {
             !(r.headers.get("content-type") ?? "").includes("text/html"),
         )
         .catch(() => false);
-    void exists("/cesium-release/1.146.0/package/Build/Cesium/Cesium.js").then(
-      (ok) =>
-        set(
-          "release",
-          ok
-            ? { state: "ready", detail: "CesiumJS 1.146.0 is in the store." }
-            : {
-                state: "later",
-                detail:
-                  "The first run downloads CesiumJS 1.146.0 from npm, once.",
-              },
-        ),
-    );
     void exists("/cesium1x/Cesium.js").then((ok) =>
       set(
         "repo",
@@ -162,9 +176,26 @@ const To = ({
 export function FirstRun() {
   const { index, summaries } = useRuns();
   const checks = useChecks();
+  const newest = useNewestRelease();
+  // Offline with an empty store, the CLI resolves npm's latest itself.
+  const command = firstRun(newest.version ?? "latest");
+  const release: Check = !newest.version
+    ? {
+        state: "later",
+        detail: "The first run downloads npm's latest CesiumJS, once.",
+      }
+    : newest.installed
+      ? {
+          state: "ready",
+          detail: `CesiumJS ${newest.version}, npm's newest release, is in the store.`,
+        }
+      : {
+          state: "later",
+          detail: `The first run downloads CesiumJS ${newest.version}, npm's newest release, once.`,
+        };
   const copy = () =>
     void navigator.clipboard
-      ?.writeText(FIRST_RUN)
+      ?.writeText(command)
       .then(() => toast("Command copied"))
       .catch(() => toast("Could not copy: select the command instead", "bad"));
   return (
@@ -177,7 +208,7 @@ export function FirstRun() {
         <Step title="Check the setup">
           <div className="first-run-checks" role="list">
             <CheckRow label="WebGPU" check={checks.webgpu} />
-            <CheckRow label="Released 1.x" check={checks.release} />
+            <CheckRow label="Released 1.x" check={release} />
             <CheckRow label="Repository 1.x" check={checks.repo} />
             <CheckRow
               label="Results"
@@ -202,7 +233,7 @@ export function FirstRun() {
           </Typography>
           <div className="first-run-command">
             <pre>
-              <code>{FIRST_RUN}</code>
+              <code>{command}</code>
             </pre>
             <IconButton label="Copy command" variant="outlined" onClick={copy}>
               <Icon href={svgCopy} />
