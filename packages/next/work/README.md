@@ -320,6 +320,9 @@ Milestone: Measurements set the default thread
 - [ ] [CS-117](./items/CS-117-measurements-and-the-default.md) Measurements and the default. Needs CS-111, CS-116 and CS-99 (job system's ports).
 - [ ] [CS-118](./items/CS-118-do-the-facade-s-measurements-ask-for-a-shared.md) decision: Do the façade's measurements ask for a shared snapshot?. Needs CS-117. Decided by owner.
 - [?] [CS-119](./items/CS-119-a-shared-snapshot.md) A shared snapshot. Proposed. Needs CS-118.
+
+Milestone: Refinement, profiles and streaming work in worker mode
+
 - [ ] [CS-120](./items/CS-120-the-other-plans-plug-in.md) The other plans plug in. Needs CS-110.
 
 No milestone
@@ -674,9 +677,12 @@ Milestone: The public API shape is approved
 - [ ] [CS-431](./items/CS-431-the-camera-chain-s-layers-checked-against-what.md) The camera chain's layers checked against what each may know. Needs CS-101 (worker-mode façade).
 - [ ] [CS-432](./items/CS-432-the-api-s-shape-checked-sync-and-async.md) The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors. Needs CS-101 (worker-mode façade).
 - [ ] [CS-433](./items/CS-433-promotions-and-demotions-proposed-what-every.md) Promotions and demotions proposed: what every app needs, and what is exported only for examples. Needs CS-101 (worker-mode façade).
+- [ ] [CS-438](./items/CS-438-which-of-the-first-public-api-review-s-proposed.md) decision: Which of the first public API review's proposed changes do you approve?. Needs CS-102. Decided by owner.
+
+Milestone: The approved API changes are made
+
 - [ ] [CS-434](./items/CS-434-stability-tiers-as-tsdoc-tags-with-internal.md) Stability tiers as TSDoc tags, with internal members stripped from the published types. Needs CS-438.
 - [ ] [CS-435](./items/CS-435-the-measurement-module-s-seam-and-entry-point.md) The measurement module's seam and entry point. Needs CS-438.
-- [ ] [CS-438](./items/CS-438-which-of-the-first-public-api-review-s-proposed.md) decision: Which of the first public API review's proposed changes do you approve?. Needs CS-102. Decided by owner.
 
 No milestone
 
