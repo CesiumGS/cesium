@@ -565,14 +565,14 @@ No milestone
 
 ### Development harness
 
-[CS-6](./initiatives/CS-6-development-harness.md), In progress: 4 of 54 done, 2 in progress, 21 ready, 23 blocked, 6 proposed.
+[CS-6](./initiatives/CS-6-development-harness.md), In progress: 6 of 54 done, 21 ready, 23 blocked, 6 proposed.
 
 #### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), In progress, led by owner: 4 of 6 done, 1 in progress, 1 ready, 0 blocked. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), In progress, led by owner: 5 of 6 done, 1 ready, 0 blocked. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 - [x] [CS-169](./items/CS-169-the-tracker-format-scripts-items-and-the-plan-s.md) The tracker: format, scripts, items and the plan's split. Done.
-- [~] [CS-170](./items/CS-170-a-work-board-in-dyno.md) A work board in Dyno. Needs CS-403 (Dyno as the development harness). Claimed by dyno-work-ui.
+- [x] [CS-170](./items/CS-170-a-work-board-in-dyno.md) A work board in Dyno. Done.
 - [x] [CS-171](./items/CS-171-are-these-the-right-initiatives.md) decision: Are these the right initiatives?. Done.
 - [x] [CS-172](./items/CS-172-keep-the-renumbering-table.md) decision: Keep the renumbering table?. Done.
 - [x] [CS-173](./items/CS-173-which-older-open-questions-in-the-design-notes.md) decision: Which older open questions in the design notes are still open?. Done.
@@ -616,7 +616,7 @@ No milestone
 
 #### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 0 of 22 done, 1 in progress, 4 ready, 17 blocked. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 1 of 22 done, 4 ready, 17 blocked. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 - [ ] [CS-390](./items/CS-390-run-identity-and-the-machine-wide-run-lock.md) Run identity and the machine-wide run lock. Needs nothing.
 - [ ] [CS-391](./items/CS-391-purpose-branch-item-and-study-in-trends-runs.md) Purpose, branch, item and study in Trends, Runs, Compare and Alerts. Needs CS-390.
@@ -631,7 +631,7 @@ No milestone
 - [ ] [CS-400](./items/CS-400-archives-export-and-import-the-manual-fallback.md) Archives: export and import (the manual fallback). Needs CS-390.
 - [ ] [CS-401](./items/CS-401-lab-pages-and-their-results-in-the-store.md) Lab pages and their results in the store. Needs CS-390 and CS-394.
 - [ ] [CS-402](./items/CS-402-measuring-with-dyno-in-agents-md-and-its-skill.md) "Measuring with Dyno" in AGENTS.md, and its skill. Needs CS-390, CS-392 and CS-404.
-- [~] [CS-403](./items/CS-403-dyno-s-navigation-rail-regrouped-by-what-people.md) Dyno's navigation rail, regrouped by what people come to do. Needs nothing. Claimed by dyno-work-ui.
+- [x] [CS-403](./items/CS-403-dyno-s-navigation-rail-regrouped-by-what-people.md) Dyno's navigation rail, regrouped by what people come to do. Done.
 - [ ] [CS-404](./items/CS-404-studies-the-model-the-files-and-the-commands.md) Studies: the model, the files and the commands. Needs CS-390.
 - [ ] [CS-405](./items/CS-405-the-studies-page.md) The Studies page. Needs CS-395, CS-403 and CS-404.
 - [ ] [CS-406](./items/CS-406-the-local-certificate-authority-the-hub-and.md) The local certificate authority, the hub and pairing. Needs CS-390.
