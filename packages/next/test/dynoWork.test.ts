@@ -13,6 +13,7 @@ import {
   stageOf,
   unblocksOf,
   waitingOnOwner,
+  workInProgress,
   type WorkItem,
   type WorkMilestone,
   type WorkSnapshot,
@@ -415,5 +416,21 @@ describe("the proposals", () => {
       [],
     );
     expect(groups.map((g) => g.project?.id)).toEqual(["CS-3"]);
+  });
+});
+
+describe("work in progress", () => {
+  it("is work someone holds, not a decision or an outside wait in progress", () => {
+    const items = [
+      item("CS-60", { status: "In progress", claimed: "s1" }),
+      item("CS-61", { status: "In progress", kind: "external", party: "1.x" }),
+      item("CS-62", {
+        status: "In progress",
+        kind: "decision",
+        decided_by: "owner",
+      }),
+      item("CS-63"),
+    ];
+    expect(workInProgress(items).map((it) => it.id)).toEqual(["CS-60"]);
   });
 });

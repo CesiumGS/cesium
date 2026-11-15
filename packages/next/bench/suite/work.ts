@@ -454,6 +454,20 @@ export function stageOf(it: WorkItem, flight?: InFlight): Stage | undefined {
 }
 
 /**
+ * Work someone is doing: work items In progress, here or on another
+ * branch. A decision or an outside wait In progress is being discussed
+ * or waits for an answer; nobody here holds it.
+ */
+export function workInProgress(
+  items: readonly WorkItem[],
+  flight?: InFlight,
+): WorkItem[] {
+  return items.filter(
+    (it) => isWork(it) && stageOf(it, flight) === "In flight",
+  );
+}
+
+/**
  * How many open items wait on each item, directly or through others: the
  * weight of everything behind it (cost of delay, until items carry one).
  */

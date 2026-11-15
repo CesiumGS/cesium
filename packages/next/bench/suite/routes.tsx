@@ -58,7 +58,7 @@ export interface WorkSearch {
   milestone?: string;
   q?: string;
   /**
-   * The list open in the details panel: "owner", "ready", "outside",
+   * The list open in the details panel: "owner", "ready", "working", "outside",
    * "done", "projects", "graph", or "stage:<Stage>" (with the scope's
    * project, if any).
    */

@@ -126,11 +126,12 @@ milestones named by their outcome, each with an `outcome` sentence,
   - **Your move** (the default): the owner's attention is the
     constraint, so each section leads with its number and lists the
     most waited-on first, counting what waits through other items.
-    Your decisions, ready to start, in progress (who holds each, on which
-    branch, claims in other worktrees and local branches included until
-    they merge) and waiting outside, as they stand now; how they change
-    is Flow's. The rail's count is the owner's, and it is the only count
-    outside the view.
+    Your decisions, ready to start, work in progress (who holds each,
+    on which branch, claims in other worktrees and local branches
+    included until they merge) and waiting outside, as they stand now;
+    a decision or an outside wait in progress stays in its own section.
+    How they change is Flow's. The rail's count is the owner's, and it
+    is the only count outside the view.
   - **Roadmap**: what comes after what, without dates. By milestones (a
     map or a list), by initiatives or projects, or as the projects'
     waits on each other. The milestone map runs across in steps or in
@@ -138,7 +139,11 @@ milestones named by their outcome, each with an `outcome` sentence,
     done, and a milestone waits on another when one of its items needs
     one of the other's. Two layouts: project lanes, or fewest crossings
     (d3-dag's layered layout), which trades the lanes for fewer crossed
-    waits. The critical path is drawn in the accent; hovering a
+    waits. There, milestones linked by waits are laid out as groups,
+    stacked with the most entangled first (the critical path's group,
+    then the biggest), with steps lined up across the groups; milestones
+    that wait on nothing and that nothing waits on sit apart below, in a
+    grid by project. The critical path is drawn in the accent; hovering a
     milestone lights what feeds it and what it unblocks; choosing a wait
     lists the items behind it. With release gates, "Measure to" keeps a
     gate and what it needs. A milestone with an item done or in progress

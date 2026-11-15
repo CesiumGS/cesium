@@ -2385,3 +2385,15 @@ button.work-need {
   white-space: nowrap;
   flex: none;
 }
+
+/* Fewest crossings: a rule between groups of linked milestones, and the
+   label over those that stand alone. */
+.work-graph-divider {
+  stroke: var(--stratakit-color-border-neutral-muted);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+.work-graph-section {
+  position: absolute;
+  margin: 0;
+}
