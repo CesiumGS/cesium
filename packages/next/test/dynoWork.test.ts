@@ -5,12 +5,16 @@ import {
   filterItems,
   flowOf,
   inFlightOf,
+  milestoneMapOf,
   nextActor,
   ownerQueue,
+  proposalGate,
+  proposalsOf,
   stageOf,
   unblocksOf,
   waitingOnOwner,
   type WorkItem,
+  type WorkMilestone,
   type WorkSnapshot,
 } from "../bench/suite/work.ts";
 import { buildGraph, loadWorkTree, progress } from "../scripts/work/lib.mjs";
@@ -261,5 +265,155 @@ describe("the owner's queue", () => {
     expect(q.map((x) => [x.decision.id, x.waiting.map((w) => w.id)])).toEqual([
       ["CS-10", ["CS-11"]],
     ]);
+  });
+});
+
+describe("the milestone map shows committed work", () => {
+  const ms = (
+    id: string,
+    constraints: string[],
+    over: Partial<Omit<WorkMilestone, "constraints">> = {},
+  ): WorkMilestone => ({
+    title: `Milestone ${id}`,
+    kind: "capability",
+    status: "Planned",
+    project: "CS-2",
+    done_when: [],
+    serves: [],
+    check_results: [],
+    path: `m/${id}`,
+    progress: { done: 0, total: constraints.length },
+    check_due: false,
+    to_shape: [],
+    ...over,
+    id,
+    constraints: constraints.map((c) => ({ id: c, clause: "c?" })),
+  });
+  const s: WorkSnapshot = {
+    ...snapshot,
+    items: [
+      item("CS-20"),
+      item("CS-21", {
+        needs: ["CS-22", "CS-23"],
+        open_needs: ["CS-22", "CS-23"],
+      }),
+      item("CS-22", { kind: "decision", decided_by: "owner" }),
+      item("CS-23", { kind: "external", party: "Someone" }),
+      item("CS-24", { kind: "decision", decided_by: "owner" }),
+      item("CS-30", { status: "Proposed" }),
+      item("CS-31", { kind: "decision", decided_by: "owner" }),
+      item("CS-32", { kind: "external", party: "Someone" }),
+      item("CS-33"),
+      item("CS-34", { status: "Proposed" }),
+    ],
+    milestones: [
+      ms("CS-50", ["CS-20", "CS-21", "CS-22"]),
+      ms("CS-51", ["CS-24"], { kind: "learning" }),
+      ms("CS-52", ["CS-34"], { status: "Proposed" }),
+    ],
+  };
+
+  it("leaves out proposals, and decisions and waits no milestone holds", () => {
+    const ids = (m: ReturnType<typeof milestoneMapOf>) =>
+      m.nodes.map((n) => n.id).sort();
+    const committed = milestoneMapOf(s, undefined, "steps");
+    expect(ids(committed)).toEqual(["CS-50", "CS-51", "unshaped-CS-2"]);
+    const loose = committed.nodes.find((n) => n.unshaped)!;
+    // Only CS-33: CS-30 is proposed, CS-31 and CS-32 aren't work.
+    expect(Object.values(loose.counts).reduce((a, b) => a + b, 0)).toBe(1);
+  });
+
+  it("counts work in the bar and marks what holds it up apart", () => {
+    const m = milestoneMapOf(s, undefined, "steps");
+    const n50 = m.nodes.find((n) => n.id === "CS-50")!;
+    expect(Object.values(n50.counts).reduce((a, b) => a + b, 0)).toBe(2);
+    expect(n50.decisions).toBe(1);
+    expect(n50.outside).toBe(1);
+    // A milestone that is only a decision counts the decision.
+    const n51 = m.nodes.find((n) => n.id === "CS-51")!;
+    expect(Object.values(n51.counts).reduce((a, b) => a + b, 0)).toBe(1);
+    expect(n51.decisions).toBe(1);
+  });
+});
+
+describe("the proposals", () => {
+  const s: WorkSnapshot = {
+    ...snapshot,
+    items: [
+      item("CS-20"),
+      item("CS-21", { kind: "decision", decided_by: "owner" }),
+      item("CS-22", { status: "Proposed" }),
+      item("CS-23", {
+        status: "Proposed",
+        needs: ["CS-21"],
+        open_needs: ["CS-21"],
+      }),
+      item("CS-24", {
+        status: "Proposed",
+        needs: ["CS-20"],
+        open_needs: ["CS-20"],
+      }),
+      item("CS-25", { status: "Proposed" }),
+      item("CS-26", { status: "Proposed" }),
+      item("CS-30", { status: "Proposed", project: "CS-3" }),
+      item("CS-31", { status: "Done", project: "CS-3" }),
+    ],
+    milestones: [
+      {
+        id: "CS-40",
+        title: "A bet",
+        kind: "capability",
+        status: "Proposed",
+        project: "CS-2",
+        done_when: [],
+        constraints: [{ id: "CS-26", clause: "c?" }],
+        serves: [],
+        check_results: [],
+        path: "m/CS-40",
+        progress: { done: 0, total: 1 },
+        check_due: false,
+        to_shape: [],
+      },
+    ],
+  };
+  const itemOf = new Map(s.items.map((i) => [i.id, i]));
+  const byId = (id: string) => itemOf.get(id)!;
+
+  it("says what stands between a proposal and committing to it", () => {
+    expect(proposalGate(byId("CS-22"), itemOf)).toBe("free");
+    expect(proposalGate(byId("CS-23"), itemOf)).toBe("decision");
+    expect(proposalGate(byId("CS-24"), itemOf)).toBe("items");
+  });
+
+  it("groups by project, whole projects first, with proposed milestones apart", () => {
+    const groups = proposalsOf(
+      s,
+      s.items,
+      s.milestones,
+      new Map([["CS-25", 2]]),
+    );
+    expect(groups.map((g) => [g.project?.id, g.whole, g.count])).toEqual([
+      ["CS-3", true, 1],
+      ["CS-2", false, 5],
+    ]);
+    const two = groups[1]!;
+    expect(two.milestones.map((m) => m.milestone.id)).toEqual(["CS-40"]);
+    expect(two.milestones[0]!.items.map((it) => it.id)).toEqual(["CS-26"]);
+    // Free first (the most waited on first), then decisions, then items.
+    expect(two.items.map((it) => it.id)).toEqual([
+      "CS-25",
+      "CS-22",
+      "CS-23",
+      "CS-24",
+    ]);
+  });
+
+  it("keeps to the items and milestones it is given", () => {
+    const groups = proposalsOf(
+      s,
+      s.items.filter((it) => it.project === "CS-3"),
+      [],
+    );
+    expect(groups.map((g) => g.project?.id)).toEqual(["CS-3"]);
   });
 });

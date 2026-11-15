@@ -50,7 +50,7 @@ export const runsLayoutRoute = createRoute({
 // ------------------------------------------------------------ needs a look
 
 export interface WorkSearch {
-  /** The question the page answers: "roadmap" or "flow" ("Your move" by default). */
+  /** The question the page answers: "roadmap", "proposals" or "flow" ("Your move" by default). */
   view?: string;
   initiative?: string;
   project?: string;
@@ -58,7 +58,7 @@ export interface WorkSearch {
   milestone?: string;
   q?: string;
   /**
-   * The list open in the details panel: "owner", "commit", "outside",
+   * The list open in the details panel: "owner", "ready", "outside",
    * "done", "projects", "graph", or "stage:<Stage>" (with the scope's
    * project, if any).
    */
@@ -75,6 +75,8 @@ export interface WorkSearch {
   shape?: string;
   /** The roadmap by "groups" (initiatives, or an initiative's projects) or "matrix" (milestones by default). */
   roadmap?: string;
+  /** The Proposals view narrowed to what can be committed now ("free"), or what waits on a "decision" or on other "items". */
+  gate?: string;
 }
 /** The tracker's board (CS-170): it reads the work items on this branch. */
 export const workRoute = createRoute({
@@ -82,7 +84,10 @@ export const workRoute = createRoute({
   path: "/work",
   validateSearch: (s: Record<string, unknown>): WorkSearch =>
     clean({
-      view: s.view === "roadmap" || s.view === "flow" ? s.view : undefined,
+      view:
+        s.view === "roadmap" || s.view === "proposals" || s.view === "flow"
+          ? s.view
+          : undefined,
       initiative: str(s.initiative),
       project: str(s.project),
       milestone: str(s.milestone),
@@ -96,6 +101,10 @@ export const workRoute = createRoute({
       roadmap:
         s.roadmap === "groups" || s.roadmap === "matrix"
           ? s.roadmap
+          : undefined,
+      gate:
+        s.gate === "free" || s.gate === "decision" || s.gate === "items"
+          ? s.gate
           : undefined,
     }),
   component: lazyRouteComponent(() => import("./views/Work.tsx"), "Work"),

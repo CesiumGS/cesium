@@ -105,6 +105,9 @@ export const KIND_NAMES: Record<ItemKind, string> = {
 export const isOpen = (it: WorkItem) =>
   it.status !== "Done" && it.status !== "Dropped";
 
+/** Work to do, as against a decision or a wait on another party. */
+export const isWork = (it: WorkItem) => it.kind === "work";
+
 /** "CS-170" → 170, for ordering by number. */
 export const idNumber = (id: string) => Number(id.replace(/^\D+-/, "")) || 0;
 
@@ -239,6 +242,120 @@ export function byProject(
       project: s.projects.find((p) => p.id === id),
       items: group,
     }));
+}
+
+// ------------------------------------------------------------ proposals
+
+/**
+ * What stands between a proposal and committing to it: nothing ("free"),
+ * an open decision of the owner's it needs ("decision"), or other open
+ * items it needs ("items").
+ */
+export type ProposalGate = "free" | "decision" | "items";
+export const PROPOSAL_GATES: readonly ProposalGate[] = [
+  "free",
+  "decision",
+  "items",
+];
+
+export function proposalGate(
+  it: WorkItem,
+  itemOf: ReadonlyMap<string, WorkItem>,
+): ProposalGate {
+  if (
+    it.open_needs.some((n) => {
+      const need = itemOf.get(n);
+      return !!need && isOwnerDecision(need);
+    })
+  ) {
+    return "decision";
+  }
+  return it.open_needs.length ? "items" : "free";
+}
+
+/** One project's proposals, as the Proposals view groups them. */
+export interface ProposalGroup {
+  project?: WorkContainer;
+  /** Every open item in the project is proposed: the project is the bet. */
+  whole: boolean;
+  /** Its proposed milestones, each with the proposed items it holds. */
+  milestones: Array<{ milestone: WorkMilestone; items: WorkItem[] }>;
+  /** Its proposed items that no proposed milestone holds. */
+  items: WorkItem[];
+  /** Its proposed items, in all. */
+  count: number;
+}
+
+/**
+ * The proposals among `items`, by project: whole projects first (they are
+ * the bigger bets), then the most proposals first. Inside a group, what
+ * can be committed now comes first, then what waits on a decision, then
+ * what waits on other items; the most waited on first within each.
+ */
+export function proposalsOf(
+  s: WorkSnapshot,
+  items: readonly WorkItem[],
+  /** The proposed milestones to show (the scope's). */
+  milestones: readonly WorkMilestone[] = s.milestones,
+  /** How many open items wait on each, for the order. */
+  weight?: ReadonlyMap<string, number>,
+): ProposalGroup[] {
+  const itemOf = new Map(s.items.map((i) => [i.id, i]));
+  const proposed = items.filter((it) => isOpen(it) && it.status === "Proposed");
+  const rank = (it: WorkItem) =>
+    PROPOSAL_GATES.indexOf(proposalGate(it, itemOf));
+  const order = (list: WorkItem[]) =>
+    list.sort(
+      (a, b) =>
+        rank(a) - rank(b) ||
+        (weight?.get(b.id) ?? 0) - (weight?.get(a.id) ?? 0) ||
+        idNumber(a.id) - idNumber(b.id),
+    );
+  const byKey = new Map<string, WorkItem[]>();
+  for (const it of proposed) {
+    const key = it.project ?? "";
+    byKey.set(key, [...(byKey.get(key) ?? []), it]);
+  }
+  const bets = milestones.filter((m) => m.status === "Proposed");
+  for (const m of bets) {
+    const key = m.project ?? "";
+    byKey.set(key, byKey.get(key) ?? []);
+  }
+  const groups: ProposalGroup[] = [];
+  for (const [key, group] of byKey) {
+    const project = s.projects.find((p) => p.id === key);
+    const inGroup = new Set(group.map((it) => it.id));
+    const held = new Set<string>();
+    const ms = bets
+      .filter((m) => (m.project ?? "") === key)
+      .sort((a, b) => idNumber(a.id) - idNumber(b.id))
+      .map((milestone) => {
+        const its = milestone.constraints
+          .map((c) => itemOf.get(c.id))
+          .filter((it): it is WorkItem => !!it && inGroup.has(it.id));
+        for (const it of its) {
+          held.add(it.id);
+        }
+        return { milestone, items: order(its) };
+      });
+    const open = s.items.filter((it) => it.project === key && isOpen(it));
+    groups.push({
+      project,
+      whole:
+        !!project &&
+        open.length > 0 &&
+        open.every((it) => it.status === "Proposed"),
+      milestones: ms,
+      items: order(group.filter((it) => !held.has(it.id))),
+      count: group.length,
+    });
+  }
+  return groups.sort(
+    (a, b) =>
+      Number(b.whole) - Number(a.whole) ||
+      b.count - a.count ||
+      idNumber(a.project?.id ?? "") - idNumber(b.project?.id ?? ""),
+  );
 }
 
 // ------------------------------------------------------------ counts
@@ -896,14 +1013,23 @@ export function orderOf(
     ]),
   );
   for (const e of entities) {
+    // The bars count work. Decisions and outside waits hold an entity up
+    // but aren't its work, so they count only where it holds no work (a
+    // milestone that is the decision, say).
+    const inScope = e.members
+      .map((m) => itemOf.get(m))
+      .filter((it): it is WorkItem => !!it && scoped.has(it.id));
+    const counted = inScope.some(isWork) ? inScope.filter(isWork) : inScope;
+    for (const it of counted) {
+      const st = stageOf(it, flight);
+      if (st) {
+        counts.get(e.id)![st]++;
+      }
+    }
     for (const m of e.members) {
       const it = itemOf.get(m);
       if (!it || !scoped.has(m)) {
         continue;
-      }
-      const st = stageOf(it, flight);
-      if (st) {
-        counts.get(e.id)![st]++;
       }
       if (!isOpen(it)) {
         continue;
@@ -1034,11 +1160,18 @@ export function milestoneRoadmapOf(
   s: WorkSnapshot,
   items: readonly WorkItem[],
   flight?: InFlight,
+  /** Proposed milestones too: bets not yet made. */
+  proposals = false,
 ): RoadmapRow[] {
   const ids = new Set(s.milestones.map((m) => m.id));
   return orderOf(
     s.milestones
-      .filter((m) => m.status !== "Done" && m.status !== "Dropped")
+      .filter(
+        (m) =>
+          m.status !== "Done" &&
+          m.status !== "Dropped" &&
+          (proposals || m.status !== "Proposed"),
+      )
       .map((m) => ({
         id: m.id,
         title: m.title,
@@ -1100,6 +1233,8 @@ export interface MapNode {
   counts: Record<Stage, number>;
   /** Open owner decisions it holds or its open items need directly. */
   decisions: number;
+  /** Open waits on other parties it holds or its open items need directly. */
+  outside: number;
   /**
    * Tokens left on its open items, and how many of them carry an estimate;
    * its budget (its appetite, or else every item's estimate together) and
@@ -1173,30 +1308,69 @@ export interface MilestoneMap {
  * their projects (or initiatives).
  */
 export function milestoneMapOf(
-  s: WorkSnapshot,
+  snapshot: WorkSnapshot,
   flight: InFlight | undefined,
   unit: "steps" | "tokens",
   /** A release gate to measure to: what it needs, and the rest apart. */
   focus?: string,
 ): MilestoneMap {
+  // The roadmap is committed work; proposals are the Proposals view's.
+  const s = {
+    ...snapshot,
+    milestones: snapshot.milestones.filter((m) => m.status !== "Proposed"),
+  };
   const itemOf = new Map(s.items.map((i) => [i.id, i]));
   const msOf = new Map(s.milestones.map((m) => [m.id, m]));
   const projectOf = new Map(s.projects.map((p) => [p.id, p]));
-  // Each project's open items that no milestone holds stand together as
+  // Each project's open work that no milestone holds stands together as
   // one bar ("not in a milestone yet"), for context: placed after the
   // milestones they wait on, they never move a milestone (lumping a
   // project's items together would make loops its items don't have).
+  // Decisions and outside waits no milestone holds stay off the map: they
+  // are in Your move and Waiting outside.
   const covered = new Set(
     s.milestones.flatMap((m) => m.constraints.map((c) => c.id)),
   );
   const unshaped = new Map<string, string[]>();
   for (const it of s.items) {
-    if (it.project && isOpen(it) && !covered.has(it.id)) {
+    if (
+      it.project &&
+      isOpen(it) &&
+      isWork(it) &&
+      it.status !== "Proposed" &&
+      !covered.has(it.id)
+    ) {
       const key = `${UNSHAPED}${it.project}`;
       unshaped.set(key, [...(unshaped.get(key) ?? []), it.id]);
     }
   }
-  const rows = milestoneRoadmapOf(s, s.items, flight);
+  // What holds a bar up besides its work: the owner's open decisions and
+  // open waits on other parties, held or needed directly by its items.
+  const holdsOf = (ids: readonly string[]) => {
+    const decisions = new Set<string>();
+    const outside = new Set<string>();
+    const note = (it: WorkItem | undefined) => {
+      if (it && isOpen(it)) {
+        if (isOwnerDecision(it)) {
+          decisions.add(it.id);
+        } else if (it.kind === "external") {
+          outside.add(it.id);
+        }
+      }
+    };
+    for (const id of ids) {
+      const it = itemOf.get(id);
+      if (!it || !isOpen(it)) {
+        continue;
+      }
+      note(it);
+      for (const n of it.open_needs) {
+        note(itemOf.get(n));
+      }
+    }
+    return { decisions, outside };
+  };
+  const rows = milestoneRoadmapOf(s, s.items, flight, true);
   const itemsIn = (id: string) =>
     unshaped.get(id) ?? msOf.get(id)?.constraints.map((c) => c.id) ?? [];
   const shown = new Set(rows.map((r) => r.id));
@@ -1395,23 +1569,7 @@ export function milestoneMapOf(
     const g = groupOf.get(r.id)!;
     const start = es.get(g)!;
     const own = unit === "steps" ? 1 : cost(r.id);
-    const constraintIds = new Set(itemsIn(r.id));
-    const decisions = new Set<string>();
-    for (const id of constraintIds) {
-      const it = itemOf.get(id);
-      if (!it || !isOpen(it)) {
-        continue;
-      }
-      if (isOwnerDecision(it)) {
-        decisions.add(it.id);
-      }
-      for (const n of it.open_needs) {
-        const need = itemOf.get(n);
-        if (need && isOwnerDecision(need) && isOpen(need)) {
-          decisions.add(n);
-        }
-      }
-    }
+    const { decisions, outside } = holdsOf(itemsIn(r.id));
     return {
       id: r.id,
       title: r.title,
@@ -1423,6 +1581,7 @@ export function milestoneMapOf(
       critical: onPath.has(r.id),
       counts: r.counts,
       decisions: decisions.size,
+      outside: outside.size,
       tokens: tokensOf(r.id),
       loop: r.group.length > 1 ? r.group : undefined,
       started: r.counts.Done > 0 || r.counts["In flight"] > 0,
@@ -1501,17 +1660,7 @@ export function milestoneMapOf(
         counts[st]++;
       }
     }
-    const decisions = new Set(
-      members.filter((m) => isOwnerDecision(itemOf.get(m)!)),
-    );
-    for (const m of members) {
-      for (const n of itemOf.get(m)!.open_needs) {
-        const need = itemOf.get(n);
-        if (need && isOwnerDecision(need) && isOpen(need)) {
-          decisions.add(n);
-        }
-      }
-    }
+    const { decisions, outside } = holdsOf(members);
     const tokens = tokensOf(id);
     nodes.push({
       id,
@@ -1527,6 +1676,7 @@ export function milestoneMapOf(
       critical: false,
       counts,
       decisions: decisions.size,
+      outside: outside.size,
       tokens,
       started: counts.Done > 0 || counts["In flight"] > 0,
       unshaped: true,

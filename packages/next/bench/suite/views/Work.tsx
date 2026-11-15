@@ -78,6 +78,11 @@ import {
   milestoneMapOf,
   milestoneRoadmapOf,
   nextActor,
+  PROPOSAL_GATES,
+  type ProposalGate,
+  type ProposalGroup,
+  proposalGate,
+  proposalsOf,
   type RoadmapRow,
   roadmapOf,
   ownerQueue,
@@ -188,10 +193,11 @@ const STAGE_MEANING: Record<Stage, string> = {
 const stageTip = (st: Stage, lead?: string) =>
   `${lead ? `${lead} · ` : ""}${STAGE_NAMES[st]} (${STAGE_MEANING[st]})`;
 
-type View = "move" | "roadmap" | "flow";
+type View = "move" | "roadmap" | "proposals" | "flow";
 const VIEWS: Array<{ id: View; label: string }> = [
   { id: "move", label: "Your move" },
   { id: "roadmap", label: "Roadmap" },
+  { id: "proposals", label: "Proposals" },
   { id: "flow", label: "Flow" },
 ];
 /** The layout's width at which the pane sits beside the view, not over it. */
@@ -246,7 +252,11 @@ function Board({
   const width = useWidth(layout);
   const inline = width >= PANE_MIN;
   const view: View =
-    search.view === "roadmap" || search.view === "flow" ? search.view : "move";
+    search.view === "roadmap" ||
+    search.view === "proposals" ||
+    search.view === "flow"
+      ? search.view
+      : "move";
   const flight = useMemo(() => inFlightOf(s), [s]);
   const projectOf = useMemo(
     () => new Map(s.projects.map((p) => [p.id, p])),
@@ -290,6 +300,7 @@ function Board({
       m.initiative ?? projectOf.get(m.project ?? "")?.initiative ?? "",
     );
   const itemOf = useMemo(() => new Map(s.items.map((i) => [i.id, i])), [s]);
+  const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
   const unblocks = useMemo(() => unblocksOf(s), [s]);
   const chains = useMemo(() => longestChains(items), [items]);
   const flow = useMemo(() => flowOf(s, items, { flight }), [s, items, flight]);
@@ -323,7 +334,14 @@ function Board({
       (a, b) => (unblocks.get(b.id) ?? 0) - (unblocks.get(a.id) ?? 0),
     );
   const decisions = byActor.owner.filter(isOwnerDecision);
-  const toCommit = byActor.owner.filter((it) => !isOwnerDecision(it));
+  const proposals = useMemo(
+    () => proposalsOf(s, items, s.milestones.filter(msInScope), unblocks),
+    // msInScope reads only the scope, which `items` follows.
+    [s, items, unblocks],
+  );
+  const canCommit = proposals
+    .flatMap((g) => [...g.items, ...g.milestones.flatMap((m) => m.items)])
+    .filter((it) => proposalGate(it, itemOf) === "free").length;
   const readyToStart = byActor.agents.filter(
     (it) => stageOf(it, flight) === "Ready",
   );
@@ -503,13 +521,22 @@ function Board({
                         All {decisions.length} decisions
                       </Link>
                     )}
-                    {toCommit.length > 0 && (
+                    {canCommit > 0 && (
                       <Link
                         component="button"
                         type="button"
-                        onClick={() => open("commit")}
+                        onClick={() =>
+                          set({
+                            view: "proposals",
+                            gate: "free",
+                            list: undefined,
+                            item: undefined,
+                          })
+                        }
                       >
-                        {toCommit.length} proposed to commit or drop
+                        {canCommit === 1
+                          ? "A proposal you can commit now"
+                          : `${canCommit} proposals you can commit now`}
                       </Link>
                     )}
                   </>
@@ -821,6 +848,27 @@ function Board({
             </div>
           )}
 
+          {view === "proposals" && (
+            <div className="work-dash">
+              <ProposalsCard
+                groups={proposals}
+                itemOf={itemOf}
+                unblocks={unblocks}
+                selected={search.item}
+                gate={
+                  search.gate === "free" ||
+                  search.gate === "decision" ||
+                  search.gate === "items"
+                    ? search.gate
+                    : undefined
+                }
+                onGate={(gate) => set({ gate }, true)}
+                onMilestone={(id) => open(`ms:${id}`)}
+                msOf={msOf}
+              />
+            </div>
+          )}
+
           {view === "flow" && (
             <div className="work-dash">
               <ul className="work-kpis" aria-label="Flow at a glance">
@@ -1113,7 +1161,7 @@ function MeasuresCard({
       {chains.length > 0 && (
         <div className="work-chains-ms">
           <header className="work-chains-ms-head">
-            <Typography variant="subtitle-sm" render={<h3 />}>
+            <Typography variant="subtitle-md" render={<h3 />}>
               Longest chain in each milestone
             </Typography>
             <InfoTip text="Inside each open milestone, the longest run of items where each needs the one before. Its length is the fewest steps the milestone can take, however many agents work on it; each square is one item, coloured by its stage, and the next one to move is named." />
@@ -2090,17 +2138,15 @@ function listTitle(
         ? "Found"
         : list === "ready"
           ? "Ready to start"
-          : list === "commit"
-            ? "Proposed, to commit or drop"
-            : list === "outside"
-              ? "Waiting outside"
-              : list === "done"
-                ? "Done"
-                : list === "matrix"
-                  ? "Dependency matrix"
-                  : list.startsWith("stage:")
-                    ? (STAGE_NAMES[list.slice(6) as Stage] ?? list)
-                    : list;
+          : list === "outside"
+            ? "Waiting outside"
+            : list === "done"
+              ? "Done"
+              : list === "matrix"
+                ? "Dependency matrix"
+                : list.startsWith("stage:")
+                  ? (STAGE_NAMES[list.slice(6) as Stage] ?? list)
+                  : list;
   return scope ? `${base} · ${scope}` : base;
 }
 
@@ -2202,7 +2248,7 @@ function ListPanel({
 }) {
   const titleId = useId();
   const msRows = useMemo(
-    () => milestoneRoadmapOf(s, s.items, flight),
+    () => milestoneRoadmapOf(s, s.items, flight, true),
     [s, flight],
   );
   const now = Date.now();
@@ -2217,17 +2263,6 @@ function ListPanel({
         selected={selected}
         projectOf={projectOf}
         unblocks={unblocks}
-      />
-    );
-  } else if (list === "commit") {
-    body = (
-      <Ranked
-        items={items.filter(
-          (it) => nextActor(it, flight) === "owner" && !isOwnerDecision(it),
-        )}
-        unblocks={unblocks}
-        projectOf={projectOf}
-        selected={selected}
       />
     );
   } else if (list === "ready") {
@@ -3464,6 +3499,347 @@ function OwnerQueue({
 }
 
 /** A link that opens an item beside the board, keeping the filters. */
+// ------------------------------------------------------------ proposals
+
+const GATE_NAMES: Record<ProposalGate, string> = {
+  free: "Can commit now",
+  decision: "Wait on a decision",
+  items: "Wait on other items",
+};
+
+/**
+ * The Proposals view: ideas not committed to yet, by project, as bets to
+ * commit or drop. Whole projects of proposals come first; a proposed
+ * milestone keeps its items under it. Each idea says what stands between
+ * it and committing (nothing, a decision of the owner's, or other items)
+ * and how much waits on it; its text, the why, opens beside the view.
+ */
+function ProposalsCard({
+  groups,
+  itemOf,
+  msOf,
+  unblocks,
+  selected,
+  gate,
+  onGate,
+  onMilestone,
+}: {
+  groups: ProposalGroup[];
+  itemOf: Map<string, WorkItem>;
+  msOf: Map<string, WorkMilestone>;
+  unblocks: Map<string, number>;
+  selected?: string;
+  /** Only what can be committed now, or what waits on a decision or items. */
+  gate?: ProposalGate;
+  onGate: (gate: ProposalGate | undefined) => void;
+  /** Opens a milestone in the pane. */
+  onMilestone: (id: string) => void;
+}) {
+  const all = groups.flatMap((g) => [
+    ...g.milestones.flatMap((m) => m.items),
+    ...g.items,
+  ]);
+  const count = (k: ProposalGate) =>
+    all.filter((it) => proposalGate(it, itemOf) === k).length;
+  const keep = (it: WorkItem) => !gate || proposalGate(it, itemOf) === gate;
+  const shown = groups
+    .map((g) => ({
+      ...g,
+      milestones: g.milestones
+        .map((m) => ({ ...m, items: m.items.filter(keep) }))
+        .filter((m) => !gate || m.items.length),
+      items: g.items.filter(keep),
+    }))
+    .filter((g) => g.items.length || g.milestones.length);
+  const bets = shown.filter((g) => g.whole);
+  const rest = shown.filter((g) => !g.whole);
+  const sectioned = bets.length > 0 && rest.length > 0;
+  const level = sectioned ? "h4" : "h3";
+  const grouped = (list: typeof shown) => (
+    <div className="work-proposal-groups">
+      {list.map((g) => (
+        <ProposalGroupView
+          key={g.project?.id ?? "none"}
+          group={g}
+          heading={level}
+          itemOf={itemOf}
+          msOf={msOf}
+          unblocks={unblocks}
+          selected={selected}
+          onMilestone={onMilestone}
+        />
+      ))}
+    </div>
+  );
+  return (
+    <Card
+      id="work-proposals-h"
+      title="Proposals"
+      caption="Ideas not committed to yet: commit one to put it on the roadmap, or drop it. Choose one to read why."
+      className="span-12"
+      tools={
+        all.length > 0 && (
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={gate ?? "all"}
+            onChange={(_, v: string | null) =>
+              v && onGate(v === "all" ? undefined : (v as ProposalGate))
+            }
+            aria-label="Show"
+            className="work-proposal-gates"
+          >
+            <ToggleButton
+              value="all"
+              render={<Button variant="outlined" size="small" />}
+            >
+              All <span className="work-toggle-count">{all.length}</span>
+            </ToggleButton>
+            {PROPOSAL_GATES.map((k) => (
+              <ToggleButton
+                key={k}
+                value={k}
+                disabled={!count(k)}
+                render={<Button variant="outlined" size="small" />}
+              >
+                {GATE_NAMES[k]}{" "}
+                <span className="work-toggle-count">{count(k)}</span>
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        )
+      }
+    >
+      {!all.length ? (
+        <Typography variant="body-md" color="textSecondary" render={<p />}>
+          Nothing is proposed here. Proposed items and milestones show here
+          until they are committed or dropped.
+        </Typography>
+      ) : sectioned ? (
+        <div className="work-proposal-sections">
+          <section aria-labelledby="work-bets-h">
+            <header className="work-proposal-section-head">
+              <Typography
+                variant="subtitle-lg"
+                render={<h3 />}
+                id="work-bets-h"
+              >
+                Whole projects
+              </Typography>
+              <Typography variant="caption-md" color="textSecondary">
+                Every open item in these is proposed: committing to one is a bet
+                on the project
+              </Typography>
+            </header>
+            {grouped(bets)}
+          </section>
+          <section aria-labelledby="work-ideas-h">
+            <header className="work-proposal-section-head">
+              <Typography
+                variant="subtitle-lg"
+                render={<h3 />}
+                id="work-ideas-h"
+              >
+                In projects under way
+              </Typography>
+              <Typography variant="caption-md" color="textSecondary">
+                Ideas beside work that is already committed
+              </Typography>
+            </header>
+            {grouped(rest)}
+          </section>
+        </div>
+      ) : (
+        grouped(shown)
+      )}
+    </Card>
+  );
+}
+
+function ProposalGroupView({
+  group: g,
+  heading,
+  itemOf,
+  msOf,
+  unblocks,
+  selected,
+  onMilestone,
+}: {
+  group: ProposalGroup;
+  heading: "h3" | "h4";
+  itemOf: Map<string, WorkItem>;
+  msOf: Map<string, WorkMilestone>;
+  unblocks: Map<string, number>;
+  selected?: string;
+  onMilestone: (id: string) => void;
+}) {
+  const Heading = heading;
+  const rows = (items: WorkItem[]) => (
+    <ul className="work-rows">
+      {items.map((it) => (
+        <ProposalRow
+          key={it.id}
+          it={it}
+          itemOf={itemOf}
+          msOf={msOf}
+          waiting={unblocks.get(it.id) ?? 0}
+          selected={it.id === selected}
+          onMilestone={onMilestone}
+        />
+      ))}
+    </ul>
+  );
+  return (
+    <section className="work-proposal-group">
+      <header className="work-group-header">
+        <Typography
+          variant="subtitle-md"
+          render={<Heading />}
+          className="work-marked"
+        >
+          {g.project && <LevelMark level="project" />}
+          {g.project?.title ?? "No project"}
+        </Typography>
+        <Typography variant="caption-md" color="textSecondary">
+          {g.project ? `${g.project.id} · ` : ""}
+          {g.whole
+            ? `all ${g.count} open ${g.count === 1 ? "item" : "items"} proposed`
+            : `${g.count} proposed`}
+        </Typography>
+      </header>
+      {g.milestones.map(({ milestone: m, items }) => (
+        <div key={m.id} className="work-proposal-ms">
+          <button
+            type="button"
+            className="work-proposal-ms-head"
+            onClick={() => onMilestone(m.id)}
+          >
+            <span className="work-marked work-proposal-ms-title">
+              <LevelMark level="milestone" />
+              <InlineText text={m.title} />
+            </span>
+            <Typography variant="caption-md" color="textSecondary">
+              Proposed {m.kind} milestone, {m.id}
+              {m.outcome ? `: ${m.outcome}` : ""}
+            </Typography>
+          </button>
+          {items.length > 0 && rows(items)}
+        </div>
+      ))}
+      {g.items.length > 0 && rows(g.items)}
+    </section>
+  );
+}
+
+function ProposalRow({
+  it,
+  itemOf,
+  msOf,
+  waiting,
+  selected,
+  onMilestone,
+}: {
+  it: WorkItem;
+  itemOf: Map<string, WorkItem>;
+  msOf: Map<string, WorkMilestone>;
+  /** Open items that wait on it, directly or through others. */
+  waiting: number;
+  selected: boolean;
+  onMilestone: (id: string) => void;
+}) {
+  const gate = proposalGate(it, itemOf);
+  // The owner's decisions first: they are the owner's to unblock.
+  const needs = it.open_needs
+    .map((n) => itemOf.get(n) ?? n)
+    .sort(
+      (a, b) =>
+        Number(typeof b !== "string" && isOwnerDecision(b)) -
+        Number(typeof a !== "string" && isOwnerDecision(a)),
+    );
+  // A committed milestone can't be done until this is committed.
+  const neededFor = it.milestones
+    .map((id) => msOf.get(id))
+    .filter(
+      (m): m is WorkMilestone =>
+        !!m &&
+        m.status !== "Proposed" &&
+        m.status !== "Done" &&
+        m.status !== "Dropped",
+    );
+  const extra = [
+    gate === "free" ? "Can commit now" : undefined,
+    waiting ? `${waiting} wait on it` : undefined,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  return (
+    <li className={`work-row${selected ? " selected" : ""}`}>
+      <ItemLink id={it.id} className="work-row-main">
+        <span className="work-id">{it.id}</span>
+        <span className="work-row-title">
+          <InlineText text={it.title} />
+        </span>
+        {extra && (
+          <Typography
+            variant="caption-md"
+            color="textSecondary"
+            className="work-row-extra"
+          >
+            {extra}
+          </Typography>
+        )}
+      </ItemLink>
+      {(needs.length > 0 || neededFor.length > 0) && (
+        <div className="work-row-needs">
+          {needs.length > 0 && (
+            <Typography variant="caption-md" color="textSecondary">
+              Waits on
+            </Typography>
+          )}
+          {needs.map((n) =>
+            typeof n === "string" ? (
+              <span key={n} className="work-need missing">
+                {n} (not in the tracker)
+              </span>
+            ) : (
+              <ItemLink
+                key={n.id}
+                id={n.id}
+                className={`work-need${isOwnerDecision(n) ? " decision" : ""}`}
+                label={`${n.id} ${n.title}, ${isOwnerDecision(n) ? "your decision" : n.status}`}
+              >
+                <span className="work-id">{n.id}</span>
+                <span className="work-need-title">
+                  <InlineText text={n.title} />
+                </span>
+              </ItemLink>
+            ),
+          )}
+          {neededFor.length > 0 && (
+            <Typography variant="caption-md" color="textSecondary">
+              Needed for
+            </Typography>
+          )}
+          {neededFor.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              className="work-need"
+              onClick={() => onMilestone(m.id)}
+              aria-label={`${m.title}, a committed milestone`}
+            >
+              <LevelMark level="milestone" />
+              <span className="work-need-title">
+                <InlineText text={m.title} />
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </li>
+  );
+}
+
 function ItemLink({
   id,
   className,
@@ -4881,6 +5257,12 @@ function MilestoneMap({
                       {n.decisions > 0 && (
                         <span>{n.decisions} of your decisions hold it up</span>
                       )}
+                      {n.outside > 0 && (
+                        <span>
+                          {n.outside} {n.outside === 1 ? "wait" : "waits"} on
+                          other parties hold it up
+                        </span>
+                      )}
                       {n.loop && (
                         <span>
                           Waits round a loop with{" "}
@@ -4921,9 +5303,7 @@ function MilestoneMap({
                         <LevelMark level={n.unshaped ? "item" : "milestone"} />
                       )}
                       <span className="work-outline-label">{n.title}</span>
-                      {n.decisions > 0 && (
-                        <span className="work-count-badge">{n.decisions}</span>
-                      )}
+                      <HoldBadges n={n} />
                     </span>
                     {unit === "tokens" && n.tokens.budget !== undefined ? (
                       <BudgetMeter
@@ -5311,9 +5691,7 @@ function MilestoneGraph({
                   <LevelMark level="milestone" />
                 )}
                 <span className="work-outline-label">{n.title}</span>
-                {n.decisions > 0 && (
-                  <span className="work-count-badge">{n.decisions}</span>
-                )}
+                <HoldBadges n={n} />
               </span>
               <span className="work-pbar-track work-map-bar" aria-hidden="true">
                 {STAGES.map((st) =>
@@ -5336,6 +5714,35 @@ function MilestoneGraph({
         })}
       </div>
     </div>
+  );
+}
+
+/**
+ * What holds a milestone up besides its work, apart from its progress bar:
+ * the owner's open decisions, and open waits on other parties.
+ */
+function HoldBadges({ n }: { n: MapNode }) {
+  return (
+    <>
+      {n.decisions > 0 && (
+        <span
+          className="work-count-badge"
+          title={`${n.decisions} of your ${n.decisions === 1 ? "decision holds" : "decisions hold"} it up`}
+          aria-label={`${n.decisions} of your decisions`}
+        >
+          {n.decisions}
+        </span>
+      )}
+      {n.outside > 0 && (
+        <span
+          className="work-count-badge outside"
+          title={`${n.outside} ${n.outside === 1 ? "wait" : "waits"} on other parties hold it up`}
+          aria-label={`${n.outside} outside ${n.outside === 1 ? "wait" : "waits"}`}
+        >
+          {n.outside}
+        </span>
+      )}
+    </>
   );
 }
 
