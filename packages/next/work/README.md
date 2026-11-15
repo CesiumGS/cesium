@@ -710,7 +710,7 @@ No milestone
 
 ### Development harness
 
-[CS-6](./initiatives/CS-6-development-harness.md), In progress: 6 of 55 done, 22 ready, 23 blocked, 6 proposed.
+[CS-6](./initiatives/CS-6-development-harness.md), In progress: 6 of 59 done, 22 ready, 27 blocked, 10 proposed.
 
 #### The work tracker
 
@@ -731,7 +731,7 @@ No milestone
 
 #### Benchmarks, parity and image regression
 
-[CS-195](./projects/CS-195-benchmarks-parity-and-image-regression.md), Planned, led by owner: 0 of 16 done, 8 ready, 6 blocked, 4 proposed. Plan: [benchmark-suite.md](../../../docs/design/benchmark-suite.md).
+[CS-195](./projects/CS-195-benchmarks-parity-and-image-regression.md), Planned, led by owner: 0 of 20 done, 8 ready, 10 blocked, 8 proposed. Plan: [benchmark-suite.md](../../../docs/design/benchmark-suite.md).
 
 Milestone: Benchmarks run per merge on dedicated machines
 
@@ -753,6 +753,13 @@ Milestone: The performance targets are met or the gaps explained
 - [ ] [CS-328](./items/CS-328-network-profiles-a-link-shaping-content-server.md) Network profiles: a link-shaping content server and a throttled scenario. Needs nothing.
 - [ ] [CS-329](./items/CS-329-m5-s-exit-the-performance-targets-met-or-the.md) M5's exit: the performance targets met or the gaps explained, including multi-view. Needs nothing.
 - [ ] [CS-451](./items/CS-451-dyno-s-guardrails-and-their-tolerances-per.md) Dyno's guardrails and their tolerances per scene, revisited now Budgeted has settled. Needs nothing.
+
+Milestone: Scene benchmarks run faster than real time
+
+- [?] [CS-512](./items/CS-512-scene-runs-on-a-virtual-clock.md) Scene runs on a virtual clock. Proposed. Needs CS-328.
+- [?] [CS-513](./items/CS-513-the-simulated-network-runs-on-the-virtual-clock.md) The simulated network runs on the virtual clock. Proposed. Needs CS-328.
+- [?] [CS-514](./items/CS-514-run-modes-faster-than-real-time-or-real-time-on.md) Run modes: faster than real time, or real time on a simulated or real network. Proposed. Needs CS-512 and CS-513.
+- [?] [CS-515](./items/CS-515-faster-than-real-time-runs-against-real-time.md) Faster-than-real-time runs against real-time runs: which metrics agree. Proposed. Needs CS-514.
 
 No milestone
 
