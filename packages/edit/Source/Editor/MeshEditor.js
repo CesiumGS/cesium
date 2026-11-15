@@ -242,13 +242,13 @@ class MeshEditor {
     this.#wasmEditor.setMode(value);
     this.#mode = value;
 
-    const { renderableComponents, selectableComponents } = this.#wasmEditor;
+    const { renderableComponents, interactableComponents } = this.#wasmEditor;
     for (const mesh of this.#meshes) {
       if (this.#wasmEditor.isMeshActive(mesh._key)) {
         this.#setComponentMasks(
           mesh,
           renderableComponents,
-          selectableComponents,
+          interactableComponents,
         );
         mesh._renderer.outlined = value === EditMode.NONE;
       }
@@ -455,8 +455,8 @@ class MeshEditor {
     this.#checkMesh(mesh);
 
     this.#wasmEditor.setMeshActive(mesh._key);
-    const { renderableComponents, selectableComponents } = this.#wasmEditor;
-    this.#setComponentMasks(mesh, renderableComponents, selectableComponents);
+    const { renderableComponents, interactableComponents } = this.#wasmEditor;
+    this.#setComponentMasks(mesh, renderableComponents, interactableComponents);
     mesh._renderer.outlined = this.#mode === EditMode.NONE;
   }
 
@@ -490,19 +490,19 @@ class MeshEditor {
 
   /**
    * Sets which of a mesh's components to draw and pick. Components that are
-   * drawn but can't be selected, like edges in Face mode, aren't pickable, so
-   * they don't interfere with picking the selectable components (like vertices) around them.
+   * drawn but aren't interactable, like edges in Face mode, aren't pickable, so
+   * they don't interfere with picking the interactable components (like vertices) around them.
    *
    * @param {Mesh} mesh The mesh.
    * @param {ComponentMask} shownComponents The components to draw.
-   * @param {ComponentMask} selectableComponents The components that can be selected.
+   * @param {ComponentMask} interactableComponents The components that can be modified (selected, hidden, etc.).
    * @ignore
    */
-  #setComponentMasks(mesh, shownComponents, selectableComponents) {
+  #setComponentMasks(mesh, shownComponents, interactableComponents) {
     const renderer = mesh._renderer;
     renderer.setShownComponents(shownComponents);
     renderer.setPickableComponents(
-      selectableComponents | ALWAYS_PICKABLE_COMPONENTS,
+      interactableComponents | ALWAYS_PICKABLE_COMPONENTS,
     );
   }
 
