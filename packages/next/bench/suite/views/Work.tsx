@@ -187,7 +187,7 @@ const STAGE_MEANING: Record<Stage, string> = {
   Proposed: "grey: proposed, not committed to yet",
   Waiting: "red: blocked until the items it needs are done",
   Ready: "blue: ready, nothing it needs is open",
-  "In flight": "violet: in flight, someone has it",
+  "In flight": "violet: in progress, someone has it",
   Done: "green: done",
 };
 const stageTip = (st: Stage, lead?: string) =>
@@ -304,16 +304,6 @@ function Board({
   const unblocks = useMemo(() => unblocksOf(s), [s]);
   const chains = useMemo(() => longestChains(items), [items]);
   const flow = useMemo(() => flowOf(s, items, { flight }), [s, items, flight]);
-  // Agents' work alone (no decisions, no outside waits), for "ready to start".
-  const workFlow = useMemo(
-    () =>
-      flowOf(
-        s,
-        items.filter((it) => it.kind === "work"),
-        { flight },
-      ),
-    [s, items, flight],
-  );
   const byActor = useMemo(() => {
     const by: Record<Actor, WorkItem[]> = {
       owner: [],
@@ -339,9 +329,6 @@ function Board({
     // msInScope reads only the scope, which `items` follows.
     [s, items, unblocks],
   );
-  const canCommit = proposals
-    .flatMap((g) => [...g.items, ...g.milestones.flatMap((m) => m.items)])
-    .filter((it) => proposalGate(it, itemOf) === "free").length;
   const readyToStart = byActor.agents.filter(
     (it) => stageOf(it, flight) === "Ready",
   );
@@ -484,11 +471,6 @@ function Board({
                     render={<Button variant="outlined" size="small" />}
                   >
                     {v.label}
-                    {v.id === "move" && decisions.length > 0 && (
-                      <span className="work-count-badge">
-                        {decisions.length}
-                      </span>
-                    )}
                   </ToggleButton>
                 ))}
               </ToggleButtonGroup>
@@ -511,35 +493,15 @@ function Board({
                   onOpen: () => open("owner"),
                 }}
                 foot={
-                  <>
-                    {decisions.length > 8 && (
-                      <Link
-                        component="button"
-                        type="button"
-                        onClick={() => open("owner")}
-                      >
-                        All {decisions.length} decisions
-                      </Link>
-                    )}
-                    {canCommit > 0 && (
-                      <Link
-                        component="button"
-                        type="button"
-                        onClick={() =>
-                          set({
-                            view: "proposals",
-                            gate: "free",
-                            list: undefined,
-                            item: undefined,
-                          })
-                        }
-                      >
-                        {canCommit === 1
-                          ? "A proposal you can commit now"
-                          : `${canCommit} proposals you can commit now`}
-                      </Link>
-                    )}
-                  </>
+                  decisions.length > 8 && (
+                    <Link
+                      component="button"
+                      type="button"
+                      onClick={() => open("owner")}
+                    >
+                      All {decisions.length} decisions
+                    </Link>
+                  )
                 }
               >
                 <LeverageBars
@@ -557,8 +519,6 @@ function Board({
                 className="span-5"
                 stat={{
                   value: readyToStart.length,
-                  series: workFlow.stocks.Ready,
-                  days: flow.days,
                   onOpen: () => open("ready"),
                 }}
                 foot={
@@ -584,13 +544,11 @@ function Board({
 
               <Card
                 id="work-flight-h"
-                title="In flight"
+                title="In progress"
                 className="span-7"
                 stat={{
                   value: inFlight.length,
                   detail: "Who holds each, and for how long",
-                  series: flow.stocks["In flight"],
-                  days: flow.days,
                   onOpen: () => open("stage:In flight"),
                 }}
               >
@@ -871,39 +829,10 @@ function Board({
 
           {view === "flow" && (
             <div className="work-dash">
-              <ul className="work-kpis" aria-label="Flow at a glance">
-                <Kpi
-                  label="Waiting on items"
-                  value={flow.stocks.Waiting.at(-1) ?? 0}
-                  series={flow.stocks.Waiting}
-                  days={flow.days}
-                  onOpen={() => open("stage:Waiting")}
-                />
-                <Kpi
-                  label="Proposed"
-                  value={flow.stocks.Proposed.at(-1) ?? 0}
-                  series={flow.stocks.Proposed}
-                  days={flow.days}
-                  onOpen={() => open("stage:Proposed")}
-                />
-                <Kpi
-                  label={`Done, last ${flow.window} days`}
-                  value={flow.arrived.Done}
-                  series={doneDaily}
-                  days={flow.days}
-                  detail={leadLine(flow)}
-                  onOpen={() => open("done")}
-                />
-                <Kpi
-                  label={`New, last ${flow.window} days`}
-                  value={flow.created}
-                  detail="Items made since the tracker's import"
-                />
-              </ul>
               <Card
                 id="work-flow-h"
                 title="Items in each stage, day by day"
-                caption="A band that widens is a queue growing; choose one to list it"
+                caption={`A band that widens is a queue growing; choose one to list it. ${flow.created} ${flow.created === 1 ? "item" : "items"} new in the last ${flow.window} days.`}
                 className="span-12"
               >
                 <FlowChart flow={flow} onStage={(st) => open(`stage:${st}`)} />
@@ -912,15 +841,8 @@ function Board({
                 s={s}
                 items={items}
                 flow={flow}
-                flight={flight}
                 doneDaily={doneDaily}
                 itemOf={itemOf}
-                milestones={s.milestones.filter(
-                  (m) =>
-                    m.status !== "Done" &&
-                    m.status !== "Dropped" &&
-                    msInScope(m),
-                )}
                 onOpen={open}
               />
               <Typography
@@ -996,19 +918,15 @@ function MeasuresCard({
   s,
   items,
   flow,
-  flight,
   doneDaily,
   itemOf,
-  milestones,
   onOpen,
 }: {
   s: WorkSnapshot;
   items: WorkItem[];
   flow: Flow;
-  flight: InFlight;
   doneDaily: number[];
   itemOf: Map<string, WorkItem>;
-  milestones: WorkMilestone[];
   onOpen: (list: string) => void;
 }) {
   const m: Measures = useMemo(
@@ -1032,10 +950,10 @@ function MeasuresCard({
   const lead = typical(m.lead, m.lead.length === 1 ? "finished" : "finished");
   const answered = typical(m.decisionLatency, "answered");
   const titleOf = (id: string) => itemOf.get(id)?.title ?? id;
-  const chains = milestones
-    .map((ms) => ({ ms, ...criticalPathOf(ms, itemOf) }))
-    .filter((p) => p.path.length > 0)
-    .sort((a, b) => b.path.length - b.done - (a.path.length - a.done));
+  // As Your decisions counts them: open, with nothing they need still open.
+  const answerable = items.filter(
+    (it) => isOwnerDecision(it) && !it.open_needs.length,
+  ).length;
   return (
     <Card
       id="work-measures-h"
@@ -1092,7 +1010,7 @@ function MeasuresCard({
           value={answered.value}
           sub={
             m.decisionsOpen.length
-              ? `${m.decisionsOpen.length} open, oldest asked ${ageText(Math.max(...m.decisionsOpen))} ago`
+              ? `${m.decisionsOpen.length} open, ${answerable} you can answer now; oldest asked ${ageText(Math.max(...m.decisionsOpen))} ago`
               : "None open"
           }
           pair="How often answered decisions are overruled or reversed"
@@ -1157,90 +1075,6 @@ function MeasuresCard({
           info="The share of items whose first report passed verification and merged without a second round. It needs HITLd's ledger."
         />
       </ul>
-
-      {chains.length > 0 && (
-        <div className="work-chains-ms">
-          <header className="work-chains-ms-head">
-            <Typography variant="subtitle-md" render={<h3 />}>
-              Longest chain in each milestone
-            </Typography>
-            <InfoTip text="Inside each open milestone, the longest run of items where each needs the one before. Its length is the fewest steps the milestone can take, however many agents work on it; each square is one item, coloured by its stage, and the next one to move is named." />
-          </header>
-          <ul className="work-chainrows">
-            {chains.map(({ ms, path, done }) => {
-              const next = path.find((it) => it.status !== "Done");
-              const nextStage = next ? stageOf(next, flight) : undefined;
-              return (
-                <li key={ms.id} className="work-chainrow">
-                  <button
-                    type="button"
-                    className="work-pbar-name"
-                    onClick={() => onOpen(`ms:${ms.id}`)}
-                    title={`${ms.title}: open the milestone`}
-                  >
-                    <LevelMark level="milestone" />
-                    <span className="work-outline-label">{ms.title}</span>
-                  </button>
-                  <ol
-                    className="work-chainsq"
-                    aria-label={`${path.length} steps, ${done} done`}
-                  >
-                    {path.map((it) => (
-                      <li key={it.id}>
-                        <ItemLink
-                          id={it.id}
-                          className={`work-chainsq-step stage-${slug(stageOf(it, flight) ?? "Waiting")}`}
-                          tip={stageTip(
-                            stageOf(it, flight) ?? "Waiting",
-                            it.id,
-                          )}
-                          label={`${it.id} ${it.title}: ${STAGE_NAMES[stageOf(it, flight) ?? "Waiting"]}`}
-                        >
-                          <span className="visually-hidden">{it.id}</span>
-                        </ItemLink>
-                      </li>
-                    ))}
-                  </ol>
-                  <span className="work-chainrow-count">
-                    {done} of {path.length}
-                  </span>
-                  {next ? (
-                    <ItemLink id={next.id} className="work-chainrow-next">
-                      Next: <span className="work-id">{next.id}</span>{" "}
-                      {nextStage === "Ready"
-                        ? "ready"
-                        : nextStage === "In flight"
-                          ? "in flight"
-                          : isOwnerDecision(next)
-                            ? "your decision"
-                            : (
-                                STAGE_NAMES[nextStage ?? "Waiting"] ?? ""
-                              ).toLowerCase()}
-                    </ItemLink>
-                  ) : (
-                    <span className="work-chainrow-next">All done</span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-          <span className="work-legend">
-            {STAGES.map((st) => (
-              <span
-                key={st}
-                className="work-legend-key"
-                data-tip={STAGE_MEANING[st]}
-              >
-                <span
-                  className={`work-swatch stage-${slug(st)}`}
-                  aria-hidden="true"
-                />
-                {STAGE_NAMES[st]}
-              </span>
-            ))}
-          </span>
-        </div>
-      )}
     </Card>
   );
 }
@@ -1587,12 +1421,10 @@ function Card({
   id: string;
   title: string;
   caption?: string;
-  /** A section led by its number: the count, a line on it, its trend; choosing it lists the items. */
+  /** A section led by its number: the count and a line on it; choosing it lists the items. */
   stat?: {
     value: number;
     detail?: string;
-    series?: number[];
-    days?: number[];
     tone?: "attention";
     onOpen?: () => void;
   };
@@ -1635,23 +1467,6 @@ function Card({
             )}
           </span>
         )}
-        {stat?.series && stat.days && stat.series.length > 1 && (
-          <span className="work-stat-trend">
-            <Sparkline
-              days={stat.days}
-              values={stat.series}
-              label={`${title}: ${stat.value} now`}
-            />
-            <Typography variant="caption-md" color="textSecondary">
-              {(() => {
-                const d = stat.value - stat.series[0]!;
-                return d === 0
-                  ? "No change since the history began"
-                  : `${d > 0 ? "+" : "−"}${Math.abs(d)} since the history began`;
-              })()}
-            </Typography>
-          </span>
-        )}
         {tools}
       </header>
       {children}
@@ -1682,7 +1497,7 @@ function InFlightRows({
         render={<p />}
         className="work-empty"
       >
-        Nothing is in flight.
+        Nothing is in progress.
       </Typography>
     );
   }
@@ -1745,68 +1560,6 @@ function doneByDay(
     }
   }
   return out;
-}
-
-function leadLine(flow: Flow): string {
-  const lead = median(flow.leadDays);
-  return lead === undefined || flow.leadDays.length < 3
-    ? "Too few finished for a lead time"
-    : `Lead time ${ageText(lead * 86_400_000)} (median, ${flow.leadDays.length})`;
-}
-
-/** A headline number: what it is, its trend, one line, and its items. */
-function Kpi({
-  label,
-  value,
-  series,
-  days,
-  detail,
-  tone,
-  onOpen,
-}: {
-  label: string;
-  value: number;
-  series?: number[];
-  days?: number[];
-  detail?: string;
-  tone?: "attention";
-  /** Lists its items; a number with no list of its own leaves it out. */
-  onOpen?: () => void;
-}) {
-  const first = series?.[0];
-  const delta = series && first !== undefined ? value - first : undefined;
-  const Tag = onOpen ? "button" : "div";
-  return (
-    <li>
-      <Tag
-        type={onOpen ? "button" : undefined}
-        className={`work-kpi ${tone ?? ""}${onOpen ? "" : " still"}`}
-        onClick={onOpen}
-      >
-        <Typography variant="caption-lg" color="textSecondary">
-          {label}
-        </Typography>
-        <span className="work-kpi-row">
-          <span className="work-kpi-value">{value}</span>
-          {series && days && series.length > 1 && (
-            <Sparkline
-              days={days}
-              values={series}
-              label={`${label}: ${value} now`}
-            />
-          )}
-        </span>
-        <Typography variant="caption-md" color="textSecondary">
-          {detail ??
-            (delta === undefined || !series || series.length < 2
-              ? " "
-              : delta === 0
-                ? "No change since the history began"
-                : `${delta > 0 ? "+" : "−"}${Math.abs(delta)} since the history began`)}
-        </Typography>
-      </Tag>
-    </li>
-  );
 }
 
 /** Items as rows with a bar for how much waits behind each. */
@@ -1993,14 +1746,11 @@ function FlowChart({
         render={<p />}
         className="work-cfd-read"
       >
-        {n > 1 ? day(flow.days[hi]!) : "Today"}:{" "}
-        {STAGES.map((st) => `${STAGE_NAMES[st]} ${flow.stocks[st][hi]}`).join(
-          " · ",
-        )}
-        {n < 3 &&
-          ` · the history began ${day(
-            flow.days[0] ?? Date.now(),
-          )}; the bands fill in as work moves`}
+        {hover !== undefined
+          ? `${day(flow.days[hi]!)}: ${STAGES.map((st) => `${STAGE_NAMES[st]} ${flow.stocks[st][hi]}`).join(", ")}`
+          : n < 3
+            ? `The history began ${day(flow.days[0] ?? Date.now())}; the bands fill in as work moves`
+            : " "}
       </Typography>
     </div>
   );
@@ -2400,6 +2150,23 @@ function ListPanel({
             {m.check_due ? " · check due" : ""}
           </Fact>
           {(() => {
+            const { path, done } = criticalPathOf(m, itemOf);
+            const next = path.find((it) => it.status !== "Done");
+            return path.length > 1 ? (
+              <Fact name="Longest chain">
+                {path.length} items in order, {done} done
+                {next && (
+                  <>
+                    ; next{" "}
+                    <ItemLink id={next.id}>
+                      <span className="work-id">{next.id}</span>
+                    </ItemLink>
+                  </>
+                )}
+              </Fact>
+            ) : null;
+          })()}
+          {(() => {
             const row = msRows.find((r) => r.id === m.id);
             if (!row) {
               return null;
@@ -2598,99 +2365,6 @@ function ListPanel({
       </div>
       <div className="work-panel-body">{body}</div>
     </Pane>
-  );
-}
-
-/**
- * One count over the days. Hovering follows the pointer with a crosshair
- * on the nearest day and reads that day's count above the line; the
- * label lists every day for screen readers.
- */
-function Sparkline({
-  days,
-  values,
-  label,
-}: {
-  days: number[];
-  values: number[];
-  label: string;
-}) {
-  const [at, setAt] = useState<number>();
-  const ref = useRef<SVGSVGElement>(null);
-  const w = 120;
-  const h = 28;
-  const max = Math.max(1, ...values);
-  const x = (i: number) =>
-    values.length < 2 ? w : 4 + (i * (w - 8)) / (values.length - 1);
-  const y = (v: number) => h - 4 - ((h - 8) * v) / max;
-  const path = values
-    .map((v, i) => `${i ? "L" : "M"}${x(i)},${y(v)}`)
-    .join(" ");
-  const day = (t: number) =>
-    new Date(t).toLocaleDateString([], { month: "short", day: "numeric" });
-  const follow = (clientX: number) => {
-    const r = ref.current?.getBoundingClientRect();
-    if (!r || !r.width || !values.length) {
-      return;
-    }
-    const px = ((clientX - r.left) / r.width) * w;
-    let best = 0;
-    for (let i = 1; i < values.length; i++) {
-      if (Math.abs(x(i) - px) < Math.abs(x(best) - px)) {
-        best = i;
-      }
-    }
-    setAt(best);
-  };
-  const shown = at ?? values.length - 1;
-  // Kept inside the line's width: the readout's anchor slides with it.
-  const frac = x(shown) / w;
-  return (
-    <span
-      className="work-spark-wrap"
-      onPointerMove={(e) => follow(e.clientX)}
-      onPointerLeave={() => setAt(undefined)}
-    >
-      <svg
-        ref={ref}
-        className="work-spark"
-        width={w}
-        height={h}
-        viewBox={`0 0 ${w} ${h}`}
-        role="img"
-        aria-label={`${label}; ${values.map((v, i) => `${day(days[i]!)} ${v}`).join(", ")}`}
-      >
-        {at !== undefined && (
-          <line
-            x1={x(at)}
-            x2={x(at)}
-            y1={0}
-            y2={h}
-            className="work-spark-cross"
-          />
-        )}
-        <path d={path} className="work-spark-line" />
-        <circle
-          cx={x(shown)}
-          cy={y(values[shown] ?? 0)}
-          r={at === undefined ? 4 : 3.5}
-          className="work-spark-dot"
-        />
-        <rect x={0} y={0} width={w} height={h} className="work-spark-hit" />
-      </svg>
-      {at !== undefined && (
-        <span
-          className="work-spark-read"
-          aria-hidden="true"
-          style={{
-            left: `${frac * 100}%`,
-            transform: `translateX(-${frac * 100}%)`,
-          }}
-        >
-          {day(days[at]!)} <b>{values[at]}</b>
-        </span>
-      )}
-    </span>
   );
 }
 
@@ -3562,6 +3236,7 @@ function ProposalsCard({
           key={g.project?.id ?? "none"}
           group={g}
           heading={level}
+          gate={gate}
           itemOf={itemOf}
           msOf={msOf}
           unblocks={unblocks}
@@ -3659,6 +3334,7 @@ function ProposalsCard({
 function ProposalGroupView({
   group: g,
   heading,
+  gate,
   itemOf,
   msOf,
   unblocks,
@@ -3667,6 +3343,8 @@ function ProposalGroupView({
 }: {
   group: ProposalGroup;
   heading: "h3" | "h4";
+  /** The toggle's choice, which the rows needn't repeat. */
+  gate?: ProposalGate;
   itemOf: Map<string, WorkItem>;
   msOf: Map<string, WorkMilestone>;
   unblocks: Map<string, number>;
@@ -3684,6 +3362,7 @@ function ProposalGroupView({
           msOf={msOf}
           waiting={unblocks.get(it.id) ?? 0}
           selected={it.id === selected}
+          shown={gate}
           onMilestone={onMilestone}
         />
       ))}
@@ -3702,9 +3381,7 @@ function ProposalGroupView({
         </Typography>
         <Typography variant="caption-md" color="textSecondary">
           {g.project ? `${g.project.id} · ` : ""}
-          {g.whole
-            ? `all ${g.count} open ${g.count === 1 ? "item" : "items"} proposed`
-            : `${g.count} proposed`}
+          {g.count} proposed
         </Typography>
       </header>
       {g.milestones.map(({ milestone: m, items }) => (
@@ -3737,6 +3414,7 @@ function ProposalRow({
   msOf,
   waiting,
   selected,
+  shown,
   onMilestone,
 }: {
   it: WorkItem;
@@ -3745,6 +3423,8 @@ function ProposalRow({
   /** Open items that wait on it, directly or through others. */
   waiting: number;
   selected: boolean;
+  /** The gate the view is narrowed to, if any. */
+  shown?: ProposalGate;
   onMilestone: (id: string) => void;
 }) {
   const gate = proposalGate(it, itemOf);
@@ -3767,7 +3447,7 @@ function ProposalRow({
         m.status !== "Dropped",
     );
   const extra = [
-    gate === "free" ? "Can commit now" : undefined,
+    gate === "free" && shown !== "free" ? "Can commit now" : undefined,
     waiting ? `${waiting} wait on it` : undefined,
   ]
     .filter(Boolean)
@@ -4568,7 +4248,7 @@ function ChainBars({
                     : actor === "outside"
                       ? "waits outside first"
                       : stageOf(head, flight) === "In flight"
-                        ? "first is in flight"
+                        ? "first is in progress"
                         : "first is ready"}
                 </span>
               </span>
@@ -4948,8 +4628,7 @@ function MilestoneMap({
             (k, n) => k + STAGES.reduce((j, st) => j + n.counts[st], 0),
             0,
           );
-          const started = here.filter((n) => n.started).length;
-          return { i, count: here.length, done, all, started };
+          return { i, count: here.length, done, all };
         })
       : [];
   const ticks =
@@ -5024,28 +4703,24 @@ function MilestoneMap({
           </ToggleButtonGroup>
         </div>
       )}
-      <p className="work-map-done">
-        <span className="work-map-done-mark" aria-hidden="true" />
-        {map.done.length ? (
-          <>
-            Done:{" "}
-            {map.done.map((d, i) => (
-              <span key={d.id}>
-                {i > 0 && ", "}
-                <Link
-                  component="button"
-                  type="button"
-                  onClick={() => onOpen(d.id)}
-                >
-                  {d.title}
-                </Link>
-              </span>
-            ))}
-          </>
-        ) : (
-          "No milestone is done yet: the map starts from now."
-        )}
-      </p>
+      {map.done.length > 0 && (
+        <p className="work-map-done">
+          <span className="work-map-done-mark" aria-hidden="true" />
+          Done:{" "}
+          {map.done.map((d, i) => (
+            <span key={d.id}>
+              {i > 0 && ", "}
+              <Link
+                component="button"
+                type="button"
+                onClick={() => onOpen(d.id)}
+              >
+                {d.title}
+              </Link>
+            </span>
+          ))}
+        </p>
+      )}
       {shape === "graph" ? (
         <MilestoneGraph
           s={s}
@@ -5106,7 +4781,7 @@ function MilestoneMap({
                 style={{ left: x(c.i), width: x(c.i + 1) - x(c.i) }}
                 data-tip={`${
                   c.i === 0
-                    ? "Now: these wait on no other milestone; those under way (an item done or in flight) are filled, the rest can start"
+                    ? "Now: these wait on no other milestone; those with an item done or in progress are filled"
                     : `Step ${c.i + 1}: starts once what it waits on in ${c.i === 1 ? "step 1" : `steps 1 to ${c.i}`} is done`
                 }; ${c.done} of ${c.all} items done`}
               >
@@ -5114,9 +4789,7 @@ function MilestoneMap({
                 <span className="work-map-col-text">
                   {c.i === 0 && <b>Now</b>}
                   <span>
-                    {c.i === 0
-                      ? `${c.started} in progress · ${c.count - c.started} can start`
-                      : `${c.count} ${c.count === 1 ? "milestone" : "milestones"}`}
+                    {`${c.count} ${c.count === 1 ? "milestone" : "milestones"}`}
                   </span>
                 </span>
               </span>
@@ -5341,11 +5014,8 @@ function MilestoneMap({
                         )
                       ) : (
                         <>
-                          {n.counts["In flight"] > 0
-                            ? `${n.counts["In flight"]} in flight · `
-                            : n.started
-                              ? "Under way · "
-                              : "Not started · "}
+                          {n.counts["In flight"] > 0 &&
+                            `${n.counts["In flight"]} in progress · `}
                           {n.counts.Done} of {total} done
                           {unit === "tokens" && n.tokens.left > 0
                             ? ` · ${tokenText(n.tokens.left)} tokens`
@@ -5406,11 +5076,11 @@ function MilestoneMap({
       <ul className="work-map-legend" aria-label="Key">
         <li>
           <span className="work-map-key started" aria-hidden="true" />
-          In progress: an item done or in flight
+          An item done or in progress
         </li>
         <li>
           <span className="work-map-key idle" aria-hidden="true" />
-          Not started
+          No item done or in progress yet
         </li>
         <li>
           <span className="work-map-key loop" aria-hidden="true" />

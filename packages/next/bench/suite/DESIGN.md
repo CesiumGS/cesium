@@ -114,15 +114,23 @@ milestones named by their outcome, each with an `outcome` sentence,
   milestone) and a find field; both narrow every view. An item or a list
   opens in a pane on the right (`?item=CS-<n>`, `?list=…`), beside the
   view when the window is wide enough and over it when not.
+- **HITLd's names.** Statuses are the tracker's (Proposed, Planned, In
+  progress, Done, Dropped); a Planned item with a need not Done is
+  Blocked, and one with every need Done is Ready, as HITLd derives them.
+  A milestone shows its items' progress, "N in progress, N of M done",
+  not a state of its own: HITLd's milestones are Proposed, Planned, Done
+  or Dropped.
+- **Each figure once.** A number belongs to the view whose question it
+  answers; another view links there rather than repeating it.
 - **Four views, one question each:**
   - **Your move** (the default): the owner's attention is the
     constraint, so each section leads with its number and lists the
     most waited-on first, counting what waits through other items.
-    Your decisions, ready to start, in flight (who holds each, on which
+    Your decisions, ready to start, in progress (who holds each, on which
     branch, claims in other worktrees and local branches included until
-    they merge) and waiting outside. The rail's count is the owner's.
-    A link under the decisions opens the proposals that can be
-    committed now.
+    they merge) and waiting outside, as they stand now; how they change
+    is Flow's. The rail's count is the owner's, and it is the only count
+    outside the view.
   - **Roadmap**: what comes after what, without dates. By milestones (a
     map or a list), by initiatives or projects, or as the projects'
     waits on each other. The milestone map runs across in steps or in
@@ -133,7 +141,9 @@ milestones named by their outcome, each with an `outcome` sentence,
     waits. The critical path is drawn in the accent; hovering a
     milestone lights what feeds it and what it unblocks; choosing a wait
     lists the items behind it. With release gates, "Measure to" keeps a
-    gate and what it needs. The roadmap is committed work only;
+    gate and what it needs. A milestone with an item done or in progress
+    is filled; a milestone's pane gives its longest chain of items that
+    must happen in order. The roadmap is committed work only;
     proposals have their own view. A milestone's bar counts its work;
     the owner's decisions and waits on other parties that hold it up are
     badges beside its name. Decisions and outside waits no milestone
@@ -146,12 +156,12 @@ milestones named by their outcome, each with an `outcome` sentence,
     how much waits on it, and which committed milestone needs it; its
     text, the why, opens in the pane. A toggle narrows the view to one of
     those three.
-  - **Flow**: the stages (proposed, waiting on items, ready, in flight,
-    done) as a band per stage, day by day since the history begins
-    (replayed from the items' committed status changes); a band that
-    widens is a queue growing. The longest chains of items that must
-    happen in order, and the measures, each with its pair: the measure
-    that must not get worse when this one is pushed.
+  - **Flow**: the stages (proposed, blocked, ready, in progress, done)
+    as a band per stage, day by day since the history begins (replayed
+    from the items' committed status changes); a band that widens is a
+    queue growing, and hovering reads a day's counts. Then the measures,
+    each with its pair: the measure that must not get worse when this
+    one is pushed.
 - **Later, from HITLd's records:** tokens per item, verification, the
   merge queue, quotas and the controllers' steps. The page says so in
   one line rather than showing empty sections.
