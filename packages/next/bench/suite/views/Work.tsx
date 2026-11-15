@@ -93,6 +93,7 @@ import {
   stageOf,
   stateOf,
   unblocksOf,
+  workInProgress,
   type WorkContainer,
   type WorkFound,
   type WorkItem,
@@ -332,7 +333,7 @@ function Board({
   const readyToStart = byActor.agents.filter(
     (it) => stageOf(it, flight) === "Ready",
   );
-  const inFlight = items.filter((it) => stageOf(it, flight) === "In flight");
+  const inFlight = workInProgress(items, flight);
   const now = Date.now();
   const ageOf = (it: WorkItem) => now - (flow.since.get(it.id) ?? now);
   const doneDaily = useMemo(
@@ -549,7 +550,7 @@ function Board({
                 stat={{
                   value: inFlight.length,
                   detail: "Who holds each, and for how long",
-                  onOpen: () => open("stage:In flight"),
+                  onOpen: () => open("working"),
                 }}
               >
                 <InFlightRows
@@ -1888,15 +1889,17 @@ function listTitle(
         ? "Found"
         : list === "ready"
           ? "Ready to start"
-          : list === "outside"
-            ? "Waiting outside"
-            : list === "done"
-              ? "Done"
-              : list === "matrix"
-                ? "Dependency matrix"
-                : list.startsWith("stage:")
-                  ? (STAGE_NAMES[list.slice(6) as Stage] ?? list)
-                  : list;
+          : list === "working"
+            ? "In progress"
+            : list === "outside"
+              ? "Waiting outside"
+              : list === "done"
+                ? "Done"
+                : list === "matrix"
+                  ? "Dependency matrix"
+                  : list.startsWith("stage:")
+                    ? (STAGE_NAMES[list.slice(6) as Stage] ?? list)
+                    : list;
   return scope ? `${base} · ${scope}` : base;
 }
 
@@ -2013,6 +2016,17 @@ function ListPanel({
         selected={selected}
         projectOf={projectOf}
         unblocks={unblocks}
+      />
+    );
+  } else if (list === "working") {
+    body = (
+      <Grouped
+        s={s}
+        items={workInProgress(items, flight)}
+        empty="Nothing is in progress."
+        selected={selected}
+        projectOf={projectOf}
+        line={(it) => whereOf(it, flight, s.branch)}
       />
     );
   } else if (list === "ready") {
@@ -5194,54 +5208,169 @@ function MilestoneGraph({
   };
   const NODE_W = 216;
   const NODE_H = 80;
+  const box = useRef<HTMLDivElement>(null);
+  const avail = useWidth(box);
   const laid = useMemo(() => {
-    const g = dagGraph<MapNode, MapEdge>();
-    const byId = new Map<string, MutGraphNode<MapNode, MapEdge>>();
-    for (const n of map.nodes) {
-      if (!n.unshaped) {
-        byId.set(n.id, g.node(n));
-      }
+    const real = map.nodes.filter((n) => !n.unshaped);
+    const ids = new Set(real.map((n) => n.id));
+    const hard = map.edges.filter(
+      (e) => !e.soft && ids.has(e.from) && ids.has(e.to),
+    );
+    // Milestones linked by waits, as groups.
+    const root = new Map(real.map((n) => [n.id, n.id]));
+    const find = (id: string): string => {
+      const r = root.get(id)!;
+      return r === id ? id : find(r);
+    };
+    for (const e of hard) {
+      root.set(find(e.from), find(e.to));
     }
-    for (const e of map.edges) {
-      const a = byId.get(e.from);
-      const b = byId.get(e.to);
-      if (a && b && !e.soft) {
-        g.link(a, b, e);
-      }
+    const groups = new Map<string, MapNode[]>();
+    for (const n of real) {
+      const r = find(n.id);
+      groups.set(r, [...(groups.get(r) ?? []), n]);
     }
+    const waitsIn = (g: MapNode[]) => {
+      const inG = new Set(g.map((n) => n.id));
+      return hard.filter((e) => inG.has(e.from)).length;
+    };
+    // The most entangled first: the critical path's group, then the
+    // biggest, then the one with the most waits.
+    const linked = [...groups.values()]
+      .filter((g) => g.length > 1)
+      .sort(
+        (a, b) =>
+          Number(b.some((n) => n.critical)) -
+            Number(a.some((n) => n.critical)) ||
+          b.length - a.length ||
+          waitsIn(b) - waitsIn(a) ||
+          a[0]!.id.localeCompare(b[0]!.id),
+      );
+    const alone = [...groups.values()]
+      .filter((g) => g.length === 1)
+      .map((g) => g[0]!)
+      .sort(
+        (a, b) =>
+          projectTitle(a.id).localeCompare(projectTitle(b.id)) ||
+          a.title.localeCompare(b.title),
+      );
+    // A step's column, the same in every group, so steps line up.
+    const COL = NODE_W + 48;
+    const centre = (step: number) => step * COL + NODE_W / 2;
+    const GAP = 40;
+    const nodes: Array<{ n: MapNode; x: number; y: number }> = [];
+    const links: Array<{
+      e: MapEdge;
+      points: Array<readonly [number, number]>;
+    }> = [];
+    const dividers: number[] = [];
+    let top = 0;
     try {
-      // Layers run down in d3-dag; here they run across, so the axes swap.
-      const layout = sugiyama()
-        .layering(
-          layeringSimplex().rank(({ data }: { data: MapNode }) =>
-            Math.round(data.x0),
-          ),
-        )
-        .decross(decrossTwoLayer())
-        .coord(coordSimplex())
-        .nodeSize(() => [NODE_H, NODE_W] as const)
-        .gap([14, 48]);
-      const { width, height } = layout(g);
-      const nodes = [...g.nodes()].map((n) => ({
-        n: n.data,
-        x: n.y - NODE_W / 2,
-        y: n.x - NODE_H / 2,
-      }));
-      const links = [...g.links()].map((l) => ({
-        e: l.data,
-        points: l.points.map(([px, py]) => [py, px] as const),
-      }));
-      return { width: height, height: width, nodes, links, error: undefined };
+      for (const group of linked) {
+        const g = dagGraph<MapNode, MapEdge>();
+        const byId = new Map<string, MutGraphNode<MapNode, MapEdge>>();
+        for (const n of group) {
+          byId.set(n.id, g.node(n));
+        }
+        for (const e of hard) {
+          const a = byId.get(e.from);
+          const b = byId.get(e.to);
+          if (a && b) {
+            g.link(a, b, e);
+          }
+        }
+        // Layers run down in d3-dag; here they run across, so the axes swap.
+        const { width: tall } = sugiyama()
+          .layering(
+            layeringSimplex().rank(({ data }: { data: MapNode }) =>
+              Math.round(data.x0),
+            ),
+          )
+          .decross(decrossTwoLayer())
+          .coord(coordSimplex())
+          .nodeSize(() => [NODE_H, NODE_W] as const)
+          .gap([14, 48])(g);
+        // Each of the group's layers holds one step; place it at that
+        // step's column, and the routes between layers in proportion.
+        const stepOf = new Map<number, number>();
+        for (const n of g.nodes()) {
+          stepOf.set(n.y, Math.round(n.data.x0));
+        }
+        const layers = [...stepOf.keys()].sort((a, b) => a - b);
+        const across = (ly: number) => {
+          const i = layers.findIndex((l) => l >= ly);
+          if (i <= 0) {
+            return centre(stepOf.get(layers[0]!)!) + (ly - layers[0]!);
+          }
+          const [l0, l1] = [layers[i - 1]!, layers[i]!];
+          const [x0, x1] = [centre(stepOf.get(l0)!), centre(stepOf.get(l1)!)];
+          return x0 + ((x1 - x0) * (ly - l0)) / (l1 - l0);
+        };
+        const at = top;
+        if (nodes.length) {
+          dividers.push(at - GAP / 2);
+        }
+        for (const n of g.nodes()) {
+          nodes.push({
+            n: n.data,
+            x: across(n.y) - NODE_W / 2,
+            y: at + n.x - NODE_H / 2,
+          });
+        }
+        for (const l of g.links()) {
+          links.push({
+            e: l.data,
+            points: l.points.map(([px, py]) => [across(py), at + px] as const),
+          });
+        }
+        top += tall + GAP;
+      }
     } catch (error) {
       return {
         width: 0,
         height: 0,
         nodes: [],
         links: [],
+        dividers: [],
+        aloneAt: undefined,
         error: String(error),
       };
     }
-  }, [map]);
+    // Milestones that wait on nothing and that nothing waits on: a grid
+    // of their own below, by project; across means nothing for them.
+    let aloneAt: number | undefined;
+    if (alone.length) {
+      aloneAt = linked.length ? top : 0;
+      // As many to a row as the view shows, so the grid needn't scroll.
+      const perRow = Math.max(
+        1,
+        Math.floor((Math.max(avail, NODE_W) - 16 + 14) / (NODE_W + 14)),
+      );
+      const y0 = aloneAt + 36;
+      alone.forEach((n, i) =>
+        nodes.push({
+          n,
+          x: (i % perRow) * (NODE_W + 14),
+          y: y0 + Math.floor(i / perRow) * (NODE_H + 14),
+        }),
+      );
+      top = y0 + Math.ceil(alone.length / perRow) * (NODE_H + 14);
+    } else if (linked.length) {
+      top -= GAP;
+    }
+    const width = nodes.reduce((w, p) => Math.max(w, p.x + NODE_W), 0);
+    return {
+      width,
+      height: top,
+      nodes,
+      links,
+      dividers,
+      aloneAt,
+      aloneCount: alone.length,
+      error: undefined,
+    };
+    // projectTitle reads the snapshot, which `map` follows.
+  }, [map, avail]);
   const lit = useMemo(() => {
     if (!hover) {
       return undefined;
@@ -5287,7 +5416,7 @@ function MilestoneGraph({
       .join(" ");
   const PAD = 8;
   return (
-    <div className="work-map-wrap">
+    <div className="work-map-wrap" ref={box}>
       <div
         className="work-map work-graph"
         style={{ width: laid.width + PAD * 2, height: laid.height + PAD * 2 }}
@@ -5314,6 +5443,16 @@ function MilestoneGraph({
             </marker>
           </defs>
           <g transform={`translate(${PAD},${PAD})`}>
+            {laid.dividers.map((y) => (
+              <line
+                key={y}
+                x1={0}
+                x2={laid.width}
+                y1={y}
+                y2={y}
+                className="work-graph-divider"
+              />
+            ))}
             {laid.links.map(({ e, points }) => {
               const on = !lit || (lit.has(e.from) && lit.has(e.to));
               const near = !!hover && (e.from === hover || e.to === hover);
@@ -5334,6 +5473,19 @@ function MilestoneGraph({
             })}
           </g>
         </svg>
+        {laid.aloneAt !== undefined && (
+          <Typography
+            variant="caption-md"
+            color="textSecondary"
+            render={<p />}
+            className="work-graph-section"
+            style={{ top: laid.aloneAt + PAD, left: PAD }}
+          >
+            {laid.aloneCount === 1
+              ? "One milestone waits on nothing, and nothing waits on it"
+              : `${laid.aloneCount} milestones wait on nothing, and nothing waits on them`}
+          </Typography>
+        )}
         {laid.nodes.map(({ n, x, y }) => {
           const total = STAGES.reduce((k, st) => k + n.counts[st], 0);
           const dim = lit && !lit.has(n.id);
@@ -5377,7 +5529,7 @@ function MilestoneGraph({
               <span className="work-map-node-meta">
                 {n.gate
                   ? `${n.gate.milestonesDone} of ${n.gate.milestones} milestones`
-                  : `${n.counts.Done} of ${total} done · ${projectTitle(n.id)}`}
+                  : `${n.counts["In flight"] ? `${n.counts["In flight"]} in progress · ` : ""}${n.counts.Done} of ${total} done · ${projectTitle(n.id)}`}
               </span>
             </button>
           );
