@@ -431,9 +431,9 @@ export type Stage = (typeof STAGES)[number];
 
 export const STAGE_NAMES: Record<Stage, string> = {
   Proposed: "Proposed",
-  Waiting: "Waiting on items",
+  Waiting: "Blocked",
   Ready: "Ready",
-  "In flight": "In flight",
+  "In flight": "In progress",
   Done: "Done",
 };
 
