@@ -2305,8 +2305,10 @@ button.work-mrow-big:focus-visible {
 }
 
 /*
- * The Proposals view: each project's ideas kept whole, in columns as wide
- * as a row reads well; a proposed milestone holds its ideas under a rule.
+ * The Proposals view: one table read top to bottom, each question in a
+ * column of its own so the eye runs down it. Projects head their rows; a
+ * proposed milestone holds its ideas under a rule. The whole row opens
+ * the idea; the links inside it sit above that.
  */
 .work-proposal-sections {
   display: flex;
@@ -2317,59 +2319,200 @@ button.work-mrow-big:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-bottom: var(--stratakit-space-400);
-  padding-bottom: var(--stratakit-space-200);
-  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+  margin-bottom: var(--stratakit-space-300);
 }
 .work-proposal-section-head h3 {
   margin: 0;
 }
-.work-proposal-groups {
-  columns: 2 420px;
-  column-gap: var(--stratakit-space-700);
+.work-ptable {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
 }
-.work-proposal-group {
-  break-inside: avoid;
-  margin-bottom: var(--stratakit-space-600);
+.work-ptable col.c-id {
+  width: 88px;
 }
-.work-proposal-group .work-row-needs {
-  padding-inline: 0;
+.work-ptable col.c-gate {
+  width: 340px;
 }
-.work-proposal-ms {
-  margin: var(--stratakit-space-200) 0 var(--stratakit-space-300);
-  padding-inline-start: var(--stratakit-space-400);
-  border-inline-start: 2px solid var(--stratakit-color-border-neutral-muted);
+.work-ptable col.c-num {
+  width: 112px;
 }
-.work-proposal-ms-head {
+.work-ptable thead th {
+  padding: 0 var(--stratakit-space-300) var(--stratakit-space-200);
+  text-align: start;
+  font-size: var(--stratakit-font-size-caption-md);
+  font-weight: 500;
+  color: var(--stratakit-color-text-neutral-secondary);
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-base);
+}
+.work-ptable .c-num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.work-ptable-group th {
+  padding: var(--stratakit-space-600) var(--stratakit-space-300)
+    var(--stratakit-space-200);
+  text-align: start;
+  font-weight: inherit;
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-ptable tbody:first-of-type .work-ptable-group th {
+  padding-top: var(--stratakit-space-400);
+}
+.work-ptable-group-name {
+  font-size: var(--stratakit-font-size-subtitle-md);
+  font-weight: 600;
+}
+.work-ptable-group-meta {
+  margin-inline-start: var(--stratakit-space-300);
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-ptable-group-link {
+  color: inherit;
+  text-decoration: none;
+}
+.work-ptable-group-link:hover {
+  text-decoration: underline;
+}
+.work-ptable-row {
+  position: relative;
+}
+.work-ptable-row td {
+  padding: var(--stratakit-space-300);
+  vertical-align: baseline;
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-ptable-row:hover td {
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+}
+.work-ptable-row.selected td:first-child {
+  box-shadow: inset 3px 0 0 var(--stratakit-color-border-accent-strong);
+}
+.work-ptable-row.in-ms td:first-child {
+  padding-inline-start: var(--stratakit-space-500);
+  box-shadow: inset 2px 0 0 var(--stratakit-color-border-neutral-muted);
+}
+.work-ptable-row.in-ms.selected td:first-child {
+  box-shadow: inset 3px 0 0 var(--stratakit-color-border-accent-strong);
+}
+.work-ptable-link {
+  color: inherit;
+  text-decoration: none;
+}
+/* The whole row is the link's target. */
+.work-ptable-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.work-ptable-link:hover {
+  text-decoration: underline;
+}
+/* StrataKit forces every focus ring's width and style; the row's ring
+   stands in for the link's, so the link's is made clear. */
+.work-ptable .work-ptable-link:focus-visible {
+  outline-color: transparent;
+}
+.work-ptable-link:focus-visible::before {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: -2px;
+}
+.work-ptable-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-ptable-ms-link,
+.work-gate-ref,
+.work-gate-more {
+  position: relative;
+  z-index: 1;
+}
+.work-ptable-ms-link {
   all: unset;
-  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+  color: var(--stratakit-color-text-neutral-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--stratakit-color-border-neutral-base);
+}
+.work-ptable-ms-link:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 1px;
+}
+.work-ptable-ms td {
+  padding: var(--stratakit-space-400) var(--stratakit-space-300)
+    var(--stratakit-space-200);
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-ptable-ms-head {
+  all: unset;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  width: 100%;
-  padding: var(--stratakit-space-200) 0;
   cursor: pointer;
   border-radius: var(--stratakit-radius-sm);
 }
-.work-proposal-ms-head:hover .work-proposal-ms-title {
+.work-ptable-ms-head:hover .work-ptable-ms-title {
   text-decoration: underline;
 }
-.work-proposal-ms-head:focus-visible {
+.work-ptable-ms-head:focus-visible {
   outline: 2px solid var(--stratakit-color-border-accent-strong);
   outline-offset: 2px;
 }
-.work-proposal-ms-title {
+.work-ptable-ms-title {
   font-weight: 600;
 }
-button.work-need {
-  font: inherit;
-  font-size: var(--stratakit-font-size-body-sm);
-  background: none;
-  cursor: pointer;
-  align-items: center;
+.work-ptable-ms-meta {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
 }
-.work-need.decision {
-  border-color: var(--stratakit-color-border-attention-base);
+
+/* What stands in the way: marked as the board marks stages. */
+.work-gate {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--stratakit-space-200);
+}
+.work-gate-mark {
+  flex: none;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-inline-end: 2px;
+}
+.work-gate-mark.free {
+  background: var(--stage-ready);
+}
+.work-gate-mark.decision {
+  background: var(--stratakit-color-bg-attention-base);
+}
+.work-gate-mark.items {
+  background: var(--stage-waiting);
+}
+.work-gate-word.muted,
+.work-gate-refs {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-gate-refs {
+  font-variant-numeric: tabular-nums;
+}
+.work-gate-ref {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--stratakit-color-border-neutral-base);
+}
+.work-gate-ref:hover {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-proposal-gates .work-gate-mark {
+  margin-inline-end: 6px;
 }
 .work-toggle-count {
   margin-inline-start: var(--stratakit-space-100);
@@ -2384,6 +2527,64 @@ button.work-need {
 .work-proposal-gates button {
   white-space: nowrap;
   flex: none;
+}
+
+/* Mid-width (the pane open, say): the fixed columns give the idea room. */
+@container (max-width: 1000px) {
+  .work-ptable col.c-id {
+    width: 76px;
+  }
+  .work-ptable col.c-gate {
+    width: 250px;
+  }
+  .work-ptable col.c-num {
+    width: 64px;
+  }
+}
+
+/* Narrow: each row stacks, the idea over what stands in its way. */
+@container (max-width: 720px) {
+  .work-ptable,
+  .work-ptable tbody,
+  .work-ptable tr,
+  .work-ptable th,
+  .work-ptable td {
+    display: block;
+  }
+  .work-ptable thead,
+  .work-ptable colgroup {
+    display: none;
+  }
+  .work-ptable tr.work-ptable-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "id title" ". gate" ". num";
+    column-gap: var(--stratakit-space-300);
+    padding: var(--stratakit-space-300) 0;
+    border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+  }
+  .work-ptable-row td {
+    padding: 0;
+    border: none;
+  }
+  .work-ptable-row .c-id {
+    grid-area: id;
+  }
+  .work-ptable-row .c-title {
+    grid-area: title;
+  }
+  .work-ptable-row .c-gate {
+    grid-area: gate;
+    margin-top: var(--stratakit-space-100);
+  }
+  .work-ptable-row .c-num {
+    grid-area: num;
+    text-align: start;
+    color: var(--stratakit-color-text-neutral-secondary);
+  }
+  .work-ptable-row .c-num:not(:empty)::after {
+    content: " waiting on it";
+  }
 }
 
 /* Fewest crossings: a rule between groups of linked milestones, and the

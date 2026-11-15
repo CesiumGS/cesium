@@ -10,6 +10,11 @@ needs: [CS-86]
 
 One-off engine loads onto `Jobs`. Needs nothing beyond the first slice (CS-86).
 
+## Done when
+
+- The glare kernel, star field and sky pack loads queue below visible content.
+- Each of these loads is cancelled when the engine is disposed.
+
 ## Files
 
 - `src/scene/Engine.ts`

@@ -10,6 +10,12 @@ needs: [CS-21, CS-35]
 
 The WebGL 2 renderer's facts and support rules. Needs CS-21 and WebGL 2 CS-35.
 
+## Done when
+
+- On `webgl2-basic` and `webgl2-chrome`, `view.support` has WebGPU's shape, with WebGL-named facts.
+- Every feature absent there is `off`, with its reason.
+- Once WebGL 2 draws the globe, terrain, imagery and meshes, the required-content invariant holds for them.
+
 ## Files
 
 - `src/profile/`

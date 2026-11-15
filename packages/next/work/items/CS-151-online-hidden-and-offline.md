@@ -12,7 +12,8 @@ Online, hidden and offline.
 
 ## Done when
 
-The `NetState` tests pass; the drift measurement is written into section 8 of this plan.
+- The `NetState` tests pass.
+- Worker timer drift in a hidden headed Chrome tab is measured, and the suspended rule's thresholds hold against it or are changed.
 
 ## Files
 

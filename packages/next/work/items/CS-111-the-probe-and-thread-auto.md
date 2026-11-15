@@ -12,7 +12,9 @@ The probe and `thread: "auto"`.
 
 ## Done when
 
-Tests (fake worker): a worker that can't start, no `navigator.gpu`, no adapter, no context, a timeout, a cached answer that fails; the inspector shows mode and reason; forced `"worker"` rejects with the reason.
+- Each probe failure falls back to the main thread with its reason: a worker that can't start, no `navigator.gpu`, no adapter, no context, a timeout, a stale cached answer (fake-worker tests).
+- The inspector shows the thread mode and its reason.
+- A forced `thread: "worker"` rejects with the reason.
 
 ## Files
 

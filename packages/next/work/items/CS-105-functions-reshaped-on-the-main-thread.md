@@ -12,7 +12,8 @@ Functions reshaped on the main thread: self-contained functions and modules. Nee
 
 ## Done when
 
-No public parameter's type is a bare function; the transform-graph and frames examples run on module or program forms; CS-91's fits run off the main thread for every program-form warp.
+- No public parameter's type is a bare function.
+- The transform-graph and frames examples run on module or program forms.
 
 ## Files
 

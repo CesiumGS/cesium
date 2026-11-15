@@ -10,6 +10,12 @@ needs: [CS-86]
 
 Content decode onto `Jobs`, with priorities and cancellation. Needs nothing beyond the first slice (CS-86).
 
+## Done when
+
+- Content decode runs at its tile's request priority.
+- A decode is cancelled when its tile is deselected or evicted.
+- Decoded content prepares its uploads in the apply phase.
+
 ## Files
 
 - `src/scene/engineContent.ts`

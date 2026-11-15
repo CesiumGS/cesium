@@ -12,7 +12,8 @@ Renderer-neutral content resources (texture sources, `MeshData`, `ImageryComposi
 
 ## Done when
 
-Same parity. Three fewer named exceptions
+- WebGPU parity suites give the same results as before the move.
+- No content code holds a WebGPU object: `TIER_EXCEPTIONS` has no `GlobeImagery` entries.
 
 ## Files
 

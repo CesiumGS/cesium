@@ -10,4 +10,9 @@ needs: [CS-105, CS-53, CS-55, CS-56, CS-61]
 
 The program forms of the reshaped functions. Needs CS-105 and Cesium IR's CS-53, CS-55, CS-56 and CS-61; closures are refused only once CS-61 lands.
 
+## Done when
+
+- A closure passed where the engine runs a function is refused in both thread modes, with a diagnostic naming the captured variable.
+- A self-contained function is lowered by its source text and runs.
+
 Detail: `docs/superpowers/plans/2026-11-13-worker-facade.md`, its milestone table.

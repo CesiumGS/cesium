@@ -10,6 +10,11 @@ needs: [CS-86]
 
 Dedicated worker groups onto `Jobs`, including the app worker group. Needs nothing beyond the first slice (CS-86).
 
+## Done when
+
+- The Moon map, Slang, B-rep kernel and B-rep section workers are scheduled as dedicated groups in `Jobs`.
+- `Jobs` has an app worker group.
+
 ## Files
 
 - `src/io/moonMapLoad.ts`

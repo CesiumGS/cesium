@@ -12,7 +12,11 @@ Retries for 3D Tiles content (episodes owned by the tile).
 
 ## Done when
 
-The verdict table and episode tests pass, including the 200-tile outage (bounded attempts), cancelled-in-backoff and the retry slot cap. Existing streaming tests pass unchanged.
+- A transient 503 retries and the content loads.
+- A 200-tile outage makes a bounded number of attempts.
+- Retries hold at most a quarter of the request window.
+- The verdict table and episode tests pass, including the 200-tile outage, cancelled-in-backoff and the retry slot cap.
+- Existing streaming tests pass unchanged.
 
 ## Files
 

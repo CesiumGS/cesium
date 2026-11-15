@@ -12,7 +12,9 @@ The façade and the direct transport.
 
 ## Done when
 
-The full suite passes in main-thread mode; per-command overhead measured in a Node micro-benchmark and recorded; `api/surface.txt` changes only where CS-103 to CS-107 changed it.
+- The full suite passes in main-thread mode through the façade.
+- Per-command overhead is measured in a Node micro-benchmark and recorded in the bench results.
+- `api/surface.txt` changes only where CS-103 to CS-107 changed it.
 
 ## Files
 

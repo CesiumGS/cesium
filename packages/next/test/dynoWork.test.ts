@@ -434,3 +434,66 @@ describe("work in progress", () => {
     expect(workInProgress(items).map((it) => it.id)).toEqual(["CS-60"]);
   });
 });
+
+describe("release items are the map's gates", () => {
+  const ms = (id: string, constraints: string[]): WorkMilestone => ({
+    id,
+    title: `Milestone ${id}`,
+    kind: "capability",
+    status: "Planned",
+    project: "CS-2",
+    done_when: [],
+    constraints: constraints.map((c) => ({ id: c, clause: "c?" })),
+    serves: [],
+    check_results: [],
+    path: `m/${id}`,
+    progress: { done: 0, total: constraints.length },
+    check_due: false,
+    to_shape: [],
+  });
+  const s: WorkSnapshot = {
+    ...snapshot,
+    items: [
+      item("CS-70"),
+      item("CS-71"),
+      item("CS-72", { needs: ["CS-71"], open_needs: ["CS-71"] }),
+      item("CS-74"),
+      item("CS-80", {
+        title: "Release 2.0.0-alpha.1",
+        release: "2.0.0-alpha.1",
+        needs: ["CS-90", "CS-72"],
+        open_needs: ["CS-72"],
+      }),
+    ],
+    milestones: [
+      ms("CS-90", ["CS-70"]),
+      ms("CS-91", ["CS-71"]),
+      ms("CS-92", ["CS-74"]),
+    ],
+  };
+
+  it("draws a release item as a gate after what it needs, not as loose work", () => {
+    const m = milestoneMapOf(s, undefined, "steps");
+    expect(m.gates).toEqual([{ id: "CS-80", title: "Release 2.0.0-alpha.1" }]);
+    const gate = m.nodes.find((n) => n.id === "CS-80")!;
+    expect(gate.gate).toBeDefined();
+    expect(gate.x0).toBeGreaterThan(m.nodes.find((n) => n.id === "CS-90")!.x0);
+    // CS-72, needed directly and in no milestone, waits on CS-91's item,
+    // so the gate comes after CS-91 too.
+    expect(gate.x0).toBeGreaterThan(m.nodes.find((n) => n.id === "CS-91")!.x0);
+    // The gate counts the items of what it waits on (CS-70, CS-71) and
+    // CS-72, needed directly; CS-80 itself is no project's loose work.
+    expect(gate.gate!.items).toBe(3);
+    const loose = m.nodes.find((n) => n.unshaped);
+    expect(Object.values(loose!.counts).reduce((a, b) => a + b, 0)).toBe(1);
+  });
+
+  it("measures to a release: what it doesn't need moves apart", () => {
+    const m = milestoneMapOf(s, undefined, "steps", "CS-80");
+    expect(m.focus).toBe("CS-80");
+    const lane = (id: string) => m.nodes.find((n) => n.id === id)!.lane;
+    expect(lane("CS-92")).toMatch(/^outside-/);
+    expect(lane("CS-91")).not.toMatch(/^outside-/);
+    expect(lane("CS-90")).not.toMatch(/^outside-/);
+  });
+});

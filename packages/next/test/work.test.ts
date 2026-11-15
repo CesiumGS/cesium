@@ -387,6 +387,29 @@ describe("checks", () => {
     expect(problems).toMatch(/needs CS-21, which was dropped/);
     expect(problems).toMatch(/cycle: CS-2[34] → CS-2[34] → CS-2[34]/);
   });
+  it("takes a release item's version, one release item per version", () => {
+    const root = tempRepo();
+    sample(root);
+    const release = (id: string, version: string) =>
+      put(root, {
+        id,
+        title: `Release ${id}`,
+        kind: "work",
+        status: "Planned",
+        project: "CS-2",
+        release: version,
+        needs: ["CS-3"],
+      });
+    release("CS-30", "2.0.0-alpha.1");
+    expect(checkItems(loadWorkTree(root), { root })).toEqual([]);
+    release("CS-31", "2.0.0-alpha.1");
+    release("CS-32", "v2.0.0");
+    const problems = checkItems(loadWorkTree(root)).join("\n");
+    expect(problems).toMatch(
+      /release 2\.0\.0-alpha\.1: set on CS-30 and CS-31; one release item per version/,
+    );
+    expect(problems).toMatch(/release "v2\.0\.0" isn't a version/);
+  });
 });
 
 describe("views", () => {

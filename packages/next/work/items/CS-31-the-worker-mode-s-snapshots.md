@@ -10,6 +10,11 @@ needs: [CS-23, CS-99]
 
 The worker mode's snapshots. Needs CS-23 and the worker spike (`docs/design/job-system.md`).
 
+## Done when
+
+- The `support`, `effective` and `explain` API tests pass unchanged in both thread modes.
+- `strict` throws synchronously from the snapshot.
+
 ## Files
 
 - `src/profile/`

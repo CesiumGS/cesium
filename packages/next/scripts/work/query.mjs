@@ -86,6 +86,7 @@ export function queryWork(root, { elsewhere = [], history = [] } = {}) {
       party: d.party,
       created: d.created,
       estimate_tokens: tokens(d.estimate_tokens),
+      release: d.kind === "work" && d.release ? String(d.release) : undefined,
       path: it.path,
       ready: g.isReady(it),
       blocked: g.isBlocked(it),

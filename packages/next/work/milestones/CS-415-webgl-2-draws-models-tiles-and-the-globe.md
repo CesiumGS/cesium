@@ -6,7 +6,7 @@ status: Planned
 created: 2026-11-14
 project: CS-9
 outcome: "On a browser without WebGPU, glTF models, 3D Tiles and the globe with terrain and imagery draw lit, within tolerance of WebGPU."
-needs: [CS-36 c?, CS-37 c?, CS-38 c?]
+needs: [CS-36 c?, CS-37 c?, CS-38 c?, CS-30 c?, CS-32 c?]
 ---
 
 ## Done when

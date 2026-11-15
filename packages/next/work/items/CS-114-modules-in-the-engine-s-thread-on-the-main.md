@@ -12,7 +12,8 @@ Modules in the engine's thread, with the engine on the main thread. Needs CS-108
 
 ## Done when
 
-A tick module changes the scene in the tick it runs in both modes (test); a controller module drives the camera from forwarded input in the worker suite.
+- With the engine on the main thread, a tick module changes the scene in the tick it runs.
+- With the engine on the main thread, a controller module drives the camera from input.
 
 ## Files
 
