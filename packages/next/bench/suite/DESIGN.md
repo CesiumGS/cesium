@@ -101,45 +101,46 @@ first principles in human-in-the-lead's systems-thinking notes, not from
 a team's lifecycle columns: work is stocks and flows; the owner's
 attention is the constraint; a distinction earns its place only if
 someone acts on it. It reads, never writes: a change to an item is a
-change to its file.
+change to its file. The tracker follows human-in-the-lead's format:
+milestones named by their outcome, each with an `outcome` sentence,
+"Done when" clauses and a check.
 
 - **It reads one API.** `/work-api/query.json` and
   `/work-api/item/CS-<n>.json` on the dev server, versioned, built by
   `scripts/work/query.mjs`, the only adapter between the page and the
   tracker's files. When the human-in-the-lead plugin's `hitld work query
 --json` and its readouts exist, that file changes and nothing here.
-- **Whose move.** Every open item has one next actor: the owner (a
-  decision they can answer now, or a proposed item to commit or drop),
-  agents (ready work, work in flight), an outside party, or nobody yet
-  (waiting on other items). A strip of four counts says so at the top,
-  and each one leads to its section. The rail's count is the owner's.
-- **Waiting on you** comes first, because the owner's attention is the
-  constraint: the decisions they can answer now, the most waited-on
-  first (counting what waits through other items), with what arrived and
-  what was answered in the last 7 days. Proposed items to commit or drop
-  fold below.
-- **Flow.** The stages (proposed, waiting on items, ready, in flight,
-  done) as stocks joined by arrows: each one's count now, a sparkline of
-  its count at the end of each day since the history begins (replayed
-  from the items' committed status changes), and the moves in and out of
-  it in the last 7 days, counted at every commit. The stage that grew
-  most is marked "Growing": a growing queue is where flow is held up.
-  Under it, Little's law's terms: new items, in flight, done, and lead
-  time from planned to done. The tracker's import (its first day) counts
-  as neither arrivals nor new items. Choosing a stage lists its items.
-- **In flight**, with who holds each and on which branch, claims in
-  other worktrees and on other local branches included until they merge.
-- **Next up**: ready items, the most waited-on first, until items carry
-  a cost of delay and a size. **Waiting outside**: the external waits,
-  ranked the same way.
-- **Structure**: how projects wait on each other, and a project's items
-  with their needs.
+- **Scope.** A trail at the top (all work, an initiative, a project, a
+  milestone) and a find field; both narrow every view. An item or a list
+  opens in a pane on the right (`?item=CS-<n>`, `?list=…`), beside the
+  view when the window is wide enough and over it when not.
+- **Three views, one question each:**
+  - **Your move** (the default): the owner's attention is the
+    constraint, so each section leads with its number and lists the
+    most waited-on first, counting what waits through other items.
+    Your decisions, ready to start, in flight (who holds each, on which
+    branch, claims in other worktrees and local branches included until
+    they merge) and waiting outside. The rail's count is the owner's.
+  - **Roadmap**: what comes after what, without dates. By milestones (a
+    map or a list), by initiatives or projects, or as the projects'
+    waits on each other. The milestone map runs across in steps or in
+    tokens left; each milestone starts once everything it waits on is
+    done, and a milestone waits on another when one of its items needs
+    one of the other's. Two layouts: project lanes, or fewest crossings
+    (d3-dag's layered layout), which trades the lanes for fewer crossed
+    waits. The critical path is drawn in the accent; hovering a
+    milestone lights what feeds it and what it unblocks; choosing a wait
+    lists the items behind it. With release gates, "Measure to" keeps a
+    gate and what it needs.
+  - **Flow**: the stages (proposed, waiting on items, ready, in flight,
+    done) as a band per stage, day by day since the history begins
+    (replayed from the items' committed status changes); a band that
+    widens is a queue growing. The longest chains of items that must
+    happen in order, and the measures, each with its pair: the measure
+    that must not get worse when this one is pushed.
 - **Later, from HITLd's records:** tokens per item, verification, the
   merge queue, quotas and the controllers' steps. The page says so in
   one line rather than showing empty sections.
-- **Filters:** where (all work, an initiative or a project, in one
-  grouped list) and words; both narrow every section. An item opens in a
-  panel on the right (`?item=CS-<n>`).
 - **Staying current:** the dev server tells open pages when an item file
   changes; pages also read when the window comes to the front and every
   minute (claims elsewhere are scanned at most every 30 s, the history
