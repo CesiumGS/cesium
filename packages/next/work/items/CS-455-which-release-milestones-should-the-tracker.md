@@ -4,7 +4,7 @@ title: "Which release milestones should the tracker have: alphas, betas, release
 kind: decision
 status: Planned
 created: 2026-11-14
-project: CS-437
+project: CS-18
 decided-by: owner
 ---
 
