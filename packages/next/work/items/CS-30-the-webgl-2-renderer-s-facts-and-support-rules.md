@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-8
 needs: [CS-21, CS-35]
+touches: [packages/next/src/profile/**, packages/next/src/render/webgl2/**]
 ---
 
 The WebGL 2 renderer's facts and support rules. Needs CS-21 and WebGL 2 CS-35.
@@ -16,9 +17,6 @@ The WebGL 2 renderer's facts and support rules. Needs CS-21 and WebGL 2 CS-35.
 - Every feature absent there is `off`, with its reason.
 - Once WebGL 2 draws the globe, terrain, imagery and meshes, the required-content invariant holds for them.
 
-## Files
+## Plan
 
-- `src/profile/`
-- `src/render/webgl2/`
-
-Detail: `docs/superpowers/plans/2026-11-13-engine-profiles.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-engine-profiles.md`, its milestone table.

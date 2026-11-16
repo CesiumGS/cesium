@@ -5,17 +5,11 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-14
+touches: [packages/next/src/shaders/surface.slang, packages/next/src/shaders/common.slang, packages/next/src/render/layout.ts, packages/next/src/render/drawConstants.ts, packages/next/src/streaming/tileMorph.ts, packages/next/src/scene/View.ts]
 ---
 
 The signed `transition` word, the dither flag, `View.lodTransitions: "smooth" | "pop"`, the clock's epoch rebase. Needs nothing.
 
-## Files
+## Plan
 
-- `src/shaders/surface.slang`
-- `src/shaders/common.slang`
-- `src/render/layout.ts`
-- `src/render/drawConstants.ts`
-- `src/streaming/tileMorph.ts`
-- `src/scene/View.ts`
-
-Detail: `docs/superpowers/plans/2026-11-13-lod-transitions.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-lod-transitions.md`, its milestone table.

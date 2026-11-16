@@ -10,4 +10,6 @@ needs: [CS-82, CS-75]
 
 The places' night windows and zinc roofs, split from CS-82 because they need OpenPBR tier 1 (CS-75): emission in nits and the metal lobe.
 
-Detail: `docs/superpowers/plans/2026-11-13-materialx-live-graph.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-materialx-live-graph.md`, its milestone table.

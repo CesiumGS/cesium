@@ -5,12 +5,11 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-11
+touches: [packages/next/src/globe/**]
 ---
 
 The quantized-mesh water mask. Needs nothing.
 
-## Files
+## Plan
 
-- `src/globe/`
-
-Detail: `docs/superpowers/plans/2026-11-13-materialx-live-graph.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-materialx-live-graph.md`, its milestone table.

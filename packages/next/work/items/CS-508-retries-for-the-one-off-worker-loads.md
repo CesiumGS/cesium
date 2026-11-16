@@ -15,4 +15,6 @@ Once the job system owns the sky pack, star map and glare kernel loads (CS-88), 
 - A transient failure on the sky pack, star map or glare kernel load retries with jittered backoff and loads.
 - Their retries count against their origin's retry budget, and a cancel on dispose stops them.
 
-Detail: `docs/superpowers/plans/2026-11-13-streaming-robustness.md`, section 12.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-streaming-robustness.md`, section 12.

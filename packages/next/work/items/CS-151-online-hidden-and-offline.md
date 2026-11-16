@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-147]
+touches: [packages/next/src/streaming/NetState.ts, packages/next/src/streaming/RequestScheduler.ts, packages/next/src/scene/Engine.ts, packages/next/src/streaming/tileRetry.ts]
 ---
 
 Online, hidden and offline.
@@ -15,11 +16,6 @@ Online, hidden and offline.
 - The `NetState` tests pass.
 - Worker timer drift in a hidden headed Chrome tab is measured, and the suspended rule's thresholds hold against it or are changed.
 
-## Files
+## Plan
 
-- `src/streaming/NetState.ts`
-- `RequestScheduler.ts`
-- `Engine.ts`
-- `tileRetry.ts`
-
-Detail: `docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.

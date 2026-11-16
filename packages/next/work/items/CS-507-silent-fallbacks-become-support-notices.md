@@ -17,4 +17,6 @@ Each fallback that is silent today raises a support notice, as the engine-profil
 - Accuracy-class notices state their effect on accuracy.
 - Glare is migrated to the notice, and glare and translucency parity are unchanged.
 
-Detail: `docs/superpowers/plans/2026-11-13-engine-profiles.md`, section 4.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-engine-profiles.md`, section 4.

@@ -22,4 +22,6 @@ Tests with two temporary homes on loopback: the issued leaf verifies under the r
 
 new `bench/suite/hub/ca.mjs`, `hub.mjs`, `pairing.mjs`, `devices.mjs`, `commands/hub.mjs`, `views/Devices.tsx`; `cli.mjs` (dispatch), `routes.tsx`, `shell.tsx` (the Settings menu), `package.json` (`hub`, the X.509 dependency)
 
-Detail: `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.

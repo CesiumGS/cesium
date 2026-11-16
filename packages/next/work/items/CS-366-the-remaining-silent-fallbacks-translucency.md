@@ -12,4 +12,6 @@ needs: [CS-23, CS-134]
 
 Dropped translucency layers become a limit notice and their regrowth a refinement source, the slice pool's imagery capacity a support-report entry, and the transform normals choice an accuracy-class `normals` feature.
 
-Detail: `docs/superpowers/plans/2026-11-13-engine-profiles.md`, section 4.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-engine-profiles.md`, section 4.

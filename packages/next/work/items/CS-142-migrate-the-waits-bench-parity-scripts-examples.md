@@ -14,4 +14,6 @@ Migrate the waits (bench, parity, scripts, examples, widgets, spikes). Needs CS-
 
 Each page's settle code is gone; bench results record the new `settleMs` meaning in their schema (`bench/suite/schema.ts`).
 
-Detail: `docs/superpowers/plans/2026-11-13-refinement-and-convergence.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-refinement-and-convergence.md`, its milestone table.

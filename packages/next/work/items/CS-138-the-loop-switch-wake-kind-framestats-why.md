@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-15
 needs: [CS-134]
+touches: [packages/next/src/scene/Engine.ts, packages/next/src/scene/engineContent.ts, packages/next/src/scene/ShaderBindings.ts, packages/next/src/scene/world/caps.ts, packages/next/src/scene/HeightClamping.ts, packages/next/src/scene/world/routes.ts, packages/next/src/render/world/bundles.ts, packages/next/src/streaming/DrawSink.ts, packages/next/widgets/recorder.ts, packages/next/widgets/recorderRows.ts, packages/next/bench/suite/**]
 ---
 
 The loop switch (`wake(kind)`, `FrameStats.why`). Needs CS-134.
@@ -14,18 +15,6 @@ The loop switch (`wake(kind)`, `FrameStats.why`). Needs CS-134.
 
 CS-134's check is removed because it's now true by construction. The power tests pass unchanged on `stats.loop`. Unattributed wakes are zero in the fake-device scenarios.
 
-## Files
+## Plan
 
-- `src/scene/Engine.ts`
-- `src/scene/engineContent.ts`
-- `src/scene/ShaderBindings.ts`
-- `src/scene/world/caps.ts`
-- `src/scene/HeightClamping.ts`
-- `src/scene/world/routes.ts`
-- `src/render/world/bundles.ts`
-- `src/streaming/DrawSink.ts`
-- `widgets/recorder.ts`
-- `widgets/recorderRows.ts`
-- `bench/suite/`
-
-Detail: `docs/superpowers/plans/2026-11-13-refinement-and-convergence.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-refinement-and-convergence.md`, its milestone table.

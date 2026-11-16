@@ -5,6 +5,7 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-10
+touches: [packages/next/src/ir/**]
 ---
 
 The core (types, rates, equations, literal slots, the builder). Needs nothing.
@@ -16,8 +17,6 @@ The core (types, rates, equations, literal slots, the builder). Needs nothing.
 - An import-boundary test shows `src/ir/` imports nothing outside itself.
 - `checkBundle` shows the core in the main chunk, with no dependency.
 
-## Files
+## Plan
 
-- `src/ir/`
-
-Detail: `docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.

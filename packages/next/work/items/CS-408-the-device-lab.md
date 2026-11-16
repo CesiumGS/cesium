@@ -20,4 +20,6 @@ A paired iPhone opens a run link, and its capability report and one scene's timi
 
 `commands/device.mjs`, new `bench/suite/hub/deviceRuns.mjs`, `capabilities.ts`, `DEVICES.md`; `suite.ts` (post-back), `runner/runner.mjs` (Firefox, Android), `manifest.mjs`, `views/Runs.tsx` (devices)
 
-Detail: `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.

@@ -12,4 +12,6 @@ needs: [CS-48]
 
 Each op is in the vocabulary with float64, autodiff, interval, emitter, df64 and residual forms.
 
-Detail: `docs/superpowers/plans/2026-11-12-transform-graph.md`, Task 9, item 3.
+## Plan
+
+`docs/superpowers/plans/2026-11-12-transform-graph.md`, Task 9, item 3.

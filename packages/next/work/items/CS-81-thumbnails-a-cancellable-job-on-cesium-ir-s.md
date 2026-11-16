@@ -6,12 +6,11 @@ state: planned
 created: 2026-11-13
 project: CS-11
 needs: [CS-80]
+touches: [packages/next/examples/materialx-graph/**]
 ---
 
 Thumbnails (a cancellable job on CS-50's evaluator) and picks. Needs CS-80.
 
-## Files
+## Plan
 
-- `examples/materialx-graph/`
-
-Detail: `docs/superpowers/plans/2026-11-13-materialx-live-graph.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-materialx-live-graph.md`, its milestone table.

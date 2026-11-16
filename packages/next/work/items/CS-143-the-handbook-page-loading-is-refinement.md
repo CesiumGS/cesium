@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-15
 needs: [CS-136]
+touches: [packages/next/handbook/**]
 ---
 
 The handbook page "Loading is refinement". Needs CS-136.
@@ -14,8 +15,6 @@ The handbook page "Loading is refinement". Needs CS-136.
 
 Reviewed by the owner.
 
-## Files
+## Plan
 
-- `handbook/`
-
-Detail: `docs/superpowers/plans/2026-11-13-refinement-and-convergence.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-refinement-and-convergence.md`, its milestone table.

@@ -6,12 +6,11 @@ state: planned
 created: 2026-11-13
 project: CS-14
 needs: [CS-122]
+touches: [packages/next/src/globe/**]
 ---
 
 Imagery coarsening, including the two suspected slice bugs (shown by tests first). Needs CS-122.
 
-## Files
+## Plan
 
-- `src/globe/`
-
-Detail: `docs/superpowers/plans/2026-11-13-lod-transitions.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-lod-transitions.md`, its milestone table.

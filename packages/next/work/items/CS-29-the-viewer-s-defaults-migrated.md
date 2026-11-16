@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-8
 needs: [CS-23]
+touches: [packages/next/widgets/viewer.ts]
 ---
 
 The Viewer's defaults migrated. Needs CS-23.
@@ -17,8 +18,6 @@ The Viewer's defaults migrated. Needs CS-23.
 - The Viewer's capacities come from device limits, and each clamp is reported.
 - The Viewer example looks the same as before.
 
-## Files
+## Plan
 
-- `widgets/viewer.ts`
-
-Detail: `docs/superpowers/plans/2026-11-13-engine-profiles.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-engine-profiles.md`, its milestone table.

@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-145]
+touches: [packages/next/src/io/requestOptions.ts, packages/next/src/io/fetchBytes.ts, packages/next/src/io/worker.ts, packages/next/src/streaming/tilesetLoad.ts, packages/next/src/streaming/Tile.ts, packages/next/src/globe/TerrainSource.ts, packages/next/src/globe/ImageryProvider.ts, packages/next/src/io/ion.ts, packages/next/src/scene/Engine.ts]
 ---
 
 Request options at 1.x parity: proxies (prefix and function), inherited query parameters and headers, credentials for trusted origins (owner, 2026-11-13). Needs CS-145. The app's auth-refresh hook is CS-157, split out because it waits for ion tokens (CS-150).
@@ -18,16 +19,6 @@ Request options at 1.x parity: proxies (prefix and function), inherited query pa
 - Credentials go only to trusted origins.
 - No option value appears in any diagnostic.
 
-## Files
+## Plan
 
-- `src/io/requestOptions.ts`
-- `fetchBytes.ts`
-- `io/worker.ts`
-- `tilesetLoad.ts`
-- `Tile.ts`
-- `TerrainSource.ts`
-- `ImageryProvider.ts`
-- `ion.ts`
-- `Engine.ts`
-
-Detail: `docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.

@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-149, CS-150, CS-151]
+touches: [packages/next/widgets/inspector.ts, packages/next/widgets/inspectable.ts, packages/next/widgets/engine.ts, packages/next/widgets/recorder.ts, packages/next/widgets/recorderRows.ts, packages/next/bench/suite]
 ---
 
 The inspector's Network section and the recorder.
@@ -19,13 +20,6 @@ The inspector's Network section and the recorder.
 - The layout doesn't move between states: the DOM-skeleton test holds.
 - The recorder has the columns `net_timeouts`, `net_retries`, `net_failed` and `net_paused`, and Dyno's report and diagnose scripts read them.
 
-## Files
+## Plan
 
-- `widgets/inspector.ts`
-- `inspectable.ts`
-- `engine.ts`
-- `recorder.ts`
-- `recorderRows.ts`
-- `bench/suite`
-
-Detail: `docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.

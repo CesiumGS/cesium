@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-152, CS-153]
+touches: [packages/next/handbook/src/tabs/**, CESIUM2_WEBGPU_PLAN.md]
 ---
 
 Handbook and plan updates.
@@ -16,9 +17,6 @@ Handbook and plan updates.
 - The page has a checked date, and its numbers match the shipped defaults.
 - The overall plan records the streaming plan's follow-ups and the Cesium ion questions.
 
-## Files
+## Plan
 
-- `handbook/src/tabs/`
-- `CESIUM2_WEBGPU_PLAN.md`
-
-Detail: `docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.

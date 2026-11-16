@@ -6,12 +6,11 @@ state: planned
 created: 2026-11-13
 project: CS-11
 needs: [CS-39]
+touches: [packages/next/src/render/webgl2/**]
 ---
 
 The WebGL 2 renderer's path. Needs CS-39.
 
-## Files
+## Plan
 
-- `src/render/webgl2/`
-
-Detail: `docs/superpowers/plans/2026-11-13-materialx-live-graph.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-materialx-live-graph.md`, its milestone table.

@@ -19,6 +19,8 @@ Every route in section 16's inventory is reachable from the rail, a run, a scene
 
 `bench/suite/shell.tsx`, `routes.tsx`, `views/Analysis.tsx` (Machines out), `views/Overview.tsx` (Machines), `views/FirstRun.tsx` (links), `DESIGN.md`, the route and link tests
 
-Detail: `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.
-
 Order note (2026-11-13): it needed CS-391 only because both edit `routes.tsx`. The owner asked to start the work UI first, so this item goes first and CS-391 rebases onto it.
+
+## Plan
+
+`docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.

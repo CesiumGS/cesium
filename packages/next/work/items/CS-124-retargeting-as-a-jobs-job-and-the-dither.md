@@ -6,13 +6,11 @@ state: planned
 created: 2026-11-13
 project: CS-14
 needs: [CS-122, CS-86]
+touches: [packages/next/src/streaming/**, packages/next/src/globe/**]
 ---
 
 Retargeting as a `Jobs` job, and the dither fallback for terrain without morph data. Needs CS-122 and the first job-system slice (merged).
 
-## Files
+## Plan
 
-- `src/streaming/`
-- `src/globe/`
-
-Detail: `docs/superpowers/plans/2026-11-13-lod-transitions.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-lod-transitions.md`, its milestone table.

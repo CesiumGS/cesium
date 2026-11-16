@@ -14,6 +14,11 @@
       "cd packages/next && npm test"
     ]
   },
+  "dispatch": {
+    "inline_globs": [
+      "packages/next/work/**"
+    ]
+  },
   "ids": {
     "blocks": [
       {

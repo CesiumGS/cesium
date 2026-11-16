@@ -20,4 +20,6 @@ A three-axis sweep reads as small multiples with an image grid. A point within n
 
 `cli.mjs` (capture), new `bench/suite/reference.mjs`, new `views/SweepView.tsx`; `views/Report.tsx`, `views/Analysis.tsx`, `analysis.css`, `views/Images.tsx` (compare any pair), `charts.mjs`
 
-Detail: `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.

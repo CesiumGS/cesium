@@ -13,4 +13,6 @@ Research: which browsers lack WebGPU, by share and platform, and which WebGL 2 e
 
 A dated table in this plan (or a linked note) that orders CS-44's steps, and the personas checked against it
 
-Detail: `docs/superpowers/plans/2026-11-13-webgl2-renderer.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-webgl2-renderer.md`, its milestone table.

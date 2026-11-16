@@ -5,14 +5,11 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-11
+touches: [packages/next/materialx/**, packages/next/scripts/materialxDefs.mjs, packages/next/scripts/materialxAssets.mjs]
 ---
 
 The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`). Needs nothing.
 
-## Files
+## Plan
 
-- `materialx/`
-- `scripts/materialxDefs.mjs`
-- `scripts/materialxAssets.mjs`
-
-Detail: `docs/superpowers/plans/2026-11-13-materialx-live-graph.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-materialx-live-graph.md`, its milestone table.

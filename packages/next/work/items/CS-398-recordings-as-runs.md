@@ -20,4 +20,6 @@ A recording saved from the vertical-exaggeration example appears in Runs with it
 
 `scripts/vitePluginRecord.ts`, `widgets/recorder.ts`, `widgets/inspector.ts`, new `bench/suite/recording.mjs`, `views/Report.tsx` (or a new `Recording.tsx`), `cli.mjs`
 
-Detail: `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.

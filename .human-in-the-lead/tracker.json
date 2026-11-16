@@ -1,5 +1,9 @@
 {
   "schema_version": 1,
   "work_dir": "packages/next/work",
-  "lists_file": "README.md"
+  "lists_file": "README.md",
+  "optional_keys": [
+    "touches",
+    "tier_override"
+  ]
 }

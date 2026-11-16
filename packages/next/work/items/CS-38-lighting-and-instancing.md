@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-9
 needs: [CS-36]
+touches: [packages/next/src/render/webgl2/**]
 ---
 
 Lighting and instancing. Needs CS-36.
@@ -14,8 +15,6 @@ Lighting and instancing. Needs CS-36.
 
 Lit `models`, i3dm tiles, b-reps through CPU tessellation within tolerance
 
-## Files
+## Plan
 
-- `src/render/webgl2/`
-
-Detail: `docs/superpowers/plans/2026-11-13-webgl2-renderer.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-webgl2-renderer.md`, its milestone table.

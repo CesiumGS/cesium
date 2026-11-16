@@ -18,4 +18,6 @@ Exporting from one store and importing into another twice gives the same store a
 
 new `bench/suite/commands/sync.mjs`; `cli.mjs`
 
-Detail: `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.

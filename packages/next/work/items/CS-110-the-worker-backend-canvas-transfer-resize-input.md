@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-13
 needs: [CS-109]
+touches: [packages/next/src/thread/engineWorker.ts, packages/next/src/thread/input.ts, packages/next/src/thread/resize.ts, packages/next/src/scene/renderTarget.ts, packages/next/vite.lib.config.ts, packages/next/scripts/checkBundle.mjs]
 ---
 
 The worker backend (canvas transfer, resize, input, built-in controllers).
@@ -16,13 +17,6 @@ The worker backend (canvas transfer, resize, input, built-in controllers).
 - The `worker` browser suite renders the same images in both modes on its three pages.
 - `checkBundle` shows the worker chunk, separate from the main chunk.
 
-## Files
+## Plan
 
-- `src/thread/engineWorker.ts`
-- `src/thread/input.ts`
-- `src/thread/resize.ts`
-- `renderTarget.ts`
-- `vite.lib.config.ts`
-- `scripts/checkBundle.mjs`
-
-Detail: `docs/superpowers/plans/2026-11-13-worker-facade.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-worker-facade.md`, its milestone table.

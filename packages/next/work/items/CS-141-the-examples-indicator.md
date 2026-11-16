@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-15
 needs: [CS-135]
+touches: [packages/next/widgets/**, packages/next/examples/transform-graph/**, packages/next/examples/vertical-exaggeration/**]
 ---
 
 The examples' indicator. Needs CS-135.
@@ -14,10 +15,6 @@ The examples' indicator. Needs CS-135.
 
 The indicator never changes size; the hysteresis is tested; coordinated with `dev/analytic-warps`.
 
-## Files
+## Plan
 
-- `widgets/`
-- `examples/transform-graph/`
-- `examples/vertical-exaggeration/`
-
-Detail: `docs/superpowers/plans/2026-11-13-refinement-and-convergence.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-refinement-and-convergence.md`, its milestone table.

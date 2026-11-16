@@ -12,4 +12,6 @@ needs: [CS-211]
 
 The plan's Task 4 and their tests pass.
 
-Detail: `docs/superpowers/plans/2026-11-08-frames-5d-controllers-and-animation.md`, Task 4.
+## Plan
+
+`docs/superpowers/plans/2026-11-08-frames-5d-controllers-and-animation.md`, Task 4.

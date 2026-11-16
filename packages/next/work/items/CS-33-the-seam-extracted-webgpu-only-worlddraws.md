@@ -5,6 +5,8 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-9
+touches: [packages/next/src/render/**, packages/next/src/scene/**, packages/next/test/fakeGpu.ts]
+tier_override: 3
 ---
 
 The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves. Needs nothing.
@@ -15,10 +17,6 @@ The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `V
 - The WebGPU renderer is reached only through `WorldDraws`, `RenderDevice`, `WorldMirror` and `ViewRenderer`.
 - The import-boundary test has a `webgl2` tier and forbids it from importing WebGPU code.
 
-## Files
+## Plan
 
-- `src/render/`
-- `src/scene/`
-- `test/fakeGpu.ts`
-
-Detail: `docs/superpowers/plans/2026-11-13-webgl2-renderer.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-webgl2-renderer.md`, its milestone table.

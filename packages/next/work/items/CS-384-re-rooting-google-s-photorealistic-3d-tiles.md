@@ -12,4 +12,6 @@ needs: [CS-150]
 
 The tileset swaps its tree when the roughly three-hour session ends, without a visible reload.
 
-Detail: `docs/superpowers/plans/2026-11-13-streaming-robustness.md`, section 11.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-streaming-robustness.md`, section 11.

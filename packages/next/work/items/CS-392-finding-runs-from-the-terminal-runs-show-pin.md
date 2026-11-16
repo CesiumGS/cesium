@@ -18,4 +18,6 @@ The commands list and show runs from summaries only. `--json` output is stable a
 
 new `bench/suite/commands/runs.mjs`; `cli.mjs` (dispatch)
 
-Detail: `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.

@@ -10,4 +10,6 @@ needs: [CS-77, CS-76]
 
 `KHR_materials_sheen` and `KHR_materials_anisotropy` onto the engine material. Needs CS-77 and OpenPBR tier 2 (CS-76).
 
-Detail: `docs/superpowers/plans/2026-11-13-materialx-live-graph.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-materialx-live-graph.md`, its milestone table.

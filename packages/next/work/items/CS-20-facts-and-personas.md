@@ -5,6 +5,7 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-8
+touches: [packages/next/src/gpu/device.ts, packages/next/test/fakeGpu.ts]
 ---
 
 Facts and personas. Needs nothing.
@@ -17,9 +18,6 @@ Facts and personas. Needs nothing.
 - `test/fakeGpu.ts` stands up each named persona.
 - The full suite's results are unchanged.
 
-## Files
+## Plan
 
-- `src/gpu/device.ts`
-- `test/fakeGpu.ts`
-
-Detail: `docs/superpowers/plans/2026-11-13-engine-profiles.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-engine-profiles.md`, its milestone table.

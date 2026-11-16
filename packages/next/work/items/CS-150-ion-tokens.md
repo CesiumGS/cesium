@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-147]
+touches: [packages/next/src/io/ion.ts, packages/next/src/globe/ImageryProvider.ts, packages/next/src/streaming/tilesetLoad.ts, packages/next/src/scene/Engine.ts]
 ---
 
 ion tokens.
@@ -18,11 +19,6 @@ ion tokens.
 - The 403 refresh is kept or dropped according to what the real Cesium ion service returns for a stale token, measured with a token the owner supplies.
 - The token tests cover the first three.
 
-## Files
+## Plan
 
-- `io/ion.ts`
-- `globe/ImageryProvider.ts`
-- `tilesetLoad.ts`
-- `Engine.ts`
-
-Detail: `docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.

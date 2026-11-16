@@ -6,12 +6,11 @@ state: planned
 created: 2026-11-13
 project: CS-11
 needs: [CS-80, CS-75]
+touches: [packages/next/examples/materialx-graph/**]
 ---
 
 The comparison against MaterialX's own renderer. Needs CS-80 and CS-75.
 
-## Files
+## Plan
 
-- `examples/materialx-graph/`
-
-Detail: `docs/superpowers/plans/2026-11-13-materialx-live-graph.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-materialx-live-graph.md`, its milestone table.

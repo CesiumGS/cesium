@@ -5,12 +5,11 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-14
+touches: [packages/next/scripts/frameJumps.mjs]
 ---
 
 The measuring script, `scripts/frameJumps.mjs`, reading recorder dumps. Needs nothing (kickoff wave A).
 
-## Files
+## Plan
 
-- `scripts/frameJumps.mjs`
-
-Detail: `docs/superpowers/plans/2026-11-13-lod-transitions.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-lod-transitions.md`, its milestone table.

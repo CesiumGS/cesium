@@ -22,4 +22,6 @@ The WGSL front end, through naga and SPIR-V, with diagnostics. Needs CS-48 and C
 - `src/ir/`
 - `tools/naga/`
 
-Detail: `docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.

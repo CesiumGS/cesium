@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-9
 needs: [CS-33, CS-21]
+touches: [packages/next/src/render/webgl2/**, packages/next/src/gpu/**]
 ---
 
 The probe, the `renderer` option and an empty WebGL 2 device. Needs CS-33 and CS-21.
@@ -16,9 +17,6 @@ The probe, the `renderer` option and an empty WebGL 2 device. Needs CS-33 and CS
 - The bundle check passes.
 - On a device below the floor, creating an engine rejects with a message naming the missing item.
 
-## Files
+## Plan
 
-- `src/render/webgl2/`
-- `src/gpu/`
-
-Detail: `docs/superpowers/plans/2026-11-13-webgl2-renderer.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-webgl2-renderer.md`, its milestone table.

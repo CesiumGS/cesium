@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-48]
+touches: [packages/next/src/ir/**]
 ---
 
 The WGSL emitter. Needs CS-48.
@@ -15,8 +16,6 @@ The WGSL emitter. Needs CS-48.
 - Emitted WGSL for every test program is accepted by naga (CI) and by Chrome (the browser suite).
 - A GPU readback of each op over its edge cases agrees with the float64 evaluator to a stated float32 tolerance per op. The test writes the tolerances down.
 
-## Files
+## Plan
 
-- `src/ir/`
-
-Detail: `docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.

@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-51]
+touches: [packages/next/src/ir/**]
 ---
 
 The GLSL ES 3.00 emitter. Needs CS-51.
@@ -16,8 +17,6 @@ The GLSL ES 3.00 emitter. Needs CS-51.
 - The GPU readback test passes on WebGL 2 with the same tolerances as CS-51.
 - naga's GLSL ES output for one emitted WGSL module per test is compiled beside it, as a cross-check.
 
-## Files
+## Plan
 
-- `src/ir/`
-
-Detail: `docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.

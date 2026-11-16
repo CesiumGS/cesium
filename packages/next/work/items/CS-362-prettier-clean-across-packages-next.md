@@ -5,6 +5,7 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-199
+tier_override: 1
 ---
 
 ## Done when

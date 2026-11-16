@@ -12,4 +12,6 @@ needs: [CS-87]
 
 A decode that hangs is detected and its worker replaced.
 
-Detail: `docs/superpowers/plans/2026-11-13-streaming-robustness.md`, section 11.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-streaming-robustness.md`, section 11.

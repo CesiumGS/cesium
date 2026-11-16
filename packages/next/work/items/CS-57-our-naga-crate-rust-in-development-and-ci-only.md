@@ -21,4 +21,6 @@ Our naga crate (Rust in development and CI only). Needs nothing.
 
 - `tools/naga/`
 
-Detail: `docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.

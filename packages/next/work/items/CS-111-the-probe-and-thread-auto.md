@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-13
 needs: [CS-110]
+touches: [packages/next/src/thread/probe.ts, packages/next/widgets/inspector.ts]
 ---
 
 The probe and `thread: "auto"`.
@@ -16,9 +17,6 @@ The probe and `thread: "auto"`.
 - The inspector shows the thread mode and its reason.
 - A forced `thread: "worker"` rejects with the reason.
 
-## Files
+## Plan
 
-- `src/thread/probe.ts`
-- `widgets/inspector.ts`
-
-Detail: `docs/superpowers/plans/2026-11-13-worker-facade.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-worker-facade.md`, its milestone table.

@@ -22,4 +22,6 @@ A study made, run against, noted and concluded from the CLI reads back with its 
 
 new `bench/suite/studies.mjs`, `commands/studies.mjs`, `packages/next/work/studies/README.md`; `cli.mjs` (dispatch, `--study`), `schema.ts`, `vite.config.ts` (endpoints), `data.ts`, the store's clean-up; the tracker's `scripts/work/views.mjs` (`check` calls the validator)
 
-Detail: `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.

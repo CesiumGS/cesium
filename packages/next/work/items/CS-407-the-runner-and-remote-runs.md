@@ -20,4 +20,6 @@ The α study's run, started on the Mac with `--on win`, measures in the laptop's
 
 new `bench/suite/runner/runner.mjs`, `bench/suite/hub/jobs.mjs`, `hub/front.mjs`, `browserArgs.mjs`; `commands/runner.mjs`, `cli.mjs`, `images.mjs`, `telemetry.mjs`, `reuse.mjs` (the machine key), `views/FirstRun.tsx`
 
-Detail: `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.

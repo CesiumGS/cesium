@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-9
 needs: [CS-36]
+touches: [packages/next/bench/**, packages/next/handbook/**]
 ---
 
 The runner suite, the gallery's renderer switch, the handbook. Grows from CS-36: it starts once first draws land and grows with each later step.
@@ -14,9 +15,6 @@ The runner suite, the gallery's renderer switch, the handbook. Grows from CS-36:
 
 One command runs every page in section 7
 
-## Files
+## Plan
 
-- `bench/`
-- `handbook/`
-
-Detail: `docs/superpowers/plans/2026-11-13-webgl2-renderer.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-webgl2-renderer.md`, its milestone table.

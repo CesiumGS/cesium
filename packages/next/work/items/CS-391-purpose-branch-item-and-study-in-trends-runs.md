@@ -18,4 +18,6 @@ With a store holding baseline runs and dev runs from two branches, Trends draws 
 
 `views/Trends.tsx`, `trendsModel.ts`, `Runs.tsx`, `runParts.tsx`, `Compare.tsx`, `Report.tsx`, `Alerts.tsx`, `changepoints.mjs`, `routes.tsx`
 
-Detail: `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.

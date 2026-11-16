@@ -14,4 +14,6 @@ The other plans plug in: refinement's public reads and `converged()` in worker m
 
 Each item's own "done when" in section 6.2.
 
-Detail: `docs/superpowers/plans/2026-11-13-worker-facade.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-worker-facade.md`, its milestone table.

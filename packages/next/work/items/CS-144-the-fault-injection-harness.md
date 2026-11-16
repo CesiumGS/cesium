@@ -5,6 +5,7 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-16
+touches: [packages/next/test/faultNetwork.ts, packages/next/test/faultNetwork.test.ts]
 ---
 
 The fault-injection harness.
@@ -13,9 +14,6 @@ The fault-injection harness.
 
 The harness's tests show each behaviour: latency, status, `Retry-After`, drop before and mid-body, stall, abort, ordering by the clock, a seed that repeats.
 
-## Files
+## Plan
 
-- `test/faultNetwork.ts`
-- `test/faultNetwork.test.ts`
-
-Detail: `docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.

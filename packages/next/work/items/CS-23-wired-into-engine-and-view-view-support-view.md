@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-8
 needs: [CS-22]
+touches: [packages/next/src/profile/**, packages/next/src/scene/Engine.ts, packages/next/src/scene/View.ts]
 ---
 
 Wired into `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`). Needs CS-22. Turning today's silent fallbacks into notices is CS-507, split from this item on 2026-11-15.
@@ -17,10 +18,6 @@ Wired into `Engine` and `View` (`view.support`, `view.effective`, `view.explain`
 - Under `strict`, a pinned step that can't run throws.
 - Glare and translucency parity are unchanged.
 
-## Files
+## Plan
 
-- `src/profile/`
-- `src/scene/Engine.ts`
-- `src/scene/View.ts`
-
-Detail: `docs/superpowers/plans/2026-11-13-engine-profiles.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-engine-profiles.md`, its milestone table.

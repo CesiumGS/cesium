@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-48]
+touches: [packages/next/src/ir/**]
 ---
 
 The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms). Needs CS-48.
@@ -16,8 +17,6 @@ The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, ra
 - Each pass has a test on a vector program, which today's scalar IR couldn't express.
 - Breakpoint splitting gives finite bounds over a line-to-arc join (the spike's case), with no dense sample outside them.
 
-## Files
+## Plan
 
-- `src/ir/`
-
-Detail: `docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.

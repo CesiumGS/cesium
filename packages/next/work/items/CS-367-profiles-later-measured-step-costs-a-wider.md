@@ -12,4 +12,6 @@ needs: [CS-26]
 
 The plan's "Later (not planned here)" list, with the cost-budget solver, a sharper upscaler and cheaper shadow steps.
 
-Detail: `docs/superpowers/plans/2026-11-13-engine-profiles.md`, section 8.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-engine-profiles.md`, section 8.

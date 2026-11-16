@@ -18,4 +18,6 @@ A full `npm test` in a fresh worktree records `test/volumes.test.ts` as environm
 
 new `bench/suite/testsReporter.ts`, `testEnvironment.json`, `commands/tests.mjs`, `views/Tests.tsx`, `tests.css`; `vite.config.ts` (vitest block, a read endpoint), `routes.tsx`, `shell.tsx` (rail)
 
-Detail: `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.

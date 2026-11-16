@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-15
 needs: [CS-135, CS-138]
+touches: [packages/next/widgets/inspector.ts, packages/next/widgets/engine.ts, packages/next/widgets/inspectable.ts]
 ---
 
 The inspector's refinement table, flags and converge times. Needs CS-135 and CS-138.
@@ -14,10 +15,6 @@ The inspector's refinement table, flags and converge times. Needs CS-135 and CS-
 
 The DOM-skeleton test holds (layout fixed across states). The owner reviews it by clicking around, per the UI quality bar.
 
-## Files
+## Plan
 
-- `widgets/inspector.ts`
-- `widgets/engine.ts`
-- `widgets/inspectable.ts`
-
-Detail: `docs/superpowers/plans/2026-11-13-refinement-and-convergence.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-refinement-and-convergence.md`, its milestone table.

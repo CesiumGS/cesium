@@ -12,4 +12,6 @@ needs: [CS-122, CS-126]
 
 The tabs' prose, checked dates and statuses are updated and the prior-art sources added with their read dates.
 
-Detail: `docs/superpowers/plans/2026-11-13-lod-transitions.md`, "Milestones".
+## Plan
+
+`docs/superpowers/plans/2026-11-13-lod-transitions.md`, "Milestones".

@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-146]
+touches: [packages/next/src/streaming/tileRetry.ts, packages/next/src/io/backoff.ts, packages/next/src/streaming/tilesetLoad.ts, packages/next/src/streaming/tilesetState.ts, packages/next/src/streaming/Tile.ts, packages/next/src/streaming/tilesetTypes.ts, packages/next/src/streaming/Tileset3D.ts]
 ---
 
 Retries for 3D Tiles content (episodes owned by the tile).
@@ -18,14 +19,6 @@ Retries for 3D Tiles content (episodes owned by the tile).
 - The verdict table and episode tests pass, including the 200-tile outage, cancelled-in-backoff and the retry slot cap.
 - Existing streaming tests pass unchanged.
 
-## Files
+## Plan
 
-- `src/streaming/tileRetry.ts`
-- `src/io/backoff.ts`
-- `tilesetLoad.ts`
-- `tilesetState.ts`
-- `Tile.ts`
-- `tilesetTypes.ts`
-- `Tileset3D.ts`
-
-Detail: `docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.

@@ -34,6 +34,8 @@ Its place in Dyno is the first item of the rail's "Needs a look" group, which th
 - Its counts match `views.mjs initiatives` and `views.mjs ready`.
 - It passes the UI checklist in `packages/next/AGENTS.md`: both themes, 380 px, keyboard only, reduced motion, a clean console.
 
-Detail: `docs/superpowers/plans/2026-11-13-work-tracker.md`, section 9.
-
 Committed (owner, 2026-11-13): build it now, with the rail (CS-403).
+
+## Plan
+
+`docs/superpowers/plans/2026-11-13-work-tracker.md`, section 9.

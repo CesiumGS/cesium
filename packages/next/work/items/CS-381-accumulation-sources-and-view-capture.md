@@ -12,4 +12,6 @@ needs: [CS-136, CS-137]
 
 TAA warm-up and still-frame supersampling as refinement sources, and `view.capture({ samples, scale })` with a clock pause if captures need it.
 
-Detail: `docs/superpowers/plans/2026-11-13-refinement-and-convergence.md`, "Later".
+## Plan
+
+`docs/superpowers/plans/2026-11-13-refinement-and-convergence.md`, "Later".

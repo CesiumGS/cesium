@@ -12,4 +12,6 @@ needs: [CS-215]
 
 The plan's Tasks 10 to 12 and their tests pass.
 
-Detail: `docs/superpowers/plans/2026-11-08-frames-5d-controllers-and-animation.md`, Tasks 10 to 12.
+## Plan
+
+`docs/superpowers/plans/2026-11-08-frames-5d-controllers-and-animation.md`, Tasks 10 to 12.

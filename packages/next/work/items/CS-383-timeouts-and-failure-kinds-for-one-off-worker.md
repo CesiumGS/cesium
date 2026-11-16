@@ -15,4 +15,6 @@ needs: [CS-145]
 
 Their retries wait until CS-88 owns these loads; that half is CS-508, split from this item on 2026-11-15 (accepted, the plan's question 7).
 
-Detail: `docs/superpowers/plans/2026-11-13-streaming-robustness.md`, section 12.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-streaming-robustness.md`, section 12.

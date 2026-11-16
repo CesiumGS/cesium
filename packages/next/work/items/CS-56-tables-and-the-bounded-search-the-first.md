@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-53, CS-54]
+touches: [packages/next/src/ir/**]
 ---
 
 Tables and the bounded search, the first extensions, with the residual's row window. Needs CS-53 and CS-54.
@@ -18,8 +19,6 @@ Tables and the bounded search, the first extensions, with the residual's row win
 - Lattices and flattens of one kind share a pipeline (a fake-GPU count test).
 - The plan-and-profile scene's first warped draw is no longer held by the corridor's compile. The example's refinement chip shows no "compiling" entry for it.
 
-## Files
+## Plan
 
-- `src/ir/`
-
-Detail: `docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.

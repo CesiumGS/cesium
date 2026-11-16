@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-9
 needs: [CS-36]
+touches: [packages/next/src/render/webgl2/**]
 ---
 
 The globe, terrain and imagery. Needs CS-36.
@@ -14,8 +15,6 @@ The globe, terrain and imagery. Needs CS-36.
 
 `globe` and `imagery` within tolerance
 
-## Files
+## Plan
 
-- `src/render/webgl2/`
-
-Detail: `docs/superpowers/plans/2026-11-13-webgl2-renderer.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-webgl2-renderer.md`, its milestone table.

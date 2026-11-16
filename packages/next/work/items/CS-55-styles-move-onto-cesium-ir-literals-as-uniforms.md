@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-50, CS-51, CS-52]
+touches: [packages/next/src/ir/**, packages/next/src/scene/styleExpression.ts]
 ---
 
 Styles move onto Cesium IR, literals as uniforms. Needs CS-50, CS-51 and CS-52.
@@ -18,9 +19,6 @@ Styles move onto Cesium IR, literals as uniforms. Needs CS-50, CS-51 and CS-52.
 - A value edit makes no new module or pipeline (a fake-GPU count test, as `test/styleCost.test.ts`).
 - The bundle guard passes.
 
-## Files
+## Plan
 
-- `src/ir/`
-- `src/scene/styleExpression.ts`
-
-Detail: `docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-cesium-ir.md`, its milestone table.

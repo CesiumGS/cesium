@@ -12,4 +12,6 @@ needs: [CS-202]
 
 The plan's Task 4 and its tests pass.
 
-Detail: `docs/superpowers/plans/2026-11-07-frames-5c-second-body.md`, Task 4.
+## Plan
+
+`docs/superpowers/plans/2026-11-07-frames-5c-second-body.md`, Task 4.

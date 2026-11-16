@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-9
 needs: [CS-33]
+touches: [packages/next/src/scene/gltfModel.ts, packages/next/src/globe/**]
 ---
 
 Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`). Needs CS-33.
@@ -15,9 +16,6 @@ Renderer-neutral content resources (texture sources, `MeshData`, `ImageryComposi
 - WebGPU parity suites give the same results as before the move.
 - No content code holds a WebGPU object: `TIER_EXCEPTIONS` has no `GlobeImagery` entries.
 
-## Files
+## Plan
 
-- `src/scene/gltfModel.ts`
-- `src/globe/`
-
-Detail: `docs/superpowers/plans/2026-11-13-webgl2-renderer.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-webgl2-renderer.md`, its milestone table.

@@ -20,4 +20,6 @@ A fresh session, given only "find out what α does at ×10", opens a study, runs
 
 `packages/next/AGENTS.md`, `packages/next/.claude/skills/measuring-with-dyno/SKILL.md`, beside `work-items/SKILL.md`
 
-Detail: `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.

@@ -12,4 +12,6 @@ needs: [CS-203]
 
 The plan's Task 5 and its tests pass. Before the handover is built, check whether Cesium Moon must first be added to the user's ion account, and what ion returns when it isn't (the spec's section 18).
 
-Detail: `docs/superpowers/plans/2026-11-07-frames-5c-second-body.md`, Task 5.
+## Plan
+
+`docs/superpowers/plans/2026-11-07-frames-5c-second-body.md`, Task 5.

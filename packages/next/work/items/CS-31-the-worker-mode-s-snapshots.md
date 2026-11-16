@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-8
 needs: [CS-23, CS-99]
+touches: [packages/next/src/profile/**]
 ---
 
 The worker mode's snapshots. Needs CS-23 and the worker spike (`docs/design/job-system.md`).
@@ -15,8 +16,6 @@ The worker mode's snapshots. Needs CS-23 and the worker spike (`docs/design/job-
 - The `support`, `effective` and `explain` API tests pass unchanged in both thread modes.
 - `strict` throws synchronously from the snapshot.
 
-## Files
+## Plan
 
-- `src/profile/`
-
-Detail: `docs/superpowers/plans/2026-11-13-engine-profiles.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-engine-profiles.md`, its milestone table.

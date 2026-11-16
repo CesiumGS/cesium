@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-13
 project: CS-13
 needs: [CS-110]
+touches: [packages/next/src/thread/errors.ts, packages/next/src/thread/host.ts, packages/next/src/thread/transport.ts, packages/next/src/gpu/GpuDevice.ts]
 ---
 
 Errors and loss, `restart()`.
@@ -15,11 +16,6 @@ Errors and loss, `restart()`.
 - Each error path reaches the app as an `EngineError` with its code (tests on the channel transport).
 - A killed worker restarts on a fresh canvas, in a worker and then on the main thread (a browser check).
 
-## Files
+## Plan
 
-- `src/thread/errors.ts`
-- `host.ts`
-- `transport.ts`
-- `GpuDevice.ts`
-
-Detail: `docs/superpowers/plans/2026-11-13-worker-facade.md`, its milestone table.
+`docs/superpowers/plans/2026-11-13-worker-facade.md`, its milestone table.

@@ -17,4 +17,6 @@ The app's auth-refresh hook among the request options (owner, 2026-11-13). Needs
 - When the hook returns nothing, those requests fail.
 - No returned value appears in any diagnostic.
 
-Detail: `docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.

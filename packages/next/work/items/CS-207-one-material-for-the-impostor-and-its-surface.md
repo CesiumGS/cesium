@@ -12,4 +12,6 @@ needs: [CS-206]
 
 The plan's Task 8 and its tests pass.
 
-Detail: `docs/superpowers/plans/2026-11-07-frames-5c-second-body.md`, Task 8.
+## Plan
+
+`docs/superpowers/plans/2026-11-07-frames-5c-second-body.md`, Task 8.

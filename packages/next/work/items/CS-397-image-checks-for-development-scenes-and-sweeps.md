@@ -18,4 +18,6 @@ needs: [CS-394, CS-395]
 
 `images.mjs`, `cli.mjs`, `views/Images.tsx`
 
-Detail: `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.
+## Plan
+
+`docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.

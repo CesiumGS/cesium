@@ -5,6 +5,8 @@ kind: work
 state: planned
 created: 2026-11-15
 project: CS-199
+touches: [packages/next/test/noSceneGains.test.ts]
+tier_override: 1
 ---
 
 `test/noSceneGains.test.ts`, "tone mapping, glare and a look stage change no byte", failed once under the full suite's load on 2026-11-15 and passed alone three times out of three; it has failed that way before. Find what in it depends on timing or load.
