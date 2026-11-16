@@ -86,7 +86,7 @@
     <g transform="translate(772 70)">
       <text font-weight="600">1  Camera</text>
       <text y="18" fill="#4a4f57">Above 135°W 25°N, 3.0 Earth radii from the</text>
-      <text y="34" fill="#4a4f57">geocentre, north up: the Earth fills about 70%</text>
+      <text y="34" fill="#4a4f57">geocenter, north up: the Earth fills about 70%</text>
       <text y="50" fill="#4a4f57">of the view's height. No flight at load.</text>
       <text y="80" font-weight="600">2  Clock and light</text>
       <text y="98" fill="#4a4f57">The clock opens at the Artemis II flyby,</text>
@@ -108,7 +108,7 @@
       <text y="402" fill="#4a4f57">appears with the first drawn overlay.</text>
       <text y="432" font-weight="600">6  Dyno's chrome is untouched</text>
       <text y="450" fill="#4a4f57">Inspector top left, credits bottom left,</text>
-      <text y="466" fill="#4a4f57">the viewer's time controls bottom centre.</text>
+      <text y="466" fill="#4a4f57">the viewer's time controls bottom center.</text>
       <text y="500" font-weight="600">Overlays are unlit</text>
       <text y="518" fill="#4a4f57">Lines and triads are emissive: their color</text>
       <text y="534" fill="#4a4f57">is the same on the day and night sides.</text>

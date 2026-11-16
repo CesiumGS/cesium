@@ -75,7 +75,7 @@
   </g>
   <g transform="translate(804 384)" font-size="11" fill="#4a4f57">
     <text font-weight="600" fill="#1f2328" font-size="12">3  The California design grid</text>
-    <text y="16">Camera: over the grid's centre, 180 km range, 55° tilt, heading</text>
+    <text y="16">Camera: over the grid's center, 180 km range, 55° tilt, heading</text>
     <text y="30">0°, so the grid fills about 70% of the view. On: design grid</text>
     <text y="44">(10 km, 1 px), true north dashed; imagery dimmed.</text>
   </g>
@@ -100,7 +100,7 @@
     <text font-weight="600" fill="#1f2328" font-size="12">4  Rigid against exact, and the 31 m sag</text>
     <text y="16">Camera: 2 km beyond the line's far end, 8 km range, 15° above the</text>
     <text y="30">horizon, looking back along it. On: rigid and exact line; the sag</text>
-    <text y="44">labelled at the far end with a 1 px leader; imagery dimmed.</text>
+    <text y="44">labeled at the far end with a 1 px leader; imagery dimmed.</text>
   </g>
 
   <!-- Stop 5 -->

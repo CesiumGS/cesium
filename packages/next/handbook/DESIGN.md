@@ -161,7 +161,7 @@ Use `CodeBlock` from `src/parts.tsx`, never a bare `pre`. It takes a language
 (`ts`, `js`, `json`, `shell` or `text`) and draws real, copyable text on its own
 surface with a border. Tokens come from `src/highlight.ts`, which runs the
 stream parsers in `@codemirror/legacy-modes` with no editor, so it adds no
-dependency. The token colours passed WCAG AA on each theme's block background,
+dependency. The token colors passed WCAG AA on each theme's block background,
 checked on 2026-11-08 (4.5:1 is the floor; the lowest is 5.6:1); check again if
 they change.
 

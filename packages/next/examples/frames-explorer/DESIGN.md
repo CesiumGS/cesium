@@ -149,7 +149,7 @@ view (open the SVGs; they're annotated):
 
 ### The opening shot
 
-- **Camera**: above 135°W 25°N, 3.0 Earth radii from the geocentre, north
+- **Camera**: above 135°W 25°N, 3.0 Earth radii from the geocenter, north
   up, so the Earth fills about 70% of the view's height. No flight at load;
   the first camera move is the user's (a tour stop, "Show on globe", a
   result).
@@ -207,7 +207,7 @@ darker ground under the overlay that is the subject.
 | Everything else while something is selected                    | alpha 0.35                                                    | as its kind                                                                                                              | the same                         |
 
 - **Dashes are geometry.** `line-list` can't dash in screen space, so a
-  dashed line is emitted as separate segments in world space (fixed metres
+  dashed line is emitted as separate segments in world space (fixed meters
   per dash, chosen per overlay so a dash spans about 10 to 20 px at the
   tour's framing).
 - **No halos: a darker ground instead.** While an engineering overlay is
@@ -220,7 +220,7 @@ darker ground under the overlay that is the subject.
   the globe and leaves the lines at full strength. Use `{ eye: true,
 compensation: -0.6 }` (about 0.66× brightness) for those stops, eased
   over the flight, and restore it after. Desaturation isn't available; the
-  eye exposure greys dim scenes a little on its own. A per-layer imagery
+  eye exposure grays dim scenes a little on its own. A per-layer imagery
   brightness and saturation control is carried forward as engine work.
 - **Selection by contrast, not width** (see "A selection on the globe").
 - Lines are depth-tested, never always-on-top (the geocentric triads
@@ -242,7 +242,7 @@ fade out when origins are under 24 px apart on screen. Overlay labels (the
 sag, the convergence, contour values) use the same style, white, with a
 1 px leader where they point at something.
 
-Stop 4's lines are each labelled (owner's rework, 2026-11-06): "Rigid:
+Stop 4's lines are each labeled (owner's rework, 2026-11-06): "Rigid:
 straight, tangent at the start" above the rigid line near its start (white),
 "Exact: follows the ellipsoid" under the exact line at 60% of its length (the
 engineering tone), and the true sag ("12.5 km apart at 400 km") above and left
@@ -296,7 +296,7 @@ reduced motion, flights cut.
 ### Camera controls in space (owner, 2026-11-06)
 
 The owner got "stuck out in space": the globe controls only start a turn
-from a press on the Earth, and nothing showed where the centre of rotation
+from a press on the Earth, and nothing showed where the center of rotation
 was. A view framed on the Moon or Orion now **orbits its subject** with
 the viewer's orbit controls (`viewer.setControls("orbit", …)`): a drag
 anywhere turns about the subject, the wheel zooms within limits, and a
@@ -310,12 +310,12 @@ heading 0, held in a frame of the subject's own (`orbit.ts`, unit-tested):
 
 | View                                 | Focus                                                 | Up                                                    | Heading 0                    | Wheel range                                            |
 | ------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------- | ---------------------------- | ------------------------------------------------------ |
-| Stop 2                               | the Earth's centre                                    | the Earth's axis (ITRF z)                             | 0° longitude (ITRF x)        | 1.02 to 40 Earth radii (about 130 km above the ground) |
-| Stop 5; Orion selected               | between the Earth and the Moon (the framing's centre) | the Moon's orbit normal at the flyby (DE440, ±30 min) | the Moon at the flyby        | 0.15 to 4 Earth–Moon distances                         |
-| MOON_ICRF, MOON_ME, MOON_PA selected | the Moon's centre                                     | its pole (MOON_ME z)                                  | the Earth's side (MOON_ME x) | 1.3 Moon radii to a quarter of the Earth–Moon distance |
+| Stop 2                               | the Earth's center                                    | the Earth's axis (ITRF z)                             | 0° longitude (ITRF x)        | 1.02 to 40 Earth radii (about 130 km above the ground) |
+| Stop 5; Orion selected               | between the Earth and the Moon (the framing's center) | the Moon's orbit normal at the flyby (DE440, ±30 min) | the Moon at the flyby        | 0.15 to 4 Earth–Moon distances                         |
+| MOON_ICRF, MOON_ME, MOON_PA selected | the Moon's center                                     | its pole (MOON_ME z)                                  | the Earth's side (MOON_ME x) | 1.3 Moon radii to a quarter of the Earth–Moon distance |
 | Stop 6; the lunar site selected      | the site                                              | its vertical (the site's up in MOON_ME)               | its north                    | 5 km to 25,000 km                                      |
 
-ICRF and HCRS show the opening shot (their origins, the barycentre and the
+ICRF and HCRS show the opening shot (their origins, the barycenter and the
 Sun, aren't on the scene) and keep the globe controls, as the Earth's frames
 do.
 
@@ -352,7 +352,7 @@ do.
   the flight landed, not past it. A drag interrupt lands with the same
   widened limits, so its first wheel tick is a notch too.
 - **The pivot marker.** While the orbit is dragged, a 20 px white ring with
-  a centre dot and crosshair ticks, outlined dark so it reads on sky and
+  a center dot and crosshair ticks, outlined dark so it reads on sky and
   ground alike, sits at `viewer.orbitPivot` (`pivot.ts`; HUD, never taking
   the pointer); it fades over 0.5 s after the drag ends (a cut under reduced
   motion).
@@ -446,7 +446,7 @@ Nothing opens in a sheet.
   (`READY`); a link to another falls back to the first.
 - **The frame tree** is the panel's one bold thing (the owner's choice of a
   top-down branching diagram over ruling S6's outline): pills sized to their
-  labels, a constant 14 px between neighbours (`layoutTree` with
+  labels, a constant 14 px between neighbors (`layoutTree` with
   `nodeWidths`), elbows between rows. A built-in frame is a family-edged pill
   with a dot; a frame the scenario added is a diamond on a pill tinted and
   edged in its family. Docked, it draws the scenario's frames, the base
@@ -454,7 +454,7 @@ Nothing opens in a sheet.
   selection, with their ancestors; each unused subtree folds into a dashed
   "+N" chip that unfolds on a click (`focusTree`). Too wide for the column,
   it pans (a soft edge says so) and scrolls the lit path and the selection
-  into view; labels never shrink. **Expand** (a labelled button on the
+  into view; labels never shrink. **Expand** (a labeled button on the
   section's heading) opens the whole tree in a dialog over the globe, which
   Escape or its Close button dismisses, focus going back to Expand.
 - **The answer's path** (`branchPath`) lights edge by edge, 90 ms apart,
@@ -467,10 +467,10 @@ Nothing opens in a sheet.
 - **Selecting** a pill opens its detail in place under the diagram: its
   family, its edge from its parent (kind, accuracy, detail, note), "Show on
   globe", and the walk against a reference. An elbow selects its edge. One
-  labelled Close.
+  labeled Close.
 - **The answer**: its figure (`headline-sm`, tabular), its sentence, its
   accuracy ("±17 mm (1σ): measured Earth orientation …", or the reason it
-  isn't bounded, in the warning colour), and the scenario's limit under a
+  isn't bounded, in the warning color), and the scenario's limit under a
   warning rule. While new knobs are evaluated the last answer stays, dimmed,
   with "Updating for your setting…" (R9); behind a catalog run it says so.
   The same answer is the **globe's callout**, top right at 48 px (level
@@ -478,7 +478,7 @@ Nothing opens in a sheet.
   legend); under 560 px it folds to its figure with a chevron (F42).
 - **Knobs** (Task 6c, the approved mockup): a head with "Knobs" and the
   checked-setup chip ("At the checked setup", its title naming what applies
-  there, or "Off the checked setup" in the attention colour), and off it a
+  there, or "Off the checked setup" in the attention color), and off it a
   line under the head naming what moved ("Site latitude −45.0° (checked:
   −90.0°). The checks re-run here."); then one row per knob, its label in a
   column of one width and its control beside it, wrapping under the label
@@ -528,14 +528,14 @@ Nothing opens in a sheet.
   repeats it. One helper, `checkRowStrings`, joins everything a row
   renders, and the tests hold "validated" to measured rows at the checked
   setup and off it. Kind and status stay apart: the kind tints
-  (`tokens.css` `--fx-kind-*`, purple, teal, pink, blue, warm grey, each
+  (`tokens.css` `--fx-kind-*`, purple, teal, pink, blue, warm gray, each
   6.3:1 or more in both schemes) are none of the pass, fail or warning
-  hues, and neither is colour alone. They are the panel's second exception
+  hues, and neither is color alone. They are the panel's second exception
   to StrataKit's tokens: StrataKit has no categorical palette, its only
   hues being its statuses. The row unfolds in place into its
   difference against its tolerance, what it is compared against, its
   reference and source, and its accuracy. A catalog row offers one
-  labelled "Open in Verification".
+  labeled "Open in Verification".
 
 **Fix round 1 (the owner's reports, 2026-11-06)** changed these, and
 binds over the bullets above where they differ:
@@ -599,7 +599,7 @@ binds over the bullets above where they differ:
 
 **Verification** is the second tab: the catalog's Checks, its Overlays and
 the Report, one segmented control apart. Its inspector's sheet keeps one
-labelled Close and no separate fill toggle.
+labeled Close and no separate fill toggle.
 
 ### The convergence exaggeration (stop 3, ruling F32)
 
@@ -637,12 +637,12 @@ caption (stop 3's ×20 convergence and its switch stay).
   same conversion plus the 2 m NAD83(2011) to WGS 84 step anywhere in the
   zone, and `RigidPlacement` is an affine map, valid at any distance (the
   rigid polyline is straight to 1e-6 m: `test/data`).
-- **Sampling.** The exact line every kilometre (400 segments; each chord
+- **Sampling.** The exact line every kilometer (400 segments; each chord
   within 2 cm of the ellipsoid, so the inset's close view sees it on the
   ground); the rigid one as 49 dashes of its chord.
 - **The camera.** South of the line looking north, 5° down, 400 km range
   (divided by the aspect on a portrait view, where the field of view is the
-  height's), centred 53% along: the whole line across the view, between the
+  height's), centered 53% along: the whole line across the view, between the
   caption (top right), the legend (bottom right) and the inset (bottom left),
   under the limb. The Sacramento triad stood over the line's start, so the
   stop draws only the geocentric triads, as stop 2 does.
@@ -651,21 +651,21 @@ caption (stop 3's ×20 convergence and its switch stay).
   mark; within its 10%). A second engine view on the viewer's target and
   world (`engine.addView`, `gapInset.ts`), its camera level and side-on,
   about 100 m south of the mark, the gap 45% of the picture's height
-  (`insetCamera`). A 1 px white leader joins the lines at the mark, labelled
+  (`insetCamera`). A 1 px white leader joins the lines at the mark, labeled
   "31.4 m"; "rigid" and "exact" name the lines at the picture's left. A 1 px
   white border (with a dark outer ring) and a caption strip, "At 20 km:
   31.4 m apart (true scale)". The triads are kept out of its view (a view
-  mask): sized for the main camera, they are kilometres long there.
+  mask): sized for the main camera, they are kilometers long there.
 - **The gap's two parts** (owner: why does the leader lean?). The 31.4 m is
   mostly the curvature's drop, and partly along the line: rigid placement
   lays 20 km of grid as 20 km, the exact one as 20 km over the grid scale
   factor (about 0.99993 between the zone's standard parallels), so the rigid
   point falls 1.48 m short. Both are computed from the two placements, split
   along the inset's own axes (`gapParts`: the ellipsoid's normal at the mark,
-  the line levelled there), not estimated. They are at right angles, so they
+  the line leveled there), not estimated. They are at right angles, so they
   combine in quadrature, √(31.32² + 1.48²) = 31.36, not by addition; shown
-  to the centimetre, a digit finer than the whole, they give the whole as
-  shown (to the decimetre, 31.3 and 1.5 would make 31.3): "31.32 m down"
+  to the centimeter, a digit finer than the whole, they give the whole as
+  shown (to the decimeter, 31.3 and 1.5 would make 31.3): "31.32 m down"
   left of the leader, "1.48 m along (grid scale)" at its top by the rigid
   line, and the stop's caption says "31.32 m down and 1.48 m along the line,
   at right angles" and why the leader leans. `test/data` checks the part along the
@@ -696,7 +696,7 @@ Dyno owns the page: title, switcher, "Show source", the "Starting…"
 overlay, the error alert, the side layout's columns, the Controls header
 and its collapse, the theme and the URL. On the canvas, Dyno's inspector
 is top left and the credits bottom left; the viewer's time controls are
-bottom centre. The example adds:
+bottom center. The example adds:
 
 - **The panel**, in Dyno's Controls body: the status strip, then the
   Scenarios / Verification tabs directly under the Controls header. No
@@ -782,7 +782,7 @@ phone the page itself doesn't fit (`design-screenshots/*-narrow.png`,
 
 - **Result rows stack below 480 px of panel** (C4, a container query):
   each row is two lines, the name and the verdict, then the bar with its
-  numbers, the effect and the accuracy (labelled); the header row hides;
+  numbers, the effect and the accuracy (labeled); the header row hides;
   explicit `role` attributes keep it a table to assistive tech.
 - Toolbars and the tree's tools stack under 420 px; the sheet fills the
   tab; the HUD goes compact under a 560 px view (the legend in its compact
@@ -969,7 +969,7 @@ data and note, and **what it adds** at the frame's origin:
   total"; a term two edges share says so ("ephemeris, 10 mm, one term with
   MOON_ICRF": DE440's Earth–Moon vector);
 - or nothing, and why: "Adds nothing at the origin: a rotation about the
-  Moon's centre, which is this origin"; "exact by definition".
+  Moon's center, which is this origin"; "exact by definition".
 
 **The rule** (as `accuracyOf` composes it): a rotation on the reference's
 side turns the whole vector to the point, so its error is σθ times the
@@ -979,7 +979,7 @@ turns about the frame's own origin and moves it not at all; DE440 origins
 on both sides of the ancestor enter once, as the vector between them; the
 Moon's relativistic terms sit on no edge, listed "from no edge". Under the
 total, one line names the counterpoint: "A point away from the Moon's
-centre isn't bounded: MOON_ME's orientation has no stated accuracy (see
+center isn't bounded: MOON_ME's orientation has no stated accuracy (see
 the lunar south-pole site)."
 
 The composed total sits at the walk's top, "Composed at MOON_PA's origin
@@ -1234,7 +1234,7 @@ retrieved 2026-11-06):
   `inputCrs` values. Both are inputs to tiling; neither is readable back
   for an asset.
 - **The tileset JSON** (3D Tiles 1.1, what ion produces today) has no CRS:
-  tiles are in Earth-centred, Earth-fixed coordinates (EPSG:4978) through
+  tiles are in Earth-centered, Earth-fixed coordinates (EPSG:4978) through
   their `transform`. A CRS declaration exists only in the **3D Tiles 2.0
   draft**: `EXT_geospatial_crs` (with `EXT_geospatial_crs_wkid` and
   `EXT_geospatial_crs_wkt2`), a glTF 2.1 extension at the glTF root
@@ -1329,12 +1329,12 @@ really helps too". It replaced the "from", "to" and "drawing in" badges. The
 frame tree holds only frames. Data is pinned beside the tree, the frame you
 draw in is a tag, and what lights up is the data's route through the tree.
 
-1. **Frames are the only nodes.** They are neutral pills; family colours stay
+1. **Frames are the only nodes.** They are neutral pills; family colors stay
    as a subtle accent. The tree's shape never changes when the view changes.
 2. **Data is pinned beside the tree, not in it.** It is a dashed card on a
    dashed tether, hanging off the frame its numbers are expressed in, for
    example "Orion's data / in EME2000 (OEM)". Orion isn't a frame node
-   unless a scenario adds an Orion-centred frame; if one does, both are
+   unless a scenario adds an Orion-centered frame; if one does, both are
    shown and the difference is explicit. A scenario without data (the
    Earth turns) lights the route between the answer's two frames instead.
    An added site, such as Sacramento's, is a frame the scenario adds, not
@@ -1374,17 +1374,17 @@ themselves. The Moon's edges say so instead of inventing one.
   - The lunar laser ranging fit's residuals, about 1.3 cm rms recently
     (§5.1), are a range residual, not an orientation accuracy. They are
     never shown as the edge's ±.
-  - Unmodelled tidal libration is "a few milliseconds of arc" (the DE421
+  - Unmodeled tidal libration is "a few milliseconds of arc" (the DE421
     and DE430 memos). 1 mas is about 8 mm at the surface.
-  - DE440's realisation of ME differs from the DE421-aligned ME by up to
+  - DE440's realization of ME differs from the DE421-aligned ME by up to
     3.07 × 10⁻⁷ rad (about 0.53 m) over 2000–2040 (NAIF
     `moon_de440_250416.tf`).
   - The library's edge reads "not stated", with those figures as context.
     The explorer estimates one (the owner's follow-up, ruled 2026-11-07):
-    3 × 10⁻⁷ rad, about 0.5 m at the surface, labelled "estimated,
+    3 × 10⁻⁷ rad, about 0.5 m at the surface, labeled "estimated,
     illustrative" with that reasoning (`scenarios/stated.ts`
     `MOON_ME_ACCURACY`). Its tree edge shows it, and the walk composes it
-    at a point's distance from the Moon's centre: the lunar site's walk to
+    at a point's distance from the Moon's center: the lunar site's walk to
     ITRF is ±0.52 m, not the ±32 mm it read when nothing gave MOON_ME's
     rotation a lever.
 - **MOON_PA ↔ MOON_ME** is a constant rotation per ephemeris (Park eq. 19),
@@ -1403,30 +1403,30 @@ themselves. The Moon's edges say so instead of inventing one.
 Every term below has a popover wherever it appears (`panel/glossary.ts`,
 `Term`): a dotted underline, a button, its definition on click or Enter.
 
-| Term                    | Definition                                                                                                                                                                                     |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ITRF                    | The International Terrestrial Reference Frame: Earth-centred axes that turn with the Earth. GPS positions and survey coordinates live here (WGS 84 today agrees with it to a few centimetres). |
-| GCRF                    | The Geocentric Celestial Reference Frame: Earth-centred axes that don't turn with the Earth, aligned with distant quasars. Satellites and the Moon are computed here, then turned into ITRF.   |
-| ICRF                    | The International Celestial Reference Frame: the solar system's barycentre, with axes fixed on distant quasars. The root of the frame tree.                                                    |
-| EME2000                 | Earth Mean Equator and Equinox of J2000: the inertial frame most spacecraft files use. It differs from GCRF by the frame bias, about 23 milliarcseconds.                                       |
-| MOON_ME                 | The Moon's mean Earth / polar axis frame: axes fixed to the Moon, the x axis toward the Earth on average.                                                                                      |
-| MOON_PA                 | The Moon's principal-axes frame, from the DE440 libration model; a fixed rotation of under a degree from MOON_ME.                                                                              |
-| Earth orientation (EOP) | The measured wobble and spin of the Earth (polar motion and UT1) that turn GCRF into ITRF; predictions grow less accurate with age.                                                            |
-| Convergence             | The angle between grid north and true north at a point; zero on the central meridian.                                                                                                          |
-| Combined factor         | Grid scale factor × elevation factor: turns a ground distance into a grid distance.                                                                                                            |
-| Epoch                   | The date a coordinate is valid at; the plates move centimetres a year.                                                                                                                         |
-| Ballpark                | PROJ's fallback operation that ignores the datum difference: metres to hundreds of metres off.                                                                                                 |
-| Bound CRS               | A CRS carrying its own transformation to WGS 84 (TOWGS84), as CAD and BIM exports often do.                                                                                                    |
-| Helmert transformation  | Three shifts, three small rotations and a scale between datums; its sign convention matters.                                                                                                   |
-| Tolerance               | How far a result may be from its expected value and still pass; the plan's own, never loosened.                                                                                                |
-| Accuracy (1σ)           | What a computation can claim about where something really is: the root sum square of its terms.                                                                                                |
-| Not bounded             | A term has no stated size, so the total can't be given; the page names the term.                                                                                                               |
-| Exact by definition     | A convention, not a measurement (the IAU 2006 frame bias, TT − TAI): no error to state, nothing added to an accuracy.                                                                          |
-| Effect size             | How big a real effect is (2 ppm, 56 µs a day), shown apart from pass or fail.                                                                                                                  |
-| Fingerprint             | A recorded operation's pipeline, grid SHA-256 and coordinates; browser and Node must match.                                                                                                    |
-| TDB                     | Barycentric Dynamical Time, the ephemeris time scale; within 2 ms of TT.                                                                                                                       |
-| Tissot ellipse          | The shape a small ground circle takes on the map; size is scale, stretch is angular distortion.                                                                                                |
-| ppm                     | Parts per million: 1 ppm is 1 mm per km.                                                                                                                                                       |
+| Term                    | Definition                                                                                                                                                                                      |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ITRF                    | The International Terrestrial Reference Frame: Earth-centered axes that turn with the Earth. GPS positions and survey coordinates live here (WGS 84 today agrees with it to a few centimeters). |
+| GCRF                    | The Geocentric Celestial Reference Frame: Earth-centered axes that don't turn with the Earth, aligned with distant quasars. Satellites and the Moon are computed here, then turned into ITRF.   |
+| ICRF                    | The International Celestial Reference Frame: the solar system's barycenter, with axes fixed on distant quasars. The root of the frame tree.                                                     |
+| EME2000                 | Earth Mean Equator and Equinox of J2000: the inertial frame most spacecraft files use. It differs from GCRF by the frame bias, about 23 milliarcseconds.                                        |
+| MOON_ME                 | The Moon's mean Earth / polar axis frame: axes fixed to the Moon, the x axis toward the Earth on average.                                                                                       |
+| MOON_PA                 | The Moon's principal-axes frame, from the DE440 libration model; a fixed rotation of under a degree from MOON_ME.                                                                               |
+| Earth orientation (EOP) | The measured wobble and spin of the Earth (polar motion and UT1) that turn GCRF into ITRF; predictions grow less accurate with age.                                                             |
+| Convergence             | The angle between grid north and true north at a point; zero on the central meridian.                                                                                                           |
+| Combined factor         | Grid scale factor × elevation factor: turns a ground distance into a grid distance.                                                                                                             |
+| Epoch                   | The date a coordinate is valid at; the plates move centimeters a year.                                                                                                                          |
+| Ballpark                | PROJ's fallback operation that ignores the datum difference: meters to hundreds of meters off.                                                                                                  |
+| Bound CRS               | A CRS carrying its own transformation to WGS 84 (TOWGS84), as CAD and BIM exports often do.                                                                                                     |
+| Helmert transformation  | Three shifts, three small rotations and a scale between datums; its sign convention matters.                                                                                                    |
+| Tolerance               | How far a result may be from its expected value and still pass; the plan's own, never loosened.                                                                                                 |
+| Accuracy (1σ)           | What a computation can claim about where something really is: the root sum square of its terms.                                                                                                 |
+| Not bounded             | A term has no stated size, so the total can't be given; the page names the term.                                                                                                                |
+| Exact by definition     | A convention, not a measurement (the IAU 2006 frame bias, TT − TAI): no error to state, nothing added to an accuracy.                                                                           |
+| Effect size             | How big a real effect is (2 ppm, 56 µs a day), shown apart from pass or fail.                                                                                                                   |
+| Fingerprint             | A recorded operation's pipeline, grid SHA-256 and coordinates; browser and Node must match.                                                                                                     |
+| TDB                     | Barycentric Dynamical Time, the ephemeris time scale; within 2 ms of TT.                                                                                                                        |
+| Tissot ellipse          | The shape a small ground circle takes on the map; size is scale, stretch is angular distortion.                                                                                                 |
+| ppm                     | Parts per million: 1 ppm is 1 mm per km.                                                                                                                                                        |
 
 ## Deviations from the plan's component table
 
@@ -1479,7 +1479,7 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   the worker's statements. The legend line is computed from the statement
   against ITRF (`orion.ts`, `orionLegend`): the total at its instant, its
   largest term, the frame drawn in and how the path was sampled, for
-  example "±10 m (1σ) at 2026-04-06 23:00 UTC against the Earth's centre,
+  example "±10 m (1σ) at 2026-04-06 23:00 UTC against the Earth's center,
   mostly the unstated time scale (TDB or TT; taken as TDB); drawn in GCRF,
   878 samples, finest 14 s". It is asked for again after a minute of clock
   time, at most once a second of real time, one request in flight.
@@ -1490,7 +1490,7 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   within 8,000 samples and **2 s of worker time** (measured: GCRF 878
   samples in about 0.1–0.5 s, ITRF about 2,100 in 0.35 s, MOON_ME about 580
   in 0.07 s). A capped path says so in the legend. Chunks may span 1e7 m
-  (half-metre float32 steps against the path's ±10 m), so the ITRF path,
+  (half-meter float32 steps against the path's ±10 m), so the ITRF path,
   which winds about 2e10 m, is about 1,600 draws, not hundreds of
   thousands (that was the 6b ITRF stall, on the main thread).
 - **Orion keeps up with the clock.** A path drawn in GCRF or MOON_ME hangs
@@ -1518,7 +1518,7 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   strength, shown only while the camera is under 60 km above the ground
   over the grid.
 - **The walk's path on the globe.** Selecting a frame joins its path's
-  origins (root first; the barycentre and the Sun left out, coincident
+  origins (root first; the barycenter and the Sun left out, coincident
   origins merged) with a dotted 1 px line in the frame's family tone,
   revealed one edge per 90 ms (at once under reduced motion), redrawn as
   the clock moves them.
@@ -1557,7 +1557,7 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   The attention color is kept for stated assumptions (Orion's time scale)
   and separation warnings. "Against" is in the shared selection and the URL
   (`against=`), and the globe's dotted path follows it; an off-scene origin
-  (the barycentre, the Sun) is a stub toward it labelled with its name and
+  (the barycenter, the Sun) is a stub toward it labeled with its name and
   distance ("→ ICRF origin, 1.0 au").
 - **Overlay rows (S-I7).** One line each: the figure, its 1σ and one
   qualifier ("±2.6 × 10⁻⁹ rad (1σ), measured Earth orientation"; "±10 m
@@ -1596,7 +1596,7 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
 ### 6c-1 fix round 3
 
 - **Stop 2 from above the north pole (S-I10).** Straight down the pole at
-  5.5 Earth radii: both triads' x and y lie outside the disc and GCRF's turn
+  5.5 Earth radii: both triads' x and y lie outside the disk and GCRF's turn
   against ITRF's like clock hands; the z axes point at the camera. A pinned
   label never hides: it steps down past a label it would cover, so two axis
   tips passing each other stay readable. Checked in motion across a
@@ -1678,8 +1678,8 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   89.5° S, 0° E, height 0 in MOON_ME (15.2 km from the pole; east-north-up
   is defined there), and the caption says "near the south pole, at
   89.5° S". The Moon drawn is the sky's disk, a backdrop with no parallax,
-  right only along the line from its centre: from 100 m it put a piece of
-  surface hundreds of kilometres off behind the triad. The stop now looks
+  right only along the line from its center: from 100 m it put a piece of
+  surface hundreds of kilometers off behind the triad. The stop now looks
   straight down the site's vertical from about 3,000 km, the disk's limb in
   view, where the backdrop behind the triad is 15.8 km from the drawn pole
   (checked in the page; it was about 404 km), and the caption adds that the
@@ -1690,7 +1690,7 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
 - **App-defined frames.** The arm's joints are frames the example builds
   with the public `Frame` API (`scenarios/jointChain.ts`), uncached, each
   stating its accuracy. The tree marks them "defined by your app": a hollow
-  square glyph and a bar of the family colour down the pill's leading edge,
+  square glyph and a bar of the family color down the pill's leading edge,
   with its own key row; "added by this scenario" stays for frames the
   scenario adds that the library builds (NAD83(2011) through PROJ). The
   answer opens "How these frames are defined" on the source's own lines.
@@ -1722,7 +1722,7 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
 - **Five objects, one tree.** The dish (DSS-43 from the station SPK, under
   ITRF), the ship's mast sensor (its body under ITRF, holding off Mile
   Rocks after its synthetic track ends), Orion (its OEM's own frame under
-  EME2000: the one scenario where Orion is a node, labelled so in its
+  EME2000: the one scenario where Orion is a node, labeled so in its
   edge's detail), the lunar site (90° S under MOON_ME) and the arm's tool
   (the app's chain at the robot arm's checked pose). The object table is
   `scenes.ts` `CAPSTONE`; `everything.ts` evaluates.
@@ -1749,7 +1749,7 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   trips (ITRF and MOON_ME, the ship's frames) and the light-time solver's
   published check, each with a note on how far it carries.
 - **Knobs.** From and To as segmented controls with a swap between them;
-  To's option for From's object is greyed out with a tip. Setting one end
+  To's option for From's object is grayed out with a tip. Setting one end
   to the other's object swaps them (`spec.ts` `withKnob`, the spec's
   `distinct`); a link naming one object twice falls back to the checked
   pair. Below 480 px each control takes its own row, so the five stay on
@@ -1762,7 +1762,7 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   not "Meets at ICRF").
 - **On the globe.** A line from From to To, placed every frame from the
   page's own frames (Orion from the page's OEM, `bodyLines.ts`
-  `pairPlaces`), the ends labelled and the length (ICRF) with the
+  `pairPlaces`), the ends labeled and the length (ICRF) with the
   worker's accuracy at its middle; with both ends on the Earth the line
   runs through it, so the length rides with From's label. Off the Earth
   the camera frames the Earth and the Moon (Orion's path drawn in GCRF
@@ -1800,10 +1800,10 @@ These bind over the bullets above where they differ.
 - **Picking:** the next end a plain click sets is shown under the key and
   announced (`aria-live`). It goes back to From when the knobs, Swap or a
   moment change the pair (`panel/pairPick.ts`, unit-tested).
-- **The hand line of sight's grey band** widens by each Earth end's
+- **The hand line of sight's gray band** widens by each Earth end's
   horizon dip, √(2h/R), h its height above the ellipsoid or its own ground
   (the mast, the arm).
-- **The dish's own position uncertainty** (DSN 810-005's centimetres; no
+- **The dish's own position uncertainty** (DSN 810-005's centimeters; no
   figure in the SPK or references.json) is named "not stated" in the
   breakdown, after the stated terms, and left out of the ±, as the walk
   leaves it out.
@@ -1817,7 +1817,7 @@ These bind over the bullets above where they differ.
   unknown ("isn't counted as clear"), never clear. (The library gives
   that only for a path wholly above the terrain's height band, which a
   trace from the ground never is.)
-- **The hand line of sight's detail** names each grey item with its own
+- **The hand line of sight's detail** names each gray item with its own
   band ("within 0.12° of the Mast sensor's horizon and 0.01° of the Moon's
   limb"), not the widest band for all.
 - **One picking state for both diagrams** (`usePairPicker`, held by the
@@ -1828,7 +1828,7 @@ These bind over the bullets above where they differ.
   isn't traced yet" (`withPending`), never a bare "In view" while the page
   hasn't traced it.
 - **The corridor at its own ends.** At station 0 the trip through the
-  ground left the point nanometres before the road's start, and the
+  ground left the point nanometers before the road's start, and the
   alignment (rightly) said "outside": the scenario didn't answer at its own
   knob's minimum. Within the round trip's tolerance (1e-4 m) the station
   is read on the end tangent's extension and held to the road's ends, as
@@ -1857,7 +1857,7 @@ These bind over the sections above where they differ.
   leads with its own figure (`accuracy.figure`): one-path's from the OEM's
   velocity covariance and the position turning with the frame
   (`Trajectory.velocitySigma`), earth-turns' in radians, then its
-  millimetres at the equator.
+  millimeters at the equator.
 - **The callout** keeps a one-sentence limit (`SceneSpec.calloutNote`;
   the long note stays in the panel), wraps the accuracy to two lines, and
   has no tooltip. Folded, it keeps the short accuracy and a "1 limit"
@@ -1899,7 +1899,7 @@ These bind over the sections above where they differ.
   +N chip names what it unfolds.
 - **One-path's speed bound takes the frames' own motion as exact**, at
   these sizes rightly: the Moon's DE440 velocity error is well under
-  1 µm/s (its position is at lunar laser ranging's centimetres), and an
+  1 µm/s (its position is at lunar laser ranging's centimeters), and an
   LOD uncertainty of about 0.02 ms/day turns ITRF by about 2 × 10⁻¹⁴ rad/s,
   about 6 µm/s at Orion's 3.8 × 10⁸ m, against ±31 µm/s and ±0.73 mm/s.
 - **Leaving the explorer** puts back the clock's zone and name that were
@@ -1909,7 +1909,7 @@ These bind over the sections above where they differ.
   evaluation, and the panel withholds its path, route figures (the route
   section says "Not worked out at this setting"), live rows, presets, data
   and mask row. The scene's own frames stay.
-- **The drone spot's accuracy** is labelled "heuristic, not a bound", not
+- **The drone spot's accuracy** is labeled "heuristic, not a bound", not
   "1σ", with the terrain caveats leading its words, so the globe card's two
   lines keep them.
 
@@ -1923,7 +1923,7 @@ These bind over the sections above where they differ.
   setup's, the ship's sight line and the drone's ray read "tracing", the
   capstone's leader is unsure and dashed with "· updating", and the arm's
   label drops its ± (`createBodyLines`' `stale`, as the callouts').
-- **One hand-check horizon rule** (`pointing.ts` `horizonGrey`): 0.1° plus
+- **One hand-check horizon rule** (`pointing.ts` `horizonGray`): 0.1° plus
   the horizon's dip from the end's height, for the dish (about 0.94° at
   DSS-43, where it was a flat 1°) and the capstone.
 - **Units and radii named for what they are** (`units.ts`): `RAD_PER_DEG`,

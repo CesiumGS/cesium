@@ -95,7 +95,7 @@ change as the harness's pages land.
 
 One page per scene (`/scenes/$scene`), top to bottom: the scene live in
 one or two engines side by side (the former Explorer), its content and
-licences, then its measured results (best results, history, changes,
+licenses, then its measured results (best results, history, changes,
 requests, filmstrip). The live view's engines and place on the camera
 path are in the page's search, so a report links to a moment. It loads
 with the page; the engines share one GPU and main thread, so its
@@ -118,7 +118,7 @@ milestones named by their outcome, each with an `outcome` sentence,
   `scripts/work/query.mjs`, the only adapter between the page and the
   tracker's files. When the human-in-the-lead plugin's `hitld work query
 --json` and its readouts exist, that file changes and nothing here.
-- **Scope, search and views.** At the top, a labelled Scope button names
+- **Scope, search and views.** At the top, a labeled Scope button names
   the scope (all work, an initiative, a project, a milestone) and opens
   the picker; the lines above the scope follow it, to go back up, with a
   button back to all work. A Search field sits beside it; both narrow

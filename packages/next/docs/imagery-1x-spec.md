@@ -246,7 +246,7 @@ the later (east/south) imagery wins.
 - Color space: `highDynamicRange = false` (Scene.js:750; `gamma = 2.2` at
   :751 used only with HDR). No `czm_srgbToLinear` anywhere in the globe
   path: texture bytes go to the non-sRGB framebuffer unchanged (browser
-  default colour-space conversion on decode). Filtering/mips act on encoded
+  default color-space conversion on decode). Filtering/mips act on encoded
   values. Tonemapping only with HDR (PostProcessStageCollection.js:613), FXAA
   off (:55), MSAA 4 (Scene.js:255).
 - Base color: `Color(0, 0, 0.5, 1)` (GlobeSurfaceTileProvider.js:199). The
@@ -255,7 +255,7 @@ the later (east/south) imagery wins.
 - Ground atmosphere (on for WGS84, Globe.js:205; 3D only), no FOG define:
   light dir = `normalize(positionWC)`; `atm = 1 − exp(−2·(c + g.rgb·(0.5 +
 clamp(1 − g.a))))`, `c = mix(c, atm, fade)`, `fade = clamp((|camWC| −
-π/2·Rmin) / (π/2·Rmin))`: 0 within 9,985,163 m of Earth's centre
+π/2·Rmin) / (π/2·Rmin))`: 0 within 9,985,163 m of Earth's center
   (GlobeFS.glsl:536-565, Globe.js:264-274). Scattering per vertex, per
   fragment above `nightFadeOutDistance` (GlobeSurfaceTileProvider.js:2606-2611).
 - Fog replaces that per tile if `fog.enabled && renderable && !underground
@@ -269,12 +269,12 @@ exp(−(k·s + k)·s·(1 + k))`, `s = v_distance·czm_fogDensity`, k = 0.15
 - Filtering: trilinear + anisotropic (max supported, usually 16×) has
   GPU-specific footprints. Match the sampler; mip generation is driver-defined
   (`NICEST`): use a 2×2 box on encoded (non-sRGB) values.
-- Colour: `rgba8unorm`, not `-srgb`, for textures and canvas; no
+- Color: `rgba8unorm`, not `-srgb`, for textures and canvas; no
   linearization. ImageBitmap `colorSpaceConversion: "default"` may apply
   ICC profiles; JPEG decoders differ by ±1-2 LSB across browsers.
 - Seams: every imagery tile is its own clamped texture, so filtering never
   crosses imagery tiles; the inclusive `step` picks the later tile;
-  sliver-skip (1/512) clamps a neighbour's edge texels over the sliver.
+  sliver-skip (1/512) clamps a neighbor's edge texels over the sliver.
   Adjacent terrain tiles may use different imagery levels (latitude
   buckets, terrain level, ancestors).
 - Mercator: per-vertex webMercatorT is linear per triangle; polar tiles use

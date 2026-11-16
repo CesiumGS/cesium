@@ -30,7 +30,7 @@ exact surface, and a client that does not draws the triangles.
 
 The b-rep is plain typed arrays, one bufferView each, so it moves between
 workers without copying and a host with its own modeler can write it directly.
-Lengths are metres and angles are radians. All geometry is float64.
+Lengths are meters and angles are radians. All geometry is float64.
 
 ## Schema
 
@@ -119,7 +119,7 @@ An empty string means none.
 ## Parameterizations
 
 With the surface's origin `o`, axes `x` and `y`, and `z = x × y`. Units: u and v in
-radians where angular, metres otherwise.
+radians where angular, meters otherwise.
 
 - Plane: `P = o + u·x + v·y`.
 - Cylinder: `P = o + r(cos u·x + sin u·y) + v·z`.
